@@ -30,10 +30,10 @@ SRCS := \
 	$(SRCDIR)/AppendMatrix.tcl \
 	$(SRCDIR)/ArrowWidget.tcl \
 	$(SRCDIR)/BaseWidget.tcl \
+	$(SRCDIR)/BoxWidget.tcl \
 	$(SRCDIR)/BuildInterpolant.tcl \
 	$(SRCDIR)/BuildNoise.tcl \
 	$(SRCDIR)/BuildTransform.tcl \
-	$(SRCDIR)/BoxWidget.tcl \
 	$(SRCDIR)/CastTVtoMLV.tcl \
 	$(SRCDIR)/CastMatrix.tcl \
 	$(SRCDIR)/ChangeCoordinates.tcl \
@@ -61,10 +61,10 @@ SRCS := \
 	$(SRCDIR)/FieldSubSample.tcl\
 	$(SRCDIR)/FieldWriter.tcl \
 	$(SRCDIR)/FrameWidget.tcl \
-	$(SRCDIR)/GLTextureBuilder.tcl \
 	$(SRCDIR)/GaugeWidget.tcl \
 	$(SRCDIR)/GenStandardColorMaps.tcl \
 	$(SRCDIR)/GenTransferFunc.tcl \
+	$(SRCDIR)/GLTextureBuilder.tcl \
 	$(SRCDIR)/Isosurface.tcl \
 	$(SRCDIR)/LightWidget.tcl \
 	$(SRCDIR)/LinAlgBinary.tcl \
@@ -82,15 +82,16 @@ SRCS := \
 	$(SRCDIR)/PathWriter.tcl \
 	$(SRCDIR)/PointWidget.tcl \
 	$(SRCDIR)/Probe.tcl \
-	$(SRCDIR)/PromptedText.tcl \
 	$(SRCDIR)/PromptedEntry.tcl \
+	$(SRCDIR)/PromptedText.tcl \
 	$(SRCDIR)/ReplaceScalarDataValue.tcl \
 	$(SRCDIR)/RescaleColorMap.tcl \
 	$(SRCDIR)/RingWidget.tcl \
 	$(SRCDIR)/SampleField.tcl \
-	$(SRCDIR)/SamplePlane.tcl \
 	$(SRCDIR)/SampleLattice.tcl \
+	$(SRCDIR)/SamplePlane.tcl \
 	$(SRCDIR)/ScalarFieldStats.tcl \
+	$(SRCDIR)/SelectField.tcl \
 	$(SRCDIR)/SetProperty.tcl \
 	$(SRCDIR)/ShowColorMap.tcl \
 	$(SRCDIR)/ShowField.tcl \
@@ -99,6 +100,7 @@ SRCS := \
 	$(SRCDIR)/StreamLines.tcl \
 	$(SRCDIR)/Submatrix.tcl \
 	$(SRCDIR)/SynchronizeGeometry.tcl \
+	$(SRCDIR)/TclStream.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/TextureVolVis.tcl \
 	$(SRCDIR)/TransformData.tcl \
@@ -106,9 +108,8 @@ SRCS := \
 	$(SRCDIR)/TransformData3.tcl \
 	$(SRCDIR)/TransformScalarData.tcl \
 	$(SRCDIR)/TransformVectorData.tcl \
-	$(SRCDIR)/ViewWidget.tcl \
 	$(SRCDIR)/Viewer.tcl \
-	$(SRCDIR)/TclStream.tcl \
+	$(SRCDIR)/ViewWidget.tcl \
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
