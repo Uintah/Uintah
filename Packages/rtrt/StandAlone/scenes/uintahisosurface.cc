@@ -1,6 +1,21 @@
 
-//#define USE_HVBRICK 1
+#define USE_HVBRICK 1
 
+// now for the SCI stuff
+#include <Core/Thread/Thread.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Exceptions/Exception.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/CCA/Ports/DataArchive.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
+
+// rtrt stuff
 #include <Packages/rtrt/Core/BrickArray3.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/CutPlane.h>
@@ -19,33 +34,40 @@
 #include <Packages/rtrt/Core/VolumeDpy.h>
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Array3.cc>
-// undef somethings that conflict
+// undef some things that conflict
 #undef None
 
 #ifdef Success
 #undef Success
 #endif
-// now for the SCI stuff
-#include <Core/Thread/Thread.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Exceptions/Exception.h>
-using namespace SCIRun;
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/CCA/Ports/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/NodeIterator.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 // standard c files
 #include <fstream>
 #include <iostream>
 #include <math.h>
 #include <string.h>
 
-using namespace rtrt;
+//using namespace rtrt;
 using namespace std;
-using SCIRun::Thread;
+using namespace SCIRun;
+//using SCIRun::Thread;
+using rtrt::Scene;
+using rtrt::Color;
+using rtrt::Material;
+#ifdef USE_HVBRICK
+using rtrt::HVolumeBrick;
+#else
+using rtrt::HVolume;
+using rtrt::BrickArray3;
+using rtrt::VMCell;
+#endif
+using rtrt::Group;
+using rtrt::Phong;
+using rtrt::Camera;
+using rtrt::Light;
+using rtrt::LinearBackground;
+using rtrt::VolumeDpy;
+using rtrt::TimeObj;
+
 
 extern "C" 
 Scene* make_scene(int argc, char* argv[], int nworkers)
@@ -216,12 +238,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #endif
 	  double data_min, data_max;
 	  switch(td->getType()){
-	  case Uintah::TypeDescription::NCVariable:
+	  case Uintah::TypeDescription::CCVariable:
 	    switch(subtype->getType()){
 	    case Uintah::TypeDescription::double_type:
 	      {
 		// get the data
-		NCVariable<double> value;
+		CCVariable<double> value;
 		da->query(value, var, mat_num, patch, time);
 		dim = IntVector(value.getHighIndex()-value.getLowIndex());
 		if(dim.x() && dim.y() && dim.z()){
@@ -234,7 +256,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 		  cerr << "dim=" << dim << '\n';
 		  cerr << "data_size = " << data_size << endl;
 #endif
-		  NodeIterator iter = patch->getNodeIterator();
+		  CellIterator iter = patch->getCellIterator();
 		  data_min = data_max = value[*iter];
 		  int data_index = 0;
 		  for(;!iter.done(); iter++){
@@ -281,9 +303,16 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 		      for (int y = 0; y < dim.y(); y++)
 			for (int z = 0; z < dim.z(); z++)
 			  {
-			    data(x,y,z) = x + y + z;
-			  }
-		    data_max = dim.x() + dim.y() + dim.z() - 3;
+			    //float val = (float) x + y + z;
+			    float val = (float) x * y * z;
+#ifdef USE_HVBRICK
+			    data[z + y*dim.z() + x * (dim.z()*dim.y())] = val;
+#else
+			    data(x,y,z) = ;
+#endif
+			  }	
+		    data_max = (dim.x()-1) * (dim.y()-1) * (dim.z()-1);
+		    //data_max = dim.x() + dim.y() + dim.z() - 3;
 		    data_min = 0;
 #endif
 		  }
@@ -310,7 +339,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	      break;
 	    } // end subtyp
 	    break;
-	  case Uintah::TypeDescription::CCVariable:
+	  case Uintah::TypeDescription::NCVariable:
 	    break;
 	  case Uintah::TypeDescription::Matrix3:
 	    break;
@@ -324,37 +353,39 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	    cerr << "Variable (" << var << ") is of unknown type: " << td->getType() << '\n';
 	    break;
 	  } // end switch(td->getType())
-	  SCIRun::Point b_min = patch->getBox().lower();
-	  SCIRun::Point b_max = patch->getBox().upper();
-	  
-	  rtrt::Point rtrt_b_min(b_min.x(),b_min.y(),b_min.z());
-	  rtrt::Point rtrt_b_max(b_max.x(),b_max.y(),b_max.z());
-	  cerr << "dim=" << dim << '\n';
-	  cerr << "min=" << rtrt_b_min << ", max=" << rtrt_b_max << '\n';
+	  if (dim.x() && dim.y() && dim.z()) {
+	    SCIRun::Point b_min = patch->getBox().lower();
+	    SCIRun::Point b_max = patch->getBox().upper();
+	    
+	    rtrt::Point rtrt_b_min(b_min.x(),b_min.y(),b_min.z());
+	    rtrt::Point rtrt_b_max(b_max.x(),b_max.y(),b_max.z());
+	    cerr << "dim=" << dim << '\n';
+	    cerr << "min=" << rtrt_b_min << ", max=" << rtrt_b_max << '\n';
 #ifdef USE_HVBRICK
-	  HVolumeBrick* hvol = new HVolumeBrick(matl0, dpy, depth,
-						nworkers, 
-						dim.x(), dim.y(), dim.z(),
-						rtrt_b_min, rtrt_b_max,
-						(float)data_min,
-						(float)data_max,
-						data);
+	    HVolumeBrick* hvol = new HVolumeBrick(matl0, dpy, depth,
+						  nworkers, 
+						  dim.x(), dim.y(), dim.z(),
+						  rtrt_b_min, rtrt_b_max,
+						  (float)data_min,
+						  (float)data_max,
+						  data);
 #else
-	  HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > >*
-	    hvol =
-	   new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > >
-       //HVolume<float, rtrt::Array3<float>, rtrt::Array3<VMCell<float> > >*
-       //hvol =
-       //new HVolume<float, rtrt::Array3<float>, rtrt::Array3<VMCell<float> > >
-	    (matl0, dpy, depth,
-	     nworkers, 
-	     dim.x(), dim.y(), dim.z(),
-	     rtrt_b_min, rtrt_b_max,
-	     (float)data_min,
-	     (float)data_max,
-	     data);
+	    HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > >*
+	      hvol =
+	      new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > >
+	      //HVolume<float, rtrt::Array3<float>, rtrt::Array3<VMCell<float> > >*
+	      //hvol =
+	      //new HVolume<float, rtrt::Array3<float>, rtrt::Array3<VMCell<float> > >
+	      (matl0, dpy, depth,
+	       nworkers, 
+	       dim.x(), dim.y(), dim.z(),
+	       rtrt_b_min, rtrt_b_max,
+	       (float)data_min,
+	       (float)data_max,
+	       data);
 #endif
-	  timeblock->add(hvol);
+	    timeblock->add(hvol);
+	  } // end if (dim.x() && dim.y() && dim.z())
 	  if (debug) cerr << "Finished processdata\n";
 	} // end patch
 	if (debug) cerr << "Finished patch\n";
@@ -403,7 +434,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     }
   }
 #endif
-  
+
   Group* group=new Group();
   group->add(timeobj1);
   new Thread(dpy, "Volume GUI thread");
@@ -433,4 +464,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   
   return scene;
 }
+
+
+
+
+
+
 
