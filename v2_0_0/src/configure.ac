@@ -2411,7 +2411,7 @@ if test "$sci_check_insight" = "yes"; then
 
    if test -a "$dir/ITKConfig.cmake"; then
 	INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g'`" 
-        insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS "/;/' | sed 's/")//' | sed 's/;//g'`"
+        insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g'`"
 	INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"	
 	INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -litkjpeg -lITKDICOMParser -lz"
 	echo "have png is $HAVE_PNG"
