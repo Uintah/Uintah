@@ -21,17 +21,11 @@ static Scheme currentScheme;
 
 /******* Variables *******/
 
-Variable::Variable( const char *name, const Scheme s,
-		    const Point& initialValue )
+Variable::Variable( const clString& name, const Scheme scheme,
+		    const Point& value )
+: name(name), scheme(scheme), value(value)
 {
    numconstraints = 0;
-
-   value = initialValue;
-   scheme = s;
-   
-   strncpy(this->name, name, 20);
-   this->name[19] = '\0';
-
    levellevel = level = 0;
 }
 
@@ -163,23 +157,20 @@ Variable::printc( ostream& os, const Index c )
 
 /******* BaseConstraints *******/
 
-BaseConstraint::BaseConstraint( const char* name, const Index numSchemes,
-				const Index VariableCount )
+BaseConstraint::BaseConstraint( const clString& name, const Index nschemes,
+				const Index varCount )
+: name(name), nschemes(nschemes), varCount(varCount),
+  vars(varCount), var_indexs(varCount), var_choices(nschemes)
 {
-   strncpy(this->name, name, 20);
-   this->name[19] = '\0';
    whichMethod = 0;
-   nschemes = numSchemes;
-   varCount = VariableCount;
-   vars = new Variable*[varCount];
-   var_indexs = new Index[varCount];
-   var_choices = new Index*[nschemes];
-   for (Index i = 0; i < varCount; i++)
+   for (Index i = 0; i < nschemes; i++)
       var_choices[i] = new Index[varCount];
 }
 
 BaseConstraint::~BaseConstraint()
 {
+    for (Index i = 0; i < nschemes; i++)
+	delete var_choices[i];
 }
 
 void
