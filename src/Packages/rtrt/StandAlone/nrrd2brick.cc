@@ -1,14 +1,18 @@
 
 
 #include <Packages/rtrt/Core/BrickArray3.h>
+
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
-#include <limits.h>
+#include <sgi_stl_warnings_on.h>
+
+#include <sci_values.h>
 #include <teem/nrrd.h>
-//#include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 
