@@ -474,7 +474,7 @@ void AMRSimulationController::run()
        scheduler->clearMappings();
        scheduler->mapDataWarehouse(Task::OldDW, 0);
        scheduler->mapDataWarehouse(Task::NewDW, totalFine);
-       for(int i=0;i<currentGrid->numLevels();i++){
+       for(int i = currentGrid->numLevels()-1; i >= 0; i--){
 	 sim->scheduleErrorEstimate(currentGrid->getLevel(i), scheduler);
 	 sim->scheduleComputeStableTimestep(currentGrid->getLevel(i), scheduler);
        }
