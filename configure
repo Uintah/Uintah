@@ -4198,7 +4198,7 @@ ac_given_srcdir=$srcdir
 
 trap 'rm -fr `echo "configVars.mk \
 		Makefile \
-		PackMakefile \
+		disjointPackageMakefile \
                 Dataflow/Modules/Fields/Manip/Makefile\
 		Dataflow/Modules/Math/Manip/Makefile\
 		sci_defs.h \
@@ -4380,7 +4380,7 @@ cat >> $CONFIG_STATUS <<EOF
 
 CONFIG_FILES=\${CONFIG_FILES-"configVars.mk \
 		Makefile \
-		PackMakefile \
+		disjointPackageMakefile \
                 Dataflow/Modules/Fields/Manip/Makefile\
 		Dataflow/Modules/Math/Manip/Makefile\
 		sci_defs.h \
