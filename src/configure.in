@@ -1202,10 +1202,13 @@ if test "$UNI_PETSC_LIB_DIR"; then
   AC_MSG_RESULT(-L$UNI_PETSC_LIB_DIR -lpetsc)
 fi
 
-# These are headers we need to build our custom widgets.
-if test ! -f "$UNI_PETSC_INC_DIR/petsc.h" ||
-   test ! -f "$UNI_PETSC_INC_DIR/petscsles.h"; then
-  AC_MSG_ERROR(Couldn't find the necessary uni-PETSc include files.)
+if test "$UNI_PETSC_LIB_DIR"; then
+  if test ! -f "$UNI_PETSC_INC_DIR/petsc.h" ||
+     test ! -f "$UNI_PETSC_INC_DIR/petscsles.h"; then
+    AC_MSG_ERROR(Couldn't find the necessary uni-PETSc include files.)
+  fi
+else
+  AC_MSG_RESULT(no)
 fi
 
 AC_SUBST(UNI_PETSC_INC_DIR)
