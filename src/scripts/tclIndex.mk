@@ -47,7 +47,7 @@ $(TCLINDEX)_DIR := $(SRCTOP)/$(SRCDIR)
 # single quotes so that createTclIndex can call it as a single
 # argument.
 
-$(TCLINDEX): $(SRCS)
+$(TCLINDEX): $(SRCS) $(SRCDIR)/sub.mk
 	$(OBJTOP)/createTclIndex $($@_DIR) '$($@_FILES)'
 
 # Add this to the list of targets
