@@ -5,11 +5,11 @@ OBJS = ColorMapWriter.o  ColumnMatrixWriter.o  ContourSetWriter.o   \
 	MatrixWriter.o  MeshWriter.o   \
 	MultiMeshWriter.o   ScalarFieldWriter.o \
 	SurfaceWriter.o   VectorFieldWriter.o   VoidStarWriter.o \
-	TetraWriter.o
+	TetraWriter.o MultiScalarFieldWriter.o
 GENSRCS = ColorMapWriter.cc ColumnMatrixWriter.cc ContourSetWriter.cc  \
 	MatrixWriter.cc MeshWriter.cc  \
 	MultiMeshWriter.cc  ScalarFieldWriter.cc  \
-	SurfaceWriter.cc  VectorFieldWriter.cc  VoidStarWriter.cc
+	SurfaceWriter.cc  VectorFieldWriter.cc  VoidStarWriter.cc MultiScalarFieldWriter.cc
 SRCS = $(GENSRCS) TetraWriter.cc
 GENTCLS = ColorMapWriter.tcl ColumnMatrixWriter.tcl ContourSetWriter.tcl \
 	MatrixWriter.tcl MeshWriter.tcl \
