@@ -64,12 +64,10 @@ class ShowField : public Module
   //! Private Data
 
   //! input ports
-  FieldIPort*              fld_;
-  ColorMapIPort*           color_;
-  ColorMapHandle           color_handle_;
-  int                      fld_gen_;
-  int                      mesh_gen_;
-  int                      colm_gen_;
+  int                      field_generation_;
+  int                      mesh_generation_;
+  int                      colormap_generation_;
+
   //! output port
   GeometryOPort           *ogeom_;  
 
@@ -84,14 +82,17 @@ class ShowField : public Module
   GuiInt                   nodes_on_;
   GuiInt                   nodes_as_disks_;
   bool                     nodes_dirty_;
+
   //! Options for rendering edges.
   GuiInt                   edges_on_;
   bool                     edges_dirty_;
+
   //! Options for rendering faces.
-  GuiInt                   use_normals_;
-  GuiInt                   use_transparency_;
   GuiInt                   faces_on_;
+  GuiInt                   faces_normals_;
+  GuiInt                   faces_transparency_;
   bool                     faces_dirty_;
+
   //! Options for rendering non-scalar data.
   GuiInt                   vectors_on_;
   GuiInt                   normalize_vectors_;
@@ -107,6 +108,7 @@ class ShowField : public Module
   GuiDouble                def_color_b_;
   GuiDouble                def_color_a_;
   MaterialHandle           def_mat_handle_;
+
 #ifdef HAVE_HASH_MAP
   typedef hash_map<int, MaterialHandle> ind_mat_t;
 #else
@@ -142,6 +144,7 @@ class ShowField : public Module
   vector<bool>               render_state_;
   void maybe_execute(toggle_type_e dis_type);
   Vector                  *bounding_vector_;
+
 public:
   ShowField(GuiContext* ctx);
   virtual ~ShowField();
@@ -154,12 +157,9 @@ public:
 
 ShowField::ShowField(GuiContext* ctx) : 
   Module("ShowField", ctx, Filter, "Visualization", "SCIRun"), 
-  fld_(0),
-  color_(0),
-  color_handle_(0),
-  fld_gen_(-1),
-  mesh_gen_(-1),
-  colm_gen_(-1),
+  field_generation_(-1),
+  mesh_generation_(-1),
+  colormap_generation_(-1),
   ogeom_(0),
   node_id_(0),
   edge_id_(0),
@@ -170,9 +170,9 @@ ShowField::ShowField(GuiContext* ctx) :
   nodes_dirty_(true),
   edges_on_(ctx->subVar("edges-on")),
   edges_dirty_(true),
-  use_normals_(ctx->subVar("use-normals")),
-  use_transparency_(ctx->subVar("use-transparency")),
   faces_on_(ctx->subVar("faces-on")),
+  faces_normals_(ctx->subVar("use-normals")),
+  faces_transparency_(ctx->subVar("use-transparency")),
   faces_dirty_(true),
   vectors_on_(ctx->subVar("vectors-on")),
   normalize_vectors_(ctx->subVar("normalize-vectors")),
@@ -278,8 +278,8 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle)
   CompileInfo *ci = RenderFieldBase::get_compile_info(ftd, ltd);
   if (!module_dynamic_compile(*ci, renderer_))
   {
-    fld_gen_ = -1;
-    mesh_gen_ = -1;
+    field_generation_ = -1;
+    mesh_generation_ = -1;
     return false;
   }
   return true;
@@ -289,15 +289,15 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle)
 bool
 ShowField::determine_dirty(FieldHandle fld_handle) 
 {
-  bool mesh_new = fld_handle->mesh()->generation != mesh_gen_;
-  bool field_new = fld_handle->generation != fld_gen_;
+  bool mesh_new = fld_handle->mesh()->generation != mesh_generation_;
+  bool field_new = fld_handle->generation != field_generation_;
 
   if (mesh_new) {
     // completely new, all dirty, or just new geometry, so data_at invalid too.
     check_for_vector_data(fld_handle);
     if (!fetch_typed_algorithm(fld_handle)) { return false; }
-    fld_gen_  = fld_handle->generation;  
-    mesh_gen_ = fld_handle->mesh()->generation; 
+    field_generation_  = fld_handle->generation;  
+    mesh_generation_ = fld_handle->mesh()->generation; 
     nodes_dirty_ = true; 
     edges_dirty_ = true; 
     faces_dirty_ = true; 
@@ -341,16 +341,16 @@ ShowField::execute()
 {
   // tell module downstream to delete everything we have sent it before.
   // This is typically viewer, it owns the scene graph memory we create here.
-  fld_ = (FieldIPort *)get_iport("Field");
-  color_ = (ColorMapIPort *)get_iport("ColorMap");
+  FieldIPort *field_iport = (FieldIPort *)get_iport("Field");
+  ColorMapIPort *color_iport = (ColorMapIPort *)get_iport("ColorMap");
   ogeom_ = (GeometryOPort *)get_oport("Scene Graph");
   FieldHandle fld_handle;
 
-  if (!fld_) {
+  if (!field_iport) {
     error("Unable to initialize iport 'Field'.");
     return;
   }
-  if (!color_) {
+  if (!color_iport) {
     error("Unable to initialize iport 'ColorMap'.");
     return;
   }
@@ -359,7 +359,7 @@ ShowField::execute()
     return;
   }
 
-  fld_->get(fld_handle);
+  field_iport->get(fld_handle);
   if(!fld_handle.get_rep()){
     warning("No Data in port 1 field.");
     return;
@@ -372,18 +372,19 @@ ShowField::execute()
   // if no colormap was attached, the argument doesn't get changed,
   // so we need to set it manually
   // if the user had a colormap attached for a previous execution,
-  // and then detached it, we need to set color_handle_ to be empty
+  // and then detached it, we need to set color_handle to be empty
 
-  if(!color_->get(color_handle_)) color_handle_=0;
+  ColorMapHandle color_handle;
+  if(!color_iport->get(color_handle)) color_handle=0;
 
-  if(!color_handle_.get_rep()){
+  if(!color_handle.get_rep()){
     //warning("No ColorMap in port 2 ColorMap.");
-    if (colm_gen_ != -1) {
+    if (colormap_generation_ != -1) {
       data_at_dirty_ = true;
     }
-    colm_gen_ = -1;
-  } else if (colm_gen_ != color_handle_->generation) {
-    colm_gen_ = color_handle_->generation;  
+    colormap_generation_ = -1;
+  } else if (colormap_generation_ != color_handle->generation) {
+    colormap_generation_ = color_handle->generation;  
     data_at_dirty_ = true;
   }
 
@@ -443,14 +444,14 @@ ShowField::execute()
   normalize_vectors_.reset();
   if (renderer_.get_rep())
   {
-    if (use_normals_.get()) fld_handle->mesh()->synchronize(Mesh::NORMALS_E);
+    if (faces_normals_.get()) fld_handle->mesh()->synchronize(Mesh::NORMALS_E);
 
     renderer_->set_mat_map(&idx_mats_);
     renderer_->render(fld_handle, 
 		      do_nodes, do_edges, do_faces, do_data,
-		      def_mat_handle_, data_at_dirty_, color_handle_,
+		      def_mat_handle_, data_at_dirty_, color_handle,
 		      ndt, edt, ns, es, vs, normalize_vectors_.get(), res_,
-		      use_normals_.get(), use_transparency_.get(),
+		      faces_normals_.get(), faces_transparency_.get(),
 		      bidirectional_.get(), arrow_heads_on_.get());
   }
 
@@ -473,7 +474,7 @@ ShowField::execute()
     faces_dirty_ = false;
     if (renderer_.get_rep() && faces_on_.get()) 
     {
-      const char *name = use_transparency_.get()?"TransParent Faces":"Faces";
+      const char *name = faces_transparency_.get()?"TransParent Faces":"Faces";
       if (face_id_) ogeom_->delObj(face_id_);
       face_id_ = ogeom_->addObj(renderer_->face_switch_, name);
     }
