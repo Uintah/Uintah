@@ -20,14 +20,14 @@
 #include <fstream>
 using namespace std;
 
-#include "SharedMemory.h"
-#include "Tracker.h"
-#include "Controller.h"
+#include <PSECommon/Modules/Salmon/SharedMemory.h>
+#include <PSECommon/Modules/Salmon/Tracker.h>
+#include <PSECommon/Modules/Salmon/Controller.h>
 
-#include "fastrak.h"
-#include "fob.h"
-#include "pinch.h"
-#include "glMath.h"
+#include <PSECommon/Modules/Salmon/fastrak.h>
+#include <PSECommon/Modules/Salmon/fob.h>
+#include <PSECommon/Modules/Salmon/pinch.h>
+#include <PSECommon/Modules/Salmon/glMath.h>
 
 #define BAWGL_STYLUS CONTROLLER_STYLUS
 #define BAWGL_PINCH CONTROLLER_PINCH

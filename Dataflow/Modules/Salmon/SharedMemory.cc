@@ -26,6 +26,7 @@ namespace Modules {
 int SharedMemory :: init( char* file, int numproc, int address, int arenasize,
 		   void** data, int size )
 {
+#ifdef __sgi
   int h;
 
   if( file == 0 )
@@ -82,6 +83,7 @@ int SharedMemory :: init( char* file, int numproc, int address, int arenasize,
 /* Put shared data address into arena. */
 
   usputinfo(arena, shared);
+#endif
 
   return(0);
 }
@@ -92,9 +94,11 @@ int SharedMemory :: init( char* file, int numproc, int address, int arenasize,
 
 void SharedMemory :: destroy( void )
 {
+#ifdef __sgi
   usfree(shared->data, arena);
   usfree(shared, arena);
   unlink(arenafile);
+#endif
 }
 
 /* 
@@ -103,6 +107,7 @@ void SharedMemory :: destroy( void )
 
 int SharedMemory :: attach( char* file, void** data )
 {
+#ifdef __sgi
   if( file == 0 )
     {
       cerr << "Error: No arena file name given\n";
@@ -130,7 +135,8 @@ int SharedMemory :: attach( char* file, void** data )
   shared = (SharedData*)usgetinfo(arena);
 
   *data = shared->data;
-  
+#endif
+
   return(0);
 }
 
@@ -140,7 +146,9 @@ int SharedMemory :: attach( char* file, void** data )
 
 void SharedMemory :: detach( void )
 {
+#ifdef __sgi
   usdetach(arena);
+#endif
 }
 
 /*
@@ -149,7 +157,9 @@ void SharedMemory :: detach( void )
 
 void SharedMemory :: lock( void )
 {
+#ifdef __sgi
   uspsema(shared->sema);
+#endif
 }
 
 /*
@@ -158,7 +168,9 @@ void SharedMemory :: lock( void )
 
 void SharedMemory :: unlock( void )
 {
+#ifdef __sgi
   usvsema(shared->sema);
+#endif
 }
 
 }}
