@@ -12,6 +12,7 @@ PSELIBS := \
 	Packages/Uintah/CCA/Ports          \
 	Packages/Uintah/Core/Grid          \
 	Packages/Uintah/Core/Parallel      \
+	Packages/Uintah/Core/ProblemSpec   \
 	Packages/Uintah/Core/Exceptions    \
 	Packages/Uintah/Core/Math          \
 	Packages/Uintah/CCA/Components/MPM \
