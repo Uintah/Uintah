@@ -40,23 +40,23 @@
 
 #include <SCIRun/CCA/CCAPortInstance.h>
 #include <iostream>
-using namespace std;
-using namespace SCIRun;
+
+namespace SCIRun {
 
 CCAPortInstance::CCAPortInstance(const std::string& name,
-				 const std::string& type,
-				 const sci::cca::TypeMap::pointer& properties,
-				 PortType porttype)
+                                 const std::string& type,
+                                 const sci::cca::TypeMap::pointer& properties,
+                                 PortType porttype)
   : name(name), type(type), properties(properties), porttype(porttype),
     useCount(0)
 {
 }
 
 CCAPortInstance::CCAPortInstance(const std::string& name,
-				 const std::string& type,
-				 const sci::cca::TypeMap::pointer& properties,
-				 const sci::cca::Port::pointer& port,
-				 PortType porttype)
+                                 const std::string& type,
+                                 const sci::cca::TypeMap::pointer& properties,
+                                 const sci::cca::Port::pointer& port,
+                                 PortType porttype)
   : name(name), type(type), properties(properties), port(port),
     porttype(porttype), useCount(0)
 {
@@ -69,14 +69,19 @@ CCAPortInstance::~CCAPortInstance()
 bool CCAPortInstance::connect(PortInstance* to)
 {
   if(!canConnectTo(to))
+    {
     return false;
+    }
   //CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
   PortInstance* p2 = to;
   if(!p2)
+    {
     return false;
-  if(portType() == From && p2->portType() == To){
+    }
+  if(portType() == From && p2->portType() == To)
+    {
     connections.push_back(p2);
-  } 
+    } 
   else p2->connect(this);
   return true;
 }
@@ -84,9 +89,9 @@ bool CCAPortInstance::connect(PortInstance* to)
 PortInstance::PortType CCAPortInstance::portType()
 {
   if(porttype == Uses)
-    return From;
+    { return From; }
   else
-    return To;
+    { return To; }
 }
 
 
@@ -101,7 +106,7 @@ std::string CCAPortInstance::getModel()
 }
 
 
-string CCAPortInstance::getUniqueName()
+std::string CCAPortInstance::getUniqueName()
 {
   // CCA names are already guaranteed to be unique
   return name;
@@ -111,19 +116,24 @@ bool CCAPortInstance::disconnect(PortInstance* to)
 {
   CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
   if(!p2)
+    {
     return false;
+    }
 
-  if(porttype !=Uses){
-    cerr<<"disconnect can be called only by user"<<endl; 
+  if(porttype !=Uses)
+    {
+    std::cerr<<"disconnect can be called only by user"<<std::endl; 
     return false;
-  } 
+    } 
   std::vector<PortInstance*>::iterator iter;
-  for(iter=connections.begin(); iter<connections.end();iter++){
-    if(p2==(*iter)){
+  for(iter=connections.begin(); iter<connections.end();iter++)
+    {
+    if(p2==(*iter))
+      {
       connections.erase(iter);
       return true;
+      }
     }
-  }
   return false;
 }
 
@@ -131,9 +141,10 @@ bool CCAPortInstance::canConnectTo(PortInstance* to)
 {
   //CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
   PortInstance* p2 = to;
-  if( p2 && getType()==p2->getType() && portType()!=p2->portType() ){
+  if( p2 && getType()==p2->getType() && portType()!=p2->portType() )
+    {
     if(available() && p2->available()) return true;
-  }
+    }
   return false;
 }
 
@@ -147,7 +158,7 @@ PortInstance* CCAPortInstance::getPeer()
   return connections[0];
 }
 
-string CCAPortInstance::getName()
+std::string CCAPortInstance::getName()
 {
   return name;
 }
@@ -160,7 +171,9 @@ void CCAPortInstance::incrementUseCount()
 bool CCAPortInstance::decrementUseCount()
 {
   if(useCount<=0)
-    return false;
+    { return false; }
   useCount--;
   return true;
 }
+
+} // end namespace SCIRun
