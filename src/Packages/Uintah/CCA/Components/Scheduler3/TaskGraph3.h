@@ -129,9 +129,6 @@ WARNING
      const vector<const Task::Dependency*>& getInitialRequires() const
        { return d_initRequires; }
 
-     const vector<const Task::Dependency*>& getOldInitialRequires() const
-       { return d_oldInitRequires; }
-     
      /// Set the requires need from the old data warehouse.
      const set<const VarLabel*, VarLabel::Compare>&
        getInitialRequiredVars() const
@@ -227,7 +224,6 @@ WARNING
       // data required from old data warehouse
      set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
      vector<const Task::Dependency*> d_initRequires;
-     vector<const Task::Dependency*> d_oldInitRequires; // for previous taskgraphs
 
      typedef map<const VarLabel*, DetailedTask3*, VarLabel::Compare>
      ReductionTasksMap;
