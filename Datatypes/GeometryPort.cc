@@ -106,6 +106,18 @@ GeomID GeometryOPort::addObj(GeomObj* obj, const clString& name,
     return id;
 }
 
+void GeometryOPort::forward(GeometryComm* msg)
+{
+    /*turn_on();*/
+    if(outbox){
+	msg->portid=portid;
+	outbox->send(msg);
+    } else {
+	save_msg(msg);
+    }
+    /*turn_off();*/
+}
+
 void GeometryOPort::delObj(GeomID id, int del)
 {
     turn_on();
@@ -185,7 +197,7 @@ void GeometryOPort::attach(Connection* c)
 	p=next;
     }
     save_msgs=0;
-    turn_off();
+    turn_of();
 }
 
 int GeometryOPort::have_data()

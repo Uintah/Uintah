@@ -88,6 +88,8 @@ public:
     void flushViews();
     void flushViewsAndWait();
 
+    void forward(GeometryComm* msg);
+
     int busy();
 
     virtual int have_data();
