@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/DifferenceGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/IntersectionGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/FileGeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/NullGeometryPiece.h>
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -62,6 +63,10 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
 
       else if (go_type == "intersection")
 	 objs.push_back(new IntersectionGeometryPiece(child));
+
+      else if (go_type == "null")
+	objs.push_back(new NullGeometryPiece(child));
+
       else if (go_type == "res" || go_type == "velocity" || go_type == "temperature") {
 	 // Ignore...
       

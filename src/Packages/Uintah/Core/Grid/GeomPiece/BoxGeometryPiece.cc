@@ -16,6 +16,7 @@ using namespace SCIRun;
 
 BoxGeometryPiece::BoxGeometryPiece(ProblemSpecP& ps)
 {
+  setName("box");
   Point min, max;
   ps->require("min",min);
   ps->require("max",max); 

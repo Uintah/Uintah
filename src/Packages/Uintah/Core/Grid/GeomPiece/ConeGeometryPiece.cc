@@ -14,6 +14,7 @@ using namespace SCIRun;
 
 ConeGeometryPiece::ConeGeometryPiece(ProblemSpecP& ps) 
 {
+  setName("cone");
   Point top, bottom;
   double topRad = 0.0;
   double botRad = 0.0;

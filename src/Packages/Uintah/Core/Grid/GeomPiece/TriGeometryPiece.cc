@@ -15,6 +15,7 @@ using namespace std;
 
 TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
 {
+  setName("tri");
   std::string file;
 
   ps->require("name",file);
