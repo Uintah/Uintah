@@ -56,6 +56,7 @@ using namespace std;
 
 static DebugStream cout_doing("MPM", false);
 static DebugStream cout_dbg("SerialMPM", false);
+static DebugStream cout_convert("MPMConv", false);
 static DebugStream cout_heat("MPMHeat", false);
 static DebugStream amr_doing("AMRMPM", false);
 
@@ -100,7 +101,12 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,GridP&,
   ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
 
   if(mpm_soln_ps) {
+
+    // Read all MPM flags (look in MPMFlags.cc)
     flags->readMPMFlags(mpm_soln_ps);
+    if (flags->d_integrator_type == "implicit")
+      throw ProblemSetupException("Can't use implicit integration with -mpm");
+
     mpm_soln_ps->get("do_grid_reset", d_doGridReset);
     mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
     mpm_soln_ps->get("maximum_particle_velocity",d_max_vel);
@@ -110,7 +116,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,GridP&,
     
     // convert text representation of face into FaceType
     for(std::vector<std::string>::const_iterator ftit(bndy_face_txt_list.begin());
-	ftit!=bndy_face_txt_list.end();ftit++) {
+        ftit!=bndy_face_txt_list.end();ftit++) {
         Patch::FaceType face = Patch::invalidFace;
         for(Patch::FaceType ft=Patch::startFace;ft<=Patch::endFace;ft=Patch::nextFace(ft)) {
           if(Patch::getFaceName(ft)==*ftit) face =  ft;
@@ -137,26 +143,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,GridP&,
     NGP=2;
     NGN=2;
   }
-
-  //__________________________________
-  // Grab time_integrator, default is explicit
-  string integrator_type = "explicit";
-  d_integrator = Explicit;
-  if (mpm_soln_ps ) {
-    mpm_soln_ps->get("time_integrator",flags->d_integrator_type);
-    if (flags->d_integrator_type == "implicit"){
-      throw ProblemSetupException("Can't use implicit integration with -mpm");
-    }
-    if (flags->d_integrator_type == "explicit") {
-      d_integrator = Explicit;
-    }
-    if (flags->d_integrator_type == "fracture") {
-      d_integrator = Fracture;
-      flags->d_fracture = true;
-    }
-  }
-
-  //  cout << "d_fracture = " << flags->d_fracture << endl;
 
   MPMPhysicalBCFactory::create(prob_spec);
 
@@ -893,13 +879,21 @@ void SerialMPM::scheduleConvertLocalizedParticles(SchedulerP& sched,
 
   int numMatls = d_sharedState->getNumMPMMatls();
 
+  cout_convert << "MPM:scheduleConvertLocalizedParticles : numMatls = " 
+               << numMatls << endl;
   for(int m = 0; m < numMatls; m+=2){
+
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    cout_convert << " Material = " << m << " mpm_matl = " << mpm_matl << endl;
     mpm_matl->getParticleCreator()->allocateVariablesAddRequires(t, mpm_matl,
                                                                  patches, lb);
+    cout_convert << "   Done ParticleCreator::allocateVariablesAddRequires\n";
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cout_convert << "   cm = " << cm << endl;
     cm->allocateCMDataAddRequires(t,mpm_matl,patches,lb);
+    cout_convert << "   Done cm->allocateCMDataAddRequires = " << endl;
     cm->addRequiresDamageParameter(t, mpm_matl, patches);
+    cout_convert << "   Done cm->addRequiresDamageParameter = " << endl;
   }
 
   sched->addTask(t, patches, matls);
@@ -1780,7 +1774,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         for (int i = projlow.x(); i<projhigh.x(); i++) {
           for (int j = projlow.y(); j<projhigh.y(); j++) {
             for (int k = projlow.z(); k<projhigh.z(); k++) {
-              IntVector ijk(i,j,k);	
+              IntVector ijk(i,j,k);     
               // flip sign so that pushing on boundary gives positive force
               bndyForce[face] -= internalforce[ijk];
               
@@ -1830,6 +1824,7 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
 
     cout_doing <<"Doing computeInternalHeatRate on patch " << patch->getID()
                <<"\t\t MPM"<< endl;
+    cout_heat << " Patch = " << patch->getID() << endl;
 
     Vector dx = patch->dCell();
     double oodx[3];
@@ -1841,6 +1836,7 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
     Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      cout_heat << "  Material = " << m << endl;
       int dwi = mpm_matl->getDWIndex();
       double kappa = mpm_matl->getThermalConductivity();
       double Cv = mpm_matl->getSpecificHeat();
@@ -1906,18 +1902,29 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
 
         // Weight the particle internal heat rate with the mass
         double pIntHeatRate_massWt = pIntHeatRate[idx]*pMass[idx];
+        cout_heat << " Particle = " << idx << endl;
+        //cout_heat << " pIntHeatRate = " << pIntHeatRate[idx]
+        //          << " pMass = " << pMass[idx] << endl;
 
         pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
         for (int k = 0; k < flags->d_8or27; k++){
-          S[k] *= pErosion[idx];
+          d_S[k] *= pErosion[idx];
           for (int j = 0; j<3; j++) {
             pTemperatureGradient[idx][j] += 
               gTemperature[ni[k]] * d_S[k][j] * oodx[j];
+            cout_heat << "   node = " << ni[k]
+                      << " gTemp = " << gTemperature[ni[k]]
+                      << " idx = " << idx
+                      << " pTempGrad = " << pTemperatureGradient[idx][j]
+                      << endl;
           }
           // Project the mass weighted particle internal heat rate to
           // the grid
           if(patch->containsNode(ni[k])){
+             S[k] *= pErosion[idx];
              gPIntHeatRate[ni[k]] +=  (pIntHeatRate_massWt*S[k]);
+             //cout_heat << "   k = " << k << " node = " << ni[k] 
+             //          << " gPIntHeatRate = " << gPIntHeatRate[ni[k]] << endl;
           }
         }
       }
@@ -1927,6 +1934,8 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
       // grid nodes by dividing gPIntHeatRate by the grid mass
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
+        //cout_heat << " c = " << c << " gPIntHeatRate = " << gPIntHeatRate[c]
+        //          << " gMass = " << gMass[c] << endl;
         gPIntHeatRate[c] /= gMass[c];
         internalHeatRate[c] = gPIntHeatRate[c];
       }
@@ -1945,7 +1954,7 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
         }
 
         // Calculate k/(rho*Cv)
-        double alpha = (kappa*pvol[idx])/(pMass[idx]*Cv); 
+        double alpha = kappa*pvol[idx]/Cv; 
         Vector T_i = pTemperatureGradient[idx];
         double T_ii = 0.0;
         IntVector node(0,0,0);
@@ -1954,9 +1963,13 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
           if(patch->containsNode(node)){
             Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                        d_S[k].z()*oodx[2]);
-            // Question: Why decreasing internal heat rate ?
-            T_ii = Dot(div, T_i)*alpha*flags->d_adiabaticHeating;
+            T_ii = Dot(div, T_i)*(alpha/gMass[node])*flags->d_adiabaticHeating;
             internalHeatRate[node] -= T_ii;
+            cout_heat << "   node = " << node << " div = " << div 
+                      << " T_i = " << T_i << " alpha = " << alpha*Cv 
+                      << " T_ii = " << T_ii*Cv*gMass[node]
+                      << " internalHeatRate = " << internalHeatRate[node] 
+                      << endl;
           }
         }
       }
@@ -2017,8 +2030,8 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
                        !iter.done();iter++){
         IntVector c = *iter;
         Vector acc(0.0,0.0,0.0);
-	//if (mass[c] > 1.0e-199)
-	  acc = (internalforce[c] + externalforce[c])/mass[c] ;
+        //if (mass[c] > 1.0e-199)
+          acc = (internalforce[c] + externalforce[c])/mass[c] ;
         acceleration[c] = acc +  gravity + gradPAccNC[c];
 
 //                 acceleration[c] =
@@ -2076,7 +2089,7 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
         IntVector c = *iter;
         tempRate[c] = internalHeatRate[c]*((mass[c]-1.e-200)/mass[c]) +  
-	  (externalHeatRate[c])/(mass[c]*Cv)+thermalContactHeatExchangeRate[c];
+          (externalHeatRate[c])/(mass[c]*Cv)+thermalContactHeatExchangeRate[c];
       }
     }
   }
@@ -2566,15 +2579,18 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
                << patch->getID() << "\t MPM"<< endl;
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
+    cout_convert << "MPM::convertLocalizeParticles:: on patch"
+                 << patch->getID() << " numMPMMaterials = " << numMPMMatls
+                 << endl;
     for(int m = 0; m < numMPMMatls; m+=2){
 
-      cout_dbg << "ConvertLocalizeParticles:: material # = " << m << endl;
+      cout_convert << " material # = " << m << endl;
 
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-      cout_dbg << "ConvertLocalizeParticles:: mpm_matl* = " << mpm_matl
+      cout_convert << " mpm_matl* = " << mpm_matl
                  << " dwi = " << dwi << " pset* = " << pset << endl;
 
       ParticleVariable<int> isLocalized;
@@ -2591,25 +2607,26 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
       mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
                                                            dwi, old_dw,new_dw);
 
-      cout_dbg << "ConvertLocalizeParticles:: Got Damage Parameter" << endl;
+      cout_convert << " Got Damage Parameter" << endl;
 
       iter = pset->begin(); 
       for (; iter != pset->end(); iter++) {
         if (isLocalized[*iter]) {
-          //cout << "damage[" << *iter << "]=" << isLocalized[*iter] << endl;
+          cout_convert << "damage[" << *iter << "]=" 
+                       << isLocalized[*iter] << endl;
           delset->addParticle(*iter);
         }
       }
 
-      cout_dbg << "ConvertLocalizeParticles:: Created Delset ";
+      cout_convert << " Created Delset ";
 
       int numparticles = delset->numParticles();
 
-      cout_dbg << "numparticles = " << numparticles << endl;
+      cout_convert << " numparticles = " << numparticles << endl;
 
       if (numparticles != 0) {
 
-        cout_dbg << "Converting " 
+        cout_convert << " Converting " 
                    << numparticles << " particles of material " 
                    <<  m  << " into particles of material " << (m+1) 
                    << " in patch " << p << endl;
@@ -2626,12 +2643,12 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
         map<const VarLabel*, ParticleVariableBase*>* newState
           = scinew map<const VarLabel*, ParticleVariableBase*>;
 
-        //cout << "New Material" << endl;
+        //cout_convert << "New Material" << endl;
         //vector<const VarLabel* > particle_labels = 
         //  particle_creator->returnParticleState();
         //printParticleLabels(particle_labels, old_dw, conv_dwi,patch);
 
-        //cout << "MPM Material" << endl;
+        //cout_convert << "MPM Material" << endl;
         //vector<const VarLabel* > mpm_particle_labels = 
         //  mpm_matl->getParticleCreator()->returnParticleState();
         //printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
@@ -2643,7 +2660,7 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
                                                              newState, delset,
                                                              old_dw);
 
-        cout_dbg << "addset num particles = " << addset->numParticles()
+        cout_convert << "addset num particles = " << addset->numParticles()
                    << " for material " << addset->getMatlIndex() << endl;
         new_dw->addParticles(patch, conv_dwi, newState);
         new_dw->deleteParticles(delset);
@@ -2652,10 +2669,10 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
       } 
       else delete delset;
     }
-    cout_dbg <<"Done convertLocalizedParticles on patch " 
+    cout_convert <<"Done convertLocalizedParticles on patch " 
                << patch->getID() << "\t MPM"<< endl;
   }
-  cout_dbg << "Completed convertLocalizedParticles " << endl;
+  cout_convert << "Completed convertLocalizedParticles " << endl;
   
 }
 
