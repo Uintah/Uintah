@@ -107,7 +107,7 @@ void FieldToNrrd::execute()
     for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(i,j,k);
+	  *p++=f->fdata()(k,j,i);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeDouble, 3);
   } else if (data == "float") { 
     LatticeVol<float> *f = 
@@ -122,7 +122,7 @@ void FieldToNrrd::execute()
     for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(i,j,k);
+	  *p++=f->fdata()(k,j,i);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeFloat, 3);
   } else if (data == "unsigned_int") {
     LatticeVol<unsigned int> *f = 
@@ -137,7 +137,7 @@ void FieldToNrrd::execute()
     for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(i,j,k);
+	  *p++=f->fdata()(k,j,i);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeUInt, 3);
   } else if (data == "int") {
     LatticeVol<int> *f = 
@@ -152,7 +152,7 @@ void FieldToNrrd::execute()
     for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(i,j,k);
+	  *p++=f->fdata()(k,j,i);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeInt, 3);
   } else if (data == "unsigned_short") {
     LatticeVol<unsigned short> *f = 
@@ -167,7 +167,7 @@ void FieldToNrrd::execute()
     for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(i,j,k);
+	  *p++=f->fdata()(k,j,i);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeUShort, 3);
   } else if (data == "short") {
     LatticeVol<short> *f = 
@@ -182,7 +182,7 @@ void FieldToNrrd::execute()
     for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(i,j,k);
+	  *p++=f->fdata()(k,j,i);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeShort, 3);
   } else if (data == "unsigned_char") {
     LatticeVol<unsigned char> *f = 
@@ -197,7 +197,7 @@ void FieldToNrrd::execute()
     for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(i,j,k);
+	  *p++=f->fdata()(k,j,i);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeUChar, 3);
   } else if (data == "char") {
     LatticeVol<char> *f = 
@@ -212,7 +212,7 @@ void FieldToNrrd::execute()
     for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++)
-	  *p++=f->fdata()(i,j,k);
+	  *p++=f->fdata()(k,j,i);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeChar, 3);
   } else if (data == "Vector") {
     LatticeVol<Vector> *f = 
@@ -226,9 +226,9 @@ void FieldToNrrd::execute()
     for (int k=0; k<nz; k++)
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++) {
-	  *p++=f->fdata()(i,j,k).x();
-	  *p++=f->fdata()(i,j,k).y();
-	  *p++=f->fdata()(i,j,k).z();
+	  *p++=f->fdata()(k,j,i).x();
+	  *p++=f->fdata()(k,j,i).y();
+	  *p++=f->fdata()(k,j,i).z();
 	}
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz*3, nrrdTypeDouble, 4);
   } else if (data == "Tensor") {
@@ -244,12 +244,12 @@ void FieldToNrrd::execute()
       for (int j=0; j<ny; j++)
 	for (int i=0; i<nx; i++) {
 	  *p++=1;  // should use mask if present
-	  *p++=f->fdata()(i,j,k).mat_[0][0];
-	  *p++=f->fdata()(i,j,k).mat_[0][1];
-	  *p++=f->fdata()(i,j,k).mat_[0][2];
-	  *p++=f->fdata()(i,j,k).mat_[1][1];
-	  *p++=f->fdata()(i,j,k).mat_[1][2];
-	  *p++=f->fdata()(i,j,k).mat_[2][2];
+	  *p++=f->fdata()(k,j,i).mat_[0][0];
+	  *p++=f->fdata()(k,j,i).mat_[0][1];
+	  *p++=f->fdata()(k,j,i).mat_[0][2];
+	  *p++=f->fdata()(k,j,i).mat_[1][1];
+	  *p++=f->fdata()(k,j,i).mat_[1][2];
+	  *p++=f->fdata()(k,j,i).mat_[2][2];
 	}
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz*3, nrrdTypeDouble, 4);
   } else {

@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
 
   // get the storage for the data, and copy base's data into it
   FData3d<double> &fdata = lf->fdata();
-  fdata.newsize(base->nx,base->ny,base->nz);
+  lf->resize_fdata();
   LatVolMesh::NodeIter iter = mesh->node_begin();
   int i=0,j=0,k=0;
   while (iter != mesh->node_end()) {
