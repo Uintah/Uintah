@@ -652,6 +652,7 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW,lb->pressY_FCLabel,   press_matl,    gac, 1);
   t->requires(Task::NewDW,lb->pressZ_FCLabel,   press_matl,    gac, 1);
   t->requires(Task::OldDW,lb->vel_CCLabel,      ice_matls_sub, gac, 2); 
+  t->requires(Task::NewDW,lb->sp_vol_CCLabel,   ice_matls_sub, gac, 2);
   t->requires(Task::NewDW,lb->rho_CCLabel,      Ghost::None);
   t->requires(Task::NewDW,lb->vol_frac_CCLabel, Ghost::None);
   t->requires(Task::OldDW,lb->doMechLabel);
@@ -760,8 +761,8 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
                                             const PatchSet* patches,
-                                            const MaterialSubset* press_matl,
-                                            const MaterialSubset* /*ice_matls*/,
+                                            const MaterialSubset*/*press_matl*/,
+                                            const MaterialSubset*/*ice_matls*/,
                                             const MaterialSet* matls)
 {
   Task* t;
@@ -1964,12 +1965,11 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     cell faces for every cell in the computational domain and a single 
     layer of ghost cells. 
   ---------------------------------------------------------------------  */
-template <class T> void ICE::computePressFace(int& numMatls,
-                              CellIterator iter, 
-                              IntVector adj_offset,
-                              constCCVariable<double>& sum_rho,
-                              constCCVariable<double>& press_CC,
-                              T& press_FC)
+template <class T> void ICE::computePressFace(CellIterator iter, 
+                                              IntVector adj_offset,
+                                              constCCVariable<double>& sum_rho,
+                                              constCCVariable<double>& press_CC,
+                                              T& press_FC)
 {
   for(;!iter.done(); iter++){
     IntVector R = *iter;
@@ -1993,8 +1993,6 @@ void ICE::computePressFC(const ProcessorGroup*,
 
     cout_doing << "Doing press_face_MM on patch " << patch->getID() 
          << "\t\t\t\t ICE" << endl;
-
-    int numMatls = d_sharedState->getNumMatls();
     Ghost::GhostType  gac = Ghost::AroundCells;
     
     constCCVariable<double> press_CC;
@@ -2016,15 +2014,15 @@ void ICE::computePressFC(const ProcessorGroup*,
          
     //__________________________________
     //  For each face compute the pressure
-    computePressFace<SFCXVariable<double> >(numMatls,patch->getSFCXIterator(),
+    computePressFace<SFCXVariable<double> >(patch->getSFCXIterator(),
                                        adj_offset[0], sum_rho_CC, press_CC,
                                        pressX_FC);
 
-    computePressFace<SFCYVariable<double> >(numMatls,patch->getSFCYIterator(),
+    computePressFace<SFCYVariable<double> >(patch->getSFCYIterator(),
                                        adj_offset[1], sum_rho_CC, press_CC,
                                        pressY_FC);
 
-    computePressFace<SFCZVariable<double> >(numMatls,patch->getSFCZIterator(),
+    computePressFace<SFCZVariable<double> >(patch->getSFCZIterator(),
                                        adj_offset[2], sum_rho_CC, press_CC,
                                        pressZ_FC); 
    //---- P R I N T   D A T A ------ 
@@ -2193,6 +2191,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     double areaY = dx.x() * dx.z();
     double areaZ = dx.x() * dx.y();
     constCCVariable<double>   rho_CC;
+    constCCVariable<double>   sp_vol_CC;
     constCCVariable<Vector>   vel_CC;
     constCCVariable<double>   vol_frac;
     constSFCXVariable<double> pressX_FC;
@@ -2242,12 +2241,13 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       tau_Z_FC.initialize(Vector(0.,0.,0.));
       viscosity = 0.0;
       if(ice_matl){
-        old_dw->get(vel_CC, lb->vel_CCLabel,  indx,patch,gac,2);
+        old_dw->get(vel_CC,    lb->vel_CCLabel,     indx,patch,gac,2);
+        new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,  indx,patch,gac,2);
         viscosity = ice_matl->getViscosity();
         if(viscosity != 0.0){  
-          computeTauX_Components( patch, vel_CC, viscosity, dx, tau_X_FC);
-          computeTauY_Components( patch, vel_CC, viscosity, dx, tau_Y_FC);
-          computeTauZ_Components( patch, vel_CC, viscosity, dx, tau_Z_FC);
+          computeTauX(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_X_FC);
+          computeTauY(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_Y_FC);
+          computeTauZ(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_Z_FC); 
         }
         include_term = 1.0;
         // This multiplies terms that are only included in the ice_matls
@@ -2279,9 +2279,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                        (tau_Y_FC[top].x()   - tau_Y_FC[bottom].x())* areaY +
                        (tau_Z_FC[front].x() - tau_Z_FC[back].x())  * areaZ;
 
-        mom_source[c].x( (-pressure_source * areaX +
-                           vol_frac[c] * viscous_source +
-                           mass * gravity.x() * include_term) * delT );
+        mom_source[c].x( (-pressure_source * areaX + 
+                           viscous_source +
+                           mass * gravity.x() * include_term) * delT ); 
 
         //__________________________________
         //    Y - M O M E N T U M
@@ -2294,8 +2294,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                        (tau_Z_FC[front].y() - tau_Z_FC[back].y())  * areaZ;
 
         mom_source[c].y( (-pressure_source * areaY +
-                           vol_frac[c] * viscous_source +
-                           mass * gravity.y() * include_term) * delT );       
+                           viscous_source +
+                           mass * gravity.y() * include_term) * delT ); 
+   
       //__________________________________
       //    Z - M O M E N T U M
         pressure_source = (pressZ_FC[front]-pressZ_FC[back]) * vol_frac[c];
@@ -2307,9 +2308,8 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                        (tau_Z_FC[front].z() - tau_Z_FC[back].z())  * areaZ;
 
         mom_source[c].z( (-pressure_source * areaZ +
-                         vol_frac[c] * viscous_source + 
-                         mass * gravity.z() * include_term) * delT );
-
+                           viscous_source + 
+                           mass * gravity.z() * include_term) * delT ); 
       }
       //__________________________________
       //  RATE FORM:   Tack on contribution
@@ -3188,11 +3188,13 @@ void ICE::hydrostaticPressureAdjustment(const Patch* patch,
             there are two common cells that automatically cancel themselves out.
           - The viscosity we're using isn't right if it varies spatially.   
  ---------------------------------------------------------------------  */
-void ICE::computeTauX_Components( const Patch* patch,
-                          const CCVariable<Vector>& vel_CC,
-                          const double viscosity,
-                          const Vector dx,
-                          SFCXVariable<Vector>& tau_X_FC)
+void ICE::computeTauX( const Patch* patch,
+                       const CCVariable<double>& rho_CC,      
+                       const CCVariable<double>& sp_vol_CC,   
+                       const CCVariable<Vector>& vel_CC,      
+                       const double viscosity,                
+                       const Vector dx,                       
+                       SFCXVariable<Vector>& tau_X_FC)        
 {
   double term1, term2, grad_1, grad_2;
   double grad_uvel, grad_vvel, grad_wvel;
@@ -3221,6 +3223,12 @@ void ICE::computeTauX_Components( const Patch* patch,
     double delY = dx.y();
     double delZ = dx.z();
     IntVector left(i-1, j, k);
+
+    double rho_brack = (rho_CC[left] * rho_CC[cell])/
+                       (rho_CC[left] + rho_CC[cell]);
+                       
+    double vol_frac_FC = rho_brack * sp_vol_CC[cell]; 
+
     //__________________________________
     // - find indices of surrounding cells
     // - compute velocities at cell face edges see note above.
@@ -3248,18 +3256,20 @@ void ICE::computeTauX_Components( const Patch* patch,
 
     term1 = 2.0 * viscosity * grad_uvel;
     term2 = (2.0/3.0) * viscosity * (grad_uvel + grad_vvel + grad_wvel);
-    tau_X_FC[cell].x(term1 - term2);
+    tau_X_FC[cell].x( vol_frac_FC * (term1 - term2)); 
+
     //__________________________________
     //  tau_XY
     grad_1 = (uvel_EC_top      - uvel_EC_bottom)  /delY;
     grad_2 = (vel_CC[cell].y() - vel_CC[left].y())/delX;
-    tau_X_FC[cell].y(viscosity * (grad_1 + grad_2));
+    tau_X_FC[cell].y(vol_frac_FC * viscosity * (grad_1 + grad_2)); 
 
     //__________________________________
     //  tau_XZ
     grad_1 = (uvel_EC_front    - uvel_EC_back)    /delZ;
     grad_2 = (vel_CC[cell].z() - vel_CC[left].z())/delX;
-    tau_X_FC[cell].z(viscosity * (grad_1 + grad_2));
+    tau_X_FC[cell].z(vol_frac_FC * viscosity * (grad_1 + grad_2)); 
+
     
 //     if (i == 0 && k == 0){
 //       cout<<cell<<" tau_XX: "<<tau_X_FC[cell].x()<<
@@ -3280,11 +3290,13 @@ void ICE::computeTauX_Components( const Patch* patch,
             there are two common cells that automatically cancel themselves out.
           - The viscosity we're using isn't right if it varies spatially. 
  ---------------------------------------------------------------------  */
-void ICE::computeTauY_Components( const Patch* patch,
-                          const CCVariable<Vector>& vel_CC,
-                          const double viscosity,
-                          const Vector dx,
-                          SFCYVariable<Vector>& tau_Y_FC)
+void ICE::computeTauY( const Patch* patch,
+                       const CCVariable<double>& rho_CC,      
+                       const CCVariable<double>& sp_vol_CC,   
+                       const CCVariable<Vector>& vel_CC,      
+                       const double viscosity,                
+                       const Vector dx,                       
+                       SFCYVariable<Vector>& tau_Y_FC)        
 {
   double term1, term2, grad_1, grad_2;
   double grad_uvel, grad_vvel, grad_wvel;
@@ -3312,6 +3324,11 @@ void ICE::computeTauY_Components( const Patch* patch,
     double delY = dx.y();
     double delZ = dx.z();
     IntVector bottom(i,j-1,k);
+    double rho_brack = (rho_CC[bottom] * rho_CC[cell])/
+                       (rho_CC[bottom] + rho_CC[cell]);
+                       
+    double vol_frac_FC = rho_brack * sp_vol_CC[cell]; 
+
     //__________________________________
     // - find indices of surrounding cells
     // - compute velocities at cell face edges see note above.
@@ -3339,20 +3356,20 @@ void ICE::computeTauY_Components( const Patch* patch,
 
     term1 = 2.0 * viscosity * grad_vvel;
     term2 = (2.0/3.0) * viscosity * (grad_uvel + grad_vvel + grad_wvel);
-    tau_Y_FC[cell].y(term1 - term2);
+    tau_Y_FC[cell].y(vol_frac_FC * (term1 - term2)); 
     
     //__________________________________
     //  tau_YX
     grad_1 = (vel_CC[cell].x() - vel_CC[bottom].x())/delY;
     grad_2 = (vvel_EC_right    - vvel_EC_left)    /delX;
+    tau_Y_FC[cell].x(vol_frac_FC * viscosity * (grad_1 + grad_2) ); 
 
-    tau_Y_FC[cell].x(viscosity * (grad_1 + grad_2) );
 
     //__________________________________
     //  tau_YZ
     grad_1 = (vvel_EC_front    - vvel_EC_back)    /delZ;
     grad_2 = (vel_CC[cell].z() - vel_CC[bottom].z())/delY;
-    tau_Y_FC[cell].z(viscosity * (grad_1 + grad_2));
+    tau_Y_FC[cell].z(vol_frac_FC * viscosity * (grad_1 + grad_2)); 
     
 //     if (i == 0 && k == 0){    
 //       cout<< cell<< " tau_YX: "<<tau_Y_FC[cell].x()<<
@@ -3364,7 +3381,7 @@ void ICE::computeTauY_Components( const Patch* patch,
 }
 
 /*---------------------------------------------------------------------
- Function~  ICE::computeTauZ_Components
+ Function~  ICE::computeTauZ
  Purpose:   This function computes shear stress tau_zx, ta_zy, tau_zz 
   Note:   - The edge velocities are defined as the average velocity 
             of the 4 cells surrounding that edge, however we only use 2 cells
@@ -3372,11 +3389,13 @@ void ICE::computeTauY_Components( const Patch* patch,
             there are two common cells that automatically cancel themselves out.
           - The viscosity we're using isn't right if it varies spatially.
  ---------------------------------------------------------------------  */
-void ICE::computeTauZ_Components( const Patch* patch,
-                          const CCVariable<Vector>& vel_CC,
-                          const double viscosity,
-                          const Vector dx,
-                          SFCZVariable<Vector>& tau_Z_FC)
+void ICE::computeTauZ( const Patch* patch,
+                       const CCVariable<double>& rho_CC,      
+                       const CCVariable<double>& sp_vol_CC,   
+                       const CCVariable<Vector>& vel_CC,      
+                       const double viscosity,                
+                       const Vector dx,                       
+                       SFCZVariable<Vector>& tau_Z_FC)        
 {
   double term1, term2, grad_1, grad_2;
   double grad_uvel, grad_vvel, grad_wvel;
@@ -3405,6 +3424,12 @@ void ICE::computeTauZ_Components( const Patch* patch,
     double delY = dx.y();
     double delZ = dx.z();
     IntVector back(i, j, k-1);
+
+    double rho_brack = (rho_CC[back] * rho_CC[cell])/
+                       (rho_CC[back] + rho_CC[cell]);
+                       
+    double vol_frac_FC = rho_brack * sp_vol_CC[cell]; 
+
     //__________________________________
     // - find indices of surrounding cells
     // - compute velocities at cell face edges see note above.
@@ -3428,13 +3453,13 @@ void ICE::computeTauZ_Components( const Patch* patch,
     //  tau_ZX
     grad_1 = (vel_CC[cell].x() - vel_CC[back].x()) /delZ;
     grad_2 = (wvel_EC_right    - wvel_EC_left)     /delX;
-    tau_Z_FC[cell].x(viscosity * (grad_1 + grad_2));
+    tau_Z_FC[cell].x(vol_frac_FC * viscosity * (grad_1 + grad_2)); 
 
     //__________________________________
     //  tau_ZY
     grad_1 = (vel_CC[cell].y() - vel_CC[back].y()) /delZ;
     grad_2 = (wvel_EC_top      - wvel_EC_bottom)   /delX;
-    tau_Z_FC[cell].y( viscosity * (grad_1 + grad_2) );
+    tau_Z_FC[cell].y( vol_frac_FC * viscosity * (grad_1 + grad_2) ); 
 
     //__________________________________
     //  tau_ZZ
@@ -3444,7 +3469,8 @@ void ICE::computeTauZ_Components( const Patch* patch,
 
     term1 = 2.0 * viscosity * grad_wvel;
     term2 = (2.0/3.0) * viscosity * (grad_uvel + grad_vvel + grad_wvel);
-    tau_Z_FC[cell].z( term1 - term2);
+    tau_Z_FC[cell].z( vol_frac_FC * (term1 - term2)); 
+
 //  cout<<"tau_ZX: "<<tau_Z_FC[cell].x()<<
 //        " tau_ZY: "<<tau_Z_FC[cell].y()<<
 //        " tau_ZZ: "<<tau_Z_FC[cell].z()<<endl;
