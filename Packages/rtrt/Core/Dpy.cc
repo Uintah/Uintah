@@ -201,9 +201,11 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
 
   priv->waitDisplay = new Mutex( "wait for display" );
   priv->waitDisplay->lock();
-  priv->xres = 1;
-  priv->yres = 1;
-
+  priv->xres = scene->get_image(0)->get_xres();
+  priv->yres = scene->get_image(0)->get_yres();
+  xres = priv->xres;
+  yres = priv->yres;
+  
   priv->followPath = false;
 
   shadowMode_ = scene->shadow_mode;
@@ -243,7 +245,9 @@ Dpy::~Dpy()
 void
 Dpy::register_worker(int i, Worker* worker)
 {
+  io_lock_.lock();
   cout << "registering worker " << i << "-" << worker << "\n";
+  io_lock_.unlock();
   workers_[i] = worker;
 }
 
@@ -264,6 +268,8 @@ Dpy::run()
     Thread::self()->migrate(0);
   io_lock_.lock();
   cerr << "display is pid " << getpid() << '\n';
+  //  cerr << "xres = "<<xres<<", yres = "<<yres<<'\n';
+  //  cerr << "priv->xres = "<<priv->xres<<", priv->yres = "<<priv->yres<<'\n';
   io_lock_.unlock();
 
   releaseSema.down();
@@ -284,7 +290,14 @@ Dpy::run()
 	break;
     }
   }
-  
+
+#if 0
+  io_lock_.lock();
+  cerr << "After init.\n";
+  cerr << "xres = "<<xres<<", yres = "<<yres<<'\n';
+  cerr << "priv->xres = "<<priv->xres<<", priv->yres = "<<priv->yres<<'\n';
+  io_lock_.unlock();
+#endif
 
   if(ncounters)
     counters=new Counters(ncounters, c0, c1);
@@ -313,6 +326,9 @@ Dpy::run()
       if (frameless) { renderFrameless(); }
       else           { renderFrame();     }
 
+      //cerr << "xres = "<<xres<<", yres = "<<yres<<'\n';
+      //cerr << "priv->xres = "<<priv->xres<<", priv->yres = "<<priv->yres<<'\n';
+      
       if(bench){
 	if(frame==10){
 	  cerr << "Warmup done, starting bench\n";
@@ -321,6 +337,15 @@ Dpy::run()
 	  double dt=SCIRun::Time::currentSeconds()-benchstart;
 	  cerr << "Benchmark completed in " <<  dt << " seconds ("
 	       << (frame-10)/dt << " frames/second)\n";
+	  Thread::exitAll(0);
+	}
+      }
+
+      // dump the frame and quit for now
+      if (frame == 2) {
+	if (!display_frames) {
+	  scene->get_image(priv->showing_scene)->save_ppm("displayless.ppm");
+	  cerr <<"Wrote frame to displayless.ppm\n";
 	  Thread::exitAll(0);
 	}
       }
@@ -516,7 +541,6 @@ Dpy::renderFrame() {
 
   bool  & stereo        = priv->stereo;  
   int   & showing_scene = priv->showing_scene;
-  int     counter       = 1;
 
   frame++;
     
@@ -591,7 +615,7 @@ Dpy::renderFrame() {
 
   Image * displayedImage = scene->get_image(showing_scene);
 
-  if(!bench){
+  if(display_frames && !bench){
     if(rserver){
       rserver->sendImage(displayedImage, nstreams);
     } else {
@@ -626,15 +650,6 @@ Dpy::renderFrame() {
     }
   }
 
-  // dump the frame and quit for now
-  if (counter == 0) {
-    if (!display_frames) {
-      displayedImage->save("displayless.raw");
-      cerr <<"Wrote frame to displayless.raw\n";
-    }
-  }
-  counter--;
-
   if( displayedImage->get_xres() != priv->xres ||
       displayedImage->get_yres() != priv->yres ) {
     delete displayedImage;
@@ -643,6 +658,7 @@ Dpy::renderFrame() {
     if(rserver){
       rserver->resize(priv->xres, priv->yres);
     } else {
+      //      if (display_frames) XResizeWindow(dpy, win, priv->xres, priv->yres);
       XResizeWindow(dpy, win, priv->xres, priv->yres);
       resize(priv->xres, priv->yres);
     }
@@ -708,12 +724,10 @@ Dpy::renderFrame() {
     }
 
     st->add(SCIRun::Time::currentSeconds(), Color(1,1,0));
-    if (display_frames) {
-      if( !priv->followPath ) {
-	guiCam_->updatePosition( *stealth_, scene, ppc );
-      } else {
-	guiCam_->followPath( *stealth_ );
-      }
+    if( !priv->followPath ) {
+      guiCam_->updatePosition( *stealth_, scene, ppc );
+    } else {
+      guiCam_->followPath( *stealth_ );
     }
     st->add(SCIRun::Time::currentSeconds(), Color(0,1,1));
 
