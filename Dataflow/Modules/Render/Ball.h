@@ -45,7 +45,7 @@
 
 /* smoosh ken shoemakes stuff into c++, PPS */
 
-#include "BallAux.h"
+#include <Dataflow/Modules/Render/BallAux.h>
 
 namespace SCIRun {
 

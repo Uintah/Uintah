@@ -52,6 +52,9 @@
 #include <Dataflow/Ports/FieldPort.h>
 
 
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
+
 namespace SCIRun {
 
 class Isosurface : public Module {
@@ -112,6 +115,36 @@ private:
 
   bool error_;
 };
+
+class IsosurfaceAlgo : public DynamicAlgoBase
+{
+public:
+  virtual FieldHandle execute(vector<FieldHandle>& fields) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription *iftd);
+};
+
+
+template< class IFIELD >
+class IsosurfaceAlgoT : public IsosurfaceAlgo
+{
+public:
+  //! virtual interface. 
+  virtual FieldHandle execute(vector<FieldHandle>& fields);
+};
+
+
+template< class IFIELD >
+FieldHandle
+IsosurfaceAlgoT<IFIELD>::execute(vector<FieldHandle>& fields)
+{
+  vector<IFIELD *> qfields(fields.size());
+  for (unsigned int i=0; i < fields.size(); i++)
+    qfields[i] = (IFIELD *)(fields[i].get_rep());
+  
+  return append_fields(qfields);
+}
 
 } // End namespace SCIRun
 

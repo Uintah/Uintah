@@ -96,6 +96,7 @@ class ShowField : public Module
   GuiInt                   faces_normals_;
   GuiInt                   faces_transparency_;
   GuiInt                   faces_usedefcolor_;
+  GuiInt                   faces_usetexture_;
   bool                     faces_dirty_;
 
   //! Options for rendering non-scalar data.
@@ -223,6 +224,7 @@ ShowField::ShowField(GuiContext* ctx) :
   faces_normals_(ctx->subVar("use-normals")),
   faces_transparency_(ctx->subVar("use-transparency")),
   faces_usedefcolor_(ctx->subVar("faces-usedefcolor")),
+  faces_usetexture_(ctx->subVar("faces-usetexture")),
   faces_dirty_(true),
   vectors_on_(ctx->subVar("vectors-on")),
   normalize_vectors_(ctx->subVar("normalize-vectors")),
@@ -564,8 +566,7 @@ ShowField::execute()
   }
 
   FieldHandle fld_handle;
-  field_iport->get(fld_handle);
-  if(!fld_handle.get_rep())
+  if (!(field_iport->get(fld_handle) && fld_handle.get_rep()))
   {
     warning("No Data in port 1 field.");
     return;
@@ -573,8 +574,7 @@ ShowField::execute()
 
   FieldIPort *vfield_iport = (FieldIPort *)get_iport("Orientation Field");
   FieldHandle vfld_handle;
-  vfield_iport->get(vfld_handle);
-  if (vfld_handle.get_rep())
+  if (vfield_iport->get(vfld_handle) && vfld_handle.get_rep())
   {
     if (vfld_handle->mesh().get_rep() != fld_handle->mesh().get_rep())
     {
@@ -757,7 +757,8 @@ ShowField::execute()
 		      faces_transparency_.get(),
 		      nodes_usedefcolor_.get(),
 		      edges_usedefcolor_.get(),
-		      faces_usedefcolor_.get());
+		      faces_usedefcolor_.get(),
+		      faces_usetexture_.get());
   }
 
   // Cleanup.

@@ -54,8 +54,8 @@ itcl_class SCIRun_Visualization_TextureBuilder {
 	# Backwards compatability with GLTextureBuilder
 	global $this-max_brick_dim
 	global $this-sel_brick_dim
-	global $this-min ->vmin
-	global $this-max ->vmax
+	global $this-min # ->vmin
+	global $this-max # ->vmax
 	trace variable $this-min w "$this backcompat-min"
 	trace variable $this-max w "$this backcompat-max"
     }

@@ -519,7 +519,7 @@ ManageFieldDataAlgoMeshVector<FOUT>::execute(ProgressReporter *mod,
 
 
 template <class FOUT>
-class ManageFieldDataAlgoMeshTensor : public ManageFieldDataAlgoMesh
+class ManageFieldDataAlgoMeshTensor9 : public ManageFieldDataAlgoMesh
 {
 public:
   //! virtual interface. 
@@ -530,9 +530,9 @@ public:
 
 template <class FOUT>
 FieldHandle
-ManageFieldDataAlgoMeshTensor<FOUT>::execute(ProgressReporter *mod,
-					     MeshHandle mesh,
-					     MatrixHandle matrix)
+ManageFieldDataAlgoMeshTensor9<FOUT>::execute(ProgressReporter *mod,
+					      MeshHandle mesh,
+					      MatrixHandle matrix)
 {
   typename FOUT::mesh_type *imesh = 
     dynamic_cast<typename FOUT::mesh_type *>(mesh.get_rep());
@@ -757,6 +757,260 @@ ManageFieldDataAlgoMeshTensor<FOUT>::execute(ProgressReporter *mod,
       v.mat_[2][0] = matrix->get(index, 6);
       v.mat_[2][1] = matrix->get(index, 7);
       v.mat_[2][2] = matrix->get(index, 8);
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+    return FieldHandle(ofield);
+  }
+  mod->warning("Matrix datasize does not match field geometry.");
+  mod->msgStream() << "Matrix size : " << rows << " " << columns << '\n';
+  mod->msgStream() << "Field size : " << nsize << " " <<  esize <<
+    " " << fsize << " " << csize << '\n';
+  return 0;
+}
+
+
+
+template <class FOUT>
+class ManageFieldDataAlgoMeshTensor6 : public ManageFieldDataAlgoMesh
+{
+public:
+  //! virtual interface. 
+  virtual FieldHandle execute(ProgressReporter *m,
+			      MeshHandle src, MatrixHandle mat);
+};
+
+
+template <class FOUT>
+FieldHandle
+ManageFieldDataAlgoMeshTensor6<FOUT>::execute(ProgressReporter *mod,
+					      MeshHandle mesh,
+					      MatrixHandle matrix)
+{
+  typename FOUT::mesh_type *imesh = 
+    dynamic_cast<typename FOUT::mesh_type *>(mesh.get_rep());
+  const unsigned int rows = matrix->nrows();
+  const unsigned int columns = matrix->ncols();
+  FOUT *ofield;
+
+  imesh->synchronize(Mesh::NODES_E);
+  typename FOUT::mesh_type::Node::size_type nsize;
+  imesh->size(nsize);
+  if (rows && rows == (unsigned int)nsize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), 1);
+    typename FOUT::mesh_type::Node::iterator iter; imesh->begin(iter);
+    typename FOUT::mesh_type::Node::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Tensor v;
+      v.mat_[0][0] = matrix->get(index, 0);
+      v.mat_[0][1] = matrix->get(index, 1);
+      v.mat_[0][2] = matrix->get(index, 2);
+
+      v.mat_[1][0] = matrix->get(index, 1);
+      v.mat_[1][1] = matrix->get(index, 3);
+      v.mat_[1][2] = matrix->get(index, 4);
+
+      v.mat_[2][0] = matrix->get(index, 2);
+      v.mat_[2][1] = matrix->get(index, 4);
+      v.mat_[2][2] = matrix->get(index, 5);
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+    return FieldHandle(ofield);
+  }
+  if (columns && columns == (unsigned int)nsize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), 1);
+    typename FOUT::mesh_type::Node::iterator iter; imesh->begin(iter);
+    typename FOUT::mesh_type::Node::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Tensor v;
+      v.mat_[0][0] = matrix->get(index, 0);
+      v.mat_[0][1] = matrix->get(index, 1);
+      v.mat_[0][2] = matrix->get(index, 2);
+
+      v.mat_[1][0] = matrix->get(index, 1);
+      v.mat_[1][1] = matrix->get(index, 3);
+      v.mat_[1][2] = matrix->get(index, 4);
+
+      v.mat_[2][0] = matrix->get(index, 2);
+      v.mat_[2][1] = matrix->get(index, 4);
+      v.mat_[2][2] = matrix->get(index, 5);
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+    return FieldHandle(ofield);
+  }
+
+  imesh->synchronize(Mesh::CELLS_E);
+  typename FOUT::mesh_type::Cell::size_type csize;
+  imesh->size(csize);
+  if (rows && rows == (unsigned int)csize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), 0);
+    typename FOUT::mesh_type::Cell::iterator iter; imesh->begin(iter);
+    typename FOUT::mesh_type::Cell::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Tensor v;
+      v.mat_[0][0] = matrix->get(index, 0);
+      v.mat_[0][1] = matrix->get(index, 1);
+      v.mat_[0][2] = matrix->get(index, 2);
+
+      v.mat_[1][0] = matrix->get(index, 1);
+      v.mat_[1][1] = matrix->get(index, 3);
+      v.mat_[1][2] = matrix->get(index, 4);
+
+      v.mat_[2][0] = matrix->get(index, 2);
+      v.mat_[2][1] = matrix->get(index, 4);
+      v.mat_[2][2] = matrix->get(index, 5);
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+    return FieldHandle(ofield);
+  }
+  if (columns && columns == (unsigned int)csize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), 0);
+    typename FOUT::mesh_type::Cell::iterator iter; imesh->begin(iter);
+    typename FOUT::mesh_type::Cell::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Tensor v;
+      v.mat_[0][0] = matrix->get(index, 0);
+      v.mat_[0][1] = matrix->get(index, 1);
+      v.mat_[0][2] = matrix->get(index, 2);
+
+      v.mat_[1][0] = matrix->get(index, 1);
+      v.mat_[1][1] = matrix->get(index, 3);
+      v.mat_[1][2] = matrix->get(index, 4);
+
+      v.mat_[2][0] = matrix->get(index, 2);
+      v.mat_[2][1] = matrix->get(index, 4);
+      v.mat_[2][2] = matrix->get(index, 5);
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+    return FieldHandle(ofield);
+  }
+
+  imesh->synchronize(Mesh::FACES_E);
+  typename FOUT::mesh_type::Face::size_type fsize;
+  imesh->size(fsize);
+  if (rows && rows == (unsigned int)fsize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), 0);
+    typename FOUT::mesh_type::Face::iterator iter; imesh->begin(iter);
+    typename FOUT::mesh_type::Face::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Tensor v;
+      v.mat_[0][0] = matrix->get(index, 0);
+      v.mat_[0][1] = matrix->get(index, 1);
+      v.mat_[0][2] = matrix->get(index, 2);
+
+      v.mat_[1][0] = matrix->get(index, 1);
+      v.mat_[1][1] = matrix->get(index, 3);
+      v.mat_[1][2] = matrix->get(index, 4);
+
+      v.mat_[2][0] = matrix->get(index, 2);
+      v.mat_[2][1] = matrix->get(index, 4);
+      v.mat_[2][2] = matrix->get(index, 5);
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+    return FieldHandle(ofield);
+  }
+  if (columns && columns == (unsigned int)fsize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), 0);
+    typename FOUT::mesh_type::Face::iterator iter; imesh->begin(iter);
+    typename FOUT::mesh_type::Face::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Tensor v;
+      v.mat_[0][0] = matrix->get(index, 0);
+      v.mat_[0][1] = matrix->get(index, 1);
+      v.mat_[0][2] = matrix->get(index, 2);
+
+      v.mat_[1][0] = matrix->get(index, 1);
+      v.mat_[1][1] = matrix->get(index, 3);
+      v.mat_[1][2] = matrix->get(index, 4);
+
+      v.mat_[2][0] = matrix->get(index, 2);
+      v.mat_[2][1] = matrix->get(index, 4);
+      v.mat_[2][2] = matrix->get(index, 5);
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+    return FieldHandle(ofield);
+  }
+
+  imesh->synchronize(Mesh::EDGES_E);
+  typename FOUT::mesh_type::Edge::size_type esize;
+  imesh->size(esize);
+  if (rows && rows == (unsigned int)esize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), 0);
+    typename FOUT::mesh_type::Edge::iterator iter; imesh->begin(iter);
+    typename FOUT::mesh_type::Edge::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Tensor v;
+      v.mat_[0][0] = matrix->get(index, 0);
+      v.mat_[0][1] = matrix->get(index, 1);
+      v.mat_[0][2] = matrix->get(index, 2);
+
+      v.mat_[1][0] = matrix->get(index, 1);
+      v.mat_[1][1] = matrix->get(index, 3);
+      v.mat_[1][2] = matrix->get(index, 4);
+
+      v.mat_[2][0] = matrix->get(index, 2);
+      v.mat_[2][1] = matrix->get(index, 4);
+      v.mat_[2][2] = matrix->get(index, 5);
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+    return FieldHandle(ofield);
+  }
+  if (columns && columns == (unsigned int)esize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(typename FOUT::mesh_handle_type(imesh), 0);
+    typename FOUT::mesh_type::Edge::iterator iter; imesh->begin(iter);
+    typename FOUT::mesh_type::Edge::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Tensor v;
+      v.mat_[0][0] = matrix->get(index, 0);
+      v.mat_[0][1] = matrix->get(index, 1);
+      v.mat_[0][2] = matrix->get(index, 2);
+
+      v.mat_[1][0] = matrix->get(index, 1);
+      v.mat_[1][1] = matrix->get(index, 3);
+      v.mat_[1][2] = matrix->get(index, 4);
+
+      v.mat_[2][0] = matrix->get(index, 2);
+      v.mat_[2][1] = matrix->get(index, 4);
+      v.mat_[2][2] = matrix->get(index, 5);
       ofield->set_value(v, *iter);
       index++;
       ++iter;

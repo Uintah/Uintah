@@ -141,8 +141,6 @@ SampleLattice::execute()
     error("Unsupported data_at location " + data_at_.get() + ".");
     return;
   }
-  if (data_at_.get() == "Cells") basis_order = 0;
-  else basis_order = 1;
 
   // Create Image Field.
   FieldHandle ofh;

@@ -41,25 +41,12 @@
 
 #include <map>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#define IRIX
-#pragma set woff 1375
-#pragma set woff 3303
-#endif
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/sax/SAXException.hpp>
 #include <xercesc/sax/SAXParseException.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/dom/DOMNamedNodeMap.hpp>
 #include <xercesc/sax/ErrorHandler.hpp>
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1375
-#pragma reset woff 3303
-#endif
-
-#ifndef NULL
-#define NULL (void*)0
-#endif 
 
 /* the following typedefs define the fields of the
    data structure component_node.  component_node's

@@ -54,6 +54,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Thread/CleanupManager.h>
 #include <iostream>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -64,6 +65,23 @@ using std::endl;
 using std::ostream;
 
 namespace SCIRun {
+
+
+#ifdef __linux
+// This is a workaround for an unusual crash on exit bug on newer
+// linux systems.  It appears that if a viewer is created at SCIRun
+// start from within a command line network that SCIRun will crash on
+// exit in the tcl thread unless the viewer is deleted first.  So we
+// just add them to the cleanup manager and have it destroy the
+// viewers before it goes away.  Once the bug is fixed we should
+// revert this back to just deleting the viewwindow directly.
+static void delete_viewwindow_callback(void *vwptr)
+{
+  if (sci_getenv("SCI_REGRESSION_TESTING")) return;
+  ViewWindow *vw = (ViewWindow *)vwptr;
+  delete vw;
+}
+#endif
 
 //----------------------------------------------------------------------
 DECLARE_MAKER(Viewer)
@@ -107,7 +125,12 @@ Viewer::~Viewer()
   for(unsigned int i=0;i<view_window_.size();i++)
   {
     view_window_lock_.lock();
+#ifdef __linux    
+    CleanupManager::invoke_remove_callback(delete_viewwindow_callback,
+                                           (void *)view_window_[i]);
+#else
     delete view_window_[i];
+#endif
     view_window_lock_.unlock();
   }
 
@@ -556,7 +579,7 @@ Viewer::delObj(GeomViewerPort* port, int serial)
   else
   {
     error("Error deleting object, object not in database...(serial=" +
-	  to_string(serial));
+	  to_string(serial) + ")" );
   }
 }
 
@@ -586,7 +609,12 @@ Viewer::delete_viewwindow(const string &id)
     if(view_window_[i]->id_ == id)
     {
       view_window_lock_.lock();
+#ifdef __linux
+      CleanupManager::invoke_remove_callback(delete_viewwindow_callback,
+                                             (void *)view_window_[i]);
+#else
       delete view_window_[i];
+#endif
       view_window_.erase(view_window_.begin() + i);
       view_window_lock_.unlock();
       return;
@@ -613,6 +641,9 @@ Viewer::tcl_command(GuiArgs& args, void* userdata)
     }
     view_window_lock_.lock();
     ViewWindow* r=scinew ViewWindow(this, gui, gui->createContext(args[2]));
+#ifdef __linux
+    CleanupManager::add_callback(delete_viewwindow_callback, (void *)r);
+#endif
     view_window_.push_back(r);
     view_window_lock_.unlock();
   } else if (args[1] == "deleteviewwindow") {

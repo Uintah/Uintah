@@ -37,6 +37,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Datatypes/MaskedLatVolMesh.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/MaskedLatVolField.h>
 #include <Core/GuiInterface/GuiVar.h>

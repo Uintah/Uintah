@@ -68,7 +68,7 @@ itcl_class SCIRun_FieldsCreate_SampleField {
         toplevel $w
 
 	iwidgets::tabnotebook $w.tabs -raiseselect true \
-	    -width 350 -height 210 -tabpos n -backdrop gray
+	    -width 350 -height 220 -tabpos n -backdrop gray
 	pack $w.tabs -side top -expand 1 -fill both
 	set wtab [$w.tabs add -label "Widget" \
 		  -command "set $this-whichtab Widget"]
@@ -179,7 +179,7 @@ itcl_class SCIRun_FieldsCreate_SampleField {
 	set newquantity [expr [set $quantity] + $step]
 
 	if {$newquantity < 1.0} {
-	    set newquantity 0
+	    set newquantity 1
 	}   
 	set $quantity $newquantity
 	$spinner delete 0 end
