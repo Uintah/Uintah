@@ -64,7 +64,7 @@ void CutMaterial::shade(Color& result, const Ray& ray,
 
 	double internal_val = 0;
 	//can this object be colored internally?
-	if (cutobj->interior_value(internal_val, ray, it)) {
+	if (cutgrp->interior_value(internal_val, ray, it)) {
 	  //it can be, map it to a color map, and make some attempy to shade that
 
 	  Color difflight = Color(0,0,0);

@@ -3,17 +3,22 @@
 using namespace rtrt;
 using namespace SCIRun;
 
-SpinningInstance::SpinningInstance(InstanceWrapperObject* o, Transform* trans, Point cen, Vector axis, double _rate) 
-  : Instance(o, trans), cen(cen), axis(axis), dorotate(true), ctime(0)
+SpinningInstance::SpinningInstance(InstanceWrapperObject* o, Transform* trans, Point cen, Vector _axis, double _rate) 
+  : Instance(o, trans), cen(cen), dorotate(true), ctime(0)
 {
   rate = 2*_rate; //2rad = 1 revolution
-  axis.normalize();
+  axis = _axis.normal();
 
+  //the location trans is the original position, before any spin is applied
   location_trans = new Transform();
   *location_trans = *currentTransform;
-  location_trans->pre_translate(Point(0,0,0)-cen); 
+  location_trans->pre_translate(Point(0,0,0)-cen); //optimization do this just once
 
+  
   o->compute_bounds(bbox_orig,0);
+  //cerr << "OBJ " << bbox_orig.min() << " to " << bbox_orig.max() << endl;
+  //cerr << "INS " << bbox.min() << " to " << bbox.max() << endl;
+
   /*
     The Instance constructor takes care of any initial 
     scale, translate, and rotate. Now we have to sweep out the bbox 
@@ -21,16 +26,14 @@ SpinningInstance::SpinningInstance(InstanceWrapperObject* o, Transform* trans, P
   */
   //find min, and max l(ength), as well as the maximum r(adius) from the bbox corners
 
-  double lmin = MAXDOUBLE;
-  double lmax = -MAXDOUBLE;
-  double rmax = -MAXDOUBLE;
+  double lmin;
+  double lmax;
+  double rmax;
   double l, r;
 
+  //bbox has already been transformed to world coords by the Instance constructor
   Point b000 = bbox.min();
   Point b111 = bbox.max();
-
-  //cerr << "BBMIN " << b000 << endl;
-  //cerr << "BBMAX " << b111 << endl;
 
   double x0 = b000.x();
   double y0 = b000.y();
@@ -45,63 +48,78 @@ SpinningInstance::SpinningInstance(InstanceWrapperObject* o, Transform* trans, P
   Point b101(x1,y0,z1);
   Point b110(x1,y1,z0);
 
-  
+  //cerr << "cen " << cen << endl;
+  //cerr << "axis " << axis << endl;
+
   l = Dot(b000-cen, axis);
-  if (l < lmin) lmin = l;
-  if (l > lmax) lmax = l;
+  lmin = l;
+  lmax = l;
   r = (b000-(cen+(l*axis))).length();
-  if (r > rmax) rmax = r;
+  rmax = r;
+  //cerr << "b000" << b000 << " " << l << ", " << r << endl;
 
   l = Dot(b001-cen, axis);
   if (l < lmin) lmin = l;
   if (l > lmax) lmax = l;
   r = (b001-(cen+(l*axis))).length();
   if (r > rmax) rmax = r;
+  //cerr << "b001" << b001 << " " << l << ", " << r << endl;
 
   l = Dot(b010-cen, axis);
   if (l < lmin) lmin = l;
   if (l > lmax) lmax = l;
   r = (b010-(cen+(l*axis))).length();
   if (r > rmax) rmax = r;
+  //cerr << "b010" << b010 << " " << l << ", " << r << endl;
 
   l = Dot(b011-cen, axis);
   if (l < lmin) lmin = l;
   if (l > lmax) lmax = l;
   r = (b011-(cen+(l*axis))).length();
   if (r > rmax) rmax = r;
+  //cerr << "b011" << b011 << " " << l << ", " << r << endl;
 
   l = Dot(b100-cen, axis);
   if (l < lmin) lmin = l;
   if (l > lmax) lmax = l;
   r = (b100-(cen+(l*axis))).length();
   if (r > rmax) rmax = r;
+  //cerr << "b100" << b100 << " " << l << ", " << r << endl;
 
   l = Dot(b101-cen, axis);
   if (l < lmin) lmin = l;
   if (l > lmax) lmax = l;
   r = (b101-(cen+(l*axis))).length();
   if (r > rmax) rmax = r;
+  //cerr << "b101" << b101 << " " << l << ", " << r << endl;
 
   l = Dot(b110-cen, axis);
   if (l < lmin) lmin = l;
   if (l > lmax) lmax = l;
   r = (b110-(cen+(l*axis))).length();
   if (r > rmax) rmax = r;
+  //cerr << "b110" << b110 << " " << l << ", " << r << endl;
 
   l = Dot(b111-cen, axis);
   if (l < lmin) lmin = l;
   if (l > lmax) lmax = l;
   r = (b111-(cen+(l*axis))).length();
   if (r > rmax) rmax = r;
+  //cerr << "b111" << b111 << " " << l << ", " << r << endl;
 
   //bounding cylinder for rotating object goes from cen+lmin*axis to cen+mlax*axis and is rmax units in radius
-  //fit an axis aligned bbox around the cylinder
+  //fit an axis aligned bbox around that cylinder
   Vector a = Cross(axis, Vector(1,0,0));
   Vector b = Cross(axis, Vector(0,1,0));
   Vector c = Cross(axis, Vector(0,0,1));
-
+  a.safe_normalize();
+  b.safe_normalize();
+  c.safe_normalize();
+  
+  //cerr << "A,B,C " << a << ", " << b << ", " << c << endl;
   Point pmin = cen+lmin*axis;
   Point pmax = cen+lmax*axis;
+  //cerr << "PMIN,PMAX " << pmin << ", " << pmax << endl;
 
   Point p;
   bbox.reset();
@@ -131,12 +149,8 @@ SpinningInstance::SpinningInstance(InstanceWrapperObject* o, Transform* trans, P
   p = pmax-rmax*c;
   bbox.extend(p);
 
+  //cerr << "S INS " << bbox.min() << " to " << bbox.max() << endl;
 
-  b000 = bbox.min();
-  b111 = bbox.max();
-
-  //cerr << "BBMIN " << b000 << endl;
-  //cerr << "BBMAX " << b111 << endl;
 }
 
 void SpinningInstance::compute_bounds(BBox& b, double /*offset*/)
@@ -149,10 +163,8 @@ void SpinningInstance::animate(double time, bool& changed) {
   
   o->animate(ctime, changed);
 
-  //There should be a more efficient way to do this, the copies are bad.
-  //But seem necessary to prevent degeneration on off angles
   *currentTransform=*location_trans;
-  //the pretranslate is done in the constructor
+  //the pretranslate to the origin is done in the constructor
   currentTransform->pre_rotate(ctime*rate, axis);
   currentTransform->pre_translate(cen-Point(0,0,0));
   changed = true;  
@@ -167,10 +179,12 @@ void SpinningInstance::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 
   Ray tray;  
   ray.transform(currentTransform,tray);
-  //double scale = tray.direction().length() / ray.direction().length();
+  Vector td = tray.direction();
+  double scale = td.normalize();
+  tray.set_direction(td);
 
   HitInfo thit;
-  if (hit.was_hit) thit.min_t = hit.min_t;// * scale;
+  if (hit.was_hit) thit.min_t = hit.min_t * scale;
   min_t = thit.min_t;
 
   if (!bbox_orig.intersect(tray, min_t)) return;
@@ -180,10 +194,10 @@ void SpinningInstance::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
   // if the ray hit one of our objects....
   if (thit.was_hit)
     {
-      min_t = thit.min_t;// / scale;
+      min_t = thit.min_t / scale;
       if(hit.hit(this, min_t)){
 	InstanceHit* i = (InstanceHit*)(hit.scratchpad);
-	Point p = ray.origin() + min_t*ray.direction();
+	Point p = tray.origin() + thit.min_t*tray.direction();
 	i->normal = thit.hit_obj->normal(p,thit);
 	i->obj = thit.hit_obj;
       }
@@ -193,21 +207,19 @@ void SpinningInstance::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 
 void SpinningInstance::incMagnification()
 {
-  //the pretranslate is done in the constructor
   location_trans->pre_scale(Vector(1.2,1.2,1.2));
 }
 void SpinningInstance::decMagnification()
 {
-  //the pretranslate is done in the constructor
   location_trans->pre_scale(Vector(.83333,.83333,.83333));
 }
 void SpinningInstance::upPole()
 {
-  //the pretranslate is done in the constructor
   location_trans->pre_translate(0.1*axis);
 }
 void SpinningInstance::downPole()
 {
-  //the pretranslate is done in the constructor
   location_trans->pre_translate(-0.1*axis);
 }
+
+
