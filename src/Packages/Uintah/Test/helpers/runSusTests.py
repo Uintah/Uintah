@@ -116,7 +116,6 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       exit(1)
 
     system("echo '%s/replace_gold_standard %s %s %s' > %s/replace_gold_standard" % (helperspath, compare_root, getcwd(), testname, testname))
-    system("chgrp csafe %s/replace_gold_standard" % testname)
     system("chmod gu+rwx %s/replace_gold_standard" % testname)
 
     chdir(testname)
@@ -145,6 +144,9 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     chdir("..")
   
   chdir("..")
+
+  system("chmod g+w %s" % resultsdir)
+
 
   if solotest != 0 and solotest_found == 0:
     print "unknown test: %s" % solotest
