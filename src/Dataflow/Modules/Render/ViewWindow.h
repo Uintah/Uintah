@@ -113,8 +113,7 @@ struct ObjTag {
 class ViewWindow;
 typedef void (ViewWindow::*MouseHandler)(int, int x, int y, 
 				  int state, int btn, int time);
-typedef void (OpenGL::*ViewWindowVisPMF)(Viewer*, ViewWindow*,
-					 GeomHandle, bool sticky = false);
+typedef void (OpenGL::*ViewWindowVisPMF)(Viewer*, ViewWindow*, GeomHandle);
 
 class ViewWindow : public GuiCallback {
   GuiInterface* gui;
