@@ -33,6 +33,10 @@ using std::cerr;
 using Component::PIDL::PIDL;
 #endif
 
+#ifdef _WIN32
+#include <afxwin.h>
+#endif
+
 using SCICore::TclInterface::TCLTask;
 using SCICore::TclInterface::GuiManager;
 using SCICore::TclInterface::GuiServer;
@@ -145,12 +149,21 @@ int main(int argc, char** argv)
     // Now activate the TCL event loop
     tcl_task->release_mainloop();
 
+#ifdef _WIN32
+	// windows has a semantic problem with atexit(), so we wait here instead.
+	HANDLE forever = CreateSemaphore(0,0,1,"forever");
+	WaitForSingleObject(forever,INFINITE);
+#endif
+
     // Never reached
     return 0;
 }
 
 //
 // $Log$
+// Revision 1.11  1999/11/10 19:48:59  moulding
+// added some #ifdef's for win32
+//
 // Revision 1.10  1999/10/07 02:08:34  sparker
 // use standard iostreams and complex type
 //
