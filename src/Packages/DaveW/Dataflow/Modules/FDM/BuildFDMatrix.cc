@@ -28,6 +28,8 @@
 #include <SCICore/Datatypes/SymSparseRowMatrix.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
+#include <iostream>
+using std::cerr;
 
 namespace DaveW {
 namespace Modules {
@@ -348,6 +350,9 @@ void BuildFDMatrix::add_lcl_gbl(Matrix& gbl_a,
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:06:33  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/08 02:26:26  sparker
 // Various #include cleanups
 //

@@ -39,13 +39,11 @@
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <PSECore/Widgets/ArrowWidget.h>
-#include <iostream.h>
-#include <strstream.h>
-
-// just so I can see the proccess id...
-
-#include <sys/types.h>
-#include <unistd.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
+#include <sstream>
+using std::ostringstream;
 
 namespace PSECommon {
 namespace Modules {
@@ -260,20 +258,18 @@ void IsoSurfaceMSRG::execute()
     double min, max;
     field->get_minmax(min, max);
     if(min != old_min || max != old_max){
-	char buf[1000];
-	ostrstream str(buf, 1000);
-	str << id << " set_minmax " << min << " " << max << '\0';
-	TCL::execute(str.str());
+	ostringstream str;
+	str << id << " set_minmax " << min << " " << max;
+	TCL::execute(str.str().c_str());
 	old_min=min;
 	old_max=max;
     }
     Point bmin, bmax;
     field->get_bounds(bmin, bmax);
     if(bmin != old_bmin || bmax != old_bmax){
-	char buf[1000];
-	ostrstream str(buf, 1000);
-	str << id << " set_bounds " << bmin.x() << " " << bmin.y() << " " << bmin.z() << " " << bmax.x() << " " << bmax.y() << " " << bmax.z() << '\0';
-	TCL::execute(str.str());
+	ostringstream str;
+	str << id << " set_bounds " << bmin.x() << " " << bmin.y() << " " << bmin.z() << " " << bmax.x() << " " << bmax.y() << " " << bmax.z();
+	TCL::execute(str.str().c_str());
 	old_bmin=bmin;
 	old_bmax=bmax;	
     }
@@ -1707,6 +1703,9 @@ void IsoSurfaceMSRG::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:07  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/29 00:46:47  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

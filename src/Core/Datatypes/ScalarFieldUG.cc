@@ -17,6 +17,8 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Math/MusilRNG.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <iostream>
+using std::cerr;
 
 #ifdef _WIN32
 #include <stdlib.h>
@@ -396,6 +398,9 @@ void ScalarFieldUG::over_grad_augment(double vol_wt, double grad_wt,
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:34  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/08/25 03:48:40  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

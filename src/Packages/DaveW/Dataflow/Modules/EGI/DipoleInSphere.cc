@@ -24,7 +24,8 @@
 #include <SCICore/Persistent/Pstreams.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <stdio.h>
 #include <math.h>
 
@@ -172,6 +173,9 @@ void DipoleInSphere::execute() {
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:06:31  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/09/16 00:36:54  dmw
 // added new Module that Chris Butson will work on (DipoleInSphere) and fixed SRCDIR references in DaveW makefiles
 //

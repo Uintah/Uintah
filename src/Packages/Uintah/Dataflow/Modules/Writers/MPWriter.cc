@@ -35,8 +35,13 @@ LOG
 #include <Uintah/Datatypes/Particles/cfdlibParticleSet.h>
 #include <Uintah/Datatypes/Particles/MPVizParticleSet.h>
 
-#include <fstream.h>
-#include <strstream.h>
+#include <iostream>
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::ios;
+#include <fstream>
+#include <sstream>
 
 #include <Uintah/Datatypes/Particles/MPWrite.h>
 #include "MPWriter.h"

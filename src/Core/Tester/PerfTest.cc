@@ -13,9 +13,13 @@
  */
 
 #include <SCICore/Tester/PerfTest.h>
-#include <iostream.h>
+#include <iostream>
 #include <limits.h>
 #include <string.h>
+#include <iostream>
+using std::cout;
+using std::endl;
+
 #ifndef _WIN32
   #include <unistd.h>
 #endif
@@ -112,6 +116,9 @@ void PerfTest::time(struct timeb* t)
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:08:05  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:39:47  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

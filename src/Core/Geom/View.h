@@ -68,6 +68,15 @@ public:
     friend SCICORESHARE void Pio (Piostream&, View&);
 };
 
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+/* 
+cc-1375 CC: REMARK File = ../../SCICore/Geom/View.h, Line = 71
+  The destructor for base class "SCICore::GeomSpace::View" is not virtual.
+  */
+#pragma set woff 1375
+#endif
+
 class SCICORESHARE ExtendedView : public View
 {
   int xres_, yres_;
@@ -97,8 +106,15 @@ public:
 } // End namespace GeomSpace
 } // End namespace SCICore
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1375
+#endif
+
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:07:51  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:39:25  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

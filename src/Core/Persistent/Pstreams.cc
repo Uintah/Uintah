@@ -17,12 +17,17 @@
 #include <SCICore/Persistent/Pstreams.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
-
-// KCC stuff
-#include <fstream.h>
+#include <fstream>
+using std::ifstream;
+using std::ofstream;
+#include <iostream>
+using std::cerr;
+using std::endl;
+using std::ostream;
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <string.h>
 #ifdef _WIN32
 #include <io.h>
@@ -35,34 +40,36 @@
 namespace SCICore {
 namespace PersistentSpace {
 
-TextPiostream::TextPiostream(ifstream* istr, int version)
-: Piostream(Read, version), istr(istr), ostr(0), have_peekname(0)
-{
-  // Dd:
-//  printf(" TextPiostream constructor not working to get KCC to compile\n");
-
-//#if 0
-    int fd=istr->rdbuf()->fd();
-    struct stat buf;
-    if(fstat(fd, &buf) != 0){
-	perror("fstat");
-	exit(-1);
-    }
-    len=buf.st_size;
-//#endif
-}
-
 TextPiostream::TextPiostream(const clString& filename, Direction dir)
 : Piostream(dir, -1)
 {
-  // Dd:
-//  printf(" TextPiostream constructor not working to get KCC to compile\n");
-
-//#if 0
     if(dir==Read){
 	ostr=0;
-	istr=0;
-	cerr << "TextPiostream CTOR not finished...\n";
+	istr=new ifstream(filename());
+	if(!istr){
+	    cerr << "Error opening file: " << filename << " for reading\n";
+	    err=1;
+	    return;
+	}
+	char hdr[12];
+	istr->read(hdr, 8);
+	if(!*istr){
+	    cerr << "Error reading header of file: " << filename << "\n";
+	    err=1;
+	    return;
+	}
+	int c=8;
+	while (*istr && c < 12){
+	    hdr[c]=istr->get();
+	    if(hdr[c] == '\n')
+		break;
+	    c++;
+	}
+	if(!readHeader(filename, hdr, "ASC", version)){
+	    cerr << "Error parsing header of file: " << filename << "\n";
+	    err=1;
+	    return;
+	}
     } else {
 	istr=0;
 	ostr=scinew ofstream(filename());
@@ -75,34 +82,6 @@ TextPiostream::TextPiostream(const clString& filename, Direction dir)
 	out << "SCI\nASC\n" << PERSISTENT_VERSION << "\n";
 	version=PERSISTENT_VERSION;
     }
-//#endif
-}
-
-TextPiostream::TextPiostream(int fd, Direction dir)
-: Piostream(dir, -1)
-{
-  // Dd:
-//  printf(" TextPiostream constructor not working to get KCC to compile\n");
-
-//#if 0
-
-    if(dir==Read){
-        ostr=0;
-        istr=0;
-        cerr << "TextPiostream CTOR not finished...\n";
-    } else {
-        istr=0;
-        ostr=scinew ofstream(fd);
-        ofstream& out=*ostr;
-        if(!out){
-            cerr << "Error opening file descriptor: " << fd << " for writing\n";
-            err=1;
-            return;
-        }
-        out << "SCI\nASC\n" << PERSISTENT_VERSION << "\n";
-        version=PERSISTENT_VERSION;
-    }
-//#endif
 }
 
 TextPiostream::~TextPiostream()
@@ -568,108 +547,12 @@ void TextPiostream::emit_pointer(int& have_data, int& pointer_id)
     }
 }
 
-double TextPiostream::get_percent_done()
-{
-  // Dd:
-//  printf(" TextPiostream get_percent_done not working to get KCC to compile\n");
-
-//#if 0
-    if(dir == Read){
-	int pos=istr->tellg();
-	return double(pos)/double(len);
-    } else {
-	return 0;
-    }
-//#endif
-//return 0; // Dd: delete this.
-}
-
-BinaryPiostream::BinaryPiostream(ifstream* istr, int version)
-: Piostream(Read, version), have_peekname(0)
-{
-  // Dd:
-//  printf(" BinaryPiostream constructor not working to get KCC to compile\n");
-
-//#if 0
-
-    int fd=istr->rdbuf()->fd();
-    xdr=scinew XDR;
-#ifdef SCI_NOMMAP_IO
-    mmapped = false;
-    fp=fdopen(istr->rdbuf()->fd(), "r");
-    rewind(fp);
-    xdrstdio_create(xdr, fp, XDR_DECODE);
-#else
-    mmapped = true;
-    struct stat buf;
-    if(fstat(fd, &buf) != 0){
-	perror("fstat");
-	exit(-1);
-    }
-    len=buf.st_size;
-    addr=mmap(0, len, PROT_READ, MAP_PRIVATE, fd, 0);
-    if((long)addr == -1){
-	perror("mmap");
-	exit(-1);
-    }
-    xdrmem_create(xdr, (caddr_t)addr, len, XDR_DECODE);
-#endif
-    char hdr[100];
-    if(!xdr_opaque(xdr, (caddr_t)hdr, 12)){
-	cerr << "xdr_opaque failed\n";
-	err=1;
-	return;
-    }
-//#endif
-}
-
-BinaryPiostream::BinaryPiostream (int fd, Direction dir)
-: Piostream (dir, -1), have_peekname(0)
-{
-    char hdr[100];
-    mmapped = false;
-    xdr = scinew XDR;
-    if (dir == Read){
-   	fp = fdopen (fd, "r");
-      	if(!fp){
-           cerr << "Error opening file descriptor: " << fd << " for reading\n";
-           err=1;
-           return;
-  	}
-	xdrstdio_create (xdr, fp, XDR_DECODE);
-    } else {
-    	fp = fdopen (fd, "w");
-        if(!fp){
-       	   cerr << "Error opening file descriptor: " << fd << " for writing\n";
-           err=1;
-           return;
-       	}
-   	xdrstdio_create (xdr, fp, XDR_ENCODE);
-       	version=PERSISTENT_VERSION;
-        sprintf(hdr, "SCI\nBIN\n%03d\n", version);
-    }
-
-    // verify header can be translated 
-    if(!xdr_opaque(xdr, (caddr_t)hdr, 12)){
-        cerr << "xdr_opaque failed\n";
-        err=1;
-        return;
-    }
-}
 
 BinaryPiostream::~BinaryPiostream()
 {
     if(xdr){
 	xdr_destroy(xdr);
 	delete xdr;
-	if(dir==Read && mmapped){
-#ifndef SCI_NOMMAP_IO
-	    if(munmap((caddr_t)addr, len) != 0){
-		perror("munmap");
-		exit(-1);
-	    }
-#endif
-	}
     }
 }
 
@@ -678,13 +561,68 @@ BinaryPiostream::BinaryPiostream(const clString& filename, Direction dir)
 {
     mmapped = false;
     if(dir==Read){
-	fp=0;
-	xdr=0;
-	cerr << "BinaryPiostream CTOR not finished...\n";
+   	fp = fopen (filename(), "r");
+      	if(!fp){
+           cerr << "Error opening file: " << filename << " for reading\n";
+           err=1;
+	   xdr=0;
+           return;
+  	}
+	xdr=scinew XDR;
+	xdrstdio_create (xdr, fp, XDR_DECODE);
+
+	char hdr[12];
+	if(!xdr_opaque(xdr, (caddr_t)hdr, 12)){
+	    cerr << "xdr_opaque failed\n";
+	    err=1;
+	    return;
+	}
+	readHeader(filename, hdr, "BIN", version);
     } else {
 	fp=fopen(filename(), "w");
 	if(!fp){
 	    cerr << "Error opening file: " << filename << " for writing\n";
+	    err=1;
+	    return;
+	}
+	xdr=scinew XDR;
+	xdrstdio_create(xdr, fp, XDR_ENCODE);
+	char hdr[100];
+	version=PERSISTENT_VERSION;
+	sprintf(hdr, "SCI\nBIN\n%03d\n", version);
+	if(!xdr_opaque(xdr, (caddr_t)hdr, 12)){
+	    cerr << "xdr_opaque failed\n";
+	    err=1;
+	    return;
+	}
+    }
+}
+
+BinaryPiostream::BinaryPiostream(int fd, Direction dir)
+: Piostream(dir, -1), have_peekname(0)
+{
+    mmapped = false;
+    if(dir==Read){
+   	fp = fdopen (fd, "r");
+      	if(!fp){
+           cerr << "Error opening socket: " << fd << " for reading\n";
+           err=1;
+	   xdr=0;
+           return;
+  	}
+	xdrstdio_create (xdr, fp, XDR_DECODE);
+
+	char hdr[12];
+	if(!xdr_opaque(xdr, (caddr_t)hdr, 12)){
+	    cerr << "xdr_opaque failed\n";
+	    err=1;
+	    return;
+	}
+	version=1;
+    } else {
+	fp=fdopen(fd, "w");
+	if(!fp){
+	    cerr << "Error opening socket: " << fd << " for writing\n";
 	    err=1;
 	    return;
 	}
@@ -870,43 +808,18 @@ void BinaryPiostream::emit_pointer(int& have_data, int& pointer_id)
     }
 }
 
-double BinaryPiostream::get_percent_done()
-{
-    if(dir == Read){
-	int pos=xdr_getpos(xdr);
-	return double(pos)/double(len);
-    } else {
-	return 0;
-    }
-}
-
 GzipPiostream::GzipPiostream(const clString& filename, Direction dir)
 : Piostream(dir, -1)
 {
     if(dir==Read){
-	cerr << "GzipPiostream CTOR not finished...\n";
+	cerr << "GzipPiostream cannot read\n";
 	gzfile=0;
     } else {
 	gzfile=gzopen(filename(), "w");
 	char str[100];
-	sprintf(str, "SCI\nGZP\n1\n");
+	sprintf(str, "SCI\nGZP\n001\n");
 	gzwrite(gzfile, str, strlen(str));
 	version=1;
-    }
-}
-
-GzipPiostream::GzipPiostream(char* name, int version)
-: Piostream(Read, version), have_peekname(0)
-{
-    gzfile=gzopen(name, "r");
-    char str[10];
-    gzread(gzfile, str, 10);
-    char hdr[13];
-    sprintf(hdr, "SCI\nGZP\n%d\n", 1);
-    if (strncmp(str, hdr, 10)) {
-	gzclose(gzfile);
-	gzfile=0;
-	return;
     }
 }
 
@@ -1158,26 +1071,15 @@ void GzipPiostream::emit_pointer(int& have_data, int& pointer_id)
     io(pointer_id);
 }
 
-double GzipPiostream::get_percent_done()
+GunzipPiostream::GunzipPiostream(const clString& filename, Direction dir)
+    : Piostream(dir, -1), have_peekname(0)
 {
-    return 0;
-}
-
-GunzipPiostream::GunzipPiostream(ifstream* istr, int version)
-: Piostream(Read, version), have_peekname(0)
-{
-  // Dd:
-//  printf(" GunzipPiostream constructor not working to get KCC to compile\n");
-
-//#if 0
-    unzipfile=istr->rdbuf()->fd();
-    struct stat buf;
-    if(fstat(unzipfile, &buf) != 0){
-	perror("fstat");
-	exit(-1);
+    unzipfile=open(filename(), O_RDWR, 0666);
+    if(unzipfile == -1){
+	cerr << "Error opening file: " << filename << " for reading\n";
+	err=1;
+	return;
     }
-    len=buf.st_size;
-//#endif
 }
 
 GunzipPiostream::~GunzipPiostream()
@@ -1426,11 +1328,6 @@ void GunzipPiostream::emit_pointer(int& have_data, int& pointer_id)
 {
     io(have_data);
     io(pointer_id);
-}
-
-double GunzipPiostream::get_percent_done()
-{
-    return 0;
 }
 
 } // End namespace PersistentSpace

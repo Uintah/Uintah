@@ -21,6 +21,9 @@
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/Util/NotFinished.h>
+#include <iostream>
+using std::cerr;
+using std::ostream;
 #include <GL/gl.h>
 
 #define USELUMIALPH 1
@@ -607,6 +610,9 @@ void GeomTexVolRender::Clear()
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:06:58  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/09/08 02:26:35  sparker
 // Various #include cleanups
 //

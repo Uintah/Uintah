@@ -22,6 +22,8 @@
 #include <SCICore/Geom/Pt.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
 
 namespace DaveW {
 namespace Modules {
@@ -264,6 +266,9 @@ void TopoSurfToGeom::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:06:30  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/09/05 05:32:24  dmw
 // updated and added Modules from old tree to new
 //

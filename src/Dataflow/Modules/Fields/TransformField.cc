@@ -27,7 +27,8 @@
 #include <SCICore/TclInterface/TCL.h>
 #include <tcl.h>
 #include <tk.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -441,6 +442,9 @@ void TransformField::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:06:49  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/25 03:47:49  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

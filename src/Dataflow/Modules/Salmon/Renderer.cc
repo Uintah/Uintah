@@ -18,7 +18,9 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <values.h>
 #include <SCICore/Thread/FutureValue.h>
 #include <SCICore/Util/NotFinished.h>
@@ -163,6 +165,9 @@ void Renderer::getData(int, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:06:56  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/08/29 00:46:41  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

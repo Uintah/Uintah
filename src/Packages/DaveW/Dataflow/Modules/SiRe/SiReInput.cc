@@ -21,7 +21,8 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Tester/RigorousTest.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <stdio.h>
 
 /* Prototypes */
@@ -293,6 +294,9 @@ void SiReInput::execute()
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:06:40  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/08 02:26:31  sparker
 // Various #include cleanups
 //

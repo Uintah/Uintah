@@ -42,6 +42,8 @@
 #include <SCICore/Math/Expon.h>
 #include <SCICore/Math/MusilRNG.h>
 #include <stdio.h>
+#include <iostream>
+using std::cerr;
 
 #define NBRHD 5
 
@@ -398,6 +400,9 @@ void SurfInterpVals::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:00  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/05 05:32:26  dmw
 // updated and added Modules from old tree to new
 //

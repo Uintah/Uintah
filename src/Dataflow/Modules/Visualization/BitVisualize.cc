@@ -37,14 +37,8 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Thread/Parallel.h>
 #include <SCICore/Thread/Thread.h>
-#include <iostream.h>
-#include <strstream.h>
-
-// just so I can see the proccess id...
-
-#include <sys/types.h>
-#include <unistd.h>
-
+#include <iostream>
+#include <sstream>
 
 #define NUM_MATERIALS 5
 
@@ -274,6 +268,9 @@ void BitVisualize::vol_render1_grid() {
 
 //
 // $Log$
+// Revision 1.8  1999/10/07 02:07:04  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.7  1999/08/29 00:46:44  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

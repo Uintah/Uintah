@@ -35,7 +35,7 @@ public:
 
     Color get();
     void set(const Color&);
-    virtual void emit(ostream& out);
+    virtual void emit(std::ostream& out);
 };
 
 class Material;
@@ -54,7 +54,7 @@ class SCICORESHARE TCLMaterial : public TCLvar {
    
     Material get();
     void set(const Material&);
-    virtual void emit(ostream& out);
+    virtual void emit(std::ostream& out);
 };
 
 } // End namespace GeomSpace
@@ -62,6 +62,9 @@ class SCICORESHARE TCLMaterial : public TCLvar {
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:07:50  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:39:23  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -25,7 +25,8 @@
 
 #include <SCICore/TclInterface/TCLvar.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <stdio.h>
 
 namespace PSECommon {
@@ -125,6 +126,9 @@ void SurfNewVals::execute() {
 
 //
 // $Log$
+// Revision 1.8  1999/10/07 02:07:00  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.7  1999/09/08 02:26:36  sparker
 // Various #include cleanups
 //

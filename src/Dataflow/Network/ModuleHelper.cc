@@ -21,7 +21,9 @@
 #include <PSECore/Dataflow/NetworkEditor.h>
 #include <PSECore/Dataflow/Port.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 #define DEFAULT_MODULE_PRIORITY 90
 
@@ -84,6 +86,9 @@ void ModuleHelper::run()
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:19  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/08/28 17:54:29  sparker
 // Integrated new Thread library
 //

@@ -19,7 +19,10 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MusilRNG.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <fstream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
+#include <fstream>
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -235,6 +238,9 @@ void InsertDelaunay::connection(ConnectionMode mode, int which_port, int)
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:08:19  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/09/05 01:15:27  dmw
 // added all of the old SCIRun mesh modules
 //

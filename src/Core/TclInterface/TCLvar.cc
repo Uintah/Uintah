@@ -27,7 +27,11 @@
 #include <SCICore/Geometry/Vector.h>
 
 #include <tcl.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
+using std::ostream;
+
 #ifdef _WIN32
 #include <string.h>
 #endif
@@ -516,6 +520,9 @@ void TCLVector::emit(ostream& out)
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:08:03  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:39:45  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

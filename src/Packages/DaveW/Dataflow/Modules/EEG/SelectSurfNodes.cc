@@ -30,7 +30,8 @@
 #include <SCICore/Math/Trig.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 namespace DaveW {
 namespace Modules {
@@ -231,6 +232,9 @@ void SelectSurfNodes::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:06:29  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/08 02:26:24  sparker
 // Various #include cleanups
 //

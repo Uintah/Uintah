@@ -23,6 +23,8 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Trig.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
 
 namespace DaveW {
 namespace Modules {
@@ -239,6 +241,9 @@ void DipoleMatToGeom::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:06:34  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/09/08 02:26:27  sparker
 // Various #include cleanups
 //

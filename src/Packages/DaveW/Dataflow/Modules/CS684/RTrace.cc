@@ -44,7 +44,9 @@
 #include <SCICore/Util/Timer.h>
 #include <PSECore/Widgets/ViewWidget.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>

@@ -14,9 +14,9 @@
 #ifndef SCI_project_NotFinished_h
 #define SCI_project_NotFinished_h
 
-#include <iostream.h>
+#include <iostream>
 
-#define NOT_FINISHED(what) cerr << what << ": Not Finished " << __FILE__ << " (line " << __LINE__ << ") " << endl
+#define NOT_FINISHED(what) std::cerr << what << ": Not Finished " << __FILE__ << " (line " << __LINE__ << ") " << std::endl
 
 #endif /* SCI_project_NotFinished_h */
 

@@ -12,7 +12,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Util/NotFinished.h>
@@ -583,6 +584,9 @@ void Pio(Piostream& stream, NodeInfo& node)
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:07:34  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/09/08 02:26:48  sparker
 // Various #include cleanups
 //

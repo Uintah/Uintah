@@ -17,6 +17,9 @@
 #include <SCICore/Containers/TrivialAllocator.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
+#include <iostream>
+using std::cerr;
+using std::ostream;
 
 #include <stdlib.h>
 
@@ -391,6 +394,9 @@ void TexGeomLines::SortVecs()
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:07:42  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/09/08 02:26:50  sparker
 // Various #include cleanups
 //

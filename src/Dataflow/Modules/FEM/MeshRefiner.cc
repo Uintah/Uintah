@@ -20,6 +20,9 @@
 #include <SCICore/Datatypes/ScalarFieldUG.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 namespace PSECommon {
 namespace Modules {
@@ -139,6 +142,9 @@ void MeshRefiner::execute()
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:06:45  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/09/08 02:26:33  sparker
 // Various #include cleanups
 //

@@ -20,6 +20,9 @@
 #include <SCICore/Thread/Parallel.h>
 #include <SCICore/Thread/SimpleReducer.h>
 #include <SCICore/Thread/Thread.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <math.h>
 
 namespace PSECommon {
@@ -452,6 +455,9 @@ void MatMat::parallel_conjugate_gradient(int processor)
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:06:52  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/09/10 04:09:02  jmk
 // Added & so it will compile on Linux
 //

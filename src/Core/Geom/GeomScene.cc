@@ -22,8 +22,12 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Math/Trig.h>
 
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
+using std::ostream;
+#include <fstream>
+using std::ofstream;
 
 namespace SCICore {
 namespace GeomSpace {
@@ -354,6 +358,9 @@ void GeomSave::rib_orient(ostream& out, const Point& center, const Vector& up,
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:44  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/08/19 23:18:06  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

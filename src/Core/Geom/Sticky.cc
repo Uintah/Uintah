@@ -17,6 +17,8 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Geometry/BBox.h>
+#include <iostream>
+using std::ostream;
 
 namespace SCICore {
 namespace GeomSpace {
@@ -70,6 +72,9 @@ bool GeomSticky::saveobj(ostream&, const clString&, GeomSave*) {
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:49  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/08/23 07:06:33  sparker
 // Fix IRIX build
 //

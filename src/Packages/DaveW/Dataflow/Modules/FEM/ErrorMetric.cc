@@ -16,8 +16,10 @@
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/TCLvar.h>
-
-#include <strstream.h>
+#include <iostream>
+using std::cerr;
+#include <sstream>
+using std::ostringstream;
 
 namespace DaveW {
 namespace Modules {
@@ -103,17 +105,16 @@ void ErrorMetric::execute()
      double CCinv=Min(1.0/(Abs(CCnum)/CCdenom), 1000000.);
      double RMSrel=Min(RMS/CCdenom1, 1000000.);
 
-     char buf[10000];
-     ostrstream str(buf, 10000);
+     ostringstream str;
      str << id << " append_graph " << 1-CC << " " << RMSrel << " \"";
      for (i=0; i<ne; i++)
          str << i << " " << (*ivec1)[i] << " ";
      str << "\" \"";
      for (i=0; i<ne; i++)
          str << i << " " << (*ivec2)[i] << " ";
-     str << "\" ; update idletasks" << '\0';
+     str << "\" ; update idletasks";
 //     cerr << "str="<<str.str()<<"\n";
-     TCL::execute(str.str());
+     TCL::execute(str.str().c_str());
 
      if (methodTCL.get() == "CC") {
          *val=CC;
@@ -136,6 +137,9 @@ void ErrorMetric::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:06:34  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/22 18:43:25  dmw
 // added new GUI
 //

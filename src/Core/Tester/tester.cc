@@ -16,7 +16,7 @@
 #include <SCICore/Tester/RigorousTest.h>
 #include <SCICore/Tester/TestTable.h>
 #include <dlfcn.h>
-#include <iostream.h>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -167,6 +167,9 @@ int main(int argc, char* argv[])
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:08:05  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:39:48  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -26,6 +26,9 @@
 #include <SCICore/Thread/Barrier.h>
 #include <SCICore/Thread/Parallel.h>
 #include <SCICore/Thread/Thread.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 #define PINVAL 1
 
@@ -379,6 +382,9 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:06:45  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/08/29 00:46:38  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

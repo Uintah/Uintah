@@ -13,7 +13,9 @@
  */
 
 #include <SCICore/Exceptions/Exceptions.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <stdlib.h>		// for abort()
 #include <string.h>
 

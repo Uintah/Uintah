@@ -2,9 +2,15 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS     = TecplotFileSelector.cc ParticleGridVisControl.cc PartToGeom.cc \
-           RescaleParticleColorMap.cc cfdGridLines.cc TecplotReader.cc \
-	   VizControl.cc
+ifeq (@BUILD_PARALLEL@,yes)
+PARALLEL_SRCS = ParticleDB.cc ParticleDatabase.cc ParticleViz.cc \
+	RunSimulation.cc
+endif
+
+SRCS     = ParticleGridVisControl.cc PartToGeom.cc \
+           RescaleParticleColorMap.cc cfdGridLines.cc \
+	   TecplotFileSelector.cc TecplotReader.cc VizControl.cc \
+	   $(PARALLEL_SRCS)
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 

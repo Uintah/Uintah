@@ -47,7 +47,7 @@ public:
     clString format_varname();
 
     clString str();
-    virtual void emit(ostream& out)=0;
+    virtual void emit(std::ostream& out)=0;
 };
 
 class SCICORESHARE TCLstring : public TCLvar {
@@ -58,7 +58,7 @@ public:
 
     clString get();
     void set(const clString&);
-    virtual void emit(ostream& out);
+    virtual void emit(std::ostream& out);
 };
 
 class SCICORESHARE TCLdouble : public TCLvar {
@@ -69,7 +69,7 @@ public:
 
     double get();
     void set(double);
-    virtual void emit(ostream& out);
+    virtual void emit(std::ostream& out);
 };
 
 class SCICORESHARE TCLint : public TCLvar {
@@ -80,7 +80,7 @@ public:
 
     int get();
     void set(int);
-    virtual void emit(ostream& out);
+    virtual void emit(std::ostream& out);
 };
 
 class SCICORESHARE TCLvardouble : public TCLvar {
@@ -91,7 +91,7 @@ public:
 
     double get();
     void set(double);
-    virtual void emit(ostream& out);
+    virtual void emit(std::ostream& out);
 };
 
 class SCICORESHARE TCLvarint : public TCLvar {
@@ -102,7 +102,7 @@ public:
 
     int get();
     void set(int);
-    virtual void emit(ostream& out);
+    virtual void emit(std::ostream& out);
 };
 
 class SCICORESHARE TCLvarintp : public TCLvar {
@@ -113,7 +113,7 @@ public:
 
     int get();
     void set(int);
-    virtual void emit(ostream& out);
+    virtual void emit(std::ostream& out);
 };
 
 class SCICORESHARE TCLPoint : public TCLvar {
@@ -126,7 +126,7 @@ public:
 
     Point get();
     void set(const Point&);
-    virtual void emit(ostream& out);
+    virtual void emit(std::ostream& out);
 };
 
 class SCICORESHARE TCLVector : public TCLvar {
@@ -139,7 +139,7 @@ public:
 
     Vector get();
     void set(const Vector&);
-    virtual void emit(ostream& out);
+    virtual void emit(std::ostream& out);
 };
 
 } // End namespace TclInterface
@@ -147,6 +147,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:08:04  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:39:46  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

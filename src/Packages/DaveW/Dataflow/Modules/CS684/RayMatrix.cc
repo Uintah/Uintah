@@ -35,7 +35,9 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/TclInterface/TCL.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>

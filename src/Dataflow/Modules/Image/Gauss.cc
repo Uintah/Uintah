@@ -25,6 +25,8 @@
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/Thread/Parallel.h>
 #include <SCICore/Thread/Thread.h>
+#include <iostream>
+using std::cerr;
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -492,6 +494,9 @@ int Gauss::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:08:14  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/08 02:26:58  sparker
 // Various #include cleanups
 //

@@ -15,7 +15,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <PSECore/Constraints/BaseConstraint.h>
-#include <iostream.h>
+#include <iostream>
+using std::endl;
+using std::ostream;
 
 namespace PSECore {
 namespace Constraints {
@@ -189,6 +191,9 @@ BaseConstraint::Register()
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:15  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/08 02:26:37  sparker
 // Various #include cleanups
 //
