@@ -23,6 +23,7 @@ Stanford University) name.
    to worry about lex library */
 
 # define yywrap() (1)
+# include <string.h>
 
 static char *ReservedWords[] = {
 "ADD",
