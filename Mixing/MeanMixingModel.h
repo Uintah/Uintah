@@ -1,29 +1,35 @@
-//----- PDFMixingModel.h --------------------------------------------------
+//----- MeanMixingModel.h --------------------------------------------------
 
-#ifndef Uintah_Component_Arches_PDFMixingModel_h
-#define Uintah_Component_Arches_PDFMixingModel_h
+#ifndef Uintah_Component_Arches_MeanMixingModel_h
+#define Uintah_Component_Arches_MeanMixingModel_h
 
 /***************************************************************************
 CLASS
-    PDFMixingModel
-       Sets up the PDFMixingModel ????
+    MeanMixingModel
+       The MeanMixingModel class sets up a mixing table that contains mean
+       values only for all the state space variables.
        
 GENERAL INFORMATION
-    PDFMixingModel.h - Declaration of PDFMixingModel class
+    MeanMixingModel.h - Declaration of MeanMixingModel class
 
-    Author: Rajesh Rawat (rawat@crsim.utah.edu)
-    Revised: Jennifer Spinti (spinti@crsim.utah.edu)
+    Author: Jennifer Spinti (spinti@crsim.utah.edu)
     
-    Creation Date : 05-30-2000
+    Creation Date : 02-04-2002
 
     C-SAFE
     
-    Copyright U of U 2000
+    Copyright U of U 2002
 
 KEYWORDS
     
 DESCRIPTION
-
+    The MeanMixingModel class is derived from the MixingModel base class. This
+    class creates a dynamic mixing table based on mean values. Hence, when this
+    class is used, there is no subgrid scale mixing model. All tabulated state 
+    space variables are mean values only and are tabulated as functions of the
+    independent variables (e.g. mixture fraction, enthalpy, reaction progress
+    variables).
+ 
 PATTERNS
     None
 
@@ -37,6 +43,7 @@ POSSIBLE REVISIONS
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/DynamicTable.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/Integrator.h>
 
 #include <vector>
 #include <string>
@@ -45,27 +52,26 @@ namespace Uintah {
   class ReactionModel;
   class MixRxnTable;
   class MixRxnTableInfo;
-  class Integrator;
   class InletStream;
   
-class PDFMixingModel: public MixingModel, public DynamicTable {
+class MeanMixingModel: public MixingModel, public DynamicTable {
 
 public:
 
       // GROUP: Constructors:
       ///////////////////////////////////////////////////////////////////////
       //
-      // Constructs an instance of PDFMixingModel
+      // Constructs an instance of MeanMixingModel
       //   [in] 
       //
-      PDFMixingModel();
+      MeanMixingModel();
 
       // GROUP: Destructors :
       ///////////////////////////////////////////////////////////////////////
       //
       // Destructor
       //
-      virtual ~PDFMixingModel();
+      virtual ~MeanMixingModel();
 
       // GROUP: Problem Setup :
       ///////////////////////////////////////////////////////////////////////
@@ -104,9 +110,9 @@ public:
       }
       inline int getNumMixVars() const{ 
 	return d_numMixingVars; 
-      }
+      }    
       inline int getNumMixStatVars() const{
-	return d_numMixStatVars;
+	return 0;
       }
       inline int getNumRxnVars() const{
 	return d_numRxnVars;
@@ -117,19 +123,15 @@ public:
       inline string getMixTableType() const{
 	return d_tableType;
       }
-      inline string getPDFShape() const {
-	return d_pdfShape;
-      }
       //***warning** compute totalvars from number of species and dependent vars
       inline int getTotalVars() const {
 	return d_depStateSpaceVars;
       }
       inline ReactionModel* getRxnModel() const {
 	return d_rxnModel;
-      }      
-      inline Integrator* getIntegrator() const {
-	return d_integrator;
       }
+      inline Integrator* getIntegrator() const {
+      }  
 
 protected :
 
@@ -139,52 +141,44 @@ private:
       //
       // Copy Constructor (never instantiated)
       //   [in] 
-      //        const PDFMixingModel&   
+      //        const MeanMixingModel&   
       //
-      PDFMixingModel(const PDFMixingModel&);
+      MeanMixingModel(const MeanMixingModel&);
 
       // GROUP: Operators Not Instantiated:
       ///////////////////////////////////////////////////////////////////////
       //
       // Assignment Operator (never instantiated)
       //   [in] 
-      //        const PDFMixingModel&   
+      //        const MeanMixingModel&   
       //
-      PDFMixingModel& operator=(const PDFMixingModel&);
+      MeanMixingModel& operator=(const MeanMixingModel&);
 
 private:
       // Looks for needed entry in table and returns that entry. If entry 
-      // does not exist and table is dynamic, it calls integrator to compute
-      // entry before returning it. If table is static and entry is non-existent,
-      // it exits program.
+      // does not exist and table is dynamic, it calls the reaction model
+      // to compute the entry.
       void tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars);
-      // Reads static data files created by James' tableGenerator program
-      void readStaticTable();
-
+      void convertKeytoFloatValues(int tableKeyIndex[], vector<double>& indepVars);
+      void computeMeanValues(int* tableKeyIndex, Stream& meanStream);
+   
       MixRxnTableInfo* d_tableInfo;
       int d_numMixingVars;
-      int d_numMixStatVars;
       int d_numRxnVars;
-      string d_pdfShape;
-      string d_tableType;		 
       int d_depStateSpaceVars;
       bool d_adiabatic;
+      string d_tableType;
       std::vector<Stream> d_streams; 
       int d_tableDimension;
-      bool d_dynamic; //If true, table is dynamic; if false, table is static
-
       // Data structure class that stores the table entries for state-space
       // variables as a function of independent variables.
       // Implemented either as a k-d tree or 2D vector data structure.
       MixRxnTable* d_mixTable;
-      Integrator* d_integrator;
       ReactionModel* d_rxnModel;
       
 
-}; // end class PDFMixingModel
+}; // end class MeanMixingModel
 
 } // end namespace Uintah
 
 #endif
-
-

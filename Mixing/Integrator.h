@@ -6,12 +6,14 @@
 /***************************************************************************
 CLASS
     Integrator
-       Sets up the Integrator ????
+       The Integrator class is required by subgrid scale PDF mixing models.
+       It performs integrations over a prescribed PDF shape. 
        
 GENERAL INFORMATION
     Integrator.h - Declaration of Integrator class
 
     Author: Rajesh Rawat (rawat@crsim.utah.edu)
+    Revised: Jennife Spinti (spinti@crsim.utah.edu)
     
     Creation Date : 05-30-2000
 
@@ -88,7 +90,6 @@ public:
       // Carry out actual integration
       //
       Stream integrate(int* tableKeyIndex);
-      Stream computeMeanValues(int* tableKeyIndex);
       void convertKeytoMeanValues(int* tableKeyIndex);
       double fun(double* x);
 
