@@ -54,19 +54,19 @@ itcl_class SCIRun_Math_SolveMatrix {
 	if {($meth == "conjugate_gradient_sci") || ($meth == "jacoby_sci") || ($meth == "bi_conjugate_gradient_sci")} {
 	    pack forget $w.stat                  
 	    pack $w.converg $w.graph -side top -padx 2 -pady 2 -fill x
-	    foreach t [winfo children $w.precond] {
-		if {[winfo class $t] == "Radiobutton"} {
-		    $t configure -state disabled
-		}
-	    }
+	    #foreach t [winfo children $w.precond] {
+		#if {[winfo class $t] == "Radiobutton"} {
+		 #   $t configure -state disabled
+		#}
+	    #}
         } else {
 #	    pack forget $w.graph $w.converg
 	    pack $w.stat  -side top -padx 2 -pady 2 -fill x
-	    foreach t [winfo children $w.precond] {
-		if {[winfo class $t] == "Radiobutton"} {
-		    $t configure -state normal
-		}
-	    }
+	    #foreach t [winfo children $w.precond] {
+		#if {[winfo class $t] == "Radiobutton"} {
+		    #$t configure -state normal
+		#}
+	    #}
 	    
         }
     }
@@ -96,32 +96,32 @@ itcl_class SCIRun_Math_SolveMatrix {
 	
 	make_labeled_radio $w.method "Solution Method" "$this switchmethod" \
 		top $this-method\
-		{{"Conjugate Gradient" conjugate_gradient }\
-		{"Conjugate Gradient Squared Iteration" conj_grad_squared}\
-		{"BiConjugate Gradient Iteration" bi_conjugate_gradient}\
-		{"BiConjugate Gradient Iteration Stabilized" bi_conjugate_gradient_stab}\
-		{"Quasi Minimal Residual Iteration" quasi_minimal_res}\
-		{"Generalized Minimum Residual Iteration" gen_min_res_iter}\
-		{"Richardson Iterations" richardson_iter}\
-		{"Conjugate Gradient & Precond. (Dataflow)" conjugate_gradient_sci}\
+		{{"Conjugate Gradient & Precond. (Dataflow)" conjugate_gradient_sci}\
 		{"BiConjugate Gradient & Precond. (Dataflow)" bi_conjugate_gradient_sci}\
 		{"Jacoby & Precond. (Dataflow)" jacoby_sci}}
 	
-	
+	        #other solving methods that currently don't work
+	        #{"Conjugate Gradient" conjugate_gradient }\
+		#{"Conjugate Gradient Squared Iteration" conj_grad_squared}\
+		#{"BiConjugate Gradient Iteration" bi_conjugate_gradient}\
+		#{"BiConjugate Gradient Iteration Stabilized" bi_conjugate_gradient_stab}\
+		#{"Quasi Minimal Residual Iteration" quasi_minimal_res}\
+		#{"Generalized Minimum Residual Iteration" gen_min_res_iter}\
+		#{"Richardson Iterations" richardson_iter}\
 	
 	
 	
         
-	make_labeled_radio $w.precond "Preconditioner" ""\
-		top $this-precond\
-		{{"DiagPreconditioner" Diag_P}\
-		{"IC Preconditioner" IC_P}\
-		{"ILU Preconditioner" ILU_P}}
+	#make_labeled_radio $w.precond "Preconditioner" ""\
+		#top $this-precond\
+		#{{"DiagPreconditioner" Diag_P}\
+		#{"IC Preconditioner" IC_P}\
+		#{"ILU Preconditioner" ILU_P}}
 	
 	
 	pack $w.method -side top -fill x -pady 2
 	
-	pack $w.precond -side top -fill x -pady 2
+	#pack $w.precond -side top -fill x -pady 2
 	
 	global $this-target_error
 	expscale $w.target_error -orient horizontal -label "Target error:" \
