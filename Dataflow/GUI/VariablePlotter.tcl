@@ -29,12 +29,21 @@ itcl_class Uintah_Visualization_VariablePlotter {
     # Thus repeatidly punching graph or table will continue to make new ones
     # without replacing old ones.
     protected display_data_id 0
+    # This array will be indexed by the name of each popup menu.  Associated
+    # with each index will be a length 2 list, the first element being the
+    # total number of selectable items in the menu, the second item is the 
+    # current number of selected items.  This array will be used to determine
+    # if the Material button should be highlighted or not.
+    protected num_mat_sel
 
     constructor {config} {
 	set name VariablePlotter
 	set_defaults
     }
-    
+     
+ 
+
+
     method set_defaults {} {
 	puts "In VariablePlotter"
 	global $this-nl
@@ -65,6 +74,7 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	    return 1
 	} else {
 	    return 0
+
 	}
     }
     method Rebuild {} {
@@ -88,46 +98,145 @@ itcl_class Uintah_Visualization_VariablePlotter {
     }
     method graph {name} {
     }
+    # Set the apperance of the button based on the current value of items selected.
+    method highlight_button { button val } {
+        if { $val == 0 } {
+            $button configure -bg grey -highlightcolor grey
+        } else {
+            $button configure -bg red -highlightcolor red
+        }
+    }
+    # This method is the callback for dynamicly generated checkboxes.  
+    # When the number of checkboxes in a menu selected changes from 0 to 
+    # not 0, this function will change the appereance of the button.
+    # IN:
+    #    menu_button - The menu to which the checkbox belongs.  This menu 
+    #                  should be of the same form as the index into the array.
+    #    cb_val - The variable that the modified checkbox is tied to
+    # OUT:
+    #    none
+    method update_cb_count { menu_button cb_val } {
+        global $cb_val
+        if { [set $cb_val] == 0 } {
+            if { [lindex $num_mat_sel($menu_button) 1] > 0 } {
+
+                set old_list $num_mat_sel($menu_button)
+                set new_list [list [lindex $old_list 0]\
+                                  [expr {[lindex $old_list 1] - 1}]]
+                set num_mat_sel($menu_button) $new_list                
+            }
+        } else {
+            if { [lindex $num_mat_sel($menu_button) 1] < \
+                 [lindex $num_mat_sel($menu_button) 0] } {
+                 set old_list $num_mat_sel($menu_button)
+                 set new_list [list [lindex $old_list 0]\
+                              [expr {[lindex $old_list 1] + 1}]]
+                 set num_mat_sel($menu_button) $new_list
+            }
+        }
+
+        highlight_button $menu_button [lindex $num_mat_sel($menu_button) 1]
+    }
     # this sets all the variables, var_root_j, with val
-    method mat_sel_sub { var_root number val} {
-	for {set j 0} { $j < $number} {incr j} {
+    method mat_sel_sub { var_root number val menu_button} {
+        # selected_before will keep track of how many checkboxes were already set
+        # in the desired manner
+	set selected_before 0
+        for {set j 0} { $j < $number} {incr j} {
 	    set tail "_$j"
+            if { [set $var_root$tail] == $val  } {
+                incr selected_before
+            }
 	    set $var_root$tail $val
 	}
+
+        # Update the num_mat_sel array
+        # Note for calling "Sel All" or "Sel None" from the top level this code is 
+        # redundant.  However, mat_sel is not called for vector or matrix submenus, only
+        # mat_sel_sub, so this code needs to be repeated in both places.=
+        if { $val == 0 } {
+            set old_list $num_mat_sel($menu_button)
+            set new_list [list [lindex $old_list 0]\
+                              [expr {[lindex $old_list 1] - $number + $selected_before}]]
+            set num_mat_sel($menu_button) $new_list
+        } else {
+            set old_list $num_mat_sel($menu_button)
+            set new_list [list [lindex $old_list 0]\
+                              [expr {[lindex $old_list 1] + $number - $selected_before}]]
+            set num_mat_sel($menu_button) $new_list
+        }
+
+        # Check that we didn't go out of bounds for values of the num_mat_sel array
+        if { [lindex $num_mat_sel($menu_button) 1] < 0 } {
+            set num_mat_sel($menu_button) [list [lindex $num_mat_sel($menu_button) 0] 0]
+        } elseif { [lindex $num_mat_sel($menu_button) 1] > \
+                       [lindex $num_mat_sel($menu_button) 0] } {
+            set num_mat_sel($menu_button) [list [lindex $num_mat_sel($menu_button) 0]\
+                                                [lindex $num_mat_sel($menu_button) 0]]
+        }
+        highlight_button $menu_button [lindex $num_mat_sel($menu_button) 1]
     }
     # called when SelAll or SelNone is evoked from the top level
-    method mat_sel { var_root mat_list val type} {
+    method mat_sel { var_root mat_list val type menu_button } {
 	for {set i 0} { $i < [llength $mat_list] } {incr i} {
 	    set j [lindex $mat_list $i]
 	    set tail "_$j"
 	    switch $type {
 		"matrix3" {
-		    mat_sel_sub $var_root$tail $num_m_type $val
+		    mat_sel_sub $var_root$tail $num_m_type $val $menu_button
 		}
 		"vector" {
-		    mat_sel_sub $var_root$tail $num_v_type $val
+		    mat_sel_sub $var_root$tail $num_v_type $val $menu_button
 		}
 		"scaler" {
 		    set $var_root$tail $val
 		}
 	    }
 	}
+
+        # Update the num_mat_sel hash.  A val of 0 means unselect all, so 
+        # set to 0.  A val of 1 means select all, so set the selected to 
+        # the total number of selectables
+        
+        if { $val == 0 } {
+            set old_list $num_mat_sel($menu_button)
+            set new_list [list [lindex $old_list 0] 0]
+            set num_mat_sel($menu_button) $new_list
+        } else {
+            set old_list $num_mat_sel($menu_button)
+            set new_list [list [lindex $old_list 0] [lindex $old_list 0]]
+            set num_mat_sel($menu_button) $new_list
+        }
+
+        # Update the appearance of the button
+        highlight_button $menu_button [lindex $num_mat_sel($menu_button) 1]
     }	
     # creates the material selection menu
     # it generates sub menus for matrix3 and vector types
     method make_mat_menu {w mat_list var_id type} {
+        # The cb_count variable will keep a running total of how many 
+        # checkboxes are created for storange into the num_mat_sel array
+        # All lines "incr cb_count" below were added as well.
+        set cb_count 0
 	set fname "$w.mat$var_id"
 	menubutton $fname -text "Material" \
 		-menu $fname.list -relief groove
 	pack $fname -side right -padx 2 -pady 2
 	
+        # Set highlighting for this button
+        # This is necessary since the window is redrawn excessively, so the highlight
+        # must be reset every time the menu is regenerated
+        if { [info exists num_mat_sel($fname)] } {
+            highlight_button $fname [lindex $num_mat_sel($fname) 1]
+        }
+
 	menu $fname.list
 	set var_o $var_id
 	append var_o "_o[set $this-var_orientation]"
 	$fname.list add command -label "Sel All" \
-		-command "$this mat_sel $this-matvar_$var_o {$mat_list} 1 $type"
+		-command "$this mat_sel $this-matvar_$var_o {$mat_list} 1 $type $fname"
 	$fname.list add command -label "Sel None" \
-		-command "$this mat_sel $this-matvar_$var_o {$mat_list} 0 $type"
+		-command "$this mat_sel $this-matvar_$var_o {$mat_list} 0 $type $fname"
 	for {set i 0} { $i < [llength $mat_list]} {incr i} {
 	    set j [lindex $mat_list $i]
 	    set var $var_o
@@ -139,16 +248,17 @@ itcl_class Uintah_Visualization_VariablePlotter {
 		menu $fname.list.types$var
 		$fname.list.types$var add command -label "Sel All" \
 			-command "$this mat_sel_sub $this-matvar_$var \
-			$num_m_type 1"
+			$num_m_type 1 $fname"
 		$fname.list.types$var add command -label "Sel None" \
-			-command "$this mat_sel_sub $this-matvar_$var \
-			$num_m_type 0"
+			-command "$this mat_sel_sub $this-matvar_$var $num_m_type 0 $fname"
 		for {set k 0} { $k < $num_m_type} {incr k} {
 		    set var2 $var
 		    append var2 "_$k"
 		    $fname.list.types$var add checkbutton \
 			    -variable $this-matvar_$var2 \
-			    -label [lindex $matrix_types $k]
+			    -label [lindex $matrix_types $k] \
+                            -command "$this update_cb_count $fname $this-matvar_$var2"
+                    incr cb_count
 		}
 	    } elseif {$type == "vector"} {
 		$fname.list add cascade -label "Mat $j" \
@@ -156,30 +266,48 @@ itcl_class Uintah_Visualization_VariablePlotter {
 		menu $fname.list.types$var
 		$fname.list.types$var add command -label "Sel All" \
 			-command "$this mat_sel_sub $this-matvar_$var \
-			$num_v_type 1"
+			$num_v_type 1 $fname"
 		$fname.list.types$var add command -label "Sel None" \
 			-command "$this mat_sel_sub $this-matvar_$var \
-			$num_v_type 0"
+			$num_v_type 0 $fname"
 		for {set k 0} { $k < $num_v_type} {incr k} {
 		    set var2 $var
 		    append var2 "_$k"
 		    $fname.list.types$var add checkbutton \
 			    -variable $this-matvar_$var2 \
-			    -label [lindex $vector_types $k]
+			    -label [lindex $vector_types $k] \
+                            -command "$this update_cb_count $fname $this-matvar_$var2"
+                    incr cb_count
 		}
 	    } elseif {$type == "scaler"} {
+                # This was a pain to get working correctly, since if you use a '_' chracter,
+                # tcl assumes that $this_matvar... is all one variable name, which it isn't.
+                # So the original used a '-', which caused problems when you try and use
+                # that variable name in a functio call, since it assumes that $this-matvar
+                # is $this -matvar where matvar is an option flag.  
+                # default variable name: $this-matvar_$var
+                set var_name $this
+                append var_name '_matvar_' $var
 		$fname.list add checkbutton \
 			-variable $this-matvar_$var \
-			-label "Mat $j"
+			-label "Mat $j" \
+                        -command "$this update_cb_count $fname $this-matvar_$var"
+                incr cb_count
 	    }
 	}
+
+        # Create the num_mat_sel entry for this menu only if the entry does not
+        # exist already
+        if { ![info exists num_mat_sel($fname)] } {
+            set num_mat_sel($fname) [list $cb_count 0]
+        }
     }
     # this function extracts which variables to get information from the global
     # variables set up with the widget.
     #
-    # displaymethod - should be either graph or table, this value is passed on
-    #                 to the c code which will call the appropiate function to
-    #                 display the information
+    # displaymethod - should be either graph, table or export_file, this value 
+    #                 is passed on to the c code which will call the 
+    #                 appropiate function to display the information
     # name - the name of the variable to graph, this is used by the c code to
     #        extract the values from the data archive
     # var_index - the index into the internal data structures that correspond
@@ -250,6 +378,10 @@ itcl_class Uintah_Visualization_VariablePlotter {
 
 	label $fname.label -text "$name"
 	pack $fname.label -side left -padx 2 -pady 2
+
+	button $fname.file -text "Export" \
+	    -command "$this extract export $name $i {$mat_list} $type"
+	pack $fname.file -side right -padx 2 -pady 2
 
 	button $fname.table -text "Table" \
 		-command "$this extract table $name $i {$mat_list} $type"
@@ -441,7 +573,7 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	    set mat_vals [lindex $var_val_list $i]
 #	    puts "mat_vals = $mat_vals"
 	    for { set j 0 } { $j < [llength $mat_vals] } {incr j} {
-		set val [lindex $mat_vals $j]
+	set val [lindex $mat_vals $j]
 		if { $max < $val } { set max $val }
 		if { $min > $val } { set min $val }
 	    }
@@ -536,7 +668,6 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	    set mat_type [lindex $args_type $i]
 	    set mat_vals [lindex $var_val_list $i]
 
-	    
 	    set line_name "Material_$mat_index"
 	    if {$mat_type != "invalid"} {
 		append line_name "_$mat_type"
@@ -555,7 +686,75 @@ itcl_class Uintah_Visualization_VariablePlotter {
 
 	pack $w.sf -fill both -expand yes -padx 10 -pady 10
     }
+    method export_data { id var pointname args } {
+	puts "Exporting....."
 
+	# Seperate the materials from the types
+        # Do this first since this information is necessary to 
+        # generate a default file name.
+	set args_mat {}
+	set args_type {}
+	for {set i 0} { $i < [llength $args] } {incr i} {
+	    lappend args_mat [lindex $args $i]
+	    incr i
+	    lappend args_type [lindex $args $i]
+	}
+	set time_list_length [llength $time_list]
+
+	# Construct a default filename based on the selected data
+ 	set default_name "$var-$pointname"
+	set vvlist_length [llength $var_val_list]
+	for { set i 0 } { $i < $vvlist_length } { incr i } {
+            # Extract values for this variable as we construct the filename.
+            # These values will be used later for output to the file.
+	    set mat_index [lindex $args_mat $i]
+	    set mat_type [lindex $args_type $i]
+            set mat_vals [lindex $var_val_list $i]
+
+	    append default_name "-M$mat_index"
+	    if { $mat_type != "invalid" } {
+		append default_name $mat_type
+	    }
+	}
+
+	set export_name [tk_getSaveFile -initialfile $default_name \
+                            -defaultextension ".txt"]
+        # Get the actual file name w/o the path info for storing in the file
+        set first [expr {[string last "/" $export_name] + 1}]
+        set last [string length $export_name]
+        set export_file_name [string range $export_name $first $last]
+
+	if [catch { open $export_name w } export_file] {
+	    puts stderr "Cannot open file for export"
+	} else {  
+            # Print out a header line
+            puts $export_file "\# $export_file_name"
+            puts -nonewline $export_file "\# Index\tTime"
+            for { set i 0 } { $i < $vvlist_length } { incr i } {
+                set mat_index [lindex $args_mat $i]
+                set mat_type [lindex $args_type $i]
+                puts -nonewline $export_file "\tMaterial_$mat_index"
+                if { $mat_type != "invalid" } {
+                    puts -nonewline $export_file "_$mat_type"
+                }
+            }
+            puts $export_file ""
+
+            # i represents the current timestep, or the rows of text
+      	    for { set i 0 } { $i < $time_list_length } { incr i } {
+		puts -nonewline $export_file "$i\t[lindex $time_list $i]"
+                # j represents the current material, or column
+                for { set j 0 } { $j < $vvlist_length } { incr j } {
+                    puts -nonewline $export_file \
+                        "\t[lindex [lindex $var_val_list $j] $i]"
+                }
+		# Final newline
+		puts $export_file "" 	       
+	    }
+	    close $export_file
+            puts stderr "File saved successfully"
+	}	
+    }
     # This is test code used to create a window with a scrollable blt table
     # This code is not normally accessable from the main user interface
     method table_test {} {
