@@ -2,9 +2,9 @@
 #include <config/sci.cf>
 
 OBJS = Delaunay.o  ExtractMeshSF.o  GenerateMesh.o  MakeScalarField.o  \
-	MeshView.o  MorphMesher3d.o
+	MeshToGeom.o  MeshView.o  MorphMesher3d.o
 SRCS = Delaunay.cc ExtractMeshSF.cc GenerateMesh.cc MakeScalarField.cc \
-	MeshView.cc MorphMesher3d.cc
+	MeshToGeom.cc MeshView.cc MorphMesher3d.cc
 
 LIBNAME = Mesh
 
