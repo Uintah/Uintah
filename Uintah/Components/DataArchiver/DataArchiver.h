@@ -66,9 +66,9 @@ namespace Uintah {
 
       // Method to output reduction variables to a single file
       void outputReduction(const ProcessorContext*,
-//		  const Patch* patch,
-		  DataWarehouseP& old_dw,
-		  DataWarehouseP& new_dw);
+			   DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw,
+			   double time);
 
    private:
       std::string d_filebase;
@@ -84,6 +84,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.5  2000/06/03 05:24:26  sparker
+// Finished/changed reduced variable emits
+// Fixed bug in directory version numbers where the index was getting
+//   written to the base file directory instead of the versioned one.
+//
 // Revision 1.4  2000/06/01 23:09:39  guilkey
 // Added beginnings of code to store integrated quantities.
 //

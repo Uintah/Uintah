@@ -73,11 +73,11 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    time_t t = time(NULL) ;
    appendElement(metaElem, "date", ctime(&t));
 
-   string iname = d_filebase+"/index.xml";
+   string iname = d_dir.getName()+"/index.xml";
    ofstream out(iname.c_str());
    out << doc << endl;
 
-   string inputname = d_filebase+"/input.xml";
+   string inputname = d_dir.getName()+"/input.xml";
    ofstream out2(inputname.c_str());
    out2 << params->getNode().getOwnerDocument() << endl;
 }
@@ -99,7 +99,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 
 
    Task* t = scinew Task("DataArchiver::outputReduction", new_dw, new_dw,
-		  this, &DataArchiver::outputReduction);
+		  this, &DataArchiver::outputReduction, time);
 
     for(int i=0;i<ivars.size();i++){
       t->requires(new_dw, ivars[i]) ;
@@ -244,19 +244,22 @@ static bool get(const DOM_Node& node, int &value)
 }
 
 void DataArchiver::outputReduction(const ProcessorContext*,
-//			  const Patch* patch,
-			  DataWarehouseP& /*old_dw*/,
-			  DataWarehouseP& new_dw)
+				   DataWarehouseP& /*old_dw*/,
+				   DataWarehouseP& new_dw,
+				   double time)
 {
-   // Dump the stuff in the reduction saveset into an
-   // ofstream
+   // Dump the stuff in the reduction saveset into files in the uda
 
    vector<const VarLabel*> ivars;
    new_dw->getIntegratedSaveSet(ivars);
-
-   static ofstream intout("intquan.dat");
-   new_dw->emit(intout, ivars);
-
+   for(int i=0;i<ivars.size();i++){
+      const VarLabel* var = ivars[i];
+      string filename = d_dir.getName()+"/"+var->getName()+".dat";
+      ofstream out(filename.c_str(), ios_base::app);
+      out << setprecision(17) << time << "\t";
+      new_dw->emit(out, var);
+      out << "\n";
+   }
 }
 
 void DataArchiver::output(const ProcessorContext*,
@@ -393,7 +396,7 @@ void DataArchiver::output(const ProcessorContext*,
    out << doc << endl;
 
    // Rewrite the index if necessary...
-   string iname = d_filebase+"/index.xml";
+   string iname = d_dir.getName()+"/index.xml";
    // Instantiate the DOM parser.
    DOMParser parser;
    parser.setDoValidation(false);
@@ -526,6 +529,11 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.7  2000/06/03 05:24:25  sparker
+// Finished/changed reduced variable emits
+// Fixed bug in directory version numbers where the index was getting
+//   written to the base file directory instead of the versioned one.
+//
 // Revision 1.6  2000/06/02 20:25:59  jas
 // If outputInterval is 0 (input file), no output is generated.
 //
