@@ -6,7 +6,7 @@
 #include <Uintah/Interface/DataArchive.h>
 //#include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Grid/ParticleVariable.h>
-#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
 #include <SCICore/Persistent/Persistent.h>
