@@ -225,6 +225,12 @@ SCI_ARG_WITH(png,
   [with_png="$withval"
    sci_required_png=yes],
   [with_png=""])
+SCI_ARG_WITH(magick,
+  AC_HELP_STRING(--with-magick=DIR,
+                 Use the Image Magick installation in DIR),
+  [with_magick="$withval"
+   sci_required_magick=yes],
+  [with_magick=""])
 SCI_ARG_WITH(unipetsc,
   AC_HELP_STRING(--with-unipetsc=DIR,
                  Use the unipetsc installation in DIR),
@@ -1271,7 +1277,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.20
+  sci_tp_version=1.22
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
   ac_try="$CC -v > /dev/null 2> conftest.out"
@@ -1882,38 +1888,50 @@ AC_SUBST(DEF_MPEG)
 
 ##  --  search for ImageMagick --------------------------------------
 
+# Default values:
 _sci_optional=optional
-if test "$with_imagemagick"; then
-  _sci_inc="$with_imagemagick/include"
-  _sci_lib="$with_imagemagick/lib"
-  _sci_optional=specific
-else
-  _sci_inc="$sci_thirdparty_includes"
-  _sci_lib="$sci_thirdparty_libs"
+_sci_lib="$sci_thirdparty_dir"
+_sci_inc="$sci_thirdparty_includes"
+
+if test "$with_magick" = "yes"; then
+  # If --with-magick is specified without a parameter, then it makes it required
+  _sci_optional=required
+else 
+  if test "$with_magick"; then
+    # If --with-magick has a parameter, then use it
+    _sci_lib="$with_magick/$BASE_LIB_DIR"
+    _sci_inc="$with_magick/include"
+    _sci_optional=specific
+  fi 
 fi
 
-# capture in the libs to link
+AC_MSG_CHECKING(for $_sci_optional ImageMagick)
+
 if test -e $_sci_lib/../bin/Magick-config; then
-    AC_MSG_RESULT(Using $_sci_lib/../bin/Magick-config to set ImageMagick variables.)
-    MAGICK_LIB_DIR_FLAG=""
-    MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
-    INC_MAGICK_H=`$_sci_lib/../bin/Magick-config --cppflags`
-    HAVE_MAGICK=yes
+   AC_MSG_RESULT(Using $_sci_lib/../bin/Magick-config to set ImageMagick variables.)
+
+   MAG_LIBS=`$_sci_lib/../bin/Magick-config --libs`
+   MAG_DIRS=`$_sci_lib/../bin/Magick-config --ldflags`
+
+   MAGICK_LIB_DIR_FLAG=
+   SCI_REMOVE_MINUS_L(MAGICK_LIB_FLAG,$MAG_DIRS,$MAG_LIBS)
+
+   INC_MAGICK_H=`$_sci_lib/../bin/Magick-config --cppflags`
+   HAVE_MAGICK=yes
+   DEF_MAGICK="#define HAVE_MAGICK 1"
 else
-    SCI_TRY_LINK(MAGICK,ImageMagick library and headers,magick/magick.h,
-                 $_sci_inc,Magick,$_sci_lib,$IM_LDFLAGS $IM_LIBS,[
-    WriteImage
-    ],$_sci_optional)
+   AC_MSG_RESULT(no.)
+   if test "$_sci_optional" != "optional"; then
+     echo
+     AC_MSG_WARN(Cannot find a Magick-config file to get ImageMagick variables.)
+     AC_MSG_WARN(This file usually resides in Magicklib_dir/../bin/Magick-config.)
+     AC_MSG_WARN(Please install ImageMagick and then reconfigure.)
+   fi
 fi
 
-if test "$HAVE_MAGICK" = "yes"; then
-    DEF_MAGICK="#define HAVE_MAGICK 1"
-fi
-
-if test "$with_imagemagick" && test ! "$DEF_MAGICK"; then
+if test "$with_magick" && test ! "$DEF_MAGICK"; then
   echo
   AC_MSG_ERROR(One or more of the ImageMagick components is missing.)
-  echo
 fi
 
 AC_SUBST(MAGICK_LIB_FLAG)
