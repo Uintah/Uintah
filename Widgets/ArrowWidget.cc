@@ -91,13 +91,16 @@ ArrowWidget::redraw()
       Point center(variables[PointVar]->point());
       Vector direct(direction*widget_scale);
       ((GeomSphere*)geometries[GeomPoint])->move(center, widget_scale);
-      ((GeomCylinder*)geometries[GeomShaft])->move(center,
-						   center + direct * 3.0,
-						   0.5*widget_scale);
-      ((GeomCappedCone*)geometries[GeomHead])->move(center + direct * 3.0,
-						    center + direct * 5.0,
-						    widget_scale,
-						    0);
+
+      if (direct.length2() > 0) {
+	 ((GeomCylinder*)geometries[GeomShaft])->move(center,
+						      center + direct * 3.0,
+						      0.5*widget_scale);
+	 ((GeomCappedCone*)geometries[GeomHead])->move(center + direct * 3.0,
+						       center + direct * 5.0,
+						       widget_scale,
+						       0);
+      }
    }
 
    Vector v1, v2;
