@@ -2195,10 +2195,11 @@ void GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime
 void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
 
-  if (have_normal) 
-    if(!pre_draw(di, matl, 1)) return;
-  else 
-    if(!pre_draw(di, matl, 0)) return;
+  if (have_normal) {
+    if (!pre_draw(di, matl, 1)) { return; }
+  } else {
+    if(!pre_draw(di, matl, 0)) { return; }
+  }
 
   di->polycount+=pts.size()/3;
   //  glPushAttrib(GL_POINT_BIT);
