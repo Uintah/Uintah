@@ -42,8 +42,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Ptolemy/Core/PtolemyInterface
 
 SRCS     += \
-            $(SRCDIR)/JNIUtils.cc \
+            $(SRCDIR)/iterSCIRun.cc \
+	    $(SRCDIR)/JNIUtils.cc \
             $(SRCDIR)/PTIISCIRun.cc \
+	    $(SRCDIR)/pt_S_scirun.cc \
             $(SRCDIR)/ptolemy_scirun_SCIRunJNIActor.cc \
 #[INSERT NEW CODE FILE HERE]
 
