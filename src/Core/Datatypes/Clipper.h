@@ -22,7 +22,7 @@
 #if !defined(Clipper_h)
 #define Clipper_h
 
-#include <Core/Containers/Handle.h>
+#include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Geometry/Transform.h>
@@ -43,7 +43,7 @@ public:
 };
 
 
-typedef Handle<Clipper> ClipperHandle;
+typedef LockingHandle<Clipper> ClipperHandle;
 
 
 
