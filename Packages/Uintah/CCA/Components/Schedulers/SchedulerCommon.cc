@@ -66,10 +66,11 @@ SchedulerCommon::~SchedulerCommon()
     delete memlogfile;
 
   // list of vars used for AMR regridding
-  for ( label_matl_map::iterator iter = label_matls_.begin(); iter != label_matls_.end(); iter++)
-    if (iter->second.second->removeReference())
-      delete iter->second.second;
-
+  for (unsigned i = 0; i < label_matls_.size(); i++)
+    for ( label_matl_map::iterator iter = label_matls_[i].begin(); iter != label_matls_[i].end(); iter++)
+      if (iter->second->removeReference())
+        delete iter->second;
+  
   label_matls_.clear();
 }
 
@@ -441,11 +442,13 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
                                        SimulationInterface* sim)
 {  
   // clear the old list of vars and matls
-  for ( label_matl_map::iterator iter = label_matls_.begin(); iter != label_matls_.end(); iter++)
-    if (iter->second.second->removeReference())
-      delete iter->second.second;
-
+  for (unsigned i = 0; i < label_matls_.size(); i++)
+    for ( label_matl_map::iterator iter = label_matls_[i].begin(); iter != label_matls_[i].end(); iter++)
+      if (iter->second->removeReference())
+        delete iter->second;
+  
   label_matls_.clear();
+  label_matls_.resize(grid->numLevels());
 
   // produce a map from all tasks' requires from the Old DW.  Store the varlabel and matls
   for (int i = 0; i < graph.getNumTasks(); i++) {
@@ -469,19 +472,20 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
         const MaterialSubset* matSubset = (dep->matls != 0) ?
           dep->matls : dep->task->getMaterialSet()->getUnion();
 
+
         // if var was already found, make a union of the materials
         MaterialSubset* matls = scinew MaterialSubset(matSubset->getVector());
         matls->addReference();
         
         MaterialSubset* union_matls;
-        union_matls = label_matls_[dep->var].second;
+        union_matls = label_matls_[level][dep->var];
         if (union_matls) {
           for (int i = 0; i < union_matls->size(); i++) 
             if (!matls->contains(union_matls->get(i)))
               matls->add(union_matls->get(i));
         }
         matls->sort();        
-        label_matls_[dep->var] = make_pair(level, matls);
+        label_matls_[level][dep->var] = matls;
       }
     }
   }
@@ -492,32 +496,67 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
   this->mapDataWarehouse(Task::OldDW, 0);
   this->mapDataWarehouse(Task::NewDW, 1);
   
-  this->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
-  this->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
-  
   DataWarehouse* oldDataWarehouse = this->get_dw(0);
   DataWarehouse* newDataWarehouse = this->getLastDW();
+  oldDataWarehouse->setScrubbing(DataWarehouse::ScrubNone);
+  newDataWarehouse->setScrubbing(DataWarehouse::ScrubNone);
   
-  vector<Task*> tasks;
+  vector<Task*> dataTasks;
+  SchedulerP sched(dynamic_cast<Scheduler*>(this));
+
   for (int i = 0; i < grid->numLevels(); i++) {
-    tasks.push_back(scinew Task("SchedulerCommon::copyDataToNewGrid", this,                          
-                             &SchedulerCommon::copyDataToNewGrid));
-    addTask(tasks[i], grid->getLevel(i)->eachPatch(), state->allMaterials());
-  }
+    LevelP newLevel = newDataWarehouse->getGrid()->getLevel(i);
 
-  // assume that all vars are required for all levels
-  for ( label_matl_map::iterator iter = label_matls_.begin(); iter != label_matls_.end(); iter++) {
-    const VarLabel* var = iter->first;
-    MaterialSubset* matls = iter->second.second;
-    int level = iter->second.first;
+    if (i > 0) {
 
-    tasks[level]->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
-    tasks[level]->computes(var, matls);
-  }
+      PatchSet* refineSet = scinew PatchSet;
+      LevelP oldLevel = oldDataWarehouse->getGrid()->getLevel(newLevel->getIndex());
+      
+      // go through the patches, and find if there are patches that weren't entirely 
+      // covered by patches on the old grid, and interpolate them.  
+      // then after, copy the data, and if necessary, overwrite interpolated data
+      
+      for (Level::patchIterator iter = newLevel->patchesBegin(); iter != newLevel->patchesEnd(); iter++) {
+        Patch* newPatch = *iter;
+        
+        // get the low/high for what we'll need to get
+        IntVector lowIndex, highIndex;
+        newPatch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0), Ghost::None, 0, lowIndex, highIndex);
+        
+        // find if area on the new patch was not covered by the old patches
+        IntVector dist = highIndex-lowIndex;
+        int totalCells = dist.x()*dist.y()*dist.z();
+        int sum = 0;
+        Patch::selectType oldPatches;
+        oldLevel->selectPatches(lowIndex, highIndex, oldPatches);
 
-  for ( int levelIndex = 1; levelIndex < grid->numLevels(); levelIndex++ ) {
-    SchedulerP sched(dynamic_cast<Scheduler*>(this));
-    sim->scheduleRefine(grid->getLevel(levelIndex), sched);
+        for (int old = 0; old < oldPatches.size(); old++) {
+          const Patch* oldPatch = oldPatches[old];
+          IntVector low = Max(oldPatch->getLowIndex(), newPatch->getLowIndex());
+          IntVector high = Min(oldPatch->getHighIndex(), newPatch->getHighIndex());
+          IntVector dist = high-low;
+          sum += dist.x()*dist.y()*dist.z();
+        }  // for oldPatches
+        if (sum != totalCells) {
+          refineSet->add(newPatch);
+        }
+        
+      } // for patchIterator
+
+      sim->scheduleRefine(refineSet, sched);
+    }
+    
+    dataTasks.push_back(scinew Task("SchedulerCommon::copyDataToNewGrid", this,                          
+                                     &SchedulerCommon::copyDataToNewGrid));
+    addTask(dataTasks[i], newLevel->eachPatch(), state->allMaterials());
+
+    for ( label_matl_map::iterator iter = label_matls_[i].begin(); iter != label_matls_[i].end(); iter++) {
+      const VarLabel* var = iter->first;
+      MaterialSubset* matls = iter->second;
+      
+      dataTasks[i]->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
+      dataTasks[i]->computes(var, matls);
+    }
   }
 
   this->compile(); 
@@ -559,7 +598,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
   for ( int p = 0; p < patches->size(); p++ ) {
     const Patch* newPatch = patches->get(p);
     const Level* newLevel = newPatch->getLevel();
-    
+
     // If there is a level that didn't exist, we don't need to copy it
     if ( newLevel->getIndex() >= oldDataWarehouse->getGrid()->numLevels() ) {
       continue;
@@ -568,17 +607,16 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
     // find old patches associated with this patch
     const Level* oldLevel = (oldDataWarehouse->getGrid()->getLevel( newLevel->getIndex() )).get_rep();
     
-    for ( label_matl_map::iterator iter = label_matls_.begin(); iter != label_matls_.end(); iter++) {
+    for ( label_matl_map::iterator iter = label_matls_[oldLevel->getIndex()].begin(); 
+          iter != label_matls_[oldLevel->getIndex()].end(); iter++) {
       const VarLabel* label = iter->first;
-      MaterialSubset* var_matls = iter->second.second;
-      int level = iter->second.first;
-      if (level != newLevel->getIndex())
-        continue;
-         
+      MaterialSubset* var_matls = iter->second;
+
+
       // get the low/high for what we'll need to get
       Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), true);
       IntVector newLowIndex, newHighIndex;
-      newPatch->computeVariableExtents(basis, label->getBoundaryLayer(), Ghost::AroundCells, 0, newLowIndex, newHighIndex);
+      newPatch->computeVariableExtents(basis, label->getBoundaryLayer(), Ghost::None, 0, newLowIndex, newHighIndex);
 
       for (int m = 0; m < var_matls->size(); m++) {
         int matl = var_matls->get(m);
@@ -594,9 +632,11 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
         for ( int oldIdx = 0;  oldIdx < oldPatches.size(); oldIdx++) {
           const Patch* oldPatch = oldPatches[oldIdx];
           
-          IntVector oldLowIndex = oldPatch->getLowIndex(basis, label->getBoundaryLayer());
-          IntVector oldHighIndex = oldPatch->getHighIndex(basis, label->getBoundaryLayer());
-          
+          //IntVector oldLowIndex = oldPatch->getLowIndex(basis, label->getBoundaryLayer());
+          //IntVector oldHighIndex = oldPatch->getHighIndex(basis, label->getBoundaryLayer());
+          IntVector oldLowIndex = oldPatch->getLowIndex(basis, IntVector(0,0,0));
+          IntVector oldHighIndex = oldPatch->getHighIndex(basis, IntVector(0,0,0));
+
           IntVector copyLowIndex = Max(newLowIndex, oldLowIndex);
           IntVector copyHighIndex = Min(newHighIndex, oldHighIndex);
         
@@ -620,7 +660,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
               } else {
                 NCVariableBase* newVariable = newDataWarehouse->d_ncDB.get(label, matl, newPatch );
                 // make sure it exists in the right region (it might be ghost data)
-                newVariable->rewindow(Min(copyLowIndex, newVariable->getLow()), Max(copyHighIndex, newVariable->getHigh()));
+                newVariable->rewindow(newLowIndex, newHighIndex);
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
               }
             }
@@ -640,7 +680,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
               } else {
                 CCVariableBase* newVariable = newDataWarehouse->d_ccDB.get(label, matl, newPatch );
                 // make sure it exists in the right region (it might be ghost data)
-                newVariable->rewindow(Min(copyLowIndex, newVariable->getLow()), Max(copyHighIndex, newVariable->getHigh()));
+                newVariable->rewindow(newLowIndex, newHighIndex);
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
               }
             }
@@ -660,7 +700,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
               } else {
                 SFCXVariableBase* newVariable = newDataWarehouse->d_sfcxDB.get(label, matl, newPatch );
                 // make sure it exists in the right region (it might be ghost data)
-                newVariable->rewindow(Min(copyLowIndex, newVariable->getLow()), Max(copyHighIndex, newVariable->getHigh()));
+                newVariable->rewindow(newLowIndex, newHighIndex);
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
               }
             }
@@ -680,7 +720,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
               } else {
                 SFCYVariableBase* newVariable = newDataWarehouse->d_sfcyDB.get(label, matl, newPatch );
                 // make sure it exists in the right region (it might be ghost data)
-                newVariable->rewindow(Min(copyLowIndex, newVariable->getLow()), Max(copyHighIndex, newVariable->getHigh()));
+                newVariable->rewindow(newLowIndex, newHighIndex);
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
               }
             }
@@ -700,7 +740,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
               } else {
                 GridVariable* newVariable = newDataWarehouse->d_sfczDB.get(label, matl, newPatch );
                 // make sure it exists in the right region (it might be ghost data)
-                newVariable->rewindow(Min(copyLowIndex, newVariable->getLow()), Max(copyHighIndex, newVariable->getHigh()));
+                newVariable->rewindow(newLowIndex, newHighIndex);
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
               }
             }
