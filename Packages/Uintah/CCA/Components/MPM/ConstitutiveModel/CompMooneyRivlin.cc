@@ -17,12 +17,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
-#if defined(_WIN32) || defined(__APPLE__)
-#include <float.h>
-#define MAXDOUBLE DBL_MAX
-#else
-#include <values.h>
-#endif
+#include <sci_values.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
