@@ -4,6 +4,13 @@ LaceContours
 LaceContoursTemp
 TransformCS
 
+Category: EEG
+Coregister
+
+Category: FDM
+BuildFDField
+BuildFDMatrix
+
 Category: FEM
 ApplyBC
 BuildFEMatrix
@@ -50,6 +57,7 @@ MeshReader
 MultimeshReader
 PointsReader
 ScalarFieldReader
+SigmaSetReader
 SurfaceReader
 VectorFieldReader
 VectorFieldOceanReader
@@ -68,17 +76,22 @@ SoundReader
 VoiceRemover
 
 Category: Surface
+AugmentSurf
 ContoursToSurf
 GenSurface
 SurfToGeom
 
 Category: Visualization
 BitVisualize
+BoxClipSField
 CuttingPlane
 GenAxes
 GenColormap
+GenFieldEdges
 Hedgehog
+IsoMask
 IsoSurface
+IsoSurfaceSP
 OctIsoSurface
 RescaleColormap
 Streamline
@@ -94,6 +107,7 @@ MatrixWriter
 MeshWriter
 MultiMeshWriter
 ScalarFieldWriter
+SigmaSetWriter
 SurfaceWriter
 TetraWriter
 VectorFieldWriter
