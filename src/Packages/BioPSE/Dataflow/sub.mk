@@ -26,7 +26,7 @@ SUBDIRS := \
 
 include $(SRCTOP_ABS)/scripts/recurse.mk
 
-PSELIBS := 
+PSELIBS := Packages/BioPSE/Core
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
 include $(SRCTOP_ABS)/scripts/largeso_epilogue.mk

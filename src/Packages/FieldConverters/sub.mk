@@ -15,8 +15,6 @@
 #  University of Utah. All Rights Reserved.
 #
 
-include $(SRCTOP)/scripts/largeso_prologue.mk
-
 SRCDIR := Packages/FieldConverters
 
 SUBDIRS := \
@@ -25,10 +23,3 @@ SUBDIRS := \
 #        $(SRCDIR)/Dataflow \
 
 include $(SRCTOP)/scripts/recurse.mk
-
-PSELIBS := 
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
-
-include $(SRCTOP)/scripts/largeso_epilogue.mk
-
-

@@ -27,14 +27,14 @@ include $(SRCTOP_ABS)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Forward
 
 
-SRCS     += \
-	$(SRCDIR)/DipoleInSphere.cc\
-	$(SRCDIR)/SetupFEMatrix.cc\
-	$(SRCDIR)/ApplyFEMCurrentSource.cc\
+SRCS     += $(SRCDIR)/DipoleInSphere.cc\
+	    $(SRCDIR)/SetupFEMatrix.cc\
+	    $(SRCDIR)/ApplyFEMCurrentSource.cc\
 #[INSERT NEW CODE FILE HERE]
 
 
-PSELIBS := Packages/BioPSE/Core/Datatypes Packages/BioPSE/Core/Algorithms/NumApproximation \
+PSELIBS := Packages/BioPSE/Core/Datatypes \
+	Packages/BioPSE/Core/Algorithms/NumApproximation \
 	Core/Datatypes \
 	Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
