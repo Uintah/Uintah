@@ -35,7 +35,8 @@ void InsertStringInFile(char* filename, char* match, char* replacement)
   fclose(ofile);
 
   /* search the copy for an instance of "match" */
-  int index1 = 0, index2 = 0;
+  int index1 = 0;
+  unsigned int index2 = 0;
   int foundat = -1;
   ifile = fopen(newfilename,"r");
   c = (char)fgetc(ifile);

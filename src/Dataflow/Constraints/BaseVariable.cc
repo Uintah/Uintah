@@ -56,7 +56,7 @@ BaseVariable::Order()
    int index; // Goes negative at end of loop.
    Index index2, highindex;
 
-   for (index=0; index<numconstraints; index++)
+   for (index=0; (Index)index< numconstraints; index++)
       constraint_order[index] = index;
 
    // Bubble sort.
