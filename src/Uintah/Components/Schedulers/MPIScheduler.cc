@@ -16,14 +16,15 @@
 #include <Uintah/Grid/TypeDescription.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <mpi.h>
+#include <iomanip>
 #include <set>
 
 using namespace Uintah;
 using namespace std;
 using SCICore::Thread::Time;
-int myrank;
 
 static SCICore::Util::DebugStream dbg("MPIScheduler", false);
+static SCICore::Util::DebugStream timeout("MPIScheduler.timings", false);
 #define PARTICLESET_TAG		0x1000000
 #define RECV_BUFFER_SIZE_TAG	0x2000000
 
@@ -84,12 +85,12 @@ MPIScheduler::MPIScheduler(const ProcessorGroup* myworld, Output* oport)
    : UintahParallelComponent(myworld), Scheduler(oport), log(myworld, oport)
 {
   d_generation = 0;
-   myrank = myworld->myrank(); // For debug only...
   if(!specialType)
      specialType = scinew TypeDescription(TypeDescription::ScatterGatherVariable,
 				       "DataWarehouse::specialInternalScatterGatherType", false, -1);
   scatterGatherVariable = scinew VarLabel("DataWarehouse::scatterGatherVariable",
 				       specialType, VarLabel::Internal);
+  d_lasttime=Time::currentSeconds();
 }
 
 
@@ -114,6 +115,9 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		      DataWarehouseP   & old_dw,
 		      DataWarehouseP   & dw )
 {
+   d_labels.clear();
+   d_times.clear();
+   emitTime("time since last execute");
    SendState ss;
    // We do not use many Bsends, so this doesn't need to be
    // big.  We make it moderately large anyway.
@@ -131,6 +135,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 
    graph.assignSerialNumbers();
 
+   emitTime("assignSerialNumbers");
    // Send particle sets
    int me = pc->myrank();
    vector<Task*> presort_tasks = graph.getTasks();
@@ -193,6 +198,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	 }
       }
    }
+   emitTime("send/recv particles sets");
 
    set<VarDestType> varsent;
    // send initial data from old datawarehouse
@@ -291,6 +297,8 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       dbg << me << " Done calling recv waitall with " << recv_ids.size() << " waiters\n";
    }
 
+   emitTime("send initial data");
+
    vector<Task*> tasks;
    graph.topologicalSort(tasks);
 
@@ -298,6 +306,8 @@ MPIScheduler::execute(const ProcessorGroup * pc,
    if(ntasks == 0){
       cerr << "WARNING: Scheduler executed, but no tasks\n";
    }
+
+   emitTime("topologicalSort:");
 
    // Compute a simple checksum to make sure that all processes
    // are trying to execute the same graph.  We should do two
@@ -315,10 +325,17 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	   << " and global is " << result_checksum << '\n';
       MPI_Abort(d_myworld->getComm(), 1);
    }
+   emitTime("checksum reduction");
+
    dbg << "Executing " << ntasks << " tasks\n";
 
    makeTaskGraphDoc(tasks, me == 0);
 
+   emitTime("taskGraph output");
+   double totalreduce=0;
+   double totalsend=0;
+   double totalrecv=0;
+   double totaltask=0;
    for(int i=0;i<ntasks;i++){
       Task* task = tasks[i];
       switch(task->getType()){
@@ -333,6 +350,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	    double reduceend = Time::currentSeconds();
 	    time_t t(0);
 	    emitNode(tasks[i], t, reduceend - reducestart);
+	    totalreduce += reduceend-reducestart;
 	 }
 	 break;
       case Task::Scatter:
@@ -488,12 +506,23 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	    dbg << " (recv: " << drecv << " seconds, task: " << dtask << " seconds, send: " << dsend << " seconds)\n";
 	    time_t t = time(0);
 	    emitNode(tasks[i], t, dsend+dtask+drecv);
+	    totalsend+=dsend;
+	    totaltask+=dtask;
+	    totalrecv+=drecv;
 	 }
 	 break;
       default:
 	 throw InternalError("Unknown task type");
       }
    }
+   emitTime("Total send time", totalsend);
+   emitTime("Total recv time", totalrecv);
+   emitTime("Total task time", totaltask);
+   emitTime("Total reduction time", totalreduce);
+   double time = Time::currentSeconds();
+   double totalexec = time-d_lasttime;
+   d_lasttime=time;
+   emitTime("Other excution time", totalexec-totalsend-totalrecv-totaltask-totalreduce);
 
    if(send_ids.size() > 0){
       vector<MPI_Status> statii(send_ids.size());
@@ -501,6 +530,8 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       MPI_Waitall((int)send_ids.size(), &send_ids[0], &statii[0]);
       dbg << me << " Done calling send(2) waitall with " << send_ids.size() << " waiters\n";
    }
+   emitTime("final wait");
+
    dw->finalize();
    finalizeNodes(me);
    int junk;
@@ -509,6 +540,30 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
 
    log.finishTimestep();
+   emitTime("finalize");
+   vector<double> d_totaltimes(d_times.size());
+   MPI_Reduce(&d_times[0], &d_totaltimes[0], d_times.size(), MPI_DOUBLE,
+	      MPI_SUM, 0, d_myworld->getComm());
+   if(me == 0){
+      double total=0;
+      for(int i=0;i<(int)d_totaltimes.size();i++)
+	 total+= d_totaltimes[i];
+      for(int i=0;i<(int)d_totaltimes.size();i++){
+	 timeout << "MPIScheduler: " << d_labels[i] << ": ";
+	 int len = strlen(d_labels[i])+strlen("MPIScheduler: ")+strlen(": ");
+	 for(int j=len;j<55;j++)
+	    timeout << ' ';
+	 double percent=d_totaltimes[i]/total*100;
+	 timeout << d_totaltimes[i] << " seconds (" << setfill(' ') << setw(3) << setprecision(2) << percent << "%)\n";
+      }
+      double time = Time::currentSeconds();
+      double rtime=time-d_lasttime;
+      d_lasttime=time;
+      cerr << "MPIScheduler: TOTAL                                      "
+	   << total << '\n';
+      cerr << "MPIScheduler: time sum reduction (one processor only):   " 
+	   << rtime << '\n';
+   }
 }
 
 void
@@ -889,9 +944,26 @@ MPIScheduler::releaseLoadBalancer()
    releasePort("load balancer");
 }
 
+void
+MPIScheduler::emitTime(char* label)
+{
+   double time = Time::currentSeconds();
+   emitTime(label, time-d_lasttime);
+   d_lasttime=time;
+}
+
+void
+MPIScheduler::emitTime(char* label, double dt)
+{
+   d_labels.push_back(label);
+   d_times.push_back(dt);
+}
 
 //
 // $Log$
+// Revision 1.25.4.3  2000/10/06 16:42:33  sparker
+// Added instrumentation
+//
 // Revision 1.25.4.2  2000/10/02 15:02:45  sparker
 // Send only boundary particles
 //
