@@ -470,12 +470,18 @@ class PowerAppBase {
 	    -variable $mods(Viewer)-ViewWindow_0-do_stereo \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
 	Tooltip $view_opts.eframe.b.stereo $tips(ViewerStereo)
+
+	checkbutton $view_opts.eframe.b.orientation -text "Orientation" \
+	    -variable $mods(Viewer)-ViewWindow_0-raxes \
+	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+	Tooltip $view_opts.eframe.b.orientation "Turn the orientation axes on/off"
 	
 	pack $view_opts.eframe.a.light $view_opts.eframe.a.fog \
 	    $view_opts.eframe.a.bbox \
    	    -side left -anchor n -padx 4 -pady 4
 
 	pack $view_opts.eframe.b.cull $view_opts.eframe.b.stereo \
+	    $view_opts.eframe.b.orientation \
 	    -side left -anchor n -padx 4 -pady 4
 	
 	
