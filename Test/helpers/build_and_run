@@ -13,7 +13,9 @@ fi
 cd "${BUILDROOT}/${mode}/build"
 
 echo ""
-echo "Configuring ${mode} build at `date` using these arguments"
+echo "TIME STAMP: STARTING CONFIGURE AT:"
+/sbin/date
+echo "...this is for the ${mode} build using these arguments:"
 echo "  $CONFIGURE_ARGS"
 echo "#!/bin/tcsh" > configure_command
 echo "nice ../../src/configure $CONFIGURE_ARGS" >> configure_command
@@ -39,8 +41,8 @@ if [ -d "${BUILD_DIR}/configure-${mode}.lock" ]; then
 	rm "${BUILD_DIR}/configure-${mode}.lock"
 fi
 
-echo ""
-echo "Starting $mode build at `date`"
+echo "TIME STAMP: DONE CONFIGURE AND STARTING BUILD AT:"
+/sbin/date
 
 cd "${BUILDROOT}/${mode}/build"
     
@@ -121,6 +123,9 @@ if [ $retval != "0" ]; then
     fi
 fi
 
+echo "TIME STAMP: DONE BUILD AT:"
+/sbin/date
+
 if [ -d "${BUILD_DIR}/make-${mode}.lock" ]; then
     # built successfully - remove old make lock 
     rm "${BUILD_DIR}/make-${mode}.lock"
@@ -161,7 +166,7 @@ for test in *; do
 	if [ $WithArches == "no" -a $test == "ARCHES" ]; then
 	    echo ""
 	    echo "Skipping test \"${test}-${mode}\" at `date`"
-	    echo "(ARCHES doesn't compile)"
+	    echo "(ARCHES did not compile)"
 	    failed=1
 	    continue; # skip arches test
 	fi
