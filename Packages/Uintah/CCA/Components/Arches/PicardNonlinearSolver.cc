@@ -869,6 +869,15 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
 
   d_props->sched_computePropsFirst_mm(sched, patches, matls);
 
+  // check if filter is defined...
+#ifdef PetscFilter
+  if (d_turbModel->getFilter()) {
+    // if the matrix is not initialized
+    if (!d_turbModel->getFilter()->isInitialized()) 
+      d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
+  }
+#endif
+
   d_props->sched_computeDrhodt(sched, patches, matls,
 				 nosolve_timelabels);
 
@@ -881,15 +890,6 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
 
   sched_interpolateFromFCToCC(sched, patches, matls, nosolve_timelabels);
   
-  // check if filter is defined...
-#ifdef PetscFilter
-  if (d_turbModel->getFilter()) {
-    // if the matrix is not initialized
-    if (!d_turbModel->getFilter()->isInitialized()) 
-      d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
-  }
-#endif
-
   d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
 					   nosolve_timelabels);
   
