@@ -12,6 +12,7 @@
 #include <sstream>
 
 namespace Uintah {
+  using namespace SCIRun::InternalError;
   using std::vector;
   using std::cerr;
   using std::ostringstream;
