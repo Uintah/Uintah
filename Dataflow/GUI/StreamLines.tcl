@@ -96,13 +96,22 @@ itcl_class SCIRun_Visualization_StreamLines {
 
 	frame $w.color -relief groove -borderwidth 2
 	label $w.color.label -text "Color Style"
-	radiobutton $w.color.const -text "Constant" -variable $this-color \
-		-value 0
-	radiobutton $w.color.incr -text "Increment" -variable $this-color \
-		-value 1
+	frame $w.color.left
+	frame $w.color.right
+	radiobutton $w.color.left.const -text   "Seed Number" \
+	    -variable $this-color -value 0
+	radiobutton $w.color.left.incr -text "Integration Step" \
+	    -variable $this-color -value 1
+	radiobutton $w.color.right.delta -text "Distance from Seed" \
+	    -variable $this-color -value 2
+	radiobutton $w.color.right.total -text "Streamline Length" \
+	    -variable $this-color -value 3
+
+	pack $w.color.left.const $w.color.left.incr -side top -anchor w
+	pack $w.color.right.delta $w.color.right.total -side top -anchor w
 
 	pack $w.color.label -side top -fill both
-	pack $w.color.const $w.color.incr -side top -anchor w
+	pack $w.color.left $w.color.right -side left -anchor w
 
 
 	frame $w.meth -relief groove -borderwidth 2
