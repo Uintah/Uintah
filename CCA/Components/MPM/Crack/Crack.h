@@ -2,7 +2,6 @@
     Crack.h
     Created by Yajun Guo in 2002-2004.
 ********************************************************************************/
-
 #ifndef UINTAH_HOMEBREW_CRACK_H
 #define UNITAH_HOMEBREW_CRACK_H
 
@@ -243,7 +242,10 @@ class Crack
     vector<double>               csa;     // Average angle between adjacent crack-front segs  
     vector<vector<Point> >        cx;     // Crack points
     vector<vector<IntVector> >    ce;     // Crack elems
-    vector<vector<int> >  cfSegNodes;     // Crack-front-seg nodes
+    vector<vector<int> >  cfSegNodes;     // Crack-front nodes, stored segment by segment 
+    vector<vector<double> > cfSegVel;     // Velocity of crack-front nodes
+    vector<vector<double> >cfSegTime;     // Time instant of crack propagation
+    vector<vector<double> >cfSegDis;      // Crack incremental 
     vector<vector<int> > cfSegPreIdx;     // node[i]=node[preIdx]
     vector<vector<int> > cfSegMinIdx;     // Min node-index of the sub-crack
     vector<vector<int> > cfSegMaxIdx;     // Max node-index of the sub-crack
