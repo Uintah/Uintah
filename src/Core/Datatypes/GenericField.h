@@ -88,7 +88,7 @@ private:
   };
 
 
-  //! A Tetrahedral Mesh.
+  //! A (generic) mesh.
   mesh_handle_type             mesh_;
   //! Data container.
   fdata_type                   fdata_;
