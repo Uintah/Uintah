@@ -338,7 +338,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
     }
   }
 
-  if (d_MAlab) {
+  if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
     if (d_radiationCalc)
       if (d_DORadiationCalc)
 	tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel,
@@ -679,11 +679,13 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 	d_DORadiation->boundarycondition(pc, patch, cellinfo,
 					 &enthalpyVars, &constEnthalpyVars);
 
-	if (d_MAlab) {
+	if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
+	  bool d_energyEx = d_boundaryCondition->getIfCalcEnergyExchange();
 	  new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
 		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 	  d_boundaryCondition->mmWallTemperatureBC(pc, patch, constEnthalpyVars.cellType,
-						   solidTemp, enthalpyVars.temperature);
+						   solidTemp, enthalpyVars.temperature,
+						   d_energyEx);
 	}
 
 	  d_DORadiation->intensitysolve(pc, patch, cellinfo,
