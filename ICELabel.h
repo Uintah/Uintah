@@ -64,6 +64,12 @@ namespace Uintah {
     //Misc Labels
     const VarLabel* IveBeenHereLabel;
     const VarLabel* scratchLabel;
+    
+    // Reduction Variables
+    const VarLabel*  TotalMassLabel;
+    const VarLabel*  CenterOfMassVelocityLabel;
+    const VarLabel*  KineticEnergyLabel;
+    const VarLabel*  TotalIntEngLabel;
       
     };
 } // end namespace Uintah
