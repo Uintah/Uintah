@@ -41,6 +41,7 @@ POSSIBLE REVISIONS
 ***************************************************************************/
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ReactionModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 
 #include <vector>
 
@@ -70,14 +71,16 @@ public:
       // GROUP: Manipulate
       //////////////////////////////////////////////////////////////////////
       // Inserts stateSpaceVars vector in table at location based on keyIndex.  
-      virtual bool Insert(int keyIndex[], std::vector<double>& stateSpaceVars) = 0; 
+      //virtual bool Insert(int keyIndex[], std::vector<double>& stateSpaceVars) = 0; 
+      virtual bool Insert(int keyIndex[], Stream& stateSpaceVars) = 0;  
       
       // GROUP: Access
       //////////////////////////////////////////////////////////////////////
       // Lookup function looks up state space vector in the table at location 
       // based on keyIndex. If it is found, it stores the state space vars in 
       // stateSpaceVars and returns true, else it just returns false.
-      virtual bool Lookup(int keyIndex[], std::vector<double>& stateSpaceVars) = 0;
+      //virtual bool Lookup(int keyIndex[], std::vector<double>& stateSpaceVars) = 0;
+      virtual bool Lookup(int keyIndex[], Stream& stateSpaceVars) = 0;
 
 protected :
 

@@ -60,6 +60,7 @@ namespace Uintah {
       //         
       //
       Stream& operator=(const Stream &rhs);
+      bool operator==(const Stream &rhs);
       ~Stream();
       Stream& linInterpolate(double upfactor, double lowfactor,
 			     Stream& rightvalue);
@@ -70,6 +71,7 @@ namespace Uintah {
       int speciesIndex(const ChemkinInterface* chemInterf, const char* name);
       void print(std::ostream& out) const;
       void print(std::ostream& out, ChemkinInterface* chemInterf);
+      void print_oneline(std::ofstream& out);
       //std::vector<double> convertStreamToVec(bool lsoot);
       std::vector<double> convertStreamToVec();
       void convertVecToStream(const std::vector<double>& vec_stateSpace, 

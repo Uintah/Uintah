@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <math.h>
 
 using namespace Uintah;
@@ -144,6 +145,52 @@ Stream::operator=(const Stream &rhs)
     }
   return *this;
   }
+
+bool
+Stream::operator==(const Stream &rhs)
+{
+  // Checks element by element for equality of two streams
+  if (d_density != rhs.d_density)
+    return(false);
+  else if (d_pressure != rhs.d_pressure)
+    return(false);
+  else if (d_temperature != rhs.d_temperature)
+    return(false);
+  else if (d_enthalpy != rhs.d_enthalpy)
+    return(false);
+  else if (d_sensibleEnthalpy != rhs.d_sensibleEnthalpy)
+    return(false);
+  else if (d_moleWeight != rhs.d_moleWeight)
+    return(false);
+  else if (d_cp != rhs.d_cp)
+    return(false);
+  else if (d_drhodf != rhs.d_drhodf)
+    return(false);
+  else if (d_drhodh != rhs.d_drhodh)
+    return(false);
+  else if (d_speciesConcn != rhs.d_speciesConcn)
+    return(false);
+  else if (d_mole != rhs.d_mole)
+    return(false);
+  else if (d_lsoot != rhs.d_lsoot)
+    return(false);
+  else if (rhs.d_numRxnVars > 0) {
+    if (d_rxnVarRates != rhs.d_rxnVarRates)
+      return(false);
+    else if (d_rxnVarNorm != rhs.d_rxnVarNorm)
+      return(false);
+  }
+  else if (rhs.d_lsoot) {
+    if (d_sootData != rhs.d_sootData)
+      return(false);
+  }
+  else if (d_CO2index = rhs.d_CO2index)
+    return(false);
+  else if (d_H2Oindex = rhs.d_H2Oindex)
+    return(false);
+  else
+    return(true);
+} 
 
 Stream::~Stream()
 {
@@ -463,9 +510,38 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
   out << endl;
 }
 
+void 
+Stream::print_oneline(std::ofstream& out) {
+  out << d_density << " " ;
+  out << d_pressure << " " ;
+  out << d_temperature << " " ;
+  out << d_enthalpy << " " ;
+  out << d_sensibleEnthalpy << " " ;
+  out << d_moleWeight << " " ;
+  out << d_cp << " " ;
+  out << d_drhodf << " " ;
+  out << d_drhodh << " " ;
+  for (int ii = 0; ii < d_speciesConcn.size(); ii++)
+    out << d_speciesConcn[ii] << " " ;
+  if (d_numRxnVars > 0) {
+    for (int ii = 0; ii < d_rxnVarRates.size(); ii++)
+      out << d_rxnVarRates[ii] << " " ;
+    for (int ii = 0; ii < d_rxnVarNorm.size(); ii++)
+      out << d_rxnVarNorm[ii] << " " ;
+  }
+  if (d_lsoot) {
+    for (int ii = 0; ii < d_sootData.size(); ii++)
+      out << d_sootData[ii] << " " ;
+  }
+  out << endl;
+}
+
 
 //
 // $Log$
+// Revision 1.24  2003/01/31 18:22:46  spinti
+// Removed conversion from stream to vector. Tables now stored as vector of streams.
+//
 // Revision 1.23  2003/01/24 22:51:21  spinti
 // Removed bugs that caused regression tester failures.
 //
