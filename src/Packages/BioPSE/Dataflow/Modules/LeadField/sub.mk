@@ -32,11 +32,24 @@ SRCS     += \
 	$(SRCDIR)/BuildMisfitField.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
-        Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
-        Core/TkExtensions Core/Math
+PSELIBS := \
+        Dataflow/Modules/Fields \
+        Dataflow/Network \
+        Dataflow/Ports \
+        Core/Datatypes \
+        Core/Persistent \
+        Core/Containers \
+        Core/Util \
+        Core/Exceptions \
+        Core/Thread \
+        Core/GuiInterface \
+        Core/Geom \
+        Core/Datatypes \
+        Core/Geometry \
+        Core/GeomInterface \
+        Core/TkExtensions \
+        Core/Math
+
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
