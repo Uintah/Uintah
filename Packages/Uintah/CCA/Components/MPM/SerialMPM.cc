@@ -112,12 +112,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
      if(mpm_matl->getFractureModel()){
        d_fracture = true;
-       lb->registerPermanentParticleState(m,lb->pCrackNormal1Label,
-					 lb->pCrackNormal1Label_preReloc); 
-       lb->registerPermanentParticleState(m,lb->pCrackNormal2Label,
-					 lb->pCrackNormal2Label_preReloc); 
-       lb->registerPermanentParticleState(m,lb->pCrackNormal3Label,
-					 lb->pCrackNormal3Label_preReloc); 
+       lb->registerPermanentParticleState(m,lb->pCrackNormalLabel,
+					 lb->pCrackNormalLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pToughnessLabel,
 					  lb->pToughnessLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pIsBrokenLabel,
@@ -160,9 +156,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pParticleIDLabel);
   if(d_fracture){
     t->computes(lb->pIsBrokenLabel);
-    t->computes(lb->pCrackNormal1Label);
-    t->computes(lb->pCrackNormal2Label);
-    t->computes(lb->pCrackNormal3Label);
+    t->computes(lb->pCrackNormalLabel);
     t->computes(lb->pToughnessLabel);
   }
   t->computes(d_sharedState->get_delt_label());
@@ -245,9 +239,7 @@ void SerialMPM::scheduleComputeBoundaryContact(SchedulerP& sched,
 			  this,&SerialMPM::computeBoundaryContact);
 
   t->requires(Task::OldDW, lb->pXLabel, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pCrackNormal1Label, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pCrackNormal2Label, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pCrackNormal3Label, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pCrackNormalLabel, Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pIsBrokenLabel, Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pVolumeLabel, Ghost::AroundCells, 1);
 
@@ -276,9 +268,7 @@ void SerialMPM::scheduleComputeConnectivity(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pXXLabel, Ghost::None);
   t->requires(Task::OldDW, lb->pVolumeLabel, Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pIsBrokenLabel, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pCrackNormal1Label, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pCrackNormal2Label, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pCrackNormal3Label, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pCrackNormalLabel, Ghost::AroundCells, 1);
   t->requires(Task::NewDW, lb->pTouchNormalLabel, Ghost::AroundCells, 1);
 
   t->computes(lb->pConnectivityLabel);
@@ -634,9 +624,7 @@ void SerialMPM::scheduleComputeFracture(SchedulerP& sched,
 
   t->requires(Task::OldDW, lb->pXLabel,            Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pIsBrokenLabel,     Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pCrackNormal1Label, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pCrackNormal2Label, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pCrackNormal3Label, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pCrackNormalLabel,  Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pVolumeLabel,       Ghost::AroundCells, 1);
 
   t->requires(Task::NewDW, lb->pXXLabel,                    Ghost::None);
@@ -650,9 +638,7 @@ void SerialMPM::scheduleComputeFracture(SchedulerP& sched,
 
   t->computes(lb->pStressAfterFractureReleaseLabel);
   t->computes(lb->pIsBrokenLabel_preReloc);
-  t->computes(lb->pCrackNormal1Label_preReloc);
-  t->computes(lb->pCrackNormal2Label_preReloc);
-  t->computes(lb->pCrackNormal3Label_preReloc);
+  t->computes(lb->pCrackNormalLabel_preReloc);
   t->computes(lb->pToughnessLabel_preReloc);
   sched->addTask(t, patches, matls);
 }

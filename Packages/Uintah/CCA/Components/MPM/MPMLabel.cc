@@ -87,13 +87,7 @@ MPMLabel::MPMLabel()
   pIsBrokenLabel = scinew VarLabel( "p.isBroken",
 			ParticleVariable<int>::getTypeDescription() );
 
-  pCrackNormal1Label = scinew VarLabel( "p.crackNormal1",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  pCrackNormal2Label = scinew VarLabel( "p.crackNormal2",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  pCrackNormal3Label = scinew VarLabel( "p.crackNormal3",
+  pCrackNormalLabel = scinew VarLabel( "p.crackNormal",
 			ParticleVariable<Vector>::getTypeDescription() );
 
   pToughnessLabel = scinew VarLabel( "p.toughness",
@@ -146,13 +140,7 @@ MPMLabel::MPMLabel()
   pIsBrokenLabel_preReloc = scinew VarLabel( "p.isBroken+",
 			ParticleVariable<int>::getTypeDescription() );
 
-  pCrackNormal1Label_preReloc = scinew VarLabel( "p.crackNormal1+",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  pCrackNormal2Label_preReloc = scinew VarLabel( "p.crackNormal2+",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  pCrackNormal3Label_preReloc = scinew VarLabel( "p.crackNormal3+",
+  pCrackNormalLabel_preReloc = scinew VarLabel( "p.crackNormal+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
   pToughnessLabel_preReloc = scinew VarLabel( "p.toughness+",
@@ -313,9 +301,7 @@ MPMLabel::~MPMLabel()
   delete pExternalHeatRateLabel;
   delete pSurfLabel;
   delete pIsBrokenLabel;
-  delete pCrackNormal1Label;
-  delete pCrackNormal2Label;
-  delete pCrackNormal3Label;
+  delete pCrackNormalLabel;
   delete pToughnessLabel;
   delete pEnergyReleaseRateLabel;
   delete pParticleIDLabel;
@@ -335,9 +321,7 @@ MPMLabel::~MPMLabel()
   delete pExternalHeatRateLabel_preReloc;
   delete pSurfLabel_preReloc;
   delete pIsBrokenLabel_preReloc;
-  delete pCrackNormal1Label_preReloc;
-  delete pCrackNormal2Label_preReloc;
-  delete pCrackNormal3Label_preReloc;
+  delete pCrackNormalLabel_preReloc;
   delete pToughnessLabel_preReloc;
   delete pEnergyReleaseRateLabel_preReloc;
   delete pParticleIDLabel_preReloc;
