@@ -183,8 +183,8 @@ void MPMICE::scheduleComputeStableTimestep(const LevelP& level,
 
 //______________________________________________________________________
 //
-void MPMICE::scheduleTimeAdvance(const LevelP&   level,
-                             SchedulerP&     sched)
+void
+MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
 {
   int numALLMatls=d_sharedState->getNumMatls();
   const PatchSet* patches = level->eachPatch();
@@ -325,15 +325,6 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
     delete react_sub;
 } // end scheduleTimeAdvance()
 
-//______________________________________________________________________
-// scheduleTimeAdvance version called by the AMR simulation controller.
-
-void
-MPMICE::scheduleTimeAdvance(const LevelP&, SchedulerP&, int , int )
-{
-  cout << "MPMICE component does not support ARM yet.\n";
-  throw InternalError("MPMICE component does not support AMR yet.");
-}
 
 //______________________________________________________________________
 //
