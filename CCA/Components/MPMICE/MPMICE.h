@@ -208,7 +208,7 @@ public:
                      int     component,
                      const NCVariable<Vector>& q_NC);
                      
-  void binaryPressureSearch(   StaticArray<constCCVariable<double> >& Temp, 
+  void binaryPressureSearch(StaticArray<constCCVariable<double> >& Temp, 
                             StaticArray<CCVariable<double> >& rho_micro, 
                             StaticArray<CCVariable<double> >& vol_frac, 
                             StaticArray<CCVariable<double> >& rho_CC_new,
@@ -222,7 +222,8 @@ public:
                             StaticArray<double> & cv,
                             double convergence_crit,
                             int numALLMatls,
-                            int count,
+                            int & count,
+                            double & sum,
                             IntVector c );                   
 //__________________________________
 //    R A T E   F O R M                   

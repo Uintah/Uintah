@@ -535,7 +535,7 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
                                    const MaterialSet* mpm_matls)
 {
 
-  cout_doing << "MPMICE::scheduleComputeLagrangianValuesMPM" << endl;
+   cout_doing << "MPMICE::scheduleComputeLagrangianValuesMPM" << endl;
 
    /* interpolateNCToCC */
 
@@ -1510,7 +1510,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     double    converg_coeff = 100.;
     double    convergence_crit = converg_coeff * DBL_EPSILON;
-    double    sum, c_2;
+    double    sum=0., c_2;
     double press_ref= d_sharedState->getRefPress();
     int numICEMatls = d_sharedState->getNumICEMatls();
     int numMPMMatls = d_sharedState->getNumMPMMatls();
@@ -1641,11 +1641,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           int indx = matl->getDWIndex();
           ostringstream desc;
           desc<<"TOP_equilibration_Mat_"<< indx<<"_patch_"<<patch->getID();
-          d_ice->printData( indx, patch,1,desc.str(),"rho_CC_new",rho_CC_new[m]);
-          d_ice->printData( indx, patch,1,desc.str(),"rho_micro", rho_micro[m]);
-      //  d_ice->printData( indx, patch,0,desc.str(),"speedSound",speedSound[m]);
-          d_ice->printData( indx, patch,1,desc.str(),"Temp_CC",   Temp[m]);     
-          d_ice->printData( indx, patch,1,desc.str(),"vol_frac_CC",vol_frac[m]);
+          d_ice->printData( indx,patch,1,desc.str(),"rho_CC_new",rho_CC_new[m]);
+          d_ice->printData( indx,patch,1,desc.str(),"rho_micro", rho_micro[m]);
+      //  d_ice->printData( indx,patch,0,desc.str(),"speedSound",speedSound[m]);
+          d_ice->printData( indx,patch,1,desc.str(),"Temp_CC",   Temp[m]);     
+          d_ice->printData( indx,patch,1,desc.str(),"vol_frac_CC",vol_frac[m]);
         }
       }
   //______________________________________________________________________
@@ -1770,11 +1770,12 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      // If the pressure solution has stalled out 
      //  then try a binary search
      if(count >= d_ice->d_max_iter_equilibration) {
+
         binaryPressureSearch( Temp, rho_micro, vol_frac, rho_CC_new,
                               speedSound,  dp_drho,  dp_de, 
                               press_eos, press, press_new, press_ref,
-                              cv, convergence_crit, numALLMatls,
-                              count,  c );
+                              cv, convergence_crit, numALLMatls, count, sum, c);
+
      }
      test_max_iter = std::max(test_max_iter, count);
 
@@ -1888,23 +1889,24 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
                             StaticArray<double> & cv,
                             double convergence_crit,
                             int numALLMatls,
-                            int count,
+                            int & count,
+                            double & sum,
                             IntVector c )
 {
    // Start over for this cell using a binary search
-  cout << " cell " << c << " Starting binary pressure search "<< endl;
+//   cout << " cell " << c << " Starting binary pressure search "<< endl;
    count = 0;
    bool converged = false;
    double c_2;
-   double Pleft, Pright, Ptemp, Pm;
-   double rhoMicroR, rhoMicroL;
+   double Pleft=0., Pright=0., Ptemp=0., Pm=0.;
+   double rhoMicroR=0., rhoMicroL=0.;
    StaticArray<double> vfR(numALLMatls);
    StaticArray<double> vfL(numALLMatls);
    Pm = press[c];
 
    while ( count < d_ice->d_max_iter_equilibration && converged == false) {
    count++;
-   double sum = 0.;
+   sum = 0.;
    for (int m = 0; m < numALLMatls; m++) {
      Material* matl = d_sharedState->getMaterial( m );
      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -2005,6 +2007,8 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
      Ptemp = 2.*Ptemp;
    }
    Pm = .5*(Pleft + Pright);
+//   cout << setprecision(15);
+//   cout << "Pm = " << Pm << " 1.-sum " << residual << endl;
   }   // end of converged
 }
 
@@ -2055,7 +2059,6 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double delX = dx.x();
     double delY = dx.y();
-    double delZ = dx.z();
     int prod_indx = -1;
     Ghost::GhostType  gn  = Ghost::None;    
     Ghost::GhostType  gac = Ghost::AroundCells;   
@@ -2204,6 +2207,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
            }
            surfaceTemp[c] = Temp;
 #if 0
+            double delZ = dx.z();
             double gradRhoX = 0.25 *
                               ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
                                 NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
@@ -2378,9 +2382,9 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
         //
         if(d_ice->d_models.size() == 0)  {     // MODEL REMOVE this stuff
           constCCVariable<double> burnedMassCC;
-          new_dw->get(burnedMassCC, MIlb->burnedMassCCLabel,   indx,patch, gac,1);
+          new_dw->get(burnedMassCC, MIlb->burnedMassCCLabel, indx,patch, gac,1);
           IntVector cIdx[8];  
-          for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+          for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
              patch->findCellsFromNode(*iter,cIdx);
             for (int in=0;in<8;in++){
               massBurnFraction[*iter] +=
@@ -2392,10 +2396,10 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
         //__________________________________
         if(d_ice->d_models.size() > 0)  { 
           constCCVariable<double> modelMass_src;
-	   new_dw->get(modelMass_src,Ilb->modelMass_srcLabel,indx, patch, gac,1);
+	   new_dw->get(modelMass_src,Ilb->modelMass_srcLabel,indx,patch, gac,1);
           
           IntVector cIdx[8];  
-          for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+          for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
              patch->findCellsFromNode(*iter,cIdx);
             for (int in=0;in<8;in++){
               massBurnFraction[*iter] +=
