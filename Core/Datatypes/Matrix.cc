@@ -114,6 +114,7 @@ Matrix::cg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
     for (j=0; j<rh.nrows(); j++)
       lhs[i][j]=lh[j];
   }
+  return 1;
 }
 
 int
@@ -225,6 +226,7 @@ Matrix::bicg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
     for (j=0; j<rh.nrows(); j++)
       lhs[i][j]=lh[j];
   }
+  return 1;
 }
 
 int
