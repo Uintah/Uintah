@@ -1,6 +1,5 @@
 #include <Uintah/Components/ICE/ICELabel.h>
 #include <Uintah/Grid/CCVariable.h>
-//#include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/SFCXVariable.h>
 #include <Uintah/Grid/SFCYVariable.h>
 #include <Uintah/Grid/SFCZVariable.h>
@@ -8,9 +7,11 @@
 #include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Grid/PerPatch.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Geometry/Vector.h>
 
 using namespace Uintah;
 using namespace Uintah::ICESpace;
+using SCICore::Geometry::Vector;
 
 ICELabel::ICELabel()
 {
@@ -30,7 +31,8 @@ ICELabel::ICELabel()
 
     temp_CCLabel      = 
      scinew VarLabel("temp_CC",   CCVariable<double>::getTypeDescription() );
-
+    vel_CCLabel       = 
+     scinew VarLabel("vel_CC",    CCVariable<Vector>::getTypeDescription() );
     uvel_CCLabel       = 
      scinew VarLabel("uvel_CC",    CCVariable<double>::getTypeDescription() );
     vvel_CCLabel       = 
@@ -132,6 +134,7 @@ ICELabel::~ICELabel()
     delete  delPress_CCLabel;
     delete  rho_CCLabel;
     delete temp_CCLabel;
+    delete vel_CCLabel;
     delete uvel_CCLabel;
     delete vvel_CCLabel;
     delete wvel_CCLabel;
@@ -175,6 +178,10 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.18  2001/01/05 16:34:10  jas
+// Changed over uvel_CC, vvel_CC, wvel_CC to a CCVariable<Vector> in all steps
+// where CC velocities are used.
+//
 // Revision 1.17  2001/01/03 00:51:53  harman
 // - added cflux, OFC, IFC, q_in_CF, q_out_CF
 // - Advection operator now in 3D, not fully tested

@@ -172,9 +172,7 @@ void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
       t->computes( dw, lb->cv_CCLabel,        dwindex, patch);
       t->computes( dw, lb->viscosity_CCLabel, dwindex, patch);
       t->computes( dw, lb->vol_frac_CCLabel,  dwindex, patch);
-      t->computes( dw, lb->uvel_CCLabel,      dwindex, patch);
-      t->computes( dw, lb->vvel_CCLabel,      dwindex, patch);
-      t->computes( dw, lb->wvel_CCLabel,      dwindex, patch);
+      t->computes( dw, lb->vel_CCLabel,      dwindex, patch);
       t->computes( dw, lb->uvel_FCLabel,      dwindex, patch);
       t->computes( dw, lb->vvel_FCLabel,      dwindex, patch);
       t->computes( dw, lb->wvel_FCLabel,      dwindex, patch);
@@ -203,9 +201,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,SchedulerP& sched,
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* matl = d_sharedState->getICEMaterial(m);
       int dwindex = matl->getDWIndex();
-      task->requires(dw, lb->uvel_CCLabel,    dwindex,    patch,  Ghost::None);
-      task->requires(dw, lb->vvel_CCLabel,    dwindex,    patch,  Ghost::None);
-      task->requires(dw, lb->wvel_CCLabel,    dwindex,    patch,  Ghost::None);
+      task->requires(dw, lb->vel_CCLabel,    dwindex,    patch,  Ghost::None);
     }
     sched->addTask(task);
   }
@@ -325,9 +321,7 @@ void ICE::scheduleStep1c(const Patch* patch,SchedulerP& sched,
     ICEMaterial* matl = d_sharedState->getICEMaterial(m);
     int dwindex = matl->getDWIndex();
     task->requires(old_dw,lb->rho_CCLabel,   dwindex,patch,Ghost::None);
-    task->requires(old_dw,lb->uvel_CCLabel,  dwindex,patch,Ghost::None);
-    task->requires(old_dw,lb->vvel_CCLabel,  dwindex,patch,Ghost::None);
-    task->requires(old_dw,lb->wvel_CCLabel,  dwindex,patch,Ghost::None);
+    task->requires(old_dw,lb->vel_CCLabel,  dwindex,patch,Ghost::None);
     task->requires(new_dw,lb->rho_micro_equil_CCLabel,
 		   dwindex,patch,Ghost::None);
     
@@ -441,9 +435,7 @@ void ICE::scheduleStep4a(const Patch* patch, SchedulerP& sched,
     ICEMaterial* matl = d_sharedState->getICEMaterial(m);
     int dwindex = matl->getDWIndex();
     task->requires(old_dw,  lb->rho_CCLabel,        dwindex,patch,Ghost::None);
-    task->requires(old_dw,  lb->uvel_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires(old_dw,  lb->vvel_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires(old_dw,  lb->wvel_CCLabel,       dwindex,patch,Ghost::None);
+    task->requires(old_dw,  lb->vel_CCLabel,       dwindex,patch,Ghost::None);
     task->requires(old_dw,  lb->viscosity_CCLabel,  dwindex,patch,Ghost::None);
     task->requires(new_dw,  lb->vol_frac_CCLabel,   dwindex,patch,Ghost::None);
     
@@ -502,9 +494,7 @@ void ICE::scheduleStep5a(const Patch* patch, SchedulerP&  sched,
     ICEMaterial* matl = d_sharedState->getICEMaterial(m);
     int dwindex = matl->getDWIndex();
     task->requires( old_dw, lb->rho_CCLabel,        dwindex,patch,Ghost::None);
-    task->requires( old_dw, lb->uvel_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires( old_dw, lb->vvel_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires( old_dw, lb->wvel_CCLabel,       dwindex,patch,Ghost::None);
+    task->requires( old_dw, lb->vel_CCLabel,       dwindex,patch,Ghost::None);
     task->requires( old_dw, lb->cv_CCLabel,         dwindex,patch,Ghost::None);
     task->requires( old_dw, lb->temp_CCLabel,       dwindex,patch,Ghost::None);
     task->requires( new_dw, lb->xmom_source_CCLabel,dwindex,patch,Ghost::None);
@@ -572,9 +562,7 @@ void ICE::scheduleStep6and7(const Patch* patch, SchedulerP& sched,
     int dwindex = matl->getDWIndex();
     task->requires(old_dw, lb->cv_CCLabel,dwindex,patch,Ghost::None,0);
     task->requires(old_dw, lb->rho_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires(old_dw, lb->uvel_CCLabel,      dwindex,patch,Ghost::None);
-    task->requires(old_dw, lb->vvel_CCLabel,      dwindex,patch,Ghost::None);
-    task->requires(old_dw, lb->wvel_CCLabel,      dwindex,patch,Ghost::None);
+    task->requires(old_dw, lb->vel_CCLabel,      dwindex,patch,Ghost::None);
     task->requires(old_dw, lb->temp_CCLabel,      dwindex,patch,Ghost::None);
     task->requires(new_dw, lb->xmom_L_ME_CCLabel, dwindex,patch,Ghost::None,0);
     task->requires(new_dw, lb->ymom_L_ME_CCLabel, dwindex,patch,Ghost::None,0);
@@ -585,9 +573,7 @@ void ICE::scheduleStep6and7(const Patch* patch, SchedulerP& sched,
     task->computes(new_dw, lb->temp_CCLabel,      dwindex,patch);
     task->computes(new_dw, lb->rho_CCLabel,       dwindex,patch);
     task->computes(new_dw, lb->cv_CCLabel,        dwindex,patch);
-    task->computes(new_dw, lb->uvel_CCLabel,      dwindex,patch);
-    task->computes(new_dw, lb->vvel_CCLabel,      dwindex,patch);
-    task->computes(new_dw, lb->wvel_CCLabel,      dwindex,patch);
+    task->computes(new_dw, lb->vel_CCLabel,      dwindex,patch);
   }
   task->computes(new_dw, d_sharedState->get_delt_label());
   sched->addTask(task);
@@ -612,6 +598,7 @@ void ICE::actuallyComputeStableTimestep(
   Vector dx = patch->dCell();
   double delt_CFL = 100000,delt_stability = 1000000,fudge_factor = 1.;
   CCVariable<double> uvel,vvel,wvel,speedSound;
+  CCVariable<Vector> vel;
   double CFL,N_ITERATIONS_TO_STABILIZE = 2;
  
   ::iterNum++;
@@ -627,25 +614,23 @@ void ICE::actuallyComputeStableTimestep(
 
     new_dw->get(speedSound, lb->speedSound_equiv_CCLabel,
 		dwindex,patch,Ghost::None, 0);
-    new_dw->get(uvel, lb->uvel_CCLabel, dwindex,patch,Ghost::None, 0);
-    new_dw->get(vvel, lb->vvel_CCLabel, dwindex,patch,Ghost::None, 0);
-    new_dw->get(wvel, lb->wvel_CCLabel, dwindex,patch,Ghost::None, 0);
+    new_dw->get(vel, lb->vel_CCLabel, dwindex,patch,Ghost::None, 0);
         
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){   
       double A = fudge_factor*CFL*dx.x()/(speedSound[*iter] + 
-					  fabs(uvel[*iter]) + d_SMALL_NUM);
+					  fabs(vel[*iter].x()) + d_SMALL_NUM);
       double B = fudge_factor*CFL*dx.y()/(speedSound[*iter] + 
-					  fabs(vvel[*iter]) + d_SMALL_NUM);
+					  fabs(vel[*iter].y()) + d_SMALL_NUM);
       double C = fudge_factor*CFL*dx.z()/(speedSound[*iter] + 
-					  fabs(wvel[*iter]) + d_SMALL_NUM);
+					  fabs(vel[*iter].z()) + d_SMALL_NUM);
       
       delt_CFL = std::min(A, delt_CFL);
       delt_CFL = std::min(B, delt_CFL);
       delt_CFL = std::min(C, delt_CFL);
 
-      A = fudge_factor * 0.5 * (dx.x()*dx.x())/fabs(uvel[*iter]);
-      B = fudge_factor * 0.5 * (dx.y()*dx.y())/fabs(vvel[*iter]);
-      C = fudge_factor * 0.5 * (dx.z()*dx.z())/fabs(wvel[*iter]);
+      A = fudge_factor * 0.5 * (dx.x()*dx.x())/fabs(vel[*iter].x());
+      B = fudge_factor * 0.5 * (dx.y()*dx.y())/fabs(vel[*iter].y());
+      C = fudge_factor * 0.5 * (dx.z()*dx.z())/fabs(vel[*iter].z());
 
       delt_stability = std::min(A, delt_stability);
       delt_stability = std::min(B, delt_stability);
@@ -683,6 +668,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     int dwindex = ice_matl->getDWIndex();
     CCVariable<double> rho_micro,rho_CC,Temp_CC,cv,speedSound,visc_CC;
     CCVariable<double> vol_frac_CC,uvel_CC,vvel_CC,wvel_CC;
+    CCVariable<Vector> vel_CC;
     SFCXVariable<double> uvel_FC;
     SFCYVariable<double> vvel_FC;
     SFCZVariable<double> wvel_FC;
@@ -694,18 +680,14 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     new_dw->allocate(speedSound,  lb->speedSound_CCLabel, dwindex,patch);
     new_dw->allocate(visc_CC,     lb->viscosity_CCLabel,  dwindex,patch);
     new_dw->allocate(vol_frac_CC, lb->vol_frac_CCLabel,   dwindex,patch);
-    
-    new_dw->allocate(uvel_CC,     lb->uvel_CCLabel,       dwindex,patch);
-    new_dw->allocate(vvel_CC,     lb->vvel_CCLabel,       dwindex,patch);
-    new_dw->allocate(wvel_CC,     lb->wvel_CCLabel,       dwindex,patch);
+    new_dw->allocate(vel_CC,     lb->vel_CCLabel,       dwindex,patch);
     
     new_dw->allocate(uvel_FC,     lb->uvel_FCLabel,       dwindex,patch);
     new_dw->allocate(vvel_FC,     lb->vvel_FCLabel,       dwindex,patch);
     new_dw->allocate(wvel_FC,     lb->wvel_FCLabel,       dwindex,patch);
     
     ice_matl->initializeCells(rho_micro,rho_CC,Temp_CC,cv,speedSound,visc_CC,
-			      vol_frac_CC,uvel_CC,vvel_CC,wvel_CC,patch,
-			      new_dw);
+			      vol_frac_CC,vel_CC,patch,new_dw);
 
     uvel_FC.initialize(0.);
     vvel_FC.initialize(0.);
@@ -713,9 +695,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     
     setBC(rho_CC, "Density",      patch);
     setBC(Temp_CC,"Temperature",  patch);
-    setBC(uvel_CC,"Velocity","x", patch);
-    setBC(vvel_CC,"Velocity","y", patch);
-    setBC(wvel_CC,"Velocity","z", patch);
+    setBC(vel_CC,"Velocity", patch);
 
     new_dw->put(rho_micro,  lb->rho_micro_CCLabel, dwindex,patch);
     new_dw->put(rho_CC,     lb->rho_CCLabel,       dwindex,patch);
@@ -723,9 +703,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     new_dw->put(Temp_CC,    lb->temp_CCLabel,      dwindex,patch);
     new_dw->put(cv,         lb->cv_CCLabel,        dwindex,patch);
     new_dw->put(speedSound, lb->speedSound_CCLabel,dwindex,patch);
-    new_dw->put(uvel_CC,    lb->uvel_CCLabel,      dwindex,patch);
-    new_dw->put(vvel_CC,    lb->vvel_CCLabel,      dwindex,patch);
-    new_dw->put(wvel_CC,    lb->wvel_CCLabel,      dwindex,patch);
+    new_dw->put(vel_CC,    lb->vel_CCLabel,      dwindex,patch);
     new_dw->put(uvel_FC,    lb->uvel_FCLabel,      dwindex,patch);
     new_dw->put(vvel_FC,    lb->vvel_FCLabel,      dwindex,patch);
     new_dw->put(wvel_FC,    lb->wvel_FCLabel,      dwindex,patch);
@@ -775,7 +753,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
 #endif
 }
 
-/* --------------------------------------------------------------------- 
+/* ---g------------------------------------------------------------------ 
  Function~  ICE::actuallyStep1a--
  Purpose~   Compute the speed of sound for each materials   
 _____________________________________________________________________*/
@@ -1090,6 +1068,7 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
 
   CCVariable<double> rho_CC, rho_micro_CC;
   CCVariable<double> uvel_CC, vvel_CC, wvel_CC;
+  CCVariable<Vector> vel_CC;
   CCVariable<double> press_CC;
   new_dw->get(press_CC,lb->press_CCLabel, 0, patch, Ghost::None, 0);
 
@@ -1101,9 +1080,7 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
     old_dw->get(rho_CC,  lb->rho_CCLabel,   dwindex, patch, Ghost::None, 0);
     new_dw->get(rho_micro_CC, lb->rho_micro_equil_CCLabel,dwindex,patch,
 		Ghost::None, 0);
-    old_dw->get(uvel_CC, lb->uvel_CCLabel,  dwindex, patch, Ghost::None, 0);
-    old_dw->get(vvel_CC, lb->vvel_CCLabel,  dwindex, patch, Ghost::None, 0);
-    old_dw->get(wvel_CC, lb->wvel_CCLabel,  dwindex, patch, Ghost::None, 0);
+    old_dw->get(vel_CC, lb->vel_CCLabel,  dwindex, patch, Ghost::None, 0);
     
     SFCXVariable<double> uvel_FC;
     SFCYVariable<double> vvel_FC;
@@ -1133,8 +1110,8 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
 	rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
 	//__________________________________
 	// interpolation to the face
-	term1 = (rho_CC[adjcell] * vvel_CC[adjcell] +
-		 rho_CC[curcell] * vvel_CC[curcell])/rho_FC;            
+	term1 = (rho_CC[adjcell] * vel_CC[adjcell].y() +
+		 rho_CC[curcell] * vel_CC[curcell].y())/rho_FC;            
 	//__________________________________
 	// pressure term
 	press_coeff = 2.0/(rho_micro_FC);
@@ -1157,8 +1134,8 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
 	rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
 	//__________________________________
 	// interpolation to the face
-	term1 = (rho_CC[adjcell] * uvel_CC[adjcell] +
-		 rho_CC[curcell] * uvel_CC[curcell])/rho_FC;
+	term1 = (rho_CC[adjcell] * vel_CC[adjcell].x() +
+		 rho_CC[curcell] * vel_CC[curcell].x())/rho_FC;
 	//__________________________________
 	// pressure term
 	press_coeff = 2.0/(rho_micro_FC);
@@ -1184,8 +1161,8 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
 	
 	//__________________________________
 	// interpolation to the face
-	term1 = (rho_CC[adjcell] * wvel_CC[adjcell] +
-		 rho_CC[curcell] * wvel_CC[curcell])/rho_FC;
+	term1 = (rho_CC[adjcell] * vel_CC[adjcell].z() +
+		 rho_CC[curcell] * vel_CC[curcell].z())/rho_FC;
 	
 	//__________________________________
 	// pressure term
@@ -1202,9 +1179,8 @@ void ICE::actuallyStep1c(const ProcessorGroup*, const Patch* patch,
       }
     }
     
-    setBC(uvel_CC,"Velocity","x",patch);
-    setBC(vvel_CC,"Velocity","y",patch);
-    setBC(wvel_CC,"Velocity","z",patch);
+    // Todd:  Why are we setting the velocity bcs but not storing them??
+    setBC(vel_CC,"Velocity",patch);
     setBC(uvel_FC,"Velocity","x",patch);
     setBC(vvel_FC,"Velocity","y",patch);
     setBC(wvel_FC,"Velocity","z",patch);
@@ -1716,6 +1692,7 @@ void ICE::actuallyStep4a(const ProcessorGroup*,const Patch* patch,
   
   CCVariable<double>   rho_CC;
   CCVariable<double>   uvel_CC, vvel_CC, wvel_CC;
+  CCVariable<Vector>   vel_CC;
   CCVariable<double>   visc_CC;
   CCVariable<double>   vol_frac;
   SFCXVariable<double> pressX_FC;
@@ -1730,9 +1707,7 @@ void ICE::actuallyStep4a(const ProcessorGroup*,const Patch* patch,
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
     int dwindex = matl->getDWIndex();
     old_dw->get(rho_CC,  lb->rho_CCLabel,      dwindex,patch,Ghost::None, 0);  
-    old_dw->get(uvel_CC, lb->uvel_CCLabel,     dwindex,patch,Ghost::None, 0);
-    old_dw->get(vvel_CC, lb->vvel_CCLabel,     dwindex,patch,Ghost::None, 0);
-    old_dw->get(wvel_CC, lb->wvel_CCLabel,     dwindex,patch,Ghost::None, 0);
+    old_dw->get(vel_CC, lb->vel_CCLabel,     dwindex,patch,Ghost::None, 0);
     old_dw->get(visc_CC, lb->viscosity_CCLabel,dwindex,patch,Ghost::None, 0);
     new_dw->get(vol_frac,lb->vol_frac_CCLabel, dwindex,patch,Ghost::None, 0);
 
@@ -1890,11 +1865,10 @@ void ICE::actuallyStep5a(const ProcessorGroup*, const Patch* patch,
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
     int dwindex = matl->getDWIndex();
     CCVariable<double> rho_CC,uvel_CC,vvel_CC, wvel_CC,cv_CC,temp_CC;
+    CCVariable<Vector> vel_CC;
     CCVariable<double> xmom_source,ymom_source, zmom_source,int_eng_source;
     old_dw->get(rho_CC,  lb->rho_CCLabel,     dwindex,patch,Ghost::None, 0);
-    old_dw->get(uvel_CC, lb->uvel_CCLabel,    dwindex,patch,Ghost::None, 0);
-    old_dw->get(vvel_CC, lb->vvel_CCLabel,    dwindex,patch,Ghost::None, 0);
-    old_dw->get(wvel_CC, lb->wvel_CCLabel,    dwindex,patch,Ghost::None, 0);
+    old_dw->get(vel_CC, lb->vel_CCLabel,    dwindex,patch,Ghost::None, 0);
     old_dw->get(cv_CC,   lb->cv_CCLabel,      dwindex,patch,Ghost::None, 0);
     old_dw->get(temp_CC, lb->temp_CCLabel,    dwindex,patch,Ghost::None, 0);
     new_dw->get(xmom_source,    lb->xmom_source_CCLabel,dwindex,patch,
@@ -1921,16 +1895,16 @@ void ICE::actuallyStep5a(const ProcessorGroup*, const Patch* patch,
       // +  mass_source[*iter];
       rho_L[*iter]  = mass_L[*iter]/vol;
       
-      xmom_L[*iter] = mass * uvel_CC[*iter]
-	//- uvel_CC[*iter] * mass_source[*iter]
+      xmom_L[*iter] = mass * vel_CC[*iter].x()
+	//- vel_CC[*iter].x() * mass_source[*iter]
 	+ xmom_source[*iter];
       
-      ymom_L[*iter] = mass * vvel_CC[*iter]
-	//- vvel_CC[*iter] * mass_source[*iter]
+      ymom_L[*iter] = mass * vel_CC[*iter].y()
+	//- vel_CC[*iter].y() * mass_source[*iter]
 	+ ymom_source[*iter];
       
-      zmom_L[*iter] = mass * wvel_CC[*iter]
-	//- wvel_CC[*iter] * mass_source[*iter]
+      zmom_L[*iter] = mass * vel_CC[*iter].z()
+	//- vel_CC[*iter].z() * mass_source[*iter]
 	+ zmom_source[*iter];
       
       int_eng_L[*iter] = mass * cv_CC[*iter] * temp_CC[*iter]
@@ -2251,12 +2225,11 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
     new_dw->get(speedSound, lb->speedSound_equiv_CCLabel,dwindex,patch,
 		Ghost::None,0);
     CCVariable<double> uvel_CC, vvel_CC, wvel_CC, rho_CC, visc_CC, cv,temp;
+    CCVariable<Vector> vel_CC;
     new_dw->allocate(rho_CC, lb->rho_CCLabel,        dwindex,patch);
     new_dw->allocate(temp,   lb->temp_CCLabel,       dwindex,patch);
     new_dw->allocate(cv,     lb->cv_CCLabel,         dwindex,patch);
-    new_dw->allocate(uvel_CC,lb->uvel_CCLabel,       dwindex,patch);
-    new_dw->allocate(vvel_CC,lb->vvel_CCLabel,       dwindex,patch);
-    new_dw->allocate(wvel_CC,lb->wvel_CCLabel,       dwindex,patch);
+    new_dw->allocate(vel_CC,lb->vel_CCLabel,       dwindex,patch);
     new_dw->allocate(visc_CC,lb->viscosity_CCLabel,  dwindex,patch);
  
     cv = cv_old;
@@ -2293,7 +2266,7 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
       rho_CC[*iter] = (mass_L[*iter] + q_advected[*iter]) * invvol;
     }
     
-    // Advect X momentum and backout uvel_CC
+    // Advect X momentum and backout vel_CC.x()
     for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
       q_CC[*iter] = xmom_L_ME[*iter] * invvol;
     }
@@ -2303,7 +2276,7 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
 
     for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
       mass = rho_CC[*iter] * vol;
-      uvel_CC[*iter] = (xmom_L_ME[*iter] + q_advected[*iter])/mass;
+      vel_CC[*iter].x( (xmom_L_ME[*iter] + q_advected[*iter])/mass );
     }
     // Advect Y momentum and backout vvel_CC
     for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
@@ -2315,7 +2288,7 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
     
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       mass = rho_CC[*iter] * vol;
-      vvel_CC[*iter] = (ymom_L_ME[*iter] + q_advected[*iter])/mass;
+      vel_CC[*iter].y( (ymom_L_ME[*iter] + q_advected[*iter])/mass );
     }
     
     // Advect Z momentum and backout wvel_CC
@@ -2328,7 +2301,7 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
                                         
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       mass = rho_CC[*iter] * vol;
-      wvel_CC[*iter] = (zmom_L_ME[*iter] + q_advected[*iter])/mass;
+      vel_CC[*iter].z( (zmom_L_ME[*iter] + q_advected[*iter])/mass );
     }
 
     // Advect internal energy and backout Temp_CC
@@ -2346,9 +2319,8 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
 
     setBC(rho_CC,   "Density",              patch);
     setBC(temp,     "Temperature",          patch);
-    setBC(uvel_CC,  "Velocity",     "x",    patch);
-    setBC(vvel_CC,  "Velocity",     "y",    patch);
-    setBC(wvel_CC,  "Velocity",     "z",    patch);
+    setBC(vel_CC,   "Velocity",             patch);
+
     /*`==========DEBUG============*/ 
 #if switchDebug_advance_advect
     printData( patch,1, "AFTER Advection before BC's",   "rho",      rho_CC);
@@ -2359,23 +2331,23 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
 #endif
     /*==========DEBUG============`*/
     
-    // Compute new delt
+    // Compute new delT
     
     for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
       double A = fudge_factor*CFL*dx.x()/(speedSound[*iter] + 
-					  fabs(uvel_CC[*iter])+d_SMALL_NUM);
+					  fabs(vel_CC[*iter].x())+d_SMALL_NUM);
       double B = fudge_factor*CFL*dx.y()/(speedSound[*iter] + 
-					  fabs(vvel_CC[*iter])+d_SMALL_NUM);
+					  fabs(vel_CC[*iter].y())+d_SMALL_NUM);
       double C = fudge_factor*CFL*dx.z()/(speedSound[*iter] + 
-					  fabs(wvel_CC[*iter])+d_SMALL_NUM);
+					  fabs(vel_CC[*iter].z())+d_SMALL_NUM);
       
       delt_CFL = std::min(A, delt_CFL);
       delt_CFL = std::min(B, delt_CFL);
       delt_CFL = std::min(C, delt_CFL);
       
-      A = fudge_factor * 0.5 * (dx.x()*dx.x())/fabs(uvel_CC[*iter]);
-      B = fudge_factor * 0.5 * (dx.y()*dx.y())/fabs(vvel_CC[*iter]);
-      C = fudge_factor * 0.5 * (dx.z()*dx.z())/fabs(wvel_CC[*iter]);
+      A = fudge_factor * 0.5 * (dx.x()*dx.x())/fabs(vel_CC[*iter].x());
+      B = fudge_factor * 0.5 * (dx.y()*dx.y())/fabs(vel_CC[*iter].y());
+      C = fudge_factor * 0.5 * (dx.z()*dx.z())/fabs(vel_CC[*iter].z());
       
       delt_stability = std::min(A, delt_stability);
       delt_stability = std::min(B, delt_stability);
@@ -2383,9 +2355,7 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
     }
     
     new_dw->put(rho_CC, lb->rho_CCLabel,  dwindex,patch);
-    new_dw->put(uvel_CC,lb->uvel_CCLabel, dwindex,patch);
-    new_dw->put(vvel_CC,lb->vvel_CCLabel, dwindex,patch);
-    new_dw->put(wvel_CC,lb->wvel_CCLabel, dwindex,patch);
+    new_dw->put(vel_CC,lb->vel_CCLabel, dwindex,patch);
     new_dw->put(temp,   lb->temp_CCLabel, dwindex,patch);
     
     // These are carried forward variables, they don't change
@@ -2453,8 +2423,8 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
 }
 
 
-void ICE::setBC(CCVariable<double>& variable, const  string& kind, 
-		const string& comp, const Patch* patch) 
+void ICE::setBC(CCVariable<Vector>& variable, const string& kind, 
+		const Patch* patch) 
 {
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;
@@ -2476,23 +2446,11 @@ void ICE::setBC(CCVariable<double>& variable, const  string& kind,
     
     if (bc_base->getType() == "Velocity") {
       VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet") {
-	if (comp == "x")
-	  variable.fillFace(face,bc->getValue().x());
-	if (comp == "y")
-	  variable.fillFace(face,bc->getValue().y());
-	if (comp == "z")
-	  variable.fillFace(face,bc->getValue().z());
-      }
+      if (bc->getKind() == "Dirichlet") 
+	variable.fillFace(face,bc->getValue());
       
-      if (bc->getKind() == "Neumann") {
-	if (comp == "x")
-	  variable.fillFaceFlux(face,bc->getValue().x(),dx);
-	if (comp == "y")
-	  variable.fillFaceFlux(face,bc->getValue().y(),dx);
-	if (comp == "z")
-	  variable.fillFaceFlux(face,bc->getValue().z(),dx);
-      }
+      if (bc->getKind() == "Neumann") 
+	variable.fillFaceFlux(face,bc->getValue(),dx);
     }
   }
 
@@ -3516,6 +3474,10 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.76  2001/01/05 16:34:09  jas
+// Changed over uvel_CC, vvel_CC, wvel_CC to a CCVariable<Vector> in all steps
+// where CC velocities are used.
+//
 // Revision 1.75  2001/01/04 03:35:42  jas
 // Remove john_debugs.  Now specifying max_iter_equilibration in the input
 // file instead of using #define MAX_ITER_EQUILIBRATION.
