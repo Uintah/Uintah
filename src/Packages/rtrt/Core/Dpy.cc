@@ -161,7 +161,10 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
     nworkers(nworkers), bench(bench), ncounters(ncounters),
     c0(c0), c1(c1), frameless(frameless),synch_frameless(0),
     display_frames(display_frames), stealth_(NULL),
-    showImage_(NULL), doAutoJitter_(false), doJitter_(false)
+    showImage_(NULL), doAutoJitter_(false), doJitter_(false),
+    showLights_( false ), lightsShowing_( false ),
+    turnOffAllLights_( false ), turnOnAllLights_( false ),
+    turnOnLight_( false ), turnOffLight_( false )
 {
   ppc = new PerProcessorContext( pp_size, scratchsize );
 
@@ -355,6 +358,31 @@ Dpy::renderFrame() {
 
   //drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(),Color(0,1,0));
 
+  if( showLights_ && !lightsShowing_ ){
+    scene->renderLights( true );
+    lightsShowing_ = true;
+  } else if( !showLights_ && lightsShowing_ ){
+    scene->renderLights( false );
+    lightsShowing_ = false;
+  }
+
+  if( turnOffAllLights_ ){
+    scene->turnOffAllLights();
+    turnOffAllLights_ = false;
+  }
+  if( turnOnAllLights_ ){
+    scene->turnOnAllLights();
+    turnOnAllLights_ = false;
+  }
+  if( turnOnLight_ ) {
+    scene->turnOnLight( turnOnLight_ );
+    turnOnLight_ = NULL;
+  }
+  if( turnOffLight_ ) {
+    scene->turnOffLight( turnOffLight_ );
+    turnOffLight_ = NULL;
+  }
+
   barrier->wait(nworkers+1);
 
   // sync all the workers.  scene->get_image(rendering_scene) should now
@@ -462,3 +490,4 @@ Dpy::get_barrier()
 {
   return barrier;
 }
+
