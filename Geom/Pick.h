@@ -20,6 +20,7 @@
 #include <Geometry/Vector.h>
 #include <Multitask/ITC.h>
 
+class Roe;
 class BaseWidget;
 class MessageBase;
 class Module;
@@ -39,6 +40,7 @@ class GeomPick : public GeomContainer {
     BaseWidget* widget;
     int widget_data;
     int selected;
+    int ignore;
     MaterialHandle highlight;
 
     GeomPick(const GeomPick&);
@@ -63,9 +65,11 @@ public:
     void set_module_data(void*);
     void set_widget_data(int);
 
-    void pick(const BState& bs);
+    void pick(Roe* roe, const BState& bs);
     void moved(int axis, double distance, const Vector& delta, const BState& bs);
     void release(const BState& bs);
+
+    void ignore_until_release();
 
     // For OpenGL
 #ifdef SCI_OPENGL
