@@ -689,18 +689,7 @@ OpenGL::redraw_frame()
     glXMakeCurrent(dpy, win, cx);
     glXWaitX();
 #if defined(HAVE_GLEW)
-    static bool glew_init = false;
-    if (!glew_init) {
-      glewExperimental = GL_TRUE;
-      GLenum err = glewInit();
-      if (GLEW_OK != err )
-      {
-        /* problem: glewInit failed, something is seriously wrong */
-	fprintf(stderr, "Error: %s\n", glewGetErrorString(err)); 
-      }
-      fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
-      glew_init = true;
-    }
+    sci_glew_init();
 #endif
     current_drawer=this;
     GLint data[1];

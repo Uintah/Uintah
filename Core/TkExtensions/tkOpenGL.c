@@ -53,6 +53,26 @@
 #include <X11/extensions/SGIStereo.h>
 #endif
 
+#ifdef HAVE_GLEW
+int sci_glew_init()
+{
+  static int glew_init = 0;
+  if(!glew_init) {
+    glewExperimental = GL_TRUE;
+    GLenum err = glewInit();
+    if (GLEW_OK != err )
+    {
+	/* problem: glewInit failed, something is seriously wrong */
+	fprintf(stderr, "Error: %s\n", glewGetErrorString(err)); 
+	return 1;
+    }
+    fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+    glew_init = 1;
+  }
+  return 0;
+}
+#endif
+
 /*
  * A data structure of the following type is kept for each OpenGL
  * widget managed by this file:

@@ -570,8 +570,13 @@ EditTransferFunc2::redraw()
       gui->unlock();
       return;
     }
+    glXMakeCurrent(dpy_, win_, ctx_);
+#ifdef HAVE_GLEW
+    sci_glew_init();
+#endif
+  } else {
+    glXMakeCurrent(dpy_, win_, ctx_);
   }
-  glXMakeCurrent(dpy_, win_, ctx_);
   
   //----------------------------------------------------------------
   // decide what rasterization to use
