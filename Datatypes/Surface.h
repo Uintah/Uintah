@@ -39,7 +39,7 @@ protected:
 	PointsSurf,
 	ScalarTriSurf,
 	STree,
-	Other,
+	Other
     };
     Surface(Representation, int closed);
 private:
@@ -59,7 +59,7 @@ public:
     enum BoundaryType {
 	DirichletExpression,
 	DirichletData,
-	None,
+	None
     };
     clString boundary_expr;
     BoundaryType boundary_type;

@@ -382,7 +382,7 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
        && addr < self->priv->stackbot+self->priv->stacklen){
 	self->priv->redlen -= pagesize;
 	if(self->priv->redlen <= 0){
-	    fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) ran off end of stack! \n",
+	    fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) ran off end of stack (signal %s)!\n",
 		    7,7,7,tname, getpid(), signam);
 	    fprintf(stderr, "Stack size was %d bytes\n", self->priv->stacklen-pagesize);
 	} else {
@@ -415,7 +415,7 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
 	} else if(buf[0] == 'd' || buf[0] == 'D') {
 	    // Start the debugger...
 	    Task::debug(Task::self());
-	    while(1){
+	    for(;;){
 		sigpause(0);
 	    }
 	} else if(buf[0]=='r' || buf[0]=='R'){

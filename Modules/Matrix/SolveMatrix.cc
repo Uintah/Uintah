@@ -154,7 +154,9 @@ Module* SolveMatrix::clone(int deep)
 
 void SolveMatrix::execute()
 {
+#ifdef SCI_SPARSELIB
  int flag = 1;
+#endif
   
     MatrixHandle matrix;
     if(!matrixport->get(matrix))
@@ -183,9 +185,11 @@ void SolveMatrix::execute()
 
   
   clString pre=precond.get();
+#ifdef SCI_SPARSELIB
       if(pre == "Diag_P") flag = 1;
       else if(pre == "IC_P") flag = 2;
       else if(pre == "ILU_P") flag = 3;
+#endif
 
     clString meth=method.get();
     if(0){
@@ -965,7 +969,7 @@ void SolveMatrix::parallel_conjugate_gradient(CGData* data, int processor)
         matrix->mult(R, Z, stats->flop, stats->memref);
 
         data->P=new ColumnMatrix(size);
-        ColumnMatrix& P=*data->P;
+        //ColumnMatrix& P=*data->P;
         data->err=R.vector_norm(stats->flop, stats->memref)/data->bnorm;
         if(data->err == 0){
             lhs=rhs;
@@ -1061,7 +1065,7 @@ void SolveMatrix::parallel_conjugate_gradient(CGData* data, int processor)
         double ak=bknum/akden;
         ColumnMatrix& lhs=*data->lhs;
         ScMult_Add(lhs, ak, P, lhs, stats->flop, stats->memref, beg, end);
-        ColumnMatrix& rhs=*data->rhs;
+        //ColumnMatrix& rhs=*data->rhs;
         ScMult_Add(R, -ak, Z, R, stats->flop, stats->memref, beg, end);
 
         data->res3[processor].r=R.vector_norm(stats->flop, stats->memref, beg, end)/data->bnorm;

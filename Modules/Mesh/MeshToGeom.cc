@@ -174,7 +174,8 @@ void MeshToGeom::execute()
 					   scinew Material(Color(0,0,0),
 							   Color(0,.6,0), 
 							   Color(.5,.5,.5), 
-#endif							   20));
+							   20));
+#endif
 //    ogeom->addObj(matl, "Mesh1");
 	
 }

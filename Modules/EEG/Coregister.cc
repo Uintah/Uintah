@@ -561,7 +561,7 @@ void Coregister::auto_register() {
                 new_c+=v;
             } else {
                 int bestRotIdx = 7;
-                double bestRorErr = allErrors[7];
+                //double bestRorErr = allErrors[7];
                 for (idx=8; idx<13; idx++) {
                     if (allErrors[idx]<allErrors[bestRotIdx]);
                         bestRotIdx = idx;

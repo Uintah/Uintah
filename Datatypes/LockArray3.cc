@@ -163,7 +163,7 @@ LockArray3<T>& LockArray3<T>::operator=(const LockArray3<T>&)
 }
 
 template<class T>
-void LockArray3<T>::io(Piostream& stream)
+void LockArray3<T>::io(Piostream&)
 {
   cerr << "Error - not implemented!\n";
 }

@@ -22,7 +22,6 @@ static TrivialAllocator GeomVertex_alloc(sizeof(GeomVertex));
 static TrivialAllocator GeomNVertex_alloc(sizeof(GeomNVertex));
 static TrivialAllocator GeomNMVertex_alloc(sizeof(GeomNMVertex));
 static TrivialAllocator GeomCVertex_alloc(sizeof(GeomCVertex));
-static TrivialAllocator GeomMVertex_alloc(sizeof(GeomMVertex));
 
 
 void* GeomVertex::operator new(size_t)

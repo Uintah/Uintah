@@ -87,7 +87,7 @@ double TriDiagonalMatrix::maxValue()
 }
 
 void TriDiagonalMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
-			     int& flops, int& memrefs, int beg, int end) const
+			     int& flops, int& memrefs, int, int) const
 {
     ASSERTEQ(rows, x.nrows());
     ASSERTEQ(rows, b.nrows());
@@ -100,8 +100,8 @@ void TriDiagonalMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
     memrefs+=6*(rows-2)+8;
 }
 
-void TriDiagonalMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
-				       int& flops, int& memrefs, int beg, int end)
+void TriDiagonalMatrix::mult_transpose(const ColumnMatrix&, ColumnMatrix&,
+				       int&, int&, int, int)
 {
     NOT_FINISHED("TriDiagonal::mult_transpose");
 }

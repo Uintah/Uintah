@@ -28,7 +28,7 @@ SR_LDFLAGS = -L$(TOP)/lib -lDataflow -lDevices -lComm -lTCL \
 SCIProgramTarget($(SR_TARGET), $(SR_OBJS), $(SR_LIBS), $(SR_LDFLAGS))
 
 sr: lib/libDataflow.so lib/libTCL.so lib/libDevices.so \
-	lib/libTCL.so lib/libMultitask.so lib/libMalloc.so
+	lib/libComm.so lib/libMultitask.so lib/libMalloc.so
 
 SRCS = $(SR_SRCS)
 SCIDependTarget($(SRCS))

@@ -33,7 +33,7 @@ public:
     Quat qNow, qDown, qDrag, qNorm;
     HVect vNow, vDown, vFrom, vTo, vrFrom, vrTo;
     HMatrix mNow, mDown;
-    Bool showResult, dragging;
+    int showResult, dragging;
     ConstraintSet sets[NSets];
     int setSizes[NSets];
     AxisSet axisSet;

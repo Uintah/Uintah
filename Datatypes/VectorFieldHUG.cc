@@ -127,7 +127,7 @@ int VectorFieldHUG::interpolate(const Point& p, Vector& value, int& ix)
   return ix < 1 ? 0 : 1;
 }
 
-Vector VectorFieldHUG::gradient(const Point& p)
+Vector VectorFieldHUG::gradient(const Point&)
 {
     // Not implemented.
     
@@ -146,7 +146,7 @@ void VectorFieldHUG::get_boundary_lines(Array1<Point>& lines)
 
 void VectorFieldHUG::io(Piostream& stream)
 {
-    int version=stream.begin_class("VectorFieldHUG", VECTORFIELDHUG_VERSION);
+    stream.begin_class("VectorFieldHUG", VECTORFIELDHUG_VERSION);
     
     // Do the base class.
     

@@ -37,6 +37,8 @@ ScalarFieldRGBase::ScalarFieldRGBase(clString r)
 	rep = Char;
     else if (r=="double")
 	rep = Double;
+    else if (r=="uchar")
+	rep = Uchar;
     else
 	rep = Void;
 }
@@ -54,6 +56,8 @@ ScalarFieldRGBase::ScalarFieldRGBase(const ScalarFieldRGBase& copy)
 	rep = Short;
     else if (r=="char")
 	rep = Char;
+    else if (r=="uchar")
+	rep = Uchar;
     else if (r=="double")
 	rep = Double;
     else
@@ -77,6 +81,8 @@ clString ScalarFieldRGBase::getType() const {
         return ("short");
     else if (rep==Char)
         return ("char");
+    else if (rep==Uchar)
+        return ("uchar");
     else if (rep==Void)
 	return ("void");
     else
@@ -119,6 +125,14 @@ ScalarFieldRGchar* ScalarFieldRGBase::getRGChar()
 {
     if (rep==Char)
 	return (ScalarFieldRGchar*) this;
+    else
+	return 0;
+}
+
+ScalarFieldRGuchar* ScalarFieldRGBase::getRGUchar()
+{
+    if (rep==Uchar)
+	return (ScalarFieldRGuchar*) this;
     else
 	return 0;
 }
@@ -310,7 +324,7 @@ void ScalarFieldRGBase::distribute_samples()
   int nsamp = samples.size();
   double factor = 1.0/(nsamp-1)*total_importance;
 
-  double jitter = 1.0; // can jitter half an interval in either direction
+  //  double jitter = 1.0; // can jitter half an interval in either direction
 
   for(i=0;i<nsamp;i++) {
     double ni = i + drand48()-0.5;

@@ -17,7 +17,7 @@ int TrackerThread::body(int)
     TrackerData tmp;
     if(!GetTrackerData(tmp))
 	return 0;
-    while(1){
+    for(;;){
 	// Wait for some clients...
 //	client_sema.down();
 

@@ -26,7 +26,7 @@ public:
 
     enum Type {
 	NodalValues,
-	ElementValues,
+	ElementValues
     };
     Type typ;
 

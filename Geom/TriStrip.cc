@@ -188,7 +188,7 @@ void GeomTriStripList::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTriStripList::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomTriStripList::saveobj(ostream&, const clString&, GeomSave*)
 {
     NOT_FINISHED("GeomTriStripList::saveobj");
     return false;

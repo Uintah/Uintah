@@ -72,7 +72,7 @@ double& SymSparseRowMatrix::get(int i, int j)
     int next_idx=rows[i+1];
     int l=row_idx;
     int h=next_idx-1;
-    while(1){
+    for(;;){
 	if(h<l){
 #if 0
 	    cerr << "column " << j << " not found in row: ";

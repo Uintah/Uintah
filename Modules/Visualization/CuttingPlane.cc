@@ -200,7 +200,9 @@ void CuttingPlane::execute()
     // colors to put in the cutting plane
     if (cptype != CP_CONTOUR)
       {
+#if 0
 	double alpha=1.0;
+#endif
 	//	GeomGrid::Format format=GeomGrid::WithMaterials;
 	//	if (cptype == CP_SURFACE)
 	//	    format=GeomGrid::WithNormAndMatl;
@@ -225,11 +227,15 @@ void CuttingPlane::execute()
 	    MaterialHandle matl;
 	    if (sfield->interpolate( p, sval, ix) || (ix=0) || sfield->interpolate( p, sval, ix)) {
 	      matl = cmap->lookup( sval);
+#if 0
 	      alpha = 0.8;
+#endif
 	    } else {
 	      matl = outcolor;
 	      sval = 0;
+#if 0
 	      alpha=0.0;
+#endif
 	    }
 	    
 	    // put the color into the cutting plane (grid) at i, j

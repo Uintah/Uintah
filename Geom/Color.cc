@@ -194,15 +194,23 @@ CharColor::CharColor ( Color& c )
 
 
 CharColor
-CharColor::operator= ( const Color& c ) const
+CharColor::operator= ( const Color& c )
 {
-  CharColor f;
+   red = (char)(c.r()*255);
+   green = (char)(c.g()*255);
+   blue = (char)(c.b()*255);
 
-  f.red = (char)(c.r()*255);
-  f.green = (char)(c.g()*255);
-  f.blue = (char)(c.b()*255);
+   return *this;
+}
 
-  return f;
+
+CharColor
+CharColor::operator= ( const CharColor& c )
+{
+  red = c.red;
+  green = c.green;
+  blue = c.blue;
+  return *this;
 }
 
 

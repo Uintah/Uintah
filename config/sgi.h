@@ -17,7 +17,7 @@
 #define SCI_NativeDebugCppFlags SCI_NativeDebugCFlags
 #define SCI_NativeOtherCppFlags SCI_OtherCFlags +w -pte.cc -ptr$(TOP)/templates
 #define SCI_NativeCppIncludeLocation /usr/include/CC
-#define SCI_NativeLinker time CC
+#define SCI_NativeLinker CC
 #define SCI_NativeLinkerFlags -ptv -pta
 #define SCI_NativeLinkerNeedsCppFlags
 #define SCI_NativeLinkerLib
@@ -61,9 +61,9 @@
 #else
 #define SCI_BoolFlags
 #endif
-#define SCI_DeltaOtherCppFlags SCI_BinFlags SCI_BoolFlags
+#define SCI_DeltaOtherCppFlags SCI_BinFlags SCI_BoolFlags -fullwarn
 #define SCI_DeltaCppIncludeLocation /usr/include/CC
-#define SCI_DeltaLinker time CC -Wl,-woff -Wl,85
+#define SCI_DeltaLinker CC -Wl,-woff -Wl,85
 #define SCI_DeltaLinkerFlags SCI_BinFlags
 #define SCI_DeltaLinkerNeedsCppFlags
 #define SCI_DeltaLinkerLib

@@ -122,7 +122,7 @@ void Renderer::dump_image(const clString&) {
     NOT_FINISHED("This is not implemented!");
 }
 
-void Renderer::redraw(Salmon*, Roe*)
+void Renderer::old_redraw(Salmon*, Roe*)
 {
     cerr << "Error - old redraw called and it shouldn't have been!\n";
 }
@@ -131,7 +131,7 @@ void Renderer::redraw(Salmon* salmon, Roe* roe,
 		      double, double, int, double)
 {
     cerr << "Warning: using old redraw\n";
-    redraw(salmon, roe);
+    old_redraw(salmon, roe);
 }
 
 void Renderer::listvisuals(TCLArgs& args)

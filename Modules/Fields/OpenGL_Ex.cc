@@ -76,8 +76,6 @@ public:
     int makeCurrent();
 };
 
-static OpenGL_Ex* current_drawer=0;
-
 extern "C" {
 Module* make_OpenGL_Ex(const clString& id)
 {
@@ -222,7 +220,6 @@ int OpenGL_Ex::makeCurrent() {
 	TCLTask::unlock();
 	return 0;
     }
-    current_drawer=this;
     if (!glXMakeCurrent(dpy, win, cx))
 	    cerr << "*glXMakeCurrent failed.\n";
 

@@ -24,7 +24,7 @@ protected:
     TCL* tcl;
 public:
     TCLvar(const clString& name, const clString& id, TCL* tcl);
-    ~TCLvar();
+    virtual ~TCLvar();
     void reset();
 
     clString str();
@@ -35,7 +35,7 @@ class TCLstring : public TCLvar {
     clString value;
 public:
     TCLstring(const clString& name, const clString& id, TCL* tcl);
-    ~TCLstring();
+    virtual ~TCLstring();
 
     clString get();
     void set(const clString&);
@@ -46,7 +46,7 @@ class TCLdouble : public TCLvar {
     double value;
 public:
     TCLdouble(const clString& name, const clString& id, TCL* tcl);
-    ~TCLdouble();
+    virtual ~TCLdouble();
 
     double get();
     void set(double);
@@ -57,7 +57,7 @@ class TCLint : public TCLvar {
     int value;
 public:
     TCLint(const clString& name, const clString& id, TCL* tcl);
-    ~TCLint();
+    virtual ~TCLint();
 
     int get();
     void set(int);
@@ -68,7 +68,7 @@ class TCLvardouble : public TCLvar {
     double value;
 public:
     TCLvardouble(const clString& name, const clString& id, TCL* tcl);
-    ~TCLvardouble();
+    virtual ~TCLvardouble();
 
     double get();
     void set(double);
@@ -79,7 +79,7 @@ class TCLvarint : public TCLvar {
     int value;
 public:
     TCLvarint(const clString& name, const clString& id, TCL* tcl);
-    ~TCLvarint();
+    virtual ~TCLvarint();
 
     int get();
     void set(int);
@@ -90,7 +90,7 @@ class TCLvarintp : public TCLvar {
     int* value;
 public:
     TCLvarintp(int*, const clString& name, const clString& id, TCL* tcl);
-    ~TCLvarintp();
+    virtual ~TCLvarintp();
 
     int get();
     void set(int);
@@ -104,7 +104,7 @@ class TCLPoint : public TCLvar {
     TCLdouble z;
 public:
     TCLPoint(const clString& name, const clString& id, TCL* tcl);
-    ~TCLPoint();
+    virtual ~TCLPoint();
 
     Point get();
     void set(const Point&);
@@ -118,7 +118,7 @@ class TCLVector : public TCLvar {
     TCLdouble z;
 public:
     TCLVector(const clString& name, const clString& id, TCL* tcl);
-    ~TCLVector();
+    virtual ~TCLVector();
 
     Vector get();
     void set(const Vector&);

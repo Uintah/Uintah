@@ -118,7 +118,7 @@ ScalarField* SegFld::clone()
 
 void SegFld::io(Piostream& stream)
 {
-    int version=stream.begin_class("SegFld", SegFld_VERSION);
+    stream.begin_class("SegFld", SegFld_VERSION);
 	// Do the base class first...
     ScalarFieldRGint::io(stream);
     Pio(stream, comps);

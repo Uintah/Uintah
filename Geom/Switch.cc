@@ -143,7 +143,7 @@ void GeomTimeSwitch::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTimeSwitch::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomTimeSwitch::saveobj(ostream&, const clString&, GeomSave*)
 {
     NOT_FINISHED("GeomTimeSwitch::saveobj");
     return false;

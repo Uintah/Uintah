@@ -21,7 +21,7 @@ struct SoundComm {
     enum Action {
 	Parameters,
 	SoundData,
-	EndOfStream,
+	EndOfStream
     };
     Action action;
     double sample_rate;
@@ -36,7 +36,7 @@ public:
     enum Protocol {
 	Atomic=0x01,
 	Stream=0x02,
-	NotNegotiated=0x10000,
+	NotNegotiated=0x10000
     };
 
 private:
@@ -45,7 +45,7 @@ private:
 	Done,
 	NeedSamples,
 	HaveSamples,
-	Flushing,
+	Flushing
     };
     State state;
     int total_samples;
@@ -79,7 +79,7 @@ class SoundOPort : public OPort {
     enum State {
 	Begin,
 	Transmitting,
-	End,
+	End
     };
     State state;
     int sbufsize;

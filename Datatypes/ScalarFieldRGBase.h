@@ -24,6 +24,7 @@ class ScalarFieldRGfloat;
 class ScalarFieldRGint;
 class ScalarFieldRGshort;
 class ScalarFieldRGchar;
+class ScalarFieldRGuchar;
 
 class ScalarFieldRGBase : public ScalarField {
 public:
@@ -33,7 +34,8 @@ public:
 	Int,
 	Short,
 	Char,
-	Void
+	Void,
+	Uchar
     };
     int nx;
     int ny;
@@ -55,6 +57,7 @@ public:
     ScalarFieldRGint* getRGInt();
     ScalarFieldRGshort* getRGShort();
     ScalarFieldRGchar* getRGChar();
+    ScalarFieldRGuchar* getRGUchar();
 
     Point get_point(int, int, int);
     void locate(const Point&, int&, int&, int&);

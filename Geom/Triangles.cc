@@ -212,7 +212,7 @@ void GeomTriangles::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTriangles::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomTriangles::saveobj(ostream&, const clString&, GeomSave*)
 {
     NOT_FINISHED("GeomTriangles::saveobj");
     return false;
@@ -358,7 +358,7 @@ void GeomTrianglesP::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTrianglesP::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomTrianglesP::saveobj(ostream&, const clString&, GeomSave*)
 {
     NOT_FINISHED("GeomTrianglesP::saveobj");
     return false;

@@ -118,8 +118,8 @@ void EditMatrix::execute()
 	    nrow.set(imat->nrows());
 	    ncol.set(imat->ncols());
 	    cerr << "Loaded type = "<<imat->getType()<<"\n";
-	    DenseMatrix *dm;
-	    if (dm=imat->getDense()) {
+	    DenseMatrix *dm=imat->getDense();
+	    if (dm){
 		cerr << "Loaded matrix is dense\n";
 		Matrixtype.set("dense");
 	    } else {

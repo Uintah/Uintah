@@ -36,7 +36,7 @@ class SimpleIPort : public IPort {
     int recvd;
 public:
     enum Protocol {
-	Atomic=0x01,
+	Atomic=0x01
     };
 
 public:

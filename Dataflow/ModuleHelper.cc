@@ -38,7 +38,7 @@ int ModuleHelper::body(int)
     if(module->have_own_dispatch){
 	module->do_execute();
     } else {
-	while(1){
+	for(;;){
 	    MessageBase* msg=module->mailbox.receive();
 	    switch(msg->type){
 	    case MessageTypes::ExecuteModule:

@@ -35,7 +35,7 @@ protected:
 	Off,
 	Resetting,
 	Finishing,
-	On,
+	On
     };
     PortState portstate;
 public:

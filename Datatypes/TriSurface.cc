@@ -46,7 +46,7 @@ TriSurface::TriSurface(Representation r)
 {
 }
 
-TriSurface::TriSurface(const TriSurface& copy, Representation r)
+TriSurface::TriSurface(const TriSurface& copy, Representation)
 : Surface(copy)
 {
     points=copy.points;
@@ -68,7 +68,7 @@ void TriSurface::order_faces() {
     if (elements.size() == 0) 
 	directed=1;
     else {
-	ASSERTL1(0 && "Can't order faces yet!");
+	ASSERTL1(!"Can't order faces yet!");
     }
 }
 
@@ -110,7 +110,7 @@ int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
     surf->add_triangle(0,1,2);
 
     Array1<int> cu;
-    while (1) {
+    for(;;) {
 	double dist=0;
 	int vid=-1;
 	grid->get_cubes_at_distance(rad,ci,cj,ck, cu);
@@ -155,7 +155,7 @@ int TriSurface::cautious_add_triangle(const Point &p1, const Point &p2,
 				       const Point &p3, int cw) {
     directed&=cw;
     if (grid==0) {
-	ASSERT("Can't run TriSurface::cautious_add_triangle w/o a grid\n");
+	ASSERT(!"Can't run TriSurface::cautious_add_triangle w/o a grid\n");
     }
     int i1=find_or_add(p1);
     int i2=find_or_add(p2);
@@ -324,7 +324,7 @@ void TriSurface::construct_hash(int xdim, int ydim, const Point &p, double res) 
 double TriSurface::distance(const Point &p,Array1<int> &res, Point *pp) {
 
     if (grid==0) {
-	ASSERT("Can't run TriSurface::distance w/o a grid\n");
+	ASSERT(!"Can't run TriSurface::distance w/o a grid\n");
     }
     Array1<int>* elem;
     Array1<int> tri;
@@ -503,9 +503,9 @@ double TriSurface::distance(const Point &p, int el, int *type, Point *pp) {
     //     directed.  Wouldn't need to check signs, etc.
 
     double A[3][3], B[3][3], C[3][3];
-    double mid[2];
-    mid[0]=(V[0][i[1]]+V[1][i[1]]+V[2][i[1]])/3;
-    mid[1]=(V[0][i[2]]+V[1][i[2]]+V[2][i[2]])/3;
+    //double mid[2];
+    //mid[0]=(V[0][i[1]]+V[1][i[1]]+V[2][i[1]])/3;
+    //mid[1]=(V[0][i[2]]+V[1][i[2]]+V[2][i[2]])/3;
 
     int X;
     for (X=0; X<3; X++) {

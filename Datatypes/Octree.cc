@@ -61,7 +61,7 @@ OctreeTop::~OctreeTop() {
 
 void OctreeTop::io(Piostream& stream)
 {
-    int version=stream.begin_class("Octree", OctreeTop_VERSION);
+    stream.begin_class("Octree", OctreeTop_VERSION);
     Pio(stream, nx);
     Pio(stream, ny);
     Pio(stream, nz);
@@ -534,14 +534,12 @@ Vector Octree::set_and_return_corner_vector(int i, int j, int k) {
     if (last_leaf) {
 	return corner_v[i][j][k];
     } else {
-	int got_it=0;
 	for (int ii=0; ii<2; ii++) {
 	    for (int jj=0; jj<2; jj++) {
 		for (int kk=0; kk<2; kk++) {
 		    Octree *kid = child[ii][jj][kk];
 		    if (kid) {
 			if (i==ii && j==jj && k==kk) {
-			    got_it=1;
 			    corner_v[i][j][k] = 
 				kid->set_and_return_corner_vector(i,j,k);
 			} else {

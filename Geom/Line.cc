@@ -100,7 +100,7 @@ void GeomLine::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomLine::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomLine::saveobj(ostream&, const clString&, GeomSave*)
 {
 #if 0
     NOT_FINISHED("GeomLine::saveobj");
@@ -174,7 +174,7 @@ void GeomLines::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomLines::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomLines::saveobj(ostream&, const clString&, GeomSave*)
 {
 #if 0
     NOT_FINISHED("GeomLines::saveobj");
@@ -256,7 +256,7 @@ void TexGeomLines::io(Piostream& stream)
     stream.end_class();
 }
 
-bool TexGeomLines::saveobj(ostream&, const clString& format, GeomSave*)
+bool TexGeomLines::saveobj(ostream&, const clString&, GeomSave*)
 {
     NOT_FINISHED("TexGeomLines::saveobj");
     return false;
@@ -274,7 +274,7 @@ void TexGeomLines::add(const Point& p1, const Point& p2,double scale)
 
 // this is used by the streamline module...
 
-void TexGeomLines::batch_add(Array1<double>& ts, Array1<Point>& ps)
+void TexGeomLines::batch_add(Array1<double>&, Array1<Point>& ps)
 {
   tex_per_seg = 0;  // this is not the hedgehog...
   int pstart = pts.size();
@@ -297,7 +297,7 @@ void TexGeomLines::batch_add(Array1<double>& ts, Array1<Point>& ps)
   tangents[tstart] = tangents[tstart-1]; // duplicate last guy...
   pts[pstart] = ps[i]; // last point...
 }
-void TexGeomLines::batch_add(Array1<double>& ts, Array1<Point>& ps,
+void TexGeomLines::batch_add(Array1<double>&, Array1<Point>& ps,
 			     Array1<Color>& cs)
 {
   tex_per_seg = 0;  // this is not the hedgehog...

@@ -16,6 +16,7 @@
 #include <Classlib/NotFinished.h>
 #include <Geom/Arrows.h>
 #include <Geom/BBoxCache.h>
+#include <Geom/Billboard.h>
 #include <Geom/Box.h>
 #include <Geom/Cone.h>
 #include <Geom/Cylinder.h>
@@ -242,8 +243,8 @@ void DrawInfoOpenGL::set_matl(Material* matl)
 
 // this is for transparent rendering stuff...
 
-void DrawInfoOpenGL::init_view(double znear, double zfar, 
-			  Point& eyep, Point& lookat)
+void DrawInfoOpenGL::init_view(double /*znear*/, double /*zfar*/, 
+			  Point& /*eyep*/, Point& /*lookat*/)
 {
   double model_mat[16]; // this is the modelview matrix
   
@@ -391,7 +392,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    for(int i=0;i<n;i++){
 		Point from(positions[i]+directions[i]*headlength);
 		glNormal3d(directions[i].x(), directions[i].y(), directions[i].z());
-		Point to(from+directions[i]);
+		//Point to(from+directions[i]);
 		Point p1(from+v1[i]);
 		glVertex3d(p1.x(), p1.y(), p1.z());
 		Point p2(from+v2[i]);
@@ -404,8 +405,8 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	} else {
 	    for(int i=0;i<n;i++){
 		Point from(positions[i]+directions[i]*headlength);
-		Point to(from+directions[i]);
-		Vector n1(v1[i]+v2[i]);
+		//Point to(from+directions[i]);
+		//Vector n1(v1[i]+v2[i]);
 		Point p1(from+v1[i]);
 		glVertex3d(p1.x(), p1.y(), p1.z());
 		Point p2(from+v2[i]);
@@ -425,7 +426,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 		di->set_matl(back_matls[i+1].get_rep());
 		glNormal3d(directions[i].x(), directions[i].y(), directions[i].z());
 		Point from(positions[i]+directions[i]*headlength);
-		Point to(from+directions[i]);
+		//Point to(from+directions[i]);
 		Point p1(from+v1[i]);
 		glVertex3d(p1.x(), p1.y(), p1.z());
 		Point p2(from+v2[i]);
@@ -439,7 +440,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    for(int i=0;i<n;i++){
 		di->set_matl(back_matls[i+1].get_rep());
 		Point from(positions[i]+directions[i]*headlength);
-		Point to(from+directions[i]);
+		//Point to(from+directions[i]);
 		Point p1(from+v1[i]);
 		glVertex3d(p1.x(), p1.y(), p1.z());
 		Point p2(from+v2[i]);
@@ -466,7 +467,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 		Point top(positions[i]+directions[i]);
 		Point from=top-directions[i]*h;
-		Point to(from+directions[i]);
+		//Point to(from+directions[i]);
 		Point p1(from+v1[i]);
 		Point p2(from+v2[i]);
 		glVertex3d(top.x(), top.y(), top.z());
@@ -497,7 +498,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 		Point from(positions[i]+directions[i]);
 		glVertex3d(from.x(), from.y(), from.z());
 		from-=directions[i]*(1.0-headlength);
-		Point to(from+directions[i]);
+		//Point to(from+directions[i]);
 		Point p1(from+v1[i]);
 		glVertex3d(p1.x(), p1.y(), p1.z());
 		Point p2(from+v2[i]);
@@ -525,7 +526,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 		Point top(positions[i]+directions[i]);
 		Point from=top-directions[i]*h;
-		Point to(from+directions[i]);
+		//Point to(from+directions[i]);
 		Point p1(from+v1[i]);
 		Point p2(from+v2[i]);
 		glVertex3d(top.x(), top.y(), top.z());
@@ -557,7 +558,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 		Point from(positions[i]+directions[i]);
 		glVertex3d(from.x(), from.y(), from.z());
 		from-=directions[i]*(1.0-headlength);
-		Point to(from+directions[i]);
+		//Point to(from+directions[i]);
 		Point p1(from+v1[i]);
 		glVertex3d(p1.x(), p1.y(), p1.z());
 		Point p2(from+v2[i]);
@@ -587,6 +588,69 @@ void GeomBBoxCache::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
     child->draw(di,m,time);
 }
+
+void GeomBillboard::draw(DrawInfoOpenGL* di, Material* m, double time)
+{
+//   MaterialHandle red = new Material(Color(.8,.0,0), Color(.2,0,0),
+// 				       Color(.5,.5,.5), 20);
+//   MaterialHandle green = new Material(Color(0,.2,0), Color(0,.2,0),
+// 				       Color(.5,.5,.5), 20);
+//   MaterialHandle yellow = new Material(Color(.8,.2,0), Color(.2,.2,0),
+// 				       Color(.5,.5,.5), 20);
+
+  
+//   GeomArrows x(0.4);
+//   x.add(Point(0,0,0), Vector(10,0,0), red, red, red);
+//   GeomArrows y(0.4);
+//   y.add(Point(0,0,0), Vector(0,10,0), green, green, green);
+//   GeomArrows z(0.4);
+//   z.add(Point(0,0,0), Vector(0,0,10), yellow, yellow, yellow);
+  
+  double mat[16];
+
+  glGetDoublev(GL_MODELVIEW_MATRIX, mat);
+  glPushMatrix();
+  glTranslated( at.x(), at.y(), at.z() );
+
+  
+  Vector u( mat[0], mat[4], mat[8] );
+  Vector v( 0, 0, 1 );
+  Vector w = Cross(u,v);
+  w.normalize();
+  //  Vector v( mat[1], mat[5], mat[9] );
+  //  Vector w( mat[2], mat[6], mat[10]);
+  mat[0] = u.x();
+  mat[1] = u.y();
+  mat[2] = u.z();
+  mat[3] = 0;
+  mat[4] = v.x();
+  mat[5] = v.y();
+  mat[6] = v.z();
+  mat[7] = 0;
+  mat[8] = w.x();
+  mat[9] = w.y();
+  mat[10]= w.z();
+  mat[11]= 0;
+  mat[12] = mat[13] = mat[14] = 0;
+  mat[15] = 1;
+  glMultMatrixd(mat);
+
+  //  glTranslated( at.x(), at.y(), at.z() );
+  
+  child->draw(di,m,time);
+
+//   x.draw(di,m,time);
+//   y.draw(di,m,time);
+
+  glPopMatrix();
+//   glPushMatrix();
+//   glTranslated( at.x(), at.y(), at.z() );
+
+//   x.draw(di,m,time);
+//   y.draw(di,m,time);
+//   z.draw(di,m,time);
+//   glPopMatrix();
+}  
 
 void GeomCappedCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
@@ -689,11 +753,11 @@ TexGeomGrid::~TexGeomGrid()
 void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   pre_draw(di, matl, 0);
-  int nu=dimU;
-  int nv=dimV;
+  //int nu=dimU;
+  //int nv=dimV;
   di->polycount+=2; 
-  Vector uu(u/(nu-1));
-  Vector vv(v/(nv-1));
+  //Vector uu(u/(nu-1));
+  //Vector vv(v/(nv-1));
 
   cerr << "Trying to do texture draw...\n";
 
@@ -956,11 +1020,11 @@ void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
 void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
 {
   pre_draw(di, matl, 0);
-  int nu=dimU;
-  int nv=dimV;
+  //int nu=dimU;
+  //int nv=dimV;
   di->polycount+=2; 
-  Vector uu(u/(nu-1));
-  Vector vv(v/(nv-1));
+  //Vector uu(u/(nu-1));
+  //Vector vv(v/(nv-1));
 
   // first find which ones need to be drawn...
 
@@ -1007,8 +1071,8 @@ void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
 //      int mapsz = map->rcolors.size();
       double cdenom = 1.0/(map->max-map->min); // index
       
-      double min = 1000000;
-      double max = -100000;
+      //double min = 1000000;
+      //double max = -100000;
 
       if (last_frame) {
 	for(int j=0;j<dimV;j++) {
@@ -1458,7 +1522,7 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 #endif
 
-void GeomQMesh::draw(DrawInfoOpenGL* di, Material* matl, double time)
+void GeomQMesh::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   pre_draw(di, matl, 1); 
 
@@ -1548,9 +1612,9 @@ void GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glEnd();
 }
 
-const int OD_TEX_INIT = 4096; // 12tg bit of clip planes...
+//const int OD_TEX_INIT = 4096; // 12tg bit of clip planes...
 
-void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double currentime)
+void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   pre_draw(di, matl, 0);  // lighting is turned off here...
   di->polycount+=pts.size()/2;
@@ -1721,7 +1785,7 @@ void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double currentime)
     int sort_start=0;
     int sort_dir=1; // positive direction
     
-    char which;
+    //char which;
     
     if (fabs(view.x()) > fabs(view.y())) {
       if (fabs(view.x()) > fabs(view.z())) { // use x dir
@@ -2231,9 +2295,9 @@ void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
     case DrawInfoOpenGL::WireFrame:
 	if (di->currently_lit) {
 	    Vector n1(Plane(p1, p2, p3).normal());
-	    Vector n2(Plane(p1, p2, p4).normal());
-	    Vector n3(Plane(p4, p2, p3).normal());
-	    Vector n4(Plane(p1, p4, p3).normal());
+	    //Vector n2(Plane(p1, p2, p4).normal());
+	    //Vector n3(Plane(p4, p2, p3).normal());
+	    //Vector n4(Plane(p1, p4, p3).normal());
 	    glBegin(GL_LINE_STRIP);
 	    glNormal3d(n1.x(),n1.y(),n1.z());
 	    glVertex3d(p1.x(), p1.y(), p1.z());
@@ -2801,12 +2865,12 @@ void GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
   if (di->multiple_transp) { // multiple transparent objects!!!
     Array1<float>& check = (di->axis==0)?xc:(di->axis==1)?yc:zc;
     
-    Array1<int> *tclist;
-    int sort_start=0; // front of list
+    //Array1<int> *tclist;
+    //int sort_start=0; // front of list
     int sort_dir=1;   // positive direction
     
     sort_dir = di->dir;
-    Vector view = di->view;
+    //Vector view = di->view;
     
     if (!xlist.size()) {
       SortPolys(); // sort the iso-surface...
@@ -2909,12 +2973,12 @@ void GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
     else
       glColor4f(r,g,b,alpha);
 
-    Array1<int> *tclist;
+    //Array1<int> *tclist;
     int sort_start=0; // front of list
     int sort_dir=1;   // positive direction
 
     sort_dir = di->dir;
-    Vector view = di->view;
+    //Vector view = di->view;
 
     if (!xlist.size()) {
       SortPolys(); // sort the iso-surface...
@@ -3614,7 +3678,7 @@ void PointLight::opengl_setup(const View&, DrawInfoOpenGL*, int& idx)
     glLightfv(GL_LIGHT0+i, GL_SPECULAR, f);
 }
 
-void HeadLight::opengl_setup(const View& view, DrawInfoOpenGL*, int& idx)
+void HeadLight::opengl_setup(const View& /*view*/, DrawInfoOpenGL*, int& idx)
 {
     int i=idx++;
 //    Point p(view.eyep());

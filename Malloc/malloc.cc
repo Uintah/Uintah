@@ -15,7 +15,7 @@ void* calloc(size_t, size_t);
 void* realloc(void* p, size_t s);
 void* memalign(size_t, size_t);
 void* valloc(size_t);
-};
+}
 
 void* malloc(size_t size)
 {

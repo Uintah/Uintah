@@ -131,7 +131,7 @@ void ScalarFieldHUG::compute_minmax()
 * Interpolation routines
 *******************************************************************************/
 
-int ScalarFieldHUG::interpolate(const Point& p, double& value, double epsilon1, double epsilon2)
+int ScalarFieldHUG::interpolate(const Point& p, double& value, double, double)
 {
   int ix = -1;
 
@@ -140,14 +140,15 @@ int ScalarFieldHUG::interpolate(const Point& p, double& value, double epsilon1, 
   return ix < 1 ? 0 : 1;
 }
 
-int ScalarFieldHUG::interpolate(const Point& p, double& value, int& ix, double epsilon1, double epsilon2)
+int ScalarFieldHUG::interpolate(const Point& p, double& value, int& ix,
+				double, double)
 {
   value = mesh->interpolate (p, data, ix);
   
   return ix < 1 ? 0 : 1;
 }
 
-Vector ScalarFieldHUG::gradient(const Point& p)
+Vector ScalarFieldHUG::gradient(const Point&)
 {
     // Not implemented.
     
@@ -166,7 +167,7 @@ void ScalarFieldHUG::get_boundary_lines(Array1<Point>& lines)
 
 void ScalarFieldHUG::io(Piostream& stream)
 {
-    int version=stream.begin_class("ScalarFieldHUG", SCALARFIELDHUG_VERSION);
+    stream.begin_class("ScalarFieldHUG", SCALARFIELDHUG_VERSION);
     
     // Do the base class.
     

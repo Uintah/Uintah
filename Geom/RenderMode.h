@@ -23,7 +23,7 @@ public:
         WireFrame,
         Flat,
         Gouraud,
-        Phong,
+        Phong
     };
 private:
     DrawType drawtype;

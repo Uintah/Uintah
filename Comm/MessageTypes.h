@@ -50,7 +50,7 @@ public:
 	AttachDialbox,
 	DialMoved,
 
-	TrackerMoved,
+	TrackerMoved
     };
 };
 

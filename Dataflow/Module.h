@@ -34,7 +34,7 @@ public:
 	NeedData,
 	JustStarted,
 	Executing,
-	Completed,
+	Completed
     };
 public:
     friend class ModuleHelper;
@@ -53,14 +53,14 @@ public:
 public:
     enum ConnectionMode {
 	Connected,
-	Disconnected,
+	Disconnected
     };
     enum SchedClass {
 	Sink,
 	Source,
 	Filter,
 	Iterator,
-	SalmonSpecial,
+	SalmonSpecial
     };
     Module(const clString& name, const clString& id, SchedClass);
     virtual ~Module();

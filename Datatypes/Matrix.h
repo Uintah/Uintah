@@ -31,14 +31,14 @@ class Matrix : public Datatype {
 protected:
     enum Sym {
         non_symmetric,
-        symmetric,
+        symmetric
     };
     enum Representation {
 	sparse,
 	symsparse,
 	dense,
 	tridiagonal,
-	other,
+	other
     };
 
     Sym sym;
@@ -60,7 +60,7 @@ public:
     int is_symmetric();
     void is_symmetric(int symm);
     virtual ~Matrix();
-    virtual Matrix* Matrix::clone();
+    virtual Matrix* clone();
     virtual double& get(int, int)=0;
     inline MatrixRow operator[](int r);
 

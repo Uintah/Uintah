@@ -201,15 +201,17 @@ VectorField* VectorFieldOcean::clone()
 {
     return scinew VectorFieldOcean(*this);
 }
+#if 0
 static MaterialHandle black=scinew Material(Color(0,0,0), Color(0,0,0),
 					    Color(0,0,0), 0);
 static MaterialHandle white=scinew Material(Color(0,0,0), Color(.6, .6, .6),
 					    Color(.6, .6, .6), 20);
+#endif
 
-GeomObj* VectorFieldOcean::makesurf(int downsample)
+GeomObj* VectorFieldOcean::makesurf(int /*downsample*/)
 {
-  GeomGrid* grid=0;
 #if 0
+  GeomGrid* grid=0;
 new GeomGrid(1280/downsample, 896/downsample,
 			      Point(0,0,0), Vector(1280,0,0), Vector(0,896,0),
 			      GeomGrid::WithNormAndMatl);
@@ -235,7 +237,7 @@ new GeomGrid(1280/downsample, 896/downsample,
 #endif
 }
 
-void VectorFieldOcean::get_boundary_lines(Array1<Point>& lines)
+void VectorFieldOcean::get_boundary_lines(Array1<Point>&)
 {
     NOT_FINISHED("VectorFieldOcean::get_boundary_lines");
 }

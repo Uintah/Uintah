@@ -40,7 +40,7 @@ public:
 				   const clString& name,
 				   const clString& width,
 				   const clString& height)=0;
-    virtual void redraw(Salmon*, Roe*);
+    virtual void old_redraw(Salmon*, Roe*);
     virtual void redraw(Salmon*, Roe*, double tbeg, double tend,
 			int nframes, double framerate);
     virtual void get_pick(Salmon*, Roe*, int x, int y,

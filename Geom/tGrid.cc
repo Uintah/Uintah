@@ -151,7 +151,7 @@ void TexGeomGrid::io(Piostream& stream)
     stream.end_class();
 }    
 
-bool TexGeomGrid::saveobj(ostream&, const clString& format, GeomSave*)
+bool TexGeomGrid::saveobj(ostream&, const clString&, GeomSave*)
 {
   return 0;
 }

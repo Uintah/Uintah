@@ -120,7 +120,7 @@ void ScalarField::fill_gradmags()
 }
 
 void ScalarField::over_grad_augment(double vol_wt, double grad_wt, 
-				      double crit_scale)
+				      double /*crit_scale*/)
 {
   // this is done in 2 passes, first just get gradients and compute totals
   double vol_total=0.0;

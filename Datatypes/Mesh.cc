@@ -537,13 +537,13 @@ int Mesh::inside(const Point& p, Element* elem)
     if(s0<-1.e-6)
 	return 0;
     double s1=elem->a[1]+Dot(elem->g[1], p);
-    if(s0<-1.e-6)
+    if(s1<-1.e-6)
 	return 0;
     double s2=elem->a[2]+Dot(elem->g[2], p);
-    if(s0<-1.e-6)
+    if(s2<-1.e-6)
 	return 0;
     double s3=elem->a[3]+Dot(elem->g[3], p);
-    if(s0<-1.e-6)
+    if(s3<-1.e-6)
 	return 0;
 #endif
 
@@ -1157,7 +1157,7 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
 	elems[tr]=0;
     }
 
-    int start_new=elems.size();
+    //int start_new=elems.size();
 
     // Add the new elements from the faces...
     FastHashTableIter<DFace> fiter(&face_table);
@@ -1560,7 +1560,7 @@ DirichletBC::DirichletBC(const SurfaceHandle& fromsurf, double value)
 {
 }
 
-void Mesh::get_boundary_lines(Array1<Point>& lines)
+void Mesh::get_boundary_lines(Array1<Point>&)
 {
     NOT_FINISHED("Mesh::get_boundary_lines");
 }

@@ -4,7 +4,6 @@
 
 #include <math.h>
 
-typedef int Bool;
 enum QuatPart {X, Y, Z, W, QuatLen};
 typedef double HMatrix[QuatLen][QuatLen];
 

@@ -70,8 +70,8 @@ void GeomText::get_bounds(BSphere& in_sphere)
 }
 
 
-void GeomText::make_prims(Array1<GeomObj*>& free,
-			 Array1<GeomObj*>& dontfree)
+void GeomText::make_prims(Array1<GeomObj*>&,
+			 Array1<GeomObj*>&)
 {
 }
 
@@ -104,7 +104,7 @@ void GeomText::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomText::saveobj(ostream&, const clString&, GeomSave* saveinfo)
+bool GeomText::saveobj(ostream&, const clString&, GeomSave*)
 {
   return 0;
 }

@@ -43,7 +43,7 @@ int cfdlibParticleSet::position_vector()
     return 0;
 }
 
-void cfdlibParticleSet::get(int timestep, int vectorid,
+void cfdlibParticleSet::get(int timestep, int,
 			    Array1<Vector>& values, int start, int end)
 {
     cfdlibTimeStep* ts=timesteps[timestep];
@@ -90,25 +90,25 @@ ParticleSet *cfdlibParticleSet::clone() const
   return scinew cfdlibParticleSet();
 }
 
-int cfdlibParticleSet::find_scalar(const clString& name)
+int cfdlibParticleSet::find_scalar(const clString&)
 {
   return 0;
 }
 
-void cfdlibParticleSet::list_scalars(Array1<clString>& names)
+void cfdlibParticleSet::list_scalars(Array1<clString>&)
 {
 }
 
-int cfdlibParticleSet::find_vector(const clString& name)
+int cfdlibParticleSet::find_vector(const clString&)
 {
   return 0;
 }
 
-void cfdlibParticleSet::list_vectors(Array1<clString>& names)
+void cfdlibParticleSet::list_vectors(Array1<clString>&)
 {
 }
   
-void cfdlibParticleSet::get(int timestep, int scalarid, Array1<double>& value,
+void cfdlibParticleSet::get(int timestep, int, Array1<double>& value,
 			    int start, int end)
 {
   cfdlibTimeStep* ts=timesteps[timestep];
@@ -122,13 +122,13 @@ void cfdlibParticleSet::get(int timestep, int scalarid, Array1<double>& value,
     value[i]=ts->scalars[i+start];
 }
 
-void cfdlibParticleSet::interpolate(double time, int vectorid, Vector& value,
-				    int start, int end)
+void cfdlibParticleSet::interpolate(double, int, Vector&,
+				    int, int)
 {
 }
 
-void cfdlibParticleSet::interpolate(double time, int scalarid, double& value,
-				    int start, int end)
+void cfdlibParticleSet::interpolate(double, int, double&,
+				    int, int)
 {
 }
 

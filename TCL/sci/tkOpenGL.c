@@ -464,5 +464,5 @@ GLXContext OpenGLGetContext(interp, name)
     Tcl_Interp* interp;
     char* name;
 {
-    return OpenGLGetContext2(interp, name, 0);
+    return OpenGLGetContext2(interp, name, (Display*)0);
 }

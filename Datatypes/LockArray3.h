@@ -36,7 +36,7 @@ public:
     LockArray3(const LockArray3&);
     LockArray3(int, int, int);
     LockArray3<T>& operator=(const LockArray3&);
-    ~LockArray3();
+    virtual ~LockArray3();
     inline T& operator()(int d1, int d2, int d3) const
 	{
 	    ASSERTL3(d1>=0 && d1<dm1);

@@ -9,7 +9,7 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	MultiMesh.o  MultiMeshPort.o  Octree.o  OctreePort.o  ScalarField.o  \
 	ScalarFieldPort.o  ScalarFieldRG.o  ScalarFieldRGBase.o  \
 	ScalarFieldRGchar.o  ScalarFieldRGshort.o  ScalarFieldRGint.o \
-	ScalarFieldRGfloat.o  \
+	ScalarFieldRGfloat.o  ScalarFieldRGuchar.o \
 	ScalarFieldRGdouble.o  ScalarFieldUG.o  ScalarFieldZone.o  \
 	ScalarTriSurface.o   \
 	ScaledBoxWidgetData.o  ScaledBoxWidgetDataPort.o  \
@@ -24,10 +24,11 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	VoidStar.o  VoidStarPort.o cMatrix.o cSMatrix.o cDMatrix.o \
 	cVector.o cVectorPort.o cMatrixPort.o \
 	ParticleSet.o ParticleSetPort.o \
-	cfdlibParticleSet.o
+	cfdlibParticleSet.o SegFld.o SegFldPort.o
 
 GENSRCS = ScalarFieldRGchar.cc  ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
-	ScalarFieldRGdouble.cc  ScalarFieldRG.cc ScalarFieldRGshort.cc
+	ScalarFieldRGdouble.cc  ScalarFieldRG.cc ScalarFieldRGshort.cc \
+	ScalarFieldRGuchar.cc
 
 SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	ColorMap.cc ColorMapPort.cc \
@@ -39,8 +40,8 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	ScalarFieldPort.cc ScalarFieldRG.cc ScalarFieldRGBase.cc \
 	ScalarFieldRGchar.cc ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
 	ScalarFieldRGdouble.cc ScalarFieldUG.cc ScalarFieldZone.cc \
-	ScalarFieldRGchar.cc ScalarFieldRGshort.cc ScalarFieldRGint.cc \
-	ScalarFieldRGfloat.cc ScalarFieldRGdouble.cc ScalarFieldUG.cc \
+	ScalarFieldRGuchar.cc ScalarFieldRGshort.cc \
+	ScalarFieldUG.cc \
 	ScalarFieldZone.cc ScalarTriSurface.cc \
 	ScaledBoxWidgetData.cc  ScaledBoxWidgetDataPort.cc \
 	SigmaSet.cc SigmaSetPort.cc \
@@ -54,10 +55,11 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	VectorFieldZone.cc \
 	ParticleSetPort.cc ParticleSet.cc \
 	VoidStar.cc VoidStarPort.cc \
-	cfdlibParticleSet.cc
+	cfdlibParticleSet.cc SegFld.cc SegFldPort.cc
 
 GENH = ScalarFieldRGchar.h  ScalarFieldRGint.h  ScalarFieldRGfloat.h \
-	ScalarFieldRGdouble.h ScalarFieldRG.h ScalarFieldRGshort.h
+	ScalarFieldRGdouble.h ScalarFieldRG.h ScalarFieldRGshort.h \
+	ScalarFieldRGuchar.h
 
 LIBNAME = Datatypes
 
@@ -78,6 +80,12 @@ ScalarFieldRGchar.h: ScalarFieldRGTYPE.h
 
 ScalarFieldRGchar.cc: ScalarFieldRGTYPE.cc
 	sed 's/TYPE/char/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGchar.cc
+
+ScalarFieldRGuchar.h: ScalarFieldRGTYPE.h
+	sed 's/TYPE/uchar/g' < ScalarFieldRGTYPE.h | sed 's/<uchar>/<unsigned char>/g' > ScalarFieldRGuchar.h
+
+ScalarFieldRGuchar.cc: ScalarFieldRGTYPE.cc
+	sed 's/TYPE/uchar/g' < ScalarFieldRGTYPE.cc | sed 's/<uchar>/<unsigned char>/g' > ScalarFieldRGuchar.cc
 
 ScalarFieldRGshort.h: ScalarFieldRGTYPE.h
 	sed 's/TYPE/short/g' < ScalarFieldRGTYPE.h > ScalarFieldRGshort.h

@@ -36,7 +36,7 @@ CenterConstraint::CenterConstraint( const clString& name,
 
    // Tell the variables about ourself.
    Register();
-};
+}
 
 
 /***************************************************************************
@@ -60,7 +60,7 @@ CenterConstraint::CenterConstraint( const clString& name,
 
    // Tell the variables about ourself.
    Register();
-};
+}
 
 
 /***************************************************************************
@@ -85,7 +85,7 @@ CenterConstraint::CenterConstraint( const clString& name,
 
    // Tell the variables about ourself.
    Register();
-};
+}
 
 
 /***************************************************************************

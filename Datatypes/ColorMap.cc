@@ -30,7 +30,7 @@ ColorMap::ColorMap()
    build_default();
 }
 
-ColorMap::ColorMap(int nlevels, double min, double max, int shortrange )
+ColorMap::ColorMap(int nlevels, double min, double max, int /*shortrange */)
 : min(min), max(max), colors(nlevels), non_diffuse_constant(0),type(0),
   rawRed(0),rawGreen(0),rawBlue(0),rawAlpha(0),raw1d(0),pre_mult_alpha(0)
 {

@@ -39,7 +39,7 @@ protected:
 	RegularGrid,
 	UnstructuredGrid,
 	OceanFile,
-	Zones,
+	Zones
     };
     VectorField(Representation);
 private:

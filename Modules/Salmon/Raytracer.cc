@@ -67,11 +67,11 @@ clString Raytracer::create_window(Roe* roe,
     return rend->create_window(roe, name, width, height);
 }
 
-void Raytracer::redraw(Salmon* _salmon, Roe* _roe)
+void Raytracer::old_redraw(Salmon* _salmon, Roe* _roe)
 {
     salmon=_salmon;
     roe=_roe;
-    rend->redraw(salmon, roe);
+    rend->old_redraw(salmon, roe);
 
     WallClockTimer timer;
     timer.start();

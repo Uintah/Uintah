@@ -65,7 +65,7 @@ void TimeGrid::set_active(int which, double t)
   
 }
 
-void TimeGrid::set(int i, int j, const MaterialHandle& matl,
+void TimeGrid::set(int i, int j, const MaterialHandle& /*matl*/,
 		   const double &alpha)
 {
     if(!tmap[active]){
@@ -114,7 +114,7 @@ TimeGrid::~TimeGrid()
       delete tmap[i];
 }
 
-void TimeGrid::get_bounds(BSphere& bs)
+void TimeGrid::get_bounds(BSphere&)
 {
 
 }
@@ -151,7 +151,7 @@ void TimeGrid::io(Piostream& stream)
     stream.end_class();
 }    
 
-bool TimeGrid::saveobj(ostream&, const clString& format, GeomSave*)
+bool TimeGrid::saveobj(ostream&, const clString&, GeomSave*)
 {
   return 0;
 }

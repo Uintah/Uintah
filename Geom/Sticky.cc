@@ -47,7 +47,7 @@ void GeomSticky::preprocess() {
   NOT_FINISHED("GeomSticky::preprocess");
 }
 
-void GeomSticky::intersect(const Ray& ray, Material*, Hit& hit) {
+void GeomSticky::intersect(const Ray&, Material*, Hit&) {
   NOT_FINISHED("GeomSticky::intersect");
 }
 
@@ -60,7 +60,7 @@ void GeomSticky::io(Piostream& stream) {
   stream.end_class();
 }
 
-bool GeomSticky::saveobj(ostream&, const clString& format, GeomSave*) {
+bool GeomSticky::saveobj(ostream&, const clString&, GeomSave*) {
   NOT_FINISHED("GeomSticky::saveobj");
   return false;
 }

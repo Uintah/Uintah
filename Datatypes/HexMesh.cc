@@ -190,7 +190,6 @@ HexFace::HexFace ()
 
 void HexFace::calc_face (HexMesh * m)
 {
-  Vector n;
   double d;
 
   // Find the centroid.  (Uses 4 points, even if points are duplicated.)
@@ -398,7 +397,6 @@ void Pio (Piostream & p, HexFace * & f)
 void HexFace::finish_read (HexMesh * m)
 {
   int c;
-  double d;
   
   for (c = 8; c--;)
     corner.node[c] = m->find_node (corner.index[c]);
@@ -1483,10 +1481,6 @@ ostream & operator << (ostream & o, HexMesh & m)
 
 void HexMesh::io (Piostream & p)
 {
-  HashTable<int, HexFace *> * hfhtp = & face_set;
-  HashTableIter<int, HexFace *> hf (hfhtp);
-  HashTable<int, Hexahedron *> * hxhtp = & element_set;
-  HashTableIter<int, Hexahedron *> hx (hxhtp);
   int version;
   
   // Set up a header and get/put our version.
@@ -1523,7 +1517,6 @@ void HexMesh::finish ()
   HashTableIter<int, HexFace *> hf (hfhtp);
   HashTable<int, Hexahedron *> * hxhtp = & element_set;
   HashTableIter<int, Hexahedron *> hx (hxhtp);
-  int version;
   
     // If we just read the mesh, some additional processing may be required.
   
@@ -1539,7 +1532,7 @@ void HexMesh::finish ()
     classify ();
 }
 
-void HexMesh::get_boundary_lines(Array1<Point>& lines)
+void HexMesh::get_boundary_lines(Array1<Point>&)
 {
     NOT_FINISHED("HexMesh::get_boundary_lines");
 }

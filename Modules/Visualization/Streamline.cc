@@ -791,7 +791,6 @@ void Streamline::do_streamline(SLSourceInfo* si)
 
 void Streamline::parallel_streamlline(int proc)
 {
-  GeomGroup* group=0;
   int st=proc*tracers.size()/np;
   int et=(proc+1)*tracers.size()/np;
   double maxt=maxsteps*stepsize;

@@ -101,8 +101,6 @@ public:
     void unique_add(Array1<int>& a, int v);
 };
 
-static TrainSegment* current_drawer=0;
-
 extern "C" {
 Module* make_TrainSegment(const clString& id)
 {
@@ -566,10 +564,6 @@ int TrainSegment::findPixelFromVoxel(clString view, int i, int j, int k,
 				     int &u, int &v, int &du, int &dv) {
     cerr << "findPixelFromVoxel("<<view<<", "<<i<<", "<<j<<", "<<k<<")\n";
     int xval, yval, zval;
-    int nnx, nny, nnz;
-    nnx=last_sfrg->nx;
-    nny=last_sfrg->ny;
-    nnz=last_sfrg->nz;
     if (view=="sag") {
 	xval=(256*tx.get()-x_win_min)/x_pixel_size;
 	if (xval!=i) return 0;	
@@ -772,7 +766,6 @@ int TrainSegment::makeCurrent() {
 	TCLTask::unlock();
 	return 0;
     }
-    current_drawer=this;
     if (!glXMakeCurrent(dpy, win, cx))
 	    cerr << "*glXMakeCurrent failed.\n";
 

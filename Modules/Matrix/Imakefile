@@ -44,7 +44,8 @@ SCISubdirs($(SPARSELIB))
 
 LOCALINCLUDES = $(OPENGLINCS) $(IML_INCLUDES)
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL -lClasslib \
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lMath \
+	-lTCL -lClasslib \
 	-lMultitask $(OPENGLLIBS) -lscitk -ltk -lMalloc $(IML_LDFLAGS) -lm -lC -lc
 
 SCIDependTarget($(SRCS))

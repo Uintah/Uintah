@@ -32,7 +32,7 @@ protected:
     enum Representation {
 	PhantomsType,
         PulsesType,
-        Other,
+        Other
     };
     VoidStar(Representation);
 private:

@@ -81,12 +81,11 @@ Multiprocess::Multiprocess()
 
 int Multiprocess::body(int)
 {
-  while(1){
-    sema1.down();
-    (*starter)(userdata, processor);
-    sema2.up();
-  }
-  return 0;
+    for(;;){
+	sema1.down();
+	(*starter)(userdata, processor);
+	sema2.up();
+    }
 }
 
 static Multiprocess* mpworkers;
@@ -113,7 +112,6 @@ void Task::multiprocess(int nprocessors, void (*starter)(void*, int),
     workerlock.lock();
 
     Multiprocess* workers=0;
-    Multiprocess* lastw=0;
     for(int i=0;i<nprocessors;i++){
       Multiprocess* w=mpworkers;
       if(!w){
@@ -124,8 +122,6 @@ void Task::multiprocess(int nprocessors, void (*starter)(void*, int),
       }
       w->next=workers;
       workers=w;
-      if(i==0)
-	lastw=w;
     }
     workerlock.unlock();
 
@@ -146,7 +142,6 @@ void Task::multiprocess(int nprocessors, void (*starter)(void*, int),
     }
 
     workerlock.lock();
-    lastw=mpworkers;
     mpworkers=workers;
     workerlock.unlock();
 }

@@ -33,7 +33,7 @@ class Piostream {
 public:
     enum Direction {
 	Read,
-	Write,
+	Write
     };
 protected:
     Piostream(Direction, int);

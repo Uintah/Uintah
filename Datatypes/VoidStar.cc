@@ -38,7 +38,7 @@ VoidStar::~VoidStar()
 
 #define VoidStar_VERSION 1
 void VoidStar::io(Piostream& stream) {
-    int version=stream.begin_class("VoidStar", VoidStar_VERSION);
+    stream.begin_class("VoidStar", VoidStar_VERSION);
     int* repp=(int*)&rep;
     Pio(stream, *repp);
     stream.end_class();

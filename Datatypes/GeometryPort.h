@@ -27,7 +27,7 @@ class Mutex;
 class GeometryIPort : public IPort {
 public:
     enum Protocol {
-	Atomic=0x01,
+	Atomic=0x01
     };
 
 protected:

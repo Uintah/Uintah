@@ -176,7 +176,7 @@ void GeomDisc::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomDisc::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomDisc::saveobj(ostream&, const clString&, GeomSave*)
 {
     NOT_FINISHED("GeomDisc::saveobj");
     return false;

@@ -179,13 +179,13 @@ void GeomPts::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomPts::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomPts::saveobj(ostream&, const clString&, GeomSave*)
 {
     NOT_FINISHED("GeomPts::saveobj");
     return false;
 }
 
-GeomTimedParticles::GeomTimedParticles(const GeomTimedParticles& cpy)
+GeomTimedParticles::GeomTimedParticles(const GeomTimedParticles&)
 : cmap(0)
 {
   cerr << "No real Copy Constructor...\n";
@@ -377,12 +377,12 @@ Vector GeomTimedParticles::normal(const Point&, const Hit&)
 
 void GeomTimedParticles::io(Piostream& stream)
 {
-    int version=stream.begin_class("GeomTimedParticles", GeomTimedParticles_VERSION);
+    stream.begin_class("GeomTimedParticles", GeomTimedParticles_VERSION);
     GeomObj::io(stream);
     stream.end_class();
 }
 
-bool GeomTimedParticles::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomTimedParticles::saveobj(ostream&, const clString&, GeomSave*)
 {
     NOT_FINISHED("GeomTimedParticles::saveobj");
     return false;

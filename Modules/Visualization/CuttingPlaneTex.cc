@@ -221,8 +221,6 @@ void CuttingPlaneTex::execute()
 
   cerr << u_num << " " << v_num << " Grid start...\n";
 
-  double time=0;
-
   // now find out how many of these frames you have...
 
   int num_fields=0;
@@ -256,15 +254,21 @@ void CuttingPlaneTex::execute()
 	
 	// get the color from cmap for p 	    
 	MaterialHandle matl;
+#if 0
 	double alpha;
+#endif
 
 	if (me->interpolate( p, sval, ix) || (ix=0) || me->interpolate( p, sval, ix)) {
 //	  matl = cmap->lookup( sval);
+#if 0
 	  alpha = 0.8;
+#endif
 	} else {
 	  matl = outcolor;
 	  sval = 0;
+#if 0
 	  alpha=0.0;
+#endif
 	}
 	
 	grid->set(i, j, matl,sval);

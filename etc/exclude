@@ -1,7 +1,9 @@
-Modules/Visualization/IsoSurface/mcube.h
-Modules/Visualization/IsoSurface/mcube2.h
+Modules/Visualization/mcube.h
+Modules/Visualization/mcube2.h
 Modules/Salmon/image.h
 Modules/Matrix/sp1_5c/
+VolPack/
+Modules/DP/
 ILDUMPS
 tcl/tkFScale
 tcl/tk

@@ -25,7 +25,7 @@ extern "C" {
     typedef double LinAlg_TriDiagRow[3];
     void linalg_tridiag(int n, LinAlg_TriDiagRow* data, double* c);
 #ifdef __cplusplus
-};
+}
 #endif
 
 #endif

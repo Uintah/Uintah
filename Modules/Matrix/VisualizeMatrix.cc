@@ -102,8 +102,6 @@ public:
     void printString(char *s);
 };
 
-static VisualizeMatrix* current_drawer=0;
-
 extern "C" {
 Module* make_VisualizeMatrix(const clString& id)
 {
@@ -416,8 +414,6 @@ void VisualizeMatrix::plot_snoop() {
     
 //    cerr << "*xres="<<xres<<"  yres="<<yres<<"\n";
     // Make ourselves current
-//    if(current_drawer != this){
-        current_drawer=this;
     if (!glXMakeCurrent(dpy, win, cx))
 //	    cerr << "*glXMakeCurrent succeeded.\n";
 //	else
@@ -543,7 +539,7 @@ void VisualizeMatrix::plot_snoop() {
     glPointSize(1);
     int errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
-//	cerr << "Snoop got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+	cerr << "Snoop got an error from GL: " << (char*)gluErrorString(errcode) << endl;
     }
     glXMakeCurrent(dpy, None, NULL);
     TCLTask::unlock();
@@ -576,8 +572,6 @@ void VisualizeMatrix::plot_snoop_rect() {
 
 //    cerr << "*xres="<<xres<<"  yres="<<yres<<"\n";
     // Make ourselves current
-//    if(current_drawer != this){
-        current_drawer=this;
     if (!glXMakeCurrent(dpy, win, cx))
 //	    cerr << "*glXMakeCurrent succeeded.\n";
 //	else
@@ -664,7 +658,7 @@ void VisualizeMatrix::plot_snoop_rect() {
     glFlush();
     int errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
-//	cerr << "Rect got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+	cerr << "Rect got an error from GL: " << (char*)gluErrorString(errcode) << endl;
     }
     glXMakeCurrent(dpy, None, NULL);
     TCLTask::unlock();
@@ -696,8 +690,6 @@ void VisualizeMatrix::plot_matrices() {
 
 //    cerr << "*xres="<<xres<<"  yres="<<yres<<"\n";
     // Make ourselves current
-//    if(current_drawer != this){
-        current_drawer=this;
     if (!glXMakeCurrent(dpy, win, cx))
 //	    cerr << "*glXMakeCurrent succeeded.\n";
 //	else
@@ -794,7 +786,7 @@ void VisualizeMatrix::plot_matrices() {
     glFlush();
     int errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
-//	cerr << "Plot got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+	cerr << "Plot got an error from GL: " << (char*)gluErrorString(errcode) << endl;
     }
     glXMakeCurrent(dpy, None, NULL);
     TCLTask::unlock();

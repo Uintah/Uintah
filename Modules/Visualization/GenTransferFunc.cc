@@ -456,7 +456,7 @@ GetClosest(float time, float val, int& cline, int& cpoint)
 {
   int i;
   
-  float minP=10000,minA=10000;
+  float minP=10000;
 
   for(i=0;i<points.size() && (points[i]._t <= time); i++) {
     ; // do nothing - just getting index...
@@ -724,7 +724,6 @@ void GenTransferFunc::execute(void)
 int GenTransferFunc::makeCurrent(void)
 {
   Tk_Window tkwin;
-  Window win;
 
   // lock a mutex
   TCLTask::lock();

@@ -91,7 +91,7 @@ void AddWells2::execute()
     char line[1000];
     in.getline(line, 1000);
     while(in){
-	double x, y, depth;
+	double x, y;
 	double dummy;
 	in >> dummy >> x >> y >> dummy >> dummy >> dummy;
 	double z1;

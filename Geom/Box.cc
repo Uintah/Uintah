@@ -92,7 +92,7 @@ void GeomBox::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomBox::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomBox::saveobj(ostream&, const clString&, GeomSave*)
 {
     NOT_FINISHED("GeomBox::saveobj");
     return false;

@@ -42,7 +42,7 @@ inline int Hash(const int& k, int hash_size)
 
 inline int Hash(const unsigned long& k, int hash_size)
 {
-    return (k^(3*hash_size+1))%hash_size;
+    return (int)(k^(3*hash_size+1))%hash_size;
 }   
 
 typedef void* HashVoid;

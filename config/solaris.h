@@ -18,7 +18,7 @@ PIC = -Kpic
 #define SCI_NativeDebugCppFlags SCI_NativeDebugCFlags
 #define SCI_NativeOtherCppFlags SCI_OtherCFlags +w -ptr$(TOP)/templates -pic
 #define SCI_NativeCppIncludeLocation /usr/include/CC
-#define SCI_NativeLinker time CC
+#define SCI_NativeLinker CC
 #define SCI_NativeLinkerFlags -ptv -pta
 #define SCI_NativeLinkerNeedsCppFlags
 #define SCI_NativeLinkerLib

@@ -11,7 +11,7 @@ public:
 				   const clString& name,
 				   const clString& width,
 				   const clString& height);
-    virtual void redraw(Salmon*, Roe*);
+    virtual void old_redraw(Salmon*, Roe*);
     virtual void get_pick(Salmon*, Roe*, int x, int y,
 			  GeomObj*&, GeomPick*&);
     virtual void put_scanline(int y, int width, Color* scanline, int repeat);
@@ -47,7 +47,7 @@ clString Postscript::create_window(Roe*,
     return "canvas "+name+" -width "+width+" -height "+height+" -background lavender";
 }
 
-void Postscript::redraw(Salmon*, Roe*)
+void Postscript::old_redraw(Salmon*, Roe*)
 {
     NOT_FINISHED("Postscript::redraw");
 }

@@ -73,7 +73,7 @@ void TextPiostream::io(int do_quotes, clString& string)
 	    char* p=buf;
 	    int n=0;
 	    ifstream& in=*istr;
-	    while(1){
+	    for(;;){
 		char c;
 		in.get(c);
 		if(!in){
@@ -110,7 +110,6 @@ void TextPiostream::io(int do_quotes, clString& string)
 
 clString TextPiostream::peek_class()
 {
-    clString name;
     expect('{');
     io(0, peekname);
     have_peekname=1;
@@ -411,7 +410,7 @@ void TextPiostream::io(clString& data)
 	char buf[1000];
 	char* p=buf;
 	int n=0;
-	while(1){
+	for(;;){
 	    char c;
 	    in.get(c);
 	    if(!in){

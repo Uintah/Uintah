@@ -36,7 +36,7 @@ LineConstraint::LineConstraint( const clString& name,
 
    // Tell the variables about ourself.
    Register();
-};
+}
 
 /***************************************************************************
  * The destructor frees the constraint's allocated structures.

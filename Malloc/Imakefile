@@ -23,8 +23,9 @@ SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
 
 #ifdef SCI_MACHINE_SGI
+ASOPT = SCI_BinFlags
 lock.o: lock_mips.s
-	as -o lock.o lock_mips.s -mips2
+	as -o lock.o lock_mips.s $(ASOPT)
 #endif
 
 TEST_LIBS =

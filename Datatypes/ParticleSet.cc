@@ -22,7 +22,7 @@ ParticleSet::ParticleSet()
 {
 }
 
-ParticleSet::ParticleSet(const ParticleSet& c)
+ParticleSet::ParticleSet(const ParticleSet&)
 {
 }
 

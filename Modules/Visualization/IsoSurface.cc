@@ -1839,7 +1839,7 @@ int IsoSurface::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     int pfaces=0;
     int rfaces=0;
     int use2 = !((f1+f2+f3+f4)&1);
-    int rfc2,rfc3,rfc4;
+    int rfc2,rfc3;
 
     // these points/codes are just for 2 triangle mode!
 
@@ -2117,10 +2117,8 @@ void IsoSurface::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
 	return;
     }
 
-    int total_prims = 0;
     int max_prim=0;
     int strip_prims=0;
-    int grp_prims=0;
     GeomTrianglesP *bgroup = 0;
     isoval.set(iv);
     // 1st bit array is for ones that are done
@@ -2140,8 +2138,6 @@ void IsoSurface::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
 
     tocheck.set(ix);
     surfQ.append(ix);
-    int groupid=0;
-    int counter=1;
     while(!surfQ.is_empty()) {
 	if (sp && abort_flag)
 	    break;

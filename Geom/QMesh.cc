@@ -57,7 +57,7 @@ void GeomQMesh::get_bounds(BBox& bb)
     }
 }
 
-void GeomQMesh::get_bounds(BSphere& bs)
+void GeomQMesh::get_bounds(BSphere&)
 {
 
 }
@@ -85,12 +85,12 @@ void GeomQMesh::intersect(const Ray&, Material*, Hit&)
 
 #define GeomQMesh_VERSION 2
 
-void GeomQMesh::io(Piostream& stream)
+void GeomQMesh::io(Piostream&)
 {
 
 }    
 
-bool GeomQMesh::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomQMesh::saveobj(ostream&, const clString&, GeomSave*)
 {
     NOT_FINISHED("GeomQMesh::saveobj");
     return false;

@@ -407,10 +407,6 @@ void FieldSeed::Visualize(int which, int onoff)
     
     //    cerr << glob_scale << " " << ug->longest_dimension() << " h\n";
     
-    int cache=0;
-    
-    double texval = 1.0/glob_scale;
-    
     double minv=10000,maxv=-1.0;
 
     VectorFieldRG *vrg = ovf->getRG();
@@ -430,7 +426,6 @@ void FieldSeed::Visualize(int which, int onoff)
     // now run though again
     
     double recipv = glob_scale/(maxv-minv);
-    double ooverr = 1.0/recipv;
     
     xstep.reset();
     ystep.reset();

@@ -255,7 +255,7 @@ void GeomSave::translate(ostream& out, const Point& p)
     end_node(out);
 }
 
-void GeomSave::rotateup(ostream& out, const Vector& up, const Vector& new_up)
+void GeomSave::rotateup(ostream& out, const Vector& up, const Vector& /*new_up*/)
 {
     Vector axis(Cross(Vector(0,1,0), up.normal()));
     if(axis.length2() > 1.e-6){
@@ -275,7 +275,7 @@ void GeomSave::rotateup(ostream& out, const Vector& up, const Vector& new_up)
 }
 
 void GeomSave::orient(ostream& out, const Point& center, const Vector& up,
-		      const Vector& new_up)
+		      const Vector& /*new_up&*/)
 {
     start_node(out, "Transform");
     indent(out);
@@ -296,7 +296,7 @@ void GeomSave::orient(ostream& out, const Point& center, const Vector& up,
 }
 
 void GeomSave::rib_orient(ostream& out, const Point& center, const Vector& up,
-		      const Vector& new_up)
+		      const Vector& /*new_up*/)
 {
     indent(out);
 

@@ -247,7 +247,7 @@ void SortObjs::DoSmartRadixSort(Array1<unsigned int>& data,
   // bits - you can overflow - just not past
   int n16=0,n12=0,n8=0,n4=0;
   int tot_bits=0;
-  int rnbits = nbits;
+  //  int rnbits = nbits;
   int npass=0;
 #if 0
   while((nbits >= 16) || ((tot_bits <= (32-16)) && (nbits > 12))) {
@@ -475,8 +475,8 @@ void main(int argc, char* argv)
   WallClockTimer mytime;
   SortObjs sorter;
 
-  double minv=0.0;
-  double mfac=1.0;
+  //double minv=0.0;
+  //double mfac=1.0;
 
   for (NUM_SHIFT=2;NUM_SHIFT<32;NUM_SHIFT++) {
     SCALE_FAC=1<<NUM_SHIFT;

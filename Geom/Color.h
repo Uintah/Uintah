@@ -133,7 +133,8 @@ public:
     inline double g() const {return green;}
     inline double b() const {return blue;}
   
-  CharColor operator= ( const Color& ) const;
+  CharColor operator= ( const Color& );
+  CharColor operator= ( const CharColor& );
 
   int operator!= ( const CharColor& ) const;
 };

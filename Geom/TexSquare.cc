@@ -59,7 +59,7 @@ void TexSquare::preprocess() {
   NOT_FINISHED("TexSquare::preprocess");
 }
 
-void TexSquare::intersect(const Ray& ray, Material*, Hit& hit) {
+void TexSquare::intersect(const Ray&, Material*, Hit&) {
   NOT_FINISHED("TexSquare::intersect");
 }
 
@@ -75,7 +75,7 @@ void TexSquare::io(Piostream& stream) {
   stream.end_class();
 }
 
-bool TexSquare::saveobj(ostream&, const clString& format, GeomSave*) {
+bool TexSquare::saveobj(ostream&, const clString&, GeomSave*) {
   NOT_FINISHED("TexSquare::saveobj");
   return false;
 }

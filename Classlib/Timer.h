@@ -19,7 +19,7 @@ class Timer {
     double start_time;
     enum State {
 	Stopped,
-	Running,
+	Running
     };
     State state;
     virtual double get_time()=0;

@@ -46,7 +46,7 @@ ContourSet::ContourSet()
     basis[2]=Vector(0,0,1);
     origin=Vector(0,0,0);
     space=1;
-};
+}
 
 ContourSet::ContourSet(const ContourSet &copy)
 : contours(copy.contours), conductivity(copy.conductivity),

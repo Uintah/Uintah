@@ -99,7 +99,7 @@ void GeomTetra::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTetra::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomTetra::saveobj(ostream&, const clString&, GeomSave*)
 {
     NOT_FINISHED("GeomTetra::saveobj");
     return false;

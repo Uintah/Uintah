@@ -102,7 +102,7 @@ Complex& cSMatrix::get(int i, int j) {
     int next_idx=row_ptr[i+1];
     int l=row_idx;
     int h=next_idx-1;
-    while(1){
+    for(;;){
 	if(h<l){
 	    static Complex zero;
 	    zero=Complex(0,0);

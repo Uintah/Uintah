@@ -45,8 +45,8 @@ GeomObj* HeadLight::geom()
     return 0; // Never seen
 }
 
-void HeadLight::lintens(const OcclusionData& od, const Point& p,
-			Color& light, Vector& light_dir)
+void HeadLight::lintens(const OcclusionData&, const Point&,
+			Color&, Vector&)
 {
     NOT_FINISHED("HeadLight::lintens");
 #if 0

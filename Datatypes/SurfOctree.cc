@@ -71,7 +71,7 @@ void SurfOctreeTop::print() {
 
 void SurfOctreeTop::io(Piostream& stream)
 {
-    int version=stream.begin_class("SurfOctree", SurfOctreeTop_VERSION);
+    stream.begin_class("SurfOctree", SurfOctreeTop_VERSION);
     Pio(stream, nx);
     Pio(stream, ny);
     Pio(stream, nz);

@@ -180,7 +180,6 @@ ScalarField* BoxClipSField::UGtoUG(const Point &minPt, const Point &maxPt,
     Array1<int> in_nodes(m->nodes.size());
     Array1<int> in_elements(m->elems.size());
     Array1<int> new_nodes;
-int cc=0;
     if (isAlligned) {
 	for (int i=0; i<m->nodes.size(); i++) {
 	    Point p=m->nodes[i]->p;

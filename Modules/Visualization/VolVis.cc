@@ -235,7 +235,7 @@ class VolVis : public Module {
   // into the arrays.
   void UpdateTransferFncArray( clString x, clString y, int index );
 
-  const int numMsg=100;
+  static const int numMsg=100;
   
   //  SMail msgs;
   Mailbox<int> msgs;
@@ -361,8 +361,6 @@ public:
  * TEMP!
  *
  **************************************************************/
-
-static VolVis* current_drawer=0;
 
 
 
@@ -714,7 +712,6 @@ VolVis::parallel( int proc )
 void
 VolVis::UpdateTransferFncArray( clString x, clString y, int index )
 {
-  int NodeCount;
   int i, len, position;
   
   char *array = new char[4000];
@@ -740,7 +737,6 @@ VolVis::UpdateTransferFncArray( clString x, clString y, int index )
   /* read in the x-position */
 
   strcpy( array, x());
-  NodeCount = 0;
   len   = 1;
 
   while ( len )
@@ -771,7 +767,6 @@ VolVis::UpdateTransferFncArray( clString x, clString y, int index )
   /* read in the y-position */
 
   strcpy( array, y());
-  NodeCount = 0;
   len   = 1;
 
   while ( len )
@@ -855,8 +850,6 @@ VolVis::makeCurrent()
       TCLTask::unlock();
       return 0;
     }
-
-  current_drawer=this;
 
   // sets up a bunch of stuff for OpenGL
   if ( ! glXMakeCurrent(dpy, win, cx) )
@@ -1250,8 +1243,6 @@ VolVis::LinearAChanged( clString a )
 void
 VolVis::TransferMapChanged()
 {
-  int i, j;
-  
   msgs.send( NEWTRANSFERMAP );
 }
 

@@ -137,7 +137,7 @@ protected:
         Switch5 = 0x0020,
         Switch6 = 0x0040,
         Switch7 = 0x0080,
-        Switch8 = 0x0100,
+        Switch8 = 0x0100
   };
 
    GeomSwitch* widget;
