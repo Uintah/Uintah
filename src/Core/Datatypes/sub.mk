@@ -36,6 +36,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/LatVolMesh.cc 		\
 	$(SRCDIR)/MaskedLatVolMesh.cc	    	\
 	$(SRCDIR)/Matrix.cc		    	\
+	$(SRCDIR)/MatrixOperations.cc	    	\
 	$(SRCDIR)/Mesh.cc		    	\
 	$(SRCDIR)/PointCloudMesh.cc         	\
 	$(SRCDIR)/PropertyManager.cc	    	\
