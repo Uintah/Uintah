@@ -1,0 +1,114 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 132 47]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 111 283]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 406 59]
+set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 111 429]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 289 187]
+
+addConnection $m2 0 $m4 0
+addConnection $m0 0 $m4 1
+addConnection $m4 0 $m1 1
+addConnection $m0 0 $m1 0
+addConnection $m1 0 $m3 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename {/scratch/callahan/SCIRunData/sphere/sphere-voltage.tvd.fld}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-nodes-on {1}
+set $m1-nodes-transparency {0}
+set $m1-nodes-as-disks {0}
+set $m1-edges-on {1}
+set $m1-edges-transparency {0}
+set $m1-faces-on {1}
+set $m1-use-normals {0}
+set $m1-use-transparency {0}
+set $m1-vectors-on {0}
+set $m1-normalize-vectors {}
+set $m1-has_vector_data {0}
+set $m1-bidirectional {0}
+set $m1-tensors-on {0}
+set $m1-has_tensor_data {0}
+set $m1-scalars-on {0}
+set $m1-scalars-transparency {0}
+set $m1-has_scalar_data {1}
+set $m1-text-on {0}
+set $m1-text-use-default-color {1}
+set $m1-text-color-r {1.0}
+set $m1-text-color-g {1.0}
+set $m1-text-color-b {1.0}
+set $m1-text-backface-cull {0}
+set $m1-text-fontsize {1}
+set $m1-text-precision {2}
+set $m1-text-render_locations {0}
+set $m1-text-show-data {1}
+set $m1-text-show-nodes {0}
+set $m1-text-show-edges {0}
+set $m1-text-show-faces {0}
+set $m1-text-show-cells {0}
+set $m1-def-color-r {0.5}
+set $m1-def-color-g {0.5}
+set $m1-def-color-b {0.5}
+set $m1-def-color-a {0.5}
+set $m1-node_display_type {Points}
+set $m1-edge_display_type {Lines}
+set $m1-data_display_type {Arrows}
+set $m1-tensor_display_type {Boxes}
+set $m1-scalar_display_type {Points}
+set $m1-active_tab {Nodes}
+set $m1-node_scale {0.03}
+set $m1-edge_scale {0.015}
+set $m1-vectors_scale {0.30}
+set $m1-tensors_scale {0.30}
+set $m1-scalars_scale {0.30}
+set $m1-show_progress {}
+set $m1-interactive_mode {Interactive}
+set $m1-node-resolution {6}
+set $m1-edge-resolution {6}
+set $m1-data-resolution {6}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-tcl_status {Calling GenStandardColorMaps!}
+set $m2-positionList {}
+set $m2-nodeList {}
+set $m2-width {1}
+set $m2-height {1}
+set $m2-mapType {3}
+set $m2-minRes {12}
+set $m2-resolution {256}
+set $m2-realres {256}
+set $m2-gamma {0}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-isFixed {0}
+set $m4-min {-5.25315}
+set $m4-max {4.31926}
+set $m4-makeSymmetric {0}
+
+::netedit scheduleok
+
+
+# Build up a simplistic standalone application.
+
+toplevel .standalone
+wm title .standalone "SCIView"	 
+
+canvas .standalone.viewwindow -width 600 -height 460
+
+frame .standalone.options -relief groove -borderwidth 2
+
+label .standalone.options.lfilename -text "Filename"
+entry .standalone.options.filename -textvariable $m0-filename
+
+pack .standalone.options.lfilename .standalone.options.filename -side top
+
+pack .standalone.viewwindow .standalone.options -side left -fill y
