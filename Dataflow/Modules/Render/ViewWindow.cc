@@ -2531,36 +2531,36 @@ void ViewWindow::do_mouse(MouseHandler handler, GuiArgs& args)
     cerr << "Mouse event dropped, mailbox full!\n";
 }
 
+
 void ViewWindow::autoview(const BBox& bbox)
 {
   dolly_throttle=0;
-  if(bbox.valid()){
+  if (bbox.valid())
+  {
     View cv(view.get());
     // Animate lookat point to center of BBox...
     cv.lookat(bbox.center());
     animate_to_view(cv, 2.0);
         
-    // Move forward/backwards until entire view is in scene...
-
+    // Move forward/backwards until entire view is in scene.
     // change this a little, make it so that the FOV must
-    // be 60 deg...
-
+    // be 60 deg.
     // I'm changing this to be 20 degrees - Dave
 
     double myfov=20.0;
 
     Vector diag(bbox.diagonal());
-    double w=diag.length();
-    Vector lookdir(cv.lookat()-cv.eyep()); 
-    lookdir.normalize();
-    const double scale = 1.0/(2*Tan(DtoR(myfov/2.0)));
+    const double w = diag.length();
+    Vector lookdir(cv.lookat() - cv.eyep()); 
+    lookdir.safe_normalize();
+    const double scale = 1.0 / (2*Tan(DtoR(myfov/2.0)));
     double length = w*scale;
     cv.fov(myfov);
-    cv.eyep(cv.lookat() - lookdir*length);
+    cv.eyep(cv.lookat() - lookdir * length);
     animate_to_view(cv, 2.0);
-
   }
 }
+
 
 void ViewWindow::redraw()
 {
