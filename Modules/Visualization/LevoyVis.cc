@@ -1229,10 +1229,15 @@ LevoyS::SetUp ( GeometryData * g )
   
   clipConst = ( g->zfar - g->znear ) / homeRay.length();
 
+  cerr << "Far clipping plane is " << g->zfar << endl;
+  cerr << "Near clipping plane is " << g->znear << endl;
+  cerr << "clipConst ended up being: " << clipConst << endl;
+
   // the ratio of near clipping plane to homeRaylength
 
   nearTohome = g->znear / homeRay.length();
-  
+
+  cerr << "near to home constant is " << nearTohome << endl;
 
   // rayStep represents the length of vector.  in order to
   // traverse the volume, a vector of this length in the direction
@@ -1357,14 +1362,15 @@ LevoyS::Eleven ( const Point& eye, Vector& step,
      nearTohome ); */
 
   int templength = step.length() * ( clipConst *
-		   geom->depthbuffer->get_depth(x,y) + nearTohome );
+		   geom->depthbuffer->get_depth(px,py) + nearTohome );
 
   // compare the 2 lengths, pick the shorter one
 
   if ( templength < mylength )
-    mylength = templength;
-  else
-    cerr << "T";
+    {
+      mylength = templength;
+      cerr << "U";
+    }
     
   /* END DAVES */
 
@@ -1866,13 +1872,13 @@ LevoyS::PerspectiveTrace( int from, int till )
 	      // i will need to REMOVE this later
 
 	      if ( beg.InInterval( end, 1.e-5 ) )
-		pixelColor = (*BackgroundBuffer)( pool, loop );
+		pixelColor = geom->colorbuffer->get_pixel( pool, loop );
 	      else
 		pixelColor = (this->*CastRay)( eye, rayToTrace,
 					      beg, end, pool, loop );
 	    }
 	  else
-	    pixelColor = (*BackgroundBuffer)( pool, loop );
+	    pixelColor = geom->colorbuffer->get_pixel( pool, loop );
 
 	  // assign color value to pixel
 
