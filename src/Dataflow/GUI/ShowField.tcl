@@ -37,6 +37,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-def-color-r
 	global $this-def-color-g
 	global $this-def-color-b
+	global $this-def-color-a
 	global $this-node_scale
 	global $this-edge_scale
 	global $this-vectors_scale
@@ -51,6 +52,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-def-color-r 0.5
 	set $this-def-color-g 0.5
 	set $this-def-color-b 0.5
+	set $this-def-color-a 0.5
 	set $this-nodes-on 1
 	set $this-nodes-as-disks 0
 	set $this-edges-on 1
