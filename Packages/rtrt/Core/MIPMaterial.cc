@@ -158,7 +158,7 @@ void MIPMaterial::shade(Color& result, const Ray& ray,
     Point hitpt = origin + ray.direction()*hit.min_t;
     //    Vector normal = hit.hit_obj->normal(hitpt,hit);
 
-    int which = cx->worker->rendering_scene;
+    int which = cx->rendering_scene;
     
     // may not get the correct camera for one iteration!!!
     Camera* cam = cx->scene->get_camera(which);
