@@ -87,6 +87,7 @@ public:
   //! slow setters/getter for polymorphic operations
   virtual double& get(int r, int c) const;
   virtual void    put(int r, int c, double val);
+  virtual void    add(int r, int c, double val);
   
   virtual DenseMatrix* transpose();
   

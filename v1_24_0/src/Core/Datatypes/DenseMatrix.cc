@@ -220,6 +220,13 @@ void DenseMatrix::put(int r, int c, double d)
   data[r][c]=d;
 }
 
+void DenseMatrix::add(int r, int c, double d)
+{
+  ASSERTRANGE(r, 0, nr);
+  ASSERTRANGE(c, 0, nc);
+  data[r][c] += d;
+}
+
 DenseMatrix *DenseMatrix::transpose() {
   DenseMatrix *m=scinew DenseMatrix(nc,nr);
   double *mptr = &((*m)[0][0]);

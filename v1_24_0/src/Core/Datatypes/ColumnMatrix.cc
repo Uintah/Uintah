@@ -218,23 +218,18 @@ double& ColumnMatrix::get(int r, int c) const
     return data[r];
 }
 
-double& ColumnMatrix::get(int r) const
-{
-    ASSERTRANGE(r, 0, rows);
-    return data[r];
-}
-
 void ColumnMatrix::put(int r, int c, double d)
 {
     ASSERTRANGE(r, 0, rows);
     ASSERTEQ(c, 0);
-    data[r]=d;
+    data[r] += d;
 }
 
-void ColumnMatrix::put(int r, double d)
+void ColumnMatrix::add(int r, int c, double d)
 {
     ASSERTRANGE(r, 0, rows);
-    data[r]=d;
+    ASSERTEQ(c, 0);
+    data[r] += d;
 }
 
 int ColumnMatrix::ncols() const

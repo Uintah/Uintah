@@ -79,10 +79,11 @@ public:
 //  ColumnMatrix *add(ColumnMatrix *m);
   virtual Matrix *transpose();
 
+  double& get(int r) const       { ASSERTRANGE(r, 0, rows); return data[r]; };
+  void    put(int r, double val) { ASSERTRANGE(r, 0, rows); data[r] = val; };
   virtual double& get(int, int) const;
-  double& get(int) const;
   virtual void put(int row, int col, double val);
-  void put(int row, double val);
+  virtual void add(int row, int col, double val);
   virtual string type_name() { return "ColumnMatrix"; }
   virtual int nrows() const;
   virtual int ncols() const;
