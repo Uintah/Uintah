@@ -77,10 +77,8 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
     int dwindex = mpm_matl->getDWIndex();
-    new_dw->get(gmass[m], lb->gMassLabel,dwindex , patch,
-		  Ghost::None, 0);
-    new_dw->get(gvelocity[m], lb->gVelocityLabel, dwindex, patch,
-		  Ghost::None, 0);
+    new_dw->get(gmass[m],     lb->gMassLabel,  dwindex,   patch,Ghost::None,0);
+    new_dw->get(gvelocity[m], lb->gVelocityLabel, dwindex,patch,Ghost::None,0);
   }
 
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
@@ -92,11 +90,9 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
     }
 
     // Set each field's velocity equal to the center of mass velocity
-    if(!compare(centerOfMassMass,0.0)){
-      centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
-      for(int n = 0; n < numMatls; n++){
+    centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+    for(int n = 0; n < numMatls; n++){
 	gvelocity[n][*iter] = centerOfMassVelocity;
-      }
     }
   }
 
@@ -148,13 +144,11 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
 
     // Set each field's velocity equal to the center of mass velocity
     // and adjust the acceleration of each field to account for this
-    if(!compare(centerOfMassMass,0.0)){
-      centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
-      for(int  n = 0; n < numMatls; n++){
+    centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+    for(int  n = 0; n < numMatls; n++){
         Dvdt = (centerOfMassVelocity - gvelocity_star[n][*iter])/delT;
 	gvelocity_star[n][*iter] = centerOfMassVelocity;
 	gacceleration[n][*iter]+=Dvdt;
-      }
     }
   }
 
