@@ -36,21 +36,62 @@ fi
 
 PACKAGE_DIRS=""
 PACKAGE_PATH="\$(OBJTOP_ABS)/PSECommon/libPSECommon.so\(\$(SRCTOP_ABS)/PSECommon/GUI\)"
+package_output=""
 
 if test "$scirun" = "yes"; then
-#  PACKAGE_DIRS=$PACKAGE_DIRS" SCIRun"
-#  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/SCIRun/libSCIRun.so\(\$(SRCTOP_ABS)/SCIRun/GUI\)"
+  PACKAGE_DIRS=$PACKAGE_DIRS" SCIRun"
+  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/SCIRun/libSCIRun.so\(\$(SRCTOP_ABS)/SCIRun/GUI\)"
   EXENAME="scirun"
+  package_output="$package_output \
+	      SCIRun/Makefile \
+	        SCIRun/Datatypes/Makefile \
+		  SCIRun/Datatypes/Image/Makefile \
+		SCIRun/Modules/Makefile \
+		  SCIRun/Modules/Image/Makefile \
+		  SCIRun/Modules/Tbon/Makefile \
+		  SCIRun/Modules/Visualization/Makefile \
+		  SCIRun/Modules/Writers/Makefile
+		  "
 fi
+
+
 if test "$uintah" = "yes"; then
   PACKAGE_DIRS=$PACKAGE_DIRS" Uintah"
   PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/Uintah/libUintah.so\(\$(SRCTOP_ABS)/Uintah/GUI\)"
   EXENAME="uintah"
+  package_output="$package_output \
+              Uintah/Makefile \
+                Uintah/Datatypes/Makefile \
+                  Uintah/Datatypes/Particles/Makefile \
+                Uintah/Modules/Makefile \
+                  Uintah/Modules/MPMViz/Makefile \
+                  Uintah/Modules/Readers/Makefile
+		  "
 fi
 if test "$davew" = "yes"; then
   PACKAGE_DIRS=$PACKAGE_DIRS" DaveW"
   PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/DaveW/libDaveW.so\(\$(SRCTOP_ABS)/DaveW/GUI\)"
   EXENAME="davew"
+  package_output="$package_output \
+	      DaveW/Makefile \
+                DaveW/Datatypes/Makefile \
+                  DaveW/Datatypes/CS684/Makefile \
+                  DaveW/Datatypes/General/Makefile \
+                  DaveW/Datatypes/SiRe/Makefile \
+                DaveW/Modules/Makefile \
+                  DaveW/Modules/CS684/Makefile \
+                  DaveW/Modules/EEG/Makefile \
+                  DaveW/Modules/EGI/Makefile \
+                  DaveW/Modules/FDM/Makefile \
+                  DaveW/Modules/SiRe/Makefile \
+                DaveW/ThirdParty/Makefile \
+                  DaveW/ThirdParty/NumRec/Makefile \
+                  DaveW/ThirdParty/OldLinAlg/Makefile \
+                  DaveW/ThirdParty/Quaternions/Makefile \
+                  DaveW/ThirdParty/RegTools/Makefile \
+                  DaveW/ThirdParty/SparseLib/Makefile \
+                DaveW/convert/Makefile \
+		"
 fi
 
 if test "$exename" = "default"; then
@@ -385,10 +426,18 @@ AC_ARG_ENABLE(enable_parallel,
 	[enable_parallel=${enable_parallel='no'}])
 if test "$enable_parallel" = "yes"; then
   PARALLEL_DEFINE="#define SCI_PARALLEL"
+  parallel_output="
+	      Component/Makefile \
+	        Component/PIDL/Makefile \
+	        tools/sidl/Makefile \
+		"
+  BUILD_PARALLEL="yes"
 else
   PARALLEL_DEFINE=""
+  BUILD_PARALLEL="no"
 fi
 AC_SUBST(PARALLEL_DEFINE)
+AC_SUBST(BUILD_PARALLEL)
 
 ##-- Emit local configuration file -------------------------------------------
 
@@ -434,6 +483,17 @@ if test x"$X_LIBS" = x"-L/usr/lib" -o x"$X_LIBS" = x" -L/usr/lib"; then
   X_LIBS=""
 fi
 
+##-- Check for programs ------------------------------------------------------
+
+# Yacc - for sidl
+AC_PROG_YACC()
+AC_SUBST(YACC)
+
+# Lex - for sidl
+AC_PROG_LEX()
+AC_SUBST(LEX)
+AC_SUBST(LEXLIB)
+
 ##-- Generate Output Files ---------------------------------------------------
 
 AC_OUTPUT(Makefile \
@@ -450,6 +510,7 @@ AC_OUTPUT(Makefile \
                 SCICore/Malloc/Makefile \
                 SCICore/Math/Makefile \
                 SCICore/Persistent/Makefile \
+                SCICore/Process/Makefile \
                 SCICore/TclInterface/Makefile \
                 SCICore/TkExtensions/Makefile \
                 SCICore/Tester/Makefile \
@@ -475,36 +536,7 @@ AC_OUTPUT(Makefile \
                   PSECommon/Modules/Fields/Makefile \
                   PSECommon/Modules/Writers/Makefile \
                   PSECommon/Modules/Visualization/Makefile \
-	      SCIRun/Makefile \
-	        SCIRun/Datatypes/Makefile \
-		  SCIRun/Datatypes/Image/Makefile \
-		SCIRun/Modules/Makefile \
-		  SCIRun/Modules/Image/Makefile \
-		  SCIRun/Modules/Tbon/Makefile \
-		  SCIRun/Modules/Visualization/Makefile \
-		  SCIRun/Modules/Writers/Makefile \
-              Uintah/Makefile \
-                Uintah/Datatypes/Makefile \
-                  Uintah/Datatypes/Particles/Makefile \
-                Uintah/Modules/Makefile \
-                  Uintah/Modules/MPMViz/Makefile \
-                  Uintah/Modules/Readers/Makefile \
-              DaveW/Makefile \
-                DaveW/Datatypes/Makefile \
-                  DaveW/Datatypes/CS684/Makefile \
-                  DaveW/Datatypes/General/Makefile \
-                  DaveW/Datatypes/SiRe/Makefile \
-                DaveW/Modules/Makefile \
-                  DaveW/Modules/CS684/Makefile \
-                  DaveW/Modules/EEG/Makefile \
-                  DaveW/Modules/EGI/Makefile \
-                  DaveW/Modules/FDM/Makefile \
-                  DaveW/Modules/SiRe/Makefile \
-                DaveW/ThirdParty/Makefile \
-                  DaveW/ThirdParty/NumRec/Makefile \
-                  DaveW/ThirdParty/OldLinAlg/Makefile \
-                  DaveW/ThirdParty/Quaternions/Makefile \
-                  DaveW/ThirdParty/RegTools/Makefile \
-                  DaveW/ThirdParty/SparseLib/Makefile \
-                DaveW/convert/Makefile \
+	      $package_output \
+	      $parallel_output
+	      , echo timestamp > stamp-h
          )

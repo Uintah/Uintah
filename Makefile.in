@@ -2,7 +2,13 @@ SRCTOP  = @top_srcdir@
 SRCDIR  = @srcdir@
 OBJTOP  = .
 
-SUBDIRS = SCICore PSECore main PSECommon @PACKAGE_DIRS@
+ifeq (@BUILD_PARALLEL@,yes)
+COMPONENT_DIRS = tools/sidl Component
+endif
+
+SUBDIRS = SCICore $(COMPONENT_DIRS) PSECore main PSECommon @PACKAGE_DIRS@
+
+all:: sci_config.h
 
 include $(SRCTOP)/scripts/recurse.mk
 
@@ -14,3 +20,19 @@ _distcleanHere::
 	rm -f scripts/cc scripts/CC
 	rm -f scripts/compile.mk scripts/targets.mk
 	rm -f config.cache config.log config.status
+
+${SRCDIR}/configure: ${SRCDIR}/configure.in ${SRCDIR}/scripts/aclocal.m4
+	cd ${SRCDIR} && autoconf
+
+sci_config.h: stamp-h
+stamp-h: ${SRCTOP}/sci_config.h.in ${SRCTOP}/sci_defs.h.in \
+		${OBJTOP}/config.status \
+		${SRCTOP}/scripts/cc.in \
+		${SRCTOP}/scripts/compile.mk.in \
+		${SRCTOP}/scripts/recurse.mk.in \
+		${SRCTOP}/scripts/targets.mk.in
+	./config.status
+     
+config.status: ${SRCDIR}/configure
+	./config.status --recheck
+	./config.status

@@ -1,0 +1,26 @@
+SRCTOP  = @top_srcdir@
+SRCDIR  = @srcdir@
+OBJTOP  = ../..
+
+SRCS      = Spec.cc SymbolTable.cc main.cc parser.y scanner.l \
+		static_check.cc
+LIBRARIES = @LEXLIB@
+CFLAGS := $(CFLAGS)
+INCLUDES  = -I$(SRCTOP)
+            
+PROGRAM   = sidl
+LEX = lex -t
+YACC = @YACC@ -d -v
+
+include $(SRCTOP)/scripts/program.mk
+
+scanner.cc: scanner.l
+	$(LEX) scanner.l > scanner.cc
+
+scanner.o: parser.h
+
+parser.cc parser.h: parser.y
+	$(YACC) -d parser.y
+	sed 's/getenv()/xxgetenv()/g' < y.tab.c > parser.cc
+	rm y.tab.c
+	mv y.tab.h parser.h
