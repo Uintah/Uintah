@@ -54,9 +54,14 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
          << "\t\t ICE" << endl;
       
     Vector dx = patch->dCell();
-    double delt_CFL = 100000;
-    constCCVariable<double> speedSound, sp_vol_CC;
+    double delt_CFL = 1e3, delt_cond = 1e3, delt;
+    double inv_sum_invDelx_sqr = 1.0/( 1.0/(dx.x() * dx.x()) 
+                                     + 1.0/(dx.y() * dx.y()) 
+                                     + 1.0/(dx.z() * dx.z())  );
+                                     
+    constCCVariable<double> speedSound, sp_vol_CC, rho_CC;
     constCCVariable<Vector> vel_CC;
+    Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;    
     if (d_CFL > 0.5) {
       throw ProblemSetupException("CFL can't exceed 0.5 for RF problems");
@@ -66,7 +71,7 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
     adj_offset[0] = IntVector(-1, 0, 0);    // X 
     adj_offset[1] = IntVector(0, -1, 0);    // Y 
     adj_offset[2] = IntVector(0,  0, -1);   // Z     
-    Vector delt;
+    Vector delt_tmp;
     Vector include_delT= Vector(0,0,0);
     IntVector numCells(patch->getHighIndex() - patch->getLowIndex());
     //__________________________________
@@ -90,23 +95,25 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
       
     for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
       Material* matl = d_sharedState->getMaterial(m);
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       int indx= matl->getDWIndex(); 
         
       new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, 1);
       new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, 1);
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gac, 1);
+      new_dw->get(rho_CC,     lb->rho_CCLabel,        indx,patch,gn,  0);     
       
+      //__________________________________
+      //  stability constraint due to courant Condition
       for (int dir = 0; dir <3; dir++) {  //loop over all three directions
-        delt[dir] = 1000.0; 
+        delt_tmp[dir] = 1000.0; 
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           IntVector R = *iter;
           IntVector L = R + adj_offset[dir];
 
           double ave_vel= 0.5 * fabs( vel_CC[R].length() + 
                                       vel_CC[L].length() ); 
-          if ( speedSound[L] < 1 || speedSound[R] < 1) {
-          cout << R << " speedSound[r] "<< speedSound[R] << " speedSound[L] "<< speedSound[L]<<endl;
-          }
+
           double kappa_R= sp_vol_CC[R]/( speedSound[R] * speedSound[R] );          
           double kappa_L= sp_vol_CC[L]/( speedSound[L] * speedSound[L] );          
 
@@ -114,30 +121,50 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
           double cstar  = sqrt(tmp) + fabs(vel_CC[R].length() -
                                            vel_CC[L].length());  
 
-          double delt_tmp = d_CFL * dx[dir]/(cstar + ave_vel);
-          delt[dir]       = std::min(delt[dir], delt_tmp);
+          double A = d_CFL * dx[dir]/(cstar + ave_vel);
+          delt_tmp[dir]       = std::min(delt_tmp[dir],A);
         }
       }  //  dir loop
       
       // see page 30 and 46 of MF document
-      double matl_delt = 1.0/(include_delT[0]/delt[0] + 
-                              include_delT[1]/delt[1] + 
-                              include_delT[2]/delt[2] );
+      double matl_delt = 1.0/(include_delT[0]/delt_tmp[0] + 
+                              include_delT[1]/delt_tmp[1] + 
+                              include_delT[2]/delt_tmp[2] );
            
       delt_CFL = std::min(delt_CFL, matl_delt);
+      
+      //__________________________________
+      // stability constraint due to heat conduction
+      //  I C E  O N L Y
+      if (ice_matl) {
+        double thermalCond = ice_matl->getThermalConductivity();
+        if (thermalCond !=0) {
+          double cv    = ice_matl->getSpecificHeat();
+          double gamma = ice_matl->getGamma();
+          double cp = cv * gamma;
+
+          for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+            IntVector c = *iter;
+            double inv_thermalDiffusivity = (rho_CC[c] * cp)/thermalCond;
+            double A =  0.5 * inv_sum_invDelx_sqr * inv_thermalDiffusivity;
+            delt_cond = std::min(A, delt_cond);
+          }
+        }  //
+      }  // ice_matl     
     }  //  matl loop
     
-    delt_CFL = std::min(delt_CFL, d_initialDt);
+    delt = std::min(delt_CFL, delt_cond);
+    delt = std::min(delt, d_initialDt);
     d_initialDt = 10000.0;
 
     //__________________________________
     //  Bullet proofing
-    if(delt_CFL < 1e-20) {  
+    if(delt< 1e-20) {  
       string warn = " E R R O R \n ICE::ComputeStableTimestepRF: delT < 1e-20";
       throw InvalidValue(warn);
     }
     
-    new_dw->put(delt_vartype(delt_CFL), lb->delTLabel);
+    new_dw->put(delt_vartype(delt), lb->delTLabel);
   }  // patch loop
   //  update when you should dump debugging data. 
   d_dbgNextDumpTime = d_dbgOldTime + d_dbgOutputInterval;
@@ -595,22 +622,14 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
     double areaY = dx.x() * dx.z();
     double areaZ = dx.x() * dx.y();
     IntVector right, left, top, bottom, front, back;
-    CCVariable<double> term1;
-    CCVariable<double> term2;   
-    CCVariable<double> term3;
-        
-    constCCVariable<double> sp_vol_CC;
-    constCCVariable<double> speedSound;
-    constCCVariable<double> press_CC;
-    constCCVariable<double> f_theta;
-    constCCVariable<double> rho_CC;
+    CCVariable<double> term1, term2, term3;
     
-    constSFCXVariable<double> pressX_FC;
-    constSFCYVariable<double> pressY_FC;
-    constSFCZVariable<double> pressZ_FC;
-    constSFCXVariable<double> pressDiffX_FC;
-    constSFCYVariable<double> pressDiffY_FC;
-    constSFCZVariable<double> pressDiffZ_FC;
+    constCCVariable<double> sp_vol_CC, speedSound, press_CC;
+    constCCVariable<double> f_theta, rho_CC, Temp_CC;
+    
+    constSFCXVariable<double> pressX_FC, pressDiffX_FC;
+    constSFCYVariable<double> pressY_FC, pressDiffY_FC;
+    constSFCZVariable<double> pressZ_FC, pressDiffZ_FC;
     
     StaticArray<constCCVariable<double>   > vol_frac(numMatls);            
     StaticArray<constCCVariable<Vector>   > vel_CC(numMatls);
@@ -629,7 +648,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
     new_dw->allocateTemporary(term2,  patch);
     new_dw->allocateTemporary(term3,  patch);
     
-     for(int m = 0; m < numMatls; m++) {
+    for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx    = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -640,16 +659,18 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       if(ice_matl){
         old_dw->get(vel_CC[m],lb->vel_CCLabel,       indx, patch, gn,0);   
       } else {
-        new_dw->get(vel_CC[m],lb->vel_CCLabel,      indx, patch, gn,0);   
+        new_dw->get(vel_CC[m],lb->vel_CCLabel,       indx, patch, gn,0);   
       }
     }
 
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl); 
+      
       int indx    = matl->getDWIndex();   
       CCVariable<double> int_eng_source;
-      new_dw->get(rho_CC,        lb->rho_CCLabel,        indx,patch,gn,  0);
-      new_dw->get(sp_vol_CC,     lb->sp_vol_CCLabel,     indx,patch,gn,  0);
+      new_dw->get(rho_CC,        lb->rho_CCLabel,        indx,patch,gac, 1);
+      new_dw->get(sp_vol_CC,     lb->sp_vol_CCLabel,     indx,patch,gac, 1);
       new_dw->get(speedSound,    lb->speedSound_CCLabel, indx,patch,gn,  0);
       new_dw->get(f_theta,       lb->f_theta_CCLabel,    indx,patch,gn,  0);
       new_dw->get(pressDiffX_FC, lb->press_diffX_FCLabel,indx,patch,gac, 1);      
@@ -662,9 +683,9 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
         double vol_frac_CC =  vol_frac[m][c];
-        right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
-        top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
-        front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
+        right    = c + IntVector(1,0,0);    left     = c;
+        top      = c + IntVector(0,1,0);    bottom   = c;
+        front    = c + IntVector(0,0,1);    back     = c;
              
         //__________________________________
         //  term1
@@ -738,6 +759,36 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
   
         int_eng_source[c] = (-term1[c] + term2[c] - term3[c]) * delT;
       }  // iter loop
+
+      //__________________________________
+      //  Source due to conduction
+      //   I C E   O N L Y
+      if(ice_matl){
+        double thermalCond = ice_matl->getThermalConductivity();
+        if(thermalCond != 0.0){ 
+          old_dw->get(Temp_CC, lb->temp_CCLabel, indx,patch,gac,1);
+          
+          SFCXVariable<double> q_X_FC;
+          SFCYVariable<double> q_Y_FC;
+          SFCZVariable<double> q_Z_FC;
+          
+          computeQ_conduction_FC( new_dw, patch, 
+                                  rho_CC,  sp_vol_CC, Temp_CC, thermalCond,
+                                  q_X_FC, q_Y_FC, q_Z_FC);
+          
+          for(CellIterator iter = patch->getCellIterator(); !iter.done(); 
+                                                                    iter++){
+            IntVector c = *iter;
+            right  = c + IntVector(1,0,0);    left   = c ;    
+            top    = c + IntVector(0,1,0);    bottom = c ;    
+            front  = c + IntVector(0,0,1);    back   = c ; 
+
+            int_eng_source[c] += (q_X_FC[right] - q_X_FC[left])  * areaX +
+                                 (q_Y_FC[top]   - q_Y_FC[bottom])* areaY +
+                                 (q_Z_FC[front] - q_Z_FC[back])  * areaZ; 
+          }
+        } 
+      }
       
       //__________________________________
       //  User specified source/sink   
