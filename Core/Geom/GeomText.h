@@ -77,6 +77,7 @@ protected:
   vector<string> text_;
   vector<Point>  location_;
   vector<Color>  color_;
+  vector<float>  index_;
 
 public:
   GeomTexts();
@@ -86,8 +87,9 @@ public:
 
   void set_font_index(int);
 
-  void add (const string &text, const Point &loc,
-	    const Color &c = Color(1,1,1));
+  void add (const string &text, const Point &loc);
+  void add (const string &text, const Point &loc, const Color &c);
+  void add (const string &text, const Point &loc, float index);
 
   virtual void reset_bbox();
   virtual void get_bounds(BBox&);

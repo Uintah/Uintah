@@ -5715,18 +5715,35 @@ void GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
     return;
   }
+  
+  const bool coloring = color_.size() == location_.size();
+  bool indexing = false;
+  if (di->using_cmtexture_ && index_.size() == location_.size())
+  {
+    indexing = true;
+    glColor4d(1.0, 1.0, 1.0, 1.0);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
 
   glDisable(GL_LIGHTING);
   glPushAttrib(GL_LIST_BIT);
   for (unsigned int i = 0; i < text_.size(); i++)
   {
-    glColor3f(color_[i].r(), color_[i].g(), color_[i].b());
+    if (coloring) { glColor3f(color_[i].r(), color_[i].g(), color_[i].b()); }
+    if (indexing) { glTexCoord1f(index_[i]); }
+
     glRasterPos3d( location_[i].x(), location_[i].y(), location_[i].z() );
     glListBase(di->fontbase[fontindex_]);
     glCallLists(text_[i].size(), GL_UNSIGNED_BYTE,
 		(GLubyte *)text_[i].c_str());
   }
   glPopAttrib ();
+
+  glDisable(GL_TEXTURE_1D);
+
   post_draw(di);
 }
 
@@ -5742,6 +5759,18 @@ void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
     return;
   }
 
+  const bool coloring = color_.size() == location_.size();
+  bool indexing = false;
+  if (di->using_cmtexture_ && index_.size() == location_.size())
+  {
+    indexing = true;
+    glColor4d(1.0, 1.0, 1.0, 1.0);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
+
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
   glPushAttrib(GL_LIST_BIT);
@@ -5753,7 +5782,9 @@ void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
     const Vector view (mat[2], mat[6], mat[10]);
     if (Dot(view, normal_[i]) > 0)
     {
-      glColor3f(color_[i].r(), color_[i].g(), color_[i].b());
+      if (coloring) { glColor3f(color_[i].r(), color_[i].g(), color_[i].b()); }
+      if (indexing) { glTexCoord1f(index_[i]); }
+
       glRasterPos3d( location_[i].x(), location_[i].y(), location_[i].z() );
       glListBase(di->fontbase[fontindex_]);
       glCallLists(text_[i].size(), GL_UNSIGNED_BYTE,
@@ -5763,6 +5794,8 @@ void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   glPopAttrib ();
   glEnable(GL_DEPTH_TEST);
+  glDisable(GL_TEXTURE_1D);
+
   post_draw(di);
 }
 

@@ -165,27 +165,40 @@ GeomTexts::set_font_index(int a)
 
 
 void
-GeomTexts::add(const string &t, const Point &p, const Color &c)
+GeomTexts::add(const string &t, const Point &p)
 {
   text_.push_back(t);
   location_.push_back(p);
+}
+
+void
+GeomTexts::add(const string &t, const Point &p, const Color &c)
+{
+  add(t, p);
   color_.push_back(c);
 }
 
+void
+GeomTexts::add(const string &t, const Point &p, float index)
+{
+  add(t, p);
+  index_.push_back(index);
+}
 
-#define GEOMTEXTS_VERSION 1
+
+#define GEOMTEXTS_VERSION 2
 
 void
 GeomTexts::io(Piostream& stream)
 {
-
-    stream.begin_class("GeomTexts", GEOMTEXTS_VERSION);
-    // Do the base class first...
+    const int version = stream.begin_class("GeomTexts", GEOMTEXTS_VERSION);
+    // Do the base class first.
     GeomObj::io(stream);
     Pio(stream, fontindex_);
     Pio(stream, text_);
     Pio(stream, location_);
     Pio(stream, color_);
+    if (version > 1) { Pio(stream, index_); }
     stream.end_class();
 }
 
@@ -232,13 +245,12 @@ GeomTextsCulled::add(const string &t, const Point &p,
 }
 
 
-#define GEOMTEXTS_VERSION 1
+#define GEOMCULLEDTEXTS_VERSION 1
 
 void
 GeomTextsCulled::io(Piostream& stream)
 {
-
-    stream.begin_class("GeomTextsCulled", GEOMTEXTS_VERSION);
+    stream.begin_class("GeomTextsCulled", GEOMCULLEDTEXTS_VERSION);
     // Do the base class first...
     GeomTexts::io(stream);
     Pio(stream, normal_);
