@@ -219,7 +219,7 @@ void SimpleCFD::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
-void SimpleCFD::computeStableTimestep(const ProcessorGroup* pg,
+void SimpleCFD::computeStableTimestep(const ProcessorGroup*,
 				      const PatchSubset* patches,
 				      const MaterialSubset* matls,
 				      DataWarehouse*,
@@ -531,7 +531,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector& l,
 	    break;
 	  case BC::FixedFlux:
 	    throw InternalError("unknown BC");
-	    break;
+	    //break;
 	  }
 	}
 	break;
@@ -568,7 +568,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector& l,
 	    break;
 	  case BC::FixedFlux:
 	    throw InternalError("unknown BC");
-	    break;
+	    //break;
 	  }
 	}
 	break;
@@ -605,7 +605,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector& l,
 	    break;
 	  case BC::FixedFlux:
 	    throw InternalError("unknown BC");
-	    break;
+	    //break;
 	  }
 	}
 	break;
@@ -642,7 +642,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector& l,
 	    break;
 	  case BC::FixedFlux:
 	    throw InternalError("unknown BC");
-	    break;
+	    //break;
 	  }
 	}
 	break;
@@ -665,7 +665,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector& l,
     break;
   case BC::FixedFlux:
     throw InternalError("unknown BC");
-    break;
+    //break;
   }
 }
 
@@ -724,7 +724,7 @@ static void ScMult_Add(Array3<double>& r, double s, const Array3<double>& a, con
 static int cg(const CellIterator& iter,
 	      const Array3<Stencil7>& A, Array3<double>& X,
 	      const Array3<double>& B, Array3<double>& tmp_R,
-	      Array3<double>& tmp_B, Array3<double>& tmp_Q,
+	      Array3<double>& tmp_Q,
 	      Array3<double>& tmp_D, double tolerance)
 {
   // R = A*X
@@ -825,8 +825,6 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
       new_dw->allocateTemporary(tmp2, patch);
       NCVariable<double> tmp3;
       new_dw->allocateTemporary(tmp3, patch);
-      NCVariable<double> tmp4;
-      new_dw->allocateTemporary(tmp4, patch);
 
       int niter;
       IntVector l, h, FN, FS, FW, FE;
@@ -849,7 +847,7 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
 		bctype, xvel_bc, xvel_bc_cc, xvel_bc_yface, xvel_bc_zface,
 		FN, FS, FW, FE,	A, rhs);
       }
-      niter=cg(patch->getSFCXIterator(), A, xvel, rhs, tmp1, tmp2, tmp3, tmp4,
+      niter=cg(patch->getSFCXIterator(), A, xvel, rhs, tmp1, tmp2, tmp3,
 	       viscosity_tolerance_);
       cerr << "X viscosity solved in " << niter << " iterations\n";
 
@@ -871,7 +869,7 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
 		bctype, yvel_bc, yvel_bc_xface, yvel_bc_cc, yvel_bc_zface,
 		FN, FS, FW, FE,	A, rhs);
       }
-      niter=cg(patch->getSFCYIterator(), A, yvel, rhs, tmp1, tmp2, tmp3, tmp4,
+      niter=cg(patch->getSFCYIterator(), A, yvel, rhs, tmp1, tmp2, tmp3,
 	       viscosity_tolerance_);
       cerr << "Y viscosity solved in " << niter << " iterations\n";
 
@@ -892,7 +890,7 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
 		bctype, zvel_bc, zvel_bc_xface, zvel_bc_yface, zvel_bc_cc,
 		FN, FS, FW, FE,	A, rhs);
       }
-      niter=cg(patch->getSFCZIterator(), A, zvel, rhs, tmp1, tmp2, tmp3, tmp4,
+      niter=cg(patch->getSFCZIterator(), A, zvel, rhs, tmp1, tmp2, tmp3,
 	       viscosity_tolerance_);
       cerr << "Z viscosity solved in " << niter << " iterations\n";
     }
@@ -934,8 +932,6 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
       new_dw->allocateTemporary(tmp2, patch);
       CCVariable<double> tmp3;
       new_dw->allocateTemporary(tmp3, patch);
-      CCVariable<double> tmp4;
-      new_dw->allocateTemporary(tmp4, patch);
 
       // Velocity correction...
       IntVector l(patch->getCellLowIndex());
@@ -980,7 +976,7 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
       A[pin_].w=0;
       A[pin_].s=0;
       sol.initialize(0);
-      int niter=cg(patch->getCellIterator(), A, sol, rhs, tmp1, tmp2, tmp3, tmp4,
+      int niter=cg(patch->getCellIterator(), A, sol, rhs, tmp1, tmp2, tmp3, 
 		   correction_tolerance_);
       cerr << "Correction solved in " << niter << " iterations\n";
       for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
@@ -1079,8 +1075,6 @@ void SimpleCFD::diffuseScalars(const ProcessorGroup*,
       new_dw->allocateTemporary(tmp2, patch);
       CCVariable<double> tmp3;
       new_dw->allocateTemporary(tmp3, patch);
-      CCVariable<double> tmp4;
-      new_dw->allocateTemporary(tmp4, patch);
 
       // Diffusion
       IntVector l=patch->getCellLowIndex();
@@ -1100,7 +1094,7 @@ void SimpleCFD::diffuseScalars(const ProcessorGroup*,
 		bctype, den_bc, xflux_bc, yflux_bc, zflux_bc, FN, FS, FW, FE,
 		A, rhs);
       }
-      int niter = cg(patch->getCellIterator(), A, den, rhs, tmp1, tmp2, tmp3, tmp4,
+      int niter = cg(patch->getCellIterator(), A, den, rhs, tmp1, tmp2, tmp3,
 		     density_diffusion_tolerance_);
       cerr << "Diffusion solved in " << niter << " iterations\n";
     }
@@ -1156,6 +1150,10 @@ void SimpleCFD::updatebcs(const ProcessorGroup*,
   new_dw->transferFrom(old_dw, lb_->bctype, patches, matls);
 }
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1209
+#endif
+
 namespace Uintah {
   static MPI_Datatype makeMPI_Stencil7()
   {
@@ -1190,5 +1188,10 @@ void swapbytes( Stencil7& a) {
   SWAP_8(a.t);
   SWAP_8(a.b);
 }
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1209
+#endif
+
 
 } // namespace SCIRun

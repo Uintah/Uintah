@@ -168,8 +168,8 @@ WARNING
 
      // If 'basis' is a constant (as in OnDemandDataWarehouse::getGridVar())
      // then these inlined functions will simplfy to one-liners.
-     inline IntVector getLowIndex(VariableBasis basis) const;
-     inline IntVector getHighIndex(VariableBasis basis) const;
+     IntVector getLowIndex(VariableBasis basis) const;
+     IntVector getHighIndex(VariableBasis basis) const;
      
      IntVector getLowIndex() const
      { return d_lowIndex; }

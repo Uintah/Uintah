@@ -1332,7 +1332,6 @@ OnDemandDataWarehouse::decrementScrubCount(const VarLabel* var, int matlIndex,
     break;
   case TypeDescription::ReductionVariable:
     SCI_THROW(InternalError("decrementScrubCount called for reduction variable: "+var->getName()));
-    break;
   default:
     SCI_THROW(InternalError("decrementScrubCount for variable of unknown type: "+var->getName()));
   }
@@ -1377,7 +1376,6 @@ OnDemandDataWarehouse::setScrubCount(const VarLabel* var, int matlIndex,
   case TypeDescription::ReductionVariable:
     // Reductions are not scrubbed
     SCI_THROW(InternalError("setScrubCount called for reduction variable: "+var->getName()));
-    break;
   default:
     SCI_THROW(InternalError("setScrubCount for variable of unknown type: "+var->getName()));
   }
@@ -1414,7 +1412,6 @@ OnDemandDataWarehouse::scrub(const VarLabel* var, int matlIndex,
   case TypeDescription::ReductionVariable:
     // Reductions are not scrubbed
     SCI_THROW(InternalError("scrub called for reduction variable: "+var->getName()));
-    break;
   default:
     SCI_THROW(InternalError("scrub for variable of unknown type: "+var->getName()));
   }
@@ -1822,7 +1819,6 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	break;
       case TypeDescription::ReductionVariable:
 	SCI_THROW(InternalError("transferFrom doesn't work for reduction variable: "+var->getName()));
-	break;
       default:
 	SCI_THROW(InternalError("Unknown variable type in transferFrom: "+var->getName()));
       }

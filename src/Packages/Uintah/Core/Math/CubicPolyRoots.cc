@@ -1,6 +1,6 @@
 #include "CubicPolyRoots.h"
 #include <math.h>
-#include <iostream.h>
+#include <iostream>
 #include <assert.h>
 
 #define PI 3.14159265358979323846
