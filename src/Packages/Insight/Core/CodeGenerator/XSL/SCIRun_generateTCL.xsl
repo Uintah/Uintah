@@ -26,7 +26,7 @@
 	<xsl:value-of select="/filter/filter-itk/parameters/param"/>
 </xsl:variable>	      
 
-<!-- Variable has_defined_objects indicates whethter this filter
+<!-- Variable has_defined_objects indicates whether this filter
      has defined objects using the datatype tag.  If this is the
      case, we need to add a dimension variable and set a window
      in size. 
@@ -82,6 +82,13 @@
 <xsl:if test="$defined_object = 'no'">
          global $this-<xsl:value-of select="name"/>  
 </xsl:if></xsl:if>
+</xsl:for-each>
+<xsl:for-each select="/filter/filter-sci/outputs/output">
+<xsl:variable name="send"><xsl:value-of select="@send_intermediate"/></xsl:variable>
+<xsl:if test="$send='yes'">
+         global $this-update_<xsl:value-of select="@name"/>
+         global $this-update_iters_<xsl:value-of select="@name"/>
+</xsl:if>
 </xsl:for-each>
 <xsl:if test="$has_defined_objects != ''">
          global $this-dimension</xsl:if>
@@ -161,6 +168,15 @@
 </xsl:if>
 
 </xsl:for-each>
+
+<xsl:for-each select="/filter/filter-sci/outputs/output">
+<xsl:variable name="send"><xsl:value-of select="@send_intermediate"/></xsl:variable>
+<xsl:if test="$send='yes'">
+         set $this-update_<xsl:value-of select="@name"/> 0
+         set $this-update_iters_<xsl:value-of select="@name"/> 10
+</xsl:if>
+</xsl:for-each>
+
 <xsl:if test="$has_defined_objects != ''">
          set $this-dimension 0</xsl:if>
     }
@@ -259,8 +275,23 @@
 </xsl:for-each>
 
 
-
-
+<!-- Add send intermediate stuff -->
+<xsl:for-each select="/filter/filter-sci/outputs/output">
+<xsl:variable name="send"><xsl:value-of select="@send_intermediate"/></xsl:variable>
+<xsl:if test="$send='yes'">
+        frame $w.updates<xsl:value-of select="@name"/>
+        checkbutton $w.updates<xsl:value-of select="@name"/>.do \
+            -text &quot;Send intermediate updates for <xsl:value-of select="@name"/>&quot; \
+            -variable $this-update_<xsl:value-of select="@name"/>
+        pack $w.updates<xsl:value-of select="@name"/>.do -side top -anchor w
+        frame $w.updates<xsl:value-of select="@name"/>.i
+        pack $w.updates<xsl:value-of select="@name"/>.i -side top -anchor nw
+        label $w.updates<xsl:value-of select="@name"/>.i.l -text &quot;Send Intermediate Interval:&quot;
+        entry $w.updates<xsl:value-of select="@name"/>.i.e -textvariable $this-update_iters_<xsl:value-of select="@name"/> -width 10
+        pack $w.updates<xsl:value-of select="@name"/>.i.l $w.updates<xsl:value-of select="@name"/>.i.e -side left -anchor w -padx 2 -pady 2
+        pack $w.updates<xsl:value-of select="@name"/>
+</xsl:if>
+</xsl:for-each>
 
 
 <!-- Every gui must have an execute and close button -->
