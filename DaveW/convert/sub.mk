@@ -16,10 +16,6 @@ PROGRAM := $(SRCDIR)/BldDisks
 SRCS := $(SRCDIR)/BldDisks.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/TestProto
-SRCS := $(SRCDIR)/TestProto.cc
-include $(SRCTOP)/scripts/program.mk
-
 PROGRAM := $(SRCDIR)/MakeRadialCylinder
 SRCS := $(SRCDIR)/MakeRadialCylinder.cc
 include $(SRCTOP)/scripts/program.mk
@@ -126,6 +122,10 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.5  2000/10/27 20:32:00  zyp
+# Fixed the sub.mk file.  Accidently included one of my test programs in
+# it (that I did not commit).  All better now...
+#
 # Revision 1.4  2000/10/24 23:58:19  zyp
 # This program (DuckWriter) converts a file containing a ColumnMatrix of
 # values from a forward problem solve of electrical injection into the
