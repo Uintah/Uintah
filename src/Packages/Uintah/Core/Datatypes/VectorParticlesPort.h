@@ -1,4 +1,3 @@
-
 /*
  *  Texture3D.h: The Vector Field Data type
  *
@@ -15,14 +14,13 @@
 #define SCI_project_VectorParticlesPort_h 1
 
 #include <Dataflow/Ports/SimplePort.h>
-#include "VectorParticles.h"
+#include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
 
 namespace Uintah {
-using namespace Uintah::Datatypes;
 
 typedef SimpleIPort<VectorParticlesHandle> VectorParticlesIPort;
 typedef SimpleOPort<VectorParticlesHandle> VectorParticlesOPort;
-} // End namespace Uintah
 
+} // End namespace Uintah
 
 #endif

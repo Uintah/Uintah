@@ -1,7 +1,6 @@
 #ifndef UINTAH_HOMEBREW_DataWarehouse_H
 #define UINTAH_HOMEBREW_DataWarehouse_H
 
-
 #include <Packages/Uintah/Grid/Handle.h>
 #include <Packages/Uintah/Grid/GridP.h>
 #include <Packages/Uintah/Grid/CCVariableBase.h>
@@ -201,7 +200,5 @@ WARNING
       DataWarehouseP& d_parent;
    };
 } // End namespace Uintah
-
-
 
 #endif

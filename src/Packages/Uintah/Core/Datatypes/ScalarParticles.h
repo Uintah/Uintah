@@ -1,24 +1,27 @@
 #ifndef SCALARPARTICLES_H
 #define SCALARPARTICLES_H
 
-#include "PSet.h"
-#include <Core/Datatypes/Datatype.h>
-#include <Core/Containers/LockingHandle.h>
+#include <Packages/Uintah/Core/Datatypes/PSet.h>
 #include <Packages/Uintah/Interface/DataArchive.h>
 //#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Grid/Grid.h>
 #include <Packages/Uintah/Grid/LevelP.h>
 #include <Packages/Uintah/Grid/Patch.h>
+
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+
 #include <iostream>
 #include <vector>
+
 using std::vector;
 
 namespace Uintah {
-using namespace Uintah;
+
 using namespace SCIRun;
 
 /**************************************
@@ -97,23 +100,22 @@ public:
 
   void get_minmax(double& v0, double& v1);
   void get_bounds(Point& p0, Point& p1){ psetH->get_bounds(p0,p1);}
-protected:
 
+protected:
   bool have_minmax;
   double data_min;
   double data_max;
   void compute_minmax();
 
-
 private:
   PSetHandle psetH;
-
 
   string _varname;
   int _matIndex;
   vector<ParticleVariable<double> >  scalars;
 
 };
+
 } // End namespace Uintah
 
 #endif

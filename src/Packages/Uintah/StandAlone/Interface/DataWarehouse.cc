@@ -1,11 +1,13 @@
 
-#include "DataWarehouse.h"
+#include <Packages/Uintah/Interface/DataWarehouse.h>
 #include <Core/Geometry/Vector.h>
+
 #include <iostream>
 
 using namespace Uintah;
-using std::cerr;
 using namespace SCIRun;
+
+using std::cerr;
 
 DataWarehouse::DataWarehouse(const ProcessorGroup* myworld, 
 			     int generation, 

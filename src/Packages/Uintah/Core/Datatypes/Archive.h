@@ -8,9 +8,8 @@
 #include <iostream>
 
 namespace Uintah {
+
 using namespace SCIRun;
-
-
 
 /**************************************
 

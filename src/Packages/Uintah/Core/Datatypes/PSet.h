@@ -1,16 +1,19 @@
 #ifndef  UINTAH_DATATYPES_PSet_H
 #define  UINTAH_DATATYPES_PSet_H
 
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/Datatype.h>
 #include <Packages/Uintah/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Grid/Grid.h>
 #include <Packages/Uintah/Grid/LevelP.h>
 #include <Packages/Uintah/Grid/Patch.h>
+
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/Datatype.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Geometry/Point.h>
+
 #include <iostream>
 #include <vector>
+
 using std::vector;
 
 namespace Uintah {
@@ -123,8 +126,8 @@ class PSet : public Datatype {
   vector< ParticleVariable<Point> >  positions;
   vector< ParticleVariable<long> >  particle_ids;
   vector< const Patch* >  patches;
-} // End namespace Uintah
 };
 
-  
+} // End namespace Uintah
+
 #endif

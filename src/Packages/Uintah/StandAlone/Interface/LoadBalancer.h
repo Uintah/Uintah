@@ -2,9 +2,11 @@
 #ifndef UINTAH_HOMEBREW_LOADBALANCER_H
 #define UINTAH_HOMEBREW_LOADBALANCER_H
 
-#include <Packages/Uintah/Parallel/Packages/UintahParallelPort.h>
+#include <Packages/Uintah/Parallel/UintahParallelPort.h>
 
 namespace Uintah {
+
+/****************************************
 
 CLASS
    LoadBalancer
@@ -48,6 +50,4 @@ WARNING
     };
 } // End namespace Uintah
     
-
-
 #endif

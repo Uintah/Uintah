@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Parallel/Packages/UintahParallelPort.h>
 #include <Packages/Uintah/Interface/DataWarehouseP.h>
 #include <Packages/Uintah/Interface/Output.h>
+
 #include <string>
 #include <vector>
 #include <list>
@@ -15,6 +16,7 @@ class DOM_Document;
 class DOM_Element;
 
 namespace Uintah {
+
 class Task;
 class VarLabel;
 class ProcessorGroup;
@@ -122,7 +124,5 @@ WARNING
        //unsigned int m_executeCount;
     };
 } // End namespace Uintah
-    
-
 
 #endif

@@ -4,9 +4,9 @@
 #include <Packages/Uintah/Grid/Handle.h>
 #include <Packages/Uintah/Grid/RefCounted.h>
 #include <Packages/Uintah/Interface/ProblemSpecP.h>
+
 #include <string>
 #include <map>
-using namespace std;
 
 #ifdef __sgi
 #define IRIX
@@ -20,6 +20,8 @@ using namespace std;
 #pragma reset woff 1375
 #endif
 
+using namespace std;
+
 namespace SCIRun {
   class IntVector;
   class Vector;
@@ -27,6 +29,9 @@ namespace SCIRun {
 }
 
 namespace Uintah {
+
+class TypeDescription;
+
 // This is the "base" problem spec.  There should be ways of breaking
 // this up
 
@@ -120,7 +125,5 @@ WARNING
    };
    
 } // End namespace Uintah
-
-
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef Packages/Uintah_PatchDataAnalyze
-#define Packages/Uintah_PatchDataAnalyze
+#ifndef UINTAH_PATCHDATAANALYZE_H
+#define UINTAH_PATCHDATAANALYZE_H
 
 #include <Packages/Uintah/Interface/DataWarehouseP.h>
 #include <Packages/Uintah/Interface/ProblemSpecP.h>
@@ -54,6 +54,4 @@ WARNING
    };
 } // End namespace Uintah
 
-
 #endif
-

@@ -4,9 +4,7 @@ include $(OBJTOP_ABS)/scripts/largeso_prologue.mk
 
 SRCDIR := Packages/Uintah/Core
 SUBDIRS := \
-	$(SRCDIR)/Algorithms \
-	$(SRCDIR)/Datatypes \
-	$(SRCDIR)/ThirdParty \
+	$(SRCDIR)/Datatypes
 
 include $(OBJTOP_ABS)/scripts/recurse.mk
 

@@ -1,4 +1,3 @@
-
 /*
  *  Texture3D.h: The Scalar Field Data type
  *
@@ -14,15 +13,16 @@
 #ifndef SCI_project_ScalarParticlesPort_h
 #define SCI_project_ScalarParticlesPort_h 1
 
+#include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
 #include <Dataflow/Ports/SimplePort.h>
-#include "ScalarParticles.h"
 
 namespace Uintah {
+
 using namespace Uintah::Datatypes;
 
 typedef SimpleIPort<ScalarParticlesHandle> ScalarParticlesIPort;
 typedef SimpleOPort<ScalarParticlesHandle> ScalarParticlesOPort;
-} // End namespace Uintah
 
+} // End namespace Uintah
 
 #endif

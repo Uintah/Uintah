@@ -1,18 +1,17 @@
-#include "ScalarParticles.h"
-#include <Core/Util/NotFinished.h>
-#include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
 #include <Packages/Uintah/Grid/Level.h>
 #include <Packages/Uintah/Grid/LevelP.h>
 #include <Packages/Uintah/Grid/GridP.h>
 #include <Packages/Uintah/Grid/Grid.h>
+
+#include <Core/Util/NotFinished.h>
+#include <Core/Malloc/Allocator.h>
+
 using std::vector;
+
 namespace Uintah {
 
-using Uintah::DataArchive;
-using Uintah::ParticleVariable;
-
 using namespace SCIRun;
-
 
 static Persistent* maker()
 {
@@ -38,11 +37,9 @@ ScalarParticles::ScalarParticles(
 {
 }
 
-
 ScalarParticles::~ScalarParticles()
 {
 }
-
 
 void ScalarParticles:: AddVar( const ParticleVariable<double> parts )
 {
@@ -85,5 +82,5 @@ void ScalarParticles::get_minmax(double& v0, double& v1)
   v0 = data_min;
   v1 = data_max; 
 }
-} // End namespace Uintah
 
+} // End namespace Uintah

@@ -10,10 +10,10 @@
 #include <Persistent/Persistent.h>
 #include <Containers/LockingHandle.h>
 
-#include <Datatypes/Particles/ParticleGridReader.h>
+#include <Packages/Uintah/Datatypes/Particles/ParticleGridReader.h>
 
 using namespace SCIRun;
-using namespace Uintah::Datatypes;
+using namespace Uintah;
 
 template void Pio<>(Piostream&, LockingHandle<ParticleGridReader>&);
 

@@ -1,19 +1,21 @@
 #ifndef SCI_project_NCTensorField_h
 #define SCI_project_NCTensorField_h 1
 
-#include "TensorField.h"
-#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Datatypes/TensorField.h>
+//#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/Grid/NCVariable.h>
 #include <Packages/Uintah/Grid/Grid.h>
 #include <Packages/Uintah/Grid/GridP.h>
 #include <Packages/Uintah/Grid/LevelP.h>
+
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
+
 #include <vector>
 
 namespace Uintah {
+
 using namespace SCIRun;
-using namespace Uintah;
 using std::vector;
 
 class SCICORESHARE NCTensorField: public TensorField {

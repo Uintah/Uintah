@@ -1,15 +1,15 @@
-#include "VectorParticles.h"
-#include <Core/Util/NotFinished.h>
-#include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
 #include <Packages/Uintah/Grid/Level.h>
 #include <Packages/Uintah/Grid/LevelP.h>
 #include <Packages/Uintah/Grid/GridP.h>
 #include <Packages/Uintah/Grid/Grid.h>
-using std::vector;
-namespace Uintah {
 
-using Uintah::DataArchive;
-using Uintah::ParticleVariable;
+#include <Core/Util/NotFinished.h>
+#include <Core/Malloc/Allocator.h>
+
+using std::vector;
+
+namespace Uintah {
 
 using namespace SCIRun;
 
@@ -20,6 +20,7 @@ static Persistent* maker()
 }
 
 PersistentTypeID VectorParticles::type_id("VectorParticles", "ParticleSet", maker);
+
 #define VectorParticles_VERSION 3
 void VectorParticles::io(Piostream&)
 {
@@ -48,7 +49,6 @@ void VectorParticles:: AddVar( const ParticleVariable<Vector> parts )
 {
   vectors.push_back( parts );
 }
-
 
 
 void VectorParticles::compute_minmax()
@@ -85,5 +85,6 @@ void VectorParticles::get_minmax(double& v0, double& v1)
   v0 = data_min;
   v1 = data_max; 
 }
+
 } // End namespace Uintah
 

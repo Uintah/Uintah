@@ -6,6 +6,8 @@
 #include <Packages/Uintah/Grid/Handle.h>
 #include <Packages/Uintah/Grid/RefCounted.h>
 
+using namespace Uintah;
+
 class ChemistryInterface : public RefCounted {
 public:
     ChemistryInterface();

@@ -2,20 +2,23 @@
 #include <Packages/Uintah/Grid/Grid.h>
 #include <Packages/Uintah/Grid/Level.h>
 #include <Packages/Uintah/Interface/InputContext.h>
+#include <Dataflow/XMLUtil/SimpleErrorHandler.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
 #include <Core/Thread/Time.h>
-#include <Dataflow/XMLUtil/SimpleErrorHandler.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Util/DebugStream.h>
-#include <iostream>
-#include <fstream>
+
 #include <sax/SAXException.hpp>
 #include <sax/SAXParseException.hpp>
 #include <sax/ErrorHandler.hpp>
+
+#include <sys/param.h>
+
+#include <iostream>
+#include <fstream>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/param.h>
 
 using namespace Uintah;
 using namespace std;
@@ -491,5 +494,4 @@ int DataArchive::queryNumMaterials( const string& name, const Patch* patch, doub
    dbg << "DataArchive::queryNumMaterials completed in " << Time::currentSeconds()-start << " seconds\n";
    return i;
 }
-
 

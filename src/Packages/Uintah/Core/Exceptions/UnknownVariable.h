@@ -1,5 +1,4 @@
 
-
 /*
  *  UnknownVariable.h: 
  *
@@ -12,8 +11,8 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef Packages/Uintah_Exceptions_UnknownVariable_h
-#define Packages/Uintah_Exceptions_UnknownVariable_h
+#ifndef UINTAH_EXCEPTIONS_UNKNOWNVARIABLE_H
+#define UINTAH_EXCEPTIONS_UNKNOWNVARIABLE_H
 
 #include <Core/Exceptions/Exception.h>
 #include <string>
@@ -34,8 +33,9 @@ namespace Uintah {
    private:
       std::string d_msg;
       UnknownVariable& operator=(const UnknownVariable&);
-} // End namespace Uintah
    };
+
+} // End namespace Uintah
 
 #endif
 

@@ -1,5 +1,3 @@
-
-
 /*
  *  TypeMismatchException.h: 
  *
@@ -12,13 +10,16 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef Packages/Uintah_Exceptions_TypeMismatchException_h
-#define Packages/Uintah_Exceptions_TypeMismatchException_h
+#ifndef UINTAH_EXCEPTIONS_TYPEMISMATCHEXCEPTION_H
+#define UINTAH_EXCEPTIONS_TYPEMISMATCHEXCEPTION_H
 
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
+using namespace SCIRun;
+
 namespace Uintah {
+   class TypeMismatchException : public SCIRun::Exception {
    public:
       TypeMismatchException(const std::string& msg);
       TypeMismatchException(const TypeMismatchException&);
@@ -29,8 +30,8 @@ namespace Uintah {
    private:
       std::string d_msg;
       TypeMismatchException& operator=(const TypeMismatchException&);
-} // End namespace Uintah
    };
+} // End namespace Uintah
 
 #endif
 

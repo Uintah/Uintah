@@ -12,13 +12,15 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef Packages/Uintah_Exceptions_InvalidValue_h
-#define Packages/Uintah_Exceptions_InvalidValue_h
+#ifndef UINTAH_EXCEPTIONS_INVALIDVALUE_H
+#define UINTAH_EXCEPTIONS_INVALIDVALUE_H
 
 #include <Packages/Uintah/Exceptions/ProblemSetupException.h>
 #include <string>
 
 namespace Uintah {
+
+   class InvalidValue : public ProblemSetupException {
    public:
       InvalidValue(const std::string&);
       InvalidValue(const InvalidValue&);
@@ -27,8 +29,9 @@ namespace Uintah {
    protected:
    private:
       InvalidValue& operator=(const InvalidValue&);
-} // End namespace Uintah
    };
+
+} // End namespace Uintah
 
 #endif
 

@@ -53,5 +53,3 @@ const char* UnknownVariable::type() const
 {
     return "Packages/Uintah::Exceptions::UnknownVariable";
 }
-
-
