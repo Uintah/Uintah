@@ -216,7 +216,7 @@ DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
       typename LDST::iterator itr, end_itr;
       dst_mesh->begin(itr);
       dst_mesh->end(end_itr);
-      typename FOUT::value_type val = 0;
+      typename FOUT::value_type val(0);
       while (itr != end_itr) {
 	out_field->set_value(val, *itr);
 	++itr;
@@ -355,7 +355,7 @@ DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
 	  val = (typename FOUT::value_type)(src_field->value(index));
 	}
       }
-      if (failed) val = 0;
+      if (failed) val = FOUT::value_type(0);
       out_field->set_value(val, *itr);
       ++itr;
       ++count;
