@@ -128,13 +128,13 @@ void FDMtoFEM::execute() {
     // build the new TetVolMesh based on nodes and cells from the LatVolMesh
     LatVolMesh *lvm = dynamic_cast<LatVolMesh*>(ifdmH->mesh().get_rep());
     TetVolMesh *tvm = scinew TetVolMesh;
-    Array3<TetVolMesh::Node::index_type> node_lookup(lvm->get_nz(), 
-						     lvm->get_ny(),
-						     lvm->get_nx());
+    Array3<TetVolMesh::Node::index_type> node_lookup(lvm->get_ni(), 
+						     lvm->get_nj(),
+						     lvm->get_nk());
 
     // store a table of which nodes are valid (a node is valid if any of
     //   its surrounding cells are valid)
-    Array3<char> valid_nodes(lvm->get_nz(), lvm->get_ny(), lvm->get_nx());
+    Array3<char> valid_nodes(lvm->get_nk(), lvm->get_nj(), lvm->get_ni());
 
     // store a table of which cells are valid
     FData3d<char> mask;
@@ -164,7 +164,7 @@ void FDMtoFEM::execute() {
       }
     // otherwise, just initialize the mask to 1's
     } else {
-      mask.newsize(lvm->get_nz()-1, lvm->get_ny()-1, lvm->get_nx()-1);
+      mask.newsize(lvm->get_nk()-1, lvm->get_nj()-1, lvm->get_ni()-1);
       mask.initialize(1);
       valid_nodes.initialize(1);
     }

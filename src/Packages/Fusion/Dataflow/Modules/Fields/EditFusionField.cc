@@ -170,9 +170,9 @@ void EditFusionField::execute(){
   }
 
   // Get the dimensions of the mesh.
-  idim_ = hvmInput->get_nx();
-  jdim_ = hvmInput->get_ny();
-  kdim_ = hvmInput->get_nz();
+  idim_ = hvmInput->get_ni();
+  jdim_ = hvmInput->get_nj();
+  kdim_ = hvmInput->get_nk();
 
   // Check to see if the dimensions have changed.
   if( idim_   != iDim_.get() ||
