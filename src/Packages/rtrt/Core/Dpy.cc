@@ -239,11 +239,6 @@ int Dpy::get_num_procs() {
 void
 Dpy::run()
 {
-  if( bench ) {
-    cerr << "Bench is currently not supported.\n";
-    Thread::exitAll(0);    
-  }
-
   io_lock_.lock();
   cerr << "display is pid " << getpid() << '\n';
   io_lock_.unlock();
@@ -273,16 +268,31 @@ Dpy::run()
   priv->exposed=true;
   priv->stereo=false;
 
+  double benchstart=0;
+  int frame=0;
   for(;;)
     {
       if (frameless) { renderFrameless(); }
       else           { renderFrame();     }
+
+      if(bench){
+	if(frame==10){
+	  cerr << "Warmup done, starting bench\n";
+	  benchstart=Time::currentSeconds();
+	} else if(frame == 110){
+	  double dt=Time::currentSeconds()-benchstart;
+	  cerr << "Benchmark completed in " <<  dt << " seconds ("
+	       << (frame-10)/dt << " frames/second)\n";
+	  Thread::exitAll(0);
+	}
+      }
 
       // Exit if you are supposed to.
       if (scene->get_rtrt_engine()->stop_execution()) {
 	cout << "Dpy going down\n";
 	Thread::exit();
       }
+      frame++;
     }
 } // end run()
 
@@ -529,7 +539,8 @@ Dpy::renderFrame() {
   //  cout << "Warning, gui has not displayed previous frame!\n";
   //}
 
-  showImage_ = displayedImage;
+  if(!bench)
+    showImage_ = displayedImage;
 
   // dump the frame and quit for now
   if (counter == 0) {
