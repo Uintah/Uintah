@@ -21,7 +21,7 @@ PSELIBS := \
 	Core/Thread      \
 	Core/Util        
 
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(SOCKET_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
