@@ -4,4 +4,4 @@ OBJTOP  = ../../..
 
 SUBDIRS = Leonid
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(OBJTOP)/scripts/recurse.mk

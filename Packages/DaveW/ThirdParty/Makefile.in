@@ -4,4 +4,4 @@ OBJTOP  = ../..
 
 SUBDIRS = NumRec OldLinAlg Quaternions RegTools SparseLib
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(OBJTOP)/scripts/recurse.mk
