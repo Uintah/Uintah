@@ -7,7 +7,7 @@ static char *id="@(#) $Id$";
 #include <SCICore/Util/Assert.h>
 
 #include <iostream>
-
+#include <stdio.h>
 using std::cerr;
 using namespace Uintah;
 using SCICore::Exceptions::InternalError;
@@ -183,6 +183,11 @@ ThreadPool::getFinishedTasks( vector<Task *> & finishedTasks )
 
 //
 // $Log$
+// Revision 1.3  2000/09/28 23:16:45  jas
+// Added (int) for anything returning the size of a STL component.  Added
+// <algorithm> and using std::find.  Other minor modifications to get
+// rid of warnings for g++.
+//
 // Revision 1.2  2000/09/28 02:15:51  dav
 // updates due to not sending 0 particles
 //
