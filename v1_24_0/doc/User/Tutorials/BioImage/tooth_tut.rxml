@@ -42,7 +42,7 @@ DEALINGS IN THE SOFTWARE.
   <section>
     <title>Loading Data</title>
     <para>
-      To load data, start by clicking the <guilabel>Nrrd</guilabel> tab
+      To load data, start by clicking the <guilabel>Generic</guilabel> tab
       in the Processing Pane, then click the
       <guibutton>Browse</guibutton> button.  See item 2 in <xref
       linkend="fig.load"/>.
@@ -130,10 +130,11 @@ DEALINGS IN THE SOFTWARE.
     <para>
       BioImage supports <firstterm>Dynamic Filters</firstterm>.
       Dynamic filters change data in some way.  Currently, BioImage
-      supports Resample, Crop, Histogram, and Cmedian.  Filters can be
-      added, modified, and removed at any time.  Filters are added by
-      pressing one of the filter buttons located at the top of the
-      Processing Pane, see item 1 in <xref linkend="fig.load"/>.
+      supports Resample, Crop, Histogram, and Median Filtering.  
+      Filters can be added, modified, and removed at any time.  
+      Filters are added by pressing one of the filter buttons 
+      located at the top of the Processing Pane, see item 1 
+      in <xref linkend="fig.load"/>.
     </para>
 
     <para>
@@ -526,7 +527,7 @@ DEALINGS IN THE SOFTWARE.
     <para>
       Turn on volume rendering by clicking the Visualization Settings pane's
       <guilabel>Volume Rendering</guilabel> tab and then click the
-      check-box labeled <guilabel>Show Volume Rendering</guilabel>. <b>NOTE: </b>On machines with graphics cards that do not support shaders, the user must manipulate the Global Opacity to perform volume rendering.
+      check-box labeled <guilabel>Show Volume Rendering</guilabel>. NOTE: On machines with graphics cards that do not support shaders, the user must manipulate the Global Opacity to perform volume rendering.
     </para>
 
     <figure id="fig.volrender_tab">
@@ -676,7 +677,7 @@ DEALINGS IN THE SOFTWARE.
       </figure>
       <para>
 	Now add another paint layer, and set its color to red. Again, using the left mouse button color the area
-	inside of the root displaye in the saggital viewer. You should now see the root colored in red and the
+	inside of the root display in the saggital viewer. You should now see the root colored in red and the
 	top of the tooth colored in blue. 
       </para>
     </section>
@@ -698,10 +699,10 @@ DEALINGS IN THE SOFTWARE.
 	pane's <guilabel>Volume Rendering
 	Tab</guilabel>, see <xref linkend="fig.volrender_tab"/> item 3.  
 	The new paint layer appears in the list of current editing widgets.
-	To remove the paint layer, click any of the controls for the paint
-	layer and it will highlight in white.  Click the Delete button to remove
-	it from the available widgets.  You may also turn it on or off using
-	the On toggle.	After removing the paint layer, the transfer function 
+	To remove any layer, click the red X  delete button next to the paint
+	layer to remove	it from the available widgets.  You may also turn it 
+	on or off using	the On toggle.	After removing the paint layer, 
+	the transfer function 
 	editor should look as it does in <xref linkend="fig.editTFWindow"/>. 
       </para>
 
