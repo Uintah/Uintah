@@ -24,6 +24,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/PPexample.tcl\
         $(SRCDIR)/PPexampleGui.tcl\
 	$(SRCDIR)/ItPDSimPartGui.tcl\
+	$(SRCDIR)/IGaussianPDSimPartGui.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/MIT/Dataflow/GUI
 
