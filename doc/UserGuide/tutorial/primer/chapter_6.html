@@ -19,7 +19,7 @@
 	<tr>
 	<td>
 	<center>
-	<br>
+	<br><A name="section 3"></A>
 	<font size="4"
 	face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular"
 	color="maroon">
@@ -52,7 +52,7 @@
 Matrix inputs and
           creates new Field and Matrix outputs:
         <ul>
-        <li>First it splits its input Field into a mesh part and a data part.
+        <li>First the module splits its input Field into a mesh part and a data part.
         <li>Then the mesh and the input Matrix are combined to form a new
 Field.
         <li>Finally, the data part of the original Field is converted to
@@ -64,7 +64,7 @@ Field.
             the same as the input Field.
         <li>If the input field's data are scalar then the output Matrix
             will be a column matrix.
-        <li>If the input field's data are vectors then the output matrix
+        <li>If the input Field's data are vectors then the output matrix
             will be of dimension Nx3.
         <li>If the field contains tensors the output matrix will be of
             dimension Nx9 where the
@@ -104,9 +104,14 @@ Field.
 	<div align="left">
 	<p><br>
 	<p><H4><b>Summary</H4></b>
-	needs content
+	<p>In this chapter, we have combined two pieces, reusing the finite element simulation network from Chapter 5, 
+	as well as the visualization network from Chapter 4. We have used a module that connects the solution vector 
+	of scalar values to the nodes of the tetrahedral finite element mesh, via the module ManageFieldData.
+
+	<p>In our Chapter 7, we will add a feedback module and interactively visualize the results. 
+	<p>	
 	<br>
-	<br>
+	<br><A href="#section 3">Back to Top</A>
         </div>
 	</td>
 	</tr>
