@@ -17,7 +17,7 @@ DynamicInstance::DynamicInstance(InstanceWrapperObject * obj,
   currentTransform = new Transform(*trans); // Parent's variable.
   newTransform     = new Transform(*trans);
 
-  bbox.extend( Point(0,0,0), 2 );
+  bbox.extend( Point(0,0,0), 10 );
 }
 
 DynamicInstance::~DynamicInstance()
@@ -25,16 +25,26 @@ DynamicInstance::~DynamicInstance()
 }
 
 void
-DynamicInstance::updateNewTransform( const float trans[4][4] )
+DynamicInstance::updateNewTransform( const float trans[4][4], 
+				     Transform & viewpoint )
 {
   double mat[4][4];
+
+  double tempmat[4][4];
   for(int i=0;i<4;i++){
     for(int j=0;j<4;j++){
       mat[i][j]= trans[i][j];
+      if(i == j) tempmat[i][j] = 1;
+      else       tempmat[i][j] = 0;
     }
   }
+
+  Transform temptrans;
+  temptrans.set( (double*)tempmat );
+
   newTransform->set( (double*)mat );
   newTransform->pre_translate( location_ );
+  newTransform->pre_trans( viewpoint );
 }
 
 void

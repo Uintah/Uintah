@@ -38,7 +38,8 @@ public:
   }
 	    
   void updatePosition( const Stealth * stealth, const Camera * cam );
-  void updateNewTransform( const float trans[4][4] );
+  void updateNewTransform( const float trans[4][4],
+			   Transform & viewpoint );
 
   // Pointer to some generic original transform that may be used for may
   // instances.
