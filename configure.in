@@ -795,36 +795,6 @@ else
   MALLOC_DEFINE="#define DISABLE_SCI_MALLOC"
 fi
 
-##  SCI_LAB_TP_DEFAULT is used to add "standard" library search paths
-##  for those of us who are too lazy to type out all the --with paths
-
-case $host in
-  *-irix*) 
-    if test "$is_64bit" = "yes"; then
-      SCI_LAB_TP_DEFAULT="/res/sci/data1/SCIRun_Thirdparty_64 \
-                          /usr/sci/projects/SCIRun/Thirdparty/IRIX64/SCIRun_Thirdparty_64 \
-                          /usr/sci/projects/SCIRun/Thirdparty/IRIX64/CCA_Thirdparty_64"
-    else
-      SCI_LAB_TP_DEFAULT="/res/sci/data1/SCIRun_Thirdparty_32 \
-                          /usr/sci/projects/SCIRun/Thirdparty/IRIX64/SCIRun_Thirdparty_32 \
-                          /usr/sci/projects/SCIRun/Thirdparty/IRIX64/CCA_Thirdparty_32"
-    fi
-    ;;
-  *linux*)
-    SCI_LAB_TP_DEFAULT="/res/sci/data1/SCIRun_Thirdparty_32_linux \
-                        /usr/sci/projects/SCIRun/Thirdparty/Linux/SCIRun_Thirdparty_32 \
-                        /usr/sci/projects/SCIRun/Thirdparty/Linux/CCA_Thirdparty_32 \
-                        /local/SCIRun_Thirdparty_32 \
-                        /local"
-    ;;
-  *-aix*)
-    AC_MSG_WARN(AIX is not completely supported!)
-    SCI_LAB_TP_DEFAULT=""
-    ;;
-  *)
-    ;;
-esac
-
 #########################################################################
 ## Make sure number of bit build for Thirdparty and SCIRun compile match
 ##
@@ -1129,6 +1099,67 @@ case $ac_cv_sizeof_voidp in
   ;;
 esac
 AC_SUBST(NBITS)
+
+##  SCI_LAB_TP_DEFAULT is used to add "standard" library search paths
+##  for those of us who are too lazy to type out all the --with paths
+
+TP_VERSION=1.3.2
+TP_ARCH=`uname -s`
+TP_COMPILER=gcc-3.0.4
+ac_try="$CC -v > /dev/null 2> conftest.out"
+(eval $ac_try) 2>&5
+vers=`grep "gcc version" conftest.out | cut -d' ' -f 3`
+rm -f conftest.out
+if test -n "$vers"; then
+  TP_COMPILER=gcc-$vers
+else
+  ac_try="$CC -version > /dev/null 2> conftest.out"
+  (eval $ac_try) 2>&5
+  vers=`grep MIPSpro conftest.out | cut -d' ' -f 4`
+  rm -f conftest.out
+  if test -n "$vers"; then
+    TP_COMPILER=MIPSpro-$vers
+  else
+    TP_COMPILER=unknown
+  fi
+fi
+TP_BASE=/usr/sci/projects
+TP_SUBDIR=$TP_ARCH/$TP_COMPILER-${NBITS}bit
+TP_PATH=$TP_BASE/SCIRun/Thirdparty/$TP_VERSION/$TP_SUBDIR
+
+CCATP_VERSION=1.0.0
+CCATP_PATH=$TP_BASE/CCA/Thirdparty/$CCATP_VERSION/$TP_SUBDIR
+
+UINTAHTP=VERSION=1.0.0
+UINTAHTP_PATH=$TP_BASE/Uintah/Thirdparty/$UINTAHTP_VERSION/$TP_SUBDIR
+
+
+SCI_LAB_TP_DEFAULT="$TP_PATH \
+                    $CCATP_PATH \
+                    $UINTAHTP_PATH"
+case $host in
+  *-irix*) 
+    if test "$is_64bit" = "yes"; then
+      SCI_LAB_TP_DEFAULT="/res/sci/data1/SCIRun_Thirdparty_64 \
+                          $SCI_LAB_TP_DEFAULT"
+    else
+      SCI_LAB_TP_DEFAULT="/res/sci/data1/SCIRun_Thirdparty_32 \
+                          $SCI_LAB_TP_DEFAULT"
+    fi
+    ;;
+  *linux*)
+    SCI_LAB_TP_DEFAULT="/res/sci/data1/SCIRun_Thirdparty_32_linux \
+                        $SCI_LAB_TP_DEFAULT \
+                        /local/SCIRun_Thirdparty_32 \
+                        /local"
+    ;;
+  *-aix*)
+    AC_MSG_WARN(AIX is not completely supported!)
+    SCI_LAB_TP_DEFAULT=""
+    ;;
+  *)
+    ;;
+esac
 
 ##  ----------------------------------------------------------------------
 ##  ----------  search for required libraries and headers  ---------------
@@ -1681,6 +1712,7 @@ FOUND_ALL_GLOBUS=no
 GLOBUS_INCLUDE=""
 GLOBUS_LIB=""
 for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
+echo $i
   if test ! -d "$i"; then
     continue
   fi
