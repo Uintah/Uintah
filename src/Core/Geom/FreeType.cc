@@ -342,17 +342,13 @@ FreeTypeText::render(int width, int height, unsigned char *buffer)
       ASSERT(bitmap_glyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY);
       int top = bitmap_glyph->top;
       int left = bitmap_glyph->left;
-      //      std::cerr << text_[i] << ": Top:" << top << "  Left: " << left << std::endl;; 
       // render glyph here
       for (int y = 0; y < bitmap_glyph->bitmap.rows; ++y) {
 	if (top-y < 0 || top-y >= height) continue;
 	for (int x = 0; x < bitmap_glyph->bitmap.width; ++x) {
 	  if (left+x < 0 || left+x >= width) continue;
 	  unsigned char val = bitmap_glyph->bitmap.buffer[y*Abs(bitmap_glyph->bitmap.pitch)+x];
-	  buffer[((top-y)*width+left+x)*4+0] = val;
-	  buffer[((top-y)*width+left+x)*4+1] = val;
-	  buffer[((top-y)*width+left+x)*4+2] = val;
-	  buffer[((top-y)*width+left+x)*4+3] = val;
+	  buffer[(top-y)*width+left+x] = val;
 	}
       }
 
