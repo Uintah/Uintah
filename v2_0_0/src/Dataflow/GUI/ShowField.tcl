@@ -63,6 +63,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-interactive_mode
 	global $this-bidirectional
 	global $this-vector-usedefcolor
+	global $this-tensor-usedefcolor
 	global $this-text-use-default-color
 	global $this-text-color-r
 	global $this-text-color-g
@@ -116,6 +117,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-interactive_mode "Interactive"
 	set $this-bidirectional 0
 	set $this-vector-usedefcolor 0
+	set $this-tensor-usedefcolor 0
 	set $this-text-use-default-color 1
 	set $this-text-color-r 1.0
 	set $this-text-color-g 1.0
@@ -391,7 +393,12 @@ itcl_class SCIRun_Visualization_ShowField {
 	    {{Boxes Boxes} {Ellipsoids Ellipsoids} \
 		 {"Colored Boxes" "Colored Boxes"}}
 	
-	pack $tensor.show_tensors $tensor.radio \
+	checkbutton $tensor.usedefcol \
+		-text "Use default color" \
+		-command "$this-c data_display_type" \
+		-variable $this-tensor-usedefcolor
+
+	pack $tensor.show_tensors $tensor.radio $tensor.usedefcol \
 		-side top -fill y -anchor w
 
 	expscale $tensor.slide -label "Tensor Scale" \

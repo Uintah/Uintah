@@ -94,6 +94,7 @@ class ShowField : public Module
 
   GuiInt                   tensors_on_;
   GuiInt                   has_tensor_data_;
+  GuiInt                   tensor_usedefcolor_;
 
   GuiInt                   scalars_on_;
   GuiInt                   scalars_transparency_;
@@ -212,6 +213,7 @@ ShowField::ShowField(GuiContext* ctx) :
   cur_field_data_at_(Field::NONE),
   tensors_on_(ctx->subVar("tensors-on")),
   has_tensor_data_(ctx->subVar("has_tensor_data")),
+  tensor_usedefcolor_(ctx->subVar("tensor-usedefcolor")),
   scalars_on_(ctx->subVar("scalars-on")),
   scalars_transparency_(ctx->subVar("scalars-transparency")),
   has_scalar_data_(ctx->subVar("has_scalar_data")),
@@ -758,12 +760,14 @@ ShowField::execute()
 	     tensors_on_.get())
     {
       if (data_id_) ogeom_->delObj(data_id_);
-      GeomHandle data = data_tensor_renderer_->render_data(vfld_handle,
-							   fld_handle,
-							   color_map_,
-							   def_material_,
-							   tdt, tscale,
-							   data_resolution_);
+      GeomHandle data =
+	data_tensor_renderer_->render_data(vfld_handle,
+					   fld_handle,
+					   color_map_,
+					   def_material_,
+					   tensor_usedefcolor_.get(),
+					   tdt, tscale,
+					   data_resolution_);
       data_id_ = ogeom_->addObj(data, fname + "Tensors");
     }
     else if (vfld_handle.get_rep() &&
