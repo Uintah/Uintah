@@ -12,8 +12,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Fusion/Dataflow/Modules/DataIO
 
-CFLAGS += $(MDSPLUS_DEF_FLAG)
-
 INCLUDES += $(MDSPLUS_INCLUDE)
 
 SRCS     += \

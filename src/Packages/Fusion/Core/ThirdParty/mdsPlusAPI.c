@@ -32,6 +32,8 @@
    It also contains many helper functions for fetching the data.
 */
 
+#include <sci_defs.h>
+
 #ifdef MDSPLUS
 
 #include "mdsPlusAPI.h"
