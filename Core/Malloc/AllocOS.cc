@@ -51,7 +51,10 @@ static int devzero_fd=-1;
 
 OSHunk* OSHunk::alloc(size_t size, bool returnable)
 {
-    size_t asize=size+sizeof(OSHunk);
+    unsigned long offset = sizeof(OSHunk)%ALIGN;
+    if(offset != 0)
+      offset = ALIGN-offset;
+    size_t asize=size+sizeof(OSHunk)+offset;
     void* ptr;
     if(returnable){
        if(devzero_fd == -1){
@@ -92,6 +95,10 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable)
        abort();
     }
     hunk->data=(void*)(hunk+1);
+    if(offset){
+      // Ensure alignment
+      hunk->data = (void*)((char*)hunk->data+offset);
+    }
     hunk->next=0;
     hunk->ninuse=0;
     hunk->len=size;

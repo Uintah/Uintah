@@ -46,7 +46,6 @@ struct OSHunk {
     void* curr;
     size_t len;
     bool returnable;
-    double align;
 };
 
 } // End namespace SCIRun
