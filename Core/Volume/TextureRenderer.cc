@@ -372,19 +372,42 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
       }
       // download texture data
       unsigned int format = (nb == 1 ? GL_LUMINANCE : GL_RGBA);
-      if(reuse) {
-        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, format,
-                        brick->tex_type(), brick->tex_data(c));
-      } else {
 #if LINUXCOMPAT
-        glTexImage3D(GL_TEXTURE_3D, 0, GL_COLOR_INDEX8_EXT,
+      if (reuse)
+      {
+        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, GL_COLOR_INDEX,
+			brick->tex_type(), brick->tex_data(c));
+      }
+      else
+      {
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_COLOR_INDEX8_EXT,
 		     nx, ny, nz, 0, GL_COLOR_INDEX,
                      brick->tex_type(), brick->tex_data(c));
+      }
+#elif defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
+      if (reuse)
+      {
+        glTexSubImage3DEXT(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, GL_RED,
+			   brick->tex_type(), brick->tex_data(c));
+      }
+      else
+      {
+        glTexImage3DEXT(GL_TEXTURE_3D, 0, GL_INTENSITY8,
+			nx, ny, nz, 0, GL_RED,
+			brick->tex_type(), brick->tex_data(c));
+      }
 #else
+      if (reuse)
+      {
+        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, format,
+                        brick->tex_type(), brick->tex_data(c));
+      }
+      else
+      {
         glTexImage3D(GL_TEXTURE_3D, 0, format, nx, ny, nz, 0, format,
                      brick->tex_type(), brick->tex_data(c));
-#endif
       }
+#endif
     }
   }
   brick->set_dirty(false);
@@ -787,6 +810,14 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
                GL_RGBA,
                GL_FLOAT,
                &(cmap1_array_(0, 0)));
+#elif defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
+  glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
+  glColorTable(GL_TEXTURE_COLOR_TABLE_SGI,
+               GL_RGBA,
+               256,
+               GL_RGBA,
+               GL_FLOAT,
+               &(cmap1_array_(0, 0)));
 #else
   // bind texture to unit 2
 #ifdef GL_ARB_fragment_program 
@@ -836,6 +867,8 @@ TextureRenderer::release_colormap1()
 #ifdef HAVE_AVR_SUPPORT
 #if LINUXCOMPAT
   glDisable(GL_SHARED_TEXTURE_PALETTE_EXT);
+#elif defined(GL_TEXTURE_COLOR_TABLE_SGI) && defined(__sgi)
+  glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
 #else
 #ifdef GL_ARB_fragment_program
   // bind texture to unit 2
