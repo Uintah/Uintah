@@ -282,7 +282,7 @@ void DetailedTasks::createScrublists(bool init_timestep)
   // Create scrub lists
   typedef map<const VarLabel*, DetailedTask*, VarLabel::Compare> ScrubMap;
   ScrubMap oldmap, newmap;
-  for(int i=0;i<localtasks.size();i++){
+  for(unsigned int i=0;i<localtasks.size();i++){
     DetailedTask* dtask = localtasks[i];
     const Task* task = dtask->getTask();
     for(const Task::Dependency* req = task->getRequires();
@@ -302,7 +302,7 @@ void DetailedTasks::createScrublists(bool init_timestep)
       }
     }
   }
-  for(int i=0;i<localtasks.size();i++){
+  for(unsigned int i=0;i<localtasks.size();i++){
     DetailedTask* dtask = localtasks[i];
     const Task* task = dtask->getTask();
     for(const Task::Dependency* comp = task->getComputes();
