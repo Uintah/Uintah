@@ -63,7 +63,7 @@
 #include <Core/Geom/PointLight.h>
 #include <Core/Geom/SpotLight.h>
 #include <Core/Geom/GeomPolyline.h>
-#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomPoint.h>
 #include <Core/Geom/GeomRenderMode.h>
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomEllipsoid.h>
@@ -2520,7 +2520,7 @@ void GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime
 
 }
 
-void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
+void GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
 
   if (have_normal) {

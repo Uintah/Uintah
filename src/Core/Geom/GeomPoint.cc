@@ -17,7 +17,7 @@
 
 
 /*
- * Pt.cc: Pts objects
+ * GeomPoint.cc: Points objects
  *
  *  Written by:
  *   Steven G. Parker & David Weinstein
@@ -28,7 +28,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomPoint.h>
 #include <Core/Containers/Sort.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
@@ -41,12 +41,12 @@ using std::ostream;
 
 namespace SCIRun {
 
-Persistent* make_GeomPts()
+Persistent* make_GeomPoints()
 {
-    return scinew GeomPts(0);
+    return scinew GeomPoints(0);
 }
 
-PersistentTypeID GeomPts::type_id("GeomPts", "GeomObj", make_GeomPts);
+PersistentTypeID GeomPoints::type_id("GeomPoints", "GeomObj", make_GeomPoints);
 
 
 Persistent* make_GeomTimedParticles()
@@ -58,21 +58,21 @@ PersistentTypeID GeomTimedParticles::type_id("GeomTimedParticles",
 					     "GeomObj", 
 					     make_GeomTimedParticles);
 
-GeomPts::GeomPts(const GeomPts &copy)
+GeomPoints::GeomPoints(const GeomPoints &copy)
 : pts(copy.pts), have_normal(copy.have_normal), n(copy.n), pickable(copy.pickable), cmap(0) {
 }
 
-GeomPts::GeomPts(int size)
+GeomPoints::GeomPoints(int size)
 : pts(0, size*3), have_normal(0), pickable(0), cmap(0)
 {
 }
 
-GeomPts::GeomPts(int size, const Vector &n)
+GeomPoints::GeomPoints(int size, const Vector &n)
 : pts(0, size*3), have_normal(1), n(n), pickable(0)
 {
 }
 
-void GeomPts::DoSort()
+void GeomPoints::DoSort()
 {
 
   SortObjs sorter;
@@ -138,16 +138,16 @@ void GeomPts::DoSort()
 
 }
 
-GeomPts::~GeomPts()
+GeomPoints::~GeomPoints()
 {
 }
 
-GeomObj* GeomPts::clone()
+GeomObj* GeomPoints::clone()
 {
-    return scinew GeomPts(*this);
+    return scinew GeomPoints(*this);
 }
 
-void GeomPts::get_bounds(BBox& bb)
+void GeomPoints::get_bounds(BBox& bb)
 {
     for (int i=0; i<pts.size(); i+=3)
 	bb.extend(Point(pts[i], pts[i+1], pts[i+2]));
@@ -155,10 +155,10 @@ void GeomPts::get_bounds(BBox& bb)
 
 #define GEOMPTS_VERSION 2
 
-void GeomPts::io(Piostream& stream)
+void GeomPoints::io(Piostream& stream)
 {
 
-    int version=stream.begin_class("GeomPts", GEOMPTS_VERSION);
+    int version=stream.begin_class("GeomPoints", GEOMPTS_VERSION);
     GeomObj::io(stream);
     Pio(stream, pts);
     if (version > 1) {
@@ -168,9 +168,9 @@ void GeomPts::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomPts::saveobj(ostream&, const string&, GeomSave*)
+bool GeomPoints::saveobj(ostream&, const string&, GeomSave*)
 {
-    NOT_FINISHED("GeomPts::saveobj");
+    NOT_FINISHED("GeomPoints::saveobj");
     return false;
 }
 

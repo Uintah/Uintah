@@ -41,6 +41,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/GeomOpenGL.cc		                \
 	$(SRCDIR)/Path.cc		    	        \
 	$(SRCDIR)/GeomPick.cc		                \
+	$(SRCDIR)/GeomPoint.cc		    		\
 	$(SRCDIR)/GeomPolyline.cc	                \
 	$(SRCDIR)/GeomQMesh.cc		                \
 	$(SRCDIR)/GeomQuads.cc		                \
@@ -70,7 +71,6 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/Material.cc		    		\
 	$(SRCDIR)/Path.cc		    		\
 	$(SRCDIR)/PointLight.cc		    		\
-	$(SRCDIR)/Pt.cc			    		\
 	$(SRCDIR)/SpotLight.cc		    		\
 	$(SRCDIR)/TexSquare.cc		    		\
 	$(SRCDIR)/TimeGrid.cc		    		\

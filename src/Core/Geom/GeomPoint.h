@@ -17,7 +17,7 @@
 
 
 /*
- * Pt.h: Pts objects
+ * Pt.h: GeomPoint objects
  *
  *  Written by:
  *   Steven G. Parker & David Weinstein
@@ -41,7 +41,7 @@
 namespace SCIRun {
 
 
-class SCICORESHARE GeomPts : public GeomObj {
+class SCICORESHARE GeomPoints : public GeomObj {
 public:
     Array1<float> pts;
     inline void add(const Point& p) {
@@ -105,10 +105,10 @@ public:
 
     void DoSort(); // sorts the arrays...
 
-    GeomPts(const GeomPts&);
-    GeomPts(int size);
-    GeomPts(int size, const Vector &);
-    virtual ~GeomPts();
+    GeomPoints(const GeomPoints&);
+    GeomPoints(int size);
+    GeomPoints(int size, const Vector &);
+    virtual ~GeomPoints();
     virtual GeomObj* clone();
     virtual void get_bounds(BBox&);
 

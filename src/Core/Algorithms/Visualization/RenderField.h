@@ -34,7 +34,7 @@
 #include <Core/Geom/GeomBox.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomDL.h>
-#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomPoint.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Util/TypeDescription.h>
@@ -531,7 +531,7 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
   GeomGroup* nodes = scinew GeomGroup;
   GeomDL *display_list = scinew GeomDL(nodes);
   GeomSwitch *node_switch = scinew GeomSwitch(display_list);
-  GeomPts *pts = 0;
+  GeomPoints *pts = 0;
 
   // 0 Points 1 Spheres 2 Axes 3 Disks
   int mode = 0;
@@ -543,7 +543,7 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
   if (mode == 0) { // Points
     typename Fld::mesh_type::Node::size_type nsize;
     mesh->size(nsize);
-    pts = scinew GeomPts((unsigned int)(nsize));
+    pts = scinew GeomPoints((unsigned int)(nsize));
   }
   // First pass: over the nodes
   mesh->synchronize(Mesh::NODES_E);
