@@ -234,8 +234,10 @@ void SimpleCFD::scheduleInitialize(const LevelP& level,
   if(do_thermal)
     task->computes(lb_->temperature);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+#if 0
   task = scinew Task("hackbcs", this, &SimpleCFD::hackbcs);
   sched->addTask(task, level->allPatches(), sharedState_->allMaterials());
+#endif
   task = scinew Task("interpolateVelocities", this, &SimpleCFD::interpolateVelocities);
   task->requires(Task::NewDW, lb_->xvelocity, Ghost::AroundCells, 1);
   task->requires(Task::NewDW, lb_->yvelocity, Ghost::AroundCells, 1);
@@ -272,7 +274,7 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
 #if 0
   task->requires(Task::OldDW, sharedState_->get_delt_label());
 #endif
-  task->requires(Task::OldDW, lb_->bctype, Ghost::None, 0);
+  task->requires(Task::OldDW, lb_->bctype, Ghost::AroundNodes, 2);
   task->requires(Task::OldDW, lb_->xvelocity, Ghost::AroundCells, maxadvect_+1);
   task->requires(Task::OldDW, lb_->yvelocity, Ghost::AroundCells, maxadvect_+1);
   task->requires(Task::OldDW, lb_->zvelocity, Ghost::AroundCells, maxadvect_+1);
@@ -363,7 +365,7 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
 #if 0
   task->requires(Task::OldDW, sharedState_->get_delt_label());
 #endif
-  task->requires(Task::OldDW, lb_->bctype, Ghost::AroundCells, 1);
+  task->requires(Task::OldDW, lb_->bctype, Ghost::AroundNodes, 2);
   task->requires(Task::NewDW, lb_->xvelocity, Ghost::AroundCells, maxadvect_+1);
   task->requires(Task::NewDW, lb_->yvelocity, Ghost::AroundCells, maxadvect_+1);
   task->requires(Task::NewDW, lb_->zvelocity, Ghost::AroundCells, maxadvect_+1);
