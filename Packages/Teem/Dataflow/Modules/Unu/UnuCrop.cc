@@ -315,11 +315,6 @@ UnuCrop::execute()
       }
     }
 
-    cerr << "Cropping with min/max \n";
-    for (int i=0; i< num_axes_.get(); i++) {
-	cerr << min[i] << " " << max[i] << "\n";
-    }
-
     if (nrrdCrop(nout, nin, min, max)) {
       char *err = biffGetDone(NRRD);
       error(string("Trouble cropping: ") + err);
