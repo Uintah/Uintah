@@ -1,4 +1,3 @@
-
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/YieldConditionFactory.h>
@@ -616,6 +615,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         pLocalized_new[idx] = pLocalized[idx];
         pPlasticTemperature_new[idx] = pPlasticTemperature[idx];
         pPlasticTempInc_new[idx] = 0.0;
+        d_plastic->updateElastic(idx);
         continue;
       }
 
