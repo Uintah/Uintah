@@ -82,7 +82,7 @@ class ModuleEntry < Entry
 
   def categoryP
     File.open(@fileName.gsub(/\.html$/,".xml")) do |f|
-      match = /category=\"(.*)\">/.match(f.read())
+      match = /category=\"(.*?)\">/.match(f.read())
       raise "#{@fileName} isn't from a module spec file" if match == nil
       match[1]
     end
