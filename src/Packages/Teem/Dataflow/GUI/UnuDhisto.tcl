@@ -48,7 +48,7 @@ itcl_class Teem_UnuAtoM_UnuDhisto {
 	set $this-max 0
 
 	global $this-usemax
-	set $this-usemax 0
+	set $this-usemax 1
     }
 
     method ui {} {
