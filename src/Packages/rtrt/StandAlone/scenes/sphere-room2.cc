@@ -6,6 +6,7 @@
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/EMBMaterial.h>
 #include <Packages/rtrt/Core/MultiMaterial.h>
+#include <Packages/rtrt/Core/InvisibleMaterial.h>
 
 #include <Packages/rtrt/Core/Satellite.h>
 #include <Packages/rtrt/Core/PortalParallelogram.h>
@@ -30,13 +31,11 @@ using namespace std;
 #define DOOROFFSET             5.25
 #define ROOMHEIGHT             30
 #define ROOMFLOOR              .5
-#define HEIGHTRATIO            (DOORHEIGHT/ROOMHEIGHT)
 #define ROOMRADIUS             50
 #define ROOMOFFSET             4
 #define PORTALOFFSET           .001
-#define ROOMCENTER             (ROOMRADIUS/2.+ROOMOFFSET),(ROOMRADIUS/2.+ROOMOFFSET)
+#define ROOMCENTER             (ROOMRADIUS+ROOMOFFSET),(ROOMRADIUS+ROOMOFFSET)
 #define WALLTHICKNESS          .1
-#define INSCILAB               0
 #define SYSTEM_SIZE_SCALE      1.438848E-5 /*1.438848E-6*/
 #define SYSTEM_DISTANCE_SCALE  6.76E-9 /*3.382080E-9*/
 #define SYSTEM_TIME_SCALE1     .4
@@ -146,6 +145,11 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
   EMBMaterial *starfield = new EMBMaterial(IMAGEDIR"tycho8.ppm");
 
+  MapBlendMaterial *rings_m = 
+    new MapBlendMaterial(IMAGEDIR"rings.ppm",
+                         white,
+                         new InvisibleMaterial());
+
   string solppm(IMAGEDIR); solppm+=table[0].name_; solppm+=".ppm";
   TileImageMaterial *sol_m = 
     new TileImageMaterial(solppm, 1, Color(1,1,1), 0, 0, 0,
@@ -155,7 +159,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   MapBlendMaterial *earth_spec = 
     new MapBlendMaterial(IMAGEDIR"earthspec4k.ppm", 
                          new TileImageMaterial(earthppm, 1, 
-                                               Color(1,1,1), 100, 0, 0,
+                                               Color(1,1,1), 60, 0, 0,
                                                FLIP_IMAGES),
                          new TileImageMaterial(earthppm, 1, 
                                                Color(1,1,1), 0, 0, 0,
@@ -297,7 +301,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   earth->set_rev_speed(1./table[1].rot_speed_*SYSTEM_TIME_SCALE1);
   table[1].self_ = earth;
   cerr << earth->name_ << " = " << earth << endl;
-  //solar_system->add( earth );
+  solar_system->add( earth );
   scene->addObjectOfInterest(earth,ANIMATE);
 
   // build the other satellites
@@ -323,13 +327,14 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
          << newsat->get_parent() << endl;
     newsat->set_rev_speed(1./table[loop].rot_speed_*SYSTEM_TIME_SCALE1);
     newsat->set_orb_speed(1./table[loop].orb_speed_*SYSTEM_TIME_SCALE2);
-    solar_system->add( newsat );
+    //solar_system->add( newsat );
     scene->addObjectOfInterest( newsat, ANIMATE );
 
     if (newsat->get_name() == "saturn") {
+      solar_system->add( newsat );
       cerr << "adding rings!!!! " << radius << endl;
       RingSatellite *rings = 
-        new RingSatellite("rings",white,
+        new RingSatellite("rings",rings_m,
                           newsat->get_center(),
                           newsat->get_up(), 
                           74400*SYSTEM_SIZE_SCALE,
