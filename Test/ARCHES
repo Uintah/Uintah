@@ -9,7 +9,7 @@ TESTS = [   ("methane_explicit", "methane_explicit_table.ups", "", 1.1, "chem_me
     	]
 
 def chemfile (test):
-    return test[3]
+    return test[4]
 
 def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_parallelism):
   symlink("%s/input.dtd" % (inputsdir), "input.dtd")
