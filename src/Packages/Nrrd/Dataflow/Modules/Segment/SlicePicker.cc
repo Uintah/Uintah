@@ -15,10 +15,12 @@
 #include <Core/Containers/String.h>
 #include <Dataflow/Network/Module.h>
 //#include <Core/Datatypes/LatticeVol.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Nrrd/Dataflow/Ports/NrrdPort.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array3.h>
 #include <Core/Geom/Color.h>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Malloc/Allocator.h>
@@ -116,7 +118,7 @@ SlicePicker::SlicePicker(const clString& id)
 {
   // Create the input port
   myid=id;
-  iport = scinew NrrdIPort(this, "SFRG", NrrIPort::Atomic);
+  iport = scinew NrrdIPort(this, "SFRG", NrrdIPort::Atomic);
   add_iport(iport);
   oport = scinew NrrdOPort(this, "BitField", NrrdIPort::Atomic);
   add_oport(oport);
