@@ -2876,6 +2876,37 @@ class FusionViewerApp {
 	}
 	puts $fileid "set loading 1"
     }
+
+    ##########################
+    ### save_module_variables
+    ##########################
+    # This method saves out the variables of all of the modules to the
+    # specified file. It currently only saves out the variables for the
+    # modules that the application has included in the global mods array.
+    method save_module_variables { fileid } {
+	# make globals accessible
+	foreach g [info globals] {
+	    global $g
+	}
+
+ 	puts $fileid "global mods"
+	
+ 	set searchID [array startsearch mods]
+ 	set i 0
+ 	set script "\n"
+ 	while {[array anymore mods $searchID]} {
+ 	    set m [array nextelement mods $searchID]
+	    # Call same method called for writing networks
+	    # which writes them out in consistent order and
+	    # only if they differ from the default.
+ 	    $mods($m) writeStateToScript script "\$mods($m)" ""
+ 	}
+ 	array donesearch mods $searchID
+	
+ 	puts $fileid "$script"
+	puts $fileid "::netedit scheduleok"
+    }
+    
     
     
     ##############################
