@@ -1309,15 +1309,15 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       if (switchDebugLagrangianSpecificVol ) {
         ostringstream desc;
         desc <<"BOT_Lagrangian_spVolRF_Mat_"<<indx<< "_patch_"<<patch->getID();
-        printData(indx, patch,1, desc.str(), "Temp",          Temp_CC[m]);        
-        printData(indx, patch,1, desc.str(), "vol_frac",      vol_frac[m]);       
-        printData(indx, patch,1, desc.str(), "rho_CC",        rho_CC);            
-        printData(indx, patch,1, desc.str(), "sp_vol_CC",     sp_vol_CC);         
-        printData(indx, patch,1, desc.str(), "Tdot",          Tdot[m]);           
-        printData(indx, patch,1, desc.str(), "f_theta",       f_theta);           
-        printData(indx, patch,1, desc.str(), "sum_therm_exp", sum_therm_exp);     
-        printData(indx, patch,1, desc.str(), "spec_vol_source",spec_vol_source);  
-        printData(indx, patch,1, desc.str(), "spec_vol_L",     spec_vol_L);       
+        printData(indx, patch,1, desc.str(), "Temp",          Temp_CC[m]); 
+        printData(indx, patch,1, desc.str(), "vol_frac",      vol_frac[m]);
+        printData(indx, patch,1, desc.str(), "rho_CC",        rho_CC);
+        printData(indx, patch,1, desc.str(), "sp_vol_CC",     sp_vol_CC);
+        printData(indx, patch,1, desc.str(), "Tdot",          Tdot[m]);
+        printData(indx, patch,1, desc.str(), "f_theta",       f_theta);
+        printData(indx, patch,1, desc.str(), "sum_therm_exp", sum_therm_exp);
+        printData(indx, patch,1, desc.str(), "spec_vol_source",spec_vol_source);
+        printData(indx, patch,1, desc.str(), "spec_vol_L",     spec_vol_L);
       }
       //____ B U L L E T   P R O O F I N G----
       IntVector neg_cell;
