@@ -146,7 +146,7 @@ void TextureVolVis::execute(void)
 //       interp_mode.set(0);
 //     }
     //    ogeom->delAll();
-    ogeom->addObj( volren, "VolumeRenderer TransParent", &geom_lock_);
+    ogeom->addObj( volren, "VolumeRenderer Transparent", &geom_lock_);
   } else {
     geom_lock_.writeLock();
     volren->SetVol( tex.get_rep() );

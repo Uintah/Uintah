@@ -180,11 +180,6 @@ VolumeVisualizer::execute()
   if(c1) cmap1_prevgen = cmap1->generation;
   if(c2) cmap2_prevgen = cmap2->generation;
 
-//   cerr << "EXISTS: " << c1 << " " << c2 << endl;
-//   cerr << "DIRTY: " << cmap1_dirty << " " << cmap2_dirty << endl;
-//   if (c1) cerr << "GEN: " << cmap1->generation << " " << cmap1_prevgen << endl;
-//   if (c2) cerr << "GEN: " << cmap2->generation << " " << cmap2_prevgen << endl;
-
   if(!volren_) {
     volren_ = new VolumeRenderer(tex, cmap1, cmap2, int(card_mem_*1024*1024*0.8));
     oldmin = tex->bbox().min();
@@ -193,7 +188,7 @@ VolumeVisualizer::execute()
     oldnj = tex->ny();
     oldnk = tex->nz();
     //    ogeom->delAll();
-    geomID = ogeom->addObj(volren_, "VolumeRenderer TransParent");
+    geomID = ogeom->addObj(volren_, "VolumeRenderer Transparent");
   } else {
     volren_->set_texture(tex);
     if(c1 && cmap1_dirty)
@@ -206,7 +201,7 @@ VolumeVisualizer::execute()
     if(oldmin != tex->bbox().min() || oldmax != tex->bbox().max() ||
        ni != oldni || nj != oldnj || nk != oldnk) {
       ogeom->delObj(geomID);
-      geomID = ogeom->addObj(volren_, "VolumeRenderer TransParent");
+      geomID = ogeom->addObj(volren_, "VolumeRenderer Transparent");
       oldni = ni; oldnj = nj; oldnk = nk;
       oldmin = tex->bbox().min();
       oldmax = tex->bbox().max();
