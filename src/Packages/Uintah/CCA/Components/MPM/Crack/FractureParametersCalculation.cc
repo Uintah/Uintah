@@ -56,7 +56,7 @@ void Crack::addComputesAndRequiresGetNodalSolutions(Task* t,
   t->requires(Task::NewDW,lb->pVelGradsLabel,                     gan,NGP);
 
   t->requires(Task::OldDW,lb->pXLabel,                            gan,NGP);
-  if(flag->d_8or27==27) t->requires(Task::OldDW, lb->pSizeLabel,        gan,NGP);
+  t->requires(Task::OldDW, lb->pSizeLabel,        gan,NGP);
 
   // Required nodal solutions
   t->requires(Task::NewDW,lb->gMassLabel,                         gnone);
@@ -89,6 +89,13 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    double* S;
+    S = new double[interpolator->size()];
+
     double time = d_sharedState->getElapsedTime();
 
     // Detect if calculating J & K (If yes, set calFractParameters=YES)
@@ -124,7 +131,7 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
       new_dw->get(pkineticenergydensity,lb->pKineticEnergyDensityLabel,pset);
 
       old_dw->get(px,                   lb->pXLabel,                   pset);
-      if(flag->d_8or27==27) old_dw->get(psize,lb->pSizeLabel,                pset);
+      old_dw->get(psize,lb->pSizeLabel,                pset);
 
       // Get nodal mass
       constNCVariable<double> gmass, Gmass;
@@ -173,12 +180,7 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
           particleIndex idx = *iter;
 
           // Get the node indices that surround the cell
-          if(flag->d_8or27==8){
-            patch->findCellAndWeights(px[idx], ni, S);
-          }
-          else if(flag->d_8or27==27){
-            patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
-          }
+	  interpolator->findCellAndWeights(px[idx], ni, S, psize[idx]);
 
           for (int k = 0; k < flag->d_8or27; k++){
             if(patch->containsNode(ni[k])){
@@ -222,6 +224,9 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
         }
       } // End if(calFractParameters || doCrackPropagation)
     }
+    delete interpolator;
+    delete[] S;
+    delete[] ni;
   }
 }
 
@@ -268,6 +273,13 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double dx_max=Max(dx.x(),dx.y(),dx.z());
+
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    double* S;
+    S = new double[interpolator->size()];
+
 
     // Variables related to MPI
     int pid,patch_size;
@@ -474,10 +486,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   /* Step 5: Evaluate solutions at integral points in global coordinates
                   */
                   for(int j=0; j<=nSegs; j++) {
-                    if(flag->d_8or27==8)
-                      patch->findCellAndWeights(X[j],ni,S);
-                    else if(flag->d_8or27==27)
-                      patch->findCellAndWeights27(X[j],ni,S,psize[j]);
+		    interpolator->findCellAndWeights(X[j],ni,S,psize[j]);
 
                     for(int k=0; k<flag->d_8or27; k++) {
                       if(GnumPatls[ni[k]]!=0 && j<nSegs/2) {  //below crack
@@ -590,10 +599,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                       Matrix3 DG=Matrix3(0.0);
                       Matrix3 VG=Matrix3(0.0);
 
-                      if(flag->d_8or27==8)
-                        patch->findCellAndWeights(X[j],ni,S);
-                      else if(flag->d_8or27==27)
-                        patch->findCellAndWeights27(X[j],ni,S,psize[j]);
+		      interpolator->findCellAndWeights(X[j],ni,S,psize[j]);
 
                       for(int k=0; k<flag->d_8or27; k++) {
                         if(GnumPatls[ni[k]]!=0 && x[j].y()<0.) { // below crack
@@ -670,10 +676,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   // Get displacements at point p_d
                   Vector disp_a=Vector(0.);
                   Vector disp_b=Vector(0.);
-                  if(flag->d_8or27==8)
-                    patch->findCellAndWeights(p_d,ni,S);
-                  else if(flag->d_8or27==27)
-                    patch->findCellAndWeights27(p_d,ni,S,psize[0]);
+		  interpolator->findCellAndWeights(p_d,ni,S,psize[0]);
                   for(int k=0; k<flag->d_8or27; k++) {
                     disp_a += gdisp[ni[k]] * S[k];
                     disp_b += Gdisp[ni[k]] * S[k];
@@ -725,6 +728,9 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
       if(pid==0) OutputCrackFrontResults(m);
       
     } // End of loop over matls
+    delete interpolator;
+    delete[] S;
+    delete[] ni;
   } // End of loop patches
 }
 

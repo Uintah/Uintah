@@ -378,6 +378,13 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     double shear;
     Vector deformed_fiber_vector;
 
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
+
     Identity.Identity();
 
     Vector dx = patch->dCell();
@@ -473,15 +480,8 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
       pIntHeatRate[idx] = 0.0;
 
       // Get the node indices that surround the cell
-      IntVector ni[MAX_BASIS];
-      Vector d_S[MAX_BASIS];
+      interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
       
-      if(d_8or27==8){
-        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-      }
-      else if(d_8or27==27){
-        patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
-      }
       
       Vector gvel;
       velGrad.set(0.0);
@@ -745,6 +745,9 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)),
                 lb->delTLabel);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
 }
 

@@ -44,7 +44,6 @@ using namespace SCIRun;
 
 using namespace std;
 
-#define MAX_BASIS 27
 #undef INTEGRAL_TRACTION
 
 static DebugStream cout_doing("RIGID_MPM", false);
@@ -82,8 +81,8 @@ void RigidMPM::computeStressTensor(const ProcessorGroup*,
 				    DataWarehouse* old_dw,
 				    DataWarehouse* new_dw)
 {
-
-  cout_doing <<"Doing computeStressTensor " <<"\t\t\t\t RigidMPM"<< endl;
+  if (cout_doing.active())
+    cout_doing <<"Doing computeStressTensor " <<"\t\t\t\t RigidMPM"<< endl;
 
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -114,8 +113,10 @@ void RigidMPM::computeInternalForce(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing computeInternalForce on patch " << patch->getID()
-	       <<"\t\t\t RigidMPM"<< endl;
+    if (cout_doing.active()) {
+      cout_doing <<"Doing computeInternalForce on patch " << patch->getID()
+		 <<"\t\t\t RigidMPM"<< endl;
+    }
 
   }
 }
@@ -139,9 +140,10 @@ void RigidMPM::solveEquationsMotion(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    cout_doing <<"Doing solveEquationsMotion on patch " << patch->getID()
-	       <<"\t\t\t RigidMPM"<< endl;
+    if (cout_doing.active()) {
+      cout_doing <<"Doing solveEquationsMotion on patch " << patch->getID()
+		 <<"\t\t\t RigidMPM"<< endl;
+    }
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
@@ -232,8 +234,19 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing interpolateToParticlesAndUpdate on patch " 
-               << patch->getID() << "\t MPM"<< endl;
+    if (cout_doing.active()) {
+      cout_doing <<"Doing interpolateToParticlesAndUpdate on patch " 
+		 << patch->getID() << "\t MPM"<< endl;
+    }
+
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    double* S;
+    S = new double[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -335,9 +348,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // model
       // For RigidMPM, this isn't done
 
-      IntVector ni[MAX_BASIS];
-      double S[MAX_BASIS];
-      Vector d_S[MAX_BASIS];
       const Level* lvl = patch->getLevel();
       double Cp=mpm_matl->getSpecificHeat();
 
@@ -347,13 +357,8 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        if(flags->d_8or27==8){
-          patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
-        }
-        else if(flags->d_8or27==27){
-          patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S, d_S,
-                                                         psize[idx]);
-        }
+	interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+							    psize[idx]);
 
         double tempRate = 0.0;
         Vector acc(0.0,0.0,0.0);
@@ -425,5 +430,9 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
     new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
 
+    delete interpolator;
+    delete[] S;
+    delete[] ni;
+    delete[] d_S;
   }
 }
