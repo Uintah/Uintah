@@ -28,18 +28,13 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Util/DynamicCompilation.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Core/Thread/CrowdMonitor.h>
-#include <Dataflow/Widgets/BoxWidget.h>
 #include <Core/Datatypes/Field.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Dataflow/Modules/Fields/IsoClip.h>
 #include <Core/Containers/StringUtil.h>
 #include <iostream>
-#include <stack>
 
 namespace SCIRun {
 
