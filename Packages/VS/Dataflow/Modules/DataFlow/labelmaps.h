@@ -20,6 +20,8 @@
 /* misc string manip functions */
 char *space_to_underbar(char *dst, char *src);
 
+char *capitalize(char *dst, char *src);
+
 /******************************************************************************
  * class VH_MasterAnatomy
  *
@@ -71,6 +73,12 @@ private:
 
 /******************************************************************************
  * class VH_AnatomyBoundingBox
+ *
+ * description: A singly-linked list of nodes consisting of an ASCII
+ *		char *name -- matching a tissue in the MasterAnatomy
+ *              and the X-Y-Z extrema of the segmentation of that
+ *              tissue.  Note: dimensions are integer Voxel addresses
+ *		referring to the original segmented volume.
  ******************************************************************************/
 class VH_AnatomyBoundingBox {
 public:
@@ -89,7 +97,7 @@ VH_AnatomyBoundingBox *
 VH_Anatomy_readBoundingBox_File(char *infilename);
 
 /******************************************************************************
- * Find the boundingBOx of a named anatomical entity
+ * Find the boundingBox of a named anatomical entity
  ******************************************************************************/
 VH_AnatomyBoundingBox *
 VH_Anatomy_findBoundingBox(VH_AnatomyBoundingBox *list, char *anatomyname);

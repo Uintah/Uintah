@@ -42,9 +42,11 @@
 #include "stdsoap2.h"
 // Xerces XML parser
 #include <xercesc/framework/MemBufInputSource.hpp>
+#include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/dom/DOMNamedNodeMap.hpp>
 #include <xercesc/dom/DOMNodeList.hpp>
+#include <xercesc/dom/DOMNamedNodeMap.hpp>
 #include <xercesc/sax/ErrorHandler.hpp>
 #include <xercesc/sax/SAXException.hpp>
 #include <xercesc/sax/SAXParseException.hpp>
@@ -272,7 +274,7 @@ void
   }
 
   // if the selection source is from the HotBox UI -- ignore the probe
-  char partsName[256], selectName[256];
+  char partsName[256], capitalName[256], selectName[256];
 
   if(selectionSource == "fromHotBoxUI")
   {
@@ -332,12 +334,42 @@ void
   }
                                                                                
   DOMDocument *injListDoc = injListParser.getDocument();
-  DOMNodeList *injList = injListDoc->getElementsByTagName(to_xml_ch_ptr("wound"));
-  unsigned long nlist = injList->getLength();
-    cout << "HotBox.cc: xml file: " << injuryListDataSrc
-         << nlist << " wound entities" << endl;
+  DOMNodeList *
+  injList = injListDoc->getElementsByTagName(to_xml_ch_ptr("wound"));
+  unsigned long i, num_struQLret, nlist = injList->getLength();
 
+  if (nlist == 0) {
+    cout << "HotBox.cc: no entities in Injury List" << endl;
+  }
+  else
+  {
+    cout << "HotBox.cc: xml file: " << injuryListDataSrc << ": "
+         << nlist << " wound entities" << endl;
+    for (i = 0;i < nlist; i++)
+    {
+      if (!(injList->item(i)))
+      {
+        std::cerr << "Error: NULL DOM node" << std::endl;
+        continue;
+      }
+      DOMNode &node = *(injList->item(i));
+      cout << "Node[" << i << "] type: " << node.getNodeType();
+      cout << " name: " << to_char_ptr(node.getNodeName());
+      if(node.hasAttributes())
+      {
+          cout << " " << node.getAttributes()->getLength()
+               << " attributes" << endl;
+          DOMNode *
+          elem = node.getAttributes()->item(0);
+          if(elem == 0)
+              cout << " Cannot get element from node" << endl;
+          else
+              cout << " value: " << to_char_ptr(elem->getNodeValue()) << endl;
+      }
+    } // end for (i = 0;i < nlist; i++)
+  } // end else (nlist != 0)
   // we now have the anatomy name corresponding to the label value at the voxel
+  char *oqafma_relation[VH_LM_NUM_NAMES];
   if(dataSource == VS_DATASOURCE_OQAFMA)
   {
     fprintf(stderr, "dataSource = OQAFMA\n");
@@ -351,18 +383,18 @@ void
       case VS_QUERYTYPE_CONTAINS:
       {
         p2 = "WHERE X->\":NAME\"->\"";
-        p2 += selectName;
+        p2 += capitalize(capitalName, selectName);
         p2 += "\", X->\"part\"+.\"contains\"->Y, Y->\":NAME\"->Contains CREATE The";
-        p2 += space_to_underbar(partsName, selectName);
+        p2 += space_to_underbar(partsName, capitalName);
         p2 += "(Contains)";
         break;
       }
       case VS_QUERYTYPE_PARTS:
       {
         p2 = "WHERE X->\":NAME\"->\"";
-        p2 += selectName;
+        p2 += capitalize(capitalName, selectName);
         p2 += "\", X->\"part\"+->Y, Y->\":NAME\"->Parts CREATE The";
-        p2 += space_to_underbar(partsName, selectName);
+        p2 += space_to_underbar(partsName, capitalName);
         p2 += "(Parts)";
         break;
       }
@@ -402,11 +434,66 @@ void
       }
 
       DOMDocument *struQLretDoc = struQLretParser.getDocument();
-      DOMNodeList *struQLretList = struQLretDoc->getElementsByTagName(to_xml_ch_ptr("part"));
-      nlist = struQLretList->getLength();
-      if (nlist == 0) {
-        cout << "HotBox.cc: no 'part' entities in StruQL return" << endl;
+      DOMNodeList *struQLretList;
+      const XMLCh* xs;
+      switch(queryType)
+      {
+        case VS_QUERYTYPE_ADJACENT_TO:
+        case VS_QUERYTYPE_CONTAINS:
+        {
+          xs = to_xml_ch_ptr("Contains");
+          break;
+        }
+        case VS_QUERYTYPE_PARTS:
+        {
+          xs = to_xml_ch_ptr("Parts");
+          break;
+        }
+        case VS_QUERYTYPE_PARTCONTAINS:
+        default:
+        {
+        }
+      } // end switch(queryType)
+      struQLretList = struQLretDoc->getElementsByTagName(xs);
+
+      num_struQLret = struQLretList->getLength();
+      if (num_struQLret == 0) {
+        cout << "HotBox.cc: no entities in StruQL return" << endl;
       }
+      else
+      {
+        cout << "HotBox.cc: " << num_struQLret
+             << " entities in StruQL return" << endl;
+        if(num_struQLret >= VH_LM_NUM_NAMES)
+           num_struQLret = VH_LM_NUM_NAMES;
+        for (i = 0;i < num_struQLret; i++)
+        {
+          if (!(struQLretList->item(i)))
+          {
+            cout << "Error: NULL DOM node" << std::endl;
+            continue;
+          }
+          DOMNode &node = *(struQLretList->item(i));
+          cout << "Node[" << i << "] type: " << node.getNodeType();
+          cout << " name: " << to_char_ptr(node.getNodeName());
+          if(node.hasChildNodes())
+          {
+              // cout << " has child nodes " << endl;
+              DOMNode  *elem = node.getFirstChild();
+              if(elem == 0)
+                  cout << " cannot get first child" << endl;
+              else
+              {
+                  // cout << " element: "
+                  //     << to_char_ptr(elem->getNodeValue()) << endl;
+                  oqafma_relation[i] =
+                       strdup(to_char_ptr(elem->getNodeValue()));
+              }
+          }
+          else
+              cout << " has no child nodes" << endl;
+        } // end for (i = 0;i < num_struQLret; i++)
+      } // end else (num_struQLret != 0)
     } // end else (SOAP_OK)
     // catch(exception& e)
     // {
