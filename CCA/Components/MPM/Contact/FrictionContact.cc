@@ -67,7 +67,6 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   typedef IntVector IV;
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
-  Vector zero(0.0,0.0,0.0);
   Matrix3 Zero(0.0);
 
   int numMatls = d_sharedState->getNumMPMMatls();
@@ -111,7 +110,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 			       patch);
 	frictionWork[m].initialize(0.);
       }
-      gsurfnorm[m].initialize(zero);
+      gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
 
       IntVector low(patch->getInteriorNodeLowIndex());
       IntVector high(patch->getInteriorNodeHighIndex());
@@ -172,111 +171,143 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
       // Fix the normals on the surface nodes
       for(Patch::FaceType face = Patch::startFace;
-          face <= Patch::endFace; face=Patch::nextFace(face)){
+                  face <= Patch::endFace; face=Patch::nextFace(face)){
         Patch::BCType bc_type = patch->getBCType(face);
-
-        // Next the nodes which make up the problem domain
-        int I, J, K;
+                                                                                
         if (bc_type == Patch::None) {
-          switch(face) {
-          case Patch::xminus:
-            I=low.x(); 
-            for (int j = JLOW; j<JHIGH; j++) {
+          int i=0,j=0,k=0;
+          if(face==Patch::xplus || face==Patch::xminus){
+            int I=0;
+            if(face==Patch::xminus){ I=low.x(); }
+            if(face==Patch::xplus) { I=high.x()-1; }
+            // Faces
+            for (j = JLOW; j<JHIGH; j++) {
               int jp = j+1; int jm = j-1;
-              for (int k = KLOW; k<KHIGH; k++) {
+              for (k = KLOW; k<KHIGH; k++) {
                 surnor = Vector( 0.0,
-                  -(gmass[m][IV(I,jp,k)] - gmass[m][IV(I,jm,k)])/dx.y(),
-                  -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
+                       -(gmass[m][IV(I,jp,k)] - gmass[m][IV(I,jm,k)])/dx.y(),
+                       -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
+                double length = surnor.length();
+                if(length>0.0){
+                   gsurfnorm[m][IntVector(I,j,k)] = surnor/length;;
+                }
+              }
+            }
+            // Edges
+            if(patch->getBCType(Patch::yminus)==Patch::None){
+              j=JLOW-1;
+              for (k = KLOW; k<KHIGH; k++) {
+                surnor = Vector( 0.0,0.0,
+                     -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
                 double length = surnor.length();
                 if(length>0.0){
                   gsurfnorm[m][IntVector(I,j,k)] = surnor/length;;
                 }
               }
             }
-            break;
-          case Patch::xplus:
-            I=high.x()-1;
-            for (int j = JLOW; j<JHIGH; j++) {
-              int jp = j+1; int jm = j-1;
-              for (int k = KLOW; k<KHIGH; k++) {
-                surnor = Vector( 0.0,
-                  -(gmass[m][IV(I,jp,k)] - gmass[m][IV(I,jm,k)])/dx.y(),
-                  -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
+            if(patch->getBCType(Patch::yplus)==Patch::None){
+              j=JHIGH;
+              for (k = KLOW; k<KHIGH; k++) {
+                surnor = Vector( 0.0,0.0,
+                     -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
                 double length = surnor.length();
                 if(length>0.0){
                   gsurfnorm[m][IntVector(I,j,k)] = surnor/length;;
                 }
               }
             }
-            break;
-          case Patch::yminus:
-            J = low.y();
-            for (int i = ILOW; i<IHIGH; i++) {
-              int ip = i+1; int im = i-1;
-              for (int k = KLOW; k<KHIGH; k++) {
-                surnor = Vector(
-                  -(gmass[m][IV(ip,J,k)] - gmass[m][IV(im,J,k)])/dx.x(),
-                  0.0,
-                  -(gmass[m][IV(i,J,k+1)] - gmass[m][IV(i,J,k-1)])/dx.z());
-                double length = surnor.length();
-                if(length>0.0){
-                  gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
-                }
-              }
-            }
-            break;
-          case Patch::yplus:
-            J = high.y()-1;
-            for (int i = ILOW; i<IHIGH; i++) {
-              int ip = i+1; int im = i-1;
-              for (int k = KLOW; k<KHIGH; k++) {
-                surnor = Vector(
-                  -(gmass[m][IV(ip,J,k)] - gmass[m][IV(im,J,k)])/dx.x(),
-                  0.0,
-                  -(gmass[m][IV(i,J,k+1)] - gmass[m][IV(i,J,k-1)])/dx.z());
-                double length = surnor.length();
-                if(length>0.0){
-                  gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
-                }
-              }
-            }
-            break;
-          case Patch::zminus:
-            K = low.z();
-            for (int i = ILOW; i<IHIGH; i++) {
-              int ip = i+1; int im = i-1;
-              for (int j = JLOW; j<JHIGH; j++) {
-                surnor = Vector(
-                  -(gmass[m][IV(ip,j,K)] - gmass[m][IV(im,j,K)])/dx.x(),
-                  -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(), 
-                  0.0);
-                double length = surnor.length();
-                if(length>0.0){
-                  gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
-                }
-              }
-            }
-            break;
-          case Patch::zplus:
-            K = high.z()-1;
-            for (int i = ILOW; i<IHIGH; i++) {
-              int ip = i+1; int im = i-1;
-              for (int j = JLOW; j<JHIGH; j++) {
-                surnor = Vector(
-                  -(gmass[m][IV(ip,j,K)] - gmass[m][IV(im,j,K)])/dx.x(),
-                  -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(), 
-                  0.0);
-                double length = surnor.length();
-                if(length>0.0){
-                  gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
-                }
-              }
-            }
-            break;
-          default:
-            break;
           }
-        }
+
+          if(face==Patch::yplus || face==Patch::yminus){
+            int J=0;
+            if(face==Patch::yminus){ J=low.y(); }
+            if(face==Patch::yplus) { J=high.y()-1; }
+            // Faces
+            for (i = ILOW; i<IHIGH; i++) {
+              int ip = i+1; int im = i-1;
+              for (k = KLOW; k<KHIGH; k++) {
+                surnor = Vector(
+                       -(gmass[m][IV(ip,J,k)] - gmass[m][IV(im,J,k)])/dx.x(),
+                         0.0,
+                       -(gmass[m][IV(i,J,k+1)] - gmass[m][IV(i,J,k-1)])/dx.z());
+                double length = surnor.length();
+                if(length>0.0){
+                  gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
+                }
+              }
+            }
+            // Edges
+            if(patch->getBCType(Patch::zminus)==Patch::None){
+              k=KLOW-1;
+              for (i = ILOW; i<IHIGH; i++) {
+                surnor = Vector(
+                       -(gmass[m][IV(i+1,J,k)] - gmass[m][IV(i-1,J,k)])/dx.x(),
+                         0.0,0.0);
+                double length = surnor.length();
+                if(length>0.0){
+                  gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
+                }
+              }
+            }
+            if(patch->getBCType(Patch::zplus)==Patch::None){
+              k=KHIGH;
+              for (i = ILOW; i<IHIGH; i++) {
+                surnor = Vector(
+                       -(gmass[m][IV(i+1,J,k)] - gmass[m][IV(i-1,J,k)])/dx.x(),
+                         0.0,0.0);
+                double length = surnor.length();
+                if(length>0.0){
+                  gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
+                }
+              }
+            }
+          }
+
+          if(face==Patch::zplus || face==Patch::zminus){
+            int K=0;
+            if(face==Patch::zminus){ K=low.z(); }
+            if(face==Patch::zplus) { K=high.z()-1; }
+            // Faces
+            for (i = ILOW; i<IHIGH; i++) {
+              int ip = i+1; int im = i-1;
+              for (j = JLOW; j<JHIGH; j++) {
+                surnor = Vector(
+                       -(gmass[m][IV(ip,j,K)] - gmass[m][IV(ip,j,K)])/dx.x(),
+                       -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(),
+                       0.0);
+                double length = surnor.length();
+                if(length>0.0){
+                  gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
+                }
+              }
+            }
+            // Edges
+            if(patch->getBCType(Patch::xminus)==Patch::None){
+              i=ILOW-1;
+              for (j = JLOW; j<JHIGH; j++) {
+                surnor = Vector(0.0,
+                       -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(),
+                       0.0);
+                double length = surnor.length();
+                if(length>0.0){
+                  gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
+                }
+              }
+            }
+            if(patch->getBCType(Patch::xplus)==Patch::None){
+              i=IHIGH;
+              for (j = JLOW; j<JHIGH; j++) {
+                surnor = Vector(0.0,
+                       -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(),
+                       0.0);
+                double length = surnor.length();
+                if(length>0.0){
+                  gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
+                }
+              }
+            }
+          } // if zsomething
+        } // else if (bc_type == Patch::None) {
       }
 
       // Create arrays for the particle stress and grid stress
@@ -289,7 +320,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       old_dw->get(px,      lb->pXLabel,      pset);
       new_dw->allocateAndPut(gstress[m],      lb->gStressLabel,      dwi,patch);
       new_dw->allocateAndPut(gnormtraction[m],lb->gNormTractionLabel,dwi,patch);
-      gstress[m].initialize(Zero);
+      gstress[m].initialize(Matrix3(0.0));
       
       // Next, interpolate the stress to the grid
       constParticleVariable<Vector> psize;
