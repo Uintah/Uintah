@@ -67,7 +67,7 @@ SRCS := \
 	$(SRCDIR)/CastTVtoMLV.tcl \
 	$(SRCDIR)/CastMatrix.tcl \
 	$(SRCDIR)/ChangeCoordinates.tcl \
-	$(SRCDIR)/ChangeFieldDataAt.tcl \
+	$(SRCDIR)/ChangeFieldBasis.tcl \
 	$(SRCDIR)/ChangeFieldDataType.tcl \
 	$(SRCDIR)/ChangeFieldBounds.tcl \
 	$(SRCDIR)/ChooseColorMap.tcl \
