@@ -50,7 +50,7 @@ namespace SCIRun {
     DTPoint *sender;  //sender sp/ep   
     DTAddress fr_addr;  //filled by sender
     DTAddress to_addr;  //filled by recver
-
+    int tag; 
     ~DTMessage();
 
     void display();

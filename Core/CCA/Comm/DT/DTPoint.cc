@@ -48,9 +48,9 @@ DTPoint::~DTPoint(){
 }
 
 DTMessage *
-DTPoint::getMessage(){
+DTPoint::getMessage(int tag){
   sema->down();
-  return dt->getMessage(this);
+  return dt->getMessage(this, tag);
 }
 
 void 
