@@ -308,7 +308,8 @@ proc endPortConnection {portcolor} {
 	set owhich [lindex $potential_connection 1]
 	set imodid [lindex $potential_connection 2]
 	set iwhich [lindex $potential_connection 3]
-	set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
+	set 
+connid [netedit addconnection $omodid $owhich $imodid $iwhich]
 	buildConnection $connid $portcolor $omodid $owhich $imodid $iwhich
 	configureOPorts $omodid
 	configureIPorts $imodid
