@@ -17,6 +17,7 @@ SRCS     += \
 	$(SRCDIR)/MWViscoElastic.cc           	\
 	$(SRCDIR)/IdealGasMP.cc               	\
 	$(SRCDIR)/Membrane.cc 			\
+	$(SRCDIR)/ShellMaterial.cc 			\
 	$(SRCDIR)/DamageModel.cc \
 	$(SRCDIR)/DamageModelFactory.cc \
 	$(SRCDIR)/DefaultHypoElasticEOS.cc \
