@@ -94,7 +94,9 @@ public:
     void error(const clString&);
     void update_state(State);
     void update_progress(double);
+    void update_progress(double, Timer &);
     void update_progress(int, int);
+    void update_progress(int, int, Timer &);
     void want_to_execute();
 
     // User Interface information

@@ -75,9 +75,26 @@ void Module::update_progress(double p)
     }
 }
 
+void Module::update_progress(double p, Timer &t)
+{
+    int opp=(int)(progress*100);
+    int npp=(int)(p*100);
+    if(opp != npp){
+	double time=t.time();
+	TCL::execute(id+" set_progress "+to_string(p)+" "+to_string(time));
+	progress=p;
+    }
+}
+
 void Module::update_progress(int n, int max)
 {
     update_progress(double(n)/double(max));
+}
+
+void Module::update_progress(int n, int max, Timer &t)
+{
+    
+    update_progress(double(n)/double(max), t);
 }
 
 // Port stuff
