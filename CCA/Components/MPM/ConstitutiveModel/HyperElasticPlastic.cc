@@ -459,6 +459,40 @@ HyperElasticPlastic::addComputesAndRequires(Task* task,
   d_plasticity->addComputesAndRequires(task, matl, patch);
 }
 
+double 
+HyperElasticPlastic::computeRhoMicroCM(double pressure,
+                                       const double p_ref,
+				       const MPMMaterial* matl)
+{
+  double rho_orig = matl->getInitialDensity();
+  double bulk = d_initialData.Bulk;
+  
+  double p_gauge = pressure - p_ref;
+  double rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
+  return rho_cur;
+}
+
+void 
+HyperElasticPlastic::computePressEOSCM(double rho_cur,double& pressure,
+				       double p_ref,  
+				       double& dp_drho, double& C_0sq,
+				       const MPMMaterial* matl)
+{
+  double bulk = d_initialData.Bulk;
+  double rho_orig = matl->getInitialDensity();
+
+  double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
+  pressure = p_ref + p_g;
+  dp_drho = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
+  C_0sq = bulk/rho_cur;  // speed of sound squared
+}
+
+double 
+HyperElasticPlastic::getCompressibility()
+{
+  return 1.0/d_initialData.Bulk;
+}
+
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1209
 #endif

@@ -102,6 +102,9 @@ WARNING
 				     DataWarehouse* new_dw);
 
     // initialize  each particle's constitutive model data
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+				  std::vector<const VarLabel*>& to);
+
     virtual void initializeCMData(const Patch* patch,
 				  const MPMMaterial* matl,
 				  DataWarehouse* new_dw);
@@ -124,9 +127,6 @@ WARNING
 				   const MPMMaterial* matl);
 
     virtual double getCompressibility();
-
-    virtual void addParticleState(std::vector<const VarLabel*>& from,
-				  std::vector<const VarLabel*>& to);
 
     // class function to read correct number of parameters
     // from the input file
