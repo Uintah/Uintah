@@ -20,7 +20,7 @@ namespace SCICore {
 namespace Malloc {
 
 struct OSHunk {
-    static OSHunk* alloc(size_t size);
+    static OSHunk* alloc(size_t size, bool returnable);
     static void free(OSHunk*);
     void* data;
     OSHunk* next;
@@ -29,6 +29,7 @@ struct OSHunk {
     size_t spaceleft;
     void* curr;
     size_t len;
+    bool returnable;
 };
 
 } // End namespace Malloc
@@ -36,6 +37,10 @@ struct OSHunk {
 
 //
 // $Log$
+// Revision 1.2  2000/07/27 07:41:48  sparker
+// Distinguish between "returnable" chunks and non-returnable chucks of memory
+// Make malloc get along with SGI's MPI
+//
 // Revision 1.1  1999/07/27 16:56:58  mcq
 // Initial commit
 //

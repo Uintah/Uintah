@@ -35,39 +35,52 @@ namespace Malloc {
 static int devzero_fd=-1;
 
 
-OSHunk* OSHunk::alloc(size_t size)
+OSHunk* OSHunk::alloc(size_t size, bool returnable)
 {
     size_t asize=size+sizeof(OSHunk);
-    if(devzero_fd == -1){
-	devzero_fd=open("/dev/zero", O_RDWR);
-	if(devzero_fd == -1){
-	    fprintf(stderr, "Error opening /dev/zero: errno=%d\n", errno);
-	    abort();
-	}
-    }
+    void* ptr;
+    if(returnable){
+       if(devzero_fd == -1){
+	  devzero_fd=open("/dev/zero", O_RDWR);
+	  if(devzero_fd == -1){
+	     fprintf(stderr, "Error opening /dev/zero: errno=%d\n", errno);
+	     abort();
+	  }
+       }
 #ifdef SCI_64BIT
-    void* ptr=mmap64(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE, devzero_fd, 0);
+       ptr=mmap64(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
+		  devzero_fd, 0);
 #else
-    void* ptr=mmap(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE, devzero_fd, 0);
+       ptr=mmap(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
+		devzero_fd, 0);
 #endif
+    } else {
+       ptr = sbrk((long)asize);
+    }
+
+    OSHunk* hunk=(OSHunk*)ptr;
     if((long)ptr == -1){
 #ifdef SCI_64BIT
-	fprintf(stderr, "Error allocating memory (%ld bytes requested)\nmmap: errno=%d\n", asize, errno);
+       fprintf(stderr, "Error allocating memory (%ld bytes requested)\nmmap: errno=%d\n", asize, errno);
 #else
-	fprintf(stderr, "Error allocating memory (%d bytes requested)\nmmap: errno=%d\n", asize, errno);
+       fprintf(stderr, "Error allocating memory (%d bytes requested)\nmmap: errno=%d\n", asize, errno);
 #endif
-	abort();
+       abort();
     }
-    OSHunk* hunk=(OSHunk*)ptr;
     hunk->data=(void*)(hunk+1);
     hunk->next=0;
     hunk->ninuse=0;
     hunk->len=size;
+    hunk->returnable=returnable;
     return hunk;
 }
 
 void OSHunk::free(OSHunk* hunk)
 {
+   if(!hunk->returnable){
+      fprintf(stderr, "Attempt to return a non-returnable memory hunk!\n");
+      abort();
+   }
     size_t len=hunk->len;
     if(munmap((MMAP_TYPE*)hunk, len) == -1){
 	int i;
@@ -91,6 +104,10 @@ void OSHunk::free(OSHunk* hunk)
 
 //
 // $Log$
+// Revision 1.6  2000/07/27 07:41:48  sparker
+// Distinguish between "returnable" chunks and non-returnable chucks of memory
+// Make malloc get along with SGI's MPI
+//
 // Revision 1.5  1999/08/23 06:30:37  sparker
 // Linux port
 // Added X11 configuration options
