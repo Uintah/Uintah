@@ -554,7 +554,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 
   sched->addTask(tsk, d_perproc_patches, matls);
 
-  const Patch* d_pressRefPatch = level->selectPatch(d_pressRef);
+  const Patch* d_pressRefPatch = level->selectPatchForCellIndex(d_pressRef);
   if(!d_pressRefPatch){
 
     for(Level::const_patchIterator iter=level->patchesBegin();
