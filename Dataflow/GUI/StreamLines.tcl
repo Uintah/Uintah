@@ -62,12 +62,12 @@ itcl_class SCIRun_Visualization_StreamLines {
 	frame $w.direction
 
 	label $w.direction.label -text "Direction"
-	radiobutton $w.direction.neg -text "Negitive" -variable $this-direction \
-		-value 0
-	radiobutton $w.direction.both -text "Both" -variable $this-direction \
-		-value 1
-	radiobutton $w.direction.pos -text "Positive" -variable $this-direction \
-		-value 2
+	radiobutton $w.direction.neg -text "Negative" \
+	    -variable $this-direction -value 0
+	radiobutton $w.direction.both -text "Both" \
+	    -variable $this-direction -value 1
+	radiobutton $w.direction.pos -text "Positive" \
+	    -variable $this-direction -value 2
 
 	frame $w.color
 
