@@ -111,8 +111,7 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	frame $w.f -relief flat
  	pack $w.f -side top -expand yes -fill both
 
-	button $w.b -text "Close" -command "wm withdraw $w"
-	pack $w.b -side top -fill x -padx 2 -pady 2
+        makeSciButtonPanel $w $w $this
 
 	makeFrames $w.f
     }
