@@ -78,6 +78,10 @@ WARNING
     void getSpatialRange(BBox& b) const;
     
     //////////
+    // Computes the length of the grid
+    void getLength(Vector& length, const string flag = "plusExtraCells") const;
+    
+    //////////
     // Problem setup functions called from simulation controller
     void problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg); 
     void problemSetupAMR(const ProblemSpecP& params, const ProcessorGroup *pg);
