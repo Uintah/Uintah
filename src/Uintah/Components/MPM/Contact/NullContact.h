@@ -3,11 +3,17 @@
 #ifndef __NULL_CONTACT_H__
 #define __NULL_CONTACT_H__
 
-#include "Contact.h"
+#include <Uintah/Components/MPM/Contact/Contact.h>
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Parallel/UintahParallelComponent.h>
+#include <Uintah/Interface/MPMInterface.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/LevelP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SimulationStateP.h>
+
 
 namespace Uintah {
   namespace MPM {
@@ -48,6 +54,8 @@ WARNING
       // copy constructor
       NullContact(const NullContact &con);
       NullContact& operator=(const NullContact &con);
+
+      SimulationStateP d_sharedState;
       
     public:
       // Constructor
@@ -72,12 +80,30 @@ WARNING
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw);
       
+      virtual void addComputesAndRequiresInterpolated(Task* task,
+                                             const MPMMaterial* matl,
+                                             const Region* region,
+                                             DataWarehouseP& old_dw,
+                                             DataWarehouseP& new_dw) const;
+
+      virtual void addComputesAndRequiresIntegrated(Task* task,
+                                             const MPMMaterial* matl,
+                                             const Region* region,
+                                             DataWarehouseP& old_dw,
+                                             DataWarehouseP& new_dw) const;
+
     };
     
   } // end namespace MPM
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.8  2000/05/25 23:05:10  guilkey
+// Created addComputesAndRequiresInterpolated and addComputesAndRequiresIntegrated
+// for each of the three derived Contact classes.  Also, got the NullContact
+// class working.  It doesn't do anything besides carry forward the data
+// into the "MomExed" variable labels.
+//
 // Revision 1.7  2000/05/11 20:10:17  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

@@ -23,8 +23,10 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SimulationStateP.h>
 #include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Grid/Task.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Uintah/Grid/VarTypes.h>
+#include <Uintah/Grid/VarLabel.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -171,7 +173,47 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
   }
 }
 
+void SingleVelContact::addComputesAndRequiresInterpolated( Task* t,
+                                             const MPMMaterial* matl,
+                                             const Region* region,
+                                             DataWarehouseP& old_dw,
+                                             DataWarehouseP& new_dw) const
+{
+
+  int idx = matl->getDWIndex();
+  t->requires( new_dw, gMassLabel, idx, region, Ghost::None);
+  t->requires( new_dw, gVelocityLabel, idx, region, Ghost::None);
+
+  t->computes( new_dw, gMomExedVelocityLabel, idx, region );
+
+
+}
+
+void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
+                                             const MPMMaterial* matl,
+                                             const Region* region,
+                                             DataWarehouseP& old_dw,
+                                             DataWarehouseP& new_dw) const
+{
+
+  int idx = matl->getDWIndex();
+  t->requires(new_dw, gMassLabel, idx, region, Ghost::None);
+  t->requires(new_dw, gVelocityStarLabel, idx, region, Ghost::None);
+  t->requires(new_dw, gAccelerationLabel, idx, region, Ghost::None);
+
+  t->computes( new_dw, gMomExedVelocityStarLabel, idx, region);
+  t->computes( new_dw, gMomExedAccelerationLabel, idx, region);
+
+
+}
+
 // $Log$
+// Revision 1.17  2000/05/25 23:05:10  guilkey
+// Created addComputesAndRequiresInterpolated and addComputesAndRequiresIntegrated
+// for each of the three derived Contact classes.  Also, got the NullContact
+// class working.  It doesn't do anything besides carry forward the data
+// into the "MomExed" variable labels.
+//
 // Revision 1.16  2000/05/11 20:10:17  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //
