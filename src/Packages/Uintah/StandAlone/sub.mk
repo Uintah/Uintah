@@ -51,6 +51,7 @@ else
         Packages/Uintah/CCA/Components/MPM \
         Packages/Uintah/CCA/Components/MPMICE \
         Packages/Uintah/CCA/Components/DataArchiver \
+        Packages/Uintah/CCA/Components/Regridder \
         Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Schedulers \

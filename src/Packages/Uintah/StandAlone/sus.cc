@@ -51,6 +51,7 @@
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
+#include <Packages/Uintah/CCA/Components/Regridder/HierarchicalRegridder.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
@@ -420,8 +421,14 @@ main( int argc, char** argv )
 
 	const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 	SimulationController* ctl;
-	if(do_AMR)
+        Regridder* regridder = NULL;
+        if(do_AMR) {
 	   ctl = scinew AMRSimulationController(world);
+
+           // if we ever decide to allow multiple algorithms, switch on them here
+           HierarchicalRegridder* regridder = scinew HierarchicalRegridder(world);
+           ctl->attachPort("regridder", regridder);
+        }
         else
 	   ctl = scinew SimpleSimulationController(world);
 
@@ -588,6 +595,7 @@ main( int argc, char** argv )
 	   bal = 0;
 	   quit( "Unknown load balancer: " + loadbalancer );
 	}
+  lb = bal;
 
 	// Output
         DataArchiver* dataarchiver = scinew DataArchiver(world);
@@ -629,6 +637,7 @@ main( int argc, char** argv )
 	  MixedScheduler* sched =
 	    scinew MixedScheduler(world, output);
 	  ctl->attachPort("scheduler", sched);
+    lb->attachPort("scheduler", sch);
 	  sched->attachPort("load balancer", bal);
 	  sch=sched;
 	} else if(scheduler == "NullScheduler"){

@@ -17,6 +17,7 @@ PSELIBS := \
 	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/CCA/Components/PatchCombiner   \
+	Packages/Uintah/CCA/Components/Regridder   \
 	Core/OS       \
 	Core/Geometry \
 	Core/Thread   \
