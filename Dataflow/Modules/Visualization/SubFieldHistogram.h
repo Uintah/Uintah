@@ -88,8 +88,8 @@ SubFieldHistogram::setval(double val)
 template <class F1, class F2>
 bool SubFieldHistogram::fill_histogram(F1* f1, F2* f2)
 {
-  ASSERT( f1->data_at() == F1::CELL ||
-	  f1->data_at() == F1::NODE );
+  ASSERT( f1->basis_order() == 0 ||
+	  f1->basis_order() == 1 );
   
 
   typename F1::mesh_handle_type s1mh =
@@ -98,7 +98,7 @@ bool SubFieldHistogram::fill_histogram(F1* f1, F2* f2)
     f2->get_typed_mesh();
 
   min_i = max_i = 0;
-  if( f1->data_at() == F1::CELL){
+  if( f1->basis_order() == 0 ){
     typename F1::mesh_type::Cell::iterator v_it; s1mh->begin(v_it);
     typename F1::mesh_type::Cell::iterator v_end; s1mh->end(v_end);
     typename F2::mesh_type::Cell::iterator s_it; s2mh->begin(s_it);
