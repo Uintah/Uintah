@@ -20,6 +20,8 @@
 # Update, build, and deliver scirun docs.
 #
 
+require 'net/smtp'
+
 class Log
   def initialize(obj=nil)
     @log = nil
@@ -181,6 +183,10 @@ class Configuration < ConfHash
   PwdOnly = "pwdOnly"
   Clean = "clean"
   DB_DTD = "dbdtd"
+  SendMailOnError = "sendMailOnError"
+  SMTPServer = "smtpServer"
+  FromAddr = "fromAddr"
+  ToAddr = "toAddr"
 
   def Configuration.new(file)
     eval("Configuration[#{File.new(file, 'r').read}]").init()
@@ -207,6 +213,8 @@ class Configuration < ConfHash
     self[LogFile] = $stderr if missing?(LogFile)
     self[Clean] = false if missing?(Clean)
     self[DB_DTD] = "/usr/local/share/sgml/dtd/docbook/4.1/docbook.dtd" if missing?(DB_DTD)
+    self[SendMailOnError] = false if missing?(SendMailOnError)
+    
     $log = Log.new(self[LogFile])
     validate()
 
@@ -280,6 +288,14 @@ class Configuration < ConfHash
     errorIfNotBoolean(Update)
     errorIfNotBoolean(Clean)
     errorIfNotString(DB_DTD)
+    if self[SendMailOnError] == true
+      errorIfMissing(SMTPServer)
+      errorIfNotString(SMTPServer)
+      errorIfMissing(ToAddr)
+      errorIfNotString(ToAddr)
+      self[FromAddr] = self[ToAddr] if missing?(self[FromAddr])
+      errorIfNotString(FromAddr)
+    end
   end
 
   def initializeGroupsDB()
@@ -317,8 +333,16 @@ class Docs
   end
 
   def publish()
-    build() if @conf[Configuration::Build] == true
-    deliver() if @conf[Configuration::Deliver] == true
+    begin
+      tbeg = Time.now
+      build() if @conf[Configuration::Build] == true
+      deliver() if @conf[Configuration::Deliver] == true
+      tend = Time.now
+      $log.write("Elapsed time: ", tend - tbeg, "\n")
+    rescue
+      $log.write($!, "\n")
+      sendMail($!) if @conf[Configuration::SendMailOnError] == true
+    end
   end
 
   def build()
@@ -380,6 +404,7 @@ docs.  Waiting...") )
   end
 
   def deliver()
+    raise "No tarball to deliver" if !FileTest::exists?(tarball)
     pwd = Dir.pwd
     Dir.chdir(@conf[Configuration::BuildDir])
     @conf[Configuration::Dests].each do |d|
@@ -390,7 +415,7 @@ docs.  Waiting...") )
 
   # FIXME: Need some file locking on the destination side!
   def deliverOne(dest)
-    installScript = <<END_OF_SCRIPT
+    installScript = <<INSTALL_SCRIPT
 (cd #{dest[Dest::Dir]}
 if #{dest[Dest::Tar]} zxf #{@conf[Configuration::Tree]}.tar.gz;
 then 
@@ -431,7 +456,7 @@ else
   exit 1 
 fi 
 ) #{@redirect}
-END_OF_SCRIPT
+INSTALL_SCRIPT
 
     $log.write("Delivering to ", dest[Dest::Mach], "\n")
     tarball = @treeRoot + "/doc/" + @conf[Configuration::Tree] + ".tar.gz"
@@ -442,7 +467,7 @@ END_OF_SCRIPT
       $log.write(`scp -p -q #{tarball} #{dest[Dest::User]}@#{dest[Dest::Mach]}:#{dest[Dest::Dir]} #{@redirect}`)
     end
     if $? != 0
-      $log.write("Transfer failed. Giving up.\n")
+      raise("Failed to transfer tarball.")
     else
       $log.write("Installing...\n")
       if dest[Dest::Mach] == "."
@@ -453,7 +478,7 @@ END_OF_SCRIPT
       if $? == 0
 	$log.write("Finished this delivery.\n")
       else
-	$log.write("Installation Failed\n")
+	raise("Failed to install tarball.")
       end 
     end
   end
@@ -491,20 +516,22 @@ END_OF_SCRIPT
     $log.write("Done making docs\n")
   end
 
-  private :updateOne, :update, :make, :deliverOne
+  def sendMail(body)
+    from_line = "From: publish.rb\n"
+    subject_line = "Subject: Fatal Error\n"
+    msg = [ from_line, subject_line, "\n", body ]
+    Net::SMTP.start(@conf[Configuration::SMTPServer]) do |smtp|
+      smtp.send_mail(msg, @conf[Configuration::FromAddr], @conf[Configuration::ToAddr]);
+    end
+  end
+
+  private :sendMail, :updateOne, :update, :make, :deliverOne
 
 end
 
 def main
-  begin
-    tbeg = Time.now
-    docs = Docs.new
-    docs.publish()
-    tend = Time.now
-    $log.write("Elapsed time: ", tend - tbeg, "\n")
-  rescue
-    $log.write($!, "\n")
-  end
+  docs = Docs.new
+  docs.publish
 end
 
 main
