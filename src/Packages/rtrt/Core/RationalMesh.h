@@ -17,8 +17,6 @@
 
 namespace rtrt {
 
-  using namespace SCIRun;
-  
 class RationalMesh {
 public:
     RationalMesh (int, int);

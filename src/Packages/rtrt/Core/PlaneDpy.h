@@ -3,13 +3,16 @@
 #define PLANEDPY_H 1
 
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
 #include <Core/Thread/Runnable.h>
 #include <X11/Xlib.h>
 
 namespace rtrt {
 
-  using namespace SCIRun;
-  
+using SCIRun::Vector;
+using SCIRun::Point;
+using SCIRun::Runnable;
+
 class PlaneDpy : public Runnable {
     int xres, yres;
     void move(int x, int y);

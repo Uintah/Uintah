@@ -8,7 +8,6 @@
 namespace rtrt {
 
 class PlaneDpy;
-  using namespace SCIRun;
   
 class CutPlane : public Object {
     Object* child;

@@ -83,7 +83,7 @@
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/Worker.h>
-#include <Packages/rtrt/Core/MiscMath.h>
+#include <Core/Math/MiscMath.h>
 #include <Packages/rtrt/Core/MusilRNG.h>
 #include <Packages/rtrt/Core/Scene.h>
 

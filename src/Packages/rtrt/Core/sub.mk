@@ -101,7 +101,9 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/TexturedTri.cc \
 	$(SRCDIR)/TimeCycleMaterial.cc \
 	$(SRCDIR)/pcube.c \
-	$(SRCDIR)/fpcube.c
+	$(SRCDIR)/fpcube.c \
+	$(SRCDIR)/templates.cc \
+	$(SRCDIR)/BrickArray2.cc
 
 PSELIBS :=  \
 	Core/Thread Core/Exceptions Core/Geometry Packages/rtrt/visinfo 

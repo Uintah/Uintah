@@ -4,11 +4,25 @@
 
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/pcube.h>
 
 namespace rtrt {
 
 struct GridTree;
 struct BoundedObject;
+
+extern "C" {
+extern int	
+fast_polygon_intersects_cube(int nverts, const real verts[][3],
+			     const real polynormal[3],
+			     int already_know_verts_are_outside_cube,
+			     int already_know_edges_are_outside_cube);
+extern int
+polygon_intersects_cube(int nverts, const real verts[/* nverts */][3],
+                        const real polynormal[3],
+                        int already_know_vertices_are_outside_cube, /*unused*/
+                        int already_know_edges_are_outside_cube);
+}	
 
 class Grid : public Object {
 

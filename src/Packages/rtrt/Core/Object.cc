@@ -13,7 +13,7 @@ using namespace SCIRun;
 static UVPlane default_mapping(Point(0,0,0), Vector(1,0,0), Vector(0,1,0));
 
 Object::Object(Material* matl, UVMapping* uv)
-    : matl(matl), uv(uv)
+  : matl(matl), uv(uv), was_processed( false )
 {
     if(!uv)
 	this->uv=&default_mapping;

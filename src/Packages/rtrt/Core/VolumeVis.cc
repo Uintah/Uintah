@@ -7,7 +7,7 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Stats.h>
-#include <Packages/rtrt/Core/MiscMath.h>
+#include <Core/Math/MiscMath.h>
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Context.h>

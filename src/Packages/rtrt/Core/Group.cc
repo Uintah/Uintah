@@ -130,7 +130,7 @@ void Group::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 }
 
 
-void Group::compute_bounds(BBox& bb, double offset)
+void Group::compute_bounds(BBox& bb, double /*offset*/)
 {
   bb.extend(bbox);
 }

@@ -6,6 +6,7 @@
 #include <Packages/rtrt/Core/HitInfo.h>
 
 using namespace rtrt;
+using namespace SCIRun;
 
 Checker::Checker(Material* matl0, Material* matl1,
 		 const Vector& u, const Vector& v)

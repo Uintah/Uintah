@@ -16,7 +16,7 @@
 #include <Packages/rtrt/Core/SunSky.h>
 #endif
 
-#include <Packages/rtrt/Core/MiscMath.h>
+#include <Core/Math/MiscMath.h>
 
 using namespace rtrt;
 
@@ -101,14 +101,14 @@ SunSky::GetSunSolidAngle( void ) const
 
 
 //// Copy Constructor
-SunSky::SunSky( const SunSky &s )
+SunSky::SunSky( const SunSky & /*s*/ )
 {
     // NOT IMPLEMENTED YET
 }
 
 //// Assignment
 SunSky& 
-SunSky::operator=( const SunSky& s )
+SunSky::operator=( const SunSky& /*s*/ )
 {
     // NOT IMPLEMENTED YET
     return( *this );

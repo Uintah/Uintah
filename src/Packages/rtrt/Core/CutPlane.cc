@@ -4,12 +4,13 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/BBox.h>
-#include <Packages/rtrt/Core/MiscMath.h>
+#include <Core/Math/MiscMath.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/PlaneDpy.h>
 #include <iostream>
 
 using namespace rtrt;
+using namespace SCIRun;
 
 CutPlane::CutPlane(Object* child, const Point& cen, const Vector& n)
     : Object(0), child(child), cen(cen), n(n), dpy(0)

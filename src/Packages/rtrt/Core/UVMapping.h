@@ -8,8 +8,8 @@ namespace SCIRun {
 
 namespace rtrt {
 
-  using namespace SCIRun;
-  
+using SCIRun::Point;
+
 class HitInfo;
 class UV;
 

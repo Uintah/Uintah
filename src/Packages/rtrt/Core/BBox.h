@@ -4,11 +4,16 @@
 
 #include <Packages/rtrt/Core/Ray.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Math/MiscMath.h>
 
 namespace rtrt {
 
-  using namespace SCIRun;
-  
+using SCIRun::Transform;
+using SCIRun::Point;
+using SCIRun::Min;
+using SCIRun::Max;
+
 class BBox {
 protected:
     Point cmin;
@@ -86,6 +91,31 @@ public:
     inline Vector diagonal() const {
 	return cmax-cmin;
     }
+    inline BBox transform(Transform* t) const
+      {
+	BBox tbbox;
+	
+	tbbox.cmin = t->project(cmin);
+	tbbox.cmax = t->project(cmax);
+	
+	tbbox.have_some = have_some;
+	
+	return tbbox;
+      }
+    
+    inline void transform(Transform* t, BBox& tbbox) const
+      {
+	t->project(cmin,tbbox.cmin);
+	t->project(cmax,tbbox.cmax);
+	
+	tbbox.have_some = have_some;
+      }
+    inline void transform_inplace(Transform* t)
+      {
+	t->project_inplace(cmin);
+	t->project_inplace(cmax);
+      }
+    
 };
 
 } // end namespace rtrt

@@ -3,13 +3,15 @@
 #define LIGHT_H 1
 
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array1.h>
 
 namespace rtrt {
 
-  using namespace SCIRun;
-  
+using SCIRun::Vector;
+using SCIRun::Point;
+
 class Light {
 protected:
     Point pos;

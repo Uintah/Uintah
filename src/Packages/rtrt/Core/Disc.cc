@@ -4,11 +4,12 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/BBox.h>
-#include <Packages/rtrt/Core/MiscMath.h>
+#include <Core/Math/MiscMath.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/UV.h>
 
 using namespace rtrt;
+using namespace SCIRun;
 
 Disc::Disc(Material* matl, const Point& cen, const Vector& n,
 	   double radius)

@@ -14,9 +14,9 @@ namespace SCIRun {
 
 namespace rtrt {
 
-using namespace SCIRun;
-using namespace std;
-  
+using SCIRun::Vector;
+using SCIRun::Point;
+
 struct DepthStats;
 
 class  HitInfo;
@@ -25,7 +25,7 @@ class  Ray;
 class  Light;
 class  BBox;
 class  PerProcessorContext;
-class UVMapping;
+class  UVMapping;
 
 template<class T> class Array1;
 
@@ -33,6 +33,8 @@ class Object {
     Material* matl;
     UVMapping* uv;
 public:
+    bool was_processed;
+
     Object(Material* matl, UVMapping* uv=0);
     inline Material* get_matl() const {
 	return matl;

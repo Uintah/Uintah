@@ -25,6 +25,8 @@ class Array2 {
   void allocate();
   Array2<T>& operator=(const Array2&);
 public:
+  typedef T data_type;
+
   Array2();
   Array2(int, int);
   ~Array2();

@@ -10,7 +10,6 @@
 namespace rtrt {
 
 class Group : public Object {
-protected:
 public:
     BBox bbox;
     bool all_children_are_groups;

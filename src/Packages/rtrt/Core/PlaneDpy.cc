@@ -1,7 +1,7 @@
 
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/PlaneDpy.h>
-#include <Packages/rtrt/Core/MinMax.h>
+#include <Core/Math/MinMax.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 #include <GL/glx.h>

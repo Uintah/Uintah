@@ -10,7 +10,7 @@ namespace SCIRun {
 
 namespace rtrt {
 
-  using namespace SCIRun;
+using SCIRun::Point;
 
 class Turbulence {
 	Noise noise;

@@ -11,8 +11,6 @@
 
 namespace rtrt {
 
-  using namespace SCIRun;
-  
 class CrowMarble : public Material {
     double scale;
     Color c1, c2, c3;

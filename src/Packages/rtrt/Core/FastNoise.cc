@@ -2,10 +2,11 @@
 #include <Packages/rtrt/Core/FastNoise.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Packages/rtrt/Core/MiscMath.h>
+#include <Core/Math/MiscMath.h>
 #include <Packages/rtrt/Core/MusilRNG.h>
 
 using namespace rtrt;
+using namespace SCIRun;
 
 FastNoise::FastNoise(int seed, int tablesize)
     : Noise(seed, tablesize)

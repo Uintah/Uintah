@@ -4,11 +4,14 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Transform.h>
 
 namespace rtrt {
 
-  using namespace SCIRun;
-  
+using SCIRun::Vector;
+using SCIRun::Point;
+using SCIRun::Transform;
+
 class Ray {
     Point  _origin;
     Vector _direction;
@@ -32,6 +35,28 @@ public:
     inline void set_direction(const Vector& v) {
 	_direction = v;
     }
+
+    inline Ray transform(Transform *t) const
+        {
+            Ray tray;
+            
+            t->unproject(_origin,tray._origin);
+            t->unproject(_direction,tray._direction);
+
+            return tray;
+
+        }
+    inline void transform(Transform *t, Ray& tray) const
+        {
+            t->unproject(_origin,tray._origin);
+            t->unproject(_direction,tray._direction);
+        }
+
+    inline void transform_inplace(Transform *t)
+        {
+            t->unproject_inplace(_origin);
+            t->unproject_inplace(_direction);
+        }
 };
 
 } // end namespace rtrt

@@ -43,6 +43,27 @@ ImageMaterial::~ImageMaterial()
 {
 }
 
+Color interp_color(Array2<Color>& image,
+				  double u, double v)
+{
+    u *= (image.dim1()-1);
+    v *= (image.dim2()-1);
+    
+    int iu = (int)u;
+    int iv = (int)v;
+
+    double tu = u-iu;
+    double tv = v-iv;
+
+    Color c = image(iu,iv)*(1-tu)*(1-tv)+
+	image(iu+1,iv)*tu*(1-tv)+
+	image(iu,iv+1)*(1-tu)*tv+
+	image(iu+1,iv+1)*tu*tv;
+
+    return c;
+    
+}
+
 void ImageMaterial::shade(Color& result, const Ray& ray,
 			  const HitInfo& hit, int depth, 
 			  double atten, const Color& accumcolor,
@@ -96,6 +117,12 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 	    v=0;
     };
     {
+#if 1
+      if (flip_)
+	diffuse = interp_color(image,u,1-v);
+      else
+	diffuse = interp_color(image,u,v);
+#else
 	u*=image.dim1();
 	v*=image.dim2();
 	int iu=(int)u;
@@ -103,6 +130,7 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
         if (flip_)
           iv = image.dim2()-iv;
 	diffuse=image(iu, iv);
+#endif
     }
 skip:
     phongshade(result, ambient, diffuse, specular, specpow, refl,

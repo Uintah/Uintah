@@ -11,8 +11,9 @@ namespace SCIRun {
 
 namespace rtrt {
 
-  using namespace SCIRun;
-  
+using SCIRun::Vector;
+using SCIRun::Point;
+
 struct Context;
 class HitInfo;
 class Scene;

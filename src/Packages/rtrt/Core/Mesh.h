@@ -14,6 +14,11 @@
 
 namespace rtrt {
 
+using SCIRun::Vector;
+using SCIRun::Point;
+using SCIRun::Dot;
+using SCIRun::Cross;
+
 class Mesh {
 public:
     Mesh (int, int);
@@ -157,7 +162,7 @@ public:
 
     Eval(u,v,S,Su,Sv,ppc);
 
-    Vector N(SCIRun::Cross(Su, Sv));
+    Vector N(Cross(Su, Sv));
     
     N.normalize();
     
@@ -207,7 +212,7 @@ public:
         else
             p1 = Vector(0,rdz,-rdy);
 
-        p2 = SCIRun::Cross(p1, rdir);
+        p2 = Cross(p1, rdir);
 
         // Each plane contains the ray origin
         p1d = -Dot(p1, ro);

@@ -21,7 +21,7 @@
 
 namespace rtrt {
 
-  using namespace SCIRun;
+using SCIRun::Vector;
 
 class SunSky
 {

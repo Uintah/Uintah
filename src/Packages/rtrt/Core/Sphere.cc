@@ -9,6 +9,7 @@
 #include <iostream>
 
 using namespace rtrt;
+using namespace SCIRun;
 
 #if 0
 static TrivialAllocator Sphere_alloc(sizeof(Sphere));

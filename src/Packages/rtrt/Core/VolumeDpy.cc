@@ -2,7 +2,7 @@
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/VolumeDpy.h>
 #include <Packages/rtrt/Core/VolumeBase.h>
-#include <Packages/rtrt/Core/MinMax.h>
+#include <Core/Math/MinMax.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 #include <GL/glx.h>
@@ -16,8 +16,7 @@
 #include "FontString.h"
 
 using namespace rtrt;
-using SCIRun::Mutex;
-using SCIRun::Thread;
+using namespace SCIRun;
 
 namespace rtrt {
   extern Mutex xlock;

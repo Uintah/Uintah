@@ -3,14 +3,13 @@
 #define Math_Noise_h 1
 
 namespace SCIRun {
-  class Point;
   class Vector;
 }
   
 namespace rtrt {
 
-  using namespace SCIRun;
-  
+using SCIRun::Vector;
+
 class Noise {
 protected:
     int tablesize;
