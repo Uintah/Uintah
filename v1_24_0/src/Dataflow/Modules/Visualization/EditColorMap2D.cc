@@ -249,6 +249,7 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     end_marker_(0),
     value_range_(0.0, -1.0)
 {
+  setStackSize(1024*512);
   pan_x_.set(0.0);
   pan_y_.set(0.0);
   scale_.set(1.0);
