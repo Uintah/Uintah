@@ -9,17 +9,7 @@
 #include <vector>
 #include <map>
 
-#ifdef __sgi
-#define IRIX
-#pragma set woff 1375
-#endif
-#include <util/PlatformUtils.hpp>
-#include <parsers/DOMParser.hpp>
-#include <dom/DOM_Node.hpp>
-#include <dom/DOM_NamedNodeMap.hpp>
-#ifdef __sgi
-#pragma reset woff 1375
-#endif
+class DOM_Node;
 
 namespace SCIRun {
   class IntVector;
@@ -68,7 +58,7 @@ WARNING
   
 ****************************************/
 
-   
+  
    class ProblemSpec : public RefCounted {
    public:
       ProblemSpec(const DOM_Node& node, bool doWrite=true);
@@ -100,12 +90,9 @@ WARNING
       ProblemSpecP get(const std::string& name, int& value);
       ProblemSpecP get(const std::string& name, bool& value);
       ProblemSpecP get(const std::string& name, std::string& value);
-      ProblemSpecP get(const std::string& name, 
-		       IntVector& value);
-      ProblemSpecP get(const std::string& name, 
-		       Vector& value);
-      ProblemSpecP get(const std::string& name, 
-		       Point& value);
+      ProblemSpecP get(const std::string& name, IntVector& value);
+      ProblemSpecP get(const std::string& name, Vector& value);
+      ProblemSpecP get(const std::string& name, Point& value);
       ProblemSpecP get(const std::string& name, vector<double>& value);
 
       void getAttributes(std::map<std::string,std::string>& value);
@@ -113,7 +100,7 @@ WARNING
 
       static const TypeDescription* getTypeDescription();
       
-      DOM_Node getNode() const {
+      DOM_Node* getNode() const {
 	 return d_node;
       }
 
@@ -127,7 +114,7 @@ WARNING
       ProblemSpec(const ProblemSpec&);
       ProblemSpec& operator=(const ProblemSpec&);
       
-      DOM_Node d_node;
+      DOM_Node* d_node;
       bool d_write;
    };
    
