@@ -20,6 +20,7 @@
 #include <Core/Util/RWS.h>
 #include <iostream>
 #include <Core/Util/scirun_env.h>
+#include <Core/Util/MacroSubstitute.h>
 
 namespace SCIRun {
 
@@ -41,7 +42,8 @@ bool RCParse(const char* rcfile, env_map& env)
       if (var[0]!='\0' && var_val[0]!='\0') {
 	removeLTWhiteSpace(var);
 	removeLTWhiteSpace(var_val);
-	env.insert(env_entry(string(var),string(var_val)));
+	env.insert(env_entry(string(var),
+			     string(MacroSubstitute(var_val,env))));
 	std::cerr << "inserted : ]" << var << "=" << var_val
 		  << "[" << std::endl;
       }
