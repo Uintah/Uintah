@@ -40,6 +40,7 @@ SRCS     += \
 	$(SRCDIR)/IsoSurfaceMRSG.cc\
 	$(SRCDIR)/IsoSurfaceSP.cc\
 	$(SRCDIR)/IsoSurfaceSAGE.cc\
+	$(SRCDIR)/IsoSurfaceNOISE.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
 	$(SRCDIR)/SimpVolVis.cc\
 	$(SRCDIR)/Streamline.cc\
@@ -49,10 +50,11 @@ SRCS     += \
 	$(SRCDIR)/WidgetTest.cc\
 	$(SRCDIR)/FastRender.c\
 	$(SRCDIR)/HedgehogLitLines.cc\
-	$(SRCDIR)/Span.cc\
-	$(SRCDIR)/Noise.cc\
-	$(SRCDIR)/NoiseMCube.cc\
 #[INSERT NEW MODULE HERE]
+
+#	$(SRCDIR)/Span.cc\
+#	$(SRCDIR)/Noise.cc\
+#	$(SRCDIR)/NoiseMCube.cc\
 
 PSELIBS := PSECommon/Algorithms/Visualization \
 	PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
@@ -66,6 +68,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/07/24 20:56:29  yarden
+# A new module to extract isosurfaces base on Noise algorithm
+# works on UG as well as any RG type
+#
 # Revision 1.6  2000/07/22 18:01:39  yarden
 # add IsoSurfaceSAGE
 #
