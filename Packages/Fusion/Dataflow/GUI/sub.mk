@@ -21,7 +21,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/MDSPlusFieldReader.tcl\
 	$(SRCDIR)/MDSPlusDataReader.tcl\
 	$(SRCDIR)/Plot2DViewer.tcl\
-	$(SRCDIR)/ReactionDiffusion.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Fusion/Dataflow/GUI
 
