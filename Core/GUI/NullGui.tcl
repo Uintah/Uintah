@@ -13,7 +13,7 @@
 
 package require Iwidgets 3.1
 
-class NullGui {
+itcl::class NullGui {
 
     variable w
 

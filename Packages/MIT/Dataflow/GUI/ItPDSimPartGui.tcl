@@ -18,7 +18,7 @@
 
 package require Iwidgets 3.1
 
-class ItPDSimPartGui {
+itcl::class ItPDSimPartGui {
 
     variable w
     variable n

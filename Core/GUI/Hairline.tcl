@@ -25,7 +25,7 @@
 
 package require Iwidgets 3.0
 
-class Hairline {
+itcl::class Hairline {
 
     variable opt
     variable menu

@@ -25,7 +25,7 @@
 
 package require Iwidgets 3.0
 
-class Diagram {
+itcl::class Diagram {
 
     variable menu
     variable tb

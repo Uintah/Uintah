@@ -13,7 +13,7 @@
 
 package require Iwidgets 3.1
 
-class Graph {
+itcl::class Graph {
 
     variable graph
     variable parent-window
