@@ -7,15 +7,29 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Components/ProblemSpecification
 
-SRCS     += 
+SRCS	+= $(SRCDIR)/ProblemSpecReader.cc
 
-PSELIBS :=
-LIBS :=
+PSELIBS := Uintah/Interface
+LIBS 	:= $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
+PROGRAM	:= $(SRCDIR)/testing
+SRCS	:= $(SRCDIR)/testing.cc
+include $(SRCTOP)/scripts/program.mk
+
+PROGRAM	:= $(SRCDIR)/test2
+SRCS	:= $(SRCDIR)/test2.cc 
+PSELIBS := Uintah/Interface Uintah/Components/ProblemSpecification
+LIBS 	:= $(XML_LIBRARY)
+include $(SRCTOP)/scripts/program.mk
+
+
 #
 # $Log$
+# Revision 1.3  2000/03/29 01:57:05  jas
+# Added a problem specification reader.
+#
 # Revision 1.2  2000/03/20 19:38:24  sparker
 # Added VPATH support
 #
