@@ -12,7 +12,7 @@ SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataArchive.cc \
 	$(SRCDIR)/MPMInterface.cc $(SRCDIR)/Output.cc \
 	$(SRCDIR)/ProblemSpec.cc $(SRCDIR)/ProblemSpecInterface.cc \
 	$(SRCDIR)/Scheduler.cc $(SRCDIR)/DWMpiHandler.cc \
-	$(SRCDIR)/MDInterface.cc
+	$(SRCDIR)/MDInterface.cc $(SRCDIR)/Analyze.cc
 
 PSELIBS := Uintah/Parallel Uintah/Grid Uintah/Exceptions PSECore/XMLUtil \
 	SCICore/Thread SCICore/Exceptions SCICore/Geometry SCICore/Util
@@ -22,6 +22,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.13  2000/07/18 00:01:29  tan
+# Added Analyze interface that will be especially useful for debugging
+# on scitific results.
+#
 # Revision 1.12  2000/06/17 07:06:47  sparker
 # Changed ProcessorContext to ProcessorGroup
 #
