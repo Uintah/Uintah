@@ -69,6 +69,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
         toplevel $w
 
 	frame $w.row10
+	frame $w.row11
 	frame $w.row8
         frame $w.row4
 	frame $w.row3 
@@ -80,18 +81,22 @@ itcl_class Teem_DataIO_DicomToNrrd {
         "Series ID  /  File(s) in Series"
 	set listing [$w.listing childsite]
 
-        pack $w.row10 $w.row8 $w.which $w.listing \
+        pack $w.row10 $w.row11 $w.row8 $w.which $w.listing \
         $w.row4 $w.row3 $w.sd $w.row9 -side top -e y -f both -padx 5 -pady 5
 
 	button $w.row10.browse_button -text " Browse " \
 	    -command "$this ChooseDir; $this UpdateSeriesUIDs"
-       
+
         # Directory selection mechanism
 	label $w.row10.dir_label -text "Directory  " 
 	entry $w.row10.dir -textvariable $this-dir -width 80
 
 	pack $w.row10.dir_label $w.row10.dir -side left
 	pack $w.row10.browse_button -side right
+
+	button $w.row11.load_button -text " Load " -command "$this UpdateSeriesUIDs"
+
+	pack $w.row11.load_button -side right
 
         # Listboxes for series selection
         set seriesuid [Scrolled_Listbox $listing.seriesuid -height 10 -selectmode single ]
@@ -145,8 +150,9 @@ itcl_class Teem_DataIO_DicomToNrrd {
     method ChooseDir { } {	
         set w .ui[modname]
 
-	if [ expr [winfo exists $w] ] {
+	if { [ expr [winfo exists $w] ] }  {
 	    set $this-dir-tmp [ tk_chooseDirectory \
+  		          -initialdir [set $this-dir] \
                           -parent $w \
                           -title "Choose Directory" \
                           -mustexist true ] 
@@ -155,6 +161,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
                 set $this-dir [set $this-dir-tmp] 
             }
         }
+        
     }
 
     method UpdateSeriesUIDs { } {
@@ -200,6 +207,8 @@ itcl_class Teem_DataIO_DicomToNrrd {
 		    
 	    } else {
 		$seriesuid.list insert end [set $this-messages]
+                set $this-num-series 0 
+                set $this-num-files 0 
 	    }     
 	}
     }
