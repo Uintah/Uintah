@@ -43,16 +43,20 @@ namespace SCIRun {
 class SCICORESHARE GeomArrows : public GeomObj {
     double headwidth;
     double headlength;
-    double rad;
     Array1<MaterialHandle> shaft_matls;
     Array1<MaterialHandle> back_matls;
     Array1<MaterialHandle> head_matls;
     Array1<Point> positions;
     Array1<Vector> directions;
     Array1<Vector> v1, v2;
-    int drawcylinders;
+    double rad; // radius of arrow shaft if cylinders are drawn
+    int drawcylinders; // switch to use lines or cylinders for the arrow
+    // The size of the of the head is proportional to the length of the vector.
+    // When this flag is set the same size head is used for all the arrows 
+    int normalize_headsize;
 public:
-    GeomArrows(double headwidth, double headlength=0.7, int cyl=0, double r=0);
+    GeomArrows(double headwidth, double headlength=0.7, int cyl=0, double r=0,
+	       int normhead = 0);
     GeomArrows(const GeomArrows&);
     virtual ~GeomArrows();
 

@@ -48,15 +48,14 @@ Persistent* make_GeomArrows()
 
 PersistentTypeID GeomArrows::type_id("GeomArrows", "GeomObj", make_GeomArrows);
 
-GeomArrows::GeomArrows(double headwidth, double headlength, int cyl, double r)
-: headwidth(headwidth), headlength(headlength)
+GeomArrows::GeomArrows(double headwidth, double headlength, int cyl, double r,
+		       int normhead)
+  : headwidth(headwidth), headlength(headlength), rad(r), drawcylinders(cyl),
+    normalize_headsize(normhead)
 {
     shaft_matls.add(new Material(Color(0,0,0), Color(.6, .6, .6), Color(.6, .6, .6), 10));
     head_matls.add(new Material(Color(0,0,0), Color(1,1,1), Color(.6, .6, .6), 10));
     back_matls.add(new Material(Color(0,0,0), Color(.6, .6, .6), Color(.6, .6, .6), 10));
-    // in case you want the shaft drawn with cylinders instead of lines
-    drawcylinders = cyl;
-    rad = r;
 }
 
 GeomArrows::GeomArrows(const GeomArrows& copy)
@@ -100,9 +99,16 @@ void GeomArrows::add(const Point& pos, const Vector& dir)
     } else {
 	Vector vv1, vv2;
 	dir.find_orthogonal(vv1, vv2);
-	double len=dir.length();
-	v1.add(vv1*headwidth*len);
-	v2.add(vv2*headwidth*len);
+	if (!normalize_headsize) {
+	  // use the length to scale the head
+	  double len = dir.length();
+	  v1.add(vv1*headwidth*len);
+	  v2.add(vv2*headwidth*len);
+	} else {
+	  // don't scale the head by the length
+	  v1.add(vv1*headwidth);
+	  v2.add(vv2*headwidth);
+	}
     }
 }
 
