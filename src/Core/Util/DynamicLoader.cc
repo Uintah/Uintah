@@ -49,6 +49,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace SCIRun {
 
 using namespace std;
@@ -59,6 +63,8 @@ using namespace std;
   // in Persistent.cc.
   Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");
   const string ext("dylib");
+#elif defined(_WIN32)
+  const string ext("dll");
 #else
   const string ext("so");
 #endif
@@ -72,6 +78,7 @@ using namespace std;
 
 DynamicLoader *DynamicLoader::scirun_loader_ = 0;
 Mutex DynamicLoader::scirun_loader_init_lock_("SCIRun loader init lock");
+
 
 CompileInfo::CompileInfo(const string &fn, const string &bcn, 
 			 const string &tcn, const string &tcdec) :
@@ -399,15 +406,66 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
     result = false;
   }
 #else
-  command += " > " + info.filename_ + "log 2>&1";
+  //command += " > " + info.filename_ + "log 2>&1";
+  
+#ifdef _WIN32
+  // we need to create a separate process here, because TCL's interpreter is active.
+  // For some reason, calling make in 'system' will hang until the interpreter closes.
+
+  STARTUPINFO si_;
+  PROCESS_INFORMATION pi_;
+
+  memset(&si_, 0, sizeof(si_));
+  memset(&pi_, 0, sizeof(pi_));
+  
+  DWORD status = 1;
+  bool retval = true;
+  
+  HANDLE logfile;
+  char logfilename[256];
+  strcpy(logfilename, (otf_dir()+info.filename_+"log").c_str());
+  for (unsigned i = 0; i < strlen(logfilename); i++)
+    if (logfilename[i] == '/') logfilename[i] = '\\';
+
+  char otfdir[256];
+  strcpy(otfdir, otf_dir().c_str());
+  for (unsigned i = 0; i < strlen(otfdir); i++)
+    if (otfdir[i] == '/') otfdir[i] = '\\';
+  
+
+  //logfile = CreateFile(TEXT(logfilename), GENERIC_WRITE,0,0,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,0);
+  if (logfile == INVALID_HANDLE_VALUE)
+    cerr << SOError() << "\n";
+
+  si_.cb = sizeof(STARTUPINFO); 
+  //si_.hStdError = logfile;
+  //si_.hStdOutput = logfile;
+  //si_.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
+  
+  if (retval) {
+    retval = CreateProcess(TEXT(MAKE_COMMAND), (char*)(string(MAKE_COMMAND) + " " + info.filename_+ext).c_str(), 
+                             0,0,TRUE,CREATE_NO_WINDOW,0,otfdir, &si_, &pi_);
+    if (!retval) {
+      cerr << SOError() << "\n";
+    }
+    else {
+      WaitForSingleObject(pi_.hProcess, INFINITE);
+      GetExitCodeProcess(pi_.hProcess, &status);
+      CloseHandle(pi_.hProcess);
+      CloseHandle(pi_.hThread);
+    }
+  }
+  //CloseHandle(logfile);
+#else
   const int status = sci_system(command.c_str());
+#endif // def _WIN32
   if(status != 0) {
     serr << "DynamicLoader::compile_so() syscal error " << status << ": "
 	 << "command was '" << command << "'\n";
     result = false;
   }
   pipe = fopen(string(otf_dir() + "/" + info.filename_ + "log").c_str(), "r");
-#endif
+#endif // __sgi
 
   char buffer[256];
   while (pipe && fgets(buffer, 256, pipe) != NULL)
@@ -423,7 +481,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 
   if (result)
   {
-    serr << "DynamicLoader - Successfully compiled " << info.filename_ + "so" 
+    serr << "DynamicLoader - Successfully compiled " << info.filename_ + ext 
 	 << endl;
   }
   return result;
