@@ -433,8 +433,8 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	if(box_ps->get("patches", patches)){
 	  level->setPatchDistributionHint(patches);
 	  if (d_myworld->size() > 1 &&
-	      (patches.x() * patches.y() * patches.z() != d_myworld->size()))
-	    throw ProblemSetupException("Number of patches must equal the number of processes in an mpi run");
+	      (patches.x() * patches.y() * patches.z() < d_myworld->size()))
+	    throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run");
 	  for(int i=0;i<patches.x();i++){
 	    for(int j=0;j<patches.y();j++){
 	      for(int k=0;k<patches.z();k++){
