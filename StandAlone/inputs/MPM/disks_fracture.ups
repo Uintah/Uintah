@@ -10,7 +10,7 @@
    </Meta>
 
    <Time>
-	<maxTime>0.15</maxTime>
+	<maxTime>0.2</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.0</delt_min>
 	<delt_max>0.001</delt_max>
@@ -35,12 +35,14 @@
 		<burn type = "null" />
 		<fracture type = "normal">
 		  <constraint> 3 </constraint>
-		  <pressure_rate> 0. </pressure_rate>
 		</fracture>
+		<pressure_rate> 3. </pressure_rate>
+		<explosive_pressure> 30 </explosive_pressure>
+		<initial_pressure> 0. </initial_pressure>
 		<density>1000.0</density>
 		<constitutive_model type="comp_mooney_rivlin"> 
-		   <he_constant_1>100000.0</he_constant_1>
-		   <he_constant_2>20000.0</he_constant_2>
+		   <he_constant_1>2500000.0</he_constant_1>
+		   <he_constant_2>500000.0</he_constant_2>
 		   <he_PR>.49</he_PR>
 	        </constitutive_model>
 		<toughness>10.e6</toughness>
@@ -56,8 +58,8 @@
 		    <res>[2,2,2]</res>
 		    <velocity>[2,2,0]</velocity>
 		    <temperature>12</temperature>
-                    <toughness_min> .2 </toughness_min>
-		    <toughness_max> .2 </toughness_max>
+                    <toughness_min> 20 </toughness_min>
+		    <toughness_max> 20 </toughness_max>
 		    <toughness_variation>1</toughness_variation>
  		</geom_object>
 
@@ -70,8 +72,8 @@
 		    <res>[2,2,2]</res>
 		    <velocity>[-2,-2,0]</velocity>
 		    <temperature>12</temperature>
-                    <toughness_min> .2 </toughness_min>
-		    <toughness_max> .2 </toughness_max>
+                    <toughness_min> 20 </toughness_min>
+		    <toughness_max> 20 </toughness_max>
 		    <toughness_variation>1</toughness_variation>
  		</geom_object>
 
@@ -87,33 +89,6 @@
     </MaterialProperties>
 	
     <Grid>
-	<BoundaryConditions>
-		 <Face side = "x-">
-                        <BCType var = "Dirichlet" label = "Velocity">
-                           <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-                </Face>
-                <Face side = "x+">
-                        <BCType var = "Dirichlet" label = "Velocity">
-			     <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-                </Face>
-                <Face side = "y-">
-                        <BCType var = "Dirichlet" label = "Velocity">
-                           <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-                </Face>                  
-		<Face side = "y+">
-                        <BCType var = "Dirichlet" label = "Velocity">            			    <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-                </Face>
-                <Face side = "z-">
-                        <BCType var = "symmetry" label = "Symmetric"> </BCType>
-                </Face>
-                <Face side = "z+">
-                        <BCType var = "symmetry" label = "Symmetric"> </BCType>
-                </Face>                           
-	</BoundaryConditions>
 	<Level>
 	    <Box label="1">
 		<lower>[0.,0.,0]</lower>
@@ -129,18 +104,18 @@
 		<crack>
 			<corner1>[0.60, 0.70,  0. ]</corner1>
 			<corner2>[0.60, 0.70,  1. ]</corner2>
-			<corner3>[0.65, 0.60,  1. ]</corner3>
-			<corner4>[0.65, 0.60,  0. ]</corner4>
+			<corner3>[0.65, 0.66,  1. ]</corner3>
+			<corner4>[0.65, 0.66,  0. ]</corner4>
 		</crack>
 		<crack>
-			<corner1>[0.70, 0.72,  0. ]</corner1>
-			<corner2>[0.70, 0.72,  1. ]</corner2>
+			<corner1>[0.74, 0.72,  0. ]</corner1>
+			<corner2>[0.74, 0.72,  1. ]</corner2>
 			<corner3>[0.80, 0.79,  1. ]</corner3>
 			<corner4>[0.80, 0.79,  0. ]</corner4>
 		</crack>
 		<crack>
-			<corner1>[0.60, 0.52,  0. ]</corner1>
-			<corner2>[0.60, 0.52,  1. ]</corner2>
+			<corner1>[0.63, 0.52,  0. ]</corner1>
+			<corner2>[0.63, 0.52,  1. ]</corner2>
 			<corner3>[0.70, 0.60,  1. ]</corner3>
 			<corner4>[0.70, 0.60,  0. ]</corner4>
 		</crack>
