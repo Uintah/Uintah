@@ -105,6 +105,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
   if (debug_ps) {
+    d_dbgGnuPlot   = false;
     d_dbgStartTime = 0.;
     d_dbgStopTime  = 1.;
     d_dbgOutputInterval = 0.0;
@@ -112,6 +113,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
     d_dbgEndIndx   = IntVector(0,0,0);
     d_dbgSigFigs   = 5;
 
+    debug_ps->get("dbg_GnuPlot",       d_dbgGnuPlot);
     debug_ps->get("dbg_var1",          d_dbgVar1);   
     debug_ps->get("dbg_var2",          d_dbgVar2);  
     debug_ps->get("dbg_timeStart",     d_dbgStartTime);
@@ -1507,7 +1509,7 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       //---- P R I N T   D A T A ------ 
       if (switchDebug_vel_FC ) {
         ostringstream desc;
-        desc <<"bottom_of_vel_FC_Mat_" << indx << "_patch_"<< patch->getID();
+        desc <<"BOT_vel_FC_Mat_" << indx << "_patch_"<< patch->getID();
         printData_FC( patch,1, desc.str(), "uvel_FC", uvel_FC);
         printData_FC( patch,1, desc.str(), "vvel_FC", vvel_FC);
         printData_FC( patch,1, desc.str(), "wvel_FC", wvel_FC);
@@ -1909,7 +1911,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
    //---- P R I N T   D A T A ------  
     if (switchDebug_explicit_press) {
       ostringstream desc;
-      desc << "Bottom_of_explicit_Pressure_patch_" << patch->getID();
+      desc << "BOT_explicit_Pressure_patch_" << patch->getID();
       printData( patch, 1,desc.str(), "term2",         term2);
       printData( patch, 1,desc.str(), "term3",         term3); 
       printData( patch, 1,desc.str(), "delP_Dilatate", delP_Dilatate);
@@ -2135,7 +2137,7 @@ void ICE::massExchange(const ProcessorGroup*,
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex();
         ostringstream desc;
-        desc << "sources/sinks_Mat_" << indx << "_patch_"<<  patch->getID();
+        desc << "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
         printData(patch, 0, desc.str(),"burnedMass",   burnedMass[m]);
         printData(patch, 0, desc.str(),"int_eng_comb", int_eng_comb[m]);
         printData(patch, 0, desc.str(),"mom_comb",   mom_comb[m]);
@@ -2341,7 +2343,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
         ostringstream desc;
-        desc << "sources/sinks_Mat_" << indx << "_patch_"<<  patch->getID();
+        desc << "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
         printVector(patch, 1, desc.str(), "mom_source",  0, mom_source);
       //printVector(patch, 1, desc.str(), "press_force", 0, press_force);        
       }
@@ -2440,7 +2442,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
         ostringstream desc;
-        desc <<  "sources/sinks_Mat_" << indx << "_patch_"<<  patch->getID();
+        desc <<  "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
         printData(patch,1,desc.str(),"int_eng_source", int_eng_source);
       }
     }  // matl loop
@@ -2577,7 +2579,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
         // Dump out all the matls data
         if (switchDebugLagrangianValues ) {
           ostringstream desc;
-          desc <<"Bot_Lagrangian_Values_Mat_"<<indx<< "_patch_"<<patch->getID();
+          desc <<"BOT_Lagrangian_Values_Mat_"<<indx<< "_patch_"<<patch->getID();
           printVector(patch,1, desc.str(), "mom_L_CC", 0, mom_L);
           printData(  patch,1, desc.str(), "int_eng_L_CC", int_eng_L); 
 
@@ -3063,7 +3065,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       //---- P R I N T   D A T A ------   
       if (switchDebug_advance_advect ) {
        ostringstream desc;
-       desc <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"<<patch->getID();
+       desc <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"<<patch->getID(); 
        printVector( patch,1, desc.str(), "mom_L_CC", 0, mom_L_ME); 
        printData(   patch,1, desc.str(), "sp_vol_L",    spec_vol_L);
        printData(   patch,1, desc.str(), "int_eng_L_CC",int_eng_L_ME);
