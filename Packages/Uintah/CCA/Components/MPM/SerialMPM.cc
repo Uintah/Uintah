@@ -69,6 +69,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   thermalContactModel = 0;
   d_8or27 = 8;
   d_min_part_mass = 3.e-15;
+  d_artificial_viscosity = false;
   NGP     = 1;
   NGN     = 1;
 
@@ -99,9 +100,11 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 
    if(mpm_soln_ps) {
      mpm_soln_ps->get("nodes8or27", d_8or27);
-     mpm_soln_ps->get("minimum_particle_mass", d_min_part_mass);
+     mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
      mpm_soln_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
+     mpm_soln_ps->get("artificial_viscosity",     d_artificial_viscosity);
    }
+
    if(d_8or27==8){
      NGP=1;
      NGN=1;
@@ -272,6 +275,8 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 	      Task::OutOfDomain);
   t->computes(lb->gTemperatureLabel, d_sharedState->getAllInOneMatl(),
 	      Task::OutOfDomain);
+  t->computes(lb->gVelocityLabel,    d_sharedState->getAllInOneMatl(),
+	      Task::OutOfDomain);
   t->computes(lb->gSp_volLabel);
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityLabel);
@@ -343,6 +348,32 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
   t->requires(Task::NewDW, lb->StrainEnergyLabel);
   t->computes(lb->AccStrainEnergyLabel);
   sched->addTask(t, patches, matls);
+
+  if(d_artificial_viscosity){
+    scheduleComputeArtificialViscosity(   sched, patches, matls);
+  }
+}
+
+void SerialMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
+                                                   const PatchSet* patches,
+                                                   const MaterialSet* matls)
+{
+  Task* t = scinew Task("SerialMPM::computeArtificialViscosity",
+		    this, &SerialMPM::computeArtificialViscosity);
+
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
+  t->requires(Task::OldDW, lb->pMassLabel,              Ghost::None);
+  t->requires(Task::NewDW, lb->pVolumeDeformedLabel,    Ghost::None);
+
+  if(d_8or27==27){
+    t->requires(Task::OldDW,lb->pSizeLabel,             Ghost::None);
+  }
+
+  t->requires(Task::NewDW,lb->gVelocityLabel, gac, NGN);
+  t->computes(lb->p_qLabel);
+
+  sched->addTask(t, patches, matls);
 }
 
 void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
@@ -375,6 +406,9 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
 
   if(d_with_ice){
     t->requires(Task::NewDW, lb->pPressureLabel,          gan,NGP);
+  }
+  if(d_artificial_viscosity){
+    t->requires(Task::NewDW, lb->p_qLabel,                gan,NGP);
   }
 
   t->computes(lb->gInternalForceLabel);
@@ -775,12 +809,16 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMPMMatls();
 
     NCVariable<double> gmassglobal,gtempglobal;
+    NCVariable<Vector> gvelglobal;
     new_dw->allocateAndPut(gmassglobal, lb->gMassLabel,
 		     d_sharedState->getAllInOneMatl()->get(0), patch);
     new_dw->allocateAndPut(gtempglobal, lb->gTemperatureLabel,
 		     d_sharedState->getAllInOneMatl()->get(0), patch);
+    new_dw->allocateAndPut(gvelglobal, lb->gVelocityLabel,
+		     d_sharedState->getAllInOneMatl()->get(0), patch);
     gmassglobal.initialize(d_SMALL_NUM_MPM);
     gtempglobal.initialize(0.0);
+    gvelglobal.initialize(Vector(0.0));
 
     Ghost::GhostType  gan = Ghost::AroundNodes;
     for(int m = 0; m < numMatls; m++){
@@ -888,6 +926,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         IntVector c = *iter; 
         totalmass       += gmass[c];
         gmassglobal[c]  += gmass[c];
+        gvelglobal[c]   += gvelocity[c];
         gvelocity[c]    /= gmass[c];
         gtempglobal[c]  += gTemperature[c];
         gTemperature[c] /= gmass[c];
@@ -935,6 +974,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         IntVector c = *iter;
         gtempglobal[c] /= gmassglobal[c];
+        gvelglobal[c] /= gmassglobal[c];
     }
   }  // End loop over patches
 }
@@ -953,6 +993,92 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
       cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
    }
+}
+
+void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* ,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    cout_doing <<"Doing computeArtificialViscosity on patch " << patch->getID()
+	       <<"\t\t MPM"<< endl;
+
+    Ghost::GhostType  gac   = Ghost::AroundCells;
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      constNCVariable<Vector> gvelocity;
+      ParticleVariable<double> p_q;
+      constParticleVariable<Vector> psize;
+      constParticleVariable<Point> px;
+      constParticleVariable<double> pmass,pvol_def;
+      new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac, NGN);
+      old_dw->get(px,        lb->pXLabel,                      pset);
+      old_dw->get(pmass,     lb->pMassLabel,                   pset);
+      new_dw->get(pvol_def,  lb->pVolumeDeformedLabel,         pset);
+      new_dw->allocateAndPut(p_q,    lb->p_qLabel,             pset);
+      if(d_8or27==27){
+        old_dw->get(psize,   lb->pSizeLabel,                   pset);
+      }
+
+      Matrix3 velGrad;
+      Vector dx = patch->dCell();
+      double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+      double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+
+      double K = 1./mpm_matl->getConstitutiveModel()->getCompressibility();
+      double c_dil;
+
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+         particleIndex idx = *iter;
+
+       // Get the node indices that surround the cell
+       IntVector ni[MAX_BASIS];
+       Vector d_S[MAX_BASIS];
+
+       if(d_8or27==8){
+          patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+       }
+       else if(d_8or27==27){
+         patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
+       }
+
+       velGrad.set(0.0);
+       for(int k = 0; k < d_8or27; k++) {
+         const Vector& gvel = gvelocity[ni[k]];
+         for(int j = 0; j<3; j++){
+            double d_SXoodx = d_S[k][j] * oodx[j];
+            for(int i = 0; i<3; i++) {
+                velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
+            }
+         }
+       }
+
+       Matrix3 D = (velGrad + velGrad.Transpose())*.5;
+
+       double DTrace = D.Trace();
+       p_q[idx] = 0.0;
+       if(DTrace<0.){
+         c_dil = sqrt(K*pvol_def[idx]/pmass[idx]);
+         p_q[idx] = (.2*fabs(c_dil*DTrace*dx_ave) +
+                      2.*(DTrace*DTrace*dx_ave*dx_ave))*
+                     (pmass[idx]/pvol_def[idx]);
+       }
+
+      }
+    }
+  }
+
 }
 
 void SerialMPM::computeInternalForce(const ProcessorGroup*,
@@ -997,6 +1123,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       constParticleVariable<Point>   px;
       constParticleVariable<double>  pvol, pmass;
       constParticleVariable<double>  p_pressure;
+      constParticleVariable<double>  p_q;
       constParticleVariable<Matrix3> pstress;
       constParticleVariable<Vector>  psize;
       NCVariable<Vector>             internalforce;
@@ -1025,12 +1152,24 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       else {
 	ParticleVariable<double>  p_pressure_create;
 	new_dw->allocateTemporary(p_pressure_create,  pset);
-	for(ParticleSubset::iterator iter = pset->begin();
-                                     iter != pset->end(); iter++){
-	   p_pressure_create[*iter]=0.0;
+	for(ParticleSubset::iterator it = pset->begin();it != pset->end();it++){
+	   p_pressure_create[*it]=0.0;
 	}
 	p_pressure = p_pressure_create; // reference created data
       }
+
+      if(d_artificial_viscosity){
+        new_dw->get(p_q,lb->p_qLabel, pset);
+      }
+      else {
+	ParticleVariable<double>  p_q_create;
+	new_dw->allocateTemporary(p_q_create,  pset);
+	for(ParticleSubset::iterator it = pset->begin();it != pset->end();it++){
+	   p_q_create[*it]=0.0;
+	}
+	p_q = p_q_create; // reference created data
+      }
+
 
       internalforce.initialize(Vector(0,0,0));
       IntVector ni[MAX_BASIS];
@@ -1053,7 +1192,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
           }
 
           stressmass  = pstress[idx]*pmass[idx];
-          stresspress = pstress[idx] + Id*p_pressure[idx];
+          stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
 
           for (int k = 0; k < d_8or27; k++){
 	    if(patch->containsNode(ni[k])){
