@@ -2,13 +2,15 @@
 #define __HYPOELASTIC_PLASTIC_H__
 
 
-#include "ConstitutiveModel.h"	
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/YieldCondition.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/StabilityCheck.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMEquationOfState.h>
 #include <math.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
@@ -79,6 +81,7 @@ WARNING
     double d_damageCutOff;
     bool d_useModifiedEOS;
     YieldCondition* d_yield;
+    StabilityCheck* d_stable;
     PlasticityModel* d_plasticity;
     DamageModel* d_damage;
     MPMEquationOfState* d_eos;
@@ -194,6 +197,12 @@ WARNING
     Matrix3 computeRateofRotation(const Matrix3& tensorV, 
 				  const Matrix3& tensorD,
 				  const Matrix3& tensorW);
+
+    /*! Compute the elastic tangent modulus tensor for isotropic
+        materials */
+    void computeElasticTangentModulus(double bulk,
+                                      double shear,
+                                      TangentModulusTensor& Ce);
 
   };
 

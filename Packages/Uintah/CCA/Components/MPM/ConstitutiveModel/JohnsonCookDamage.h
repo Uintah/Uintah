@@ -2,7 +2,7 @@
 #define __JOHNSONCOOK_DAMAGE_MODEL_H__
 
 
-#include "DamageModel.h"	
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModel.h>	
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {

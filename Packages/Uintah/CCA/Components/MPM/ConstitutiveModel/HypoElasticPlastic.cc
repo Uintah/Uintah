@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/YieldConditionFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/StabilityCheckFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMEquationOfStateFactory.h>
@@ -15,10 +16,14 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/FastMatrix.h>
+#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
 #include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Core/Util/NotFinished.h>
 
@@ -53,6 +58,9 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or
 	 << " Biswajit.  "<< endl;
     throw ParameterNotFound(desc.str());
   }
+
+  d_stable = StabilityCheckFactory::create(ps);
+  if(!d_stable) cerr << "Stability check disabled\n";
 
   d_plasticity = PlasticityModelFactory::create(ps);
   if(!d_plasticity){
@@ -420,8 +428,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       Matrix3 trialS = tensorS + tensorEta*(2.0*shear*delT);
       equivStress = (trialS.NormSquared())*1.5;
 
-      // To determine if the stress is above or below yield used a von Mises yld
-      // criterion Assumption: Material yields, on average, as a von Mises solid
+      // Calculate flow stress
       double temperature = pTemperature[idx] + pPlasticTemperature[idx];
       flowStress = d_plasticity->computeFlowStress(tensorEta, tensorS, 
                                                    temperature,
@@ -436,6 +443,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           tensorSig.Trace() + tensorD.Trace()*(2.0*shear*delT);
       double Phi = d_yield->evalYieldCondition(sqrt(equivStress), flowStress,
                                       traceOfTrialStress, porosity);
+      cout << "Equivalent stress = " << sqrt(equivStress) 
+           << " Flow stress = " << sqrt(flowStress) << endl;
       if (Phi <= 0.0) {
 
 	// Calculate the deformed volume
@@ -545,6 +554,26 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         double taylorQuinney = 0.9;
         double C_p = matl->getSpecificHeat();
         Tdot = tensorSig.Contract(tensorD)*(taylorQuinney/(rho_cur*C_p));
+
+        // Compute stability criterion
+        if (d_stable) {
+	  // Calculate the elastic-plastic tangent modulus
+	  // **WARNING** Assumes vonMises yield condition and the
+	  // associated flow rule for all cases other than Gurson plasticity.
+	  TangentModulusTensor Ce;
+	  computeElasticTangentModulus(bulk, shear, Ce);
+	  TangentModulusTensor Cep;
+	  temperature += Tdot*delT;
+	  d_plasticity->computeTangentModulus(tensorSig, tensorD, temperature,
+					      delT, idx, matl, Ce, Cep);
+
+          Vector direction(0.0,0.0,0.0);
+	  bool isLocalized = d_stable->checkStability(tensorSig, tensorD,
+						      Cep, direction);
+	  if (isLocalized) {
+	    cerr << " Particle " << idx << " is localized " << endl;
+	  }
+        }
 
 	// Rotate the stress and deformation rate back to the laboratory 
 	// coordinates
@@ -1282,6 +1311,30 @@ HypoElasticPlastic::computeRateofRotation(const Matrix3& tensorV,
   tensorOmega(3,2) = omega[1];  
 
   return tensorOmega;
+}
+
+// Compute the elastic tangent modulus tensor for isotropic
+// materials (**NOTE** can get rid of one copy operation if needed)
+void 
+HypoElasticPlastic::computeElasticTangentModulus(double bulk,
+                                                 double shear,
+                                                 TangentModulusTensor& Ce)
+{
+  // Form the elastic tangent modulus tensor
+  double E = 9.0*bulk*shear/(3.0*bulk+shear);
+  double nu = E/(2.0*shear) - 1.0;
+  double fac = E/((1.0+nu)*(1.0-2.0*nu));
+  double C11 = fac*(1.0-nu);
+  double C12 = fac*nu;
+  FastMatrix C_6x6(6,6);
+  for (int ii = 0; ii < 6; ++ii) 
+    for (int jj = 0; jj < 6; ++jj) C_6x6(ii,jj) = 0.0;
+  C_6x6(0,0) = C11; C_6x6(1,1) = C11; C_6x6(2,2) = C11;
+  C_6x6(0,1) = C12; C_6x6(0,2) = C12; 
+  C_6x6(1,0) = C12; C_6x6(1,2) = C12; 
+  C_6x6(2,0) = C12; C_6x6(2,1) = C12; 
+  C_6x6(3,3) = shear; C_6x6(4,4) = shear; C_6x6(5,5) = shear;
+  Ce.convertToTensorForm(C_6x6);
 }
 
 double HypoElasticPlastic::computeRhoMicroCM(double pressure,
