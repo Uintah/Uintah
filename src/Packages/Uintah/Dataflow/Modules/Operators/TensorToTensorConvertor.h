@@ -33,29 +33,29 @@ namespace Uintah {
   };
 
   template<class TensorOp>
-    void TensorToTensorConvertor::computeTensor(TensorParticles* pInput, 
-                                                TensorParticles* pOutput,
-                                                TensorOp op)
-    {
-       // Get the particle set
-       pOutput->Set(pInput->getParticleSet());
-       ShareAssignParticleVariable<Matrix3> outSet;
-
-       vector<ShareAssignParticleVariable<Matrix3> >& inTensor = pInput->get();
-       vector<ShareAssignParticleVariable<Matrix3> >::const_iterator iter;
-
-       for (iter = inTensor.begin(); iter != inTensor.end(); iter++) {
-         
-         ParticleSubset* subset = (*iter).getParticleSubset();
-         outSet = ParticleVariable<Matrix3>(subset);
-         for (ParticleSubset::iterator sub_iter = subset->begin();
-	      sub_iter != subset->end(); sub_iter++) {
-           outSet[*sub_iter] = op((*iter)[*sub_iter]);
-         }
-         pOutput->AddVar(outSet);
-       }
+  void TensorToTensorConvertor::computeTensor(TensorParticles* pInput, 
+					      TensorParticles* pOutput,
+					      TensorOp op)
+  {
+    // Get the particle set
+    pOutput->Set(pInput->getParticleSet());
+    ShareAssignParticleVariable<Matrix3> outSet;
+    
+    vector<ShareAssignParticleVariable<Matrix3> >& inTensor = pInput->get();
+    vector<ShareAssignParticleVariable<Matrix3> >::const_iterator iter;
+    
+    for (iter = inTensor.begin(); iter != inTensor.end(); iter++) {
+      
+      ParticleSubset* subset = (*iter).getParticleSubset();
+      outSet = ParticleVariable<Matrix3>(subset);
+      for (ParticleSubset::iterator sub_iter = subset->begin();
+	   sub_iter != subset->end(); sub_iter++) {
+	outSet[*sub_iter] = op((*iter)[*sub_iter]);
+      }
+      pOutput->AddVar(outSet);
     }
-
+  }
+  
 } //end namespace Uintah
 
 #endif 
