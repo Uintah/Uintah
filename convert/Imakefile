@@ -1,6 +1,6 @@
 
 #include <config/sci.cf>
 
-SUBDIRS = MakeContourSet
+SUBDIRS = MakeContourSet MakeSurface
 
 SCISubdirs($(SUBDIRS))
