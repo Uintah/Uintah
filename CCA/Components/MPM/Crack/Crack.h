@@ -81,10 +81,28 @@ class Crack
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
 
+    void addComputesAndRequiresPrepareMovingCrack(Task* task,
+                                const PatchSet* patches,
+                                const MaterialSet* matls) const;
+    void PrepareMovingCrack(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
+
     void addComputesAndRequiresMoveCrack(Task* task,
                                 const PatchSet* patches,
                                 const MaterialSet* matls) const;
     void MoveCrack(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
+
+    void addComputesAndRequiresUpdateCrackExtentAndNormals(Task* task,
+                                const PatchSet* patches,
+                                const MaterialSet* matls) const;
+    void UpdateCrackExtentAndNormals(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
@@ -105,14 +123,15 @@ class Crack
      int NGN;
 
      // Data members for cracks
-     Point cmin[MNM],cmax[MNM];             //extent of crack plane
-     int numElems[MNM];            //number of carck elements    
-     int numPts[MNM];              //number of crack points
-     double c_mu[MNM];             //Frcition coefficient
-     double separateVol[MNM];      //normal volume to seperate
-     double contactVol[MNM];       //normal volume to contact
-     string crackType[MNM];        //crack contact type
+     Point cmin[MNM],cmax[MNM];       //extent of crack plane
+     int numElems[MNM];               //number of carck elements    
+     int numPts[MNM];                 //number of crack points
+     double c_mu[MNM];                //Frcition coefficient
+     double separateVol[MNM];         //normal volume to seperate
+     double contactVol[MNM];          //normal volume to contact
+     string crackType[MNM];           //crack contact type
      Point cx[MNM][1000];             //crack position
+     short moved[MNM][1000];          //if crack point moved
      IntVector cElemNodes[MNM][1000]; //crack element nodes
      Vector cElemNorm[MNM][1000];     //crack element normals     
  
