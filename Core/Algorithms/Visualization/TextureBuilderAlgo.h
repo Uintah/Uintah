@@ -154,25 +154,26 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
 // 	cerr<<"Mesh grabbed with value = "<<mesh.get_rep()<<"\n";
 	Transform tform;
 // 	cerr<<"Setting transform ... ";
-	mesh->transform(tform);
+	mesh->get_canonical_transform(tform);
 // 	cerr<<"done!\n";
 	int nx = mesh->get_ni();
 	int ny = mesh->get_nj();
 	int nz = mesh->get_nk();
-	if(vfield->basis_order() == 0) {
+	 if(vfield->basis_order() == 0) {
 	  --nx; --ny; --nz;
 	}
 
 	
 	
 	vector<TextureBrickHandle> patch_bricks;
-	build_bricks(patch_bricks, nx, ny, nz, nc, nb, mesh->get_bounding_box(),
-		     card_mem);
+	//cannonical bounding box
+	BBox bbox(Point(0,0,0), Point(1,1,1));
+	build_bricks(patch_bricks, nx, ny, nz, nc, nb, bbox, card_mem);
 	
 	if( i == 0 ){
 	  texture->set_size(nx, ny, nz, nc, nb);
 	  texture->set_card_mem(card_mem);
-	  texture->set_bbox(mesh->get_bounding_box());
+	  texture->set_bbox(bbox);
 	  texture->set_minmax(vmin, vmax, gmin, gmax);
 	  texture->set_transform(tform);
 	}
@@ -206,19 +207,22 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
     nb[0] = gfield.get_rep() ? 4 : 1;
     nb[1] = gfield.get_rep() ? 1 : 0;
     Transform tform;
-    mesh->transform(tform);
+    mesh->get_canonical_transform(tform);
     //
     texture->lock_bricks();
     texture->clear();
     vector<TextureBrickHandle>& bricks = texture->bricks();
+    const BBox bbox(Point(0,0,0), Point(1,1,1)); 
     if(nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
-       || nc != texture->nc() || card_mem != texture->card_mem()) {
+       || nc != texture->nc() || card_mem != texture->card_mem() ||
+       bbox.min() != texture->bbox().min()) {
       //     cerr << "REBUILD" <<  nx << " " << ny << " " << nz << " " << card_mem << endl;
-      build_bricks(bricks, nx, ny, nz, nc, nb, mesh->get_bounding_box(), card_mem);
+//        build_bricks(bricks, nx, ny, nz, nc, nb, mesh->get_bounding_box(), card_mem);
+      build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
       texture->set_size(nx, ny, nz, nc, nb);
       texture->set_card_mem(card_mem);
     }
-    texture->set_bbox(mesh->get_bounding_box());
+    texture->set_bbox(bbox);
     texture->set_minmax(vmin, vmax, gmin, gmax);
     texture->set_transform(tform);
     for(unsigned int i=0; i<bricks.size(); i++) {
