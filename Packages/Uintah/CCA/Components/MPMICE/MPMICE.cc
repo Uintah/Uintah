@@ -443,7 +443,7 @@ void  MPMICE::scheduleMassExchange(const Patch* patch,
 
 void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
 				       const Patch* patch,
-				       DataWarehouseP& old_dw,
+				       DataWarehouseP&,
 				       DataWarehouseP& new_dw)
 {			       
 
@@ -837,7 +837,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 
   double vol = dx.x()*dx.y()*dx.z();
   double tmp;
-  int itworked=-9;
 
   // Convert momenta to velocities.  Slightly different for MPM and ICE.
   for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
@@ -891,7 +890,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     //     S O L V E
     //  - Add exchange contribution to orig value
     acopy = a;
-    itworked = acopy.solve(b);
+    acopy.solve(b);
     for(int m = 0; m < numALLMatls; m++) {
 	vel_CC[m][*iter].x( vel_CC[m][*iter].x() + b[m] );
 	dvdt_CC[m][*iter].x( b[m] );
@@ -908,7 +907,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     //     S O L V E
     //  - Add exchange contribution to orig value
     acopy    = a;
-    itworked = acopy.solve(b);
+    acopy.solve(b);
     for(int m = 0; m < numALLMatls; m++)   {
 	vel_CC[m][*iter].y( vel_CC[m][*iter].y() + b[m] );
 	dvdt_CC[m][*iter].y( b[m] );
@@ -925,7 +924,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     //     S O L V E
     //  - Add exchange contribution to orig value
     acopy    = a;
-    itworked = acopy.solve(b);
+    acopy.solve(b);
     for(int m = 0; m < numALLMatls; m++)  {
 	vel_CC[m][*iter].z( vel_CC[m][*iter].z() + b[m] );
 	dvdt_CC[m][*iter].z( b[m] );
@@ -957,7 +956,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       }
     }
     //     S O L V E, Add exchange contribution to orig value
-    itworked = a.solve(b);
+    a.solve(b);
     
     for(int m = 0; m < numALLMatls; m++) {
       Temp_CC[m][*iter] = Temp_CC[m][*iter] + b[m];
@@ -1578,7 +1577,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
  Function~  MPMICE::massExchange--
  ---------------------------------------------------------------------  */
 void MPMICE::massExchange(const ProcessorGroup*,  const Patch* patch,
-			  DataWarehouseP& old_dw,  DataWarehouseP& new_dw)
+			  DataWarehouseP& ,  DataWarehouseP& new_dw)
 {
 #ifdef DOING
   cout << "Doing massExchange on patch " <<
