@@ -97,7 +97,7 @@ static SysClock orig_timer;
 static double ticks_to_seconds;
 static double seconds_to_ticks;
 static int hittimer;
-static ulock_t control_c_lock;
+static usema_t* control_c_sema;
 static void handle_profile(int, int, sigcontext_t*);
 
 // Thread states
@@ -359,7 +359,7 @@ static char* signal_name(int sig, int code, caddr_t addr)
 }
 
 static void wait_shutdown() {
-    int n;
+    long n;
     if((n=prctl(PR_GETNSHARE)) > 1){
 	fprintf(stderr, "Waiting for %d threads to shut down: ", n-1);
 	sginap(10);
@@ -390,7 +390,7 @@ static void handle_quit(int sig, int code, sigcontext_t*)
     if(self==0)
 	return; // This is an idle thread...
     if(sig == SIGINT){
-	int st=uscsetlock(control_c_lock, 100);
+	int st=uscpsema(control_c_sema);
 	if(st==-1){
 	    perror("uscsetlock");
 	    Thread::niceAbort();
@@ -399,10 +399,11 @@ static void handle_quit(int sig, int code, sigcontext_t*)
 	if(st == 0){
 	    // This will wait until the other thread is done
 	    // handling the interrupt
-	    ussetlock(control_c_lock);
-	    usunsetlock(control_c_lock);
+	    uspsema(control_c_sema);
+	    usvsema(control_c_sema);
 	    return;
 	}
+	// Otherwise, we handle the interrupt
     }
 
     const char* tname=self?self->threadName():"main?";
@@ -416,7 +417,7 @@ static void handle_quit(int sig, int code, sigcontext_t*)
 	fprintf(stderr, "\n\nActive threads:\n");
 	print_threads(stderr, 1);
 	Thread::niceAbort();
-	usunsetlock(control_c_lock);
+	usvsema(control_c_sema);
     } else {
 	exiting=true;
 	exit_code=1;
@@ -568,7 +569,7 @@ void Thread::initialize() {
     ticks_to_seconds=(double)cycleval*1.e-12;
     seconds_to_ticks=1./ticks_to_seconds;
 
-    int ccsize=syssgi(SGI_CYCLECNTR_SIZE);
+    long ccsize=syssgi(SGI_CYCLECNTR_SIZE);
     if(ccsize == 32){
 	timer_32bit=true;
     }
@@ -661,7 +662,7 @@ void Thread::initialize() {
     main_sema=usnewsema(arena, 0);
     nprocessors=Thread::numProcessors();
 
-    control_c_lock=usnewlock(poolmutex_arena);
+    control_c_sema=usnewsema(poolmutex_arena, 0);
     if(!poolmutex_lock){
 	perror("usnewlock");
 	exit(-1);
@@ -957,7 +958,7 @@ int Thread::numProcessors()
 	    if(nproc<=0)
 		nproc=1;
 	} else {
-	    nproc = sysmp(MP_NAPROCS);
+	    nproc = (int)sysmp(MP_NAPROCS);
 	}
     }
     return nproc;
@@ -1014,10 +1015,10 @@ void Thread::waitUntil(double seconds) {
 void Thread::waitFor(double seconds) {
     if(seconds<=0)
 	return;
-    static int tps=0;
+    static long tps=0;
     if(tps==0)
 	tps=CLK_TCK;
-    int ticks=seconds*tps;
+    long ticks=seconds*tps;
     while (ticks != 0){
 	ticks=sginap(ticks);
     }

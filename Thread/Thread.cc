@@ -31,6 +31,7 @@ Thread::Thread(ThreadGroup* g, char* name) {
     cpu=-1;
     priority=5;
     abort_handler=0;
+    runner=0;
 }
 
 int Thread::nlisteners;
