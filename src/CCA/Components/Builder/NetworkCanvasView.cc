@@ -58,8 +58,33 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
           cerr<<"lst.size="<<lst.size()<<endl;
           if(lst.size()>0) removeConnection(lst[0]);
         }
-
+#ifdef USE_MID_BUTTON
 	else if(e->button()==Qt::MidButton){
+                  for(std::vector<Module*>::iterator it=modules.begin(); it!=modules.end(); it++) {
+                     if( (QWidget*)(*it)==who ){
+                        QPoint localpos=e->pos()-QPoint(childX(who), childY(who));
+                        cerr<<"local point="<<localpos.x()<<" "<<localpos.y()<<endl;
+                        if((*it)->clickedPort(localpos, porttype, portname)){
+
+
+                          connecting= *it;
+                          showPossibleConnections(connecting, portname, porttype);
+                          return;
+                        }
+                     }
+                }
+        }
+        else if(e->button()==Qt::LeftButton){
+                  for(std::vector<Module*>::iterator it=modules.begin(); it!=modules.end(); it++) {
+                     if( (QWidget*)(*it)==who ){
+                           moving = *it;
+                         moving_start = p;
+                          return;
+                     }
+                }
+        }
+#else
+	else if(e->button()==Qt::LeftButton){
 		  for(std::vector<Module*>::iterator it=modules.begin(); it!=modules.end(); it++) {
 		     if( (QWidget*)(*it)==who ){
 			QPoint localpos=e->pos()-QPoint(childX(who), childY(who));
@@ -73,8 +98,6 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
 			}
 		     }
 		}
-	}
-        else if(e->button()==Qt::LeftButton){
 		  for(std::vector<Module*>::iterator it=modules.begin(); it!=modules.end(); it++) {
 		     if( (QWidget*)(*it)==who ){
              		   moving = *it;
@@ -82,7 +105,8 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
            	          return;
 		     }	
 		}
-	    }	
+        }
+#endif	
 }
 
 void NetworkCanvasView::contentsMouseReleaseEvent(QMouseEvent* e)

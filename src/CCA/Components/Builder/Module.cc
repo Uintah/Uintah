@@ -27,7 +27,7 @@ gov::cca::ports::UIPort::pointer uip, CIA::array1<std::string> & up, CIA::array1
 {
         pd=10; //distance between two ports
         pw=10; //port width
-        ph=8; //prot height
+        ph=4; //prot height
 
 	this->cid=cid;
 	uiPort=uip;
@@ -49,7 +49,8 @@ gov::cca::ports::UIPort::pointer uip, CIA::array1<std::string> & up, CIA::array1
 
 	
 	setGeometry(QRect(0,0,w,h));
-  setFrameStyle(WinPanel|Raised);
+  setFrameStyle(Panel|Raised);
+	setLineWidth(4);
 
 	
   QPushButton *ui=new QPushButton("UI", this,"ui");
@@ -135,15 +136,20 @@ void Module::mousePressEvent(QMouseEvent *e)
 bool Module::clickedPort(QPoint localpos, PortType &porttype,
 			 std::string &portname)
 {
+    const int ex=2;		
     for(unsigned int i=0;i<pp.size();i++){
-	if(portRect(i, PROVIDES).contains(localpos)){
+        QRect r=portRect(i, PROVIDES);
+	r=QRect(r.x()-ex, r.y()-ex,r.width()+ex*2,r.height()+ex*2);	
+	if(r.contains(localpos)){
 		porttype=PROVIDES ;
 		portname=pp[i];
 		return true;
 	}
     }	
     for(unsigned int i=0;i<up.size();i++){
-        if(portRect(i, USES).contains(localpos)){ 
+        QRect r=portRect(i, USES);
+	r=QRect(r.x()-ex, r.y()-ex,r.width()+ex*2,r.height()+ex*2);	
+        if(r.contains(localpos)){ 
                 porttype=USES ;
                 portname=up[i];
                 return true;
