@@ -6,17 +6,22 @@
 SRCDIR := Uintah/Modules
 
 SUBDIRS := \
-	$(SRCDIR)/MPMViz\
 	$(SRCDIR)/Readers\
 	$(SRCDIR)/Writers\
 	$(SRCDIR)/Visualization\
 #[INSERT NEW CATEGORY DIR HERE]
+#	$(SRCDIR)/MPMViz\
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.5  2000/12/06 21:50:57  kuzimmer
+# No longer compiling MPMVis
+#
 # Revision 1.4  2000/10/24 05:57:55  moulding
+#
+#
 # new module maker Phase 2: new module maker goes online
 #
 # These changes clean out the last remnants of the old module maker and
