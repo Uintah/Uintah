@@ -32,6 +32,24 @@ CylinderGeometryPiece::CylinderGeometryPiece(ProblemSpecP& ps) {
   d_radius = rad;
 }
 
+CylinderGeometryPiece::CylinderGeometryPiece(const Point& top,
+		                             const Point& bottom,
+					     double radius)
+{
+  double near_zero = 1e-100;
+  Vector axis = top - bottom;
+  
+  if ( axis.length()  < near_zero ) {
+    SCI_THROW(ProblemSetupException("Input File Error: Cylinder axes has zero length"));
+  }
+  if ( radius <= 0.0) {
+    SCI_THROW(ProblemSetupException("Input File Error: Cylinder radius must be > 0.0"));
+  }
+  d_bottom = bottom;
+  d_top = top;
+  d_radius = radius;
+}
+
 CylinderGeometryPiece::~CylinderGeometryPiece()
 {
 }

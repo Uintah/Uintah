@@ -53,6 +53,13 @@ WARNING
 	 CylinderGeometryPiece(ProblemSpecP &);
 	 
 	 //////////
+	 // Constructor that takes top, bottom and radius
+	 //
+	 CylinderGeometryPiece(const Point& top, 
+			       const Point& bottom,
+			       double radius);
+
+	 //////////
 	 // Destructor
 	 virtual ~CylinderGeometryPiece();
 	 
@@ -64,6 +71,13 @@ WARNING
 	 // Returns the bounding box surrounding the cylinder.
 	 virtual Box getBoundingBox() const;
 	 
+	 //////////
+	 // Get the top, bottom and radius
+	 //
+	 inline Point top() const {return d_top;}
+	 inline Point bottom() const {return d_bottom;}
+	 inline double radius() const {return d_radius;}
+
       private:
 	 Point d_bottom;
 	 Point d_top;
