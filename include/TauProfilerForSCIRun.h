@@ -6,7 +6,11 @@
 
 #ifdef USE_TAU_PROFILING
 
-#  define TAU_DOT_H_LESS_HEADERS
+//  RNJ - The following define is supplied
+//        by the TAU makefile.
+//
+//#  define TAU_DOT_H_LESS_HEADERS
+
 #  include <Profile/Profiler.h>
 
 #else
