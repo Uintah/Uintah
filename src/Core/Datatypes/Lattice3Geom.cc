@@ -153,13 +153,15 @@ void Lattice3Geom::compute_deltas(){
 void
 Lattice3Geom::set_bbox(BBox &box)
 {
-  Vector diag = box.diagonal();
-  Vector sdiag(diag.x() / d_nx, diag.y() / d_ny, diag.z() / d_nz);
-  d_trans.post_scale(sdiag);
-
   Vector offset(box.min());
   d_trans.post_translate(offset);
 
+  Vector diag = box.diagonal();
+  Vector sdiag(diag.x() / (d_nx - 1.0),
+	       diag.y() / (d_ny - 1.0),
+	       diag.z() / (d_nz - 1.0));
+
+  d_trans.post_scale(sdiag);
   d_trans.compute_imat();
   compute_bbox();
 }
