@@ -28,6 +28,10 @@ PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/T
 endif
 LIBS := -lm
 
+PROGRAM := $(SRCDIR)/ContinuityToTetVolDouble
+SRCS := $(SRCDIR)/ContinuityToTetVolDouble.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/EGItoMat
 SRCS := $(SRCDIR)/EGItoMat.cc
 include $(SCIRUN_SCRIPTS)/program.mk
