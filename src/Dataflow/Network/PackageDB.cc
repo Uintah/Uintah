@@ -613,31 +613,13 @@ PackageDB::getCategoryName(const string &packName,
     return catName;
   }
 
+  // Look up the package name somewhere else.  Find a remapping.
   PackageIter iter(package);
   for (iter.first(); iter.ok();++iter)
   {
     if (iter.get_data()->lookup(modName, modinfo))
     {
-      string newcatname = iter.get_key();
-      if (newcatname != catName &&
-	  !(packName == "SCIRun" && catName == "Fields"))
-      {
-#if SCI_ASSERTION_LEVEL >= 3
-	cerr << "Remark: Remapping " <<
-	  packName << "_" << catName << "_" << modName << " to " <<
-	  packName << "_" << newcatname << "_" << modName << "\n";
-#endif
-      }
-      else if (newcatname != catName &&
-	  !(packName == "Teem" && catName == "Unu"))
-      {
-#if SCI_ASSERTION_LEVEL >= 3
-	cerr << "Remark: Remapping " <<
-	  packName << "_" << catName << "_" << modName << " to " <<
-	  packName << "_" << newcatname << "_" << modName << "\n";
-#endif
-      }
-      return newcatname;
+      return iter.get_key();
     }
   }
   return catName;
