@@ -105,17 +105,12 @@ if (!oldStyleAdvect.active()){
 
   string tablename = "testtable";
   table = TableFactory::readTable(params, tablename);
-  cerr << "got table\n";
   table->addIndependentVariable("mix. frac.");
-  cerr << "add var\n";
 
   for (ProblemSpecP child = params->findBlock("tableValue"); child != 0;
        child = child->findNextBlock("tableValue")) {
-    cerr << "found\n";
     TableValue* tv = new TableValue;
-    cerr << "getNodeValue\n";
     child->get(tv->name);
-    cerr << "tableValue: " << tv->name << '\n';
     tv->index = table->addDependentVariable(tv->name);
     string labelname = tablename+"-"+tv->name;
     tv->label = VarLabel::create(labelname, CCVariable<double>::getTypeDescription());
