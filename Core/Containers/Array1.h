@@ -95,6 +95,11 @@ public:
   Array1<T>& operator=(const Array1&);
 
   //////////
+  //Compare over the array - this can be costly, so try to avoid it.
+  int operator==(const Array1<T>&) const;
+  int operator!=(const Array1<T>&) const;
+
+  //////////
   //Deletes the array and frees the associated memory
   ~Array1();
     
@@ -201,6 +206,26 @@ Array1<T>& Array1<T>::operator=(const Array1<T>& copy)
   nalloc=_size;
   default_grow_size=copy.default_grow_size;
   return(*this);
+}
+
+template<class T>
+int Array1<T>::operator==(const Array1<T>& a) const
+{
+  for(int i=0;i<_size;i++)
+    if( objs[i]!=a.objs[i] )
+      return false;
+
+  return true;
+}
+
+template<class T>
+int Array1<T>::operator!=(const Array1<T>& a) const
+{
+  for(int i=0;i<_size;i++)
+    if( objs[i]!=a.objs[i] )
+      return true;
+
+  return false;
 }
 
 template<class T>
