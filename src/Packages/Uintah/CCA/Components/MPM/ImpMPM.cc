@@ -1829,8 +1829,8 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
     if (exists == PETSC_TRUE)
       VecDestroy(petscTemp2);
 
-    VecCreateSeq(PETSC_COMM_WORLD,num_nodes,&petscQ);
-    VecCreateSeq(PETSC_COMM_WORLD,num_nodes,&petscTemp2);
+    VecCreateMPI(PETSC_COMM_WORLD,num_nodes,PETSC_DETERMINE,&petscQ);
+    VecCreateMPI(PETSC_COMM_WORLD,num_nodes,PETSC_DETERMINE,&petscTemp2);
     PetscScalar v = 0.;
     VecSet(&v,petscQ);
     VecSet(&v,petscTemp2);
@@ -1936,6 +1936,7 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
 #ifdef HAVE_PETSC
       PetscScalar minusone = -1.;
       VecAXPY(&minusone,petscTemp2,petscQ);
+      VecDestroy(petscTemp2);
 #endif
     }
 #ifdef HAVE_PETSC
@@ -2256,7 +2257,7 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
 
 #ifdef HAVE_PETSC
     Vec diagonal;
-    VecCreateSeq(PETSC_COMM_WORLD,num_nodes,&diagonal);
+    VecCreateMPI(PETSC_COMM_WORLD,num_nodes,PETSC_DETERMINE,&diagonal);
     MatGetDiagonal(A,diagonal);
     PetscScalar* diag;
     VecGetArray(diagonal,&diag);
@@ -2282,6 +2283,7 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
     VecAssemblyBegin(diagonal);
     VecAssemblyEnd(diagonal);
     MatDiagonalSet(A,diagonal,INSERT_VALUES);
+    VecDestroy(diagonal);
 #endif
     KK.clear();
     KK = KKK;
@@ -2412,10 +2414,10 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
     SLESGetPC(sles,&pc);
     KSPSetType(ksp,KSPCG);
     PCSetType(pc,PCJACOBI);
-    KSPSetTolerances(ksp,1.e-7,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
+    KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
 
     int its;
-    VecCreateSeq(PETSC_COMM_WORLD,num_nodes,&d_x);
+    VecCreateMPI(PETSC_COMM_WORLD,num_nodes,PETSC_DETERMINE,&d_x);
     SLESSolve(sles,petscQ,d_x,&its);
     SLESView(sles,PETSC_VIEWER_STDOUT_WORLD);
     PetscPrintf(PETSC_COMM_WORLD,"Iterations %d\n",its);
@@ -2424,8 +2426,8 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
     for (int i = 0; i < num_nodes; i++) {
       PetscPrintf(PETSC_COMM_WORLD,"d_x[%d] = %g\n",i,xPetsc[i]);
     }
-    VecRestoreArray(d_x,&xPetsc);
 
+    SLESDestroy(sles);
 #endif
 
     x = cgSolve(KK,Q,conflag);
@@ -2454,8 +2456,16 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
       dof[0] = 3*node_num;
       dof[1] = 3*node_num+1;
       dof[2] = 3*node_num+2;
+#ifdef HAVE_PETSC
+      dispInc[n] = Vector(xPetsc[dof[0]],xPetsc[dof[1]],xPetsc[dof[2]]);
+#else
       dispInc[n] = Vector(x[dof[0]],x[dof[1]],x[dof[2]]);
-    }    
+#endif
+    }
+#ifdef HAVE_PETSC
+    VecRestoreArray(d_x,&xPetsc);
+    VecDestroy(d_x);
+#endif
   }
 
 }
