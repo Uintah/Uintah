@@ -365,7 +365,7 @@ University of Utah. All Rights Reserved.
 <title><xsl:value-of select="./bookinfo/title" /></title>
 <link rel="stylesheet" type="text/css">
 <xsl:attribute name="href">
-  <xsl:value-of select="concat($treetop,'/doc/Utilities/HTML/doc_styles.css')" />
+  <xsl:value-of select="concat($treetop,'doc/Utilities/HTML/doc_styles.css')" />
 </xsl:attribute>
 </link>
 </head>
