@@ -85,8 +85,8 @@ void GLAnimatedStreams::init()
 
   Point min, max;
   _vfH->get_bounds(min, max);
-    
-  cerr<<"RMAX = "<<RMAX<<endl;
+
+  cerr<<"bounds = "<<min<<", "<<max<<endl;    
 }
 GLAnimatedStreams::~GLAnimatedStreams()
 {
@@ -217,7 +217,12 @@ GLAnimatedStreams::newStreamer(int whichStreamer)
   Point min, max;
   _vfH->get_bounds(min, max);
   
-  fx[whichStreamer] = min + (max - min ) * dRANDOM();
+  Vector toPoint = Vector( (max.x() - min.x()) * dRANDOM(),
+			   (max.y() - min.y()) * dRANDOM(),
+			   (max.z() - min.z()) * dRANDOM());
+
+  fx[whichStreamer] = min + toPoint;
+  cerr<<"stream base = "<<fx[whichStreamer]<<endl;
 
   tempNode = new streamerNode;
   tempNode->position = fx[whichStreamer];
