@@ -11,12 +11,13 @@ methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
                             "<maxTime>10.0</maxTime>"])
 
 
-UNUSED = [ ("methane_explicit_8patch", methane8patch_ups, "", 8, "ALL","chem_meth", "arches") \
+UNUSED = [ 
 ]
 
-TESTS = [ ("ice_perf_test", "performanceTest.ups", "", 1, "IRIX64","","ice"),  \
+TESTS = [ ("methane_explicit_8patch", methane8patch_ups, "", 8, "ALL","chem_meth", "arches"), \
+        ("ice_perf_test", "performanceTest.ups", "", 1, "ALL","","ice"),  \
           ("mpmice_perf_test", "performanceTest.ups", "", 1, "ALL","","mpmice"),\
-          ("disks2mat4patch4proc", "disks2mat4patch.ups", "", 4, "IRIX64","","mpm"), \
+          ("disks2mat4patch4proc", "disks2mat4patch.ups", "", 4, "ALL","","mpm"), \
     	]
 
 def chemfile (test):
