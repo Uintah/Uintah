@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyper.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyperImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramForBinder.h>
@@ -47,16 +48,19 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
    
    if (mat_type == "comp_mooney_rivlin")
       return(scinew CompMooneyRivlin(child,lb,n8or27));
-   
-   if (mat_type == "trans_iso_hyper")
-      return(scinew TransIsoHyper(child,lb,n8or27));
-
 
    else if (mat_type ==  "comp_neo_hook") {
      if (integrator == "explicit" || integrator == "fracture")
       return(scinew CompNeoHook(child,lb,n8or27));
      else if (integrator == "implicit")
        return(scinew CompNeoHookImplicit(child,lb,n8or27));
+   }
+
+   else if (mat_type ==  "trans_iso_hyper") {
+     if (integrator == "explicit" || integrator == "fracture")
+      return(scinew TransIsoHyper(child,lb,n8or27));
+     else if (integrator == "implicit")
+       return(scinew TransIsoHyperImplicit(child,lb,n8or27));
    }
 
    else if (mat_type ==  "ideal_gas")
@@ -77,7 +81,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
      else if (integrator == "implicit")
        return(scinew HypoElasticImplicit(child,lb,n8or27));
    }
-   
+
    else if (mat_type ==  "mw_visco_elastic")
       return(scinew MWViscoElastic(child,lb,n8or27));
    
