@@ -67,7 +67,13 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   d_mpm->setMPMLabel(Mlb);
   d_mpm->setWithICE();
   d_mpm->problemSetup(prob_spec, grid, d_sharedState);
-  
+
+  dataArchiver = dynamic_cast<Output*>(getPort("output"));
+  if(dataArchiver == 0){
+    cout<<"dataArhiver in MPMICE is null now exiting; "<<endl;
+    exit(1);
+  }
+  d_ice->attachPort("output", dataArchiver);
   d_ice->setICELabel(Ilb);
   d_ice->problemSetup(prob_spec, grid, d_sharedState);
   
@@ -1361,7 +1367,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
   //---- P R I N T   D A T A ------
   #if 0
-
     if(d_ice -> switchDebug_equilibration_press)  { 
       for (int m = 0; m < numALLMatls; m++)  {
         Material* matl = d_sharedState->getMaterial( m );
@@ -1446,8 +1451,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 	   mpm_matl->getConstitutiveModel()->
 	     computePressEOSCM(rho_micro[m][*iter],press_eos[m],press_ref,
                               dp_drho[m], tmp,mpm_matl);
+           speedSound_new[m][*iter] = sqrt(tmp);
 
-          speedSound_new[m][*iter] = sqrt(tmp);
   #endif
 	   mat_volume[m] = mat_vol[m][*iter];
 
