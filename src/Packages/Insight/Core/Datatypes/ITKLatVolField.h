@@ -99,9 +99,9 @@ public:
   const value_type &operator[](typename LatVolMesh::Cell::index_type idx) const
   { 
     typename image_type::IndexType pixel;
-    pixel[0] = idx.i_;
+    pixel[0] = idx.k_;
     pixel[1] = idx.j_;
-    pixel[2] = idx.k_;
+    pixel[2] = idx.i_;
     return image_->GetPixel( pixel ); 
   } 
   const value_type &operator[](typename LatVolMesh::Face::index_type idx) const
@@ -168,9 +168,9 @@ public:
 
   void resize(const LatVolMesh::Node::size_type &size)
   { 
-    if( (size.i_ == dim1()) &&
+    if( (size.i_ == dim3()) &&
 	(size.j_ == dim2()) &&
-	(size.k_ == dim3())) {
+	(size.k_ == dim1())) {
       return;
     }
     else {
@@ -186,9 +186,9 @@ public:
   }
   void resize(const LatVolMesh::Cell::size_type &size)
   { 
-    if( (size.i_ == dim1()) &&
+    if( (size.i_ == dim3()) &&
 	(size.j_ == dim2()) &&
-	(size.k_ == dim3())) {
+	(size.k_ == dim1())) {
       return;
     }
     else {
@@ -320,6 +320,8 @@ public:
   // ../src/Core/Datatypes/QuadraticTetVolField.h:95: warning: implicit typename is 
   // deprecated, please see the documentation for details
   typedef typename GenericField<LatVolMesh, ITKFData3d<Data> >::mesh_handle_type mesh_handle_type;
+  typedef LatVolMesh mesh_type;
+
   ITKLatVolField();
   ITKLatVolField(Field::data_location data_at);
   ITKLatVolField(LatVolMeshHandle mesh, Field::data_location data_at);
