@@ -109,6 +109,19 @@ double Harlow::computeRhoMicro(double& press, double& gamma,
   // Pointwise computation of microscopic density
   return  press/((gamma - 1.0)*cv*Temp);
 }
+//__________________________________
+//
+void Harlow::computeTemp_CC(const Patch* patch,
+                                const CCVariable<double>& press, 
+                                const double& gamma,
+				    const CCVariable<double>& cv,
+                                const CCVariable<double>& rho_micro, 
+                                CCVariable<double>& Temp)
+{
+  for (CellIterator iter = patch->getCellIterator();!iter.done();iter++) {                     
+    Temp[*iter]= press[*iter]/ ( (gamma - 1.0) * cv[*iter] * rho_micro[*iter] );
+  }
+}
 
 void Harlow::computePressEOS(double& rhoM, double& gamma,
 			       double& cv, double& Temp,
