@@ -1095,11 +1095,12 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	set modstr [join [modulePath $module] ->]
 
 	if { [string equal "SCIRun->Render->Viewer" $modstr] } {
+	    set num 0
 	    foreach w [winfo children .] {
 		if { [string first .ui$module $w] == 0 } {
-		    append script "\n${tab}$modVar($module) ui"
-		    append script "\n${tab}set $modVar($module)-ViewWindow_0-geometry [wm geometry .ui$module-ViewWindow_0]\n"
-		    break
+		    append script "\n${tab}$modVar($module) addViewer"
+		    append script "\n${tab}set $modVar($module)-ViewWindow_$num-geometry [wm geometry $w]\n"
+		    incr num
 		}
 	    }
 	}
