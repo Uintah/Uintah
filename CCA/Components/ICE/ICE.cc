@@ -1219,10 +1219,10 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       new_dw->allocate(uvel_FC, lb->uvel_FCLabel, indx, patch);
       new_dw->allocate(vvel_FC, lb->vvel_FCLabel, indx, patch);
       new_dw->allocate(wvel_FC, lb->wvel_FCLabel, indx, patch);
-
-      uvel_FC.initialize(0.);
-      vvel_FC.initialize(0.);
-      wvel_FC.initialize(0.);
+      IntVector lowIndex(patch->getSFCXLowIndex());
+      uvel_FC.initialize(0.0, lowIndex,patch->getSFCXHighIndex());
+      vvel_FC.initialize(0.0, lowIndex,patch->getSFCYHighIndex());
+      wvel_FC.initialize(0.0, lowIndex,patch->getSFCZHighIndex());
 
       double term1, term2, term3, press_coeff, rho_micro_FC, rho_FC;
 
@@ -1394,7 +1394,9 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     vector<SFCXVariable<double> > uvel_FCME(numMatls);
     vector<SFCYVariable<double> > vvel_FCME(numMatls);
     vector<SFCZVariable<double> > wvel_FCME(numMatls);
-
+    // lowIndex is the same for all vel_FC
+    IntVector lowIndex(patch->getSFCXLowIndex()); 
+    
     // Extract the momentum exchange coefficients
     vector<double> b(numMatls);
     DenseMatrix beta(numMatls,numMatls),a(numMatls,numMatls);
@@ -1424,8 +1426,12 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       new_dw->allocate(uvel_FCME[m], lb->uvel_FCMELabel, indx, patch);
       new_dw->allocate(vvel_FCME[m], lb->vvel_FCMELabel, indx, patch);
       new_dw->allocate(wvel_FCME[m], lb->wvel_FCMELabel, indx, patch);
-    }
 
+      uvel_FCME[m].initialize(0.0, lowIndex,patch->getSFCXHighIndex());
+      vvel_FCME[m].initialize(0.0, lowIndex,patch->getSFCYHighIndex());
+      wvel_FCME[m].initialize(0.0, lowIndex,patch->getSFCZHighIndex());
+    }
+    
     for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
       IntVector curcell = *iter;
       //__________________________________
@@ -2916,15 +2922,18 @@ void ICE::setBC(CCVariable<double>& press_CC, CCVariable<double>& rho_micro,
     
     if (bc_base->getType() == "Pressure") {
       PressureBoundCond* bc = dynamic_cast<PressureBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet") 
-	press_CC.fillFace(face,bc->getValue());
       
-      if (bc->getKind() == "Neumann") 
-	press_CC.fillFaceFlux(face,bc->getValue(),dx);
-       
-      if ( fabs(gravity.x()) > 0.0  || 
-           fabs(gravity.y()) > 0.0  || fabs(gravity.z()) > 0.0) {
+      if (  fabs(gravity.x()) > 0.0  || 
+            fabs(gravity.y()) > 0.0  || 
+            fabs(gravity.z()) > 0.0) {
         press_CC.setHydrostaticPressureBC(face, gravity, rho_micro, dx);
+      }
+      else {
+        if (bc->getKind() == "Dirichlet")
+         press_CC.fillFace(face,bc->getValue());
+ 
+        if (bc->getKind() == "Neumann")
+         press_CC.fillFaceFlux(face,bc->getValue(),dx);
       }
     }
   }
@@ -3165,7 +3174,7 @@ void ICE::setBC(SFCZVariable<double>& variable, const  string& kind,
 
 
 /* ---------------------------------------------------------------------
- Function~  outFlux_volume--
+ Function~  influxOutfluxVolume--
  Purpose~   calculate the individual outfluxes for each cell.
             This includes the slabs and edge fluxes
  References:
@@ -3264,8 +3273,21 @@ void ICE::influxOutfluxVolume(const SFCXVariable<double>&     uvel_FC,
     for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
       total_fluxout  += OFC[*iter].d_cflux[corner];
     }
+    
+ // ASSERT(total_fluxout < vol);
+    if (total_fluxout > vol) {
+      IntVector curcell = *iter;
+      int i,j,k;
+      i   = curcell.x();
+      j   = curcell.y();
+      k   = curcell.z();
 
-    ASSERT(total_fluxout < vol);
+      char warning [100];
+      sprintf(warning,
+        " cell[%d][%d][%d], total_outflux (%5.4g)  > vol (%5.4g) .....Now exiting ",
+        i,j,k,total_fluxout, vol);
+      Message(1,"ICE::influxOutfluxVolume:",warning, "");
+   }
   }
 }
   
@@ -3901,8 +3923,8 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
   fprintf(stderr,"$%s\n",message2);
   
   if (include_GC == 1)  { 
-    lowIndex = patch->getCellLowIndex();
-    hiIndex  = patch->getCellHighIndex();
+    lowIndex = patch->getSFCXLowIndex();
+    hiIndex  = patch->getSFCXHighIndex();
   }
   if (include_GC == 0) {
     lowIndex = patch->getInteriorCellLowIndex();
@@ -3949,8 +3971,8 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
   fprintf(stderr,"$%s\n",message2);
   
   if (include_GC == 1)  { 
-    lowIndex = patch->getCellLowIndex();
-    hiIndex  = patch->getCellHighIndex();
+    lowIndex = patch->getSFCYLowIndex();
+    hiIndex  = patch->getSFCYHighIndex();
   }
   if (include_GC == 0) {
     lowIndex = patch->getInteriorCellLowIndex();
@@ -3998,8 +4020,8 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
   fprintf(stderr,"$%s\n",message2);
   
   if (include_GC == 1)  { 
-    lowIndex = patch->getCellLowIndex();
-    hiIndex  = patch->getCellHighIndex();
+    lowIndex = patch->getSFCZLowIndex();
+    hiIndex  = patch->getSFCZHighIndex();
   }
   if (include_GC == 0) {
     lowIndex = patch->getInteriorCellLowIndex();
