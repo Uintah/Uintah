@@ -63,6 +63,8 @@ public:
     TetVol<T>::resize_fdata();
   }
 
+  void initialize_mask(int) {}
+
   static  PersistentTypeID type_id;
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
