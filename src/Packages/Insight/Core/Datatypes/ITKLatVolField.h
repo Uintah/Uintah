@@ -568,44 +568,46 @@ void
 ITKLatVolField<Data>::io(Piostream &stream)
 {
   int version = stream.begin_class(type_name(-1), ITK_LAT_VOL_FIELD_VERSION);
-  if(stream.reading()) {
-    GenericField<LatVolMesh, ITKFData3d<Data> >::io(stream);
-    stream.end_class();
-    
-    // set spacing
-    typedef typename itk::Image<Data, 3> ImageType;
-    const BBox bbox = mesh()->get_bounding_box();
-    Point mesh_center;
-    Vector mesh_size;
-    if(bbox.valid()) {
-      mesh_center = bbox.center();
-      mesh_size = bbox.diagonal();
-    }
-    else {
-      std::cerr << "No bounding box to get center\n"; // fix
+  if(version) {
+    if(stream.reading()) {
+      GenericField<LatVolMesh, ITKFData3d<Data> >::io(stream);
+      stream.end_class();
+      
+      // set spacing
+      typedef typename itk::Image<Data, 3> ImageType;
+      const BBox bbox = mesh()->get_bounding_box();
+      Point mesh_center;
+      Vector mesh_size;
+      if(bbox.valid()) {
+	mesh_center = bbox.center();
+	mesh_size = bbox.diagonal();
+      }
+      else {
+	std::cerr << "No bounding box to get center\n"; // fix
+	return;
+      }
+      
+      // image origin and spacing
+      double origin[ ImageType::ImageDimension ];
+      origin[0] = mesh_center.x();
+      origin[1] = mesh_center.y();
+      origin[2] = mesh_center.z();
+      
+      fdata().set_image_origin( origin );
+      
+      double spacing[ ImageType::ImageDimension ];
+      spacing[0] = mesh_size.x()/fdata().dim1();
+      spacing[1] = mesh_size.y()/fdata().dim2();
+      spacing[2] = mesh_size.z()/fdata().dim3();
+      
+      fdata().set_image_spacing( spacing );
+      
+      return;
+    } else {
+      GenericField<LatVolMesh, ITKFData3d<Data> >::io(stream);
+      stream.end_class();
       return;
     }
-
-    // image origin and spacing
-    double origin[ ImageType::ImageDimension ];
-    origin[0] = mesh_center.x();
-    origin[1] = mesh_center.y();
-    origin[2] = mesh_center.z();
-    
-    fdata().set_image_origin( origin );
-    
-    double spacing[ ImageType::ImageDimension ];
-    spacing[0] = mesh_size.x()/fdata().dim1();
-    spacing[1] = mesh_size.y()/fdata().dim2();
-    spacing[2] = mesh_size.z()/fdata().dim3();
-
-    fdata().set_image_spacing( spacing );
-
-    return;
-  } else {
-    GenericField<LatVolMesh, ITKFData3d<Data> >::io(stream);
-    stream.end_class();
-    return;
   }
 
 }

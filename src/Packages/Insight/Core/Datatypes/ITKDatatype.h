@@ -34,6 +34,8 @@
 
 // TEMP
 #include "itkImage.h"
+#include "itkRGBPixel.h"
+#include "itkVector.h"
 
 namespace Insight {
 
