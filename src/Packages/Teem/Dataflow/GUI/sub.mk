@@ -40,6 +40,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/NrrdResample.tcl\
 	$(SRCDIR)/NrrdSelectTime.tcl\
 	$(SRCDIR)/NrrdWriter.tcl\
+	$(SRCDIR)/HDF5DataReader.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Teem/Dataflow/GUI
