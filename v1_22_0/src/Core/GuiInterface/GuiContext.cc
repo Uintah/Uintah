@@ -43,6 +43,7 @@
 #include <Core/GuiInterface/GuiContext.h>
 #include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Util/Environment.h>
+#include <Core/Math/MiscMath.h>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -130,6 +131,7 @@ bool GuiContext::get(double& value)
 
 void GuiContext::set(double value)
 {
+  value = MakeReal(value);
   ostringstream stream;
   // Print the number 17 digits wide with decimal
   stream << showpoint << setprecision(17) << value;
