@@ -308,6 +308,7 @@ private:
   double           d_SMALL_NUM_MPM;
   int              d_8or27;  // Number of nodes a particle can interact with
   double           d_min_part_mass; // Minimum particle mass before it's deleted
+  double           d_max_vel; // Maxmimum particle velocity before it's deleted
   int              NGP;      // Number of ghost particles needed.
   int              NGN;      // Number of ghost nodes     needed.
 

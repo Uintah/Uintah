@@ -69,6 +69,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   thermalContactModel = 0;
   d_8or27 = 8;
   d_min_part_mass = 3.e-15;
+  d_max_vel = 3.e105;
   d_artificial_viscosity = false;
   NGP     = 1;
   NGN     = 1;
@@ -101,6 +102,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    if(mpm_soln_ps) {
      mpm_soln_ps->get("nodes8or27", d_8or27);
      mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
+     mpm_soln_ps->get("maximum_particle_melocity",d_max_vel);
      mpm_soln_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
      mpm_soln_ps->get("artificial_viscosity",     d_artificial_viscosity);
    }
@@ -2008,7 +2010,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	  }
           pmassNew[idx]        = Max(pmass[idx]*(1.    - burnFraction),0.);
           pvolumeNew[idx]      = pmassNew[idx]/rho;
-	  if(pmassNew[idx] <= d_min_part_mass){
+          if(pmassNew[idx] <= d_min_part_mass ||
+            (rho_frac_min < 1.0 && pvelocitynew[idx].length() > d_max_vel)){
 	    delset->addParticle(idx);
 	  }
 	    
