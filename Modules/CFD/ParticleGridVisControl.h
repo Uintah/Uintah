@@ -95,8 +95,8 @@ private:
 
 
   ParticleGridReaderHandle pgrh;
-  void setVars(ParticleGridReader *reader);
-  void checkVars(ParticleGridReader *reader );
+  void setVars(ParticleGridReaderHandle reader);
+  void checkVars(ParticleGridReaderHandle reader );
   void graph(clString, clString);
 }; //class 
 

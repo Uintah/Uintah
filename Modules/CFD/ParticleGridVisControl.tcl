@@ -130,9 +130,11 @@ itcl_class ParticleGridVisControl {
 	button $w.b -text "Close" -command "destroy $w"
 	pack $w.b -side top -fill x -padx 2 -pady 2
 
-
+	puts "adding scalarvars"
   	$this addScalarVars
+	puts "adding vector vars"
   	$this addVectorVars
+	puts "adding fluidvars"
   	$this addFluids
 
     }

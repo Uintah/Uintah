@@ -124,7 +124,7 @@ void ParticleGridVisControl::tcl_command( TCLArgs& args, void* userdata)
       return;
     }
     if ( pgrh->getNFluids() ){
-      fl = pgrh->getFluid( 1 );
+      fl = pgrh->getFluid( 0 );
       Array1<clString> varnames;
       fl->getScalarVars( varnames );
       result = varnames[0];
@@ -142,7 +142,7 @@ void ParticleGridVisControl::tcl_command( TCLArgs& args, void* userdata)
       return;
     }
     if ( pgrh->getNFluids() ){
-      fl = pgrh->getFluid( 1 );
+      fl = pgrh->getFluid( 0 );
       Array1<clString> varnames;
       fl->getVectorVars( varnames );
       result = varnames[0];
@@ -192,7 +192,7 @@ void ParticleGridVisControl::tcl_command( TCLArgs& args, void* userdata)
 // If receiving data for the first time, this function selects
 // the first variable in each catagory.
 //
-void ParticleGridVisControl::setVars(ParticleGridReader* reader)
+void ParticleGridVisControl::setVars(ParticleGridReaderHandle reader)
 {
   int nFluids = reader->getNFluids();
   for( int i = 0; i < nFluids; i++ ){
@@ -235,7 +235,7 @@ void ParticleGridVisControl::setVars(ParticleGridReader* reader)
 // Check to see that this data has the same variables as the last
 // set of data.  If they are different then call setVars, because
 // previous selections do not apply.
-void ParticleGridVisControl::checkVars(ParticleGridReader *reader)
+void ParticleGridVisControl::checkVars(ParticleGridReaderHandle reader)
 {
   int i;
   ParticleGridReader *pgr = pgrh.get_rep();
@@ -370,10 +370,10 @@ void ParticleGridVisControl::execute()
 
    if ( handle.get_rep() != pgrh.get_rep() ) {
 
-     if (pgrh.get_rep() == 0 ){
-       setVars( handle.get_rep() );
+     if (pgrh.get_rep()  == 0 ){
+       setVars( handle );
      } else {
-       checkVars( handle.get_rep() );
+       checkVars( handle );
      }
      pgrh = handle;
 
@@ -396,6 +396,7 @@ void ParticleGridVisControl::execute()
    if ( pFluid.get() != 0 ){
      fl = pgrh->getFluid( pFluid.get() - 1);
      ParticleSetHandle psh = fl->getParticleSet();
+     cerr<<psVar.get()<<", "<<pvVar.get()<<", "<<endl;
      ParticleSetExtension *pse =
        new ParticleSetExtension(psVar.get(), pvVar.get(), (void *) this);
      ParticleSetExtensionHandle pseh( pse );

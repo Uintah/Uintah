@@ -182,15 +182,15 @@ void PartToGeom::execute()
   if( iePort->get(pseh)) {
     pse = pseh.get_rep();
     posid = part->position_vector();
-    if( pse->getVectorId() != "") {
-      vid = part->find_vector( pse->getVectorId());
+    if( pseh->getVectorId() != "") {
+      vid = part->find_vector( pseh->getVectorId());
       part->get(timestep, vid, vectors);
     }
 
-    sid = part->find_scalar( pse->getScalarId());
+    sid = part->find_scalar( pseh->getScalarId());
     part->get(timestep, posid, pos);
     part->get(timestep, sid, scalars);
-    cbClass = pse->getCallbackClass(); // hack need a better way.
+    cbClass = pseh->getCallbackClass(); // hack need a better way.
   } else {
     cbClass = 0;
     posid=part->position_vector();

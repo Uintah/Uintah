@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-
+#include <unistd.h>
 
 extern "C" { 
   
@@ -138,7 +138,7 @@ void TecplotFileSelector::doAnimation()
 
   for(i = startFrame.get(); i <= endFrame.get(); i += increment.get() ){
     ostrstream ostr;
-    
+    sleep(2);
     ostr.fill('0');
     ostr << path << "/"<< root<< setw(4)<<i;
     cerr << ostr.str()<< endl;
