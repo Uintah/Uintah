@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -133,7 +134,7 @@ MPIScheduler::actuallyCompile(const ProcessorGroup* pg)
   graph.createDetailedDependencies(dts_, lb, pg);
   releasePort("load balancer");
 
-  dts_->assignMessageTags(graph.getTasks());
+  dts_->assignMessageTags(pg->myrank());
 
   verifyChecksum();
 
@@ -295,12 +296,14 @@ MPIScheduler::sendMPIData( const ProcessorGroup * pg,
       void* buf;
       int count;
       MPI_Datatype datatype;
+     
 #ifdef USE_PACKING
       mpibuff.get_type(buf, count, datatype, pg->getComm());
       mpibuff.pack(pg->getComm(), count);
 #else
       mpibuff.get_type(buf, count, datatype);
 #endif
+
       dbg << "Sending message number " << batch->messageTag 
 	  << " to " << to << "\n";
       if( mixedDebug.active() ) {
