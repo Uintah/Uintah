@@ -51,7 +51,13 @@ WARNING
 
 	 //////////
 	 // Insert Documentation Here:
-	 IntVector getObjInfoNumParticlesPerCell();
+	 IntVector getNumParticlesPerCell();
+
+	 //////////
+	 // Insert Documentation Here:
+	 GeometryPiece* getPiece() const {
+	    return d_piece;
+	 }
 
       private:
 	 GeometryPiece* d_piece;
@@ -65,6 +71,9 @@ WARNING
 
 
 // $Log$
+// Revision 1.16  2000/04/27 23:18:46  sparker
+// Added problem initialization for MPM
+//
 // Revision 1.15  2000/04/26 06:48:24  sparker
 // Streamlined namespaces
 //

@@ -71,7 +71,7 @@ void OnDemandDataWarehouse::get(ParticleVariableBase&, const VarLabel*,
 }
 
 void OnDemandDataWarehouse::allocate(ParticleVariableBase&, const VarLabel*,
-				     int matlIndex, const Region*, int numGhostCells) const
+				     int matlIndex, const Region*) const
 {
    cerr << "OnDemend DataWarehouse::allocate not finished\n";
 }
@@ -89,7 +89,7 @@ void OnDemandDataWarehouse::get(NCVariableBase&, const VarLabel*,
 }
 
 void OnDemandDataWarehouse::allocate(NCVariableBase&, const VarLabel*,
-				     int matlIndex, const Region*, int numGhostCells) const
+				     int matlIndex, const Region*) const
 {
    cerr << "OnDemend DataWarehouse::allocate not finished\n";
 }
@@ -273,6 +273,9 @@ OnDemandDataWarehouse::DataRecord::DataRecord(DataItem* di,
 
 //
 // $Log$
+// Revision 1.12  2000/04/27 23:18:48  sparker
+// Added problem initialization for MPM
+//
 // Revision 1.11  2000/04/26 06:48:33  sparker
 // Streamlined namespaces
 //

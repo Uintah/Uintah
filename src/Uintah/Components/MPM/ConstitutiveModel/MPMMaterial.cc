@@ -4,6 +4,8 @@
 #include "MPMMaterial.h"
 #include "ConstitutiveModel.h"
 #include <SCICore/Geometry/IntVector.h>
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/CellIterator.h>
 #include <Uintah/Components/MPM/GeometrySpecification/GeometryPieceFactory.h>
 #include <Uintah/Components/MPM/GeometrySpecification/UnionGeometryPiece.h>
 #include <Uintah/Components/MPM/GeometrySpecification/GeometryObject.h>
@@ -70,8 +72,6 @@ MPMMaterial::~MPMMaterial()
   // Destructor
 }
 
-#if 0
-
 ConstitutiveModel * MPMMaterial::getConstitutiveModel()
 {
   // Return the pointer to the constitutive model associated
@@ -80,7 +80,7 @@ ConstitutiveModel * MPMMaterial::getConstitutiveModel()
   return d_cm;
 }
 
-long MPMMaterial::countParticles(const Region* region)
+long MPMMaterial::countParticles(const Region* region) const
 {
    long sum = 0;
    for(int i=0; i<d_geom_objs.size(); i++)
@@ -88,8 +88,8 @@ long MPMMaterial::countParticles(const Region* region)
    return sum;
 }
 
-void MPMMaterial::countParticles(ParticleVariable<Point>& position,
-				 const Region* region)
+void MPMMaterial::createParticles(ParticleVariable<Point>& position,
+				  const Region* region)
 {
    long start = 0;
    for(int i=0; i<d_geom_objs.size(); i++)
@@ -97,22 +97,34 @@ void MPMMaterial::countParticles(ParticleVariable<Point>& position,
 }
 
 long MPMMaterial::countParticles(GeometryObject* obj,
-				 const Region*) const
+				 const Region* region) const
 {
-   Vector dxpp = dCell/numParPCell;
-
-   Box b1 = objs->getBox();
-   Box b2 = objs->getbox();
+   GeometryPiece* piece = obj->getPiece();
+   Box b1 = piece->getBoundingBox();
+   Box b2 = region->getBox();
    Box b = b1.intersect(b2);
    if(b.degenerate())
       return 0;
 
+   IntVector ppc = obj->getNumParticlesPerCell();
+   Vector dxpp = region->dCell()*obj->getNumParticlesPerCell();
+   Vector dcorner = dxpp*0.5;
+
    int count = 0;
-   for(...){
-      if(obj->inside(p))
-	 count++;
+   for(CellIterator iter = region->getCellIterator(b); !iter.done(); iter++){
+      Point lower = region->nodePosition(*iter) + dcorner;
+      for(int ix=0;ix < ppc.x(); ix++){
+	 for(int iy=0;iy < ppc.y(); iy++){
+	    for(int iz=0;iz < ppc.z(); iz++){
+	       IntVector idx(ix, iy, iz);
+	       Point p = lower + dxpp*idx;
+	       if(piece->inside(p))
+		  count++;
+	    }
+	 }
+      }
    }
+   cerr << "Count for obj: " << count << '\n';
    return count;
 }
 
-#endif

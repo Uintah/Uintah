@@ -59,8 +59,11 @@ WARNING
 	 // Return correct constitutive model pointer for this material
 	 ConstitutiveModel * getConstitutiveModel();
 	 
-	 long countParticles(const Region*);
+	 long countParticles(const Region*) const;
+	 long countParticles(GeometryObject* obj, const Region*) const;
 	 void createParticles(ParticleVariable<Point>& position, const Region*);
+	 long createParticles(GeometryObject* obj, long start,
+			      ParticleVariable<Point>& position, const Region*);
       private:
 	 
 	 // Specific constitutive model associated with this material
@@ -85,6 +88,9 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.7  2000/04/27 23:18:44  sparker
+// Added problem initialization for MPM
+//
 // Revision 1.6  2000/04/26 06:48:17  sparker
 // Streamlined namespaces
 //

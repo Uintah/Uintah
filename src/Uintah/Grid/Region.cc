@@ -7,6 +7,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/SubRegion.h>
 #include <SCICore/Math/MiscMath.h>
 #include <Uintah/Exceptions/InvalidGrid.h>
+#include <Uintah/Grid/CellIterator.h>
 #include <values.h>
 
 using namespace Uintah;
@@ -218,8 +219,20 @@ void Region::performConsistencyCheck() const
     throw InvalidGrid("Degenerate region");
 }
 
+CellIterator Region::getCellIterator(const Box& b) const
+{
+   Vector l = (b.lower() - d_box.lower())/d_res;
+   Vector u = (b.upper() - d_box.lower())/d_res;
+   return CellIterator((int)l.x(), (int)l.y(), (int)l.z(),
+		       RoundUp(u.x()), RoundUp(u.y()), RoundUp(u.z()));
+}
+      
+
 //
 // $Log$
+// Revision 1.7  2000/04/27 23:18:50  sparker
+// Added problem initialization for MPM
+//
 // Revision 1.6  2000/04/26 06:48:54  sparker
 // Streamlined namespaces
 //

@@ -12,7 +12,7 @@ GeometryObject::~GeometryObject()
 {
 }
 
-IntVector GeometryObject::getObjInfoNumParticlesPerCell()
+IntVector GeometryObject::getNumParticlesPerCell()
 {
   return d_resolution;
 }
@@ -377,6 +377,9 @@ void GeometryObject::fillWithParticles(vector<Material *> &materials,
 #endif
   
 // $Log$
+// Revision 1.11  2000/04/27 23:18:46  sparker
+// Added problem initialization for MPM
+//
 // Revision 1.10  2000/04/26 06:48:24  sparker
 // Streamlined namespaces
 //

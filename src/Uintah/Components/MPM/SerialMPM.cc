@@ -378,10 +378,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       NCVariable<Vector> gvelocity;
       NCVariable<Vector> externalforce;
 
-      new_dw->allocate(gmass,         gMassLabel, vfindex, region, 0);
-      new_dw->allocate(gvelocity,     gVelocityLabel, vfindex, region, 0);
-      new_dw->allocate(externalforce, gExternalForceLabel, vfindex, region, 0);
-#ifdef WONT_COMPILE_YET
+      new_dw->allocate(gmass,         gMassLabel, vfindex, region);
+      new_dw->allocate(gvelocity,     gVelocityLabel, vfindex, region);
+      new_dw->allocate(externalforce, gExternalForceLabel, vfindex, region);
 
       ParticleSubset* pset = px.getParticleSubset();
       ASSERT(pset == pmass.getParticleSubset());
@@ -422,7 +421,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 	}
       }
 
-#endif
       new_dw->put(gmass,         gMassLabel, vfindex, region);
       new_dw->put(gvelocity,     gVelocityLabel, vfindex, region);
       new_dw->put(externalforce, gExternalForceLabel, vfindex, region);
@@ -481,7 +479,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
       old_dw->get(pvol,    pVolumeLabel, matlindex, region, 0);
       old_dw->get(pstress, pStressLabel, matlindex, region, 0);
 
-      new_dw->allocate(internalforce, gInternalForceLabel, vfindex, region, 0);
+      new_dw->allocate(internalforce, gInternalForceLabel, vfindex, region);
   
       ParticleSubset* pset = px.getParticleSubset();
       ASSERT(pset == px.getParticleSubset());
@@ -538,7 +536,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 
       // Create variables for the results
       NCVariable<Vector> acceleration;
-      new_dw->allocate(acceleration, gAccelerationLabel, vfindex, region, 0);
+      new_dw->allocate(acceleration, gAccelerationLabel, vfindex, region);
 
       // Do the computation of a = F/m for nodes where m!=0.0
       for(NodeIterator  iter  = region->begin();
@@ -585,7 +583,7 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
 
       // Create variables for the results
       NCVariable<Vector> velocity_star;
-      new_dw->allocate(velocity_star, gVelocityStarLabel, vfindex, region, 0);
+      new_dw->allocate(velocity_star, gVelocityStarLabel, vfindex, region);
 
       // Do the computation
 
@@ -700,6 +698,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.31  2000/04/27 23:18:41  sparker
+// Added problem initialization for MPM
+//
 // Revision 1.30  2000/04/27 21:39:27  jas
 // Now creating contact via a factory.
 //
