@@ -690,9 +690,9 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 	/*
 	if (d_MAlab) {
 	  new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
-		      matlIndex, patch, Ghost::None, APackages/Uintah/CCA/Components/Arches/Arches.rches::ZEROGHOSTCELLS);
+		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 	  new_dw->allocateAndPut(enthalpyVars.temperature, d_lab->tempOUTLabel,
-				 matlIndex, patchPackages/Uintah/StandAlone/);
+				 matlIndex, patch);
 	  d_boundaryCondition->mmWallTemperatureBC(pc, patch, constEnthalpyVars.cellType,
 						   solidTemp, constEnthalpyVars.temperature);
 	}
