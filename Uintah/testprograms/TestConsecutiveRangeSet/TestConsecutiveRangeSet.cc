@@ -7,6 +7,7 @@
 
 list<int> getRandomList(int size, int min, int max);
 void doListInitTests(Suite* suite);
+void doAddInOrderTests(Suite* suite);
 void doStringInitTests(Suite* suite);
 void doIntersectTests(Suite* suite);
 void doUnionTests(Suite* suite);
@@ -21,6 +22,7 @@ SuiteTree* ConsecutiveRangeSetTestTree()
   SuiteTreeNode* topSuite = new SuiteTreeNode("ConsecutiveRangeSet");
 
   doListInitTests(topSuite->addSuite("List Init"));
+  doAddInOrderTests(topSuite->addSuite("addInOrder"));
   doStringInitTests(topSuite->addSuite("String Init"));
   doIntersectTests(topSuite->addSuite("Intersect"));
   doUnionTests(topSuite->addSuite("Union"));
@@ -64,6 +66,55 @@ void doListInitTests(Suite* suite)
   compareTest->setResults(equalSets(set, sortedTestSet, TestSetSize,
 				    sameSize));
   sizeTest->setResults(sameSize);
+}
+
+void doAddInOrderTests(Suite* suite)
+{
+  int i;
+  list<int> intList;
+  list<int>::iterator it;
+  bool sameSize;
+  Test* sizeTest = suite->addTest("Set size");
+  Test* compareTest = suite->addTest("Compared items");
+  Test* groupTest = suite->addTest("Number of groups");
+  
+  for (i = 0; i < 100; i++) {
+    intList = getRandomList(i, -100, 100);
+    intList.sort();
+    ConsecutiveRangeSet set;
+    for (it = intList.begin(); it != intList.end(); it++)
+       set.addInOrder(*it);
+    compareTest->setResults(equalSets(set, intList, sameSize));
+    sizeTest->setResults(sameSize);
+    intList.clear();
+  }
+
+  const int testSet[] = { 1, 3, 8, 6, 10, 5, 2, 9, -1 };
+  const int sortedTestSet[] = { -1, 1, 2, 3, 5, 6, 8, 9, 10 };
+  const int TestSetSize = 9;
+
+  for (i = 0; i < TestSetSize; i++)
+    intList.push_back(testSet[i]);
+  
+  try {
+     ConsecutiveRangeSet set;
+     for (it = intList.begin(); it != intList.end(); it++)
+	set.addInOrder(*it);
+     suite->addTest("Not in order", false);
+  }
+  catch (ConsecutiveRangeSetException) {
+     suite->addTest("Not in order", true);
+  }
+
+  intList.sort();
+  ConsecutiveRangeSet set;
+  for (it = intList.begin(); it != intList.end(); it++)
+     set.addInOrder(*it);
+  groupTest->setResults(set.getNumRanges() == 4);  
+  compareTest->setResults(equalSets(set, sortedTestSet, TestSetSize,
+				    sameSize));
+  sizeTest->setResults(sameSize);
+ 
 }
 
 void doStringInitTest(Suite* suite, string testname, string setstr,
