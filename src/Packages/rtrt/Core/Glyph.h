@@ -85,6 +85,8 @@ public:
 
   GlyphGroup() : Object(0) {} // for Pio.
 
+  inline int get_index(const float val) const;
+  
   //! Persistent I/O.
   static  SCIRun::PersistentTypeID type_id;
   virtual void io(SCIRun::Piostream &stream);

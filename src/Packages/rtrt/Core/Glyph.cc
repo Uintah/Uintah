@@ -101,7 +101,9 @@ void Glyph::preprocess(double maxradius, int& pp_offset, int& scratchsize) {
 // The reason that this was done, was that Dav de St. Germain told me not
 // to put an externed global variable in the header.  Whatever!
 
-#define GLYPH_GROUP_INDEX(val) (int)((val) * num_levels)
+int GlyphGroup::get_index(const float val) const {
+  return (int)(val*num_levels);
+}
 
 GlyphGroup::GlyphGroup(Array1<Glyph *> &glyphs, int gridcellsize,
 		       int num_levels):
@@ -122,7 +124,7 @@ GlyphGroup::GlyphGroup(Array1<Glyph *> &glyphs, int gridcellsize,
   // Now we need to assign the glyps to the groups
   for(int i = 0; i < glyphs.size(); i++) {
     // This represents the last group where the glyph will appear.
-    int index = GLYPH_GROUP_INDEX(glyphs[i]->get_value());
+    int index = get_index(glyphs[i]->get_value());
     // Now we need to start with 0 and go up to the index.
     for(int j = 0; j <= index; j++)
       groups[j].add((Object*)glyphs[i]);
@@ -156,12 +158,12 @@ void GlyphGroup::io(SCIRun::Piostream &stream) {
   
 void GlyphGroup::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext* cx) {
-  grids[GLYPH_GROUP_INDEX(glyph_threshold)]->intersect(ray, hit, st, cx);
+  grids[get_index(glyph_threshold)]->intersect(ray, hit, st, cx);
 }
 
 void GlyphGroup::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 				 DepthStats* st, PerProcessorContext* ppc) {
-  grids[GLYPH_GROUP_INDEX(glyph_threshold)]->
+  grids[get_index(glyph_threshold)]->
     light_intersect(ray, hit, atten, st, ppc);
 }
 
@@ -169,7 +171,7 @@ void GlyphGroup::softshadow_intersect(Light* light, Ray& ray,
 				      HitInfo& hit, double dist, Color& atten,
 				      DepthStats* st,
 				      PerProcessorContext* ppc) {
-  grids[GLYPH_GROUP_INDEX(glyph_threshold)]->
+  grids[get_index(glyph_threshold)]->
     softshadow_intersect(light, ray, hit, dist, atten, st, ppc);
 }
 
@@ -178,7 +180,7 @@ void GlyphGroup::multi_light_intersect(Light* light, const Point& orig,
 				       const Array1<Color>& attens,
 				       double dist, DepthStats* st,
 				       PerProcessorContext* ppc) {
-  grids[GLYPH_GROUP_INDEX(glyph_threshold)]->
+  grids[get_index(glyph_threshold)]->
     multi_light_intersect(light, orig, dirs, attens, dist, st, ppc);
 }
 
