@@ -115,7 +115,6 @@ void BuildFEMatrix::parallel(int proc)
 
   barrier_.wait(np_);
   
-  if (proc==0) t.start();
   TetVolMesh::node_array neib_nodes;
   for(i=start_node;i<end_node;i++){
     rows_[r++]=mycols.size();
