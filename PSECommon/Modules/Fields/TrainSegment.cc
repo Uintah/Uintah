@@ -375,7 +375,7 @@ void TrainSegment::redraw_lines() {
 
     glDisable(GL_LOGIC_OP);
     glFlush();
-    int errcode;
+    GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
 	cerr << "plot_rect got an error from GL: " << (char*)gluErrorString(errcode) << endl;
     }
@@ -500,7 +500,7 @@ void TrainSegment::redraw_all() {
 
     redraw_lines();
     glFlush();
-    int errcode;
+    GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
 	cerr << "plot_matrices got an error from GL: " << (char*)gluErrorString(errcode) << endl;
     }
@@ -778,6 +778,13 @@ int TrainSegment::makeCurrent() {
 
 //
 // $Log$
+// Revision 1.7  1999/11/16 00:05:37  yarden
+// replace
+//    int errcode
+// with
+//    GLenum errcode
+// to make egcs happy
+//
 // Revision 1.6  1999/10/07 02:06:48  sparker
 // use standard iostreams and complex type
 //
