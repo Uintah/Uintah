@@ -1,6 +1,8 @@
 #ifndef UINTAH_HOMEBREW_PARALLEL_H
 #define UINTAH_HOMEBREW_PARALLEL_H
 
+#include <string>
+
 namespace Uintah {
 
 class ProcessorGroup;
@@ -42,8 +44,11 @@ WARNING
       };
 
       //////////
-      // Insert Documentation Here:
-      static void initializeManager(int& argc, char**& argv);
+      // Determines if MPI is being used, and if so, initializes MPI.
+      // "scheduler" is used to determine if MPI is initialized with
+      // thread safety on (ie: on if scheduler == "MixedScheduler").
+      static void initializeManager( int& argc, char**& argv, 
+				     const std::string & scheduler );
       
       //////////
       // Insert Documentation Here:
