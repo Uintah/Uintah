@@ -155,7 +155,6 @@ WARNING
       virtual void put(const PerPatchBase&, const VarLabel*,
 				int matlIndex, const Patch*) = 0;
      
-      //////////
       // Remove particles that are no longer relevant
       virtual void deleteParticles(ParticleSubset* delset) = 0;
 
@@ -221,6 +220,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.37  2000/07/28 22:45:17  jas
+// particle relocation now uses separate var labels for each material.
+// Addd <iostream> for ReductionVariable.  Commented out protected: in
+// Scheduler class that preceeded scheduleParticleRelocation.
+//
 // Revision 1.36  2000/07/28 03:01:07  rawat
 // modified createDatawarehouse and added getTop function
 //
