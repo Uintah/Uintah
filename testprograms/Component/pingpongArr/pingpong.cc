@@ -152,20 +152,24 @@ int main(int argc, char* argv[])
 
 	  //Set up the array and the timer  
 	  double stime=Time::currentSeconds();
-          cerr << mysize << ", " << myrank << "\n";
+
+          //OLD calculation replaced by BLOCK 
+	  cerr << mysize << ", " << myrank << "\n";
           arrsize = 100 / mysize;
           sta = myrank * arrsize;
           fin = (myrank * arrsize) + arrsize - 1;
           cerr << arrsize << "::" << sta << " -- " << fin << "\n";
-          init(arr,sta,fin+1);
-
+          //E of OLD calc
+	  
 	  //Inform everyone else of my distribution
           //(this sends a message to all the callee objects)
           Index* dr[1];
           dr[0] = BLOCK(myrank,mysize,100);
-	  cout << "sta=" << sta << ", dr[0]->myfirst)=" << dr[0]->myfirst << "\n";
-	  cout << "fin=" << fin << ", dr[0]->myfirst)=" << dr[0]->mylast << "\n";
-          MxNArrayRep* arrr = new MxNArrayRep(1,dr);
+	  cout << "sta=" << sta << ", dr[0]->myfirst=" << dr[0]->myfirst << "\n";
+	  cout << "fin=" << fin << ", dr[0]->myfirst=" << dr[0]->mylast << "\n";
+          init(arr,dr[0]->myfirst,dr[0]->mylast);
+
+	  MxNArrayRep* arrr = new MxNArrayRep(1,dr);
 	  pp->setCallerDistribution("D",arrr); 
 	  std::cerr << "setCallerDistribution completed\n";
 
