@@ -7,12 +7,16 @@ SRCDIR := Remote/GUI
 
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
-$(SRCDIR)/tclIndex: $(SRCDIR)/remoteSalmon.tcl $(SRCTOP)/Remote/GUI
+$(SRCDIR)/tclIndex: $(SRCDIR)/remoteSalmon.tcl
+	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Remote/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.2  2000/06/06 16:39:10  dahart
+# Fixed a bug
+#
 # Revision 1.1  2000/06/06 15:29:24  dahart
 # - Added a new package / directory tree for the remote visualization
 # framework.
