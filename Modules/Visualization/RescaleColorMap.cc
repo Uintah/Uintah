@@ -85,6 +85,8 @@ void RescaleColorMap::execute()
 	    cmap.detach();
 	    cmap->min=min;
 	    cmap->max=max;
+
+	    cerr << "Rescale ColorMap " << min << " " << max << endl;
 	}
     }
     omap->send(cmap);

@@ -143,32 +143,30 @@ void CuttingPlane::execute()
 	sfield->get_bounds( min, max );
 	Point center = min + (max-min)/2.0;
 	double max_scale;
-	if (need_find == 1)
-	{   // Find the field and put in optimal place
-	    // in xy plane with reasonable frame thickness
-	    Point right( max.x(), center.y(), center.z());
-	    Point down( center.x(), min.y(), center.z());
-	    max_scale = Max( (max.x() - min.x()), (max.y() - min.y()) );
-	    widget->SetScale( max_scale/30. );
-	    widget->SetPosition( center, right, down);
-	}
-	else if (need_find == 2)
-	{   // Find the field and put in optimal place
-	    // in yz plane with reasonable frame thickness
-	    Point right( center.x(), center.y(), max.z());
-	    Point down( center.x(), min.y(), center.z());	    
-	    max_scale = Max( (max.z() - min.z()), (max.y() - min.y()) );
-	    widget->SetScale( max_scale/30. );
-	    widget->SetPosition( center, right, down);
-	}
-	else
-	{   // Find the field and put in optimal place
-	    // in xz plane with reasonable frame thickness
-	    Point right( max.x(), center.y(), center.z());
-	    Point down( center.x(), center.y(), min.z());	    
-	    max_scale = Max( (max.x() - min.x()), (max.z() - min.z()) );
-	    widget->SetScale( max_scale/30. );
-	    widget->SetPosition( center, right, down);
+	if (need_find == 1) {
+	  // Find the field and put in optimal place
+	  // in xy plane with reasonable frame thickness
+	  Point right( max.x(), center.y(), center.z());
+	  Point down( center.x(), min.y(), center.z());
+	  max_scale = Max( (max.x() - min.x()), (max.y() - min.y()) );
+	  widget->SetScale( max_scale/30. );
+	  widget->SetPosition( center, right, down);
+	} else if (need_find == 2) {
+	  // Find the field and put in optimal place
+	  // in yz plane with reasonable frame thickness
+	  Point right( center.x(), center.y(), max.z());
+	  Point down( center.x(), min.y(), center.z());	    
+	  max_scale = Max( (max.z() - min.z()), (max.y() - min.y()) );
+	  widget->SetScale( max_scale/30. );
+	  widget->SetPosition( center, right, down);
+	} else  {
+	  // Find the field and put in optimal place
+	  // in xz plane with reasonable frame thickness
+	  Point right( max.x(), center.y(), center.z());
+	  Point down( center.x(), center.y(), min.z());	    
+	  max_scale = Max( (max.x() - min.x()), (max.z() - min.z()) );
+	  widget->SetScale( max_scale/30. );
+	  widget->SetPosition( center, right, down);
 	}
 	need_find = 0;
     }
@@ -177,7 +175,7 @@ void CuttingPlane::execute()
     Point 	corner, center, R, D;
     widget->GetPosition( center, R, D);
     Vector v1 = R - center,
-           v2 = D - center;
+      v2 = D - center;
          
     // calculate the corner and the
     // u and v vectors of the cutting plane
@@ -196,18 +194,18 @@ void CuttingPlane::execute()
     int u_num = (int) (u_fac * 500),
         v_num = (int) (v_fac * 500);
 
-//    cout << "u fac = " << u_fac << "\nv fac = " << v_fac << endl;
-
+    //    cout << "u fac = " << u_fac << "\nv fac = " << v_fac << endl;
+    
     // Get the scalar values and corresponding
     // colors to put in the cutting plane
     if (cptype != CP_CONTOUR)
-    {
+      {
 	double alpha=1.0;
-//	GeomGrid::Format format=GeomGrid::WithMaterials;
-//	if (cptype == CP_SURFACE)
-//	    format=GeomGrid::WithNormAndMatl;
+	//	GeomGrid::Format format=GeomGrid::WithMaterials;
+	//	if (cptype == CP_SURFACE)
+	//	    format=GeomGrid::WithNormAndMatl;
 	GeomGrid* grid = new GeomGrid( u_num, v_num, corner, u, v,
-				      0);
+				       0);
         Vector unorm=u.normal();
         Vector vnorm=v.normal();
         Vector N(Cross(unorm, vnorm));
@@ -218,42 +216,43 @@ void CuttingPlane::execute()
 
 	int ix = 0;
 	for (int i = 0; i < u_num; i++)
-	    for (int j = 0; j < v_num; j++)
-	    {
-		Point p = corner + u * ((double) i/(u_num-1)) + 
-		                   v * ((double) j/(v_num-1));
-		double sval;
-
-		// get the color from cmap for p 	    
-		MaterialHandle matl;
-		if (sfield->interpolate( p, sval, ix) || (ix=0) || sfield->interpolate( p, sval, ix)) {
-		    matl = cmap->lookup( sval);
-		    alpha = 0.8;
-		} else {
-		    matl = outcolor;
-		    sval = 0;
-		    alpha=0.0;
-		}
-
-		// put the color into the cutting plane (grid) at i, j
-		if (cptype == CP_SURFACE)
-		{
-		    double h = sval;
-		    Vector G(sfield->gradient(p));
-		    double umag=Dot(unorm, G)*scale_fac;
-		    double vmag=Dot(vnorm, G)*scale_fac;
-		    Vector normal(N-unorm*umag-vnorm*vmag);
-		    grid->set(i, j, ((h*scale_fac) + offset_fac), normal, matl/*,alpha*/);
-		}
-		else  			// if (cptype == CP_PLANE)
-		    grid->set(i, j, 0, matl/*,alpha*/);
+	  for (int j = 0; j < v_num; j++) {
+	    Point p = corner + u * ((double) i/(u_num-1)) + 
+	      v * ((double) j/(v_num-1));
+	    double sval;
+	    
+	    // get the color from cmap for p 	    
+	    MaterialHandle matl;
+	    if (sfield->interpolate( p, sval, ix) || (ix=0) || sfield->interpolate( p, sval, ix)) {
+	      matl = cmap->lookup( sval);
+	      alpha = 0.8;
+	    } else {
+	      matl = outcolor;
+	      sval = 0;
+	      alpha=0.0;
 	    }
-    // delete the old grid/cutting plane
-    if (old_grid_id != 0)
-        ogeom->delObj( old_grid_id );
-
+	    
+	    // put the color into the cutting plane (grid) at i, j
+	    if (cptype == CP_SURFACE)
+	      {
+		double h = sval;
+		Vector G(sfield->gradient(p));
+		double umag=Dot(unorm, G)*scale_fac;
+		double vmag=Dot(vnorm, G)*scale_fac;
+		Vector normal(N-unorm*umag-vnorm*vmag);
+		grid->set(i, j, ((h*scale_fac) + offset_fac), normal, matl/*,alpha*/);
+	      }
+	    else  			// if (cptype == CP_PLANE)
+	      grid->set(i, j, 0, matl/*,alpha*/);
+	  }
+	// delete the old grid/cutting plane
+	if (old_grid_id != 0) {
+	  ogeom->delObj( old_grid_id );
+	}
 	grid_id = ogeom->addObj(grid, "Cutting Plane");
-    }
+	old_grid_id = grid_id;
+	
+      }
 
     else
     {
@@ -366,10 +365,13 @@ void CuttingPlane::execute()
 		    }
 		}
     // delete the old grid/cutting plane
-    if (old_grid_id != 0)
-        ogeom->delObj( old_grid_id );
+	    if (old_grid_id != 0) {
+	      ogeom->delObj( old_grid_id );
 
-	    grid_id = ogeom->addObj( cs, "Contour Plane");
+	    }
+	    grid_id =  ogeom->addObj( cs, "Contour Plane");
+	    old_grid_id = grid_id;
+		      
 	}
 	
     }

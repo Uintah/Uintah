@@ -44,6 +44,11 @@ itcl_class Hedgehog {
 		top $this-type \
 		{2D 3D}
 	pack $w.f.type -side left -padx 5 -anchor w
+
+	make_labeled_radio $w.f.shaft "Shaft style:" $n \
+		top $this-drawcylinders { {Lines 0} {Cylinders 1} }
+	pack $w.f.shaft -side left -padx 5 -anchor w
+	
 	button $w.f.findxy -text "Find XY" -command "$this-c findxy"
 	pack $w.f.findxy -pady 2 -side top -ipadx 3 -anchor e
 	
@@ -69,7 +74,11 @@ itcl_class Hedgehog {
                 -resolution 0.001 \
 		-variable $this-width_scale -command $n 
 	pack $w.width_scale -side right -fill x -pady 2
-	
-
+	scale $w.shaft_scale -orient horizontal -label "Shaft Radius" \
+		-from 0 -to 1 -length 3c \
+		-showvalue true -resolution 0.001 \
+		-variable $this-shaft_rad -command $n
+	pack $w.shaft_scale -side left -fill x -pady 2
     }
 }
+

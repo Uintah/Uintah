@@ -49,6 +49,8 @@ class Hedgehog : public Module {
    TCLdouble width_scale;
    TCLdouble head_length;
    TCLstring type;
+   TCLint drawcylinders;
+   TCLdouble shaft_rad;
    MaterialHandle outcolor;
    int grid_id;
    int need_find2d;
@@ -79,9 +81,10 @@ Hedgehog::Hedgehog(const clString& id)
   length_scale("length_scale", id, this),
   width_scale("width_scale", id, this),
   head_length("head_length", id, this),
-  type("type", id, this)
+  type("type", id, this),
+  drawcylinders("drawcylinders", id, this),
+  shaft_rad("shaft_rad", id, this)
 {
-    cerr << 1 << endl;
     // Create the input ports
     // Need a scalar field and a ColorMap
     invectorfield = scinew VectorFieldIPort( this, "Vector Field",
@@ -94,34 +97,31 @@ Hedgehog::Hedgehog(const clString& id)
 				     ColorMapIPort::Atomic);
     add_iport( inColorMap);
 					
-    cerr << 5 << endl;
     // Create the output port
     ogeom = scinew GeometryOPort(this, "Geometry", 
 			      GeometryIPort::Atomic);
     add_oport(ogeom);
-    cerr << 6 << endl;
     init = 1;
     float INIT(.1);
 
-    cerr << 7 << endl;
     widget2d = scinew ScaledFrameWidget(this, &widget_lock, INIT);
-    cerr << 8 << endl;
     widget3d = scinew ScaledBoxWidget(this, &widget_lock, INIT);
     grid_id=0;
 
     need_find2d=1;
     need_find3d=1;
-    
-    cerr << 9 << endl;
+
+    drawcylinders.set(0);
     outcolor=scinew Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 0);
-    cerr << 10 << endl;
 }
 
 Hedgehog::Hedgehog(const Hedgehog& copy, int deep)
 : Module(copy, deep), length_scale("length_scale", id, this),
   width_scale("width_scale", id, this),
   head_length("head_length", id, this),
-  type("type", id, this)
+  type("type", id, this),
+  drawcylinders("drawcylinders", id, this),
+  shaft_rad("shaft_rad", id, this)
 {
    NOT_FINISHED("Hedgehog::Hedgehog");
 }
@@ -257,7 +257,7 @@ void Hedgehog::execute()
     widscale = width_scale.get(),
     headlen = head_length.get();
     
-    GeomArrows* arrows = new GeomArrows(widscale, 1.0-headlen);
+    GeomArrows* arrows = new GeomArrows(widscale, 1.0-headlen, drawcylinders.get(), shaft_rad.get() );
     for (int i = 0; i < u_num; i++)
 	for (int j = 0; j < v_num; j++)
 	    for(int k = 0; k < w_num; k++)
@@ -288,11 +288,12 @@ void Hedgehog::execute()
 			}
 		    }
 		}
-    grid_id = ogeom->addObj(arrows, module_name);
-    
+
     // delete the old grid/cutting plane
     if (old_grid_id != 0)
 	ogeom->delObj( old_grid_id );
+
+    grid_id = ogeom->addObj(arrows, module_name);
 }
 
 void Hedgehog::widget_moved(int last)
