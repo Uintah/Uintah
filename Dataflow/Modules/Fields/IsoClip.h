@@ -25,7 +25,6 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
-#include <Core/Datatypes/Clipper.h>
 #include <sci_hash_map.h>
 #include <algorithm>
 
