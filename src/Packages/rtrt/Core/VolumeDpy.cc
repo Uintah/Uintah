@@ -234,6 +234,16 @@ void VolumeDpy::move_isoval(const int x)
   new_isoval=val;
 }
 
+void VolumeDpy::change_isoval(float new_val) {
+  if (new_val >= datamin && new_val <= datamax)
+    new_isoval = new_val;
+}
+
+void VolumeDpy::set_minmax(float min, float max) {
+  datamin = min;
+  datamax = max;
+}
+
 void VolumeDpy::animate(bool& changed)
 {
   if(isoval != new_isoval){
