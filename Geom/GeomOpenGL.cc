@@ -38,7 +38,9 @@
 #include <Geom/Pt.h>
 #include <Geom/RenderMode.h>
 #include <Geom/Sphere.h>
+#if 0
 #include <Geom/Squares.h>
+#endif
 #include <Geom/Switch.h>
 #include <Geom/Tetra.h>
 #include <Geom/TexSlices.h>
@@ -2843,6 +2845,7 @@ void GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
+#if 0
 void GeomSquares::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if ( pts.size() == 0 )
@@ -2862,6 +2865,7 @@ void GeomSquares::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
   glEnd();
 }
+#endif
 
 void GeomBox::draw(DrawInfoOpenGL* di, Material* matl, double)
 {

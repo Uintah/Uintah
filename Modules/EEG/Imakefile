@@ -2,8 +2,10 @@
 #include <config/sci.cf>
 
 #ifdef SCI_OPENGL
+#if 0
 OPENGLOBJS = MRIsim.o 
 OPENGLSRCS = MRIsim.cc
+#endif
 
 #ifdef SCI_MESA
 OPENGLINCS = -I$(TOP)/Mesa/include -I/usr/openwin/include
