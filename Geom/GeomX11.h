@@ -14,18 +14,33 @@
 #ifndef SCI_Geom_GeomX11_h
 #define SCI_Geom_GeomX11_h 1
 
-#include <X11/Xlib.h>
+#include <Classlib/Array1.h>
 #include <Classlib/Stack.h>
+#include <Geom/Geom.h>
+#include <Geometry/Point.h>
+#include <X11/Xlib.h>
+class Light;
 class Material;
 class Transform;
 
 struct DrawInfoX11 {
     DrawInfoX11();
     Material* current_matl;
-    Stack<Material*> stack;
-    void set_matl(Material*);
-    void push_matl(Material*);
-    void pop_matl();
+    int current_lit;
+    unsigned long current_pixel;
+
+    void set_color(const Color&);
+
+    int red_max;
+    int green_max;
+    int blue_max;
+    int red_mult;
+    int green_mult;
+    unsigned long* colors;
+
+    Color amblight;
+    Array1<Light*> light;
+    Point eyep;
 
     Display* dpy;
     Window win;

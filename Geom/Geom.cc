@@ -48,3 +48,5 @@ void GeomObj::set_matl(const MaterialHandle& _matl)
 {
     matl=_matl;
 }
+
+

@@ -23,7 +23,15 @@ public:
     Color& operator=(const Color&);
     ~Color();
 
+    Color operator*(const Color&) const;
+    Color operator*(double) const;
+    Color operator+(const Color&) const;
+    Color& operator+=(const Color&);
+
     void get_color(float color[4]);
+    inline double r() const {return _r;}
+    inline double g() const {return _g;}
+    inline double b() const {return _b;}
 };
 
 #endif

@@ -14,7 +14,7 @@
 #include <Geom/Group.h>
 
 GeomGroup::GeomGroup()
-: GeomObj(1), objs(0, 100)
+: GeomObj(0), objs(0, 100)
 {
 }
 

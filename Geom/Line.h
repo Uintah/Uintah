@@ -28,7 +28,9 @@ public:
     virtual GeomObj* clone();
     virtual void get_bounds(BBox&);
 
+#ifdef SCI_OPENGL
     virtual void objdraw(DrawInfoOpenGL*);
+#endif
     virtual void objdraw(DrawInfoX11*);
     virtual double depth(DrawInfoX11*);
     virtual void make_prims(Array1<GeomObj*>& free,
