@@ -55,7 +55,7 @@ AC_ARG_WITH(blt,
 
 
 if test "$exename" = "default"; then
-  EXENAME=pse
+  EXENAME=scirun
 else
   EXENAME=$exename
 fi
