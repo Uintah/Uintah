@@ -81,7 +81,10 @@ itcl_class expscale {
 	set decimalplaces 3
 
 	set class [modname [$this info class]]
-	set w [modname $this]
+	if {[catch {set w}]} {
+	    set w [modname $this]
+	}
+
 	frame $w -class $class -borderwidth 2 -relief groove
 
 	if {[catch {set variable}]} {
@@ -91,8 +94,6 @@ itcl_class expscale {
 	if {[catch {set $variable}]} {
 	    set $variable 1
 	}
-
-	set w [modname $this]
 
 	set resolution [getResolution ]
 	set built 1
@@ -123,7 +124,6 @@ itcl_class expscale {
     }
 
     destructor {
-	set w [modname $this]
 	destroy $w.scale
 	destroy $w.e
     }
@@ -133,6 +133,7 @@ itcl_class expscale {
 
     public label "" 
     public orient ""
+    public w
     protected built 0
     public variable "" {
 	if {$built} {
@@ -215,10 +216,10 @@ itcl_class expscale {
 	
 	set resolution [getResolution ]
 
-	[modname $this].scale configure -from $from -to $to \
+	$w.scale configure -from $from -to $to \
 	    -tickinterval $mag -resolution $resolution
 
-	[modname $this].e.exp delete 0 end
-	[modname $this].e.exp insert 0 $exp
+	$w.e.exp delete 0 end
+	$w.e.exp insert 0 $exp
     }
 }
