@@ -427,8 +427,8 @@ void AMRSimulationController::run()
 
      // Execute the current timestep
      for(int i=0;i<totalFine;i++)
-       scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubComplete);
-     scheduler->get_dw(totalFine)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+       scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubNone);
+     scheduler->get_dw(totalFine)->setScrubbing(DataWarehouse::ScrubNone);
      scheduler->execute();
      if(output)
        output->executedTimestep();
