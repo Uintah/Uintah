@@ -191,7 +191,7 @@ void SimulationController::run()
       archive.restartInitialize(d_restartTimestep, grid,
 				scheduler->get_new_dw(), &t, &delt);
       
-      output->restartSetup(restartFromDir, d_restartTimestep, t,
+      output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
 			   d_restartFromScratch, d_restartRemoveOldDir);
       // in case restart initialize doesn't put delt
       delt_vartype delt_var(delt);
