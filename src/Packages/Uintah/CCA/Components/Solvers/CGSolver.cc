@@ -231,9 +231,10 @@ public:
       guess_label(guess), guess_dw(guess_dw), params(params),
       modifies_x(modifies_x)
   {
-    R_label = VarLabel::create(A->getName()+" R", Types::sol_type::getTypeDescription());
-    D_label = VarLabel::create(A->getName()+" D", Types::sol_type::getTypeDescription());
-    Q_label = VarLabel::create(A->getName()+" Q", Types::sol_type::getTypeDescription());
+    typedef typename Types::sol_type sol_type;
+    R_label = VarLabel::create(A->getName()+" R", sol_type::getTypeDescription());
+    D_label = VarLabel::create(A->getName()+" D", sol_type::getTypeDescription());
+    Q_label = VarLabel::create(A->getName()+" Q", sol_type::getTypeDescription());
     d_label = VarLabel::create(A->getName()+" d", sum_vartype::getTypeDescription());
     aden_label = VarLabel::create(A->getName()+" aden", sum_vartype::getTypeDescription());
     VarLabel* tmp_flop_label = VarLabel::create(A->getName()+" flops", sumlong_vartype::getTypeDescription());
@@ -283,7 +284,8 @@ public:
 	typename Types::const_type D;
 	old_dw->get(D, D_label, matl, patch, Around, 1);
 
-	Patch::VariableBasis basis = Patch::translateTypeToBasis(Types::sol_type::getTypeDescription()->getType(), true);
+	typedef typename Types::sol_type sol_type;
+	Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
 	IntVector l = patch->getLowIndex(basis);
 	IntVector h = patch->getHighIndex(basis);
 	CellIterator iter(l, h);
@@ -308,7 +310,8 @@ public:
       const Patch* patch = patches->get(p);
       for(int m = 0;m<matls->size();m++){
 	int matl = matls->get(m);
-	Patch::VariableBasis basis = Patch::translateTypeToBasis(Types::sol_type::getTypeDescription()->getType(), true);
+	typedef typename Types::sol_type sol_type;
+	Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
 	IntVector l = patch->getLowIndex(basis);
 	IntVector h = patch->getHighIndex(basis);
 	CellIterator iter(l, h);
@@ -416,7 +419,8 @@ public:
       const Patch* patch = patches->get(p);
       for(int m = 0;m<matls->size();m++){
 	int matl = matls->get(m);
-	Patch::VariableBasis basis = Patch::translateTypeToBasis(Types::sol_type::getTypeDescription()->getType(), true);
+	typedef typename Types::sol_type sol_type;
+	Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
 	IntVector l = patch->getLowIndex(basis);
 	IntVector h = patch->getHighIndex(basis);
 	CellIterator iter(l, h);
@@ -453,7 +457,8 @@ public:
       const Patch* patch = patches->get(p);
       for(int m = 0;m<matls->size();m++){
 	int matl = matls->get(m);
-	Patch::VariableBasis basis = Patch::translateTypeToBasis(Types::sol_type::getTypeDescription()->getType(), true);
+	typedef typename Types::sol_type sol_type;
+	Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
 	IntVector l = patch->getLowIndex(basis);
 	IntVector h = patch->getHighIndex(basis);
 	CellIterator iter(l, h);
@@ -671,7 +676,8 @@ public:
 	const Patch* patch = patches->get(p);
 	for(int m = 0;m<matls->size();m++){
 	  int matl = matls->get(m);
-	  Patch::VariableBasis basis = Patch::translateTypeToBasis(Types::sol_type::getTypeDescription()->getType(), true);
+	  typedef typename Types::sol_type sol_type;
+	  Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
 	  IntVector l = patch->getLowIndex(basis);
 	  IntVector h = patch->getHighIndex(basis);
 	  CellIterator iter(l, h);
