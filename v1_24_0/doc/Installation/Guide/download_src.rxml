@@ -42,7 +42,7 @@ DEALINGS IN THE SOFTWARE.
     <listitem id="src_download">
       <para>
 	Any number of SCIRun <firstterm>Problem Solving
-	Environment</firstterm>s (<acronym>PSE</acronym>) can be built
+	Environment</firstterm> (<acronym>PSE</acronym>) Packages may be built
 	from source code.  A <acronym>PSE</acronym> is built from a
 	particular set of SCIRun packages, which can be downloaded
 	from SCI's <ulink
@@ -112,7 +112,7 @@ DEALINGS IN THE SOFTWARE.
       downloaded.</para>
 
       <para>SCIRun documentation, <filename>SCIRunDocs.<!--%=
-      doc.version() %-->.tar.gz</filename>, can be also be
+      doc.version() %-->.tar.gz</filename>, may also be
       downloaded.</para>
 
     </listitem>
@@ -173,8 +173,8 @@ gunzip -c SCIRunDocs.<!--%= doc.version() %-->.tar.gz | tar xf -
 	</literallayout>
 	This creates the directory
 	<filename>SCIRunDocs</filename>.<!--%= doc.version() %-->. This
-	directory can be moved to a new location, say
-	<filename>/usr/local</filename>, accessible to all SCIRun users.
+	directory may be moved to a new location (e.g.:
+	<filename>/usr/local</filename>) accessible to all SCIRun users.
 	Point a browser at
 	<filename>SCIRunDocs.<!--%= doc.version() %-->/doc/index.html</filename> to access SCIRun's
 	online documentation.
