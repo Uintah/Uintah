@@ -1294,7 +1294,7 @@ echo "configure:1293: checking physical processor count" >&5
     ;;
 esac
 
-if ! NUM_CPUS="`expr $NUM_CPUS + 0 2> /dev/null`" ; then
+if ! test $NUM_CPUS="`expr $NUM_CPUS + 0 2> /dev/null`" ; then
   NUM_CPUS="1"
 fi
 echo "$ac_t""$NUM_CPUS" 1>&6
@@ -1303,10 +1303,10 @@ echo "$ac_t""$NUM_CPUS" 1>&6
 ## when linking.  1 is usually a good number to use per link,
 ## espcially for smaller number of cpu machines.  I think 4 is
 ## sufficient for even nirvana.
-if test "NUM_CPUS -le 2" ; then
+if test "$NUM_CPUS -le 2" ; then
   MAKE_PARALLELISM=1
 else
-  if test "NUM_CPUS -le 8" ; then
+  if test "$NUM_CPUS -le 8" ; then
     MAKE_PARALLELISM=2
   else
     MAKE_PARALLELISM=4
