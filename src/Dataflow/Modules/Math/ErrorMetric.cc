@@ -169,6 +169,7 @@ void ErrorMetric::execute()
      avg1/=ne;
      avg2/=ne;
 
+     double Norm1=0; 
      double ccNum=0;
      double ccDenom1=0;
      double ccDenom2=0;
@@ -182,17 +183,25 @@ void ErrorMetric::execute()
          ccNum+=shift1*shift2;
          ccDenom1+=shift1*shift1;
          ccDenom2+=shift2*shift2;
-//         double tmp=fabs((*ivec1)[iterate]-(*ivec2)[iterate]);
-         double tmp=fabs(shift1-shift2);
-	 if (pp==1) rms+=tmp; 
-	 else if (pp==2) rms+=tmp*tmp; 
-	 else rms+=pow(tmp,pp);
+         double tmp=fabs((*ivec1)[iterate]-(*ivec2)[iterate]);
+	 if (pp==1) {
+           rms+=tmp;
+           Norm1+=fabs((*ivec1)[iterate]);
+          }        
+	 else if (pp==2) {
+           rms+=tmp*tmp;
+           Norm1+=((*ivec1)[iterate])*((*ivec1)[iterate]);
+          }         
+	 else {
+           rms+=pow(tmp,pp);
+           Norm1+=pow(fabs((*ivec1)[iterate]),pp);
+         }
      }
      rms = pow(rms/ne,1/pp);
      double ccDenom=Sqrt(ccDenom1*ccDenom2);
      double cc=Min(ccNum/ccDenom, 1000000.);
      double ccInv=Min(1.0-ccNum/ccDenom, 1000000.);
-     double rmsRel=Min(rms/ccDenom1, 1000000.);
+     double rmsRel=Min(rms*pow(ne/Norm1,1/pp), 1000000.);
 
 
      if (haveUI_.get()) {
