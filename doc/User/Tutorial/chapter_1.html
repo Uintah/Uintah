@@ -94,17 +94,17 @@ color="maroon">
      SCIRun_DATA</a>.  This process assumes that you have downloaded the SCIRunData directory, a separate download from the SCIRun build.  
     <ol>
       <p><li value="1.">The SCIRUN_DATA variable points to the location 
-      of the SCIRunData directory on your system</p>  
+      of the SCIRunData directory on your system.</p>  
       <p><li value="2.0">The SCIRUN_DATASET variable indicates which dataset
       to load 
-      since many of our example networks run with a variety of data inputs such as sphere, brain-EG, and utahtorso-lowres</p></ol> 
+      since many of our example networks run with a variety of data inputs such as sphere, brain-EG, and utahtorso-lowres.</p></ol> 
 
 <p>To begin, we will construct a network that loads a geometric mesh from disk and renders it to the screen.  In your Unix shell window:</p>
 <ol>
   <p><li value="1.">Set your SCIRUN_DATA variable, pointing to the
-  location of SCIRunData</p>  
+  location of SCIRun Data.</p>  
   <p><li value="2.">Set your SCIRUN_DATASET variable to utahtorso-lowres
-  (as shown in <b>Figure 1.2</b>)</p></ol>
+  (as shown in <b>Figure 1.2</b>).</p></ol>
   
   </div>
   <center>
@@ -128,10 +128,10 @@ color="maroon">
   start SCIRun.   
   <ol>
     <p><li value="1.">Change into your SCIRun/src/ directory, and
-    enter the command &quot;./scirun&quot;.  SCIRun cannot be run as a background application  
+    enter the command &quot;./scirun&quot;.  SCIRun cannot be run as a background application.  
     <p><li value="2.">The SCIRun NetworkEditor window appears on your
     screen, as shown in 
-    <b>Figure 1.3</b></p></ol>
+    <b>Figure 1.3</b>.</p></ol>
 	<p> The NetworkEditor screen consists of three frames: the GlobalView frame in the left uppermost corner; the Error frame in the right uppermost corner, and the NetEdit frame. The NetEdit frame is a large area in which you will construct your networks of modules.</p>
 <p> Since the NetEdit frame is so extensive, the Global View frame shows you which part of the NetEdit frame you are currently viewing. The Error frame will show errors that appear in red during startup, or during the execution of a net.  
     
@@ -150,7 +150,7 @@ color="maroon">
     <p>We will first create a FieldReader module that loads a SCIRun Field.</p>
 	<p><ul><li>From the
     SCIRun menu, select DataIO/FieldReader, as shown in
-    <b>Figure 1.3.1</b></p></ul>
+    <b>Figure 1.3.1</b>.</p></ul>
 <p> To find out more about using nets, see the <a
     HREF="../Guide/usersguide/srug4.html#sec:workingwithnets">User's Guide
     4.0, Working 
@@ -166,13 +166,13 @@ color="maroon">
 <p>Set the user interface (UI) settings for the FieldReader module:
    <ol>
       <p><li value="1.">Press the UI button to launch the file
-      browser window, titled "Open field file." Your SCIRun environment should look like <b>Figure 1.4</b></p></li>  
+      browser window, titled "Open field file." Your SCIRun environment should look like <b>Figure 1.4</b>.</p></li>  
     <li value="2.">Type, or point-and-click to the
       utahtorso-lowres/utahtorso-lowres-voltage.tvd.fld input file. This dataset is a low resolution tetrahedral mesh of a human
-      torso</p>
+      torso.</p>
 <li><p>Select the filename in the file-browser
 	  window, press &quot;Open.&quot;  The file-browser window
-	  disappears and the module begins to execute</p><br>  
+	  disappears and the module begins to execute.</p><br>  
     </div>
     <center>
     <p><img height="512" width="500" src="images/figures/1_4.gif"><br>
@@ -181,10 +181,10 @@ color="maroon">
     <div align="left">
     <p>
      <ul>
-      <li><p>The module finishes computing and the progress bar turns green</p> 
+      <li><p>The module finishes computing and the progress bar turns green.</p> 
       <li><p>The module icon displays a number that indicates the amount of
-	  CPU time required to complete its execution (<b>Figure 1.5</b>)</p>
-	<li><p> You have just loaded a SCIRun Field</p>
+	  CPU time required to complete its execution (<b>Figure 1.5</b>).</p>
+	<li><p> You have just loaded a SCIRun Field.</p>
     </ul><br>
     
     </div>
@@ -298,7 +298,7 @@ color="maroon">
     <div align="left">
  <ol><li value="3."> Continue to hold the button and drag your mouse toward the yellow ShowField input port</p> 
       <p><li>The line turns red, showing the desired connection. Release the mouse
-	  button </p>   
+	  button.</p>   
     </div>
     <center>
     <p><img height="250" width="250" src="images/figures/1_7b.gif"><br>
@@ -306,7 +306,7 @@ color="maroon">
     </center>
     <div align="left">
 <ol><li value="4.">You should see a yellow pipe showing a data flow connection
-	  between FieldReader and ShowField
+	  between FieldReader and ShowField.
     </p></ol>
     </p><br>
     </div>
@@ -325,12 +325,12 @@ color="maroon">
         
     <p><ol>
       <li value="1.">Select the UI button on the ShowField
-      module</p>
+      module.</p>
     <p><li value= "2.">Select the Default Color button
-      near the bottom of the GUI to change the default color and a separate &quot;color&quot; GUI appears</p>    
-      <li ><p>In the color GUI, you can use the sliders to adjust the color values. Set Red and Green to 0.00, and Blue to 1.00. The Alpha value remains at 0.50 </p>  
-      <li><p>Select the &quot;OK&quot; button in the color GUI. Notice that the Default Color swatch in the ShowField GUI has changed to blue.  Your SCIRun environment should look like <b>Figure 1.8</b></p>  
-      <li ><p>In the color GUI, Select &quot;Cancel&quot; to close the window</p></ol>
+      near the bottom of the GUI to change the default color and a separate &quot;color&quot; GUI appears.</p>    
+      <li ><p>In the color GUI, you can use the sliders to adjust the color values. Set Red and Green to 0.00, and Blue to 1.00. The Alpha value remains at 0.50. </p>  
+      <li><p>Select the &quot;OK&quot; button in the color GUI. Notice that the Default Color swatch in the ShowField GUI has changed to blue.  Your SCIRun environment should look like <b>Figure 1.8</b>.</p>  
+      <li ><p>In the color GUI, Select &quot;Cancel&quot; to close the window.</p></ol>
 </div>
     <center>
     <p><img height="512" width="500" src="images/figures/1_6.gif"><br>
@@ -340,18 +340,18 @@ color="maroon">
 <br>
 <p>We will now change the scale and resolution of the nodes.</p>
  
-      <ol><li><p>In the ShowField GUI, you can increase the Node Scale interval by a power of 10 by pressing the + button.  Set the Node Scale to 2</p>
+      <ol><li><p>In the ShowField GUI, you can increase the Node Scale interval by a power of 10 by pressing the + button.  Set the Node Scale to 2.</p>
 <p><li>Set the Sphere Resolution
-	  to 5</p> 
-      <li><p>Go to the Edges tab and turn off the display of edges by deselecting the &quot;Show Edges&quot; check box</p>  
-      <li><p>Go the the Faces tab and repeat the same action</p></ol><br> 
+	  to 5.</p> 
+      <li><p>Go to the Edges tab and turn off the display of edges by deselecting the &quot;Show Edges&quot; check box.</p>  
+      <li><p>Go the the Faces tab and repeat the same action.</p></ol><br> 
       <p>The ShowField module is now ready to render the nodes as blue
 	  spheres. The module will &quot;Interactively Update&quot;, by default, to execute after every change.  Or, you may select &quot;Execute Button Only&quot; that holds all changes until you press the Execute button.
     </ol>
     <p>Consult the <a HREF="../Guide/usersguide/srug4.html#sec:executenet">
     User's Guide 4.5,
     Executing a Network</a> for more details. 
-    <p>ShowField works with any of the SCIRun Field data types. These data types must be first compiled into a shared library as needed where they are saved for future use.  This process is called &quot;Dynamic Compilation.&quot;</p>
+    <p>ShowField works with any of the SCIRun Field data types. These data types must be first compiled into a shared library as needed where they are saved for future use.  This process is called &quot;Dynamic Compilation.&quot;.</p>
 <p>As a result, Dynamic Compilation causes a delay when the module executes for the first time. For more detail about this process, refer to the PDF document <a
     href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
     Compilation</a> or the Developer's Guide, Section .
@@ -368,15 +368,15 @@ color="maroon">
     Visualization with the Viewer</a>. 
     <ol>
       <p><li>Locate the Viewer under the SCIRun/Render
-	  menu</p>  
+	  menu.</p>  
       <li><p>Connect the output port from ShowField into the Viewer
 	  input port. The Viewer module now has a new
-	  input port. This is an example of a SCIRun module that
-	  has dynamic input ports</p> 
-      <li><p>Open the Viewer window by pressing the Viewer's UI button</p>
+	  input port;an example of a SCIRun module that
+	  has dynamic input ports.</p> 
+      <li><p>Open the Viewer window by pressing the Viewer's UI button.</p>
       <li><p>In the Viewer window, you will see a set of axes, representing X, Y, and Z directions. Press the Autoview button near the bottom of the window, and you should see the points of the geometry, similar to <b>Figure 1.10</b>  
-    </ol></p> 
-	<p>The image in your Viewer will appear at a somewhat different angle, since the image in <b>Figure 1.10</b> has been been rotated.</p>  	
+    .</ol></p> 
+	<p>The image in your Viewer will appear at a somewhat different angle, since the image in <b>Figure 1.10</b> has been rotated.</p>  	
     </div>
     <center>
     <p><img height="451" width="450" src="images/figures/1_10.gif"><br>
@@ -394,29 +394,29 @@ color="maroon">
            
     <p><b><A name="section-7">Mouse controls</b><br></A>
     
-    <p>In the Viewer, you can rotate scale and translate your image using the mouse.The <a
+    <p>In the Viewer, you can rotate scale and translate your image using the mouse. The <a
     HREF="../Guide/usersguide/srug5.html#sec:view-mouse">User's Guide 5.2,
     Mouse Control in the Viewer</a> 
 	provides more complete information.</p><br>
 <p><b>Translating the image</b></p>
     <ol>
-      <p><li> Move the mouse to the center of the image</p>
-      <p><li> Click and hold the left mouse button</p> 
-      <p><li> Move the mouse in order to move the image</p>  
+      <p><li> Move the mouse to the center of the image.</p>
+      <p><li> Click and hold the left mouse button.</p> 
+      <p><li> Move the mouse in order to move the image.</p>  
       <p><li>Release the button and the image will stay where you have placed it within the Viewer window</p></ol><br>
-<p><b>Rotating the image</b></p>
-      <ol><p><li> Click and hold the middle mouse button</p> 
-	<p><li>Move the mouse in order to rotate the image</p>
-<p><li>Release the mouse button</p>
-	<p><li>If you release the mouse button while dragging, the image will continue to rotate</p>
-<p><li>Click the middle mouse button to stop rotation</p>
+<p><b>Rotating the image</b>.</p>
+      <ol><p><li> Click and hold the middle mouse button.</p> 
+	<p><li>Move the mouse in order to rotate the image.</p>
+<p><li>Release the mouse button.</p>
+	<p><li>If you release the mouse button while dragging, the image will continue to rotate.</p>
+<p><li>Click the middle mouse button to stop rotation.</p>
 </ol>  
     
     <p><b>Scaling the scene</b></p>
 
-    <ol><p><li>Click the right mouse button and drag the mouse</p>
-<p><li>Move the mouse up or to the left in order to zoom the image out</p>
-<p><li>Move the mouse down or to the right in order to zoom the image in</p>
+    <ol><p><li>Click the right mouse button and drag the mouse.</p>
+<p><li>Move the mouse up or to the left in order to zoom the image out.</p>
+<p><li>Move the mouse down or to the right in order to zoom the image in.</p>
  <p><b>Figure 1.10.1</b> shows the image rotated approximately 90 degrees and scaled. 
     
     </div>
@@ -442,13 +442,13 @@ color="maroon">
       <p><li>Autoview: restores the display back to its default
 	  condition; very useful when first viewing an object or when some
 	  combination of settings results in objects disappearing from the
-	  View window</p> 
+	  View window.</p> 
       <p><li>Set Home View: captures the setting of the current view so you
 	  can return to it later by clicking the ``Go home'' 
-	  button</p>
-      <p><li>Go home: restores the current home view</p>  
+	  button.</p>
+      <p><li>Go home: restores the current home view.</p>  
       <p><li>Views: lists a number of standard viewing angles and
-	  orientations for you to select</p>
+	  orientations for you to select.</p>
     </ul>
   </div>
     <center>
@@ -465,7 +465,7 @@ color="maroon">
       <p><li>Locate the "+" button in the lower right corner of the Viewer
 	  window to access the Extended Control Window which contains additional Viewer settings<b>(Figure 1.10.3)</b>, as described in the <a
 	  HREF="../Guide/usersguide/srug5.html#sec:view-control">User's Guide
-	  5.3, Extended Control Window</a></p> 
+	  5.3, Extended Control Window</a>.</p> 
     </ul> 
 <center>
     <p><img height="273" width="500" src="images/figures/1_10_3.gif"><br>
@@ -484,12 +484,12 @@ color="maroon">
 
     <p>Saving a SCIRun network:
     <ol>
-      <p><li value="1.">Click on the File menu and select &quot;Save As&quot;</p>  
+      <p><li value="1.">Click on the File menu and select &quot;Save As&quot;.</p>  
       <p><li>When the file browser appears, follow the prompt to choose a
 	  location and filename for your net. By convention, most
-	  nets are stored in the SCIRun/src/nets/ directory, but you can store them in another location</p>
+	  nets are stored in the SCIRun/src/nets/ directory, but you can store them in another location.</p>
       <p><li>For this example, store the net as
-	  SCIRun/src/nets/show-torso-mesh.net, as in <b>Figure 1.11</b>. The .net suffix represents a SCIRun network file</p>
+	  SCIRun/src/nets/show-torso-mesh.net, as in <b>Figure 1.11</b>. The .net suffix represents a SCIRun network file.</p>
     </ol><br> 
 
     </div>
@@ -500,13 +500,13 @@ color="maroon">
     <div align="left">
     </p><br>
     <ol>
-<p><li>Click the &quot;Save&quot; button. The network will be saved, and the GUI disappears</p>
-      <p><li>Exit SCIRun</p></ol>
+<p><li>Click the &quot;Save&quot; button. The network will be saved, and the GUI disappears.</p>
+      <p><li>Exit SCIRun.</p></ol>
 <p>Loading a SCIRun network:</p>  
-      <ol><p><li>Start SCIRun</p>
+      <ol><p><li>Start SCIRun.</p>
 <p><li>From the File drop-down menu, select the 
-      the &quot;Load...&quot; option</p>
-      <li>Select SCIRun/src/nets/show-torso-mesh.net 
+      the &quot;Load...&quot; option.</p>
+      <li>Select SCIRun/src/nets/show-torso-mesh.net. 
     </ol><br>
     
     </div>
@@ -521,11 +521,11 @@ color="maroon">
     <p>The net should reload into SCIRun, where you previously saved it.  
     After changing any module settings (<i>e.g.</i>, rotating the view
     in the Viewer Window or changing
-    the rendering color of the nodes in ShowField), there are
+    the rendering color of the nodes in ShowField), you have
     two options for re-saving the net:</p>
     <ul>
       <p><li>Overwrite the existing show-torso-mesh.net file by
-	  using File/Save from the drop-down menu</p>  
+	  using File/Save from the drop-down menu.</p>  
       <p><li>Or, you can save the net to a new file by using File/Save As...</p>  
     </ul>
     
