@@ -368,11 +368,17 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    this, &SerialMPM::computeInternalForce);
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
+	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 	    int idx = matl->getDWIndex();
 	    t->requires( new_dw, lb->pStressLabel_preReloc, idx, patch,
 			 Ghost::AroundNodes, 1);
 	    t->requires( new_dw, lb->pVolumeDeformedLabel, idx, patch,
 			 Ghost::AroundNodes, 1);
+
+	    if(mpm_matl->getFractureModel()) {
+	       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+   	    }
 
 	    t->computes( new_dw, lb->gInternalForceLabel, idx, patch );
 	 }
@@ -396,6 +402,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
+	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 	    int idx = matl->getDWIndex();
 
 	    t->requires(old_dw, lb->pXLabel, idx, patch,
@@ -404,6 +411,11 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			Ghost::AroundNodes, 1 );
 	    t->requires(old_dw, lb->pTemperatureGradientLabel, idx, patch,
 			Ghost::AroundNodes, 1);
+
+	    if(mpm_matl->getFractureModel()) {
+	       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+   	    }
 
 	    t->computes( new_dw, lb->gInternalHeatRateLabel, idx, patch );
 	 }
@@ -1207,6 +1219,11 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
   
       internalforce.initialize(Vector(0,0,0));
 
+      ParticleVariable<int> pVisibility;
+      if(mpm_matl->getFractureModel()) {
+        new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
+      }
+
       for(ParticleSubset::iterator iter = pset->begin();
          iter != pset->end(); iter++){
          particleIndex idx = *iter;
@@ -1214,14 +1231,21 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
          // Get the node indices that surround the cell
          IntVector ni[8];
          Vector d_S[8];
+
          if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
   	   continue;
 
+         Visibility vis;
+         if(mpm_matl->getFractureModel()) {
+           vis = pVisibility[idx];
+           vis.modifyShapeDerivatives(d_S);
+         }
+
          for (int k = 0; k < 8; k++){
-	  if(patch->containsNode(ni[k])){
-	   Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-	   internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
-	  }
+	   if(patch->containsNode(ni[k]) && vis.visible(k)){
+	     Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
+	     internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
+	   }
          }
       }
       new_dw->put(internalforce, lb->gInternalForceLabel, vfindex, patch);
@@ -1271,6 +1295,11 @@ void SerialMPM::computeInternalHeatRate(
   
       internalHeatRate.initialize(0.);
 
+      ParticleVariable<int> pVisibility;
+      if(mpm_matl->getFractureModel()) {
+        new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
+      }
+
       for(ParticleSubset::iterator iter = pset->begin();
          iter != pset->end(); iter++){
          particleIndex idx = *iter;
@@ -1281,12 +1310,18 @@ void SerialMPM::computeInternalHeatRate(
          if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
   	   continue;
 
+         Visibility vis;
+         if(mpm_matl->getFractureModel()) {
+           vis = pVisibility[idx];
+           vis.modifyShapeDerivatives(d_S);
+         }
+
          for (int k = 0; k < 8; k++){
-	  if(patch->containsNode(ni[k])){
-           Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-	   internalHeatRate[ni[k]] -= Dot( div, pTemperatureGradient[idx] ) * 
-	                              pvol[idx] * thermalConductivity;
-	  }
+	   if(patch->containsNode(ni[k]) && vis.visible(k)){
+             Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
+	     internalHeatRate[ni[k]] -= Dot( div, pTemperatureGradient[idx] ) * 
+	                                pvol[idx] * thermalConductivity;
+ 	   }
          }
       }
       new_dw->put(internalHeatRate, lb->gInternalHeatRateLabel, vfindex, patch);
@@ -1794,6 +1829,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.139  2000/09/09 20:39:12  tan
+// Modify interpolation weights and shape function derivatives when fracture
+// involved.
+//
 // Revision 1.138  2000/09/09 20:23:19  tan
 // Replace BrokenCellShapeFunction with particle visibility information in shape
 // function computation.
