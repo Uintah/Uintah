@@ -78,56 +78,82 @@ using namespace SCIRun;
       
     public:
       
-      void actuallyInitialize(const ProcessorGroup*, const Patch* patch,
-			      DataWarehouse*  old_dw, DataWarehouse* new_dw);
+      void actuallyInitialize(const ProcessorGroup*, 
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+			         DataWarehouse*, 
+                              DataWarehouse* new_dw);
       
       void actuallyComputeStableTimestep(const ProcessorGroup*,
 					 const Patch* patch, DataWarehouse*,
 					 DataWarehouse*);
 
-      void computeEquilibrationPressure(
-            const ProcessorGroup*, const Patch* patch, DataWarehouse*, 
-            DataWarehouse*);
+      void computeEquilibrationPressure(const ProcessorGroup*, 
+                                          const PatchSubset* patch,  
+                                          const MaterialSubset* matls,
+                                          DataWarehouse*, 
+                                          DataWarehouse*);
       
-      void computeFaceCenteredVelocities(
-            const ProcessorGroup*, const Patch* patch, DataWarehouse*, 
-            DataWarehouse*);
+      void computeFaceCenteredVelocities(const ProcessorGroup*, 
+                                         const PatchSubset* patch,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse*,
+                                         DataWarehouse*);
 
-      void addExchangeContributionToFCVel(
-            const ProcessorGroup*, const Patch* patch,  DataWarehouse*, 
-            DataWarehouse*);
+      void addExchangeContributionToFCVel(const ProcessorGroup*, 
+                                          const PatchSubset* patch,  
+                                          const MaterialSubset* matls,
+                                          DataWarehouse*, 
+                                          DataWarehouse*);
 
-      void computeDelPressAndUpdatePressCC(
-            const ProcessorGroup*,const Patch* patch,   DataWarehouse*, 
-            DataWarehouse*);
+      void computeDelPressAndUpdatePressCC(const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           DataWarehouse*,
+                                           DataWarehouse*);
 
-      void computePressFC(
-            const ProcessorGroup*, const Patch* patch,  DataWarehouse*,
-            DataWarehouse*);
+      void computePressFC(const ProcessorGroup*, 
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse*,
+                          DataWarehouse*);
                    
-      void accumulateMomentumSourceSinks(
-            const ProcessorGroup*,const Patch* patch,   DataWarehouse*,
-             DataWarehouse*);
+      void accumulateMomentumSourceSinks(const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse*,
+                                         DataWarehouse*);
       
-      void accumulateEnergySourceSinks(
-            const ProcessorGroup*,const Patch* patch,   DataWarehouse*,
-            DataWarehouse*);
-      
-      void computeLagrangianValues( 
-            const ProcessorGroup*, const Patch* patch,  DataWarehouse*,
-            DataWarehouse*);
-      
-      void addExchangeToMomentumAndEnergy(
-            const ProcessorGroup*,const Patch* patch,   DataWarehouse*,
-            DataWarehouse*);
-      
-      void advectAndAdvanceInTime(
-            const ProcessorGroup*,const Patch* patch,   DataWarehouse*,
-            DataWarehouse*);
+      void accumulateEnergySourceSinks(const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse*,
+                                       DataWarehouse*);
 
-      void printConservedQuantities(
-            const ProcessorGroup*,const Patch* patch,   DataWarehouse*,
-            DataWarehouse*);
+      
+      void computeLagrangianValues(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse*,
+                                   DataWarehouse*);
+      
+      void addExchangeToMomentumAndEnergy(const ProcessorGroup*,
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* matls,
+                                          DataWarehouse*,
+                                          DataWarehouse*);
+      
+      void advectAndAdvanceInTime(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse*,
+                                  DataWarehouse*);
+                                  
+      void printConservedQuantities(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse*,
+                                    DataWarehouse*);
             
       void setBC(CCVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
@@ -167,9 +193,10 @@ using namespace SCIRun;
                       CCVariable<double>& press_CC);
                       
       void massExchange(const ProcessorGroup*,
-                    const Patch* patch,   
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw);      
+                        const PatchSubset* patch, 
+                        const MaterialSubset* matls,  
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);      
       
       // Debugging switches
       bool switchDebugInitialize;
