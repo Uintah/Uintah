@@ -561,6 +561,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
                HEBurn* heb = mpm_matl->getBurnModel();
                heb->addCheckIfComputesAndRequires
 				(t, mpm_matl, patch, old_dw, new_dw);
+	       d_burns=heb->getBurns();
             }
          }
          sched->addTask(t);
@@ -673,7 +674,10 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    vector<const VarLabel*> plabels;
    plabels.push_back(lb->pVelocityLabel);
    plabels.push_back(lb->pExternalForceLabel);
-//   plabels.push_back(lb->pSurfLabel);
+   if(d_burns){
+      plabels.push_back(lb->pSurfLabel);
+      plabels.push_back(lb->pIsIgnitedLabel); //for burn models
+   }
    if(d_fractureModel){
       plabels.push_back(lb->pSurfaceNormalLabel); //for fracture
       plabels.push_back(lb->pAverageMicrocrackLength); //for fracture
@@ -688,7 +692,6 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    plabels.push_back(lb->pVolumeLabel);
    plabels.push_back(lb->pDeformationMeasureLabel);
    plabels.push_back(lb->pStressLabel);
-//   plabels.push_back(lb->pIsIgnitedLabel); //for burn models
 
    // This array should contain a list of all of the particle state
    // that will be used in the next time step
@@ -696,22 +699,26 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    vector<const VarLabel*> plabels_preReloc;
    plabels_preReloc.push_back(lb->pVelocityLabel_preReloc);
    plabels_preReloc.push_back(lb->pExternalForceLabel_preReloc);
-//   plabels_preReloc.push_back(lb->pSurfLabel_preReloc);
+   if(d_burns){
+     plabels_preReloc.push_back(lb->pSurfLabel_preReloc);
+     plabels_preReloc.push_back(lb->pIsIgnitedLabel_preReloc); //for burn models
+   }
    if(d_fractureModel){
-      plabels_preReloc.push_back(lb->pSurfaceNormalLabel_preReloc); //for fracture
-      plabels_preReloc.push_back(lb->pAverageMicrocrackLength_preReloc); //for fracture
+     plabels_preReloc.push_back(lb->pSurfaceNormalLabel_preReloc); // fracture
+     plabels_preReloc.push_back(lb->pAverageMicrocrackLength_preReloc); //frac.
    }
+
    if(d_heatConductionInvolved){
-      plabels_preReloc.push_back(lb->pTemperatureLabel_preReloc); //for heat conduction
-      plabels_preReloc.push_back(lb->pTemperatureGradientLabel_preReloc); //for heat conduction
-      plabels_preReloc.push_back(lb->pTemperatureRateLabel_preReloc); //for heat conduction
+      plabels_preReloc.push_back(lb->pTemperatureLabel_preReloc); //for heat 
+      plabels_preReloc.push_back(lb->pTemperatureGradientLabel_preReloc); //heat
+      plabels_preReloc.push_back(lb->pTemperatureRateLabel_preReloc); //heat
    }
+
    plabels_preReloc.push_back(lb->pParticleIDLabel_preReloc);
    plabels_preReloc.push_back(lb->pMassLabel_preReloc);
    plabels_preReloc.push_back(lb->pVolumeLabel_preReloc);
    plabels_preReloc.push_back(lb->pDeformationMeasureLabel_preReloc);
    plabels_preReloc.push_back(lb->pStressLabel_preReloc);
-//   plabels_preReloc.push_back(lb->pIsIgnitedLabel_preReloc); //for burn models
 
    // This sucks, fix it - Steve
    Material* matl = d_sharedState->getMaterial( 0 );
@@ -737,7 +744,9 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    new_dw->pleaseSave(lb->gMassLabel, numMatls);
    new_dw->pleaseSave(lb->gVelocityLabel, numMatls);
 
-//   new_dw->pleaseSave(lb->cBurnedMassLabel, numMatls);
+   if(d_burns){
+     new_dw->pleaseSave(lb->cBurnedMassLabel, numMatls);
+   }
 
    new_dw->pleaseSaveIntegrated(lb->StrainEnergyLabel);
    new_dw->pleaseSaveIntegrated(lb->KineticEnergyLabel);
@@ -1521,6 +1530,11 @@ void SerialMPM::crackGrow(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.88  2000/06/19 23:52:12  guilkey
+// Added boolean d_burns so that certain stuff only gets done
+// if a burn model is present.  Not to worry, the if's on this
+// are not inside of inner loops.
+//
 // Revision 1.87  2000/06/19 21:22:28  bard
 // Moved computes for reduction variables outside of loops over materials.
 //

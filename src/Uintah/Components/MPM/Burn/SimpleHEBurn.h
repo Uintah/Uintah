@@ -71,6 +71,8 @@ WARNING
 			   DataWarehouseP& old_dw,
 			   DataWarehouseP& new_dw);
 
+      virtual bool getBurns() const;
+
       // initialize and allocate the burn model data
       void initializeBurnModelData(const Patch* patch,
                                    const MPMMaterial* matl,
@@ -93,6 +95,11 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.4  2000/06/19 23:52:14  guilkey
+// Added boolean d_burns so that certain stuff only gets done
+// if a burn model is present.  Not to worry, the if's on this
+// are not inside of inner loops.
+//
 // Revision 1.3  2000/06/08 16:49:45  guilkey
 // Added more stuff to the burn models.  Most infrastructure is now
 // in place to change the mass and volume, we just need a little bit of science.

@@ -200,6 +200,7 @@ private:
   ThermalContact*  d_thermalContactModel;
 
   bool             d_heatConductionInvolved;
+  bool             d_burns;
 };
       
 } // end namespace MPM
@@ -207,6 +208,11 @@ private:
    
 //
 // $Log$
+// Revision 1.42  2000/06/19 23:52:13  guilkey
+// Added boolean d_burns so that certain stuff only gets done
+// if a burn model is present.  Not to worry, the if's on this
+// are not inside of inner loops.
+//
 // Revision 1.41  2000/06/17 07:06:33  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
