@@ -48,7 +48,7 @@ typedef LockingHandle<TensorAttrib >    TensorAttribHandle;
 typedef DiscreteAttrib<double>          SourceAttrib;
 typedef LockingHandle<SourceAttrib >    SourceAttribHandle;
 
-typedef DiscreteAttrib<NewmannBC>       NmnBCAttrib;
+typedef DiscreteAttrib<NeumannBC>       NmnBCAttrib;
 typedef LockingHandle<NmnBCAttrib >     NmnBCAttribHandle;
 
 typedef DiscreteAttrib<double>          DrhBCAttrib;
@@ -200,11 +200,11 @@ void BuildFDMatrix::execute()
   }
   
   // -- getting boundary conditions
-  hTmpAttrib = hField->getAttrib("NewmannBC");
+  hTmpAttrib = hField->getAttrib("NeumannBC");
   NmnBCAttribHandle  hNmnBC(0);
-  AccelAttrib<NewmannBC>* dummyAttr = dynamic_cast<AccelAttrib<NewmannBC>*>(hTmpAttrib.get_rep());
+  AccelAttrib<NeumannBC>* dummyAttr = dynamic_cast<AccelAttrib<NeumannBC>*>(hTmpAttrib.get_rep());
   if (!hTmpAttrib.get_rep()){
-    cerr << "No NewmannBC Attrib  supplied in the field" << endl;    
+    cerr << "No NeumannBC Attrib  supplied in the field" << endl;    
   }
   else {
     hNmnBC  =  hTmpAttrib->downcast((NmnBCAttrib*) 0);
@@ -329,12 +329,12 @@ void BuildFDMatrix::execute()
       TensorArray& ownSigma = hTensors->get3(ii, jj, kk);
       
       double tmpSigma = 0;
-      NewmannBC nmnBC;    
+      NeumannBC nmnBC;    
       Vector dir(0, 0, 0);
       double dval, val;
 
       // -----------------------------------------------------------------------
-      // --  if it has neighboor with Newmann and Dirichlet BC at the same time,
+      // --  if it has neighboor with Neumann and Dirichlet BC at the same time,
       // just set it to the combined value of the BC's
       if ( kk!=0 && hTensors->isValid(ii, jj, kk-1) 
 	   && hDrhBC->getValid3(ii, jj, kk-1, dval) 
@@ -520,7 +520,7 @@ void BuildFDMatrix::execute()
       double val1;
 
       if (hNmnBC->getValid3(ii, jj, kk, nmnBC)){
-	// --  adjustment to rhs due to the pure Newmann node
+	// --  adjustment to rhs due to the pure Neumann node
 	dir=nmnBC.dir;
 	val=nmnBC.val;
       }
@@ -528,65 +528,65 @@ void BuildFDMatrix::execute()
       // 1-----
       if (empty & 32) {
 	currLcl[1]*=2;
-	if (dir.x()!=0){                 // Newmann node
+	if (dir.x()!=0){                 // Neumann node
 	  val1 = (dir.x()>0)?val:-val;
 	  rhs[i]-=2*val1*currLcl[1]/d_dx;
-	  dir.x(0.0);                    // Newmann BC is handled
+	  dir.x(0.0);                    // Neumann BC is handled
 	}
       }
 
       // -1----
       if (empty & 16) {
 	currLcl[0]*=2;
-	if (dir.x()!=0){                 // Newmann node
+	if (dir.x()!=0){                 // Neumann node
 	  val1 = (dir.x()>0)?val:-val;
 	  rhs[i]-=2*val1*currLcl[0]/d_dx;
-	  dir.x(0.0);                    // Newmann BC is handled
+	  dir.x(0.0);                    // Neumann BC is handled
 	}
       }
       
       // --1---
       if (empty & 8)  {
 	currLcl[3]*=2;
-	if (dir.y()!=0){                 // Newmann node
+	if (dir.y()!=0){                 // Neumann node
 	  val1 = (dir.y()>0)?val:-val;
 	  rhs[i]-=2*val1*currLcl[3]/d_dy;
-	   dir.y(0.0);                    // Newmann BC is handled
+	   dir.y(0.0);                    // Neumann BC is handled
 	}
       }
 
       // ---1--
       if (empty & 4)  {
 	currLcl[2]*=2;
-	if (dir.y()!=0){                 // Newmann node
+	if (dir.y()!=0){                 // Neumann node
 	  val1 = (dir.y()>0)?val:-val;
 	  rhs[i]-=2*val1*currLcl[2]/d_dy;
-	  dir.y(0.0);                    // Newmann BC is handled 
+	  dir.y(0.0);                    // Neumann BC is handled 
 	}
       } 	     
       
       // ----1-
       if (empty & 2)  {
 	currLcl[5]*=2;
-	if (dir.z()!=0){                 // Newmann node
+	if (dir.z()!=0){                 // Neumann node
 	  val1 = (dir.z()>0)?val:-val;
 	  rhs[i]-=2*val1*currLcl[5]/d_dz;
-	  dir.z(0.0);                    // Newmann BC is handled 
+	  dir.z(0.0);                    // Neumann BC is handled 
 	}
       }
       
       // -----1
       if (empty & 1)  {
 	currLcl[4]*=2;
-	if (dir.z()!=0){                 // Newmann node
+	if (dir.z()!=0){                 // Neumann node
 	  val1 = (dir.z()>0)?val:-val;
 	  rhs[i]-=2*val1*currLcl[4]/d_dz;
-	  dir.z(0.0);                    // Newmann BC is handled 
+	  dir.z(0.0);                    // Neumann BC is handled 
 	}
       }	
       
       // ----------------------------------------------------------------------------
-      // handling pure Newmann BC left inside the volume
+      // handling pure Neumann BC left inside the volume
       if (dir.x()){
 	val1 = (dir.x()>0)?val:-val;
 	rhs[i]-=2*val1*currLcl[1]/d_dx;
@@ -626,7 +626,7 @@ void BuildFDMatrix::execute()
   const unsigned int* pBitVector = hTensors->getValidBits(nalloc);
   pMapAttrib->copyValidBits(pBitVector, nalloc);
   
-  // -- making adjustments for Newmann nodes with Dirichlet conditions
+  // -- making adjustments for Neumann nodes with Dirichlet conditions
   for (i=0; i<mSize; i++){
     ii = activeNodes[i].x();
     jj = activeNodes[i].y();

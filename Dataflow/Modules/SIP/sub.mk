@@ -43,11 +43,11 @@ SRCS     += \
 	$(SRCDIR)/Unop.cc\
 	$(SRCDIR)/WhiteNoiseImage.cc\
 	$(SRCDIR)/fftn.c\
-#	$(SRCDIR)/SegFldOps\
 #[INSERT NEW CODE FILE HERE]
+#	$(SRCDIR)/SegFldOps\
 
 PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes Core/Persistent \
-	Core/Exceptions Core/Thread Core/Containers \
+	Core/Exceptions Core/Math Core/Thread Core/Containers \
 	Core/TclInterface Core/Geometry Core/Datatypes \
 	Core/Util Core/Geom Core/TkExtensions \
 	Dataflow/Widgets

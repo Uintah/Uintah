@@ -17,8 +17,8 @@ using std::cout;
 using std::endl;
 
 //////////
-// PIO for NewmannBC objects
-void Pio(Piostream& stream, NewmannBC& nmn){
+// PIO for NeumannBC objects
+void Pio(Piostream& stream, NeumannBC& nmn){
   stream.begin_cheap_delim();
   Pio(stream, nmn.dir);
   Pio(stream, nmn.val);
@@ -26,7 +26,7 @@ void Pio(Piostream& stream, NewmannBC& nmn){
 }
 //////////
 //
-ostream& operator<<(ostream& ostr, NewmannBC& nmn){
+ostream& operator<<(ostream& ostr, NeumannBC& nmn){
   ostr << "["<< nmn.dir << ", " << nmn.val << "]";
   return ostr;
 }

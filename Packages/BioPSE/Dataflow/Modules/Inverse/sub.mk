@@ -10,12 +10,12 @@ include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Inverse
 
 SRCS     += \
-#	$(SRCDIR)/ConductivitySearch.cc\
-#	$(SRCDIR)/Dipoleearch.cc\
-#	$(SRCDIR)/SurfaceToSurface.cc\
 #[INSERT NEW CODE FILE HERE]
+#	$(SRCDIR)/ConductivitySearch.cc\
+#	$(SRCDIR)/DipoleSearch.cc\
+#	$(SRCDIR)/SurfaceToSurface.cc\
 
-PSELIBS := Core/Datatypes Dataflow/Network \
+PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/TclInterface \
         Core/Geom Core/Datatypes Core/Geometry \
