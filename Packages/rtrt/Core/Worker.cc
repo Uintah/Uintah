@@ -3,6 +3,7 @@
 
 #include <Packages/rtrt/Core/CutGroup.h>
 #include <Packages/rtrt/Core/Dpy.h>
+#include <Packages/rtrt/Core/DpyPrivate.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Ray.h>
