@@ -29,10 +29,17 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 	set_defaults
     }
     method set_defaults {} {
-	global $this-filetype $this-confirm $this-split
+	global $this-filetype $this-confirm $this-split env
 	set $this-filetype Binary
 	set $this-split 0
-	set $this-confirm 0
+      	set $this-confirm 1
+	puts "conf is: $env(SCI_CONFIRM_OVERWRITE)"
+	if { [info exists env(SCI_CONFIRM_OVERWRITE)] && 
+	     ([string equal 0 $env(SCI_CONFIRM_OVERWRITE)] ||
+	      [string equal -nocase no $env(SCI_CONFIRM_OVERWRITE)]) } {
+	    set $this-confirm 0
+	}
+
     }
     method overwrite {} {
 	global $this-confirm $this-filetype
