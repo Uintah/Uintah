@@ -10,7 +10,7 @@
 #  Copyright (C) 1995 SCI Group
 #
 
-itcl_class PSECommon_Visualization_Hedgehog {
+itcl_class PSECommon_Visualization_HedgehogLitLines {
     inherit Module
     protected l_s ""
     constructor {config} {
