@@ -5024,6 +5024,10 @@ echo "${ECHO_T}no" >&6
     ;;
 
   *)
+    if test "$enable_64bit" = "yes"; then
+      BASE_LIB_DIR=lib64
+    fi
+
     # linux
     ac_objext=o
     CFLAGS=" -Wall"
