@@ -381,7 +381,7 @@ void StreamLines::execute()
   }
 
   // might have to get Field::NODE
-  cf_ = scinew ContourField<double>(Field::NONE);
+  cf_ = scinew ContourField<double>(Field::NODE);
   cmesh_ = dynamic_cast<ContourMesh*>(cf_->get_typed_mesh().get_rep());
 
   interp_ = (GenericInterpolate<Vector>*)vf_->query_interpolate();
