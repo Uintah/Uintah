@@ -73,6 +73,8 @@ OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
      d_grid(grid),
      d_isInitializationDW(isInitializationDW)
 {
+  restart = false;
+  aborted = false;
 }
 
 OnDemandDataWarehouse::~OnDemandDataWarehouse()
@@ -2563,6 +2565,28 @@ OnDemandDataWarehouse::checkAccesses(RunningTaskInfo* currentTaskInfo,
   }
 }
 
+
+// For timestep abort/restart
+bool OnDemandDataWarehouse::timestepAborted()
+{
+  return aborted;
+}
+
+bool OnDemandDataWarehouse::timestepRestarted()
+{
+  return restart;
+}
+
+void OnDemandDataWarehouse::abortTimestep()
+{
+  aborted=true;
+}
+
+void OnDemandDataWarehouse::restartTimestep()
+{
+  restart=true;
+}
+
 namespace Uintah {
   int getDB_ID(const Patch* patch) {
     if(!patch)
@@ -2578,3 +2602,4 @@ namespace Uintah {
     return level->getIndex();
   }
 }
+

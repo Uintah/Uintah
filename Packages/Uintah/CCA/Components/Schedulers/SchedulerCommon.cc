@@ -259,9 +259,7 @@ SchedulerCommon::advanceDataWarehouse(const GridP& grid)
 					  true /* initialization dw */);
   } else {
     for(int i=numOldDWs;i<(int)dws.size();i++)
-      dws[i]=scinew OnDemandDataWarehouse(d_myworld, this, d_generation++,
-					  grid);
-    //dws[0].get_rep()->printAll();
+      replaceDataWarehouse(i, grid);
   }
 }
 
@@ -269,8 +267,12 @@ void SchedulerCommon::fillDataWarehouses(const GridP& grid)
 {
   for(int i=numOldDWs;i<(int)dws.size();i++)
     if(!dws[i])
-      dws[i]=scinew OnDemandDataWarehouse(d_myworld, this, d_generation++,
-					  grid);
+      replaceDataWarehouse(i, grid);
+}
+
+void SchedulerCommon::replaceDataWarehouse(int index, const GridP& grid)
+{
+  dws[index] = scinew OnDemandDataWarehouse(d_myworld, this, d_generation++, grid);
 }
 
 const vector<const Patch*>* SchedulerCommon::

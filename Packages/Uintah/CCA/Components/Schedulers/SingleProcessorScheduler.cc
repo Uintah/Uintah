@@ -130,6 +130,10 @@ SingleProcessorScheduler::execute(const ProcessorGroup * pg)
     long long dummy;
     read_counters(0, &dummy, 19, &flop_count);
 #endif
+    if(dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
+      dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
+      break;
+    }
     if(dbg.active())
       dbg << "Completed task: " << *task->getTask()
 	  << " (" << delT << " seconds)\n";

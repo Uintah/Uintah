@@ -260,6 +260,12 @@ public:
    void scrub(const VarLabel* label, int matlIndex, const Patch* patch);
    void initializeScrubs(int dwid, const map<VarLabelMatlPatchDW, int>& scrubcounts);
 
+   // For timestep abort/restart
+   virtual bool timestepAborted();
+   virtual bool timestepRestarted();
+   virtual void abortTimestep();
+   virtual void restartTimestep();
+
    void logMemoryUse(ostream& out, unsigned long& total, const std::string& tag);
 
    // must be called by the thread that will run the test
@@ -407,6 +413,9 @@ private:
     
    map<Thread*, list<RunningTaskInfo> > d_runningTasks;
    ScrubMode d_scrubMode;
+
+   bool aborted;
+   bool restart;
 };
 
 } // end namespace Uintah
