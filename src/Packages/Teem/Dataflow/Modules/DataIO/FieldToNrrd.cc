@@ -86,7 +86,7 @@ FieldToNrrd::~FieldToNrrd()
     if (f->data_at() == Field::NODE) \
       nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, \
                   nrrdCenterNode, nrrdCenterNode, nrrdCenterNode); \
-    else // if (f->data_at() == Field::CELL) \
+    else \
       nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, \
                   nrrdCenterCell, nrrdCenterCell, nrrdCenterCell)
 
