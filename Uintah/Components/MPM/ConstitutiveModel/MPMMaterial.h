@@ -21,7 +21,7 @@ namespace Uintah {
    class Patch;
    class VarLabel;
    namespace MPM {
-      class GeometryObject;
+     class GeometryObject;
       class ConstitutiveModel;
       class HEBurn;
       class Fracture;
@@ -140,6 +140,9 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.32  2001/01/04 00:18:04  jas
+// Remove g++ warnings.
+//
 // Revision 1.31  2000/11/22 01:40:59  guilkey
 // Moved forward declaration of GeometryPiece
 //

@@ -381,7 +381,7 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
     double size1 = pow(pVolume[pIdx],0.3333);
 
     //crack surface contact force
-    for(int pNeighbor=0; pNeighbor<particles.size(); ++pNeighbor)
+    for(int pNeighbor=0; pNeighbor<(int)particles.size(); ++pNeighbor)
     {
       particleIndex pContact = particles[pNeighbor];
       if(pContact == pIdx) continue;
@@ -516,6 +516,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.77  2001/01/04 00:18:04  jas
+// Remove g++ warnings.
+//
 // Revision 1.76  2000/12/30 05:08:09  tan
 // Fixed a problem concerning patch and ghost in fracture computations.
 //
