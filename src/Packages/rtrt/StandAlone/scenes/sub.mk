@@ -28,6 +28,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/mipvfem.mo \
 	$(SRCDIR)/multihvb.mo \
 	$(SRCDIR)/oldvfem.mo \
+	$(SRCDIR)/original.mo \
 	$(SRCDIR)/spherefile.mo \
 	$(SRCDIR)/teapot.mo \
 	$(SRCDIR)/teapot.rational.mo \

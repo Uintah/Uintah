@@ -691,7 +691,7 @@ Scene* make_scene(int argc, char* argv[], int) {
 			 ambient_scale);
   scene->add_light(new Light(Point(500,-300,300), Color(.8,.8,.8), 0));
   scene->set_background_ptr(new EnvironmentMapBackground("/home/sci/dmw/stadium/SKY.ppm"));
-  scene->shadow_mode=1;
+  scene->select_shadow_mode("hard");
   scene->set_materials(ase_matls);
   cerr << "num materials="<<ase_matls.size()<<"\n";
   CycleMaterial *cm;

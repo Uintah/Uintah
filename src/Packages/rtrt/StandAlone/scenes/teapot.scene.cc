@@ -434,7 +434,7 @@ Material *brick = new Speckle(0.01, Color(0.5,0.5,0.5), Color(0.6, 0.62, 0.64) )
       Scene *scene = new Scene(g,cam,bgcolor,cdown, cup,groundplane,ambient_scale);
       scene->ambient_hack = true;
 
-      scene->shadow_mode = 1;
+      scene->select_shadow_mode("hard");
       scene->maxdepth = 8;
       scene->shadowobj = new BV1(shadow);
       scene->add_light(new Light(Point(200,400,1300), Color(.8,.8,.8), 0));

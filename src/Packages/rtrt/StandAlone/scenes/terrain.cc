@@ -502,7 +502,7 @@ Scene* make_scene(int argc, char* argv[])
 			   groundplane, 
 			   ambient_scale);
     scene->add_light(new Light(Point(-10000,-10000,10000), Color(.7,.7,.7), 0));
-    scene->shadow_mode=0;
+    scene->select_shadow_mode("none");
     scene->ambient_hack=true;
     scene->maxdepth=0;
     scene->set_background_ptr( new LinearBackground(

@@ -439,11 +439,11 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
 #endif  
   int ncolors=5000;
   Array1<Material*> matls(ncolors);
-  float Ka=.8;
+  //float Ka=.8;
   float Kd=.8;
-  float Ks=.8;
-  float refl=0;
-  float specpow=40;
+  //float Ks=.8;
+  //float refl=0;
+  //float specpow=40;
   for(int i=0;i<ncolors;i++){
     float frac=float(i)/(ncolors-1);
     Color c(spline(frac));
@@ -655,7 +655,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Camera cam(Point(0,0,400), Point(0,0,0),
 	     Vector(0,1,0), 60.0);
   
-  double bgscale=0.5;
+  //double bgscale=0.5;
   //Color groundcolor(0,0,0);
   //Color averagelight(0,0,0);
   double ambient_scale=1.0;
@@ -742,7 +742,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 			 ambient_scale);
   
   scene->add_light(new Light(Point(500,-300,300), Color(.8,.8,.8), 0));
-  scene->shadow_mode=1;
+  scene->select_shadow_mode("none");
   return scene;
 }
 

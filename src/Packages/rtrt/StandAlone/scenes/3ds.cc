@@ -5,7 +5,6 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/HashTable.h>
-#include <Packages/rtrt/Core/clString.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Rect.h>
@@ -104,7 +103,7 @@ struct State3D {
     Scene* scene;
     double light_radius;
     float master_scale;
-    HashTable<clString, Material*> matls;
+    HashTable<string, Material*> matls;
     State3D();
     Color ambient;
     Array1<Object*> nomatl;
@@ -396,7 +395,7 @@ void read_facedata(Chunk* ch, State3D& state, Array1<Face>& faces)
 		int nmatl=chunk->get_short(p);
 		p+=2;
 		Material* matl;
-		if(!state.matls.lookup(clString(matl_name), matl)){
+		if(!state.matls.lookup(matl_name, matl)){
 		    cerr << "ERROR: Couldn't find material: " << matl_name << '\n';
 		    exit(1);
 		}
@@ -595,7 +594,7 @@ void read_matentry(Chunk* ch, State3D& state)
     Material* matl=new Phong(mat.ambient, mat.diffuse, mat.specular,
 			     mat.shininess);
     //cerr << "Material: " << mat.name << " " << mat.ambient << " " << mat.diffuse << " " << mat.specular << " " << mat.shininess << '\n';
-    state.matls.insert(clString(mat.name), matl);
+    state.matls.insert(mat.name, matl);
 }
 
 void read_edit3ds(Chunk* ch, Group* world, State3D& state)
@@ -770,11 +769,6 @@ void read_3ds(char* filename, Scene* scene, double light_radius, int maxtri)
 #include <Packages/rtrt/Core/Array1.h>
 template class Array1<Face>;
 
-#include <Packages/rtrt/Core/HashTable.cc>
-#include <Packages/rtrt/Core/HashTableEntry.cc>
-template class HashTable<clString, Material*>;
-template class HashTableEntry<clString, Material*>;
-
 #endif
 
 extern "C" 
@@ -812,6 +806,6 @@ Scene* make_scene(int argc, char* argv[])
 			   bgcolor, groundcolor*bgcolor, bgcolor, groundplane,
 			   ambient_scale);
     read_3ds(file, scene, 0, maxtri);
-    scene->shadow_mode=1;
+    scene->select_shadow_mode("hard");
     return scene;
 }

@@ -112,10 +112,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	for(int i=0;i<files.size();i++){
 	  matl0=new Phong(Color(0,0,0), Color(.6,1,.4),
 			  Color(0,0,0), 100, 0);
+#if 0
 	  if (false) {
 	    matl0=new Phong(Color(0,0,0), Color(1,0.1,0.1),
 			    Color(0,0,0), 100, 0);
 	  }
+#endif
 	  HVolume<unsigned char, BrickArray3<unsigned char>, BrickArray3<VMCell<unsigned char> > > * hvol = new HVolume<unsigned char, BrickArray3<unsigned char>, BrickArray3<VMCell<unsigned char> > > (matl0, dpy, files[i], depth, nworkers);
 	  group->add(hvol);
 	}
@@ -169,7 +171,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
                                Color(0.0,0.0,0.0),
                                Vector(1, 0, 0)) );
 
-    scene->shadow_mode=0;
+    scene->select_shadow_mode("none");
     scene->ambient_hack=false;
     scene->attach_display(dpy);
     return scene;

@@ -149,7 +149,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 0.5);
   scene->ambient_hack = false;
 
-  scene->shadow_mode = 1;
+  scene->select_shadow_mode("hard");
   scene->maxdepth = 8;
   scene->add_light(new Light(Point(8, -8, 3.9), Color(.8,.8,.8), 0));
   scene->animate=false;
