@@ -103,8 +103,9 @@ private:
   }
 
   //! loop through the nodes in the seed field
-  template <class VectorField, class SeedField>
-  void TemplatedExecute(VectorField *, SeedField *, ContourMeshHandle);
+  template <class VMESH, class SMESH>
+  void TemplatedExecute(VMESH *, SMESH *, VectorFieldInterface *,
+			ContourMeshHandle);
 
   //! find the nodes that make up a single stream line.
   //! This particular implementation uses Runge-Kutta-Fehlberg
@@ -246,17 +247,15 @@ StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
 
 
 
-template <class VectorField, class SeedField>
+template <class VMESH, class SMESH>
 void 
-StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf,
+StreamLines::TemplatedExecute(VMESH *vmesh, SMESH *smesh,
+			      VectorFieldInterface *vfi,
 			      ContourMeshHandle cmesh)
 {
-  typedef typename VectorField::mesh_type        vf_mesh_type;
-  typedef typename SeedField::mesh_type          sf_mesh_type;
-  typedef typename vf_mesh_type::Node::iterator   vf_node_iterator;
-  typedef typename sf_mesh_type::Node::iterator   sf_node_iterator;
+  typedef typename VMESH::Node::iterator          vf_node_iterator;
+  typedef typename SMESH::Node::iterator          sf_node_iterator;
   typedef typename ContourMesh::Node::index_type  node_index_type;
-  typedef typename vf_mesh_type::Cell::index_type cell_index_type;
 
   Point seed;
   Vector test;
@@ -264,15 +263,7 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf,
   vector<Point>::iterator node_iter;
   node_index_type n1, n2;
 
-  sf_mesh_type *smesh =
-    dynamic_cast<sf_mesh_type*>(sf->get_typed_mesh().get_rep());
-
-  vf_mesh_type *vmesh =
-    dynamic_cast<vf_mesh_type*>(vf->get_typed_mesh().get_rep());
   vmesh->finish_mesh();
-
-  VectorFieldInterface *vfi = vf->query_vector_interface();
-
 
   TCL::execute(id + " set_state Executing 0");
   const int node_count = smesh->nodes_size();
@@ -293,15 +284,12 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf,
     smesh->get_point(seed, *seed_iter);
 
     // Is the seed point inside the field?
-    if (vf->data_at() == Field::NODE)
+    if (!interpolate(vfi, seed, test))
     {
-      if (!interpolate(vfi, seed, test))
-      {
-	warning("StreamLines: WARNING: seed point was not inside the field.");
-	++seed_iter;
-	continue;
-      }
-    } 
+      warning("StreamLines: WARNING: seed point was not inside the field.");
+      ++seed_iter;
+      continue;
+    }
 
     // Find the positive streamlines.
     nodes.clear();
@@ -378,9 +366,9 @@ void StreamLines::execute()
   }
   
   // Check that the flow field input is a vector field.
-  if (!vf_->query_vector_interface()) {
-    postMessage("StreamLines: ERROR: FlowField is not a Vector field."
-		"  Exiting.");
+  VectorFieldInterface *vfi = vf_->query_vector_interface();
+  if (!vfi) {
+    error("FlowField is not a Vector field.  Exiting.");
     return;
   }
 
@@ -395,29 +383,31 @@ void StreamLines::execute()
   // this is a pain...
   // use Marty's dispatch here instead...
   if (vf_->get_type_name(0) == "LatticeVol") {
+    LatVolMesh *vmesh = (LatVolMesh *)(vf_->mesh().get_rep());
     if (vf_->get_type_name(1) == "Vector") {
       if (sf_->get_type_name(-1) == "ContourField<double>") {
-	TemplatedExecute((LatticeVol<Vector>*)vf_,(ContourField<double>*)sf_,
-			 cmesh);
+	TemplatedExecute(vmesh, (ContourMesh *)(sf_->mesh().get_rep()),
+			 vfi, cmesh);
       } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
-	TemplatedExecute((LatticeVol<Vector>*)vf_,(TriSurf<double>*)sf_,
-			 cmesh);
+	TemplatedExecute(vmesh, (TriSurfMesh *)(sf_->mesh().get_rep()),
+			 vfi, cmesh);
       } else if (sf_->get_type_name(-1) == "PointCloud<double>") {
-	TemplatedExecute((LatticeVol<Vector>*)vf_,(PointCloud<double>*)sf_,
-			 cmesh);
+	TemplatedExecute(vmesh, (PointCloudMesh *)(sf_->mesh().get_rep()),
+			 vfi, cmesh);
       }
     }
   } else if (vf_->get_type_name(0) =="TetVol") {
+    TetVolMesh *vmesh = (TetVolMesh *)(vf_->mesh().get_rep());
     if (vf_->get_type_name(1) == "Vector") {
       if (sf_->get_type_name(-1) == "ContourField<double>") {
-	TemplatedExecute((TetVol<Vector>*)vf_,(ContourField<double>*)sf_,
-			 cmesh);
+	TemplatedExecute(vmesh, (ContourMesh *)(sf_->mesh().get_rep()),
+			 vfi, cmesh);
       } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
-	TemplatedExecute((TetVol<Vector>*)vf_,(TriSurf<double>*)sf_,
-			 cmesh);
+	TemplatedExecute(vmesh, (TriSurfMesh *)(sf_->mesh().get_rep()),
+			 vfi, cmesh);
       } else if (sf_->get_type_name(-1) == "PointCloud<double>") {
-	TemplatedExecute((TetVol<Vector>*)vf_,(PointCloud<double>*)sf_,
-			 cmesh);
+	TemplatedExecute(vmesh, (PointCloudMesh *)(sf_->mesh().get_rep()),
+			 vfi, cmesh);
       }
     }
   }
