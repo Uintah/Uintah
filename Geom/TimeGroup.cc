@@ -82,12 +82,13 @@ GeomObj* GeomTimeGroup::clone()
 
 void GeomTimeGroup::get_bounds(BBox& in_bb)
 {
-#if 0
+
     for(int i=0;i<objs.size();i++)
 	objs[i]->get_bounds(in_bb);
-#endif
 
+#if 0
     in_bb.extend(bbox);
+#endif
 }
 
 void GeomTimeGroup::get_bounds(BSphere& in_sphere)
