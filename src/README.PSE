@@ -6,8 +6,8 @@ recognize the distribution tree when it sees it.
 Useful configuration flags:
 
  --enable-scirun	- Compile the package indicated.  At least one
- --enable-uintah          must be specified.
- --enable-davew
+ --enable-uintah          must be specified.  Uintah is enabled by default;
+ --enable-davew           you can turn it off with --disable-uintah
 
  --enable-exename=NAME  - call the executable NAME instead of the
 	                  default {scirun,uintah,davew}
