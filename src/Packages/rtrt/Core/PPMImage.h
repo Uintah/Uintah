@@ -36,10 +36,10 @@ class PPMImage
 {
 
  protected:
-  unsigned      u_,v_;
-  unsigned      max_;
-  bool          valid_;
-  vector<Color> image_;
+  unsigned            u_,v_;
+  unsigned            max_;
+  bool                valid_;
+  vector<rtrt::Color> image_;
 
  public:
   PPMImage(const string& s) : valid_(false) { read_image(s.c_str()); }
@@ -54,7 +54,7 @@ class PPMImage
   unsigned get_height() { return v_; }
   unsigned get_size() { return max_; }
 
-  void get_dimensions_and_data(Array2<Color> &c, int &nu, int &nv) {
+  void get_dimensions_and_data(Array2<rtrt::Color> &c, int &nu, int &nv) {
     c.resize(u_,v_);
     for (int u=0; u<u_; u++)
       for (int v=0; v<v_; v++)
@@ -63,13 +63,19 @@ class PPMImage
     nv=v_;
   }
 
-  Color &operator()(unsigned u, unsigned v)
+  bool valid() { return valid_; }
+
+  rtrt::Color &operator()(unsigned u, unsigned v)
   {
+    if (v>=v_) v=v_-1;
+    if (u>=u_) u=u_-1;
     return image_[v*u_+u];
   }
 
-  const Color &operator()(unsigned u, unsigned v) const
+  const rtrt::Color &operator()(unsigned u, unsigned v) const
   {
+    if (v>=v_) v=v_-1;
+    if (u>=u_) u=u_-1;
     return image_[v*u_+u];
   }
 
@@ -142,9 +148,9 @@ class PPMImage
       for(unsigned v=0;v<v_;++v){
 	for(unsigned u=0;u<u_;++u){
 	  indata.read((char*)color, 3);
-	  image_[v*u_+u]=Color(color[0]/(double)max_,
-			       color[1]/(double)max_,
-			       color[2]/(double)max_);
+	  image_[v*u_+u]=rtrt::Color(color[0]/(double)max_,
+                                     color[1]/(double)max_,
+                                     color[2]/(double)max_);
 	}
       }    
     } else { // P3
@@ -152,9 +158,9 @@ class PPMImage
       for(unsigned v=0;v<v_;++v){
 	for(unsigned u=0;u<u_;++u){
 	  indata >> r >> g >> b;
-	  image_[v*u_+u]=Color(r/(double)max_,
-			       g/(double)max_,
-			       b/(double)max_);
+	  image_[v*u_+u]=rtrt::Color(r/(double)max_,
+                                     g/(double)max_,
+                                     b/(double)max_);
 	}
       }    
     }
