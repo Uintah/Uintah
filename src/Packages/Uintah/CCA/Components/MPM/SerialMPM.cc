@@ -1,7 +1,20 @@
 
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
+#include <Packages/Uintah/CCA/Components/MPM/Burn/HEBurn.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMPhysicalModules.h>
+#include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
+#include <Packages/Uintah/CCA/Components/MPM/HeatConduction/HeatConduction.h>
+#include <Packages/Uintah/CCA/Components/MPM/Fracture/Fracture.h>
+#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/Fracture/Visibility.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/Array3Index.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -17,8 +30,10 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Grid/BoundCond.h>
+#include <Packages/Uintah/Core/Grid/VelocityBoundCond.h>
+#include <Packages/Uintah/Core/Grid/SymmetryBoundCond.h>
+#include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 
@@ -26,30 +41,8 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/Burn/HEBurn.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-
-#include <Packages/Uintah/CCA/Components/MPM/Fracture/Visibility.h>
-
 #include <iostream>
 #include <fstream>
-
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
-
-
-#include <Packages/Uintah/Core/Grid/BoundCond.h>
-#include <Packages/Uintah/Core/Grid/VelocityBoundCond.h>
-#include <Packages/Uintah/Core/Grid/SymmetryBoundCond.h>
-#include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
-
-#include <Packages/Uintah/CCA/Components/MPM/MPMPhysicalModules.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
-#include <Packages/Uintah/CCA/Components/MPM/HeatConduction/HeatConduction.h>
-#include <Packages/Uintah/CCA/Components/MPM/Fracture/Fracture.h>
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
-
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -509,7 +502,6 @@ void SerialMPM::scheduleComputeInternalForce(const Patch* patch,
 
     if(numMPMMatls!=numALLMatls){
       t->requires(new_dw, lb->pPressureLabel, idx, patch,Ghost::AroundNodes, 1);
-     cout << "matlindex requires = " << idx << endl;
     }
 
     if(mpm_matl->getFractureModel()) {
@@ -1359,9 +1351,9 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 	   if(patch->containsNode(ni[k])){
 	     Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 						d_S[k].z()*oodx[2]);
-  // Todd LOOK HERE
 	     internalforce[ni[k]] -=
 			(div * (pstress[idx] - Id*p_pressure[idx]) * pvol[idx]);
+//			(div * (pstress[idx]) * pvol[idx]);
              gstress[ni[k]] += pstress[idx] * pmass[idx] * S[k];
              gstressglobal[ni[k]] += pstress[idx] * pmass[idx] * S[k];
 	   }
@@ -1374,6 +1366,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
          if(gmass[*iter] >= 1.e-10){
             gstress[*iter] /= gmass[*iter];
          }
+//       cout << "internalForce = " << internalforce[*iter] << endl;
       }
       IntVector offset = 
 	patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
@@ -1575,7 +1568,7 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
             TemperatureBoundCond* bc =
                        dynamic_cast<TemperatureBoundCond*>(bcs[i]);
             if (bc->getKind() == "Neumann"){
-              cout << "bc value = " << bc->getValue() << endl;
+//              cout << "bc value = " << bc->getValue() << endl;
 	      double value = bc->getValue();
 	      IntVector offset = 
 		patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
@@ -1747,22 +1740,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
     int dwindex = mpm_matl->getDWIndex();
     // Get the arrays of particle values to be changed
-    ParticleVariable<Point> px;
-    ParticleVariable<Point> pxnew;
-    ParticleVariable<Vector> pvelocity;
-    ParticleVariable<Vector> pvelocitynew;
+    ParticleVariable<Point>  px, pxnew;
+    ParticleVariable<Vector> pvelocity, pvelocitynew, pexternalForce;
     ParticleVariable<double> pmass;
-    ParticleVariable<Vector> pexternalForce;
 
-    ParticleVariable<double> pTemperature;    //for heat conduction
-    ParticleVariable<double> pTemperatureNew; //for heat conduction
-    ParticleVariable<Vector> pTemperatureGradient; //for heat conduction
-    ParticleVariable<double> pTemperatureRate; //for heat conduction
-    NCVariable<double> gTemperatureRate; //for heat conduction
-    NCVariable<double> gTemperatureStar; //for heat conduction
-    NCVariable<double> gTemperature; //for heat conduction
-    NCVariable<double> gmass;
-    NCVariable<double> gvol;
+    ParticleVariable<double> pTemperature, pTemperatureNew, pTemperatureRate; 
+    ParticleVariable<Vector> pTemperatureGradient; 
+    NCVariable<double> gTemperatureRate,gTemperatureStar, gTemperature;
+    NCVariable<double> gmass, gvol;
 
     ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
     old_dw->get(px,        lb->pXLabel, pset);
@@ -1811,7 +1796,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     old_dw->get(delT, d_sharedState->get_delt_label() );
 
     double Cp=mpm_matl->getSpecificHeat();
-    double ThCnd = mpm_matl->getThermalConductivity();
+    //double ThCnd = mpm_matl->getThermalConductivity();
 
     // Apply grid boundary conditions to the velocity_star and
     // acceleration before interpolating back to the particles
@@ -2085,9 +2070,9 @@ void SerialMPM::carryForwardVariables( const ProcessorGroup*,
 }
 	    
 void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
-				    	      const Patch* patch,
-					      DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw)
+				    	      const Patch*,
+					      DataWarehouseP&,
+					      DataWarehouseP&)
 {
 #if 0
    int numMatls = d_sharedState->getNumMatls();
