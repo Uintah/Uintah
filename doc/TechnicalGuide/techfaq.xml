@@ -439,4 +439,39 @@ Unmap failed - leaking memory
       </para>
     </answer>
   </entry>
+
+  <entry>
+    <keywords>GUI, GuiInt, GuiDouble, GuiString</keywords>
+    <question>
+      <para>
+	When I save my network, why don't the settings in my modules GUI get saved?
+      </para>
+    </question>
+    <answer>
+      <para>
+	You need to use GuiVars.  these are how you share a variable between 
+	C++ and tcl, and are also the only values that get saved to the tcl 
+	scripts.
+
+	Look and any module with a gui for an example, Look for GuiString or 
+	GuiInt or GuiDouble, and in particular look at their constructor.   
+	You need to synch with the tcl side by specifying the name of the var 
+	on the tcl side.  That will be reffered to on the tcl side like so...
+
+	C++ side:
+
+	GuiInt myint_;
+
+	-- initialization in constructor --
+	myint_("myint", id, <whatever other args it takes...>)
+
+	tcl side:
+
+	set $this-myint 1
+	(or whatever value you want)
+
+	look at ShowField.cc and .tcl for examples..
+      </para>
+    </answer>
+  </entry>
 </faq>
