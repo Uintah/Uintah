@@ -1563,7 +1563,7 @@ void ImpMPM::formStiffnessMatrixPetsc(const ProcessorGroup*,
 {
   // DONE
 
-  WRONG
+//  WRONG
   int nn = 0;
   IntVector nodes(0,0,0);
   cout << "nodes = " << nodes << endl;
