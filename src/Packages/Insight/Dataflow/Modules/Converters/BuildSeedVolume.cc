@@ -195,11 +195,14 @@ BuildSeedVolume::execute()
     f->value(rad, *ibi);
     
     // fill in that pixel
+    int radsq = rad*rad;
     for(int r=y-rad; r <=(y+rad); r++) {
       for(int c=x-rad; c <= (x+rad); c++) {
 	// check if point is within volume and
+	// should be part of the circle
 	// if so fill it in
-	if (r>0 && r<samples_y && c>0 && c<samples_x) 
+	if (r>0 && r<samples_y && c>0 && c<samples_x &&
+	    ((c-x)*(c-x) + (r-y)*(r-y)) <= radsq) 
 	  data[r*samples_x+c+1] = inside;
       }
     }
