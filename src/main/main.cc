@@ -39,7 +39,7 @@
  *  Copyright (C) 1999 U of U
  */
 
-#include <include/sci_defs/environment_defs.h>
+#include <sci_defs/environment_defs.h>
 
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
