@@ -4,7 +4,8 @@ OBJTOP   = ../../..
 
 SRCS     = MPMaterial.cc MPVizParticleSet.cc ParticleGridReader.cc \
            ParticleGridReaderPort.cc ParticleSet.cc ParticleSetPort.cc \
-           cfdlibParticleSet.cc
+           cfdlibParticleSet.cc VizGrid.cc MPVizGrid.cc MPWrite.cc \
+	   MPRead.cc MPParticleGridReader.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
