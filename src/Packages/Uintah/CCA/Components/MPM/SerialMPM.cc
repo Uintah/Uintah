@@ -1468,6 +1468,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         IntVector c = *iter; 
         totalmass       += gmass[c];
         gmassglobal[c]  += gmass[c];
+        gvolumeglobal[c]  += gvolume[c];
         gvelglobal[c]   += gvelocity[c];
         gvelocity[c]    /= gmass[c];
         gtempglobal[c]  += gTemperature[c];
