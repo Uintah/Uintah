@@ -9,8 +9,16 @@
 using namespace Uintah;
 using namespace SCIRun;
 
-CylinderGeometryPiece::CylinderGeometryPiece(ProblemSpecP& ps) {
+CylinderGeometryPiece::CylinderGeometryPiece() 
+{
+  Point top, bottom;
+  d_bottom = bottom;
+  d_top = top;
+  d_radius = 0.0;
+}
 
+CylinderGeometryPiece::CylinderGeometryPiece(ProblemSpecP& ps) 
+{
   Point top,bottom;
   double rad;
   
