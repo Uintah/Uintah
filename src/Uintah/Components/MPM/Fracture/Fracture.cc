@@ -32,6 +32,37 @@ updateSurfaceNormalOfBoundaryParticle(
 
 void
 Fracture::
+labelSelfContactCells (
+           const ProcessorContext*,
+           const Region* region,
+           const DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw)
+{
+}
+
+void
+Fracture::
+updateParticleInformationInContactCells (
+           const ProcessorContext*,
+           const Region* region,
+           const DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw)
+{
+}
+
+void
+Fracture::
+updateNodeInformationInContactCells (
+           const ProcessorContext*,
+           const Region* region,
+           const DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw)
+{
+}
+
+
+void
+Fracture::
 crackGrow(
            const ProcessorContext*,
            const Region* region,
@@ -55,6 +86,9 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
   pStressLabel   = new VarLabel( "p.stress",
                    ParticleVariable<Matrix3>::getTypeDescription() );
 
+  pExternalForceLabel = new VarLabel( "p.externalForce",
+                   ParticleVariable<Vector>::getTypeDescription() );
+
   pDeformationMeasureLabel = new VarLabel("p.deformationMeasure",
                              ParticleVariable<Matrix3>::getTypeDescription());
 
@@ -70,6 +104,9 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.4  2000/05/10 18:32:11  tan
+// Added member funtion to label self-contact cells.
+//
 // Revision 1.3  2000/05/10 05:06:40  tan
 // Basic structure of fracture class.
 //
