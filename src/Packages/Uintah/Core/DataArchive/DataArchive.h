@@ -43,7 +43,8 @@ using std::string;
 using std::vector;
 
 class VarLabel;
-  class DataWarehouse;
+class DataWarehouse;
+class LoadBalancer;
 
    struct eqstr { // comparison class used in hash_map to compare keys
      bool operator()(const char* s1, const char* s2) const {
@@ -210,6 +211,7 @@ public:
   virtual ~DataArchive();
   
   void restartInitialize(int& timestep, const GridP& grid, DataWarehouse* dw,
+                         LoadBalancer* lb,
 			 double* pTime /* passed back */,
 			 double* pDelt /* passed back */);
 

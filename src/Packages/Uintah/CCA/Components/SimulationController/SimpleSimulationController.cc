@@ -200,7 +200,7 @@ SimpleSimulationController::run()
 
       double delt = 0;
       archive.restartInitialize(d_restartTimestep, grid,
-                            scheduler->get_dw(1), &t, &delt);
+                            scheduler->get_dw(1), lb, &t, &delt);
       
       sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
       ProblemSpecP pspec = archive.getRestartTimestepDoc();

@@ -168,7 +168,7 @@ void AMRSimulationController::run()
      
      double delt = 0;
      archive.restartInitialize(d_restartTimestep, currentGrid,
-			       scheduler->get_dw(1), &t, &delt);
+			       scheduler->get_dw(1), lb, &t, &delt);
      
      ProblemSpecP pspec = archive.getRestartTimestepDoc();
      XMLURL url = archive.getRestartTimestepURL();
