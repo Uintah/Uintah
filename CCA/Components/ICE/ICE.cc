@@ -145,6 +145,10 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   } 
 
   //__________________________________
+  //  Find if we're using LODI bcs
+  d_usingLODI = using_LODI_BC(prob_spec);
+  
+  //__________________________________
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
   if (debug_ps) {
@@ -1123,13 +1127,12 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->spec_vol_L_CCLabel,  gac,2);
   task->requires(Task::NewDW, lb->speedSound_CCLabel,  gn, 0);  
   //__________________________________
-  if(d_usingLODI) { 
-    task->requires(Task::OldDW, lb->press_CCLabel,    press_matl, gac, 2);      
+  if(d_usingLODI) {   
     task->requires(Task::OldDW, lb->temp_CCLabel,     ice_matls,  gac, 1);      
     task->requires(Task::OldDW, lb->rho_CCLabel,      ice_matls,  gac, 1);      
-    task->requires(Task::OldDW, lb->vel_CCLabel,      ice_matls,  gac, 1);      
-    task->requires(Task::OldDW, lb->sp_vol_CCLabel,   ice_matls,  gac, 1);      
-    task->requires(Task::OldDW, lb->vol_frac_CCLabel, ice_matls,  gac, 1);
+    task->requires(Task::OldDW, lb->vel_CCLabel,      ice_matls,  gac, 1);
+    task->requires(Task::OldDW, lb->press_CCLabel,    press_matl, gac, 2);       
+    task->requires(Task::OldDW, lb->vol_frac_CCLabel, ice_matls,  gac, 2);
   }
 
   task->modifies(lb->rho_CCLabel,   ice_matls);
@@ -1426,12 +1429,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                 press_CC,  numALLMatls,    patch, new_dw);
 
       cv[m] = ice_matl->getSpecificHeat();
-    
-      d_usingLODI = are_We_Using_LODI_BC(patch,d_is_LODI_face, indx);
-      if (d_usingLODI) {
-        cout << "\n WARNING:  LODI boundary conditions are "
-             << " NOT set during the problem initialization \n " << endl;
-      }
       
       setBC(press_CC, rho_micro, placeHolder,
             "rho_micro","Pressure", patch, d_sharedState, 0, new_dw);
@@ -2484,6 +2481,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     // if LODI are specified then set them.
     Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(numMatls);
     lv->setLodiBcs = true;
+    lv->usingLODI = d_usingLODI;
     if(d_usingLODI) { 
       lodi_getVars_pressBC(  patch, lv, lb, d_sharedState, old_dw, new_dw);
     } 
@@ -3729,8 +3727,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         lodi_vars->cv   = cv;
         lodi_vars->delT = delT;
         lodi_vars->speedSound = speedSound;
-        lodi_bc_preprocess( patch, lodi_vars, lb, indx, 
-                            d_is_LODI_face, old_dw, new_dw);
+        lodi_bc_preprocess( patch, lodi_vars, lb, indx, old_dw, new_dw,
+                            d_sharedState);
       }
     
       //__________________________________
@@ -3995,9 +3993,9 @@ void ICE::hydrostaticPressureAdjustment(const Patch* patch,
           - The viscosity we're using isn't right if it varies spatially.   
  ---------------------------------------------------------------------  */
 void ICE::computeTauX( const Patch* patch,
-                       const CCVariable<double>& rho_CC,      
-                       const CCVariable<double>& sp_vol_CC,   
-                       const CCVariable<Vector>& vel_CC,      
+                       constCCVariable<double>& rho_CC,      
+                       constCCVariable<double>& sp_vol_CC,   
+                       constCCVariable<Vector>& vel_CC,      
                        const double viscosity,                
                        const Vector dx,                       
                        SFCXVariable<Vector>& tau_X_FC)        
@@ -4120,9 +4118,9 @@ void ICE::computeTauX( const Patch* patch,
           - The viscosity we're using isn't right if it varies spatially. 
  ---------------------------------------------------------------------  */
 void ICE::computeTauY( const Patch* patch,
-                       const CCVariable<double>& rho_CC,      
-                       const CCVariable<double>& sp_vol_CC,   
-                       const CCVariable<Vector>& vel_CC,      
+                       constCCVariable<double>& rho_CC,      
+                       constCCVariable<double>& sp_vol_CC,   
+                       constCCVariable<Vector>& vel_CC,      
                        const double viscosity,                
                        const Vector dx,                       
                        SFCYVariable<Vector>& tau_Y_FC)        
@@ -4243,9 +4241,9 @@ void ICE::computeTauY( const Patch* patch,
           - The viscosity we're using isn't right if it varies spatially.
  ---------------------------------------------------------------------  */
 void ICE::computeTauZ( const Patch* patch,
-                       const CCVariable<double>& rho_CC,      
-                       const CCVariable<double>& sp_vol_CC,   
-                       const CCVariable<Vector>& vel_CC,      
+                       constCCVariable<double>& rho_CC,      
+                       constCCVariable<double>& sp_vol_CC,   
+                       constCCVariable<Vector>& vel_CC,      
                        const double viscosity,                
                        const Vector dx,                       
                        SFCZVariable<Vector>& tau_Z_FC)        
