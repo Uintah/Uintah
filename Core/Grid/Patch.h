@@ -125,8 +125,9 @@ WARNING
 						Vector d_S[8]) const;
      //////////
      // Insert Documentation Here:
-     CellIterator getCellIterator() const;
-     CellIterator getExtraCellIterator() const;
+     CellIterator getCellIterator(const IntVector gc = IntVector(0,0,0)) const;
+     CellIterator getExtraCellIterator(const IntVector gc = 
+				       IntVector(0,0,0)) const;
      
      CellIterator getCellIterator(const Box& b) const;
      CellIterator getExtraCellIterator(const Box& b) const;
