@@ -219,70 +219,44 @@ void SerialMPM::scheduleSetPositions(SchedulerP& sched,
 				     const PatchSet* patches,
 				     const MaterialSet* matls)
 {
-#if 0
-  int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task( "SerialMPM::setPositions",
-			  patch, old_dw, new_dw,
 			  this,&SerialMPM::setPositions);
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
-    int idx = matl->getDWIndex();
-    t->requires(Task::OldDW, lb->pXLabel, idx, patch, Ghost::None);
-    t->computes(lb->pXXLabel);
-  }
+  t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
+  t->computes(lb->pXXLabel);
   sched->addTask(t, patches, matls);
-#else
-  NOT_FINISHED("SerialMPM::scheduleSetPositions");
-#endif
 }
 
 void SerialMPM::scheduleComputeBoundaryContact(SchedulerP& sched,
 					       const PatchSet* patches,
 					       const MaterialSet* matls)
 {
-#if 0
  /*
   * computeBoundaryContact
   *   in(P.X, P.VOLUME, P.NEWISBROKEN, P.NEWCRACKSURFACENORMAL)
   *   operation(computeBoundaryContact)
   * out(P.STRESS) */
 
-  int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task( "SerialMPM::computeBoundaryContact",
-			  patch, old_dw, new_dw,
 			  this,&SerialMPM::computeBoundaryContact);
 
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
-    int idx = matl->getDWIndex();
-    t->requires(Task::OldDW, lb->pXLabel,
-        idx, patch, Ghost::AroundCells, 1);
-    t->requires(Task::OldDW, lb->pCrackNormal1Label,
-	idx, patch, Ghost::AroundCells, 1);
-    t->requires(Task::OldDW, lb->pCrackNormal2Label,
-	idx, patch, Ghost::AroundCells, 1);
-    t->requires(Task::OldDW, lb->pCrackNormal3Label,
-	idx, patch, Ghost::AroundCells, 1);
-    t->requires(Task::OldDW, lb->pIsBrokenLabel,
-        idx, patch, Ghost::AroundCells, 1);
-    t->requires(Task::OldDW, lb->pVolumeLabel,
-        idx, patch, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pXLabel, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pCrackNormal1Label, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pCrackNormal2Label, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pCrackNormal3Label, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pIsBrokenLabel, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pVolumeLabel, Ghost::AroundCells, 1);
 
-    t->requires(Task::NewDW, lb->pXXLabel, idx, patch, Ghost::None);
+  t->requires(Task::NewDW, lb->pXXLabel, Ghost::None);
 
-    t->computes(lb->pContactNormalLabel);
-  }
+  t->computes(lb->pContactNormalLabel);
+
   sched->addTask(t, patches, matls);
-#else
-  NOT_FINISHED("SerialMPM::scheduleSetPositions");
-#endif
 }
 
 void SerialMPM::scheduleComputeConnectivity(SchedulerP& sched,
 					    const PatchSet* patches,
 					    const MaterialSet* matls)
 {
-#if 0
  /*
   * computeConnectivity
   *   in(P.X, P.VOLUME, P.ISBROKEN, P.CRACKSURFACENORMAL)
@@ -292,32 +266,19 @@ void SerialMPM::scheduleComputeConnectivity(SchedulerP& sched,
 
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task( "SerialMPM::computeConnectivity",
-			  patch, old_dw, new_dw,
 			  this,&SerialMPM::computeConnectivity);
 
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
-    int idx = matl->getDWIndex();
-    t->requires(Task::OldDW, lb->pXLabel,        idx, patch, Ghost::AroundCells, 1);
-    t->requires(Task::NewDW, lb->pXXLabel,       idx, patch, Ghost::None);
-    t->requires(Task::OldDW, lb->pVolumeLabel,   idx, patch, Ghost::AroundCells, 1);
-    t->requires(Task::OldDW, lb->pIsBrokenLabel, 
-       idx, patch, Ghost::AroundCells, 1);
-    t->requires(Task::OldDW, lb->pCrackNormal1Label,
-       idx, patch, Ghost::AroundCells, 1);
-    t->requires(Task::OldDW, lb->pCrackNormal2Label,
-       idx, patch, Ghost::AroundCells, 1);
-    t->requires(Task::OldDW, lb->pCrackNormal3Label,
-       idx, patch, Ghost::AroundCells, 1);
-    t->requires(Task::NewDW, lb->pContactNormalLabel,
-       idx, patch, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pXLabel, Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, lb->pXXLabel, Ghost::None);
+  t->requires(Task::OldDW, lb->pVolumeLabel, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pIsBrokenLabel, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pCrackNormal1Label, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pCrackNormal2Label, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pCrackNormal3Label, Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, lb->pContactNormalLabel, Ghost::AroundCells, 1);
 
-    t->computes(lb->pConnectivityLabel);
-  }
+  t->computes(lb->pConnectivityLabel);
   sched->addTask(t, patches, matls);
-#else
-  NOT_FINISHED("SerialMPM::scheduleSetPositions");
-#endif
 }
 
 void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
@@ -351,17 +312,11 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureNoBCLabel);
   t->computes(lb->gExternalHeatRateLabel);
 
-#if 0
-  if(mpm_matl->getFractureModel()) {
-    t->requires(Task::NewDW,lb->pContactNormalLabel,
-		Ghost::AroundNodes, 1 );
-    t->requires(Task::NewDW, lb->pConnectivityLabel,
-		Ghost::AroundNodes, 1 );
+  if(d_fracture) {
+    t->requires(Task::NewDW,lb->pContactNormalLabel, Ghost::AroundNodes, 1 );
+    t->requires(Task::NewDW, lb->pConnectivityLabel, Ghost::AroundNodes, 1 );
     t->computes(lb->gMassContactLabel);
   }
-#else
-  NOT_FINISHED("new task stuff (fracture)");
-#endif
      
   t->computes(lb->gMassLabel);
   t->computes(lb->TotalMassLabel);
@@ -445,16 +400,10 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
     t->requires(Task::NewDW, lb->pPressureLabel,          Ghost::AroundNodes,1);
   }
 
-#if 0
-  if(mpm_matl->getFractureModel()) {
-    t->requires(Task::NewDW, lb->pConnectivityLabel,
-		Ghost::AroundNodes, 1 );
-    t->requires(Task::NewDW, lb->pContactNormalLabel,
-		Ghost::AroundNodes, 1 );
+  if(d_fracture) {
+    t->requires(Task::NewDW, lb->pConnectivityLabel, Ghost::AroundNodes, 1 );
+    t->requires(Task::NewDW, lb->pContactNormalLabel, Ghost::AroundNodes, 1 );
   }
-#else
-  NOT_FINISHED("fracture requires");
-#endif
 
   t->computes(lb->gInternalForceLabel);
   t->computes(lb->gStressForSavingLabel);
@@ -479,13 +428,9 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel, Ghost::AroundNodes, 1);
   t->requires(Task::NewDW, lb->gTemperatureLabel,    Ghost::AroundCells, 2);
 
-#if 0
-  if(mpm_matl->getFractureModel()) {
+  if(d_fracture) {
     t->requires(Task::NewDW,lb->pConnectivityLabel,Ghost::AroundNodes,1);
   }
-#else
-  NOT_FINISHED("fracture requires");
-#endif
 
   t->computes(lb->gInternalHeatRateLabel);
   sched->addTask(t, patches, matls);
@@ -503,21 +448,10 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
   Task* t = scinew Task("SerialMPM::solveEquationsMotion",
 		    this, &SerialMPM::solveEquationsMotion);
 
-#if 0
-  int numMatls = d_sharedState->getNumMPMMatls();
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    int idx = mpm_matl->getDWIndex();
-    
-    if(mpm_matl->getFractureModel())
-      t->requires(Task::NewDW, lb->gMassContactLabel,   Ghost::None);
-    else
-      t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
-  }
-#else
-  NOT_FINISHED("fracture requires");
-  t->requires(Task::NewDW, lb->gMassLabel,              Ghost::None);
-#endif
+  if(d_fracture)
+    t->requires(Task::NewDW, lb->gMassContactLabel,   Ghost::None);
+  else
+    t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
       
   t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
   t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
@@ -540,20 +474,10 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
   Task* t = scinew Task("SerialMPM::solveHeatEquations",
 			    this, &SerialMPM::solveHeatEquations);
 
-#if 0
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    int idx = mpm_matl->getDWIndex();
-
-    if(mpm_matl->getFractureModel())
-      t->requires(Task::NewDW, lb->gMassContactLabel,   Ghost::None);
-    else
-      t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
-  }
-#else
-  NOT_FINISHED("fracture requires");
-  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
-#endif
+  if(d_fracture)
+    t->requires(Task::NewDW, lb->gMassContactLabel,   Ghost::None);
+  else
+    t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
 
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requires(Task::NewDW, lb->gInternalHeatRateLabel, Ghost::None);
@@ -672,14 +596,10 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->requires(Task::NewDW, lb->dTdt_NCLabel,            Ghost::AroundCells,1);
   }
 
-#if 0
-  if(mpm_matl->getFractureModel()) {
+  if(d_fracture) {
     t->requires(Task::NewDW, lb->pConnectivityLabel,      Ghost::None);
     t->requires(Task::NewDW, lb->pContactNormalLabel,     Ghost::None);
   }
-#else
-  NOT_FINISHED("fracture requires");
-#endif
 
   t->computes(lb->pVelocityLabel_preReloc);
   t->computes(lb->pXLabel_preReloc);
@@ -750,26 +670,13 @@ void SerialMPM::scheduleCarryForwardVariables(SchedulerP& sched,
   Task* t = scinew Task("SerialMPM::carryForwardVariables",
 		         this,&SerialMPM::carryForwardVariables);
 
-#if 0
-  int numMatls = d_sharedState->getNumMPMMatls();
-  for(int m = 0; m < numMatls; m++) {
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    int idx = mpm_matl->getDWIndex();
-
-    if(d_fracture) {
-      t->requires(Task::NewDW, lb->pStressAfterFractureReleaseLabel,
+  if(d_fracture)
+    t->requires(Task::NewDW, lb->pStressAfterFractureReleaseLabel,
 		Ghost::None);
-    }
-    else {
+  else
       t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel,
 		Ghost::None);			 
-    }
-  }
-#else
-  NOT_FINISHED("fracture requires");
-  t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel,
-	      Ghost::None);			 
-#endif
+
   t->computes(lb->pStressLabel_preReloc);
   sched->addTask(t, patches, matls);
 }
