@@ -53,7 +53,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-isoval-quantity 1
 	set $this-active-isoval-selection-tab 0
 	set $this-continuous 0
-	set $this-extract-from-new-field 0
+	set $this-extract-from-new-field 1
 	set $this-algorithm 0
 	set $this-type ""
 	set $this-gen 0
@@ -177,7 +177,11 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	set sel [$isf.tabs add -label "Slider" -command "set $this-active-isoval-selection-tab 0"]
 
-	scale $sel.isoval -label "Isovalue:" \
+	scaleEntry2 $sel.isoval \
+	    [set $this-isoval-min] [set $this-isoval-max] \
+	    5c $this-isoval $this-isoval2
+
+#	scale $sel.isoval -label "Isovalue:" \
 		-variable $this-isoval \
 		-from [set $this-isoval-min] -to [set $this-isoval-max] \
 		-length 5c \
@@ -187,7 +191,6 @@ itcl_class SCIRun_Visualization_Isosurface {
 		-resolution 0.001 \
 	        -command "$this change-isoval"
 
-	bind $sel.isoval <ButtonRelease> "$this set-isoval"
 	
 	button $sel.extract -text "Extract" -command "$this-c needexecute"
 
@@ -196,15 +199,15 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	# Iso Value using text-entry
 	
-	set sel [$isf.tabs add -label "Text" -command "set $this-active-isoval-selection-tab 1"]
+#	set sel [$isf.tabs add -label "Text" -command "set $this-active-isoval-selection-tab 1"]
 	
-	frame $sel.f
-	label $sel.f.l -text "Type isovalue:"
-	entry $sel.f.e -width 20 -text $this-isoval-typed
-	bind $sel.f.e <Return> "$this-c needexecute"
-	pack $sel.f.l $sel.f.e -side left -fill x -expand 1
-	button $sel.extract -text "Extract" -command "$this-c needexecute"
-	pack $sel.f $sel.extract -side top -expand 1
+#	frame $sel.f
+#	label $sel.f.l -text "Type isovalue:"
+#	entry $sel.f.e -width 20 -text $this-isoval-typed
+#	bind $sel.f.e <Return> "$this-c needexecute"
+#	pack $sel.f.l $sel.f.e -side left -fill x -expand 1
+#	button $sel.extract -text "Extract" -command "$this-c needexecute"
+#	pack $sel.f $sel.extract -side top -expand 1
 
 	# Iso Value using quantity
 	
@@ -394,7 +397,46 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-isoval-min $min
 	set $this-isoval-max $max
 	if [ expr [winfo exists $w] ] {
-	    $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval configure -from $min -to $max
+	    $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.s configure -from $min -to $max
 	}
+    }
+
+    method scaleEntry2 { win start stop length var1 var2 } {
+	frame $win 
+#	pack $win -side top -padx 5
+
+	scale $win.s -from $start -to $stop -length $length \
+	    -variable $var1 -orient horizontal -showvalue false \
+	    -command "$this updateSliderEntry $var1 $var2" \
+	    -resolution 0.001
+
+	entry $win.e -width 10 -text $var2
+
+	bind $win.s <ButtonRelease> "$this set-isoval"
+
+	bind $win.e <Return> "$this manualSliderEntry $start $stop $var1 $var2"
+
+	pack $win.s -side left
+	pack $win.e -side bottom -padx 5
+    }
+
+    method updateSliderEntry {var1 var2 someUknownVar} {
+	set $var2 [set $var1]
+
+	change-isoval [set $var1]
+    }
+
+    method manualSliderEntry { start stop var1 var2 } {
+
+	if { [set $var2] < 0 } {
+	    set $var2 0
+	}
+	
+	if { [set $var2] > $stop } {
+	    set $var2 $stop }
+	
+	set $var1 [set $var2]
+
+	change-isoval [set $var1]
     }
 }
