@@ -199,7 +199,7 @@ The generated HTML is to be used with the stylesheet component.css.
           
           <p class="head">I/O</p>
           
-          <p><table class="io">
+          <p><table class="io" cellspacing="0" border="1" width="100%" cellpadding="2">
           <tr>
             <th colspan="5" align="center"><xsl:value-of select="@name"/>'s Inputs</th>
           </tr>
@@ -232,7 +232,7 @@ The generated HTML is to be used with the stylesheet component.css.
             </xsl:for-each>
           </xsl:for-each>
         </table></p>
-        <p><table class="io">
+        <p><table class="io" cellspacing="0" border="1" width="100%" cellpadding="2">
         <tr>
           <th colspan="5" align="center"><xsl:value-of select="@name"/>'s Outputs</th>
         </tr>
@@ -260,7 +260,7 @@ The generated HTML is to be used with the stylesheet component.css.
         <xsl:apply-templates select="./description"/>
         <xsl:apply-templates select="./img"/>
         <p>
-          <table class="gui">
+          <table class="gui" cellspacing="0" border="1" width="100%" cellpadding="2">
             <tr><th colspan="3">Descriptions of GUI Controls (Widgets)</th></tr>
             <tr><th>Widget</th><th>Label</th><th>Description</th></tr>
             <xsl:for-each select="./parameter">
