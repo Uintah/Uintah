@@ -997,6 +997,35 @@ LatVolMesh::size(LatVolMesh::Cell::size_type &s) const
   s = Cell::size_type(ni_-1, nj_-1,nk_-1);
 }
 
+int
+LatVolMesh::get_valence(LatVolMesh::Node::index_type i) const
+{
+  return (((i.i_ == 0 || i.i_ == ni_) ? 1 : 2) +
+	  ((i.j_ == 0 || i.j_ == nj_) ? 1 : 2) +
+	  ((i.k_ == 0 || i.k_ == nk_) ? 1 : 2));
+}
+
+int
+LatVolMesh::get_valence(LatVolMesh::Edge::index_type i) const
+{
+  return 1;
+}
+
+int
+LatVolMesh::get_valence(LatVolMesh::Face::index_type i) const
+{
+  return 1;
+}
+
+
+int
+LatVolMesh::get_valence(LatVolMesh::Cell::index_type i) const
+{
+  return 1;
+}
+
+
+
 
 const TypeDescription*
 LatVolMesh::get_type_description() const
