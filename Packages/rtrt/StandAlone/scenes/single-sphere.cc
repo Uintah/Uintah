@@ -32,10 +32,10 @@ using namespace rtrt;
 extern "C" 
 Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 {
-  Camera cam( Point(0,3,0), Point( 0,0,0 ), Vector(0,0,1), 45.0 );
+  Camera cam( Point(0,30,0), Point( 0,0,0 ), Vector(0,0,1), 45.0 );
 
   Material* white=new LambertianMaterial( Color( 1,1,1 ) );
-
+//  white->local_ambient_mode = Sphere_Ambient;
   Object* sphere = new Sphere( white, Point(0,0,0), 1 );
 
   Group * group = new Group();
@@ -53,6 +53,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
   EnvironmentMapBackground *emap = 
     new EnvironmentMapBackground("/home/sci/dmw/rtrt/rgb-envmap.ppm",
+//    new EnvironmentMapBackground("/home/sci/dmw/sr/rtrt/SCIRun/sgi64opt/Packages/rtrt/StandAlone/utils/top.ppm",
 				 Vector(0,0,1));
 
   scene->set_ambient_environment_map(emap);

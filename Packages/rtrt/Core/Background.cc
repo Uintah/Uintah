@@ -54,9 +54,9 @@ void LinearBackground::color_in_direction(const Vector& v,
 
 inline  int IndexOfMinAbsComponent( const Vector& v ) 
 {
-    if ( fabs( v[0]) < fabs( v[1]) && fabs(v[0]) < fabs(v[2]))
+    if ( fabs(v.x()) <= fabs(v.y()) && fabs(v.x()) <= fabs(v.z()))
             return 0;
-        else if( fabs(v[1]) < fabs(v[2] ) )
+        else if( fabs(v.y()) <= fabs(v.z()) )
             return 1;
         else
             return 2;
@@ -66,11 +66,11 @@ inline Vector PerpendicularVector( const Vector& v )
 {
    int axis = IndexOfMinAbsComponent( v );
    if( axis == 0 )
-      return Vector( 0.0, v[2], -v[1] );
+      return Vector( 0.0, v.z(), -v.y() );
    else if ( axis == 1 )
-      return Vector( v[2], 0.0, -v[0] );
+      return Vector( v.z(), 0.0, -v.x() );
    else
-      return Vector( v[1], -v[0], 0.0 );
+      return Vector( v.y(), -v.x(), 0.0 );
    }
 
 
@@ -129,7 +129,8 @@ EnvironmentMapBackground::color_in_direction( const Vector& DIR , Color& result)
     
     //double v = (DIR.x()+1)/2.;
     //double u = (DIR.z()+1)/2.;
-
-    result = _image( int( v*( _width - 1 ) ), int( u*( _height - 1 ) ) ) *
-      ambientScale_;
+    
+    int i=int( v*( _width - 1 ) );
+    int j=int( u*( _height - 1 ) );
+    result = _image( i, j ) * ambientScale_;
 }

@@ -45,8 +45,7 @@ public:
 
     //ambient color (irradiance/pi) at position with surface normal
     inline Color ambient(Scene* scene, const Vector& normal) const {
-      int a_mode = (scene->ambient_mode==Global_Ambient)?scene->ambient_mode:local_ambient_mode;
-
+      int a_mode = (local_ambient_mode==Global_Ambient)?scene->ambient_mode:local_ambient_mode;
       // in this next line, a_mode should never be Global_Ambient
       // .. but just in case someone sets someone sets it wrong
       // we'll just return the constant ambient color

@@ -110,6 +110,7 @@ public:
 						  Color &c) {
     if (ambient_environment_map) 
       ambient_environment_map->color_in_direction(v, c);
+    else c=Color(0,1,0);
   }
 
   inline void set_bgcolor(const Color& c) {
