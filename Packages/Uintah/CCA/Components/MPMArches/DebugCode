@@ -6,6 +6,10 @@
 	  cout << "solid fraction = " << solid_fraction_cc[0][*iter] << endl;
 	}
 
+	  if (*iter == IntVector(7,9,9)) {
+	    cout << "Printing solid fraction at 7,9,9 " << endl;
+	    cout << solid_fraction_cc[0][*iter] << endl; 
+	  }
 
 void MPMArches::computeIntegratedSolidProps
 

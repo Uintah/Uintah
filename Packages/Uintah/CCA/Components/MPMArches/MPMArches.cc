@@ -1156,10 +1156,13 @@ void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
 
   t->requires(Task::OldDW, d_MAlb->void_frac_CCLabel, 
 	      arches_matls->getUnion(), Ghost::None, zeroGhostCells);
+  double time = d_sharedState->getElapsedTime();
+
   if (!d_useCutCell) {
     t->requires(Task::NewDW, d_MAlb->cVolumeLabel,   
 		mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
-    if (nofTimeSteps < 3 && !d_restart)
+    //    if (nofTimeSteps < 3 && !d_restart)
+    if (time < 1.0E-10)
       d_recompile = true;
   }
   else {
@@ -1225,7 +1228,10 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
     // actual computation
 
     bool recalculateVoidFrac = false;
-    if (nofTimeSteps < 3 && !d_restart) 
+    double time = d_sharedState->getElapsedTime();
+
+    //    if (nofTimeSteps < 2 && !d_restart) 
+    if (time < 1.0E-10)
       recalculateVoidFrac = true;
 
     if (!d_useCutCell) {
