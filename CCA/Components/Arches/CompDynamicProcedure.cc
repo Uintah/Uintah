@@ -21,6 +21,7 @@
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SoleVariable.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
@@ -148,6 +149,10 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
         tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, 
 		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
     }
+
+    int mmWallID = d_boundaryCondition->getMMWallId();
+    if (mmWallID > 0)
+      tsk->requires(Task::NewDW, timelabels->ref_density);
 
     // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -747,6 +752,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	      }
 	    }
 	  }
+
 	  filterRhoV[currCell] /= totalVol;
 	  }
         }
@@ -804,6 +810,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	      }
 	    }
 	  }
+
 	  filterRhoW[currCell] /= totalVol;
 	  }
         }
@@ -852,16 +859,22 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch, density, filterRho);
     // making filterRho nonzero 
+    sum_vartype den_ref_var;
     if (mmWallID > 0) {
+      new_dw->get(den_ref_var, timelabels->ref_density);
+
       idxLo = patch->getCellLowIndex();
       idxHi = patch->getCellHighIndex();
-      for (int colZ = startZ; colZ < endZ; colZ ++) {
-        for (int colY = startY; colY < endY; colY ++) {
-	  for (int colX = startX; colX < endX; colX ++) {
+
+      for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
+        for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
+	  for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
+
 	    IntVector currCell(colX, colY, colZ);
 
-	    if (filterRho[currCell] == 0.0) 
-	      filterRho[currCell]=density[IntVector(-1,-1,-1)];
+	    if (filterRho[currCell] < 1.0e-15) 
+	      filterRho[currCell]=den_ref_var;
+
           }
         }
       }
