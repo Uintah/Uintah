@@ -24,6 +24,7 @@ namespace rtrt {
 
     int normal_method, gui_normal_method;
     int show_silhouettes, gui_show_silhouettes;
+    int use_cool2warm, gui_use_cool2warm;
 
     SketchMaterialBase(float sil_thickness):
       sil_thickness(sil_thickness), inv_sil_thickness(1/sil_thickness),
@@ -35,7 +36,8 @@ namespace rtrt {
       valley_color(0,0,0),
       gui_valley_color_r(0), gui_valley_color_g(0), gui_valley_color_b(0),
       normal_method(1), gui_normal_method(1),
-      show_silhouettes(1), gui_show_silhouettes(1)
+      show_silhouettes(1), gui_show_silhouettes(1),
+      use_cool2warm(1), gui_use_cool2warm(1)
     {}
     virtual ~SketchMaterialBase() {}
   };
