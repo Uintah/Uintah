@@ -96,7 +96,33 @@ bool Function::functionOf(int n) {
       
   }
 }
+
+int Function::get_dims() {
   
+  switch(type) {    
+
+  case variable:
+    return var+1;
+
+  case number:
+    return 0;
+      
+  case negation: case exponential: case sine: case cosine: case square:
+  case squareroot: case logarithm: case absolutevalue:
+    return arg1->get_dims();
+      
+  case sum: case difference: case product: case quotient: case power:
+    {
+      int d1=arg1->get_dims();
+      int d2=arg2->get_dims();
+      return (d1>d2)?d1:d2;
+    }
+  
+  default:
+    return 0;
+  }
+}
+
 //----------------------------------------------------------------------
 				// evaluate this function at x
 double Function::eval(double* x) const {

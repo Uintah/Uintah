@@ -122,6 +122,11 @@ public:
 				// returns true if the calling
 				// function is a function of x[n]
   bool functionOf(int n);
+                                // returns the order number of last 
+                                // input variable
+                                // by default they are x0, x1, ...                                
+  int  get_dims();
+  
   
 				// simplify an expression Mostly, we
 				// are just checking for
@@ -163,7 +168,6 @@ protected:
 				// be closed along the way or cleaned
 				// up at the end
   static FunctionSoLoader soloader;
-
 };
 
 //----------------------------------------------------------------------
@@ -190,3 +194,20 @@ public:
 } // namespace SCICore {
 
 #endif // __FUNCTION_H__
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
