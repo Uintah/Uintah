@@ -12,6 +12,7 @@ class Arg_base;
 class Module;
 class Connection;
 class Renderer;
+class TCLvarint;
 
 typedef HashTable<clString, PersistentTypeID*> _dummy1_;
 typedef HashTable<clString, Arg_item*> _dummy3_;
@@ -22,3 +23,4 @@ typedef HashTable<clString, Module*> _dummy7_;
 typedef HashTable<clString, Connection*> _dummy8_;
 typedef HashTable<clString, Renderer*> _dummy9_;
 typedef HashTable<clString, int> _dummy10_;
+typedef HashTable<clString, TCLvarint*> _dummy11_;
