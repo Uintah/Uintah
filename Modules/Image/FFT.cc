@@ -3,7 +3,7 @@
  *
  *  Written by:
  *    Scott Morris
- *    October 1997
+ *    July 1998
  */
 
 #include <Classlib/Array1.h>
@@ -12,6 +12,7 @@
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/ScalarFieldRG.h>
+#include <Datatypes/ScalarFieldRGfloat.h>
 #include <Datatypes/ColorMapPort.h>
 #include <Geom/Grid.h>
 #include <Geom/Group.h>
@@ -23,6 +24,7 @@
 #include <TCL/TCLvar.h>
 #include <Multitask/Task.h>
 #include <math.h>
+#include "fftn.c"
 
 class FFT : public Module {
    ScalarFieldIPort *inscalarfield;
@@ -133,17 +135,51 @@ void FFT::execute()
     }
     newgrid=new ScalarFieldRG;
 
+    rg->compute_minmax();
     rg->get_minmax(min,max);
+
+    int nx = rg->grid.dim2();
+    int ny = rg->grid.dim1();
+    int nz = rg->grid.dim3();
     
-    newgrid->resize(1,max+1,1);
+    newgrid->resize(ny,nx,2);
 
     np = Task::nprocessors();    
 
+    unsigned long flops,refs;
   
     cerr << "min/max : " << min << " " << max << "\n";
-    
-    Task::multiprocess(np, start_FFT, this);
 
+    float *temp = new float[nx*ny];
+    float *temp2 = new float[nx*ny];
+    
+    for (int x=0;x<nx;x++)
+      for (int y=0;y<ny;y++) {
+	//	newgrid->grid(x,y,0)=rg->grid(x,y,0);
+	temp[y*nx+x]=rg->grid(y,x,0);
+	if (nz==2)
+	  temp2[y*nx+x]=rg->grid(y,x,1); else
+	    temp2[y*nx+x]=0;
+      }
+
+    int dims[2];
+    dims[0] = nx;
+    dims[1] = ny;
+    
+    
+    fftnf(2,dims,temp,temp2,1,0.0);
+	 
+    
+      //    fft2d_float(temp, ny, 1, &flops, &refs);
+    
+    //    Task::multiprocess(np, start_FFT, this);
+
+    for (x=0;x<nx;x++)
+      for (int y=0;y<ny;y++) {
+	newgrid->grid(y,x,0)=temp[y*nx+x];
+	newgrid->grid(y,x,1)=temp2[y*nx+x];
+      }
+    
     outscalarfield->send( newgrid );
 }
 
