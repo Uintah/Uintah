@@ -205,6 +205,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pSizeLabel);
   t->computes(d_sharedState->get_delt_label());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
+  t->computes(lb->pColorLabel);      // empty scalar
 
   if (flags->d_useLoadCurves) {
     // Computes the load curve ID associated with each particle
@@ -840,6 +841,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSp_volLabel,           Ghost::None); 
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
+  t->requires(Task::OldDW, lb->pColorLabel,            Ghost::None);
   if(flags->d_8or27==27){
     t->requires(Task::OldDW, lb->pSizeLabel,            Ghost::None);
   }
@@ -872,10 +874,12 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pSp_volLabel_preReloc);
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
+  t->computes(lb->pColorLabel_preReloc);
   if(flags->d_8or27==27){
     t->computes(lb->pSizeLabel_preReloc);
   }
   t->computes(lb->pXXLabel);
+   
 
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
@@ -1045,6 +1049,8 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       //NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
       //cerrLock.unlock();
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int index = mpm_matl->getDWIndex();
+      
       particleIndex numParticles = mpm_matl->countParticles(patch);
       totalParticles+=numParticles;
 
@@ -1053,12 +1059,22 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                          mpm_matl,
                                                          new_dw);
+                                                         
+            
+      ParticleSubset* pset = new_dw->getParticleSubset(index, patch);
       if (flags->d_doErosion) {
-        int index = mpm_matl->getDWIndex();
-        ParticleSubset* pset = new_dw->getParticleSubset(index, patch);
         ParticleVariable<double> pErosion;
         setParticleDefault(pErosion, lb->pErosionLabel, pset, new_dw, 1.0);
       }
+      
+      // scalar used for debugging
+      ParticleVariable<double> pcolor;
+      setParticleDefault(pcolor, lb->pColorLabel, pset, new_dw, 0.0);
+      //__________________________________
+      //  hardwiring for Northrup Grumman nozzle   
+      #define SerialMPM_1
+      #include "../MPMICE/NGC_nozzle.i"
+      #undef SerialMPM_1
     }
   }
 
@@ -2638,7 +2654,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
        }
       }
-      new_dw->deleteParticles(delset);      
+      new_dw->deleteParticles(delset);  
+      //__________________________________
+      //  particle debugging label-- carry forward
+      constParticleVariable<double> pColor;
+      ParticleVariable<double>pColor_new;
+      old_dw->get(pColor, lb->pColorLabel, pset);
+      new_dw->allocateAndPut(pColor_new, lb->pColorLabel_preReloc,   pset);
+      pColor_new.copyData(pColor);    
     }
 
     if(combustion_problem){  // Adjust the min. part. mass if dt gets small
