@@ -291,8 +291,6 @@ case $host in
            ;;
   *)
      AC_MSG_WARN(WARNING: Untested configuration - you are on your own!)
-     AC_PROG_CC
-     AC_PROG_CXX
      ;;
 esac
 
@@ -1216,18 +1214,25 @@ AC_PROG_LEX()
 AC_SUBST(LEX)
 AC_SUBST(LEXLIB)
 
-##-- Generate Output Files ---------------------------------------------------
+##-------- check/create subdirs that have special Makefiles ---------
 
-if ! test -d "Dataflow/Modules/Fields/Manip"; then
-  mkdir -p "Dataflow/Modules/Fields/Manip";
-fi
-if ! test -d "Dataflow/Modules/Math/Manip"; then
-  mkdir -p "Dataflow/Modules/Math/Manip";
-fi
+AC_CHECK_FILE(Dataflow/Modules/Fields/Manip, 
+	echo "found it";, 
+	echo "creating Dataflow/Modules/Fields/Manip..."; 	
+	mkdir -p "Dataflow/Modules/Fields/Manip")
 
-if ! test -d "on-the-fly-libs"; then
-  mkdir -p "on-the-fly-libs";
-fi
+AC_CHECK_FILE(Dataflow/Modules/Math/Manip, 
+	echo "found it";, 
+	echo "creating Dataflow/Modules/Math/Manip..."; 	
+	mkdir -p "Dataflow/Modules/Math/Manip")
+
+AC_CHECK_FILE(on-the-fly-libs, 
+	echo "found it";, 
+	echo "creating on-the-fly-libs..."; 	
+	mkdir -p "on-the-fly-libs")
+
+abs_conftop_dir=`pwd`;
+AC_SUBST(abs_conftop_dir)
 
 ##-- Generate Output Files ---------------------------------------------------
 AC_OUTPUT(	configVars.mk \
