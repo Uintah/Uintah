@@ -70,7 +70,7 @@ void SelectElements::execute()
   FieldHandle field;
   if (!ifieldPort->get(field) || !field.get_rep()) return;
 
-  ScalarFieldInterface *sfi = field->query_scalar_interface();
+  ScalarFieldInterface *sfi = field->query_scalar_interface(this);
   double min, max;
   sfi->compute_min_max(min, max);
   string value = value_.get();

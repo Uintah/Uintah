@@ -101,11 +101,11 @@ DirectInterpolate::execute()
     return;
   }
 
-  ScalarFieldInterface *sfi = sfieldhandle->query_scalar_interface();
-  VectorFieldInterface *vfi = sfieldhandle->query_vector_interface();
-  TensorFieldInterface *tfi = sfieldhandle->query_tensor_interface();
+  ScalarFieldInterface *sfi;
+  VectorFieldInterface *vfi;
+  TensorFieldInterface *tfi;
   FieldHandle ofieldhandle;
-  if (sfi)
+  if ((sfi = sfieldhandle->query_scalar_interface(this)))
   {
     const TypeDescription *td0 = dfieldhandle->get_type_description();
     const TypeDescription *td1 = dfieldhandle->data_at_type_description();
@@ -117,7 +117,7 @@ DirectInterpolate::execute()
 				 use_closest_.get(),
 				 closeness_distance_.get());
   }
-  else if (vfi)
+  else if ((vfi = sfieldhandle->query_vector_interface(this)))
   {
     const TypeDescription *td0 = dfieldhandle->get_type_description();
     const TypeDescription *td1 = dfieldhandle->data_at_type_description();
@@ -129,7 +129,7 @@ DirectInterpolate::execute()
 				 use_closest_.get(),
 				 closeness_distance_.get());
   }
-  else if (tfi)
+  else if ((tfi = sfieldhandle->query_tensor_interface(this)))
   {
     const TypeDescription *td0 = dfieldhandle->get_type_description();
     const TypeDescription *td1 = dfieldhandle->data_at_type_description();

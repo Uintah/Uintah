@@ -24,9 +24,9 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+#include <Core/Util/ModuleReporter.h>
 #include <Core/Containers/Handle.h>
 #include <Core/Datatypes/TriSurfField.h>
-#include <Dataflow/Network/Module.h>
 
 namespace SCIRun {
 
@@ -154,7 +154,7 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
 class FieldBoundaryAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(Module *m, const MeshHandle mesh,
+  virtual void execute(ModuleReporter *m, const MeshHandle mesh,
 		       FieldHandle &bndry, FieldHandle &intrp) = 0;
 
   //! support the dynamically compiled algorithm concept
@@ -167,14 +167,14 @@ class FieldBoundaryAlgoT : public FieldBoundaryAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(Module *m, const MeshHandle mesh,
+  virtual void execute(ModuleReporter *m, const MeshHandle mesh,
 		       FieldHandle &boundary, FieldHandle &interp);
 };
 
 
 template <class Msh>
 void 
-FieldBoundaryAlgoT<Msh>::execute(Module *mod, const MeshHandle mesh,
+FieldBoundaryAlgoT<Msh>::execute(ModuleReporter *mod, const MeshHandle mesh,
 				 FieldHandle &boundary, FieldHandle &interp)
 {
   if (get_type_description((typename Msh::Elem *)0)->get_name() !=

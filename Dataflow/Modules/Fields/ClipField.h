@@ -24,8 +24,8 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+#include <Core/Util/ModuleReporter.h>
 #include <Core/Datatypes/Clipper.h>
-#include <Dataflow/Network/Module.h>
 #include <sci_hash_map.h>
 #include <algorithm>
 
@@ -34,10 +34,10 @@ namespace SCIRun {
 class ClipFieldAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute_cell(Module *m,
+  virtual FieldHandle execute_cell(ModuleReporter *m,
 				   FieldHandle fieldh,
 				   ClipperHandle clipper) = 0;
-  virtual FieldHandle execute_node(Module *m,
+  virtual FieldHandle execute_node(ModuleReporter *m,
 				   FieldHandle fieldh, ClipperHandle clipper,
 				   bool any_inside_p) = 0;
 
@@ -51,9 +51,9 @@ class ClipFieldAlgoT : public ClipFieldAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute_cell(Module *m,
+  virtual FieldHandle execute_cell(ModuleReporter *m,
 				   FieldHandle fieldh, ClipperHandle clipper);
-  virtual FieldHandle execute_node(Module *m,
+  virtual FieldHandle execute_node(ModuleReporter *m,
 				   FieldHandle fieldh, ClipperHandle clipper,
 				   bool any_inside_p);
 };
@@ -61,7 +61,7 @@ public:
 
 template <class FIELD>
 FieldHandle
-ClipFieldAlgoT<FIELD>::execute_cell(Module *mod,
+ClipFieldAlgoT<FIELD>::execute_cell(ModuleReporter *mod,
 				    FieldHandle fieldh, ClipperHandle clipper)
 {
   typename FIELD::mesh_type *mesh =
@@ -155,7 +155,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(Module *mod,
 
 template <class FIELD>
 FieldHandle
-ClipFieldAlgoT<FIELD>::execute_node(Module *mod,
+ClipFieldAlgoT<FIELD>::execute_node(ModuleReporter *mod,
 				    FieldHandle fieldh, ClipperHandle clipper,
 				    bool any_inside_p)
 {

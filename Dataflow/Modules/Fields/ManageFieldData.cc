@@ -81,15 +81,15 @@ ManageFieldData::execute()
   }
 
   int svt_flag = 0;
-  if (ifieldhandle->query_scalar_interface())
+  if (ifieldhandle->query_scalar_interface(this))
   {
     svt_flag = 0;
   }
-  else if (ifieldhandle->query_vector_interface())
+  else if (ifieldhandle->query_vector_interface(this))
   {
     svt_flag = 1;
   }
-  else if (ifieldhandle->query_tensor_interface())
+  else if (ifieldhandle->query_tensor_interface(this))
   {
     svt_flag = 2;
   }

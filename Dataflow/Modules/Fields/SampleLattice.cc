@@ -91,17 +91,17 @@ SampleLattice::execute()
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
     datatype = SCALAR;
-    minb = Point(0.0, 0.0, 0.0);
+    minb = Point(-1.0, -1.0, -1.0);
     maxb = Point(1.0, 1.0, 1.0);
   }
   else
   {
     datatype = SCALAR;
-    if (ifieldhandle->query_vector_interface())
+    if (ifieldhandle->query_vector_interface(this))
     {
       datatype = VECTOR;
     }
-    else if (ifieldhandle->query_tensor_interface())
+    else if (ifieldhandle->query_tensor_interface(this))
     {
       datatype = TENSOR;
     }
@@ -130,9 +130,26 @@ SampleLattice::execute()
     return;
   }
 
-  if (datatype == VECTOR)
+  if (datatype == VECTOR || true)
   {
-    ofh = scinew LatVolField<Vector>(mesh, data_at);
+    LatVolField<Vector> *lvf = scinew LatVolField<Vector>(mesh, data_at);
+    LatVolMesh::Node::iterator bi, ei;
+    mesh->begin(bi); mesh->end(ei);
+    Vector v(0.0, 0.0, 1.0);
+    while (bi != ei)
+    {
+      Point p;
+      mesh->get_center(p, *bi);
+      p.z(0.0);
+      Vector v2 = Cross(p.asVector(), v);
+      if (v2.safe_normalize() < 1.0e-3)
+      {
+	v2 = v;
+      }
+      lvf->set_value(v2, *bi);
+      ++bi;
+    }
+    ofh = lvf;
   }				    
   else if (datatype == TENSOR)	    
   {				    

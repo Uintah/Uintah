@@ -26,7 +26,7 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Dataflow/Network/Module.h>
+#include <Core/Util/ModuleReporter.h>
 #include <Core/Geometry/Tensor.h>
 
 
@@ -163,7 +163,8 @@ ManageFieldDataAlgoFieldTensor<Fld, Loc>::execute(FieldHandle ifield_h)
 class ManageFieldDataAlgoMesh : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(Module *m, MeshHandle src, MatrixHandle mat) = 0;
+  virtual FieldHandle execute(ModuleReporter *m,
+			      MeshHandle src, MatrixHandle mat) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *msrc,
@@ -177,13 +178,14 @@ class ManageFieldDataAlgoMeshScalar : public ManageFieldDataAlgoMesh
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(Module *m, MeshHandle src, MatrixHandle mat);
+  virtual FieldHandle execute(ModuleReporter *m,
+			      MeshHandle src, MatrixHandle mat);
 };
 
 
 template <class MSRC, class FOUT>
 FieldHandle
-ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(Module *mod,
+ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(ModuleReporter *mod,
 						   MeshHandle mesh,
 						   MatrixHandle matrix)
 {
@@ -325,12 +327,13 @@ class ManageFieldDataAlgoMeshVector : public ManageFieldDataAlgoMesh
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(Module *m, MeshHandle src, MatrixHandle mat);
+  virtual FieldHandle execute(ModuleReporter *m,
+			      MeshHandle src, MatrixHandle mat);
 };
 
 template <class MSRC, class FOUT>
 FieldHandle
-ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(Module *mod,
+ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(ModuleReporter *mod,
 						   MeshHandle mesh,
 						   MatrixHandle matrix)
 {
@@ -503,13 +506,14 @@ class ManageFieldDataAlgoMeshTensor : public ManageFieldDataAlgoMesh
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(Module *m, MeshHandle src, MatrixHandle mat);
+  virtual FieldHandle execute(ModuleReporter *m,
+			      MeshHandle src, MatrixHandle mat);
 };
 
 
 template <class MSRC, class FOUT>
 FieldHandle
-ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(Module *mod,
+ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(ModuleReporter *mod,
 						   MeshHandle mesh,
 						   MatrixHandle matrix)
 {
