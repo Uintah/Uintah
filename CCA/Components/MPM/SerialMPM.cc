@@ -83,6 +83,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   d_adiabaticHeating = 0.0; // Adiabatic heating is on (no heat exchange
                             // between material points and surroundings
   d_forceIncrementFactor = 1.0;
+  d_doGridReset = true;
 }
 
 SerialMPM::~SerialMPM()
@@ -102,6 +103,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP&,
 
   if(mpm_soln_ps) {
     mpm_soln_ps->get("nodes8or27", d_8or27);
+    mpm_soln_ps->get("do_grid_reset", d_doGridReset);
     mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
     mpm_soln_ps->get("maximum_particle_velocity",d_max_vel);
     mpm_soln_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
@@ -111,7 +113,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP&,
     bool adiabaticHeatingOn = true;
     mpm_soln_ps->get("turn_on_adiabatic_heating", adiabaticHeatingOn);
     if (!adiabaticHeatingOn) d_adiabaticHeating = 1.0;
-    mpm_soln_ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
+    mpm_soln_ps->get("ForceBC_force_increment_factor",d_forceIncrementFactor);
     mpm_soln_ps->get("create_new_particles", d_createNewParticles);
     ProblemSpecP erosion_ps = mpm_soln_ps->findBlock("erosion");
     if (erosion_ps) {
@@ -848,6 +850,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   if(d_8or27==27){
     t->computes(lb->pSizeLabel_preReloc);
   }
+  t->computes(lb->pXXLabel);
 
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
@@ -2005,7 +2008,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
 	ParticleSubset::iterator iter = pset->begin();
 	for(;iter != pset->end(); iter++){
 	  particleIndex idx = *iter;
-	  pExternalForce_new[idx] = pExternalForce[idx]*d_forceIncrementFactor;
+          pExternalForce_new[idx] = pExternalForce[idx]*d_forceIncrementFactor;
 	}
       }
     } // matl loop
@@ -2244,12 +2247,16 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       RMI = reactant->getDWIndex();
       combustion_problem=true;
     }
+    double move_particles=1.;
+    if(!d_doGridReset){
+      move_particles=0.;
+    }
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
-      ParticleVariable<Point> pxnew;
+      ParticleVariable<Point> pxnew,pxx;
       constParticleVariable<Vector> pvelocity, psize;
       ParticleVariable<Vector> pvelocitynew, psizeNew;
       constParticleVariable<double> pmass, pvolume, pTemperature, pSp_vol;
@@ -2278,6 +2285,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
+      new_dw->allocateAndPut(pxx,          lb->pXXLabel,                  pset);
       new_dw->allocateAndPut(pdispnew,     lb->pDispLabel_preReloc,       pset);
       new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
       new_dw->allocateAndPut(pvolumeNew,   lb->pVolumeLabel_preReloc,     pset);
@@ -2383,9 +2391,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	}
 
 	// Update the particle's position and velocity
-	pxnew[idx]           = px[idx]    + vel*delT;
+	pxnew[idx]           = px[idx]    + vel*delT*move_particles;
         pdispnew[idx]        = pdisp[idx] + vel*delT;
 	pvelocitynew[idx]    = pvelocity[idx]    + (acc - alpha*vel)*delT;
+        // pxx is only useful if we're not in normal grid resetting mode.
+	pxx[idx]             = px[idx]    + pdispnew[idx];
 //        if(pvelocitynew[idx].length() > 5000.0){
 //          pvelocitynew[idx] = .5*pvelocitynew[idx];
 //        }
