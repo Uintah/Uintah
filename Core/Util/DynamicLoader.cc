@@ -415,11 +415,12 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
     result = false;
   }
 #else
-  //command += " > " + info.filename_ + "log 2>&1";
+  command += " > " + info.filename_ + "log 2>&1";
   
 #ifdef _WIN32
   // we need to create a separate process here, because TCL's interpreter is active.
   // For some reason, calling make in 'system' will hang until the interpreter closes.
+  // the batch file is for convenience of not having to create files manually
 
   STARTUPINFO si_;
   PROCESS_INFORMATION pi_;
@@ -428,43 +429,48 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
   memset(&pi_, 0, sizeof(pi_));
   
   DWORD status = 1;
-  bool retval = true;
   
   HANDLE logfile;
   char logfilename[256];
-  strcpy(logfilename, (otf_dir()+info.filename_+"log").c_str());
-  for (unsigned i = 0; i < strlen(logfilename); i++)
-    if (logfilename[i] == '/') logfilename[i] = '\\';
-
   char otfdir[256];
   strcpy(otfdir, otf_dir().c_str());
-  for (unsigned i = 0; i < strlen(otfdir); i++)
-    if (otfdir[i] == '/') otfdir[i] = '\\';
-  
+  // We need to make Windows create a command and read it since windows
+  // system can't handle a ';' to split commands
+  int loc = command.find(';');
 
-  //logfile = CreateFile(TEXT(logfilename), GENERIC_WRITE,0,0,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,0);
-  if (logfile == INVALID_HANDLE_VALUE)
-    cerr << SOError() << "\n";
+  // give it \ instead of / so windows can read it correctly
+  string command1 = command.substr(0, loc);
+  for (unsigned i = 0; i < command1.length(); i++)
+    if (command1[i] == '/') {
+      command1[i] = '\\';
+    }
+  for (unsigned i = 0; i < strlen(otfdir); i++)
+    if (otfdir[i] == '/') {
+      otfdir[i] = '\\';
+    }
+  string command2 = command.substr(loc+1, command.length());
+
+  string batch_filename = string(otfdir)+"\\" + info.filename_ + "bat";
+  FILE* batch = fopen(batch_filename.c_str(), "w");
+  fprintf(batch, "\n%s\n%s\n", command1.c_str(), command2.c_str());
+  fclose(batch);
 
   si_.cb = sizeof(STARTUPINFO); 
-  //si_.hStdError = logfile;
-  //si_.hStdOutput = logfile;
-  //si_.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
-  
-  if (retval) {
-    retval = CreateProcess(TEXT(MAKE_COMMAND), (char*)(string(MAKE_COMMAND) + " " + info.filename_+ext).c_str(), 
-                             0,0,TRUE,CREATE_NO_WINDOW,0,otfdir, &si_, &pi_);
-    if (!retval) {
-      cerr << SOError() << "\n";
-    }
-    else {
-      WaitForSingleObject(pi_.hProcess, INFINITE);
-      GetExitCodeProcess(pi_.hProcess, &status);
-      CloseHandle(pi_.hProcess);
-      CloseHandle(pi_.hThread);
-    }
+
+  // the CREATE_NO_WINDOW is so the process will not run in the same shell.
+  // Otherwise it will get confused while trying to run in the same shell as the 
+  // tcl interpreter.
+  bool retval = 
+    CreateProcess(batch_filename.c_str(),0,0,0,0,CREATE_NO_WINDOW,0,0, &si_, &pi_);
+  if (!retval) {
+    cerr << SOError() << "\n";
   }
-  //CloseHandle(logfile);
+  else {
+    WaitForSingleObject(pi_.hProcess, INFINITE);
+    GetExitCodeProcess(pi_.hProcess, &status);
+    CloseHandle(pi_.hProcess);
+    CloseHandle(pi_.hThread);
+  }
 #else
   const int status = sci_system(command.c_str());
 #endif // def _WIN32
