@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 
-<!--%= "PCEtLQogICoqKioqIERPTidUIEVESVQgTUUhICoqKioqCiAgSSdtIGdlbmVy\nYXRlZCBmcm9tIG1haW4ucnhtbC4gIEVkaXQgaXQgaW5zdGVhZC4KLS0+Cg==\n".unpack("m") %-->
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -22,31 +23,26 @@
 <!DOCTYPE book
   PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
   "../../Utilities/XML/Docbook_dtd/docbookx.dtd" [
-<!ENTITY intro SYSTEM "intro.xml">
-<!ENTITY src.core SYSTEM "src/core.xml">
-<!ENTITY src.dataflow SYSTEM "src/dataflow.xml">
-<!ENTITY src.nets SYSTEM "src/nets.xml">
-<!ENTITY dev.codingstandards SYSTEM "dev/coding_standards.xml">
-<!ENTITY dev.dataflow  SYSTEM "dev/dataflow.xml">
-<!ENTITY dev.dynamiccomp SYSTEM "dev/dynamiccomp.xml">
-<!ENTITY dev.interfacetcl SYSTEM "dev/interfacetcl.xml">
-<!ENTITY dev.memorymgt  SYSTEM "dev/memorymgt.xml">
-<!ENTITY dev.persistentdata SYSTEM "dev/persistentdata.xml">
-<!ENTITY dev.customtkwidgets SYSTEM "dev/customtkwidgets.xml">
-<!ENTITY dev.utilities SYSTEM "dev/utilities.xml">
-<!ENTITY dev.exceptions SYSTEM "dev/exceptions.xml">
-<!ENTITY dev.widgets3d SYSTEM "dev/widgets3d.xml">
+<!--%= doc.sysEntity("intro") %-->
+<!--%= doc.sysEntity("src.core") %-->
+<!--%= doc.sysEntity("src.dataflow") %-->
+<!--%= doc.sysEntity("src.nets") %-->
+<!--%= doc.sysEntity("dev.coding_standards") %-->
+<!--%= doc.sysEntity("dev.dataflow") %-->
+<!--%= doc.sysEntity("dev.dynamiccomp") %-->
+<!--%= doc.sysEntity("dev.interfacetcl") %-->
+<!--%= doc.sysEntity("dev.memorymgt") %-->
+<!--%= doc.sysEntity("dev.persistentdata") %-->
+<!--%= doc.sysEntity("dev.customtkwidgets") %-->
+<!--%= doc.sysEntity("dev.utilities") %-->
+<!--%= doc.sysEntity("dev.exceptions") %-->
+<!--%= doc.sysEntity("dev.widgets3d") %-->
 <!ENTITY sr  "SCIRun">
 ]>
 
 <book id="main">
 <title>Developers' Guide</title>
-<!--%
-version = File.open("../../edition.xml") do |f| 
-  /<edition>(.*)<\/edition>/.match(f.read())[1]
-end
-%-->
-<subtitle>(for &sr; Version <!--%= version %-->)</subtitle>
+<subtitle>(for &sr; Version <!--%= doc.edition %-->)</subtitle>
 
 &intro;
 
@@ -59,7 +55,7 @@ end
 
 <part id="dev">
 <title>Development</title>
-&dev.codingstandards;
+&dev.coding_standards;
 &dev.dataflow;
 &dev.dynamiccomp;
 &dev.interfacetcl;
