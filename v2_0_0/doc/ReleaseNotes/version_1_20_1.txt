@@ -1,11 +1,16 @@
-
 Release Notes - SCIRun Version 1.20.1 - Nov 17, 2003
-
-New Projects in Version 1.20.1
-------------------------------
 
 Data Sets
 ---------
+
+  - Added a diffusion tensor heart dataset (heart-dt), high-resolution
+    and medium-resolution.  Diffusion tensor data was obtained through
+    the collaborative efforts of investigators in the Center for
+    Cardiovascular Bioinformatics and Modelling (P. Helm, R. Winslow),
+    at the NHLBI (D. Ennis, E. McVeigh), at the Cardiovascular Research
+    and Training Institute (R. MacLeod, B. Punske, S. Shome, and
+    J. Stinstra), and the Scientific Computing and Imaging Institute
+    (D. Weinstein, G. Kindlmann).
 
 New Modules
 -----------
@@ -13,11 +18,16 @@ New Modules
   SCIRun Modules: (Category in parentheses)
   ---------------
 
+  - MatrixOperations (Math): Fast ColumnMatrix multiply support
+
+  - LinAlgBinary (Math): Added support for SparseRowMatrix X
+    DenseMatrix multiplication.
+
   Teem Modules: (Category in parentheses)
   -------------
 
-  BioPSE Modules: (Category in parentheses)
-  ---------------
+  - NrrdReader (DataIO): Fixed UI to better handle tuple axis.
+
 
 Module Enhancements
 -------------------
@@ -25,11 +35,40 @@ Module Enhancements
   SCIRun Modules: (Category in parentheses)
   ---------------
 
-  BioPSE Modules:
+    - SampleField (FieldsGeometry): added Reset Rake option
+
+  BioPSE Modules: (Category in parentheses)
   ---------------
+
+    - Incorporated support for 2D (triangle-mesh) finite element
+      problems.
 
   Teem Modules: (Category in parentheses)
   -------------
+
+    - TendEstim (Tend): Fixed bug which was causing auto-threshold to be
+      ignored.
+
+    - AnalyzeToNrrd (DataIO): Now saves all files that have been loaded
+      instead of just the last one.
+
+PowerApp Enhancements
+---------------------
+
+  - Added PowerApp base class
+
+  - Reorganized PowerApp File Menu to include Load Session,
+    Save Session, Save Session As, Save Image, and Quit.
+    The Save Image option will save the image in the Viewer
+    Window. Sessions are now saved with a .ses extention.
+
+  - Fixed "Save Image" in PowerApps
+
+  - Fixed loading and saving session for BioTensor.
+
+  - Fixed seeding glyphs on a grid for BioTensor.
+
+  - Fixed BioTensor when loading a B-Matrix file.
 
 Infrastructure Enhancements
 ---------------------------
@@ -44,10 +83,26 @@ Infrastructure Enhancements
 
   - Fixed Thirdparty OSX install script error (in install-dlcompat.sh).
 
+  - Updated various files to improve OSX support (now works with 10.2,
+    10.3, gcc-3.1, and gcc-3.3)
 
-New Nets
---------
+  - Added a Clear button to the Module Log.  This clears the text as
+    well as the indicator on the module.
+
+  - Fixed makefile and path variables for dynamic compilation.
+
+  - Fixed bug in TetVolMesh::get_cells
+
+  - Fixed file->clear hang
 
 Network Editor Enhancements
 ---------------------------
 
+Documentation
+-------------
+
+  - Added a BioFEM tutorial
+
+  - Updated BioPSE tutorial
+
+  - Updated BioTensor tutorial
