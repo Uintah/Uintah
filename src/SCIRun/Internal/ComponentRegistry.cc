@@ -38,7 +38,7 @@
 using namespace std;
 using namespace SCIRun;
 
-class ComponentClassDescriptionAdapter : public gov::cca::ComponentClassDescription {
+class ComponentClassDescriptionAdapter : public sci::cca::ComponentClassDescription {
 public:
   ComponentClassDescriptionAdapter(const ComponentDescription*);
   ~ComponentClassDescriptionAdapter();
@@ -88,19 +88,19 @@ InternalComponentInstance* ComponentRegistry::create(SCIRunFramework* framework,
   return n;
 }
 
-gov::cca::Port::pointer ComponentRegistry::getService(const std::string&)
+sci::cca::Port::pointer ComponentRegistry::getService(const std::string&)
 {
-  return gov::cca::Port::pointer(this);
+  return sci::cca::Port::pointer(this);
 }
 
-SIDL::array1<gov::cca::ComponentClassDescription::pointer> ComponentRegistry::getAvailableComponentClasses()
+SSIDL::array1<sci::cca::ComponentClassDescription::pointer> ComponentRegistry::getAvailableComponentClasses()
 {
   vector<ComponentDescription*> list;
   framework->listAllComponentTypes(list, false);
-  SIDL::array1<gov::cca::ComponentClassDescription::pointer> ccalist;
+  SSIDL::array1<sci::cca::ComponentClassDescription::pointer> ccalist;
   for(vector<ComponentDescription*>::iterator iter = list.begin();
       iter != list.end(); iter++){
-    ccalist.push_back(gov::cca::ComponentClassDescription::pointer(new ComponentClassDescriptionAdapter(*iter)));
+    ccalist.push_back(sci::cca::ComponentClassDescription::pointer(new ComponentClassDescriptionAdapter(*iter)));
   }
   return ccalist;
 }

@@ -52,19 +52,19 @@ BuilderService::~BuilderService()
 {
 }
 
-gov::cca::ComponentID::pointer
+sci::cca::ComponentID::pointer
 BuilderService::createInstance(const std::string& instanceName,
 			       const std::string& className,
-			       const gov::cca::TypeMap::pointer& /*properties*/)
+			       const sci::cca::TypeMap::pointer& /*properties*/)
 {
   cerr << "Need to do something with properties...\n";
   std::string url="";
   return framework->createComponentInstance(instanceName, className,url);
 }
 
-gov::cca::ConnectionID::pointer BuilderService::connect(const gov::cca::ComponentID::pointer& c1,
+sci::cca::ConnectionID::pointer BuilderService::connect(const sci::cca::ComponentID::pointer& c1,
 					       const string& port1,
-					       const gov::cca::ComponentID::pointer& c2,
+					       const sci::cca::ComponentID::pointer& c2,
 					       const string& port2)
 {
   ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
@@ -88,7 +88,7 @@ gov::cca::ConnectionID::pointer BuilderService::connect(const gov::cca::Componen
   if(!pr1->connect(pr2)){
     throw CCAException("Cannot connect");
   }
-  gov::cca::ConnectionID::pointer conn(new ConnectionID(c1, port1, c2, port2));
+  sci::cca::ConnectionID::pointer conn(new ConnectionID(c1, port1, c2, port2));
   framework->connIDs.push_back(conn);
   return conn;
 }
@@ -101,50 +101,50 @@ InternalComponentInstance* BuilderService::create(SCIRunFramework* framework,
   return n;
 }
 
-gov::cca::Port::pointer BuilderService::getService(const std::string&)
+sci::cca::Port::pointer BuilderService::getService(const std::string&)
 {
-  return gov::cca::Port::pointer(this);
+  return sci::cca::Port::pointer(this);
 }
 
-SIDL::array1<gov::cca::ComponentID::pointer> BuilderService::getComponentIDs()
+SSIDL::array1<sci::cca::ComponentID::pointer> BuilderService::getComponentIDs()
 {
   return framework->compIDs;
 }
 
-gov::cca::TypeMap::pointer BuilderService::getComponentProperties(const gov::cca::ComponentID::pointer& /*cid*/)
+sci::cca::TypeMap::pointer BuilderService::getComponentProperties(const sci::cca::ComponentID::pointer& /*cid*/)
 {
   cerr << "BuilderService::getComponentProperties not finished\n";
-  return gov::cca::TypeMap::pointer(0);
+  return sci::cca::TypeMap::pointer(0);
 }
 
-void BuilderService::setComponentProperties(const gov::cca::ComponentID::pointer& /*cid*/,
-					    const gov::cca::TypeMap::pointer& /*map*/)
+void BuilderService::setComponentProperties(const sci::cca::ComponentID::pointer& /*cid*/,
+					    const sci::cca::TypeMap::pointer& /*map*/)
 {
   cerr << "BuilderService::setComponentProperties not finished\n";
 }
 
-gov::cca::ComponentID::pointer BuilderService::getDeserialization(const std::string& /*s*/)
+sci::cca::ComponentID::pointer BuilderService::getDeserialization(const std::string& /*s*/)
 {
   cerr << "BuilderService::getDeserialization not finished\n";
-  return gov::cca::ComponentID::pointer(0);
+  return sci::cca::ComponentID::pointer(0);
 }
 
-gov::cca::ComponentID::pointer BuilderService::getComponentID(const std::string& componentInstanceName)
+sci::cca::ComponentID::pointer BuilderService::getComponentID(const std::string& componentInstanceName)
 {
-  gov::cca::ComponentID::pointer cid=framework->lookupComponentID(componentInstanceName);
+  sci::cca::ComponentID::pointer cid=framework->lookupComponentID(componentInstanceName);
   if(cid.isNull()) throw CCAException("ComponentID not found");
   return cid;
 }
 
-void BuilderService::destroyInstance(const gov::cca::ComponentID::pointer& toDie,
+void BuilderService::destroyInstance(const sci::cca::ComponentID::pointer& toDie,
 				     float timeout)
 {
   return framework->destroyComponentInstance(toDie, timeout);
 }
 
-SIDL::array1<std::string> BuilderService::getProvidedPortNames(const gov::cca::ComponentID::pointer& cid)
+SSIDL::array1<std::string> BuilderService::getProvidedPortNames(const sci::cca::ComponentID::pointer& cid)
 {
-  SIDL::array1<std::string> result;
+  SSIDL::array1<std::string> result;
   ComponentInstance *ci=framework->lookupComponent(cid->getInstanceName());
   for(PortInstanceIterator* iter = ci->getPorts(); !iter->done(); iter->next()){
     PortInstance* port = iter->get();
@@ -154,9 +154,9 @@ SIDL::array1<std::string> BuilderService::getProvidedPortNames(const gov::cca::C
   return result;
 }
 
-SIDL::array1<std::string> BuilderService::getUsedPortNames(const gov::cca::ComponentID::pointer& cid)
+SSIDL::array1<std::string> BuilderService::getUsedPortNames(const sci::cca::ComponentID::pointer& cid)
 {
-  SIDL::array1<std::string> result;
+  SSIDL::array1<std::string> result;
   ComponentInstance *ci=framework->lookupComponent(cid->getInstanceName());
   for(PortInstanceIterator* iter = ci->getPorts(); !iter->done(); iter->next()){
     PortInstance* port = iter->get();
@@ -166,27 +166,27 @@ SIDL::array1<std::string> BuilderService::getUsedPortNames(const gov::cca::Compo
   return result;
 }
 
-gov::cca::TypeMap::pointer BuilderService::getPortProperties(const gov::cca::ComponentID::pointer& /*cid*/,
+sci::cca::TypeMap::pointer BuilderService::getPortProperties(const sci::cca::ComponentID::pointer& /*cid*/,
 							     const std::string& /*portname*/)
 {
   cerr << "BuilderService::getPortProperties not finished\n";
-  return gov::cca::TypeMap::pointer(0);
+  return sci::cca::TypeMap::pointer(0);
 }
 
-void BuilderService::setPortProperties(const gov::cca::ComponentID::pointer& /*cid*/,
+void BuilderService::setPortProperties(const sci::cca::ComponentID::pointer& /*cid*/,
 				       const std::string& /*portname*/,
-				       const gov::cca::TypeMap::pointer& /*map*/)
+				       const sci::cca::TypeMap::pointer& /*map*/)
 {
   cerr << "BuilderService::setPortProperties not finished\n";
 }
 
-SIDL::array1<gov::cca::ConnectionID::pointer> BuilderService::getConnectionIDs(const SIDL::array1<gov::cca::ComponentID::pointer>& componentList)
+SSIDL::array1<sci::cca::ConnectionID::pointer> BuilderService::getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer>& componentList)
 {
-  SIDL::array1<gov::cca::ConnectionID::pointer> conns;
+  SSIDL::array1<sci::cca::ConnectionID::pointer> conns;
   for(unsigned i=0; i<framework->connIDs.size(); i++){
     for(unsigned j=0; j<componentList.size(); j++){
-      gov::cca::ComponentID::pointer cid1=framework->connIDs[i]->getUser();
-      gov::cca::ComponentID::pointer cid2=framework->connIDs[i]->getProvider();
+      sci::cca::ComponentID::pointer cid1=framework->connIDs[i]->getUser();
+      sci::cca::ComponentID::pointer cid2=framework->connIDs[i]->getProvider();
       if(cid1==componentList[j]||cid2==componentList[j]){
 	conns.push_back(framework->connIDs[i]);
 	break;
@@ -196,20 +196,20 @@ SIDL::array1<gov::cca::ConnectionID::pointer> BuilderService::getConnectionIDs(c
   return conns;
 }
 
-gov::cca::TypeMap::pointer
-BuilderService::getConnectionProperties(const gov::cca::ConnectionID::pointer& /*connID*/)
+sci::cca::TypeMap::pointer
+BuilderService::getConnectionProperties(const sci::cca::ConnectionID::pointer& /*connID*/)
 {
   cerr << "BuilderService::getConnectionProperties not finished\n";
-  return gov::cca::TypeMap::pointer(0);
+  return sci::cca::TypeMap::pointer(0);
 }
 
-void BuilderService::setConnectionProperties(const gov::cca::ConnectionID::pointer& /*connID*/,
-					     const gov::cca::TypeMap::pointer& /*map*/)
+void BuilderService::setConnectionProperties(const sci::cca::ConnectionID::pointer& /*connID*/,
+					     const sci::cca::TypeMap::pointer& /*map*/)
 {
   cerr << "BuilderService::setConnectionProperties not finished\n";
 }
 
-void BuilderService::disconnect(const gov::cca::ConnectionID::pointer& connID,
+void BuilderService::disconnect(const sci::cca::ConnectionID::pointer& connID,
 				float /*timeout*/)
 {
   ComponentID* userID=dynamic_cast<ComponentID*>(connID->getUser().getPointer());
@@ -230,18 +230,18 @@ void BuilderService::disconnect(const gov::cca::ConnectionID::pointer& connID,
   //cerr << "BuilderService::disconnect: timeout or safty check needed "<<endl;
 }
 
-void BuilderService::disconnectAll(const gov::cca::ComponentID::pointer& /*id1*/,
-				   const gov::cca::ComponentID::pointer& /*id2*/,
+void BuilderService::disconnectAll(const sci::cca::ComponentID::pointer& /*id1*/,
+				   const sci::cca::ComponentID::pointer& /*id2*/,
 				   float /*timeout*/)
 {
   cerr << "BuilderService::disconnectAll not finished\n";
 }
 
 
-SIDL::array1<std::string>  BuilderService::getCompatiblePortList(
-     const gov::cca::ComponentID::pointer& c1,
+SSIDL::array1<std::string>  BuilderService::getCompatiblePortList(
+     const sci::cca::ComponentID::pointer& c1,
      const std::string& port1,
-     const gov::cca::ComponentID::pointer& c2)
+     const sci::cca::ComponentID::pointer& c2)
 {
   ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
   ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
@@ -257,7 +257,7 @@ SIDL::array1<std::string>  BuilderService::getCompatiblePortList(
     throw CCAException("Unknown port");
 
 
-  SIDL::array1<std::string> availablePorts;
+  SSIDL::array1<std::string> availablePorts;
   for(PortInstanceIterator* iter = comp2->getPorts(); !iter->done();
       iter->next()){
     PortInstance* pr2 = iter->get();
@@ -271,14 +271,14 @@ SIDL::array1<std::string>  BuilderService::getCompatiblePortList(
 void BuilderService::registerFramework(const string &frameworkURL)
 {
   Object::pointer obj=PIDL::objectFrom(frameworkURL);
-  gov::cca::AbstractFramework::pointer remoteFramework=
-    pidl_cast<gov::cca::AbstractFramework::pointer>(obj);
-  gov::cca::Services::pointer bs = remoteFramework->getServices("external builder", 
+  sci::cca::AbstractFramework::pointer remoteFramework=
+    pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
+  sci::cca::Services::pointer bs = remoteFramework->getServices("external builder", 
 								"builder main", 
-								gov::cca::TypeMap::pointer(0));
+								sci::cca::TypeMap::pointer(0));
   cerr << "got bs\n";
-  gov::cca::ports::ComponentRepository::pointer reg =
-    pidl_cast<gov::cca::ports::ComponentRepository::pointer>
+  sci::cca::ports::ComponentRepository::pointer reg =
+    pidl_cast<sci::cca::ports::ComponentRepository::pointer>
     (bs->getPort("cca.ComponentRepository"));
   if(reg.isNull()){
     cerr << "Cannot get component registry, not building component menus\n";
@@ -288,8 +288,8 @@ void BuilderService::registerFramework(const string &frameworkURL)
   //traverse Builder Components here...
 
   for(unsigned int i=0; i<servicesList.size();i++){
-    gov::cca::ports::BuilderService::pointer builder 
-      = pidl_cast<gov::cca::ports::BuilderService::pointer>
+    sci::cca::ports::BuilderService::pointer builder 
+      = pidl_cast<sci::cca::ports::BuilderService::pointer>
       (servicesList[i]->getPort("cca.BuilderService"));
 
     if(builder.isNull()){
@@ -297,16 +297,16 @@ void BuilderService::registerFramework(const string &frameworkURL)
       return;
     } 
     
-    gov::cca::ComponentID::pointer cid=servicesList[i]->getComponentID();
+    sci::cca::ComponentID::pointer cid=servicesList[i]->getComponentID();
     cerr<<"try to connect..."<<endl;
-    gov::cca::ConnectionID::pointer connID=builder->connect(cid, "builderPort",
+    sci::cca::ConnectionID::pointer connID=builder->connect(cid, "builderPort",
 							    cid, "builder");
     cerr<<"connection done"<<endl;
   
 
-    gov::cca::Port::pointer p = servicesList[i]->getPort("builder");
-    gov::cca::ports::BuilderPort::pointer bp = 
-      pidl_cast<gov::cca::ports::BuilderPort::pointer>(p);
+    sci::cca::Port::pointer p = servicesList[i]->getPort("builder");
+    sci::cca::ports::BuilderPort::pointer bp = 
+      pidl_cast<sci::cca::ports::BuilderPort::pointer>(p);
     if(bp.isNull()){
       cerr << "BuilderPort is not connected!\n";
     } 
@@ -320,14 +320,14 @@ void BuilderService::registerFramework(const string &frameworkURL)
   
 }
 
-void BuilderService::registerServices(const gov::cca::Services::pointer &svc)
+void BuilderService::registerServices(const sci::cca::Services::pointer &svc)
 {
   servicesList.push_back(svc);
 }
 
-gov::cca::AbstractFramework::pointer BuilderService::getFramework()
+sci::cca::AbstractFramework::pointer BuilderService::getFramework()
 {
-  return gov::cca::AbstractFramework::pointer(framework);
+  return sci::cca::AbstractFramework::pointer(framework);
 }*/
 
 

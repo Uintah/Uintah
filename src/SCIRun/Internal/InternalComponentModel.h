@@ -48,7 +48,7 @@ namespace SCIRun {
     virtual ComponentInstance* createInstance(const std::string& name,
 					      const std::string& type);
     virtual bool destroyInstance(ComponentInstance *ci);
-    gov::cca::Port::pointer getFrameworkService(const std::string& type,
+    sci::cca::Port::pointer getFrameworkService(const std::string& type,
 						const std::string& componentName);
     bool releaseFrameworkService(const std::string& type,
 				 const std::string& componentName);

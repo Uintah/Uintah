@@ -61,13 +61,13 @@ void InternalComponentModel::addService(InternalComponentDescription* svc)
   services[svc->serviceType]=svc;
 }
 
-gov::cca::Port::pointer
+sci::cca::Port::pointer
 InternalComponentModel::getFrameworkService(const std::string& type,
 					    const std::string& componentName)
 {
   map<string, InternalComponentDescription*>::iterator iter=services.find(type);
   if(iter == services.end())
-    return gov::cca::Port::pointer(0);
+    return sci::cca::Port::pointer(0);
 
   InternalComponentDescription* cd = iter->second;
   InternalComponentInstance* ci;
@@ -84,7 +84,7 @@ InternalComponentModel::getFrameworkService(const std::string& type,
     framework->registerComponent(ci, cname);
   }
   ci->incrementUseCount();
-  gov::cca::Port::pointer ptr = ci->getService(type);
+  sci::cca::Port::pointer ptr = ci->getService(type);
   ptr->addReference();
   return ptr;
 }
