@@ -39,9 +39,13 @@ void    ICE::printData( int matl,
       dumpThisMatl = true;
     }
   } 
-  
-  d_dbgTime= dataArchiver->getCurrentTime();  
-  if ( dumpThisMatl == true        &&
+  const Level* level = patch->getLevel();
+  int levelIndx = level->getIndex();
+    
+  d_dbgTime= dataArchiver->getCurrentTime();
+    
+  if ( levelIndx == d_dbgLevel    &&
+       dumpThisMatl == true        &&
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
@@ -56,7 +60,7 @@ void    ICE::printData( int matl,
     // spew to stderr
     if ( d_dbgGnuPlot== false && 
         high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {      
-      cerr << "______________________________________________\n";
+      cerr << "____________________________________________L-"<<levelIndx<<"\n";
       cerr << "$" << message1 << "\n";
       cerr << "$" << message2 << "\n";
 
@@ -133,7 +137,11 @@ void    ICE::printData(int matl,
   } 
   
   d_dbgTime= dataArchiver->getCurrentTime();  
-  if ( dumpThisMatl == true        &&
+  const Level* level = patch->getLevel();
+  int levelIndx = level->getIndex();
+  
+  if ( levelIndx == d_dbgLevel    &&
+       dumpThisMatl == true        &&
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
@@ -147,7 +155,7 @@ void    ICE::printData(int matl,
     // spew to stderr
     if ( d_dbgGnuPlot== false && 
         high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {      
-      cerr << "______________________________________________\n";
+      cerr << "____________________________________________L-"<<levelIndx<<"\n";
       cerr << "$" << message1 << "\n";
       cerr << "$" << message2 << "\n";
 
@@ -221,9 +229,12 @@ void    ICE::printVector(int matl,
       dumpThisMatl = true;
     }
   } 
-  
+  const Level* level = patch->getLevel();
+  int levelIndx = level->getIndex();
   d_dbgTime= dataArchiver->getCurrentTime();  
-  if ( dumpThisMatl == true        &&
+  
+  if ( levelIndx == d_dbgLevel     &&
+       dumpThisMatl == true        &&
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
@@ -253,7 +264,7 @@ void    ICE::printVector(int matl,
        
         cerr.setf(ios::scientific,ios::floatfield);
         cerr.precision(d_dbgSigFigs);
-        cerr << "______________________________________________\n";
+        cerr << "__________________________________________L-"<<levelIndx<<"\n";
         cerr << "$" << message1 << "\n";
         cerr << "$" << var_name << "\n";
         for(int k = low.z(); k < high.z(); k++)  {
@@ -326,9 +337,12 @@ void    ICE::printData_FC(int matl,
       dumpThisMatl = true;
     }
   } 
-  
+  const Level* level = patch->getLevel();
+  int levelIndx = level->getIndex();
   d_dbgTime= dataArchiver->getCurrentTime();  
-  if ( dumpThisMatl == true        &&
+  
+  if ( levelIndx  == d_dbgLevel   &&
+       dumpThisMatl == true        &&
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
@@ -345,7 +359,7 @@ void    ICE::printData_FC(int matl,
     
       cerr.setf(ios::scientific,ios::floatfield);
       cerr.precision(d_dbgSigFigs); 
-      cerr << "______________________________________________\n";
+      cerr << "____________________________________________L-"<<levelIndx<<"\n";
       cerr << "$" << message1 << "\n";
       cerr << "$" << message2 << "\n"; 
       for(int k = low.z(); k < high.z(); k++)  {
@@ -414,9 +428,12 @@ void    ICE::printData_FC(int matl,
       dumpThisMatl = true;
     }
   } 
-  
+  const Level* level = patch->getLevel();
+  int levelIndx = level->getIndex();
   d_dbgTime= dataArchiver->getCurrentTime();  
-  if ( dumpThisMatl == true        &&
+  
+  if ( levelIndx == d_dbgLevel     &&
+       dumpThisMatl == true        &&
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
@@ -431,7 +448,7 @@ void    ICE::printData_FC(int matl,
         high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {  
       cerr.setf(ios::scientific,ios::floatfield);
       cerr.precision(d_dbgSigFigs);
-      cerr << "______________________________________________\n";
+      cerr << "____________________________________________L-"<<levelIndx<<"\n";
       cerr << "$" << message1 << "\n";
       cerr << "$" << message2 << "\n";
       for(int k = low.z(); k < high.z(); k++)  {
@@ -503,8 +520,12 @@ void    ICE::printData_FC(int matl,
     }
   } 
   
-  d_dbgTime= dataArchiver->getCurrentTime();  
-  if ( dumpThisMatl == true        &&
+  const Level* level = patch->getLevel();
+  int levelIndx = level->getIndex();
+  d_dbgTime= dataArchiver->getCurrentTime();
+    
+  if ( levelIndx == d_dbgLevel     &&
+       dumpThisMatl == true        &&
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
@@ -519,7 +540,7 @@ void    ICE::printData_FC(int matl,
         high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {   
       cerr.setf(ios::scientific,ios::floatfield);
       cerr.precision(d_dbgSigFigs);   
-      cerr << "______________________________________________\n";
+      cerr << "____________________________________________L-"<<levelIndx<<"\n";
       cerr << "$" << message1 << "\n";
       cerr << "$" << message2 << "\n";
       for(int k = low.z(); k < high.z(); k++)  {
@@ -580,8 +601,12 @@ void    ICE::printStencil( int /*matl*/,
                            const string&    message2,       
                            const CCVariable<Stencil7>& q_CC)
 {
-  d_dbgTime= dataArchiver->getCurrentTime();  
-  if ( d_dbgTime >= d_dbgStartTime && 
+  const Level* level = patch->getLevel();
+  int levelIndx = level->getIndex();
+  d_dbgTime= dataArchiver->getCurrentTime();
+    
+  if ( levelIndx == d_dbgLevel &&
+       d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
     d_dbgOldTime = d_dbgTime;      
@@ -591,7 +616,7 @@ void    ICE::printStencil( int /*matl*/,
                         low, high); 
     //__________________________________
     // spew to stderr
-    cerr << "______________________________________________\n";
+    cerr << "______________________________________________L-"<<levelIndx<<"\n";
     cerr << "$" << message1 << "\n";
     cerr << "$" << message2 << "\n";
 
