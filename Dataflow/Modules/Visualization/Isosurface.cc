@@ -35,6 +35,8 @@ using std::endl;
 #include <sstream>
 using std::ostringstream;
 
+#include <Dataflow/Modules/Visualization/Isosurface.h>
+
 //#include <typeinfo>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/GeomGroup.h>
@@ -52,82 +54,11 @@ using std::ostringstream;
 #include <Core/Algorithms/Visualization/Sage.h>
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
 //#include <Dataflow/Ports/SurfacePort.h>
 
 
 namespace SCIRun {
 
-class MinmaxFunctor {
-public:
-  virtual bool get( Field *, pair<double,double>& ) = 0;
-};
-
-template<class F>
-class Minmax : public MinmaxFunctor {
-public:
-  virtual bool get( Field *field, pair<double,double> &p ) {
-    F *f = dynamic_cast<F *>(field);
-    if ( !f ) return false;
-    cerr << "compute minmax...\n";
-    return field_minmax( *f, p );
-  }
-};
-
-class Isosurface : public Module {
-
-  // Input Ports
-  FieldIPort* infield;
-  FieldIPort* incolorfield;
-  ColorMapIPort* inColorMap;
-
-  // Output Ports
-  FieldOPort* osurf;
-  GeometryOPort* ogeom;
-  
-
-  //! GUI variables
-  GuiDouble gui_iso_value;
-  GuiInt    extract_from_new_field;
-  GuiInt    use_algorithm;
-  GuiInt    build_trisurf_;
-
-  //! 
-  double iso_value;
-  FieldHandle field_;
-  GeomObj *surface;
-  FieldHandle colorfield;
-  ColorMapHandle cmap;
-  TriSurfMeshHandle trisurf_mesh_;
-
-  //! status variables
-  int init;
-  int geom_id;
-  double prev_min, prev_max;
-  int last_generation;
-  int build_trisurf;
-  bool have_colorfield;
-  bool have_ColorMap;
-
-  MarchingCubesAlg *mc_alg;
-  NoiseAlg *noise_alg;
-  SageAlg *sage_alg;
-  Loader loader;
-  Loader minmax_loader;
-
-  MaterialHandle matl;
-
-public:
-  Isosurface(const clString& id);
-  virtual ~Isosurface();
-  virtual void execute();
-
-  void initialize();
-  void new_field( FieldHandle & );
-  void send_results();
-};
 
 
 extern "C" Module* make_Isosurface(const clString& id) {
