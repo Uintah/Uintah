@@ -33,6 +33,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 # genpttex
 SRCS := $(SRCDIR)/genpttex.cc
+PSELIBS += Packages/rtrt/Core/PathTracer
 PROGRAM := Packages/rtrt/StandAlone/genpttex
 include $(SCIRUN_SCRIPTS)/program.mk
 
