@@ -47,9 +47,9 @@ WARNING
     class iterator {
     public:
       iterator(const Array3<T>* array3, IntVector index)
-	: d_array3(array3), d_index(index) { }
+	: d_index(index), d_array3(array3) { }
       iterator(const iterator& iter)
-	: d_array3(iter.d_array3), d_index(iter.d_index) { }
+	: d_index(iter.d_index), d_array3(iter.d_array3) { }
       ~iterator() {}
 
       iterator& operator=(const iterator& it2)
