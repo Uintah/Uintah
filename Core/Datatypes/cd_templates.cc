@@ -107,6 +107,8 @@ const TypeDescription* get_type_description(vector<CellIndex<int> >*);
 // Property types
 template class Property<int>;
 template class Property<string>;
+template class Property<double>;
+template class Property<float>;
 template class Property<Array1<double> >;
 template class Property<Array1<Tensor> >;
 template class Property<pair<int,double> >;
