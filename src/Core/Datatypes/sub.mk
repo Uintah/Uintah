@@ -15,6 +15,7 @@ GENHDRS := $(patsubst %.cc,%.h,$(GENSRCS))
 
 SRCS += $(GENSRCS) \
         $(SRCDIR)/Attrib.cc                 \
+        $(SRCDIR)/AttribManager.cc          \
         $(SRCDIR)/BasicSurfaces.cc	    \
 	$(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/ColorMap.cc		    \
@@ -48,6 +49,7 @@ SRCS += $(GENSRCS) \
         $(SRCDIR)/SurfaceGeom.cc	    \
         $(SRCDIR)/SymSparseRowMatrix.cc	    \
         $(SRCDIR)/TField.cc		    \
+	$(SRCDIR)/TriSurfGeom.cc	    \
         $(SRCDIR)/TetMeshGeom.cc	    \
         $(SRCDIR)/TriDiagonalMatrix.cc	    \
         $(SRCDIR)/TriSurface.cc		    \
