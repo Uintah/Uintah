@@ -18,9 +18,11 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/FusionSlicePlot.tcl\
 	$(SRCDIR)/FusionFieldReader.tcl\
 	$(SRCDIR)/PPPLHDF5FieldReader.tcl\
+	$(SRCDIR)/HDF5ProtoType.tcl\
 	$(SRCDIR)/MDSPlusFieldReader.tcl\
 	$(SRCDIR)/MDSPlusDataReader.tcl\
 	$(SRCDIR)/Plot2DViewer.tcl\
+	$(SRCDIR)/ReactionDiffusion.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Fusion/Dataflow/GUI
 
