@@ -89,6 +89,7 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("PressureSolver");
   db->require("ref_point", d_pressRef);
+  db->getWithDefault("normalize_pressure", d_norm_pres, false);
   string finite_diff;
   db->require("finite_difference", finite_diff);
   if (finite_diff == "second") d_discretize = scinew Discretization();
@@ -469,12 +470,13 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
       d_pressRefProc << endl;
   }
   MPI_Bcast(&pressureVars.press_ref, 1, MPI_DOUBLE, d_pressRefProc, pg->getComm());
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch *patch = patches->get(p);
-    normPressure(pg, patch, &pressureVars);
-    //    updatePressure(pg, patch, &pressureVars);
-    // put back the results
-  }
+  if (d_norm_pres) 
+    for (int p = 0; p < patches->size(); p++) {
+      const Patch *patch = patches->get(p);
+      normPressure(pg, patch, &pressureVars);
+      //    updatePressure(pg, patch, &pressureVars);
+      // put back the results
+    }
 
   // destroy matrix
   d_linearSolver->destroyMatrix();
@@ -647,7 +649,6 @@ PressureSolver::normPressure(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   double pressref = vars->press_ref;
-  pressref = 0.0;
   fort_normpress(idxLo, idxHi, vars->pressure, pressref);
 
 #ifdef ARCHES_PRES_DEBUG
