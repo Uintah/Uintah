@@ -42,7 +42,7 @@ namespace SCIRun {
 // LUTs for the RK-fehlberg algorithm 
 const double a[]  ={16.0/135, 0, 6656.0/12825, 28561.0/56430, -9.0/50, 2.0/55};
 const double ab[]  ={1.0/360, 0, -128.0/4275, -2197.0/75240, 1.0/50, 2.0/55};
-const double c[]   ={0, 1.0/4, 3.0/8, 12.0/13, 1.0, 1.0/2}; /* not used */
+  //const double c[]   ={0, 1.0/4, 3.0/8, 12.0/13, 1.0, 1.0/2}; /* not used */
 const double d[][5]={{0, 0, 0, 0, 0},
 		     {1.0/4, 0, 0, 0, 0},
 		     {3.0/32, 9.0/32, 0, 0, 0},
@@ -79,7 +79,7 @@ private:
   GuiInt                        remove_colinear_;
 };
 
-  DECLARE_MAKER(StreamLines);
+  DECLARE_MAKER(StreamLines)
 
 StreamLines::StreamLines(GuiContext* ctx) : 
   Module("StreamLines", ctx, Source, "Visualization", "SCIRun"),

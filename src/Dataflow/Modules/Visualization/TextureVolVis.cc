@@ -73,7 +73,7 @@ TextureVolVis::~TextureVolVis()
 
 }
 
-void TextureVolVis::widget_moved(int)
+void TextureVolVis::widget_moved(bool)
 {
   if( volren ){
       volren->SetControlPoint(control_widget->ReferencePoint());

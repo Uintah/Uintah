@@ -93,10 +93,10 @@ public:
   virtual void execute();
 
   virtual void tcl_command(GuiArgs&, void*);
-  virtual void widget_moved(int);
+  virtual void widget_moved(bool);
 };
 
-  DECLARE_MAKER(EditField);
+  DECLARE_MAKER(EditField)
 
 EditField::EditField(GuiContext* ctx)
   : Module("EditField", ctx, Source, "Fields", "SCIRun"),
@@ -551,7 +551,7 @@ void EditField::tcl_command(GuiArgs& args, void* userdata)
     sizex_.reset(); sizey_.reset(); sizez_.reset();
     if (sizex_.get() <= 0 || sizey_.get() <= 0 || sizez_.get() <= 0) {
       postMessage("EditField: Degenerate BBox requested!");
-      widget_moved(1);           // force values back to widget settings
+      widget_moved(true);           // force values back to widget settings
       return;                    // degenerate 
     }
     Vector sizex(sizex_.get(),0,0);
@@ -568,9 +568,9 @@ void EditField::tcl_command(GuiArgs& args, void* userdata)
   }
 }
 
-void EditField::widget_moved(int i)
+void EditField::widget_moved(bool last)
 {
-  if (i==1) {
+  if (last) {
     Point center, right, down, in;
     cx_.reset(); cy_.reset(); cz_.reset();
     sizex_.reset(); sizey_.reset(); sizez_.reset();
@@ -583,8 +583,6 @@ void EditField::widget_moved(int i)
     sizez_.set((in.z()-center.z())*2.);
     cgeom_.set(1);
     want_to_execute();
-  } else {
-    //Module::widget_moved(i);
   }
 }
 

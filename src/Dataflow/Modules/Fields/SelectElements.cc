@@ -46,7 +46,7 @@ public:
   virtual void execute();
 };
 
-  DECLARE_MAKER(SelectElements);
+  DECLARE_MAKER(SelectElements)
 
 SelectElements::SelectElements(GuiContext* ctx)
   : Module("SelectElements", ctx, Source, "Fields", "SCIRun"),
@@ -79,7 +79,7 @@ void SelectElements::execute()
   strcpy(value_str, value.c_str());
   char *matl;
   Array1<int> values;
-  while (matl = strtok(value_str, " ,")) {
+  while ((matl = strtok(value_str, " ,"))) {
     value_str=0;
     values.add(atoi(matl));
   }

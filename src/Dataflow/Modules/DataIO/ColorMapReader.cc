@@ -39,7 +39,7 @@ public:
   ColorMapReader(GuiContext* ctx);
 };
 
-DECLARE_MAKER(ColorMapReader);
+DECLARE_MAKER(ColorMapReader)
 
 ColorMapReader::ColorMapReader(GuiContext* ctx)
   : GenericReader<ColorMapHandle>("ColorMapReader", ctx, "DataIO", "SCIRun")

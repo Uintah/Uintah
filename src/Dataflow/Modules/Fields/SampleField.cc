@@ -88,7 +88,7 @@ public:
   SampleField(GuiContext* ctx);
   virtual ~SampleField();
   virtual void execute();
-  virtual void widget_moved(int);
+  virtual void widget_moved(bool last);
 };
 
 
@@ -132,9 +132,9 @@ SampleField::~SampleField()
 
 
 void
-SampleField::widget_moved(int i)
+SampleField::widget_moved(bool last)
 {
-  if (i == 1)
+  if (last)
   {
     if (rake_) {
       rake_->GetEndpoints(endpoint0_,endpoint1_);

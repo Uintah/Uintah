@@ -197,7 +197,7 @@ void OpenGL::redraw_loop()
   TimeThrottle throttle;
   throttle.start();
   double newtime=0;
-  while(1) {
+  for(;;) {
     if (dead) return;
     int nreply=0;
     if(viewwindow->inertia_mode){
@@ -1251,7 +1251,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
     GLuint hit_obj=0;
     //GLuint hit_obj_index = 0x12345678;  // need for object indexing
     GLuint hit_pick=0;
-    GLuint hit_pick_index = 0x12345678;  // need for object indexing
+    //GLuint hit_pick_index = 0x12345678;  // need for object indexing
 #endif
     //cerr << "hits=" << hits << "\n";
     if(hits >= 1){
@@ -1275,7 +1275,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
 	  unsigned int hp1=pick_buffer[idx++];
 	  unsigned int hp2=pick_buffer[idx++];
 	  hit_obj=((long)hp1<<32)|hp2;
-	  hit_pick_index = pick_buffer[idx++];
+	  //hit_pick_index = pick_buffer[idx++];
 #else
 	  // hit_obj=pick_buffer[idx++];
 	  // hit_obj_index=pick_buffer[idx++];
@@ -1283,7 +1283,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
 	  idx+=nnames-3; // Skip to the last one...
 	  hit_pick=pick_buffer[idx++];
 	  hit_obj=pick_buffer[idx++];
-	  hit_pick_index=pick_buffer[idx++];
+	  //hit_pick_index=pick_buffer[idx++];
 #endif
 	  //cerr << "new min... (obj=" << hit_obj
 	  //     << ", pick="          << hit_pick
