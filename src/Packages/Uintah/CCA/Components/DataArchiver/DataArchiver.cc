@@ -1104,7 +1104,7 @@ void DataArchiver::output(const ProcessorGroup*,
     DOM_Node tn = findTextNode(endNode);
     DOMString val = tn.getNodeValue();
     char* s = val.transcode();
-    long end = atoi(s);
+    long end = atol(s);
     delete[] s;
     
     if(end > cur)
