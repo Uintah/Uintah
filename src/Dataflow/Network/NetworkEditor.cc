@@ -150,7 +150,7 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    return;
 	}
 	if (args.count() == 4)
-	  net->block_connection(args[2]);
+	  net->disable_connection(args[2]);
 	if (!net->disconnect(args[2])) {
 	    args.error("Cannot find connection "+args[2]+" for deletion");
 	}

@@ -53,7 +53,8 @@ Connection::Connection(Module* m1, int p1, Module* m2, int p2,
 		       const string &id)
   : oport(m1->getOPort(p1)),
     iport(m2->getIPort(p2)),
-    id(id)
+    id(id),
+    disabled_(false)
 {
   iport->attach(this);
   oport->attach(this);
@@ -63,7 +64,7 @@ Connection::Connection(Module* m1, int p1, Module* m2, int p2,
 Connection::~Connection()
 {
   oport->detach(this);
-  iport->detach(this, blocked_);
+  iport->detach(this, disabled_);
 }
 
 void Connection::makeID()

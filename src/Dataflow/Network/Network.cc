@@ -296,6 +296,18 @@ void Network::attach(Scheduler* _sched)
   sched=_sched;
 }
 
+void
+Network::disable_connection(const string& connId)
+{
+  for (unsigned int i = 0; i < connections.size(); i++)
+    if (connections[i]->id == connId)
+    {
+      connections[i]->disabled_ = true;
+      return;
+    }
+}
+
+
 Scheduler* Network::get_scheduler()
 {
   return sched;
