@@ -81,7 +81,7 @@ int GeomSwitch::get_state()
 
 void GeomSwitch::get_bounds(BBox& bbox)
 {
-   if(state)child->get_bounds(bbox);
+   if (state && child) child->get_bounds(bbox);
 }
 
 

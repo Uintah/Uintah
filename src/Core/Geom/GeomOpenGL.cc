@@ -675,14 +675,24 @@ void GeomBBoxCache::draw(DrawInfoOpenGL* di, Material *m, double time)
 
 GeomDL::~GeomDL()
 {
-  if (have_dl && dl)
+  if (display_list_)
   {
-    glDeleteLists(dl, 1);
+    glDeleteLists(display_list_, 1);
   }
 
-  if(child)
+  if (child)
   {
     delete child;
+  }
+}
+
+void GeomDL::reset_bbox()
+{
+  GeomContainer::reset_bbox();
+  if (display_list_)
+  {
+    glDeleteLists(display_list_, 1);
+    display_list_ = 0;
   }
 }
 
@@ -691,46 +701,50 @@ void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
   if ( !child ) return;
 
-  if(!pre_draw(di, m, 0)) return;
+  if ( !pre_draw(di, m, 0) ) return;
   
   if ( !di->dl ) 
+  {
     child->draw(di,m,time);  // do not use display list
-  else  {
+  }
+  else
+  {
     // do we need a new dl ?
-    if (!have_dl 
- 	|| type  != di->get_drawtype() 
- 	|| lighting != di->lighting ) 
+    if ( display_list_ == 0 ||
+	 type_  != di->get_drawtype() ||
+	 lighting_ != di->lighting ) 
     {
-      type = di->get_drawtype();
-      lighting = di->lighting; 
-      polygons = di->polycount; // remember poly count
+      type_ = di->get_drawtype();
+      lighting_ = di->lighting; 
+      const int pre_polycount = di->polycount; // remember poly count
       
       // do we need to allocate a dl ?
-      if ( !have_dl ) {
-	dl = glGenLists(1);
-	if ( dl == 0 ) {
-	   child->draw(di,m,time);  // do not use display list
-	   post_draw(di);
-	   return;
+      if ( !display_list_ )
+      {
+	display_list_ = glGenLists(1);
+	if ( !display_list_ )
+	{
+	  child->draw(di,m,time);  // do not use display list
+	  post_draw(di);
+	  return;
 	}
-	have_dl = true;
       }
-      
-      // create a new dl 
 
-      // don't use COMPILE_AND_EXECUTE as it seems to cause the dl to be slower
-      glNewList( dl,  GL_COMPILE);
+      // Fill in the display list.
+      // Don't use COMPILE_AND_EXECUTE as it makes a slower dl (NVidia linux).
+      glNewList( display_list_,  GL_COMPILE);
       child->draw(di,m,time);
       glEndList();
-      glCallList(dl); 
+      glCallList(display_list_); 
 
-      // update poly count;
-      polygons = di->polycount - polygons; 
+      // Update poly count;
+      polygons_ = di->polycount - pre_polycount;
     } 
-    else {
+    else
+    {
       // display the child using the dl
-      glCallList(dl);
-      di->polycount += polygons;
+      glCallList(display_list_);
+      di->polycount += polygons_;
     }
   }
 

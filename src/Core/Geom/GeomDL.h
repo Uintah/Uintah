@@ -34,34 +34,34 @@
 #ifdef SCI_OPENGL
 #include <Core/Geom/GeomOpenGL.h>
 #endif
-#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomContainer.h>
 
 
 namespace SCIRun {
     
-    class SCICORESHARE GeomDL : public GeomObj {
-      GeomObj* child;
-      int polygons;
-      unsigned int dl;
-      bool have_dl;
-      int type;
-      int lighting;
+class SCICORESHARE GeomDL : public GeomContainer {
+protected:
+  int polygons_;
+  int type_;
+  int lighting_;
+  unsigned int display_list_;
       
-    public:
-      GeomDL(GeomObj*);
-      virtual ~GeomDL();
+public:
+  GeomDL(GeomObj*);
+  GeomDL(const GeomDL &copy);
+  virtual ~GeomDL();
       
-      virtual GeomObj* clone();
-      virtual void get_bounds(BBox&);
-      
+  virtual GeomObj* clone();
+  virtual void reset_bbox();
+
 #ifdef SCI_OPENGL
-      virtual void draw(DrawInfoOpenGL*, Material*, double time);
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
-      virtual void get_triangles(Array1<float> &);
-      virtual void io(Piostream&);
-      static PersistentTypeID type_id;	
-      virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
-    };
+
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;	
+  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+};
     
 } // End namespace SCIRun
 
