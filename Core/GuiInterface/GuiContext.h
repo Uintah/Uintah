@@ -58,12 +58,19 @@ class GuiInterface;
 class GuiContext {
   public:
     GuiContext(GuiInterface* ctx, const string& name, bool save=true);
+    ~GuiContext();
 
+    GuiInterface*	getInterface();
     GuiContext*		subVar(const string& name, bool save=true);
+
     void		erase(const string& subname);
 
     void		lock();
     void		unlock();
+  
+    void		dontCache(); // always query GUI for value
+    void		doCache();  // only query GUI if not cached already
+    void		reset(); // resets the cache
 
     bool		get(string& value);
     void		set(const string& value);
@@ -74,21 +81,49 @@ class GuiContext {
     bool		get(int& value);
     void		set(int value);
 
-    void		reset();
-    GuiInterface*	getInterface();
     string		getfullname();
 
+    string		getName();
+    void		setName(const string&);
+
+    void		tcl_setVarStates();  
+  
     void		dontSave();
+    void		doSave();
+    
     void		setUseDatadir(bool flag);
-  private:
-    string		format_varname();
+  private:  
+    bool		setType();
+  
+    string		getPrefix();
+
+    string		getMapKeyFromString(const string &); 
+    string		getMapNameFromString(const string &str);
+  
+    int			popLastListIndexFromString(string &str);
+
+    bool		stringIsaMap(const string &str);
+    bool		stringIsaListElement(const string &str);
+
+    bool		getString(const string &varname, string &value);
+    bool		setString(const string &varname, const string &value);
 
     GuiInterface*	gui;
     string		name;
     vector<GuiContext*> children;
-    bool		cached;
-    bool		save;
-    bool		usedatadir;
+
+    enum  {
+      SAVE_E			= 1 << 0,
+      CACHE_E			= 1 << 1,
+      CACHED_E			= 1 << 2,
+      SUBSTITUTE_DATADIR_E	= 1 << 3//,
+      //      TCL_VARIABLE_E		= 1 << 4,
+      //      TCL_LIST_ELEMENT_E	= 1 << 5,
+      //TCL_ARRAY_ELEMENT_E	= 1 << 6,
+      //TCL_ARRAY_ELEMENT_E	= 1 << 7
+    };
+
+    unsigned int	context_state;
 
     GuiContext(const GuiContext&);
     GuiContext& operator=(const GuiContext&);
