@@ -116,7 +116,7 @@ void LookupSplitSurface::execute()
       return;
     }
 
-    int mycond=mIH->elems[ix]->cond;
+    int mycond=mIH->element(ix)->cond;
     if ((splitDir == "X") && p.x()<splitVal)
       mycond+=half;
     else if ((splitDir == "Y") && p.y()<splitVal)

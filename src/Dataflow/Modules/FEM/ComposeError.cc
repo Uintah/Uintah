@@ -93,7 +93,7 @@ void ComposeError::execute()
 	return;
     }
 
-    int nelems=upfug->mesh->elems.size();
+    int nelems=upfug->mesh->elemsize();
     ScalarFieldUG* outf=scinew ScalarFieldUG(ScalarFieldUG::ElementValues);
     outf->mesh=upfug->mesh;
     outf->data.resize(nelems);

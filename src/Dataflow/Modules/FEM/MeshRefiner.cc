@@ -100,11 +100,11 @@ void MeshRefiner::execute()
     double* up=&upfug->data[0];
     double upper_bound=interval->high;
     Array1<Point> new_points;
-    int nelems=mesh->elems.size();
+    int nelems=mesh->elemsize();
     int i;
     for(i=0;i<nelems;i++){
         if(up[i] > upper_bound){
-	    new_points.add(mesh->elems[i]->centroid());
+	    new_points.add(mesh->element(i)->centroid());
 	}
 	if(i%10000 == 0)
 	  update_progress(i, 2*nelems);
@@ -127,7 +127,7 @@ void MeshRefiner::execute()
 	  update_progress(new_points.size()+i, 2*new_points.size());
     }
     mesh->pack_all();
-    cerr << "There are now " << mesh->nodes.size() << " nodes and " << mesh->elems.size() << " elements\n";
+    cerr << "There are now " << mesh->nodesize() << " nodes and " << mesh->elemsize() << " elements\n";
     mesh_oport->send(mesh);
 }
 

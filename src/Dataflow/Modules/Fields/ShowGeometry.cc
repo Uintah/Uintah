@@ -241,9 +241,6 @@ public:
     } else if (tsurf) {
       d_dbg << "Writing out surface" << endl;
       displaySurface(tsurf, verts);
-    } else if (true) {
-      d_dbg << "testing surface" << endl;
-      displaySurface((TriSurfGeom *)geom, verts);
     } else {
       d_dbg << "Not a LatticGeom!!" << endl;
     }

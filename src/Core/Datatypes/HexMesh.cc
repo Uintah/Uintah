@@ -28,8 +28,10 @@
 #include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Persistent/Persistent.h>
+
 #include <Core/Persistent/PersistentMap.h>
+//#include <iostream>
+//#include <fstream>
 
 using std::cout;
 using std::endl;
@@ -58,38 +60,38 @@ HexMesh::type_id("HexMesh", "Datatype", make_HexMesh);
 *******************************************************************************/
 
 /*******************************************************************************
-* Constructor
-*
-* 	This constructor makes a point and assigns it an index.
-*******************************************************************************/
+ * Constructor
+ *
+ * 	This constructor makes a point and assigns it an index.
+ *******************************************************************************/
 
 HexNode::HexNode (int i, double x, double y, double z)
-: Point (x, y, z),
-  my_index (i)
+  : Point (x, y, z),
+    my_index (i)
 {
 }
 
 
 /*******************************************************************************
-* HexNode::HexNode ()
-*
-* 	The default constructor, it sets up all values of the node to 0.  This
-* should only be used prior to doing a Pio call to read in this hex node.
-*******************************************************************************/
+ * HexNode::HexNode ()
+ *
+ * 	The default constructor, it sets up all values of the node to 0.  This
+ * should only be used prior to doing a Pio call to read in this hex node.
+ *******************************************************************************/
 
 HexNode::HexNode ()
-: Point (0.0, 0.0, 0.0),
-  my_index (0)
+  : Point (0.0, 0.0, 0.0),
+    my_index (0)
 {
 }
 
 
 /*******************************************************************************
-* ostream & operator << (ostream & o, const HexNode & n)
-*
-*	This function outputs the contents of the HexNode for debugging
-* purposes only.
-*******************************************************************************/
+ * ostream & operator << (ostream & o, const HexNode & n)
+ *
+ *	This function outputs the contents of the HexNode for debugging
+ * purposes only.
+ *******************************************************************************/
 
 std::ostream & operator << (std::ostream & o, const HexNode & n)
 {
@@ -107,14 +109,14 @@ std::ostream & operator << (std::ostream & o, const HexNode & n)
 *******************************************************************************/
 
 /*******************************************************************************
-* HexFace::HexFace (int, int, FourHexNodes & f, HexMesh * m)
-*
-* 	This constructor makes a face and assigns nodes to it.  Note that all
-* the nodes should have indecies and pointers (none should be NULL).
-*******************************************************************************/
+ * HexFace::HexFace (int, int, FourHexNodes & f, HexMesh * m)
+ *
+ * 	This constructor makes a face and assigns nodes to it.  Note that all
+ * the nodes should have indecies and pointers (none should be NULL).
+ *******************************************************************************/
 
 HexFace::HexFace (int i, int e, FourHexNodes & f, HexMesh * m)
-: my_index (i), my_contains_index (e), my_neighbor_index (0)
+  : my_index (i), my_contains_index (e), my_neighbor_index (0)
 {
   // Make a copy of the corners.
   
@@ -127,14 +129,14 @@ HexFace::HexFace (int i, int e, FourHexNodes & f, HexMesh * m)
 
 
 /*******************************************************************************
-* HexFace::HexFace ()
-*
-* 	The default constructor, it sets up all values of the face to 0.  This
-* should only be used prior to doing a Pio call to read in this hex face.
-*******************************************************************************/
+ * HexFace::HexFace ()
+ *
+ * 	The default constructor, it sets up all values of the face to 0.  This
+ * should only be used prior to doing a Pio call to read in this hex face.
+ *******************************************************************************/
 
 HexFace::HexFace ()
-: my_index (0), my_contains_index (0), my_neighbor_index (0)
+  : my_index (0), my_contains_index (0), my_neighbor_index (0)
 {
   int c;
   
@@ -149,11 +151,11 @@ HexFace::HexFace ()
 
 
 /*******************************************************************************
-* void HexFace::calc_face ()
-*
-* 	This function sets up the centroid and the normal for this face.  It
-* also calculates a measure for the planarity of the corners of the face.
-*******************************************************************************/
+ * void HexFace::calc_face ()
+ *
+ * 	This function sets up the centroid and the normal for this face.  It
+ * also calculates a measure for the planarity of the corners of the face.
+ *******************************************************************************/
 
 void HexFace::calc_face (HexMesh * m)
 {
@@ -224,11 +226,11 @@ void HexFace::calc_face (HexMesh * m)
 
 
 /*******************************************************************************
-* int HexFace::is_corner (int i)
-*
-* 	This function returns true if there is a corner in this face with
-* index 'i'.
-*******************************************************************************/
+ * int HexFace::is_corner (int i)
+ *
+ * 	This function returns true if there is a corner in this face with
+ * index 'i'.
+ *******************************************************************************/
 
 int HexFace::is_corner (int i)
 {
@@ -243,11 +245,11 @@ int HexFace::is_corner (int i)
 
 
 /*******************************************************************************
-* int HexFace::compare (FourHexNodes & f)
-*
-* 	This function returns true if the corners in this object match the
-* corners passed as a parameter.  Only indecies are compared.
-*******************************************************************************/
+ * int HexFace::compare (FourHexNodes & f)
+ *
+ * 	This function returns true if the corners in this object match the
+ * corners passed as a parameter.  Only indecies are compared.
+ *******************************************************************************/
 
 int HexFace::compare (FourHexNodes & f)
 {
@@ -272,27 +274,27 @@ int HexFace::compare (FourHexNodes & f)
 
 
 /*******************************************************************************
-* double HexFace::dist (const Point & P)
-*
-* 	This function returns the distance from the face of the given point.
-* Note that if the plane is degenerate (i.e. a line or a point) then this
-* returns 0.  Negative values indicate that the point lies in the opposite
-* direction as the normal.
-*******************************************************************************/
+ * double HexFace::dist (const Point & P)
+ *
+ * 	This function returns the distance from the face of the given point.
+ * Note that if the plane is degenerate (i.e. a line or a point) then this
+ * returns 0.  Negative values indicate that the point lies in the opposite
+ * direction as the normal.
+ *******************************************************************************/
 
 double HexFace::dist (const Point & P)
 {
   return my_normal.x() * P.x() + my_normal.y() * P.y() + my_normal.z() * P.z ()
-         + my_d;
+    + my_d;
 }
 
 
 /*******************************************************************************
-* ostream & operator << (ostream & o, const HexFace & f)
-*
-*	This function outputs the contents of the HexFace for debugging
-* purposes only.
-*******************************************************************************/
+ * ostream & operator << (ostream & o, const HexFace & f)
+ *
+ *	This function outputs the contents of the HexFace for debugging
+ * purposes only.
+ *******************************************************************************/
 
 std::ostream & operator << (std::ostream & o, const HexFace & f)
 {
@@ -311,10 +313,10 @@ std::ostream & operator << (std::ostream & o, const HexFace & f)
 }
 
 /*******************************************************************************
-* void HexFace::finish_read (HexMesh * m)
-*
-*     Set up pointers which were not stored in permanent storage.
-*******************************************************************************/
+ * void HexFace::finish_read (HexMesh * m)
+ *
+ *     Set up pointers which were not stored in permanent storage.
+ *******************************************************************************/
 
 void HexFace::finish_read (HexMesh * m)
 {
@@ -334,17 +336,17 @@ void HexFace::finish_read (HexMesh * m)
 *******************************************************************************/
 
 /*******************************************************************************
-* Hexahedron::Hexahedron (int index, HexMesh * m, EightHexNodes & e)
-*
-* 	Initialize the index and the vertecies of the volume.
-*******************************************************************************/
+ * Hexahedron::Hexahedron (int index, HexMesh * m, EightHexNodes & e)
+ *
+ * 	Initialize the index and the vertecies of the volume.
+ *******************************************************************************/
 
 Hexahedron::Hexahedron (int index, HexMesh * m, EightHexNodes & e)
-: my_index (index),
-  num_faces (6),
-  corner (e),
-  min (999999, 999999, 999999),
-  max (0, 0, 0)
+  : my_index (index),
+    num_faces (6),
+    corner (e),
+    min (999999, 999999, 999999),
+    max (0, 0, 0)
 {
   static int face_order[] = { 0, 1, 2, 3,  0, 3, 7, 4,  0, 4, 5, 1,  
                               1, 5, 6, 2,  2, 6, 7, 3,  4, 7, 6, 5 };  
@@ -404,17 +406,17 @@ Hexahedron::Hexahedron (int index, HexMesh * m, EightHexNodes & e)
 
 
 /*******************************************************************************
-* Hexahedron::Hexahedron ()
-*
-* 	The default constructor, it sets up all values of the element to 0.
-*******************************************************************************/
+ * Hexahedron::Hexahedron ()
+ *
+ * 	The default constructor, it sets up all values of the element to 0.
+ *******************************************************************************/
 
 Hexahedron::Hexahedron ()
-: my_index (0),
-  my_centroid (0, 0, 0),
-  num_faces (0),
-  min (999999, 999999, 999999),
-  max (0, 0, 0)
+  : my_index (0),
+    my_centroid (0, 0, 0),
+    num_faces (0),
+    min (999999, 999999, 999999),
+    max (0, 0, 0)
 {
   int c;
     
@@ -439,24 +441,24 @@ Hexahedron::Hexahedron ()
 
 
 /*******************************************************************************
-* void Hexahedron::calc_coeff ()
-*
-*
-*     This function calculates the coefficients required for interpolation --
-* these aide in finding s, t, and u.
-*******************************************************************************/
+ * void Hexahedron::calc_coeff ()
+ *
+ *
+ *     This function calculates the coefficients required for interpolation --
+ * these aide in finding s, t, and u.
+ *******************************************************************************/
 
 void Hexahedron::calc_coeff ()
 {
   int c, d;
   static double signs[] = {  1,  1,  1,  1,  1,  1,  1,  1,
-                            -1,  1,  1, -1, -1,  1,  1, -1,
-                            -1, -1,  1,  1, -1, -1,  1,  1,
-                            -1, -1, -1, -1,  1,  1,  1,  1,
+			     -1,  1,  1, -1, -1,  1,  1, -1,
+			     -1, -1,  1,  1, -1, -1,  1,  1,
+			     -1, -1, -1, -1,  1,  1,  1,  1,
                              1, -1,  1, -1,  1, -1,  1, -1,
                              1, -1, -1,  1, -1,  1,  1, -1,
                              1,  1, -1, -1, -1, -1,  1,  1,
-                            -1,  1, -1,  1,  1, -1,  1, -1};
+			     -1,  1, -1,  1,  1, -1,  1, -1};
   
   d = 0;
   
@@ -475,11 +477,11 @@ void Hexahedron::calc_coeff ()
 
 
 /*******************************************************************************
-* void Hexahedron::calc_centroid ()
-*
-*
-*     This function calculates the centroid of the volume.
-*******************************************************************************/
+ * void Hexahedron::calc_centroid ()
+ *
+ *
+ *     This function calculates the centroid of the volume.
+ *******************************************************************************/
 
 void Hexahedron::calc_centroid ()
 {
@@ -519,12 +521,12 @@ void Hexahedron::calc_centroid ()
 
 
 /*******************************************************************************
-* void Hexahedron::find_stu (const Vector & p, double & s, double & t, double & u)
-*
-*
-*     This function finds an s, t, and u coordinate for an x, y, and z 
-* coordinate.
-*******************************************************************************/
+ * void Hexahedron::find_stu (const Vector & p, double & s, double & t, double & u)
+ *
+ *
+ *     This function finds an s, t, and u coordinate for an x, y, and z 
+ * coordinate.
+ *******************************************************************************/
 
 void Hexahedron::find_stu (const Vector & p, double & s, double & t, double & u)
 {
@@ -590,11 +592,11 @@ void Hexahedron::find_stu (const Vector & p, double & s, double & t, double & u)
 
 
 /*******************************************************************************
-* ostream & operator << (ostream & o, const Hexahedron & h)
-*
-*	This function outputs the contents of the Hexahedron for debugging
-* purposes only.
-*******************************************************************************/
+ * ostream & operator << (ostream & o, const Hexahedron & h)
+ *
+ *	This function outputs the contents of the Hexahedron for debugging
+ * purposes only.
+ *******************************************************************************/
 
 std::ostream & operator << (std::ostream & o, const Hexahedron & h)
 {
@@ -617,10 +619,10 @@ std::ostream & operator << (std::ostream & o, const Hexahedron & h)
 }
 
 /*******************************************************************************
-* void Hexahedron::finish_read (HexMesh * m)
-*
-*     Set up pointers which were not stored in permanent storage.
-*******************************************************************************/
+ * void Hexahedron::finish_read (HexMesh * m)
+ *
+ *     Set up pointers which were not stored in permanent storage.
+ *******************************************************************************/
 
 void Hexahedron::finish_read (HexMesh * m)
 {
@@ -644,40 +646,54 @@ void Hexahedron::finish_read (HexMesh * m)
 *******************************************************************************/
 
 /*******************************************************************************
-* static Persistent* make_HexMesh()
-*
-* 	This function is provided so that the persistant base class can
-* make objects of this type.
-*******************************************************************************/
+ * static Persistent* make_HexMesh()
+ *
+ * 	This function is provided so that the persistant base class can
+ * make objects of this type.
+ *******************************************************************************/
 
 static Persistent* make_HexMesh()
 {
-    return scinew HexMesh ();
+  return scinew HexMesh ();
 }
 
 
 /*******************************************************************************
-* HexMesh::HexMesh ()
-*
-* 	This default constructor sets up an empty mesh.  This default call is
-* used prior to building a mesh from points and volumes or prior to using the
-* pio calls to read in a mesh.
-*******************************************************************************/
+ * HexMesh::HexMesh ()
+ *
+ * 	This default constructor sets up an empty mesh.  This default call is
+ * used prior to building a mesh from points and volumes or prior to using the
+ * pio calls to read in a mesh.
+ *******************************************************************************/
 
 HexMesh::HexMesh ()
-: highest_face_index (0),
-  highest_node_index (0),
-  classified (0)
+  : highest_face_index (0),
+    highest_node_index (0),
+    classified (0)
+{
+}
+
+
+HexMesh::HexMesh(const HexMesh &copy) :
+  node_set(copy.node_set),
+  element_set(copy.element_set),
+  face_set(copy.face_set),
+  neighbor_set(copy.neighbor_set),
+  KD(copy.KD),
+  highest_face_index(copy.highest_face_index),
+  highest_node_index(copy.highest_node_index),
+  highest_element_index(copy.highest_element_index),
+  classified(copy.classified)
 {
 }
 
 
 /*******************************************************************************
-* HexMesh::~HexMesh ()
-*
-* 	This destructor cleans up all memory used by this class.  First,
-* all volumes are deleted, then faces, then nodes.
-*******************************************************************************/
+ * HexMesh::~HexMesh ()
+ *
+ * 	This destructor cleans up all memory used by this class.  First,
+ * all volumes are deleted, then faces, then nodes.
+ *******************************************************************************/
 
 HexMesh::~HexMesh ()
 {
@@ -686,27 +702,25 @@ HexMesh::~HexMesh ()
 
 
 /*******************************************************************************
-* HexMesh * HexMesh::clone ()
-*
-* 	This function creates a copy of this class instance and it returns
-* a pointer to that instance.
-*******************************************************************************/
+ * HexMesh * HexMesh::clone ()
+ *
+ * 	This function creates a copy of this class instance and it returns
+ * a pointer to that instance.
+ *******************************************************************************/
 
-HexMesh * HexMesh::clone ()
+HexMesh *HexMesh::clone()
 {
-  // Not yet implemented.
-  
-  return NULL;
+  return scinew HexMesh(*this);
 }
 
 
 /*******************************************************************************
-* int HexMesh::add_node (int index, double x, double y, double z)
-*
-* 	Add a point to the point hash table.  No two points may share the
-* same index -- add_node will not allow this.  Returns 0 upon success, -1
-* upon failure.
-*******************************************************************************/
+ * int HexMesh::add_node (int index, double x, double y, double z)
+ *
+ * 	Add a point to the point hash table.  No two points may share the
+ * same index -- add_node will not allow this.  Returns 0 upon success, -1
+ * upon failure.
+ *******************************************************************************/
 
 int HexMesh::add_node (int index, double x, double y, double z)
 {
@@ -731,11 +745,11 @@ int HexMesh::add_node (int index, double x, double y, double z)
 
 
 /*******************************************************************************
-* HexNode * HexMesh::find_node (int index)
-*
-* 	If a node exists in the mesh with the given index, that node is
-* returned.  Otherwise, NULL is returned.
-*******************************************************************************/
+ * HexNode * HexMesh::find_node (int index)
+ *
+ * 	If a node exists in the mesh with the given index, that node is
+ * returned.  Otherwise, NULL is returned.
+ *******************************************************************************/
 
 HexNode * HexMesh::find_node (int index)
 {
@@ -751,12 +765,12 @@ HexNode * HexMesh::find_node (int index)
 
 
 /*******************************************************************************
-* int HexMesh::add_face (int index, int e, FourHexNodes & f)
-*
-* 	Add a face to the mesh.  No two faces may share the
-* same index -- add_face will not allow this.  Returns 0 upon success, -1
-* upon failure.  (e = index of element which is adding this face.)
-*******************************************************************************/
+ * int HexMesh::add_face (int index, int e, FourHexNodes & f)
+ *
+ * 	Add a face to the mesh.  No two faces may share the
+ * same index -- add_face will not allow this.  Returns 0 upon success, -1
+ * upon failure.  (e = index of element which is adding this face.)
+ *******************************************************************************/
 
 int HexMesh::add_face (int index, int e, FourHexNodes & f)
 {
@@ -794,11 +808,11 @@ int HexMesh::add_face (int index, int e, FourHexNodes & f)
 
 
 /*******************************************************************************
-* int HexMesh::add_face (int e, FourHexNodes & f)
-*
-* 	Add a face to the mesh.  Since no index was specified, the new face
-* will be given an index one larger than the largest one added so far.
-*******************************************************************************/
+ * int HexMesh::add_face (int e, FourHexNodes & f)
+ *
+ * 	Add a face to the mesh.  Since no index was specified, the new face
+ * will be given an index one larger than the largest one added so far.
+ *******************************************************************************/
 
 int HexMesh::add_face (int e, FourHexNodes & f)
 {
@@ -807,11 +821,11 @@ int HexMesh::add_face (int e, FourHexNodes & f)
 
 
 /*******************************************************************************
-* HexFace * HexMesh::find_face (int index)
-*
-* 	If a face exists in the mesh with the given index, that face is
-* returned.  Otherwise, NULL is returned.
-*******************************************************************************/
+ * HexFace * HexMesh::find_face (int index)
+ *
+ * 	If a face exists in the mesh with the given index, that face is
+ * returned.  Otherwise, NULL is returned.
+ *******************************************************************************/
 
 HexFace * HexMesh::find_face (int index)
 {
@@ -828,11 +842,11 @@ HexFace * HexMesh::find_face (int index)
 
 
 /*******************************************************************************
-* HexFace * HexMesh::find_face (FourHexNodes & f)
-*
-* 	This function looks for a face using the nodes as the key.  If it is 
-* found, it is returned.  Otherwise, NULL is returned.
-*******************************************************************************/
+ * HexFace * HexMesh::find_face (FourHexNodes & f)
+ *
+ * 	This function looks for a face using the nodes as the key.  If it is 
+ * found, it is returned.  Otherwise, NULL is returned.
+ *******************************************************************************/
 
 HexFace * HexMesh::find_face (FourHexNodes & f)
 {
@@ -849,12 +863,12 @@ HexFace * HexMesh::find_face (FourHexNodes & f)
 
 
 /*******************************************************************************
-* int HexMesh::add_element (int index,  EightHexNodes & e)
-*
-* 	Add an element to the mesh.  No two volume elements may share the
-* same index -- add_element will not allow this.  Returns 0 upon success, -1
-* upon failure.
-*******************************************************************************/
+ * int HexMesh::add_element (int index,  EightHexNodes & e)
+ *
+ * 	Add an element to the mesh.  No two volume elements may share the
+ * same index -- add_element will not allow this.  Returns 0 upon success, -1
+ * upon failure.
+ *******************************************************************************/
 
 int HexMesh::add_element (int index, EightHexNodes & e)
 {
@@ -886,11 +900,11 @@ int HexMesh::add_element (int index, EightHexNodes & e)
 
 
 /*******************************************************************************
-* Hexahedron * HexMesh::find_element (int index)
-*
-* 	If an element exists in the mesh with the given index, that element is
-* returned.  Otherwise, NULL is returned.
-*******************************************************************************/
+ * Hexahedron * HexMesh::find_element (int index)
+ *
+ * 	If an element exists in the mesh with the given index, that element is
+ * returned.  Otherwise, NULL is returned.
+ *******************************************************************************/
 
 Hexahedron * HexMesh::find_element (int index)
 {
@@ -907,10 +921,10 @@ Hexahedron * HexMesh::find_element (int index)
 
 
 /*******************************************************************************
-* Classify operator
-*
-*     This function builds a KD tree of elements.
-*******************************************************************************/
+ * Classify operator
+ *
+ *     This function builds a KD tree of elements.
+ *******************************************************************************/
 
 void PushDown (KDTree * c, Hexahedron * h, int level)
 {
@@ -920,63 +934,63 @@ void PushDown (KDTree * c, Hexahedron * h, int level)
   
   switch (c->split)
   {
-    case 0:
-      dx = (c->min.x() + c->max.x()) / 2;
-      if (h->min.x() <= dx && h->max.x() >= dx)
-        side = 0;
-      else if (h->min.x() <= dx && h->max.x() <= dx)
-      {
-        mmin = c->min;
-        mmax = c->max;
-        mmax.x (dx);
-        side = 1;
-      }
-      else
-      {
-        mmin = c->min;
-        mmax = c->max;
-        mmin.x (dx);
-        side = 2;
-      }
-      break;
-    case 1:
-      dy = (c->min.y() + c->max.y()) / 2;
-      if (h->min.y() <= dy && h->max.y() >= dy)
-        side = 0;
-      else if (h->min.y() <= dy && h->max.y() <= dy)
-      {
-        mmin = c->min;
-        mmax = c->max;
-        mmax.y (dy);
-        side = 1;
-      }
-      else
-      {
-        mmin = c->min;
-        mmax = c->max;
-        mmin.y (dy);
-        side = 2;
-      }
-      break;
-    case 2:
-      dz = (c->min.z() + c->max.z()) / 2;
-      if (h->min.z() <= dz && h->max.z() >= dz)
-        side = 0;
-      else if (h->min.z() <= dz && h->max.z() <= dz)
-      {
-        mmin = c->min;
-        mmax = c->max;
-        mmax.z (dz);
-        side = 1;
-      }
-      else
-      {
-        mmin = c->min;
-        mmax = c->max;
-        mmin.z (dz);
-        side = 2;
-      }
-      break;
+  case 0:
+    dx = (c->min.x() + c->max.x()) / 2;
+    if (h->min.x() <= dx && h->max.x() >= dx)
+      side = 0;
+    else if (h->min.x() <= dx && h->max.x() <= dx)
+    {
+      mmin = c->min;
+      mmax = c->max;
+      mmax.x (dx);
+      side = 1;
+    }
+    else
+    {
+      mmin = c->min;
+      mmax = c->max;
+      mmin.x (dx);
+      side = 2;
+    }
+    break;
+  case 1:
+    dy = (c->min.y() + c->max.y()) / 2;
+    if (h->min.y() <= dy && h->max.y() >= dy)
+      side = 0;
+    else if (h->min.y() <= dy && h->max.y() <= dy)
+    {
+      mmin = c->min;
+      mmax = c->max;
+      mmax.y (dy);
+      side = 1;
+    }
+    else
+    {
+      mmin = c->min;
+      mmax = c->max;
+      mmin.y (dy);
+      side = 2;
+    }
+    break;
+  case 2:
+    dz = (c->min.z() + c->max.z()) / 2;
+    if (h->min.z() <= dz && h->max.z() >= dz)
+      side = 0;
+    else if (h->min.z() <= dz && h->max.z() <= dz)
+    {
+      mmin = c->min;
+      mmax = c->max;
+      mmax.z (dz);
+      side = 1;
+    }
+    else
+    {
+      mmin = c->min;
+      mmax = c->max;
+      mmin.z (dz);
+      side = 2;
+    }
+    break;
   }
       
   if (level >= 20)
@@ -984,53 +998,53 @@ void PushDown (KDTree * c, Hexahedron * h, int level)
       
   switch (side)
   {
-    case 0:
-      if (level >= 20)
-        c->here.add (h);
-      else
-      {
-        if (c->low == NULL)
-        {
-          c->low = new KDTree;
-          c->low->min = mmin;
-          c->low->max = mmax;
-          c->low->split = (c->split+1) % 3;
-          c->low->low = c->low->high = NULL;
-        }
-        PushDown (c->low, h, level+1);
-        if (c->high == NULL)
-        {
-          c->high = new KDTree;
-          c->high->min = mmin;
-          c->high->max = mmax;
-          c->high->split = (c->split+1) % 3;
-          c->high->low = c->high->high = NULL;
-        }
-        PushDown (c->high, h, level+1);
-      }
-      break;
-    case 1:
+  case 0:
+    if (level >= 20)
+      c->here.add (h);
+    else
+    {
       if (c->low == NULL)
       {
-        c->low = new KDTree;
-        c->low->min = mmin;
-        c->low->max = mmax;
-        c->low->split = (c->split+1) % 3;
-        c->low->low = c->low->high = NULL;
+	c->low = new KDTree;
+	c->low->min = mmin;
+	c->low->max = mmax;
+	c->low->split = (c->split+1) % 3;
+	c->low->low = c->low->high = NULL;
       }
       PushDown (c->low, h, level+1);
-      break;
-    case 2:
       if (c->high == NULL)
       {
-        c->high = new KDTree;
-        c->high->min = mmin;
-        c->high->max = mmax;
-        c->high->split = (c->split+1) % 3;
-        c->high->low = c->high->high = NULL;
+	c->high = new KDTree;
+	c->high->min = mmin;
+	c->high->max = mmax;
+	c->high->split = (c->split+1) % 3;
+	c->high->low = c->high->high = NULL;
       }
       PushDown (c->high, h, level+1);
-      break;
+    }
+    break;
+  case 1:
+    if (c->low == NULL)
+    {
+      c->low = new KDTree;
+      c->low->min = mmin;
+      c->low->max = mmax;
+      c->low->split = (c->split+1) % 3;
+      c->low->low = c->low->high = NULL;
+    }
+    PushDown (c->low, h, level+1);
+    break;
+  case 2:
+    if (c->high == NULL)
+    {
+      c->high = new KDTree;
+      c->high->min = mmin;
+      c->high->max = mmax;
+      c->high->split = (c->split+1) % 3;
+      c->high->low = c->high->high = NULL;
+    }
+    PushDown (c->high, h, level+1);
+    break;
   }    
 }
 
@@ -1069,13 +1083,13 @@ void HexMesh::classify ()
 }
 
 /*******************************************************************************
-* Locate operator
-*
-*     This function returns the index of the Hexahedron that contains the
-* given point, if any.  The node to start searching at is specified.
-*******************************************************************************/
+ * Locate operator
+ *
+ *     This function returns the index of the Hexahedron that contains the
+ * given point, if any.  The node to start searching at is specified.
+ *******************************************************************************/
 
-int HexMesh::locate (const Point& P, int & idx)
+bool HexMesh::locate (const Point& P, int & idx)
 {
   Hexahedron * h;
   int c, max_iter, m, next, fail;
@@ -1135,7 +1149,10 @@ int HexMesh::locate (const Point& P, int & idx)
   
   if (P.x() < KD.min.x() || P.y() < KD.min.y() || P.z() < KD.min.z() || 
       P.x() > KD.max.x() || P.y() > KD.max.y() || P.z() > KD.max.z())
-    return idx = -1;
+  {
+    idx = -1;
+    return false;
+  }
     
   while (k != NULL)
   {
@@ -1151,41 +1168,44 @@ int HexMesh::locate (const Point& P, int & idx)
         if (h->surface(c)->dist(P) < -1e-10)
           break;
       if (c == -1)
-        return (idx = h->index());   
+      {
+	idx = h->index();
+	return true;
+      }
     }
     
     switch (k->split)
     {
-      case 0:
-        if (P.x() < (k->min.x() + k->max.x()) / 2)
-          k = k->low;
-        else 
-          k = k->high;
-          break;
-      case 1:
-        if (P.y() < (k->min.y() + k->max.y()) / 2)
-          k = k->low;
-        else 
-          k = k->high;
-          break;
-      case 2:
-        if (P.z() < (k->min.z() + k->max.z()) / 2)
-          k = k->low;
-        else 
-          k = k->high;
-          break;
+    case 0:
+      if (P.x() < (k->min.x() + k->max.x()) / 2)
+	k = k->low;
+      else 
+	k = k->high;
+      break;
+    case 1:
+      if (P.y() < (k->min.y() + k->max.y()) / 2)
+	k = k->low;
+      else 
+	k = k->high;
+      break;
+    case 2:
+      if (P.z() < (k->min.z() + k->max.z()) / 2)
+	k = k->low;
+      else 
+	k = k->high;
+      break;
     }
   }
-
-  return idx = -1;
+  idx = -1;
+  return false;
 }
 
 
 /*******************************************************************************
-* Interpolation operators
-*
-*     This function returns the value at the given data point.  
-*******************************************************************************/
+ * Interpolation operators
+ *
+ *     This function returns the value at the given data point.  
+ *******************************************************************************/
 
 double HexMesh::interpolate (const Point & p, const Array1<double> & data, int & start)
 {
@@ -1270,10 +1290,10 @@ double HexMesh::interpolate (const Point & P, const Array1<Vector> & data,
 }
 
 /*******************************************************************************
-* Bounding box operator
-*
-*     This function finds the bounding box of the volume given by this mesh.
-*******************************************************************************/
+ * Bounding box operator
+ *
+ *     This function finds the bounding box of the volume given by this mesh.
+ *******************************************************************************/
 
 void HexMesh::get_bounds (Point& min, Point& max)
 {
@@ -1291,11 +1311,11 @@ void HexMesh::get_bounds (Point& min, Point& max)
 
 
 /*******************************************************************************
-* ostream & operator << (ostream & o, const HexMesh & m)
-*
-*	This function outputs the contents of the HexMesh for debugging
-* purposes only.
-*******************************************************************************/
+ * ostream & operator << (ostream & o, const HexMesh & m)
+ *
+ *	This function outputs the contents of the HexMesh for debugging
+ * purposes only.
+ *******************************************************************************/
 
 ostream & operator << (ostream & o, HexMesh & m)
 {
@@ -1338,11 +1358,11 @@ ostream & operator << (ostream & o, HexMesh & m)
 
 
 /*******************************************************************************
-* void HexMesh::io (Piostream & p)
-*
-*	Output or input this mesh to the given io stream.  (All sub-objects
-* are subsequently output.)
-*******************************************************************************/
+ * void HexMesh::io (Piostream & p)
+ *
+ *	Output or input this mesh to the given io stream.  (All sub-objects
+ * are subsequently output.)
+ *******************************************************************************/
 
 void HexMesh::io (Piostream & p)
 {
@@ -1394,7 +1414,7 @@ void HexMesh::finish ()
   for (hf = face_set.begin(); hf != face_set.end(); ++hf) {
     (*hf).second->finish_read(this);
     neighbor_set[(*hf).second->corner_set()] = (*hf).second;
- }
+  }
   
   if (!classified) classify();
 }
@@ -1402,14 +1422,14 @@ void HexMesh::finish ()
 //----------------------------------------------------------------------
 void HexMesh::get_boundary_lines(Array1<Point>&)
 {
-    NOT_FINISHED("HexMesh::get_boundary_lines");
+  NOT_FINISHED("HexMesh::get_boundary_lines");
 }
 
 /*******************************************************************************
-* void Pio (Piostream & p, HexNode & n)
-*
-*	Output or input the node to the given io stream.
-*******************************************************************************/
+ * void Pio (Piostream & p, HexNode & n)
+ *
+ *	Output or input the node to the given io stream.
+ *******************************************************************************/
 
 void Pio (Piostream & p, HexNode & n)
 {
@@ -1429,11 +1449,11 @@ void Pio (Piostream & p, HexNode & n)
 
 
 /*******************************************************************************
-* void Pio (Piostream & p, HexNode * & n)
-*
-*	Output or input the node to the given io stream.  Create a new node
-* and return it if we are reading.
-*******************************************************************************/
+ * void Pio (Piostream & p, HexNode * & n)
+ *
+ *	Output or input the node to the given io stream.  Create a new node
+ * and return it if we are reading.
+ *******************************************************************************/
 
 void Pio (Piostream & p, HexNode * & n)
 {
@@ -1449,10 +1469,10 @@ void Pio (Piostream & p, HexNode * & n)
 }
 
 /*******************************************************************************
-* void Pio (Piostream & p, HexFace & f)
-*
-*	Output or input the face to the given io stream.
-*******************************************************************************/
+ * void Pio (Piostream & p, HexFace & f)
+ *
+ *	Output or input the face to the given io stream.
+ *******************************************************************************/
 
 void Pio (Piostream & p, HexFace & f)
 {
@@ -1474,11 +1494,11 @@ void Pio (Piostream & p, HexFace & f)
 
 
 /*******************************************************************************
-* void Pio (Piostream & p, HexFace * & f)
-*
-*	Output or input the face to the given io stream.  Create a new face
-* and return it if we are reading.
-*******************************************************************************/
+ * void Pio (Piostream & p, HexFace * & f)
+ *
+ *	Output or input the face to the given io stream.  Create a new face
+ * and return it if we are reading.
+ *******************************************************************************/
 
 void Pio (Piostream & p, HexFace * & f)
 {
@@ -1494,12 +1514,12 @@ void Pio (Piostream & p, HexFace * & f)
 }
 
 /*******************************************************************************
-* void Pio (Piostream & p, Hexahedron & h)
-*
-*	Output or input the volume to the given io stream.  Note that if the
-* data was input, an additional call must be made to finish setting up the
-* pointers to the faces, etc.
-*******************************************************************************/
+ * void Pio (Piostream & p, Hexahedron & h)
+ *
+ *	Output or input the volume to the given io stream.  Note that if the
+ * data was input, an additional call must be made to finish setting up the
+ * pointers to the faces, etc.
+ *******************************************************************************/
 
 void Pio (Piostream & p, Hexahedron & h)
 {  
@@ -1523,10 +1543,10 @@ void Pio (Piostream & p, Hexahedron & h)
 
 
 /*******************************************************************************
-* void Pio (Piostream & p, Hexahedron * & h)
-*
-*	Output or input the volume to the given io stream.
-*******************************************************************************/
+ * void Pio (Piostream & p, Hexahedron * & h)
+ *
+ *	Output or input the volume to the given io stream.
+ *******************************************************************************/
 
 void Pio (Piostream & p, Hexahedron * & h)
 {
@@ -1542,4 +1562,3 @@ void Pio (Piostream & p, Hexahedron * & h)
 }
 
 } // End namespace SCIRun
-

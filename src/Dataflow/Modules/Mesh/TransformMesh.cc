@@ -1,3 +1,4 @@
+
 /*
  *  TransformMesh.cc:  Rotate and flip field to get it into "standard" view
  *
@@ -82,9 +83,10 @@ void TransformMesh::execute()
 
     MeshHandle mmm=meshIH;
     meshIH.detach();
-    for (int i=0; i<meshIH->nodes.size(); i++)
+    for (int i=0; i<meshIH->nodesize(); i++)
 	meshIH->nodes[i]->p = t.project(meshIH->nodes[i]->p);
     oport->send(meshIH);
 }
 
 } // End namespace SCIRun
+

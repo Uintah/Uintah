@@ -22,7 +22,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
-#include <stdlib.h> // For size_t
+//#include <stdlib.h> // For size_t
 
 namespace SCIRun {
 
@@ -69,6 +69,7 @@ void Pio(Piostream& stream, EdgeInfo& edge);
 void Pio(Piostream& stream, NodeInfo& node);
 
 class SCICORESHARE SurfTree : public Surface {
+  friend class TriSurface;
 public:
   Array1<Point> nodes;		// array of all nodes
   Array1<TSElement*> faces;		// array of all faces/elements
@@ -79,6 +80,7 @@ public:
   Array1<EdgeInfo> edgeI;
   Array1<NodeInfo> nodeI;
 
+protected:
   enum Type {
     NodeValuesAll,			// we have values at all nodes
     NodeValuesSome,			// we have values at some nodes
@@ -89,40 +91,43 @@ public:
   Array1<double> data;		// optional data at nodes/faces
   Array1<int> idx;			// optional indices - when "some" data
   int valid_bboxes;
+
 public:
   SurfTree(Representation r=STree);
   SurfTree(const SurfTree& copy, Representation r=STree);
   virtual ~SurfTree();
-  virtual Surface* clone();
+  virtual Surface *clone();
 
-  void compute_bboxes();
-  void distance(const Point &p, int &have_hit, double &distBest, 
-		int &compBest, int &faceBest, int comp);
-  int inside(const Point &p, int &component);
+  // Persistent representation...
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+
+  void buildNormals();
 
   virtual void construct_grid(int, int, int, const Point &, double);
   virtual void construct_grid();
   virtual void get_surfnodes(Array1<NodeHandle>&);
   virtual void set_surfnodes(const Array1<NodeHandle>&);
+  virtual int inside(const Point& p);
+  virtual void construct_hash(int, int, const Point &, double);
+
+  virtual GeomObj* get_obj(const ColorMapHandle&);
+
+protected:
+  void compute_bboxes();
+  void distance(const Point &p, int &have_hit, double &distBest, 
+		int &compBest, int &faceBest, int comp);
+  int inside(const Point &p, int &component);
+
   void get_surfnodes(Array1<NodeHandle>&, clString name);
   void set_surfnodes(const Array1<NodeHandle>&, clString name);
-  void bldNormals();
   void bldNodeInfo();
   void printNbrInfo();
   int extractTriSurface(TriSurface*, Array1<int>&, Array1<int>&, int, 
 			int RemapPoints=1);
 
-  virtual int inside(const Point& p);
-  virtual void construct_hash(int, int, const Point &, double);
-
-  virtual GeomObj* get_obj(const ColorMapHandle&);
-    
-  // Persistent representation...
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
 };
 
 } // End namespace SCIRun
 
-
-#endif /* SCI_Datatytpes_SurfTree_h */
+#endif /* SCI_Datatypes_SurfTree_h */

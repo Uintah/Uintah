@@ -114,11 +114,11 @@ void InsertDelaunay::execute()
 
     if(same){
 	cerr << "SAME!\n";
-	int nelems=last_mesh->elems.size();
+	const int nelems = last_mesh->elemsize();
 	mesh_handle->remove_all_elements();
 	mesh_handle->elems.resize(nelems);
 	for(int i=0;i<nelems;i++){
-	    mesh_handle->elems[i]=new Element(*last_mesh->elems[i], mesh_handle.get_rep());
+	    mesh_handle->elems[i]=new Element(*last_mesh->element(i), mesh_handle.get_rep());
 	}
 	int isurf;
 	int nsurfs=surfs.size();
@@ -147,7 +147,7 @@ void InsertDelaunay::execute()
 	    int nt=nsurfs*npoints;
 	    for(int i=0;i<npoints;i++){
 		mesh->nodes.add(newnodes[i]);
-		mesh->insert_delaunay(mesh->nodes.size()-1);
+		mesh->insert_delaunay(mesh->nodesize()-1);
 		if(i%100 == 0)
 		    update_progress(nt+isurf*npoints+i, 2*nt);
 	    }
@@ -179,11 +179,11 @@ void InsertDelaunay::execute()
 	update_progress(i+nelems, 3*nelems);
     }
     mesh_handle->pack_all();
-    int nnodes=mesh_handle->nodes.size();
+    int nnodes=mesh_handle->nodesize();
     for(i=0;i<nnodes;i++){
-	if(mesh_handle->nodes[i]->elems.size() == 0){
+	if(mesh_handle->node(i).elems.size() == 0){
 	    cerr << "Node " << i << " was orphaned" << endl;
-	    mesh_handle->nodes[i]=0;
+	    //mesh_handle->node(i) = 0;
 	}
 	update_progress(i+2*nnodes, 3*nnodes);
     }
@@ -208,7 +208,7 @@ void InsertDelaunay::execute()
 #endif
     update_progress(6, 6);
     mesh_handle->pack_all();
-    cerr << "There are now " << mesh_handle->elems.size() << " elements" << endl;
+    cerr << "There are now " << mesh_handle->elemsize() << " elements" << endl;
     oport->send(mesh_handle);
 }
 

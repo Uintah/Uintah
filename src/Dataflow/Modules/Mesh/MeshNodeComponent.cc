@@ -1,5 +1,5 @@
 /*
- *  MeshNodeComponent.cc:  Unfinished modules
+ *  MeshNodeCore/CCA/Component.cc:  Unfinished modules
  *
  *  Written by:
  *   David Weinstein
@@ -54,17 +54,17 @@ void MeshNodeComponent::execute()
     if (!iport->get(mesh))
 	return;
 
-    ColumnMatrix *comp = new ColumnMatrix(mesh->nodes.size());
+    ColumnMatrix *comp = new ColumnMatrix(mesh->nodesize());
     int i;
     if (compTCL.get() == "x") {
-	for (i=0; i<mesh->nodes.size(); i++)
-	    (*comp)[i]=mesh->nodes[i]->p.x();
+	for (i=0; i<mesh->nodesize(); i++)
+	    (*comp)[i]=mesh->node(i).p.x();
     } else if (compTCL.get() == "y") {
-	for (i=0; i<mesh->nodes.size(); i++)
-	    (*comp)[i]=mesh->nodes[i]->p.y();
+	for (i=0; i<mesh->nodesize(); i++)
+	    (*comp)[i]=mesh->node(i).p.y();
     } else { // if (compTCL.get() == "z") {
-	for (i=0; i<mesh->nodes.size(); i++)
-	    (*comp)[i]=mesh->nodes[i]->p.z();
+	for (i=0; i<mesh->nodesize(); i++)
+	    (*comp)[i]=mesh->node(i).p.z();
     }
 
     oport->send(ColumnMatrixHandle(comp));

@@ -61,25 +61,25 @@ void MakeScalarField::execute()
     if(!inrhs->get(rhshandle))
 	return;
     ColumnMatrix& rhs=*rhshandle.get_rep();
-    if (rhs.nrows() == mesh->nodes.size()) {
+    if (rhs.nrows() == mesh->nodesize()) {
 	cerr << "Using nodal values";
 	sf=scinew ScalarFieldUG(ScalarFieldUG::NodalValues);
     }
     else
-	if (rhs.nrows() == mesh->elems.size()) {
+	if (rhs.nrows() == mesh->elemsize()) {
 	    cerr << "Using element values";
 	    sf=scinew ScalarFieldUG(ScalarFieldUG::ElementValues);
 	}
 	else {
-	    cerr << "The ColumnMatrix size, " << rhs.nrows() << ", does not match the number of nodes, " << mesh->nodes.size() << ", nor does it match the number of elements, " << mesh->elems.size();
+	    cerr << "The ColumnMatrix size, " << rhs.nrows() << ", does not match the number of nodes, " << mesh->nodesize() << ", nor does it match the number of elements, " << mesh->elemsize();
 	    return;
 	}
     sf->mesh=mesh;
     sf->data.resize(rhs.nrows());
     for(int i=0;i<rhs.nrows();i++){
-	if (rhs.nrows() == mesh->nodes.size())
-	    if(mesh->nodes[i]->bc)
-		sf->data[i]=mesh->nodes[i]->bc->value;
+	if (rhs.nrows() == mesh->nodesize())
+	    if(mesh->node(i).bc)
+		sf->data[i]=mesh->node(i).bc->value;
 	    else	
 		sf->data[i]=rhs[i];
 	else
@@ -89,4 +89,5 @@ void MakeScalarField::execute()
 }
 
 } // End namespace SCIRun
+
 

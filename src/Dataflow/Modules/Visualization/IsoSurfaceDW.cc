@@ -323,7 +323,7 @@ void IsoSurfaceDW::execute()
     } else if(unstructured_grid){
 	if (emit) {
 	    surf=scinew TriSurface;
-	    int pts_per_side=(int) Cbrt(unstructured_grid->mesh->nodes.size());
+	    int pts_per_side=(int) Cbrt(unstructured_grid->mesh->nodesize());
 	    spacing/=pts_per_side;
 	    surf->construct_grid(pts_per_side+2,pts_per_side+2,pts_per_side+2, 
 				 minPt+(Vector(1.001,1.029,0.917)*(-.001329)),
@@ -1743,10 +1743,10 @@ int IsoSurfaceDW::iso_tetra(Element* element, Mesh* mesh,
     double v2=field->data[element->n[1]]-isoval;
     double v3=field->data[element->n[2]]-isoval;
     double v4=field->data[element->n[3]]-isoval;
-    Node* n1=mesh->nodes[element->n[0]].get_rep();
-    Node* n2=mesh->nodes[element->n[1]].get_rep();
-    Node* n3=mesh->nodes[element->n[2]].get_rep();
-    Node* n4=mesh->nodes[element->n[3]].get_rep();
+    const Node &n1=mesh->node(element->n[0]);
+    const Node &n2=mesh->node(element->n[1]);
+    const Node &n3=mesh->node(element->n[2]);
+    const Node &n4=mesh->node(element->n[3]);
     if(v1 == v2 && v3 == v4 && v1 == v4)
 	return 0;
     int f1=v1<0;
@@ -1764,9 +1764,9 @@ int IsoSurfaceDW::iso_tetra(Element* element, Mesh* mesh,
     case 14:
 	// Point 4 is inside
  	if(v4 != 0){
-	    Point p1(Interpolate(n4->p, n1->p, v4/(v4-v1)));
-	    Point p2(Interpolate(n4->p, n2->p, v4/(v4-v2)));
-	    Point p3(Interpolate(n4->p, n3->p, v4/(v4-v3)));
+	    Point p1(Interpolate(n4.p, n1.p, v4/(v4-v1)));
+	    Point p2(Interpolate(n4.p, n2.p, v4/(v4-v2)));
+	    Point p3(Interpolate(n4.p, n3.p, v4/(v4-v3)));
 	    group->add(p1, p2, p3);
 	    faces=FACE1|FACE2|FACE3;
 	}
@@ -1775,9 +1775,9 @@ int IsoSurfaceDW::iso_tetra(Element* element, Mesh* mesh,
     case 13:
 	// Point 3 is inside
  	if(v3 != 0){
-	    Point p1(Interpolate(n3->p, n1->p, v3/(v3-v1)));
-	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
-	    Point p3(Interpolate(n3->p, n4->p, v3/(v3-v4)));
+	    Point p1(Interpolate(n3.p, n1.p, v3/(v3-v1)));
+	    Point p2(Interpolate(n3.p, n2.p, v3/(v3-v2)));
+	    Point p3(Interpolate(n3.p, n4.p, v3/(v3-v4)));
 	    group->add(p1, p2, p3);
 	    faces=FACE1|FACE2|FACE4;
 	}
@@ -1786,10 +1786,10 @@ int IsoSurfaceDW::iso_tetra(Element* element, Mesh* mesh,
     case 12:
 	// Point 3 and 4 are inside
  	{
-	    Point p1(Interpolate(n3->p, n1->p, v3/(v3-v1)));
-	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
-	    Point p3(Interpolate(n4->p, n1->p, v4/(v4-v1)));
-	    Point p4(Interpolate(n4->p, n2->p, v4/(v4-v2)));
+	    Point p1(Interpolate(n3.p, n1.p, v3/(v3-v1)));
+	    Point p2(Interpolate(n3.p, n2.p, v3/(v3-v2)));
+	    Point p3(Interpolate(n4.p, n1.p, v4/(v4-v1)));
+	    Point p4(Interpolate(n4.p, n2.p, v4/(v4-v2)));
 	    if(v3 != v4){
 		if(v3 != 0 && v1 != 0)
 		    group->add(p1, p2, p3);
@@ -1803,9 +1803,9 @@ int IsoSurfaceDW::iso_tetra(Element* element, Mesh* mesh,
     case 11:
 	// Point 2 is inside
  	if(v2 != 0){
-	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
-	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
-	    Point p3(Interpolate(n2->p, n4->p, v2/(v2-v4)));
+	    Point p1(Interpolate(n2.p, n1.p, v2/(v2-v1)));
+	    Point p2(Interpolate(n2.p, n3.p, v2/(v2-v3)));
+	    Point p3(Interpolate(n2.p, n4.p, v2/(v2-v4)));
 	    group->add(p1, p2, p3);
 	    faces=FACE1|FACE3|FACE4;
 	}
@@ -1814,10 +1814,10 @@ int IsoSurfaceDW::iso_tetra(Element* element, Mesh* mesh,
     case 10:
 	// Point 2 and 4 are inside
  	{
-	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
-	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
-	    Point p3(Interpolate(n4->p, n1->p, v4/(v4-v1)));
-	    Point p4(Interpolate(n4->p, n3->p, v4/(v4-v3)));
+	    Point p1(Interpolate(n2.p, n1.p, v2/(v2-v1)));
+	    Point p2(Interpolate(n2.p, n3.p, v2/(v2-v3)));
+	    Point p3(Interpolate(n4.p, n1.p, v4/(v4-v1)));
+	    Point p4(Interpolate(n4.p, n3.p, v4/(v4-v3)));
 	    if(v2 != v4){
 		if(v2 != 0 && v1 != 0)
 		    group->add(p1, p2, p3);
@@ -1831,10 +1831,10 @@ int IsoSurfaceDW::iso_tetra(Element* element, Mesh* mesh,
     case 9:
 	// Point 2 and 3 are inside
  	{
-	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
-	    Point p2(Interpolate(n2->p, n4->p, v2/(v2-v4)));
-	    Point p3(Interpolate(n3->p, n1->p, v3/(v3-v1)));
-	    Point p4(Interpolate(n3->p, n4->p, v3/(v3-v4)));
+	    Point p1(Interpolate(n2.p, n1.p, v2/(v2-v1)));
+	    Point p2(Interpolate(n2.p, n4.p, v2/(v2-v4)));
+	    Point p3(Interpolate(n3.p, n1.p, v3/(v3-v1)));
+	    Point p4(Interpolate(n3.p, n4.p, v3/(v3-v4)));
 	    if(v2 != v3){
 		if(v2 != 0 && v1 != 0)
 		    group->add(p1, p2, p3);
@@ -1848,9 +1848,9 @@ int IsoSurfaceDW::iso_tetra(Element* element, Mesh* mesh,
     case 8:
 	// Point 1 is inside
  	if(v1 != 0){
-	    Point p1(Interpolate(n1->p, n2->p, v1/(v1-v2)));
-	    Point p2(Interpolate(n1->p, n3->p, v1/(v1-v3)));
-	    Point p3(Interpolate(n1->p, n4->p, v1/(v1-v4)));
+	    Point p1(Interpolate(n1.p, n2.p, v1/(v1-v2)));
+	    Point p2(Interpolate(n1.p, n3.p, v1/(v1-v3)));
+	    Point p3(Interpolate(n1.p, n4.p, v1/(v1-v4)));
 	    group->add(p1, p2, p3);
 	    faces=FACE2|FACE3|FACE4;
 	}
@@ -1863,10 +1863,10 @@ void IsoSurfaceDW::iso_tetrahedra(ScalarFieldUG* field, double isoval,
 				GeomTrianglesP* group)
 {
     Mesh* mesh=field->mesh.get_rep();
-    int nelems=mesh->elems.size();
+    int nelems=mesh->elemsize();
     for(int i=0;i<nelems;i++){
 	//update_progress(i, nelems);
-	Element* element=mesh->elems[i];
+	Element *element = mesh->element(i);
 	iso_tetra(element, mesh, field, isoval, group);
 	if(sp && abort_flag)
 	    return;

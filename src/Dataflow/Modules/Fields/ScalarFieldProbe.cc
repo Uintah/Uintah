@@ -173,7 +173,7 @@ void ScalarFieldProbe::execute()
     if (hSF->getRG()) typeName="Regular";
     else if ( ScalarFieldUG* hUGSF=hSF->getUG()){ 
       typeName="Unstructured";
-      nelems=hUGSF->mesh->elems.size();
+      nelems=hUGSF->mesh->elemsize();
     }
     else typeName="Unknown";
   

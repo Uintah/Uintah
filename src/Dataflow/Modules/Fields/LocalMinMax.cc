@@ -73,7 +73,7 @@ void LocalMinMax::execute()
 	    osfug->data.resize(isfug->data.size());
 	    osfug->data.initialize(0);
 	    Mesh* mesh=isfug->mesh.get_rep();
-	    int nnodes=mesh->nodes.size();
+	    int nnodes=mesh->nodesize();
 	    totalCnt=nnodes;
 	    int i,j;
 	    for (i=0; i<nnodes; i++) {
@@ -114,7 +114,7 @@ void LocalMinMax::execute()
 	    osfug->data.resize(isfug->data.size());
 	    osfug->data.initialize(0);
 	    Mesh* mesh=isfug->mesh.get_rep();
-	    int nelems=mesh->elems.size();
+	    int nelems=mesh->elemsize();
 	    totalCnt=nelems;
 	    int i,j;
 	    for (i=0; i<nelems; i++) {

@@ -79,14 +79,14 @@ void MeshRender::execute()
 
     int n=to.get();
     if(n==0){
-	n=mesh->elems.size();
-    } else if(n>mesh->elems.size()){
-	n=mesh->elems.size();
+	n=mesh->elemsize();
+    } else if(n>mesh->elemsize()){
+	n=mesh->elemsize();
     }
     int i=from.get();
     for (; i<n; i++) 
     {
-	Element* elm=mesh->elems[i];
+	Element* elm=mesh->element(i);
 	Edge e1(elm->n[0], elm->n[1]);
 	Edge e2(elm->n[0], elm->n[2]);
 	Edge e3(elm->n[0], elm->n[3]);
@@ -112,8 +112,8 @@ void MeshRender::execute()
     for(eiter = edge_table.begin(); eiter != edge_table.end(); ++eiter)
     {
 	Edge e((*eiter).first);
-	Point p1(mesh->nodes[e.n[0]]->p);
-	Point p2(mesh->nodes[e.n[1]]->p);
+	const Point &p1 = mesh->node(e.n[0]).p;
+	const Point &p2 = mesh->node(e.n[1]).p;
 	GeomCylinder* cyl = new GeomCylinder(p1, p2, radius, 10, 2);
 	group -> add(cyl);
     }

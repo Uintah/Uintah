@@ -336,7 +336,7 @@ void IsoMask::execute()
     } else if(unstructured_grid){
 	if (emit_surface.get()) {
 	    surf=scinew TriSurface;
-	    int pts_per_side=(int) Cbrt(unstructured_grid->mesh->nodes.size());
+	    int pts_per_side=(int) Cbrt(unstructured_grid->mesh->nodesize());
 	    spacing/=pts_per_side;
 	    surf->construct_grid(pts_per_side+2,pts_per_side+2,pts_per_side+2, 
 				 minPt+(Vector(1.001,1.029,0.917)*(-.001329)),
@@ -881,10 +881,10 @@ int IsoMask::iso_tetra(Element* element, Mesh* mesh,
     double v2=field->data[element->n[1]]-isoval;
     double v3=field->data[element->n[2]]-isoval;
     double v4=field->data[element->n[3]]-isoval;
-    Node* n1=mesh->nodes[element->n[0]].get_rep();
-    Node* n2=mesh->nodes[element->n[1]].get_rep();
-    Node* n3=mesh->nodes[element->n[2]].get_rep();
-    Node* n4=mesh->nodes[element->n[3]].get_rep();
+    const Point	&n1=mesh->node(element->n[0]).p;
+    const Point	&n2=mesh->node(element->n[1]).p;
+    const Point	&n3=mesh->node(element->n[2]).p;
+    const Point	&n4=mesh->node(element->n[3]).p;
     if(v1 == v2 && v3 == v4 && v1 == v4)
 	return 0;
     int f1=v1<0;
@@ -902,9 +902,9 @@ int IsoMask::iso_tetra(Element* element, Mesh* mesh,
     case 14:
 	// Point 4 is inside
  	if(v4 != 0){
-	    Point p1(Interpolate(n4->p, n1->p, v4/(v4-v1)));
-	    Point p2(Interpolate(n4->p, n2->p, v4/(v4-v2)));
-	    Point p3(Interpolate(n4->p, n3->p, v4/(v4-v3)));
+	    Point p1(Interpolate(n4, n1, v4/(v4-v1)));
+	    Point p2(Interpolate(n4, n2, v4/(v4-v2)));
+	    Point p3(Interpolate(n4, n3, v4/(v4-v3)));
 	    group->add(p1, p2, p3);
 	    faces=FACE1|FACE2|FACE3;
 	}
@@ -913,9 +913,9 @@ int IsoMask::iso_tetra(Element* element, Mesh* mesh,
     case 13:
 	// Point 3 is inside
  	if(v3 != 0){
-	    Point p1(Interpolate(n3->p, n1->p, v3/(v3-v1)));
-	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
-	    Point p3(Interpolate(n3->p, n4->p, v3/(v3-v4)));
+	    Point p1(Interpolate(n3, n1, v3/(v3-v1)));
+	    Point p2(Interpolate(n3, n2, v3/(v3-v2)));
+	    Point p3(Interpolate(n3, n4, v3/(v3-v4)));
 	    group->add(p1, p2, p3);
 	    faces=FACE1|FACE2|FACE4;
 	}
@@ -924,10 +924,10 @@ int IsoMask::iso_tetra(Element* element, Mesh* mesh,
     case 12:
 	// Point 3 and 4 are inside
  	{
-	    Point p1(Interpolate(n3->p, n1->p, v3/(v3-v1)));
-	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
-	    Point p3(Interpolate(n4->p, n1->p, v4/(v4-v1)));
-	    Point p4(Interpolate(n4->p, n2->p, v4/(v4-v2)));
+	    Point p1(Interpolate(n3, n1, v3/(v3-v1)));
+	    Point p2(Interpolate(n3, n2, v3/(v3-v2)));
+	    Point p3(Interpolate(n4, n1, v4/(v4-v1)));
+	    Point p4(Interpolate(n4, n2, v4/(v4-v2)));
 	    if(v3 != v4){
 		if(v3 != 0 && v1 != 0)
 		    group->add(p1, p2, p3);
@@ -941,9 +941,9 @@ int IsoMask::iso_tetra(Element* element, Mesh* mesh,
     case 11:
 	// Point 2 is inside
  	if(v2 != 0){
-	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
-	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
-	    Point p3(Interpolate(n2->p, n4->p, v2/(v2-v4)));
+	    Point p1(Interpolate(n2, n1, v2/(v2-v1)));
+	    Point p2(Interpolate(n2, n3, v2/(v2-v3)));
+	    Point p3(Interpolate(n2, n4, v2/(v2-v4)));
 	    group->add(p1, p2, p3);
 	    faces=FACE1|FACE3|FACE4;
 	}
@@ -952,10 +952,10 @@ int IsoMask::iso_tetra(Element* element, Mesh* mesh,
     case 10:
 	// Point 2 and 4 are inside
  	{
-	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
-	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
-	    Point p3(Interpolate(n4->p, n1->p, v4/(v4-v1)));
-	    Point p4(Interpolate(n4->p, n3->p, v4/(v4-v3)));
+	    Point p1(Interpolate(n2, n1, v2/(v2-v1)));
+	    Point p2(Interpolate(n2, n3, v2/(v2-v3)));
+	    Point p3(Interpolate(n4, n1, v4/(v4-v1)));
+	    Point p4(Interpolate(n4, n3, v4/(v4-v3)));
 	    if(v2 != v4){
 		if(v2 != 0 && v1 != 0)
 		    group->add(p1, p2, p3);
@@ -969,10 +969,10 @@ int IsoMask::iso_tetra(Element* element, Mesh* mesh,
     case 9:
 	// Point 2 and 3 are inside
  	{
-	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
-	    Point p2(Interpolate(n2->p, n4->p, v2/(v2-v4)));
-	    Point p3(Interpolate(n3->p, n1->p, v3/(v3-v1)));
-	    Point p4(Interpolate(n3->p, n4->p, v3/(v3-v4)));
+	    Point p1(Interpolate(n2, n1, v2/(v2-v1)));
+	    Point p2(Interpolate(n2, n4, v2/(v2-v4)));
+	    Point p3(Interpolate(n3, n1, v3/(v3-v1)));
+	    Point p4(Interpolate(n3, n4, v3/(v3-v4)));
 	    if(v2 != v3){
 		if(v2 != 0 && v1 != 0)
 		    group->add(p1, p2, p3);
@@ -986,9 +986,9 @@ int IsoMask::iso_tetra(Element* element, Mesh* mesh,
     case 8:
 	// Point 1 is inside
  	if(v1 != 0){
-	    Point p1(Interpolate(n1->p, n2->p, v1/(v1-v2)));
-	    Point p2(Interpolate(n1->p, n3->p, v1/(v1-v3)));
-	    Point p3(Interpolate(n1->p, n4->p, v1/(v1-v4)));
+	    Point p1(Interpolate(n1, n2, v1/(v1-v2)));
+	    Point p2(Interpolate(n1, n3, v1/(v1-v3)));
+	    Point p3(Interpolate(n1, n4, v1/(v1-v4)));
 	    group->add(p1, p2, p3);
 	    faces=FACE2|FACE3|FACE4;
 	}
@@ -1001,10 +1001,10 @@ void IsoMask::iso_tetrahedra(ScalarFieldUG* field, double isoval,
 				GeomTrianglesP* group)
 {
     Mesh* mesh=field->mesh.get_rep();
-    int nelems=mesh->elems.size();
+    int nelems=mesh->elemsize();
     for(int i=0;i<nelems;i++){
 	//update_progress(i, nelems);
-	Element* element=mesh->elems[i];
+	Element* element=mesh->element(i);
 	iso_tetra(element, mesh, field, isoval, group);
 	if(sp && abort_flag)
 	    return;
@@ -1018,7 +1018,7 @@ void IsoMask::iso_tetrahedra_strip(ScalarFieldUG* field, double isoval,
 				      GeomGroup* group)
 {
     Mesh* mesh=field->mesh.get_rep();
-    int nelems=mesh->elems.size();
+    int nelems=mesh->elemsize();
     BitArray1 visited(nelems, 0);
 
     for(int i=0;i<nelems;i++){
@@ -1107,10 +1107,10 @@ inline int F_FACE(int e1, int e2) { return EDGE_TO_FACE[(e1<<3)|e2]; }
 inline int E_FACE(int e1, int e2) { return ((e1<<3)|e2); }
 
 inline void add_strip_point(const int nvert, GeomTriStripList* group,
-			    const NodeHandle& n1,
-			    const NodeHandle& n2,
-			    const NodeHandle& n3,
-			    const NodeHandle& n4,
+			    const Point	&n1,
+			    const Point	&n2,
+			    const Point	&n3,
+			    const Point	&n4,
 			    const double v1,
 			    const double v2,
 			    const double v3,
@@ -1123,22 +1123,22 @@ inline void add_strip_point(const int nvert, GeomTriStripList* group,
 
 	switch (nvert) {
 	case E12:
-	    p1 = (Interpolate(n1->p,n2->p,v1/(v1-v2)));
+	    p1 = (Interpolate(n1,n2,v1/(v1-v2)));
 	    break;
 	case E13:
-	    p1 =  (Interpolate(n1->p,n3->p,v1/(v1-v3)));
+	    p1 =  (Interpolate(n1,n3,v1/(v1-v3)));
 	    break;
 	case E14:
-	    p1 = (Interpolate(n1->p,n4->p,v1/(v1-v4)));
+	    p1 = (Interpolate(n1,n4,v1/(v1-v4)));
 	    break;
 	case E23:
-	    p1 = (Interpolate(n2->p,n3->p,v2/(v2-v3)));
+	    p1 = (Interpolate(n2,n3,v2/(v2-v3)));
 	    break;
 	case E24:
-	    p1 = (Interpolate(n2->p,n4->p,v2/(v2-v4)));
+	    p1 = (Interpolate(n2,n4,v2/(v2-v4)));
 	    break;
 	case E34:
-	    p1 = (Interpolate(n3->p,n4->p,v3/(v3-v4)));
+	    p1 = (Interpolate(n3,n4,v3/(v3-v4)));
 	    break;
 	default:
 	    cerr << "Major error, unnkown code: " << nvert << "\n";
@@ -1169,10 +1169,10 @@ int IsoMask::iso_strip_enter(int inc,
     double v2=field->data[element->n[1]]-isoval;
     double v3=field->data[element->n[2]]-isoval;
     double v4=field->data[element->n[3]]-isoval;
-    NodeHandle n1=mesh->nodes[element->n[0]];
-    NodeHandle n2=mesh->nodes[element->n[1]];
-    NodeHandle n3=mesh->nodes[element->n[2]];
-    NodeHandle n4=mesh->nodes[element->n[3]];
+    const Point &n1 = mesh->node(element->n[0]).p;
+    const Point &n2 = mesh->node(element->n[1]).p;
+    const Point &n3 = mesh->node(element->n[2]).p;
+    const Point &n4 = mesh->node(element->n[3]).p;
     int f1=v1<0;
     int f2=v2<0;
     int f3=v3<0;
@@ -1285,10 +1285,10 @@ int IsoMask::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     double v2=field->data[element->n[1]]-isoval;
     double v3=field->data[element->n[2]]-isoval;
     double v4=field->data[element->n[3]]-isoval;
-    NodeHandle n1=mesh->nodes[element->n[0]];
-    NodeHandle n2=mesh->nodes[element->n[1]];
-    NodeHandle n3=mesh->nodes[element->n[2]];
-    NodeHandle n4=mesh->nodes[element->n[3]];
+    const Point &n1 = mesh->node(element->n[0]).p;
+    const Point &n2 = mesh->node(element->n[1]).p;
+    const Point &n3 = mesh->node(element->n[2]).p;
+    const Point &n4 = mesh->node(element->n[3]).p;
     int f1=v1<0;
     int f2=v2<0;
     int f3=v3<0;
@@ -1314,9 +1314,9 @@ int IsoMask::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 14:
 	// Point 4 is inside
  	{
-	    Point p1(Interpolate(n4->p, n1->p, v4/(v4-v1)));
-	    Point p2(Interpolate(n4->p, n2->p, v4/(v4-v2)));
-	    Point p3(Interpolate(n4->p, n3->p, v4/(v4-v3)));
+	    Point p1(Interpolate(n4, n1, v4/(v4-v1)));
+	    Point p2(Interpolate(n4, n2, v4/(v4-v2)));
+	    Point p3(Interpolate(n4, n3, v4/(v4-v3)));
 	    Vector n(Cross(p2-p1,p3-p1));
 #if NORMALIZE_NORMALS
 	    if (n.length2() > 0){
@@ -1340,9 +1340,9 @@ int IsoMask::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 13:
 	// Point 3 is inside
  	{
-	    Point p1(Interpolate(n3->p, n1->p, v3/(v3-v1)));
-	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
-	    Point p3(Interpolate(n3->p, n4->p, v3/(v3-v4)));
+	    Point p1(Interpolate(n3, n1, v3/(v3-v1)));
+	    Point p2(Interpolate(n3, n2, v3/(v3-v2)));
+	    Point p3(Interpolate(n3, n4, v3/(v3-v4)));
 	    Vector n(Cross(p2-p1,p3-p1));
 #if NORMALIZE_NORMALS
 	    if (n.length2() > 0){
@@ -1367,10 +1367,10 @@ int IsoMask::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 12:
 	// Point 3 and 4 are inside
  	{
-	    pA=Interpolate(n3->p, n1->p, v3/(v3-v1));
-	    pB=Interpolate(n3->p, n2->p, v3/(v3-v2));
-	    pC=Interpolate(n4->p, n1->p, v4/(v4-v1));
-	    pD=Interpolate(n4->p, n2->p, v4/(v4-v2));
+	    pA=Interpolate(n3, n1, v3/(v3-v1));
+	    pB=Interpolate(n3, n2, v3/(v3-v2));
+	    pC=Interpolate(n4, n1, v4/(v4-v1));
+	    pD=Interpolate(n4, n2, v4/(v4-v2));
 
 	    eA = E31;
 	    eB = E32;
@@ -1383,9 +1383,9 @@ int IsoMask::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 11:
 	// Point 2 is inside
  	{
-	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
-	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
-	    Point p3(Interpolate(n2->p, n4->p, v2/(v2-v4)));
+	    Point p1(Interpolate(n2, n1, v2/(v2-v1)));
+	    Point p2(Interpolate(n2, n3, v2/(v2-v3)));
+	    Point p3(Interpolate(n2, n4, v2/(v2-v4)));
 	    Vector n(Cross(p2-p1,p3-p1));
 #if NORMALIZE_NORMALS
 	    if (n.length2() > 0){
@@ -1407,10 +1407,10 @@ int IsoMask::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 10:
 	// Point 2 and 4 are inside
  	{
-	    pA=Interpolate(n2->p, n1->p, v2/(v2-v1));
-	    pB=Interpolate(n2->p, n3->p, v2/(v2-v3));
-	    pC=Interpolate(n4->p, n1->p, v4/(v4-v1));
-	    pD=Interpolate(n4->p, n3->p, v4/(v4-v3));
+	    pA=Interpolate(n2, n1, v2/(v2-v1));
+	    pB=Interpolate(n2, n3, v2/(v2-v3));
+	    pC=Interpolate(n4, n1, v4/(v4-v1));
+	    pD=Interpolate(n4, n3, v4/(v4-v3));
 
 	    eA = E21;
 	    eB = E23;
@@ -1423,10 +1423,10 @@ int IsoMask::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 9:
 	// Point 2 and 3 are inside
  	{
-	    pA=Interpolate(n2->p, n1->p, v2/(v2-v1));
-	    pB=Interpolate(n2->p, n4->p, v2/(v2-v4));
-	    pC=Interpolate(n3->p, n1->p, v3/(v3-v1));
-	    pD=Interpolate(n3->p, n4->p, v3/(v3-v4));
+	    pA=Interpolate(n2, n1, v2/(v2-v1));
+	    pB=Interpolate(n2, n4, v2/(v2-v4));
+	    pC=Interpolate(n3, n1, v3/(v3-v1));
+	    pD=Interpolate(n3, n4, v3/(v3-v4));
 
 	    eA = E21;
 	    eB = E24;
@@ -1438,9 +1438,9 @@ int IsoMask::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     case 8:
 	// Point 1 is inside
  	{
-	    Point p1(Interpolate(n1->p, n2->p, v1/(v1-v2)));
-	    Point p2(Interpolate(n1->p, n3->p, v1/(v1-v3)));
-	    Point p3(Interpolate(n1->p, n4->p, v1/(v1-v4)));
+	    Point p1(Interpolate(n1, n2, v1/(v1-v2)));
+	    Point p2(Interpolate(n1, n3, v1/(v1-v3)));
+	    Point p3(Interpolate(n1, n4, v1/(v1-v4)));
 	    Vector n(Cross(p2-p1,p3-p1));
 #if NORMALIZE_NORMALS
 	    if (n.length2() > 0){
@@ -1512,7 +1512,7 @@ void IsoMask::iso_tetra_strip(int ix, Mesh* mesh,
 				 GeomGroup* group, BitArray1& visited)
 {
     GeomTriStripList* nstrip = scinew GeomTriStripList;
-    Element* element=mesh->elems[ix];
+    Element* element=mesh->element(ix);
     int strip_done=0;
 
     visited.set(ix); // mark it as really done...
@@ -1543,7 +1543,7 @@ void IsoMask::iso_tetra_strip(int ix, Mesh* mesh,
 	    nf = -1;
 	if (nf > -1) {
 	    visited.set(nf);
-	    Element *nelement = mesh->elems[nf];
+	    Element *nelement = mesh->element(nf);
 	    // you have to remap the edges into the
 	    // face you are recursing into to match the
 	    // current element...
@@ -1568,7 +1568,7 @@ void IsoMask::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
 				      GeomGroup* group)
 {
     Mesh* mesh=field->mesh.get_rep();
-    int nelems=mesh->elems.size();
+    int nelems=mesh->elemsize();
     double iv;
     if(!field->interpolate(p, iv)){
 	error("Seed point not in field boundary");
@@ -1612,7 +1612,7 @@ void IsoMask::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
 
 	ix = surfQ.pop();
 	if (!visited.is_set(ix)) {
-	    Element* element=mesh->elems[ix];
+	    Element* element=mesh->element(ix);
 //	    GeomTriStripList* ts = scinew GeomTriStripList;
 	    int f0=element->face(0);
 	    int f1=element->face(1);
@@ -1666,7 +1666,7 @@ void IsoMask::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
 		    else {
 
 			visited.set(nf);
-			Element *nelement = mesh->elems[nf];
+			Element *nelement = mesh->element(nf);
 			// you have to remap the edges into the
 			// face you are recursing into to match the
 			// current element...
@@ -1720,7 +1720,7 @@ void IsoMask::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
 				GeomTrianglesP* group)
 {
     Mesh* mesh=field->mesh.get_rep();
-    int nelems=mesh->elems.size();
+    int nelems = mesh->elemsize();
     double iv;
     if(!field->interpolate(p, iv)){
 	error("Seed point not in field boundary");
@@ -1750,7 +1750,7 @@ void IsoMask::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
 	}
 #endif
 	ix=surfQ.pop();
-	Element* element=mesh->elems[ix];
+	Element *element = mesh->element(ix);
 	int nbrs=iso_tetra(element, mesh, field, iv, group);
 	if(nbrs & FACE1){
 	    int f0=element->face(0);
