@@ -218,7 +218,7 @@ Stream::convertVecToStream(const vector<double>& vec_stateSpace, const bool lfav
   d_numMixVars = numMixVars;
   d_numRxnVars = numRxnVars;
   d_speciesConcn = vector<double> (vec_stateSpace.begin()+NUM_DEP_VARS,
-				   vec_stateSpace.end()-d_numRxnVars-1);//Should this be numRxnVars??
+				   vec_stateSpace.end()-d_numRxnVars);
   d_rxnVarRates = vector<double> (vec_stateSpace.end()-d_numRxnVars, 
 				  vec_stateSpace.end());
 }      
@@ -308,6 +308,10 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
+// Revision 1.5  2001/07/27 20:51:40  sparker
+// Include file cleanup
+// Fix uninitialized array element
+//
 // Revision 1.4  2001/07/16 21:15:38  rawat
 // added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
 //
