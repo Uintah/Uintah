@@ -31,6 +31,25 @@ for i in $package; do
   PACKAGE_PATH=$PACKAGE_PATH,"\$(SRCTOP_ABS)/$i/components.xml"
 done
 
+##-- check for user supplied tcl paths --------------------------------------
+
+AC_ARG_WITH(tcl,
+        [  --with-tcl=<path-to-tcl>      <path-to-tcl>/bin/tclsh8.0],
+        [tcl="$withval"],
+        [tcl=""])
+AC_ARG_WITH(tk,
+        [  --with-tk=<path-to-tk>        <path-to-tk>/bin/wish8.0],
+        [tk="$withval"],
+        [tk=""])
+AC_ARG_WITH(itcl,
+        [  --with-itcl=<path-to-itcl>    <path-to-itcl>/bin/itkwish3.0],
+        [itcl="$withval"],
+        [itcl=""])
+AC_ARG_WITH(blt,
+        [  --with-blt=<path-to-btl>      <path-to-blt>/bin/bltwish24],
+        [blt="$withval"],
+        [blt=""])
+
 
 if test "$exename" = "default"; then
   EXENAME=pse
@@ -41,6 +60,13 @@ fi
 AC_SUBST(PACKAGE_DIRS)
 AC_SUBST(PACKAGE_PATH)
 AC_SUBST(EXENAME)
+
+##-- check for supplied xerces path ------------------------------------------
+
+AC_ARG_WITH(xerces,
+	[  --with-xerces=<path-to-xerces>  <path-to-xerces>],
+	[xerces="$withval"],
+	[xerces=""])
 
 ##-- Canonical Host Type -----------------------------------------------------
 
@@ -135,6 +161,8 @@ case $host in
                echo "Using Assembler ${AS}"
              fi
            fi
+	   F77=f77
+	   FFLAGS="$BINARYFLAGS ${FFLAGS}"
            CFLAGS="-fullwarn -xansi -LANG:std ${CFLAGS} $BINARYFLAGS $extra_cflags"
 	   ASFLAGS="$BINARYFLAGS ${ASFLAGS}"
            SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(LIBDIR)so_locations $(TLINK) ${SOFLAGS}"
@@ -147,11 +175,17 @@ case $host in
              threads="irix"
            fi
 	   TIME_IMPL=Time_irix.cc
+	   if test "$is_64bit" = "yes" ; then
+             IMAGE_LIBS="-lifl"
+           else
+             IMAGE_LIBS="-lifl -lcl"
+           fi
 	   TRACEBACK_LIB=-lexc
            ;;
   *-linux-gnu)
      AC_PROG_CC
      AC_PROG_CXX
+#     AC_PROG_F77
      CFLAGS="-Wall ${CFLAGS}"
      TEMPLATE_TAG=
      TEMPLATE_BOX="<>"
@@ -162,6 +196,7 @@ case $host in
      TIME_IMPL=Time_unix.cc
      PLATFORM_LDFLAGS="-ldl"
      TRACEBACK_LIB=""
+     IMAGE_LIBS=""
      echo "checking for sstream"
      AC_CHECK_HEADER(sstream, SSTREAM_COMPAT="no", SSTREAM_COMPAT="yes")
            ;;
@@ -171,11 +206,13 @@ case $host in
      AC_PROG_CXX
      ;;
 esac
+AC_SUBST(F77)
+AC_SUBST(FFLAGS)
 AC_SUBST(PLATFORM_LDFLAGS)
 AC_SUBST(NEED_SONAME)
 AC_SUBST(SSTREAM_COMPAT)
 AC_SUBST(TRACEBACK_LIB)
-
+AC_SUBST(IMAGE_LIBS)
 ##-- Part II thread configuration --------------------------------------------
 
 if test "$threads" = "unknown"; then
@@ -269,6 +306,8 @@ else
   echo $CC_DEPEND_REGEN
 fi
 AC_SUBST(CC_DEPEND_REGEN)
+F77_DEPEND_REGEN=$CC_DEPEND_REGEN
+AC_SUBST(F77_DEPEND_REGEN)
 
 ##-- How Many Processors -----------------------------------------------------
 
@@ -294,6 +333,16 @@ AC_SUBST(MAKE_PARALLELISM)
 ##-- Find TCL ----------------------------------------------------------------
 
 echo -n "Looking for Pre-built TCL 8.0.4... "
+
+if test "$tcl" ; then
+  unset cfsh
+  cfsh="$tcl/lib/tclConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
+fi
+
+if test -z "$TCL_VERSION" ; then
 unset Wish80
 if Wish80="`type tclsh8.0 | sed 's/^.* //'`" ; then
   unset cfsh
@@ -302,6 +351,8 @@ if Wish80="`type tclsh8.0 | sed 's/^.* //'`" ; then
     . $cfsh
   fi
 fi
+fi
+
 if test "$TCL_VERSION" = "8.0" -a "$TCL_PATCH_LEVEL" = ".4" ; then
   # TCL_PREFIX set by tclConfig.sh
   TCL_INCLUDE_DIR="${TCL_PREFIX}/include"
@@ -312,12 +363,18 @@ if test "$TCL_VERSION" = "8.0" -a "$TCL_PATCH_LEVEL" = ".4" ; then
   echo -L$TCL_LIB_DIR $TCL_LIB_FLAG
 
   if test "$TCL_LD_FLAGS" != "" ; then
-    echo "  XXX: Check SGI ABI"
+    if test "$host" = "*-irix*"; then
+      echo "  XXX: Check SGI ABI"
+    fi
   fi
 
 else
-  echo "not found -- must build"
-  echo "  Implement me."
+  if test -z "TCL_VERSION" ; then
+    echo "not found -- must build"
+    echo "  Implement me."
+  else
+    echo "incorrect tcl version $TCL_VERSION$TCL_PATCH_LEVEL found"
+  fi
   exit 1
 fi
 
@@ -328,6 +385,23 @@ AC_SUBST(TCL_LIB_FLAG)
 ##-- Find Tk -----------------------------------------------------------------
 
 echo -n "Looking for Pre-built Tk 8.0.4... "
+
+if test "$tk" ; then
+  unset cfsh
+  cfsh="$tk/lib/tkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+    echo -n --with-tk gives $TK_VERSION$TK_PATCH_LEVEL
+  fi
+elif test "$tcl" ; then
+  unset cfsh
+  cfsh="$tcl/lib/tkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
+fi
+
+if test -z "$TK_VERSION" ; then
 unset Wish80
 if Wish80="`type wish8.0 | sed 's/^.* //'`" ; then
   unset cfsh
@@ -336,6 +410,8 @@ if Wish80="`type wish8.0 | sed 's/^.* //'`" ; then
     . $cfsh
   fi
 fi
+fi
+
 if test "$TK_VERSION" = "8.0" -a "$TK_PATCH_LEVEL" = ".4" ; then
   # TK_PREFIX set by tclConfig.sh
   TK_INCLUDE_DIR="${TK_PREFIX}/include"
@@ -372,7 +448,26 @@ AC_SUBST(TK_LIB_FLAG)
 ##-- Find iTcl ---------------------------------------------------------------
 
 echo -n "Looking for Pre-built iTk 3.0... "
+
 if test "$BUILDING_TK" = "" ; then
+
+if test "$itcl" ; then
+  unset cfsh
+  cfsh="$itcl/lib/itkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+    ITCL_PREFIX=$itcl
+  fi
+elif test "$tcl" ; then
+  unset cfsh
+  cfsh="$tcl/lib/itkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+    ITCL_PREFIX=$tcl
+  fi
+fi
+
+if test -z "$ITCL_VERSION" ; then
   unset Wish80
   if sh="`type itkwish3.0 | sed 's/^.* //'`" ; then
     unset cfsh
@@ -383,44 +478,58 @@ if test "$BUILDING_TK" = "" ; then
     fi
   fi
 fi
+fi # end BUILDING_TK
+
 if test "$ITCL_VERSION" = "3.0" ; then
-  ITCL_PREFIX="`cd $shdir/.. ; pwd`"
+  if test -z "$ITCL_PREFIX" ; then
+   ITCL_PREFIX="`cd $shdir/.. ; pwd`"
+  fi
   ITCL_INCLUDE_DIR="${ITCL_PREFIX}/include"
   ITCL_LIB_DIR="${ITCL_PREFIX}/lib"
+  ITCL_BIN_DIR="${ITCL_PREFIX}/bin"
   ITCL_LIB_FLAG="-litk3.0 -litcl3.0"
   ITCL_WIDGETS="${ITCL_LIB_DIR}/iwidgets/scripts"
 
-  echo -L$ITCL_PREFIX $ITCL_LIB_FLAG
+  #echo -L$ITCL_PREFIX $ITCL_LIB_FLAG
+  echo -L$ITCL_LIB_DIR $ITCL_LIB_FLAG
 else
-  echo "not found -- must build"
-  echo "  Implement me."
+  if test -z "$ITCL_VERSION" ; then
+    echo "not found -- must build"
+    echo "  Implement me."
+  else
+    echo "incorrect itcl/itk version $ITCL_VERSION$ITCL_PATCH_LEVEL found"
+  fi
   exit 1
 fi
 
 AC_SUBST(ITCL_INCLUDE_DIR)
 AC_SUBST(ITCL_LIB_DIR)
+AC_SUBST(ITCL_BIN_DIR)
 AC_SUBST(ITCL_LIB_FLAG)
 AC_SUBST(ITCL_WIDGETS)
 
-##-- Find etags ------------------------------------------------------------
-
-AC_PATH_PROG(ETAGS, etags, notfound)
-if test "$ETAGS" = "notfound" ; then
-  echo "\tetags not found"
-else
-  echo "\tFound etags at " $ETAGS
-fi
- 
 ##-- Find BLT ---------------------------------------------------------------
+echo -n "Looking for Pre-built blt 2.4... "
 
-echo -n "Looking for Pre-built blt2.4... "
+if test "$blt" ; then
+  BLT_PREFIX=$blt
+elif test "$tcl" ; then
+  BLT_PREFIX=$tcl
+fi
+
+if test -z "$BLT_PREFIX" ; then
 if sh="`type bltwish24 | sed 's/^.* //'`" ; then
   shdir="`dirname $sh`"
   BLT_PREFIX="`cd $shdir/.. ; pwd`"
+fi
+fi
+
+if test "$BLT_PREFIX" ; then
   BLT_INCLUDE_DIR="${BLT_PREFIX}/include"
   BLT_LIB_DIR="${BLT_PREFIX}/lib"
   BLT_LIB_FLAG="-lBLT24"
-  echo -L$BLT_PREFIX $BLT_LIB_FLAG
+  #echo -L$BLT_PREFIX $BLT_LIB_FLAG
+  echo -L$BLT_LIB_DIR $BLT_LIB_FLAG
 else
   echo "not found -- must build"
   echo "  Implement me."
@@ -430,6 +539,175 @@ fi
 AC_SUBST(BLT_INCLUDE_DIR)
 AC_SUBST(BLT_LIB_DIR)
 AC_SUBST(BLT_LIB_FLAG)
+
+##-- Find Xerces-c  ------------------------------------------------------
+
+echo -n "Looking for Pre-built Xerces-c... "
+
+if test "$xerces"; then
+  XML_LIB_DIR=$xerces
+fi
+
+if test -z "$XML_LIB_DIR"; then
+  case $host in
+  *-irix*)
+    if test "$is_64bit" = "yes"; then
+      if test -e /res/sci/data6/sparker/xerces-c/lib64/libxerces-c1_?.so; then
+        XML_LIB_DIR="/res/sci/data6/sparker/xerces-c/lib64"
+      elif test -e /usr/lib64/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/lib64"
+      elif test -e /usr/local/lib64/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/local/lib64"
+      elif test -e /usr/lib/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/lib"
+      elif test -e /usr/local/lib/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/local/lib"
+      fi
+    else
+      if test -e /res/sci/data6/sparker/xerces-c/lib32/libxerces-c1_?.so; then
+        XML_LIB_DIR="/res/sci/data6/sparker/xerces-c/lib32"
+      elif test -e /usr/lib32/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/lib32"
+      elif test -e /usr/local/lib32/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/local/lib32"
+      elif test -e /usr/lib/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/lib"
+      elif test -e /usr/local/lib/libxerces-c1_?.so; then
+	XML_LIB_DIR="/usr/local/lib"
+      fi
+    fi
+    ;;
+  *linux*)
+    if test -e /tmp/opt/xerces-1.1/lib/libxerces-c1_?.so; then
+      XML_LIB_DIR="/tmp/opt/xerces-1.1/lib"
+    elif test -e /usr/lib/libxerces-c1_?.so; then
+      XML_LIB_DIR="/usr/lib"
+    elif test -e /usr/local/lib/libxerces-c1_?.so; then
+      XML_LIB_DIR="/usr/local/lib"
+    fi
+    ;;
+  *)
+    if test -e /usr/lib/libxerces-c1_?.so; then
+      XML_LIB_DIR="/usr/lib"
+    elif test -e /usr/local/lib/libxerces-c1_?.so; then
+      XML_LIB_DIR="/usr/local/lib"
+    fi
+    ;;
+  esac
+fi
+
+if test -z "$XML_LIB_DIR"; then
+  echo "Couldn't find libxerces-c1_?.so.  exiting."
+  exit 1
+fi
+
+XML_INCLUDE_DIR=$XML_LIB_DIR/../include
+
+if test -e $XML_LIB_DIR/libxerces-c1_1.so; then
+  XML_LIB_FLAG="-lxerces-c1_1"
+elif test -e $XML_LIB_DIR/libxerces-c1_2.so; then
+  XML_LIB_FLAG="-lxerces-c1_2"
+fi
+
+echo "-L$XML_LIB_DIR $XML_LIB_FLAG"
+
+AC_SUBST(XML_LIB_DIR)
+AC_SUBST(XML_LIB_FLAG)
+AC_SUBST(XML_INCLUDE_DIR)
+
+##-- Find Nektar--------------------------------------------------------------
+
+AC_ARG_WITH(with_nektar,
+	[  --with-nektar=DIR		Use the nektar installation in DIR],
+	[with_nektar="$withval"],
+	[with_nektar=${with_nektar='no'}])
+
+
+if ! test "${with_nektar}" = "no"; then
+  NEKTAR_PREFIX=${with_nektar}
+  NEKTAR_INCLUDE_DIR="${NEKTAR_PREFIX}/include"
+  NEKTAR_LIB_DIR="${NEKTAR_PREFIX}/lib"
+  NEKTAR_LIB_FLAG="-lhybridopt -lvec"
+  echo "with Nektar at ${NEKTAR_PREFIX}"
+fi
+
+AC_SUBST(NEKTAR_INCLUDE_DIR)
+AC_SUBST(NEKTAR_LIB_DIR)
+AC_SUBST(NEKTAR_LIB_FLAG)
+
+
+##-- Find etags ------------------------------------------------------------
+
+AC_PATH_PROG(ETAGS, etags, notfound)
+if test "$ETAGS" = "notfound" ; then
+  echo "\tetags not found"
+fi
+ 
+
+##-- Find location of OpenGL -----------------------------------------------
+
+echo -n "checking for OpenGL... "
+
+if test -e /usr/include/GL; then
+  GL_INCLUDE_DIR="/usr/include"
+elif test -e /usr/X11R6/include/GL; then
+  GL_INCLUDE_DIR="/usr/X11R6/include"
+fi
+
+if test -c /usr/lib/libGL.so; then
+  GL_LIB_DIR="/usr/lib"
+elif test -e /usr/X11R6/lib/libGL.so; then
+  GL_LIB_DIR="/usr/X11R6/lib"
+fi
+
+if test "$GL_INCLUDE_DIR" = ""; then
+  echo "couldn't find the location of the GL headers."
+  echo "by standard convention, they should be in /usr/include/GL"
+  echo ""
+  exit 1
+else
+  echo libraries $GL_LIB_DIR, headers $GL_INCLUDE_DIR/GL
+fi
+
+AC_SUBST(GL_INCLUDE_DIR)
+AC_SUBST(GL_LIB_DIR)
+
+
+##-- Other paths for Uintah ------------------------------------------
+
+AC_ARG_ENABLE(enable_sci_malloc,
+	[  --enable-sci-malloc		Use SCI malloc checker],
+	[enable_sci_malloc="$enableval"],
+	[enable_sci_malloc=${enable_sci_malloc='yes'}])
+
+if test "$enable_sci_malloc" = "yes"; then
+	MALLOC_DEFINE=""
+else
+	MALLOC_DEFINE="#define DISABLE_SCI_MALLOC"
+fi
+AC_SUBST(MALLOC_DEFINE)
+	
+##-- Other paths for Uintah ------------------------------------------
+
+AC_ARG_WITH(petsc,
+	[  --with-petsc=<path-to-petsc>  <path-to-petsc>],
+	[withpetsc="$withval"],
+	[withpetsc=""])
+if test "$optimize" = "yes"; then
+   PETSC_SUB="libO"
+else
+   PETSC_SUB="libg"
+fi
+PETSC_DIR=$withpetsc
+if test "$withpetsc" = "yes"; then
+   PETSC_ARCH=`$(PETSC_DIR)/bin/petscarch`
+   if test "$is_64bit" != "yes" -a "$PETSC_ARCH" = "IRIX64"; then
+      PETSC_ARCH="IRIX"
+   fi
+fi
+AC_SUBST(PETSC_DIR)
+AC_SUBST(PETSC_SUB)
+AC_SUBST(PETSC_ARCH)
 
 ##-- Check for option to build new parallel (distributed memory) SCIRun ------
 
@@ -524,30 +802,9 @@ if test x"$X_LIBS" = x"-L/usr/lib" -o x"$X_LIBS" = x" -L/usr/lib"; then
   X_LIBS=""
 fi
 
-##-- Check for library ------------------------------------------------------
-
-## THIS NEEDS TO BE BETTER - steve
-case $host in
-  *-irix*) 
-	if test "$is_64bit" = "yes"; then
-  	  XML_LIB_DIR="/res/sci/data6/sparker/xerces-c/lib64"
-	else
-  	  XML_LIB_DIR="/res/sci/data6/sparker/xerces-c/lib32"
-	fi
-	XML_INCLUDE_DIR="/res/sci/data6/sparker/xerces-c/include"
-        ;;
-  *linux*) 
-  	XML_LIB_DIR="/tmp/opt/xerces-c-1.1/lib"
-	XML_INCLUDE_DIR="/tmp/opt/xerces-c-1.1/include"
-	;;
-  *)       
-           ;;
-esac
-
-XML_LIB_FLAG="-lxerces-c1_1"
-AC_SUBST(XML_LIB_DIR)
-AC_SUBST(XML_LIB_FLAG)
-AC_SUBST(XML_INCLUDE_DIR)
+if ! test x"$X_LIBS" = x; then
+  X_LIBS="-Wl,-rpath,$x_libraries $X_LIBS"
+fi
 
 ##-- Check for programs ------------------------------------------------------
 
@@ -569,6 +826,68 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.53.2.1  2000/09/28 03:20:04  mcole
+# merge trunk into FIELD_REDESIGN branch
+#
+# Revision 1.69  2000/09/14 15:33:47  sparker
+# Added a configure flag --disable-sci-malloc
+#
+# Revision 1.68  2000/09/12 15:48:02  sparker
+# Added --with-petsc configuration flag
+#
+# Revision 1.67  2000/09/05 17:26:54  moulding
+#
+#
+# removed hardcoding for xerces stuff.  It now looks for xerces in Utah locations
+# first ('cuz we're lazy) and then some standard locations (/usr/lib,
+# /usr/local/lib).  And to top it off, there's a --with-xerces switch in case
+# it's somewhere else.
+#
+# Revision 1.66  2000/09/04 06:20:03  moulding
+#
+#
+# fixed execute permissions for createTclIndex
+#
+# Revision 1.65  2000/09/03 23:47:17  moulding
+# added stuff to allow executables to be assigned as well as libraries for the --with-tcl configure option
+#
+# Revision 1.64  2000/08/10 15:22:55  kirby
+#
+# nektar fixes
+#
+# Revision 1.63  2000/08/10 14:29:34  jehall
+# Minor fixes to Nektar section of configure
+#
+# Revision 1.62  2000/08/10 03:33:36  yarden
+# add --with-nektar
+#
+# Revision 1.61  2000/08/01 19:17:37  moulding
+#
+#
+# Added Todd Miller's "-with-tcl" stuff
+#
+# Revision 1.60  2000/07/11 20:21:56  yarden
+# add -rpath if the x_libraries are not in the standard place.
+#
+# Revision 1.59  2000/06/12 20:23:31  sparker
+# Commented out f77 config on linux - for now
+#
+# Revision 1.58  2000/06/12 18:39:00  sparker
+# Added F77 configuration
+#
+# Revision 1.57  2000/06/10 04:18:22  moulding
+# added a section to search for GL headers
+#
+# Revision 1.56  2000/06/09 17:46:16  kuzimmer
+# Modified so that linux and 64bit compiles won't choke on the new image
+# and compression libraries
+#
+# Revision 1.55  2000/06/08 22:29:51  kuzimmer
+# fixed an error in IMAGE_LIBS
+#
+# Revision 1.54  2000/06/08 20:32:48  kuzimmer
+#  modified so that linux will compile without SGI specific image and compression libraries
+#
 # Revision 1.53  2000/05/11 20:26:05  mcole
 # add etags generation to build system
 #

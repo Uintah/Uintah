@@ -42,7 +42,7 @@ private:
     char* symname;
     int count;
     int max;
-	struct timeb start_time;
+    struct timeb start_time;
     double baseline;
     double baseline_time;
     bool is_baseline;
@@ -54,6 +54,12 @@ private:
 
 //
 // $Log$
+// Revision 1.2.2.1  2000/09/28 03:11:46  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.3  2000/09/25 19:48:27  sparker
+// Quiet warnings under g++
+//
 // Revision 1.2  1999/08/17 06:39:47  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

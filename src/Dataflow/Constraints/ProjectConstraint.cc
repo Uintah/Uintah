@@ -113,7 +113,7 @@ ProjectConstraint::Satisfy( const Index index, const Scheme scheme, const Real E
       return 1;
    case 2:
       ASSERTFAIL("ProjectConstraint:  Can only satisfy projection");
-      break;
+      //break;
    default:
       cerr << "Unknown variable in Project Constraint!" << endl;
       break;
@@ -126,6 +126,12 @@ ProjectConstraint::Satisfy( const Index index, const Scheme scheme, const Real E
 
 //
 // $Log$
+// Revision 1.5.2.1  2000/09/28 03:14:55  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.6  2000/06/15 19:50:56  sparker
+// Fixed warnings
+//
 // Revision 1.5  1999/10/07 02:07:16  sparker
 // use standard iostreams and complex type
 //

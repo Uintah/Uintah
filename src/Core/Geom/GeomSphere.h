@@ -16,37 +16,46 @@
 
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/IntVector.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
+using SCICore::Geometry::IntVector;
+
 class SCICORESHARE GeomSphere : public GeomObj {
 public:
-    Point cen;
-    double rad;
-    int nu;
-    int nv;
-
-    void adjust();
-    void move(const Point&, double, int nu=20, int nv=10);
-
-    GeomSphere(int nu=20, int nv=10, int id = 0x1234567);
-    GeomSphere(const Point&, double, int nu=20, int nv=10, int id = 0x1234567);
-    GeomSphere(const GeomSphere&);
-    virtual ~GeomSphere();
-
-    virtual GeomObj* clone();
-    virtual void get_bounds(BBox&);
+  Point cen;
+  double rad;
+  int nu;
+  int nv;
+  
+  void adjust();
+  void move(const Point&, double, int nu=20, int nv=10);
+  void move(const Point& _cen);
     
-
+  GeomSphere(int nu, int nv, IntVector id);
+  GeomSphere(int nu, int nv, int id_int, IntVector id);
+  GeomSphere(int nu=20, int nv=10, int id = 0x1234567);
+  GeomSphere(const Point&, double, int nu=20, int nv=10, int id = 0x1234567);
+  GeomSphere(const Point&, double, int nu, int nv, int id_int, IntVector id);
+  GeomSphere(const Point&, double, int nu, int nv, IntVector id);
+  GeomSphere(const GeomSphere&);
+  virtual ~GeomSphere();
+  
+  virtual GeomObj* clone();
+  virtual void get_bounds(BBox&);
+  
+  
 #ifdef SCI_OPENGL
-    virtual void draw(DrawInfoOpenGL*, Material*, double time);
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
-
-    virtual void io(Piostream&);
-    static PersistentTypeID type_id;
-    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
+  
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
   virtual bool getId( int& id );
+  virtual bool getId( IntVector& id);
   
 };
 
@@ -55,6 +64,19 @@ public:
 
 //
 // $Log$
+// Revision 1.5.2.1  2000/09/28 03:12:19  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.8  2000/09/11 22:14:46  bigler
+// Added constructors that take an int and IntVector to allow unique
+// identification in 4 dimensions.
+//
+// Revision 1.7  2000/08/11 15:38:35  bigler
+// Added another constructor that took an IntVector index.
+//
+// Revision 1.6  2000/08/09 18:21:15  kuzimmer
+// Added IntVector indexing to GeomObj & GeomSphere
+//
 // Revision 1.5  2000/01/03 20:12:37  kuzimmer
 //  Forgot to check in these files for picking spheres
 //

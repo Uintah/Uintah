@@ -208,6 +208,9 @@ inline void Path::set_arc_param(){
 
 //
 // $Log$
+// Revision 1.2.2.1  2000/09/28 03:13:32  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
 // Revision 1.2  2000/08/09 07:15:55  samsonov
 // final version and Cocoon comments
 //
