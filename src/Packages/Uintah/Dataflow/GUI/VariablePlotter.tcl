@@ -459,7 +459,7 @@ itcl_class Uintah_Visualization_VariablePlotter {
       $w.graph yaxis configure -title $var 
 #==========TESTING==========`*/	
 
-	$w.graph xaxis configure -title "Timestep" -loose true
+	$w.graph xaxis configure -title "Time (sec)" -loose true
 	
 	set vvlist_length [llength $var_val_list]
 #	puts "length of var_val_list = [llength $var_val_list]"
