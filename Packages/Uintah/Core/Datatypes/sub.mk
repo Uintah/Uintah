@@ -14,6 +14,7 @@ SRCS     += \
 	$(SRCDIR)/TensorParticles.cc \
 	$(SRCDIR)/TensorParticlesPort.cc \
 	$(SRCDIR)/PSet.cc \
+	$(SRCDIR)/LevelField.cc \
 	$(SRCDIR)/LevelMesh.cc \
 	$(SRCDIR)/GLTexture3D.cc \
 	$(SRCDIR)/GLAnimatedStreams.cc \
@@ -31,6 +32,7 @@ PSELIBS := \
 	Dataflow/Network \
 	Dataflow/XMLUtil \
 	Core/Exceptions  \
+	Core/Geom    \
 	Core/Geometry    \
 	Core/Persistent  \
 	Core/Datatypes   \
@@ -42,11 +44,11 @@ PSELIBS := \
         Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/CCA/Components/MPM
 
-LIBS := $(XML_LIBRARY)
+LIBS := $(XML_LIBRARY) $(GL_LIBS) -lm 
 
 ifeq ($(BUILD_PARALLEL),yes)
 PSELIBS := $(PSELIBS) Core/CCA/Component/CIA Core/CCA/Component/PIDL
-LIBS := $(LIBS) $(GLOBUS_LIBS) -lglobus_nexus
+LIBS := $(LIBS) $(GLOBUS_LIBS) -lglobus_nexus 
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
