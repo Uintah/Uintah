@@ -78,7 +78,31 @@ MoveElemToNode::execute()
     return;
   }
 
-  string ext = "Lat";
+  string ext = "";
+  const TypeDescription *mtd = ifield->mesh()->get_type_description();
+  if (mtd->get_name() == "LatVolMesh")
+  {
+    if (ifield->data_at() != Field::CELL)
+    {
+      error("LatVolMesh data must be at cell centers.");
+      return;
+    }
+    ext = "Lat";
+  }
+  else if (mtd->get_name() == "ImageMesh")
+  {
+    if (ifield->data_at() != Field::FACE)
+    {
+      error("ImageMesh data must be at face centers.");
+      return;
+    }
+    ext = "Img";
+  }
+  else
+  {
+    error("Unsupported mesh type.  This only works on LatVols and Images.");
+    return;
+  }
 
   if (ifield_generation_ != ifield->generation)
   {
