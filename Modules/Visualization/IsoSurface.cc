@@ -710,7 +710,7 @@ void IsoSurface::iso_reg_grid(ScalarFieldRG* field, double isoval,
     int ny=field->ny;
     int nz=field->nz;
     for(int i=0;i<nx-1;i++){
-	update_progress(i, nx);
+	//update_progress(i, nx);
 	for(int j=0;j<ny-1;j++){
 	    for(int k=0;k<nz-1;k++){
 		iso_cube(i,j,k, isoval, group, field);
@@ -934,7 +934,7 @@ void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, double isoval,
     Mesh* mesh=field->mesh.get_rep();
     int nelems=mesh->elems.size();
     for(int i=0;i<nelems;i++){
-	update_progress(i, nelems);
+	//update_progress(i, nelems);
 	Element* element=mesh->elems[i];
 	iso_tetra(element, mesh, field, isoval, group);
 	if(abort_flag)

@@ -32,7 +32,7 @@ proc uiIsoSurface {modid} {
     global isoval,$modid
     fscale $w.f.isoval -variable isoval,$modid -digits 4 \
 	    -from 0.0 -to 1.0 -label "IsoValue:" \
-	    -resolution .01 -showvalue true -tickinterval .2 \
+	    -resolution .01 -showvalue true \
 	    -activeforeground SteelBlue2 -orient horizontal \
 	    -command $n -state disabled
     pack $w.f.isoval -side top -fill x
@@ -50,6 +50,8 @@ proc uiIsoSurface {modid} {
 proc IsoSurface_set_minmax {modid min max} {
     set w .ui$modid	
     $w.f.isoval configure -from $min -to $max
+    puts "min is $min"
+    puts "max is $max"
 }
 
 proc IsoSurface_set_bounds {modid xmin ymin zmin xmax ymax zmax} {
