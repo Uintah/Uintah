@@ -66,9 +66,6 @@ void SystemCallProcess::kill(int secs, bool processexit)
     {
         bool killprocess = true; // Do we need to kill the child process
 
-        char buffer[5];
-        int     length;
-
 // THIS NEEDS TO BE REPLACED
 // since simulations can run for a long time, the pid numbers can have been reused in the mean time
 // hence we need to find a better construction. The next one does this, but at the exit waiting for signal
@@ -87,7 +84,7 @@ void SystemCallProcess::kill(int secs, bool processexit)
     
         if (killprocess) 
         {
-            int ret = ::killpg(pid_,SIGKILL);
+            ::killpg(pid_,SIGKILL);
         }
     }
     pid_ = 0;
@@ -134,8 +131,6 @@ void    SystemCallProcess::close()
 void SystemCallProcess::wait()
 {
 #ifndef _WIN32
-    char buffer[5];
-    int  length;
 
     if (pid_ == 0) return;
     // As soon as data is put in the exit fifo, it is a

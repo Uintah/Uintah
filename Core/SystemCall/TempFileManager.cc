@@ -42,13 +42,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <math.h>
 #include <sys/stat.h>
 #include <sys/types.h> 
 #include <sys/time.h>
 #include <Core/SystemCall/TempFileManager.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
-#include <math.h>
+#include <sgi_stl_warnings_on.h> 
  
 namespace SCIRun {
  

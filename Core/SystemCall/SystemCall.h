@@ -40,12 +40,18 @@
 #ifndef CORE_SYSTEMCALL_SYSTEMCALL_H
 #define CORE_SYSTEMCALL_SYSTEMCALL_H 1
 
+#include <sgi_stl_warnings_off.h>
 #include <list>
 #include <string>
 #include <vector>
+#include <iostream>
+#include <fstream>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/select.h>
+
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>
@@ -54,8 +60,6 @@
 #include <Core/SystemCall/SystemCallManager.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/ICom/IComSocket.h>
-#include <iostream>
-#include <fstream>
 
 namespace SCIRun {
 

@@ -40,11 +40,15 @@
 #ifndef CORE_SYSTEMCALL_SYSTEMCALLERROR_H
 #define CORE_SYSTEMCALL_SYSTEMCALLERROR_H 1
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+
 #include <errno.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <iostream>
 
 namespace SCIRun {
 
