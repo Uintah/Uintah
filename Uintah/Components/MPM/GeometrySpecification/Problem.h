@@ -2,7 +2,7 @@
 #define __PROBLEM_H__
 
 #include "GeometryObject.h"
-#include "BoundCond.h"
+#include "../BoundCond.h"
 #include "Material.h"
 #include <string>
 #include <vector>
@@ -48,6 +48,9 @@ public:
 #endif // __PROBLEM_H__
 
 // $Log$
+// Revision 1.2  2000/03/15 22:13:08  jas
+// Added log and changed header file locations.
+//
 // Revision 1.1  2000/03/14 22:10:49  jas
 // Initial creation of the geometry specification directory with the legacy
 // problem setup.

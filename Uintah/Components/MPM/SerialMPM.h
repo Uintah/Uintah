@@ -53,3 +53,8 @@ private:
 };
 
 #endif
+
+// $Log$
+// Revision 1.3  2000/03/15 22:13:04  jas
+// Added log and changed header file locations.
+//
