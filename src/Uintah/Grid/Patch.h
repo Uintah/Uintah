@@ -112,16 +112,19 @@ WARNING
      
      //////////
      // Insert Documentation Here:
-     bool findCellAndWeights(const SCICore::Geometry::Point& pos,
+     void findCellAndWeights(const SCICore::Geometry::Point& pos,
 			     IntVector ni[8], double S[8]) const;
      
      //////////
      // Insert Documentation Here:
-     bool findCellAndShapeDerivatives
+     void findCellAndShapeDerivatives
      (const SCICore::Geometry::Point& pos,
 		         IntVector ni[8],
 			 SCICore::Geometry::Vector S[8]) const;
 
+     void findCellAndWeightsAndShapeDerivatives(const SCICore::Geometry::Point& pos,
+			     IntVector ni[8], double S[8], SCICore::Geometry::Vector d_S[8]) const;
+     
      //////////
      // Insert Documentation Here:
      CellIterator getCellIterator() const;
@@ -324,6 +327,11 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.24  2000/11/30 22:55:34  guilkey
+// Changed the return type of the findCellAnd... functions from bool to void.
+// Also, added a findCellAndWeightsAndShapeDerivatives to be used where both
+// quantities are needed.
+//
 // Revision 1.23  2000/11/28 03:47:26  jas
 // Added FCVariables for the specific faces X,Y,and Z.
 //
