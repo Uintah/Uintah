@@ -15,18 +15,25 @@
 #define SCI_project_TCLTask_h 1
 
 #include <Multitask/Task.h>
+#include <Multitask/ITC.h>
 
 class TCLTask : public Task {
     int argc;
     char** argv;
+    Semaphore cont;
+    Semaphore start;
 protected:
     virtual int body(int);
+    friend void wait_func(void*);
+    void mainloop_wait();
 public:
     TCLTask(int argc, char* argv[]);
     virtual ~TCLTask();
     static void lock();
     static int try_lock();
     static void unlock();
+    void mainloop_waitstart();
+    void release_mainloop();
 };
 
 #endif

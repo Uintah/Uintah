@@ -33,12 +33,34 @@ static char rcsid[] = "$Header$ SPRITE (Berkeley)";
 #include "itcl.h"
 #include <config.h>
 
+Tcl_Interp* the_interp;
+
 extern int OpenGLCmd _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, int argc, char **argv));
 extern int BevelCmd _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, int argc, char **argv));
+extern int Tk_RangeCmd _ANSI_ARGS_((ClientData clientData,
+	Tcl_Interp *interp, int argc, char **argv));
 extern int BLineInit _ANSI_ARGS_((void));
+extern int Blt_Init _ANSI_ARGS_((Tcl_Interp* interp));
+extern int Table_Init _ANSI_ARGS_((Tcl_Interp* interp));
 
+
+static void (*wait_func)(void*);
+static void* wait_func_data;
+
+int tkMain(argc, argv, nwait_func, nwait_func_data)
+    int argc;				/* Number of arguments. */
+    char **argv;			/* Array of argument strings. */
+    void (*nwait_func)(void*);
+    void* nwait_func_data;
+{
+    wait_func=nwait_func;
+    wait_func_data=nwait_func_data;
+    Tk_Main(argc, argv, Tcl_AppInit);
+    return 0;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -66,6 +88,8 @@ Tcl_AppInit(interp)
     Visual* visual;
     int depth;
     Colormap colormap;
+
+    the_interp=interp;
 
     main = Tk_MainWindow(interp);
 
@@ -126,6 +150,9 @@ Tcl_AppInit(interp)
 #endif
     Tcl_CreateCommand(interp, "bevel", BevelCmd, (ClientData) main,
 		      (void (*)()) NULL);
+    Tcl_CreateCommand(interp, "range", Tk_RangeCmd, (ClientData) main,
+                      (void (*)()) NULL);
+
 
     /*
      * Initialize the BLine Canvas item
@@ -140,5 +167,7 @@ Tcl_AppInit(interp)
      */
 
     tcl_RcFileName = "~/.scirc";
+
+    (*wait_func)(wait_func_data);
     return TCL_OK;
 }

@@ -1,15 +1,8 @@
 
 #include <config/sci.cf>
 
-SUBDIRS = sci
-TCLSUBDIRS = tcl tk itcl blt-1.7 tkTable
-
-SCISubdirs3($(TCLSUBDIRS))
-Makefiles::
-	@for i in $(TCLSUBDIRS) ; do \
-	(cd $$i ; echo "configuring in $(CURRENT_DIR)/$$i..."; \
-	 ./configure ); \
-	done
+SUBDIRS = tcl tk itcl blt-1.7 tkTable sci
+TCLSUBDIRS = 
 
 SCISubdirs($(SUBDIRS))
 

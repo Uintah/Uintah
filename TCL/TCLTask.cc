@@ -20,8 +20,7 @@
 #include <tcl/tcl/tcl.h>
 #include <tcl/tk/tk.h>
 
-extern "C" int tkMain(int argc, char** argv);
-extern "C" void Tk_FirstPrompt();
+extern "C" int tkMain(int argc, char** argv, void (*)(void*), void*);
 extern Tcl_Interp* the_interp;
 typedef void (Tcl_LockProc)();
 extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
@@ -62,7 +61,7 @@ static int x_error_handler(Display* dpy, XErrorEvent* error)
 }
 
 TCLTask::TCLTask(int argc, char* argv[])
-: Task("TCLTask", 1), argc(argc), argv(argv)
+: Task("TCLTask", 1), argc(argc), argv(argv), start(0), cont(0)
 {
     // Setup the error handler to catch errors...
     // The default one exits, and makes it very hard to 
@@ -71,21 +70,43 @@ TCLTask::TCLTask(int argc, char* argv[])
     if(!tlock)
 	tlock=scinew Mutex;
     Tcl_SetLock(do_lock, do_unlock);
-    Tk_SetSelectProc((Tk_SelectProc*)Task::mtselect);
-    tkMain(argc, argv);
-    TCL::initialize();
 }
 
 TCLTask::~TCLTask()
 {
 }
 
+void wait_func(void* thatp)
+{
+    TCLTask* that=(TCLTask*)thatp;
+    that->mainloop_wait();
+}
+
 int TCLTask::body(int)
 {
-    Tk_FirstPrompt();
-    Tk_MainLoop();
-    Tcl_Eval(the_interp, "exit");
+    tkMain(argc, argv, wait_func, (void*)this);
     return 0;
+}
+
+void TCLTask::mainloop_waitstart()
+{
+    start.down();
+}
+
+void TCLTask::release_mainloop()
+{
+    cont.up();
+}
+
+void TCLTask::mainloop_wait()
+{
+    TCL::initialize();
+    // The main program will want to know that we are started...
+    start.up();
+
+    // Wait for the main program to tell us that all initialization
+    // has occurred...
+    cont.down();
 }
 
 void TCLTask::lock()

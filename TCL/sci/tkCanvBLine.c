@@ -10,6 +10,11 @@
 #include "tkInt.h"
 #include "tcl.h"
 
+void Tk_DrawBeveledLine(Display* display, Drawable drawable,
+			Tk_3DBorder border, XPoint *pointPtr,
+			int numPoints, int width, int borderWidth,
+			int relief);
+
 /*
  * The structure below defines the record for each line item.
  */
