@@ -22,6 +22,20 @@ itcl_class Uintah_Operators_TensorOperator {
 	set $this-eigen2D-calc-type 0
 	set $this-delta 1
 
+	# n.s.t
+	global $this-nx
+	global $this-ny
+	global $this-nz
+	global $this-tx
+	global $this-ty
+	global $this-tz
+	set $this-nx 0
+	set $this-ny 0
+	set $this-nz 0
+	set $this-tx 0
+	set $this-ty 0
+	set $this-tz 0
+
     }
     method make_entry {w text v c} {
 	frame $w
@@ -63,7 +77,10 @@ itcl_class Uintah_Operators_TensorOperator {
 	radiobutton $w.calc.octshearstress -text "Octahedral Shear Stress" \
 		-variable $this-operation -value 4 \
 		-command "$this select_oct_shear_stress"
-	pack $w.calc.l $w.calc.elem $w.calc.eigen2D $w.calc.pressure $w.calc.eqivstress $w.calc.octshearstress -anchor w
+	radiobutton $w.calc.nst -text "n . sigma. t" \
+		-variable $this-operation -value 5 \
+		-command "$this select_nst"
+	pack $w.calc.l $w.calc.elem $w.calc.eigen2D $w.calc.pressure $w.calc.eqivstress $w.calc.octshearstress $w.calc.nst -anchor w
 	pack $w.calc -side left -padx 2 -pady 2 -fill y
 
 	if { [set $this-operation] == 0} {
@@ -76,6 +93,8 @@ itcl_class Uintah_Operators_TensorOperator {
 	    select_equivalent_stress
 	} elseif { [set $this-operation] == 4} {
 	    select_oct_shear_stress
+	} elseif { [set $this-operation] == 5} {
+	    select_nst
 	}
     }
 
@@ -124,6 +143,14 @@ itcl_class Uintah_Operators_TensorOperator {
 	destroy $w.opts
 	frame $w.opts -relief sunken -bd 1
 	oct_shear_stress_ui $w.opts
+	pack $w.opts -padx 2 -pady 2 -fill y -expand yes
+	$this-c needexecute
+    }
+    method select_nst {} {
+	set w .ui[modname]
+	destroy $w.opts
+	frame $w.opts -relief sunken -bd 1
+	nst_ui $w.opts
 	pack $w.opts -padx 2 -pady 2 -fill y -expand yes
 	$this-c needexecute
     }
@@ -244,4 +271,21 @@ ____________________________________________
 	$this-c needexecute
     }
 
+    method nst_ui {w} {
+	set n "$this-c needexecute"
+
+        frame $w.n
+        make_entry $w.n.nx "n" $this-nx $n
+        make_entry $w.n.ny "  " $this-ny $n
+        make_entry $w.n.nz "  " $this-nz $n
+        pack $w.n.nx $w.n.ny $w.n.nz -side left
+
+        frame $w.t
+        make_entry $w.t.tx "t" $this-tx $n
+        make_entry $w.t.ty "  " $this-ty $n
+        make_entry $w.t.tz "  " $this-tz $n
+        pack $w.t.tx $w.t.ty $w.t.tz -side left
+
+	pack $w.n $w.t -anchor w -pady 5
+    }
 }
