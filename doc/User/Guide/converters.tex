@@ -30,22 +30,22 @@ foreign data. The converters import/export the following \sr{} data
 types: \datatype{Field}, \datatype{Matrix}, and \datatype{ColorMap}.
 Foreign data is text based.
 
-The following sections discuss \sr{}'s file-based objects, field
-export/import mechanics, format of foreign data files, converter
-command line options, and converter synopses.
+\sr{}'s file-based objects, field export/import mechanics, format of
+foreign data files, converter command line options, and converter
+synopses are discussed in the following sections.
 
 
 \subsection{\sr{} Persistent (File-based) Objects}
 \label{sec:sr_file_object}
 
-Objects (fields, matrices, color maps, \etc) \sr{} creates at runtime
+The objects (fields, matrices, color maps, \etc) \sr{} creates at runtime
 store themselves to files as \dfn{persistent objects}.  A persistent
 object is a ``snapshot'' of an object's data and state.  Runtime
 objects are reconstructed from their persistent file-based cousins.
 \sr{}'s persistent objects are also called \sr{} file-based objects.
 
 \sr{}'s persistent objects can be saved in binary form or text form.
-\sr{}'s binary objects are built atop XDR, a library that abstracts
+\sr{}'s binary objects are built on XDR, a library that abstracts
 away the architecture specific facets of data input/output (e.g.
 endianness, pointer size, etc).
 
@@ -70,32 +70,27 @@ converter and an export converter.
 
 To export a field, a simple \sci{} network and two converters are used.
 
-The converters export the components of a field to three files: mesh
-node locations are exported to a file, mesh connectivity data are
-exported to a second file, and field data values are exported to a
-third file.
+The components of a field are exported to three files.  Mesh node
+locations are exported to a file, mesh connectivity data are export to
+a second file, and field data values are exported to a third file.
 
-Field objects cannot be exported directly by the converters.  An
-export converter requires a field object and a field data object.  The
-field data object is a \sr{} matrix object. The matrix object is
-produced by simple \sr{} network.
-
-A network is constructed using modules \datatype{FieldReader},
+Field objects cannot be exported directly by the converters.  A field
+is first split into a mesh part (a field object with no data) and a
+data part (a matrix object) using a simple \sr{} network.  The
+network is constructed using modules \datatype{FieldReader},
 \datatype{ManageFieldData}, and \datatype{MatrixWriter}.  A
-\datatype{FieldReader} module reads a file-based field object.
+\datatype{FieldReader} module reads the field to be split.
 \datatype{FieldReader}'s output port is connected to
 \datatype{ManageFieldData}'s input port (\datatype{ManageFieldData}'s
 matrix input port is unconnected).  \datatype{ManageFieldData}'s
 matrix output port is connected to \datatype{MatrixWriter}'s input
-port.  The (executed) network saves the field's data as a file-based
-matrix object.
+port.  The (executed) network saves the field's data as a matrix object.
 
-After a matrix object is created, a field's mesh and data parts are
-exported to text files using field and matrix converters.  A field
-converter produces two files: a node location file (called a ``pts''
-file) and a node connectivity file (``tri'', ``tet'', ``quad'', or
-``hex'' files).  A matrix converter produces a file of data values
-(``txt'' files).
+After a field is split, its mesh and data parts are exported to
+text files using field and matrix converters.  A field converter
+produces two files: a node location file (called a ``pts'' file) and a
+node connectivity file (``tri'', ``tet'', ``quad'', or ``hex'' files).
+A matrix converter produces a file of data values (``txt'' files).
 
 \subsection{Importing a Field}
 \label{sec:import_field}
@@ -105,7 +100,7 @@ To import a field, two converters and a simple \sr{} network are used.
 A field converter is used to produce an incomplete (mesh data only)
 persistent field object from node location and node connectivity
 files.  A matrix converter is used to produce a persistent matrix
-object from a (\filename{txt}) data file.
+object from a node data file.
 
 A complete field (mesh and data) is assembled in \sr{} by
 constructing a simple network using modules \datatype{FieldReader},
@@ -127,9 +122,10 @@ the complete field object to a file.
 
 Converters export/import \dfn{node location files}, \dfn{connectivity
   files}, \dfn{structured mesh files}, \dfn{column matrix}, \dfn{dense
-  matrix files}, \dfn{sparse row matrix files} and \dfn{color map files}.
-All are human readable text files.  Sections below describe text file
-formats imported and exported by \sr{}'s converters.
+  matrix files}, \dfn{sparse row matrix files} and \dfn{color map
+  files}.  All files are human readable text files.  Text file formats
+imported and exported by \sr{}'s converters are discussed in following
+sections.
 
 \subsubsection{Node Location File}
 \label{sec:node_loc_fmt}
@@ -159,7 +155,7 @@ xN yN zN
 On export, option \option{-noPtsHeader} tells an export converter to
 omit \verb|N| from the output file.
 
-If \verb|N| is omitted from a file on import then option
+If \verb|N| is omitted from a file on import, option
 \option{-noPtsHeader} must be passed to the import converter.
 
 
@@ -167,7 +163,7 @@ If \verb|N| is omitted from a file on import then option
 \label{sec:node_conn_fmt}
 
 Five types of node connectivity files exist corresponding to the
-unstructured mesh types \datatype{CurveMesh}, \datatype{TriSurfMesh},
+unstructured mesh types: \datatype{CurveMesh}, \datatype{TriSurfMesh},
 \datatype{QuadSurfMesh}, \datatype{TetVolMesh}, and
 \datatype{HexVolMesh}.  The five file formats define
 edge, triangular, quadrilateral, tetrahedral, and hexahedral,
@@ -203,7 +199,7 @@ missing from a text file on import.
 Each of the remaining lines specify node indices of one element.
 Node indices are assumed to be zero-based unless option
 \option{-oneBasedIndexing} is used.  This option can be used with
-import and export converters to either read ones-based indices on
+import and export converters to read ones-based indices on
 import or to write ones-based indices on export.
 
 Edge files have two node indices per line, tri files have three, quad
@@ -247,8 +243,10 @@ element \(e_{i,j,k}\) is \(\{n_{i,j,k}, n_{i,j,k+1}, n_{i,j+1,k+1}, n_{i,j+1,k},
 from \filename{pts} files described in \secref{Node Location File
   Format}{sec:node_loc_fmt}.  \Filename{Pts} files for
 structured meshes specify the number of indices in each dimension of the
-mesh.  For example, a \filename{pts} file for a structured curve field
-(StructCurveField) looks like this:
+mesh. 
+
+A structured curve field (StructCurveField) \filename{pts} file looks
+like this:
 
 \begin{verbatim}
 NI
@@ -260,8 +258,8 @@ x1 y1 z1
 xN yN zN
 \end{verbatim}
 
-and a \filename{pts} file for a structured quadrilateral surface field
-(StructQuadSurfField) looks like this:
+A structured quadrilateral surface field
+(StructQuadSurfField) \filename{pts} file looks like this:
 
 \begin{verbatim}
 NI NJ
@@ -273,8 +271,8 @@ x1 y1 z1
 xN yN zN
 \end{verbatim}
 
-and a \filename{pts} file for a structured hexahedral volume field
-(StructHexVolField) looks like this:
+A structured hexahedral volume field (StructHexVolField)
+\filename{pts} file looks like this:
 
 \begin{verbatim}
 NI NJ NK
@@ -291,9 +289,9 @@ On export, option \option{-noHeader} tells a converter
 \command{StructHexVolFieldToText}) to omit mesh index counts
 from the output file.
 
-If node index count values are missing from a file on import then
-option \option{-noHeader} must be used.  It tells the converter
-(\command{TextToStructCurveField},
+If node index count values are missing from a file on import, option
+\option{-noHeader} must be used.  Option \option{-noHeader} tells the
+converter (\command{TextToStructCurveField},
 \command{TextToStructQuadSurfField}, or
 \command{TextToStructHexVolField}) the mesh index count(s).  Option
 \option{-noHeader} is followed by the appropriate mesh index count
@@ -321,10 +319,12 @@ export/import column matrices.
 On export, option \option{-noHeader} tells
 \command{ColumnMatrixToText} to omit \verb|N| from the output file.
 
-If \verb|N| is omitted from a file on import then option
+If \verb|N| is omitted from a file on import, option
 \option{-noHeader} must be passed to \command{TextToColumnMatrix}.
+Option \option{-noHeader} tells the converter the number of data
+values in the matrix.
 
-Following \verb|N| is list of data values.
+\verb|N| is followed by a list of data values.
 
 \subsubsection{Dense Matrix}
 
@@ -347,10 +347,10 @@ convert dense matrices to and from text based forms.
 of matrix rows and columns respectively .  
 
 On export, option \option{-noHeader} tells
-\command{DenseRowMatrixToText} to omits \verb|N| and \verb|M| from the
+\command{DenseRowMatrixToText} to omit \verb|N| and \verb|M| from the
 output file..
 
-If \verb|N| and \verb|M| are omitted from a file on import then option
+If \verb|N| and \verb|M| are omitted from a file on import, option
 \option{-noHeader N M} must be passed to
 \command{TextToDenseMatrix}.
 
@@ -384,7 +384,7 @@ On export, option \option{-noHeader} tells
 \verb|NE| from the output file.
 
 If \verb|NR|, \verb|NC|, and \verb|NE| are omitted from a file on
-import then option \option{-noHeader \ptext{nrows} \ptext{ncols}
+import, option \option{-noHeader \ptext{nrows} \ptext{ncols}
   \ptext{nentries}} must be passed to \command{TextToSparseRowMatrix}.
 
 Matrix entries must have ascending row indices. Column indices must be
@@ -414,7 +414,7 @@ the file.
 On export option \option{-noHeader} tells \command{ColorMapToText} to
 omit \verb|N| from the output file.
 
-If \verb|N| is omitted from a file on import then option
+If \verb|N| is omitted from a file on import, option
 \option{-noHeader} must be passed to \command{TextToColorMap}.
 
 Each line following \verb|N| is a color map entry consisting of an RGB
@@ -425,14 +425,14 @@ data values are in the range 0.0 to 1.0 inclusive.
 \label{sec:converter_synopses}
 
 Converter synopses for unstructured fields, structured fields, matrices,
-and color maps are presented in sections that follow.   Note that
+and color maps are presented in following sections.   Note that
 the names of import converters begin with ``TextTo'' (as in
 TextToCurveField) and export converters end with ``ToText'' (as in
 CurveFieldToText).
 
-If \sr{} is installed from its RPM package then converter commands are
+If \sr{} is installed from its RPM package, converter commands are
 located in \filename{/usr/local/SCIRun/bin}.  If \sr{} is installed
-from source code then converter commands are installed in
+from source code, converter commands are installed in
 \ptext{build-dir}\filename{/Standalone/convert}.  \ptext{Build-dir} is
 the directory where \sr{}'s \command{configure} and \command{make}
 commands were run.
@@ -440,7 +440,7 @@ commands were run.
 \subsubsection{Converter Synopses for Unstructured Fields}
 \label{sec:unstruct_field_synopses}
 
-In the synopses that follow, \ptext{field} is the name of a \sr{}
+In the following synopses, \ptext{field} is the name of a \sr{}
 file-based field object, \ptext{pts} is the name of a node location
 (\filename{pts}) file, and \ptext{edges}, \ptext{hexes},
 \ptext{quads}, \ptext{tets}, and \ptext{tris} are the names of node
@@ -494,7 +494,7 @@ TextToTriSurfField pts tris field [-noPtsCount] [-noElementsCount] [-oneBasedInd
 \subsubsection{Converter Synopses for Structured Fields}
 \label{sec:struct_field_synopses}
 
-In the synopses that follow, \ptext{field} is the name of a \sr{}
+In the following synopses, \ptext{field} is the name of a \sr{}
 file-base field object and \ptext{pts} is the name of a node location
 (\filename{pts}) file.
 
@@ -502,8 +502,8 @@ On export, option \option{-noHeader} tells a converter to omit
 field dimension information from the output file.
 
 On import, option \option{-noHeader} passes field dimension
-information to a converter (because this information is missing from
-the input file).
+information to a converter. Use \option{-noHeader} when field
+dimension information is missing from the input file.
 
 \begin{verbatim}
 StructCurveFieldToText field pts [-noHeader]
@@ -522,16 +522,16 @@ TextToStructHexVolField pts field [-noHeader ni nj nk]
 
 \subsubsection{Converter Synopses for Matrices}
 
-In the synopses that follow, \ptext{matrix-in} and \ptext{matrix-out}
-are the names of either \sr{} file-based matrix objects or the names
+In the following synopses, \ptext{matrix-in} and \ptext{matrix-out}
+are the names of \sr{} file-based matrix objects or the names
 of matrix text files, depending on context.
 
 On export, option \option{-noHeader} tells a converter to omit matrix
 dimension information from the output file.
 
 On import, option \option{-noHeader} passes matrix dimension
-information to a converter (because this information is missing from
-the input file).
+information to a converter.  Use \option{-noHeader} when matrix
+dimension information is missing from the input file.
 
 \begin{verbatim}
 ColumnMatrixToText matrix-in matrix-out [-noHeader]
@@ -556,9 +556,9 @@ matrix object or the name of a matrix text file, depending on context.
 On export, option \option{-noHeader} tells a converter to omit the
 count of color map entries from the output file.
 
-On import, option \option{-noHeader} passes the number of color map entries
-to a converter (because this information is missing from
-the input file).
+On import, option \option{-noHeader} passes the number of color map
+entries to a converter.  Use \option{-noHeader} when the number of
+color map entries is missing from the input file.
 
 \begin{verbatim}
 ColorMapToText  colormap-in colormap-out [-noHeader]
@@ -569,8 +569,8 @@ TextToColorMap  colormap-in colormap-out [-noHeader]
 \subsection{Examples}
 \label{sec:converter_ex}
 
-If \sr{}'s sample data have been installed then data import/export
-examples will be found in \directory{SCIRunData/convert-examples}
+If \sr{}'s sample data have been installed, data import/export
+examples will be found in \directory{SCIRunData/convert-examples}.
 Directory \directory{SCIRunData/convert-examples} contains examples of
 data that have been converted to/from text and \sr{} formats.  See
 \filename{SCIRunData/convert-examples/README} for details.
