@@ -389,8 +389,8 @@ PrismVolMesh::delete_cell_edges(Cell::index_type idx)
 {
   //ASSERT(!is_frozen());
   edge_lock_.lock();
-  const unsigned int base = idx * PRISM_NEDGES;
-  for (unsigned int i=base; i<base+ PRISM_NEDGES; ++i) {
+  const int base = idx * PRISM_NEDGES;
+  for ( int i=base; i<base+ PRISM_NEDGES; ++i) {
     //! If the Shared Edge Set is represented by the particular
     //! cell/edge index that is being recomputed, then
     //! remove it (and insert a non-recomputed edge if any left)
@@ -443,8 +443,8 @@ PrismVolMesh::delete_cell_faces(Cell::index_type idx)
 {
   //ASSERT(!is_frozen());
   face_lock_.lock();
-  const unsigned int base = idx * PRISM_NFACES;
-  for (unsigned int i=base; i<base+PRISM_NFACES; ++i) {
+  const int base = idx * PRISM_NFACES;
+  for ( int i=base; i<base+PRISM_NFACES; ++i) {
     // If the Shared Face Set is represented by the particular
     // cell/face index that is being recomputed, then
     // remove it (and insert a non-recomputed shared face if any exist)
@@ -499,9 +499,9 @@ PrismVolMesh::delete_cell_node_neighbors(Cell::index_type idx)
   //ASSERT(!is_frozen());
   node_neighbor_lock_.lock();
 
-  const unsigned int base = idx * PRISM_NNODES;
+  const int base = idx * PRISM_NNODES;
 
-  for (unsigned int i=base; i<base+PRISM_NNODES; ++i) {
+  for ( int i=base; i<base+PRISM_NNODES; ++i) {
 
     const unsigned int n = cells_[i];
 
@@ -870,7 +870,7 @@ PrismVolMesh::get_neighbors(Node::array_type &array,
   for (unsigned int i=0; i<node_neighbors_[idx].size(); i++) {
     const unsigned int base =
       node_neighbors_[idx][i]/PRISM_NNODES*PRISM_NNODES;
-    for (int c=base; c<base+PRISM_NNODES; c++) {
+    for (unsigned int c=base; c<base+PRISM_NNODES; c++) {
       if (cells_[c] != idx && inserted.find(cells_[c]) == inserted.end()) {
 	inserted.insert(cells_[c]);
 	array.push_back(cells_[c]);
@@ -1072,7 +1072,7 @@ PrismVolMesh::polygon_area(const Node::array_type &ni, const Vector N) const
   double area = 0;
   double an, ax, ay, az;  // abs value of normal and its coords
   int   coord;           // coord to ignore: 1=x, 2=y, 3=z
-  int   i, j, k;         // loop indices
+  unsigned int   i, j, k;         // loop indices
   const unsigned int n = ni.size();
 
   // select largest abs coordinate to ignore for projection
@@ -1466,7 +1466,7 @@ PrismVolMesh::add_elem(Node::array_type a)
 
   const unsigned int idx = cells_.size() / PRISM_NNODES;
  
-  for (unsigned int n = 0; n < a.size(); n++)
+  for (unsigned int n = 0; n < PRISM_NNODES; n++)
     cells_.push_back(a[n]);
 
   if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(idx);
@@ -1482,7 +1482,7 @@ void
 PrismVolMesh::delete_cells(set<int> &to_delete)
 {
   vector<under_type> old_cells = cells_;
-  unsigned int i = 0;
+  int i = 0;
 
   cells_.clear();
   cells_.reserve(old_cells.size() - to_delete.size()*PRISM_NNODES);
@@ -1498,7 +1498,7 @@ PrismVolMesh::delete_cells(set<int> &to_delete)
     ++i;
   }
 
-  for (; i < (unsigned int)(old_cells.size()/PRISM_NNODES); i++) {
+  for (; i < (int)(old_cells.size()/PRISM_NNODES); i++) {
     const unsigned int base = i * PRISM_NNODES;
     for (unsigned int c=base; c<base+PRISM_NNODES; c++)
       cells_.push_back(old_cells[c]);
