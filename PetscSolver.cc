@@ -594,7 +594,8 @@ PetscSolver::pressLinearSolve()
      cerr << "Init Norm: " << init_norm << " Error reduced by: " << norm/init_norm << endl;
      cerr << "Sum of RHS vector: " << sum_b << endl;
   }
-  if ((norm/init_norm < 1.0)&& (norm < 2.0))
+  //  if ((norm/init_norm < 1.0)&& (norm < 2.0))
+  if (norm/init_norm < 1.0)
     return true;
   else
     return false;

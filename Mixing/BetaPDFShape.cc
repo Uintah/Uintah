@@ -42,11 +42,11 @@ BetaPDFShape::computePDFFunction(double* meanMixVar,
 {
   d_validGammaValue = true;
   //cout<<"Beta::meanMixVar ="<<meanMixVar[0]<<" "<<statVar<<endl;
-  if ((meanMixVar[0]<0.0000001)||(meanMixVar[0]>0.999999)) {
+  if ((meanMixVar[0]<0.001)||(meanMixVar[0]>0.999)) {
      d_validGammaValue = false;
      return;
   }
-  if (statVar <= 1e-05*meanMixVar[0]) {
+  if (statVar <= 1e-04) {
      d_validGammaValue = false;
      return;
   }
@@ -106,10 +106,10 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
       {
 	//	cout << "meanmixvar " << meanMixVar[i] << endl;
 	new_d_statVar = 0.9*meanMixVar[i]*(1-meanMixVar[i])/2.0;
-	cout << "newstatvar = " << new_d_statVar << endl;
+	//cout << "newstatvar = " << new_d_statVar << endl;
 	new_factor = (1.0 - sumSqrMixVars)/new_d_statVar - 1.0;
 	d_coef[i] = meanMixVar[i]*new_factor;
-	cout << "beta is negative, new beta is calculated" << endl;
+	//cout << "beta is negative, new beta is calculated" << endl;
       }
     gammafn[i] = dgammaln_(&d_coef[i]); // gammaln(ai)
     //cout << "gammaln(" << i << ") = " << gammafn[i] << endl;
@@ -120,13 +120,13 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
   if (d_coef[d_dimPDF] <= 0.0)
     {
       new_d_statVar = 0.9*lastMixVars*(1-lastMixVars)/2.0;
-      cout << "lastMixVar = "<<lastMixVars<<" mean[d_dimPDF] = "<<meanMixVar[d_dimPDF]<<endl;
+      //cout << "lastMixVar = "<<lastMixVars<<" mean[d_dimPDF] = "<<meanMixVar[d_dimPDF]<<endl;
       new_factor = (1.0 - sumSqrMixVars)/new_d_statVar - 1.0;
       d_coef[d_dimPDF] = lastMixVars*new_factor;
-      cout << "Beta is negative, new beta is calculated" << endl;
+      //cout << "Beta is negative, new beta is calculated" << endl;
     }    
 
-  cout << lastMixVars << " Beta(" << d_dimPDF << ") = " << d_coef[d_dimPDF] << endl;
+  //cout << lastMixVars << " Beta(" << d_dimPDF << ") = " << d_coef[d_dimPDF] << endl;
   gammafn[d_dimPDF] = dgammaln_(&d_coef[d_dimPDF]); // computing gamma(aN)
   //  cout << "gammaln(" << i << ") = " << d_gammafn[i] << endl;
   //  cout << "*******************" << endl;
@@ -162,6 +162,14 @@ BetaPDFShape::computeShapeFunction(double *var) {
 
 //
 // $Log$
+// Revision 1.5  2001/08/26 06:31:48  spinti
+// 1. Changed Petsc's convergence criterion to not depend on absolute norm
+// 2. Removed zeroing of pressref in PressureSolver
+// 3. Added a requires in Properties.cc to make it consistent with taskgraph
+// 4. Changed criteria for computing PDF
+// 5. Initialized reqwrk array to zero in Stanjan
+// 6. Moved location of common block in stanlib.F
+//
 // Revision 1.4  2001/08/25 07:32:45  skumar
 // Incorporated Jennifer's beta-PDF mixing model code with some
 // corrections to the equilibrium code.

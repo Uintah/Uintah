@@ -139,6 +139,8 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
                *nofElements + 2*nofElements);
   int *ieqwrk = new int[lenieq]; // integer equilibrium work space
   double *reqwrk = new double[lenreq]; // real equilibrium work space
+  for (int i=0; i < lenreq; i++)
+    reqwrk[i] = 0;
 
   // Determine other required inputs
   double patm = initPress * .9869e-05; // Pa -> atm

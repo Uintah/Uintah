@@ -192,13 +192,14 @@ c    pointers
      ;   LoE,IoEEQN,IoELAM,IoELMA,IoELMB,IoF,IoG,IoHA,IoHC,IoPA,
      ;   IoPC,IoPMOL,IoQ,LoQ,IoQC,LoQC,IoRC,LoRC,IoRL,IoRP,
      ;   IoSMOA,IoSMOB,IoSMOO,IoSMOL,IoSMUL,IoW,IoX,IoXO,IoY,IoZ
+       common /kcallblock/ kcall
 c-----------------------------------------------------------------------
 c    iteration limit
        PARAMETER (KTRMAX=200)
 c    first call indicator
        SAVE
        DATA KCALL/1/
-       common /kcallblock/ kcall
+
 c-----------------------------------------------------------------------
 c    set comparison constants in computation precision
        IF (KCALL.NE.0)  THEN
@@ -6251,7 +6252,7 @@ c    header
 c
 c    get the enthalpy
 10     WRITE (KUTERM,11)
-11     FORMAT (/'   enthalpy above 298.15K (kcal/mol)?  '$)
+11     FORMAT (/'   enthalpy above 298.15K (kcal/mol)?  ')
        READ (KUTERM,*,ERR=18) HMH0J
        GOTO 20
 18     CALL SJDERR
@@ -6259,7 +6260,7 @@ c    get the enthalpy
 c
 c    get the entropy
 20     WRITE (KUTERM,21)
-21     FORMAT ('   entropy (cal/mol-K)?  '$)
+21     FORMAT ('   entropy (cal/mol-K)?  ')
        READ (KUTERM,*,ERR=28) S0J
        IF (S0J.LE.ZERO)  THEN
            WRITE (KUTERM,14)

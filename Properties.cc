@@ -95,6 +95,8 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
 			  &Properties::computeProps);
 
   int numGhostCells = 0;
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
+		numGhostCells);
   // requires scalars
   tsk->requires(Task::NewDW, d_lab->d_densitySPLabel, Ghost::None,
 		numGhostCells);
