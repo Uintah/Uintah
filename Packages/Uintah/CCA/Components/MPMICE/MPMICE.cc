@@ -356,6 +356,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_mpm->scheduleExMomIntegrated(                 sched, patches, mpm_matls);
   d_mpm->scheduleSetGridBoundaryConditions(       sched, patches, mpm_matls);
   d_mpm->scheduleCalculateDampingRate(            sched, patches, mpm_matls);
+  d_mpm->scheduleAddNewParticles(                 sched, patches, mpm_matls);
   d_mpm->scheduleConvertLocalizedParticles(       sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, mpm_matls);
   //d_mpm->scheduleApplyExternalLoads(              sched, patches, mpm_matls);
