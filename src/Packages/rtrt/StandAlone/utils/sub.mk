@@ -43,6 +43,10 @@ PROGRAM := $(SRCDIR)/vq
 SRCS := $(SRCDIR)/vq.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/parallel_vq-pnn
+SRCS := $(SRCDIR)/parallel_vq-pnn.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/vq-error
 SRCS := $(SRCDIR)/vq-error.cc
 include $(SCIRUN_SCRIPTS)/program.mk
