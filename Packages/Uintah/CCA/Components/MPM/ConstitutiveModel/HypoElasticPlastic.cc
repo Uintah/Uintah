@@ -41,7 +41,7 @@ static DebugStream cout_CST1("HEP1",false);
 
 HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, 
                                        MPMLabel* Mlb, 
-				       MPMFlags* Mflag)
+                                       MPMFlags* Mflag)
 {
   lb = Mlb;
   flag = Mflag;
@@ -394,6 +394,7 @@ void HypoElasticPlastic::allocateCMDataAddRequires(Task* task,
                                                    const PatchSet* patch,
                                                    MPMLabel* lb) const
 {
+  Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matlset = matl->thisMaterial();
 
   // Allocate the variables shared by all constitutive models
@@ -402,7 +403,6 @@ void HypoElasticPlastic::allocateCMDataAddRequires(Task* task,
   addSharedRForConvertExplicit(task, matlset, patch);
 
   // Add requires local to this model
-  Ghost::GhostType  gnone = Ghost::None;
   task->requires(Task::NewDW, pLeftStretchLabel_preReloc,    matlset, gnone);
   task->requires(Task::NewDW, pRotationLabel_preReloc,       matlset, gnone);
   task->requires(Task::NewDW, pStrainRateLabel_preReloc,     matlset, gnone);
@@ -426,7 +426,7 @@ void HypoElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
   // deleted to the particle to be added. 
   // This method is defined in the ConstitutiveModel base class.
   copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-  
+
   // Copy the data local to this constitutive model from the particles to 
   // be deleted to the particles to be added
   ParticleSubset::iterator n,o;
@@ -464,6 +464,7 @@ void HypoElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
 
   n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
+
     pLeftStretch[*n] = o_LeftStretch[*o];
     pRotation[*n] = o_Rotation[*o];
     pStrainRate[*n] = o_StrainRate[*o];
@@ -708,20 +709,20 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Calculate the velocity gradient (L) from the grid velocity
       short pgFld[27];
       if (flag->d_fracture) {
-	for(int k=0; k<27; k++) 
-	  pgFld[k]=pgCode[idx][k];
-	if (flag->d_8or27==27) 
-	  tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
-					    pgFld, gVelocity, GVelocity);
-	else 
-	  tensorL = computeVelocityGradient(patch, oodx, px[idx], 
-					    pgFld, gVelocity, GVelocity);
+        for(int k=0; k<27; k++) 
+          pgFld[k]=pgCode[idx][k];
+        if (flag->d_8or27==27) 
+          tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
+                                            pgFld, gVelocity, GVelocity);
+        else 
+          tensorL = computeVelocityGradient(patch, oodx, px[idx], 
+                                            pgFld, gVelocity, GVelocity);
       } else {
-	if (flag->d_8or27==27)
-	  tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
-					    gVelocity);
-	else
-	  tensorL = computeVelocityGradient(patch, oodx, px[idx], gVelocity);
+        if (flag->d_8or27==27)
+          tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
+                                            gVelocity);
+        else
+          tensorL = computeVelocityGradient(patch, oodx, px[idx], gVelocity);
       }
 
       // Compute the deformation gradient increment using the time_step

@@ -52,7 +52,7 @@ namespace Uintah {
     struct CMData {
       double Bulk;    /*< Bulk modulus */
       double Shear;   /*< Shear Modulus */
-    };	 
+    };   
 
     // Create datatype for storing porosity parameters
     struct PorosityData {
@@ -113,7 +113,7 @@ namespace Uintah {
     PlasticityModel*    d_plastic;
     DamageModel*        d_damage;
     MPMEquationOfState* d_eos;
-	 
+         
     // Prevent copying of this class
     // copy constructor
     //HypoElasticPlastic(const HypoElasticPlastic &cm);
@@ -126,18 +126,18 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* lb,MPMFlags* flag);
     HypoElasticPlastic(const HypoElasticPlastic* cm);
-	 
+         
     ////////////////////////////////////////////////////////////////////////
     /*! \brief destructor  */
     ////////////////////////////////////////////////////////////////////////
     virtual ~HypoElasticPlastic();
-	 
+         
     ////////////////////////////////////////////////////////////////////////
     /*! \brief compute stable timestep for this patch */
     ////////////////////////////////////////////////////////////////////////
     virtual void computeStableTimestep(const Patch* patch,
-				       const MPMMaterial* matl,
-				       DataWarehouse* new_dw);
+                                       const MPMMaterial* matl,
+                                       DataWarehouse* new_dw);
 
     ////////////////////////////////////////////////////////////////////////
     /*! 
@@ -151,20 +151,20 @@ namespace Uintah {
     */
     ////////////////////////////////////////////////////////////////////////
     virtual void computeStressTensor(const PatchSubset* patches,
-				     const MPMMaterial* matl,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
+                                     const MPMMaterial* matl,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
 
     virtual void computeStressTensor(const PatchSubset* ,
-				     const MPMMaterial* ,
-				     DataWarehouse* ,
-				     DataWarehouse* ,
+                                     const MPMMaterial* ,
+                                     DataWarehouse* ,
+                                     DataWarehouse* ,
 #ifdef HAVE_PETSC
                                      MPMPetscSolver* ,
 #else
                                      SimpleSolver* ,
 #endif
-				     const bool )
+                                     const bool )
     {
     }
 
@@ -180,53 +180,53 @@ namespace Uintah {
     /*! \brief initialize  each particle's constitutive model data */
     ////////////////////////////////////////////////////////////////////////
     virtual void addParticleState(std::vector<const VarLabel*>& from,
-				  std::vector<const VarLabel*>& to);
+                                  std::vector<const VarLabel*>& to);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief initialize  each particle's constitutive model data */
     ////////////////////////////////////////////////////////////////////////
     virtual void initializeCMData(const Patch* patch,
-				  const MPMMaterial* matl,
-				  DataWarehouse* new_dw);
+                                  const MPMMaterial* matl,
+                                  DataWarehouse* new_dw);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-					   const PatchSet* patch, 
-					   MPMLabel* lb) const;
+                                           const PatchSet* patch, 
+                                           MPMLabel* lb) const;
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-				   ParticleSubset* subset,
-				   map<const VarLabel*, 
-				   ParticleVariableBase*>* newState,
-				   ParticleSubset* delset,
-				   DataWarehouse* old_dw);
+                                   ParticleSubset* subset,
+                                   map<const VarLabel*, 
+                                   ParticleVariableBase*>* newState,
+                                   ParticleSubset* delset,
+                                   DataWarehouse* old_dw);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
     virtual void addInitialComputesAndRequires(Task* task,
-					       const MPMMaterial* matl,
-					       const PatchSet* patches) const;
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) const;
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
     virtual void addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patches) const;
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches) const;
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
     virtual void addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patches,
-					const bool recursion) const;
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches,
+                                        const bool recursion) const;
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
@@ -247,39 +247,39 @@ namespace Uintah {
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
     virtual void addRequiresDamageParameter(Task* task,
-					    const MPMMaterial* matl,
-					    const PatchSet* patches) const;
+                                            const MPMMaterial* matl,
+                                            const PatchSet* patches) const;
 
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
     virtual void getDamageParameter(const Patch* patch, 
-				    ParticleVariable<int>& damage, int dwi,
-				    DataWarehouse* old_dw,
-				    DataWarehouse* new_dw);
+                                    ParticleVariable<int>& damage, int dwi,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Get the increment in plastic temperature. */
     ////////////////////////////////////////////////////////////////////////
     void getPlasticTemperatureIncrement(ParticleSubset* pset,
-				        DataWarehouse* new_dw,
+                                        DataWarehouse* new_dw,
                                         ParticleVariable<double>& T) ;
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Sockets for MPM-ICE */
     ////////////////////////////////////////////////////////////////////////
     virtual double computeRhoMicroCM(double pressure,
-				     const double p_ref,
-				     const MPMMaterial* matl);
+                                     const double p_ref,
+                                     const MPMMaterial* matl);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Sockets for MPM-ICE */
     ////////////////////////////////////////////////////////////////////////
     virtual void computePressEOSCM(double rho_m, double& press_eos,
-				   double p_ref,
-				   double& dp_drho, double& ss_new,
-				   const MPMMaterial* matl);
+                                   double p_ref,
+                                   double& dp_drho, double& ss_new,
+                                   const MPMMaterial* matl);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Sockets for MPM-ICE */
@@ -292,18 +292,18 @@ namespace Uintah {
     /*! \brief Compute the updated left stretch and rotation tensors */
     ////////////////////////////////////////////////////////////////////////
     void computeUpdatedVR(const double& delT,
-			  const Matrix3& DD, 
-			  const Matrix3& WW,
-			  Matrix3& VV, 
+                          const Matrix3& DD, 
+                          const Matrix3& WW,
+                          Matrix3& VV, 
 
-			  Matrix3& RR);  
+                          Matrix3& RR);  
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Compute the rate of rotation tensor */
     ////////////////////////////////////////////////////////////////////////
     Matrix3 computeRateofRotation(const Matrix3& tensorV, 
-				  const Matrix3& tensorD,
-				  const Matrix3& tensorW);
+                                  const Matrix3& tensorD,
+                                  const Matrix3& tensorW);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Compute the elastic tangent modulus tensor for isotropic

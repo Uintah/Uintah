@@ -700,28 +700,28 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       pIntHeatRate[idx] = 0.0;
 
       cout_EP << getpid() << " idx = " << idx 
-	      << " vel = " << pVelocity[idx] << endl;
+              << " vel = " << pVelocity[idx] << endl;
       //-----------------------------------------------------------------------
       // Stage 1:
       //-----------------------------------------------------------------------
       // Calculate the velocity gradient (L) from the grid velocity
       short pgFld[27];
       if (flag->d_fracture) {
-	for(int k=0; k<27; k++) 
-	  pgFld[k]=pgCode[idx][k];
-	if (flag->d_8or27==27) 
-	  tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
-					    pgFld, gVelocity, GVelocity);
-	else 
-	  tensorL = computeVelocityGradient(patch, oodx, px[idx], 
-					    pgFld, gVelocity, GVelocity);
+        for(int k=0; k<27; k++) 
+          pgFld[k]=pgCode[idx][k];
+        if (flag->d_8or27==27) 
+          tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
+                                            pgFld, gVelocity, GVelocity);
+        else 
+          tensorL = computeVelocityGradient(patch, oodx, px[idx], 
+                                            pgFld, gVelocity, GVelocity);
       } else {
-	if (flag->d_8or27==27)
-	  tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
-					    gVelocity, pErosion[idx]);
-	else
-	  tensorL = computeVelocityGradient(patch, oodx, px[idx], 
-					    gVelocity, pErosion[idx]);
+        if (flag->d_8or27==27)
+          tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
+                                            gVelocity, pErosion[idx]);
+        else
+          tensorL = computeVelocityGradient(patch, oodx, px[idx], 
+                                            gVelocity, pErosion[idx]);
       }
       for (int ii = 0; ii < 3; ++ii) {
         for (int jj = 0; jj < 3; ++jj) {
@@ -840,7 +840,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
         melted = true;
 
         // Set the deviatoric stress to zero
-	if (d_doMelting) tensorS = 0.0;
+        if (d_doMelting) tensorS = 0.0;
 
         d_plastic->updateElastic(idx);
 
@@ -1019,9 +1019,9 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       if (flag->d_doErosion) {
         if (pLocalized[idx]) {
           if (d_allowNoTension) {
-	    if (p > 0.0) tensorSig = zero;
-	    else tensorSig = tensorHy;
-	  }
+            if (p > 0.0) tensorSig = zero;
+            else tensorSig = tensorHy;
+          }
           else if (d_setStressToZero) tensorSig = zero;
         }
       }
@@ -1127,12 +1127,12 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
         // Use erosion algorithms to treat localized particles
         if (isLocalized) {
 
-	  // If the localized particles fail again then set their stress to zero
+          // If the localized particles fail again then set their stress to zero
           if (pLocalized[idx]) {
             pDamage_new[idx] = 0.0;
             pPorosity_new[idx] = 0.0;
-	    tensorSig = zero;
-	  } else {
+            tensorSig = zero;
+          } else {
 
             // set the particle localization flag to true  
             pLocalized_new[idx] = 1;
@@ -1141,11 +1141,11 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
             // Apply various erosion algorithms
             if (d_allowNoTension) {
-	      if (p > 0.0) tensorSig = zero;
-	      else tensorSig = tensorHy;
-	    }
+              if (p > 0.0) tensorSig = zero;
+              else tensorSig = tensorHy;
+            }
             else if (d_setStressToZero) tensorSig = zero;
-	  }
+          }
 
         }
       }
