@@ -231,4 +231,26 @@ const TypeDescription* get_type_description(Tensor*)
   return td;
 }
 
+
+ostream& operator<<( ostream& os, const Tensor& t )
+{
+  os << '[' << t.mat_[0][0] << ' ' << t.mat_[0][1] << ' ' << t.mat_[0][2]
+     << ' ' << t.mat_[1][0] << ' ' << t.mat_[1][1] << ' ' << t.mat_[1][2]
+     << ' ' << t.mat_[2][0] << ' ' << t.mat_[2][1] << ' ' << t.mat_[2][2]
+     << ']';
+
+  return os;
+}
+
+istream& operator>>( istream& is, Tensor& t)
+{
+  t = Tensor();
+  is >> t.mat_[0][0] >> t.mat_[0][1] >> t.mat_[0][2]
+     >> t.mat_[1][0] >> t.mat_[1][1] >> t.mat_[1][2]
+     >> t.mat_[2][0] >> t.mat_[2][1] >> t.mat_[2][2];
+     
+  return is;
+}
+
+
 } // End namespace SCIRun

@@ -74,6 +74,9 @@ public:
 
 const TypeDescription* get_type_description(Tensor*);
 
+SCICORESHARE std::ostream& operator<<(std::ostream& os, const Tensor& t);
+SCICORESHARE std::istream& operator>>(std::istream& os, Tensor& t);
+
 } // End namespace SCIRun
 
 #endif // Geometry_Tensor_h
