@@ -132,6 +132,10 @@ GeoProbeScene::GeoProbeScene(GuiContext* ctx)
     yb_(ctx->subVar("yb")),
     za_(ctx->subVar("za")),
     zb_(ctx->subVar("zb")),
+    gpfilename_(ctx->subVar("gpfilename")),
+    iso_min_(ctx->subVar("iso_min")),
+    iso_max_(ctx->subVar("iso_max")),
+    iso_val_(ctx->subVar("iso_val")),
     xa_act_(ctx->subVar("xa-active")),
     xa_mat_(ctx->subVar("xa-usemat")),
     xb_act_(ctx->subVar("xb-active")),
@@ -148,11 +152,7 @@ GeoProbeScene::GeoProbeScene(GuiContext* ctx)
     gui_color_g_(ctx->subVar("color-g")),
     gui_color_b_(ctx->subVar("color-b")),
     //    surfmat(0),
-    hvol(0),
-    gpfilename_(ctx->subVar("gpfilename")),
-    iso_min_(ctx->subVar("iso_min")),
-    iso_max_(ctx->subVar("iso_max")),
-    iso_val_(ctx->subVar("iso_val"))
+    hvol(0)
 {
 }
 
@@ -188,7 +188,7 @@ Scene* GeoProbeScene::make_scene(Object *obj)
 						  rtrt::Color(0.0,0.0,0.0),
 						  Vector(0,0,1)) );
   // set the shadow mode
-  scene->select_shadow_mode( Hard_Shadows );
+  scene->select_shadow_mode( No_Shadows );
   return scene;
 }
 
