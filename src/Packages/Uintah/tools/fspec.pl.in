@@ -358,7 +358,11 @@ sub cname {
     if($fortran_underscore && $name =~ /_/){
 	$name.="_";
     }
-    $name.="_";
+    if($fortran_underscore){
+      $name.="_";
+    } else {
+      $name.="";
+    }
 }
 
 print OUT "#ifndef PASS1\n";
