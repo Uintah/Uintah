@@ -48,8 +48,11 @@ SRCS     += \
 	$(SRCDIR)/Timer.cc \
 	$(SRCDIR)/TypeDescription.cc \
         $(SRCDIR)/XMLParser.cc \
-        $(SRCDIR)/ProgressiveWarning.cc \
-	$(SRCDIR)/GenerateUUID.cc
+        $(SRCDIR)/ProgressiveWarning.cc
+
+ifeq ($(BUILD_SCIRUN2),yes)
+SRCS += $(SRCDIR)/GenerateUUID.cc
+endif
 
 PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Math
 LIBS := $(XML_LIBRARY) $(DL_LIBRARY) $(THREAD_LIBRARY)
