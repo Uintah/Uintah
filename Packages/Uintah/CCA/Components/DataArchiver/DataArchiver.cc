@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <fstream>
 #include <iostream>
+#include <stdio.h>
 #include <sstream>
 #include <vector>
 #include <sys/param.h>
