@@ -3,18 +3,17 @@
 #define UINTAH_HOMEBREW_CCVariableBase_H
 
 #include <Packages/Uintah/Core/Grid/Variable.h>
-#include <mpi.h>
 
 namespace SCIRun {
   class IntVector;
 }
 
 namespace Uintah {
+  using SCIRun::IntVector;
 
-using SCIRun::IntVector;
-
-class OutputContext;
-   class Patch;
+  class BufferInfo;
+  class OutputContext;
+  class Patch;
 
 /**************************************
 
@@ -65,10 +64,8 @@ WARNING
 			      const IntVector& lowIndex,
 			      const IntVector& highIndex) = 0;
       virtual void* getBasePointer() = 0;
-      void getMPIBuffer(void*& buf, int& count,
-			MPI_Datatype& datatype, bool& free_datatype,
-			const IntVector& low, const IntVector& high);
-      void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype);
+     void getMPIBuffer(BufferInfo& buffer,
+		       const IntVector& low, const IntVector& high);
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
       virtual void getSizes(IntVector& low, IntVector& high, IntVector& siz) const = 0;
       virtual void getSizes(IntVector& low, IntVector& high,

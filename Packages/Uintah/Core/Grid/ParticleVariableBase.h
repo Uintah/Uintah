@@ -5,18 +5,16 @@
 #include <Packages/Uintah/Core/Grid/ParticleSubset.h>
 #include <Packages/Uintah/Core/Grid/Variable.h>
 
-#include <mpi.h>
-
 #include <vector>
 
 namespace Uintah {
-
-   class OutputContext;
-   class ParticleSubset;
-   class ParticleSet;
-   class Patch;
-   class ProcessorGroup;
-   class TypeDescription;
+  class BufferInfo;
+  class OutputContext;
+  class ParticleSubset;
+  class ParticleSet;
+  class Patch;
+  class ProcessorGroup;
+  class TypeDescription;
 
 /**************************************
 
@@ -65,11 +63,14 @@ WARNING
 			  std::vector<ParticleVariableBase*> srcs,
 			  particleIndex extra = 0) = 0;
       virtual void unpackMPI(void* buf, int bufsize, int* bufpos,
-			     const ProcessorGroup* pg, int start, int n) = 0;
+			     const ProcessorGroup* pg,
+			     ParticleSubset* pset) = 0;
       virtual void packMPI(void* buf, int bufsize, int* bufpos,
-			   const ProcessorGroup* pg, int start, int n) = 0;
+			   const ProcessorGroup* pg,
+			   ParticleSubset* pset) = 0;
       virtual void packsizeMPI(int* bufpos,
-			       const ProcessorGroup* pg, int start, int n) = 0;
+			       const ProcessorGroup* pg,
+			       ParticleSubset* pset) = 0;
 
       //////////
       // Insert Documentation Here:
@@ -84,8 +85,7 @@ WARNING
       }
       
       virtual void* getBasePointer() = 0;
-      void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype,
-			bool& free_datatype, ParticleSubset* sendset);
+      void getMPIBuffer(BufferInfo& buffer, ParticleSubset* sendset);
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
    protected:
       ParticleVariableBase(const ParticleVariableBase&);
