@@ -545,6 +545,7 @@ HexVolMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
 void
 HexVolMesh::compute_node_neighbors()
 {
+  if (!(synchronized_ & EDGES_E)) synchronize(EDGES_E);
   node_nbor_lock_.lock();
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());

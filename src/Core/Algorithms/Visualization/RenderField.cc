@@ -110,7 +110,7 @@ template <>
 bool 
 add_data(const Point &, const Tensor &, GeomArrows *, 
 	 GeomSwitch *,
-	 MaterialHandle &, const string &, double, bool)
+	 MaterialHandle &, const string &, double, bool, bool)
 {
   return false;
 }
@@ -119,11 +119,14 @@ template <>
 bool 
 add_data(const Point &p, const Vector &d, GeomArrows *arrows, 
 	 GeomSwitch *,
-	 MaterialHandle &mat, const string &, double sf, bool normalize)
+	 MaterialHandle &mat, const string &, double sf, bool normalize,
+	 bool bidirectional)
 {
   Vector v(d);
   if (normalize) { v.safe_normalize(); }
   arrows->add(p, v*sf, mat, mat, mat);
+  if (bidirectional) arrows->add(p, -v*sf, mat, mat, mat);
   return true;
 }
+
 } // end namespace SCIRun

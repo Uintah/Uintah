@@ -60,7 +60,8 @@ public:
 		      bool def_col, ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
-		      int res, bool use_normals, bool use_transparency) = 0;
+		      int res, bool use_normals, bool use_transparency,
+		      bool bidirectional, bool arrow_heads) = 0;
 
   RenderFieldBase();
   virtual ~RenderFieldBase();
@@ -99,11 +100,12 @@ public:
 		  bool nodes, bool edges, bool faces, bool data, 
 		  bool data_at, const string &ndt, const string &edt, 
 		  double ns, double es, double vs, bool normalize,
-		  bool use_normals, bool use_transparency);
+		  bool use_normals, bool use_transparency,
+		  bool bidirectional, bool arrow_heads);
 
   void render_data(const Fld *fld, 
 		   const string &data_display_type,
-		   double scale, bool normalize);
+		   double scale, bool normalize, bool bidirectional);
 
   void render_materials(const Fld *fld, const string &data_display_type);
 
@@ -114,7 +116,8 @@ public:
 		      bool data_at, ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
-		      int res, bool use_normals, bool use_transparency);
+		      int res, bool use_normals, bool use_transparency,
+		      bool bidirectional, bool arrow_heads);
     
 private:
   inline void add_sphere(const Point &p, double scale, GeomGroup *g, 
@@ -179,7 +182,7 @@ to_double(const Vector&, double &);
 template <class Dat>
 bool 
 add_data(const Point &, const Dat &, GeomArrows *, 
-	 GeomSwitch *, MaterialHandle &, const string &, double, bool)
+	 GeomSwitch *, MaterialHandle &, const string &, double, bool, bool)
 {
   return false;
 }
@@ -187,12 +190,12 @@ add_data(const Point &, const Dat &, GeomArrows *,
 template <>
 bool 
 add_data(const Point &, const Vector &, GeomArrows *, 
-	 GeomSwitch *, MaterialHandle &, const string &, double, bool);
+	 GeomSwitch *, MaterialHandle &, const string &, double, bool, bool);
 
 template <>
 bool 
 add_data(const Point &, const Tensor &, GeomArrows *, 
-	 GeomSwitch *, MaterialHandle &, const string &, double, bool);
+	 GeomSwitch *, MaterialHandle &, const string &, double, bool, bool);
 
 template <class Fld, class Loc>
 void 
@@ -202,7 +205,8 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 			      bool def_col, ColorMapHandle color_handle,
 			      const string &ndt, const string &edt,
 			      double ns, double es, double vs, bool normalize, 
-			      int res, bool use_normals, bool use_transparency)
+			      int res, bool use_normals, bool use_transparency,
+			      bool bidirectional, bool arrow_heads)
 {
   Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
   ASSERT(fld != 0);
@@ -210,7 +214,8 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
   color_handle_ = color_handle;
   res_ = res;
   render_all(fld, nodes, edges, faces, data, def_col,  ndt, edt, ns, es, vs, 
-	     normalize, use_normals, use_transparency);
+	     normalize, use_normals, use_transparency, bidirectional, 
+	     arrow_heads);
 }
 
 
@@ -219,7 +224,8 @@ void
 RenderField<Fld, Loc>::render_data(const Fld *fld,
 				   const string &display_type,
 				   double scale, 
-				   bool normalize)
+				   bool normalize,
+				   bool bidirectional)
 {
   //cerr << "rendering data_at" << endl;
   double val = 0.0L;
@@ -236,7 +242,7 @@ RenderField<Fld, Loc>::render_data(const Fld *fld,
       to_double(tmp, val);
       MaterialHandle m = choose_mat(false, *iter);
       add_data(p, tmp, vec_node_, data_switch_, 
-	       m, display_type, scale, normalize); 
+	       m, display_type, scale, normalize, bidirectional); 
     }
     ++iter;
   }
@@ -675,8 +681,10 @@ RenderField<Fld, Loc>::render_all(const Fld *fld, bool nodes,
 				  bool edges, bool faces, bool data,
 				  bool data_at,
 				  const string &ndt, const string &edt,
-				  double ns, double es, double vs, bool normalize,
-				  bool use_normals, bool use_transparency)
+				  double ns, double es, double vs, 
+				  bool normalize, bool use_normals, 
+				  bool use_transparency, bool bidirectional,
+				  bool arrow_heads)
 {
   if (data_at) render_materials(fld, ndt);
   if (nodes) render_nodes(fld, ndt, ns);
@@ -684,9 +692,10 @@ RenderField<Fld, Loc>::render_all(const Fld *fld, bool nodes,
   if (faces) render_faces(fld, use_normals, use_transparency);
   
   if (data) {
-    vec_node_ = scinew GeomArrows(0.15, 0.6);
+    if (arrow_heads) vec_node_ = scinew GeomArrows(0.15, 0.6);
+    else vec_node_ = scinew GeomArrows(0, 0.6);
     data_switch_ = scinew GeomSwitch(vec_node_);
-    render_data(fld, ndt, vs, normalize);
+    render_data(fld, ndt, vs, normalize, bidirectional);
   }
 }
 

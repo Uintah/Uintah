@@ -45,6 +45,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-active_tab
 	global $this-has_vec_data
 	global $this-interactive_mode
+	global $this-bidirectional
+	global $this-arrow-heads-on
 	set $this-node_display_type Spheres
 	set $this-edge_display_type Lines
 	set $this-node_scale 0.03
@@ -66,6 +68,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-use-normals 0
 	set $this-use-transparency 0
 	set $this-interactive_mode "Interactive"
+	set $this-bidirectional 0
+	set $this-arrow-heads-on 1
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-has_vec_data w "$this vec_tab_changed"
 	trace variable $this-nodes-as-disks w "$this disk_render_status_changed"
@@ -234,7 +238,18 @@ itcl_class SCIRun_Visualization_ShowField {
 		-command "$this-c toggle_normalize" \
 		-variable $this-normalize-vectors
 
+	checkbutton $vector.bidirectional \
+		-text "Render Vectors bidirectionally" \
+		-command "$this-c toggle_bidirectional" \
+		-variable $this-bidirectional
+
+	checkbutton $vector.arrowheads \
+		-text "Show Vector arrowheads" \
+		-command "$this-c toggle_arrowheads" \
+		-variable $this-arrow-heads-on
+
 	pack $vector.show_vectors $vector.normalize_vectors \
+	        $vector.bidirectional $vector.arrowheads \
 		-side top -fill y -anchor w
 
 	expscale $vector.slide -label "Vector Scale" \
