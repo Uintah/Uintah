@@ -12,6 +12,7 @@ fi
 cd "${BUILDROOT}/${mode}/build"
 
 echo "Configuring ${mode} build at `date` using these arguments"
+echo "\t$CONFIGURE_ARGS"
 echo "../../src/configure $CONFIGURE_ARGS" > configure_command
 chmod a+x configure_command
 ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
