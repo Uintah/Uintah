@@ -170,7 +170,11 @@ public:
   // Add to the range set, asserting that value is greater or equal
   // to anything already in the set.
   void addInOrder(int value) throw(ConsecutiveRangeSetException);
-
+  
+  template <class AnyIterator>
+  void addInOrder(const AnyIterator& begin, const AnyIterator& end)
+  { for (AnyIterator it = begin; it != end; it++) addInOrder(*it); }
+  
   bool operator==(const ConsecutiveRangeSet& set2) const;
   bool operator!=(const ConsecutiveRangeSet& set2) const
   { return !(*this == set2); }
