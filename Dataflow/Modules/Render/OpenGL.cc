@@ -985,7 +985,6 @@ OpenGL::redraw_frame()
 	    }
 	    glPopMatrix();
 		
-	    delete pinchText[0];
 	    sprintf(scalestr, "Scale: %.2f", bawgl->virtualViewScale);
 		
 	    pinchText[0] = scinew GeomText(scalestr, Point(1,1,1));
@@ -1028,7 +1027,6 @@ OpenGL::redraw_frame()
 	    }
 	    glPopMatrix();
 	
-	    delete pinchText[1];
 	    sprintf(scalestr, "Velocity: %.2f", -1000*bawgl->velocity);
 	
 	    pinchText[1] = scinew GeomText(scalestr, Point(1,1,1));
