@@ -81,8 +81,8 @@
 		    <inletType>primary</inletType>
 		    <geom_object>
 		      <box label="inlet">
-			<min>[-4,0.44,0.44]</min>
-			<max>[0,0.56,0.56]</max>
+			<min>[-4,0.468,0.468]</min>
+			<max>[0,0.532,0.532]</max>
 		      </box>
 		    </geom_object>
 		</FlowInlet>
