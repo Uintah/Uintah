@@ -87,6 +87,8 @@ WARNING
     virtual void releaseLoadBalancer() = 0;
     
     virtual DataWarehouse* get_dw(int idx) = 0;
+    virtual DataWarehouse* getLastDW(void) = 0;
+
     virtual void logMemoryUse() = 0;
       
     //////////

@@ -249,7 +249,7 @@ void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
 {
   for(; req != 0; req=req->next){
     if (dbg.active())
-      dbg << d_myworld->myrank() << "     Looking at req: " << *req << '\n';
+      dbg << d_myworld->myrank() << "     Checking edge for req: " << *req << ", task: " << *req->task << ", domain: " << req->patches_dom << '\n';
     if(sc->isNewDW(req->mapDataWarehouse())){
       // If DW is finalized, we assume that we already have it,
       // or that we will get it sent to us.  Otherwise, we set
@@ -266,7 +266,7 @@ void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
         // determine if we need to add a dependency edge
 	bool add=false;
 	if (dbg.active())
-          dbg << d_myworld->myrank() << "       Checking edge from task: " << *compiter->second->task << " to task: " << *req->task << '\n';
+          dbg << d_myworld->myrank() << "       Checking edge from comp: " << *compiter->second << ", task: " << *compiter->second->task << ", domain: " << compiter->second->patches_dom << '\n';
 	if(req->mapDataWarehouse() == compiter->second->mapDataWarehouse()){
 	  if(task->isReductionTask()){
             // Make sure that we get the comp from the reduction task
