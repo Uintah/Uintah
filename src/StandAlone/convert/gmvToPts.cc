@@ -50,7 +50,7 @@ main(int argc, char* argv[])
     //  cout << tmp << endl << endl;
   }
 
-  long  node, mesh,elem;
+  long  node, mesh, elem = 4;
 
   const char *fname=0;
   string ext=".pts";
