@@ -515,7 +515,8 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
 				    double delta_t, int index)
 {
   int matlIndex = 0;
-  int numGhostCells = 0;
+  int numGhostCells = 1;
+  int zeroGhostCells = 0;
   int nofStencils = 7;
   DataWarehouseP old_dw = new_dw->getTop();
   // Get the PerPatch CellInformation data
@@ -531,54 +532,47 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   //}
   CellInformation* cellinfo = cellInfoP;
   old_dw->get(d_velocityVars->old_density, d_lab->d_densityCPLabel, 
-	      matlIndex, patch, Ghost::None, numGhostCells);
+	      matlIndex, patch, Ghost::None, zeroGhostCells);
   switch (index) {
   case Arches::XDIR:
     new_dw->get(d_velocityVars->uVelocity, d_lab->d_uVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::None, numGhostCells);
-    old_dw->get(d_velocityVars->old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::None, numGhostCells);
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     for (int ii = 0; ii < nofStencils; ii++)
       matrix_dw->get(d_velocityVars->uVelocityCoeff[ii], 
 		     d_lab->d_uVelCoefMBLMLabel, 
-		     ii, patch, Ghost::None, numGhostCells);
+		     ii, patch, Ghost::None, zeroGhostCells);
     matrix_dw->get(d_velocityVars->uVelNonlinearSrc, 
 		   d_lab->d_uVelNonLinSrcMBLMLabel,
-		   matlIndex, patch, Ghost::None, numGhostCells);
+		   matlIndex, patch, Ghost::None, zeroGhostCells);
     matrix_dw->allocate(d_velocityVars->residualUVelocity, d_lab->d_uVelocityRes,
 			  matlIndex, patch);
 
     break;
   case Arches::YDIR:
     new_dw->get(d_velocityVars->vVelocity, d_lab->d_vVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::None, numGhostCells);
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     // initial guess for explicit calculations
-    old_dw->get(d_velocityVars->old_vVelocity, d_lab->d_vVelocitySPBCLabel, 
-    		matlIndex, patch, Ghost::None, numGhostCells);
-
     for (int ii = 0; ii < nofStencils; ii++)
       matrix_dw->get(d_velocityVars->vVelocityCoeff[ii], 
 		     d_lab->d_vVelCoefMBLMLabel, 
-		     ii, patch, Ghost::None, numGhostCells);
+		     ii, patch, Ghost::None, zeroGhostCells);
     matrix_dw->get(d_velocityVars->vVelNonlinearSrc, 
 		   d_lab->d_vVelNonLinSrcMBLMLabel,
-		   matlIndex, patch, Ghost::None, numGhostCells);
+		   matlIndex, patch, Ghost::None, zeroGhostCells);
     matrix_dw->allocate(d_velocityVars->residualVVelocity, d_lab->d_vVelocityRes,
 			  matlIndex, patch);
     break; 
   case Arches::ZDIR:
     new_dw->get(d_velocityVars->wVelocity, d_lab->d_wVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::None, numGhostCells);
-    old_dw->get(d_velocityVars->old_wVelocity, d_lab->d_wVelocitySPBCLabel, 
-    		matlIndex, patch, Ghost::None, numGhostCells);
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
 
     for (int ii = 0; ii < nofStencils; ii++)
       matrix_dw->get(d_velocityVars->wVelocityCoeff[ii], 
 		     d_lab->d_wVelCoefMBLMLabel, 
-		     ii, patch, Ghost::None, numGhostCells);
+		     ii, patch, Ghost::None, zeroGhostCells);
     matrix_dw->get(d_velocityVars->wVelNonlinearSrc, 
 		   d_lab->d_wVelNonLinSrcMBLMLabel,
-		   matlIndex, patch, Ghost::None, numGhostCells);
+		   matlIndex, patch, Ghost::None, zeroGhostCells);
     matrix_dw->allocate(d_velocityVars->residualWVelocity, d_lab->d_wVelocityRes,
 			  matlIndex, patch);
     break;  
@@ -611,16 +605,24 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   d_linearSolver->computeVelUnderrelax(pc, patch, new_dw, matrix_dw, index, 
 				     d_velocityVars);
   // initial guess for explicit calculation
+  new_dw->get(d_velocityVars->old_uVelocity, d_lab->d_uVelocityCPBCLabel, 
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
+  new_dw->get(d_velocityVars->old_vVelocity, d_lab->d_vVelocityCPBCLabel, 
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
+  new_dw->get(d_velocityVars->old_wVelocity, d_lab->d_wVelocityCPBCLabel, 
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
+#ifdef 0
   new_dw->allocate(d_velocityVars->old_uVelocity, d_lab->d_old_uVelocityGuess,
 			  matlIndex, patch);
   new_dw->allocate(d_velocityVars->old_vVelocity, d_lab->d_old_vVelocityGuess,
 			  matlIndex, patch);
   new_dw->allocate(d_velocityVars->old_wVelocity, d_lab->d_old_wVelocityGuess,
 			  matlIndex, patch);
-  
+
   d_velocityVars->old_uVelocity = d_velocityVars->uVelocity;
   d_velocityVars->old_vVelocity = d_velocityVars->vVelocity;
   d_velocityVars->old_wVelocity = d_velocityVars->wVelocity;  
+#endif
   // make it a separate task later
   d_linearSolver->velocityLisolve(pc, patch, new_dw, matrix_dw, index, delta_t, 
 				  d_velocityVars, cellinfo, d_lab);
@@ -648,6 +650,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.28  2000/09/14 17:04:54  rawat
+// converting arches to multipatch
+//
 // Revision 1.27  2000/09/07 23:07:17  rawat
 // fixed some bugs in bc and added pressure solver using petsc
 //

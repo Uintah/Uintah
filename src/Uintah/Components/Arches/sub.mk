@@ -35,13 +35,16 @@ LIBS := $(LIBS) $(PETSC_LIBS) -lpetscsles -lpetscdm -lpetscmat -lpetscvec -lpets
 endif
 #CFLAGS += -g -DARCHES_VEL_DEBUG
 #CFLAGS += -g -DARCHES_DEBUG -DARCHES_GEOM_DEBUG -DARCHES_BC_DEBUG -DARCHES_COEF_DEBUG 
-#CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
+CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
 #LIBS += -lblas
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.29  2000/09/14 17:04:54  rawat
+# converting arches to multipatch
+#
 # Revision 1.28  2000/09/12 18:11:25  sparker
 # Do not compile petsc solver if petsc not present
 #

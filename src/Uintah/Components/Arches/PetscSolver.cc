@@ -263,14 +263,14 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     int ii = ((row%(nnx*nny))%nnx);
     int jj = ((row - ii)%(nnx*nny))/nnx;
     int kk = (row-ii-nnx*jj)/(nnx*nny);
-    // make it compatible with uintah's indices
-    value[0] = vars->pressCoeff[Arches::AB][IntVector(ii,jj,kk)];
-    value[1] = vars->pressCoeff[Arches::AS][IntVector(ii,jj,kk)];
-    value[2] = vars->pressCoeff[Arches::AW][IntVector(ii,jj,kk)];
+    // all the off-diagnol components follow different sign convention
+    value[0] = -vars->pressCoeff[Arches::AB][IntVector(ii,jj,kk)];
+    value[1] = -vars->pressCoeff[Arches::AS][IntVector(ii,jj,kk)];
+    value[2] = -vars->pressCoeff[Arches::AW][IntVector(ii,jj,kk)];
     value[3] = vars->pressCoeff[Arches::AP][IntVector(ii,jj,kk)];
-    value[4] = vars->pressCoeff[Arches::AE][IntVector(ii,jj,kk)];
-    value[5] = vars->pressCoeff[Arches::AN][IntVector(ii,jj,kk)];
-    value[6] = vars->pressCoeff[Arches::AT][IntVector(ii,jj,kk)];
+    value[4] = -vars->pressCoeff[Arches::AE][IntVector(ii,jj,kk)];
+    value[5] = -vars->pressCoeff[Arches::AN][IntVector(ii,jj,kk)];
+    value[6] = -vars->pressCoeff[Arches::AT][IntVector(ii,jj,kk)];
     ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
     cerr << "set values: row=" << row << ", col=";
     for(int i=0;i<7;i++)
@@ -291,13 +291,12 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     int ii = ((row%(nnx*nny))%nnx);
     int jj = ((row - ii)%(nnx*nny))/nnx;
     int kk = (row-ii-nnx*jj)/(nnx*nny);
-    // make it compatible with uintah's indices
-    value[0] = vars->pressCoeff[Arches::AS][IntVector(ii,jj,kk)];
-    value[1] = vars->pressCoeff[Arches::AW][IntVector(ii,jj,kk)];
+    value[0] = -vars->pressCoeff[Arches::AS][IntVector(ii,jj,kk)];
+    value[1] = -vars->pressCoeff[Arches::AW][IntVector(ii,jj,kk)];
     value[2] = vars->pressCoeff[Arches::AP][IntVector(ii,jj,kk)];
-    value[3] = vars->pressCoeff[Arches::AE][IntVector(ii,jj,kk)];
-    value[4] = vars->pressCoeff[Arches::AN][IntVector(ii,jj,kk)];
-    value[5] = vars->pressCoeff[Arches::AT][IntVector(ii,jj,kk)];
+    value[3] = -vars->pressCoeff[Arches::AE][IntVector(ii,jj,kk)];
+    value[4] = -vars->pressCoeff[Arches::AN][IntVector(ii,jj,kk)];
+    value[5] = -vars->pressCoeff[Arches::AT][IntVector(ii,jj,kk)];
     ierr = MatSetValues(A,1,&row,6,col,value,INSERT_VALUES);
     cerr << "2. set values: row=" << row << ", col=";
     for(int i=0;i<6;i++)
@@ -318,13 +317,12 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     int ii = ((row%(nnx*nny))%nnx);
     int jj = ((row - ii)%(nnx*nny))/nnx;
     int kk = (row-ii-nnx*jj)/(nnx*nny);
-    // make it compatible with uintah's indices
-    value[0] = vars->pressCoeff[Arches::AB][IntVector(ii,jj,kk)];
-    value[1] = vars->pressCoeff[Arches::AS][IntVector(ii,jj,kk)];
-    value[2] = vars->pressCoeff[Arches::AW][IntVector(ii,jj,kk)];
+    value[0] = -vars->pressCoeff[Arches::AB][IntVector(ii,jj,kk)];
+    value[1] = -vars->pressCoeff[Arches::AS][IntVector(ii,jj,kk)];
+    value[2] = -vars->pressCoeff[Arches::AW][IntVector(ii,jj,kk)];
     value[3] = vars->pressCoeff[Arches::AP][IntVector(ii,jj,kk)];
-    value[4] = vars->pressCoeff[Arches::AE][IntVector(ii,jj,kk)];
-    value[5] = vars->pressCoeff[Arches::AN][IntVector(ii,jj,kk)];
+    value[4] = -vars->pressCoeff[Arches::AE][IntVector(ii,jj,kk)];
+    value[5] = -vars->pressCoeff[Arches::AN][IntVector(ii,jj,kk)];
     ierr = MatSetValues(A,1,&row,6,col,value,INSERT_VALUES);
     cerr << "set values: row=" << row << ", col=";
     for(int i=0;i<6;i++)
@@ -344,12 +342,11 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     int ii = ((row%(nnx*nny))%nnx);
     int jj = ((row - ii)%(nnx*nny))/nnx;
     int kk = (row-ii-nnx*jj)/(nnx*nny);
-    // make it compatible with uintah's indices
-    value[0] = vars->pressCoeff[Arches::AW][IntVector(ii,jj,kk)];
+    value[0] = -vars->pressCoeff[Arches::AW][IntVector(ii,jj,kk)];
     value[1] = vars->pressCoeff[Arches::AP][IntVector(ii,jj,kk)];
-    value[2] = vars->pressCoeff[Arches::AE][IntVector(ii,jj,kk)];
-    value[3] = vars->pressCoeff[Arches::AN][IntVector(ii,jj,kk)];
-    value[4] = vars->pressCoeff[Arches::AT][IntVector(ii,jj,kk)];
+    value[2] = -vars->pressCoeff[Arches::AE][IntVector(ii,jj,kk)];
+    value[3] = -vars->pressCoeff[Arches::AN][IntVector(ii,jj,kk)];
+    value[4] = -vars->pressCoeff[Arches::AT][IntVector(ii,jj,kk)];
     ierr = MatSetValues(A,1,&row,5,col,value,INSERT_VALUES);
     cerr << "set values: row=" << row << ", col=";
     for(int i=0;i<5;i++)
@@ -370,12 +367,11 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     int ii = ((row%(nnx*nny))%nnx);
     int jj = ((row - ii)%(nnx*nny))/nnx;
     int kk = (row-ii-nnx*jj)/(nnx*nny);
-    // make it compatible with uintah's indices
-    value[0] = vars->pressCoeff[Arches::AB][IntVector(ii,jj,kk)];
-    value[1] = vars->pressCoeff[Arches::AS][IntVector(ii,jj,kk)];
-    value[2] = vars->pressCoeff[Arches::AW][IntVector(ii,jj,kk)];
+    value[0] = -vars->pressCoeff[Arches::AB][IntVector(ii,jj,kk)];
+    value[1] = -vars->pressCoeff[Arches::AS][IntVector(ii,jj,kk)];
+    value[2] = -vars->pressCoeff[Arches::AW][IntVector(ii,jj,kk)];
     value[3] = vars->pressCoeff[Arches::AP][IntVector(ii,jj,kk)];
-    value[4] = vars->pressCoeff[Arches::AE][IntVector(ii,jj,kk)];
+    value[4] = -vars->pressCoeff[Arches::AE][IntVector(ii,jj,kk)];
     ierr = MatSetValues(A,1,&row,5,col,value,INSERT_VALUES);
     cerr << "set values: row=" << row << ", col=";
     for(int i=0;i<5;i++)
@@ -395,9 +391,9 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
   int jj = 0;
   int kk = 0;
   value[0] = vars->pressCoeff[Arches::AP][IntVector(ii,jj,kk)];
-  value[1] = vars->pressCoeff[Arches::AE][IntVector(ii,jj,kk)];
-  value[2] = vars->pressCoeff[Arches::AN][IntVector(ii,jj,kk)];
-  value[3] = vars->pressCoeff[Arches::AT][IntVector(ii,jj,kk)];
+  value[1] = -vars->pressCoeff[Arches::AE][IntVector(ii,jj,kk)];
+  value[2] = -vars->pressCoeff[Arches::AN][IntVector(ii,jj,kk)];
+  value[3] = -vars->pressCoeff[Arches::AT][IntVector(ii,jj,kk)];
   ierr = MatSetValues(A,1,&row,4,col,value,INSERT_VALUES);
   CHKERRA(ierr);
   row = nnx*nny*nnz-1;
@@ -408,9 +404,9 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
   ii = nnx-1;
   jj = nny-1;
   kk = nnz-1;
-  value[0] = vars->pressCoeff[Arches::AB][IntVector(ii,jj,kk)];
-  value[1] = vars->pressCoeff[Arches::AS][IntVector(ii,jj,kk)];
-  value[2] = vars->pressCoeff[Arches::AW][IntVector(ii,jj,kk)];
+  value[0] = -vars->pressCoeff[Arches::AB][IntVector(ii,jj,kk)];
+  value[1] = -vars->pressCoeff[Arches::AS][IntVector(ii,jj,kk)];
+  value[2] = -vars->pressCoeff[Arches::AW][IntVector(ii,jj,kk)];
   value[3] = vars->pressCoeff[Arches::AP][IntVector(ii,jj,kk)];
   ierr = MatSetValues(A,1,&row,4,col,value,INSERT_VALUES);
   CHKERRA(ierr);
@@ -432,7 +428,6 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     int ii = ((row%(nnx*nny))%nnx);
     int jj = ((row - ii)%(nnx*nny))/nnx;
     int kk = (row-ii-nnx*jj)/(nnx*nny);
-    // make it compatible with uintah's indices
     vecvalueb = vars->pressNonlinearSrc[IntVector(ii,jj,kk)];
     cerr << "vecvalueb=" << vecvalueb << '\n';
     vecvaluex = vars->pressure[IntVector(ii,jj,kk)];
@@ -491,7 +486,6 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     int ii = ((row%(nnx*nny))%nnx);
     int jj = ((row - ii)%(nnx*nny))/nnx;
     int kk = (row-ii-nnx*jj)/(nnx*nny);
-    // make it compatible with uintah's indices
     vars->pressure[IntVector(ii,jj,kk)] = xvec[row];
     cerr << "press" << IntVector(ii,jj,kk) << "=" << xvec[row] << '\n';
   }
@@ -1342,6 +1336,9 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.6  2000/09/14 17:04:54  rawat
+// converting arches to multipatch
+//
 // Revision 1.5  2000/09/12 22:34:02  sparker
 // Moved petsc include to .cc file
 //
