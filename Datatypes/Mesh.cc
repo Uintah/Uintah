@@ -859,6 +859,10 @@ Face::Face(int n0, int n1, int n2)
     hash=(n[0]*7+5)^(n[1]*5+3)^(n[2]*3+1);
 }
 
+Edge::Edge()
+{
+}
+
 Edge::Edge(int n0, int n1)
 {
     if (n0 < n1)
@@ -1013,6 +1017,7 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
     }
     for(i=0;i<to_remove.size();i++){
 	int tr=to_remove[i];
+	cerr << "Removing: " << tr << endl;
 	delete elems[tr];
 	elems[tr]=0;
     }
@@ -1065,9 +1070,9 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
     }
 
     
-#if 0
     // Go through and look for small elements - try to get rid of
     // them by swapping an edge
+#if 0
     for(int degen=start_new;degen<elems.size();degen++){
 	Element* e=elems[degen];
 	if(e->volume() < 1.e-10){
@@ -1191,6 +1196,9 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
 	for(int i=0;i<nelems;i++){
 	    Element* e=elems[i];
 	    if(e){
+		if(e->volume() < 1.e-5){
+		    cerr << "Degenerate... (" << i << ") volume=" << e->volume() << endl;
+		}
 		Point cen;
 		double rad2;
 		double err;

@@ -63,8 +63,11 @@ template class Array1<clString>;
 template void Pio(Piostream&, Array1<clString>&);
 
 #include <Classlib/Array2.cc>
-template class Array2<double> >;
-template void Pio(Piostream&, Array2<double> >&);
+template class Array2<double>;
+template void Pio(Piostream&, Array2<double>&);
+
+#include <Classlib/LockingHandle.cc>
+template class LockingHandle<SigmaSet>;
 
 #endif
 

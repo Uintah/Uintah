@@ -285,7 +285,6 @@ void DenseMatrix::invert()
 
     // Gauss-Jordan with partial pivoting
     for(i=0;i<nr;i++){
-	cerr << "row: " << i << " of " << nr << endl;
         double max=Abs(data[i][i]);
         int row=i;
         for(int j=i+1;j<nr;j++){
@@ -320,7 +319,6 @@ void DenseMatrix::invert()
 
     // Back-substitution
     for(i=1;i<nr;i++){
-	cerr << "row: " << i << " of " << nr << endl;
         ASSERT(Abs(data[i][i]) > 1.e-12);
         double denom=1./data[i][i];
         double* r1=data[i];
@@ -338,7 +336,6 @@ void DenseMatrix::invert()
 
     // Normalize
     for(i=0;i<nr;i++){
-	cerr << "row: " << i << " of " << nr << endl;
         ASSERT(Abs(data[i][i]) > 1.e-12);
         double factor=1./data[i][i];
         for(int j=0;j<nr;j++){

@@ -9,7 +9,7 @@ OBJS = BasicSurfaces.o  Colormap.o  ColormapPort.o  \
 	MultiMesh.o  MultiMeshPort.o  Octree.o  OctreePort.o  ScalarField.o  \
 	ScalarFieldPort.o  ScalarFieldRG.o  ScalarFieldRGBase.o  \
 	ScalarFieldRGchar.o  ScalarFieldRGint.o  ScalarFieldRGfloat.o  \
-	ScalarFieldRGdouble.o  ScalarFieldUG.o  SigmaSet.o  SigmaSetPort.o  \
+	ScalarFieldUG.o  SigmaSet.o  SigmaSetPort.o  \
 	SoundPort.o  Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
 	TriDiagonalMatrix.o  TriSurface.o  \
 	VectorField.o  \

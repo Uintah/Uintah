@@ -105,6 +105,7 @@ struct Face {
 
 struct Edge{
     int n[2];
+    Edge();
     Edge(int, int);
     int hash(int hash_size) const;
     int operator==(const Edge&) const;
