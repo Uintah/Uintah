@@ -38,7 +38,7 @@
  *
  */
 
-#include "/home/sci/damevski/SCIRun/src/CCA/Components/HelloWorldBridge/HelloWorldBridge.h"
+#include "HelloWorldBridge.h"
 
 using namespace somethingspc;
 using namespace SCIRun;
