@@ -162,20 +162,25 @@ void GatherTimeSteps::process_event()
       
       timelimit.reset();
       tsp.reset();
-      
+
+      cout << "reset tcl vars" << endl;
+	
       // each timestep is represented by one group
       GeomGroup *grp = new GeomGroup();
 
       // add the last objects on each port to the non-timed-group
-      for( int i = 0; i < lastobjs.size(); i++ ) {
+      for( int i = 0; i < lastobjs.size()-2; i++ ) {
 	grp->add( lastobjs[i] );
       }
+      cout << "added objects 0 through " << i << " to grp" << endl;
+      
       tsp.set( tsp.get() + 1 );
       tsp.reset();
-      
+
+      cout << "modified tcl vars" << endl;
       // add the non-timed group to the timegroup
       tgroup->add( grp, (double)(currtime-1) / (double)timelimit.get() );
-      
+      cout << "added grp to tgroup" << endl;
       // if we've gotten the appropriate number of timesteps, forward the
       // timegroup to Salmon
       if( currtime == timelimit.get() ) {
@@ -186,7 +191,9 @@ void GatherTimeSteps::process_event()
 	cout << "GatherTimeSteps: forwarding message" << endl;
 
 	outport->addObj( tgroup, "TimeGroup" );
+	cout << "ready to flush" << endl;
 	outport->flush();
+	cout << "flushed" << endl;
       }
       currtime++;
     }
