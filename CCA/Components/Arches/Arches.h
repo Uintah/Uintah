@@ -32,7 +32,7 @@ WARNING
   
 ****************************************/
 
-#include <sci_defs.h>
+#include <sci_defs/petsc_defs.h>
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Components/SimulationController/SimulationController.h>
