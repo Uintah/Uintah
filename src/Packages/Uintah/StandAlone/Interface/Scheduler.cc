@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include <Uintah/Interface/Scheduler.h>
 
@@ -174,6 +175,9 @@ Scheduler::problemSetup(const ProblemSpecP&)
 
 //
 // $Log$
+// Revision 1.14  2000/09/29 05:35:07  sparker
+// Quiet g++ warnings
+//
 // Revision 1.13  2000/09/27 00:14:33  witzel
 // Changed emitEdges to makeTaskGraphDoc with an option to emit
 // the actual edges (only process 0 in the MPI version since all
