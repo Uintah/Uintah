@@ -99,6 +99,7 @@ int main(int argc, char* argv[])
 	} else {
 	  Object::pointer obj=PIDL::objectFrom(client_url);
 	  cerr << "Object_from completed\n";
+
 	  PingPong::pointer pp=pidl_cast<PingPong::pointer>(obj);
 	  cerr << "pidl_case completed\n";
 	  if(pp.isNull()){
@@ -111,11 +112,12 @@ int main(int argc, char* argv[])
 	    if(i != j)
 	      cerr << "BAD data: " << i << " vs. " << j << '\n';
 	  }
+
 	  double dt=Time::currentSeconds()-stime;
 	  cerr << reps << " reps in " << dt << " seconds\n";
 	  double us=dt/reps*1000*1000;
 	  cerr << us << " us/rep\n";
-	}
+ 	}
     } catch(const MalformedURL& e) {
 	cerr << "pingpong.cc: Caught MalformedURL exception:\n";
 	cerr << e.message() << '\n';

@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
 	  std::cerr << "setCallerDistribution completed\n";
 
 	  for(int i=0;i<reps;i++){
-	    int j=pp->pingpong(arr);
+            int j=pp->pingpong(arr);
 	    cerr << "sum of all array elements = " << j << "\n";
 	  }
 	  double dt=Time::currentSeconds()-stime;
