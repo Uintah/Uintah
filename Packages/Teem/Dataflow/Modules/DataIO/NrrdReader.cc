@@ -276,7 +276,7 @@ bool
 NrrdReader::read_file(string fn)
 {
   NrrdData *n = scinew NrrdData;
-  if (nrrdLoad(n->nrrd=nrrdNew(), strdup(fn.c_str()), 0))
+  if (nrrdLoad(n->nrrd = nrrdNew(), airStrdup(fn.c_str()), 0))
   {
     char *err = biffGetDone(NRRD);
     error("Read error on '" + fn + "': " + err);

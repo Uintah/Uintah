@@ -219,7 +219,7 @@ UnuCmedian::execute()
       free(err);
       return;
     }
-    //nrrd_joined->nrrd->axis[0].label = strdup(nin->axis[0].label);
+    //nrrd_joined->nrrd->axis[0].label = airStrdup(nin->axis[0].label);
     //nrrd_joined->copy_sci_data(*nrrd_handle.get_rep());
     onrrd_->send(NrrdDataHandle(nrrd_joined));
   } else {
