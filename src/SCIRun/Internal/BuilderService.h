@@ -32,6 +32,7 @@
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalComponentInstance.h>
+#include <SCIRun/Bridge/AutoBridge.h>
 
 namespace SCIRun {
   class SCIRunFramework;
@@ -79,7 +80,13 @@ namespace SCIRun {
 		const sci::cca::ComponentID::pointer& c1,
 		const std::string& port1,
 		const sci::cca::ComponentID::pointer& c2);
-
+    
+    //Bridge methods 
+    virtual SSIDL::array1<std::string> getBridgablePortList(
+	        const sci::cca::ComponentID::pointer& c1,
+	        const std::string& port1,
+	        const sci::cca::ComponentID::pointer& c2);
+    virtual std::string generateBridge(const std::string& c1, const std::string& c2);
 
     sci::cca::Port::pointer getService(const std::string&);
 
@@ -96,7 +103,7 @@ namespace SCIRun {
     BuilderService(SCIRunFramework* fwk, const std::string& name);
     std::vector<sci::cca::Services::pointer> servicesList;	
     std::string getFrameworkURL();
-
+    AutoBridge autobr;
   };
 }
 
