@@ -258,6 +258,14 @@ WARNING
       ProblemSpecP getWithDefault(const std::string& name, vector<double>& value, const vector<double>& defaultVal);   
       ProblemSpecP getWithDefault(const std::string& name, vector<int>& value, const vector<int>& defaultVal); 
 
+      //////////
+      // Add a stylesheet to this document, to be output at the top of the page
+      void addStylesheet(char* type, char* value);
+
+      //////////
+      // Output the DOMTree.  
+      void output(char* filename = 0) const;
+
       inline bool operator == (const ProblemSpec& a) const {
 	return a.d_node == d_node;
       }
