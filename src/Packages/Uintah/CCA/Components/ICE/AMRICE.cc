@@ -640,11 +640,11 @@ void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
 /*___________________________________________________________________
  Function~  AMRICE::scheduleRefine--  
 _____________________________________________________________________*/
-void AMRICE::scheduleRefine(const LevelP& fineLevel,
+void AMRICE::scheduleRefine(const PatchSet* patches,
                                SchedulerP& sched)
 {
   Ghost::GhostType  gn = Ghost::None; 
-  cout_dbg << "AMRICE::scheduleRefine\t\t\t\tL-" << fineLevel->getIndex() << '\n';
+  cout_dbg << "AMRICE::scheduleRefine\t\t\t\tP-" << *patches << '\n';
   Task* task = scinew Task("refine",this, &AMRICE::refine);
 
   MaterialSubset* subset = scinew MaterialSubset;
@@ -685,7 +685,7 @@ void AMRICE::scheduleRefine(const LevelP& fineLevel,
   task->computes(lb->temp_CCLabel);
   task->computes(lb->vel_CCLabel);
 
-  sched->addTask(task, fineLevel->eachPatch(), d_sharedState->allMaterials()); 
+  sched->addTask(task, patches, d_sharedState->allMaterials()); 
 }
 
 /*___________________________________________________________________
