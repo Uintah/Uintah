@@ -49,14 +49,10 @@ edition := ../edition.xml
   all \
   documentum-html \
   documentum-print \
-  module-xml-html \
-  module-xml-print \
-  module-latex-html \
-  module-latex-print \
+  mod-spec-ref-html \
+  mod-spec-ref-print \
   clean \
   veryclean
-#  component-html \
-#  component-print
 
 .DELETE_ON_ERROR:
 
@@ -64,12 +60,8 @@ all: \
   index.html \
   documentum-html \
   documentum-print \
-  module-xml-html \
-  module-xml-print \
-  module-latex-html \
-  module-latex-print
-#  component-html \
-#  component-print
+  mod-spec-ref-html
+#  mod-spec-ref-print
 
 # Rule for building index.html
 
@@ -100,57 +92,25 @@ documentum.pdf : documentum.rxml ${edition}
 
 # Rules for building component reference.
 
-component : component-html component-print
+mod-spec-ref : mod-spec-ref-html mod-spec-ref-print
 
-component-html : component.html
+mod-spec-ref-html : mod-spec-ref.html
 
-component.html : component.rxml ${edition}
+mod-spec-ref.html : mod-spec-ref.rxml ${edition}
 	${call rxml_to_hxml,$<}
-	java com.icl.saxon.StyleSheet -w2 component.hxml \
+	java com.icl.saxon.StyleSheet -w2 mod-spec-ref.hxml \
          ${stylesheet_chunk} ${parms_chunk}
-	java com.icl.saxon.StyleSheet -w2 component.hxml \
+	java com.icl.saxon.StyleSheet -w2 mod-spec-ref.hxml \
          ${stylesheet_nochunk} ${parms_nochunk} >$@
 
-component-print : component.pdf
+mod-spec-ref-print : mod-spec-ref.pdf
 
-component.pdf : component.rxml ${edition}
+mod-spec-ref.pdf : mod-spec-ref.rxml ${edition}
 	${call rxml_to_pxml,$<}
-	openjade -t tex -V tex-backend -c ${CATALOG} -o component.tex \
--d ${stylesheet_print}  ${params_print} ${XML_DCL} component.pxml 
-	for i in 1 2 ; do jadetex component.tex ; done
-	dvipdfm -p letter component.dvi
-
-# Rules for building module-xml docs
-
-module-xml-html: module-xml/index.html
-
-module-xml-print : module-xml.pdf 
-
-module-xml.dvi: module-xml.tex
-	-${latex} $<
-	-${latex} $<
-
-module-xml.pdf: module-xml.dvi
-	dvipdfm -p letter ${basename $<}
-
-module-xml/index.html: module-xml.dvi
-	latex2html ${latex2htmloptions} module-xml.tex
-
-# Rules for building module-latex docs
-
-module-latex-html : module-latex/index.html
-
-module-latex-print: module-latex.pdf 
-
-module-latex.dvi: module-latex.tex
-	-${latex} $<
-	-${latex} $<
-
-module-latex.pdf: module-latex.dvi
-	dvipdfm -p letter ${basename $<}
-
-module-latex/index.html: module-latex.dvi
-	latex2html ${latex2htmloptions} module-latex.tex
+	openjade -t tex -V tex-backend -c ${CATALOG} -o mod-spec-ref.tex \
+-d ${stylesheet_print}  ${params_print} ${XML_DCL} mod-spec-ref.pxml 
+	for i in 1 2 ; do jadetex mod-spec-ref.tex ; done
+	dvipdfm -p letter mod-spec-ref.dvi
 
 # Cleanage
 
@@ -160,4 +120,3 @@ clean:
 
 veryclean: clean
 	-${rmfiles} *.html *.pdf
-	-${rmdirs} module-xml module-latex
