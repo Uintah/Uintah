@@ -61,11 +61,7 @@ VPATH := $(SRCTOP)
 
 PACKAGE_DIRS := @PACKAGE_DIRS@
 LOAD_PACKAGE := @LOAD_PACKAGE@
-BUILD_PARALLEL := @BUILD_PARALLEL@
-# Dd: don't need to do it explicitly this way... I think.
-#ifeq ($(BUILD_PARALLEL),yes)
-#COMPONENT_DIRS := Core/CCA/tools/sidl Core/CCA/Component
-#endif
+BUILD_SCIRUN2 := @BUILD_SCIRUN2@
 
 # These cannot be :=
 THREAD_IMPL = $(SRCDIR)/@THREAD_IMPL@
@@ -231,7 +227,6 @@ YACC := @YACC@ -d -v
 PERL := @PERL@
 
 MAKE_PARALLELISM := @MAKE_PARALLELISM@
-NBITS := @NBITS@
 
 LARGESOS := @LARGESOS@
 
@@ -260,16 +255,30 @@ XML_LIBRARY := $(LDRUN_PREFIX)$(XML_LIB_DIR) -L$(XML_LIB_DIR) $(XML_LIB_FLAG)
 XML_INCLUDE := -I@INCXERCESC_H@
 XML_TLINK := -L$(XML_LIB_DIR)
 
-ifeq ($(BUILD_PARALLEL),yes)
+ifeq ($(BUILD_SCIRUN2),yes)
+SUBDIRS := $(SUBDIRS) SCIRun CCA
 GLOBUS_LIB_DIR := @GLOBUS_LIB@
-GLOBUS_LIBS := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_nexus -lglobus_io -lglobus_dc -lglobus_common @GLOBUS_EXTRA_DIRS@
+GLOBUS_LIBS := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_nexus -lglobus_dc -lglobus_common @GLOBUS_EXTRA_DIRS@
 GLOBUS_COMMON := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_common
 GLOBUS_TLINK := -L$(GLOBUS_LIB_DIR)
-endif
 ifneq (@GLOBUS_INCLUDE@,)
   GLOBUS_INCLUDE := -I@GLOBUS_INCLUDE@
 else
   GLOBUS_INCLUDE :=
+endif
+
+HAVE_QT := @HAVE_QT@
+QT_LIB_DIR := @QT_LIB@
+QT_LIB_FLAG := -lqt-mt
+QT_LIBS := $(LDRUN_PREFIX)$(QT_LIB_DIR) -L$(QT_LIB_DIR) $(QT_LIB_FLAG)
+ifneq (@QT_INCLUDE@,)
+  QT_INCLUDE := -I@QT_INCLUDE@
+else
+  QT_INCLUDE :=
+endif
+QT_DEFS := -DQT_THREAD_SUPPORT
+QT_MOC_BIN := @QT_MOC_BIN@
+
 endif
 
 TLINK := $(BLT_TLINK) $(GLOBUS_TLINK) $(XML_TLINK)
@@ -285,7 +294,7 @@ PETSC_LIBS := $(LDRUN_PREFIX)$(PETSC_LIBDIR) -L$(PETSC_LIBDIR) $(PETSC_EXTRA_LIB
 
 endif
 
-INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(SRCTOP)/Packages $(TCL_INCLUDE) $(TK_INCLUDE) $(ITCL_INCLUDE) $(ITK_INCLUDE) $(BLT_INCLUDE) $(GLOBUS_INCLUDE) $(XML_INCLUDE) $(PETSC_INCLUDES) $(TAU_INCLUDE) $(MPI_INCLUDE) $(UNI_PETSC_INCLUDE)
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(SRCTOP)/Packages $(TCL_INCLUDE) $(TK_INCLUDE) $(ITCL_INCLUDE) $(ITK_INCLUDE) $(BLT_INCLUDE) $(GLOBUS_INCLUDE) $(QT_INCLUDE) $(XML_INCLUDE) $(PETSC_INCLUDES) $(TAU_INCLUDE) $(MPI_INCLUDE) $(UNI_PETSC_INCLUDE)
 FINCLUDES += -I$(SRCTOP) -I$(OBJTOP)
 
 SSTREAM_COMPAT := @SSTREAM_COMPAT@
@@ -303,7 +312,7 @@ CC              := @CC@
 CXX             := @CXX@
 AS              := @AS@
 LD              := @LD@
-CFLAGS          := @CFLAGS@ $(CFLAGS)
+CFLAGS          := @CFLAGS@ $(CFLAGS) $(QT_DEFS)
 SOFLAGS         := @SOFLAGS@ -L$(LIBDIR) $(CFLAGS)
 LDFLAGS         := @LDFLAGS@ -L$(LIBDIR) $(CFLAGS)
 ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
@@ -320,9 +329,28 @@ else
 SONAMEFLAG = 
 endif
 
-.SUFFIXES: .cc .c .o .d .s .F
+.SUFFIXES: .cc .c .o .d .s .F .cpp
 
 .cc.o: $<
+ifeq ($(CC_DEPEND_REGEN),-MD)
+	$(CXX) $(CFLAGS) $(INCLUDES) -MD -c $< -o $@
+  ifeq ($(CC_DEPEND_REGEN_MOVE),y)
+	echo -n "$(dir $@)" > $(basename $@).d
+	cat $(basename $(notdir $@)).d >> $(basename $@).d
+	rm $(basename $(notdir $@)).d 
+  endif
+else
+  ifeq ($(CC_DEPEND_REGEN),-M)
+	$(CXX) $(CFLAGS) $(INCLUDES) -M > $(basename $@).d
+	awk '{ print "$(basename $@)"".o: " $$2 }' $(basename $@).d > $(basename $@).temp.d
+	mv $(basename $@).temp.d $(basename $@).d
+	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
+  else
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+  endif
+endif
+
+.cpp.o: $<
 ifeq ($(CC_DEPEND_REGEN),-MD)
 	$(CXX) $(CFLAGS) $(INCLUDES) -MD -c $< -o $@
   ifeq ($(CC_DEPEND_REGEN_MOVE),y)
@@ -375,3 +403,7 @@ endif
 .s.o: $<
 	$(AS) $(ASFLAGS) -o $@ $< -o $@
 
+ifeq ($(BUILD_SCIRUN2),yes)
+moc_%.cpp: %.h
+	$(QT_MOC_BIN) $< -o $@
+endif
