@@ -4,24 +4,24 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE uvelcoef(domLoU, domHiU, idxLoU, idxHiU, UU,
+      SUBROUTINE vvelcoef(domLoV, domHiV, idxLoV, idxHiV, VV,
      &     CESAV, CWSAV, CNSAV, CSSAV, CTSAV, CBSAV,
      &     AP, AE, AW, AN, AS, AT, AB,
-     &     DU,
-     &     domLoV, domHiV, VV,
+     &     DV,
+     &     domLoU, domHiU, UU,
      &     domLoW, domHiW, WW,
      &     domLo, domHi, DEN, VIS, 
      &     DELTAT,
-     &     CEEU, CWEU, CWWU, CNN, CSN, CSS,
-     &     CTT, CBT, CBB, SEWU, SNS, STB,
-     &     DXEPU, DXPWU, DYNP, DYPS, DZTP, DZPB, 
-     &     FAC1U, FAC2U, FAC3U, FAC4U, 
-     &     IESDU, IWSDU,
-     &     ENFAC, SFAC, TFAC, BFAC,
+     &     CEE, CWE, CWW, CNNV, CSNV, CSSV,
+     &     CTT, CBT, CBB, SEW, SNSV, STB,
+     &     DXEP, DXPW, DYNPV, DYPSV, DZTP, DZPB, 
+     &     FAC1V, FAC2V, FAC3V, FAC4V, 
+     &     JNSDV, JSSDV,
+     &     EFAC, WFAC, TFAC, BFAC,
      &     ierr)
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
-C     THIS SUBROUTINE WILL compute matrix coefficients for uvelocity
+C     THIS SUBROUTINE WILL compute matrix coefficients for vvelocity
 C---------------------------------------------------------------------
 
       implicit none
@@ -31,40 +31,40 @@ c #include "param4.h"
 c*********************************************************************
 c     Arguments :
 c*********************************************************************
-      integer domLoU(3), domHiU(3), idxLoU(3), idxHiU(3)
-      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AP(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AE(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AW(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AN(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AS(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AT(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AB(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision CESAV(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision CWSAV(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision CNSAV(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision CSSAV(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision CTSAV(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision CBSAV(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision DU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      integer domLoV(3), domHiV(3)
+      integer domLoV(3), domHiV(3), idxLoV(3), idxHiV(3)
       double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
      &     domLoV(3):domHiV(3))
+      double precision AP(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      double precision AE(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      double precision AW(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      double precision AN(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      double precision AS(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      double precision AT(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      double precision AB(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      double precision CESAV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      double precision CWSAV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      double precision CNSAV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      double precision CSSAV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      double precision CTSAV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      double precision CBSAV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      double precision DV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      integer domLoU(3), domHiU(3)
+      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
+     &     domLoU(3):domHiU(3))
       integer domLoW(3), domHiW(3)
       double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
      &     domLoW(3):domHiW(3))
@@ -74,32 +74,32 @@ c*********************************************************************
       double precision VIS(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
       double precision DELTAT
-      double precision CEEU(domLo(1):domHi(1))
-      double precision CWEU(domLo(1):domHi(1))
-      double precision CWWU(domLo(1):domHi(1))
-      double precision CNN(domLo(2):domHi(2))
-      double precision CSN(domLo(2):domHi(2))
-      double precision CSS(domLo(2):domHi(2))
+      double precision CEE(domLo(1):domHi(1))
+      double precision CWE(domLo(1):domHi(1))
+      double precision CWW(domLo(1):domHi(1))
+      double precision CNNV(domLo(2):domHi(2))
+      double precision CSNV(domLo(2):domHi(2))
+      double precision CSSV(domLo(2):domHi(2))
       double precision CTT(domLo(3):domHi(3))
       double precision CBT(domLo(3):domHi(3))
       double precision CBB(domLo(3):domHi(3))
-      double precision SEWU(domLo(1):domHi(1))
-      double precision SNS(domLo(2):domHi(2))
+      double precision SEW(domLo(1):domHi(1))
+      double precision SNSV(domLo(2):domHi(2))
       double precision STB(domLo(3):domHi(3))
-      double precision DXEPU(domLo(1):domHi(1))
-      double precision DXPWU(domLo(1):domHi(1))
-      double precision DYNP(domLo(2):domHi(2))
-      double precision DYPS(domLo(2):domHi(2))
+      double precision DXEP(domLo(1):domHi(1))
+      double precision DXPW(domLo(1):domHi(1))
+      double precision DYNPV(domLo(2):domHi(2))
+      double precision DYPSV(domLo(2):domHi(2))
       double precision DZTP(domLo(3):domHi(3))
       double precision DZPB(domLo(3):domHi(3))
-      double precision FAC1U(domLo(1):domHi(1))
-      double precision FAC2U(domLo(1):domHi(1))
-      double precision FAC3U(domLo(1):domHi(1))
-      double precision FAC4U(domLo(1):domHi(1))
-      integer IESDU(domLo(1):domHi(1))
-      integer IWSDU(domLo(1):domHi(1))
-      double precision ENFAC(domLo(2):domHi(2))
-      double precision SFAC(domLo(2):domHi(2))
+      double precision FAC1V(domLo(2):domHi(2))
+      double precision FAC2V(domLo(2):domHi(2))
+      double precision FAC3V(domLo(2):domHi(2))
+      double precision FAC4V(domLo(2):domHi(2))
+      integer JNSDV(domLo(2):domHi(2))
+      integer JSSDV(domLo(2):domHi(2))
+      double precision EFAC(domLo(1):domHi(1))
+      double precision WFAC(domLo(1):domHi(1))
       double precision TFAC(domLo(3):domHi(3))
       double precision BFAC(domLo(3):domHi(3))
       integer ierr
@@ -107,16 +107,16 @@ c*********************************************************************
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      integer ISTU, JSTU, KSTU, IENDU, JENDU, KENDU
+      integer ISTV, JSTV, KSTV, IENDV, JENDV, KENDV
       integer i, j, k
 
       logical L2UP, LSMPT, LCEND
 
       double precision AREAN, AREAS, AREAEW, AREATB, VOL
-      double precision GE, GP, GW, GN, GNW, GS, GSW, GT, GTW, GTP, GBW
+      double precision GE, GP, GW, GN, GSE, GS, GSW, GT, GST, GSB, GB
       double precision CEO, CWO, CNO, CSO, CTO, CBO
       double precision CE, CW, CN, CS, CT, CB
-      double precision CPE, CPW, GVP, CPN, CPS, GWP, CPT, CPB
+      double precision GUP, CPE, CPW, CPN, CPS, GWP, CPT, CPB
       double precision VISE, VISW, VISN, VISS, VIST, VISB
       double precision DEO, DWO, DNO, DSO, DTO, DBO
       double precision DE, DW, DN, DS, DT, DB
@@ -127,12 +127,12 @@ c*********************************************************************
 c*********************************************************************
 c     Start :
 c*********************************************************************
-      ISTU = idxLoU(1)
-      JSTU = idxLoU(2)
-      KSTU = idxLoU(3)
-      IENDU = idxHiU(1)
-      JENDU = idxHiU(2)
-      KENDU = idxHiU(3)
+      ISTV = idxLoV(1)
+      JSTV = idxLoV(2)
+      KSTV = idxLoV(3)
+      IENDV = idxHiV(1)
+      JENDV = idxHiV(2)
+      KENDV = idxHiV(3)
 
 c*********************************************************************
 c     Set all flags except one to false (** WARNING ** need to change)
@@ -144,49 +144,54 @@ c*********************************************************************
 c*********************************************************************
 c     Go thru all the cells
 c*********************************************************************
-      DO 220 K = KSTU,KENDU
-         DO 210 J = JSTU,JENDU
-            DO 200 I = ISTU,IENDU   
+      DO 220 K = KSTV,KENDV
+         DO 210 J = JSTV,JENDV
+            DO 200 I = ISTV,IENDV
 C-----------------------------------------------------------------------
-C     COMPUTE AREAS AND VOLUME (** WARNING ** No polar co-ordinate systems)
+C     COMPUTE AREAS AND VOLUME
 C-----------------------------------------------------------------------
-C              AREAN = RV(J+1)*SEWU(I)*STB(K)
-C              AREAS = RV(J)*SEWU(I)*STB(K)
-C              AREAEW = RA(J)*SNS(J)*STB(K)
-C              AREATB = SNS(J)*SEWU(I)
-C              VOL = RA(J)*SEWU(I)*SNS(J)*STB(K)
-               AREAN = SEWU(I)*STB(K)
-               AREAS = SEWU(I)*STB(K)
-               AREAEW = SNS(J)*STB(K)
-               AREATB = SNS(J)*SEWU(I)
-               VOL = SEWU(I)*SNS(J)*STB(K)
+c              RCVA = 0.5*(RCV(J)+RCV(J+1))
+c              AREAN = RCV(J+1)*STB(K)*SEW(I)
+c              AREAS = RCV(J)*STB(K)*SEW(I)
+c              AREAEW = RCVA*STB(K)*SNSV(J)
+c              AREATB = SNSV(J)*SEW(I)
+c              VOL = RCVA*STB(K)*SEW(I)*SNSV(J)
+               AREAN = STB(K)*SEW(I)
+               AREAS = STB(K)*SEW(I)
+               AREAEW = STB(K)*SNSV(J)
+               AREATB = SNSV(J)*SEW(I)
+               VOL = STB(K)*SEW(I)*SNSV(J)
 C-----------------------------------------------------------------------
 C     CALCULATE CONVECTION COEFFICIENTS
 C-----------------------------------------------------------------------
                GE = 0.5*(DEN(I+1,J,K)+DEN(I,J,K))*UU(I+1,J,K)
-               GP = 0.5*(DEN(I,J,K)+DEN(I-1,J,K))*UU(I,J,K)
-               GW = 0.5*(DEN(I-1,J,K)+DEN(I-2,J,K))*UU(I-1,J,K)
+               GSE = 0.5*(DEN(I,J-1,K)+DEN(I+1,J-1,K))*UU(I+1,J-1,K)
+               GW = 0.5*(DEN(I,J,K)+DEN(I-1,J,K))*UU(I,J,K)
+               GSW = 0.5*(DEN(I,J-1,K)+DEN(I-1,J-1,K))*UU(I,J-1,K)
                GN = 0.5*(DEN(I,J+1,K)+DEN(I,J,K))*VV(I,J+1,K)
-               GNW = 0.5*(DEN(I-1,J,K)+DEN(I-1,J+1,K))*VV(I-1,J+1,K)
-               GS = 0.5*(DEN(I,J-1,K)+DEN(I,J,K))*VV(I,J,K)
-               GSW = 0.5*(DEN(I-1,J,K)+DEN(I-1,J-1,K))*VV(I-1,J,K)
-               GT = 0.5*(DEN(I,J,K)+DEN(I,J,K+1))*WW(I,J,K+1)
-               GTW = 0.5*(DEN(I-1,J,K)+DEN(I-1,J,K+1))*WW(I-1,J,K+1)
-               GTP = 0.5*(DEN(I,J,K)+DEN(I,J,K-1))*WW(I,J,K)
-               GBW = 0.5*(DEN(I-1,J,K)+DEN(I-1,J,K-1))*WW(I-1,J,K)
-               CEO = 0.5*(GE+GP)*AREAEW
-               CWO = 0.5*(GP+GW)*AREAEW
-               CNO = (0.5*GN+0.5*GNW)*AREAN
-               CSO = (0.5*GS+0.5*GSW)*AREAS
-               CTO = (0.5*GT+0.5*GTW)*AREATB
-               CBO = (0.5*GTP+0.5*GBW)*AREATB
+               GP = 0.5*(DEN(I,J,K)+DEN(I,J-1,K))*VV(I,J,K)
+               GS = 0.5*(DEN(I,J-1,K)+DEN(I,J-2,K))*VV(I,J-1,K)
+c******************
+c ** WARNING ** RAWAT : What does J==2 mean in the patch context ?
+c******************
+               IF (J.EQ.2) GS = DEN(I,J-1,K)*VV(I,J-1,K)
+               GT = 0.5*(DEN(I,J,K+1)+DEN(I,J,K))*WW(I,J,K+1)
+               GST = 0.5*(DEN(I,J-1,K+1)+DEN(I,J-1,K))*WW(I,J-1,K+1)
+               GB = 0.5*(DEN(I,J,K)+DEN(I,J,K-1))*WW(I,J,K)
+               GSB = 0.5*(DEN(I,J-1,K)+DEN(I,J-1,K-1))*WW(I,J-1,K)
+               CEO = (0.5*GE+0.5*GSE)*AREAEW
+               CWO = (0.5*GW+0.5*GSW)*AREAEW
+               CTO = (0.5*GT+0.5*GST)*AREATB
+               CBO = (0.5*GB+0.5*GSB)*AREATB 
+               CNO = 0.5*(GN+GP)*AREAN
+               CSO = 0.5*(GP+GS)*AREAS
 C-----------------------------------------------------------------------
 C      NEW DIFFERENCING STUFF
 C-----------------------------------------------------------------------
-               CE = CEEU(I)*CEO + CWEU(I)*CWO
-               CW = CWWU(I)*CWO - CWEU(I)*CEO   
-               CN = CNN(J)*CNO + CSN(J)*CSO
-               CS = CSS(J)*CSO - CSN(J)*CNO
+               CE = CEE(I)*CEO + CWE(I)*CWO
+               CW = CWW(I)*CWO - CWE(I)*CEO   
+               CN = CNNV(J)*CNO + CSNV(J)*CSO
+               CS = CSSV(J)*CSO - CSNV(J)*CNO
                CT = CTT(K)*CTO + CBT(K)*CBO
                CB = CBB(K)*CBO - CBT(K)*CTO
                CESAV(I,J,K) = CE
@@ -198,44 +203,61 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C      UPWIND DIFFERENCING STUFF
 C-----------------------------------------------------------------------
-               CPE = GP*VOL/SEWU(I)
-               CPW = GP*VOL/SEWU(I-1)
-               GVP = ENFAC(J)*(0.5*GN+0.5*GNW)+SFAC(J)*(0.5*GS+0.5*GSW)
-               CPN = GVP*VOL/DYNP(J)
-               CPS = GVP*VOL/DYPS(J)
-               GWP = TFAC(K)*(0.5*GT+0.5*GTW)+BFAC(K)*(0.5*GTP+0.5*GBW)
-c              CPT = GWP*VOL/(RA(J)*DZTP(K))
-c              CPB = GWP*VOL/(RA(J)*DZPB(K))
+               GUP = EFAC(I)*(0.5*GE+0.5*GSE)+WFAC(I)*(0.5*GW+0.5*GSW)
+               CPE = GUP*VOL/DXEP(I)
+               CPW = GUP*VOL/DXPW(I)
+c ******
+c ** WARNING ** Rawat, should this be SNS or SNSV ?
+c ******
+c              CPN = GP*VOL/SNS(J)
+c              CPS = GP*VOL/SNS(J-1)
+               CPN = GP*VOL/SNSV(J)
+               CPS = GP*VOL/SNSV(J-1)
+               GWP = TFAC(K)*(0.5*GT+0.5*GST)+BFAC(K)*(0.5*GB+0.5*GSB)
+c              CPT = GWP*VOL/(RCVA*DZTP(K))
+c              CPB = GWP*VOL/(RCVA*DZPB(K))
                CPT = GWP*VOL/DZTP(K)
                CPB = GWP*VOL/DZPB(K)
 C-----------------------------------------------------------------------
 C     CALCULATE DIFFUSION COEFFICIENTS
 C-----------------------------------------------------------------------
-               VISE = FAC1U(I)*VIS(I,J,K)+FAC2U(I)*VIS(I+IESDU(I),J,K)
-               VISW = FAC3U(I)*VIS(I-1,J,K)+FAC4U(I)*VIS(I+IWSDU(I),J,K)
-               VISN = 0.5*(0.5*(VIS(I,J,K)+VIS(I,J+1,K))+
-     &              0.5*(VIS(I-1,J,K)+VIS(I-1,J+1,K)))
-               VISS = 0.5*(0.5*(VIS(I,J,K)+VIS(I,J-1,K))+
-     &              0.5*(VIS(I-1,J,K)+VIS(I-1,J-1,K)))
+               VISE = 0.5*(0.5*(VIS(I,J,K)+VIS(I+1,J,K))+
+     &              0.5*(VIS(I,J-1,K)+VIS(I+1,J-1,K)))
+               VISW = 0.5*(0.5*(VIS(I,J,K)+VIS(I-1,J,K))+
+     &              0.5*(VIS(I,J-1,K)+VIS(I-1,J-1,K)))
+c******************
+c ** WARNING ** RAWAT : Why are VISN, VISS, VIST, VISB arrays in vcoef.f
+c                       but VISE, VISW are not arrays in ucoef.f ?
+c******************
+c              VISN(I) = FAC1V(J)*VIS(I,J,K)+FAC2V(J)*VIS(I,J+JNSDV(J),K)
+c              VISS(I) = FAC3V(J)*VIS(I,J-1,K)+FAC4V(J)*VIS(I,J+JSSDV(J),K)  
+c              VIST(I) = 0.5*(0.5*(VIS(I,J,K)+VIS(I,J,K+1))+
+c    &              0.5*(VIS(I,J-1,K)+VIS(I,J-1,K+1)))
+c              VISB(I) = 0.5*(0.5*(VIS(I,J,K)+VIS(I,J,K-1))+
+c    &              0.5*(VIS(I,J-1,K)+VIS(I,J-1,K-1)))
+               VISN = FAC1V(J)*VIS(I,J,K)+FAC2V(J)*VIS(I,J+JNSDV(J),K)
+               VISS = FAC3V(J)*VIS(I,J-1,K)+FAC4V(J)*VIS(I,J+JSSDV(J),K)  
                VIST = 0.5*(0.5*(VIS(I,J,K)+VIS(I,J,K+1))+
-     &              0.5*(VIS(I-1,J,K)+VIS(I-1,J,K+1)))
+     &              0.5*(VIS(I,J-1,K)+VIS(I,J-1,K+1)))
                VISB = 0.5*(0.5*(VIS(I,J,K)+VIS(I,J,K-1))+
-     &              0.5*(VIS(I-1,J,K)+VIS(I-1,J,K-1)))  
-               DEO = VISE*AREAEW/DXEPU(I)
-               DWO = VISW*AREAEW/DXPWU(I)
-               DNO = VISN*AREAN/DYNP(J)
-               DSO = VISS*AREAS/DYPS(J)
-c              DTO = VIST*AREATB/(RA(J)*DZTP(K))
-c              DBO = VISB*AREATB/(RA(J)*DZPB(K))
+     &              0.5*(VIS(I,J-1,K)+VIS(I,J-1,K-1)))
+               DEO = VISE*AREAEW/DXEP(I)
+               DWO = VISW*AREAEW/DXPW(I)
+c              DNO = VISN(I)*AREAN/DYNPV(J)
+c              DSO = VISS(I)*AREAS/DYPSV(J)
+c              DTO = VIST(I)*AREATB/(RCVA*DZTP(K))
+c              DBO = VISB(I)*AREATB/(RCVA*DZPB(K))
+               DNO = VISN*AREAN/DYNPV(J)
+               DSO = VISS*AREAS/DYPSV(J)
                DTO = VIST*AREATB/DZTP(K)
                DBO = VISB*AREATB/DZPB(K)
 C-----------------------------------------------------------------------
 C     NEW DIFFUSION TERMS
 C-----------------------------------------------------------------------
-               DE = CEEU(I)*DEO + CWEU(I)*DWO*DXPWU(I)/DXEPU(I)
-               DW = CWWU(I)*DWO - CWEU(I)*DEO*DXEPU(I)/DXPWU(I)   
-               DN = CNN(J)*DNO + CSN(J)*DSO*DYPS(J)/DYNP(J)
-               DS = CSS(J)*DSO - CSN(J)*DNO*DYNP(J)/DYPS(J)
+               DE = CEE(I)*DEO + CWE(I)*DWO*DXPW(I)/DXEP(I)
+               DW = CWW(I)*DWO - CWE(I)*DEO*DXEP(I)/DXPW(I)   
+               DN = CNNV(J)*DNO + CSNV(J)*DSO*DYPSV(J)/DYNPV(J)
+               DS = CSSV(J)*DSO - CSNV(J)*DNO*DYNPV(J)/DYPSV(J)
                DT = CTT(K)*DTO + CBT(K)*DBO*DZPB(K)/DZTP(K)
                DB = CBB(K)*DBO - CBT(K)*DTO*DZTP(K)/DZPB(K)
 C-----------------------------------------------------------------------
@@ -259,10 +281,13 @@ C-----------------------------------------------------------------------
                ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
                ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
                ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
-               DU(I,J,K) = VOL/DXPWU(I)
-c              TSUM = TSUM + TEW+TNS+TTB
+c ******
+c ** WARNING ** Rawat, should this be DYPS or DYPSV ?
+c ******
+c              DV(I,J,K) = VOL/DYPS(J)
+               DV(I,J,K) = VOL/DYPSV(J)
 C----------------------------------------------------------------------
-C      PROVISIONS FOR VARIOUS UPWIND DIFFERENCING SCHEMES
+C      PROVISIONS FOR SIMPLEST
 C----------------------------------------------------------------------
                IF (LSMPT) THEN
                   AE(I,J,K) = DE
@@ -272,9 +297,9 @@ C----------------------------------------------------------------------
                   AT(I,J,K) = DT
                   AB(I,J,K) = DB
 c                 AC(I,J,K) = AEC+AWC+ANC+ASC+ATC+ABC
-c                 SU(I,J,K) = AEC*U(I+1,J,K)+AWC*U(I-1,J,K) +
-c    &                 ANC*U(I,J+1,K)+ASC*U(I,J-1,K) +
-c    &                 ATC*U(I,J,K+1)+ABC*U(I,J,K-1)
+c                 SU(I,J,K) = AEC*V(I+1,J,K)+AWC*V(I-1,J,K) +
+c    &                 ANC*V(I,J+1,K)+ASC*V(I,J-1,K) +
+c    &                 ATC*V(I,J,K+1)+ABC*V(I,J,K-1)
                ELSE IF (LCEND) THEN
                   AE(I,J,K) = DE-CE*0.5
                   AW(I,J,K) = DW+CW*0.5
@@ -319,16 +344,9 @@ c                 SU(I,J,K) = 0.0
 c*********************************************************************
 c
 c $Log$
-c Revision 1.3  2000/07/08 23:08:56  bbanerje
+c Revision 1.1  2000/07/08 23:08:56  bbanerje
 c Added vvelcoef and wvelcoef ..
 c Rawat check the ** WARNING ** tags in these files for possible problems.
 c
-c Revision 1.2  2000/07/08 08:03:37  bbanerje
-c Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
-c made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
-c to Arches::AE .. doesn't like enums in templates apparently.
-c
-c Revision 1.1  2000/07/07 23:07:48  rawat
-c added inlet bc's
 c
 c*********************************************************************

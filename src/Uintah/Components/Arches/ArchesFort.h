@@ -46,6 +46,8 @@ WARNING
 #define FORT_CALPBC calpbc_
 #define FORT_INLBCS inlbcs_
 #define FORT_UVELCOEF uvelcoef_
+#define FORT_VVELCOEF vvelcoef_
+#define FORT_WVELCOEF wvelcoef_
 #define FORT_BCUVEL bcuvel_
 #define FORT_BCVVEL bcvvel_
 #define FORT_BCWVEL bcwvel_
@@ -273,14 +275,104 @@ extern "C"
 		  const double* fac1u, const double* fac2u,
 		  const double* fac3u, const double* fac4u,
 		  const int* iesdu, const int* iwsdu, 
-		  const double* enfac, const double* sfac,
+		  const double* nfac, const double* sfac,
 		  const double* tfac, const double* bfac);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the V-velocity coeffs and convection coeffs
+    //
+    void
+    FORT_VVELCOEF(const int* domLoV, const int* domHiV,
+		  const int* idxLoV, const int* idxHiV,
+		  const double* vVelocity,
+		  double* vVelocityConvectCoeff_AE, 
+		  double* vVelocityConvectCoeff_AW, 
+		  double* vVelocityConvectCoeff_AN, 
+		  double* vVelocityConvectCoeff_AS, 
+		  double* vVelocityConvectCoeff_AT, 
+		  double* vVelocityConvectCoeff_AB, 
+		  double* vVelocityCoeff_AP,
+		  double* vVelocityCoeff_AE,
+		  double* vVelocityCoeff_AW,
+		  double* vVelocityCoeff_AN,
+		  double* vVelocityCoeff_AS,
+		  double* vVelocityCoeff_AT,
+		  double* vVelocityCoeff_AB,
+		  double* variableCalledDV,
+		  const int* domLoU, const int* domHiU,
+		  const double* uVelocity,
+		  const int* domLoW, const int* domHiW,
+		  const double* wVelocity,
+		  const int* domLo, const int* domHi,
+		  const double* density,
+		  const double* viscosity,
+		  const double* deltaT,
+		  const double* cee, const double* cwe, const double* cww,
+		  const double* cnnv, const double* csnv, const double* cssv,
+		  const double* ctt, const double* cbt, const double* cbb,
+		  const double* sew, const double* snsv, const double* stb,
+		  const double* dxep, const double* dxpw,
+		  const double* dynpv, const double* dypsv,
+		  const double* dztp, const double* dzpb,
+		  const double* fac1v, const double* fac2v,
+		  const double* fac3v, const double* fac4v,
+		  const int* jnsdv, const int* jssdv, 
+		  const double* efac, const double* wfac,
+		  const double* tfac, const double* bfac);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the W-velocity coeffs and convection coeffs
+    //
+    void
+    FORT_WVELCOEF(const int* domLoW, const int* domHiW,
+		  const int* idxLoW, const int* idxHiW,
+		  const double* wVelocity,
+		  double* wVelocityConvectCoeff_AE, 
+		  double* wVelocityConvectCoeff_AW, 
+		  double* wVelocityConvectCoeff_AN, 
+		  double* wVelocityConvectCoeff_AS, 
+		  double* wVelocityConvectCoeff_AT, 
+		  double* wVelocityConvectCoeff_AB, 
+		  double* wVelocityCoeff_AP,
+		  double* wVelocityCoeff_AE,
+		  double* wVelocityCoeff_AW,
+		  double* wVelocityCoeff_AN,
+		  double* wVelocityCoeff_AS,
+		  double* wVelocityCoeff_AT,
+		  double* wVelocityCoeff_AB,
+		  double* variableCalledDW,
+		  const int* domLoU, const int* domHiU,
+		  const double* uVelocity,
+		  const int* domLoV, const int* domHiV,
+		  const double* vVelocity,
+		  const int* domLo, const int* domHi,
+		  const double* density,
+		  const double* viscosity,
+		  const double* deltaT,
+		  const double* cee, const double* cwe, const double* cww,
+		  const double* cnn, const double* csn, const double* css,
+		  const double* cttw, const double* cbtw, const double* cbbw,
+		  const double* sew, const double* sns, const double* stbw,
+		  const double* dxep, const double* dxpw,
+		  const double* dynp, const double* dyps,
+		  const double* dztpw, const double* dzpbw,
+		  const double* fac1w, const double* fac2w,
+		  const double* fac3w, const double* fac4w,
+		  const int* ktsdw, const int* kbsdw, 
+		  const double* efac, const double* wfac,
+		  const double* nfac, const double* sfac);
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.12  2000/07/08 23:08:54  bbanerje
+// Added vvelcoef and wvelcoef ..
+// Rawat check the ** WARNING ** tags in these files for possible problems.
+//
 // Revision 1.11  2000/07/08 08:03:33  bbanerje
 // Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
 // made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
