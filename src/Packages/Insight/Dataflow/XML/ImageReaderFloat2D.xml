@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<?xml-stylesheet href="../../../../Dataflow/XML/package-component.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -24,6 +22,10 @@
   <overview>
     <authors>
     </authors>
+    <summary>
+    </summary>
+    <description>This module uses the itk::ImageFileReader to read in a 2D Image as floats.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
+  </description>
   </overview>
   <implementation>
   </implementation>
