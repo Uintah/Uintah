@@ -58,7 +58,7 @@ SKELSRCS :=
 include ${OUTDIR}/${COMPONENT}_stub.make
 SRCS := $(SRCS) $(patsubst %,$(SRCDIR)/%,$(IORSRCS) $(STUBSRCS) $(IMPLSRCS) $(SKELSRCS))
 
-PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL \
+PSELIBS := Core/CCA/Component/SIDL Core/CCA/Component/PIDL \
 	Core/CCA/Component/Comm Core/CCA/spec Core/Thread \
 	Core/Containers Core/Exceptions
 
