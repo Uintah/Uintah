@@ -17,20 +17,7 @@
 
 # SCI Network 1.0
 
-set results [sourceSettingsFile]
-
-if { $results == "failed" } {
-
-    ::netedit scheduleok
-    return 
-
-} else {
-
-    set DATADIR [lindex $results 0]
-    set DATASET [lindex $results 1]
-}
-
-source $DATADIR/$DATASET/$DATASET.settings
+init_DATADIR_and_DATASET
 
 ::netedit dontschedule
 
@@ -108,7 +95,7 @@ addConnection $m24 0 $m18 1
 addConnection $m24 0 $m20 0
 addConnection $m16 0 $m23 0
 
-set $m0-filename $env(SCIRUN_DATA)/$DATASET/$DATASET-mesh.tvt.fld
+set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
 set $m1-seed_gui 1
 set $m2-UseCondTCL 1
 set $m2-BCFlag {GroundZero}
@@ -125,7 +112,7 @@ set $m4-use_previous_soln 1
 set $m4-emit_partial 0
 set $m4-np 1
 set $m5-use_interp {0}
-set $m7-filename $env(SCIRUN_DATA)/$DATASET/$DATASET-electrodes.pcd.fld
+set $m7-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
 set $m9-target_error 1e-07
 set $m9-orig_error 9.65643e-06
 set $m9-current_error {9.65643e-06}
@@ -138,8 +125,8 @@ set $m9-np 1
 set $m14-haveUI 1
 set $m14-methodTCL {CCinv}
 set $m14-pTCL {1}
-set $m15-filename $env(SCIRUN_DATA)/$DATASET/$DATASET-condparams.mat
-set $m16-filename $env(SCIRUN_DATA)/$DATASET/$DATASET-voltage.tvd.fld
+set $m15-filename $DATADIR/$DATASET/$DATASET-condparams.mat
+set $m16-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
 set $m17-tcl_status {Calling GenStandardColorMaps!}
 set $m17-positionList {}
 set $m17-nodeList {}
