@@ -20,7 +20,7 @@ ImageMaterial::ImageMaterial(char* texfile, ImageMaterial::Mode umode,
 			     const Color& specular, double specpow,
 			     double refl)
     : umode(umode), vmode(vmode), ambient(ambient), Kd(Kd), specular(specular),
-      specpow(specpow), refl(refl),  transp(0)
+      specpow(specpow), refl(refl),  transp(0), flip_(false)
 {
     read_image(texfile);
     outcolor=Color(0,0,0);
@@ -32,7 +32,7 @@ ImageMaterial::ImageMaterial(char* texfile, ImageMaterial::Mode umode,
 			     const Color& specular, double specpow,
 			     double refl,  double transp)
     : umode(umode), vmode(vmode), ambient(ambient), Kd(Kd), specular(specular),
-      specpow(specpow), refl(refl),  transp(transp)
+      specpow(specpow), refl(refl),  transp(transp), flip_(false)
 {
     read_image(texfile);
     outcolor=Color(0,0,0);
@@ -99,6 +99,8 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 	v*=image.dim2();
 	int iu=(int)u;
 	int iv=(int)v;
+        if (flip_)
+          iv = image.dim2()-iv;
 	diffuse=image(iu, iv);
     }
 skip:
