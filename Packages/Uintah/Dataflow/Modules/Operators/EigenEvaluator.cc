@@ -34,7 +34,7 @@ void EigenEvaluator::execute(void) {
   FieldHandle hTF;
   
   if(!in->get(hTF)){
-    std::cerr<<"Didn't get a handle\n";
+    std::cerr<<"EigenEvaluator::execute(void) Didn't get a handle\n";
     return;
   } else if ( hTF->get_type_name(1) != "Matrix3" ){
     std::cerr<<"Input is not a Tensor field\n";

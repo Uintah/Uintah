@@ -20,7 +20,8 @@ VectorParticlesOperator::VectorParticlesOperator(GuiContext* ctx)
 {
 }
   
-void VectorParticlesOperator::execute(void) {
+void VectorParticlesOperator::execute(void) 
+{
   //  tcl_status.set("Calling InPlaneEigenEvaluator!"); 
   in = (VectorParticlesIPort *) get_iport("Vector Particles");
   spout = (ScalarParticlesOPort *)get_oport("Scalar Particles");
@@ -28,7 +29,7 @@ void VectorParticlesOperator::execute(void) {
   VectorParticlesHandle hTF;
   
   if(!in->get(hTF)){
-    std::cerr<<"Didn't get a handle\n";
+    std::cerr<<"VectorParticlesOperator::execute(void) Didn't get a handle\n";
     return;
   }
 

@@ -25,7 +25,8 @@ TensorParticlesOperator::TensorParticlesOperator(GuiContext* ctx)
 {
 }
   
-void TensorParticlesOperator::execute(void) {
+void TensorParticlesOperator::execute(void) 
+{
   //  tcl_status.set("Calling InPlaneEigenEvaluator!"); 
  
   in = ( TensorParticlesIPort *) get_iport("Tensor Particles");
@@ -34,7 +35,7 @@ void TensorParticlesOperator::execute(void) {
   TensorParticlesHandle hTF;
   
   if(!in->get(hTF)){
-    std::cerr<<"Didn't get a handle\n";
+    std::cerr<<"TensorParticlesOperator::execute(void) Didn't get a handle\n";
     return;
   }
 

@@ -738,7 +738,7 @@ bool GridVisualizer::getGrid()
 {
   ArchiveHandle handle;
   if(!in->get(handle)){
-    std::cerr<<"Didn't get a handle\n";
+    std::cerr<<"GridVisualizer::getGrid() Didn't get a handle\n";
     grid = NULL;
     return false;
   }
