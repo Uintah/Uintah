@@ -9,9 +9,11 @@
 #include <iostream>
 #include <mpi.h>
 
-using namespace Uintah;
-using std::cerr;
 using namespace SCICore::Exceptions;
+using namespace Uintah;
+
+using std::cerr;
+using std::cout;
 using std::string;
 
 static bool            allowThreads;
@@ -110,6 +112,9 @@ Parallel::finalizeManager(Circumstances circumstances)
 {
    if(::usingMPI){
       if(circumstances == Abort){
+	 cerr.flush();
+	 cout.flush();
+	 sleep(1);
 	 MPI_Abort(worldComm, 1);
       } else {
 	 int status;
@@ -130,6 +135,11 @@ Parallel::getRootProcessorGroup()
 
 //
 // $Log$
+// Revision 1.14  2000/09/29 19:52:56  dav
+// Added cerr and cout flushes and a sleep before the abort... In the past
+// print statements have been lost because of the abort.  Hopefully this
+// will allow all output to be displayed before the program actually dies.
+//
 // Revision 1.13  2000/09/28 22:21:34  dav
 // Added code that allows the MPIScheduler to run correctly even if
 // PSE_MAX_THREADS is set.  This was messing up the assigning of resources.
