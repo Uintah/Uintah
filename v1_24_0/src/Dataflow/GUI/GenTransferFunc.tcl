@@ -95,9 +95,7 @@ itcl_class SCIRun_Visualization_GenTransferFunc {
 	    pack $w.f.gl1 -padx 2 -pady 2
 
             # Create an OpenGL widget.
-	    opengl $w.f.gl1.gl -geometry 512x256 -doublebuffer true \
-		-direct true -rgba true \
-		-redsize 1 -greensize 1 -bluesize 1 -depthsize 2
+	    $this-c setgl 0
 
 	    # Every time the OpenGL widget is displayed, redraw it.
 	    bind $w.f.gl1.gl <Expose> "$this-c expose 0"
@@ -118,9 +116,7 @@ itcl_class SCIRun_Visualization_GenTransferFunc {
 	    pack $w.f.gl3 -padx 2 -pady 2
 
             # Create an OpenGL widget.
-            opengl $w.f.gl3.gl -geometry 512x64 -doublebuffer true \
-		-direct true -rgba true -redsize 1 \
-		-greensize 1 -bluesize 1 -depthsize 2
+	    $this-c setgl 1
 
             # Every time the OpenGL widget is displayed, redraw it.
             bind $w.f.gl3.gl <Expose> "$this-c expose 1"
