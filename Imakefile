@@ -1,19 +1,25 @@
 
 #include <config/sci.cf>
 
-SUBDIRS = Classlib Comm Dataflow Devices Geometry \
-	Malloc Math Multitask TCL tcl
+SUBDIRS = Classlib Comm Constraints \
+	Dataflow Datatypes Devices Geom Geometry \
+	Malloc Math Modules Multitask TCL Widgets tcl
 
 SCISubdirs($(SUBDIRS))
 
 
 SR_TARGET = sr
-SR_SRCS = scirun.cc
-SR_OBJS = scirun.o
+SR_SRCS = scirun.cc tmpl_hack.cc 
+SR_OBJS = scirun.o  tmpl_hack.o
 SR_LIBS = \
+	Modules/libModules.o \
+	Widgets/libWidgets.a \
+	Constraints/libConstraints.a \
 	TCL/libTCL.a \
 	Dataflow/libDataflow.a \
+	Datatypes/libDatatypes.a \
 	TCL/libTCL.a \
+	Geom/libGeom.a \
 	Devices/libDevices.a \
 	Comm/libComm.a \
 	Geometry/libGeometry.a \
