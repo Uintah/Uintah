@@ -100,6 +100,13 @@
 	    <para> Used for sending Crosswidget object handle and SCICore::GeomSpace::View objects to other modules 
 	    (Salmon or view-dependent isosurface extracting module)</para>
 	  </usage>
+
+	  <port>CameraViewOPort</port>
+	  <datatype>SCICore::Datatypes::CameraView</datatype>
+	  <usage>
+	    <para> Used for sending handle to CameraView datatype object containing current path view </para>
+	  </usage>
+
 	</out>
       </ports>
 
@@ -108,7 +115,7 @@
 	  <name> PathReader </name>
 	</typin>
 	<typout>
-	  <name> PathWriter, Salmon </name>
+	  <name> PathWriter, Salmon, IsoSurfaceSAGE (???) </name>
 	</typout>
       </modules>
       <example></example>
