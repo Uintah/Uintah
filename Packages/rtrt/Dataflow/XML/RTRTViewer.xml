@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../../doc/component.dtd">
+<?xml-stylesheet href="../../../../../doc/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
 
 <component name="RTRTViewer" category="Render">
   <overview>
@@ -12,6 +14,12 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Scene</name>
+        <datatype>rtrt::Scene</datatype>
+      </port>
+    </inputs>
   </io>
   <testing>
   </testing>
