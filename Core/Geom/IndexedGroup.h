@@ -39,7 +39,7 @@
 
 namespace SCIRun {
 
-  using namespace std;
+using namespace std;
 
 class SCICORESHARE GeomIndexedGroup: public GeomObj {
     

@@ -31,23 +31,18 @@
 #ifndef SCI_Geom_Billboard_h
 #define SCI_Geom_Billboard_h 1
 
-#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomContainer.h>
 #include <Core/Geometry/BBox.h>
 
 namespace SCIRun {
 
-class SCICORESHARE GeomBillboard: public GeomObj {
-  GeomObj* child;
+class SCICORESHARE GeomBillboard: public GeomContainer {
   Point at;
-  
-  BBox bbox;
+
 public:
-  GeomBillboard(GeomObj*, const Point &);
-  
-  virtual ~GeomBillboard();
+  GeomBillboard(GeomHandle, const Point &);
   
   virtual GeomObj* clone();
-  //    virtual void reset_bbox();
   virtual void get_bounds(BBox&);
   
 #ifdef SCI_OPENGL
@@ -55,11 +50,12 @@ public:
 #endif
   virtual void io(Piostream&);
   static PersistentTypeID type_id;	
-  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
 } // End namespace SCIRun
 
 
 #endif
+
+
 

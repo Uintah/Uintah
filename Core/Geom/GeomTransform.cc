@@ -48,12 +48,12 @@ Persistent* make_GeomTransform()
 
 PersistentTypeID GeomTransform::type_id("GeomTransform", "GeomObj", make_GeomTransform);
 
-GeomTransform::GeomTransform(GeomObj* obj)
+GeomTransform::GeomTransform(GeomHandle obj)
 : GeomContainer(obj)
 {
 }
 
-GeomTransform::GeomTransform(GeomObj* obj, const Transform trans)
+GeomTransform::GeomTransform(GeomHandle obj, const Transform trans)
 : GeomContainer(obj), trans(trans)
 {
 }
@@ -85,10 +85,6 @@ Transform GeomTransform::getTransform()
     return trans;
 }
 
-GeomTransform::~GeomTransform()
-{
-}
-
 GeomObj* GeomTransform::clone()
 {
     return scinew GeomTransform(*this);
@@ -97,14 +93,15 @@ GeomObj* GeomTransform::clone()
 void GeomTransform::get_bounds(BBox& bb)
 {
     BBox b;
-    child->get_bounds(b);
+    child_->get_bounds(b);
     bb.extend(trans.project(b.min()));
     bb.extend(trans.project(b.max()));
 }
 
 #define GEOMTransform_VERSION 1
 
-void GeomTransform::io(Piostream& stream)
+void
+GeomTransform::io(Piostream& stream)
 {
     stream.begin_class("GeomTransform", GEOMTransform_VERSION);
     GeomContainer::io(stream);
@@ -112,7 +109,8 @@ void GeomTransform::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomTransform::saveobj(ostream&, const string&,
+bool
+GeomTransform::saveobj(ostream&, const string&,
 			   GeomSave*)
 {
     cerr << "don't know how to output a transform matrix!\n";

@@ -316,7 +316,7 @@ void Viewer::flushViews()
 }
 
 //----------------------------------------------------------------------
-void Viewer::addObj(GeomViewerPort* port, int serial, GeomObj *obj,
+void Viewer::addObj(GeomViewerPort* port, int serial, GeomHandle obj,
 		    const string& name, CrowdMonitor* lock)
 {
   string pname(name+" ("+to_string(port->portno)+")");

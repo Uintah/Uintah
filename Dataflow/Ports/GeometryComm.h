@@ -36,9 +36,9 @@
 #include <Dataflow/Comm/MessageBase.h>
 #include <Core/Geom/View.h>
 #include <Core/Thread/FutureValue.h>
+#include <Core/Geom/GeomObj.h>
 
 namespace SCIRun {
-  class GeomObj;
   class Semaphore;
   class GeometryData;
 
@@ -52,7 +52,8 @@ struct GeomReply {
 class PSECORESHARE GeometryComm : public MessageBase {
 public:
     GeometryComm(Mailbox<GeomReply>*);
-    GeometryComm(int, GeomID, GeomObj*, const string&, CrowdMonitor* lock);
+    GeometryComm(int, GeomID, GeomHandle,
+		 const string&, CrowdMonitor* lock);
     GeometryComm(int, GeomID, int del);
     GeometryComm(MessageTypes::MessageType, int);
     GeometryComm(MessageTypes::MessageType, int, Semaphore* wait);
@@ -67,7 +68,7 @@ public:
     Mailbox<GeomReply>* reply;
     int portno;
     GeomID serial;
-    GeomObj* obj;
+    GeomHandle obj;
     string name;
     CrowdMonitor* lock;
     Semaphore* wait;

@@ -45,16 +45,10 @@ PersistentTypeID GeomBillboard::type_id("GeomBillboard", "GeomObj",
 					make_GeomBillboard);
 
 
-GeomBillboard::GeomBillboard(GeomObj* obj, const Point &p)
-: child(obj), at(p)
+GeomBillboard::GeomBillboard(GeomHandle obj, const Point &p)
+: GeomContainer(obj), at(p)
 {
 
-}
-
-GeomBillboard::~GeomBillboard()
-{
-  if(child)
-    delete child;
 }
 
 GeomObj* GeomBillboard::clone()
@@ -65,15 +59,14 @@ GeomObj* GeomBillboard::clone()
 
 void GeomBillboard::get_bounds(BBox& box)
 {
-  //box.extend(Point(-5,-2,-1));
-  //box.extend(Point(5,2, 1));
-  child->get_bounds(bbox);
+  BBox bbox;
+
+  child_->get_bounds(bbox);
 
   box.reset();
   box.extend( Point( bbox.min().x(), bbox.min().z(), bbox.min().y() ));
   box.extend( Point( bbox.max().x(), bbox.max().z(), bbox.max().y() ));
   box.translate( at.vector() );
-  //  cerr << " at " << box.min() << "  " << box.max() << "\n";
 }
 
 #define GEOMBBOXCACHE_VERSION 1
@@ -82,14 +75,8 @@ void GeomBillboard::io(Piostream& stream)
 {
 
     stream.begin_class("GeomBillboard", GEOMBBOXCACHE_VERSION);
-    Pio(stream, child);
+    Pio(stream, child_);
     stream.end_class();
-}
-
-bool GeomBillboard::saveobj(ostream& out, const string& format,
-			    GeomSave* saveinfo)
-{
-    return child->saveobj(out, format, saveinfo);
 }
 
 } // End namespace SCIRun

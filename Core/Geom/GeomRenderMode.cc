@@ -45,7 +45,7 @@ Persistent* make_GeomRenderMode()
 
 PersistentTypeID GeomRenderMode::type_id("GeomRenderMode", "GeomObj", make_GeomRenderMode);
 
-GeomRenderMode::GeomRenderMode(DrawType drawtype, GeomObj* child)
+GeomRenderMode::GeomRenderMode(DrawType drawtype, GeomHandle child)
 : GeomContainer(child), drawtype(drawtype)
 {
 }
@@ -53,12 +53,6 @@ GeomRenderMode::GeomRenderMode(DrawType drawtype, GeomObj* child)
 GeomRenderMode::GeomRenderMode(const GeomRenderMode& copy)
 : GeomContainer(copy), drawtype(copy.drawtype)
 {
-}
-
-GeomRenderMode::~GeomRenderMode()
-{
-    if(child)
-	delete child;
 }
 
 GeomObj* GeomRenderMode::clone()

@@ -41,12 +41,11 @@ namespace SCIRun {
 class SCICORESHARE GeomTransform : public GeomContainer {
     Transform trans;
 public:
-    GeomTransform(GeomObj*);
-    GeomTransform(GeomObj*, const Transform);
+    GeomTransform(GeomHandle);
+    GeomTransform(GeomHandle, const Transform);
     GeomTransform(const GeomTransform&);
     void setTransform(const Transform);
     Transform getTransform();
-    virtual ~GeomTransform();
     virtual GeomObj* clone();
 
     virtual void get_bounds(BBox&);

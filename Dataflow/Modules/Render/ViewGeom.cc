@@ -41,13 +41,14 @@ using std::ostream;
 namespace SCIRun {
 
 
-Persistent* make_GeomViewerItem()
+Persistent*
+GeomViewerItem::maker()
 {
-    return scinew GeomViewerItem;
+  return scinew GeomViewerItem;
 }
 
-PersistentTypeID GeomViewerItem::type_id("GeomViewerItem", "GeomObj",
-					 make_GeomViewerItem);
+PersistentTypeID GeomViewerItem::type_id("GeomViewerItem", "GeomContainer",
+					 GeomViewerItem::maker);
 
 GeomViewerPort::GeomViewerPort(int no)
   : msg_head(0), msg_tail(0), portno(no)
@@ -61,27 +62,21 @@ GeomViewerPort::~GeomViewerPort()
 }
 
 GeomViewerItem::GeomViewerItem() :
-  child_(0),
+  GeomContainer(0),
   crowd_lock_(0)
 {
 }
 
-GeomViewerItem::GeomViewerItem(GeomObjHandle obj,const string& nm, 
-			       CrowdMonitor* lck)
-  :child_(obj), name_(nm), crowd_lock_(lck)
+GeomViewerItem::GeomViewerItem(GeomHandle obj,const string& nm, 
+			       CrowdMonitor* lck) :
+  GeomContainer(obj),
+  name_(nm),
+  crowd_lock_(lck)
 {
-    if (!crowd_lock_)
-	child_ = scinew GeomBBoxCache(obj);
-}
-
-GeomViewerItem::~GeomViewerItem()
-{
-}
-
-void GeomViewerItem::get_triangles( Array1<float> &v)
-{
-  if ( child_)
-    child_->get_triangles(v);
+  if (!crowd_lock_)
+  {
+    //child_ = scinew GeomBBoxCache(obj);
+  }
 }
 
 GeomObj*
@@ -91,25 +86,10 @@ GeomViewerItem::clone()
   return scinew GeomViewerItem(child_, name_, crowd_lock_);
 }
 
-void GeomViewerItem::reset_bbox()
-{
-  if (child_)
-  {
-    child_->reset_bbox();
-  }
-}
-
-void GeomViewerItem::get_bounds(BBox& box)
-{
-  if (child_)
-  {
-    child_->get_bounds(box);
-  }
-}
-
 #define GeomViewerITEM_VERSION 1
 
-void GeomViewerItem::io(Piostream& stream)
+void
+GeomViewerItem::io(Piostream& stream)
 {
 
     stream.begin_class("GeomViewerItem", GeomViewerITEM_VERSION);
@@ -127,14 +107,5 @@ void GeomViewerItem::io(Piostream& stream)
     stream.end_class();
 }
 
-bool GeomViewerItem::saveobj(ostream& out, const string& format,
-			     GeomSave* saveinfo)
-{
-  if (child_)
-  {
-    return child_->saveobj(out, format, saveinfo);
-  }
-  return true;
-}
 
 } // End namespace SCIRun

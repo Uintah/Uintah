@@ -38,10 +38,11 @@ namespace SCIRun {
 class SCICORESHARE GeomSwitch : public GeomContainer {
     int state;
     GeomSwitch(const GeomSwitch&);
+
 public:
-    GeomSwitch(GeomObj*, int state=1);
-    virtual ~GeomSwitch();
+    GeomSwitch(GeomHandle, int state=1);
     virtual GeomObj* clone();
+
     void set_state(int st);
     int get_state();
     virtual void get_bounds(BBox&);
@@ -56,13 +57,14 @@ public:
     virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
+
 class SCICORESHARE GeomTimeSwitch : public GeomContainer {
     double tbeg;
     double tend;
     GeomTimeSwitch(const GeomTimeSwitch&);
+
 public:
-    GeomTimeSwitch(GeomObj*, double tbeg, double tend);
-    virtual ~GeomTimeSwitch();
+    GeomTimeSwitch(GeomHandle, double tbeg, double tend);
     virtual GeomObj* clone();
 
     // For OpenGL
@@ -74,6 +76,7 @@ public:
     static PersistentTypeID type_id;
     virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
+
 
 } // End namespace SCIRun
 

@@ -50,17 +50,13 @@ Persistent* make_GeomTimeSwitch()
 
 PersistentTypeID GeomTimeSwitch::type_id("GeomTimeSwitch", "GeomObj", make_GeomTimeSwitch);
 
-GeomSwitch::GeomSwitch(GeomObj* obj, int state)
+GeomSwitch::GeomSwitch(GeomHandle obj, int state)
 : GeomContainer(obj), state(state)
 {
 }
 
 GeomSwitch::GeomSwitch(const GeomSwitch& copy)
 : GeomContainer(copy), state(copy.state)
-{
-}
-
-GeomSwitch::~GeomSwitch()
 {
 }
 
@@ -81,18 +77,19 @@ int GeomSwitch::get_state()
 
 void GeomSwitch::get_bounds(BBox& bbox)
 {
-   if (state && child) child->get_bounds(bbox);
+   if (state && child_.get_rep()) child_->get_bounds(bbox);
 }
 
 
-bool GeomSwitch::saveobj(ostream& out, const string& format,
+bool
+GeomSwitch::saveobj(ostream& out, const string& format,
 			 GeomSave* saveinfo)
 {
     cerr << "saveobj Switch ";
     if(state)
       {
 	cerr << "yep.\n";
-	return child->saveobj(out, format, saveinfo);
+	return child_->saveobj(out, format, saveinfo);
       }
     else
       {
@@ -111,17 +108,15 @@ void GeomSwitch::io(Piostream& stream)
     stream.end_class();
 }
 
-GeomTimeSwitch::GeomTimeSwitch(GeomObj* obj, double tbeg, double tend)
+
+
+GeomTimeSwitch::GeomTimeSwitch(GeomHandle obj, double tbeg, double tend)
 : GeomContainer(obj), tbeg(tbeg), tend(tend)
 {
 }
 
 GeomTimeSwitch::GeomTimeSwitch(const GeomTimeSwitch& copy)
 : GeomContainer(copy), tbeg(copy.tbeg), tend(copy.tend)
-{
-}
-
-GeomTimeSwitch::~GeomTimeSwitch()
 {
 }
 

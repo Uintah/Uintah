@@ -44,28 +44,16 @@ PersistentTypeID GeomBBoxCache::type_id("GeomBBoxCache", "GeomObj",
 					make_GeomBBoxCache);
 
 
-GeomBBoxCache::GeomBBoxCache(GeomObj* obj)
-:child(obj),bbox_cached(0)
+GeomBBoxCache::GeomBBoxCache(GeomHandle obj)
+ : GeomContainer(obj), bbox_cached(0)
 {
 
 }
 
-GeomBBoxCache::GeomBBoxCache(GeomObj* obj, const BBox &box)
-:child(obj),bbox_cached(1)
+GeomBBoxCache::GeomBBoxCache(GeomHandle obj, const BBox &box)
+  : GeomContainer(obj), bbox_cached(true)
 {
   bbox.extend( box );
-}
-
-GeomBBoxCache::~GeomBBoxCache()
-{
-    if(child)
-	delete child;
-}
-
-void GeomBBoxCache::get_triangles( Array1<float> &v)
-{
-    if ( child )
-      child->get_triangles(v);
 }
 
 GeomObj* GeomBBoxCache::clone()
@@ -76,15 +64,16 @@ GeomObj* GeomBBoxCache::clone()
 
 void GeomBBoxCache::reset_bbox()
 {
-    bbox_cached = 0;
+    bbox_cached = false;
+    GeomContainer::reset_bbox();
 }
 
 void GeomBBoxCache::get_bounds(BBox& box)
 {
   if (!bbox_cached || !bbox.valid()) {
     bbox.reset();
-    child->get_bounds(bbox);
-    bbox_cached = 1;
+    child_->get_bounds(bbox);
+    bbox_cached = true;
   }
   
   box.extend( bbox );
@@ -113,14 +102,8 @@ void GeomBBoxCache::io(Piostream& stream)
 	Pio(stream, rad);
 	stream.end_cheap_delim();
     }
-    Pio(stream, child);
+    Pio(stream, child_);
     stream.end_class();
-}
-
-bool GeomBBoxCache::saveobj(ostream& out, const string& format,
-			    GeomSave* saveinfo)
-{
-    return child->saveobj(out, format, saveinfo);
 }
 
 } // End namespace SCIRun

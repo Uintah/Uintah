@@ -37,9 +37,10 @@ namespace SCIRun {
 
 class SCICORESHARE GeomContainer : public GeomObj {
 protected:
-    GeomObj* child;
+    GeomHandle child_;
+
 public:
-    GeomContainer(GeomObj*);
+    GeomContainer(GeomHandle);
     GeomContainer(const GeomContainer&);
     virtual ~GeomContainer();
     virtual void get_bounds(BBox&);
@@ -49,9 +50,12 @@ public:
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
+
     virtual void get_triangles( Array1<float> &);
+
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+    virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };    
 
 } // End namespace SCIRun

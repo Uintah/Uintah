@@ -43,20 +43,14 @@ Persistent *make_GeomSticky() {
 
 PersistentTypeID GeomSticky::type_id("GeomSticky", "GeomObj", make_GeomSticky);
 
-GeomSticky::GeomSticky( GeomObj *c )
-  : GeomObj(), child(c)
+GeomSticky::GeomSticky( GeomHandle obj )
+  : GeomContainer(obj)
 {
 }
 
 GeomSticky::GeomSticky( const GeomSticky &copy )
-  : GeomObj(copy), child(copy.child)
+  : GeomContainer(copy)
 {
-}
-
-GeomSticky::~GeomSticky()
-{
-  if(child)
-    delete child;
 }
 
 GeomObj* GeomSticky::clone() {
@@ -71,16 +65,13 @@ GeomSticky::get_bounds( BBox& bb )
 
 #define GeomSticky_VERSION 1
 
-void GeomSticky::io(Piostream& stream) {
+void
+GeomSticky::io(Piostream& stream)
+{
   stream.begin_class("GeomSticky", GeomSticky_VERSION);
   GeomObj::io(stream);
-  Pio(stream, child);
+  Pio(stream, child_);
   stream.end_class();
-}
-
-bool GeomSticky::saveobj(ostream&, const string&, GeomSave*) {
-  NOT_FINISHED("GeomSticky::saveobj");
-  return false;
 }
 
 } // End namespace SCIRun

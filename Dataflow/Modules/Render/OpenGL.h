@@ -53,7 +53,7 @@
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/Light.h>
 #include <Core/Geom/Lighting.h>
-#include <Core/Geom/RenderMode.h>
+#include <Core/Geom/GeomRenderMode.h>
 #include <Core/Geom/View.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>

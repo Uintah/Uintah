@@ -39,17 +39,15 @@
 namespace SCIRun {
 
 class SCICORESHARE GeomGroup : public GeomObj {
-    Array1<GeomObj*> objs;
-    int del_children;
+    vector<GeomHandle> objs;
 
 public:
-    GeomGroup(int del_children=1);
+    GeomGroup();
     GeomGroup(const GeomGroup&);
-    virtual ~GeomGroup();
     virtual GeomObj* clone();
 
-    void add(GeomObj*);
-    void remove(GeomObj*);
+    void add(GeomHandle);
+    void remove(GeomHandle);
     void remove_all();
     int size();
 

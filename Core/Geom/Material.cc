@@ -196,7 +196,7 @@ bool GeomMaterial::saveobj(ostream& out, const string& format,
 	saveinfo->indent(out);
 	out << "transparency " << matl->transparency << "\n";
 	saveinfo->end_node(out);
-	if(!child->saveobj(out, format, saveinfo))
+	if(!child_->saveobj(out, format, saveinfo))
 	    return false;
 	saveinfo->end_sep(out);
 	return true;
@@ -214,7 +214,7 @@ bool GeomMaterial::saveobj(ostream& out, const string& format,
 	    << 1.0 / matl->shininess << " \"specularcolor\" [ "
 	    << spec.r() << " " << spec.g() << " " << spec.b() << " ]\n";
 
-	if(!child->saveobj(out, format, saveinfo))
+	if(!child_->saveobj(out, format, saveinfo))
 	    return false;
 	saveinfo->end_attr(out);
 	return true;

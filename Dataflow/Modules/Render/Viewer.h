@@ -69,7 +69,7 @@ public:
 private:
   void initPort(Mailbox<GeomReply>*);
   void append_port_msg(GeometryComm*);
-  void addObj(GeomViewerPort* port, GeomID serial, GeomObj *obj,
+  void addObj(GeomViewerPort* port, GeomID serial, GeomHandle obj,
 	      const string&, CrowdMonitor* lock);
   void delObj(GeomViewerPort* port, GeomID serial, int del);
   void delAll(GeomViewerPort* port);

@@ -47,7 +47,7 @@ protected:
   unsigned int display_list_;
       
 public:
-  GeomDL(GeomObj*);
+  GeomDL(GeomHandle);
   GeomDL(const GeomDL &copy);
   virtual ~GeomDL();
       
@@ -60,7 +60,6 @@ public:
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;	
-  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
     
 } // End namespace SCIRun
