@@ -43,9 +43,12 @@
 #ifndef SCIRun_src_Core_Geom_Freetype_h
 #define SCIRun_src_Core_Geom_Freetype_h 1
 
+#include <sci_defs/ogl_defs.h>
+#ifdef HAVE_FREETYPE
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
+#endif
 #include <Core/Geometry/Point.h>
 #include <string>
 #include <vector>
@@ -62,7 +65,9 @@ public:
   FreeTypeLibrary();
   virtual ~FreeTypeLibrary();
   FreeTypeFace *	load_face(string);
+#ifdef HAVE_FREETYPE
   FT_Library		library_;
+#endif
 };
 
 
@@ -77,7 +82,9 @@ public:
   string		get_family_name();
   string		get_style_name();
   string		get_filename();
+#ifdef HAVE_FREETYPE
   FT_Face		ft_face_;
+#endif
 private:
   double		points_;
   unsigned int		x_dpi_;
@@ -91,10 +98,12 @@ class SCICORESHARE FreeTypeGlyph {
 public:
   FreeTypeGlyph();
   virtual ~FreeTypeGlyph();
+#ifdef HAVE_FREETYPE
   FT_Glyph		glyph_;
   FT_UInt		index_;
   Point			position_;
   FT_Vector		ft_position();
+#endif
 };
 
 typedef vector<FreeTypeGlyph *> FreeTypeGlyphs;
@@ -118,7 +127,9 @@ public:
   void			render(int, int, unsigned char *);
   void			get_bounds(BBox &);
   void			set_anchor(anchor_e anchor) { anchor_ = anchor; }
+#ifdef HAVE_FREETYPE
   FT_Vector		ft_position(); 
+#endif
 };
   
  

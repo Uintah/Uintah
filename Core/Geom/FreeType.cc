@@ -57,14 +57,18 @@ using std::ostream;
 
 
 FreeTypeLibrary::FreeTypeLibrary() {
+#ifdef HAVE_FREETYPE
   if (FT_Init_FreeType(&library_))
+#endif
     throw InternalError("FreeType Unable to Initialize");
 }
 
 
 
 FreeTypeLibrary::~FreeTypeLibrary() {
+#ifdef HAVE_FREETYPE
   if (FT_Done_FreeType(library_))
+#endif
     throw InternalError("FreeType did not close properly");
 }
 
@@ -78,7 +82,10 @@ FreeTypeLibrary::load_face(string filename)
 
 
 FreeTypeFace::FreeTypeFace(FreeTypeLibrary *lib, string filename) 
-  : ft_face_(0),
+  : 
+#ifdef HAVE_FREETYPE
+    ft_face_(0),
+#endif
     points_(12.0),
     x_dpi_(72),
     y_dpi_(72),
@@ -88,41 +95,61 @@ FreeTypeFace::FreeTypeFace(FreeTypeLibrary *lib, string filename)
   struct stat buf;
   if (stat(filename.c_str(),&buf) < 0)
     throw FileNotFound(filename);
-
+#ifdef HAVE_FREETYPE
   FT_Error error = FT_New_Face(library_->library_, filename.c_str(), 0, &ft_face_);
   if (error == FT_Err_Unknown_File_Format)
     throw InternalError("FreeType Unknown Face File Format "+filename);
   else if (error)
+#endif
     throw InternalError("Freetype Cannot Initialize Face "+filename);
 }
 
 
 FreeTypeFace::~FreeTypeFace() {
+#ifdef HAVE_FREETYPE
   if (FT_Done_Face(ft_face_))
+#endif
     throw InternalError("FreeType Face did not close properly");
 }
 
 
 string
 FreeTypeFace::get_family_name() {
+#ifdef HAVE_FREETYPE
   return string(static_cast<char *>(ft_face_->family_name));
+#else
+  return string();
+#endif
 }
 
 string
 FreeTypeFace::get_style_name() {
+#ifdef HAVE_FREETYPE
   return string(static_cast<char *>(ft_face_->style_name));
+#else
+  return string();
+#endif
 }
 
 
 bool
 FreeTypeFace::has_kerning_p() {
+#ifdef HAVE_FREETYPE
   return ft_face_->face_flags & FT_FACE_FLAG_KERNING;
+#else
+  return false;
+#endif
+  
 }
 
 
 bool
 FreeTypeFace::scalable_p() {
+#ifdef HAVE_FREETYPE
   return ft_face_->face_flags & FT_FACE_FLAG_SCALABLE;
+#else
+  return false;
+#endif
 }
 
 
@@ -130,16 +157,20 @@ void
 FreeTypeFace::set_dpi(unsigned int x_dpi, unsigned int y_dpi) {
   x_dpi_ = x_dpi;
   y_dpi_ = y_dpi;
+#ifdef HAVE_FREETYPE
   if (FT_Set_Char_Size(ft_face_, Round(points_*64.0), Round(points_*64.0), x_dpi_, y_dpi_)) {
     throw InternalError("FreeType Cannot set_dpi.");
   }
+#endif
 }
 
 void
 FreeTypeFace::set_points(double points) {
   points_ = points;
+#ifdef HAVE_FREETYPE
   if (FT_Set_Char_Size(ft_face_, Round(points_*64.0), Round(points_*64.0), x_dpi_, y_dpi_)) 
     throw InternalError("FreeType Cannot set_points.");
+#endif
 }
 
 string
@@ -149,18 +180,23 @@ FreeTypeFace::get_filename() {
 
 
 FreeTypeGlyph::FreeTypeGlyph()
+#ifdef HAVE_FREETYPE
   : glyph_(0),
     index_(0),
     position_(0.0, 0.0, 0.0)
+#endif
 {
 }
 
 FreeTypeGlyph::~FreeTypeGlyph()
 {
+#ifdef HAVE_FREETYPE
   if (glyph_) 
     FT_Done_Glyph(glyph_);
+#endif
 }
 
+#ifdef HAVE_FREETYPE
 FT_Vector
 FreeTypeGlyph::ft_position() {
   FT_Vector ret_val;
@@ -168,6 +204,7 @@ FreeTypeGlyph::ft_position() {
   ret_val.y = Round(position_.y()*64.0);
   return ret_val;
 }
+#endif
   
 
 FreeTypeText::FreeTypeText(string text, FreeTypeFace *face, Point *pos)
@@ -185,6 +222,7 @@ FreeTypeText::FreeTypeText(string text, FreeTypeFace *face, Point *pos)
 void
 FreeTypeText::layout()
 {
+#ifdef HAVE_FREETYPE
   // This position is just the relative cursor for glyph layout
   Point position(0.0,0.0,0.0); // just using x and y for layout
   FT_UInt last_index = 0;
@@ -223,14 +261,17 @@ FreeTypeText::layout()
     
     last_index = glyph->index_;
   }
+#endif
 }
 
 
 FreeTypeText::~FreeTypeText() 
 {
+#ifdef HAVE_FREETYPE
   for (unsigned int i = 0; i < glyphs_.size(); ++i) {
     FT_Done_Glyph(glyphs_[i]->glyph_);
   }
+#endif
 }
 
 FreeTypeFace *
@@ -243,7 +284,7 @@ void
 FreeTypeText::get_bounds(BBox& in_bb)
 {
   // Todo, fix for position and anchor
-
+#ifdef HAVE_FREETYPE
   FT_BBox ft_bbox;
   for (unsigned int i = 0; i < glyphs_.size(); ++i) {
     FT_Glyph_Get_CBox(glyphs_[i]->glyph_, ft_glyph_bbox_truncate, &ft_bbox);
@@ -255,6 +296,7 @@ FreeTypeText::get_bounds(BBox& in_bb)
     in_bb.extend(ll);
     in_bb.extend(ur);
   } 
+#endif
 }
 
 
@@ -262,6 +304,7 @@ FreeTypeText::get_bounds(BBox& in_bb)
 void
 FreeTypeText::render(int width, int height, unsigned char *buffer)
 {
+#ifdef HAVE_FREETYPE
   //  BBox bbox;
   //get_bounds(bbox);
 
@@ -307,6 +350,7 @@ FreeTypeText::render(int width, int height, unsigned char *buffer)
       FT_Done_Glyph(temp_glyph);
     }
   }
+#endif
 }
 
 
