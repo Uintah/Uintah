@@ -754,7 +754,8 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
   }
   else {
    d_lock.readLock();
-    checkGetAccess(label, matlIndex, patch);
+    checkGetAccess(label, matlIndex, patch, pset->getGhostType(),
+		   pset->numGhostCells());
     ParticleVariableBase* var = constVar.cloneType();
 
     const vector<const Patch*>& neighbors = pset->getNeighbors();
@@ -897,7 +898,7 @@ OnDemandDataWarehouse::get(constNCVariableBase& constVar,
 			   int matlIndex, const Patch* patch,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
-  checkGetAccess(label, matlIndex, patch);
+  checkGetAccess(label, matlIndex, patch, gtype, numGhostCells);
   NCVariableBase* var = constVar.cloneType();
   getGridVar<Patch::NodeBased>(*var, d_ncDB, label, matlIndex, patch,
 			       gtype, numGhostCells);
@@ -1003,7 +1004,7 @@ OnDemandDataWarehouse::get(constCCVariableBase& constVar,
 			   int matlIndex, const Patch* patch,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
-  checkGetAccess(label, matlIndex, patch);
+  checkGetAccess(label, matlIndex, patch, gtype, numGhostCells);
   CCVariableBase* var = constVar.cloneType();  
   getGridVar<Patch::CellBased>(*var, d_ccDB, label, matlIndex, patch,
 			       gtype, numGhostCells);
@@ -1058,7 +1059,7 @@ OnDemandDataWarehouse::get(constSFCXVariableBase& constVar,
 			   int matlIndex, const Patch* patch,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
-  checkGetAccess(label, matlIndex, patch);
+  checkGetAccess(label, matlIndex, patch, gtype, numGhostCells);
   SFCXVariableBase* var = constVar.cloneType();
   getGridVar<Patch::XFaceBased>(*var, d_sfcxDB, label, matlIndex, patch,
 				gtype, numGhostCells);
@@ -1124,7 +1125,7 @@ OnDemandDataWarehouse::get(constSFCYVariableBase& constVar,
 			   int matlIndex, const Patch* patch,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
-  checkGetAccess(label, matlIndex, patch);
+  checkGetAccess(label, matlIndex, patch, gtype, numGhostCells);
   SFCYVariableBase* var = constVar.cloneType();
   getGridVar<Patch::YFaceBased>(*var, d_sfcyDB, label, matlIndex, patch,
 				gtype, numGhostCells);
@@ -1190,7 +1191,7 @@ OnDemandDataWarehouse::get(constSFCZVariableBase& constVar,
 			   int matlIndex, const Patch* patch,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
-  checkGetAccess(label, matlIndex, patch);
+  checkGetAccess(label, matlIndex, patch, gtype, numGhostCells);
   SFCZVariableBase* var = constVar.cloneType();
   getGridVar<Patch::ZFaceBased>(*var, d_sfczDB, label, matlIndex, patch,
 				gtype, numGhostCells);
@@ -1540,41 +1541,58 @@ OnDemandDataWarehouse::checkAllocation(const Variable& var,
 #endif
 }
 
-inline void OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
-						  int matlIndex,
-						  const Patch* patch)
+inline void
+OnDemandDataWarehouse::checkGetAccess(const VarLabel* label, int matlIndex,
+				      const Patch* patch,
+				      Ghost::GhostType gtype,int numGhostCells)
 {
 #if SCI_ASSERTION_LEVEL >= 1
   const Task* currentTask = getCurrentTask();
   if (currentTask == 0)
     // don't check if done outside of any task (i.e. SimulationController)
-    return; 
+    return;
   
+  IntVector lowOffset, highOffset;
+  Patch::getGhostOffsets(label->typeDescription()->getType(), gtype,
+			 numGhostCells, lowOffset, highOffset);
+    
   VarAccessMap& currentTaskAccesses = getCurrentTaskAccesses();
   
   // If it was accessed by the current task already, then it should
   // have get access (i.e. if you put it in, you should be able to get it
   // right back out).
-  map<SpecificVarLabel, AccessType>::iterator findIter;
+  map<SpecificVarLabel, AccessInfo>::iterator findIter;
   findIter = currentTaskAccesses.find(SpecificVarLabel(label, matlIndex,
-							 patch));
+						       patch));
   if (findIter == currentTaskAccesses.end()) {
     // it hasn't been accessed by this task previous, so check that it can.
-    if (!hasGetAccess(currentTask, label, matlIndex, patch)) {
-      const Task* currentTask = getCurrentTask();
+    if (!hasGetAccess(currentTask, label, matlIndex, patch, lowOffset,
+		      highOffset)) {
       if (currentTask == 0 ||
 	  (string(currentTask->getName()) != "Relocate::relocateParticles")) {
 	string has = (isFinalized() ? "old" : "new");
 	has += " datawarehouse get";
+	if (numGhostCells > 0) {
+	  ostringstream ghost_str;
+	  ghost_str << " for " << numGhostCells << " layer";
+	  if (numGhostCells > 1) ghost_str << "s";
+	  ghost_str << " of ghosts around " << Ghost::getGhostTypeName(gtype);
+	  has += ghost_str.str();
+	}	
 	string needs = "task requires";
 	throw DependencyException(currentTask, label, matlIndex, patch,
 				  has, needs);
       }
     }
     else {
-      currentTaskAccesses[SpecificVarLabel(label, matlIndex, patch)]
-	= GetAccess;
+      AccessInfo& accessInfo =
+	currentTaskAccesses[SpecificVarLabel(label, matlIndex, patch)];
+      accessInfo.accessType = GetAccess;
+      accessInfo.encompassOffsets(lowOffset, highOffset);
     }
+  }
+  else {
+    findIter->second.encompassOffsets(lowOffset, highOffset);
   }
 #endif
 }
@@ -1621,10 +1639,12 @@ OnDemandDataWarehouse::checkModifyAccess(const VarLabel* label, int matlIndex,
 inline bool
 OnDemandDataWarehouse::hasGetAccess(const Task* currentTask,
 				    const VarLabel* label, int matlIndex,
-				    const Patch* patch)
+				    const Patch* patch, IntVector lowOffset,
+				    IntVector highOffset)
 { 
-  return currentTask->hasRequires(label, matlIndex, patch,
-				  isFinalized() ? Task::OldDW : Task::NewDW);
+  return
+    currentTask->hasRequires(label, matlIndex, patch, lowOffset, highOffset,
+			     isFinalized() ? Task::OldDW : Task::NewDW);
 }
 
 inline
@@ -1719,6 +1739,9 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
       continue;
     
     const VarLabel* label = dep->var;
+    IntVector lowOffset, highOffset;
+    Patch::getGhostOffsets(label->typeDescription()->getType(), dep->gtype,
+			   dep->numGhostCells, lowOffset, highOffset);    
 
     constHandle<PatchSubset> patches =
       dep->getPatchesUnderDomain(domainPatches);
@@ -1746,10 +1769,11 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 	const Patch* patch = patches->get(p);
 	
 	SpecificVarLabel key(label, matl, patch);
-	map<SpecificVarLabel, AccessType>::iterator find_iter;
+	map<SpecificVarLabel, AccessInfo>::iterator find_iter;
 	find_iter = currentTaskAccesses.find(key);
 	if (find_iter == currentTaskAccesses.end() ||
-	    (*find_iter).second != accessType) {
+	    (*find_iter).second.accessType != accessType) {
+	  // Makes request that is never followed through.
 	  string has, needs;
 	  if (accessType == GetAccess) {
 	    has = "task requires";
@@ -1766,6 +1790,36 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 	    has = "task modifies";
 	    needs = "datawarehouse modify";
 	  }
+	  throw DependencyException(currentTask, label, matl, patch,
+				    has, needs);
+	}
+	else if ((*find_iter).second.lowOffset != lowOffset ||
+		 (*find_iter).second.highOffset != highOffset) {
+	  // Makes request for ghost cells that are never gotten.
+	  AccessInfo accessInfo = (*find_iter).second;	
+	  ASSERT(accessType == GetAccess);
+
+	  // Assert that the request was greater than what was asked for
+	  // because the other cases (where it asked for more than the request)
+	  // should have been caught in checkGetAccess().
+	  ASSERT(Max((*find_iter).second.lowOffset, lowOffset) == lowOffset);
+	  ASSERT(Max((*find_iter).second.highOffset,highOffset) == highOffset);
+
+	  string has, needs;
+	  has = "task requires";
+	  ostringstream ghost_str;
+	  ghost_str << " for " << dep->numGhostCells << " layer";
+	  if (dep->numGhostCells > 1) ghost_str << "s";
+	  ghost_str << " of ghosts around " <<
+	    Ghost::getGhostTypeName(dep->gtype);
+	  has += ghost_str.str();
+	  
+	  if (isFinalized())
+	    needs = "get from the old datawarehouse";
+	  else
+	    needs = "get from the new datawarehouse";
+	  needs += " that includes the requested ghosts.";
+	
 	  throw DependencyException(currentTask, label, matl, patch,
 				    has, needs);
 	}

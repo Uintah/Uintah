@@ -560,6 +560,7 @@ WARNING
 
     // finds if it requires or modifies var
     bool hasRequires(const VarLabel* var, int matlIndex, const Patch* patch,
+		     IntVector lowOffset, IntVector highOffset,
 		     WhichDW dw) const;
 
     // finds if it modifies var
@@ -600,8 +601,8 @@ WARNING
     void setSets(const PatchSet* patches, const MaterialSet* matls);
     
   private: // class Task
-    bool isInDepMap(const DepMap& depMap, const VarLabel* var,
-		    int matlIndex, const Patch* patch) const;
+    Dependency* isInDepMap(const DepMap& depMap, const VarLabel* var,
+			   int matlIndex, const Patch* patch) const;
     
     //////////
     // Insert Documentation Here:
