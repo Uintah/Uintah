@@ -140,18 +140,23 @@ void Pio (Piostream & p, HexNode * & n)
 *******************************************************************************/
 
 /*******************************************************************************
-* HexFace::HexFace (int, int, FourHexNodes & f)
+* HexFace::HexFace (int, int, FourHexNodes & f, HexMesh * m)
 *
 * 	This constructor makes a face and assigns nodes to it.  Note that all
 * the nodes should have indecies and pointers (none should be NULL).
 *******************************************************************************/
 
-HexFace::HexFace (int i, int e, FourHexNodes & f)
+HexFace::HexFace (int i, int e, FourHexNodes & f, HexMesh * m)
 : my_index (i), my_contains_index (e), my_neighbor_index (0)
 {
   // Use the helper function to set up this face.
 
   set_corners (f);
+  
+  if (Dot (my_normal, m->find_element (my_contains_index)->centroid()) + my_d < 0)
+  {
+    my_normal *= -1.0;
+  }
 }
 
 
@@ -220,8 +225,8 @@ void HexFace::calc_face ()
   else
     my_normal *= 0.0;
     
-  // I accidentally calculated normals reversed.
-  
+  // As a general rule, normals are reversed.
+    
   my_normal *= -1.0;  
   
   // Find the distance between each corner and the plane.  (If the length of
@@ -401,11 +406,16 @@ void Pio (Piostream & p, HexFace * & f)
 void HexFace::finish_read (HexMesh * m)
 {
   int c;
+  double d;
   
   for (c = 8; c--;)
     corner.node[c] = m->find_node (corner.index[c]);
 
   calc_face ();
+  
+  d = Dot (my_normal, m->find_element (my_contains_index)->centroid()) + my_d;
+  if (d < 0)
+    my_normal *= -1.0;  
 }
 
 
@@ -424,13 +434,17 @@ void HexFace::finish_read (HexMesh * m)
 Hexahedron::Hexahedron (int index, HexMesh * m, EightHexNodes & e)
 : my_index (index),
   num_faces (6),
-  corner (e)
+  corner (e),
+  min (999999, 999999, 999999),
+  max (0, 0, 0)
 {
   static int face_order[] = { 0, 1, 2, 3,  0, 3, 7, 4,  0, 4, 5, 1,  
                               1, 5, 6, 2,  2, 6, 7, 3,  4, 7, 6, 5 };  
   int c, d, p;
   HexFace * t, * f;
   FourHexNodes n;
+  
+  calc_centroid ();
   
   for (p = 0, c = 0; c < 6; c++)
   {
@@ -476,6 +490,7 @@ Hexahedron::Hexahedron (int index, HexMesh * m, EightHexNodes & e)
     }
        
   calc_coeff ();
+  calc_centroid ();
 }
 
 
@@ -487,7 +502,10 @@ Hexahedron::Hexahedron (int index, HexMesh * m, EightHexNodes & e)
 
 Hexahedron::Hexahedron ()
 : my_index (0),
-  num_faces (0)
+  my_centroid (0, 0, 0),
+  num_faces (0),
+  min (999999, 999999, 999999),
+  max (0, 0, 0)
 {
   int c;
     
@@ -548,6 +566,49 @@ void Hexahedron::calc_coeff ()
 
 
 /*******************************************************************************
+* void Hexahedron::calc_centroid ()
+*
+*
+*     This function calculates the centroid of the volume.
+*******************************************************************************/
+
+void Hexahedron::calc_centroid ()
+{
+  Vector v(0,0,0);
+  int i, j, k=0;
+  double r;
+  
+  for (i = 0; i < 8; i++)
+  {
+    for (j = i; j--;)
+      if (corner.index[i] == corner.index[j]) break;
+      
+    if (j < 0)
+    {
+      v += corner.node[i]->vector();
+      k++;
+    } 
+  }
+  
+  v *= 1.0 / k;
+  
+  my_centroid = v.point();  
+  
+  my_radius = 0.0;
+  
+  for (i = 8; i--;)
+  {
+    r = (my_centroid- *corner.node[i]).length2();
+    if (r > my_radius)
+      my_radius = r;
+      
+    min=Min(min, *corner.node[i]);
+    max=Max(max, *corner.node[i]);
+  }
+}
+
+
+/*******************************************************************************
 * void Hexahedron::find_stu (const Vector & p, double & s, double & t, double & u)
 *
 *
@@ -557,45 +618,63 @@ void Hexahedron::calc_coeff ()
 
 void Hexahedron::find_stu (const Vector & p, double & s, double & t, double & u)
 {
-  Vector c, dc;
-  double cs, ct, cu, err1, err2, tmp, ts, tt, tu;
-  double ratio = 1.0;
+  double ts, tt, tu, e, err = 1.0e+49;
+  Vector s1, s2, s3, s4, t1, t2;
+  Vector dc;
+  double es, et, eu;
   
-  s = t = u = 0.0;
-  err2 = 999999.0;
+  dc = p - v1;
+  if (Dot (dc, v2) > 0)
+    es =  1.01;
+  else
+    es =  0.01;
+  if (Dot (dc, v3) > 0)
+    et =  1.01;
+  else
+    et =  0.01;
+  if (Dot (dc, v4) > 0)
+    eu =  1.01;
+  else
+    eu =  0.01;
   
-  do
+  s = es - 0.51;
+  t = et - 0.51;
+  u = eu - 0.51;
+  dc = p - v1 + v2*s + (v3 + v5*s)*t + (v4 + v6*s + (v7 + v8*s)*t)*u;
+  ts = Dot (dc, v2 + v5*t + (v6 + v8*t)*u);
+  tt = Dot (dc, v3 + v5*s + (v7 + v8*s)*u);
+  tu = Dot (dc, v4 + v6*s + (v7 + v8*s)*t);
+  if (ts < 0)
+    es -= 0.5;
+  if (tt < 0)
+    et -= 0.5;
+  if (tu < 0)
+    eu -= 0.5;  
+  
+  for (ts = es - 0.51; ts < es; ts += 0.25)
   {
-    dc = v1 + v2*s + (v3 + v5*s)*t + (v4 + v6*s + (v7 + v8*s)*t)*u - p;
-    err1 = dc.length2 ();
-    ts = Dot (dc, v2 + v5*t + (v6 + v8*t)*u) * ratio;
-    tt = Dot (dc, v3 + v5*s + (v7 + v8*s)*u) * ratio;
-    tu = Dot (dc, v4 + v6*s + (v7 + v8*s)*t) * ratio;
-    if (err1 < err2)
+    s1 = v1 + v2*ts;
+    s2 = v3 + v5*ts;
+    s3 = v4 + v6*ts;
+    s4 = v7 + v8*ts;
+    for (tt = et - 0.51; tt < et; tt += 0.25)
     {
-      s -= ts;
-      t -= tt;
-      u -= tu;
+      t1 = s2*tt;
+      t2 = s3 + s4*tt;
+      for (tu = eu - 0.51; tu < eu; tu += 0.25)
+      {
+        e = (s1 + t1 + t2*tu - p).length2();
+        if (e < err)
+        {
+          s = ts;
+          t = tt;
+          u = tu;
+          err = e;
+        }
+      }
     }
-    else
-    {
-      s += cs;
-      t += ct;
-      u += cu;
-      ratio = 0.5;
-      err2 = err1;
-      continue;
-    }
-    dc = v1 + v2*s + (v3 + v5*s)*t + (v4 + v6*s + (v7 + v8*s)*t)*u - p;
-    err2 = dc.length2 ();
-    tmp = err1 - err2;
-    if (err2 < 1.0e-8)
-      return;
-    ratio *= err1 / tmp;
-    s -= (cs = Dot (dc, v2 + v5*t + (v6 + v8*t)*u) * ratio);
-    t -= (ct = Dot (dc, v3 + v5*s + (v7 + v8*s)*u) * ratio);
-    u -= (cu = Dot (dc, v4 + v6*s + (v7 + v8*s)*t) * ratio);
-  } while (1);
+  }
+
 }
 
 
@@ -692,7 +771,8 @@ void Hexahedron::finish_read (HexMesh * m)
   for (c = 6; c--;)
     face.face[c] = m->find_face (face.index[c]);
     
-  calc_coeff ();   
+  calc_coeff (); 
+  calc_centroid ();  
 }
 
 
@@ -725,7 +805,8 @@ static Persistent* make_HexMesh()
 
 HexMesh::HexMesh ()
 : highest_face_index (0),
-  highest_node_index (0)
+  highest_node_index (0),
+  classified (0)
 {
 }
 
@@ -843,7 +924,7 @@ int HexMesh::add_face (int index, int e, FourHexNodes & f)
 
   // Make a new face, add it to the hash table, and return.
   
-  h = new HexFace (index, e, f);
+  h = new HexFace (index, e, f, this);
   
   face_set.insert (index, h);
   neighbor_set.insert (f, h);
@@ -966,6 +1047,171 @@ Hexahedron * HexMesh::find_element (int index)
 
 
 /*******************************************************************************
+* Classify operator
+*
+*     This function builds a KD tree of elements.
+*******************************************************************************/
+
+void PushDown (KDTree * c, Hexahedron * h, int level)
+{
+  Point mmin, mmax;
+  double dx, dy, dz;
+  int side;
+  
+  switch (c->split)
+  {
+    case 0:
+      dx = (c->min.x() + c->max.x()) / 2;
+      if (h->min.x() <= dx && h->max.x() >= dx)
+        side = 0;
+      else if (h->min.x() <= dx && h->max.x() <= dx)
+      {
+        mmin = c->min;
+        mmax = c->max;
+        mmax.x (dx);
+        side = 1;
+      }
+      else
+      {
+        mmin = c->min;
+        mmax = c->max;
+        mmin.x (dx);
+        side = 2;
+      }
+      break;
+    case 1:
+      dy = (c->min.y() + c->max.y()) / 2;
+      if (h->min.y() <= dy && h->max.y() >= dy)
+        side = 0;
+      else if (h->min.y() <= dy && h->max.y() <= dy)
+      {
+        mmin = c->min;
+        mmax = c->max;
+        mmax.y (dy);
+        side = 1;
+      }
+      else
+      {
+        mmin = c->min;
+        mmax = c->max;
+        mmin.y (dy);
+        side = 2;
+      }
+      break;
+    case 2:
+      dz = (c->min.z() + c->max.z()) / 2;
+      if (h->min.z() <= dz && h->max.z() >= dz)
+        side = 0;
+      else if (h->min.z() <= dz && h->max.z() <= dz)
+      {
+        mmin = c->min;
+        mmax = c->max;
+        mmax.z (dz);
+        side = 1;
+      }
+      else
+      {
+        mmin = c->min;
+        mmax = c->max;
+        mmin.z (dz);
+        side = 2;
+      }
+      break;
+  }
+      
+  if (level >= 20)
+    side = 0;    
+      
+  switch (side)
+  {
+    case 0:
+      if (level >= 20)
+        c->here.add (h);
+      else
+      {
+        if (c->low == NULL)
+        {
+          c->low = new KDTree;
+          c->low->min = mmin;
+          c->low->max = mmax;
+          c->low->split = (c->split+1) % 3;
+          c->low->low = c->low->high = NULL;
+        }
+        PushDown (c->low, h, level+1);
+        if (c->high == NULL)
+        {
+          c->high = new KDTree;
+          c->high->min = mmin;
+          c->high->max = mmax;
+          c->high->split = (c->split+1) % 3;
+          c->high->low = c->high->high = NULL;
+        }
+        PushDown (c->high, h, level+1);
+      }
+      break;
+    case 1:
+      if (c->low == NULL)
+      {
+        c->low = new KDTree;
+        c->low->min = mmin;
+        c->low->max = mmax;
+        c->low->split = (c->split+1) % 3;
+        c->low->low = c->low->high = NULL;
+      }
+      PushDown (c->low, h, level+1);
+      break;
+    case 2:
+      if (c->high == NULL)
+      {
+        c->high = new KDTree;
+        c->high->min = mmin;
+        c->high->max = mmax;
+        c->high->split = (c->split+1) % 3;
+        c->high->low = c->high->high = NULL;
+      }
+      PushDown (c->high, h, level+1);
+      break;
+  }    
+}
+
+void HexMesh::classify ()
+{
+  Hexahedron * h;
+  HashTable<int, Hexahedron *> * hxhtp = & element_set;
+  HashTableIter<int, Hexahedron *> hx (hxhtp);
+  
+  cout << "Building KD tree.\n";
+  
+  classified = 1;
+  
+  KD.min.x(999999);
+  KD.min.y(999999);
+  KD.min.z(999999);
+  KD.max.x(0);
+  KD.max.y(0);
+  KD.max.z(0);
+  
+  for (hx.first (); hx.ok (); ++hx)
+  {
+    h = hx.get_data();
+    KD.min = Min (KD.min, h->min);
+    KD.max = Max (KD.max, h->max);
+  }
+  
+  KD.split = 0;
+  KD.low = KD.high = NULL;
+  
+  for (hx.first (); hx.ok (); ++hx)
+  {
+    h = hx.get_data();
+    
+    PushDown (&KD, h, 1);    
+  }
+  
+  cout << "KD tree done.\n";
+}
+
+/*******************************************************************************
 * Locate operator
 *
 *     This function returns the index of the Hexahedron that contains the
@@ -977,12 +1223,10 @@ int HexMesh::locate (const Point& P, int & idx)
   Hexahedron * h;
   int c, max_iter, m, next, fail;
   double smallest, dist;
-  
-  // DEBUG Hack to avoid stupid search.
-  
+      
   if (idx < 1)
     idx = 1;
-    
+
   // Do smart search here, artificially limit the depth.
 
   for (max_iter = 150; idx >= 0 && max_iter--;)
@@ -1013,7 +1257,9 @@ int HexMesh::locate (const Point& P, int & idx)
     }
 
     if (!fail)
+    {
       return idx;
+    }
     else  
       idx = next;
   }
@@ -1023,21 +1269,55 @@ int HexMesh::locate (const Point& P, int & idx)
   // Stupid search only needed for volumes with cavaties or concave components.
   // Skip this step now.
 
-  return -1;
+  if (!classified)
+    classify ();
 
-#if 0
-  HashTable<int, Hexahedron *> * hxhtp = & element_set;
-  HashTableIter<int, Hexahedron *> hx (hxhtp);
+  KDTree * k;
   
-  for (hx.first (); hx.ok (); ++hx)
-  {
-    h = hx.get_data();
-    for (c = h->surface_count (); c--;)
-      if (h->surface(c)->dist(P) < -1e-10)
-        break;
-    if (c == -1)
-      return (idx = h->index());
+  k = &KD;
+  
+  if (P.x() < KD.min.x() || P.y() < KD.min.y() || P.z() < KD.min.z() || 
+      P.x() > KD.max.x() || P.y() > KD.max.y() || P.z() > KD.max.z())
+    return idx = -1;
     
+  while (k != NULL)
+  {
+    for (m = k->here.size (); --m >= 0;)
+    {
+      h = k->here[m];
+      if (
+          (h->centroid().x() - P.x()) * (h->centroid().x() - P.x()) + 
+          (h->centroid().y() - P.y()) * (h->centroid().y() - P.y()) + 
+          (h->centroid().z() - P.z()) * (h->centroid().z() - P.z()) - h->radius () > 0)
+        continue; 
+      for (c = h->surface_count (); c--;)
+        if (h->surface(c)->dist(P) < -1e-10)
+          break;
+      if (c == -1)
+        return (idx = h->index());   
+    }
+    
+    switch (k->split)
+    {
+      case 0:
+        if (P.x() < (k->min.x() + k->max.x()) / 2)
+          k = k->low;
+        else 
+          k = k->high;
+          break;
+      case 1:
+        if (P.y() < (k->min.y() + k->max.y()) / 2)
+          k = k->low;
+        else 
+          k = k->high;
+          break;
+      case 2:
+        if (P.z() < (k->min.z() + k->max.z()) / 2)
+          k = k->low;
+        else 
+          k = k->high;
+          break;
+    }
   }
 
   return idx = -1;
@@ -1051,26 +1331,75 @@ int HexMesh::locate (const Point& P, int & idx)
 *     This function returns the value at the given data point.  
 *******************************************************************************/
 
-double HexMesh::interpolate (const Point & P, const Array1<double> & data, int & start)
+double HexMesh::interpolate (const Point & p, const Array1<double> & data, int & start)
 {
   Hexahedron * h;
   double s, t, u, sm1, sp1, tm1, tp1, um1, up1;
 
   // Find which node has this point.
   
-  locate (P, start);
+  locate (p, start);
   if (start < 0)
     return -1;
-  
+    
   h = find_element (start);
 
   if (h == NULL)
     return -1;
     
 
+  // Patch to deal with tetra.
+  
+  /*
+  if (h->node_index(0) == h->node_index(1) &&
+      h->node_index(1) == h->node_index(2) &&
+      h->node_index(2) == h->node_index(3))
+  {
+    cout << "Tetra.\n";
+    Point p1(h->node(0));
+    Point p2(h->node(4));
+    Point p3(h->node(6));
+    Point p4(h->node(7));
+    double x1=p1.x();
+    double y1=p1.y();
+    double z1=p1.z();
+    double x2=p2.x();
+    double y2=p2.y();
+    double z2=p2.z();
+    double x3=p3.x();
+    double y3=p3.y();
+    double z3=p3.z();
+    double x4=p4.x();
+    double y4=p4.y();
+    double z4=p4.z();
+    double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+    double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+    double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+    double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+    double iV6=1./(a1+a2+a3+a4);
+
+    double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
+    double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
+    double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
+    double value = data[h->node_index(0)] * iV6*(a1+b1*p.x()+c1*p.y()+d1*p.z());
+    double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
+    double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
+    double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
+    value += data[h->node_index(4)] * iV6*(a2+b2*p.x()+c2*p.y()+d2*p.z());
+    double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
+    double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
+    double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
+    value += data[h->node_index(6)] * iV6*(a3+b3*p.x()+c3*p.y()+d3*p.z());
+    double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
+    double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
+    double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
+    return value + data[h->node_index(7)] * iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
+  }
+*/
+
   // Find interpolants.
   
-  h->find_stu (P.vector(), s, t, u);
+  h->find_stu (p.vector(), s, t, u);
   sm1 = s - 1;
   sp1 = s + 1;
   tm1 = t - 1;
@@ -1202,13 +1531,13 @@ void HexMesh::io (Piostream & p)
   
     if (p.reading ())
     {
+      for (hx.first (); hx.ok (); ++hx)
+        hx.get_data()->finish_read (this);
       for (hf.first (); hf.ok (); ++hf)
       {
         hf.get_data()->finish_read (this);
         neighbor_set.insert ( hf.get_data()->corner_set(), hf.get_data());
       }
-      for (hx.first (); hx.ok (); ++hx)
-        hx.get_data()->finish_read (this);
     }
   }
 }

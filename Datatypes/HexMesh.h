@@ -86,6 +86,15 @@ struct SixHexFaces
   HexFace * face[6];
 };
 
+struct KDTree
+{
+  Point min, max;
+  KDTree *low, *high;
+  int split;             // 0 = x, 1 = y, 2 = z;
+  
+  Array1 <Hexahedron *> here;
+};
+
 
 /*******************************************************************************
 * Class actual declarations
@@ -135,7 +144,7 @@ class HexFace
 
   public:
 
-    HexFace (int, int, FourHexNodes & f);  // When facing volume, nodes counterclockwise
+    HexFace (int, int, FourHexNodes & f, HexMesh * m);
     HexFace ();
 
     // Setup and query functions.
@@ -180,14 +189,20 @@ class Hexahedron
     
     EightHexNodes corner;       // The nodes for this volume.
     
+    Point my_centroid;          // The centroid of this volume.
+    double my_radius;            // A minimum radius for this volume.
+    
     SixHexFaces face;		// Pointer array to faces.
     int num_faces;              // Actual number of non-trivial faces.
     
     Vector v1, v2, v3, v4, v5, v6, v7, v8;  // Used in interpolation.
           
     void calc_coeff ();         // Used in interpolation.
+    void calc_centroid ();      // Used in interpolation.
                 
   public:
+
+    Point min, max;
 
     Hexahedron (int, HexMesh * m, EightHexNodes & e);
     Hexahedron ();
@@ -200,6 +215,8 @@ class Hexahedron
     inline HexFace * surface (int i) { return face.face[i%6]; };
     inline int node_index (int i) { return corner.index[i%8]; };
     inline const Point & node (int i) { return *corner.node[i%8]; };
+    inline const Point & centroid () { return my_centroid; };
+    inline double radius () { return my_radius; };
         
     void find_stu (const Vector & P, double & s, double & t, double & u);    
         
@@ -214,13 +231,20 @@ class HexMesh : public Datatype
 {
   private:
 
+    //Array1<HexNode *> node_set;
+    //Array1<Hexahedron *> element_set;
+    //Array1<HexFace *> face_set;
     HashTable<int, HexNode *> node_set;
     HashTable<int, Hexahedron *> element_set;
     HashTable<int, HexFace *> face_set;
     HashTable<FourHexNodes, HexFace *> neighbor_set;
     
+    int classified;
+    KDTree KD;
+    
     int highest_face_index;
     int highest_node_index;
+    int highest_element_index;
     
   public:
   
@@ -247,8 +271,11 @@ class HexMesh : public Datatype
     
     // Access functions
     
+    void classify ();
+    
     int    locate      (const Point & P, int & start);
     double interpolate (const Point & P, const Array1<double> & data, int & start);
+    double interpolate (const Point & P, const Array1<Vector> & data, Vector & v, int & start);
     void   get_bounds  (Point & min, Point & max);
     void get_boundary_lines(Array1<Point>& lines);
     
