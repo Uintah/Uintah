@@ -28,6 +28,11 @@ BBox::BBox()
     have_some=0;
 }
 
+BBox::BBox(const Point& min, const Point& max):
+  have_some(0), cmin(min), cmax(max)
+{
+}
+
 BBox::BBox(const BBox& copy)
 : have_some(copy.have_some), cmin(copy.cmin), cmax(copy.cmax) 
 {
@@ -545,6 +550,9 @@ void Pio(Piostream & stream, BBox & box) {
 
 //
 // $Log$
+// Revision 1.6  2000/05/08 19:15:47  kuzimmer
+// Added a new constructor to BBox
+//
 // Revision 1.5  2000/04/11 19:06:08  kuzimmer
 // Includes an Overlap function to test to see if two BBoxes overlap
 //
