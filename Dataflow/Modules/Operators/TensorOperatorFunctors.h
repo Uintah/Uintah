@@ -34,17 +34,17 @@ namespace Uintah {
   */
 
   
-struct TensorElementExtractionOp
-{
-  TensorElementExtractionOp(int row, int column)
-    : m_row(row), m_column(column) { }
+  struct TensorElementExtractionOp
+  {
+    TensorElementExtractionOp(int row, int column)
+      : m_row(row), m_column(column) { }
 
-  inline double operator()(Matrix3 M)
-  { return M(m_row-1, m_column-1); }
+    inline double operator()(Matrix3 M)
+    { return M(m_row-1, m_column-1); }
 
-  int m_row;
-  int m_column;
-};
+    int m_row;
+    int m_column;
+  };
 
 #define Eigen2DOp(plane) \
 struct Eigen2D##plane##Op \
@@ -57,9 +57,9 @@ struct Eigen2D##plane##Op \
     return (num_eigen_values == 2) ? e1 - e2 : 0; \
   } \
 }
-Eigen2DOp(XY); // declares Eigen2DXYOp struct from above macro
-Eigen2DOp(XZ); // declares Eigen2DXZOp struct from above macro
-Eigen2DOp(YZ); // declares Eigen2DYZOp struct from above macro
+  Eigen2DOp(XY); // declares Eigen2DXYOp struct from above macro
+  Eigen2DOp(XZ); // declares Eigen2DXZOp struct from above macro
+  Eigen2DOp(YZ); // declares Eigen2DYZOp struct from above macro
 
 #define Eigen2DCosOp(plane) \
 struct Eigen2D##plane##CosOp \
@@ -117,7 +117,7 @@ struct NDotSigmaDotTOp
     if(n.length() > 0.0) n/=n.length();
     t = Vector(tx,ty,tz);
     if(t.length() > 0.0) t/=t.length();
-//    std::cout << " n = " << n << " t = " << t << std::endl;
+    //    std::cout << " n = " << n << " t = " << t << std::endl;
   }
 
   // This is the function which does the operation you want.
@@ -137,31 +137,72 @@ struct NDotSigmaDotTOp
 };
 
 /*
-struct EigenOp
-{
+  struct EigenOp
+  {
   EigenOp(int chosen)
-    : m_chosen(chosen) { }
+  : m_chosen(chosen) { }
   inline pair<double, Vector> operator()(Matrix3 M);
   int m_chosen;
-};
+  };
 
-inline pair<double, Vector> EigenOp::operator()(Matrix3 M)
-{
+  inline pair<double, Vector> EigenOp::operator()(Matrix3 M)
+  {
   double e[3];
   int num_eigen_values = M.getEigenValues(e[0], e[1], e[2]);
   if (num_eigen_values <= m_chosen)
-    return pair<double, Vector>(0, Vector(0, 0, 0));
+  return pair<double, Vector>(0, Vector(0, 0, 0));
   else {
-    std::vector<Vector> eigenVectors;
-    double eigenValue = e[m_chosen];
-    eigenVectors = M.getEigenVectors(eigenValue, e[0]);
-    if (eigenVectors.size() != 1)
-      return pair<double, Vector>(eigenValue, Vector(0, 0, 0));
-    else
-      return pair<double, Vector>(eigenValue, eigenVectors[0].normal());
+  std::vector<Vector> eigenVectors;
+  double eigenValue = e[m_chosen];
+  eigenVectors = M.getEigenVectors(eigenValue, e[0]);
+  if (eigenVectors.size() != 1)
+  return pair<double, Vector>(eigenValue, Vector(0, 0, 0));
+  else
+  return pair<double, Vector>(eigenValue, eigenVectors[0].normal());
   }
-}
+  }
 */
+
+struct GreenLagrangeStrainTensorOp
+{
+  GreenLagrangeStrainTensorOp() {}
+  inline Matrix3 operator()(const Matrix3& F)
+  { 
+    Matrix3 one; one.Identity();
+    Matrix3 E = (F.Transpose()*F - one)*0.5;
+    return E;
+  }
+};
+
+struct CauchyGreenDeformationTensorOp
+{
+  CauchyGreenDeformationTensorOp() {}
+  inline Matrix3 operator()(const Matrix3& F)
+  { 
+    Matrix3 C = F.Transpose()*F;
+    return C;
+  }
+};
+
+struct FingerDeformationTensorOp
+{
+  FingerDeformationTensorOp() {}
+  inline Matrix3 operator()(const Matrix3& F)
+  { 
+    Matrix3 B = F*F.Transpose();
+    return B;
+  }
+};
+
+struct NullTensorOp
+{
+  NullTensorOp() {}
+  inline Matrix3 operator()(const Matrix3& F)
+  { 
+    Matrix3 T = F;
+    return T;
+  }
+};
 
 }
 

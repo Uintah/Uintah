@@ -33,6 +33,7 @@ SRCS := \
 	$(SRCDIR)/VectorParticlesOperator.tcl\
 	$(SRCDIR)/AnimatedStreams.tcl\
 	$(SRCDIR)/VariablePlotter.tcl\
+	$(SRCDIR)/TensorToTensorConvertor.tcl\
 #[INSERT NEW TCL FILE HERE]
 #	$(SRCDIR)/EigenEvaluator.tcl\
 #	$(SRCDIR)/ParticleEigenEvaluator.tcl\
