@@ -1431,7 +1431,11 @@ if test "$with_X11_lib"; then
   _x_lib_dir="$with_X11_lib"
   _x_inc_dir="$with_X11_lib/../include"
 else 
-  _x_lib_dir="/usr/X11R6/lib"
+  if test "$NBITS" == "64"; then
+    _x_lib_dir="/usr/X11R6/lib64"
+  else
+    _x_lib_dir="/usr/X11R6/lib"
+  fi
   _x_inc_dir="/usr/X11R6/include"
 fi
 
