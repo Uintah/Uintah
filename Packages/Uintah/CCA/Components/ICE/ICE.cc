@@ -658,7 +658,7 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW, lb->speedSound_CCLabel,           Ghost::None);
   t->requires(Task::NewDW, lb->vol_frac_CCLabel,             Ghost::None);
   if (d_RateForm) {     //RATE FORM
-    t->requires(Task::NewDW, lb->matl_press_CCLabel,           Ghost::None);
+    t->requires(Task::NewDW, lb->matl_press_CCLabel,         Ghost::None);
   }
 
 #ifdef ANNULUSICE
@@ -2359,7 +2359,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       }
 
 #ifdef ANNULUSICE
-      CCVariable<double> rho_CC;
+      constCCVariable<double> rho_CC;
       new_dw->get(rho_CC,      lb->rho_CCLabel,       indx,patch,Ghost::None,0);
 #endif
       new_dw->allocate(int_eng_source,  lb->int_eng_source_CCLabel, indx,patch);
@@ -2759,8 +2759,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex();
         ostringstream desc;
-        desc<<"TOP_addExchangeToMomentumAndEnergy_%d_patch_%d "<<
-                       indx<< patch->getID();
+        desc<<"TOP_addExchangeToMomentumAndEnergy_"<<indx<<"_patch_"
+            <<patch->getID();
         printData(   patch,1, desc.str(),"Temp_CC",    Temp_CC[m]);     
         printData(   patch,1, desc.str(),"int_eng_L",  int_eng_L[m]);   
         printData(   patch,1, desc.str(),"mass_L",     mass_L[m]);      
@@ -2857,8 +2857,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex();
         ostringstream desc;
-        desc<<"addExchangeToMomentumAndEnergy_%d_patch_%d "<<
-                       indx<< patch->getID();
+        desc<<"addExchangeToMomentumAndEnergy_"<<indx<<"_patch_"
+            <<patch->getID();
         printVector(patch,1, desc.str(), "mom_L_ME", 0,mom_L_ME[m]);
         printData(  patch,1, desc.str(),"int_eng_L_ME",int_eng_L_ME[m]);
       }
