@@ -17,6 +17,9 @@
   University of Utah. All Rights Reserved.
 -->
 
+<!--% require("../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
 "../Utilities/XML/Docbook_dtd/docbookx.dtd" [
 <!ENTITY ltx "LaTeX">
@@ -26,8 +29,7 @@
 
 <article class="techreport">
 <title>&sr; Documentum</title>
-<subtitle>&sr; Documentation (Explicated)</subtitle>
-
+<subtitle>&sr; Documentation Explicated (v. <!--%= doc.edition %-->)</subtitle>
 <articleinfo>
 <author>
 <firstname>Ted</firstname>
@@ -62,11 +64,11 @@ both) &sr; documentation.</para>
 <para>The types of documents in the tree.</para >
 </listitem>
 <listitem>
-<para>How to build document products from their
-sources (and the tools needed to do this).</para>
+<para>Building document products from their sources (and the tools
+needed to do this).</para>
 </listitem>
 <listitem>
-<para>How to edit documents.</para>
+<para>Editing documents.</para>
 </listitem>
 </itemizedlist>
 
@@ -247,42 +249,93 @@ FAQ.</para>
 </tgroup>
 </table>
 
-<para>
-
-</para>
-
 </section>
 
 <section id="sec.builddocs">
 <title>Building Docs</title>
 
-<para>&sr; documents are written in number of <firstterm><link
+<para>
+&sr; documents are written in number of <firstterm><link
 linkend="sec.docmls">markup</link></firstterm> languages: XML, &ltx;,
 and HTML (plus their <firstterm>eruby</firstterm>
 equivalents&mdash;see <xref endterm="sec.docmls.title"
 linkend="sec.docmls"/> for more information).  XML and &ltx; document
 sources must be <quote>built</quote> or transformed into other forms
-(e.g. HTML) for presentation.  This section shows how to invoke the
-build system.</para>
+(e.g. HTML) for presentation.  This section shows how to use build
+system.
+</para>
+<para>
+Before using the build system:
+<itemizedlist>
+<listitem>
+<para>
+Install the required tools.  See
+<link endterm="sec.tools.title" linkend="sec.tools"/>.
+</para>
+</listitem>
+<listitem>
+<para>Prepare a <firstterm>catalog</firstterm> file.</para>
+</listitem>
+<listitem>
+<para>Setup environment variables.</para>
+</listitem>
+</itemizedlist>
+The build system can be invoked from the <link
+linkend="sec.cmd-line-invoke">command line</link>, from a script, or
+from the program <link
+linkend="sec.using-publish-rb">Publish.rb</link>
+</para>
 
-<para>This section assumes that all necessary
-<link linkend="sec.tools">tools</link> have been installed.</para>
+<section id="sec.catalog">
+<title>Catalog File</title>
+<para></para>
+</section>
 
-<para>Three environment variables must be set before building
+<section id="sec.bld-vars">
+<title>Environment Variables</title>
+
+<para>Six environment variables must be set before building
 the documentation:
-<simplelist>
-<member><envar>CLASSPATH</envar> must contain the path of the
+<itemizedlist>
+<listitem>
+<para>
+<envar>CLASSPATH</envar> is the path to the
 file <filename>saxon.jar</filename> within the Saxon distribution.
-</member>
-<member><envar>STYLESHEET_PATH</envar> must point to the location of the
-<filename>html</filename> directory within the &dbk; stylesheet
-distribution.
-</member>
-<member>
+</para>
+</listitem>
+<listitem>
+<para>
+<envar>STYLESHEET_XSL_HTML</envar> is the path of the
+<filename>html</filename> directory within the &dbk;
+<acronym>XSL</acronym> stylesheet distribution.
+</para>
+</listitem>
+<listitem>
+<para>
+<envar>STYLESHEET_DSSSL_PRINT</envar> is the path of the
+<filename>print</filename> directory within the &dbk;
+<acronym>DSSSL</acronym> stylesheet distribution.
+</para>
+</listitem>
+<listitem>
+<para>
+<envar>XML_DCL</envar> is the path to the file
+<filename>xml.dcl</filename> within the &dbk;
+<acronym>DSSSL</acronym> stylesheet distribution.
+</para>
+</listitem>
+<listitem>
+<para>
+<envar>CATALOG</envar> is the path to a catalog file.
+</para>
+</listitem>
+<listitem>
+<para>
 <envar>WITH_CV</envar> should be set to the string <quote>true</quote>
 if you want Doxygen to build the C++ based documentation.
-</member>
-</simplelist>
+</para>
+</listitem>
+</itemizedlist>
 For instance (assuming a Bourne type shell):
 <programlisting>
 export CLASSPATH=/usr/local/lib/Saxon/saxon.jar
@@ -291,14 +344,18 @@ export WITH_CV=true
 </programlisting>
 
 </para>
+</section>
 
-<para>Now to make (all) docs <command>cd</command> to the toplevel
+<section id="sec.cmd-line-invoke">
+<title>Command line Invocation</title>
+
+<para>To make (all) docs <command>cd</command> to the toplevel
 <filename>doc</filename> directory and type <command>make</command>.
 </para>
 
 <para>To also make a doc tarball type this:
 <programlisting>
-cd doc                  # cd to topleve doc directory
+cd doc                  # cd to toplevel doc directory
 make tarball
 </programlisting>
 </para>
@@ -325,6 +382,13 @@ no products) from a directory (and its sub-directories) type:
 <para>To also remove products (generated files) type:
 <programlisting>make veryclean</programlisting>
 </para>
+</section>
+
+<section id="sec.using-publish-rb">
+<title>Using Publish.rb</title>
+<para> </para>
+</section>
+
 </section>
 
 <section id="sec.srcsprds">
@@ -1523,7 +1587,7 @@ documentation for the new release.
 </section>
 
 <section id="sec.tools">
-<title>Tools</title>
+<title id="sec.tools.title">Tools</title>
 
 <para>
 The following tools are
@@ -1586,15 +1650,41 @@ translate the Users guide and latex module descriptions to HTML.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term><ulink url="http://www.stack.nl/~dimitri/doxygen/">Doxygen</ulink></term>
+<term><ulink url="http://jadetex.sourceforge.net/">JadeTeX</ulink></term>
 <listitem>
-<para>Doxygen is a documentation system for C++.  It both generates and extracts
-documentation from C++ source files.</para>
+<para>
+A TeX macro package for processing TeX output generated by OpenJade.
+See <ulink
+url="http://jadetex.sourceforge.net/">http://jadetex.sourceforge.net/</ulink>
+for installation instructions.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>Dvipdfm</term>
+<listitem>
+<para>Dvipdfm converts dvi files to pdf.  Dvipdf is part of modern
+&ltx; distributions.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://openjade.sourceforge.net">OpenJade</ulink></term>
+<listitem>
+<para>An implementation of the <acronym>DSSSL</acronym> stylesheet
+language.  It applies a <acronym>DSSSL</acronym> stylesheet to
+<acronym>SGML</acronym>/<acronym>XML</acronym> input to produce TeX
+output.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://www.oasis-open.org/cover/ISOEnts.zip">ISO character entity sets</ulink></term>
+<listitem>
+<para>Needed Character entities sets.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term><ulink url="http://docbook.sourceforge.net/">&dbk; Style
-Sheets</ulink> (1.51.1)</term>
+Sheets</ulink></term>
 <listitem>
 <para>The &dbk; stylesheets translate &dbk; XML documents (Developers
 Guide, Installation Guide, and FAQs) to HTML.</para> 
@@ -1606,6 +1696,13 @@ files <filename>doc/Utilities/XML/srdocbook.xsl</filename>,
 <filename>doc/Utilities/XML/srdocbook-chunk.xsl</filename>, and
 <filename>doc/Utilities/XML/srqandaset.xsl</filename> to the
 <filename>html</filename> directory of the &dbk; distribution.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><ulink url="http://www.stack.nl/~dimitri/doxygen/">Doxygen</ulink></term>
+<listitem>
+<para>Doxygen is a documentation system for C++.  It both generates and extracts
+documentation from C++ source files.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -1649,6 +1746,11 @@ printable version of the users guide.</para>
 <section id="goals">
 <title>Goals for &sr; 2.0</title>
 <itemizedlist>
+<listitem>
+<para>
+Produce PDF versions of all docs.
+</para>
+</listitem>
 <listitem>
 <para>Developers Guide</para>
 </listitem>
@@ -1706,16 +1808,11 @@ class="starttag">ulink</sgmltag> element.</para>
 <itemizedlist>
 <listitem>
 <para>Create <filename>doc/User/Nets</filename>.  Cover page and index
-files live here..</para>
+files live here.</para>
 </listitem>
 <listitem>
-<para>Cover page is index into major, minor, and category level net
+<para>Cover page is index into major and minor net
 descriptions.</para>
-</listitem>
-<listitem>
-<para> A ruby script generates (from a network's notes) category level
-index files (one per package sorted alphabetically and by
-category)</para>
 </listitem>
 <listitem>
 <para>Major and Minor net descriptions written in docbook.</para>
@@ -1730,13 +1827,19 @@ category)</para>
 <para>Pdf versions of docs</para>
 </listitem>
 <listitem>
-<para>Document Mac OS X intallation</para>
+<para>Document &sr; installation on Mac OS X.</para>
 </listitem>
 <listitem>
 <para>Install doc build tools on SCI Linux and OSX machines</para>
 </listitem>
 <listitem>
-<para>Add section to this documment on creating LaTeX documents</para>
+<para>Documment creation of LaTeX documents</para>
+</listitem>
+<listitem>
+<para>Document use of eruby and the use of srdoc.rb.</para>
+</listitem>
+<listitem>
+<para>Document use of Publish.rb</para>
 </listitem>
 </itemizedlist>
 </section>
