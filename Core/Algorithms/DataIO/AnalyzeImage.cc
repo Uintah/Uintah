@@ -161,8 +161,14 @@ AnalyzeImage::AnalyzeImage(const AnalyzeImage& d)
 //
 AnalyzeImage::~AnalyzeImage()
 {
-  // All memory allocation was done using scinew, so no memory needs to be 
-  // manually deallocated.
+  // Deallocate all dynamically allocated memory
+  /*
+  if( pixel_buffer_ != 0 ) delete [] pixel_buffer_;
+  if( size_ != 0 ) delete [] size_;
+  if( origin_ != 0 ) delete [] origin_;
+  if( spacing_ != 0 ) delete [] spacing_;
+  if( index_ != 0 ) delete [] index_;
+  */
 }
 
 /*===========================================================================*/
@@ -333,18 +339,18 @@ void AnalyzeImage::print_image_info()
 
   // Get id
   string id = get_id();
-  cout << "(AnalyzeImage::print_image_info) ID: " << id << "\n";
+  cout << "(AnalyzeImage::print_image_info) ID: " << id << endl;
 
   // Get number of pixels
   int num_pixels = get_num_pixels();
-  cout << "(AnalyzeImage::print_image_info) Num Pixels: " << num_pixels << "\n";
+  cout << "(AnalyzeImage::print_image_info) Num Pixels: " << num_pixels << endl;
 
   // Get pixel buffer data (array)
   //PixelType * pixel_data = get_pixel_buffer();
   //for( int i = 0; i < num_pixels; i++ )
   // {
   //  cout << "(AnalyzeImage) Pixel value " << i << ": " << pixel_data[i] 
-  //      << "\n"; 
+  //      << endl; 
   //}
 
   // Get pixel type
@@ -352,7 +358,7 @@ void AnalyzeImage::print_image_info()
 
   // Get image dimension
   int image_dim = get_dimension();
-  cout << "(AnalyzeImage::print_image_info) Dimension: " << image_dim << "\n";
+  cout << "(AnalyzeImage::print_image_info) Dimension: " << image_dim << endl;
 
   // Get the size of each axis
   cout << "(AnalyzeImage::print_image_info) Size: [ ";
@@ -360,7 +366,7 @@ void AnalyzeImage::print_image_info()
   {
     cout << get_size(j) << " "; 
   }
-  cout << "]\n";
+  cout << "]" << endl;
 
   // Get the origin  
   cout << "(AnalyzeImage::print_image_info) Origin: [ ";
@@ -368,7 +374,7 @@ void AnalyzeImage::print_image_info()
   {
     cout << get_origin(k) << " "; 
   }
-  cout << "]\n";
+  cout << "]" << endl;
 
   // Get the pixel spacing
   cout << "(AnalyzeImage::print_image_info) Spacing: [ ";
@@ -376,7 +382,7 @@ void AnalyzeImage::print_image_info()
   {
     cout << get_spacing(m) << " "; 
   }
-  cout << "]\n";
+  cout << "]" << endl;
 
   // Get the indices
   cout << "(AnalyzeImage::print_image_info) Index: [ ";
@@ -384,7 +390,7 @@ void AnalyzeImage::print_image_info()
   { 
     cout << get_index(n) << " "; 
   }
-  cout << "]\n";
+  cout << "]" << endl;
  
 
 }

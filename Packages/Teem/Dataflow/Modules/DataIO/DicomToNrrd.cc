@@ -244,11 +244,11 @@ void DicomToNrrd::execute(){
 void DicomToNrrd::split_string( string src, vector<string> &container )
 {
   std::istringstream str_data(src);
-  //cerr << "(DicomToNrrd::split_string) src = " << src << "\n";
+  //cerr << "(DicomToNrrd::split_string) src = " << src << endl;
   string word;
   while( str_data >> word )
   {
-    //cerr << "(DicomToNrrd::split_string) word = " << word << "\n";
+    //cerr << "(DicomToNrrd::split_string) word = " << word << endl;
     container.push_back( word );
   } 
 }
@@ -294,7 +294,7 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
 
     reader.set_dir( dir );
 
-    //cerr << "(DicomToNrrd::tcl_command) dir = " << dir << "\n";
+    //cerr << "(DicomToNrrd::tcl_command) dir = " << dir << endl;
 
     // Read all of the series uids from this directory, concatenate them to
     // form one string, and pass the string to the tcl side.
@@ -313,7 +313,7 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
       messages_.set( none_found );
     }
 
-    //cerr << "(DicomToNrrd::tcl_command) all_suids = " << all_suids << "\n";
+    //cerr << "(DicomToNrrd::tcl_command) all_suids = " << all_suids << endl;
 
     series_uid_.set( all_suids );
 #endif
@@ -325,10 +325,9 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
     string dir = args[2];
     reader.set_dir( dir );
 
-    //suid_sel_ = (ctx->subVar("suid-sel"));
     string suid = args[3];
 
-    //cerr << "(DicomToNrrd::tcl_command) suid = " << suid << "\n";
+    //cerr << "(DicomToNrrd::tcl_command) suid = " << suid << endl;
 
     std::vector<std::string> files = reader.get_file_names( suid );
     int num_files = files.size();
@@ -339,7 +338,7 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
       all_files = string( all_files + " " + files[i] );  
     }
 
-    //cerr << "(DicomToNrrd::tcl_command) all_files = " << all_files << "\n";
+    //cerr << "(DicomToNrrd::tcl_command) all_files = " << all_files << endl;
     series_files_.set( all_files );
 #endif
   }
@@ -377,15 +376,15 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
     all_series_.insert( all_series_.end(), new_series );
 
     ostringstream str1;
-    str1 << "entry-dir" << all_series_.size()-1;
+    str1 << "entry-dir" << all_series_.size() - 1;
     entry_dir_.insert(entry_dir_.end(), new GuiString(ctx->subVar(str1.str())));
 
     ostringstream str2;
-    str2 << "entry-suid" << all_series_.size()-1;
+    str2 << "entry-suid" << all_series_.size() - 1;
     entry_suid_.insert(entry_suid_.end(), new GuiString(ctx->subVar(str2.str())));
 
     ostringstream str3;
-    str3 << "entry-files" << all_series_.size()-1;
+    str3 << "entry-files" << all_series_.size() - 1;
     entry_files_.insert(entry_files_.end(), new GuiString(ctx->subVar(str3.str())));
 
 #endif
@@ -394,14 +393,13 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
   {
 #ifdef HAVE_INSIGHT
     // Get the selected series to be deleted
-    //series_del_ = (ctx->subVar("series-del"));
     string series_del = args[2];
 
     // Split the series_del string by spaces
     vector<string> info;
     split_string( series_del, info );
 
-    //cerr << "info size = " << info.size() << "\n";
+    //cerr << "info size = " << info.size() << endl;
 
     if( info.size() < 11 ) {
       error("(DicomToNrrd::tcl_command) Delete series failed. Bad series info.");
@@ -410,19 +408,19 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
 
     // Get the directory 
     string dir = info[1];
-    //cerr << "(DicomToNrrd::tcl_command) dir = " << dir << "\n";
+    //cerr << "(DicomToNrrd::tcl_command) dir = " << dir << endl;
 
     // Get the series uid
     string suid = info[4];
-    //cerr << "(DicomToNrrd::tcl_command) suid = " << suid << "\n";
+    //cerr << "(DicomToNrrd::tcl_command) suid = " << suid << endl;
 
     // Get the start file
     string start_file = info[7];
-    //cerr << "(DicomToNrrd::tcl_command) start_file = " << start_file << "\n";
+    //cerr << "(DicomToNrrd::tcl_command) start_file = " << start_file << endl;
 
     // Get the end file
     string end_file = info[10];
-    //cerr << "(DicomToNrrd::tcl_command) end_file = " << end_file << "\n";
+    //cerr << "(DicomToNrrd::tcl_command) end_file = " << end_file << endl;
 
     // Find the matching entry in the all_series vector and remove it
     int num_series = all_series_.size();
@@ -487,7 +485,7 @@ int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
   // Get the number of series' to build nrrds from 
   int num_series = all_series_.size();
 
-  //cerr << "(DicomToNrrd::build_nrrds) num_series = " << num_series << "\n";
+  //cerr << "(DicomToNrrd::build_nrrds) num_series = " << num_series << endl;
   //int num_series = 1;
 
   vector<Nrrd*> arr( num_series );
@@ -623,7 +621,7 @@ int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
 NrrdData * DicomToNrrd::join_nrrds( vector<Nrrd*> arr )
 {
   int num_nrrds = arr.size();
-  //cerr << "(DicomToNrrd::join_nrrds) num_nrrds = " << num_nrrds << "\n";
+  //cerr << "(DicomToNrrd::join_nrrds) num_nrrds = " << num_nrrds << endl;
 
   if( num_nrrds == 0 )
   {

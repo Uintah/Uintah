@@ -182,8 +182,41 @@ DicomImage::DicomImage(const DicomImage& d)
 //
 DicomImage::~DicomImage()
 {
-  // All memory allocation was done using scinew, so no memory needs to be 
-  // manually deallocated.
+  // Deallocate all dynamically allocated memory
+  /*
+  if( pixel_buffer_ != 0 )
+  {
+    delete [] pixel_buffer_;
+    pixel_buffer_ = 0;
+  }
+  */
+
+  /*
+  if( size_ != 0 ) 
+  {
+    delete [] size_;
+    size_ = 0;
+  }
+  
+
+  if( origin_ != 0 ) 
+  {
+    delete [] origin_;
+    origin_ = 0;
+  }
+
+  if( spacing_ != 0 ) 
+  { 
+    delete [] spacing_;
+    spacing_ = 0;
+  }
+
+  if( index_ != 0 ) 
+  { 
+    delete [] index_;
+    index_ = 0;
+  }
+  */
 }
 
 /*===========================================================================*/
@@ -216,7 +249,8 @@ int DicomImage::get_num_pixels()
 // 
 // get_pixel_buffer
 //
-// Description : Returns an array of pixel values of type PixelType.  
+// Description : Returns the array of pixel values of type 
+//               PixelType.  
 //
 // Arguments   : none
 //
@@ -352,11 +386,11 @@ void DicomImage::print_image_info()
 
   // Get id
   string id = get_id();
-  cout << "(DicomImage::print_image_info) ID: " << id << "\n";
+  cout << "(DicomImage::print_image_info) ID: " << id << endl;
 
   // Get number of pixels
   int num_pixels = get_num_pixels();
-  cout << "(DicomImage::print_image_info) Num Pixels: " << num_pixels << "\n";
+  cout << "(DicomImage::print_image_info) Num Pixels: " << num_pixels << endl;
 
   // Get pixel buffer data (array)
   PixelType min = INT_MAX;
@@ -366,26 +400,26 @@ void DicomImage::print_image_info()
   for( int i = 0; i < num_pixels; i++ )
   {
     //cout << "(DicomImage) Pixel value " << i << ": " << pixel_data[i] 
-    //    << "\n"; 
+    //    << endl; 
     if( pixel_data[i] < min ) 
     {
       min = pixel_data[i];
       //cout << "(DicomImage) Pixel value " << i << ": " << pixel_data[i] 
-      //     << " is new minimum\n"; 
+      //     << " is new minimum" << endl; 
     }
     if( pixel_data[i] > max ) max = pixel_data[i];    
   }
 
   cout << "(DicomImage::print_image_info) Min, Max: [ " << min 
-       << " " << max << " ]\n";
+       << " " << max << " ]" << endl;
 
   // Get pixel type
   string data_type = get_data_type();
-  cout << "(DicomImage::print_image_info) Data Type: " << data_type << "\n";
+  cout << "(DicomImage::print_image_info) Data Type: " << data_type << endl;
 
   // Get image dimension
   int image_dim = get_dimension();
-  cout << "(DicomImage::print_image_info) Dimension: " << image_dim << "\n";
+  cout << "(DicomImage::print_image_info) Dimension: " << image_dim << endl;
 
   // Get the size of each axis
   cout << "(DicomImage::print_image_info) Size: [ ";
@@ -393,7 +427,7 @@ void DicomImage::print_image_info()
   {
     cout << get_size(j) << " "; 
   }
-  cout << "]\n";
+  cout << "]" << endl;
 
   // Get the origin  
   cout << "(DicomImage::print_image_info) Origin: [ ";
@@ -401,7 +435,7 @@ void DicomImage::print_image_info()
   {
     cout << get_origin(k) << " "; 
   }
-  cout << "]\n";
+  cout << "]" << endl;
 
   // Get the pixel spacing
   cout << "(DicomImage::print_image_info) Spacing: [ ";
@@ -409,7 +443,7 @@ void DicomImage::print_image_info()
   {
     cout << get_spacing(m) << " "; 
   }
-  cout << "]\n";
+  cout << "]" << endl;
 
   // Get the indices
   cout << "(DicomImage::print_image_info) Index: [ ";
@@ -417,7 +451,7 @@ void DicomImage::print_image_info()
   {
     cout << get_index(n) << " "; 
   }
-  cout << "]\n";
+  cout << "]" << endl;
 
 
 }
