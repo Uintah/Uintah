@@ -136,12 +136,12 @@ void SCIRunComponentModel::initGuiInterface() {
   gui->eval("set scirun2 1");
   
   tcl_task->release_mainloop();
-  packageDB->setGui(gui);
   
   net = new Network();
   Scheduler* sched_task=new Scheduler(net);
   new NetworkEditor(net, gui);
   gui->execute("wm withdraw .");
+  packageDB->setGui(gui);
 
   // Activate the scheduler.  Arguments and return
   // values are meaningless
