@@ -231,13 +231,14 @@ int NetInterface::disconnect( NetConnection * conn )
 // 
 // disconnect_all 
 //
-// Description : Disconnect from all connections.
+// Description : Disconnect from all connections.  Returns 0 on success, -1
+//               on failure.
 //
 // Arguments   : none
 //
-void NetInterface::disconnect_all()
+int NetInterface::disconnect_all()
 {
-  net_interface_disconnect_all( &interface_ );  
+  return net_interface_disconnect_all( &interface_ );  
 }
 
 
@@ -253,11 +254,45 @@ void NetInterface::disconnect_all()
 void NetInterface::print_connections()
 {
   net_interface_print_conns( &interface_ );
+
+  /*
+  // Get the connections
+  std::vector<NetConnection> connections = get_connections();
+
+  // Print each connection
+  int num_conns = connections.size();
+
+  cout << "(print_connections) There are " << num_conns << " connections"  
+       << endl;
+
+  for( int i = 0; i < num_conns; i++ )
+  {
+    (connections[i]).print();
+  }
+  */
 }
 
-/*
-  //std::vector<NetConnection> get_connections();
-  */
+/*===========================================================================*/
+// 
+// get_connections
+//
+// Description : Return a vector of all the connections.
+//
+// Arguments   : none
+//
+std::vector<NetConnection> NetInterface::get_connections()
+{
+  std::vector<NetConnection> connections;
+
+  // Convert all the NetConnectionC objects in the connections array to 
+  // NetConnection objects and add them to the array.
+  for( int i = 0; i < interface_.num_connections_; i++ )
+  {
+    NetConnection conn( interface_.connections_[i] );
+    connections.push_back( conn );    
+  } 
+  return connections;
+}
 
 /*===========================================================================*/
 // 

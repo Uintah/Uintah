@@ -51,6 +51,7 @@
 #include <iostream>
 #include <assert.h>
 #include <limits>
+#include <vector>
 
 #define MAX_PORT_LEN 8
 
@@ -98,9 +99,9 @@ public:
  
   NetConnection connect( std::string host_name, int port );
   int disconnect( NetConnection * conn ); 
-  void disconnect_all(); 
+  int disconnect_all(); 
   void print_connections(); 
-  //std::vector<NetConnection> get_connections();
+  std::vector<NetConnection> get_connections();
 
   // 
   // Reading functions
