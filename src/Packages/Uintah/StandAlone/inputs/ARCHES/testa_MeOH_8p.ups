@@ -252,7 +252,6 @@
 			<pctype>jacobi</pctype>
 			<overlap>1</overlap>
 			<max_iter>75</max_iter>
-			<res_tol>0.0003</res_tol>
 		        <underrelax>0.97</underrelax>
 		    </LinearSolver>
 		</PressureSolver>

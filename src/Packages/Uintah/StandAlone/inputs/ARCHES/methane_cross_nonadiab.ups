@@ -261,7 +261,6 @@
 			<fill>1</fill>		!---for ilu preconditioner
 			<overlap>1</overlap>	!---for asm preconditioner
 			<max_iter>75</max_iter>
-			<res_tol>0.0003</res_tol>
 		        <underrelax>1.00</underrelax>
 		    </LinearSolver>
 		</PressureSolver>
