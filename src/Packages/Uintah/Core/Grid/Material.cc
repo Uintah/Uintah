@@ -10,6 +10,7 @@ using namespace Uintah;
 Material::Material()
 {
   thismatl=0;
+  haveName = false;
 }
 
 Material::Material(ProblemSpecP& ps)
