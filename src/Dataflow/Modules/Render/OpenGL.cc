@@ -91,7 +91,9 @@ OpenGL::query(GuiInterface* gui)
 
 
 OpenGL::OpenGL(GuiInterface* gui) :
-  gui(gui), tkwin(0),
+  gui(gui),
+  helper(0),
+  tkwin(0),
   do_hi_res(false),
   encoding_mpeg_(false),
 
@@ -99,14 +101,13 @@ OpenGL::OpenGL(GuiInterface* gui) :
   recv_mb("OpenGL renderer receive mailbox", 10),
   get_mb("OpenGL renderer request mailbox", 5),
   img_mb("OpenGL renderer image data mailbox", 5),
-  helper_thread_(0),
-  helper(0),
-  dead_(false)
   // CollabVis Code begin
 #ifdef HAVE_COLLAB_VIS
-  ,doZTexView(false),
-  doZTexTransform(false)
+  doZTexView(false),
+  doZTexTransform(false),
 #endif
+  helper_thread_(0),
+  dead_(false)
   // CollabVis code end
 {
   drawinfo=scinew DrawInfoOpenGL;

@@ -100,13 +100,15 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     caxes(ctx->subVar("caxes")),
     raxes(ctx->subVar("raxes")),
     iaxes(ctx->subVar("iaxes")),
+    // CollabVis code begin
+    HaveCollabVis_(ctx->subVar("have_collab_vis")),
+    // CollabVis code end
     doingMovie(false),
     makeMPEG(false),
     curFrame(0),
     curName("movie"),
     dolly_throttle(0),
     // CollabVis code begin
-    HaveCollabVis_(ctx->subVar("have_collab_vis")),
 #ifdef HAVE_COLLAB_VIS
     groupInfo( NULL ),
     groupInfoLock( "GroupInfoLock" ),
@@ -116,6 +118,7 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     // CollabVis code end
     show_rotation_axis(false),
     id(ctx->getfullname()),
+    need_redraw( false ),
     view(ctx->subVar("view")),
     homeview(Point(2.1, 1.6, 11.5), Point(.0, .0, .0), Vector(0,1,0), 20),
     lightColors(ctx->subVar("lightColors")),
@@ -142,8 +145,7 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     file_resx(ctx->subVar("resx")),
     file_resy(ctx->subVar("resy")),
     file_aspect(ctx->subVar("aspect")),
-    file_aspect_ratio(ctx->subVar("aspect_ratio")),
-    need_redraw( false )
+    file_aspect_ratio(ctx->subVar("aspect_ratio"))
 {
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));
@@ -230,7 +232,7 @@ void ViewWindow::itemAdded(GeomViewerItem* si)
   }
   // invalidate the bounding box
   bb.reset();
-  need_redraw=1;
+  need_redraw=true;
 }
 
 void ViewWindow::itemDeleted(GeomViewerItem *si)
@@ -249,7 +251,7 @@ void ViewWindow::itemDeleted(GeomViewerItem *si)
   }
 				// invalidate the bounding box
   bb.reset();
-  need_redraw=1;
+  need_redraw=true;
 }
 
 // need to fill this in!   
@@ -257,7 +259,7 @@ void ViewWindow::itemDeleted(GeomViewerItem *si)
 void ViewWindow::itemCB(CallbackData*, void *gI) {
   GeomItem *g = (GeomItem *)gI;
   g->vis = !g->vis;
-  need_redraw=1;
+  need_redraw=true;
 }
 
 void ViewWindow::spawnChCB(CallbackData*, void*)
@@ -664,7 +666,7 @@ void ViewWindow::rotate(double /*angle*/, Vector /*v*/, Point /*c*/)
     kids[i]->rotate(angle, v, c);
   evl->unlock();
 #endif
-  need_redraw=1;
+  need_redraw=true;
 }
 
 void ViewWindow::rotate_obj(double /*angle*/, const Vector& /*v*/, const Point& /*c*/)
@@ -680,7 +682,7 @@ void ViewWindow::rotate_obj(double /*angle*/, const Vector& /*v*/, const Point& 
     kids[i]->rotate(angle, v, c);
   evl->unlock();
 #endif
-  need_redraw=1;
+  need_redraw=true;
 }
 
 void ViewWindow::translate(Vector /*v*/)
@@ -699,7 +701,7 @@ void ViewWindow::translate(Vector /*v*/)
     kids[i]->translate(v);
   evl->unlock();
 #endif
-  need_redraw=1;
+  need_redraw=true;
 }
 
 void ViewWindow::scale(Vector /*v*/, Point /*c*/)
@@ -716,7 +718,7 @@ void ViewWindow::scale(Vector /*v*/, Point /*c*/)
     kids[i]->scale(v, c);
   evl->unlock();
 #endif
-  need_redraw=1;
+  need_redraw=true;
 }
 
 void ViewWindow::mouse_translate(int action, int x, int y, int, int, int)
@@ -769,7 +771,7 @@ void ViewWindow::mouse_translate(int action, int x, int y, int, int, int)
       // Put the view back...
       view.set(tmpview);
 
-      need_redraw=1;
+      need_redraw=true;
       ostringstream str;
       str << "translate: " << total_x << ", " << total_y;
       update_mode_string(str.str());
@@ -856,7 +858,7 @@ void ViewWindow::mouse_dolly(int action, int x, int y, int, int, int)
 	tmpview.lookat(tmpview.lookat()+dolly_vector*dly);
 	tmpview.eyep(tmpview.eyep()+dolly_vector*dly);
 	view.set(tmpview);
-	need_redraw=1;
+	need_redraw=true;
       }
       char str[100];
       sprintf(str, "dolly: %.3g (th=%.3g)", dolly_total, 
@@ -902,7 +904,7 @@ void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
       tmpview.fov(RtoD(2*Atan(scl*Tan(DtoR(tmpview.fov()/2.)))));
 
       view.set(tmpview);
-      need_redraw=1;
+      need_redraw=true;
       ostringstream str;
       str << "scale: " << total_scale*100 << "%";
       update_mode_string(str.str());
@@ -930,7 +932,7 @@ void ViewWindow::MyTranslateCamera(Vector offset)
   tmpview.lookat(tmpview.lookat() + offset);
 
   view.set(tmpview);
-  need_redraw=1;
+  need_redraw=true;
 }
 
 // surprised this wasn't definied somewhere in Core?
@@ -999,7 +1001,7 @@ void ViewWindow::MyRotateCamera( Point  center,
   tmpview.up    (mat * u);
 
   view.set(tmpview);
-  need_redraw=1;
+  need_redraw=true;
 }
 
 void ViewWindow::NormalizeMouseXY( int X, int Y, float *NX, float *NY )
@@ -1397,7 +1399,7 @@ void ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
       case UNICAM_ZOOM:     unicam_zoom(x, y); break;
       }
 
-      need_redraw=1;
+      need_redraw=true;
 
       ostringstream str;
       char *unicamMode[] = {"Choose", "Rotate", "Pan", "Zoom"};
@@ -1424,7 +1426,7 @@ void ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
       }
     }
         
-    need_redraw = 1;
+    need_redraw = true;
 
     update_mode_string("");
     break;

@@ -73,7 +73,7 @@ void SynchronizeGeometry::do_execute() {
   ogeom_ = (GeometryOPort*)getOPort("OutputGeometry");
 
   if(ogeom_ == NULL) 
-    cout << "ogeom_ is NULL" <<endl;cout.flush();
+    cout << "ogeom_ is NULL" << std::endl; cout.flush();
 
   for(;;){
     msg = mailbox.receive();

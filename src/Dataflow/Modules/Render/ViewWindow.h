@@ -253,7 +253,7 @@ public:
 
   OpenGL* current_renderer;
   string id;
-  int need_redraw;
+  bool need_redraw;
 
   SCIBaWGL* get_bawgl(void) { return(bawgl); }
     
