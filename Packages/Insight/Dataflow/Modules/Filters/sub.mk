@@ -43,7 +43,9 @@ SRC_GEN := $(patsubst $(XMLS_PATH)/sci_%.xml, $(SRCDIR)/%.cc, $(XMLS))
 CATEGORY := Filters
 CODEGEN := -classpath $(PATH_TO_SCIRUN)/tools/CodeGenerator/java:$(XALAN_PATH) SCIRun.GenerateSCIRunCode 
 
-SRCS += ${SRC_GEN} 
+SRCS += ${SRC_GEN} \
+	${SRCDIR}/ExtractImageFilter.cc \
+#[INSERT NEW CODE FILE HERE]
 
 $(SRCDIR)/%.cc : $(SRCDIR)/XML/sci_%.xml
 	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateCC.xsl $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/$*.cc
