@@ -12,6 +12,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
+#include <stdio.h>
 #include <SCICore/Datatypes/DenseMatrix.h>
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Datatypes/ColumnMatrix.h>
@@ -578,6 +579,9 @@ void DenseMatrix::mult(double s)
 
 //
 // $Log$
+// Revision 1.10  2000/07/25 16:47:43  yarden
+// add missing include
+//
 // Revision 1.9  2000/07/12 15:45:08  dmw
 // Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
 //
