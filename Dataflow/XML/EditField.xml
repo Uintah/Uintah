@@ -77,6 +77,15 @@
           </p>
         </description>
       </port>
+      <port>
+        <name>Transformation Matrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+        <description>
+          <p>
+            The matrix that represents the transformations made by the widget.
+          </p>
+        </description>
+      </port>
     </outputs>
   </io>
   <gui>
