@@ -393,6 +393,21 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // poisson equation
     d_momSolver->solveVelHatCorr(level, sched,
 			   Runge_Kutta_current_step, Runge_Kutta_last_step);
+  #ifdef Runge_Kutta_2nd
+    d_props->sched_averageRKProps(sched, patches, matls);
+    d_props->sched_reComputeRKProps(sched, patches, matls);
+    if (nofScalarVars > 0) {
+      for (int index = 0;index < nofScalarVars; index ++) {
+      // in this case we're only solving for one scalarVar...but
+      // the same subroutine can be used to solve multiple scalarVars
+        d_turbModel->sched_computeScalarVariance(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
+      }
+      d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
+    }
+    d_momSolver->sched_averageRKHatVelocities(sched, patches, matls);
+  #endif
     d_pressSolver->solveCorr(level, sched,
 			Runge_Kutta_current_step, Runge_Kutta_last_step);
     // Momentum solver
