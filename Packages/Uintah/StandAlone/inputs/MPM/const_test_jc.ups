@@ -10,13 +10,13 @@
    <Time>
 	<maxTime>2</maxTime>
 	<initTime>0.0</initTime>
-	<delt_min>0.0004</delt_min>
-	<delt_max>0.002</delt_max>
+	<delt_min>0.000001</delt_min>
+	<delt_max>0.00001</delt_max>
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>const_test_jc.uda</filebase>
-	<outputInterval>.1</outputInterval>
+	<outputInterval>.001</outputInterval>
 <!--
         <save label = "NTractionZMinus"/>
 	<save label = "KineticEnergy"/>
@@ -54,6 +54,29 @@
 	<MPM>
 	    <material>
                 <burn type = "null" />
+		<density>7.0e9</density>
+		<constitutive_model type="hypo_elastic">
+		   <G>12.e10</G>
+		   <K>32.e10</K>
+	        </constitutive_model>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+		    <box label = "piston">
+			<min>[0.0,0.0,1.0]</min>
+			<max>[1.0,1.0,2.0]</max>
+		    </box>
+		    <res>[1,1,1]</res>
+		    <velocity>[0.0,0.0,-570.0]</velocity>
+		    <temperature>294</temperature>
+ 		</geom_object>
+		<velocity_field>0</velocity_field>
+	    </material>
+
+<!--
+	    <material>
+                <burn type = "null" />
 		<density>7860.0</density>
 		<constitutive_model type="johnson_cook">
 		   <shear_modulus>80.0e9</shear_modulus>
@@ -77,35 +100,47 @@
 		<geom_object>
 		    <box label = "box - HY-100 Steel">
 			<min>[0.0,0.0,0.0]</min>
-			<max>[0.01,0.01,0.01]</max>
+			<max>[1.0,1.0,1.0]</max>
 		    </box>
 		    <res>[1,1,1]</res>
-		    <velocity>[0.0,0.0,-.5e-2]</velocity>
+		    <velocity>[0.0,0.0,0.0]</velocity>
 		    <temperature>294</temperature>
  		</geom_object>
-		<velocity_field>100</velocity_field>
+		<velocity_field>1</velocity_field>
 	    </material>
-
+-->
 	    <material>
                 <burn type = "null" />
-		<density>1.e9</density>
-		<constitutive_model type="hypo_elastic">
-		   <G>12.e10</G>
-		   <K>32.e10</K>
+		<density>7830.0</density>
+		<constitutive_model type="johnson_cook">
+		   <shear_modulus>80.0e9</shear_modulus>
+		   <bulk_modulus>173.33e9</bulk_modulus>
+                   <A>792.0e6</A>
+                   <B>510.0e6</B>
+                   <C>0.014</C>
+                   <n>0.26</n>
+                   <m>1.03</m>
+                   <room_temp>294.0</room_temp>
+                   <melt_temp>1793.0</melt_temp>
+                   <D1>0</D1>
+                   <D2>0</D2>
+                   <D3>0</D3>
+                   <D4>0</D4>
+                   <D5>0</D5>
 	        </constitutive_model>
 		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
-		<specific_heat>5</specific_heat>
+		<specific_heat>477</specific_heat>
 		<geom_object>
-		    <box label = "piston">
-			<min>[0.0,0.0,.01]</min>
-			<max>[0.01,0.01,.02]</max>
+		    <box label = "box - 4340 Steel">
+			<min>[0.0,0.0,0.0]</min>
+			<max>[1.0,1.0,1.0]</max>
 		    </box>
 		    <res>[1,1,1]</res>
-		    <velocity>[0.0,0.0,-1.e-2]</velocity>
+		    <velocity>[0.0,0.0,0.0]</velocity>
 		    <temperature>294</temperature>
  		</geom_object>
-		<velocity_field>0</velocity_field>
+		<velocity_field>1</velocity_field>
 	    </material>
 
 	    <contact>
@@ -147,7 +182,7 @@
 	<Level>
 	    <Box label = "1">
 		<lower>[0.0,0.0,0.0]</lower>
-		<upper>[.02,.02,0.03]</upper>
+		<upper>[2.0,2.0,3.0]</upper>
 	        <resolution>[2,2,3]</resolution>
 		<patches>[1,1,1]</patches>
 	    </Box>
