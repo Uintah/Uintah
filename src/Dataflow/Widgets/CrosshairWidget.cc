@@ -138,6 +138,13 @@ CrosshairWidget::redraw()
   }
 }
 
+void
+CrosshairWidget::geom_pick(GeomPick *p, ViewWindow *vw,
+			   int data, const BState &bs)
+{
+  BaseWidget::geom_pick(p, vw, data, bs);
+  pick_position_ = variables[CenterVar]->point();
+}
 
 /***************************************************************************
  * The widget's geom_moved method receives geometry move requests from
@@ -161,7 +168,8 @@ CrosshairWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
   {
   case Pick:
   case PickAxes:
-    MoveDelta(delta);
+    variables[CenterVar]->Move(pick_position_);
+    MoveDelta(pick_offset);
     break;
   }
   execute(0);
