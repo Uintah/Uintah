@@ -300,7 +300,7 @@ void BuilderWindow::buildRemotePackageMenus(const  gov::cca::ports::ComponentRep
     model=frameworkURL;
     if(menus.find(model) == menus.end())
       menus[model]=new MenuTree(this, frameworkURL);
-    string name = (*iter)->getClassName();
+    string name = (*iter)->getComponentClassName();
     vector<string> splitname = split_string(name, '.');
     menus[model]->add(splitname, 0, *iter, name);
   }
@@ -332,7 +332,7 @@ void BuilderWindow::buildPackageMenus()
     string model = (*iter)->getModelName();
     if(menus.find(model) == menus.end())
       menus[model]=new MenuTree(this,"");
-    string name = (*iter)->getClassName();
+    string name = (*iter)->getComponentClassName();
     vector<string> splitname = split_string(name, '.');
     menus[model]->add(splitname, 0, *iter, name);
   }
@@ -517,7 +517,7 @@ void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescripti
   }
   cerr << "Should put properties on component before creating\n";
 
-  gov::cca::ComponentID::pointer cid=builder->createInstance(cd->getClassName(), cd->getClassName(), gov::cca::TypeMap::pointer(0),url);
+  gov::cca::ComponentID::pointer cid=builder->createInstance(cd->getComponentClassName(), cd->getComponentClassName(), gov::cca::TypeMap::pointer(0),url);
   if(cid.isNull()){
     cerr << "instantiateFailed...\n";
     return;
@@ -526,10 +526,10 @@ void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescripti
   CIA::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
 
   services->releasePort("cca.BuilderService");
-  if(cd->getClassName()!="SCIRun.Builder"){
+  if(cd->getComponentClassName()!="SCIRun.Builder"){
     int x = 20;
     int y = 20;
-    big_canvas_view->addModule(cd->getClassName(), x, y, usesPorts, providesPorts, cid, true); //reposition module
+    big_canvas_view->addModule(cd->getComponentClassName(), x, y, usesPorts, providesPorts, cid, true); //reposition module
   }
   // TEK
   cerr << "BuilderWindow::instantiateCompnent(): Leaving..." << endl;
