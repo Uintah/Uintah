@@ -396,10 +396,33 @@ Patch::determineGhostPatches( int numGhostCells )
    d_leftBack.set( minX, maxY, minZ, minX - gc, maxY - gc, maxZ );
    d_leftFront.set( minX, minY, minZ, minX - gc, minY - gc, maxZ );
 }
-      
 
+IntVector Patch::getHighGhostCellIndex() const
+{
+  cerr<<"needed by tan."<<endl;
+  return IntVector(0,0,0); /*
+                             put IntVector(0,0,0) just for no compiling warning.
+                               --tan
+                            */
+}
+
+IntVector Patch::getLowGhostCellIndex() const
+{
+  cerr<<"needed by tan."<<endl;
+  return IntVector(0,0,0); /*
+                             put IntVector(0,0,0) just for no compiling warning.
+                               --tan
+                            */
+}
+      
 //
 // $Log$
+// Revision 1.6  2000/06/05 19:25:14  tan
+// I need the following two functions,
+// (1) IntVector getHighGhostCellIndex() const;
+// (2) IntVector getLowGhostCellIndex() const;
+// The temporary empty functions are created.
+//
 // Revision 1.5  2000/06/04 04:36:07  tan
 // Added function findNodesFromCell() to find the 8 neighboring node indexes
 // according to a given cell index.

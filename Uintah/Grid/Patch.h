@@ -216,6 +216,12 @@ WARNING
 	 return Box(nodePosition(getCellLowIndex()+IntVector(l,l,l)),
 		    nodePosition(getCellHighIndex()+IntVector(h,h,h)));
       }
+      
+      /*
+         I need the following two functions.  --tan
+       */
+      IntVector getHighGhostCellIndex() const;
+      IntVector getLowGhostCellIndex() const;
 				 
       string toString() const;
 
@@ -279,6 +285,12 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
 
 //
 // $Log$
+// Revision 1.5  2000/06/05 19:25:02  tan
+// I need the following two functions,
+// (1) IntVector getHighGhostCellIndex() const;
+// (2) IntVector getLowGhostCellIndex() const;
+// The temporary empty functions are created.
+//
 // Revision 1.4  2000/06/04 04:35:52  tan
 // Added function findNodesFromCell() to find the 8 neighboring node indexes
 // according to a given cell index.
