@@ -231,24 +231,24 @@ mlb& operator * (mlb & b, double ml);
 mlb& operator * (mlb & a, mlb & b);
 mlb& operator / (mlb & a, mlb &b);   // Divide by scalar
 inline mlb& operator * (double m,mlb &a){return(a*m);}
-inline mlb& operator * (mlb& a,int m){return(a*(double)m);}
+// inline mlb& operator * (mlb& a,int m){return(a*(double)m);}
 inline mlb& operator * (int m,mlb& a){return(a*(double)m);}
-inline mlb& operator / (mlb& a,double b){return(a/a2m(b));}
-inline mlb& operator / (double b,mlb &a){return(a2m(b)/a);}
-inline mlb& operator / (mlb& a,int b){return(a/a2m(b));}
-inline mlb& operator / (int b,mlb &a){return(a2m(b)/a);}
+// inline mlb& operator / (mlb& a,double b){return(a/a2m(b));}
+// inline mlb& operator / (double b,mlb &a){return(a2m(b)/a);}
+// inline mlb& operator / (mlb& a,int b){return(a/a2m(b));}
+// inline mlb& operator / (int b,mlb &a){return(a2m(b)/a);}
 
 int   mlb2size(mlb &b);
 
 mlb& size(mlb &a, mlb &b);
 inline mlb& size(mlb &a, int b)  {return(size(a,a2m(b)));}
 mlb& zeros(mlb &a, mlb &b);
-inline mlb& zeros(int a, mlb &b) {return(zeros(a2m(a),b));}
-inline mlb& zeros(int a, int  b) {return(zeros(a2m(a),a2m(b)));}
+// inline mlb& zeros(int a, mlb &b) {return(zeros(a2m(a),b));}
+// inline mlb& zeros(int a, int  b) {return(zeros(a2m(a),a2m(b)));}
 inline mlb& zeros(mlb& a, int b) {return(zeros(a,a2m(b)));}
 mlb& ones(mlb &a, mlb &b);
-inline mlb& ones(int a, mlb &b) {return(ones(a2m(a),b));}
-inline mlb& ones(int a, int  b) {return(ones(a2m(a),a2m(b)));}
+// inline mlb& ones(int a, mlb &b) {return(ones(a2m(a),b));}
+// inline mlb& ones(int a, int  b) {return(ones(a2m(a),a2m(b)));}
 inline mlb& ones(mlb& a, int b) {return(ones(a,a2m(b)));}
 
 mlb& length(mlb &a);
@@ -262,21 +262,21 @@ mlb & operator >> (mlb &a, mlb &b);    // [a;b]
 mlb & dmlt(mlb & a, mlb & b);
 void  disp(mlb &a);
 mlb& operator % (mlb &a,mlb &b);      // [a:b]
-inline mlb& operator % (double a,mlb &b){return(a2m(a)%b);}
-inline mlb& operator % (mlb& a,double b){return(a%a2m(b));}
+// inline mlb& operator % (double a,mlb &b){return(a2m(a)%b);}
+// inline mlb& operator % (mlb& a,double b){return(a%a2m(b));}
 inline mlb& operator % (int a,mlb &b){return(a2m(a)%b);}
-inline mlb& operator % (mlb& a,int b){return(a%a2m(b));}
+// inline mlb& operator % (mlb& a,int b){return(a%a2m(b));}
 
 // mlb& plus(double a1,mlb&c1,double a2)        a1*c1+a2
 // mlb& plus(double a1,mlb&c1,double a2,mlb&c2) a1*c1+a2*c2
 mlb& operator + (mlb& a, mlb& b);
 mlb& operator + (mlb& b, double ml);
-inline mlb& operator + (double m,mlb & b) {return(b+m);}
-inline mlb& operator + (int m,mlb & b) {return(b+(double)m);}
-inline mlb& operator + (mlb &b, int m) {return(b+(double)m);}
+// inline mlb& operator + (double m,mlb & b) {return(b+m);}
+// inline mlb& operator + (int m,mlb & b) {return(b+(double)m);}
+// inline mlb& operator + (mlb &b, int m) {return(b+(double)m);}
 inline mlb& operator - (mlb& a, mlb& b){return(-b+a);}
-inline mlb& operator - (mlb &b, double m) {return(b+(double)(-m));}
-inline mlb& operator - (double m, mlb &b) {return(-b+m);}
+// inline mlb& operator - (mlb &b, double m) {return(b+(double)(-m));}
+// inline mlb& operator - (double m, mlb &b) {return(-b+m);}
 inline mlb& operator - (mlb &b, int m) {return(b+(double)(-m));}
 inline mlb& operator - (int m, mlb &b) {return(-b+(double)m);}
 
@@ -291,22 +291,22 @@ mlb& operator <= (mlb & a, mlb & b);
 mlb& operator == (double a, mlb & b);
 mlb& operator == (mlb & a, mlb & b);
 inline mlb& operator > (mlb& a, mlb& b)  { return( b<a ); }
-inline mlb& operator > (double a, mlb& b) { return( b<a ); }
-inline mlb& operator > (mlb& a, double b) { return( b<a ); }
+// inline mlb& operator > (double a, mlb& b) { return( b<a ); }
+// inline mlb& operator > (mlb& a, double b) { return( b<a ); }
 inline mlb& operator >=(mlb& a, mlb& b) { return( b<=a ); }
-inline mlb& operator >=(double a, mlb& b) { return( b<=a ); }
-inline mlb& operator >=(mlb& a, double b) { return( b<=a ); }
+// inline mlb& operator >=(double a, mlb& b) { return( b<=a ); }
+// inline mlb& operator >=(mlb& a, double b) { return( b<=a ); }
 inline mlb& operator ==(mlb&b, double a) { return(a==b); }
 
-inline mlb& operator <  (int a, mlb & b){return((double)a<b);}
+// inline mlb& operator <  (int a, mlb & b){return((double)a<b);}
 inline mlb& operator <  (mlb & a, int b){return(a<(double)b);}
-inline mlb& operator <= (int a, mlb & b){return((double)a<=b);}
+// inline mlb& operator <= (int a, mlb & b){return((double)a<=b);}
 inline mlb& operator <= (mlb&  a, int b){return(a<=(double)b);}
-inline mlb& operator == (int a, mlb & b){return((double)a==b);}
-inline mlb& operator > (int a, mlb& b) { return( b<(double)a );  }
+// inline mlb& operator == (int a, mlb & b){return((double)a==b);}
+// inline mlb& operator > (int a, mlb& b) { return( b<(double)a );  }
 inline mlb& operator > (mlb& a, int b) { return( (double)b<a );  }
-inline mlb& operator >=(int a, mlb& b) { return( b<=(double)a ); }
-inline mlb& operator >=(mlb& a, int b) { return( (double)b<=a ); }
+// inline mlb& operator >=(int a, mlb& b) { return( b<=(double)a ); }
+// inline mlb& operator >=(mlb& a, int b) { return( (double)b<=a ); }
 inline mlb& operator ==(mlb& b, int a) { return( (double)a==b ); }
 
 int  MLBempty(mlb &a);
@@ -317,7 +317,10 @@ int  MLBempty(mlb &a);
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef __sgi
 #include <iostream.h>
+#endif
 
 /****************************************************
    Construct empty temporary object
@@ -446,7 +449,7 @@ void mlb::thisprt(char *s)
   printf("\n");
 }
 #else
-void mlb::thisprt(char *s) { return;}
+void mlb::thisprt(char *) {  return;}
 #endif
 
 /****************************************************
@@ -695,7 +698,7 @@ void MLBerr(bool flag,char *msg)
 
 int MLBempty(mlb &a)
 {
-  if((a.ndms==0)&(a.db==NULL))  return(1);
+  if((a.ndms==0)&&(a.db==NULL))  return(1);
   if(a.dms[0]==0) return(1);
   return(0);
 }
@@ -729,7 +732,7 @@ void mlb::set_double_ptr(int n1,int n2,double *ptr)
 
 void mlb::release_double_ptr()
 {
-   MLBerr((db==NULL)&(dms==NULL),"release_double for empty object");
+   MLBerr( (db==NULL)&&(dms==NULL) ,"release_double for empty object");
    delete [] dms;
    dms=NULL;
    db=NULL;  // This is not deleted because is does not belong here
@@ -738,11 +741,6 @@ void mlb::release_double_ptr()
 /****************************************************
     BLAS functions 
 ****************************************************/
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
-#include <iostream.h>
 
 /****************************************************
    is it one-dimensional?
@@ -791,7 +789,7 @@ mlb & trnsp(mlb & abc)
       tmp.db[ k1 + k2*tmp.dms[0] ]= abc.db[ k2 + k1*abc.dms[0] ];
  }
 
- if(is1d(tmp)&(tmp.dms[1]==1)) // remove trailing singleton
+ if(is1d(tmp)&&(tmp.dms[1]==1)) // remove trailing singleton
  {
    int n=tmp.dms[0];
    tmp.ndms=1;
@@ -1002,7 +1000,7 @@ mlb::operator bool()
 
 void mlb::mkmatrix(int n1,int n2)
 {
- if((n1<=0)|(n2<=0)) fatalerr("mkmatrix: zero-length");
+ if((n1<=0)||(n2<=0)) fatalerr("mkmatrix: zero-length");
 
  type=2;
  if(n2==1)
@@ -1257,8 +1255,8 @@ mlb & max(mlb & a)
 
 mlb & operator << (mlb & a, mlb & b)
 {
-  if((a.type!=2)|(b.type!=2))  fatalerr("combin of non-doubles");
-  if((a.ndms>2)|(b.ndms>2)) fatalerr("combine of n-d matrices");
+  if((a.type!=2)||(b.type!=2))  fatalerr("combin of non-doubles");
+  if((a.ndms>2)||(b.ndms>2)) fatalerr("combine of n-d matrices");
   if(a.dms[0]!=b.dms[0]) fatalerr("combine: first dimensions disagree");
 
   int n1=a.dms[0];
@@ -1289,7 +1287,7 @@ mlb & operator << (mlb & a, mlb & b)
 
 mlb & dmlt(mlb & a, mlb & b)
 {
-  if((a.type!=2)|(b.type!=2))  fatalerr("dmlt of non-doubles");
+  if((a.type!=2)||(b.type!=2))  fatalerr("dmlt of non-doubles");
   if(!issamedms(a,b)) fatalerr("dmlt: sizes disagree");
 
   if(istmp(a))
@@ -1501,8 +1499,8 @@ mlb & operator >> (mlb & a, mlb & b)
    return(a);
   }
  
-  MLBerr((a.type!=2)|(b.type!=2),"append of non-doubles");
-  MLBerr((a.ndms>2)|(b.ndms>2),  "append of n-d matrices");
+  MLBerr((a.type!=2)||(b.type!=2),"append of non-doubles");
+  MLBerr((a.ndms>2)||(b.ndms>2),  "append of n-d matrices");
 
   int na1=a.dms[0];
   int na2=(a.ndms==1)? 1 : a.dms[1];
@@ -1931,7 +1929,7 @@ for(it=1;it<=fcsdg;++it){
 
 disp(it);
 
-while(1){
+for(;;){
  rnorm=sqrt(trnsp(r)*r);
  if(rnorm <= nsf ) break;
 
