@@ -145,7 +145,7 @@ void Level::performConsistencyCheck() const
   // See if abutting boxes have consistent bounds
 }
 
-void Level::findIndexRange(IntVector& lowIndex,IntVector& highIndex) const
+void Level::findNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
   lowIndex = d_patches[0]->getNodeLowIndex();
   highIndex = d_patches[0]->getNodeHighIndex();
@@ -155,6 +155,23 @@ void Level::findIndexRange(IntVector& lowIndex,IntVector& highIndex) const
     Patch* patch = d_patches[p];
     IntVector l( patch->getNodeLowIndex() );
     IntVector u( patch->getNodeHighIndex() );
+    for(int i=0;i<3;i++) {
+      if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
+      if( u(i) > highIndex(i) ) highIndex(i) = u(i);
+    }
+  }
+}
+
+void Level::findCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
+{
+  lowIndex = d_patches[0]->getCellLowIndex();
+  highIndex = d_patches[0]->getCellHighIndex();
+  
+  for(int p=1;p<(int)d_patches.size();p++)
+  {
+    Patch* patch = d_patches[p];
+    IntVector l( patch->getCellLowIndex() );
+    IntVector u( patch->getCellHighIndex() );
     for(int i=0;i<3;i++) {
       if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
       if( u(i) > highIndex(i) ) highIndex(i) = u(i);
@@ -487,14 +504,33 @@ const PatchSet* Level::allPatches() const
   return all_patches;
 }
 
-const Patch* Level::selectPatch( const IntVector& idx) const
+const Patch* Level::selectPatchForCellIndex( const IntVector& idx) const
 {
   selectType pv;
-
   IntVector i(1,1,1);
   selectPatches(idx - i,idx + i,pv);
   if(pv.size() == 0)
     return 0;
-  else
-    return pv[0];
+  else {
+    selectType::iterator it;
+    for( it = pv.begin(); it != pv.end(); it++)
+      if( (*it)->containsCell(idx) )
+	return *it;
+  }
+  return 0;
+}
+const Patch* Level::selectPatchForNodeIndex( const IntVector& idx) const
+{
+  selectType pv;
+  IntVector i(1,1,1);
+  selectPatches(idx - i,idx + i,pv);
+  if(pv.size() == 0)
+    return 0;
+  else {
+    selectType::iterator it;
+    for( it = pv.begin(); it != pv.end(); it++)
+      if( (*it)->containsNode(idx) )
+	return *it;
+  }
+  return 0;
 }
