@@ -32,6 +32,7 @@
 #define SCI_project_ScaledBox_Widget_h 1
 
 #include <Dataflow/Widgets/BaseWidget.h>
+#include <Core/Datatypes/BoxClipper.h>
 
 namespace SCIRun {
 
@@ -79,6 +80,8 @@ public:
 
    // Material indexs
    enum { PointMatl, EdgeMatl, ResizeMatl, SliderMatl };
+
+   BoxClipper get_clipper();
 
 protected:
    virtual string GetMaterialName( const Index mindex ) const;   
