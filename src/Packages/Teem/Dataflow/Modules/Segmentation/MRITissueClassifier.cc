@@ -31,13 +31,15 @@
 
 #include <Teem/Dataflow/Modules/Segmentation/MRITissueClassifier.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Util/Assert.h>
 #include <iostream>
 #include <list>
 #include <math.h>
 
 
 
-namespace SCIRun {
+namespace SCITeem {
+using namespace SCIRun;
 
 
 
@@ -286,30 +288,66 @@ distmap_4ssed( int *map, int n[2] )
 void
 MRITissueClassifier::execute()
 {
-  BackgroundDetection();
-  ComputeForegroundCenter();
-  FatDetection();
-  BrainDetection(4.0,10.0);
-  BoneDetection(10.0);
-  ScalpClassification();
-  BrainClassification();
+  NrrdIPort *T1port = (NrrdIPort*)get_iport("T1"); 
+  NrrdIPort *T2port = (NrrdIPort*)get_iport("T2"); 
+  NrrdIPort *PDport = (NrrdIPort*)get_iport("PD"); 
+  NrrdIPort *FSport = (NrrdIPort*)get_iport("FATSAT"); 
+  if (!T1port || !T2port || !PDport || !FSport) 
+  {
+    error("Unable to initialize iport.");
+    return;
+  }
+  
+  if (!T1port->get(m_T1_Data) || !m_T1_Data.get_rep() ||
+      !T2port->get(m_T2_Data) || !m_T2_Data.get_rep() ||
+      !PDport->get(m_PD_Data) || !m_PD_Data.get_rep())
+  {
+    return;
+  }
+
+  m_FatSat = (FSport->get(m_FATSAT_Data) && m_FATSAT_Data.get_rep())?1:0;
+
+  
+
+  if (generation_[0] != m_T1_Data.get_rep()->generation ||
+      generation_[1] != m_T2_Data.get_rep()->generation ||
+      generation_[2] != m_PD_Data.get_rep()->generation ||
+      (m_FatSat &&
+       generation_[3] != m_FATSAT_Data.get_rep()->generation)) 
+  {
+    generation_[0] = m_T1_Data.get_rep()->generation;
+    generation_[1] = m_T2_Data.get_rep()->generation;
+    generation_[2] = m_PD_Data.get_rep()->generation;
+    if (m_FatSat)
+      generation_[3] = m_FATSAT_Data.get_rep()->generation;
+      
+
+    BackgroundDetection();
+    ComputeForegroundCenter();
+    FatDetection();
+    BrainDetection(4.0,10.0);
+    BoneDetection(10.0);
+    ScalpClassification();
+    BrainClassification();
+  }
 }
 
+
+MRITissueClassifier::~MRITissueClassifier()
+{
+}
 
 
 MRITissueClassifier::MRITissueClassifier (GuiContext *ctx) :
   Module("MRITissueClassifier",ctx,Filter,"Segmentation","Teem"),
-  m_Data(0)
+  m_Data(0),
+  generation_(4)
 {
   std::cout<<"INITIALIZATION\n";
-#ifdef MCKAY_TODO
-  char scan_keyword[80], filename[100], keyword[100];
-  FILE *fp;
-#endif
   int i, j, x, y, z, zp, yp, NData;
 
 
-
+#ifdef MCKAY_TODO
   //  sprintf(m_OutputPrefix,"");                    
   TRYKEYWORD(m_OutputPrefix,"","OUTPUT_PREFIX"); // prefix for all output files
   TRYKEYWORD(m_width,"", "WIDTH");               // data volume dimensions
@@ -346,7 +384,6 @@ MRITissueClassifier::MRITissueClassifier (GuiContext *ctx) :
   m_Energy	= create_nrrd_of_floats(m_width, m_height, m_depth);
   m_CSF_Energy	= create_nrrd_of_floats(m_width, m_height, m_depth);
 
-#ifdef MCKAY_TODO
   m_Label = T_BACKGROUND;
   ColumnMatrix tempvec;
   if (m_FatSat) tempvec = ColumnMatrix(4);
@@ -459,7 +496,7 @@ MRITissueClassifier::MRITissueClassifier (GuiContext *ctx) :
       }
     }
   free (tempdata);
-#endif
+
   ColumnMatrix tempvec;
   for (x=0;x<m_width;x++)
     for (y=0;y<m_height;y++)
@@ -476,6 +513,7 @@ MRITissueClassifier::MRITissueClassifier (GuiContext *ctx) :
     m_TopOfEyeSlice = -1;
     m_EyeSlice = -1;
   }
+#endif
 }
 
 void
@@ -3922,6 +3960,109 @@ MRITissueClassifier::floodFill(NrrdDataHandle data, int label_from, int label_to
     listz.pop_front();
   }
 }
+
+
+
+NrrdDataHandle
+MRITissueClassifier::extract_nrrd_slice_int(NrrdDataHandle data, int z)
+{
+  return 0;
+}
+
+
+NrrdDataHandle
+MRITissueClassifier::create_nrrd_of_ints(int x, int y, int z)
+{
+  return 0;
+}
+
+NrrdDataHandle
+MRITissueClassifier::create_nrrd_of_floats(int x, int y, int z) 
+{
+  return 0;
+}
+
+int
+MRITissueClassifier::get_nrrd_int(NrrdDataHandle data, int x, int y, int z) 
+{
+  return 0;
+}
+
+float
+MRITissueClassifier::get_nrrd_float(NrrdDataHandle data, int x, int y, int z) 
+{
+  return 0;
+}
+
+
+void
+MRITissueClassifier::set_nrrd_int(NrrdDataHandle data, int val,
+				  int x, int y, int z) 
+{
+}
+
+void
+MRITissueClassifier::set_nrrd_float(NrrdDataHandle data, float val,
+				    int x, int y, int z)
+{
+}
+
+bool
+MRITissueClassifier::nrrd_check_bounds(NrrdDataHandle data, 
+				       int x, int y, int z) 
+{
+  return false;
+}
+
+
+NrrdDataHandle
+MRITissueClassifier::create_nrrd_of_ints(int x, int y)
+{
+  return 0;
+}
+
+NrrdDataHandle
+MRITissueClassifier::create_nrrd_of_floats(int x, int y) 
+{
+  return 0;
+}
+
+int
+MRITissueClassifier::get_nrrd_int(NrrdDataHandle data, int x, int y) 
+{
+  return 0;
+}
+
+float
+MRITissueClassifier::get_nrrd_float(NrrdDataHandle data, int x, int y) 
+{
+  return 0;
+}
+
+
+void
+MRITissueClassifier::set_nrrd_int(NrrdDataHandle data, int val, int x, int y) 
+{
+}
+
+void
+MRITissueClassifier::set_nrrd_float(NrrdDataHandle data, float val, 
+				    int x, int y)
+{
+}
+
+bool
+MRITissueClassifier::nrrd_check_bounds(NrrdDataHandle data, int x, int y) 
+{
+  return false;
+}
+
+ColumnMatrix
+MRITissueClassifier::get_m_Data(int x, int y, int z)
+{
+  return ColumnMatrix();
+}
+
 
 
 } //namespace SCIRun
