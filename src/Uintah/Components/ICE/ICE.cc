@@ -237,6 +237,30 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	sched->addTask(t);
       }
 
+      // Step 1e computes momentum exchange on FC velocities
+      {
+	Task* t = scinew Task("ICE::step1e",patch, old_dw, new_dw,this,
+			       &ICE::actuallyStep1e);
+
+	for (int m = 0; m < numMatls; m++) {
+	  Material* matl = d_sharedState->getMaterial(m);
+	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+	  if(ice_matl){
+	    t->requires(new_dw,lb->vol_frac_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->uvel_FCMELabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->vvel_FCMELabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->wvel_FCMELabel,
+			matl->getDWIndex(),patch,Ghost::None);
+
+	    t->computes(new_dw,lb->div_velfc_CCLabel,matl->getDWIndex(),patch);
+          }
+	}
+	sched->addTask(t);
+      }
+
       // Step 2
       {
 	Task* t = scinew Task("ICE::step2",patch, old_dw, new_dw,this,
@@ -789,6 +813,54 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
   }
 }
 
+void ICE::actuallyStep1e(const ProcessorGroup*,
+		   const Patch* patch,
+		   DataWarehouseP& old_dw,
+		   DataWarehouseP& new_dw)
+{
+  cout << "Doing actually step1e" << endl;
+
+  int numMatls = d_sharedState->getNumMatls();
+  Vector dx = patch->dCell();
+  double  top, bottom, right, left, front, back;
+
+  // Compute the divergence of the face centered velocities
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    if(ice_matl){
+      int vfindex = matl->getVFIndex();
+      // Get required variables for this patch
+      FCVariable<double> uvel_FC;
+      FCVariable<double> vvel_FC;
+      FCVariable<double> wvel_FC;
+      CCVariable<double> vol_frac;
+      new_dw->get(uvel_FC, lb->uvel_FCMELabel, vfindex, patch, Ghost::None, 0);
+      new_dw->get(vvel_FC, lb->vvel_FCMELabel, vfindex, patch, Ghost::None, 0);
+      new_dw->get(wvel_FC, lb->wvel_FCMELabel, vfindex, patch, Ghost::None, 0);
+      new_dw->get(vol_frac,lb->vol_frac_CCLabel, vfindex,patch,Ghost::None, 0);
+
+      // Create variables for the results
+      CCVariable<double> div_velfc_CC;
+      new_dw->allocate(div_velfc_CC, lb->div_velfc_CCLabel, vfindex, patch);
+
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	IntVector curcell = *iter;
+//	top      =  dx.x()*dx.z()* vvel_FC[*iter][TOP];
+//	bottom   = -dx.x()*dx.z()* vvel_FC[*iter][BOTTOM];
+//	left     = -dx.y()*dx.z()* uvel_FC[*iter][LEFT];
+//	right    =  dx.y()*dx.z()* uvel_FC[*iter][RIGHT];
+//	front    =  dx.x()*dx.y()* wvel_FC[*iter][FRONT];
+//	back     = -dx.x()*dx.y()* wvel_FC[*iter][BACK];
+	div_velfc_CC[*iter] = vol_frac[*iter]*
+			     (top + bottom + left + right + front  + back );
+      }
+
+      new_dw->put(div_velfc_CC, lb->div_velfc_CCLabel, vfindex, patch);
+    }
+  }
+
+}
 void ICE::actuallyStep2(const ProcessorGroup*,
 		   const Patch* patch,
 		   DataWarehouseP& old_dw,
@@ -869,6 +941,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.33  2000/10/16 18:32:40  guilkey
+// Implemented "step1e" of the ICE algorithm.
+//
 // Revision 1.32  2000/10/16 17:19:44  guilkey
 // Code for ICE::step1d.  Only code for one of the faces is committed
 // until things become more concrete.
