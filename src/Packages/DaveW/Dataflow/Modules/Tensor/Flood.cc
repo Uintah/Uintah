@@ -24,7 +24,7 @@
 #include <Core/Geom/GeomPick.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/Material.h>
-#include <Core/Geom/Switch.h>
+#include <Core/Geom/GeomSwitch.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Expon.h>

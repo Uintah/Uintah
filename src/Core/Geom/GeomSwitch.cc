@@ -27,7 +27,7 @@
  *
  *  Copyright (C) 1995 SCI Group
  */
-#include <Core/Geom/Switch.h>
+#include <Core/Geom/GeomSwitch.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>

@@ -69,7 +69,7 @@
 #if 0
 #include <Core/Geom/Squares.h>
 #endif
-#include <Core/Geom/Switch.h>
+#include <Core/Geom/GeomSwitch.h>
 #include <Core/Geom/GeomTetra.h>
 #include <Core/Geom/GeomTexSlices.h>
 #include <Core/Geom/TexSquare.h>
@@ -83,7 +83,7 @@
 #include <Core/Geom/GeomTube.h>
 #include <Core/Geom/GeomTriStrip.h>
 #include <Core/Geom/View.h>
-#include <Core/Geom/Sticky.h>
+#include <Core/Geom/GeomSticky.h>
 #include <Core/Geom/Color.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
