@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
 
-<!-- @version: -->
+<!-- @version: Updated 7/31/00-->
 
 <Uintah_specification>
 
    <Meta>
-	<title>Bar problem</title>
+	<title>Colliding Disks</title>
    </Meta>
 
    <Time>
@@ -18,27 +18,22 @@
    </Time>
    <DataArchiver>
         <filebase>disksel.uda</filebase>
-        <outputInterval>.1</outputInterval>
+	<outputInterval>.1</outputInterval>
    </DataArchiver>
 
     <MPM>
 	<time_integrator>explicit</time_integrator>
     </MPM>
 
-
-
     <PhysicalConstants>
 	<gravity>[0,0,0]</gravity>
-	<ideal_gas_constant>1.0</ideal_gas_constant>
-	<pressure>1.0</pressure>
-	<viscosity>0.3</viscosity>
     </PhysicalConstants>
 
     <MaterialProperties>
 	<MPM>
 	    <material>
                 <burn>
-                 <type>null</type>
+                  <type>null</type>
                 </burn>
 		<density>1000.0</density>
                 <comp_neo_hook>
@@ -56,10 +51,6 @@
 		    </cylinder>
 		    <res>[2,2,2]</res>
 		    <velocity>[0.1,0.1,0]</velocity>
-		    <BoundaryConditions>
-			<NormalForce>5</NormalForce>
-			<FaceForce face="x+">[1,0,0]</FaceForce>
-		    </BoundaryConditions>
 		    <temperature>12</temperature>
  		</geom_object>
 
@@ -71,17 +62,13 @@
 		    </cylinder>
 		    <res>[2,2,2]</res>
 		    <velocity>[-0.1,-0.1,0]</velocity>
-		    <BoundaryConditions>
-			<NormalForce>5</NormalForce>
-			<FaceForce face="x+">[1,0,0]</FaceForce>
-		    </BoundaryConditions>
 		    <temperature>12</temperature>
  		</geom_object>
 		<velocity_field>0</velocity_field>
 	    </material>
 
 	    <contact>
-	      <type>single_velocity</type>
+	      <type>null</type>
 	      <vel_fields>[0,0,0]</vel_fields>
 	    </contact>
 	</MPM>
@@ -89,6 +76,33 @@
     </MaterialProperties>
 	
     <Grid>
+	<BoundaryConditions>
+		 <Face side = "x-">
+                        <BCType label = "Kinematic" var = "velocity">
+                           <velocity> [0.0,0.0,0.0] </velocity>
+                        </BCType>
+                </Face>
+                <Face side = "x+">
+                        <BCType label = "Kinematic" var = "velocity">
+			     <velocity> [0.0,0.0,0.0] </velocity>
+                        </BCType>
+                </Face>
+                <Face side = "y-">
+                        <BCType label = "Kinematic" var = "velocity">
+                           <velocity> [0.0,0.0,0.0] </velocity>
+                        </BCType>
+                </Face>                  
+		<Face side = "y+">
+                        <BCType label = "Kinematic" var = "velocity">            			    <velocity> [0.0,0.0,0.0] </velocity>
+                        </BCType>
+                </Face>
+                <Face side = "z-">
+                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
+                </Face>
+                <Face side = "z+">
+                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
+                </Face>                           
+	</BoundaryConditions>
 	<Level>
 	    <Box label="1">
 		<lower>[0,0,0]</lower>
@@ -102,15 +116,6 @@
     <PhysicalBC>
 	<MPM>
 	</MPM>
-
-
     </PhysicalBC>
     
-    <InitialConditions>
-
-	<MPM>
-	</MPM>
-
-    </InitialConditions>
-
 </Uintah_specification>

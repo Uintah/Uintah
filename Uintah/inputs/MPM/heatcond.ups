@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
 
-<!-- @version: -->
+<!-- @version: Updated 7/31/00 -->
 
 <Uintah_specification>
 
@@ -18,7 +18,7 @@
    </Time>
 
    <DataArchiver>
-        <filebase>conduct.uda</filebase>
+        <filebase>heatcond.uda</filebase>
         <outputInterval>.01</outputInterval>
    </DataArchiver>
 
@@ -29,18 +29,13 @@
 
     <PhysicalConstants>
 	<gravity>[0,0,0]</gravity>
-	<ideal_gas_constant>1.0</ideal_gas_constant>
-	<pressure>1.0</pressure>
-	<viscosity>0.3</viscosity>
     </PhysicalConstants>
 
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn>
-                 <type>null</type>
-                </burn>
-                <density>1000.0</density>
+                <burn> <type>null</type> </burn>
+                <density>10000.0</density>
                 <thermal_conductivity>237.0</thermal_conductivity>
                 <specific_heat>903</specific_heat>
                 <heat_transfer_coefficient>111</heat_transfer_coefficient>
@@ -55,10 +50,6 @@
 		    </box>
 		    <res>[2,2,2]</res>
 		    <velocity>[0.,0.,0.]</velocity>
-		    <BoundaryConditions>
-			<NormalForce>5</NormalForce>
-			<FaceForce face="x+">[1,0,0]</FaceForce>
-		    </BoundaryConditions>
 		    <temperature>300.</temperature>
  		</geom_object>
 
@@ -69,10 +60,6 @@
 		    </box>
 		    <res>[2,2,2]</res>
 		    <velocity>[0.,0.,0.]</velocity>
-		    <BoundaryConditions>
-			<NormalForce>5</NormalForce>
-			<FaceForce face="x+">[1,0,0]</FaceForce>
-		    </BoundaryConditions>
 		    <temperature>0.</temperature>
  		</geom_object>
 		<velocity_field>0</velocity_field>
@@ -104,15 +91,6 @@
     <PhysicalBC>
 	<MPM>
 	</MPM>
-
-
     </PhysicalBC>
     
-    <InitialConditions>
-
-	<MPM>
-	</MPM>
-
-    </InitialConditions>
-
 </Uintah_specification>

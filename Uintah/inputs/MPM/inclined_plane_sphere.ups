@@ -10,7 +10,7 @@
    </Meta>
 
    <Time>
-	<maxTime>0.064</maxTime>
+	<maxTime>1.0</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00004</delt_min>
 	<delt_max>0.004</delt_max>
@@ -19,7 +19,7 @@
 
    <DataArchiver>
         <filebase>incplane.uda</filebase>
-        <outputInterval>.005</outputInterval>
+        <outputInterval>.1</outputInterval>
    </DataArchiver>
 
     <MPM>
@@ -28,10 +28,7 @@
 
 
     <PhysicalConstants>
-	<gravity>[0,-7.07,-7.07]</gravity>
-	<ideal_gas_constant>1.0</ideal_gas_constant>
-	<pressure>1.0</pressure>
-	<viscosity>0.3</viscosity>
+	<gravity>[7.071,0.0,-7.071]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
@@ -57,16 +54,13 @@
 		    </sphere>
 		    <res>[2,2,2]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
-		    <BoundaryConditions>
-			<NormalForce>5</NormalForce>
-			<FaceForce face="x+">[1,0,0]</FaceForce>
-		    </BoundaryConditions>
 		    <temperature>10</temperature>
  		</geom_object>
 		<velocity_field>0</velocity_field>
 	    </material>
 
             <material name = "Hard Plastic" >
+                <burn> <type>null</type></burn>
                 <density>10000.0</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
@@ -86,10 +80,6 @@
 		    </box>
 		    <res>[2,2,2]</res>
 		    <velocity>[0.0,0.0,0]</velocity>
-		    <BoundaryConditions>
-			<NormalForce>5</NormalForce>
-			<FaceForce face="x+">[1,0,0]</FaceForce>
-		    </BoundaryConditions>
 		    <temperature>10</temperature>
  		</geom_object>
 		<velocity_field>1</velocity_field>
@@ -150,15 +140,6 @@
     <PhysicalBC>
 	<MPM>
 	</MPM>
-
-
     </PhysicalBC>
     
-    <InitialConditions>
-
-	<MPM>
-	</MPM>
-
-    </InitialConditions>
-
 </Uintah_specification>
