@@ -38,8 +38,6 @@
 
 #include <Core/share/share.h>
 
-#include <string>
-
 namespace SCIRun {
 
 using std::string;
