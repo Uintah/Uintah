@@ -960,7 +960,8 @@ VolVis::execute()
   imagelock.lock();
 
   Image = *(calc->Image);
-  
+
+  #if 0
   /* THE MOST AWESOME DEBUGGING TECHNIQUE */
   
   int loop;
@@ -995,7 +996,8 @@ VolVis::execute()
     }
   
   /* END OF THE MOST AWESOME DEBUGGING TECHNIQUE */
-      
+#endif
+  
   // also, the bgColor accessed by the redraw_all fnc
   // can now be changed.
 
