@@ -213,16 +213,17 @@ void DataArchiver::finalizeTimestep(double time, double delt,
  
    int timestep = d_currentTimestep;
 
-   // Schedule task to dump out integrated data at every timestep
-   vector<const VarLabel*> ivars;
-   new_dw->getIntegratedSaveSet(ivars);
-
-
+   // Schedule task to dump out reduction variables at every timestep
    Task* t = scinew Task("DataArchiver::outputReduction", new_dw, new_dw,
 			 this, &DataArchiver::outputReduction, time);
 
-   for(int i=0;i<(int)ivars.size();i++){
-      t->requires(new_dw, ivars[i]) ;
+   for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
+      SaveItem& saveItem = d_saveReductionLabels[i];
+      const VarLabel* var = saveItem.label;
+      for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
+	   matIt != saveItem.matls.end(); matIt++) {     
+	 t->requires(new_dw, var, *matIt) ;
+      }
    }
 
    sched->addTask(t);
@@ -709,6 +710,10 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
 
 //
 // $Log$
+// Revision 1.23  2000/12/07 01:27:29  witzel
+// Added some changes I forgot to make pertaining saving reduction variables
+// (creating outputReduction task).
+//
 // Revision 1.22  2000/12/06 23:59:40  witzel
 // Added variable save functionality via the DataArchiver problem spec
 //
