@@ -7,93 +7,84 @@
 
 namespace Uintah {
 
-/**************************************
-
-CLASS
-   MieGruneisenEOS
+  ////////////////////////////////////////////////////////////////////////////
+  /*!
+    \class MieGruneisenEOS
    
-   A Mie-Gruneisen type equation of state model
-   (Zocher, Maudlin, Chen, Flower-Maudlin, 2000,
+    \brief A Mie-Gruneisen type equation of state model
+   
+    \author Biswajit Banerjee \n
+    C-SAFE and Department of Mechanical Engineering \n
+    University of Utah \n
+    Copyright (C) 2003 University of Utah \n
+
+    Reference:
+    
+    Zocher, Maudlin, Chen, Flower-Maudlin, 2000,
     European Congress on Computational Methods in Applied Science 
     and Engineering, ECOMAS 2000, Barcelona)
 
-GENERAL INFORMATION
 
-   MieGruneisenEOS.h
+    The equation of state is given by
+    \f[
+    p = \frac{\rho_0 C_0^2 \zeta 
+              \left[1 + \left(1-\frac{\Gamma_0}{2}\right)\zeta\right]}
+             {\left[1 - (S_{\alpha} - 1) \zeta\right]^2 + \Gamma_0 C_p T}
+    \f]
+    where 
+    \f$ p\f$ = pressure \n
+    \f$ C_0 \f$= bulk speed of sound \n
+    \f$ \zeta = (\rho/\rho_0 - 1)\f$ \n
+    where \f$\rho\f$ = current density \n
+    \f$\rho_0\f$ = initial density \n
+    \f$ E\f$ = internal energy = \f$C_p T\f$ \n
+    where \f$C_p\f$ = specfic heat at constant pressure \n
+    \f$T\f$ = temperature \n
+    \f$\Gamma_0\f$ = Gruneisen's gamma at reference state \n
+    \f$S_{\alpha}\f$ = linear Hugoniot slope coefficient 
+  */
+  ////////////////////////////////////////////////////////////////////////////
 
-   Biswajit Banerjee
-   Department of Mechanical Engineering
-   University of Utah
+  class MieGruneisenEOS : public MPMEquationOfState {
 
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   Copyright (C) 2003 University of Utah
+    // Create datatype for storing model parameters
+  public:
+    struct CMData {
+      double C_0;
+      double Gamma_0;
+      double S_alpha;
+    };	 
 
-KEYWORDS
-   Mie-Gruneisen, Equation of State, Pressure calculation
+  private:
 
-DESCRIPTION
-   
-   The equation of state is given by
-
-       p = (rho_0 * (C_0)^2 * zeta * (1 + (1-Gamma_0/2)*zeta))/
-           (1 - (S_alpha - 1)*zeta)^2 + Gamma_0*E
-
-   where 
-         p = pressure
-         C_0 = bulk speed of sound
-         zeta = (rho/rho_0 - 1)
-              where rho = current density
-                    rho_0 = initial density
-         E = internal energy = c_p * T
-              where c_p = specfic heat at constant pressure
-                    T = temperature
-         Gamma_0 = Gruneisen's gamma at reference state
-         S_alpha = linear Hugoniot slope coefficient
-             
-WARNING
-  
-****************************************/
-
-      class MieGruneisenEOS : public MPMEquationOfState {
-
-      // Create datatype for storing model parameters
-      public:
-	 struct CMData {
-            double C_0;
-            double Gamma_0;
-            double S_alpha;
-	 };	 
-
-      private:
-
-	 CMData d_const;
+    CMData d_const;
 	 
-	 // Prevent copying of this class
-	 // copy constructor
-	 MieGruneisenEOS(const MieGruneisenEOS &cm);
-	 MieGruneisenEOS& operator=(const MieGruneisenEOS &cm);
+    // Prevent copying of this class
+    // copy constructor
+    MieGruneisenEOS(const MieGruneisenEOS &cm);
+    MieGruneisenEOS& operator=(const MieGruneisenEOS &cm);
 
-      public:
-	 // constructors
-	 MieGruneisenEOS(ProblemSpecP& ps); 
+  public:
+    // constructors
+    MieGruneisenEOS(ProblemSpecP& ps); 
 	 
-	 // destructor 
-	 virtual ~MieGruneisenEOS();
+    // destructor 
+    virtual ~MieGruneisenEOS();
 	 
-	 //////////
-	 // Calculate the pressure using a equation of state
-	 virtual Matrix3 computePressure(const MPMMaterial* matl,
-                                        const double& bulk,
-                                        const double& shear,
-                                        const Matrix3& deformGrad,
-                                        const Matrix3& rateOfDeformation,
-                                        const Matrix3& stress,
-                                        const double& temperature,
-                                        const double& density,
-                                        const double& delT);
+    /////////////////////////////////////////////////////////////////////////
+    /*! Calculate the pressure using a equation of state */
+    /////////////////////////////////////////////////////////////////////////
+    virtual Matrix3 computePressure(const MPMMaterial* matl,
+				    const double& bulk,
+				    const double& shear,
+				    const Matrix3& deformGrad,
+				    const Matrix3& rateOfDeformation,
+				    const Matrix3& stress,
+				    const double& temperature,
+				    const double& density,
+				    const double& delT);
   
-      };
+  };
 
 } // End namespace Uintah
 

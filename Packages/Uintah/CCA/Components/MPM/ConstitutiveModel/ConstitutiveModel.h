@@ -25,36 +25,21 @@ namespace Uintah {
   class ParticleSubset;
   class ParticleVariableBase;
 
-
-
-  /**************************************
-
-CLASS
-   ConstitutiveModel
+  //////////////////////////////////////////////////////////////////////////
+  /*!
+   \class ConstitutiveModel
    
-   Short description...
+   \brief Base class for contitutive models.
 
-GENERAL INFORMATION
+   \author Steven G. Parker \n
+   Department of Computer Science \n
+   University of Utah \n
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n
+   Copyright (C) 2000 SCI Group \n
 
-   ConstitutiveModel.h
-
-   Steven G. Parker
-   Department of Computer Science
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   Copyright (C) 2000 SCI Group
-
-KEYWORDS
-   Constitutive_Model
-
-DESCRIPTION
    Long description...
-  
-WARNING
-  
-  ****************************************/
+  */
+  //////////////////////////////////////////////////////////////////////////
 
   class ConstitutiveModel {
   public:
@@ -62,6 +47,11 @@ WARNING
     ConstitutiveModel();
     virtual ~ConstitutiveModel();
 	 
+    /////////////////////////////////////////////////////////////////////
+    /*! Set the adiabatic heating flag */
+    /////////////////////////////////////////////////////////////////////
+    virtual void setAdiabaticHeating(double flag);
+
     // Basic constitutive model calculations
     virtual void computeStressTensor(const PatchSubset* patches,
                                    const MPMMaterial* matl,
@@ -120,25 +110,44 @@ WARNING
 			 double& press, double& dp_drho,
 			 double& dp_de);
 
-    /////////
-    // Add initial computes for erosion
+    ////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Add initial computes for erosion.
+    */
+    ////////////////////////////////////////////////////////////////////////
     virtual void addInitialComputesAndRequiresWithErosion(Task* task,
 				     const MPMMaterial* matl,
 				     const PatchSet* patches,
 				     std::string algorithm);
 
-    //////////
-    // Computes and requires to erosion update
+    ////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Computes and requires for erosion update.
+    */
+    ////////////////////////////////////////////////////////////////////////
     virtual void addComputesAndRequiresWithErosion(Task* task,
 					const MPMMaterial* matl,
 					const PatchSet* patch) const;
 
-    //////////
-    // Stress computation with erosion
+    ////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Stress computation with erosion.
+    */
+    ////////////////////////////////////////////////////////////////////////
     virtual void computeStressTensorWithErosion(const PatchSubset* patches,
 				const MPMMaterial* matl,
 				DataWarehouse* old_dw,
 				DataWarehouse* new_dw);
+
+    ////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Get the increment of temperature due to conversion of plastic
+             work.
+    */
+    ////////////////////////////////////////////////////////////////////////
+    virtual void getPlasticTemperatureIncrement(ParticleSubset* pset,
+				                DataWarehouse* new_dw,
+                                                ParticleVariable<double>& T) ;
 
     //////////
     // Carry forward CM variables for RigidMPM
@@ -197,7 +206,9 @@ WARNING
                                     constNCVariable<Vector>& gVelocity,
                                     constNCVariable<Vector>& GVelocity);
 
-    // Calculate polar decomposition
+    /*! 
+      \brief Calculate polar decomposition of the deformation gradient.
+    */
     void polarDecomposition(const Matrix3& F, 
                             Matrix3& R,
                             Matrix3& U) const;
@@ -207,6 +218,7 @@ WARNING
     int NGP;
     int NGN;
     std::string d_erosionAlgorithm;
+    double d_adiabaticHeating;
   };
 } // End namespace Uintah
       

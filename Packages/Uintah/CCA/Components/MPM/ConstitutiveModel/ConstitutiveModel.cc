@@ -23,10 +23,17 @@ using namespace Uintah;
 
 ConstitutiveModel::ConstitutiveModel()
 {
+  d_adiabaticHeating = 0.0;
 }
 
 ConstitutiveModel::~ConstitutiveModel()
 {
+}
+
+void
+ConstitutiveModel::setAdiabaticHeating(double flag)
+{
+  d_adiabaticHeating = flag;
 }
 
 void ConstitutiveModel::computeStressTensor(const PatchSubset*,
@@ -120,6 +127,13 @@ ConstitutiveModel::computeStressTensorWithErosion(const PatchSubset* patches,
 {
   cout << "Using dummy compute stress tensor" << endl;
   computeStressTensor(patches, matl, old_dw, new_dw);
+}
+
+void 
+ConstitutiveModel::getPlasticTemperatureIncrement(ParticleSubset* ,
+				                  DataWarehouse* ,
+                                                  ParticleVariable<double>& )
+{
 }
 
 void ConstitutiveModel::carryForward(const PatchSubset*,

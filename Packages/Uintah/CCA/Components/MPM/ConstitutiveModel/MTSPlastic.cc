@@ -147,21 +147,30 @@ MTSPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
 {
   // Calculate strain rate and incremental strain
   double edot = sqrt(rateOfDeformation.NormSquared()/1.5);
-  pPlasticStrain_new[idx] = pPlasticStrain[idx] + edot*delT;
   if (edot < 1.0e-10) edot = 1.0e-10;
-
   double delEps = edot*delT;
+  pPlasticStrain_new[idx] = pPlasticStrain[idx] + delEps;
+
+  // Check if temperature is correct
+  if (T <= 0.0) {
+    ostringstream desc;
+    desc << "**MTS ERROR** Absolute temperature <= 0." << endl;
+    desc << "T = " << T << " edot = " << edot << endl;
+    throw InvalidValue(desc.str());
+  }
 
   // Calculate mu and mu/mu_0
-  double mu_mu_0 = 1.0 - d_CM.D/(d_CM.mu_0*(exp(d_CM.T_0/T) - 1.0)); 
-  if (!(mu_mu_0 > 0.0)) {
+  double expT0_T = exp(d_CM.T_0/T) - 1.0;
+  ASSERT(expT0_T != 0);
+  double mu = d_CM.mu_0 - d_CM.D/expT0_T;
+  if (mu <= 0.0) {
     ostringstream desc;
     desc << "**MTS ERROR** Shear modulus <= 0." << endl;
     desc << "T = " << T << " mu0 = " << d_CM.mu_0 << " T0 = " << d_CM.T_0
          << " exp(To/T) = " << exp(d_CM.T_0/T) << " D = " << d_CM.D << endl;
     throw InvalidValue(desc.str());
   }
-  double mu = mu_mu_0*d_CM.mu_0;
+  double mu_mu_0 = mu/d_CM.mu_0;
   //cout << "mu = " << mu << " mu/mu_0 = " << mu_mu_0 << endl;
 
   // Calculate S_i
