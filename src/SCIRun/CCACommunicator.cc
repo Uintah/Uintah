@@ -52,16 +52,13 @@
 #include <unistd.h>
 #include <netdb.h>
 
-#include <string>
-
 #include "SCIRunFramework.h"
 #include "CCACommunicator.h"
 
-using namespace SCIRun;
-using namespace std;
-
-
 #define PORT  2009 // the port used for recv and send
+
+namespace SCIRun {
+
 
 //convert domain name to IP address
 /** this method is not used
@@ -89,22 +86,28 @@ CCACommunicator::CCACommunicator(SCIRunFramework *framework,
 
 void CCACommunicator::readPacket(const Packet &pkt)
 {
-  std::string url=pkt.ccaFrameworkURL;
-  if(url==framework->getURL().getString()) return; //don't save my own URL
-  for(unsigned int i=0; i<ccaFrameworkURL.size();i++){
+  std::string url = pkt.ccaFrameworkURL;
+  if(url==framework->getURL().getString())
+    {
+    return; //don't save my own URL
+    }
+  for(unsigned int i=0; i<ccaFrameworkURL.size();i++)
+    {
     if(ccaFrameworkURL[i]==url) return;
-  }
+    }
   //cerr<<"Received CCA Framework at "<<pkt.fromAddress<< endl;
   //cerr<<"URL="<<url<< endl;
   ccaFrameworkURL.push_back(url);
-
   
-  sci::cca::ports::BuilderService::pointer bs = pidl_cast<sci::cca::ports::BuilderService::pointer>
+  sci::cca::ports::BuilderService::pointer bs
+    = pidl_cast<sci::cca::ports::BuilderService::pointer>
     (services->getPort("cca.BuilderService"));
-  if(bs.isNull()){
-    cerr << "Fatal Error: Cannot find builder service\n";
+
+  if(bs.isNull())
+    {
+    std::cerr << "Fatal Error: Cannot find builder service" << std::endl;
     Thread::exitAll(1);
-  }
+    }
   //do not delete the following line	
   //bs->registerFramework(url);
 
@@ -130,21 +133,24 @@ void CCACommunicator::run()
   struct sockaddr_in myaddr;
   // Open a UDP socket. 
   sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sockfd < 0){
+  if (sockfd < 0)
+    {
     perror("error in socket: ");
     return;
-  }
+    }
   // Bind the address to the socket. 
   bzero(&myaddr, sizeof(myaddr));
   myaddr.sin_family = AF_INET;
   myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
   myaddr.sin_port = htons(PORT);
-  if (bind(sockfd, (struct sockaddr *) &myaddr,sizeof(myaddr)) != 0){
+  if (bind(sockfd, (struct sockaddr *) &myaddr,sizeof(myaddr)) != 0)
+    {
     perror("error in bind:");
     return;
-  }
- 
-  while(true){
+    }
+  
+  while(true)
+    {
     //Check incoming packages
     
     struct timeval tv;
@@ -156,35 +162,41 @@ void CCACommunicator::run()
     //select the file descriptors who are ready
     
     bool reading=true;
-    while(reading){
+    while(reading)
+      {
       reading=false;
       int retval=select(sockfd+1, &readfds, NULL, NULL, &tv);
       if(retval==-1){
-	perror("error in select:");
-	return;
+      perror("error in select:");
+      return;
       }
-      else if(retval>0){
-      //check if sockfd is ready
-	if(FD_ISSET(sockfd, &readfds)){
-	  Packet pkt;
-	  socklen_t addrlen=sizeof(sockaddr);
-	  sockaddr addr;
-	  if(recvfrom(sockfd, &pkt, sizeof(struct Packet), 0, &addr, &addrlen)!=0){
-	    readPacket(pkt);
-	    reading=true;
-	  }
-	}
+      else if(retval>0)
+        {
+        //check if sockfd is ready
+        if(FD_ISSET(sockfd, &readfds))
+          {
+          Packet pkt;
+          socklen_t addrlen=sizeof(sockaddr);
+          sockaddr addr;
+          if(recvfrom(sockfd, &pkt, sizeof(struct Packet), 0, &addr, &addrlen)!=0)
+            {
+            readPacket(pkt);
+            reading=true;
+            }
+          }
+        }
       }
-    }
     //Sending outging packages
-    for(unsigned int i=0; i<ccaSiteList.size();i++){
+    for(unsigned int i=0; i<ccaSiteList.size();i++)
+      {
       Packet pkt=makePacket(i);
       struct hostent *he;
       const char * destAddress=ccaSiteList[i].c_str();
-      if ((he=gethostbyname(destAddress)) == NULL){ 
-	cerr<<"Warning: unknown CCA site: "<<destAddress<<endl;
-	continue;
-      }
+      if ((he=gethostbyname(destAddress)) == NULL)
+        {
+        std::cerr<<"Warning: unknown CCA site: " <<destAddress<< std::endl;
+        continue;
+        }
       their_addr.sin_family = AF_INET;         // host byte order 
       their_addr.sin_port = htons(PORT); // short, network byte order 
       their_addr.sin_addr = *((struct in_addr *)he->h_addr);
@@ -196,9 +208,10 @@ void CCACommunicator::run()
       if(retval==-1) perror("error in send:");
       //else cerr<<"My Framework URL is sent to "<<destAddress<<endl;
     }
-     
-  }
-    //need to terminate the above loop with Framework termination signal
-    close(sockfd);
+    
+    }
+  //need to terminate the above loop with Framework termination signal
+  close(sockfd);
 }
- 
+
+} // end namespace SCIRun
