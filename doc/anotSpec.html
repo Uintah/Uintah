@@ -4,29 +4,30 @@
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <meta name="GENERATOR" content="Mozilla/4.61 [en] (X11; U; IRIX64 6.5 IP28) [Netscape]">
 </head>
-<body>
+<BODY BGCOLOR="#FFFFCC" TEXT="#000000" LINK=#CC0000 VLINK=#990000 ALINK=#FF0000>
+
 Annotated spec.xml created in emacs in xml-mode. (<a href="psgml.html">psgml
 in your emacs</a>)
 <br>Colors mean...
-<br><font color="#006600">comment (more clues as to what to do next)</font>
-<br><font color="#3333FF">Text body (the real info)</font>
+<br><font color="#006600">comment (more clues as to what to do next, what to add if necessary)</font>
+<br><font color="#3333FF">Text body (the real info you should fill in)</font>
 <br>
 <hr WIDTH="100%">
 <br>&lt;?xml version='1.0' encoding='us-ascii' ?>
-<br><font color="#666600">&lt;!-- spec.dtd lives in PSE/doc, update this
+<br><font color="#006600">&lt;!-- spec.dtd lives in PSE/doc, update this
 relative to your xml file --></font>
 <br><font color="#666666">&lt;!DOCTYPE spec SYSTEM "spec.dtd"></font>
 <p>&lt;spec>
 <br>&nbsp; &lt;info>
 <br>&nbsp;&nbsp;&nbsp; &lt;name><font color="#3333FF">Exact module name</font>&lt;/name>
-<br>&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!-- hook for the menu
+<br>&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!-- hook for the menu
 item that launches this module --></font>
 <br>&nbsp;&nbsp;&nbsp; &lt;creation><font color="#3333FF">Ex. make_BuildFEMatrix</font>&lt;/creation>
 <br>&nbsp;&nbsp;&nbsp; &lt;description>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;summary><font color="#3333FF">Short
 summary of modules purpose</font>&lt;/summary>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;info-builder>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!--
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
 one or more paragraphs --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;para><font color="#3333FF">Elaborate
 and describe more comprehensively, for</font>
@@ -34,7 +35,7 @@ and describe more comprehensively, for</font>
 someone who does not write PSE modules</font>&lt;/para>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/info-builder>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;info-developer>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!--
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
 one or more paragraphs --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;para><font color="#3333FF">Put
 module implementation details here, for module</font>
@@ -44,7 +45,7 @@ writers and PSE maintainers. If a drawing or two would</font>
 help explain things, there is a place for them in the</font>
 <br><font color="#3333FF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 next tag (img).</font>&lt;/para>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!--
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
 zero or more images --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;img><font color="#3333FF">Put
 the relative path to one gif or jpeg here. Please put</font>
@@ -57,7 +58,7 @@ module you are documenting. For example:</font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/info-developer>
 <br>&nbsp;&nbsp;&nbsp; &lt;/description>
 <br>&nbsp;&nbsp;&nbsp; &lt;author>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!-- one or
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!-- one or
 more names, last name on list assumed to be maintainer --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;name><font color="#3333FF">First
 name original author, successive names include major edits</font>
@@ -72,10 +73,10 @@ number 1.0 (not currently supported)</font>&lt;/version>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;ports>
 <br>&nbsp;&lt;in>
 <br>&nbsp;&nbsp; &lt;port><font color="#3333FF">Port type</font>&lt;/port>
-<br>&nbsp;&nbsp; <font color="#666600">&lt;!-- one or more datatype fields
+<br>&nbsp;&nbsp; <font color="#006600">&lt;!-- one or more datatype fields
 (list all valid) --></font>
 <br>&nbsp;&nbsp; &lt;datatype><font color="#3333FF">Exact datatype name</font>&lt;/datatype>
-<br>&nbsp;&nbsp; <font color="#666600">&lt;!-- zero or one usage field
+<br>&nbsp;&nbsp; <font color="#006600">&lt;!-- zero or one usage field
 --></font>
 <br>&nbsp;&nbsp; &lt;usage>
 <br>&nbsp;&nbsp;&nbsp;&nbsp; &lt;para><font color="#3333FF">If there is
@@ -88,10 +89,10 @@ in the module code</font>&lt;/para>
 <br>&nbsp;&lt;/in>
 <br>&nbsp;&lt;out>
 <br>&nbsp;&nbsp; &lt;port><font color="#3333FF">Port type</font>&lt;/port>
-<br>&nbsp;&nbsp;<font color="#666600"> &lt;!-- one or more datatype fields
+<br>&nbsp;&nbsp;<font color="#006600"> &lt;!-- one or more datatype fields
 (list all valid) --></font>
 <br>&nbsp;&nbsp; &lt;datatype><font color="#3333FF">Exact datatype name</font>&lt;/datatype>
-<br>&nbsp;&nbsp; <font color="#666600">&lt;!-- zero or one usage field
+<br>&nbsp;&nbsp; <font color="#006600">&lt;!-- zero or one usage field
 --></font>
 <br>&nbsp;&nbsp; &lt;usage>
 <br>&nbsp;&nbsp;&nbsp;&nbsp; &lt;para><font color="#3333FF">state the output's
@@ -107,25 +108,25 @@ disambiguate them.</font>&lt;/para>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/ports>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;modules>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;typin>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!--
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
 one or more name fields (list all valid) --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;name><font color="#3333FF">Name
 a typical upstream Module (or "file" for Readers)</font>&lt;/name>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/typin>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;typout>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!--
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
 one or more name fields (list all valid) --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;name><font color="#3333FF">Name
 a typical downstream Module (or "file" for Writers)</font>&lt;/name>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/typout>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/modules>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!-- pointer
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!-- pointer
 to example network map --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;example><font color="#3333FF">A
 .sr file that shows the intended use in ./doc</font>&lt;/example>
 <br>&nbsp;&nbsp;&nbsp; &lt;/IO>
 <br>&nbsp;&nbsp;&nbsp; &lt;also>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!-- one or
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!-- one or
 more ref fields (list all valid) --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;ref><font color="#3333FF"> See Also
 ... classes, modules, datatypes, files within the PSE,</font>
@@ -133,20 +134,20 @@ more ref fields (list all valid) --></font>
 references, published papers, white papers, url's </font>&lt;/ref>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;link><font color="#3333FF">http://www.cool.info.about.this.module.org</font>&lt;/link>
 <br>&nbsp;&nbsp;&nbsp; &lt;/also>
-<br>&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!-- optional field --></font>
+<br>&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!-- optional field --></font>
 <br>&nbsp;&nbsp;&nbsp; &lt;caution>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!-- optional
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!-- optional
 field --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;knownbugs>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!--
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
 one or more bugNum fields (list all valid) --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bugNum><font color="#3333FF">Bugzilla
-bug number</font>&lt;/bugNum>
+bug number  <a href="specProcedure.html#bugzilla">(how to do this)</a></font>&lt;/bugNum>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/knownbugs>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!-- optional
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!-- optional
 field --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;platformIssues>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!--
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
 one or more issue fields (list all valid) --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;issue><font color="#3333FF">Platform
 issue. Ex. Needs 3d texture capabilities.</font>
@@ -154,22 +155,22 @@ issue. Ex. Needs 3d texture capabilities.</font>
 Ex. works on linux only.</font>&lt;/issue>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/platformIssues>
 <br>&nbsp;&nbsp;&nbsp; &lt;/caution>
-<br>&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!-- optional field --></font>
+<br>&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!-- optional field --></font>
 <br>&nbsp;&nbsp;&nbsp; &lt;enhancements>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#666600"> &lt;!-- one or
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#006600"> &lt;!-- one or
 more paragraphs --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;para><font color="#3333FF">list
 future work or possible extensions to the module</font>&lt;/para>
 <br>&nbsp;&nbsp;&nbsp; &lt;/enhancements>
 <br>&nbsp; &lt;/info>
 <br>&nbsp; &lt;gui>
-<br>&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!-- one parameter field
+<br>&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!-- one parameter field
 for each widget in the dialog --></font>
 <br>&nbsp;&nbsp;&nbsp; &lt;parameter>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;label>I<font color="#3333FF">dentify
 it by the label it has onscreen</font>&lt;/label>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;guidance>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!--
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
 one or more paragraphs --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;para><font color="#3333FF">Spells
 out exactly how to modify the module's behavior from</font>
@@ -197,13 +198,13 @@ tag is the relative path,&nbsp; ./doc/ModuleXGUI.jpg</font>&lt;/img>
 <p>&nbsp; &lt;testing>
 <br>&nbsp;&nbsp;&nbsp; &lt;plan>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;procedure>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!--
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
 one or more paragraphs --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;para><font color="#3333FF">Describe
 the special testing needs this module has.</font>&lt;/para>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/procedure>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;steps>
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#666600">&lt;!--
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
 add as many steps as needed. --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;step><font color="#3333FF">Put
 one step of the Test Plan here.</font>&lt;/step>
