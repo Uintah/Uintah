@@ -1,4 +1,5 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="utf-8"?>
+
 <!--
    For more information, please see: http://software.sci.utah.edu
 
@@ -34,8 +35,8 @@
 {"sr"=>"SCIRun","osx"=>"Mac OS X","pf"=>Doc::PlatformString},
 ["intro", "dmg_inst", "rpm_inst","source_inst", "download_src",
  "third_party_inst", "opt_inst", "build", "preparing", "starting", "help",
- "linux_notes", "opt_inst_appendix", "blas_lapack_inst", "petsc_inst",
- "itk_inst", "hdf5_inst", "mdsplus_inst", "cvs"])
+ "opt_inst_appendix", "blas_lapack_inst", "petsc_inst",
+ "itk_inst", "hdf5_inst", "mdsplus_inst", "multi_builds", "cvs"])
 %-->
 
 <article id="article.main">
@@ -48,7 +49,7 @@
 &preparing;
 &starting;
 &help;
-<!--%= doc.ifP(Doc::Linux) {%Q{-->&linux_notes;<!--}} %-->
 &opt_inst_appendix;
+&multi_builds;
 &cvs;
 </article>

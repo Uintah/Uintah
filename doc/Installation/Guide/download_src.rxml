@@ -1,5 +1,5 @@
 <!--
-For more information, please see: http://software.sci.utah.edu
+    For more information, please see: http://software.sci.utah.edu
 
 The MIT License
 
@@ -29,89 +29,104 @@ DEALINGS IN THE SOFTWARE.
 <!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
+<!--% osx = (Doc::Platform == Doc::OSX) ? "_osx" : "" %-->
+
 <section id="sec.sources">
-  <title id="sec.title.sources">Downloading and Unpacking Sources</title>
+  <title id="sec.title.sources">Downloading and Unpacking
+  Sources</title>
 
   <orderedlist>
 
     <listitem id="src_download">
+      <para>Three <firstterm>problem solving
+      environments</firstterm> (<acronym>PSE</acronym>) can be built
+      from &sr;s sources: BioPSE, Fusion, and Insight.  Each PSE
+      requires a particular set of sources, which can be downloaded
+      from the <ulink
+      url="http://software.sci.utah.edu/archive_entry.html">software
+      archive</ulink>.</para>
 
       <para>
-	From <acronym>SCI</acronym>'s <ulink
-	url="http://software.sci.utah.edu/archive_entry.html">software
-	archive</ulink> page obtain the following:
-	<itemizedlist>
-	  <listitem>
-	    <para>
-	      <filename>SCIRun.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	    </para>
-	  </listitem>
-	  <listitem>
-	    <para>
-	      <filename>BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	    </para>
-	  </listitem>
-	  <listitem>
-	    <para>
-	      <filename>MatlabInterface.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	      if Matlab support is desired.  MatlatInterface
-	      requires package TEEM.
-	    </para>
-	  </listitem>
-	  <!--%= doc.ifNotP(Doc::Irix) {%Q{-->
-	  <listitem>
-	    <para><filename>Insight.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	    to add support for ITK in &sr;.  Insight requires
-	    package TEEM.  See also <xref linkend="sec.obitk"/>.
-	    </para>
-	  </listitem>
-	  <!--}} %-->
-	  <listitem>
-	    <para>
-	      <filename>DataIO.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	      to add support for reading HDF5
-	      <!--%= doc.ifNotP(Doc::Irix) {%Q{-->and MDSplus<!--}} %-->
-	      data.  DataIO requires package Teem.
-	    </para>
-	  </listitem>
-	  <listitem>
-	    <para>
-	      <filename>TEEM.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>.
-	      The Teem package is required by the MatlabInterface,
-	      Insight, DataIO, and Fusion packages.
-	    </para>
-	  </listitem>
-	  <listitem>
-	    <para><filename>Fusion.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	    to add support for converting NRRD data to &sr; fields.
-	    Fusion requires packages Teem and DataIO.</para>
-	  </listitem>
-	  <listitem>
-	    <para>
-	      <!--%= doc.ifNotP(Doc::OSX) {%Q{-->
-	      <filename>Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	      <!--}} %-->	      
-	      <!--%= doc.ifP(Doc::OSX) {%Q{-->
-	      <filename>Thirdparty_install_osx.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	      <!--}} %-->	      
-	    </para>
-	  </listitem>
-	  <listitem>
-	    <para>
-	      <filename>SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz</filename>, &sr; sample data sets, 
-	    </para>
-	  </listitem>
-	  <listitem>
-	    <para>
-	      <filename>SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz</filename>,
-	      &sr; documentation,
-	    </para>
-	  </listitem>
-	</itemizedlist>
+	To build BioPSE, download the following:
+	<simplelist>
+	  <member>
+	    <filename>SCIRun.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>MatlabInterface.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>TEEM.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>Thirdparty_install<!--%= osx %-->.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz</filename> 
+	  </member>
+	  <member>
+	    <filename>SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	</simplelist>
       </para>
 
-    </listitem>
+      <para>
+	To build Fusion, download the following:
+	<simplelist>
+	  <member>
+	    <filename>SCIRun.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>Fusion.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>TEEM.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>DataIO.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>Thirdparty_install<!--%= osx %-->.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz</filename> 
+	  </member>
+	  <member>
+	    <filename>SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	</simplelist>
+      </para>
 
+      <!--%= doc.ifNotP(Doc::Irix) {%Q{-->
+      <para>
+	To build Insight, download the following:
+	<simplelist>
+	  <member>
+	    <filename>SCIRun.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>Insight.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>TEEM.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>Thirdparty_install<!--$#{osx}$-->.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz</filename> 
+	  </member>
+	  <member>
+	    <filename>SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </member>
+	</simplelist>
+      </para>
+      <!--}} %-->
+    </listitem>
+    
     <listitem id="src_unpack">
       <para>
 	Unpack &sr; sources:
@@ -142,7 +157,8 @@ DEALINGS IN THE SOFTWARE.
 	  gunzip -c SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 	</literallayout>
 	This creates the directory <filename>&sr;Data</filename>.
-	<filename>&sr;Data</filename> should be moved to a location accessible to all &sr; users, say
+	<filename>&sr;Data</filename> should be moved to a location
+	accessible to all &sr; users, say
 	<filename>/usr/local</filename>.
       </para>
     </listitem>
@@ -153,20 +169,11 @@ DEALINGS IN THE SOFTWARE.
       </para>
       <para>
 	<literallayout class="monospaced">
-	  <!--%= doc.ifNotP(Doc::OSX) {%Q{-->
-	  gunzip -c Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
-	  <!--}} %-->      
-	  <!--%= doc.ifP(Doc::OSX) {%Q{-->
-	gunzip -c Thirdparty_install_osx.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
-	<!--}} %-->
+	  gunzip -c Thirdparty_install<!--%= osx
+	  %-->.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 	</literallayout>
-	This creates the directory
-	<!--%= doc.ifNotP(Doc::OSX) {%Q{-->
-      <filename>Thirdparty_install.<replaceable>x.x.x</replaceable></filename>.
-      <!--}} %-->
-      <!--%= doc.ifP(Doc::OSX) {%Q{-->
-      <filename>Thirdparty_install_osx.<replaceable>x.x.x</replaceable></filename>.
-      <!--}} %-->
+	This creates the directory <filename>Thirdparty_install<!--%=
+	osx %-->.<replaceable>x.x.x</replaceable></filename>.
       </para>
     </listitem>
 
