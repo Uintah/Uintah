@@ -772,6 +772,7 @@ namespace Uintah {
       double d_dbgNextDumpTime;
       double d_dbgSym_relative_tol;
       double d_dbgSym_absolute_tol;
+      double d_dbgSym_cutoff_value;
       
       bool   d_dbgGnuPlot;
       bool   d_dbgTime_to_printData;
