@@ -68,6 +68,7 @@ itcl_class Teem_DataIO_NrrdWriter {
 	makeSaveFilebox \
 		-parent $w \
 		-filevar $this-filename \
+	        -setcmd "wm withdraw $w" \
 		-command "$this-c needexecute; wm withdraw $w" \
 		-cancel "wm withdraw $w" \
 		-title $title \

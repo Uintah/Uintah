@@ -36,8 +36,6 @@ itcl_class SCIRun_DataIO_FieldReader {
 	set w .ui[modname]
 
 	if {[winfo exists $w]} {
-	    # Refresh UI
-	    biopseFDialog_RefreshCmd $w
 	    return
 	}
 
@@ -64,8 +62,8 @@ itcl_class SCIRun_DataIO_FieldReader {
 	makeOpenFilebox \
 		-parent $w \
 		-filevar $this-filename \
-		-command "wm withdraw $w" \
-		-execute "$this-c needexecute; wm withdraw $w" \
+	        -setcmd "wm withdraw $w" \
+		-command "$this-c needexecute; wm withdraw $w" \
 		-cancel "wm withdraw $w" \
 		-title $title \
 		-filetypes $types \

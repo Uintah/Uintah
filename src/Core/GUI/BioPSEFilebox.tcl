@@ -44,6 +44,7 @@
 #       makeSaveFilebox \
 #               -parent $w \
 #               -filevar $this-saveFile \
+#               -setcmd "wm withdraw $w" \ 
 #               -command "$this doSaveImage; wm withdraw $w" \
 #               -cancel "wm withdraw $w" \
 #               -title $title \
@@ -701,6 +702,20 @@ proc biopseFDialog {argstring} {
 
     biopseFDialog_UpdateWhenIdle $w
 
+    # Set the timestamp for the current directory
+    global biopse_TimeStamps biopse_ID
+    set biopse_TimeStamps($w) [file mtime $data(selectPath)]
+
+    # set the refreshing ID to be -1.  For some reason when a
+    # UI is opened or closed the map/unmap methods get called
+    # about 20 times so this let it check if it is the first time
+    set biopse_ID($w) {-1}
+
+    # bind mapping and unmapping to start and stop update directory command
+    bind $w <Map> "biopseFDialog_Mapped $w"
+    bind $w <Unmap> "biopseFDialog_Unmapped $w"
+
+
     # 6. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
     # display and de-iconify it.
@@ -757,7 +772,7 @@ proc biopseFDialog_Config {w type argList} {
 	    {-command "" "" ""}
 	    {-filevar "" "" ""}
 	    {-cancel "" "" ""}
-	    {-execute "" "" ""}
+	    {-setcmd "" "" ""}
 	    {-defaultextension "" "" ""}
 	}
 	set data(-initialfile) ""
@@ -773,7 +788,7 @@ proc biopseFDialog_Config {w type argList} {
 	    {-command "" "" ""}
 	    {-filevar "" "" ""}
 	    {-cancel "" "" ""}
-	    {-execute "" "" ""}
+	    {-setcmd "" "" ""}
 	    {-formatvar "" "" ""}
 	    {-formats "" "" ""}
 	    {-splitvar "" "" ""}
@@ -886,7 +901,7 @@ static char updir_bits[] = {
     # data(icons): the IconList that list the files and directories.
     set data(icons) [biopseIconList $w.icons \
 	-browsecmd "biopseFDialog_ListBrowse $w" \
-	-command   "biopseFDialog_OkCmd $w"]
+	-command   "biopseFDialog_SetCmd $w"]
 
     # f2: the frame with the OK button and the "file name" field
     set f2 [frame $w.f2 -bd 0]
@@ -926,38 +941,50 @@ static char updir_bits[] = {
     $data(typeMenuBtn) config -takefocus 1 -highlightthickness 2 \
 	-relief raised -bd 2 -anchor w
 
-   # the okBtn is created after the typeMenu so that the keyboard traversal
+   # the setBtn is created after the typeMenu so that the keyboard traversal
     # is in the right order
-    # Ok, Execute, Cancel, Refresh, and Find at bottom
+    # Ok, Execute, Cancel, and Find (optional) at bottom
     set f7 [frame $w.f7]
-    set data(okBtn)     [button $f7.ok     -text Set     -under 0 -width 6 \
-	-default active -pady 3]
-    Tooltip $f7.ok "Set the filename and dimiss\nthe UI without executing"
-    if { [string length $data(-execute)] } {
-       set data(executeBtn) [button $f7.execute -text Execute -under 0 -width 6\
-	  -default normal -pady 3]
-       Tooltip $f7.execute "Set the filename, execute\nthe module, and dismiss\nthe UI"
+    if { [string length $data(-setcmd)] } {
+	set data(setBtn)     [button $f7.ok     -text Set     -under 0 -width 10 \
+				  -default active -pady 3]
+	Tooltip $f7.ok "Set the filename and dimiss\nthe UI without executing"
+    }
+
+    set data(executeBtn) [button $f7.execute -text Execute -under 0 -width 10\
+			      -default normal -pady 3]
+    # For the viewer Save Image window, have it say Save instead of Execute
+    if {[string first "ViewWindow" $w] != -1} {
+	$data(executeBtn) config -text "Save"
     } 
-    set data(cancelBtn) [button $f7.cancel -text Cancel -under 0 -width 6\
+    Tooltip $f7.execute "Set the filename, execute\nthe module, and dismiss\nthe UI"
+
+    set data(cancelBtn) [button $f7.cancel -text Cancel -under 0 -width 10\
 				 -default normal -pady 3]
     Tooltip $f7.cancel "Dismiss the UI without\nsetting the filename"
-    set data(refreshBtn) [button $f7.refresh   -text Refresh   -under 0  -width 6 \
-			      -default normal -pady 3]		  
-    Tooltip $f7.refresh "Refresh the visible files\nand directories to reflect\nthe current file system"
-    set data(findBtn) [button $f7.find   -text Find   -under 0  -width 6 \
-			      -default normal -pady 3]	
-    Tooltip $f7.find "Highlights (on the Network Editor) the\nmodule that corresponds to this GUI"	  
+
+    # only include a find button if this dialog has the form
+    # .ui[modname].  otherwise it must be a child of a ui.
+    set mod [string range $w 3 end]
+    global Subnet
+    set have_find [array get Subnet $mod]
+    if {[llength $have_find] > 0} {
+	set data(findBtn) [button $f7.find   -text Find   -under 0  -width 10 \
+			       -default normal -pady 3]	
+	Tooltip $f7.find "Highlights (on the Network Editor) the\nmodule that corresponds to this GUI"	  
+    }
 
     # pack the widgets in f7
-    pack $data(okBtn) -side left -padx 4 -anchor e -fill x -expand 1
-    if { [string length $data(-execute)] } {
-	pack $data(executeBtn) -side left -padx 4 -anchor e -fill x -expand 1 
+    if {[llength $have_find] > 0} {
+	pack $data(findBtn) -side right -padx 4 -anchor e -fill x -expand 0
     }
-    pack $data(cancelBtn) -side left -padx 4 -anchor e -fill x -expand 1
-    pack $data(refreshBtn) -side left -padx 4 -anchor e -fill x -expand 1
-    pack $data(findBtn) -side left -padx 4 -anchor e -fill x -expand 1
+    pack $data(cancelBtn) -side right -padx 4 -anchor e -fill x -expand 0
+    pack $data(executeBtn) -side right -padx 4 -anchor e -fill x -expand 0
+    if { [string length $data(-setcmd)] } {
+	pack $data(setBtn) -side right -padx 4 -anchor e -fill x -expand 0
+    }
 
-    pack $f7 -side bottom -fill x 
+    pack $f7 -side bottom -anchor s 
 
     # creating additional widgets for Save-dialog box
     if {![string compare $data(type) save]} {
@@ -1056,13 +1083,15 @@ static char updir_bits[] = {
     bind $data(ent) <Return>  "biopseFDialog_ActivateEnt $w"
     
     $data(upBtn)     config -command "biopseFDialog_UpDirCmd $w"
-    $data(okBtn)     config -command "biopseFDialog_OkCmd $w ok"
-    if { [string length $data(-execute)] } {
-	$data(executeBtn) config -command "biopseFDialog_OkCmd $w execute"
+    if { [string length $data(-setcmd)] } {
+	$data(setBtn)     config -command "biopseFDialog_SetCmd $w set"
     }
+    $data(executeBtn) config -command "biopseFDialog_SetCmd $w execute"
     $data(cancelBtn) config -command "biopseFDialog_CancelCmd $w"
-    $data(refreshBtn) config -command "biopseFDialog_RefreshCmd $w"
-    $data(findBtn) config -command "biopseFDialog_FindCmd $w"
+    # $data(refreshBtn) config -command "biopseFDialog_RefreshCmd $w"
+    if {[llength $have_find] > 0} {
+	$data(findBtn) config -command "biopseFDialog_FindCmd $w"
+    }
 
     trace variable data(selectPath) w "biopseFDialog_SetPath $w"
 
@@ -1101,12 +1130,59 @@ proc biopseFDialog_UpdateWhenIdle {w} {
     }
 }
 
+# biopseFDialog_Mapped --
+#       This is called when the Reader/Writer is mapped
+#       meaning the ui is opened.  At this point we want
+#       to start the refreshing script to update the directory
+proc biopseFDialog_Mapped {w} {
+    global biopse_ID
+
+    # start calls to peridically refresh ui
+    # only call if it isn't all ready running though which
+    # is indicated by biopse_ID($w) not being equal to -1
+    if {[info exists biopse_ID] && [info exists biopse_ID($w)] && \
+	    $biopse_ID($w) == -1} {
+	biopseFDialog_UpdateDirectory $w
+    } 
+}
+
+# biopseFDialog_Unmapped --
+#       This is called when the Reader/Writer is unmapped
+#       meaning the ui is closed. At this point we want to
+#       kill the refreshing script.
+proc biopseFDialog_Unmapped {w} {
+    global biopse_ID
+    # only end script if the biopse_ID($w) has a valid value
+    # which indicates it is running
+    if {$biopse_ID($w) != -1} {
+	after cancel $biopse_ID($w)
+	set biopse_ID($w) -1
+    } 
+}
+
+# biopseFDialog_UpdateDirectory --
+#       Checks the current modification time of the selectPath directory
+#       and compares it to the old modification time stored in
+#       the biopse_TimeStamps array.  If different, it updates 
+#       the biopseFDialog.
+proc biopseFDialog_UpdateDirectory {w} {
+    upvar #0 $w data
+    global biopse_TimeStamps biopse_ID
+    set curr_time [file mtime $data(selectPath)]
+    set old_time $biopse_TimeStamps($w)
+    
+    if {$curr_time != $old_time} {
+	set biopse_TimeStamps($w) $curr_time
+	biopseFDialog_Update $w
+    }
+    set biopse_ID($w) [after 5000 "biopseFDialog_UpdateDirectory $w"]
+}
+
 # biopseFDialog_Update --
 #	Loads the files and directories into the IconList widget. Also
 #	sets up the directory option menu for quick access to parent
 #	directories.
 proc biopseFDialog_Update {w} {
-
     # This proc may be called within an idle handler. Make sure that the
     # window has not been destroyed before this proc is called
     if {![winfo exists $w] || [string compare [winfo class $w] TkFDialog]} {
@@ -1402,9 +1478,9 @@ proc biopseFDialog_EntFocusIn {w} {
     biopseIconList_Unselect $data(icons)
 
     if {![string compare $data(type) open]} {
-	# $data(okBtn) config -text "Open"
+	# $data(setBtn) config -text "Open"
     } else {
-	# $data(okBtn) config -text "Save"
+	# $data(setBtn) config -text "Save"
     }
 }
 
@@ -1486,8 +1562,8 @@ proc biopseFDialog_ActivateEnt {w {whichBtn execute}} {
 proc biopseFDialog_InvokeBtn {w key} {
     upvar #0 $w data
 
-    if {![string compare [$data(okBtn) cget -text] $key]} {
-	tkButtonInvoke $data(okBtn)
+    if {![string compare [$data(setBtn) cget -text] $key]} {
+	tkButtonInvoke $data(setBtn)
     }
 }
 
@@ -1512,8 +1588,8 @@ proc biopseFDialog_JoinFile {path file} {
 
 
 
-# Gets called when user presses the "OK" button
-proc biopseFDialog_OkCmd {w {whichBtn execute}} {
+# Gets called when user presses the "Set" button
+proc biopseFDialog_SetCmd {w {whichBtn execute}} {
     upvar #0 $w data
 
     set text [biopseIconList_Get $data(icons)]
@@ -1554,7 +1630,13 @@ proc biopseFDialog_RefreshCmd {w} {
 proc biopseFDialog_FindCmd {w} {
     # Fade in Icon
     # Indicate which module by removing the .ui from $w
-    fadeinIcon [string range $w 3 end] 1 1
+    set mod [string range $w 3 end]
+    global Subnet
+    set list [array get Subnet $mod]
+    if {[llength $list] > 0} {
+	fadeinIcon $mod 1 1
+    }
+    
 }
 
 # Gets called when user browses the IconList widget (dragging mouse, arrow
@@ -1572,12 +1654,12 @@ proc biopseFDialog_ListBrowse {w text} {
 	$data(ent) insert 0 $text
 
 	if {![string compare $data(type) open]} {
-	    # $data(okBtn) config -text "Open"
+	    # $data(setBtn) config -text "Open"
 	} else {
-	    # $data(okBtn) config -text "Save"
+	    # $data(setBtn) config -text "Save"
 	}
     } else {
-	# $data(okBtn) config -text "Open"
+	# $data(setBtn) config -text "Open"
     }
 }
 
@@ -1645,9 +1727,9 @@ proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
     
     # AS: final steps before returning: setting filename variable and executing command
     set $data(-filevar) $selectFilePath
-    if {$whichBtn == "ok"} {
-	eval $data(-command)
+    if {$whichBtn == "set"} {
+	eval $data(-setcmd)
     } else {
-	eval $data(-execute)
+	eval $data(-command)
     }
 }

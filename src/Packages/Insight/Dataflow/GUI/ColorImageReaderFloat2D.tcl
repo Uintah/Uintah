@@ -52,6 +52,7 @@ itcl_class Insight_DataIO_ColorImageReaderFloat2D {
 	makeOpenFilebox \
 		-parent $w \
 		-filevar $this-FileName \
+	        -setcmd "wm withdraw $w" \
 		-command "$this-c needexecute; wm withdraw $w" \
 		-cancel "wm withdraw $w" \
 		-title "Open Image File" \
