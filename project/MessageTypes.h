@@ -23,6 +23,11 @@ public:
 	ReSchedule,
 
 	MUIDispatch,
+
+	GeometryInit,
+	GeometryAddObj,
+	GeometryDelObj,
+	GeometryDelAll,
     };
 };
 

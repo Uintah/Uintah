@@ -14,10 +14,14 @@
 #ifndef SCI_project_GeometryPort_h
 #define SCI_project_GeometryPort_h 1
 
-#include <Persistent.h>
+#include <MessageBase.h>
 #include <Port.h>
 #include <Geometry/Vector.h>
 #include <Geometry/Point.h>
+#include <Multitask/ITC.h>
+
+typedef int GeomID;
+class GeomObj;
 
 class GeometryIPort : public IPort {
 public:
@@ -37,12 +41,34 @@ public:
 
 class GeometryOPort : public OPort {
     GeometryIPort* in;
+    int portid;
+    GeomID serial;
+
+    virtual void reset();
+    virtual void finish();
+
+    Mailbox<MessageBase*>* outbox;
 public:
     GeometryOPort(Module*, const clString& name, int protocol);
     virtual ~GeometryOPort();
 
-    virtual void reset();
-    virtual void finish();
+    GeomID addObj(GeomObj*);
+    void delObj(GeomID);
+    void delAll();
+};
+
+class GeometryComm : public MessageBase {
+public:
+    GeometryComm(Mailbox<int>*);
+    GeometryComm(int, GeomID, GeomObj*);
+    GeometryComm(int, GeomID);
+    GeometryComm(int);
+    virtual ~GeometryComm();
+
+    Mailbox<int>* reply;
+    int portno;
+    GeomID serial;
+    GeomObj* obj;
 };
 
 #endif /* SCI_project_GeometryPort_h */

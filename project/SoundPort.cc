@@ -63,6 +63,10 @@ void SoundIPort::finish()
     if(state != Done){
 	cerr << "Not all of sound was read...\n";
     }
+    if(sample_buf){
+	delete[] sample_buf;
+	sample_buf=0;
+    }
 }
 
 int SoundIPort::nsamples()
@@ -105,6 +109,7 @@ int SoundIPort::end_of_stream()
 
 void SoundIPort::do_read()
 {
+    turn_on();
     SoundComm* comm;
     comm=mailbox.receive();
     switch(comm->action){
@@ -130,11 +135,14 @@ void SoundIPort::do_read()
 	total_samples=recvd_samples;
 	break;
     }
+    delete comm;
+    turn_off();
 }
 
 void SoundOPort::finish()
 {
     // Flush the stream and send an end of stream marker...
+    turn_on();
     if(!in){
 	Connection* connection=connections[0];
 	in=(SoundIPort*)connection->iport;
@@ -152,6 +160,7 @@ void SoundOPort::finish()
     comm->action=SoundComm::EndOfStream;
     in->mailbox.send(comm);
     state=End;
+    turn_off();
 }
 
 void SoundOPort::set_nsamples(int s)
@@ -171,6 +180,7 @@ void SoundOPort::put_sample(double s)
     ASSERT(state != End);
     if(state == Begin){
 	// Send the Parameters message...
+	turn_on();
 	SoundComm* comm=new SoundComm;
 	comm->action=SoundComm::Parameters;
 	comm->sample_rate=rate;
@@ -183,6 +193,7 @@ void SoundOPort::put_sample(double s)
 	state=Transmitting;
 	sbufsize=(int)(rate/20);
 	ptr=0;
+	turn_off();
     }
     if(!sbuf){
 	sbuf=new double[sbufsize];
@@ -191,6 +202,7 @@ void SoundOPort::put_sample(double s)
     sbuf[ptr++]=s;
     if(ptr >= sbufsize){
 	// Send it away...
+	turn_on();
 	SoundComm* comm=new SoundComm;
 	comm->action=SoundComm::SoundData;
 	comm->sbufsize=sbufsize;
@@ -199,5 +211,6 @@ void SoundOPort::put_sample(double s)
 	in->mailbox.send(comm);
 	sbuf=0;
 	ptr=0;
+	turn_off();
     }
 }

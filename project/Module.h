@@ -41,7 +41,6 @@ protected:
     State state;
     Array1<OPort*> oports;
     Array1<IPort*> iports;
-private:
     ModuleHelper* helper;
 public:
     enum ConnectionMode {

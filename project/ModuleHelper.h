@@ -19,8 +19,9 @@ class Module;
 
 class ModuleHelper : public Task {
     Module* module;
+    int execute_only;
 public:
-    ModuleHelper(Module* module);
+    ModuleHelper(Module* module, int execute_only);
     virtual ~ModuleHelper();
 
     virtual int body(int);

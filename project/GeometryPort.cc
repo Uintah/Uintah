@@ -13,6 +13,7 @@
 
 #include <GeometryPort.h>
 #include <Connection.h>
+#include <Module.h>
 #include <NotFinished.h>
 #include <Port.h>
 #include <Classlib/Assert.h>
@@ -42,20 +43,70 @@ GeometryOPort::~GeometryOPort()
 
 void GeometryIPort::reset()
 {
-    NOT_FINISHED("GeometryIPort::reset");
 }
 
 void GeometryIPort::finish()
 {
-    NOT_FINISHED("GeometryIPort::finish");
 }
 
 void GeometryOPort::reset()
 {
-    NOT_FINISHED("GeometryOPort::reset");
+    if(!outbox){
+	Connection* connection=connections[0];
+	Module* mod=connection->iport->get_module();
+	outbox=&mod->mailbox;
+	// Send the registration message...
+	Mailbox<int> tmp(1);
+	outbox->send(new GeometryComm(&tmp));
+	portid=tmp.receive();
+	serial=1;
+    }
 }
 
 void GeometryOPort::finish()
 {
-    NOT_FINISHED("GeometryOPort::finish");
+}
+
+GeomID GeometryOPort::addObj(GeomObj* obj)
+{
+    GeomID id=serial++;
+    outbox->send(new GeometryComm(portid, id, obj));
+    return id;
+}
+
+void GeometryOPort::delObj(GeomID id)
+{
+    outbox->send(new GeometryComm(portid, id));
+}
+
+void GeometryOPort::delAll()
+{
+    outbox->send(new GeometryComm(portid));
+}
+
+GeometryComm::GeometryComm(Mailbox<int>* reply)
+: MessageBase(MessageTypes::GeometryInit), reply(reply)
+{
+}
+
+GeometryComm::GeometryComm(int portno, GeomID serial, GeomObj* obj)
+: MessageBase(MessageTypes::GeometryAddObj),
+  portno(portno), serial(serial), obj(obj)
+{
+}
+
+GeometryComm::GeometryComm(int portno, GeomID serial)
+: MessageBase(MessageTypes::GeometryDelObj),
+  portno(portno), serial(serial)
+{
+}
+
+GeometryComm::GeometryComm(int portno)
+: MessageBase(MessageTypes::GeometryDelAll),
+  portno(portno)
+{
+}
+
+GeometryComm::~GeometryComm()
+{
 }

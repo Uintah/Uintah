@@ -22,8 +22,9 @@
 #include <CallbackCloners.h>
 #include <Connection.h>
 #include <HelpUI.h>
-#include <ModuleShape.h>
 #include <MUI.h>
+#include <ModuleHelper.h>
+#include <ModuleShape.h>
 #include <MotifCallback.h>
 #include <MtXEventLoop.h>
 #include <NetworkEditor.h>
@@ -220,6 +221,10 @@ void UserModule::create_interface()
     if(window)
 	window->activate();
     evl->unlock();
+
+    // Start up the event loop
+    helper=new ModuleHelper(this, 0);
+    helper->activate(0);
 }
 
 static void draw_shadow(Display* dpy, Window win, GC gc,

@@ -13,7 +13,6 @@
 
 #include <Module.h>
 #include <Connection.h>
-#include <ModuleHelper.h>
 #include <ModuleShape.h>
 #include <MotifCallbackBase.h>
 #include <NetworkEditor.h>
@@ -23,18 +22,14 @@
 
 Module::Module(const clString& name, SchedClass sched_class)
 : name(name), sched_class(sched_class), state(NeedData), mailbox(5),
-  xpos(10), ypos(10), width(100), height(100)
+  xpos(10), ypos(10), width(100), height(100), helper(0)
 {
-    helper=new ModuleHelper(this);
-    helper->activate(0);
 }
 
 Module::Module(const Module& copy, int)
 : name(copy.name), state(NeedData), mailbox(5),
   xpos(10), ypos(10), width(100), height(100)
 {
-    helper=new ModuleHelper(this);
-    helper->activate(0);
     NOT_FINISHED("Module copy CTOR");
 }
 

@@ -73,8 +73,6 @@ NetworkEditor::~NetworkEditor()
 
 int NetworkEditor::body(int)
 {
-    extern void tsound();
-    tsound();
     // Create User interface...
     window=new ApplicationShellC;
     window->SetTitle("Project with no name");

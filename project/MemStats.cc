@@ -30,7 +30,8 @@
 #include <stdio.h>
 extern MtXEventLoop* evl;
 
-#define MEMSTATS_FONT "screen14"
+// #define MEMSTATS_FONT "screen14"
+#define MEMSTATS_FONT "-*-clean-medium-r-*-*-10-*"
 #define MEMSTATS_FGCOLOR "black"
 #define MEMSTATS_INLISTCOLOR "blue"
 #define MEMSTATS_UNFREEDCOLOR "red"
@@ -43,9 +44,9 @@ MemStats::MemStats(NetworkEditor* netedit)
     dialog=new DialogShellC;
     dialog->Create("Memory Stats", "Memory Stats", evl->get_display());
     drawing_a=new DrawingAreaC;
-    textwidth=355;
-    graphwidth=200;
-    drawing_a->SetWidth(textwidth+graphwidth);
+    textwidth=255;
+    graphwidth=150;
+    drawing_a->SetWidth(textwidth+graphwidth+20);
     drawing_a->SetHeight(830);
     drawing_a->SetShadowThickness(0);
     drawing_a->SetResizePolicy(XmRESIZE_NONE);

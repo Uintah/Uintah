@@ -19,9 +19,9 @@
 #include <iostream.h>
 
 #define DEFAULT_MODULE_PRIORITY 90
-ModuleHelper::ModuleHelper(Module* module)
+ModuleHelper::ModuleHelper(Module* module, int execute_only)
 : Task(module->name, 1, DEFAULT_MODULE_PRIORITY),
-  module(module)
+  module(module), execute_only(execute_only)
 {
 }
 
@@ -31,24 +31,28 @@ ModuleHelper::~ModuleHelper()
 
 int ModuleHelper::body(int)
 {
-    while(1){
-	MessageBase* msg=module->mailbox.receive();
-	switch(msg->type){
-	case MessageTypes::ExecuteModule:
-	    module->do_execute();
-	    break;
-	case MessageTypes::MUIDispatch:
-	    {
-		MUI_Module_Message* dmsg=(MUI_Module_Message*)msg;
-		dmsg->do_it();
-		dmsg->module->mui_callback(dmsg->cbdata, dmsg->flags);
+    if(execute_only){
+	module->do_execute();
+    } else {
+	while(1){
+	    MessageBase* msg=module->mailbox.receive();
+	    switch(msg->type){
+	    case MessageTypes::ExecuteModule:
+		module->do_execute();
+		break;
+	    case MessageTypes::MUIDispatch:
+		{
+		    MUI_Module_Message* dmsg=(MUI_Module_Message*)msg;
+		    dmsg->do_it();
+		    dmsg->module->mui_callback(dmsg->cbdata, dmsg->flags);
+		}
+		break;
+	    default:
+		cerr << "Illegal Message type: " << msg->type << endl;
+		break;
 	    }
-	    break;
-	default:
-	    cerr << "Illegal Message type: " << msg->type << endl;
-	    break;
+	    delete msg;
 	}
-	delete msg;
     }
     return 0;
 }
