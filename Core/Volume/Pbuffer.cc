@@ -223,15 +223,44 @@ Pbuffer::create ()
     int major, minor;
     const char* version = glXGetClientString(glXGetCurrentDisplay(), GLX_VERSION);
     sscanf(version, "%d.%d", &major, &minor);
-    mATI_render_texture = gluCheckExtension((GLubyte*)"GLX_ATI_render_texture", (GLubyte*)glXGetClientString(glXGetCurrentDisplay(), GLX_EXTENSIONS));
-    mATI_pixel_format_float = gluCheckExtension((GLubyte*)"GLX_ATI_pixel_format_float", (GLubyte*)glXGetClientString(glXGetCurrentDisplay(), GLX_EXTENSIONS));
-    mNV_float_buffer = gluCheckExtension((GLubyte*)"GLX_NV_float_buffer", (GLubyte*)glXGetClientString(glXGetCurrentDisplay(), GLX_EXTENSIONS))
-      && gluCheckExtension((GLubyte*)"GL_NV_float_buffer", (GLubyte*)glGetString(GL_EXTENSIONS))
-      && gluCheckExtension((GLubyte*)"GL_ARB_fragment_program", (GLubyte*)glGetString(GL_EXTENSIONS));
-    mNV_texture_rectangle = gluCheckExtension((GLubyte*)"GL_NV_texture_rectangle", (GLubyte*)glGetString(GL_EXTENSIONS));
-    
-    if(minor < 3
-       || (mFormat == GL_FLOAT && !(mATI_pixel_format_float || mNV_float_buffer))) {
+
+    mATI_render_texture = 
+      gluCheckExtension((GLubyte*)"GLX_ATI_render_texture",
+			(GLubyte*)glXGetClientString(glXGetCurrentDisplay(), 
+						     GLX_EXTENSIONS));
+
+    mATI_pixel_format_float = 
+      gluCheckExtension((GLubyte*)"GLX_ATI_pixel_format_float", 
+			(GLubyte*)glXGetClientString(glXGetCurrentDisplay(), 
+						     GLX_EXTENSIONS));
+
+    mNV_float_buffer = 
+      gluCheckExtension((GLubyte*)"GLX_NV_float_buffer", 
+			(GLubyte*)glXGetClientString(glXGetCurrentDisplay(), 
+						     GLX_EXTENSIONS))
+      && gluCheckExtension((GLubyte*)"GL_NV_float_buffer", 
+			   (GLubyte*)glGetString(GL_EXTENSIONS))
+      && gluCheckExtension((GLubyte*)"GL_ARB_fragment_program", 
+			   (GLubyte*)glGetString(GL_EXTENSIONS));
+
+    mNV_texture_rectangle = 
+      gluCheckExtension((GLubyte*)"GL_NV_texture_rectangle", 
+			(GLubyte*)glGetString(GL_EXTENSIONS));
+
+#if defined(OGL_DBG)
+    std::cerr << "----- info from Pbuffer::create() in Core/Volume -----" 
+	      << std::endl;
+    std::cerr << "-- mATI_render_texture : " 
+	      << mATI_render_texture << std::endl;
+    std::cerr << "-- mATI_pixel_format_float: " 
+	      << mATI_pixel_format_float << std::endl;
+    std::cerr << "-- mNV_float_buffer: " 
+	      << mNV_float_buffer << std::endl;
+    std::cerr << "-- mNV_texture_rectangle: " 
+	      << mNV_texture_rectangle << std::endl;
+#endif    
+    if(minor < 3 || (mFormat == GL_FLOAT && 
+		     !(mATI_pixel_format_float || mNV_float_buffer))) {
       mSupported = false;
     } else {
       mSupported = true;
@@ -240,10 +269,10 @@ Pbuffer::create ()
 
     if(mSupported && mATI_render_texture) {
       bool fail = false;
-      fail = fail
-        || (glXBindTexImageATI = (PFNGLXBINDTEXIMAGEATIPROC)getProcAddress("glXBindTexImageATI")) == 0;
-      fail = fail
-        || (glXReleaseTexImageATI = (PFNGLXRELEASETEXIMAGEATIPROC)getProcAddress("glXReleaseTexImageATI")) == 0;
+      fail = fail || (glXBindTexImageATI = (PFNGLXBINDTEXIMAGEATIPROC)
+		      getProcAddress("glXBindTexImageATI")) == 0;
+      fail = fail || (glXReleaseTexImageATI = (PFNGLXRELEASETEXIMAGEATIPROC)
+		      getProcAddress("glXReleaseTexImageATI")) == 0;
       if(fail) {
         mSupported = false;
         cerr << "GL_ATI_render_texture is not supported." << endl;

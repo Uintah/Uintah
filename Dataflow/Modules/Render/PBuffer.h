@@ -43,7 +43,7 @@
 #ifndef SCIRUN_PBUFFER_H
 #define SCIRUN_PBUFFER_H
 
-#if (defined(__linux) && !defined(__ECC)) || defined(__APPLE__)
+#if 0 //(defined(__linux) && !defined(__ECC)) || defined(__APPLE__)
 #define HAVE_PBUFFER
 #endif
 

@@ -50,6 +50,7 @@ SRCS     += \
 	$(SRCDIR)/GenTitle.cc\
 	$(SRCDIR)/GenTransferFunc.cc\
 	$(SRCDIR)/Isosurface.cc\
+	$(SRCDIR)/NrrdToColorMap2.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
 	$(SRCDIR)/ShowColorMap.cc\
 	$(SRCDIR)/ShowField.cc\

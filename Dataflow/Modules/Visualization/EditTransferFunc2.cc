@@ -77,10 +77,35 @@ struct UndoItem
 
 class EditTransferFunc2 : public Module {
 
+
+public:
+  EditTransferFunc2(GuiContext* ctx);
+  virtual ~EditTransferFunc2();
+
+  virtual void execute();
+
+  virtual void tcl_command(GuiArgs&, void*);
+  virtual void presave();
+  
+  void resize_gui(int n = -1);
+  void update_from_gui();
+  void update_to_gui(bool forward = true);
+  void tcl_unpickle();
+
+  void undo();
+
+  void redraw();
+
+  void push(int x, int y, int button, int modifier);
+  void motion(int x, int y);
+  void release(int x, int y, int button);
+private:
+
   GLXContext ctx_;
   Display* dpy_;
   Window win_;
-  int width_, height_;
+  int width_;
+  int height_;
   bool button_;
   vector<CM2WidgetHandle> widgets_;
   stack<UndoItem> undo_stack_;
@@ -90,6 +115,8 @@ class EditTransferFunc2 : public Module {
   bool use_pbuffer_;
   bool use_back_buffer_;
   
+  int icmap_gen_;
+
   Nrrd* histo_;
   bool histo_dirty_;
   GLuint histo_tex_;
@@ -114,28 +141,6 @@ class EditTransferFunc2 : public Module {
   vector<GuiDouble *>		gui_color_b_;
   vector<GuiDouble *>		gui_color_a_;
   vector<GuiString *>           gui_wstate_;
-
-public:
-  EditTransferFunc2(GuiContext* ctx);
-  virtual ~EditTransferFunc2();
-
-  virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
-  virtual void presave();
-  
-  void resize_gui(int n = -1);
-  void update_from_gui();
-  void update_to_gui(bool forward = true);
-  void tcl_unpickle();
-
-  void undo();
-
-  void redraw();
-
-  void push(int x, int y, int button, int modifier);
-  void motion(int x, int y);
-  void release(int x, int y, int button);
 };
 
 
@@ -144,11 +149,24 @@ DECLARE_MAKER(EditTransferFunc2)
 
 EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
   : Module("EditTransferFunc2", ctx, Filter, "Visualization", "SCIRun"),
-    ctx_(0), dpy_(0), win_(0), button_(0), shader_factory_(0),
-    pbuffer_(0), use_pbuffer_(true), use_back_buffer_(true),
-    histo_(0), histo_dirty_(false), histo_tex_(0),
-    cmap_dirty_(true), cmap_tex_(0),
-    pick_widget_(-1), pick_object_(0), first_motion_(true), updating_(false),
+    ctx_(0), 
+    dpy_(0), 
+    win_(0), 
+    button_(0), 
+    shader_factory_(0),
+    pbuffer_(0), 
+    use_pbuffer_(true), 
+    use_back_buffer_(true),
+    icmap_gen_(-1),
+    histo_(0), 
+    histo_dirty_(false), 
+    histo_tex_(0),
+    cmap_dirty_(true), 
+    cmap_tex_(0),
+    pick_widget_(-1), 
+    pick_object_(0), 
+    first_motion_(true), 
+    updating_(false),
     gui_faux_(ctx->subVar("faux")),
     gui_histo_(ctx->subVar("histo")),
     gui_num_entries_(ctx->subVar("num-entries"))
@@ -439,6 +457,10 @@ EditTransferFunc2::tcl_unpickle()
       widgets_.push_back(scinew RectangleCM2Widget());
       widgets_[widgets_.size()-1]->tcl_unpickle(gui_wstate_[i]->get());
     }
+    else if (gui_wstate_[i]->get()[0] == 'i') {
+      widgets_.push_back(scinew ImageCM2Widget());
+      widgets_[widgets_.size()-1]->tcl_unpickle(gui_wstate_[i]->get());
+    }
   }
 
   // Grab colors
@@ -543,6 +565,27 @@ EditTransferFunc2::release(int x, int y, int button)
 void
 EditTransferFunc2::execute()
 {
+  ColorMap2IPort* cmap_iport = (ColorMap2IPort*)get_iport("Input Colormap");
+  if (cmap_iport) {
+    ColorMap2Handle icmap_handle;
+    cmap_iport->get(icmap_handle);
+    if (icmap_handle.get_rep() && icmap_handle->generation != icmap_gen_) {
+
+      // If the first widget is an empty widget replace it 
+      // with the input widget.
+      if (widgets_[0]->is_empty()) {
+	widgets_.erase(widgets_.begin());
+      }
+      // add the input widgets to our existing set.
+      widgets_.insert(widgets_.begin(), icmap_handle->widgets().begin(), 
+		      icmap_handle->widgets().end());
+      icmap_gen_ = icmap_handle->generation;
+      update_to_gui();
+      cmap_dirty_ = true;
+      redraw();
+    }
+  }
+
   NrrdIPort* histo_port = (NrrdIPort*)get_iport("Histogram");
   if(histo_port) {
     NrrdDataHandle h;
@@ -704,7 +747,9 @@ EditTransferFunc2::redraw()
       }
       // rasterize widgets
       for (unsigned int i=0; i<widgets_.size(); i++) {
-	widgets_[i]->rasterize(array_, gui_faux_.get());
+	if (! widgets_[i]->is_empty()) {
+	  widgets_[i]->rasterize(array_, gui_faux_.get());
+	}
       }
       // update texture
       if(cmap_size_dirty) {
@@ -778,7 +823,9 @@ EditTransferFunc2::redraw()
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     for(unsigned int i=0; i<widgets_.size(); i++) {
-      widgets_[i]->rasterize(*shader_factory_, gui_faux_.get(), 0);
+      if (! widgets_[i]->is_empty()) {
+	widgets_[i]->rasterize(*shader_factory_, gui_faux_.get(), 0);
+      }
     }
 
     glBlendFunc(GL_ONE, GL_DST_ALPHA);
@@ -877,7 +924,9 @@ EditTransferFunc2::redraw()
   
   // draw widgets
   for(unsigned int i=0; i<widgets_.size(); i++) {
-    widgets_[i]->draw();
+    if (! widgets_[i]->is_empty()) {
+      widgets_[i]->draw();
+    }
   }
   
   glXSwapBuffers(dpy_, win_);

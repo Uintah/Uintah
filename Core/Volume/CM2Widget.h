@@ -59,6 +59,7 @@ public:
   virtual void rasterize(SCIRun::Array3<float>& array, bool faux) = 0;
   virtual CM2Widget* clone() = 0;
   
+  virtual bool is_empty() { return false; }
   // behavior
   virtual int pick1 (int x, int y, int w, int h) = 0;
   virtual int pick2 (int x, int y, int w, int h, int m) = 0;
@@ -180,11 +181,12 @@ protected:
   int pick_ix_, pick_iy_;
 };
 
-
+//The image widget cannot be manipulated, only drawn.
 class ImageCM2Widget : public CM2Widget
 {
 public:
-  ImageCM2Widget(NrrdDataHandle image);
+  ImageCM2Widget();
+  ImageCM2Widget(NrrdDataHandle p);
   ~ImageCM2Widget();
   ImageCM2Widget(ImageCM2Widget& copy);
 
@@ -195,23 +197,26 @@ public:
   void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
   void rasterize(SCIRun::Array3<float>& array, bool faux);
   
+  bool is_empty() { return ! pixels_.get_rep(); }
   // behavior
-  virtual int pick1 (int x, int y, int w, int h);
-  virtual int pick2 (int x, int y, int w, int h, int m);
-  virtual void move (int obj, int x, int y, int w, int h);
-  virtual void release (int obj, int x, int y, int w, int h);
+  virtual int pick1 (int x, int y, int w, int h) { return 0;}
+  virtual int pick2 (int x, int y, int w, int h, int m) { return 0;}
+  virtual void move (int obj, int x, int y, int w, int h) {}
+  virtual void release (int obj, int x, int y, int w, int h) {}
   
-  virtual std::string tcl_pickle();
-  virtual void tcl_unpickle(const std::string &p);
+  virtual std::string tcl_pickle() {return "i";}
+  virtual void tcl_unpickle(const std::string &p) {}
 
   virtual void io(SCIRun::Piostream &stream);
   static SCIRun::PersistentTypeID type_id;
 
 protected:
-  ImageCM2Widget();
-  NrrdDataHandle image_;
-
   static Persistent *maker();
+
+  // nrrdSpatialResample ...
+  Nrrd* resize(int w, int h);
+
+  NrrdDataHandle pixels_;
 };
 
 } // End namespace SCIRun
