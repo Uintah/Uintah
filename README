@@ -6,3 +6,24 @@ For an optimized 64bit build, use:
  '--enable-optimize=-Ofast -G0 -OPT:Olimit=20000 -IPA:plimit=20000' \
  --disable-sci-malloc --enable-assertion-level=0  
 
+
+______________________________________________________________________
+SUS_GOOD AND SUS_SUSPECT                      11/30/01 (Todd)
+ 
+If you want to keep a "good" sus around to compare against while you 
+work on "suspect" code.
+
+- First build a "good" sus
+- mv sus sus_good
+- mkdir SCIRun/src/good_libs
+- cp -r SCIRun/src/lib/ SCIRun/src/good_libs/.
+- In a terminal that will ONLY be used to run sus_good
+    setenv  LD_LIBRARY64_PATH /hd3/harman/SCIRun/src/good_libs:/usr/installed/SCIRun_Thirdparty_64/lib:/usr/lib:/usr/lib64
+    setenv _RLD64_ROOT junk
+ 
+and it should work
+
+_RLD64_ROOT essentially wipes out the original library path and LD_LIBRARY64_PATH
+sets the path where you want the executable to look.  Don't run any other
+applications from this terminal since you've wiped out their library paths.
+Compile and run your suspect code in a different terminal.
