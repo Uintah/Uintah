@@ -32,6 +32,7 @@ SRCS     += \
 	$(SRCDIR)/BuildTransform.cc\
 	$(SRCDIR)/ErrorMetric.cc\
         $(SRCDIR)/ManipMatrix.cc\
+        $(SRCDIR)/MatrixSelectVector.cc\
 	$(SRCDIR)/SolveMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
