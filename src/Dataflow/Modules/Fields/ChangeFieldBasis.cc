@@ -156,9 +156,11 @@ ChangeFieldBasis::execute()
   {
     // No changes, just send the original through (it may be nothing!).
     remark("Passing field from input port to output port unchanged.");
-    warning("Mapping for that location combination is not yet supported.");
     ofport->send(fh);
-    omport->send(0);
+
+    MatrixHandle m(SparseRowMatrix::identity(fh->data_size()));
+    omport->send(m);
+
     return;
   }
 
