@@ -1,5 +1,11 @@
 # SCIRun Network v1.23.0
 
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
+set results [sourceSettingsFile]
+set DATADIR [lindex $results 0]
+set DATASET [lindex $results 1]
+######################################################################
 
 set name {Main}
 set bbox {10 10 394 243}
@@ -23,7 +29,8 @@ set c1 [addConnection $m1 0 $m2 0]
 set c2 [addConnection $m3 0 $m2 1]
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
-set $m1-filename "/home/asade/UTAH/TEST/CH105_040412_1016_w_100.nrrd"
+set $m1-filename $DATADIR/$DATASET/CH105_040412_1016_w_100.nrrd
+set $m3-filename $DATADIR/$DATASET/CH105_040412_1051_w_107.nrrd 
 
 # Set GUI variables for the VS->Render->ICUMonitor Module
 set $m2-time {0.008}
