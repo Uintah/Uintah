@@ -49,6 +49,7 @@
 #include <Core/2d/Point2d.h>
 #include <Core/2d/Vector2d.h>
 #include <sci_gl.h>
+#include <sci_glu.h>
 
 using namespace std;
 

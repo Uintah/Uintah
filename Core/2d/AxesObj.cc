@@ -44,6 +44,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/AxesObj.h>
 #include <sci_gl.h>
+#include <sci_glu.h>
 
 
 namespace SCIRun {

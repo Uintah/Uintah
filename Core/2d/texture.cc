@@ -34,6 +34,7 @@
 #include <afxwin.h>
 #endif
 #include <sci_gl.h>
+#include <sci_glu.h>
 #include <stdio.h>
 
 #define MY_FILTER GL_LINEAR_MIPMAP_LINEAR
