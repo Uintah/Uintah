@@ -12,6 +12,12 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Data Archive</name>
+        <datatype>Uintah::Archive</datatype>
+      </port>
+    </inputs>
   </io>
   <testing>
   </testing>

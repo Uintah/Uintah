@@ -2,9 +2,9 @@
 #define __DERIVE_PARTICLEEIGENEVALUATOR_H__
 
 #include <Dataflow/Network/Module.h>
-#include <Uintah/Core/Datatypes/TensorParticlesPort.h>
-#include <Uintah/Core/Datatypes/ScalarParticlesPort.h>
-#include <Uintah/Core/Datatypes/VectorParticlesPort.h>
+#include <Uintah/Dataflow/Ports/TensorParticlesPort.h>
+#include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>
+#include <Uintah/Dataflow/Ports/VectorParticlesPort.h>
 #include <string>
 
 using std::string;

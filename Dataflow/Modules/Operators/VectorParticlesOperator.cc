@@ -17,13 +17,10 @@ extern "C" Module* make_VectorParticlesOperator( const string& id ) {
 
 
 VectorParticlesOperator::VectorParticlesOperator(const string& id)
-  : Module("VectorParticlesOperator",id,Source),
+  : Module("VectorParticlesOperator",id,Source, "Operators", "Uintah"),
     guiOperation("operation", id, this)
 {
   // Create Ports
-  in = scinew VectorParticlesIPort(this, "VectorField");
-  spout = scinew ScalarParticlesOPort(this, "ScalarField");
-
   // Add ports to the Module
   add_iport(in);
   add_oport(spout);
@@ -31,6 +28,9 @@ VectorParticlesOperator::VectorParticlesOperator(const string& id)
   
 void VectorParticlesOperator::execute(void) {
   //  tcl_status.set("Calling InPlaneEigenEvaluator!"); 
+  in = (VectorParticlesIPort *) get_iport("Vector Particles");
+  spout = (ScalarParticlesOPort *)get_oport("Scalar Particles");
+
   VectorParticlesHandle hTF;
   
   if(!in->get(hTF)){

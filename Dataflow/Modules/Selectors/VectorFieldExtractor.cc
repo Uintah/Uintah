@@ -65,20 +65,10 @@ extern "C" Module* make_VectorFieldExtractor( const string& id ) {
 
 //--------------------------------------------------------------- 
 VectorFieldExtractor::VectorFieldExtractor(const string& id) 
-  : Module("VectorFieldExtractor", id, Filter),
+  : Module("VectorFieldExtractor", id, Filter, "Selectors", "Uintah"),
     tcl_status("tcl_status", id, this), sVar("sVar", id, this),
     sMatNum("sMatNum", id, this), type(0)
 { 
-  //////////// Initialization code goes here
-  // Create Ports
-  in=scinew ArchiveIPort(this, "Data Archive",
-		      ArchiveIPort::Atomic);
-  vfout=scinew FieldOPort(this, "VectorField", FieldIPort::Atomic);
-
-  // Add them to the Module
-  add_iport(in);
-  add_oport(vfout);
-
 } 
 
 //------------------------------------------------------------ 
@@ -162,6 +152,8 @@ void VectorFieldExtractor::setVars()
 void VectorFieldExtractor::execute() 
 { 
   tcl_status.set("Calling VectorFieldExtractor!"); 
+  in = (ArchiveIPort *) get_iport("Data Archive");
+  vfout = (FieldOPort *) get_oport("Vector Field");
   
   ArchiveHandle handle;
    if(!in->get(handle)){

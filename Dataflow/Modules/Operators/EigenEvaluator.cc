@@ -20,23 +20,20 @@ void computeGridEigens(TensorField* tensorField,
  
 
 EigenEvaluator::EigenEvaluator(const string& id)
-  : Module("EigenEvaluator",id,Source),
+  : Module("EigenEvaluator",id,Source, "Operators", "Uintah"),
     guiEigenSelect("eigenSelect", id, this)
     //    tcl_status("tcl_status", id, this),
 {
-  // Create Ports
-  in = new FieldIPort(this, "TensorField");
-  sfout = new FieldOPort(this, "EigenValueField");
-  vfout = new FieldOPort(this, "EigenVectorField");
-
-  // Add ports to the Module
-  add_iport(in);
-  add_oport(sfout);
-  add_oport(vfout);
 }
   
 void EigenEvaluator::execute(void) {
   //  tcl_status.set("Calling EigenEvaluator!"); 
+
+  in = (FieldIPort *) get_iport("Tensor Field");
+  sfout = (FieldOPort *) get_oport("Eigenvalue Field");
+  vfout = (FieldOPort *) get_oport("Eigenvector Field");
+  
+
   FieldHandle hTF;
   
   if(!in->get(hTF)){

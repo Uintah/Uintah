@@ -65,20 +65,10 @@ extern "C" Module* make_TensorFieldExtractor( const string& id ) {
 
 //--------------------------------------------------------------- 
 TensorFieldExtractor::TensorFieldExtractor(const string& id) 
-  : Module("TensorFieldExtractor", id, Filter),
+  : Module("TensorFieldExtractor", id, Filter, "Selectors", "Uintah"),
     tcl_status("tcl_status", id, this), sVar("sVar", id, this),
     sMatNum("sMatNum", id, this), type(0)
 { 
-  //////////// Initialization code goes here
-  // Create Ports
-  in=scinew ArchiveIPort(this, "Data Archive",
-		      ArchiveIPort::Atomic);
-  sfout=scinew FieldOPort(this, "TensorField", FieldIPort::Atomic);
-
-  // Add them to the Module
-  add_iport(in);
-  add_oport(sfout);
-
 } 
 
 //------------------------------------------------------------ 
@@ -89,7 +79,6 @@ TensorFieldExtractor::~TensorFieldExtractor(){}
 void TensorFieldExtractor::setVars()
 {
   string command;
-
   DataArchive& archive = *((*(archiveH.get_rep()))());
 
   vector< string > names;
@@ -164,6 +153,9 @@ void TensorFieldExtractor::setVars()
 void TensorFieldExtractor::execute() 
 { 
   tcl_status.set("Calling TensorFieldExtractor!"); 
+  in = (ArchiveIPort *) get_iport("Data Archive");
+  tfout = (FieldOPort *) get_oport("Tensor Field");
+
   
   ArchiveHandle handle;
    if(!in->get(handle)){
@@ -230,7 +222,7 @@ void TensorFieldExtractor::execute()
 	}
 	thread_sema->down(max_workers);
 	if( thread_sema ) delete thread_sema;
-	sfout->send(vfd);
+	tfout->send(vfd);
 	return;
       }
       break;
@@ -261,7 +253,7 @@ void TensorFieldExtractor::execute()
 	}
 	thread_sema->down(max_workers);
 	if( thread_sema ) delete thread_sema;
-	sfout->send(vfd);
+	tfout->send(vfd);
 	return;
       }
       break;

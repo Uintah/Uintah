@@ -32,10 +32,10 @@ LOG
 
 
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
-#include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
-#include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
-#include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
 #include <Dataflow/Network/Module.h> 
 #include <Core/GuiInterface/GuiVar.h> 
 #include <Core/Containers/ConsecutiveRangeSet.h>

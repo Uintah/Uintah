@@ -20,7 +20,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
-#include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -106,7 +106,7 @@ extern "C" Module* make_VariablePlotter(const string& id) {
 }
 
 VariablePlotter::VariablePlotter(const string& id)
-: Module("VariablePlotter", id, Filter),
+: Module("VariablePlotter", id, Filter, "Visualization", "Uintah"),
   var_orientation("var_orientation",id,this),
   nl("nl",id,this),
   index_x("index_x",id,this),
@@ -116,10 +116,6 @@ VariablePlotter::VariablePlotter(const string& id)
   curr_var("curr_var",id,this)
 {
 
-  // Create the input port
-  in=scinew ArchiveIPort(this, "Data Archive",
-		      ArchiveIPort::Atomic);
-  add_iport(in);
 }
 
 VariablePlotter::~VariablePlotter()
@@ -213,6 +209,8 @@ void VariablePlotter::setVars(GridP grid) {
 
 void VariablePlotter::execute()
 {
+  // Create the input port
+  in= (ArchiveIPort *) get_iport("Data Archive");
 
   cerr << "\t\tEntering execute.\n";
 

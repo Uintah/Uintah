@@ -31,7 +31,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 
 #include <Core/Datatypes/LatticeVol.h>
@@ -203,7 +203,7 @@ GridP NodeHedgehog::getGrid()
 }
 
 NodeHedgehog::NodeHedgehog(const string& id)
-: Module("NodeHedgehog", id, Filter),
+: Module("NodeHedgehog", id, Filter, "Visualization", "Uintah"),
   widget_lock("NodeHedgehog widget lock"),
   length_scale("length_scale", id, this),
   width_scale("width_scale", id, this),
@@ -219,31 +219,6 @@ NodeHedgehog::NodeHedgehog(const string& id)
   max_vector_z("max_vector_z", id, this),
   max_vector_length("max_vector_length", id, this)
 {
-  // Create the input ports
-  // grid
-  ingrid=scinew ArchiveIPort(this, "Data Archive",
-		      ArchiveIPort::Atomic);
-  add_iport(ingrid);
-
-  // scalar field
-  inscalarfield = scinew FieldIPort( this, "Scalar Field",
-					   FieldIPort::Atomic);
-  add_iport( inscalarfield);
-
-  // vector field
-  invectorfield = scinew FieldIPort( this, "Vector Field",
-					   FieldIPort::Atomic);
-  add_iport( invectorfield);
-
-  // color map
-  inColorMap = scinew ColorMapIPort( this, "ColorMap",
-				     ColorMapIPort::Atomic);
-  add_iport( inColorMap);
-  
-// Create the output port
-  ogeom = scinew GeometryOPort(this, "Geometry", 
-			       GeometryIPort::Atomic);
-  add_oport(ogeom);
   init = 1;
   float INIT(.1);
   
@@ -299,6 +274,14 @@ void NodeHedgehog::execute()
 {
   int old_grid_id = grid_id;
 
+    // Create the input port
+  ingrid = (ArchiveIPort *) get_iport("Data Archive");
+  inscalarfield = (FieldIPort *) get_iport("Scalar Field");
+  invectorfield = (FieldIPort *) get_iport("Vector Field");
+  inColorMap = (ColorMapIPort *) get_iport("ColorMap");
+					
+  // Create the output port
+  ogeom = (GeometryOPort *) get_oport("Geometry"); 
   // Must have a vector field and a grid, otherwise exit
   FieldHandle vfield;
   if (!invectorfield->get( vfield ))
