@@ -33,8 +33,6 @@
 #include <Core/Algorithms/Visualization/TetMC.h>
 #include <Core/Algorithms/Visualization/HexMC.h>
 #include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
@@ -103,9 +101,9 @@ class Isosurface : public Module {
   bool have_ColorMap;
 
   //! Handles to the isosurfacing algorithms.
-  DynamicAlgoHandle            mc_alg_;
-  DynamicAlgoHandle            noise_alg_;
-  DynamicAlgoHandle            sage_alg_;
+  LockingHandle<MarchingCubesAlg>       mc_alg_;
+  LockingHandle<NoiseAlg>               noise_alg_;
+  LockingHandle<SageAlg>                sage_alg_;
 
 public:
   Isosurface(GuiContext* ctx);

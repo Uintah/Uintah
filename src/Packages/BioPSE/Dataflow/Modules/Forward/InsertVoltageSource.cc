@@ -29,7 +29,6 @@ using namespace SCIRun;
 
 class InsertVoltageSource : public Module {
   GuiInt outside_;
-  GuiInt averaging_;
   GuiInt groundfirst_;
 public:
   InsertVoltageSource(GuiContext *context);
@@ -44,7 +43,6 @@ DECLARE_MAKER(InsertVoltageSource)
 InsertVoltageSource::InsertVoltageSource(GuiContext *context)
   : Module("InsertVoltageSource", context, Filter, "Forward", "BioPSE"),
     outside_(context->subVar("outside")),
-    averaging_(context->subVar("averaging")),
     groundfirst_(context->subVar("groundfirst"))
 {
 }
@@ -127,7 +125,6 @@ void InsertVoltageSource::execute() {
   // get our own local copy of the Field and mesh
   imeshH.detach();  
 
-  int averaging = averaging_.get();
   int outside = outside_.get();
 
   TetVolMesh::Node::size_type tvm_nnodes;
@@ -137,11 +134,21 @@ void InsertVoltageSource::execute() {
 
   TetVolMesh::Node::array_type nbrs(4);
 
-  Array1<Array1<pair<double, double> > > contrib(tvm_nnodes);
-  Array1<TetVolMesh::Node::index_type> have_some;
+  Array1<pair<double, double> > closest(tvm_nnodes); // store the dist/val
+                                                     // of the closest node
+  Array1<int> have_some(tvm_nnodes);
+  have_some.initialize(0);
+  Array1<TetVolMesh::Node::index_type> bc_tet_nodes;
 
+  for (unsigned int di=0; di<dirichlet.size(); di++) {
+    int didx=dirichlet[di].first;
+    // so other BCs can't over-write this one
+    have_some[didx]=1;
+    closest[didx].first=0;
+  }
+    
   // for each surface data_at position/value...
-  for (int s=0; s<(int)sources.size(); s++) {
+  for (unsigned int s=0; s<sources.size(); s++) {
     Point pt=sources[s];
     double val=vals[s];
 
@@ -154,54 +161,28 @@ void InsertVoltageSource::execute() {
       nbrs.resize(1);
     } else continue;
   
-    // for each nbr, store the value/distance in contrib[nbr]
+    // for each nbr, see if this node is the closest of the bc nodes checked
+    //   so far -- if so, store it
     unsigned int i;
     for (i=0; i<nbrs.size(); i++) {
       Point nbr_pt;
-      tvm->get_center(nbr_pt, nbrs[i]);
+      TetVolMesh::Node::index_type nidx = nbrs[i];
+      tvm->get_center(nbr_pt, nidx);
       double d = (pt - nbr_pt).length();
-      if (d < 1.e-6) d=1.e-6;
-      d = 1/d;
       pair<double, double> p(d, val);
-      have_some.add(nbrs[i]);
-      if (contrib[nbrs[i]].size() == 0) {
-	if (averaging) {
-	  contrib[nbrs[i]].add(p);
-	} else {
-	  if (contrib[nbrs[i]].size() == 0) {
-	    contrib[nbrs[i]].add(p);
-	  } else if (d > contrib[nbrs[i]][0].first) {
-	    contrib[nbrs[i]][0] = p;
-	  }
-	}
+      if (!have_some[nidx]) {
+	have_some[nidx]=1;
+	bc_tet_nodes.add(nidx);
+	closest[nidx]=p;
+      } else if (closest[nidx].first < d) {
+	closest[nidx]=p;
       }
     }
   }
 
-  // for each tet node that was touched, compute 1/(sum of all the distances)
-  // multiply each distance by that to get weightings
-  int i,j;
-  for (i=0; i<have_some.size(); i++) {
-    double sum_dist = 0;
-    TetVolMesh::Node::index_type node = have_some[i];
-    for (j=0; j<contrib[node].size(); j++) {
-      sum_dist += contrib[node][j].first;
-    }
-    sum_dist = 1./sum_dist;
-    for (j=0; j<contrib[node].size(); j++) {
-      contrib[node][j].first *= sum_dist;
-    }
-  }
-
-  // if no meshes changed, we'll use the same weightings -- just new values
-  for (i=0; i<have_some.size(); i++) {
-    TetVolMesh::Node::index_type node = have_some[i];
-    double avg_val = 0;
-    for (j=0; j<contrib[node].size(); j++) {
-      avg_val += contrib[node][j].second * contrib[node][j].first;
-    }
-    dirichlet.push_back(pair<int, double>(node, avg_val));
-  }
+  for (int i=0; i<bc_tet_nodes.size(); i++)
+    dirichlet.push_back(pair<int, double>(bc_tet_nodes[i],
+					  closest[bc_tet_nodes[i]].second));
   imeshH->set_property("dirichlet", dirichlet, false);
   imeshH->set_property("conductivity_table", conds, false);
   omesh->send(imeshH);

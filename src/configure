@@ -3461,7 +3461,7 @@ echo "configure:3417: checking for `basename $MAKE` version 3.78.1" >&5
     fi
   
 
-for ac_prog in gawk mawk nawk awk
+for ac_prog in mawk gawk nawk awk
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -3762,7 +3762,7 @@ else
 #line 3763 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 #include <stdio.h>
 main()
@@ -19546,7 +19546,6 @@ for i in $with_imagemagick $thirdparty $SCI_LAB_TP_DEFAULT; do
     continue
   fi
 
-
   
     #######################################################
     ##  Begin: SCI_CHECK_LIB macro...
@@ -19612,13 +19611,13 @@ for i in $with_imagemagick $thirdparty $SCI_LAB_TP_DEFAULT; do
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lMagick""... $ac_c" 1>&6
-echo "configure:19616: checking for -lMagick" >&5
+echo "configure:19615: checking for -lMagick" >&5
     else
        _SCI_DECL_="char WriteImage();"
        _SCI_CALL_="WriteImage();"
 
        echo $ac_n "checking for WriteImage in -lMagick""... $ac_c" 1>&6
-echo "configure:19622: checking for WriteImage in -lMagick" >&5
+echo "configure:19621: checking for WriteImage in -lMagick" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -19781,6 +19780,7 @@ EOF
       #parse out the -L parts and leave only the -l parts
       MAGICK_LINK=`echo $IM_LIBS | sed 's|-L[A-Za-z0-9/\.\-]* ||g'`
   fi
+  break
 done
  
 

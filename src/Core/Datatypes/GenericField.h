@@ -35,13 +35,13 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/PersistentSTL.h>
-#include <vector>
 #include <iostream>
+#include <vector>
 
 namespace SCIRun {
 using std::cerr;
 using std::endl;
-
+using std::vector;
 
 template <class Mesh, class FData>
 class GenericField: public Field 
@@ -139,24 +139,28 @@ GenericField<Mesh, FData>::resize_fdata()
   if (data_at() == NODE)
   {
     typename mesh_type::Node::size_type ssize;
+    get_typed_mesh()->synchronize(Mesh::NODES_E);
     get_typed_mesh()->size(ssize);
     fdata().resize(ssize);
   }
   else if (data_at() == EDGE)
   {
     typename mesh_type::Edge::size_type ssize;
+    get_typed_mesh()->synchronize(Mesh::EDGES_E);
     get_typed_mesh()->size(ssize);
     fdata().resize(ssize);
   }
   else if (data_at() == FACE)
   {
     typename mesh_type::Face::size_type ssize;
+    get_typed_mesh()->synchronize(Mesh::FACES_E);
     get_typed_mesh()->size(ssize);
     fdata().resize(ssize);
   }
   else if (data_at() == CELL)
   {
     typename mesh_type::Cell::size_type ssize;
+    get_typed_mesh()->synchronize(Mesh::CELLS_E);
     get_typed_mesh()->size(ssize);
     fdata().resize(ssize);
   }
@@ -201,12 +205,11 @@ void GenericField<Mesh, FData>::io(Piostream& stream)
 }
 
 
-
-
 template <class Mesh, class FData>
 GenericField<Mesh, FData>::GenericField() : 
   Field(),
-  mesh_(mesh_handle_type(scinew mesh_type()))
+  mesh_(mesh_handle_type(scinew mesh_type())),
+  fdata_(0) //workaround for default variable bug on sgi.
 {
   if (data_at() != NONE && mesh_.get_rep())
   {
@@ -217,10 +220,11 @@ GenericField<Mesh, FData>::GenericField() :
 template <class Mesh, class FData>
 GenericField<Mesh, FData>::GenericField(data_location data_at) : 
   Field(data_at),
-  mesh_(mesh_handle_type(scinew mesh_type()))
+  mesh_(mesh_handle_type(scinew mesh_type())),
+  fdata_(0) //workaround for default variable bug on sgi.
 {
   if (data_at != NONE && mesh_.get_rep())
-  {
+  { 
     resize_fdata();
   }
 }
@@ -229,7 +233,8 @@ template <class Mesh, class FData>
 GenericField<Mesh, FData>::GenericField(mesh_handle_type mesh, 
 					data_location data_at) : 
   Field(data_at),
-  mesh_(mesh)
+  mesh_(mesh),
+  fdata_(0) //workaround for default variable bug on sgi.
 {
   if (data_at != NONE && mesh_.get_rep())
   {

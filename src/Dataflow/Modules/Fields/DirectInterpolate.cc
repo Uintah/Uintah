@@ -100,44 +100,57 @@ DirectInterpolate::execute()
   {
     return;
   }
+  sfieldhandle->mesh()->synchronize(Mesh::GRID_E);
 
-  ScalarFieldInterface *sfi = sfieldhandle->query_scalar_interface();
-  VectorFieldInterface *vfi = sfieldhandle->query_vector_interface();
-  TensorFieldInterface *tfi = sfieldhandle->query_tensor_interface();
+  ScalarFieldInterface *sfi;
+  VectorFieldInterface *vfi;
+  TensorFieldInterface *tfi;
   FieldHandle ofieldhandle;
-  if (sfi)
+  if ((sfi = sfieldhandle->query_scalar_interface()))
   {
-    const TypeDescription *td0 = dfieldhandle->get_type_description();
-    const TypeDescription *td1 = dfieldhandle->data_at_type_description();
-    CompileInfo *ci = DirectInterpScalarAlgoBase::get_compile_info(td0, td1);
+    const TypeDescription *fsrc = sfieldhandle->get_type_description();
+    const TypeDescription *fdst = dfieldhandle->get_type_description();
+    const TypeDescription *ldst = dfieldhandle->data_at_type_description();
+    CompileInfo *ci =
+      DirectInterpScalarAlgoBase::get_compile_info(fsrc, fdst, ldst);
     Handle<DirectInterpScalarAlgoBase> algo;
     if (!module_dynamic_compile(*ci, algo)) return;
-    ofieldhandle = algo->execute(dfieldhandle, sfi,
+    ofieldhandle = algo->execute(dfieldhandle->mesh(),
+				 dfieldhandle->data_at(),
+				 sfi,
 				 use_interp_.get(),
 				 use_closest_.get(),
 				 closeness_distance_.get());
   }
-  else if (vfi)
+  else if ((vfi = sfieldhandle->query_vector_interface()))
   {
-    const TypeDescription *td0 = dfieldhandle->get_type_description();
-    const TypeDescription *td1 = dfieldhandle->data_at_type_description();
-    CompileInfo *ci = DirectInterpVectorAlgoBase::get_compile_info(td0, td1);
+    const TypeDescription *fsrc = sfieldhandle->get_type_description();
+    const TypeDescription *fdst = dfieldhandle->get_type_description();
+    const TypeDescription *ldst = dfieldhandle->data_at_type_description();
+    CompileInfo *ci =
+      DirectInterpVectorAlgoBase::get_compile_info(fsrc, fdst, ldst);
     Handle<DirectInterpVectorAlgoBase> algo;
     if (!module_dynamic_compile(*ci, algo)) return;
-    ofieldhandle = algo->execute(dfieldhandle, vfi,
+    ofieldhandle = algo->execute(dfieldhandle->mesh(),
+				 dfieldhandle->data_at(),
+				 vfi,
 				 use_interp_.get(),
 				 use_closest_.get(),
 				 closeness_distance_.get());
   }
-  else if (tfi)
+  else if ((tfi = sfieldhandle->query_tensor_interface()))
   {
-    const TypeDescription *td0 = dfieldhandle->get_type_description();
-    const TypeDescription *td1 = dfieldhandle->data_at_type_description();
-    CompileInfo *ci = DirectInterpTensorAlgoBase::get_compile_info(td0, td1);
+    const TypeDescription *fsrc = sfieldhandle->get_type_description();
+    const TypeDescription *fdst = dfieldhandle->get_type_description();
+    const TypeDescription *ldst = dfieldhandle->data_at_type_description();
+    CompileInfo *ci =
+      DirectInterpTensorAlgoBase::get_compile_info(fsrc, fdst, ldst);
     Handle<DirectInterpTensorAlgoBase> algo;
     if (!module_dynamic_compile(*ci, algo)) return;
 
-    ofieldhandle = algo->execute(dfieldhandle, tfi,
+    ofieldhandle = algo->execute(dfieldhandle->mesh(),
+				 dfieldhandle->data_at(),
+				 tfi,
 				 use_interp_.get(),
 				 use_closest_.get(),
 				 closeness_distance_.get());
@@ -161,7 +174,8 @@ DirectInterpolate::execute()
 
 
 CompileInfo *
-DirectInterpScalarAlgoBase::get_compile_info(const TypeDescription *field_td,
+DirectInterpScalarAlgoBase::get_compile_info(const TypeDescription *fsrc,
+					     const TypeDescription *fdst,
 					     const TypeDescription *loc_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -169,23 +183,29 @@ DirectInterpScalarAlgoBase::get_compile_info(const TypeDescription *field_td,
   static const string template_class_name("DirectInterpScalarAlgo");
   static const string base_class_name("DirectInterpScalarAlgoBase");
 
+  const string::size_type fdst_loc = fdst->get_name().find_first_of('<');
+  const string::size_type fsrc_loc = fsrc->get_name().find_first_of('<');
+  const string fout = fdst->get_name().substr(0, fdst_loc) +
+    fsrc->get_name().substr(fsrc_loc);
+
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       field_td->get_filename() + "." +
+		       to_filename(fout) + "." +
 		       loc_td->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       field_td->get_name() + ", " + loc_td->get_name());
+                       fout + ", " + loc_td->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  field_td->fill_compile_info(rval);
+  fdst->fill_compile_info(rval);
   return rval;
 }
 
 
 CompileInfo *
-DirectInterpVectorAlgoBase::get_compile_info(const TypeDescription *field_td,
+DirectInterpVectorAlgoBase::get_compile_info(const TypeDescription *fsrc,
+					     const TypeDescription *fdst,
 					     const TypeDescription *loc_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -193,23 +213,29 @@ DirectInterpVectorAlgoBase::get_compile_info(const TypeDescription *field_td,
   static const string template_class_name("DirectInterpVectorAlgo");
   static const string base_class_name("DirectInterpVectorAlgoBase");
 
+  const string::size_type fdst_loc = fdst->get_name().find_first_of('<');
+  const string::size_type fsrc_loc = fsrc->get_name().find_first_of('<');
+  const string fout = fdst->get_name().substr(0, fdst_loc) +
+    fsrc->get_name().substr(fsrc_loc);
+
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       field_td->get_filename() + "." +
+		       to_filename(fout) + "." +
 		       loc_td->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       field_td->get_name() + ", " + loc_td->get_name());
+                       fout + ", " + loc_td->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  field_td->fill_compile_info(rval);
+  fdst->fill_compile_info(rval);
   return rval;
 }
 
 
 CompileInfo *
-DirectInterpTensorAlgoBase::get_compile_info(const TypeDescription *field_td,
+DirectInterpTensorAlgoBase::get_compile_info(const TypeDescription *fsrc,
+					     const TypeDescription *fdst,
 					     const TypeDescription *loc_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -217,17 +243,22 @@ DirectInterpTensorAlgoBase::get_compile_info(const TypeDescription *field_td,
   static const string template_class_name("DirectInterpTensorAlgo");
   static const string base_class_name("DirectInterpTensorAlgoBase");
 
+  const string::size_type fdst_loc = fdst->get_name().find_first_of('<');
+  const string::size_type fsrc_loc = fsrc->get_name().find_first_of('<');
+  const string fout = fdst->get_name().substr(0, fdst_loc) +
+    fsrc->get_name().substr(fsrc_loc);
+
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       field_td->get_filename() + "." +
+		       to_filename(fout) + "." +
 		       loc_td->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       field_td->get_name() + ", " + loc_td->get_name());
+                       fout + ", " + loc_td->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  field_td->fill_compile_info(rval);
+  fdst->fill_compile_info(rval);
   return rval;
 }
 

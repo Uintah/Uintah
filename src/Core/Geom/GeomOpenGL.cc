@@ -1781,6 +1781,28 @@ void GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
+void GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+    if(!pre_draw(di, matl, 0)) return;
+
+    di->polycount+=points_.size()/2;
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+
+    glLineWidth(line_width_);
+
+    glBegin(GL_LINES);
+    for (unsigned int i=0; i<points_.size(); i++)
+    {
+      glColor3d(colors_[i].r(), colors_[i].g(), colors_[i].b());
+      glVertex3d(points_[i].x(), points_[i].y(), points_[i].z());
+    }
+    glEnd();
+
+    glLineWidth(1.0);
+
+    post_draw(di);
+}
+
 //const int OD_TEX_INIT = 4096; // 12tg bit of clip planes...
 
 void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
@@ -4488,6 +4510,7 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
+  if(!pre_draw(di, matl, 0)) return;
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
@@ -4505,6 +4528,8 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
   glPopMatrix();
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
+
+  post_draw(di);
 }  
 
 } // End namespace SCIRun

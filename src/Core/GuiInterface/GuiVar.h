@@ -57,9 +57,12 @@ class GuiSingle : public GuiVar
 {
   T value_;
 public:
-  GuiSingle(GuiContext* ctx) :
-    GuiVar(ctx) {}
-  
+  GuiSingle(GuiContext* ctx) : GuiVar(ctx) {}
+  GuiSingle(GuiContext* ctx, const T &val) : GuiVar(ctx), value_(val)
+  {
+    ctx->set(value_);
+  }
+
   virtual ~GuiSingle() {}
 
   inline T get() {
@@ -67,7 +70,7 @@ public:
     return value_;
   }
   inline void set(const T value) {
-    if(value != value_) {
+    if (value != value_) {  // buggy if value_ happens to initialize to value
       value_ = value;
       ctx->set(value_);
     }
@@ -76,9 +79,8 @@ public:
 
 typedef GuiSingle<string> GuiString;
 typedef GuiSingle<double> GuiDouble;
-typedef GuiSingle<double> GuiVardouble;  // NEED TO GET RID OF
 typedef GuiSingle<int> GuiInt;
-typedef GuiSingle<int> GuiVarint;   // NEED TO GET RID OF
+
 
 template <class T>
 class GuiTriple : public GuiVar
