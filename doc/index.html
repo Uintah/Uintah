@@ -33,11 +33,17 @@ p.title { text-align: center; font-size: xx-large }
 <script type="text/javascript">
 var treetop="";
 var path = location.pathname;
-while (path.substr(path.lastIndexOf("/")+1) != "doc") {
+var iLimit = 20;
+var i = 0;
+while (i < iLimit && path.substr(path.lastIndexOf("/")+1) != "doc") {
 treetop += "../";
+i += 1;
 path = path.substr(0, path.lastIndexOf("/"));
 }
-document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css' \/>")
+var inDocTree = i < iLimit;
+if (inDocTree) {
+document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
+}
 </script>
 
 <title>Guide to SCIRun Documentation</title>
@@ -46,7 +52,9 @@ document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='s
 
 <body>
 <script type="text/javascript">
+if (inDocTree) {
 document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+}
 </script>
 
 <br />
@@ -97,7 +105,9 @@ document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTM
 </table>
 
 <script type="text/javascript">
+if (inDocTree) {
 document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
+}
 </script>
 
 </body>
