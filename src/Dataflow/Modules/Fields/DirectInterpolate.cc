@@ -21,6 +21,7 @@
  *         field.
  *
  *  Written by:
+ *   David Weinstein
  *   Michael Callahan
  *   Department of Computer Science
  *   University of Utah
@@ -31,9 +32,9 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Modules/Fields/DirectInterpolate.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/Modules/Fields/DirectInterpolate.h>
 #include <Core/Containers/Handle.h>
 #include <iostream>
 #include <stdio.h>
@@ -46,28 +47,29 @@ using std::pair;
 
 class DirectInterpolate : public Module
 {
-  FieldIPort *src_port_;
-  FieldIPort *dst_port_;
-  FieldOPort *ofp_; 
-  GuiInt     use_interp_;
-  GuiInt     use_closest_;
-  GuiDouble  closeness_distance_;
+  FieldIPort *src_port;
+  FieldIPort *dst_port;
+  FieldOPort *ofp; 
+  GuiString  interpolation_basis_;
+  GuiInt     map_source_to_single_dest_;
+  GuiInt     exhaustive_search_;
+  GuiDouble  exhaustive_search_max_dist_;
+  GuiInt     np_;
 
 public:
   DirectInterpolate(GuiContext* ctx);
   virtual ~DirectInterpolate();
   virtual void execute();
-
-  template <class Fld> void callback1(Fld *fld);
-
 };
 
 DECLARE_MAKER(DirectInterpolate)
 DirectInterpolate::DirectInterpolate(GuiContext* ctx) : 
   Module("DirectInterpolate", ctx, Filter, "Fields", "SCIRun"),
-  use_interp_(ctx->subVar("use_interp")),
-  use_closest_(ctx->subVar("use_closest")),
-  closeness_distance_(ctx->subVar("closeness_distance"))
+  interpolation_basis_(ctx->subVar("interpolation_basis")),
+  map_source_to_single_dest_(ctx->subVar("map_source_to_single_dest")),
+  exhaustive_search_(ctx->subVar("exhaustive_search")),
+  exhaustive_search_max_dist_(ctx->subVar("exhaustive_search_max_dist")),
+  np_(ctx->subVar("np"))
 {
 }
 
@@ -75,113 +77,63 @@ DirectInterpolate::~DirectInterpolate()
 {
 }
 
-
 void
 DirectInterpolate::execute()
 {
-  dst_port_ = (FieldIPort *)get_iport("Destination");
-  FieldHandle dfieldhandle;
-  if (!dst_port_) {
+  dst_port = (FieldIPort *)get_iport("Destination");
+  FieldHandle fdst_h;
+
+  if (!dst_port) {
     error("Unable to initialize iport 'Destination'.");
     return;
   }
-  if (!(dst_port_->get(dfieldhandle) && dfieldhandle.get_rep()))
+  if (!(dst_port->get(fdst_h) && fdst_h.get_rep()))
   {
     return;
   }
 
-  src_port_ = (FieldIPort *)get_iport("Source");
-  FieldHandle sfieldhandle;
-  if (!src_port_) {
+  src_port = (FieldIPort *)get_iport("Source");
+  FieldHandle fsrc_h;
+  if(!src_port) {
     error("Unable to initialize iport 'Source'.");
     return;
   }
-  if (!(src_port_->get(sfieldhandle) && sfieldhandle.get_rep()))
+  if (!(src_port->get(fsrc_h) && fsrc_h.get_rep()))
   {
     return;
   }
-  sfieldhandle->mesh()->synchronize(Mesh::LOCATE_E);
 
-  ScalarFieldInterface *sfi;
-  VectorFieldInterface *vfi;
-  TensorFieldInterface *tfi;
-  FieldHandle ofieldhandle;
-  if ((sfi = sfieldhandle->query_scalar_interface(this)))
-  {
-    const TypeDescription *fsrc = sfieldhandle->get_type_description();
-    const TypeDescription *fdst = dfieldhandle->get_type_description();
-    const TypeDescription *ldst = dfieldhandle->data_at_type_description();
-    CompileInfoHandle ci =
-      DirectInterpScalarAlgoBase::get_compile_info(fsrc, fdst, ldst);
-    Handle<DirectInterpScalarAlgoBase> algo;
-    if (!module_dynamic_compile(ci, algo)) return;
-    ofieldhandle = algo->execute(dfieldhandle->mesh(),
-				 dfieldhandle->data_at(),
-				 sfi,
-				 use_interp_.get(),
-				 use_closest_.get(),
-				 closeness_distance_.get());
-  }
-  else if ((vfi = sfieldhandle->query_vector_interface(this)))
-  {
-    const TypeDescription *fsrc = sfieldhandle->get_type_description();
-    const TypeDescription *fdst = dfieldhandle->get_type_description();
-    const TypeDescription *ldst = dfieldhandle->data_at_type_description();
-    CompileInfoHandle ci =
-      DirectInterpVectorAlgoBase::get_compile_info(fsrc, fdst, ldst);
-    Handle<DirectInterpVectorAlgoBase> algo;
-    if (!module_dynamic_compile(ci, algo)) return;
-    ofieldhandle = algo->execute(dfieldhandle->mesh(),
-				 dfieldhandle->data_at(),
-				 vfi,
-				 use_interp_.get(),
-				 use_closest_.get(),
-				 closeness_distance_.get());
-  }
-  else if ((tfi = sfieldhandle->query_tensor_interface(this)))
-  {
-    const TypeDescription *fsrc = sfieldhandle->get_type_description();
-    const TypeDescription *fdst = dfieldhandle->get_type_description();
-    const TypeDescription *ldst = dfieldhandle->data_at_type_description();
-    CompileInfoHandle ci =
-      DirectInterpTensorAlgoBase::get_compile_info(fsrc, fdst, ldst);
-    Handle<DirectInterpTensorAlgoBase> algo;
-    if (!module_dynamic_compile(ci, algo)) return;
+  CompileInfoHandle ci =
+    DirectInterpAlgo::get_compile_info(fsrc_h->get_type_description(),
+				       fsrc_h->data_at_type_description(),
+				       fdst_h->get_type_description(),
+				       fdst_h->data_at_type_description());
+  Handle<DirectInterpAlgo> algo;
+  if (!module_dynamic_compile(ci, algo)) return;
 
-    ofieldhandle = algo->execute(dfieldhandle->mesh(),
-				 dfieldhandle->data_at(),
-				 tfi,
-				 use_interp_.get(),
-				 use_closest_.get(),
-				 closeness_distance_.get());
-  }
-  else
-  {
-    error("No field interface to sample on.");
-  }
-
-  ofp_ = (FieldOPort *)get_oport("Interpolant");
-  if (!ofp_) {
-    error("Unable to initialize " + name + "'s output port.");
+  ofp = (FieldOPort *)get_oport("Interpolant");
+  if(!ofp) {
+    error("Unable to initialize oport 'Interpolant'.");
     return;
   }
-  string units;
-  if (sfieldhandle->get_property("units", units))
-    ofieldhandle->set_property("units", units, false);
-  ofp_->send(ofieldhandle);
+  fsrc_h->mesh()->synchronize(Mesh::LOCATE_E);
+  ofp->send(algo->execute(fsrc_h, fdst_h->mesh(), fdst_h->data_at(),
+			  interpolation_basis_.get(),
+			  map_source_to_single_dest_.get(),
+			  exhaustive_search_.get(),
+			  exhaustive_search_max_dist_.get(), np_.get()));
 }
 
-
-
 CompileInfoHandle
-DirectInterpScalarAlgoBase::get_compile_info(const TypeDescription *fsrc,
-					     const TypeDescription *fdst,
-					     const TypeDescription *loc_td)
+DirectInterpAlgo::get_compile_info(const TypeDescription *fsrc,
+				   const TypeDescription *lsrc,
+				   const TypeDescription *fdst,
+				   const TypeDescription *ldst)
 {
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("DirectInterpScalarAlgo");
-  static const string base_class_name("DirectInterpScalarAlgoBase");
+  static const string template_class_name("DirectInterpAlgoT");
+  static const string base_class_name("DirectInterpAlgo");
 
   const string::size_type fdst_loc = fdst->get_name().find_first_of('<');
   const string::size_type fsrc_loc = fsrc->get_name().find_first_of('<');
@@ -190,77 +142,22 @@ DirectInterpScalarAlgoBase::get_compile_info(const TypeDescription *fsrc,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       to_filename(fout) + "." +
-		       loc_td->get_filename() + ".",
+		       fsrc->get_filename() + "." +
+		       lsrc->get_filename() + "." +
+		       fdst->get_filename() + "." +
+		       ldst->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       fout + ", " + loc_td->get_name());
+                       fsrc->get_name() + ", " +
+                       lsrc->get_name() + ", " +
+                       fout + ", " +
+                       ldst->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  fsrc->fill_compile_info(rval);
   fdst->fill_compile_info(rval);
   return rval;
 }
-
-
-CompileInfoHandle
-DirectInterpVectorAlgoBase::get_compile_info(const TypeDescription *fsrc,
-					     const TypeDescription *fdst,
-					     const TypeDescription *loc_td)
-{
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("DirectInterpVectorAlgo");
-  static const string base_class_name("DirectInterpVectorAlgoBase");
-
-  const string::size_type fdst_loc = fdst->get_name().find_first_of('<');
-  const string::size_type fsrc_loc = fsrc->get_name().find_first_of('<');
-  const string fout = fdst->get_name().substr(0, fdst_loc) +
-    fsrc->get_name().substr(fsrc_loc);
-
-  CompileInfo *rval = 
-    scinew CompileInfo(template_class_name + "." +
-		       to_filename(fout) + "." +
-		       loc_td->get_filename() + ".",
-                       base_class_name, 
-                       template_class_name, 
-                       fout + ", " + loc_td->get_name());
-
-  // Add in the include path to compile this obj
-  rval->add_include(include_path);
-  fdst->fill_compile_info(rval);
-  return rval;
-}
-
-
-CompileInfoHandle
-DirectInterpTensorAlgoBase::get_compile_info(const TypeDescription *fsrc,
-					     const TypeDescription *fdst,
-					     const TypeDescription *loc_td)
-{
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("DirectInterpTensorAlgo");
-  static const string base_class_name("DirectInterpTensorAlgoBase");
-
-  const string::size_type fdst_loc = fdst->get_name().find_first_of('<');
-  const string::size_type fsrc_loc = fsrc->get_name().find_first_of('<');
-  const string fout = fdst->get_name().substr(0, fdst_loc) +
-    fsrc->get_name().substr(fsrc_loc);
-
-  CompileInfo *rval = 
-    scinew CompileInfo(template_class_name + "." +
-		       to_filename(fout) + "." +
-		       loc_td->get_filename() + ".",
-                       base_class_name, 
-                       template_class_name, 
-                       fout + ", " + loc_td->get_name());
-
-  // Add in the include path to compile this obj
-  rval->add_include(include_path);
-  fdst->fill_compile_info(rval);
-  return rval;
-}
-
 
 } // End namespace SCIRun
