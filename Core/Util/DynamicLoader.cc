@@ -49,12 +49,10 @@ using namespace std;
   const string ext("so");
 #endif
 
-env_map scirunrc;
 
 DynamicLoader *DynamicLoader::scirun_loader_ = 0;
 Mutex DynamicLoader::scirun_loader_init_lock_("SCIRun loader init lock");
 string DynamicLoader::otf_dir_ = string(SCIRUN_OBJDIR) + "/on-the-fly-libs";
-bool DynamicLoader::otf_dir_found_ = false;
 
 CompileInfo::CompileInfo(const string &fn, const string &bcn, 
 			 const string &tcn, const string &tcdec) :
@@ -106,6 +104,9 @@ DynamicLoader::DynamicLoader() :
   compilation_cond_("DynamicLoader: waits for compilation to finish."),
   map_lock_("DynamicLoader: controls mutable access to the map.")
 {
+  char *env = getenv("SCIRUN_ON_THE_FLY_LIBS_DIR"); 
+  if (env)
+    otf_dir_ = string(env);
   map_lock_.lock();
   algo_map_.clear();
   map_lock_.unlock();
@@ -214,7 +215,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
   if (!do_compile && !wait_for_current_compile(info.filename_)) return false;
 
   // Try to load a dynamic library that is already compiled
-  string full_so = get_compile_dir() + string("/") + 
+  string full_so = otf_dir_ + string("/") + 
     info.filename_ + ext;
 
   LIBRARY_HANDLE so = 0;
@@ -279,7 +280,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
 bool 
 DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 {
-  string command = ("cd " + get_compile_dir() + "; " + MAKE_CMMD + " " + 
+  string command = ("cd " + otf_dir_ + "; " + MAKE_CMMD + " " + 
 		    info.filename_ + ext);
 
   serr << "DynamicLoader - Executing: " << command << endl;
@@ -306,7 +307,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 	 << "command was '" << command << "'\n";
     result = false;
   }
-  pipe = fopen((get_compile_dir()+"/" + info.filename_ + "log").c_str(), "r");
+  pipe = fopen((otf_dir_+"/" + info.filename_ + "log").c_str(), "r");
 #endif
 
   char buffer[256];
@@ -333,7 +334,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 void
 DynamicLoader::cleanup_failed_compile(CompileInfoHandle info)
 {
-  const string base = get_compile_dir() + "/" + info->filename_;
+  const string base = otf_dir_ + "/" + info->filename_;
 
   const string full_cc = base + "cc";
   unlink(full_cc.c_str());
@@ -363,7 +364,7 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
   const string STD_STR("std::");
 
   // Try to open the file for writing.
-  string full = get_compile_dir() + "/" + info.filename_ + "cc";
+  string full = otf_dir_ + "/" + info.filename_ + "cc";
   ofstream fstr(full.c_str());
 
   if (!fstr) {
@@ -477,78 +478,6 @@ DynamicLoader::maybe_get(const CompileInfo &ci, DynamicAlgoHandle &algo)
   return (fetch(ci, algo) ||
 	  (compile_and_store(ci, true, log) && fetch(ci, algo)));
 }
-
-
-bool
-DynamicLoader::validate_compile_dir(string &dir)
-{
-  struct stat buf;
-  if (!stat(dir.c_str(), &buf) && !errno) 
-  {    
-     // Rid the string of any trailing '/'s
-    string::iterator str_end = dir.end();
-    --str_end;
-    while ((*str_end) == '/') --str_end;
-    dir.erase(++str_end,dir.end());
-    
-    return copy_makefile_to(dir);
-
-        
-#if 0
-    // Look for the makefile in the  directory
-    const int status = stat(string(dir + "/Makefile").c_str(), &buf);
-    return  ((!status && !errno) || // Found the Makefile there already
-	     // OR the Makefile wasnt found, but the copy was successful
-	     (status && errno == ENOENT && copy_makefile_to(dir)));
-#endif
-
-  }
-  return false;
-}
-
-
-
-
-const string &
-DynamicLoader::get_compile_dir()
-{
-  if (!otf_dir_found_) 
-  {
-    otf_dir_ = getenv("SCIRUN_ON_THE_FLY_LIBS_DIR");
-    otf_dir_found_ = true;
-  }
-  return otf_dir_;
-}
-      
-bool 
-DynamicLoader::copy_makefile_to(const string &dir)
-{
-  string command = ("cp -f " + string(SCIRUN_OBJDIR) + 
-		    "/on-the-fly-libs/Makefile " + dir);
-
-  bool result = true;
-#ifdef __sgi
-  FILE * pipe = 0;
-  pipe = popen(command.c_str(), "r");
-  if (pipe == NULL)
-  {
-    result = false;
-  }
-#else
-  const int status = sci_system(command.c_str());
-  if(status != 0) {
-    result = false;
-  }
-#endif
-  if (!result)
-  {
-    cerr << "DynamicLoader::copy_makefile() unable to copy " 
-         << SCIRUN_OBJDIR << "/on-the-fly-libs/Makefile to " << dir << endl;
-  }
-
-  return result;
-}
-
 
 
 

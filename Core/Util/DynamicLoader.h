@@ -104,10 +104,6 @@ private:
   bool entry_is_null(const string &entry);
   bool wait_for_current_compile(const string &entry);
   
-  bool copy_makefile_to(const string &dir);
-  const string &get_compile_dir();
-  bool validate_compile_dir(string &dir);
-  
   typedef map<string, maker_fun> map_type;
   map_type              algo_map_;
   
@@ -115,12 +111,12 @@ private:
   CrowdMonitor          map_crowd_;
   ConditionVariable     compilation_cond_;
   Mutex                 map_lock_;
+  static string		otf_dir_;
 
   //! static vars.
   static DynamicLoader *scirun_loader_;
   static Mutex          scirun_loader_init_lock_;
-  static string		otf_dir_;
-  static bool		otf_dir_found_;
+  
 };
 
 } // End namespace SCIRun
