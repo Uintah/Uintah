@@ -5,7 +5,7 @@
  *    Scott Morris
  *    August 1997
  *
- *  Copyright (C) 1995 SCI Group
+ *  Copyright (C) 1997 SCI Group
  */
 
 #include <Classlib/Array1.h>
@@ -73,8 +73,11 @@ class Gauss : public Module {
 
   double sig;
   int siz;
+  int np;
+  float *gauss;
   
   TCLdouble sigma,size;
+  TCLint hardware;
   
 public: 
   Gauss(const clString& id);
@@ -82,6 +85,8 @@ public:
   virtual ~Gauss();
   virtual Module* clone(int deep);
   virtual void execute();
+
+  void do_parallel(int proc);
 
   // event handlers for the window
   void DoMotion(int x, int y,int which);
@@ -110,7 +115,8 @@ extern "C" {
 
 Gauss::Gauss(const clString& id)
 : Module("Gauss", id, Filter),
-  sigma("sigma", id, this), size("size", id, this)
+  sigma("sigma", id, this), size("size", id, this),
+  hardware("hardware", id, this)
 {
   // Create the input ports
 
@@ -135,7 +141,8 @@ Gauss::Gauss(const clString& id)
 
 Gauss::Gauss(const Gauss& copy, int deep)
 : Module(copy, deep),
-  sigma("sigma", id, this),  size("size", id, this)
+  sigma("sigma", id, this),  size("size", id, this),
+  hardware("hardware", id, this)
 {
   NOT_FINISHED("Gauss::Gauss");
 }
@@ -148,6 +155,36 @@ Module* Gauss::clone(int deep)
 {
   return scinew Gauss(*this, deep);
 }
+
+void Gauss::do_parallel(int proc)
+{
+  int start = (outgrid->grid.dim1()-1)*proc/np;
+  int end   = (proc+1)*(outgrid->grid.dim1()-1)/np;
+
+  if (!start) start++;
+  if (end == outgrid->grid.dim1()-1) end--;
+    
+  for(int x=start; x<end; x++)                 // 1 -> outgrid->grid.dim1()-1 
+    for(int y=1; y<outgrid->grid.dim2()-1; y++){               // start -> end
+      outgrid->grid(x,y,0) = (gauss[0]*ingrid->grid(x-1,y-1,0) + \
+			      gauss[1]*ingrid->grid(x,y-1,0) + \
+			      gauss[2]*ingrid->grid(x+1,y-1,0) + \
+			      gauss[3]*ingrid->grid(x-1,y,0) + \
+			      gauss[4]*ingrid->grid(x,y,0) + \
+			      gauss[5]*ingrid->grid(x+1,y,0) + \
+			      gauss[6]*ingrid->grid(x-1,y+1,0) + \
+			      gauss[7]*ingrid->grid(x,y+1,0) + \
+			      gauss[8]*ingrid->grid(x+1,y+1,0)); 
+      }
+}
+
+static void do_parallel_stuff(void* obj,int proc)
+{
+  Gauss* img = (Gauss*) obj;
+
+  img->do_parallel(proc);
+}
+
 
 void Gauss::execute()
 {
@@ -166,7 +203,6 @@ void Gauss::execute()
   gen=ingrid->generation;
     
   if (gen!=outgrid->generation) {
-    cerr << "New..\n";
     outgrid=new ScalarFieldRG(*ingrid);
     dgrid=new ScalarFieldRGfloat;
   } 
@@ -191,6 +227,7 @@ void Gauss::execute()
     }
 */
 
+  ingrid->compute_minmax();
   ingrid->get_minmax(minval,maxval);
   
   
@@ -204,15 +241,19 @@ void Gauss::execute()
 
   drawn = 1;
 
-  if (!makeCurrent() )
-    return; 
+  int usehardware = hardware.get(); 
 
-  glXMakeCurrent(dpy,pbuf,ctx);
+  if (usehardware) {
+    if (!makeCurrent() )
+      return; 
 
-  glDrawBuffer(GL_BACK);
-  glClear(GL_COLOR_BUFFER_BIT);
-
-  float *gauss;
+    glXMakeCurrent(dpy,pbuf,ctx);
+    
+    glDrawBuffer(GL_BACK);
+    glClear(GL_COLOR_BUFFER_BIT);
+  }
+  
+  
   sig=sigma.get();
   siz=(unsigned char)size.get();
 
@@ -231,28 +272,30 @@ void Gauss::execute()
   for (i1=0;i1<(siz*siz);i1++) {
     gauss[i1]=gauss[i1]/sum;
   }
+
+  if (usehardware) {
   
-  glConvolutionFilter2DEXT(GL_CONVOLUTION_2D_EXT,  \
-			   GL_LUMINANCE, \
-			   siz,siz, \
-			   GL_LUMINANCE,GL_FLOAT,gauss); 
-  glEnable(GL_CONVOLUTION_2D_EXT); 
+    glConvolutionFilter2DEXT(GL_CONVOLUTION_2D_EXT,  \
+			     GL_LUMINANCE, \
+			     siz,siz, \
+			     GL_LUMINANCE,GL_FLOAT,gauss); 
+    glEnable(GL_CONVOLUTION_2D_EXT); 
+    
+    //  glPixelTransferf(GL_POST_CONVOLUTION_RED_BIAS_EXT,0.5);
+    
+    glDrawPixels(width,height,GL_LUMINANCE,GL_FLOAT,&dgrid->grid(0,0,0));
+    
+    glDisable(GL_CONVOLUTION_2D_EXT);
+    
+    //  glPixelTransferf(GL_RED_BIAS,-0.5);
+    
+    glReadPixels(0,0,width,height,GL_RED,GL_FLOAT,&dgrid->grid(0,0,0));
+    
+    //  glXSwapBuffers(dpy,win);
 
-//  glPixelTransferf(GL_POST_CONVOLUTION_RED_BIAS_EXT,0.5);
-  
-  glDrawPixels(width,height,GL_LUMINANCE,GL_FLOAT,&dgrid->grid(0,0,0));
-
-  glDisable(GL_CONVOLUTION_2D_EXT);
-
-//  glPixelTransferf(GL_RED_BIAS,-0.5);
-  
-  glReadPixels(0,0,width,height,GL_RED,GL_FLOAT,&dgrid->grid(0,0,0));
-
-//  glXSwapBuffers(dpy,win);
-
-  for (x=0;x<width;x++)
-    for (int y=0;y<height;y++)
-      outgrid->grid(y,x,0)=(dgrid->grid(y,x,0)*maxval);
+    for (x=0;x<width;x++)
+      for (int y=0;y<height;y++)
+	outgrid->grid(y,x,0)=(dgrid->grid(y,x,0)*maxval);
 
 /*  int max = 0;
   int two32=2;
@@ -269,9 +312,13 @@ void Gauss::execute()
   cerr << "two32 : " << two32 << "\n";
   cerr << "max : " << max << "\n"; */
   
-  glXMakeCurrent(dpy,None,NULL);
-  TCLTask::unlock();
-
+    glXMakeCurrent(dpy,None,NULL);
+    TCLTask::unlock();
+  } else {
+    np = Task::nprocessors();
+    Task::multiprocess(np, do_parallel_stuff, this);
+  }
+  
   // Send out
 
   outscalarfield->send(outgrid);
