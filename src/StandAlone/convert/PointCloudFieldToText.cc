@@ -98,7 +98,7 @@ int
 main(int argc, char **argv) {
   if (argc < 3 || argc > 4) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 #if defined(__APPLE__)  
   macForceLoad(); // Attempting to force load (and thus instantiation of
@@ -110,23 +110,23 @@ main(int argc, char **argv) {
   char *ptsName = argv[2];
   if (!parseArgs(argc, argv)) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
   FieldHandle handle;
   Piostream* stream=auto_istream(fieldName);
   if (!stream) {
     cerr << "Couldn't open file "<<fieldName<<".  Exiting...\n";
-    exit(0);
+    return 2;
   }
   Pio(*stream, handle);
   if (!handle.get_rep()) {
     cerr << "Error reading surface from file "<<fieldName<<".  Exiting...\n";
-    exit(0);
+    return 2;
   }
   if (handle->get_type_description(0)->get_name() != "PointCloudField") {
     cerr << "Error -- input field wasn't a PointCloudField (type_name="<<handle->get_type_description(0)->get_name()<<"\n";
-    exit(0);
+    return 2;
   }
 
   MeshHandle mH = handle->mesh();
@@ -140,7 +140,7 @@ main(int argc, char **argv) {
   FILE *fPts = fopen(ptsName, "wt");
   if (!fPts) {
     cerr << "Error opening output file "<<ptsName<<"\n";
-    exit(0);
+    return 2;
   }
   if (ptsCountHeader) fprintf(fPts, "%d\n", (unsigned)(nsize));
   cerr << "Number of points = "<< nsize <<"\n";

@@ -98,7 +98,7 @@ int
 main(int argc, char **argv) {
   if (argc < 3 || argc > 4) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 #if defined(__APPLE__)  
   macForceLoad(); // Attempting to force load (and thus instantiation of
@@ -110,19 +110,19 @@ main(int argc, char **argv) {
   char *textfileName = argv[2];
   if (!parseArgs(argc, argv)) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
   ColorMapHandle handle;
   Piostream* stream=auto_istream(colormapName);
   if (!stream) {
     cerr << "Couldn't open file "<<colormapName<<".  Exiting...\n";
-    exit(0);
+    return 2;
   }
   Pio(*stream, handle);
   if (!handle.get_rep()) {
     cerr << "Error reading colormap from file "<<colormapName<<".  Exiting...\n";
-    exit(0);
+    return 2;
   }
 
   int size=handle->size();
@@ -130,7 +130,7 @@ main(int argc, char **argv) {
   FILE *fTxt = fopen(textfileName, "wt");
   if (!fTxt) {
     cerr << "Error -- couldn't open output file "<<textfileName<<"\n";
-    exit(0);
+    return 2;
   }
   if (header) fprintf(fTxt, "%d\n", size);
   //double alpha;

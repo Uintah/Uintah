@@ -108,7 +108,7 @@ main(int argc, char **argv)
 {
   if (argc < 3 || argc > 6) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
 #if defined(__APPLE__)  
@@ -121,7 +121,7 @@ main(int argc, char **argv)
   const char *fieldName = argv[2];
   if (!parseArgs(argc, argv)) {
     printUsageInfo(argv[0]);
-    return 0;
+    return 2;
   }
 
   ProgressReporter *pr = scinew ProgressReporter();
@@ -129,7 +129,7 @@ main(int argc, char **argv)
   
   if (pcH.get_rep() == 0)
   {
-    return 0;
+    return 2;
   }
 
   if (binOutput) {
