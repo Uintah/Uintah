@@ -27,6 +27,7 @@ using namespace SCIRun;
 
 #define OLD_SPARSE
 #undef OLD_SPARSE
+#define DEBUG 0
 
 CompNeoHookImplicit::CompNeoHookImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 {
@@ -269,7 +270,7 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 					      const bool recursion)
 
 {
-#if 1
+#if DEBUG
   IntVector nodes(0,0,0);
   int num_nodes(0);
 #if 0 
@@ -356,10 +357,6 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 		     lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(bElBar_new,lb->bElBarLabel_preReloc, pset);
     
-    cerr << "after allocates and puts" << endl;    
-    if (pset->begin() == pset->end())
-      cerr << "no particles to iterate over . . ." << endl;
-    
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
     
@@ -371,7 +368,7 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
     for(ParticleSubset::iterator iter = pset->begin();
 	iter != pset->end(); iter++){
       particleIndex idx = *iter;
-#if 1
+#if DEBUG
       cerr << "Particle " << px[idx] << endl;
 #endif
       velGrad.set(0.0);
@@ -392,11 +389,14 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 	cerr << "patch extents = " << patch->getNodeLowIndex() << " " 
 	     << patch->getNodeHighIndex() << endl;
 #endif
+
+#ifdef HAVE_PETSC
 	  l2g_node_num = l2g[ni[k]];
 	  // cerr << "l2g_node_num = " << l2g_node_num << endl;
 	  dof.push_back(l2g_node_num);
 	  dof.push_back(l2g_node_num+1);
 	  dof.push_back(l2g_node_num+2);
+#endif
 	  
 
 #ifndef HAVE_PETSC 		
@@ -463,7 +463,7 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
       // Compute the deformation gradient increment using the dispGrad
       
       deformationGradientInc = dispGrad + Identity;
-#if 1
+#if DEBUG
       for (int i = 1; i<= 3; i++) {
 	for (int j = 1; j <= 3; j++) {
 	  cerr << "dispGrad(" << i << "," << j << ")= " << dispGrad(i,j) 
@@ -506,7 +506,7 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
       
       fbar = deformationGradientInc * 
 	pow(deformationGradientInc.Determinant(),-1./3.);
-#if 1
+#if DEBUG
       cerr << "J = " << J << " fbar = " << fbar << endl;
 #endif
       bElBar_new[idx] = fbar*bElBar_old[idx]*fbar.Transpose();
@@ -589,7 +589,7 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
       }
 
       // Error it looks like the stress tensor is doubled for some reason.
-#if 1
+#if DEBUG
       cerr << "sig = " << "\t" << sig(0,0) << "\t" << sig(0,1) << "\t" 
 	   << sig(0,2) << endl;
       cerr << "sig = " << "\t" << sig(1,0) << "\t" << sig(1,1) << "\t" 
@@ -600,11 +600,11 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
       
       double volold = pvolumeold[idx];
       double volnew = pvolumeold[idx]*J;
-#if 1
+#if DEBUG
       cerr << "volnew = " << volnew << " volold = " << volold << endl;
 #endif
       pvolume_deformed[idx] = volnew;
-#if 1
+#if DEBUG
       for (int i = 0; i < 6; i++) {
 	for (int j = 0; j < 6; j++) {
 	  cerr << "D[" << i << "][" << j << "]= " << D(i,j) << "\t";
@@ -648,7 +648,7 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 	int dofi = dof[I];
 	for (int J = 0; J < (int)dof.size(); J++) {
 	  int dofj = dof[J];
-#if 1
+#if DEBUG
 #ifdef OLD_SPARSE
 	  cerr << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
 	       << endl;
@@ -761,7 +761,7 @@ void CompNeoHookImplicit::computeStressTensorImplicitOnly(const PatchSubset* pat
        // Compute the deformation gradient increment using the dispGrad
 
        deformationGradientInc = dispGrad + Identity;
-#if 1
+#if DEBUG
       for (int i = 1; i<= 3; i++) {
 	for (int j = 1; j <= 3; j++) {
 	  cerr << "dispGrad(" << i << "," << j << ")= " << dispGrad(i,j) 
@@ -795,7 +795,7 @@ void CompNeoHookImplicit::computeStressTensorImplicitOnly(const PatchSubset* pat
        fbar = deformationGradientInc * 
 	 pow(deformationGradientInc.Determinant(),-1./3.);
 
-#if 1
+#if DEBUG
       cerr << "J = " << J << " fbar = " << fbar << endl;
 #endif
        bElBar_new[idx] = fbar*bElBar_new[idx]*fbar.Transpose();
@@ -818,7 +818,7 @@ void CompNeoHookImplicit::computeStressTensorImplicitOnly(const PatchSubset* pat
 	 }
        }
 
-#if 1
+#if DEBUG
       cerr << "sig = " << "\t" << sig(0,0) << "\t" << sig(0,1) << "\t" 
 	   << sig(0,2) << endl;
       cerr << "sig = " << "\t" << sig(1,0) << "\t" << sig(1,1) << "\t" 
@@ -828,7 +828,7 @@ void CompNeoHookImplicit::computeStressTensorImplicitOnly(const PatchSubset* pat
 #endif
 
        pvolume_deformed[idx] = pvolumeold[idx]*J;
-#if 1
+#if DEBUG
       cerr << "volnew = " << pvolumeold[idx]*J << " volold = " 
 	   << pvolumeold[idx] << endl;
 #endif
