@@ -17,7 +17,6 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 
 #include <sci_algorithm.h>
 #include <fstream>

@@ -4,7 +4,7 @@
 #include <string>
 #include <iosfwd>
 
-class DOMElement;
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 namespace SCIRun {
   class IntVector;
@@ -67,11 +67,11 @@ public:
 	    const string& compressionMode);
 
   virtual void emitNormal(ostream& out, const IntVector& l,
-			  const IntVector& h, DOMElement* varnode) = 0;
+			  const IntVector& h, ProblemSpecP varnode) = 0;
   virtual void readNormal(istream& in, bool swapbytes) = 0;
 
   virtual bool emitRLE(ostream& /*out*/, const IntVector& l,
-		       const IntVector& h, DOMElement* /*varnode*/);
+		       const IntVector& h, ProblemSpecP /*varnode*/);
   virtual void readRLE(istream& /*in*/, bool swapbytes, int nByteMode);
   
   virtual void allocate(const Patch* patch) = 0;

@@ -8,7 +8,6 @@
 #include <Core/Util/Assert.h>
 #include <Core/Util/Endian.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariableBase.h>
 #include <Packages/Uintah/Core/Grid/constGridVariable.h>
 #include <Packages/Uintah/CCA/Ports/InputContext.h>
@@ -140,9 +139,9 @@ public:
 			   const ProcessorGroup* pg,
 			   ParticleSubset* pset);
   virtual void emitNormal(ostream& out, const IntVector& l,
-			  const IntVector& h, DOMElement* varnode);
+			  const IntVector& h, ProblemSpecP varnode);
   virtual bool emitRLE(ostream& out, const IntVector& l, const IntVector& h,
-		       DOMElement* varnode);
+		       ProblemSpecP varnode);
   
   virtual void readNormal(istream& in, bool swapBytes);
   virtual void readRLE(istream& in, bool swapBytes, int nByteMode);
@@ -464,14 +463,12 @@ template<class T>
   template<class T>
   void
   ParticleVariable<T>::emitNormal(ostream& out, const IntVector&,
-				  const IntVector&, DOMElement* varnode)
+				  const IntVector&, ProblemSpecP varnode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
 
-    if (findNode("numParticles", varnode) == 0) {
-      DOMText* text = varnode->getOwnerDocument()->createTextNode(to_xml_ch_ptr("numParticles"));
-      //appendElement(varnode, "numParticles", d_pset->numParticles());
-      appendElement(varnode, text, d_pset->numParticles());
+    if (varnode->findBlock("numParticles") == 0) {
+      varnode->appendElement("numParticles", d_pset->numParticles());
     }
     if(!td->isFlat()){
       SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
@@ -496,13 +493,11 @@ template<class T>
   template<class T>
   bool
   ParticleVariable<T>::emitRLE(ostream& out, const IntVector& /*l*/,
-			       const IntVector& /*h*/, DOMElement* varnode)
+			       const IntVector& /*h*/, ProblemSpecP varnode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
-    if (findNode("numParticles", varnode) == 0) {
-      DOMText* text = varnode->getOwnerDocument()->createTextNode(to_xml_ch_ptr("numParticles"));
-      //appendElement(varnode, "numParticles", d_pset->numParticles());
-      appendElement(varnode, text, d_pset->numParticles());
+    if (varnode->findBlock("numParticles") == 0) {
+      varnode->appendElement("numParticles", d_pset->numParticles());
     }
     if(!td->isFlat()){
       SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));

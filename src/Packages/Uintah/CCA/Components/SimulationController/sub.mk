@@ -12,6 +12,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/Core/DataArchive \
 	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Grid        \
 	Core/OS       \
@@ -20,7 +21,7 @@ PSELIBS := \
 	Core/Util   \
 	Core/Exceptions
 
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS := $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

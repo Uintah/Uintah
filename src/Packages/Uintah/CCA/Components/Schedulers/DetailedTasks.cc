@@ -892,7 +892,7 @@ void DetailedTasks::logMemoryUse(ostream& out, unsigned long& total,
 	    elems3.str(), ndeps*sizeof(DetailedDep), 0);
 }
 
-void DetailedTasks::emitEdges(DOMElement* edgesElement, int rank)
+void DetailedTasks::emitEdges(ProblemSpecP edgesElement, int rank)
 {
   for (int i = 0; i < (int)tasks.size(); i++) {
     ASSERTRANGE(tasks[i]->getAssignedResourceIndex(), 0, d_myworld->size());
@@ -902,19 +902,14 @@ void DetailedTasks::emitEdges(DOMElement* edgesElement, int rank)
   }
 }
 
-void DetailedTask::emitEdges(DOMElement* edgesElement)
+void DetailedTask::emitEdges(ProblemSpecP edgesElement)
 {
   map<DependencyBatch*, DependencyBatch*>::iterator req_iter;
   for (req_iter = reqs.begin(); req_iter != reqs.end(); req_iter++) {
     DetailedTask* fromTask = (*req_iter).first->fromTask;
-    DOMElement* edge = edgesElement->getOwnerDocument()->createElement(to_xml_ch_ptr("edge"));
-    appendElement(edge, 
-		  edgesElement->getOwnerDocument()->createTextNode(to_xml_ch_ptr("source")), 
-		  fromTask->getName());
-    appendElement(edge, 
-		  edgesElement->getOwnerDocument()->createTextNode(to_xml_ch_ptr("target")), 
-		  getName());
-    edgesElement->appendChild(edge);
+    ProblemSpecP edge = edgesElement->appendChild("edge");
+    edge->appendElement("source", fromTask->getName());
+    edge->appendElement("target", getName());
   }
 
   list<InternalDependency>::iterator iter;
@@ -927,14 +922,9 @@ void DetailedTask::emitEdges(DOMElement* edgesElement)
       // are only needed for logistic reasons
       continue;
     }
-    DOMElement* edge = edgesElement->getOwnerDocument()->createElement(to_xml_ch_ptr("edge"));
-    appendElement(edge, 
-		  edgesElement->getOwnerDocument()->createTextNode(to_xml_ch_ptr("source")), 
-		  fromTask->getName());
-    appendElement(edge, 
-		  edgesElement->getOwnerDocument()->createTextNode(to_xml_ch_ptr("target")), 
-		  getName());
-    edgesElement->appendChild(edge);
+    ProblemSpecP edge = edgesElement->appendChild("edge");
+    edge->appendElement("source", fromTask->getName());
+    edge->appendElement("target", getName());
   }
 }
 
