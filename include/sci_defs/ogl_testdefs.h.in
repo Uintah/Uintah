@@ -47,8 +47,9 @@
     GLenum errCode;                                                     \
     int cnt = 1;                                                        \
     while ((errCode = glGetError()) != GL_NO_ERROR) {                   \
-      std::cerr<< "OpenGL Error(" << cnt << "): "<< x << " "            \
-	  << (const char*)gluErrorString(errCode) << std::endl;         \
+      std::cerr<< "OpenGL Error(" << cnt << "):"                        \
+          << __FILE__ << ":" << __LINE__ << " '"                        \
+	  << (const char*)gluErrorString(errCode) << "'" << std::endl;  \
     }                                                                   \
   }
 #else
