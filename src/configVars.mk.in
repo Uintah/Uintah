@@ -282,6 +282,9 @@ ifeq ($(SSTREAM_COMPAT),yes)
 INCLUDES := $(INCLUDES) -I$(SRCTOP)/include/compat
 endif
 
+# sort and remove duplicates from the final list of include paths
+INCLUDES := $(shell for i in $(INCLUDES); do echo $$i; done | sort -u)
+
 # variables and suffix rules for module transformation
 #------------------------------------------------------------------------------
 
