@@ -158,6 +158,11 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
 // pressure initial guess and underrelaxation value is taken from corresponding
 // time substep in the old_dw
+  if ((timelabels->integrator_step_name == "BEEmulation2")||
+      (timelabels->integrator_step_name == "BEEmulation3")) 
+  tsk->requires(Task::NewDW, timelabels->pressure_guess,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  else
   tsk->requires(Task::OldDW, timelabels->pressure_guess,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -225,6 +230,11 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->get(constPressureVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
+    if ((timelabels->integrator_step_name == "BEEmulation2")||
+        (timelabels->integrator_step_name == "BEEmulation3")) 
+    new_dw->get(constPressureVars.pressure, timelabels->pressure_guess, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    else
     old_dw->get(constPressureVars.pressure, timelabels->pressure_guess, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -360,6 +370,11 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
   // coefficient for the variable for which solve is invoked
 
   if (!(d_pressure_correction))
+    if ((timelabels->integrator_step_name == "BEEmulation2")||
+        (timelabels->integrator_step_name == "BEEmulation3")) 
+    tsk->requires(Task::NewDW, timelabels->pressure_guess, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    else
     tsk->requires(Task::OldDW, timelabels->pressure_guess, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -470,6 +485,11 @@ PressureSolver::pressureLinearSolve(const ProcessorGroup* pc,
   new_dw->allocateAndPut(pressureVars.pressure, timelabels->pressure_out,
 			 matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   if (!(d_pressure_correction))
+    if ((timelabels->integrator_step_name == "BEEmulation2")||
+        (timelabels->integrator_step_name == "BEEmulation3")) 
+    new_dw->copyOut(pressureVars.pressure, timelabels->pressure_guess, 
+	            matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    else
     old_dw->copyOut(pressureVars.pressure, timelabels->pressure_guess, 
 	            matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   else

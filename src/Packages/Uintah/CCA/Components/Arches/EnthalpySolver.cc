@@ -749,7 +749,7 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  if (timelabels->number_of_steps > 1)
+  if (timelabels->multiple_steps)
     tsk->requires(Task::NewDW, d_lab->d_enthalpyTempLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   else
@@ -855,7 +855,7 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
     new_dw->get(constEnthalpyVars.old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    if (timelabels->number_of_steps > 1)
+    if (timelabels->multiple_steps)
       new_dw->get(constEnthalpyVars.old_enthalpy, d_lab->d_enthalpyTempLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     else
