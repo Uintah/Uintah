@@ -188,6 +188,10 @@ CuttingPlane::~CuttingPlane()
 {
 }
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1184
+#endif
+
 void CuttingPlane::execute()
 {
     int old_grid_id = grid_id;
@@ -374,6 +378,7 @@ void CuttingPlane::execute()
 			else if (sval<min) min=sval;
 			else if (sval>max) max=sval;
 		    }
+
 		}
 	    invrange=(cmapmax-cmapmin)/(max-min);
 	}
@@ -401,6 +406,10 @@ void CuttingPlane::execute()
 #endif
 	    }
 	    
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 255
+#endif
+
 	    // put the color into the cutting plane (grid) at i, j
 	    if (cptype == CP_SURFACE)
 	      {
@@ -658,6 +667,9 @@ void CuttingPlane::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.10  2000/06/15 19:50:28  sparker
+// Fixed warnings
+//
 // Revision 1.9  2000/03/17 09:27:30  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
