@@ -981,9 +981,12 @@ proc showSplash { imgname {steps none} } {
     global SCIRUN_SRCDIR
 
     if {[winfo exists .splash]} {
-        wm deiconify .splash
-	raise .splash
-	return;
+	if { [winfo ismapped $w] == 1} {
+	    raise $w
+	} else {
+	    wm deiconify $w
+	}
+	return
     }
 
     set filename [file join $SCIRUN_SRCDIR $imgname]
