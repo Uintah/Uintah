@@ -789,7 +789,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                           all_matls); 
   }
 
-  scheduleCheckNeedAddMaterial(           sched, patches, all_matls);
+  scheduleCheckNeedAddMaterial(           sched, level,   all_matls);
 
   //__________________________________
   //  clean up memory
@@ -5113,7 +5113,8 @@ ICE::refineBoundaries(const Patch*, SFCZVariable<double>&,
   throw InternalError("trying to do AMR iwth the non-AMR component!");
 }
 
-bool ICE::needRecompile(double time, double dt, const GridP& grid) {
+bool ICE::needRecompile(double time, double dt, const GridP& grid)
+{
   if(d_recompile){
     d_recompile = false;
     return true;
@@ -5124,41 +5125,18 @@ bool ICE::needRecompile(double time, double dt, const GridP& grid) {
 }
 
 void ICE::scheduleCheckNeedAddMaterial(SchedulerP& sched,
-                                       const PatchSet* patches,
+                                       const LevelP& level,
                                        const MaterialSet* ice_matls)
 {
-  cout_doing << "ICE::scheduleCheckNeedAddMaterial" << endl;
-  Task* t = scinew Task("ICE::checkNeedAddMaterial",
-                      this,&ICE::checkNeedAddMaterial);
- 
-  sched->addTask(t, patches, ice_matls);
-}
-
-void ICE::checkNeedAddMaterial(const ProcessorGroup*,
-                               const PatchSubset* patches,
-                               const MaterialSubset* /*matls*/,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-                                                                                
-    cout_doing << "Checking some as yet undetermined criteria to see if we need to add a new ICE material " << patch->getID() << "\t ICE" << endl;
-                                                                                
-    double time = d_sharedState->getElapsedTime();
-
-    static bool added = false;
- 
-    if(time>.05e100 && !added){
-      d_sharedState->setNeedAddMaterial(true);
-      added = true;
-    }
-    else{
-      d_sharedState->setNeedAddMaterial(false);
+  if(d_models.size() != 0){
+    cout_doing << "ICE::scheduleCheckNeedAddMaterial" << endl;
+    for(vector<ModelInterface*>::iterator iter = d_models.begin();
+       iter != d_models.end(); iter++){
+      ModelInterface* model = *iter;
+      model->scheduleCheckNeedAddMaterial(sched, level, d_modelInfo);
     }
   }
 }
-
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1209
