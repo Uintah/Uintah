@@ -56,6 +56,8 @@ static string widget_name("Isosurface");
 Isosurface::Isosurface(GuiContext* ctx) : 
   Module("Isosurface", ctx, Filter, "Visualization", "SCIRun"), 
   gui_iso_value(ctx->subVar("isoval")),
+  gui_iso_value_min(ctx->subVar("isoval-min")),
+  gui_iso_value_max(ctx->subVar("isoval-max")),
   extract_from_new_field(ctx->subVar("extract-from-new-field")),
   use_algorithm(ctx->subVar("algorithm")),
   build_trisurf_(ctx->subVar("build_trisurf")),

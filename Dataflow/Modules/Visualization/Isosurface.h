@@ -74,6 +74,8 @@ class Isosurface : public Module {
 
   //! GUI variables
   GuiDouble  gui_iso_value;
+  GuiDouble  gui_iso_value_min;
+  GuiDouble  gui_iso_value_max;
   GuiInt     extract_from_new_field;
   GuiInt     use_algorithm;
   GuiInt     build_trisurf_;
