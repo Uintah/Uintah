@@ -49,25 +49,25 @@ c------------------------------------------------------------------
      $                 su(i,j,k),sp(i,j,k),const)
                else
                   if (pcell(i-2*ioff,j-2*joff,k-2*koff).eq.mmwallid) 
-     $                 aw(i,j,k) = 0.0
+     $                 aw(i,j,k) = 0.0D0
                   if (pcell(i+ioff,j+joff,k+koff).eq.mmwallid)
-     $                 ae(i,j,k) = 0.0
+     $                 ae(i,j,k) = 0.0D0
                   if ((pcell(i-idt1,j-jdt1,k-kdt1).eq.mmwallid).or.
      $                (pcell(i-ioff-idt1,j-joff-jdt1,k-koff-kdt1)
      $                 .eq.mmwallid))
-     $                 as(i,j,k) = 0.0
+     $                 as(i,j,k) = 0.0D0
                   if ((pcell(i+idt1,j+jdt1,k+jdt1).eq.mmwallid).or.
      $                (pcell(i-ioff+idt1,j-joff+jdt1,k-koff+kdt1)
      $                 .eq.mmwallid))
-     $                 an(i,j,k) = 0.0
+     $                 an(i,j,k) = 0.0D0
                   if ((pcell(i-idt2,j-jdt2,k-kdt2).eq.mmwallid).or.
      $                (pcell(i-ioff-idt2,j-joff-jdt2,k-koff-kdt2)
      $                 .eq.mmwallid))
-     $                 ab(i,j,k) = 0.0
+     $                 ab(i,j,k) = 0.0D0
                   if ((pcell(i+idt2,j+jdt2,k+kdt2).eq.mmwallid).or.
      $                (pcell(i-ioff+idt2,j-joff+jdt2,k-koff+kdt2)
      $                 .eq.mmwallid))
-     $                 at(i,j,k) = 0.0
+     $                 at(i,j,k) = 0.0D0
                endif
  800        continue
  810     continue

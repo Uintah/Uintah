@@ -36,7 +36,7 @@ c-----------------------------------------------------------------------
          do 250 j = valid_lo(2), valid_hi(2)
             do 150 i = valid_lo(1), valid_hi(1)
 
-               ap(i,j,k) = 0.0
+               ap(i,j,k) = 0.0D0
 
  150        continue
  250     continue

@@ -50,7 +50,7 @@ C--------------------------------------------------------------------
       integer j
       integer k
 
-      tcons = 1.0
+      tcons = 1.0D0
       ltest = .false.
 c      l2up = .false.
       l2up = .true.

@@ -175,7 +175,7 @@ c----------------------------------------------------------------------
                if (xplus) then
                   if ((pcell(idxHi(1)+1,j,k).eq.outletfield).or.
      $                 ((pcell(idxHi(1)+1,j,k).eq.presstype).and.
-     $                 (uu(idxHi(1)+2,j,k).gt.0.0))) then
+     $                 (uu(idxHi(1)+2,j,k).gt.0.0D0))) then
                      if ((loutsf).or.
      $                    (pcell(idxHi(1)+1,j,k).eq.presstype).or.
      $                    (pcell(idxHi(1)+1,j,k).eq.outletfield)) then
@@ -187,7 +187,7 @@ c----------------------------------------------------------------------
                if (xminus) then
                   if ((pcell(idxLo(1)-1,j,k).eq.outletfield).or.
      $                 ((pcell(idxLo(1)-1,j,k).eq.presstype).and.
-     $                 (uu(idxLo(1)-1,j,k).lt.0.0))) then
+     $                 (uu(idxLo(1)-1,j,k).lt.0.0D0))) then
                      if ((loutsf).or.
      $                    (pcell(idxLo(1)-1,j,k).eq.presstype)) then
                         H(idxLo(1)-1,j,k) = H(idxLo(1),j,k)
@@ -207,7 +207,7 @@ c--------------------------------------------------------------------
                if (yplus) then
                   if ((pcell(i,idxHi(2)+1,k).eq.outletfield).or.
      $                 ((pcell(i,idxHi(2)+1,k).eq.presstype).and.
-     $                 (vv(i,idxHi(2)+2,k).gt.0.0))) then
+     $                 (vv(i,idxHi(2)+2,k).gt.0.0D0))) then
                      if ((loutsf).or.
      $                    (pcell(i, idxHi(2)+1, k).eq.presstype)) then
                         H(i,idxHi(2)+1,k) = H(i,idxHi(2),k)
@@ -218,7 +218,7 @@ c--------------------------------------------------------------------
                if (yminus) then
                   if ((pcell(i,idxLo(2)-1,k).eq.outletfield).or.
      $                 ((pcell(i,idxLo(2)-1,k).eq.presstype).and.
-     $                 (vv(i,idxLo(2)-1,k).lt.0.0))) then
+     $                 (vv(i,idxLo(2)-1,k).lt.0.0D0))) then
                      if ((loutsf).or.(pcell(i, idxLo(2)-1, k).eq.
      $                    presstype)) then
                         H(i,idxLo(2)-1,k) = H(i,idxLo(2),k)
@@ -238,7 +238,7 @@ c--------------------------------------------------------------------
                if (zplus) then
                   if ((pcell(i,j,idxHi(3)+1).eq.outletfield).or.
      $                 ((pcell(i,j,idxHi(3)+1).eq.presstype).and.
-     $                 (ww(i,j,idxHi(3)+2).gt.0.0))) then
+     $                 (ww(i,j,idxHi(3)+2).gt.0.0D0))) then
                      if ((loutsf).or.(pcell(i, j, idxHi(3)+1).eq.
      $                    presstype)) then
                         H(i,j,idxHi(3)+1) = H(i,j,idxHi(3))
@@ -249,7 +249,7 @@ c--------------------------------------------------------------------
                if (zminus) then
                   if ((pcell(i,j,idxLo(3)-1).eq.outletfield).or.
      $                 ((pcell(i,j,idxLo(3)-1).eq.presstype).and.
-     $                 (ww(i,j,idxLo(3)-1).lt.0.0))) then
+     $                 (ww(i,j,idxLo(3)-1).lt.0.0D0))) then
                      if ((loutsf).or.(pcell(i, j, idxLo(3)-1).eq.
      $                    presstype)) then
                         H(i,j,idxLo(3)-1) = H(i,j,idxLo(3))

@@ -74,10 +74,10 @@ c*********************************************************************
                   H(i,j,k) = -delta_t*uvwout*(old_H(i,j,k)-
      $                         old_H(i-1,j,k))/dxpw(i) + 
      $                         old_H(i,j,k)
-                  if (H(i,j,k) .lt. 0.0) then 
-                     H(i,j,k) = 0.0
-                  else if (H(i,j,k) .gt. 1.0) then
-                     H(i,j,k) = 1.0
+                  if (H(i,j,k) .lt. 0.0D0) then 
+                     H(i,j,k) = 0.0D0
+                  else if (H(i,j,k) .gt. 1.0D0) then
+                     H(i,j,k) = 1.0D0
                   endif
                endif
  180        CONTINUE
