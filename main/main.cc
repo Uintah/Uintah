@@ -44,15 +44,18 @@
 
 #ifdef SCI_PARALLEL
 #include <Core/CCA/Component/PIDL/PIDL.h>
+#endif
+
 #include <iostream>
 using std::cerr;
 using std::cout;
 using std::endl;
-#endif
 
 #ifdef _WIN32
 #include <afxwin.h>
 #endif
+
+#define VERSION "1.1.2"
 
 using namespace SCIRun;
 
@@ -88,8 +91,41 @@ extern string DEFAULT_LOAD_PACKAGE;  // configured packages
 #error You must set ITCL_WIDGETS to the iwidgets/scripts path
 #endif
 
-int main(int argc, char** argv)
+void
+usage()
 {
+  cout << "Usage: scirun [args] [net_file]\n";
+  cout << "       [-]-v[ersion] : prints out version information\n";
+  cout << "       [-]-h[elp]    : prints usage information\n";
+  cout << "       net_file      : SCIRun Network Input File\n";
+  exit( 0 );
+}
+
+// Apparently some args are past through to TCL where they are parsed...
+// Probably need to check to make sure they are at least valid here???
+
+void
+parse_args( int argc, char *argv[] )
+{
+  for( int cnt = 0; cnt < argc; cnt++ )
+    {
+      string arg( argv[ cnt ] );
+      if( ( arg == "--version" ) || ( arg == "-version" )
+	  || ( arg == "-v" ) || ( arg == "--v" ) ){
+	cout << "Version: " << VERSION << "\n";
+	exit( 0 );
+      } else if ( ( arg == "--help" ) || ( arg == "-help" ) ||
+		  ( arg == "-h" ) ||  ( arg == "--h" ) ) {
+	usage();
+      }
+    }
+}
+
+int
+main(int argc, char *argv[] )
+{
+  parse_args( argc, argv );
+
   global_argc=argc;
   global_argv=argv;
 
@@ -98,7 +134,8 @@ int main(int argc, char** argv)
   SCIRUN_OBJTOP = OBJTOP;
   DEFAULT_LOAD_PACKAGE = DEF_LOAD_PACK;
 
-#ifdef SCI_PARALLEL
+#if 0
+ ifdef SCI_PARALLEL
   try {
     PIDL::PIDL::initialize(argc, argv);
   } catch(const Exception& e) {
