@@ -24,7 +24,7 @@
 #include <Geometry/BBox.h>
 #include <Geometry/Vector.h>
 #include <Geom/Geom.h>
-#include <GL/glu.h>
+#include <Geom/PointLight.h>
 #include <iostream.h>
 #include <stdio.h>
 #include <string.h>
@@ -108,6 +108,8 @@ Roe::Roe(Salmon* s, const clString& id)
     haveInheritMat=0;
     mtnScl=1;
     current_renderer=0;
+    eyep=Point(0,0,1);
+    light.add(new PointLight(Point(0, 0, 120), Color(1,1,1)));
     RoeInit(s);
 }
 
