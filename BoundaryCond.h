@@ -10,7 +10,7 @@
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Stencil7.h>
-
+#include <Packages/Uintah/Core/Grid/BCDataArray.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Containers/StaticArray.h>
