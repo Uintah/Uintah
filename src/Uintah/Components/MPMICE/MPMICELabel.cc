@@ -14,22 +14,33 @@ using namespace Uintah::MPMICESpace;
 MPMICELabel::MPMICELabel()
 {
   // Cell centered variables
-  cMomentumLabel = scinew VarLabel( "c.momentum",
+  cMassLabel    = scinew VarLabel( "c.mass",
+			CCVariable<double>::getTypeDescription() );
+  cVolumeLabel  = scinew VarLabel( "c.volume",
+			CCVariable<double>::getTypeDescription() );
+  vel_CCLabel   = scinew VarLabel( "vel_CC",
 			CCVariable<Vector>::getTypeDescription() );
-  cMassLabel = scinew VarLabel( "c.mass",
-			CCVariable<double>::getTypeDescription() );
-  cVolumeLabel = scinew VarLabel( "c.volume",
-			CCVariable<double>::getTypeDescription() );
+  mom_L_CCLabel = scinew VarLabel( "mom_L_CC",
+			CCVariable<Vector>::getTypeDescription() );
+  dvdt_CCLabel  = scinew VarLabel( "dvdt_CC",
+			CCVariable<Vector>::getTypeDescription() );
 } 
 
 MPMICELabel::~MPMICELabel()
 {
-  delete cMomentumLabel;
   delete cMassLabel;
   delete cVolumeLabel;
+  delete vel_CCLabel;
+  delete mom_L_CCLabel;
+  delete dvdt_CCLabel;
 }
 
 // $Log$
+// Revision 1.4  2001/01/15 23:21:54  guilkey
+// Cleaned up CCMomentum exchange, so it now looks more like Todd's.
+// Added effects back to solid material.  Need NodeIterator to be fixed,
+// and need to figure out how to apply BCs from the ICE code.
+//
 // Revision 1.3  2001/01/14 02:30:01  guilkey
 // CC momentum exchange now works from solid to fluid, still need to
 // add fluid to solid effects.
