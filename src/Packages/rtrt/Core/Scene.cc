@@ -8,6 +8,9 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/LambertianMaterial.h>
+#include <Packages/rtrt/Core/Sphere.h>
+#include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/DpyBase.h>
 #include <Packages/rtrt/Core/Shadows/NoShadows.h>
@@ -30,11 +33,15 @@ Scene::Scene(Object* obj, const Camera& cam, Image* image0, Image* image1,
              const Color& cup,
 	     const Plane& groundplane,
 	     double ambientscale)
-    : obj(obj), camera0(camera0), image0(image0), image1(image1),
+    : obj(obj), mainGroup_(obj),
+      camera0(camera0), image0(image0), image1(image1),
       groundplane(groundplane),
       cup(cup), cdown(cdown), origCup_(cup), origCDown_(cdown),
       work("frame tiles")
 {
+  mainGroupWithLights_ = new Group;
+  mainGroupWithLights_->add( obj );
+
   origAmbientColor_ = Color(1,1,1) * ambientscale;
   ambientColor_     = origAmbientColor_;
 
@@ -86,11 +93,15 @@ Scene::Scene(Object* obj, const Camera& cam, const Color& bgcolor,
              const Color& cup,
 	     const Plane& groundplane,
 	     double ambientscale)
-    : obj(obj), camera0(camera0), image0(0), image1(0),
+    : obj(obj), mainGroup_(obj), 
+      camera0(camera0), image0(0), image1(0),
       groundplane(groundplane),
       cdown(cdown), cup(cup), origCup_(cup), origCDown_(cdown),
       work("frame tiles")
 {
+  mainGroupWithLights_ = new Group;
+  mainGroupWithLights_->add( obj );
+
   origAmbientColor_ = Color(1,1,1) * ambientscale;
   ambientColor_     = origAmbientColor_;
 
@@ -99,7 +110,8 @@ Scene::Scene(Object* obj, const Camera& cam, const Color& bgcolor,
 
 Scene::~Scene()
 {
-    delete obj;
+    delete mainGroup_;
+    delete mainGroupWithLights_;
     delete camera0;
     delete camera1;
     delete image0;
@@ -117,13 +129,31 @@ void Scene::refill_work(int which, int nworkers)
     work.refill(nass, nworkers, 40);
 }
 
+static Material * flat_yellow = NULL;
+
 void Scene::add_light(Light* light)
 {
+    if( !flat_yellow )
+        flat_yellow = new LambertianMaterial(Color(.8,.8,.0));
+
+    // Create a yellow sphere that can be rendered in the location
+    // of the light.
+    Sphere * s = new Sphere( flat_yellow, light->get_pos(), 0.1 );
+    mainGroupWithLights_->add( s );
+
     lights.add(light);
 }
 
 void Scene::add_per_matl_light(Light* light)
 {
+    if( !flat_yellow )
+        flat_yellow = new LambertianMaterial(Color(.8,.8,.0));
+
+    // Create a yellow sphere that can be rendered in the location
+    // of the light.
+    Sphere * s = new Sphere( flat_yellow, light->get_pos(), 0.1 );
+    mainGroupWithLights_->add( s );
+
     per_matl_lights.add(light);
 }
 
@@ -187,3 +217,82 @@ void Scene::attach_display(DpyBase *dpy) {
   displays.add(dpy);
   dpy->set_scene(this);
 }
+
+void
+Scene::turnOffAllLights( Light * exceptThisLight )
+{
+  int numLights = lights.size();
+
+  for( int cnt = numLights-1; cnt >= 0; cnt-- )
+    {
+      Light * light = lights[cnt];
+      if( light == exceptThisLight )
+	continue;
+      light->turnOff();
+      nonActiveLights_.add( light );
+      lights.remove( cnt );
+    }
+}
+
+void
+Scene::turnOnAllLights()
+{
+  int numLights = nonActiveLights_.size();
+
+  for( int cnt = numLights-1; cnt >= 0; cnt-- )
+    {
+      Light * light = nonActiveLights_[ cnt ];
+      lights.add( light );
+      light->turnOn();
+      nonActiveLights_.remove( cnt );
+    }
+}
+
+void
+Scene::turnOffLight( Light * light )
+{
+  if( light->isOn() )
+    {
+      for( int cnt = 0; cnt < lights.size(); cnt++ )
+	{
+	  if( lights[cnt] == light )
+	    {
+	      lights.remove( cnt );
+	      light->turnOff();
+	      nonActiveLights_.add( light );
+	      return;
+	    }
+	}
+    }
+}
+
+void
+Scene::turnOnLight( Light * light )
+{
+  if( !light->isOn() )
+    {
+      for( int cnt = 0; cnt < nonActiveLights_.size(); cnt++ )
+	{
+	  if( nonActiveLights_[cnt] == light )
+	    {
+	      nonActiveLights_.remove( cnt );
+	      light->turnOn();
+	      lights.add( light );
+	      return;
+	    }
+	}
+    }
+}
+
+void
+Scene::renderLights( bool on )
+{
+  if( on ){ 
+    // Draw spheres for all the lights
+    obj = mainGroupWithLights_;
+  } else {
+    // Remove the spheres for all the lights
+    obj = mainGroup_;
+  }
+}
+
