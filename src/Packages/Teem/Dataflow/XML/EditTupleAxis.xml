@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<component name="EditTupleAxis" category="NrrdData">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>
+      The EditTupleAxis module allows the user to edit the entries
+of the tuple-axis associated with a Nrrd data set.
+    </summary>
+    <description>
+	<p>The input Nrrd is copied with this module.  The output
+string is checked to make sure that the number of entries match the
+number of the input Nrrd.  For example, if the input Nrrd has a tuple
+axis with the label "(Vector)", the output could be 
+"(Scalar),(Scalar),(Scalar)", because the input data has three entries
+along the tuple axis, as does the output.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no"> 
+      <port>
+        <name>Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

@@ -26,6 +26,8 @@ SRCDIR := Packages/Teem/Dataflow/GUI
 
 SRCS := \
 	$(SRCDIR)/axis_info_sel_box.tcl\
+	$(SRCDIR)/ChooseNrrd.tcl\
+	$(SRCDIR)/EditTupleAxis.tcl\
 	$(SRCDIR)/FieldToNrrd.tcl\
 	$(SRCDIR)/HDF5DataReader.tcl\
 	$(SRCDIR)/NrrdInfo.tcl\
