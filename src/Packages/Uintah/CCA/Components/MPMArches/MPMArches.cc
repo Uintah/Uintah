@@ -54,7 +54,7 @@ using namespace std;
 // ****************************************************************************
 
 #undef RIGID_MPM
-#define RIGID_MPM
+// #define RIGID_MPM
 
 MPMArches::MPMArches(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
