@@ -710,9 +710,9 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
             int l=0;
             int h=axis->weights.size()-1;
             if(value < axis->weights[l] || value > axis->weights[h]){
-              if(value < axis->weights[l] && value > axis->weights[l]-1.e-1)
+              if(value < axis->weights[l] && value > axis->weights[l]-1.5e-1)
                 value = axis->weights[l];
-              else if(value > axis->weights[h] && value < axis->weights[h]+1.e-1)
+              else if(value > axis->weights[h] && value < axis->weights[h]+1.5e-1)
                 value = axis->weights[h];
               else {
                 cerr.precision(17);
