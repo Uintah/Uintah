@@ -50,8 +50,8 @@
 	<Level>
 	    <Box label = "1">
 	        <lower>[0,0,0]</lower>
-	        <upper>[3,3,3]</upper>
-	        <resolution>[100,100,100]</resolution>
+	        <upper>[4,4,4]</upper>
+	        <resolution>[150,150,150]</resolution>
                 <extraCells>[1,1,1]</extraCells>
 		<patches>[3,4,4]</patches>
 	    </Box>
@@ -140,7 +140,7 @@
 		    <geom_object>
 		      <box label = "botWall">
 			<min>[-1,-1,-1]</min>
-			<max>[0,4,4]</max>
+			<max>[0,5,5]</max>
 		      </box>
 		    </geom_object>
 		</FlowInlet>
@@ -153,9 +153,9 @@
 		    <inletType>primary</inletType>
 		    <geom_object>
 		      <cylinder label = "inlet">
-			<bottom>[-5,1.5,1.5]</bottom>
-			<top>[0,1.5,1.5]</top>
-			<radius> 0.5 </radius>
+			<bottom>[-5,2,2]</bottom>
+			<top>[0,2,2]</top>
+			<radius> .5 </radius>
 		      </cylinder>
 		    </geom_object>
 		</FlowInlet>
@@ -168,20 +168,20 @@
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
 		      <box label = "posY_xzWall">
-			<min>[0,3,-1]</min>
-			<max>[3,4,4]</max>
+			<min>[0,4,-1]</min>
+			<max>[4,5,5]</max>
 		      </box>
 		      <box label = "zeroY_xzWall">
 			<min>[0,-1,-1]</min>
-			<max>[3,0,4]</max>
+			<max>[4,0,5]</max>
 		      </box>
 		      <box label = "posZ_xyWall">
-			<min>[0,-1,3]</min>
-			<max>[3,4,4]</max>
+			<min>[0,-1,4]</min>
+			<max>[4,5,5]</max>
 		      </box>
                       <box label = "zeroZ_xyWall">	
 			<min>[0,-1,-1]</min>
-			<max>[3,4,0]</max>
+			<max>[4,5,0]</max>
 		      </box>
 		    </geom_object>
 		</PressureBC>
@@ -194,8 +194,8 @@
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
 		      <box label = "topWall">
-			<min>[3,-1,-1]</min>
-			<max>[4,4,4]</max>
+			<min>[4,-1,-1]</min>
+			<max>[5,5,5]</max>
 		      </box>
 		    </geom_object>
 		</outletBC>
