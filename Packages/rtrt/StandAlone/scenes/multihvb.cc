@@ -18,6 +18,7 @@
 #include <math.h>
 #include <string.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Thread/Mutex.h>
 
 using namespace rtrt;
 using namespace std;

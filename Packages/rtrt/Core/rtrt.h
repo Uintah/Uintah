@@ -3,6 +3,7 @@
 #define RTRT_H 1
 
 #include <Core/Thread/Thread.h>
+#include <Core/Thread/Mutex.h>
 #include <Packages/rtrt/Core/BallAux.h>
 #include <Packages/rtrt/Core/Util.h>
 

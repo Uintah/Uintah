@@ -8,6 +8,7 @@
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
+#include <Core/Thread/Mutex.h>
 #include <Core/Thread/WorkQueue.h>
 #include <stdio.h>
 #include <fstream>
@@ -23,7 +24,7 @@ using namespace SCIRun;
 
 
 namespace rtrt {
-  extern Mutex io;
+  extern SCIRun::Mutex io;
   
   struct VMCell16 {
     float max;
