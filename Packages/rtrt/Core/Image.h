@@ -131,7 +131,8 @@ public:
 
   void draw( int  window_size, // 0 == large, 1 == medium
 	     bool fullscreen ); 
-  void draw_depth( float max_depth = 100 ); 
+  void draw_depth(float max_depth); 
+  void draw_sils_on_image(float max_depth); 
 
   void set(const Pixel& value);
   inline Pixel& operator()(int x, int y) {
@@ -142,7 +143,8 @@ public:
   }
   void set_depth(int x, int y, double d);
   void save(char* file);
-  void save_ppm(char *filename);
+  void save_ppm(char *filename, bool draw_sils = false, float max_depth=0);
+  void save_depth(char *filename);
 };
 #if 0
 class ImageTile;
