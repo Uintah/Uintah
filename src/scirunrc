@@ -173,9 +173,13 @@ SCIRUN_TMP_DIR = /tmp
 # SCIRUN_NOCLEANUPCOMPILE = true
 
 
-### SCI_NOSPLASH = [boolean]
+### SCIRUN_NOSPLASH = [boolean]
 #   If true, SCIRun will not display the splash screen at startup.
-# SCI_NOSPLASH = false
+# SCIRUN_NOSPLASH = false
+
+### SCIRUN_HIDE_PROGRESS = [boolean]
+#   If true, SCIRun will not display progress bars during startup and loading
+# SCIRUN_HIDE_PROGRESS = false
 
 
 ### SCIRUN_FAST_QUIT = [boolean]
@@ -192,6 +196,12 @@ SCIRUN_TMP_DIR = /tmp
 #   If True, regression testing mode will turn on.  Execution starts after a
 #   network is loaded and SCIRun will exit immediately after creating an image.
 # SCI_REGRESSION_TESTING = false
+
+
+### SCIRUN_REGRESSION_TESTING_TIMEOUT = [integer]
+#   If set, and if SCI_REGRESSION_TESTING is True, SCIRun will automatically
+#   kill itself after specified seconds.
+# SCI_REGRESSION_TESTING_TIMEOUT = 300
 
 
 ### THREAD_NO_CATCH_SIGNALS = [boolean]
@@ -229,7 +239,7 @@ SCIRUN_GUI_MoveGuiToMouse = on
 ### SCIRUN_STRAIGHT_CONNECTIONS = [boolean]
 #   Use straight lines to represent connections between modules in the
 #   network editor.
-SCIRUN_STRAIGHT_CONNECTIONS = off
+# SCIRUN_STRAIGHT_CONNECTIONS = off
 
 #################
 # UNDOCUMENTED ##
