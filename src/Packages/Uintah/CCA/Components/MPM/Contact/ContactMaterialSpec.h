@@ -85,7 +85,7 @@ WARNING
            size_t numMats = gmass.size();
            if(numMats>d_matls.size()) numMats = d_matls.size();
            
-           for(int imat=0;imat<numMats;imat++) 
+           for(unsigned int imat=0;imat<numMats;imat++) 
              {
                if(d_matls[imat] && fabs(gmass[imat][c])<EPSILON ) {
                  return false; // required material not present, dont apply this bc
