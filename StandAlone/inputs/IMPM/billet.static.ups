@@ -18,11 +18,12 @@
    </Time>
    <DataArchiver>
         <filebase>billet.static.uda</filebase>
-	<outputInterval>.025</outputInterval>
+	<outputTimestepInterval>1</outputTimestepInterval>
 	<save label="p.x"/>
 	<save label="p.velocity"/>
 	<save label="p.volume"/>
 	<save label="p.stress"/>
+	<save label="p.particleID"/>
 	<save label="g.mass"/>
         <save label="g.acceleration"/>
         <save label="dispNew"/>
