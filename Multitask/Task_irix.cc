@@ -13,6 +13,7 @@
 
 #include <Multitask/Task.h>
 #include <Multitask/ITC.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 #include <stdlib.h>
 #include <ulocks.h>

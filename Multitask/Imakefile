@@ -14,7 +14,7 @@
 LOCKS = lock.o
 
 lock.o: lock_mips.s
-	as -o lock.o lock_mips.s -mips4
+	as -o lock.o lock_mips.s -mips2
 #endif
 
 #ifdef SCI_MACHINE_SOLARIS
