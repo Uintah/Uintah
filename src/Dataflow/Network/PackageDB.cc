@@ -390,18 +390,8 @@ void PackageDB::loadPackage(bool resolve)
   }
   if (gui && !getenv("SCI_NOSPLASH"))
   {
-    gui->execute("toplevel .loading; "
-		 "wm geometry .loading 504x482+135+170; "
-		 "wm title .loading {Welcome to SCIRun}; "
-		 "update idletasks");
-    gui->execute("image create photo ::img::splash -file \"" +
-		 string(SCIRUN_SRCTOP) + "/main/scisplash.ppm\"; "
-		 "label .loading.splash -image ::img::splash; "
-		 "pack .loading.splash");
-    gui->execute("iwidgets::feedback .loading.fb -labeltext "
-		 "{Loading package:                 }"
-		 " -steps " + to_string(mod_count) + ";"
-		 "pack .loading.fb -padx 5 -fill x; update idletasks");
+    gui->execute("showSpash " + to_string(mod_count) + " """ +
+		 string(SCIRUN_SRCTOP) + "/main/scisplash.ppm""");
   }
   int index = 0;
   int numreg;
@@ -409,7 +399,7 @@ void PackageDB::loadPackage(bool resolve)
   for (pi = packages.begin();
        pi!=packages.end();
        pi++) {
-
+    
     numreg = 0;
     
     string pname = (*pi).second->name;
@@ -460,10 +450,8 @@ void PackageDB::loadPackage(bool resolve)
     }
     
     if (numreg) {
-      if(gui){
+      if(gui)
 	gui->execute("createPackageMenu " + to_string(index++));
-	gui->execute("update idletasks");
-      }
     } else {
       if(gui)
 	gui->postMessage("Unable to load package " + pname + ":\n"
@@ -776,4 +764,5 @@ ModuleInfo* PackageDB::GetModuleInfo(const string& name, const string& catname,
     return info;
   return 0;
 }
+
 
