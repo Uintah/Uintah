@@ -15,7 +15,7 @@ int main()
   ProblemSpecReader reader;
   
   ProblemSpecP prob_spec;
-  prob_spec = reader.readInputFile("test.ups");
+  prob_spec = reader.readInputFile("input1.ups");
 
   cout << "works after reading file . . ." << endl;
   
@@ -23,7 +23,11 @@ int main()
 
   ProblemSpecP time_prob_spec = prob_spec->findBlock("Time");
 
-  cout << "Works after finding Time block" << endl;
+  ProblemSpecP cfd_prob_spec = prob_spec->findBlock("CFD");
+
+  ProblemSpecP ice_prob_spec = cfd_prob_spec->findBlock("ICE");
+
+   cout << "Works after finding ICE block" << endl;
 
   string title;
   meta_prob_spec->require("title",title);
@@ -44,6 +48,17 @@ int main()
   double delt_max;
   time_prob_spec->require("delt_max",delt_max);
   cout << "delt_max is " << delt_max << endl;
+
+  ProblemSpecP mat_prob_spec = ice_prob_spec->findBlock("material_properties");
+
+  double viscosity;
+  mat_prob_spec->require("viscosity",viscosity);
+  cout << "viscosity is " << viscosity << endl;
+
+  
+ 
+  
+
   exit(1);
 }
 
