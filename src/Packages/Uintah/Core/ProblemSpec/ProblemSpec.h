@@ -250,6 +250,7 @@ WARNING
       // value
       bool get(int &value);
       bool get(long &value);
+      bool get(Vector &value);
 
       //////////
       // look for the value of tag named name and passes
