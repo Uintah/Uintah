@@ -26,7 +26,7 @@
       <save label = "vol_frac_CC"/>
       <save label = "rho_CC"/>
       <save label = "temp_CC"/>
-      <save label = "int_eng_L_ME_CC"/>
+      <save label = "eng_L_ME_CC"/>
       <save label = "p.x"/>
       <save label = "p.volume"/>
       <save label = "p.mass"/>
