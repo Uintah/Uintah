@@ -140,11 +140,10 @@ void ParticleVis::execute()
 
 
   // default colormap--nobody has scaled it.
-#if 0
   if( !cmap->IsScaled()) {
-#endif
     for(ParticleSubset::iterator iter = ps->begin();
-	iter != ps->end(); iter++){max = ( part->getScalars()[ *iter ] > max ) ?
+	iter != ps->end(); iter++){
+      max = ( part->getScalars()[ *iter ] > max ) ?
 	      part->getScalars()[ *iter ] : max;
       min = ( part->getScalars()[ *iter ] < min ) ?
 	      part->getScalars()[ *iter ] : min;
@@ -155,9 +154,7 @@ void ParticleVis::execute()
     }
     cmap->Scale(min,max);
     cerr << "min=" << min << ", max=" << max << '\n';
-#if 0
   }  
-#endif 
 
   //--------------------------------------
   cerr << "numParticles: " << ps->getParticleSet()->numParticles() << '\n';
@@ -229,12 +226,13 @@ void ParticleVis::execute()
 		       outcolor, outcolor, outcolor);
       }
     } 
+    obj->add( pts );
     if( drawVectors.get() == 1){
       obj->add( arrows );
     }
-    GeomPick *pick = new GeomPick( obj, this);
+    // GeomPick *pick = new GeomPick( obj, this);
     ogeom->delAll();
-    ogeom->addObj(pick, "Particles");      
+    ogeom->addObj(obj, "Particles");      
   }
 //     GeomMaterial* matl=new GeomMaterial(obj,
 //    					  new Material(Color(0,0,0),
@@ -272,6 +270,9 @@ extern "C" Module* make_ParticleVis( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.4  2000/05/22 17:20:01  kuzimmer
+// Updating new Viz tools
+//
 // Revision 1.3  2000/05/21 08:18:06  sparker
 // Always compute min/max for particles
 // Fill in grid data

@@ -13,13 +13,17 @@ SRCS     += $(SRCDIR)/Archive.cc  $(SRCDIR)/ArchivePort.cc \
 PSELIBS := SCICore/Exceptions SCICore/Geometry \
 	SCICore/Persistent SCICore/Datatypes \
 	SCICore/Containers Uintah/Grid Uintah/Interface \
-	Uintah/Exceptions Kurt/Datatypes 
+	Uintah/Exceptions Kurt/Datatypes PSECore/XMLUtil 
+
 LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/05/22 17:19:56  kuzimmer
+# Updating new Viz tools
+#
 # Revision 1.2  2000/05/21 08:13:49  sparker
 # Removed depend.mk - it doesn't belong in the repository
 # Added xml libraries to sub.mk

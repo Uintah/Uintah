@@ -4,7 +4,6 @@ catch {rename ParticleVis ""}
 itcl_class Kurt_Vis_ParticleVis {
 
     inherit Module
-    protected t ""
     protected r ""
     protected l_s ""
 
@@ -17,11 +16,9 @@ itcl_class Kurt_Vis_ParticleVis {
 	puts "destructor:  ParticleVis"
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    ::delete object $t
 	    ::delete object $r
 	    ::delete object $l_s
        }
-	set t ""
 	set r ""
 	set l_s ""
 	puts "done"
@@ -29,7 +26,27 @@ itcl_class Kurt_Vis_ParticleVis {
 
     method set_defaults {} {
 	global $this-current_time
+	global $this-radius
+	global $this-polygons
+	global $this-show_nth
+	global $this-drawVectors
+	global $this-length_scale
+	global $this-head_length
+	global $this-shaft_rad
+	global $this-width_scale
+	global $this-drawcylinders
+	global $this-drawspheres
 	set $this-current_time 0
+	set $this-radius 0.01
+	set $this-polygons 32
+	set $this-show_nth 2
+	set $this-drawVectors 0
+	set $this-length_scale 0.1
+	set $this-head_length 0.3
+	set $this-shaft_rad 0.1
+	set $this-width_scale 0.1
+	set $this-drawcylinders 0
+	set $this-drawspheres 0
     }
 
     method ui {} {
@@ -54,10 +71,6 @@ itcl_class Kurt_Vis_ParticleVis {
 	wm minsize $w 300 20
 	frame $w.f1 -relief groove -borderwidth 2
 	pack $w.f1 -side top -expand yes -fill both
-
-	set t [expscale $w.f1.time -label "Time:" -orient horizontal \
-		  -variable $this-current_time -command $n ]
-	pack $w.f1.time -side top -fill x
 
 	make_labeled_radio $w.f1.geom "Particle Geometry" $n \
 	     top $this-drawspheres { {Points 0} {"Spheres (picking mode)" 1} }
@@ -118,7 +131,7 @@ itcl_class Kurt_Vis_ParticleVis {
 	pack $w.f2.shaft_scale -side left -fill x -pady 2
 
 
-	button $w.close -text "Close" -command "$this close"
+	button $w.close -text "Close" -command "wm withdraw $w"
 	pack $w.close -side top -expand yes -fill x
 
     }

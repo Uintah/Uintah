@@ -85,8 +85,8 @@ void RescaleColorMapForParticles::execute()
 	  part->getScalars()[ *iter ] : min;
       }
       if( max == min ){
-	max += 1e-6;
-	min -= 1e-6;
+	max += 0.001;
+	min -= 0.001;
       }
 	
       cmap.detach();
