@@ -34,10 +34,17 @@ itcl_class Uintah_Visualization_CuttingPlane {
 	global $this-exhaustiveGUI
 	set $this-exhaustiveGUI 0
 #	$this-c needexecute
-    }
+    	global $this-xt
+	global $this-yt
+	global $this-zt
+	set $this-xt 0
+	set $this-yt 0
+	set $this-zt 0
+}
     method ui {} {
 	set w .ui[modname]
-		if {[winfo exists $w]} {
+	if {[winfo exists $w]} {
+	    wm deiconify $w
 	    raise $w
 	    return;
 	}
@@ -81,7 +88,8 @@ itcl_class Uintah_Visualization_CuttingPlane {
 	button $w.g.z.plus -text "+" -command "$this-c plusz"
 	label $w.g.z.label -text " Z "
 	button $w.g.z.minus -text "-" -command "$this-c minusz"
-	pack $w.g.z.plus $w.g.z.label $w.g.z.minus -side left -fill x -expand 1 -padx 10
+	pack $w.g.z.plus $w.g.z.label $w.g.z.minus -side left \
+	    -fill x -expand 1 -padx 10
 	pack $w.g.z -side top
 	pack $w.g -side top -fill x
 
@@ -112,5 +120,39 @@ itcl_class Uintah_Visualization_CuttingPlane {
 	checkbutton $w.exh -text "Exhaustive Search" -variable \
 		$this-exhaustiveGUI -command $n
 	pack $w.local $w.full $w.exh -fill x -pady 2 -side top
+
+ 	frame $w.f0 -relief groove -borderwidth 2
+	pack $w.f0 -side top -expand yes -fill both -padx 2
+	buildTranslateFrame $w.f0
+        button $w.b -text "Close" -command "wm withdraw $w"
+        pack $w.b -side top -fill x -padx 2 -pady 2
+	
+    }
+    method buildTranslateFrame { name } {
+	if {  [winfo exists $name.1] } {
+	    destroy $name.1
+	}
+	if {  [winfo exists $name.2] } {
+	    destroy $name.2
+	}
+	frame $name.1 -relief flat -borderwidth 2
+	pack $name.1 -side top  -expand yes -fill both -padx 2
+	frame $name.2 -relief flat -borderwidth 2
+	pack $name.2 -side top  -expand yes -fill both -padx 2
+	
+	label $name.1.l -text Translate
+	pack $name.1.l
+	label $name.2.x -text "x:"
+	entry $name.2.xe -textvariable $this-xt -width 6
+	label $name.2.y -text "y:"
+	entry $name.2.ye -textvariable $this-yt -width 6
+	label $name.2.z -text "z:"
+	entry $name.2.ze -textvariable $this-zt -width 6
+	
+	pack $name.2.x $name.2.xe $name.2.y $name.2.ye $name.2.z $name.2.ze \
+	    -side left -expand yes -fill x -padx 2
+	bind $name.2.xe <Return> "$this-c needexecute"
+	bind $name.2.ye <Return> "$this-c needexecute"
+	bind $name.2.ze <Return> "$this-c needexecute"
     }
 }
