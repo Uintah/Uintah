@@ -3,10 +3,10 @@
 itcl_class SCIRun_Render_Viewer {
     inherit Module
 
-    # List of Roe children of this sammon
-    protected roe
+    # List of ViewWindow children of this salmon
+    protected viewwindow
 
-    # Id for the Next Roe to be created.  Incremented for each new Roe
+    # Id for the Next ViewWindows to be created.  Incremented for each new Viewindow
     protected nextrid 0
 
     constructor {config} {
@@ -14,7 +14,7 @@ itcl_class SCIRun_Render_Viewer {
 	set_defaults
     }
     destructor {
-	foreach rid $roe {
+	foreach rid $viewwindow {
 	    destroy .ui[$rid modname]
 
 	    $rid delete
@@ -24,14 +24,14 @@ itcl_class SCIRun_Render_Viewer {
     method set_defaults {} {
 	set make_progress_graph 0
 	set make_time 0
-	set roe ""
+	set viewwindow ""
     }
 
-    method makeRoeID {} {
-	set id $this-Roe_$nextrid
+    method makeViewWindowID {} {
+	set id $this-ViewWindow_$nextrid
 	incr nextrid
 	while {[::info commands $id] != ""} {
-	    set id $this-Roe_$nextrid
+	    set id $this-ViewWindow_$nextrid
 	    incr nextrid
 	}
 	return $id
@@ -39,17 +39,17 @@ itcl_class SCIRun_Render_Viewer {
 
     method ui {{rid -1}} {
 	if {$rid == -1} {
-	    set rid [makeRoeID]
+	    set rid [makeViewWindowID]
 	}
-	Roe $rid -salmon $this
-	lappend roe $rid
+	ViewWindow $rid -viewer $this
+	lappend viewwindow $rid
     }
 }
 
-catch {rename Roe ""}
+catch {rename ViewWindow ""}
 
-itcl_class Roe {
-    public salmon
+itcl_class ViewWindow {
+    public viewer
     
     # parameters to hold current state of detachable part
     protected IsAttached 
@@ -70,11 +70,11 @@ itcl_class Roe {
     }
 
     constructor {config} {
-	$salmon-c addroe $this
+	$viewer-c addviewwindow $this
 	set w .ui[modname]
 	toplevel $w
-	wm title $w "Roe"
-	wm iconname $w "Roe"
+	wm title $w "ViewWindow"
+	wm iconname $w "ViewWindow"
 	wm minsize $w 100 100
 	
 	global $this-saveFile
@@ -108,7 +108,7 @@ itcl_class Roe {
         set $this-caxes 1
 
 	# Get the list of supported renderers for the pulldown
-	set r [$salmon-c listrenderers]
+	set r [$viewer-c listrenderers]
 	
 	# Need to initialize the background color
 	global $this-bgcolor-r
@@ -352,7 +352,7 @@ itcl_class Roe {
 	frame $w.detached.f
 	pack $w.detached.f -side top -anchor w -fill x
 	
-	wm title $w.detached "ROE settings"
+	wm title $w.detached "VIEWWINDOW settings"
 	update
 
 	wm sizefrom  $w.detached user
@@ -1266,6 +1266,6 @@ itcl_class Roe {
     method doSaveImage {} {
 	global $this-saveFile
 	global $this-saveType
-	$this-c dump_roe [set $this-saveFile] [set $this-saveType]
+	$this-c dump_viewwindow [set $this-saveFile] [set $this-saveType]
     }
 }
