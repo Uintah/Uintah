@@ -35,7 +35,10 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <vector>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <fstream>
+#include <sgi_stl_warnings_on.h>
 // Foundational Model of Anatomy Web Services
 #include "soapServiceInterfaceSoapBindingProxy.h" // get proxy
 #include "ServiceInterfaceSoapBinding.nsmap" // get namespace bindings
@@ -92,13 +95,23 @@ private:
   GuiInt gui_is_injured7_;
   GuiInt gui_is_injured8_;
   GuiInt gui_is_injured9_;
-  // hierarchical relations
+  // hierarchical relations -- 0-based in GUI ListBox
+  // this stores the Tcl name of the HotBox GUI instance
+  GuiString gui_name_;
+  // these store the array values
+  GuiString gui_parent0_;
   GuiString gui_parent1_;
-  GuiString gui_parent2_;
+  // this stores the name of the list
+  GuiString gui_parent_list_;
+  // these store the array values
+  GuiString gui_sibling0_;
   GuiString gui_sibling1_;
   GuiString gui_sibling2_;
   GuiString gui_sibling3_;
-  GuiString gui_sibling4_;
+  // this stores the name of the list
+  GuiString gui_sibling_list_;
+  // these store the array values
+  GuiString gui_child0_;
   GuiString gui_child1_;
   GuiString gui_child2_;
   GuiString gui_child3_;
@@ -106,7 +119,8 @@ private:
   GuiString gui_child5_;
   GuiString gui_child6_;
   GuiString gui_child7_;
-  GuiString gui_child8_;
+  // this stores the name of the list
+  GuiString gui_child_list_;
 
   // toggle on/off drawing GeomSticky output
   GuiString enableDraw_;
@@ -205,12 +219,16 @@ HotBox::HotBox(GuiContext* ctx)
   gui_is_injured7_(ctx->subVar("gui_is_injured(7)")),
   gui_is_injured8_(ctx->subVar("gui_is_injured(8)")),
   gui_is_injured9_(ctx->subVar("gui_is_injured(9)")),
+  gui_name_(ctx->subVar("gui_name")),
+  gui_parent0_(ctx->subVar("gui_parent(0)")),
   gui_parent1_(ctx->subVar("gui_parent(1)")),
-  gui_parent2_(ctx->subVar("gui_parent(2)")),
+  gui_parent_list_(ctx->subVar("gui_parlist_name")),
+  gui_sibling0_(ctx->subVar("gui_sibling(0)")),
   gui_sibling1_(ctx->subVar("gui_sibling(1)")),
   gui_sibling2_(ctx->subVar("gui_sibling(2)")),
   gui_sibling3_(ctx->subVar("gui_sibling(3)")),
-  gui_sibling4_(ctx->subVar("gui_sibling(4)")),
+  gui_sibling_list_(ctx->subVar("gui_siblist_name")),
+  gui_child0_(ctx->subVar("gui_child(0)")),
   gui_child1_(ctx->subVar("gui_child(1)")),
   gui_child2_(ctx->subVar("gui_child(2)")),
   gui_child3_(ctx->subVar("gui_child(3)")),
@@ -218,7 +236,7 @@ HotBox::HotBox(GuiContext* ctx)
   gui_child5_(ctx->subVar("gui_child(5)")),
   gui_child6_(ctx->subVar("gui_child(6)")),
   gui_child7_(ctx->subVar("gui_child(7)")),
-  gui_child8_(ctx->subVar("gui_child(8)")),
+  gui_child_list_(ctx->subVar("gui_childlist_name")),
   enableDraw_(ctx->subVar("enableDraw")),
   datasource_(ctx->subVar("datasource")),
   querytype_(ctx->subVar("querytype")),
@@ -866,23 +884,71 @@ HotBox::executeOQAFMA()
   // }
 
   // set vars in HotBox Tcl GUI
-  gui_sibling1_.set(selectName);
+  gui_sibling0_.set(selectName);
   if(num_struQLret > 0)
-     gui_child1_.set(oqafma_relation[0]);
+     gui_child0_.set(oqafma_relation[0]);
+  else
+     gui_child0_.set("");
   if(num_struQLret > 1)
-     gui_child2_.set(oqafma_relation[1]);
+     gui_child1_.set(oqafma_relation[1]);
+  else
+     gui_child1_.set("");
   if(num_struQLret > 2)
-     gui_child3_.set(oqafma_relation[2]);
+     gui_child2_.set(oqafma_relation[2]);
+  else
+     gui_child2_.set("");
   if(num_struQLret > 3)
-     gui_child4_.set(oqafma_relation[3]);
+     gui_child3_.set(oqafma_relation[3]);
+  else
+     gui_child3_.set("");
   if(num_struQLret > 4)
-     gui_child5_.set(oqafma_relation[4]);
+     gui_child4_.set(oqafma_relation[4]);
+  else
+     gui_child4_.set("");
   if(num_struQLret > 5)
-     gui_child6_.set(oqafma_relation[5]);
+     gui_child5_.set(oqafma_relation[5]);
+  else
+     gui_child5_.set("");
   if(num_struQLret > 6)
-     gui_child7_.set(oqafma_relation[6]);
+     gui_child6_.set(oqafma_relation[6]);
+  else
+     gui_child6_.set("");
   if(num_struQLret > 7)
-     gui_child8_.set(oqafma_relation[7]);
+     gui_child7_.set(oqafma_relation[7]);
+  else
+     gui_child7_.set("");
+
+  // **** magic occurs here **** //
+  // grab control of the Tcl GUI program asynchronously
+  std::string tclResult;
+  gui->lock();
+  // re-populate Hierarchy Browser lists with array members
+  std::string
+   evalStr = "set " + gui_parent_list_.get() + " [list [set " + 
+             gui_name_.get() + "-gui_parent(0)] [set " +
+             gui_name_.get() + "-gui_parent(1)]]";
+  cerr << "gui->eval(" << evalStr << ")" << endl;
+  gui->eval(evalStr, tclResult);
+  istringstream iss(tclResult);
+  cerr << iss;
+
+  gui->eval("set " + gui_sibling_list_.get() + " [list [set " +
+            gui_name_.get() + "-gui_sibling(0)] [set " +
+            gui_name_.get() + "-gui_sibling(1)] [set " +
+            gui_name_.get() + "-gui_sibling(2)] [set " +
+            gui_name_.get() + "-gui_sibling(3)]]", tclResult);
+
+  gui->eval("set " + gui_child_list_.get() + " [list [set " +
+            gui_name_.get() + "-gui_child(0)] [set " +
+            gui_name_.get() + "-gui_child(1)] [set " +
+            gui_name_.get() + "-gui_child(2)] [set " +
+            gui_name_.get() + "-gui_child(3)] [set " +
+            gui_name_.get() + "-gui_child(4)] [set " +
+            gui_name_.get() + "-gui_child(5)] [set " +
+            gui_name_.get() + "-gui_child(6)] [set " +
+            gui_name_.get() + "-gui_child(7)]]", tclResult);
+
+  gui->unlock();
 
   // clean up
   for (int i = 0; i < num_struQLret; i++)
