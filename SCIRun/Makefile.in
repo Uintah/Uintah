@@ -10,7 +10,7 @@ TK_LIB_FLAG   = @TK_LIB_FLAG@
 ITCL_LIB_DIR  = @ITCL_LIB_DIR@
 ITCL_LIB_FLAG = @ITCL_LIB_FLAG@
 
-SUBDIRS = Datatypes Modules
+SUBDIRS = Datatypes Modules GUI
 SOLIB   = libSCIRun.so
 
 SOLIBRARIES = -L$(OBJTOP)/PSECore -lPSECore \
