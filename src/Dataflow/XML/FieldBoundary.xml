@@ -28,7 +28,6 @@
     </authors>
     <summary>Extract boundary surface from volume field.</summary>
     <description>
-      <p>Version Date: March 2001</p><p>Version: 1.0</p>
       <p>Builds a TriSurface of doubles (with no data) from the incoming 
          volume field boundary.  Does nothing if the input is not high 
          enough order to have faces.</p>

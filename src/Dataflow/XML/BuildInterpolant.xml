@@ -28,9 +28,10 @@
       <author>David Weinstein</author>
       <author>Michael Callahan</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Build an interpolant field -- a field that says how to
+    project the data from one field onto the data of a second field.
+    </summary>
     <description>
-      <p>Version Date: July 1998</p><p>Version: 1.0</p>
     </description>
   </overview>
   <io>

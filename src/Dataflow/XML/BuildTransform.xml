@@ -26,9 +26,10 @@
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Build a 4x4 geometric transformation matrix.</summary>
     <description>
-      <p>Version Date: March 1999</p><p>Version: 1.0</p>
+      <p>Build the transformation matrix by specifying options in
+      respect to Translate, Scale, Rotate, Sheer and Permute.</p>
     </description>
   </overview>
   <io>

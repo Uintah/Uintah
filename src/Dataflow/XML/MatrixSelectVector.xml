@@ -26,9 +26,10 @@
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Select a row or column of a matrix.</summary>
     <description>
-      <p>Version Date: June 1999</p><p>Version: 1.0</p>
+      <p>Use the sliders to select the specific row or column.</p>
+      <p>Select whether you want the row or column.</p>
     </description>
   </overview>
   <io>

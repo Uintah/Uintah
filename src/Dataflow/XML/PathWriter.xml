@@ -26,9 +26,8 @@
     <authors>
       <author>Dave Weinstein</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Save persistent representation of a path to a file.</summary>
     <description>
-      <p>Version Date: 1994</p><p>Version: 1.0</p>
     </description>
   </overview>
   <io>

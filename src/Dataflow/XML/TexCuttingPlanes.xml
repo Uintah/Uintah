@@ -26,9 +26,10 @@
     <authors>
       <author>Kurt Zimmerman</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>View slices of a volume.</summary>
     <description>
-      <p>Version Date: unknown</p><p>Version: 1.0</p>
+      <p>You can select the X,Y,Z or View plane and use the "+" and
+      "-" buttons to move the cutting planes.</p>
     </description>
   </overview>
   <io>

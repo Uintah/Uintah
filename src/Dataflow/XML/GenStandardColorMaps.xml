@@ -30,7 +30,6 @@
        visualization tools.
     </summary>
     <description>
-      <p>Version Date: December 1998</p><p>Version: 1.0</p>
       <p>This module is used to create some
          "standard" non-editable colormaps in Dataflow/Uintah.
          Non-editable simply means that the colors cannot be

@@ -32,7 +32,6 @@
           values that permeate the field where possible.
     </summary>
     <description>
-      <p>Version Date: March 2001</p><p>Version: 1.0</p>
       <p>
          The field in input port 1 holds the mesh and data that are 
          to be visualized. It only needs to have a mesh, in which case 

@@ -26,9 +26,12 @@
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Performs the binary matrix operations of add and
+    multiply.
+    </summary>
     <description>
-      <p>Version Date: June 1999</p><p>Version: 1.0</p>
+      <p>Select "A X B" for multiplication.</p>
+      <p>Select "A + B" for addition.</p> 
     </description>
   </overview>
   <io>
