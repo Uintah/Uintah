@@ -135,6 +135,7 @@ are used in conjuntion with -PTvar.\n\n";
     exit(1);
 }
 
+
 int main(int argc, char** argv)
 {
   /*
@@ -501,9 +502,7 @@ int main(int argc, char** argv)
 		    {
 		      NCVariable<Point> value;
 		      da->query(value, var, matl, patch, time);
-                    IntVector lo = value.getLowIndex();
-                    IntVector hi = value.getHighIndex() - IntVector(1,1,1);
-		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
+                    cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			Point min, max;
@@ -543,9 +542,7 @@ int main(int argc, char** argv)
 		    {
 		      NCVariable<Matrix3> value;
 		      da->query(value, var, matl, patch, time);
-                    IntVector lo = value.getLowIndex();
-                    IntVector hi = value.getHighIndex() - IntVector(1,1,1);
-		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
+                    cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
@@ -599,9 +596,7 @@ int main(int argc, char** argv)
 		    {
 		      CCVariable<Point> value;
 		      da->query(value, var, matl, patch, time);
-                    IntVector lo = value.getLowIndex();
-                    IntVector hi= value.getHighIndex() - IntVector(1,1,1);
-		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
+                    cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			Point min, max;
@@ -646,9 +641,7 @@ int main(int argc, char** argv)
 		    {
 		      CCVariable<Matrix3> value;
 		      da->query(value, var, matl, patch, time);
-                    IntVector lo = value.getLowIndex();
-                    IntVector hi= value.getHighIndex() - IntVector(1,1,1);
-		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << "\n";
+                    cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
