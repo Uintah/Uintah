@@ -24,8 +24,8 @@ public:
    ICE(const ProcessorGroup* myworld);
    virtual ~ICE();
 
-   struct fflux { double fflux[6]; };
-   struct eflux { double eflux[12]; };
+   struct fflux { double d_fflux[6]; };
+   struct eflux { double d_eflux[12]; };
    
    virtual void problemSetup(
                         const ProblemSpecP& params, 
@@ -135,76 +135,6 @@ public:
 		          DataWarehouseP&,
 		          DataWarehouseP&);
 
-
- void convertNR_4dToUCF(
-                        const Patch*, 
-                        CCVariable<Vector>& vel_ucf, 
-			   double ****uvel_CC,
-			   double ****vvel_CC,
-			   double ****wvel_CC,
-                        bool  include_ghostcells,
-			   int xLoLimit,
-			   int xHiLimit,
-			   int yLoLimit,
-			   int yHiLimit,
-			   int zLoLimit,
-			   int zHiLimit,
-			   int m);
- void convertNR_4dToUCF(
-                        const Patch*, 
-                        CCVariable<double>& scalar_ucf, 
-			   double ****scalar_CC,
-			   bool include_ghostcells,
-			   int xLoLimit,
-			   int xHiLimit,
-			   int yLoLimit,
-			   int yHiLimit,
-			   int zLoLimit,
-			   int zHiLimit,
-			   int m);
-
- void convertUCFToNR_4d(
-                        const Patch*, 
-                        CCVariable<Vector>& vel_ucf, 
-			   double ****uvel_CC,
-			   double ****vvel_CC,
-			   double ****wvel_CC,
-			   bool include_ghostcells,
-			   int xLoLimit,
-			   int xHiLimit,
-			   int yLoLimit,
-			   int yHiLimit,
-			   int zLoLimit,
-			   int zHiLimit,
-			   int m);
-                        
- void convertUCFToNR_4d(
-                        const Patch*, 
-                        CCVariable<double>& scalar_ucf, 
-			   double ****scalar_CC,
-			   bool include_ghostcells,
-			   int xLoLimit,
-			   int xHiLimit,
-			   int yLoLimit,
-			   int yHiLimit,
-			   int zLoLimit,
-			   int zHiLimit,
-			   int m);
-
- void convertNR_4dToUCF(
-                        const Patch*, 
-                        FCVariable<Vector>& vel_ucf, 
-			   double ****uvel_FC,
-			   double ****vvel_FC,
-			   double ****wvel_FC,
-			   bool include_ghostcells,
-			   int xLoLimit,
-			   int xHiLimit,
-			   int yLoLimit,
-			   int yHiLimit,
-			   int zLoLimit,
-			   int zHiLimit,
-			   int m);
                         
 void before_each_step_wrapper(
                         const Patch* patch,
@@ -337,6 +267,10 @@ void after_each_step_wrapper(
 #endif
 
 // $Log$
+// Revision 1.32  2000/10/25 22:22:13  jas
+// Change the fflux and eflux struct so that the data members begin with d_.
+// This makes g++ happy.
+//
 // Revision 1.31  2000/10/24 23:07:21  guilkey
 // Added code for steps6and7.
 //
