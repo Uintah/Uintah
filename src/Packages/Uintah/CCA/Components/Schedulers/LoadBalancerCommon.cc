@@ -53,7 +53,7 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
       ASSERTRANGE(idx, 0, d_myworld->size());
 
       if (task->getTask()->getType() == Task::Output)
-        task->assignResource((idx/outputNthProc)*outputNthProc);
+        task->assignResource((idx/d_outputNthProc)*d_outputNthProc);
       else        
         task->assignResource(idx);
 
@@ -201,15 +201,16 @@ LoadBalancerCommon::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
   double interval = 0;
   double cellFactor;
   int timestepInterval = 0;
-
+  d_outputNthProc = 1;
+  
   if (p != 0) {
-    p->getWithDefault("outputNthProc", outputNthProc, 1);
+    p->getWithDefault("outputNthProc", d_outputNthProc, 1);
     if(!p->get("timestepInterval", timestepInterval))
       timestepInterval = 0;
     if (timestepInterval != 0 && !p->get("interval", interval))
       interval = 0.0; // default
     p->getWithDefault("dynamicAlgorithm", dynamicAlgo, "static");
     p->getWithDefault("cellFactor", cellFactor, .1);
-    setDynamicAlgorithm(dynamicAlgo, interval, timestepInterval, cellFactor);
   }
+  setDynamicAlgorithm(dynamicAlgo, interval, timestepInterval, cellFactor);
 }

@@ -61,7 +61,7 @@ namespace Uintah {
      SimulationStateP d_sharedState; // to keep track of timesteps
      
      std::set<const Patch*> d_neighbors;
-     int outputNthProc;
+     int d_outputNthProc;
 
    };
 } // End namespace Uintah
