@@ -5,7 +5,9 @@
 #include <Classlib/String.h>
 #include <Constraints/BaseConstraint.h>
 #include <Geom/Geom.h>
+#include <Geom/Group.h>
 #include <Geom/Material.h>
+#include <Geometry/BSphere.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 #include <Datatypes/ContourSet.h>
@@ -73,6 +75,9 @@ typedef Array1<MaterialHandle> _dummy36_;
 typedef Array1<SurfaceIPort*> _dummy37_;
 typedef Array1<SurfaceHandle> _dummy38_;
 typedef Array1<DebugSwitch*> _dummy39_;
+
+typedef Array1<GeomGroup::ITree*> _dummy40_;
+typedef Array1<BSphere> _dummy41_;
 
 static void _fn1_(Piostream& p1, Array1<TSElement*>& p2)
 {
