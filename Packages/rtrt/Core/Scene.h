@@ -9,7 +9,7 @@
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Plane.h>
 #include <Packages/rtrt/Core/Background.h>
-#include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/Shadows/ShadowBase.h>
 #include <stdio.h>
 
 namespace rtrt {
@@ -23,6 +23,8 @@ class Light;
 class Ray;
 class HitInfo;
 class DpyBase;
+  class Material;
+  class ShadowBase;
 struct DepthStats;
 struct PerProcessorContext;
 
@@ -38,6 +40,8 @@ class Scene {
   Plane groundplane;   // the groundplane for ambient hack
                        // distance guage is based on normal length
   
+  int shadow_mode;
+  int lightbits;
   Array1<Light*> lights;
   RTRT *rtrt_engine;
   Array1<DpyBase*> displays;
@@ -141,6 +145,9 @@ public:
   inline Light* light(int i) {
     return lights[i];
   }
+  inline int nlightBits() {
+    return lightbits;
+  }
 
   inline void set_rtrt_engine(RTRT* _rtrt) {
     rtrt_engine = _rtrt;
@@ -158,11 +165,8 @@ public:
   void waitForEmpty(int which);
   
   
-  void light_intersect(Object* obj, Light* light, const Ray& ray,
-		       HitInfo& hitinfo, double dist, double& atten,
-		       PerProcessorContext* ppc);
   void preprocess(double maxradius, int& pp_offset, int& scratchsize);
-  int shadow_mode;
+  Array1<ShadowBase*> shadows;
   int maxdepth;
   float base_threshold;
   float full_threshold;
@@ -189,6 +193,16 @@ public:
   }
 
   void attach_display(DpyBase *dpy);
+  void init(const Camera& cam, const Color& bgcolor);
+  void add_shadowmode(const char* name, ShadowBase* s);
+  bool select_shadow_mode(const char* name);
+
+  inline bool lit(const Point& hitpos, Light* light,
+		  const Vector& light_dir, double dist, Color& shadow_factor,
+		  int depth, Context* cx) {
+    return shadows[shadow_mode]->lit(hitpos, light, light_dir, dist,
+				     shadow_factor, depth, cx);
+  }
 };
 
 } // end namespace rtrt

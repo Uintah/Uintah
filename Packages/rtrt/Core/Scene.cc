@@ -10,6 +10,12 @@
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/DpyBase.h>
+#include <Packages/rtrt/Core/Shadows/NoShadows.h>
+#include <Packages/rtrt/Core/Shadows/HardShadows.h>
+#include <Packages/rtrt/Core/Shadows/SingleSampleSoftShadows.h>
+#include <Packages/rtrt/Core/Shadows/MultiSampleSoftShadows.h>
+#include <Packages/rtrt/Core/Shadows/ScrewyShadows.h>
+#include <Packages/rtrt/Core/Shadows/UncachedHardShadows.h>
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
@@ -29,34 +35,10 @@ Scene::Scene(Object* obj, const Camera& cam, Image* image0, Image* image1,
       cup(cup), cdown(cdown),
       ambientscale(ambientscale), work("frame tiles")
 {
-  work.refill(0,0,8);
-  shadow_mode=3;
-  camera0=new Camera(cam);
-  camera1=new Camera(cam);
-  maxdepth=2;
-  xtilesize=32;
-  ytilesize=2;
-  ambient_hack=true;
-  shadowobj=0;
-  background = new ConstantBackground( bgcolor );
-  animate=true;
-  hotspots=false;
-  logframes=false;
-  frameno=0;
-  frametime_fp=0;
-  lasttime=0;
+  init(cam, bgcolor);
 }
 
-Scene::Scene(Object* obj, const Camera& cam, const Color& bgcolor,
-             const Color& cdown,
-             const Color& cup,
-	     const Plane& groundplane,
-	     double ambientscale)
-    : obj(obj), camera0(camera0), image0(0), image1(0),
-      groundplane(groundplane),
-      cdown(cdown),
-      cup(cup),
-      ambientscale(ambientscale), work("frame tiles")
+void Scene::init(const Camera& cam, const Color& bgcolor)
 {
   work.refill(0,0,8);
   shadow_mode=3;
@@ -74,6 +56,42 @@ Scene::Scene(Object* obj, const Camera& cam, const Color& bgcolor,
   frameno=0;
   frametime_fp=0;
   lasttime=0;
+  add_shadowmode("none", new NoShadows());
+  add_shadowmode("single", new SingleSampleSoftShadows());
+  add_shadowmode("hard", new HardShadows());
+  add_shadowmode("screwy", new ScrewyShadows());
+  add_shadowmode("multisample", new MultiSampleSoftShadows());
+  add_shadowmode("uncached", new UncachedHardShadows());
+}
+
+void Scene::add_shadowmode(const char* name, ShadowBase* s)
+{
+  s->setName(name);
+  shadows.add(s);
+}
+
+bool Scene::select_shadow_mode(const char* name)
+{
+  for(int i=0;i<shadows.size();i++)
+    if(strcmp(shadows[i]->getName(), name) == 0){
+      shadow_mode=i;
+      return true;
+    }
+  return false;
+}
+
+Scene::Scene(Object* obj, const Camera& cam, const Color& bgcolor,
+             const Color& cdown,
+             const Color& cup,
+	     const Plane& groundplane,
+	     double ambientscale)
+    : obj(obj), camera0(camera0), image0(0), image1(0),
+      groundplane(groundplane),
+      cdown(cdown),
+      cup(cup),
+      ambientscale(ambientscale), work("frame tiles")
+{
+  init(cam, bgcolor);
 }
 
 Scene::~Scene()
@@ -102,18 +120,28 @@ void Scene::add_light(Light* light)
 
 void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
 {
-    double maxradius=0;
-    for(int i=0;i<lights.size();i++)
-	if(lights[i]->radius > maxradius)
-	    maxradius=lights[i]->radius;
-    maxradius*=bvscale;
-    double time=SCIRun::Time::currentSeconds();
-    obj->preprocess(maxradius, pp_offset, scratchsize);
-    if(shadowobj)
-	shadowobj->preprocess(maxradius, pp_offset, scratchsize);
-    else
-	shadowobj=obj;
-    cerr << "Preprocess took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+  for(int i=0;i<lights.size();i++)
+    lights[i]->setIndex(i);
+  lightbits = 0;
+  int i=lights.size();
+  while(i){
+    lightbits++;
+    i>>=1;
+  }
+  double maxradius=0;
+  for(int i=0;i<lights.size();i++)
+    if(lights[i]->radius > maxradius)
+      maxradius=lights[i]->radius;
+  maxradius*=bvscale;
+  double time=SCIRun::Time::currentSeconds();
+  obj->preprocess(maxradius, pp_offset, scratchsize);
+  if(shadowobj)
+    shadowobj->preprocess(maxradius, pp_offset, scratchsize);
+  else
+    shadowobj=obj;
+  for(int i=0;i<shadows.size();i++)
+    shadows[i]->preprocess(this, pp_offset, scratchsize);
+  cerr << "Preprocess took " << Time::currentSeconds()-time << " seconds\n";
 }
 
 void Scene::copy_camera(int which)

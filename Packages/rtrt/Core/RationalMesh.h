@@ -27,7 +27,7 @@ public:
     Point4D **getPts(Vector &, Vector &, Vector &);
 
     inline int get_scratchsize() {
-      return msize*nsize*sizeof(Point4D);
+      return (int)(msize*nsize*sizeof(Point4D));
       //return (2*msize+2*nsize)*sizeof(double);
     }
 

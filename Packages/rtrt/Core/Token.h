@@ -40,7 +40,7 @@ typedef enum {
   DEL_LANGLE      = '<',
   DEL_RANGLE      = '>',
   DEL_DOUBLEQUOTE = '"',
-  DEL_SINGLEQUOTE = '\'',
+  DEL_SINGLEQUOTE = '\''
 
 } DELIMITER;
 

@@ -120,21 +120,11 @@ void Box::intersect(const Ray& r, HitInfo& hit, DepthStats* st,
 
     if (t2 > t1) {
        st->box_hit++;
-       if (t1 > FLT_EPSILON)
-          hit.hit(this, t1);
-       else if (t2 > FLT_EPSILON)
-          hit.hit(this, t2);
+       hit.hit(this, t1);
+       hit.hit(this, t2);
     }
 
 }
-
-void Box::light_intersect(Light*, const Ray& lightray,
-                                  HitInfo& hit, double, Color&,
-                                  DepthStats* ds, PerProcessorContext* ppc)
-{
-    intersect(lightray, hit, ds, ppc);
-}
-
 
 Vector Box::normal(const Point& hitpos, const HitInfo&)
 {

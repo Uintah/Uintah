@@ -170,14 +170,6 @@ Vector Slice<T,A,B>::normal(const Point&, const HitInfo&)
 }
 
 template<class T, class A, class B>
-void Slice<T,A,B>::light_intersect(Light*, const Ray& lightray,
-			  HitInfo& hit, double, Color&,
-			  DepthStats* ds, PerProcessorContext* ppc)
-{
-    intersect(lightray, hit, ds, ppc);
-}
-
-template<class T, class A, class B>
 void Slice<T,A,B>::compute_hist(int, int*,
 				float, float)
 {

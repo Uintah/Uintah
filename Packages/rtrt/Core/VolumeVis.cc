@@ -126,12 +126,6 @@ void VolumeVis::intersect(const Ray& ray, HitInfo& hit, DepthStats*,
    
 }
 
-void VolumeVis::light_intersect(Light* , const Ray& lightray,
-				HitInfo& hit, double , Color& ,
-				DepthStats* ds, PerProcessorContext* ppc) {
-  intersect(lightray, hit, ds, ppc);
-}
-
 // All incoming vectors should be normalized
 
 // Parameters:

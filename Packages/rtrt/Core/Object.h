@@ -49,9 +49,11 @@ public:
     virtual ~Object();
     virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*)=0;
-    virtual void light_intersect(Light* light, const Ray& ray,
-				 HitInfo& hit, double dist, Color& atten,
-				 DepthStats* st, PerProcessorContext* ppc)=0;
+    virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+				 DepthStats* st, PerProcessorContext* ppc);
+    virtual void softshadow_intersect(Light* light, const Ray& ray,
+				      HitInfo& hit, double dist, Color& atten,
+				      DepthStats* st, PerProcessorContext* ppc);
     virtual void multi_light_intersect(Light* light, const Point& orig,
 				       const Array1<Vector>& dirs,
 				       const Array1<Color>& attens,

@@ -45,7 +45,6 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/FastNoise.cc \
 	$(SRCDIR)/FastTurbulence.cc \
 	$(SRCDIR)/Tri.cc \
-	$(SRCDIR)/clString.cc \
 	$(SRCDIR)/Color.cc \
 	$(SRCDIR)/BouncingSphere.cc  \
 	$(SRCDIR)/BV1.cc \
@@ -105,6 +104,9 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/fpcube.c \
 	$(SRCDIR)/templates.cc \
 	$(SRCDIR)/BrickArray2.cc
+
+SUBDIRS := $(SRCDIR)/Shadows
+include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS :=  \
 	Core/Thread Core/Exceptions Core/Geometry Packages/rtrt/visinfo 

@@ -47,7 +47,7 @@ void BrickArray2<T>::allocate()
     // 128 byte cache line
     L1=(int)(sqrt(128./sizeof(T))+.1);
     // 16K page size
-    L2=(int)(sqrt(16384./(sizeof(T)*L1*L1))+.1);
+    L2=(int)(sqrt(16384./double(sizeof(T)*L1*L1))+.1);
     cerr << "sizeof(T)=" << sizeof(T) << '\n';
     cerr << "L1=" << L1 << ", L2=" << L2 << '\n';
     int totalx=(dm1+L2*L1-1)/(L2*L1);

@@ -1134,13 +1134,6 @@ Vector HTVolumeBrick::normal(const Point&, const HitInfo& hit)
   return *n;
 }
 
-void HTVolumeBrick::light_intersect(Light*, const Ray& lightray,
-				    HitInfo& hit, double, Color&,
-				    DepthStats* ds, PerProcessorContext* ppc)
-{
-  intersect(lightray, hit, ds, ppc);
-}
-
 void HTVolumeBrick::compute_hist(int nhist, int* hist,
 				 float datamin, float datamax)
 {

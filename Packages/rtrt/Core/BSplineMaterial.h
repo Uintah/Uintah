@@ -8,9 +8,8 @@
 #include <Packages/rtrt/Core/Array2.h>
 #include <Packages/rtrt/Core/PerProcessorContext.h>
 
-using namespace std;
-
 namespace rtrt {
+using namespace std;
   
 class Knot {
 private:

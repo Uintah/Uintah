@@ -55,7 +55,7 @@ void PhongMaterial::shade(Color& result, const Ray& ray,
 	Vector light_dir=light->get_pos()-hitpos;
 	double dist=light_dir.normalize();
 	Color shadowfactor(1,1,1);
-	if(cx->worker->lit(hitpos, light, light_dir, dist, shadowfactor, depth, cx) ){
+	if(cx->scene->lit(hitpos, light, light_dir, dist, shadowfactor, depth, cx) ){
             double cos_theta=Dot(light_dir, normal);
 	    if(cos_theta < 0){
 		cos_theta=-cos_theta;
@@ -70,7 +70,7 @@ void PhongMaterial::shade(Color& result, const Ray& ray,
 	}
     }
     
-    Color surfcolor=Rd * opac * (difflight + ambient_hack(cx->scene, hitpos, normal)) + Rphong*speclight;
+    Color surfcolor=Rd * opac * (difflight + ambient_hack(cx->scene, normal)) + Rphong*speclight;
 
     // fire the reflection ray
     if (reflects && depth < cx->scene->maxdepth && 

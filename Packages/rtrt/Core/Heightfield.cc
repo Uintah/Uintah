@@ -876,14 +876,6 @@ Vector Heightfield<A,B>::normal(const Point&, const HitInfo& hit)
 }
 
 template<class A, class B>
-void Heightfield<A,B>::light_intersect(Light*, const Ray& lightray,
-			  HitInfo& hit, double, Color&,
-			  DepthStats* ds, PerProcessorContext* ppc)
-{
-    intersect(lightray, hit, ds, ppc);
-}
-
-template<class A, class B>
 void Heightfield<A,B>::brickit(int proc)
 {
     int sx, ex;
@@ -911,7 +903,7 @@ void Heightfield<T,A,B>::get_minmax(float& min, float& max)
 
 
 template<class A, class B>
-void Heightfield<A,B>::uv(UV& uv, const Point&p, const HitInfo& hit)
+void Heightfield<A,B>::uv(UV& uv, const Point&p, const HitInfo&)
 {
     double scalex = 1./(x2-x1);
     double scaley = 1./(y2-y1);

@@ -67,9 +67,8 @@ Vector CutPlane::normal(const Point&, const HitInfo&)
     return Vector(0,0,0);
 }
 
-void CutPlane::light_intersect(Light* light, const Ray& ray,
-			   HitInfo& hit, double dist, Color& atten,
-			   DepthStats* st, PerProcessorContext* ppc)
+void CutPlane::light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+			       DepthStats* st, PerProcessorContext* ppc)
 {
     Vector dir(ray.direction());
     Point orig(ray.origin());
@@ -82,7 +81,8 @@ void CutPlane::light_intersect(Light* light, const Ray& ray,
     Point p(orig+dir*t);
     double plane=Dot(n, orig)-d;
     if(plane > 0){
-	child->light_intersect(light, ray, newhit, dist, newatten, st, ppc);
+      newhit.min_t = hit.min_t;
+	child->light_intersect(ray, newhit, newatten, st, ppc);
 	// On near side of plane...
 	if(t<0 || (newhit.was_hit && newhit.min_t < t)){
 	    hit=newhit;
@@ -93,7 +93,8 @@ void CutPlane::light_intersect(Light* light, const Ray& ray,
 	    return;
 	// On far side of plane...
 	Ray newray(p, dir);
-	child->light_intersect(light, newray, newhit, dist-t, newatten, st, ppc);
+	newhit.min_t = hit.min_t-dt;
+	child->light_intersect(newray, newhit, newatten, st, ppc);
 	if(newhit.was_hit){
 	    hit=newhit;
 	    hit.min_t+=t;
