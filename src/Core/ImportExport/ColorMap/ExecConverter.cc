@@ -78,7 +78,7 @@ Exec_setup_command(const char *cfilename, const string &precommand,
 
   // Temporary filename.
   tmpfilename = "/tmp/" + basenoext + "-" +
-    to_string((unsigned int)(getpid())) + ".fld";
+    to_string((unsigned int)(getpid())) + ".cmap";
 
   // Filename with first extension removed.
   loc = filename.find_last_of(".");
