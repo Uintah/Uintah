@@ -7,10 +7,6 @@
 #include <Uintah/Interface/SchedulerP.h>
 
 namespace Uintah {
-namespace Interface {
-
-using Uintah::Parallel::UintahParallelPort;
-using Uintah::Grid::LevelP;
 
 /**************************************
 
@@ -41,25 +37,27 @@ WARNING
   
 ****************************************/
 
-class Output : public UintahParallelPort {
-public:
-    Output();
-    virtual ~Output();
+   class Output : public UintahParallelPort {
+   public:
+      Output();
+      virtual ~Output();
+      
+      //////////
+      // Insert Documentation Here:
+      void finalizeTimestep(double t, double delt, const LevelP&, SchedulerP&,
+			    const DataWarehouseP&);
+   private:
+      Output(const Output&);
+      Output& operator=(const Output&);
+   };
 
-    //////////
-    // Insert Documentation Here:
-    void finalizeTimestep(double t, double delt, const LevelP&, SchedulerP&,
-			  const DataWarehouseP&);
-private:
-    Output(const Output&);
-    Output& operator=(const Output&);
-};
-
-} // end namespace Interface
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.6  2000/04/26 06:49:11  sparker
+// Streamlined namespaces
+//
 // Revision 1.5  2000/04/11 07:10:53  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

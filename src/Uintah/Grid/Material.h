@@ -4,7 +4,6 @@
 #include <Uintah/Interface/DataWarehouseP.h>
 
 namespace Uintah {
-  namespace Grid {
     
 
 
@@ -41,41 +40,43 @@ WARNING
 //using Uintah::Interface::DataWarehouseP;
 
 
-class Material {
-public:
-  Material() {}
-
-  virtual ~Material() {}
-
-  //////////
-  // Return index associated with this material's
-  // location in the data warehouse
-  int getDWIndex() const;
-
-  //////////
-  // Return index associated with this material's
-  // velocity field
-  int getVFIndex() const;
-
-protected:
-
-  // Index associated with this material's spot in the DW
-  int d_dwindex;
-  // Index associated with this material's velocity field
-  int d_vfindex;
-
-private:
-
-  Material(const Material &mat);
-  Material& operator=(const Material &mat);
-};
-
-  } // end namespace Grid
+   class Material {
+   public:
+      Material() {}
+      
+      virtual ~Material() {}
+      
+      //////////
+      // Return index associated with this material's
+      // location in the data warehouse
+      int getDWIndex() const;
+      
+      //////////
+      // Return index associated with this material's
+      // velocity field
+      int getVFIndex() const;
+      
+   protected:
+      
+      // Index associated with this material's spot in the DW
+      int d_dwindex;
+      // Index associated with this material's velocity field
+      int d_vfindex;
+      
+   private:
+      
+      Material(const Material &mat);
+      Material& operator=(const Material &mat);
+   };
+   
 } // end namespace Uintah
 
 #endif // __MATERIAL_H__
 
 // $Log$
+// Revision 1.5  2000/04/26 06:48:49  sparker
+// Streamlined namespaces
+//
 // Revision 1.4  2000/04/20 18:56:30  sparker
 // Updates to MPM
 //

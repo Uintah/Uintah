@@ -10,13 +10,7 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 
 namespace Uintah {
-   namespace Interface {
     
-      using Uintah::Parallel::UintahParallelPort;
-      using Uintah::Grid::LevelP;
-      using Uintah::Grid::GridP;
-      using Uintah::Grid::SimulationStateP;
-      
       /**************************************
 	
 	CLASS
@@ -46,43 +40,45 @@ namespace Uintah {
 	
 	****************************************/
       
-      class CFDInterface : public UintahParallelPort {
-      public:
-	 CFDInterface();
-	 virtual ~CFDInterface();
-	 
-	 //////////
-	 // Insert Documentation Here:
-	 virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-				   SimulationStateP& state) = 0;
-	 
-	 //////////
-	 // Insert Documentation Here:
-	 virtual void scheduleComputeStableTimestep(const LevelP& level,
-						    SchedulerP&,
-						    DataWarehouseP&) = 0;
-	 
-	 //////////
-	 // Insert Documentation Here:
-	 virtual void scheduleInitialize(const LevelP& level,
-					 SchedulerP&,
-					 DataWarehouseP&) = 0;
-	 
-	 //////////
-	 // Insert Documentation Here:
-	 virtual void scheduleTimeAdvance(double t, double dt,
-					  const LevelP& level, SchedulerP&,
-					  const DataWarehouseP&, DataWarehouseP&) = 0;
-      private:
-	 CFDInterface(const CFDInterface&);
-	 CFDInterface& operator=(const CFDInterface&);
-      };
+   class CFDInterface : public UintahParallelPort {
+   public:
+      CFDInterface();
+      virtual ~CFDInterface();
       
-   } // end namespace Interface
+      //////////
+      // Insert Documentation Here:
+      virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
+				SimulationStateP& state) = 0;
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void scheduleComputeStableTimestep(const LevelP& level,
+						 SchedulerP&,
+						 DataWarehouseP&) = 0;
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void scheduleInitialize(const LevelP& level,
+				      SchedulerP&,
+				      DataWarehouseP&) = 0;
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void scheduleTimeAdvance(double t, double dt,
+				       const LevelP& level, SchedulerP&,
+				       const DataWarehouseP&, DataWarehouseP&) = 0;
+   private:
+      CFDInterface(const CFDInterface&);
+      CFDInterface& operator=(const CFDInterface&);
+   };
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.12  2000/04/26 06:49:10  sparker
+// Streamlined namespaces
+//
 // Revision 1.11  2000/04/24 21:04:39  sparker
 // Working on MPM problem setup and object creation
 //

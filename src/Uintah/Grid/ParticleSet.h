@@ -5,9 +5,8 @@
 #include <iostream> // TEMPORARY
 
 namespace Uintah {
-namespace Grid {
 
-typedef int particleIndex;
+   typedef int particleIndex;
 
 /**************************************
 
@@ -38,36 +37,38 @@ WARNING
   
 ****************************************/
 
-class ParticleSet : public RefCounted {
-public:
-    ParticleSet();
-    ~ParticleSet();
-
-    //////////
-    // Insert Documentation Here:
-    particleIndex addParticle() {
-	return d_numParticles++;
-    }
-
-    //////////
-    // Insert Documentation Here:
-    particleIndex numParticles() {
-	return d_numParticles;
-    }
-private:
-    //////////
-    // Insert Documentation Here:
-    particleIndex d_numParticles;
-
-    ParticleSet(const ParticleSet&);
-    ParticleSet& operator=(const ParticleSet&);
-};
-
-} // end namespace Grid
+   class ParticleSet : public RefCounted {
+   public:
+      ParticleSet();
+      ~ParticleSet();
+      
+      //////////
+      // Insert Documentation Here:
+      particleIndex addParticle() {
+	 return d_numParticles++;
+      }
+      
+      //////////
+      // Insert Documentation Here:
+      particleIndex numParticles() {
+	 return d_numParticles;
+      }
+   private:
+      //////////
+      // Insert Documentation Here:
+      particleIndex d_numParticles;
+      
+      ParticleSet(const ParticleSet&);
+      ParticleSet& operator=(const ParticleSet&);
+   };
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.3  2000/04/26 06:48:51  sparker
+// Streamlined namespaces
+//
 // Revision 1.2  2000/03/16 22:07:59  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

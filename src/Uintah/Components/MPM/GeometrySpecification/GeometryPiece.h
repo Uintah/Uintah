@@ -1,7 +1,6 @@
 #ifndef __GEOMETRY_PIECE_H__
 #define __GEOMETRY_PIECE_H__
 
-#include <SCICore/Geometry/IntVector.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 
 namespace SCICore {
@@ -12,17 +11,9 @@ namespace SCICore {
 }
 
 namespace Uintah {
-   namespace Grid {
-      class Box;
-   }
-   namespace Components {
-      
-      using Uintah::Interface::ProblemSpecP;
-      using Uintah::Interface::ProblemSpec;
-      using SCICore::Geometry::Point;
-      using SCICore::Geometry::Vector;
-      using SCICore::Geometry::IntVector;
-      using Uintah::Grid::Box;
+   class Box;
+   namespace MPM {
+      using namespace SCICore::Geometry;
 
 /**************************************
 	
@@ -57,14 +48,14 @@ WARNING
       class GeometryPiece {
 	 
       public:
-	//////////
-	// Insert Documentation Here:
+	 //////////
+	 // Insert Documentation Here:
 	 GeometryPiece();
-
+	 
 	 //////////
 	 // Insert Documentation Here:
 	 virtual ~GeometryPiece();
-	
+	 
 #ifdef FUTURE
 	 //////////
 	 // Insert Documentation Here:
@@ -76,18 +67,22 @@ WARNING
 	 //////////
 	 // Insert Documentation Here:
 	 virtual Box getBoundingBox() const = 0;
+	 
 	 //////////
 	 // Insert Documentation Here:
 	 virtual bool inside(const Point &p) const = 0;	 
       };
       
-   } // end namespace Components
+   } // end namespace MPM
 } // end namespace Uintah
-
+   
 #endif // __GEOMETRY_PIECE_H__
 
 
 // $Log$
+// Revision 1.4  2000/04/26 06:48:24  sparker
+// Streamlined namespaces
+//
 // Revision 1.3  2000/04/24 21:04:30  sparker
 // Working on MPM problem setup and object creation
 //

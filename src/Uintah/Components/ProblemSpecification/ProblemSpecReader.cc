@@ -8,9 +8,7 @@
 #include <iostream>
 #include <stdio.h>
 using namespace std;
-
-using Uintah::Exceptions::ProblemSetupException;
-using Uintah::Interface::ProblemSpec;
+using namespace Uintah;
 
 void outputContent(ostream& target, const DOMString &s);
 ostream& operator<<(ostream& target, const DOMString& toWrite);

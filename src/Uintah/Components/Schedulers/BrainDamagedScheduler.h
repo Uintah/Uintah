@@ -13,24 +13,8 @@ namespace SCICore {
 }
 
 namespace Uintah {
-
-namespace Grid {
-  class Task;
-}
-
-namespace Parallel {
-  class ProcessorContext;
-}
-
-namespace Components {
-
-using Uintah::Parallel::UintahParallelComponent;
-using Uintah::Parallel::ProcessorContext;
-using Uintah::Interface::Scheduler;
-using Uintah::Interface::DataWarehouseP;
-using Uintah::Grid::Task;
-using Uintah::Grid::VarLabel;
-
+   class Task;
+   class ProcessorContext;
 /**************************************
 
 CLASS
@@ -60,75 +44,77 @@ WARNING
   
 ****************************************/
 
-class BrainDamagedScheduler : public UintahParallelComponent, public Scheduler {
-public:
-    BrainDamagedScheduler( int MpiRank, int MpiProcesses );
-    virtual ~BrainDamagedScheduler();
-
-    //////////
-    // Insert Documentation Here:
-    virtual void initialize();
-
-    //////////
-    // Insert Documentation Here:
-    virtual void execute(const ProcessorContext*);
-
-    //////////
-    // Insert Documentation Here:
-    virtual void addTarget(const VarLabel*);
-
-    //////////
-    // Insert Documentation Here:
-    virtual void addTask(Task* t);
-
-    //////////
-    // Insert Documentation Here:
-    virtual DataWarehouseP createDataWarehouse();
-
-    //////////
-    // Insert Documentation Here:
-    void setNumThreads(int numThreads);
-
-private:
-    BrainDamagedScheduler(const BrainDamagedScheduler&);
-    BrainDamagedScheduler& operator=(const BrainDamagedScheduler&);
-
-    struct TaskRecord {
-	TaskRecord(Task*);
-	~TaskRecord();
-
-	Task*                    task;
-	std::vector<TaskRecord*> deps;
-	std::vector<TaskRecord*> reverseDeps;
-    };
-
-    //////////
-    // Insert Documentation Here:
-    bool allDependenciesCompleted(TaskRecord* task) const;
-
-    //////////
-    // Insert Documentation Here:
-    void setupTaskConnections();
-
-    //////////
-    // Insert Documentation Here:
-    void runThreadedTask(int, TaskRecord*, const ProcessorContext*,
-			 SCICore::Thread::SimpleReducer*);
-
-    SCICore::Thread::SimpleReducer* d_reducer;
-
-    std::vector<TaskRecord*>        d_tasks;
-    std::vector<const VarLabel*>    d_targets;
-
-    SCICore::Thread::ThreadPool*    d_pool;
-    int                             d_numThreads;
-};
-
-} // end namespace Components
+   class BrainDamagedScheduler : public UintahParallelComponent, public Scheduler {
+   public:
+      BrainDamagedScheduler( int MpiRank, int MpiProcesses );
+      virtual ~BrainDamagedScheduler();
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void initialize();
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void execute(const ProcessorContext*);
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void addTarget(const VarLabel*);
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void addTask(Task* t);
+      
+      //////////
+      // Insert Documentation Here:
+      virtual DataWarehouseP createDataWarehouse();
+      
+      //////////
+      // Insert Documentation Here:
+      void setNumThreads(int numThreads);
+      
+   private:
+      BrainDamagedScheduler(const BrainDamagedScheduler&);
+      BrainDamagedScheduler& operator=(const BrainDamagedScheduler&);
+      
+      struct TaskRecord {
+	 TaskRecord(Task*);
+	 ~TaskRecord();
+	 
+	 Task*                    task;
+	 std::vector<TaskRecord*> deps;
+	 std::vector<TaskRecord*> reverseDeps;
+      };
+      
+      //////////
+      // Insert Documentation Here:
+      bool allDependenciesCompleted(TaskRecord* task) const;
+      
+      //////////
+      // Insert Documentation Here:
+      void setupTaskConnections();
+      
+      //////////
+      // Insert Documentation Here:
+      void runThreadedTask(int, TaskRecord*, const ProcessorContext*,
+			   SCICore::Thread::SimpleReducer*);
+      
+      SCICore::Thread::SimpleReducer* d_reducer;
+      
+      std::vector<TaskRecord*>        d_tasks;
+      std::vector<const VarLabel*>    d_targets;
+      
+      SCICore::Thread::ThreadPool*    d_pool;
+      int                             d_numThreads;
+   };
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.7  2000/04/26 06:48:32  sparker
+// Streamlined namespaces
+//
 // Revision 1.6  2000/04/20 18:56:26  sparker
 // Updates to MPM
 //

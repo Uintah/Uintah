@@ -10,53 +10,46 @@
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Grid/SimulationStateP.h>
-
-namespace Uintah {
-    namespace Grid {
-	class Region;
-    }
-}
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/GridP.h>
 
 namespace Uintah {
-namespace Components {
-class GeometryObject;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
-using Uintah::Interface::ProblemSpec;
-using Uintah::Interface::ProblemSpecP;
-using Uintah::Grid::GridP;
-using Uintah::Grid::SimulationStateP;
-
-class Problem {
-  
- public:
-  Problem();
-  ~Problem();
-  
-    
-  void preProcessor(const ProblemSpecP& prob_spec, GridP& grid,
-		    SimulationStateP& sharedState);
-  void createParticles(const Uintah::Grid::Region* region, 
-		       Uintah::Interface::DataWarehouseP&);
+   class Region;
+   namespace MPM {
+      class GeometryObject;
+      using SCICore::Geometry::Vector;
+      using SCICore::Geometry::Point;
    
-  int getNumObjects() const;
-  std::vector<GeometryObject>* getObjects();
- 
-
- private:
-  int d_num_bcs;      // number of boundary conditions;
-  std::vector<BoundCond>  d_bcs;          // boundary conditions
-
-};
-
-} // end namespace Components
+      class Problem {
+      
+      public:
+	 Problem();
+	 ~Problem();
+      
+      
+	 void preProcessor(const ProblemSpecP& prob_spec, GridP& grid,
+			   SimulationStateP& sharedState);
+	 void createParticles(const Region* region, 
+			      DataWarehouseP&);
+	 
+	 int getNumObjects() const;
+	 std::vector<GeometryObject>* getObjects();
+	 
+	 
+      private:
+	 int d_num_bcs;      // number of boundary conditions;
+	 std::vector<BoundCond>  d_bcs;          // boundary conditions
+	 
+      };
+   } // end namespace MPM
 } // end namespace Uintah
 
 #endif // __PROBLEM_H__
 
 // $Log$
+// Revision 1.9  2000/04/26 06:48:25  sparker
+// Streamlined namespaces
+//
 // Revision 1.8  2000/04/24 21:04:32  sparker
 // Working on MPM problem setup and object creation
 //

@@ -7,25 +7,9 @@
 #include <map>
 
 namespace Uintah {
-
-namespace Grid {
   class DataItem;
   class TypeDescription;
   class Region;
-}
-
-namespace Components {
-
-using Uintah::Interface::DataWarehouse;
-using Uintah::Grid::DataItem;
-using Uintah::Grid::TypeDescription;
-using Uintah::Grid::Region;
-using Uintah::Grid::NCVariableBase;
-using Uintah::Grid::ParticleVariableBase;
-using Uintah::Grid::ReductionVariableBase;
-using Uintah::Grid::GridP;
-using Uintah::Grid::VarLabel;
-
 /**************************************
 
   CLASS
@@ -65,6 +49,8 @@ public:
   virtual void allocate(ReductionVariableBase&, const VarLabel*) const;
   virtual void get(ReductionVariableBase&, const VarLabel*) const;
   virtual void put(const ReductionVariableBase&, const VarLabel*);
+  virtual void allocate(int numParticles, ParticleVariableBase&,
+			const VarLabel*, const Region*) const;
   virtual void allocate(ParticleVariableBase&, const VarLabel*,
 			int matlIndex, const Region*, int numGhostCells) const;
   virtual void get(ParticleVariableBase&, const VarLabel*,
@@ -138,11 +124,13 @@ private:
   GridP grid;
 };
 
-} // end namespace Components
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.10  2000/04/26 06:48:33  sparker
+// Streamlined namespaces
+//
 // Revision 1.9  2000/04/24 15:17:01  sparker
 // Fixed unresolved symbols
 //

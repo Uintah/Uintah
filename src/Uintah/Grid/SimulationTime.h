@@ -4,8 +4,6 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 
 namespace Uintah {
-  namespace Grid {
-    using Uintah::Interface::ProblemSpecP;
     
     /**************************************
       
@@ -36,26 +34,26 @@ namespace Uintah {
       
       ****************************************/
     
-    class SimulationTime {
-    public:
+   class SimulationTime {
+   public:
       SimulationTime(const ProblemSpecP& params);
       double maxTime;
       double initTime;
       double delt_min;
       double delt_max;
-
-    private:
+      
+   private:
       SimulationTime(const SimulationTime&);
       SimulationTime& operator=(const SimulationTime&);
       
-    };
-
-    
-  } // end namespace Grid
+   };
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.2  2000/04/26 06:48:57  sparker
+// Streamlined namespaces
+//
 // Revision 1.1  2000/04/13 06:51:02  sparker
 // More implementation to get this to work
 //

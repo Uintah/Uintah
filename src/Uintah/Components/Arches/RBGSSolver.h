@@ -46,12 +46,9 @@ none
 #include <SCICore/Containers/Array1.h>
 
 namespace Uintah {
-namespace Components {
+namespace Arches {
 class LinearSolver;
-using namespace Uintah::Grid;
-  using namespace Uintah::Interface;
   using namespace SCICore::Containers;
-  using namespace Uintah::Parallel;
 
 class RBGSSolver:
 public LinearSolver

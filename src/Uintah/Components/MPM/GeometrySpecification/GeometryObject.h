@@ -5,7 +5,7 @@
 #include <SCICore/Geometry/IntVector.h>
 
 namespace Uintah {
-   namespace Components {
+   namespace MPM {
       class GeometryPiece;
       using namespace SCICore::Geometry;
 /**************************************
@@ -58,13 +58,16 @@ WARNING
 	 IntVector d_resolution;
       };
       
-   } // end namespace Components
+   } // end namespace MPM
 } // end namespace Uintah
 
 #endif // __GEOMETRY_OBJECT_H__
 
 
 // $Log$
+// Revision 1.15  2000/04/26 06:48:24  sparker
+// Streamlined namespaces
+//
 // Revision 1.14  2000/04/25 18:43:30  jas
 // Changed variable name of d_num_par_per_cell to d_resolution.
 //

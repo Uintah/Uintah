@@ -2,13 +2,13 @@
 #define UINTAH_HOMEBREW_PARTICLEDATA_H
 
 #include <Uintah/Grid/RefCounted.h>
+#include <Uintah/Grid/ParticleSet.h>
 #include <vector>
 
 namespace Uintah {
-namespace Grid {
-
-template<class T>
-class ParticleVariable;
+   
+   template<class T>
+      class ParticleVariable;
 
 /**************************************
 
@@ -37,55 +37,56 @@ WARNING
   
 ****************************************/
 
-template<class T>
-class ParticleData : public RefCounted {
-public:
-    ParticleData();
-    ParticleData(const ParticleData<T>&);
-    ParticleData<T>& operator=(const ParticleData<T>&);
-    virtual ~ParticleData();
-
-    //////////
-    // Insert Documentation Here:
-    void add(particleIndex idx, const T& value);
-
-    //////////
-    // Insert Documentation Here:
-    void resize(int newSize) {
-	data.resize(newSize);
-    }
-
-private:
-    friend class ParticleVariable<T>;
-
-    //////////
-    // Insert Documentation Here:
-    std::vector<T> data;
-};
-
-template<class T>
-ParticleData<T>::ParticleData()
-{
-}
-
-template<class T>
-void ParticleData<T>::add(particleIndex idx, const T& value)
-{
-    if(idx != data.size())
-	throw ParticleException("add, not at the end");
-    data.push_back(value);
-}
-
-template<class T>
-ParticleData<T>::~ParticleData()
-{
-}
-
-} // end namespace Grid
+   template<class T> class ParticleData : public RefCounted {
+   public:
+      ParticleData();
+      ParticleData(const ParticleData<T>&);
+      ParticleData<T>& operator=(const ParticleData<T>&);
+      virtual ~ParticleData();
+      
+      //////////
+      // Insert Documentation Here:
+      void add(particleIndex idx, const T& value);
+      
+      //////////
+      // Insert Documentation Here:
+      void resize(int newSize) {
+	 data.resize(newSize);
+      }
+      
+   private:
+      friend class ParticleVariable<T>;
+      
+      //////////
+      // Insert Documentation Here:
+      std::vector<T> data;
+   };
+   
+   template<class T>
+      ParticleData<T>::ParticleData()
+      {
+      }
+   
+   template<class T>
+      void ParticleData<T>::add(particleIndex idx, const T& value)
+      {
+	 if(idx != data.size())
+	    throw ParticleException("add, not at the end");
+	 data.push_back(value);
+      }
+   
+   template<class T>
+      ParticleData<T>::~ParticleData()
+      {
+      }
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.5  2000/04/26 06:48:51  sparker
+// Streamlined namespaces
+//
 // Revision 1.4  2000/04/11 07:10:50  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

@@ -16,9 +16,7 @@
 #include <iostream>
 using namespace std;
 
-using Uintah::Components::Discretization;
-using namespace Uintah::Components;
-using namespace Uintah::Grid;
+using namespace Uintah::Arches;
 using SCICore::Geometry::Vector;
 
 Discretization::Discretization()

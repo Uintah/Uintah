@@ -18,10 +18,7 @@
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <iostream>
 using namespace std;
-using Uintah::Components::Discretization;
-using namespace Uintah::Components;
-using namespace Uintah::Grid;
-using Uintah::Exceptions::InvalidValue;
+using namespace Uintah::Arches;
 using SCICore::Geometry::Vector;
 
 BoundaryCondition::BoundaryCondition()

@@ -7,19 +7,9 @@
 
 class SimulationStateP;
 namespace Uintah {
-
-  namespace Grid {
-    class Region;
-  }
-  namespace Parallel {
-    class ProcessorContext;
-  }
-
-namespace Components {
-
-using Uintah::Grid::Region;
-using Uintah::Interface::DataWarehouseP;
-using Uintah::Parallel::ProcessorContext;
+   class ProcessorContext;
+   class Region;
+   namespace MPM {
 
 /**************************************
 
@@ -50,48 +40,51 @@ WARNING
 
 ****************************************/
 
-class Contact {
-public:
-  // Basic contact methods
-  virtual void exMomInterpolated(const ProcessorContext*,
-				 const Region* region,
-                                 const DataWarehouseP& old_dw,
-                                 DataWarehouseP& new_dw) = 0;
-
-  virtual void exMomIntegrated(const ProcessorContext*,
-			       const Region* region,
-                               const DataWarehouseP& old_dw,
-                               DataWarehouseP& new_dw) = 0;
-
-
-  // Auxilliary methods to supply data needed by some of the
-  // advanced contact models
-  virtual void computeSurfaceNormals()
-  {
-    // Null function is the default.  Particular contact
-    // classes will define these functions when needed.
-    return;
-  };
-  virtual void computeTraction()
-  {
-    // Null function is the default.  Particular contact
-    // classes will define these functions when needed.
-    return;
-  };
-};
-
-inline bool compare(double num1, double num2)
-{
-  double EPSILON=1.e-8;
-
-  return (fabs(num1-num2) <= EPSILON);
-}
-
-
-} // end namespace Components
+      class Contact {
+      public:
+	 // Basic contact methods
+	 virtual void exMomInterpolated(const ProcessorContext*,
+					const Region* region,
+					const DataWarehouseP& old_dw,
+					DataWarehouseP& new_dw) = 0;
+	 
+	 virtual void exMomIntegrated(const ProcessorContext*,
+				      const Region* region,
+				      const DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw) = 0;
+	 
+	 
+	 // Auxilliary methods to supply data needed by some of the
+	 // advanced contact models
+	 virtual void computeSurfaceNormals()
+	 {
+	    // Null function is the default.  Particular contact
+	    // classes will define these functions when needed.
+	    return;
+	 };
+	 virtual void computeTraction()
+	 {
+	    // Null function is the default.  Particular contact
+	    // classes will define these functions when needed.
+	    return;
+	 };
+      };
+      
+      inline bool compare(double num1, double num2)
+	 {
+	    double EPSILON=1.e-8;
+	    
+	    return (fabs(num1-num2) <= EPSILON);
+	 }
+      
+      
+   } // end namespace MPM
 } // end namespace Uintah
-
+   
 // $Log$
+// Revision 1.7  2000/04/26 06:48:20  sparker
+// Streamlined namespaces
+//
 // Revision 1.6  2000/04/25 22:57:30  guilkey
 // Fixed Contact stuff to include VarLabels, SimulationState, etc, and
 // made more of it compile.

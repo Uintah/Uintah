@@ -11,17 +11,7 @@
 #include <Uintah/Grid/Region.h>
 #include <Uintah/Parallel/ProcessorContext.h>
 namespace Uintah {
-namespace Components {
-  using Uintah::Interface::CFDInterface;
-  using Uintah::Parallel::UintahParallelComponent;
-  using Uintah::Interface::ProblemSpecP;
-  using Uintah::Grid::GridP;
-  using Uintah::Grid::LevelP;
-  using Uintah::Grid::Region;
-  using Uintah::Interface::DataWarehouseP;
-  using Uintah::Interface::SchedulerP;
-  using Uintah::Parallel::ProcessorContext;
-
+namespace Arches {
 
 class Properties {
 public:
@@ -55,7 +45,7 @@ private:
     Stream d_streams[MAX_MIXSTREAMS]; 
 };
 
-} // end namespace Components
+} // end namespace Arches
 } // end namespace Uintah
 
 

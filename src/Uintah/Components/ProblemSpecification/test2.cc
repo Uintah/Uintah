@@ -6,10 +6,7 @@
 using std::cout;
 using std::endl;
 using std::cerr;
-
-using Uintah::Interface::ProblemSpec;
-using Uintah::Interface::ProblemSpecP;
-
+using namespace Uintah;
 
 int main()
 {

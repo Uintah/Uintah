@@ -6,7 +6,6 @@
 #include <SCICore/Geometry/Vector.h>
 
 namespace Uintah {
-namespace Grid {
 
 /**************************************
 
@@ -41,48 +40,50 @@ WARNING
   
 ****************************************/
 
-class SubRegion {
-public:
-    SubRegion(const SCICore::Geometry::Point& lower,
-	      const SCICore::Geometry::Point& upper,
-	      int sx, int sy, int sz,
-	      int ex, int ey, int ez);
-    ~SubRegion();
-    SubRegion(const SubRegion&);
-    SubRegion& operator=(const SubRegion&);
-
-    //////////
-    // Determines if the Point "p" is geometrically within this SubRegion
-    inline bool contains(const SCICore::Geometry::Point& p) const {
-	return p.x() >= d_lower.x() && 
-	       p.y() >= d_lower.y() &&
-	       p.z() >= d_lower.z() &&
-	       p.x() < d_upper.x()  &&
-               p.y() < d_upper.y()  &&
-               p.z() < d_upper.z();
-    }
-    ////////// 
-    // Determines if the Array index "idx" is "part of" this SubRegion
-    inline bool contains(const Array3Index& idx) const {
-	return idx.i() >= d_sx && idx.j() >= d_sy && idx.k() >= d_sz
+   class SubRegion {
+   public:
+      SubRegion(const SCICore::Geometry::Point& lower,
+		const SCICore::Geometry::Point& upper,
+		int sx, int sy, int sz,
+		int ex, int ey, int ez);
+      ~SubRegion();
+      SubRegion(const SubRegion&);
+      SubRegion& operator=(const SubRegion&);
+      
+      //////////
+      // Determines if the Point "p" is geometrically within this SubRegion
+      inline bool contains(const SCICore::Geometry::Point& p) const {
+	 return p.x() >= d_lower.x() && 
+	    p.y() >= d_lower.y() &&
+	    p.z() >= d_lower.z() &&
+	    p.x() < d_upper.x()  &&
+	    p.y() < d_upper.y()  &&
+	    p.z() < d_upper.z();
+      }
+      ////////// 
+      // Determines if the Array index "idx" is "part of" this SubRegion
+      inline bool contains(const Array3Index& idx) const {
+	 return idx.i() >= d_sx && idx.j() >= d_sy && idx.k() >= d_sz
 	    && idx.i() <= d_ex && idx.j() <= d_ey && idx.k() <= d_ez;
-    }
-private:
-    SCICore::Geometry::Point d_lower;
-    SCICore::Geometry::Point d_upper;
-
-    ////////// 
-    // Starting and ending indexes into a larger 3D array that stores
-    // the data for this sub-region.
-    int d_sx, d_sy, d_sz;
-    int d_ex, d_ey, d_ez;
-};
-
-} // end namespace Grid
+      }
+   private:
+      SCICore::Geometry::Point d_lower;
+      SCICore::Geometry::Point d_upper;
+      
+      ////////// 
+      // Starting and ending indexes into a larger 3D array that stores
+      // the data for this sub-region.
+      int d_sx, d_sy, d_sz;
+      int d_ex, d_ey, d_ez;
+   };
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.4  2000/04/26 06:48:59  sparker
+// Streamlined namespaces
+//
 // Revision 1.3  2000/03/17 18:45:42  dav
 // fixed a few more namespace problems
 //

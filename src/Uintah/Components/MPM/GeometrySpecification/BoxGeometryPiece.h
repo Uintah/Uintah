@@ -5,11 +5,10 @@
 #include <SCICore/Geometry/Point.h>
 #include <Uintah/Grid/Box.h>
 
-using SCICore::Geometry::Point;
-using Uintah::Grid::Box;
 
 namespace Uintah {
-namespace Components {
+   namespace MPM {
+      using SCICore::Geometry::Point;
 
 /**************************************
 	
@@ -51,37 +50,40 @@ WARNING
 ****************************************/
 
 
-class BoxGeometryPiece : public GeometryPiece {
-
- public:
-  //////////
-  // Constructor that takes a ProblemSpecP argument.   It reads the xml 
-  // input specification and builds a generalized box.
-  BoxGeometryPiece(ProblemSpecP&);
-
-  //////////
-  // Destructor
-  virtual ~BoxGeometryPiece();
-
-  //////////
-  // Determines whether a point is inside the box.
-  virtual bool inside(const Point &p) const;
-
-  //////////
-  //  Returns the bounding box surrounding the cylinder.
-  virtual Box getBoundingBox() const;
-
- private:
-  Box d_box;
-
-};
-
-} // end namespace Components
+      class BoxGeometryPiece : public GeometryPiece {
+	 
+      public:
+	 //////////
+	 // Constructor that takes a ProblemSpecP argument.   It reads the xml 
+	 // input specification and builds a generalized box.
+	 BoxGeometryPiece(ProblemSpecP&);
+	 
+	 //////////
+	 // Destructor
+	 virtual ~BoxGeometryPiece();
+	 
+	 //////////
+	 // Determines whether a point is inside the box.
+	 virtual bool inside(const Point &p) const;
+	 
+	 //////////
+	 //  Returns the bounding box surrounding the cylinder.
+	 virtual Box getBoundingBox() const;
+	 
+      private:
+	 Box d_box;
+	 
+      };
+      
+   } // end namespace MPM
 } // end namespace Uintah
 
 #endif // __BOX_GEOMTRY_Piece_H__
 
 // $Log$
+// Revision 1.3  2000/04/26 06:48:23  sparker
+// Streamlined namespaces
+//
 // Revision 1.2  2000/04/24 21:04:28  sparker
 // Working on MPM problem setup and object creation
 //

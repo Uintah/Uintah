@@ -6,9 +6,7 @@
 #include <iostream> // TEMPORARY
 
 namespace Uintah {
-namespace Grid {
-  class TypeDescription;
-    using Uintah::Exceptions::TypeMismatchException;
+   class TypeDescription;
 
 /**************************************
 
@@ -39,77 +37,78 @@ WARNING
   
 ****************************************/
 
-template<class T>
-class SoleVariable : public DataItem {
-public:
-    inline SoleVariable() {}
-    inline SoleVariable(T value) : value(value) {}
-    inline SoleVariable(const SoleVariable<T>& copy) : value(copy.value) {}
-    virtual ~SoleVariable();
-
-    static const TypeDescription* getTypeDescription();
-
-    inline operator T () const {
-	return value;
-    }
-    virtual void get(DataItem&) const;
-    virtual SoleVariable<T>* clone() const;
-    virtual void allocate(const Region*);
-private:
-    SoleVariable<T>& operator=(const SoleVariable<T>& copy);
-    T value;
-};
-
-template<class T>
-const TypeDescription*
-SoleVariable<T>::getTypeDescription()
-{
-    //cerr << "SoleVariable::getTypeDescription not done\n";
-    return 0;
-}
-
-template<class T>
-void
-SoleVariable<T>::get(DataItem& copy) const
-{
-    SoleVariable<T>* ref = dynamic_cast<SoleVariable<T>*>(&copy);
-    if(!ref)
-	throw TypeMismatchException("SoleVariable<T>");
-    *ref = *this;
-}
-
-template<class T>
-SoleVariable<T>::~SoleVariable()
-{
-}
-
-template<class T>
-SoleVariable<T>*
-SoleVariable<T>::clone() const
-{
-    return new SoleVariable<T>(*this);
-}
-
-template<class T>
-SoleVariable<T>&
-SoleVariable<T>::operator=(const SoleVariable<T>& copy)
-{
-    value = copy.value;
-    return *this;
-}
-
-template<class T>
-void
-SoleVariable<T>::allocate(const Region*)
-{
-    throw TypeMismatchException("SoleVariable shouldn't use allocate");
-}
-
-} // end namespace Grid
+   template<class T> class SoleVariable : public DataItem {
+   public:
+      inline SoleVariable() {}
+      inline SoleVariable(T value) : value(value) {}
+      inline SoleVariable(const SoleVariable<T>& copy) : value(copy.value) {}
+      virtual ~SoleVariable();
+      
+      static const TypeDescription* getTypeDescription();
+      
+      inline operator T () const {
+	 return value;
+      }
+      virtual void get(DataItem&) const;
+      virtual SoleVariable<T>* clone() const;
+      virtual void allocate(const Region*);
+   private:
+      SoleVariable<T>& operator=(const SoleVariable<T>& copy);
+      T value;
+   };
+   
+   template<class T>
+      const TypeDescription*
+      SoleVariable<T>::getTypeDescription()
+      {
+	 //cerr << "SoleVariable::getTypeDescription not done\n";
+	 return 0;
+      }
+   
+   template<class T>
+      void
+      SoleVariable<T>::get(DataItem& copy) const
+      {
+	 SoleVariable<T>* ref = dynamic_cast<SoleVariable<T>*>(&copy);
+	 if(!ref)
+	    throw TypeMismatchException("SoleVariable<T>");
+	 *ref = *this;
+      }
+   
+   template<class T>
+      SoleVariable<T>::~SoleVariable()
+      {
+      }
+   
+   template<class T>
+      SoleVariable<T>*
+      SoleVariable<T>::clone() const
+      {
+	 return new SoleVariable<T>(*this);
+      }
+   
+   template<class T>
+      SoleVariable<T>&
+      SoleVariable<T>::operator=(const SoleVariable<T>& copy)
+      {
+	 value = copy.value;
+	 return *this;
+      }
+   
+   template<class T>
+      void
+      SoleVariable<T>::allocate(const Region*)
+      {
+	 throw TypeMismatchException("SoleVariable shouldn't use allocate");
+      }
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.6  2000/04/26 06:48:57  sparker
+// Streamlined namespaces
+//
 // Revision 1.5  2000/04/13 06:51:02  sparker
 // More implementation to get this to work
 //

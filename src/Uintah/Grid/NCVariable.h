@@ -6,11 +6,9 @@
 #include <SCICore/Exceptions/InternalError.h>
 
 namespace Uintah {
-namespace Grid {
+   using SCICore::Exceptions::InternalError;
 
-    using SCICore::Exceptions::InternalError;
-
-class TypeDescription;
+   class TypeDescription;
 
 /**************************************
 
@@ -39,85 +37,86 @@ WARNING
   
 ****************************************/
 
-template<class T>
-class NCVariable : public Array3<T>, public NCVariableBase{
-public:
-    NCVariable();
-    NCVariable(const NCVariable<T>&);
-    virtual ~NCVariable();
-
-    //////////
-    // Insert Documentation Here:
-    static const TypeDescription* getTypeDescription();
-
-    virtual NCVariable<T>* clone() const;
-
-    //////////
-    // Insert Documentation Here:
-    virtual void allocate(const Region*);
-
-    NCVariable<T>& operator=(const NCVariable<T>&);
-
-private:
-};
-
-template<class T>
-const TypeDescription*
-NCVariable<T>::getTypeDescription()
-{
-    //cerr << "NCVariable::getTypeDescription not done\n";
-    return 0;
-}
-
-template<class T>
-NCVariable<T>::~NCVariable()
-{
-}
-
-template<class T>
-NCVariable<T>*
-NCVariable<T>::clone() const
-{
-    return new NCVariable<T>(*this);
-}
-
-template<class T>
-NCVariable<T>&
-NCVariable<T>::operator=(const NCVariable<T>& copy)
-{
-    if(this != &copy){
-	Array3<T>::operator=(copy);
-    }
-    return *this;
-}
-
-template<class T>
-NCVariable<T>::NCVariable()
-{
-}
-
-template<class T>
-NCVariable<T>::NCVariable(const NCVariable<T>& copy)
-    : Array3<T>(copy)
-{
-}
-
-template<class T>
-void
-NCVariable<T>::allocate(const Region* region)
-{
-    if(getWindow())
-	throw InternalError("Allocating an NCvariable that is apparently already allocated!");
+   template<class T> class NCVariable : public Array3<T>, public NCVariableBase{
+   public:
+      NCVariable();
+      NCVariable(const NCVariable<T>&);
+      virtual ~NCVariable();
+      
+      //////////
+      // Insert Documentation Here:
+      static const TypeDescription* getTypeDescription();
+      
+      virtual NCVariable<T>* clone() const;
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void allocate(const Region*);
+      
+      NCVariable<T>& operator=(const NCVariable<T>&);
+      
+   private:
+   };
+   
+   template<class T>
+      const TypeDescription*
+      NCVariable<T>::getTypeDescription()
+      {
+	 //cerr << "NCVariable::getTypeDescription not done\n";
+	 return 0;
+      }
+   
+   template<class T>
+      NCVariable<T>::~NCVariable()
+      {
+      }
+   
+   template<class T>
+      NCVariable<T>*
+      NCVariable<T>::clone() const
+      {
+	 return new NCVariable<T>(*this);
+      }
+   
+   template<class T>
+      NCVariable<T>&
+      NCVariable<T>::operator=(const NCVariable<T>& copy)
+      {
+	 if(this != &copy){
+	    Array3<T>::operator=(copy);
+	 }
+	 return *this;
+      }
+   
+   template<class T>
+      NCVariable<T>::NCVariable()
+      {
+      }
+   
+   template<class T>
+      NCVariable<T>::NCVariable(const NCVariable<T>& copy)
+      : Array3<T>(copy)
+      {
+      }
+   
+   template<class T>
+      void
+      NCVariable<T>::allocate(const Region* region)
+      {
+	 if(getWindow())
+	    throw InternalError("Allocating an NCvariable that is apparently already allocated!");
 #if 0
-    resize(region->getNx()+1, region->getNy()+1, region->getNz()+1);
+	 resize(region->getNx()+1, region->getNy()+1, region->getNz()+1);
 #endif
-}
-
-} // end namespace Grid
+      }
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.8  2000/04/26 06:48:49  sparker
+// Streamlined namespaces
+//
 // Revision 1.7  2000/04/20 18:56:30  sparker
 // Updates to MPM
 //

@@ -9,7 +9,7 @@
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Components/Arches/Arches.h>
 
-using Uintah::Components::RBGSSolver;
+using namespace Uintah::Arches;
 using namespace std;
 
 RBGSSolver::RBGSSolver()

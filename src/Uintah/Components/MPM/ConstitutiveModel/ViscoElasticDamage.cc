@@ -44,7 +44,7 @@ using std::ofstream;
 using std::endl;
 using std::string;
 
-using namespace Uintah::Components;
+using namespace Uintah::MPM;
 
 ViscoElasticDamage::ViscoElasticDamage(ProblemSpecP& ps)
 {

@@ -10,7 +10,7 @@
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Components/Arches/Arches.h>
 
-using Uintah::Components::MomentumSolver;
+using namespace Uintah::Arches;
 using namespace std;
 
 MomentumSolver::MomentumSolver()

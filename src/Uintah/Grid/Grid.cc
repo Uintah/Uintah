@@ -5,12 +5,8 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Exceptions/InvalidGrid.h>
 #include <iostream>
-using std::cerr;
-
-using Uintah::Exceptions::InvalidGrid;
-
-namespace Uintah {
-namespace Grid {
+using namespace Uintah;
+using namespace std;
 
 Grid::Grid()
 {
@@ -69,8 +65,3 @@ void Grid::printStatistics() const
   cerr << "Total cells in grid:\t\t" << totalCells << " (" << ppc << " avg. per patch)\n";
   cerr << "\n";
 }
-
-} // end namespace Grid
-} // end namespace Uintah
-
-

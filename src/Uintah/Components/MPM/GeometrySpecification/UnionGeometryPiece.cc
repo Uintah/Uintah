@@ -6,7 +6,8 @@ using SCICore::Geometry::Point;
 using SCICore::Geometry::Min;
 using SCICore::Geometry::Max;
 
-using namespace Uintah::Components;
+using namespace Uintah::MPM;
+using namespace Uintah;
 using namespace std;
 
 UnionGeometryPiece::UnionGeometryPiece(ProblemSpecP &ps) 

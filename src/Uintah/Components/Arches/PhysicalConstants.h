@@ -13,11 +13,7 @@
 #include <SCICore/Geometry/Vector.h>
 
 namespace Uintah {
-namespace Components {
-  using Uintah::Interface::CFDInterface;
-  using Uintah::Parallel::UintahParallelComponent;
-  using Uintah::Interface::ProblemSpecP;
-  using Uintah::Interface::DataWarehouseP;
+namespace Arches {
   using SCICore::Geometry::Vector;
 
 class PhysicalConstants {
@@ -53,7 +49,7 @@ private:
     
 };
 
-} // end namespace Components
+} // end namespace Arches
 } // end namespace Uintah
 
 

@@ -5,10 +5,10 @@
 #include <math.h>
 #include <SCICore/Geometry/Point.h>
 
-using SCICore::Geometry::Point;
-
 namespace Uintah {
-namespace Components {
+   namespace MPM {
+      using SCICore::Geometry::Point;
+
 
 
 /**************************************
@@ -50,38 +50,41 @@ WARNING
 ****************************************/
 
 
-class SphereGeometryPiece : public GeometryPiece {
-
- public:
-  //////////
-  //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
-  // input specification and builds a sphere.
-  SphereGeometryPiece(ProblemSpecP &);
-
-  //////////
-  // Destructor
-  virtual ~SphereGeometryPiece();
-
-  //////////
-  // Determines whether a point is inside the sphere. 
-  virtual bool inside(const Point &p) const;
-
-  //////////
-  // Returns the bounding box surrounding the box.
-  virtual Box getBoundingBox() const;
-
- private:
- 
-  Point d_origin;
-  double d_radius;
-};
-
-} // end namespace Components
+      class SphereGeometryPiece : public GeometryPiece {
+	 
+      public:
+	 //////////
+	 //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
+	 // input specification and builds a sphere.
+	 SphereGeometryPiece(ProblemSpecP &);
+	 
+	 //////////
+	 // Destructor
+	 virtual ~SphereGeometryPiece();
+	 
+	 //////////
+	 // Determines whether a point is inside the sphere. 
+	 virtual bool inside(const Point &p) const;
+	 
+	 //////////
+	 // Returns the bounding box surrounding the box.
+	 virtual Box getBoundingBox() const;
+	 
+      private:
+	 
+	 Point d_origin;
+	 double d_radius;
+      };
+      
+   } // end namespace MPM
 } // end namespace Uintah
 
 #endif // __SPHERE_GEOMETRY_PIECE_H__
 
 // $Log$
+// Revision 1.3  2000/04/26 06:48:26  sparker
+// Streamlined namespaces
+//
 // Revision 1.2  2000/04/24 21:04:33  sparker
 // Working on MPM problem setup and object creation
 //

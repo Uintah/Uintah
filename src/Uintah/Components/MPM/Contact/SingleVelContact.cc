@@ -12,7 +12,6 @@ static char *id="@(#) $Id$";
 
 #include "SingleVelContact.h"
 #include <SCICore/Geometry/Vector.h>
-
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
@@ -21,7 +20,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/Region.h>
-#include <Uintah/Grid/NodeIterator.h> // Must be included after Region.h
+#include <Uintah/Grid/NodeIterator.h>
 #include <Uintah/Grid/ReductionVariable.h>
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SimulationStateP.h>
@@ -31,16 +30,8 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <vector>
-
-namespace Uintah {
-namespace Components {
-
+using namespace Uintah::MPM;
 using SCICore::Geometry::Vector;
-using Uintah::Grid::Level;
-using Uintah::Grid::ReductionVariable;
-using Uintah::Grid::NodeIterator;
-using Uintah::Grid::NCVariable;
-using Uintah::Grid::VarLabel;
 using std::vector;
 
 
@@ -170,10 +161,10 @@ SingleVelContact::exMomIntegrated(const ProcessorContext*,
 #endif
 }
 
-} // end namespace Components
-} // end namespace Uintah
-
 // $Log$
+// Revision 1.5  2000/04/26 06:48:21  sparker
+// Streamlined namespaces
+//
 // Revision 1.4  2000/04/25 22:57:30  guilkey
 // Fixed Contact stuff to include VarLabels, SimulationState, etc, and
 // made more of it compile.

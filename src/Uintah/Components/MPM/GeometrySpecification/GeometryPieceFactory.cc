@@ -14,8 +14,7 @@
 using std::cerr;
 using std::endl;
 
-using namespace Uintah::Components;
-using Uintah::Interface::ProblemSpecP;
+using namespace Uintah::MPM;
 
 void GeometryPieceFactory::create(const ProblemSpecP& ps,
 				   std::vector<GeometryPiece*>& objs)

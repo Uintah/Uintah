@@ -6,7 +6,7 @@
 #include "Contact.h"
 
 namespace Uintah {
-namespace Components {
+   namespace MPM {
 
 /**************************************
 
@@ -37,36 +37,39 @@ WARNING
   
 ****************************************/
 
-class NullContact : public Contact {
- private:
-
-  // Prevent copying of this class
-  // copy constructor
-  NullContact(const NullContact &con);
-  NullContact& operator=(const NullContact &con);
-
- public:
-   // Constructor
-   NullContact();
-
-   // Destructor
-   virtual ~NullContact();
-
-   // Basic contact methods
-   virtual void exMomInterpolated(const Region* region,
-                                  const DataWarehouseP& old_dw,
-                                  DataWarehouseP& new_dw);
-
-   virtual void exMomIntegrated(const Region* region,
-                                const DataWarehouseP& old_dw,
-                                DataWarehouseP& new_dw);
-
-};
-
-} // end namespace Components
+      class NullContact : public Contact {
+      private:
+	 
+	 // Prevent copying of this class
+	 // copy constructor
+	 NullContact(const NullContact &con);
+	 NullContact& operator=(const NullContact &con);
+	 
+      public:
+	 // Constructor
+	 NullContact();
+	 
+	 // Destructor
+	 virtual ~NullContact();
+	 
+	 // Basic contact methods
+	 virtual void exMomInterpolated(const Region* region,
+					const DataWarehouseP& old_dw,
+					DataWarehouseP& new_dw);
+	 
+	 virtual void exMomIntegrated(const Region* region,
+				      const DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw);
+	 
+      };
+      
+   } // end namespace MPM
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.4  2000/04/26 06:48:20  sparker
+// Streamlined namespaces
+//
 // Revision 1.3  2000/03/20 23:50:44  dav
 // renames SingleVel to SingleVelContact
 //

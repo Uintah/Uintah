@@ -11,8 +11,7 @@ static char *id="@(#) $Id$";
 
 #include "NullContact.h"
 
-namespace Uintah {
-namespace Components {
+using namespace Uintah::MPM;
 
 NullContact::NullContact()
 {
@@ -40,10 +39,10 @@ void NullContact::exMomIntegrated(const Region* region,
 
 }
 
-} // end namespace Components
-} // end namespace Uintah
-
 // $Log$
+// Revision 1.4  2000/04/26 06:48:20  sparker
+// Streamlined namespaces
+//
 // Revision 1.3  2000/03/20 23:50:44  dav
 // renames SingleVel to SingleVelContact
 //

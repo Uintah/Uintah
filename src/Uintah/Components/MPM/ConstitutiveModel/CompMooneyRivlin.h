@@ -9,14 +9,7 @@
 #include <Uintah/Interface/DataWarehouseP.h>
 
 namespace Uintah {
-   namespace Grid {
-      class VarLabel;
-   }
-namespace Components {
-
-    using Uintah::Interface::DataWarehouseP;
-    using Uintah::Grid::VarLabel;
-
+   namespace MPM {
 /**************************************
 
 CLASS
@@ -46,76 +39,79 @@ WARNING
   
 ****************************************/
 
-class CompMooneyRivlin : public ConstitutiveModel {
- private:
-
-  // Create datatype for storing model parameters
-  struct CMData {
-        double C1;
-        double C2;
-        double C3;
-        double C4;
-        };
-
-  // Prevent copying of this class
-  // copy constructor
-  CompMooneyRivlin(const CompMooneyRivlin &cm);
-  CompMooneyRivlin& operator=(const CompMooneyRivlin &cm);
- 
- public:
-  // constructor
-  CompMooneyRivlin(const Region* region,
-                   const MPMMaterial* matl);
-
-  // constructor
-  CompMooneyRivlin(ProblemSpecP& ps);
-  
-  // destructor 
-  virtual ~CompMooneyRivlin();
-
-  // compute stress at each particle in the region
-  virtual void computeStressTensor(const Region* region,
-				   const MPMMaterial* matl,
-                                   const DataWarehouseP& old_dw,
-                                   DataWarehouseP& new_dw);
-
-  // compute total strain energy for all particles in the region
-  virtual double computeStrainEnergy(const Region* region,
-                                     const MPMMaterial* matl,
-                                     const DataWarehouseP& new_dw);
-
-  // initialize  each particle's constitutive model data
-  virtual void initializeCMData(const Region* region,
-                            const MPMMaterial* matl,
-                            DataWarehouseP& new_dw);
-
-  // class function to read correct number of parameters
-  // from the input file
-  static void readParameters(ProblemSpecP ps, double *p_array);
-
-
-  // class function to read correct number of parameters
-  // from the input file, and create a new object
-  static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
-
-   // member function to read correct number of parameters
-  // from the input file, and any other particle information
-  // need to restart the model for this particle 
-  // and create a new object
-  static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
-
-  // class function to create a new object from parameters
-  static ConstitutiveModel* create(double *p_array);
-
-   const VarLabel* p_cmdata_label;
-};
-
-}
+      class CompMooneyRivlin : public ConstitutiveModel {
+      private:
+	 
+	 // Create datatype for storing model parameters
+	 struct CMData {
+	    double C1;
+	    double C2;
+	    double C3;
+	    double C4;
+	 };
+	 
+	 // Prevent copying of this class
+	 // copy constructor
+	 CompMooneyRivlin(const CompMooneyRivlin &cm);
+	 CompMooneyRivlin& operator=(const CompMooneyRivlin &cm);
+	 
+      public:
+	 // constructor
+	 CompMooneyRivlin(const Region* region,
+			  const MPMMaterial* matl);
+	 
+	 // constructor
+	 CompMooneyRivlin(ProblemSpecP& ps);
+	 
+	 // destructor 
+	 virtual ~CompMooneyRivlin();
+	 
+	 // compute stress at each particle in the region
+	 virtual void computeStressTensor(const Region* region,
+					  const MPMMaterial* matl,
+					  const DataWarehouseP& old_dw,
+					  DataWarehouseP& new_dw);
+	 
+	 // compute total strain energy for all particles in the region
+	 virtual double computeStrainEnergy(const Region* region,
+					    const MPMMaterial* matl,
+					    const DataWarehouseP& new_dw);
+	 
+	 // initialize  each particle's constitutive model data
+	 virtual void initializeCMData(const Region* region,
+				       const MPMMaterial* matl,
+				       DataWarehouseP& new_dw);
+	 
+	 // class function to read correct number of parameters
+	 // from the input file
+	 static void readParameters(ProblemSpecP ps, double *p_array);
+	 
+	 
+	 // class function to read correct number of parameters
+	 // from the input file, and create a new object
+	 static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
+	 
+	 // member function to read correct number of parameters
+	 // from the input file, and any other particle information
+	 // need to restart the model for this particle 
+	 // and create a new object
+	 static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
+	 
+	 // class function to create a new object from parameters
+	 static ConstitutiveModel* create(double *p_array);
+	 
+	 const VarLabel* p_cmdata_label;
+      };
+      
+   }
 }
 
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.12  2000/04/26 06:48:14  sparker
+// Streamlined namespaces
+//
 // Revision 1.11  2000/04/25 18:42:33  jas
 // Revised the factory method and constructor to take a ProblemSpec argument
 // to create a new constitutive model.

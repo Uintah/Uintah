@@ -18,9 +18,7 @@
 #include <iostream>
 using namespace std;
 
-using Uintah::Components::SmagorinskyModel;
-using namespace Uintah::Components;
-using namespace Uintah::Grid;
+using namespace Uintah::Arches;
 using SCICore::Geometry::Vector;
 
 SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):

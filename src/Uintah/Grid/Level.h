@@ -11,11 +11,10 @@
 #include <vector>
 
 namespace Uintah {
-namespace Grid {
 
-class Region;
-class Task;
-
+   class Region;
+   class Task;
+   
 /**************************************
 
 CLASS
@@ -46,38 +45,40 @@ WARNING
   
 ****************************************/
 
-class Level : public RefCounted {
-public:
-  Level();
-  virtual ~Level();
-
-  typedef std::vector<Region*>::iterator regionIterator;
-  typedef std::vector<Region*>::const_iterator const_regionIterator;
-  const_regionIterator regionsBegin() const;
-  const_regionIterator regionsEnd() const;
-  regionIterator regionsBegin();
-  regionIterator regionsEnd();
-
-  Region* addRegion(const SCICore::Geometry::Point& lower,
-		    const SCICore::Geometry::Point& upper,
-		    const SCICore::Geometry::IntVector& res);
-
-  int numRegions() const;
-  long totalCells() const;
-
-  void performConsistencyCheck() const;
-private:
-  Level(const Level&);
-  Level& operator=(const Level&);
-
-  std::vector<Region*> d_regions;
-};
-
-} // end namespace Grid
+   class Level : public RefCounted {
+   public:
+      Level();
+      virtual ~Level();
+      
+      typedef std::vector<Region*>::iterator regionIterator;
+      typedef std::vector<Region*>::const_iterator const_regionIterator;
+      const_regionIterator regionsBegin() const;
+      const_regionIterator regionsEnd() const;
+      regionIterator regionsBegin();
+      regionIterator regionsEnd();
+      
+      Region* addRegion(const SCICore::Geometry::Point& lower,
+			const SCICore::Geometry::Point& upper,
+			const SCICore::Geometry::IntVector& res);
+      
+      int numRegions() const;
+      long totalCells() const;
+      
+      void performConsistencyCheck() const;
+   private:
+      Level(const Level&);
+      Level& operator=(const Level&);
+      
+      std::vector<Region*> d_regions;
+   };
+   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.8  2000/04/26 06:48:49  sparker
+// Streamlined namespaces
+//
 // Revision 1.7  2000/04/12 23:00:47  sparker
 // Starting problem setup code
 // Other compilation fixes

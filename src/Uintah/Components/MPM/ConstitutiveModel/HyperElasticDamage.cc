@@ -42,7 +42,7 @@ using std::ofstream;
 using std::endl;
 using std::string;
 
-using namespace Uintah::Components;
+using namespace Uintah::MPM;
 
 HyperElasticDamage::HyperElasticDamage(ProblemSpecP& ps)
 {
@@ -415,6 +415,9 @@ int HyperElasticDamage::getSize() const
 
 //
 // $Log$
+// Revision 1.6  2000/04/26 06:48:17  sparker
+// Streamlined namespaces
+//
 // Revision 1.5  2000/04/25 18:42:34  jas
 // Revised the factory method and constructor to take a ProblemSpec argument
 // to create a new constitutive model.

@@ -21,6 +21,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SoleVariable.h>
 #include <Uintah/Grid/Task.h>
+#include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Interface/Scheduler.h>
 
@@ -33,30 +34,12 @@ static char *id="@(#) $Id$";
 
 #include "GeometrySpecification/Problem.h"
 
-namespace Uintah {
-namespace Components {
-
-using Uintah::Interface::Scheduler;
+using namespace Uintah::MPM;
 
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
 using SCICore::Math::Max;
-using std::cerr;
-using std::string;
-using std::ofstream;
-using Uintah::Grid::Level;
-using Uintah::Grid::Material;
-using Uintah::Grid::ParticleSubset;
-using Uintah::Grid::ParticleVariable;
-using Uintah::Grid::Task;
-using Uintah::Grid::SoleVariable;
-using Uintah::Interface::ProblemSpec;
-using Uintah::Grid::Region;
-using Uintah::Grid::ReductionVariable;
-using Uintah::Grid::NodeIterator;
-using Uintah::Grid::NCVariable;
-using Uintah::Grid::VarLabel;
-using namespace Uintah::Components;
+using namespace std;
 
 SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
@@ -112,7 +95,7 @@ SerialMPM::~SerialMPM()
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
-			     const SimulationStateP& sharedState)
+			     SimulationStateP& sharedState)
 {
    d_sharedState = sharedState;
    Problem prob_description;
@@ -342,21 +325,18 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
 				   const DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw)
 {
-#if 0
+  int numMatls = d_sharedState->getNumMatls();
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
-       GeometryObject* obj = mpm_matl->getObject();
-
-       int numParticles = obj->countParticles(region);
+       int numParticles = mpm_matl->countParticles(region);
        ParticleVariable<Point> particles;
-       new_dw->allocate(numParticles, particles, position_label, region);
+       new_dw->allocate(numParticles, particles, pXLabel, region);
 
-       obj->createParticles(particles, region);
+       mpm_matl->createParticles(particles, region);
     }
   }
-#endif
 }
 
 void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
@@ -391,7 +371,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 
       old_dw->get(px,             pXLabel, matlindex, region, 0);
       old_dw->get(pmass,          pMassLabel, matlindex, region, 0);
-      old_dw->get(pvelocity,      pVelocityLabel, matlindex, region, 0);
+      old_dw->get(pvelocity,      pVelocityLabel, vfindex, region, 0);
       old_dw->get(pexternalforce, pExternalForceLabel, matlindex, region, 0);
 
       // Create arrays for the grid data
@@ -419,7 +399,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       externalforce.initialize(Vector(0,0,0));
       for(ParticleSubset::iterator iter = pset->begin();
 	iter != pset->end(); iter++){
-	Uintah::Grid::particleIndex idx = *iter;
+	 particleIndex idx = *iter;
 
 	// Get the node indices that surround the cell
 	Array3Index ni[8];
@@ -513,7 +493,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
 
       for(ParticleSubset::iterator iter = pset->begin();
          iter != pset->end(); iter++){
-         Uintah::Grid::particleIndex idx = *iter;
+         particleIndex idx = *iter;
   
          // Get the node indices that surround the cell
          Array3Index ni[8];
@@ -666,7 +646,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       double ke=0;
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
-        Uintah::Grid::particleIndex idx = *iter;
+	 particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
         Array3Index ni[8];
@@ -720,10 +700,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
   }
 }
 
-} // end namespace Components
-} // end namespace Uintah
-
 // $Log$
+// Revision 1.29  2000/04/26 06:48:12  sparker
+// Streamlined namespaces
+//
 // Revision 1.28  2000/04/25 22:57:29  guilkey
 // Fixed Contact stuff to include VarLabels, SimulationState, etc, and
 // made more of it compile.

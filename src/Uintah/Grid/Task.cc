@@ -6,7 +6,7 @@ static char *id="@(#) $Id$";
 #include <SCICore/Exceptions/InternalError.h>
 #include <iostream>
 
-using Uintah::Grid::Task;
+using namespace Uintah;
 using SCICore::Exceptions::InternalError;
 
 Task::ActionBase::~ActionBase()
@@ -103,6 +103,9 @@ void Task::addComps(std::vector<Dependency*>& to) const
 
 //
 // $Log$
+// Revision 1.7  2000/04/26 06:49:00  sparker
+// Streamlined namespaces
+//
 // Revision 1.6  2000/04/20 18:56:31  sparker
 // Updates to MPM
 //

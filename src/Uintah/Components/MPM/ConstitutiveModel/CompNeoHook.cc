@@ -15,12 +15,8 @@
 #include "ConstitutiveModelFactory.h"
 #include "CompNeoHook.h"
 #include <fstream>
-using std::ifstream;
-using std::ofstream;
-using std::endl;
-using std::string;
-
-using namespace Uintah::Components;
+using namespace Uintah::MPM;
+using namespace std;
 
 CompNeoHook::CompNeoHook(ProblemSpecP& ps)
 {
@@ -126,9 +122,9 @@ std::vector<double> CompNeoHook::getMechProps() const
 }
 
 void CompNeoHook::computeStressTensor(const Region* region,
-                                   const MPMMaterial* matl,
-                                   const DataWarehouseP& old_dw,
-                                   DataWarehouseP& new_dw)
+				      const MPMMaterial* matl,
+				      const DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw)
 {
 #ifdef WONT_COMPILE_YET
   Matrix3 bElBarTrial,shearTrial,fbar,deformationGradientInc;
@@ -313,6 +309,9 @@ int CompNeoHook::getSize() const
 
 
 // $Log$
+// Revision 1.6  2000/04/26 06:48:14  sparker
+// Streamlined namespaces
+//
 // Revision 1.5  2000/04/25 18:42:33  jas
 // Revised the factory method and constructor to take a ProblemSpec argument
 // to create a new constitutive model.

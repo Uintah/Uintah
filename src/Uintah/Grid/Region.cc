@@ -7,17 +7,11 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/SubRegion.h>
 #include <SCICore/Math/MiscMath.h>
 #include <Uintah/Exceptions/InvalidGrid.h>
-using Uintah::Exceptions::InvalidGrid;
-
 #include <values.h>
 
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Max;
-using SCICore::Geometry::Min;
-using SCICore::Math::Floor;
-using Uintah::Grid::Region;
-using std::ostream;
+using namespace Uintah;
+using namespace SCICore::Geometry;
+using namespace std;
 
 Region::Region(const Point& lower, const Point& upper,
 	       const IntVector& res)
@@ -226,6 +220,9 @@ void Region::performConsistencyCheck() const
 
 //
 // $Log$
+// Revision 1.6  2000/04/26 06:48:54  sparker
+// Streamlined namespaces
+//
 // Revision 1.5  2000/04/13 06:51:01  sparker
 // More implementation to get this to work
 //

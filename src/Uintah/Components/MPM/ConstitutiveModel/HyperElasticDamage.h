@@ -42,139 +42,138 @@
 #include <math.h>
 #include "ConstitutiveModel.h"	
 #include <vector>
+#include <Uintah/Components/MPM/Util/Matrix3.h>
+
 
 namespace Uintah {
-namespace Components {
-
-
-class HyperElasticDamage : public ConstitutiveModel {
- private:
-  // data areas
-  // deformation gradient tensor (3 x 3 Matrix)
-  Matrix3 deformationGradient;
-  // Deviatoric-Elastic Part of the left Cauchy-Green Tensor (3 x 3 Matrix)
-  // or CeBar -- a defferent notation
-  Matrix3 bElBar;
-  // Deviatoric-Elastic part of the Lagrangian Strain Tensor 
-  Matrix3 E_bar, current_E_bar;
-  // symmetric stress tensor (3 x 3 Matrix)  
-  Matrix3 stressTensor;
-
-  // ConstitutiveModel's properties
-  // HyperElasticDamage Constants
-  double d_Bulk,d_Shear;
-  // Damage parameters
-  double d_Alpha, d_Beta;
-  // Damage Character 
-  double damageG;
-  // Maximum equivalent strain
-  double maxEquivStrain;
-
- public:
-  // constructors
-  HyperElasticDamage(ProblemSpecP& ps);
-  HyperElasticDamage(double bulk,double shear,
-			double alpha,double beta, double strainmax);
-       
-  // copy constructor
-  HyperElasticDamage(const HyperElasticDamage &cm);
- 
-  // destructor 
-  virtual ~HyperElasticDamage();
-
-  // assign the HyperElasticDamage components 
-  
-  // set Bulk Modulus
-  void setBulk(double bulk);
-  // set Shear Modulus
-  void setShear(double shear);
-  // set Damage Parameters
-  void setDamageParameters(double d_alpha,double beta);
-  // set maximum equivalent strain
-  void setMaxEquivStrain(double strainmax);
-  // assign the deformation gradient tensor
-  virtual void setDeformationMeasure(Matrix3 dg);
-  // assign the symmetric stress tensor
-  virtual void setStressTensor(Matrix3 st);
-
-
-  // access components of the HyperElasticDamage model
-  // access the symmetric stress tensor
-  virtual Matrix3 getStressTensor() const;
- 
-  virtual Matrix3 getDeformationMeasure() const;
-  // access the mechanical properties
-
-  virtual std::vector<double> getMechProps() const;
-
-
-
-  
-  //////////
-  // Basic constitutive model calculations
-  virtual void computeStressTensor(const Region* region,
-				   const MPMMaterial* matl,
-				   const DataWarehouseP& new_dw,
-				   DataWarehouseP& old_dw);
-
-  //////////
-  // Computation of strain energy.  Useful for tracking energy balance.
-  virtual double computeStrainEnergy(const Region* region,
-				   const MPMMaterial* matl,
-                                   const DataWarehouseP& new_dw);
-
-  // initialize  each particle's constitutive model data
-  virtual void initializeCMData(const Region* region,
-				const MPMMaterial* matl,
-				DataWarehouseP& new_dw);    
-
-  // Return the Lame constants
-  virtual double getMu() const;
-  virtual double getLambda() const;
-
-  // class function to read correct number of parameters
-  // from the input file
-  static void readParameters(ProblemSpecP ps, double *p_array);
-
-  // class function to write correct number of parameters
-  // to the output file
-  static void writeParameters(std::ofstream& out, double *p_array);
-
-  // class function to read correct number of parameters
-  // from the input file, and create a new object
-  static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
-
-  // member function to write correct number of parameters
-  // to output file, and to write any other particle information
-  // needed to restart the model for this particle
-  virtual void writeRestartParameters(std::ofstream& out) const;
-
-  // member function to read correct number of parameters
-  // from the input file, and any other particle information
-  // need to restart the model for this particle 
-  // and create a new object
-  static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
-
-  // class function to create a new object from parameters
-  static ConstitutiveModel* create(double *p_array);
-
-  // member function to determine the model type.
-  virtual int getType() const;
-  // member function to get model's name
-  virtual std::string getName() const;
-  // member function to get number of parameters for model
-  virtual int getNumParameters() const;
-  // member function to print parameter names for model
-  virtual void printParameterNames(std::ofstream& out) const;
-  
-  // member function to make a duplicate
-  virtual ConstitutiveModel* copy() const;
-
-  virtual int getSize() const;
-};
-
-
-} // end namespace Components
+   namespace MPM {
+      
+      class HyperElasticDamage : public ConstitutiveModel {
+      private:
+	 // data areas
+	 // deformation gradient tensor (3 x 3 Matrix)
+	 Matrix3 deformationGradient;
+	 // Deviatoric-Elastic Part of the left Cauchy-Green Tensor (3 x 3 Matrix)
+	 // or CeBar -- a defferent notation
+	 Matrix3 bElBar;
+	 // Deviatoric-Elastic part of the Lagrangian Strain Tensor 
+	 Matrix3 E_bar, current_E_bar;
+	 // symmetric stress tensor (3 x 3 Matrix)  
+	 Matrix3 stressTensor;
+	 
+	 // ConstitutiveModel's properties
+	 // HyperElasticDamage Constants
+	 double d_Bulk,d_Shear;
+	 // Damage parameters
+	 double d_Alpha, d_Beta;
+	 // Damage Character 
+	 double damageG;
+	 // Maximum equivalent strain
+	 double maxEquivStrain;
+	 
+      public:
+	 // constructors
+	 HyperElasticDamage(ProblemSpecP& ps);
+	 HyperElasticDamage(double bulk,double shear,
+			    double alpha,double beta, double strainmax);
+	 
+	 // copy constructor
+	 HyperElasticDamage(const HyperElasticDamage &cm);
+	 
+	 // destructor 
+	 virtual ~HyperElasticDamage();
+	 
+	 // assign the HyperElasticDamage components 
+	 
+	 // set Bulk Modulus
+	 void setBulk(double bulk);
+	 // set Shear Modulus
+	 void setShear(double shear);
+	 // set Damage Parameters
+	 void setDamageParameters(double d_alpha,double beta);
+	 // set maximum equivalent strain
+	 void setMaxEquivStrain(double strainmax);
+	 // assign the deformation gradient tensor
+	 virtual void setDeformationMeasure(Matrix3 dg);
+	 // assign the symmetric stress tensor
+	 virtual void setStressTensor(Matrix3 st);
+	 
+	 
+	 // access components of the HyperElasticDamage model
+	 // access the symmetric stress tensor
+	 virtual Matrix3 getStressTensor() const;
+	 
+	 virtual Matrix3 getDeformationMeasure() const;
+	 // access the mechanical properties
+	 
+	 virtual std::vector<double> getMechProps() const;
+	 
+	 
+	 
+	 
+	 //////////
+	 // Basic constitutive model calculations
+	 virtual void computeStressTensor(const Region* region,
+					  const MPMMaterial* matl,
+					  const DataWarehouseP& new_dw,
+					  DataWarehouseP& old_dw);
+	 
+	 //////////
+	 // Computation of strain energy.  Useful for tracking energy balance.
+	 virtual double computeStrainEnergy(const Region* region,
+					    const MPMMaterial* matl,
+					    const DataWarehouseP& new_dw);
+	 
+	 // initialize  each particle's constitutive model data
+	 virtual void initializeCMData(const Region* region,
+				       const MPMMaterial* matl,
+				       DataWarehouseP& new_dw);    
+	 
+	 // Return the Lame constants
+	 virtual double getMu() const;
+	 virtual double getLambda() const;
+	 
+	 // class function to read correct number of parameters
+	 // from the input file
+	 static void readParameters(ProblemSpecP ps, double *p_array);
+	 
+	 // class function to write correct number of parameters
+	 // to the output file
+	 static void writeParameters(std::ofstream& out, double *p_array);
+	 
+	 // class function to read correct number of parameters
+	 // from the input file, and create a new object
+	 static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
+	 
+	 // member function to write correct number of parameters
+	 // to output file, and to write any other particle information
+	 // needed to restart the model for this particle
+	 virtual void writeRestartParameters(std::ofstream& out) const;
+	 
+	 // member function to read correct number of parameters
+	 // from the input file, and any other particle information
+	 // need to restart the model for this particle 
+	 // and create a new object
+	 static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
+	 
+	 // class function to create a new object from parameters
+	 static ConstitutiveModel* create(double *p_array);
+	 
+	 // member function to determine the model type.
+	 virtual int getType() const;
+	 // member function to get model's name
+	 virtual std::string getName() const;
+	 // member function to get number of parameters for model
+	 virtual int getNumParameters() const;
+	 // member function to print parameter names for model
+	 virtual void printParameterNames(std::ofstream& out) const;
+	 
+	 // member function to make a duplicate
+	 virtual ConstitutiveModel* copy() const;
+	 
+	 virtual int getSize() const;
+      };
+   } // end namespace MPM
 } // end namespace Uintah
 
 
@@ -182,6 +181,9 @@ class HyperElasticDamage : public ConstitutiveModel {
 
 //
 // $Log$
+// Revision 1.7  2000/04/26 06:48:17  sparker
+// Streamlined namespaces
+//
 // Revision 1.6  2000/04/25 18:42:35  jas
 // Revised the factory method and constructor to take a ProblemSpec argument
 // to create a new constitutive model.

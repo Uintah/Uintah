@@ -5,20 +5,11 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/ProblemSpec.h>
 
-using Uintah::Interface::ProblemSpecP;
-using Uintah::Interface::ProblemSpec;
-
 namespace Uintah {
-    namespace Grid {
-	class Region;
-	class VarLabel;
-    }
-namespace Components {
-
-    using Uintah::Grid::VarLabel;
-
-    // THIS DOES NOT GO HERE - steve
-class MPMMaterial;
+   class Region;
+   class VarLabel;
+   namespace MPM {
+      class MPMMaterial;
 
 /**************************************
 
@@ -49,48 +40,48 @@ WARNING
   
 ****************************************/
 
-using Uintah::Grid::Region;
-using Uintah::Interface::DataWarehouseP;
-
-class ConstitutiveModel {
-public:
-
-  ConstitutiveModel();
-  virtual ~ConstitutiveModel();
-
-  //////////
-  // Basic constitutive model calculations
-  virtual void computeStressTensor(const Region* region,
-				   const MPMMaterial* matl,
-				   const DataWarehouseP& new_dw,
-				   DataWarehouseP& old_dw) = 0;
-
-  //////////
-  // Computation of strain energy.  Useful for tracking energy balance.
-  virtual double computeStrainEnergy(const Region* region,
-				   const MPMMaterial* matl,
-                                   const DataWarehouseP& new_dw) = 0;
-
-  //////////
-  // Create space in data warehouse for CM data
-  virtual void initializeCMData(const Region* region,
-				const MPMMaterial* matl,
-                                DataWarehouseP& new_dw) = 0;
-
-   const VarLabel* px_label;
-   const VarLabel* p_deformationMeasure_label;
-   const VarLabel* p_stress_label;
-   const VarLabel* p_mass_label;
-   const VarLabel* p_volume_label;
-   const VarLabel* g_velocity_label;
-   const VarLabel* delt_label;
-
-};
-
-} // end namespace Components
+      class ConstitutiveModel {
+      public:
+	 
+	 ConstitutiveModel();
+	 virtual ~ConstitutiveModel();
+	 
+	 //////////
+	 // Basic constitutive model calculations
+	 virtual void computeStressTensor(const Region* region,
+					  const MPMMaterial* matl,
+					  const DataWarehouseP& new_dw,
+					  DataWarehouseP& old_dw) = 0;
+	 
+	 //////////
+	 // Computation of strain energy.  Useful for tracking energy balance.
+	 virtual double computeStrainEnergy(const Region* region,
+					    const MPMMaterial* matl,
+					    const DataWarehouseP& new_dw) = 0;
+	 
+	 //////////
+	 // Create space in data warehouse for CM data
+	 virtual void initializeCMData(const Region* region,
+				       const MPMMaterial* matl,
+				       DataWarehouseP& new_dw) = 0;
+	 
+	 const VarLabel* px_label;
+	 const VarLabel* p_deformationMeasure_label;
+	 const VarLabel* p_stress_label;
+	 const VarLabel* p_mass_label;
+	 const VarLabel* p_volume_label;
+	 const VarLabel* g_velocity_label;
+	 const VarLabel* delt_label;
+	 
+      };
+      
+   } // end namespace MPM
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.9  2000/04/26 06:48:15  sparker
+// Streamlined namespaces
+//
 // Revision 1.8  2000/04/21 01:22:56  guilkey
 // Put the VarLabels which are common to all constitutive models in the
 // base class.  The only one which isn't common is the one for the CMData.

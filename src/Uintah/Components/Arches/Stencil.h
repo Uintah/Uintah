@@ -38,7 +38,7 @@ none
 #ifndef included_Discretization
 #define included_Discretization
 namespace Uintah {
-namespace Components {
+namespace Arches {
 
     class Stencil {
 	Stencil(const DataWarehouseP&, const std::string&, const Region*);

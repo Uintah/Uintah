@@ -12,18 +12,7 @@
 #include <Uintah/Parallel/ProcessorContext.h>
 
 namespace Uintah {
-namespace Components {
-
-using Uintah::Interface::CFDInterface;
-using Uintah::Parallel::UintahParallelComponent;
-using Uintah::Interface::ProblemSpecP;
-using Uintah::Grid::GridP;
-using Uintah::Grid::LevelP;
-using Uintah::Grid::SimulationStateP;
-using Uintah::Grid::Region;
-using Uintah::Interface::DataWarehouseP;
-using Uintah::Interface::SchedulerP;
-using Uintah::Parallel::ProcessorContext;
+   namespace Arches {
 
 class PhysicalConstants;
 class NonlinearSolver;
@@ -75,11 +64,14 @@ private:
     BoundaryCondition* d_boundaryCondition;
 };
 
-} // end namespace Components
+} // end namespace Arches
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.17  2000/04/26 06:48:00  sparker
+// Streamlined namespaces
+//
 // Revision 1.16  2000/04/24 21:04:20  sparker
 // Working on MPM problem setup and object creation
 //
