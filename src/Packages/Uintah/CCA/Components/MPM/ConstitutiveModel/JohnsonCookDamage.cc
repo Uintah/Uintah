@@ -78,7 +78,9 @@ JohnsonCookDamage::calcStrainAtFracture(const Matrix3& stress,
                                         const double& )
 {
   double sigMean = stress.Trace()/3.0;
-  double sigEquiv = sqrt((stress.NormSquared())*1.5);
+  Matrix3 I; I.Identity();
+  Matrix3 sig_dev = stress - I*sigMean;
+  double sigEquiv = sqrt((sig_dev.NormSquared())*1.5);
   double sigStar = 0.0;
   if (sigEquiv != 0) sigStar = sigMean/sigEquiv;
   double stressPart = d_initialData.D1 + 

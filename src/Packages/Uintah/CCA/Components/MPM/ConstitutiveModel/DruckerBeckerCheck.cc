@@ -84,8 +84,8 @@ DruckerBeckerCheck::checkStability(const Matrix3& stress,
     return false;
   } else {
     ASSERT(!(A == 0));
-    double yplus = (-B + sqrt(B2_4AC))/(2.0*A);
-    double yminus = (-B - sqrt(B2_4AC))/(2.0*A);
+    double yplus = (-B + sqrt(B2_4AC))/(2.0*(A+1.0e-20));
+    double yminus = (-B - sqrt(B2_4AC))/(2.0*(A+1.0e-20));
     if (yplus < 0.0 && yminus < 0.0) {
       // No real roots - no bifurcation
       return false;
