@@ -68,9 +68,6 @@ namespace SCIRun {
     // Handler table size
     int table_size;
 
-    /////////////
-    // Server context object
-    void *object;
   };
 }// namespace SCIRun
 

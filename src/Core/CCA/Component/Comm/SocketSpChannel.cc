@@ -57,14 +57,12 @@ using namespace SCIRun;
 SocketSpChannel::SocketSpChannel() { 
   sp=new DTPoint;
   ep=NULL;
-  object=NULL;
 }
 
 SocketSpChannel::SocketSpChannel(SocketSpChannel &spchan) { 
   sp=new DTPoint;
   ep=spchan.ep;
   ep_addr=spchan.ep_addr;
-  object=spchan.object;
 }
 
 SocketSpChannel::~SocketSpChannel(){
@@ -95,8 +93,6 @@ SpChannel* SocketSpChannel::SPFactory(bool deep) {
 }
 
 void SocketSpChannel::closeConnection() {
-  cerr<<"###SPChan::closeConnection() is called\n";
-  //do nothing
   //addReference upon openning connection
   Message *message=getMessage();
   message->createMessage();
@@ -107,7 +103,6 @@ void SocketSpChannel::closeConnection() {
 //new message is created and user should call destroyMessage to delete it.
 Message* SocketSpChannel::getMessage() {
   SocketMessage *msg=new SocketMessage(this);
-  msg->setLocalObject(object);
   return msg;
 }
 

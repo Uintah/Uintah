@@ -63,7 +63,6 @@ using namespace SCIRun;
 SocketEpChannel::SocketEpChannel(){ 
   ep=new DTPoint;
   handler_table=NULL;
-  object=NULL;
 }
 
 SocketEpChannel::~SocketEpChannel(){ 
@@ -84,7 +83,7 @@ string SocketEpChannel::getUrl() {
 }
 
 void SocketEpChannel::activateConnection(void* obj){
-  object=obj;
+  ep->object=obj;
   ServerContext* sc=(ServerContext*)(obj);
   sc->d_objid=(int)ep;
   Thread *service_thread = new Thread(new SocketThread(this, NULL,  -1), "SocketServiceThread", 0, Thread::Activated);
@@ -92,7 +91,7 @@ void SocketEpChannel::activateConnection(void* obj){
 }
 
 Message* SocketEpChannel::getMessage() {
-  //this should not be never called!
+  //this should never be called!
   throw CommError("SocketEpChannel::getMessage", -1);
 }
 
@@ -111,7 +110,6 @@ SocketEpChannel::bind(SpChannel* spchan){
   SocketSpChannel *chan=dynamic_cast<SocketSpChannel*>(spchan);
   chan->ep=ep;
   chan->ep_addr=PIDL::getDT()->getAddress();
-  chan->object=object;
 }
 
 void 
@@ -125,10 +123,10 @@ SocketEpChannel::runService(){
       break;
     }
     int id=*((int *)msg->buf);
-    cerr<<"Servicing id="<<id<<endl;
+    //cerr<<"Servicing id="<<id<<endl;
     //filter internal messages
     if(id<=-100){
-      ServerContext* sc=(ServerContext*)(object);
+      ServerContext* sc=(ServerContext*)(ep->object);
       switch(id){
       case -101:
 	sc->d_objptr->_addReference();
@@ -141,7 +139,6 @@ SocketEpChannel::runService(){
     }
     else{
       SocketMessage* new_msg=new SocketMessage(this, msg);
-      new_msg->setLocalObject(object);
       //The SocketHandlerThread is responsible to free the buf.   
 
       Thread* t = new Thread(new SocketThread(this, new_msg, id), "SocketHandlerThread", 0, Thread::Activated);

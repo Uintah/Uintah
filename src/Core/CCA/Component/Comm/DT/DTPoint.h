@@ -37,6 +37,7 @@ namespace SCIRun {
   class DTPoint{
   public:
     friend class DataTransmitter;
+    void *object;
     DTPoint();
     ~DTPoint();
     

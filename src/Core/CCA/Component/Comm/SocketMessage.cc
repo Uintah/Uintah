@@ -52,6 +52,7 @@
 #include <Core/CCA/Component/Comm/DT/DTMessage.h>
 #include <Core/CCA/Component/Comm/DT/DataTransmitter.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/Component/PIDL/Warehouse.h>
 #include <Core/CCA/Component/PIDL/URL.h>
 
 using namespace std;
@@ -62,7 +63,6 @@ SocketMessage::SocketMessage(SocketEpChannel *epchan, DTMessage *dtmsg)
 {
   this->msg=dtmsg->buf;
   this->dtmsg=dtmsg;
-  this->object=NULL;
   msg_size=sizeof(int); //skip handler_id
   this->epchan=epchan;
   spchan=NULL;
@@ -72,7 +72,6 @@ SocketMessage::SocketMessage(SocketSpChannel *spchan)
 {
   this->dtmsg=NULL;
   this->msg=NULL;
-  this->object=NULL;
   msg_size=sizeof(int); //skip handler_id
   this->spchan=spchan;
   epchan=NULL;
@@ -82,16 +81,11 @@ SocketMessage::~SocketMessage() {
   if(msg!=NULL) free(msg);
 }
 
-void SocketMessage::setLocalObject(void *obj){
-  object=obj;
-}
-
 void 
 SocketMessage::createMessage()  { 
   msg=realloc(msg, INIT_SIZE);
   capacity=INIT_SIZE;
   msg_size=sizeof(int); //reserve for handler_id
-  object=NULL;
 }
 
 void 
@@ -128,12 +122,11 @@ SocketMessage::marshalSpChannel(SpChannel* channel){
   SocketSpChannel * chan = dynamic_cast<SocketSpChannel*>(channel);
   marshalBuf(&(chan->ep_addr), sizeof(DTAddress));
   marshalBuf(&(chan->ep), sizeof(void *));
-  marshalBuf(&(chan->object), sizeof(void *));
 }
 
 void 
 SocketMessage::sendMessage(int handler){
-  cerr<<"SocketMessage::sendMessage handler id="<<handler<<endl;
+  //cerr<<"SocketMessage::sendMessage handler id="<<handler<<endl;
   memcpy(msg, &handler, sizeof(int));
   DTMessage *wmsg=new DTMessage;
   wmsg->buf=(char*)msg;
@@ -201,19 +194,17 @@ SocketMessage::unmarshalSpChannel(SpChannel* channel){
 
   unmarshalBuf(&(chan->ep_addr), sizeof(DTAddress));
   unmarshalBuf(&(chan->ep), sizeof(void *));
-  unmarshalBuf(&(chan->object), sizeof(void *));
-
-  if(!PIDL::getDT()->isLocal(chan->ep_addr)){
-    object=NULL;
-  }
-  else{
-    object=chan->object;
-  }
 }
 
 void* 
 SocketMessage::getLocalObj(){
-  return object;
+  if(epchan!=NULL){
+    return epchan->ep->object;
+  }
+  else{
+    if(!PIDL::getDT()->isLocal(spchan->ep_addr)) return NULL;
+    return spchan->ep->object;
+  }
 }
 
 void SocketMessage::destroyMessage() {
