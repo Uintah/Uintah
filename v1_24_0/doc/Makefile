@@ -35,6 +35,7 @@ tarball := ${tarfile}.gz
 tarcmd := gnutar --exclude='*CVS*' --exclude='auto' \
 --create --verbose --file=${root}/doc/${tarfile} 
 products := User Installation Developer Documentum
+edition := ../src/main/sci_version.h
 
 # Build all docs except code view docs (in Developer/CodeViews).  To
 # additionally build code views invoke make this way: make WITH_CV=true
