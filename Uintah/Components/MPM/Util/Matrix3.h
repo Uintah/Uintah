@@ -106,12 +106,20 @@ class Matrix3 {
   //Transpose
   inline Matrix3 Transpose() const;
 
-  // Returns number of real eigen values and passes back
-  // the values.  There will either be one eigenvalue
-  // passed back via e1, or three eigenvalue in which case
-  // they will be sorted such that e1 <= e2 <= e3.
+  // Returns number of real, unique eigen values and passes
+  // back the values.  If it returns 1, the value is passed back
+  // in e1.  If it returns 2, the values are passed back in e1
+  // and e2 such that e1 < e2.  If 3, then e1 < e2 < e3.
   int getEigenValues(double& e1, double& e2, double& e3) const;
 
+  // Get the eigen values of the 2x2 sub-matrix specified by
+  // the appropriate plane, returning the number of different real
+  // values.  If there is only 1 (unique) eigenvalue, it is
+  // passed back in e1.  If 2, then e1 < e2.
+  int getXYEigenValues(double& e1, double& e2) const;
+  int getYZEigenValues(double& e1, double& e2) const;
+  int getXZEigenValues(double& e1, double& e2) const;
+  
   // Returns an array of eigenvectors that form the basis
   // of eigenvectors corresponding to the given eigenvalue.
   // There may be 0 (if eigen_value is not a true eigen value),
@@ -486,6 +494,9 @@ inline SCICore::Geometry::Vector operator*(const SCICore::Geometry::Vector& v, c
 #endif  // __MATRIX3_H__
 
 // $Log$
+// Revision 1.8  2000/08/24 21:18:27  witzel
+// Added sub-matrix eigen value solving methods
+//
 // Revision 1.7  2000/08/18 17:06:11  guilkey
 // Fixed the += operator.
 //
