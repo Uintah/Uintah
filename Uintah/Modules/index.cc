@@ -1,4 +1,5 @@
 #include <PSECore/Dataflow/PackageDB.h>
+#include <sci_config.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/Module.h>
 
@@ -39,9 +40,11 @@ void initPackage(const clString& tcl) {
   RM("MPMViz", "Rescale Particle Color Map", make_RescaleParticleColorMap, tcl+"/RescaleParticleColorMap.tcl");
   RM("MPMViz", "cfd Grid Lines", make_cfdGridLines, tcl+"/cfdGridLines.tcl");
   RM("MPMViz", "Viz Control", make_VizControl, tcl+"/VizControl.tcl");
+#ifdef SCI_PARALLEL
   RM("MPMViz", "Particle DB", make_ParticleDB, tcl+"/ParticleDB.tcl");
   RM("MPMViz", "Run Simulation", make_RunSimulation, tcl+"/RunSimulation.tcl");
   RM("MPMViz", "Particle Viz", make_ParticleViz, tcl+"/ParticleViz.tcl");
+#endif
   // Readers
   RM("Readers", "Particle Set Reader", make_ParticleSetReader, "");
   RM("Readers", "MP Reader", make_MPReader, tcl+"/MPReader.tcl");
