@@ -98,7 +98,7 @@ void
 MomentumSolver::solve(SchedulerP& sched,
 		      const PatchSet* patches,
 		      const MaterialSet* matls,
-		      double /*time*/, double delta_t, int index)
+		      int index)
 {
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
@@ -111,7 +111,7 @@ MomentumSolver::solve(SchedulerP& sched,
   // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
   //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
 
-  sched_buildLinearMatrix(sched, patches, matls, delta_t, index);
+  sched_buildLinearMatrix(sched, patches, matls, index);
     
   // Schedules linear velocity solve
   // require : [u,v,w]VelocityCPBC, [u,v,w]VelCoefPBLM,
@@ -121,7 +121,7 @@ MomentumSolver::solve(SchedulerP& sched,
   //           [u,v,w]VelocityMS
   //  d_linearSolver->sched_velSolve(level, sched, new_dw, matrix_dw, index);
 
-  sched_velocityLinearSolve(sched, patches, matls, delta_t, index);
+  sched_velocityLinearSolve(sched, patches, matls, index);
 
 }
 
@@ -131,14 +131,16 @@ MomentumSolver::solve(SchedulerP& sched,
 void 
 MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches,
 					const MaterialSet* matls,
-					double delta_t, int index)
+					int index)
 {
   Task* tsk = scinew Task( "MomentumSolver::BuildCoeff",
 			  this, &MomentumSolver::buildLinearMatrix,
-			  delta_t, index);
+			  index);
   int numGhostCells = 1;
   int zeroGhostCells = 0;
 
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
   // get old_dw from sched
   // from old_dw for time integration
 
@@ -284,15 +286,17 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
 void
 MomentumSolver::sched_velocityLinearSolve(SchedulerP& sched, const PatchSet* patches,
 					  const MaterialSet* matls,
-					  double delta_t, int index)
+					  int index)
 {
   Task* tsk = scinew Task("MomentumSolver::VelLinearSolve",
 			  this,
-			  &MomentumSolver::velocityLinearSolve, delta_t, index);
+			  &MomentumSolver::velocityLinearSolve, index);
   
   int numGhostCells = 1;
   int zeroGhostCells = 0;
-  
+
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+
   //      DataWarehouseP old_dw = new_dw->getTop();
   // fix for task graph to work
 
@@ -368,8 +372,12 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  const MaterialSubset* /*matls*/,
 				  DataWarehouse* old_dw,
 				  DataWarehouse* new_dw,
-				  double delta_t, int index)
+				  int index)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -763,10 +771,14 @@ void
 MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
 				    const PatchSubset* patches,
 				    const MaterialSubset* /*matls*/,
-				    DataWarehouse*,
+				    DataWarehouse* old_dw,
 				    DataWarehouse* new_dw,
-				    double delta_t, int index)
+				    int index)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -927,7 +939,7 @@ void
 MomentumSolver::solvePred(SchedulerP& sched,
 			  const PatchSet* patches,
 			  const MaterialSet* matls,
-			  double /*time*/, double delta_t, int index)
+			  int index)
 {
   //computes stencil coefficients and source terms
   // require : pressureCPBC, [u,v,w]VelocityCPBC, densityIN, viscosityIN (new_dw)
@@ -935,7 +947,7 @@ MomentumSolver::solvePred(SchedulerP& sched,
   // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
   //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
 
-  sched_buildLinearMatrixPred(sched, patches, matls, delta_t, index);
+  sched_buildLinearMatrixPred(sched, patches, matls, index);
     
 
 }
@@ -946,13 +958,16 @@ MomentumSolver::solvePred(SchedulerP& sched,
 void 
 MomentumSolver::sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* patches,
 					    const MaterialSet* matls,
-					    double delta_t, int index)
+					    int index)
 {
   Task* tsk = scinew Task( "MomentumSolver::BuildCoeffPred",
 			  this, &MomentumSolver::buildLinearMatrixPred,
-			  delta_t, index);
+			  index);
   int numGhostCells = 1;
   int zeroGhostCells = 0;
+
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
 #ifdef correctorstep
   tsk->requires(Task::NewDW, d_lab->d_densityPredLabel,
 		Ghost::AroundCells, numGhostCells);
@@ -1056,10 +1071,14 @@ void
 MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 				      const PatchSubset* patches,
 				      const MaterialSubset* /*matls*/,
-				      DataWarehouse*,
+				      DataWarehouse* old_dw,
 				      DataWarehouse* new_dw,
-				      double delta_t, int index)
+				      int index)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -1238,7 +1257,7 @@ void
 MomentumSolver::solveCorr(SchedulerP& sched,
 			  const PatchSet* patches,
 			  const MaterialSet* matls,
-			  double /*time*/, double delta_t, int index)
+			  int index)
 {
   //computes stencil coefficients and source terms
   // require : pressureCPBC, [u,v,w]VelocityCPBC, densityIN, viscosityIN (new_dw)
@@ -1246,7 +1265,7 @@ MomentumSolver::solveCorr(SchedulerP& sched,
   // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
   //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
 
-  sched_buildLinearMatrixCorr(sched, patches, matls, delta_t, index);
+  sched_buildLinearMatrixCorr(sched, patches, matls, index);
     
 
 }
@@ -1257,13 +1276,15 @@ MomentumSolver::solveCorr(SchedulerP& sched,
 void 
 MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* patches,
 					    const MaterialSet* matls,
-					    double delta_t, int index)
+					    int index)
 {
   Task* tsk = scinew Task( "MomentumSolver::BuildCoeffCorr",
 			  this, &MomentumSolver::buildLinearMatrixCorr,
-			  delta_t, index);
+			  index);
   int numGhostCells = 1;
 
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_pressureSPBCLabel,
@@ -1323,10 +1344,14 @@ void
 MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 				      const PatchSubset* patches,
 				      const MaterialSubset* /*matls*/,
-				      DataWarehouse*,
+				      DataWarehouse* old_dw,
 				      DataWarehouse* new_dw,
-				      double delta_t, int index)
+				      int index)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);

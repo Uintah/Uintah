@@ -112,8 +112,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 // Schedule non linear solve and carry out some actual operations
 // ****************************************************************************
 int ExplicitSolver::nonlinearSolve(const LevelP& level,
-					  SchedulerP& sched,
-					  double time, double delta_t)
+					  SchedulerP& sched)
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
@@ -134,12 +133,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //correct inlet velocities to account for change in properties
   // require : densityIN, [u,v,w]VelocityIN (new_dw)
   // compute : [u,v,w]VelocitySIVBC
-  d_boundaryCondition->sched_setInletVelocityBC(sched, patches, matls, time);
+  d_boundaryCondition->sched_setInletVelocityBC(sched, patches, matls);
   d_boundaryCondition->sched_recomputePressureBC(sched, patches, matls);
   // compute total flowin, flow out and overall mass balance
-  d_boundaryCondition->sched_computeFlowINOUT(sched, patches, matls, delta_t);
+  d_boundaryCondition->sched_computeFlowINOUT(sched, patches, matls);
   d_boundaryCondition->sched_computeOMB(sched, patches, matls);
-  d_boundaryCondition->sched_transOutletBC(sched, patches, matls, delta_t);
+  d_boundaryCondition->sched_transOutletBC(sched, patches, matls);
   // compute apo and drhodt, used in transport equations
   // put a logical to call computetranscoeff 
   // using a predictor corrector approach from Najm [1998]
@@ -156,10 +155,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   for (int index = 0;index < nofScalars; index ++) {
     // in this case we're only solving for one scalar...but
     // the same subroutine can be used to solve multiple scalars
-    d_scalarSolver->solvePred(sched, patches, matls, time, delta_t, index);
+    d_scalarSolver->solvePred(sched, patches, matls, index);
   }
   if (d_enthalpySolve)
-    d_enthalpySolver->solvePred(sched, patches, matls, time, delta_t);
+    d_enthalpySolver->solvePred(sched, patches, matls);
 #ifdef correctorstep
   d_props->sched_computePropsPred(sched, patches, matls);
 #else
@@ -175,7 +174,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //           pressurePS (new_dw)
   // first computes, hatted velocities and then computes the pressure poisson equation
   d_props->sched_computeDenRefArray(sched, patches, matls);
-  d_pressSolver->solvePred(level, sched, time, delta_t);
+  d_pressSolver->solvePred(level, sched);
   // Momentum solver
   // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
   // viscosityIN (new_dw)
@@ -188,14 +187,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   
   // project velocities using the projection step
   for (int index = 1; index <= Arches::NDIM; ++index) {
-    d_momSolver->solvePred(sched, patches, matls, time, delta_t, index);
+    d_momSolver->solvePred(sched, patches, matls, index);
   }
 #ifdef correctorstep
   // corrected step
   for (int index = 0;index < nofScalars; index ++) {
     // in this case we're only solving for one scalar...but
     // the same subroutine can be used to solve multiple scalars
-    d_scalarSolver->solveCorr(sched, patches, matls, time, delta_t, index);
+    d_scalarSolver->solveCorr(sched, patches, matls, index);
   }
   // same as corrector
   d_props->sched_reComputeProps(sched, patches, matls);
@@ -209,8 +208,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //           pressurePS (new_dw)
   // first computes, hatted velocities and then computes the pressure 
   // poisson equation
-  d_pressSolver->solveCorr(level, sched, time, delta_t);
-  // Momentum solver
+  d_pressSolver->solveCorr(level, sched);
+  // Momentum solver2
   // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
   // viscosityIN (new_dw)
   //           [u,v,w]VelocitySPBC, densityCP (old_dw)
@@ -222,7 +221,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   
   // project velocities using the projection step
   for (int index = 1; index <= Arches::NDIM; ++index) {
-    d_momSolver->solveCorr(sched, patches, matls, time, delta_t, index);
+    d_momSolver->solveCorr(sched, patches, matls, index);
   }
   // if external boundary then recompute velocities using new pressure
   // and puts them in nonlinear_dw
@@ -661,6 +660,7 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
 	 iter != d_probePoints.end(); iter++) {
 
       if (patch->containsCell(*iter)) {
+	cerr.precision(10);
 	cerr << "for Intvector: " << *iter << endl;
 	cerr << "Density: " << density[*iter] << endl;
 	cerr << "Viscosity: " << viscosity[*iter] << endl;

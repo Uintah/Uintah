@@ -24,6 +24,7 @@
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
@@ -92,8 +93,7 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
 void 
 EnthalpySolver::solve(SchedulerP& sched,
 		    const PatchSet* patches,
-		    const MaterialSet* matls,
-		    double /*time*/, double delta_t)
+		    const MaterialSet* matls)
 {
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
@@ -103,13 +103,13 @@ EnthalpySolver::solve(SchedulerP& sched,
   //computes stencil coefficients and source terms
   // requires : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
   // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
-  sched_buildLinearMatrix(sched, patches, matls, delta_t);
+  sched_buildLinearMatrix(sched, patches, matls);
   
   // Schedule the scalar solve
   // require : scalarIN, scalCoefSBLM, scalNonLinSrcSBLM
   // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSP
   //d_linearSolver->sched_scalarSolve(level, sched, new_dw, matrix_dw, index);
-  sched_enthalpyLinearSolve(sched, patches, matls, delta_t);
+  sched_enthalpyLinearSolve(sched, patches, matls);
 }
 
 //****************************************************************************
@@ -117,16 +117,17 @@ EnthalpySolver::solve(SchedulerP& sched,
 //****************************************************************************
 void 
 EnthalpySolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches,
-				      const MaterialSet* matls,
-				      double delta_t)
+				      const MaterialSet* matls)
 {
   Task* tsk = scinew Task("EnthalpySolver::BuildCoeff",
 			  this,
-			  &EnthalpySolver::buildLinearMatrix,
-			  delta_t);
+			  &EnthalpySolver::buildLinearMatrix);
 
   int numGhostCells = 1;
   int zeroGhostCells = 0;
+
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
   // This task requires scalar and density from old time step for transient
   // calculation
   //DataWarehouseP old_dw = new_dw->getTop();
@@ -160,15 +161,15 @@ EnthalpySolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
 //****************************************************************************
 void
 EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched, const PatchSet* patches,
-				      const MaterialSet* matls,
-				      double delta_t)
+				      const MaterialSet* matls)
 {
   Task* tsk = scinew Task("EnthalpySolver::enthalpyLinearSolve",
 			  this,
-			  &EnthalpySolver::enthalpyLinearSolve, delta_t);
+			  &EnthalpySolver::enthalpyLinearSolve);
   int numGhostCells = 1;
   int zeroGhostCells = 0;
   
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
 
   // coefficient for the variable for which solve is invoked
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
@@ -191,10 +192,13 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched, const PatchSet* pat
 void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 				     const PatchSubset* patches,
 				     const MaterialSubset*,
-				     DataWarehouse*,
-				     DataWarehouse* new_dw,
-				     double delta_t)
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -303,10 +307,13 @@ void
 EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 				const PatchSubset* patches,
 				const MaterialSubset*,
-				DataWarehouse*,
-				DataWarehouse* new_dw,
-				double delta_t)
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -371,19 +378,18 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 void 
 EnthalpySolver::solvePred(SchedulerP& sched,
 			const PatchSet* patches,
-			const MaterialSet* matls,
-			double /*time*/, double delta_t)
+			const MaterialSet* matls)
 {
   //computes stencil coefficients and source terms
   // requires : enthalpyIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
   // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
-  sched_buildLinearMatrixPred(sched, patches, matls, delta_t);
+  sched_buildLinearMatrixPred(sched, patches, matls);
   
   // Schedule the enthalpy solve
   // require : enthalpyIN, scalCoefSBLM, scalNonLinSrcSBLM
   // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, enthalpySP
   //d_linearSolver->sched_enthalpySolve(level, sched, new_dw, matrix_dw);
-  sched_enthalpyLinearSolvePred(sched, patches, matls, delta_t);
+  sched_enthalpyLinearSolvePred(sched, patches, matls);
 }
 
 //****************************************************************************
@@ -392,16 +398,17 @@ EnthalpySolver::solvePred(SchedulerP& sched,
 void 
 EnthalpySolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 					  const PatchSet* patches,
-					  const MaterialSet* matls,
-					  double delta_t)
+					  const MaterialSet* matls)
 {
   Task* tsk = scinew Task("EnthalpySolver::BuildCoeffPred",
 			  this,
-			  &EnthalpySolver::buildLinearMatrixPred,
-			  delta_t);
+			  &EnthalpySolver::buildLinearMatrixPred);
 
   int numGhostCells = 1;
   int zeroGhostCells = 0;
+
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
   // This task requires enthalpy and density from old time step for transient
   // calculation
   //DataWarehouseP old_dw = new_dw->getTop();
@@ -442,9 +449,12 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 					 const PatchSubset* patches,
 					 const MaterialSubset*,
 					 DataWarehouse* old_dw,
-					 DataWarehouse* new_dw,
-					 double delta_t)
+					 DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -602,15 +612,15 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 void
 EnthalpySolver::sched_enthalpyLinearSolvePred(SchedulerP& sched,
 					  const PatchSet* patches,
-					  const MaterialSet* matls,
-					  double delta_t)
+					  const MaterialSet* matls)
 {
   Task* tsk = scinew Task("EnthalpySolver::enthalpyLinearSolvePred",
 			  this,
-			  &EnthalpySolver::enthalpyLinearSolvePred, delta_t);
+			  &EnthalpySolver::enthalpyLinearSolvePred);
   int numGhostCells = 1;
   int zeroGhostCells = 0;
   
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
 
   // coefficient for the variable for which solve is invoked
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
@@ -636,11 +646,14 @@ void
 EnthalpySolver::enthalpyLinearSolvePred(const ProcessorGroup* pc,
                                 const PatchSubset* patches,
 				const MaterialSubset*,
-				DataWarehouse*,
-				DataWarehouse* new_dw,
-				double delta_t)
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw)
 {
-for (int p = 0; p < patches->size(); p++) {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
+  for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->
@@ -707,19 +720,18 @@ for (int p = 0; p < patches->size(); p++) {
 void 
 EnthalpySolver::solveCorr(SchedulerP& sched,
 			const PatchSet* patches,
-			const MaterialSet* matls,
-			double /*time*/, double delta_t)
+			const MaterialSet* matls)
 {
   //computes stencil coefficients and source terms
   // requires : enthalpyIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
   // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
-  sched_buildLinearMatrixCorr(sched, patches, matls, delta_t);
+  sched_buildLinearMatrixCorr(sched, patches, matls);
   
   // Schedule the enthalpy solve
   // require : enthalpyIN, scalCoefSBLM, scalNonLinSrcSBLM
   // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, enthalpySP
   //d_linearSolver->sched_enthalpySolve(level, sched, new_dw, matrix_dw, index);
-  sched_enthalpyLinearSolveCorr(sched, patches, matls, delta_t);
+  sched_enthalpyLinearSolveCorr(sched, patches, matls);
 }
 
 //****************************************************************************
@@ -728,16 +740,17 @@ EnthalpySolver::solveCorr(SchedulerP& sched,
 void 
 EnthalpySolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 					  const PatchSet* patches,
-					  const MaterialSet* matls,
-					  double delta_t)
+					  const MaterialSet* matls)
 {
   Task* tsk = scinew Task("EnthalpySolver::BuildCoeffCorr",
 			  this,
-			  &EnthalpySolver::buildLinearMatrixCorr,
-			  delta_t);
+			  &EnthalpySolver::buildLinearMatrixCorr);
 
   int numGhostCells = 1;
   int zeroGhostCells = 0;
+
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
   // This task requires enthalpy and density from old time step for transient
   // calculation
   //DataWarehouseP old_dw = new_dw->getTop();
@@ -775,10 +788,13 @@ EnthalpySolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 					 const PatchSubset* patches,
 					 const MaterialSubset*,
-					 DataWarehouse*,
-					 DataWarehouse* new_dw,
-					 double delta_t)
+					 DataWarehouse* old_dw,
+					 DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -890,15 +906,15 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 void
 EnthalpySolver::sched_enthalpyLinearSolveCorr(SchedulerP& sched,
 					  const PatchSet* patches,
-					  const MaterialSet* matls,
-					  double delta_t)
+					  const MaterialSet* matls)
 {
   Task* tsk = scinew Task("EnthalpySolver::enthalpyLinearSolveCorr",
 			  this,
-			  &EnthalpySolver::enthalpyLinearSolveCorr, delta_t);
+			  &EnthalpySolver::enthalpyLinearSolveCorr);
   int numGhostCells = 1;
   int zeroGhostCells = 0;
   
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
 
   // coefficient for the variable for which solve is invoked
   //***warning changed in to pred
@@ -922,10 +938,13 @@ void
 EnthalpySolver::enthalpyLinearSolveCorr(const ProcessorGroup* pc,
 				const PatchSubset* patches,
 				const MaterialSubset*,
-				DataWarehouse*,
-				DataWarehouse* new_dw,
-				double delta_t)
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material

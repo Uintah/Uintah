@@ -316,11 +316,10 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 // Schedule time advance
 // ****************************************************************************
 void 
-Arches::scheduleTimeAdvance(double time, double dt,
-			    const LevelP& level, 
+Arches::scheduleTimeAdvance(const LevelP& level, 
 			    SchedulerP& sched)
 {
-  d_nlSolver->nonlinearSolve(level, sched, time, dt);
+  d_nlSolver->nonlinearSolve(level, sched);
 }
 
 
