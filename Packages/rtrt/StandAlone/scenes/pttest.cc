@@ -30,7 +30,7 @@ using namespace rtrt;
 #define MAX_LINE_LEN 256
 
 TextureGridSphere* texGridFromFile(char *fname, int tex_res, float radius,
-				   int nsides, int depth);
+				   int nsides, int gdepth);
 
 float radius = 1.0;
 
@@ -74,7 +74,7 @@ Group *make_geometry(char* tex_names[NUM_TEXTURES])
 }
 
 Group *make_geometry_tg(char* tex_names[NUM_TEXTURES], int tex_res,
-			int nsides, int depth) {
+			int nsides, int gdepth) {
   Group* group = new Group();
   
   float* spheres = new float[NUM_TEXTURES*3];
@@ -123,7 +123,7 @@ Group *make_geometry_tg(char* tex_names[NUM_TEXTURES], int tex_res,
   group->add(new 
 	     TextureGridSphere(spheres, nspheres, radius, tex_indices,
 		    tex_data, nspheres, tex_res,
-		    nsides, depth));
+		    nsides, gdepth));
 
   return group;
 }
@@ -136,7 +136,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
   int tex_res = -1;
   char *infilename=0;
   int nsides = 6;
-  int depth = 2;
+  int gdepth = 2;
 
   for (int i=1;i<argc;i++)
   {
@@ -152,8 +152,8 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
       tex_res=atoi(argv[++i]);
     else if(strcmp(argv[i],"-nsides")==0)
       nsides=atoi(argv[++i]);
-    else if(strcmp(argv[i],"-depth")==0)
-      depth=atoi(argv[++i]);
+    else if(strcmp(argv[i],"-gdepth")==0)
+      gdepth=atoi(argv[++i]);
     else
     {
       cerr<<"unrecognized option \""<<argv[i]<<"\""<< endl;
@@ -164,14 +164,14 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
       cerr<<"  -tex_res <int>      resolution of the textures (-1)"<<endl;
       cerr<<"  -radius <float>     sphere radius (1.0)"<<endl;
       cerr<<"  -nsides <int>       number of sides for grid cells (6)"<<endl;
-      cerr<<"  -depth <int>        depth of grid cells (2)"<<endl;
+      cerr<<"  -gdepth <int>       gdepth of grid cells (2)"<<endl;
       exit(1);
     }
   }
 
   Object *group=0;
   if (infilename) {
-    group=texGridFromFile(infilename, tex_res, radius, nsides, depth);
+    group=texGridFromFile(infilename, tex_res, radius, nsides, gdepth);
   } else {
     char *tex_names[NUM_TEXTURES];
     // Make the tex_names
@@ -182,7 +182,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
     }
   
     if (tex_res > 0)
-      group = make_geometry_tg(tex_names, tex_res, nsides, depth);
+      group = make_geometry_tg(tex_names, tex_res, nsides, gdepth);
     else
       group = make_geometry(tex_names);
   }
@@ -229,7 +229,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
 // Returns a pointer to a newly allocated TextureGridSpheres
 //   on success, NULL on any failure
 TextureGridSphere* texGridFromFile(char *fname, int tex_res, float radius,
-				   int nsides, int depth) {
+				   int nsides, int gdepth) {
   // Declare a few variables
   float* sphere_data=0;
   int* index_data=0;
@@ -612,7 +612,7 @@ TextureGridSphere* texGridFromFile(char *fname, int tex_res, float radius,
   tex_grid = new TextureGridSphere(sphere_data, total_nspheres,
 				    radius, index_data, tex_data,
 				    total_ntextures, tex_res,
-				    nsides, depth);
+				    nsides, gdepth);
 
   return tex_grid;
 }
