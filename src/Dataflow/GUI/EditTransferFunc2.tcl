@@ -330,7 +330,9 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
         # natural behavior that a swatch will be loaded and immediately deleted.
         global env  
         global deleteSwatch 
-        
+        global $this-row
+        global $this-col
+         
         # Note:  The following line MAY break in windows due to path declaration differences 
         # (/ vs. \)
         set basename [split $deleteSwatch "/"] 
@@ -351,6 +353,8 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
             foreach element [winfo children $f] {
               destroy $element
             }
+            set $this-row 0
+            set $this-col 0
             create_swatches
         }
     }
