@@ -10,7 +10,7 @@ OBJS = ColorMapReader.o   ColumnMatrixReader.o   ContourSetReader.o   \
 	TiffReader.o
 # ParticleSetReader.o
 GENSRCS = ColorMapReader.cc ColumnMatrixReader.cc ContourSetReader.cc  \
-	MatrixReader.cc   MeshReader.cc   MultiSFRGReader.cc \
+	MatrixReader.cc   MeshReader.cc   \
 	MultiMeshReader.cc  ScalarFieldReader.cc   SigmaSetReader.cc \
 	SurfaceReader.cc  VectorFieldReader.cc  VoidStarReader.cc \
         ParticleSetReader.cc
