@@ -48,3 +48,6 @@ Data Sets
          Updated command line arguments for converter examples in
          README file
 
+
+(Release notes for each version of SCIRun can be found in
+./SCIRun/doc/ReleaseNotes/ in the src tree.)
