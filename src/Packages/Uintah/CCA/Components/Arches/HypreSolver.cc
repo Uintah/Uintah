@@ -488,7 +488,7 @@ HypreSolver::pressLinearSolve()
   HYPRE_StructVector tmp;  
   int num_iterations;
   int n_pre, n_post, skip;
-  double sum_b, iprod, init_norm, final_res_norm;
+  double sum_b, iprod, final_res_norm;
 
   /*Calculating initial norm*/
   HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &tmp);

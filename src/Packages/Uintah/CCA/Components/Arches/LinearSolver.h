@@ -76,6 +76,7 @@ public:
       // Setup the problem (etc.)
       virtual void problemSetup(const ProblemSpecP& params) = 0;
 
+      inline double getInitNorm() { return init_norm; }
 
       ////////////////////////////////////////////////////////////////////////
       // Pressure Underrelaxation
@@ -201,6 +202,7 @@ public:
    virtual bool pressLinearSolve() = 0;
    virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars) = 0;
    virtual void destroyMatrix() = 0;
+   double init_norm;
 
 protected:
 

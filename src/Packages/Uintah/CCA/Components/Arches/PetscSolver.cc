@@ -60,7 +60,8 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("LinearSolver");
   db->require("max_iter", d_maxSweeps);
-  db->require("res_tol", d_residual);
+  //db->require("res_tol", d_residual);
+  db->getWithDefault("res_tol", d_residual, 1.0e-7);
   db->require("underrelax", d_underrelax);
   db->require("pctype", d_pcType);
   if (d_pcType == "asm")
@@ -501,7 +502,6 @@ PetscSolver::pressLinearSolve()
     throw PetscError(ierr, "VecAssemblyEnd");
   // compute the initial error
   double neg_one = -1.0;
-  double init_norm;
   double sum_b;
   ierr = VecSum(d_b, &sum_b);
   Vec u_tmp;
@@ -587,7 +587,7 @@ PetscSolver::pressLinearSolve()
     if(ierr)
       throw PetscError(ierr, "KSPSetType");
   }
-  ierr = KSPSetTolerances(ksp, 1.e-7, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
+  ierr = KSPSetTolerances(ksp, d_residual, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   if(ierr)
     throw PetscError(ierr, "KSPSetTolerances");
 
