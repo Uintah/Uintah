@@ -104,15 +104,29 @@ setenv PATH $JAVA_HOME/bin:$PATH
   <section id="sec.obitk">
     <title id="sec.title.obitk">Obtaining <acronym>ITK</acronym></title>
 
-    <para>The Insight toolkit must be installed before building SCIRun.
-    The Insight toolkit and its installation instructions are
-    available on the <ulink
-    url="http://www.itk.org"><acronym>ITK</acronym> web site</ulink>.
-    SCIRun supports <acronym>ITK</acronym> versions 1.6 and 1.8.
-    <acronym>ITK</acronym> installation requires CMake, an
-    open-source, cross-platform build tool.  CMake can be obtained
-    from the <ulink url="http://www.cmake.org">CMake web
-    site</ulink>.</para>
+    <para>
+      The Insight toolkit must be installed before building SCIRun.
+      The Insight toolkit and its installation instructions are
+      available on the <ulink
+      url="http://www.itk.org"><acronym>ITK</acronym> web
+      site</ulink>.  SCIRun supports <acronym>ITK</acronym> versions
+      1.6, 1.8, and 1.10.
+    </para>
+
+    <note os="linux;osx">
+      <para>
+	<acronym>ITK</acronym> versions 1.6 and 1.8 are not compatible
+	with GCC 3.4.  Use <acronym>ITK</acronym> 1.10 if compiling
+	with GCC 3.4.
+      </para>
+    </note>
+
+    <para>
+      <acronym>ITK</acronym> installation requires CMake, an
+      open-source, cross-platform build tool.  CMake can be obtained
+      from the <ulink url="http://www.cmake.org">CMake web
+      site</ulink>.
+    </para>
 
     <note>
       <para>SCIRun's Insight package must also be downloaded to add support

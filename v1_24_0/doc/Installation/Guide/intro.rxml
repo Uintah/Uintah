@@ -31,6 +31,25 @@ DEALINGS IN THE SOFTWARE.
 <!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
+<!--% matlab_info = %Q{
+<listitem>
+  <para>
+    SCIRun's MatlabInterface package requires Matlab version 6 or version 7.
+  </para>
+</listitem>}
+%-->
+
+<!--% gcc_itk_info = %Q{
+<listitem>
+  <para>
+    Note that SCIRun is compatible with GCC 3.4. However,  when building
+    ITK, for use with
+    SCIRun's ITK package, ITK version 1.10 must be used because
+    earlier ITK versions are not compatible with GCC 3.4.
+  </para>
+</listitem>}
+%-->
+
 <section id="sec.intro">
   <title>Introduction</title>
 
@@ -79,8 +98,13 @@ DEALINGS IN THE SOFTWARE.
 		<para>Redhat 9 or Mandrake 9.2</para>
 	      </listitem>
 	      <listitem>
-		<para>GCC 3.x</para>
+		<para>GCC 3.x.  SCIRun has been updated to work with
+		the recently released GCC 3.4 compiler, however, our
+		development team does not currently use this compiler
+		extensively, so there is a small possibility that
+		problems will occur when using GCC 3.4.</para>
 	      </listitem>
+	      <!--%= matlab_info %-->
 	    </itemizedlist>
 	  </entry>
 	</row>
@@ -103,6 +127,7 @@ DEALINGS IN THE SOFTWARE.
 	      <listitem>
 		<para>MIPSpro compiler 7.3.1.1m (or later)</para>
 	      </listitem>
+	      <!--%= matlab_info %-->
 	    </itemizedlist>
 	  </entry>
 	</row>
@@ -126,11 +151,7 @@ DEALINGS IN THE SOFTWARE.
 		<para>Apple's X11 server software, Xcode developer
 		tools, and X11 software development kit.</para>
 	      </listitem>
-	      <listitem>
-		<para>SCIRun's MatlabInterface package requires Matlab
-		version Matlab 6.5.1 (MathWorks Relase 13, Service
-		Pack 1).</para>
-	      </listitem>
+	      <!--%= matlab_info %-->
 	      <listitem>
 		<para>SCIRun's TEEM package supports PNG images if PNG libraries
 		are installed.  PNG libraries can be installed via the <ulink
@@ -164,29 +185,42 @@ DEALINGS IN THE SOFTWARE.
     </tgroup>
   </table>
 
-  <para os="osx">Apple's X11 server software, Xcode developer tools, and X11
-  SDK are distributed with Mac OS X but are not part of the Mac OS X default
-  installation.  They are installed by double-clicking, in turn, the
-  files <filename>X11User.pkg</filename>,
-  <filename>Developer.mpkg</filename>, and
-  <filename>X11SDK.pkg</filename>.  These files may be present on the
-  hard drive, the Mac OS X installation CDs, or DVD.
-  <filename>Developer.mpkg</filename> and
-  <filename>X11SDK.pkg</filename> are part of the Xcode
-  distribution.</para>
-
-  <para os="linux">
-    Additional platform notes:
+  <para os="osx">
+    Additional notes:
     <itemizedlist>
       <listitem>
-	<para>NVIDIA drivers, versions 1.0-5328, 1.0-5336, and 1.0-6106, will not
-	work for hardware based texture volume rendering in SCIRun.
-	Please do not update to these drivers if you wish your volume
-	rendering to work.</para>
+	<para>
+	  Apple's X11 server software, Xcode developer tools, and X11
+	  SDK are distributed with Mac OS X but are not part of the
+	  Mac OS X default installation.  They are installed by
+	  double-clicking, in turn, the files
+	  <filename>X11User.pkg</filename>,
+	  <filename>Developer.mpkg</filename>, and
+	  <filename>X11SDK.pkg</filename>.  These files may be present
+	  on the hard drive, the Mac OS X installation CDs, or DVD.
+	  <filename>Developer.mpkg</filename> and
+	  <filename>X11SDK.pkg</filename> are part of the Xcode
+	  distribution.
+	</para>
+      </listitem>
+      <!--%= gcc_itk_info %-->
+    </itemizedlist>
+  </para>
+
+  <para os="linux">
+    Additional notes:
+    <itemizedlist>
+      <!--%= gcc_itk_info %-->
+      <listitem>
+	<para>NVIDIA drivers, versions 1.0-5328, 1.0-5336, and
+	1.0-6106, will not work for hardware based texture volume
+	rendering in SCIRun.  Please do not update to these drivers if
+	you wish your volume rendering to work.</para>
       </listitem>
       <listitem>
-	<para>Driver versions 1.0-4496, 1.0-4363 will work, but 1.0-6111 or later is required 
-	for advanced volume rendering.</para>
+	<para>Driver versions 1.0-4496, 1.0-4363 will work, but
+	1.0-6111 or later is required for advanced volume
+	rendering.</para>
       </listitem>
       <listitem>
 	<para>Driver version 1.0-4191 does not work.  SCI has not
@@ -199,19 +233,24 @@ DEALINGS IN THE SOFTWARE.
 	running SCIRun on this system at this time.</para>
       </listitem>
       <listitem>
-	<para>While NVIDIA graphic cards and drivers seem to work best under linux,
-              we recently ahve had success with ATI cards/drivers.
+	<para>While NVIDIA graphic cards and drivers seem to work best
+	under linux, we recently have had success with ATI
+	cards/drivers.
         </para>
 	<itemizedlist>
 	  <listitem>
-	    <para>Note, we have seen problems with vertex arrays.  A workaround for this is
-                  available by setting the environment variable SCIRUN_DRAWARRAYS_DISABLE to true.
-                  (This may be done in the .scirunrc file or in the shell's environment.)
+	    <para>Note, we have seen problems with vertex arrays.  A
+	    workaround for this is available by setting the
+	    environment variable
+	    <envar>SCIRUN_DRAWARRAYS_DISABLE</envar> to true.  (This
+	    may be done in the .scirunrc file or in the shell's
+	    environment.)
             </para>
 	  </listitem>
 	  <listitem>
-	    <para>Note - Pbuffers on the ATI card has shown some problems resulting in 
-                  saved images not being optimal.
+	    <para>
+	      Note - Pbuffers on the ATI card has shown some problems
+	      resulting in saved images not being optimal.
             </para>
 	  </listitem>
 	</itemizedlist>
@@ -219,16 +258,23 @@ DEALINGS IN THE SOFTWARE.
     </itemizedlist>
   </para>
 
-  <para os="linux">Proceed to <xref linkend="sec.rpminst" /> to install SCIRun
-  from an <acronym>RPM</acronym>.</para>
+  <para os="linux">
+    Proceed to <xref linkend="sec.rpminst" /> to install SCIRun from
+    an <acronym>RPM</acronym>.
+  </para>
 
-  <para os="osx">Proceed to <xref linkend="sec.dmg_inst"/> to install SCIRun from
-  a disk image.</para>
+  <para os="osx">
+    Proceed to <xref linkend="sec.dmg_inst"/> to install SCIRun from a
+    disk image.
+  </para>
 
-  <para os="irix">Proceed to <xref linkend="sec.source_inst"/> to install
-  SCIRun.</para>
+  <para os="irix">
+    Proceed to <xref linkend="sec.source_inst"/> to install SCIRun.
+  </para>
 
-  <para os="linux;osx">Proceed to <xref linkend="sec.source_inst"/> to
-  install SCIRun from source code.</para>
+  <para os="linux;osx">
+    Proceed to <xref linkend="sec.source_inst"/> to install SCIRun
+    from source code.
+  </para>
 
 </section>
