@@ -19,7 +19,8 @@ SRCS     += $(SRCDIR)/GridVisualizer.cc \
 	$(SRCDIR)/EigenEvaluator.cc \
 	$(SRCDIR)/ParticleEigenEvaluator.cc \
 	$(SRCDIR)/InPlaneEigenEvaluator.cc \
-	$(SRCDIR)/TensorElementExtractor.cc
+	$(SRCDIR)/TensorElementExtractor.cc \
+	$(SRCDIR)/ParticleTensorElementExtractor.cc
 
 
 PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
@@ -36,6 +37,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.9  2000/10/18 19:09:47  witzel
+# Added ParticleTensorElementExtractor
+#
 # Revision 1.8  2000/10/17 22:47:42  witzel
 # Added ParticleEigenEvaluator.
 #
