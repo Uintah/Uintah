@@ -281,3 +281,19 @@ int MPMMaterial::checkForSurface(const GeometryPiece* piece, const Point p,
     return 0;
   }
 }
+
+double  MPMMaterial::getThermalConductivity() const
+{
+  return d_thermal_cond;
+}
+
+double  MPMMaterial::getSpecificHeat() const
+{
+  return d_spec_heat;
+}
+
+// $Log$
+// Revision 1.20  2000/05/26 01:43:41  tan
+// Added getThermalConductivity() and getSpecificHeat()
+// for computation on heat conduction.
+//

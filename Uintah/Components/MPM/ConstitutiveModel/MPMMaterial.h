@@ -81,6 +81,9 @@ WARNING
 
 	 int checkForSurface(const GeometryPiece* piece,
 				const Point p, const Vector dxpp);
+				
+	 double  getThermalConductivity() const;
+	 double  getSpecificHeat() const;
 
       private:
 	 
@@ -115,6 +118,10 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.14  2000/05/26 01:43:29  tan
+// Added getThermalConductivity() and getSpecificHeat()
+// for computation on heat conduction.
+//
 // Revision 1.13  2000/05/19 23:15:52  guilkey
 // Added code to fish out which particles are on the surface.  This
 // is stored in the DW as an int 1 (it is a surface particle) or 0
