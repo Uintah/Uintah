@@ -433,11 +433,11 @@ Thread::detach()
 void
 Thread::exitAll(int code)
 {
-  CleanupManager::call_callbacks();
   if (getenv("SCIRUN_EXIT_CRASH_WORKAROUND"))
   {
     raise(SIGKILL);
   }
+  CleanupManager::call_callbacks();
   if(initialized && !exiting){
     exiting=true;
     lock_scheduler();
