@@ -9,7 +9,8 @@
  *
  * Add methods to populate this suite tree with more
  * suites below where it says:
- /* ADD MORE POPULATING METHODS ABOVE FOR OTHER TEST SUITES */
+ * ADD MORE POPULATING METHODS ABOVE FOR OTHER TEST SUITES
+ */
 
 #include "TestSuite/SuiteTree.h"
 #include "TestMatrix3/testmatrix3.h"
@@ -63,6 +64,10 @@ int main(int argc, char* argv[])
   suites->addSubTree(matrix3TestTree());
 
   /* ADD MORE POPULATING METHODS ABOVE FOR OTHER TEST SUITES */
+
+  // show suite tree summary
+  bool allPassed;
+  cout << suites->composeSubSummary("", expandAll, allPassed) << endl;
   
   // report failed suites to itemized the tests the failed
   if (reportAll)
