@@ -1,6 +1,5 @@
 #include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderAdvector.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -23,10 +22,12 @@ SecondOrderAdvector::SecondOrderAdvector(DataWarehouse* new_dw,
                                          const Patch*  patch) 
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
-  new_dw->allocateTemporary(d_OFS,    patch, gac, 1);
-  new_dw->allocateTemporary(r_out_x,  patch, gac, 1); 
-  new_dw->allocateTemporary(r_out_y,  patch, gac, 1); 
-  new_dw->allocateTemporary(r_out_z,  patch, gac, 1);      
+  new_dw->allocateTemporary(d_OFS,         patch, gac, 1);
+  new_dw->allocateTemporary(r_out_x,       patch, gac, 1); 
+  new_dw->allocateTemporary(r_out_y,       patch, gac, 1); 
+  new_dw->allocateTemporary(r_out_z,       patch, gac, 1);
+  new_dw->allocateTemporary(d_mass_massVertex, patch, gac, 1);
+  new_dw->allocateTemporary(d_mass_slabs,      patch, gac, 1); 
 }
 
 
@@ -116,7 +117,6 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
     
     //__________________________________
     //  Bullet proofing
-    //!
     double total_fluxout = 0.0;
     for(int face = TOP; face <= BACK; face++ )  {
       total_fluxout  += ofs.d_fflux[face];
@@ -192,29 +192,97 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
 
   }
 }
-/* ---------------------------------------------------------------------
+/*_____________________________________________________________________
  Function~ advectQ
 _____________________________________________________________________*/
+//       M A S S   ( non-compatible)
+void SecondOrderAdvector::advectMass( const CCVariable<double>& mass,
+                                      const Patch* patch,
+                                      CCVariable<double>& mass_advected,
+                                      DataWarehouse* new_dw)
+{
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  CCVariable<vertex<double> > q_vertex;
+  CCVariable<double> mass_grad_x, mass_grad_y, mass_grad_z;
+  
+  new_dw->allocateTemporary(mass_grad_x, patch,gac,1);
+  new_dw->allocateTemporary(mass_grad_y, patch,gac,1);
+  new_dw->allocateTemporary(mass_grad_z, patch,gac,1);
+  new_dw->allocateTemporary(q_vertex,   patch,gac,1);
+  bool compatible = false;
+  
+  // compute the limited gradients of mass 
+  gradQ<double>(mass, patch, mass_grad_x, mass_grad_y, mass_grad_z);
+  
+  Q_vertex<double>(compatible, mass, q_vertex, patch,
+	            mass_grad_x, mass_grad_y,  mass_grad_z);
+  
+  limitedGradient<double>(mass, patch, q_vertex, 
+                          mass_grad_x, mass_grad_y, mass_grad_z);
+                          
+  // compute the value of q at the slab d_mass_slabs 
+  // The other versions of advectQ need d_mass_slabs if compatible                                                
+  qAverageFlux<double>( compatible, mass, d_notUsed_D, patch, d_mass_slabs, 
+                        mass_grad_x, mass_grad_y, mass_grad_z);
+
+  advectSlabs<double>(d_mass_slabs, patch,mass, mass_advected, 
+		        d_notUsedX, d_notUsedY, d_notUsedZ, 
+		        ignoreFaceFluxesD());
+                      
+  // compute mass_CC/mass_vertex for each cell node                    
+  mass_massVertex_ratio(mass, patch, mass_grad_x, mass_grad_y, mass_grad_z); 
+}
+
+
+//__________________________________
 //     D O U B L E
-void SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
+void SecondOrderAdvector::advectQ( const bool useCompatibleFluxes,
+                                   const bool is_Q_massSpecific,
+                                   const CCVariable<double>& A_CC,
+                                   const CCVariable<double>& mass,
                                    const Patch* patch,
                                    CCVariable<double>& q_advected,
                                    DataWarehouse* new_dw)
 {
 
-  CCVariable<facedata<double> > q_OAFS;
   Ghost::GhostType  gac = Ghost::AroundCells;
-  new_dw->allocateTemporary(q_OAFS, patch,gac,1);
+  CCVariable<facedata<double> > q_OAFS;
+  CCVariable<vertex<double> > q_vertex;
+  CCVariable<double> q_grad_x, q_grad_y, q_grad_z, q_CC;
+    
+  new_dw->allocateTemporary(q_CC,     patch,gac,2);  
+  new_dw->allocateTemporary(q_OAFS,   patch,gac,1);
+  new_dw->allocateTemporary(q_grad_x, patch,gac,1);
+  new_dw->allocateTemporary(q_grad_y, patch,gac,1);
+  new_dw->allocateTemporary(q_grad_z, patch,gac,1);
+  new_dw->allocateTemporary(q_vertex, patch,gac,2);
+   
+  // convert from flux to primitive var. if using compatible fluxes
+  bool compatible = 
+   flux_to_primitive<double>(useCompatibleFluxes,is_Q_massSpecific,
+                             patch, A_CC, mass, q_CC); 
   
-  qAverageFlux( q_CC, patch, q_OAFS);
+  // compute the limited gradients of q_CC
+  gradQ<double>(q_CC, patch, q_grad_x, q_grad_y, q_grad_z); 
+  
+  Q_vertex<double>(compatible, q_CC, q_vertex, patch,
+	            q_grad_x, q_grad_y,  q_grad_z); 
+ 
+
+  limitedGradient<double>(q_CC, patch, q_vertex, 
+                          q_grad_x, q_grad_y,  q_grad_z);
+                            
+  // compute the value of q at the slab q_OAFS
+  qAverageFlux<double>( compatible, q_CC, mass, patch, q_OAFS, 
+                        q_grad_x, q_grad_y, q_grad_z);
         
   advectSlabs<double>(q_OAFS,patch,q_CC, q_advected, 
-		      d_notUsedX, d_notUsedY, d_notUsedZ, 
-		      ignoreFaceFluxesD());
+		        d_notUsedX, d_notUsedY, d_notUsedZ, 
+		        ignoreFaceFluxesD());
 }
 //__________________________________
 //  S P E C I A L I Z E D   D O U B L E 
-//  needed by implicit solve
+//  needed by implicit solve  ( Non-compatible)
 void SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
                                    const Patch* patch,
                                    CCVariable<double>& q_advected,
@@ -223,34 +291,81 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
                                    SFCZVariable<double>& q_ZFC,
 				       DataWarehouse* new_dw)
 {
-  CCVariable<facedata<double> > q_OAFS;
   Ghost::GhostType  gac = Ghost::AroundCells;
-  new_dw->allocateTemporary(q_OAFS, patch,gac,1);
+  CCVariable<facedata<double> > q_OAFS;
+  CCVariable<vertex<double> > q_vertex;
+  CCVariable<double> q_grad_x, q_grad_y, q_grad_z;
 
-  qAverageFlux(q_CC, patch, q_OAFS);
+  new_dw->allocateTemporary(q_OAFS,   patch,gac,1);
+  new_dw->allocateTemporary(q_grad_x, patch,gac,1);
+  new_dw->allocateTemporary(q_grad_y, patch,gac,1);
+  new_dw->allocateTemporary(q_grad_z, patch,gac,1);
+  new_dw->allocateTemporary(q_vertex, patch,gac,2);
+  bool compatible = false;
+  
+  // compute the limited gradients    
+  gradQ<double>(q_CC, patch, 
+                q_grad_x, q_grad_y, q_grad_z); 
+  
+  Q_vertex<double>(compatible, q_CC, q_vertex, patch,
+	            q_grad_x, q_grad_y,  q_grad_z); 
+                   
+  limitedGradient<double>(q_CC,patch,q_vertex,
+                          q_grad_x,q_grad_y, q_grad_z);
+
+  // compute the value of q_CC at the slab q_OAFS 
+  qAverageFlux<double>( compatible, q_CC, d_notUsed_D, patch, q_OAFS, 
+                        q_grad_x, q_grad_y, q_grad_z);
         
   advectSlabs<double>(q_OAFS,patch, q_CC, q_advected, 
                       q_XFC, q_YFC, q_ZFC, saveFaceFluxes());
 }
 //__________________________________
 //     V E C T O R
-void SecondOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
+void SecondOrderAdvector::advectQ(const bool useCompatibleFluxes,
+                                  const bool is_Q_massSpecific,
+                                  const CCVariable<Vector>& A_CC,
+                                  const CCVariable<double>& mass,
                                   const Patch* patch,
                                   CCVariable<Vector>& q_advected,
                                   DataWarehouse* new_dw)
 {
-  CCVariable<facedata<Vector> > q_OAFS;
   Ghost::GhostType  gac = Ghost::AroundCells;
-  new_dw->allocateTemporary(q_OAFS, patch,gac,1);
+  CCVariable<facedata<Vector> > q_OAFS;
+  CCVariable<vertex<Vector> > q_vertex;
+  CCVariable<Vector> q_grad_x, q_grad_y, q_grad_z, q_CC;
   
-  qAverageFlux(q_CC, patch, q_OAFS);
+  new_dw->allocateTemporary(q_CC,     patch,gac,2);
+  new_dw->allocateTemporary(q_OAFS,   patch,gac,1);
+  new_dw->allocateTemporary(q_grad_x, patch,gac,1);
+  new_dw->allocateTemporary(q_grad_y, patch,gac,1);
+  new_dw->allocateTemporary(q_grad_z, patch,gac,1);
+  new_dw->allocateTemporary(q_vertex, patch,gac,2);
+  
+  // convert from flux to primitive var. if using compatible fluxes
+  bool compatible = 
+   flux_to_primitive<Vector>(useCompatibleFluxes,is_Q_massSpecific,
+                             patch, A_CC, mass, q_CC); 
+
+  // compute the limited gradients of q_CC   
+  gradQ<Vector>(q_CC, patch, q_grad_x, q_grad_y, q_grad_z); 
+  
+  Q_vertex<Vector>(compatible, q_CC, q_vertex, patch,
+	            q_grad_x, q_grad_y,  q_grad_z); 
+             
+  limitedGradient<Vector>(q_CC,patch,q_vertex,
+                          q_grad_x,q_grad_y,q_grad_z);
+
+  // compute the value of q_CC at the slab q_OAFS 
+  qAverageFlux<Vector>( compatible, q_CC, mass, patch, q_OAFS, 
+                        q_grad_x, q_grad_y, q_grad_z);
 
   advectSlabs<Vector>(q_OAFS,patch, q_CC, q_advected, 
-                    d_notUsedX, d_notUsedY, d_notUsedZ, 
-                    ignoreFaceFluxesV());
+                      d_notUsedX, d_notUsedY, d_notUsedZ, 
+                      ignoreFaceFluxesV());
 }
 
-/* ---------------------------------------------------------------------
+/*_____________________________________________________________________
  Function~  Advect--  driver program that does the advection  
 _____________________________________________________________________*/
 template < class T, typename F>
@@ -264,8 +379,7 @@ void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
                                   F save_q_FC)  // function is passed in
   
 {
-
-                                  //  W A R N I N G
+                                 //  W A R N I N G
   Vector dx = patch->dCell();    // assumes equal cell spacing             
   double invvol = 1.0/(dx.x() * dx.y() * dx.z());     
 
@@ -284,9 +398,9 @@ void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
       double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
 
       T q_faceFlux_tmp = q_OAFS[ac].d_data[IF_slab[f]] * influxVol
-	                 - q_OAFS[c].d_data[OF_slab[f]] * outfluxVol;
+	                - q_OAFS[c].d_data[OF_slab[f]] * outfluxVol;
                                 
-      faceVol[f]       =  outfluxVol +  influxVol;
+      faceVol[f]       = outfluxVol +  influxVol;
       q_face_flux[f]   = q_faceFlux_tmp; 
       sum_q_face_flux += q_faceFlux_tmp;
     }  
@@ -301,36 +415,41 @@ void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
 //______________________________________________________________________
 template <class T>
 void
-SecondOrderAdvector::qAverageFlux( const CCVariable<T>& q_CC,
+SecondOrderAdvector::qAverageFlux( const bool useCompatibleFluxes,
+                                   const CCVariable<T>& q_CC,
+                                   const CCVariable<double>& mass_CC,
                                    const Patch* patch,
-                                   CCVariable<facedata<T> >& q_OAFS )
+                                   CCVariable<facedata<T> >& q_OAFS,
+                                   const CCVariable<T>& grad_x,
+                                   const CCVariable<T>& grad_y,
+                                   const CCVariable<T>& grad_z)
   
 {
   const Level* level=patch->getLevel();
-  Vector dx = patch->dCell();
-  Vector inv_2del;
-  inv_2del.x(1.0/(2.0 * dx.x()) );
-  inv_2del.y(1.0/(2.0 * dx.y()) );
-  inv_2del.z(1.0/(2.0 * dx.z()) );
-  Vector dx_2 = dx/2.0;
+
   //__________________________________
-  // on Boundary faces set q_OAFS = q_CC
-  vector<Patch::FaceType>::const_iterator itr;
+  // on Boundary faces set q_OAFS
+  // compatiblefluxes q_oafs = q_CC * mass_CC
+  // non-compatible   q_oafs = q_CC
+  vector<Patch::FaceType>::const_iterator itr; 
   
   for (itr  = patch->getBoundaryFaces()->begin(); 
        itr != patch->getBoundaryFaces()->end(); ++itr){
     Patch::FaceType face = *itr;
     
     for(CellIterator iter = patch->getFaceCellIterator(face); 
-        !iter.done(); iter++) {
-      const IntVector& c = *iter;  // hit only those cells along that face
+                                                    !iter.done(); iter++) {
+      const IntVector& c = *iter;
       T Q_CC = q_CC[c];
+      if (useCompatibleFluxes){         //  PULL THIS OUT AND MAKE SEPARATE LOOPS
+        Q_CC *= mass_CC[c];
+      }
 
       facedata<T>& oafs = q_OAFS[c];
       for (int face = TOP; face <= BACK; face ++){
-        oafs.d_data[face] = Q_CC;
+        oafs.d_data[face] = Q_CC ;
       }
-    } 
+    }
   }
   //__________________________________
   // On Fine level patches set q_OAFS = q_CC in the 
@@ -341,10 +460,13 @@ SecondOrderAdvector::qAverageFlux( const CCVariable<T>& q_CC,
       face <= Patch::endFace; face=Patch::nextFace(face)){
       
       for(CellIterator iter = patch->getFaceCellIterator(face); 
-          !iter.done(); iter++) {
+                                                    !iter.done(); iter++) {
         const IntVector& c = *iter; 
         T Q_CC = q_CC[c];
-
+        if (useCompatibleFluxes){
+          Q_CC *= mass_CC[c];
+        }
+      
         facedata<T>& oafs = q_OAFS[c];
         for (int face = TOP; face <= BACK; face ++){
           oafs.d_data[face] = Q_CC;
@@ -352,55 +474,56 @@ SecondOrderAdvector::qAverageFlux( const CCVariable<T>& q_CC,
       }
     }
   }
-  
    
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
   CellIterator iter = patch->getCellIterator();
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
-    
-  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
-    const IntVector& c = *iter;
+  
+  if (!useCompatibleFluxes) {  // non-compatible advection 
+    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+      const IntVector& c = *iter;
 
-    T grad_x, grad_y, grad_z, gradlim;
-    gradQ( q_CC, c, inv_2del, grad_x, grad_y, grad_z);
-    gradientLimiter( q_CC, c, dx_2, gradlim, grad_x, grad_y, grad_z); 
+      T Q_CC = q_CC[c];
+      T q_grad_X = grad_x[c];
+      T q_grad_Y = grad_y[c];
+      T q_grad_Z = grad_z[c];
+      facedata<T>& q_slab = q_OAFS[c];
+      const fflux& rx = r_out_x[c];
+      const fflux& ry = r_out_y[c];
+      const fflux& rz = r_out_z[c];
 
-    T q_grad_X = gradlim * grad_x;
-    T q_grad_Y = gradlim * grad_y;
-    T q_grad_Z = gradlim * grad_z;    
-    
-    T Q_CC = q_CC[c];
-    //__________________________________
-    //  OUTAVERAGEFLUX: SLAB
-    //  with limiter.
-    facedata<T>& oafs = q_OAFS[c];
-    const fflux& rx = r_out_x[c];
-    const fflux& ry = r_out_y[c];
-    const fflux& rz = r_out_z[c];
-    oafs.d_data[BACK] = q_grad_X * rx.d_fflux[BACK] + 
-                        q_grad_Y * ry.d_fflux[BACK] +               
-                        q_grad_Z * rz.d_fflux[BACK] + Q_CC;     
-                                  
-    oafs.d_data[FRONT] =q_grad_X * rx.d_fflux[FRONT] + 
-                        q_grad_Y * ry.d_fflux[FRONT] + 
-                        q_grad_Z * rz.d_fflux[FRONT] + Q_CC;
+      for (int face = TOP; face <= BACK; face ++){
+        q_slab.d_data[face] = q_grad_X * rx.d_fflux[face] +         
+                              q_grad_Y * ry.d_fflux[face] +               
+                              q_grad_Z * rz.d_fflux[face] + Q_CC;   
+      } 
+    }
+  }
+  
+  if (useCompatibleFluxes) {   // compatible fluxes  
+    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+      const IntVector& c = *iter;
 
-    oafs.d_data[BOTTOM] = q_grad_X * rx.d_fflux[BOTTOM] + 
-                        q_grad_Y * ry.d_fflux[BOTTOM] + 
-                        q_grad_Z * rz.d_fflux[BOTTOM] + Q_CC;
-                                  
-    oafs.d_data[TOP] =    q_grad_X * rx.d_fflux[TOP] + 
-                        q_grad_Y * ry.d_fflux[TOP] + 
-                        q_grad_Z * rz.d_fflux[TOP] +  Q_CC;
-                                  
-    oafs.d_data[LEFT] =   q_grad_X * rx.d_fflux[LEFT] + 
-                        q_grad_Y * ry.d_fflux[LEFT] + 
-                        q_grad_Z * rz.d_fflux[LEFT] + Q_CC;
-
-    oafs.d_data[RIGHT] =  q_grad_X * rx.d_fflux[RIGHT] + 
-                        q_grad_Y * ry.d_fflux[RIGHT] + 
-                        q_grad_Z * rz.d_fflux[RIGHT] + Q_CC;
+      T Q_CC = q_CC[c];
+      T q_grad_X = grad_x[c];
+      T q_grad_Y = grad_y[c];
+      T q_grad_Z = grad_z[c];
+      
+      facedata<T>& q_slab = q_OAFS[c];
+      const fflux& rx = r_out_x[c];
+      const fflux& ry = r_out_y[c];
+      const fflux& rz = r_out_z[c];
+      const facedata<double> mass_slab = d_mass_slabs[c];
+      const double mass = mass_CC[c];
+      
+      for (int face = TOP; face <= BACK; face ++){
+        q_slab.d_data[face] = mass_slab.d_data[face] * Q_CC 
+            + mass * ( q_grad_X * rx.d_fflux[face] +         
+                       q_grad_Y * ry.d_fflux[face] +               
+                       q_grad_Z * rz.d_fflux[face]);
+      } 
+    }
   }
 }
