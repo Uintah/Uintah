@@ -638,28 +638,25 @@ TetVolMesh::locate(Face::index_type &/*face*/, const Point & /* p */)
 bool
 TetVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
-  if (grid_.get_rep() == 0) {
+  if (grid_.get_rep() == 0)
+  {
     compute_grid();
-    //ASSERTFAIL("Call compute_grid before calling locate!");
   }
   LatVolMeshHandle mesh = grid_->get_typed_mesh();
   LatVolMesh::Cell::index_type ci;
   if (!mesh->locate(ci, p)) { return false; }
-  bool found_p = false;
   vector<Cell::index_type> v = grid_->value(ci);
   vector<Cell::index_type>::iterator iter = v.begin();
-  while (iter != v.end()) {
-    if (inside4_p((*iter) * 4, p)) {
-      found_p = true;
-      break;
+  while (iter != v.end())
+  {
+    if (inside4_p((*iter) * 4, p))
+    {
+      cell = *iter;
+      return true;
     }
     ++iter;
   }
-
-  if (found_p)
-    cell = *iter;
-
-  return found_p;
+  return false;
 }
 
 
