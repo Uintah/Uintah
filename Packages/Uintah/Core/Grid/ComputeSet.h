@@ -27,7 +27,13 @@ namespace Uintah {
       : items(items)
     {
     }
-
+    
+    template <class InputIterator>
+    ComputeSubset(InputIterator begin, InputIterator end)
+      : items(begin, end)
+    {
+    }
+    
     int size() const {
       return (int)items.size();
     }
