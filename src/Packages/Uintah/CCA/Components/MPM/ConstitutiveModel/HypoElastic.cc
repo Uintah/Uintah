@@ -84,8 +84,25 @@ void HypoElastic::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
+
+void HypoElastic::allocateCMDataAddRequires(Task* task,
+					    const MPMMaterial* matl,
+					    const PatchSet* patch,
+					    MPMLabel* lb) const
+{
+   const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+#ifdef FRACTURE
+  task->requires(Task::OldDW,lb->pDispGradsLabel.Ghost::None);
+  task->requires(Task::OldDW,lb->pStrainEnergyDensityLabel,Ghost::None);
+#endif
+
+}
+
+
 void HypoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
-				    ParticleSubset* subset,
+				    ParticleSubset* addset,
 				    map<const VarLabel*, ParticleVariableBase*>* newState,
 				    ParticleSubset* delset,
 				    DataWarehouse* old_dw)
@@ -96,23 +113,30 @@ void HypoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
   Identity.Identity();
 
   ParticleVariable<Matrix3> deformationGradient,pstress;
-  new_dw->allocateTemporary(deformationGradient,subset);
-  new_dw->allocateTemporary(pstress,subset);
+  constParticleVariable<Matrix3> o_deformationGradient,o_stress;
+  new_dw->allocateTemporary(deformationGradient,addset);
+  new_dw->allocateTemporary(pstress,addset);
+  old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
+  old_dw->get(o_stress,lb->pStressLabel,delset);
   // for J-Integral
 
 #ifdef FRACTURE
   ParticleVariable<Matrix3> pdispGrads;
-  new_dw->allocateTemporary(pdispGrads, subset);
+  constParticleVariable<Matrix3> o_dispGrads;
+  new_dw->allocateTemporary(pdispGrads, addset);
+  old_dw->get(o_dispGrads,lb->pDispGradsLabel,delset);
   ParticleVariable<double>  pstrainEnergyDensity;
-  new_dw->allocateTemporary(pstrainEnergyDensity, , subset);
+  constParticleVariable<double>  o_strainEnergyDensity;
+  new_dw->allocateTemporary(pstrainEnergyDensity,addset);
+  old_dw->get(o_strainEnergyDensity,lb->pStrainEnergyDensityLabel,delset);
 #endif
-  for(ParticleSubset::iterator iter = subset->begin();iter != subset->end();
-      iter++){
-     deformationGradient[*iter] = Identity;
-     pstress[*iter] = zero;
+  ParticleSubset::iterator o, n = addset->begin();
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
+     deformationGradient[*n] = o_deformationGradient[*o];
+     pstress[*n] = zero;
 #ifdef FRACTURE
-     pdispGrads[*iter] = zero;
-     pstrainEnergyDensity[*iter] = 0.0;
+     pdispGrads[*n] = o_dispGrads[*o];
+     pstrainEnergyDensity[*n] = o_strainEnergyDensity[*o];
 #endif
   }
 
