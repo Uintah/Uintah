@@ -14,8 +14,9 @@ SUBDIRS := \
 	$(SRCDIR)/DataIO \
 	$(SRCDIR)/Bayer \
 	$(SRCDIR)/Metropolis \
-	$(SRCDIR)/Test\
 #[INSERT NEW CATEGORY DIR HERE]
+
+#	$(SRCDIR)/Test\
 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
