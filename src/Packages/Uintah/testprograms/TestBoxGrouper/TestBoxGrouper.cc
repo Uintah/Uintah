@@ -68,13 +68,14 @@ void doSimpleExampleTests(Suite* suite, bool verbose)
 
 void doGridTests(Suite* suite, int n, int numTakeAway, bool verbose)
 {
-  set<int> takeAwayRands;
+  list<int> takeAwayRands;
   int i;
   for (i = 0; i < numTakeAway; i++) {
-    takeAwayRands.insert(rand() % (n*n*n - i));
+    takeAwayRands.push_back(rand() % (n*n*n - i));
   }
-  int takeAwayOffset = 0;
-  set<int>::iterator takeAwayRandIter = takeAwayRands.begin();
+  takeAwayRands.sort();
+  
+  list<int>::iterator takeAwayRandIter = takeAwayRands.begin();
   
   set<const Box*> boxes;
   i = 0;
@@ -87,36 +88,36 @@ void doGridTests(Suite* suite, int n, int numTakeAway, bool verbose)
 	else
 	  id = i;
 	if (takeAwayRandIter == takeAwayRands.end() ||
-	    i != *takeAwayRandIter + takeAwayOffset) {
+	    i < *takeAwayRandIter) {
 	  boxes.insert(scinew Box(IntVector(x, y, z), IntVector(x, y, z), id));
 	}
 	else {
 	  ++takeAwayRandIter;
-	  ++takeAwayOffset;
 	}
 	i++;
       }
     }
   }
-  suite->addTest("take away count", boxes.size() == n*n*n - numTakeAway);
+  suite->addTest("take away count", (int)boxes.size() == n*n*n - numTakeAway);
   
   //boxes.erase(boxes.begin());
 
   BoxRangeQuerier rangeQuerier(boxes.begin(), boxes.end());
 
 #ifdef SUPERBOX_PERFORMANCE_TESTING
-  biggerBoxCount = 0;
-  minBiggerBoxCount = 0;
+  SuperBoxSet::biggerBoxCount = 0;
+  SuperBoxSet::minBiggerBoxCount = 0;
 #endif
   SuperBoxSet* superBoxSet =
-    SuperBoxSet::makeNearOptimalSuperBoxSet(boxes.begin(), boxes.end(),
+    SuperBoxSet::makeOptimalSuperBoxSet(boxes.begin(), boxes.end(),
 					    rangeQuerier);
   if (verbose) {
 #ifdef SUPERBOX_PERFORMANCE_TESTING  
-    cerr << "\nBiggerBoxCount: " << biggerBoxCount << endl;
-    cerr << "\nMinimum BiggerBoxCount: " << minBiggerBoxCount << endl;
+    cerr << "\nBiggerBoxCount: " << SuperBoxSet::biggerBoxCount << endl;
+    cerr << "\nMinimum BiggerBoxCount: " << SuperBoxSet::minBiggerBoxCount
+	 << endl;
 #endif  
-    cerr << "\nSuperBoxSet:\n";
+    cerr << "\nOptimal SuperBoxSet:\n";
     cerr << *superBoxSet << endl;
     cerr << superBoxSet->getValue() << endl;
   }
@@ -129,8 +130,12 @@ void doGridTests(Suite* suite, int n, int numTakeAway, bool verbose)
     SuperBoxSet* nearOptimalSuperBoxSet =
       SuperBoxSet::makeNearOptimalSuperBoxSet(boxes.begin(), boxes.end(),
 					      rangeQuerier);
-
-    cerr << superBoxSet->getValue() << " >= " << nearOptimalSuperBoxSet->getValue() << endl;
+    if (verbose) {
+      cerr << "\nNear Optimal (heuristic) SuperBoxSet:\n";
+      cerr << *nearOptimalSuperBoxSet << endl;
+      cerr << nearOptimalSuperBoxSet->getValue() << endl;
+    }
+    
     suite->addTest("Near Optimal Comparison", superBoxSet->getValue() >=
 		   nearOptimalSuperBoxSet->getValue());
   }
@@ -157,7 +162,7 @@ void performStandardSuperBoxSetTests(Suite* suite,
   }
 
   suite->addTest("complete", superSetBoxes == boxes);
-  suite->addTest("disjoint", count == superSetBoxes.size());
+  suite->addTest("disjoint", count == (int)superSetBoxes.size());
 }
 
 template <class BoxPIterator>
