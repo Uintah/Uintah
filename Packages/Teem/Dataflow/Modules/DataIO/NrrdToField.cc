@@ -394,7 +394,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	  
 	  return ofield_handle;
 	} else {
-	  cerr << "Field didn't fit\n";
+	  warning("Warning: Field passed in but not used because sizes didn't match.  Generating mesh from scratch. Try inserting a ChangeFieldDataAt module above NrrdToField and setting the data location.");
 	}
     } else {
       dataH = 0;
