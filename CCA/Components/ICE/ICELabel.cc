@@ -19,6 +19,8 @@ ICELabel::ICELabel()
     VarLabel::create("matl_press_CC",CCVariable<double>::getTypeDescription());
   press_equil_CCLabel   =
     VarLabel::create("press_equil_CC",CCVariable<double>::getTypeDescription());
+  volFrac_advectedLabel  =
+    VarLabel::create("volFrac_advected",CCVariable<double>::getTypeDescription());
   delP_DilatateLabel  =
     VarLabel::create("delP_Dilatate",CCVariable<double>::getTypeDescription());
   delP_MassXLabel  =
@@ -65,8 +67,8 @@ ICELabel::ICELabel()
     VarLabel::create("mass_L_CC",    CCVariable<double>::getTypeDescription());
   mom_L_ME_CCLabel = 
     VarLabel::create("mom_L_ME_CC",  CCVariable<Vector>::getTypeDescription());
-  int_eng_L_ME_CCLabel = 
-   VarLabel::create("int_eng_L_ME_CC",CCVariable<double>::getTypeDescription());
+  eng_L_ME_CCLabel = 
+   VarLabel::create("eng_L_ME_CC",   CCVariable<double>::getTypeDescription());
   q_CCLabel = 
     VarLabel::create("q_CC",         CCVariable<double>::getTypeDescription());
   q_advectedLabel = 
@@ -131,22 +133,19 @@ ICELabel::ICELabel()
                                   SFCZVariable<double>::getTypeDescription() );  
     
     // Misc labels
-    scratchLabel     =
-     VarLabel::create("scratch",  CCVariable<double>::getTypeDescription() );
-    scratch_FCXLabel   =
-     VarLabel::create("scratch_FCX",SFCXVariable<double>::getTypeDescription());
-
-    scratch_FCYLabel   =
-     VarLabel::create("scratch_FCY",SFCYVariable<double>::getTypeDescription());
-
-    scratch_FCZLabel   =
-     VarLabel::create("scratch_FCZ",SFCZVariable<double>::getTypeDescription());
-
-    scratch_FCVectorLabel   =
-     VarLabel::create("scratch_FCVector",
-                   SFCXVariable<Vector>::getTypeDescription());
-    IveBeenHereLabel     =
-     VarLabel::create("IveBeenHere",CCVariable<int>::getTypeDescription() );
+  scratchLabel     =
+    VarLabel::create("scratch",  CCVariable<double>::getTypeDescription() );
+  scratch_FCXLabel   =
+    VarLabel::create("scratch_FCX",SFCXVariable<double>::getTypeDescription());
+  scratch_FCYLabel   =
+    VarLabel::create("scratch_FCY",SFCYVariable<double>::getTypeDescription());
+  scratch_FCZLabel   =
+    VarLabel::create("scratch_FCZ",SFCZVariable<double>::getTypeDescription());
+  scratch_FCVectorLabel   =
+    VarLabel::create("scratch_FCVector",
+                                   SFCXVariable<Vector>::getTypeDescription());
+  IveBeenHereLabel     =
+    VarLabel::create("IveBeenHere",CCVariable<int>::getTypeDescription() );
      
  //Reduction labels (The names must be identical to those in MPMLabel.cc)
   KineticEnergyLabel = 
@@ -157,9 +156,7 @@ ICELabel::ICELabel()
   TotalMassLabel = 
     VarLabel::create( "TotalMass",     sum_vartype::getTypeDescription() );  
   TotalIntEngLabel = 
-    VarLabel::create( "TotalIntEng",   sum_vartype::getTypeDescription() );  
-
-       
+    VarLabel::create( "TotalIntEng",   sum_vartype::getTypeDescription() ); 
 } 
 
 ICELabel::~ICELabel()
@@ -168,6 +165,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(press_CCLabel);
     VarLabel::destroy(press_equil_CCLabel);
     VarLabel::destroy(matl_press_CCLabel);
+    VarLabel::destroy(volFrac_advectedLabel); 
     VarLabel::destroy(delP_DilatateLabel);
     VarLabel::destroy(delP_MassXLabel);
     VarLabel::destroy(rho_CCLabel);
@@ -195,7 +193,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(spec_vol_L_CCLabel);
     VarLabel::destroy(mass_L_CCLabel);
     VarLabel::destroy(mom_L_ME_CCLabel);
-    VarLabel::destroy(int_eng_L_ME_CCLabel);
+    VarLabel::destroy(eng_L_ME_CCLabel);
     VarLabel::destroy(q_CCLabel);
     VarLabel::destroy(q_advectedLabel);
     VarLabel::destroy(qV_CCLabel);
