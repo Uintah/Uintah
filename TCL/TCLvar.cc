@@ -14,6 +14,7 @@
 #include <TCL/TCL.h>
 #include <TCL/TCLTask.h>
 #include <TCL/TCLvar.h>
+#include <Geom/Color.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 
@@ -270,5 +271,27 @@ void TCLVector::set(const Vector& p)
     x.set(p.x());
     y.set(p.y());
     z.set(p.z());
+}
+
+TCLColor::TCLColor(const clString& name, const clString& id, TCL* tcl)
+: TCLvar(name, id, tcl), r("r", str(), tcl), g("g", str(), tcl),
+  b("b", str(), tcl)
+{
+}
+
+TCLColor::~TCLColor()
+{
+}
+
+Color TCLColor::get()
+{
+    return Color(r.get(), g.get(), b.get());
+}
+
+void TCLColor::set(const Color& p)
+{
+    r.set(p.r());
+    g.set(p.g());
+    b.set(p.b());
 }
 
