@@ -22,6 +22,7 @@ namespace Uintah {
       class ViscoScram : public ConstitutiveModel {
       private:
          // Create datatype for storing model parameters
+         bool d_useModifiedEOS;
       public:
          struct CMData {
             double PR;
