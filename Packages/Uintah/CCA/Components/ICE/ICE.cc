@@ -5,7 +5,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
@@ -14,7 +13,6 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Core/Util/NotFinished.h>
 
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -89,6 +87,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_SMALL_NUM = 1.0e-100;                                                   
   d_TINY_RHO  = 1.0e-12;// also defined ICEMaterial.cc and MPMMaterial.cc   
   d_modelInfo = 0;
+  d_modelSetup = 0;
 }
 
 ICE::~ICE()
@@ -105,6 +104,8 @@ ICE::~ICE()
 
   if(d_modelInfo)
     delete d_modelInfo;
+  if(d_modelSetup)
+    delete d_modelSetup;
 }
 
 /* ---------------------------------------------------------------------
@@ -403,10 +404,10 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   if(modelMaker){
     modelMaker->makeModels(prob_spec, grid, sharedState, d_models);
     releasePort("ModelMaker");
+    d_modelSetup = scinew ICEModelSetup();
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
 	iter != d_models.end(); iter++){
-      ModelSetup setup;
-      (*iter)->problemSetup(grid, sharedState, setup);
+      (*iter)->problemSetup(grid, sharedState, d_modelSetup);
     }
 
     d_modelInfo = scinew ModelInfo(d_sharedState->get_delt_label(),
@@ -448,6 +449,14 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   // The task will have a reference to press_matl
   if (press_matl->removeReference())
     delete press_matl; // shouln't happen, but...
+
+  if(d_models.size() != 0){
+    for(vector<ModelInterface*>::iterator iter = d_models.begin();
+	iter != d_models.end(); iter++){
+      ModelInterface* model = *iter;
+      model->scheduleInitialize(sched, level, d_modelInfo);
+    }
+  }
 }
 
 void ICE::restartInitialize()
@@ -1120,6 +1129,19 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
                                     const MaterialSubset* /*mpm_matls*/,
                                     const MaterialSet* matls)
 {
+  if(d_modelSetup && d_modelSetup->tvars.size() > 0){
+    Task* task = scinew Task("ICE::transportModelVariables",
+			     this, &ICE::transportModelVariables);
+    for(vector<TransportedVariable*>::iterator iter = d_modelSetup->tvars.begin();
+	iter != d_modelSetup->tvars.end(); iter++){
+      TransportedVariable* tvar = *iter;
+      task->requires(Task::OldDW, tvar->var, tvar->matls,
+		     Ghost::AroundCells, 0);
+      task->computes(tvar->Lvar, tvar->matls);
+    }
+    task->requires(Task::NewDW,  lb->mass_L_CCLabel, Ghost::AroundCells, 0);
+    sched->addTask(task, patches, matls);
+  } 
   cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
                      this, &ICE::advectAndAdvanceInTime);
@@ -1136,6 +1158,15 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->modifies(lb->sp_vol_CCLabel,ice_matls);
   task->computes(lb->temp_CCLabel,  ice_matls);
   task->computes(lb->vel_CCLabel,   ice_matls);
+
+  if(d_modelSetup && d_modelSetup->tvars.size() > 0){
+    for(vector<TransportedVariable*>::iterator iter = d_modelSetup->tvars.begin();
+	iter != d_modelSetup->tvars.end(); iter++){
+      TransportedVariable* tvar = *iter;
+      task->requires(Task::NewDW, tvar->Lvar, Ghost::AroundCells, 2);
+      task->computes(tvar->var, tvar->matls);
+    }
+  } 
   
   sched->addTask(task, patches, matls);
 }
@@ -3805,6 +3836,37 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
   } //patches
 }
 
+void ICE::transportModelVariables(const ProcessorGroup*,  
+				  const PatchSubset* patches,
+				  const MaterialSubset* /*matls*/,
+				  DataWarehouse* old_dw,
+				  DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    for(vector<TransportedVariable*>::iterator iter = d_modelSetup->tvars.begin();
+	iter != d_modelSetup->tvars.end(); iter++){
+      TransportedVariable* tvar = *iter;
+      for(int m=0;m<tvar->matls->size();m++){
+	int matl = tvar->matls->get(m);
+	constCCVariable<double> q;
+	old_dw->get(q, tvar->var, matl, patch, Ghost::None, 0);
+	constCCVariable<double> m;
+	new_dw->get(m, lb->mass_L_CCLabel, matl, patch, Ghost::None, 0);
+	CCVariable<double> qm;
+	new_dw->allocateAndPut(qm, tvar->Lvar, matl, patch);
+	for(CellIterator iter = patch->getExtraCellIterator();
+	    !iter.done(); iter++){
+	  qm[*iter] = q[*iter]*m[*iter];
+	  cerr << "qm" << *iter << "=" << qm[*iter] << ", q=" << q[*iter] << ", m=" << m[*iter] << '\n';
+	}
+	//  Set Neumann = 0 if symmetric Boundary conditions
+	setBC(qm, "set_if_sym_BC",patch, d_sharedState, matl);
+      }
+    }
+  }
+}
+ 
 /* --------------------------------------------------------------------- 
  Function~  ICE::advectAndAdvanceInTime--
  Purpose~
@@ -3979,6 +4041,38 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       //  Set Neumann = 0 if symmetric Boundary conditions
       setBC(sp_vol_CC, "set_if_sym_BC",patch, d_sharedState, indx); 
+      
+      if(d_modelSetup && d_modelSetup->tvars.size() > 0){
+	for(vector<TransportedVariable*>::iterator iter = d_modelSetup->tvars.begin();
+	    iter != d_modelSetup->tvars.end(); iter++){
+	  TransportedVariable* tvar = *iter;
+	  if(tvar->matls->contains(indx)){
+	    //__________________________________
+	    // Advection of model variables
+	    constCCVariable<double> q_L;
+	    new_dw->get(q_L, tvar->Lvar, indx, patch, gac, 2);
+	    advector->advectQ(q_L,patch,q_advected, new_dw); 
+	    CCVariable<double> q_CC;
+	    new_dw->allocateAndPut(q_CC, tvar->var, indx, patch);
+      
+	    for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
+	      IntVector c = *iter;
+	      double q_tmp      = q_L[c]/mass_L[c];
+	      cerr << "c=" << c;
+	      cerr << ", mass_L=" << mass_L[c];
+	      cerr << ", q_L=" << q_L[c] << ", q_tmp=" << q_tmp;
+	      double q_a = (q_advected[c] - q_tmp * mass_advected[c])/
+                          ( mass_new[c]);
+	      cerr << ", q_a=" << q_a;
+	      q_CC[c]    = q_tmp + q_a; 
+	      cerr << ", q_CC=" << q_CC[c] << '\n';
+	    }
+
+	    //  Set Neumann = 0 if symmetric Boundary conditions
+	    //setBC(q_CC, "set_if_sym_BC",patch, d_sharedState, indx); 
+	  }
+	}
+      }
       
       //---- P R I N T   D A T A ------   
       if (switchDebug_advance_advect ) {
@@ -4654,6 +4748,23 @@ bool ICE::areAllValuesPositive( CCVariable<double> & src, IntVector& neg_cell )
   return true;      
 } 
 
+ICE::ICEModelSetup::ICEModelSetup()
+{
+}
+
+ICE::ICEModelSetup::~ICEModelSetup()
+{
+}
+
+void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSubset* matls,
+						     VarLabel* var)
+{
+  TransportedVariable* t = scinew TransportedVariable;
+  t->matls = matls;
+  t->var = var;
+  t->Lvar = VarLabel::create(var->getName()+"-L", var->typeDescription());
+  tvars.push_back(t);
+}
 
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
