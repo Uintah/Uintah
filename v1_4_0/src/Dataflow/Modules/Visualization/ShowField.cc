@@ -240,6 +240,7 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle)
     error("ShowField could not get algorithm!!");
     return false;
   }
+  return true;
 }
 
 
@@ -264,6 +265,15 @@ ShowField::determine_dirty(FieldHandle fld_handle)
 					def_color_b_.get()));
     m->transparency = def_color_a_.get();
     def_mat_handle_ = m;
+    if (node_id_) ogeom_->delObj(node_id_);
+    node_id_ = 0;
+    if (edge_id_) ogeom_->delObj(edge_id_);
+    edge_id_ = 0;
+    if (face_id_) ogeom_->delObj(face_id_);
+    face_id_ = 0;
+    if (data_id_) ogeom_->delObj(data_id_);
+    data_id_ = 0;
+
   } else if (!mesh_new && field_new) {
     // same geometry, new data.
     check_for_vector_data(fld_handle);
