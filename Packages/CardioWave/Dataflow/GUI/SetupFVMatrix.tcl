@@ -35,6 +35,7 @@ itcl_class CardioWave_CreateModel_SetupFVMatrix {
 	global $this-sprfile
 	global $this-sprbwfile
 	global $this-volumefile
+	global $this-visfile
 	global $this-BW
         set $this-sigx1 1
 	set $this-sigy1 1
@@ -45,6 +46,7 @@ itcl_class CardioWave_CreateModel_SetupFVMatrix {
 	set $this-sprfile "SPR"
 	set $this-sprbwfile "SPRBW"
 	set $this-volumefile "VOLUME"
+	set $this-visfile "VIS"
 	set $this-BW 0
     }
 
@@ -95,7 +97,7 @@ itcl_class CardioWave_CreateModel_SetupFVMatrix {
 
 
         global $this-sprfile
-	make_entry $w.f.s "SPR file: " $this-sprfile \
+	make_entry $w.f.spr "SPR file: " $this-sprfile \
 		"$this-c needexecute"
 
         global $this-sprbwfile
@@ -103,13 +105,16 @@ itcl_class CardioWave_CreateModel_SetupFVMatrix {
 		"$this-c needexecute"
 
         global $this-volumefile
-	make_entry $w.f.v "Volume file: " $this-volumefile \
+	make_entry $w.f.vol "Volume file: " $this-volumefile \
 		"$this-c needexecute"		
 	
+        global $this-visfile
+	make_entry $w.f.vis "Vis file: " $this-visfile \
+		"$this-c needexecute"
+
 	global $this-BW
 	checkbutton $w.f.bw -text "BandWidth Minimization" -variable $this-BW 
 
-
-	pack $w.f $w.sigma1 $w.sigma2 $w.f.s $w.f.sbw $w.f.v $w.f.bw -side top -fill x -expand 1
+	pack $w.f $w.sigma1 $w.sigma2 $w.f.spr $w.f.sbw $w.f.vol $w.f.vis $w.f.bw -side top
    }
 }

@@ -30,7 +30,7 @@ void read_mesh();
 void read_conductivity(MESH* mesh);
 void compute_volumes(MESH* mesh, const char* fname);
 void compute_matrix(MESH* mesh, const char *fname);
-void dump_vis(MESH* mesh);
+void dump_vis(MESH* mesh, const char *fname);
 void jacobian(float xi, float eta, float zeta,float Xbox[],float Ybox[],float Zbox[],float Jac[][3]);
 void trial(float xi, float eta, float zeta, char ch, float dN[][3]);
 void fvelement(float Xbox[],float Ybox[],float Zbox[],float lmatrix[][8],float D[][9]);
