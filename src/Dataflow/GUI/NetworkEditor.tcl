@@ -1793,7 +1793,11 @@ proc setVarStates { var save substitute } {
 proc printvars { pattern } {
     foreach name [lsort [uplevel \#0 "info vars *${pattern}*"]] { 
 	upvar \#0 $name var
-	puts "set \"$name\" \{$var\}"
+	if { [uplevel \#0 array exists \"$name\"] } {
+	    uplevel \#0 parray \"$name\"
+	} else {
+	    puts "set \"$name\" \{$var\}"
+	}
     }
 }
 
