@@ -36,7 +36,6 @@ RingSatellite::io(SCIRun::Piostream &str)
   str.begin_class("RingSatellite", RING_SATELLITE_VERSION);
   Ring::io(str);
   SCIRun::Pio(str, parent_);
-  SCIRun::Pio(str, name_);
   str.end_class();
 }
 } // end namespace

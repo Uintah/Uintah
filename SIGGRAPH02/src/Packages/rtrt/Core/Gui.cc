@@ -8,6 +8,7 @@
 #include <Packages/rtrt/Core/Ball.h>
 #include <Packages/rtrt/Core/BallMath.h>
 #include <Packages/rtrt/Core/Stealth.h>
+#include <Packages/rtrt/Core/Names.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Image.h>
@@ -1294,7 +1295,7 @@ Gui::createObjectWindow( GLUI * window )
   for( int num = 0; num < objects.size(); num++ )
     {
       char name[ 1024 ];
-      sprintf( name, "%s", objects[ num ]->name_.c_str() );
+      sprintf( name, "%s", Names::getName(objects[num]));
 
       SelectableGroup *sg = dynamic_cast<SelectableGroup*>(objects[num]);
       if (sg) {

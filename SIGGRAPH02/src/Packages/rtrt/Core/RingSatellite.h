@@ -30,7 +30,7 @@ class RingSatellite : public Ring
                 Satellite *parent=0) 
     : Ring(mat, center, up, radius, thickness), parent_(parent)
   {
-    name_ = name;
+    Names::nameObject(name, this);
 
     if (parent_) 
       cen = parent->get_center();
@@ -53,9 +53,6 @@ class RingSatellite : public Ring
 
   Point &get_center() { return cen; }
   void set_center(const Point &p) { cen = p; }
-
-  string get_name() const { return name_; }
-  void set_name(const string &s) { name_ = s; }
 
   virtual void compute_bounds(BBox& bbox, double offset)
   {

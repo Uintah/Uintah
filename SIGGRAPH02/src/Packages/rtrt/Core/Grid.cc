@@ -3,6 +3,7 @@
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/TexturedTri.h>
 #include <Packages/rtrt/Core/Tri.h>
+#include <Packages/rtrt/Core/Names.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Packages/rtrt/Core/Ray.h>
@@ -91,9 +92,9 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
   if (was_preprocessed) return;
   was_preprocessed=true;
   
-  if (name_ != "") std::cerr << "\n\n"
+  if (Names::hasName(this)) std::cerr << "\n\n"
                              << "\n==========================================================\n"
-                             << "* Building Regular Grid for Object " << name_ 
+			     << "* Building Regular Grid for Object " << Names::getName(this)
 			     << "\n==========================================================\n";
 
     cerr << "Building grid\n";

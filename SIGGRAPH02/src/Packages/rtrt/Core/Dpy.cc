@@ -134,16 +134,16 @@ float Galpha=1.0; // doh!  global variable...  probably should be moved...
 */
 
 
-static double    eye_dist = 0;
-static double    prev_time[3]; // history for quaternions and time
-static HVect     prev_quat[3];
+//static double    eye_dist = 0;
+//static double    prev_time[3]; // history for quaternions and time
+//static HVect     prev_quat[3];
 static Transform prev_trans;
 
 static double   last_frame = SCIRun::Time::currentSeconds();
 static int      frame = 0;
 static int      rendering_scene = 0;
 static MusilRNG rng;
-static Object * obj;
+//static Object * obj;
 
 static double   lightoff_frame = -1.0;
 
@@ -196,7 +196,7 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
   shadowMode_ = scene->shadow_mode;
   ambientMode_ = scene->ambient_mode;
 
-  obj=scene->get_object();
+  //obj=scene->get_object();
   priv->maxdepth=scene->maxdepth;
 
   workers_.resize( nworkers );
@@ -608,7 +608,7 @@ Dpy::renderFrame() {
   if (display_frames) {
       
     double curtime=SCIRun::Time::currentSeconds();
-    double dt=curtime-scene->lasttime;
+    //double dt=curtime-scene->lasttime;
 
     scene->lasttime=curtime;
 

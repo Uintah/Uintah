@@ -25,6 +25,18 @@ extern "C" {
 
 #include <stdlib.h>
 
+#ifdef __sgi
+#include <sys/types.h>
+#include <sys/pmo.h>
+#include <sys/attributes.h>
+#include <sys/conf.h>
+#include <sys/hwgraph.h>
+#include <sys/stat.h>
+#include <invent.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#endif
 using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
@@ -120,6 +132,28 @@ void GridTris::preprocess(double, int&, int&)
 {
   if (preprocessed) return;
   preprocessed = true;
+#if 0
+  void* data = verts.begin();
+  unsigned long size = verts.size()*sizeof(Vert);
+#define NUMNODES 1024 // Optimistic :)
+  pm_pginfo_t nbuf[NUMNODES];
+  int nnodes = __pm_get_page_info(data, size, &nbuf[0], NUMNODES);
+  if(nnodes == -1){
+    perror("__pm_get_page_info");
+    exit(1);
+  }
+  for (int i = 0; i < nnodes; i++) {
+    char devname[160];
+    int length = sizeof(devname);
+    printf("Address %x devt %x node %s page size %d pm %d\n",
+	   nbuf[i].vaddr,
+	   nbuf[i].node_dev,
+	   dev_to_devname(nbuf[i].node_dev,  devname, &length),
+	   nbuf[i].page_size,
+	   nbuf[i].pm_handle);
+  }
+#endif
+
   cerr << "Building GridTris for " << tris.size() << " triangles\n";
   float time=SCIRun::Time::currentSeconds();
   

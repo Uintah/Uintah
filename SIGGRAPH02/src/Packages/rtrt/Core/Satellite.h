@@ -3,6 +3,7 @@
 #define SATELLITE_H 1
 
 #include <Packages/rtrt/Core/UVSphere.h>
+#include <Packages/rtrt/Core/Names.h>
 #include <stdlib.h>
 
 namespace rtrt {
@@ -36,7 +37,7 @@ class Satellite : public UVSphere
   {
     //theta_ = drand48()*6.282;
     theta_ = 0;
-    name_ = name;
+    Names::nameObject(name, this);
 
     if (orb_radius_ && parent_) {
       cen = parent->get_center();
@@ -69,9 +70,6 @@ class Satellite : public UVSphere
 
   Point &get_center() { return cen; }
   void set_center(const Point &p) { cen = p; }
-
-  string get_name() const { return name_; }
-  void set_name(const string &s) { name_ = s; }
 
   virtual void compute_bounds(BBox& bbox, double offset)
   {
