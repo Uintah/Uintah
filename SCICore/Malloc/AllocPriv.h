@@ -12,6 +12,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 namespace SCICore {
 namespace Malloc {
@@ -63,6 +64,7 @@ struct Allocator {
     int strict;
     int lazy;
     int trace;
+    FILE* trace_out;
     OSHunk* hunks;
 
     AllocBin* small_bins;
@@ -105,6 +107,13 @@ void AllocError(char*);
 
 //
 // $Log$
+// Revision 1.2  1999/09/17 05:04:43  sparker
+// Enhanced malloc tracing facility.  You can now set the environment
+// variable MALLOC_TRACE to a filename, where the allocator will dump
+// all calls to alloc/free.  It will also dump any unfreed objects
+// and some statistics at the end of the program.  Setting MALLOC_TRACE
+// to an empty string sends this information to stderr.
+//
 // Revision 1.1  1999/07/27 16:56:58  mcq
 // Initial commit
 //
