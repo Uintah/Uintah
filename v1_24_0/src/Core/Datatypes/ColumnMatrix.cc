@@ -116,6 +116,21 @@ SparseRowMatrix *ColumnMatrix::sparse() {
   return scinew SparseRowMatrix(nrows_, 1, row, columns, nnz, a);
 }
 
+
+double *
+ColumnMatrix::get_data_pointer()
+{
+  return data;
+}
+
+
+size_t
+ColumnMatrix::get_data_size()
+{
+  return nrows();
+}
+
+
 Matrix *ColumnMatrix::transpose() {
   DenseMatrix *dm = scinew DenseMatrix(1, nrows_);
   for (int i=0; i<nrows_; i++)
