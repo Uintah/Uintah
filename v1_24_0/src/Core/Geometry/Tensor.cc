@@ -52,6 +52,8 @@ using std::istream;
 using std::ostream;
 #include <stdio.h>
 
+#include <teem/ten.h>
+
 namespace SCIRun {
 
 Tensor::Tensor() : have_eigens_(0)
@@ -253,7 +255,24 @@ Vector Tensor::operator*(const Vector v) const
 void Tensor::build_eigens_from_mat()
 {
   if (have_eigens_) return;
-  ASSERTFAIL("not yet implemented");
+  float ten[7];
+  ten[0] = 1.0;
+  ten[1] = mat_[0][0];
+  ten[2] = mat_[0][1];
+  ten[3] = mat_[0][2];
+  ten[4] = mat_[1][1];
+  ten[5] = mat_[1][2];
+  ten[6] = mat_[2][2];
+  float eval[3];
+  float evec[9];
+  tenEigensolve_f(eval, evec, ten);
+  e1_ = Vector(evec[0], evec[1], evec[2]);
+  e2_ = Vector(evec[3], evec[4], evec[5]);
+  e3_ = Vector(evec[6], evec[7], evec[8]);
+  l1_ = eval[0];
+  l2_ = eval[1];
+  l3_ = eval[2];
+  have_eigens_ = true;
 }
 
 void Tensor::get_eigenvectors(Vector &e1, Vector &e2, Vector &e3)

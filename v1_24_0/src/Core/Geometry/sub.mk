@@ -31,6 +31,8 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
+INCLUDES += $(TEEM_INCLUDE)
+
 SRCDIR   := Core/Geometry
 
 SRCS     += $(SRCDIR)/BBox.cc \
@@ -47,6 +49,6 @@ SRCS     += $(SRCDIR)/BBox.cc \
 
 PSELIBS := Core/Persistent Core/Containers \
 	   Core/Exceptions Core/Util
-LIBS := $(DEFAULT_LIBRARY) $(M_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(DEFAULT_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
