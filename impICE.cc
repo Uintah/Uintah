@@ -583,13 +583,12 @@ void ICE::setupRHS(const ProcessorGroup*,
       
     //__________________________________
     //  Form RHS
+    // note:  massExchangeTerm has delT incorporated inside of it
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       
       double term1 = beta[c] *  (press_CC[c] - oldPressure[c]); 
-      double term2 = delT * massExchTerm[c];
-      
-      rhs[c] = -term1 + term2 + sumAdvection[c];
+      rhs[c] = -term1 + massExchTerm[c] + sumAdvection[c];
       rhs_max = std::max(rhs_max, rhs[c] * rhs[c]); 
     }
     new_dw->put(max_vartype(rhs_max), lb->max_RHSLabel);
@@ -741,7 +740,7 @@ void ICE::computeDel_P(const ProcessorGroup*,
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
       delP_MassX[c]    = massExchTerm[c]/beta[c];
-      delP_Dilatate[c] = (press_CC[c] - press_equil[c]) - delP_MassX[c];
+      delP_Dilatate[c] = (press_CC[c] - delP_MassX[c]) - press_equil[c];
       initialGuess[c]  = delP_Dilatate[c];
     }    
 
