@@ -43,7 +43,8 @@ SRCS     += \
 	$(SRCDIR)/ReferenceMgr.cc
 
 PSELIBS := Core/Exceptions Core/Thread Core/globus_threads
-LIBS := $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARYK) $(MPI_LIBRARY) $(UUID_LIB)
+LIBS := $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARYK) \
+	$(MPI_LIBRARY) $(UUID_LIB) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
