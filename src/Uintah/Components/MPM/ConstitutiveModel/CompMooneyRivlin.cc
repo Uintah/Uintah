@@ -258,24 +258,24 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
    task->computes(new_dw, pVolumeLabel, matl->getDWIndex(), region);
 }
 
-double CompMooneyRivlin::computeStrainEnergy(const Region* /*region*/,
-                                             const MPMMaterial* /*matl*/,
-                                             DataWarehouseP& /*new_dw*/)
+double CompMooneyRivlin::computeStrainEnergy(const Region* region,
+                                             const MPMMaterial* matl,
+                                             DataWarehouseP& new_dw)
 {
-#ifdef WONT_COMPILE_YET
   double invar1,invar2,invar3,J,se=0.0;
   Matrix3 B,BSQ;
 
-  matlindex = matl->getDWIndex();
+  int matlindex = matl->getDWIndex();
 
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
-  new->get(deformationGradient, "p.deformationMeasure", matlindex, region, 0);
+  new_dw->get(deformationGradient, pDeformationMeasureLabel, matlindex,
+					 region, Ghost::None, 0);
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  old_dw->get(cmdata, "p.cmdata", matlindex, region, 0);
-  ParticleVariable<Matrix3> pvolume;
-  old_dw->get(pvolume, "p.volume", matlindex, region, 0);
+  new_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
+  ParticleVariable<double> pvolume;
+  new_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None, 0);
 
   ParticleSubset* pset = pvolume.getParticleSubset();
   ASSERT(pset == pdeformationMeasure.getParticleSubset());
@@ -294,18 +294,14 @@ double CompMooneyRivlin::computeStrainEnergy(const Region* /*region*/,
      // Compute the invariants
      invar1 = B.Trace();
      invar2 = 0.5*((invar1*invar1) - (B*B).Trace());
-     J = deformationGradient.Determinant();
+     J = deformationGradient[idx].Determinant();
      invar3 = J*J;
   
-     se += C1*(invar1-3.0) + C2*(invar2-3.0) +
+     se += (C1*(invar1-3.0) + C2*(invar2-3.0) +
            C3*(1.0/(invar3*invar3) - 1.0) +
-           C4*(invar3-1.0)*(invar3-1.0);
+           C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx];
   }
   return se;
-#else
-  cerr << "CompMooneyRivlin::computeStrainEnergy not finished\n";
-  return 0;
-#endif
 
 }
 
@@ -350,6 +346,9 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.28  2000/05/18 17:03:21  guilkey
+// Fixed computeStrainEnergy.
+//
 // Revision 1.27  2000/05/18 16:06:24  guilkey
 // Implemented computeStrainEnergy for CompNeoHookPlas.  In both working
 // constitutive models, moved the carry forward of the particle volume to
