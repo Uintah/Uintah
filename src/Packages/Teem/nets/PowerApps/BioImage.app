@@ -2029,7 +2029,7 @@ class BioImageApp {
 
             frame $page.planes -relief groove -borderwidth 2
             pack $page.planes -side top -anchor nw -expand no -fill x
-            
+
 	    global show_plane_x show_plane_y show_plane_z
 	    global show_MIP_x show_MIP_y show_MIP_z
 
@@ -4234,9 +4234,11 @@ class BioImageApp {
 
     method update_planes_threshold {} {
 	global mods planes_threshold 
-	global $mods(ViewImage)-min $mods(ViewImage)-max
-        set min [set $mods(ViewImage)-min]
-	set max [set $mods(ViewImage)-max]
+        global $mods(ViewImage)-axial-viewport0-clut_ww $mods(ViewImage)-axial-viewport0-clut_wl
+        set ww [set $mods(ViewImage)-axial-viewport0-clut_ww]
+        set wl [set $mods(ViewImage)-axial-viewport0-clut_wl]
+        set min [expr $wl-$ww/2]
+        set max [expr $wl+$ww/2]
 
 	set m1 [lindex [lindex $filters(0) $modules] 26]
         global $m1-nodeList $m1-positionList
