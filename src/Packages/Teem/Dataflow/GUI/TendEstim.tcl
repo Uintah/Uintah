@@ -56,13 +56,15 @@ itcl_class Teem_Tend_TendEstim {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.threshold -labeltext "threshold:" -textvariable $this-threshold
+        iwidgets::entryfield $w.f.options.threshold -labeltext "threshold:" \
+	    -textvariable $this-threshold
         pack $w.f.options.threshold -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.soft -labeltext "soft:" -textvariable $this-soft
+        iwidgets::entryfield $w.f.options.soft -labeltext "soft:" \
+	    -textvariable $this-soft
         pack $w.f.options.soft -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.bmatrix -labeltext "bmatrix:" -textvariable $this-bmatrix
-        pack $w.f.options.bmatrix -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.scale -labeltext "scale:" -textvariable $this-scale
+
+        iwidgets::entryfield $w.f.options.scale -labeltext "scale:" \
+	    -textvariable $this-scale
         pack $w.f.options.scale -side top -expand yes -fill x
 
 	button $w.f.b -text "Execute" -command "$this-c needexecute"

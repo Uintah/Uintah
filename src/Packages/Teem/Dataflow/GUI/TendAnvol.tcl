@@ -27,10 +27,10 @@ itcl_class Teem_Tend_TendAnvol {
     }
     method set_defaults {} {
         global aniso_metric
-        set aniso_metric ""
+        set aniso_metric  "tenAniso_Tr"
 
         global threshold
-        set threshold 0.0
+        set threshold 0.5
 
 
     }
@@ -50,7 +50,29 @@ itcl_class Teem_Tend_TendAnvol {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.aniso_metric -labeltext "aniso_metric:" -textvariable $this-aniso_metric
+
+	make_labeled_radio $w.f.options.aniso_metric \
+	    "Anisotropy Metric"  "" top  $this-aniso_metric \
+	    {{"Westin's linear (first version)" "tenAniso_Cl1"} 
+		{"Westin's planar (first version)" "tenAniso_Cp1"} 
+		{"Westin's linear + planar (first version)" "tenAniso_Ca1"}
+		{"Westin's spherical (first version)" "tenAniso_Cs1"}
+		{"gk's anisotropy type (first version)" "tenAniso_Ct1"}
+		{"Westin's linear (second version)" "tenAniso_Cl2"}
+		{"Westin's planar (second version)" "tenAniso_Cp2"}
+		{"Westin's linear + planar (second version)" "tenAniso_Ca2"}
+		{"Westin's spherical (second version)" "tenAniso_Cs2"}
+		{"gk's anisotropy type (second version)" "tenAniso_Ct2"}
+		{"Bass+Pier's relative anisotropy" "tenAniso_RA"}
+		{"(Bass+Pier's fractional anisotropy)/sqrt(2)" "tenAniso_FA"}
+		{"volume fraction = 1-(Bass+Pier's volume ratio)" "tenAniso_VF"}
+		{"radius of root circle is 2*sqrt(Q/9)" "tenAniso_Q"}
+		{"phase of root circle is acos(R/Q^3)" "tenAniso_R"}
+		{"sqrt(Q^3 - R^2)" "tenAniso_S"}
+		{"R/Q^3" "tenAniso_Th"}
+		{"Zhukov's invariant-based anisotropy metric" "tenAniso_Cz"}
+		{"plain old trace" "tenAniso_Tr"}}
+
         pack $w.f.options.aniso_metric -side top -expand yes -fill x
         iwidgets::entryfield $w.f.options.threshold -labeltext "threshold:" -textvariable $this-threshold
         pack $w.f.options.threshold -side top -expand yes -fill x

@@ -26,34 +26,45 @@ itcl_class Teem_Tend_TendEpireg {
         set_defaults
     }
     method set_defaults {} {
-        global gradient_list
-        set gradient_list ""
+        global this-gradient_list
+        set this-gradient_list ""
 
-        global reference
-        set reference 0
+        global this-reference
+        set this-reference "-1"
 
-        global blur_x
-        set blur_x 0.0
+        global this-blur_x
+        set this-blur_x 1.0
 
-        global blur_y
-        set blur_y 0.0
+        global this-blur_y
+        set this-blur_y 2.0
 
-        global threshold
-        set threshold 0.0
+        global this-threshold
+        set this-threshold 0.0
 
-        global cc_analysis
-        set cc_analysis 0
+        global this-cc_analysis
+        set this-cc_analysis 1
 
-        global fitting
-        set fitting 0.0
+        global this-fitting
+        set this-fitting 0.70
 
-        global kernel
-        set kernel ""
+        global this-kernel
+        set this-kernel "cubicCR"
 
-        global base
-        set base 0
+        global this-sigma
+        set this-sigma 0.0
 
+	global this-extent
+	set this-extent 0.5
+    }
 
+    method update_text {} {
+	set w .ui[modname]
+	set $this-gradient_list [$w.f.options.gradient_list get 1.0 end]
+    }
+
+    method send_text {} {
+	$this update_text
+	$this-c needexecute
     }
 
     method ui {} {
@@ -71,8 +82,13 @@ itcl_class Teem_Tend_TendEpireg {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.gradient_list \
-	    -labeltext "gradient_list:" -textvariable $this-gradient_list
+	option add *textBackground white	
+	iwidgets::scrolledtext $w.f.options.gradient_list \
+	    -vscrollmode dynamic -labeltext "List of gradients. example: (one gradient per line) 0.5645 0.32324 0.4432454"
+
+	bind $w.f.options.gradient_list <Leave> "$this update_text"
+	catch {$w.f.options.gradient_list insert end [set $this-gradient_list]}
+
         pack $w.f.options.gradient_list -side top -expand yes -fill x
         iwidgets::entryfield $w.f.options.reference \
 	    -labeltext "reference:" -textvariable $this-reference
@@ -92,12 +108,25 @@ itcl_class Teem_Tend_TendEpireg {
         iwidgets::entryfield $w.f.options.fitting -labeltext "fitting:" \
 	    -textvariable $this-fitting
         pack $w.f.options.fitting -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.kernel -labeltext "kernel:" \
-	    -textvariable $this-kernel
+
+	make_labeled_radio $w.f.options.kernel "Kernel:" "" \
+		top $this-kernel \
+		{{"Box" box} \
+		{"Tent" tent} \
+		{"Cubic (Catmull-Rom)" cubicCR} \
+		{"Cubic (B-spline)" cubicBS} \
+		{"Quartic" quartic} \
+		{"Gaussian" gaussian}}
+
         pack $w.f.options.kernel -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.base -labeltext "base:" \
-	    -textvariable $this-base
-        pack $w.f.options.base -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.sigma -labeltext "sigma:" \
+	    -textvariable $this-sigma
+        pack $w.f.options.sigma -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.extent -labeltext "extent:" \
+	    -textvariable $this-extent
+        pack $w.f.options.extent -side top -expand yes -fill x
 
 	button $w.f.b -text "Execute" -command "$this-c needexecute"
 	pack $w.f.b -side top -expand 1 -fill x

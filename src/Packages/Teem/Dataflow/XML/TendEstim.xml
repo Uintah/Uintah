@@ -45,10 +45,6 @@
         <name>Tensors</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
-      <port>
-        <name>Error</name>
-	<datatype>Teem::Nrrd</datatype>
-      </port>
     </outputs>
   </io>
   <testing>

@@ -44,16 +44,6 @@ ConvertToNrrdBase::get_h_file_path() {
 }
 
 template <>
-void fill_data<Tensor>(Tensor &t, double *p) {
-  p[0] = t.mat_[0][0];
-  p[1] = t.mat_[0][1];
-  p[2] = t.mat_[0][2];
-  p[3] = t.mat_[1][1];
-  p[4] = t.mat_[1][2];
-  p[5] = t.mat_[2][2];
-}
-
-template <>
 void fill_data<Vector>(Vector &v, double *p) {
   p[0] = v.x();
   p[1] = v.y();
@@ -206,13 +196,20 @@ get_raw_data_ptr<FData3d<Tensor> >(FData3d<Tensor> &data, int)  {
   int nx = data.dim3();
   int ny = data.dim2();
   int nz = data.dim1();
-  double *new_data = new double[nx * ny * nz * 6];
-  double *p = new_data;
+  float *new_data = new float[nx * ny * nz * 7];
+  float *p = new_data;
   for (int k = 0; k < nz; k++) {
     for (int j = 0; j < ny; j++) {
       for (int i = 0; i < nx; i++) {
-	fill_data(data(k,j,i), p);
-	p += 6;
+	Tensor &t = data(k,j,i);
+	p[0] = t.mat_[0][0];
+	p[1] = t.mat_[0][1];
+	p[2] = t.mat_[0][2];
+	p[3] = t.mat_[1][1];
+	p[4] = t.mat_[1][2];
+	p[5] = t.mat_[2][2];
+	p[6] = 1.0;
+	p += 7;
       }
     }
   }

@@ -77,9 +77,6 @@ template <class T>
 void fill_data(T &, double *);
 
 template <>
-void fill_data<Tensor>(Tensor &t, double *p); 
-
-template <>
 void fill_data<Vector>(Vector &v, double *p);
 
 template <class T>
@@ -225,8 +222,8 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
   int sink_size = 1;
   string sink_label = label + string(":Scalar");
   if (data_name == ten) {
-    pad_data = 6; // copy the data, and pad for tensor values
-    sink_size = 6;
+    pad_data = 7; // copy the data, and pad for tensor values
+    sink_size = 7;
     sink_label = label + string(":Tensor");
   } else if (data_name== vec) {
     pad_data = 3; // copy the data and pad for vector values

@@ -41,7 +41,7 @@ using namespace std;
 class ConvertToFieldBase : public DynamicAlgoBase
 {
 public:
-  virtual bool convert_to_field(SCIRun::FieldHandle, Nrrd*, 
+  virtual bool convert_to_field(SCIRun::FieldHandle, NrrdDataHandle, 
 				SCIRun::FieldHandle &) = 0;
   virtual ~ConvertToFieldBase();
 
@@ -70,7 +70,7 @@ class ConvertToField : public ConvertToFieldBase
 {
 public:
   //! virtual interface.
-  virtual bool convert_to_field(SCIRun::FieldHandle, Nrrd*, 
+  virtual bool convert_to_field(SCIRun::FieldHandle, NrrdDataHandle in, 
 				SCIRun::FieldHandle &);
 };
 
@@ -111,10 +111,11 @@ fill_data(Fld *fld, Nrrd *inrrd, Iter &iter, Iter &end)
 
 template <class Fld>
 bool
-ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld, 
-				      Nrrd *inrrd, 
+ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle  fld, 
+				      NrrdDataHandle       in,
 				      SCIRun::FieldHandle &out)
 {
+  Nrrd *inrrd = in->nrrd;
   vector<unsigned int> dims;
   // The input fld in not neccessarily the exact type Fld, 
   // it will have the exact same mesh type however.
@@ -165,8 +166,11 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
   }
   // All sci nrrds should have a tuple axis, we assume it.
   // It is axis 0.  Make sure sizes along each dim still match.
-  if (inrrd->dim != (int)dims.size() + 1) return false;
-  switch ((int)dims.size()) {
+
+  if (inrrd->dim != (int)dims.size() + 1) {
+    return false;
+  }
+  switch (inrrd->dim -1) {
   case 1:
     {
       // make sure size of dimensions match up
@@ -202,9 +206,6 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
   // Copy all of the non-transient properties from the original field.
   *((PropertyManager *)(out.get_rep()))=*((PropertyManager *)(fld.get_rep()));
 
-  //Prepare to iterate over the data and copy from the nrrd to the field data.
-
-  
   // Copy the data into the field.
   switch (fld->data_at()) {
   case Field::NODE :
