@@ -163,6 +163,18 @@ HyperElasticPlastic::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
+void HyperElasticPlastic::allocateCMDataAddRequires(Task* task,
+						   const MPMMaterial* matl,
+						   const PatchSet* patch,
+						   MPMLabel* lb) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+  task->requires(Task::OldDW,pDamageLabel, Ghost::None);
+  task->requires(Task::OldDW,pBbarElasticLabel, Ghost::None);
+}
+
 
 void 
 HyperElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
@@ -202,10 +214,11 @@ HyperElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
     pDamage[*n] = o_Damage[*o];
   }
 
+  (*newState)[pBbarElasticLabel] = pBbarElastic.clone();
   (*newState)[lb->pDeformationMeasureLabel] = pDeformGrad.clone();
   (*newState)[lb->pStressLabel] = pStress.clone();
-  (*newState)[pDamageLabel] = pStress.clone();
-  (*newState)[pBbarElasticLabel] = pBbarElastic.clone();
+  (*newState)[pDamageLabel] = pDamage.clone();
+
 
 
   // Initialize the data for the plasticity model

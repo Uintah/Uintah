@@ -60,6 +60,10 @@ namespace Uintah {
 				  DataWarehouse* new_dw);
 
 
+    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
+					   const PatchSet* patch, 
+					   MPMLabel* lb) const;
+
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
 				   ParticleSubset* subset,
 				   map<const VarLabel*, ParticleVariableBase*>* newState,
@@ -91,9 +95,6 @@ namespace Uintah {
     virtual void addParticleState(std::vector<const VarLabel*>& from,
 				  std::vector<const VarLabel*>& to);
 
-
-    const VarLabel* bElBarLabel;
-    const VarLabel* bElBarLabel_preReloc;
 
   };
 } // End namespace Uintah
