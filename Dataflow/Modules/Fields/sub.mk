@@ -45,6 +45,7 @@ SRCS     += \
 	$(SRCDIR)/ClipLattice.cc\
 	$(SRCDIR)/ConvertTet.cc\
 	$(SRCDIR)/Coregister.cc\
+	$(SRCDIR)/CreateMesh.cc\
 	$(SRCDIR)/DirectInterpolate.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/FieldCage.cc\
