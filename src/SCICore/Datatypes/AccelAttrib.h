@@ -410,6 +410,43 @@ template <class T> string AccelAttrib<T>::get_info() {
   return retval.str();
 }
 
+
+template<>
+string
+AccelAttrib<unsigned char>::get_info()
+{
+  ostringstream retval;
+  retval <<
+    "Name = " << name << endl <<
+    "Type = AccelAttrib" << endl <<
+    "Dim = " << dim << ": " << nx << ' ' << ny << ' ' << nz << endl <<
+    "Size = " << size() << endl;
+#if 1
+  retval << "Data = ";
+  vector<unsigned char>::iterator itr = data.begin();
+  int i = 0;
+  for(;itr!=data.end() && i < 1000; itr++, i++) {
+    retval << (int)(*itr) << " ";
+  }
+  if (itr != data.end()) { retval << "..."; }
+  retval << endl;
+#else
+  for (int k = 0; k < nz; k++)
+    {
+      for (int j = 0; j < nz; j++)
+	{
+	  retval << "  " << (int)(&(data[k * nx*ny + j * nx]));
+	}
+      retval << endl;
+    }
+  retval << endl;
+#endif
+  return retval.str();
+}
+
+
+
+
 template <class T> void AccelAttrib<T>::io(Piostream&){
 }
 
