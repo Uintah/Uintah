@@ -89,3 +89,21 @@ int BSphere::intersect(const Ray& ray)
     }
     return 0;
 }
+
+void BSphere::extend(const Point& p)
+{
+    if(have_some){
+	Vector v(p-cen);
+	double dist=v.normalize();
+	if(dist > rad){
+	    // extend it...
+	    double new_rad=(dist+rad)/2;
+	    double frac=new_rad-rad;
+	    cen+=v*frac;
+	}
+    } else {
+	cen=p;
+	rad=1.e-4;
+	rad2=rad*rad;
+    }
+}
