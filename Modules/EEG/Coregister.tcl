@@ -5,12 +5,15 @@
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
- #   Oct 1996
+ #   Aug 1996
  #
  #  Copyright (C) 1996 SCI Group
  # 
  #  Log Information:
  #  $Log$
+ #  Revision 1.6  1996/10/21 23:07:55  dweinste
+ #  ugh.
+ #
  #  Revision 1.5  1996/10/21 23:03:04  dweinste
  #  seeing if log info works
  #
