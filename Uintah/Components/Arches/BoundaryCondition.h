@@ -58,14 +58,12 @@ none
 namespace Uintah {
 
 class VarLabel;
-namespace MPM {
-  class GeometryPiece;
-}
+class GeometryPiece;
 
 namespace ArchesSpace {
 
 using namespace SCICore::Containers;
-using namespace Uintah::MPM;
+using namespace Uintah;
 class TurbulenceModel;
 class Properties;
 
@@ -424,6 +422,10 @@ private:
   
 //
 // $Log$
+// Revision 1.43  2000/11/21 23:54:36  guilkey
+// Removed references to MPM namespace which existed only because of
+// the use of GeometryPiece.
+//
 // Revision 1.42  2000/08/19 05:53:43  bbanerje
 // Changed code so that output looks more like fortran output.
 //
