@@ -52,6 +52,8 @@ WARNING
       
       virtual void copyPointer(const SFCZVariableBase&) = 0;
       
+      virtual void rewindow(const IntVector& low, const IntVector& high) = 0;
+
       //////////
       // Insert Documentation Here:
       virtual SFCZVariableBase* clone() const = 0;
@@ -79,6 +81,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/10/12 20:05:37  sparker
+// Removed print statement from FCVariable
+// Added rewindow to SFC{X,Y,Z}Variables
+// Uncommented assertion in CCVariable
+//
 // Revision 1.3  2000/09/25 14:41:32  rawat
 // added mpi support for cell centered and staggered cell variables
 //

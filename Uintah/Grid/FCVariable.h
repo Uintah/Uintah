@@ -222,19 +222,13 @@ class FCVariable : public Array3<T>, public FCVariableBase {
       const TypeDescription*
       FCVariable<T>::getTypeDescription()
       {
-	 // Dd: Whis isn't td a class variable and does it
-	 // need to be deleted in the destructor?
-	std::cerr << "getting type description from FC var\n";
-
-	 // Dd: Copied this from NC Var... don't know if it is 
-	 // correct.
-	static TypeDescription* td;
-	if(!td){
-	  td = scinew TypeDescription(TypeDescription::FCVariable,
-				   "FCVariable", &maker,
-				   fun_getTypeDescription((T*)0));
-	}
-	return td;
+	 static TypeDescription* td;
+	 if(!td){
+	    td = scinew TypeDescription(TypeDescription::FCVariable,
+					"FCVariable", &maker,
+					fun_getTypeDescription((T*)0));
+	 }
+	 return td;
       }
    
    template<class T>
@@ -389,6 +383,11 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 
 //
 // $Log$
+// Revision 1.12  2000/10/12 20:05:37  sparker
+// Removed print statement from FCVariable
+// Added rewindow to SFC{X,Y,Z}Variables
+// Uncommented assertion in CCVariable
+//
 // Revision 1.11  2000/10/06 02:40:38  jas
 // Implemented more functions.
 //

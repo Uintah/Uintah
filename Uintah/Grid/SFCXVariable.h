@@ -63,6 +63,7 @@ class SFCXVariable : public Array3<T>, public SFCXVariableBase {
      // Insert Documentation Here:
      static const TypeDescription* getTypeDescription();
      
+     virtual void rewindow(const IntVector& low, const IntVector& high);
      virtual void copyPointer(const SFCXVariableBase&);
      
      //////////
@@ -243,6 +244,15 @@ class SFCXVariable : public Array3<T>, public SFCXVariableBase {
       }
    
    template<class T>
+      void SFCXVariable<T>::rewindow(const IntVector& low,
+				   const IntVector& high) {
+      Array3<T> newdata;
+      newdata.resize(low, high);
+      newdata.copy(*this, low, high);
+      resize(low, high);
+      Array3<T>::operator=(newdata);
+   }
+   template<class T>
       void
       SFCXVariable<T>::copyPointer(const SFCXVariableBase& copy)
       {
@@ -371,6 +381,11 @@ class SFCXVariable : public Array3<T>, public SFCXVariableBase {
 
 //
 // $Log$
+// Revision 1.8  2000/10/12 20:05:37  sparker
+// Removed print statement from FCVariable
+// Added rewindow to SFC{X,Y,Z}Variables
+// Uncommented assertion in CCVariable
+//
 // Revision 1.7  2000/09/25 20:37:43  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
