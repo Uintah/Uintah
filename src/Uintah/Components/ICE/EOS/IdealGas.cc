@@ -75,31 +75,45 @@ void IdealGas::computeSpeedSound(const Patch* patch,
 
 }
 
-double IdealGas::computeRhoMicro(double&, double &)
+double IdealGas::computeRhoMicro(double& press, double& gamma,
+				 double& cv, double& Temp)
 {
+  // Pointwise computation of microscopic density
+  return  press/((gamma - 1.0)*cv*Temp);
 }
 
-double IdealGas::computePressEOS(double&, double &)
+void IdealGas::computePressEOS(double& rhoM, double& gamma,
+			       double& cv, double& Temp,
+			       double& press, double& dp_drho, double& dp_de)
 {
+  // Pointwise computation of thermodynamic quantities
+  press   = (gamma - 1.0)*rhoM*cv*Temp;
+  dp_drho = (gamma - 1.0)*cv*Temp;
+  dp_de   = (gamma - 1.0)*rhoM;
 }
 
 
 void IdealGas::computeRhoMicro(const Patch* patch,
-                                 const ICEMaterial* matl,
-                                 DataWarehouseP& old_dw,
-                                 DataWarehouseP& new_dw)
+                               const ICEMaterial* matl,
+                               DataWarehouseP& old_dw,
+                               DataWarehouseP& new_dw)
 {
+
+
 }
 
 void IdealGas::computePressEOS(const Patch* patch,
-                                 const ICEMaterial* matl,
-                                 DataWarehouseP& old_dw,
-                                 DataWarehouseP& new_dw)
+                               const ICEMaterial* matl,
+                               DataWarehouseP& old_dw,
+                               DataWarehouseP& new_dw)
 {
 }
 
 
 //$Log$
+//Revision 1.4  2000/10/10 22:18:27  guilkey
+//Added some simple functions
+//
 //Revision 1.3  2000/10/10 20:35:12  jas
 //Move some stuff around.
 //
