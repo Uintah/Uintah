@@ -110,3 +110,11 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/SingleTet
 SRCS := $(SRCDIR)/SingleTet.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/TriSurfToVtk
+SRCS := $(SRCDIR)/TriSurfToVtk.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/VtkToTriSurf
+SRCS := $(SRCDIR)/VtkToTriSurf.cc
+include $(SCIRUN_SCRIPTS)/program.mk
