@@ -20,7 +20,7 @@ using namespace std;
 
 #define one_over_255 .00392156862745098039
 
-PCAGridSpheres::PCAGridSpheres(float* spheres, size_t nspheres,
+PCAGridSpheres::PCAGridSpheres(float* spheres, size_t nspheres, int ndata,
 			       float radius,
 			       int *tex_indices,
 			       unsigned char* tex_data, int nbases, int tex_res,
@@ -28,7 +28,7 @@ PCAGridSpheres::PCAGridSpheres(float* spheres, size_t nspheres,
 			       float tex_min, float tex_max,
 			       int nsides, int depth,
 			       const Color& color) :
- TextureGridSpheres(spheres, nspheres, radius, tex_indices, tex_data,
+ TextureGridSpheres(spheres, nspheres, ndata, radius, tex_indices, tex_data,
 		    nbases, tex_res, nsides, depth, color),
  xform(xform), mean(mean), nbases(nbases), nchannels(nchannels),
  tex_min(tex_min)
