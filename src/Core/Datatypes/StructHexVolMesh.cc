@@ -103,15 +103,15 @@ StructHexVolMesh::transform(const Transform &t)
   begin(i);
   end(ie);
 
-  while (i != ie) {
-    points_((*i).i_,(*i).j_,(*i).k_) = t.project(points_((*i).i_,(*i).j_,(*i).k_));
+  while (i != ie)
+  {
+    points_((*i).i_,(*i).j_,(*i).k_) =
+      t.project(points_((*i).i_,(*i).j_,(*i).k_));
 
     ++i;
   }
-  
-  // Recompute grid.
-  grid_.detach();
-  compute_grid();
+
+  grid_ = 0;
 }
 
 void
