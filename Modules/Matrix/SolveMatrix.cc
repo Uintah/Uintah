@@ -126,6 +126,7 @@ void SolveMatrix::execute()
 
     clString meth=method.get();
     if(meth == "conjugate_gradient"){
+	rhs.detach();
 	conjugate_gradient(matrix.get_rep(),
 			   *solution.get_rep(), *rhs.get_rep());
 	solport->send(solution);
@@ -231,6 +232,11 @@ void SolveMatrix::jacobi(Matrix* matrix,
 	Sub(Z, Z, rhs, flop, memref);
 	err=Z.vector_norm(flop, memref)/bnorm;
 
+	{
+	    ColumnMatrix dd(lhs.nrows());
+	    matrix->mult(lhs, dd, flop, memref);
+	}
+
 	errlist.add(err);
 
 	gflop+=flop/1000000000;
@@ -252,7 +258,8 @@ void SolveMatrix::jacobi(Matrix* matrix,
 	    double progress=(log_orig-log(err))/(log_orig-log_targ);
 	    update_progress(progress);
 
-	    solport->send_intermediate(rhs.clone());
+	    if(niter%30 == 0)
+		solport->send_intermediate(rhs.clone());
 	}
     }
     iteration.set(niter);
@@ -307,6 +314,10 @@ void SolveMatrix::conjugate_gradient(Matrix* matrix,
     ColumnMatrix P(size);
     double bkden=0;
     double err=R.vector_norm(flop, memref)/bnorm;
+    if(err == 0){
+	lhs=rhs;
+	return;
+    }
 
     orig_error.set(err);
     current_error.set(err);
@@ -401,13 +412,14 @@ void SolveMatrix::conjugate_gradient(Matrix* matrix,
 
 	    append_values(niter, errlist, last_update, targetidx, targetlist, last_errupdate);
 
-	    double progress=(log_orig-log(err))/(log_orig-log_targ);
-	    update_progress(progress);
+	    if(err > 0){
+		double progress=(log_orig-log(err))/(log_orig-log_targ);
+		cerr << "err=" << err << endl;
+		cerr << "log_orig=" << log_orig << endl;
+		update_progress(progress);
+	    }
 
 	    solport->send_intermediate(lhs.clone());
-	    for(int i=0;i<10000;i++){
-		Task::yield();
-	    }
 	}
     }
     iteration.set(niter);
