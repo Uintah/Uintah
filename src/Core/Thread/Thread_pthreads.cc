@@ -901,8 +901,8 @@ Mutex::lock()
 bool
 Mutex::tryLock()
 {
-    if(pthread_mutex_trylock(&priv_->mutex) != 0){
-	if(errno == EAGAIN || errno == EINTR)
+    if((errno = pthread_mutex_trylock(&priv_->mutex)) != 0){
+	if(errno == EBUSY)
 	    return false;
 	throw ThreadError(std::string("pthread_mutex_trylock: ")
 			  +strerror(errno));
