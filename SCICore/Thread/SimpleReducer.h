@@ -64,6 +64,12 @@ DESCRIPTION
 	    // return the same global max.
 	    double max(int myrank, int numThreads, double mymax);
 
+	    //////////
+	    // Performs a global min over all of the threads.  As soon as each
+	    // thread has called min with their local max, each thread will
+	    // return the same global max.
+	    double min(int myrank, int numThreads, double mymax);
+
 	private:
 	    struct data {
 		double d_d;
@@ -93,6 +99,20 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.5  2000/02/15 00:23:49  sparker
+// Added:
+//  - new Thread::parallel method using member template syntax
+//  - Parallel2 and Parallel3 helper classes for above
+//  - min() reduction to SimpleReducer
+//  - ThreadPool class to help manage a set of threads
+//  - unmap page0 so that programs will crash when they deref 0x0.  This
+//    breaks OpenGL programs, so any OpenGL program linked with this
+//    library must call Thread::allow_sgi_OpenGL_page0_sillyness()
+//    before calling any glX functions.
+//  - Do not trap signals if running within CVD (if DEBUGGER_SHELL env var set)
+//  - Added "volatile" to fetchop barrier implementation to workaround
+//    SGI optimizer bug
+//
 // Revision 1.4  1999/09/24 18:55:07  moulding
 // added SCICORESHARE, for win32, to class declarations
 //

@@ -36,18 +36,23 @@ using SCICore::Thread::Runnable;
 using SCICore::Thread::Thread;
 using SCICore::Thread::ThreadGroup;
 
-class ParallelHelper : public Runnable {
-    const ParallelBase* helper;
-    int proc;
-public:
-    ParallelHelper(const ParallelBase* helper, int proc)
-	: helper(helper), proc(proc) {}
-    virtual ~ParallelHelper() {}
-    virtual void run() {
-	ParallelBase* cheat=(ParallelBase*)helper;
-	cheat->run(proc);
+namespace SCICore {
+    namespace Thread {
+	class ParallelHelper : public Runnable {
+	    const ParallelBase* helper;
+	    int proc;
+	public:
+	    ParallelHelper(const ParallelBase* helper, int proc)
+		: helper(helper), proc(proc) {}
+	    virtual ~ParallelHelper() {}
+	    virtual void run() {
+		ParallelBase* cheat=(ParallelBase*)helper;
+		cheat->run(proc);
+	    }
+	};
     }
-};
+}
+using SCICore::Thread::ParallelHelper;
 
 Thread::~Thread()
 {
@@ -171,8 +176,7 @@ ThreadGroup*
 Thread::parallel(const ParallelBase& helper, int nthreads,
 		 bool block, ThreadGroup* threadGroup)
 {
-    ThreadGroup* newgroup=new ThreadGroup("Parallel group",
-    				      threadGroup);
+    ThreadGroup* newgroup=new ThreadGroup("Parallel group", threadGroup);
     if(!block){
 	// Extra synchronization to make sure that helper doesn't
 	// get destroyed before the threads actually start
@@ -309,6 +313,20 @@ Thread::getStateString(ThreadState state)
 
 //
 // $Log$
+// Revision 1.15  2000/02/15 00:23:50  sparker
+// Added:
+//  - new Thread::parallel method using member template syntax
+//  - Parallel2 and Parallel3 helper classes for above
+//  - min() reduction to SimpleReducer
+//  - ThreadPool class to help manage a set of threads
+//  - unmap page0 so that programs will crash when they deref 0x0.  This
+//    breaks OpenGL programs, so any OpenGL program linked with this
+//    library must call Thread::allow_sgi_OpenGL_page0_sillyness()
+//    before calling any glX functions.
+//  - Do not trap signals if running within CVD (if DEBUGGER_SHELL env var set)
+//  - Added "volatile" to fetchop barrier implementation to workaround
+//    SGI optimizer bug
+//
 // Revision 1.14  1999/11/01 22:20:40  moulding
 // #ifdef out Thread::niceAbort() for win32.
 //

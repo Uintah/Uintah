@@ -98,8 +98,42 @@ SimpleReducer::max(int proc, int n, double mymax)
     return gmax;
 }
 
+double
+SimpleReducer::min(int proc, int n, double mymin)
+{
+    if(n != d_array_size){
+        collectiveResize(proc, n);
+    }
+
+    int buf=d_p[proc].d_buf;
+    d_p[proc].d_buf=1-buf;
+
+    joinArray* j=d_join[buf];
+    j[proc].d_d.d_d=mymin;
+    Barrier::wait(n);
+    double gmin=j[0].d_d.d_d;
+    for(int i=1;i<n;i++)
+        if(j[i].d_d.d_d < gmin)
+	    gmin=j[i].d_d.d_d;
+    return gmin;
+}
+
 //
 // $Log$
+// Revision 1.5  2000/02/15 00:23:49  sparker
+// Added:
+//  - new Thread::parallel method using member template syntax
+//  - Parallel2 and Parallel3 helper classes for above
+//  - min() reduction to SimpleReducer
+//  - ThreadPool class to help manage a set of threads
+//  - unmap page0 so that programs will crash when they deref 0x0.  This
+//    breaks OpenGL programs, so any OpenGL program linked with this
+//    library must call Thread::allow_sgi_OpenGL_page0_sillyness()
+//    before calling any glX functions.
+//  - Do not trap signals if running within CVD (if DEBUGGER_SHELL env var set)
+//  - Added "volatile" to fetchop barrier implementation to workaround
+//    SGI optimizer bug
+//
 // Revision 1.4  1999/09/21 23:19:06  dmw
 // fixed a bug Steve missed... ;)
 //

@@ -5,7 +5,7 @@ OBJTOP   = ../..
 SRCS     = Guard.cc MutexPool.cc ParallelBase.cc \
 	   Runnable.cc Thread.cc ThreadError.cc \
 	   SimpleReducer.cc Thread_unix.cc ThreadGroup.cc \
-	   WorkQueue.cc @THREAD_IMPL@ @TIME_IMPL@
+	   ThreadPool.cc WorkQueue.cc @THREAD_IMPL@ @TIME_IMPL@
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
