@@ -77,6 +77,7 @@ WARNING
 				       ParticleVariable<double>& mass,
 				       ParticleVariable<double>& volume,
 				       ParticleVariable<int>& pissurf,
+				       ParticleVariable<double>& temperature,
 				       const Patch*);
 
 	 int checkForSurface(const GeometryPiece* piece,
@@ -110,6 +111,7 @@ WARNING
 	 const VarLabel* pExternalForceLabel;
 	 const VarLabel* pXLabel;
 	 const VarLabel* pSurfLabel;
+         const VarLabel* pTemperatureLabel;
       };
 
 } // end namespace MPM
@@ -118,6 +120,10 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.16  2000/05/31 16:35:07  guilkey
+// Added code to initialize particle temperatures.  Moved the specification
+// of the temperature from the Material level to the GeometryObject level.
+//
 // Revision 1.15  2000/05/30 20:19:05  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
