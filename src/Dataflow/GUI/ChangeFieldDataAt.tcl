@@ -139,16 +139,16 @@ itcl_class SCIRun_Fields_ChangeFieldDataAt {
     }
 
 
-    method config_labeloption {win text2 text3} {
-	if {![winfo exists $win]} {
-	    return
-	}
-	$win.l2 configure -text $text2 -val $text2
-	$win.l3 configure -text $text3 -val $text3
-    }
+    #method config_labeloption {win text2 text3} {
+#	if {![winfo exists $win]} {
+#	    return
+#	}
+#	$win.l2 configure -text $text2 -val $text2
+#	$win.l3 configure -text $text3 -val $text3
+#    }
 
-    method config_labelentry { win text2 } {
-    }
+#    method config_labelentry { win text2 } {
+#    }
 
     method config_labelcombo { win arglist sel} {
 	if {![winfo exists $win]} {
