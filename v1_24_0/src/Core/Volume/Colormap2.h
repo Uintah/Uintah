@@ -32,7 +32,7 @@
 #ifndef ColorMap2_h
 #define ColorMap2_h
 
-#include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/PropertyManager.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Thread/Mutex.h>
 #include <vector>
@@ -44,7 +44,7 @@ typedef LockingHandle<CM2Widget> CM2WidgetHandle;
 
 using std::vector;
 
-class ColorMap2 : public SCIRun::Datatype
+class ColorMap2 : public PropertyManager
 {
 public:
   ColorMap2();
