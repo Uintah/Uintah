@@ -239,7 +239,7 @@ proc createSubnet { from_subnet { modules "" } } {
 	set canvas $Subnet(Subnet${from_subnet}_canvas)
 	set bbox [compute_bbox $canvas $modules]
     }
-    set subnet [makeSubnet $from_subnet $mouseX $mouseY $bbox]
+    set subnet [makeSubnet $from_subnet [lindex $bbox 0] [lindex $bbox 1] $bbox]
     set Subnet(Subnet${subnet}_Modules) $modules
     # Then move the modules to the new canvas
     foreach modid $modules {
@@ -287,11 +287,37 @@ proc expandSubnet { modid } {
 
     set fromcanvas $Subnet(Subnet${from}_canvas)
     set tocanvas $Subnet(Subnet${to}_canvas)
-    set x [lindex [$tocanvas bbox $modid] 0]
-    set y [lindex [$tocanvas bbox $modid] 1]
+    set x [lindex [$tocanvas coords $modid] 0]
+    set y [lindex [$tocanvas coords $modid] 1]
     $tocanvas delete $modid
     set toDelete ""
     set toAdd ""
+
+    foreach iconn $Subnet(Subnet${from}_connections) {
+	lappend toDelete $iconn
+	foreach econn $Subnet(SubnetIcon${from}_connections) {
+	    lappend toDelete $econn
+	    if { [iNum econn] == [oNum iconn] &&
+		 [string equal SubnetIcon$from [iMod econn]] &&
+		 [string equal Subnet$from [oMod iconn]] } {
+		lappend toAdd \
+		    "[oMod econn] [oNum econn] [iMod iconn] [iNum iconn]"
+		
+	    }
+	    if { [oNum econn] == [iNum iconn] &&
+		 [string equal SubnetIcon$from [oMod econn]] &&
+		 [string equal Subnet$from [iMod iconn]] } {
+		lappend toAdd \
+		    "[oMod iconn] [oNum iconn] [iMod econn] [iNum econn]"
+	    }
+	}
+    }
+
+    foreach conn $toDelete {
+	# the last 0 paramater means to not tell scirun, just delete TCL reps
+	destroyConnection $conn 0 0
+    }
+
     foreach module $Subnet(Subnet${from}_Modules) {
 	set bbox [$fromcanvas bbox $module]
 	set newx [expr $x + [lindex $bbox 0] - 10]
@@ -302,33 +328,11 @@ proc expandSubnet { modid } {
 	destroy $fromcanvas.module$module
 	$module make_icon $newx $newy 1
     }	
-    foreach iconn $Subnet(Subnet${from}_connections) {
-	lappend toDelete $iconn
-	foreach econn $Subnet(SubnetIcon${from}_connections) {
-	    lappend toDelete $econn
-	    if { [iNum econn] == [oNum iconn] && \
-		     [isaSubnetIcon [iMod econn]] && \
-		     [isaSubnet [oMod iconn]] } {
-		lappend toAdd \
-		    "[oMod econn] [oNum econn] [iMod iconn] [iNum iconn]"
-	    }
-	    if { [oNum econn] == [iNum iconn] && \
-		     [isaSubnetIcon [oMod econn]] && \
-		     [isaSubnet [iMod iconn]] } {
-		lappend toAdd \
-		    "[oMod iconn] [oNum iconn] [iMod econn] [iNum econn]"
-	    }
-	}
-    }
-
-    foreach conn $toDelete {
-	destroyConnection $conn 0 0
-    }
 
     foreach conn $toAdd {
+	# the last 0 paramater means to not tell scirun, just delete TCL reps
 	createConnection $conn 0 0
     }
-
 
     set CurrentlySelectedModules $Subnet(Subnet${from}_Modules)
     foreach module $Subnet(Subnet${from}_Modules) {
@@ -336,13 +340,10 @@ proc expandSubnet { modid } {
 	$module setColorAndTitle
     }
 
-#    moduleDestroy $modid
     trace vdelete Subnet(Subnet${from}_Name) w updateSubnetName
     array unset Subnet Subnet${from}*
     array unset Subnet SubnetIcon${from}*
-    destroy .subnet$from
-
-    
+    destroy .subnet$from    
 }
 
 
