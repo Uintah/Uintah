@@ -56,7 +56,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
   ParticleSubset* subset = allocateVariables(numParticles,dwi,lb,patch,new_dw);
 
   // Create a file that contains the points just created.
-  ofstream source("created.pts");
+//  ofstream source("created.pts");
   particleIndex start = 0;
   
   vector<GeometryObject*>::const_iterator obj;
@@ -148,7 +148,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 	      if(piece->inside(p)){
                 particleIndex pidx = start+count; 
 		position[pidx]=p;
-		source << p.x() << "  " <<  p.y() << "  " << p.z() << endl;;
+//		source << p.x() << "  " <<  p.y() << "  " << p.z() << endl;;
 #ifdef FRACTURE
                 pdisp[start+count] = Vector(0.,0.,0.);
 #endif
@@ -193,7 +193,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     } // end of else
     start += count;
   }
-  source.close();
+//  source.close();
   return subset;
 }
 
