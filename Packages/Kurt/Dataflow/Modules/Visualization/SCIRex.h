@@ -43,6 +43,7 @@ using SCIRun::ColorMapIPort;
 using SCIRun::GeometryOPort;
 using SCIRun::GuiInt;
 using SCIRun::GuiDouble;
+using SCIRun::GuiString;
 using SCIRun::GeomID;
 
 using SCIRun::GLTexture3DHandle;
@@ -78,7 +79,8 @@ private:
   GuiInt render_style_;
   GuiDouble alpha_scale_;
   GuiInt interp_mode_;
-
+  GuiString displays_;
+  GuiInt compositers_;
 };
 
 } // End namespace Kurt

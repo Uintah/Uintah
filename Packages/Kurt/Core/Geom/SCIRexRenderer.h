@@ -76,7 +76,7 @@ public:
   
   SCIRexRenderer(int id);
   
-  SCIRexRenderer(int id, vector<char*>& displays, int compositers,
+  SCIRexRenderer(int id, vector<const char*>& displays, int compositers,
 		 FieldHandle tex, ColorMapHandle map,
 		 bool isfixed, double min, double max,
 		 GLTexture3DHandle texH = 0);
@@ -197,7 +197,7 @@ private:
   void make_render_windows(FieldHandle tex_, 
 		     double& min_, double& max_,
 		     bool is_fixed_, int brick_size_,
-		     vector<char *>& displays);
+		     vector<const char *>& displays);
 
 
 };
