@@ -71,9 +71,9 @@ c*********************************************************************
          DO 190 K=KST,KEND
 	    DO 180 J=JST,JEND
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                  H(i,j,k) = -delta_t*uvwout*(old_H(i,j,k)-
-     $                         old_H(i-1,j,k))/dxpw(i) + 
-     $                         old_H(i,j,k)
+                 H(i,j,k) = (-delta_t*uvwout*(den(i,j,k)*old_H(i,j,k)-
+     $                         den(i-1,j,k)*old_H(i-1,j,k))/dxpw(i) + 
+     $                         den(i,j,k)*old_H(i,j,k))/den(i,j,k)
                   if (H(i,j,k) .lt. 0.0D0) then 
                      H(i,j,k) = 0.0D0
                   else if (H(i,j,k) .gt. 1.0D0) then
