@@ -87,12 +87,22 @@ public:
                                  DataWarehouseP&,
                                  DataWarehouseP&);
 
+  void scheduleCCMomExchange(const Patch* patch,
+                             SchedulerP&,
+                             DataWarehouseP&,
+                             DataWarehouseP&);
+
   //////////
   // Insert Documentation Here:
   void interpolateNCToCC(const ProcessorGroup*,
                          const Patch* patch,
                          DataWarehouseP& old_dw,
                          DataWarehouseP& new_dw);
+
+  void doCCMomExchange(const ProcessorGroup*,
+                       const Patch* patch,
+                       DataWarehouseP& old_dw,
+                       DataWarehouseP& new_dw);
 
   enum bctype { NONE=0,
                 FIXED,

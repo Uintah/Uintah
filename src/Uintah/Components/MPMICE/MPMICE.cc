@@ -109,8 +109,9 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
     d_mpm->scheduleIntegrateTemperatureRate(patch,sched,old_dw,new_dw);
 
     scheduleInterpolateNCToCC(patch,sched,old_dw,new_dw);
+    scheduleCCMomExchange(patch,sched,old_dw,new_dw);
 
-    d_mpm->scheduleExMomIntegrated(patch,sched,old_dw,new_dw);
+//    d_mpm->scheduleExMomIntegrated(patch,sched,old_dw,new_dw);
     d_mpm->scheduleInterpolateToParticlesAndUpdate(patch,sched,old_dw,new_dw);
     d_mpm->scheduleComputeMassRate(patch,sched,old_dw,new_dw);
     if(d_fracture) {
@@ -191,7 +192,7 @@ void MPMICE::scheduleInterpolateNCToCC(const Patch* patch,
    for(int m = 0; m < numMPMMatls; m++){
      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
      int idx = mpm_matl->getDWIndex();
-     t->requires(new_dw, Mlb->gMomExedVelocityStarLabel, idx, patch,
+     t->requires(new_dw, Mlb->gVelocityStarLabel, idx, patch,
 		Ghost::AroundCells, 1);
      t->requires(new_dw, Mlb->gMassLabel,                idx, patch,
 		Ghost::AroundCells, 1);
@@ -200,6 +201,64 @@ void MPMICE::scheduleInterpolateNCToCC(const Patch* patch,
    }
 
    sched->addTask(t);
+
+}
+
+void MPMICE::scheduleCCMomExchange(const Patch* patch,
+                                   SchedulerP& sched,
+                                   DataWarehouseP& old_dw,
+                                   DataWarehouseP& new_dw)
+{
+   int numMPMMatls = d_sharedState->getNumMPMMatls();
+   Task* t=scinew Task("MPMICE::doCCMomExchange",
+		        patch, old_dw, new_dw,
+		        this, &MPMICE::doCCMomExchange);
+
+   for(int m = 0; m < numMPMMatls; m++){
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+     int idx = mpm_matl->getDWIndex();
+     t->requires(new_dw, MIlb->cVelocityLabel, idx, patch, Ghost::None, 0);
+     t->requires(new_dw, MIlb->cMassLabel,     idx, patch, Ghost::None, 0);
+
+     t->computes(new_dw, Mlb->gMomExedVelocityStarLabel, idx, patch);
+     t->computes(new_dw, Mlb->gMomExedAccelerationLabel, idx, patch);
+   }
+
+   sched->addTask(t);
+
+}
+
+void MPMICE::doCCMomExchange(const ProcessorGroup*,
+                             const Patch* patch,
+                             DataWarehouseP&,
+                             DataWarehouseP& new_dw)
+{
+  int numMatls = d_sharedState->getNumMPMMatls();
+  // Create arrays for the grid data
+  NCVariable<Vector> gacceleration, gvelocity;
+  NCVariable<Vector> gMEacceleration, gMEvelocity;
+
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    int matlindex = mpm_matl->getDWIndex();
+
+     new_dw->get(gvelocity,     Mlb->gVelocityStarLabel, matlindex, patch,
+							Ghost::AroundCells, 1);
+     new_dw->get(gacceleration, Mlb->gAccelerationLabel, matlindex, patch,
+							Ghost::AroundCells, 1);
+
+     new_dw->allocate(gMEvelocity,     Mlb->gMomExedVelocityStarLabel,
+							 matlindex, patch);
+     new_dw->allocate(gMEacceleration, Mlb->gMomExedAccelerationLabel,
+							 matlindex, patch);
+
+    // Just carrying forward for now, real code needs to go here
+ 
+     new_dw->put(gvelocity,     Mlb->gMomExedVelocityStarLabel,
+							 matlindex, patch);
+     new_dw->put(gacceleration, Mlb->gMomExedAccelerationLabel,
+							 matlindex, patch);
+  }
 
 }
 
@@ -221,10 +280,11 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
      CCVariable<double> cmass;
      CCVariable<Vector> cvelocity;
 
-     new_dw->get(gmass,     Mlb->gMassLabel,                matlindex, patch,
-					   Ghost::AroundCells, 1);
-     new_dw->get(gvelocity, Mlb->gMomExedVelocityStarLabel, matlindex, patch,
-					   Ghost::AroundCells, 1);
+     new_dw->get(gmass,     Mlb->gMassLabel,           matlindex, patch,
+							Ghost::AroundCells, 1);
+     new_dw->get(gvelocity, Mlb->gVelocityStarLabel,   matlindex, patch,
+							Ghost::AroundCells, 1);
+
      new_dw->allocate(cmass,     MIlb->cMassLabel,     matlindex, patch);
      new_dw->allocate(cvelocity, MIlb->cVelocityLabel, matlindex, patch);
  
@@ -250,6 +310,9 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.6  2000/12/28 21:20:10  guilkey
+// Adding beginnings of functions for coupling.
+//
 // Revision 1.5  2000/12/28 20:26:36  guilkey
 // More work on coupling MPM and ICE
 //
