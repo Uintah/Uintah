@@ -11,7 +11,6 @@
 #include <math.h>
 
 namespace SCIRun {
-
 /**************************************
 
 CLASS
@@ -144,6 +143,7 @@ template<class TPoint, class TPointElem,
 class RangeTree
 {
 public:
+
   // Build a range tree for the given set of points on the
   // given number of dimensions (must be >= 2).  There may
   // be Point's with equivalent values in the list but there
@@ -432,11 +432,11 @@ private:
   {
   public:
     CascadeTraverser(RangeTreeNode* vsplit, int subIndex)
-      : Traverser<SIDE>(vsplit, 1), subIndex_(subIndex)
+      : RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::Traverser<SIDE>(vsplit, 1), subIndex_(subIndex)
     { ASSERT(subIndex != -1); }
 
     CascadeTraverser(CascadeTraverser& traverser)
-      : Traverser<SIDE>(traverser), subIndex_(traverser.subIndex_) {}
+      : RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::Traverser<SIDE>(traverser), subIndex_(traverser.subIndex_) {}
 
     // quitOnBadIndex is only relevant if BOUND_FROM_SIDE == RANGE_LEFT,
     // otherwise it will quit regardless (because it can't handle negative
@@ -1113,7 +1113,6 @@ goNext(const BoundTester& boundTester)
   while (!node_->isLeaf() &&
 	 !boundTester.isInBound<SIDE>((*node_->point_)[D_]))
       node_ = node_->getChild<OTHER_SIDE>();
-
   return !node_->isLeaf();
 }
 
