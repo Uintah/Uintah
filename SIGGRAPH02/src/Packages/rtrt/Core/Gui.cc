@@ -142,7 +142,9 @@ Gui::Gui() :
   mouseDown_(0), beQuiet_(true),
   lightsOn_(true), lightsBeingRendered_(false),
   rightButtonMenuActive_(true),
-  displayRStats_(false), displayPStats_(false)
+  displayRStats_(false), displayPStats_(false),
+  bottomGraphicTrig_(NULL), activeMTT_(NULL), queuedMTT_(NULL),
+  leftGraphicTrig_(NULL)
 {
   inputString_[0] = 0;
 }
@@ -255,6 +257,93 @@ Gui::setupFonts()
 }
 
 void
+Gui::handleTriggers()
+{
+  // Handle Active Trigger
+  if( activeGui->activeMTT_ )
+    {
+      Trigger * next = NULL;
+      // next is NULL if no next trigger associated with this trigger.
+      bool result = activeGui->activeMTT_->advance( next );
+      if( result == false ) // remove from active list.
+	{
+	  if( activeGui->queuedMTT_ ) 
+	    {
+	      activeGui->activeMTT_ = activeGui->queuedMTT_;
+	      activeGui->queuedMTT_->activate();
+	      activeGui->queuedMTT_ = next;
+	    }
+	  else
+	    {
+	      activeGui->activeMTT_ = next;
+	      if( next ) 
+		{
+		  cout << "done now activating " << next->getName() << "\n";
+		  next->activate();
+		}
+	    }
+	}
+    }
+
+  // Check all triggers.
+  vector<Trigger*> & triggers = dpy_->scene->getTriggers();
+  for( int cnt = 0; cnt < triggers.size(); cnt++ )
+    {
+      Trigger * trigger = triggers[cnt];
+      bool result = trigger->check( activeGui->camera_->eye );
+      if( result == true )
+	{
+	  if( activeGui->activeMTT_ )
+	    {
+	      cout << "queuing trigger: " << trigger->getName() << "\n";
+	      activeGui->activeMTT_->deactivate();
+	      activeGui->queuedMTT_ = trigger;
+	    }
+	  else
+	    {
+	      cout << "KICKING OFF TRIGGER: " << trigger->getName() << "\n";
+	      activeGui->activeMTT_ = trigger;
+	      activeGui->activeMTT_->activate();
+	    }
+	}
+    }
+
+  // Deal with bottom graphic trigger
+  if( activeGui->bottomGraphicTrig_ )
+    {
+      Trigger * next = NULL;
+      activeGui->bottomGraphicTrig_->advance( next );
+      if( next )
+	{
+	  activeGui->bottomGraphicTrig_ = next;
+	  next->activate();
+	}
+      else
+	{
+	  // Calling check() just to advance the time of the trigger.
+	  activeGui->bottomGraphicTrig_->check( Point(0,0,0) );
+	}
+    }
+
+  // Deal with left graphic trigger
+  if( activeGui->leftGraphicTrig_ )
+    {
+      Trigger * next = NULL;
+      activeGui->leftGraphicTrig_->advance( next );
+      if( next )
+	{
+	  activeGui->leftGraphicTrig_ = next;
+	  next->activate();
+	}
+      else
+	{
+	  // Calling check() just to advance the time of the trigger.
+	  activeGui->leftGraphicTrig_->check( Point(0,0,0) );
+	}
+    }
+} // end handleTriggers()
+
+void
 Gui::idleFunc()
 {
   Dpy               * dpy = activeGui->dpy_;
@@ -275,52 +364,11 @@ Gui::idleFunc()
       activeGui->startSoundThreadBtn_->set_name( "Sounds Started" );
     }
 
-  ///////////////////////////////////////////////////////////
-  // Handle Active Triggers
-  if( activeGui->activeTriggers_.size() > 0 )
-    {
-      bool done = false;
-      vector<Trigger*>::iterator iter = activeGui->activeTriggers_.end();
-      iter--;
-
-      while( !done )
-	{
-	  bool result = (*iter)->advance();
-	  if( result == false ) // remove from active list.
-	    {
-	      iter = activeGui->activeTriggers_.erase( iter );
-	    }
-	  if( iter == activeGui->activeTriggers_.begin() || 
-	      activeGui->activeTriggers_.size() == 0 )
-	    {
-	      done = true;
-	    }
-	  else
-	    {
-	      iter--;
-	    }
-	}
-    }
-
-  // Check all triggers.
-  vector<Trigger*> & triggers = dpy->scene->getTriggers();
-  for( int cnt = 0; cnt < triggers.size(); cnt++ )
-    {
-      Trigger * trigger = triggers[cnt];
-      bool result = trigger->check( activeGui->camera_->eye );
-      if( result == true )
-	{
-	  activeGui->activeTriggers_.push_back( trigger );
-	}
-    }
-  // Done handling triggers
-  ///////////////////////////////////////////////////////////
-
+  glutSetWindow( activeGui->glutDisplayWindowId );
+  activeGui->handleTriggers();
 
   // I know this is a hack... 
   if( dpy->showImage_ ){
-
-    glutSetWindow( activeGui->glutDisplayWindowId );
 
     // Display textual information on the screen:
     char buf[100];
@@ -798,14 +846,16 @@ Gui::handleWindowResizeCB( int width, int height )
 {
   printf("window resized\n");
 
-glViewport(0, 0, activeGui->dpy_->priv->xres, activeGui->dpy_->priv->yres);
-glMatrixMode(GL_PROJECTION);
-glLoadIdentity();
-gluOrtho2D(0, activeGui->dpy_->priv->xres, 0, activeGui->dpy_->priv->yres);
-glDisable( GL_DEPTH_TEST );
-glMatrixMode(GL_MODELVIEW);
-glLoadIdentity();
-glTranslatef(0.375, 0.375, 0.0);
+  glutSetWindow( activeGui->glutDisplayWindowId );
+
+  glViewport(0, 0, activeGui->dpy_->priv->xres, activeGui->dpy_->priv->yres);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(0, activeGui->dpy_->priv->xres, 0, activeGui->dpy_->priv->yres);
+  glDisable( GL_DEPTH_TEST );
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glTranslatef(0.375, 0.375, 0.0);
 
   return;
 
@@ -1087,8 +1137,6 @@ Gui::updateSoundCB( int /*id*/ )
 
   Point & location = activeGui->currentSound_->locations_[0];
 
-  cout << "point is " << location << "\n";
-
   activeGui->soundOriginX_->set_float_val( location.x() );
   activeGui->soundOriginY_->set_float_val( location.y() );
   activeGui->soundOriginZ_->set_float_val( location.z() );
@@ -1110,17 +1158,41 @@ Gui::toggleShowLightsCB( int /*id*/ )
 }
 
 void
+Gui::toggleLightOnOffCB( int /*id*/ )
+{
+  Light * light = activeGui->lights_[ activeGui->selectedLightId_ ];
+  if( light->isOn() )
+    {
+      // turn it off
+      activeGui->lightOnOffBtn_->set_name( "Turn On" );
+      light->turnOff();
+      activeGui->lightsColorPanel_->disable();
+      activeGui->lightsPositionPanel_->disable();
+    }
+  else
+    {
+      // turn it on
+      activeGui->lightOnOffBtn_->set_name( "Turn Off" );
+      light->turnOn();
+      activeGui->lightsColorPanel_->enable();
+      activeGui->lightsPositionPanel_->enable();
+    }
+}
+
+void
 Gui::toggleLightSwitchesCB( int /*id*/ )
 {
   if( activeGui->lightsOn_ ) {
     activeGui->toggleLightsOnOffBtn_->set_name( "Turn On Lights" );
     activeGui->dpy_->turnOffAllLights_ = true;
+    activeGui->dpy_->turnOnAllLights_ = false;
     activeGui->lightsOn_ = false;
     activeGui->lightsColorPanel_->disable();
     activeGui->lightsPositionPanel_->disable();
   } else {
     activeGui->toggleLightsOnOffBtn_->set_name( "Turn Off Lights" );
     activeGui->dpy_->turnOnAllLights_ = true;
+    activeGui->dpy_->turnOffAllLights_ = false;
     activeGui->lightsOn_ = true;
     activeGui->lightsColorPanel_->enable();
     activeGui->lightsPositionPanel_->enable();
@@ -1364,8 +1436,25 @@ Gui::activateTriggerCB( int /* id */ )
   vector<Trigger*> triggers = activeGui->dpy_->scene->getTriggers();
   Trigger * trig = triggers[ activeGui->selectedTriggerId_ ];
 
-  trig ->activate();
-  activeGui->activeTriggers_.push_back( trig );
+  if( trig->isSoundTrigger() )
+    {
+      trig->activate();
+    }
+  else // image trigger
+    {
+      if( activeGui->activeMTT_ ) // If a trigger is already running...
+	{
+	  cout << "QUEUING trigger: " << trig->getName() << "\n";
+	  activeGui->activeMTT_->deactivate(); // then tell it to stop.
+	  activeGui->queuedMTT_ = trig;        // and queue up the new trigger.
+	}
+      else
+	{
+	  cout << "activating TRIGGER: " << trig->getName() << "\n";
+	  activeGui->activeMTT_ = trig;
+	  activeGui->activeMTT_->activate();
+	}
+    }
 }
 
 void
@@ -1480,7 +1569,10 @@ Gui::createLightWindow( GLUI * window )
     window->add_spinner_to_panel( panel, "Intensity:", GLUI_SPINNER_FLOAT,
 				  &lightBrightness_, -1, updateIntensityCB );
   lightIntensity_->set_float_limits( 0.0, 1.0 );
-  lightIntensity_->set_speed( 0.01 );
+  lightIntensity_->set_speed( 0.1 );
+
+  lightOnOffBtn_ = window->add_button_to_panel( panel, "Turn Off",
+						-1, toggleLightOnOffCB );
 
   lightsColorPanel_ = window->add_panel_to_panel( panel, "Color" );
 
@@ -1563,14 +1655,14 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
     activeGui->mainWindowVisible = false;
   }
 
-  activeGui->routeWindow     = GLUI_Master.create_glui( "Route",0,400,400 );
-  activeGui->lightsWindow    = GLUI_Master.create_glui( "Lights",0,500,400 );
-  activeGui->objectsWindow   = GLUI_Master.create_glui( "Objects",0,600,400 );
-  activeGui->soundsWindow    = GLUI_Master.create_glui( "Sounds",0,700,400 );
-  activeGui->triggersWindow_ = GLUI_Master.create_glui( "Triggers",0,800,400 );
+  activeGui->routeWindow     = GLUI_Master.create_glui( "Route",   0,900,400 );
+  activeGui->lightsWindow    = GLUI_Master.create_glui( "Lights",  0,900,500 );
+  activeGui->objectsWindow   = GLUI_Master.create_glui( "Objects", 0,900,600 );
+  activeGui->soundsWindow    = GLUI_Master.create_glui( "Sounds",  0,900,700 );
+  activeGui->triggersWindow_ = GLUI_Master.create_glui( "Triggers",0,900,800 );
 
   activeGui->getStringWindow = 
-                    GLUI_Master.create_glui( "Input Request", 0, 400, 400 );
+                    GLUI_Master.create_glui( "Input Request", 0, 900, 600 );
 
   //  activeGui->routeWindow->set_main_gfx_window( winId );
   //  activeGui->lightsWindow->set_main_gfx_window( winId );
