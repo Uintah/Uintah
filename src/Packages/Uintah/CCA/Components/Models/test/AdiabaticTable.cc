@@ -1,5 +1,4 @@
 // TODO
-// track down tiny eloss - why????
 // Use cp directly instead of cv/gamma
 
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
@@ -28,12 +27,9 @@
 #include <Core/Util/DebugStream.h>
 #include <stdio.h>
 
-// TODO:
-// 1. Call modifyThermo from intialize instead of duping code
-// Drive density...
-
 using namespace Uintah;
 using namespace std;
+
 //__________________________________
 //  To turn on the output
 //  setenv SCI_DEBUG "MODELS_DOING_COUT:+,ADIABATIC_TABLE_DBG_COUT:+"
@@ -326,7 +322,14 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
       double mass  = rho_CC[c]*volume;    
       double cp    = gamma[c] * cv[c];    
       double icp   = ref_gamma[c] * ref_cv[c];
-      eReleased[c] = temp[c] * cp - ref_temp[c] * icp;
+      // This is stupid, but since some machines can't do math when
+      // optimization is turned on we trap the common case to make
+      // the result be truly zero.  It just makes debugging a bit
+      // easier later on.
+      if(temp[c] == ref_temp[c] && cp == icp)
+        eReleased[c] = 0;
+      else
+        eReleased[c] = temp[c] * cp - ref_temp[c] * icp;
     }
     setBC(eReleased,"cumulativeEnergyReleased", patch, sharedState,indx, new_dw); 
 
@@ -549,7 +552,6 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       int ncells = 0;
       double cpsum = 0;
       double masssum=0;
-      bool flag=true;
 #endif
       
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
@@ -569,25 +571,6 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         // as a source
         eReleased_src[c] += erelease;
         energySource[c] += erelease*mass;
-#if 0
-        // Diagnostics
-        if(erelease != 0){
-          cerr.precision(20);
-          cerr << "\nerelease=" << erelease << '\n';
-          cerr << "c=" << c << '\n';
-          cerr << "flameTemp=" << flameTemp[c] << '\n';
-          cerr << "cp=" << cp << '\n';
-          cerr << "initialTemp = " << initialTemp[c] << '\n';
-          cerr << "initial_cp=" << icp << '\n';
-          cerr << "dtemp=" << flameTemp[c]-initialTemp[c] << '\n';
-          cerr << "dcp=" << cp-icp << '\n';
-          cerr << "mass=" << mass << '\n';
-          cerr << "ediff=" << energyNew-energyOrig << '\n';
-          cerr << "heatLoss=" << heatLoss[c] << '\n';
-          flag=false;
-        }
-#endif
-
 
 #if 0
         //__________________________________
@@ -610,10 +593,6 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
           maxDecrease = dtemp;
 #endif
       }
-#if 0
-      if(flag)
-        cerr << "PASSED!!!!!!!!!!!!!!!!!!!!!!!!\n";
-#endif
 #if 0
       cerr << "MaxTemp = " << maxTemp << ", maxFlameTemp=" << maxFlameTemp << ", maxIncrease=" << maxIncrease << ", maxDecrease=" << maxDecrease << ", totalEnergy=" << totalEnergy << '\n';
       double cp = cpsum/ncells;
