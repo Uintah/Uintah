@@ -414,7 +414,7 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
     double val;
 
     if ((sfld->basis_order() > 0) || (sfld->basis_order() == 0 && 
-				     mesh->dimensionality() == 1)) {
+				     mesh->dimensionality() == 0)) {
       typename Fld::value_type tmp;
       sfld->value(tmp, *niter);
 	
