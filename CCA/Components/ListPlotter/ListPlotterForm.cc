@@ -20,6 +20,7 @@
 #include <qimage.h>
 #include <qpixmap.h>
 
+#if 0
 static QPixmap uic_load_pixmap_ListPlotterForm( const QString &name )
 {
     const QMimeSource *m = QMimeSourceFactory::defaultFactory()->data( name );
@@ -29,6 +30,7 @@ static QPixmap uic_load_pixmap_ListPlotterForm( const QString &name )
     QImageDrag::decode( m, pix );
     return pix;
 }
+#endif
 /* 
  *  Constructs a ListPlotterForm which is a child of 'parent', with the 
  *  name 'name' and widget flags set to 'f'.

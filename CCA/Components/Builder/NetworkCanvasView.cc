@@ -111,7 +111,7 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
 #endif	
 }
 
-void NetworkCanvasView::contentsMouseReleaseEvent(QMouseEvent* e)
+void NetworkCanvasView::contentsMouseReleaseEvent(QMouseEvent* /*e*/)
 {
         //IMPORTANT NOTES: e->pos() returns the mouse point in the canvas coordinates
         //cerr<<"MousePress e->pos()="<<e->pos().x()<<endl;

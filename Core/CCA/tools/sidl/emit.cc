@@ -574,7 +574,7 @@ void CI::emit_handler_table(EmitState& e)
 {
   e.out << "// handler table for " << (iam_class()?"class ":"interface ") << name << "\n";
   e.out << "//" << curfile << ":" << lineno << "\n\n";
-  e.out << "void "<< cppfullname(0) << "::" << cppclassname()
+  e.out << "void "<< cppfullname(0)
         << "::registerhandlers(SCIRun::EpChannel* epc)\n";
   e.out << "{\n";
 
@@ -589,7 +589,7 @@ void CI::emit_handler_table(EmitState& e)
   e.out << tempe->out.str();
   delete tempe;
 
-  e.out << "\n}; // vtable_size=" << vtable_base << "\n\n";
+  e.out << "\n} // vtable_size=" << vtable_base << "\n\n";
 }
 
 bool Method::reply_required() const
@@ -1173,7 +1173,7 @@ void ArrayType::emit_unmarshal(EmitState& e, const string& arg,
 }
 
 void ArrayType::emit_marshalsize(EmitState& e, const string& arg,
-				 const string& sizevar,
+				 const string& /*sizevar*/,
 				 const string& /* qty */) const
 {
   //  e.out << leader2 << sizevar << " += globus_nexus_sizeof_int(" << dim << "); // array dims\n";
@@ -1220,7 +1220,7 @@ bool ArrayType::uniformsize() const
 }
 
 void ArrayType::emit_marshal(EmitState& e, const string& arg,
-			     const string& qty,
+			     const string& /*qty*/,
 			     const std::string& bufname, bool top) const
 {
   string pname;
@@ -1264,13 +1264,13 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
   }
 }
 
-void ArrayType::emit_rettype(EmitState& e, const string& arg) const
+void ArrayType::emit_rettype(EmitState& e, const string& /*arg*/) const
 {
   e.out << cppfullname(0) << " _ret";
 }
 
 void ArrayType::emit_prototype(SState& out, ArgContext ctx,
-			       SymbolTable* localScope) const
+			       SymbolTable* /*localScope*/) const
 {
   if(ctx == ArgIn){
     out << "const ";
@@ -1282,7 +1282,7 @@ void ArrayType::emit_prototype(SState& out, ArgContext ctx,
 
 void BuiltinType::emit_unmarshal(EmitState& e, const string& arg,
 				 const string& qty,
-				 const string& bufname,
+				 const string& /*bufname*/,
 				 bool declare) const
 {
   if(cname == "void"){
@@ -1361,9 +1361,9 @@ void BuiltinType::emit_unmarshal(EmitState& e, const string& arg,
   }
 }
 
-void BuiltinType::emit_marshalsize(EmitState& e, const string& arg,
-				   const string& sizevar,
-				   const string& qty) const
+void BuiltinType::emit_marshalsize(EmitState& /*e*/, const string& /*arg*/,
+				   const string& /*sizevar*/,
+				   const string& /*qty*/) const
 {
   /*
   if(cname == "void"){
@@ -1402,7 +1402,7 @@ void BuiltinType::emit_declaration(EmitState& e, const string& arg) const
 
 void BuiltinType::emit_marshal(EmitState& e, const string& arg,
 			       const string& qty, 
-			       const string& bufname, bool/* top*/) const
+			       const string& /*bufname*/, bool/* top*/) const
 {
   if(cname == "void"){
     // What?
@@ -1532,7 +1532,7 @@ bool BuiltinType::uniformsize() const
 
 void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 			       const string& qty,
-			       const string& bufname,
+			       const string& /*bufname*/,
 			       bool declare) const
 {
   Symbol::Type symtype = name->getSymbol()->getType();
@@ -1574,9 +1574,9 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
   }
 }
 
-void NamedType::emit_marshalsize(EmitState& e, const string& arg,
-				 const string& sizevar,
-				 const string& qty) const
+void NamedType::emit_marshalsize(EmitState& /*e*/, const string& /*arg*/,
+				 const string& /*sizevar*/,
+				 const string& /*qty*/) const
 {
   /*
   Symbol::Type symtype = name->getSymbol()->getType();
@@ -1608,7 +1608,7 @@ void NamedType::emit_declaration(EmitState& e, const string& arg) const
 
 void NamedType::emit_marshal(EmitState& e, const string& arg,
 			     const string& qty,
-			     const string& bufname, bool /*top*/) const
+			     const string& /*bufname*/, bool /*top*/) const
 {
   Symbol::Type symtype = name->getSymbol()->getType();
   if(symtype == Symbol::EnumType){

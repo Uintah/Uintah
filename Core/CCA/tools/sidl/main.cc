@@ -60,6 +60,7 @@ const char* find_cpp()
   cerr << "Cpp: doesn't seem to exist... bye.\n";
 
   exit( 1 );
+  return 0;
 }
 
 char* find_builtin()

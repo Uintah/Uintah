@@ -37,12 +37,12 @@ using CIA::Object;
 
 void Interface::addReference()
 {
-  Object::addReference();
+  SCIRun::Object::addReference();
 }
 
 void Interface::deleteReference()
 {
-  Object::deleteReference();
+  SCIRun::Object::deleteReference();
 }
 
 Class::pointer Interface::getClass()
@@ -51,25 +51,25 @@ Class::pointer Interface::getClass()
   return Class::pointer(0);
 }
 
-bool Interface::isSame(const Interface::pointer& object)
+bool Interface::isSame(const Interface::pointer& /*object*/)
 {
   NOT_FINISHED("bool .CIA.Interface.isSame(in .CIA.Interface object)");
   return false;
 }
 
-bool Interface::isInstanceOf(const Class::pointer& type)
+bool Interface::isInstanceOf(const Class::pointer& /*type*/)
 {
   NOT_FINISHED("bool .CIA.Interface.isInstanceOf(in .CIA.Class type)");
   return false;
 }
 
-bool Interface::supportsInterface(const Class::pointer& type)
+bool Interface::supportsInterface(const Class::pointer& /*type*/)
 {
   NOT_FINISHED("bool .CIA.Interface.supportsInterface(in .CIA.Class type)");
   return false;
 }
 
-Interface::pointer Interface::queryInterface(const Class::pointer& type)
+Interface::pointer Interface::queryInterface(const Class::pointer& /*type*/)
 {
   NOT_FINISHED(".CIA.Interface .CIA.Interface.queryInterface(in .CIA.Class type)");
   return Interface::pointer(0);

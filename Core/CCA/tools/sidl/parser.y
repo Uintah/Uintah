@@ -36,9 +36,6 @@ extern int lineno;
 #include <stdlib.h>
 #include <iostream>
 
-#define LOCAL 0x01
-#define ONEWAY 0x02
-
  using namespace std;
 
 %}

@@ -25,22 +25,22 @@ SocketMessage::~SocketMessage() {
 }
 
 void SocketMessage::createMessage()  {  }
-void SocketMessage::marshalInt(int *i, int size = 1)  {  }
-void SocketMessage::marshalByte(char *b, int size = 1) {  }
-void SocketMessage::marshalChar(char *c, int size = 1) {  }
-void SocketMessage::marshalFloat(float *f, int size = 1) {  }
-void SocketMessage::marshalDouble(double *d, int size = 1) {  }
-void SocketMessage::marshalLong(long *l, int size = 1) {  }
+void SocketMessage::marshalInt(int *i, int size)  {  }
+void SocketMessage::marshalByte(char *b, int size) {  }
+void SocketMessage::marshalChar(char *c, int size) {  }
+void SocketMessage::marshalFloat(float *f, int size) {  }
+void SocketMessage::marshalDouble(double *d, int size) {  }
+void SocketMessage::marshalLong(long *l, int size) {  }
 void SocketMessage::marshalSpChannel(SpChannel* channel) {  }
 void SocketMessage::sendMessage(int handler) {  }
 void SocketMessage::waitReply()  {  }
 void SocketMessage::unmarshalReply()  {  }
-void SocketMessage::unmarshalInt(int *i, int size = 1) {  }
-void SocketMessage::unmarshalByte(char *b, int size = 1) {  }
-void SocketMessage::unmarshalChar(char *c, int size = 1) {  }
-void SocketMessage::unmarshalFloat(float *f, int size = 1) {  }
-void SocketMessage::unmarshalDouble(double *d, int size = 1) {  }
-void SocketMessage::unmarshalLong(long *l, int size = 1) {  }
+void SocketMessage::unmarshalInt(int *i, int size) {  }
+void SocketMessage::unmarshalByte(char *b, int size) {  }
+void SocketMessage::unmarshalChar(char *c, int size) {  }
+void SocketMessage::unmarshalFloat(float *f, int size) {  }
+void SocketMessage::unmarshalDouble(double *d, int size) {  }
+void SocketMessage::unmarshalLong(long *l, int size) {  }
 void SocketMessage::unmarshalSpChannel(SpChannel* channel) {  }
 
 void* SocketMessage::getLocalObj() {  return 0; }

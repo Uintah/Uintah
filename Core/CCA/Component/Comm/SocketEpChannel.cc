@@ -56,7 +56,7 @@ string SocketEpChannel::getUrl() {
   return o.str();
 }
 
-void SocketEpChannel::activateConnection(void* obj) {  }
+void SocketEpChannel::activateConnection(void* /*obj*/) {  }
 
 Message* SocketEpChannel::getMessage() {
   if (connfd == 0)
@@ -66,11 +66,11 @@ Message* SocketEpChannel::getMessage() {
   return msg;
 }
 
-void SocketEpChannel::allocateHandlerTable(int size) { }
+void SocketEpChannel::allocateHandlerTable(int /*size*/) { }
 
-void SocketEpChannel::registerHandler(int num, void* handle) { }
+void SocketEpChannel::registerHandler(int /*num*/, void* /*handle*/) { }
 
-void SocketEpChannel::bind(SpChannel* spchan) { }
+void SocketEpChannel::bind(SpChannel* /*spchan*/) { }
 
 
 

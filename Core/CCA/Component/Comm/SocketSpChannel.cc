@@ -28,12 +28,12 @@ SocketSpChannel::SocketSpChannel() {
 
 SocketSpChannel::~SocketSpChannel() { }
 
-void SocketSpChannel::openConnection(const URL& url) {
+void SocketSpChannel::openConnection(const URL& /*url*/) {
   //Call connector and pass it the args
   //connfd = open_connection(url.getHostname().c_str(),url.getPortNumber());
 }
 
-SpChannel* SocketSpChannel::SPFactory(bool deep) {
+SpChannel* SocketSpChannel::SPFactory(bool /*deep*/) {
   SocketSpChannel* new_sp = new SocketSpChannel(); 
   return new_sp;
 }

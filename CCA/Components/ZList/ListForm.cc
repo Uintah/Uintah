@@ -22,6 +22,7 @@
 #include <qpixmap.h>
 #include "ZList.h"
 #include <string.h>
+#if 0
 static QPixmap uic_load_pixmap_ListForm( const QString &name )
 {
     const QMimeSource *m = QMimeSourceFactory::defaultFactory()->data( name );
@@ -31,6 +32,7 @@ static QPixmap uic_load_pixmap_ListForm( const QString &name )
     QImageDrag::decode( m, pix );
     return pix;
 }
+#endif
 /* 
  *  Constructs a ListForm which is a child of 'parent', with the 
  *  name 'name' and widget flags set to 'f'.
