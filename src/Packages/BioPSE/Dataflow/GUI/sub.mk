@@ -36,9 +36,13 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ConfigureWireElectrode.tcl\
 	$(SRCDIR)/DipoleInAnisoSpheres.tcl\
 	$(SRCDIR)/DipoleSearch.tcl\
+	$(SRCDIR)/ExtractSingleSurface.tcl\
 	$(SRCDIR)/InsertVoltageSource.tcl\
 	$(SRCDIR)/IntegrateCurrent.tcl\
 	$(SRCDIR)/ModifyConductivities.tcl\
+	$(SRCDIR)/SegFieldOps.tcl \
+	$(SRCDIR)/SegFieldToLatVol.tcl \
+	$(SRCDIR)/SepSurfToQuadSurf.tcl \
 	$(SRCDIR)/SetupFEMatrix.tcl\
 	$(SRCDIR)/ShowDipoles.tcl\
 	$(SRCDIR)/ShowLeads.tcl\
