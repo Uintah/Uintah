@@ -1042,7 +1042,7 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 		append script  "\{$Notes($module-Position)\}\n"
 	    }
 	    if { [info exists Notes($module-Color)] } {
-		append script "${tab}set Notes(\$m$i--Color) "
+		append script "${tab}set Notes(\$m$i-Color) "
 		append script "\{$Notes($module-Color)\}\n"
 	    }
 	}
