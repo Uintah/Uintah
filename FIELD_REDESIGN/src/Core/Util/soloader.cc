@@ -21,7 +21,9 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 
 	if (LibraryHandle == 0)
 	{
-	    //cerr << "ERROR: The library \"" << libname << "\" could not be found, or is corrupt." << endl;
+#ifndef _WIN32
+	  //cerr << "ERROR: The library \"" << libname << "\" could not be found, or is corrupt: " << dlerror() << endl;
+#endif
 		return 0;
 	}
 
@@ -75,7 +77,9 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
 
 	if (LibraryHandle == 0)
 	{
-	    //cerr << "ERROR: The library \"" << libname << "\" could not be found, or is corrupt." << endl;
+#ifndef _WIN32
+	  // cerr << "ERROR: The library \"" << libname << "\" could not be found, or is corrupt: " << dlerror() << endl;
+#endif
 		return 0;
 	}
 
