@@ -815,6 +815,7 @@ extern "C"
   //	      bool* lswpsn, bool* lswpbt);
   
   // normalize pressure
+  void
   FORT_NORMPRESS(const int* domLo, const int* domHi,
 		 const int* idxLo, const int* idxHi,
 		 double* pressure,
@@ -826,6 +827,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.31  2000/08/12 23:53:18  bbanerje
+// Added Linegs part to the solver.
+//
 // Revision 1.30  2000/08/11 21:26:35  rawat
 // added linear solver for pressure eqn
 //

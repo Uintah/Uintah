@@ -141,7 +141,8 @@ public:
 				   const Patch* patch,
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw, int index,
-				   ArchesVariables* vars) = 0;
+				   ArchesVariables* vars,
+				   const ArchesLabel* lab) = 0;
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -181,7 +182,8 @@ public:
 				 const Patch* patch,
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw, int index,
-				 ArchesVariables* vars) = 0;
+				 ArchesVariables* vars,
+				 const ArchesLabel* lab) = 0;
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -215,6 +217,9 @@ private:
 
 //
 // $Log$
+// Revision 1.12  2000/08/12 23:53:18  bbanerje
+// Added Linegs part to the solver.
+//
 // Revision 1.11  2000/08/11 21:26:36  rawat
 // added linear solver for pressure eqn
 //

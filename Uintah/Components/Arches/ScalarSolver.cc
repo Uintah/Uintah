@@ -338,7 +338,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 					  d_scalarVars);
   // make it a separate task later
   d_linearSolver->scalarLisolve(pc, patch, new_dw, matrix_dw, index, 
-				d_scalarVars);
+				d_scalarVars, d_lab);
   // put back the results
   new_dw->put(d_scalarVars->scalar, d_lab->d_scalarSPLabel, 
 	      index, patch);
@@ -348,6 +348,9 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.21  2000/08/12 23:53:19  bbanerje
+// Added Linegs part to the solver.
+//
 // Revision 1.20  2000/08/10 00:56:33  rawat
 // added pressure bc for scalar and changed discretization option for velocity
 //
