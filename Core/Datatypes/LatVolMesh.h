@@ -18,10 +18,11 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/MeshBase.h>
-
+#include <string>
 
 namespace SCIRun {
 
+using std::string;
 
 class SCICORESHARE LatVolMesh : public MeshBase
 {
@@ -235,8 +236,8 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static  const string type_name(int);
-  virtual const string get_type_name(int n) const { return type_name(n); }
-
+  virtual const string get_type_name(int a) const 
+    { return type_name(a); } 
 
 private:
 
