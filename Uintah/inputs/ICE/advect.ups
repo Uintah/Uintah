@@ -193,6 +193,15 @@
 	    <speed_of_sound> 376         </speed_of_sound>
 	    <gamma>          1.4         </gamma>	    
 	    <velocity_field>0</velocity_field>
+	    <geom_object>
+                <box label="gp1">
+                    <min>[ 1.0, 1.0, 1.0 ]</min>
+                    <max>[ 2.0, 2.0, 2.0 ]</max>
+                </box>
+	        <res>		   [2,2,2]    </res>
+	        <velocity>         [1,1,0]    </velocity>
+	        <temperature>      300.0      </temperature>
+	    </geom_object>
 	  </material>
 	  <exchange_coefficients>
 	     <momentum>	[0,0,0] </momentum>
@@ -201,75 +210,4 @@
 	</ICE>	
     </MaterialProperties>
 	
-
-    <!-- Question - how do we want to attach a bc to a region of the grid? -->
-    <!--____________________________________________________________________-->
-    <!--       P  H  Y  S  I  C  A  L     B  C  '  S                        -->
-    <!--    Need to add option here                                         -->
-    <!--____________________________________________________________________-->
-    <PhysicalBC>
-	<ICE>
-	    <type>           inflow      </type>
-	    <face>           left        </face>
-	    <velocity>       [1,1,0]     </velocity>
-	    <temperature>    1           </temperature>
-	    <density>        1           </density>
-	    <pressure>       1           </pressure>
-
-	    <type>           inflow      </type>
-	    <face>           right       </face>
-	    <velocity>       [1,1,0]     </velocity>
-	    <temperature>    1           </temperature>
-	    <density>        1           </density>
-	    <pressure>       1           </pressure>
-
-	    <type>           inflow      </type>
-	    <face>           top         </face>
-	    <velocity>       [1,1,0]     </velocity>
-	    <temperature>    1           </temperature>
-	    <density>        1           </density>
-	    <pressure>       1           </pressure>
-
-	    <type>           inflow      </type>
-	    <face>           bottom      </face>
-	    <velocity>       [1,1,0]     </velocity>
-	    <temperature>    1           </temperature>
-	    <density>        1           </density>
-	    <pressure>       1           </pressure>
-           
-	    <type>           inflow      </type>
-	    <face>           front       </face>
-	    <velocity>       [1,1,0]     </velocity>
-	    <temperature>    1           </temperature>
-	    <density>        1           </density>
-	    <pressure>       1           </pressure>
-
-	    <type>           inflow      </type>
-	    <face>           back        </face>
-	    <velocity>       [1,1,0]     </velocity>
-	    <temperature>    1           </temperature>
-	    <density>        1           </density>
-	    <pressure>       1           </pressure>
-	</ICE>
-    </PhysicalBC>
-    
-    
-    <!--____________________________________________________________________-->
-    <!--     I  N  I  T  I  A  L     C  O  N  D  I  T  I  O  N  S           -->
-    <!--   velocity         = (x, y, z direction)                           -->
-    <!--   Density          = kg/m^3umber of iterations                     -->
-    <!--   temperature      = Kelvin                                        -->
-    <!--____________________________________________________________________-->    
-    <InitialConditions>
-	<ICE>
-	 <pressure>	     101325.0    </pressure>
-	 <material>
-	  <volume_fraction>  1.0	</volume_fraction>
-	  <velocity>         [1,1,0]    </velocity>
-	  <micro_density>    1.10       </micro_density>
-	  <temperature>      300.0      </temperature>
-	 </material>
-	</ICE>
-    </InitialConditions>
-
 </Uintah_specification>
