@@ -296,9 +296,62 @@ VH_AdjacencyMapping::get_num_rel(int index)
   return(numrel[0]);
 }
 
-void
-VH_AnatomyBoundingBox::readFile(char *infilename)
+VH_AnatomyBoundingBox *
+VH_Anatomy_readBoundingBox_File(char *infilename)
 {
+  FILE *infile;
+  char *inLine;
+  if(!(infile = fopen(infilename, "r")))
+  {
+    perror("VH_AnatomyBoundingBox::readFile()");
+    cerr << "cannot open '" << infilename << "'" << endl;
+    return((VH_AnatomyBoundingBox *)0);
+  }
+
+  inLine = new char[VH_FILE_MAXLINE];
+  int buffsize = VH_FILE_MAXLINE;
+  int inLine_cnt = 0;
+
+  cerr << "VH_AnatomyBoundingBox::readFile(" << infilename << ")";
+ 
+  // skip first line
+  if((inLine = read_line(inLine, &buffsize, infile)) <= 0)
+  {
+    cerr << "VH_AnatomyBoundingBox::readFile(): premature EOF" << endl;
+  }
+  inLine_cnt++;
+
+  // allocate the first Anatomy Nama/BoundingBox node
+  VH_AnatomyBoundingBox *listRoot = new VH_AnatomyBoundingBox();
+  VH_AnatomyBoundingBox *listPtr = listRoot;
+  while(read_line(inLine, &buffsize, infile) != 0)
+  {
+    if(strlen(inLine) > 0)
+    { // expect lines of the form:
+      // Anatomy Name,minX,maxX,minY,maxY,minZ,maxZ,minSlice,maxSlice
+      if(sscanf(inLine, "%[^,],%d,%d,%d,%d,%d,%d,%d,%d",
+                     &(listPtr->anatomyname),
+                     &(listPtr->minX), &(listPtr->maxX),
+                     &(listPtr->minY), &(listPtr->maxY),
+                     &(listPtr->minZ), &(listPtr->maxZ),
+                     &(listPtr->minSlice), &(listPtr->maxSlice)
+               ) < 9)
+      {
+        fprintf(stderr,
+           "VH_AnatomyBoundingBox::readFile(%s): format error line %d\n",
+           infilename, inLine_cnt);
+      }
+      // allocate the next Anatomy Nama/BoundingBox node
+      listPtr->flink = new VH_AnatomyBoundingBox();
+      listPtr = listPtr->flink;
+    } // end if(strlen(inLine) > 0)
+    inLine_cnt++;
+  } // end while(read_line(inLine, &buffsize, infile) != 0)
+
+  delete [] inLine;
+  fclose(infile);
+  cerr << "done" << endl;
+  return(listRoot);
 } // end VH_AnatomyBoundingBox::readFile(char *infilename)
 
 void
@@ -306,4 +359,18 @@ VH_AnatomyBoundingBox::readFile(FILE *infileptr)
 {
 } // end VH_AnatomyBoundingBox::readFile(FILE *infileptr)
 
+/******************************************************************************
+ * Find the boundingBox of a named anatomical entity
+ ******************************************************************************/VH_AnatomyBoundingBox *
+VH_Anatomy_findBoundingBox(VH_AnatomyBoundingBox *list, char *targetname)
+{
+  VH_AnatomyBoundingBox *listPtr = list;
+  while(listPtr->flink != (VH_AnatomyBoundingBox *)0)
+  {
+    if(!strcmp(listPtr->anatomyname, targetname)) break;
+    // (else)
+    if(!(listPtr = listPtr->flink)) break;
+  } // end while(listPtr->flink != (VH_AnatomyBoundingBox *)0)
+  return(listPtr);
+} // end VH_Anatomy_findBoundingBox()
 
