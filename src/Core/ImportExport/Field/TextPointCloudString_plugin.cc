@@ -45,12 +45,13 @@
 #include <sstream>
 #include <stdlib.h>
 
+namespace SCIRun {
+
 using namespace std;
-using namespace SCIRun;
 
 
-static FieldHandle
-reader(const char *filename)
+FieldHandle
+TextPointCloudField_reader(const char *filename)
 {
   ifstream ptsstream(filename);
 
@@ -61,7 +62,7 @@ reader(const char *filename)
   
   while (!ptsstream.eof())
   {
-      ptsstream >> x >> y >> z;
+    ptsstream >> x >> y >> z;
     pcm->add_point(Point(x, y, z));
     
     char c;
@@ -81,8 +82,8 @@ reader(const char *filename)
 }    
 
 
-static void
-writer(FieldHandle field, const char *filename)
+void
+TextPointCloudField_writer(FieldHandle field, const char *filename)
 {
   ofstream ptsstream(filename);
 
@@ -115,4 +116,9 @@ writer(FieldHandle field, const char *filename)
 
 static FieldIEPlugin
 TextPointCloudString_plugin("TextPointCloudString",
-			    "pcs.txt", "", reader, writer);
+			    "pcs.txt", "",
+			    TextPointCloudField_reader,
+			    TextPointCloudField_writer);
+
+
+} // namespace SCIRun
