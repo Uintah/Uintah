@@ -418,9 +418,9 @@ if test -z "$TCL_MAJOR_VERSION" ; then
   unset cfsh
 
   if test "$is_64bit" = "yes" ; then
-    cfsh="/res/sci/data1/itcltk-8.3.2-64/lib/tclConfig.sh"
+    cfsh="$thirdparty/itcltk-8.3.2-64/lib/tclConfig.sh"
   else
-    cfsh="/res/sci/data1/itcltk-8.3.2/lib/tclConfig.sh"
+    cfsh="$thirdparty/itcltk-8.3.2/lib/tclConfig.sh"
   fi
 
   if test -f $cfsh ; then
@@ -507,9 +507,9 @@ if test -z "$TK_MAJOR_VERSION" ; then
   unset cfsh
 
   if test "$is_64bit" = "yes" ; then
-    cfsh="/res/sci/data1/itcltk-8.3.2-64/lib/tkConfig.sh"
+    cfsh="$thirdparty/itcltk-8.3.2-64/lib/tkConfig.sh"
   else
-    cfsh="/res/sci/data1/itcltk-8.3.2/lib/tkConfig.sh"
+    cfsh="$thirdparty/itcltk-8.3.2/lib/tkConfig.sh"
   fi
 
   if test -f $cfsh ; then
@@ -613,11 +613,11 @@ if test -z "$ITCL_MAJOR_VERSION" ; then
 
   unset cfsh
   if test "$is_64bit" = "yes" ; then
-    cfsh="/res/sci/data1/itcltk-8.3.2-64/lib/itclConfig.sh"
-    ITCL_PREFIX="/res/sci/data1/itcltk-8.3.2-64"
+    cfsh="$thirdparty/itcltk-8.3.2-64/lib/itclConfig.sh"
+    ITCL_PREFIX="$thirdparty/itcltk-8.3.2-64"
   else
-    cfsh="/res/sci/data1/itcltk-8.3.2/lib/itclConfig.sh"
-    ITCL_PREFIX="/res/sci/data1/itcltk-8.3.2"
+    cfsh="$thirdparty/itcltk-8.3.2/lib/itclConfig.sh"
+    ITCL_PREFIX="$thirdparty/itcltk-8.3.2"
   fi
 
   if test -f $cfsh ; then
@@ -628,11 +628,11 @@ if test -z "$ITCL_MAJOR_VERSION" ; then
 
   unset cfsh
   if test "$is_64bit" = "yes" ; then
-    cfsh="/res/sci/data1/itcltk-8.3.2-64/lib/itkConfig.sh"
-    ITK_PREFIX="/res/sci/data1/itcltk-8.3.2-64"
+    cfsh="$thirdparty/itcltk-8.3.2-64/lib/itkConfig.sh"
+    ITK_PREFIX="$thirdparty/itcltk-8.3.2-64"
   else
-    cfsh="/res/sci/data1/itcltk-8.3.2/lib/itkConfig.sh"
-    ITK_PREFIX="/res/sci/data1/itcltk-8.3.2"
+    cfsh="$thirdparty/itcltk-8.3.2/lib/itkConfig.sh"
+    ITK_PREFIX="$thirdparty/itcltk-8.3.2"
   fi
 
   if test -f $cfsh ; then
@@ -729,11 +729,11 @@ fi
 
 if test -z "$BLT_PREFIX" ; then
   if test "$is_64bit" = "yes" && 
-     test -e /res/sci/data1/itcltk-8.3.2-64/lib/libBLT24.so; then
-    BLT_PREFIX="/res/sci/data1/itcltk-8.3.2-64"
+     test -e $thirdparty/itcltk-8.3.2-64/lib/libBLT24.so; then
+    BLT_PREFIX="$thirdparty/itcltk-8.3.2-64"
   elif test "$is_64bit" != "yes" &&
-       test -e /res/sci/data1/itcltk-8.3.2/lib/libBLT24.so; then
-    BLT_PREFIX="/res/sci/data1/itcltk-8.3.2"  
+       test -e $thirdparty/itcltk-8.3.2/lib/libBLT24.so; then
+    BLT_PREFIX="$thirdparty/itcltk-8.3.2"  
   elif test -e /usr/lib/libBLT24.so; then
     BLT_PREFIX=/usr
   elif test -e /usr/local/lib/libBLT24.so; then
@@ -787,8 +787,8 @@ if test -z "$XML_LIB_DIR"; then
   case $host in
   *-irix*)
     if test "$is_64bit" = "yes"; then
-      if test -e /res/sci/data1/xerces-1.3.0/lib64/libxerces-c1_?.so; then
-        XML_LIB_DIR="/res/sci/data1/xerces-1.3.0/lib64"
+      if test -e $thirdparty/xerces-1.3.0/lib64/libxerces-c1_?.so; then
+        XML_LIB_DIR="$thirdparty/xerces-1.3.0/lib64"
       elif test -e /usr/lib64/libxerces-c1_?.so; then
 	XML_LIB_DIR="/usr/lib64"
       elif test -e /usr/local/lib64/libxerces-c1_?.so; then
@@ -799,8 +799,8 @@ if test -z "$XML_LIB_DIR"; then
 	XML_LIB_DIR="/usr/local/lib"
       fi
     else
-      if test -e /res/sci/data1/xerces-1.3.0/lib32/libxerces-c1_?.so; then
-        XML_LIB_DIR="/res/sci/data1/xerces-1.3.0/lib32"
+      if test -e $thirdparty/xerces-1.3.0/lib32/libxerces-c1_?.so; then
+        XML_LIB_DIR="$thirdparty/xerces-1.3.0/lib32"
       elif test -e /usr/lib32/libxerces-c1_?.so; then
 	XML_LIB_DIR="/usr/lib32"
       elif test -e /usr/local/lib32/libxerces-c1_?.so; then
@@ -833,11 +833,11 @@ if (test $xerces &&
     test -d "$xerces/include/dom" &&
     test -d "$xerces/include/parsers") ; then
   XML_INCLUDE_DIR="$xerces/include"
-elif (test -d "/res/sci/data1/xerces-1.3.0/include/util" &&
-      test -d "/res/sci/data1/xerces-1.3.0/include/sax" &&
-      test -d "/res/sci/data1/xerces-1.3.0/include/dom" &&
-      test -d "/res/sci/data1/xerces-1.3.0/include/parsers") ; then
-  XML_INCLUDE_DIR="/res/sci/data1/xerces-1.3.0/include"
+elif (test -d "$thirdparty/xerces-1.3.0/include/util" &&
+      test -d "$thirdparty/xerces-1.3.0/include/sax" &&
+      test -d "$thirdparty/xerces-1.3.0/include/dom" &&
+      test -d "$thirdparty/xerces-1.3.0/include/parsers") ; then
+  XML_INCLUDE_DIR="$thirdparty/xerces-1.3.0/include"
 elif (test -d "/usr/include/util" &&
       test -d "/usr/include/sax" &&
       test -d "/usr/include/dom" &&
