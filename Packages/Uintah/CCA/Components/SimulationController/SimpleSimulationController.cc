@@ -44,9 +44,6 @@ using std::cout;
 using namespace SCIRun;
 using namespace Uintah;
 
-// for calculating memory usage when sci-malloc is disabled.
-char* SimulationController::start_addr = NULL;
-
 SimpleSimulationController::SimpleSimulationController(const ProcessorGroup* myworld) :
   SimulationController(myworld)
 {
