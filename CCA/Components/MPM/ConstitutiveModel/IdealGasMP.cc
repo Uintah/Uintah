@@ -18,7 +18,6 @@
 #include <Core/Util/NotFinished.h>
 #include <fstream>
 #include <iostream>
-#include <Core/Datatypes/DenseMatrix.h>
 
 using std::cerr;
 using namespace Uintah;
