@@ -26,7 +26,7 @@
 #define TEMPLATE_TAG @TEMPLATE_TAG@
 #define TEMPLATE_BOX @TEMPLATE_BOX@
 #define SCI_@NBITS@BITS
-@PARALLEL_DEFINE@
+@SCIRUN2_DEFINE@
 @THREAD_DEFINE@
 @MALLOC_DEFINE@
 @UNI_PETSC_DEF@
@@ -35,6 +35,7 @@
 @DEF_PETSC@
 @DEF_SSL@
 @DEF_GLOBUS@
+@DEF_QT@
 @DEF_TEEM@
 @DEF_PERFEX@
 @DEF_CRYPTO@
@@ -52,6 +53,9 @@
 #define FIELD_MAMIP_OBJ "@abs_conftop_dir@/Dataflow/Modules/Fields/Manip"
 #define ON_THE_FLY_SRC "@abs_conftop_dir@/@top_srcdir@/on-the-fly-libs"
 #define ON_THE_FLY_OBJ "@abs_conftop_dir@/on-the-fly-libs"
+#define SCIRUN_SRCDIR "@abs_srcdir@"
+#define SCIRUN_OBJDIR "@abs_conftop_dir@"
+#define LOAD_PACKAGE "@LOAD_PACKAGE@"
 
 /* Someday, we should make this a config variable - it might help the
    optimizer, at the cost of more difficult debugging */

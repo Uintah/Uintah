@@ -630,14 +630,10 @@ SCI_ARG_ENABLE(assertion-level,
   [  --enable-assertion-level=N        Use assertion level N (0-3)],
   [enable_assertion_level="$enableval"],
   [enable_assertion_level=${enable_assertion_level=3}])
-SCI_ARG_ENABLE(parallel,
-  [  --enable-parallel                 build experimental distributed memory],
-  [enable_parallel="$enableval"],
-  [enable_parallel=${enable_parallel='no'}])
-SCI_ARG_ENABLE(enterleave,
-  [  --enable-enterleave               Make gmake print out entering/leaving],
-  [enterleave="$enableval"],
-  [enterleave=${enterleave='no'}])
+SCI_ARG_ENABLE(scirun2,
+  [  --enable-scirun2                  build experimental SCIRun 2],
+  [enable_scirun2="$enableval"],
+  [enable_scirun2=${enable_scirun2='no'}])
 
 ##  --------------------------------------------------------------------
 ##  -----------  check for unknown or mis-spelled arguments  -----------
@@ -787,12 +783,6 @@ else
   MALLOC_DEFINE="#define DISABLE_SCI_MALLOC"
 fi
 
-if test "$enterleave" = "yes" ; then
-  NOPRINTDIR=EMPTY
-else
-  NOPRINTDIR="--no-print-directory"
-fi
-
 ##  SCI_LAB_TP_DEFAULT is used to add "standard" library search paths
 ##  for those of us who are too lazy to type out all the --with paths
 
@@ -816,6 +806,13 @@ case $host in
   *)
     ;;
 esac
+
+if test "$is_64bit" = "yes"; then
+  NBITS=64
+else
+  NBITS=32
+fi
+AC_SUBST(NBITS)
 
 #########################################################################
 ## Make sure number of bit build for Thirdparty and SCIRun compile match
@@ -1183,6 +1180,7 @@ FLIBS=""
 case $host in 
   *-irix*)
     SCI_CHECK_LIB($thirdparty/lib,ftn,main,FLIBS=-lftn,,,)
+    SCI_CHECK_LIB($thirdparty/lib,fortran,main,FLIBS=$FLIBS -lfortran,,,)
     ;;
   *linux*)
     SCI_CHECK_LIB($thirdparty/lib,g2c,main,FLIBS=-lg2c,,,)
@@ -1632,11 +1630,18 @@ AC_SUBST(DEF_EXC)
 
 ##  --  globus nexus  ----------------------------------------------------
 
-if test "$is_64bit" = "yes"; then
-  NBITS=64
-else
-  NBITS=32
-fi
+case $host in
+  *-irix*)
+    if test "$is_64bit" = "yes"; then
+      LIBDIR=lib64
+    else
+      LIBDIR=lib32
+    fi
+    ;;
+  *)
+    LIBDIR=lib
+    ;;
+esac
 
 FOUND_ALL_GLOBUS=no
 GLOBUS_INCLUDE=""
@@ -1645,30 +1650,33 @@ for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then
     continue
   fi
-  SCI_CHECK_LIB($i/lib$NBITS,globus_utp,main,,continue,
-    $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
-  SCI_CHECK_LIB($i/lib$NBITS,globus_mp,main,,continue,
-    -lglobus_utp $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
-  SCI_CHECK_LIB($i/lib$NBITS,globus_gss_assist,main,,continue,
-    -lglobus_mp -lglobus_utp $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
-  SCI_CHECK_LIB($i/lib$NBITS,globus_gss,main,,continue,
-    -lglobus_gss_assist -lglobus_mp -lglobus_utp $SSL_LIBRARY -lssl \
-    $CRYPTO_LIBRARY -lcrypto)
-  SCI_CHECK_LIB($i/lib$NBITS,globus_gaa,main,,continue,
-    -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp \
-    $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
+  AC_CHECKING(in $i/$LIBDIR)
+  SCI_CHECK_LIB($i/$LIBDIR,globus_dc,main,,continue,)
+#  SCI_CHECK_LIB($i/$LIBDIR,globus_utp,main,,continue,
+#    $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
+#  SCI_CHECK_LIB($i/$LIBDIR,globus_mp,main,,continue,
+#    -lglobus_utp $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
+#  SCI_CHECK_LIB($i/$LIBDIR,globus_gss_assist,main,,continue,
+#    -lglobus_mp -lglobus_utp $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
+#  SCI_CHECK_LIB($i/$LIBDIR,globus_gss,main,,continue,
+#    -lglobus_gss_assist -lglobus_mp -lglobus_utp $SSL_LIBRARY -lssl \
+#    $CRYPTO_LIBRARY -lcrypto)
+#  SCI_CHECK_LIB($i/$LIBDIR,globus_gaa,main,,continue,
+#    -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp \
+#    $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
   ##
   ##  which globus headers should be tested for?
   ##
-  if test "$HAVE_LIBGLOBUS_UTP" &&
-     test "$HAVE_LIBGLOBUS_MP" &&
-     test "$HAVE_LIBGLOBUS_GSS_ASSIST" &&
-     test "$HAVE_LIBGLOBUS_GSS" &&
-     test "$HAVE_LIBGLOBUS_GAA"; then
+#  if test "$HAVE_LIBGLOBUS_UTP" &&
+#     test "$HAVE_LIBGLOBUS_MP" &&
+#     test "$HAVE_LIBGLOBUS_GSS_ASSIST" &&
+#     test "$HAVE_LIBGLOBUS_GSS" &&
+#     test "$HAVE_LIBGLOBUS_GAA"; then
+  if test "$HAVE_LIBGLOBUS_DC"; then
     FOUND_ALL_GLOBUS=yes
     DEF_GLOBUS="#define HAVE_GLOBUS 1"
     GLOBUS_INCLUDE="$i/include"
-    GLOBUS_LIB="$LIBGLOBUS_UTP"
+    GLOBUS_LIB="$LIBGLOBUS_DC"
     is_linux=`echo $host | sed 's/.*linux.*/linux/'`
     if test "$is_linux" = "linux"; then
       GLOBUS_EXTRA_DIRS="-lglobus_gaa -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto"
@@ -1677,30 +1685,73 @@ for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
   fi
 done
 
-if test "$enable_parallel" = "yes"; then
-  if test "$with_globus" = "no"; then
-    AC_MSG_ERROR(Must include --with-globus with --enable-parallel)
-  fi
-  ## Must find all of globus if user specifies enable-parallel
-  if test "$FOUND_ALL_GLOBUS" = "no"; then
-    AC_MSG_ERROR(Did not find all of globus)
-  fi
-  PARALLEL_DEFINE="#define SCI_PARALLEL"
-  BUILD_PARALLEL="yes"
-else
-  PARALLEL_DEFINE=""
-  BUILD_PARALLEL="no"
-fi
-
-AC_SUBST(NBITS)
 AC_SUBST(GLOBUS_EXTRA_DIRS)
 AC_SUBST(GLOBUS_INCLUDE)
 AC_SUBST(GLOBUS_LIB)
-AC_SUBST(PARALLEL_DEFINE)
-AC_SUBST(BUILD_PARALLEL)
 AC_SUBST(DEF_GLOBUS)
 
-##  --  search fo gzopen (and related)  ----------------------------------
+##  --  search for Qt  ----------------------------------------------------
+
+FOUND_ALL_QT=no
+QT_INCLUDE=""
+QT_LIB=""
+QT_MOC_BIN=""
+for i in $with_qt $thirdparty $SCI_LAB_TP_DEFAULT; do
+  if test ! -d "$i"; then
+    continue
+  fi
+  AC_CHECKING(in $i/lib)
+  SCI_CHECK_LIB($i/lib,qt-mt,main,,continue,)
+
+  AC_CHECKING(for moc in $i/bin)
+  AC_CHECK_PROG(QT_MOC_BIN,moc,$ac_dir/moc,NOMOC,$i/bin)
+
+  if test "$HAVE_LIBQT_MT" &&
+     test $QT_MOC_BIN != "NOMOC"; then
+    FOUND_ALL_QT=yes
+    DEF_QT="#define HAVE_QT 1"
+    HAVE_QT="yes"
+    QT_INCLUDE="$i/include"
+    QT_LIB="$LIBQT_MT"
+    break
+  fi
+done
+
+AC_SUBST(HAVE_QT)
+AC_SUBST(DEF_QT)
+AC_SUBST(QT_INCLUDE)
+AC_SUBST(QT_LIB)
+
+##  --  See if we have everything needed for SCIRun2 ----------------------
+
+if test "$enable_scirun2" = "yes"; then
+  if test "$FOUND_ALL_GLOBUS" != "yes"; then
+    if test "$with_globus" = "no"; then
+      AC_MSG_ERROR(Must include --with-globus with --enable-scirun2)
+    else
+      AC_MSG_ERROR(Globus not found required for scirun2)
+    fi
+    exit 1
+  fi
+# Do not require Qt for SCIRun2 yet: 
+#  if test "$FOUND_ALL_QT" != "yes"; then
+#    if test "$with_qt" = "no"; then
+#      AC_MSG_ERROR(Must include --with-qt with --enable-scirun2)
+#    else
+#      AC_MSG_ERROR(Qt not found required for scirun2)
+#    fi
+#    exit 1
+#  fi
+  SCIRUN2_DEFINE="#define SCIRUN2"
+  BUILD_SCIRUN2="yes"
+else
+  SCIRUN2_DEFINE=""
+  BUILD_SCIRUN2="no"
+fi
+AC_SUBST(SCIRUN2_DEFINE)
+AC_SUBST(BUILD_SCIRUN2)
+
+##  --  search for gzopen (and related)  ----------------------------------
 
 SCI_CHECK_LIB($thirdparty/lib,z,main,,,)
 SCI_CHECK_HEADERS($thirdparty/include,zlib.h)
@@ -1828,7 +1879,7 @@ for i in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
     PETSC_EXTRA_LIBS="-lpetsccontrib -lpetscdm -lpetscmat \
       -lpetscsles -lpetscsnes -lpetscts -lpetscvec $LAPACK_LIBRARY $LAPACK \
       $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 $MPI_LIBRARY $MPI \
-	$FLIBS -lfortran -lm"
+	$FLIBS -lm"
     break
   fi 
 done
@@ -1951,6 +2002,8 @@ AC_CONFIG_HEADER(sci_config.h)
 
 abs_conftop_dir=`pwd`;
 AC_SUBST(abs_conftop_dir)
+abs_srcdir=`(cd ${srcdir};pwd)`
+AC_SUBST(abs_srcdir)
 
 ##  make list of all the output files
 output_files="configVars.mk \
