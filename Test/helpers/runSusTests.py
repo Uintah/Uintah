@@ -238,20 +238,20 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     output_to_browser=0
 
   # set the command name for mpirun - differs on different platforms
-  MPICMD="mpirun -np"
+  MPIHEAD="mpirun -np"
   if environ['OS'] == "OSF":
-    MPICMD="prun -n"
+    MPIHEAD="prun -n"
 
   # set where to view the log files
   logpath = environ['WEBLOG']
-# set the command for sus, based on # of processors
+
+  # set the command for sus, based on # of processors
+  # the /usr/bin/time is to tell how long it took
   if np == 1:
-    command = "%s/sus -%s %s" % (susdir, algo, extra_flags)
+    command = "/usr/bin/time -p %s/sus -%s %s" % (susdir, algo, extra_flags)
     mpimsg = ""
   else:
-    #if environ['OS'] == "Linux":
-      #system("/usr/local/lam-mpi/bin/lamboot > /dev/null")
-    command = "%s %s %s/sus -mpi -%s %s" % (MPICMD, int(np), susdir, algo, extra_flags)
+    command = "/usr/bin/time -p %s %s %s/sus -mpi -%s %s" % (MPIHEAD, int(np), susdir, algo, extra_flags)
     mpimsg = " (mpi %s proc)" % (int(np))
 
   if do_restart == "yes":
@@ -289,8 +289,17 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     compare_msg = '\tSee %s/compare_sus_runs.log.txt for more comparison information.' % (logpath)
     memory_msg  = '\tSee %s/mem_leak_check.log.txt for more comparison information.' % (logpath)
       
+
+  # actually run the test!
   rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
   print "Command Line: %s %s" % (command, susinput)
+
+  # get the time from sus.log
+  # /usr/bin/time outputs 3 lines, the one called 'real' is what we want
+  # it is the third line from the bottom
+
+  system("tail -n3 sus.log.txt | grep real | awk '{print $2}' > timestamp")
+  system("echo \"Test lasted `cat timestamp` seconds\"")
 
   if mode == "dbg":
     environ['MALLOC_STATS'] = "compare_uda_malloc_stats"
