@@ -111,10 +111,9 @@ inline Vector PerpendicularVector( const Vector& v )
 
 EnvironmentMapBackground::EnvironmentMapBackground( char* filename,
 						    const Vector& up ) :
-    _width( 0 ),
-    _height( 0 ),
-    _up( up ),
-    ambientScale_( 1.0 )
+    ambientScale_( 1.0 ),
+    _width( 0 ), _height( 0 ),
+    _up( up )
 {
   //
   // Built an orthonormal basis
