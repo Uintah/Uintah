@@ -35,8 +35,10 @@ namespace Uintah {
     const VarLabel* viscosity_CCLabel;
     const VarLabel* mom_source_CCLabel;
     const VarLabel* int_eng_source_CCLabel;
+    const VarLabel* spec_vol_source_CCLabel;
     const VarLabel* mom_L_CCLabel;
     const VarLabel* int_eng_L_CCLabel;
+    const VarLabel* spec_vol_L_CCLabel;
     const VarLabel* mass_L_CCLabel;
     const VarLabel* mom_L_ME_CCLabel;
     const VarLabel* int_eng_L_ME_CCLabel;
@@ -51,6 +53,8 @@ namespace Uintah {
     const VarLabel* term2Label;
     const VarLabel* term3Label;
     const VarLabel* f_theta_CCLabel;
+    const VarLabel* Tdot_CCLabel;
+    const VarLabel* SumThermExpLabel;
    
     // Face centered variables
     const VarLabel* uvel_FCLabel;
