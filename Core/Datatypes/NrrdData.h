@@ -83,11 +83,12 @@ protected:
 
   // To help with pio
   string                nrrd_fname_;
+
+  static Persistent *maker();
 };
 
-typedef LockingHandle<NrrdData> NrrdDataHandle;
 
-// some template helpers...
+typedef LockingHandle<NrrdData> NrrdDataHandle;
 
 
 // nrrd Types that we need to convert to:
@@ -136,7 +137,8 @@ template <>
 unsigned int get_nrrd_type<Tensor>();
 
 template <class T>
-unsigned int get_nrrd_type() {
+unsigned int get_nrrd_type()
+{
   return nrrdTypeDouble;
 }
 
