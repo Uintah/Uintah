@@ -46,8 +46,8 @@ ManhattanDist::ManhattanDist(const Array1<Point>&Pts, int n, int init,
     nx=v.x()/dd+1; ny=v.y()/dd+1; nz=v.z()/dd+1;
     max.x(min.x()+dd*nx); max.y(min.y()+dd*ny); max.z(min.z()+dd*nz);
     set_bounds(min,max);
-    closestNodeIdx.newsize(nx,ny,nz);
-    grid.newsize(nx,ny,nz);
+    closestNodeIdx.resize(nx,ny,nz);
+    grid.resize(nx,ny,nz);
     grid.initialize(-1);
     if (init) {
 	cerr << "starting full initialize of ManhattanDist...\n";

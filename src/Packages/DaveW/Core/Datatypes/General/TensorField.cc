@@ -35,7 +35,7 @@ TensorField<DATA>::TensorField(int in_slices, int in_width, int in_height)
   m_tensor_field.resize(TENSOR_ELEMENTS);
   
   for (ii = 0; ii < TENSOR_ELEMENTS; ii ++)
-    m_tensor_field[ii].newsize(m_slices, m_width, m_height);
+    m_tensor_field[ii].resize(m_slices, m_width, m_height);
   
   /* Set up the arrays for the eigenvectors*/
   m_e_vectors.resize(EVECTOR_ELEMENTS);
@@ -60,7 +60,7 @@ TensorField<DATA>::TensorField(int in_width, int in_height, int in_slices,
   m_tensor_field.resize(TENSOR_ELEMENTS);
   
   for (ii = 0; ii < TENSOR_ELEMENTS; ii ++)
-      m_tensor_field[ii].newsize(m_width, m_height, m_slices);
+      m_tensor_field[ii].resize(m_width, m_height, m_slices);
   
   if (!just_tensors) {
       /* Set up the arrays for the eigenvectors*/
@@ -74,7 +74,7 @@ TensorField<DATA>::TensorField(int in_width, int in_height, int in_slices,
       }
   }
 
-  m_inside.newsize(m_width, m_height, m_slices);
+  m_inside.resize(m_width, m_height, m_slices);
 
   float *p=&(data[0]);
   for (int z=0; z<in_slices; z++) {

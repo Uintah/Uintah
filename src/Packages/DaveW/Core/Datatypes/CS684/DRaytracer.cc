@@ -169,7 +169,7 @@ void DRaytracer::preRayTrace() {
 
   // build new ImageRM
   irm = new ImageRM;
-  irm->pix.newsize(ny,nx);
+  irm->pix.resize(ny,nx);
   irm->min=specMin;
   irm->max=specMax;
   irm->num=specNum;

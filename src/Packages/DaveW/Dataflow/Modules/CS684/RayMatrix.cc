@@ -323,7 +323,7 @@ void RayMatrix::execute()
 	rm->bldPixelSpectrum();
 	rm->bldPixelXYZandRGB();
 	xyz=new ImageXYZ;
-	xyz->xyz.newsize(NY,NX*3);
+	xyz->xyz.resize(NY,NX*3);
 	for (int yy=0; yy<NY; yy++) {
 	    for (int xx=0; xx<NX; xx++) {
 		xyz->xyz(yy,xx*3)=rm->pix(yy,xx).xyz.x();

@@ -555,7 +555,7 @@ GLTexture3D::build_bon_tree(Point min, Point max,
       padz_ = zmax_ - zsize;
       newz = zmax_;
     }
-    brickData->newsize( newz, newy, newx);
+    brickData->resize( newz, newy, newx);
 
 
 #ifdef __sgi
@@ -583,7 +583,7 @@ GLTexture3D::build_bon_tree(Point min, Point max,
     node = scinew Octree<Brick*>(brick, Octree<Brick *>::LEAF, parent );
   } else { // we must subdivide
 
-    brickData->newsize( zmax_, ymax_, xmax_);
+    brickData->resize( zmax_, ymax_, xmax_);
 
     double stepx, stepy, stepz;
 //     if( level > 0 ){

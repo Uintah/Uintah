@@ -53,9 +53,9 @@ GeomTexSlices::GeomTexSlices(int nx, int ny, int nz, const Point& min,
   : min(min), max(max), nx(nx), ny(ny), nz(nz), have_drawn(0), accum(0.1),
     bright(0.6)
 {
-    Xmajor.newsize(nx, ny, nz);
-    Ymajor.newsize(ny, nx, nz);
-    Zmajor.newsize(nz, nx, ny);
+    Xmajor.resize(nx, ny, nz);
+    Ymajor.resize(ny, nx, nz);
+    Zmajor.resize(nz, nx, ny);
 }
 
 GeomTexSlices::GeomTexSlices(const GeomTexSlices& copy)

@@ -192,7 +192,7 @@ void RTrace::execute()
 	camera_widget->userdata=(void *) ud;
 	NX=nx.get();
 	NY=ny.get();
-	xyz.newsize(NY,NX*3);
+	xyz.resize(NY,NX*3);
 	xyz.initialize(0);
 	image.resize(NX*NY*3);
 	rawImage.resize(NX*NY*3);
@@ -241,7 +241,7 @@ void RTrace::execute()
 
     // Only ~really~ raytrace if tcl said to
     if (tcl_exec) {
-	xyz.newsize(NY,NX*3);
+	xyz.resize(NY,NX*3);
 	image.resize(NX*NY*3);
 	rawImage.resize(NX*NY*3);
 	clampedImage.resize(NX*NY*3);
@@ -311,7 +311,7 @@ void RTrace::widget_moved2(int last, void *)
 void RTrace::bound() {
     if (!init) {
 	NX=NY=128;
-	xyz.newsize(NY,NX*3);
+	xyz.resize(NY,NX*3);
 	xyz.initialize(0);
 	image.resize(NX*NY*3);
 	rawImage.resize(NX*NY*3);
@@ -390,7 +390,7 @@ void RTrace::bound() {
 void RTrace::histogram() {
     if (!init) {
 	NX=NY=128;
-	xyz.newsize(NY,NX*3);
+	xyz.resize(NY,NX*3);
 	xyz.initialize(0);
 	image.resize(NX*NY*3);
 	rawImage.resize(NX*NY*3);

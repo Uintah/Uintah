@@ -164,9 +164,10 @@ void FDMtoFEM::execute() {
       }
     // otherwise, just initialize the mask to 1's
     } else {
-      mask.newsize(lvm->get_nk()-1, lvm->get_nj()-1, lvm->get_ni()-1);
-      mask.initialize(1);
-      valid_nodes.initialize(1);
+      ASSERTFAIL("Need a MaskedLatVol");
+//      mask.resize(lvm->get_nk()-1, lvm->get_nj()-1, lvm->get_ni()-1);
+//      mask.initialize(1);
+//      valid_nodes.initialize(1);
     }
 
     // add all of the nodes from the FDM mesh into the FEM mesh
