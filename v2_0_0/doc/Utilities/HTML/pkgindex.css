@@ -37,16 +37,18 @@ font-weight:bold;
 font-size:small;
 color:#FFCC33}
 
-table { 
-}
+table {
+margin: auto}
+
+table ul li { 
+font-size: medium;
+list-style-type: none}
 
 th { 
+font-size: large;
 background-color:#003333;
-color:#FFCC33}
+color:#FFCC33;
+width:100%}
 
-tr {
-vertical-align: center}
-
-td {
-height: 1.75em;
-width: 150px}
+p {
+font-size: small}

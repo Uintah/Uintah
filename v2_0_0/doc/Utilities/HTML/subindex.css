@@ -25,14 +25,20 @@ Stylesheet for 2nd level index.html files (e.g. doc/User/index.html).
 
 .title {
 font-weight:bold;
-font-size:large;
+font-size:100%;
+font-style: oblique;
+color:#FFCC33;
+background-color: #003333;
 text-align:center}
 
 .subtitle {
-width: 500px;
+font-style: oblique;
+height: 1.75em;
+color:#FFCC33;
+background-color: #003333;
 text-align:center;
 font-weight:bold;
-font-size:small}
+font-size:75%}
 
 table {
 }
@@ -49,3 +55,7 @@ width:100%}
 
 p {
 font-size: small}
+
+a { 
+font-style: oblique;
+font-size: 100% }

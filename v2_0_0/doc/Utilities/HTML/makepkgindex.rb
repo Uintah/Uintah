@@ -164,7 +164,7 @@ cellpadding='2'> \n")
 <th colspan=\"#{numCols}\">
 <span class=\"title\">#{packageName} Module Descriptions</span>
 <br/>
-<span class=\"subtitle\">alphabetically [<a class=\"alt\" href=\"#{packageName}_bycat.html\">by category</a>]</span>
+<span class=\"subtitle\">alphabetically (and <a class=\"alt\" href=\"#{packageName}_bycat.html\">by category</a>)</span>
 <br/>
 <span class=\"subtitle\">for SCIRun version #{version}</span>
 </th>

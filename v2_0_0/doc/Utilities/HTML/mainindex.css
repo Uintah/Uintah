@@ -25,35 +25,50 @@ Stylesheet for doc/index.html
 
 .title {
 font-weight:bold;
-font-size:large;
+font-size:100%;
+font-style: oblique;
+color:#FFCC33;
+background-color: #003333;
 text-align:center}
 
 .subtitle {
+font-style: oblique;
 height: 1.75em;
+color:#FFCC33;
+background-color: #003333;
 text-align:center;
 font-weight:bold;
-font-size:small}
+font-size:75%}
+
+.topic_title {
+font-weight:bold;
+font-size:100%;
+font-style: oblique;
+background-color:#003333;
+color:#FFCC33;
+text-align:center}
 
 table ul li { 
 font-size: medium;
 list-style-type: none}
 
-ul { 
-margin: 0px;
-}
-
 th { 
-font-size: large;
-background-color:#003333;
-color:#FFCC33;
+padding:0}
+
+td{ 
+vertical-align: top}
+
+table.topic {
+width:250px}
+
+td.topic { 
+background-color: rgb(175,175,175);
+height: 600px;          
 }
 
-tr {}
-
-td { 
-vertical-align: top;
-width: 33%;
-}
+a { 
+font-style: oblique;
+font-size: 100% }
 
 p {
 font-size: small}
