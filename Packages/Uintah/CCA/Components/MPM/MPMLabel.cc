@@ -88,23 +88,6 @@ MPMLabel::MPMLabel()
   pSizeLabel_preReloc = VarLabel::create( "p.size+",
 			ParticleVariable<Vector>::getTypeDescription());
   
-  pLeftStretchLabel = VarLabel::create("p.leftStretch",
-			ParticleVariable<Matrix3>::getTypeDescription());
-  pLeftStretchLabel_preReloc = VarLabel::create("p.leftStretch+",
-			ParticleVariable<Matrix3>::getTypeDescription());
-  pRotationLabel = VarLabel::create("p.rotation",
-			ParticleVariable<Matrix3>::getTypeDescription());
-  pRotationLabel_preReloc = VarLabel::create("p.rotation+",
-			ParticleVariable<Matrix3>::getTypeDescription());
-  pDeformRatePlasticLabel = VarLabel::create("p.deformRatePlastic",
-			ParticleVariable<Matrix3>::getTypeDescription());
-  pDeformRatePlasticLabel_preReloc = VarLabel::create("p.deformRatePlastic+",
-			ParticleVariable<Matrix3>::getTypeDescription());
-  pPlasticStrainLabel = VarLabel::create("p.plasticStrain",
-			ParticleVariable<double>::getTypeDescription());
-  pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
-			ParticleVariable<double>::getTypeDescription());
-
   // Particle Variables 
   pDeformationMeasureLabel_preReloc = VarLabel::create("p.deformationMeasure+",
 			ParticleVariable<Matrix3>::getTypeDescription());
@@ -371,11 +354,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pTang2Label_preReloc);
   VarLabel::destroy(pNormLabel);
   VarLabel::destroy(pNormLabel_preReloc);
-  VarLabel::destroy(pDeformRatePlasticLabel);
-  VarLabel::destroy(pDeformRatePlasticLabel_preReloc);
-  VarLabel::destroy(pPlasticStrainLabel);
-  VarLabel::destroy(pPlasticStrainLabel_preReloc);
-  
 
   VarLabel::destroy(gAccelerationLabel);
   VarLabel::destroy(gMomExedAccelerationLabel);
