@@ -337,6 +337,8 @@ void ICE::scheduleTimeAdvance(const LevelP& level,
 
   scheduleAddExchangeToMomentumAndEnergy(sched, patches, all_matls);
 
+  scheduleComputeLagrangianSpecificVolume(sched, patches, press_matl, all_matls);
+
   scheduleAdvectAndAdvanceInTime(sched, patches, all_matls);
   
   if(switchTestConservation) {
@@ -606,6 +608,26 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
 }
 
 /* ---------------------------------------------------------------------
+ Function~  ICE:: scheduleComputeLagrangianSpecificVolume--
+_____________________________________________________________________*/
+void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
+                                               const PatchSet* patches,
+                                               const MaterialSubset* /*press_matl*/,
+                                               const MaterialSet* matls)
+{
+  cout_doing << "ICE::scheduleComputeLagrangianSpecificVolume" << endl;
+  Task* task = scinew Task("ICE::computeLagrangianSpecificVolume",
+                      this,&ICE::computeLagrangianSpecificVolume);
+  task->requires(Task::NewDW, lb->rho_CCLabel,         Ghost::AroundCells,1);
+  task->requires(Task::NewDW, lb->rho_micro_CCLabel,   Ghost::AroundCells,1);
+  task->requires(Task::NewDW, lb->created_vol_CCLabel, Ghost::AroundCells,1);
+
+  task->computes(lb->spec_vol_L_CCLabel);
+
+  sched->addTask(task, patches, matls);
+}
+
+/* ---------------------------------------------------------------------
  Function~  ICE::scheduleAddExchangeToMomentumAndEnergy--
 _____________________________________________________________________*/
 void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
@@ -646,8 +668,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->mass_L_CCLabel,      Ghost::AroundCells,1);
   task->requires(Task::NewDW, lb->int_eng_L_ME_CCLabel,Ghost::AroundCells,1);
   task->requires(Task::NewDW, lb->rho_micro_CCLabel,   Ghost::AroundCells,1);
-  task->requires(Task::OldDW, lb->mass_CCLabel,        Ghost::AroundCells,1);
-  task->requires(Task::NewDW, lb->created_vol_CCLabel, Ghost::AroundCells,1);
+  task->requires(Task::NewDW, lb->spec_vol_L_CCLabel,  Ghost::AroundCells,1);
  
   task->computes(lb->rho_CC_top_cycleLabel);
   task->computes(lb->mass_CCLabel);
@@ -687,8 +708,8 @@ void ICE::schedulePrintConservedQuantities(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,  
 					 const PatchSubset* patches,
-                                    const MaterialSubset* /*matls*/,
-					 DataWarehouse* old_dw, 
+                                         const MaterialSubset* /*matls*/,
+					 DataWarehouse* /*old_dw*/,
 					 DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
@@ -2440,6 +2461,47 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
   }  // patch loop
 }
 
+void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* /*matls*/,
+                                          DataWarehouse* /*old_dw*/,
+                                          DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    cout_doing << "Doing computeLagrangianSpecificVolume " <<
+      patch->getID() << "\t ICE" << endl;
+
+    int numALLMatls = d_sharedState->getNumMatls();
+    Vector  dx = patch->dCell();
+    double vol = dx.x()*dx.y()*dx.z();
+
+    constCCVariable<double> rho_CC, rho_micro, createdVol, mass_CC;
+    //__________________________________
+    //  Compute the Lagrangian specific volume
+    for(int m = 0; m < numALLMatls; m++) {
+     Material* matl = d_sharedState->getMaterial( m );
+     int indx = matl->getDWIndex();
+     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+     CCVariable<double> spec_vol_L;
+     new_dw->allocate(spec_vol_L,     lb->spec_vol_L_CCLabel,     indx,patch);
+     spec_vol_L.initialize(0.);
+     if(ice_matl){
+       new_dw->get(rho_CC,    lb->rho_CCLabel,        indx,patch,Ghost::None,0);
+       new_dw->get(rho_micro, lb->rho_micro_CCLabel,  indx,patch,Ghost::None,0);
+       new_dw->get(createdVol,lb->created_vol_CCLabel,indx,patch,Ghost::None,0);
+
+       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){ 
+         IntVector c = *iter;
+         spec_vol_L[c] = (rho_CC[c]*vol)/rho_micro[c] + createdVol[c];
+       }
+     }
+     new_dw->put(spec_vol_L,     lb->spec_vol_L_CCLabel,     indx,patch);
+    }  // end numALLMatl loop
+  }  // patch loop
+}
+
 /*---------------------------------------------------------------------
  Function~  ICE::addExchangeToMomentumAndEnergy--
  Purpose~
@@ -2710,9 +2772,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     double vol = dx.x()*dx.y()*dx.z(),mass;
     double invvol = 1.0/vol;
 
-    int numALLmatls = d_sharedState->getNumMatls();
-    int numICEmatls = d_sharedState->getNumICEMatls();
-
     // These arrays get re-used for each material, and for each
     // advected quantity
     CCVariable<double> q_CC, q_advected;
@@ -2735,9 +2794,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       constCCVariable<double> rho_micro;
       CCVariable<Vector> vel_CC;
       constCCVariable<Vector> mom_L_ME;
-      constCCVariable<double > int_eng_L_ME, mass_L;
-      constCCVariable<double > mass_CC_old, createdVol;
-      
+      constCCVariable<double > int_eng_L_ME, mass_L, spec_vol_L;
+
       constSFCXVariable<double > uvel_FC;
       constSFCYVariable<double > vvel_FC;
       constSFCZVariable<double > wvel_FC;
@@ -2745,18 +2803,16 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       new_dw->get(uvel_FC,lb->uvel_FCMELabel,indx,patch,Ghost::AroundCells,2);
       new_dw->get(vvel_FC,lb->vvel_FCMELabel,indx,patch,Ghost::AroundCells,2);
       new_dw->get(wvel_FC,lb->wvel_FCMELabel,indx,patch,Ghost::AroundCells,2);
-      new_dw->get(mom_L_ME,  lb->mom_L_ME_CCLabel, indx,patch,
-		  Ghost::AroundCells,1);
       new_dw->get(mass_L, lb->mass_L_CCLabel,indx,patch,Ghost::AroundCells,1);
-      old_dw->get(mass_CC_old,lb->mass_CCLabel,indx,patch,
-		  Ghost::AroundCells,1);
-      
-      new_dw->get(createdVol, lb->created_vol_CCLabel,
-		  indx,patch,Ghost::AroundCells,1);
-      new_dw->get(rho_micro,lb->rho_micro_CCLabel,indx,patch,
-		  Ghost::AroundCells,1);
-      new_dw->get(int_eng_L_ME,lb->int_eng_L_ME_CCLabel,indx,patch,
-		  Ghost::AroundCells,1);
+
+      new_dw->get(mom_L_ME,    lb->mom_L_ME_CCLabel,
+					indx,patch,Ghost::AroundCells,1);
+      new_dw->get(spec_vol_L,  lb->spec_vol_L_CCLabel,
+					indx,patch,Ghost::AroundCells,1);
+      new_dw->get(rho_micro,   lb->rho_micro_CCLabel,
+					indx,patch,Ghost::AroundCells,1);
+      new_dw->get(int_eng_L_ME,lb->int_eng_L_ME_CCLabel,
+					indx,patch,Ghost::AroundCells,1);
 
       new_dw->allocate(rho_CC,    lb->rho_CC_top_cycleLabel,  indx,patch);
       new_dw->allocate(mass_CC,   lb->mass_CCLabel,           indx,patch);
@@ -2829,34 +2885,29 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       //__________________________________
       // Advection of specific volume.  Advected quantity is a volume fraction
-      if (numICEmatls != numALLmatls)  {
-        // I am doing this so that we get a reasonable answer for sp_vol
-        // in the extra cells.  This calculation will get overwritten in
-        // the interior cells.
-        for(CellIterator iter=patch->getExtraCellIterator();!iter.done();
-          iter++){
-	  IntVector c = *iter;
-          sp_vol_CC[c] = 1.0/rho_micro[c];
-        }
-        for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
-	  IntVector c = *iter;
-	  //          q_CC[c] = (mass_L[c]/rho_micro[c])*invvol;
-	  q_CC[c] = (mass_CC_old[c]/rho_micro[c]
-						 + createdVol[c])*invvol;
-        }
+      // I am doing this so that we get a reasonable answer for sp_vol
+      // in the extra cells.  This calculation will get overwritten in
+      // the interior cells.
+      for(CellIterator iter=patch->getExtraCellIterator();!iter.done(); iter++){
+	IntVector c = *iter;
+        sp_vol_CC[c] = 1.0/rho_micro[c];
+      }
+      for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
+	IntVector c = *iter;
+	q_CC[c] = spec_vol_L[c]*invvol;
+      }
 
-	advector->advectQ(q_CC,patch,q_advected);
+      advector->advectQ(q_CC,patch,q_advected);
 
-	// After the following expression, sp_vol_CC is the matl volume
-        for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-	  IntVector c = *iter;
-          sp_vol_CC[c] = (q_CC[c]*vol + q_advected[c]);
-        }
-        // Divide by the new mass_CC.
-        for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-	  IntVector c = *iter;
-	  sp_vol_CC[c] /= mass_CC[c];
-        }
+      // After the following expression, sp_vol_CC is the matl volume
+      for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
+	IntVector c = *iter;
+        sp_vol_CC[c] = (q_CC[c]*vol + q_advected[c]);
+      }
+      // Divide by the new mass_CC.
+      for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
+	IntVector c = *iter;
+	sp_vol_CC[c] /= mass_CC[c];
       }
 
       //---- P R I N T   D A T A ------   

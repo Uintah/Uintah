@@ -85,11 +85,16 @@ using namespace SCIRun;
       void scheduleComputeLagrangianValues(SchedulerP&, 
                                           const PatchSet*,
                                           const MaterialSubset*,
-					       const MaterialSet*);
+					  const MaterialSet*);
                  
+      void scheduleComputeLagrangianSpecificVolume(SchedulerP&,
+                                                   const PatchSet*,
+                                                   const MaterialSubset*,
+                                                   const MaterialSet*);
+
       void scheduleAddExchangeToMomentumAndEnergy(SchedulerP&, 
                                                   const PatchSet*,
-						        const MaterialSet*);
+						  const MaterialSet*);
       
       void scheduleAdvectAndAdvanceInTime(SchedulerP&, 
                                           const PatchSet*,
@@ -171,6 +176,12 @@ using namespace SCIRun;
                                    DataWarehouse*,
                                    DataWarehouse*);
       
+      void computeLagrangianSpecificVolume(const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           DataWarehouse*,
+                                           DataWarehouse*);
+
       void addExchangeToMomentumAndEnergy(const ProcessorGroup*,
                                           const PatchSubset* patches,
                                           const MaterialSubset* matls,
