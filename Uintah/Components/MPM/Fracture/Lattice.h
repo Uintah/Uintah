@@ -18,9 +18,8 @@ class Lattice : public Array3<Cell> {
 public:
         Lattice(const Patch* patch,const ParticleVariable<Point>& pX);
 
-  void  fingNeighborWithout(particleIndex pIndex);
-  void  fingNeighborWith(particleIndex pIndex);
-         
+  bool              containCell(const IntVector& cellIndex) const;
+  
   const Patch*                    getPatch();
   const ParticleVariable<Point>&  getParticlesPosition();
 
@@ -35,6 +34,9 @@ private:
 #endif //__LATTICE_H__
 
 // $Log$
+// Revision 1.4  2000/06/05 23:57:37  tan
+// Added conainCell().
+//
 // Revision 1.3  2000/06/05 22:32:29  tan
 // Added function to find neighbor for a given particle index.
 //
