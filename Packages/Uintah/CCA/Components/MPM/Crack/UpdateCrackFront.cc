@@ -203,7 +203,8 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
         MPI_Barrier(mpi_crack_comm);
 
-        /* Task 2: Detect if crack-front nodes are inside of materials
+        /* Task 2: Detect if the centers of crack-front segments
+	           are inside of materials
         */
         vector<short> cfSegCenterInMat;
         cfSegCenterInMat.resize(cfSegNodes[m].size()/2);
@@ -250,43 +251,6 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
         MPI_Barrier(mpi_crack_comm);
 
-	
-        /* Task 1a: Detect if crack-front-segment center is inside of
-                   materials for single crack-front-seg problems
-        
-        int ncfSegs=(int)cfSegNodes[m].size()/2;
-        short cfSegCenterInMat=YES;
-        if(ncfSegs==1) {
-          int workID=-1;
-          for(int i=0; i<patch_size; i++) {
-            if(cfsset[m][i].size()==1) {workID=i; break;}
-          }
-
-          if(pid==workID) {
-            int nd1=cfSegNodes[m][0];
-            int nd2=cfSegNodes[m][1];
-            Point cent=cx[m][nd1]+(cx[m][nd2]-cx[m][nd1])/2.;
-
-            // Get the node indices that surround the cell
-            if(flag->d_8or27==8)
-              patch->findCellAndWeights(cent, ni, S);
-            else if(flag->d_8or27==27)
-              patch->findCellAndWeights27(cent, ni, S, psize[0]);
-
-            for(int k = 0; k < flag->d_8or27; k++) {
-              double totalMass=gmass[ni[k]]+Gmass[ni[k]];
-              if(totalMass<d_cell_mass/32.) {
-                cfSegCenterInMat=NO;
-                break;
-              }
-            }
-          } // End of if(pid==workID)
-
-          MPI_Bcast(&cfSegCenterInMat,1,MPI_SHORT,workID,mpi_crack_comm);
-        } // End of if(ncfSegs==1)
-
-        MPI_Barrier(mpi_crack_comm);
-*/
         /* Task 3: Recollect crack-front segs, discarding the dead ones
         */
         // Store crack-front parameters in temporary arraies
@@ -304,18 +268,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
           short thisSegActive=NO;
 	  if(cfSegNodesInMat[2*i] || cfSegNodesInMat[2*i+1] || cfSegCenterInMat[i])
 		  thisSegActive=YES;
-/*	  
-          if(old_size/2==1) { // for single seg problems
-            // Remain active if any of two ends and center are inside
-            if(cfSegNodesInMat[2*i] || cfSegNodesInMat[2*i+1] ||
-               cfSegCenterInMat) thisSegActive=YES;
-          }
-          else { // for multiple seg problems
-            // Remain active if any of two ends is inside
-            if(cfSegNodesInMat[2*i] || cfSegNodesInMat[2*i+1])
-              thisSegActive=YES;
-          }
-*/
+	  
           if(thisSegActive) { // Collect parameters of the node
             cfSegNodes[m].push_back(nd1);
             cfSegNodes[m].push_back(nd2);
@@ -354,12 +307,12 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
             delete [] copyData;
           }
        
-          /* Task 3: Get previous index, and minimum & maximum indexes 
+          /* Task 4: Get previous index, and minimum & maximum indexes 
              for crack-front nodes
           */
           FindCrackFrontNodeIndexes(m);
     
-          /* Task 4: Calculate normals, tangential normals and binormals
+          /* Task 5: Calculate normals, tangential normals and binormals
           */         
           if(smoothCrackFront) { // Smooth crack front with cubic-spline
             short smoothSuccessfully=SmoothCrackFrontAndCalculateNormals(m);
@@ -373,11 +326,14 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
             CalculateCrackFrontNormals(m);
           }
         } // End if(cfSegNodes[m].size()>0)
+	
 	else { // Crack has penetrated the material
           // If all crack-front segs dead, the material is broken.
-	  if(pid==0) cout << "!!! Material " << m 
-		          << " has no crack or is broken." << endl;
-	}	
+          if(ce[m].size()>0) { // The material has crack(s)		
+	    if(pid==0) cout << "!!! Material " << m << " is broken." << endl;
+	  }  
+	}
+	
       } // End of if(d_doCrackPropagation!="false")
 
       // Save crack elems, crack points and crack-front nodes
@@ -386,6 +342,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
         int curTimeStep=d_sharedState->getCurrentTopLevelTimeStep();
         if(pid==0) OutputCrackGeometry(m,curTimeStep);
       }
+
     } // End of loop over matls
   } // End of loop over patches
 }
