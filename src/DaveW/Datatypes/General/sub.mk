@@ -8,8 +8,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := DaveW/Datatypes/General
 
 SRCS     += $(SRCDIR)/ContourSet.cc $(SRCDIR)/ContourSetPort.cc \
-	$(SRCDIR)/ManhattanDist.cc $(SRCDIR)/Path.cc \
-	$(SRCDIR)/PathPort.cc $(SRCDIR)/ScalarTriSurface.cc \
+	$(SRCDIR)/ManhattanDist.cc \
+	$(SRCDIR)/ScalarTriSurface.cc \
 	$(SRCDIR)/SegFld.cc $(SRCDIR)/SegFldPort.cc \
 	$(SRCDIR)/SigmaSet.cc $(SRCDIR)/SigmaSetPort.cc \
 	$(SRCDIR)/TensorField.cc $(SRCDIR)/TensorFieldBase.cc \
@@ -25,6 +25,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/07/19 00:24:52  samsonov
+# *** empty log message ***
+#
 # Revision 1.2  2000/03/20 19:35:57  sparker
 # Added VPATH support
 #
