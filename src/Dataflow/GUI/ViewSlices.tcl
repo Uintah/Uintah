@@ -137,7 +137,6 @@ itcl_class SCIRun_Render_ViewSlices {
     # 'prefix' is the prefix the variables
     # 'tab' is the indent string to make it look pretty
     method writeStateToScript { scriptVar prefix { tab "" }} {
-	Module::writeStateToScript $scriptVar $prefix $tab
 	upvar 1 $scriptVar script2
 	set num 0
 	foreach w [winfo children .] {
@@ -145,6 +144,7 @@ itcl_class SCIRun_Render_ViewSlices {
 		append script2 "\n${tab}${prefix} ui"
 	    }
 	}
+	Module::writeStateToScript script2 $prefix $tab
     }
 
     method gl_frame { w } {
