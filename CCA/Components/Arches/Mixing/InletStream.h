@@ -41,6 +41,7 @@ namespace Uintah {
       std::vector<double> d_mixVars;
       std::vector<double> d_mixVarVariance;
       double d_enthalpy;
+      bool d_initEnthalpy;
       std::vector<double> d_rxnVars;
       int d_axialLoc;
 
