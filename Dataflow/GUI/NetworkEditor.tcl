@@ -80,9 +80,9 @@ proc setIcons { { w . } { size small } } {
 
 
 rename toplevel __TCL_toplevel__
-proc toplevel { pathName args } {
-    set win [eval __TCL_toplevel__ $pathName $args]
-    setIcons $pathName
+proc toplevel { args } {
+    set win [eval __TCL_toplevel__ $args]
+    setIcons [lindex $args 0]
     return $win
 }
 
