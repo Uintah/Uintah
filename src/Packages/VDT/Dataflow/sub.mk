@@ -22,8 +22,8 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Packages/VDT/Dataflow
 
 SUBDIRS := \
-        $(SRCDIR)/GUI \
         $(SRCDIR)/Modules \
+#        $(SRCDIR)/GUI \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
