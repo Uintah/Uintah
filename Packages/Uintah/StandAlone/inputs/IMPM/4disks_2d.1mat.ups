@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-	<maxTime>9.e-6</maxTime>
+	<maxTime>3.e-6</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>5.e-8</delt_min>
 	<delt_max>5.e-8</delt_max>
@@ -16,18 +16,19 @@
    </Time>
    <DataArchiver>
         <filebase>4disks_2d.uda</filebase>
-	<outputInterval>1.e-6</outputInterval>
+	<outputInterval>5.e-7</outputInterval>
 	<save label = "p.x"/>
 	<save label = "p.velocity"/>
 	<save label = "p.volume"/>
 	<save label = "p.stress"/>
+        <save label = "g.stressFS"/>
+        <save label = "dispNew"/>
 <!--
 	<save label = "KineticEnergy"/>
 	<save label = "p.temperature"/>
 	<save label = "p.stress"/>
         <save label = "g.mass" material = "2"/>
         <save label = "g.temperature" material = "2"/>
-        <save label = "g.stressFS" material = "2"/>
 	<save label = "g.velocity"/>
 -->
    </DataArchiver>
@@ -152,8 +153,8 @@
 	<Level>
 	    <Box label = "1">
 		<lower>[-0.55, 0.00, -0.10]</lower>
-		<upper>[ 0.55, 0.05,  4.05]</upper>
-	        <resolution>[22,1,83]</resolution>
+		<upper>[ 0.55, 0.05,  4.10]</upper>
+	        <resolution>[22,1,84]</resolution>
 		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>
