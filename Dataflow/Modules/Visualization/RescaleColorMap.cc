@@ -74,7 +74,6 @@ RescaleColorMap::execute()
 {
   ColorMapHandle cHandle;
   ColorMapIPort *cmap_port = (ColorMapIPort *)get_iport("ColorMap");
-  ColorMapOPort *omap = (ColorMapOPort *)get_oport("ColorMap");
  
  if (!cmap_port) {
     error("Unable to initialize iport 'ColorMap'.");
