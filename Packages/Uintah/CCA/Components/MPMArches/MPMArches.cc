@@ -113,10 +113,16 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    d_arches->problemSetup(prob_spec, grid, d_sharedState);
    d_arches->getBoundaryCondition()->setIfCalcEnergyExchange(d_calcEnergyExchange);
    if (d_arches->checkSolveEnthalpy()) {
-     d_DORad = d_arches->getNonlinearSolver()->getEnthalpySolver()->checkDORadiation();
+     d_radiation = d_arches->getNonlinearSolver()->getEnthalpySolver()->checkRadiation();
+     if (d_radiation) 
+       d_DORad = d_arches->getNonlinearSolver()->getEnthalpySolver()->checkDORadiation();
+     else
+       d_DORad = false;
    }
-   else 
+   else {
      d_DORad = false;
+     d_radiation = false;
+   }
 }
 
 // ****************************************************************************
