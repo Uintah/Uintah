@@ -199,7 +199,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   #ifdef correctorstep
     d_props->sched_computePropsPred(sched, patches, matls);
-    d_props->sched_computeDenRefArray(sched, patches, matls);
+    d_props->sched_computeDenRefArrayPred(sched, patches, matls);
   #else
     d_props->sched_reComputeProps(sched, patches, matls);
     d_props->sched_computeDenRefArray(sched, patches, matls);
@@ -231,6 +231,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   }
   
   #ifdef correctorstep
+    d_boundaryCondition->sched_predcomputePressureBC(sched, patches, matls);
     d_turbModel->sched_computeTurbSubmodelPred(sched, patches, matls);
   #else
     d_boundaryCondition->sched_lastcomputePressureBC(sched, patches, matls);
@@ -256,6 +257,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // Underrelaxation for density is done with initial density, not with
     // density from the previous substep
     d_props->sched_computePropsInterm(sched, patches, matls);
+    d_props->sched_computeDenRefArrayInterm(sched, patches, matls);
     // linearizes and solves pressure eqn
     // require : pressureIN, densityIN, viscosityIN,
     //           [u,v,w]VelocitySIVBC (new_dw)
@@ -282,6 +284,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_momSolver->solveInterm(sched, patches, matls, index);
     }
   
+    d_boundaryCondition->sched_intermcomputePressureBC(sched, patches, matls);
     d_turbModel->sched_computeTurbSubmodelInterm(sched, patches, matls);
   #endif
 
@@ -304,7 +307,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // Underrelaxation for density is done with initial density, not with
     // density from the previous substep
     d_props->sched_reComputeProps(sched, patches, matls);
-    //    d_props->sched_computeDenRefArray(sched, patches, matls);
+    d_props->sched_computeDenRefArray(sched, patches, matls);
     // linearizes and solves pressure eqn
     // require : pressureIN, densityIN, viscosityIN,
     //           [u,v,w]VelocitySIVBC (new_dw)
@@ -335,6 +338,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // require : densityCP, pressurePS, [u,v,w]VelocitySIVBC
     // compute : [u,v,w]VelocityCPBC, pressureSPBC
   
+    d_boundaryCondition->sched_lastcomputePressureBC(sched, patches, matls);
     d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls);
   #endif
   
