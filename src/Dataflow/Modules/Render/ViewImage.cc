@@ -2900,7 +2900,7 @@ ViewImage::tcl_command(GuiArgs& args, void* userdata) {
     if (args.count() == 5 && !string_to_int(args[4], visualid))
       error("setgl bad visual id: "+args[4]);
 
-    TkOpenGLContext *context = scinew TkOpenGLContext(args[2], visualid);
+    TkOpenGLContext *context = scinew TkOpenGLContext(args[2], 640, 480, visualid);
     XSync(context->display_, 0);
     ASSERT(layouts_.find(args[2]) == layouts_.end());
     layouts_[args[2]] = scinew WindowLayout(ctx->subVar(args[3],0));
