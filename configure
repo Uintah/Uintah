@@ -2246,6 +2246,18 @@ case SCIRun2 in
     sci_check_glui=yes
     sci_check_oogl=yes
     sci_check_audio=yes
+
+    # WARNING... You must add scripting to configure.ac to handle an "optional"
+    # test.  This has ONLY BEEN DONE FOR teem so far.  (It is fairly straightforward,
+    # taking about 3 or so lines.  See the "search for teem" section
+    # of configure.ac to see how it is done.  Dd.
+    #
+    # (We should make a function that does the following test for yes before
+    # setting to 'optional' so that you don't have to put in all three of these
+    # lines for each library that you want to be optional:)
+    if test "$sci_check_teem" != "yes"; then
+      sci_check_teem=optional
+    fi
   ;;
   Insight)
     sci_check_insight=yes
@@ -2354,6 +2366,18 @@ case $i in
     sci_check_glui=yes
     sci_check_oogl=yes
     sci_check_audio=yes
+
+    # WARNING... You must add scripting to configure.ac to handle an "optional"
+    # test.  This has ONLY BEEN DONE FOR teem so far.  (It is fairly straightforward,
+    # taking about 3 or so lines.  See the "search for teem" section
+    # of configure.ac to see how it is done.  Dd.
+    #
+    # (We should make a function that does the following test for yes before
+    # setting to 'optional' so that you don't have to put in all three of these
+    # lines for each library that you want to be optional:)
+    if test "$sci_check_teem" != "yes"; then
+      sci_check_teem=optional
+    fi
   ;;
   Insight)
     sci_check_insight=yes
@@ -4027,7 +4051,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4030:" \
+echo "$as_me:4054:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7376,8 +7400,8 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-echo "$as_me:$LINENO: checking for math libraries and headers" >&5
-echo $ECHO_N "checking for math libraries and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for math libraries and headers (not-optional)" >&5
+echo $ECHO_N "checking for math libraries and headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -7546,8 +7570,8 @@ fi
 
 
 
-echo "$as_me:$LINENO: checking for X libraries and headers" >&5
-echo $ECHO_N "checking for X libraries and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for X libraries and headers (not-optional)" >&5
+echo $ECHO_N "checking for X libraries and headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -7809,8 +7833,8 @@ case $threads in
 
 
 
-echo "$as_me:$LINENO: checking for fetchop library" >&5
-echo $ECHO_N "checking for fetchop library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for fetchop library (not-optional)" >&5
+echo $ECHO_N "checking for fetchop library (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -7969,8 +7993,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for pthread library and headers" >&5
-echo $ECHO_N "checking for pthread library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for pthread library and headers (not-optional)" >&5
+echo $ECHO_N "checking for pthread library and headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -8281,8 +8305,8 @@ esac
 
 
 
-echo "$as_me:$LINENO: checking for OpenGL libraries and headers" >&5
-echo $ECHO_N "checking for OpenGL libraries and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for OpenGL libraries and headers (not-optional)" >&5
+echo $ECHO_N "checking for OpenGL libraries and headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -8477,8 +8501,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for dlopen in libc" >&5
-echo $ECHO_N "checking for dlopen in libc... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for dlopen in libc (optional)" >&5
+echo $ECHO_N "checking for dlopen in libc (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -8640,8 +8664,8 @@ else
 
 
 
-echo "$as_me:$LINENO: checking for dlopen in libdl" >&5
-echo $ECHO_N "checking for dlopen in libdl... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for dlopen in libdl (not-optional)" >&5
+echo $ECHO_N "checking for dlopen in libdl (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -8821,8 +8845,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for dlopen in libdl" >&5
-echo $ECHO_N "checking for dlopen in libdl... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for dlopen in libdl (not-optional)" >&5
+echo $ECHO_N "checking for dlopen in libdl (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -8988,8 +9012,8 @@ fi
 
 
 
-echo "$as_me:$LINENO: checking for required standard headers" >&5
-echo $ECHO_N "checking for required standard headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required standard headers (not-optional)" >&5
+echo $ECHO_N "checking for required standard headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -9172,8 +9196,8 @@ case $host in
 
 
 
-echo "$as_me:$LINENO: checking for required standard headers" >&5
-echo $ECHO_N "checking for required standard headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required standard headers (not-optional)" >&5
+echo $ECHO_N "checking for required standard headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -9326,8 +9350,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for required standard headers" >&5
-echo $ECHO_N "checking for required standard headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required standard headers (not-optional)" >&5
+echo $ECHO_N "checking for required standard headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -9489,8 +9513,8 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 
-echo "$as_me:$LINENO: checking for standard template library headers" >&5
-echo $ECHO_N "checking for standard template library headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for standard template library headers (not-optional)" >&5
+echo $ECHO_N "checking for standard template library headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -9934,8 +9958,8 @@ fi
 
 
 
-echo "$as_me:$LINENO: checking for required tcl library and headers" >&5
-echo $ECHO_N "checking for required tcl library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required tcl library and headers (not-optional)" >&5
+echo $ECHO_N "checking for required tcl library and headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -10129,8 +10153,8 @@ fi
 
 
 
-echo "$as_me:$LINENO: checking for required tk library and headers" >&5
-echo $ECHO_N "checking for required tk library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required tk library and headers (not-optional)" >&5
+echo $ECHO_N "checking for required tk library and headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -10314,8 +10338,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for required itcl library and headers" >&5
-echo $ECHO_N "checking for required itcl library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required itcl library and headers (not-optional)" >&5
+echo $ECHO_N "checking for required itcl library and headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -10498,8 +10522,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for required itk library and headers" >&5
-echo $ECHO_N "checking for required itk library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required itk library and headers (not-optional)" >&5
+echo $ECHO_N "checking for required itk library and headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -10681,8 +10705,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for required BLT library and headers" >&5
-echo $ECHO_N "checking for required BLT library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required BLT library and headers (not-optional)" >&5
+echo $ECHO_N "checking for required BLT library and headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -10893,8 +10917,8 @@ if test "$sci_check_plplot" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for optional optimized plplot library and headers" >&5
-echo $ECHO_N "checking for optional optimized plplot library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional optimized plplot library and headers (optional)" >&5
+echo $ECHO_N "checking for optional optimized plplot library and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -11072,8 +11096,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for optional debug plplot library and headers" >&5
-echo $ECHO_N "checking for optional debug plplot library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional debug plplot library and headers (optional)" >&5
+echo $ECHO_N "checking for optional debug plplot library and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -11255,8 +11279,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for optional optimized tclMatrix library and headers" >&5
-echo $ECHO_N "checking for optional optimized tclMatrix library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional optimized tclMatrix library and headers (optional)" >&5
+echo $ECHO_N "checking for optional optimized tclMatrix library and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -11434,8 +11458,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for optional debug tclMatrix library and headers" >&5
-echo $ECHO_N "checking for optional debug tclMatrix library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional debug tclMatrix library and headers (optional)" >&5
+echo $ECHO_N "checking for optional debug tclMatrix library and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -11840,8 +11864,8 @@ esac
 
 
 
-echo "$as_me:$LINENO: checking for xerces library and headers" >&5
-echo $ECHO_N "checking for xerces library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for xerces library and headers (not-optional)" >&5
+echo $ECHO_N "checking for xerces library and headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -12038,8 +12062,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for sstream header" >&5
-echo $ECHO_N "checking for sstream header... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for sstream header (optional)" >&5
+echo $ECHO_N "checking for sstream header (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -12205,8 +12229,8 @@ fi
 
 
 
-echo "$as_me:$LINENO: checking for traceback library and headers" >&5
-echo $ECHO_N "checking for traceback library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for traceback library and headers (optional)" >&5
+echo $ECHO_N "checking for traceback library and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -12407,8 +12431,8 @@ fi
 
 
 
-echo "$as_me:$LINENO: checking for MPEG library" >&5
-echo $ECHO_N "checking for MPEG library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for MPEG library (optional)" >&5
+echo $ECHO_N "checking for MPEG library (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -12619,8 +12643,8 @@ for i in $_sci_lib; do
 
 
 
-echo "$as_me:$LINENO: checking for optional ImageMagick library and headers" >&5
-echo $ECHO_N "checking for optional ImageMagick library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional ImageMagick library and headers (optional)" >&5
+echo $ECHO_N "checking for optional ImageMagick library and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -12842,8 +12866,8 @@ for i in $_sci_lib; do
 
 
 
-echo "$as_me:$LINENO: checking for optional png library and headers" >&5
-echo $ECHO_N "checking for optional png library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional png library and headers (optional)" >&5
+echo $ECHO_N "checking for optional png library and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -13050,8 +13074,8 @@ fi
 
 
 
-echo "$as_me:$LINENO: checking for required zlib library and header" >&5
-echo $ECHO_N "checking for required zlib library and header... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required zlib library and header (not-optional)" >&5
+echo $ECHO_N "checking for required zlib library and header (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -13250,8 +13274,8 @@ if test $sci_check_fortran = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for required fortran libraries" >&5
-echo $ECHO_N "checking for required fortran libraries... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required fortran libraries (not-optional)" >&5
+echo $ECHO_N "checking for required fortran libraries (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -13406,8 +13430,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for required fortran libraries" >&5
-echo $ECHO_N "checking for required fortran libraries... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required fortran libraries (not-optional)" >&5
+echo $ECHO_N "checking for required fortran libraries (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -13563,8 +13587,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for required fortran libraries" >&5
-echo $ECHO_N "checking for required fortran libraries... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required fortran libraries (not-optional)" >&5
+echo $ECHO_N "checking for required fortran libraries (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -13717,8 +13741,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for required fortran libraries" >&5
-echo $ECHO_N "checking for required fortran libraries... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required fortran libraries (not-optional)" >&5
+echo $ECHO_N "checking for required fortran libraries (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -13873,8 +13897,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for required fortran libraries" >&5
-echo $ECHO_N "checking for required fortran libraries... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required fortran libraries (not-optional)" >&5
+echo $ECHO_N "checking for required fortran libraries (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -14032,8 +14056,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for required fortran libraries" >&5
-echo $ECHO_N "checking for required fortran libraries... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for required fortran libraries (not-optional)" >&5
+echo $ECHO_N "checking for required fortran libraries (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -14201,8 +14225,8 @@ if test "$sci_check_blas" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for optional essl library" >&5
-echo $ECHO_N "checking for optional essl library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional essl library (not-optional)" >&5
+echo $ECHO_N "checking for optional essl library (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -14367,8 +14391,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for optional cxml library" >&5
-echo $ECHO_N "checking for optional cxml library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional cxml library (not-optional)" >&5
+echo $ECHO_N "checking for optional cxml library (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -14533,8 +14557,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for optional blas library" >&5
-echo $ECHO_N "checking for optional blas library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional blas library (optional)" >&5
+echo $ECHO_N "checking for optional blas library (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -14698,8 +14722,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for optional fblas library" >&5
-echo $ECHO_N "checking for optional fblas library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional fblas library (not-optional)" >&5
+echo $ECHO_N "checking for optional fblas library (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -14885,8 +14909,8 @@ if test "$sci_check_ftgl" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for optional FTGL library" >&5
-echo $ECHO_N "checking for optional FTGL library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional FTGL library (not-optional)" >&5
+echo $ECHO_N "checking for optional FTGL library (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -15086,8 +15110,8 @@ if test "$sci_check_lapack" = "yes" &&
 
 
 
-echo "$as_me:$LINENO: checking for optional lapack library" >&5
-echo $ECHO_N "checking for optional lapack library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional lapack library (optional)" >&5
+echo $ECHO_N "checking for optional lapack library (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -15252,8 +15276,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for optional flapack library" >&5
-echo $ECHO_N "checking for optional flapack library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional flapack library (optional)" >&5
+echo $ECHO_N "checking for optional flapack library (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -15419,8 +15443,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for optional complib.sgimath library" >&5
-echo $ECHO_N "checking for optional complib.sgimath library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional complib.sgimath library (optional)" >&5
+echo $ECHO_N "checking for optional complib.sgimath library (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -15644,8 +15668,8 @@ echo "$as_me: checking for required MPI components......" >&6;}
 
 
 
-echo "$as_me:$LINENO: checking for mpi library and header" >&5
-echo $ECHO_N "checking for mpi library and header... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for mpi library and header (optional)" >&5
+echo $ECHO_N "checking for mpi library and header (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -15823,8 +15847,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for mpi library and header" >&5
-echo $ECHO_N "checking for mpi library and header... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for mpi library and header (optional)" >&5
+echo $ECHO_N "checking for mpi library and header (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -16002,8 +16026,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for mpich library and header" >&5
-echo $ECHO_N "checking for mpich library and header... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for mpich library and header (optional)" >&5
+echo $ECHO_N "checking for mpich library and header (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -16330,8 +16354,8 @@ fi
 
 
 
-echo "$as_me:$LINENO: checking for optional mpi-uni libraries and headers" >&5
-echo $ECHO_N "checking for optional mpi-uni libraries and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional mpi-uni libraries and headers (optional)" >&5
+echo $ECHO_N "checking for optional mpi-uni libraries and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -16509,8 +16533,8 @@ if test "$HAVE_MPIUNI" = "no"; then
 
 
 
-echo "$as_me:$LINENO: checking for optional mpiunich and pmpiunich libraries" >&5
-echo $ECHO_N "checking for optional mpiunich and pmpiunich libraries... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional mpiunich and pmpiunich libraries (optional)" >&5
+echo $ECHO_N "checking for optional mpiunich and pmpiunich libraries (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -16752,8 +16776,8 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPIUNI" = "yes") &&
 
 
 
-echo "$as_me:$LINENO: checking for optional petsc libraries and headers" >&5
-echo $ECHO_N "checking for optional petsc libraries and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional petsc libraries and headers (optional)" >&5
+echo $ECHO_N "checking for optional petsc libraries and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -16943,8 +16967,8 @@ _sci_includes=''
 
 
 
-echo "$as_me:$LINENO: checking for optional petsc-uni libraries and headers" >&5
-echo $ECHO_N "checking for optional petsc-uni libraries and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional petsc-uni libraries and headers (optional)" >&5
+echo $ECHO_N "checking for optional petsc-uni libraries and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -17133,16 +17157,6 @@ fi
 
 
 
-
-
-##  ----------------------------------------------------------------------
-##  ----------  optional checks for libraries and headers  ---------------
-##  ----------------------------------------------------------------------
-
-echo
-{ echo "$as_me:$LINENO: checking for optional components......" >&5
-echo "$as_me: checking for optional components......" >&6;}
-echo
 
 
 ##  --  search for Insight  ---------------------------------------------------
@@ -17358,8 +17372,8 @@ if test "$sci_check_babel" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for optional sidl library and headers" >&5
-echo $ECHO_N "checking for optional sidl library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for optional sidl library and headers (optional)" >&5
+echo $ECHO_N "checking for optional sidl library and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -17606,8 +17620,8 @@ if test "$sci_check_jpeg" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for jpeg library" >&5
-echo $ECHO_N "checking for jpeg library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for jpeg library (not-optional)" >&5
+echo $ECHO_N "checking for jpeg library (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -17784,8 +17798,8 @@ if test "$sci_check_tiff" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for tiff library" >&5
-echo $ECHO_N "checking for tiff library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for tiff library (not-optional)" >&5
+echo $ECHO_N "checking for tiff library (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -17964,8 +17978,8 @@ if test "$sci_check_netsolve" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for netsolve library" >&5
-echo $ECHO_N "checking for netsolve library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for netsolve library (not-optional)" >&5
+echo $ECHO_N "checking for netsolve library (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -18148,8 +18162,8 @@ if test "$sci_check_glut" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for glut library and headers" >&5
-echo $ECHO_N "checking for glut library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for glut library and headers (not-optional)" >&5
+echo $ECHO_N "checking for glut library and headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -18340,8 +18354,8 @@ if test "$sci_check_glui" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for glui library and headers" >&5
-echo $ECHO_N "checking for glui library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for glui library and headers (not-optional)" >&5
+echo $ECHO_N "checking for glui library and headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -18547,8 +18561,8 @@ if test "$sci_check_oogl" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for oogl library and headers" >&5
-echo $ECHO_N "checking for oogl library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for oogl library and headers (optional)" >&5
+echo $ECHO_N "checking for oogl library and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -18740,8 +18754,8 @@ if test "$sci_check_audio" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for audio library" >&5
-echo $ECHO_N "checking for audio library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for audio library (optional)" >&5
+echo $ECHO_N "checking for audio library (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -18902,7 +18916,8 @@ fi # end sci_check_audio
 
 ##  --  search for teem  -------------------------------------------------
 
-if test "$sci_check_teem" = "yes"; then
+if test "$sci_check_teem" != "no"; then
+
   if test "$with_teem"; then
     _sci_lib="$with_teem/lib"
     _sci_inc="$with_teem/include"
@@ -18911,6 +18926,7 @@ if test "$sci_check_teem" = "yes"; then
     _sci_inc="$sci_thirdparty_includes"
   fi
 
+  if test "$sci_check_teem" == "optional"; then
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -18935,8 +18951,8 @@ if test "$sci_check_teem" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for teem library and headers" >&5
-echo $ECHO_N "checking for teem library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for teem library and headers (optional)" >&5
+echo $ECHO_N "checking for teem library and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -18990,7 +19006,185 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
-   #include <teem/nrrd.h>
+           #include <teem/nrrd.h>
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+eval LIB_DIR_TEEM='"$_sci_lib"'
+eval TEEM_LIB_DIR_FLAG='"$_sci_lib_path"'
+eval TEEM_LIB_FLAG='"$_sci_libs"'
+eval HAVE_TEEM="yes"
+eval INC_TEEM_H='"$_sci_includes"'
+eval HAVE_TEEM_H="yes"
+echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+eval LIB_DIR_TEEM=''
+eval TEEM_LIB_DIR_FLAG=''
+eval TEEM_LIB_FLAG=''
+eval HAVE_TEEM="no"
+eval INC_TEEM_H=''
+eval HAVE_TEEM_H="no"
+echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+if test "optional" =  "not-optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it, the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it, the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: Test for required TEEM failed.
+    To see the failed compile information, look in config.log,
+    search for TEEM. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&5
+echo "$as_me: error: Test for required TEEM failed.
+    To see the failed compile information, look in config.log,
+    search for TEEM. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+
+  else
+
+## arguments mean:
+## arg 1 : variable base name i.e. MATH
+## arg 2 : checking message
+## arg 3 : includes that arg 6 needs to compile
+## arg 4 : include paths -I
+## arg 5 : list of libs to link against -l
+## arg 6 : lib paths -L
+## arg 7 : extra link flags
+## arg 8 : body of code to compile. can be empty
+## arg 9 : optional or not-optional required argument
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      LIB_DIR_TEEM        => lib path
+##      TEEM_LIB_DIR_FLAG   => all the -L's
+##      TEEM_LIB_FLAG       => all the -l's
+##      HAVE_TEEM           => yes or no
+##      INC_TEEM_H          => all the -I's
+##      HAVE_TEEM_H         => yes or no
+
+
+
+echo "$as_me:$LINENO: checking for teem library and headers (not-optional)" >&5
+echo $ECHO_N "checking for teem library and headers (not-optional)... $ECHO_C" >&6
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+for i in $_sci_inc; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_includes"; then
+      _sci_includes=-I$i
+    else
+      _sci_includes="$_sci_includes -I$i"
+    fi
+  fi
+done
+
+
+for i in teem; do
+  if test -z "$_sci_libs"; then
+    _sci_libs=-l$i
+  else
+    _sci_libs="$_sci_libs -l$i"
+  fi
+done
+
+_sci_lib_path=
+
+for i in $_sci_lib; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_lib_path"; then
+      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
+    else
+      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
+    fi
+  fi
+done
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+LDFLAGS="$_sci_lib_path $LDFLAGS"
+LIBS="$_sci_libs -lm $LIBS"
+
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+           #include <teem/nrrd.h>
 
 int
 main ()
@@ -19088,6 +19282,7 @@ _sci_libs=''
 _sci_includes=''
 
 
+  fi
 
   if test "$HAVE_TEEM" = "yes"; then
      DEF_TEEM="#define HAVE_TEEM 1"
@@ -19140,8 +19335,8 @@ if test "$sci_check_mdsplus" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for mdslib library and headers" >&5
-echo $ECHO_N "checking for mdslib library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for mdslib library and headers (not-optional)" >&5
+echo $ECHO_N "checking for mdslib library and headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -19351,8 +19546,8 @@ if test "$sci_check_hdf5" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for hdf5 library and headers" >&5
-echo $ECHO_N "checking for hdf5 library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for hdf5 library and headers (optional)" >&5
+echo $ECHO_N "checking for hdf5 library and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -19552,8 +19747,8 @@ if test "$sci_check_perfex" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for perfex library" >&5
-echo $ECHO_N "checking for perfex library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for perfex library (optional)" >&5
+echo $ECHO_N "checking for perfex library (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -19739,8 +19934,8 @@ if test "$sci_check_crypto" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for crypto library" >&5
-echo $ECHO_N "checking for crypto library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for crypto library (optional)" >&5
+echo $ECHO_N "checking for crypto library (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -19930,8 +20125,8 @@ if test "$sci_check_ssl" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for ssl library" >&5
-echo $ECHO_N "checking for ssl library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for ssl library (optional)" >&5
+echo $ECHO_N "checking for ssl library (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -20136,8 +20331,8 @@ echo "$as_me: error: CRYPTO library not found.  This will cause globus check to 
 
 
 
-echo "$as_me:$LINENO: checking for globus library and headers" >&5
-echo $ECHO_N "checking for globus library and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for globus library and headers (optional)" >&5
+echo $ECHO_N "checking for globus library and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -20610,8 +20805,8 @@ if test "$sci_check_qt" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for qt library" >&5
-echo $ECHO_N "checking for qt library... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for qt library (optional)" >&5
+echo $ECHO_N "checking for qt library (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -20882,8 +21077,8 @@ if test "$sci_check_vdt" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for vdt libraries and headers" >&5
-echo $ECHO_N "checking for vdt libraries and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for vdt libraries and headers (not-optional)" >&5
+echo $ECHO_N "checking for vdt libraries and headers (not-optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -21088,8 +21283,8 @@ if test "$sci_check_hypre" = "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for HYPRE libraries and headers" >&5
-echo $ECHO_N "checking for HYPRE libraries and headers... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for HYPRE libraries and headers (optional)" >&5
+echo $ECHO_N "checking for HYPRE libraries and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS

@@ -2433,15 +2433,6 @@ AC_SUBST(PETSC_UNI_LIB_DIR_FLAG)
 AC_SUBST(DEF_PETSC_UNI)
 AC_SUBST(INC_PETSC_UNI_H)
 
-##  ----------------------------------------------------------------------
-##  ----------  optional checks for libraries and headers  ---------------
-##  ----------------------------------------------------------------------
-
-echo
-AC_MSG_NOTICE(checking for optional components......)
-echo
-
-
 ##  --  search for Insight  ---------------------------------------------------
 
 if test "$sci_check_insight" = "yes"; then
@@ -2744,7 +2735,8 @@ AC_SUBST(AUDIO_LIB_DIR_FLAG)
 
 ##  --  search for teem  -------------------------------------------------
 
-if test "$sci_check_teem" = "yes"; then
+if test "$sci_check_teem" != "no"; then
+
   if test "$with_teem"; then
     _sci_lib="$with_teem/lib"
     _sci_inc="$with_teem/include"
@@ -2753,9 +2745,15 @@ if test "$sci_check_teem" = "yes"; then
     _sci_inc="$sci_thirdparty_includes"
   fi
   
-  SCI_TRY_LINK(TEEM,teem library and headers,[
-   #include <teem/nrrd.h>
-   ],$_sci_inc,teem,$_sci_lib,-lm,,not-optional)
+  if test "$sci_check_teem" == "optional"; then
+     SCI_TRY_LINK(TEEM,teem library and headers,[
+           #include <teem/nrrd.h>
+           ],$_sci_inc,teem,$_sci_lib,-lm,,optional)
+  else
+     SCI_TRY_LINK(TEEM,teem library and headers,[
+           #include <teem/nrrd.h>
+           ],$_sci_inc,teem,$_sci_lib,-lm,,not-optional)
+  fi
 
   if test "$HAVE_TEEM" = "yes"; then
      DEF_TEEM="#define HAVE_TEEM 1"
