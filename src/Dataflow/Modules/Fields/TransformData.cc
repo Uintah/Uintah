@@ -42,6 +42,7 @@ class TransformData : public Module
 {
 private:
   GuiString function_;
+  GuiString outputdatatype_;
 
 public:
   TransformData(GuiContext* ctx);
@@ -55,7 +56,8 @@ DECLARE_MAKER(TransformData)
 
 TransformData::TransformData(GuiContext* ctx)
   : Module("TransformData", ctx, Filter,"Fields", "SCIRun"),
-    function_(ctx->subVar("function"))
+    function_(ctx->subVar("function")),
+    outputdatatype_(ctx->subVar("outputdatatype"))
 {
 }
 
@@ -87,14 +89,23 @@ TransformData::execute()
     return;
   }
 
+  string outputdatatype = outputdatatype_.get();
+  if (outputdatatype == "input")
+  {
+    outputdatatype = ifieldhandle->get_type_description(1)->get_name();
+  }
+
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->data_at_type_description();
+  const string oftn = ifieldhandle->get_type_description(0)->get_name() +
+    "<" + outputdatatype + "> ";
   int hoffset = 0;
   Handle<TransformDataAlgo> algo;
   while (1)
   {
     CompileInfoHandle ci =
-      TransformDataAlgo::get_compile_info(ftd, ltd, function_.get(), hoffset);
+      TransformDataAlgo::get_compile_info(ftd, oftn, ltd,
+					  function_.get(), hoffset);
     if (!DynamicCompilation::compile(ci, algo, true, this))
     {
       DynamicLoader::scirun_loader().remove_cc(*(ci.get_rep()), cout);
@@ -121,9 +132,11 @@ TransformData::execute()
 
 CompileInfoHandle
 TransformDataAlgo::get_compile_info(const TypeDescription *field_td,
+				    string ofieldtypename,
 				    const TypeDescription *loc_td,
 				    string function,
 				    int hashoffset)
+
 {
   hash<const char *> H;
   unsigned int hashval = H(function.c_str()) + hashoffset;
@@ -136,22 +149,25 @@ TransformDataAlgo::get_compile_info(const TypeDescription *field_td,
   CompileInfo *rval = 
     scinew CompileInfo(template_name + "." +
 		       field_td->get_filename() + "." +
+		       to_filename(ofieldtypename) + "." +
 		       loc_td->get_filename() + ".",
                        base_class_name, 
                        template_name, 
-                       field_td->get_name() + ", " + loc_td->get_name());
+                       field_td->get_name() + ", " +
+		       ofieldtypename + ", " +
+		       loc_td->get_name());
 
   // Code for the function.
   string class_declaration =
     string("\"\n\nusing namespace SCIRun;\n\n") + 
-    "template <class FIELD, class LOC>\n" +
-    "class " + template_name + " : public TransformDataAlgoT<FIELD, LOC>\n" +
+    "template <class IFIELD, class OFIELD, class LOC>\n" +
+    "class " + template_name + " : public TransformDataAlgoT<IFIELD, OFIELD, LOC>\n" +
     "{\n" +
-    "  virtual void function(typename FIELD::value_type &result,\n" +
+    "  virtual void function(typename OFIELD::value_type &result,\n" +
     "                        double x, double y, double z,\n" +
-    "                        const typename FIELD::value_type &v)\n" +
+    "                        const typename IFIELD::value_type &v)\n" +
     "  {\n" +
-    function +
+    "     " + function + "\n" +
     "  }\n" +
     "\n" +
     "  virtual string identify()\n" +

@@ -25,6 +25,8 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Math/function.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Tensor.h>
 
 namespace SCIRun {
 
@@ -37,32 +39,33 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+					    string ofieldtypenam,
 					    const TypeDescription *lsrc,
 					    string function,
 					    int hashoffset);
 };
 
 
-template <class FIELD, class LOC>
+template <class IFIELD, class OFIELD, class LOC>
 class TransformDataAlgoT : public TransformDataAlgo
 {
 public:
-  virtual void function(typename FIELD::value_type &result,
+  virtual void function(typename OFIELD::value_type &result,
 			double x, double y, double z,
-			const typename FIELD::value_type &v) = 0;
+			const typename IFIELD::value_type &v) = 0;
 
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle src);
 };
 
 
-template <class FIELD, class LOC>
+template <class IFIELD, class OFIELD, class LOC>
 FieldHandle
-TransformDataAlgoT<FIELD, LOC>::execute(FieldHandle field_h)
+TransformDataAlgoT<IFIELD, OFIELD, LOC>::execute(FieldHandle field_h)
 {
-  FIELD *ifield = dynamic_cast<FIELD *>(field_h.get_rep());
-  typename FIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
-  FIELD *ofield = ifield->clone();
+  IFIELD *ifield = dynamic_cast<IFIELD *>(field_h.get_rep());
+  typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
+  OFIELD *ofield = scinew OFIELD(imesh, ifield->data_at());
 
   typename LOC::iterator ibi, iei;
   imesh->begin(ibi);
@@ -70,12 +73,13 @@ TransformDataAlgoT<FIELD, LOC>::execute(FieldHandle field_h)
 
   while (ibi != iei)
   {
-    typename FIELD::value_type val, result;
+    typename IFIELD::value_type val;
     ifield->value(val, *ibi);
 
     Point p;
     imesh->get_center(p, *ibi);
 
+    typename OFIELD::value_type result;
     function(result, p.x(), p.y(), p.z(), val);
 
     ofield->set_value(result, *ibi);

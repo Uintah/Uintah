@@ -21,12 +21,14 @@ itcl_class SCIRun_Fields_TransformData {
         set name TransformData
 	
 	global $this-function
-	
+	global $this-outputdatatype
+
         set_defaults
     }
 
     method set_defaults {} {
 	set $this-function "result = v * 10;"
+	set $this-outputdatatype "input"
     }
 
     method ui {} {
@@ -37,17 +39,63 @@ itcl_class SCIRun_Fields_TransformData {
         }
         toplevel $w
 
+	labelcombo $w.otype "Output Data Type" \
+	    {"input" "unsigned char" "unsigned short" \
+		 "unsigned int" \
+		 char short int float double Vector Tensor} \
+	    $this-outputdatatype
+
 	frame $w.row1	
 	entry $w.row1.entry -textvariable $this-function -width 60
-#	text $w.row1.entry
-#	scrollbar $w.row1.scroll -command "$w.row1.entry yview"
-#	pack $w.row1.scroll -side right -fill y
-	pack $w.row1.entry -side left -fill x
+	pack $w.row1.entry -side left -fill x -padx 5
 
 	frame $w.row2
 	button $w.row2.execute -text "Execute" -command "$this-c needexecute"
 	pack $w.row2.execute -side left -e y -f both -padx 5 -pady 5
 	pack $w.row1 $w.row2 -side top -e y -f both -padx 5 -pady 5
+    }
+
+
+    method labelcombo { win text1 arglist var} {
+	frame $win 
+	pack $win -side top -padx 5
+	label $win.l1 -text $text1 \
+		      -anchor w -just left
+	label $win.colon  -text ":" -width 2 -anchor w -just left
+	iwidgets::optionmenu $win.c -foreground darkred \
+		-command " $this comboget $win.c $var "
+
+	set i 0
+	set found 0
+	set length [llength $arglist]
+	for {set elem [lindex $arglist $i]} {$i<$length} \
+	    {incr i 1; set elem [lindex $arglist $i]} {
+	    if {"$elem"=="[set $var]"} {
+		set found 1
+	    }
+	    $win.c insert end $elem
+	}
+
+	if {!$found} {
+	    $win.c insert end [set $var]
+	}
+
+	label $win.l2 -text "" -width 20 -anchor w -just left
+
+	# hack to associate optionmenus with a textvariable
+	bind $win.c <Map> "$win.c select {[set $var]}"
+
+	pack $win.l1 $win.colon -side left
+	pack $win.c $win.l2 -side left	
+    }
+
+    method comboget { win var } {
+	if {![winfo exists $win]} {
+	    return
+	}
+	if { "$var"!="[$win get]" } {
+	    set $var [$win get]
+	}
     }
 }
 
