@@ -195,7 +195,8 @@ SampleField::widget_moved(bool last, BaseWidget*)
     if (rake_) {
       rake_->GetEndpoints(endpoint0_, endpoint1_);
       double ratio = rake_->GetRatio();
-      if (ratio < 0.0001) ratio = 0.0001; // To avoid infinte loop
+      const double smax = 1.0 / (200 - 1);  // Max the slider at 200 samples.
+      if (ratio < smax) ratio = smax;
       double num_seeds = Max(0.0, 1.0/ratio+1.0);
       gui_maxSeeds_.set(num_seeds);
 
