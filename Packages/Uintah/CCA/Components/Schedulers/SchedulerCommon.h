@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
+#include <iosfwd>
 
 class DOM_Document;
 class DOM_Element;
@@ -71,6 +72,8 @@ WARNING
        
     virtual DataWarehouse* get_old_dw();
     virtual DataWarehouse* get_new_dw();
+
+    virtual void logMemoryUse();
       
     //////////
     // Insert Documentation Here:
@@ -99,6 +102,7 @@ WARNING
     Output* m_outPort;
     DOM_Document* m_graphDoc;
     DOM_Element* m_nodes;
+    ofstream* memlogfile;
     bool emit_taskgraph;
   };
 } // End namespace Uintah

@@ -1418,3 +1418,23 @@ OnDemandDataWarehouse::scrub(const VarLabel* var)
     throw InternalError("Scrubbing variable of unknown type: "+var->getName());
   }
 }
+
+void OnDemandDataWarehouse::logMemoryUse(ostream& out, const std::string& tag)
+{
+  int dwid=d_generation;
+  d_ncDB.logMemoryUse(out, tag, dwid);
+  d_ccDB.logMemoryUse(out, tag, dwid);
+  d_sfcxDB.logMemoryUse(out, tag, dwid);
+  d_sfcyDB.logMemoryUse(out, tag, dwid);
+  d_sfczDB.logMemoryUse(out, tag, dwid);
+  d_particleDB.logMemoryUse(out, tag, dwid);
+  d_reductionDB.logMemoryUse(out, tag, dwid);
+  d_perpatchDB.logMemoryUse(out, tag, dwid);
+
+  // Log the psets.
+  for(psetDBType::iterator iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++){
+    ParticleSubset* pset = iter->second;
+    out << dwid << "\t" << tag << "\t" << "ParticleSubset" << "\t-\t" << pset->numParticles() << "\t" << pset->numParticles()*sizeof(particleIndex) << '\n';
+  }
+}
+
