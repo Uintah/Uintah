@@ -34,11 +34,6 @@
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/ProxyBase.h>
 #include <Core/CCA/Component/Comm/Message.h>
-
-#ifdef HAVE_GLOBUS
-#include <Core/CCA/Component/Comm/ReplyEP.h>
-#endif
-
 #include <Core/CCA/Component/PIDL/TypeInfo_internal.h>
 #include <Core/Exceptions/InternalError.h>
 #include <iostream>
@@ -114,11 +109,9 @@ Object* TypeInfo::pidl_cast(Object* obj) const
   } else {
     // isa succeeded 
     // addReference to the other processes in case it is a parallel component
-      refList *d_ref;
-      d_ref = _rm->getAllReferences();
-      for(unsigned int i=1; i < d_ref->size(); i++) {
+    for(unsigned int i=1; i < _rm->d_ref.size(); i++) {
       /*CALLNORET*/
-      message = (*d_ref)[i].chan->getMessage();
+      message = _rm->d_ref[i].chan->getMessage();
       message->createMessage();
       //Marshal flag which informs handler that
       // this message is CALLNORET
@@ -131,7 +124,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
       int _numCalls = 1;
       message->marshalInt(&_numCalls);
       // Send the message
-      int _handler= (*d_ref)[i].getVtableBase()+0;
+      int _handler= _rm->d_ref[i].getVtableBase()+0;
       message->sendMessage(_handler);
       message->destroyMessage();
     }
@@ -141,10 +134,9 @@ Object* TypeInfo::pidl_cast(Object* obj) const
     for(unsigned int i=0; i < new_rm->d_ref.size(); i++)
       new_rm->d_ref[i].d_vtable_base=vtbase;
     //return (*d_priv->create_proxy)(*new_rm);
-Object *obj=
-    (*d_priv->create_proxy)(*new_rm);
-	delete new_rm;
-	return obj;
+    Object *obj=(*d_priv->create_proxy)(*new_rm);
+    delete new_rm;
+    return obj;
   }
 }
 
