@@ -400,32 +400,38 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
 
     // Ask if we should abort...
     fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\ndump core? ", 7,7,7,tname, getpid(), signam);
-    char buf[100];
-    buf[0]='n';
-    if(!fgets(buf, 100, stdin)){
-	// Exit without an abort...
-	Task::exit_all(-1);
-    }
-    if(buf[0] == 'n' || buf[0] == 'N'){
-	// Exit without an abort...
-	Task::exit_all(-1);
-    } else if(buf[0] == 'd' || buf[0] == 'D') {
-	// Start the debugger...
-	Task::debug(Task::self());
-	while(1){
-	    sigpause(0);
+    for(;;){
+	char buf[100];
+	while(read(fileno(stdin), buf, 100) <= 0){
+	    if(errno != EINTR){
+		fprintf(stderr, "\nCould not read response, exiting\n");
+		buf[0]='e';
+		break;
+	    }
 	}
-    } else {
-	// Abort...
-	fprintf(stderr, "Dumping core...\n");
-	struct rlimit rlim;
-	getrlimit(RLIMIT_CORE, &rlim);
-	rlim.rlim_cur=RLIM_INFINITY;
-	setrlimit(RLIMIT_CORE, &rlim);
-	aborting=1;
-	signal(SIGABRT, SIG_DFL); // We will dump core, but not other threads
-	kill(0, SIGABRT);
-	sigpause(0); // Just in case....
+	if(buf[0] == 'n' || buf[0] == 'N'){
+	    // Exit without an abort...
+	    Task::exit_all(-1);
+	} else if(buf[0] == 'd' || buf[0] == 'D') {
+	    // Start the debugger...
+	    Task::debug(Task::self());
+	    while(1){
+		sigpause(0);
+	    }
+	} else if(buf[0]=='r' || buf[0]=='R'){
+	    return;
+	} else {
+	    // Abort...
+	    fprintf(stderr, "Dumping core...\n");
+	    struct rlimit rlim;
+	    getrlimit(RLIMIT_CORE, &rlim);
+	    rlim.rlim_cur=RLIM_INFINITY;
+	    setrlimit(RLIMIT_CORE, &rlim);
+	    aborting=1;
+	    signal(SIGABRT, SIG_DFL); // We will dump core, but not other threads
+	    kill(0, SIGABRT);
+	    sigpause(0); // Just in case....
+	}
     }
 }
 
