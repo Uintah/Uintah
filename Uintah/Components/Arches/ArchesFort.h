@@ -865,6 +865,7 @@ extern "C"
     //
     void
     FORT_UNDERELAX(const int* domLo, const int* domHi,
+		   const int* domLong, const int* domHing,
 		    const int* idxLo, const int* idxHi,
 		    double* variable,
 		    double* coeffDiagonal,
@@ -922,6 +923,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.37  2000/09/29 20:32:35  rawat
+// added underrelax to pressure solver
+//
 // Revision 1.36  2000/09/26 04:35:27  rawat
 // added some more multi-patch support
 //

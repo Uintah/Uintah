@@ -135,11 +135,14 @@ RBGSSolver::computePressUnderrelax(const ProcessorGroup*,
   // Get the patch bounds and the variable bounds
   IntVector domLo = vars->pressure.getFortLowIndex();
   IntVector domHi = vars->pressure.getFortHighIndex();
+  IntVector domLong = vars->pressCoeff[Arches::AP].getFortLowIndex();
+  IntVector domHing = vars->pressCoeff[Arches::AP].getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
   FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		 domLong.get_pointer(), domHing.get_pointer(),
 		 idxLo.get_pointer(), idxHi.get_pointer(),
 		 vars->pressure.getPointer(),
 		 vars->pressCoeff[Arches::AP].getPointer(), 
@@ -442,6 +445,8 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
   // Get the patch bounds and the variable bounds
   IntVector domLo;
   IntVector domHi;
+  IntVector domLong;
+  IntVector domHing;
   IntVector idxLo;
   IntVector idxHi;
 
@@ -449,9 +454,12 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
   case Arches::XDIR:
     domLo = vars->uVelocity.getFortLowIndex();
     domHi = vars->uVelocity.getFortHighIndex();
+    domLong = vars->uVelocityCoeff[Arches::AP].getFortLowIndex();
+    domHing = vars->uVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
     FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		   domLong.get_pointer(), domHing.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   vars->uVelocity.getPointer(),
 		   vars->uVelocityCoeff[Arches::AP].getPointer(), 
@@ -498,9 +506,12 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
     case Arches::YDIR:
     domLo = vars->vVelocity.getFortLowIndex();
     domHi = vars->vVelocity.getFortHighIndex();
+    domLong = vars->vVelocityCoeff[Arches::AP].getFortLowIndex();
+    domHing = vars->vVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
     FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		   domLong.get_pointer(), domHing.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   vars->vVelocity.getPointer(),
 		   vars->vVelocityCoeff[Arches::AP].getPointer(), 
@@ -547,9 +558,12 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
     case Arches::ZDIR:
     domLo = vars->wVelocity.getFortLowIndex();
     domHi = vars->wVelocity.getFortHighIndex();
+    domLong = vars->wVelocityCoeff[Arches::AP].getFortLowIndex();
+    domHing = vars->wVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCZFORTLowIndex();
     idxHi = patch->getSFCZFORTHighIndex();
     FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		   domLong.get_pointer(), domHing.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   vars->wVelocity.getPointer(),
 		   vars->wVelocityCoeff[Arches::AP].getPointer(), 
@@ -950,11 +964,14 @@ RBGSSolver::computeScalarUnderrelax(const ProcessorGroup* ,
   // Get the patch bounds and the variable bounds
   IntVector domLo = vars->scalar.getFortLowIndex();
   IntVector domHi = vars->scalar.getFortHighIndex();
+  IntVector domLong = vars->scalarCoeff[Arches::AP].getFortLowIndex();
+  IntVector domHing = vars->scalarCoeff[Arches::AP].getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
   FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		 domLong.get_pointer(), domHing.get_pointer(),
 		 idxLo.get_pointer(), idxHi.get_pointer(),
 		 vars->scalar.getPointer(),
 		 vars->scalarCoeff[Arches::AP].getPointer(), 
@@ -1102,6 +1119,9 @@ RBGSSolver::setPressMatrix(const ProcessorGroup* ,
 
 //
 // $Log$
+// Revision 1.28  2000/09/29 20:32:36  rawat
+// added underrelax to pressure solver
+//
 // Revision 1.27  2000/09/26 19:59:18  sparker
 // Work on MPI petsc
 //

@@ -123,6 +123,13 @@ ArchesLabel::ArchesLabel()
   // V-Velocity Linear Src Labels
   d_vVelLinSrcMBLMLabel = scinew VarLabel("vVelLinSrcMBLM",
 				 SFCYVariable<double>::getTypeDescription() );
+
+  // labels for ref density and pressure
+  d_refDensity_label = scinew VarLabel("refDensityLabel",
+				       sum_vartype::getTypeDescription() );
+  d_refPressure_label = scinew VarLabel("refPressureLabel",
+				       sum_vartype::getTypeDescription() );
+
   // V-Velocity Non Linear Src Labels
   d_vVelNonLinSrcMBLMLabel = scinew VarLabel("vVelNonLinSrcMBLM",
 				    SFCYVariable<double>::getTypeDescription() );
@@ -257,6 +264,9 @@ ArchesLabel::~ArchesLabel()
 
 //
 // $Log$
+// Revision 1.9  2000/09/29 20:32:35  rawat
+// added underrelax to pressure solver
+//
 // Revision 1.8  2000/09/07 23:07:17  rawat
 // fixed some bugs in bc and added pressure solver using petsc
 //

@@ -208,6 +208,9 @@ namespace Uintah {
       // Scalar NonLinear Src
       const VarLabel* d_scalNonLinSrcSBLMLabel;
 
+      // label for ref_density and pressure
+      const VarLabel* d_refDensity_label;
+      const VarLabel* d_refPressure_label;
       // labels for nonlinear residuals
       const VarLabel* d_presResidPSLabel;
       const VarLabel* d_presTruncPSLabel;
@@ -252,6 +255,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.9  2000/09/29 20:32:35  rawat
+// added underrelax to pressure solver
+//
 // Revision 1.8  2000/09/07 23:07:17  rawat
 // fixed some bugs in bc and added pressure solver using petsc
 //

@@ -12,6 +12,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 
 using namespace Uintah::ArchesSpace;
@@ -39,6 +40,7 @@ Properties::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Properties");
   db->require("denUnderrelax", d_denUnderrelax);
+  db->require("ref_point", d_denRef);
 
   // Read the mixing variable streams, total is noofStreams 0 
   d_numMixingVars = 0;
@@ -100,6 +102,7 @@ Properties::sched_computeProps(const LevelP& level,
       for (int ii = 0; ii < d_numMixingVars; ii++) 
 	tsk->requires(old_dw, d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
 			 numGhostCells);
+      tsk->computes(old_dw, d_lab->d_refDensity_label);
       tsk->computes(new_dw, d_lab->d_densityCPLabel, matlIndex, patch);
       sched->addTask(tsk);
     }
@@ -128,6 +131,7 @@ Properties::sched_reComputeProps(const LevelP& level,
       // requires scalars
       tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
+      tsk->computes(old_dw, d_lab->d_refDensity_label);
       tsk->computes(new_dw, d_lab->d_densityCPLabel, matlIndex, patch);
       sched->addTask(tsk);
     }
@@ -209,6 +213,13 @@ Properties::computeProps(const ProcessorGroup*,
     }
   }
 #endif
+  if (patch->containsCell(d_denRef)) {
+    double den_ref = density[d_denRef];
+    cerr << "density_ref " << den_ref << endl;
+    old_dw->put(sum_vartype(den_ref),d_lab->d_refDensity_label);
+  }
+  else
+    old_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
 
   // Write the computed density to the new data warehouse
   new_dw->put(density,d_lab->d_densityCPLabel, matlIndex, patch);
@@ -281,6 +292,14 @@ Properties::reComputeProps(const ProcessorGroup*,
     }
   }
 #endif
+  if (patch->containsCell(d_denRef)) {
+    double den_ref = density[d_denRef];
+    cerr << "density_ref " << den_ref << endl;
+    old_dw->put(sum_vartype(den_ref),d_lab->d_refDensity_label);
+  }
+  else
+    old_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
+
   new_dw->put(density, d_lab->d_densityCPLabel, matlIndex, patch);
 }
 
@@ -303,6 +322,9 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.30  2000/09/29 20:32:36  rawat
+// added underrelax to pressure solver
+//
 // Revision 1.29  2000/09/20 16:56:16  rawat
 // added some petsc parallel stuff and fixed some bugs
 //

@@ -49,7 +49,7 @@ void
 Source::calculateVelocitySource(const ProcessorGroup* ,
 				const Patch* patch,
 				DataWarehouseP& ,
-				DataWarehouseP& ,
+				DataWarehouseP& new_dw,
 				double delta_t,
 				int index,
 				int eqnType,
@@ -61,8 +61,23 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   double gravity = d_physicalConsts->getGravity(index);
   // get iref, jref, kref and ref density by broadcasting from a patch that contains
   // iref, jref and kref
+#if 0
+  if (patch->containsCell(d_denRef)) {
+    double den_ref = vars->density[d_denRef];
+    new_dw->put(sum_vartype(den_ref),d_lab.d_refDensity_label);
+  }
+  else
+    new_dw->put(sum_vartype(0), d_lab.d_refDensity_label);
+  sum_vartype den_ref_var;
+  new_de->get(den_ref_var, d_lab.d_refDensity_label);
+  double den_Ref = den_ref_var;
+  
+#endif
+  double den_ref = vars->den_Ref;
+
+
   //  double den_ref = vars->density[IntVector(3,3,3)]; // change it!!! use ipref, jpref and kpref
-  double den_ref = 1.184344; // change it!!! use ipref, jpref and kpref
+  //  double den_ref = 1.184344; // change it!!! use ipref, jpref and kpref
   cerr << " ref_ density" << den_ref << endl;
   // Get the patch and variable indices
   IntVector domLoU = vars->uVelocity.getFortLowIndex();
@@ -822,6 +837,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.42  2000/09/29 20:32:36  rawat
+//added underrelax to pressure solver
+//
 //Revision 1.41  2000/09/26 19:59:18  sparker
 //Work on MPI petsc
 //

@@ -307,7 +307,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   int numGhostCells = 1;
   int zeroGhostCells = 0;
   int nofStencils = 7;
-
+  // Get the reference density
   // Get the required data
   new_dw->get(d_pressureVars->density, d_lab->d_densityINLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
@@ -315,6 +315,10 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
   new_dw->get(d_pressureVars->pressure, d_lab->d_pressureINLabel, 
 	      matlIndex, patch, Ghost::None, zeroGhostCells);
+  sum_vartype den_ref_var;
+  old_dw->get(den_ref_var, d_lab->d_refDensity_label);
+  d_pressureVars->den_Ref = den_ref_var;
+  cerr << "getdensity_ref " << d_pressureVars->den_Ref << endl;
   // Get the PerPatch CellInformation data
   PerPatch<CellInformation*> cellInfoP;
   old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -544,6 +548,17 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
 	 //	  unpack from linear solver.
 	 d_linearSolver->copyPressSoln(patch, d_pressureVars);
 	 cerr << "Calling normPressure for patch: " << patch->getID() << '\n';
+	 // need help from stave, rajesh
+#if 0
+	 if (patch->containsCell(d_pressRef)) {
+	   d_pressureVars->press_ref = d_pressureVars->pressure[d_pressRef];
+	   MPI_Bcast(d_pressureVars->press_ref, 1, MPI_DOUBLE, me, pg);
+	 }
+	 else {
+	   // 
+	   MPI_Bcast(d_pressureVars->press_ref, 1, MPI_DOUBLE,? , pg, ierr);
+	 }
+#endif
 	 normPressure(pg, patch, d_pressureVars);
 	 cerr << "Done with normPressure for patch: " << patch->getID() << '\n';
 	 // put back the results
@@ -592,7 +607,6 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
   new_dw->put(sum_vartype(d_pressureVars->residPress), d_lab->d_presResidPSLabel);
   new_dw->put(sum_vartype(d_pressureVars->truncPress), d_lab->d_presTruncPSLabel);
   // apply underelaxation to eqn
-#if 0
   d_linearSolver->computePressUnderrelax(pc, patch, old_dw, new_dw,
 					 d_pressureVars);
     cerr << "After underrelax" << endl;
@@ -601,7 +615,6 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
 	  cerr.width(10);
 	  cerr << *iter << ": " << d_pressureVars->pressNonlinearSrc[*iter] << "\n" ; 
     }
-#endif
   // put back computed matrix coeffs and nonlinear source terms 
   // modified as a result of underrelaxation 
   // into the matrix datawarehouse
@@ -641,7 +654,8 @@ PressureSolver::normPressure(const ProcessorGroup*,
   IntVector domHi = vars->pressure.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  double pressref = d_pressureVars->pressure[d_pressRef];
+  //  double pressref = d_pressureVars->press_ref;
+  double pressref = 0.0;
   FORT_NORMPRESS(domLo.get_pointer(),domHi.get_pointer(),
 		idxLo.get_pointer(), idxHi.get_pointer(),
 		vars->pressure.getPointer(), 
@@ -664,6 +678,9 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.53  2000/09/29 20:32:36  rawat
+// added underrelax to pressure solver
+//
 // Revision 1.52  2000/09/26 19:59:17  sparker
 // Work on MPI petsc
 //
