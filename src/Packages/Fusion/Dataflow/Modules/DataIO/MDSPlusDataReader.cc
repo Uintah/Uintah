@@ -38,7 +38,7 @@
 #include <Core/Datatypes/ScanlineField.h>
 #include <Packages/Fusion/share/share.h>
 
-#include <Packages/Fusion/Core/ThirdParty/mdsPlusAPI.h>
+#include <Packages/Fusion/Core/ThirdParty/mdsPlusReader.h>
 
 namespace Fusion {
 
@@ -108,44 +108,78 @@ void MDSPlusDataReader::execute(){
 
     ScanlineMesh *slm = NULL;
     ScanlineField<double> *pField = NULL;
+    
+    MDSPlusReader mds;
+
+    int trys = 0;
+    int retVal;
+
+    while( trys < 10 && (retVal = mds.connect(server.c_str()) ) == -2 ) {
+      remark( "Waiting for the connection to become free." );
+      sleep( 1 );
+      trys++;
+    }
 
     /* Connect to MDSplus */
-    if( MDS_Connect(server.c_str()) < 0 ) {
-      error( "connecting to Mds Server " + server );
+    if( retVal == -2 ) {
+      error( "Connection to Mds Server " + server + " too busy ... giving up.");
+      error_ = true;
+      return;
+    }
+    else if( retVal < 0 ) {
+      error( "Connecting to Mds Server " + server );
       error_ = true;
       return;
     }
     else
-      remark( "Conecting to MdsPlus Server --> " + server );
+      remark( "Conecting to MdsPlus Server " + server );
+
 
     // Open tree
-    if( MDS_Open( tree.c_str(), shot) , 0 ) {
+    trys = 0;
+
+    while( trys < 10 && (retVal = mds.open( tree.c_str(), shot) ) == -2 ) {
+      remark( "Waiting for the tree and shot to become free." );
+      sleep( 1 );
+      trys++;
+    }
+
+    if( retVal == -2 ) {
       ostringstream str;
-      str << "opening " << tree << " tree for shot " << shot;
+      str << "Opening " << tree << " tree and shot " << shot << " too busy ... giving up.";
+      error_ = true;
+      return;
+    }
+    if( retVal < 0 ) {
+      ostringstream str;
+      str << "Opening " << tree << " tree and shot " << shot;
       error( str.str() );
       error_ = true;
       return;
     }
     else {
       ostringstream str;
-      str << "Opening " << tree << " tree for shot " << shot;
+      str << "Opening " << tree << " tree and shot " << shot;
       remark( str.str() );
     }
 
     int dims[3];
 
     // Query the server for the cylindrical components of the grid.
-    phi_data = get_grid( "PHI", dims );
+    phi_data =  mds.grid( "PHI", dims );
 
-    nPhi = dims[0];
+    mds.disconnect();
 
-    {
-      ostringstream str;
-      str << "Read phi data " << nPhi-1 << " slices";
-      remark( str.str() );
-    }
-
+    //  Load the fields with the mesh and data.
     if( phi_data != NULL && dims[0] ) {
+      nPhi = dims[0];
+
+      {
+	ostringstream str;
+	str << "Read phi data " << nPhi-1 << " slices";
+	remark( str.str() );
+      }
+
       ScanlineMesh::Node::index_type node;
 
       slm = scinew ScanlineMesh(nPhi-1,

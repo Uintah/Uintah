@@ -38,7 +38,7 @@
 #include <Packages/Fusion/Core/Datatypes/StructHexVolField.h>
 #include <Packages/Fusion/share/share.h>
 
-#include <Packages/Fusion/Core/ThirdParty/mdsPlusAPI.h>
+#include <Packages/Fusion/Core/ThirdParty/mdsPlusReader.h>
 
 #include <algorithm>
 
@@ -142,6 +142,18 @@ MDSPlusFieldReader::MDSPlusFieldReader(GuiContext *context)
 
   for( int i=0; i<MAX_VECTOR; i++ )
     bVector_[i] = -1;
+
+  for( int i=0; i<MAX_GRID; i++ )
+    grid_data[i] = NULL;
+
+  for( int i=0; i<MAX_SCALAR; i++ )
+    for( int j=0; j<3; j++ )
+      scalar_data[i][j] = NULL;
+
+  for( int i=0; i<MAX_VECTOR; i++ )
+    for( int j=0; j<3; j++ )
+      for( int k=0; k<3; k++ )
+	vector_data[i][j][k] = NULL;
 }
 
 MDSPlusFieldReader::~MDSPlusFieldReader(){
@@ -172,77 +184,35 @@ void MDSPlusFieldReader::execute(){
   int sliceStart =  atoi( sSliceStart_.get().c_str() );
   int sliceStop =  atoi( sSliceStop_.get().c_str() );
   int sliceSkip =  atoi( sSliceSkip_.get().c_str() );
+  int space = iSpace_.get();
+  int mode = iMode_.get();
 
-  bool update = false;
+  bool readGrid = false, readData = false;
+  bool modeChange = false;
 
   if( bScalar_[0] != iScalar0_.get() ) {
     bScalar_[0] = iScalar0_.get();
-    update = true;
+
+    if( bScalar_[0] ) readData = true;
   }
 
   if( bVector_[0] != iVector0_.get() ) {
     bVector_[0] = iVector0_.get();
-    update = true;
+
+    if( bVector_[0] ) readData = true;
   }
 
   if( bVector_[1] != iVector1_.get() ) {
     bVector_[1] = iVector1_.get();
-    update = true;
+
+    if( bVector_[1] ) readData = true;
   }
 
   if( bVector_[2] != iVector2_.get() ) {
     bVector_[2] = iVector2_.get();
-    update = true;
+
+    if( bVector_[2] ) readData = true;
   }
-
-  int space = iSpace_.get();
-  int mode = iMode_.get();
-
-  bool readAll, readGrid, readData;
-  bool modeChange;
-
-  if( error_  == true ||
-      
-      update == true ||
-
-      server_ != server ||
-      tree_   != tree   ||
-      shot_   != shot ) {
-
-    error_ = false;
-
-    server_ = server;
-    tree_   = tree;
-    shot_   = shot;
-
-    readAll = readGrid = true;
-  } else
-    readAll = readGrid = false;
-
-  if( sliceRange_  != sliceRange ||
-      sliceStart_ != sliceStart ||
-      sliceStop_ != sliceStop ||
-      sliceSkip_ != sliceSkip ||
-      slice_ != slice ||
-      space_ != space ) {
-
-    sliceRange_ = sliceRange;
-    sliceStart_ = sliceStart;
-    sliceStop_ = sliceStop;
-    sliceSkip_ = sliceSkip;
-
-    slice_  = slice;
-    space_ = space;
-
-    readData = true;
-  } else
-    readData = false;
-    
-  if( mode_ != mode ) {
-    mode_ = mode;
-    modeChange = true;
-  } else
-    modeChange = false;
 
   bool readSomething = false;
 
@@ -266,46 +236,116 @@ void MDSPlusFieldReader::execute(){
     return;
   }
 
-  if( readAll || readGrid || readData ) {
-   
+  if( error_  == true ||
+      
+      server_ != server ||
+      tree_   != tree   ||
+      shot_   != shot ) {
+
+    error_ = false;
+
+    server_ = server;
+    tree_   = tree;
+    shot_   = shot;
+
+    readGrid = readData = true;
+  }
+
+  if( sliceRange_ != sliceRange )
+      sliceRange_ = sliceRange;
+
+  if( sliceRange_ == true ||
+      slice_ != slice ||
+      space_ != space) {
+
+    slice_  = slice;
+    space_ = space;
+
+    sliceStart_ = sliceStart;
+    sliceStop_ = sliceStop;
+    sliceSkip_ = sliceSkip;
+
+    readData = true;
+  }
+    
+  if( mode_ != mode ) {
+    mode_ = mode;
+    modeChange = true;
+  }
+  
+  MDSPlusReader mds;
+
+  if( readGrid || readData ) {
+
+    int trys = 0;
+    int retVal;
+
+    while( trys < 10 && (retVal = mds.connect(server.c_str()) ) == -2 ) {
+      remark( "Waiting for the connection to become free." );
+      sleep( 1 );
+      trys++;
+    }
+  
     /* Connect to MDSplus */
-    if( MDS_Connect(server.c_str()) < 0 ) {
-      error( "connecting to Mds Server " + server );
+    if( retVal == -2 ) {
+      error( "Connection to Mds Server " + server + " too busy ... giving up.");
+      error_ = true;
+      return;
+    }
+    else if( retVal < 0 ) {
+      error( "Connecting to Mds Server " + server );
       error_ = true;
       return;
     }
     else
-      remark( "Conecting to MdsPlus Server --> " + server );
+      remark( "Conecting to MdsPlus Server " + server );
+
 
     // Open tree
-    if( MDS_Open( tree.c_str(), shot) , 0 ) {
+    trys = 0;
+
+    while( trys < 10 && (retVal = mds.open( tree.c_str(), shot) ) == -2 ) {
+      remark( "Waiting for the tree and shot to become free." );
+      sleep( 1 );
+      trys++;
+    }
+
+    if( retVal == -2 ) {
       ostringstream str;
-      str << "opening " << tree << " tree for shot " << shot;
+      str << "Opening " << tree << " tree and shot " << shot << " too busy ... giving up.";
+      error_ = true;
+      return;
+    }
+    if( retVal < 0 ) {
+      ostringstream str;
+      str << "Opening " << tree << " tree and shot " << shot;
       error( str.str() );
       error_ = true;
       return;
     }
     else {
       ostringstream str;
-      str << "Opening " << tree << " tree for shot " << shot;
+      str << "Opening " << tree << " tree and shot " << shot;
       remark( str.str() );
     }
   }
 
-
-  if( readAll || readGrid  || readData ) {
+  // If reading the same tree no need to get the grid.
+  if( readGrid ) {
 
     int dims[3];
 
-    for( int n=0; n<MAX_GRID; n++ )
+    for( int n=0; n<MAX_GRID; n++ ) {
+      if( grid_data[n] ) delete grid_data[n];
       grid_data[n] = NULL;
+    }
 
     // Query the server for the cylindrical components of the grid.
     for( int n=0; n<MAX_GRID; n++ ) {
 
       dims[0] = dims[1] = dims[2] = 0;
 
-      grid_data[n] = get_grid( gridStr[n].c_str(), dims );
+      grid_data[n] = mds.grid( gridStr[n].c_str(), dims );
 
       if( grid_data[n] ) {
 
@@ -342,12 +382,14 @@ void MDSPlusFieldReader::execute(){
 
     {
       ostringstream str;
-      str << "Grid size: " << nRadial << " " << nTheta << " " << nPhi << " " << nMode;
+      str << "Grid size: ";
+      str << nRadial << " " << nTheta << " " << nPhi << " " << nMode;
       remark( str.str() );
     }
   }
 
-  if( readAll || readData ) {
+
+  if( readData || modeChange ) {
 
     std::string sNode("SCALARS");                 // Node/Data to fetch
     std::string vNode("VECTORS.CYLINDRICAL");     // Node/Data to fetch
@@ -356,15 +398,15 @@ void MDSPlusFieldReader::execute(){
 
     int dims[3];
 
-    char *name = NULL;          // Used to hold the name of the slice 
+    std::string name;           // Used to hold the name of the slice 
     double time;                // Used to hold the time of the slice 
     int nSlices;                // Number of time slices.
     int *nids;                  // IDs to the time slice nodes in the tree 
 
     // Query the server for the number of slices in the tree
-    nSlices = get_slice_ids( &nids );
+    nSlices = mds.slice_ids( &nids );
 
-    {
+    if( readData ) {
       ostringstream str;
       str << "Number of slices in the current shot " << nSlices;
       remark( str.str() );
@@ -373,8 +415,8 @@ void MDSPlusFieldReader::execute(){
     vector< pair< int, double > > sliceList;
 
     for( int ic=0; ic<nSlices; ic++ ) {
-      name = get_slice_name( nids, ic );
-      time = get_slice_time( name );
+      name = mds.slice_name( nids, ic );
+      time = mds.slice_time( name );
 
       sliceList.push_back( pair< int, double >(ic, time) );
     }
@@ -395,9 +437,9 @@ void MDSPlusFieldReader::execute(){
 	error( str.str() );
 	error_ = true;
 	return;
-      } else if( sliceSkip_< 0 || sliceStop_-sliceStart_+1<sliceSkip_ ) {
+      } else if( sliceSkip_< 0 || sliceStop_-sliceStart_<sliceSkip_ ) {
 	ostringstream str;
-	str << "Slice stop is outside of the range [0-" << sliceStop_-sliceStart_+1 << ").";
+	str << "Slice skip is outside of the range [0-" << sliceStop_-sliceStart_ << ").";
 	error( str.str() );
 	error_ = true;
 	return;
@@ -420,8 +462,8 @@ void MDSPlusFieldReader::execute(){
 
       slice = sliceList[ic].first;
 
-      name = get_slice_name( nids, slice );
-      time = get_slice_time( name );
+      name = mds.slice_name( nids, slice );
+      time = mds.slice_time( name );
 
       {
 	ostringstream str;
@@ -439,50 +481,26 @@ void MDSPlusFieldReader::execute(){
 	sSliceNumber_.set( str.str().c_str() );
       }
 
-      // Fetch the Scalar data from the node
-      for( int n=0; n<MAX_SCALAR; n++ ) {
+      if( readData  ) {
+	// Fetch the Scalar data from the node
+	for( int n=0; n<MAX_SCALAR; n++ ) {
 
-	for( int i=0; i<3; i++ )
-	  scalar_data[n][i] = NULL;
-
-	if( bScalar_[n] ) {
-	
-	  buf = sNode + sFieldStr[n];
-
-	  if( space_ == REALSPACE ) {
-	    remark( spaceStr[0] + "." + buf );
-
-	    scalar_data[n][0] =
-	      get_slice_data( name, spaceStr[0].c_str(), buf.c_str(), dims );
-
-	    if( scalar_data[n][0] == NULL ) {
-	      error( "Error can not get Scalar data" );
-	      if( ! sliceRange_ ) {
-		error_ = true;
-		return;
-	      }
-	    } else if( nRadial != dims[0] ||
-		       nTheta  != dims[1] ||
-		       nPhi    != dims[2] ) {
-	      
-	      ostringstream str;
-	      str << "Error dimensions do not match Grid dimensions: ";
-	      str << dims[0] << " " << dims[1] << " " << dims[2];
-	      error( str.str() );
-	      if( ! sliceRange_ ) {
-		error_ = true;
-		return;
-	      }
-	    }
+	  for( int i=0; i<3; i++ ) {
+	    if( scalar_data[n][i] ) delete scalar_data[n][i];
+	    scalar_data[n][i] = NULL;
 	  }
-	  else if( space_ == PERTURBED ){
-	    for( int i=1; i<3; i++ ) { // Real and imaginary perturbed parts
-	      remark( spaceStr[i] + "." + buf );
 
-	      scalar_data[n][i] =
-		get_slice_data( name, spaceStr[i].c_str(), buf.c_str(), dims );
+	  if( bScalar_[n] ) {
+	
+	    buf = sNode + sFieldStr[n];
 
-	      if( scalar_data[n][i] == NULL ) {
+	    if( space_ == REALSPACE ) {
+	      remark( spaceStr[0] + "." + buf );
+
+	      scalar_data[n][0] =
+		mds.slice_data( name, spaceStr[0].c_str(), buf.c_str(), dims );
+
+	      if( scalar_data[n][0] == NULL ) {
 		error( "Error can not get Scalar data" );
 		if( ! sliceRange_ ) {
 		  error_ = true;
@@ -490,50 +508,8 @@ void MDSPlusFieldReader::execute(){
 		}
 	      } else if( nRadial != dims[0] ||
 			 nTheta  != dims[1] ||
-			 nMode   != dims[2] ) {
-
-		ostringstream str;
-		str << "Error dimensions do not match Grid dimensions: ";
-		str << dims[0] << " " << dims[1] << " " << dims[2];
-		error( str.str() );
-		if( ! sliceRange_ ) {
-		  error_ = true;
-		  return;
-		}
-	      }
-	    }
-	  }
-	}
-      }
-
-      // Fetch the Vector data from the node
-      for( int n=0; n<MAX_VECTOR; n++ ) {
-
-	for( int i=0; i<3; i++ )
-	  for( int j=0; j<3; j++ )
-	    vector_data[n][i][j] = NULL;
-
-	if( bVector_[n] ) {
-
-	  if( space == REALSPACE ) {
-	    for( int j=0; j<3; j++ ) {  // R, Z, Phi parts.
-	      buf = vNode + vFieldStr[n][j];
-
-	      remark( spaceStr[0] + "." + buf );
-
-	      vector_data[n][0][j] =
-		get_slice_data( name, spaceStr[0].c_str(), buf.c_str(), dims );
-
-	      if( vector_data[n][0][j] == NULL ) {
-		error( "Error can not get Vector data" );
-		if( ! sliceRange_ ) {
-		  error_ = true;
-		  return;
-		}
-	      } else if( nRadial != dims[0] ||
-			 nTheta  != dims[1] ||
 			 nPhi    != dims[2] ) {
-
+	      
 		ostringstream str;
 		str << "Error dimensions do not match Grid dimensions: ";
 		str << dims[0] << " " << dims[1] << " " << dims[2];
@@ -544,18 +520,15 @@ void MDSPlusFieldReader::execute(){
 		}
 	      }
 	    }
-	  } else if( space_ == PERTURBED ) {
-	    for( int i=1; i<3; i++ ) { // Real and imaginary perturbed parts
-	      for( int j=0; j<3; j++ ) {  // R, Z, Phi parts.
-		buf = vNode + vFieldStr[n][j];
-
+	    else if( space_ == PERTURBED ){
+	      for( int i=1; i<3; i++ ) { // Real and imaginary perturbed parts
 		remark( spaceStr[i] + "." + buf );
 
-		vector_data[n][i][j] =
-		  get_slice_data( name, spaceStr[i].c_str(), buf.c_str(), dims );
+		scalar_data[n][i] =
+		  mds.slice_data( name, spaceStr[i].c_str(), buf.c_str(), dims );
 
-		if( vector_data[n][i][j] == NULL ) {
-		  error( "Error can not get Vector data" );
+		if( scalar_data[n][i] == NULL ) {
+		  error( "Error can not get Scalar data" );
 		  if( ! sliceRange_ ) {
 		    error_ = true;
 		    return;
@@ -577,9 +550,85 @@ void MDSPlusFieldReader::execute(){
 	    }
 	  }
 	}
+
+	// Fetch the Vector data from the node
+	for( int n=0; n<MAX_VECTOR; n++ ) {
+
+	  for( int i=0; i<3; i++ ) {
+	    for( int j=0; j<3; j++ ) {
+	      if( vector_data[n][i][j] ) delete vector_data[n][i][j];
+	      vector_data[n][i][j] = NULL;
+	    }
+	  }
+
+	  if( bVector_[n] ) {
+
+	    if( space == REALSPACE ) {
+	      for( int j=0; j<3; j++ ) {  // R, Z, Phi parts.
+		buf = vNode + vFieldStr[n][j];
+
+		remark( spaceStr[0] + "." + buf );
+
+		vector_data[n][0][j] =
+		  mds.slice_data( name, spaceStr[0].c_str(), buf.c_str(), dims );
+
+		if( vector_data[n][0][j] == NULL ) {
+		  error( "Error can not get Vector data" );
+		  if( ! sliceRange_ ) {
+		    error_ = true;
+		    return;
+		  }
+		} else if( nRadial != dims[0] ||
+			   nTheta  != dims[1] ||
+			   nPhi    != dims[2] ) {
+
+		  ostringstream str;
+		  str << "Error dimensions do not match Grid dimensions: ";
+		  str << dims[0] << " " << dims[1] << " " << dims[2];
+		  error( str.str() );
+		  if( ! sliceRange_ ) {
+		    error_ = true;
+		    return;
+		  }
+		}
+	      }
+	    } else if( space_ == PERTURBED ) {
+	      for( int i=1; i<3; i++ ) { // Real and imaginary perturbed parts
+		for( int j=0; j<3; j++ ) {  // R, Z, Phi parts.
+		  buf = vNode + vFieldStr[n][j];
+
+		  remark( spaceStr[i] + "." + buf );
+
+		  vector_data[n][i][j] =
+		    mds.slice_data( name, spaceStr[i].c_str(), buf.c_str(), dims );
+
+		  if( vector_data[n][i][j] == NULL ) {
+		    error( "Error can not get Vector data" );
+		    if( ! sliceRange_ ) {
+		      error_ = true;
+		      return;
+		    }
+		  } else if( nRadial != dims[0] ||
+			     nTheta  != dims[1] ||
+			     nMode   != dims[2] ) {
+
+		    ostringstream str;
+		    str << "Error dimensions do not match Grid dimensions: ";
+		    str << dims[0] << " " << dims[1] << " " << dims[2];
+		    error( str.str() );
+		    if( ! sliceRange_ ) {
+		      error_ = true;
+		      return;
+		    }
+		  }
+		}
+	      }
+	    }
+	  }
+	}
       }
 
-      if( readAll || readData || modeChange ) {
+      if( readData || modeChange ) {
 	StructHexVolMesh *hvm = scinew StructHexVolMesh(nRadial, nTheta, nPhi);
 
 	StructHexVolField<double> *sField[MAX_SCALAR];
@@ -608,8 +657,6 @@ void MDSPlusFieldReader::execute(){
 	unsigned int kdim = nPhi;
 	unsigned int mdim = nMode;
 
-	remark( "Creating mesh and field. ");
-
 	// Convert the data and place in the mesh and field.
 	double xVal, yVal, zVal, pVal, rad, phi, angle;
 
@@ -633,7 +680,7 @@ void MDSPlusFieldReader::execute(){
 
 	  if( mode_ == 3 ) {
 	    ostringstream str;
-	    str << " K Values ";
+	    str << " Summing K Values ";
 	    str << grid_data[3][0] << "  ";
 	    str << grid_data[3][1] << "  ";
 	    str << grid_data[3][2];
@@ -641,7 +688,7 @@ void MDSPlusFieldReader::execute(){
 	  }
 	  else {
 	    ostringstream str;
-	    str << " Mode "  << mode_ << " and K Value " << grid_data[3][mode_];
+	    str << "Calculating Mode "  << mode_ << " and K Value " << grid_data[3][mode_];
 	    remark( str.str() );
 	  }
 
@@ -708,24 +755,35 @@ void MDSPlusFieldReader::execute(){
 	  }
 	}
 
+	remark( "Creating mesh and field. ");
+
 	cc = 0;
 
+	int jIndex;
+
 	for( k=0; k<kdim; k++ ) {
+
+	  node.k_ = k;
 
 	  phi = grid_data[2][k];
 
 	  for( j=0; j<jdim; j++ ) {
+
+	    node.j_ = j;
+
+	    jIndex = j * idim;
+
 	    for( i=0; i<idim; i++ ) {
 
-	      node.i_ = i;
-	      node.j_ = j;
-	      node.k_ = k;
+	      index = i + jIndex;
 
-	      rad = grid_data[0][i+j*idim];
+	      node.i_ = i;
+
+	      rad = grid_data[0][index];
 
 	      xVal =  rad * cos( phi );
 	      yVal = -rad * sin( phi );
-	      zVal =  grid_data[1][i+j*idim];
+	      zVal =  grid_data[1][index];
 
 	      hvm->set_point(node, Point( xVal, yVal, zVal ) );
 
@@ -741,6 +799,7 @@ void MDSPlusFieldReader::execute(){
 		if( bVector_[n] ) {
 		  xVal =  vector_data[n][0][0][cc] * cos(phi) -
 		    vector_data[n][0][2][cc] * sin(phi);
+
 		  yVal = -vector_data[n][0][0][cc] * sin(phi) -
 		    vector_data[n][0][2][cc] * cos(phi);
 	      
@@ -795,6 +854,9 @@ void MDSPlusFieldReader::execute(){
       }
     }
   }
+
+  if( readGrid || readData )
+    mds.disconnect();
 
   // Get a handle to the output pressure field port.
   for( int n=0; n<MAX_SCALAR; n++ ) {
