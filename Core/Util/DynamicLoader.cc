@@ -328,10 +328,24 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 
 
 void
-DynamicLoader::remove_cc(const CompileInfo &info, ostream &serr)
+DynamicLoader::cleanup_failed_compile(CompileInfoHandle info)
 {
-  string full = get_compile_dir() + "/" + info.filename_ + "cc";
-  unlink(full.c_str());
+  const string base = get_compile_dir() + "/" + info->filename_;
+
+  const string full_cc = base + "cc";
+  unlink(full_cc.c_str());
+
+  const string full_d = base + "d";
+  unlink(full_d.c_str());
+
+  const string full_log = base + "log";
+  unlink(full_log.c_str());
+
+  const string full_o = base + "o";
+  unlink(full_o.c_str());
+
+  const string full_so = base + "so";
+  unlink(full_so.c_str());
 }
 
 

@@ -105,7 +105,7 @@ ClipByFunction::execute()
       ClipByFunctionAlgo::get_compile_info(ftd, clipfunction_.get(), hoffset);
     if (!DynamicCompilation::compile(ci, algo, false, this))
     {
-      DynamicLoader::scirun_loader().remove_cc(*(ci.get_rep()), cout);
+      DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
       error("Your function would not compile.");
       return;
     }
