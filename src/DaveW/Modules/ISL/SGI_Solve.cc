@@ -32,10 +32,12 @@ using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
 
+/*
 extern "C" {
 void PSLDLT_Solve ( int token,double x[],double b[]);
  void PSLDLT_Destroy (int token);
 }
+*/
 
 class SGI_Solve : public Module {
 
@@ -115,12 +117,12 @@ void SGI_Solve::execute()
   
  cerr<<"Solve ...";
  start = time(0); 
- PSLDLT_Solve(token,sol,rhs);
+// PSLDLT_Solve(token,sol,rhs);
  end = time(0); 
  cerr<<"...Done!  Time = "<<(end-start)<<" s"<<endl;
 
 
- // PSLDLT_Destroy(token);
+ // PSLDLT_Destroy(token); // this line was commented out for real
 
 
  cerr<<endl;
@@ -146,6 +148,9 @@ void SGI_Solve::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/11/09 08:35:20  dmw
+// took out complibsgimath references, so this will compile on machines other than just rapture - as a result, SGI_LU and SGI_Solve don't work anymore
+//
 // Revision 1.2  1999/10/07 02:06:37  sparker
 // use standard iostreams and complex type
 //
