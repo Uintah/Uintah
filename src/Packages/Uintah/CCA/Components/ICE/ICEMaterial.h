@@ -50,61 +50,59 @@ DESCRIPTION
 WARNING
 
 ****************************************/
-
-      class ICEMaterial : public Material {
-      public:
-	 ICEMaterial(ProblemSpecP&);
-	 
-	 ~ICEMaterial();
-	 
-	 //////////
-	 // Return correct EOS model pointer for this material
-	 EquationOfState* getEOS() const;
-	 Burn* getBurnModel();
-
-         //for HeatConductionModel
-        double getThermalConductivity() const;
-        double getSpecificHeat() const;
-        double getHeatTransferCoefficient() const;
-        double getGamma() const;
-	 double getViscosity() const;
-	 double getSpeedOfSound() const;
-        bool   getIsProductOfReaction() const;
-
-	 void initializeCells(CCVariable<double>& rhom,
-                           CCVariable<double>&sp_vol,
-                           CCVariable<double>& rhC,
-			      CCVariable<double>& temp, 
-			      CCVariable<double>& ss,    CCVariable<double>& vsc,
-			      CCVariable<double>& volf,  CCVariable<Vector>& vCC,
-                           CCVariable<double>& press,
-                           int numMatls,
-			      const Patch* patch, DataWarehouse* new_dw);
-
-      private:
-
-	 // Specific constitutive model associated with this material
-	 EquationOfState *d_eos;
-	 Burn* d_burn;
-
-	 double d_thermalConductivity;
-	 double d_specificHeat;
-	 double d_heatTransferCoefficient;
-	 double d_speed_of_sound;
-	 double d_viscosity;
-	 double d_gamma;
-        bool d_react_prods;
-         
-	 std::vector<GeometryObject2*> d_geom_objs;
-
-	 ICELabel* lb;
-
-	 // Prevent copying of this class
-	 // copy constructor
-	 ICEMaterial(const ICEMaterial &icem);
-	 ICEMaterial& operator=(const ICEMaterial &icem);        
-        
-      };
+ 
+ class ICEMaterial : public Material {
+ public:
+   ICEMaterial(ProblemSpecP&);
+   
+   ~ICEMaterial();
+   
+   //////////
+   // Return correct EOS model pointer for this material
+   EquationOfState* getEOS() const;
+   Burn* getBurnModel();
+   
+   //for HeatConductionModel
+   double getThermalConductivity() const;
+   double getSpecificHeat() const;
+   double getHeatTransferCoefficient() const;
+   double getGamma() const;
+   double getViscosity() const;
+   double getSpeedOfSound() const;
+   
+   void initializeCells(CCVariable<double>& rhom,
+			CCVariable<double>&sp_vol,
+			CCVariable<double>& rhC,
+			CCVariable<double>& temp, 
+			CCVariable<double>& ss,    CCVariable<double>& vsc,
+			CCVariable<double>& volf,  CCVariable<Vector>& vCC,
+			CCVariable<double>& press,
+			int numMatls,
+			const Patch* patch, DataWarehouse* new_dw);
+   
+ private:
+   
+   // Specific constitutive model associated with this material
+   EquationOfState *d_eos;
+   Burn* d_burn;
+   
+   double d_thermalConductivity;
+   double d_specificHeat;
+   double d_heatTransferCoefficient;
+   double d_speed_of_sound;
+   double d_viscosity;
+   double d_gamma;
+   
+   std::vector<GeometryObject2*> d_geom_objs;
+   
+   ICELabel* lb;
+   
+   // Prevent copying of this class
+   // copy constructor
+   ICEMaterial(const ICEMaterial &icem);
+   ICEMaterial& operator=(const ICEMaterial &icem);        
+   
+ };
 } // End namespace Uintah
 
 #endif // __ICE_MATERIAL_H__

@@ -37,7 +37,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb)
-  : lb(lb)
+  : Material(ps), lb(lb)
 {
    // Constructor
 
