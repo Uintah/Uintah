@@ -2828,9 +2828,7 @@ if test "$with_globus" && test ! "$DEF_GLOBUS"; then
   echo
 fi
 
-debugging=yes
   SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_io,        main,,,optional)
-debugging=no
 
 if test "$is_linux" = "linux"; then
   SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_utp,       main,,,optional)
