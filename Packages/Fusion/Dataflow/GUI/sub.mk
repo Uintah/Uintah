@@ -13,7 +13,6 @@ SRCDIR := Packages/Fusion/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/EditFusionField.tcl\
 	$(SRCDIR)/FusionFieldReader.tcl\
 	$(SRCDIR)/MDSPlusFieldReader.tcl\
 	$(SRCDIR)/MDSPlusDataReader.tcl\
