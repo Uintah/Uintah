@@ -131,8 +131,8 @@ AC_DEFUN(SCI_MSG_ERROR,
 ##      $lib_LIBRARY   =>   -Lpath
 ##      HAVE_LIB$lib   =>   yes
 ##
-##  - cxx == "yes" => Lib being tested for is a C++ lib.
-##        == "no" or anything else => C lib, don't need "extern C" stuff.
+##  - cxx == "no" => C lib, don't need "extern C" stuff.
+##        == "yes" or anything else => Lib being tested for is a C++ lib.
 ##        This is done because we need to be able to use this check on
 ##        C only libraries.  This is done before we call
 ##        AC_LANG_CPLUSPLUS (which (I think) switches everything into
@@ -259,7 +259,16 @@ AC_DEFUN(SCI_CHECK_LIB,
           LIBRARY=-L$_CHECK_PATH_
        fi
 
-       cat > conftest.cc <<EOF
+       if test "$_SCI_USING_CXX_" = "no"; then
+         theCompiler=$CC
+	 theExt=c
+       else
+         theCompiler=$CXX
+	 theExt=cc
+       fi
+
+       cat > conftest.$theExt <<EOF
+
        #include "confdefs.h"
        $EXTERN_BEGIN
        $_SCI_DECL_
@@ -271,7 +280,7 @@ AC_DEFUN(SCI_CHECK_LIB,
 EOF
 
        rm -f a.out
-       ac_try="$CXX $CFLAGS conftest.cc $LIBRARY -l$2 $_SCI_OTHER_LIBS_ >/dev/null >> conftest.out 2>> conftest.out"
+       ac_try="$theCompiler $CFLAGS conftest.$theExt $LIBRARY -l$2 $_SCI_OTHER_LIBS_ >/dev/null >> conftest.out 2>> conftest.out"
        (eval $ac_try) 2>&5
 
        if test "$debugging" = "yes"; then
@@ -396,6 +405,14 @@ AC_DEFUN(SCI_CHECK_HEADERS,
     _SCI_USING_CXX_="$4"
     _SCI_HEADER_OPTIONAL_="$5"
 
+    if test "$_SCI_USING_CXX_" = "no"; then
+       theCompiler=$CC
+       theExt=c
+    else
+       theCompiler=$CXX
+       theExt=cc
+    fi
+
     if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
             "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        SCI_MSG_ERROR(SCI CHECK HEADERS macro (for $2) optional parameter must be set to 'optional' or 'not-optional')
@@ -447,10 +464,10 @@ AC_DEFUN(SCI_CHECK_HEADERS,
 
           include_list="\n""$include_list\n""int main() { return 0; }\n"
 
-	  echo $use_minus_e $include_list > conftest.cc
+	  echo $use_minus_e $include_list > conftest.$theExt
 
           rm -f conftest.o
-          ac_try="$CXX $CFLAGS -c conftest.cc $INCLUDE_FLAGS $3 >/dev/null 2>conftest.out"
+          ac_try="$theCompiler $CFLAGS -c conftest.$theExt $INCLUDE_FLAGS $3 >/dev/null 2>conftest.out"
           (eval $ac_try) 2>&5
 
           if test -f conftest.o; then
@@ -553,8 +570,8 @@ AC_DEFUN(SCI_CHECK_HEADERS,
           _SCI_HEADER_HAVE_=HAVE_$_SCI_HEADER_NAME_
           _SCI_INCLUDE_NAME_=INC$_SCI_HEADER_NAME_
 
-          ac_try="$CXX $CFLAGS -c conftest.cc $INCLUDE_FLAGS $3 >/dev/null 2>conftest.out"
-          cat > conftest.cc <<EOF
+          ac_try="$theCompiler $CFLAGS -c conftest.$theExt $INCLUDE_FLAGS $3 >/dev/null 2>conftest.out"
+          cat > conftest.$theExt <<EOF
           #include "confdefs.h"
           #include <$_HEADER_>
           int main() {
@@ -566,7 +583,7 @@ EOF
 
           if test -f conftest.o; then
              if test "$_CHECK_PATH_" != ""; then
-                if test -e "$_CHECK_PATH_/$_HEADER_"; then
+                if test -f "$_CHECK_PATH_/$_HEADER_"; then
                    AC_MSG_RESULT($_CHECK_PATH_)
                    eval $_SCI_INCLUDE_NAME_=-I$_CHECK_PATH_
                 else
@@ -2304,19 +2321,18 @@ AC_SUBST(MPEGE_LIBRARY)
 
 dirs="$mdsplus/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
 
-SCI_CHECK_LIB($dirs,MdsLib_client,main,,,optional)
-if test "$LIBMDSLIB_CLIENT"; then
+SCI_CHECK_LIB($dirs,MdsLib_client,main,,no,optional)
+if test "$HAVE_LIBMDSLIB_CLIENT"; then
    LIBMDSPLUS="$LIBMDSLIB_CLIENT"
 fi
 
-SCI_CHECK_HEADERS($LIBMDSLIB_CLIENT/../include,mdslib.h,,,optional)
-if test "$INCMDSLIB_CLIENT"; then
-   INCMDSPLUS_H="$LIBMDSLIB_CLIENT/../include"
+SCI_CHECK_HEADERS($LIBMDSLIB_CLIENT/../include,mdslib.h,,no,optional)
+if test "$HAVE_MDSLIB_H"; then
+   INCMDSPLUS_H="-I$LIBMDSLIB_CLIENT/../include"
 fi
 
 if test "$LIBMDSPLUS" && test "$INCMDSPLUS_H"; then
-    DEF_MDSPLUS="#define MDSPLUS 1"
-    break
+    DEF_MDSPLUS="#define HAVE_MDSPLUS 1"
 fi
 
 if test "$mdsplus" && test ! "$DEF_MDSPLUS"; then
