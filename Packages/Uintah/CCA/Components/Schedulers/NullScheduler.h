@@ -50,6 +50,10 @@ WARNING
       
       //////////
       // Insert Documentation Here:
+     virtual void compile( const ProcessorGroup * pc );
+      
+      //////////
+      // Insert Documentation Here:
      virtual void execute( const ProcessorGroup * pc );
       
       //////////
