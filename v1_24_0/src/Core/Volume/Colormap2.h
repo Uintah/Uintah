@@ -52,18 +52,19 @@ public:
 	    bool updating, bool faux);
   virtual ~ColorMap2();
 
-  inline vector<CM2WidgetHandle>& widgets() { return widgets_; }
+  inline vector<CM2WidgetHandle>&	widgets() { return widgets_; }
   
-  inline bool updating() { return updating_; }
-  inline bool faux() { return faux_; }
-
-  virtual void io(SCIRun::Piostream&);
-  static SCIRun::PersistentTypeID type_id;
+  inline bool				updating() { return updating_; }
+  inline bool				faux() { return faux_; }
+  int &					selected() { return selected_; }
+  virtual void				io(SCIRun::Piostream&);
+  static SCIRun::PersistentTypeID	type_id;
 
 protected:
-  bool updating_;
-  bool faux_;
-  vector<CM2WidgetHandle> widgets_;
+  bool					updating_;
+  bool					faux_;
+  vector<CM2WidgetHandle>		widgets_;
+  int					selected_;
 };
 
 typedef SCIRun::LockingHandle<ColorMap2> ColorMap2Handle;
