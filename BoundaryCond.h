@@ -94,10 +94,6 @@ template<class T>
                             const string& bc_kind,
                             const T& value,
                             const Vector& cell_dx);
-
-  bool are_We_Using_LODI_BC(const Patch* patch,
-                            vector<bool>& which_face_LODI,
-                            const int mat_id);
   
   void ImplicitMatrixBC(CCVariable<Stencil7>& var, const Patch* patch);
   
