@@ -26,14 +26,10 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/BoundCond.h>
-#include <Packages/Uintah/Core/Grid/VelocityBoundCond.h>
-#include <Packages/Uintah/Core/Grid/SymmetryBoundCond.h>
-#include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Grid/fillFace.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
@@ -1410,46 +1406,14 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
 
       // Apply grid boundary conditions to the velocity before storing the data
-      IntVector offset =  IntVector(0,0,0);
 
-      for(Patch::FaceType face = Patch::startFace;
-	  face <= Patch::endFace; face=Patch::nextFace(face)){
-        const BoundCondBase *vel_bcs, *temp_bcs, *sym_bcs;
-        if (patch->getBCType(face) == Patch::None) {
-	  vel_bcs  = patch->getBCValues(dwi,"Velocity",face);
-	  temp_bcs = patch->getBCValues(dwi,"Temperature",face);
-	  sym_bcs  = patch->getBCValues(dwi,"Symmetric",face);
-        } else
-          continue;
-
-	if (vel_bcs != 0) {
-	  const VelocityBoundCond* bc =
-	    dynamic_cast<const VelocityBoundCond*>(vel_bcs);
-	  if (bc->getKind() == "Dirichlet") {
-	    //cout << "Velocity bc value = " << bc->getValue() << endl;
-            // for primary field
-	    fillFace(gvelocity,patch, face,bc->getValue(),offset);
-            // for additional field
-            fillFace(Gvelocity,patch, face,bc->getValue(),offset);
-	  }
-	}
-	if (sym_bcs != 0) {
-          // for primary field
-	  fillFaceNormal(gvelocity,patch, face,offset);
-          // for addtitional field
-          fillFaceNormal(Gvelocity,patch, face,offset);
-	}
-	if (temp_bcs != 0) {
-	  const TemperatureBoundCond* bc =
-	    dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
-	  if (bc->getKind() == "Dirichlet") {
-            // for primary field
-	    fillFace(gTemperature,patch, face,bc->getValue(),offset);
-            // for additional field
-            fillFace(GTemperature,patch, face,bc->getValue(),offset);
-	  }
-	}
-      }
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch,dwi,"Velocity",gvelocity);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",Gvelocity);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",Gvelocity);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",GTemperature);
 
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
 
@@ -1767,21 +1731,11 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
 #endif
       //__________________________________
       // Set internal force = 0 on symmetric boundaries
-      for(Patch::FaceType face = Patch::startFace;
-	  face <= Patch::endFace; face=Patch::nextFace(face)){
-	const BoundCondBase *sym_bcs;
-	if (patch->getBCType(face) == Patch::None) {
-	  sym_bcs  = patch->getBCValues(dwi,"Symmetric",face);
-	} else
-	  continue;
-	if (sym_bcs != 0) {
-	  IntVector offset(0,0,0);
-          // for primary field
-	  fillFaceNormal(internalforce,patch, face,offset);
-          // for additional field
-          fillFaceNormal(Ginternalforce,patch,face,offset);
-	}
-      }
+
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",Ginternalforce);
+
 #ifdef KUMAR
       internalforce.initialize(Vector(0,0,0));
 #endif
@@ -2087,72 +2041,12 @@ void FractureMPM::solveHeatEquations(const ProcessorGroup*,
 	htrate_gasNC = htrate_gasNC_create; // reference created data
       }
 
-      Vector dx = patch->dCell();
-      for(Patch::FaceType face = Patch::startFace;
-	  face <= Patch::endFace; face=Patch::nextFace(face)){
-	const BoundCondBase* temp_bcs;
-        if (patch->getBCType(face) == Patch::None) {
-	   temp_bcs = patch->getBCValues(dwi,"Temperature",face);
-        } else
-          continue;
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch,dwi,"Temperature",internalHeatRate,
+			      gvolume);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",GinternalHeatRate,
+			      gvolume);
 
-	if (temp_bcs != 0) {
-            const TemperatureBoundCond* bc =
-	      dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
-            if (bc->getKind() == "Neumann"){
-	      double value = bc->getValue();
-
-             IntVector low = patch->getInteriorNodeLowIndex();
-             IntVector hi  = patch->getInteriorNodeHighIndex();     
-              if(face==Patch::xplus || face==Patch::xminus){
-                int I = 0;
-                if(face==Patch::xminus){ I=low.x(); }
-                if(face==Patch::xplus){ I=hi.x()-1; }
-                for (int j = low.y(); j<hi.y(); j++) {
-                  for (int k = low.z(); k<hi.z(); k++) {
-                    // for primary field
-                    internalHeatRate[IntVector(I,j,k)] +=
-				value*(2.0*gvolume[IntVector(I,j,k)]/dx.x());
-                    // for additional field
-                    GinternalHeatRate[IntVector(I,j,k)] +=
-                                value*(2.0*Gvolume[IntVector(I,j,k)]/dx.x());
-                  }
-                }
-              }
-              if(face==Patch::yplus || face==Patch::yminus){
-                int J = 0;
-                if(face==Patch::yminus){ J=low.y(); }
-                if(face==Patch::yplus){ J=hi.y()-1; }
-                for (int i = low.x(); i<hi.x(); i++) {
-                  for (int k = low.z(); k<hi.z(); k++) {
-                    // for primary field
-                    internalHeatRate[IntVector(i,J,k)] +=
-				value*(2.0*gvolume[IntVector(i,J,k)]/dx.y());
-                    // for additional field
-                    GinternalHeatRate[IntVector(i,J,k)] +=
-                                value*(2.0*Gvolume[IntVector(i,J,k)]/dx.y());
-                  }
-                }
-              }
-              if(face==Patch::zplus || face==Patch::zminus){
-                int K = 0;
-                if(face==Patch::zminus){ K=low.z(); }
-                if(face==Patch::zplus){ K=hi.z()-1; }
-                for (int i = low.x(); i<hi.x(); i++) {
-                  for (int j = low.y(); j<hi.y(); j++) {
-                    // for primary field
-                    internalHeatRate[IntVector(i,j,K)] +=
-				value*(2.0*gvolume[IntVector(i,j,K)]/dx.z());
-                    // for additional field
-                    GinternalHeatRate[IntVector(i,j,K)] +=
-                                value*(2.0*Gvolume[IntVector(i,j,K)]/dx.z());
-                  }
-                }
-              }
-            }
-          }
-        
-      }
 
       // Create variables for the results
       // for primary field
@@ -2282,28 +2176,11 @@ void FractureMPM::integrateTemperatureRate(const ProcessorGroup*,
       }
 
       // Apply grid boundary conditions to the temperature 
-      IntVector offset(0,0,0);
-      for(Patch::FaceType face = Patch::startFace;
-	  face <= Patch::endFace; face=Patch::nextFace(face)){
-        const BoundCondBase *temp_bcs;
-        if (patch->getBCType(face) == Patch::None) {
-	   temp_bcs = patch->getBCValues(dwi,"Temperature",face);
-        }
-        else {
-          continue;
-        }
 
-        if (temp_bcs != 0) {
-          const TemperatureBoundCond* bc = 
-              dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
-          if (bc->getKind() == "Dirichlet") {
-            // for primary field
-            fillFace(tempStar,patch, face,bc->getValue(),     offset);
-            // for additional field
-            fillFace(GtempStar,patch, face,bc->getValue(),    offset);
-          }  // if(dirichlet)
-        }  //if(temp_bc)
-      }  // patch face loop
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch,dwi,"Temperature",tempStar);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",GtempStar);
+
 
       // Now recompute temp_rate as the difference between the temperature
       // interpolated to the grid (no bcs applied) and the new tempStar
@@ -2349,39 +2226,15 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
 
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
-      IntVector offset(0,0,0);
-      for(Patch::FaceType face = Patch::startFace;
-	  face <= Patch::endFace; face=Patch::nextFace(face)){
-        const BoundCondBase *vel_bcs, *sym_bcs;
-        if (patch->getBCType(face) == Patch::None) {
-	   vel_bcs  = patch->getBCValues(dwi,"Velocity",   face);
-	   sym_bcs  = patch->getBCValues(dwi,"Symmetric",  face);
-        } else
-          continue;
-         //__________________________________
-         // Velocity and Acceleration
-	  if (vel_bcs != 0) {
-	    const VelocityBoundCond* bc = 
-	      dynamic_cast<const VelocityBoundCond*>(vel_bcs);
-	    //cout << "Velocity bc value = " << bc->getValue() << endl;
-	    if (bc->getKind() == "Dirichlet") {
-              // for primary field
-	      fillFace(gvelocity_star,patch, face,bc->getValue(),     offset);
-	      fillFace(gacceleration, patch, face,Vector(0.0,0.0,0.0),offset);
-              // for additional field
-              fillFace(Gvelocity_star,patch, face,bc->getValue(),     offset);
-              fillFace(Gacceleration, patch, face,Vector(0.0,0.0,0.0),offset);
-	    }
-	  }
-	  if (sym_bcs != 0) {
-             // for primary field
-	     fillFaceNormal(gvelocity_star,patch, face,offset);
-	     fillFaceNormal(gacceleration, patch, face,offset);
-             // for additional field
-             fillFaceNormal(Gvelocity_star,patch, face,offset);
-             fillFaceNormal(Gacceleration, patch, face,offset);
-	  }
-      }  // patch face loop
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch,dwi,"Velocity",gvelocity_star);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",Gvelocity_star);
+      bc.setBoundaryCondition(patch,dwi,"Acceleration",gacceleration);
+      bc.setBoundaryCondition(patch,dwi,"Acceleration",Gacceleration);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",Gvelocity_star);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",Gacceleration);
 
     } // matl loop
   }  // patch loop
