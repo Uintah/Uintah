@@ -105,7 +105,7 @@ ColorMapToNrrd::execute()
     const float *data = cmapH->get_rgba();
 
     const int range = size*4;
-    for(int start=0; start<size; start++) 
+    for(unsigned int start=0; start<size; start++) 
       for(int cur=0; cur<range; cur+=size, ++data) 
 	val[start+cur] = *data;
 

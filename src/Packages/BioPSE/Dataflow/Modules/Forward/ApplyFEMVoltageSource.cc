@@ -135,7 +135,7 @@ void ApplyFEMVoltageSource::execute()
   // -- if the user passed in a vector the right size, copy it into ours 
   if (iportRhs_->get(hRhsIn) && 
       (rhsIn=dynamic_cast<ColumnMatrix*>(hRhsIn.get_rep())) && 
-      (rhsIn->nrows() == nsize))
+      ((unsigned int)(rhsIn->nrows()) == nsize))
   {
     string units;
     if (rhsIn->get_property("units", units))
@@ -165,7 +165,7 @@ void ApplyFEMVoltageSource::execute()
     error("Input stiffness matrix wasn't square.");
     return;
   }
-  if (nsize != matIn->nrows()) {
+  if (nsize != (unsigned int)(matIn->nrows())) {
     error("Input stiffness matrix was " + to_string(nsize)  +
 	  " nodes, matrix has " + to_string(matIn->nrows()) + " rows.");
     return;
