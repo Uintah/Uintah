@@ -186,30 +186,18 @@ int NormalMapMaterial::readfromppm6(char *filename)
   unsigned char ra,ga,ba;
   int r,g,b;
   double max = temp;
-  //if(temp != 255)
-  //  { printf("Maxval not 255 m=%d h=%d w=%d\n",temp,height,width); return;}
-  //resize normal map here
   normalmapimage = (Vector *)malloc(dimension_x*dimension_y*sizeof(Vector));
-  //val = (Color *)malloc(width*height*sizeof(Color));
-  //values = (int *)malloc(sizeof(int)*width*height);
   printf("Converting from 0->%d (x3) to Vector 0->1 by division\n",temp);
-  printf("Reading in File for a Normal Map%s\n",filename);
+  printf("Reading in File for a Normal Map=%s\n",filename);
   for(int j = dimension_y-1; j >= 0; j--)
     for(int i = 0; i < dimension_x; i++)
       { //ramsey
 	fscanf(fin,"%c%c%c",&ra,&ga,&ba);
-	r = (int)ra; g = (int)ga; b = (int)ba; 
-	if(r == 0 && g == 0 && b == 0)
-	  {
-	    normalmapimage[j*dimension_x+i] = Vector(0,0,1);
-	    printf("Found purely black pixel, converting to 0,0,1\n");
-	  }
-	else
-	  {
-	    normalmapimage[j*dimension_x+i] = 
-	      Vector(r/max,g/max,b/max); //(conversion)
-	    normalmapimage[j*dimension_x+i].normalize(); // need normalized Vectors
-	  }
+	r = ((int)ra / (max/2))-1; 
+	g = ((int)ga / (max/2))-1; 
+	b = ((int)ba / (max/2))-1; 
+        normalmapimage[j*dimension_x+i] =  Vector(r,g,b);
+        normalmapimage[j*dimension_x+i].normalize(); // need normalized Vectors
       }
   printf("File read\n");
   fclose(fin);
@@ -246,25 +234,17 @@ int NormalMapMaterial::readfromppm6(char *filename)
     fscanf(fin,"%d",&temp);
     double max = temp;
     int r,g,b;
-    //val = (Color *)malloc(width*height*sizeof(Color));
-    //values = (int *)malloc(sizeof(int)*width*height);
     normalmapimage = (Vector *)malloc(dimension_x*dimension_y*sizeof(Vector));
-    printf("Reading in File for a Normal Map%s\n",filename);
+    printf("Reading in File for a Normal Map=%s\n",filename);
     for(int j = dimension_y-1; j >= 0; j--)
       for(int i = 0; i < dimension_x; i++)
         {
           fscanf(fin,"%d %d %d",&r,&g,&b);
-          //setval(i,j,r/max,g/max,b/max);
-	  if(r == 0 && g == 0 && b ==0)
-	    {
-	      normalmapimage[j*dimension_x+i] = Vector(0,0,1);
-	      printf("Found purely black pixel, converting to 0,0,1\n");
-	    }
-	  else
-	    {
-	      normalmapimage[j*dimension_x+i] = Vector(r/max,g/max,b/max);
-	      normalmapimage[j*dimension_x+i].normalize();
-	    }
+    	r = (r / (max/2))-1; 
+	g = (g / (max/2))-1; 
+	b = (b / (max/2))-1; 
+        normalmapimage[j*dimension_x+i] =  Vector(r,g,b);
+        normalmapimage[j*dimension_x+i].normalize(); // need normalized Vectors
         }   
     printf("File read\n");
     fclose(fin);
