@@ -61,9 +61,10 @@ Hedgehog::Hedgehog()
     length_scale=1;
     ui_length_scale=new MUI_slider_real("Length Scale", &length_scale,
 					MUI_widget::Immediate, 0);
+    ui_length_scale->set_minmax(0, 10);
     add_ui(ui_length_scale);
     radius=0;
-    ui_radius=new MUI_slider_real("Length Scale", &radius,
+    ui_radius=new MUI_slider_real("Radius", &radius,
 				  MUI_widget::Immediate, 0);
     add_ui(ui_radius);
 
@@ -104,13 +105,18 @@ void Hedgehog::execute()
 	Vector diagonal(max-min);
 	space_x=diagonal.x()/10;
 	ui_space_x->set_value(space_x);
+	ui_space_x->set_minmax(0, diagonal.x());
 	space_y=diagonal.y()/10;
 	ui_space_y->set_value(space_y);
+	ui_space_y->set_minmax(0, diagonal.y());
 	space_z=diagonal.z()/10;
 	ui_space_z->set_value(space_z);
+	ui_space_z->set_minmax(0, diagonal.z());
 	length_scale=Min(space_x, space_y, space_z)*.75;
+	need_minmax=0;
     }
     ObjGroup* group=new ObjGroup;
+    cerr << "length_scale=" << length_scale << endl;
     for(double x=min.x();x<=max.x();x+=space_x){
 	for(double y=min.y();y<=max.y();y+=space_y){
 	    for(double z=min.z();z<=max.z();z+=space_z){
@@ -118,6 +124,7 @@ void Hedgehog::execute()
 		Vector v;
 		if(field->interpolate(p, v)){
 		    GeomLine* line=new GeomLine(p, p+(v*length_scale));
+		    group->add(line);
 		}
 	    }
 	}
