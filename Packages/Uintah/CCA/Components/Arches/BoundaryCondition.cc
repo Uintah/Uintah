@@ -790,6 +790,10 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
   tsk->computes(d_lab->d_maxAbsW_label);
   tsk->computes(d_lab->d_maxUxplus_label);
 
+//#ifdef divergenceconstraint
+    tsk->computes(d_lab->d_divConstraintLabel);
+//#endif
+
   for (int ii = 0; ii < d_props->getNumMixVars(); ii++) 
     tsk->modifies(d_lab->d_scalarSPLabel);
   sched->addTask(tsk, patches, matls);
@@ -1347,6 +1351,13 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     uVelRhoHat.copyData(uVelocity); 
     vVelRhoHat.copyData(vVelocity); 
     wVelRhoHat.copyData(wVelocity); 
+
+//#ifdef divergenceconstraint
+    CCVariable<double> divergence;
+    new_dw->allocateAndPut(divergence,
+			     d_lab->d_divConstraintLabel, matlIndex, patch);
+    divergence.initialize(0.0);
+//#endif
 
     double maxAbsU = 0.0;
     double maxAbsV = 0.0;
