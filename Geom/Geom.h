@@ -17,7 +17,7 @@
 #include <Classlib/Array1.h>
 #include <Classlib/Handle.h>
 #include <variant.h>
-#include <Geom/Color.h>
+#include <Geom/Material.h>
 
 class BBox;
 class DrawInfoOpenGL;
@@ -25,21 +25,6 @@ class DrawInfoX11;
 class GeomPick;
 class Vector;
 class Point;
-
-class Material {
-protected:
-    friend class Handle<Material>;
-    int ref_cnt;
-public:
-    Color ambient;
-    Color diffuse;
-    Color specular;
-    double shininess;
-    Color emission;
-    Material(const Color&, const Color&, const Color&, double);
-};
-
-typedef Handle<Material> MaterialHandle;
 
 class GeomObj {
 protected:

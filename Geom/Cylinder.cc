@@ -66,7 +66,7 @@ void GeomCylinder::adjust()
     v2*=rad;
 
     Vector z(0,0,1);
-    if(Abs(axis.y()) < 1.e-5){
+    if(Abs(axis.y())+Abs(axis.x()) < 1.e-5){
 	// Only in x-z plane...
 	zrotaxis=Vector(0,-1,0);
     } else {

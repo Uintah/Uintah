@@ -13,13 +13,6 @@
 
 #include <Geom/Geom.h>
 
-Material::Material(const Color& ambient, const Color& diffuse,
-		   const Color& specular, double shininess)
-: ref_cnt(0), ambient(ambient), diffuse(diffuse), specular(specular),
-  shininess(shininess), emission(0,0,0)
-{
-}
-
 GeomObj::GeomObj(int lit)
 : lit(lit), matl(0), pick(0)
 {
