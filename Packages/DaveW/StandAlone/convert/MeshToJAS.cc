@@ -58,8 +58,8 @@ main(int argc, char **argv) {
     fprintf(fout, "%d\n", m->nodes.size());
     int i;
     for (i=0; i<m->nodes.size(); i++) {
-	fprintf(fout, "%lf %lf %lf\n", m->nodes[i]->p.x(), m->nodes[i]->p.y(),
-		m->nodes[i]->p.z());
+	fprintf(fout, "%lf %lf %lf\n", m->nodes[i].p.x(), m->nodes[i].p.y(),
+		m->nodes[i].p.z());
     }
     fclose(fout);
 
