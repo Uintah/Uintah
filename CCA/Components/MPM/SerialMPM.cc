@@ -2179,6 +2179,21 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
+
+#if 0
+      Check if material type that we can do erosion on (HypoElasticPlastic){
+        Loop over existing particles for these materials{
+          check criteria for particle deletion/addition (p.damage/p.porosity){
+            if criteria is met, delete original particle, replace with a
+            newly created particle of the target material using the state of
+            the original particle{
+            }
+          }
+        }
+        new_dw->deleteParticles(delset);      
+        
+      }
+#endif
       
       int numparticles = 1;
       ParticleCreator* particle_creator = mpm_matl->getParticleCreator();
@@ -2414,6 +2429,16 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           bool pointInLevel = lvl->containsPointInRealCells(pxnew[idx]);
           if(pmassNew[idx] <= d_min_part_mass || !pointInLevel ||
              pvelocitynew[idx].length() > d_max_vel){
+            delset->addParticle(idx);
+          }
+        }
+       }
+       else{
+        for(ParticleSubset::iterator iter  = pset->begin();
+                                     iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          bool pointInLevel = lvl->containsPointInRealCells(pxnew[idx]);
+          if(!pointInLevel){
             delset->addParticle(idx);
           }
         }
