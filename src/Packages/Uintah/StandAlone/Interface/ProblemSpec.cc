@@ -36,9 +36,47 @@ ProblemSpecP ProblemSpec::findBlock(const std::string& name) const
   prob_spec->setNode(this->d_node);
   prob_spec->setDoc(this->d_doc);
 
-  DOM_Node start_element = prob_spec->d_doc.getDocumentElement();
+  DOM_Node start_element;
+  if (d_node.isNull()) {
+    start_element = prob_spec->d_doc.getDocumentElement();
+  }
+  else {
+    start_element = this->d_node;
+  }
   DOM_Node found_node = findNode(name,start_element);
 
+  if (found_node.isNull()) {
+    cerr << "Didn't find the tag . . " << name << endl;
+    cerr << "Setting to Null . . " << endl;
+    prob_spec = 0;
+  }
+  else {
+    prob_spec->setNode(found_node);
+  }
+  
+  return prob_spec;
+
+}
+
+ProblemSpecP ProblemSpec::findNextBlock(const std::string& name) const 
+{
+  ProblemSpecP prob_spec = new ProblemSpec;
+  prob_spec->setNode(this->d_node);
+  prob_spec->setDoc(this->d_doc);
+
+  DOM_Node start_element;
+  if (d_node.isNull()) {
+    start_element = prob_spec->d_doc.getDocumentElement();
+  }
+  else {
+    start_element = this->d_node;
+  }
+
+  // Iterate through all of the child nodes that have this name
+
+  DOM_Node found_node = start_element.getNextSibling();
+
+   
   if (found_node.isNull()) {
     cerr << "Didn't find the tag . . " << endl;
     cerr << "Setting to Null . . " << endl;
@@ -46,8 +84,6 @@ ProblemSpecP ProblemSpec::findBlock(const std::string& name) const
   }
   else {
     prob_spec->setNode(found_node);
-    DOMString found_node_name = found_node.getNodeName();
-    found_node_name.println();
   }
   
   return prob_spec;
@@ -61,10 +97,19 @@ DOM_Node ProblemSpec::findNode(const std::string &name,DOM_Node node) const
   // Convert string name to a DOMString;
   
   DOMString search_name(name.c_str());
+  // Check if the node is equal
+  DOMString node_name = node.getNodeName();
+  if (node_name.equals(search_name))
+    return node;
+      
+  // Do the child nodes now
   DOM_Node child = node.getFirstChild();
   while (child != 0) {
     DOMString child_name = child.getNodeName();
-    if (child_name.equals(search_name) ){
+    char *s = child_name.transcode();
+    std::string c_name(s);
+    delete[] s;
+    if (search_name.equals(child_name) ) {
       return child;
     }
     DOM_Node tmp = findNode(name,child);
@@ -144,11 +189,11 @@ ProblemSpecP ProblemSpec::get(const std::string& name, bool &value)
       if (child.getNodeType() == DOM_Node::TEXT_NODE) {
 	DOMString val = child.getNodeValue();
 	char *s = val.transcode();
-	int cmp = atoi(s);
+	std::string cmp(s);
 	delete[] s;
-	if (cmp == 0)
+	if (cmp == "false")
 	   value = false;
-	else if (cmp == 1)
+	else if (cmp == "true")
 	  value = true;
 	
       }
@@ -175,7 +220,6 @@ ProblemSpecP ProblemSpec::get(const std::string& name, std::string &value)
       if (child.getNodeType() == DOM_Node::TEXT_NODE) {
 	DOMString val = child.getNodeValue();
 	char *s = val.transcode();
-	//value = string(s);
 	value = std::string(s);
 	delete[] s;
       }
@@ -237,6 +281,10 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.7  2000/04/06 02:33:33  jas
+// Added findNextBlock which will find all of the tags named name within a
+// given block.
+//
 // Revision 1.6  2000/03/31 17:52:08  moulding
 // removed #include <cstdlib> and changed line 178 from "value = string(s);" to
 // "value = std::string(s);"
