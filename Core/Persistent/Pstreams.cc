@@ -1108,14 +1108,21 @@ void BinaryPiostream::io(unsigned long& data)
 void BinaryPiostream::io(long long& data)
 {
   if(err)return;
-#if !defined(__APPLE__) && !defined(__osf__)
-  if(!xdr_longlong_t(xdr, (int64_t*)(&data))){
+#if defined(__x86_64__)
+  if(!xdr_longlong_t(xdr, (quad_t*)(&data))){
     err=1;
     cerr << "xdr_longlong_t failed\n";
   }
 #else
+#  if !defined(__APPLE__) && !defined(__osf__)
+  if(!xdr_longlong_t(xdr, (int64_t*)(&data))){
+    err=1;
+    cerr << "xdr_longlong_t failed\n";
+  }
+#  else
   cerr << "xdr_longlong_t is not implemented on Apple\n";
   err = 1;
+#  endif
 #endif
 }
 
