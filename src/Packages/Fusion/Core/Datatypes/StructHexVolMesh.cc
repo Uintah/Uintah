@@ -114,22 +114,52 @@ StructHexVolMesh::get_center(Point &result, const Cell::index_type &idx) const
 
 
 bool
-StructHexVolMesh::inside8_p(Cell::index_type i, const Point &p) const
+StructHexVolMesh::inside8_p(Cell::index_type idx, const Point &p) const
 {
-  Face::array_type faces;
-  get_faces(faces, i);
+  static const int table[6][3][3] =
+  {{{0, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1}},
 
+   {{0, 0, 0},
+    {1, 0, 0},
+    {0, 1, 0}},
+
+   {{0, 0, 0},
+    {1, 0, 0},
+    {0, 0, 1}},
+
+   {{1, 1, 1},
+    {1, 0, 1},
+    {1, 1, 0}},
+
+   {{1, 1, 1},
+    {0, 1, 1},
+    {1, 0, 1}},
+
+   {{1, 1, 1},
+    {0, 1, 1},
+    {1, 1, 0}}};
+  
   Point center;
-  get_center(center, i);
+  get_center(center, idx);
 
-  for (unsigned int i = 0; i < faces.size(); i++)
+  for (int i = 0; i < 6; i++)
   {
-    Node::array_type nodes;
-    get_nodes(nodes, faces[i]);
+    Node::index_type n0(idx.i_ + table[i][0][0],
+			idx.j_ + table[i][0][1],
+			idx.k_ + table[i][0][2]);
+    Node::index_type n1(idx.i_ + table[i][1][0],
+			idx.j_ + table[i][1][1],
+			idx.k_ + table[i][1][2]);
+    Node::index_type n2(idx.i_ + table[i][2][0],
+			idx.j_ + table[i][2][1],
+			idx.k_ + table[i][2][2]);
+
     Point p0, p1, p2;
-    get_center(p0, nodes[0]);
-    get_center(p1, nodes[1]);
-    get_center(p2, nodes[2]);
+    get_center(p0, n0);
+    get_center(p1, n1);
+    get_center(p2, n2);
 
     const Vector v0(p1 - p0), v1(p2 - p0);
     const Vector normal = Cross(v0, v1);
@@ -154,8 +184,8 @@ StructHexVolMesh::locate(Cell::index_type &cell, const Point &p)
   LatVolMeshHandle mesh = grid_->get_typed_mesh();
   LatVolMesh::Cell::index_type ci;
   if (!mesh->locate(ci, p)) { return false; }
-  vector<Cell::index_type> v = grid_->value(ci);
-  vector<Cell::index_type>::iterator iter = v.begin();
+  const vector<Cell::index_type> &v = grid_->value(ci);
+  vector<Cell::index_type>::const_iterator iter = v.begin();
   while (iter != v.end()) {
     if (inside8_p(*iter, p))
     {
