@@ -478,7 +478,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 		  pexternalforce[start+count]=Vector(0,0,0); // for now
 		  short int& myCellNAPID = cellNAPID[cell_idx];
 		  particleID[start+count] = cellID | (long64)myCellNAPID;
-		  ASSERT(myCellNAPID < 0xffff);
+		  ASSERT(myCellNAPID < 0x7fff);
 		  myCellNAPID++;
 
 		  if( d_fracture ) {

@@ -5,7 +5,6 @@
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Core/Math/MinMax.h>
@@ -17,6 +16,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Core/Util/NotFinished.h>
 
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Components/MPM/Fracture/Connectivity.h>
 
 using std::cerr;
