@@ -35,7 +35,7 @@ public:
     virtual GeomObj* clone();
 
 #ifdef SCI_OPENGL
-    virtual void draw(DrawInfoOpenGL*, Material*);
+    virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);

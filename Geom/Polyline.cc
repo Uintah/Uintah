@@ -17,12 +17,11 @@
 #include <Geom/Line.h>
 
 GeomPolyline::GeomPolyline()
-: GeomObj()
 {
 }
 
 GeomPolyline::GeomPolyline(const GeomPolyline& copy)
-: GeomObj(copy), pts(copy.pts)
+: GeomVertexPrim(copy)
 {
 }
 
@@ -34,28 +33,10 @@ GeomObj* GeomPolyline::clone()
     return new GeomPolyline(*this);
 }
 
-void GeomPolyline::get_bounds(BBox& bb)
-{
-    for(int i=0;i<pts.size();i++)
-	bb.extend(pts[i]);
-}
-
-void GeomPolyline::get_bounds(BSphere&)
-{
-    NOT_FINISHED("GeomPolyline::get_bounds");
-}
-
-void GeomPolyline::make_prims(Array1<GeomObj*>& free,
+void GeomPolyline::make_prims(Array1<GeomObj*>&,
 			      Array1<GeomObj*>&)
 {
-    if(pts.size() < 2)
-	return;
-    int n=pts.size()-1;
-    for(int i=0;i<n;i++){
-	GeomLine* line=new GeomLine(pts[i], pts[i+1]);
-//	line->set_matl(matl);
-	free.add(line);
-    }
+    NOT_FINISHED("GeomPolyline::make_prims");
 }
 
 void GeomPolyline::preprocess()

@@ -45,7 +45,7 @@ public:
     // For OpenGL
 #ifdef SCI_OPENGL
     void pre_draw(DrawInfoOpenGL*, Material*, int lit);
-    virtual void draw(DrawInfoOpenGL*, Material*)=0;
+    virtual void draw(DrawInfoOpenGL*, Material*, double time)=0;
 #endif
 
     // For X11

@@ -14,24 +14,18 @@
 #ifndef SCI_Geom_Polyline_h
 #define SCI_Geom_Polyline_h 1
 
-#include <Geom/Geom.h>
-#include <Classlib/Array1.h>
-#include <Geometry/Point.h>
+#include <Geom/VertexPrim.h>
 
-class GeomPolyline : public GeomObj {
+class GeomPolyline : public GeomVertexPrim {
 public:
-    Array1<Point> pts;
-
     GeomPolyline();
     GeomPolyline(const GeomPolyline&);
     virtual ~GeomPolyline();
 
     virtual GeomObj* clone();
-    virtual void get_bounds(BBox&);
-    virtual void get_bounds(BSphere&);
 
 #ifdef SCI_OPENGL
-    virtual void draw(DrawInfoOpenGL*, Material*);
+    virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);

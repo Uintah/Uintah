@@ -14,27 +14,26 @@
 #ifndef SCI_Geom_Tri_h
 #define SCI_Geom_Tri_h 1
 
-#include <Geom/Geom.h>
-#include <Geometry/Point.h>
+#include <Geom/VertexPrim.h>
 
-class GeomTri : public GeomObj {
+class GeomTri : public GeomVertexPrim {
     int x_cross(double p1[2], double p2[2], double p[2]);
-public:
-    Point p1;
-    Point p2;
-    Point p3;
     Vector n;
-
+public:
     GeomTri(const Point&, const Point&, const Point&);
+    GeomTri(const Point&, const Point&, const Point&,
+	    const MaterialHandle&,
+	    const MaterialHandle&,
+	    const MaterialHandle&);
     GeomTri(const GeomTri&);
     virtual ~GeomTri();
 
+    virtual void get_bounds(BSphere& bs);
+
     virtual GeomObj* clone();
-    virtual void get_bounds(BBox&);
-    virtual void get_bounds(BSphere&);
 
 #ifdef SCI_OPENGL
-    virtual void draw(DrawInfoOpenGL*, Material*);
+    virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
     virtual void objdraw(DrawInfoX11*, Material*);
     virtual double depth(DrawInfoX11*);

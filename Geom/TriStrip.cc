@@ -17,29 +17,21 @@
 #include <Geometry/BBox.h>
 
 GeomTriStrip::GeomTriStrip()
-: GeomObj()
 {
 }
 
 GeomTriStrip::GeomTriStrip(const GeomTriStrip& copy)
-: GeomObj(copy), pts(copy.pts), norms(copy.norms)
+: GeomVertexPrim(copy)
 {
 }
 
 GeomTriStrip::~GeomTriStrip() {
 }
 
-void GeomTriStrip::make_prims(Array1<GeomObj*>& free,
+void GeomTriStrip::make_prims(Array1<GeomObj*>&,
 			      Array1<GeomObj*>&)
 {
-    if(pts.size() < 3)
-	return;
-    int n=pts.size()-2;
-    for(int i=0;i<n;i++){
-	GeomTri* tri=new GeomTri(pts[i], pts[i+1], pts[i+2]);
-//	tri->set_matl(matl);
-	free.add(tri);
-    }
+    NOT_FINISHED("GeomTriStrip::make_prims");
 }
 
 GeomObj* GeomTriStrip::clone()
@@ -47,33 +39,12 @@ GeomObj* GeomTriStrip::clone()
     return new GeomTriStrip(*this);
 }
 
-void GeomTriStrip::get_bounds(BBox& bb)
-{
-    for(int i=0;i<pts.size();i++)
-	bb.extend(pts[i]);
-}
-
-void GeomTriStrip::get_bounds(BSphere&)
-{
-    NOT_FINISHED("GeomTriStrip::get_bounds");
-}
-
-void GeomTriStrip::add(const Point& pt, const Vector& norm)
-{
-    pts.add(pt);
-    norms.add(norm);
-}
-
 void GeomTriStrip::preprocess()
 {
     NOT_FINISHED("GeomTriStrip::preprocess");
 }
 
-void GeomTriStrip::intersect(const Ray& ray, Material* matl, Hit& hit)
+void GeomTriStrip::intersect(const Ray&, Material*, Hit&)
 {
-    int n=pts.size()-2;
-    for(int i=0;i<n;i++){
-	GeomTri tri(pts[i], pts[i+1], pts[i+2]);
-	tri.intersect(ray, matl, hit);
-    }
+    NOT_FINISHED("GeomTriStrip::intersect");
 }

@@ -30,7 +30,7 @@ public:
 
     // For OpenGL
 #ifdef SCI_OPENGL
-    virtual void draw(DrawInfoOpenGL*, Material*);
+    virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
     // For all Painter's algorithm based renderers
     virtual void make_prims(Array1<GeomObj*>& free,
@@ -40,6 +40,21 @@ public:
     virtual void preprocess();
     virtual void intersect(const Ray& ray, Material* matl,
 			   Hit& hit);
+};
+
+class GeomTimeSwitch : public GeomContainer {
+    double tbeg;
+    double tend;
+    GeomTimeSwitch(const GeomTimeSwitch&);
+public:
+    GeomTimeSwitch(GeomObj*, double tbeg, double tend);
+    virtual ~GeomTimeSwitch();
+    virtual GeomObj* clone();
+
+    // For OpenGL
+#ifdef SCI_OPENGL
+    virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
 };
 
 #endif /* SCI_Geom_Switch_h */

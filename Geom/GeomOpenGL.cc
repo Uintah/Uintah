@@ -34,8 +34,6 @@
 #include <Geom/Tube.h>
 #include <Geom/TriStrip.h>
 #include <Geom/View.h>
-#include <Geom/VCTri.h>
-#include <Geom/VCTriStrip.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 #include <Geometry/Plane.h>
@@ -116,7 +114,7 @@ void DrawInfoOpenGL::set_matl(Material* matl)
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
 }
 
-void GeomCappedCylinder::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomCappedCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(height < 1.e-6)return;
     pre_draw(di, matl, 1);
@@ -135,7 +133,7 @@ void GeomCappedCylinder::draw(DrawInfoOpenGL* di, Material* matl)
     glPopMatrix();
 }
 
-void GeomCone::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomCone::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(height < 1.e-6)return;
     pre_draw(di, matl, 1);
@@ -147,12 +145,12 @@ void GeomCone::draw(DrawInfoOpenGL* di, Material* matl)
     glPopMatrix();
 }
 
-void GeomContainer::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomContainer::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
-    child->draw(di, matl);
+    child->draw(di, matl, time);
 }
 
-void GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(height < 1.e-6)return;
     pre_draw(di, matl, 1);
@@ -164,7 +162,7 @@ void GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl)
     glPopMatrix();
 }
 
-void GeomDisc::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomDisc::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 1);
     glPushMatrix();
@@ -175,13 +173,13 @@ void GeomDisc::draw(DrawInfoOpenGL* di, Material* matl)
     glPopMatrix();
 }
 
-void GeomGroup::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
     for (int i=0; i<objs.size(); i++)
-	objs[i]->draw(di, matl);
+	objs[i]->draw(di, matl, time);
 }
 
-void GeomLine::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 0);
     di->polycount++;
@@ -191,87 +189,120 @@ void GeomLine::draw(DrawInfoOpenGL* di, Material* matl)
     glEnd();
 }
 
-void GeomMaterial::draw(DrawInfoOpenGL* di, Material* /* old_matl */)
+void GeomMaterial::draw(DrawInfoOpenGL* di, Material* /* old_matl */, double time)
 {
-    child->draw(di, matl.get_rep());
+    child->draw(di, matl.get_rep(), time);
 }
 
-void GeomPick::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
     if(di->pickmode)
 	glPushName((GLuint)this);
-    child->draw(di, matl);
+    child->draw(di, matl, time);
     if(di->pickmode)
 	glPopName();
 }
 
-void GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 0);
-    di->polycount+=pts.size()-1;
+    di->polycount+=verts.size()-1;
     glBegin(GL_LINE_STRIP);
-    for(int i=0;i<pts.size();i++){
-	Point p(pts[i]);
-	glVertex3d(p.x(), p.y(), p.z());
+    for(int i=0;i<verts.size();i++){
+	verts[i]->emit_point(di);
     }
     glEnd();
 }
 
 // --------------------------------------------------
 
-void GeomTube::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 1);
-    Array1<Point> c1; 
-    Array1<Point> c2; 
-    Vector n1, n2; 
-    Point  p1, p2; 
-    for(int i=0; i<pts.size(); i++) {
-       c1 = make_circle(pts[i], rad[i], normal[i]); 
-       c2 = make_circle(pts[i+1], rad[i+1], normal[i+1]); 
-
-       // draw triangle strips
-            glBegin(GL_TRIANGLE_STRIP);
-	    for(int j=0;j<c1.size();j++){
-
-		n1 = c1[j]-pts[i];
-		glNormal3d(n1.x(), n1.y(), n1.z());
-		p1 = c1[j];
-		glVertex3d(p1.x(), p1.y(), p1.z());
-
-		n2 = c2[j]-pts[i+1];
-		glNormal3d(n2.x(), n2.y(), n2.z());
-		p2 = c2[j];
-		glVertex3d(p2.x(), p2.y(), p2.z());
+    di->polycount+=(verts.size()-1)*2*20;
+    Array1<Point> circle1;
+    Array1<Point> circle2;
+    Array1<Point>* p1=&circle1;
+    Array1<Point>* p2=&circle2;
+    SinCosTable tab(nu+1, 0, 2*Pi);
+    make_circle(0, *p1, tab);
+    if(di->get_drawtype() == DrawInfoOpenGL::WireFrame){
+	glBegin(GL_LINE_LOOP);
+	for(int j=0;j<p1->size();j++){
+	    Point pt2((*p1)[j]);
+	    glVertex3d(pt2.x(), pt2.y(), pt2.z());
+	}
+	glEnd();
+    }
+    for(int i=0; i<verts.size()-1; i++) {
+	make_circle(i+1, *p2, tab);
+	Array1<Point>& pp1=*p1;
+	Array1<Point>& pp2=*p2;
+	switch(di->get_drawtype()){
+	case DrawInfoOpenGL::WireFrame:
+	    {
+		// Draw lines
+		glBegin(GL_LINES);
+		for(int j=0;j<nu;j++){
+		    Point pt1(pp1[j]);
+		    glVertex3d(pt1.x(), pt1.y(), pt1.z());
+		    Point pt2(pp2[j]);
+		    glVertex3d(pt2.x(), pt2.y(), pt2.z());
+		}
+		glEnd();
+		glBegin(GL_LINE_LOOP);
+		for(j=0;j<nu;j++){
+		    Point pt2(pp2[j]);
+		    glVertex3d(pt2.x(), pt2.y(), pt2.z());
+		}
+		glEnd();
 	    }
-		n1 = c1[0]-pts[i];
-		glNormal3d(n1.x(), n1.y(), n1.z());
-		p1 = c1[0];
-		glVertex3d(p1.x(), p1.y(), p1.z());
+	    break;
+	case DrawInfoOpenGL::Flat:
+	case DrawInfoOpenGL::Gouraud:
+	case DrawInfoOpenGL::Phong:
+	    {
+		// draw triangle strips
+		glBegin(GL_TRIANGLE_STRIP);
+		Point cen1(verts[i]->p);
+		Point cen2(verts[i+1]->p);
+		for(int j=0;j<=nu;j++){
+		    Point pt1(pp1[j]);
+		    Vector n1(pt1-cen1);
+		    verts[i]->emit_matl(di);
+		    glNormal3d(n1.x(), n1.y(), n1.z());
+		    glVertex3d(pt1.x(), pt1.y(), pt1.z());
 
-		n2 = c2[0]-pts[i+1];
-		glNormal3d(n2.x(), n2.y(), n2.z());
-		p2 = c2[0];
-		glVertex3d(p2.x(), p2.y(), p2.z());
-
-	    glEnd();
-     }
-  }
+		    Point pt2(pp2[j]);
+		    Vector n2(pt2-cen2);
+		    verts[i+1]->emit_matl(di);
+		    glNormal3d(n2.x(), n2.y(), n2.z());
+		    glVertex3d(pt2.x(), pt2.y(), pt2.z());
+		}
+		glEnd();
+	    }
+	}
+	// Swith p1 and p2 pointers
+	Array1<Point>* tmp=p1;
+	p1=p2;
+	p2=tmp;
+    }
+}
 
 // --------------------------------------------------
 
-void GeomRenderMode::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomRenderMode::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
 //    int save_lighting=di->lighting;
     NOT_FINISHED("GeomRenderMode");
     if(child){
-	child->draw(di, matl);
+	child->draw(di, matl, time);
 	// We don't put things back if no children...
 	
     }
 }    
 
-void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 1);
     glPushMatrix();
@@ -281,13 +312,13 @@ void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl)
     glPopMatrix();
 }
 
-void GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
    if(state)
-      child->draw(di, matl);
+      child->draw(di, matl, time);
 }
 
-void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 1);
     di->polycount+=4;
@@ -364,7 +395,13 @@ void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl)
     }
 }
 
-void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomTimeSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
+{
+    if(time >= tbeg && time < tend)
+	child->draw(di, matl, time);
+}
+
+void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 1);
     glPushMatrix();
@@ -486,64 +523,58 @@ void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl)
     glPopMatrix();
 }
 
-void GeomTri::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 1);
     di->polycount++;
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
 	glBegin(GL_LINE_LOOP);
-	glVertex3d(p1.x(), p1.y(), p1.z());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	glVertex3d(p3.x(), p3.y(), p3.z());
+	verts[0]->emit_point(di);
+	verts[1]->emit_point(di);
+	verts[2]->emit_point(di);
 	glEnd();
 	break;
     case DrawInfoOpenGL::Flat:
 	glBegin(GL_TRIANGLES);
-	glVertex3d(p1.x(), p1.y(), p1.z());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	glVertex3d(p3.x(), p3.y(), p3.z());
+	verts[0]->emit_point(di);
+	verts[1]->emit_point(di);
+	verts[2]->emit_point(di);
 	glEnd();
 	break;
     case DrawInfoOpenGL::Gouraud:
     case DrawInfoOpenGL::Phong:
 	glBegin(GL_TRIANGLES);
 	glNormal3d(-n.x(), -n.y(), -n.z());
-	glVertex3d(p1.x(), p1.y(), p1.z());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	glVertex3d(p3.x(), p3.y(), p3.z());
+	verts[0]->emit_all(di);
+	verts[1]->emit_all(di);
+	verts[2]->emit_all(di);
 	glEnd();
 	break;
     }
 }
 
-void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 1);
-    if(pts.size() <= 2)
+    if(verts.size() <= 2)
 	return;
-    di->polycount+=pts.size()-2;
+    di->polycount+=verts.size()-2;
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
 	{
 	    glBegin(GL_LINES);
-	    Point p1(pts[0]);
-	    Point p2(pts[1]);
-	    glVertex3d(p1.x(), p1.y(), p1.z());
-	    glVertex3d(p2.x(), p2.y(), p2.z());
-	    for(int i=2;i<pts.size();i+=2){
-		Point p3(pts[i]);
-		Point p4(pts[i+1]);
-		glVertex3d(p3.x(), p3.y(), p3.z());
-		glVertex3d(p1.x(), p1.y(), p1.z());
-		glVertex3d(p3.x(), p3.y(), p3.z());
-		glVertex3d(p2.x(), p2.y(), p2.z());
-		glVertex3d(p4.x(), p4.y(), p4.z());
-		glVertex3d(p3.x(), p3.y(), p3.z());
-		glVertex3d(p4.x(), p4.y(), p4.z());
-		glVertex3d(p2.x(), p2.y(), p2.z());
-		p1=p3;
-		p2=p4;
+	    verts[0]->emit_point(di);
+	    verts[1]->emit_point(di);
+	    for(int i=2;i<verts.size();i+=2){
+		verts[i]->emit_point(di);
+		verts[i-2]->emit_point(di);
+		verts[i]->emit_point(di);
+		verts[i-1]->emit_point(di);
+		verts[i+1]->emit_point(di);
+		verts[i]->emit_point(di);
+		verts[i+1]->emit_point(di);
+		verts[i-1]->emit_point(di);
 	    }
 	    glEnd();
 	}
@@ -551,9 +582,8 @@ void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl)
     case DrawInfoOpenGL::Flat:
 	{
 	    glBegin(GL_TRIANGLE_STRIP);
-	    for(int i=0;i<pts.size();i++){
-		Point p(pts[i]);
-		glVertex3d(p.x(), p.y(), p.z());
+	    for(int i=0;i<verts.size();i++){
+		verts[i]->emit_point(di);
 	    }
 	    glEnd();
 	}
@@ -562,11 +592,8 @@ void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl)
     case DrawInfoOpenGL::Phong:
 	{
 	    glBegin(GL_TRIANGLE_STRIP);
-	    for(int i=0;i<pts.size();i++){
-		Vector n(norms[i]);
-		glNormal3d(n.x(), n.y(), n.z());
-		Point p(pts[i]);
-		glVertex3d(p.x(), p.y(), p.z());
+	    for(int i=0;i<verts.size();i++){
+		verts[i]->emit_all(di);
 	    }
 	    glEnd();
 	}
@@ -574,115 +601,58 @@ void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl)
     }
 }
 
-void GeomVCTriStrip::draw(DrawInfoOpenGL* di, Material* matl)
+void GeomVertex::emit_all(DrawInfoOpenGL*)
 {
-    if(pts.size() <= 2)
-	return;
-    di->polycount+=pts.size()-2;
-    pre_draw(di, matl, 1);
-    switch(di->get_drawtype()){
-    case DrawInfoOpenGL::WireFrame:
-	{
-	    glBegin(GL_LINES);
-	    Point p1(pts[0]);
-	    Point p2(pts[1]);
-	    glVertex3d(p1.x(), p1.y(), p1.z());
-	    glVertex3d(p2.x(), p2.y(), p2.z());
-	    for(int i=2;i<pts.size();i+=2){
-		Point p3(pts[i]);
-		Point p4(pts[i+1]);
-		glVertex3d(p3.x(), p3.y(), p3.z());
-		glVertex3d(p1.x(), p1.y(), p1.z());
-		glVertex3d(p3.x(), p3.y(), p3.z());
-		glVertex3d(p2.x(), p2.y(), p2.z());
-		glVertex3d(p4.x(), p4.y(), p4.z());
-		glVertex3d(p3.x(), p3.y(), p3.z());
-		glVertex3d(p4.x(), p4.y(), p4.z());
-		glVertex3d(p2.x(), p2.y(), p2.z());
-		p1=p3;
-		p2=p4;
-	    }
-	    glEnd();
-	}
-	break;
-    case DrawInfoOpenGL::Flat:
-	{
-	    glBegin(GL_TRIANGLE_STRIP);
-	    for(int i=0;i<pts.size();i++){
-		Point p(pts[i]);
-		glVertex3d(p.x(), p.y(), p.z());
-	    }
-	    glEnd();
-	}
-	break;
-    case DrawInfoOpenGL::Gouraud:
-	{
-	    glBegin(GL_TRIANGLE_STRIP);
-	    di->set_matl(mmatl[0].get_rep());
-	    for(int i=0;i<pts.size();i++){
-		Vector n(norms[i]);
-		glNormal3d(n.x(), n.y(), n.z());
-		Point p(pts[i]);
-		glVertex3d(p.x(), p.y(), p.z());
-	    }
-	    glEnd();
-	}
-	break;
-    case DrawInfoOpenGL::Phong:
-	{
-	    glBegin(GL_TRIANGLE_STRIP);
-	    for(int i=0;i<pts.size();i++){
-		Vector n(norms[i]);
-		glNormal3d(n.x(), n.y(), n.z());
-		Point p(pts[i]);
-		di->set_matl(mmatl[i].get_rep());
-		glVertex3d(p.x(), p.y(), p.z());
-	    }
-	    glEnd();
-	}
-	break;
-    }
+    glVertex3d(p.x(), p.y(), p.z());
 }
 
-void GeomVCTri::draw(DrawInfoOpenGL* di, Material* matl) {
-    di->polycount++;
-    pre_draw(di, matl, 1);
-    switch(di->get_drawtype()){
-    case DrawInfoOpenGL::WireFrame:
-	glBegin(GL_LINE_LOOP);
-	glVertex3d(p1.x(), p1.y(), p1.z());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	glVertex3d(p3.x(), p3.y(), p3.z());
-	glEnd();
-	break;
-    case DrawInfoOpenGL::Flat:
-	glBegin(GL_TRIANGLES);
-	glVertex3d(p1.x(), p1.y(), p1.z());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	glVertex3d(p3.x(), p3.y(), p3.z());
-	glEnd();
-	break;
-    case DrawInfoOpenGL::Gouraud:
-	glBegin(GL_TRIANGLES);
-	glNormal3d(-n.x(), -n.y(), -n.z());
-	di->set_matl(m1.get_rep());
-	glVertex3d(p1.x(), p1.y(), p1.z());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	glVertex3d(p3.x(), p3.y(), p3.z());
-	glEnd();
-	break;
-    case DrawInfoOpenGL::Phong:
-	glBegin(GL_TRIANGLES);
-	glNormal3d(-n.x(), -n.y(), -n.z());
-	di->set_matl(m1.get_rep());
-	glVertex3d(p1.x(), p1.y(), p1.z());
-	di->set_matl(m2.get_rep());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	di->set_matl(m3.get_rep());
-	glVertex3d(p3.x(), p3.y(), p3.z());
-	glEnd();
-	break;
-    }
+void GeomVertex::emit_point(DrawInfoOpenGL*)
+{
+    glVertex3d(p.x(), p.y(), p.z());
+}
+
+void GeomVertex::emit_matl(DrawInfoOpenGL*)
+{
+    // Do nothing
+}
+
+void GeomVertex::emit_normal(DrawInfoOpenGL*)
+{
+    // Do nothing
+}
+
+void GeomNVertex::emit_all(DrawInfoOpenGL*)
+{
+    glNormal3d(normal.x(), normal.y(), normal.z());
+    glVertex3d(p.x(), p.y(), p.z());
+}
+
+void GeomNVertex::emit_normal(DrawInfoOpenGL*)
+{
+    glNormal3d(normal.x(), normal.z(), normal.z());
+}
+
+void GeomNMVertex::emit_all(DrawInfoOpenGL* di)
+{
+    di->set_matl(matl.get_rep());
+    glNormal3d(normal.x(), normal.y(), normal.z());
+    glVertex3d(p.x(), p.y(), p.z());
+}
+
+void GeomNMVertex::emit_matl(DrawInfoOpenGL* di)
+{
+    di->set_matl(matl.get_rep());
+}
+
+void GeomMVertex::emit_all(DrawInfoOpenGL* di)
+{
+    di->set_matl(matl.get_rep());
+    glVertex3d(p.x(), p.y(), p.z());
+}
+
+void GeomMVertex::emit_matl(DrawInfoOpenGL* di)
+{
+    di->set_matl(matl.get_rep());
 }
 
 void PointLight::opengl_setup(const View&, DrawInfoOpenGL*, int& idx)

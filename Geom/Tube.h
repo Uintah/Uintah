@@ -13,21 +13,19 @@
 #ifndef SCI_Geom_Tube_h 
 #define SCI_Geom_Tube_h 1 
 
-#include <Geom/Geom.h>
-#include <Classlib/Array1.h>
-#include <Geometry/Point.h>
+#include <Geom/VertexPrim.h>
 
+class SinCosTable;
 
-class GeomTube: public GeomObj{
-
+class GeomTube : public GeomVertexPrim {
+    int nu;
+    Array1<Vector> directions;
+    Array1<double> radii;
 private:
-    Array1<Point> make_circle(Point, double, Vector); 
+    void make_circle(int which, Array1<Point>& circle,
+		     const SinCosTable& tab); 
 public:
-    Array1<Point>  pts;    // center points of circles
-    Array1<double> rad;    // radius at each point
-    Array1<Vector> normal; // the direction of each point
-
-    GeomTube(); 
+    GeomTube(int nu=10); 
     GeomTube(const GeomTube&); 
     virtual ~GeomTube(); 
 
@@ -35,11 +33,10 @@ public:
     virtual void get_bounds(BBox&); 
     virtual void get_bounds(BSphere&);
   
-    int add(Point, double, Vector); 
-
+    void add(GeomVertex*, double, const Vector&);
 
 #ifdef SCI_OPENGL
-    virtual void draw(DrawInfoOpenGL*, Material*); 
+    virtual void draw(DrawInfoOpenGL*, Material*, double time); 
 #endif 
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);

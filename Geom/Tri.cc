@@ -21,17 +21,35 @@
 #include <iostream.h>
 
 GeomTri::GeomTri(const Point& p1, const Point& p2, const Point& p3)
-: GeomObj(), p1(p1), p2(p2), p3(p3), n(Cross(p3-p1, p2-p1))
+: n(Cross(p3-p1, p2-p1))
 {
     if(n.length2() > 0){
 	n.normalize();
     } else {
 	cerr << "Degenerate triangle!!!\n" << endl;
     }
+    add(p1);
+    add(p2);
+    add(p3);
+}
+
+GeomTri::GeomTri(const Point& p1, const Point& p2, const Point& p3,
+		 const MaterialHandle& mat1, const MaterialHandle& mat2,
+		 const MaterialHandle& mat3)
+: n(Cross(p3-p1, p2-p1))
+{
+    if(n.length2() > 0){
+	n.normalize();
+    } else {
+	cerr << "Degenerate triangle!!!\n" << endl;
+    }
+    add(p1, mat1);
+    add(p2, mat2);
+    add(p3, mat3);
 }
 
 GeomTri::GeomTri(const GeomTri &copy)
-: GeomObj(copy), p1(copy.p1), p2(copy.p2), p3(copy.p3), n(copy.n)
+: GeomVertexPrim(copy), n(copy.n)
 {
 }
 
@@ -44,15 +62,11 @@ GeomObj* GeomTri::clone()
     return new GeomTri(*this);
 }
 
-void GeomTri::get_bounds(BBox& bb)
-{
-    bb.extend(p1);
-    bb.extend(p2);
-    bb.extend(p3);
-}
-
 void GeomTri::get_bounds(BSphere& bs)
 {
+    Point p1(verts[0]->p);
+    Point p2(verts[1]->p);
+    Point p3(verts[2]->p);
     Vector e1(p2-p1);
     Vector e2(p3-p2);
     Vector e3(p1-p3);
@@ -128,6 +142,9 @@ void GeomTri::intersect(const Ray& ray, Material* matl, Hit& hit)
 {
     double tmp=Dot(n, ray.direction());
     if(tmp > -1.e-6 && tmp < 1.e-6)return; // Parallel to plane
+    Point p1(verts[0]->p);
+    Point p2(verts[1]->p);
+    Point p3(verts[2]->p);
     Vector v=p1-ray.origin();
     double t=Dot(n, v)/tmp;
     if(t<1.e-6)return;

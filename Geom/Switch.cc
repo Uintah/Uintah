@@ -69,3 +69,22 @@ void GeomSwitch::intersect(const Ray& ray, Material* matl, Hit& hit)
 {
    if(state)child->intersect(ray, matl, hit);
 }
+
+GeomTimeSwitch::GeomTimeSwitch(GeomObj* obj, double tbeg, double tend)
+: GeomContainer(obj), tbeg(tbeg), tend(tend)
+{
+}
+
+GeomTimeSwitch::GeomTimeSwitch(const GeomTimeSwitch& copy)
+: GeomContainer(copy), tbeg(copy.tbeg), tend(copy.tend)
+{
+}
+
+GeomTimeSwitch::~GeomTimeSwitch()
+{
+}
+
+GeomObj* GeomTimeSwitch::clone()
+{
+    return new GeomTimeSwitch(*this);
+}

@@ -20,7 +20,7 @@ OBJS = Color.o  Cone.o  Container.o  Cylinder.o  Disc.o  \
 	Pick.o  PickMessage.o  PointLight.o  Polyline.o  \
 	RenderMode.o  Sphere.o Switch.o  \
 	Tetra.o  Torus.o Tri.o  TriStrip.o  Tube.o  \
-	VCTri.o  VCTriStrip.o  View.o  \
+	VertexPrim.o  View.o  \
 	$(OPENGLOBJS) $(X11OBJS)
 SRCS = Color.cc Cone.cc Container.cc Cylinder.cc Disc.cc \
 	Geom.cc GeomRaytracer.cc Group.cc \
@@ -28,7 +28,7 @@ SRCS = Color.cc Cone.cc Container.cc Cylinder.cc Disc.cc \
 	Pick.cc PickMessage.cc PointLight.cc Polyline.cc \
 	RenderMode.cc Sphere.cc Switch.cc \
 	Tetra.cc Torus.cc Tri.cc TriStrip.cc Tube.cc \
-	VCTri.cc VCTriStrip.cc View.cc \
+	VertexPrim.cc View.cc \
 	$(OPENGLSRCS) $(X11SRCS)
 
 LIBNAME = Geom
