@@ -39,7 +39,7 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
     log = "sus.log"
 
   if datmode == "dbg":
-    if d_restart == "yes":
+    if do_restart == "yes":
       environ['MALLOC_STATS'] = "restart_malloc_stats"
     else:
       environ['MALLOC_STATS'] = "malloc_stats"
