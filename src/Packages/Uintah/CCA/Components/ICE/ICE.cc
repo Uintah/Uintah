@@ -1431,8 +1431,8 @@ template<class T> void ICE::computeVelFace(int dir, CellIterator it,
     ASSERT(rho_FC > 0.0);
     //__________________________________
     // interpolation to the face
-    double term1 = (rho_CC[L] * vel_CC[L](dir) +
-                    rho_CC[R] * vel_CC[R](dir))/(rho_FC);            
+    double term1 = (rho_CC[L] * vel_CC[L][dir] +
+                    rho_CC[R] * vel_CC[R][dir])/(rho_FC);            
     //__________________________________
     // pressure term           
     double sp_vol_brack = 2.*(sp_vol_CC[L] * sp_vol_CC[R])/
@@ -1524,17 +1524,17 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       //__________________________________
       //  Compute vel_FC for each face
       computeVelFace<SFCXVariable<double> >(0,patch->getSFCXIterator(offset),
-                                      adj_offset[0],dx(0),delT,gravity(0),
+                                      adj_offset[0],dx[0],delT,gravity[0],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
                                        uvel_FC);
 
       computeVelFace<SFCYVariable<double> >(1,patch->getSFCYIterator(offset),
-                                      adj_offset[1],dx(1),delT,gravity(1),
+                                      adj_offset[1],dx[1],delT,gravity[1],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
                                        vvel_FC);
 
       computeVelFace<SFCZVariable<double> >(2,patch->getSFCZIterator(offset),
-                                      adj_offset[2],dx(2),delT,gravity(2),
+                                      adj_offset[2],dx[2],delT,gravity[2],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
                                        wvel_FC);
 
@@ -2291,7 +2291,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         //    X - M O M E N T U M 
         pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[c];
         
-        press_force[c](0) = -pressure_source * areaX; 
+        press_force[c][0] = -pressure_source * areaX; 
                
         viscous_source=(tau_X_FC[right].x() - tau_X_FC[left].x())  * areaX +
                        (tau_Y_FC[top].x()   - tau_Y_FC[bottom].x())* areaY +
@@ -2305,7 +2305,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         //    Y - M O M E N T U M
         pressure_source = (pressY_FC[top]-pressY_FC[bottom])* vol_frac[c];
          
-        press_force[c](1) = -pressure_source * areaY;
+        press_force[c][1] = -pressure_source * areaY;
         
         viscous_source=(tau_X_FC[right].y() - tau_X_FC[left].y())  * areaX +
                        (tau_Y_FC[top].y()   - tau_Y_FC[bottom].y())* areaY +
@@ -2319,7 +2319,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       //    Z - M O M E N T U M
         pressure_source = (pressZ_FC[front]-pressZ_FC[back]) * vol_frac[c];
         
-        press_force[c](2) = -pressure_source * areaZ;
+        press_force[c][2] = -pressure_source * areaZ;
         
         viscous_source=(tau_X_FC[right].z() - tau_X_FC[left].z())  * areaX +
                        (tau_Y_FC[top].z()   - tau_Y_FC[bottom].z())* areaY +
@@ -2555,16 +2555,16 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 
           //  must have a minimum momentum   
           for (int dir = 0; dir <3; dir++) {  //loop over all three directons
-            double min_mom_L = vel_CC[c](dir) * min_mass;
-            double mom_L_tmp = vel_CC[c](dir) * mass;
-                             + mom_comb[c](dir);
+            double min_mom_L = vel_CC[c][dir] * min_mass;
+            double mom_L_tmp = vel_CC[c][dir] * mass;
+                             + mom_comb[c][dir];
   
              // Preserve the original sign on momemtum     
              // Use d_SMALL_NUMs to avoid nans when mom_L_temp = 0.0
             double plus_minus_one = (mom_L_tmp + d_SMALL_NUM)/
                                     (fabs(mom_L_tmp + d_SMALL_NUM));
             
-            mom_L[c](dir) = mom_source[c](dir) +
+            mom_L[c][dir] = mom_source[c][dir] +
                   plus_minus_one * std::max( fabs(mom_L_tmp), min_mom_L );
           }
 
@@ -2841,12 +2841,12 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
           b[m] = 0.0;
           for(int n = 0; n < numALLMatls; n++) {
            b[m] += beta(m,n) *
-             (vel_CC[n][c](dir) - vel_CC[m][c](dir));
+             (vel_CC[n][c][dir] - vel_CC[m][c][dir]);
           }
         }
         a_inverse.multiply(b,X);
         for(int m = 0; m < numALLMatls; m++) {
-          vel_CC[m][c](dir) =  vel_CC[m][c](dir) + X[m];
+          vel_CC[m][c][dir] =  vel_CC[m][c][dir] + X[m];
         }
       }
 

@@ -36,13 +36,13 @@ void VectorParticlesOperator::execute(void) {
   ScalarParticles* pSP = scinew ScalarParticles();
 
   switch(guiOperation.get()) {
-  case 0: // extract element
-  case 1: // 2D eigen-value/vector
-  case 2: // pressure
+  case 0: // extract U
+  case 1: // extract V
+  case 2: // extract W
     computeScalars(pTP, pSP,
 		   VectorElementExtractionOp(guiOperation.get()));
     break;
-  case 3: // equivalent stress 
+  case 3: // extract the length 
     computeScalars(pTP, pSP, LengthOp());
     break;
   default:
