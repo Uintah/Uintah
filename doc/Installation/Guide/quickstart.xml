@@ -21,76 +21,189 @@
 
 <section>
 <title>Introduction</title>
+
 <para>
-This chapter is a quick installation checklist.
+For complete installation instructions see <xref linkend="inst"/>. 
 </para>
+
 <para>
 SCIRun is officially compatible with two platforms: SGI and Linux.
 </para>
-<para>
-See <xref linkend="inst"/> for minimum system requirements and detailed
-installation instructions.
-</para>
-<para>See <xref linkend="thirdparty"/> for required thirdparty
-software and instructions on its installation.</para>
+
+<para><ulink url="http://www.python.org">Python</ulink> (version 1.5.2 or
+later) and <ulink url="http://www.gnu.org/directory/make.html">GNU
+make</ulink> (version 3.79 or later) must be present before building
+SCIRun.</para>
+
 </section>
 
 <section>
-<title>Installing SCIRun and Packages</title>
+<title>Downloading and Unpacking Sources</title>
+
 <para>
+
 <orderedlist>
+
+<listitem>
+
+<para>
+Obtain the source code for SCIRun and any desired packages.  Be sure
+to get the <quote>third party</quote> sources too.  The compressed
+tarballs for these sources can be downloaded from SCI's <ulink
+url="http://software.sci.utah.edu/archive_entry.html">software
+archive</ulink> page.
+</para>
+
+</listitem>
+
 <listitem>
 <para>
-Obtain the source trees for SCIRun and any desired
-packages.
+Unpack the SCIRun tarball:
+<literallayout class="monospaced">
+gunzip -c SCIRun.x.x.x.tar.gz | tar xf -
+</literallayout>
+This will create a directory called <filename>SCIRun</filename>.
 </para>
 </listitem>
+
 <listitem>
 <para>
-Unzip the SCIRun source tree into a directory of your
-choosing.
-</para>
-<para>
-The chosen directory will be referred to as 
-<replaceable>install dir</replaceable> from now on.
+Unpack the compressed package tarballs into
+<filename>SCIRun/src/Packages</filename>, for example:
+<literallayout class="monospaced">
+gunzip -c BioPSE.PKG.x.x.x.tar.gz | (cd SCIRun/src/Packages &amp;&amp; tar xf -)
+</literallayout>
+to unpack the BioPSE package.
 </para>
 </listitem>
+
 <listitem>
 <para>
-Unzip the packages (if any) into 
-<replaceable>install dir</replaceable>/SCIRun/src/Packages.
+Unpack the third party tarball:
+<literallayout class="monospaced">
+gunzip -c Thirdparty_install.x.x.x.tar.gz | tar xf -
+</literallayout>
 </para>
 </listitem>
+
 </orderedlist>
+
 </para>          
+
 </section>
 
 <section>
-<title>Building SCIRun and Packages</title>
+<title>Building Third Party Software</title>
+
 <para>
+
 <orderedlist>
+
 <listitem>
 <para>
-Ensure that the target install machine matches the above 
-system requirements.
+<command>cd</command> to the third party software directory:
+<literallayout class="monospaced">
+cd Thirdparty_install.x.x.x
+</literallayout>
 </para>
 </listitem>
+
 <listitem>
 <para>
-Run configure from a directory of your choosing.
-</para>
-<para>
-The chosen directory will be referred to as
-<replaceable>build dir</replaceable> from now on.
+Run the third party installation script:
+<literallayout class="monospaced">
+python install <replaceable>dir</replaceable> <replaceable>OS-name</replaceable> <replaceable>compiler</replaceable> <replaceable>32|64</replaceable> <replaceable>jobs</replaceable>
+</literallayout>
+where <replaceable>dir</replaceable> is the directory in which the
+third-party software will be installed (although it is actually
+installed in a sub-directory of the specified one),
+<replaceable>OS-name</replaceable> is the name of the OS (Irix or
+Linux), <replaceable>compiler</replaceable> is your compiler's name and
+version (e.g. gcc-3.04), <replaceable>32|64</replaceable> specifies
+one of 32 bit or 64 bit binaries, and <replaceable>jobs</replaceable>
+is the number of jobs that make will create when building the
+software.  For example:
+<literallayout class="monospaced">
+python install /usr/local/SCIRun_Third_Party Irix CC 64 2
+</literallayout>
+or
+<literallayout class="monospaced">
+python install /usr/local/SCIRun_Third_Party Linux gcc-3.1 32 2
+</literallayout>
+When finished, the installation script will display the complete name
+of the third-party software installation directory&mdash;make note of
+this value.
 </para>
 </listitem>
-<listitem>
-<para>
-Run GNU make in the <replaceable>build dir</replaceable> directory.
-</para>
-</listitem>
+
 </orderedlist>
+
 </para>
+
+</section>
+
+<section>
+<title>Building SCIRun</title>
+
+<para>
+
+<orderedlist>
+
+<listitem>
+<para>
+Run SCIRun's configure script.  This can be done from the
+<filename>SCIRun/src</filename> directory:
+<literallayout class="monospaced">
+cd SCIRun/src
+./configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \
+--enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
+</literallayout>
+or from another directory:
+<literallayout class="monospaced">
+mkdir SCIRun/<replaceable>dir</replaceable>
+cd SCIRun/<replaceable>dir</replaceable>
+../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \ 
+--enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
+</literallayout>
+in which case SCIRun will be built in the directory
+<filename>SCIRun/<replaceable>dir</replaceable></filename>.  Above,
+<replaceable>third-party-dir</replaceable> is replaced by the name of
+the third party software installation directory and
+"<replaceable>package-name1 package-name2 &hellip;</replaceable>" is
+replaced by a list of (previously downloaded and unpacked) package
+names , e.g. "BioPSE MatlabInterface".  For example:
+<literallayout class="monospaced">
+../src/configure \
+  --with-thirdparty=/usr/local/SCIRun_Third_Party/1.4.2/Irix/CC-32bit \
+  --enable-package="BioPSE"
+</literallayout>
+</para>
+</listitem>
+
+<listitem>
+<para>
+Run (GNU) make (from the directory used previously when running configure):
+<literallayout class="monospaced">
+make
+</literallayout>
+or
+<literallayout class="monospaced">
+make -j <replaceable>N</replaceable>
+</literallayout>
+if your machine has <replaceable>N</replaceable> available
+processors.  This will produce a <command>scirun</command>
+executable. 
+</para>
+</listitem>
+<listitem>
+<para>Test your build by typing <command>./scirun</command>.  You should
+see &sr;'s network editor window and the &sr; shell prompt.</para>
+</listitem>
+
+</orderedlist>
+
+</para>
+
 </section>
 
 </chapter>
