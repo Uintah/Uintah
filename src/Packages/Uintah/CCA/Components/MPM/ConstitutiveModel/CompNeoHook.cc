@@ -78,11 +78,11 @@ void CompNeoHook::addParticleState(std::vector<const VarLabel*>& from,
 {
    from.push_back(lb->pDeformationMeasureLabel);
    from.push_back(lb->pStressLabel);
-   from.push_back(bElBar_oldLabel);
+//   from.push_back(bElBar_oldLabel);
 
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
    to.push_back(lb->pStressLabel_preReloc);
-   to.push_back(bElBar_newLabel);
+//   to.push_back(bElBar_newLabel);
 }
 
 void CompNeoHook::computeStableTimestep(const Patch* patch,
@@ -500,7 +500,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     new_dw->put(pstress,                lb->pStressLabel_preReloc);
     new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(pvolume_deformed,       lb->pVolumeDeformedLabel);
-    new_dw->put(bElBar_new,bElBar_newLabel);
+    new_dw->put(bElBar_new,             bElBar_newLabel);
 
   }
 }
@@ -743,7 +743,7 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
     new_dw->put(pstress,                lb->pStressLabel_preReloc);
     new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(pvolume_deformed,       lb->pVolumeDeformedLabel);
-    new_dw->put(bElBar_new,bElBar_newLabel);
+    new_dw->put(bElBar_new,             bElBar_newLabel);
 
   }
 }
@@ -758,20 +758,20 @@ void CompNeoHook::addComputesAndRequires(Task* task,
    task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
 						 matlset, Ghost::None);
-   task->requires(Task::OldDW,bElBar_oldLabel,matlset,Ghost::None);
+//   task->requires(Task::OldDW,bElBar_oldLabel,matlset,Ghost::None);
    task->requires(Task::NewDW,lb->gVelocityLabel,matlset,Ghost::AroundCells,1);
-   task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
+//   task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
    
    task->requires(Task::OldDW, lb->delTLabel);
 
-  if(d_8or27==27){
-    task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
-  }
+   if(d_8or27==27){
+     task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
+   }
 
    task->computes(lb->pStressLabel_preReloc,             matlset);
    task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
    task->computes(lb->pVolumeDeformedLabel,              matlset);
-   task->computes(bElBar_newLabel,matlset);
+//   task->computes(bElBar_newLabel,matlset);
    
 }
 
