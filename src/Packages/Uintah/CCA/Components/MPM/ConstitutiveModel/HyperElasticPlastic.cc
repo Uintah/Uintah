@@ -3,7 +3,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModelFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/EquationOfStateFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMEquationOfStateFactory.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
@@ -51,7 +51,7 @@ HyperElasticPlastic::HyperElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8
     throw ParameterNotFound(desc.str());
   }
   
-  d_eos = EquationOfStateFactory::create(ps);
+  d_eos = MPMEquationOfStateFactory::create(ps);
   if(!d_eos){
     ostringstream desc;
     desc << "An error occured in the EquationOfStateFactory that has \n"

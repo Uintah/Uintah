@@ -2,7 +2,7 @@
 #define __DEFAULT_HYPERELASTIC_EOS_MODEL_H__
 
 
-#include "EquationOfState.h"	
+#include "MPMEquationOfState.h"	
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -50,7 +50,7 @@ WARNING
   
 ****************************************/
 
-      class DefaultHyperElasticEOS : public EquationOfState {
+      class DefaultHyperElasticEOS : public MPMEquationOfState {
 
       // Create datatype for storing model parameters
       public:
