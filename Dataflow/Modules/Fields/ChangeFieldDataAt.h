@@ -27,6 +27,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
 
 namespace SCIRun {
 
@@ -35,9 +36,10 @@ class ChangeFieldDataAtAlgoCreate : public DynamicAlgoBase
 {
 public:
 
-  virtual FieldHandle execute(FieldHandle fsrc_h,
+  virtual FieldHandle execute(ProgressReporter *mod,
+			      FieldHandle fsrc_h,
 			      Field::data_location fout_at,
-			      bool &same_value_type_p) = 0;
+			      MatrixHandle &interp) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -50,17 +52,19 @@ class ChangeFieldDataAtAlgoCreateT : public ChangeFieldDataAtAlgoCreate
 {
 public:
 
-  virtual FieldHandle execute(FieldHandle fsrc_h,
+  virtual FieldHandle execute(ProgressReporter *mod,
+			      FieldHandle fsrc_h,
 			      Field::data_location fout_at,
-			      bool &same_value_type_p);
+			      MatrixHandle &interp);
 };
 
 
 template <class FSRC, class FOUT>
 FieldHandle
-ChangeFieldDataAtAlgoCreateT<FSRC, FOUT>::execute(FieldHandle fsrc_h,
-					  Field::data_location at,
-					  bool &same_value_type_p)
+ChangeFieldDataAtAlgoCreateT<FSRC, FOUT>::execute(ProgressReporter *mod,
+						  FieldHandle fsrc_h,
+						  Field::data_location at,
+						  MatrixHandle &interp)
 {
   FSRC *fsrc = dynamic_cast<FSRC *>(fsrc_h.get_rep());
 
@@ -69,10 +73,6 @@ ChangeFieldDataAtAlgoCreateT<FSRC, FOUT>::execute(FieldHandle fsrc_h,
   fout->resize_fdata();
 
   fout->copy_properties(fsrc);
-
-  same_value_type_p =
-    (get_type_description((typename FSRC::value_type *)0)->get_name() ==
-     get_type_description((typename FOUT::value_type *)0)->get_name());
 
   return fout;
 }

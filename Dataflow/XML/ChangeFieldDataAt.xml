@@ -68,6 +68,16 @@
           </p>
         </description>
       </port>
+      <port>
+        <name>Interpolant</name>
+        <datatype>SCIRun::Matrix</datatype>
+        <description>
+          <p>
+            An interpolant matrix that maps the input locations on to
+            the output locations.
+          </p>
+        </description>
+      </port>
     </outputs>
   </io>
   <gui>

@@ -160,7 +160,7 @@ ChangeFieldDataAt::execute()
 
   if (dataat == fh->data_at())
   {
-    // no changes, just send the original through (it may be nothing!)
+    // No changes, just send the original through (it may be nothing!).
     oport->send(fh);
     remark("Passing field from input port to output port unchanged.");
     return;
@@ -174,8 +174,8 @@ ChangeFieldDataAt::execute()
   if (!DynamicCompilation::compile(ci, algo, this)) return;
 
   update_state(Executing);
-  bool same_value_type_p = false;
-  FieldHandle ef(algo->execute(fh, dataat, same_value_type_p));
+  MatrixHandle interpolant(0);
+  FieldHandle ef(algo->execute(this, fh, dataat, interpolant));
 
   oport->send(ef);
 }
@@ -186,7 +186,7 @@ CompileInfoHandle
 ChangeFieldDataAtAlgoCreate::get_compile_info(const TypeDescription *field_td,
 					      const string &fdstname)
 {
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string template_class("ChangeFieldDataAtAlgoCreateT");
   static const string base_class_name("ChangeFieldDataAtAlgoCreate");
