@@ -956,11 +956,7 @@ proc displayErrorWarningOrInfo { msg status } {
     .top.errorFrame.text see end
 }
 
-proc showSpash { steps image_file } {
-    showSplash $steps
-}
-
-proc showSplash { {steps none} } {
+proc showSplash { imgname {steps none} } {
     global SCIRUN_SRCDIR
 
     if {[winfo exists .splash]} {
@@ -969,7 +965,7 @@ proc showSplash { {steps none} } {
 	return;
     }
 
-    set filename [file join $SCIRUN_SRCDIR main scisplash.ppm]
+    set filename [file join $SCIRUN_SRCDIR $imgname]
     image create photo ::img::splash -file "$filename"
     toplevel .splash
 

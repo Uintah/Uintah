@@ -390,8 +390,7 @@ void PackageDB::loadPackage(bool resolve)
   }
   if (gui && !getenv("SCI_NOSPLASH"))
   {
-    gui->execute("showSpash " + to_string(mod_count) + " """ +
-		 string(SCIRUN_SRCTOP) + "/main/scisplash.ppm""");
+    gui->execute("showSplash ""[file join main scisplash.ppm]"" " + to_string(mod_count));
   }
   int index = 0;
   int numreg;
