@@ -341,9 +341,9 @@ MRITissueClassifier::MRITissueClassifier (GuiContext *ctx) :
 
 
   m_Label = T_BACKGROUND;
-  VISVector tempvec;
-  if (m_FatSat) tempvec = VISVector(4);
-  else tempvec = VISVector(3);
+  ColumnMatrix tempvec;
+  if (m_FatSat) tempvec = ColumnMatrix(4);
+  else tempvec = ColumnMatrix(3);
 
   for (x=0;x<m_width;x++)
     for (y=0;y<m_height;y++)
@@ -934,7 +934,7 @@ MRITissueClassifier::Accumulate1DHistogramWithLabel (float *upperlims, int *hist
   // (lx,ly,lz) and (hx,hy,hz) determine subvolume to be used
 #ifdef MCKAY_TODO
   int x, y, z, i;
-  VISVector data;
+  ColumnMatrix data;
 
   
   for (x=lx;x<=hx;x++)
@@ -1075,23 +1075,23 @@ MRITissueClassifier::EM1DWeighted (float *data, float *weight, int n,
   return prob;
 }
 
-float *MRITissueClassifier::EM_CSF_GM_WM (VISVector &CSF_mean, VISMatrix &CSF_cov, float *CSF_prior,
-					  VISVector &GM_mean, VISMatrix &GM_cov, float *GM_prior,
-					  VISVector &WM_mean, VISMatrix &WM_cov, float *WM_prior,
+float *MRITissueClassifier::EM_CSF_GM_WM (ColumnMatrix &CSF_mean, DenseMatrix &CSF_cov, float *CSF_prior,
+					  ColumnMatrix &GM_mean, DenseMatrix &GM_cov, float *GM_prior,
+					  ColumnMatrix &WM_mean, DenseMatrix &WM_cov, float *WM_prior,
 					  int label)
 {
-  int x, y, z, n, flag, it, j, k;    
-  VISVector CSF_meanp, GM_meanp, WM_meanp;
+  int x, y, z, n, flag, it, j, k, flops, memrefs;    
+  ColumnMatrix CSF_meanp, GM_meanp, WM_meanp;
   float sum, sum2, dist, CSF_const, GM_const, WM_const;
-  VISVector diff, data;
-  VISVector feature(3);
-  VISMatrix CSF_icov, GM_icov, WM_icov;
+  ColumnMatrix diff, data, temp;
+  ColumnMatrix feature(3);
+  DenseMatrix CSF_icov = CSF_cov, GM_icov = GM_cov, WM_icov = WM_cov;
   
   n = 0;
   for (z=0;z<m_depth;z++)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==label) n++;
+        if (get_nrrd_int(m_Label,x,y,z)==label) n++;
 
   float *prob = (float*)calloc(n*3,sizeof(float));
 
@@ -1102,79 +1102,77 @@ float *MRITissueClassifier::EM_CSF_GM_WM (VISVector &CSF_mean, VISMatrix &CSF_co
     CSF_meanp = CSF_mean;GM_meanp = GM_mean;WM_meanp = WM_mean;
 
     // evaluate probabilities
-    CSF_icov = CSF_cov.inv(); // compute matrix inverse
-    GM_icov = GM_cov.inv();
-    WM_icov = WM_cov.inv();
+    // compute matrix inverse
+    if (!CSF_icov.invert()) error("Cannot invert CSF_icov"); 
+    if (!GM_icov.invert()) error("Cannot invert GM_icov");
+    if (!WM_icov.invert()) error("Cannot invert WM_icov");
 
-    CSF_const = 1.0/sqrt(Max((float)(CSF_cov(0,0)*(CSF_cov(1,1)*CSF_cov(2,2)-CSF_cov(1,2)*CSF_cov(2,1))
-				     -CSF_cov(0,1)*(CSF_cov(1,0)*CSF_cov(2,2)-CSF_cov(2,0)*CSF_cov(1,2))
-				     +CSF_cov(0,2)*(CSF_cov(1,0)*CSF_cov(2,1)-CSF_cov(2,0)*CSF_cov(1,1))),TINY));
-    GM_const = 1.0/sqrt(Max((float)(GM_cov(0,0)*(GM_cov(1,1)*GM_cov(2,2)-GM_cov(1,2)*GM_cov(2,1))
-				    -GM_cov(0,1)*(GM_cov(1,0)*GM_cov(2,2)-GM_cov(2,0)*GM_cov(1,2))
-				    +GM_cov(0,2)*(GM_cov(1,0)*GM_cov(2,1)-GM_cov(2,0)*GM_cov(1,1))),TINY));
-    WM_const = 1.0/sqrt(Max((float)(WM_cov(0,0)*(WM_cov(1,1)*WM_cov(2,2)-WM_cov(1,2)*WM_cov(2,1))
-				    -WM_cov(0,1)*(WM_cov(1,0)*WM_cov(2,2)-WM_cov(2,0)*WM_cov(1,2))
-				    +WM_cov(0,2)*(WM_cov(1,0)*WM_cov(2,1)-WM_cov(2,0)*WM_cov(1,1))),TINY));
+    CSF_const = 1.0/sqrt(Max((float)(CSF_cov.get(0,0)*(CSF_cov.get(1,1)*CSF_cov.get(2,2)-CSF_cov.get(1,2)*CSF_cov.get(2,1))
+				     -CSF_cov.get(0,1)*(CSF_cov.get(1,0)*CSF_cov.get(2,2)-CSF_cov.get(2,0)*CSF_cov.get(1,2))
+				     +CSF_cov.get(0,2)*(CSF_cov.get(1,0)*CSF_cov.get(2,1)-CSF_cov.get(2,0)*CSF_cov.get(1,1))),TINY));
+    GM_const = 1.0/sqrt(Max((float)(GM_cov.get(0,0)*(GM_cov.get(1,1)*GM_cov.get(2,2)-GM_cov.get(1,2)*GM_cov.get(2,1))
+				    -GM_cov.get(0,1)*(GM_cov.get(1,0)*GM_cov.get(2,2)-GM_cov.get(2,0)*GM_cov.get(1,2))
+				    +GM_cov.get(0,2)*(GM_cov.get(1,0)*GM_cov.get(2,1)-GM_cov.get(2,0)*GM_cov.get(1,1))),TINY));
+    WM_const = 1.0/sqrt(Max((float)(WM_cov.get(0,0)*(WM_cov.get(1,1)*WM_cov.get(2,2)-WM_cov.get(1,2)*WM_cov.get(2,1))
+				    -WM_cov.get(0,1)*(WM_cov.get(1,0)*WM_cov.get(2,2)-WM_cov.get(2,0)*WM_cov.get(1,2))
+				    +WM_cov.get(0,2)*(WM_cov.get(1,0)*WM_cov.get(2,1)-WM_cov.get(2,0)*WM_cov.get(1,1))),TINY));
     
     k=0;
     for (z=0;z<m_depth;z++)
       for (y=0;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          if (m_Label(x,y,z)==label)
+          if (get_nrrd_int(m_Label,x,y,z)==label)
             {
-            data = m_Data.peek(x,y,z);
-            if (m_FatSat)
-              {
-              feature.poke(0)=data.peek(0);
-              feature.poke(1)=data.peek(1);
-              feature.poke(2)=data.peek(2);
-              }
-            else feature = data;
+	      feature = get_m_Data(x,y,z);
+	      if (feature.nrows() != 3) feature.resize(3);
             
-            diff=feature-CSF_mean;
-            dist=Max(diff.dot(CSF_icov*diff),0.0);
-            prob[k]=exp(-0.5*dist)*(*CSF_prior)*CSF_const;
-            sum=prob[k];
-
-            diff=feature-GM_mean;
-            dist=Max(diff.dot(GM_icov*diff),0.0);
-            prob[k+1]=exp(-0.5*dist)*(*GM_prior)*GM_const;
-            sum+=prob[k+1];
-
-            diff=feature-WM_mean;
-            dist=Max(diff.dot(WM_icov*diff),0.0);
-            prob[k+2]=exp(-0.5*dist)*(*WM_prior)*WM_const;
-            sum+=prob[k+2];
-
-            for (j=0;j<3;j++) prob[k+j]/=Max(sum,TINY);
-            k+=3;
+	      Sub(diff, feature, CSF_mean); //  diff=feature-CSF_mean;
+	      CSF_icov.mult(diff, temp, flops, memrefs); // CSF_icov*diff = temp
+	      dist=Max(Dot(diff, temp),0.0);
+	      prob[k]=exp(-0.5*dist)*(*CSF_prior)*CSF_const;
+	      sum=prob[k];
+	      
+	      Sub(diff, feature, GM_mean); // diff=feature-GM_mean;
+	      GM_icov.mult(diff, temp, flops, memrefs);    
+	      dist=Max(Dot(diff,temp),0.0);// dist=Max(diff.dot(GM_icov*diff),0.0);            
+	      prob[k+1]=exp(-0.5*dist)*(*GM_prior)*GM_const;
+	      sum+=prob[k+1];
+	      
+	      Sub(diff, feature, WM_mean); // diff=feature-WM_mean;
+	      WM_icov.mult(diff, temp, flops, memrefs);    
+	      dist=Max(Dot(diff,temp),0.0);// dist=Max(diff.dot(GM_icov*diff),0.0);            
+	      prob[k+2]=exp(-0.5*dist)*(*WM_prior)*WM_const;
+	      sum+=prob[k+2];
+	      
+	      for (j=0;j<3;j++) prob[k+j]/=Max(sum,TINY);
+	      k+=3;
             }
 
     // compute new statistics
     dist=0.0f;
     sum2=0.0f;
-    CSF_mean = 0.0;GM_mean = 0.0;WM_mean = 0.0;
-    CSF_cov = 0.0;GM_cov = 0.0;WM_cov = 0.0;
+    CSF_mean.zero();
+    GM_mean.zero();
+    WM_mean.zero();
+    CSF_cov.zero();
+    GM_cov.zero();
+    WM_cov.zero();
     (*CSF_prior) = 0.0; (*GM_prior) = 0.0;(*WM_prior) = 0.0;
     
     k = 0;
     for (z=0;z<m_depth;z++)
       for (y=0;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          if (m_Label(x,y,z)==label)
+          if (get_nrrd_int(m_Label,x,y,z)==label)
             {
-            data = m_Data.peek(x,y,z);
-            if (m_FatSat)
-              {
-              feature.poke(0)=data.peek(0);
-              feature.poke(1)=data.peek(1);
-              feature.poke(2)=data.peek(2);
-              }
-            else feature = data;
-            
+            feature = get_m_Data(x,y,z);
+	    if (feature.nrows() != 3) feature.resize(3);
+
+#ifdef MCKAY_TODO            
             CSF_mean += prob[k]*feature;
             GM_mean += prob[k+1]*feature;
             WM_mean += prob[k+2]*feature;
+#endif
 
             (*CSF_prior) += prob[k];
             (*GM_prior) += prob[k+1];
@@ -1182,39 +1180,46 @@ float *MRITissueClassifier::EM_CSF_GM_WM (VISVector &CSF_mean, VISMatrix &CSF_co
 
             k+=3;
             }
-    CSF_mean /= Max((*CSF_prior), TINY);
-    GM_mean /= Max((*GM_prior), TINY);
-    WM_mean /= Max((*WM_prior), TINY);
+
+    // CSF_mean /= Max((*CSF_prior), TINY);
+    CSF_mean.scalar_multiply(1.0 / Max((*CSF_prior), TINY));
+    // GM_mean /= Max((*GM_prior), TINY);
+    GM_mean.scalar_multiply(1.0 / Max((*GM_prior), TINY));
+    // WM_mean /= Max((*WM_prior), TINY);
+    WM_mean.scalar_multiply(1.0 / Max((*WM_prior), TINY));
 
     k = 0;
     for (z=0;z<m_depth;z++)
       for (y=0;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          if (m_Label(x,y,z)==label)
+          if (get_nrrd_int(m_Label,x,y,z)==label)
             {
-            data = m_Data.peek(x,y,z);
-            if (m_FatSat)
-              {
-              feature.poke(0)=data.peek(0);
-              feature.poke(1)=data.peek(1);
-              feature.poke(2)=data.peek(2);
-              }
-            else feature = data;
+            feature = get_m_Data(x,y,z);
+	    if (feature.nrows() != 3) feature.resize(3);
             
-            diff = feature - CSF_mean;
+            Sub(diff,feature,CSF_mean);
+#ifdef MCKAY_TODO
             CSF_cov += prob[k]*(diff.exterior(diff));
+#endif	
 
-            diff = feature - GM_mean;
+            Sub(diff,feature,GM_mean); // diff = feature - GM_mean;
+#ifdef MCKAY_TODO
             GM_cov += prob[k+1]*(diff.exterior(diff));
+#endif
 
-            diff = feature - WM_mean;
+            Sub(diff,feature,WM_mean); // diff = feature - WM_mean;
+#ifdef MCKAY_TODO
             WM_cov += prob[k+2]*(diff.exterior(diff));
+#endif
 
             k+=3;
             }
-    CSF_cov /= Max((*CSF_prior), TINY);
-    GM_cov /= Max((*GM_prior), TINY);
-    WM_cov /= Max((*WM_prior), TINY);
+    // CSF_cov /= Max((*CSF_prior), TINY);
+    CSF_cov.scalar_multiply (1.0 / Max((*CSF_prior), TINY));
+    // GM_cov /= Max((*GM_prior), TINY);
+    GM_cov.scalar_multiply (1.0 / Max((*GM_prior), TINY));
+    // WM_cov /= Max((*WM_prior), TINY);
+    WM_cov.scalar_multiply (1.0 / Max((*WM_prior), TINY));
 
     sum2 = (*CSF_prior)+(*GM_prior)+(*WM_prior);
     (*CSF_prior)/=sum2;
@@ -1225,45 +1230,77 @@ float *MRITissueClassifier::EM_CSF_GM_WM (VISVector &CSF_mean, VISMatrix &CSF_co
     dist = 0.0;
     if (it!=0)
       {
-      diff=CSF_mean - CSF_meanp;
-      dist+=(diff.norm()/(TINY+CSF_meanp.norm()));
-      diff=GM_mean - GM_meanp;
-      dist+=(diff.norm()/(TINY+GM_meanp.norm()));
-      diff=WM_mean - WM_meanp;
-      dist+=(diff.norm()/(TINY+WM_meanp.norm()));
-      dist=sqrt(dist/3.0);
-      if (dist<m_MinChange) flag=0;
+
+	// diff=CSF_mean - CSF_meanp;
+	Sub(diff, CSF_mean, CSF_meanp);
+	// dist+=(diff.norm()/(TINY+CSF_meanp.norm()));
+	diff.vector_norm();
+	temp = CSF_meanp;
+	temp.vector_norm();
+#ifdef MCKAY_TODO
+	Add(temp,TINY);
+	Div(dist, diff, temp);
+#endif 
+
+	// diff=GM_mean - GM_meanp;
+	Sub(diff, GM_mean, GM_meanp);
+	// dist+=(diff.norm()/(TINY+GM_meanp.norm()));
+	diff.vector_norm();
+	temp = GM_meanp;
+	temp.vector_norm();
+#ifdef MCKAY_TODO
+	Add(temp,TINY);
+	Div(dist, diff, temp);
+#endif 
+       
+	
+	
+	// diff=WM_mean - WM_meanp;
+	Sub(diff, WM_mean, WM_meanp);
+	// dist+=(diff.norm()/(TINY+WM_meanp.norm()));
+	diff.vector_norm();
+	temp = WM_meanp;
+	temp.vector_norm();
+#ifdef MCKAY_TODO
+	Add(temp,TINY);
+	Div(dist, diff, temp);
+#endif 
+	
+	
+
+	dist=sqrt(dist/3.0);
+	if (dist<m_MinChange) flag=0;
       }
     it++;
     } // end while
 
   std::cout<<it<<" iterations performed\n";
   std::cout<<"EM final\n";
-  std::cout<<"WM  mean = ("<<WM_mean(0)<<","<<WM_mean(1)<<","<<WM_mean(2)<<") prior = "<<(*WM_prior)<<"\n";
-  std::cout<<"    covariance "<<WM_cov<<"\n";
-  std::cout<<"GM  mean = ("<<GM_mean(0)<<","<<GM_mean(1)<<","<<GM_mean(2)<<") prior = "<<(*GM_prior)<<"\n";
-  std::cout<<"    covariance "<<GM_cov<<"\n";
-  std::cout<<"CSF mean = ("<<CSF_mean(0)<<","<<CSF_mean(1)<<","<<CSF_mean(2)<<") prior = "<<(*CSF_prior)<<"\n";
-  std::cout<<"    covariance "<<CSF_cov<<"\n";
+  std::cout<<"WM  mean = ("<<WM_mean.get(0)<<","<<WM_mean.get(1)<<","<<WM_mean.get(2)<<") prior = "<<(*WM_prior)<<"\n";
+  std::cout<<"    covariance "; WM_cov.print(std::cout);//<<WM_cov<<"\n";
+  std::cout<<"GM  mean = ("<<GM_mean.get(0)<<","<<GM_mean.get(1)<<","<<GM_mean.get(2)<<") prior = "<<(*GM_prior)<<"\n";
+  std::cout<<"    covariance "; GM_cov.print(std::cout);//<<GM_cov<<"\n";
+  std::cout<<"CSF mean = ("<<CSF_mean.get(0)<<","<<CSF_mean.get(1)<<","<<CSF_mean.get(2)<<") prior = "<<(*CSF_prior)<<"\n";
+  std::cout<<"    covariance "; CSF_cov.print(std::cout);//<<CSF_cov<<"\n";
   
   return prob;
 }
 
-float *MRITissueClassifier::EM_Muscle_Fat (VISVector &Muscle_mean, VISMatrix &Muscle_cov, float *Muscle_prior,
-                                             VISVector &Fat_mean, VISMatrix &Fat_cov, float *Fat_prior,
+float *MRITissueClassifier::EM_Muscle_Fat (ColumnMatrix &Muscle_mean, DenseMatrix &Muscle_cov, float *Muscle_prior,
+                                             ColumnMatrix &Fat_mean, DenseMatrix &Fat_cov, float *Fat_prior,
                                              int label, int dim)
 {
-  int x, y, z, n, flag, it, j, k;    
-  VISVector Muscle_meanp, Fat_meanp;
+  int x, y, z, n, flag, it, j, k, flops, memrefs;    
+  ColumnMatrix Muscle_meanp, Fat_meanp;
   float sum, sum2, dist, Muscle_const, Fat_const;
-  VISVector diff, data;
-  VISMatrix Muscle_icov, Fat_icov;
+  ColumnMatrix diff, data, temp;
+  DenseMatrix Muscle_icov = Muscle_cov, Fat_icov = Fat_cov;
 
   n = 0;
   for (z=0;z<m_depth;z++)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==label) n++;
+        if (get_nrrd_int(m_Label,x,y,z)==label) n++;
 
   float *prob = (float*)calloc(n*2,sizeof(float));
 
@@ -1274,40 +1311,46 @@ float *MRITissueClassifier::EM_Muscle_Fat (VISVector &Muscle_mean, VISMatrix &Mu
     Muscle_meanp = Muscle_mean;Fat_meanp = Fat_mean;
 
     // evaluate probabilities
-    Muscle_icov = Muscle_cov.inv(); // compute matrix inverse
-    Fat_icov = Fat_cov.inv();
+    // compute matrix inverse
+    if (!Muscle_icov.invert()) error ("cannot invert muslce_iconv");
+    if (!Fat_icov.invert()) error ("cannot invert fat_cov");
 
     if (dim==3)
-      {
-      Muscle_const = 1.0/sqrt(Max((float)(Muscle_cov(0,0)*(Muscle_cov(1,1)*Muscle_cov(2,2)-Muscle_cov(1,2)*Muscle_cov(2,1))
-                                             -Muscle_cov(0,1)*(Muscle_cov(1,0)*Muscle_cov(2,2)-Muscle_cov(2,0)*Muscle_cov(1,2))
-                                             +Muscle_cov(0,2)*(Muscle_cov(1,0)*Muscle_cov(2,1)-Muscle_cov(2,0)*Muscle_cov(1,1))),TINY));
-      Fat_const = 1.0/sqrt(Max((float)(Fat_cov(0,0)*(Fat_cov(1,1)*Fat_cov(2,2)-Fat_cov(1,2)*Fat_cov(2,1))
-                                          -Fat_cov(0,1)*(Fat_cov(1,0)*Fat_cov(2,2)-Fat_cov(2,0)*Fat_cov(1,2))
-                                          +Fat_cov(0,2)*(Fat_cov(1,0)*Fat_cov(2,1)-Fat_cov(2,0)*Fat_cov(1,1))),TINY));
-      }
+    {
+      Muscle_const = 1.0/sqrt(Max((float)(Muscle_cov.get(0,0)*(Muscle_cov.get(1,1)*Muscle_cov.get(2,2)-Muscle_cov.get(1,2)*Muscle_cov.get(2,1))
+					  -Muscle_cov.get(0,1)*(Muscle_cov.get(1,0)*Muscle_cov.get(2,2)-Muscle_cov.get(2,0)*Muscle_cov.get(1,2))
+					  +Muscle_cov.get(0,2)*(Muscle_cov.get(1,0)*Muscle_cov.get(2,1)-Muscle_cov.get(2,0)*Muscle_cov.get(1,1))),TINY));
+      Fat_const = 1.0/sqrt(Max((float)(Fat_cov.get(0,0)*(Fat_cov.get(1,1)*Fat_cov.get(2,2)-Fat_cov.get(1,2)*Fat_cov.get(2,1))
+					 -Fat_cov.get(0,1)*(Fat_cov.get(1,0)*Fat_cov.get(2,2)-Fat_cov.get(2,0)*Fat_cov.get(1,2))
+				       +Fat_cov.get(0,2)*(Fat_cov.get(1,0)*Fat_cov.get(2,1)-Fat_cov.get(2,0)*Fat_cov.get(1,1))),TINY));
+    }
     else
-      {
+    {
+#ifdef MCKAY_TODO
       Muscle_const = 1.0/sqrt(Max((float)fabs(Muscle_cov.det()),TINY));  
       // .det() computes determinant
       Fat_const = 1.0/sqrt(Max((float)fabs(Fat_cov.det()),TINY));
-      }
+#endif
+    }
     
     k=0;
     for (z=0;z<m_depth;z++)
       for (y=0;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          if (m_Label(x,y,z)==label)
+          if (get_nrrd_int(m_Label,x,y,z)==label)
             {
-            data = m_Data.peek(x,y,z);
+	      
+            data = get_m_Data(x,y,z);
             
-            diff=data-Muscle_mean;
-            dist=Max(diff.dot(Muscle_icov*diff),0.0);
+	    Sub(diff, data, Muscle_mean); //  diff=data-Muscle_mean;
+	    Muscle_icov.mult(diff, temp, flops, memrefs); // Muscle_icov*diff = temp
+	    dist = Max(Dot(diff, temp), 0.0);
             prob[k]=exp(-0.5*dist)*(*Muscle_prior)*Muscle_const;
             sum=prob[k];
 
-            diff=data-Fat_mean;
-            dist=Max(diff.dot(Fat_icov*diff),0.0);
+            Sub(diff, data, Fat_mean); //diff=data-Fat_mean;
+	    Fat_icov.mult(diff, temp, flops, memrefs); // Fat_icov*diff = temp
+	    dist = Max(Dot(diff, temp), 0.0);
             prob[k+1]=exp(-0.5*dist)*(*Fat_prior)*Fat_const;
             sum+=prob[k+1];
 
@@ -1324,47 +1367,55 @@ float *MRITissueClassifier::EM_Muscle_Fat (VISVector &Muscle_mean, VISMatrix &Mu
     // compute new statistics
     dist=0.0f;
     sum2=0.0f;
-    Muscle_mean = 0.0;Fat_mean = 0.0;
-    Muscle_cov = 0.0;Fat_cov = 0.0;
+    Muscle_mean.zero();
+    Fat_mean.zero();
+    Muscle_cov.zero();
+    Fat_cov.zero();
     (*Muscle_prior) = 0.0; (*Fat_prior) = 0.0;
     
     k = 0;
     for (z=0;z<m_depth;z++)
       for (y=0;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          if (m_Label(x,y,z)==label)
-            {
-            data = m_Data.peek(x,y,z);
-            
+          if (get_nrrd_int(m_Label,x,y,z)==label)
+	  {
+            data = get_m_Data(x,y,z);
+#ifdef MCKAY_TODO            
             Muscle_mean += prob[k]*data;
             Fat_mean += prob[k+1]*data;
-
+#endif
             (*Muscle_prior) += prob[k];
             (*Fat_prior) += prob[k+1];
 
             k+=2;
-            }
-    Muscle_mean /= Max((*Muscle_prior), TINY);
-    Fat_mean /= Max((*Fat_prior), TINY);
+	  }
+    
+    Muscle_mean.scalar_multiply(1.0 / Max((*Muscle_prior), TINY));
+    Fat_mean.scalar_multiply(1.0 / Max((*Fat_prior)      
+, TINY));
 
     k = 0;
     for (z=0;z<m_depth;z++)
       for (y=0;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          if (m_Label(x,y,z)==label)
+          if (get_nrrd_int(m_Label,x,y,z)==label)
             {
-            data = m_Data.peek(x,y,z);
+            data = get_m_Data(x,y,z);
 
-            diff = data - Muscle_mean;
+            Sub(diff, data, Muscle_mean);
+#ifdef MCKAY_TODO
             Muscle_cov += prob[k]*(diff.exterior(diff));
+#endif
 
-            diff = data - Fat_mean;
+            Sub(diff, data, Fat_mean);
+#ifdef MCKAY_TODO
             Fat_cov += prob[k+1]*(diff.exterior(diff));
+#endif
 
             k+=2;
             }
-    Muscle_cov /= Max((*Muscle_prior), TINY);
-    Fat_cov /= Max((*Fat_prior), TINY);
+    Muscle_cov.scalar_multiply(1.0 / Max((*Muscle_prior), TINY));
+    Fat_cov.scalar_multiply(1.0 / Max((*Fat_prior), TINY));
 
     sum2 = (*Muscle_prior)+(*Fat_prior);
 
@@ -1374,11 +1425,17 @@ float *MRITissueClassifier::EM_Muscle_Fat (VISVector &Muscle_mean, VISMatrix &Mu
     // compute amount of change
     dist = 0.0;
     if (it!=0)
-      {
-      diff=Muscle_mean - Muscle_meanp;
-      dist+=(diff.norm()/(TINY+Muscle_meanp.norm()));
-      diff=Fat_mean - Fat_meanp;
-      dist+=(diff.norm()/(TINY+Fat_meanp.norm()));
+    {
+      Sub(diff, Muscle_mean, Muscle_meanp); // diff=Muscle_mean - Muscle_meanp;
+      // dist+=(diff.norm()/(TINY+Muscle_meanp.norm()));
+      diff.vector_norm();
+      temp = Muscle_meanp;
+      temp.vector_norm();
+         
+      Sub (diff, Fat_mean, Fat_meanp);
+      // dist+=(diff.norm()/(TINY+Fat_meanp.norm()));
+      diff.vector_norm();
+
       dist=sqrt(dist/2.0);
       if (dist<m_MinChange) flag=0;
       }
@@ -1389,19 +1446,19 @@ float *MRITissueClassifier::EM_Muscle_Fat (VISVector &Muscle_mean, VISMatrix &Mu
   std::cout<<"EM final\n";
   if (dim==3)
       {
-      std::cout<<"Fat    mean = ("<<Fat_mean(0)<<","<<Fat_mean(1)<<","<<Fat_mean(2)<<") prior = "<<(*Fat_prior)<<"\n";
-      std::cout<<"       covariance "<<Fat_cov<<"\n";
-      std::cout<<"Muscle mean = ("<<Muscle_mean(0)<<","<<Muscle_mean(1)<<","<<Muscle_mean(2)<<") prior = "<<(*Muscle_prior)<<"\n";
-      std::cout<<"       covariance "<<Muscle_cov<<"\n";
+      std::cout<<"Fat    mean = ("<<Fat_mean.get(0)<<","<<Fat_mean.get(1)<<","<<Fat_mean.get(2)<<") prior = "<<(*Fat_prior)<<"\n";
+      std::cout<<"       covariance "; Fat_cov.print(std::cout); //<<Fat_cov<<"\n";
+      std::cout<<"Muscle mean = ("<<Muscle_mean.get(0)<<","<<Muscle_mean.get(1)<<","<<Muscle_mean.get(2)<<") prior = "<<(*Muscle_prior)<<"\n";
+      std::cout<<"       covariance "; Muscle_cov.print(std::cout); //<<Muscle_cov<<"\n";
       }
     else
       {
-      std::cout<<"Fat    mean = ("<<Fat_mean(0)<<","<<Fat_mean(1)<<","
-               <<Fat_mean(2)<<","<<Fat_mean(3)<<") prior = "<<(*Fat_prior)<<"\n";
-      std::cout<<"       covariance "<<Fat_cov<<"\n";
-      std::cout<<"Muscle mean = ("<<Muscle_mean(0)<<","<<Muscle_mean(1)<<","
-               <<Muscle_mean(2)<<","<<Muscle_mean(3)<<") prior = "<<(*Muscle_prior)<<"\n";
-      std::cout<<"       covariance "<<Muscle_cov<<"\n";
+      std::cout<<"Fat    mean = ("<<Fat_mean.get(0)<<","<<Fat_mean.get(1)<<","
+               <<Fat_mean.get(2)<<","<<Fat_mean.get(3)<<") prior = "<<(*Fat_prior)<<"\n";
+      std::cout<<"       covariance "; Fat_cov.print(std::cout); //<<Fat_cov<<"\n";
+      std::cout<<"Muscle mean = ("<<Muscle_mean.get(0)<<","<<Muscle_mean.get(1)<<","
+               <<Muscle_mean.get(2)<<","<<Muscle_mean.get(3)<<") prior = "<<(*Muscle_prior)<<"\n";
+      std::cout<<"       covariance "; Muscle_cov.print(std::cout); //<<Muscle_cov<<"\n";
       }
 
   return prob;
@@ -1419,7 +1476,7 @@ MRITissueClassifier::BackgroundDetection ()
   
   std::cout<<"FOREGROUND/BACKGROUND DETECTION\n";
   int x, y, z, i, flag;
-  VISVector vec;
+  ColumnMatrix vec;
   float e, stepsize, w, mean[2], prior[2], var[2], temp, th_low, th_high, min, max;
   float *pdfest;
    
@@ -1428,9 +1485,9 @@ MRITissueClassifier::BackgroundDetection ()
       for (x=0;x<m_width;x++)
         {
         e=0.0;
-        vec=m_Data.peek(x,y,z);
-        for (i=0;i<3;i++) e+=vec.peek(i);
-        m_Energy.poke(x,y,z)=e;
+        vec=get_m_Data(x,y,z);
+        for (i=0;i<3;i++) e+=vec.get(i);
+        set_nrrd_float(m_Energy, e, x, y, z);
         if (!(x||y||z)) min=max=e;
         else
           {
@@ -1493,7 +1550,10 @@ MRITissueClassifier::BackgroundDetection ()
   free (centers);
   
   int xa, ya, k;
+#ifdef MCKAY_TODO
   VISImage<int> slice(m_width, m_height);
+#endif
+  NrrdDataHandle slice;
   int *slicebg = (int*)calloc(m_width*m_height,sizeof(int));
   int slicesize[2];
   slicesize[0]=m_width;
@@ -1507,33 +1567,42 @@ MRITissueClassifier::BackgroundDetection ()
     // robust, we only use the high threshold here
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (m_Energy(x,y,z)>=th_high) slice.poke(x,y)=1; else slice.poke(x,y)=0;
+        if (get_nrrd_float(m_Energy,x,y,z)>=th_high) 
+	  set_nrrd_int(slice,1,x,y); 
+	else 
+	  set_nrrd_int(slice,0,x,y);
 
     // floodfill background from all boundary pixels -- could also just use the
     // 4 corners
+#ifdef MCKAY_TODO
     for (xa=0;xa<m_width;xa++)
       {
-      if (slice(xa,0)==0) slice = slice.floodFill(0,2,xa,0);
-      if (slice(xa,m_height-1)==0) slice = slice.floodFill(0,2,xa,m_height-1);
+      if (get_nrrd_int(slice,xa,0)==0) 
+	slice = slice.floodFill(0,2,xa,0);      
+      if (get_nrrd_int(slice,xa,m_height-1)==0) 
+	slice = slice.floodFill(0,2,xa,m_height-1);
       }
     for (ya=0;ya<m_height;ya++)
       {
-      if (slice(0,ya)==0) slice = slice.floodFill(0,2,0,ya);
-      if (slice(m_width-1,ya)==0) slice = slice.floodFill(0,2,m_width-1,ya);
+      if (get_nrrd_int(slice,0,ya)==0) 
+	slice = slice.floodFill(0,2,0,ya);
+      if (get_nrrd_int(slice,m_width-1,ya)==0) 
+	slice = slice.floodFill(0,2,m_width-1,ya);
       }
+#endif
 
     // mark the pixels in m_Labels image
     flag=0;
     k=0;
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if ((m_Label(x,y,z)==T_BACKGROUND)&&(slice(x,y)!=2))
+        if ((get_nrrd_int(m_Label,x,y,z)==T_BACKGROUND)&&(get_nrrd_int(slice,x,y)!=2))
           {
           flag=1;
-          m_Label.poke(x,y,z)=T_FOREGROUND;
+          set_nrrd_int(m_Label,T_FOREGROUND,x,y,z);
           slicebg[k++]=1;
           }
-        else if (m_Label(x,y,z)==T_BACKGROUND) slicebg[k++]=0;
+        else if (get_nrrd_int(m_Label,x,y,z)==T_BACKGROUND) slicebg[k++]=0;
         else slicebg[k++]=1;
 
     // compute 2D distance transform the background pixels
@@ -1542,7 +1611,7 @@ MRITissueClassifier::BackgroundDetection ()
       m_TopOfHead=z;
       for (y=0;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          m_DistBG.poke(x,y,z)=0.0;
+          set_nrrd_float(m_DistBG,0.0,x,y,z);
       }
     else 
       {
@@ -1550,7 +1619,7 @@ MRITissueClassifier::BackgroundDetection ()
       k=0;
       for (y=0;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          m_DistBG.poke(x,y,z)=m_PixelDim*sqrt((float)slicebg[k++]);
+          set_nrrd_float(m_DistBG,m_PixelDim*sqrt((float)slicebg[k++]),x,y,z);
       }
     } // z-loop
   std::cout<<"Top of head slice = "<<m_TopOfHead<<std::endl;
@@ -1568,7 +1637,7 @@ MRITissueClassifier::BackgroundDetection ()
 
     for (ya=0;ya<m_height;ya++)
       for (xa=0;xa<m_width;xa++)
-        if ((slice(xa,ya)==3)&&(m_Label(xa,ya,z+1)!=T_BACKGROUND)&&(m_DistBG(xa,ya,z+1)>10.0))
+        if ((get_nrrd_int(slice,xa,ya)==3)&&(get_nrrd_int(m_Label,xa,ya,z+1)!=T_BACKGROUND)&&(get_nrrd_float(m_DistBG,xa,ya,z+1)>10.0))
           slice = slice.floodFill(3,1,xa,ya);
     // floodfill pixels between the low and high thresholds from seed
     // locations 10mm deep in the head, by doing this we avoid some of
@@ -1577,30 +1646,30 @@ MRITissueClassifier::BackgroundDetection ()
     
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (slice(x,y)==3) slice.poke(x,y)=0; // these are pixels outside the
+        if (get_nrrd_int(slice,x,y)==3) slice.poke(x,y)=0; // these are pixels outside the
                                               // head that fall between the 2 thresholds
     
     // floodfill background from all boundary pixels -- could also just use the
     // 4 corners
     for (xa=0;xa<m_width;xa++)
       {
-      if (slice(xa,0)==0) slice = slice.floodFill(0,2,xa,0);
-      if (slice(xa,m_height-1)==0) slice = slice.floodFill(0,2,xa,m_height-1);
+      if (get_nrrd_int(slice,xa,0)==0) slice = slice.floodFill(0,2,xa,0);
+      if (get_nrrd_int(slice,xa,m_height-1)==0) slice = slice.floodFill(0,2,xa,m_height-1);
       }
     for (ya=0;ya<m_height;ya++)
       {
-      if (slice(0,ya)==0) slice = slice.floodFill(0,2,0,ya);
-      if (slice(m_width-1,ya)==0) slice = slice.floodFill(0,2,m_width-1,ya);
+      if (get_nrrd_int(slice,0,ya)==0) slice = slice.floodFill(0,2,0,ya);
+      if (get_nrrd_int(slice,m_width-1,ya)==0) slice = slice.floodFill(0,2,m_width-1,ya);
       }
     k=0;
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if ((m_Label(x,y,z)==T_BACKGROUND)&&(slice(x,y)!=2))
+        if ((get_nrrd_int(m_Label,x,y,z)==T_BACKGROUND)&&(get_nrrd_int(slice,x,y)!=2))
           {
-          m_Label.poke(x,y,z)=T_FOREGROUND;
+          set_nrrd_int(m_Label,T_FOREGROUND,x,y,z)
           slicebg[k++]=1;
           }
-        else if (m_Label(x,y,z)==T_BACKGROUND) slicebg[k++]=0;
+        else if (get_nrrd_int(m_Label,x,y,z)==T_BACKGROUND) slicebg[k++]=0;
         else slicebg[k++]=1;
 
     // compute 2D distance transform the background pixels
@@ -1608,23 +1677,26 @@ MRITissueClassifier::BackgroundDetection ()
     k=0;
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        m_DistBG.poke(x,y,z)=m_PixelDim*sqrt((float)slicebg[k++]);
+        set_nrrd_float(m_DistBG,m_PixelDim*sqrt((float)slicebg[k++]),x,y,z);
     } // z-loop
   
   free(slicebg);
 
+#ifdef MCKAY_TODO
   m_DistBG2D = m_DistBG; // save 2D distance transform
+#endif
   // fix 2D distance to approximate 3D distance  
   for (x=0;x<m_width;x++)
     for (y=0;y<m_height;y++)
-      if (m_DistBG(x,y,m_TopOfHead-1)>0.0) m_DistBG.poke(x,y,m_TopOfHead-1)=m_SliceThickness;
+      if (get_nrrd_float(m_DistBG,x,y,m_TopOfHead-1)>0.0) set_nrrd_float(m_DistBG,m_SliceThickness,x,y,m_TopOfHead-1);
 
   for (z=m_TopOfHead-2;z>=0;z--)
     {
     for (x=0;x<m_width;x++)
       for (y=0;y<m_height;y++)
-        if (m_DistBG(x,y,z)>0.0) m_DistBG.poke(x,y,z) = Min (m_DistBG(x,y,z),
-                                                                m_DistBG(x,y,z+1)+m_SliceThickness);
+        if (get_nrrd_float(m_DistBG,x,y,z)>0.0) {
+	  const float val = Min (get_nrrd_float(m_DistBG,x,y,z),get_nrrd_float(m_DistBG,x,y,z+1)+m_SliceThickness);
+	  set_nrrd_float(m_DistBG,val,x,y,z);
     }
 }
 
@@ -1645,7 +1717,7 @@ MRITissueClassifier::ComputeForegroundCenter ()
     k=0;
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==T_FOREGROUND)
+        if (get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)
           {
           k++;
           m_slicecenter[0][z]+=(float)x;
@@ -1718,27 +1790,27 @@ MRITissueClassifier::FatDetection_NOFATSAT (float maskr)
   std::cout<<"FAT DETECTION (without fatsat)\n";
   int x, y, z, cnt, i;
   float min, max,  temp, mean[4], var[4], prior[4], *pdfest, th, fat_energy;
-  VISVector data;
+  ColumnMatrix data;
 
   cnt = 0;
   for (z=0;z<m_TopOfHead;z++)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        {
-        data = m_Data.peek(x,y,z);
-        fat_energy = data(0); // use T1 signal
-        if (m_Label(x,y,z)==T_FOREGROUND)
-          {
+      {
+        data = get_m_Data(x,y,z);
+        fat_energy = data.get(0); // use T1 signal
+        if (get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)
+	{
           if (cnt==0) min=max=fat_energy;
           else
-            {
+	  {
             if (fat_energy>max) max=fat_energy;
             else if (fat_energy<min) min=fat_energy;
-            } 
+	  } 
           cnt++;
-          }
-        }
-
+	}
+      }
+  
   std::cout<<"T1 min = "<<min<<" , max = "<<max<<std::endl;
   // compute bins for the histogram
   float stepsize = ceil((max-min)/(float)NBINMAX);
@@ -1832,49 +1904,70 @@ MRITissueClassifier::FatDetection_NOFATSAT (float maskr)
     for (z=0;z<depth;z++)
       for (y=ycenter;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          if (m_Label(x,y,z)==T_FOREGROUND)
-            {
-            data = m_Data.peek(x,y,z);
-            fat_energy = data.peek(0);
+          if (get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)
+	  {
+            data = get_m_Data(x,y,z);
+            fat_energy = data.get(0);
             if (fat_energy>th)
-              m_Label.poke(x,y,z) = T_FAT;
+              set_nrrd_int(m_Label, T_FAT, x,y,z);
             }
     
     int rad = (int)floor(maskr);
     int len = 2*rad+1;
     
     float xo, yo;
+#ifdef MCKAY_TODO
     VISImage<int> tempI (m_width, m_height-ycenter);
     VISImage<int> maskI (len, len);
+#endif
     
     for (y=0;y<len;y++)
       for (x=0;x<len;x++)
         {
         xo = (float)( x - rad );
         yo = (float)( y - rad );
-        if ( sqrt(xo*xo + yo*yo) <=maskr ) maskI.poke(x,y) = 1;
-        else maskI.poke(x,y) = 0;
+#ifdef MCKAY_TODO
+        if ( sqrt(xo*xo + yo*yo) <=maskr )
+	  maskI.poke(x,y) = 1;
+        else
+	  maskI.poke(x,y) = 0;
+#endif
         }
     
     for (z=0;z<depth;z++)
       {
       for (y=ycenter;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          if ((m_Label(x,y,z)==T_FAT)||(m_Label(x,y,z)==T_EYE)||(m_Label(x,y,z)==T_EYE_LENS))
+	{
+	  const int label = get_nrrd_int(m_Label,x,y,z);
+#ifdef MCKAY_TODO
+          if (label == T_FAT || label == T_EYE || label ==T_EYE_LENS)
             tempI.poke(x,y-ycenter)=1; 
-          else tempI.poke(x,y-ycenter)=0;
+          else
+	    tempI.poke(x,y-ycenter)=0;
+#endif
+	}
 
+#ifdef MCKAY_TODO
       // we need to clean up noise because T1 signal by itself is not very
       // reliable for fat detection
       tempI=tempI.closing(maskI); // close holes
       tempI=tempI.opening(maskI); // remove outliers
       tempI=tempI.dilate(maskI);  // increase fat volume just to make sure
                                   // brain doesn't leak out 
+#endif
         
       for (y=ycenter;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          if ((m_Label(x,y,z)==T_FAT)&&(tempI(x,y-ycenter)==0)) m_Label.poke(x,y,z)=T_FOREGROUND;
-          else if ((tempI(x,y-ycenter)==1)&&(m_Label(x,y,z)==T_FOREGROUND)) m_Label.poke(x,y,z)=T_FAT;
+	{
+	  const int label = get_nrrd_int(m_Label, x, y, z);
+#ifdef MCKAY_TODO
+          if (label == T_FAT && tempI(x,y-ycenter) == 0)
+	    set_nrrd_int(m_Label, T_FOREGROUND, x,y,z);
+          else if (tempI(x,y-ycenter) == 1 && label == T_FOREGROUND) 
+	    set_nrrd_int(m_Label, T_FAT, x,y,z);
+#endif
+	}
       }
     }
 }
@@ -1896,29 +1989,37 @@ MRITissueClassifier::FatDetection_FATSAT ()
   // threshold to increase the chances of succesfully blocking any leakage
 
   std::cout<<"FAT DETECTION (with fatsat)\n";
+#ifdef MCKAY_TODO
   m_Fat_Energy= VISVolume<float> (m_width, m_height, m_depth);
+#endif
+  NrrdDataHandle m_Fat_Energy;
+
   int x, y, z, cnt, i;
   float min, max,  temp, mean[2], var[2], prior[2], *pdfest, th;
-  VISVector data;
+  ColumnMatrix data;
 
   cnt = 0;
   for (z=0;z<m_TopOfHead;z++)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        {
-        data = m_Data.peek(x,y,z);
-        m_Fat_Energy.poke(x,y,z) = data(0) - data(3);
-        if (m_Label(x,y,z)==T_FOREGROUND)
-          {
-          if (cnt==0) min=max=m_Fat_Energy(x,y,z);
+      {
+	data = get_m_Data(x,y,z);
+	const float energy = data.get(0) - data.get(3);
+	set_nrrd_float(m_Fat_Energy, energy, x,y,z);
+        if (get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)
+	{
+	  if (cnt==0) 
+	    min=max=energy;
           else
-            {
-            if (m_Fat_Energy(x,y,z)>max) max=m_Fat_Energy(x,y,z);
-            else if (m_Fat_Energy(x,y,z)<min) min=m_Fat_Energy(x,y,z);
-            } 
+	  {	   
+            if (energy>max) 
+	      max=energy;
+            else if (energy<min) 
+	      min=energy;
+	  } 
           cnt++;
-          }
-        }
+	}
+      }
 
   std::cout<<"Fat energy min = "<<min<<" , max = "<<max<<std::endl;
   // compute bins for the histogram
@@ -1984,13 +2085,13 @@ MRITissueClassifier::FatDetection_FATSAT ()
   std::cout<<"Fat threshold = "<<th<<std::endl;
 
   if (m_TopOfEyeSlice>=0)
-    {
+  {
     int depth = 1 + m_TopOfEyeSlice + (int)ceil(6.0/m_SliceThickness);
     for (z=0;z<depth;z++)
       for (y=0;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          if ((m_Label(x,y,z)==T_FOREGROUND)&&(m_Fat_Energy(x,y,z)>th))
-            m_Label.poke(x,y,z) = T_FAT;
+          if ((get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)&&(get_nrrd_float(m_Fat_Energy,x,y,z)>th))
+	    set_nrrd_int(m_Label, T_FAT, x,y,z);
     }
 }
 
@@ -2018,16 +2119,20 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
   for (z=0;z<m_TopOfHead;z++)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==T_FOREGROUND)
-          {
-          if (cnt==0) min=max=m_Energy(x,y,z);
+        if (get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)
+	{
+	  const float energy = get_nrrd_float(m_Energy, x,y,z);
+          if (cnt==0) 
+	    min=max=energy;
           else
-            {
-            if (m_Energy(x,y,z)>max) max=m_Energy(x,y,z);
-            else if (m_Energy(x,y,z)<min) min=m_Energy(x,y,z);
-            }
+	  {
+            if (energy>max) 
+	      max=energy;
+            else if (energy<min) 
+	      min=energy;
+	  }
           cnt++;
-          }
+	}
 
   std::cout<<"Energy min = "<<min<<" , max = "<<max<<std::endl;
   // compute bins for the histogram
@@ -2107,28 +2212,40 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
   int rad = (int)ceil(maskr);
   int len = 2*rad+1;
   float xo, yo;
+#ifdef MCKAY_TODO
   VISImage<int> tempI (m_width,m_height);
   VISImage<int> mask(len,len);
+#endif
+  NrrdDataHandle tempI, mask;
+
   for (x=0;x<len;x++)
     for (y=0;y<len;y++)
       {
       xo = (float)( x - rad );
       yo = (float)( y - rad );
-      if ( sqrt(xo*xo + yo*yo) <=maskr ) mask.poke(x,y) = 1;
-      else mask.poke(x,y) = 0;
+      if ( sqrt(xo*xo + yo*yo) <=maskr ) 
+	set_nrrd_int(mask,1,x,y);
+      else 
+	set_nrrd_int(mask,0,x,y);
       }
 
   // prepare sinus detection mask
   int rad2 = (int)ceil(maskr2);
   int len2 = 2*rad2+1;
+#ifdef MCKAY_TODO
   VISImage<int> mask2(len2,len2);
+#endif
+  NrrdDataHandle mask2;
+
   for (x=0;x<len2;x++)
     for (y=0;y<len2;y++)
       {
       xo = (float)( x - rad2 );
       yo = (float)( y - rad2 );
-      if ( sqrt(xo*xo + yo*yo) <=maskr2 ) mask2.poke(x,y) = 1;
-      else mask2.poke(x,y) = 0;
+      if ( sqrt(xo*xo + yo*yo) <=maskr2 )
+	set_nrrd_int(mask2,1,x,y);
+      else
+	set_nrrd_int(mask2,0,x,y);
       }
   
   int yl=(int)rint(m_center[1])-10;
@@ -2148,41 +2265,50 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
   m_TopOfBrain = -1;
   // slices from eyes to top of head
   for (z=Max(m_TopOfEyeSlice,0);z<m_TopOfHead;z++)
-    {
+  {
     for (x=0;x<m_width;x++)
       for (y=0;y<m_height;y++)
-        if ((m_Label(x,y,z)==T_FOREGROUND)&&(m_Energy(x,y,z)>threshold)) tempI.poke(x,y)=2;
-        else tempI.poke(x,y)=0;
+        if ((get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)&&
+	    (get_nrrd_float(m_Energy,x,y,z)>threshold)) 
+	  set_nrrd_int(tempI,2,x,y);
+	else
+	  set_nrrd_int(tempI,0,x,y);
     
     if (z<=zt)
-      {
+    {
       // can't have any brain pixels within 15 mm of the background for these
       // slices , we do this to avoid leaking around the eyes
       for (x=0;x<m_width;x++)
         for (y=ylow;y<m_height;y++)
-          if (m_DistBG(x,y,z)<distth)
-            tempI.poke(x,y)=0;
+          if (get_nrrd_float(m_DistBG,x,y,z)<distth)
+            set_nrrd_int(tempI,0,x,y);
       }
 
     // floodfill from inside
     for (xa=xl;xa<=xh;xa++)
       for (ya=yl;ya<=yh;ya++)
-        if (tempI(xa,ya)==2)
+        if (get_nrrd_int(tempI,xa,ya)==2)
+#ifdef MCKAY_TODO
           tempI = tempI.floodFill(2,1,xa,ya);
+#endif
+    ;
     
     yl2 = m_height-1; yh2 = 0;
     for (x=0;x<m_width;x++)
       for (y=0;y<m_height;y++)
-        if (tempI(x,y)==2) tempI.poke(x,y)=0;
-        else if (tempI(x,y)==1)
-          {
+        if (get_nrrd_int(tempI,x,y)==2) 
+	  set_nrrd_int(tempI,0,x,y);
+        else if (get_nrrd_int(tempI,x,y)==1)
+	{
           if (y<yl2) yl2 = y;
           if (y>yh2) yh2 = y;
-          }
+	}
 
+#ifdef MCKAY_TODO
     // remove holes in brain (low energy pixels enclosed in brain tissue such
     // as some sinuses)
     tempI = tempI.closing(mask);
+#endif
     // find sinuses that are not totally enclosed in brain matter
     yl2 = Max(yl2-3,0);
     yh2 = Min(yh2+3,m_height-1);
@@ -2193,11 +2319,11 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
       xl2 = Max((int)floor(m_slicecenter[0][z]-dist),0);
       xh2 = Min((int)ceil(m_slicecenter[0][z]+dist),m_width-1);
       for (x=xl2;x<=xh2;x++)
-        if (tempI(x,y)==0)
+        if (get_nrrd_int(tempI,x,y)==0)
           {
-          dist = m_DistBG2D(x,y,z);
-          ndx = m_DistBG2D(x+1,y,z)-m_DistBG2D(x-1,y,z);
-          ndy = m_DistBG2D(x,y+1,z)-m_DistBG2D(x,y-1,z);
+          dist = get_nrrd_float(m_DistBG2D,x,y,z);
+          ndx = get_nrrd_float(m_DistBG2D,x+1,y,z)-get_nrrd_float(m_DistBG2D,x-1,y,z);
+          ndy = get_nrrd_float(m_DistBG2D,x,y+1,z)-get_nrrd_float(m_DistBG2D,x,y-1,z);
           val = sqrt(ndx*ndx+ndy*ndy);
           ndx /= val;
           ndy /= val;
@@ -2207,14 +2333,14 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
           for (xp = -rad2; xp<=rad2; xp++)
             {
             for (yp = -rad2; yp<=rad2; yp++)
-              if (((xp!=0)||(yp!=0))&&mask2(xp+rad2,yp+rad2))
+              if (((xp!=0)||(yp!=0))&&get_nrrd_int(mask2,xp+rad2,yp+rad2))
                 {
                 xn = x + xp ;
                 yn = y + yp;
                 if ((xn>=0)&&(xn<m_width)&&(yn>=0)&&(yn<m_height)&&
-                    (m_DistBG2D(xn,yn,z)>=dl)&&(m_DistBG2D(xn,yn,z)<=dh))
+                    (get_nrrd_float(m_DistBG2D,xn,yn,z)>=dl)&&(get_nrrd_float(m_DistBG2D,xn,yn,z)<=dh))
                   {
-                  if (((!flag)||(!flag2))&&(tempI(xn,yn)==1))
+                  if (((!flag)||(!flag2))&&(get_nrrd_int(tempI,xn,yn)==1))
                     {
                     val = ndy*(float)xp - ndx*(float)yp;
                     if (val>0.0) flag = 1;
@@ -2223,27 +2349,31 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
                   }
                 }
             }
-          if (flag&&flag2) tempI.poke(x,y) = 1;
+          if (flag&&flag2) set_nrrd_int(tempI,1,x,y);
           }
       }
+#ifdef MCKAY_TODO
     tempI.floodFill(0,3,0,0);
     tempI.floodFill(0,3,m_width-1,0);
     tempI.floodFill(0,3,0,m_height-1);
     tempI.floodFill(0,3,m_width-1,m_height-1);
+#endif
 
     for (x=0;x<m_width;x++)
       for (y=0;y<m_height;y++)
-        if (tempI(x,y)==0) tempI.poke(x,y)=1;
-        else if (tempI(x,y)==3) tempI.poke(x,y)=0;
+        if (get_nrrd_int(tempI,x,y)==0) 
+	  set_nrrd_int(tempI,1,x,y);
+        else if (get_nrrd_int(tempI,x,y)==3) 
+	  set_nrrd_int(tempI,0,x,y);
     
     if (z>=zlow)
       {
       cnt = cnt2 = 0;
       for (x=0;x<m_width;x++)
         for (y=0;y<m_height;y++)
-          if (m_Label(x,y,z) == T_FOREGROUND)
+          if (get_nrrd_int(m_Label,x,y,z) == T_FOREGROUND)
             {
-            if (tempI(x,y)==1) cnt++;
+            if (get_nrrd_int(tempI,x,y)==1) cnt++;
             cnt2++;
             }
       r = ((float)cnt)/((float)cnt2);
@@ -2258,8 +2388,8 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
 
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if ((m_Label(x,y,z)==T_FOREGROUND)&&(tempI(x,y)==1))
-          m_Label.poke(x,y,z)=T_INTRACRANIAL; // brain pixel
+        if ((get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)&&(get_nrrd_int(tempI,x,y)==1))
+          set_nrrd_int(m_Label,T_INTRACRANIAL,x,y,z); // brain pixel
     }
 
   if (m_TopOfBrain == -1) m_TopOfBrain = m_TopOfHead;
@@ -2269,14 +2399,19 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
   zt = m_TopOfEyeSlice-(int)ceil(3.0/m_SliceThickness);
   if ((m_EyesVisible==1)&&(m_TopOfEyeSlice>0))
     {
+#ifdef MCKAY_TODO
     VISVolume<int> tempV (m_width,m_height,m_TopOfEyeSlice);
+#endif
+    NrrdDataHandle tempV;
     
     for (z=0;z<m_TopOfEyeSlice;z++)
       {
       for (x=0;x<m_width;x++)
         for (y=0;y<m_height;y++)
-          if ((m_Label(x,y,z)==T_FOREGROUND)&&(m_Energy(x,y,z)>threshold)) tempI.poke(x,y)=1;
-          else tempI.poke(x,y)=0;
+          if ((get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)&&(m_Energy(x,y,z)>threshold))
+	    tempI.poke(x,y)=1;
+	  else
+	    tempI.poke(x,y)=0;
       
       if (z>=zt)
         {
@@ -2288,20 +2423,23 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
 
       for (x=0;x<m_width;x++)
         for (y=0;y<m_height;y++)
-          tempV.poke(x,y,z)=tempI(x,y);
+          tempV.poke(x,y,z)=get_nrrd_int(tempI,x,y);
       }
     
     for (xa=xl;xa<=xh;xa++)
       for (ya=yl;ya<=yh;ya++)
-        if (tempV(xa,ya,m_TopOfEyeSlice-1)==1)
+        if (get_nrrd_int(tempV,x,y,z)xa,ya,m_TopOfEyeSlice-1)==1)
+#ifdef MCKAY_TODO
           tempV.floodFill(1,2,xa,ya,m_TopOfEyeSlice-1);
+#endif
+	  ;
     
     for (z=0;z<m_TopOfEyeSlice;z++)
       {
       yl2 = m_height-1;
       for (x=0;x<m_width;x++)
         for (y=0;y<m_height;y++)
-          if (tempV(x,y,z)==2)
+          if (get_nrrd_int(tempV,x,y,z)x,y,z)==2)
             {
             tempI.poke(x,y) = 1;
             if (y<yl2) yl2 = y;
@@ -2320,11 +2458,11 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
           xl2 = Max((int)floor(m_slicecenter[0][z]-dist),0);
           xh2 = Min((int)ceil(m_slicecenter[0][z]+dist),m_width-1);
           for (x=xl2;x<=xh2;x++)
-            if (tempI(x,y)==0)
+            if (get_nrrd_int(tempI,x,y)==0)
               {
-              dist = m_DistBG2D(x,y,z);
-              ndx = m_DistBG2D(x+1,y,z)-m_DistBG2D(x-1,y,z);
-              ndy = m_DistBG2D(x,y+1,z)-m_DistBG2D(x,y-1,z);
+              dist = get_nrrd_float(m_DistBG2D,x,y,z);
+              ndx = get_nrrd_float(m_DistBG2D,x+1,y,z)-get_nrrd_float(m_DistBG2D,x-1,y,z);
+              ndy = get_nrrd_float(m_DistBG2D,x,y+1,z)-get_nrrd_float(m_DistBG2D,x,y-1,z);
               val = sqrt(ndx*ndx+ndy*ndy);
               ndx /= val;
               ndy /= val;
@@ -2339,9 +2477,9 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
                     xn = x + xp ;
                     yn = y + yp;
                     if ((xn>=0)&&(xn<m_width)&&(yn>=0)&&(yn<m_height)&&
-                        (m_DistBG2D(xn,yn,z)>=dl)&&(m_DistBG2D(xn,yn,z)<=dh))
+                        (get_nrrd_float(m_DistBG2D,xn,yn,z)>=dl)&&(get_nrrd_float(m_DistBG2D,xn,yn,z)<=dh))
                       {
-                      if (((!flag)||(!flag2))&&(tempI(xn,yn)==1))
+                      if (((!flag)||(!flag2))&&(get_nrrd_int(tempI,xn,yn)==1))
                         {
                         val = ndy*(float)xp - ndx*(float)yp;
                         if (val>0.0) flag = 1;
@@ -2361,13 +2499,13 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
       
       for (x=0;x<m_width;x++)
         for (y=0;y<m_height;y++)
-          if (tempI(x,y)==0) tempI.poke(x,y)=1;
-          else if (tempI(x,y)==3) tempI.poke(x,y)=0;
+          if (get_nrrd_int(tempI,x,y)==0) tempI.poke(x,y)=1;
+          else if (get_nrrd_int(tempI,x,y)==3) tempI.poke(x,y)=0;
       
       for (y=0;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          if ((m_Label(x,y,z)==T_FOREGROUND)&&(tempI(x,y)==1))
-            m_Label.poke(x,y,z)=T_INTRACRANIAL; // brain pixel
+          if ((get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)&&(get_nrrd_int(tempI,x,y)==1))
+            set_nrrd_int(m_Label,T_INTRACRANIAL,x,y,z); // brain pixel
       }
     }
 
@@ -2376,8 +2514,8 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
   for (z=0;z<d;z++)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==T_FAT)
-          m_Label.poke(x,y,z)=T_FOREGROUND; // remove any previous fat markings
+        if (get_nrrd_int(m_Label,x,y,z)==T_FAT)
+          set_nrrd_int(m_Label,T_FOREGROUND,x,y,z); // remove any previous fat markings
                                             // in these slices -- they were
                                             // only needed for the brain floodfills
 
@@ -2403,7 +2541,7 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
     tempI = m_Label.image(z);
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (tempI(x,y) == T_FOREGROUND)
+        if (get_nrrd_int(tempI,x,y) == T_FOREGROUND)
           {
           list.clean();
           rlist.clean();
@@ -2416,7 +2554,7 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
             {
             xa = x + N[j][0];
             ya = y + N[j][0];
-            if ((tempI.checkBounds((unsigned)xa,(unsigned)ya))&&(m_Label(xa,ya,z)==T_BACKGROUND))
+            if ((tempI.checkBounds((unsigned)xa,(unsigned)ya))&&(get_nrrd_int(m_Label,xa,ya,z)==T_BACKGROUND))
               {
               flag=1;
               break;
@@ -2443,7 +2581,7 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
                       {
                       xa = next_x + N[j][0];
                       ya = next_y + N[j][0];
-                      if ((tempI.checkBounds((unsigned)xa,(unsigned)ya))&&(m_Label(xa,ya,z)==T_BACKGROUND))
+                      if ((tempI.checkBounds((unsigned)xa,(unsigned)ya))&&(get_nrrd_int(m_Label,xa,ya,z)==T_BACKGROUND))
                         {
                         flag=1;
                         break;
@@ -2473,7 +2611,7 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
       ymin = m_height;
       for (y=0;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          if ((m_Label(x,y,z)==T_INTRACRANIAL)&&(y<ymin)) ymin = y;
+          if ((get_nrrd_int(m_Label,x,y,z)==T_INTRACRANIAL)&&(y<ymin)) ymin = y;
       yc = ymin + (int)rint(40.0/m_PixelDim);
       }
 
@@ -2481,13 +2619,13 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
         {
-        if ((m_Label(x,y,z)==T_INTRACRANIAL)&&(m_Energy(x,y,z)<threshold))
+        if ((get_nrrd_int(m_Label,x,y,z)==T_INTRACRANIAL)&&(m_Energy(x,y,z)<threshold))
           {
-          if (z>m_TopTemporalSlice) m_Label.poke(x,y,z) = T_SINUS;
+          if (z>m_TopTemporalSlice) set_nrrd_int(m_Label,T_SINUS,x,y,z);
           else
             {
-            if (y<yc)  m_Label.poke(x,y,z) = T_SINUS;
-            else m_Label.poke(x,y,z) = T_FOREGROUND;
+            if (y<yc)  set_nrrd_int(m_Label,T_SINUS,x,y,z);
+            else set_nrrd_int(m_Label,T_FOREGROUND,x,y,z);
             }
           }
         }
@@ -2523,7 +2661,7 @@ MRITissueClassifier::FindTemporalSlice ()
     for (x = xcl; x<=xcr; x++)
       {
       for (y=m_height;y>=0;y--)
-        if ((m_Label(x,y,z)==T_INTRACRANIAL)||(m_Label(x,y,z)==T_SINUS))
+        if ((get_nrrd_int(m_Label,x,y,z)==T_INTRACRANIAL)||(get_nrrd_int(m_Label,x,y,z)==T_SINUS))
           break;
       if (y>maxc) maxc=y;
       }
@@ -2533,14 +2671,14 @@ MRITissueClassifier::FindTemporalSlice ()
       for (x = x1l; x<=x1r; x++)
         {
         for (y=m_height;y>=0;y--)
-          if ((m_Label(x,y,z)==T_INTRACRANIAL)||(m_Label(x,y,z)==T_SINUS))
+          if ((get_nrrd_int(m_Label,x,y,z)==T_INTRACRANIAL)||(get_nrrd_int(m_Label,x,y,z)==T_SINUS))
             break;
         if (y>maxl) maxl=y;
         }
       for (x = x2l; x<=x2r; x++)
         {
         for (y=m_height;y>=0;y--)
-          if ((m_Label(x,y,z)==T_INTRACRANIAL)||(m_Label(x,y,z)==T_SINUS))
+          if ((get_nrrd_int(m_Label,x,y,z)==T_INTRACRANIAL)||(get_nrrd_int(m_Label,x,y,z)==T_SINUS))
             break;
         if (y>maxr) maxr=y;
         }
@@ -2622,16 +2760,16 @@ MRITissueClassifier::FindTemporalLobes ()
             }
           for (x=0;x<m_width;x++)
             for (y=0;y<m_height;y++)
-              if (((m_Label(x,y,z)==T_INTRACRANIAL)||(m_Label(x,y,z)==T_SINUS))&&(slice(x,y)!=m))
+              if (((get_nrrd_int(m_Label,x,y,z)==T_INTRACRANIAL)||(get_nrrd_int(m_Label,x,y,z)==T_SINUS))&&(slice(x,y)!=m))
                 {
-                if (!((m_Label(x,y,z+1)==T_INTRACRANIAL)||(m_Label(x,y,z+1)==T_SINUS)))
+                if (!((get_nrrd_int(m_Label,x,y,z+1)==T_INTRACRANIAL)||(get_nrrd_int(m_Label,x,y,z+1)==T_SINUS)))
                   {
-                  m_Label.poke(x,y,z) = T_FOREGROUND;
+                  set_nrrd_int(m_Label,T_FOREGROUND,x,y,z);
                   pcnt[slice(x,y)-1]--;
                   }
                 else if (y>maxy)
                   {
-                  m_Label.poke(x,y,z) = T_FOREGROUND;
+                  set_nrrd_int(m_Label,T_FOREGROUND,x,y,z);
                   pcnt[slice(x,y)-1]--;
                   }
                 }
@@ -2650,16 +2788,16 @@ MRITissueClassifier::BoneDetection_PDthreshold (float *th_low, float *th_high)
   // better than  t1+t2+pd for some reason
   int i, x, y, z, cnt;
   float min, max, val, mean[2], var[2], prior[2], temp, *pdfest;
-  VISVector data;
+  ColumnMatrix data;
   
   cnt = 0;
   for (z=0;z<m_TopOfHead;z++)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==T_FOREGROUND)
+        if (get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)
           {
           data = m_Data.peek(x,y,z);
-          m_Label.poke(x,y,z)=T_FOREGROUND;
+          set_nrrd_int(m_Label,T_,x,y,z)=T_FOREGROUND;
           val = data.peek(2);
           if (cnt==0) min=max=val;
           else
@@ -2748,7 +2886,7 @@ MRITissueClassifier::BoneDetection_TopSection (float maskr, float th_low, float 
 {
   int i, x, y, z, xp, yp, xn, yn, flag, flag2, flag_OFF;;
   float dist, dl, dh, th, val, ndx, ndy;
-  VISVector data;
+  ColumnMatrix data;
   int zt1 = m_TopOfEyeSlice + (int)ceil(35.0/m_SliceThickness);
   int zt2 = m_TopOfEyeSlice + (int)ceil(15.0/m_SliceThickness);
 
@@ -2786,11 +2924,11 @@ MRITissueClassifier::BoneDetection_TopSection (float maskr, float th_low, float 
       }
     for (y=0;y<m_height;y++) 
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==T_FOREGROUND)
+        if (get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)
           {
           data = m_Data.peek(x,y,z);
           val = data.peek(2);
-          if ((val>th)||(m_DistBG2D(x,y,z)<=3.0)) slice.poke(x,y)=1; // scalp
+          if ((val>th)||(get_nrrd_float(m_DistBG2D,x,y,z)<=3.0)) slice.poke(x,y)=1; // scalp
           else slice.poke(x,y)=2; // bone
           }
         else slice.poke(x,y) = 0;
@@ -2799,9 +2937,9 @@ MRITissueClassifier::BoneDetection_TopSection (float maskr, float th_low, float 
       for (x=1;x<m_width-1;x++)
         if (slice(x,y)==1)
           {
-          dist = m_DistBG2D(x,y,z);
-          ndx = m_DistBG2D(x+1,y,z)-m_DistBG2D(x-1,y,z);
-          ndy = m_DistBG2D(x,y+1,z)-m_DistBG2D(x,y-1,z);
+          dist = get_nrrd_float(m_DistBG2D,x,y,z);
+          ndx = get_nrrd_float(m_DistBG2D,x+1,y,z)-get_nrrd_float(m_DistBG2D,x-1,y,z);
+          ndy = get_nrrd_float(m_DistBG2D,x,y+1,z)-get_nrrd_float(m_DistBG2D,x,y-1,z);
           val = sqrt(ndx*ndx+ndy*ndy);
           ndx /= val;
           ndy /= val;
@@ -2816,9 +2954,9 @@ MRITissueClassifier::BoneDetection_TopSection (float maskr, float th_low, float 
                 xn = x + xp ;
                 yn = y + yp;
                 if ((xn>=0)&&(xn<m_width)&&(yn>=0)&&(yn<m_height)&&
-                    (m_DistBG2D(xn,yn,z)>=dl)&&(m_DistBG2D(xn,yn,z)<=dh))
+                    (get_nrrd_float(m_DistBG2D,xn,yn,z)>=dl)&&(get_nrrd_float(m_DistBG2D,xn,yn,z)<=dh))
                   {
-                  if (m_Label(xn,yn,z)==T_INTRACRANIAL)
+                  if (get_nrrd_int(m_Label,xn,yn,z)==T_INTRACRANIAL)
                     {
                     flag_OFF = 1;
                     break;
@@ -2843,7 +2981,7 @@ MRITissueClassifier::BoneDetection_TopSection (float maskr, float th_low, float 
           {
           flag = 0;
           for (i=0;i<4;i++)
-            if (m_Label(x+N[i][0],y+N[i][1],z)==T_BACKGROUND)
+            if (get_nrrd_int(m_Label,x+N[i][0],y+N[i][1],z)==T_BACKGROUND)
               {
               flag = 1;
               break;
@@ -2861,8 +2999,8 @@ MRITissueClassifier::BoneDetection_TopSection (float maskr, float th_low, float 
           {
           flag = 0;
           for (i=0;i<4;i++)
-            if ((m_Label(x+N[i][0],y+N[i][1],z)==T_INTRACRANIAL)||
-                (m_Label(x+N[i][0],y+N[i][1],z)==T_SINUS))
+            if ((get_nrrd_int(m_Label,x+N[i][0],y+N[i][1],z)==T_INTRACRANIAL)||
+                (get_nrrd_int(m_Label,x+N[i][0],y+N[i][1],z)==T_SINUS))
               {
               flag = 1;
               break;
@@ -2872,7 +3010,7 @@ MRITissueClassifier::BoneDetection_TopSection (float maskr, float th_low, float 
           
     for (y=0;y<m_height;y++) 
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==T_FOREGROUND)
+        if (get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)
           {
           if (slice(x,y)==2)
             {
@@ -2880,17 +3018,17 @@ MRITissueClassifier::BoneDetection_TopSection (float maskr, float th_low, float 
             val = data.peek(2);
             if (m_FatSat)
               {
-              if (val<=th_low) m_Label.poke(x,y,z) = T_BONE;
-              else if (m_Fat_Energy(x,y,z)<=m_FatThreshold) m_Label.poke(x,y,z) = T_BONE;
-              else m_Label.poke(x,y,z) = T_MARROW;
+              if (val<=th_low) set_nrrd_int(m_Label,T_BONE,x,y,z);
+              else if (m_Fat_Energy(x,y,z)<=m_FatThreshold) set_nrrd_int(m_Label,T_BONE,x,y,z);
+              else set_nrrd_int(m_Label,T_MARROW,x,y,z);
               }
             else
               {
-              if (val>th_low) m_Label.poke(x,y,z) = T_MARROW;
-              else m_Label.poke(x,y,z) = T_BONE;
+              if (val>th_low) set_nrrd_int(m_Label,T_MARROW,x,y,z);
+              else set_nrrd_int(m_Label,T_BONE,x,y,z);
               }
             }
-          else m_Label.poke(x,y,z)=T_FOREGROUND;
+          else set_nrrd_int(m_Label,T_FOREGROUND,x,y,z);
           }
     }
 
@@ -2919,9 +3057,9 @@ MRITissueClassifier::BoneDetection_SecondSection (float th)
     {
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==T_FOREGROUND)
+        if (get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)
           {
-          if ((m_Data.peek(x,y,z).peek(2)<=th)&&(m_DistBG2D(x,y,z)>3.0)) boneim.poke(x,y) = 1;
+          if ((m_Data.peek(x,y,z).peek(2)<=th)&&(get_nrrd_float(m_DistBG2D,x,y,z)>3.0)) boneim.poke(x,y) = 1;
           else boneim.poke(x,y) = 2;
           }
         else boneim.poke(x,y)=0;
@@ -2932,7 +3070,7 @@ MRITissueClassifier::BoneDetection_SecondSection (float th)
           {
           flag = 0;
           for (i=0;i<4;i++)
-            if (m_Label(x+N[i][0],y+N[i][1],z)==T_BACKGROUND)
+            if (get_nrrd_int(m_Label,x+N[i][0],y+N[i][1],z)==T_BACKGROUND)
               {
               flag = 1;
               break;
@@ -2950,8 +3088,8 @@ MRITissueClassifier::BoneDetection_SecondSection (float th)
           {
           flag = 0;
           for (i=0;i<4;i++)
-            if ((m_Label(x+N[i][0],y+N[i][1],z)==T_INTRACRANIAL)||
-                (m_Label(x+N[i][0],y+N[i][1],z)==T_SINUS))               
+            if ((get_nrrd_int(m_Label,x+N[i][0],y+N[i][1],z)==T_INTRACRANIAL)||
+                (get_nrrd_int(m_Label,x+N[i][0],y+N[i][1],z)==T_SINUS))               
               {
               flag = 1;
               break;
@@ -2961,28 +3099,28 @@ MRITissueClassifier::BoneDetection_SecondSection (float th)
 
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if ((boneim(x,y)==2)&&(m_Label(x,y,z)==T_FOREGROUND))
+        if ((boneim(x,y)==2)&&(get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND))
           {
-          if (m_Data.peek(x,y,z).peek(2)<=th) m_Label.poke(x,y,z)=T_BONE;
+          if (m_Data.peek(x,y,z).peek(2)<=th) set_nrrd_int(m_Label,T_BONE,x,y,z);
           else
             {
             if (m_FatSat)
               {
               if (m_Fat_Energy(x,y,z)>=m_FatThreshold)
                 {
-                if ((y<ylow)||(y>yhigh)) m_Label.poke(x,y,z)=T_MARROW;
-                else m_Label.poke(x,y,z)=T_FOREGROUND;
+                if ((y<ylow)||(y>yhigh)) set_nrrd_int(m_Label,T_MARROW,x,y,z);
+                else set_nrrd_int(m_Label,T_FOREGROUND,x,y,z);
                 }
-              else m_Label.poke(x,y,z)=T_BONE;
+              else set_nrrd_int(m_Label,T_BONE,x,y,z);
               }
             else
               {
-              if ((y<ylow)||(y>yhigh)) m_Label.poke(x,y,z)=T_MARROW;
-              else m_Label.poke(x,y,z)=T_FOREGROUND;
+              if ((y<ylow)||(y>yhigh)) set_nrrd_int(m_Label,T_MARROW,x,y,z);
+              else set_nrrd_int(m_Label,T_FOREGROUND,x,y,z);
               }
             }
           }
-        else if ((boneim(x,y)==1)&&(m_Label(x,y,z)==T_FOREGROUND)) m_Label.poke(x,y,z)=T_FOREGROUND;
+        else if ((boneim(x,y)==1)&&(get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)) set_nrrd_int(m_Label,T_FOREGROUND,x,y,z);
     }
 }
 
@@ -2997,10 +3135,10 @@ MRITissueClassifier::BoneDetection_ThirdSection (float th)
   for (z=0;z<zt;z++)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if ((m_Label(x,y,z)==T_FOREGROUND)&&
+        if ((get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)&&
             (m_Data.peek(x,y,z).peek(2)<=th)&&
-            (m_DistBG2D(x,y,z)>3.0))
-          m_Label.poke(x,y,z)=T_BONE;
+            (get_nrrd_float(m_DistBG2D,x,y,z)>3.0))
+          set_nrrd_int(m_Label,T_BONE,x,y,z);
         
 }
 
@@ -3016,7 +3154,7 @@ MRITissueClassifier::BackgroundNoiseLevel ()
   for (z=0;z<m_depth;z++)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==T_BACKGROUND)
+        if (get_nrrd_int(m_Label,x,y,z)==T_BACKGROUND)
           {
           var += (m_Energy(x,y,z)*m_Energy(x,y,z));
           cnt++;
@@ -3061,7 +3199,7 @@ MRITissueClassifier::AirDetection (float maskr)
       {
       if (y>=m_brainlim[z]) th2 = 1.5*th; else th2 = th;
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==T_BONE)
+        if (get_nrrd_int(m_Label,x,y,z)==T_BONE)
           {
           if ((m_Energy(x,y,z)<=0.5*th)&&(m_Data.peek(x,y,z).peek(2)<=0.5*m_BoneThreshold))
             {
@@ -3088,14 +3226,14 @@ MRITissueClassifier::AirDetection (float maskr)
     tempI = tempI.opening(mask);
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (tempI(x,y)) vol.poke(x,y,z)=1; else vol.poke(x,y,z)=0;
+        if (get_nrrd_int(tempI,x,y)) vol.poke(x,y,z)=1; else vol.poke(x,y,z)=0;
     }
 
   for (z=m_TopTemporalSlice+1;z<zt;z++)
     {
     for (y=m_brainlim[z];y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==T_BONE)
+        if (get_nrrd_int(m_Label,x,y,z)==T_BONE)
           {
           if ((m_Energy(x,y,z)<=0.5*th)&&(m_Data.peek(x,y,z).peek(2)<=0.5*m_BoneThreshold))
             {
@@ -3127,7 +3265,7 @@ MRITissueClassifier::AirDetection (float maskr)
     tempI = tempI.opening(mask);
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (tempI(x,y)) vol.poke(x,y,z)=1; else vol.poke(x,y,z)=0;
+        if (get_nrrd_int(tempI,x,y)) vol.poke(x,y,z)=1; else vol.poke(x,y,z)=0;
     }
   
   for (z=0;z<zt;z++)
@@ -3140,7 +3278,7 @@ MRITissueClassifier::AirDetection (float maskr)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
         if (vol(x,y,z)==2)
-          m_Label.poke(x,y,z) = T_BACKGROUND;
+          set_nrrd_int(m_Label,T_BACKGROUND,x,y,z);
 
 }
 
@@ -3150,14 +3288,14 @@ MRITissueClassifier::BrainClassification ()
   std::cout<<"INTRACRANIAL CLASSIFICATION\n";
   int x, y, z, i;
   int cnt = 0;
-  VISVector data;
+  ColumnMatrix data;
   float min, max, temp, mean[3], prior[3], var[3];
   VISImageFile imf;
 
   for (x=0;x<m_width;x++)
     for (y=0;y<m_height;y++)
       for (z=0;z<m_depth;z++)
-        if (m_Label(x,y,z)==T_INTRACRANIAL)
+        if (get_nrrd_int(m_Label,x,y,z)==T_INTRACRANIAL)
           {
           if (cnt==0) min=max=m_CSF_Energy(x,y,z);
           else
@@ -3246,18 +3384,18 @@ MRITissueClassifier::BrainClassification ()
   for (x=0;x<m_width;x++)
     for (y=0;y<m_height;y++)
       for (z=0;z<m_depth;z++)
-        if (m_Label(x,y,z)==T_INTRACRANIAL)
+        if (get_nrrd_int(m_Label,x,y,z)==T_INTRACRANIAL)
           {
-          if (m_CSF_Energy(x,y,z)>=threshold1) m_Label.poke(x,y,z) = T_CSF;
-          else if (m_CSF_Energy(x,y,z)>=threshold2) m_Label.poke(x,y,z)=T_GM;
-          else m_Label.poke(x,y,z)=T_WM;
+          if (m_CSF_Energy(x,y,z)>=threshold1) set_nrrd_int(m_Label,T_CSF,x,y,z);
+          else if (m_CSF_Energy(x,y,z)>=threshold2) set_nrrd_int(m_Label,T_GM,x,y,z);
+          else set_nrrd_int(m_Label,T_WM,x,y,z);
           }
   imf.write(m_Label.image().becomeFlat(),"labels.fit");
 
   int dim = 3;
-  VISVector datavec, diff, feature(dim);
-  VISVector CSF_mean(dim), GM_mean(dim), WM_mean(dim);
-  VISMatrix CSF_cov(dim,dim), GM_cov(dim,dim), WM_cov(dim,dim);
+  ColumnMatrix datavec, diff, feature(dim);
+  ColumnMatrix CSF_mean(dim), GM_mean(dim), WM_mean(dim);
+  DenseMatrix CSF_cov(dim,dim), GM_cov(dim,dim), WM_cov(dim,dim);
   float CSF_prior, GM_prior, WM_prior;
 
   CSF_mean = 0.0;GM_mean = 0.0;WM_mean = 0.0;
@@ -3276,17 +3414,17 @@ MRITissueClassifier::BrainClassification ()
           feature.poke(2) = datavec(2);
           }
         else feature = datavec;
-        if (m_Label(x,y,z)==T_CSF)
+        if (get_nrrd_int(m_Label,x,y,z)==T_CSF)
           {
           CSF_mean += feature;
           CSF_prior += 1.0;
           }
-        if (m_Label(x,y,z)==T_GM)
+        if (get_nrrd_int(m_Label,x,y,z)==T_GM)
           {
           GM_mean += feature;
           GM_prior += 1.0;
           }
-        if (m_Label(x,y,z)==T_WM)
+        if (get_nrrd_int(m_Label,x,y,z)==T_WM)
           {
           WM_mean += feature;
           WM_prior += 1.0;
@@ -3308,23 +3446,23 @@ MRITissueClassifier::BrainClassification ()
           feature.poke(2) = datavec(2);
           }
         else feature = datavec;
-        if (m_Label(x,y,z)==T_CSF)
+        if (get_nrrd_int(m_Label,x,y,z)==T_CSF)
           {
           diff = feature - CSF_mean;
           CSF_cov += diff.exterior(diff);
-          m_Label.poke(x,y,z)=T_INTRACRANIAL;
+          set_nrrd_int(m_Label,T_INTRACRANIAL,x,y,z);
           }
-        if (m_Label(x,y,z)==T_GM)
+        if (get_nrrd_int(m_Label,x,y,z)==T_GM)
           {
           diff = feature - GM_mean;
           GM_cov += diff.exterior(diff);
-          m_Label.poke(x,y,z)=T_INTRACRANIAL;
+          set_nrrd_int(m_Label,T_INTRACRANIAL,x,y,z);
           }
-        if (m_Label(x,y,z)==T_WM)
+        if (get_nrrd_int(m_Label,x,y,z)==T_WM)
           {
           diff = feature - WM_mean;
           WM_cov += diff.exterior(diff);
-          m_Label.poke(x,y,z)=T_INTRACRANIAL;
+          set_nrrd_int(m_Label,T_INTRACRANIAL,x,y,z);
           }
         }
 
@@ -3351,17 +3489,17 @@ MRITissueClassifier::BrainClassification ()
   for (z=0;z<m_depth;z++)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==T_INTRACRANIAL)
+        if (get_nrrd_int(m_Label,x,y,z)==T_INTRACRANIAL)
           {
           if (pdfest[k]>pdfest[k+1])
             {
-            if (pdfest[k]>pdfest[k+2]) m_Label.poke(x,y,z) = T_CSF;
-            else m_Label.poke(x,y,z) = T_WM;
+            if (pdfest[k]>pdfest[k+2]) set_nrrd_int(m_Label,T_CSF,x,y,z);
+            else set_nrrd_int(m_Label,T_WM,x,y,z);
             }
           else 
             {
-            if (pdfest[k+1]>pdfest[k+2]) m_Label.poke(x,y,z) = T_GM;
-            else m_Label.poke(x,y,z) = T_WM;
+            if (pdfest[k+1]>pdfest[k+2]) set_nrrd_int(m_Label,T_GM,x,y,z);
+            else set_nrrd_int(m_Label,T_WM,x,y,z);
             }
           k+=3;
           }
@@ -3371,10 +3509,10 @@ MRITissueClassifier::BrainClassification ()
   for (z=0;z<m_depth;z++)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if ((m_Label(x,y,z)==T_CSF)||
-            (m_Label(x,y,z)==T_GM)||
-            (m_Label(x,y,z)==T_WM))
-          m_Label.poke(x,y,z) = T_INTRACRANIAL;
+        if ((get_nrrd_int(m_Label,x,y,z)==T_CSF)||
+            (get_nrrd_int(m_Label,x,y,z)==T_GM)||
+            (get_nrrd_int(m_Label,x,y,z)==T_WM))
+          set_nrrd_int(m_Label,T_INTRACRANIAL,x,y,z);
   
   float *spdf = SmoothProbabilities (pdfest,3,T_INTRACRANIAL,cnt,0.5);
   free (pdfest);
@@ -3384,17 +3522,17 @@ MRITissueClassifier::BrainClassification ()
   for (z=0;z<m_depth;z++)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==T_INTRACRANIAL)
+        if (get_nrrd_int(m_Label,x,y,z)==T_INTRACRANIAL)
           {
           if (pdfest[k]>pdfest[k+1])
             {
-            if (pdfest[k]>pdfest[k+2]) m_Label.poke(x,y,z) = T_CSF;
-            else m_Label.poke(x,y,z) = T_WM;
+            if (pdfest[k]>pdfest[k+2]) set_nrrd_int(m_Label,T_CSF,x,y,z);
+            else set_nrrd_int(m_Label,T_WM,x,y,z);
             }
           else 
             {
-            if (pdfest[k+1]>pdfest[k+2]) m_Label.poke(x,y,z) = T_GM;
-            else m_Label.poke(x,y,z) = T_WM;
+            if (pdfest[k+1]>pdfest[k+2]) set_nrrd_int(m_Label,T_GM,x,y,z);
+            else set_nrrd_int(m_Label,T_WM,x,y,z);
             }
           k+=3;
           }
@@ -3418,7 +3556,7 @@ float *MRITissueClassifier::SmoothProbabilities (float *prob, int c, int l, int 
     for (z=0;z<m_depth;z++)
       for (y=0;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          if (m_Label(x,y,z)==l)
+          if (get_nrrd_int(m_Label,x,y,z)==l)
             {
             p.poke(x,y,z) = prob[k];
             k+=c;
@@ -3428,7 +3566,7 @@ float *MRITissueClassifier::SmoothProbabilities (float *prob, int c, int l, int 
     for (z=0;z<m_depth;z++)
       for (y=0;y<m_height;y++)
         for (x=0;x<m_width;x++)
-          if (m_Label(x,y,z)==l)
+          if (get_nrrd_int(m_Label,x,y,z)==l)
             {
             sprob[m] = Max(p(x,y,z),0.0f);
             m+=c;
@@ -3454,9 +3592,9 @@ MRITissueClassifier::ScalpClassification ()
   int x, y, z;
   int dim;
   if (m_FatSat) dim = 4; else dim = 3;
-  VISVector datavec, diff;
-  VISVector Muscle_mean(dim), Fat_mean(dim);
-  VISMatrix Muscle_cov(dim,dim), Fat_cov(dim,dim);
+  ColumnMatrix datavec, diff;
+  ColumnMatrix Muscle_mean(dim), Fat_mean(dim);
+  DenseMatrix Muscle_cov(dim,dim), Fat_cov(dim,dim);
   float Muscle_prior, Fat_prior, fatenergy, *pdfest, sum;
 
   Muscle_mean = 0.0;Fat_mean = 0.0;
@@ -3466,7 +3604,7 @@ MRITissueClassifier::ScalpClassification ()
   for (x=0;x<m_width;x++)
     for (y=0;y<m_height;y++)
       for (z=0;z<m_depth;z++)
-        if (m_Label(x,y,z)==T_FOREGROUND)
+        if (get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)
           {
           datavec = m_Data.peek(x,y,z);
           if (m_FatSat) fatenergy = m_Fat_Energy(x,y,z);
@@ -3476,13 +3614,13 @@ MRITissueClassifier::ScalpClassification ()
             {
             Fat_mean += datavec;
             Fat_prior += 1.0;
-            m_Label.poke(x,y,z) = T_FAT;
+            set_nrrd_int(m_Label,T_FAT,x,y,z);
             }
           else 
             {
             Muscle_mean += datavec;
             Muscle_prior += 1.0;
-            m_Label.poke(x,y,z) = T_MUSCLE;
+            set_nrrd_int(m_Label,T_MUSCLE,x,y,z);
             }
           }
   Muscle_mean /= Muscle_prior;
@@ -3493,17 +3631,17 @@ MRITissueClassifier::ScalpClassification ()
       for (z=0;z<m_depth;z++)
         {
         datavec = m_Data.peek(x,y,z);
-        if (m_Label(x,y,z)==T_MUSCLE)
+        if (get_nrrd_int(m_Label,x,y,z)==T_MUSCLE)
           {
           diff = datavec - Muscle_mean;
           Muscle_cov += diff.exterior(diff);
-          m_Label.poke(x,y,z)=T_FOREGROUND;
+          set_nrrd_int(m_Label,T_FOREGROUND,x,y,z);
           }
-        if (m_Label(x,y,z)==T_FAT)
+        if (get_nrrd_int(m_Label,x,y,z)==T_FAT)
           {
           diff = datavec - Fat_mean;
           Fat_cov += diff.exterior(diff);
-          m_Label.poke(x,y,z)=T_FOREGROUND;
+          set_nrrd_int(m_Label,T_FOREGROUND,x,y,z);
           }
         }
 
@@ -3521,10 +3659,10 @@ MRITissueClassifier::ScalpClassification ()
   for (z=0;z<m_depth;z++)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        if (m_Label(x,y,z)==T_FOREGROUND)
+        if (get_nrrd_int(m_Label,x,y,z)==T_FOREGROUND)
           {
-          if (pdfest[k]>pdfest[k+1]) m_Label.poke(x,y,z) = T_MUSCLE;
-          else m_Label.poke(x,y,z) = T_FAT;
+          if (pdfest[k]>pdfest[k+1]) set_nrrd_int(m_Label,T_MUSCLE,x,y,z);
+          else set_nrrd_int(m_Label,T_FAT,x,y,z);
           k+=2;
           }
 
