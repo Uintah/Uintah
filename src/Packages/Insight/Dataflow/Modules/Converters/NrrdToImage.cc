@@ -51,16 +51,11 @@
 namespace Insight {
 
 using namespace SCIRun;
-#ifdef HAVE_TEEM
-  using namespace SCITeem;
-#endif
 
 class PSECORESHARE NrrdToImage : public Module {
 public:
-#ifdef HAVE_TEEM
   NrrdIPort *inrrd_;
   NrrdDataHandle inrrd_handle_;
-#endif
 
   ITKDatatypeOPort *oimg_;
   ITKDatatypeHandle oimg_handle_;
@@ -99,7 +94,6 @@ NrrdToImage::~NrrdToImage(){
 }
 
 void NrrdToImage::execute(){
-#ifdef HAVE_TEEM
 
   inrrd_ = (NrrdIPort*)get_iport("InputNrrd");
   if(!inrrd_) {
@@ -157,15 +151,11 @@ void NrrdToImage::execute(){
   }
   oimg_->send(oimg_handle_);
   
-#else
-  error("Must have Teem to use this module. Please reconfigure and enable Teem");
   return;
-#endif
 }
 
 template<unsigned int dim>
 void NrrdToImage::determine_nrrd_type() {
-#ifdef HAVE_TEEM
 
   Nrrd* n = inrrd_handle_->nrrd;
 
@@ -220,12 +210,10 @@ void NrrdToImage::determine_nrrd_type() {
       create_image<double,dim>();
     break;
   }
-#endif
 }
 
 template<class type, unsigned int dim>
 void NrrdToImage::create_image() {
-#ifdef HAVE_TEEM
 
   Nrrd* n = inrrd_handle_->nrrd;
   typedef typename itk::Image<type,dim> ImageType;
@@ -285,14 +273,11 @@ void NrrdToImage::create_image() {
   result->data_ = img;
   oimg_handle_ = result;
 
-#endif
 }
 
 
 template<class type, unsigned int dim>
 void NrrdToImage::create_image2() {
-#ifdef HAVE_TEEM
-  cerr << "Creating vector image\n";
 
   Nrrd* n = inrrd_handle_->nrrd;
   typedef typename itk::Image<itk::Vector<type>,dim> ImageType;
@@ -367,7 +352,6 @@ void NrrdToImage::create_image2() {
   result->data_ = img;
   oimg_handle_ = result;
 
-#endif
 }
 
 void NrrdToImage::tcl_command(GuiArgs& args, void* userdata)
