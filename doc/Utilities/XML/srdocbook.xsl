@@ -22,8 +22,8 @@ University of Utah. All Rights Reserved.
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 version="1.0">
 
-<xsl:import href="docbook.xsl"/>
+  <xsl:import href="docbook.xsl"/>
 
-<xsl:include href="srdocbooktemplates.xsl"/>
+  <xsl:include href="srdocbook-common.xsl"/>
 
 </xsl:stylesheet>
