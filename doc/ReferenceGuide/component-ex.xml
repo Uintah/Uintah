@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "component.dtd">
 
-<component name="Histo">
+<component name="Histo" package="SCIRun" category="Stats">
   <overview>
     <authors>
       <author>Ted Dustman</author>
