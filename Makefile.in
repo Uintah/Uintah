@@ -204,18 +204,14 @@ ifeq (,$(findstring objs,$(MAKECMDGOALS)))
 # This includes all of the dependencies.  We prepend the absolute path
 # to the obj dir to prevent make from wasting time searching for them
 # in other directories
-
-  ifeq ($(CC_DEPEND_REGEN),-MD)
-    -include $(patsubst %.o,$(OBJTOP_ABS)/%.d, $(CLEANOBJS))
-  else
+  ifeq ($(CC_DEPEND_MODE),perdir)
     -include $(patsubst %,$(OBJTOP_ABS)/%/depend.mk, $(patsubst $(SRCTOP)/%,%,$(ALLSUBDIRS)))
+  else
+    -include $(patsubst %.o,$(OBJTOP_ABS)/%.$(CC_DEPEND_EXT), $(CLEANOBJS))
   endif
-
 else
-
-# If we are making the special target "objs", we skip the dependencies.
-# This is a hack for a "quick" compile.
-
+  # If we are making the special target "objs", we skip the dependencies.
+  # This is a hack for a "quick" compile.
 endif
 
 # Convenience targets for Specific executables (use make sus)

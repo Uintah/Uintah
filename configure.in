@@ -996,48 +996,85 @@ esac
 AC_MSG_CHECKING($CC dependency regen switch)
 rm -f configure-test.*
 rm -rf configure-test-dir
-echo "#include <stdio.h>" > configure-test.c
 mkdir configure-test-dir
-CC_DEPEND_REGEN='unknown'
-CC_DEPEND_REGEN_MOVE='y'
+echo "#include <stdio.h>" > configure-test-dir/configure-test.cc
 
-case $host in
-  *-irix*)
-    if test "${CC_DEPEND_REGEN}" = "unknown" ; then
-      ${CC} -MDupdate configure-test.d -c configure-test.c 2> /dev/null
-      if test -f configure-test.d ; then
-        CC_DEPEND_REGEN='-MDupdate $(dir $@)depend.mk'
+# Try to automatically determine these three things
+# One of twopass, move or normal
+CC_DEPEND_MODE=unknown
+# Compiler-specific flag
+CC_DEPEND_REGEN=unknown
+# Filename extension
+CC_DEPEND_EXT=unknown
+
+# Try -MDupdate
+for flag in -MDupdate; do
+  if test $CC_DEPEND_MODE = unknown; then
+    rm -f configure-test.o configure-test-dir/configure-test.o
+    ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.d -o configure-test-dir/configure-test.o configure-test.cc >/dev/null 2>conftest.out"
+    (eval $ac_try) 2>&5
+    if test -f configure-test-dir/configure-test.d ; then
+      CC_DEPEND_MODE=perdir
+      CC_DEPEND_REGEN='-MDupdate $(dir $@)depend.mk'
+      CC_DEPEND_EXT=doesnotmatter
+    fi
+  fi
+done
+
+# Try -MD or -M
+for flag in -MD -M; do
+  for ext in d u; do
+    if test $CC_DEPEND_MODE = unknown; then
+      rm -f configure-test.o configure-test-dir/configure-test.o
+      ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.cc -o configure-test-dir/configure-test.o >/dev/null 2>conftest.out"
+      (eval $ac_try) 2>&5
+      if test -f configure-test-dir/configure-test.d ; then
+        CC_DEPEND_MODE=normal
+	CC_DEPEND_REGEN=$flag
+	CC_DEPEND_EXT=$ext
+      fi
+      if test -f configure-test.d; then
+        CC_DEPEND_MODE=move
+	CC_DEPEND_REGEN=$flag
+	CC_DEPEND_EXT=$ext
       fi
     fi
-    ;;
-  *linux*)
-    if test "${CC_DEPEND_REGEN}" = "unknown" ; then
-      ${CC} -MD -c configure-test.c > /dev/null 2>&1
-      if test -f configure-test.d ; then
-        CC_DEPEND_REGEN='-MD'
-        ${CC} -MD -c configure-test.c -o configure-test-dir/configure-test.o > /dev/null 2>&1
-        if test -f configure-test-dir/configure-test.d ; then
-          CC_DEPEND_REGEN_MOVE='n'
-        fi
-      fi
+  done
+done
+
+# Last resort, try one that spits out to stdout
+for flag in -M; do
+  if test $CC_DEPEND_MODE = unknown; then
+    rm -f configure-test.o configure-test-dir/configure-test.o
+    ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.cc >configure-test-dir/configure-test.d 2>conftest.out"
+    (eval $ac_try) 2>&5
+    if test -s configure-test-dir/configure-test.d ; then
+      CC_DEPEND_MODE=stdout
+      CC_DEPEND_REGEN=$flag
+      CC_DEPEND_EXT=d
     fi
-    ;;
-  *-aix*)
-    if test "${CC_DEPEND_REGEN}" = "" ; then
-      ${CC} -M -c configure-test.c > configure-test.d 2> /dev/null
-      if test -s configure-test.d ; then
-        CC_DEPEND_REGEN='-M'
-      fi
-    fi
-    ;;
-  *)
-    ;;
-esac
-AC_MSG_RESULT($CC_DEPEND_REGEN)
+  fi
+done
+
+if test $CC_DEPEND_MODE = unknown; then
+  AC_MSG_ERROR(Cannot determine dependency generation flag)
+fi
+
+AC_MSG_RESULT([$CC_DEPEND_REGEN (mode: $CC_DEPEND_MODE, ext: $CC_DEPEND_EXT)])
 rm -f configure-test.*
 rm -rf configure-test-dir
 
 F77_DEPEND_REGEN=$CC_DEPEND_REGEN
+F77_DEPEND_MODE=$CC_DEPEND_MODE
+F77_DEPEND_EXT=$CC_DEPEND_EXT
+AC_SUBST(CC_DEPEND_MODE)
+AC_SUBST(CC_DEPEND_REGEN)
+AC_SUBST(CC_DEPEND_EXT)
+AC_SUBST(F77_DEPEND_MODE)
+AC_SUBST(F77_DEPEND_REGEN)
+AC_SUBST(F77_DEPEND_EXT)
+
+# Other programs
 
 AC_PATH_PROG(MAKE,gmake,NOT_FOUND,,)
 if test "$MAKE" = "NOT_FOUND"; then
@@ -1092,9 +1129,6 @@ AC_SUBST(SOFLAGS)
 AC_SUBST(ASFLAGS)
 AC_SUBST(LDRUN_PREFIX)
 AC_SUBST(extra_cflags)
-AC_SUBST(CC_DEPEND_REGEN)
-AC_SUBST(CC_DEPEND_REGEN_MOVE)
-AC_SUBST(F77_DEPEND_REGEN)
 AC_SUBST(MAKE_PARALLELISM)
 AC_SUBST(NEED_SONAME)
 AC_SUBST(PERL)

@@ -376,22 +376,16 @@ FLIBS		:= @FLIBS@
 ################################################################
 # Auto dependency generation flags
 #
-#    WARNING: This has not been implemented yet.  Currently there is
-#    some kludgy, hard to understand logic.  We need to set the
-#    CC_DEPEND_SINGLE_STEP during the configure and then just use it.
-#
-# CC_DEPEND_SINGLE_STEP is "no" if the compiler is stupid (eg: KCC)
-#    and requires a dependency creation "compile" and then an actual
-#    compilation (instead of just outputing the dependency info at
-#    the same time as the compile).
-#
 
+CC_DEPEND_MODE	    := @CC_DEPEND_MODE@
 CC_DEPEND_REGEN      = @CC_DEPEND_REGEN@
-CC_DEPEND_REGEN_MOVE = @CC_DEPEND_REGEN_MOVE@
-CC_DEPEND_EXT        = d # with new configure, it will be: @CC_DEPEND_EXT@
+CC_DEPEND_EXT       := @CC_DEPEND_EXT@
+F77_DEPEND_MODE      = @F77_DEPEND_MODE@
 F77_DEPEND_REGEN     = @F77_DEPEND_REGEN@
+F77_DEPEND_EXT	    := @F77_DEPEND_EXT@
 
 NEED_SONAME	:= @NEED_SONAME@
+ECHO :=		echo @ECHO_N@
 
 ifeq ($(NEED_SONAME),yes)
   SONAMEFLAG = -Wl,-soname,$(notdir $@)
@@ -399,19 +393,51 @@ else
   SONAMEFLAG = 
 endif
 
-.SUFFIXES: .cc .c .o .$(CC_DEPEND_EXT) .s .F .cpp
+.SUFFIXES: .cc .c .o .s .F .cpp
 
 .cc.o: $<
-ifeq ($(CC_DEPEND_REGEN),-MD)
-	$(CXX) $(CFLAGS) $(INCLUDES) -MD -c $< -o $@
-  ifeq ($(CC_DEPEND_REGEN_MOVE),y)
+ifeq ($(CC_DEPEND_MODE),normal)
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+else
+ifeq ($(CC_DEPEND_MODE),move)
 	echo @ECHO_N@ "$(dir $@)@ECHO_C@" > $(basename $@).$(CC_DEPEND_EXT)
 	cat $(basename $(notdir $@)).$(CC_DEPEND_EXT) >> $(basename $@).$(CC_DEPEND_EXT)
 	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
-  endif
 else
-  ifeq ($(CC_DEPEND_REGEN),-M)
-     ifeq ($(CC_DEPEND_EXT),d)
+ifeq ($(CC_DEPEND_MODE),stdout)
+        #
+        # .d - most likely gcc... have to explicitly put it in a .d file.
+        #
+        # -M outputs to stdout(err?) dependency info.  Redirect this output
+        # to a temp file.  Prepend that file to replace filename.o with:
+        # <path_to_file>/filename.o.  Then remove the temp file.
+        #
+	@rm -f $(basename $@).depend
+	@echo "CREATING DEPENDENCY INFORMATION:"
+	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+	($(ECHO) "$(dir $@)"; $(CXX) $(CFLAGS) $(INCLUDES) -M -c $<) > $(basename $@).$(CC_DEPEND_EXT)
+	@rm -f $(basename $@).depend
+
+        # Now do the actual compile!
+	@echo "ACTUALLY COMPILING:"
+	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
+else
+	$(ECHO) Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)
+	exit 1
+endif
+endif
+endif
+
+.cpp.o: $<
+ifeq ($(CC_DEPEND_MODE),normal)
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+else
+ifeq ($(CC_DEPEND_MODE),move)
+	echo @ECHO_N@ "$(dir $@)@ECHO_C@" > $(basename $@).$(CC_DEPEND_EXT)
+	cat $(basename $(notdir $@)).$(CC_DEPEND_EXT) >> $(basename $@).$(CC_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+else
+ifeq ($(CC_DEPEND_MODE),stdout)
         #
         # .d - most likely gcc... have to explicitly put it in a .d file.
         #
@@ -419,6 +445,17 @@ else
         # to a temp file.  Awk that file to replace filename.o with:
         # <path_to_file>/filename.o.  Then remove the temp file.
         #
+	@rm -f $(basename $@).depend
+	@echo "CREATING DEPENDENCY INFORMATION:"
+	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+	($(ECHO) "$(dir $@)"; $(CXX) $(CFLAGS) $(INCLUDES) -M -c $<) > $(basename $@).$(CC_DEPEND_EXT)
+	@rm -f $(basename $@).depend
+
+        # Now do the actual compile!
+	@echo "ACTUALLY COMPILING:"
+	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+
 	@rm -f $(basename $@).depend
 	@echo "CREATING DEPENDENCY INFORMATION:"
 	$(CXX) $(CFLAGS) $(INCLUDES) -M -c $< > $(basename $@).depend
@@ -430,69 +467,77 @@ else
         # Now do the actual compile!
 	@echo "ACTUALLY COMPILING:"
 	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
-     else
-        # .u - probably xlc (aix) and .u file is automatically created.
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
-     endif
-  else
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
-  endif
-endif
-
-.cpp.o: $<
-ifeq ($(CC_DEPEND_REGEN),-MD)
-	$(CXX) $(CFLAGS) $(INCLUDES) -MD -c $< -o $@
-  ifeq ($(CC_DEPEND_REGEN_MOVE),y)
-	echo @ECHO_N@ "$(dir $@)@ECHO_C@" > $(basename $@).$(CC_DEPEND_EXT)
-	cat $(basename $(notdir $@)).$(CC_DEPEND_EXT) >> $(basename $@).$(CC_DEPEND_EXT)
-	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT) 
-  endif
 else
-  ifeq ($(CC_DEPEND_REGEN),-M)
-	$(CXX) $(CFLAGS) $(INCLUDES) -M > $(basename $@).$(CC_DEPEND_EXT)
-	awk '{ print "$(basename $@)"".o: " $$2 }' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).temp.$(CC_DEPEND_EXT)
-	mv $(basename $@).temp.$(CC_DEPEND_EXT) $(basename $@).$(CC_DEPEND_EXT)
-	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
-  else
-	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
-  endif
+	$(ECHO) Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)
+	exit 1
+endif
+endif
 endif
 
 .F.o: $<
-
+ifeq ($(F77_DEPEND_MODE),normal)
 	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
-ifeq ($(CC_DEPEND_REGEN),-MD)
-  ifeq ($(CC_DEPEND_REGEN_MOVE),y)
-	echo @ECHO_N@ "$(dir $@)@ECHO_C@" > $(basename $@).$(CC_DEPEND_EXT)
-	cat $(basename $(notdir $@)).$(CC_DEPEND_EXT) >> $(basename $@).$(CC_DEPEND_EXT)
-	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT) 
-  endif
+else
+ifeq ($(F77_DEPEND_MODE),move)
+	echo @ECHO_N@ "$(dir $@)@ECHO_C@" > $(basename $@).$(F77_DEPEND_EXT)
+	cat $(basename $(notdir $@)).$(F77_DEPEND_EXT) >> $(basename $@).$(F77_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(F77_DEPEND_EXT)
+else
+ifeq ($(F77_DEPEND_MODE),stdout)
+        #
+        # .d - most likely gcc... have to explicitly put it in a .d file.
+        #
+        # -M outputs to stdout(err?) dependency info.  Redirect this output
+        # to a temp file.  Awk that file to replace filename.o with:
+        # <path_to_file>/filename.o.  Then remove the temp file.
+        #
+	@rm -f $(basename $@).depend
+	@echo "CREATING DEPENDENCY INFORMATION:"
+	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+	($(ECHO) "$(dir $@)"; $(F77) $(CFLAGS) $(INCLUDES) -M -c $<) > $(basename $@).$(CC_DEPEND_EXT)
+	@rm -f $(basename $@).depend
+
+        # Now do the actual compile!
+	@echo "ACTUALLY COMPILING:"
+	$(F77) $(CFLAGS) $(INCLUDES) -c $< -o $@
+else
+	$(ECHO) Unknown F77_DEPEND_MODE: $(F77_DEPEND_MODE)
+	exit 1
+endif
+endif
 endif
 
-
 .c.o: $<
-ifeq ($(CC_DEPEND_REGEN),-MD)
-	$(CC) $(CFLAGS) $(INCLUDES) -MD -c $< -o $@
-  ifeq ($(CC_DEPEND_REGEN_MOVE),y)
+ifeq ($(CC_DEPEND_MODE),normal)
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+else
+ifeq ($(CC_DEPEND_MODE),move)
 	echo @ECHO_N@ "$(dir $@)@ECHO_C@" > $(basename $@).$(CC_DEPEND_EXT)
 	cat $(basename $(notdir $@)).$(CC_DEPEND_EXT) >> $(basename $@).$(CC_DEPEND_EXT)
-	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT) 
-  endif
+	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
 else
-  ifeq ($(CC_DEPEND_REGEN),-M)
-     ifeq ($(CC_DEPEND_EXT),d)
+ifeq ($(CC_DEPEND_MODE),stdout)
+        #
         # .d - most likely gcc... have to explicitly put it in a .d file.
-	$(CC) $(CFLAGS) $(INCLUDES) -M > $(basename $@).$(CC_DEPEND_EXT)
-	awk '{ print "$(basename $@)"".o: " $$2 }' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).temp.$(CC_DEPEND_EXT)
-	mv $(basename $@).temp.$(CC_DEPEND_EXT) $(basename $@).$(CC_DEPEND_EXT)
+        #
+        # -M outputs to stdout(err?) dependency info.  Redirect this output
+        # to a temp file.  Awk that file to replace filename.o with:
+        # <path_to_file>/filename.o.  Then remove the temp file.
+        #
+	@rm -f $(basename $@).depend
+	@echo "CREATING DEPENDENCY INFORMATION:"
+	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+	($(ECHO) "$(dir $@)"; $(CC) $(CFLAGS) $(INCLUDES) -M -c $<) > $(basename $@).$(CC_DEPEND_EXT)
+	@rm -f $(basename $@).depend
+
+        # Now do the actual compile!
+	@echo "ACTUALLY COMPILING:"
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-     else
-        # .u - probably xlc (aix) and .u file is automatically created.
-	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
-     endif
-  else
-	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
-  endif
+else
+	$(ECHO) Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)
+	exit 1
+endif
+endif
 endif
 
 .s.o: $<
