@@ -358,9 +358,15 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     Vector nnormal = normal;
     nnormal *= -1.0;
 
+    const int num = Round(get_GuiDouble(base+"divisions"));
+
     Vector delta = primary;
     delta.normalize();
-    delta *= get_GuiDouble(base+"absolute");
+    GuiDouble *absolute_var = dynamic_cast<GuiDouble *>(vars_[base+"absolute"]);
+    if (absolute_var->valid()) 
+      delta *= absolute_var->get();
+    else 
+      delta = primary/num;
 
     Vector nsecondary = -secondary;
     
@@ -371,7 +377,7 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     if (line_width < 0.05) line_width = 0.05;
     lines->setLineWidth(line_width);
 
-    const int num = Round(get_GuiDouble(base+"divisions"));
+
     for (int i = 0; i <= num; i++) {
       const Point pos = origin + delta*i;    
       lines->add(pos, pos + secondary);
