@@ -1,22 +1,21 @@
 #ifndef UINTAH_SECOND_ORDER_ADVECTOR_H
 #define UINTAH_SECOND_ORDER_ADVECTOR_H
 
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderBase.h>
+
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+
 #include <Core/Containers/StaticArray.h>
-
-
 
 namespace Uintah {
 
-
-  class SecondOrderAdvector : public Advector, public SecondOrderBase{
+  class SecondOrderAdvector : public Advector, public SecondOrderBase {
 
   public:
     SecondOrderAdvector();
@@ -47,30 +46,26 @@ namespace Uintah {
   private:
     CCVariable<fflux> d_OFS, r_out_x, r_out_y, r_out_z;
     const VarLabel* OFS_CCLabel;
-    friend const TypeDescription* fun_getTypeDescription(fflux*);
+    friend const TypeDescription* fun_getTypeDescription(fflux*); 
 
   private:                                 
-    template<class T> void qAverageFlux(const CCVariable<T>& q_CC,
-                              const Patch* patch,
-				  CCVariable<T>& grad_lim,
-                              const CCVariable<T>& q_grad_x,
-                              const CCVariable<T>& q_grad_y,
-                              const CCVariable<T>& q_grad_z,
-				  StaticArray<CCVariable<T> >& q_OAFS,
-			         DataWarehouse* new_dw);
+    template<class T> 
+    void qAverageFlux(const CCVariable<T>& q_CC,
+		      const Patch* patch,
+		      CCVariable<T>& grad_lim,
+		      const CCVariable<T>& q_grad_x,
+		      const CCVariable<T>& q_grad_y,
+		      const CCVariable<T>& q_grad_z,
+		      StaticArray<CCVariable<T> >& q_OAFS);
     
-    template<class T> void advect(StaticArray<CCVariable<T> >& q_OAFS,
-                              const Patch* patch,
-                              CCVariable<T>& q_advected);
-	
-
-			 
+    template<class T> 
+    void advect(StaticArray<CCVariable<T> >& q_OAFS,
+		const Patch* patch,
+		CCVariable<T>& q_advected);
+	 
   };  
-}
+} // end namespace Uintah
 
-namespace SCIRun {
-void swapbytes( Uintah::SecondOrderAdvector::fflux& );
-} // namespace SCIRun
 #endif
 
 
