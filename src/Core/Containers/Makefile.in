@@ -1,9 +1,0 @@
-SRCTOP   = @top_srcdir@
-SRCDIR   = @srcdir@
-OBJTOP   = ../../..
-
-SRCS     = Sort.cc String.cc PQueue.cc TrivialAllocator.cc BitArray1.cc
-
-INCLUDES = -I$(OBJTOP) -I$(SRCDIR)/.. -I$(SRCDIR)/../..
-
-include $(SRCTOP)/scripts/objs.mk

@@ -1,7 +1,0 @@
-SRCTOP  = @top_srcdir@
-SRCDIR  = @srcdir@
-OBJTOP  = ../../..
-
-SUBDIRS = Particles
-
-include $(SRCTOP)/scripts/recurse.mk

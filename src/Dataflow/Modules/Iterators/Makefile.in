@@ -1,9 +1,0 @@
-SRCTOP   = @top_srcdir@
-SRCDIR   = @srcdir@
-OBJTOP   = ../../../..
-
-SRCS     = MeshIterator.cc
-
-INCLUDES = -I$(OBJTOP) -I$(SRCTOP)/libs/SCICore -I$(SRCTOP)/libs/PSECore
-
-include $(SRCTOP)/scripts/objs.mk

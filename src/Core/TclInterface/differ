@@ -1,9 +1,0 @@
-#!/sbin/ksh
-
-for file in `ls *.cc`
-do
-  print "Diffing $file"
-  diff $file /home/dav/local/Reorg/SCI_NT/TCL/$file | grep -v \$Log | \
-	 grep -v namespace | grep -v SCICore | grep -v "static char \*id"
-done
-

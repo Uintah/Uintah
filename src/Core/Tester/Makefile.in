@@ -1,9 +1,0 @@
-SRCTOP   = @top_srcdir@
-SRCDIR   = @srcdir@
-OBJTOP   = ../../..
-
-SRCS     = PerfTest.cc RigorousTest.cc
-
-INCLUDES = -I$(OBJTOP) -I$(SRCDIR)/..
-
-include $(SRCTOP)/scripts/objs.mk

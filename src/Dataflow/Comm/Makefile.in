@@ -1,9 +1,0 @@
-SRCTOP   = @top_srcdir@
-SRCDIR   = @srcdir@
-OBJTOP   = ../../..
-
-SRCS     = MessageBase.cc
-
-INCLUDES = -I$(OBJTOP) -I$(SRCDIR)/..
-
-include $(SRCTOP)/scripts/objs.mk
