@@ -537,10 +537,10 @@ SimpleSimulationController::run()
       double orig_delt = delt;
       do {
 	bool restartable = sim->restartableTimesteps();
-	if (restartable /*|| lb->isDynamic() || lb->getNthProc() != 1*/)
+	if (restartable || lb->isDynamic() || lb->getNthProc() != 1)
 	  scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
 	else
-          scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+          scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
 	  	
 	scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
 
