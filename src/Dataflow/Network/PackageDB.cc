@@ -33,8 +33,6 @@
 #undef ASSERT
 #endif
 
-#include <sci_defs/environment_defs.h>
-
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/FileUtils.h>
 #include <Dataflow/Network/ComponentNode.h>
@@ -220,19 +218,20 @@ void PackageDB::loadPackage(bool resolve)
   //			   "__ZN6SCIRun10CurveFieldINS_6TensorEE2ioERNS_9PiostreamE");
   //#endif
 
-  const char *env;
   // the format of PACKAGE_PATH is a colon seperated list of paths to the
   // root(s) of package source trees.
-  packagePath = string(SCIRUN_SRCDIR) + "/Packages";
+  const char *srcdir = sci_getenv("SCIRUN_SRCDIR");
+  ASSERT(srcdir);
+  packagePath = srcdir + string("/Packages");
 
   // if the user specififes it, build the complete package path
-  env = sci_getenv("PACKAGE_SRC_PATH");
-  if (env) packagePath = string(env) + ":" + packagePath;
+  const char *packpath = sci_getenv("PACKAGE_SRC_PATH");
+  if (packpath) packagePath = string(packpath) + ":" + packagePath;
 
   // the format of LOAD_PACKAGE is a comma seperated list of package names.
   // build the complete list of packages to load
-  env = sci_getenv("LOAD_PACKAGE");
-  loadPackage = string(env?env:LOAD_PACKAGE);
+  ASSERT(sci_getenv("SCIRUN_LOAD_PACKAGE"));
+  loadPackage = string(sci_getenv("SCIRUN_LOAD_PACKAGE"));
 
   while(loadPackage!="") {
     // Strip off the first element, leave the rest for the next
@@ -283,8 +282,8 @@ void PackageDB::loadPackage(bool resolve)
     string xmldir;
     
     if(packageElt == "SCIRun") {
-      xmldir = string(SCIRUN_SRCDIR) + "/Dataflow/XML";
-      gui_exec("lappend auto_path "+string(SCIRUN_SRCDIR)+"/Dataflow/GUI");
+      xmldir = string(srcdir) + "/Dataflow/XML";
+      gui_exec("lappend auto_path "+string(srcdir)+"/Dataflow/GUI");
     } else {
       xmldir = pathElt+"/"+packageElt+"/Dataflow/XML";
       gui_exec(string("lappend auto_path ")+pathElt+"/"+packageElt+
