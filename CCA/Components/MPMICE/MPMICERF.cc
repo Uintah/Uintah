@@ -66,34 +66,35 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     CCVariable<double> press_new; 
 
     new_dw->allocateAndPut(press_new, Ilb->press_equil_CCLabel, 0,patch);
-    
+    Ghost::GhostType  gn = Ghost::None;   
+   
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       if(ice_matl){                    // I C E
-        old_dw->get(Temp[m],   Ilb->temp_CCLabel,  indx,patch,Ghost::None,0);
-        old_dw->get(rho_CC[m], Ilb->rho_CCLabel,   indx,patch,Ghost::None,0);
-        old_dw->get(sp_vol_CC[m],
-                               Ilb->sp_vol_CCLabel,indx,patch,Ghost::None,0);
+        old_dw->get(Temp[m],      Ilb->temp_CCLabel,  indx,patch,gn,0);
+        old_dw->get(rho_CC[m],    Ilb->rho_CCLabel,   indx,patch,gn,0);
+        old_dw->get(sp_vol_CC[m], Ilb->sp_vol_CCLabel,indx,patch,gn,0);
         cv[m]    = ice_matl->getSpecificHeat();
         gamma[m] = ice_matl->getGamma();
       }
       if(mpm_matl){                    // M P M    
-        new_dw->get(Temp[m],   MIlb->temp_CCLabel,indx, patch,Ghost::None,0);
-        new_dw->get(mat_vol[m],MIlb->cVolumeLabel,indx, patch,Ghost::None,0);
-        new_dw->get(mass_CC[m],MIlb->cMassLabel,  indx, patch,Ghost::None,0);
+        new_dw->get(Temp[m],     MIlb->temp_CCLabel,  indx,patch,gn,0); 
+        new_dw->get(mat_vol[m],  MIlb->cVolumeLabel,  indx,patch,gn,0); 
+        new_dw->get(mass_CC[m],  MIlb->cMassLabel,    indx,patch,gn,0); 
         cv[m] = mpm_matl->getSpecificHeat();
       }
-      new_dw->allocateAndPut(sp_vol_new[m], Ilb->sp_vol_CCLabel,    indx,patch); 
-      new_dw->allocateAndPut(rho_CC_new[m], Ilb->rho_CCLabel,       indx,patch); 
       new_dw->allocateTemporary(rho_CC_scratch[m], patch);
-      new_dw->allocateAndPut(vol_frac[m], Ilb->vol_frac_CCLabel,  indx,patch); 
-      new_dw->allocateAndPut(f_theta[m], Ilb->f_theta_CCLabel,   indx,patch); 
-      new_dw->allocateAndPut(matl_press[m], Ilb->matl_press_CCLabel,indx,patch); 
-      new_dw->allocateTemporary(rho_micro[m], patch); 
-      new_dw->allocateAndPut(speedSound_new[m], Ilb->speedSound_CCLabel,indx,patch);
+      new_dw->allocateTemporary(rho_micro[m],      patch);
+      new_dw->allocateAndPut(sp_vol_new[m],Ilb->sp_vol_CCLabel,    indx,patch);  
+      new_dw->allocateAndPut(rho_CC_new[m],Ilb->rho_CCLabel,       indx,patch);  
+      new_dw->allocateAndPut(vol_frac[m],  Ilb->vol_frac_CCLabel,  indx,patch);  
+      new_dw->allocateAndPut(f_theta[m],   Ilb->f_theta_CCLabel,   indx,patch);  
+      new_dw->allocateAndPut(matl_press[m],Ilb->matl_press_CCLabel,indx,patch);  
+      new_dw->allocateAndPut(speedSound_new[m], 
+                                           Ilb->speedSound_CCLabel,indx,patch);
       speedSound_new[m].initialize(0.0);
       if(ice_matl){                    // I C E
        rho_CC_scratch[m].copyData(rho_CC[m]);
@@ -258,26 +259,6 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
 
       }
     } 
-    //__________________________________
-    //    carry sp_vol_CC forward for MPMICE:computeEquilibrationPressure
-    for (int m = 0; m < numALLMatls; m++)   {
-      Material* matl = d_sharedState->getMaterial( m );
-      int indx = matl->getDWIndex();
-      // allocateAndPut instead:
-      /* new_dw->put( sp_vol_new[m],    Ilb->sp_vol_CCLabel,     indx, patch);  */;
-      // allocateAndPut instead:
-      /* new_dw->put( vol_frac[m],      Ilb->vol_frac_CCLabel,   indx, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put( f_theta[m],       Ilb->f_theta_CCLabel,    indx, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put( matl_press[m],    Ilb->matl_press_CCLabel, indx, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put( speedSound_new[m],Ilb->speedSound_CCLabel, indx, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put( rho_CC_new[m],    Ilb->rho_CCLabel,        indx, patch); */;
-    }
-    // allocateAndPut instead:
-    /* new_dw->put(press_new,Ilb->press_equil_CCLabel,0,patch); */;
     
    //---- P R I N T   D A T A ------   
     if (d_ice->switchDebug_EQ_RF_press) {
