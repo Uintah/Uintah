@@ -871,6 +871,10 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	    if(sc->isOldDW(req->mapDataWarehouse()) && !sc->isNewDW(req->mapDataWarehouse()+1))
 	      continue;
 	    int matl = matls->get(m);
+
+	    // creator is the task that performs the original compute.
+	    // If the require is for the OldDW, then it will be a send old
+	    // data task
 	    DetailedTask* creator;
 	    Task::Dependency* comp = 0;
 	    if(sc->isOldDW(req->mapDataWarehouse())){
@@ -889,9 +893,10 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	      }
 	    }
 	    if (modifies) {
-	      // Add links to the modifying task from anything requiring
-	      // the variable before it's modified so that it never gets
-	      // modified before it gets used.
+	      // find the tasks that up to this point require the variable
+	      // that we are modifying (i.e., the ones that use the computed
+	      // variable before we modify it), and put a dependency between
+	      // this task and those tasks
 	      list<DetailedTask*> requireBeforeModifiedTasks;
 	      creator->findRequiringTasks(req->var,
 					  requireBeforeModifiedTasks);
@@ -955,14 +960,12 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 
 int TaskGraph::findVariableLocation(LoadBalancer* lb,
 				    const ProcessorGroup* pg,
-				    Task::Dependency*/* req*/,
-				    const Patch* patch, int /*matl*/)
+				    Task::Dependency* req,
+				    const Patch* patch, int matl)
 {
   // This needs to be improved, especially for re-distribution on
   // restart from checkpoint.
-  int proc = lb->getOldProcessorAssignment(patch, pg);
-  //int proc = lb->getPatchwiseProcessorAssignment(patch, pg);
-
+  int proc = lb->getOldProcessorAssignment(req->var, patch, matl, pg);
   return proc;
 }
 
