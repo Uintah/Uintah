@@ -57,6 +57,10 @@ public:
     // and the number of allocated elements remains the same.
     void remove_all();
 
+    // Change the size of the array.
+    void resize(int newsize);
+
+
     friend void Pio(Piostream&, Array1<T>&);
     friend void Pio(Piostream&, Array1<T>*&);
 };
