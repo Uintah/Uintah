@@ -81,14 +81,14 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      T& operator[](particleIndex idx) {
+      inline T& operator[](particleIndex idx) {
 	 ASSERTRANGE(idx, 0, (particleIndex)d_pdata->data.size());
 	 return d_pdata->data[idx];
       }
       
       //////////
       // Insert Documentation Here:
-      const T& operator[](particleIndex idx) const {
+      inline const T& operator[](particleIndex idx) const {
 	 ASSERTRANGE(idx, 0, (particleIndex)d_pdata->data.size());
 	 return d_pdata->data[idx];
       }
@@ -394,6 +394,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.22  2000/11/28 01:15:48  guilkey
+// Inlined the [] operator.
+//
 // Revision 1.21  2000/09/25 20:37:42  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
