@@ -5,9 +5,11 @@
 #include <Packages/Uintah/Grid/NCVariable.h>
 #include <Packages/Uintah/Grid/CCVariable.h>
 #include <Packages/Uintah/Grid/GridP.h>
+
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
+
 #include <string>
 #include <vector>
 #include <list>
@@ -32,8 +34,9 @@ using std::dec;
 #include <unistd.h>
 
 namespace Uintah {
+
 using namespace SCIRun;
-   using namespace std;
+using namespace std;
 
    struct eqstr { // comparison class used in hash_map to compare keys
      bool operator()(const char* s1, const char* s2) const {
@@ -618,9 +621,7 @@ void DataArchive::query(std::vector<T>& values, const std::string& name,
     dbg << "DataArchive::query(values) completed in "
         << (Time::currentSeconds() - call_start) << " seconds\n";
 }
+
 } // End namespace Uintah
 
-
-
 #endif
-

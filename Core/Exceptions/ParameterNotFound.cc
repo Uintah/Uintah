@@ -1,5 +1,5 @@
 
-#include "ParameterNotFound.h"
+#include <Packages/Uintah/Exceptions/ParameterNotFound.h>
 
 using namespace Uintah;
 

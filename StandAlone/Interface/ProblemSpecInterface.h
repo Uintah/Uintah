@@ -47,8 +47,6 @@ WARNING
       ProblemSpecInterface& operator=(const ProblemSpecInterface&);
    };
 } // End namespace Uintah
-   
-
 
 #endif
 

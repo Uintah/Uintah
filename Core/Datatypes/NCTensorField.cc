@@ -1,9 +1,11 @@
-#include <Core/Geometry/Vector.h>
-#include <Core/Math/MinMax.h>
+#include <Packages/Uintah/Core/Datatypes/NCTensorField.h>
 #include <Packages/Uintah/Grid/Level.h>
 #include <Packages/Uintah/Grid/LevelP.h>
 #include <Packages/Uintah/Grid/Grid.h>
-#include "NCTensorField.h"
+
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/MinMax.h>
+
 #include <values.h>
 #include <iostream>
 
@@ -11,15 +13,12 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-
-
 namespace Uintah {
 
 NCTensorField::NCTensorField()
   :TensorField()
 {
 }
-
 
 NCTensorField::NCTensorField(const NCTensorField& copy)
   //  : Packages/UintahScalarField( copy )
@@ -135,5 +134,5 @@ void NCTensorField::get_boundary_lines(Array1<Point>& lines)
     }
 
 }
+
 } // End namespace Uintah
-  

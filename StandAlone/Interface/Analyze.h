@@ -65,6 +65,4 @@ WARNING
    };
 } // End namespace Uintah
 
-
-
 #endif

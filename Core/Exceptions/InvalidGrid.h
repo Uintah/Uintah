@@ -1,5 +1,3 @@
-
-
 /*
  *  InvalidGrid.h: 
  *
@@ -12,13 +10,15 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef Packages/Uintah_Exceptions_InvalidGrid_h
-#define Packages/Uintah_Exceptions_InvalidGrid_h
+#ifndef UINTAH_EXCEPTIONS_INVALIDGRID_H
+#define UINTAH_EXCEPTIONS_INVALIDGRID_H
 
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
 namespace Uintah {
+
+   class InvalidGrid : public SCICore::Exceptions::Exception {
    public:
       InvalidGrid(const std::string& msg);
       InvalidGrid(const InvalidGrid&);
@@ -29,8 +29,9 @@ namespace Uintah {
    private:
       std::string d_msg;
       InvalidGrid& operator=(const InvalidGrid&);
-} // End namespace Uintah
    };
+
+} // End namespace Uintah
 
 #endif
 

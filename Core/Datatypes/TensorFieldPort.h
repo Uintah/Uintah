@@ -1,4 +1,3 @@
-
 /*
  *  Texture3D.h: The Scalar Field Data type
  *
@@ -14,14 +13,17 @@
 #ifndef SCI_project_TensorFieldPort_h
 #define SCI_project_TensorFieldPort_h 1
 
+#include <Packages/Uintah/Core/Datatypes/TensorField.h>
+
 #include <Dataflow/Ports/SimplePort.h>
-#include "TensorField.h"
 
 namespace Uintah {
+
 using namespace SCIRun;
+
 typedef SimpleIPort<TensorFieldHandle> TensorFieldIPort;
 typedef SimpleOPort<TensorFieldHandle> TensorFieldOPort;
-} // End namespace Uintah
 
+} // End namespace Uintah
 
 #endif

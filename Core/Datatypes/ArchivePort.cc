@@ -4,8 +4,8 @@
 #include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
-using namespace Uintah::Datatypes;
 
+using namespace SCIRun;
 
 extern "C" {
 UINTAHSHARE IPort* make_ArchiveIPort(Module* module, const clString& name) {

@@ -1,5 +1,5 @@
 
-#include "ProblemSetupException.h"
+#include <Packages/Uintah/Exceptions/ProblemSetupException.h>
 
 using namespace Uintah;
 

@@ -1,23 +1,23 @@
-#include <Core/Geometry/Vector.h>
-#include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Grid/Level.h>
 #include <Packages/Uintah/Grid/LevelP.h>
 #include <Packages/Uintah/Grid/Grid.h>
-#include "CCVectorField.h"
+#include <Packages/Uintah/Core/Datatypes/CCVectorField.h>
+
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/MinMax.h>
+
 #include <iostream>
+
 using std::cerr;
 using std::endl;
 using std::vector;
 
-
 namespace Uintah {
-
 
 CCVectorField::CCVectorField()
   :VectorFieldRG()
 {
 }
-
 
 CCVectorField::CCVectorField(const CCVectorField& copy)
   //  : Packages/UintahScalarField( copy )
@@ -28,7 +28,6 @@ CCVectorField::CCVectorField(const CCVectorField& copy)
     _vars.push_back( copy._vars[i] );
   }
 }
-
 
 CCVectorField::CCVectorField(GridP grid, LevelP level,
 				string var, int mat,
@@ -131,6 +130,6 @@ using namespace SCIRun;
   value = _vars[i][index];
   return 1;
 }
-} // End namespace Uintah
 
+} // End namespace Uintah
 

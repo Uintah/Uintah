@@ -1,5 +1,3 @@
-
-
 /*
  *  ProblemSetupException.h: 
  *
@@ -12,8 +10,8 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef Packages/Uintah_Exceptions_ProblemSetupException_h
-#define Packages/Uintah_Exceptions_ProblemSetupException_h
+#ifndef UINTAH_EXCEPTIONS_PROBLEMSETUPEXCEPTION_H
+#define UINTAH_EXCEPTIONS_PROBLEMSETUPEXCEPTION_H
 
 #include <Core/Exceptions/Exception.h>
 #include <string>
@@ -28,8 +26,8 @@ namespace Uintah {
    private:
       std::string d_msg;
       ProblemSetupException& operator=(const ProblemSetupException&);
-} // End namespace Uintah
    };
+} // End namespace Uintah
 
 #endif
 

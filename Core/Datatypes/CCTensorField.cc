@@ -1,16 +1,17 @@
-#include <Core/Geometry/Vector.h>
-#include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Grid/Level.h>
 #include <Packages/Uintah/Grid/LevelP.h>
 #include <Packages/Uintah/Grid/Grid.h>
-#include "CCTensorField.h"
+#include <Packages/Uintah/Core/Datatypes/CCTensorField.h>
+
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/MinMax.h>
+
 #include <values.h>
 #include <iostream>
 
 using std::vector;
 using std::cerr;
 using std::endl;
-
 
 namespace Uintah {
 
@@ -134,5 +135,5 @@ void CCTensorField::get_boundary_lines(Array1<Point>& lines)
     }
 
 }
+
 } // End namespace Uintah
-  

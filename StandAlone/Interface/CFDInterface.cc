@@ -1,5 +1,5 @@
 
-#include "CFDInterface.h"
+#include <Packages/Uintah/Interface/CFDInterface.h>
 
 using Uintah::CFDInterface;
 

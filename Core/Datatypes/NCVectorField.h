@@ -1,16 +1,18 @@
 #ifndef SCI_project_NCVectorField_h
 #define SCI_project_NCVectorField_h 1
 
-#include <Core/Datatypes/VectorFieldRG.h>
 #include <Packages/Uintah/Grid/NCVariable.h>
 #include <Packages/Uintah/Grid/GridP.h>
 #include <Packages/Uintah/Grid/LevelP.h>
+
 #include <Core/Geometry/Point.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+
 #include <vector>
 
 namespace Uintah {
+
 using namespace SCIRun;
-using namespace Uintah;
 using std::vector;
 
 class SCICORESHARE NCVectorField : public VectorFieldRG {

@@ -1,18 +1,23 @@
 
-#include "ProblemSpec.h"
+#include <Packages/Uintah/Interface/ProblemSpec.h>
+#include <Packages/Uintah/Exceptions/ParameterNotFound.h>
 
-#include <iostream>
+#include <Dataflow/XMLUtil/XMLUtil.h>
+
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Exceptions/ParameterNotFound.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Malloc/Allocator.h>
+
 //#include <cstdlib>
+
+#include <iostream>
 #include <map>
+
 using namespace Uintah;
-using namespace std;
 using namespace SCIRun;
+
+using namespace std;
 
 ProblemSpec::ProblemSpec(const DOM_Node& node, bool doWrite)
   : d_node(node), d_write(doWrite)
@@ -442,10 +447,8 @@ void ProblemSpec::getAttributes(map<string,string>& attributes)
 
 }
 
-
 const TypeDescription* ProblemSpec::getTypeDescription()
 {
     //cerr << "ProblemSpec::getTypeDescription() not done\n";
     return 0;
 }
-

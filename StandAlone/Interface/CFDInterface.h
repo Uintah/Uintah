@@ -72,8 +72,5 @@ namespace Uintah {
       CFDInterface& operator=(const CFDInterface&);
    };
 } // End namespace Uintah
-   
-
 
 #endif
-

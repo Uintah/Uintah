@@ -22,5 +22,3 @@ template<> clString SimpleIPort<TensorFieldHandle>::port_type("TensorField");
 template<> clString SimpleIPort<TensorFieldHandle>::port_color("yellow4");
 
 } // End namespace Uintah
-
-

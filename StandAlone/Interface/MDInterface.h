@@ -73,7 +73,5 @@ WARNING
       MDInterface& operator=(const MDInterface&);
    };
 } // End namespace Uintah
-   
 
 #endif
-

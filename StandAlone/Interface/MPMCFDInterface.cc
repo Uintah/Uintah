@@ -1,5 +1,5 @@
 
-#include "MPMCFDInterface.h"
+#include <Packages/Uintah/Interface/MPMCFDInterface.h>
 
 using namespace Uintah;
 

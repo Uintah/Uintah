@@ -1,4 +1,3 @@
-
 /*
  *  Texture3D.h: The Tensor Field Data type
  *
@@ -14,14 +13,14 @@
 #ifndef SCI_project_TensorParticlesPort_h
 #define SCI_project_TensorParticlesPort_h 1
 
+#include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
 #include <Dataflow/Ports/SimplePort.h>
-#include "TensorParticles.h"
 
 namespace Uintah {
-using namespace Uintah::Datatypes;
 
 typedef SimpleIPort<TensorParticlesHandle> TensorParticlesIPort;
 typedef SimpleOPort<TensorParticlesHandle> TensorParticlesOPort;
+
 } // End namespace Uintah
 
 
