@@ -111,8 +111,6 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    // cut cells do not currently support moving geometries
    calcVel = !dontCalcVel;
 
-   //   cout << "Done with MPMArches problemsetup requires" << endl;
-
    d_mpm->setMPMLabel(Mlb);
    d_mpm->setWithArches();
    d_mpm->problemSetup(prob_spec, grid, d_sharedState);
