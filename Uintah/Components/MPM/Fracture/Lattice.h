@@ -20,8 +20,8 @@ public:
 
   bool              containCell(const IntVector& cellIndex) const;
   
-  const Patch*                    getPatch();
-  const ParticleVariable<Point>&  getParticlesPosition();
+  const Patch*                    getPatch() const;
+  const ParticleVariable<Point>&  getParticlesPosition() const;
 
 private:
   const Patch* d_patch;
@@ -34,6 +34,9 @@ private:
 #endif //__LATTICE_H__
 
 // $Log$
+// Revision 1.5  2000/06/06 21:04:47  bigler
+// Added const to Lattice members to get it to compile
+//
 // Revision 1.4  2000/06/05 23:57:37  tan
 // Added conainCell().
 //
