@@ -26,7 +26,8 @@ running.tex network.tex viewer.tex import.tex
 
 # Latex2html options.  Change as needed.
 LATEX2HTMLOPTIONS = -split 4 -no_white -link 1 -bottom_navigation \
--html_version 3.2,math -show_section_numbers -local_icons 
+-html_version 4.0,math -show_section_numbers -local_icons \
+-style ../../doc_styles.css
 #-local_icons
 
 # Change to reflect installation locations.
@@ -36,6 +37,9 @@ PSINSTDIR =
 MAINFILE = ${BN}.tex
 DVIFILE = ${BN}.dvi
 PSFILE = ${BN}.ps
+GZPSFILE = ${PSFILE}.gz
+PDFFILE = ${BN}.pdf
+GZPDFFILE = ${PDFFILE}.gz
 HTMLDIR = ${BN}
 HTMLFILE = ${HTMLDIR}/${BN}.html
 
@@ -68,14 +72,17 @@ ${HTMLFILE}: ${DVIFILE}
 	latex2html ${LATEX2HTMLOPTIONS} ${MAINFILE}
 
 ${PSFILE}: ${DVIFILE}
-	dvips -o ${PSFILE} -Ppdf ${DVIFILE}
+	dvips -o ${PSFILE} -Pps ${DVIFILE}
+	cat ${PSFILE} | gzip -c > ${GZPSFILE}
+	dvips -o ${PDFFILE} -Ppdf ${DVIFILE}
+	cat ${PDFFILE} | gzip -c > ${GZPDFFILE}
 
 clean:
 	-rm -f ${BN}.aux ${BN}.log ${BN}.toc ${BN}.lot ${BN}.lof
 
 veryclean: clean
 	-rm -rf ${HTMLDIR}
-	-rm ${BN}.dvi ${BN}.ps *~
+	-rm ${BN}.dvi ${BN}.ps ${BN}.pdf ${BN}.*.gz *~
 
 installhtml: ${HTMLFILE}
 	if [ -d ${HTMLINSTDIR} ]; \
