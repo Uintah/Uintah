@@ -1321,7 +1321,9 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
     // boundaries in the explicit projection, we want to 
     // show the effect of AE, etc. in AP for the 
     // intrusion boundaries
-
+    if (d_boundaryCondition->getIntrusionBC())
+      d_boundaryCondition->intrusionPressureBC(pc, patch, cellinfo, &pressureVars);
+    
     if (d_MAlab)
       d_boundaryCondition->mmpressureBC(pc, patch, cellinfo, &pressureVars);
 
@@ -1339,16 +1341,6 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
 
   
     // put required vars
-
-    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      // allocateAndPut instead:
-      /* new_dw->put(pressureVars.pressCoeff[ii], d_lab->d_presCoefPBLMLabel, 
-		  ii, patch); */;
-    }
-
-#ifdef ARCHES_PRES_DEBUG
-  std::cerr << "Done building matrix for press coeff" << endl;
-#endif
 
   }
 }

@@ -383,6 +383,8 @@ ArchesLabel::ArchesLabel()
     // for reacting flows
   d_tempINLabel = VarLabel::create("tempIN",
 				  CCVariable<double>::getTypeDescription() );
+  d_cpINLabel = VarLabel::create("cpIN",
+				  CCVariable<double>::getTypeDescription() );
   d_co2INLabel = VarLabel::create("co2IN",
 				  CCVariable<double>::getTypeDescription() );
   d_h2oINLabel = VarLabel::create("h2oIN",
@@ -661,6 +663,16 @@ ArchesLabel::ArchesLabel()
   // for radiation
   d_fvtfiveINLabel = VarLabel::create("fvtfiveIN",
 				    CCVariable<double>::getTypeDescription() );
+  d_tfourINLabel = VarLabel::create("tfourIN",
+				    CCVariable<double>::getTypeDescription() );
+  d_tfiveINLabel = VarLabel::create("tfiveIN",
+				    CCVariable<double>::getTypeDescription() );
+  d_tnineINLabel = VarLabel::create("tnineIN",
+				    CCVariable<double>::getTypeDescription() );
+  d_qrgINLabel = VarLabel::create("qrgIN",
+				  CCVariable<double>::getTypeDescription() );
+  d_qrsINLabel = VarLabel::create("qrsIN",
+				  CCVariable<double>::getTypeDescription() );
 
   d_absorpINLabel = VarLabel::create("absorpIN",
 				    CCVariable<double>::getTypeDescription() );
@@ -671,9 +683,19 @@ ArchesLabel::ArchesLabel()
 				    CCVariable<double>::getTypeDescription() );
   d_radiationSRCINLabel = VarLabel::create("radiationSRCIN",
 				    CCVariable<double>::getTypeDescription() );
+
+  d_radiationFluxEINLabel = VarLabel::create("radiationFluxEIN",
+					     CCVariable<double>::getTypeDescription() );
   d_radiationFluxWINLabel = VarLabel::create("radiationFluxWIN",
 					     CCVariable<double>::getTypeDescription() );
-
+  d_radiationFluxNINLabel = VarLabel::create("radiationFluxNIN",
+					     CCVariable<double>::getTypeDescription() );
+  d_radiationFluxSINLabel = VarLabel::create("radiationFluxSIN",
+					     CCVariable<double>::getTypeDescription() );
+  d_radiationFluxTINLabel = VarLabel::create("radiationFluxTIN",
+					     CCVariable<double>::getTypeDescription() );
+  d_radiationFluxBINLabel = VarLabel::create("radiationFluxBIN",
+					     CCVariable<double>::getTypeDescription() );
 
   d_reactscalarSRCINLabel = VarLabel::create("reactscalarSRCIN",
 				    CCVariable<double>::getTypeDescription() );
@@ -1079,6 +1101,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_mmcellTypeLabel);
   VarLabel::destroy(d_mmgasVolFracLabel);
   VarLabel::destroy(d_tempINLabel);
+  VarLabel::destroy(d_cpINLabel);
   VarLabel::destroy(d_co2INLabel);
   VarLabel::destroy(d_h2oINLabel);
   VarLabel::destroy(d_denRefArrayLabel);
@@ -1153,10 +1176,20 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_enthNonLinSrcCorrLabel);
   VarLabel::destroy(d_absorpINLabel);
   VarLabel::destroy(d_fvtfiveINLabel);
+  VarLabel::destroy(d_tfourINLabel);
+  VarLabel::destroy(d_tfiveINLabel);
+  VarLabel::destroy(d_tnineINLabel);
+  VarLabel::destroy(d_qrgINLabel);
+  VarLabel::destroy(d_qrsINLabel);
   VarLabel::destroy(d_abskgINLabel);
   VarLabel::destroy(d_sootFVINLabel);
   VarLabel::destroy(d_radiationSRCINLabel);
+  VarLabel::destroy(d_radiationFluxEINLabel);
   VarLabel::destroy(d_radiationFluxWINLabel);
+  VarLabel::destroy(d_radiationFluxNINLabel);
+  VarLabel::destroy(d_radiationFluxSINLabel);
+  VarLabel::destroy(d_radiationFluxTINLabel);
+  VarLabel::destroy(d_radiationFluxBINLabel);
   VarLabel::destroy(d_reactscalarSRCINLabel);
   VarLabel::destroy(d_absorpINPredLabel);
   VarLabel::destroy(d_co2INPredLabel);
