@@ -31,6 +31,7 @@
 
 #include <Core/Util/NotFinished.h>
 #include <Core/Persistent/Persistent.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <Core/Volume/Colormap2.h>
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Malloc/Allocator.h>
@@ -44,18 +45,27 @@ static Persistent* maker()
 
 PersistentTypeID Colormap2::type_id("Colormap2", "Datatype", maker);
 
-#define Colormap2_VERSION 1
-void Colormap2::io(Piostream&)
+#define COLORMAP2_VERSION 1
+
+void
+Colormap2::io(Piostream &stream)
 {
-  NOT_FINISHED("Colormap2::io(Piostream&)");
+  stream.begin_class("Colormap2", COLORMAP2_VERSION);
+  
+  SCIRun::Pio(stream, faux_);
+  SCIRun::Pio(stream, widgets_);
+
+  stream.end_class();
 }
 
 Colormap2::Colormap2()
   : updating_(false)
 {}
 
-Colormap2::Colormap2(vector<CM2Widget*>& widgets, bool updating, bool faux)
-  : updating_(updating), faux_(faux)
+Colormap2::Colormap2(const vector<CM2WidgetHandle>& widgets,
+		     bool updating, bool faux)
+  : updating_(updating),
+    faux_(faux)
 {
   for(unsigned int i=0; i<widgets.size(); i++)
     widgets_.push_back(widgets[i]->clone());
@@ -63,8 +73,6 @@ Colormap2::Colormap2(vector<CM2Widget*>& widgets, bool updating, bool faux)
 
 Colormap2::~Colormap2()
 {
-  for(unsigned int i=0; i<widgets_.size(); i++)
-    delete widgets_[i];
 }
 
 } // End namespace SCIRun

@@ -32,6 +32,8 @@
 #ifndef CM2Widget_h
 #define CM2Widget_h
 
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Datatypes/Color.h>
 #include <string>
@@ -41,7 +43,7 @@ namespace SCIRun {
 class CM2ShaderFactory;
 class Pbuffer;
 
-class CM2Widget
+class CM2Widget : public SCIRun::Datatype
 {
 public:
   CM2Widget();
@@ -70,6 +72,9 @@ public:
   float alpha() const { return alpha_; }
   void set_alpha(float a);
 
+  virtual void io(SCIRun::Piostream &stream) = 0;
+  static SCIRun::PersistentTypeID type_id;
+
 protected:
   void selectcolor(int obj);
 
@@ -85,6 +90,9 @@ protected:
   int selected_;
   SCIRun::HSVColor last_hsv_;
 };
+
+typedef LockingHandle<CM2Widget> CM2WidgetHandle;
+
 
 class TriangleCM2Widget : public CM2Widget
 {
@@ -110,6 +118,9 @@ public:
 
   virtual std::string tcl_pickle();
   virtual void tcl_unpickle(const std::string &p);
+
+  virtual void io(SCIRun::Piostream &stream);
+  static SCIRun::PersistentTypeID type_id;
 
 protected:
   float base_;
@@ -152,6 +163,9 @@ public:
   
   virtual std::string tcl_pickle();
   virtual void tcl_unpickle(const std::string &p);
+
+  virtual void io(SCIRun::Piostream &stream);
+  static SCIRun::PersistentTypeID type_id;
 
 protected:
   CM2RectangleType type_;

@@ -65,9 +65,9 @@ struct UndoItem
 
   int action_;
   int selected_;
-  CM2Widget *widget_;
+  CM2WidgetHandle widget_;
 
-  UndoItem(int a, int s, CM2Widget *w)
+  UndoItem(int a, int s, CM2WidgetHandle w)
     : action_(a), selected_(s), widget_(w)
   {
   }
@@ -82,7 +82,7 @@ class EditTransferFunc2 : public Module {
   Window win_;
   int width_, height_;
   bool button_;
-  vector<CM2Widget*> widgets_;
+  vector<CM2WidgetHandle> widgets_;
   stack<UndoItem> undo_stack_;
   CM2ShaderFactory* shader_factory_;
   Pbuffer* pbuffer_;
@@ -328,13 +328,11 @@ EditTransferFunc2::undo()
     switch (item.action_)
     {
     case UndoItem::UNDO_CHANGE:
-      delete widgets_[item.selected_];
       widgets_[item.selected_] = item.widget_;
       gui_update = true;
       break;
 
     case UndoItem::UNDO_ADD:
-      delete widgets_[item.selected_];
       widgets_.erase(widgets_.begin() + item.selected_);
       gui_update = true;
       break;
@@ -424,11 +422,6 @@ EditTransferFunc2::update_from_gui()
 void
 EditTransferFunc2::tcl_unpickle()
 {
-  unsigned int i;
-  for (i=0; i <widgets_.size(); i++)
-  {
-    delete widgets_[i];
-  }
   widgets_.clear();
 
   gui_num_entries_.reset();
