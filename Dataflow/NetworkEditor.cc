@@ -27,14 +27,6 @@ NetworkEditor::NetworkEditor(Network* net)
 : Task("Network Editor", 1), net(net),
   mailbox(100), first_schedule(1)
 {
-}
-
-NetworkEditor::~NetworkEditor()
-{
-}
-
-int NetworkEditor::body(int)
-{
     // Create User interface...
     TCL::add_command("netedit", this, 0);
     TCL::source_once("Dataflow/NetworkEditor.tcl");
@@ -43,6 +35,14 @@ int NetworkEditor::body(int)
     // Initialize the network
     net->initialize(this);
 
+}
+
+NetworkEditor::~NetworkEditor()
+{
+}
+
+int NetworkEditor::body(int)
+{
     // Go into Main loop...
     do_scheduling();
     main_loop();
@@ -58,15 +58,6 @@ void NetworkEditor::main_loop()
 	// Dispatch message....
 	int need_sched=0;
 	switch(msg->type){
-#ifdef OLDUI
-	case MessageTypes::DoCallback:
-	    {
-		Callback_Message* cmsg=(Callback_Message*)msg;
-		cmsg->mcb->perform(cmsg->cbdata);
-		delete cmsg->cbdata;
-	    }
-	    break;
-#endif
 	case MessageTypes::ReSchedule:
 	    do_scheduling();
 	    break;
@@ -250,7 +241,6 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    }
 	}
 	args.result(args.make_list(res));
-    } else if(args[1] == "schedule"){
     } else if(args[1] == "completelist"){
 	ModuleCategory* allcat=ModuleList::get_all();
 	ModuleCategoryIter iter(allcat);

@@ -14,6 +14,7 @@ set time_font "-Adobe-Courier-Medium-R-Normal-*-100-75-*"
 
 proc makeNetworkEditor {} {
 
+    wm minsize . 100 100
     frame .main_menu -relief raised -borderwidth 3
     pack .main_menu -fill x
     menubutton .main_menu.file -text "File" -underline 0 \
@@ -51,10 +52,9 @@ proc makeNetworkEditor {} {
     pack .all_lists.l.title .all_lists.l.f -anchor w
     
     scrollbar .all_lists.l.f.scroll -relief sunken \
-	-command ".all_lists.l.f.list yview" \
-	-foreground plum2 -activeforeground SteelBlue2
+	-command ".all_lists.l.f.list yview"
     listbox .all_lists.l.f.list -yscroll ".all_lists.l.f.scroll set" \
-	-relief sunken -geometry 20x40 -exportselection false
+	-relief sunken -geometry 20x35 -exportselection false
     pack .all_lists.l.f.scroll -side right -fill y -padx 2
     pack .all_lists.l.f.list -side left -expand yes -fill both
     global netedit_completelist
@@ -72,8 +72,7 @@ proc makeNetworkEditor {} {
     frame .l.lists.l1.f
     pack .l.lists.l1.title .l.lists.l1.f -anchor w
     scrollbar .l.lists.l1.f.scroll -relief sunken \
-	-command ".l.lists.l1.f.list yview" \
-	-foreground plum2 -activeforeground SteelBlue2
+	-command ".l.lists.l1.f.list yview"
     listbox .l.lists.l1.f.list -yscroll ".l.lists.l1.f.scroll set" \
 	-relief sunken -geometry 20x4 -exportselection false
     pack .l.lists.l1.f.scroll -side right -fill y -padx 2
@@ -88,8 +87,7 @@ proc makeNetworkEditor {} {
     frame .l.lists.l2.f
     pack .l.lists.l2.title .l.lists.l2.f -anchor w
     scrollbar .l.lists.l2.f.scroll -relief sunken \
-	-command ".l.lists.l2.f.list yview" \
-	-foreground plum2 -activeforeground SteelBlue2
+	-command ".l.lists.l2.f.list yview"
     listbox .l.lists.l2.f.list -yscroll ".l.lists.l2.f.scroll set" \
 	-relief sunken -geometry 20x4 -exportselection false
     pack .l.lists.l2.f.scroll -side right -fill y -padx 2
@@ -100,9 +98,8 @@ proc makeNetworkEditor {} {
     frame .t -borderwidth 5
     pack .t
     text .t.text -relief sunken -bd 2 -yscrollcommand ".t.s set" \
-	-height 3 -width 100
-    scrollbar .t.s -relief sunken -command ".t.text yview" \
-	-foreground plum2 -activeforeground SteelBlue2 
+	-height 3 -width 80
+    scrollbar .t.s -relief sunken -command ".t.text yview"
     pack .t.s -side right -expand yes -fill y -padx 4
     pack .t.text -expand yes -fill x
     global netedit_errortext
@@ -114,13 +111,11 @@ proc makeNetworkEditor {} {
     frame .cframe.f -relief sunken -borderwidth 3
     canvas .cframe.f.canvas -scrollregion {0c 0c 100c 100c} \
 	-xscroll ".cframe.hscroll set" -yscroll ".cframe.vscroll set" \
-	-bg "#224488" -width 20c -height 15c
+	-bg "#224488" -width 9c -height 9c
     scrollbar .cframe.vscroll -relief sunken \
-	-command ".cframe.f.canvas yview" \
-	-foreground plum2 -activeforeground SteelBlue2
+	-command ".cframe.f.canvas yview"
     scrollbar .cframe.hscroll -orient horizontal -relief sunken \
-	-command ".cframe.f.canvas xview" \
-	-foreground plum2 -activeforeground SteelBlue2
+	-command ".cframe.f.canvas xview"
     pack .cframe.vscroll -side right -fill y -padx 4
     pack .cframe.hscroll -side bottom -fill x -pady 4
     pack .cframe.f -expand yes -fill both

@@ -10,8 +10,7 @@ proc showMemStats {} {
 	canvas .msw.canvas -yscroll ".msw.vscroll set" \
 		-scrollregion {0c 0c 11c 50c} \
 		-width 11c -height 18c
-	scrollbar .msw.vscroll -relief sunken -command ".msw.canvas yview" \
-		-foreground plum2 -activeforeground SteelBlue2
+	scrollbar .msw.vscroll -relief sunken -command ".msw.canvas yview"
 	pack .msw.vscroll -side right -fill y -padx 4 -pady 4
 	pack .msw.canvas -expand yes -fill y -pady 4
 	set lineheight [winfo pixels .msw.canvas 8p]
