@@ -350,7 +350,7 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
   currentGrid = d_regridder->regrid(oldGrid.get_rep(), d_scheduler, d_ups);
   if (d_myworld->myrank() == 0) {
         cout << "  DOING ANOTHER INITIALIZATION REGRID!!!!\n";
-        cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
+        //cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
         cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
   }
   double regridTime = Time::currentSeconds() - start;
@@ -397,8 +397,8 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
   if (currentGrid != oldGrid) {
     if (d_myworld->myrank() == 0) {
       cout << "  REGRIDDING!!!!!\n";
-      cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
-      cout << "---------- NEW GRID ----------" << *(currentGrid.get_rep());
+      //cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
+      //cout << "---------- NEW GRID ----------" << *(currentGrid.get_rep());
     }
          
     // Compute number of dataWarehouses
@@ -540,7 +540,7 @@ void AMRSimulationController::executeTimestep(double t, double& delt, GridP& cur
     }
     
     d_scheduler->execute();
-    if(d_scheduler->get_dw(1)->timestepRestarted()){
+    if(d_scheduler->get_dw(totalFine)->timestepRestarted()){
       ASSERT(restartable);
       // Figure out new delt
       double new_delt = d_sim->recomputeTimestep(delt);
@@ -551,6 +551,10 @@ void AMRSimulationController::executeTimestep(double t, double& delt, GridP& cur
       delt = new_delt;
       d_scheduler->get_dw(0)->override(delt_vartype(new_delt),
                                        d_sharedState->get_delt_label());
+
+      for (int i=1; i <= totalFine; i++)
+        d_scheduler->replaceDataWarehouse(i, currentGrid);
+
       double delt_fine = delt;
       int skip=totalFine;
       for(int i=0;i<currentGrid->numLevels();i++){
@@ -567,8 +571,6 @@ void AMRSimulationController::executeTimestep(double t, double& delt, GridP& cur
       }
       success = false;
       
-      for (int i=1; i < totalFine; i++)
-        d_scheduler->replaceDataWarehouse(i, currentGrid);
     } else {
       success = true;
       if(d_scheduler->get_dw(1)->timestepAborted()){
