@@ -44,6 +44,7 @@
 #include <SCIRun/SCIRunFramework.h>
 #include <iostream>
 #include <mpi.h>
+#include <sci_defs/qt_defs.h>
 
 using namespace SCIRun;
 using namespace sci::cca;
