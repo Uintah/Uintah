@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/Material.h>
@@ -49,7 +50,8 @@ Task::subpatchCapable(bool state)
 void
 Task::requires(const DataWarehouseP& ds, const VarLabel* var)
 {
-  d_reqs.push_back(scinew Dependency(ds, var, -1, 0, this));
+  d_reqs.push_back(scinew Dependency(ds, var, -1, 0, this,
+				     IntVector(-9,-8,-7), IntVector(-6,-5,-4)));
 }
 
 void
@@ -58,83 +60,20 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 {
    ASSERT(ds.get_rep() != 0);
    const TypeDescription* td = var->typeDescription();
-   int l,h;
-   switch(gtype){
-   case Ghost::None:
-      if(numGhostCells != 0)
-	 throw InternalError("Ghost cells specified with task type none!\n");
-      l=h=0;
-      d_reqs.push_back(scinew Dependency(ds, var, matlIndex, patch, this));
-      return;
-   case Ghost::AroundNodes:
-      if(numGhostCells == 0)
-	 throw InternalError("No ghost cells specified with Task::AroundNodes");
-      switch(td->getType()){
-      case TypeDescription::NCVariable:
-	 // All 27 neighbors
-	 l=-1;
-	 h=1;
-	 break;
-      case TypeDescription::CCVariable:
-      case TypeDescription::ParticleVariable:
-	 // Lower neighbors
-	 l=-1;
-	 h=0;
-         break;
-      default:
-	 throw InternalError("Illegal Basis type");
-      }
-      break;
-   case Ghost::AroundCells:
-      if(numGhostCells == 0)
-	 throw InternalError("No ghost cells specified with Task::AroundCells");
-      switch(td->getType()){
-      case TypeDescription::NCVariable:
-	 // Upper neighbors
-	 l=0;
-	 h=1;
-         break;
-      case TypeDescription::CCVariable:
-	// all neighbours
-	 l=-1;
-	 h=1;
-         break;
-      case TypeDescription::SFCXVariable:
-		// all neighbours
-	 l=-1;
-	 h=1;
-         break;
-      case TypeDescription::SFCYVariable:
-		// all neighbours
-	 l=-1;
-	 h=1;
-         break;
-      case TypeDescription::SFCZVariable:
-		// all neighbours
-	 l=-1;
-	 h=1;
-         break;
-      case TypeDescription::ParticleVariable:
-	 // All 27 neighbors
-	 l=-1;
-	 h=1;
-	 break;
-      default:
-	 throw InternalError("Illegal Basis type");
-      }
-      break;
-   default:
-      throw InternalError("Illegal ghost type");
-   }
-   const Level* level = patch->getLevel();
    std::vector<const Patch*> neighbors;
-   IntVector low(patch->getCellLowIndex()+IntVector(l,l,l));
-   IntVector high(patch->getCellHighIndex()+IntVector(h,h,h));
-   level->selectPatches(low, high, neighbors);
+   IntVector lowIndex, highIndex;
+   patch->computeVariableExtents(td->getType(), gtype, numGhostCells,
+				 neighbors, lowIndex, highIndex);
    for(int i=0;i<(int)neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
+      using SCICore::Geometry::Max;
+      using SCICore::Geometry::Min;
+
+      IntVector low = Max(lowIndex, neighbor->getNodeLowIndex());
+      IntVector high= Min(highIndex, neighbor->getNodeHighIndex());
+
       d_reqs.push_back(scinew Dependency(ds, var, matlIndex,
-					 neighbor, this));
+					 neighbor, this, low, high));
    }
 }
 
@@ -142,7 +81,9 @@ void
 Task::computes(const DataWarehouseP& ds, const VarLabel* var)
 {
    ASSERT(ds.get_rep() != 0);
-   d_comps.push_back(scinew Dependency(ds, var, -1, d_patch, this));
+   d_comps.push_back(scinew Dependency(ds, var, -1, d_patch, this,
+				       IntVector(-19,-18,-17),
+				       IntVector(-16,-15,-14)));
 }
 
 void
@@ -150,7 +91,9 @@ Task::computes(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 	       const Patch* patch)
 {
    ASSERT(ds.get_rep() != 0);
-   d_comps.push_back(scinew Dependency(ds, var, matlIndex, patch, this));
+   d_comps.push_back(scinew Dependency(ds, var, matlIndex, patch, this,
+				       IntVector(-29,-28,-27),
+				       IntVector(-26,-25,-24)));
 }
 
 void
@@ -166,13 +109,17 @@ Task::doit(const ProcessorGroup* pc)
 Task::Dependency::Dependency(const DataWarehouseP& dw,
 			     const VarLabel* var, int matlIndex,
 			     const Patch* patch,
-			     Task* task)
+			     Task* task,
+			     const IntVector& lowIndex,
+			     const IntVector& highIndex)
     : d_dw(dw),
       d_var(var),
       d_matlIndex(matlIndex),
       d_patch(patch),
-   d_task(task),
-   d_serialNumber(-123)
+      d_task(task),
+      d_serialNumber(-123),
+      d_lowIndex(lowIndex),
+      d_highIndex(highIndex)
 {
 }
 
@@ -258,6 +205,9 @@ operator << (ostream &out, const Task::TaskType & tt)
 
 //
 // $Log$
+// Revision 1.24.2.1  2000/09/29 06:12:29  sparker
+// Added support for sending data along patch edges
+//
 // Revision 1.24  2000/09/28 23:22:01  jas
 // Added (int) to remove g++ warnings for STL size().  Reordered initialization
 // to coincide with *.h declarations.

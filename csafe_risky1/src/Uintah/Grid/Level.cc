@@ -277,8 +277,15 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
 }
 
+Box Level::getBox(const IntVector& l, const IntVector& h) const
+{
+   return Box(getNodePosition(l), getNodePosition(h));
+}
 //
 // $Log$
+// Revision 1.22.4.1  2000/09/29 06:12:29  sparker
+// Added support for sending data along patch edges
+//
 // Revision 1.22  2000/09/25 20:37:42  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
