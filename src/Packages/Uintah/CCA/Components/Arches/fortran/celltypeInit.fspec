@@ -1,2 +1,0 @@
-void celltypeinit(IntVector indexLow, IntVector indexHigh,
-     CCVariable<int> pcell, int cellval);
