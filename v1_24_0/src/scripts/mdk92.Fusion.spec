@@ -121,8 +121,7 @@ python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}/install /usr/local
 rm -rf /usr/local/SCIRun/bin
 mkdir -p /usr/local/SCIRun/bin
 cd /usr/local/SCIRun/bin
-/usr/local/SCIRun/src/con
-figure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-ftgl="/usr/local/%{ftgl}" --with-hdf5="/usr/local/%{hdf5}" --with-mdsplus="/usr/local/mdsplus"  --enable-package="Fusion DataIO Teem"
+/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-ftgl="/usr/local/%{ftgl}" --with-hdf5="/usr/local/%{hdf5}" --with-mdsplus="/usr/local/mdsplus"  --enable-package="Fusion DataIO Teem"
 cd /usr/local/SCIRun/bin/on-the-fly-libs
 tar -xvzf %{SOURCE7}
 cd /usr/local/SCIRun/bin/
