@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
   TetVolMeshHandle tvm=0;
   if (mesh->cond_tensors.size()) {
     TetVol<Tensor> *field = new TetVol<Tensor>(Field::CELL);
-    field->set_string("name", "conductivity");
+    field->store("name", "conductivity");
     tvm = field->get_typed_mesh();
     load_mesh(mesh, tvm);
     field->resize_fdata();
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
       field->initialize_mask(0);
     }
 
-    field->set_string("name", "dirichlet");
+    field->store("name", "dirichlet");
     int node_counter=0;
     TetVolMesh::node_iterator ni;
     for (ni = tvm->node_begin(); ni != tvm->node_end(); ++ni, node_counter++) {
