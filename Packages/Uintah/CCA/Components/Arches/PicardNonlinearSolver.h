@@ -106,6 +106,11 @@ public:
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw);
 
+      void sched_probeData(const LevelP&, 
+			   SchedulerP& sched,
+			   DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw);
+
       // GROUP: Action Computations :
       ///////////////////////////////////////////////////////////////////////
       // Compute the residual
@@ -143,10 +148,18 @@ private:
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw);
 
+      void probeData(const ProcessorGroup* pc,
+		     const Patch* patch,
+		     DataWarehouseP& old_dw,
+		     DataWarehouseP& new_dw);
+
 private:
 
       // Total number of nonlinear iterates
       int d_nonlinear_its;
+      // for probing data for debuging or plotting
+      bool d_probe_data;
+      vector<IntVector> d_probePoints;
       // nonlinear residual tolerance
       double d_resTol;
       // Pressure Eqn Solver

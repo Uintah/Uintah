@@ -257,6 +257,13 @@ ArchesLabel::ArchesLabel()
 				CCVariable<Vector>::getTypeDescription() );
   d_newCCVelocityLabel = scinew VarLabel("newCCVelocity",
 				CCVariable<Vector>::getTypeDescription() );
+  d_newCCUVelocityLabel = scinew VarLabel("newCCUVelocity",
+				CCVariable<double>::getTypeDescription() );
+  d_newCCVVelocityLabel = scinew VarLabel("newCCVVelocity",
+				CCVariable<double>::getTypeDescription() );
+  d_newCCWVelocityLabel = scinew VarLabel("newCCWVelocity",
+				CCVariable<double>::getTypeDescription() );
+
 }
 
 //****************************************************************************
