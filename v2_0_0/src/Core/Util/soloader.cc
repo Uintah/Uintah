@@ -18,6 +18,7 @@
 // soloader.cpp written by Chris Moulding 11/98
 
 #include <Core/Util/soloader.h>
+#include <sci_defs.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <string>
@@ -31,8 +32,14 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 #ifdef _WIN32
   LibraryHandle = LoadLibrary(libname);
 #elif defined(__APPLE__)
-  string name = string("lib/")+libname;
+  string name = string(SCIRUN_OBJDIR "/lib/")+libname;
   LibraryHandle = dlopen(name.c_str(), RTLD_LAZY|RTLD_GLOBAL);
+
+  if( LibraryHandle == 0 ) { 
+    // dlopen of absolute path failed...  Perhaps they have a DYLD_LIBRARY_PATH var set...
+    // If so, if we try again without the path, then maybe it will succeed...
+    LibraryHandle = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
+  }
 #else
   LibraryHandle = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
 #endif
@@ -66,8 +73,17 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
   if ( libname[0] == '/' )
     name = libname;
   else
-    name = string("lib/") + libname;
-  return dlopen(name.c_str(), RTLD_LAZY|RTLD_GLOBAL);
+    name = string(SCIRUN_OBJDIR "/lib/") + libname;
+
+  LIBRARY_HANDLE lh;
+  lh = dlopen(name.c_str(), RTLD_LAZY|RTLD_GLOBAL);
+
+  if( lh == 0 ) { 
+    // dlopen of absolute path failed...  Perhaps they have a DYLD_LIBRARY_PATH var set...
+    // If so, if we try again without the path, then maybe it will succeed...
+    lh = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
+  }
+  return lh;
 #else
   return dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
 #endif
