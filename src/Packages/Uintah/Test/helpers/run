@@ -92,7 +92,7 @@ for test in *; do
 	        rm "${BUILD_DIR}/${test}-${mode}.lock"
 	    fi
 	elif [ $retval = "3" ]; then
-	    echo "Passed: ${test}-$mode tests (tests skipped)"
+	    echo "Skipped: ${test}-$mode tests"
 	else
 	    echo "Failed: ${test}-${mode} tests"
 	    if [ ! -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
