@@ -989,7 +989,7 @@ TetVolMesh::locate(Cell::index_type &cell, const Point &p)
   vector<Cell::index_type>::iterator iter = v.begin();
   while (iter != v.end())
   {
-    if (inside4_p((*iter) * 4, p))
+    if (inside((*iter) * 4, p))
     {
       cell = *iter;
       return true;
@@ -1017,23 +1017,7 @@ TetVolMesh::get_weights(const Point &p,
 static double
 tet_vol6(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
 {
-  const double x1=p1.x();
-  const double y1=p1.y();
-  const double z1=p1.z();
-  const double x2=p2.x();
-  const double y2=p2.y();
-  const double z2=p2.z();
-  const double x3=p3.x();
-  const double y3=p3.y();
-  const double z3=p3.z();
-  const double x4=p4.x();
-  const double y4=p4.y();
-  const double z4=p4.z();
-  const double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
-  const double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
-  const double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
-  const double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
-  return fabs(a1+a2+a3+a4);
+  return fabs( Dot(Cross(p2-p1,p3-p1),p4-p1) );
 }
 
 void
@@ -1120,67 +1104,41 @@ TetVolMesh::compute_grid()
 }
 
 
-
 bool
-TetVolMesh::inside4_p(int i, const Point &p)
+TetVolMesh::inside(Cell::index_type idx, const Point &p)
 {
-  // TODO: This has not been tested.
-  // TODO: Looks like too much code to check sign of 4 plane/point tests.
+  Point center;
+  get_center(center, idx);
 
-  const Point &p0 = points_[cells_[i+0]];
-  const Point &p1 = points_[cells_[i+1]];
-  const Point &p2 = points_[cells_[i+2]];
-  const Point &p3 = points_[cells_[i+3]];
-  const double x0 = p0.x();
-  const double y0 = p0.y();
-  const double z0 = p0.z();
-  const double x1 = p1.x();
-  const double y1 = p1.y();
-  const double z1 = p1.z();
-  const double x2 = p2.x();
-  const double y2 = p2.y();
-  const double z2 = p2.z();
-  const double x3 = p3.x();
-  const double y3 = p3.y();
-  const double z3 = p3.z();
+  Face::array_type faces;
+  get_faces(faces, idx);
 
-  const double a0 = + x1*(y2*z3-y3*z2) + x2*(y3*z1-y1*z3) + x3*(y1*z2-y2*z1);
-  const double a1 = - x2*(y3*z0-y0*z3) - x3*(y0*z2-y2*z0) - x0*(y2*z3-y3*z2);
-  const double a2 = + x3*(y0*z1-y1*z0) + x0*(y1*z3-y3*z1) + x1*(y3*z0-y0*z3);
-  const double a3 = - x0*(y1*z2-y2*z1) - x1*(y2*z0-y0*z2) - x2*(y0*z1-y1*z0);
-  const double iV6 = 1.0 / (a0+a1+a2+a3);
+  for (unsigned int i=0; i<faces.size(); i++) {
+    Node::array_type ra;
+    get_nodes(ra, faces[i]);
 
-  const double b0 = - (y2*z3-y3*z2) - (y3*z1-y1*z3) - (y1*z2-y2*z1);
-  const double c0 = + (x2*z3-x3*z2) + (x3*z1-x1*z3) + (x1*z2-x2*z1);
-  const double d0 = - (x2*y3-x3*y2) - (x3*y1-x1*y3) - (x1*y2-x2*y1);
-  const double s0 = iV6 * (a0 + b0*p.x() + c0*p.y() + d0*p.z());
-  if (s0 < -1.e-12)
-    return false;
+    const Point &p0 = point(ra[0]);
+    const Point &p1 = point(ra[1]);
+    const Point &p0 = point(ra[0]);
 
-  const double b1 = + (y3*z0-y0*z3) + (y0*z2-y2*z0) + (y2*z3-y3*z2);
-  const double c1 = - (x3*z0-x0*z3) - (x0*z2-x2*z0) - (x2*z3-x3*z2);
-  const double d1 = + (x3*y0-x0*y3) + (x0*y2-x2*y0) + (x2*y3-x3*y2);
-  const double s1 = iV6 * (a1 + b1*p.x() + c1*p.y() + d1*p.z());
-  if (s1 < -1.e-12)
-    return false;
+    const Vector v0(p0 - p1), v1(p2 - p1);
+    const Vector normal = Cross(v0, v1);
+    const Vector off0(p - p1);
+    const Vector off1(center - p1);
 
-  const double b2 = - (y0*z1-y1*z0) - (y1*z3-y3*z1) - (y3*z0-y0*z3);
-  const double c2 = + (x0*z1-x1*z0) + (x1*z3-x3*z1) + (x3*z0-x0*z3);
-  const double d2 = - (x0*y1-x1*y0) - (x1*y3-x3*y1) - (x3*y0-x0*y3);
-  const double s2 = iV6 * (a2 + b2*p.x() + c2*p.y() + d2*p.z());
-  if (s2 < -1.e-12)
-    return false;
+    double dotprod = Dot(off0, normal);
 
-  const double b3 = +(y1*z2-y2*z1) + (y2*z0-y0*z2) + (y0*z1-y1*z0);
-  const double c3 = -(x1*z2-x2*z1) - (x2*z0-x0*z2) - (x0*z1-x1*z0);
-  const double d3 = +(x1*y2-x2*y1) + (x2*y0-x0*y2) + (x0*y1-x1*y0);
-  const double s3 = iV6 * (a3 + b3*p.x() + c3*p.y() + d3*p.z());
-  if (s3 < -1.e-12)
-    return false;
+    // Account for round off - the point may be on the plane!!
+    if( fabs( dotprod ) < 1.0e-8 )
+      continue;
 
+    // If orientated correctly the second dot product is not needed.
+    // Only need to check to see if the sign is negitive.
+    if (dotprod * Dot(off1, normal) < 0.0)
+      return false;
+  }
   return true;
 }
-
 
 
 //! This code uses the robust geometric predicates 
@@ -1188,7 +1146,7 @@ TetVolMesh::inside4_p(int i, const Point &p)
 //! for some reason they crash right now, so this code is not compiled in
 #if 0
 bool
-TetVolMesh::inside4_p(int i, const Point &p)
+TetVolMesh::inside(int i, const Point &p)
 {
   double *p0 = &points_[cells_[i*4+0]](0);
   double *p1 = &points_[cells_[i*4+1]](0);
@@ -1384,45 +1342,28 @@ TetVolMesh::delete_cells(set<int> &to_delete)
   
 }
 
-
-double 
-TetVolMesh::volume(TetVolMesh::Cell::index_type ci)
-{
-  TetVolMesh::Node::array_type n;
-  get_nodes(n, ci);
-  const Point &p1 = point(n[0]);
-  const Point &p2 = point(n[1]);
-  const Point &p3 = point(n[2]);
-  const Point &p4 = point(n[3]);
-  double x1=p1.x();
-  double y1=p1.y();
-  double z1=p1.z();
-  double x2=p2.x();
-  double y2=p2.y();
-  double z2=p2.z();
-  double x3=p3.x();
-  double y3=p3.y();
-  double z3=p3.z();
-  double x4=p4.x();
-  double y4=p4.y();
-  double z4=p4.z();
-  double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
-  double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
-  double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
-  double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
-  return fabs(a1+a2+a3+a4)/6.0;
-}
-
 void
 TetVolMesh::orient(Cell::index_type ci) {
-  double sgn=volume(ci);
-  if(sgn < 0.0){
+
+  Node::array_type ra;
+  get_nodes(ra,ci);
+  const Point &p0 = point(arr[0]);
+  const Point &p1 = point(arr[1]);
+  const Point &p2 = point(arr[2]);
+  const Point &p3 = point(arr[3]);
+
+  // Unsigned volumex6 of the tet.
+  double sgn=Dot(Cross(p1-p0,p2-p0),p3-p0);
+
+  if(sgn < 0.0) {
     // Switch two of the edges so that the volume is positive
-    int tmp = cells_[ci * 4];
-    cells_[ci * 4] = cells_[ci * 4 + 1];
-    cells_[ci * 4 + 1] = tmp;
+    unsigned int base = ci * 4;
+    unsigned int tmp = cells_[base];
+    cells_[base] = cells_[base + 1];
+    cells_[base + 1] = tmp;
     sgn=-sgn;
   }
+
   if(sgn < 1.e-9){ // return 0; // Degenerate...
     cerr << "Warning - small element, volume=" << sgn << endl;
   }
@@ -1437,7 +1378,7 @@ TetVolMesh::insert_node(const Point &p)
   locate(cell, p);
 
   const unsigned index = cell*4;
-  if (!inside4_p(index, p)) return false;
+  if (!inside(index, p)) return false;
 
   if (synchronized_ & NODE_NEIGHBORS_E) delete_cell_node_neighbors(cell);
   if (synchronized_ & EDGES_E) delete_cell_edges(cell);
