@@ -1971,7 +1971,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
       new_dw->getModifiable(yvel, lb_->yvelocity, matl, patch);
       new_dw->getModifiable(zvel, lb_->zvelocity, matl, patch);
       new_dw->get(sol, pressure, matl, patch, Ghost::AroundFaces, 1);
-
+      
       Condition<double>* xbc = bcs.getCondition<double>("xvelocity", Patch::XFaceBased);
       Condition<double>* ybc = bcs.getCondition<double>("yvelocity", Patch::YFaceBased);
       Condition<double>* zbc = bcs.getCondition<double>("zvelocity", Patch::ZFaceBased);
@@ -2036,8 +2036,8 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	    xvel[idx] -= gx;
 	  }
 	  break;
-	case BC::FixedValue:
-	  break;
+	case BC::FixedValue:	
+          break;
 	case BC::CoarseGrid:
 	case BC::Exterior:
 	  throw InternalError("unknown bc");
@@ -2046,7 +2046,6 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
       }
 
       //cerr << "RANDY: SimpleCFD::applyProjection() BBB" << endl;
-
       for(CellIterator iter(patch->getSFCYIterator(0)); !iter.done(); iter++){
 	IntVector idx(*iter);
 	BCRegion<double>* bc = ybc->get(bctype[idx]);
@@ -2105,7 +2104,6 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
       }
 
       //cerr << "RANDY: SimpleCFD::applyProjection() CCC" << endl;
-
       for(CellIterator iter(patch->getSFCZIterator(0)); !iter.done(); iter++){
 	IntVector idx(*iter);
 	BCRegion<double>* bc = zbc->get(bctype[idx]);
@@ -2162,11 +2160,13 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	  BREAK;
 	}
       }
+
 #if 0
       print(xvel, yvel, zvel, "Corrected velocity");
 #endif
       //cerr << "RANDY: SimpleCFD::applyProjection() DDD" << endl;
     }
+    cout_doing << "  Done ApplyProjection\n";
   }
   //cerr << "RANDY: SimpleCFD::applyProjection() END" << endl;
 }
