@@ -2401,8 +2401,8 @@ case SCIRun2 in
     sci_required_xalan=yes
   ;;
   *)
-    { echo "$as_me:$LINENO: WARNING: No known dependencies for Package SCIRun2" >&5
-echo "$as_me: WARNING: No known dependencies for Package SCIRun2" >&2;}
+    { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package SCIRun2" >&5
+echo "$as_me: WARNING: In aclocal.m4: No known dependencies for Package SCIRun2" >&2;}
   ;;
 esac
 
@@ -2562,13 +2562,157 @@ case $i in
     sci_required_xalan=yes
   ;;
   *)
-    { echo "$as_me:$LINENO: WARNING: No known dependencies for Package $i" >&5
-echo "$as_me: WARNING: No known dependencies for Package $i" >&2;}
+    { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package $i" >&5
+echo "$as_me: WARNING: In aclocal.m4: No known dependencies for Package $i" >&2;}
   ;;
 esac
 
 
 done
+
+if test "$pkg_BioPSE" = "yes" || test "$pkg_Insight" = "yes" ||
+   test "$pgk_MatlabInterface" = "yes" || test "$pkg_DataIO" = "yes" ||
+   test "$pkg_Fusion" = "yes"; then
+   if test "$pkg_Teem" != "yes"; then
+      { echo "$as_me:$LINENO: WARNING: User did not enable the Teem package but it is required by" >&5
+echo "$as_me: WARNING: User did not enable the Teem package but it is required by" >&2;}
+      { echo "$as_me:$LINENO: WARNING: an enabled package(s)... adding it to the list of requested packages." >&5
+echo "$as_me: WARNING: an enabled package(s)... adding it to the list of requested packages." >&2;}
+      PACKAGE_DIRS=$PACKAGE_DIRS" Packages/Teem"
+      # set the package dependent checks
+
+
+eval pkg_Teem=yes
+
+case Teem in
+  BioPSE)
+  ;;
+  Teem)
+    sci_required_teem=yes
+  ;;
+  VDT)
+    sci_required_vdt=yes
+  ;;
+  MatlabInterface)
+  ;;
+  Uintah)
+    sci_required_fortran=yes
+    sci_required_mpi=yes
+    sci_required_blas=yes
+    sci_required_lapack=yes
+    sci_required_perl=yes
+    sci_required_tools=yes
+  ;;
+  Fusion)
+  ;;
+  DataIO)
+    sci_required_mdsplus=yes
+    sci_required_hdf5=yes
+  ;;
+  SCIRun2)
+    sci_required_babel=yes
+    sci_required_uuid=yes
+    sci_required_ruby=yes
+  ;;
+  Remote)
+    sci_required_jpeg=yes
+    sci_required_tiff=yes
+  ;;
+  NetSolve)
+    sci_required_netsolve=yes
+  ;;
+  rtrt)
+    sci_required_glut=yes
+    sci_required_glui=yes
+    sci_required_oogl=yes
+    sci_required_audio=yes
+    sci_required_teem=yes
+  ;;
+  Insight)
+    sci_required_insight=yes
+    sci_required_xalan=yes
+  ;;
+  *)
+    { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package Teem" >&5
+echo "$as_me: WARNING: In aclocal.m4: No known dependencies for Package Teem" >&2;}
+  ;;
+esac
+
+
+      package="$package Teem"
+   fi
+fi
+
+if test "$pkg_Fusion" = "yes"; then
+  if test "$pkg_DataIO" != "yes"; then
+      { echo "$as_me:$LINENO: WARNING: User did not enable the DataIO package but it is required by" >&5
+echo "$as_me: WARNING: User did not enable the DataIO package but it is required by" >&2;}
+      { echo "$as_me:$LINENO: WARNING: the Fusion package... adding it to the list of requested packages." >&5
+echo "$as_me: WARNING: the Fusion package... adding it to the list of requested packages." >&2;}
+      PACKAGE_DIRS=$PACKAGE_DIRS" Packages/DataIO"
+      # set the package dependent checks
+
+
+eval pkg_DataIO=yes
+
+case DataIO in
+  BioPSE)
+  ;;
+  Teem)
+    sci_required_teem=yes
+  ;;
+  VDT)
+    sci_required_vdt=yes
+  ;;
+  MatlabInterface)
+  ;;
+  Uintah)
+    sci_required_fortran=yes
+    sci_required_mpi=yes
+    sci_required_blas=yes
+    sci_required_lapack=yes
+    sci_required_perl=yes
+    sci_required_tools=yes
+  ;;
+  Fusion)
+  ;;
+  DataIO)
+    sci_required_mdsplus=yes
+    sci_required_hdf5=yes
+  ;;
+  SCIRun2)
+    sci_required_babel=yes
+    sci_required_uuid=yes
+    sci_required_ruby=yes
+  ;;
+  Remote)
+    sci_required_jpeg=yes
+    sci_required_tiff=yes
+  ;;
+  NetSolve)
+    sci_required_netsolve=yes
+  ;;
+  rtrt)
+    sci_required_glut=yes
+    sci_required_glui=yes
+    sci_required_oogl=yes
+    sci_required_audio=yes
+    sci_required_teem=yes
+  ;;
+  Insight)
+    sci_required_insight=yes
+    sci_required_xalan=yes
+  ;;
+  *)
+    { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package DataIO" >&5
+echo "$as_me: WARNING: In aclocal.m4: No known dependencies for Package DataIO" >&2;}
+  ;;
+esac
+
+
+      package="$package DataIO"
+  fi
+fi
 
 if test "$sci_required_unipetsc" = "yes"; then
    sci_required_blas=yes
@@ -2591,43 +2735,6 @@ fi
 
 
 
-
-# Take care of package dependencies
-if test "$pkg_DataIO" = "yes"; then
-  # DataIO depends upon Teem Package.
-  if test -z $pkg_Teem; then
-    { { echo "$as_me:$LINENO: error: The DataIO Package depends on the Teem Package. Please
-                  make sure you have the Teem Package and configure
-                  with it enabled." >&5
-echo "$as_me: error: The DataIO Package depends on the Teem Package. Please
-                  make sure you have the Teem Package and configure
-                  with it enabled." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-fi
-
-if test "$pkg_Fusion" = "yes"; then
-  # Fusion depends upon Teem Package.
-  if test -z $pkg_Teem; then
-    { { echo "$as_me:$LINENO: error: The Fusion Package depends on the Teem Package. Please
-                  make sure you have the Teem Package and configure
-                  with it enabled." >&5
-echo "$as_me: error: The Fusion Package depends on the Teem Package. Please
-                  make sure you have the Teem Package and configure
-                  with it enabled." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-  if test -z $pkg_DataIO; then
-    { { echo "$as_me:$LINENO: error: The Fusion Package depends on the DataIO Package. Please
-                  make sure you have the Teem Package and configure
-                  with it enabled." >&5
-echo "$as_me: error: The Fusion Package depends on the DataIO Package. Please
-                  make sure you have the Teem Package and configure
-                  with it enabled." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-fi
-
 LOAD_PACKAGE="SCIRun"
 for i in $package; do
  LOAD_PACKAGE=$LOAD_PACKAGE,"$i"
@@ -2640,7 +2747,7 @@ BASENAME_IS=`type dirname | sed 's%^.* %%'`
 LDRUN_PREFIX="-Wl,-rpath -Wl,"
 
 ## We use both of these in a number of spots, so I think this is fair:
-## (Eventually we could write our own if necessary...
+## (Eventually we could write our own if necessary...)
 if test -z "$DIRNAME_IS" -o -z "$BASENAME_IS"; then
   { { echo "$as_me:$LINENO: error: dirname or basename not found.  Configure script won't work!" >&5
 echo "$as_me: error: dirname or basename not found.  Configure script won't work!" >&2;}
@@ -4234,7 +4341,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4237:" \
+echo "$as_me:4344:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7550,13 +7657,16 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -7716,6 +7826,7 @@ else
   eval M_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval M_LIB_FLAG='"$LIBS"'
 eval M_LIB_FLAG='"$_sci_libs"'
 eval HAVE_M="yes"
 
@@ -7832,6 +7943,9 @@ if test "$with_X11_lib"; then
 else
   _x_lib_dir="/usr/X11R6"
 
+##
+## BASE_LIB_PATH:
+##
 ## arguments mean:
 ## arg 1 : This argument will be written with the result
 ## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
@@ -7861,13 +7975,16 @@ fi
 
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -8053,6 +8170,7 @@ else
   eval X_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval X_LIB_FLAG='"$LIBS"'
 eval X_LIB_FLAG='"$_sci_libs"'
 eval HAVE_X="yes"
 
@@ -8251,13 +8369,16 @@ esac
 case $threads in
    irix)
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -8415,6 +8536,7 @@ else
   eval FETCHOP_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval FETCHOP_LIB_FLAG='"$LIBS"'
 eval FETCHOP_LIB_FLAG='"$_sci_libs"'
 eval HAVE_FETCHOP="yes"
 
@@ -8525,13 +8647,16 @@ _sci_includes=''
       ;;
    pthreads)
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -8689,6 +8814,7 @@ else
   eval PTHREAD_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval PTHREAD_LIB_FLAG='"$LIBS"'
 eval PTHREAD_LIB_FLAG='"$_sci_libs"'
 eval HAVE_PTHREAD="yes"
 
@@ -8966,13 +9092,16 @@ esac
 ##### #endif
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -9158,6 +9287,7 @@ else
   eval GL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval GL_LIB_FLAG='"$LIBS"'
 eval GL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_GL="yes"
 
@@ -9276,13 +9406,16 @@ fi
 
 ##  --  search for dlopen  -----------------------------------------------
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -9442,6 +9575,7 @@ else
   eval DL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval DL_LIB_FLAG='"$LIBS"'
 eval DL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_DL="yes"
 
@@ -9551,13 +9685,16 @@ else
   case $host in
   *-darwin*)
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -9745,6 +9882,7 @@ else
   eval DL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval DL_LIB_FLAG='"$LIBS"'
 eval DL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_DL="yes"
 
@@ -9850,13 +9988,16 @@ _sci_includes=''
     ;;
   *)
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -10016,6 +10157,7 @@ else
   eval DL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval DL_LIB_FLAG='"$LIBS"'
 eval DL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_DL="yes"
 
@@ -10133,13 +10275,16 @@ ext="$ac_ext"
 ac_ext="cc"
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -10291,6 +10436,7 @@ else
   eval STAT64_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval STAT64_LIB_FLAG='"$LIBS"'
 eval STAT64_LIB_FLAG='"$_sci_libs"'
 eval HAVE_STAT64="yes"
 
@@ -10405,13 +10551,16 @@ fi
 
 ##  --  required standard headers
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -10561,6 +10710,7 @@ else
   eval STD_HDRS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval STD_HDRS_LIB_FLAG='"$LIBS"'
 eval STD_HDRS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_STD_HDRS="yes"
 
@@ -10671,13 +10821,16 @@ case $host in
   *-irix*)
     # test for required sqi headers as well
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -10827,6 +10980,7 @@ else
   eval STD_HDRS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval STD_HDRS_LIB_FLAG='"$LIBS"'
 eval STD_HDRS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_STD_HDRS="yes"
 
@@ -10934,13 +11088,16 @@ _sci_includes=''
     ;;
   *)
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -11090,6 +11247,7 @@ else
   eval STD_HDRS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval STD_HDRS_LIB_FLAG='"$LIBS"'
 eval STD_HDRS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_STD_HDRS="yes"
 
@@ -11208,13 +11366,16 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -11367,6 +11528,7 @@ else
   eval STL_HEADERS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval STL_HEADERS_LIB_FLAG='"$LIBS"'
 eval STL_HEADERS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_STL_HEADERS="yes"
 
@@ -11763,13 +11925,16 @@ if test -f "$_sci_lib/tclConfig.sh"; then
 fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -11955,6 +12120,7 @@ else
   eval TCL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval TCL_LIB_FLAG='"$LIBS"'
 eval TCL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_TCL="yes"
 
@@ -12073,13 +12239,16 @@ fi
 # Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
 #
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -12265,6 +12434,7 @@ else
   eval TK_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval TK_LIB_FLAG='"$LIBS"'
 eval TK_LIB_FLAG='"$_sci_libs"'
 eval HAVE_TK="yes"
 
@@ -12375,13 +12545,16 @@ _sci_includes=''
 
 # -- itcl --
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -12567,6 +12740,7 @@ else
   eval ITCL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval ITCL_LIB_FLAG='"$LIBS"'
 eval ITCL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_ITCL="yes"
 
@@ -12677,13 +12851,16 @@ _sci_includes=''
 
 # -- itk --
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -12869,6 +13046,7 @@ else
   eval ITK_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval ITK_LIB_FLAG='"$LIBS"'
 eval ITK_LIB_FLAG='"$_sci_libs"'
 eval HAVE_ITK="yes"
 
@@ -12978,13 +13156,16 @@ _sci_includes=''
 
 # -- blt --
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -13170,6 +13351,7 @@ else
   eval BLT_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval BLT_LIB_FLAG='"$LIBS"'
 eval BLT_LIB_FLAG='"$_sci_libs"'
 eval HAVE_BLT="yes"
 
@@ -13485,13 +13667,16 @@ case $host in
 esac
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -13680,6 +13865,7 @@ else
   eval XERCES_C_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval XERCES_C_LIB_FLAG='"$LIBS"'
 eval XERCES_C_LIB_FLAG='"$_sci_libs"'
 eval HAVE_XERCES_C="yes"
 
@@ -13794,13 +13980,16 @@ _sci_includes=''
 ##  --  search for optional headers  ------------------------------------
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -13950,6 +14139,7 @@ else
   eval SSTREAM_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval SSTREAM_LIB_FLAG='"$LIBS"'
 eval SSTREAM_LIB_FLAG='"$_sci_libs"'
 eval HAVE_SSTREAM="yes"
 
@@ -14075,13 +14265,16 @@ else
 fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -14267,6 +14460,7 @@ else
   eval EXC_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval EXC_LIB_FLAG='"$LIBS"'
 eval EXC_LIB_FLAG='"$_sci_libs"'
 eval HAVE_EXC="yes"
 
@@ -14397,13 +14591,16 @@ else
 fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -14572,6 +14769,7 @@ else
   eval MPEGE_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval MPEGE_LIB_FLAG='"$LIBS"'
 eval MPEGE_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MPEGE="yes"
 
@@ -14706,6 +14904,9 @@ else
     # If --with-magick has a parameter, then use it
     _sci_lib="$with_magick"
 
+##
+## BASE_LIB_PATH:
+##
 ## arguments mean:
 ## arg 1 : This argument will be written with the result
 ## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
@@ -14764,13 +14965,16 @@ echo "${ECHO_T}Using $_sci_lib/../bin/Magick-config to set ImageMagick variables
        done
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -14796,8 +15000,8 @@ fi
 
 
 
-echo "$as_me:$LINENO: checking for ImageMagick library and headers (optional)" >&5
-echo $ECHO_N "checking for ImageMagick library and headers (optional)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for ImageMagick library and headers (required)" >&5
+echo $ECHO_N "checking for ImageMagick library and headers (required)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -14805,9 +15009,9 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for ImageMagick library and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for ImageMagick library and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for ImageMagick library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for ImageMagick library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -14830,7 +15034,7 @@ echo "$as_me: error: Please do not specify /usr/include as the location for Imag
   fi
 done
 
-if test "optional" = "specific"; then
+if test "required" = "specific"; then
   # If 'specific' then only one lib is allowed:
   ### Determine if there is only one item in $MAGICK_LIB_FLAG (I don't know of a better way to do this.)
   __sci_pass=false
@@ -14956,6 +15160,7 @@ else
   eval MAGICK_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval MAGICK_LIB_FLAG='"$LIBS"'
 eval MAGICK_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MAGICK="yes"
 
@@ -14982,7 +15187,7 @@ eval INC_MAGICK_H=''
 eval HAVE_MAGICK_H="no"
 echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-if test "optional" != "optional"; then
+if test "required" != "optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -15025,7 +15230,7 @@ fi
 fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 
-if test "optional" = "specific"; then
+if test "required" = "specific"; then
 #echo specific
   # Make sure the exact includes were found
   for i in ""magick/magick.h; do
@@ -15093,8 +15298,8 @@ fi
 
 # Default values:
 _sci_optional=optional
-_sci_lib="$sci_thirdparty_dir"
-_sci_inc="$sci_thirdparty_includes"
+_sci_lib=
+_sci_inc=
 
 if test "$with_png" = "yes"; then
   # If --with-png is specified without a parameter, then it makes it required
@@ -15105,6 +15310,9 @@ else
     _sci_lib="$with_png"
     _sci_inc="$with_png/include"
 
+##
+## BASE_LIB_PATH:
+##
 ## arguments mean:
 ## arg 1 : This argument will be written with the result
 ## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
@@ -15134,13 +15342,16 @@ else
 fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -15326,6 +15537,7 @@ else
   eval PNG_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval PNG_LIB_FLAG='"$LIBS"'
 eval PNG_LIB_FLAG='"$_sci_libs"'
 eval HAVE_PNG="yes"
 
@@ -15500,13 +15712,16 @@ else
 fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -15692,6 +15907,7 @@ else
   eval Z_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval Z_LIB_FLAG='"$LIBS"'
 eval Z_LIB_FLAG='"$_sci_libs"'
 eval HAVE_Z="yes"
 
@@ -15825,13 +16041,16 @@ fi
 case $host in
   *-irix*)
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -15989,6 +16208,7 @@ else
   eval F_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval F_LIB_FLAG='"$LIBS"'
 eval F_LIB_FLAG='"$_sci_libs"'
 eval HAVE_F="yes"
 
@@ -16095,13 +16315,16 @@ _sci_includes=''
   *aix*)
     # AIX Fortran Library Check
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -16259,6 +16482,7 @@ else
   eval F_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval F_LIB_FLAG='"$LIBS"'
 eval F_LIB_FLAG='"$_sci_libs"'
 eval HAVE_F="yes"
 
@@ -16366,13 +16590,16 @@ _sci_includes=''
     # Linux Library Check
     if test "$F77" = "pgf77"; then
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -16530,6 +16757,7 @@ else
   eval F_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval F_LIB_FLAG='"$LIBS"'
 eval F_LIB_FLAG='"$_sci_libs"'
 eval HAVE_F="yes"
 
@@ -16634,13 +16862,16 @@ _sci_includes=''
 
     else
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -16798,6 +17029,7 @@ else
   eval F_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval F_LIB_FLAG='"$LIBS"'
 eval F_LIB_FLAG='"$_sci_libs"'
 eval HAVE_F="yes"
 
@@ -16904,13 +17136,16 @@ _sci_includes=''
     ;;
   *dec*)
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -17068,6 +17303,7 @@ else
   eval F_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval F_LIB_FLAG='"$LIBS"'
 eval F_LIB_FLAG='"$_sci_libs"'
 eval HAVE_F="yes"
 
@@ -17174,13 +17410,16 @@ _sci_includes=''
   *-darwin*)
     # OSX Library Check
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -17338,6 +17577,7 @@ else
   eval F_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval F_LIB_FLAG='"$LIBS"'
 eval F_LIB_FLAG='"$_sci_libs"'
 eval HAVE_F="yes"
 
@@ -17443,13 +17683,16 @@ _sci_includes=''
     ;;
   *)
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -17607,6 +17850,7 @@ else
   eval F_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval F_LIB_FLAG='"$LIBS"'
 eval F_LIB_FLAG='"$_sci_libs"'
 eval HAVE_F="yes"
 
@@ -17738,13 +17982,16 @@ echo "$as_me: error: Don't specify a path for atlas when on a Mac (we use vecLib
    { (exit 1); exit 1; }; }
      fi
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -17894,6 +18141,7 @@ else
   eval BLAS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval BLAS_LIB_FLAG='"$LIBS"'
 eval BLAS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_BLAS="yes"
 
@@ -18002,13 +18250,16 @@ _sci_includes=''
      ;;
    *)
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -18194,6 +18445,7 @@ else
   eval BLAS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval BLAS_LIB_FLAG='"$LIBS"'
 eval BLAS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_BLAS="yes"
 
@@ -18338,13 +18590,16 @@ if test "$HAVE_BLAS" != "yes"; then
   case $host in
     *aix*)
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -18513,6 +18768,7 @@ else
   eval BLAS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval BLAS_LIB_FLAG='"$LIBS"'
 eval BLAS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_BLAS="yes"
 
@@ -18618,13 +18874,16 @@ _sci_includes=''
        ;;
     *dec*)
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -18793,6 +19052,7 @@ else
   eval BLAS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval BLAS_LIB_FLAG='"$LIBS"'
 eval BLAS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_BLAS="yes"
 
@@ -18898,13 +19158,16 @@ _sci_includes=''
        ;;
     *)
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -19090,6 +19353,7 @@ else
   eval BLAS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval BLAS_LIB_FLAG='"$LIBS"'
 eval BLAS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_BLAS="yes"
 
@@ -19199,13 +19463,16 @@ _sci_includes=''
 
        else
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -19391,6 +19658,7 @@ else
   eval BLAS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval BLAS_LIB_FLAG='"$LIBS"'
 eval BLAS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_BLAS="yes"
 
@@ -19500,13 +19768,16 @@ _sci_includes=''
 
           else
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -19675,6 +19946,7 @@ else
   eval BLAS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval BLAS_LIB_FLAG='"$LIBS"'
 eval BLAS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_BLAS="yes"
 
@@ -19779,13 +20051,16 @@ _sci_includes=''
 
              if test "$HAVE_BLAS" = "no"; then
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -19954,6 +20229,7 @@ else
   eval BLAS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval BLAS_LIB_FLAG='"$LIBS"'
 eval BLAS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_BLAS="yes"
 
@@ -20094,13 +20370,16 @@ if test "$sci_required_ftgl" = "yes"; then
   fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -20286,6 +20565,7 @@ else
   eval FTGL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval FTGL_LIB_FLAG='"$LIBS"'
 eval FTGL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_FTGL="yes"
 
@@ -20421,20 +20701,23 @@ if test "$HAVE_F" = "yes" && test "$HAVE_BLAS" = "yes"; then
   if test "$with_lapack"; then
     _sci_lib="$with_lapack"
   else
-    _sci_lib="$LIB_DIR_BLAS $sci_thirdparty_libs"
+    _sci_lib="$LIB_DIR_BLAS"
   fi
 fi
 
 case $host in
   *-darwin*)
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -20584,6 +20867,7 @@ else
   eval LAPACK_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval LAPACK_LIB_FLAG='"$LIBS"'
 eval LAPACK_LIB_FLAG='"$_sci_libs"'
 eval HAVE_LAPACK="yes"
 
@@ -20692,13 +20976,16 @@ _sci_includes=''
      ;;
    *)
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -20867,6 +21154,7 @@ else
   eval LAPACK_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval LAPACK_LIB_FLAG='"$LIBS"'
 eval LAPACK_LIB_FLAG='"$_sci_libs"'
 eval HAVE_LAPACK="yes"
 
@@ -20974,13 +21262,16 @@ esac
 
 if test "$HAVE_LAPACK" != "yes"; then
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -21149,6 +21440,7 @@ else
   eval LAPACK_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval LAPACK_LIB_FLAG='"$LIBS"'
 eval LAPACK_LIB_FLAG='"$_sci_libs"'
 eval HAVE_LAPACK="yes"
 
@@ -21264,13 +21556,16 @@ LAPACKMP_LIB_DIR_FLAG=$LAPACK_LIB_DIR_FLAG
 
 if test "$HAVE_LAPACK" != "yes"; then
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -21439,6 +21734,7 @@ else
   eval LAPACK_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval LAPACK_LIB_FLAG='"$LIBS"'
 eval LAPACK_LIB_FLAG='"$_sci_libs"'
 eval HAVE_LAPACK="yes"
 
@@ -21545,13 +21841,16 @@ _sci_includes=''
        { echo "$as_me:$LINENO: WARNING: Using complib for lapack" >&5
 echo "$as_me: WARNING: Using complib for lapack" >&2;}
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -21720,6 +22019,7 @@ else
   eval LAPACKMP_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval LAPACKMP_LIB_FLAG='"$LIBS"'
 eval LAPACKMP_LIB_FLAG='"$_sci_libs"'
 eval HAVE_LAPACKMP="yes"
 
@@ -21885,13 +22185,16 @@ echo "$as_me: checking for required MPI components......" >&6;}
         fi
         # /usr/include/mpi is the standard location of mpi on some linux dists.
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -22077,6 +22380,7 @@ else
   eval MPI_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval MPI_LIB_FLAG='"$LIBS"'
 eval MPI_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MPI="yes"
 
@@ -22184,13 +22488,16 @@ _sci_includes=''
         # Try without pmpi (and with pthreads) (for the newer version
 	# of lam mpi.
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -22376,6 +22683,7 @@ else
   eval MPI_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval MPI_LIB_FLAG='"$LIBS"'
 eval MPI_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MPI="yes"
 
@@ -22482,13 +22790,16 @@ _sci_includes=''
 
         if test "$HAVE_MPI" != "yes"; then
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -22674,6 +22985,7 @@ else
   eval MPI_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval MPI_LIB_FLAG='"$LIBS"'
 eval MPI_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MPI="yes"
 
@@ -22779,13 +23091,16 @@ _sci_includes=''
 
            if test "$HAVE_MPI" != "yes"; then
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -22971,6 +23286,7 @@ else
   eval MPI_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval MPI_LIB_FLAG='"$LIBS"'
 eval MPI_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MPI="yes"
 
@@ -23240,13 +23556,16 @@ else
 fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -23432,6 +23751,7 @@ else
   eval MPIUNI_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval MPIUNI_LIB_FLAG='"$LIBS"'
 eval MPIUNI_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MPIUNI="yes"
 
@@ -23537,13 +23857,16 @@ _sci_includes=''
 
 if test "$HAVE_MPIUNI" != "yes"; then
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -23729,6 +24052,7 @@ else
   eval MPIUNICH_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval MPIUNICH_LIB_FLAG='"$LIBS"'
 eval MPIUNICH_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MPIUNICH="yes"
 
@@ -23908,13 +24232,16 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPIUNI" = "yes") &&
   fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -24100,6 +24427,7 @@ else
   eval PETSC_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval PETSC_LIB_FLAG='"$LIBS"'
 eval PETSC_LIB_FLAG='"$_sci_libs"'
 eval HAVE_PETSC="yes"
 
@@ -24225,13 +24553,16 @@ echo "$as_me: error: One or more of the PETSc components is missing." >&2;}
   fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -24417,6 +24748,7 @@ else
   eval PETSC_UNI_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval PETSC_UNI_LIB_FLAG='"$LIBS"'
 eval PETSC_UNI_LIB_FLAG='"$_sci_libs"'
 eval HAVE_PETSC_UNI="yes"
 
@@ -24766,13 +25098,16 @@ if test "$sci_required_babel" = "yes"; then
   echo $_sci_lib
   echo $_sci_inc
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -24958,6 +25293,7 @@ else
   eval SIDL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval SIDL_LIB_FLAG='"$LIBS"'
 eval SIDL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_SIDL="yes"
 
@@ -25134,13 +25470,16 @@ if test "$sci_required_jpeg" = "yes"; then
    fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -25309,6 +25648,7 @@ else
   eval JPEG_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval JPEG_LIB_FLAG='"$LIBS"'
 eval JPEG_LIB_FLAG='"$_sci_libs"'
 eval HAVE_JPEG="yes"
 
@@ -25426,13 +25766,16 @@ if test "$sci_required_tiff" = "yes"; then
    fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -25601,6 +25944,7 @@ else
   eval TIFF_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval TIFF_LIB_FLAG='"$LIBS"'
 eval TIFF_LIB_FLAG='"$_sci_libs"'
 eval HAVE_TIFF="yes"
 
@@ -25720,13 +26064,16 @@ if test "$sci_required_netsolve" = "yes"; then
    fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -25895,6 +26242,7 @@ else
   eval NETSOLVE_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval NETSOLVE_LIB_FLAG='"$LIBS"'
 eval NETSOLVE_LIB_FLAG='"$_sci_libs"'
 eval HAVE_NETSOLVE="yes"
 
@@ -26011,6 +26359,9 @@ if test "$sci_required_glut" = "yes"; then
    if test "$with_glut"; then
      _sci_lib_glut="$with_glut"
 
+##
+## BASE_LIB_PATH:
+##
 ## arguments mean:
 ## arg 1 : This argument will be written with the result
 ## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
@@ -26038,6 +26389,9 @@ if test "$sci_required_glut" = "yes"; then
      if test "$with_opengl"; then
        _sci_lib_ogl="$with_opengl"
 
+##
+## BASE_LIB_PATH:
+##
 ## arguments mean:
 ## arg 1 : This argument will be written with the result
 ## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
@@ -26067,6 +26421,9 @@ if test "$sci_required_glut" = "yes"; then
      else
        _sci_lib_X="/usr/X11R6"
 
+##
+## BASE_LIB_PATH:
+##
 ## arguments mean:
 ## arg 1 : This argument will be written with the result
 ## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
@@ -26105,13 +26462,16 @@ if test "$sci_required_glut" = "yes"; then
    fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -26297,6 +26657,7 @@ else
   eval GLUT_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval GLUT_LIB_FLAG='"$LIBS"'
 eval GLUT_LIB_FLAG='"$_sci_libs"'
 eval HAVE_GLUT="yes"
 
@@ -26422,6 +26783,9 @@ if test "$sci_required_glui" = "yes"; then
      ## Set the path for glut and glui
      _sci_lib_glut="$with_glut"
 
+##
+## BASE_LIB_PATH:
+##
 ## arguments mean:
 ## arg 1 : This argument will be written with the result
 ## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
@@ -26448,6 +26812,9 @@ if test "$sci_required_glui" = "yes"; then
 
      _sci_lib_glui="$with_glui"
 
+##
+## BASE_LIB_PATH:
+##
 ## arguments mean:
 ## arg 1 : This argument will be written with the result
 ## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
@@ -26477,6 +26844,9 @@ if test "$sci_required_glui" = "yes"; then
        ## OpenGL path
        _sci_lib_ogl="$with_opengl"
 
+##
+## BASE_LIB_PATH:
+##
 ## arguments mean:
 ## arg 1 : This argument will be written with the result
 ## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
@@ -26507,6 +26877,9 @@ if test "$sci_required_glui" = "yes"; then
        ## X path
        _sci_lib_X="/usr/X11R6"
 
+##
+## BASE_LIB_PATH:
+##
 ## arguments mean:
 ## arg 1 : This argument will be written with the result
 ## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
@@ -26545,13 +26918,16 @@ if test "$sci_required_glui" = "yes"; then
    fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -26737,6 +27113,7 @@ else
   eval GLUI_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval GLUI_LIB_FLAG='"$LIBS"'
 eval GLUI_LIB_FLAG='"$_sci_libs"'
 eval HAVE_GLUI="yes"
 
@@ -26879,13 +27256,16 @@ if test "$sci_required_oogl" = "yes"; then
   # Only check for OOGL if the user did not say without-oogl.
   if test "$with_oogl" != "no"; then
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -27071,6 +27451,7 @@ else
   eval OOGL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval OOGL_LIB_FLAG='"$LIBS"'
 eval OOGL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_OOGL="yes"
 
@@ -27237,13 +27618,16 @@ if test "$sci_required_glew" = "yes"; then
 #    #include<GL/glxew.h>
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -27429,6 +27813,7 @@ else
   eval GLEW_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval GLEW_LIB_FLAG='"$LIBS"'
 eval GLEW_LIB_FLAG='"$_sci_libs"'
 eval HAVE_GLEW="yes"
 
@@ -27566,13 +27951,16 @@ if test "$sci_required_audio" = "yes"; then
   _sci_lib="$with_audio"
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -27741,6 +28129,7 @@ else
   eval AUDIO_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval AUDIO_LIB_FLAG='"$LIBS"'
 eval AUDIO_LIB_FLAG='"$_sci_libs"'
 eval HAVE_AUDIO="yes"
 
@@ -27877,13 +28266,16 @@ if test "$sci_required_teem" = "yes"; then
 
   if test "$sci_required_rtrt" = "yes"; then
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -27945,12 +28337,12 @@ done
 
 if test "optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
-  ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
+  ### Determine if there is only one item in $_sci_lib m (I don't know of a better way to do this.)
   __sci_pass=false
   __sci_first_time=true
 
   # Must have the "" for the SGI sh.
-  for value in "" $_sci_lib; do
+  for value in "" $_sci_lib m; do
     if test "$value" = "/usr/lib"; then
        echo ""
        { { echo "$as_me:$LINENO: error: Please do not specify /usr/lib as the location for libs teem." >&5
@@ -27968,8 +28360,8 @@ echo "$as_me: error: Please do not specify /usr/lib as the location for libs tee
     fi
   done
   if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for teem library and headers only one library path may be specified (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for teem library and headers only one library path may be specified (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for teem library and headers only one library path may be specified (you had: $_sci_lib m).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for teem library and headers only one library path may be specified (you had: $_sci_lib m).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
   # and only one include path:
@@ -28005,7 +28397,7 @@ done
 
 _sci_lib_path=
 
-for i in $_sci_lib; do
+for i in $_sci_lib m; do
   # make sure it exists
   if test -d $i; then
     if test -z "$_sci_lib_path"; then
@@ -28019,7 +28411,7 @@ done
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs -lm $LIBS"
+LIBS="$_sci_libs  $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __sci_pound_includes=
@@ -28061,14 +28453,15 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
-eval LIB_DIR_TEEM='"$_sci_lib"'
+eval LIB_DIR_TEEM='"$_sci_lib m"'
 
-if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
+if test "$_sci_lib m" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval TEEM_LIB_DIR_FLAG=''
 else
   eval TEEM_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval TEEM_LIB_FLAG='"$LIBS"'
 eval TEEM_LIB_FLAG='"$_sci_libs"'
 eval HAVE_TEEM="yes"
 
@@ -28151,10 +28544,10 @@ echo "$as_me: error: Specificly requested teem library and headers include file 
   done
   # Make sure the exact libraries were found
   for i in ""teem; do
-#echo looking for $_sci_lib/$i
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested teem library and headers library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested teem library and headers library file '$_sci_lib/$i' was not found" >&2;}
+#echo looking for $_sci_lib m/$i
+    if test ! -e $_sci_lib m/lib$i.so && test ! -e $_sci_lib m/lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specificly requested teem library and headers library file '$_sci_lib m/$i' was not found" >&5
+echo "$as_me: error: Specificly requested teem library and headers library file '$_sci_lib m/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -28173,13 +28566,36 @@ _sci_includes=''
 
   else
 
+     # Determine if teem is using png.  Assume teem is either in the 3rd Party
+     # or where the user has specified (as we are going to use nm to look at its
+     # symbols and are not trying to link against it (at this point.))
+
+     result=`nm $_sci_lib/libteem.a | grep png`
+     if test -n "$result" && test "$HAVE_PNG" != "yes"; then
+        { echo "$as_me:$LINENO: WARNING: Teem was built with PNG support.  However the SCIRun configure" >&5
+echo "$as_me: WARNING: Teem was built with PNG support.  However the SCIRun configure" >&2;}
+        { echo "$as_me:$LINENO: WARNING: did not find PNG.  You need to determine where it is... as" >&5
+echo "$as_me: WARNING: did not find PNG.  You need to determine where it is... as" >&2;}
+        { echo "$as_me:$LINENO: WARNING: Teem seems to have found it already.  You will most likely then need" >&5
+echo "$as_me: WARNING: Teem seems to have found it already.  You will most likely then need" >&2;}
+        { echo "$as_me:$LINENO: WARNING: to use --with-png=/dir/above/dir/having/libpng on your configure line." >&5
+echo "$as_me: WARNING: to use --with-png=/dir/above/dir/having/libpng on your configure line." >&2;}
+        { { echo "$as_me:$LINENO: error: Please fix this problem and then configure again." >&5
+echo "$as_me: error: Please fix this problem and then configure again." >&2;}
+   { (exit 1); exit 1; }; }
+     fi
+
+
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -28315,7 +28731,7 @@ done
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs -lm $LIBS"
+LIBS="$_sci_libs $PNG_LIB_DIR_FLAG $PNG_LIB_FLAG -lm $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __sci_pound_includes=
@@ -28365,6 +28781,7 @@ else
   eval TEEM_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval TEEM_LIB_FLAG='"$LIBS"'
 eval TEEM_LIB_FLAG='"$_sci_libs"'
 eval HAVE_TEEM="yes"
 
@@ -28508,13 +28925,16 @@ if test "$sci_required_mdsplus" = "yes"; then
   ac_ext="c"
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -28700,6 +29120,7 @@ else
   eval MDSPLUS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval MDSPLUS_LIB_FLAG='"$LIBS"'
 eval MDSPLUS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_MDSPLUS="yes"
 
@@ -28842,13 +29263,16 @@ if test "$sci_required_hdf5" = "yes"; then
 
   # Basic check for the header file.
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -29034,6 +29458,7 @@ else
   eval HDF5_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval HDF5_LIB_FLAG='"$LIBS"'
 eval HDF5_LIB_FLAG='"$_sci_libs"'
 eval HAVE_HDF5="yes"
 
@@ -29166,13 +29591,16 @@ if test "$sci_required_perfex" = "yes"; then
   _sci_lib="$sci_thirdparty_libs"
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -29341,6 +29769,7 @@ else
   eval PERFEX_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval PERFEX_LIB_FLAG='"$LIBS"'
 eval PERFEX_LIB_FLAG='"$_sci_libs"'
 eval HAVE_PERFEX="yes"
 
@@ -29464,13 +29893,16 @@ if test "$sci_required_crypto" = "yes"; then
   fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -29639,6 +30071,7 @@ else
   eval CRYPTO_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval CRYPTO_LIB_FLAG='"$LIBS"'
 eval CRYPTO_LIB_FLAG='"$_sci_libs"'
 eval HAVE_CRYPTO="yes"
 
@@ -29769,13 +30202,16 @@ if test "$sci_required_ssl" = "yes"; then
   fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -29944,6 +30380,7 @@ else
   eval SSL_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval SSL_LIB_FLAG='"$LIBS"'
 eval SSL_LIB_FLAG='"$_sci_libs"'
 eval HAVE_SSL="yes"
 
@@ -30089,13 +30526,16 @@ echo "$as_me: error: CRYPTO library not found.  This will cause globus check to 
   MISC_LIB_FLAG="$SSL_LIB_DIR_FLAG $SSL_LIB_FLAG $CRYPTO_LIB_DIR_FLAG $CRYPTO_LIB_FLAG"
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -30281,6 +30721,7 @@ else
   eval GLOBUS_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval GLOBUS_LIB_FLAG='"$LIBS"'
 eval GLOBUS_LIB_FLAG='"$_sci_libs"'
 eval HAVE_GLOBUS="yes"
 
@@ -30683,13 +31124,16 @@ if test "$sci_required_qt" = "yes"; then
 
   # Only looking for one .h file... assuming all the rest are in the same place.
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -30875,6 +31319,7 @@ else
   eval QT_MT_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval QT_MT_LIB_FLAG='"$LIBS"'
 eval QT_MT_LIB_FLAG='"$_sci_libs"'
 eval HAVE_QT_MT="yes"
 
@@ -31062,13 +31507,16 @@ if test "$sci_required_ruby" = "yes"; then
 
   # Only looking for one .h file... assuming all the rest are in the same place.
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -31254,6 +31702,7 @@ else
   eval RUBY_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval RUBY_LIB_FLAG='"$LIBS"'
 eval RUBY_LIB_FLAG='"$_sci_libs"'
 eval HAVE_RUBY="yes"
 
@@ -31389,13 +31838,16 @@ if test "$sci_required_vtk" = "yes"; then
 
   # Only looking for one .h file... assuming all the rest are in the same place.
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -31581,6 +32033,7 @@ else
   eval VTK_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval VTK_LIB_FLAG='"$LIBS"'
 eval VTK_LIB_FLAG='"$_sci_libs"'
 eval HAVE_VTK="yes"
 
@@ -31739,13 +32192,16 @@ if test "$sci_required_vdt" = "yes"; then
     MISC_LIB_FLAGS="$X_LIB_DIR_FLAG $X_LIB_FLAG $M_LIB_FLAG $LEX_LIB_FLAG"
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -31933,6 +32389,7 @@ else
   eval VDT_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval VDT_LIB_FLAG='"$LIBS"'
 eval VDT_LIB_FLAG='"$_sci_libs"'
 eval HAVE_VDT="yes"
 
@@ -32074,13 +32531,16 @@ else
 fi
 
 
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -32266,6 +32726,7 @@ else
   eval HYPRE_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval HYPRE_LIB_FLAG='"$LIBS"'
 eval HYPRE_LIB_FLAG='"$_sci_libs"'
 eval HAVE_HYPRE="yes"
 
