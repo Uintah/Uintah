@@ -97,14 +97,14 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle > nHandles,
   NTYPE *ptrZ   = (NTYPE *)(nHandles[mesh[1]]->nrrd->data);
   NTYPE *ptrPhi = (NTYPE *)(nHandles[mesh[2]]->nrrd->data);
     
-  for( j=0; j<jdim; j++ ) {
+  for( i=0; i<idim; i++ ) {
+    double cosPhi = cos( ptrPhi[i] );
+    double sinPhi = sin( ptrPhi[i] );
+      
     for( k=0; k<kdim; k++ ) {
+      for( j=0; j<jdim; j++ ) {
       
-      int iRZ = k * jdim + j;
-      
-      for( i=0; i<idim; i++ ) {
-	double cosPhi = cos( ptrPhi[i] );
-	double sinPhi = sin( ptrPhi[i] );
+	int iRZ = k * jdim + j;
       
 	// Mesh
 	ndata[cc*3  ] =  ptrR[iRZ] * cosPhi;
@@ -117,7 +117,7 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle > nHandles,
   }
 
   nrrdWrap(nout->nrrd, ndata, nHandles[mesh[2]]->nrrd->type,
-	   ndims+1, sink_size, jdim, kdim, idim);
+	   ndims+1, sink_size, idim, jdim, kdim);
   nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
 	      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
@@ -128,12 +128,77 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle > nHandles,
   dataset[0].replace( dataset[0].find( "PHI:Scalar" ), 10, "XYZ:Vector" );
 
   nout->nrrd->axis[0].label = strdup(dataset[0].c_str());
-  nout->nrrd->axis[1].label = strdup("Radial");
+  nout->nrrd->axis[1].label = strdup("Phi");
   nout->nrrd->axis[2].label = strdup("Theta");
-  nout->nrrd->axis[3].label = strdup("Phi");
+  nout->nrrd->axis[3].label = strdup("Radial");
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[mesh[2]].get_rep()));
+
+  nout->set_property( "Coordinate System", string("Cartesian - XYZ"), false );
+
+  return  NrrdDataHandle( nout );	
+}
+
+
+template< class NTYPE >
+class NIMRODScalarConverterAlgoT : public NIMRODConverterAlgo
+{
+public:
+
+  virtual NrrdDataHandle execute(vector< NrrdDataHandle > nHandles,
+				 vector< int > mesh,
+				 vector< int > data,
+				 int idim, int jdim, int kdim);
+};
+
+
+template< class NTYPE >
+NrrdDataHandle
+NIMRODScalarConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle > nHandles,
+					     vector< int > mesh,
+					     vector< int > data,
+					     int idim, int jdim, int kdim)
+{
+  int sink_size = 1;
+  int ndims = 3;
+
+  NrrdData *nout = scinew NrrdData(false);
+
+  NTYPE* ndata = scinew NTYPE[idim*jdim*kdim];
+
+  register int i,j,k,cc = 0;
+
+  NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd->data);
+    
+  for( i=0; i<idim; i++ ) {
+    for( j=0; j<jdim; j++ ) {
+      for( k=0; k<kdim; k++ ) {
+
+	unsigned int index = (i * jdim + j) * kdim + k;
+	
+	ndata[cc] =  ptr[index];
+	++cc;
+      }
+    }
+  }
+
+  nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	   ndims+1, sink_size, idim, jdim, kdim);
+  nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+	      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+
+  vector< string > dataset;
+
+  nHandles[data[0]]->get_tuple_indecies(dataset);
+
+  nout->nrrd->axis[0].label = strdup(dataset[0].c_str());
+  nout->nrrd->axis[1].label = strdup("Phi");
+  nout->nrrd->axis[2].label = strdup("Theta");
+  nout->nrrd->axis[3].label = strdup("Radial");
+
+  *((PropertyManager *)nout) =
+    *((PropertyManager *)(nHandles[data[0]].get_rep()));
 
   nout->set_property( "Coordinate System", string("Cartesian - XYZ"), false );
 
@@ -179,11 +244,11 @@ execute(vector< NrrdDataHandle > nHandles,
   for( i=0; i<idim; i++ ) {
     double cosPhi = cos( ptrMeshPhi[i] );
     double sinPhi = sin( ptrMeshPhi[i] );
-      
+
     for( j=0; j<jdim; j++ ) {
       for( k=0; k<kdim; k++ ) {
-
-	int index = (i * jdim + j) * kdim + k;
+      
+	unsigned int index = (i * jdim + j) * kdim + k;
 
 	// Value
 	ndata[cc*3  ] =  ptrR[index] * cosPhi - ptrPhi[index] * sinPhi;
@@ -196,7 +261,7 @@ execute(vector< NrrdDataHandle > nHandles,
   }
 
   nrrdWrap(nout->nrrd, ndata, nHandles[data[2]]->nrrd->type,
-	   ndims+1, sink_size, jdim, kdim, idim);
+	   ndims+1, sink_size, idim, jdim, kdim);
   nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
 	      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
@@ -207,9 +272,9 @@ execute(vector< NrrdDataHandle > nHandles,
   dataset[0].replace( dataset[0].find( "PHI:Scalar" ), 10, "XYZ:Vector" );
 
   nout->nrrd->axis[0].label = strdup(dataset[0].c_str());
-  nout->nrrd->axis[1].label = strdup("Radial");
+  nout->nrrd->axis[1].label = strdup("Phi");
   nout->nrrd->axis[2].label = strdup("Theta");
-  nout->nrrd->axis[3].label = strdup("Phi");
+  nout->nrrd->axis[3].label = strdup("Radial");
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[data[2]].get_rep()));
@@ -265,10 +330,10 @@ execute(vector< NrrdDataHandle > nHandles,
 
   for( i=0; i<idim; i++ ) {
     double phi = ptrMeshPhi[i];
-      
+
     for( j=0; j<jdim; j++ ) {
       for( k=0; k<kdim; k++ ) {
-
+      
 	unsigned int m;
 
 	//  If summing start at 0 otherwise start with the mode
@@ -278,19 +343,15 @@ execute(vector< NrrdDataHandle > nHandles,
 	for( ; m<nmodes; m++ ) {  // Mode loop.
 
 	  unsigned int index = (m * jdim + j) * kdim + k;
-
+	
 	  double angle = ptrMeshK[m] * phi; // Mode * phi slice.
 
 	  for( unsigned int c=0; c<rank; c++ )
 	    ndata[cc*rank+c] = 0;
 
-	  for( unsigned int c=0; c<rank; c++ ) {
+	  for( unsigned int c=0; c<rank; c++ )
 	    ndata[cc*rank+c] += 2.0 * ( cos( angle ) * ptrs[c     ][index] -
 					sin( angle ) * ptrs[c+rank][index] );
-
-	    //	    cerr << i << " " << j << " " << k << " ";
-	    //	    cerr << c << " " << c+rank << "  " << cc*rank+c << endl;
-	  }
 
 	  //  Not summing so quit.
 	  if( mode < nmodes )
@@ -302,14 +363,14 @@ execute(vector< NrrdDataHandle > nHandles,
     }
   }
 
-  nrrdWrap(nout->nrrd, ndata, nHandles[data[2]]->nrrd->type,
-	   ndims+1, sink_size, jdim, kdim, idim);
+  nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	   ndims+1, sink_size, idim, jdim, kdim);
   nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
 	      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
   vector< string > dataset;
 
-  nHandles[data[2]]->get_tuple_indecies(dataset);
+  nHandles[data[0]]->get_tuple_indecies(dataset);
 
   char tmpstr[12];
   
@@ -319,15 +380,18 @@ execute(vector< NrrdDataHandle > nHandles,
     sprintf( tmpstr,"MODE-%d-", mode );
 
   dataset[0].replace( dataset[0].find( "REAL" ), 4, tmpstr );
-  dataset[0].replace( dataset[0].find( "PHI:Scalar" ), 10, "XYZ:Vector" );
+
+  string::size_type pos = dataset[0].find( "R:Scalar" );
+  if( pos != string::npos )
+    dataset[0].replace( pos, 10, "XYZ:Vector" );
 
   nout->nrrd->axis[0].label = strdup(dataset[0].c_str());
-  nout->nrrd->axis[1].label = strdup("Radial");
+  nout->nrrd->axis[1].label = strdup("Phi");
   nout->nrrd->axis[2].label = strdup("Theta");
-  nout->nrrd->axis[3].label = strdup("Phi");
+  nout->nrrd->axis[3].label = strdup("Radial");
 
   *((PropertyManager *)nout) =
-    *((PropertyManager *)(nHandles[data[2]].get_rep()));
+    *((PropertyManager *)(nHandles[data[0]].get_rep()));
 
   nout->set_property( "Coordinate System", string("Cartesian - XYZ"), false );
 

@@ -106,11 +106,11 @@ execute(MeshHandle mHandle,
   if( property.find("Cartesian") != std::string::npos ) {
   
     PNTYPE *ptr = (PNTYPE *)(nHandles[mesh[0]]->nrrd->data);
-
+    
     for( k=0; k<kdim; k++ ) {
       for( j=0; j<jdim; j++ ) {
 	for( i=0; i<idim; i++ ) {
-	
+	  
 	  int index = (i * jdim + j) * kdim + k;
 
 	  // Mesh
@@ -242,10 +242,9 @@ execute(MeshHandle mHandle,
 
     register int i, j, k;
 
-    for( i=0; i<idim; i++ ) {
+    for( k=0; k<kdim; k++ ) {
       for( j=0; j<jdim; j++ ) {
-	for( k=0; k<kdim; k++ ) {
-	
+	for( i=0; i<idim; i++ ) {
 	  int index = (i * jdim + j) * kdim + k;
 	
 	  // Value
@@ -333,10 +332,9 @@ execute(MeshHandle mHandle,
 				  
     NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd->data);
 
-     for( i=0; i<idim; i++ ) {
+    for( k=0; k<kdim; k++ ) {
       for( j=0; j<jdim; j++ ) {
-	for( k=0; k<kdim; k++ ) {
-	
+	for( i=0; i<idim; i++ ) {
 	  int index = (i * jdim + j) * kdim + k;
 	
 	  ifield->set_value( Vector( ptr[index*3  ],

@@ -55,7 +55,8 @@ public:
   virtual void tcl_command(GuiArgs&, void*);
 
 private:
-  enum { NONE = 0, MESH = 1, REALSPACE = 2, PERTURBED = 4 };
+  enum { NONE = 0, MESH = 1, SCALAR = 2, REALSPACE = 4, PERTURBED = 8 };
+  enum { R = 0, Z = 1, PHI = 2, K = 3 };
 
   GuiString datasetsStr_;
   GuiInt nModes_;
@@ -178,7 +179,35 @@ NIMRODConverter::execute(){
     }
   }
 
-  if( nHandles.size() != 3 && nHandles.size() != 4 && nHandles.size() != 8 ){
+  string datasetsStr;
+
+  // Get each of the dataset names for the GUI.
+  for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
+
+    nHandle = nHandles[ic];
+
+    // Get the tuple axis name - there is only one.
+    vector< string > dataset;
+    nHandle->get_tuple_indecies(dataset);
+
+    // Save the name of the dataset.
+    if( nHandles.size() == 1 )
+      datasetsStr.append( dataset[0] );
+    else
+      datasetsStr.append( "{" + dataset[0] + "} " );
+  }      
+
+
+  if( datasetsStr != datasetsStr_.get() ) {
+    // Update the dataset names and dims in the GUI.
+    ostringstream str;
+    str << id << " set_names " << " {" << datasetsStr << "}";
+    
+    gui->execute(str.str().c_str());
+  }
+
+  if( nHandles.size() != 1 && nHandles.size() != 3 &&
+      nHandles.size() != 4 && nHandles.size() != 8 ){
     error( "Not enough or too many handles or representations" );
     return;
   }
@@ -211,10 +240,6 @@ NIMRODConverter::execute(){
     for( unsigned int ic=0; ic++; ic<nHandles.size() )
       nGenerations_[ic] = nHandles[ic]->generation;
 
-    string datasetsStr;
-
-    vector< string > datasets;
-
     // Get each of the dataset names for the GUI.
     for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
 
@@ -224,12 +249,6 @@ NIMRODConverter::execute(){
       vector< string > dataset;
       nHandle->get_tuple_indecies(dataset);
 
-      // Save the name of the dataset.
-      if( nHandles.size() == 1 )
-	datasetsStr.append( dataset[0] );
-      else
-	datasetsStr.append( "{" + dataset[0] + "} " );
-      
       if( nHandle->get_property( "Topology", property ) ) {
 
 	// Structured mesh.
@@ -237,25 +256,25 @@ NIMRODConverter::execute(){
 
 	  if( nHandle->get_property( "Coordinate System", property ) ) {
 
-	      // Special Case - NIMROD data which has multiple components.
+	    // Special Case - NIMROD data which has multiple components.
 	    if( property.find("Cylindrical - NIMROD") != string::npos ) {
 
 	      // Sort the components components.
 	      if( dataset[0].find( "R:Scalar" ) != string::npos &&
 		  nHandle->nrrd->dim == 3 ) {
 		conversion = MESH;
-		mesh_[0] = ic;
+		mesh_[R] = ic;
 	      } else if( dataset[0].find( "Z:Scalar" ) != string::npos && 
-		       nHandle->nrrd->dim == 3 ) {
+			 nHandle->nrrd->dim == 3 ) {
 		conversion = MESH;
-		mesh_[1] = ic; 
+		mesh_[Z] = ic; 
 	      } else if( dataset[0].find( "PHI:Scalar" ) != string::npos && 
-		       nHandle->nrrd->dim == 2 ) {
-		mesh_[2] = ic;
+			 nHandle->nrrd->dim == 2 ) {
+		mesh_[PHI] = ic;
 	      } else if( dataset[0].find( "K:Scalar" ) != string::npos && 
 			 nHandle->nrrd->dim == 2 ) {
 		conversion = PERTURBED;
-		mesh_[3] = ic;
+		mesh_[K] = ic;
 	      } else {
 		error( dataset[0] + " is unknown NIMROD mesh data." );
 		error_ = true;
@@ -293,6 +312,10 @@ NIMRODConverter::execute(){
 		     nHandle->nrrd->dim == 4 ) {
 	    conversion = REALSPACE;
 	    data_[2] = ic;
+	  } else if( dataset[0].find( ":Scalar" ) != string::npos && 
+		     nHandle->nrrd->dim == 4 ) {
+	    conversion = SCALAR;
+	    data_[0] = ic;
 	  } else {
 	    error( dataset[0] + " is unknown NIMROD node data." );
 	    error_ = true;
@@ -358,14 +381,6 @@ NIMRODConverter::execute(){
 	return;
       }
     }
-
-    if( datasetsStr != datasetsStr_.get() ) {
-      // Update the dataset names and dims in the GUI.
-      ostringstream str;
-      str << id << " set_names " << " {" << datasetsStr << "}";
-      
-      gui->execute(str.str().c_str());
-    }
   }
 
   unsigned int i = 0;
@@ -406,37 +421,53 @@ NIMRODConverter::execute(){
     int idim=0, jdim=0, kdim=0;
 
     string convertStr;
-
-    nHandles[mesh_[2]]->get_property( "Coordinate System", property );
+    unsigned int ntype;
 
     if( conversion & MESH ) {
+      ntype = nHandles[mesh_[PHI]]->nrrd->type;
+
+      nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
+
       if( property.find("Cylindrical - NIMROD") != string::npos ) {
-	if( nHandles[mesh_[0]]->nrrd->axis[1].size != 
-	    nHandles[mesh_[1]]->nrrd->axis[1].size ||
-	    nHandles[mesh_[0]]->nrrd->axis[2].size != 
-	    nHandles[mesh_[1]]->nrrd->axis[2].size ) {
+	if( nHandles[mesh_[R]]->nrrd->axis[1].size != 
+	    nHandles[mesh_[Z]]->nrrd->axis[1].size ||
+	    nHandles[mesh_[R]]->nrrd->axis[2].size != 
+	    nHandles[mesh_[Z]]->nrrd->axis[2].size ) {
 	  error( "Mesh dimension mismatch." );
 	  error_ = true;
 	  return;
 	}
 
-	jdim = nHandles[mesh_[0]]->nrrd->axis[1].size; // Radial
-	kdim = nHandles[mesh_[0]]->nrrd->axis[2].size; // Theta
-	idim = nHandles[mesh_[2]]->nrrd->axis[1].size; // Phi
+	idim = nHandles[mesh_[PHI]]->nrrd->axis[1].size; // Phi
+	jdim = nHandles[mesh_[R]]->nrrd->axis[1].size; // Radial
+	kdim = nHandles[mesh_[Z]]->nrrd->axis[2].size; // Theta
       }
 
       convertStr = "Mesh";
 
-    } else if( conversion & REALSPACE ) {
+    } else if( conversion & SCALAR ) {
+      ntype = nHandles[data_[0]]->nrrd->type;
+
+      idim = nHandles[data_[0]]->nrrd->axis[1].size; // Phi
+      jdim = nHandles[data_[0]]->nrrd->axis[2].size; // Radial
+      kdim = nHandles[data_[0]]->nrrd->axis[3].size; // Theta
+
+      convertStr = "Scalar";
+
+     } else if( conversion & REALSPACE ) {
+      ntype = nHandles[mesh_[PHI]]->nrrd->type;
+
+      nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
+
       if( property.find("Cylindrical - NIMROD") != string::npos ) {
-	jdim = nHandles[data_[0]]->nrrd->axis[1].size; // Radial
-	kdim = nHandles[data_[0]]->nrrd->axis[2].size; // Theta
-	idim = nHandles[mesh_[2]]->nrrd->axis[1].size; // Phi
+	idim = nHandles[mesh_[PHI]]->nrrd->axis[1].size; // Phi
+	jdim = nHandles[data_[R]]->nrrd->axis[2].size; // Radial
+	kdim = nHandles[data_[Z]]->nrrd->axis[3].size; // Theta
 
 	for( unsigned int ic=0; ic<data_.size(); ic++ ) {
-	  if( nHandles[data_[ic]]->nrrd->axis[1].size != jdim ||
-	      nHandles[data_[ic]]->nrrd->axis[2].size != kdim ||
-	      nHandles[data_[ic]]->nrrd->axis[3].size != idim ) {
+	  if( nHandles[data_[ic]]->nrrd->axis[1].size != idim ||
+	      nHandles[data_[ic]]->nrrd->axis[2].size != jdim ||
+	      nHandles[data_[ic]]->nrrd->axis[3].size != kdim ) {
 	    error( "Mesh dimension mismatch." );
 	    error_ = true;
 	    return;
@@ -447,17 +478,21 @@ NIMRODConverter::execute(){
       convertStr = "RealSpace";
 
     } else if( conversion & PERTURBED ) {
+      ntype = nHandles[mesh_[PHI]]->nrrd->type;
+
+      nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
+
       int nmodes = 0;
 
       if( property.find("Cylindrical - NIMROD") != string::npos ) {
-	jdim   = nHandles[data_[0]]->nrrd->axis[1].size; // Radial
-	kdim   = nHandles[data_[0]]->nrrd->axis[2].size; // Theta
-	nmodes = nHandles[mesh_[3]]->nrrd->axis[1].size; // Modes
+	nmodes = nHandles[mesh_[K]]->nrrd->axis[1].size; // Modes
+	jdim   = nHandles[data_[0]]->nrrd->axis[2].size; // Radial
+	kdim   = nHandles[data_[0]]->nrrd->axis[3].size; // Theta
 
 	for( unsigned int ic=0; ic<data_.size(); ic++ ) {
-	  if( nHandles[data_[ic]]->nrrd->axis[1].size != jdim ||
-	      nHandles[data_[ic]]->nrrd->axis[2].size != kdim ||
-	      nHandles[data_[ic]]->nrrd->axis[3].size != nmodes ) {
+	  if( nHandles[data_[ic]]->nrrd->axis[1].size != nmodes ||
+	      nHandles[data_[ic]]->nrrd->axis[2].size != jdim ||
+	      nHandles[data_[ic]]->nrrd->axis[3].size != kdim ) {
 	    error( "Mesh dimension mismatch." );
 	    error_ = true;
 	    return;
@@ -483,18 +518,22 @@ NIMRODConverter::execute(){
       convertStr = "Perturbed";
     }
 
-
-    remark( "Converting the " + convertStr );
+    if( conversion ) {
+      remark( "Converting the " + convertStr );
     
-    CompileInfoHandle ci_mesh =
-      NIMRODConverterAlgo::get_compile_info( convertStr,
-					     nHandles[mesh_[2]]->nrrd->type);
+      CompileInfoHandle ci_mesh =
+	NIMRODConverterAlgo::get_compile_info( convertStr, ntype );
     
-    Handle<NIMRODConverterAlgo> algo_mesh;
+      Handle<NIMRODConverterAlgo> algo_mesh;
     
-    if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return;
+      if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return;
       
-    nHandle_ = algo_mesh->execute( nHandles, mesh_, data_, idim, jdim, kdim );
+      nHandle_ = algo_mesh->execute( nHandles, mesh_, data_, idim, jdim, kdim );
+    } else {
+      error( "Nothing to convert." );
+      error_ = true;
+      return;
+    }
   }
   
   // Get a handle to the output field port.
