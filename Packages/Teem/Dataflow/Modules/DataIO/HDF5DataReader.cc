@@ -255,7 +255,7 @@ void HDF5DataReader::execute() {
 	  string first_tlab(first->nrrd->axis[0].label);
 	  new_label = first_tlab;
 	  string first_tuple_types = first->concat_tuple_types();
-	  cout << "the tuple types are: " << first_tuple_types << endl;
+
 	  ++niter;
 	  join_me.push_back(first->nrrd);
 	  while (niter != vec.end()) {
@@ -275,6 +275,7 @@ void HDF5DataReader::execute() {
 	    axis = join_me[0]->dim;
 	    incr = 1;
 	  }
+
 	  onrrd->nrrd = nrrdNew();
 	  if (nrrdJoin(onrrd->nrrd, &join_me[0], join_me.size(), axis, incr)) {
 	      char *err = biffGetDone(NRRD);
