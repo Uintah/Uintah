@@ -186,8 +186,7 @@ c     smagorinsky model: with delta near wall treated as
 c     distance from wall, in analogy with classical mixing 
 c     length model
 
-            rho = pt5*(den(i,j,k) + 
-     $           den(i-ioff,j-joff,k-koff))
+            rho = den(i,j,k)
             
             visturb = (csmag*yp)**2*rho*
      $           abs((up_fcy(ii,jj,kk) - ug_cc(i,j,k))/
