@@ -7,7 +7,6 @@ SUBDIRS := $(SRCDIR)/tools
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 SRCS := $(SRCDIR)/sus.cc
-SRCS := $(SRCS) $(SRCDIR)/FakeArches.cc
 
 ifeq ($(CC),newmpxlc)
 AIX_LIBS := \
@@ -25,7 +24,9 @@ AIX_LIBS := \
         Core/GeomInterface\
         Core/Containers   \
         Core/TkExtensions \
-        Packages/Uintah/CCA/Components/HETransformation 
+        Packages/Uintah/CCA/Components/HETransformation \
+        Packages/Uintah/CCA/Components/Arches/Mixing \
+        Packages/Uintah/CCA/Components/Arches_fortran
 endif
 
 
@@ -54,6 +55,8 @@ else
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Packages/Uintah/CCA/Components/ICE \
         Packages/Uintah/CCA/Components/Examples \
+        Packages/Uintah/CCA/Components/Arches \
+        Packages/Uintah/CCA/Components/MPMArches \
         Packages/Uintah/CCA/Components/PatchCombiner \
         $(AIX_LIBS)
 endif
@@ -158,5 +161,3 @@ sus: prereqs Packages/Uintah/StandAlone/sus
 puda: prereqs Packages/Uintah/StandAlone/puda
 
 compare_uda: prereqs Packages/Uintah/StandAlone/compare_uda
-
-restart_merger: prereqs Packages/Uintah/StandAlone/restart_merger
