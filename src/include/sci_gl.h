@@ -35,6 +35,16 @@
 
 #include <GL/glew.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern int sci_glew_init();
+
+#ifdef __cplusplus
+}
+#endif
+
 #else /* !HAVE_GLEW */
 
 #include <GL/gl.h>
