@@ -55,8 +55,6 @@ itcl_class VolVis {
 
 	global CanvasWidth CanvasHeight
 
-	global $this-rasterX $this-rasterY
-	global $this-bgColor
 	global $this-minSV $this-maxSV
 	global $this-project $this-centerit $this-processors
 
@@ -85,13 +83,6 @@ itcl_class VolVis {
 	global Selected
 
 	# set variables shared by c++ and tcl
-
-	set $this-rasterX   100
-	set $this-rasterY   100
-	
-#	set $this-bgColor-r 0
-#	set $this-bgColor-g 0
-#	set $this-bgColor-b 0
 
 	set $this-maxSV 120
 	set $this-minSV 0
@@ -258,15 +249,27 @@ itcl_class VolVis {
 	radiobutton $w.f.methods.b -text Bresenham -variable $this-method  \
 		-value 1
 
-	button $w.f.steps -text "StepSize" -command "$this adjustStepSize"
+	#create the scale
+	    
+	frame $w.f.f -relief groove -borderwidth 2
+	
+	scale $w.f.f.steps -orient horizontal -variable $this-intervalCount \
+		-from 1 -to 40 -label "Slices per processor: " \
+		-showvalue true -tickinterval 10 \
+		-digits 2 -length 5c
+
+
+#	button $w.f.steps -text "StepSize" -command "$this adjustStepSize"
 	
 	button $w.f.b -text "Redraw" -command "$this-c redraw_all" -fg blue
 	button $w.f.execbutton -text "Execute" -command "$this-c wanna_exec" \
 		-fg blue
 
 	# place the buttons in a window
-
-	pack $w.f.proj.per $w.f.proj.ort -side left -fill x
+#
+# UNCOMMENT when orthogonal projections are introduced
+#
+#	pack $w.f.proj.per $w.f.proj.ort -side left -fill x
 
 	pack $w.f.allign.left $w.f.allign.cent -side left -fill x
 	
@@ -277,15 +280,16 @@ itcl_class VolVis {
 
 	pack $w.f.methods.l $w.f.methods.b -side left -fill x
 
-
+	pack $w.f.f.steps -side left -fill x
 	
-#        pack $w.f.viewstuff $w.f.rastersize $w.f.background $w.f.proj \
-#		$w.f.allign $w.f.proc $w.f.graph  $w.f.b  $w.f.execbutton \
+#        pack $w.f.viewstuff $w.f.rastersize $w.f.background $w.f.proj       \
+#		$w.f.allign $w.f.proc $w.f.salmon_interaction $w.f.methods  \
+#		$w.f.graph  $w.f.steps $w.f.b  $w.f.execbutton              \
 #		-expand yes -fill x -pady 2 -padx 2
-	
-        pack $w.f.viewstuff $w.f.rastersize $w.f.background $w.f.proj       \
+
+        pack $w.f.viewstuff $w.f.rastersize $w.f.background                 \
 		$w.f.allign $w.f.proc $w.f.salmon_interaction $w.f.methods  \
-		$w.f.graph  $w.f.steps $w.f.b  $w.f.execbutton              \
+		$w.f.graph  $w.f.f $w.f.b  $w.f.execbutton              \
 		-expand yes -fill x -pady 2 -padx 2
 	pack $w.f
 
@@ -465,11 +469,6 @@ itcl_class VolVis {
 	    
 	    frame $w.f -relief groove -borderwidth 2
 
-	    scale $w.f.ss -orient horizontal -variable $this-stepsize \
-		    -from 1 -to 30 -label "Step Size" \
-		    -showvalue true -tickinterval 10 \
-		    -digits 2 -length 5c
-
 	    scale $w.f.slice -orient horizontal -variable $this-intervalCount \
 		    -from 1 -to 40 -label "Slices per processor: " \
 		    -showvalue true -tickinterval 10 \
@@ -477,7 +476,8 @@ itcl_class VolVis {
 
 	    # place these creations in a window
 	    
-	    pack $w.f.ss $w.f.slice -expand yes -fill x
+#	    pack $w.f.ss $w.f.slice -expand yes -fill x
+	    pack $w.f.slice -expand yes -fill x
 	    pack $w.f
 	}
     }
@@ -504,12 +504,6 @@ itcl_class VolVis {
 	    
 	    toplevel $w
 	    wm title $w "Raster Size"
-	    wm minsize $w 200 150
-
-
-	    #
-	    #
-	    # EXP!!!
 
 	    # create a frame with 2 scales
 
@@ -517,17 +511,22 @@ itcl_class VolVis {
 
 	    scale $w.f.x -orient horizontal -variable $this-eview-xres \
 		    -from 100 -to 600 -label "Horizontal:" \
-		    -showvalue true -tickinterval 150 \
-		    -digits 3 -length 5c
+		    -showvalue true -tickinterval 100 \
+		    -digits 3 -length 12c
 	    
 	    scale $w.f.y -orient horizontal -variable $this-eview-yres \
 		    -from 100 -to 600 -label "Vertical:" \
 		    -showvalue true -tickinterval 100 \
-		    -digits 3 -length 5c
+		    -digits 3 -length 12c
+
+	    scale $w.f.ss -orient horizontal -variable $this-stepsize \
+		    -from 1 -to 30 -label "Step Size" \
+		    -showvalue true -tickinterval 5 \
+		    -digits 2 -length 12c
 
 	    # place the scales in a window
 	    
-	    pack $w.f.x $w.f.y -expand yes -fill x
+	    pack $w.f.x $w.f.y $w.f.ss -expand yes -fill x
 	    pack $w.f
 
 	}

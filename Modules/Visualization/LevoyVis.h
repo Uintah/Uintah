@@ -39,6 +39,7 @@
 
 #define VIEW_PORT_SIZE 600
 #define CANVAS_WIDTH 200
+#define TABLE_SIZE 2000
 
 class Levoy;
 class LevoyS;
@@ -62,6 +63,9 @@ protected:
   Array1<double> * AssociatedVals;
   Array1<double> * ScalarVals;
 
+  Array1<double> SVOpacity[4];
+  double SVMultiplier;
+  double sv_min;
 
   Array1<double> * Slopes;
 
@@ -111,9 +115,8 @@ protected:
   // offsets from the center
   
   int centerOffsetU, centerOffsetV;
-  
 
-  double DetermineRayStepSize ();
+  double DetermineRayStepSize ( int steps );
 
   void CalculateRayIncrements ( View myview, Vector& rayIncrementU,
 			       Vector& rayIncrementV, const int& rasterX,
@@ -124,7 +127,7 @@ protected:
   // associates an opacity or color value (0-1 range) given
   // a scalar value
 
-  double AssociateValue( double scalarValue,
+  inline double AssociateValue( double scalarValue,
 			const Array1<double>& SVA, const Array1<double>& OA,
 			const Array1<double>& Sl );
   
@@ -145,9 +148,9 @@ public:
   // no depth buffer or color buffer info; therefore, Salmon view
   // is not applicable
 
-  void SetUp ( const ExtendedView& myview );
+  void SetUp ( const ExtendedView& myview, int stepsize );
 
-  virtual void SetUp ( GeometryData * g );
+  virtual void SetUp ( GeometryData * g, int stepsize );
   
   
   // uses the new transfer map and ray-bbox intersections
@@ -176,28 +179,6 @@ public:
   
 #endif
 };
-
-inline
-double
-Levoy::AssociateValue ( double scalarValue,
-		       const Array1<double>& SVA, const Array1<double>& OA,
-		       const Array1<double>& Sl )
-{
-  double opacity = -1;
-  int i;
-  
-  for ( i = 1; i < SVA.size(); i++ )
-    if ( scalarValue <= SVA[i] )
-      {
-	opacity = Sl[i] * ( scalarValue - SVA[i-1] ) + OA[i-1];
-	break;
-      }
-
-  ASSERT ( opacity != -1 );
-
-  return opacity;
-
-}
 
 /**************************************************************************
  *
@@ -242,7 +223,7 @@ public:
   // allows the Salmon image and my volvis stuff to be superimposed
 
   virtual
-    void SetUp ( GeometryData * );
+    void SetUp ( GeometryData *, int stepsize );
 
   // uses Salmon view, and Depth and color buffer information
   

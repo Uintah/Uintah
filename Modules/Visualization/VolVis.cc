@@ -115,14 +115,6 @@ class VolVis : public Module {
 
   TCLExtendedView iEView;
 
-  // background color
-
-  TCLColor ibgColor;
-
-  // raster dimensions
-  
-  TCLint iRasterX, iRasterY;
-
   // EXP!!!
 
   ExtendedView myview;
@@ -321,11 +313,8 @@ VolVis::VolVis(const clString& id)
   iEView("eview", id, this),
   minSV("minSV", id, this),
   maxSV("maxSV", id, this),
-  ibgColor("bgColor", id, this),
   projection("project", id, this),
   iCenter("centerit", id, this),
-  iRasterX("rasterX", id, this),
-  iRasterY("rasterY", id, this),
   iProc("processors", id, this),
   intervalCount("intervalCount", id, this),
   Rsv("Rsv", id, this),
@@ -364,21 +353,14 @@ VolVis::VolVis(const clString& id)
 
   homeSFgeneration = -1;
 
-  bgColor = BLACK;
-
   // initialize this image in order to prevent seg faults
   // by OpenGL when redrawing the screen with uninitialized
   // (size of 0,0) array of pixels
 
   Image.newsize(100,100);
-  Image.initialize( bgColor );
+  Image.initialize( myview.bg() );
 
-  // TEMP: i have no clue why initialization of ibgColor in
-  // TCL code does not work.
-
-  ibgColor.set(BLACK);
-
-  //  intervalCount.set(1);
+  iEView.bg.set( BLACK );
 
   max = 110;
   min = 1;
@@ -398,9 +380,6 @@ VolVis::VolVis(const VolVis& copy, int deep)
   iEView("eview", id, this),
   maxSV("maxSV", id, this),
   minSV("minSV", id, this),
-  iRasterX("rasterX", id, this),
-  iRasterY("rasterY", id, this),
-  ibgColor("bgColor", id, this),
   projection("project", id, this),
   iCenter("centerit", id, this),
   iProc("processors", id, this),
@@ -482,7 +461,6 @@ VolVis::parallel( int proc )
   // by one processor in one session.
   
   int interval = myview.xres() / procCount / intervalCount.get();
-//  int interval = iRasterX.get() / procCount / intervalCount.get();
 
   if ( projection.get() )
     { // for a perspective projection do the following:
@@ -759,7 +737,7 @@ VolVis::redraw_all()
 
   // clear the GLwindow to background color
 
-  glClearColor( bgColor.r(), bgColor.g(), bgColor.b(), 0 );
+  glClearColor( myview.bg().r(), myview.bg().g(), myview.bg().b(), 0 );
   
   glClear(GL_COLOR_BUFFER_BIT);
   
@@ -783,15 +761,33 @@ VolVis::redraw_all()
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   
+  // set pixelsize based on other stuff...
+
+  int scale_int = Image.dim2();
+  if (Image.dim1() > scale_int)
+    scale_int = Image.dim1();
+
+  float zoom = VIEW_PORT_SIZE*1.0/scale_int;
+
+//  zoom = 1.0;
+  x_pixel_size = 1.0*zoom;
+  y_pixel_size = 1.0*zoom;
+
   glPixelZoom(x_pixel_size, y_pixel_size);
 
 //  cerr << "Displaying an image of dimensions: " << Image.dim1() << " " <<
 //    Image.dim2() << endl;
   
+  printf("%lf %lf : %lf : %d\n",x_pixel_size,y_pixel_size,zoom,scale_int);
+  
   if ( iCenter.get() )
     {
+#if 0      
       glRasterPos2i( x_pixel_size + ( VIEW_PORT_SIZE - Image.dim2() ) / 2 ,
 		    y_pixel_size * ( ( VIEW_PORT_SIZE / 2 + Image.dim1() / 2 + 1 ) ) );
+#else
+      glRasterPos2i( 0, 599 );
+#endif      
     }
   else
     {
@@ -873,33 +869,38 @@ VolVis::execute()
 
   GeometryData* data=ogeom->getData(0, GEOM_ALLDATA);
 
-  //
-  // EXP!!!!
-  // TEMP!!!
+  // update myview information, but make sure that the variables
+  // such as bg color and raster size cannot be accessed by redraw
+  // at the same time
+
+  imagelock.lock();
+    
   myview = iEView.get();
+
+  imagelock.unlock();
 
   if ( data != NULL )
     {
       calc = new LevoyS( homeSFRGrid,
 			myview.bg(), ScalarVal, Opacity );
 
-      calc->SetUp( data );
+      calc->SetUp( data, stepSize.get() );
     }
   else
     {
       calc = new Levoy ( homeSFRGrid,
 			myview.bg(), ScalarVal, Opacity );
 
-      calc->SetUp( myview );
+      calc->SetUp( myview, stepSize.get() );
     }      
-
-  watch.start();
 
   cerr << " interval count is " << intervalCount.get() <<endl;
   
   cerr << "added vars: " << salmonData.get() << "  " << method.get()
     << "  " << stepSize.get() << endl;
   
+  watch.start();
+
   if ( intervalCount.get() != 0 && iProc.get() )
     {
       procCount = Task::nprocessors();
@@ -955,11 +956,7 @@ VolVis::execute()
   
   /* END OF THE MOST AWESOME DEBUGGING TECHNIQUE */
   
-  // also, the bgColor accessed by the redraw_all fnc
-  // can now be changed.
-
-  bgColor = ibgColor.get() * ( 1. / 255 );
-
+  
   // the Image array has been modified, it is now safe to let
   // go of the thread
   
