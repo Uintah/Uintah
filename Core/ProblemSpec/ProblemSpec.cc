@@ -1043,7 +1043,19 @@ void ProblemSpec::setAttribute(const std::string& name,
 {
   XMLCh* attrName = XMLString::transcode(name.c_str());
   XMLCh* attrValue = XMLString::transcode(value.c_str());
-  dynamic_cast<DOMElement*>(d_node)->setAttribute(attrName, attrValue);
+
+  DOMElement * casted;
+#if !defined(_AIX)
+  casted = dynamic_cast<DOMElement*>(d_node);
+  if( !casted ) {
+    cerr << "Dynamic_cast of ProblemSpec.cc: d_node failed\n";
+  }
+#else
+  casted = static_cast<DOMElement*>(d_node);
+#endif
+
+  casted->setAttribute(attrName, attrValue);
+
   delete [] attrName;
   delete [] attrValue;
 }
