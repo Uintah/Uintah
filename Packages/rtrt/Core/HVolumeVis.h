@@ -112,6 +112,7 @@ protected:
     double t_inc;
     double t_min;
     double t_max;
+    double t_inc_inv;
     Ray ray;
     Context *cx;
   };
@@ -508,11 +509,6 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, double t_sample,
 	
       }
 
-      // This does early ray termination when we don't have anymore
-      // color to collect.
-      if (isctx.alpha >= RAY_TERMINATION_THRESHOLD)
-	break;
-      
       // Update the new position
       t_sample += isctx.t_inc;
       bool break_forloop = false;
@@ -546,6 +542,11 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, double t_sample,
 #endif
       if (break_forloop)
 	break;
+
+      // This does early ray termination when we don't have anymore
+      // color to collect.
+      if (isctx.alpha >= RAY_TERMINATION_THRESHOLD)
+	break;
     }
   } else {
     BrickArray3<MetaCT>& mcells=macrocells[depth];
@@ -560,9 +561,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, double t_sample,
       cerr << "doing macrocell: " << gx << ", " << gy << ", " << gz << ": "<<endl;
       flush(cerr);
 #endif
-      MetaCT& mcell=mcells(gx,gy,gz);
-/*        mcell.print(); */
-      if(mcell & isctx.transfunct){
+      if(mcells(gx,gy,gz) & isctx.transfunct){
 	// Do this cell...
 	int new_cx=xsize[depth-1];
 	int new_cy=ysize[depth-1];
@@ -624,8 +623,10 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, double t_sample,
 	      (cellcorner-Vector(ix, iy, iz))*cellsize, celldir*cellsize,
 	      isctx);
       }
-      // Now we need to step to the next cell and determine the next t_sample
 
+      // We need to determine where the next sample is.  We do this
+      // using the closest crossing in x/y/z.  This will be the next
+      // sample point.
       double closest;
       if(next_x < next_y && next_x < next_z){
 	// next_x is the closest
@@ -636,10 +637,20 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, double t_sample,
 	closest = next_z;
       }
 	
-      double step = ceil((closest - t_sample)/isctx.t_inc);
+      double step = ceil((closest - t_sample)*isctx.t_inc_inv);
       t_sample += isctx.t_inc * step;
 
-      // Update ix,iy,iz
+      // Now that we have the next sample point, we need to determine
+      // which cell it ended up in.  There are cases (grazing corners
+      // for example) which will make the next sample not be in the
+      // next cell.  Because this case can happen, this code will try
+      // to determine which cell the sample will live.
+      //
+      // Perhaps there is a way to use cellcorner and cellsize to get
+      // ix/y/z.  The result would have to be cast to an int, and then
+      // next_x/y/z would have to be updated as needed. (next_x +=
+      // dtdx * (newix - ix).  The advantage of something like this
+      // would be the lack of branches, but it does use casts.
       bool break_forloop = false;
       while (t_sample > next_x) {
 	// Step in x...
@@ -814,6 +825,7 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   isctx.t_inc = dpy->t_inc;
   isctx.t_min = t_min;
   isctx.t_max = t_max;
+  isctx.t_inc_inv = 1/isctx.t_inc;
   isctx.ray = ray;
   isctx.cx = ctx;
   
@@ -826,15 +838,11 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   total = isctx.total;
 
   } else {
-    double x_weight_high, y_weight_high, z_weight_high;
-    int x_low, y_low, z_low;
-    
     float t_inc = dpy->t_inc;
     
     for(float t = t_min; t < t_max; t += t_inc) {
       // opaque values are 0, so terminate the ray at alpha values close to zero
       if (alpha < RAY_TERMINATION_THRESHOLD) {
-	int x_high, y_high, z_high;
 	// get the point to interpolate
 	Point current_p = ray.origin() + ray.direction() * t - min.vector();
 	
@@ -844,37 +852,31 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
 	// get the indices and weights for the indicies
 	double norm = current_p.x() * inv_diag.x();
 	double step = norm * (nx - 1);
-	x_low = clamp(0, (int)step, data.dim1()-2);
-	x_high = x_low+1;
-	//      float x_weight_low = x_high - step;
-	x_weight_high = step - x_low;
+	int x_low = clamp(0, (int)step, data.dim1()-2);
+	float x_weight_high = step - x_low;
 	
 	norm = current_p.y() * inv_diag.y();
 	step = norm * (ny - 1);
-	y_low = clamp(0, (int)step, data.dim2()-2);
-	y_high = y_low+1;
-	//      float y_weight_low = y_high - step;
-	y_weight_high = step - y_low;
+	int y_low = clamp(0, (int)step, data.dim2()-2);
+	float y_weight_high = step - y_low;
 	
 	norm = current_p.z() * inv_diag.z();
 	step = norm * (nz - 1);
-	z_low = clamp(0, (int)step, data.dim3()-2);
-	z_high = z_low+1;
-	//      float z_weight_low = z_high - step;
-	z_weight_high = step - z_low;
+	int z_low = clamp(0, (int)step, data.dim3()-2);
+	float z_weight_high = step - z_low;
 
 	////////////////////////////////////////////////////////////
 	// do the interpolation
 	
 	DataT a,b,c,d,e,f,g,h;
-	a = data(x_low,  y_low,  z_low);
-	b = data(x_low,  y_low,  z_high);
-	c = data(x_low,  y_high, z_low);
-	d = data(x_low,  y_high, z_high);
-	e = data(x_high, y_low,  z_low);
-	f = data(x_high, y_low,  z_high);
-	g = data(x_high, y_high, z_low);
-	h = data(x_high, y_high, z_high);
+	a = data(x_low,   y_low,   z_low);
+	b = data(x_low,   y_low,   z_low+1);
+	c = data(x_low,   y_low+1, z_low);
+	d = data(x_low,   y_low+1, z_low+1);
+	e = data(x_low+1, y_low,   z_low);
+	f = data(x_low+1, y_low,   z_low+1);
+	g = data(x_low+1, y_low+1, z_low);
+	h = data(x_low+1, y_low+1, z_low+1);
 	
 	float lz1, lz2, lz3, lz4, ly1, ly2, value;
 	lz1 = a * (1 - z_weight_high) + b * z_weight_high;
