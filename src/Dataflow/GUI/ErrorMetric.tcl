@@ -107,7 +107,7 @@ itcl_class SCIRun_Math_ErrorMetric {
         $w.data.g element create A -data "1 0" -color red -symbol ""
         $w.data.g element create B -data "1 0" -color blue -symbol ""
         $w.data.g yaxis configure -title "Value" 
-        $w.data.g xaxis configure -title "Element" -min 1
+        $w.data.g xaxis configure -title "Element" -min 0
 	global $this-rms
 	global $this-cc
 	frame $w.vals -relief groove -borderwidth 2
