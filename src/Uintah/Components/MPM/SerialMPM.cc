@@ -76,8 +76,6 @@ void SerialMPM::problemSetup(const ProblemSpecP&, GridP& grid,
 	dw->put(pdeformationMeasure, "p.deformationMeasure", region, 0);
 	ParticleVariable<Vector> pexternalforce(psubset);
 	dw->put(pexternalforce, "p.externalforce", region, 0);
-	ParticleVariable<CMState> pcmstate(psubset);
-	dw->put(pcmstate, "p.cmstate", region, 0);
 	cerr << "Creating particles for region\n";
 	Enigma.createParticles(region, dw);
     }
@@ -132,6 +130,26 @@ void SerialMPM::timeStep(double t, double dt,
 	    t->computes(new_dw, "g.velocity", region, 0,
 			NCVariable<Vector>::getTypeDescription());
 	    t->computes(new_dw, "g.externalforce", region, 0,
+			NCVariable<Vector>::getTypeDescription());
+	    sched->addTask(t);
+	}
+
+	{
+	   /* exMomInterpolated
+	    *   in(G.MASS, G.VELOCITY)
+	    *   operation(peform operations which will cause each of
+	    *		  velocity fields to feel the influence of the
+	    *		  the others according to specific rules)
+	    *   out(G.VELOCITY)
+	    */
+	    Task* t = new Task("Contact::exMomInterpolated",
+				region, old_dw, new_dw,
+				this, Contact::exMomInterpolated);
+	    t->requires(new_dw, "g.mass", region, 0,
+			NCVariable<double>::getTypeDescription());
+	    t->requires(new_dw, "g.velocity", region, 0,
+			NCVariable<Vector>::getTypeDescription());
+	    t->computes(new_dw, "g.velocity", region, 0,
 			NCVariable<Vector>::getTypeDescription());
 	    sched->addTask(t);
 	}
@@ -227,6 +245,30 @@ void SerialMPM::timeStep(double t, double dt,
 	    t->requires(old_dw, "delt",
 			SoleVariable<double>::getTypeDescription());
 	    t->computes(new_dw, "g.velocity_star", region, 0,
+			NCVariable<Vector>::getTypeDescription());
+	    sched->addTask(t);
+	}
+
+	{
+	   /* exMomIntegrated
+	    *   in(G.MASS, G.VELOCITY_STAR, G.ACCELERATION)
+	    *   operation(peform operations which will cause each of
+	    *		  velocity fields to feel the influence of the
+	    *		  the others according to specific rules)
+	    *   out(G.VELOCITY_STAR, G.ACCELERATION)
+	    */
+	    Task* t = new Task("Contact::exMomIntegrated",
+				region, old_dw, new_dw,
+				this, Contact::exMomIntegrated);
+	    t->requires(new_dw, "g.mass", region, 0,
+			NCVariable<double>::getTypeDescription());
+	    t->requires(new_dw, "g.velocity_star", region, 0,
+			NCVariable<Vector>::getTypeDescription());
+	    t->requires(new_dw, "g.acceleration", region, 0,
+			NCVariable<Vector>::getTypeDescription());
+	    t->computes(new_dw, "g.velocity_star", region, 0,
+			NCVariable<Vector>::getTypeDescription());
+	    t->computes(new_dw, "g.acceleration", region, 0,
 			NCVariable<Vector>::getTypeDescription());
 	    sched->addTask(t);
 	}
@@ -555,6 +597,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.5  2000/03/16 01:11:23  guilkey
+// To timeStep added tasks to do contact.
+//
 // Revision 1.4  2000/03/15 22:13:04  jas
 // Added log and changed header file locations.
 //
