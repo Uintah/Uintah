@@ -181,6 +181,7 @@ static int trunc(double v ) { return v > 0 ? int(floor(v)) : int(floor(v+1)); }
 /*
  * SageBase class
  */
+inline
 void SageBase::setView (const View &view, double znear, double zfar, 
 			int xres, int yres )
 {
@@ -224,6 +225,7 @@ void SageBase::setView (const View &view, double znear, double zfar,
   AW.z(AW.z() * sz );
 }
 
+inline
 void SageBase::setParameters( int scan, int vis, int reduce, 
 			      int all, int size)
 {
@@ -234,6 +236,7 @@ void SageBase::setParameters( int scan, int vis, int reduce,
   this->min_size = size;
 }
 
+inline
 void SageBase::setRegion( double x0, double x1, double y0,double y1)
 {
   region_on = true;
@@ -278,7 +281,7 @@ public:
 };
     
     
-void
+inline void
 SageStack::resize( int s )
 {
   if ( s > size ) {
@@ -393,6 +396,7 @@ void Sage<Field>::project( const Point &p, Pt &q )
 
 
 
+static 
 int permutation[8][8] = {
   {0,4,1,2,6,3,5,7},
   {1,3,5,0,2,7,4,6},
