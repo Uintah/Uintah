@@ -15,5 +15,6 @@ HierarchicalRegridder::~HierarchicalRegridder()
 
 Grid* HierarchicalRegridder::regrid(Grid* oldgrid, SchedulerP sched)
 {
+
   return oldgrid;
 }

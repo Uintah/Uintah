@@ -11,6 +11,9 @@ using namespace SCIRun;
 
 namespace Uintah {
 
+class DataWarehouse;
+class Patch;
+
 /**************************************
 
 CLASS
@@ -50,7 +53,7 @@ WARNING
     virtual ~RegridderCommon();
 
     //! Initialize with regridding parameters from ups file
-    virtual void problemSetup(const ProblemSpecP& params);
+    virtual void problemSetup(const ProblemSpecP& params, const GridP& grid);
 
     //! Asks if we need to recompile the task graph.
     //! Will return true if we did a regrid
@@ -58,12 +61,27 @@ WARNING
 			       const GridP& grid);
 
   private:
-    IntVector d_minPatchSize;
-    IntVector d_maxPatchSize;
-    int d_safetyLayers; // ?
-    vector<int> d_dividingLattice;
+    // input parameters from ups file
+    vector<IntVector> d_cellRefinementRatio;
+    int d_cellCreationDilation;
+    int d_cellDeletionDilation;
+    int d_minBoundaryCells; //! min # of cells to be between levels' boundaries
+
+    //! ratio to divide each patch (inner vector is for x,y,z ratio, 
+    //! outer vector is a subsequent value per level)
+    vector<IntVector> d_latticeRefinementRatio;
+    int d_maxLevels;
+
+    // these are structures derived from the code
+    vector<IntVector> cell_num;
+    vector<IntVector> patch_num;
+    vector<IntVector> patch_size;
+    
 
     bool newGrid;
+
+    bool flagCellsExist(DataWarehouse* dw, Patch* patch);
+    int  calculateNumberOfPatches();
   };
 
 } // End namespace Uintah
