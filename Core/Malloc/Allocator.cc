@@ -41,12 +41,12 @@
 #include <strings.h>
 
 #if defined(__sun)
-#include <string.h>
-#define bcopy(src,dest,n) memcpy(dest,src,n)
-#elif defined(__linux) || defined(__digital__) || defined __sgi
-#include <string.h>
+#  include <string.h>
+#  define bcopy(src,dest,n) memcpy(dest,src,n)
+#elif defined(__linux) || defined(__digital__) || defined(__sgi) || defined(_AIX)
+#  include <string.h>
 #else
-#error "Need bcopy idfdef for this architecture"
+#  error "Need bcopy idfdef for this architecture"
 #endif
 
 #include <sys/param.h>
@@ -54,7 +54,7 @@
 #include <sci_config.h>
 
 #ifdef SCI_PTHREAD
-#include <pthread.h>
+#  include <pthread.h>
 #endif
 
 /* we use UCONV to avoid compiler warnings. */
@@ -71,7 +71,12 @@ extern "C" void audit() {
 }
 
 namespace SCIRun {
-  
+
+// Dd: For AIX
+#ifdef STATSIZE
+#  undef STATSIZE
+#endif
+
 #define STATSIZE (4096+BUFSIZ)
   static char stat_buffer[STATSIZE];
   static char trace_buffer[STATSIZE];
