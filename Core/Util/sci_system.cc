@@ -72,6 +72,11 @@ using namespace SCIRun;
 #endif
 /* BW */
 
+/* This is for the Intel ecc compiler */
+#ifdef __ECC
+#define __sigemptyset sigemptyset
+#endif
+
 #ifdef __digital__
 #define __environ environ
 #endif
