@@ -39,6 +39,13 @@
 #include <Core/CCA/spec/cca_sidl.h>
 #include <iostream>
 #include <sstream>
+#include <Core/Util/NotFinished.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <iostream>
+
 
 #include "CCACommunicator.h"
 
@@ -46,6 +53,7 @@ using namespace std;
 using namespace SCIRun;
 
 SCIRunFramework::SCIRunFramework()
+  //:d_slave_sema("Wait for a slave to regester Semaphore",0)
 {
   models.push_back(internalServices=new InternalComponentModel(this));
   models.push_back(new SCIRunComponentModel(this));
@@ -75,7 +83,7 @@ SCIRunFramework::getServices(const std::string& selfInstanceName,
 sci::cca::ComponentID::pointer
 SCIRunFramework::createComponentInstance(const std::string& name,
 					 const std::string& t,
-					 const std::string& url)
+					 const sci::cca::TypeMap::pointer properties)
 {
   string type=t;
   // See if the type is of the form:
@@ -117,12 +125,15 @@ SCIRunFramework::createComponentInstance(const std::string& name,
     cerr << "No component model wants to build " << type << '\n';
     return ComponentID::pointer(0);
   }
-  //ComponentInstance* ci = mod->createInstance(name, type, url);
-  ComponentInstance* ci = mod->createInstance(name, type);
+  ComponentInstance* ci;
+  if(mod->getName()=="CCA")
+    ci = ((CCAComponentModel*)mod)->createInstance(name, type, properties);
+  else{
+    ci = mod->createInstance(name, type);
+  }
   if(!ci){
     cerr<<"Error: failed to create ComponentInstance"<<endl;
     return ComponentID::pointer(0);
-    
   }
   registerComponent(ci, name);
   compIDs.push_back(ComponentID::pointer(new ComponentID(this, ci->instanceName)));
@@ -289,6 +300,24 @@ sci::cca::AbstractFramework::pointer SCIRunFramework::createEmptyFramework()
   cerr << "SCIRunFramework::createEmptyFramework not finished\n";
   return sci::cca::AbstractFramework::pointer(0);
 }
+
+int SCIRunFramework::registerLoader(const ::std::string& loaderName, const ::SSIDL::array1< ::std::string>& slaveURLs)
+{
+  resourceReference* rr = new resourceReference(loaderName, slaveURLs);
+  rr->print();
+  cca->addLoader(rr);
+  
+  //d_slave_sema.up(); //now wake UP
+  return 0;
+}
+
+int SCIRunFramework::unregisterLoader(const std::string &loaderName)
+{
+  cca->removeLoader(loaderName);
+  return 0;
+}
+
+
 // do not delete the following 2 methods
 /* 
 void SCIRunFramework::share(const sci::cca::Services::pointer &svc)

@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 #include <Core/CCA/spec/cca_sidl.h>
+#include <SCIRun/resourceReference.h>
 namespace SCIRun {
   class ComponentDescription;
   class ComponentInstance;
@@ -42,9 +43,7 @@ namespace SCIRun {
 
     virtual bool haveComponent(const std::string& type) = 0;
     virtual ComponentInstance* createInstance(const std::string& name,
-					      const std::string& type)=0;
-    virtual std::string  createComponent(const std::string& name,
-							  const std::string& type);
+					      const std::string& type);
     virtual bool destroyInstance(ComponentInstance* ci)= 0;
     virtual std::string getName() const = 0;
     virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,

@@ -31,7 +31,9 @@ SRCS     += \
 	$(SRCDIR)/PortInstance.cc \
 	$(SRCDIR)/PortInstanceIterator.cc\
 	$(SRCDIR)/CCACommunicator.cc \
-	$(SRCDIR)/SCIRunLoader.cc 
+	$(SRCDIR)/SCIRunLoader.cc \
+	$(SRCDIR)/resourceReference.cc \
+	$(SRCDIR)/TypeMap.cc
 
 SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal
 ifeq ($(HAVE_BABEL),yes)
@@ -43,9 +45,10 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
 	Dataflow/Network Core/GuiInterface Core/CCA/spec \
 	Core/CCA/Component/PIDL Core/CCA/Component/SSIDL \
-	Core/Exceptions Core/TkExtensions Core/Thread
+	Core/Exceptions Core/TkExtensions Core/Thread \
+	Core/globus_threads Core/CCA/Component/Comm
 
-LIBS := $(XML_LIBRARY)
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
 ifeq ($(HAVE_BABEL),yes)
   LIBS := $(LIBS) $(SIDL_LIBRARY)
 endif

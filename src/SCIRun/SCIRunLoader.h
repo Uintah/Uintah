@@ -19,34 +19,51 @@
  *  SCIRunLoader.h: An instance of the SCIRun Parallel Component Loader
  *
  *  Written by:
- *   Keming Zhang 
+ *   Kosta  & Keming Zhang 
  *   Department of Computer Science
  *   University of Utah
  *   April 2003
  *
  */
 
-#ifndef SCIRun_Framework_SCIRunLoader_h
-#define SCIRun_Framework_SCIRunLoader_h
+#ifndef SCIRun_SCIRunLoader_h
+#define SCIRun_SCIRunLoader_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <vector>
 #include <map>
 #include <string>
-
+#include <SCIRun/ComponentModel.h>
+#include <SCIRun/CCA/CCAComponentDescription.h>
+#include <SCIRun/ComponentInstance.h>
+#include <SCIRun/resourceReference.h>
 namespace SCIRun {
 
   class SCIRunLoader : public sci::cca::Loader{
   public:
-
-    SCIRunLoader();
+    SCIRunLoader(const std::string& loaderName, const std::string& frameworkURL);
     virtual ~SCIRunLoader();
-    int loadComponent(const std::string & componentType);
-    int getComonents(SSIDL::array1<std::string>& componentList);
-  private:
-    std::string masterFrameworkURL;
-  };
 
+    //virtual int createInstance(const ::std::string& componentType, const std::string& componentName, SSIDL::array1<std::string>& componentURLs);
+    virtual int createInstance(const std::string& componentType, const std::string& componentName, std::string &componentURL);
+
+    virtual int destroyInstance(const std::string& componentName, float timeout);
+
+    virtual int getAllComponentTypes(::SSIDL::array1< ::std::string>& componentTypes);
+    
+    virtual int shutdown(float timeout);
+
+    int mpi_rank;
+    int mpi_size;
+    
+  private:
+    void buildComponentList();
+    void readComponentDescription(const std::string& file);
+    void destroyComponentList();
+    std::string masterFrameworkURL;
+    typedef std::map<std::string, CCAComponentDescription*> componentDB_type;
+    componentDB_type components;
+  };
 }
 
 #endif
