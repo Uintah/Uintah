@@ -28,6 +28,9 @@
 
 #include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
 #include <iostream>
+#include <algorithm>
+#include <Core/Util/Timer.h>
+
 
 namespace BioPSE {
 
@@ -50,8 +53,6 @@ BuildFEMatrix::BuildFEMatrix(TetVolIntHandle hField,
   barrier_("BuildFEMatrix barrier"),
   colIdx_(np+1),
   tens_(tens)
-  //pModule(pM),
-  //msgStream_(*(pM->msgStream))
 {
   hMesh_=hField->get_typed_mesh();
   int nNodes = hMesh_->nodes_size();
@@ -76,7 +77,8 @@ bool BuildFEMatrix::build_FEMatrix(TetVolIntHandle hField,
   hRhs = 0;
 
   BuildFEMatrixHandle hMaker = new BuildFEMatrix(hField, dirBC, tens, hA, hRhs, np);
-  
+  cerr << "Number of processors: " << np << endl;
+
   Thread::parallel(Parallel<BuildFEMatrix>(hMaker.get_rep(), &BuildFEMatrix::parallel),
 		   np, true);
   
@@ -100,20 +102,33 @@ void BuildFEMatrix::parallel(int proc)
   
   int r = start_node;
   int i;
-
+  
   //----------------------------------------------------------------------
   //! Creating sparse matrix structure
   Array1<int> mycols(0, 15*ndof);
+  
+  if (proc==0){
+    hMesh_->compute_edges();
+    hMesh_->compute_node_neighbors();
+  }
 
+  barrier_.wait(np_);
+  
+  TetVolMesh::node_array neib_nodes;
   for(i=start_node;i<end_node;i++){
     rows_[r++]=mycols.size();
-    TetVolMesh::node_array neib_nodes;
-
-    hMesh_->compute_node_neighbors();
-    hMesh_->get_neighbors(neib_nodes, i);
-
-    for (unsigned int jj=0; jj<neib_nodes.size(); jj++)
+    neib_nodes.clear();
+    
+    hMesh_->get_neighbors(neib_nodes, TetVolMesh::node_index(i));
+    
+    // adding the node itself, sorting and eliminating duplicates
+    neib_nodes.push_back(TetVolMesh::node_index(i));
+    sort(neib_nodes.begin(), neib_nodes.end());
+    //neib_nodes.erase(unique(neib_nodes.begin(), neib_nodes.end()), neib_nodes.end());
+ 
+    for (int jj=0; jj<neib_nodes.size(); jj++){
       mycols.add(neib_nodes[jj]);
+    }
   }
   
   colIdx_[proc]=mycols.size();
@@ -122,10 +137,7 @@ void BuildFEMatrix::parallel(int proc)
   barrier_.wait(np_);
   
   int st=0;
-  if (proc == 0){
-    
-    //pModule->update_progress(2,6);
-    
+  if (proc == 0){  
     for(i=0;i<np_;i++){
       int ns=st+colIdx_[i];
       colIdx_[i]=st;
@@ -133,7 +145,6 @@ void BuildFEMatrix::parallel(int proc)
     }
     
     colIdx_[np_]=st;
-    //msgStream_ << "st=" << st << endl;
     allCols_=scinew int[st];
   }
 
@@ -158,17 +169,14 @@ void BuildFEMatrix::parallel(int proc)
   //! the main thread makes the matrix and rhs...
   if(proc == 0){
     rows_[nNodes]=st;
-    //pModule->update_progress(3,6);
-    
     pA_ = scinew SparseRowMatrix(nNodes, nNodes, rows_, allCols_, st);
     pRhs_ = scinew ColumnMatrix(nNodes);
     hA_ = pA_;
     hRhs_ = pRhs_;
   }
-
+  
   //! check point
   barrier_.wait(np_);
-  
   
   //! zeroing in parallel
   double* a = pA_->a;
@@ -178,24 +186,19 @@ void BuildFEMatrix::parallel(int proc)
   
   int ns=colIdx_[proc];
   int ne=colIdx_[proc+1];
-
+  
   for(i=ns;i<ne;i++){
     a[i]=0;
   }
-
+  
   //----------------------------------------------------------
   //! Filling the matrix
-
-  //! Dividing cells among processors
-  //int nCells=hMesh_->cells_size();
-  //TetVolMesh::cell_index cind1 = nCells * proc/np_;
-  //TetVolMesh::cell_index cind2 = nCells * (proc+1)/np_;
-  
   TetVolMesh::cell_iterator ii;
   
   double lcl_matrix[4][4];
- 
+  
   for (ii=hMesh_->cell_begin(); ii!=hMesh_->cell_end(); ++ii){
+  
     TetVolMesh::node_array  cell_nodes;
     hMesh_->get_nodes(cell_nodes, *ii); 
     
@@ -204,14 +207,15 @@ void BuildFEMatrix::parallel(int proc)
        || (cell_nodes[1] >= start_node && cell_nodes[1] < end_node)
        || (cell_nodes[2] >= start_node && cell_nodes[2] < end_node)
        || (cell_nodes[3] >= start_node && cell_nodes[3] < end_node)){
-      
+       
       build_local_matrix(lcl_matrix, *ii);
+     
       add_lcl_gbl(lcl_matrix, *ii, start_node, end_node);
     }
   }
   
   barrier_.wait(np_);
-
+ 
   //! adjusting matrix for Dirichlet BC on first processor
   // --  no parralelization here, no many Dirichlet nodes
   Array1<int> idcNz;
@@ -221,10 +225,11 @@ void BuildFEMatrix::parallel(int proc)
   vector<double> dbc;
 
   if (proc==0){
+    
     for(unsigned int idx = 0; idx<dirBC_.size(); ++idx){
-      int ni = dirBC_[i].first;
-      double val = dirBC_[i].second;
-
+      int ni = dirBC_[idx].first;
+      double val = dirBC_[idx].second;
+      
       // -- getting column indices of non-zero elements for the current row
       pA_->getRowNonzeros(ni, idcNz, valNz);
       
@@ -232,20 +237,22 @@ void BuildFEMatrix::parallel(int proc)
       for (int i=0; i<idcNz.size(); ++i){
 	int j = idcNz[i];
 	(*pRhs_)[j] +=-val*valNz[i]; 
-      };
+      }
     }
-
+    
     //! zeroing matrix row and column corresponding to the dirichlet nodes
     for(unsigned int idx = 0; idx<dirBC_.size(); ++idx){
-      int ni = dirBC_[i].first;
-      double val = dirBC_[i].second;
-
+      int ni = dirBC_[idx].first;
+      double val = dirBC_[idx].second;
+      
       pA_->getRowNonzeros(ni, idcNz, valNz);
+      
       for (int i=0; i<idcNz.size(); ++i){
 	int j = idcNz[i];
 	pA_->put(ni, j, 0);
 	pA_->put(j, ni, 0); 
       }
+      
       //! updating dirichlet node and corresponding entry in rhs
       pA_->put(ni, ni, 1);
       (*pRhs_)[ni] = val;
@@ -257,11 +264,12 @@ void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::cell_inde
 {
   Vector grad1, grad2, grad3, grad4;
   double vol = hMesh_->get_gradient_basis(c_ind, grad1, grad2, grad3, grad4);
+ 
   int  ind = hField_->value(c_ind);
 
   double (&el_cond)[3][3] = tens_[ind].mat_;
-  
-  if(vol < 1.e-10){
+ 
+  if(abs(vol) < 1.e-10){
     for(int i = 0; i<4; i++)
       for(int j = 0; j<4; j++)
 	lcl_a[i][j]=0;
@@ -291,16 +299,19 @@ void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::cell_inde
   el_coefs[3][2]=grad4.z();
   
   // build the local matrix
-  for(int i=0; i< 4; i++) {
-    for(int j=0; j< 4; j++) {
+  for(int i=0; i<4; i++) {
+    for(int j=0; j<4; j++) {
+
       lcl_a[i][j] = 0.0;
+
       for (int k=0; k< 3; k++){
 	for (int l=0; l<3; l++){
 	  lcl_a[i][j] += 
 	    el_cond[k][l]*el_coefs[i][k]*el_coefs[j][l];
 	}
       }
-      lcl_a[i][j] *= vol;
+
+      lcl_a[i][j] *= abs(vol);
     }
   }
 }
@@ -310,6 +321,7 @@ void BuildFEMatrix::add_lcl_gbl(double lcl_a[4][4], TetVolMesh::cell_index c_ind
   TetVolMesh::node_array cell_nodes;
 
   hMesh_->get_nodes(cell_nodes, c_ind); 
+
   for (int i=0; i<4; i++) {
     int ii = cell_nodes[i];
     if (ii>=s && ii<e)          //! the row to update belongs to the process, proceed...
@@ -322,6 +334,5 @@ void BuildFEMatrix::add_lcl_gbl(double lcl_a[4][4], TetVolMesh::cell_index c_ind
 
 void BuildFEMatrix::io(Piostream&){
 }
-
 
 } // end namespace BioPSE
