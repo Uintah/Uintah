@@ -57,20 +57,20 @@ MPMICELabel::MPMICELabel()
 
 MPMICELabel::~MPMICELabel()
 {
-  delete cMassLabel;
-  delete cVolumeLabel;
-  delete vel_CCLabel;
-  delete velstar_CCLabel;
-  delete dvdt_CCLabel;
-  delete dTdt_CCLabel;
-  delete temp_CCLabel;
-  delete temp_CC_scratchLabel;
-  delete press_NCLabel;
-  delete velInc_CCLabel;
-  delete velInc_NCLabel;
-  delete burnedMassCCLabel;
-  delete releasedHeatCCLabel;
-  delete sumBurnedMassLabel;
-  delete sumReleasedHeatLabel;
-  delete sumCreatedVolLabel;
+  VarLabel::destroy(cMassLabel);
+  VarLabel::destroy(cVolumeLabel);
+  VarLabel::destroy(vel_CCLabel);
+  VarLabel::destroy(velstar_CCLabel);
+  VarLabel::destroy(dvdt_CCLabel);
+  VarLabel::destroy(dTdt_CCLabel);
+  VarLabel::destroy(temp_CCLabel);
+  VarLabel::destroy(temp_CC_scratchLabel);
+  VarLabel::destroy(press_NCLabel);
+  VarLabel::destroy(velInc_CCLabel);
+  VarLabel::destroy(velInc_NCLabel);
+  VarLabel::destroy(burnedMassCCLabel);
+  VarLabel::destroy(releasedHeatCCLabel);
+  VarLabel::destroy(sumBurnedMassLabel);
+  VarLabel::destroy(sumReleasedHeatLabel);
+  VarLabel::destroy(sumCreatedVolLabel);
 }

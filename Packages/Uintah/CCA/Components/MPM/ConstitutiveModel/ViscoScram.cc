@@ -64,10 +64,10 @@ ViscoScram::~ViscoScram()
 {
   // Destructor
 
-  delete p_statedata_label;
-  delete p_statedata_label_preReloc;
-  delete pRandLabel;
-  delete pRandLabel_preReloc;
+  VarLabel::destroy(p_statedata_label);
+  VarLabel::destroy(p_statedata_label_preReloc);
+  VarLabel::destroy(pRandLabel);
+  VarLabel::destroy(pRandLabel_preReloc);
 }
 
 void ViscoScram::initializeCMData(const Patch* patch,
