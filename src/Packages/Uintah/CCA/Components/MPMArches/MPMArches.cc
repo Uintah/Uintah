@@ -54,6 +54,7 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
    // add for MPMArches, if any parameters are reqd
    d_mpm->setMPMLabel(Mlb);
+   d_mpm->setWithArches();
    d_mpm->problemSetup(prob_spec, grid, d_sharedState);
    // set multimaterial label in Arches to access interface variables
    d_arches->setMPMArchesLabel(d_MAlb);
