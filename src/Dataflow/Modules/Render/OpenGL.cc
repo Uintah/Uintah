@@ -1103,6 +1103,8 @@ OpenGL::redraw_frame()
 	cerr << "Dumping " << fullpath << "....  ";
 	dump_image(fullpath);
 	cerr << " done!\n";
+	
+	view_window_->setMovieFrame(current_movie_frame_);
       }
     }
   } else {
@@ -1452,6 +1454,8 @@ OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj)
 void
 ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 {
+  tclID_ = (string) tclID;
+
   GuiString type(ctx_->subVar(tclID+"-type",false));
   if (type.valid()) {
     if (type.get() == "Default")
@@ -1535,6 +1539,16 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
   drawinfo->init_lighting(drawinfo->lighting);
 }
 
+
+void
+ViewWindow::setMovieFrame( int movieframe )
+{
+  GuiInt movieFrame(ctx_->subVar(tclID_+"-movieFrame",false));
+  if (movieFrame.valid()) {
+    movieFrame.set( movieframe );
+    movieFrame.reset();
+  }
+}
 
 
 void
