@@ -53,6 +53,8 @@ set runDate " Sun  Jun 10 2001"
 global runTime
 set runTime " 20:26:15"
 
+set bbox {12.0 6.0 757 756}
+
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 320 7]
 set m1 [addModuleAtPosition "BioPSE" "Inverse" "ConductivitySearch" 12 113]
 set m2 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 287 234]

@@ -53,6 +53,8 @@ set runDate " Fri  Mar 23 2001"
 global runTime
 set runTime " 17:17:8"
 
+set bbox {12.0 13.0 364 336}
+
 set m0 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 30 121]
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 12 13]
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 169 28]

@@ -53,6 +53,8 @@ set runDate " Sun  Jun 3 2001"
 global runTime
 set runTime " 21:6:33"
 
+set bbox {4.0 4.0 705 698}
+
 set m0 [addModuleAtPosition "BioPSE" "LeadField" "AssignLeadFieldSources" 249 513]
 set m1 [addModuleAtPosition "MatlabInterface" "Math" "Focusing" 267 452]
 set m2 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 72 339]

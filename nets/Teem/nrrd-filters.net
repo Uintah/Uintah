@@ -43,6 +43,8 @@ set runDate " Thu  Apr 19 2001"
 global runTime
 set runTime " 22:8:0"
 
+set bbox {8.0 10.0 689 537}
+
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 304 10]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 92 114]
 set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 110 493]

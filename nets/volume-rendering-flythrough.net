@@ -42,6 +42,8 @@ set runDate " Sat  Oct 7 19100"
 global runTime
 set runTime " 16:35:33"
 
+set bbox {28.0 14.0 704 486}
+
 set m0 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 181 160]
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 363 14]
 set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 163 442]
