@@ -19,7 +19,8 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Core/Util/NotFinished.h>
-
+#include <iostream>
+using namespace std;
 using namespace Uintah;
 
 //****************************************************************************
@@ -317,6 +318,7 @@ Properties::reComputeProps(const ProcessorGroup*,
     //new_dw->allocate(new_density, d_densityCPLabel, matlIndex, patch);
     IntVector indexLow = patch->getCellLowIndex();
     IntVector indexHigh = patch->getCellHighIndex();
+    voidFraction.print(cerr);
   // set density for the whole domain
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
