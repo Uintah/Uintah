@@ -41,9 +41,13 @@ Disk space requirements for build from source code are listed in <xref
 linkend="tbl.disk_space"/>.
 </para>
 
+<para>See <xref linkend="intro.nvidia_notes"
+endterm="intro.nvidia_notes.title"/> for information on the use of
+Nvidia graphics cards with the Linux operating system.</para>
+
 <para>See <xref endterm="intro.ati_notes.title"
 linkend="intro.ati_notes"/> for information on the use of ATI cards
-and drivers.</para>
+and drivers with the Linux operating system.</para>
 
 <para>See <xref linkend="intro.redhat_ent_notes"
 endterm="intro.redhat_ent_notes.title"/> for information about the use
@@ -93,16 +97,12 @@ of Red Hat Enterprise Linux.</para>
 <entry>
 <itemizedlist>
 <listitem>
-<para>Mac OS X 10.2.6, 10.2.7, 10.2.8, or OS X 10.3</para>
+<para>OS X 10.3 (Panther)</para>
 </listitem>
 <listitem>
-<para>December 2002 developer tools for &osx; 10.2</para>
 <para>&osx; 10.3 compatible developer tools for &osx; 10.3</para>
 </listitem>
 <listitem>
-<para>Apple's <ulink url="http://www.apple.com/macosx/x11/">X11
-Public Beta 3</ulink> and X11 <acronym>SDK</acronym> for &osx;
-10.2</para> 
 
 <para>Apple's X11 and X11 <acronym>SDK</acronym> for &osx; 10.3.
 X11 is distributed with &osx; 10.3 but must be installed separately</para>
@@ -186,6 +186,24 @@ source code.</para>
 </listitem>
 </orderedlist>
 </para>
+
+<section id="intro.nvidia_notes">
+<title id="intro.nvidia_notes.title">Linux and Nvidia Driver Notes</title>
+
+<para>
+Nvidia drivers, versions 1.0-5328 and 1.0-5336, will not work for
+hardware based texture volume rendering in SCIRun.  Please do not
+update to these drivers if you wish your volume rendering to work.
+</para>
+
+<para>Driver versions 1.0-4496, 1.0-4363 are known to work.</para>
+
+<para>
+Driver version 1.0-4191 does not work.  SCI has not tested versions
+earlier than 1.0-4191&mdash;they may or may not work.
+</para>
+
+</section>
 
 <section id="intro.ati_notes">
 <title id="intro.ati_notes.title">Linux and ATI Graphics Cards Notes</title>
