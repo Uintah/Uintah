@@ -1,6 +1,0 @@
-depend.mk
-Makefile
-fnparser.cc
-fnparser.h
-fnparser.cc.output
-fnscanner.cc
