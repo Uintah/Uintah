@@ -15,38 +15,31 @@
 #  University of Utah. All Rights Reserved.
 #
 
+
 # Makefile fragment for this subdirectory
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Core/CCA/Component/CIA
+SRCDIR   := Core/CCA/Component/Comm
 
 SRCS     += \
-	$(SRCDIR)/CIA_sidl.cc \
-	$(SRCDIR)/Class.cc \
-	$(SRCDIR)/ClassNotFoundException.cc \
-	$(SRCDIR)/IllegalArgumentException.cc \
-	$(SRCDIR)/InstantiationException.cc \
-	$(SRCDIR)/Interface.cc \
-	$(SRCDIR)/Method.cc \
-	$(SRCDIR)/NoSuchMethodException.cc \
-	$(SRCDIR)/Object.cc \
-	$(SRCDIR)/Throwable.cc 
+	$(SRCDIR)/connector.cc \
+	$(SRCDIR)/listener.cc \
+	$(SRCDIR)/SocketSpChannel.cc \
+	$(SRCDIR)/SocketEpChannel.cc \
+	$(SRCDIR)/NexusEpChannel.cc \
+	$(SRCDIR)/NexusSpChannel.cc \
+	$(SRCDIR)/CommError.cc \
+	$(SRCDIR)/NexusSpMessage.cc \
+	$(SRCDIR)/NexusEpMessage.cc \
+	$(SRCDIR)/SocketMessage.cc \
+	$(SRCDIR)/Communication.cc \
+	$(SRCDIR)/sock.c \
+	$(SRCDIR)/buf.c \
+	$(SRCDIR)/ReplyEP.cc \
+	$(SRCDIR)/NexusHandlerThread.cc \
 
-# We cannot use the implicit rule for CIA, since it needs that
-# special -cia flag
-$(SRCDIR)/CIA_sidl.o: $(SRCDIR)/CIA_sidl.cc $(SRCDIR)/CIA_sidl.h
-
-$(SRCDIR)/CIA_sidl.cc: $(SRCDIR)/CIA.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -cia -o $@ $<
-
-$(SRCDIR)/CIA_sidl.h: $(SRCDIR)/CIA.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -cia -h -o $@ $<
-
-GENHDRS := $(SRCDIR)/CIA_sidl.h
-
-PSELIBS := Core/CCA/Component/PIDL
-
+PSELIBS := Core/Exceptions Core/Thread 
 LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
