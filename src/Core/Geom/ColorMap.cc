@@ -207,7 +207,7 @@ ColorMap::getAlpha(double t)
   return colors_[int(t*(colors_.size()-1))]->transparency;
 }
 
-#define COLORMAP_VERSION 4
+#define COLORMAP_VERSION 5
 
 
 void
@@ -215,6 +215,17 @@ ColorMap::io(Piostream& stream)
 {
 
   int version= stream.begin_class("ColorMap", COLORMAP_VERSION);
+  if ( version > 4)
+  {
+    Pio(stream, resolution_);
+    Pio(stream, min_);
+    Pio(stream, max_);
+  }
+  else if (version == 4 && stream.reading())
+  {
+    // Bad guess, better than nothing.
+    resolution_ = 256;
+  }
   Pio(stream, colors_);
   if ( version > 2 )
     Pio(stream, units_);
