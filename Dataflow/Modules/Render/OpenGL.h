@@ -146,12 +146,32 @@ public:
   void saveImage(const string& fname,
 		 const string& type = "ppm", int x=640, int y=512);
 
+
 protected:
+  int xres, yres;
+
   bool compute_depth(ViewWindow* viewwindow, const View& view,
 		     double& near, double& far);
 
+  // Compute world space point under cursor (x,y).  If successful,
+  // set 'p' to that value & return true.  Otherwise, return false.
+  bool pick_scene(int x, int y, Point *p);
+
+  void get_pick(Viewer*, ViewWindow*, int, int, GeomObj*&, GeomPick*&, int& );
+
+  void kill_helper();
+
+  void listvisuals(GuiArgs&);
+  void setvisual(const string&, int i, int width, int height);
+
+  void redraw(Viewer*, ViewWindow*, double tbeg, double tend,
+	      int ntimesteps, double frametime);
+
+  void getData(int datamask, FutureValue<GeometryData*>* result);
+  
+private:
+
   GuiInterface* gui;
-  int xres, yres;
   Runnable *helper;
   Tk_Window tkwin;
   Window win;
@@ -161,37 +181,34 @@ protected:
   DrawInfoOpenGL* drawinfo;
   WallClockTimer fpstimer;
   double current_time;
-
   int old_stereo;
   GLuint imglist;
+  string my_openglname;
+  vector<XVisualInfo*> visuals;
+  bool do_hi_res;
+
+
   void make_image();
 
   void redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
   void pick_draw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
 
-  string my_openglname;
-  vector<XVisualInfo*> visuals;
 
-  bool do_hi_res;
-
+  // MPEG SUPPORT
   void StartMpeg(const string& fname);
   void AddMpegFrame();
   void EndMpeg();
-  bool encoding_mpeg;
+  bool encoding_mpeg_;
 
 #ifdef HAVE_MPEG
-  FILE *output;
-  MPEGe_options options;
+  FILE *mpeg_file_;
+  MPEGe_options mpeg_options_;
 #endif // HAVE_MPEG
 
-  void redraw(Viewer*, ViewWindow*, double tbeg, double tend,
-	      int ntimesteps, double frametime);
+
   void real_get_pick(Viewer*, ViewWindow*, int, int, GeomObj*&,
 		     GeomPick*&, int&);
-  void get_pick(Viewer*, ViewWindow*, int, int,
-		GeomObj*&, GeomPick*&, int& );
-  void dump_image(const string& fname,
-		  const string& type = "raw");
+  void dump_image(const string& fname, const string& type = "raw");
   void put_scanline(int y, int width, Color* scanline, int repeat=1);
 
   void render_and_save_image(int x, int y,
@@ -201,18 +218,13 @@ protected:
   void deriveFrustum();
 
   // HACK -- support data for get_pixel_depth
-  float  pixel_depth_data[1310720];  // assume no screen is > 1280x1024
+  float    pixel_depth_data[1310720];  // assume no screen is > 1280x1024
   GLdouble get_depth_model[16];
   GLdouble get_depth_proj[16];
   GLint    get_depth_view[4];
 
 
-  // Compute world space point under cursor (x,y).  If successful,
-  // set 'p' to that value & return true.  Otherwise, return false.
-  bool pick_scene(int x, int y, Point *p);
-  void kill_helper();
-
-  string myname;
+  string myname_;
   Mailbox<int> send_mb;
   Mailbox<int> recv_mb;
   Mailbox<GetReq> get_mb;
@@ -221,7 +233,7 @@ protected:
   Frustum frustum;
   HiRes hi_res;
 
-  Viewer* viewer;
+  Viewer* viewer_;
   ViewWindow* viewwindow;
   double tbeg;
   double tend;
@@ -236,9 +248,6 @@ protected:
   GeomPick* ret_pick_pick;
   int ret_pick_index;
 
-  void listvisuals(GuiArgs&);
-  void setvisual(const string&, int i, int width, int height);
-
   View lastview;
   double znear, zfar;
 
@@ -250,13 +259,10 @@ protected:
   GeomText* pinchText[2];
   GeomCappedCylinder* pinchCylinder[4];
 
-  Thread *helper_thread;
-  bool dead;
+  Thread *helper_thread_;
+  bool dead_;
 
   // These functions were added to clean things up a bit.
-
-  void getData(int datamask, FutureValue<GeometryData*>* result);
-  
   void real_getData(int datamask, FutureValue<GeometryData*>* result);
 };
 

@@ -87,14 +87,14 @@ OpenGL::query(GuiInterface* gui)
 OpenGL::OpenGL(GuiInterface* gui) :
   gui(gui), tkwin(0),
   do_hi_res(false),
-  encoding_mpeg(false),
+  encoding_mpeg_(false),
 
   send_mb("OpenGL renderer send mailbox",10),
   recv_mb("OpenGL renderer receive mailbox", 10),
   get_mb("OpenGL renderer request mailbox", 5),
   img_mb("OpenGL renderer image data mailbox", 5),
-  helper_thread(0),
-  dead(0)
+  helper_thread_(0),
+  dead_(false)
 {
   drawinfo=scinew DrawInfoOpenGL;
   fpstimer.start();
@@ -140,9 +140,9 @@ OpenGL::OpenGL(GuiInterface* gui) :
 OpenGL::~OpenGL()
 {
   // Finish up the mpeg that was in progress.
-  if (encoding_mpeg)
+  if (encoding_mpeg_)
   {
-    encoding_mpeg = false;
+    encoding_mpeg_ = false;
     EndMpeg();
   }
 
@@ -182,7 +182,7 @@ void
 OpenGL::redraw(Viewer* s, ViewWindow* r, double _tbeg, double _tend,
 	       int _nframes, double _framerate)
 {
-  viewer=s;
+  viewer_ = s;
   viewwindow=r;
   tbeg=_tbeg;
   tend=_tend;
@@ -192,10 +192,10 @@ OpenGL::redraw(Viewer* s, ViewWindow* r, double _tbeg, double _tend,
   // start one...
   if(!helper)
   {
-    my_openglname= "OpenGL: " + myname;
+    my_openglname= "OpenGL: " + myname_;
     helper=new OpenGLHelper(this);
-    helper_thread=new Thread(helper, my_openglname.c_str());
-    helper_thread->detach();
+    helper_thread_ = new Thread(helper, my_openglname.c_str());
+    helper_thread_->detach();
   }
 
   send_mb.send(DO_REDRAW);
@@ -211,7 +211,7 @@ void
 OpenGL::kill_helper()
 {
   // kill the helper thread
-  dead = true;
+  dead_ = true;
   send_mb.send(86);
 }
 
@@ -227,7 +227,7 @@ OpenGL::redraw_loop()
   double newtime=0;
   for(;;)
   {
-    if (dead) return;
+    if (dead_) return;
     int nreply=0;
     if(viewwindow->inertia_mode)
     {
@@ -265,7 +265,7 @@ OpenGL::redraw_loop()
       {
 	if (r == DO_PICK)
 	{
-	  real_get_pick(viewer, viewwindow, send_pick_x, send_pick_y,
+	  real_get_pick(viewer_, viewwindow, send_pick_x, send_pick_y,
 			ret_pick_obj, ret_pick_pick, ret_pick_index);
 	  recv_mb.send(PICK_DONE);
 	}
@@ -330,13 +330,13 @@ OpenGL::redraw_loop()
     {
       for (;;)
       {
-	if (dead) return;
+	if (dead_) return;
 	int r=send_mb.receive();
 	if (r == 86)
 	  return;
 	else if (r == DO_PICK)
 	{
-	  real_get_pick(viewer, viewwindow, send_pick_x, send_pick_y,
+	  real_get_pick(viewer_, viewwindow, send_pick_x, send_pick_y,
 			ret_pick_obj, ret_pick_pick, ret_pick_index);
 	  recv_mb.send(PICK_DONE);
 	}
@@ -600,7 +600,7 @@ OpenGL::redraw_frame()
 {
   // Get window information
   gui->lock();
-  Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname),
+  Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
 				      Tk_MainWindow(the_interp));
   if(!new_tkwin)
   {
@@ -621,7 +621,7 @@ OpenGL::redraw_frame()
       gui->lock();
       win = Tk_WindowId(tkwin);
     }
-    cx=OpenGLGetContext(the_interp, ccast_unsafe(myname));
+    cx=OpenGLGetContext(the_interp, ccast_unsafe(myname_));
     if(!cx)
     {
       cerr << "Unable to create OpenGL Context!\n";
@@ -667,7 +667,7 @@ OpenGL::redraw_frame()
 
   // Get a lock on the geometry database...
   // Do this now to prevent a hold and wait condition with TCLTask
-  viewer->geomlock_.readLock();
+  viewer_->geomlock_.readLock();
 
   gui->lock();
 
@@ -849,7 +849,7 @@ OpenGL::redraw_frame()
 	
 	// Set up Lighting
 	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-	const Lighting& l=viewer->lighting_;
+	const Lighting& l=viewer_->lighting_;
 	int idx=0;
 	int ii;
 	for(ii=0;ii<l.lights.size();ii++)
@@ -1127,7 +1127,7 @@ OpenGL::redraw_frame()
     glXSwapBuffers(dpy, win);
   }
 
-  viewer->geomlock_.readUnlock();
+  viewer_->geomlock_.readUnlock();
 
   // Look for errors
   GLenum errcode;
@@ -1182,9 +1182,9 @@ OpenGL::redraw_frame()
     //      cerr << "Saving a movie!\n";
     if( viewwindow->makeMPEG )
     {
-      if(!encoding_mpeg)
+      if(!encoding_mpeg_)
       {
-	encoding_mpeg = true;
+	encoding_mpeg_ = true;
 	fname = fname + ".mpg";
 	StartMpeg( fname );
       }
@@ -1193,9 +1193,9 @@ OpenGL::redraw_frame()
     else
     { // dump each frame
       /* if mpeg has just been turned off, close the file. */
-      if(encoding_mpeg)
+      if(encoding_mpeg_)
       {
-	encoding_mpeg = false;
+	encoding_mpeg_ = false;
 	EndMpeg();
       }
       unsigned char movie[10];
@@ -1222,9 +1222,9 @@ OpenGL::redraw_frame()
   }
   else
   {
-    if(encoding_mpeg)
-    {// make sure we finish up mpeg that was in progress
-      encoding_mpeg = false;
+    if(encoding_mpeg_)
+    { // Finish up mpeg that was in progress.
+      encoding_mpeg_ = false;
       EndMpeg();
     }
   }
@@ -1279,7 +1279,7 @@ OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
   }
   // Setup the view...
   View view(viewwindow->view.get());
-  viewer->geomlock_.readLock();
+  viewer_->geomlock_.readLock();
 
   // Compute znear and zfar...
   double znear;
@@ -1430,7 +1430,7 @@ OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
       // x,y,min_z is our point... we can unproject it to get model-space pt
     }
   }
-  viewer->geomlock_.readUnlock();
+  viewer_->geomlock_.readUnlock();
 }
 
 
@@ -2024,17 +2024,13 @@ OpenGL::setvisual(const string& wname, int which, int width, int height)
 {
   tkwin=0;
   current_drawer=0;
-  //cerr << "choosing visual " << which << '\n';
+
   gui->execute("opengl " + wname +
 	       " -visual " + to_string((int)visuals[which]->visualid) +
 	       " -direct true" +
 	       " -geometry " + to_string(width) + "x" + to_string(height));
-  //cerr << string("opengl ")+wname+" -visual " +
-  //  to_string((int)visuals[which]->visualid)+" -direct true -geometry " +
-  //  to_string(width)+"x"+to_string(height) << "\n";
-  //cerr << "done choosing visual\n";
 
-  myname = wname;
+  myname_ = wname;
 }
 
 
@@ -2153,7 +2149,8 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
     GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR)
     {
-      cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << "\n";
+      cerr << "We got an error from GL: " <<
+	(char*)gluErrorString(errcode) << "\n";
     }
     gui->unlock();
   }
@@ -2167,20 +2164,21 @@ OpenGL::StartMpeg(const string& fname)
 {
 #ifdef HAVE_MPEG
   // Get a file pointer pointing to the output file.
-  output=fopen(fname.c_str(), "w");
-  if (!output)
+  mpeg_file_ = fopen(fname.c_str(), "w");
+  if (!mpeg_file_)
   {
     cerr << "Failed to open file " << fname << " for writing\n";
     return;
   }
   // Get the default options.
-  MPEGe_default_options( &options );
+  MPEGe_default_options( &mpeg_options_ );
   // Change a couple of the options.
-  strcpy(options.frame_pattern, "II");  // was ("IIIIIIIIIIIIIII");
-  options.search_range[1]=0;
-  if( !MPEGe_open(output, &options ) )
+  strcpy(mpeg_options_.frame_pattern, "II");  // was ("IIIIIIIIIIIIIII");
+  mpeg_options_.search_range[1]=0;
+  if( !MPEGe_open(mpeg_file_, &mpeg_options_ ) )
   {
-    cerr << "MPEGe library initialisation failure!:" << options.error << "\n";
+    cerr << "MPEGe library initialisation failure!:" <<
+      mpeg_options_.error << "\n";
     return;
   }
 #endif // HAVE_MPEG
@@ -2238,9 +2236,9 @@ OpenGL::AddMpegFrame()
     memcpy( p1, row, r);
   }
 
-  if( !MPEGe_image(image, &options) )
+  if( !MPEGe_image(image, &mpeg_options_) )
   {
-    cerr << "MPEGe_image failure:" << options.error << "\n";
+    cerr << "MPEGe_image failure:" << mpeg_options_.error << "\n";
   }
 #endif // HAVE_MPEG
 }
@@ -2251,9 +2249,9 @@ void
 OpenGL::EndMpeg()
 {
 #ifdef HAVE_MPEG
-  if( !MPEGe_close(&options) )
+  if( !MPEGe_close(&mpeg_options_) )
   {
-    cerr << "Had a bit of difficulty closing the file:" << options.error;
+    cerr << "Had a bit of difficulty closing the file:" << mpeg_options_.error;
   }
 
   cerr << "Ending Mpeg\n";
