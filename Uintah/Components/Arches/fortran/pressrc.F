@@ -2,7 +2,7 @@ c
 c $Id$
 c
       subroutine pressrc(domLo, domHi, idxLo, idxHi, 
-     $     sp, su, 
+     $     su, sp, 
      &     den, old_den,
      &     domLoU, domHiU, uu, 
      $     aup, aue, auw, aun, aus, aut, aub, suu,
@@ -266,6 +266,10 @@ c        convs = convs/((KEND-KST+1)*(JEND-JST+1)*(IEND-IST+1))
          end
 c
 c $Log$
+c Revision 1.4  2000/08/20 22:52:38  bbanerje
+c Fixed PressureSource bug .. domHi, domLo were not being assigned
+c correctly in the wrapper.
+c
 c Revision 1.3  2000/08/17 20:32:02  rawat
 c Fixed some bugs
 c

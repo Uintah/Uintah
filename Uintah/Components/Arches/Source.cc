@@ -117,6 +117,32 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    cellinfo->fac3u.get_objs(), 
 		    cellinfo->fac4u.get_objs(),
 		    cellinfo->iesdu.get_objs(), cellinfo->iwsdu.get_objs());
+
+#ifdef ARCHES_DEBUG
+    cerr << "AFTER U Velocity Source" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cerr << "SU for U velocity for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->uVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "AFTER U Velocity Source" << endl;
+    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
+      cerr << "SP for U velocity for ii = " << ii << endl;
+      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
+	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->uVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
     break;
   case Arches::YDIR:
 
@@ -151,6 +177,32 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    cellinfo->fac3v.get_objs(), 
 		    cellinfo->fac4v.get_objs(),
 		    cellinfo->jnsdv.get_objs(), cellinfo->jssdv.get_objs()); 
+
+#ifdef ARCHES_DEBUG
+    cerr << "AFTER V Velocity Source" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cerr << "SU for V velocity for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->vVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "AFTER V Velocity Source" << endl;
+    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
+      cerr << "SP for V velocity for ii = " << ii << endl;
+      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
+	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->vVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
     break;
   case Arches::ZDIR:
 
@@ -185,6 +237,32 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    cellinfo->fac3w.get_objs(), 
 		    cellinfo->fac4w.get_objs(),
 		    cellinfo->ktsdw.get_objs(), cellinfo->kbsdw.get_objs()); 
+
+#ifdef ARCHES_DEBUG
+    cerr << "AFTER W Velocity Source" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cerr << "SU for W velocity for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->wVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "AFTER W Velocity Source" << endl;
+    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
+      cerr << "SP for W velocity for ii = " << ii << endl;
+      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
+	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->wVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
     break;
   default:
     throw InvalidValue("Invalid index in Source::calcVelSrc");
@@ -260,17 +338,17 @@ Source::calculatePressureSource(const ProcessorGroup*,
   IntVector idxHi = patch->getCellFORTHighIndex();
   IntVector domLoU = vars->uVelocity.getFortLowIndex();
   IntVector domHiU = vars->uVelocity.getFortHighIndex();
-  IntVector domLoV = vars->uVelocity.getFortLowIndex();
-  IntVector domHiV = vars->uVelocity.getFortHighIndex();
-  IntVector domLoW = vars->uVelocity.getFortLowIndex();
-  IntVector domHiW = vars->uVelocity.getFortHighIndex();
+  IntVector domLoV = vars->vVelocity.getFortLowIndex();
+  IntVector domHiV = vars->vVelocity.getFortHighIndex();
+  IntVector domLoW = vars->wVelocity.getFortLowIndex();
+  IntVector domHiW = vars->wVelocity.getFortHighIndex();
 
   //fortran call ** WARNING ** ffield = -1
   int ffield = -1;
   FORT_PRESSOURCE(domLo.get_pointer(), domHi.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
-		  vars->pressLinearSrc.getPointer(),
 		  vars->pressNonlinearSrc.getPointer(),
+		  vars->pressLinearSrc.getPointer(),
 		  vars->density.getPointer(), vars->old_density.getPointer(),
 		  domLoU.get_pointer(), domHiU.get_pointer(),
 		  vars->uVelocity.getPointer(), 
@@ -305,6 +383,32 @@ Source::calculatePressureSource(const ProcessorGroup*,
 		  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
 		  cellinfo->stb.get_objs(),
 		  vars->cellType.getPointer(), &ffield, &delta_t);
+
+#ifdef ARCHES_DEBUG
+    cerr << "AFTER Calculate Pressure Source" << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SU for Pressure for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->pressNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "AFTER Calculate Pressure Source" << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SP for Pressure for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->pressLinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
 }
 
 //****************************************************************************
@@ -340,6 +444,31 @@ Source::calculateScalarSource(const ProcessorGroup*,
 		    cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
 		    cellinfo->stb.get_objs(),
 		    &delta_t);
+
+#ifdef ARCHES_DEBUG
+    cerr << "AFTER Calculate Scalar Source" << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SU for Scalar " << index << " for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->scalarNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "AFTER Calculate Scalar Source" << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SP for Scalar " << index << " for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->scalarLinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
 }
 
 //****************************************************************************
@@ -383,6 +512,30 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 		vars->uVelocityConvectCoeff[Arches::AS].getPointer(),
 		vars->uVelocityConvectCoeff[Arches::AT].getPointer(),
 		vars->uVelocityConvectCoeff[Arches::AB].getPointer());
+#ifdef ARCHES_DEBUG
+    cerr << "AFTER Modify Velocity Mass Source" << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SU for U velocity for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->uVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "AFTER Modify Velocity Mass Source" << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SP for U velocity for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->uVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
     break;
   case Arches::YDIR:
     domLo = vars->vVelocity.getFortLowIndex();
@@ -406,6 +559,30 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 		vars->vVelocityConvectCoeff[Arches::AS].getPointer(),
 		vars->vVelocityConvectCoeff[Arches::AT].getPointer(),
 		vars->vVelocityConvectCoeff[Arches::AB].getPointer());
+#ifdef ARCHES_DEBUG
+    cerr << "AFTER Modify Velocity Mass Source" << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SU for V velocity for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->vVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "AFTER Modify Velocity Mass Source" << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SP for V velocity for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->vVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
     break;
   case Arches::ZDIR:
     domLo = vars->wVelocity.getFortLowIndex();
@@ -429,6 +606,30 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 		vars->wVelocityConvectCoeff[Arches::AS].getPointer(),
 		vars->wVelocityConvectCoeff[Arches::AT].getPointer(),
 		vars->wVelocityConvectCoeff[Arches::AB].getPointer());
+#ifdef ARCHES_DEBUG
+    cerr << "AFTER Modify Velocity Mass Source" << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SU for W velocity for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->wVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "AFTER Modify Velocity Mass Source" << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "SP for W velocity for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(10);
+	  cerr << vars->wVelLinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
     break;
   default:
     throw InvalidValue("Invalid index in Source::calcVelMassSrc");
@@ -571,6 +772,10 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.37  2000/08/20 22:52:33  bbanerje
+//Fixed PressureSource bug .. domHi, domLo were not being assigned
+//correctly in the wrapper.
+//
 //Revision 1.36  2000/08/19 16:36:35  rawat
 //fixed some bugs in scalarcoef calculations
 //
