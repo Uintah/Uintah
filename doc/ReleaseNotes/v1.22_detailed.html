@@ -104,12 +104,12 @@ LatVolFields.</li>
       <li>Added '?' button to open module help.</li>
       <li>Changed readers and writers to have a Set, Execute, Cancel an Find
 button. Set will change the module's filename, and exit the UI without
-executing the module.  Execute will set the filenam, execute the module,
+executing the module.  Execute will set the filename, execute the module,
 and close the UI.</li>
       <li>All "Choose" modules have a "Use first valid" checkbox which causes the
 module to iterate over its connected inputs and use the first valid data.</li>
       <li>Regular Meshes now display formatted printing of Cell, Node, and Face indices in ShowField, Probe, and FieldInfo modules.</li>
-      <li>SampleField (FieldsCreate) module now has ring on 3D gauge widget to set number of samples interactively.</li>
+      <li>SampleField (FieldsCreate) module now has ring on 3D gage widget to set number of samples interactively.</li>
       <li>Added VCR buttons to MatrixSelectVector (Math) UI</li>
       <li>Ability to link a viewer's ViewWindows so that interaction in one window, will be duplicated in other ViewWindows.</li>
       <li>Added Viewer's ViewWindow->View... entries to get view from other active ViewWindows.</li>
@@ -132,7 +132,7 @@ vector for performance enhancement.</li>
       <li>More efficient IsoClip find_ functions.</li>
       <li>Add normals option to the FieldMeasures module.</li>
       <li>ClipField saves widget positions now.</li>
-      <li>Fix Unstructure (FieldsGeometry) to preseve node ordering in scanline orientation.</li>
+      <li>Fix Unstructure (FieldsGeometry) to preserve node ordering in scanline orientation.</li>
       <li>Fix uninitialized sigma crash in ScalarFieldStats.</li>
       <li>Fix Isosurface-quadtypeface.net crash bug associated with ImageMesh::get_neighbors().</li>
       <li>Fix const DenseMatrix compilation error.</li>
@@ -167,7 +167,6 @@ able to create, structured, unstructured, or regular fields.</li>
       <li>Optimizations in BioTensor in order to use less memory.</li>
       <li>Use GuiFilename for filenames instead of GuiString in NrrdReader and
 NrrdWriter.</li>
-</li>
     </ul>
 
     <h2>Insight Modules (Category in parentheses)</h2>
@@ -204,9 +203,9 @@ vector for performance enhancement.</li>
 
       <li>Multiple Notes windows can now be opened at the same time allowing for cut/paste operations.</li>
       <li>New progress bar shows accurate status of loading .net file or PowerApp initialization.</li>
-     <li>Module help is now viewed in full HTML format.  User is prompted to choose HTML browswer.</li>
+     <li>Module help is now viewed in full HTML format.  User is prompted to choose HTML browser.</li>
       <li>The license has changed to the MIT License.</li>
-      <li>Added exertior product to ColumnMatrix.</li>
+      <li>Added exterior product to ColumnMatrix.</li>
       <li>TetVolMesh::refine_elements and refine_elements_levels added for tet refinement.</li>
       <li>Use const reference for GenericField::value() functions.</li>
       <li>Fix GeomCones polycount.</li>
@@ -227,10 +226,10 @@ C++ code.  This was used by the ClipByFunction, LinAlgBinary and LinAlgUnary mod
       <li>Add debugging asserts to set_value and value calls for fields.</li>
       <li>Use unsigned int as under_type for all meshes.</li>
       <li>Add module runtimes to regression output.</li>
-      <li>Use lessthan function for map<> when hash_map not defined.</li>
+      <li>Use lessthan function for map&lt;> when hash_map not defined.</li>
       <li>Use a better string hash function, use X31 hash.</li>
-      <li>Lock PropertyManager more agressively, add copy_properties function.</li>
-      <li>Fix typo that was causing dynamic compliation directory to always default to
+      <li>Lock PropertyManager more aggressively, add copy_properties function.</li>
+      <li>Fix typo that was causing dynamic compilation directory to always default to
 ~/SCIRun/on-the-fly-libs//</li>
       <li>Add MakeReal function that converts double numbers that are: +infinity to max double, -infinity to min double, and NaN to 0.  Used only for sending values to the TCL interpreter.</li>
       <li>Change widget_moved(int) method to widget_moved(int,BaseWidget*) signature to allow callback to determine which widget was moved</li>
@@ -240,8 +239,8 @@ C++ code.  This was used by the ClipByFunction, LinAlgBinary and LinAlgUnary mod
       <li>Evaluate floating point numbers using TCL's 'expr' command to pare down redundant 0's after decimal place.</li>
       <li>Added TCL function initGlobal that will assign a value to a global variable if and only if that variable does not already exist.</li>
       <li>Add TCLInterface::complete_command that returns true if str is a complete TCL script with matching braces.</li>
-      <li>Added TCL proc envBool to query the boolean status of an environemnt variable.<?li>
-      <li>Use Core/Util/Enviroment.h to provide universal environment that works on SGIs, Mac G5's, and Linux.</li>
+      <li>Added TCL proc envBool to query the boolean status of an environment variable.</li>
+      <li>Use Core/Util/Environment.h to provide universal environment that works on SGIs, Mac G5's, and Linux.</li>
       <li>In TCL, Use [netedit getenv VARNAME], and [netedit setenv VARNAME VALUE] to interface with environment variables.</li>
       <li>Move some code from SCIRun/src/Dataflow/GUI/Module.tcl out into SCIRun/src/Dataflow/GUI/Port.tcl and SCIRun/src/Dataflow/GUI/Connection.tcl.</li>
       <li>Added procedure genSubnetScript - the core of the network writing algorithm.</li>
@@ -249,7 +248,7 @@ C++ code.  This was used by the ClipByFunction, LinAlgBinary and LinAlgUnary mod
       <li>Handle bad values (like inf) better when writing floating point values to networks.</li>
     </ul>
 
-    <h1>Environment Variables</h1
+    <h1>Environment Variables</h1>
     <ul>
       <li>Added environment variable SCIRUN_NET_SUBSTITUTE_DATADIR. If true, .nets will automatically substitute SCIRUN_DATA and SCIRUN_DATASET.</li>
       <li>Added environment variable SCIRUN_FAST_QUIT.  If true, will not ask user to save before exiting scirun.</li>
@@ -274,9 +273,9 @@ C++ code.  This was used by the ClipByFunction, LinAlgBinary and LinAlgUnary mod
       <li>Added feature of moving by grabbing a connection.</li>
       <li>Added 'SR' button to Subnet Icons to access the Sub-Network Editor.</li>
       <li>Sub-Networks have been revamped to embed their information in the main .net file.</li>
-      <li>Sub-Networks retain the old functionality with the 'On Disk' option to have the subnet files be saved seperately from the .net file.</li>
+      <li>Sub-Networks retain the old functionality with the 'On Disk' option to have the subnet files be saved separately from the .net file.</li>
       <li>Subnets have been revamped to embed their information in the main .net file.</li>
-      <li>Subnets retain to 'On Disk' option to have the subnet files be saved seperately or as templates.</li>
+      <li>Subnets retain to 'On Disk' option to have the subnet files be saved separately or as templates.</li>
       <li>All .nets residing in SCIRun/src/Subnets and ~/SCIRun/Subnets/*.net are automatically loaded as templates.</li>
       <li>Added <tt>Control-Q</tt>tt> keyboard shortcut to quit.</li>
       <li>Fix deletion of dynamic ports.</li>
