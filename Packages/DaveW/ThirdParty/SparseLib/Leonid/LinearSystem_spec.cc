@@ -43,7 +43,7 @@ template<> void LinearSystem<double>::solve(){
     NRHS = nrhs;
     LDB = N;
     
-//    cout << "Calling LAPACK dgtsv_() "<<endl; 
+//    std::cout << "Calling LAPACK dgtsv_() "<<std::endl; 
     time = clock();
     dgtsv_(&N, &NRHS, ((MatrixTridiag<double>*) A)->get_pdl(),((MatrixTridiag<double>*) A)->get_pd(),((MatrixTridiag<double>*) A)->get_pdu(),B->get_p(), &LDB, &INFO );
     time = clock() - time;
@@ -63,10 +63,10 @@ template<> void LinearSystem<double>::solve(){
   
   else if (!strcmp(matrix_type,"sparse")){
 
-    cout <<"Not implemented in this version!"<<endl;
+    std::cout <<"Not implemented in this version!"<<std::endl;
   }
    else
-    cerr << "I should not be here!"<<endl;  
+    std::cerr << "I should not be here!"<<std::endl;  
 }
 //----------------------------------------------------------------------------
 #if 0
@@ -127,10 +127,10 @@ void LinearSystem<Complex>::solve(){
   }
 
   else if (!strcmp(matrix_type,"sparse")){
-    cout <<"Not implemented in this version!"<<endl;}
+    std::cout <<"Not implemented in this version!"<<std::endl;}
 
   else
-    cerr << "I should not be here!"<<endl;
+    cerr << "I should not be here!"<<std::endl;
   
 }
 #endif
@@ -146,18 +146,18 @@ template<> void LinearSystem<double>:: info(){
   else if(!strcmp(matrix_type,"sparse"))
     solver = "dgssv_";
 
-  cout<<"********************************************"<<endl; 
-  cout<<"Linear System:"<<endl;
-  cout<<"Data Type = 'double'"<<endl;
-  cout<<"Matrix = "<<n<<" x "<<n<<endl;
-  cout<<"Matrix Type:"<<matrix_type<<endl;
-  cout<<"RHS = "<<n<<" x "<< nrhs<<endl;
-  cout<<"************"<<endl;
-  cout<<"LAPACK Solver:"<<solver<<endl; 
-  cout<<"LAPACK info = "<<info_<<endl;
-  cout<<"LAPACK result =  "<<messege_<<endl;
-  cout<<"LAPACK time = "<<(double)time/CLOCKS_PER_SEC<<"s"<<endl;
-  cout<<"********************************************"<<endl;
+  std::cout<<"********************************************"<<std::endl; 
+  std::cout<<"Linear System:"<<std::endl;
+  std::cout<<"Data Type = 'double'"<<std::endl;
+  std::cout<<"Matrix = "<<n<<" x "<<n<<std::endl;
+  std::cout<<"Matrix Type:"<<matrix_type<<std::endl;
+  std::cout<<"RHS = "<<n<<" x "<< nrhs<<std::endl;
+  std::cout<<"************"<<std::endl;
+  std::cout<<"LAPACK Solver:"<<solver<<std::endl; 
+  std::cout<<"LAPACK info = "<<info_<<std::endl;
+  std::cout<<"LAPACK result =  "<<messege_<<std::endl;
+  std::cout<<"LAPACK time = "<<(double)time/CLOCKS_PER_SEC<<"s"<<std::endl;
+  std::cout<<"********************************************"<<std::endl;
 }
 
 #if 0
@@ -171,18 +171,18 @@ void LinearSystem<Complex>:: info(){
   else if(!strcmp(matrix_type,"sparse"))
     solver = "zgssv_";
 
-  cout<<"********************************************"<<endl; 
-  cout<<"Linear System:"<<endl;
-  cout<<"Data Type = 'Complex'"<<endl;
-  cout<<"Matrix = "<<n<<" x "<<n<<endl;
-  cout<<"Matrix Type:"<<matrix_type<<endl;
-  cout<<"RHS = "<<n<<" x "<< nrhs<<endl;
-  cout<<"************"<<endl;
-  cout<<"LAPACK Solver:"<<solver<<endl; 
-  cout<<"LAPACK info = "<<info_<<endl;
-  cout<<"LAPACK result =  "<<messege_<<endl;
-  cout<<"LAPACK time = "<<(double)time/CLOCKS_PER_SEC<<"s"<<endl;
-  cout<<"********************************************"<<endl;
+  std::cout<<"********************************************"<<std::endl; 
+  std::cout<<"Linear System:"<<std::endl;
+  std::cout<<"Data Type = 'Complex'"<<std::endl;
+  std::cout<<"Matrix = "<<n<<" x "<<n<<std::endl;
+  std::cout<<"Matrix Type:"<<matrix_type<<std::endl;
+  std::cout<<"RHS = "<<n<<" x "<< nrhs<<std::endl;
+  std::cout<<"************"<<std::endl;
+  std::cout<<"LAPACK Solver:"<<solver<<std::endl; 
+  std::cout<<"LAPACK info = "<<info_<<std::endl;
+  std::cout<<"LAPACK result =  "<<messege_<<std::endl;
+  std::cout<<"LAPACK time = "<<(double)time/CLOCKS_PER_SEC<<"s"<<std::endl;
+  std::cout<<"********************************************"<<std::endl;
 
 
 

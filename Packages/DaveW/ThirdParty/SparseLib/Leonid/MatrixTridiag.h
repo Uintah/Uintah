@@ -24,7 +24,7 @@
 #include "utils.h"
 #include "Complex.h"
 
-using namespace std;
+//using namespace std;
 
 template<class Data_Type> class MatrixDense;
 
@@ -98,7 +98,7 @@ public:
   void print();
   void read(char* filename);
   void write(char* filename);
-  friend ostream& operator << (ostream& output, MatrixTridiag<Data_Type> &A);
+  friend std::ostream& operator << (std::ostream& output, MatrixTridiag<Data_Type> &A);
 
   
   
@@ -560,7 +560,7 @@ return A;
 } 
 //---------------------------------------------------------------------
 template <class Data_Type>
-ostream &operator<< (ostream &output,MatrixTridiag<Data_Type> &A){
+std::ostream &operator<< (std::ostream &output,MatrixTridiag<Data_Type> &A){
   output << endl;  
   for(int i=0 ;i < A.nr();i++){
     output<<"[";

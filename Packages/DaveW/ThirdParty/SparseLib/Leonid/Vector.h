@@ -23,7 +23,7 @@
 #include "utils.h"
 #include "Complex.h"
 
-using namespace std;
+//using namespace std;
 
 template<class Data_Type> class MatrixDense;
 template<class Data_Type> class MatrixSparse;
@@ -87,7 +87,7 @@ public:
 //Input & Output:
   void read(char* filename);
   void write(char* filename);
-  friend ostream &operator<< (ostream &output, ZVector<Data_Type> &B);
+    //friend ostream &operator<< (ostream &output, const ZVector<Data_Type> &B);
   void info();
   
 };
@@ -410,8 +410,9 @@ return;
 }
 
 //-----------------------------------------------------------------
+
 template<class Data_Type>
-ostream &operator<< (ostream &output, ZVector<Data_Type>  &b){
+std::ostream &operator<< (std::ostream &output, const ZVector<Data_Type>  &b){
 
   output<<endl;
   for(int i=0 ;i < b.size();i++)
@@ -420,6 +421,9 @@ ostream &operator<< (ostream &output, ZVector<Data_Type>  &b){
   
   return(output);
 }
+
+template<>
+std::ostream &operator<< (std::ostream &output, const ZVector<double>  &b);
 
 //-----------------------------------------------------------------
 template <class Data_Type>

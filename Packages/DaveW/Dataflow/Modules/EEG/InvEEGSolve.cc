@@ -46,7 +46,7 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-
+#include <DaveW/ThirdParty/SparseLib/Leonid/Vector.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/MatrixPort.h>
 #include <PSECore/Datatypes/MeshPort.h>
@@ -956,6 +956,9 @@ void InvEEGSolve::execute() {
 
 //
 // $Log$
+// Revision 1.8  1999/11/23 01:39:43  dmw
+// fixed the DaveW ThirdParty stuff - life is swell again
+//
 // Revision 1.7  1999/10/07 02:06:27  sparker
 // use standard iostreams and complex type
 //
