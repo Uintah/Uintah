@@ -59,7 +59,7 @@ itcl_class SCIRun_DataIO_FieldReader {
 	
 	makeOpenFilebox \
 		-parent $w \
-		-filevar $this-d_filename \
+		-filevar $this-filename \
 		-command "$this-c needexecute" \
 		-cancel "destroy $w" \
 		-title $title \
