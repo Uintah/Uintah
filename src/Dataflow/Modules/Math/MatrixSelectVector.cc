@@ -102,8 +102,8 @@ void MatrixSelectVector::execute() {
     if (use_row) {
       cm=new ColumnMatrix(mh->ncols());
       cm->zero();
-      double *data=cm->get_rhs();
-      for (int i=0; i<w->nrows(); i++) {
+      double *data=cm->get_data();
+      for (int i=0; i<w->nrows()/2; i++) {
 	int idx = (*w)[i*2];
 	double wt = (*w)[i*2+1];
 	for (int j=0; j<mh->ncols(); j++)
@@ -112,8 +112,8 @@ void MatrixSelectVector::execute() {
     } else {
       cm=new ColumnMatrix(mh->nrows());
       cm->zero();
-      double *data=cm->get_rhs();
-      for (int i=0; i<w->nrows(); i++) {
+      double *data=cm->get_data();
+      for (int i=0; i<w->nrows()/2; i++) {
 	int idx = (*w)[i*2];
 	double wt = (*w)[i*2+1];
 	for (int j=0; j<mh->nrows(); j++)
@@ -132,11 +132,11 @@ void MatrixSelectVector::execute() {
     ColumnMatrix *cm;
     if (use_row) {
       cm=new ColumnMatrix(mh->ncols());
-      double *data = cm->get_rhs();
+      double *data = cm->get_data();
       for (int c=0; c<mh->ncols(); c++) data[c]=mh->get(which, c);
     } else {
       cm=new ColumnMatrix(mh->nrows());
-      double *data = cm->get_rhs();
+      double *data = cm->get_data();
       for (int r=0; r<mh->nrows(); r++) data[r]=mh->get(r, which);
     }	    
     MatrixHandle cmh(cm);
@@ -147,7 +147,7 @@ void MatrixSelectVector::execute() {
       for (; which<mh->nrows()-1; which++, row_.set(which)) {
 	if (stop_) { stop_=0; break; }
 	cm=new ColumnMatrix(mh->ncols());
-	double *data = cm->get_rhs();
+	double *data = cm->get_data();
 	for (int c=0; c<mh->ncols(); c++) data[c]=mh->get(which, c);
 	MatrixHandle cmh(cm);
 	ovec_->send_intermediate(cmh);
@@ -156,7 +156,7 @@ void MatrixSelectVector::execute() {
       for (; which<mh->ncols()-1; which++, col_.set(which)) {
 	if (stop_) { stop_=0; break; }
 	cm=new ColumnMatrix(mh->nrows());
-	double *data = cm->get_rhs();
+	double *data = cm->get_data();
 	for (int r=0; r<mh->nrows(); r++) data[r]=mh->get(r, which);
 	MatrixHandle cmh(cm);
 	ovec_->send_intermediate(cmh);
@@ -164,11 +164,11 @@ void MatrixSelectVector::execute() {
     }	    
     if (use_row) {
       cm=new ColumnMatrix(mh->ncols());
-      double *data = cm->get_rhs();
+      double *data = cm->get_data();
       for (int c=0; c<mh->ncols(); c++) data[c]=mh->get(which, c);
     } else {
       cm=new ColumnMatrix(mh->nrows());
-      double *data = cm->get_rhs();
+      double *data = cm->get_data();
       for (int r=0; r<mh->nrows(); r++) data[r]=mh->get(r, which);
     }	    
     MatrixHandle cmh(cm);
