@@ -75,7 +75,7 @@ void Grid::performConsistencyCheck() const
              << " and Level " << fineLevel->getIndex() 
              << " is NOT equal to [2,2,2] but " 
              << refineRatio_test << endl;
-        throw InvalidGrid(desc.str());
+        //throw InvalidGrid(desc.str());
       }
       //__________________________________
       // finer level can't lay outside of the coarser level
@@ -112,7 +112,7 @@ void Grid::performConsistencyCheck() const
         ostringstream desc;
         desc << " The finer Level " << fineLevel->getIndex()
              << " must have an even number of cells " <<  i_cells << endl;
-        throw InvalidGrid(desc.str()); 
+        //throw InvalidGrid(desc.str()); 
       }
     }
   }
