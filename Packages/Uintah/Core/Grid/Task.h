@@ -447,7 +447,30 @@ WARNING
     // Insert Documentation Here:
     void computes(const VarLabel*, const MaterialSubset* matls,
 		  DomainSpec matls_domain);
+
+     //////////
+    // Insert Documentation Here:
+    void modifies(const VarLabel*,
+		  const PatchSubset* patches, DomainSpec patches_domain, 
+		  const MaterialSubset* matls, DomainSpec matls_domain,
+		   Ghost::GhostType gtype, int numGhostCells = 0);
     
+    //////////
+    // Insert Documentation Here:
+    void modifies(const VarLabel*, const PatchSubset* patches = 0,
+		  const MaterialSubset* matls = 0);
+    
+    //////////
+    // Insert Documentation Here:
+    void modifies(const VarLabel*, const MaterialSubset* matls,
+		  Ghost::GhostType gtype, int numGhostCells = 0);
+    
+    //////////
+    // Insert Documentation Here:
+    void modifies(const VarLabel*, const MaterialSubset* matls,
+		  DomainSpec matls_domain,
+		   Ghost::GhostType gtype, int numGhostCells = 0);
+   
     //////////
     // Tells the task to actually execute the function assigned to it.
     void doit(const ProcessorGroup* pc, const PatchSubset*,
@@ -518,12 +541,18 @@ WARNING
     const Dependency* getRequires() const {
       return req_head;
     }
+    const Dependency* getModifies() const {
+      return mod_head;
+    }
     
     Dependency* getComputes() {
       return comp_head;
     }
     Dependency* getRequires() {
       return req_head;
+    }
+    Dependency* getModifies() {
+      return mod_head;
     }
     
     bool isReductionTask() const {
@@ -561,6 +590,8 @@ WARNING
     Dependency* comp_tail;
     Dependency* req_head;
     Dependency* req_tail;
+    Dependency* mod_head;
+    Dependency* mod_tail;
     
     const PatchSet* patch_set;
     const MaterialSet* matl_set;
