@@ -16,17 +16,17 @@ PROGRAM := $(SRCDIR)/BldDisks
 SRCS := $(SRCDIR)/BldDisks.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/TestProto
-SRCS := $(SRCDIR)/TestProto.cc
-include $(SRCTOP)/scripts/program.mk
+#PROGRAM := $(SRCDIR)/TestProto
+#SRCS := $(SRCDIR)/TestProto.cc
+#include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/MakeRadialCylinder
-SRCS := $(SRCDIR)/MakeRadialCylinder.cc
-include $(SRCTOP)/scripts/program.mk
+#PROGRAM := $(SRCDIR)/MakeRadialCylinder
+#SRCS := $(SRCDIR)/MakeRadialCylinder.cc
+#include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/DuckReader
-SRCS := $(SRCDIR)/DuckReader.cc
-include $(SRCTOP)/scripts/program.mk
+#PROGRAM := $(SRCDIR)/DuckReader
+#SRCS := $(SRCDIR)/DuckReader.cc
+#include $(SRCTOP)/scripts/program.mk
 
 PROGRAM := $(SRCDIR)/DuckWriter
 SRCS := $(SRCDIR)/DuckWriter.cc
@@ -126,6 +126,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.2.2.4  2000/10/27 16:25:43  mcole
+# fix build in convert
+#
 # Revision 1.2.2.3  2000/10/26 14:02:27  moulding
 # merge HEAD into FIELD_REDESIGN
 #
