@@ -2,14 +2,12 @@
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ChemkinInterface.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ChemkinPrototypes.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/MixRxnTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixRxnTableInfo.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/KDTree.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/VectorTable.h>
+//Are these necessary???
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <iostream>
 #include <string>
 #include <math.h>
@@ -34,54 +32,32 @@ StanjanEquilibriumReactionModel::problemSetup(const ProblemSpecP& params,
 {
   ProblemSpecP rxn_db = params->findBlock("EquilibriumReactionModel");
   d_mixModel = mixModel;
-  int numMixVars = d_mixModel->getNumMixVars();
-  int numRxnVars =  d_mixModel->getNumRxnVars();
+  d_numMixVars = d_mixModel->getNumMixVars();
+  d_numRxnVars =  d_mixModel->getNumRxnVars();
+  d_rxnTableDimension = d_numMixVars + d_numRxnVars + !(d_adiabatic);
+  d_rxnTableInfo = new MixRxnTableInfo(d_rxnTableDimension);
+  bool mixTableFlag = false;
+  d_rxnTableInfo->problemSetup(rxn_db, mixTableFlag, d_mixModel);
   d_depStateSpaceVars = NUM_DEP_VARS + d_reactionData->getNumSpecies();
-  //cout << "Stanjan: depStateVars = " << d_depStateSpaceVars << endl;
   d_lsoot = false;
-  d_rxnTableDimension = numMixVars + numRxnVars + !(d_adiabatic);
+  d_rxnTable = new KD_Tree(d_rxnTableDimension, d_depStateSpaceVars);
+  // tableSetup is a function in DynamicTable; it allocates memory for table
+  tableSetup(d_rxnTableDimension, d_rxnTableInfo);
   d_indepVars = vector<double>(d_rxnTableDimension);
-  // Only need to set up reaction table if mixing table is dynamic
-  string mixTableType = mixModel->getMixTableType();
-  if (mixTableType == "dynamic") {
-    d_rxnTableInfo = new MixRxnTableInfo(d_rxnTableDimension);
-    bool varFlag = false; //Table does not have variance
-    d_rxnTableInfo->problemSetup(rxn_db, varFlag, d_mixModel); 
-    // Set up table, either as vectors or as kdtree
-    string tableType, tableStorage;
-    //No static table capability for equilibrium model; need to add???
-    rxn_db->require("TableType", tableType);
-    if (tableType == "static") {
-      cerr << "Static equilibrium table not implemented yet" << endl;
-      cerr << "Table will be computed dynamically" << endl;
-    }
-    rxn_db->require("TableStorage", tableStorage);
-    if (tableStorage == "KDTree")
-      d_rxnTable = new KD_Tree(d_rxnTableDimension, d_depStateSpaceVars);
-    else if (tableStorage == "2DVector")
-      d_rxnTable = new VectorTable(d_rxnTableDimension, d_rxnTableInfo);
-    else {
-      d_rxnTable = new VectorTable(d_rxnTableDimension, d_rxnTableInfo);
-      cout << "TABLE STORAGE is vectorTable" << endl;
-      //throw InvalidValue("Table storage not supported" + tableStorage);
-    }
-    // tableSetup is a function in DynamicTable; it allocates memory for table
-    tableSetup(d_rxnTableDimension, d_rxnTableInfo);
-  } // If mixTableType = "dynamic"
-
 }
 
 void
-StanjanEquilibriumReactionModel::getRxnStateSpace(Stream unreactedMixture,
-						      vector<double> varsHFPi,
+StanjanEquilibriumReactionModel::getRxnStateSpace(Stream& unreactedMixture,
+						      vector<double>& varsHFPi,
 						      Stream& reactedStream)
 {
-  getProps(varsHFPi, reactedStream);
+  reactedStream = getProps(varsHFPi);
 }
 
-void
-StanjanEquilibriumReactionModel::tableLookUp(int* tableKeyIndex, Stream& equilStateSpace) 
+Stream
+StanjanEquilibriumReactionModel::tableLookUp(int* tableKeyIndex) 
 {
+  Stream equilStateSpace;
   vector<double> vec_stateSpaceVars;
   bool flag = false;
 #if 0
@@ -102,7 +78,7 @@ StanjanEquilibriumReactionModel::tableLookUp(int* tableKeyIndex, Stream& equilSt
       vector<double> mixVars(d_mixModel->getNumMixVars());
       for (int jj = 0; jj < d_mixModel->getNumMixVars(); jj++) {
 	mixVars[jj] = d_indepVars[mixIndex+jj];
-	//cout << "Stanjan::mixVars = " << mixVars[jj]<< endl;
+	//cout << "Stanjan::indepVars = " << d_indepVars[jj]<< endl;
       }
       Stream unreactedStream = d_mixModel->speciesStateSpace(mixVars);
       computeRxnStateSpace(unreactedStream, d_indepVars, equilStateSpace);
@@ -113,8 +89,7 @@ StanjanEquilibriumReactionModel::tableLookUp(int* tableKeyIndex, Stream& equilSt
       double eps = 0.0001;
       vector <double> dfMixVars(1);
       if (mixVars[0] > 0.9999) 
-        //dfMixVars[0] = mixVars[0] - eps;
-	dfMixVars[0] = mixVars[0] - 0.01;
+        dfMixVars[0] = mixVars[0] - eps;
       else
         dfMixVars[0] = mixVars[0] + eps;
       Stream dfStream =  d_mixModel->speciesStateSpace(dfMixVars);
@@ -124,7 +99,6 @@ StanjanEquilibriumReactionModel::tableLookUp(int* tableKeyIndex, Stream& equilSt
         equilStateSpace.d_drhodf = (equilStateSpace.d_density - dfStateSpace.d_density)/eps;
       else    
         equilStateSpace.d_drhodf = (dfStateSpace.d_density - equilStateSpace.d_density)/eps;
-      //cout << "dfrho = " << dfStateSpace.d_density << " rho = " << equilStateSpace.d_density << endl; 
       vec_stateSpaceVars = equilStateSpace.convertStreamToVec();
       // defined in K-D tree implementation
       d_rxnTable->Insert(tableKeyIndex, vec_stateSpaceVars);
@@ -137,6 +111,7 @@ StanjanEquilibriumReactionModel::tableLookUp(int* tableKeyIndex, Stream& equilSt
 				       d_mixModel->getNumMixVars(),
 				       d_mixModel->getNumRxnVars(), d_lsoot);
   }
+  return equilStateSpace;  
 
 }
 
@@ -157,8 +132,8 @@ StanjanEquilibriumReactionModel::convertIndextoValues(int tableKeyIndex[])
 
 
 void
-StanjanEquilibriumReactionModel::computeRxnStateSpace(Stream unreactedMixture,
-						      vector<double> mixRxnVar,
+StanjanEquilibriumReactionModel::computeRxnStateSpace(Stream& unreactedMixture,
+						      vector<double>& mixRxnVar,
 						      Stream& equilStateSpace)
 {
   equilStateSpace = unreactedMixture;
@@ -173,10 +148,7 @@ StanjanEquilibriumReactionModel::computeRxnStateSpace(Stream unreactedMixture,
     initMassFract = d_reactionData->convertMolestoMass(
 				      unreactedMixture.d_speciesConcn);
   else
-    initMassFract = unreactedMixture.d_speciesConcn;  
-  // Check to see if mixture fraction is close to 1.0. If so, stanjan will
-  // fail, so return unreacted values; unnecessary with table
-  //if (mixRxnVar[0] > 1e-10)
+    initMassFract = unreactedMixture.d_speciesConcn;   
   computeEquilibrium(initTemp, initPress, initMassFract, equilStateSpace);
   equilStateSpace.d_lsoot = d_lsoot;  // No soot in this model
   double sensibleEnthalpy = 0;
@@ -219,7 +191,7 @@ StanjanEquilibriumReactionModel::computeRxnStateSpace(Stream unreactedMixture,
       equilStateSpace.d_drhodh = (equilStateSpace.d_density - dhStateSpace.d_density)/eps;
     else  
       equilStateSpace.d_drhodh = (dhStateSpace.d_density - equilStateSpace.d_density)/eps;
-
+    
     // Calculate radiation gas absorption coefficient and black body
     // emissivity for given mixture
     //computeRadiationProperties();

@@ -328,7 +328,6 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 		   mol_viscos, CF, d_factorMesh, d_filterl);
 
     // boundary conditions
-   /* 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -396,7 +395,6 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 	}
       }
     }
-*/
 
     if (d_MAlab) {
       IntVector indexLow = patch->getCellLowIndex();
@@ -539,7 +537,6 @@ SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
 		   mol_viscos, CF, d_factorMesh, d_filterl);
 
     // boundary conditions
-   /* 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -608,7 +605,6 @@ SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
       }
     }
 
-*/
     if (d_MAlab) {
       IntVector indexLow = patch->getCellLowIndex();
       IntVector indexHigh = patch->getCellHighIndex();

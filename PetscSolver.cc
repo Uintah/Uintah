@@ -50,7 +50,7 @@ PetscSolver::PetscSolver(const ProcessorGroup* myworld)
 // ****************************************************************************
 PetscSolver::~PetscSolver()
 {
- finalizeSolver();
+  finalizeSolver();
 }
 
 // ****************************************************************************
