@@ -197,16 +197,20 @@ WARNING
      CellIterator getExtraCellIterator(const Box& b) const;
      
      //__________________________________
-     //   I C E - M P M I C E   I T E R A T O R S
+     //   I C E - M P M I C E   S T U F F 
      CellIterator getFaceCellIterator(const FaceType& face, 
                                 const string& domain="minusEdgeCells") const;
+     CellIterator getEdgeCellIterator(const FaceType& face0, 
+                                const FaceType& face1,
+                                const string& domain="minusCornerCells") const;
 
      CellIterator getSFCXIterator(const int offset = 0) const;
      CellIterator getSFCYIterator(const int offset = 0) const;
      CellIterator getSFCZIterator(const int offset = 0) const;
      CellIterator getSFCIterator( const int dir, const int offset = 0) const;
      CellIterator addGhostCell_Iter(CellIterator hi_lo, const int nCells) const;
-      
+     
+     IntVector faceAxes(const FaceType& face) const; 
      //__________________________________
      //////////
      // Insert Documentation Here:

@@ -1401,6 +1401,73 @@ Patch::getFaceCellIterator(const FaceType& face, const string& domain) const
   } 
   return CellIterator(lowPt, highPt);
 }
+//__________________________________
+//  Iterate over an edge at the intersection of face0 and face1
+// if domain == minusCornerCells this subtracts off the corner cells.
+CellIterator    
+Patch::getEdgeCellIterator(const FaceType& face0, 
+                           const FaceType& face1,const string& domain) const
+{ 
+  vector<IntVector>loPt(2);   
+  vector<IntVector>hiPt(2); 
+  loPt[0] = d_lowIndex;
+  loPt[1] = d_lowIndex;
+  hiPt[0] = d_highIndex;
+  hiPt[1] = d_highIndex;
+  
+  IntVector dir0 = faceDirection(face0);
+  IntVector dir1 = faceDirection(face1);
+  IntVector test = dir0 + dir1; // add the normal components, i.e.,
+                                // xminus(-1) + xplus(1) = 0
+  
+  if (face0 == face1 || test == IntVector(0,0,0)) {  //  no edge here
+    return CellIterator(loPt[0], loPt[0]);
+  }
+  
+  for (int f = 0; f < 2 ; f++ ) {
+    FaceType face;
+    if (f == 0 ) {
+     face = face0;
+    }else{
+     face = face1;
+    }
+    
+    if(face == Patch::xplus) {           //  X P L U S
+      loPt[f].x(d_inHighIndex.x());
+      hiPt[f].x(d_inHighIndex.x()+1);
+    }
+    if(face == Patch::xminus){           //  X M I N U S
+      loPt[f].x(d_inLowIndex.x()-1);
+      hiPt[f].x(d_inLowIndex.x());
+    }
+    if(face == Patch::yplus) {           //  Y P L U S
+      loPt[f].y(d_inHighIndex.y());
+      hiPt[f].y(d_inHighIndex.y()+1);
+    }
+    if(face == Patch::yminus) {          //  Y M I N U S
+      loPt[f].y(d_inLowIndex.y()-1);
+      hiPt[f].y(d_inLowIndex.y());
+    }
+    if(face == Patch::zplus) {           //  Z P L U S
+      loPt[f].z(d_inHighIndex.z() );
+      hiPt[f].z(d_inHighIndex.z()+1);
+    }
+    if(face == Patch::zminus) {          //  Z M I N U S
+      loPt[f].z(d_inLowIndex.z()-1);
+      hiPt[f].z(d_inLowIndex.z());
+    } 
+  }
+  // compute the edge low and high pt from the intersection
+  IntVector LowPt  = Max(loPt[0], loPt[1]);
+  IntVector HighPt = Min(hiPt[0], hiPt[1]);
+  
+  if(domain == "minusCornerCells"){
+    IntVector offset = IntVector(1,1,1) - Abs(dir0) - Abs(dir1);
+    LowPt  +=offset;
+    HighPt -=offset;
+  }
+  return CellIterator(LowPt, HighPt);
+}
 
 
 //__________________________________
@@ -1425,6 +1492,24 @@ Patch::addGhostCell_Iter(CellIterator hi_lo, const int nCells) const
    return  CellIterator(ll,hh);
 } 
 
+//__________________________________
+//  Returns the main axis along a face and
+//  the orthognonal axes to that face.
+IntVector
+Patch::faceAxes(const FaceType& face) const
+{
+  IntVector dir(0,0,0);
+  if (face == xminus || face == xplus ) {
+    dir = IntVector(0,1,2);
+  }
+  if (face == yminus || face == yplus ) {
+    dir = IntVector(1,0,2);
+  }
+  if (face == zminus || face == zplus ) {
+    dir = IntVector(2,0,1);
+  }
+  return dir;
+}
 //______________________________________________________________________
 
 
