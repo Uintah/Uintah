@@ -91,8 +91,8 @@
 	<p>Another useful technique for visualizing data is to interpolate data values
 	 from one Field to another Field. In this section, we will read in two datasets:
 	<ul> 
-	<li>Contains the utahtorso volume mesh we looked at in Chapter 1.
-	<li>Contains the electrodes that we looked at in
+	<li>The first contains the utahtorso volume mesh we looked at in Chapter 1.
+	<li>The second contains the electrodes that we looked at in
 	Chapter 2 [link here to chapter 2, electrodes]. </ul>
 	
 	<p>The volume Field contains simulated voltage values
@@ -155,7 +155,7 @@
 	<ol>
 	<li value:"1.">Connect the output
 	from the Gradient module to the the first Field input port of
-	the StreamLines module.
+	the StreamLines module.</ol>
 
 	<p>To generate a sample distribution of streamline seed
 	points, we will use the SampleField module.  SampleField
@@ -165,16 +165,17 @@
 	<p>The samples can be generated randomly or can be user selected 
 	via a 3D widget.  For streamline visualization, we use a 3D "rake" widget to
 	place our distribution of seed points.
-
+	
 	<p>To interactively position the rake of seed points within
 	the volume:
-	<li value="2.">Connect the Geometry output port (pink) from this
+	<ol><li value="2.">Connect the Geometry output port (pink) from this
 	module to the Viewer module.  
 	<li>Select the "rake" option from the SampleField UI and 
 	set the number of samples to 15.
 	<li>Connect the Field output port from this module to the
 	second Field input port of the StreamLines module.
-	</ol>
+	</ol><br>
+
 	<p>At this point, we have streamlines coming out of the
         StreamLines module, and we would like to render them.  Before
         we do, we can attach scalar datavalues to the
