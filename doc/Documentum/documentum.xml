@@ -1613,9 +1613,8 @@ printable version of the users guide.</para>
 </section>
 
 <section id="to-do">
-<title>To Do</title>
-<para>The following sections present a never ending list of things to
-be done.</para>
+<title>To Do</title> <para>The following sections present a never
+ending list of documentation related things to be done.</para>
 
 <section>
 <title>User Docs</title>
@@ -1669,7 +1668,7 @@ stylesheets.</para>
 <para>Add section to this document on editing latex documents.</para>
 </listitem>
 </itemizedlist>
-
+ 
 </section>
 
 <section>
@@ -1699,6 +1698,32 @@ class="starttag">rlink</sgmltag> elements with <sgmltag
 class="starttag">ulink</sgmltag> (for url style links) and <sgmltag
 class="starttag">link</sgmltag> (for intra document
 links).</para>
+</listitem>
+<listitem>
+<para>
+Extend <sgmltag class="starttag">gui</sgmltag> element to accommodate
+multiple panes (say via tabs).  This would basically change the
+<sgmltag class="starttag">gui</sgmltag> grammer to look like this:
+<literallayout class="monospaced">
+<![CDATA[
+<!ELEMENT gui ((description, parameter+, (img, caption?)+)+)>
+]]>
+</literallayout>
+</para>
+</listitem>
+<listitem>
+<para>
+Introduce a more feature filled <sgmltag
+class="starttag">img</sgmltag> element, e.g. one that includes
+<sgmltag class="starttag">title</sgmltag> and/or <sgmltag
+class="starttag">caption</sgmltag> elements.
+</para>
+</listitem>
+<listitem>
+<para>
+Convert the component DTD to an XML schema.  This should allow for
+more precise error/incompleteness checking.
+</para>
 </listitem>
 </itemizedlist>
 </para>
