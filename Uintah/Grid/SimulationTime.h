@@ -41,6 +41,7 @@ namespace Uintah {
       double initTime;
       double delt_min;
       double delt_max;
+      double delt_factor;
       
    private:
       SimulationTime(const SimulationTime&);
@@ -51,6 +52,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.3  2000/06/08 20:59:19  jas
+// Added timestep multiplier (fudge factor).
+//
 // Revision 1.2  2000/04/26 06:48:57  sparker
 // Streamlined namespaces
 //

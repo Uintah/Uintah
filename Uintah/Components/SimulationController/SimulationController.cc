@@ -148,7 +148,7 @@ void SimulationController::run()
       delt_vartype delt_var;
       old_ds->get(delt_var, sharedState->get_delt_label());
 
-      double delt = delt_var;
+      double delt = delt_var*timeinfo.delt_factor;
 
       if(delt < timeinfo.delt_min){
 	 cerr << "WARNING: raising delt from " << delt
@@ -428,6 +428,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.29  2000/06/08 21:00:40  jas
+// Added timestep multiplier (fudge factor).
+//
 // Revision 1.28  2000/06/05 19:51:56  guilkey
 // Formatting
 //
