@@ -29,6 +29,7 @@
 #include <Packages/rtrt/Core/PPMImage.h>
 #include <Packages/rtrt/Core/Trigger.h>
 #include <Packages/rtrt/Core/VolumeVis2D.h>
+#include <Packages/rtrt/Core/MouseCallBack.h>
 #if !defined(linux)
 #  include <Packages/rtrt/Sound/SoundThread.h>
 #  include <Packages/rtrt/Sound/Sound.h>
@@ -55,8 +56,9 @@
 #include <strings.h> // for bzero
 #include <errno.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <Packages/rtrt/Core/MouseCallBack.h>
+#include <sgi_stl_warnings_on.h>
 
 // From Glyph.cc
 namespace rtrt {
@@ -851,6 +853,9 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   case 27: // Escape key... need to find a symbolic name for this...
     activeGui->quit();
     break;
+  case 'S':
+    activeGui->priv->stereo=!(activeGui->priv->stereo);
+    break;
 #if 0
     // below is for blending "pixels" in
     // frameless rendering...
@@ -863,9 +868,6 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   case '1':
     cout << "NOTICE: Use 2 key to toggle Stereo\n";
     cout << "      : 1 key is deprecated and may go away\n";
-    break;
-  case '2':
-    stereo=!stereo;
     break;
 
     FPS -= 1;
@@ -1406,7 +1408,7 @@ Gui::handleSpaceballMotionCB( int sbm_x, int sbm_y, int sbm_z )
 }
 
 void
-Gui::handleSpaceballRotateCB( int sbr_x, int sbr_y, int sbr_z )
+Gui::handleSpaceballRotateCB( int sbr_x, int sbr_y, int /*sbr_z*/ )
 {
   double sensitivity = 1000.0;
 
@@ -1695,7 +1697,7 @@ Gui::createObjectWindow( GLUI * window )
 	SGCallbackInfo *cbi1 = new SGCallbackInfo();
 	callback_info_list.push_back(cbi1);
 	cbi1->sg = sg;
-	int callback_info_id = callback_info_list.size() - 1;
+	int callback_info_id = static_cast<int>(callback_info_list.size() - 1);
 	
 	(window->add_checkbox_to_panel( panel, "Cycle Objects", NULL,
 					callback_info_id,
@@ -2007,7 +2009,7 @@ Gui::addLight( Light * light )
 {
   string & name = light->name_;
   if( name != "" ) {
-    int numLights = lights_.size();
+    int numLights = static_cast<int>(lights_.size());
     char namec[1024];
     sprintf( namec, "%s", name.c_str() );
 
