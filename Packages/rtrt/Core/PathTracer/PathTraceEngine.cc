@@ -100,7 +100,8 @@ PathTraceWorker::PathTraceWorker(Group *group, PathTraceContext *ptc,
       // between sets of points.
       for(int sample = 0; sample < ptc->num_samples[div_index]; sample++) {
 	Point2D temp = sample_points(sgindex, div_index)[sample];
-	int random_index = rng() * (ptc->num_samples[div_index]-1);
+	int random_index =
+          static_cast<int>(rng() * (ptc->num_samples[div_index]-1));
 	sample_points(sgindex, div_index)[sample] = 
 	  sample_points(sgindex, div_index)[random_index];
 	sample_points(sgindex, div_index)[random_index] = temp;
@@ -406,7 +407,7 @@ TextureSphere::TextureSphere(const Point &cen, double radius, int tex_res):
   inside.initialize(0);
 }
 
-void TextureSphere::dilateTexture(size_t index, PathTraceContext* ptc) {
+void TextureSphere::dilateTexture(size_t /*index*/, PathTraceContext* ptc) {
   //  cout<<"Dilating texture "<<index<<" ("<<"s="<<ptc->support
   //      <<", uwa="<<ptc->use_weighted_ave<<", t="<<ptc->threshold<<")"
   //      <<endl;
