@@ -49,7 +49,8 @@ RadLinearSolver::RadLinearSolver(const ProcessorGroup* myworld)
 // ****************************************************************************
 RadLinearSolver::~RadLinearSolver()
 {
-  finalizeSolver();
+// Comment out the following till better place to finalize PETSC is found
+//  finalizeSolver();
 }
 
 // ****************************************************************************
