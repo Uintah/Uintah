@@ -1,9 +1,6 @@
-
-/* REFERENCED */
-static char *id="$Id$";
-
 /*
  *  FileNotFound.h: Generic exception for internal errors
+ *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -44,6 +41,9 @@ const char* FileNotFound::type() const
 
 //
 // $Log$
+// Revision 1.2  2000/09/25 19:46:41  sparker
+// Quiet warnings under g++
+//
 // Revision 1.1  2000/05/20 08:06:12  sparker
 // New exception classes
 //

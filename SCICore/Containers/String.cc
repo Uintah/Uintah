@@ -283,12 +283,12 @@ clString clString::substr(int start, int length) const
 {
     ASSERT(p != 0);
     unsigned long len=strlen(p->s);
-    ASSERTRANGE(start, 0, len);
+    ASSERTRANGE(start, 0, (int)len);
     unsigned long l=length==-1?len-start:length;
     ASSERTRANGE((long)(start+l), 0, (long)(len+1));
     char* tmp=scinew char[l+1];
     int i;
-    for(i=0;i<l;i++){
+    for(i=0;i<(int)l;i++){
 	tmp[i]=p->s[i+start];
     }
     tmp[i]='\0';
@@ -504,6 +504,9 @@ void clString::test_performance(PerfTest* __pt) {
 
 //
 // $Log$
+// Revision 1.10  2000/09/25 19:45:53  sparker
+// Quiet warnings under g++
+//
 // Revision 1.9  2000/03/23 10:29:18  sparker
 // Use new exceptions/ASSERT macros
 // Fixed compiler warnings

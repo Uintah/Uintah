@@ -74,7 +74,7 @@ void
 ThreadPool::parallel(const ParallelBase& helper, int nthreads)
 {
     d_lock.lock();
-    if(nthreads >= d_threads.size()){
+    if(nthreads >= (int)d_threads.size()){
 	if(!d_group)
 	    d_group=new ThreadGroup("Parallel group");
 	int oldsize = d_threads.size();
