@@ -1,3 +1,8 @@
+//----- PicardNonlinearSolver.h -----------------------------------------------
+
+#ifndef Uintah_Component_Arches_PicardNonlinearSolver_h
+#define Uintah_Component_Arches_PicardNonlinearSolver_h
+
 /**************************************
 CLASS
    NonlinearSolver
@@ -29,15 +34,11 @@ WARNING
    none
 ****************************************/
 
-#ifndef Uintah_Component_Arches_PicardNonlinearSolver_h
-#define Uintah_Component_Arches_PicardNonlinearSolver_h
-
-#include "Arches.h"
-#include "NonlinearSolver.h"
-
+#include <Uintah/Components/Arches/Arches.h>
+#include <Uintah/Components/Arches/NonlinearSolver.h>
 
 namespace Uintah {
-    namespace ArchesSpace {
+namespace ArchesSpace {
 
 class PressureSolver;
 class MomentumSolver;
@@ -47,77 +48,142 @@ class Properties;
 class BoundaryCondition;
 class PhysicalConstants;
 const double MACHINEPRECISSION = 14.0; //used to compute residual
-class PicardNonlinearSolver:
-public NonlinearSolver
-{
+
+class PicardNonlinearSolver: public NonlinearSolver {
+
 public:
 
-  // GROUP: Constructors:
-  ////////////////////////////////////////////////////////////////////////
-  //
-  PicardNonlinearSolver(Properties* props, BoundaryCondition* bc,
-			TurbulenceModel* turbModel, 
-			PhysicalConstants* physConst);
+      // GROUP: Constructors:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Solver initialized with all input data 
+      //
+      PicardNonlinearSolver(Properties* props, 
+			    BoundaryCondition* bc,
+			    TurbulenceModel* turbModel, 
+			    PhysicalConstants* physConst);
+
+      // GROUP: Destructors:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Virtual destructor for PicardNonlinearSolver.
+      //
+      virtual ~PicardNonlinearSolver();
 
 
+      // GROUP: Problem Setup :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Set up the problem specification database
+      //
+      virtual void problemSetup(const ProblemSpecP& input_db);
 
-  // GROUP: Destructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Virtual destructor for PicardNonlinearSolver.
-  virtual ~PicardNonlinearSolver();
-
-
-  ////////////////////////////////////////////////////////////////////////
-  // Solve the nonlinear system.
-  // The code returns 0 if there are no errors and
-  // 1 if there is a nonlinear failure.
-  //    [in] data User data needed for solve 
-  virtual int nonlinearSolve(double time, double deltat, const LevelP&,
-			     SchedulerP& sched,
-			     const DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw);
+      // GROUP: Schedule Action :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Solve the nonlinear system. (also does some actual computations)
+      // The code returns 0 if there are no errors and
+      // 1 if there is a nonlinear failure.
+      //    [in] 
+      //        documentation here
+      //    [out] 
+      //        documentation here
+      //
+      virtual int nonlinearSolve(double time, double deltat, 
+				 const LevelP&,
+				 SchedulerP& sched,
+				 DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw);
   
-  virtual void problemSetup(const ProblemSpecP& input_db);
-  void computeResidual(const LevelP&, SchedulerP& sched,
-		       const DataWarehouseP& old_dw,
-		       DataWarehouseP& new_dw);
-  void sched_initialize(const LevelP&, SchedulerP& sched,
-			    const DataWarehouseP& old_dw,
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Schedule the Initialization of non linear solver
+      //    [in] 
+      //        data User data needed for solve 
+      //
+      void sched_initialize(const LevelP&, 
+			    SchedulerP& sched,
+			    DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw);
+
+      // GROUP: Action Computations :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Compute the residual
+      //    [in] 
+      //        documentation here
+      //
+      void computeResidual(const LevelP&, 
+			   SchedulerP& sched,
+			   const DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw);
   
+protected :
 
 private:
-  void initialize(const ProcessorContext* pc,
-		  const Patch* patch,
-		  const DataWarehouseP& old_dw,
-		  DataWarehouseP& new_dw);
-  // Total number of nonlinear iterates
-  int d_nonlinear_its;
-  // nonlinear residual tolerance
-  double d_resTol;
-    
-  // Pressure Eqn Solver
-  PressureSolver* d_pressSolver;
-  
-  // Momentum Eqn Solver 
-  MomentumSolver* d_momSolver;
 
-  // Scalar solver
-  ScalarSolver* d_scalarSolver;
-  // physcial constatns
-  PhysicalConstants* d_physicalConsts;
-  // properties...solves density, temperature and specie concentrations
-  Properties* d_props;
-  
-  // Turbulence Model
-  TurbulenceModel* d_turbModel;
-  // Boundary conditions
-  BoundaryCondition* d_boundaryCondition;
-  
-};
+      // GROUP: Constructors (private):
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Should never be used
+      //
+      PicardNonlinearSolver();
 
-    }
-}
+      // GROUP: Action Methods (private) :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Actually Initialize the non linear solver
+      //    [in] 
+      //        data User data needed for solve 
+      //
+      void initialize(const ProcessorContext* pc,
+		      const Patch* patch,
+		      DataWarehouseP& old_dw,
+		      DataWarehouseP& new_dw);
+
+private:
+
+      // Total number of nonlinear iterates
+      int d_nonlinear_its;
+      // nonlinear residual tolerance
+      double d_resTol;
+      // Pressure Eqn Solver
+      PressureSolver* d_pressSolver;
+      // Momentum Eqn Solver 
+      MomentumSolver* d_momSolver;
+      // Scalar solver
+      ScalarSolver* d_scalarSolver;
+      // physcial constatns
+      PhysicalConstants* d_physicalConsts;
+      // properties...solves density, temperature and specie concentrations
+      Properties* d_props;
+      // Turbulence Model
+      TurbulenceModel* d_turbModel;
+      // Boundary conditions
+      BoundaryCondition* d_boundaryCondition;
+
+      // const VarLabel*
+      const VarLabel* d_pressureLabel;
+      const VarLabel* d_velocityLabel;
+      const VarLabel* d_scalarLabel;
+      const VarLabel* d_densityLabel;
+      const VarLabel* d_viscosityLabel;
+
+      // generation variable for DataWarehouse creation
+      int d_generation;
+  
+}; // End class PicardNonlinearSolver
+
+} // End namespace ArchesSpace
+} // End namespace Uintah
 
 #endif
+
+//
+// $Log$
+// Revision 1.10  2000/06/04 22:40:14  bbanerje
+// Added Cocoon stuff, changed task, require, compute, get, put arguments
+// to reflect new declarations. Changed sub.mk to include all the new files.
+//
+//
 

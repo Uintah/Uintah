@@ -11,14 +11,16 @@ SRCS     += $(SRCDIR)/Arches.cc $(SRCDIR)/BoundaryCondition.cc \
 	$(SRCDIR)/NonlinearSolver.cc $(SRCDIR)/PhysicalConstants.cc \
 	$(SRCDIR)/PicardNonlinearSolver.cc \
 	$(SRCDIR)/Properties.cc $(SRCDIR)/SmagorinskyModel.cc \
-	$(SRCDIR)/TurbulenceModel.cc
+	$(SRCDIR)/TurbulenceModel.cc $(SRCDIR)/Discretization.cc \
+	$(SRCDIR)/LinearSolver.cc \
+	$(SRCDIR)/PressureSolver.cc $(SRCDIR)/MomentumSolver.cc \
+	$(SRCDIR)/ScalarSolver.cc $(SRCDIR)/RBGSSolver.cc \
+	$(SRCDIR)/Source.cc
+
 
 #SUBDIRS := $(SRCDIR)/fortran
 
 #include $(SRCTOP)/scripts/recurse.mk
-
-#$(SRCDIR)/Discretization.cc 
-#	$(SRCDIR)/PressureSolver.cc
 
 PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions \
 	   SCICore/Exceptions
@@ -28,6 +30,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.12  2000/06/04 22:40:16  bbanerje
+# Added Cocoon stuff, changed task, require, compute, get, put arguments
+# to reflect new declarations. Changed sub.mk to include all the new files.
+#
 # Revision 1.11  2000/05/30 19:35:26  dav
 # added SCICore/Exceptions to PSELIBS
 #
