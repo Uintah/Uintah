@@ -60,6 +60,7 @@ public:
   StaticSlot( void (*fun)() ) : fun(fun) {}
   
   virtual void send() { (*fun)(); }
+  bool operator==(const StaticSlot &s) { return fun == s.fun;}
 };
 
 /*
@@ -75,6 +76,7 @@ private:
 public:
   Slot( Caller *caller, void (Caller::*pmf)() ) : caller(caller), pmf(pmf) {}
   virtual void send() { (caller->*pmf)(); }
+  bool operator==(const Slot &s) { return caller == s.caller && pmf == s.pmf; }
 };
 
 
@@ -87,7 +89,21 @@ private:
   vector<SlotBase *> slot;
 public:
   void add( SlotBase *s) { slot.push_back(s); }
+
   void operator()() { for (int i=0; i<slot.size(); i++) slot[i]->send(); }
+
+  template<class Slot>
+  bool rem( const Slot &r) { 
+    for (int i=0; i<slot.size(); i++) {
+      Slot *s = dynamic_cast<Slot *>(slot[i]);
+      if ( s && (*s) == r ) {
+	delete slot[i];
+	slot.erase( slot.begin()+i);
+	return true;
+      }
+    }
+    return false;
+  }
 };
 
 /*
@@ -106,6 +122,21 @@ void connect( Signal &s, void (*fun)() )
   s.add( slot );
 }
 
+/*
+ * Disconnect (void)
+ */
+
+template<class T>
+bool disconnect( Signal &s, T &t, void (T::*fun)())
+{
+  return s.rem(Slot<T>(&t, fun));
+}
+
+bool disconnect( Signal &s, void (*fun)() )
+{
+  return s.rem( StaticSlot( fun ) );
+}
+  
 //
 // ****************** single arg
 //
@@ -129,6 +160,8 @@ public:
   Slot1( Caller *caller, void (Caller::*pmf)(Arg1) )
     : caller(caller), pmf(pmf) {}
   void send(Arg1 arg) { (caller->*pmf)(arg); }
+  bool operator==(const Slot1<Caller,Arg1> &s) 
+    { return caller == s.caller && pmf == s.pmf; }
 };
 
 /*
@@ -143,6 +176,7 @@ public:
   StaticSlot1( void (*fun)(Arg1) ) : fun(fun) {}
   
   virtual void send(Arg1 a) { (*fun)(a); }
+  bool operator==(const StaticSlot1<Arg1> &s) { return fun == s.fun;}
 };
 
 /*
@@ -156,6 +190,18 @@ private:
 public:
   void add( SlotBase1<Arg> *s) { slot.push_back(s); }
   void operator()( Arg a) {for (int i=0; i<slot.size(); i++) slot[i]->send(a);}
+  template<class Slot>
+  bool rem( const Slot &r) { 
+    for (int i=0; i<slot.size(); i++) {
+      Slot *s = dynamic_cast<Slot *>(slot[i]);
+      if ( s && (*s) == r ) {
+	delete slot[i];
+	slot.erase( slot.begin()+i);
+	return true;
+      }
+    }
+    return false;
+  }
 };
 
 /*
@@ -175,6 +221,22 @@ void connect( Signal &s, void (*fun)(Arg1) )
 {
   StaticSlot1<Arg1> *slot = new StaticSlot1<Arg1>( fun );
   s.add( slot );
+}
+
+/*
+ * Disconnect (Arg)
+ */
+
+template<class T, class Arg>
+bool disconnect( Signal1<Arg> &s, T &t, void (T::*fun)(Arg))
+{
+  return s.rem(Slot1<T,Arg>(&t, fun));
+}
+
+template<class Arg>
+bool disconnect( Signal1<Arg> &s, void (*fun)(Arg) )
+{
+  return s.rem( StaticSlot1<Arg>( fun ) );
 }
 
 //
@@ -247,6 +309,22 @@ void connect( Signal &s, void (*fun)(Arg1,Arg2) )
 {
   StaticSlot2<Arg1,Arg2> *slot = new StaticSlot2<Arg1,Arg2>( fun );
   s.add( slot );
+}
+
+/*
+ * Disconnect (Arg1, Arg2)
+ */
+
+template<class T, class Arg1, class Arg2>
+bool disconnect( Signal2<Arg1, Arg2> &s, T &t, void (T::*fun)(Arg1, Arg2))
+{
+  return s.rem(Slot2<T,Arg1, Arg2>(&t, fun));
+}
+
+template<class Arg1, class Arg2>
+bool disconnect( Signal2<Arg1, Arg2> &s, void (*fun)(Arg1, Arg2) )
+{
+  return s.rem( StaticSlot2<Arg1, Arg2>( fun ) );
 }
 
 #endif // Signals_h
