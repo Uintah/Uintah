@@ -263,13 +263,12 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
         tsk->requires(Task::OldDW, d_lab->d_radiationFluxBINLabel,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
-	/*
         tsk->requires(Task::OldDW, d_lab->d_abskgINLabel,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
-	*/
+	/*
         tsk->requires(Task::OldDW, d_lab->d_abskgINLabel,
           	      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
+	*/
       }
     } 
   }
@@ -582,17 +581,16 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
         old_dw->copyOut(enthalpyVars.src, d_lab->d_radiationSRCINLabel,
 		        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-	/*
 	new_dw->allocateAndPut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
 			       matlIndex, patch);
         old_dw->copyOut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
 		        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-	*/
+	/*
  	new_dw->allocateAndPut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
 			       matlIndex, patch);
         old_dw->copyOut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
 		        matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
+	*/
         }
         else {
         new_dw->get(constEnthalpyVars.co2, d_lab->d_co2INLabel, 
@@ -712,7 +710,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 	enthalpyVars.qfluxs.initialize(0.0);
 	enthalpyVars.qfluxt.initialize(0.0);
 	enthalpyVars.qfluxb.initialize(0.0);
-        enthalpyVars.ABSKG.initialize(0.0);
+	enthalpyVars.ABSKG.initialize(0.0);
 
 	d_DORadiation->computeRadiationProps(pc, patch, cellinfo,
 					     &enthalpyVars, &constEnthalpyVars);

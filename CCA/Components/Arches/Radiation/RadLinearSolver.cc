@@ -62,12 +62,12 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
   if (params) {
     ProblemSpecP db = params->findBlock("LinearSolver");
     if (db) {
-
+      /*
       if (db->findBlock("shsolver"))
 	db->require("shsolver", d_shsolver);
       else
 	d_shsolver = false;
-
+      */
       if (db->findBlock("underelax"))
 	db->require("underrelax", d_underrelax);
       else
@@ -229,17 +229,17 @@ RadLinearSolver::matrixCreate(const PatchSet* allpatches,
   numlcolumns = numlrows;
   globalrows = (int)totalCells;
   globalcolumns = (int)totalCells;
-
+  /*
   if(d_shsolver){
 
   d_nz = 7;
   o_nz = 6;
   }
   else {
-
+  */
   d_nz = 4;
   o_nz = 3;
-  }
+  //  }
 
   // #ifdef ARCHES_PETSC_DEBUG
 #if 0
@@ -338,12 +338,12 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
 
   int col[4];
   double value[4];
-
+  /*
   if(d_shsolver){
   int col[7];
   double value[7];
   }
-
+  */
   // fill matrix for internal patches
   // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
   // petsc matrix
@@ -369,7 +369,7 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
 	int ii = colX+facX;
 	int jj = colY+facY;
 	int kk = colZ+facZ;
-
+	/*
 	if(d_shsolver){
 	col[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
 	col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
@@ -380,13 +380,15 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
 	col[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
 	}
 	else {
+	*/
 	col[0] = l2g[IntVector(colX,colY,kk)];  //ab
 	col[1] = l2g[IntVector(colX, jj, colZ)]; // as
 	col[2] = l2g[IntVector(ii, colY, colZ)]; // aw
 	col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
-	}
+	//	}
 
 	//#ifdef ARCHES_PETSC_DEBUG
+	/*
 	if(d_shsolver){
 	value[0] = -AB[IntVector(colX,colY,colZ)];
 	value[1] = -AS[IntVector(colX,colY,colZ)];
@@ -397,20 +399,22 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
 	value[6] = -AT[IntVector(colX,colY,colZ)];
 	}
 	else{
+	*/
 	value[0] = -AB[IntVector(colX,colY,colZ)];
 	value[1] = -AS[IntVector(colX,colY,colZ)];
 	value[2] = -AW[IntVector(colX,colY,colZ)];
 	value[3] = AP[IntVector(colX,colY,colZ)];
-	}
+	//	}
 
 	int row = col[3];
-
+	/*
 	if(d_shsolver){
 	ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
 	}
 	else{
+	*/
 	ierr = MatSetValues(A,1,&row,4,col,value,INSERT_VALUES);
-	}
+	//	}
 
 	if(ierr)
 	  throw PetscError(ierr, "MatSetValues");

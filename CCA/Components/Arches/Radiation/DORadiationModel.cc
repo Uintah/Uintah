@@ -191,21 +191,39 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 					 ArchesConstVariables* constvars)
 
 {
-      IntVector domLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-      IntVector domHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
 
-      IntVector idxLo = patch->getCellFORTLowIndex();
-      IntVector idxHi = patch->getCellFORTHighIndex();
-
-      idxLo = idxLo - IntVector(1,1,1);
-      idxHi = idxHi + IntVector(1,1,1);
-
-      /*
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   IntVector domLo = patch->getCellLowIndex();
   IntVector domHi = patch->getCellHighIndex();
-      */
+
+  /*
+      IntVector domLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
+      IntVector domHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+    int startZ = domLo.z();
+    if (zminus) startZ++;
+    int endZ = domHi.z();
+    if (zplus) endZ--;
+    int startY = domLo.y();
+    if (yminus) startY++;
+    int endY = domHi.y();
+    if (yplus) endY--;
+    int startX = domLo.x();
+    if (xminus) startX++;
+    int endX = domHi.x();
+    if (xplus) endX--;
+
+    IntVector idxLo(startX, startY, startZ);
+    IntVector idxHi(endX - 1, endY - 1, endZ -1);
+  */
 
     CCVariable<double> shgamma;
     vars->shgamma.allocate(domLo,domHi);
