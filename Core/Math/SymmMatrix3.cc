@@ -47,7 +47,7 @@ SymmMatrix3::eigen(Vector& eval, Matrix3& evec)
   for (int ii = 0; ii < 3; ++ii) {
     eval[ii] = d[ii];
     for (int jj = 0; jj < 3; ++jj) {
-      evec(ii+1,jj+1) = V[ii][jj];
+      evec(ii,jj) = V[ii][jj];
     }
   }
 
