@@ -53,6 +53,9 @@ namespace Uintah {
     const VarLabel* OFE_CCLabel;
     const VarLabel* q_CCLabel;
     const VarLabel* q_advectedLabel;
+    const VarLabel* term1Label;
+    const VarLabel* term2Label;
+    const VarLabel* term3Label;
    
     // Face centered variables
     const VarLabel* uvel_FCLabel;
@@ -72,6 +75,9 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.12  2000/10/25 23:12:17  guilkey
+// Fixed step2, reorganized 6and7 just a little bit.
+//
 // Revision 1.11  2000/10/24 23:07:21  guilkey
 // Added code for steps6and7.
 //

@@ -288,7 +288,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->speedSound_equiv_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(old_dw,lb->rho_CCLabel,
+	    t->requires(new_dw,lb->rho_micro_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->press_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
@@ -376,8 +376,6 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	    t->requires(new_dw,lb->delPress_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->speedSound_equiv_CCLabel,
-			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(new_dw,lb->div_velfc_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->vol_frac_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
@@ -1163,9 +1161,38 @@ void ICE::actuallyStep2(const ProcessorGroup*,
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
   Vector dx = patch->dCell();
-  double  top, bottom, right, left, front, back,vol,coeff;
+  double top, bottom, right, left, front, back;
+  double vol = dx.x()*dx.y()*dx.z();
+  double invvol = 1./vol;
+
+  // Allocate the temporary variables needed for advection
+  // These arrays get re-used for each material
+  CCVariable<double> q_CC, q_advected;
+  CCVariable<fflux> IFS,OFS,q_out,q_in;
+  CCVariable<eflux> IFE,OFE,q_out_EF,q_in_EF;
+
+  new_dw->allocate(q_CC,       lb->q_CCLabel,       0, patch);
+  new_dw->allocate(q_advected, lb->q_advectedLabel, 0, patch);
+  new_dw->allocate(IFS,        IFS_CCLabel,         0, patch);
+  new_dw->allocate(OFS,        OFS_CCLabel,         0, patch);
+  new_dw->allocate(IFE,        IFE_CCLabel,         0, patch);
+  new_dw->allocate(OFE,        OFE_CCLabel,         0, patch);
+  new_dw->allocate(q_out,      q_outLabel,          0, patch);
+  new_dw->allocate(q_out_EF,   q_out_EFLabel,       0, patch);
+  new_dw->allocate(q_in,       q_inLabel,           0, patch);
+  new_dw->allocate(q_in_EF,    q_in_EFLabel,        0, patch);
+
+  CCVariable<double> term1, term2, term3;
+  new_dw->allocate(term1, lb->term3Label, 0, patch);
+  new_dw->allocate(term2, lb->term3Label, 0, patch);
+  new_dw->allocate(term3, lb->term3Label, 0, patch);
+
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	term1[*iter] = 0.; term2[*iter] = 0.; term3[*iter] = 0.;
+  }
 
   // Compute the divergence of the face centered velocities
+  // Compute delPress and the new pressure
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -1174,30 +1201,22 @@ void ICE::actuallyStep2(const ProcessorGroup*,
       // Get required variables for this patch
       FCVariable<double> uvel_FC, vvel_FC, wvel_FC;
       CCVariable<double> vol_frac;
-      CCVariable<double> rho_CC;
+      CCVariable<double> rho_micro_CC;
       CCVariable<double> speedSound;
-      CCVariable<double> pressure;
-      new_dw->get(uvel_FC, lb->uvel_FCMELabel, vfindex, patch, Ghost::None, 0);
-      new_dw->get(vvel_FC, lb->vvel_FCMELabel, vfindex, patch, Ghost::None, 0);
-      new_dw->get(wvel_FC, lb->wvel_FCMELabel, vfindex, patch, Ghost::None, 0);
-      new_dw->get(vol_frac,lb->vol_frac_CCLabel, vfindex,patch,Ghost::None, 0);
-      old_dw->get(rho_CC,  lb->rho_CCLabel,      vfindex,patch,Ghost::None, 0);
+      new_dw->get(uvel_FC, lb->uvel_FCMELabel,  vfindex, patch, Ghost::None, 0);
+      new_dw->get(vvel_FC, lb->vvel_FCMELabel,  vfindex, patch, Ghost::None, 0);
+      new_dw->get(wvel_FC, lb->wvel_FCMELabel,  vfindex, patch, Ghost::None, 0);
+      new_dw->get(vol_frac,lb->vol_frac_CCLabel,vfindex,patch,Ghost::None, 0);
+      new_dw->get(rho_micro_CC, lb->rho_micro_CCLabel,
+						 vfindex,patch,Ghost::None, 0);
       new_dw->get(speedSound,lb->speedSound_equiv_CCLabel,
 					         vfindex,patch,Ghost::None, 0);
-      new_dw->get(pressure,lb->press_CCLabel,    vfindex,patch,Ghost::None, 0);
 
       // Create variables for the results
       CCVariable<double> div_velfc_CC;
-      CCVariable<double> delPress;
-      CCVariable<double> pressdP;
       new_dw->allocate(div_velfc_CC, lb->div_velfc_CCLabel, vfindex, patch);
-      new_dw->allocate(delPress, lb->delPress_CCLabel, vfindex, patch);
-      new_dw->allocate(pressdP, lb->pressdP_CCLabel, vfindex, patch);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-	IntVector curcell = *iter;
-	vol   = dx.x()*dx.y()*dx.z();
-	coeff = delT * rho_CC[*iter] * speedSound[*iter]*speedSound[*iter]/vol;
 //	top      =  dx.x()*dx.z()* vvel_FC[*iter][TOP];
 //	bottom   = -dx.x()*dx.z()* vvel_FC[*iter][BOTTOM];
 //	left     = -dx.y()*dx.z()* uvel_FC[*iter][LEFT];
@@ -1206,13 +1225,52 @@ void ICE::actuallyStep2(const ProcessorGroup*,
 //	back     = -dx.x()*dx.y()* wvel_FC[*iter][BACK];
 	div_velfc_CC[*iter] = vol_frac[*iter]*
 			     (top + bottom + left + right + front  + back );
-	delPress[*iter]     = -coeff * div_velfc_CC[*iter];
-	pressdP[*iter]     += delPress[*iter];
+      }
+
+      // Advection preprocessing
+      //influx_outflux_volume
+      influxOutfluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,OFS,OFE,IFS,IFE);
+
+      { // Compute Advection of the volume fraction
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+          q_CC[*iter] = vol_frac[*iter] * invvol;
+        }
+
+        advectQFirst(q_CC,patch,OFS,OFE,IFS,IFE,q_out,q_out_EF,q_in,q_in_EF,
+                     q_advected);
+      }
+
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	term1[*iter] = 0.;
+	term2[*iter] -= q_advected[*iter];
+	term3[*iter] += vol_frac[*iter] / (rho_micro_CC[*iter] *
+					   speedSound[*iter]*speedSound[*iter]);
       }
 
       new_dw->put(div_velfc_CC, lb->div_velfc_CCLabel, vfindex, patch);
-      new_dw->put(pressdP,  lb->pressdP_CCLabel, vfindex, patch);
+    }
+  }
+
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    if(ice_matl){
+      int vfindex = matl->getVFIndex();
+      // Create variables for the required variables and the results
+      CCVariable<double> pressure;
+      CCVariable<double> delPress;
+      CCVariable<double> pressdP;
+      new_dw->get(pressure,   lb->press_CCLabel, vfindex,patch,Ghost::None, 0);
+      new_dw->allocate(delPress,     lb->delPress_CCLabel,  vfindex, patch);
+      new_dw->allocate(pressdP,      lb->pressdP_CCLabel,   vfindex, patch);
+
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	delPress[*iter] = (delT * term1[*iter] - term2[*iter])/(term3[*iter]);
+	pressdP[*iter]  = pressure[*iter] + delPress[*iter];
+      }
+
       new_dw->put(delPress, lb->delPress_CCLabel, vfindex, patch);
+      new_dw->put(pressdP,  lb->pressdP_CCLabel, vfindex, patch);
     }
   }
 
@@ -1373,7 +1431,6 @@ void ICE::actuallyStep4b(const ProcessorGroup*,
       CCVariable<double> press_CC;
       CCVariable<double> delPress;
       CCVariable<double> speedSound;
-      CCVariable<double> div_velfc;
       CCVariable<double> wvel_CC;
       CCVariable<double> visc_CC;
       CCVariable<double> vol_frac;
@@ -1382,8 +1439,6 @@ void ICE::actuallyStep4b(const ProcessorGroup*,
       new_dw->get(press_CC,lb->press_CCLabel,   vfindex,patch,Ghost::None, 0);
       new_dw->get(delPress,lb->delPress_CCLabel,vfindex,patch,Ghost::None,0);
       new_dw->get(speedSound, lb->speedSound_equiv_CCLabel,
-						vfindex,patch,Ghost::None, 0);
-      new_dw->get(div_velfc, lb->div_velfc_CCLabel,
 						vfindex,patch,Ghost::None, 0);
       new_dw->get(vol_frac,lb->vol_frac_CCLabel,vfindex,patch,Ghost::None, 0);
 
@@ -1681,14 +1736,28 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
   double vol = dx.x()*dx.y()*dx.z(),mass;
   double invvol = 1.0/vol;
 
-  CCVariable<double> temp, cv, q_CC, q_advected;
-  CCVariable<double> uvel_CC,vvel_CC,wvel_CC, rho_CC,visc_CC;
+  CCVariable<double> uvel_CC,vvel_CC,wvel_CC,rho_CC,visc_CC,cv,temp;
   CCVariable<double> xmom_L_ME,ymom_L_ME,zmom_L_ME,int_eng_L_ME,mass_L;
 
   FCVariable<double> uvel_FC, vvel_FC, wvel_FC;
 
+  // Allocate the temporary variables needed for advection
+  // These arrays get re-used for each material, and for each
+  // advected quantity
+  CCVariable<double> q_CC, q_advected;
   CCVariable<fflux> IFS,OFS,q_out,q_in;
   CCVariable<eflux> IFE,OFE,q_out_EF,q_in_EF;
+
+  new_dw->allocate(q_CC,       lb->q_CCLabel,       0, patch);
+  new_dw->allocate(q_advected, lb->q_advectedLabel, 0, patch);
+  new_dw->allocate(IFS,        IFS_CCLabel,         0, patch);
+  new_dw->allocate(OFS,        OFS_CCLabel,         0, patch);
+  new_dw->allocate(IFE,        IFE_CCLabel,         0, patch);
+  new_dw->allocate(OFE,        OFE_CCLabel,         0, patch);
+  new_dw->allocate(q_out,      q_outLabel,          0, patch);
+  new_dw->allocate(q_out_EF,   q_out_EFLabel,       0, patch);
+  new_dw->allocate(q_in,       q_inLabel,           0, patch);
+  new_dw->allocate(q_in_EF,    q_in_EFLabel,        0, patch);
 
   for (int m = 0; m < d_sharedState->getNumMatls(); m++ ) {
     Material* matl = d_sharedState->getMaterial(m);
@@ -1717,16 +1786,6 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
       new_dw->allocate(vvel_CC,lb->vvel_CCLabel,       vfindex,patch);
       new_dw->allocate(wvel_CC,lb->wvel_CCLabel,       vfindex,patch);
       new_dw->allocate(visc_CC,lb->viscosity_CCLabel,  vfindex,patch);
-      new_dw->allocate(q_CC,   lb->q_CCLabel,          vfindex,patch);
-      new_dw->allocate(q_advected, lb->q_advectedLabel,vfindex,patch);
-      new_dw->allocate(IFS,        IFS_CCLabel,        vfindex,patch);
-      new_dw->allocate(OFS,        OFS_CCLabel,        vfindex,patch);
-      new_dw->allocate(IFE,        IFE_CCLabel,        vfindex,patch);
-      new_dw->allocate(OFE,        OFE_CCLabel,        vfindex,patch);
-      new_dw->allocate(q_out,      q_outLabel,         vfindex,patch);
-      new_dw->allocate(q_out_EF,   q_out_EFLabel,      vfindex,patch);
-      new_dw->allocate(q_in,       q_inLabel,          vfindex,patch);
-      new_dw->allocate(q_in_EF,    q_in_EFLabel,       vfindex,patch);
 
       // Advection preprocessing
       //influx_outflux_volume
@@ -2117,6 +2176,9 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.49  2000/10/25 23:12:17  guilkey
+// Fixed step2, reorganized 6and7 just a little bit.
+//
 // Revision 1.48  2000/10/25 22:22:13  jas
 // Change the fflux and eflux struct so that the data members begin with d_.
 // This makes g++ happy.
