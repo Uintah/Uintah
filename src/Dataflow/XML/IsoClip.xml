@@ -53,6 +53,10 @@
 	<name>Input Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+	<name>Optional Isovalue</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>

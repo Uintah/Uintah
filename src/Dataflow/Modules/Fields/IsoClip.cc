@@ -31,6 +31,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Dataflow/Modules/Fields/IsoClip.h>
 #include <Core/Containers/StringUtil.h>
@@ -72,7 +73,10 @@ class IsoClip : public Module
 private:
   GuiDouble gui_isoval_;
   GuiInt    gui_lte_;
-  int       last_input_generation_;
+  int       last_field_generation_;
+  double    last_isoval_;
+  int       last_lte_;
+  int       last_matrix_generation_;
 
 public:
   IsoClip(GuiContext* ctx);
@@ -89,7 +93,10 @@ IsoClip::IsoClip(GuiContext* ctx)
   : Module("IsoClip", ctx, Filter, "Fields", "SCIRun"),
     gui_isoval_(ctx->subVar("isoval")),
     gui_lte_(ctx->subVar("lte")),
-    last_input_generation_(0)
+    last_field_generation_(0),
+    last_isoval_(0),
+    last_lte_(-1),
+    last_matrix_generation_(0)
 {
 }
 
@@ -104,15 +111,42 @@ IsoClip::execute()
 {
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
-  FieldHandle ifieldhandle;
   if (!ifp) {
     error("Unable to initialize iport 'Input Field'.");
     return;
   }
+  FieldHandle ifieldhandle;
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
     return;
   }
+
+  MatrixIPort *imp = (MatrixIPort *)get_iport("Optional Isovalue");
+  if (!imp)
+  {
+    error("Unable to initialize iport 'Optional Isovalue'.");
+    return;
+  }
+  MatrixHandle isomat;
+  if (imp->get(isomat) && isomat.get_rep() &&
+      isomat->nrows() > 0 && isomat->ncols() > 0 &&
+      isomat->generation != last_matrix_generation_)
+  {
+    last_matrix_generation_ = isomat->generation;
+    gui_isoval_.set(isomat->get(0, 0));
+  }
+
+  const double isoval = gui_isoval_.get();
+  if (last_field_generation_ == ifieldhandle->generation &&
+      last_isoval_ == isoval &&
+      last_lte_ == gui_lte_.get())
+  {
+    // We're up to date, return.
+    return;
+  }
+  last_field_generation_ = ifieldhandle->generation;
+  last_isoval_ = isoval;
+  last_lte_ = gui_lte_.get();
 
   string ext = "";
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
@@ -141,8 +175,6 @@ IsoClip::execute()
     error("Isoclipping can only done for fields with data at nodes.");
     return;
   }
-
-  const double isoval = gui_isoval_.get();
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   CompileInfoHandle ci = IsoClipAlgo::get_compile_info(ftd, ext);
