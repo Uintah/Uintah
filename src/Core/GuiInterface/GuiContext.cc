@@ -239,7 +239,7 @@ void GuiContext::emit(std::ostream& out, const string& midx)
 	const string dataset(tmp);
 	while (1)
 	{
-	  loc = result.find(dataset);
+	  string::size_type loc = result.find(dataset);
 	  if (loc != string::npos)
 	  {
 	    result.replace(loc, dataset.size(), "$DATASET");
