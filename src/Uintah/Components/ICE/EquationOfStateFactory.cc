@@ -1,4 +1,5 @@
 #include "EquationOfStateFactory.h"
+#include "IdealGas.h"
 #include <Uintah/Interface/ProblemSpec.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <fstream>
@@ -16,7 +17,7 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
 	child = child->findNextBlock()) {
       std::string mat_type = child->getNodeName();
       if (mat_type == "ideal_gas") {
-//	 return(scinew IdealGas(child));
+		 return(scinew IdealGas(child));
       } else {
 	 cerr << "Unknown Material Type R (" << mat_type << ")" << std::endl;;
 	 //      exit(1);
@@ -25,6 +26,9 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
    return 0;
 }
 //$Log$
+//Revision 1.3  2000/10/04 23:42:29  jas
+//Add IdealGas to the EOS factory.
+//
 //Revision 1.2  2000/10/04 20:17:52  jas
 //Change namespace ICE to ICESpace.
 //
