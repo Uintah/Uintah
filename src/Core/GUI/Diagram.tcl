@@ -83,6 +83,8 @@ class Diagram {
 
 	$tb add button normal \
 	    -helpstr "Normal mode" \
+	    -image [image create photo \
+		-file "../src/pixmaps/pointer.ppm"] \
 	    -command "$this set-mode normal"
 
 	$tb add button zoom-in \
