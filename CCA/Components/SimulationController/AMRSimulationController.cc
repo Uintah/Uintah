@@ -248,11 +248,13 @@ void AMRSimulationController::run()
    if (!d_restarting && regridder->isAdaptive())
      while (currentGrid->numLevels() < regridder->maxLevels() &&
             regridder->flaggedCellsOnFinestLevel(currentGrid, scheduler)) {
-       oldGrid = currentGrid;
-       cout << "  DOING ANOTHER INITIALIZATION REGRID!!!!\n";
+       oldGrid = currentGrid;       
        currentGrid = regridder->regrid(oldGrid.get_rep(), scheduler, ups);
-       cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
-       cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
+       if (d_myworld->myrank() == 0) {
+         cout << "  DOING ANOTHER INITIALIZATION REGRID!!!!\n";
+         cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
+         cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
+       }
        if (currentGrid == oldGrid)
          break;
 
@@ -470,6 +472,18 @@ void AMRSimulationController::run()
        DumpAllocator(DefaultAllocator(), filename.c_str());
      }
 
+     if(sharedState->needAddMaterial()){
+       sim->addMaterial(ups, currentGrid, sharedState);
+       sharedState->finalizeMaterials();
+       scheduler->initialize();
+       for (int i = 0; i < currentGrid->numLevels(); i++)
+         sim->scheduleInitializeAddedMaterial(currentGrid->getLevel(i), scheduler);
+       scheduler->compile();
+       scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
+       scheduler->execute();
+     }
+
+
      if(needRecompile(t, delt, currentGrid, sim, output, lb, regridder, levelids) || first ){
        first=false;
        if(d_myworld->myrank() == 0)
@@ -508,7 +522,7 @@ void AMRSimulationController::run()
        }
 
        if(output)
-	 output->finalizeTimestep(t, delt, currentGrid, scheduler,true);
+	 output->finalizeTimestep(t, delt, currentGrid, scheduler, true, sharedState->needAddMaterial());
 
        scheduler->compile();
 
