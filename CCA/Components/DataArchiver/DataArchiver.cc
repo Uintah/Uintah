@@ -1828,6 +1828,8 @@ makeVersionedDir(const std::string nameBase)
   }
   if (make_link)
     symlink(dirName.c_str(), nameBase.c_str());
+
+  cout << "DataArchiver created " << dirName << endl;
    
   return Dir(dirName);
 }
