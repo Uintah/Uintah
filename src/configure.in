@@ -1521,6 +1521,20 @@ case $host in
      ;;
 esac
 
+## these should all be blank in this version of the configure!
+AC_SUBST(DEF_MPI)
+AC_SUBST(DEF_PETSC)
+AC_SUBST(DEF_IFL)
+AC_SUBST(DEF_CL)
+AC_SUBST(DEF_SSL)
+AC_SUBST(DEF_GLOBUS)
+AC_SUBST(DEF_TEEM)
+AC_SUBST(DEF_PERFEX)
+AC_SUBST(DEF_CRYPTO)
+AC_SUBST(DEF_EXC)
+AC_SUBST(DEF_Z)
+
+
 ##-------- check/create subdirs that have special Makefiles ---------
 
 for i in Dataflow/Modules/Fields/Manip Dataflow/Modules/Math/Manip \
