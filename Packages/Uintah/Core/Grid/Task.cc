@@ -10,6 +10,15 @@
 
 using namespace Uintah;
 
+void Task::initialize()
+{
+  d_resourceIndex=-1;
+  comp_head=comp_tail=0;
+  req_head=req_tail=0;
+  patch_set=0;
+  matl_set=0;
+}
+
 Task::ActionBase::~ActionBase()
 {
 }
@@ -17,6 +26,34 @@ Task::ActionBase::~ActionBase()
 Task::~Task()
 {
   delete d_action;
+  Dependency* dep = req_head;
+  while(dep){
+    Dependency* next = dep->next;
+    delete dep;
+    dep=next;
+  }
+  dep = comp_head;
+  while(dep){
+    Dependency* next = dep->next;
+    delete dep;
+    dep=next;
+  }
+  if(matl_set && matl_set->removeReference())
+    delete matl_set;
+  if(patch_set && patch_set->removeReference())
+    delete patch_set;
+}
+
+void Task::setSets(const PatchSet* ps, const MaterialSet* ms)
+{
+  ASSERT(patch_set == 0);
+  ASSERT(matl_set == 0);
+  patch_set=ps;
+  if(patch_set)
+    patch_set->addReference();
+  matl_set=ms;
+  if(matl_set)
+    matl_set->addReference();
 }
 
 void
@@ -38,114 +75,115 @@ Task::subpatchCapable(bool state)
 }
 
 void
-Task::requires(const DataWarehouseP& ds, const VarLabel* var,
-	       int matlIndex /* = -1 */)
+Task::requires(WhichDW dw, const VarLabel* var,
+	       const PatchSubset* patches, const MaterialSubset* matls,
+	       Ghost::GhostType gtype, int numGhostCells)
 {
-  d_reqs.push_back(Dependency(ds.get_rep(), var, matlIndex, 0, this,
-			      IntVector(-9,-8,-7), IntVector(-6,-5,-4)));
-}
-
-void
-Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
-	       const Patch* patch, Ghost::GhostType gtype, int numGhostCells)
-{
-   ASSERT(ds.get_rep() != 0);
-   const TypeDescription* td = var->typeDescription();
-   Level::selectType neighbors;
-   IntVector lowIndex, highIndex;
-   patch->computeVariableExtents(td->getType(), gtype, numGhostCells,
-				 neighbors, lowIndex, highIndex);
-   switch ( td->getType()) {
-   case TypeDescription::CCVariable:
-     for(int i=0;i<(int)neighbors.size();i++){
-      const Patch* neighbor = neighbors[i];
-      IntVector low = Max(lowIndex, neighbor->getCellLowIndex());
-      IntVector high= Min(highIndex, neighbor->getCellHighIndex());
-      d_reqs.push_back(Dependency(ds.get_rep(), var, matlIndex,
-				  neighbor, this, low, high));
-   }
-     break;
-   case TypeDescription::SFCXVariable:
-     for(int i=0;i<(int)neighbors.size();i++){
-      const Patch* neighbor = neighbors[i];
-      IntVector low = Max(lowIndex, neighbor->getSFCXLowIndex());
-      IntVector high= Min(highIndex, neighbor->getSFCXHighIndex());
-      d_reqs.push_back(Dependency(ds.get_rep(), var, matlIndex,
-				  neighbor, this, low, high));
-   }
-     break;
-   case TypeDescription::SFCYVariable:
-     for(int i=0;i<(int)neighbors.size();i++){
-      const Patch* neighbor = neighbors[i];
-      IntVector low = Max(lowIndex, neighbor->getSFCYLowIndex());
-      IntVector high= Min(highIndex, neighbor->getSFCYHighIndex());
-      d_reqs.push_back(Dependency(ds.get_rep(), var, matlIndex,
-				  neighbor, this, low, high));
-   }
-     break;
-   case TypeDescription::SFCZVariable:
-     for(int i=0;i<(int)neighbors.size();i++){
-      const Patch* neighbor = neighbors[i];
-      IntVector low = Max(lowIndex, neighbor->getSFCZLowIndex());
-      IntVector high= Min(highIndex, neighbor->getSFCZHighIndex());
-
-      d_reqs.push_back(Dependency(ds.get_rep(), var, matlIndex,
-				  neighbor, this, low, high));
-     }
-     break;
-   case TypeDescription::NCVariable:
-     for(int i=0;i<(int)neighbors.size();i++){
-      const Patch* neighbor = neighbors[i];
-      IntVector low = Max(lowIndex, neighbor->getNodeLowIndex());
-      IntVector high= Min(highIndex, neighbor->getNodeHighIndex());
-
-      d_reqs.push_back(Dependency(ds.get_rep(), var, matlIndex,
-				  neighbor, this, low, high));
-     }
-     break;
-   default:
-     for(int i=0;i<(int)neighbors.size();i++){
-      const Patch* neighbor = neighbors[i];
-      IntVector low = Max(lowIndex, neighbor->getNodeLowIndex());
-      IntVector high= Min(highIndex, neighbor->getNodeHighIndex());
-
-      d_reqs.push_back(Dependency(ds.get_rep(), var, matlIndex,
-				  neighbor, this, low, high));
-     }
-   break;
-   }
+  Dependency* dep = scinew Dependency(this, dw, var, patches, matls,
+				   gtype, numGhostCells);
+  dep->next=0;
+  if(req_tail)
+    req_tail->next=dep;
+  else
+    req_head=dep;
+  req_tail=dep;
 }
 
 
 void
-Task::computes(const DataWarehouseP& ds, const VarLabel* var,
-	       int matlIndex /* = -1 */)
+Task::requires(WhichDW dw, const VarLabel* var,
+	       Ghost::GhostType gtype, int numGhostCells)
 {
-   ASSERT(ds.get_rep() != 0);
-   d_comps.push_back(Dependency(ds.get_rep(), var, matlIndex, d_patch, this,
-				IntVector(-19,-18,-17),
-				IntVector(-16,-15,-14)));
+  requires(dw, var, 0, 0, gtype, numGhostCells);
 }
 
 void
-Task::computes(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
-	       const Patch* patch)
+Task::requires(WhichDW dw, const VarLabel* var,
+	       const MaterialSubset* matls,
+	       Ghost::GhostType gtype, int numGhostCells)
 {
-   ASSERT(ds.get_rep() != 0);
-   d_comps.push_back(Dependency(ds.get_rep(), var, matlIndex, patch,
-				this,
-				IntVector(-29,-28,-27),
-				IntVector(-26,-25,-24)));
+  requires(dw, var, 0, matls, gtype, numGhostCells);
 }
 
 void
-Task::doit(const ProcessorGroup* pc)
+Task::requires(WhichDW dw, const VarLabel* var,
+	       const PatchSubset* patches,
+	       Ghost::GhostType gtype, int numGhostCells)
 {
-  if( d_completed )
-      throw InternalError("Task doit() called, but has already completed");
+  requires(dw, var, patches, 0, gtype, numGhostCells);
+}
+
+void
+Task::requires(WhichDW dw, const VarLabel* var, const PatchSubset* patches,
+	       const MaterialSubset* matls)
+{
+  TypeDescription::Type vartype = var->typeDescription()->getType();
+  if(!(vartype == TypeDescription::PerPatch
+       || vartype == TypeDescription::ReductionVariable))
+    throw InternalError("Requires should specify ghost type for this variable");
+  requires(dw, var, patches, matls, Ghost::None, 0);
+}
+
+void
+Task::requires(WhichDW dw, const VarLabel* var,
+	       const MaterialSubset* matls)
+{
+  TypeDescription::Type vartype = var->typeDescription()->getType();
+  if(!(vartype == TypeDescription::PerPatch
+       || vartype == TypeDescription::ReductionVariable))
+    throw InternalError("Requires should specify ghost type for this variable");
+  requires(dw, var, 0, matls, Ghost::None, 0);
+}
+
+void
+Task::computes(const VarLabel* var, const PatchSubset* patches,
+               const MaterialSubset* matls)
+{
+  Dependency* dep = scinew Dependency(this, NewDW, var, patches, matls);
+  dep->next=0;
+  if(comp_tail)
+    comp_tail->next=dep;
+  else
+    comp_head=dep;
+  comp_tail=dep;
+}
+
+void
+Task::computes(const VarLabel* var, const MaterialSubset* matls)
+{
+  computes(var, 0, matls);
+}
+
+Task::Dependency::Dependency(Task* task, WhichDW dw, const VarLabel* var,
+			     const PatchSubset* patches,
+			     const MaterialSubset* matls,
+			     Ghost::GhostType gtype = Ghost::None,
+			     int numGhostCells)
+: task(task), var(var), patches(patches), matls(matls),
+  gtype(gtype), dw(dw), numGhostCells(numGhostCells)
+{
+  req_head=req_tail=comp_head=comp_tail=0;
+  if(patches)
+    patches->addReference();
+  if(matls)
+    matls->addReference();
+}
+
+Task::Dependency::~Dependency()
+{
+  if(patches && patches->removeReference())
+    delete patches;
+  if(matls && matls->removeReference())
+    delete matls;
+}
+
+void
+Task::doit(const ProcessorGroup* pc, const PatchSubset* patches,
+           const MaterialSubset* matls, DataWarehouse* fromDW,
+           DataWarehouse* toDW)
+{
   if(d_action)
-     d_action->doit(pc, d_patch, d_fromDW, d_toDW);
-  d_completed=true;
+     d_action->doit(pc, patches, matls, fromDW, toDW);
 }
 
 void
@@ -153,28 +191,88 @@ Task::display( ostream & out ) const
 {
   out << getName() << " (" << d_tasktype << "): [Own: " << d_resourceIndex
       << ", ";
-  if( d_patch != 0 ){
-    out << "P: " << d_patch->getID()
-	<< ", DW: " << d_fromDW->getID()
-	<< ", " << d_toDW->getID() << ", ";
+  if( patch_set != 0 ){
+    out << "Patches: {";
+    for(int i=0;i<patch_set->size();i++){
+      const PatchSubset* ps = patch_set->getSubset(i);
+      if(i != 0)
+	out << ", ";
+      out << "{";
+      for(int j=0;j<ps->size();j++){
+	if(j != 0)
+	  out << ",";
+	const Patch* patch = ps->get(j);
+	out << patch->getID();
+      }
+      out << "}";
+    }
+    out << "}";
   } else {
     out << "(No Patch), ";
   }
-  if( d_completed ){ out << "Completed, "; } else { out << "Pending, "; }
-  out << "(R: " << d_reqs.size() << ", C: " << d_comps.size() << ")]";
+  out << "]";
 }
 
 ostream &
 operator << ( ostream & out, const Uintah::Task::Dependency & dep )
 {
-  out << "[" << *(dep.d_var) << " Patch: ";
-  if( dep.d_patch ){
-    out << dep.d_patch->getID();
+  out << "[" << *(dep.var) << " Patches: ";
+  if( dep.patches ){
+    for(int i=0;i<dep.patches->size();i++){
+      if(i > 0)
+	out << ",";
+      out << dep.patches->get(i)->getID();
+    }
   } else {
     out << "none";
   }
-  out << " MI: " << dep.d_matlIndex << " DW: " << dep.d_dw->getID() << " SN: " 
-      << dep.d_serialNumber << "]";
+  out << " MI: ";
+  if(dep.matls){
+    for(int i=0;i<dep.matls->size();i++){
+      if(i>0)
+	out << ",";
+      out << dep.matls->get(i);
+    }
+  } else {
+    out << "none";
+  }
+  out << ", ";
+  switch(dep.dw){
+  case Task::OldDW:
+    out << "OldDW";
+    break;
+  case Task::NewDW:
+    out << "NewDW";
+    break;
+  }
+  out << ", ";
+  switch(dep.gtype){
+  case Ghost::None:
+    out << "Ghost::None";
+    break;
+  case Ghost::AroundNodes:
+    out << "Ghost::AroundNodes";
+    break;
+  case Ghost::AroundCells:
+    out << "Ghost::AroundCells";
+    break;
+  case Ghost::AroundXFaces:
+    out << "Ghost::AroundXFaces";
+    break;
+  case Ghost::AroundYFaces:
+    out << "Ghost::AroundYFaces";
+    break;
+  case Ghost::AroundZFaces:
+    out << "Ghost::AroundZFaces";
+    break;
+  case Ghost::AroundAllFaces:
+    out << "Ghost::AroundAllFaces";
+    break;
+  }
+  if(dep.gtype != Ghost::None)
+    out << ":" << dep.numGhostCells;
+
+  out << "]";
   return out;
 }
 
@@ -183,10 +281,10 @@ Task::displayAll(ostream& out) const
 {
    display(out);
    out << '\n';
-   for(int i=0;i<(int)d_reqs.size();i++)
-      out << "requires: " << d_reqs[i] << '\n';
-   for(int i=0;i<(int)d_comps.size();i++)
-      out << "computes: " << d_comps[i] << '\n';
+   for(Task::Dependency* req = req_head; req != 0; req = req->next)
+      out << "requires: " << *req << '\n';
+   for(Task::Dependency* comp = comp_head; comp != 0; comp = comp->next)
+      out << "computes: " << *comp << '\n';
 }
 
 ostream &
@@ -206,13 +304,9 @@ operator << (ostream &out, const Task::TaskType & tt)
   case Task::Reduction:
     out << "Reduction";
     break;
-  case Task::Scatter:
-    out << "Scatter";
-    break;
-  case Task::Gather:
-    out << "Gather";
+  case Task::InitialSend:
+    out << "InitialSend";
     break;
   }
   return out;
 }
-

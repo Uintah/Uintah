@@ -2,6 +2,7 @@
 #define UINTAH_HOMEBREW_Task_H
 
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/fixedvector.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 #include <Packages/Uintah/Core/ProblemSpec/Handle.h>
@@ -10,6 +11,7 @@
 #include <Core/Containers/TrivialAllocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -52,14 +54,14 @@ WARNING
 ****************************************/
 
    class Task {
-      
       class ActionBase {
       public:
 	 virtual ~ActionBase();
 	 virtual void doit(const ProcessorGroup* pc,
-			   const Patch* patch,
-			   DataWarehouseP& fromDW,
-			   DataWarehouseP& toDW) = 0;
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* fromDW,
+			   DataWarehouse* toDW) = 0;
       };
 
       template<class T>
@@ -67,22 +69,23 @@ WARNING
 
          T* ptr;
          void (T::*pmf)(const ProcessorGroup*,
-                        DataWarehouseP&,
-                        DataWarehouseP&);
+                        DataWarehouse*,
+                        DataWarehouse*);
       public: // class NPAction
          NPAction( T* ptr,
                  void (T::*pmf)(const ProcessorGroup*,
-                                DataWarehouseP&,
-                                DataWarehouseP&) )
+                                DataWarehouse*,
+                                DataWarehouse*) )
             : ptr(ptr), pmf(pmf) {}
          virtual ~NPAction() {}
 
          //////////
          // Insert Documentation Here:
          virtual void doit(const ProcessorGroup* pc,
-                           const Patch*,
-                           DataWarehouseP& fromDW,
-                           DataWarehouseP& toDW) {
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW) {
             (ptr->*pmf)(pc, fromDW, toDW);
          }
       }; // end class ActionBase
@@ -92,15 +95,15 @@ WARNING
 
          T* ptr;
          void (T::*pmf)(const ProcessorGroup*,
-                        DataWarehouseP&,
-                        DataWarehouseP&,
+                        DataWarehouse*,
+                        DataWarehouse*,
 			Arg1);
 	 Arg1 arg1;
       public:  // class NPAction1
          NPAction1( T* ptr,
                  void (T::*pmf)(const ProcessorGroup*,
-                                DataWarehouseP&,
-                                DataWarehouseP&,
+                                DataWarehouse*,
+                                DataWarehouse*,
 				Arg1),
 		   Arg1 arg1)
             : ptr(ptr), pmf(pmf), arg1(arg1) {}
@@ -109,9 +112,10 @@ WARNING
          //////////
          // Insert Documentation Here:
          virtual void doit(const ProcessorGroup* pc,
-                           const Patch*,
-                           DataWarehouseP& fromDW,
-                           DataWarehouseP& toDW) {
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW) {
             (ptr->*pmf)(pc, fromDW, toDW, arg1);
          }
       }; // end class NPAction1
@@ -121,25 +125,28 @@ WARNING
 	 
 	 T* ptr;
 	 void (T::*pmf)(const ProcessorGroup*,
-			const Patch*,
-			DataWarehouseP&,
-			DataWarehouseP&);
+			const PatchSubset* patches,
+			const MaterialSubset* matls,
+			DataWarehouse*,
+			DataWarehouse*);
       public: // class Action
 	 Action( T* ptr,
 		 void (T::*pmf)(const ProcessorGroup*, 
-				const Patch*, 
-				DataWarehouseP&,
-				DataWarehouseP&) )
+				const PatchSubset* patches,
+				const MaterialSubset* matls,
+				DataWarehouse*,
+				DataWarehouse*) )
 	    : ptr(ptr), pmf(pmf) {}
 	 virtual ~Action() {}
 	 
 	 //////////
 	 // Insert Documentation Here:
 	 virtual void doit(const ProcessorGroup* pc,
-			   const Patch* patch,
-			   DataWarehouseP& fromDW,
-			   DataWarehouseP& toDW) {
-	    (ptr->*pmf)(pc, patch, fromDW, toDW);
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* fromDW,
+			   DataWarehouse* toDW) {
+	    (ptr->*pmf)(pc, patches, matls, fromDW, toDW);
 	 }
       }; // end class Action
 
@@ -148,17 +155,19 @@ WARNING
 	 
 	 T* ptr;
 	 void (T::*pmf)(const ProcessorGroup*,
-			const Patch*,
-			DataWarehouseP&,
-			DataWarehouseP&,
+			const PatchSubset* patches,
+			const MaterialSubset* matls,
+			DataWarehouse*,
+			DataWarehouse*,
 			Arg1 arg1);
 	 Arg1 arg1;
       public: // class Action1
 	 Action1( T* ptr,
 		 void (T::*pmf)(const ProcessorGroup*, 
-				const Patch*, 
-				DataWarehouseP&,
-				DataWarehouseP&,
+				const PatchSubset* patches,
+				const MaterialSubset* matls,
+				DataWarehouse*,
+				DataWarehouse*,
 				Arg1),
 		  Arg1 arg1)
 	    : ptr(ptr), pmf(pmf), arg1(arg1) {}
@@ -167,9 +176,10 @@ WARNING
 	 //////////
 	 // Insert Documentation Here:
 	 virtual void doit(const ProcessorGroup* pc,
-			   const Patch* patch,
-			   DataWarehouseP& fromDW,
-			   DataWarehouseP& toDW) {
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* fromDW,
+			   DataWarehouse* toDW) {
 	    (ptr->*pmf)(pc, patch, fromDW, toDW, arg1);
 	 }
       }; // end class Action1
@@ -179,18 +189,20 @@ WARNING
 	 
 	 T* ptr;
 	 void (T::*pmf)(const ProcessorGroup*,
-			const Patch*,
-			DataWarehouseP&,
-			DataWarehouseP&,
+			const PatchSubset* patches,
+			const MaterialSubset* matls,
+			DataWarehouse*,
+			DataWarehouse*,
 			Arg1 arg1, Arg2 arg2);
 	 Arg1 arg1;
 	 Arg2 arg2;
       public: // class Action2
 	 Action2( T* ptr,
 		 void (T::*pmf)(const ProcessorGroup*, 
-				const Patch*, 
-				DataWarehouseP&,
-				DataWarehouseP&,
+				const PatchSubset* patches,
+				const MaterialSubset* matls,
+				DataWarehouse*,
+				DataWarehouse*,
 				Arg1, Arg2),
 		  Arg1 arg1, Arg2 arg2)
 	    : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2) {}
@@ -199,9 +211,10 @@ WARNING
 	 //////////
 	 // Insert Documentation Here:
 	 virtual void doit(const ProcessorGroup* pc,
-			   const Patch* patch,
-			   DataWarehouseP& fromDW,
-			   DataWarehouseP& toDW) {
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* fromDW,
+			   DataWarehouse* toDW) {
 	    (ptr->*pmf)(pc, patch, fromDW, toDW, arg1, arg2);
 	 }
       }; // end class Action2
@@ -211,9 +224,10 @@ WARNING
 	 
 	 T* ptr;
 	 void (T::*pmf)(const ProcessorGroup*,
-			const Patch*,
-			DataWarehouseP&,
-			DataWarehouseP&,
+			const PatchSubset* patches,
+			const MaterialSubset* matls,
+			DataWarehouse*,
+			DataWarehouse*,
 			Arg1 arg1, Arg2 arg2, Arg3 arg3);
 	 Arg1 arg1;
 	 Arg2 arg2;
@@ -221,9 +235,10 @@ WARNING
       public: // class Action3
 	 Action3( T* ptr,
 		 void (T::*pmf)(const ProcessorGroup*, 
-				const Patch*, 
-				DataWarehouseP&,
-				DataWarehouseP&,
+				const PatchSubset* patches,
+				const MaterialSubset* matls,
+				DataWarehouse*,
+				DataWarehouse*,
 				Arg1, Arg2, Arg3),
 		  Arg1 arg1, Arg2 arg2, Arg3 arg3)
 	    : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3) {}
@@ -232,10 +247,11 @@ WARNING
 	 //////////
 	 // Insert Documentation Here:
 	 virtual void doit(const ProcessorGroup* pc,
-			   const Patch* patch,
-			   DataWarehouseP& fromDW,
-			   DataWarehouseP& toDW) {
-	    (ptr->*pmf)(pc, patch, fromDW, toDW, arg1, arg2, arg3);
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* fromDW,
+			   DataWarehouse* toDW) {
+	    (ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1, arg2, arg3);
 	 }
       }; // end Action3
 
@@ -244,9 +260,10 @@ WARNING
 	 
 	 T* ptr;
 	 void (T::*pmf)(const ProcessorGroup*,
-			const Patch*,
-			DataWarehouseP&,
-			DataWarehouseP&,
+			const PatchSubset* patches,
+			const MaterialSubset* matls,
+			DataWarehouse*,
+			DataWarehouse*,
 			Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4);
 	 Arg1 arg1;
 	 Arg2 arg2;
@@ -255,9 +272,10 @@ WARNING
       public: // class Action4
 	 Action4( T* ptr,
 		 void (T::*pmf)(const ProcessorGroup*, 
-				const Patch*, 
-				DataWarehouseP&,
-				DataWarehouseP&,
+				const PatchSubset* patches,
+				const MaterialSubset* matls,
+				DataWarehouse*,
+				DataWarehouse*,
 				Arg1, Arg2, Arg3, Arg4),
 		  Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
 	    : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2),
@@ -267,229 +285,154 @@ WARNING
 	 //////////
 	 // Insert Documentation Here:
 	 virtual void doit(const ProcessorGroup* pc,
-			   const Patch* patch,
-			   DataWarehouseP& fromDW,
-			   DataWarehouseP& toDW) {
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* fromDW,
+			   DataWarehouse* toDW) {
 	    (ptr->*pmf)(pc, patch, fromDW, toDW, arg1, arg2, arg3, arg4);
 	 }
       }; // end Action4
 
    public: // class Task
 
+      enum WhichDW {
+	OldDW, NewDW
+      };
+      
       enum TaskType {
 	 Normal,
 	 Reduction,
-	 Scatter,
-	 Gather
+	 InitialSend,
       };
 
-      Task(const SimpleString&         taskName)
-	:  d_resourceIndex(-1),
-	   d_taskName(taskName),
-	   d_patch(0),
-	   d_action(0),
-	   d_fromDW(0),
-	   d_toDW(0)
+      Task(const SimpleString&         taskName, TaskType type)
+	:  d_taskName(taskName),
+	   d_action(0)
       {
-	 d_completed = false;
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
-	 d_tasktype = Reduction;
+	 d_tasktype = type;
+	 initialize();
       }
 
       template<class T>
       Task(const SimpleString&         taskName,
-	   const Patch*         patch,
-	   DataWarehouseP&       fromDW,
-	   DataWarehouseP&       toDW,
 	   T*                    ptr,
 	   void (T::*pmf)(const ProcessorGroup*,
-			  const Patch*,
-			  DataWarehouseP&,
-			  DataWarehouseP&) )
-	: d_resourceIndex( -1 ),
-	  d_taskName( taskName ), 
-	   d_patch( patch ),
-	   d_action( scinew Action<T>(ptr, pmf) ),
-	   d_fromDW( fromDW ),
-	   d_toDW( toDW )
-
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse*,
+			  DataWarehouse*) )
+	: d_taskName( taskName ), 
+	  d_action( scinew Action<T>(ptr, pmf) )
       {
-	 d_completed = false;
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
 	 d_tasktype = Normal;
+	 initialize();
       }
 
-     template<class T>
-      Task(const SimpleString&         taskName,
-           DataWarehouseP&       fromDW,
-           DataWarehouseP&       toDW,
-           T*                    ptr,
-           void (T::*pmf)(const ProcessorGroup*,
-                          DataWarehouseP&,
-                          DataWarehouseP&) )
-         : d_taskName( taskName ),
-           d_patch( 0 ),
-           d_action( scinew NPAction<T>(ptr, pmf) ),
-           d_fromDW( fromDW ),
-           d_toDW( toDW )
-      {
-         d_completed = false;
-         d_usesThreads = false;
-         d_usesMPI = false;
-         d_subpatchCapable = false;
-	 d_tasktype = Normal;
-      }
-
-      
      template<class T, class Arg1>
       Task(const SimpleString&         taskName,
-           DataWarehouseP&       fromDW,
-           DataWarehouseP&       toDW,
            T*                    ptr,
            void (T::*pmf)(const ProcessorGroup*,
-                          DataWarehouseP&,
-                          DataWarehouseP&,
+                          DataWarehouse*,
+                          DataWarehouse*,
 			  Arg1),
 	   Arg1 arg1)
          : d_taskName( taskName ),
-           d_patch( 0 ),
-           d_action( scinew NPAction1<T, Arg1>(ptr, pmf, arg1) ),
-           d_fromDW( fromDW ),
-           d_toDW( toDW )
+           d_action( scinew NPAction1<T, Arg1>(ptr, pmf, arg1) )
       {
-         d_completed = false;
          d_usesThreads = false;
          d_usesMPI = false;
          d_subpatchCapable = false;
 	 d_tasktype = Normal;
+	 initialize();
       }
 
-      
-      template<class T>
-      Task(const SimpleString&         taskName,
-	   DataWarehouseP&       fromDW,
-	   DataWarehouseP&       toDW,
-	   T*                    ptr,
-	   void (T::*pmf)(const ProcessorGroup*,
-			  const Patch*,
-			  DataWarehouseP&,
-			  DataWarehouseP&) )
-	 : d_taskName( taskName ), 
-	   d_patch( 0 ),
-	   d_action( scinew Action<T>(ptr, pmf) ),
-	   d_fromDW( fromDW ),
-	   d_toDW( toDW )
-      {
-	 d_completed = false;
-	 d_usesThreads = false;
-	 d_usesMPI = false;
-	 d_subpatchCapable = false;
-	 d_tasktype = Normal;
-      }
-      
       template<class T, class Arg1>
       Task(const SimpleString&         taskName,
-	   const Patch*         patch,
-	   DataWarehouseP&       fromDW,
-	   DataWarehouseP&       toDW,
 	   T*                    ptr,
 	   void (T::*pmf)(const ProcessorGroup*,
-			  const Patch*,
-			  DataWarehouseP&,
-			  DataWarehouseP&,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse*,
+			  DataWarehouse*,
 			  Arg1),
 	   Arg1 arg1)
 	 : d_taskName( taskName ), 
-	   d_patch( patch ),
-	   d_action( scinew Action1<T, Arg1>(ptr, pmf, arg1) ),
-	   d_fromDW( fromDW ),
-	   d_toDW( toDW )
+	   d_action( scinew Action1<T, Arg1>(ptr, pmf, arg1) )
       {
-	 d_completed = false;
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
 	 d_tasktype = Normal;
+	 initialize();
       }
       
       template<class T, class Arg1, class Arg2>
       Task(const SimpleString&         taskName,
-	   const Patch*         patch,
-	   DataWarehouseP&       fromDW,
-	   DataWarehouseP&       toDW,
 	   T*                    ptr,
 	   void (T::*pmf)(const ProcessorGroup*,
-			  const Patch*,
-			  DataWarehouseP&,
-			  DataWarehouseP&,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse*,
+			  DataWarehouse*,
 			  Arg1, Arg2),
 	   Arg1 arg1, Arg2 arg2)
 	 : d_taskName( taskName ), 
-	   d_patch( patch ),
-	   d_action( scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2) ),
-	   d_fromDW( fromDW ),
-	   d_toDW( toDW )
+	   d_action( scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2) )
       {
-	 d_completed = false;
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
 	 d_tasktype = Normal;
+	 initialize();
       }
       
       template<class T, class Arg1, class Arg2, class Arg3>
       Task(const SimpleString&         taskName,
-	   const Patch*         patch,
-	   DataWarehouseP&       fromDW,
-	   DataWarehouseP&       toDW,
 	   T*                    ptr,
 	   void (T::*pmf)(const ProcessorGroup*,
-			  const Patch*,
-			  DataWarehouseP&,
-			  DataWarehouseP&,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse*,
+			  DataWarehouse*,
 			  Arg1, Arg2, Arg3),
 	   Arg1 arg1, Arg2 arg2, Arg3 arg3)
 	 : d_taskName( taskName ), 
-	   d_patch( patch ),
-	   d_action( scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3) ),
-	   d_fromDW( fromDW ),
-	   d_toDW( toDW )
+	   d_action( scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3) )
       {
-	 d_completed = false;
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
 	 d_tasktype = Normal;
+	 initialize();
       }
       
       template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
       Task(const SimpleString&         taskName,
-	   const Patch*         patch,
-	   DataWarehouseP&       fromDW,
-	   DataWarehouseP&       toDW,
 	   T*                    ptr,
 	   void (T::*pmf)(const ProcessorGroup*,
-			  const Patch*,
-			  DataWarehouseP&,
-			  DataWarehouseP&,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse*,
+			  DataWarehouse*,
 			  Arg1, Arg2, Arg3, Arg4),
 	   Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
 	 : d_taskName( taskName ), 
-	   d_patch( patch ),
-	   d_action( scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4) ),
-	   d_fromDW( fromDW ),
-	   d_toDW( toDW )
+	   d_action( scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4) )
       {
-	 d_completed = false;
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
 	 d_tasktype = Normal;
+	 initialize();
       }
+
+     void initialize();
 
       ~Task();
       
@@ -505,81 +448,122 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      void requires(const DataWarehouseP& ds, const VarLabel*, \
-		    int matlIndex=-1);
+      void requires(WhichDW, const VarLabel*, const PatchSubset* patches = 0,
+		    const MaterialSubset* matls = 0);
       
       //////////
       // Insert Documentation Here:
-      void requires(const DataWarehouseP& ds, const VarLabel*, int matlIndex,
-		    const Patch* patch, Ghost::GhostType gtype,
-		    int numGhostCells = 0);
+      void requires(WhichDW, const VarLabel*, const MaterialSubset* matls);
       
       //////////
       // Insert Documentation Here:
-      void computes(const DataWarehouseP& ds, const VarLabel*,
-		    int matlIndex=-1);
+      void requires(WhichDW, const VarLabel*,
+		    Ghost::GhostType gtype, int numGhostCells = 0);
       
       //////////
       // Insert Documentation Here:
-      void computes(const DataWarehouseP& ds, const VarLabel*, int matlIndex,
-		    const Patch* patch);
-
+      void requires(WhichDW, const VarLabel*,
+		    const PatchSubset* patches, const MaterialSubset* matls,
+		    Ghost::GhostType gtype, int numGhostCells = 0);
+      
+      //////////
+      // Insert Documentation Here:
+      void requires(WhichDW, const VarLabel*,
+		    const PatchSubset* patches,
+		    Ghost::GhostType gtype, int numGhostCells = 0);
+      
+      //////////
+      // Insert Documentation Here:
+      void requires(WhichDW, const VarLabel*,
+		    const MaterialSubset* matls,
+		    Ghost::GhostType gtype, int numGhostCells = 0);
+      
+      //////////
+      // Insert Documentation Here:
+      void computes(const VarLabel*, const PatchSubset* patches = 0,
+		    const MaterialSubset* matls = 0);
+      
+      //////////
+      // Insert Documentation Here:
+      void computes(const VarLabel*, const MaterialSubset* matls);
+      
       //////////
       // Tells the task to actually execute the function assigned to it.
-      void doit(const ProcessorGroup* pc);
+      void doit(const ProcessorGroup* pc, const PatchSubset*,
+		const MaterialSubset*, DataWarehouse* fromDW,
+		DataWarehouse* toDW);
 
       inline const char* getName() const {
 	 return d_taskName;
       }
-      inline const Patch* getPatch() const {
-	 return d_patch;
-      }
-      inline bool isCompleted() const {
-	 return d_completed;
-      }
+     inline const PatchSet* getPatchSet() const {
+       return patch_set;
+     }
+
+     inline const MaterialSet* getMaterialSet() const {
+       return matl_set;
+     }
+
+     struct Edge;
 
       struct Dependency {
-	 DataWarehouse*   d_dw;
-	 const VarLabel*  d_var;
-	 const Patch*     d_patch;
-	 Task*		  d_task;
-	 int		  d_matlIndex;
-	 int		  d_serialNumber;
-	 IntVector	  d_lowIndex, d_highIndex;
+	Dependency* next;
+	Task* task;
+	const VarLabel*  var;
+	const PatchSubset* patches;
+	const MaterialSubset* matls;
+	Edge* req_head;
+	Edge* req_tail;
+	Edge* comp_head;
+	Edge* comp_tail;
+	Ghost::GhostType gtype;
+	WhichDW dw;
+	int numGhostCells;
 
-	 inline Dependency() {}
-	 Dependency(const Dependency&);
-	 Dependency& operator=(const Dependency& copy) {
-	    d_dw=copy.d_dw;
-	    d_var=copy.d_var;
-	    d_patch=copy.d_patch;
-	    d_task=copy.d_task;
-	    d_matlIndex=copy.d_matlIndex;
-	    d_serialNumber=copy.d_serialNumber;
-	    d_lowIndex=copy.d_lowIndex;
-	    d_highIndex=copy.d_highIndex;
-	    return *this;
-	 }
-	 
-	 inline Dependency(DataWarehouse* dw,
-			   const VarLabel* var,
-			   int matlIndex,
-			   const Patch* patch,
-			   Task* task,
-			   const IntVector& lowIndex,
-			   const IntVector& highIndex)
-	 : d_dw(dw),
-	   d_var(var),
-	   d_patch(patch),
-	   d_task(task),
-	   d_matlIndex(matlIndex),
-	   d_serialNumber(-123),
-	   d_lowIndex(lowIndex),
-	   d_highIndex(highIndex)
-	 {
-	 }
+	Dependency(Task* task,
+		   WhichDW dw,
+		   const VarLabel* var,
+		   const PatchSubset* patches,
+		   const MaterialSubset* matls,
+		   Ghost::GhostType gtype = Ghost::None,
+		   int numGhostCells = 0);
+	~Dependency();
+	inline void addComp(Edge* edge);
+	inline void addReq(Edge* edge);
+
+      private:
+	Dependency();
+	Dependency& operator=(const Dependency& copy);
+	Dependency(const Dependency&);
       }; // end struct Dependency
-      
+
+
+     struct Edge {
+       const Dependency* comp;
+       Edge* compNext;
+       const Dependency* req;
+       Edge* reqNext;
+       inline Edge(const Dependency* comp, const Dependency * req)
+	 : comp(comp), compNext(0), req(req), reqNext(0)
+       {
+       }
+     };
+
+     const Dependency* getComputes() const {
+       return comp_head;
+     }
+     const Dependency* getRequires() const {
+       return req_head;
+     }
+
+     Dependency* getComputes() {
+       return comp_head;
+     }
+     Dependency* getRequires() {
+       return req_head;
+     }
+
+#if 0
       //////////
       // Insert Documentation Here:
       void addComps(vector<Dependency*>&) const;
@@ -613,6 +597,7 @@ WARNING
       reqType& getRequires() {
 	 return d_reqs;
       }
+#endif
 
       bool isReductionTask() const {
 	 return d_tasktype == Reduction;
@@ -623,13 +608,6 @@ WARNING
       }
       TaskType getType() const {
 	 return d_tasktype;
-      }
-
-      void assignResource( int idx ) {
-	 d_resourceIndex = idx;
-      }
-      int getAssignedResourceIndex() const {
-	 return d_resourceIndex;
       }
 
       //////////
@@ -645,17 +623,24 @@ WARNING
       bool visited;
       bool sorted;
       int  d_resourceIndex;
+      void setSets(const PatchSet* patches, const MaterialSet* matls);
+
    private: // class Task
       //////////
       // Insert Documentation Here:
       SimpleString        d_taskName;
-      const Patch*        d_patch;
       ActionBase*         d_action;
-      DataWarehouseP      d_fromDW;
-      DataWarehouseP      d_toDW;
-      bool                d_completed;
+#if 0
       reqType		  d_reqs;
       compType		  d_comps;
+#endif
+     Dependency* comp_head;
+     Dependency* comp_tail;
+     Dependency* req_head;
+     Dependency* req_tail;
+
+     const PatchSet* patch_set;
+     const MaterialSet* matl_set;
       
       bool                d_usesMPI;
       bool                d_usesThreads;
@@ -666,6 +651,22 @@ WARNING
       Task& operator=(const Task&);
    };
 
+  inline void Task::Dependency::addComp(Edge* edge)
+  {
+    if(comp_tail)
+      comp_tail->compNext=edge;
+    else
+      comp_head=edge;
+    comp_tail=edge;
+  }
+  inline void Task::Dependency::addReq(Edge* edge)
+  {
+    if(req_tail)
+      req_tail->reqNext=edge;
+    else
+      req_head=edge;
+    req_tail=edge;
+  }
 } // End namespace Uintah
    
 
