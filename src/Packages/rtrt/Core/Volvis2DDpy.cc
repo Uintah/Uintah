@@ -28,18 +28,18 @@ Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
   hist.initialize(0);
   float data_max = 0;  // used to scale histogram to be more readable
 
-  // creates volume-data scatter plot
+  // precomputed values to speed up histogram creation
+  float g_textureFactor = (textureHeight-1)/(gmax-gmin);
+  float v_textureFactor = (textureWidth-1)/(vmax-vmin);
+
   for( int n = 0; n < volumes.size(); n++ ) {
 
-    // precomputed values to speed up histogram creation
-    float g_textureFactor = (textureHeight-1)/(gmax-gmin);
-    float v_textureFactor = (textureWidth-1)/(vmax-vmin);
     // create histogram scatter plot
     for( int z = 0; z < volumes[n]->nz; z++ )
       for( int y = 0; y < volumes[n]->ny; y++ )
 	for( int x = 0; x < volumes[n]->nx; x++ ) {
 	  Voxel2D<float> data = volumes[n]->data(x,y,z);
-	      
+
 	  // assign voxel value's corresponding texture row
 	  int y_index = (int)((data.g()-gmin)*g_textureFactor);
 	  if ( y_index >= textureHeight || y_index < 0 )
