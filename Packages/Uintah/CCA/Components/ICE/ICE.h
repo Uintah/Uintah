@@ -311,19 +311,18 @@ using namespace SCIRun;
                        DataWarehouse* old_dw,                           
                        DataWarehouse* new_dw);
                        
+      void setupRHS(const ProcessorGroup*,
+                    const PatchSubset* patches,                      
+                    const MaterialSubset* ,                          
+                    DataWarehouse* old_dw,                           
+                    DataWarehouse* new_dw);
+                       
        void updatePressure(const ProcessorGroup*,
                            const PatchSubset* patches,                      
                            const MaterialSubset* ,                          
                            DataWarehouse* old_dw,                           
                            DataWarehouse* new_dw); 
                                                 
-      void petscExample(const PatchSubset* patches);
-      
-      void petscMapping( const PatchSubset* patches,
-                         int numlrows,
-                         int numlcolumns,
-                         int gobalrows,
-                         int gobalcolumns);
 //__________________________________ 
 //   O T H E R                            
                                
