@@ -21,7 +21,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 ProblemSpecReader::ProblemSpecReader(const std::string& filename)
-    : d_filename(filename)
+  : d_filename(filename)
 {
 }
 
@@ -29,7 +29,8 @@ ProblemSpecReader::~ProblemSpecReader()
 {
 }
 
-ProblemSpecP ProblemSpecReader::readInputFile()
+ProblemSpecP
+ProblemSpecReader::readInputFile()
 {
   ProblemSpecP prob_spec;
   static bool initialized = false;
@@ -86,7 +87,8 @@ ProblemSpecP ProblemSpecReader::readInputFile()
   return prob_spec;
 }
 
-void ProblemSpecReader::resolveIncludes(ProblemSpecP params)
+void
+ProblemSpecReader::resolveIncludes(ProblemSpecP params)
 {
   // find the directory the current file was in, and if the includes are 
   // not an absolute path, have them for relative to that directory
@@ -106,40 +108,40 @@ void ProblemSpecReader::resolveIncludes(ProblemSpecP params)
       string str = child->getNodeName();
       // look for the include tag
       if (str == "include") {
-	map<string, string> attributes;
-	child->getAttributes(attributes);
-	string href = attributes["href"];
+        map<string, string> attributes;
+        child->getAttributes(attributes);
+        string href = attributes["href"];
 
-	// not absolute path, append href to directory
-	if (href[0] != '/')
-	  href = directory + href;
-	if (href == "")
-	  throw ProblemSetupException("No href attributes in include tag");
-	
-	// open the file, read it, and replace the index node
-	ProblemSpecReader *psr = new ProblemSpecReader(href);
-	ProblemSpecP include = psr->readInputFile();
-	delete psr;
-	// nodes to be substituted must be enclosed in a 
+        // not absolute path, append href to directory
+        if (href[0] != '/')
+          href = directory + href;
+        if (href == "")
+          throw ProblemSetupException("No href attributes in include tag");
+        
+        // open the file, read it, and replace the index node
+        ProblemSpecReader *psr = new ProblemSpecReader(href);
+        ProblemSpecP include = psr->readInputFile();
+        delete psr;
+        // nodes to be substituted must be enclosed in a 
         // "Uintah_Include" node
 
-	if (include->getNodeName() == "Uintah_Include") {
-	  ProblemSpecP incChild = include->getFirstChild();
-	  while (incChild != 0) {
-	    //make include be created from same document that created params
-	    ProblemSpecP newnode = child->importNode(incChild, true);
-	    resolveIncludes(newnode);
-	    params->getNode()->insertBefore(newnode->getNode(), child->getNode());
-	    incChild = incChild->getNextSibling();
-	  }
-	  ProblemSpecP temp = child->getNextSibling();
-	  params->removeChild(child);
-	  child = temp;
-	  continue;
-	}
-	else {
-	  throw ProblemSetupException("No href attributes in include tag");
-	}
+        if (include->getNodeName() == "Uintah_Include") {
+          ProblemSpecP incChild = include->getFirstChild();
+          while (incChild != 0) {
+            //make include be created from same document that created params
+            ProblemSpecP newnode = child->importNode(incChild, true);
+            resolveIncludes(newnode);
+            params->getNode()->insertBefore(newnode->getNode(), child->getNode());
+            incChild = incChild->getNextSibling();
+          }
+          ProblemSpecP temp = child->getNextSibling();
+          params->removeChild(child);
+          child = temp;
+          continue;
+        }
+        else {
+          throw ProblemSetupException("No href attributes in include tag");
+        }
       }
       // recurse on child's children
       resolveIncludes(child);
