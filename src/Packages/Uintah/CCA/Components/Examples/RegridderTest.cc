@@ -42,6 +42,7 @@ namespace Uintah
   void RegridderTest::scheduleInitialize ( const LevelP& level, SchedulerP& scheduler )
   {
     Task* task = scinew Task( "initialize", this, &RegridderTest::initialize );
+    task->computes( d_examplesLabel->density );
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
 
@@ -55,12 +56,15 @@ namespace Uintah
   void RegridderTest::scheduleTimeAdvance ( const LevelP& level, SchedulerP& scheduler, int step, int nsteps )
   {
     Task* task = scinew Task( "timeAdvance", this, &RegridderTest::timeAdvance );
+    task->requires( Task::OldDW, d_examplesLabel->density, Ghost::AroundCells, 1 );
+    task->computes( d_examplesLabel->density );
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
 
   void RegridderTest::scheduleErrorEstimate ( const LevelP& level, SchedulerP& scheduler )
   {
     Task* task = scinew Task( "errorEstimate", this, &RegridderTest::errorEstimate, false );
+    task->requires( Task::NewDW, d_examplesLabel->density, Ghost::None, 0 );
     task->modifies( d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials() );
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
@@ -69,6 +73,7 @@ namespace Uintah
   void RegridderTest::scheduleInitialErrorEstimate ( const LevelP& level, SchedulerP& scheduler )
   {
     Task* task = scinew Task( "initialErrorEstimate", this, &RegridderTest::errorEstimate, true );
+    task->requires( Task::NewDW, d_examplesLabel->density, Ghost::None, 0 );
     task->modifies( d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials() );
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
@@ -81,6 +86,11 @@ namespace Uintah
 
   void RegridderTest::scheduleRefine ( const LevelP& level, SchedulerP& scheduler )
   {
+    Task* task = scinew Task( "refine", this, &RegridderTest::refine );
+    task->requires(Task::NewDW, d_examplesLabel->density, 0, Task::CoarseLevel, 0,
+		   Task::NormalDomain, Ghost::None, 0);
+    task->computes(d_examplesLabel->density);
+    scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
 
   void RegridderTest::scheduleRefineInterface ( const LevelP& level, SchedulerP& scheduler, int step, int nsteps )
@@ -91,16 +101,33 @@ namespace Uintah
 				  const PatchSubset* patches, const MaterialSubset* matls,
 				  DataWarehouse* old_dw, DataWarehouse* new_dw)
   {
+    //    cerr << "RANDY: RegridderTest::initialize()" << endl;
     BBox gridBoundingBox;
     new_dw->getGrid()->getSpatialRange( gridBoundingBox );
     Vector gridMax( gridBoundingBox.max() );
     Vector gridMin( gridBoundingBox.min() );
     d_centerOfCylinder          = (( gridMax - gridMin ) / 2.0 ) + gridMin;
     d_lengthOfCylinder          = 0.60 * gridMax.z();
-    d_innerRadiusOfCylinder     = 0.20 * gridMax.x();
-    d_outerRadiusOfCylinder     = 0.22 * gridMax.x();
-    d_rateOfExpansionOfCylinder = 0.10 * gridMax.x();
+    d_innerRadiusOfCylinder     = 0.05 * gridMax.x();
+    d_outerRadiusOfCylinder     = 0.10 * gridMax.x();
+    d_rateOfExpansionOfCylinder = 0.01 * gridMax.x();
+
+    for(int p=0;p<patches->size();p++){
+      const Patch* patch = patches->get(p);
+      for(int m = 0;m<matls->size();m++){
+	int matl = matls->get(m);
+	CCVariable<double> density;
+	new_dw->allocateAndPut(density, d_examplesLabel->density, matl, patch);
+	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
+	  IntVector idx(*iter);
+	  Vector whereThisCellIs( patch->cellPosition( idx ) );
+	  Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfCylinder;
+	  density[idx] = distanceToCenterOfDomain.length();
+	}
+      }
+    }
   }
+
 
   void RegridderTest::computeStableTimestep (const ProcessorGroup*,
 					     const PatchSubset* patches,
@@ -115,8 +142,29 @@ namespace Uintah
 				    const MaterialSubset* matls,
 				    DataWarehouse* old_dw, DataWarehouse* new_dw )
   {
-    d_innerRadiusOfCylinder += d_rateOfExpansionOfCylinder;
-    d_outerRadiusOfCylinder += d_rateOfExpansionOfCylinder;
+    //    cerr << "RANDY: RegridderTest::timeAdvance()" << endl;
+    
+    const Level* level = getLevel(patches);
+    if ( level->getIndex() == 0 ) {
+      d_centerOfCylinder[0] += d_rateOfExpansionOfCylinder;
+      //    d_innerRadiusOfCylinder += d_rateOfExpansionOfCylinder;
+      //    d_outerRadiusOfCylinder += d_rateOfExpansionOfCylinder;
+    }
+
+    for(int p=0;p<patches->size();p++){
+      const Patch* patch = patches->get(p);
+      for(int m = 0;m<matls->size();m++){
+	int matl = matls->get(m);
+	CCVariable<double> density;
+	new_dw->allocateAndPut(density, d_examplesLabel->density, matl, patch);
+	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
+	  IntVector idx(*iter);
+	  Vector whereThisCellIs( patch->cellPosition( idx ) );
+	  Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfCylinder;
+	  density[idx] = distanceToCenterOfDomain.length();
+	}
+      }
+    }
   }
 
   void RegridderTest::errorEstimate ( const ProcessorGroup*,
@@ -124,6 +172,7 @@ namespace Uintah
 				      const MaterialSubset* matls,
 				      DataWarehouse*, DataWarehouse* new_dw, bool initial )
   {
+    //    cerr << "RANDY: RegridderTest::errorEstimate()" << endl;
     for ( int p = 0; p < patches->size(); p++ ) {
       const Patch* patch = patches->get(p);
 
@@ -136,26 +185,32 @@ namespace Uintah
 
       bool foundErrorOnPatch = false;
 
-      for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
-	IntVector idx(*iter);
+      for(int m = 0;m<matls->size();m++) {
+	int matl = matls->get(m);
+	constCCVariable<double> density;
+	new_dw->get( density, d_examplesLabel->density, matl, patch, Ghost::AroundCells, 1 );
 
-	Vector whereThisCellIs( patch->cellPosition( idx ) );
+	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
+	  IntVector idx(*iter);
 
-	Vector vectorToCenterOfCylinder = whereThisCellIs - d_centerOfCylinder;
-
-	double distanceToCenterOfCylinderInXYPlane = Sqrt( vectorToCenterOfCylinder.x() *
-							   vectorToCenterOfCylinder.x() +
-							   vectorToCenterOfCylinder.y() *
-							   vectorToCenterOfCylinder.y() );
-
-	if ( ( distanceToCenterOfCylinderInXYPlane <= d_outerRadiusOfCylinder ) &&
-	     ( distanceToCenterOfCylinderInXYPlane >= d_innerRadiusOfCylinder ) &&
-	     ( fabs(vectorToCenterOfCylinder.z()) <= ( d_lengthOfCylinder / 2.0 ) ) ) {
-	  refineFlag[idx]=true;
-	  refinePatch->set();
-	  foundErrorOnPatch = true;
-	} else {
-	  refineFlag[idx]=false;
+/*
+	  Vector whereThisCellIs( patch->cellPosition( idx ) );
+	  Vector vectorToCenterOfCylinder = whereThisCellIs - d_centerOfCylinder;
+	  double distanceToCenterOfCylinderInXYPlane = Sqrt( vectorToCenterOfCylinder.x() *
+							     vectorToCenterOfCylinder.x() +
+							     vectorToCenterOfCylinder.y() *
+							     vectorToCenterOfCylinder.y() );
+	//	  if ( ( distanceToCenterOfCylinderInXYPlane <= d_outerRadiusOfCylinder ) &&
+	//	       ( distanceToCenterOfCylinderInXYPlane >= d_innerRadiusOfCylinder ) &&
+	//	       ( fabs(vectorToCenterOfCylinder.z()) <= ( d_lengthOfCylinder / 2.0 ) ) ) {
+	//	if ( vectorToCenterOfCylinder.length() <= d_innerRadiusOfCylinder ) {
+*/
+	  if ( density[idx] <= d_innerRadiusOfCylinder ) {
+	    refineFlag[idx]=true;
+	    foundErrorOnPatch = true;
+	  } else {
+	    refineFlag[idx]=false;
+	  }
 	}
       }
 
@@ -172,7 +227,20 @@ namespace Uintah
 			       const MaterialSubset* matls,
 			       DataWarehouse*, DataWarehouse* new_dw )
   {
-    cerr << "RANDY: RegridderTest::refine()" << endl;
+    //    cerr << "RANDY: RegridderTest::refine()" << endl;
+    for(int p=0;p<patches->size();p++){
+      const Patch* patch = patches->get(p);
+      for(int m = 0;m<matls->size();m++){
+	int matl = matls->get(m);
+	CCVariable<double> density;
+	new_dw->allocateAndPut(density, d_examplesLabel->density, matl, patch);
+	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
+	  IntVector idx(*iter);
+	  Vector whereThisCellIs( patch->cellPosition( idx ) );
+	  Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfCylinder;
+	  density[idx] = distanceToCenterOfDomain.length();
+	}
+      }
+    }
   }
-
 } // namespace Uintah
