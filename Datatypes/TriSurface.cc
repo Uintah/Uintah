@@ -26,7 +26,7 @@ static Persistent* make_TriSurface()
 PersistentTypeID TriSurface::type_id("TriSurface", "Surface", make_TriSurface);
 
 TriSurface::TriSurface()
-: Surface(TriSurf), empty_index(-1), directed(0)
+: Surface(TriSurf), empty_index(-1), directed(1)
 {
 }
 
