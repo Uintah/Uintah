@@ -93,6 +93,9 @@ public:
   //Assign a handle from a pointer.
   Handle<T>& operator=(T*);
 
+  bool Handle<T>::operator==(const Handle<T>& crep) const;
+  bool Handle<T>::operator!=(const Handle<T>& crep) const;
+
   //////////
   //Destroy the handle
   ~Handle();
@@ -157,6 +160,18 @@ Handle<T>& Handle<T>::operator=(T* crep)
     rep=crep;
     if(rep)rep->ref_cnt++;
     return *this;
+}
+
+template<class T>
+bool Handle<T>::operator==(const Handle<T>& crep) const
+{
+  return (get_rep() == crep.get_rep());
+}
+
+template<class T>
+bool Handle<T>::operator!=(const Handle<T>& crep) const
+{
+  return (get_rep() != crep.get_rep());
 }
 
 template<class T>
