@@ -29,6 +29,25 @@ latex := latex -interaction=nonstopmode
 # Name of root doc sans extension.
 bn := usersguide
 
+mainfile := ${bn}.tex
+dvifile := ${bn}.dvi
+pdffile := ${bn}.pdf
+htmldir := ${bn}
+treetop := ../../..
+texutils := ${treetop}/doc/Utilities/TeX
+
+# Locations of scirun-doc style files
+stylefile1 := ${texutils}/scirun-doc.sty
+stylefile2 := ${texutils}/scirun-doc.tex
+stylefile3 := ${texutils}/scirun-doc.perl
+
+# Symbolic links to style files.
+# These style links are a hack to get latex2html to do the right thing.
+stylefile1link := scirun-doc.sty
+stylefile2link := scirun-doc.tex
+stylefile3link := scirun-doc.perl
+stylefilelinks := ${stylefile1link} ${stylefile2link} ${stylefile3link}
+
 # The macros file used by latex and latex2html is generated from this
 # one.
 rmacrosfile := srugmacros.rtex
@@ -42,21 +61,15 @@ htmlfigs := Figures/*.gif Figures/*.jpg
 
 # User created/edited sources (generated sources come into play further
 # down). 
-srcs := ${macrosfile} usersguide.tex title.tex intro.tex concepts.tex \
+srcs := ${macrosfile} ${mainfile} title.tex intro.tex concepts.tex \
 running.tex network.tex viewer.tex packages.tex converters.tex \
-itk_sr.tex ../../Utilities/TeX/scirun-doc.tex
+itk_sr.tex ${stylefile1} ${stylefile2} ${stylefile3}
 
 # Latex2html options.  Change as needed.
 latex2htmloptions = -split 4 -no_white -link 1 -bottom_navigation \
 -html_version 4.0,math -show_section_numbers -local_icons \
 -long_titles 1 -prefix srug -image_type gif \
--style ../../../Utilities/HTML/srlatex2html.css
-
-mainfile := ${bn}.tex
-dvifile := ${bn}.dvi
-pdffile := ${bn}.pdf
-htmldir := ${bn}
-treetop := ../../..
+-style ${treetop}/../doc/Utilities/HTML/srlatex2html.css
 
 # Remove list of directories
 define rmdirs
@@ -68,8 +81,6 @@ define rmfiles
 ${if ${1},${shell rm -f ${1}}}
 endef
 
-# ########## Targets for making various forms of the users guide.
-
 .PHONY: all html dvi pdf clean veryclean
 
 all: dvi pdf html
@@ -80,7 +91,16 @@ html: ${htmldir}
 
 pdf: ${pdffile}
 
-${dvifile}: ${srcs} ${psfigs}
+${stylefile1link}:
+	ln -s ${stylefile1} ${stylefile1link}
+
+${stylefile2link}:
+	ln -s ${stylefile2} ${stylefile2link}
+
+${stylefile3link}:
+	ln -s ${stylefile3} ${stylefile3link}
+
+${dvifile}: ${srcs} ${psfigs} ${stylefilelinks}
 	-${latex}  ${bn}
 	-makeindex ${bn}.idx
 	-bibtex ${bn}
@@ -103,4 +123,4 @@ clean:
 
 veryclean: clean
 	${call rmdirs,${htmldir}}
-	${call rmfiles,${pdffile} ${bn}.bbl ${macrosfile}}
+	${call rmfiles,${pdffile} ${bn}.bbl ${macrosfile} ${stylefilelinks}}
