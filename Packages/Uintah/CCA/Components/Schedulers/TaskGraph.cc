@@ -495,11 +495,18 @@ class CompTable {
 	 const Patch* patch, int matl)
       : task(task), comp(comp), patch(patch), matl(matl)
     {
-      std::hash<string> h;
-      hash=(unsigned int)(((unsigned int)comp->dw<<3)
-	^(h(comp->var->getName()))
-	^(patch->getID()<<4)
-	^matl);
+      if(patch){
+	std::hash<string> h;
+	hash=(unsigned int)(((unsigned int)comp->dw<<3)
+			    ^(h(comp->var->getName()))
+			    ^(patch->getID()<<4)
+			    ^matl);
+      } else {
+	std::hash<string> h;
+	hash=(unsigned int)(((unsigned int)comp->dw<<3)
+			    ^(h(comp->var->getName()))
+			    ^matl);
+      }
     }
     ~Data()
     {
@@ -530,12 +537,16 @@ CompTable::~CompTable()
 void CompTable::remembercomp(DetailedTask* task, Task::Dependency* comp,
 			     const PatchSubset* patches, const MaterialSubset* matls)
 {
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    for(int m=0;m<matls->size();m++){
-      int matl = matls->get(m);
-      data.insert(new Data(task, comp, patch, matl));
+  if(patches && matls){
+    for(int p=0;p<patches->size();p++){
+      const Patch* patch = patches->get(p);
+      for(int m=0;m<matls->size();m++){
+	int matl = matls->get(m);
+	data.insert(new Data(task, comp, patch, matl));
+      }
     }
+  } else {
+    data.insert(new Data(task, comp, 0, 0));
   }
 }
 
