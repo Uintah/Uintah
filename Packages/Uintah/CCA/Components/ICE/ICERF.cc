@@ -197,8 +197,8 @@ void ICE::computeDivThetaVel_CC(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing<<"computeDivThetaVel_CC on patch "
-              << patch->getID() <<"\t\t ICE" << endl;
+    cout_doing<<"doing computeDivThetaVel_CC on patch "
+              << patch->getID() <<"\t\t\t ICE" << endl;
 
     Vector dx       = patch->dCell();
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -211,8 +211,8 @@ void ICE::computeDivThetaVel_CC(const ProcessorGroup*,
     
     for (int m = 0; m < numMatls; m++)   {
       Material* matl = d_sharedState->getMaterial( m );
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = matl->getDWIndex();
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
 
       CCVariable<Vector> D;
       constCCVariable<Vector> vel_CC;
