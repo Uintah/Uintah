@@ -127,7 +127,7 @@ public:
   
   void resize_gui(int n = -1);
   void update_from_gui();
-  void update_to_gui(bool init = false);
+  void update_to_gui(bool forward = false);
   void tcl_unpickle();
 
   void undo();
@@ -157,7 +157,7 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
   widgets_.push_back(scinew TriangleCM2Widget());
   widgets_.push_back(scinew RectangleCM2Widget());
   resize_gui();
-  update_to_gui(true);
+  update_to_gui(false);
 }
 
 
@@ -300,7 +300,7 @@ void
 EditTransferFunc2::resize_gui(int n)
 {
   gui_num_entries_.set(n==-1?widgets_.size():n);
-  unsigned int i;
+  unsigned int i = 0;
   // Expand the gui elements.
   for (i = gui_name_.size(); i < (unsigned int)gui_num_entries_.get(); i++)
   {
@@ -310,13 +310,20 @@ EditTransferFunc2::resize_gui(int n)
     gui_color_g_.push_back(new GuiDouble(ctx->subVar(num +"-color-g")));
     gui_color_b_.push_back(new GuiDouble(ctx->subVar(num +"-color-b")));
     gui_color_a_.push_back(new GuiDouble(ctx->subVar(num +"-color-a")));
-    //gui_wstate_.push_back(new GuiString(ctx->subVar("state-" + num)));
+    gui_wstate_.push_back(new GuiString(ctx->subVar("state-" + num)));
+  }
+
+  if (i != 0)
+  {
+    ctx->erase("marker");
+    GuiString marker(ctx->subVar("marker"));
+    marker.set("end");
   }
 }
 
 
 void
-EditTransferFunc2::update_to_gui(bool init)
+EditTransferFunc2::update_to_gui(bool forward)
 {
   // Update GUI
   resize_gui();
@@ -328,9 +335,9 @@ EditTransferFunc2::update_to_gui(bool init)
     gui_color_g_[i]->set(c.g());
     gui_color_b_[i]->set(c.b());
     gui_color_a_[i]->set(widgets_[i]->alpha());
-    //gui_wstate_[i]->set(widgets_[i]->tcl_pickle());
+    gui_wstate_[i]->set(widgets_[i]->tcl_pickle());
   }
-  if (!init) { gui->execute(id + " create_entries"); }
+  if (forward) { gui->execute(id + " create_entries"); }
 }
 
 
@@ -517,9 +524,13 @@ EditTransferFunc2::execute()
   if(histo_dirty_) {
     redraw();
   }
+  
+  // TODO: This is tcl_pickle and should go in presave() when that callback
+  // is ported in from the 1.22.0 branch.
+  update_to_gui(false);
 
   Colormap2OPort* cmap_port = (Colormap2OPort*)get_oport("Output Colormap");
-  if(cmap_port) {
+  if (cmap_port) {
     Colormap2Handle cmap(scinew Colormap2(widgets_, updating_, gui_faux_.get()));
     cmap_port->send(cmap);
   }
