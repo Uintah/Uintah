@@ -306,7 +306,7 @@ getSuperPatchExtents(const VarLabel* label, int matlIndex, const Patch* patch,
   SuperPatch::Region requiredExtents = connectedPatchGroup->getRegion();  
   
   // expand to cover the entire connected patch group
-  bool containsGivenPatch;
+  bool containsGivenPatch = false;
   for (unsigned int i = 0; i < connectedPatchGroup->getBoxes().size(); i++) {
     // get the minimum extents containing both the expected ghost cells
     // to be needed and the given ghost cells.
