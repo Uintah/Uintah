@@ -133,6 +133,7 @@ ShowDipoles::execute()
       showLastVec != lastShowLastVec_ ||
       showLines != lastShowLines_ ) {
 
+    lastGen_ = fieldH->generation;
     if (field_pcv->fdata().size() != nDips_) {
 	     
       msgStream_<< "NEW SIZE FOR DIPOLEMATTOGEOM_ field_pcv->data().size()="
@@ -175,7 +176,7 @@ ShowDipoles::execute()
     }
     Array1<Point> pts;
     unsigned int i;
-    double max;
+    double max=0;
     for (i=0; i<field_pcv->fdata().size(); i++) {
       double dv=field_pcv->fdata()[i].length();
       if (i==0 || dv>max) max=dv;
@@ -209,14 +210,20 @@ ShowDipoles::execute()
       GeomMaterial *gm=new GeomMaterial(g, new Material(Color(.8,.8,.2)));
       gidx_=ogeom_->addObj(gm, string("Dipole Lines"));
     }
-    fieldH.detach();
-    dipoleFldH_=fieldH;
+    FieldHandle fH(fieldH);
+    fH.detach();
+    dipoleFldH_=fH;
     ogeom_->flushViews();
     ofield_->send(dipoleFldH_);
   } else if (execMsg_ == "widget_moved") {
     execMsg_="";
     Array1<Point> pts;
     unsigned int i;
+    FieldHandle fH(fieldH);
+    fH.detach();
+    fH->mesh_detach();
+    field_pcv=dynamic_cast<PointCloudField<Vector>*>(fH.get_rep());
+    field_mesh=field_pcv->get_typed_mesh();
     for (i=0; i<nDips_; i++) {
       Point p=widget_[i]->GetPosition();
       pts.add(p);
@@ -236,14 +243,13 @@ ShowDipoles::execute()
       gidx_=ogeom_->addObj(gm, string("Dipole Lines"));
     }
     ogeom_->flushViews();
-    dipoleFldH_=fieldH;
+    dipoleFldH_=fH;
     ofield_->send(dipoleFldH_);
   } else {
     // just send the same old dipoles as last time
     remark("Sending old stuff.");
     ofield_->send(dipoleFldH_);
   }
-  lastGen_ = gen;
   lastWidgetSize_ = widgetSize;
   lastScaleMode_ = scaleMode;
   lastShowLastVec_ = showLastVec;
