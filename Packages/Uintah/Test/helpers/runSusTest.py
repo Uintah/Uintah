@@ -29,7 +29,7 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
     command = "%s/sus -%s" % (susdir, algo)
 
   if do_restart == "yes":
-    susinput = "-restart *.uda.000"
+    susinput = "-restart *.uda.000 -t 0 -move"
     log = "sus_restart.log"
   else:
     susinput = "%s/inputs/%s/%s" % (susdir, ALGO, input(test))
