@@ -272,6 +272,8 @@ class HexMesh : public Datatype
     
     void classify ();
     
+    void finish ();
+    
     int    locate      (const Point & P, int & start);
     double interpolate (const Point & P, const Array1<double> & data, int & start);
     double interpolate (const Point & P, const Array1<Vector> & data, Vector & v, int & start);

@@ -475,6 +475,7 @@ Hexahedron::Hexahedron (int index, HexMesh * m, EightHexNodes & e)
        
   calc_coeff ();
   calc_centroid ();
+     
 }
 
 
@@ -1507,6 +1508,21 @@ void HexMesh::io (Piostream & p)
   
     if (p.reading ())
     {
+      finish ();
+    }
+  }
+}
+
+void HexMesh::finish ()
+{
+  HashTable<int, HexFace *> * hfhtp = & face_set;
+  HashTableIter<int, HexFace *> hf (hfhtp);
+  HashTable<int, Hexahedron *> * hxhtp = & element_set;
+  HashTableIter<int, Hexahedron *> hx (hxhtp);
+  int version;
+  
+    // If we just read the mesh, some additional processing may be required.
+  
       for (hx.first (); hx.ok (); ++hx)
         hx.get_data()->finish_read (this);
       for (hf.first (); hf.ok (); ++hf)
@@ -1514,8 +1530,6 @@ void HexMesh::io (Piostream & p)
         hf.get_data()->finish_read (this);
         neighbor_set.insert ( hf.get_data()->corner_set(), hf.get_data());
       }
-    }
-  }
 }
 
 void HexMesh::get_boundary_lines(Array1<Point>& lines)
