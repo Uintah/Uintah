@@ -25,10 +25,10 @@ using namespace std;
 
 //#define DOING
 #undef DOING
-#define EOSCM
+//#define EOSCM
 //#undef EOSCM
-//#define IDEAL_GAS
-#undef IDEAL_GAS
+#define IDEAL_GAS
+//#undef IDEAL_GAS
 //#define BURN_DEBUG
 #undef BURN_DEBUG
 
