@@ -72,6 +72,11 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
   db->require("fac_mesh", d_factorMesh);
   db->require("filterl", d_filterl);
   db->require("var_const",d_CFVar); // const reqd by variance eqn
+  if (db->findBlock("turbulentPrandtlNumber")) 
+    db->require("turbulentPrandtlNumber",d_turbPrNo);
+  else
+    d_turbPrNo = 0.4;
+
 }
 
 //****************************************************************************
@@ -1014,6 +1019,111 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     /* new_dw->put(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch); */;
   }
 }
+
+//****************************************************************************
+// Schedule recomputation of the turbulence sub model 
+//****************************************************************************
+void 
+SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched, 
+						 const PatchSet* patches,
+						 const MaterialSet* matls)
+{
+  Task* tsk = scinew Task("SmagorinskyModel::computeScalarDissipation",
+			  this,
+			  &SmagorinskyModel::computeScalarDissipation);
+
+  
+  // Requires, only the scalar corresponding to matlindex = 0 is
+  //           required. For multiple scalars this will be put in a loop
+  // assuming scalar dissipation is computed before turbulent viscosity calculation 
+  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#ifdef correctorstep
+  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#else  
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#endif
+
+  // Computes
+  tsk->computes(d_lab->d_scalarDissSPLabel);
+
+  sched->addTask(tsk, patches, matls);
+}
+
+
+void 
+SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
+					const PatchSubset* patches,
+					const MaterialSubset*,
+					DataWarehouse*,
+					DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    // Variables
+    constCCVariable<double> viscosity;
+    constCCVariable<double> scalar;
+    CCVariable<double> scalarDiss;  // dissipation..chi
+    new_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#ifdef correctorstep
+    new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex, patch, Ghost::AroundCells,
+		Arches::ONEGHOSTCELL);
+#else
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, Ghost::AroundCells,
+		Arches::ONEGHOSTCELL);
+#endif
+    new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel, matlIndex, patch);
+    scalarDiss.initialize(0.0);
+    
+    // Get the PerPatch CellInformation data
+    PerPatch<CellInformationP> cellInfoP;
+    //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+    //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+    //else {
+    //  cellInfoP.setData(scinew CellInformation(patch));
+    //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+    //}
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+    
+    // compatible with fortran index
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+	  double scale = 0.5*(scalar[currCell]+
+			      scalar[IntVector(colX+1,colY,colZ)]);
+	  double scalw = 0.5*(scalar[currCell]+
+			      scalar[IntVector(colX-1,colY,colZ)]);
+	  double scaln = 0.5*(scalar[currCell]+
+			      scalar[IntVector(colX,colY+1,colZ)]);
+	  double scals = 0.5*(scalar[currCell]+
+			      scalar[IntVector(colX,colY-1,colZ)]);
+	  double scalt = 0.5*(scalar[currCell]+
+			      scalar[IntVector(colX,colY,colZ+1)]);
+	  double scalb = 0.5*(scalar[currCell]+
+			      scalar[IntVector(colX,colY,colZ-1)]);
+	  double dfdx = (scale-scalw)/cellinfo->sew[colX];
+	  double dfdy = (scaln-scals)/cellinfo->sns[colY];
+	  double dfdz = (scalt-scalb)/cellinfo->stb[colZ];
+	  scalarDiss[currCell] = viscosity[currCell]/d_turbPrNo*
+	                        (dfdx*dfdx + dfdy*dfdy + dfdz*dfdz); 
+	}
+      }
+    }
+  }
+}
+
+
+
 
 //****************************************************************************
 // Calculate the Velocity BC at the Wall
