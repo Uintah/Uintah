@@ -379,12 +379,19 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	    t->requires( new_dw, lb->pVolumeDeformedLabel, idx, patch,
 			 Ghost::AroundNodes, 1);
 
+	    t->requires( old_dw, lb->pMassLabel, idx, patch,
+			 Ghost::AroundNodes, 1);
+
+            t->requires( new_dw, lb->gMassLabel, idx, patch,
+                         Ghost::None);
+
 	    if(mpm_matl->getFractureModel()) {
 	       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
    	    }
 
 	    t->computes( new_dw, lb->gInternalForceLabel, idx, patch );
+            t->computes(new_dw, lb->gStressForSavingLabel, idx, patch );
 	 }
 
 	 sched->addTask( t );
@@ -788,7 +795,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	 sched->addTask(t);
       }
 
-//#if 0
+#if 0
       if(t + dt >= d_nextOutputTime)
       {
 	 Task *t = scinew Task("SerialMPM::interpolateParticlesForSaving",
@@ -816,7 +823,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
          sched->addTask(t);
 
       }
-//#endif
+#endif
     }
     
     if(t + dt >= d_nextOutputTime)
@@ -835,26 +842,24 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 				     numMatls);
 
    new_dw->pleaseSave(lb->pXLabel, numMatls);
-   new_dw->pleaseSave(lb->pVelocityLabel, numMatls);
+//   new_dw->pleaseSave(lb->pVelocityLabel, numMatls);
    new_dw->pleaseSave(lb->pVolumeLabel, numMatls);
-   new_dw->pleaseSave(lb->pMassLabel, numMatls);
+//   new_dw->pleaseSave(lb->pMassLabel, numMatls);
    new_dw->pleaseSave(lb->pStressLabel, numMatls);
 
-   new_dw->pleaseSave(lb->gAccelerationLabel, numMatls);
-   new_dw->pleaseSave(lb->gInternalForceLabel, numMatls);
+//   new_dw->pleaseSave(lb->gAccelerationLabel, numMatls);
+//   new_dw->pleaseSave(lb->gInternalForceLabel, numMatls);
    new_dw->pleaseSave(lb->gMassLabel, numMatls);
-   new_dw->pleaseSave(lb->gVelocityLabel, numMatls);
+//   new_dw->pleaseSave(lb->gVelocityLabel, numMatls);
 
-   new_dw->pleaseSave(lb->pTemperatureLabel, numMatls);
-   new_dw->pleaseSave(lb->pTemperatureGradientLabel, numMatls);
+//   new_dw->pleaseSave(lb->pTemperatureLabel, numMatls);
+//   new_dw->pleaseSave(lb->pTemperatureGradientLabel, numMatls);
 
-   new_dw->pleaseSave(lb->gTemperatureLabel, numMatls);
+//   new_dw->pleaseSave(lb->gTemperatureLabel, numMatls);
 
    // Add pleaseSaves here for each of the grid variables
    // created by interpolateParticlesForSaving
-//#if 0
    new_dw->pleaseSave(lb->gStressForSavingLabel, numMatls);
-//#endif
 
    if(d_fracture) {
      new_dw->pleaseSave(lb->pCrackSurfaceNormalLabel, numMatls);
@@ -1360,7 +1365,6 @@ void SerialMPM::stressRelease(const ProcessorGroup*,
    }
 }
 
-
 void SerialMPM::computeInternalForce(const ProcessorGroup*,
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
@@ -1390,18 +1394,23 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       // and the constitutive model
       ParticleVariable<Point>  px;
       ParticleVariable<double>  pvol;
+      ParticleVariable<double>  pmass;
       ParticleVariable<Matrix3> pstress;
       NCVariable<Vector>        internalforce;
+      NCVariable<Matrix3>       gstress;
+      NCVariable<double>        gmass;
 
       ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
 						       Ghost::AroundNodes, 1,
 						       lb->pXLabel);
       old_dw->get(px,      lb->pXLabel, pset);
+      old_dw->get(pmass,   lb->pMassLabel, pset);
+
       new_dw->get(pvol,    lb->pVolumeDeformedLabel, pset);
-      
-      
+      new_dw->get(gmass,        lb->gMassLabel, vfindex, patch, Ghost::None, 0);
       new_dw->get(pstress, lb->pStressAfterStrainRateLabel, pset);
 
+      new_dw->allocate(gstress, lb->gStressForSavingLabel, vfindex, patch);
       new_dw->allocate(internalforce, lb->gInternalForceLabel, vfindex, patch);
   
       internalforce.initialize(Vector(0,0,0));
@@ -1418,9 +1427,12 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
          // Get the node indices that surround the cell
          IntVector ni[8];
          Vector d_S[8];
+         double S[8];
 
          if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
   	   continue;
+         if(!patch->findCellAndWeights(px[idx], ni, S))
+           continue;
 
          Visibility vis;
          if(mpm_matl->getFractureModel()) {
@@ -1432,10 +1444,17 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 	   if(patch->containsNode(ni[k]) && vis.visible(k)){
 	     Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
 	     internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
+             gstress[ni[k]] += pstress[idx] * pmass[idx] * S[k];
 	   }
          }
       }
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+         if(gmass[*iter] >= 1.e-10){
+            gstress[*iter] /= gmass[*iter];
+         }
+      }
       new_dw->put(internalforce, lb->gInternalForceLabel, vfindex, patch);
+      new_dw->put(gstress, lb->gStressForSavingLabel, vfindex, patch);
     }
   }
 }
@@ -2032,6 +2051,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.154  2000/09/27 16:47:18  guilkey
+// Moved the creation of gStressForSaving from my failed function into
+// computeInternalForce.  Lame.
+//
 // Revision 1.153  2000/09/25 20:23:13  sparker
 // Quiet g++ warnings
 //
