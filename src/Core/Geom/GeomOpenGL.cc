@@ -197,10 +197,13 @@ DrawInfoOpenGL::DrawInfoOpenGL()
     pickchild(0),
     fog(0),
     cull(0),
-    current_matl(0),
-    fontinit(true),
-    fontbase(0)
+    current_matl(0)
 {
+    for (int i=0; i < GEOM_FONT_COUNT; i++) {
+        fontstatus[i] = 0;
+        fontbase[i] = 0;
+    }
+
     qobj=gluNewQuadric();
 #ifdef _WIN32
 	gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (void (__stdcall*)())quad_error);
@@ -4538,91 +4541,90 @@ void GeomIndexedGroup::draw(DrawInfoOpenGL* di, Material* m, double time)
   }
 }
 
-//----------------------------------------------------------------------
-void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+bool
+DrawInfoOpenGL::init_font(int a)
 {
 #ifndef _WIN32
-  if(!pre_draw(di,matl,0)) return;
+  if (a > GEOM_FONT_COUNT || a < 0) { return false; }
 
-  if ( di->fontinit ) {
-    //cerr << "GeomText::draw: Initializing fonts." << endl;
-    di->dpy = XOpenDisplay( NULL );
-    XFontStruct* fontInfo = XLoadQueryFont(di->dpy,
-      "-adobe-helvetica-bold-r-normal-*-14-120-*-*-p-60-iso8859-1");
-    if (fontInfo == NULL) {
-      fontInfo =
-	XLoadQueryFont(di->dpy,
-          "-schumacher-clean-bold-r-normal-*-*-120-*-*-*-*-*");
-    }
+  if ( fontstatus[a] == 0 )
+  {
+    dpy = XOpenDisplay( NULL );
+
+    static const char *fontname[GEOM_FONT_COUNT] = {
+      "-schumacher-clean-medium-r-normal-*-*-60-*-*-*-*-*",
+      "-schumacher-clean-bold-r-normal-*-*-100-*-*-*-*-*",
+      "-schumacher-clean-bold-r-normal-*-*-140-*-*-*-*-*",
+      "-*-courier-bold-r-normal-*-*-180-*-*-*-*-*",
+      "-*-courier-bold-r-normal-*-*-240-*-*-*-*-*"
+    };
+
+    XFontStruct* fontInfo = XLoadQueryFont(dpy, fontname[a]);
     if (fontInfo == NULL)
     {
-      cerr << "GeomText::draw: no font found.\n";
-      return;
+      cerr << "DrawInfoOpenGL::init_font: font '" << fontname[a]
+	   << "' not found.\n";
+      fontstatus[a] = 2;
+      return false;
     }
     Font id = fontInfo->fid;
     unsigned int first = fontInfo->min_char_or_byte2;
     unsigned int last = fontInfo->max_char_or_byte2;
 
-    di->fontbase = glGenLists((GLuint) last+1);
+    fontbase[a] = glGenLists((GLuint) last+1);
 
-    if (di->fontbase == 0) {
-      printf ("GeomText::draw: Out of display lists\n");
-      return;
+    if (fontbase[a] == 0) {
+      cerr << "DrawInfoOpenGL::init_font: Out of display lists.\n";
+      fontstatus[a] = 2;
+      return false;
     }
 
-    glXUseXFont(id, first, last-first+1, di->fontbase+first);
+    glXUseXFont(id, first, last-first+1, fontbase[a]+first);
+    fontstatus[a] = 1;
+  }
+  if (fontstatus[a] == 1)
+  {
+    return true;
+  }
+#endif
+  return false;
+}
 
-    di->fontinit = false;
+
+//----------------------------------------------------------------------
+void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if(!pre_draw(di,matl,0)) return;
+
+  const int fontindex = 2;
+
+  if (!di->init_font(fontindex))
+  {
+    post_draw(di);
+    return;
   }
 
   glColor3f(c.r(), c.g(), c.b());
   glDisable(GL_LIGHTING);
   glRasterPos3d( at.x(), at.y(), at.z() );
-  /*glBitmap(0, 0, x, y, 1, 1, 0);*/
   glPushAttrib (GL_LIST_BIT);
-  glListBase(di->fontbase);
+  glListBase(di->fontbase[fontindex]);
   glCallLists(text.size(), GL_UNSIGNED_BYTE, (GLubyte *)text.c_str());
   glPopAttrib ();
   post_draw(di);
-#endif
 }
 
 
 //----------------------------------------------------------------------
 void GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-#ifndef _WIN32
   if(!pre_draw(di,matl,0)) return;
 
-  if ( di->fontinit ) {
-    //cerr << "GeomText::draw: Initializing fonts." << endl;
-    di->dpy = XOpenDisplay( NULL );
-    XFontStruct* fontInfo = XLoadQueryFont(di->dpy,
-      "-adobe-helvetica-bold-r-normal-*-14-120-*-*-p-60-iso8859-1");
-    if (fontInfo == NULL) {
-      fontInfo =
-	XLoadQueryFont(di->dpy,
-          "-schumacher-clean-bold-r-normal-*-*-120-*-*-*-*-*");
-    }
-    if (fontInfo == NULL)
-    {
-      cerr << "GeomText::draw: no font found.\n";
-      return;
-    }
-    Font id = fontInfo->fid;
-    unsigned int first = fontInfo->min_char_or_byte2;
-    unsigned int last = fontInfo->max_char_or_byte2;
-
-    di->fontbase = glGenLists((GLuint) last+1);
-
-    if (di->fontbase == 0) {
-      printf ("GeomText::draw: Out of display lists\n");
-      return;
-    }
-
-    glXUseXFont(id, first, last-first+1, di->fontbase+first);
-
-    di->fontinit = false;
+  if (!di->init_font(fontindex_))
+  {
+    post_draw(di);
+    return;
   }
 
   glDisable(GL_LIGHTING);
@@ -4631,51 +4633,24 @@ void GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
   {
     glColor3f(color_[i].r(), color_[i].g(), color_[i].b());
     glRasterPos3d( location_[i].x(), location_[i].y(), location_[i].z() );
-    glListBase(di->fontbase);
+    glListBase(di->fontbase[fontindex_]);
     glCallLists(text_[i].size(), GL_UNSIGNED_BYTE,
 		(GLubyte *)text_[i].c_str());
   }
   glPopAttrib ();
   post_draw(di);
-#endif
 }
 
 
 //----------------------------------------------------------------------
 void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-#ifndef _WIN32
   if(!pre_draw(di,matl,0)) return;
 
-  if ( di->fontinit ) {
-    //cerr << "GeomText::draw: Initializing fonts." << endl;
-    di->dpy = XOpenDisplay( NULL );
-    XFontStruct* fontInfo = XLoadQueryFont(di->dpy,
-      "-adobe-helvetica-bold-r-normal-*-14-120-*-*-p-60-iso8859-1");
-    if (fontInfo == NULL) {
-      fontInfo =
-	XLoadQueryFont(di->dpy,
-	 "-schumacher-clean-bold-r-normal-*-*-120-*-*-*-*-*");
-    }
-    if (fontInfo == NULL)
-    {
-      cerr << "GeomText::draw: no font found.\n";
-      return;
-    }
-    Font id = fontInfo->fid;
-    unsigned int first = fontInfo->min_char_or_byte2;
-    unsigned int last = fontInfo->max_char_or_byte2;
-
-    di->fontbase = glGenLists((GLuint) last+1);
-
-    if (di->fontbase == 0) {
-      printf ("GeomText::draw: Out of display lists\n");
-      return;
-    }
-
-    glXUseXFont(id, first, last-first+1, di->fontbase+first);
-
-    di->fontinit = false;
+  if (!di->init_font(fontindex_))
+  {
+    post_draw(di);
+    return;
   }
 
   glDisable(GL_DEPTH_TEST);
@@ -4691,7 +4666,7 @@ void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
     {
       glColor3f(color_[i].r(), color_[i].g(), color_[i].b());
       glRasterPos3d( location_[i].x(), location_[i].y(), location_[i].z() );
-      glListBase(di->fontbase);
+      glListBase(di->fontbase[fontindex_]);
       glCallLists(text_[i].size(), GL_UNSIGNED_BYTE,
 		  (GLubyte *)text_[i].c_str());
     }
@@ -4700,7 +4675,6 @@ void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
   glPopAttrib ();
   glEnable(GL_DEPTH_TEST);
   post_draw(di);
-#endif
 }
 
 

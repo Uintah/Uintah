@@ -53,6 +53,8 @@ namespace SCIRun {
 namespace SCIRun {
 
 
+#define GEOM_FONT_COUNT 5
+
 class Material;
 
 const int CLIP_P0 = 1;
@@ -129,8 +131,11 @@ public:
     int debug;
     void reset();
 
-    bool   fontinit;
-    GLuint fontbase;
+    // Font support.
+    bool init_font(int a);
+
+    int    fontstatus[GEOM_FONT_COUNT];
+    GLuint fontbase[GEOM_FONT_COUNT];
 };
 
 } // End namespace SCIRun

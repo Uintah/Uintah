@@ -73,6 +73,7 @@ public:
 				  bool use_default_material,
 				  MaterialHandle default_material,
 				  bool backface_cull_p,
+				  int  fontsize,
 				  bool render_data,
 				  bool render_nodes,
 				  bool render_edges,
@@ -117,6 +118,7 @@ public:
 				  bool use_default_material,
 				  MaterialHandle default_material,
 				  bool backface_cull_p,
+				  int  fontsize,
 				  bool render_data,
 				  bool render_nodes,
 				  bool render_edges,
@@ -139,20 +141,25 @@ private:
   GeomSwitch *render_text_data(FieldHandle fld,
 			       bool use_default_material,
 			       MaterialHandle default_material,
-			       bool backface_cull_p);
+			       bool backface_cull_p,
+			       int fontsize);
   GeomSwitch *render_text_nodes(FieldHandle fld,
   				bool use_default_material,
   				MaterialHandle default_material,
-				bool backface_cull_p);
+				bool backface_cull_p,
+				int fontsize);
   GeomSwitch *render_text_edges(FieldHandle fld,
   				bool use_default_material,
-  				MaterialHandle default_material);
+  				MaterialHandle default_material,
+				int fontsize);
   GeomSwitch *render_text_faces(FieldHandle fld,
   				bool use_default_material,
-  				MaterialHandle default_material);
+  				MaterialHandle default_material,
+				int fontsize);
   GeomSwitch *render_text_cells(FieldHandle fld,
 				bool use_default_material,
-				MaterialHandle default_material);
+				MaterialHandle default_material,
+				int fontsize);
 
   GeomSwitch *render_data(const Fld *fld, 
 			  const string &data_display_mode,
@@ -845,6 +852,7 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 				   bool use_default_material,
 				   MaterialHandle default_material,
 				   bool backface_cull_p,
+				   int fontsize,
 				   bool render_data,
 				   bool render_nodes,
 				   bool render_edges,
@@ -857,27 +865,29 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
   if (render_data)
   {
     texts->add(render_text_data(field_handle, use_default_material,
-				default_material, backface_cull_p));
+				default_material, backface_cull_p,
+				fontsize));
   }
   if (render_nodes)
   {
     texts->add(render_text_nodes(field_handle, use_default_material,
-				 default_material, backface_cull_p));
+				 default_material, backface_cull_p,
+				 fontsize));
   }
   if (render_edges)
   {
     texts->add(render_text_edges(field_handle, use_default_material,
-				 default_material));
+				 default_material, fontsize));
   }
   if (render_faces)
   {
     texts->add(render_text_faces(field_handle, use_default_material,
-				 default_material));
+				 default_material, fontsize));
   }
   if (render_cells)
   {
     texts->add(render_text_cells(field_handle, use_default_material,
-				 default_material));
+				 default_material, fontsize));
   }
   return text_switch;
 }
@@ -888,7 +898,8 @@ GeomSwitch *
 RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
 					bool use_default_material,
 					MaterialHandle default_material,
-					bool backface_cull_p)
+					bool backface_cull_p,
+					int fontsize)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -904,11 +915,13 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
     mesh->synchronize(Mesh::NORMALS_E);
     ctexts = scinew GeomTextsCulled();
     text_switch = scinew GeomSwitch(ctexts);
+    ctexts->set_font_index(fontsize);
   }
   else
   {
     texts = scinew GeomTexts();
     text_switch = scinew GeomSwitch(texts);
+    texts->set_font_index(fontsize);
   }
 
   char buffer[256];
@@ -959,7 +972,8 @@ GeomSwitch *
 RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
 					 bool use_default_material,
 					 MaterialHandle default_material,
-					 bool backface_cull_p)
+					 bool backface_cull_p,
+					 int fontsize)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -975,11 +989,13 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
     mesh->synchronize(Mesh::NORMALS_E);
     ctexts = scinew GeomTextsCulled();
     text_switch = scinew GeomSwitch(ctexts);
+    ctexts->set_font_index(fontsize);
   }
   else
   {
     texts = scinew GeomTexts();
     text_switch = scinew GeomSwitch(texts);
+    texts->set_font_index(fontsize);
   }
 
   char buffer[256];
@@ -1022,7 +1038,8 @@ template <class Fld, class Loc>
 GeomSwitch *
 RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
 					 bool use_default_material,
-					 MaterialHandle default_material)
+					 MaterialHandle default_material,
+					 int fontsize)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -1032,6 +1049,7 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
 
   GeomTexts *texts = scinew GeomTexts;
   GeomSwitch *text_switch = scinew GeomSwitch(texts);
+  texts->set_font_index(fontsize);
   char buffer[256];
   typename Fld::mesh_type::Edge::iterator iter, end;
   mesh->begin(iter);
@@ -1062,7 +1080,8 @@ template <class Fld, class Loc>
 GeomSwitch *
 RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
 					 bool use_default_material,
-					 MaterialHandle default_material)
+					 MaterialHandle default_material,
+					 int fontsize)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -1072,6 +1091,7 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
 
   GeomTexts *texts = scinew GeomTexts;
   GeomSwitch *text_switch = scinew GeomSwitch(texts);
+  texts->set_font_index(fontsize);
   char buffer[256];
   typename Fld::mesh_type::Face::iterator iter, end;
   mesh->begin(iter);
@@ -1102,7 +1122,8 @@ template <class Fld, class Loc>
 GeomSwitch *
 RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
 					 bool use_default_material,
-					 MaterialHandle default_material)
+					 MaterialHandle default_material,
+					 int fontsize)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -1112,6 +1133,7 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
 
   GeomTexts *texts = scinew GeomTexts;
   GeomSwitch *text_switch = scinew GeomSwitch(texts);
+  texts->set_font_index(fontsize);
   char buffer[256];
   typename Fld::mesh_type::Cell::iterator iter, end;
   mesh->begin(iter);

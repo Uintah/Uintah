@@ -54,6 +54,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-text-color-g
 	global $this-text-color-b
 	global $this-text-backface-cull
+	global $this-text-fontsize
 	global $this-text-show-data
 	global $this-text-show-nodes
 	global $this-text-show-edges
@@ -89,6 +90,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-text-color-g 1.0
 	set $this-text-color-b 1.0
 	set $this-text-backface-cull 0
+	set $this-text-fontsize 1
 	set $this-text-show-data 1
 	set $this-text-show-nodes 0
 	set $this-text-show-edges 0
@@ -346,6 +348,11 @@ itcl_class SCIRun_Visualization_ShowField {
 	    -command "$this-c rerender_text" \
 	    -variable $this-text-show-cells
 
+	make_labeled_radio $text.size \
+	    "Font size:" "$this-c rerender_text" left \
+	    $this-text-fontsize \
+	    {{"T" 0} {"S" 1} {"M" 2} {"L" 3} {"XL" 4}}
+
 	pack $text.show.data $text.show.nodes $text.show.edges \
 	    $text.show.faces $text.show.cells \
 	    -side top -fill y -anchor w
@@ -354,7 +361,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	    "text_color_change"
 
 	pack $text.show_text $text.use_def_col $text.def_col \
-	    $text.backfacecull $text.show \
+	    $text.backfacecull $text.show $text.size \
 	    -side top -fill y -anchor w
     }
 
