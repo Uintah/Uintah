@@ -347,6 +347,7 @@ Dpy::checkGuiFlags()
     }
   }
   if( turnOnAllLights_ ){
+    lightoff_frame = -1;
     scene->turnOnAllLights();
     turnOnAllLights_ = false;
   }
