@@ -135,7 +135,7 @@ Noise::execute()
     if ( triangles )
       delete triangles;
     triangles = scinew GeomTrianglesP*[nt];
-    printf("Noise: %d trees\n", np );
+    printf("Noise: %d trees\n", nt );
     forest_generation = forest->generation;
   }
   else {
