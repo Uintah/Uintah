@@ -10,6 +10,18 @@ using namespace rtrt;
 using namespace std;
 using namespace SCIRun;
 
+////////////////////////////////////////////
+// OOGL stuff
+extern BasicTexture * rtrtTopTex;
+extern ShadedPrim   * rtrtTopTexQuad;
+extern BasicTexture * rtrtBotTex;
+extern ShadedPrim   * rtrtBotTexQuad;
+extern BasicTexture * rtrtMidBotTex;
+extern ShadedPrim   * rtrtMidTopTexQuad;
+extern BasicTexture * rtrtMidTopTex;
+extern ShadedPrim   * rtrtMidBotTexQuad;
+////////////////////////////////////////////
+
 Persistent* image_maker() {
   return new Image();
 }
@@ -63,8 +75,27 @@ void Image::resize_image(const int new_xres, const int new_yres) {
   resize_image();
 }
 
-void Image::draw()
+void Image::draw( int window_size )
 {
+  if( window_size == 0 )
+    {
+      // Because textures must be powers of 2 in size, we have broken
+      // the rtrt render window into two textures, one of 512 pixels
+      // ans one of 128 pixels.
+      rtrtBotTex->reset( GL_UNSIGNED_BYTE, &image[0][0] );
+      rtrtBotTexQuad->draw();
+      rtrtTopTex->reset( GL_UNSIGNED_BYTE, &image[512][0] );
+      rtrtTopTexQuad->draw();
+    }
+  else
+    {
+      rtrtMidBotTex->reset( GL_UNSIGNED_BYTE, &image[0][0] );
+      rtrtMidBotTexQuad->draw();
+      rtrtMidTopTex->reset( GL_UNSIGNED_BYTE, &image[256][0] );
+      rtrtMidTopTexQuad->draw();
+    }
+
+#if 0
     if(stereo){
 	glDrawBuffer(GL_BACK_LEFT);
 	glRasterPos2i(0,0);
@@ -74,9 +105,11 @@ void Image::draw()
 	glDrawPixels(xres, yres, GL_RGBA, GL_UNSIGNED_BYTE, &image[yres][0]);
     } else {
 	glDrawBuffer(GL_BACK);
-	glRasterPos2i(0,0);
+	//	glRasterPos2i(0,0);
+	glRasterPos2i(128,286);
 	glDrawPixels(xres, yres, GL_RGBA, GL_UNSIGNED_BYTE, &image[0][0]);
     }
+#endif
 }
 
 void Image::set(const Pixel& value)
