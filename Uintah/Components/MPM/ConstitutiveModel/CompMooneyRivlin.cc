@@ -70,6 +70,7 @@ void CompMooneyRivlin::initializeCMData(const Region* region,
 
 void CompMooneyRivlin::computeStableTimestep(const Region* region,
 					     const MPMMaterial* matl,
+//					     const DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw)
 {
    // This is only called for the initial timestep - all other timesteps
@@ -155,6 +156,8 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
   ASSERT(pset == pmass.getParticleSubset());
   ASSERT(pset == pvolume.getParticleSubset());
 
+  cerr << " In compute Stress " << std::endl;
+
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
      particleIndex idx = *iter;
@@ -163,6 +166,7 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
      // Get the node indices that surround the cell
      IntVector ni[8];
      Vector d_S[8];
+  cerr << " In compute Stress " << std::endl;
      if(!region->findCellAndShapeDerivatives(px[idx], ni, d_S))
          continue;
 
@@ -199,6 +203,8 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
       double C3 = cmdata[idx].C3;
       double C4 = cmdata[idx].C4;
 
+      cerr << C1 << " " << C2 << std::endl;
+
       w1 = C1;
       w2 = C2;
       w3 = -2.0*C3/(invar3*invar3*invar3) + 2.0*C4*(invar3 -1.0);
@@ -223,6 +229,7 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
     new_dw->put(pstress, pStressLabel, matlindex, region);
     new_dw->put(deformationGradient, pDeformationMeasureLabel,
 		matlindex, region);
+    new_dw->put(cmdata, p_cmdata_label, matlindex, region);
 }
 
 double CompMooneyRivlin::computeStrainEnergy(const Region* /*region*/,
@@ -317,6 +324,9 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.19  2000/05/02 19:31:23  guilkey
+// Added a put for cmdata.
+//
 // Revision 1.18  2000/05/02 18:41:16  guilkey
 // Added VarLabels to the MPM algorithm to comply with the
 // immutable nature of the DataWarehouse. :)
