@@ -73,7 +73,7 @@ public:
   // GROUP: Access
   //////////
   // get the ith child
-  const Octree<T>* operator[](int i) const;
+  Octree<T>* operator[](int i) const;
   //////////
   // access the parent node.
   const Octree<T>* parent() { return parent; }
@@ -127,7 +127,7 @@ void Octree<T>::SetChild(int i, Octree<T>* n)
 }
 
 template<class T>
-const Octree<T>* Octree<T>::operator[](int i) const
+Octree<T>* Octree<T>::operator[](int i) const
 {
   if( i >= 0 && i < 8 )
     return children[i];
