@@ -749,7 +749,7 @@ TetVolMesh::get_cells(Cell::array_type &array, Edge::index_type idx) const
   array.clear();
   while (range.first != range.second)
   {
-    array.push_back((*range.first)/4);
+    array.push_back((*range.first)/6);
     ++range.first;
   }
 }
