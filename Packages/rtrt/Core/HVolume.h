@@ -98,7 +98,9 @@ public:
   Array3<T> indata;
   A blockdata;
   T datamin, datamax;
+  // depth 0 is the data level
   int depth;
+  // size of the hierarchy at each level
   int* xsize;
   int* ysize;
   int* zsize;
@@ -970,6 +972,9 @@ void HVolume<T,A,B>::intersect(Ray& ray, HitInfo& hit,
   // The dix_dx/diy_dy/diz_dz variables identify which direction the
   // ray is travelling in the x/y/z direction.
   int dix_dx;
+  // This indicates which index to use first.
+  // ---> [0 1]      : use 0
+  //      [0 1] <--- : use 1
   int ddx;
   if(dir.x() > 0){
     MIN=xinv_dir*(min.x()-orig.x());
@@ -991,7 +996,7 @@ void HVolume<T,A,B>::intersect(Ray& ray, HitInfo& hit,
     y1=yinv_dir*(max.y()-orig.y());
     diy_dy=1;
     ddy=1;
-  } else if(dir.y() <-1.e-6){
+  } else {
     y0=yinv_dir*(max.y()-orig.y());
     y1=yinv_dir*(min.y()-orig.y());
     diy_dy=-1;
@@ -1035,19 +1040,23 @@ void HVolume<T,A,B>::intersect(Ray& ray, HitInfo& hit,
   }
   if(t>1.e29)
     return;
-  // surface_p is the point on (or inside) the box where the ray intersects.
-  Point intersect_p(orig+dir*t);
-  Vector s((intersect_p-min)*ihierdiag);
+  // start_p is the point on (or inside) the box where the ray intersects.
+  Point start_p(orig+dir*t);
+  // s is start_p in normalized space of the hierarchy [0..1].
+  Vector s((start_p-min)*ihierdiag);
   //cout << "s = " << s << "\tdepth = " << depth << endl;
   int cx=xsize[depth-1];
   int cy=ysize[depth-1];
   int cz=zsize[depth-1];
+  // These are the location in index space at the coarsest level.
   int ix=(int)(s.x()*cx);
   int iy=(int)(s.y()*cy);
   int iz=(int)(s.z()*cz);
   //cerr << "ix = " << ix << endl;
   //cerr << "iy = " << iy << endl;
   //cerr << "iz = " << iz << endl;
+
+  // Do boundary checks to make sure everything is OK.
   if(ix>=cx)
     ix--;
   if(iy>=cy)
@@ -1063,30 +1072,42 @@ void HVolume<T,A,B>::intersect(Ray& ray, HitInfo& hit,
   //cerr << "ix = " << ix << endl;
   //cerr << "iy = " << iy << endl;
   //cerr << "iz = " << iz << endl;
-  
+
+  // next_x/y/z are in terms of t.  These identify at which t value
+  // the ray will cross the grid in either the x/y/z directions.
   double next_x, next_y, next_z;
+  // dtdx/y/z indicate how much to increment t when it crosses a cell
+  // in x/y/z.
   double dtdx, dtdy, dtdz;
+
   double icx=ixsize[depth-1];
   double x=min.x()+hierdiag.x()*double(ix+ddx)*icx;
-  next_x=(x-intersect_p.x())*xinv_dir;
+  next_x=(x-start_p.x())*xinv_dir;
   dtdx=dix_dx*hierdiag.x()*icx*xinv_dir;
+  
   double icy=iysize[depth-1];
   double y=min.y()+hierdiag.y()*double(iy+ddy)*icy;
-  next_y=(y-intersect_p.y())*yinv_dir;
+  next_y=(y-start_p.y())*yinv_dir;
   dtdy=diy_dy*hierdiag.y()*icy*yinv_dir;
+  
   double icz=izsize[depth-1];
   double z=min.z()+hierdiag.z()*double(iz+ddz)*icz;
-  next_z=(z-intersect_p.z())*zinv_dir;
+  next_z=(z-start_p.z())*zinv_dir;
   dtdz=diz_dz*hierdiag.z()*icz*zinv_dir;
-  
+
+  // cellcorner and celldir are transformed versions of the ray's
+  // origin and direction.  They are transformed to make t of the ray
+  // be in the space of the cells at the current depth.
   Vector cellsize(cx,cy,cz);
-  Vector cellcorner((intersect_p-min)*ihierdiag*cellsize);
+  Vector cellcorner((start_p-min)*ihierdiag*cellsize);
   Vector celldir(dir*ihierdiag*cellsize);
+
+  // This is the value we are looking for
   float isoval=dpy->isoval;
   //cerr << "isoval = "<<isoval<<" ";
 
-  // Make a new ray with the point intersect_p.  Be sure to offset t.
-  Ray new_ray(intersect_p, dir);
+  // Make a new ray with the point start_p.  Be sure to offset t.
+  Ray new_ray(start_p, dir);
   // Create a new HitInfo with the appropiate information
   HitInfo new_hit;
   if (hit.was_hit)
