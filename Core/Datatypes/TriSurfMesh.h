@@ -126,10 +126,10 @@ public:
   bool locate(Face::index_type &loc, const Point &p) const;
   bool locate(Cell::index_type &loc, const Point &p) const;
 
-  void get_weights(const Point &p, Node::array_type &l, vector<double> &w) {}
-  void get_weights(const Point &p, Edge::array_type &l, vector<double> &w) {}
+  void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
+  void get_weights(const Point &, Edge::array_type &, vector<double> &) {ASSERTFAIL("TriSurfMesh::get_weights for edges isn't supported");}
   void get_weights(const Point &p, Face::array_type &l, vector<double> &w);
-  void get_weights(const Point &p, Cell::array_type &l, vector<double> &w) {}
+  void get_weights(const Point &, Cell::array_type &, vector<double> &) {ASSERTFAIL("TriSurfMesh::get_weights for cells isn't supported");}
 
   void get_point(Point &result, Node::index_type index) const
   { result = points_[index]; }
@@ -149,7 +149,8 @@ public:
     return (Cross(p0-p1,p2-p0)).length()*0.5;
   }
 
-  void get_random_point(Point &p, const Face::index_type &ei) const;
+  void get_random_point(Point &p, const Face::index_type &ei, 
+			int seed=0) const;
 
   double get_element_size(const Elem::index_type &fi) { return get_area(fi); }
 

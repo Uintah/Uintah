@@ -138,6 +138,29 @@ ContourMesh::locate(Edge::index_type &idx, const Point &p) const
 
 void
 ContourMesh::get_weights(const Point &p,
+			 Node::array_type &l, vector<double> &w)
+{
+  Edge::index_type idx;
+  if (locate(idx, p))
+  {
+    Node::array_type ra(2);
+    get_nodes(ra,idx);
+    Point p0,p1;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    double dist0, dist1, dist_sum;
+    dist0 = (p0-p).length();
+    dist1 = (p1-p).length();
+    dist_sum = dist0 + dist1;
+    l.push_back(ra[0]);
+    l.push_back(ra[1]);
+    w.push_back(dist0/dist_sum);
+    w.push_back(dist1/dist_sum);
+  }
+}
+
+void
+ContourMesh::get_weights(const Point &p,
 			 Edge::array_type &l, vector<double> &w)
 {
   Edge::index_type idx;

@@ -34,6 +34,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/MeshBase.h>
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/share/share.h>
 #include <Core/Math/MusilRNG.h>
 #include <string>
@@ -48,6 +49,8 @@ using std::endl;
 class SCICORESHARE LatVolMesh : public MeshBase
 {
 public:
+
+  static const string& get_h_file_path();
 
   struct UnfinishedIndex
   {
@@ -151,6 +154,8 @@ public:
   {
     NodeIndex() : LatIndex() {}
     NodeIndex(unsigned i, unsigned j, unsigned k) : LatIndex(i,j,k) {}
+    static string type_name(int i=-1) { ASSERT(i<1); return "LatVolMesh::NodeIndex"; }
+    friend void Pio(Piostream&, NodeIndex&);
   };
 
   struct LatIter : public LatIndex
@@ -378,8 +383,8 @@ public:
   bool locate(Cell::index_type &, const Point &) const;
 
   void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
-  void get_weights(const Point &p, Edge::array_type &l, vector<double> &w) {}
-  void get_weights(const Point &p, Face::array_type &l, vector<double> &w) {}
+  void get_weights(const Point &, Edge::array_type &, vector<double> &) {ASSERTFAIL("LatVolMesh::get_weights for edges isn't supported");}
+  void get_weights(const Point &, Face::array_type &, vector<double> &) {ASSERTFAIL("LatVolMesh::get_weights for faces isn't supported");}
   void get_weights(const Point &p, Cell::array_type &l, vector<double> &w);
 
   void get_point(Point &p, Node::index_type i) const
@@ -387,7 +392,8 @@ public:
   void get_normal(Vector &/* result */, Node::index_type /* index */) const
   { ASSERTFAIL("not implemented") }
 
-  void get_random_point(Point &p, const Elem::index_type &ei) const;
+  void get_random_point(Point &p, const Elem::index_type &ei, 
+			int seed=0) const;
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
@@ -428,6 +434,8 @@ template <> LatVolMesh::Node::iterator LatVolMesh::tend(LatVolMesh::Node::iterat
 template <> LatVolMesh::Edge::iterator LatVolMesh::tend(LatVolMesh::Edge::iterator *) const;
 template <> LatVolMesh::Face::iterator LatVolMesh::tend(LatVolMesh::Face::iterator *) const;
 template <> LatVolMesh::Cell::iterator LatVolMesh::tend(LatVolMesh::Cell::iterator *) const;
+
+const TypeDescription* get_type_description(LatVolMesh::Node::index_type *);
 
 } // namespace SCIRun
 

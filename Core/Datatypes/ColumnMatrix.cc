@@ -29,6 +29,8 @@
  */
 
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Expon.h>
@@ -46,9 +48,8 @@ static Persistent* maker()
 
 PersistentTypeID ColumnMatrix::type_id("ColumnMatrix", "Matrix", maker);
 
-ColumnMatrix::ColumnMatrix(int rows)
-  : Matrix(Matrix::NON_SYMMETRIC, Matrix::COLUMN),
-    rows(rows)
+ColumnMatrix::ColumnMatrix(int rows) 
+  : rows(rows)
 {
     if(rows)
 	data=scinew double[rows];
@@ -56,16 +57,54 @@ ColumnMatrix::ColumnMatrix(int rows)
 	data=0;
 }
 
-ColumnMatrix::ColumnMatrix(const ColumnMatrix& c)
-  : Matrix(Matrix::NON_SYMMETRIC, Matrix::COLUMN), rows(c.rows)
+ColumnMatrix::ColumnMatrix(const ColumnMatrix& c) 
+  : rows(c.rows)
 {
-    if(rows){
-	data=scinew double[rows];
-	for(int i=0;i<rows;i++)
-	    data[i]=c.data[i];
-    } else {
-	data=0;
+  if(rows){
+    data=scinew double[rows];
+    for(int i=0;i<rows;i++)
+      data[i]=c.data[i];
+  } else {
+    data=0;
+  }
+}
+
+DenseMatrix *ColumnMatrix::toDense()
+{
+  DenseMatrix *dm = scinew DenseMatrix(rows, 1);
+  for (int i=0; i<rows; i++)
+    (*dm)[i][0] = data[i];
+  return dm;
+}
+
+SparseRowMatrix *ColumnMatrix::toSparse() {
+  int nnz = 0;
+  int r;
+  int *row = scinew int[rows+1];
+  for (r=0; r<rows; r++)
+    if (data[r] != 0) nnz++;
+  
+  int *columns = scinew int[nnz];
+  double *a = scinew double[nnz];
+  
+  int count=0;
+  for (r=0; r<rows; r++) {
+    row[r] = count;
+    if (data[r] != 0) {
+      columns[count]=0;
+      a[count]=data[r];
+      count++;
     }
+  }
+  row[rows]=count;
+  return scinew SparseRowMatrix(rows, 1, row, columns, nnz, a);
+}
+
+Matrix *ColumnMatrix::transpose() {
+  DenseMatrix *dm = scinew DenseMatrix(1, rows);
+  for (int i=0; i<rows; i++)
+    (*dm)[0][i] = data[i];
+  return dm;
 }
 
 ColumnMatrix* ColumnMatrix::clone() {
@@ -156,14 +195,14 @@ void ColumnMatrix::print() {
   print(cerr);
 }
 
-double& ColumnMatrix::get(int r, int c)
+double& ColumnMatrix::get(int r, int c) const
 {
     ASSERTRANGE(r, 0, rows);
     ASSERTEQ(c, 0);
     return data[r];
 }
 
-double& ColumnMatrix::get(int r)
+double& ColumnMatrix::get(int r) const
 {
     ASSERTRANGE(r, 0, rows);
     return data[r];
@@ -193,22 +232,6 @@ double ColumnMatrix::sumOfCol(int c) {
   for (int i=0; i<rows; i++)
     sum+=data[i];
   return sum;
-}
-
-double ColumnMatrix::minValue() {
-  double minVal=data[0];
-  for (int r=0; r<rows; r++)
-    if (data[r] < minVal)
-      minVal = data[r];
-  return minVal;
-}
-
-double ColumnMatrix::maxValue() {
-  double maxVal=data[0];
-  for (int r=0; r<rows; r++)
-    if (data[r] > maxVal)
-      maxVal = data[r];
-  return maxVal;
 }
 
 void ColumnMatrix::getRowNonzeros(int r, Array1<int>& idx, 

@@ -41,9 +41,12 @@ using namespace std;
 
 PersistentTypeID LatVolMesh::type_id("LatVolMesh", "MeshBase", maker);
 
-void LatVolMesh::get_random_point(Point &p, const Elem::index_type &ei) const
+void LatVolMesh::get_random_point(Point &p, const Elem::index_type &ei,
+				  int seed) const
 {
-  static MusilRNG rng(1249);
+  static MusilRNG rng;
+
+  // build the three principal edge vectors
   Node::array_type ra;
   get_nodes(ra,ei);
   Point p0,p1,p2,p3;
@@ -54,13 +57,18 @@ void LatVolMesh::get_random_point(Point &p, const Elem::index_type &ei) const
   Vector v0(p1-p0);
   Vector v1(p2-p0);
   Vector v2(p3-p0);
-  double t = rng()*v0.length();
-  double u = rng()*v1.length();
-  double v = rng()*v2.length();
-  if ( (t+u+v)>1 ) {
-    t = 1.-t;
-    u = 1.-u;
-    v = 1.-v;
+
+  // choose a random point in the cell
+  double t, u, v;
+  if (seed) {
+    MusilRNG rng1(seed);
+    t = rng1();
+    u = rng1();
+    v = rng1();
+  } else {
+    t = rng();
+    u = rng();
+    v = rng();
   }
   p = p0+(v0*t)+(v1*u)+(v2*v);
 }
@@ -209,6 +217,7 @@ LatVolMesh::get_weights(const Point &p,
     w.push_back(1.0);
   }
 }
+
 void
 LatVolMesh::get_weights(const Point &p,
 			Node::array_type &l, vector<double> &w)
@@ -237,6 +246,16 @@ LatVolMesh::get_weights(const Point &p,
       ++wit;
     }
   }
+}
+
+void
+Pio(Piostream& stream, LatVolMesh::NodeIndex& n)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, n.i_);
+    Pio(stream, n.j_);
+    Pio(stream, n.k_);
+    stream.end_cheap_delim();
 }
 
 #define LATVOLMESH_VERSION 1
@@ -379,4 +398,18 @@ LatVolMesh::Face::size_type LatVolMesh::faces_size() const
 LatVolMesh::Cell::size_type LatVolMesh::cells_size() const
 { return tsize((Cell::size_type *)0); }
 
+const string& 
+LatVolMesh::get_h_file_path() {
+  static const string path(TypeDescription::cc_to_h(__FILE__));
+  return path;
+}
+
+const TypeDescription* get_type_description(LatVolMesh::Node::index_type *) {
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("LatVolMesh::NodeIndex", 
+				LatVolMesh::get_h_file_path(), "SCIRun");
+  }
+  return td;
+}
 } // namespace SCIRun
