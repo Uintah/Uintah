@@ -1247,16 +1247,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	frame $w.execmode   -relief groove -borderwidth 2
 
         scale $w.loc.min -variable $this-range_min -label "Start " \
-		-showvalue true -orient horizontal -relief groove -length 200
+	    -from [set $this-selectable_min] -to [set $this-selectable_max] \
+	    -showvalue true -orient horizontal -relief groove -length 200
         scale $w.loc.max -variable $this-range_max -label "End " \
-		-showvalue true -orient horizontal -relief groove -length 200
+	    -from [set $this-selectable_min] -to [set $this-selectable_max] \
+	    -showvalue true -orient horizontal -relief groove -length 200
 
-	frame $w.loc.e
+	frame $w.loc.e   -relief groove -borderwidth 2
 	frame $w.loc.e.l
 	frame $w.loc.e.r
 
 	label $w.loc.e.l.curlabel -text "Current Value" -just left
-	entry $w.loc.e.r.curentry -width 10 -textvariable $this-current
+	entry $w.loc.e.r.curentry -width 8 -textvariable $this-current
 
 	label $w.loc.e.l.inclabel -text "Increment" -justify left
 	entry $w.loc.e.r.incentry -width 8 -textvariable $this-inc-amount
@@ -1318,7 +1320,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
         pack $w.execmode.play $w.execmode.stop $w.execmode.step \
 		-side left -fill both -expand yes
 
-        pack $w.loc $w.playmode $w.dependence $w.execmode \
+#        pack $w.loc $w.playmode w.dependence $w.execmode
+        pack $w.loc $w.playmode $w.execmode \
 		-padx 5 -pady 5 -fill both -expand yes
 
 	update_animate_range [set $this-selectable_min] [set $this-selectable_max]

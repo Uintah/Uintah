@@ -101,11 +101,13 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 		-side left -expand yes -fill both
 
         scale $w.loc.min -variable $this-range_min -label "Start " \
-		-showvalue true -orient horizontal -relief groove -length 200
+	    -from [set $this-selectable_min] -to [set $this-selectable_max] \
+	    -showvalue true -orient horizontal -relief groove -length 200
         scale $w.loc.max -variable $this-range_max -label "End " \
-		-showvalue true -orient horizontal -relief groove -length 200
+	    -from [set $this-selectable_min] -to [set $this-selectable_max] \
+	    -showvalue true -orient horizontal -relief groove -length 200
 
-	frame $w.loc.e
+	frame $w.loc.e   -relief groove -borderwidth 2
 	frame $w.loc.e.l
 	frame $w.loc.e.r
 
