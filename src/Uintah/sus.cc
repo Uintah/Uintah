@@ -20,6 +20,7 @@
 #include <Uintah/Components/MPM/SerialMPM.h>
 #include <Uintah/Components/Arches/Arches.h>
 #include <Uintah/Components/ICE/ICE.h>
+#include <Uintah/Components/MPMICE/MPMICE.h>
 #include <Uintah/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Uintah/Components/Schedulers/MPIScheduler.h>
 #include <Uintah/Components/Schedulers/MixedScheduler.h>
@@ -67,6 +68,7 @@ void usage( const std::string & message,
       cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
       cerr << "Valid options are:\n";
       cerr << "-mpm                 : \n";
+      cerr << "-ice                 : \n";
       cerr << "-arches              : \n";
       cerr << "-nthreads <#>        : \n";
       cerr << "-scheduler <name>    : Don't specify, use system default!\n";
@@ -157,7 +159,7 @@ int main(int argc, char** argv)
     /*
      * Check for valid argument combinations
      */
-    if(do_mpm && (do_ice || do_arches)){
+    if(do_mpm && do_arches){
 	usage( "MPM doesn't yet work with ICE/Arches", "", argv[0]);
     }
     if(do_ice && do_arches){
@@ -202,6 +204,13 @@ int main(int argc, char** argv)
 	}
 	if(cfd)
 	    sim->attachPort("cfd", cfd);
+
+	// Connect an MPMICE module if do_mpm and do_ice are both true
+	MPMCFDInterface* mpmcfd = 0;
+	if(do_mpm && do_ice){
+	    mpmcfd = scinew MPMICESpace::MPMICE(world);
+	    sim->attachPort("mpmcfd", mpmcfd);
+	}
 
 	// Output
 	Output* output = scinew DataArchiver(world);
@@ -267,6 +276,7 @@ int main(int argc, char** argv)
     delete reader;
     delete mpm;
     delete cfd;
+    delete mpmcfd;
     delete output;
     delete bal;
     //    delete sched;
@@ -294,6 +304,10 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.31  2000/12/01 22:59:16  guilkey
+// Adding code to allow MPM to work with a CFD code, specifics are directed
+// towards ICE, but most work is generic for either ICE or Arches.
+//
 // Revision 1.30  2000/10/04 20:21:18  jas
 // Changed ICE() to ICE(world).
 //
