@@ -336,17 +336,56 @@ MPMLabel::MPMLabel()
   pDispLabel_preReloc = VarLabel::create( "p.displacement+",
                   ParticleVariable<Vector>::getTypeDescription());
 
+  pDispGradsLabel = VarLabel::create("p.dispGrads",
+                  ParticleVariable<Matrix3>::getTypeDescription());
+  pDispGradsLabel_preReloc = VarLabel::create( "p.dispGrads+",
+                  ParticleVariable<Matrix3>::getTypeDescription());
+
+  pStrainEnergyDensityLabel = VarLabel::create("p.strainEnergyDensity",
+                  ParticleVariable<double>::getTypeDescription());
+  pStrainEnergyDensityLabel_preReloc = VarLabel::create( "p.strainEnergyDensity+",
+                  ParticleVariable<double>::getTypeDescription());
+
+  pKineticEnergyDensityLabel = VarLabel::create("p.kineticEnergyDensity",
+                  ParticleVariable<double>::getTypeDescription());
+
   pgCodeLabel = VarLabel::create("p.gcode",
                   ParticleVariable<Short27>::getTypeDescription());
-
-  GCrackNormLabel= VarLabel::create("G.cracknormal",
-                  NCVariable<Vector>::getTypeDescription());
 
   gNumPatlsLabel = VarLabel::create("g.numPatls",
                   NCVariable<int>::getTypeDescription());
 
   GNumPatlsLabel = VarLabel::create("G.numPatls",
                   NCVariable<int>::getTypeDescription());
+
+  gDisplacementLabel = VarLabel::create("g.displacement",
+                  NCVariable<Vector>::getTypeDescription() );
+
+  GDisplacementLabel = VarLabel::create("G.displacement",
+                  NCVariable<Vector>::getTypeDescription() );
+
+  gGridStressLabel = VarLabel::create("g.gridStress",
+                  NCVariable<Matrix3>::getTypeDescription());
+  GGridStressLabel = VarLabel::create("G.gridStress",
+                  NCVariable<Matrix3>::getTypeDescription());
+
+  gDispGradsLabel = VarLabel::create("g.dispGrads",
+                  NCVariable<Matrix3>::getTypeDescription());
+  GDispGradsLabel = VarLabel::create("G.dispGrads",
+                  NCVariable<Matrix3>::getTypeDescription());
+
+  gStrainEnergyDensityLabel = VarLabel::create("g.strainEnergyDensity",
+                  NCVariable<double>::getTypeDescription());
+  GStrainEnergyDensityLabel = VarLabel::create("G.strainEnergyDensity",
+                  NCVariable<double>::getTypeDescription());
+
+  gKineticEnergyDensityLabel = VarLabel::create("g.kineticEnergyDensity",
+                  NCVariable<double>::getTypeDescription());
+  GKineticEnergyDensityLabel = VarLabel::create("G.kineticEnergyDensity",
+                  NCVariable<double>::getTypeDescription());
+
+  GCrackNormLabel= VarLabel::create("G.cracknormal",
+                  NCVariable<Vector>::getTypeDescription());
 
   GMassLabel = VarLabel::create("G.mass",
                   NCVariable<double>::getTypeDescription());
@@ -389,12 +428,6 @@ MPMLabel::MPMLabel()
                   NCVariable<Vector>::getTypeDescription() );
 
   GAccelerationLabel = VarLabel::create( "G.acceleration",
-                  NCVariable<Vector>::getTypeDescription() );
-
-  gDisplacementLabel = VarLabel::create("g.displacement",
-                  NCVariable<Vector>::getTypeDescription() );
-
-  GDisplacementLabel = VarLabel::create("G.displacement",
                   NCVariable<Vector>::getTypeDescription() );
 
   GSp_volLabel = VarLabel::create("G.sp_vol",
@@ -541,13 +574,28 @@ MPMLabel::~MPMLabel()
  // for Farcture --------------
   VarLabel::destroy(pDispLabel);
   VarLabel::destroy(pDispLabel_preReloc);
+  VarLabel::destroy(pDispGradsLabel);
+  VarLabel::destroy(pDispGradsLabel_preReloc);
+  VarLabel::destroy(pStrainEnergyDensityLabel);
+  VarLabel::destroy(pStrainEnergyDensityLabel_preReloc);
+  VarLabel::destroy(pKineticEnergyDensityLabel);
 
   VarLabel::destroy(pgCodeLabel);
 
   VarLabel::destroy(gNumPatlsLabel);
   VarLabel::destroy(GNumPatlsLabel);
-  VarLabel::destroy(GCrackNormLabel);
+  VarLabel::destroy(gDisplacementLabel);
+  VarLabel::destroy(GDisplacementLabel);
+  VarLabel::destroy(gGridStressLabel);
+  VarLabel::destroy(GGridStressLabel);
+  VarLabel::destroy(gDispGradsLabel);
+  VarLabel::destroy(GDispGradsLabel);
+  VarLabel::destroy(gStrainEnergyDensityLabel);
+  VarLabel::destroy(GStrainEnergyDensityLabel);
+  VarLabel::destroy(gKineticEnergyDensityLabel);
+  VarLabel::destroy(GKineticEnergyDensityLabel);
 
+  VarLabel::destroy(GCrackNormLabel);
   VarLabel::destroy(GMassLabel);
   VarLabel::destroy(GVolumeLabel);
   VarLabel::destroy(GVelocityLabel);
@@ -560,13 +608,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(GInternalHeatRateLabel);
   VarLabel::destroy(GTemperatureRateLabel);
   VarLabel::destroy(GTemperatureStarLabel);
-
   VarLabel::destroy(GVelocityStarLabel);
   VarLabel::destroy(GAccelerationLabel);
-
-  VarLabel::destroy(gDisplacementLabel);
-  VarLabel::destroy(GDisplacementLabel);
-
   VarLabel::destroy(GSp_volLabel);
   VarLabel::destroy(GSp_vol_srcLabel);
   // --------------------------------
