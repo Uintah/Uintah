@@ -140,7 +140,11 @@ void CCAComponentInstance::releasePort(const std::string& name)
 
 sci::cca::TypeMap::pointer CCAComponentInstance::createTypeMap()
 {
-  return sci::cca::TypeMap::pointer(new TypeMap);
+  sci::cca::TypeMap::pointer tm(new TypeMap);
+  //TODO: it is not clear why we need addReference here. But removing it can cause random crash
+  // when creating remote parallel components
+  tm->addReference();
+  return tm; 
 }
 
 void CCAComponentInstance::registerUsesPort(const std::string& portName,
@@ -192,26 +196,25 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
 					   const std::string& portType,
 					   const sci::cca::TypeMap::pointer& properties)
 {
-  //mutex->lock();
   std::map<std::string, CCAPortInstance*>::iterator iter = ports.find(portName);
-  if(iter != ports.end())
-    {
-    if(iter->second->porttype == CCAPortInstance::Provides)
-      { throw CCAException("name conflict between uses and provides ports"); }
-    else
-      { throw CCAException("addProvidesPort called twice"); }
+  if(iter != ports.end()){
+    if(iter->second->porttype == CCAPortInstance::Provides){
+      throw CCAException("name conflict between uses and provides ports"); }
+    else{
+      throw CCAException("addProvidesPort called twice"); 
     }
-  if(!properties.isNull() &&  properties->getInt("size",1)!=1)
-    {
+  }
+  if(!properties.isNull() &&  properties->getInt("size",1)>1){
     //if port is collective.
     int size=properties->getInt("size",1);
     int rank=properties->getInt("rank",0);
+    
+    mutex->lock();
+    
     std::map<std::string, std::vector<Object::pointer> >::iterator iter
       = preports.find(portName);
-    if(iter==preports.end())
-      {
+    if(iter==preports.end()){
       if(port.isNull()) std::cerr<<"port is NULL\n";
-      //      std::cerr<<"portURL="<<port->getURL().getString()<<std::endl;
       
       //new preport
       std::vector<Object::pointer> urls(size);
@@ -219,29 +222,37 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
       //      preports[portName][rank]=port->getURL();
       preports[portName][rank]=port;
       precnt[portName]=0;
-      }
-    else
-      {
+      precond[portName]=new ConditionVariable("precond");
+    }
+    else{
       //existed preport  
       iter->second[rank]=port;
-      }
-    if(++precnt[portName]==size)
-      {
+    }
+    if(++precnt[portName]==size){
       //all member ports have arrived.
       Object::pointer obj=PIDL::objectFrom(preports[portName],1,0);
       sci::cca::Port::pointer cport=pidl_cast<sci::cca::Port::pointer>(obj);
       ports.insert(make_pair(portName, new CCAPortInstance(portName, portType,
-                                    properties, cport, CCAPortInstance::Provides)));
+							   properties, cport, CCAPortInstance::Provides)));
       preports.erase(portName);
-      precnt.erase(portName);
+      precond[portName]->conditionBroadcast();
+      precnt[portName]--;
+    }else{
+      precond[portName]->wait(*mutex);
+      if(--precnt[portName]==0){
+	precnt.erase(portName);
+	delete precond[portName];
+	precond.erase(portName);
       }
-    //mutex->unlock();
-    return;
     }
-  ports.insert(make_pair(portName,
+    mutex->unlock();
+    return;
+  }
+  else{
+    ports.insert(make_pair(portName,
                          new CCAPortInstance(portName, portType, properties,
                                              port, CCAPortInstance::Provides)));
-  //mutex->unlock();
+  }
 }
 
 void CCAComponentInstance::removeProvidesPort(const std::string& name)

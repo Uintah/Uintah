@@ -255,6 +255,7 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
 {
   std::string loaderName="";
   if(!properties.isNull()){
+    properties->addReference();
     loaderName=properties->getString("LOADER NAME","");
   }
   std::cerr<<"creating cca component <" <<
@@ -309,7 +310,7 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
   CCAComponentInstance* ci = new CCAComponentInstance(framework, name, type,
                                                       properties, //sci::cca::TypeMap::pointer(0),
                                                       component);
-  ci->addReference(); //what is this for?
+  //  ci->addReference(); //not necessary, will be removed
   component->setServices(sci::cca::Services::pointer(ci));
   return ci;
 }
