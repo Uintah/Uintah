@@ -1842,8 +1842,7 @@ set exec_fibers(GenStandardColorMaps-Fibers) 0
 #######################################################
 wm withdraw .
 
-global SCIRUN_SRCDIR
-set auto_index(::PowerAppBase) "source $SCIRUN_SRCDIR/Dataflow/GUI/PowerAppBase.app"
+set auto_index(::PowerAppBase) "source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/PowerAppBase.app"
 
 class BioTensorApp {
     inherit ::PowerAppBase
@@ -3703,9 +3702,7 @@ class BioTensorApp {
     ############################
     # Show the help menu
     method show_help {} {
-	global SCIRUN_SRCDIR
-
-	showSplash [file join $SCIRUN_SRCDIR Packages Teem Dataflow GUI splash-tensor.ppm]
+	showSplash [file join [netedit getenv SCIRUN_SRCDIR] Packages Teem Dataflow GUI splash-tensor.ppm]
 
 	global tutorial_link
 	set tutorial_link "http://software.sci.utah.edu/doc/User/Tutorials/BioTensor"
