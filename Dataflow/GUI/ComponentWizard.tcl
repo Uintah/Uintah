@@ -109,8 +109,8 @@ proc make_icon {canvas modx mody {gui 0} } {
     global time_font
     
     # Make the title
-    entry $p.title -relief flat -justify center -width 16 \
-         -font $modname_font 
+    prompted_entry $p.title "<click to edit title>" -relief flat \
+        -justify center -width 16 -font $modname_font 
     
     # Make the time label
     label $p.time -text "00.00" \
