@@ -351,14 +351,12 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
    Ghost::GhostType  gac = Ghost::AroundCells;
    t->requires(Task::OldDW, d_sharedState->get_delt_label());
    
-   t->requires(Task::NewDW, MIlb->press_NCLabel,    press_matl,gac, 1);
-   t->requires(Task::NewDW, Ilb->pressX_FCLabel,    press_matl,gac, 1);    
-   t->requires(Task::NewDW, Ilb->pressY_FCLabel,    press_matl,gac, 1);    
-   t->requires(Task::NewDW, Ilb->pressZ_FCLabel,    press_matl,gac, 1);
-   t->requires(Task::NewDW, MIlb->cMassLabel,       mpm_matl,  gac, 1);
-   t->requires(Task::OldDW, Mlb->pXLabel,           mpm_matl, Ghost::None);
+   t->requires(Task::NewDW, MIlb->press_NCLabel,       press_matl,gac, 1);
+   t->requires(Task::NewDW, MIlb->cMassLabel,          mpm_matl,  gac, 1);
+   t->requires(Task::NewDW, Ilb->press_force_CCLabel,  mpm_matl,  gac, 1);
+   t->requires(Task::OldDW, Mlb->pXLabel,              mpm_matl, Ghost::None);
    if(d_8or27==27){
-     t->requires(Task::OldDW, Mlb->pSizeLabel,      mpm_matl, Ghost::None);
+     t->requires(Task::OldDW, Mlb->pSizeLabel,         mpm_matl, Ghost::None);
    }
    t->computes(Mlb->pPressureLabel,   mpm_matl);
    t->computes(Mlb->gradPAccNCLabel,  mpm_matl);
@@ -740,34 +738,19 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
     double S[MAX_BASIS];
     IntVector cIdx[8];
     double p_ref = d_sharedState->getRefPress();
-    IntVector right, left, top, bottom, front, back;
-    constNCVariable<double>   pressNC; 
-    constCCVariable<double>   vol_frac;   
-    constSFCXVariable<double> pressX_FC;
-    constSFCYVariable<double> pressY_FC;
-    constSFCZVariable<double> pressZ_FC;
+    constNCVariable<double>   pressNC;    
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->get(pressNC, MIlb->press_NCLabel,  0, patch, gac, 1);
-    new_dw->get(pressX_FC,Ilb->pressX_FCLabel, 0, patch, gac, 1);
-    new_dw->get(pressY_FC,Ilb->pressY_FCLabel, 0, patch, gac, 1);
-    new_dw->get(pressZ_FC,Ilb->pressZ_FCLabel, 0, patch, gac, 1);
-    Vector dx   = patch->dCell();
-    double delX = dx.x();
-    double delY = dx.y();
-    double delZ = dx.z();
-    
+        
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
-      CCVariable<Vector> press_force;
+      constCCVariable<Vector> press_force;
       constCCVariable<double> mass;
-      NCVariable<Vector> gradPAccNC;
-      
-      new_dw->get(vol_frac,         Ilb->vol_frac_CCLabel,  indx,patch,
-                                                               Ghost::None, 0); 
-      new_dw->get(mass,             MIlb->cMassLabel,       indx,patch, gac,1); 
-      new_dw->allocate(gradPAccNC,  Mlb->gradPAccNCLabel,   indx, patch);
-      new_dw->allocate(press_force, MIlb->scratchVecLabel,  indx, patch);
+      NCVariable<Vector> gradPAccNC; 
+      new_dw->get(press_force,      Ilb->press_force_CCLabel,indx,patch,gac,1);
+      new_dw->get(mass,             MIlb->cMassLabel,        indx,patch,gac,1); 
+      new_dw->allocate(gradPAccNC,  Mlb->gradPAccNCLabel,    indx,patch);
       gradPAccNC.initialize(Vector(0.,0.,0.));    
         
       ParticleSubset* pset = old_dw->getParticleSubset(indx, patch);
@@ -777,7 +760,6 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
       if(d_8or27==27){
         old_dw->get(psize,        Mlb->pSizeLabel,          pset);
       }
-
       new_dw->allocate(pPressure, Mlb->pPressureLabel,      pset);
       old_dw->get(px,             Mlb->pXLabel,             pset);
 
@@ -800,26 +782,9 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
         }
         pPressure[idx] = press-p_ref;
       }
- 
       //__________________________________
-      // Interpolate CC pressure gradient (mom_source) to nodes (gradP*dA*dt)
-      press_force.initialize(Vector(0.,0.,0.));
-      for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
-        IntVector c = *iter;
-        right  = c + IntVector(1,0,0);    left   = c + IntVector(0,0,0);      
-        top    = c + IntVector(0,1,0);    bottom = c + IntVector(0,0,0);      
-        front  = c + IntVector(0,0,1);    back   = c + IntVector(0,0,0);
-        double vol_frac_CC = vol_frac[c];
-        press_force[c](0) = -(pressX_FC[right] - pressX_FC[left])
-                           * vol_frac_CC * delY * delZ;
-        press_force[c](1) = -(pressY_FC[top]   - pressY_FC[bottom]) 
-                           * vol_frac_CC * delX * delZ;
-        press_force[c](2) = -(pressZ_FC[front] - pressZ_FC[back])   
-                           * vol_frac_CC * delX * delY;
-      }
-
+      // gradPAccNC
      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-    
         patch->findCellsFromNode(*iter,cIdx);
         for (int in=0;in<8;in++){
           IntVector c = cIdx[in];
@@ -829,18 +794,16 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
                                 
           gradPAccNC[*iter](1) += (press_force[c](1)/mass_CC) * .125;
                                 
-          gradPAccNC[*iter](2) += (press_force[c](2)/mass_CC) * .125 ;      
-    //    gradPAccNC[*iter]+=(mom_source[cIdx[in]]/(mass[cIdx[in]]*delT))*.125;
+          gradPAccNC[*iter](2) += (press_force[c](2)/mass_CC) * .125;      
+
+//        gradPAccNC[*iter]+=(mom_source[cIdx[in]]/(mass[cIdx[in]]*delT))*.125; 
         }
       }
       //---- P R I N T   D A T A ------ 
       if(switchDebug_InterpolatePAndGradP) {
         ostringstream desc;
         desc<< "BOT_MPMICE::interpolatePAndGradP_mat_"<< indx<<"_patch_"
-            <<patch->getID();       
-        d_ice-> printData_FC( patch,0,desc.str(), "press_FC_LEFT",  pressX_FC);
-        d_ice-> printData_FC( patch,0,desc.str(), "press_FC_BOTTOM",pressY_FC);
-        d_ice-> printData_FC( patch,0,desc.str(), "press_FC_BACK",  pressZ_FC);            
+            <<patch->getID();                   
         printNCVector( patch, 1,desc.str(),"gradPAccNC",0,gradPAccNC);
       }
       new_dw->put(pPressure,   Mlb->pPressureLabel);
