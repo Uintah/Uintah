@@ -454,8 +454,8 @@ void HDF5DataReader::ReadandSendData( string& filename,
       if( vec.size() > 1) {
 
 	if( assumesvt_ && vec.size() != 3 && vec.size() != 6) {
-	  error( "Assuming Vector and Tensor data but can not merge into a Vector or Tensor because there are more than 3 or 6 nrrds that are alike" );
-	  return;
+	  warning( "Assuming Vector and Tensor data but can not merge into a Vector or Tensor because there are not 3 or 6 nrrds that are alike." );
+	  continue;
 	}
 	  
 	vector<Nrrd*> join_me;
@@ -473,10 +473,10 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	  groupName.erase( pos, groupName.length()-pos );
 
 	n->get_property( "Name", dataName );
-	pos = dataName.find_last_of("-"); // Erase the Kind
+	pos = dataName.find_last_of("-"); // Erase the Group
 	if( pos != std::string::npos )
 	  dataName.erase( 0, pos );
-	pos = dataName.find_last_of(":"); // Erase the group
+	pos = dataName.find_last_of(":"); // Erase the Kind
 	if( pos != std::string::npos )
 	  dataName.erase( pos, dataName.length()-pos );
 
@@ -489,10 +489,10 @@ void HDF5DataReader::ReadandSendData( string& filename,
 
 	  if (mergedata_ == MERGE_LIKE) {
 	    n->get_property( "Name", dataName );
-	    pos = dataName.find_last_of("-"); // Erase the Kind
+	    pos = dataName.find_last_of("-"); // Erase the Group
 	    if( pos != std::string::npos )
 	      dataName.erase( 0, pos );
-	    pos = dataName.find_last_of(":"); // Erase the group
+	    pos = dataName.find_last_of(":"); // Erase the Kind
 	    if( pos != std::string::npos )
 	      dataName.erase( pos, dataName.length()-pos );
 

@@ -179,51 +179,51 @@ MDSPlusDataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
   h1->get_property( "Name", nrrdName1 );
   h2->get_property( "Name", nrrdName2 );
 
-  grp1 = nrrdName1;
-  grp2 = nrrdName2;
-
-  pos = grp1.find_last_of(":");
-  if( pos != std::string::npos )
-    grp1.erase( pos, grp1.length()-pos ); // Erase the kind
-  pos = grp1.find_last_of(":");
-  if( pos != std::string::npos )
-    grp1.erase( pos, grp1.length()-pos ); // Erase the data name
-
-  pos = grp2.find_last_of(":");
-  if( pos != std::string::npos )
-    grp2.erase( pos, grp2.length()-pos ); // Erase the kind
-  pos = grp2.find_last_of(":");
-  if( pos != std::string::npos )
-    grp2.erase( pos, grp2.length()-pos ); // Erase the data name
-
-  if( grp1 != grp2 )
-    return false;
-
-  if( mergedata_ != MERGE_TIME ) {
-    // The names are the only properties that are allowed to be different
-    // when merging so remove them before testing the rest of the properties.
-    h1->remove_property( "Name" );
-    h2->remove_property( "Name" );
-
-    bool pass = true;
+  if (mergedata_ == MERGE_LIKE) {
+    grp1 = nrrdName1;
+    grp2 = nrrdName2;
     
-    if( (*((PropertyManager *) h1.get_rep()) !=
-	 *((PropertyManager *) h2.get_rep())) ) pass = false;
+    pos = grp1.find_last_of(":");
+    if( pos != std::string::npos )
+      grp1.erase( pos, grp1.length()-pos ); // Erase the kind
+    pos = grp1.find_last_of(":");
+    if( pos != std::string::npos )
+      grp1.erase( pos, grp1.length()-pos ); // Erase the data name
     
-    // Restore the names
-    h1->set_property( "Name", nrrdName1, false );
-    h2->set_property( "Name", nrrdName2, false );
+    pos = grp2.find_last_of(":");
+    if( pos != std::string::npos )
+      grp2.erase( pos, grp2.length()-pos ); // Erase the kind
+    pos = grp2.find_last_of(":");
+    if( pos != std::string::npos )
+      grp2.erase( pos, grp2.length()-pos ); // Erase the data name
 
-    if( !pass )
+    if( grp1 != grp2 )
       return false;
   }
 
+  // The names are the only properties that are allowed to be different
+  // when merging so remove them before testing the rest of the properties.
+  h1->remove_property( "Name" );
+  h2->remove_property( "Name" );
+  
+  bool pass = true;
+  
+  if( (*((PropertyManager *) h1.get_rep()) !=
+       *((PropertyManager *) h2.get_rep())) ) pass = false;
+  
+  // Restore the names
+  h1->set_property( "Name", nrrdName1, false );
+  h2->set_property( "Name", nrrdName2, false );
+  
+  if( !pass )
+    return false;
+
   Nrrd* n1 = h1->nrrd; 
   Nrrd* n2 = h2->nrrd;
-  
-  
+    
   if (n1->type != n2->type)
     return false;
+
   if (n1->dim  != n2->dim)
     return false;
   
@@ -232,8 +232,9 @@ MDSPlusDataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
     start = n2->dim;
   else
     start = n1->dim;
-  // compare the last dimensions (in case scalar and vector)
-  for (int i=start-1; i>=0; i--) {
+
+  // Compare the dimensions.
+  for (int i=0; i<n1->dim; i++) {
     if (n1->axis[i].size != n2->axis[i].size)
       return false;
   }
@@ -409,7 +410,11 @@ void MDSPlusDataReader::execute(){
 
 	if (vec.size() > 1) {
 	  
-	  // check if this is a time axis merge or a tuple axis merge.
+	  if( assumesvt_ && vec.size() != 3 && vec.size() != 6) {
+	    warning( "Assuming Vector and Tensor data but can not merge into a Vector or Tensor because there are not 3 or 6 nrrds that are alike." );
+	    continue;
+	  }
+	  
 	  vector<Nrrd*> join_me;
 	  vector<NrrdDataHandle>::iterator niter = vec.begin();
 
@@ -425,7 +430,7 @@ void MDSPlusDataReader::execute(){
 	  if( pos != std::string::npos )
 	    groupName.erase( pos, groupName.length()-pos );
 
-	  pos = groupName.find_last_of(":"); // Erase the data name
+	  pos = groupName.find_last_of(":"); // Erase the Name
 	  if( pos != std::string::npos )
 	    groupName.erase( pos, groupName.length()-pos );
 
@@ -434,7 +439,7 @@ void MDSPlusDataReader::execute(){
 	  pos = dataName.find_last_of(":"); // Erase the Kind
 	  if( pos != std::string::npos )
 	    dataName.erase( pos, dataName.length()-pos );
-	  pos = dataName.find_last_of(":"); // Erase the group
+	  pos = dataName.find_last_of(":"); // Erase the Group
 	  if( pos != std::string::npos )
 	    dataName.erase( 0, pos );
 	  
@@ -445,100 +450,88 @@ void MDSPlusDataReader::execute(){
 	    ++niter;
 	    join_me.push_back(n->nrrd);
 
-	    n->get_property( "Name", dataName );
-	    pos = dataName.find_last_of(":"); // Erase the Kind
-	    if( pos != std::string::npos )
-	      dataName.erase( pos, dataName.length()-pos );
-	    pos = dataName.find_last_of(":"); // Erase the group
-	    if( pos != std::string::npos )
-	      dataName.replace( 0, pos, "-" );
-
-	    nrrdName += dataName;
-	  }	  
-
-	  if (join_me.size() == 3 || join_me.size() == 6) {
-	    NrrdData* onrrd = scinew NrrdData(true);
-
-	    int axis = 0,  incr = 0;
-	    
 	    if (mergedata_ == MERGE_LIKE) {
-	      axis = 0; // tuple
-	      incr = 0; // tuple case.
-
-	      // if all scalars being merged, need to increment axis
-	      bool same_size = true;
-	      for (int n=0; n<(int)join_me.size()-1; n++) {
-		if (join_me[n]->dim != join_me[n+1]->dim) 
-		  same_size = false;
-	      }
-	      if (same_size)
-		incr = 1; // tuple case.
-	    } else if (mergedata_ == MERGE_TIME) {
-	      axis = join_me[0]->dim; // time
-	      incr = 1;               // time
-	    }
-	    
-	    onrrd->nrrd = nrrdNew();
-	    if (nrrdJoin(onrrd->nrrd, &join_me[0], join_me.size(), axis, incr)) {
-	      char *err = biffGetDone(NRRD);
-	      error(string("Join Error: ") +  err);
-	      free(err);
-	      error_ = true;
-	      return;
-	    }
-	    
-	    // set new kinds for joined nrrds
-	    if (join_me.size() == 3) {
-	      onrrd->nrrd->axis[0].kind = nrrdKind3Vector;
-	      nrrdName += string(":Vector");
-	    } else if (join_me.size() == 6) {
-	      onrrd->nrrd->axis[0].kind = nrrdKind3DSymTensor;
-	      nrrdName += string(":Tensor");
-	    } else {
-	      onrrd->nrrd->axis[0].kind = nrrdKindDomain;
-	      nrrdName += string(":Scalar");
-	    }
-
-	    for(int i=1; i<onrrd->nrrd->dim; i++) 
-	      onrrd->nrrd->axis[i].kind = nrrdKindDomain;
-
-	    if (mergedata_ == MERGE_TIME) {
-	      onrrd->nrrd->axis[axis].label = "Time";
-	      // remove all numbers from name
-	      string s(join_me[0]->axis[0].label);
-	      nrrdName.clear();
+	      n->get_property( "Name", dataName );
+	      pos = dataName.find_last_of(":"); // Erase the Kind
+	      if( pos != std::string::npos )
+		dataName.erase( pos, dataName.length()-pos );
+	      pos = dataName.find_last_of(":"); // Erase the Group
+	      if( pos != std::string::npos )
+		dataName.replace( 0, pos, "-" );
 	      
-	      const string nums("0123456789");
-	      
-	      // test against valid char set.	      
-	      for(string::size_type i = 0; i < s.size(); i++) {
-		bool in_set = false;
-		for (unsigned int c = 0; c < nums.size(); c++) {
-		  if (s[i] == nums[c]) {
-		    in_set = true;
-		    break;
-		  }
-		}
-		
-		if (in_set) { nrrdName.push_back('X' ); }
-		else        { nrrdName.push_back(s[i]); }		
-	      }
+	      nrrdName += dataName;
 	    }
-	    
-	    // Copy the properties.
-	    NrrdDataHandle handle = NrrdDataHandle(onrrd);
-	  
-	    *((PropertyManager *) handle.get_rep()) =
-	      *((PropertyManager *) n.get_rep());
-	  
-	    // Take care of the axis label and the nrrd name.
-	    onrrd->nrrd->axis[0].label = strdup("Merged Data");
-	    onrrd->set_property( "Name", nrrdName, false );
-
-	    // clear the nrrds;
-	    vec.clear();
-	    vec.push_back(handle);
 	  }
+
+	  NrrdData* onrrd = new NrrdData(true);
+	  
+	  int axis = 0; // axis
+	  int incr = 1; // incr.
+	
+	  onrrd->nrrd = nrrdNew();
+	  if (nrrdJoin(onrrd->nrrd, &join_me[0], join_me.size(), axis, incr)) {
+	    char *err = biffGetDone(NRRD);
+	    error(string("Join Error: ") +  err);
+	    free(err);
+	    error_ = true;
+	    return;
+	  }
+
+	  // set new kinds for joined nrrds
+	  if (assumesvt_ && join_me.size() == 3) {
+	    onrrd->nrrd->axis[0].kind = nrrdKind3Vector;
+	    nrrdName += string(":Vector");
+	  } else if (assumesvt_ && join_me.size() == 6) {
+	    onrrd->nrrd->axis[0].kind = nrrdKind3DSymTensor;
+	    nrrdName += string(":Tensor");
+	  } else {
+	    onrrd->nrrd->axis[0].kind = nrrdKindDomain;
+	    nrrdName += string(":Scalar");
+	  }
+
+	  for(int i=1; i<onrrd->nrrd->dim; i++) {
+	    onrrd->nrrd->axis[i].kind = nrrdKindDomain;
+	    onrrd->nrrd->axis[i].label = join_me[0]->axis[i].label;
+	  }
+
+	  if (mergedata_ == MERGE_LIKE) {
+	    onrrd->nrrd->axis[axis].label = strdup("Merged Data");
+	  } else if (mergedata_ == MERGE_TIME) {
+	    onrrd->nrrd->axis[axis].label = "Time";
+
+	    // remove all numbers from name
+	    string s(nrrdName);
+	    nrrdName.clear();
+	    
+	    const string nums("0123456789");
+	    
+	    // test against valid char set.	    
+	    for(string::size_type i = 0; i < s.size(); i++) {
+	      bool in_set = false;
+	      for (unsigned int c = 0; c < nums.size(); c++) {
+		if (s[i] == nums[c]) {
+		  in_set = true;
+		  break;
+		}
+	      }
+	      
+	      if (in_set) { nrrdName.push_back('X' ); }
+	      else        { nrrdName.push_back(s[i]); }	      
+	    }
+	  }
+
+	  // Copy the properties.
+	  NrrdDataHandle handle = NrrdDataHandle(onrrd);
+	  
+	  *((PropertyManager *) handle.get_rep()) =
+	    *((PropertyManager *) n.get_rep());
+	  
+	  // Take care of the axis label and the nrrd name.
+	  onrrd->set_property( "Name", nrrdName, false );
+
+	  // clear the nrrds;
+	  vec.clear();
+	  vec.push_back(handle);
 	}
       }
     }
