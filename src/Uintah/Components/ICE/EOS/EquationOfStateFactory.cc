@@ -26,15 +26,17 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
       }
       if (mat_type == "stiff_gas") {
 		 return(scinew StiffGas(child));
-      }
       } else {
-	 cerr << "Unknown Material Type R (" << mat_type << ")" << std::endl;;
+	 cerr << "Unknown Material Type R (" << mat_type << ")" << std::endl;
 	 //      exit(1);
       }
    }
    return 0;
 }
 //$Log$
+//Revision 1.4  2000/10/31 04:27:42  jas
+//Fix typo.
+//
 //Revision 1.3  2000/10/31 04:14:28  jas
 //Added stiff gas EOS type.  It is just a copy of IdealGas.
 //
