@@ -39,6 +39,10 @@ namespace SCIRun {
   public:
     virtual ~BuilderService();
 
+    static InternalComponentInstance* create(SCIRunFramework* framework,
+						      const std::string& name);
+
+
     virtual gov::cca::ComponentID::pointer createInstance(const std::string& instanceName,
 						 const std::string& className,
 						 const gov::cca::TypeMap::pointer& properties);
@@ -71,10 +75,13 @@ namespace SCIRun {
 			       const gov::cca::ComponentID::pointer& id2,
 			       float timeout);
 
-    static InternalComponentInstance* create(SCIRunFramework* fwk,
-					     const std::string& name);
+    virtual CIA::array1<std::string> getAvailablePortList(
+		const gov::cca::ComponentID::pointer& c1,
+		const std::string& port1,
+		const gov::cca::ComponentID::pointer& c2);
+
     std::string getFrameworkURL(); 
-   
+
   ::CIA::array1< gov::cca::Port::pointer > 
    listPorts(const std::string &com_name);
     gov::cca::Port::pointer getService(const std::string&);
