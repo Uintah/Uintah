@@ -216,8 +216,11 @@ namespace Uintah {
       
       void Message(int abort, char message1[],char message2[],char message3[]);
                         
-       void printData(const  Patch* patch,int include_GC,char message1[],
-		      char message2[], const  CCVariable<double>& q_CC);
+      void printData(const  Patch* patch,int include_GC,char message1[],
+		     char message2[], const  CCVariable<double>& q_CC);
+
+      void printData(const  Patch* patch,int include_GC,char message1[],
+		     char message2[], const  CCVariable<Vector>& q_CC);
       
       ICELabel* lb; 
       SimulationStateP d_sharedState;
@@ -292,6 +295,10 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.49  2001/01/05 20:01:29  jas
+// Replaced {x,y,z}mom_source with a single mom_source that is a
+// CCVariable<Vector>.  Fixed printData so it can handle CCVariable<Vector>.
+//
 // Revision 1.48  2001/01/05 16:34:09  jas
 // Changed over uvel_CC, vvel_CC, wvel_CC to a CCVariable<Vector> in all steps
 // where CC velocities are used.
