@@ -31,10 +31,6 @@
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/logo.h>
 
-#ifdef __sgi
-#include <ifl/iflFile.h>
-#endif
-
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
 
@@ -770,35 +766,6 @@ void OpenGL::redraw_frame()
 	  
 	  // Show the pretty picture
 	  glXSwapBuffers(dpy, win);
-#ifdef __sgi
-	  if(saveprefix != ""){
-	    // Save out the image...
-	    char filename[200];
-	    sprintf(filename, "%s%04d.rgb", saveprefix.c_str(), t);
-	    unsigned char* rgbdata=scinew unsigned char[xres*yres*3];
-	    glReadPixels(0, 0, xres, yres, GL_RGB, GL_UNSIGNED_BYTE, rgbdata);
-	    iflSize dims(xres, yres, 1);
-	    iflFileConfig fc(&dims, iflUChar);
-	    iflStatus sts;
-	    iflFile *file=iflFile::create(filename, NULL, &fc, NULL, &sts);
-	    if (sts != iflOKAY) {
-	      cerr << "Unable to save image file "<<filename<<"\n";
-	      break;
-	    }
-	    sts = file->setTile(0, 0, 0, xres, yres, 1, rgbdata);
-	    if (sts != iflOKAY) {
-	      cerr << "Unable to save image tile to "<<filename<<"\n";
-	      break;
-	    }
-	    sts = file->flush();
-	    if (sts != iflOKAY) {
-	      cerr << "Unable to write tile to "<<filename<<"\n";
-	      break;
-	    }
-	    file->close();
-	    delete[] rgbdata;
-	  }
-#endif // __sgi
 	}
 	throttle.stop();
 	double fps;
@@ -1704,17 +1671,6 @@ void OpenGL::real_saveImage(const string& name,
     ppm.close();
 
   }
-#ifdef __sgi
-  else if(type == "rgb" || type == "jpg" ){
-    cerr << "Saving file "<< name <<endl;
-    iflSize dims(vp[2], vp[3], 3);
-    iflFileConfig fc(&dims, iflUChar);
-    iflStatus sts;
-    iflFile* file = iflFile::create(name.c_str(), NULL, &fc, NULL, &sts);
-    sts = file->setTile(0, 0, 0, vp[2], vp[3], 1, pxl);
-    file->close();
-  } 
-#endif
   else {
     cerr<<"Error unknown image file type\n";
   }
