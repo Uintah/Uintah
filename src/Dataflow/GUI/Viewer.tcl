@@ -1025,6 +1025,8 @@ itcl_class ViewWindow {
 		-command "$this-c redraw"
 
 	$menun add separator
+	$menun add radiobutton -label Default -variable $this-$objid-type \
+	    -command "$this-c redraw"
 	$menun add radiobutton -label Wire -variable $this-$objid-type \
 	    -command "$this-c redraw"	    
 	$menun add radiobutton -label Flat -variable $this-$objid-type \
@@ -1040,7 +1042,7 @@ itcl_class ViewWindow {
 	global "$this-$objid-cull"
 	global "$this-$objid-dl"
 
-	set "$this-$objid-type" Gouraud
+	set "$this-$objid-type" Default
 	set "$this-$objid-light" 1
 	set "$this-$objid-fog" 0
 	set "$this-$objid-debug" 0
@@ -1050,11 +1052,12 @@ itcl_class ViewWindow {
 
 
 	pack $m.objlist.canvas.frame.objt$objid -side top -anchor w
-	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
-	#tkwait visibility $m.objlist.canvas.frame.obj$objid
+	pack $m.objlist.canvas.frame.obj$objid \
+	    $m.objlist.canvas.frame.menu$objid \
+	    -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
+
 	update idletasks
 	set width [winfo width $m.objlist.canvas.frame]
-	#set height [winfo height $m.objlist.canvas.frame]
 	set height [lindex [$m.objlist.canvas cget -scrollregion] end]
 
 	incr height [expr $newframeheight+20]
