@@ -372,19 +372,20 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
     t = scinew Task("ICE::actuallyComputeStableTimestepRF",
                       this, &ICE::actuallyComputeStableTimestepRF);
   }
-  Ghost::GhostType  gac = Ghost::AroundCells;  
-  
+  Ghost::GhostType  gn = Ghost::None;  
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  const MaterialSet* all_matls = d_sharedState->allMaterials(); 
   t->requires(Task::NewDW, lb->doMechLabel);
   if (d_EqForm){            // EQ
-    t->requires(Task::NewDW, lb->vel_CCLabel,        Ghost::None);
-    t->requires(Task::NewDW, lb->speedSound_CCLabel, Ghost::None);
+    t->requires(Task::NewDW, lb->vel_CCLabel,         gn);
+    t->requires(Task::NewDW, lb->speedSound_CCLabel,  gn);
   } else if (d_RateForm){   // RATE FORM
     t->requires(Task::NewDW, lb->vel_CCLabel,        gac, 1);
     t->requires(Task::NewDW, lb->speedSound_CCLabel, gac, 1);
-    t->requires(Task::NewDW, lb->sp_vol_CCLabel,     gac, 1);
+    t->requires(Task::NewDW, lb->sp_vol_CCLabel,     gac, 1); 
   }
   t->computes(d_sharedState->get_delt_label());
-  sched->addTask(t,level->eachPatch(), d_sharedState->allICEMaterials());
+  sched->addTask(t,level->eachPatch(), all_matls); 
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleTimeAdvance--
@@ -952,24 +953,24 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     constCCVariable<double> speedSound;
     constCCVariable<Vector> vel;
     Ghost::GhostType  gn  = Ghost::None;    
-    for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      int indx= ice_matl->getDWIndex();
+
+    for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+      Material* matl = d_sharedState->getMaterial(m);
+      int indx= matl->getDWIndex(); 
       new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gn, 0);
       new_dw->get(vel,        lb->vel_CCLabel,        indx,patch,gn, 0);
 
-     for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-       IntVector c = *iter;
-       double A = fudge_factor*d_CFL*dx.x()/(speedSound[c] + 
+      for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        double A = fudge_factor*d_CFL*dx.x()/(speedSound[c] + 
                                       fabs(vel[c].x())+d_SMALL_NUM);
-       double B = fudge_factor*d_CFL*dx.y()/(speedSound[c] + 
+        double B = fudge_factor*d_CFL*dx.y()/(speedSound[c] + 
                                       fabs(vel[c].y())+d_SMALL_NUM);
-       double C = fudge_factor*d_CFL*dx.z()/(speedSound[c] + 
+        double C = fudge_factor*d_CFL*dx.z()/(speedSound[c] + 
                                       fabs(vel[c].z())+d_SMALL_NUM);
-       delt_CFL = std::min(A, delt_CFL);
-       delt_CFL = std::min(B, delt_CFL);
-       delt_CFL = std::min(C, delt_CFL);
-
+        delt_CFL = std::min(A, delt_CFL);
+        delt_CFL = std::min(B, delt_CFL);
+        delt_CFL = std::min(C, delt_CFL);
       }
     }
     delt_CFL = std::min(delt_CFL, d_initialDt);
@@ -986,7 +987,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       string warn = " E R R O R \n ICE::ComputeStableTimestep: delT < 1e-20";
       throw InvalidValue(warn);
     }
-    
     new_dw->put(delt_vartype(delt_CFL), lb->delTLabel);
   }  // patch loop
   //  update when you should dump debugging data. 
