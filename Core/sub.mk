@@ -5,7 +5,6 @@ include $(SRCTOP)/scripts/largeso_prologue.mk
 SRCDIR := Core
 
 SUBDIRS := \
-	$(SRCDIR)/Algorithms \
 	$(SRCDIR)/Containers \
 	$(SRCDIR)/Datatypes \
 	$(SRCDIR)/Exceptions \
@@ -22,6 +21,7 @@ SUBDIRS := \
 	$(SRCDIR)/Thread \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
+#	$(SRCDIR)/Algorithms \
 
 ifeq ($(BUILD_PARALLEL),yes)
 SUBDIRS := $(SUBDIRS) $(SRCDIR)/globus_threads
