@@ -3,10 +3,15 @@
 include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
 SRCDIR := Packages/rtrt
+
+ifneq ($(USE_SOUND),no)
+   SOUNDDIR := $(SRCDIR)/Sound
+endif
+
 SUBDIRS := \
 	$(SRCDIR)/Core         \
 	$(SRCDIR)/Dataflow     \
-	$(SRCDIR)/Sound        \
+	$(SOUNDDIR)            \
 	$(SRCDIR)/visinfo
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

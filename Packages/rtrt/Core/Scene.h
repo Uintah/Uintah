@@ -27,8 +27,10 @@ class Gui;
 class Material;
 class ShadowBase;
 class Group;
+#if !defined(linux)
 class SoundThread;
 class Sound;
+#endif
 
 struct DepthStats;
 struct PerProcessorContext;
@@ -189,10 +191,12 @@ public:
   void refill_work(int which, int nworkers);
   void waitForEmpty(int which);
 
+#if !defined(linux) && !defined(SCI_64BITS)
   // Used mainly by make_scene to register sounds with the application.
   void           addSound( Sound * sound ) { sounds_.push_back( sound ); }
   vector<Sound*> getSounds() { return sounds_; }
   int            soundVolume() const { return soundVolume_; }
+#endif
   
   void preprocess(double maxradius, int& pp_offset, int& scratchsize);
   Array1<ShadowBase*> shadows;
@@ -248,9 +252,11 @@ private:
   friend class Dpy;
   friend class Gui;
 
+#if !defined(linux)
   // This is just used as a pass through so the make_scene can get
   // sounds to the sound thread;
   vector<Sound*>   sounds_;
+#endif
   int              soundVolume_;
 
   // Points to either mainGroup_ or mainGroupWithLights_;

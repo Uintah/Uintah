@@ -18,6 +18,7 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Gui.h>
+#include <Packages/rtrt/Sound/SoundThread.h>
 
 #include <iostream>
 
@@ -78,6 +79,7 @@ static void usage(char* progname)
     cerr << " -noshuffle       - don't randomize chunks - much uglier\n";
     cerr << " -udp             - update rate - how often to synchronuze cameras\n";
     cerr << "                    as a fraction of pixels per/proc\n";
+    cerr << " -sound           - start sound thread\n";
     cerr << " -jitter          - jittered masks - fixed table for now\n";
     cerr << " -worker_gltest   - calls run_gl_test from worker threads\n";
     cerr << " -display_gltest  - calls run_gl_test from display thread\n";
@@ -144,6 +146,8 @@ main(int argc, char* argv[])
   
   bool do_frameless=false;
   bool display_frames=true;
+
+  bool startSoundThread = false;
 
   printf("before glutInit\n");
   glutInit( &argc, argv );
@@ -263,6 +267,8 @@ main(int argc, char* argv[])
       }
     } else if(strcmp(argv[i],"-jitter")==0) {
       rtrt_engine->do_jitter=1;
+    } else if(strcmp(argv[i],"-sound")==0) {
+      startSoundThread = true;
     } else if(strcmp(argv[i], "-eye") == 0){
       Point p;
       i++;
@@ -415,7 +421,7 @@ main(int argc, char* argv[])
   int scratchsize=0;
   scene->preprocess(bvscale, pp_size, scratchsize);
   cerr << "Done\n";
-  
+
   // initialize jitter masks 
   
   for(int ii=0;ii<1000;ii++) {
@@ -441,6 +447,21 @@ main(int argc, char* argv[])
   Gui::setActiveGui( gui );
   gui->setDpy( dpy );
 
+#if !defined(linux) && !defined(SCI_64BITS)
+  SoundThread * soundthread = NULL;
+
+  if( startSoundThread ) {
+    if( scene->getSounds().size() > 0 ) {
+      cout << "Starting Sound Thread!\n";
+      soundthread = new SoundThread( dpy->getGuiCam(), scene );
+      Thread * t = new Thread( soundthread, "Sound thread");
+      t->detach();
+    } else {
+      cout << "No sounds! Not starting sound thread!\n";
+    }
+  }
+#endif
+
   // Initialize GLUT and GLUI stuff.
   printf("start glut inits\n");
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
@@ -450,10 +471,16 @@ main(int argc, char* argv[])
   glutInitWindowPosition( 20, 20 );
   glutReshapeWindow( xres, yres );
 
+  cout << "sb: " << glutDeviceGet( GLUT_HAS_SPACEBALL ) << "\n";
+
   glutKeyboardFunc( Gui::handleKeyPressCB );
   glutSpecialFunc( Gui::handleSpecialKeyCB );
   glutMouseFunc( Gui::handleMouseCB );
   glutMotionFunc( Gui::handleMouseMotionCB );
+  glutSpaceballMotionFunc( Gui::handleSpaceballMotionCB );
+  glutSpaceballRotateFunc( Gui::handleSpaceballRotateCB );
+  glutSpaceballButtonFunc( Gui::handleSpaceballButtonCB );
+
   glutReshapeFunc( Gui::handleWindowResizeCB );
   glutDisplayFunc( doNothingCB );
 
