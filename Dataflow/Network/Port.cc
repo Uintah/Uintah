@@ -64,20 +64,20 @@ OPort::OPort(Module* module, const string& type_name,
 
 void Port::attach(Connection* conn)
 {
-    connections.add(conn);
+    connections.push_back(conn);
     module->connection(Module::Connected, which_port, this==conn->oport);
 }
 
 void Port::detach(Connection* conn)
 {
-    int i;
+    unsigned int i;
     for (i=0; i<connections.size(); i++)
 	if (connections[i] == conn) break;
     if (i == connections.size()) {
 	cerr << "Error: connection not found!\n";
 	return;
     }
-    connections.remove(i);
+    connections.erase(connections.begin() + i);
     module->connection(Module::Disconnected, which_port, this==conn->oport);
 }
 
