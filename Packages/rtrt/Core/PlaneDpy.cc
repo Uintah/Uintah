@@ -123,7 +123,7 @@ void PlaneDpy::key_pressed(unsigned long key) {
 }
 
 void PlaneDpy::button_pressed(MouseButton button, const int x, const int y){
-  if (button==Button1) {
+  if (button == MouseButton1) {
     starty = y;
     move(x, y);
     redraw=true;
@@ -131,7 +131,7 @@ void PlaneDpy::button_pressed(MouseButton button, const int x, const int y){
 }    
 
 void PlaneDpy::button_motion(MouseButton button, const int x, const int /*y*/) {
-  if (button == Button1) {
+  if (button == MouseButton1) {
     move(x, starty);
     redraw=true;
   }
