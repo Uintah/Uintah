@@ -27,6 +27,7 @@ namespace SCIRun {
 using std::string;
 using std::map;
 using std::vector;
+using std::pair;
 
 class clString;
 class Persistent;
