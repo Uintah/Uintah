@@ -10,7 +10,8 @@
 #include <Packages/rtrt/Core/Context.h>
 #include <math.h>
 #include <iostream>
-#ifdef __GNUG__
+
+#ifndef HAVE_FASTM
 #define fsqrt sqrt
 #endif
 

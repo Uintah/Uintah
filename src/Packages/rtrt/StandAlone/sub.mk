@@ -17,7 +17,7 @@ else
 	Core/Exceptions
 
 endif
-LIBS := $(GL_LIBS) -lfastm -lm -lelf -lfetchop -lperfex
+LIBS := $(GL_LIBS) $(FASTM_LIBRARY) -lm -lelf $(THREAD_LIBS) $(PERFEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -60,7 +60,7 @@ else
 	Core/Exceptions
 
 endif
-LIBS := $(GL_LIBS) -lfastm -lm -lelf -lfetchop -lperfex
+LIBS := $(GL_LIBS) $(FASTM_LIBRARY) -lm -lelf $(THREAD_LIBS) $(PERFEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -80,7 +80,7 @@ else
 	Core/Exceptions
 
 endif
-LIBS := $(GL_LIBS) -lfastm -lm -lelf -lfetchop -lperfex
+LIBS := $(GL_LIBS) $(FASTM_LIBRARY) -lm -lelf $(THREAD_LIBS) $(PERFEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
