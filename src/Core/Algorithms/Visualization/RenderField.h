@@ -51,7 +51,8 @@ public:
 		      bool faces, bool data, MaterialHandle def_mat, 
 		      bool def_col, ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
-		      double ns, double es, double vs, int res) = 0;
+		      double ns, double es, double vs, bool normalize, 
+		      int res) = 0;
 
   virtual ~RenderFieldBase();
 
@@ -102,11 +103,11 @@ public:
   void render_all(const Fld *fld,  
 		  bool nodes, bool edges, bool faces, bool data, 
 		  bool def_col, const string &ndt, const string &edt, 
-		  double ns, double es, double vs);
+		  double ns, double es, double vs, bool normalize);
 
   void render_data(const Fld *fld, 
-		   const string &data_display_type,
-		   double scale);
+		   const string &data_display_type, bool def_color,
+		   double scale, bool normalize);
 
   //! virtual interface. 
   virtual void render(FieldHandle fh,  
@@ -114,7 +115,8 @@ public:
 		      MaterialHandle def_mat,
 		      bool def_col, ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
-		      double ns, double es, double vs, int res);
+		      double ns, double es, double vs, bool normalize, 
+		      int res);
     
 private:
   inline void add_sphere(const Point &p, double scale, GeomGroup *g, 
@@ -134,6 +136,12 @@ private:
 		       MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
 		       GeomTriangles *g);
   
+  template <class Iter>
+  void render_data_at(const Fld *fld, Iter begin, Iter end, 
+				 const string &display_type,
+				 bool use_def_color, double scale, 
+				 bool normalize);
+
   inline  MaterialHandle choose_mat(bool def, double val) {  
     if (def) return def_mat_handle_;
     return color_handle_->lookup(val);
@@ -163,10 +171,14 @@ template <>
 bool
 to_double(const unsigned char&, double &);
 
+template <>
+bool
+to_double(const Vector&, double &);
+
 template <class Dat>
 bool 
 add_data(const Point &, const Dat &, GeomArrows *, 
-	 GeomSwitch *, MaterialHandle &, const string &, double)
+	 GeomSwitch *, MaterialHandle &, const string &, double, bool)
 {
   return false;
 }
@@ -174,12 +186,12 @@ add_data(const Point &, const Dat &, GeomArrows *,
 template <>
 bool 
 add_data(const Point &, const Vector &, GeomArrows *, 
-	 GeomSwitch *, MaterialHandle &, const string &, double);
+	 GeomSwitch *, MaterialHandle &, const string &, double, bool);
 
 template <>
 bool 
 add_data(const Point &, const Tensor &, GeomArrows *, 
-	 GeomSwitch *, MaterialHandle &, const string &, double);
+	 GeomSwitch *, MaterialHandle &, const string &, double, bool);
 
 template <class Fld>
 void 
@@ -188,22 +200,49 @@ RenderField<Fld>::render(FieldHandle fh,  bool nodes,
 			 MaterialHandle def_mat,
 			 bool def_col, ColorMapHandle color_handle,
 			 const string &ndt, const string &edt,
-			 double ns, double es, double vs, int res)
+			 double ns, double es, double vs, bool normalize, 
+			 int res)
 {
   Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
   ASSERT(fld != 0);
   def_mat_handle_ = def_mat;
   color_handle_ = color_handle;
   res_ = res;
-  render_all(fld, nodes, edges, faces, data, def_col,  ndt, edt, ns, es, vs);
+  render_all(fld, nodes, edges, faces, data, def_col,  ndt, edt, ns, es, vs, 
+	     normalize);
 }
 
+template <class Fld> template <class Iter>
+void 
+RenderField<Fld>::render_data_at(const Fld *fld, Iter begin, Iter end, 
+				 const string &display_type, 
+				 bool use_def_color, double scale, 
+				 bool normalize)
+{
+  bool def_color = (use_def_color || (color_handle_.get_rep() == 0));
+  double val = 0.0L;
+  typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
+
+  Iter iter = begin;
+  while (iter != end) {
+    typename Fld::value_type tmp;
+    if (fld->value(tmp, *iter)) {
+      Point p;
+      mesh->get_center(p, *iter);
+      to_double(tmp, val);
+      MaterialHandle m = choose_mat(def_color, val);
+      add_data(p, tmp, vec_node_, data_switch_, 
+	       m, display_type, scale, normalize); 
+    }
+    ++iter;
+  }
+}
 
 template <class Fld>
 void 
 RenderField<Fld>::render_data(const Fld *sfld, 
-			       const string &display_type,
-			       double scale) 
+			      const string &display_type, bool use_def_color,
+			      double scale, bool normalize)
 {
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
 
@@ -211,62 +250,35 @@ RenderField<Fld>::render_data(const Fld *sfld,
   switch (sfld->data_at()) {
   case Field::NODE:
     {
-      typename Fld::mesh_type::Node::iterator niter = mesh->node_begin();  
-      while (niter != mesh->node_end()) {
-	typename Fld::value_type tmp;
-	if (sfld->value(tmp, *niter)) {
-	  Point p;
-	  mesh->get_point(p, *niter);
-	  add_data(p, tmp, vec_node_, data_switch_, def_mat_handle_, 
-		   display_type, scale); 
-	}
-	++niter;
-      }
+      typename Fld::mesh_type::Node::iterator itb = mesh->node_begin(); 
+      typename Fld::mesh_type::Node::iterator ite = mesh->node_end(); 
+      render_data_at(sfld, itb, ite, display_type, use_def_color, 
+		     scale, normalize);
     }
     break;
   case Field::EDGE:      
     {
-      typename Fld::mesh_type::Edge::iterator eiter = mesh->edge_begin();  
-      while (eiter != mesh->edge_end()) { 
-	typename Fld::value_type tmp;
-	if (sfld->value(tmp, *eiter)) {
-	  Point p;
-	  mesh->get_center(p, *eiter);
-	  add_data(p, tmp, vec_node_, data_switch_, def_mat_handle_, 
-		   display_type, scale);
-	}
-	++eiter;
-      }
+      typename Fld::mesh_type::Edge::iterator itb = mesh->edge_begin(); 
+      typename Fld::mesh_type::Edge::iterator ite = mesh->edge_end(); 
+      render_data_at(sfld, itb, ite, display_type, use_def_color, 
+		     scale, normalize);
     }
     break;
   case Field::FACE:
     {
-      typename Fld::mesh_type::Face::iterator fiter = mesh->face_begin();  
-      while (fiter != mesh->face_end()) { 
-	typename Fld::value_type tmp;
-	if (sfld->value(tmp, *fiter)) {
-	  Point p;
-	  mesh->get_center(p, *fiter);
-	  add_data(p, tmp, vec_node_, data_switch_, def_mat_handle_, 
-		   display_type, scale);
-	}
-	++fiter;
-      }
+      typename Fld::mesh_type::Face::iterator itb = mesh->face_begin(); 
+      typename Fld::mesh_type::Face::iterator ite = mesh->face_end(); 
+      render_data_at(sfld, itb, ite, display_type, use_def_color, 
+		     scale, normalize);
     }
     break;
   case Field::CELL:
     {
-      typename Fld::mesh_type::Cell::iterator citer = mesh->cell_begin();  
-      while (citer != mesh->cell_end()) { 
-	typename Fld::value_type tmp;
-	if (sfld->value(tmp, *citer)) {
-	  Point p;
-	  mesh->get_center(p, *citer);
-	  add_data(p, tmp, vec_node_, data_switch_, def_mat_handle_, 
-		   display_type, scale);
-	}
-	++citer;
-      }
+      typename Fld::mesh_type::Cell::iterator itb = mesh->cell_begin(); 
+      typename Fld::mesh_type::Cell::iterator ite = mesh->cell_end(); 
+      render_data_at(sfld, itb, ite, display_type, use_def_color, 
+		     scale, normalize);
+
     }
     break;
   case Field::NONE:
@@ -498,7 +510,7 @@ RenderField<Fld>::render_all(const Fld *fld, bool nodes,
 			     bool edges, bool faces, bool data,
 			     bool def_col,
 			     const string &ndt, const string &edt,
-			     double ns, double es, double vs)
+			     double ns, double es, double vs, bool normalize)
 {
   if (nodes) render_nodes(fld, ndt, def_col, ns);
   if (edges) render_edges(fld, edt, def_col, es);
@@ -507,7 +519,7 @@ RenderField<Fld>::render_all(const Fld *fld, bool nodes,
   if (data) {
     vec_node_ = scinew GeomArrows(vs);
     data_switch_ = scinew GeomSwitch(vec_node_);
-    render_data(fld, ndt, vs);
+    render_data(fld, ndt, def_col, vs, normalize);
   }
 }
 

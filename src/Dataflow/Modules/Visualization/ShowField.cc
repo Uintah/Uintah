@@ -93,6 +93,7 @@ class ShowField : public Module
   bool                     faces_dirty_;
   //! data.
   GuiInt                   vectors_on_;
+  GuiInt                   normalize_vectors_;
   GuiInt                   has_vec_data_;
   bool                     data_dirty_;
   
@@ -143,6 +144,7 @@ ShowField::ShowField(const string& id) :
   faces_on_("faces-on", id, this),
   faces_dirty_(true),
   vectors_on_("vectors-on", id, this),
+  normalize_vectors_("normalize-vectors", id, this),
   has_vec_data_("has_vec_data", id, this),
   data_dirty_(true),
   use_def_color_(true),
@@ -181,8 +183,9 @@ ShowField::execute()
     return;
   } else if (fld_gen_ != fld_handle->generation) {
     const TypeDescription *td = fld_handle->get_type_description();
-
-    if (fld_handle->query_vector_interface() != 0) {
+    has_vec_data_.reset();
+    if ((fld_handle->query_vector_interface() != 0) && 
+	(! has_vec_data_.get())) {
       has_vec_data_.set(1);
     }
     error(td->get_h_file_path().c_str());
@@ -231,7 +234,7 @@ ShowField::execute()
   if ((!nodes_dirty_) && (!edges_dirty_) && 
       (!faces_dirty_) && (!data_dirty_))  { return; }
 
-  use_def_color_ = ! fld_handle->is_scalar();
+  use_def_color_ = false; //! fld_handle->is_scalar();
 
   //dispatch1(fld_handle, render);
   //  if (disp_error) return; // dispatch already printed an error message. 
@@ -249,10 +252,11 @@ ShowField::execute()
 
   RenderFieldBase* alg = dynamic_cast<RenderFieldBase*>(renderer_.get_rep());
 
+  normalize_vectors_.reset();
   alg->render(fld_handle, 
 	      nodes_dirty_, edges_dirty_, faces_dirty_, data_dirty_,
 	      def_mat_handle_, use_def_color_, color_handle_,
-	      ndt, edt, ns, es, vs, res_);
+	      ndt, edt, ns, es, vs, normalize_vectors_.get(), res_);
 
   // cleanup...
   if (nodes_dirty_) {
@@ -364,6 +368,11 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     } else {
       ogeom_->flushViews();
     }
+  } else if (args[1] == "toggle_normalize"){
+    // Toggle the GeomSwitch.
+    normalize_vectors_.reset();
+    data_dirty_ = true;
+    want_to_execute(); // Must redraw the vectors.
   } else {
     Module::tcl_command(args, userdata);
   }
