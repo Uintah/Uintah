@@ -53,7 +53,8 @@ class ProcessorGroup;
 
 class OnDemandDataWarehouse : public DataWarehouse {
 public:
-   OnDemandDataWarehouse( const ProcessorGroup* myworld, int generation );
+   OnDemandDataWarehouse( const ProcessorGroup* myworld, int generation, 
+			  DataWarehouseP& parent);
    virtual ~OnDemandDataWarehouse();
    
    virtual void setGrid(const GridP&);
@@ -251,6 +252,9 @@ private:
 
 //
 // $Log$
+// Revision 1.34  2000/07/28 03:01:54  rawat
+// modified createDatawarehouse and added getTop()
+//
 // Revision 1.33  2000/07/27 22:39:47  sparker
 // Implemented MPIScheduler
 // Added associated support

@@ -62,7 +62,7 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      virtual DataWarehouseP createDataWarehouse( int generation );
+      virtual DataWarehouseP createDataWarehouse(DataWarehouseP& parent_dw);
       
       //////////
       // Insert Documentation Here:
@@ -94,12 +94,17 @@ WARNING
       SingleProcessorScheduler& operator=(const SingleProcessorScheduler&);
 
       TaskGraph graph;
+      // id of datawarehouse
+      int d_generation;
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.5  2000/07/28 03:01:54  rawat
+// modified createDatawarehouse and added getTop()
+//
 // Revision 1.4  2000/07/27 22:39:47  sparker
 // Implemented MPIScheduler
 // Added associated support
