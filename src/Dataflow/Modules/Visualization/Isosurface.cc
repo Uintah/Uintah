@@ -67,9 +67,11 @@ Isosurface::Isosurface(GuiContext* ctx) :
   gui_iso_value_typed_(ctx->subVar("isoval-typed")),
   gui_iso_value_quantity_(ctx->subVar("isoval-quantity")),
   gui_iso_quantity_range_(ctx->subVar("quantity-range")),
+  gui_iso_quantity_clusive_(ctx->subVar("quantity-clusive")),
   gui_iso_quantity_min_(ctx->subVar("quantity-min")),
   gui_iso_quantity_max_(ctx->subVar("quantity-max")),
   gui_iso_value_list_(ctx->subVar("isoval-list")),
+  gui_iso_value_matrix_(ctx->subVar("isoval-matrix")),
   gui_extract_from_new_field_(ctx->subVar("extract-from-new-field")),
   gui_use_algorithm_(ctx->subVar("algorithm")),
   gui_build_field_(ctx->subVar("build_trisurf")),
@@ -210,103 +212,127 @@ Isosurface::execute()
   
   vector<double> isovals(0);
 
-  MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Optional Isovalues");
-  MatrixHandle mHandle;
-  if (imatrix_port->get(mHandle)) {
-    if(!mHandle.get_rep()) {
+  double qmax = iso_value_max_;
+  double qmin = iso_value_min_;
+
+  if (gui_active_isoval_selection_tab_.get() == "0") { // slider / typed
+    const double val = gui_iso_value_.get();
+    const double valTyped = gui_iso_value_typed_.get();
+    if (val != valTyped) {
+      char s[1000];
+      sprintf(s, "Typed isovalue %g was out of range.  Using isovalue %g instead.", valTyped, val);
+      warning(s);
+      gui_iso_value_typed_.set(val);
+    }
+    if ( qmin <= val && val <= qmax )
+      isovals.push_back(val);
+    else {
+      error("Typed isovalue out of range -- skipping isosurfacing.");
+      return;
+    }
+  } else if (gui_active_isoval_selection_tab_.get() == "1") { // quantity
+    int num = gui_iso_value_quantity_.get();
+
+    if (num < 1) {
+      error("Isosurface quantity must be at least one -- skipping isosurfacing.");
+      return;
+    }
+
+    string range = gui_iso_quantity_range_.get();
+
+    if (range == "colormap") {
+      if (!have_ColorMap) {
+	error("No color colormap for isovalue quantity");
+	return;
+      }
+      qmin = cmHandle->getMin();
+      qmax = cmHandle->getMax();
+    } else if (range == "manual") {
+      qmin = gui_iso_quantity_min_.get();
+      qmax = gui_iso_quantity_max_.get();
+    } // else we're using "field" and qmax and qmin were set above
+    
+    if (qmin >= qmax) {
+      error("Can't use quantity tab if the minimum and maximum are the same.");
+      return;
+    }
+
+    string clusive = gui_iso_quantity_clusive_.get();
+
+    if (clusive == "exclusive") {
+      // if the min - max range is 2 - 4, and the user requests 3 isovals,
+      // the code below generates 2.333, 3.0, and 3.666 -- which is nice
+      // since it produces evenly spaced slices in torroidal data.
+	
+      double di=(qmax - qmin)/(double)num;
+      for (int i=0; i<num; i++) 
+	isovals.push_back(qmin + ((double)i+0.5)*di);
+
+    } else if (clusive == "inclusive") {
+      // if the min - max range is 2 - 4, and the user requests 3 isovals,
+      // the code below generates 2.0, 3.0, and 4.0.
+
+      double di=(qmax - qmin)/(double)(num-1.0);
+      for (int i=0; i<num; i++) 
+	isovals.push_back(qmin + ((double)i*di));
+    }
+  } else if (gui_active_isoval_selection_tab_.get() == "2") { // list
+    istringstream vlist(gui_iso_value_list_.get());
+    double val;
+    while(!vlist.eof()) {
+      vlist >> val;
+      if (vlist.fail()) {
+	if (!vlist.eof()) {
+	  vlist.clear();
+	  warning("List of Isovals was bad at character " +
+		  to_string((int)(vlist.tellg())) +
+		  "('" + ((char)(vlist.peek())) + "').");
+	}
+	break;
+      }
+      else if (!vlist.eof() && vlist.peek() == '%') {
+	vlist.get();
+	val = iso_value_min_ + (iso_value_max_ - iso_value_min_) * val / 100.0;
+      }
+      isovals.push_back(val);
+    }
+  } else if (gui_active_isoval_selection_tab_.get() == "3") { // matrix
+
+    MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Optional Isovalues");
+    MatrixHandle mHandle;
+
+    if (!imatrix_port->get(mHandle)) {
+      gui->execute("set-isomatrix \"No matrix present\"");
+      error("Matrix selected - but no matrix is present.");
+      return;
+    } else if(!mHandle.get_rep()) {
+      gui->execute("set-isomatrix \"No matrix representation\"");
       error( "No matrix representation." );
       return;
     }
 
-    if( mGeneration_ != mHandle->generation ) {
+    if( mGeneration_ != mHandle->generation )
       mGeneration_ = mHandle->generation;
-    }
     
+    ostringstream str;
+
+    str << id << " set-isomatrix \"";
+
     for (int i=0; i < mHandle->nrows(); i++) {
       for (int j=0; j < mHandle->ncols(); j++) {
 	isovals.push_back(mHandle->get(i, j));
+
+	str << " " << isovals[i];
       }
     }
+
+    str << "\"";
+
+    gui->execute(str.str().c_str());
+
   } else {
-    double qmax = iso_value_max_;
-    double qmin = iso_value_min_;
-
-    if (gui_active_isoval_selection_tab_.get() == "0") { // slider / typed
-      const double val = gui_iso_value_.get();
-      const double valTyped = gui_iso_value_typed_.get();
-      if (val != valTyped) {
-	char s[1000];
-	sprintf(s, "Typed isovalue %g was out of range.  Using isovalue %g instead.", valTyped, val);
-	warning(s);
-	gui_iso_value_typed_.set(val);
-      }
-      if ( qmin <= val && val <= qmax )
-	isovals.push_back(val);
-      else {
-	error("Typed isovalue out of range -- skipping isosurfacing.");
-	return;
-      }
-    }
-    else if (gui_active_isoval_selection_tab_.get() == "1") { // quantity
-      int num = gui_iso_value_quantity_.get();
-
-      if (num < 1) {
-	error("Isosurface quantity must be at least one -- skipping isosurfacing.");
-	return;
-      }
-
-      string range = gui_iso_quantity_range_.get();
-
-      if (range == "colormap") {
-	if (!have_ColorMap) {
-	  error("No color colormap for isovalue quantity");
-	  return;
-	}
-	qmin = cmHandle->getMin();
-	qmax = cmHandle->getMax();
-      } else if (range == "manual") {
-	qmin = gui_iso_quantity_min_.get();
-	qmax = gui_iso_quantity_max_.get();
-      } // else we're using "field" and qmax and qmin were set above
-    
-      if (qmin >= qmax) {
-	error("Can't use quantity tab if the minimum and maximum are the same.");
-	return;
-      }
-
-      // if the min - max range is 2 - 4, and the user requests 3 isovals,
-      // the code below generates 2.333, 3.0, and 3.666 -- which is nice
-      // since it produces evenly spaced slices in torroidal data.
-
-      double di=(qmax - qmin)/(double)num;
-      for (int i=0; i<num; i++) 
-	isovals.push_back(qmin + ((double)i+0.5)*di);
-    }
-    else if (gui_active_isoval_selection_tab_.get() == "2") { // list
-      istringstream vlist(gui_iso_value_list_.get());
-      double val;
-      while(!vlist.eof()) {
-	vlist >> val;
-	if (vlist.fail()) {
-	  if (!vlist.eof()) {
-	    vlist.clear();
-	    warning("List of Isovals was bad at character " +
-		    to_string((int)(vlist.tellg())) +
-		    "('" + ((char)(vlist.peek())) + "').");
-	  }
-	  break;
-	}
-	else if (!vlist.eof() && vlist.peek() == '%') {
-	  vlist.get();
-	  val = iso_value_min_ + (iso_value_max_ - iso_value_min_) * val / 100.0;
-	}
-	isovals.push_back(val);
-      }
-    }
-    else {
-      error("Bad active_isoval_selection_tab value");
-      return;
-    }
+    error("Bad active_isoval_selection_tab value");
+    return;
   }
 
   // See if any of the isovalues have changed.
