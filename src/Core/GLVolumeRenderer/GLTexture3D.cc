@@ -94,14 +94,14 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
   isCC_(false),
   reuse_bricks(false)
 {
-  cerr<<"trying init\n";
+//   cerr<<"trying init\n";
   if (!init(min, max, use_minmax)) { return; }
   set_bounds();
-  cerr<<"set_bounds\n";
+//   cerr<<"set_bounds\n";
   compute_tree_depth();
-  cerr<<"computed tree depth\n";
+//   cerr<<"computed tree depth\n";
   build_texture();
-  cerr<<"built_texture\n";
+//   cerr<<"built_texture\n";
 }
 
 GLTexture3D::~GLTexture3D()
@@ -125,8 +125,6 @@ GLTexture3D::init(double& min, double &max, bool use_minmax)
     cerr << "GLTexture3D constructor error - nonscalar LatVolField type.\n";
     return false;
   }
-  double minval, maxval;
-  sfi->compute_min_max(minval, maxval);
   LatVolMeshHandle mesh = (LatVolMesh *)(texfld_->mesh().get_rep());
   transform_ = mesh->get_transform();
 
@@ -164,11 +162,10 @@ GLTexture3D::init(double& min, double &max, bool use_minmax)
     cerr << "NOT A STRICTLY SCALE/TRANSLATE MATRIX, WILL NOT WORK.\n";
   }
   
-  minP_ = Point(0,0,0);
-  maxP_ = Point(mesh->get_nx(), mesh->get_ny(), mesh->get_nz());
-  cerr <<"X_, Y_, Z_ = "<<X_<<", "<<Y_<<", "<<Z_<<endl;
-  cerr << "use_minmax = "<<use_minmax<<"  min="<<min<<" max="<<max<<"\n";
-  cerr << "    fieldminmax: min="<<minval<<" max="<<maxval<<"\n";
+  minP_ = Point(mesh->get_min_x(), mesh->get_min_y(), mesh->get_min_z());
+  maxP_ = Point(mesh->get_min_x() + mesh->get_nx(), 
+		mesh->get_min_y() + mesh->get_ny(),
+		mesh->get_min_z() + mesh->get_nz());
   if (use_minmax)
   {
     min_ = min;
@@ -176,10 +173,15 @@ GLTexture3D::init(double& min, double &max, bool use_minmax)
   }
   else
   {
+    double minval, maxval;
+    sfi->compute_min_max(minval, maxval);
     min = min_ = minval;
     max = max_ = maxval;
+//     cerr << "    fieldminmax: min="<<minval<<" max="<<maxval<<"\n";
   }
-  cerr << "    texture: min="<<min<<"  max="<<max<<"\n";
+//   cerr <<"X_, Y_, Z_ = "<<X_<<", "<<Y_<<", "<<Z_<<endl;
+//   cerr << "use_minmax = "<<use_minmax<<"  min="<<min<<" max="<<max<<"\n";
+//   cerr << "    texture: min="<<min<<"  max="<<max<<"\n";
   return true;
 }
 
@@ -289,7 +291,7 @@ void GLTexture3D::replace_texture()
   tg = scinew ThreadGroup( group_name.c_str());
 
   string type = texfld_->get_type_description(1)->get_name();
-  cerr << "Type = " << type << endl;
+//   cerr << "Type = " << type << endl;
   
   if (type == "double") {
     replace_bon_tree_data(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 

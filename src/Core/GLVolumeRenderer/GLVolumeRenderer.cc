@@ -204,6 +204,7 @@ GLVolumeRenderer::setup()
     }
   }
   glColor4f(1,1,1,1); // set to all white for modulation
+  glDepthMask(GL_FALSE);
 }
 
 
@@ -211,6 +212,7 @@ void
 GLVolumeRenderer::cleanup()
 {
 
+  glDepthMask(GL_TRUE);
   if( cmap_.get_rep() )
 #ifdef GL_TEXTURE_COLOR_TABLE_SGI
     glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
