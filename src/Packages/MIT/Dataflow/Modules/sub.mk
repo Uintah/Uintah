@@ -12,6 +12,7 @@ SRCDIR := Packages/MIT/Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/Bayer \
+	$(SRCDIR)/Metropolis \
 	$(SRCDIR)/DataIO \
 #[INSERT NEW CATEGORY DIR HERE]
 
