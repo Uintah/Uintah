@@ -98,7 +98,7 @@ NrrdConvert::execute()
   Nrrd *nout = nrrdNew();
   cerr << "New type is "<<type<<endl;
 
-  nrrdConvert(nin, nout, type);
+  nrrdConvert(nout, nin, type);
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
   last_nrrdH_ = nrrd;

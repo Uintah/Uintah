@@ -110,7 +110,7 @@ NrrdQuantize::execute()
 
   cerr << "Quantizing -- min="<<minf<<" max="<<maxf<<" nbits="<<nbits<<endl;
 
-  nrrdQuantize(nin, nout, minf, maxf, nbits);
+  nrrdQuantize(nout, nin, minf, maxf, nbits);
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
   last_nrrdH_ = nrrd;

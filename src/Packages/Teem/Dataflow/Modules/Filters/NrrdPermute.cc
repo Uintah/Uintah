@@ -131,7 +131,7 @@ NrrdPermute::execute()
   Nrrd *nout = nrrdNew();
   cerr << "Permuting: 0->"<<axes[0]<<" 1->"<<axes[1]<<" 2->"<<axes[2]<<endl;
 
-  nrrdPermuteAxes(nin, nout, axes);
+  nrrdPermuteAxes(nout, nin, axes);
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
   last_nrrdH_ = nrrd;
