@@ -176,7 +176,8 @@ PropertyManager::store( const string &name,  T& obj )
   map_type::iterator loc = properties_.find(name);
   if (loc != properties_.end()) 
     delete loc->second;
-    
+  else
+    size_++;
   properties_[name] = new Property<T>( obj );
   size_++;
 }
