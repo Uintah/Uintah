@@ -1865,8 +1865,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
         //   Contributions from reactions
-        double inv_mass = sp_vol_CC[m][c] /vol;            
-        term1[c] += (burnedMass[c]/delT) * (inv_mass);
+        term1[c] += burnedMass[c] * (sp_vol_CC[m][c]/vol);
 
         //   Divergence of velocity * face area 
         term2[c] -= q_advected[c];
@@ -1879,10 +1878,10 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     press_CC.initialize(0.);
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
-      delP_MassX[c]    = (delT * term1[c])/term3[c];
+      delP_MassX[c]    = term1[c]/term3[c];
       delP_Dilatate[c] = -term2[c]/term3[c];
-      press_CC[c]      = pressure[c] + 
-                             delP_MassX[c] + delP_Dilatate[c];    
+      press_CC[c]      = pressure[c] + delP_MassX[c] + delP_Dilatate[c];
+      press_CC[c] = max(1e-12, press_CC[c]);
     }
     setBC(press_CC, sp_vol_CC[SURROUND_MAT],
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw);
@@ -1904,6 +1903,14 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       printData( patch, 1,desc.str(), "Press_CC",      press_CC);
     }
    //____ B U L L E T   P R O O F I N G----
+#if 0
+    // I'm commenting this out since I've rendered this check
+    // useless by the addition of:
+    // press_CC[c] = max(1e-12, press_CC[c]);
+    // above.  This was done to help robustify the equilibration
+    // pressure calculation in MPMICE.  Also, in rate form, negative
+    // mean pressures are allowed, so this needs to go anyway.
+
     IntVector neg_cell;
     if(!areAllValuesPositive(press_CC, neg_cell) ) {
       ostringstream warn;
@@ -1911,6 +1918,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
           << neg_cell<< " Negative press_CC";
       throw InvalidValue(warn.str());
     }
+#endif
   }  // patch loop
 }
 
@@ -2416,11 +2424,11 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       }
 
 #ifdef ANNULUSICE
-      if(n_iter <= 1.e10){
+      if(n_iter <= 4000){
         if(m==2){
           for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
             IntVector c = *iter;
-            int_eng_source[c] += 1.e10 * delT * rho_CC[c] * vol;
+            int_eng_source[c] += 8.e12 * delT * rho_CC[c] * vol;
           }
         }
       }
@@ -2622,20 +2630,13 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
      new_dw->allocate(spec_vol_L, lb->spec_vol_L_CCLabel, indx, patch);
      new_dw->get(mass_L_CC,       lb->mass_L_CCLabel,     indx, patch, gn,0);
      new_dw->get(sp_vol,          lb->sp_vol_CCLabel,     indx, patch, gn,0);
-/*`===CURRENTLY NOT USED=========*/
      new_dw->get(spec_vol_src,    lb->created_vol_CCLabel,indx, patch, gn,0);
      new_dw->get(rho_CC,          lb->rho_CCLabel,        indx, patch, gn,0); 
-/*==============================`*/
      spec_vol_L.initialize(0.);
      
      for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){ 
        IntVector c = *iter;
-/*`==========TESTING==========*/
- // WE MAY WANT TO GET RID OF THE EQ VERSION OF THIS TASK.  
- //   OLD STYLE
- //   spec_vol_L[c] = (rho_CC[c] * cell_vol * sp_vol[c]) + spec_vol_src[c];
-      spec_vol_L[c] =  mass_L_CC[c] * sp_vol[c];      
-/*==========TESTING==========`*/
+      spec_vol_L[c] = (rho_CC[c] * cell_vol * sp_vol[c]) + spec_vol_src[c];
       }
       //  Set Neumann = 0 if symmetric Boundary conditions
       setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx); 
