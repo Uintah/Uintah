@@ -103,7 +103,6 @@ itcl_class SCIRun_DataIO_FieldWriter {
 	        -initialfile $defname \
 		-initialdir $initdir \
 		-defaultextension $defext \
-		-formatvar $this-filetype \
 	        -confirmvar $this-confirm
 		#-splitvar $this-split
 

@@ -51,30 +51,80 @@ class FieldReader : public GenericReader<FieldHandle> {
 protected:
   virtual bool call_importer(const string &filename);
 
+  GuiString gui_types_;
+  GuiString gui_filetype_;
+
 public:
   FieldReader(GuiContext* ctx);
+
+  virtual void execute();
 };
+
 
 DECLARE_MAKER(FieldReader)
 
 FieldReader::FieldReader(GuiContext* ctx)
-  : GenericReader<FieldHandle>("FieldReader", ctx, "DataIO", "SCIRun")
+  : GenericReader<FieldHandle>("FieldReader", ctx, "DataIO", "SCIRun"),
+    gui_types_(ctx->subVar("types")),
+    gui_filetype_(ctx->subVar("filetype"))
 {
-  //importing_ = true;  // Turn this on to test TextPointCloudString plugin.
+  FieldIEPluginManager mgr;
+  vector<string> importers;
+  mgr.get_importer_list(importers);
+  
+  string importtypes = "{";
+  importtypes += "{{SCIRun Field File} {.fld} } ";
+  importtypes += "{{SCIRun Field Any} {.*} } ";
+
+  for (unsigned int i = 0; i < importers.size(); i++)
+  {
+    FieldIEPlugin *pl = mgr.get_plugin(importers[i]);
+    if (pl->fileextension != "")
+    {
+      importtypes += "{{" + importers[i] + "} {" + pl->fileextension + "} } ";
+    }
+    else
+    {
+      importtypes += "{{" + importers[i] + "} {.*} } ";
+    }
+  }
+
+  importtypes += "}";
+
+  gui_types_.set(importtypes);
 }
 
 
 bool
 FieldReader::call_importer(const string &filename)
 {
+  const string ftpre = gui_filetype_.get();
+  const string::size_type loc = ftpre.find_first_of(" (");
+  const string ft = ftpre.substr(0, loc);
+
   FieldIEPluginManager mgr;
-  FieldIEPlugin *pl = mgr.get_plugin("TextPointCloudString");
+  FieldIEPlugin *pl = mgr.get_plugin(ft);
   if (pl)
   {
     handle_ = pl->filereader(this, filename.c_str());
     return handle_.get_rep();
   }
   return false;
+}
+
+
+void
+FieldReader::execute()
+{
+  const string ftpre = gui_filetype_.get();
+  const string::size_type loc = ftpre.find_first_of(" (");
+  const string ft = ftpre.substr(0, loc);
+
+  cout << "ft = '" << ft << "'\n";
+  importing_ = !(ft == "" ||
+		 ft == "SCIRun Field File" ||
+		 ft == "SCIRun Field Any");
+  GenericReader<FieldHandle>::execute();
 }
 
 
