@@ -140,18 +140,19 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
 
     // Retrieve necessary data from DataWarehouse
     StaticArray<constNCVariable<double> > gmass(numMatls);
+    StaticArray<constNCVariable<Vector> > gvelocity(numMatls);
     StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
     StaticArray<NCVariable<Vector> > gacceleration(numMatls);
     StaticArray<NCVariable<double> > frictionWork(numMatls);
 
     for(int m=0;m<matls->size();m++){
      int dwi = matls->get(m);
-     new_dw->get(gmass[m], lb->gMassLabel,dwi ,patch, Ghost::None, 0);
+     new_dw->get(gmass[m],    lb->gMassLabel,          dwi,patch,Ghost::None,0);
+     new_dw->get(gvelocity[m],lb->gVelocityInterpLabel,dwi,patch,Ghost::None,0);
      new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
      new_dw->getModifiable(gacceleration[m], lb->gAccelerationLabel, dwi,patch);
      if (flag->d_fracture)
-       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
-			     patch);
+       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
      else {
        new_dw->allocateAndPut(frictionWork[m], lb->frictionalWorkLabel,dwi,
 			      patch);
@@ -168,8 +169,8 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
       stopped = true;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
           IntVector c = *iter; 
-	  gacceleration[0][c]    = (new_velocity - gvelocity_star[0][c])/delT;
-	  gvelocity_star[0][c]   = new_velocity;
+          gacceleration[0][c]    = (new_velocity - gvelocity[0][c])/delT;
+          gvelocity_star[0][c]   = new_velocity;
       }
     }
 
@@ -184,19 +185,20 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
 
       // Set each field's velocity equal to the center of mass velocity
       // and adjust the acceleration of each field to account for this
+
       if(!compare(gmass[0][c],0.0)){  // Non-rigid matl
         for(int  n = 1; n < numMatls; n++){
           int xn = d_direction.x()*n;
           int yn = d_direction.y()*n;
           int zn = d_direction.z()*n;
-          double xDvdt = -(gvelocity_star[n][c].x() - gvelocity_star[xn][c].x())/delT;
-          double yDvdt = -(gvelocity_star[n][c].y() - gvelocity_star[yn][c].y())/delT;
-          double zDvdt = -(gvelocity_star[n][c].z() - gvelocity_star[zn][c].z())/delT;
-	  Dvdt = Vector(xDvdt, yDvdt, zDvdt);
-	  gvelocity_star[n][c].x( gvelocity_star[xn][c].x() );
-	  gvelocity_star[n][c].y( gvelocity_star[yn][c].y() );
-	  gvelocity_star[n][c].z( gvelocity_star[zn][c].z() );
-	  gacceleration[n][c]+=Dvdt;
+          double xDvdt = (gvelocity_star[xn][c].x() - gvelocity[n][c].x())/delT;
+          double yDvdt = (gvelocity_star[yn][c].y() - gvelocity[n][c].y())/delT;
+          double zDvdt = (gvelocity_star[zn][c].z() - gvelocity[n][c].z())/delT;
+          Dvdt = Vector(xDvdt, yDvdt, zDvdt);
+          gvelocity_star[n][c].x( gvelocity_star[xn][c].x() );
+          gvelocity_star[n][c].y( gvelocity_star[yn][c].y() );
+          gvelocity_star[n][c].z( gvelocity_star[zn][c].z() );
+          gacceleration[n][c]=Dvdt;
         }
       }
     }
@@ -219,7 +221,8 @@ void RigidBodyContact::addComputesAndRequiresIntegrated( Task* t,
 {
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);    
-  t->requires(Task::NewDW, lb->gMassLabel,              Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel,           Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityInterpLabel, Ghost::None);
   t->modifies(             lb->gVelocityStarLabel, mss);
   t->modifies(             lb->gAccelerationLabel, mss);
   if (flag->d_fracture)
