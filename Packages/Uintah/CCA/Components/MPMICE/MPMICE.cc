@@ -140,6 +140,8 @@ void MPMICE::scheduleTimeAdvance(double, double,
                                                                   press_matl,
                                                                   all_matls);
 
+  scheduleInterpolateMassBurnFractionToNC(        sched, patches, mpm_matls);
+
   d_ice->scheduleComputePressFC(                  sched, patches, press_matl,
                                                                   all_matls);
   d_ice->scheduleAccumulateMomentumSourceSinks(   sched, patches, press_matl,
@@ -177,7 +179,7 @@ void MPMICE::scheduleTimeAdvance(double, double,
 
   d_mpm->scheduleCarryForwardVariables(           sched, patches, mpm_matls);
   d_ice->scheduleAdvectAndAdvanceInTime(          sched, patches, ice_matls);
-  
+
   sched->scheduleParticleRelocation(level,
 				    Mlb->pXLabel_preReloc, 
 				    Mlb->d_particleState_preReloc,
@@ -321,6 +323,7 @@ void MPMICE::scheduleCCMomExchange(SchedulerP& sched,
                                  // M P M
   t->requires(Task::NewDW, Mlb->gVelocityStarLabel, mpm_matls,Ghost::None);
   t->requires(Task::NewDW, Mlb->gAccelerationLabel, mpm_matls,Ghost::None);
+  t->requires(Task::NewDW, MIlb->cMassLabel,        mpm_matls,Ghost::None);
   t->computes(MIlb->dTdt_CCLabel, mpm_matls);
   t->computes(MIlb->dvdt_CCLabel, mpm_matls);
 
@@ -418,6 +421,24 @@ void MPMICE::scheduleComputeMassBurnRate(SchedulerP& sched,
   t->computes(MIlb->releasedHeatCCLabel);
     
   sched->addTask(t, patches, all_matls);
+}
+
+void MPMICE::scheduleInterpolateMassBurnFractionToNC(SchedulerP& sched,
+						 const PatchSet* patches,
+					         const MaterialSet* mpm_matls)
+{
+#ifdef DOING
+  cout << "MPMICE::scheduleInterpolateMassBurnFractionToNC" << endl;
+#endif 
+  Task* t = scinew Task("MPMICE::interpolateMassBurnFractionToNC",
+		    this, &MPMICE::interpolateMassBurnFractionToNC);
+ 
+  t->requires(Task::NewDW, MIlb->burnedMassCCLabel, Ghost::AroundCells,1);
+  t->requires(Task::NewDW, MIlb->cMassLabel,        Ghost::AroundCells,1);
+
+  t->computes(Mlb->massBurnFractionLabel);
+
+  sched->addTask(t, patches, mpm_matls);
 }
 
 //______________________________________________________________________
@@ -1686,6 +1707,9 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
     old_dw->get(gasTemperature, Ilb->temp_CCLabel, dwindex,patch,Ghost::None,0);
     new_dw->get(gasPressure,    Ilb->press_CCLabel,0,patch,Ghost::None,0);
 
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label());
+
     //__________________________________
     // M P M  matls
     // compute the burned mass and released Heat
@@ -1703,20 +1727,16 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
         new_dw->get(solidMass, MIlb->cMassLabel, dwindex, patch,Ghost::None, 0);
 
         for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-//          matl->getBurnModel()->computeBurn(gasTemperature[*iter],
-//					    gasPressure[*iter],
-//					    solidMass[*iter],
-//					    solidTemperature[*iter],
-//					    burnedMass[m][*iter],
-//					    releasedHeat[m][*iter]);
+	  // For clarity, this should be renamed computeBurnRate
+          matl->getBurnModel()->computeBurn(gasTemperature[*iter],
+					    gasPressure[*iter],
+					    solidMass[*iter],
+					    solidTemperature[*iter],
+					    burnedMass[m][*iter],
+					    releasedHeat[m][*iter]);
+	  burnedMass[m][*iter] *= delT;
+	  releasedHeat[m][*iter] *= delT;
 
-    /*`==========TESTING========== 
-     ignore the burnModel while testing. 
-       if (solidMass[*iter] > d_SMALL_NUM)  {
-        burnedMass[m][*iter]    = 0.1;
-        releasedHeat[m][*iter]  = 0.0;
-       }
-     ==========TESTING==========`*/
           sumBurnedMass[*iter]    += burnedMass[m][*iter];
           sumReleasedHeat[*iter]  += releasedHeat[m][*iter];
         }
@@ -1739,7 +1759,7 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
     //---- P R I N T   D A T A ------ 
     for(int m = 0; m < numALLMatls; m++) {
     #if 0  //turn off for quality control testing
-      if (d_ice->switchDebugSource_Sink) {
+//      if (d_ice->switchDebugSource_Sink) {
         Material* matl = d_sharedState->getMaterial( m );
         int dwindex = matl->getDWIndex();
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -1749,8 +1769,58 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
         if(mpm_matl) sprintf(description, "MPMsources/sinks_Mat_%d",dwindex);
         d_ice->printData( patch, 0, description,"burnedMass", burnedMass[m]);
         d_ice->printData( patch, 0, description,"releasedHeat",releasedHeat[m]);
-      }
+//      }
     #endif
     }
   }  // patches
+}
+
+void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
+					     const PatchSubset* patches,
+					     const MaterialSubset* ,
+					     DataWarehouse* old_dw,
+					     DataWarehouse* new_dw)
+{
+#ifdef DOING
+    cout << "Doing interpolateMassBurnFractionToNC  \t\t MPMICE" << endl;
+#endif 
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    // Interpolate the CC burn fraction to the nodes
+
+    int numALLMatls = d_sharedState->getNumMPMMatls() + 
+      d_sharedState->getNumICEMatls();
+
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label());
+
+    for (int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      int dwindex = matl->getDWIndex();
+      if(mpm_matl){
+        CCVariable<double> burnedMassCC;
+        CCVariable<double> massCC;
+        NCVariable<double> massBurnFraction;
+        new_dw->get(burnedMassCC,     MIlb->burnedMassCCLabel,dwindex,patch,
+							 Ghost::AroundCells,1);
+        new_dw->get(massCC,           MIlb->cMassLabel,       dwindex,patch,
+							 Ghost::AroundCells,1);
+        new_dw->allocate(massBurnFraction,
+				      Mlb->massBurnFractionLabel,dwindex,patch);
+
+        IntVector cIdx[8];
+        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+           patch->findCellsFromNode(*iter,cIdx);
+	   massBurnFraction[*iter]         = 0.0;
+	   for (int in=0;in<8;in++){
+	     massBurnFraction[*iter] +=
+				(burnedMassCC[cIdx[in]]/massCC[cIdx[in]])*.125;
+           }
+        }
+        new_dw->put(massBurnFraction,Mlb->massBurnFractionLabel, dwindex,patch);
+      }  //if(mpm_matl)
+    }  //ALLmatls  
+  }  //patches
 }
