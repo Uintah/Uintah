@@ -69,6 +69,7 @@ MusilRNG::MusilRNG(int seed)
 	b1=b2=b3=b4=b5=b6=b7=b8=b9=b10=b11=b12=0;
 	d1=d2=d3=d4=d5=d6=d7=d8=d9=d10=d11=d12=0;
 	point=4;
+	(*this)(); // the first value is *always* 0.770611 -- just throw it out
 }
 
 double MusilRNG::operator()()
