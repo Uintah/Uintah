@@ -159,6 +159,13 @@ void ScalarFieldExtractor::execute()
   range = hi - low;
   BBox box;
   level->getSpatialRange(box);
+
+  if( mesh_handle_.get_rep() == 0 ){
+    mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
+				    range.z(), box.min(),
+				    box.max());
+  }
+
   const TypeDescription* subtype = type->getSubType();
   string var(sVar.get());
   int mat = sMatNum.get();
@@ -169,11 +176,8 @@ void ScalarFieldExtractor::execute()
       case TypeDescription::double_type:
 	{
 	  NCVariable<double> gridVar;
-	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
-					     range.z(), box.min(),
-					     box.max());
 	  LatVolField<double> *sfd =
-	    scinew LatVolField<double>( lvm, Field::NODE );
+	    scinew LatVolField<double>( mesh_handle_, Field::NODE );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
@@ -184,11 +188,8 @@ void ScalarFieldExtractor::execute()
       case TypeDescription::int_type:
 	{
 	  NCVariable<int> gridVar;
-	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
-					     range.z(), box.min(),
-					     box.max());
 	  LatVolField<int> *sfd =
-	    scinew LatVolField<int>( lvm, Field::NODE );
+	    scinew LatVolField<int>( mesh_handle_, Field::NODE );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
@@ -200,11 +201,8 @@ void ScalarFieldExtractor::execute()
      case TypeDescription::long64_type:
 	{
 	  NCVariable<long64> gridVar;
-	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
-					     range.z(), box.min(),
-					     box.max());
 	  LatVolField<long64> *sfd =
-	    scinew LatVolField<long64>( lvm, Field::NODE );
+	    scinew LatVolField<long64>( mesh_handle_, Field::NODE );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
@@ -223,11 +221,8 @@ void ScalarFieldExtractor::execute()
       case TypeDescription::double_type:
 	{
 	  CCVariable<double> gridVar;
-	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
-					     range.z(), box.min(),
-					     box.max());
 	  LatVolField<double> *sfd =
-	    scinew LatVolField<double>( lvm, Field::CELL );
+	    scinew LatVolField<double>( mesh_handle_, Field::CELL );
 	  
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
@@ -243,11 +238,8 @@ void ScalarFieldExtractor::execute()
       case TypeDescription::int_type:
 	{
 	  CCVariable<int> gridVar;
-	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
-					     range.z(), box.min(),
-					     box.max());
 	  LatVolField<int> *sfd =
-	    scinew LatVolField<int>( lvm, Field::CELL );
+	    scinew LatVolField<int>( mesh_handle_, Field::CELL );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
@@ -259,11 +251,8 @@ void ScalarFieldExtractor::execute()
       case TypeDescription::long_type:
 	{
 	  CCVariable<long64> gridVar;
-	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
-					     range.z(), box.min(),
-					     box.max());
 	  LatVolField<long64> *sfd =
-	    scinew LatVolField<long64>( lvm, Field::CELL );
+	    scinew LatVolField<long64>( mesh_handle_, Field::CELL );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
