@@ -34,11 +34,11 @@ WARNING
 
 // GROUP: Function Definitions:
 ////////////////////////////////////////////////////////////////////////
-#define FORT_COLLECT_FCDRAG_TO_CC collect_drag_cc_
-#define FORT_MM_INTERP_CCTOFC interp_centertoface_
+//#define FORT_COLLECT_FCDRAG_TO_CC collect_drag_cc_
+//#define FORT_MM_INTERP_CCTOFC interp_centertoface_
 #define FORT_MM_INTERP_FCTOCC interp_facetocenter_
-#define FORT_MM_MOM_EXCH_CONT momentum_exchange_term_continuous_cc_
-#define FORT_MM_PRESSFORCE pressure_force_
+//#define FORT_MM_MOM_EXCH_CONT momentum_exchange_term_continuous_cc_
+//#define FORT_MM_PRESSFORCE pressure_force_
 #define FORT_MM_REDISTRIBUTE_DRAG redistribute_dragforce_cc_
 // GROUP: Function Declarations:
 ////////////////////////////////////////////////////////////////////////
@@ -49,6 +49,7 @@ extern "C"
   //////////////////////////////////////////////////////////////////////
   // Collect drag sources for the gas phase from faces to cell center
 
+#if 0
   void
   FORT_COLLECT_FCDRAG_TO_CC(
 			    double* su_dragx_cc, 
@@ -68,11 +69,13 @@ extern "C"
 			    const int* dim_hi_sp_fcy,
 			    const int* valid_lo,
 			    const int* valid_hi);
+#endif
 
 
   //////////////////////////////////////////////////////////////////////
   // Interpolate a quantity from the cell center to the face center
 
+#if 0
   void 
   FORT_MM_INTERP_CCTOFC(
 			double* phi_fc,
@@ -81,6 +84,7 @@ extern "C"
 			const int* dim_lo_fc, const int* dim_hi_fc,
 			const int* dim_lo_cc, const int* dim_hi_cc,
 			const int* valid_lo, const int* valid_hi);
+#endif
 
   //////////////////////////////////////////////////////////////////////
   // Interpolate a quantity from the face center to the cell center
@@ -97,6 +101,7 @@ extern "C"
 			const int* dim_lo_fc, const int* dim_hi_fc,
 			const int* valid_lo, const int* valid_hi);
 			
+#if 0
   //////////////////////////////////////////////////////////////////////
   // Calculate momentum exchange terms for continuous solid-fluid
   // interaction
@@ -146,10 +151,12 @@ extern "C"
 			const int* pcell, 
 			const int* mmwallid, 
 			const int*ffield);
+#endif
 
   //////////////////////////////////////////////////////////////////////
   // Calculate pressure forces on continuous solid from gas
 
+#if 0
   void
   FORT_MM_PRESSFORCE(
 		     double* pressforcex_fcx,
@@ -168,6 +175,7 @@ extern "C"
 		     const int* dim_lo_p, const int* dim_hi_p,
 		     const int* valid_lo, const int* valid_hi,
 		     const int* pcell, const int* wall, const int* ffield);
+#endif
 
   //////////////////////////////////////////////////////////////////////
   // Redistribute drag forces on continuous solid calculated at
