@@ -27,7 +27,7 @@
 
    <MPM>
 	<time_integrator>implicit</time_integrator>
-	<dynamic> true </dynamic>
+	<dynamic>true</dynamic>
    </MPM>
 
 
