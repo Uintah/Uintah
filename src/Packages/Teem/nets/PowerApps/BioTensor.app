@@ -1252,7 +1252,7 @@ set $m92-numseeds {10}
 set $m92-rngseed {1}
 set $m92-rnginc {1}
 set $m92-clamp {0}
-set $m92-autoexecute {1}
+set $m92-autoexecute {0}
 set $m92-type {}
 set $m92-dist {uniuni}
 set $m92-whichtab {Widget}
@@ -1540,7 +1540,7 @@ set $m131-numseeds {10}
 set $m131-rngseed {1}
 set $m131-rnginc {1}
 set $m131-clamp {0}
-set $m131-autoexecute {1}
+set $m131-autoexecute {0}
 set $m131-type {}
 set $m131-dist {uniuni}
 set $m131-whichtab {Widget}
@@ -3140,32 +3140,41 @@ class BioTensorApp {
     # This implements saving a BioTensor session
     method save_session {} {
 	global mods
-	
-	set types {
-	    {{App Settings} {.set} }
-	    {{Other} { * } }
-	} 
-	set savefile [ tk_getSaveFile -defaultextension {.set} \
-			   -filetypes $types ]
-	if { $savefile != "" } {
-	    set fileid [open $savefile w]
+
+	if {$saveFile == ""} {
+	    
+	    set types {
+		{{App Settings} {.ses} }
+		{{Other} { * } }
+	    } 
+	    set saveFile [ tk_getSaveFile -defaultextension {.ses} \
+			       -filetypes $types ]
+	}
+	if { $saveFile != "" } {
+	    # configure title
+	    wm title .standalone "BioTensor - [getFileName $saveFile]" 
+	    
+	    set fileid [open $saveFile w]
 	    
 	    # Save out data information 
 	    puts $fileid "# BioTensor Session\n"
 	    puts $fileid "set app_version 1.0"
-
+	    
 	    save_module_variables $fileid
 	    save_class_variables $fileid 
-
+	    
 	    save_global_variables $fileid
 	    save_disabled_modules $fileid
+	    save_disabled_connections $fileid
 	    
 	    close $fileid
-
+	    
 	    global NetworkChanged
 	    set NetworkChanged 0
-	}
+	} 
     }
+
+
 
     #########################
     ### save_class_variables
@@ -3181,6 +3190,39 @@ class BioTensorApp {
 	}
 	puts $fileid "set loading 1"
     }
+
+    #########################
+    ### save_disabled_connections
+    #########################
+    # Save out the call to disable all modules connections
+    # that are currently disabled
+    method save_disabled_connections { fileid } {
+	global mods Disabled
+	
+	puts $fileid "\n# Disabled Module Connections\n"
+	
+	# Check the connections between the ChooseField-X, ChooseField-Y,
+	# or ChooseField-Z and the GatherPoints module
+
+	set name "$mods(ChooseField-X)_p0_to_$mods(GatherPoints)_p0"
+	if {[info exists Disabled($name)] && $Disabled($name)} {
+	    puts $fileid "disableConnection \"\$mods(ChooseField-X) 0 \$mods(GatherPoints) 0\""
+	}
+
+	set name "$mods(ChooseField-Y)_p0_to_$mods(GatherPoints)_p1"
+	if {[info exists Disabled($name)] && $Disabled($name)} {
+	    puts $fileid "disableConnection \"\$mods(ChooseField-Y) 0 \$mods(GatherPoints) 1\""
+	}
+
+	set name "$mods(ChooseField-Z)_p0_to_$mods(GatherPoints)_p2"
+	if {[info exists Disabled($name)] && $Disabled($name)} {
+	    puts $fileid "disableConnection \"\$mods(ChooseField-Z) 0 \$mods(GatherPoints) 2\""
+	}
+
+
+	
+    }
+
 
     #########################
     ### save_global_variables
@@ -3412,12 +3454,15 @@ class BioTensorApp {
     # all messed up.
     method load_session {} {	
 	set types {
-	    {{App Settings} {.set} }
+	    {{App Settings} {.ses} }
 	    {{Other} { * }}
 	}
 	
-	set file [tk_getOpenFile -filetypes $types]
-	if {$file != ""} {
+	set saveFile [tk_getOpenFile -filetypes $types]
+
+	if {$saveFile != ""} {
+	    # configure title
+	    wm title .standalone "BioTensor - [getFileName $saveFile]" 
 	    
 	    # Reset application 
 	    reset_app
@@ -3425,8 +3470,8 @@ class BioTensorApp {
 	    foreach g [info globals] {
 		global $g
 	    }
-	    
-	    source $file
+
+	    source $saveFile
 
 	    # set a few variables that need to be reset
 	    set indicate 0
@@ -3461,7 +3506,19 @@ class BioTensorApp {
 	    configure_registration_tab
 	    configure_dt_tab
 
-	    change_indicator_labels "Executing to Save Point..."
+	    $indicatorL1 configure -text "Press Execute to run to save point..."
+	    $indicatorL2 configure -text "Press Execute to run to save point..."
+
+# 	    global bmatrix
+# 	    if {$dt_completed  && $bmatrix == "load"} {
+# 		puts "Setting BMatrix stuff..."
+# 		global mods
+# 		global $mods(NrrdReader-BMatrix)-add
+# 		global $mods(NrrdReader-BMatrix)-axis
+# 		set $mods(NrrdReader-BMatrix)-add 1
+# 		set $mods(NrrdReader-BMatrix)-axis {}
+# 	    }
+
 	}	
     }
 
@@ -3543,6 +3600,8 @@ class BioTensorApp {
     # This is called when any module calls update_state.
     # We only care about "JustStarted" and "Completed" calls.
     method update_progress { which state } {
+#	puts "$which $state"
+	
 	global mods
 	global $mods(ShowField-Isosurface)-faces-on
 	global $mods(ShowField-Glyphs)-tensors-on
@@ -3673,6 +3732,8 @@ class BioTensorApp {
 		    configure_sample_planes
 		    
 		}
+	    } else {
+		puts "NRRD STUFF DIDN'T EXIST"
 	    }
  	} elseif {$which == $mods(ShowField-X) && $state == "JustStarted"} {
 	    change_indicate_val 1
@@ -3823,6 +3884,8 @@ class BioTensorApp {
 				    "Please specify an existing nrrd file\nwith a T2 reference image before\nexecuting." -type ok -icon info -parent .standalone] 
 		    return
 		}
+		
+		puts "Setting tuple axis to 0 for NrrdReader1 and NrrdReader-T2 (DWI Mode)"
 		global $mods(NrrdReader1)-axis
 		set $mods(NrrdReader1)-axis axis0
 
@@ -3863,6 +3926,9 @@ class BioTensorApp {
 				    "Please specify an valid nrrd file\nwith tensors before executing." -type ok -icon info -parent .standalone] 
 		    return
 		}
+		puts "Setting tuple axis to 0 for NrrdReader1 (tensor mode)"
+		global $mods(NrrdReader1)-axis
+		set $mods(NrrdReader1)-axis axis0
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
 		# Dicom 
 
@@ -4184,15 +4250,13 @@ class BioTensorApp {
     #############################
     # Specify a nrrd file, set the tuple axis to 0
     method load_nrrd_dwi {} {
+
 	global mods
 	set theWindow [$mods(NrrdReader1) make_file_open_box]
-	
-	tkwait window $theWindow
-	
-	update idletasks
 
- 	global $mods(NrrdReader1)-axis
-	set $mods(NrrdReader1)-axis axis0
+	# tkwait window $theWindow
+	
+	# update idletasks
     }
     
 
@@ -4204,12 +4268,9 @@ class BioTensorApp {
 	global mods
         set theWindow [$mods(NrrdReader-T2) make_file_open_box]
 	
-	tkwait window $theWindow
+	# tkwait window $theWindow
 
-	update idletasks
-
- 	global $mods(NrrdReader-T2)-axis
-	set $mods(NrrdReader-T2)-axis axis0
+	# update idletasks
     } 
 
     
@@ -4237,6 +4298,9 @@ class BioTensorApp {
 	    # activate reg variance checkbutton
 	    $variance_tab1.reg configure -state normal
 	    $variance_tab2.reg configure -state normal
+
+	    global $mods(NrrdReader-Gradient)-axis
+	    set $mods(NrrdReader-Gradient)-axis axis0
 
 	    # execute
 	    $mods(TendEpireg)-c needexecute
@@ -4308,12 +4372,9 @@ class BioTensorApp {
         global mods
         set theWindow [$mods(NrrdReader-Gradient) make_file_open_box]
 	
-        tkwait window $theWindow
+        #tkwait window $theWindow
 	
-        update idletasks
-	
- 	global $mods(NrrdReader-Gradient)-axis
-	set $mods(NrrdReader-Gradient)-axis axis0
+        #update idletasks
     }
     
     method set_resampling_filter { w } {
@@ -4418,6 +4479,15 @@ class BioTensorApp {
 				"Please load a B-Matrix file containing." -type ok -icon info -parent .standalone]
 		return
 	    }
+
+	    puts "Setting tuple axis to ADD for NrrdReader-BMatrix"
+	    # Set the BMatrix to add a tuple axis
+	    global $mods(NrrdReader-BMatrix)-add
+	    set $mods(NrrdReader-BMatrix)-add 1
+	    
+	    global $mods(NrrdReader-BMatrix)-axis
+	    set $mods(NrrdReader-BMatrix)-axis {}
+	    
 	} 
 	
 	# unblock modules
@@ -4426,6 +4496,10 @@ class BioTensorApp {
 	
 	# execute
 	$mods(ChooseNrrd-ToSmooth)-c needexecute
+
+# 	if {$bmatrix == "load"} {
+# 	    $mods(NrrdReader-BMatrix)-c needexecute
+# 	}
 
 	set dt_completed 1
 	set reg_completed 1
@@ -4460,6 +4534,7 @@ class BioTensorApp {
 	tkwait window $theWindow
 	
 	update idletasks
+
 	
 #        global $mods(NrrdReader-BMatrix)-axis
 #        set $mods(NrrdReader-BMatrix)-axis 0
@@ -8110,6 +8185,7 @@ class BioTensorApp {
 		    activate_dt
 		    $proc_tab1 view "Build Tensors"
 		    $proc_tab2 view "Build Tensors"
+		    change_indicator_labels "Press Execute to Build Diffusion Tensors..."
 		} elseif {$reg_completed} {
 		    # Building DTs step
 		    $proc_tab1 view "Build Tensors"
@@ -8197,8 +8273,8 @@ class BioTensorApp {
 	} else {
 	    # $msg != "Dynamically Compiling Code..."
 	    if {$msg != "E R R O R !"} {
-		$indicatorL1 configure -text "Executing to Save Point..."
-		$indicatorL2 configure -text "Executing to Save Point..."
+		$indicatorL1 configure -text "Executing to save point..."
+		$indicatorL2 configure -text "Executing to save point..."
 	    } else {
 		$indicatorL1 configure -text $msg
 		$indicatorL2 configure -text $msg
