@@ -11,7 +11,8 @@ ICE_DIR  := Uintah/Components/ICE/ice_sm
 ifeq ($(NBITS),64)
 ICE_LIBS := $(ICE_DIR)/Libraries/64bit
 else
-ICE_LIBS := $(ICE_DIR)/libraries/n32bit
+ICE_LIBS := $(ICE_DIR)/Libraries/n32bit
+endif
 
 SRCS	+= $(SRCDIR)/ICE.cc
 
@@ -68,6 +69,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.7  2000/06/14 21:53:19  jehall
+# - Fixed typos in last commit
+#
 # Revision 1.6  2000/06/14 21:37:44  jehall
 # - Added generated executable 'ice' to CVS ignore list
 #
