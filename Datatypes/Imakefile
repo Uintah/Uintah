@@ -15,7 +15,7 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	ScaledBoxWidgetData.o  ScaledBoxWidgetDataPort.o  \
 	SigmaSet.o  SigmaSetPort.o  \
 	SoundPort.o  SparseRowMatrix.o  SurfOctree.o  SurfOctreeTopPort.o  \
-	Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
+	SurfTree.o  Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
 	TriDiagonalMatrix.o  TriSurface.o  \
 	VectorField.o  VectorFieldOcean.o \
 	VectorFieldZone.o LockArray3.o \
@@ -40,7 +40,7 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	ScaledBoxWidgetData.cc  ScaledBoxWidgetDataPort.cc \
 	SigmaSet.cc SigmaSetPort.cc \
 	SoundPort.cc SparseRowMatrix.cc SurfOctree.cc SurfOctreeTopPort.cc \
-	Surface.cc SurfacePort.cc SymSparseRowMatrix.cc \
+	SurfTree.cc Surface.cc SurfacePort.cc SymSparseRowMatrix.cc \
 	TriDiagonalMatrix.cc TriSurface.cc \
 	VectorField.cc  VectorFieldOcean.cc \
 	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc \
