@@ -2013,6 +2013,18 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
   
   typename SFld::mesh_handle_type mesh = sfld->get_typed_mesh();
 
+  // Use a default color?
+  bool def_color = !(cmap.get_rep());
+  bool vec_color = false;
+  MaterialHandle vcol(0);
+  if (def_color && cfld->query_vector_interface().get_rep())
+  {
+    def_color = false;
+    vec_color = true;
+    vcol = scinew Material();
+    vcol->transparency = 1.0;
+  }
+
   typename Loc::iterator iter, end;
   mesh->begin(iter);
   mesh->end(end);
@@ -2026,7 +2038,21 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 
       if (points_p)
       {
-	if (cmap.get_rep())
+	if (def_color)
+	{
+	  points->add(p);
+	}
+	else if (vec_color)
+	{
+	  typename CFld::value_type ctmp;
+	  cfld->value(ctmp, *iter);
+
+	  Vector vtmp;
+	  to_vector(ctmp, vtmp);
+	  vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	  points->add(p, vcol);
+	}
+	else
 	{
 	  typename CFld::value_type ctmp;
 	  cfld->value(ctmp, *iter);
@@ -2035,14 +2061,46 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 	  to_double(ctmp, ctmpd);
 	  points->add(p, ctmpd);
 	}
-	else
-	{
-	  points->add(p);
-	}
       }
       else
       {
-	if (cmap.get_rep())
+	if (def_color)
+	{
+	  if (sized_p)
+	  {
+	    const double dtmp = fabs((double)tmp * scale);
+	    if (!spheres->add_radius(p, dtmp))
+	    {
+	      points->add(p);
+	    }
+	  }
+	  else
+	  {
+	    spheres->add(p);
+	  }
+	}
+	else if (vec_color)
+	{
+	  typename CFld::value_type ctmp;
+	  cfld->value(ctmp, *iter);
+
+	  Vector ctmpv;
+	  to_vector(ctmp, ctmpv);
+	  vcol->diffuse = Color(ctmpv.x(), ctmpv.y(), ctmpv.z());
+	  if (sized_p)
+	  {
+	    const double dtmp = fabs((double)tmp * scale);
+	    if (!spheres->add_radius(p, dtmp, vcol))
+	    {
+	      points->add(p, vcol);
+	    }
+	  }
+	  else
+	  {
+	    spheres->add(p, vcol);
+	  }
+	}
+	else
 	{
 	  typename CFld::value_type ctmp;
 	  cfld->value(ctmp, *iter);
@@ -2061,21 +2119,6 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 	  else
 	  {
 	    spheres->add(p, ctmpd);
-	  }
-	}
-	else
-	{
-	  if (sized_p)
-	  {
-	    const double dtmp = fabs((double)tmp * scale);
-	    if (!spheres->add_radius(p, dtmp))
-	    {
-	      points->add(p);
-	    }
-	  }
-	  else
-	  {
-	    spheres->add(p);
 	  }
 	}
       }
