@@ -29,6 +29,8 @@
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Plane.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/Trig.h>
 #include <iostream>
@@ -289,6 +291,21 @@ void Transform::post_rotate(double angle, const Vector& axis)
   inverse_valid=0;
 }	
 
+void Transform::rotate(const Vector& from, const Vector& to)
+{
+  Vector axis(Cross(from, to));
+  if(axis.length2() < 0.00001) return; // Don't bother
+  double sintheta=axis.normalize();
+  if(sintheta >= 1.0){
+    pre_rotate(M_PI/2, axis);
+  } else if(sintheta <= -1.0){
+    pre_rotate(-M_PI/2, axis);
+  } else {
+    double theta=asin(sintheta);
+    pre_rotate(theta, axis);
+  }
+}
+
 void Transform::build_permute(double m[4][4],int xmap, int ymap, int zmap, 
 			      int pre){
   load_zero(m);
@@ -351,6 +368,13 @@ Vector Transform::unproject(const Vector& p)
 		imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z());
 }
 
+Vector Transform::project_normal(const Vector& p) const
+{
+    double x=mat[0][0]*p.x()+mat[0][1]*p.x()+mat[0][2]*p.x()+mat[0][3];
+    double y=mat[1][0]*p.y()+mat[1][1]*p.y()+mat[1][2]*p.y()+mat[1][3];
+    double z=mat[2][0]*p.z()+mat[2][1]*p.z()+mat[2][2]*p.z()+mat[2][3];
+    return Vector(x, y, z);
+}
 
 void Transform::get(double* gmat) const
 {
