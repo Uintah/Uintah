@@ -64,7 +64,7 @@ namespace Uintah {
 				      const Patch* patch,
 				      DataWarehouse* new_dw);
 
-    ParticleVariable<Point> position,position0;
+    ParticleVariable<Point> position;
     ParticleVariable<Vector> pvelocity, pexternalforce, psize;
     ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol;
     ParticleVariable<long64> pparticleID;
