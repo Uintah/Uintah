@@ -49,15 +49,19 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/AddWells.tcl $(SRCDIR)/AddWells2.tcl \
 	$(SRCDIR)/VolRendTexSlices.tcl $(SRCDIR)/VolVis.tcl \
 	$(SRCDIR)/WidgetTest.tcl $(SRCDIR)/Writer.tcl \
 	$(SRCDIR)/cConjGrad.tcl $(SRCDIR)/cPhase.tcl \
-	$(SRCDIR)/EditPath.tcl $(SRCDIR)/PathReader.tcl\
-	$(SRCDIR)/PathWriter.tcl \
-	$(SRCDIR)/IsoSurfaceSAGE.tcl 
+	$(SRCDIR)/EditPath.tcl $(SRCDIR)/PathReader.tcl \
+	$(SRCDIR)/PathWriter.tcl $(SRCDIR)/IsoSurfaceSAGE.tcl \
+	$(SRCDIR)/GenVectorField.tcl $(SRCDIR)/GenScalarField.tcl
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/PSECommon/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.5  2000/07/23 18:28:45  dahart
+# Initial commit / GUI files for modules to generate scalar & vector
+# fields from symbolic functions
+#
 # Revision 1.4  2000/07/22 18:04:19  yarden
 # add GUI for IsoSurfaceSAGE module
 #
