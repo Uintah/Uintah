@@ -67,7 +67,7 @@ WARNING
     // Insert Documentation Here:
     virtual void addTask(Task* t, const PatchSet*, const MaterialSet*) = 0;
     
-    virtual const set<const VarLabel*>& getInitialRequires() = 0;
+    virtual const set<const VarLabel*, VarLabel::Compare>& getInitialRequires() = 0;
     
     virtual LoadBalancer* getLoadBalancer() = 0;
     virtual void releaseLoadBalancer() = 0;
