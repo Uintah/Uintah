@@ -21,11 +21,12 @@ itcl_class SCIRun_Fields_ClipByFunction {
         set name ClipByFunction
         set_defaults
     }
+
     method set_defaults {} {
         global $this-clipfunction
 	global $this-clipmode
 	set $this-clipfunction "x < 0"
-	set $this-clipmode 1
+	set $this-clipmode "cell"
     }
 
     method ui {} {
@@ -39,8 +40,26 @@ itcl_class SCIRun_Fields_ClipByFunction {
 
 	set c "$this-c needexecute"
 
-	entry $w.e -textvariable $this-clipfunction
-	bind $w.e <Return> $c
-	pack $w.e -side left -fill x -expand 1
+	frame $w.location -relief groove -borderwidth 2
+	label $w.location.label -text "Clip Location"
+	radiobutton $w.location.cell -text "Cell Centers" \
+	    -variable $this-clipmode -value cell -command $c
+	radiobutton $w.location.nodeone -text "One Node" \
+	    -variable $this-clipmode -value onenode -command $c
+	radiobutton $w.location.nodeall -text "All Nodes" \
+	    -variable $this-clipmode -value allnodes -command $c
+
+	pack $w.location.label -side top -expand yes -fill both
+	pack $w.location.cell $w.location.nodeone $w.location.nodeall \
+	    -side top -anchor w
+
+	frame $w.function -borderwidth 2
+	label $w.function.l -text "F(x, y, z, v)"
+	entry $w.function.e -width 20 -textvariable $this-clipfunction
+	bind $w.function.e <Return> $c
+	pack $w.function.l $w.function.e -side left
+
+	pack $w.location $w.function -side top -fill x -expand 1 \
+	    -padx 5 -pady 5
     }
 }

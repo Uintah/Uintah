@@ -45,7 +45,7 @@ namespace SCIRun {
 class ClipByFunction : public Module
 {
 private:
-  GuiInt clipmode_;
+  GuiString clipmode_;
   GuiString clipfunction_;
   int  last_input_generation_;
 
@@ -106,15 +106,17 @@ ClipByFunction::execute()
   }
 
   int clipmode = 0;
-  if (ifieldhandle->data_at() != Field::NODE)
+  if (clipmode_.get() == "cell")
   {
-    // Assume data at elements.
     clipmode = 0;
   }
-  else
+  else if (clipmode_.get() == "onenode")
   {
-    clipmode = clipmode_.get();
-    if (clipmode > 8 || clipmode <= 0) clipmode = -1;
+    clipmode = 1;
+  }
+  else if (clipmode_.get() == "allnodes")
+  {
+    clipmode = -1;
   }
 
   FieldHandle ofield =

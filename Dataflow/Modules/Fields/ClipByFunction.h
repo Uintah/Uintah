@@ -92,6 +92,10 @@ ClipByFunctionAlgoT<FIELD>::execute(ModuleReporter *mod,
 
   vector<typename FIELD::mesh_type::Elem::index_type> elemmap;
 
+  const bool elemdata_valid =
+    field->data_at_type_description()->get_name() ==
+    get_type_description((typename FIELD::mesh_type::Elem *)0)->get_name();
+
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
   while (bi != ei)
@@ -101,8 +105,8 @@ ClipByFunctionAlgoT<FIELD>::execute(ModuleReporter *mod,
     {
       Point p;
       mesh->get_center(p, *bi);
-      typename FIELD::value_type v;
-      field->value(v, *bi);
+      typename FIELD::value_type v(0);
+      if (elemdata_valid) { field->value(v, *bi); }
       inside = vinside_p(p.x(), p.y(), p.z(), v);
     }
     else if (clipmode < 0)
@@ -116,8 +120,8 @@ ClipByFunctionAlgoT<FIELD>::execute(ModuleReporter *mod,
       {
 	Point p;
 	mesh->get_center(p, onodes[i]);
-	typename FIELD::value_type v;
-	field->value(v, onodes[i]);
+	typename FIELD::value_type v(0);
+	if (field->data_at() == Field::NODE) { field->value(v, onodes[i]); }
 	if (vinside_p(p.x(), p.y(), p.z(), v))
 	{
 	  counter++;
@@ -138,8 +142,8 @@ ClipByFunctionAlgoT<FIELD>::execute(ModuleReporter *mod,
       {
 	Point p;
 	mesh->get_center(p, onodes[i]);
-	typename FIELD::value_type v;
-	field->value(v, onodes[i]);
+	typename FIELD::value_type v(0);
+	if (field->data_at() == Field::NODE) { field->value(v, onodes[i]); }
 	if (!vinside_p(p.x(), p.y(), p.z(), v))
 	{
 	  inside = false;
