@@ -204,9 +204,9 @@ void Flood::execute()
 	sf->grid.initialize(0);
 	sf->set_bounds(min, max);
 	sfH = sf;
-	cell_status.newsize(nx, ny, nz);
+	cell_status.resize(nx, ny, nz);
 	cell_status.initialize(0);
-	curvMax.newsize(nx, ny, nz);
+	curvMax.resize(nx, ny, nz);
 	curvMax.initialize(0);
 	active_cell.resize(0);
 	seedMoved=1;

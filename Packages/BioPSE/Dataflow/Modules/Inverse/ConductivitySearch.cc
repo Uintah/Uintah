@@ -174,7 +174,7 @@ void ConductivitySearch::build_basis_matrices() {
 void ConductivitySearch::initialize_search() {
   // fill in our random conductivities and build our stiffness matrix frame
   misfit_.resize(NCONDUCTIVITIES_);
-  conductivities_.newsize(NCONDUCTIVITIES_, NDIM_);
+  conductivities_.resize(NCONDUCTIVITIES_, NDIM_);
 
   ColumnMatrix *cm;
   cond_vector_ = cm = new ColumnMatrix(NDIM_*2);

@@ -233,7 +233,7 @@ void BrickGrid::init( LatVolField<Data>& tex )
 	for( k = 0; k < bricks_->dim3(); k++)
 	  delete (*bricks_)(i,j,k);
 
-    bricks_->newsize(bx,by,bz);
+    bricks_->resize(bx,by,bz);
   }
   
   int max_workers = Max(Thread::numProcessors()/2, 4);

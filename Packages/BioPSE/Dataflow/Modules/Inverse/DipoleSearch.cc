@@ -141,7 +141,7 @@ void DipoleSearch::initialize_search() {
   PointCloudMesh::Node::iterator ni; seeds_mesh->begin(ni);
   PointCloudMesh::Node::iterator nie; seeds_mesh->end(nie);
   misfit_.resize(NDIPOLES_);
-  dipoles_.newsize(NDIPOLES_, NDIM_+3);
+  dipoles_.resize(NDIPOLES_, NDIM_+3);
   for (int nc=0; ni != nie; ++ni, nc++) {
     Point p;
     seeds_mesh->get_center(p, *ni);

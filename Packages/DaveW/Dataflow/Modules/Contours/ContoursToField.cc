@@ -358,7 +358,7 @@ void CStoSFRG::execute()
 	    }
 
     Array2<char> slice;
-    slice.newsize(nx,ny);
+    slice.resize(nx,ny);
     for (i=0; i<pts.size(); i++) {
 	slice.initialize(0);
 	Scanline s(slice, pts[i]);

@@ -231,7 +231,7 @@ double GeomGrid::get(int i, int j)
 void GeomGrid::set(int i, int j, double v, const Vector& normal)
 {
     if(!have_normals){
-	normals.newsize(verts.dim1(), verts.dim2());
+	normals.resize(verts.dim1(), verts.dim2());
 	have_normals=1;
     }
     verts(i, j)=v;
@@ -241,7 +241,7 @@ void GeomGrid::set(int i, int j, double v, const Vector& normal)
 void GeomGrid::set(int i, int j, double v, const MaterialHandle& matl)
 {
     if(!have_matls){
-	matls.newsize(verts.dim1(), verts.dim2());
+	matls.resize(verts.dim1(), verts.dim2());
 	have_matls=1;
     }
     verts(i, j)=v;
@@ -252,11 +252,11 @@ void GeomGrid::set(int i, int j, double v, const Vector& normal,
 		   const MaterialHandle& matl)
 {
     if(!have_matls){
-	matls.newsize(verts.dim1(), verts.dim2());
+	matls.resize(verts.dim1(), verts.dim2());
 	have_matls=1;
     }
     if(!have_normals){
-	normals.newsize(verts.dim1(), verts.dim2());
+	normals.resize(verts.dim1(), verts.dim2());
 	have_normals=1;
     }
     verts(i, j)=v;
