@@ -65,22 +65,22 @@ public:
   MFData3d(const MFData3d& data) {Array3<Data>::copy(data); }
   virtual ~MFData3d();
   
-  const value_type &operator[](typename MaskedLatVolMesh::Cell::index_type idx) const
+  const value_type &operator[](const MaskedLatVolMesh::Cell::index_type &idx) const
   { return this->operator()(idx.k_,idx.j_,idx.i_); } 
-  const value_type &operator[](typename MaskedLatVolMesh::Face::index_type idx) const
+  const value_type &operator[](const MaskedLatVolMesh::Face::index_type &idx) const
   { return this->operator()(0, 0, unsigned(idx)); }
-  const value_type &operator[](typename MaskedLatVolMesh::Edge::index_type idx) const
+  const value_type &operator[](const MaskedLatVolMesh::Edge::index_type &idx) const
   { return this->operator()(0, 0, unsigned(idx)); }    
-  const value_type &operator[](typename MaskedLatVolMesh::Node::index_type idx) const
+  const value_type &operator[](const MaskedLatVolMesh::Node::index_type &idx) const
   { return this->operator()(idx.k_,idx.j_,idx.i_); }    
 
-  value_type &operator[](typename MaskedLatVolMesh::Cell::index_type idx)
+  value_type &operator[](const MaskedLatVolMesh::Cell::index_type &idx)
   { return this->operator()(idx.k_,idx.j_,idx.i_); } 
-  value_type &operator[](typename MaskedLatVolMesh::Face::index_type idx)
+  value_type &operator[](const MaskedLatVolMesh::Face::index_type &idx)
   { return this->operator()(0, 0, unsigned(idx)); }
-  value_type &operator[](typename MaskedLatVolMesh::Edge::index_type idx)
+  value_type &operator[](const MaskedLatVolMesh::Edge::index_type &idx)
   { return this->operator()(0, 0, unsigned(idx)); }    
-  value_type &operator[](typename MaskedLatVolMesh::Node::index_type idx)
+  value_type &operator[](const MaskedLatVolMesh::Node::index_type &idx)
   { return this->operator()(idx.k_,idx.j_,idx.i_); }    
 
   void resize(const MaskedLatVolMesh::Node::size_type &size)
