@@ -11,13 +11,10 @@
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
 
 // Known problems:
-// Only translations will work because normal isn't transformed
-// Scales will not work because ray parameter isn't transformed
+// Scales may not work because ray parameter isn't transformed --
+// the direction vector scale is adjusted instead.
 // Why are all the virtual functions in this file?  We should make it's
 //  very own .cc file
-// Any nested material that might need the scratchpad will be quite broken
-// Faster by calling o->obj->intersect
-// Do they cast correct shadows?
 
 namespace rtrt {
 

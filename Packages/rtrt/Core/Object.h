@@ -5,17 +5,20 @@
 
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Color.h>
+#include <Core/Geometry/Transform.h>
 #include <iostream>
 
 namespace SCIRun {
   class Point;
   class Vector;
+  class Transform;
 }
 
 namespace rtrt {
 
 using SCIRun::Vector;
 using SCIRun::Point;
+using SCIRun::Transform;
 
 struct DepthStats;
 
@@ -65,7 +68,7 @@ public:
     virtual void compute_bounds(BBox& bbox, double offset)=0;
     virtual void collect_prims(Array1<Object*>& prims);
     virtual void print(ostream& out);
-
+    virtual void transform(Transform&) {}
     //added for Cutting Planes, so far only HVolumeBrick returns true and the value at
     //an interior point.
     virtual bool interior_value( double&, const Ray &, const double ) { return false; }; 

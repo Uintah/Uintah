@@ -114,3 +114,11 @@ void Group::prime(int n)
     objs.resize(n);
     objs.resize(nobjs);
 }
+
+void Group::transform(Transform& T)
+{
+  for (int i=0;i<objs.size();i++) {
+    objs[i]->transform(T);
+  }
+
+}

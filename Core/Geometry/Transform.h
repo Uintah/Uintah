@@ -82,20 +82,20 @@ public:
   void post_translate(const Vector&);
 
   Point unproject(const Point& p);
-  void unproject(const Point& p, Point& res) const;
-  void unproject_inplace(Point& p) const;
+  void unproject(const Point& p, Point& res);
+  void unproject_inplace(Point& p);
   Vector unproject(const Vector& p);
-  void unproject(const Vector& v, Vector& res) const;
-  void unproject_inplace(Vector& v) const;
+  void unproject(const Vector& v, Vector& res);
+  void unproject_inplace(Vector& v);
   Point project(const Point& p) const;
   void project(const Point& p, Point& res) const;
   void project_inplace(Point& p) const;
   Vector project(const Vector& p) const;
   void project(const Vector& p, Vector& res) const;
   void project_inplace(Vector& p) const;
-  Vector project_normal(const Vector&) const;
-  void project_normal(const Vector&, Vector& res) const;
-  void project_normal_inplace(Vector&) const;
+  Vector project_normal(const Vector&);
+  void project_normal(const Vector&, Vector& res);
+  void project_normal_inplace(Vector&);
   void get(double*) const;
   void get_trans(double*) const;
   void set(double*);

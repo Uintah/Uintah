@@ -6,6 +6,7 @@
 #include <Packages/rtrt/Core/Object.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Array1.h>
+#include <Core/Geometry/Transform.h>
 
 namespace rtrt {
 
@@ -37,6 +38,7 @@ public:
     virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
     virtual void compute_bounds(BBox&, double offset);
     virtual void collect_prims(Array1<Object*>& prims);
+    void transform(Transform &);
 };
 
 } // end namespace rtrt

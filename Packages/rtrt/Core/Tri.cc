@@ -64,7 +64,8 @@ Tri::Tri(Material* matl, const Point& p1, const Point& p2,
 
 Tri::Tri(Material* matl, const Point& p1, const Point& p2,
 	 const Point& p3,
-	 const Vector& _vn1, const Vector& _vn2, const Vector& _vn3)
+	 const Vector& _vn1, const Vector& _vn2, const Vector& _vn3,
+	 bool check_badness)
   : Object(matl), p1(p1), p2(p2), p3(p3)
 {
     Vector v1(p2-p1);
@@ -72,7 +73,7 @@ Tri::Tri(Material* matl, const Point& p1, const Point& p2,
     n=Cross(v1, v2);
 #if 1
     double l = n.length2();
-    if (l > 1.e-16) {
+    if ((!check_badness && l > 0) || l > 1.e-16) {
       bad = false;
       n *= 1/sqrt(l);
     } else {
