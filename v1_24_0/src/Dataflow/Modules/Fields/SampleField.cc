@@ -596,16 +596,7 @@ SampleField::execute()
 {
   ogport_ = (GeometryOPort *)get_oport("Sampling Widget");
 
-  if (!ogport_) {
-    error("Unable to initialize oport 'Sampling Widget'.");
-    return;
-  }
-
   FieldIPort *ifport = (FieldIPort *)get_iport("Field to Sample");
-  if (!ifport) {
-    error("Unable to initialize iport 'Field to Sample'.");
-    return;
-  }
 
   FieldHandle fHandle;
   // The field input is required.
@@ -694,11 +685,6 @@ SampleField::execute()
 
   if( fHandle_.get_rep() ) {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Samples");
-    if (!ofield_port) {
-      error("Unable to initialize oport 'Samples'.");
-      return;
-    }
-
     ofield_port->send(fHandle_);
   }
 }

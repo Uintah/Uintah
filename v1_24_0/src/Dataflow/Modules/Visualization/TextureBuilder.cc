@@ -125,12 +125,6 @@ TextureBuilder::execute()
   FieldIPort* igfield = (FieldIPort*)get_iport("Gradient Field");
   TextureOPort* otexture = (TextureOPort *)get_oport("Texture");
 
-  if (!ivfield)
-  {
-    error("Unable to initialize input ports.");
-    return;
-  }
-
   FieldHandle vfield;
   ivfield->get(vfield);
   if (!vfield.get_rep())

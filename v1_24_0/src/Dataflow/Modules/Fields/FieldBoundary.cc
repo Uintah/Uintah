@@ -93,20 +93,8 @@ FieldBoundary::execute()
   infield_ = (FieldIPort *)get_iport("Field");
   osurf_ = (FieldOPort *)get_oport("BoundaryField");
   ointerp_ = (MatrixOPort *)get_oport("Mapping");
-  FieldHandle input;
-  if (!infield_) {
-    error("Unable to initialize iport 'Field'.");
-    return;
-  }
-  if (!osurf_) {
-    error("Unable to initialize oport 'BoundaryField'.");
-    return;
-  }
-  if(!ointerp_) {
-    error("Unable to initialize oport 'Mapping'.");
-    return;
-  }
 
+  FieldHandle input;
   if (!(infield_->get(input) && input.get_rep()))
   {
     error("No input field data.");

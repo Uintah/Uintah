@@ -180,10 +180,6 @@ void GenStandardColorMaps::execute()
    if ( genMap(cmap, tclRes, resolution.get(), gamma.get(), faux.get()) ) 
    {
      ColorMapOPort *outport = (ColorMapOPort *)get_oport("ColorMap");
-     if (!outport) {
-       error("Unable to initialize oport 'ColorMap'.");
-       return;
-     }
      outport->send(cmap);
    }
 } 

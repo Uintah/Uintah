@@ -79,13 +79,6 @@ Gradient::execute()
   FieldIPort* ifp = (FieldIPort *)get_iport("Input Field");
 
   FieldHandle fieldin;
-
-  if (!ifp)
-  {
-    error( "Unable to initialize iport 'Input Field'.");
-    return;
-  }
-
   if (!(ifp->get(fieldin) && fieldin.get_rep()))
   {
     error( "No handle or representation in input field." );
@@ -125,18 +118,10 @@ Gradient::execute()
     fieldout = algo->execute(fieldin);
   }
 
-  // Get a handle to the output field port.
+  // Send the data downstream
   if ( fieldout.get_rep() )
   {
     FieldOPort* ofp = (FieldOPort *) get_oport("Output Gradient");
-
-    if (!ofp)
-    {
-      error("Unable to initialize oport 'Output Gradient'.");
-      return;
-    }
-
-    // Send the data downstream
     ofp->send(fieldout);
   }
 }

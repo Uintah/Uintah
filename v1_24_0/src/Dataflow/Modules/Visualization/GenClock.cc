@@ -134,18 +134,8 @@ void GenClock::execute(){
   // Get a handle to the output geom port.
   GeometryOPort *ogeom_port = (GeometryOPort *) get_oport("Clock");
   
-  if (!ogeom_port) {
-    error("Unable to initialize oport 'Clock'.");
-    return;
-  }
-  
   // Get the time via a matrix
   MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Time Matrix");
-  
-  if (!imatrix_port) {
-    error("Unable to initialize iport 'Time Matrix'.");
-    return;
-  }
   
   MatrixHandle mHandle;
   if (imatrix_port->get(mHandle) && mHandle.get_rep()) {
@@ -379,11 +369,6 @@ GenClock::tcl_command(GuiArgs& args, void* userdata) {
     /*
     // Get a handle to the output geom port.
     GeometryOPort *ogeom_port = (GeometryOPort *) get_oport("Clock");
-    
-    if (!ogeom_port) {
-      error("Unable to initialize oport 'Clock'.");
-      return;
-    }
     
     color_r_.reset();
     color_g_.reset();

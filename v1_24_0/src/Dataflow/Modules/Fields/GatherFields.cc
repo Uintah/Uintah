@@ -101,12 +101,7 @@ GatherFields::execute()
     while (pi != range.second)
     {
       FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
-      if (!ifield)
-      {
-	error("Unable to initialize iport '" + to_string(pi->second) + "'.");
-	return;
-      }
-      
+
       // Increment here!  We do this because last one is always
       // empty so we can test for it before issuing empty warning.
       ++pi;
@@ -245,19 +240,10 @@ GatherFields::execute()
     }
   }
 
-  // Get a handle to the output field port.
+  // Send the data downstream
   if( fHandle_.get_rep() )
   {
-    FieldOPort *ofield_port = 
-      (FieldOPort *) get_oport("Output Field");
-
-    if (!ofield_port)
-    {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
+    FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
     ofield_port->send( fHandle_ );
   }    
 }

@@ -81,19 +81,6 @@ void LinAlgBinary::execute() {
   imatA_ = (MatrixIPort *)get_iport("A");
   imatB_ = (MatrixIPort *)get_iport("B");
   omat_ = (MatrixOPort *)get_oport("Output");
-
-  if (!imatA_) {
-    error("Unable to initialize iport 'A'.");
-    return;
-  }
-  if (!imatB_) {
-    error("Unable to initialize iport 'B'.");
-    return;
-  }
-  if (!omat_) {
-    error("Unable to initialize oport 'Output'.");
-    return;
-  }
   
   update_state(NeedData);
   MatrixHandle aH, bH;

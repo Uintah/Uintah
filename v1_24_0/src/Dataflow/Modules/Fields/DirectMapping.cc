@@ -108,12 +108,8 @@ DirectMapping::execute()
 {
   update_state(NeedData);
 
-  FieldIPort * sfield_port = (FieldIPort *)get_iport("Source");
+  FieldIPort * sfield_port = (FieldIPort *)get_iport("Sourcefoo");
   FieldHandle sfHandle;
-  if(!sfield_port) {
-    error("Unable to initialize iport 'Source'.");
-    return;
-  }
   if (!(sfield_port->get(sfHandle) && sfHandle.get_rep())) {
     error( "No source field handle or representation" );
     return;
@@ -125,11 +121,6 @@ DirectMapping::execute()
 
   FieldIPort *dfield_port = (FieldIPort *)get_iport("Destination");
   FieldHandle dfHandle;
-
-  if (!dfield_port) {
-    error("Unable to initialize iport 'Destination'.");
-    return;
-  }
   if (!(dfield_port->get(dfHandle) && dfHandle.get_rep())) {
     error( "No destination field handle or representation" );
     return;
@@ -199,17 +190,10 @@ DirectMapping::execute()
 			     exhaustive_search_max_dist_, np_);
   }
 
-  // Get a handle to the output field port.
-  if( fHandle_.get_rep() ) {
-    FieldOPort *ofield_port = 
-      (FieldOPort *) get_oport("Remapped Destination");
-
-    if (!ofield_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
+  // Send the data downstream
+  if( fHandle_.get_rep() )
+  {
+    FieldOPort *ofield_port = (FieldOPort *) get_oport("Remapped Destination");
     ofield_port->send( fHandle_ );
   }
 }

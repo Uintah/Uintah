@@ -154,19 +154,7 @@ VolumeVisualizer::execute()
   icmap2 = (ColorMap2IPort*)get_iport("ColorMap2");
   ogeom = (GeometryOPort*)get_oport("Geometry");
   ocmap = (ColorMapOPort*)get_oport("ColorMap");
-  if (!intexture) {
-    error("Unable to initialize iport 'GL Texture'.");
-    return;
-  }
-  if (!icmap1 && !icmap2) {
-    error("Unable to initialize iport 'ColorMap' or 'ColorMap2'.");
-    return;
-  }
-  if (!ogeom) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
-  
+
   if (!intexture->get(tex)) {
     warning("No texture, nothing done.");
     return;
@@ -332,17 +320,13 @@ VolumeVisualizer::execute()
   
   ogeom->flushViews();				  
 
-  if (!ocmap) {
-    error("Unable to initialize oport 'Color Map'.");
-    return;
-  } else {
-    if(c1) {
-      ColorMapHandle outcmap;
-      outcmap = new ColorMap(*cmap1.get_rep()); 
-      outcmap->Scale(tex->vmin(), tex->vmax());
-      ocmap->send(outcmap);
-    }
-  }    
+  if(c1)
+  {
+    ColorMapHandle outcmap;
+    outcmap = new ColorMap(*cmap1.get_rep()); 
+    outcmap->Scale(tex->vmin(), tex->vmax());
+    ocmap->send(outcmap);
+  }
 }
 
 } // End namespace SCIRun

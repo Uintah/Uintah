@@ -129,12 +129,6 @@ void FieldSlicer::execute(){
   // Get a handle to the input field port.
   FieldIPort* ifield_port = (FieldIPort *) get_iport("Input Field");
 
-  if (!ifield_port)
-  {
-    error( "Unable to initialize "+name+"'s iport" );
-    return;
-  }
-
   // The field input is required.
   if (!ifield_port->get(fHandle) || !(fHandle.get_rep()) ||
       !(fHandle->mesh().get_rep()))
@@ -260,17 +254,10 @@ void FieldSlicer::execute(){
     workalgo->execute(fHandle, fHandle_, index, axis_);
   }
 
-  // Get a handle to the output field port.
-  if( fHandle_.get_rep() ) {
-    FieldOPort *ofield_port = 
-      (FieldOPort *) get_oport("Output Field");
-
-    if (!ofield_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
+  // Send the data downstream
+  if( fHandle_.get_rep() )
+  {
+    FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
     ofield_port->send( fHandle_ );
   }
 }

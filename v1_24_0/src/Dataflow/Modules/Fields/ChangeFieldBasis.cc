@@ -108,10 +108,6 @@ void
 ChangeFieldBasis::execute()
 {
   FieldIPort *iport = (FieldIPort*)get_iport("Input"); 
-  if (!iport) {
-    error("Unable to initialize iport 'Input'.");
-    return;
-  }
   
   // The input port (with data) is required.
   FieldHandle fh;
@@ -130,17 +126,9 @@ ChangeFieldBasis::execute()
 
   // The output port is required.
   FieldOPort *ofport = (FieldOPort*)get_oport("Output");
-  if (!ofport) {
-    error("Unable to initialize oport 'Output'.");
-    return;
-  }
 
   // The output port is required.
   MatrixOPort *omport = (MatrixOPort*)get_oport("Mapping");
-  if (!omport) {
-    error("Unable to initialize oport 'Mapping'.");
-    return;
-  }
 
   int basis_order = fh->basis_order();
   const string &bstr = outputdataat_.get();

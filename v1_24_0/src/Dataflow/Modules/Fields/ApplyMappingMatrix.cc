@@ -86,10 +86,6 @@ ApplyMappingMatrix::execute()
   // Get source field.
   FieldIPort *sfp = (FieldIPort *)get_iport("Source");
   FieldHandle sfield;
-  if (!sfp) {
-    error("Unable to initialize iport 'Source'.");
-    return;
-  }
   if (!(sfp->get(sfield) && sfield.get_rep())) {
     error( "No source field handle or representation" );
     return;
@@ -98,10 +94,6 @@ ApplyMappingMatrix::execute()
   // Get destination field.
   FieldIPort *dfp = (FieldIPort *)get_iport("Destination");
   FieldHandle dfield;
-  if (!dfp) {
-    error("Unable to initialize iport 'Source'.");
-    return;
-  }
   if (!(dfp->get(dfield) && dfield.get_rep())) {
     error( "No destination field handle or representation" );
     return;
@@ -110,10 +102,6 @@ ApplyMappingMatrix::execute()
   // Get the mapping matrix.
   MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Mapping");
   MatrixHandle imatrix;
-  if (!imatrix_port) {
-    error("Unable to initialize iport 'Mapping'.");
-    return;
-  }
   if (!(imatrix_port->get(imatrix) && imatrix.get_rep())) {
     error( "No source matrix handle or representation" );
     return;
@@ -148,13 +136,9 @@ ApplyMappingMatrix::execute()
       fHandle_->copy_properties(sfield.get_rep());
   }
 
-  if (fHandle_.get_rep()) {
+  if (fHandle_.get_rep())
+  {
     FieldOPort *ofp = (FieldOPort *)get_oport("Output");
-    if (!ofp) {
-      error("Unable to initialize oport 'Output'.");
-      return;
-    }
-
     ofp->send(fHandle_);
   }
 }
