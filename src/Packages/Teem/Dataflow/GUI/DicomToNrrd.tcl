@@ -478,11 +478,6 @@ itcl_class Teem_DataIO_DicomToNrrd {
 	return $f.list
     }  
 
-    method darby {} {
-	set w .ui[modname]
-	puts [$w.listing.childsite.seriesuid.list curselection]
-    }
-
     method sync_filenames {} {
  	set w .ui[modname]
 
