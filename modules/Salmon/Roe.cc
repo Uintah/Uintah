@@ -55,6 +55,7 @@
 #include <X11/keysym.h>
 
 extern MtXEventLoop* evl;
+GLwMDrawC* gl_current_window=0;
 
 #define PERF_FONTFACE XFont::Medium
 #define PERF_FONTSIZE 12
@@ -67,6 +68,9 @@ typedef void (Roe::*MouseHandler)(int action, int x, int y,
 #define SHIFT_MASK 1
 #define CONTROL_MASK 2
 #define META_MASK 4
+
+static const int pick_buffer_size = 512;
+static const double pick_window = 5.0;
 
 struct MouseHandlerData {
     MouseHandler handler;	
@@ -153,15 +157,15 @@ void Roe::RoeInit(Salmon* s) {
     dbcontext_st->set_knob(6, "Translate X",
 			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
 						     &Roe::DBtranslate, (void*)0));
-    dbcontext_st->set_scale(6, 100);	
+    dbcontext_st->set_scale(6, 5);	
     dbcontext_st->set_knob(4, "Translate Y",
 			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
 						     &Roe::DBtranslate, (void*)1));
-    dbcontext_st->set_scale(4, 100);
+    dbcontext_st->set_scale(4, 5);
     dbcontext_st->set_knob(2, "Translate Z",
 			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
 						     &Roe::DBtranslate, (void*)2));
-    dbcontext_st->set_scale(2, 100);
+    dbcontext_st->set_scale(2, 5);
     dbcontext_st->set_knob(7, "Rotate X",
 			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
 						     &Roe::DBrotate, (void*)0));
@@ -182,7 +186,8 @@ void Roe::RoeInit(Salmon* s) {
     buttons_exposed=0;
     drawinfo=new DrawInfo;
     drawinfo->drawtype=DrawInfo::Gouraud;
-
+    drawinfo->pick_mode=False;
+    drawinfo->edit_mode=False;
     firstGen=False;
     dialog=new DialogShellC;
     dialog->SetAllowShellResize(true);
@@ -470,6 +475,7 @@ void Roe::RoeInit(Salmon* s) {
 }
 
 void Roe::orthoCB(CallbackData*, void*) {
+    evl->lock();
     make_current();
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -486,15 +492,18 @@ void Roe::orthoCB(CallbackData*, void*) {
 	glScaled(scl,scl,scl);
     }
     glMatrixMode(GL_MODELVIEW);
+    evl->unlock();
     need_redraw=1;
 }
 
 void Roe::perspCB(CallbackData*, void*) {
+    evl->lock();
     make_current();
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(90, 1.33, 1, 100);
     glMatrixMode(GL_MODELVIEW);
+    evl->unlock();
     need_redraw=1;
 }
 
@@ -511,7 +520,6 @@ void Roe::initCB(CallbackData*, void*) {
     // Create a GLX context
     evl->lock();
     cx = glXCreateContext(XtDisplay(*graphics), vi, 0, GL_TRUE);
-
     make_current();
 
     // set the view
@@ -569,9 +577,12 @@ void Roe::initCB(CallbackData*, void*) {
 }
 
 void Roe::make_current() {
-    evl->lock();
-    GLwDrawingAreaMakeCurrent(*graphics, cx);
-    evl->unlock();
+    if(gl_current_window != graphics){
+	evl->lock();
+	GLwDrawingAreaMakeCurrent(*graphics, cx);
+	gl_current_window=graphics;
+	evl->unlock();
+    }
 }
 
 void Roe::itemAdded(GeomObj *g, char *name) {
@@ -628,8 +639,10 @@ void Roe::redrawAll()
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
 	GLfloat light_position1[] = { -50,-100,100,1};
 	glLightfv(GL_LIGHT1, GL_POSITION, light_position1);
-	glClearColor(0,0,0,1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	if (!drawinfo->pick_mode && !drawinfo->edit_mode) {
+	    glClearColor(0,0,0,1);
+	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
 	drawinfo->push_matl(manager->default_matl);
 	HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
 	for (iter.first(); iter.ok(); ++iter) {
@@ -639,12 +652,19 @@ void Roe::redrawAll()
 		GeomObj *geom=serIter.get_data();
 		for (int i=0; i<geomItemA.size(); i++)
 		    if (geomItemA[i]->geom == geom)
-			if (geomItemA[i]->vis)
+			// we draw it if we're editing, if it's pickable,
+			//  or if we're not in pick-mode
+			if (geomItemA[i]->vis && 
+			    (drawinfo->edit_mode || !drawinfo->pick_mode || 
+			     geom->pick))
+			    if (drawinfo->edit_mode || drawinfo->pick_mode)
+				glLoadName((GLuint)geom);
 			    geom->draw(drawinfo);
-	    }	
+	    }
 	}
 	drawinfo->pop_matl();
-	GLwDrawingAreaSwapBuffers(*graphics);
+	if (!drawinfo->pick_mode && !drawinfo->edit_mode)
+	    GLwDrawingAreaSwapBuffers(*graphics);
 	timer.stop();
 	perf_string1=to_string(drawinfo->polycount)+" polygons in "
 	    +to_string(timer.time())+" seconds";
@@ -809,8 +829,10 @@ void Roe::wireCB(CallbackData*, void*)
 {
     drawinfo->drawtype=DrawInfo::WireFrame;
     drawinfo->current_matl=0;
+    evl->lock();
     make_current();
     glDisable(GL_LIGHTING);
+    evl->unlock();
     need_redraw=1;
 }
 
@@ -818,8 +840,10 @@ void Roe::flatCB(CallbackData*, void*)
 {
     drawinfo->drawtype=DrawInfo::Flat;
     drawinfo->current_matl=0;
+    evl->lock();
     make_current();
     glDisable(GL_LIGHTING);
+    evl->unlock();
     need_redraw=1;
 }
 
@@ -827,8 +851,10 @@ void Roe::gouraudCB(CallbackData*, void*)
 {
     drawinfo->drawtype=DrawInfo::Gouraud;
     drawinfo->current_matl=0;
+    evl->lock();
     make_current();
     glEnable(GL_LIGHTING);
+    evl->unlock();
     need_redraw=1;
 }
 
@@ -836,8 +862,10 @@ void Roe::phongCB(CallbackData*, void*)
 {
     drawinfo->drawtype=DrawInfo::Phong;
     drawinfo->current_matl=0;
+    evl->lock();
     make_current();
     glEnable(GL_LIGHTING);
+    evl->unlock();
     need_redraw=1;
 }
 
@@ -847,52 +875,62 @@ void Roe::ambientCB(CallbackData*, void*)
 }
 
 void Roe::fogCB(CallbackData*, void*) {
+    evl->lock();
     make_current();
     if (!glIsEnabled(GL_FOG)) {
 	glEnable(GL_FOG);
     } else {
 	glDisable(GL_FOG);
     }
+    evl->unlock();
     need_redraw=1;
 }
 
 void Roe::point1CB(CallbackData*, void*)
 {
+    evl->lock();
     make_current();
     if (!glIsEnabled(GL_LIGHT0)) {
 	glEnable(GL_LIGHT0);
     } else {
 	glDisable(GL_LIGHT0);
     }
+    evl->unlock();
     need_redraw=1;
 }
 
 void Roe::point2CB(CallbackData*, void*)
 {
+    evl->lock();
     make_current();
     if (!glIsEnabled(GL_LIGHT1)) {
 	glEnable(GL_LIGHT1);
     } else {
 	glDisable(GL_LIGHT1);
     }
+    evl->unlock();
     need_redraw=1;
 }
 
 void Roe::head1CB(CallbackData*, void*)
 {
+    evl->lock();
     make_current();
     if (!glIsEnabled(GL_LIGHT2)) {
 	glEnable(GL_LIGHT2);
     } else {
 	glDisable(GL_LIGHT2);
     }
+    evl->unlock();
     need_redraw=1;
 }
 
 void Roe::goHomeCB(CallbackData*, void*)
 {
+    evl->lock();
     make_current();
     glLoadMatrixd(inheritMat);
+    evl->unlock();
     need_redraw=1;
 }
 
@@ -926,8 +964,8 @@ void Roe::autoViewCB(CallbackData*, void*)
     double ly=lookat.y();
     double ywidth=ly-bbox.min().y();
     double dist=Max(xwidth, ywidth);
-    make_current();
     evl->lock();
+    make_current();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     double lz=lookat.z();
@@ -950,8 +988,10 @@ void Roe::autoViewCB(CallbackData*, void*)
 
 void Roe::setHomeCB(CallbackData*, void*)
 {
+    evl->lock();
     make_current();
     glGetDoublev(GL_MODELVIEW_MATRIX, inheritMat);
+    evl->unlock();
 }
 
 Roe::Roe(const Roe&)
@@ -961,6 +1001,7 @@ Roe::Roe(const Roe&)
 
 void Roe::rotate(double angle, Vector v, Point c)
 {
+    evl->lock();
     make_current();
     double temp[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, temp);
@@ -972,17 +1013,20 @@ void Roe::rotate(double angle, Vector v, Point c)
     glMultMatrixd(temp);
     for (int i=0; i<kids.size(); i++)
 	kids[i]->rotate(angle, v, c);
+    evl->unlock();
     need_redraw=1;
 }
 
 void Roe::rotate_obj(double angle, const Vector& v, const Point& c)
 {
+    evl->lock();
     make_current();
     glTranslated(c.x(), c.y(), c.z());
     glRotated(angle, v.x(), v.y(), v.z());
     glTranslated(-c.x(), -c.y(), -c.z());
     for(int i=0; i<kids.size(); i++)
 	kids[i]->rotate(angle, v, c);
+    evl->unlock();
     need_redraw=1;
 }
 
@@ -993,13 +1037,13 @@ static void mmult(double *m, double *p1, double *p2) {
 	    p2[i]+=m[j*4+i]*p1[j];
 	}
     }
-    cerr << p2[3] << "\n";
     for (i=0; i<3; i++)
 	p2[i]/=p2[3];
 }
 
 void Roe::translate(Vector v)
 {
+    evl->lock();
     make_current();
     double temp[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, temp);
@@ -1009,11 +1053,13 @@ void Roe::translate(Vector v)
     glMultMatrixd(temp);
     for (int i=0; i<kids.size(); i++)
 	kids[i]->translate(v);
+    evl->unlock();
     need_redraw=1;
 }
 
 void Roe::scale(Vector v, Point c)
 {
+    evl->lock();
     make_current();
     glTranslated(c.x(), c.y(), c.z());
     glScaled(v.x(), v.y(), v.z());
@@ -1021,6 +1067,7 @@ void Roe::scale(Vector v, Point c)
     mtnScl*=v.x();
     for (int i=0; i<kids.size(); i++)
 	kids[i]->scale(v, c);
+    evl->unlock();
     need_redraw=1;
 }
 
@@ -1208,6 +1255,7 @@ void Roe::mouse_translate(int action, int x, int y, int, int)
 	    total_y += ymtn;
 	    if (Abs(total_x) < .001) total_x = 0;
 	    if (Abs(total_y) < .001) total_y = 0;
+	    evl->lock();
 	    make_current();
 	    double temp[16];
 	    glGetDoublev(GL_MODELVIEW_MATRIX, temp);
@@ -1221,6 +1269,7 @@ void Roe::mouse_translate(int action, int x, int y, int, int)
 	    need_redraw=1;
 	    update_mode_string(clString("translate: ")+to_string(total_x)
 			       +", "+to_string(total_y));
+	    evl->unlock();
 	}
 	break;
     case BUTTON_UP:
@@ -1251,6 +1300,7 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
 	    ymtn/=30;
 	    last_x = x;
 	    last_y = y;
+	    evl->lock();
 	    make_current();
 	    if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
 	    if (scl<0) scl=1/(1-scl); else scl+=1;
@@ -1266,6 +1316,7 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
 	    }
 	    need_redraw=1;
 	    update_mode_string(clString("scale: ")+to_string(total_x*100)+"%");
+	    evl->unlock();
 	}
 	break;
     case BUTTON_UP:
@@ -1292,6 +1343,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 	    double ymtn=last_y-y;
 	    last_x = x;
 	    last_y = y;
+	    evl->lock();
 	    make_current();
 	    Point cntr(bb.center());
 	    double mm[16];
@@ -1308,14 +1360,14 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 	    glGetDoublev(GL_PROJECTION_MATRIX, pm);
 	    glPopMatrix();
 	    glGetIntegerv(GL_VIEWPORT, vp);
-	    // unproject the center of the viewport, w/ z-value=.94
+	    // unproject the center of the viewport, w/ z-value=.5
 	    // to find the point we want to rotate around.
-	    if (gluUnProject(vp[0]+vp[2]/2, vp[1]+vp[3]/2, .94, mm, pm, vp, 
+	    if (gluUnProject(vp[0]+vp[2]/2, vp[1]+vp[3]/2, .1, mm, pm, vp, 
 			 &cx, &cy, &cz) == GL_FALSE) 
 		cerr << "Error Projecting!\n";
 	    centr[0]=cx; centr[1]=cy; centr[2]=cz; centr[3]=1;
 	    // multiply that point by our current modelview matrix to get
-	    // the z-translate necessaary to put that point at the origin
+	    // the z-translate necessary to put that point at the origin
 	    mmult(mm, centr, trans);
 	    glMatrixMode(GL_MODELVIEW);
 	    glPopMatrix();
@@ -1332,6 +1384,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 	    }
 	    need_redraw=1;
 	    update_mode_string("rotate:");
+	    evl->unlock();
 	}
 	break;
     case BUTTON_UP:
@@ -1340,9 +1393,142 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
     }
 }
 
-void Roe::mouse_pick(int, int, int, int, int)
+void Roe::mouse_pick(int action, int x, int y, int, int)
 {
-    NOT_FINISHED("mouse_pick");
+    switch(action){
+    case BUTTON_DOWN:
+	{
+	    total_x=0;
+	    total_y=0;
+	    total_z=0;
+	    last_x=x;
+	    last_y=y;
+	    evl->lock();
+	    make_current();
+	    GLint viewport[4];
+	    glGetIntegerv(GL_VIEWPORT, viewport);
+	    GLuint pick_buffer[pick_buffer_size];
+	    glSelectBuffer(pick_buffer_size, pick_buffer);
+	    glRenderMode(GL_SELECT);
+	    glInitNames();
+	    glPushName(0);
+
+	    // load the old perspetive matrix, so we can use it
+	    double pm[16];
+	    glGetDoublev(GL_PROJECTION_MATRIX, pm);
+	    glMatrixMode(GL_PROJECTION);
+	    glPushMatrix();
+	    glLoadIdentity();
+	    gluPickMatrix(x,viewport[3]-y,pick_window,pick_window,viewport);
+	    glMultMatrixd(pm);
+
+	    // Redraw the scene
+	    DrawInfo::DrawType olddrawtype(drawinfo->drawtype);
+	    drawinfo->drawtype=DrawInfo::Flat;
+	    drawinfo->pick_mode=1;
+	    redrawAll();
+	    drawinfo->drawtype=olddrawtype;
+	    drawinfo->pick_mode=0;
+
+	    glPopMatrix();
+	    glMatrixMode(GL_MODELVIEW);
+	    glFlush();
+	    int hits=glRenderMode(GL_RENDER);
+	    GLuint min_z;
+	    GLuint pick_index=0;
+	    if(hits >= 1){
+		min_z=pick_buffer[1];
+		pick_index=pick_buffer[3];
+		for (int h=1; h<hits; h++) {
+		    ASSERT(pick_buffer[h*4]==1);
+		    if (pick_buffer[h*4+1] < min_z) {
+			min_z=pick_buffer[h*4+1];
+			pick_index=pick_buffer[h*4+3];
+		    }
+		}
+	    }
+	    geomSelected=(GeomObj *)pick_index;
+	    if (geomSelected) {
+		for (int i=0; i<geomItemA.size(); i++) {
+		    if (geomItemA[i]->geom == geomSelected)
+			update_mode_string(clString("pick: ")+
+					   geomItemA[i]->name);
+		}
+	    } else {
+		update_mode_string("pick: none");
+	    }
+	    evl->unlock();
+	}
+	break;
+    case BUTTON_MOTION:
+	{
+	    if (!geomSelected) break;
+	    double xmtn=last_x-x;
+	    double ymtn=last_y-y;
+	    xmtn/=30;
+	    ymtn/=30;
+	    evl->lock();
+	    make_current();
+// project the center of the item grabbed onto the screen -- take the z
+// component and unprojec the last and current x, y locations to get a 
+// vector in object space.
+	    BBox itemBB;
+	    geomSelected->get_bounds(itemBB);
+	    double midz=itemBB.center().z();
+	    double mm[16], pm[16];
+	    int vp[4];
+	    glGetDoublev(GL_MODELVIEW_MATRIX, mm);
+	    glGetDoublev(GL_PROJECTION_MATRIX, pm);
+	    glGetIntegerv(GL_VIEWPORT, vp);
+	    double x0, x1, y0, y1, z0, z1;
+	    // unproject the center of the viewport, w/ z-value=.94
+	    // to find the point we want to rotate around.
+	    if (gluUnProject(last_x, vp[3]-last_y, midz, mm, pm, vp, 
+			 &x0, &y0, &z0) == GL_FALSE) 
+		cerr << "Error Projecting!\n";
+	    if (gluUnProject(x, vp[3]-y, midz, mm, pm, vp, 
+			 &x1, &y1, &z1) == GL_FALSE) 
+		cerr << "Error Projecting!\n";
+	    Vector dir(Point(x1, y1, z1)-Point(x0,y0,z0));
+	    double dist=dir.length();
+	    dir.normalize();
+	    cerr << "Direction: " << dir.string() << "\n";
+	    double dot=0;
+	    int prin_dir=-1;
+	    double currdot;
+	    for (int i=0; i<geomSelected->pick->nprincipal(); i++) {
+		if ((currdot=Dot(dir, geomSelected->pick->principal(i))) >dot){
+		    dot=currdot;
+		    prin_dir=i;
+		}
+	    }
+	    Vector mtn(geomSelected->pick->principal(prin_dir)*dist);
+	    cerr << "Pick motion..." <<
+		mtn.string() << "\n";
+	    total_x+=mtn.x();
+	    total_y+=mtn.y();
+	    total_z+=mtn.z();
+	    if (Abs(total_x) < .0001) total_x=0;
+	    if (Abs(total_y) < .0001) total_y=0;
+	    if (Abs(total_z) < .0001) total_z=0;
+	    need_redraw=1;
+	    for (i=0; i<geomItemA.size(); i++) {
+		if (geomItemA[i]->geom == geomSelected)
+		    update_mode_string(clString("pick: ")+
+				       geomItemA[i]->name+
+				       " "+to_string(total_x)+
+				       ", "+to_string(total_y)+
+				       ", "+to_string(total_z));
+	    }
+	    evl->unlock();
+	    last_x = x;
+	    last_y = y;
+	}
+	break;
+    case BUTTON_UP:
+	update_mode_string("");
+	break;
+    }
 }
 
 void Roe::update_mode_string(const clString& ms)
@@ -1430,6 +1616,7 @@ void Roe::DBscale(DBContext*, int, double value, double delta, void*)
     Point p(0,0,0);
     if(bb.valid())
 	p=bb.center();
+    mtnScl*=f;
     scale(Vector(f, f, f), p);
     need_redraw=1;
 }

@@ -145,6 +145,7 @@ class Roe {
     int last_y;
     double total_x;
     double total_y;
+    double total_z;
     int haveInheritMat;
     double mtnScl;
     double inheritMat[16];
@@ -161,6 +162,7 @@ class Roe {
     XFont* modefont;
     clString mode_string;
     void update_mode_string(const clString&);
+    GeomObj *geomSelected;
 
     void redraw_perf(CallbackData*, void*);
     clString perf_string1;
