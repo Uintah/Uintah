@@ -123,7 +123,8 @@ public:
   unsigned get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
   unsigned get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
-  void get_neighbor(Face::index_type &neighbor, Edge::index_type idx) const;
+  bool get_neighbor(Face::index_type &neighbor, Face::index_type face,
+		    Edge::index_type edge) const;
   void get_neighbors(Node::array_type &array, Node::index_type idx) const;
 
   //! Get the size of an elemnt (length, area, volume)

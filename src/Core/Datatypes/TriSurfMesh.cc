@@ -256,6 +256,7 @@ TriSurfMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
 }
 
 
+#if 0
 void
 TriSurfMesh::get_neighbor(Face::index_type &neighbor,
 			  Edge::index_type idx) const
@@ -263,6 +264,27 @@ TriSurfMesh::get_neighbor(Face::index_type &neighbor,
   ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
 	    "Must call synchronize EDGE_NEIGHBORS_E on TriSurfMesh first");
   neighbor = edge_neighbors_[edges_[idx]];
+}
+#endif
+
+bool
+TriSurfMesh::get_neighbor(Face::index_type &neighbor,
+			  Face::index_type face,
+			  Edge::index_type edge) const
+{
+  ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
+	    "Must call synchronize EDGE_NEIGHBORS_E on TriSurfMesh first");
+  int n = edge_neighbors_[edges_[edge]];
+  if (n != -1 && (n % 3) == face)
+  {
+    n = edge_neighbors_[n];
+  }
+  if (n != -1)
+  {
+    neighbor = n % 3;
+    return true;
+  }
+  return false;
 }
 
 
@@ -690,78 +712,35 @@ TriSurfMesh::compute_edge_neighbors(double err)
   ASSERTMSG(synchronized_ & EDGES_E,
 	    "Must call synchronize EDGES_E on TriSurfMesh first");
 
-  // Collapse point set by err.
-  // TODO: average in stead of first found for new point?
-  vector<Point> points(points_);
-  vector<int> mapping(points_.size());
-  vector<Point>::size_type i;
-  points_.clear();
-  for (i = 0; i < points.size(); i++)
-  {
-    mapping[i] = add_find_point(points[i], err);
-  }
-
-  // Repair faces.
-  for (i=0; i < faces_.size(); i++)
-  {
-    faces_[i] = mapping[i];
-  }
-
-  // TODO: Remove all degenerate faces here.
-
-  // TODO: fix forward/backward facing problems.
-
-  // Find neighbors
-  vector<list<unsigned long> > edgemap(points_.size());
-  for (i=0; i< faces_.size(); i++)
-  {
-    edgemap[faces_[i]].push_back(i);
-  }
+  hash_map<pair<int, int>, int, edgehash, edgecompare> edge_map;
   
   edge_neighbors_.resize(faces_.size());
-
-  for (i=0; i<edgemap.size(); i++)
+  for (unsigned int j = 0; j < edge_neighbors_.size(); j++)
   {
-    list<unsigned long>::iterator li1 = edgemap[i].begin();
-
-    while (li1 != edgemap[i].end())
-    {
-      unsigned long e1 = *li1;
-      li1++;
-
-      list<unsigned long>::iterator li2 = li1;
-      while (li2 != edgemap[i].end())
-      {
-	unsigned long e2 = *li2;
-	li2++;
-	
-	if ( faces_[next(static_cast<int>(e1))] == faces_[prev(static_cast<int>(e2))])
-	{
-	  edge_neighbors_[e1] = static_cast<int>(e2);
-	  edge_neighbors_[e2] = static_cast<int>(e1);
-	}
-      }
-    }
+    edge_neighbors_[j] = -1;
   }
 
-  // Remove unused points.
-  // Reuse mapping array, edgemap array.
-  vector<Point> dups(points_);
-  points_.clear();
-
-  for (i=0; i<dups.size(); i++)
+  int i;
+  for (i=faces_.size()-1; i >= 0; i--)
   {
-    if(edgemap[i].begin() != edgemap[i].end())
+    const int a = i;
+    const int b = a - a % 3 + (a+1) % 3;
+
+    int n0 = faces_[a];
+    int n1 = faces_[b];
+    int tmp;
+    if (n0 > n1) { tmp = n0; n0 = n1; n1 = tmp; }
+
+    pair<int, int> nodes(n0, n1);
+    
+    hash_map<pair<int, int>, int, edgehash, edgecompare>::iterator maploc;
+    maploc = edge_map.find(nodes);
+    if (maploc != edge_map.end())
     {
-      points_.push_back(dups[i]);
-      mapping[i] = points_.size() - 1;
+      edge_neighbors_[(*maploc).second] = i;
+      edge_neighbors_[i] = (*maploc).second;
     }
-  }
-
-  // Repair faces.
-  for (i=0; i < faces_.size(); i++)
-  {
-    faces_[i] = mapping[i];
+    edge_map[nodes] = i;
   }
 
   synchronized_ |= EDGE_NEIGHBORS_E;
