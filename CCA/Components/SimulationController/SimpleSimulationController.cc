@@ -213,6 +213,23 @@ SimpleSimulationController::run()
       scheduler->setGeneration( output->getCurrentTimestep()+1);
 
       scheduler->get_dw(1)->setID( output->getCurrentTimestep() );
+      
+      if (timeinfo.override_restart_delt != 0) {
+        double newdelt = timeinfo.override_restart_delt;
+        if (d_myworld->myrank() == 0)
+          cout << "Overriding restart delt with " << newdelt << endl;
+        scheduler->get_dw(1)->override(delt_vartype(newdelt), 
+                                       sharedState->get_delt_label());
+        double delt_fine = newdelt;
+        for(int i=0;i<grid->numLevels();i++){
+          const Level* level = grid->getLevel(i).get_rep();
+          if(i != 0)
+            delt_fine /= level->timeRefinementRatio();
+          scheduler->get_dw(1)->override(delt_vartype(delt_fine), sharedState->get_delt_label(),
+                                         level);
+        }
+
+      }
       scheduler->get_dw(1)->finalize();
       sim->restartInitialize();
    } else {
