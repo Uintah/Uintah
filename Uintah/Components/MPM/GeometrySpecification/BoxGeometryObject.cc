@@ -10,7 +10,7 @@ using namespace Uintah::Components;
 
 BoxGeometryObject::BoxGeometryObject(ProblemSpecP& ps)
 {
-   Point min, max;
+  Point min, max;
   ps->require("min",min);
   ps->require("max",max);  
   d_box=Box(min,max);
@@ -37,6 +37,9 @@ Box BoxGeometryObject::getBoundingBox() const
 }
 
 // $Log$
+// Revision 1.4  2000/04/22 18:19:10  jas
+// Filled in comments.
+//
 // Revision 1.3  2000/04/20 18:56:20  sparker
 // Updates to MPM
 //

@@ -17,7 +17,7 @@ namespace Components {
 CLASS
    CylinderGeometryObject
 	
-   Short description...
+   Creates a generalized cylinder from the xml input file description.
 	
 GENERAL INFORMATION
 	
@@ -32,10 +32,19 @@ GENERAL INFORMATION
  
 	
 KEYWORDS
-   CylinderGeometryObject
+   CylinderGeometryObject BoundingBox inside
 	
 DESCRIPTION
-   Long description...
+   Creates a generalized cylinder from the xml input file description.
+   Requires three inputs: bottom point, top point and a radius.  
+   There are methods for checking if a point is inside the cylinder
+   and also for determining the bounding box for the cylinder.
+   The input form looks like this:
+       <cylinder>
+         <bottom>[0.,0.,0.]</bottom>
+	 <top>[0.,0.,0.]</top>
+	 <radius>2.0</radius>
+       </cylinder>
 	
 WARNING
 	
@@ -45,18 +54,20 @@ class CylinderGeometryObject : public GeometryObject {
 
  public:
   //////////
-  // Insert Documentation Here:
+  // Constructor that takes a ProblemSpecP argument.   It reads the xml 
+  // input specification and builds a generalized cylinder.
   CylinderGeometryObject(ProblemSpecP &);
+
   //////////
-  // Insert Documentation Here:
+  // Destructor
   virtual ~CylinderGeometryObject();
 
   //////////
-  // Insert Documentation Here:
+  // Determines whether a point is inside the cylinder.
   virtual bool inside(const Point &p) const;
 
   //////////
-  // Insert Documentation Here:
+  // Returns the bounding box surrounding the cylinder.
   virtual Box getBoundingBox() const;
  
  private:
@@ -74,6 +85,9 @@ class CylinderGeometryObject : public GeometryObject {
 #endif // __CYLINDER_GEOMTRY_OBJECT_H__
 
 // $Log$
+// Revision 1.7  2000/04/22 18:19:10  jas
+// Filled in comments.
+//
 // Revision 1.6  2000/04/22 16:51:04  jas
 // Put in a skeleton framework for documentation (coccoon comment form).
 // Comments still need to be filled in.

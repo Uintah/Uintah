@@ -16,7 +16,7 @@ namespace Components {
 CLASS
    BoxGeometryObject
 	
-   Short description...
+   Creates a box from the xml input file description.
 	
 GENERAL INFORMATION
 	
@@ -31,10 +31,20 @@ GENERAL INFORMATION
  
 	
 KEYWORDS
-   BoxGeometryObject
+   BoxGeometryObject BoundingBox inside
 	
 DESCRIPTION
-   Long description...
+   Creates a box from the xml input file description.
+   Requires two inputs: lower left point and upper right point.  
+   There are methods for checking if a point is inside the box
+   and also for determining the bounding box for the box (which
+   just returns the box itself).
+   The input form looks like this:
+       <box>
+         <min>[0.,0.,0.]</min>
+	 <max>[1.,1.,1.]</max>
+       </box>
+	
 	
 WARNING
 	
@@ -45,20 +55,22 @@ class BoxGeometryObject : public GeometryObject {
 
  public:
   //////////
-  // Insert Documentation Here:
+  // Constructor that takes a ProblemSpecP argument.   It reads the xml 
+  // input specification and builds a generalized box.
   BoxGeometryObject(ProblemSpecP&);
 
   //////////
-  // Insert Documentation Here:
+  // Destructor
   virtual ~BoxGeometryObject();
 
   //////////
-  // Insert Documentation Here:
+  // Determines whether a point is inside the box.
   virtual bool inside(const Point &p) const;
 
   //////////
-  // Insert Documentation Here:
+  //  Returns the bounding box surrounding the cylinder.
   virtual Box getBoundingBox() const;
+
  private:
   Box d_box;
 
@@ -70,6 +82,9 @@ class BoxGeometryObject : public GeometryObject {
 #endif // __BOX_GEOMTRY_OBJECT_H__
 
 // $Log$
+// Revision 1.5  2000/04/22 18:19:10  jas
+// Filled in comments.
+//
 // Revision 1.4  2000/04/22 16:55:11  jas
 // Added logging of changes.
 //
