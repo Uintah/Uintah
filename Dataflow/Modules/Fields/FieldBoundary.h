@@ -139,7 +139,7 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
 	    }
 	    else
 	    {
-	      tmesh->add_triangle(node_idx[0], node_idx[i-1], node_idx[i]);
+	      tmesh->add_triangle(node_idx[0], node_idx[i], node_idx[i-1]);
 	    }
 	  }
 	  ++niter;
