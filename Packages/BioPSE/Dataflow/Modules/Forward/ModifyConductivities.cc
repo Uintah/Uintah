@@ -271,10 +271,9 @@ ModifyConductivities::execute()
     //remark("Using identity conductivity tensors.");
     created_p = true;
     ScalarFieldInterface *sfi = field->query_scalar_interface(this);
-    double maxval;
+    double minval, maxval;
     if (sfi)
     {
-      double minval;
       sfi->compute_min_max(minval, maxval);
     }
     else
@@ -282,7 +281,7 @@ ModifyConductivities::execute()
       maxval = 1.0;
     }
 
-    if (maxval < 1.0 || maxval > 100)
+    if (minval < 0 || maxval > 100)
     {
       error("Invalid number of tensors to create, no property to manage.");
       return;
