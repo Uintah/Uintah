@@ -110,4 +110,9 @@ itcl_class TclStream {
 	} 
     }
 
+    method clearTextWidget {} {
+	# Clear the text widget and not the actual stream
+	$txtWidget delete 0.0 end
+    }
+
 }
