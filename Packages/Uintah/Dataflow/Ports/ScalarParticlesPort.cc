@@ -19,9 +19,9 @@ extern "C" {
 
 template<>
 string
-SimpleIPort<ScalarParticlesHandle>::port_type("ScalarParticles");
+SimpleIPort<ScalarParticlesHandle>::port_type_("ScalarParticles");
 
 template<>
 string
-SimpleIPort<ScalarParticlesHandle>::port_color("chartreuse");
+SimpleIPort<ScalarParticlesHandle>::port_color_("chartreuse");
 
