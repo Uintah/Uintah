@@ -44,9 +44,6 @@ protected:
   double spec_coeff, ambient, diffuse, specular;
   float delta_x2, delta_y2, delta_z2;
   
-  inline int clamp(const int min, const int val, const int max) {
-    return (val>min?(val<max?val:max):min);
-  }
   Color color(const Vector &N, const Vector &V, const Vector &L, 
 	      const Color &object_color, const Color &light_color) const;
 public:
