@@ -656,8 +656,12 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 		  var2->packsizeMPI(&sendsize, pc, 0, numP);
 		  //delete var2;
 		}
+	      } else {
+		int size;
+		MPI_Pack_size(1, MPI_INT, pc->getComm(), &size);
+		sendsize+=size;
 	      }
-	    }
+	    } 
 	    MPI_Send(&sendsize, 1, MPI_INT, sgargs.dest[i],
 		     sgargs.tags[i]|RECV_BUFFER_SIZE_TAG, pc->getComm());
 	    log.logSend(0, sizeof(int), "sg_buffersize");
@@ -675,7 +679,10 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 		  var2->packMPI(buf, sendsize, &position, pc, 0, numP);
 		  delete var2;
 		}
-	      }
+	      } else {
+		int numP = 0;
+		MPI_Pack(&numP, 1, MPI_INT, buf, sendsize, &position, pc->getComm());
+              }   
 	    }
 	    ASSERTEQ(position, sendsize);
 	    MPI_Send(buf, sendsize, MPI_PACKED, sgargs.dest[i], sgargs.tags[i],
@@ -776,7 +783,7 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
       vector<int> counts(neighbors.size());
       for(int i=0;i<neighbors.size();i++){
 	 if(sgargs.dest[i] != me){
-	    if(recvsize[i] && totalParticles){
+	   if(recvsize[i]){
 	       int n=-1234;
 	       MPI_Unpack(recvbuf[i], recvsize[i], &recvpos[i],
 			  &n, 1, MPI_INT, pc->getComm());
@@ -863,6 +870,12 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.19  2000/09/20 18:29:52  jas
+// Removed the && totalParticles condition in the gatherParticles.
+// Added packing info when 0 particles needed to be sent.
+// The packing and unpacking of data is now consistent for multiple
+// patches and materials.
+//
 // Revision 1.18  2000/09/20 16:00:28  sparker
 // Added external interface to LoadBalancer (for per-processor tasks)
 // Added message logging functionality. Put the tag <MessageLog/> in
