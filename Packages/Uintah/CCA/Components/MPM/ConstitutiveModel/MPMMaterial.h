@@ -116,6 +116,7 @@ WARNING
 			           CCVariable<Vector>& vCC,
 			           int numMatls,
 			           const Patch* patch);
+
  private:
 
    MPMLabel* lb;

@@ -18,6 +18,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/DebugStream.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
@@ -26,6 +27,8 @@
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
+
+static DebugStream debug("ShellMat", false);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -707,9 +710,9 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
 
       // Compute stress using a constitutive relation
       //Matrix3 sigTop(0.0), sigBot(0.0), sigCen(0.0);
-      //computeShellElasticStress(defGradTop_new, sigTop);
-      //computeShellElasticStress(defGradCen_new, sigCen);
-      //computeShellElasticStress(defGradBot_new, sigBot);
+      //computeShellElasticStress(defGradTop_new, sigTop, bulk, shear);
+      //computeShellElasticStress(defGradCen_new, sigCen, bulk, shear);
+      //computeShellElasticStress(defGradBot_new, sigBot, bulk, shear);
 
       // Rotate the deformation gradient so that the 33 direction
       // is along the direction of the normal
@@ -722,7 +725,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
       // Enforce the no normal stress condition (Sig33 = 0)
       // (we call this condition, roughly, plane stress)
       Matrix3 sigTop(0.0), sigBot(0.0), sigCen(0.0);
-      if (!computePlaneStressAndDefGrad(defGradTop_new, sigTop)) {
+      if (!computePlaneStressAndDefGrad(defGradTop_new, sigTop, bulk, shear)) {
         cerr << "----------------------------------- " << endl;
         cerr << "Particle = " << idx << endl << endl;
         cerr << "Velocity Gradient = " << endl;
@@ -753,14 +756,14 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
         cerr << "SigTop = " << sigTop << endl;
         exit(1);
       }
-      if (!computePlaneStressAndDefGrad(defGradCen_new, sigCen)) {
+      if (!computePlaneStressAndDefGrad(defGradCen_new, sigCen, bulk, shear)) {
         cerr << "Normal = " << pNormal[idx] << endl;
         cerr << "R = " << R << endl;
         cerr << "defGradCen = " << defGradCen_new << endl;
         cerr << "SigCen = " << sigCen << endl;
         exit(1);
       }
-      if (!computePlaneStressAndDefGrad(defGradBot_new, sigBot)) {
+      if (!computePlaneStressAndDefGrad(defGradBot_new, sigBot, bulk, shear)) {
         if (d_world->myrank() == 16) {
           cerr << "Current Processor = " << d_world->myrank() << endl;
           cerr << "Normal = " << pNormal[idx] << endl;
@@ -1187,14 +1190,19 @@ ShellMaterial::calcIncrementalRotation(const Vector& r,
                                        const Vector& n,
                                        double delT)
 {
+  debug << "r = " << r << " n = " << n << " delT = " << delT << endl;
+  Matrix3 I; I.Identity();
   // Calculate the rotation angle
   double phi = r.length()*delT;
-  if (phi == 0.0) return Matrix3(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
+  if (phi == 0.0) return I;
 
   // Create vector a = (n x r)/|(n x r)|
   Vector a = Cross(n,r);
-  ASSERT(a.length() > 0.0);  
-  a /= (a.length());
+  double len = a.length();
+  debug << "ShellMaterial::1198: a = " << a << "len = " << len << endl;
+  if (len <= 0.0) return I;
+  ASSERT(len > 0.0);  
+  a /= len;
 
   // Return the incremental rotation matrix
   return Matrix3(phi, a);
@@ -1218,6 +1226,7 @@ ShellMaterial::calcTotalRotation(const Vector& n0,
 
   // Find the rotation axis
   Vector a = Cross(n,n0);
+  if (a.length() <= 0.0) {Matrix3 I; I.Identity(); R = I; return;}
   ASSERT(a.length() > 0.0);
   a /= (a.length());
 
@@ -1279,11 +1288,10 @@ ShellMaterial::calcInPlaneGradient(const Vector& n,
 // Calculate the shell elastic stress
 //
 void
-ShellMaterial::computeShellElasticStress(Matrix3& F, Matrix3& sig)
+ShellMaterial::computeShellElasticStress(Matrix3& F, Matrix3& sig,
+                                         double bulk, double shear)
 {
   // Initialize bulk, shear
-  double bulk = d_initialData.Bulk;
-  double shear = d_initialData.Shear;
   Matrix3 One; One.Identity();
 
   double J = F.Determinant();
@@ -1302,11 +1310,10 @@ ShellMaterial::computeShellElasticStress(Matrix3& F, Matrix3& sig)
 // when sig33 is set to zero.  Can be optimized considerably later.
 //
 bool
-ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
+ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig, 
+                                            double bulk, double shear)
 {
-  // Initialize bulk, shear
-  double bulk = d_initialData.Bulk;
-  double shear = d_initialData.Shear;
+  // Initialize 
   Matrix3 One; One.Identity();
 
   /*  NO PLANE STRESS */
