@@ -10,8 +10,8 @@
  *	   <http://www.csm.ornl.gov/~dickson>
  ******************************************************************************/
 
+#include <stdio.h>
 #include <iostream>
-#include <Fields.h>
 #include "labelmaps.h"
 
 using namespace std;
@@ -106,7 +106,7 @@ splitAtComma(char *srcStr, char **dst0, char **dst1)
     return(0);
   }
   while(*srcPtr != ',') { srcPtr++; count++; }
-  *dst0 = strndup(srcStr, count);
+  *dst0 = strdup(srcStr);
   // srcPtr points to ','
   *dst1 = ++srcPtr;
   return(1);
@@ -115,17 +115,22 @@ splitAtComma(char *srcStr, char **dst0, char **dst1)
 void
 VH_MasterAnatomy::readFile(char *infilename)
 {
-  Fields *infields;
-  if(!(infields = new Fields(infilename)))
+  FILE *infile;
+  char *inLine;
+  if(!(infile = fopen(infilename, "r")))
   {
     perror("VH_MasterAnatomy::readFile()");
     cerr << "cannot open '" << infilename << "'" << endl;
     return;
   }
+
+  inLine = new char[VH_FILE_MAXLINE];
+  int buffsize = VH_FILE_MAXLINE;
+
   cerr << "VH_MasterAnatomy::readFile(" << infilename << ")";
   char *indexStr;
   // skip first line
-  if(infields->getLine() < 0)
+  if((inLine = read_line(inLine, &buffsize, infile)) <= 0)
   {
     cerr << "VH_MasterAnatomy::readFile(): premature EOF" << endl;
   }
@@ -133,17 +138,17 @@ VH_MasterAnatomy::readFile(char *infilename)
   anatomyname[num_names] = strdup("unknown");
   labelindex[num_names] = 0;
   num_names++;
-  while(infields->getLine() >= 0)
+  while(read_line(inLine, &buffsize, infile) != 0)
   {
-    if(infields->getNF() > 0)
+    if(strlen(inLine) > 0)
     { // expect lines of the form: AnatomyName,Label
-      if(!splitAtComma((char *)infields->getCurrentLine().c_str(),
+      if(!splitAtComma((char *)inLine,
                    &anatomyname[num_names], &indexStr)) break;
       labelindex[num_names] = atoi(indexStr);
-    } // end if(infields->get_NF() > 0)
+    } // end if(strlen(inLine) > 0)
     num_names++;
     cerr << ".";
-  } // end while(infields->get_line() >= 0)
+  } // end while(read_line(inLine, &buffsize, infile) != 0)
   cerr << "done" << endl;
 } // end VH_MasterAnatomy::readFile(char *infilename)
 
