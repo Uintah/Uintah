@@ -15,7 +15,7 @@ IdealGas::~IdealGas()
 }
 
 double IdealGas::computeRhoMicro(double press, double gamma,
-                              double cv, double Temp)
+                                 double cv, double Temp)
 {
   // Pointwise computation of microscopic density
   return  press/((gamma - 1.0)*cv*Temp);
@@ -33,7 +33,7 @@ void IdealGas::computeTempCC(const Patch* patch,
                           Patch::FaceType face)
 {
   if(comp_domain == "WholeDomain") {
-    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {                     
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       Temp[*iter]= press[*iter]/ ( (gamma - 1.0) * cv * rho_micro[*iter] );
     }
   } 
@@ -58,6 +58,12 @@ void IdealGas::computePressEOS(double rhoM, double gamma,
   press   = (gamma - 1.0)*rhoM*cv*Temp;
   dp_drho = (gamma - 1.0)*cv*Temp;
   dp_de   = (gamma - 1.0)*rhoM;
+}
+
+// Return (1/v)*(dv/dT)  (constant pressure thermal expansivity)
+double IdealGas::getAlpha(double Temp, double , double , double )
+{
+  return  1.0/Temp;
 }
 
 //______________________________________________________________________

@@ -64,6 +64,8 @@ WARNING
                                CCVariable<double>& Temp,
                                Patch::FaceType face=Patch::xplus) = 0;
        
+         virtual double getAlpha(double temp,double sp_v,double P, double cv)=0;
+
 
         virtual void hydrostaticTempAdjustment(Patch::FaceType face,
                                           const Patch* patch,
