@@ -1,22 +1,54 @@
 #include <Packages/rtrt/Core/RegularColorMap.h>
+#include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array1.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <fstream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////
-// Constructors
+// Constructors/Destructors
 ///////////////////////////////////////////////////////////////////
-RegularColorMap::RegularColorMap(const char* filename, int size) {
+RegularColorMap::RegularColorMap(const char* filename, int size):
+  lock("RegularColorMap lock"),
+  update_blended_colors(false), new_blended_colors(size),
+  blended_colors(size)
+{
+  if (!fillColor(filename, color_list)) {
+    cerr << "RegularColorMap::RegularColorMap(file)"
+	 << ": Unable to load colormap from file, using default\n";
+    fillColor(GrayScale, color_list);
+  }
+  fillBlendedColors(blended_colors);
+  blended_colors_lookup.set_results_ptr(&blended_colors);
 }
 
-RegularColorMap::RegularColorMap(Array1<Color> &input_color_list, int size) {
+RegularColorMap::RegularColorMap(Array1<Color> &input_color_list, int size):
+  lock("RegularColorMap lock"),
+  color_list(input_color_list), 
+  update_blended_colors(false), new_blended_colors(size),
+  blended_colors(size)  
+{
+  fillBlendedColors(blended_colors);
+  blended_colors_lookup.set_results_ptr(&blended_colors);
 }
 
-RegularColorMap::RegularColorMap(int type = 0, int size) {
+RegularColorMap::RegularColorMap(int type, int size):
+  lock("RegularColorMap lock"),
+  update_blended_colors(false), new_blended_colors(size),
+  blended_colors(size)
+{
+  fillColor(type, color_list);
+  fillBlendedColors(blended_colors);
+  blended_colors_lookup.set_results_ptr(&blended_colors);
+}
+
+RegularColorMap::~RegularColorMap() {
 }
 
 //////////////////////////////////////////////////////////////////
@@ -95,28 +127,118 @@ void RegularColorMap::fillColor(int type, Array1<Color> &colors) {
     colors.add(Color(0,0,0));
     break;
   default:
-    cerr << "Invalid type "<<type<<" using gray scale\n";
+    cerr << "RegularColorMap::fillColor(type):Invalid type "<<type
+	 <<" using gray scale\n";
     colors.add(Color(1,1,1));
     colors.add(Color(0,0,0));
   }
+}
+
+bool RegularColorMap::fillColor(const char* file, Array1<Color> &colors) {
+  char *me = "RegularColorMap::fillColor(file)";
+  Array1<Color> new_colors;
+  ifstream infile(file);
+  if (!infile) {
+    cerr << me << ":Color map file, "<<file<<" cannot be opened for reading\n";
+    return false;
+  }
+
+  float r = 0;
+  infile >> r;
+  float max = r;
+  do {
+    // slurp up the colors
+    float g = 0;
+    float b = 0;
+    infile >> g >> b;
+    if (r > max)
+      max = r;
+    if (g > max)
+      max = g;
+    if (b > max)
+      max = b;
+    new_colors.add(Color(r,g,b));
+    //    cout << "Added: "<<new_colors[new_colors.size()-1]<<endl;
+    infile >> r;
+  } while(infile);
+
+  if (max > 1) {
+    cerr << me << ":Renormalizing colors for range of 0 to 255\n";
+    float inv255 = 1.0f/255.0f;
+    for(int i = 0; i < new_colors.size(); i++) {
+      new_colors[i] = new_colors[i] * inv255;
+      //      cout << "new_colors["<<i<<"] = "<<new_colors[i]<<endl;
+    }
+  }
+
+  // Copy the contents of new_colors to colors
+  colors = new_colors;
+
+  return true;
+}
+
+void RegularColorMap::fillBlendedColors(Array1<Color> &blended) {
+  ScalarTransform1D<int, Color> color_list_lookup;
+  color_list_lookup.set_results_ptr(&color_list);
+  color_list_lookup.scale(0, blended.size()-1);
+  for(int i = 0; i < blended.size(); i++)
+    blended[i] = color_list_lookup.interpolate(i);
 }
 
 //////////////////////////////////////////////////////////////////
 // public functions
 //////////////////////////////////////////////////////////////////
 
-bool RegularColorMap::changeColorMap(int type) {
-  if (new_blended_colors != 0) {
-    delete new_blended_colors;
-  }
+void RegularColorMap::changeColorMap(int type) {
+  lock.lock();
+  // Load up the new color_list
+  fillColor(type, color_list);
+
+  // Build the interpolated values
+  fillBlendedColors(new_blended_colors);
+  
+  update_blended_colors = true;
+  lock.unlock();
 }
 
 bool RegularColorMap::changeColorMap(const char* filename) {
+  lock.lock();
+  if (fillColor(filename, color_list)) {
+    // Only do this if color_list was successfully updated
+    fillBlendedColors(new_blended_colors);
+    update_blended_colors = true;
+    lock.unlock();
+    return true;
+  } else {
+    lock.unlock();
+    return false;
+  }
 }
 
 bool RegularColorMap::changeSize(int new_size) {
+  if (new_size <= 0) {
+    cerr << "RegularColorMap::changeSize: bad new_size "<<new_size<<"\n";
+    return false;
+  }
+  lock.lock();
+
+  new_blended_colors.resize(new_size);
+  fillBlendedColors(new_blended_colors);
+  update_blended_colors = true;
+
+  lock.unlock();
+  return true;
 }
 
-void RegularColorMap::animate(double t, bool& changed) {
+void RegularColorMap::animate(double /*t*/, bool& changed) {
+  // We want to only copy over the values if update_blended_colors is true
+  if (update_blended_colors) {
+    lock.lock();
+    update_blended_colors = false;
+    blended_colors = new_blended_colors;
+    lock.unlock();
+
+    changed  = true;
+  }
 }
 
