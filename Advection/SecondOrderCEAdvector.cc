@@ -9,8 +9,6 @@
 #include <Core/Util/Endian.h>
 #include <iostream>
 
-#define d_SMALL_NUM 1.0e-100
-
 using namespace Uintah;
 /* ---------------------------------------------------------------------
  References:
@@ -171,90 +169,90 @@ void SecondOrderCEAdvector::inFluxOutFluxVolume(
     
     //__________________________________
     //   FOR EACH SLAB 
-      r_x = delX_left/2.0   -  delX_right/2.0;
-      r_y = delY_bottom/2.0 - delY_top/2.0;
-      r_z = delZ_back/2.0   - delZ_front/2.0;
-      
-      r_out_x[c].d_fflux[RIGHT] = delX/2.0 - delX_right/2.0;
-      r_out_y[c].d_fflux[RIGHT] = r_y;
-      r_out_z[c].d_fflux[RIGHT] = r_z;
-      
-      r_out_x[c].d_fflux[LEFT] = delX_left/2.0 - delX/2.0;
-      r_out_y[c].d_fflux[LEFT] = r_y;
-      r_out_z[c].d_fflux[LEFT] = r_z;
-      
-      r_out_x[c].d_fflux[TOP] = r_x;
-      r_out_y[c].d_fflux[TOP] = delY/2.0 - delY_top/2.0;
-      r_out_z[c].d_fflux[TOP] = r_z;
-     
-      r_out_x[c].d_fflux[BOTTOM] = r_x;
-      r_out_y[c].d_fflux[BOTTOM] = delY_bottom/2.0 - delY/2.0;
-      r_out_z[c].d_fflux[BOTTOM] = r_z;
-      
-      r_out_x[c].d_fflux[FRONT] = r_x;
-      r_out_y[c].d_fflux[FRONT] = r_y;
-      r_out_z[c].d_fflux[FRONT] = delZ/2.0 - delZ_front/2.0;
-     
-      r_out_x[c].d_fflux[BACK] = r_x;
-      r_out_y[c].d_fflux[BACK] = r_y;
-      r_out_z[c].d_fflux[BACK] = delZ_back/2.0 - delZ/2.0;
-      
-     //__________________________________
-     //     FOR EACH EDGE 
-     rx_R   = delX/2.0        - delX_right/2.0;
-     rx_L   = delX_left/2.0   - delX/2.0;
-     ry_TOP = delY/2.0        - delY_top/2.0;
-     ry_BOT = delY_bottom/2.0 - delY/2.0;
-     rz_FR  = delZ/2.0        - delZ_front/2.0;
-     rz_BK  = delZ_back/2.0   - delZ/2.0;
-     
-     r_out_x_EF[c].d_eflux[TOP_R] = rx_R;
-     r_out_y_EF[c].d_eflux[TOP_R] = ry_TOP;  
-     r_out_z_EF[c].d_eflux[TOP_R] = r_z;
-     
-     r_out_x_EF[c].d_eflux[TOP_FR] = r_x;
-     r_out_y_EF[c].d_eflux[TOP_FR] = ry_TOP;  
-     r_out_z_EF[c].d_eflux[TOP_FR] = rz_FR;
-     
-     r_out_x_EF[c].d_eflux[TOP_L] = rx_L;
-     r_out_y_EF[c].d_eflux[TOP_L] = ry_TOP;  
-     r_out_z_EF[c].d_eflux[TOP_L] = r_z;
-     
-     r_out_x_EF[c].d_eflux[TOP_BK] = r_x;
-     r_out_y_EF[c].d_eflux[TOP_BK] = ry_TOP;  
-     r_out_z_EF[c].d_eflux[TOP_BK] = rz_BK;
-     
-     r_out_x_EF[c].d_eflux[BOT_R] = rx_R;
-     r_out_y_EF[c].d_eflux[BOT_R] = ry_BOT;  
-     r_out_z_EF[c].d_eflux[BOT_R] = r_z;
-     
-     r_out_x_EF[c].d_eflux[BOT_FR] = r_x;
-     r_out_y_EF[c].d_eflux[BOT_FR] = ry_BOT;  
-     r_out_z_EF[c].d_eflux[BOT_FR] = rz_FR;
-     
-     r_out_x_EF[c].d_eflux[BOT_L] = rx_L;
-     r_out_y_EF[c].d_eflux[BOT_L] = ry_BOT;  
-     r_out_z_EF[c].d_eflux[BOT_L] = r_z;
-     
-     r_out_x_EF[c].d_eflux[BOT_BK] = r_x;
-     r_out_y_EF[c].d_eflux[BOT_BK] = ry_BOT;  
-     r_out_z_EF[c].d_eflux[BOT_BK] = rz_BK;
-     
-     r_out_x_EF[c].d_eflux[RIGHT_BK] = rx_R;
-     r_out_y_EF[c].d_eflux[RIGHT_BK] = r_y;  
-     r_out_z_EF[c].d_eflux[RIGHT_BK] = rz_BK;
-     
-     r_out_x_EF[c].d_eflux[RIGHT_FR] = rx_R;
-     r_out_y_EF[c].d_eflux[RIGHT_FR] = r_y;  
-     r_out_z_EF[c].d_eflux[RIGHT_FR] = rz_FR;
-     
-     r_out_x_EF[c].d_eflux[LEFT_BK] = rx_L;
-     r_out_y_EF[c].d_eflux[LEFT_BK] = r_y;  
-     r_out_z_EF[c].d_eflux[LEFT_BK] = rz_BK;
-     
-     r_out_x_EF[c].d_eflux[LEFT_FR] = rx_L;
-     r_out_y_EF[c].d_eflux[LEFT_FR] = r_y;  
-     r_out_z_EF[c].d_eflux[LEFT_FR] = rz_FR;
+    r_x = delX_left/2.0   -  delX_right/2.0;
+    r_y = delY_bottom/2.0 - delY_top/2.0;
+    r_z = delZ_back/2.0   - delZ_front/2.0;
+
+    r_out_x[c].d_fflux[RIGHT] = delX/2.0 - delX_right/2.0;
+    r_out_y[c].d_fflux[RIGHT] = r_y;
+    r_out_z[c].d_fflux[RIGHT] = r_z;
+
+    r_out_x[c].d_fflux[LEFT] = delX_left/2.0 - delX/2.0;
+    r_out_y[c].d_fflux[LEFT] = r_y;
+    r_out_z[c].d_fflux[LEFT] = r_z;
+
+    r_out_x[c].d_fflux[TOP] = r_x;
+    r_out_y[c].d_fflux[TOP] = delY/2.0 - delY_top/2.0;
+    r_out_z[c].d_fflux[TOP] = r_z;
+
+    r_out_x[c].d_fflux[BOTTOM] = r_x;
+    r_out_y[c].d_fflux[BOTTOM] = delY_bottom/2.0 - delY/2.0;
+    r_out_z[c].d_fflux[BOTTOM] = r_z;
+
+    r_out_x[c].d_fflux[FRONT] = r_x;
+    r_out_y[c].d_fflux[FRONT] = r_y;
+    r_out_z[c].d_fflux[FRONT] = delZ/2.0 - delZ_front/2.0;
+
+    r_out_x[c].d_fflux[BACK] = r_x;
+    r_out_y[c].d_fflux[BACK] = r_y;
+    r_out_z[c].d_fflux[BACK] = delZ_back/2.0 - delZ/2.0;
+
+    //__________________________________
+    //     FOR EACH EDGE 
+    rx_R   = delX/2.0        - delX_right/2.0;
+    rx_L   = delX_left/2.0   - delX/2.0;
+    ry_TOP = delY/2.0        - delY_top/2.0;
+    ry_BOT = delY_bottom/2.0 - delY/2.0;
+    rz_FR  = delZ/2.0        - delZ_front/2.0;
+    rz_BK  = delZ_back/2.0   - delZ/2.0;
+
+    r_out_x_EF[c].d_eflux[TOP_R] = rx_R;
+    r_out_y_EF[c].d_eflux[TOP_R] = ry_TOP;  
+    r_out_z_EF[c].d_eflux[TOP_R] = r_z;
+
+    r_out_x_EF[c].d_eflux[TOP_FR] = r_x;
+    r_out_y_EF[c].d_eflux[TOP_FR] = ry_TOP;  
+    r_out_z_EF[c].d_eflux[TOP_FR] = rz_FR;
+
+    r_out_x_EF[c].d_eflux[TOP_L] = rx_L;
+    r_out_y_EF[c].d_eflux[TOP_L] = ry_TOP;  
+    r_out_z_EF[c].d_eflux[TOP_L] = r_z;
+
+    r_out_x_EF[c].d_eflux[TOP_BK] = r_x;
+    r_out_y_EF[c].d_eflux[TOP_BK] = ry_TOP;  
+    r_out_z_EF[c].d_eflux[TOP_BK] = rz_BK;
+
+    r_out_x_EF[c].d_eflux[BOT_R] = rx_R;
+    r_out_y_EF[c].d_eflux[BOT_R] = ry_BOT;  
+    r_out_z_EF[c].d_eflux[BOT_R] = r_z;
+
+    r_out_x_EF[c].d_eflux[BOT_FR] = r_x;
+    r_out_y_EF[c].d_eflux[BOT_FR] = ry_BOT;  
+    r_out_z_EF[c].d_eflux[BOT_FR] = rz_FR;
+
+    r_out_x_EF[c].d_eflux[BOT_L] = rx_L;
+    r_out_y_EF[c].d_eflux[BOT_L] = ry_BOT;  
+    r_out_z_EF[c].d_eflux[BOT_L] = r_z;
+
+    r_out_x_EF[c].d_eflux[BOT_BK] = r_x;
+    r_out_y_EF[c].d_eflux[BOT_BK] = ry_BOT;  
+    r_out_z_EF[c].d_eflux[BOT_BK] = rz_BK;
+
+    r_out_x_EF[c].d_eflux[RIGHT_BK] = rx_R;
+    r_out_y_EF[c].d_eflux[RIGHT_BK] = r_y;  
+    r_out_z_EF[c].d_eflux[RIGHT_BK] = rz_BK;
+
+    r_out_x_EF[c].d_eflux[RIGHT_FR] = rx_R;
+    r_out_y_EF[c].d_eflux[RIGHT_FR] = r_y;  
+    r_out_z_EF[c].d_eflux[RIGHT_FR] = rz_FR;
+
+    r_out_x_EF[c].d_eflux[LEFT_BK] = rx_L;
+    r_out_y_EF[c].d_eflux[LEFT_BK] = r_y;  
+    r_out_z_EF[c].d_eflux[LEFT_BK] = rz_BK;
+
+    r_out_x_EF[c].d_eflux[LEFT_FR] = rx_L;
+    r_out_y_EF[c].d_eflux[LEFT_FR] = r_y;  
+    r_out_z_EF[c].d_eflux[LEFT_FR] = rz_FR;
 
     num_cells++;
     error_test +=(vol - total_fluxout)/fabs(vol- total_fluxout);
@@ -298,8 +296,7 @@ void SecondOrderCEAdvector::allocateAndCompute_Q_ave(
                               StaticArray<CCVariable<T> >& q_OAFE,
                               StaticArray<CCVariable<T> >& q_OAFC )
 {
-  T unit(1.0);
-  T SN(d_SMALL_NUM);
+
   CCVariable<T> grad_lim, q_grad_x,q_grad_y,q_grad_z;
   Ghost::GhostType  gac = Ghost::AroundCells;
   new_dw->allocateTemporary(grad_lim,         patch, gac, 1);
@@ -321,8 +318,7 @@ void SecondOrderCEAdvector::allocateAndCompute_Q_ave(
   //__________________________________
   gradQ(q_CC, patch, q_grad_x, q_grad_y, q_grad_z);
     
-  gradientLimiter(q_CC, patch, grad_lim, q_grad_x, q_grad_y, q_grad_z,
-                  unit, SN, new_dw);
+  gradientLimiter(q_CC, patch, grad_lim, q_grad_x, q_grad_y, q_grad_z,new_dw);
   qAverageFlux(q_CC, patch, grad_lim,  q_grad_x, q_grad_y, q_grad_z,
                q_OAFS,  q_OAFE, q_OAFC);
 }
@@ -395,7 +391,10 @@ template <class T, typename F>
                                        SFCZVariable<double>& q_ZFC,
                                        F save_q_FC)  // function is passed in
 {
-
+                                  //  W A R N I N G
+  Vector dx = patch->dCell();    // assumes equal cell spacing             
+  double invvol = 1.0/(dx.x() * dx.y() * dx.z());     
+  
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
     IntVector c = *iter;
     double oneThird = 1.0/3.0;
@@ -413,10 +412,10 @@ template <class T, typename F>
       double outfluxVol = d_OFS[c ].d_fflux[OF_slab[f]];
       double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
 
-      q_slab_flux  = - q_OAFS[OF_slab[f]][c]  * outfluxVol 
-                     + q_OAFS[IF_slab[f]][ac] * influxVol;   
+      q_slab_flux  =  q_OAFS[IF_slab[f]][ac] * influxVol
+                    - q_OAFS[OF_slab[f]][c]  * outfluxVol;   
                                
-      slab_vol    +=  outfluxVol +  influxVol;                 
+      slab_vol     =  outfluxVol +  influxVol;
 
       //__________________________________
       //   E D G E S  
@@ -427,14 +426,14 @@ template <class T, typename F>
         int OF = OF_edge[f][e];    // cleans up the equations
         int IF = IF_edge[f][e];
 
-        IntVector ac = c + E_ac[f][e]; // adjcent cell
+        IntVector ac = c + E_ac[f][e]; // adjacent cell
         outfluxVol = 0.5 * d_OFE[c ].d_eflux[OF];
         influxVol  = 0.5 * d_OFE[ac].d_eflux[IF];
 
         q_edge_flux += -q_OAFE[OF][c]  * outfluxVol
                     +   q_OAFE[IF][ac] * influxVol;
         edge_vol    += outfluxVol + influxVol;
-      }                
+      }               
 
       //__________________________________
       //   C O R N E R S
@@ -445,7 +444,7 @@ template <class T, typename F>
         int OF = OF_corner[f][crner];    // cleans up the equations
         int IF = IF_corner[f][crner];
 
-        IntVector ac = c + C_ac[f][crner]; // adjcent cell
+        IntVector ac = c + C_ac[f][crner]; // adjacent cell
         outfluxVol = oneThird * d_OFC[c ].d_cflux[OF];
         influxVol  = oneThird * d_OFC[ac].d_cflux[IF];
 
@@ -453,22 +452,22 @@ template <class T, typename F>
                       +   q_OAFC[IF][ac] * influxVol; 
         corner_vol    += outfluxVol + influxVol;
       }  //  corner loop
-        
+      
       q_face_flux[f] = q_slab_flux + q_edge_flux + q_corner_flux;
-      faceVol[6]      = slab_vol + edge_vol + corner_vol;
+      faceVol[f]     = slab_vol + edge_vol + corner_vol;
     }  // face loop 
        
     //__________________________________
     //  sum up all the contributions
     q_advected[c] = T(0.0);
     for(int f = TOP; f <= BACK; f++ )  {
-      q_advected[c] += q_face_flux[f];
+      q_advected[c] += q_face_flux[f] * invvol;
     }
-    
+
     //__________________________________
     //  inline function to compute q_FC 
     save_q_FC(c, q_XFC, q_YFC, q_ZFC, faceVol, q_face_flux);                                         
-  }
+  }  //cell iterator
 }
 
 

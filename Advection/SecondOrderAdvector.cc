@@ -9,10 +9,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
-
 #include <iostream>
-
-#define d_SMALL_NUM 1.0e-100
 
 using namespace Uintah;
 using namespace std;
@@ -185,8 +182,7 @@ void SecondOrderAdvector::allocateAndCompute_Q_ave(
                               DataWarehouse* new_dw,
                               StaticArray<CCVariable<T> >& q_OAFS )
 {
-  T unit(1.0);
-  T SN(d_SMALL_NUM);
+
   CCVariable<T> grad_lim, q_grad_x,q_grad_y,q_grad_z;
   Ghost::GhostType  gac = Ghost::AroundCells;
   
@@ -202,8 +198,7 @@ void SecondOrderAdvector::allocateAndCompute_Q_ave(
   //__________________________________
   gradQ(q_CC, patch, q_grad_x, q_grad_y, q_grad_z);
     
-  gradientLimiter(q_CC, patch, grad_lim, q_grad_x, q_grad_y, q_grad_z,
-                             unit, SN, new_dw);
+  gradientLimiter(q_CC, patch, grad_lim, q_grad_x, q_grad_y, q_grad_z, new_dw);
                   
   qAverageFlux(   q_CC, patch, grad_lim, q_grad_x, q_grad_y, q_grad_z, 
                   q_OAFS);
@@ -221,7 +216,7 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
   StaticArray<CCVariable<double> > q_OAFS(6);
   allocateAndCompute_Q_ave<double>(q_CC, patch, new_dw, q_OAFS);
         
-  advectSlabs<double>(q_OAFS,patch,q_advected, 
+  advectSlabs<double>(q_OAFS,patch,q_CC, q_advected, 
                       d_notUsedX, d_notUsedY, d_notUsedZ, 
                       ignoreFaceFluxesD);
 }
@@ -239,7 +234,7 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
   StaticArray<CCVariable<double> > q_OAFS(6);
   allocateAndCompute_Q_ave<double>(q_CC, patch, new_dw, q_OAFS);
         
-  advectSlabs<double>(q_OAFS,patch,q_advected, 
+  advectSlabs<double>(q_OAFS,patch, q_CC, q_advected, 
                       q_XFC, q_YFC, q_ZFC, saveFaceFluxes);
 }
 //__________________________________
@@ -252,7 +247,7 @@ void SecondOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
   StaticArray<CCVariable<Vector> > q_OAFS(6);
   allocateAndCompute_Q_ave<Vector>(q_CC, patch, new_dw, q_OAFS);
 
-  advectSlabs<Vector>(q_OAFS,patch,q_advected, 
+  advectSlabs<Vector>(q_OAFS,patch, q_CC, q_advected, 
                     d_notUsedX, d_notUsedY, d_notUsedZ, 
                     ignoreFaceFluxesV);
 }
@@ -262,7 +257,8 @@ void SecondOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
 _____________________________________________________________________*/
 template < class T, typename F>
 void SecondOrderAdvector::advectSlabs( StaticArray<CCVariable<T> >& q_OAFS,
-                                  const Patch* patch,                   
+                                  const Patch* patch,
+                                  const CCVariable<T>& q_CC,                   
                                   CCVariable<T>& q_advected,
                                   SFCXVariable<double>& q_XFC,
                                   SFCYVariable<double>& q_YFC,
@@ -270,6 +266,10 @@ void SecondOrderAdvector::advectSlabs( StaticArray<CCVariable<T> >& q_OAFS,
                                   F save_q_FC)  // function is passed in
   
 {
+                                  //  W A R N I N G
+  Vector dx = patch->dCell();    // assumes equal cell spacing             
+  double invvol = 1.0/(dx.x() * dx.y() * dx.z());     
+
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
     IntVector c = *iter;
    
@@ -278,9 +278,7 @@ void SecondOrderAdvector::advectSlabs( StaticArray<CCVariable<T> >& q_OAFS,
     T q_face_flux[6];
     double faceVol[6];
          
-    for(int f = TOP; f <= BACK; f++ )  {    
-      double slab_vol = 0.0;
-      T q_slab_flux = T(0.0);
+    for(int f = TOP; f <= BACK; f++ )  { 
       
       //__________________________________
       //   S L A B S
@@ -288,24 +286,22 @@ void SecondOrderAdvector::advectSlabs( StaticArray<CCVariable<T> >& q_OAFS,
       double outfluxVol = d_OFS[c ].d_fflux[OF_slab[f]];
       double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
 
-      q_slab_flux  = - q_OAFS[OF_slab[f]][c]  * outfluxVol 
-                     + q_OAFS[IF_slab[f]][ac] * influxVol;             
-      slab_vol     +=  outfluxVol +  influxVol;
-      q_face_flux[f] = q_slab_flux;
-      faceVol[f]     = slab_vol;
-      
+      q_face_flux[f]  =  q_OAFS[IF_slab[f]][ac] * influxVol
+                       - q_OAFS[OF_slab[f]][c]  * outfluxVol;
+                                
+      faceVol[f]      =  outfluxVol +  influxVol;
     }  // face loop 
        
     //__________________________________
     //  sum up all the contributions
     q_advected[c] = T(0.0);
     for(int f = TOP; f <= BACK; f++ )  {
-      q_advected[c] += q_face_flux[f];
+      q_advected[c] += q_face_flux[f] * invvol;
     }
     
     //__________________________________
     //  inline function to compute q_FC 
-    save_q_FC(c, q_XFC, q_YFC, q_ZFC, faceVol, q_face_flux);
+    save_q_FC(c, q_XFC, q_YFC, q_ZFC, faceVol, q_face_flux, q_CC);
   }
 }
 
