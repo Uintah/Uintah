@@ -1001,6 +1001,8 @@ void Allocator::get_hunk(size_t reqsize, OSHunk*& ret_hunk, void*& ret_p)
     hunk->spaceleft-=reqsize;
     ret_p=hunk->curr;
     hunk->curr=(void*)((char*)hunk->curr+reqsize);
+    if(default_allocator && default_allocator->trace_out)
+      fprintf(default_allocator->trace_out, "H %p %p "UCONV"\n", hunk, ret_p, reqsize);
     ret_hunk=hunk;
 }
 
