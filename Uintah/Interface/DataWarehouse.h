@@ -12,8 +12,7 @@
 #include <Uintah/Grid/ReductionVariableBase.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 
-#include <iostream>
-#include <fstream>
+#include <iosfwd>
 
 using namespace std;
 namespace SCICore {
@@ -152,6 +151,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.26  2000/06/03 05:32:10  sparker
+// Removed include of fstream
+// Changed include of iostream to iosfwd
+//
 // Revision 1.25  2000/06/03 05:30:27  sparker
 // Changed emit (primary for reduction variables) to use ostream instead
 // of ofstream
