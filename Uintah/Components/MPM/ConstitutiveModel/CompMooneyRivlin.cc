@@ -8,7 +8,10 @@
 
 #include "CompMooneyRivlin.h"
 
-CompMooneyRivlin::CompMooneyRivlin(region, matl, old_dw, new_dw)
+CompMooneyRivlin::CompMooneyRivlin(const Region* region,
+				   MPMMaterial* matl,
+				   const DataWarehouseP& old_dw,
+				   DataWarehouseP& new_dw)
 {
   // Constructor
   // Create storage in datawarehouse for data fields
@@ -23,14 +26,20 @@ CompMooneyRivlin::~CompMooneyRivlin()
   // Destructor
 }
 
-CompMooneyRivlin::intializeCMData(region, matl, new_dw);
+void CompMooneyRivlin::intializeCMData(const Region* region,
+                                       MPMMaterial* matl,
+                                       const DataWarehouseP& old_dw,
+                                       DataWarehouseP& new_dw);
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
 
 }
 
-void CompMooneyRivlin::computeStressTensor(region, matl, old_dw, new_dw)
+void CompMooneyRivlin::computeStressTensor(const Region* region,
+                                           MPMMaterial* matl,
+                                           const DataWarehouseP& old_dw,
+                                           DataWarehouseP& new_dw)
 {
 
   Matrix3 Identity,deformationGradientInc,B,velGrad;
@@ -141,7 +150,10 @@ void CompMooneyRivlin::computeStressTensor(region, matl, old_dw, new_dw)
 						matl, region, 0);
 }
 
-double CompMooneyRivlin::computeStrainEnergy(region, matl, new_dw)
+double CompMooneyRivlin::computeStrainEnergy(const Region* region,
+                                             MPMMaterial* matl,
+                                             const DataWarehouseP& old_dw,
+                                             DataWarehouseP& new_dw)
 {
   double invar1,invar2,invar3,J,se=0.0;
   Matrix3 B,BSQ;
@@ -184,6 +196,9 @@ double CompMooneyRivlin::computeStrainEnergy(region, matl, new_dw)
 }
 
 // $Log$
+// Revision 1.3  2000/03/16 00:49:31  guilkey
+// Fixed the parameter lists in the .cc files
+//
 // Revision 1.2  2000/03/15 20:05:57  guilkey
 // Worked over the ConstitutiveModel base class, and the CompMooneyRivlin
 // class to operate on all particles in a region of that material type at once,

@@ -25,7 +25,7 @@ class CompMooneyRivlin : public ConstitutiveModel {
   CompMooneyRivlin& operator=(const CompMooneyRivlin &cm);
  
  public:
-  // constructors
+  // constructor
   CompMooneyRivlin(const Region* region,
                    const MPMMaterial* matl,
                    const DataWarehouseP& old_dw,
@@ -55,6 +55,9 @@ class CompMooneyRivlin : public ConstitutiveModel {
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.3  2000/03/16 00:49:32  guilkey
+// Fixed the parameter lists in the .cc files
+//
 // Revision 1.2  2000/03/15 20:05:56  guilkey
 // Worked over the ConstitutiveModel base class, and the CompMooneyRivlin
 // class to operate on all particles in a region of that material type at once,
