@@ -19,13 +19,15 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/prdbc1.F $(SRCDIR)/prdbc2.F $(SRCDIR)/wallbc.F \
 	$(SRCDIR)/fixval.F \
 	$(SRCDIR)/scalcoef.F $(SRCDIR)/coeffb.F $(SRCDIR)/rmean.F \
-	$(SRCDIR)/addpressgrad.F \
+	$(SRCDIR)/addpressgrad.F $(SRCDIR)/calcpressgrad.F \
+	$(SRCDIR)/addpressuregrad.F $(SRCDIR)/addtranssrc.F \
 	$(SRCDIR)/bcscalar.F \
 	$(SRCDIR)/scalsrc.F \
 	$(SRCDIR)/rescal.F \
 	$(SRCDIR)/arrl1.F $(SRCDIR)/underelax.F $(SRCDIR)/linegs.F \
 	$(SRCDIR)/normpress.F $(SRCDIR)/explicit.F \
-	$(SRCDIR)/mmcelltypeinit.F
+	$(SRCDIR)/mmcelltypeinit.F \
+	$(SRCDIR)/mmmomsrc.F $(SRCDIR)/mmbcvelocity.F $(SRCDIR)/mmwallbc.F
 
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \

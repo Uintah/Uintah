@@ -268,6 +268,13 @@ ArchesLabel::ArchesLabel()
   d_newCCWVelocityLabel = scinew VarLabel("newCCWVelocity",
 				CCVariable<double>::getTypeDescription() );
 
+  // for pressure grad term in momentum
+  d_pressGradUSuLabel = scinew VarLabel("pressGradUSu",
+					SFCXVariable<double>::getTypeDescription() );
+  d_pressGradVSuLabel = scinew VarLabel("pressGradVSu",
+					SFCYVariable<double>::getTypeDescription() );
+  d_pressGradWSuLabel = scinew VarLabel("pressGradWSu",
+					SFCZVariable<double>::getTypeDescription() );
   // multimaterial labels
   d_mmcellTypeLabel = scinew VarLabel("mmcellType",
 				      CCVariable<int>::getTypeDescription() );

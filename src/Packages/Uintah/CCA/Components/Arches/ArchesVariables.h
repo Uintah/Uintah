@@ -97,8 +97,13 @@ namespace Uintah {
       SFCYVariable<double> residualVVelocity;
       SFCZVariable<double> residualWVelocity;
       CCVariable<double> residualScalar;      
+      // pressure gradient vars added to momentum source terms
+      SFCXVariable<double> pressGradUSu;
+      SFCYVariable<double> pressGradVSu;
+      SFCZVariable<double> pressGradWSu;
 
       // multimaterial variables
+      CCVariable<double> voidFraction;
       SFCXVariable<double> mmuVelSu;
       SFCXVariable<double> mmuVelSp;
       SFCYVariable<double> mmvVelSu;

@@ -263,7 +263,10 @@ namespace Uintah {
       const VarLabel* d_newCCUVelocityLabel;
       const VarLabel* d_newCCVVelocityLabel;
       const VarLabel* d_newCCWVelocityLabel;
-
+      // for pressure grad term in momentum
+      const VarLabel* d_pressGradUSuLabel;
+      const VarLabel* d_pressGradVSuLabel;
+      const VarLabel* d_pressGradWSuLabel;
       // for multimaterial
       const VarLabel* d_mmcellTypeLabel;
       const VarLabel* d_mmgasVolFracLabel;

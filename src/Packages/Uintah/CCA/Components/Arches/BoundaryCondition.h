@@ -231,10 +231,17 @@ public:
 			CellInformation* cellinfo,
 			ArchesVariables* vars);
       // applies multimaterial bc's for scalars and pressure
-      void mmwallBC( const ProcessorGroup*,
-		     const Patch* patch,
-		     CellInformation* cellinfo,
-		     ArchesVariables* vars);
+      void mmscalarWallBC( const ProcessorGroup*,
+			   const Patch* patch,
+			   CellInformation* cellinfo,
+			   ArchesVariables* vars);
+      
+      // adds pressure gradient to momentume nonlinear source term
+      void addPressureGrad(const ProcessorGroup* ,
+			   const Patch* patch ,
+			   int index,
+			   CellInformation* cellinfo,			  
+			   ArchesVariables* vars);
 			
 private:
 
@@ -261,6 +268,19 @@ private:
 		       CellInformation* cellinfo,
 		        ArchesVariables* vars);
 
+      void mmuVelocityBC(const Patch* patch,
+			 ArchesVariables* vars);
+		      
+
+      ////////////////////////////////////////////////////////////////////////
+      // Call Fortran to compute v velocity BC terms
+      void mmvVelocityBC(const Patch* patch,
+			 ArchesVariables* vars);
+
+      ////////////////////////////////////////////////////////////////////////
+      // Call Fortran to compute w velocity BC terms
+      void mmwVelocityBC(const Patch* patch,
+			 ArchesVariables* vars);
       ////////////////////////////////////////////////////////////////////////
       // Actually set inlet velocity bcs
       void setInletVelocityBC(const ProcessorGroup* pc,

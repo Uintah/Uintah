@@ -164,6 +164,10 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_pressureSPBCLabel,
 		Ghost::AroundCells, numGhostCells);
+  if (d_MAlab)
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
+		  Ghost::None, zeroGhostCells);
+
   switch (index) {
   case Arches::XDIR:
     tsk->requires(Task::NewDW, d_lab->d_uVelocityCPBCLabel,
@@ -553,6 +557,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
   // for explicit coeffs will be computed using the old u, v, and w
   // change it for implicit solve
+  // get void fraction
+    if (d_MAlab)
+      new_dw->get(velocityVars.voidFraction, d_lab->d_mmgasVolFracLabel,
+		  matlIndex, patch, 
+		  Ghost::None, zeroGhostCells);
     switch (index) {
     case Arches::XDIR:
       new_dw->get(velocityVars.uVelocity, d_lab->d_uVelocityCPBCLabel, 
@@ -586,6 +595,10 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		       d_lab->d_uVelLinSrcMBLMLabel, matlIndex, patch);
       new_dw->allocate(velocityVars.uVelNonlinearSrc, 
 		       d_lab->d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
+      // for computing pressure gradient for momentum source
+      new_dw->allocate(velocityVars.pressGradUSu, 
+		       d_lab->d_pressGradUSuLabel, matlIndex, patch);
+
     //cerr << "in moment solve just after allocate" << index << endl;
       break;
     case Arches::YDIR:
@@ -621,7 +634,10 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		       d_lab->d_vVelLinSrcMBLMLabel, matlIndex, patch);
       new_dw->allocate(velocityVars.vVelNonlinearSrc, 
 		       d_lab->d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
-      
+      // for computing pressure gradient for momentum source
+      new_dw->allocate(velocityVars.pressGradVSu, 
+		       d_lab->d_pressGradVSuLabel, matlIndex, patch);
+
       break;
     case Arches::ZDIR:
       // getting new value of u velocity
@@ -654,7 +670,10 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		       d_lab->d_wVelLinSrcMBLMLabel, matlIndex, patch);
       new_dw->allocate(velocityVars.wVelNonlinearSrc, 
 		       d_lab->d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
-      
+      // for computing pressure gradient for momentum source
+      new_dw->allocate(velocityVars.pressGradWSu, 
+		       d_lab->d_pressGradWSuLabel, matlIndex, patch);
+ 
       break;
     default:
       throw InvalidValue("Invalid index in MomentumSolver");
@@ -736,9 +755,12 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_source->addPressureSource(pc, patch, old_dw, new_dw, delta_t, index,
 				cellinfo, &velocityVars, d_mmInterface, mmVars);
 #endif  
-    
-    d_source->addPressureSource(pc, patch, delta_t, index,
-				cellinfo, &velocityVars);
+  d_source->addTransMomSource(pc, patch, delta_t, index, cellinfo,
+			      &velocityVars);
+  d_source->computePressureSource(pc, patch, index,
+				  cellinfo, &velocityVars);
+  d_boundaryCondition->addPressureGrad(pc, patch, index, cellinfo,
+				       &velocityVars);
 #ifdef ARCHES_MOM_DEBUG
     if (index == 1) {
       cerr << "After vel voef for u" << endl;
