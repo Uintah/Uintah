@@ -28,6 +28,7 @@ SRCS     += $(SRCDIR)/GuiCallback.cc \
 	$(SRCDIR)/MemStats.cc \
 	$(SRCDIR)/TCLInterface.cc \
 	$(SRCDIR)/TCLTask.cc \
+	$(SRCDIR)/scirun_env.cc \
 	$(SRCDIR)/SciTCLstrbuff.cc \
 	$(SRCDIR)/TclObj.cc
 

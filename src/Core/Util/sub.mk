@@ -31,7 +31,6 @@ SRCS     += \
 	$(SRCDIR)/SizeTypeConvert.cc \
 	$(SRCDIR)/RWS.cc \
 	$(SRCDIR)/sci_system.cc \
-	$(SRCDIR)/scirun_env.cc \
 	$(SRCDIR)/soloader.cc \
         $(SRCDIR)/Signals.cc \
 	$(SRCDIR)/Timer.cc \
