@@ -14,7 +14,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.03       </maxTime>
+       <maxTime>            0.003       </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -128,33 +128,32 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>thermx.uda</filebase>
-      <outputInterval>.0005</outputInterval>
-      <save label="mom_L_ME_CC"/>
-      <save label="vel_CC"/>
-      <save label="press_CC"/>
+      <outputTimestepInterval>1</outputTimestepInterval>
       <save label="press_equil_CC"/>
-      <save label="delP_Dilatate"/>
-      <save label="rho_CC"/>
       <save label="vol_frac_CC"/>
       <save label="sp_vol_CC"/>
+      <save label="uvel_FC"/>
+      <save label="vvel_FC"/>
+      <save label="wvel_FC"/>
+      <save label="uvel_FCME"/>
+      <save label="vvel_FCME"/>
+      <save label="wvel_FCME"/>
+      <save label="delP_Dilatate"/>
+      <save label="press_CC"/>
+      <save label="mom_L_ME_CC"/>
+      <save label="vel_CC"/> 
+      <save label="rho_CC"/>
       <save label="temp_CC"/>
       <save label="p.x"/>
       <save label="p.volume"/>
       <save label="p.velocity"/>
       <save label="p.temperature"/>
-
-       <!-- needed for regression tester dat comparisons -->       
-       <save label="KineticEnergy"/>
-
-       <!-- need checkpointing for regression tester -->
-       <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
 
    <Debug>
      <dbg_timeStart>       0.00   </dbg_timeStart>
      <dbg_timeStop>        0.03   </dbg_timeStop>
      <dbg_outputInterval>  1e-9   </dbg_outputInterval>
-
      <!--
      <debug label = "switchDebugInitialize"/>
      <debug label = "switchDebug_EQ_RF_press"/>
@@ -175,7 +174,7 @@
          <cfl>0.5</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "FirstOrder" />
+        <advection type = "FirstOrderCE" />
         <solution technique = "EqForm" />
       </ICE>        
     </CFD>
