@@ -368,12 +368,12 @@ void NetworkEditor::save_network(const clString& filename)
       return;
     out << "# SCI Network 1.0\n";
     out << "\n";
-    out << "######################\n";
-    out << "# These commands generated automatically, DO NOT REMOVE!\n";
-    out << "loadfile "<<filename<<"\n";
-    out << "return\n";
-    out << "######################\n";
-    out << "::netedit dontschedule\n";
+//    out << "######################\n";
+//    out << "# These commands generated automatically, DO NOT REMOVE!\n";
+//    out << "loadfile "<<filename<<"\n";
+//    out << "return\n";
+//    out << "######################\n";
+    out << "::netedit dontschedule\n\n";
     net->read_lock();
 
     // Added by Mohamed Dekhil for saving extra information
@@ -444,8 +444,8 @@ void NetworkEditor::save_network(const clString& filename)
     // Emit variables...
     for(i=0;i<net->nmodules();i++){
         Module* module=net->module(i);
-cerr << "Emit vars for " << module->name << endl;
-	module->emit_vars(out);
+	clString midx(clString("$m")+to_string(i));
+	module->emit_vars(out, midx);
     }
 
     for(i=0;i<net->nmodules();i++){

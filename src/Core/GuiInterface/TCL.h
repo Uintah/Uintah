@@ -50,7 +50,7 @@ class SCICORESHARE TCL {
     void register_var(GuiVar*);
     void unregister_var(GuiVar*);
 public:
-    virtual void emit_vars(std::ostream& out);
+    virtual void emit_vars(std::ostream& out, clString& midx);
     static void initialize();
     static void execute(const clString&);
     static void execute(char*);

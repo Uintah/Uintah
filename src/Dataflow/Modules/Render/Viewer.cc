@@ -556,13 +556,15 @@ void Viewer::insert_specific(const clString& key, void* data)
 }
 
 //----------------------------------------------------------------------
-void Viewer::emit_vars(ostream& out)
+void Viewer::emit_vars(ostream& out, clString& midx)
 {
-  cerr << "Viewer emitvars" << endl;
-  TCL::emit_vars(out);
+//  cerr << "Viewer emitvars" << endl;
+  TCL::emit_vars(out, midx);
+  clString viewwindowstr;
   for(int i=0;i<viewwindow.size();i++){
-    out << id << " ui " << viewwindow[i]->id << "\n";
-    viewwindow[i]->emit_vars(out);
+    viewwindowstr=midx+clString("-ViewWindow_")+to_string(i);
+    out << midx << " ui " << viewwindowstr << "\n";
+    viewwindow[i]->emit_vars(out, viewwindowstr);
   }
 }
 

@@ -509,10 +509,10 @@ proc popupLoadMenu {} {
 	{{Other} { * } }
     } 
     
-    set netedit_loadfile [tk_getOpenFile -filetypes $types ]
+    set netedit_loadnet [tk_getOpenFile -filetypes $types ]
     
-    if { [file exists $netedit_loadfile] } {
-	loadfile $netedit_loadfile
+    if { [file exists $netedit_loadnet] } {
+	loadnet $netedit_loadnet
     }
 }
 
@@ -857,6 +857,13 @@ proc createAlias {fromPackage fromCategory fromModule toPackage toCategory toMod
 }
 
 proc loadfile {netedit_loadfile} {
+    puts "NOTICE: `loadfile' has been disabled."
+    puts "   To use old nets, remove the `loadfile' and `return' lines"
+    puts "   from near the top of the file."
+    return
+}
+
+proc loadnet {netedit_loadfile} {
     global loading
     set loading 0
     set group_info [sourcefile $netedit_loadfile]
@@ -881,7 +888,12 @@ proc sourcefile {netedit_loadfile} {
     set fchannel [open $netedit_loadfile]
     
     set curr_line ""
-    set stage 1
+
+#    set stage 1
+# DMW: without macromodules, we can just source all of the lines of the file
+#          which is what stage 4 does.
+
+    set stage 4
 
     global info_list
     set info_list ""
@@ -897,6 +909,7 @@ proc sourcefile {netedit_loadfile} {
     
     while { ! [eof $fchannel] } {
 	# Stage 1: Source basic variables
+
 	if { $stage == 1 } {
 	    if { [string match "set m*" $curr_line] } {
 		# Go on to stage 2, not moving on to the next line of the file
@@ -913,7 +926,7 @@ proc sourcefile {netedit_loadfile} {
 		eval $curr_line
 	    }
 	}
-	
+
 	# Stage 2: Create Modules
 	if { $stage == 2 } {
 	    if { [string match "set m*" $curr_line] } {
@@ -1011,8 +1024,18 @@ proc sourcefile {netedit_loadfile} {
 	}
 	
 	# one last source (this will need to be changed)
+
+
+# DMW: for backwards compatability, we need to ignore the loadfile and return
+#          lines
+
 	if { $stage == 4 } {
-	    eval $curr_line
+	    if { ![string match "load*" $curr_line] } {
+		if { ![string match "return*" $curr_line] } {
+		    puts $curr_line
+		    eval $curr_line
+		}
+	    }
 	}
 	
 	# Read the next line of the file

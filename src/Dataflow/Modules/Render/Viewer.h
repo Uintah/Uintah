@@ -97,7 +97,8 @@ public:
 
   void tcl_command(TCLArgs&, void*);
 
-  virtual void emit_vars(std::ostream& out); // Override from class TCL
+  virtual void emit_vars(std::ostream& out, 
+			 clString& midx); // Override from class TCL
 
 				// The scene...
   GeomIndexedGroup ports;	// this contains all of the ports...

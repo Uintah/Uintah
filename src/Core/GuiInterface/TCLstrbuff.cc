@@ -50,7 +50,7 @@ TCLstrbuff::~TCLstrbuff(){
 
 //////////
 //   
-void TCLstrbuff::emit(std::ostream&){
+void TCLstrbuff::emit(std::ostream&, clString&){
   
 }
 
