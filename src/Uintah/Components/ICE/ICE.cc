@@ -495,6 +495,8 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
     }
   }
 
+  for (int m = 0; m< numMatls; m++) press_new[m] = press[m];
+
   bool converged = false;
   double SMALL_NUM=1.e-12;
 
@@ -535,7 +537,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
      double vol_frac_not_close_packed = 1.;
      delPress = (A - vol_frac_not_close_packed - B)/C;
      for (int m = 0; m < numMatls; m++)
-       press[m][*iter] += delPress;
+       press_new[m][*iter] += delPress;
 
      for (int m = 0; m < numMatls; m++) {
        Material* matl = d_sharedState->getMaterial(m);
@@ -543,7 +545,8 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
        if (ice_matl) {
 	 double gamma = ice_matl->getGamma();
 	 rho_micro[m][*iter] = ice_matl->getEOS()->
-	   computeRhoMicro(press[m][*iter], gamma,cv[m][*iter],Temp[m][*iter]);
+	   computeRhoMicro(press_new[m][*iter], gamma,cv[m][*iter],
+			   Temp[m][*iter]);
        }
      }
 
@@ -606,7 +609,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 	for (int m = 0; m < numMatls; m++) {
 	  press_hydro += rho[m][*iter]* gravity.x()*
 	    ((double) (curcell-highIndex).x()*dx.x()- width);
-	  press[m][*iter] -= press_hydro;
+	  press_new[m][*iter] -= press_hydro;
 	}
       }
     }
@@ -618,7 +621,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 	for (int m = 0; m < numMatls; m++) {
 	  press_hydro += rho[m][*iter]* gravity.y()*
 	    ( (double) (curcell-highIndex).y()*dx.y()- height);
-	  press[m][*iter] -= press_hydro;
+	  press_new[m][*iter] -= press_hydro;
 	}
       }
     }
@@ -630,7 +633,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 	for (int m = 0; m < numMatls; m++) {
 	  press_hydro += rho[m][*iter]* gravity.z()*
 	    ((double) (curcell-highIndex).z()*dx.z()- depth);
-	  press[m][*iter] -= press_hydro;
+	  press_new[m][*iter] -= press_hydro;
 	}
       }
     }
@@ -641,9 +644,9 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       if (ice_matl) {
 	int vfindex = matl->getVFIndex();
-	new_dw->put(press[m],lb->press_CCLabel,vfindex,patch);
-	new_dw->put(vol_frac[m],lb->vol_frac_CCLabel,vfindex,patch);
-	new_dw->put(speedSound[m],lb->speedSound_equiv_CCLabel,vfindex,patch);
+	//	new_dw->put(press_new[m],lb->press_CCLabel,vfindex,patch);
+	//new_dw->put(vol_frac[m],lb->vol_frac_CCLabel,vfindex,patch);
+	//	new_dw->put(speedSound[m],lb->speedSound_equiv_CCLabel,vfindex,patch);
       }
     }
     
@@ -1131,6 +1134,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.39  2000/10/17 20:26:20  jas
+// Changed press to press_new.
+//
 // Revision 1.38  2000/10/17 18:35:20  guilkey
 // Added some computes to actuallyInitialize.
 //
