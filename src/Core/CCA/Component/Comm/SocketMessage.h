@@ -32,9 +32,8 @@ namespace SCIRun {
   class SocketSpChannel;
   class SocketMessage : public Message {
   public:
-    SocketMessage(void *msg);
-    SocketMessage(SocketEpChannel* ep);
-    SocketMessage(SocketSpChannel* sp);
+    SocketMessage(int sockfd, void *msg=NULL);
+
     virtual ~SocketMessage();
     void* getLocalObj();
     void createMessage();
@@ -57,16 +56,22 @@ namespace SCIRun {
     void unmarshalSpChannel(SpChannel* channel);
     void destroyMessage();
 
+
+    void setSocketEp(SocketEpChannel* ep);
+    void setSocketSp(SocketSpChannel* sp);
+
+    inline static int sendall(int sockfd, void *buf, int *len);
+
   private:
     inline void marshalBuf(const void *buf, int fullsize);
     inline void unmarshalBuf(void *buf, int fullsize);
     void *msg;
+    SocketEpChannel *ep;
+    SocketSpChannel *sp;
     int capacity;
     int msg_size;
     static const int INIT_SIZE=1024;
-    SocketEpChannel *ep;
-    SocketSpChannel *sp;
-    bool isEp;
+    int sockfd;  //the socket file descreptor through which the message is transmitted.
   };
 }
 

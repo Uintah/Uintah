@@ -20,7 +20,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>
+//#include <stdio.h>
 
+#include <iostream>
 #include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
@@ -29,23 +31,26 @@
 using namespace std;
 using namespace SCIRun;
 
-SocketMessage::SocketMessage(void *msg)
+SocketMessage::SocketMessage(int sockfd, void *msg)
 {
+  this->ep=NULL;
+  this->sp=NULL;
   this->msg=msg;
+  this->sockfd=sockfd;
+  msg_size=0;
+  //if(this->msg==NULL) createMessage();
 }
 
-SocketMessage::SocketMessage(SocketEpChannel* ep) { 
+void
+SocketMessage::setSocketEp(SocketEpChannel* ep)
+{
   this->ep=ep;
-  msg=NULL;
-  isEp=true;
-  createMessage();
 }
 
-SocketMessage::SocketMessage(SocketSpChannel* sp) { 
+void
+SocketMessage::setSocketSp(SocketSpChannel* sp)
+{
   this->sp=sp;
-  msg=NULL;
-  isEp=false;
-  createMessage();
 }
 
 SocketMessage::~SocketMessage() {
@@ -90,32 +95,73 @@ SocketMessage::marshalLong(const long *buf, int size){
 
 void 
 SocketMessage::marshalSpChannel(SpChannel* channel){
-  //...
+  throw CommError("SocketMessage::marshalSpChannel not inmplemented!",-1);
 }
 
 void 
 SocketMessage::sendMessage(int handler){
   memcpy((char*)msg, &msg_size, sizeof(long));
   memcpy((char*)msg+sizeof(long), &handler, sizeof(int));
-
-  if(isEp){
-    //...
+  
+  if(sockfd==-1) sockfd=sp->sockfd;
+  if(sockfd==-1) throw CommError("SocketMessage::sendMessage", -1);
+  /*
+  //print the msg
+  printf("\nMsg=");
+  for(int i=0; i<msg_size; i++){
+    printf("%4u",((unsigned char*)msg)[i]);
   }
-  else{
-    if(send(sp->sockfd, msg, msg_size, 0) == -1){ 
-      throw CommError("send", errno);
-    }
+  printf("\n\n");
+  */
+
+  if(sendall(sockfd, msg, &msg_size) == -1){ 
+      throw CommError("sendall", errno);
   }
 }
 
 void 
 SocketMessage::waitReply(){
-  //...
+  if(sockfd==-1) sockfd=sp->sockfd;
+  if(sockfd==-1) throw CommError("waitReply", -1);
+  int headerSize=sizeof(long)+sizeof(int);
+  void *buf=malloc(headerSize);
+  int numbytes;
+  if ((numbytes=recv(sockfd, buf, headerSize, MSG_WAITALL)) == -1) {
+    throw CommError("recv", errno);
+  }
+  int id;
+  memcpy(&msg_size, buf, sizeof(long));
+  memcpy(&id, (char*)buf+sizeof(long), sizeof(int));
+
+  msg=realloc(msg, msg_size-headerSize);
+  if ((numbytes=recv(sockfd, msg, msg_size-headerSize, MSG_WAITALL)) == -1) {
+    throw CommError("recv", errno);
+  }
+
+  if(numbytes!=msg_size-headerSize) throw CommError("waitReply: numbytes!=msg_size-headerSize", -1);
+  
+  /*
+  //print the msg
+  printf("\nMsg=");
+  for(int i=0; i<headerSize; i++){
+    printf("%4u",((unsigned char*)buf)[i]);
+  }
+  
+  for(int i=0; i<msg_size-headerSize; i++){
+    printf("%4u",((unsigned char*)msg)[i]);
+  }
+  printf("\n\n");
+  */
+  free(buf);
+  
+
+
+  msg_size=0;
 }
 
 void 
 SocketMessage::unmarshalReply(){
-  //...
+  //don't have to do anything
 }
 
 void 
@@ -149,11 +195,12 @@ SocketMessage::unmarshalLong(long *buf, int size){
 
 void 
 SocketMessage::unmarshalSpChannel(SpChannel* channel){
-  //...
+  throw CommError("SocketMessage::unmarshalSpChannel not inmplemented!",-1);
 }
 
 void* 
 SocketMessage::getLocalObj(){
+  if(ep==NULL) throw CommError("SocketMessagegetLocalObj", -1);
   return ep->object; 
 }
 
@@ -179,3 +226,23 @@ SocketMessage::unmarshalBuf(void *buf, int fullsize){
   memcpy(buf, (char*)msg+msg_size, fullsize); 
   msg_size+=fullsize;
 }
+
+
+int SocketMessage::sendall(int sockfd, void *buf, int *len)
+{
+  int total = 0;        // how many bytes we've sent
+  int bytesleft = *len; // how many we have left to send
+  int n;
+  
+  while(total < *len) {
+    n = send(sockfd, (char*)buf+total, bytesleft, 0);
+    if (n == -1) { break; }
+    total += n;
+    bytesleft -= n;
+  }
+  
+  *len = total; // return number actually sent here
+  
+  return n==-1?-1:0; // return -1 on failure, 0 on success
+} 
+

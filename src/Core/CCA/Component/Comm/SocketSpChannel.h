@@ -28,7 +28,6 @@ namespace SCIRun {
   public:
 
     SocketSpChannel();
-    SocketSpChannel(const string &url);
     virtual ~SocketSpChannel();
     void openConnection(const URL& url);
     void closeConnection();
@@ -45,7 +44,7 @@ namespace SCIRun {
     // URL of the endpoint
     string ep_url;
 
-    Message* msg; 
+    SocketMessage* msg; 
 
   };
 }
