@@ -805,8 +805,8 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
   case Arches::ZDIR:
     domLo = vars->wVelocity.getFortLowIndex();
     domHi = vars->wVelocity.getFortHighIndex();
-    idxLo = patch->getSFCYFORTLowIndex();
-    idxHi = patch->getSFCYFORTHighIndex();
+    idxLo = patch->getSFCZFORTLowIndex();
+    idxHi = patch->getSFCZFORTHighIndex();
 
     Size = domHi - domLo + IntVector(1,1,1);
 
@@ -1072,6 +1072,9 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.23  2000/09/20 16:56:16  rawat
+// added some petsc parallel stuff and fixed some bugs
+//
 // Revision 1.22  2000/09/07 23:07:17  rawat
 // fixed some bugs in bc and added pressure solver using petsc
 //

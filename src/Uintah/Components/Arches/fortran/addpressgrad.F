@@ -55,8 +55,8 @@ c*********************************************************************
       ltim = .true.
       lexpl = .true.
       do 120 k =idxLoU(3), idxHiU(3)
-         do 110 j = idxLoU(2), idxLoU(2)
-            do 100 i = idxLoU(1), idxLoU(1)
+         do 110 j = idxLoU(2), idxHiU(2)
+            do 100 i = idxLoU(1), idxHiU(1)
                VOL = SEWU(I)*SNS(J)*STB(K)
                idf  = i*ioff + j*joff + k*koff
                SU(I,J,K) = SU(I,J,K)+(PRESS(I-IOFF,J-JOFF,K-KOFF)-
@@ -75,6 +75,9 @@ c*********************************************************************
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/09/20 16:56:19  rawat
+c added some petsc parallel stuff and fixed some bugs
+c
 c Revision 1.3  2000/08/15 00:23:38  rawat
 c added explicit solve for momentum and scalar eqns
 c

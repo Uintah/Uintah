@@ -132,6 +132,77 @@ PetscSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
 
 }
 
+#if 0
+void 
+PetscSolver::matrixCreate()
+{
+  // for global index get a petsc index that
+  // make it a data memeber
+  int numProcessors = d_world->size();
+  IntVector lowIndex;
+  IntVector highIndex;
+  level->(lowIndex, highIndex);
+  int nnx = highIndex.x() - lowIndex.x();
+  int nny = highIndex.y() - lowIndex.y();
+  int nnz = highIndex.z() - lowIndex.z();
+  int nnn = nnx*nny*nnz;
+  IntVector plowIndex = patch->getCellLowIndex();
+  IntVector phighIndex = patch->getCellHighIndex();
+  
+  // number of patches for each processor
+  vector<int> numCells(numProcessors, 0);
+  vector<int> numPatches(numProcessors, 0);
+  vector<int> petscIndex(nnn);
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+    {
+       int proc = find_processor_assignment(patch);
+       numCells[proc] += (phighIndex[0]-plowIndex[0])*
+	                 (phighIndex[1]-plowIndex[1])*
+	                 (phighIndex[2]-plowIndex[2]);
+       
+    }
+  }
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+    {
+       int proc = find_processor_assignment(patch);
+       int globalIndex = 0;
+       if (proc == 0)
+	 globalIndex = numPatches[proc];
+       else {
+	 for (int procnum = 0; procnum < proc; procnum++) 
+	   globalIndex += numCells[procnum];
+	 globalIndex += numPatches[proc];
+       }
+       for (int colZ = plowIndex.z(); colZ < phighIndex.z(); colZ ++) {
+	 for (int colY = plowIndex.y(); colY < phighIndex.y(); colY ++) {
+	   for (int colX = plowIndex.x(); colX < phighIndex.x(); colX ++) {
+	     int localIndex = colZ*nnx*nny + colY*nnx+colX;
+	     petscIndex[localIndex] = globalIndex;
+	     globalIndex++;
+	   }
+	 }
+       }
+    }
+  }
+  Mat A;
+  int me = d_world->myrank();
+  if (proc == me) {
+  int numlrows = numCells[me];
+  int numlcolumns = numlrows;
+  int globalrows = nnn;
+  int globalcolumns = nnn;
+  int d_nz = 7;
+  int o_nz = 5;
+  int ierr = MarCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
+			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+  CHKERRA(ierr);
+}
+#endif
+
 // ****************************************************************************
 // Actual compute of pressure underrelaxation
 // ****************************************************************************
@@ -1336,6 +1407,9 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.7  2000/09/20 16:56:16  rawat
+// added some petsc parallel stuff and fixed some bugs
+//
 // Revision 1.6  2000/09/14 17:04:54  rawat
 // converting arches to multipatch
 //

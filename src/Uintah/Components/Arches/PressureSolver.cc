@@ -290,7 +290,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
   d_old_dw->get(d_pressureVars->old_wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-  d_old_dw->get(d_pressureVars->old_density, d_lab->d_densityCPLabel, 
+  d_old_dw->get(d_pressureVars->old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
   d_old_dw->get(d_pressureVars->cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
@@ -539,6 +539,9 @@ PressureSolver::normPressure(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.48  2000/09/20 16:56:16  rawat
+// added some petsc parallel stuff and fixed some bugs
+//
 // Revision 1.47  2000/09/14 17:04:54  rawat
 // converting arches to multipatch
 //

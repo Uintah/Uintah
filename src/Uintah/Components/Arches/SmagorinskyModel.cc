@@ -353,6 +353,20 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		 cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
 		 cellinfo->tfac, cellinfo->bfac);
   */
+#ifdef ARCHES_PRES_DEBUG
+  // Testing if correct values have been put
+  cerr << " AFTER COMPUTE TURBULENCE SUBMODEL " << endl;
+  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    cerr << "Viscosity for ii = " << ii << endl;
+    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	cerr.width(10);
+	cerr << viscosity[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cerr << endl;
+    }
+  }
+#endif
 
   // Put the calculated viscosityvalue into the new data warehouse
   new_dw->put(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
@@ -626,6 +640,9 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.30  2000/09/20 16:56:16  rawat
+// added some petsc parallel stuff and fixed some bugs
+//
 // Revision 1.29  2000/08/10 21:29:09  rawat
 // fixed a bug in cellinformation
 //
