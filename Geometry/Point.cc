@@ -92,8 +92,8 @@ ostream& operator<<( ostream& os, const Point& p )
 #if 1 
 istream& operator>>( istream& is, Point& v)
 {
-  double x, y, z;
-  char st;
+    double x, y, z;
+    char st;
   is >> st >> x >> st >> y >> st >> z >> st;
   v=Point(x,y,z);
   return is;
@@ -142,6 +142,8 @@ Point::InInterval( Point a, double epsilon )
 
 void Point::test_rigorous(RigorousTest* __test)
 {	
+
+
     //Basic Point Tests
 
     Point P(0,0,0);
@@ -274,7 +276,10 @@ void Point::test_rigorous(RigorousTest* __test)
     Vector v2(0,0,0);
     Vector v3(0,0,0);
     int X,Y,Z;
-
+    double Xd,Yd,Zd;
+    const double cnst = 1234.5678;      
+    Point m_A(1,2,3);
+    Point m_A_prime(1,2,3);
     for (x=0;x<10;++x){
 	for (int y=0;y<10;++y){
 	    for (int z=0;z<10;++z){
@@ -298,6 +303,8 @@ void Point::test_rigorous(RigorousTest* __test)
 		v2.z(y);
 		TEST((v2.x()==z)&&(v2.y()==x)&&(v2.z()==y));
 		
+		//Point-Point=Vector Tests
+		
 		v3=p2-p1;
 		X=p2.x()-p1.x();
 		Y=p2.y()-p1.y();
@@ -307,6 +314,7 @@ void Point::test_rigorous(RigorousTest* __test)
 		TEST(v3.y()==Y);
 		TEST(v3.z()==Z);
 		
+		//Point+Vector=Point Tests
 		
 		p2=p1+v1;
 		X=p1.x()+v1.x();
@@ -317,6 +325,7 @@ void Point::test_rigorous(RigorousTest* __test)
 		TEST(p2.y()==Y);
 		TEST(p2.z()==Z);
 		
+		//Point+=Vector Tests
 		p1.x(x);
 		p1.y(y);
 		p1.z(z);
@@ -325,34 +334,141 @@ void Point::test_rigorous(RigorousTest* __test)
 		v1.y(x);
 		v1.z(y);
 		TEST((v1.x()==z)&&(v1.y()==x)&&(v1.z()==y));
+		X = p1.x()+v1.x();
+		Y = p1.y()+v1.y();
+		Z = p1.z()+v1.z();
 
+		p1+=v1;
+		TEST(p1.x()==X);
+		TEST(p1.y()==Y);
+		TEST(p1.z()==Z);
+	      
+		
+		//Point-Vector=Point Tests
+		
+		p1.x(x);
+		p1.y(y);
+		p1.z(z);
+		TEST((p1.x()==x)&&(p1.y()==y)&&(p1.z()==z));
+		v1.x(z);
+		v1.y(x);
+		v1.z(y);
+		TEST((v1.x()==z)&&(v1.y()==x)&&(v1.z()==y));
+		
 		X=p1.x()-v1.x();
 		Y=p1.y()-v1.y();
 		Z=p1.z()-v1.z();
-	   
+	  
+		
 		p3=p1-v1;
 		TEST(p3.x()==X);
 		TEST(p3.y()==Y);
 		TEST(p3.z()==Z);
 
-		double D = x*.12345;
-		X=p1.x()*D;
-		Y=p1.y()*D;
-		Z=p1.z()*D;
-
-	/*	p3=D*p1;
-		TEST(p3.x()==X);
-		TEST(p3.y()==Y);
-		TEST(p3.z()==Z);
+		//Point-=Vector Tests
+		X = p1.x()-v1.x();
+		Y = p1.y()-v1.y();
+		Z = p1.z()-v1.z();
 		
-	*/	
+		p1-=v1;
+		
+		TEST(p1.x()==X);
+		TEST(p1.y()==Y);
+		TEST(p1.z()==Z);
+		
+		//Constant*Point=Point Tests
 
+		m_A_prime=m_A*cnst;
+		
+		Xd = m_A.x()*cnst;
+		Yd = m_A.y()*cnst;
+		Zd = m_A.z()*cnst;
+
+		TEST (m_A_prime.x()==Xd);
+		TEST (m_A_prime.y()==Yd);
+		TEST (m_A_prime.z()==Zd);
+		
+		//Point*=Point Tests
+		
+		m_A_prime.x(double(x));
+		m_A_prime.y(double(y));
+		m_A_prime.z(double(z));
+
+		TEST(m_A_prime.x()==x&&m_A_prime.y()==y&&m_A_prime.z()==z);
+		
+		m_A_prime=m_A_prime*cnst;
+
+		Xd=m_A_prime.x()*cnst;
+		Yd=m_A_prime.y()*cnst;
+		Zd=m_A_prime.z()*cnst;
+
+		m_A_prime*=cnst;
+
+		TEST(m_A_prime.x()==Xd);
+		TEST(m_A_prime.y()==Yd);
+		TEST(m_A_prime.z()==Zd);
+
+
+
+		//Point/Constant=Point Tests
+
+		m_A_prime=m_A/cnst;
+		
+		Xd = m_A.x()/cnst;
+		Yd = m_A.y()/cnst;
+		Zd = m_A.z()/cnst;
+
+		TEST (m_A_prime.x()==Xd);
+		TEST (m_A_prime.y()==Yd);
+		TEST (m_A_prime.z()==Zd);
+		
+		//Point/=Constant Tests
+
+		Xd = m_A_prime.x()/cnst;
+		Yd = m_A_prime.y()/cnst;
+		Zd = m_A_prime.z()/cnst;
+
+		m_A_prime/=cnst;
+		
+		TEST(m_A_prime.x()==Xd);
+		TEST(m_A_prime.y()==Yd);
+		TEST(m_A_prime.z()==Zd);
+	
+#if 0
+		//Point-Constant Tests
+		
+		v1.x(x);
+		v1.y(y);
+		v1.z(z);
+
+		v2.x(0);
+		v2.y(0);
+		v2.z(0);
+
+		X = v1.x()-cnst;
+		Y = v1.y()-cnst;
+		Z = v1.z()-cnst;
+		
+		v2=v1-cnst;
+		
+		TEST(v2.x()==X);
+		TEST(v2.y()==Y);
+		TEST(v2.z()==Z);
+#endif	
+		
 	    }
+
+
+
 	}
-    }
-    
+
+    }  
 
 
 }
 
+
+
+
 #endif
+
