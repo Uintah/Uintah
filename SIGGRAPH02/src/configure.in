@@ -1278,6 +1278,7 @@ case $host in
     else
       SCI_LAB_TP_DEFAULT=/res/sci/data1/SCIRun_Thirdparty_32
     fi
+    TIME_IMPL=Time_irix.cc
     ;;
   *linux*)
     no_optimize_flag=-O0
