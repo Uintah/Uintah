@@ -727,18 +727,15 @@ SparseRowMatrix::submatrix(int r1, int c1, int r2, int c2)
   }
 
   int *cs = scinew int[csv.size()];
+  double *vals = scinew double[valsv.size()];
   for (i = 0; (unsigned int)i < csv.size(); i++)
   {
     cs[i] = csv[i];
-  }
-
-  double *vals = scinew double[valsv.size()];
-  for (i = 0; (unsigned int)i < valsv.size(); i++)
-  {
     vals[i] = valsv[i];
   }
 
-  return scinew SparseRowMatrix(r2-r1+1, c2-c1+1, rs, cs, (int)valsv.size(), vals);
+  return scinew SparseRowMatrix(r2-r1+1, c2-c1+1, rs, cs,
+                                (int)valsv.size(), vals);
 }
 
 } // End namespace SCIRun
