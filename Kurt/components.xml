@@ -7,7 +7,7 @@
   <scirun-library category="Vis">
   <soNames>
     <soName>libKurt_Modules_Vis.so</soName>
-    <!-- this is also ignored for now -->
+    <!-- this is ignored for now -->
     <soName>libKurt.so</soName>
   </soNames>
   <dataflow-component name="VolVis">
@@ -136,6 +136,22 @@
     <parameters></parameters>
     <implementation>
       <creationFunction>make_ParticleVis</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ArchiveReader">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs> Archive </outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ArchiveReader</creationFunction>
     </implementation>
   </dataflow-component>
   </scirun-library>
