@@ -262,8 +262,7 @@ set c102 [addConnection $m91 0 $m38 4]
 
 
 # Set GUI variables
-set $m1-filename "/home/darbyb/work/data/ucsd/6.22retina/demo-6.22retina.nhdr"
-#set $m1-filename "/home/darbyb/work/data/ucsd/king_flt/demo-king_filt.nhdr"
+set $m1-filename "/usr/sci/data/Medical/ucsd/king_flt/king_filt-full.nhdr"
 set $m5-uis {3}
 
 
