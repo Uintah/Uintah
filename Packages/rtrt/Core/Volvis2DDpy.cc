@@ -78,6 +78,24 @@ Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
   redraw = true;
 } // createBGText()
 
+void
+Volvis2DDpy::clearBGText() {
+  for( int i = 0; i < textureHeight; i++ )
+    for( int j = 0; j < textureWidth; j++ ) {
+      // rescale value to make more readable and clamp large values
+      float c = 0.0f;
+      transTexture2->textArray[i][j][0] = c;
+      bgTextImage->textArray[i][j][0] = c;
+      transTexture2->textArray[i][j][1] = c;
+      bgTextImage->textArray[i][j][1] = c;
+      transTexture2->textArray[i][j][2] = c;
+      bgTextImage->textArray[i][j][2] = c;
+      transTexture2->textArray[i][j][3] = 0.0f;
+      bgTextImage->textArray[i][j][3] = 1.0f;
+    } // for(j)
+  hist_changed = true;
+  redraw = true;
+}
 
 
 // Refreshes the transfer function texture.  Uses up to two additional 
@@ -696,7 +714,7 @@ Volvis2DDpy::pickShape( int x, int y ) {
 void
 Volvis2DDpy::init() {
   // initialize adjustable global variables from volume data
-  if( selected_vmin == NULL ) {
+  if( selected_vmin == 0 ) {
     selected_vmin = current_vmin = vmin;
     selected_vmax = current_vmax = vmax;
     selected_gmin = current_gmin = gmin;
@@ -716,7 +734,8 @@ Volvis2DDpy::init() {
   glDisable( GL_DEPTH_TEST );
 
   // create scatterplot texture to reflect volume data
-  createBGText( current_vmin, current_vmax, current_gmin, current_gmax );
+  //  createBGText( current_vmin, current_vmax, current_gmin, current_gmax );
+  clearBGText();
   glPixelStoref( GL_UNPACK_ALIGNMENT, 1 );
   glGenTextures( 1, &bgTextName );
   glBindTexture( GL_TEXTURE_2D, bgTextName );
@@ -905,7 +924,7 @@ Volvis2DDpy::key_pressed(unsigned long key) {
     current_gmax = selected_gmax;
     text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
     text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
-    createBGText( selected_vmin, selected_vmax, selected_gmin, selected_gmax );
+    createBGText( current_vmin, current_vmax, current_gmin, current_gmax );
     break;
 
   case XK_f:
@@ -994,21 +1013,28 @@ Volvis2DDpy::key_pressed(unsigned long key) {
     // revert to original histogram parameters
   case XK_o:
   case XK_O:
-    selected_vmin = current_vmin = vmin;
-    selected_vmax = current_vmax = vmax;
-    selected_gmin = current_gmin = gmin;
-    selected_gmax = current_gmax = gmax;
-    text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
-    text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
-    createBGText( vmin, vmax, gmin, gmax );
+    if (current_vmin != vmin || current_vmax != vmax ||
+	current_gmin != gmin || current_gmax != gmax) {
+      current_vmin = vmin;
+      current_vmax = vmax;
+      current_gmin = gmin;
+      current_gmax = gmax;
+      text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
+      text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
+      //    createBGText( vmin, vmax, gmin, gmax );
+      clearBGText();
+    }
+    selected_vmin = current_vmin;
+    selected_vmax = current_vmax;
+    selected_gmin = current_gmin; 
+    selected_gmax = current_gmax;
     break;
 
     // exit program
   case XK_q:
   case XK_Q:
   case XK_Escape:
-    close_display();
-    exit(0);
+    stop();
     break;
 
     // render accurately
@@ -1024,6 +1050,8 @@ Volvis2DDpy::key_pressed(unsigned long key) {
     if( pickedIndex >= 0 ) {
       widgets[pickedIndex]->changeTextureAlignment();
       boundSubTexture( widgets[pickedIndex] );
+    } else {
+      cerr << "Make sure you are selecting a widget with the left mouse button first.\n";
     }
     break;
 
@@ -1813,13 +1841,20 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
       printf( "\nAborting file load!\n" );
       return;
     }
-    createBGText( vmn, vmx, gmn, gmx );
-    current_vmin = selected_vmin = vmn;
-    current_vmax = selected_vmax = vmx;
-    current_gmin = selected_gmin = gmn;
-    current_gmax = selected_gmax = gmx;
-    text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
-    text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
+    if (current_vmin != vmn || current_vmax != vmx ||
+	current_gmin != gmn || current_gmax != gmx) {
+      clearBGText();
+      current_vmin = vmn;
+      current_vmax = vmx;
+      current_gmin = gmn;
+      current_gmax = gmx;
+      text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
+      text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
+    }
+    selected_vmin = current_vmin;
+    selected_vmax = current_vmax;
+    selected_gmin = current_gmin; 
+    selected_gmax = current_gmax;
   }
   while( !infile.eof() ) {
     infile >> token;
@@ -1970,13 +2005,20 @@ Volvis2DDpy::loadWidgets( char* file )
 //        printf( "\nAborting file load!\n" );
 //        return;
 //      }
-    createBGText( vmn, vmx, gmn, gmx );
-    current_vmin = selected_vmin = vmn;
-    current_vmax = selected_vmax = vmx;
-    current_gmin = selected_gmin = gmn;
-    current_gmax = selected_gmax = gmx;
-    text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
-    text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
+    if (current_vmin != vmn || current_vmax != vmx ||
+	current_gmin != gmn || current_gmax != gmx) {
+      clearBGText();
+      current_vmin = vmn;
+      current_vmax = vmx;
+      current_gmin = gmn;
+      current_gmax = gmx;
+      text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
+      text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
+    }
+    selected_vmin = current_vmin;
+    selected_vmax = current_vmax;
+    selected_gmin = current_gmin; 
+    selected_gmax = current_gmax;
   }
   while( !infile.eof() ) {
     infile >> token;
@@ -2104,13 +2146,13 @@ Volvis2DDpy::Volvis2DDpy( float t_inc, bool cut ):DpyBase("Volvis2DDpy"),
 					gmax(-MAXFLOAT), cut(cut) {
   waiting_for_redraw = true;
   // initialize adjustable global variables from volume data
-  selected_vmin = current_vmin = NULL;
-  selected_vmax = current_vmax = NULL;
-  selected_gmin = current_gmin = NULL;
-  selected_gmax = current_gmax = NULL;
+  selected_vmin = current_vmin = 0;
+  selected_vmax = current_vmax = 0;
+  selected_gmin = current_gmin = 0;
+  selected_gmax = current_gmax = 0;
 
-  t_inc_diff = 1.0f;
-  t_inc = original_t_inc;
+  t_inc_diff = t_inc/0.01f;
+  original_t_inc = t_inc;
   render_mode = CLEAN;
   hist_changed = true;
   transFunc_changed = true;
@@ -2136,7 +2178,6 @@ Volvis2DDpy::Volvis2DDpy( float t_inc, bool cut ):DpyBase("Volvis2DDpy"),
     cp_gs_bar = new GLBar( 374.0f, 25.0f, 242.0f, 0.0f, 0.4f, 0.3f );
   }
   
-  original_t_inc = t_inc;
   bgTextImage = new Texture<GLfloat>(0,0);
   transTexture1 = new Texture<GLfloat>(0,0);
   transTexture2 = new Texture<GLfloat>(0,0);
