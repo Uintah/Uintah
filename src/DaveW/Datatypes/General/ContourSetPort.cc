@@ -13,12 +13,24 @@
  */
 
 #include <DaveW/Datatypes/General/ContourSetPort.h>
+#include <DaveW/share/share.h>
 
 //namespace DaveW {
 //namespace Datatypes {
 
 using namespace SCICore::Containers;
 using namespace DaveW::Datatypes;
+
+extern "C" {
+DaveWSHARE IPort* make_ContourSetIPort(Module* module,
+					 const clString& name) {
+  return new SimpleIPort<ContourSetHandle>(module,name);
+}
+DaveWSHARE OPort* make_ContourSetOPort(Module* module,
+					 const clString& name) {
+  return new SimpleOPort<ContourSetHandle>(module,name);
+}
+}
 
 template<> clString SimpleIPort<ContourSetHandle>::port_type("ContourSet");
 template<> clString SimpleIPort<ContourSetHandle>::port_color("#388e8e");
@@ -28,6 +40,10 @@ template<> clString SimpleIPort<ContourSetHandle>::port_color("#388e8e");
 
 //
 // $Log$
+// Revision 1.2  2000/11/22 17:30:15  moulding
+// added extern "C" make functions for input and output ports (to be used
+// by the autoport facility).
+//
 // Revision 1.1  1999/09/01 05:27:35  dmw
 // more DaveW datatypes...
 //
