@@ -37,6 +37,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Geom/TkOpenGLContext.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/Environment.h>
 
 #include <iostream>
 using std::cerr;
@@ -129,35 +130,39 @@ ShaderProgramARB::init_shaders_supported()
     ShaderProgramARB_mInitMutex.lock();
     if (!mInit)
     {
-      // Create a test context.
-      TkOpenGLContext *context =
-        new TkOpenGLContext(".testforshadersupport", 0, 0, 0);
-      context->make_current();
-
+      if (sci_getenv_p("SCIRUN_DISABLE_SHADERS")) {
+	mSupported = false;
+      } else {
+	// Create a test context.
+	TkOpenGLContext *context =
+	  new TkOpenGLContext(".testforshadersupport", 0, 0, 0);
+	context->make_current();
+	
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-      mSupported =
-        gluCheckExtension((const GLubyte*)"GL_ARB_vertex_program", 
-                          glGetString(GL_EXTENSIONS)) &&
-        gluCheckExtension((const GLubyte*)"GL_ARB_fragment_program", 
-                          glGetString(GL_EXTENSIONS)) &&
-        (glGenProgramsARB_SCI = (SCIPFNGLGENPROGRAMSARBPROC)
-         getProcAddress("glGenProgramsARB")) &&
-        (glDeleteProgramsARB_SCI = (SCIPFNGLDELETEPROGRAMSARBPROC)
-         getProcAddress("glDeleteProgramsARB")) &&
-        (glBindProgramARB_SCI = (SCIPFNGLBINDPROGRAMARBPROC) 
-         getProcAddress("glBindProgramARB")) &&
-        (glProgramStringARB_SCI = (SCIPFNGLPROGRAMSTRINGARBPROC)
-         getProcAddress("glProgramStringARB")) &&
-        (glIsProgramARB_SCI = (SCIPFNGLISPROGRAMARBPROC)
-         getProcAddress("glIsProgramARB")) &&
-        (glProgramLocalParameter4fARB_SCI = (SCIPFNGLPROGRAMLOCALPARAMETER4FARBPROC)
-         getProcAddress("glProgramLocalParameter4fARB"));
+	mSupported =
+	  gluCheckExtension((const GLubyte*)"GL_ARB_vertex_program", 
+			    glGetString(GL_EXTENSIONS)) &&
+	  gluCheckExtension((const GLubyte*)"GL_ARB_fragment_program", 
+			    glGetString(GL_EXTENSIONS)) &&
+	  (glGenProgramsARB_SCI = (SCIPFNGLGENPROGRAMSARBPROC)
+	   getProcAddress("glGenProgramsARB")) &&
+	  (glDeleteProgramsARB_SCI = (SCIPFNGLDELETEPROGRAMSARBPROC)
+	   getProcAddress("glDeleteProgramsARB")) &&
+	  (glBindProgramARB_SCI = (SCIPFNGLBINDPROGRAMARBPROC) 
+	   getProcAddress("glBindProgramARB")) &&
+	  (glProgramStringARB_SCI = (SCIPFNGLPROGRAMSTRINGARBPROC)
+	   getProcAddress("glProgramStringARB")) &&
+	  (glIsProgramARB_SCI = (SCIPFNGLISPROGRAMARBPROC)
+	   getProcAddress("glIsProgramARB")) &&
+	  (glProgramLocalParameter4fARB_SCI = 
+	   (SCIPFNGLPROGRAMLOCALPARAMETER4FARBPROC)
+	   getProcAddress("glProgramLocalParameter4fARB"));
 #else
-      mSupported = false;
+	mSupported = false;
 #endif
-
+	delete context;
+      }
       mInit = true;
-      delete context;
     }
     ShaderProgramARB_mInitMutex.unlock();
   }
