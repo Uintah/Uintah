@@ -169,6 +169,11 @@ MPMLabel::MPMLabel()
   gExternalHeatRateLabel = new VarLabel("g.externalHeatRate",
 			NCVariable<double>::getTypeDescription());
 
+  gThermalContactHeatExchangeRateLabel = new 
+     VarLabel("g.thermalContactHeatExchangeRate",
+     NCVariable<double>::getTypeDescription());
+
+
   // Cell centered variables
 
   cSelfContactLabel = new VarLabel( "c.selfContact",
@@ -214,6 +219,9 @@ const MPMLabel* MPMLabel::getLabels()
 }
 
 // $Log$
+// Revision 1.16  2000/06/28 01:09:06  tan
+// Thermal contact model start to work!
+//
 // Revision 1.15  2000/06/27 21:50:57  guilkey
 // Added saving of more "meta data."  Namely, center of mass position and
 // velocity.  These are both actually mass weighted, so should be divided

@@ -67,6 +67,7 @@ namespace Uintah {
       const VarLabel* gTemperatureLabel; //for heat conduction
       const VarLabel* gInternalHeatRateLabel;
       const VarLabel* gExternalHeatRateLabel;
+      const VarLabel* gThermalContactHeatExchangeRateLabel;
       
       const VarLabel* cSelfContactLabel; //for fracture, CCVariable
       const VarLabel* cSurfaceNormalLabel; //for fracture, CCVariable
@@ -86,6 +87,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.14  2000/06/28 01:08:56  tan
+// Thermal contact model start to work!
+//
 // Revision 1.13  2000/06/27 21:50:57  guilkey
 // Added saving of more "meta data."  Namely, center of mass position and
 // velocity.  These are both actually mass weighted, so should be divided

@@ -19,19 +19,15 @@ ThermalContact::ThermalContact(ProblemSpecP& ps,SimulationStateP& d_sS)
 
 void ThermalContact::computeHeatExchange(const ProcessorGroup*,
 					const Patch* patch,
-					DataWarehouseP& /*old_dw*/,
+					DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw)
- {
+{
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
 
   std::vector<NCVariable<double> > gmass(NVFs);
   std::vector<NCVariable<double> > gTemperature(NVFs);
-  
-  //
-  // tan: gExternalHeatRate should be initialized somewhere before.
-  //
-  std::vector<NCVariable<double> > gExternalHeatRate(NVFs);
+  std::vector<NCVariable<double> > thermalContactHeatExchangeRate(NVFs);
 
   const MPMLabel *lb = MPMLabel::getLabels();
   
@@ -45,11 +41,12 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
       new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , patch,
-		  Ghost::None, 0);
+         Ghost::None, 0);
       new_dw->get(gTemperature[vfindex], lb->gTemperatureLabel, vfindex, patch,
-		  Ghost::None, 0);
-      new_dw->get(gExternalHeatRate[vfindex], lb->gExternalHeatRateLabel, 
-                  vfindex, patch, Ghost::None, 0);
+         Ghost::None, 0);
+      new_dw->allocate(thermalContactHeatExchangeRate[vfindex],
+         lb->gThermalContactHeatExchangeRateLabel, vfindex, patch);
+      thermalContactHeatExchangeRate[vfindex].initialize(0);
     }
   }
 
@@ -57,20 +54,23 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
   {
     for(n = 0; n < NVFs; n++)
     {
-      double temp = gTemperature[n][*iter];
+      double temprature_mass0 = gTemperature[n][*iter] * gmass[n][*iter];
       
       for(m = 0; m < numMatls; m++)
       {
         matl = d_sharedState->getMaterial( m );
         mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+        
         if(mpm_matl){
           vfindex = matl->getVFIndex();
-          if( !compare(gTemperature[vfindex][*iter],temp) )
+          double temprature_mass = gTemperature[vfindex][*iter] * 
+             gmass[vfindex][*iter];
+          
+          if( !compare(temprature_mass,temprature_mass0) )
           {
-            gExternalHeatRate[n][*iter] += 
-              mpm_matl->getHeatTransferCoefficient() *
-                ( gmass[vfindex][*iter] * gTemperature[vfindex][*iter] 
-                - gmass[n][*iter] * temp );
+            thermalContactHeatExchangeRate[n][*iter] += 
+               mpm_matl->getHeatTransferCoefficient() *
+                  ( temprature_mass - temprature_mass0 );
           }
         }
       }
@@ -78,7 +78,8 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
   }
 
   for(int n=0; n< NVFs; n++){
-    new_dw->put(gExternalHeatRate[n], lb->gExternalHeatRateLabel, n, patch);
+    new_dw->put(thermalContactHeatExchangeRate[n], 
+      lb->gThermalContactHeatExchangeRateLabel, n, patch);
   }
 
 }
@@ -92,21 +93,23 @@ void ThermalContact::initializeThermalContact(const Patch* /*patch*/,
 void ThermalContact::addComputesAndRequires(Task* t,
                                              const MPMMaterial* matl,
                                              const Patch* patch,
-                                             DataWarehouseP& /*old_dw*/,
+                                             DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const
 {
   int idx = matl->getDWIndex();
   const MPMLabel* lb = MPMLabel::getLabels();
   t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
   t->requires( new_dw, lb->gTemperatureLabel, idx, patch, Ghost::None);
-  t->requires( new_dw, lb->gExternalHeatRateLabel, idx, patch, Ghost::None);
 
-  t->computes( new_dw, lb->gExternalHeatRateLabel, idx, patch );
+  t->computes( new_dw, lb->gThermalContactHeatExchangeRateLabel, idx, patch );
 }
 
 
 //
 // $Log$
+// Revision 1.10  2000/06/28 01:09:39  tan
+// Thermal contact model start to work!
+//
 // Revision 1.9  2000/06/26 18:42:19  tan
 // Different heat_conduction properties for different materials are allowed
 // in the MPM simulation.
