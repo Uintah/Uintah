@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Exceptions/OutFluxVolume.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/Endian.h>
 #include <iostream>
 
 using namespace Uintah;
@@ -252,6 +253,15 @@ namespace Uintah {
   
 }
 
+namespace SCIRun {
+
+void swapbytes( Uintah::FirstOrderAdvector::fflux& f) {
+  double *p = f.d_fflux;
+  SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
+  SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+}
+
+} // namespace SCIRun
 
 
 

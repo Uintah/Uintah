@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Exceptions/OutFluxVolume.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/Endian.h>
 #include <iostream>
 
 using namespace Uintah;
@@ -348,14 +349,20 @@ namespace Uintah {
   
 }
 
+namespace SCIRun {
 
+void swapbytes( Uintah::FirstOrderCEAdvector::eflux& e) {
+  double *p = e.d_eflux;
+  SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
+  SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+  SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+  SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+}
+  
+void swapbytes( Uintah::FirstOrderCEAdvector::cflux& c) {
+  double *p = c.d_cflux;
+  SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+  SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
+}
 
-
-
-
-
-
-
-
-
-
+} // namespace SCIRun

@@ -711,3 +711,17 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 } // End namespace Uintah
+
+#include <Core/Util/Endian.h>
+
+namespace SCIRun {
+void swapbytes( Uintah::ViscoScram::StateData& d)
+{
+  for (int i = 0; i < 5; i++) swapbytes(d.DevStress[i]);
+  swapbytes(d.VolumeChangeHeating);
+  swapbytes(d.ViscousHeating);
+  swapbytes(d.CrackHeating);
+  swapbytes(d.CrackRadius);
+}
+  
+} // namespace SCIRun
