@@ -885,7 +885,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 	equivStress = sqrt((tensorS.NormSquared())*1.5);
 
         // Calculate total stress
-	Matrix3 tensorSig = tensorS + tensorHy;
+	tensorSig = tensorS + tensorHy;
 
         // Update the plastic strain
         pPlasticStrain_new[idx] = ep;
@@ -1605,7 +1605,7 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
 	equivStress = sqrt((tensorS.NormSquared())*1.5);
 
         // Calculate total stress
-	Matrix3 tensorSig = tensorS + tensorHy;
+	tensorSig = tensorS + tensorHy;
 
         // Update the plastic strain
         pPlasticStrain_new[idx] = ep;
