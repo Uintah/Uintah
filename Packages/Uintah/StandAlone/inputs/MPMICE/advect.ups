@@ -14,7 +14,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.1       </maxTime>
+       <maxTime>            0.01       </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -114,12 +114,12 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0,0,0]    </lower>
-              <upper>        [2.5,2.5,3.5]    </upper>
-                <extraCells> [1,1,1]     </extraCells>
-              <patches>    [1,1,1]    </patches>
+              <lower>        [0,0,0]          </lower>
+              <upper>        [2.5,2.5,2.5]    </upper>
+              <extraCells> [1,1,1]            </extraCells>
+              <patches>    [1,1,1]            </patches>
            </Box>
-           <spacing>        [0.5,0.5,0.5]  </spacing>
+           <spacing>        [0.5,0.5,0.5]     </spacing>
        </Level>
     </Grid>
    
@@ -127,30 +127,29 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>icempm.uda</filebase>
-      <outputInterval>.01</outputInterval>
-      <save label="mom_L_ME_CC"/>
-      <save label="vel_CC"/>
-      <save label="press_CC"/>
+      <filebase>advect_mpmice.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
       <save label="press_equil_CC"/>
+      <save label="uvel_FC"/>
+      <save label="vvel_FC"/>
+      <save label="wvel_FC"/>
+      <save label="uvel_FCME"/>
+      <save label="vvel_FCME"/>
+      <save label="wvel_FCME"/>
       <save label="delP_Dilatate"/>
+      <save label="press_CC"/>
+      <save label="mom_L_ME_CC"/>
       <save label="rho_CC"/>
+      <save label="vel_CC"/>
       <save label="p.x"/>
       <save label="p.volume"/>
       <save label="p.velocity"/>
-
-       <!-- needed for regression tester dat comparisons -->       
-       <save label="KineticEnergy"/>
-
-       <!-- need checkpointing for regression tester -->
-       <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
 
    <Debug>
      <dbg_timeStart>       0.0    </dbg_timeStart>
      <dbg_timeStop>        3.0e-5 </dbg_timeStop>
      <dbg_outputInterval>  1e-9   </dbg_outputInterval>
-
      <!--
      <debug label = "switchDebugInitialize"/>
      <debug label = "switchDebug_EQ_RF_press"/>
@@ -170,7 +169,7 @@
          <cfl>0.5</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "FirstOrder" />
+        <advection type = "FirstOrderCE" />
         <solution technique = "EqForm" />
       </ICE>        
     </CFD>
@@ -209,7 +208,7 @@
                         <max>           [1.5,1.5,1.5]   </max>
                     </box>
                     <res>               [2,2,2]         </res>
-                    <velocity>          [10.0,0.0,0.0]   </velocity>
+                    <velocity>          [10.0,10.0,10.0]   </velocity>
                     <temperature>       300             </temperature>
                 </geom_object>
          </material>
@@ -241,8 +240,8 @@
                     <max>           [1.5,1.5,1.5]       </max>
                 </box>
               </difference>
-               <res>                      [2,2,2]             </res>
-               <velocity>           [10.0,0.0,0.0]       </velocity>
+               <res>                      [2,2,2]        </res>
+               <velocity>           [10.0,10.0,10.0]     </velocity>
                <temperature>        300.0               </temperature>
                <density>    1.1792946927374306000e+00   </density>
                <pressure>           101325.0            </pressure>
