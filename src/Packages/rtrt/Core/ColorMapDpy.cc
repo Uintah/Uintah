@@ -14,8 +14,8 @@
 #include <stdio.h>
 #include <X11/keysym.h>
 #include <algorithm>
-#ifdef __GNUG__
-#include <values.h>
+#if defined(__GNUG__) || defined(__ECC)
+#  include <values.h>
 #endif
 
 using namespace rtrt;
