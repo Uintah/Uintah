@@ -47,13 +47,14 @@ namespace Uintah {
 
          // Prevent copying of this class
          // copy constructor
-         TransIsoHyperImplicit(const TransIsoHyperImplicit &cm);
+         //TransIsoHyperImplicit(const TransIsoHyperImplicit &cm);
          TransIsoHyperImplicit& operator=(const TransIsoHyperImplicit &cm);
          int d_8or27;
 
       public:
          // constructors
          TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* lb, int n8or27);
+         TransIsoHyperImplicit(const TransIsoHyperImplicit* cm);
        
          // destructor
          virtual ~TransIsoHyperImplicit();

@@ -45,6 +45,20 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
   }
 }
 
+HypoElastic::HypoElastic(const HypoElastic* cm)
+{
+  lb = cm->lb;
+  d_8or27 = cm->d_8or27;
+  NGN = cm->NGN;
+
+  d_initialData.G = cm->d_initialData.G;
+  d_initialData.K = cm->d_initialData.K;
+#ifdef FRACTURE
+  d_initialData.KIc = cm->d_initialData.KIc;
+  d_initialData.KIIc = cm->d_initialData.KIIc;
+#endif
+}
+
 HypoElastic::~HypoElastic()
 {
   // Destructor

@@ -99,6 +99,46 @@ ViscoScramForBinder::ViscoScramForBinder(ProblemSpecP& ps,
 
 }
 
+ViscoScramForBinder::ViscoScramForBinder(const ViscoScramForBinder* cm)
+{
+  lb = cm->lb;
+  d_8or27 = cm->d_8or27;
+  NGN = cm->NGN;
+
+  d_useModifiedEOS = cm->d_useModifiedEOS ;
+  d_initialData.bulkModulus = cm->d_initialData.bulkModulus;
+  d_initialData.numMaxwellElements = cm->d_initialData.numMaxwellElements;
+  int nn = d_initialData.numMaxwellElements;
+  d_initialData.shearModulus = scinew double[nn];
+  for (int ii = 0; ii < nn; ++ii) {
+    d_initialData.shearModulus[ii] = cm->d_initialData.shearModulus[ii];
+  }
+
+  d_initialData.reducedTemperature_WLF = 
+    cm->d_initialData.reducedTemperature_WLF ;
+  d_initialData.constantA1_WLF = cm->d_initialData.constantA1_WLF ;
+  d_initialData.constantA2_WLF = cm->d_initialData.constantA2_WLF ;
+  d_initialData.constantB1_RelaxTime = cm->d_initialData.constantB1_RelaxTime ;
+  d_initialData.constantB2_RelaxTime = cm->d_initialData.constantB2_RelaxTime ;
+
+  d_doCrack = cm->d_doCrack;
+  d_initialData.initialSize_Crack = cm->d_initialData.initialSize_Crack ;
+  d_initialData.powerValue_Crack = cm->d_initialData.powerValue_Crack ;
+  d_initialData.initialRadius_Crack = cm->d_initialData.initialRadius_Crack ;
+  d_initialData.maxGrowthRate_Crack = cm->d_initialData.maxGrowthRate_Crack ;
+  d_initialData.stressIntensityF_Crack = 
+    cm->d_initialData.stressIntensityF_Crack ;
+  d_initialData.frictionCoeff_Crack = cm->d_initialData.frictionCoeff_Crack ;
+
+  // State data
+  pStatedataLabel = 
+    VarLabel::create("p.statedata_vsb",
+		     ParticleVariable<Statedata>::getTypeDescription());
+  pStatedataLabel_preReloc = 
+    VarLabel::create("p.statedata_vsb+",
+		     ParticleVariable<Statedata>::getTypeDescription());
+}
+
 ViscoScramForBinder::~ViscoScramForBinder()
 {
   // Delete local stuff

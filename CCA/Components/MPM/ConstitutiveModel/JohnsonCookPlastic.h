@@ -2,7 +2,7 @@
 #define __JOHNSONCOOK_PLASTICITY_MODEL_H__
 
 
-#include "PlasticityModel.h"	
+#include "PlasticityModel.h"    
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -50,7 +50,8 @@ namespace Uintah {
       double m;
       double TRoom;
       double TMelt;
-    };	 
+      double epdot_0;
+    };   
 
   private:
 
@@ -58,52 +59,53 @@ namespace Uintah {
          
     // Prevent copying of this class
     // copy constructor
-    JohnsonCookPlastic(const JohnsonCookPlastic &cm);
+    //JohnsonCookPlastic(const JohnsonCookPlastic &cm);
     JohnsonCookPlastic& operator=(const JohnsonCookPlastic &cm);
 
   public:
     // constructors
     JohnsonCookPlastic(ProblemSpecP& ps);
-	 
+    JohnsonCookPlastic(const JohnsonCookPlastic* cm);
+         
     // destructor 
     virtual ~JohnsonCookPlastic();
-	 
+         
     // Computes and requires for internal evolution variables
     // Only one internal variable for Johnson-Cook :: plastic strain
     virtual void addInitialComputesAndRequires(Task* task,
-					       const MPMMaterial* matl,
-					       const PatchSet* patches) const;
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) const;
 
     virtual void addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patches) const;
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches) const;
 
 
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-					   const PatchSet* patch, 
-					   MPMLabel* lb) const;
+                                           const PatchSet* patch, 
+                                           MPMLabel* lb) const;
 
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-				   ParticleSubset* addset,
-				   map<const VarLabel*, 
+                                   ParticleSubset* addset,
+                                   map<const VarLabel*, 
                                      ParticleVariableBase*>* newState,
-				   ParticleSubset* delset,
-				   DataWarehouse* old_dw);
+                                   ParticleSubset* delset,
+                                   DataWarehouse* old_dw);
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
-				  std::vector<const VarLabel*>& to);
+                                  std::vector<const VarLabel*>& to);
 
     virtual void initializeInternalVars(ParticleSubset* pset,
-					DataWarehouse* new_dw);
+                                        DataWarehouse* new_dw);
 
     virtual void getInternalVars(ParticleSubset* pset,
-				 DataWarehouse* old_dw);
+                                 DataWarehouse* old_dw);
 
     virtual void allocateAndPutInternalVars(ParticleSubset* pset,
-					    DataWarehouse* new_dw); 
+                                            DataWarehouse* new_dw); 
 
     virtual void allocateAndPutRigid(ParticleSubset* pset,
-				     DataWarehouse* new_dw); 
+                                     DataWarehouse* new_dw); 
 
     virtual void updateElastic(const particleIndex idx);
 
@@ -113,10 +115,10 @@ namespace Uintah {
     /*! \brief  compute the flow stress */
     ///////////////////////////////////////////////////////////////////////////
     virtual double computeFlowStress(const PlasticityState* state,
-				     const double& delT,
-				     const double& tolerance,
-				     const MPMMaterial* matl,
-				     const particleIndex idx);
+                                     const double& delT,
+                                     const double& tolerance,
+                                     const MPMMaterial* matl,
+                                     const particleIndex idx);
 
     ///////////////////////////////////////////////////////////////////////////
     /*! Compute the elastic-plastic tangent modulus 
@@ -124,12 +126,12 @@ namespace Uintah {
     associated flow rule */
     ///////////////////////////////////////////////////////////////////////////
     virtual void computeTangentModulus(const Matrix3& stress,
-				       const PlasticityState* state,
-				       const double& delT,
+                                       const PlasticityState* state,
+                                       const double& delT,
                                        const MPMMaterial* matl,
                                        const particleIndex idx,
-				       TangentModulusTensor& Ce,
-				       TangentModulusTensor& Cep);
+                                       TangentModulusTensor& Ce,
+                                       TangentModulusTensor& Cep);
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
@@ -205,7 +207,7 @@ namespace Uintah {
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTTemperature(const PlasticityState* state,
-					const particleIndex idx);
+                                        const particleIndex idx);
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
@@ -226,7 +228,7 @@ namespace Uintah {
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTStrainRate(const PlasticityState* state,
-				       const particleIndex idx);
+                                       const particleIndex idx);
 
   };
 

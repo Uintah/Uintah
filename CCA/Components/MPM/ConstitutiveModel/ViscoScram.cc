@@ -71,6 +71,45 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
   }
 }
 
+ViscoScram::ViscoScram(const ViscoScram* cm)
+{
+  lb = cm->lb;
+  d_8or27 = cm->d_8or27;
+  NGN = cm->NGN;
+
+  d_useModifiedEOS = cm->d_useModifiedEOS ;
+  d_initialData.PR = cm->d_initialData.PR;
+  d_initialData.CrackParameterA = cm->d_initialData.CrackParameterA;
+  d_initialData.CrackPowerValue = cm->d_initialData.CrackPowerValue;
+  d_initialData.CrackMaxGrowthRate = cm->d_initialData.CrackMaxGrowthRate;
+  d_initialData.StressIntensityF = cm->d_initialData.StressIntensityF;
+  d_initialData.CrackFriction = cm->d_initialData.CrackFriction;
+  d_initialData.InitialCrackRadius = cm->d_initialData.InitialCrackRadius;
+  d_initialData.CrackGrowthRate = cm->d_initialData.CrackGrowthRate;
+  d_initialData.G[0] = cm->d_initialData.G[0];
+  d_initialData.G[1] = cm->d_initialData.G[1];
+  d_initialData.G[2] = cm->d_initialData.G[2];
+  d_initialData.G[3] = cm->d_initialData.G[3];
+  d_initialData.G[4] = cm->d_initialData.G[4];
+  d_initialData.RTau[0] = cm->d_initialData.RTau[0];
+  d_initialData.RTau[1] = cm->d_initialData.RTau[1];
+  d_initialData.RTau[2] = cm->d_initialData.RTau[2];
+  d_initialData.RTau[3] = cm->d_initialData.RTau[3];
+  d_initialData.RTau[4] = cm->d_initialData.RTau[4];
+  d_initialData.Beta = cm->d_initialData.Beta;
+  d_initialData.Gamma = cm->d_initialData.Gamma;
+  d_initialData.DCp_DTemperature = cm->d_initialData.DCp_DTemperature;
+
+  p_statedata_label          = VarLabel::create("p.statedata_vs",
+                            ParticleVariable<StateData>::getTypeDescription());
+  p_statedata_label_preReloc = VarLabel::create("p.statedata_vs+",
+                            ParticleVariable<StateData>::getTypeDescription());
+  pRandLabel                 = VarLabel::create( "p.rand",
+                            ParticleVariable<double>::getTypeDescription() );
+  pRandLabel_preReloc        = VarLabel::create( "p.rand+",
+                            ParticleVariable<double>::getTypeDescription() );
+}
+
 ViscoScram::~ViscoScram()
 {
   // Destructor

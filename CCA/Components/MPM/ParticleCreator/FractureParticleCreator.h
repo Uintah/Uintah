@@ -10,9 +10,7 @@ namespace Uintah {
     
     FractureParticleCreator(MPMMaterial* matl, 
 			    MPMLabel* lb,
-			    int n8or27,
-			    bool haveLoadCurve,
-			    bool doErosion);
+			    MPMFlags* flags);
     virtual ~FractureParticleCreator();
 
     virtual ParticleSubset* createParticles(MPMMaterial* matl,

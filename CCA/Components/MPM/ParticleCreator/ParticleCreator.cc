@@ -1,5 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
@@ -29,11 +30,12 @@ using std::ofstream;
 
 ParticleCreator::ParticleCreator(MPMMaterial* matl, 
                                  MPMLabel* lb,
-                                 int n8or27, 
-                                 bool haveLoadCurve,
-				 bool doErosion) 
-  : d_8or27(n8or27), d_useLoadCurves(haveLoadCurve), d_doErosion(doErosion)
+                                 MPMFlags* flags)
 {
+  d_8or27 = flags->d_8or27;
+  d_useLoadCurves = flags->d_useLoadCurves;
+  d_doErosion = flags->d_doErosion;
+
   registerPermanentParticleState(matl,lb);
 }
 
@@ -251,13 +253,15 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
   //const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,lb->pDispLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pXLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pVelocityLabel, Ghost::None);
-  task->requires(Task::NewDW,lb->pExtForceLabel_preReloc, Ghost::None);
-  task->requires(Task::OldDW,lb->pVolumeLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pMassLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pParticleIDLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pTemperatureLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pSp_volLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pParticleIDLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pVelocityLabel, Ghost::None);
+  task->requires(Task::NewDW,lb->pExtForceLabel_preReloc, Ghost::None);
+  //task->requires(Task::OldDW,lb->pExternalForceLabel, Ghost::None);
+  task->requires(Task::NewDW,lb->pVolumeDeformedLabel, Ghost::None);
+  //task->requires(Task::OldDW,lb->pVolumeLabel, Ghost::None);
 
   if (d_8or27 == 27)
     task->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
@@ -267,7 +271,6 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
 
   if (d_doErosion)
     task->requires(Task::OldDW,lb->pErosionLabel, Ghost::None);
-
 }
 
 
@@ -308,13 +311,15 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
 
   old_dw->get(o_disp,lb->pDispLabel,delset);
   old_dw->get(o_position,lb->pXLabel,delset);
-  old_dw->get(o_velocity,lb->pVelocityLabel,delset);
-  new_dw->get(o_external_force,lb->pExtForceLabel_preReloc,delset);
-  old_dw->get(o_volume,lb->pVolumeLabel,delset);
   old_dw->get(o_mass,lb->pMassLabel,delset);
+  old_dw->get(o_particleID,lb->pParticleIDLabel,delset);
   old_dw->get(o_temperature,lb->pTemperatureLabel,delset);
   old_dw->get(o_sp_vol,lb->pSp_volLabel,delset);
-  old_dw->get(o_particleID,lb->pParticleIDLabel,delset);
+  old_dw->get(o_velocity,lb->pVelocityLabel,delset);
+  new_dw->get(o_external_force,lb->pExtForceLabel_preReloc,delset);
+  //old_dw->get(o_external_force,lb->pExternalForceLabel,delset);
+  new_dw->get(o_volume,lb->pVolumeDeformedLabel,delset);
+  //old_dw->get(o_volume,lb->pVolumeLabel,delset);
   if (d_8or27 == 27) 
     old_dw->get(o_size,lb->pSizeLabel,delset);
   if (d_useLoadCurves) 

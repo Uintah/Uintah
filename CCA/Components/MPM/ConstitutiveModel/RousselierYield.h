@@ -56,7 +56,7 @@ namespace Uintah {
 
     // Prevent copying of this class
     // copy constructor
-    RousselierYield(const RousselierYield &);
+    //RousselierYield(const RousselierYield &);
     RousselierYield& operator=(const RousselierYield &);
 
   public:
@@ -64,6 +64,7 @@ namespace Uintah {
     //! Constructor
     /*! Creates a Rousselier Yield Function object */
     RousselierYield(ProblemSpecP& ps);
+    RousselierYield(const RousselierYield* cm);
 	 
     //! Destructor 
     ~RousselierYield();

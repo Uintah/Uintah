@@ -86,13 +86,14 @@ WARNING
 
     // Prevent copying of this class
     // copy constructor
-    HyperElasticPlastic(const HyperElasticPlastic &cm);
+    //HyperElasticPlastic(const HyperElasticPlastic &cm);
     HyperElasticPlastic& operator=(const HyperElasticPlastic &cm);
 
   public:
 
     // constructors
     HyperElasticPlastic(ProblemSpecP& ps, MPMLabel* lb,int n8or27);
+    HyperElasticPlastic(const HyperElasticPlastic* cm);
 	 
     // destructor 
     virtual ~HyperElasticPlastic();

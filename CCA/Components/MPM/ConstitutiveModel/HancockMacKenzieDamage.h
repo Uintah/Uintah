@@ -47,12 +47,13 @@ namespace Uintah {
 	 
     // Prevent copying of this class
     // copy constructor
-    HancockMacKenzieDamage(const HancockMacKenzieDamage &cm);
+    //HancockMacKenzieDamage(const HancockMacKenzieDamage &cm);
     HancockMacKenzieDamage& operator=(const HancockMacKenzieDamage &cm);
 
   public:
     // constructors
     HancockMacKenzieDamage(ProblemSpecP& ps); 
+    HancockMacKenzieDamage(const HancockMacKenzieDamage* cm);
 	 
     // destructor 
     virtual ~HancockMacKenzieDamage();

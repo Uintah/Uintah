@@ -9,6 +9,10 @@ DefaultHypoElasticEOS::DefaultHypoElasticEOS(ProblemSpecP&)
 {
 } 
 	 
+DefaultHypoElasticEOS::DefaultHypoElasticEOS(const DefaultHypoElasticEOS*)
+{
+} 
+	 
 DefaultHypoElasticEOS::~DefaultHypoElasticEOS()
 {
 }

@@ -37,3 +37,21 @@ MPMEquationOfState* MPMEquationOfStateFactory::create(ProblemSpecP& ps)
 
    //return 0;
 }
+
+MPMEquationOfState* 
+MPMEquationOfStateFactory::createCopy(const MPMEquationOfState* eos)
+{
+   if (dynamic_cast<const MieGruneisenEOS*>(eos))
+      return(scinew MieGruneisenEOS(dynamic_cast<const MieGruneisenEOS*>(eos)));
+
+   else if (dynamic_cast<const DefaultHypoElasticEOS*>(eos))
+      return(scinew DefaultHypoElasticEOS(dynamic_cast<const DefaultHypoElasticEOS*>(eos)));
+
+   else if (dynamic_cast<const DefaultHyperElasticEOS*>(eos))
+      return(scinew DefaultHyperElasticEOS(dynamic_cast<const DefaultHyperElasticEOS*>(eos)));
+
+   else 
+      throw ProblemSetupException("Cannot create copy of unknown MPM EOS");
+
+   //return 0;
+}

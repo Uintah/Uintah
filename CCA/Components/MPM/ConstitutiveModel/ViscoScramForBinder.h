@@ -140,13 +140,14 @@ WARNING
     CMData d_initialData;
 
     // Prevent copying of this class
-    ViscoScramForBinder(const ViscoScramForBinder &cm);
+    //ViscoScramForBinder(const ViscoScramForBinder &cm);
     ViscoScramForBinder& operator=(const ViscoScramForBinder &cm);
 
   public:
 
     // constructors
     ViscoScramForBinder(ProblemSpecP& ps, MPMLabel* lb, int n8or27);
+    ViscoScramForBinder(const ViscoScramForBinder* cm);
        
     // destructor
     virtual ~ViscoScramForBinder();

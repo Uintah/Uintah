@@ -15,6 +15,12 @@ RousselierYield::RousselierYield(ProblemSpecP& ps)
   ps->require("sig_1",d_constant.sig_1);
 }
 	 
+RousselierYield::RousselierYield(const RousselierYield* cm)
+{
+  d_constant.D = cm->d_constant.D;
+  d_constant.sig_1 = cm->d_constant.sig_1;
+}
+	 
 RousselierYield::~RousselierYield()
 {
 }

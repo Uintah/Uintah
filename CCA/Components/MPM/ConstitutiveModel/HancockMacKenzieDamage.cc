@@ -12,6 +12,12 @@ HancockMacKenzieDamage::HancockMacKenzieDamage(ProblemSpecP& ps)
   ps->require("Dc",d_initialData.Dc);
 } 
 	 
+HancockMacKenzieDamage::HancockMacKenzieDamage(const HancockMacKenzieDamage* cm)
+{
+  d_initialData.D0  = cm->d_initialData.D0;
+  d_initialData.Dc  = cm->d_initialData.Dc;
+} 
+	 
 HancockMacKenzieDamage::~HancockMacKenzieDamage()
 {
 }

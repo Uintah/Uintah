@@ -33,12 +33,13 @@ namespace Uintah {
 
     // Prevent copying of this class
     // copy constructor
-    Membrane(const Membrane &cm);
+    //Membrane(const Membrane &cm);
     Membrane& operator=(const Membrane &cm);
 
   public:
     // constructors
     Membrane(ProblemSpecP& ps,  MPMLabel* lb, int n8or27);
+    Membrane(const Membrane* cm);
        
     // destructor
     virtual ~Membrane();

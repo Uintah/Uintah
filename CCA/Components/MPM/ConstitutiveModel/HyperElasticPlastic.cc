@@ -93,6 +93,36 @@ HyperElasticPlastic::HyperElasticPlastic(ProblemSpecP& ps,
 
 }
 
+HyperElasticPlastic::HyperElasticPlastic(const HyperElasticPlastic* cm)
+{
+  lb = cm->lb;
+  d_8or27 = cm->d_8or27;
+
+  d_initialData.Bulk = cm->d_initialData.Bulk;
+  d_initialData.Shear = cm->d_initialData.Shear;
+  d_useMPMICEModifiedEOS = cm->d_useMPMICEModifiedEOS;
+  d_erosionAlgorithm = cm->d_erosionAlgorithm ;
+  
+  d_plasticity = PlasticityModelFactory::createCopy(cm->d_plasticity);
+  d_damage = DamageModelFactory::createCopy(cm->d_damage);
+  d_eos = MPMEquationOfStateFactory::createCopy(cm->d_eos);
+
+  pBbarElasticLabel = VarLabel::create("p.bbarElastic",
+	ParticleVariable<Matrix3>::getTypeDescription());
+  pPlasticStrainLabel = VarLabel::create("p.plasticStrain",
+	ParticleVariable<double>::getTypeDescription());
+  pDamageLabel = VarLabel::create("p.damage",
+	ParticleVariable<double>::getTypeDescription());
+
+  pBbarElasticLabel_preReloc = VarLabel::create("p.bbarElastic+",
+	ParticleVariable<Matrix3>::getTypeDescription());
+  pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
+	ParticleVariable<double>::getTypeDescription());
+  pDamageLabel_preReloc = VarLabel::create("p.damage+",
+	ParticleVariable<double>::getTypeDescription());
+
+}
+
 HyperElasticPlastic::~HyperElasticPlastic()
 {
   // Destructor 

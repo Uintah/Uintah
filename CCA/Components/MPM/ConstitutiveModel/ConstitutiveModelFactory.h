@@ -10,14 +10,17 @@ namespace Uintah {
 
   class ConstitutiveModel;
   class MPMLabel;
+  class MPMFlags;
 
   class ConstitutiveModelFactory
   {
   public:
     // this function has a switch for all known mat_types
     
-    static ConstitutiveModel* create(ProblemSpecP& ps, MPMLabel* lb,int n8or27,
-				     std::string integrator);
+    static ConstitutiveModel* create(ProblemSpecP& ps, MPMLabel* lb,
+                                     MPMFlags* flags);
+
+    static ConstitutiveModel* createCopy(const ConstitutiveModel* cm);
   };
 } // End namespace Uintah
       

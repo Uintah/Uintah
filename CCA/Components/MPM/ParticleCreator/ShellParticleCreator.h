@@ -48,9 +48,7 @@ WARNING
     //
     ShellParticleCreator(MPMMaterial* matl, 
 			 MPMLabel* lb,
-			 int n8or27,
-			 bool haveLoadCurve,
-			 bool doErosion);
+			 MPMFlags* flags);
     virtual ~ShellParticleCreator();
     
     /////////////////////////////////////////////////////////////////////////

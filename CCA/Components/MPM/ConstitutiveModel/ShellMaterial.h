@@ -62,12 +62,13 @@ namespace Uintah {
 
     // Prevent copying of this class
     // copy constructor
-    ShellMaterial(const ShellMaterial &cm);
+    //ShellMaterial(const ShellMaterial &cm);
     ShellMaterial& operator=(const ShellMaterial &cm);
 
   public:
     // constructors
     ShellMaterial(ProblemSpecP& ps,  MPMLabel* lb, int n8or27);
+    ShellMaterial(const ShellMaterial* cm);
        
     // destructor
     virtual ~ShellMaterial();

@@ -44,13 +44,14 @@ namespace Uintah {
 
     // Prevent copying of this class
     // copy constructor
-    TransIsoHyper(const TransIsoHyper &cm);
+    //TransIsoHyper(const TransIsoHyper &cm);
     TransIsoHyper& operator=(const TransIsoHyper &cm);
     int d_8or27;
 
   public:
     // constructors
     TransIsoHyper(ProblemSpecP& ps,  MPMLabel* lb, int n8or27);
+    TransIsoHyper(const TransIsoHyper* cm);
        
     // destructor
     virtual ~TransIsoHyper();

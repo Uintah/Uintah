@@ -9,6 +9,10 @@ DefaultHyperElasticEOS::DefaultHyperElasticEOS(ProblemSpecP&)
 {
 } 
 	 
+DefaultHyperElasticEOS::DefaultHyperElasticEOS(const DefaultHyperElasticEOS*)
+{
+} 
+	 
 DefaultHyperElasticEOS::~DefaultHyperElasticEOS()
 {
 }

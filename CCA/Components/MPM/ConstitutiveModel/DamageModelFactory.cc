@@ -34,3 +34,17 @@ DamageModel* DamageModelFactory::create(ProblemSpecP& ps)
 
    //return 0;
 }
+
+DamageModel* DamageModelFactory::createCopy(const DamageModel* dm)
+{
+   if (dynamic_cast<const JohnsonCookDamage*>(dm))
+      return(scinew JohnsonCookDamage(dynamic_cast<const JohnsonCookDamage*>(dm)));
+
+   else if (dynamic_cast<const HancockMacKenzieDamage*>(dm))
+      return(scinew HancockMacKenzieDamage(dynamic_cast<const HancockMacKenzieDamage*>(dm)));
+
+   else 
+      throw ProblemSetupException("Cannot create copy of unknown damage model");
+
+   //return 0;
+}

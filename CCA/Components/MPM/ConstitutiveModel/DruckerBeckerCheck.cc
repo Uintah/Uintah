@@ -14,6 +14,10 @@ DruckerBeckerCheck::DruckerBeckerCheck(ProblemSpecP& )
 {
 }
 
+DruckerBeckerCheck::DruckerBeckerCheck(const DruckerBeckerCheck* )
+{
+}
+
 DruckerBeckerCheck::~DruckerBeckerCheck()
 {
 }

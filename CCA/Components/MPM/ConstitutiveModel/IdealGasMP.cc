@@ -43,6 +43,16 @@ IdealGasMP::IdealGasMP(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 
 }
 
+IdealGasMP::IdealGasMP(const IdealGasMP* cm)
+{
+  lb = cm->lb;
+  d_8or27 = cm->d_8or27;
+  NGN = cm->NGN;
+
+  d_initialData.gamma = cm->d_initialData.gamma;
+  d_initialData.cv = cm->d_initialData.cv;
+}
+
 IdealGasMP::~IdealGasMP()
 {
 }

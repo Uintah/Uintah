@@ -18,6 +18,7 @@ namespace Uintah {
   class Patch;
   class DataWarehouse;
   class MPMLabel;
+  class MPMFlags;
   class MPMMaterial;
   class ParticleSubset;
   class VarLabel;
@@ -27,7 +28,7 @@ namespace Uintah {
     
     ParticleCreator(MPMMaterial* matl, 
                     MPMLabel* lb,
-                    int n8or27, bool haveLoadCurve, bool doErosion);
+                    MPMFlags* flags);
 
     virtual ~ParticleCreator();
 

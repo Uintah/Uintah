@@ -61,12 +61,13 @@ namespace Uintah {
 	 
     // Prevent copying of this class
     // copy constructor
-    MieGruneisenEOS(const MieGruneisenEOS &cm);
+    //MieGruneisenEOS(const MieGruneisenEOS &cm);
     MieGruneisenEOS& operator=(const MieGruneisenEOS &cm);
 
   public:
     // constructors
     MieGruneisenEOS(ProblemSpecP& ps); 
+    MieGruneisenEOS(const MieGruneisenEOS* cm);
 	 
     // destructor 
     virtual ~MieGruneisenEOS();

@@ -9,6 +9,10 @@ VonMisesYield::VonMisesYield(ProblemSpecP&)
 {
 }
 	 
+VonMisesYield::VonMisesYield(const VonMisesYield*)
+{
+}
+	 
 VonMisesYield::~VonMisesYield()
 {
 }

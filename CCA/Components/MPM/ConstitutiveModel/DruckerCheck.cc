@@ -13,6 +13,10 @@ DruckerCheck::DruckerCheck(ProblemSpecP& ps)
 {
 }
 
+DruckerCheck::DruckerCheck(const DruckerCheck*)
+{
+}
+
 DruckerCheck::~DruckerCheck()
 {
 }

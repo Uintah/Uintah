@@ -36,13 +36,14 @@ namespace Uintah {
 
          // Prevent copying of this class
          // copy constructor
-         HypoElasticImplicit(const HypoElasticImplicit &cm);
+         //HypoElasticImplicit(const HypoElasticImplicit &cm);
          HypoElasticImplicit& operator=(const HypoElasticImplicit &cm);
          int d_8or27;
 
       public:
          // constructors
          HypoElasticImplicit(ProblemSpecP& ps,  MPMLabel* lb, int n8or27);
+         HypoElasticImplicit(const HypoElasticImplicit* cm);
        
          // destructor
          virtual ~HypoElasticImplicit();

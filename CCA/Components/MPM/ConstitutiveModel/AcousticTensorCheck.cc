@@ -50,6 +50,13 @@ AcousticTensorCheck::AcousticTensorCheck(ProblemSpecP& ps)
   ps->require("numPhi",d_numPhi);
 }
 
+AcousticTensorCheck::AcousticTensorCheck(const AcousticTensorCheck* cm)
+{
+  d_sweepInc = cm->d_sweepInc;
+  d_numTheta = cm->d_numTheta;
+  d_numPhi = cm->d_numPhi;
+}
+
 /*! Nothing to delete except the object itself */
 AcousticTensorCheck::~AcousticTensorCheck()
 {

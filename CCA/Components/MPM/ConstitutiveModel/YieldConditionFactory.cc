@@ -33,3 +33,19 @@ YieldCondition* YieldConditionFactory::create(ProblemSpecP& ps)
    else 
       throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Yield Condition ("+mat_type+")");
 }
+
+YieldCondition* 
+YieldConditionFactory::createCopy(const YieldCondition* yc)
+{
+   if (dynamic_cast<const VonMisesYield*>(yc))
+      return(scinew VonMisesYield(dynamic_cast<const VonMisesYield*>(yc)));
+
+   else if (dynamic_cast<const GursonYield*>(yc))
+      return(scinew GursonYield(dynamic_cast<const GursonYield*>(yc)));
+
+   else if (dynamic_cast<const RousselierYield*>(yc))
+      return(scinew RousselierYield(dynamic_cast<const RousselierYield*>(yc)));
+
+   else 
+      throw ProblemSetupException("Cannot create copy of unknown yield condition");
+}
