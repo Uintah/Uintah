@@ -74,15 +74,11 @@ namespace Uintah {
     /////////////////////////////////////////////////////////////////////////
     /*! Calculate the pressure using a equation of state */
     /////////////////////////////////////////////////////////////////////////
-    virtual Matrix3 computePressure(const MPMMaterial* matl,
-				    const double& bulk,
-				    const double& shear,
-				    const Matrix3& deformGrad,
-				    const Matrix3& rateOfDeformation,
-				    const Matrix3& stress,
-				    const double& temperature,
-				    const double& density,
-				    const double& delT);
+    virtual double computePressure(const MPMMaterial* matl,
+				   const PlasticityState* state,
+				   const Matrix3& deformGrad,
+				   const Matrix3& rateOfDeformation,
+				   const double& delT);
   
   };
 

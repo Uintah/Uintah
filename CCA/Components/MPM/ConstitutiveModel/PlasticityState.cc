@@ -9,6 +9,8 @@ PlasticityState::PlasticityState()
   temperature = 0.0;
   density = 0.0;
   initialDensity = 0.0;
+  bulkModulus = 0.0;
+  initialBulkModulus = 0.0;
   shearModulus = 0.0;
   initialShearModulus = 0.0;
   meltingTemp = 0.0;
@@ -23,6 +25,8 @@ PlasticityState::PlasticityState(const PlasticityState& state)
   temperature = state.temperature ;
   density = state.density ;
   initialDensity = state.initialDensity ;
+  bulkModulus = state.bulkModulus ;
+  initialBulkModulus = state.initialBulkModulus ;
   shearModulus = state.shearModulus ;
   initialShearModulus = state.initialShearModulus ;
   meltingTemp = state.meltingTemp ;
@@ -43,6 +47,8 @@ PlasticityState::operator=(const PlasticityState& state)
   temperature = state.temperature ;
   density = state.density ;
   initialDensity = state.initialDensity ;
+  bulkModulus = state.bulkModulus ;
+  initialBulkModulus = state.initialBulkModulus ;
   shearModulus = state.shearModulus ;
   initialShearModulus = state.initialShearModulus ;
   meltingTemp = state.meltingTemp ;

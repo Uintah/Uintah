@@ -513,6 +513,8 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->temperature = temperature;
       state->density = rho_cur;
       state->initialDensity = rho_0;
+      state->bulkModulus = bulk ;
+      state->initialBulkModulus = bulk;
       state->shearModulus = shear ;
       state->initialShearModulus = shear;
       state->meltingTemp = Tm ;
@@ -531,10 +533,9 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // be obtained from a strain energy functional of the form U'(J)
       // which is usually satisfied by equations of states that may or may not
       // satisfy small strain elasticity
-      Matrix3 tensorHy = d_eos->computePressure(matl, bulk, mu_cur, 
-                                                tensorF_new, tensorEta, 
-                                                tensorS, pTemperature[idx], 
-                                                rho_cur, delT);
+      double p = d_eos->computePressure(matl, state, tensorF_new, tensorD, 
+                                        delT);
+      Matrix3 tensorHy = one*p;
 
       // Calculate the flow stress
       flowStress = d_plasticity->computeFlowStress(state, delT, d_tol, 

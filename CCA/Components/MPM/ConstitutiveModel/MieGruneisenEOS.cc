@@ -19,35 +19,31 @@ MieGruneisenEOS::~MieGruneisenEOS()
 
 //////////
 // Calculate the pressure using the Mie-Gruneisen equation of state
-Matrix3 
+double 
 MieGruneisenEOS::computePressure(const MPMMaterial* matl,
-                                 const double& ,
-                                 const double& ,
+                                 const PlasticityState* state,
                                  const Matrix3& ,
                                  const Matrix3& ,
-                                 const Matrix3& ,
-                                 const double& T,
-                                 const double& rho,
                                  const double& )
 {
+  // Get the state data
+  double rho = state->density;
+  double T = state->temperature;
 
-   // Get original density
-   double rho_0 = matl->getInitialDensity();
+  // Get original density
+  double rho_0 = matl->getInitialDensity();
    
-   // Calc. zeta
-   double zeta = (rho/rho_0 - 1.0);
-   if (zeta == 0) {
-      Matrix3 zero(0.0);
-      return zero;
-   }
+  // Calc. zeta
+  double zeta = (rho/rho_0 - 1.0);
+  if (zeta == 0) return 0.0;
 
-   // Calculate internal energy E
-   double E = (matl->getSpecificHeat())*T;
+  // Calculate internal energy E
+  double E = (matl->getSpecificHeat())*T;
  
-   // Calculate the pressure
-   double numer = rho_0*(d_const.C_0*d_const.C_0)*(1.0/zeta+(1.0-0.5*d_const.Gamma_0));
-   double denom = 1.0/zeta - (d_const.S_alpha-1.0);
-   double p = numer/(denom*denom) + d_const.Gamma_0*E;
-   Matrix3 one; one.Identity();
-   return (one*(-p));
+  // Calculate the pressure
+  double numer = rho_0*(d_const.C_0*d_const.C_0)*(1.0/zeta+
+                         (1.0-0.5*d_const.Gamma_0));
+  double denom = 1.0/zeta - (d_const.S_alpha-1.0);
+  double p = numer/(denom*denom) + d_const.Gamma_0*E;
+  return -p;
 }
