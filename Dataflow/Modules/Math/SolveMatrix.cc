@@ -819,7 +819,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 	invdiag[i]=1;
     }
     flop+=size;
-    memref=2*size*sizeof(double);
+    memref=2*size*(int)sizeof(double);
 
     ColumnMatrix Z(size);
     matrix->mult(lhs, Z, flop, memref);
