@@ -232,7 +232,7 @@ C_FILES := $(patsubst %,%/*.c, $(ALLSUBDIRS))
 CPP_FILES := $(patsubst %,%/*.cc, $(ALLSUBDIRS))
 HEADER_FILES := $(patsubst %,%/*.h, $(ALLSUBDIRS))
 
-ETAGS_FILES := $(wildcard $(C_FILES) $(CPP_FILES) $(HEADER_FILES))
+ETAGS_FILES := $(wildcard $(HEADER_FILES) $(C_FILES) $(CPP_FILES) )
 TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
 ETAGS := @ETAGS@
 
@@ -294,6 +294,7 @@ clean::
 	rm -f $(CLEANPROGS)
 	rm -f y.output
 	rm -Rf $(LIBDIR)
+	rm sciTAGS
 
 distclean:: clean
 	rm -f config.status config.log config.cache
@@ -359,6 +360,9 @@ endif
 
 #
 # $Log$
+# Revision 1.33  2000/08/01 15:32:58  mcole
+# put header files first in etags
+#
 # Revision 1.32  2000/07/25 17:53:55  jehall
 # - Prevent make from deleting automatically generated *_sidl.{h,cc} files,
 #   since the MIPSPro CC may need them at link time for template
