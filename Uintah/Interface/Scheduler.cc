@@ -1,26 +1,31 @@
-//
-// $Id$
-//
+/* REFERENCED */
+static char *id="@(#) $Id$";
+
+#include <Uintah/Interface/Scheduler.h>
+
+#include <SCICore/Exceptions/ErrnoException.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <PSECore/XMLUtil/XMLUtil.h>
+
+#include <Uintah/Components/Schedulers/TaskGraph.h>
+#include <Uintah/Grid/Task.h>
+#include <Uintah/Grid/Patch.h>
+#include <Uintah/Interface/DataWarehouse.h>
 
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <errno.h>
 #include <sstream>
+#include <string>
 #include <stdlib.h>
 #include <time.h>
-#include <PSECore/XMLUtil/XMLUtil.h>
-#include <Uintah/Components/Schedulers/TaskGraph.h>
-#include <Uintah/Grid/Patch.h>
-#include <Uintah/Grid/Task.h>
-#include <Uintah/Interface/DataWarehouse.h>
-#include "Scheduler.h"
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Exceptions/ErrnoException.h>
 
 using namespace Uintah;
 using namespace PSECore::XMLUtil;
-using namespace std;
+
+using std::cerr;
+using std::string;
 using namespace SCICore::OS;
 using namespace SCICore::Exceptions;
 
@@ -175,6 +180,9 @@ Scheduler::problemSetup(const ProblemSpecP&)
 
 //
 // $Log$
+// Revision 1.12  2000/09/26 21:41:38  dav
+// minor formatting/include rearrangment
+//
 // Revision 1.11  2000/09/25 20:39:14  sparker
 // Quiet g++ compiler warnings
 //
