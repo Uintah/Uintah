@@ -61,7 +61,7 @@ c*********************************************************************
       if (xminus) ist = ist-1
       if (xplus) iend = iend+1
       if (yminus) jst = jst-1
-      if (yplus) jst = jst +1
+      if (yplus) jend = jend +1
       if (zminus) kst = kst - 1
       if (zplus) kend = kend +1
 
@@ -81,6 +81,10 @@ c*********************************************************************
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/10/12 20:07:41  sparker
+c Commented out debug print statements
+c Fixed bug in profscalar
+c
 c Revision 1.3  2000/10/11 16:37:31  rawat
 c modified calpbc for ghost cells
 c
