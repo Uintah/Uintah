@@ -48,7 +48,7 @@ else
 	SCIRun Core/CCA/Component/SSIDL Core/Thread
 endif
 
-LIBS :=
+LIBS := $(GLOBUS_LIBRARY)
 PROGRAM := sr
 
 include $(SCIRUN_SCRIPTS)/program.mk
