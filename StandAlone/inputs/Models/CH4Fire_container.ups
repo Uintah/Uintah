@@ -209,11 +209,16 @@
       <save label= "modelEng_src"/>
       
       <save label="p.x"/>
+      <save label="p.particleID"/>
       <save label="p.volume"/>
-     <!-- <save label="p.mass"/>
-      <save label="p.velocity"/>
+      <save label="p.mass"/>
       <save label="p.temperature"/>
       <save label="p.stress"/> 
+      <save label="p.plasticStrain"/> 
+      <save label="p.strainRate"/> 
+      <save label="p.localized"/> 
+      <!-- 
+      <save label="p.velocity"/>
       <save label="g.mass"/>
       <save label="g.temperature"/>  -->
       <checkpoint cycle = "4" timestepInterval = "200"/>
@@ -281,8 +286,8 @@
         <turn_on_adiabatic_heating>      false      </turn_on_adiabatic_heating>
         <accumulate_strain_energy>       false      </accumulate_strain_energy>
         <use_load_curves>                false      </use_load_curves>
-        <create_new_particles>           false      </create_new_particles>
-        <erosion algorithm = "none"/>
+        <create_new_particles>           true       </create_new_particles>
+        <erosion algorithm = "KeepStress"/>
     </MPM>
 
     <!--____________________________________________________________________-->
@@ -316,16 +321,16 @@
        <include href="inputs/MPM/MaterialData/GursonYieldSteel.xml"/>
        <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
        <include href="inputs/MPM/MaterialData/JohnsonCookDamage4340Steel.xml"/>
-          <initial_material_temperature>  294.0 </initial_material_temperature>
+          <initial_material_temperature>  300.0 </initial_material_temperature>
           <initial_mean_porosity>         0.005 </initial_mean_porosity>
           <initial_std_porosity>          0.001 </initial_std_porosity>
-          <critical_porosity>             0.5   </critical_porosity>
+          <critical_porosity>             0.3   </critical_porosity>
           <frac_nucleation>               0.1   </frac_nucleation>
           <meanstrain_nucleation>         0.3   </meanstrain_nucleation>
           <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
           <initial_porosity_distrib>      gauss </initial_porosity_distrib>
-          <initial_mean_scalar_damage>    0.01  </initial_mean_scalar_damage>
-          <initial_std_scalar_damage>     0.005 </initial_std_scalar_damage>
+          <initial_mean_scalar_damage>    0.005  </initial_mean_scalar_damage>
+          <initial_std_scalar_damage>     0.001 </initial_std_scalar_damage>
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
@@ -429,8 +434,14 @@
        
       <exchange_properties> 
          <exchange_coefficients>
-              <momentum>  [ 0, 1e15, 1e15]     </momentum>
-              <heat>      [ 0, 1e10, 1e10]     </heat>
+              <momentum>  [ 0, 0, 0, 1e15,
+                               0, 0, 1e15,
+                                  0, 1e15,
+                                     1e15]     </momentum>
+              <heat>      [ 0, 0, 0, 1e10,
+                               0, 0, 1e10,
+                                  0, 1e10,
+                                     1e10]     </heat>
         </exchange_coefficients>
       </exchange_properties> 
     </MaterialProperties>
