@@ -391,6 +391,50 @@ int Matrix3::getEigenValues(double& e1, double& e2, double& e3) const
   return num_values;
 }
 
+int SolveQuadratic(double b, double c, double& e1, double&e2)
+{
+  double disc = b*b - 4*c;
+  if (disc < 0) return 0;
+
+  if (disc == 0) {
+    e1 = -b/2;
+    return 1;
+  }
+  else {
+    disc = sqrt(disc);
+    e1 = (-b - disc) / 2;
+    e2 = (-b + disc) / 2;
+    return 2;
+  }
+}
+
+int Matrix3::getXYEigenValues(double& e1, double& e2) const
+{
+  // eigen values will be roots of the following quadratic
+  // a*x^2 + b*x + c
+  double b = -(mat3[0][0] + mat3[1][1]);
+  double c = mat3[0][0] * mat3[1][1] - mat3[0][1] * mat3[1][0];
+  return SolveQuadratic(b, c, e1, e2);
+}
+
+int Matrix3::getYZEigenValues(double& e1, double& e2) const
+{
+  // eigen values will be roots of the following quadratic
+  // a*x^2 + b*x + c
+  double b = -(mat3[1][1] + mat3[2][2]);
+  double c = mat3[1][1] * mat3[2][2] - mat3[1][2] * mat3[2][1];
+  return SolveQuadratic(b, c, e1, e2);
+}
+
+int Matrix3::getXZEigenValues(double& e1, double& e2) const
+{
+  // eigen values will be roots of the following quadratic
+  // a*x^2 + b*x + c
+  double b = -(mat3[0][0] + mat3[2][2]);
+  double c = mat3[0][0] * mat3[2][2] - mat3[0][2] * mat3[2][0];
+  return SolveQuadratic(b, c, e1, e2);
+}
+
 ostream & operator << (ostream &out_file, const Matrix3 &m3)
 {
   // Overload the output stream << operator
@@ -424,6 +468,9 @@ MPI_Datatype makeMPI_Matrix3()
 }
 
 //$Log$
+//Revision 1.8  2000/08/24 21:18:27  witzel
+//Added sub-matrix eigen value solving methods
+//
 //Revision 1.7  2000/08/19 00:07:30  witzel
 //Use graphics gems' CubeRoots instead of my CubicPolyRoots
 //(theirs may be more reliable).
