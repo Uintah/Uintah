@@ -21,6 +21,7 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Containers/StaticArray.h>
 #include <float.h>
+#include <stdio.h>
 
 using namespace Uintah;
 using namespace SCIRun;

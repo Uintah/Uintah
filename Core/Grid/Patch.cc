@@ -14,6 +14,7 @@
 #include <values.h>
 #include <iostream>
 #include <sstream>
+#include <stdio.h>
 #include <map>
 
 using namespace SCIRun;
