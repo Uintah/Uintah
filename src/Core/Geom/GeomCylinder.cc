@@ -98,7 +98,9 @@ void GeomCylinder::adjust()
     axis=top-bottom;
     height=axis.length();
     if(height < 1.e-6){
-	cerr << "Degenerate cylinder!\n";
+	cerr << "GeomCylinder - Degenerate cylinder!\n";
+	cerr << "GeomCylinder - " << top.x() << " " << top.y() << " "   << top.z() << endl;
+	cerr << "GeomCylinder - " << bottom.x() << " " << bottom.y() << " "   << bottom.z() << endl;
     } else {
 	axis.find_orthogonal(v1, v2);
     }
