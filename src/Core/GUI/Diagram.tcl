@@ -229,7 +229,7 @@ class Diagram {
 	    set zoom-mode in
 	} elseif { $mode == "off" } {
 	    $ogl set-cursor $prevcursor
-	    ogl rem-bind DiagramZoom
+	    $ogl rem-bind DiagramZoom
 	    set zoom-mode out
 	} elseif { $mode == "in" } {
 	    $ogl set-cursor "@$icon+.xbm $icon+mask.xbm black lightblue"
