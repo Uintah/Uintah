@@ -39,15 +39,16 @@ extraCells      = 1;                        % Number of ghost cells in each dire
 maxTime         = 0.0005;                   % Maximum simulation time [sec]
 initTime        = 0.0;                      % Initial simulation time [sec]
 delt_init       = 1e-6;                     % First timestep [sec]
-maxTimeSteps    = 1;                      % Maximum number of timesteps [dimensionless]
-CFL             = 0.4;                    % Courant number (~velocity*delT/delX) [dimensionless]
+maxTimeSteps    = 100;                      % Maximum number of timesteps [dimensionless]
+CFL             = 0.45;                     % Courant number (~velocity*delT/delX) [dimensionless]
 
 % Material properties (ideal gas)
 cv              = 717.5;                    % Specific_heat
 gamma           = 1.4;                      % gamma coefficient in the Equation of State (EOS)
 
 %================ ICE Interal Parameters ================
-
+% Debug flags
+compareUintah   = 0;
 
 %================ Partition of the domain into regions ================
 
@@ -61,7 +62,7 @@ count           = count+1;
 R.label         = 'leftpartition';          % Title of this region
 R.min           = 0;                        % Location of lower-left corner of this region [length]
 R.max           = 0.5;                      % Location of upper-right corner of this region [length]
-R.velocity      = 10.0;                      % Initial velocity
+R.velocity      = 0.0;                      % Initial velocity
 R.temperature   = 300.0;                    % Initial temperature [Kelvin]
 R.density       = 1.1768292682926831000;    % Initial density
 R.pressure      = 101325.0;                 % Initial pressure (1 atmosphere)
@@ -72,12 +73,12 @@ Region{count}   = R;                        % Add region to list
 count           = count+1;
 R.min           = 0.5;                      % Location of lower-left corner of this region [length]
 R.max           = 1;                        % Location of upper-right corner of this region [length]
-R.velocity      = 10.0;                      % Initial velocity
+R.velocity      = 0.0;                      % Initial velocity
 R.temperature   = 300.0;                    % Initial temperature [Kelvin]
-%R.density       = 0.11768292682926831000;   % Initial density
-%R.pressure      = 10132.50;                 % Initial pressure (0.1 atmosphere)
-R.density       = 1.1768292682926831000;   % Initial density
-R.pressure      = 101325.0;                 % Initial pressure (0.1 atmosphere)
+R.density       = 0.11768292682926831000;   % Initial density
+R.pressure      = 10132.50;                 % Initial pressure (0.1 atmosphere)
+% R.density       = 1.1768292682926831000;   % Initial density
+% R.pressure      = 101325.0;                 % Initial pressure (0.1 atmosphere)
 Region{count}   = R;                        % Add region to list
 
 %______________________________________________________________________
@@ -90,6 +91,7 @@ x_CC        = zeros(1,totCells);            % Cell centers locations (x-componen
 rho_CC      = zeros(1,totCells);            % Density rho
 xvel_CC     = zeros(1,totCells);            % Velocity u (x-component)
 temp_CC     = zeros(1,totCells);            % Temperature T
+press_eq_CC = zeros(1,totCells);            % equilibraton pressure
 press_CC    = zeros(1,totCells);            % Pressure p
 volfrac_CC  = zeros(1,totCells);            % Volume fraction theta, = 1 for this single-material problem
 spvol_CC    = zeros(1,totCells);            % Specific volume v0 = theta/rho = 1/(specific density)
@@ -99,6 +101,7 @@ gradLim     = zeros(1,totCells);            % Gradient Limiter (for advection)
 grad_x      = zeros(1,totCells);            % Gradient of rho (for advection)
 q_advected  = zeros(1,totCells);            % Advected flux of quantity (for advection)
 rho_slab    = zeros(1,totCells);            % Density in slab (for advection)
+delPDilatate = zeros(1,totCells);            % Pressure increment due to dilatation
 
 %================ Cell Centered (CC), Lagrangian values (L) ================
 
@@ -166,29 +169,29 @@ temp_CC     = setBoundaryConditions(temp_CC     ,'temp_CC');
 press_CC    = setBoundaryConditions(press_CC    ,'press_CC');
 
 %================ Initialize graphics ================
-figure(1);
-set(0,'DefaultFigurePosition',[0,0,1024,768]);
+%figure(1);
+%set(0,'DefaultFigurePosition',[0,0,1024,768]);
 %================ Plot results ================
-
-subplot(2,2,1), plot(x_CC,rho_CC);
-xlim([boxLower(1) boxUpper(1)]);
-legend('\rho');
-grid on;
-
-subplot(2,2,2), plot(x_CC,xvel_CC);
-xlim([boxLower(1) boxUpper(1)]);
-legend('u_1');
-grid on;
-
-subplot(2,2,3), plot(x_CC,temp_CC);
-xlim([boxLower(1) boxUpper(1)]);
-legend('T');
-grid on;
-
-subplot(2,2,4), plot(x_CC,press_CC);
-xlim([boxLower(1) boxUpper(1)]);
-legend('p');
-grid on;
+% 
+% subplot(2,2,1), plot(x_CC,rho_CC);
+% xlim([boxLower(1) boxUpper(1)]);
+% legend('\rho');
+% grid on;
+% 
+% subplot(2,2,2), plot(x_CC,xvel_CC);
+% xlim([boxLower(1) boxUpper(1)]);
+% legend('u_1');
+% grid on;
+% 
+% subplot(2,2,3), plot(x_CC,temp_CC);
+% xlim([boxLower(1) boxUpper(1)]);
+% legend('T');
+% grid on;
+% 
+% subplot(2,2,4), plot(x_CC,press_CC);
+% xlim([boxLower(1) boxUpper(1)]);
+% legend('p');
+% grid on;
 
 %M(tstep) = getframe(gcf);
 
@@ -219,17 +222,18 @@ for tstep = 1:maxTimeSteps
     fprintf('Step 2: compute equilibration pressure\n');
 
     % Update pressure from EOS
-    press_CC        = (gamma-1).*cv.*rho_CC.*temp_CC;               % Evaluate p from EOS
+    press_eq_CC      = (gamma-1).*cv.*rho_CC.*temp_CC;               % Evaluate p from EOS
     
     % Compute speed of sound at cell centers
     DpDrho          = (gamma-1).*cv.*temp_CC;                       % d P / d rho
     DpDe            = (gamma-1).*rho_CC;                            % d P / d e
-    speedSound_CC   = sqrt(DpDrho + DpDe.*press_CC./ ...
-        (rho_CC.^2 + d_SMALL_NUM));                                 % Speed of sound
+    tmp             = DpDrho + ( DpDe .* (press_eq_CC./rho_CC.^2));
+    speedSound_CC   = sqrt(tmp);                                    % Speed of sound
+    
     
     % Set boundary conditions on p
-    press_CC        =  setBoundaryConditions(press_CC,'press_CC');
-
+    press_eq_CC     =  setBoundaryConditions(press_eq_CC,'press_CC');
+    
     
     %_____________________________________________________
     % 3. Compute sources of energy due to chemical reactions
@@ -240,7 +244,8 @@ for tstep = 1:maxTimeSteps
     % 4. Compute the face-centered velocities
     fprintf('Step 4: compute face-centered velocities\n');
 
-    for j = firstCell:lastCell-1                                  % Loop over faces inside the domain
+%    for j = firstCell:lastCell-1                                  % Loop over faces inside the domain
+    for j = firstCell-1:lastCell                                  % Loop over all faces
         left        = j;
         right       = j+1;
         term1       = (...
@@ -251,7 +256,7 @@ for tstep = 1:maxTimeSteps
         term2a      = 2.0*spvol_CC(left)*spvol_CC(right) ...
             / (spvol_CC(left) + spvol_CC(right) + d_SMALL_NUM);
             
-        term2b      = (press_CC(right) - press_CC(left))/delX;
+        term2b      = (press_eq_CC(right) - press_eq_CC(left))/delX;
         
         xvel_FC(j)  = term1 - delT*term2a*term2b;
     end
@@ -276,11 +281,13 @@ for tstep = 1:maxTimeSteps
     [q_advected, gradLim, grad_x, rho_slab, rho_vrtx_1, rho_vrtx_2] = ...
         advectRho(volfrac_CC, ofs, rx, xvel_FC, delX, nCells);      % Treat theta advection like a rho advection (van Leer limiter, etc.)
     
+    term1 = ((speedSound_CC.^2) ./ spvol_CC );
+        
     % Advance pressure in time
-    delPDilatate(firstCell:lastCell) = (speedSound_CC(firstCell:lastCell).^2 ./ spvol_CC(firstCell:lastCell)) .* q_advected;
+    delPDilatate = +  term1 .* q_advected;
+    %              ^----------------DOUBLE CHECK THIS SIGN!!!
     
-    press_CC(firstCell:lastCell) = press_CC(firstCell:lastCell) + delPDilatate(firstCell:lastCell);
-    %   ^^----------------DOUBLE CHECK THIS SIGN!!!
+    press_CC = press_eq_CC + delPDilatate;
     % Set boundary conditions on the new pressure
     press_CC =  setBoundaryConditions(press_CC,'press_CC');
            
@@ -307,10 +314,10 @@ for tstep = 1:maxTimeSteps
 
     for j = firstCell:lastCell
         del_mom(j)  = -delT * delX * ...
-            ((press_FC(j) - press_FC(j-1))/(delX));
+            ((press_FC(j) - press_FC(j-1))/delX);
             
-        del_eng(j)  =  delX * press_CC(j) * delPDilatate(j) ...
-                      /(speedSound_CC(j).^2 ./ spvol_CC(j));                % Shift q to the indices of the rest of the arrays in this formula
+        del_eng(j)  =  delX .*spvol_CC(j) .* press_CC(j) * delPDilatate(j) ...
+                      /(speedSound_CC(j).^2);                % Shift q to the indices of the rest of the arrays in this formula
     end
 
     
@@ -347,10 +354,11 @@ for tstep = 1:maxTimeSteps
     fprintf ('Advecting density\n');
     [q_advected, gradLim, grad_x, rho_slab, rho_vrtx_1, rho_vrtx_2] = ...
         advectRho(mass_L, ofs, rx, xvel_FC, delX, nCells);      
-    mass_CC(firstCell:lastCell)     = mass_L(firstCell:lastCell) - q_advected;                      % note: advection of rho * ofs (the advected volume) = advection correction to the mass
-%    mass_CC(firstCell:lastCell)     = mass_L(firstCell:lastCell) - delT * q_advected;                      % note: advection of rho * ofs (the advected volume) = advection correction to the mass
-    rho_CC      = mass_CC ./ delX;                                  % Updated density
+    mass_CC     = mass_L + q_advected;                      % note: advection of rho * ofs (the advected volume) = advection correction to the mass
+    rho_CC      = mass_CC ./ delX;                          % Updated density
+    
     % Need to set B.C. on rho,T,u!!
+    rho_CC      = setBoundaryConditions(rho_CC      ,'rho_CC');
     
     %__________________________________
     % M O M E N T U M
@@ -358,55 +366,158 @@ for tstep = 1:maxTimeSteps
     fprintf ('Advecting momentum\n');
     [q_advected, gradLim, grad_x] = ...
         advectQ(mom_L, rho_CC, rho_slab, rho_vrtx_1, rho_vrtx_2, ofs, rx, xvel_FC, delX, nCells);
-    xvel_CC(firstCell:lastCell)     = (mom_L(firstCell:lastCell) - q_advected) ./ (mass_CC(firstCell:lastCell) + d_SMALL_NUM);  % Updated velocity
+   
 
+    
+    xvel_CC     = (mom_L + q_advected) ./ (mass_CC);  % Updated velocity
+    xvel_CC     = setBoundaryConditions(xvel_CC     ,'xvel_CC');
+    
     %__________________________________
     % E N E R G Y
     % Uses van Leer limiter
     fprintf ('Advecting energy\n');
     [q_advected, gradLim, grad_x] = ...
         advectQ(eng_L, rho_CC, rho_slab, rho_vrtx_1, rho_vrtx_2, ofs, rx, xvel_FC, delX, nCells);
-    temp_CC(firstCell:lastCell)     = (eng_L(firstCell:lastCell) - q_advected)./(cv.*mass_CC(firstCell:lastCell) + d_SMALL_NUM);% Updated temperature
+    temp_CC     = (eng_L + q_advected)./(cv.*mass_CC);% Updated temperature
+    temp_CC     = setBoundaryConditions(temp_CC     ,'temp_CC');
 
     
     %_____________________________________________________
     % 10. End of the timestep
 
-    %================ Compute del_T ================    
+    %================ Compute del_T ================
     % From ICE.cc: A G G R E S S I V E
-    
+
     delt_CFL        = 1e+30;
     for j = firstCell:lastCell
-        speed_Sound = speedSound_CC(j);
-        A           = CFL*delX/(speed_Sound + abs(xvel_CC(j))+d_SMALL_NUM);
-        delt_CFL    = min(A, delt_CFL);
+      speed_Sound = speedSound_CC(j);
+      A           = CFL*delX/(speed_Sound + abs(xvel_CC(j)));
+      delt_CFL    = min(A, delt_CFL);
     end
     fprintf('Aggressive delT Based on currant number CFL = %.3e\n',delt_CFL);
 
-    %================ Plot results ================
-    figure(1)
-    subplot(2,2,1), plot(x_CC,rho_CC);
-    xlim([boxLower(1) boxUpper(1)]);
-    legend('\rho');
-    grid on;
 
-    subplot(2,2,2), plot(x_CC,xvel_CC);
-    xlim([boxLower(1) boxUpper(1)]);
-    legend('u_1');
-    grid on;
+    %================ Compare with ICE ================
+    if (compareUintah)
+      uda = 'shockTube.uda.000';
+      delX = 0.01;
 
-    subplot(2,2,3), plot(x_CC,temp_CC);
-    xlim([boxLower(1) boxUpper(1)]);
-    legend('T');
-    grid on;
-    
-    subplot(2,2,4), plot(x_CC,press_CC);
-    xlim([boxLower(1) boxUpper(1)]);
-    legend('p');
-    grid on;
-   
-     M(tstep) = getframe(gcf);
-    
+      %  extract the physical time for each dump
+      c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda)
+      [status0, result0]=unix(c0);
+      physicalTime  = importdata('tmp');
+
+      if ( tstep > 1)
+        physicalTime(tstep) - physicalTime(tstep -1)
+        delT
+      end
+
+      ts = tstep -1;
+      startEnd = '-istart 0 0 0 -iend 1000 0 0';
+      c1 = sprintf('lineextract -v rho_CC   -timestep %i %s -o rho     -m 0 -uda %s',ts,startEnd,uda);
+      c2 = sprintf('lineextract -v vel_CC   -timestep %i %s -o vel_tmp  -m 0 -uda %s',ts,startEnd,uda);
+      c3 = sprintf('lineextract -v temp_CC  -timestep %i %s -o temp    -m 0 -uda %s',ts,startEnd,uda);
+      c4 = sprintf('lineextract -v press_CC -timestep %i %s -o press   -m 0 -uda %s',ts,startEnd,uda);
+      c5 = sprintf('lineextract -v delP_Dilatate -timestep %i %s -o delP   -m 0 -uda %s',ts,startEnd,uda);
+      c6 = sprintf('lineextract -v speedSound_CC -timestep %i %s -o Ssound -m 0 -uda %s',ts,startEnd,uda);
+      c7 = sprintf('lineextract -v uvel_FCME     -timestep %i %s -o uvelFC -m 0 -uda %s',ts,startEnd,uda);
+
+      [status1, result1]=unix(c1);
+      [status2, result2]=unix(c2);
+      [status3, result3]=unix(c3);
+      [status4, result4]=unix(c4);
+      [status5, result5]=unix(c5);
+      [status6, result6]=unix(c6);
+      [status7, result7]=unix(c7);
+
+      % rip out [] from velocity data
+      c8 = sprintf('sed ''s/\\[//g'' vel_tmp | sed ''s/\\]//g'' >vel');
+      [status8, result8]=unix(c8);
+
+      delP_ice   = importdata('delP');
+      press_ice  = importdata('press');
+      temp_ice   = importdata('temp');
+      rho_ice    = importdata('rho');
+      vel_ice    = importdata('vel');
+      Ssound_ice = importdata('Ssound');
+      uvel_FC_ice = importdata('uvelFC');
+      x          = press_ice(:,1) .* delX;
+
+      unix('/bin/rm delP press temp rho vel Ssound uvelFC vel_tmp');
+      %================ Plot results ================
+      figure(1)
+      subplot(2,2,1), plot(x_CC,rho_CC, x, rho_ice(:,4));
+      xlim([boxLower(1) boxUpper(1)]);
+      legend('\rho', 'rho ice');
+      grid on;
+
+      subplot(2,2,2), plot(x_CC,xvel_CC,x, vel_ice(:,4) );
+      xlim([boxLower(1) boxUpper(1)]);
+      legend('u_1', 'u ice');
+      grid on;
+
+      subplot(2,2,3), plot(x_CC,temp_CC, x, temp_ice(:,4));
+      xlim([boxLower(1) boxUpper(1)]);
+      legend('T', 'T ice');
+      grid on;
+
+      subplot(2,2,4), plot(x_CC,press_CC, x, press_ice(:,4));
+      xlim([boxLower(1) boxUpper(1)]);
+      legend('p', 'p ice');
+      grid on;
+
+      figure(2)
+      subplot(2,2,1), plot(x_CC,delPDilatate, x, delP_ice(:,4));
+      xlim([boxLower(1) boxUpper(1)]);
+      legend('delP','delP ice');
+      grid on;
+
+
+      subplot(2,2,2), plot(x_CC,speedSound_CC, x, Ssound_ice(:,4));
+      xlim([boxLower(1) boxUpper(1)]);
+      legend('speedSound','speedSound ice');
+      grid on;
+
+    else
+      if (mod(tstep,10) == 0)
+        %================ Plot results ================
+        figure(1)
+        subplot(2,2,1), plot(x_CC,rho_CC);
+        xlim([boxLower(1) boxUpper(1)]);
+        legend('\rho');
+        grid on;
+
+        subplot(2,2,2), plot(x_CC,xvel_CC);
+        xlim([boxLower(1) boxUpper(1)]);
+        legend('u_1');
+        grid on;
+
+        subplot(2,2,3), plot(x_CC,temp_CC);
+        xlim([boxLower(1) boxUpper(1)]);
+        legend('T');
+        grid on;
+
+        subplot(2,2,4), plot(x_CC,press_CC);
+        xlim([boxLower(1) boxUpper(1)]);
+        legend('p');
+        grid on;
+
+        figure(2)
+        subplot(2,2,1), plot(x_CC,delPDilatate);
+        xlim([boxLower(1) boxUpper(1)]);
+        legend('delP');
+        grid on;
+
+
+        subplot(2,2,2), plot(x_CC,speedSound_CC);
+        xlim([boxLower(1) boxUpper(1)]);
+        legend('speedSound');
+        grid on;
+      end
+    end
+
+    %M(tstep) = getframe(gcf);
+    %pause
     %================ Various breaks ================
     
     delT    = delt_CFL;                                         % Compute delT - "agressively" small
