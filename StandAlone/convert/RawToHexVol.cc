@@ -82,7 +82,7 @@ main(int argc, char **argv) {
 		 nodeIndex[i4], nodeIndex[i5], nodeIndex[16], nodeIndex[i7]);
   }
   if (count != ncells) {
-    cerr <<"Error -- was told "<<npts<<" points, but found "<<count<<"\n";
+    cerr <<"Error -- was told "<<ncells<<" cells, but found "<<count<<"\n";
     exit(0);
   }
 
