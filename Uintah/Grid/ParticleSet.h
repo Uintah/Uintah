@@ -2,7 +2,6 @@
 #define PARTICLESET_H
 
 #include "RefCounted.h"
-#include <iostream> // TEMPORARY
 
 namespace Uintah {
 
@@ -73,6 +72,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.6  2000/05/15 19:39:48  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.5  2000/05/10 20:03:01  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

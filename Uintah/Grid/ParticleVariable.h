@@ -2,16 +2,21 @@
 #define UINTAH_HOMEBREW_PARTICLEVARIABLE_H
 
 #include <SCICore/Util/FancyAssert.h>
+#include <SCICore/Exceptions/ErrnoException.h>
+#include <SCICore/Exceptions/InternalError.h>
+#include <Uintah/Grid/EmitUtils.h>
 #include <Uintah/Grid/ParticleVariableBase.h>
+#include <Uintah/Interface/OutputContext.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <Uintah/Grid/ParticleData.h>
 #include <Uintah/Grid/ParticleSubset.h>
 #include <Uintah/Grid/TypeDescription.h>
-#include <iostream> //TEMPORARY
-
+#include <unistd.h>
+#include <errno.h>
 
 namespace Uintah {
-
+   using SCICore::Exceptions::ErrnoException;
+   using SCICore::Exceptions::InternalError;
    class TypeDescription;
 
 /**************************************
@@ -81,6 +86,7 @@ WARNING
       virtual void gather(ParticleSubset* dest,
 			  std::vector<ParticleSubset*> subsets,
 			  std::vector<ParticleVariableBase*> srcs);
+      virtual void emit(OutputContext&);
    private:
       
       //////////
@@ -216,10 +222,41 @@ WARNING
 	 }
 	 ASSERT(dstiter == pset->end());
       }
+
+   template<class T>
+      void
+      ParticleVariable<T>::emit(OutputContext& oc)
+      {
+	 T* t=0;
+	 if(isFlat(*t)){
+	    // This could be optimized...
+	    ParticleSubset::iterator iter = d_pset->begin();
+	    while(iter != d_pset->end()){
+	       particleIndex start = *iter;
+	       iter++;
+	       particleIndex end = start+1;
+	       while(iter != d_pset->end() && *iter == end) {
+		  end++;
+		  iter++;
+	       }
+	       size_t size = sizeof(T)*(end-start);
+	       ssize_t s=write(oc.fd, &(*this)[start], size);
+	       if(size != s)
+		  throw ErrnoException("ParticleVariable::emit (write call)", errno);
+	       oc.cur+=size;
+	    }
+	 } else {
+	    throw InternalError("Cannot yet write non-flat objects!\n");
+	 }
+      }
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.12  2000/05/15 19:39:48  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.11  2000/05/10 20:03:01  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

@@ -6,7 +6,8 @@
 SRCDIR := Uintah/Components
 
 
-SUBDIRS :=  $(SRCDIR)/Schedulers $(SRCDIR)/SimulationController \
+SUBDIRS :=  $(SRCDIR)/DataArchiver \
+	$(SRCDIR)/Schedulers $(SRCDIR)/SimulationController \
 	$(SRCDIR)/MPM $(SRCDIR)/ICE \
 	$(SRCDIR)/Arches $(SRCDIR)/ProblemSpecification
 
@@ -14,6 +15,10 @@ include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.7  2000/05/15 19:39:33  sparker
+# Implemented initial version of DataArchive (output only so far)
+# Other misc. cleanups
+#
 # Revision 1.6  2000/05/05 06:42:40  dav
 # Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
 #

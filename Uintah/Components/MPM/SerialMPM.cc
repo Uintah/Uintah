@@ -472,9 +472,15 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			Ghost::AroundCells, 1);
 	    t->requires(old_dw, pXLabel, idx, region,
 			Ghost::None);
+	    t->requires(old_dw, pVolumeLabel, idx, region, Ghost::None);
+	    t->requires(old_dw, pMassLabel, idx, region, Ghost::None);
+	    t->requires(old_dw, pExternalForceLabel, idx, region, Ghost::None);
 	    t->requires(old_dw, deltLabel );
 	    t->computes(new_dw, pVelocityLabel, idx, region );
 	    t->computes(new_dw, pXLabel, idx, region );
+	    t->computes(new_dw, pVolumeLabel, idx, region);
+	    t->computes(new_dw, pMassLabel, idx, region);
+	    t->computes(new_dw, pExternalForceLabel, idx, region);
 	 }
 
 	 sched->addTask(t);
@@ -545,6 +551,15 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask(t);
       }
     }
+
+   if(d_fractureModel) {
+      new_dw->pleaseSave(pDeformationMeasureLabel, numMatls);
+   }
+   new_dw->pleaseSave(pVolumeLabel, numMatls);
+   new_dw->pleaseSave(pExternalForceLabel, numMatls);
+   new_dw->pleaseSave(gVelocityLabel, numMatls);
+   new_dw->pleaseSave(pXLabel, numMatls);
+   new_dw->pleaseSave(pVolumeLabel, numMatls);
 }
 
 void SerialMPM::actuallyInitialize(const ProcessorContext*,
@@ -1053,6 +1068,10 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.56  2000/05/15 19:39:37  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.55  2000/05/15 19:02:44  tan
 // A little change on initializedFracture Interface.
 //

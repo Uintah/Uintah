@@ -28,6 +28,7 @@ PSELIBS := Uintah
 LIBS :=
 else
 PSELIBS := Uintah/Grid Uintah/Parallel Uintah/Components/MPM \
+	Uintah/Components/DataArchiver \
 	Uintah/Components/SimulationController Uintah/Components/ICE \
 	Uintah/Components/Schedulers Uintah/Components/Arches \
 	Uintah/Components/ProblemSpecification \
@@ -39,6 +40,10 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.7  2000/05/15 19:39:29  sparker
+# Implemented initial version of DataArchive (output only so far)
+# Other misc. cleanups
+#
 # Revision 1.6  2000/05/11 20:10:10  dav
 # adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 #

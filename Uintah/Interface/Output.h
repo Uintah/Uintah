@@ -2,11 +2,16 @@
 #define UINTAH_HOMEBREW_OUTPUT_H
 
 #include <Uintah/Parallel/UintahParallelPort.h>
-#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/SimulationStateP.h>
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/SchedulerP.h>
 
 namespace Uintah {
+   class ProcessorContext;
+   class Region;
 
 /**************************************
 
@@ -44,8 +49,15 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      void finalizeTimestep(double t, double delt, const LevelP&, SchedulerP&,
-			    const DataWarehouseP&);
+      virtual void problemSetup(const ProblemSpecP& params) = 0;
+
+      //////////
+      // Insert Documentation Here:
+      virtual void finalizeTimestep(double t, double delt, const LevelP&,
+				    SchedulerP&,
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP&) = 0;
+
    private:
       Output(const Output&);
       Output& operator=(const Output&);
@@ -55,6 +67,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.7  2000/05/15 19:39:52  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.6  2000/04/26 06:49:11  sparker
 // Streamlined namespaces
 //

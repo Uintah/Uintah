@@ -84,7 +84,102 @@ WARNING
 	    (ptr->*pmf)(pc, region, fromDW, toDW);
 	 }
       };
+      template<class T, class Arg1>
+      class Action1 : public ActionBase {
+	 
+	 T* ptr;
+	 Arg1 arg1;
+	 void (T::*pmf)(const ProcessorContext*,
+			const Region*,
+			DataWarehouseP&,
+			DataWarehouseP&,
+			Arg1 arg1);
+      public:
+	 Action1( T* ptr,
+		 void (T::*pmf)(const ProcessorContext*, 
+				const Region*, 
+				DataWarehouseP&,
+				DataWarehouseP&,
+				Arg1),
+		  Arg1 arg1)
+	    : ptr(ptr), pmf(pmf), arg1(arg1) {}
+	 virtual ~Action1() {}
+	 
+	 //////////
+	 // Insert Documentation Here:
+	 virtual void doit(const ProcessorContext* pc,
+			   const Region* region,
+			   DataWarehouseP& fromDW,
+			   DataWarehouseP& toDW) {
+	    (ptr->*pmf)(pc, region, fromDW, toDW, arg1);
+	 }
+      };
       
+      template<class T, class Arg1, class Arg2>
+      class Action2 : public ActionBase {
+	 
+	 T* ptr;
+	 Arg1 arg1;
+	 Arg2 arg2;
+	 void (T::*pmf)(const ProcessorContext*,
+			const Region*,
+			DataWarehouseP&,
+			DataWarehouseP&,
+			Arg1 arg1, Arg2 arg2);
+      public:
+	 Action2( T* ptr,
+		 void (T::*pmf)(const ProcessorContext*, 
+				const Region*, 
+				DataWarehouseP&,
+				DataWarehouseP&,
+				Arg1, Arg2),
+		  Arg1 arg1, Arg2 arg2)
+	    : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2) {}
+	 virtual ~Action2() {}
+	 
+	 //////////
+	 // Insert Documentation Here:
+	 virtual void doit(const ProcessorContext* pc,
+			   const Region* region,
+			   DataWarehouseP& fromDW,
+			   DataWarehouseP& toDW) {
+	    (ptr->*pmf)(pc, region, fromDW, toDW, arg1, arg2);
+	 }
+      };
+
+      template<class T, class Arg1, class Arg2, class Arg3>
+      class Action3 : public ActionBase {
+	 
+	 T* ptr;
+	 Arg1 arg1;
+	 Arg2 arg2;
+	 Arg3 arg3;
+	 void (T::*pmf)(const ProcessorContext*,
+			const Region*,
+			DataWarehouseP&,
+			DataWarehouseP&,
+			Arg1 arg1, Arg2 arg2, Arg3 arg3);
+      public:
+	 Action3( T* ptr,
+		 void (T::*pmf)(const ProcessorContext*, 
+				const Region*, 
+				DataWarehouseP&,
+				DataWarehouseP&,
+				Arg1, Arg2, Arg3),
+		  Arg1 arg1, Arg2 arg2, Arg3 arg3)
+	    : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3) {}
+	 virtual ~Action3() {}
+	 
+	 //////////
+	 // Insert Documentation Here:
+	 virtual void doit(const ProcessorContext* pc,
+			   const Region* region,
+			   DataWarehouseP& fromDW,
+			   DataWarehouseP& toDW) {
+	    (ptr->*pmf)(pc, region, fromDW, toDW, arg1, arg2, arg3);
+	 }
+      };
+
    public:
       template<class T>
       Task(const string&         taskName,
@@ -140,10 +235,58 @@ WARNING
 			  DataWarehouseP&,
 			  DataWarehouseP&,
 			  Arg1),
-	   Arg1)
+	   Arg1 arg1)
 	 : d_taskName( taskName ), 
 	   d_region( region ),
-	   //d_action( new Action<T>(ptr, pmf) ),
+	   d_action( new Action1<T, Arg1>(ptr, pmf, arg1) ),
+	   d_fromDW( fromDW ),
+	   d_toDW( toDW )
+      {
+	 d_completed = false;
+	 d_usesThreads = false;
+	 d_usesMPI = false;
+	 d_subregionCapable = false;
+      }
+      
+      template<class T, class Arg1, class Arg2>
+      Task(const string&         taskName,
+	   const Region*         region,
+	   DataWarehouseP&       fromDW,
+	   DataWarehouseP&       toDW,
+	   T*                    ptr,
+	   void (T::*pmf)(const ProcessorContext*,
+			  const Region*,
+			  DataWarehouseP&,
+			  DataWarehouseP&,
+			  Arg1, Arg2),
+	   Arg1 arg1, Arg2 arg2)
+	 : d_taskName( taskName ), 
+	   d_region( region ),
+	   d_action( new Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2) ),
+	   d_fromDW( fromDW ),
+	   d_toDW( toDW )
+      {
+	 d_completed = false;
+	 d_usesThreads = false;
+	 d_usesMPI = false;
+	 d_subregionCapable = false;
+      }
+      
+      template<class T, class Arg1, class Arg2, class Arg3>
+      Task(const string&         taskName,
+	   const Region*         region,
+	   DataWarehouseP&       fromDW,
+	   DataWarehouseP&       toDW,
+	   T*                    ptr,
+	   void (T::*pmf)(const ProcessorContext*,
+			  const Region*,
+			  DataWarehouseP&,
+			  DataWarehouseP&,
+			  Arg1, Arg2, Arg3),
+	   Arg1 arg1, Arg2 arg2, Arg3 arg3)
+	 : d_taskName( taskName ), 
+	   d_region( region ),
+	   d_action( new Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3) ),
 	   d_fromDW( fromDW ),
 	   d_toDW( toDW )
       {
@@ -251,6 +394,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.13  2000/05/15 19:39:50  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.12  2000/05/11 20:10:21  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

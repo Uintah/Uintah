@@ -77,6 +77,8 @@ void
 OnDemandDataWarehouse::put(const ReductionVariableBase& var,
 			   const VarLabel* label)
 {
+   ASSERT(!d_finalized);
+
    reductionDBtype::const_iterator iter = d_reductionDB.find(label);
    if(iter == d_reductionDB.end()){
       d_reductionDB[label]=new ReductionRecord(var.clone());
@@ -279,6 +281,8 @@ OnDemandDataWarehouse::put(const ParticleVariableBase& var,
 			   int matlIndex,
 			   const Region* region)
 {
+   ASSERT(!d_finalized);
+
    // Error checking
    if(d_particleDB.exists(label, matlIndex, region))
       throw InternalError("Variable already exists: "+label->getName());
@@ -374,6 +378,8 @@ OnDemandDataWarehouse::put(const NCVariableBase& var,
 			   const VarLabel* label,
 			   int matlIndex, const Region* region)
 {
+   ASSERT(!d_finalized);
+
    // Error checking
    if(d_ncDB.exists(label, matlIndex, region))
       throw InternalError("NC variable already exists: "+label->getName());
@@ -402,7 +408,9 @@ void
 OnDemandDataWarehouse::put(const CCVariableBase&, const VarLabel*,
 			   int matlIndex, const Region*)
 {
-  throw InternalError( "CC Var put not implemented yet!" );    
+   ASSERT(!d_finalized);
+
+   throw InternalError( "CC Var put not implemented yet!" );    
 }
 
 int
@@ -461,7 +469,6 @@ OnDemandDataWarehouse::registerOwnership( const VarLabel * label,
   varList->push_back( location );
 }
 
-
 void
 OnDemandDataWarehouse::carryForward(const DataWarehouseP& fromp)
 {
@@ -480,6 +487,23 @@ OnDemandDataWarehouse::carryForward(const DataWarehouseP& fromp)
    }
 }
 
+void
+OnDemandDataWarehouse::pleaseSave(const VarLabel* var, int number)
+{
+   ASSERT(!d_finalized);
+
+   d_saveset.push_back(var);
+   d_savenumbers.push_back(number);
+}
+
+void
+OnDemandDataWarehouse::getSaveSet(std::vector<const VarLabel*>& vars,
+				  std::vector<int>& numbers) const
+{
+   vars=d_saveset;
+   numbers=d_savenumbers;
+}
+
 bool
 OnDemandDataWarehouse::exists(const VarLabel* label, const Region* region) const
 {
@@ -496,6 +520,22 @@ OnDemandDataWarehouse::exists(const VarLabel* label, const Region* region) const
    return false;
 }
 
+void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
+				 int matlIndex, const Region* region) const
+{
+   if(d_ncDB.exists(label, matlIndex, region)) {
+      NCVariableBase* var = d_ncDB.get(label, matlIndex, region);
+      var->emit(oc);
+      return;
+   }
+   if(d_particleDB.exists(label, matlIndex, region)) {
+      ParticleVariableBase* var = d_particleDB.get(label, matlIndex, region);
+      var->emit(oc);
+      return;
+   }
+   throw UnknownVariable(label->getName());
+}
+
 OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* var)
    : var(var)
 {
@@ -505,6 +545,10 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 
 //
 // $Log$
+// Revision 1.22  2000/05/15 19:39:43  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.21  2000/05/11 20:10:19  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

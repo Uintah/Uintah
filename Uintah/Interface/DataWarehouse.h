@@ -19,7 +19,7 @@ namespace Geometry {
 }
 
 namespace Uintah {
-
+   class OutputContext;
    class VarLabel;
 
 /**************************************
@@ -112,7 +112,18 @@ WARNING
       // variable (in the given region) is on.
       virtual int findMpiNode( const VarLabel * label,
 			       const Region   * region ) = 0;
+
+      //////////
+      // Adds a variable to the save set
+      virtual void pleaseSave(const VarLabel* label, int number) = 0;
        
+      //////////
+      // Retrieves the saveset
+      virtual void getSaveSet(std::vector<const VarLabel*>&,
+			      std::vector<int>&) const = 0;
+
+      virtual void emit(OutputContext&, const VarLabel* label,
+			int matlIndex, const Region* region) const = 0;
    protected:
       DataWarehouse( int MpiRank, int MpiProcesses, int generation );
       int d_MpiRank, d_MpiProcesses;
@@ -128,6 +139,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.22  2000/05/15 19:39:52  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.21  2000/05/11 20:10:23  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

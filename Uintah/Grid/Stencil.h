@@ -3,7 +3,6 @@
 
 #include <Uintah/Grid/DataItem.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
-#include <iostream> // TEMPORARY
 
 namespace Uintah {
 
@@ -127,6 +126,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3  2000/05/15 19:39:49  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.2  2000/04/26 06:48:58  sparker
 // Streamlined namespaces
 //

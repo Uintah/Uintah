@@ -66,6 +66,9 @@ void SimulationController::run()
    if(!ups)
       throw ProblemSetupException("Input file is not a Uintah specification");
    
+   Output* output = dynamic_cast<Output*>(getPort("output"));
+   output->problemSetup(ups);
+   
    // Setup the initial grid
    GridP grid=new Grid();
    
@@ -139,8 +142,6 @@ void SimulationController::run()
    ProcessorContext* pc = ProcessorContext::getRootContext();
    scheduler->execute(pc, old_ds);
    
-   Output* output = dynamic_cast<Output*>(getPort("output"));
-   
    while(t < timeinfo.maxTime) {
       double wallTime = Time::currentSeconds() - start_time;
 
@@ -151,15 +152,18 @@ void SimulationController::run()
       if(delt < timeinfo.delt_min){
 	 cerr << "WARNING: raising delt from " << delt
 	      << " to minimum: " << timeinfo.delt_min << '\n';
+	 cerr << "AND IT DOESN'T WORK";
 	 delt = timeinfo.delt_min;
       }
       if(delt > timeinfo.delt_max){
 	 cerr << "WARNING: lowering delt from " << delt 
 	      << " to maxmimum: " << timeinfo.delt_max << '\n';
+	 cerr << "AND IT DOESN'T WORK";
 	 delt = timeinfo.delt_max;
       }
       
-      old_ds->put(delt_vartype(delt), sharedState->get_delt_label());
+      // Needs to be fixed - steve
+      //old_ds->put(delt_vartype(delt), sharedState->get_delt_label());
       cout << "Time=" << t << ", delt=" << delt 
 	   << ", elapsed time = " << wallTime << '\n';
 
@@ -174,7 +178,7 @@ void SimulationController::run()
       scheduleTimeAdvance(t, delt, level, scheduler, old_ds, new_ds,
 			  cfd, mpm);
       if(output)
-	 output->finalizeTimestep(t, delt, level, scheduler, new_ds);
+	 output->finalizeTimestep(t, delt, level, scheduler, old_ds, new_ds);
       t += delt;
       
       // Begin next time step...
@@ -199,7 +203,7 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
    
    for(ProblemSpecP level_ps = grid_ps->findBlock("Level");
        level_ps != 0; level_ps = level_ps->findNextBlock("Level")){
-      LevelP level = new Level();
+      LevelP level = new Level(grid.get_rep());
       
       for(ProblemSpecP box_ps = level_ps->findBlock("Box");
 	  box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
@@ -421,6 +425,10 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.20  2000/05/15 19:39:45  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.19  2000/05/11 21:25:51  sparker
 // Fixed main time loop
 //

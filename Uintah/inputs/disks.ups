@@ -15,6 +15,10 @@
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.001</delt_max>
    </Time>
+   <DataArchiver>
+        <filebase>disks.uda</filebase>
+	<outputInterval>5</outputInterval>
+   </DataArchiver>
 
     <MPM>
 	<time_integrator>explicit</time_integrator>
@@ -86,7 +90,7 @@
 	    <Box label="1">
 		<lower>[0,0,0]</lower>
 		<upper>[1.0,1.0,.15]</upper>
-	        <resolution>[20,20,3]</resolution>
+	        <resolution>[50,50,3]</resolution>
 		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>

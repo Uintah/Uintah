@@ -111,6 +111,18 @@ public:
    void finalize() {
       d_finalized=true;
    }
+
+   //////////
+   // Adds a variable to the save set
+   virtual void pleaseSave(const VarLabel* label, int number);
+       
+   //////////
+   // Retrieves the saveset
+   virtual void getSaveSet(std::vector<const VarLabel*>&,
+			   std::vector<int>&) const;
+       
+   virtual void emit(OutputContext&, const VarLabel* label,
+		     int matlIndex, const Region* region) const;
 private:
 
    void sendMpiDataRequest();
@@ -144,12 +156,19 @@ private:
    int d_responseTag; 
    
    const VarLabel * d_positionLabel;
+
+   std::vector<const VarLabel*> d_saveset;
+   std::vector<int> d_savenumbers;
 };
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.19  2000/05/15 19:39:43  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.18  2000/05/11 20:10:19  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

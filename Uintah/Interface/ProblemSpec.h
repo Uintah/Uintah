@@ -105,6 +105,10 @@ WARNING
       
       static const TypeDescription* getTypeDescription();
       
+
+      DOM_Document getDocument() const {
+	 return d_doc;
+      }
    private:
       ProblemSpec(const ProblemSpec&);
       ProblemSpec& operator=(const ProblemSpec&);
@@ -119,6 +123,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.13  2000/05/15 19:39:53  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.12  2000/04/27 00:28:38  jas
 // Can now read the attributes field of a tag.
 //
