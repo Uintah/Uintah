@@ -38,7 +38,8 @@
 SRCDIR := Packages/Ptolemy/Dataflow/Modules
 
 SUBDIRS := \
-        $(SRCDIR)/Vergil
+        $(SRCDIR)/Vergil \
+        $(SRCDIR)/Converters \
 #[INSERT NEW CATEGORY DIR HERE]
 
 SOFLAGS := \
