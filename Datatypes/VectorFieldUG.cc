@@ -29,9 +29,17 @@ VectorFieldUG::VectorFieldUG(Type typ)
 }
 
 VectorFieldUG::VectorFieldUG(const MeshHandle& mesh, Type typ)
-: VectorField(UnstructuredGrid), mesh(mesh), data(mesh->nodes.size()),
+: VectorField(UnstructuredGrid), mesh(mesh),
   typ(typ)
 {
+  switch(typ){
+  case NodalValues:
+    data.resize(mesh->nodes.size());
+    break;
+  case ElementValues:
+    data.resize(mesh->elems.size());
+    break;
+  }
 }
 
 VectorFieldUG::~VectorFieldUG()
