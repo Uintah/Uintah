@@ -3,13 +3,9 @@
 #define UINTAH_HOMEBREW_DataWarehouseP_H
 
 namespace Uintah {
-    namespace Grid {
-	template<class T> class Handle;
-    }
-    namespace Interface {
-	class DataWarehouse;
-	typedef Uintah::Grid::Handle<DataWarehouse> DataWarehouseP;
-    }
+   template<class T> class Handle;
+   class DataWarehouse;
+   typedef Handle<DataWarehouse> DataWarehouseP;
 }
 
 #endif

@@ -9,15 +9,9 @@ static char *id="@(#) $Id$";
 #include <SCICore/Geometry/Point.h>
 #include <Uintah/Exceptions/ParameterNotFound.h>
 //#include <cstdlib>
-
-using std::cerr;
-using std::endl;
-using namespace Uintah::Interface;
-using std::string;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::IntVector;
-using Uintah::Exceptions::ParameterNotFound;
+using namespace Uintah;
+using namespace std;
+using namespace SCICore::Geometry;
 
 ProblemSpec::ProblemSpec()
 {
@@ -483,6 +477,9 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.15  2000/04/26 06:49:11  sparker
+// Streamlined namespaces
+//
 // Revision 1.14  2000/04/20 23:57:03  jas
 // Fixed the findBlock() and findNextBlock() to iterate through all the
 // nodes.  Now we can go thru the MPM setup without an error.  There is
