@@ -3041,7 +3041,7 @@ if test "$sci_required_mdsplus" = "yes"; then
   ext="$ac_ext"
   ac_ext="c"
 
-  SCI_TRY_LINK(MDSPLUS,mdslib library and headers,mdslib.h,$_sci_inc,MdsLib_client,$_sci_lib,,,required)
+  SCI_TRY_LINK(MDSPLUS,mdslib library and headers,mdslib.h,$_sci_inc,MdsLib_client,$_sci_lib,,,optional)
 
   if test "$HAVE_MDSPLUS" = "yes"; then
      DEF_MDSPLUS="#define HAVE_MDSPLUS 1"

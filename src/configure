@@ -28205,8 +28205,8 @@ fi
 
 
 
-echo "$as_me:$LINENO: checking for mdslib library and headers (required)" >&5
-echo $ECHO_N "checking for mdslib library and headers (required)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for mdslib library and headers (optional)" >&5
+echo $ECHO_N "checking for mdslib library and headers (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -28214,9 +28214,9 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for mdslib library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for mdslib library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for mdslib library and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for mdslib library and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -28239,7 +28239,7 @@ echo "$as_me: error: Please do not specify /usr/include as the location for mdsl
   fi
 done
 
-if test "required" = "specific"; then
+if test "optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
   ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
   __sci_pass=false
@@ -28391,7 +28391,7 @@ eval INC_MDSPLUS_H=''
 eval HAVE_MDSPLUS_H="no"
 echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-if test "required" != "optional"; then
+if test "optional" != "optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -28434,7 +28434,7 @@ fi
 fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 
-if test "required" = "specific"; then
+if test "optional" = "specific"; then
 #echo specific
   # Make sure the exact includes were found
   for i in ""mdslib.h; do
