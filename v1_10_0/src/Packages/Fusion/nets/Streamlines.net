@@ -2,9 +2,6 @@
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
 set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 16 17]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 300 55]
 set m2 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 34 133]
@@ -79,9 +76,11 @@ set $m4-use-normals {0}
 set $m4-use-transparency {0}
 set $m4-vectors-on {0}
 set $m4-normalize-vectors {25277570}
-set $m4-has_vec_data {0}
+set $m4-has_vector_data {0}
 set $m4-bidirectional {0}
 set $m4-arrow-heads-on {1}
+set $m4-tensors-on {0}
+set $m4-has_tensor_data {0}
 set $m4-text-on {0}
 set $m4-text-use-default-color {1}
 set $m4-text-color-r {1.0}
@@ -89,6 +88,8 @@ set $m4-text-color-g {1.0}
 set $m4-text-color-b {1.0}
 set $m4-text-backface-cull {0}
 set $m4-text-fontsize {1}
+set $m4-text-precision {2}
+set $m4-text-render_locations {0}
 set $m4-text-show-data {1}
 set $m4-text-show-nodes {0}
 set $m4-text-show-edges {0}
@@ -100,14 +101,18 @@ set $m4-def-color-b {0.5}
 set $m4-def-color-a {0.5}
 set $m4-node_display_type {Spheres}
 set $m4-edge_display_type {Cylinders}
+set $m4-data_display_type {Arrows}
+set $m4-tensor_display_type {Boxes}
 set $m4-active_tab {Nodes}
 set $m4-node_scale {0.05}
 set $m4-edge_scale {0.03}
 set $m4-vectors_scale {0.3}
+set $m4-tensors_scale {0.30}
 set $m4-show_progress {39848618}
 set $m4-interactive_mode {Interactive}
 set $m4-node-resolution {6}
 set $m4-edge-resolution {6}
+set $m4-data-resolution {6}
 set $m5-notes {}
 set $m5-show_status {1}
 set $m5-endpoints {1}
@@ -131,7 +136,7 @@ set $m6-notes {}
 set $m6-show_status {1}
 set $m6-isFixed {0}
 set $m6-min {                0}
-set $m6-max {              128}
+set $m6-max {               78}
 set $m6-makeSymmetric {0}
 set $m7-notes {}
 set $m7-show_status {1}
