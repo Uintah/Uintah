@@ -171,7 +171,7 @@ HexIntMask::execute()
   HexVolMesh::Node::iterator bni, eni;
   HexVolMesh::Cell::iterator bci, eci;
   
-  if (hvfield->data_at() == Field::CELL) {
+  if (hvfield->basis_order() == 0) {
 #ifdef HAVE_HASH_MAP
     typedef hash_map<unsigned int,
       HexVolMesh::Node::index_type,
@@ -271,7 +271,7 @@ HexIntMask::execute()
     
     if (elemmap.size() > 0)
     {
-      ofield = scinew HexVolField<int>(clipped, Field::CELL);
+      ofield = scinew HexVolField<int>(clipped, 0);
       ofield->copy_properties(hvfield);
       
       int val;
@@ -377,7 +377,7 @@ HexIntMask::execute()
     // copy the field data - map it to the right nodes
     if (nodemap.size() > 0)
     {
-      ofield = scinew HexVolField<int>(clipped, Field::NODE);
+      ofield = scinew HexVolField<int>(clipped,1);
       ofield->copy_properties(hvfield);
       
       int val;

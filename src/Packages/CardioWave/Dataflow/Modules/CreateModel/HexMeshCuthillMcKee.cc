@@ -158,6 +158,7 @@ HexMeshCuthillMcKee::execute()
 
   // pre-process -- build up neighbor lists
   while (nbi != nei) {
+
     vector<HexVolMesh::Node::index_type> neighbors;
     hvmesh->get_neighbors(neighbors, *nbi);
     for (unsigned int i = 0; i < neighbors.size(); i++) {
@@ -277,7 +278,7 @@ HexMeshCuthillMcKee::execute()
     ++cbi;
   }
 
-  HexVolField<int> *bwfield = scinew HexVolField<int>(bwmesh, Field::NODE);
+  HexVolField<int> *bwfield = scinew HexVolField<int>(bwmesh, 1);
   hvmesh->begin(nbi);
   while (nbi != nei) {
     int val;
@@ -294,8 +295,10 @@ HexMeshCuthillMcKee::execute()
   bwmesh->begin(nbi);
   bwmesh->end(nei);
   while(nbi != nei) {
-    vector<HexVolMesh::Node::index_type> neighbors;
+
+	vector<HexVolMesh::Node::index_type> neighbors;
     bwmesh->get_neighbors(neighbors, *nbi);
+
     for (unsigned int i = 0; i < neighbors.size(); i++) {
 		// Again to resolve problems iterator has to be casted
 		// The iterator is a number but has only a ++ operator

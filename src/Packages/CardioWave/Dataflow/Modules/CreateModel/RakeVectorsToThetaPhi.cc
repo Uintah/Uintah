@@ -74,7 +74,7 @@ void RakeVectorsToThetaPhi::execute()
     return;
   }
   
-  if (vecfld->data_at() != Field::NODE) {
+  if (vecfld->basis_order() != 1) {
     error("Input field doesn't have data at Nodes.");
     return;
   }

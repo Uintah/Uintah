@@ -103,7 +103,7 @@ VectorFieldsToTensorField::execute()
   LatVolMeshHandle maskmesh;
   if (mask) maskmesh = mask->get_typed_mesh();
 
-  if (ev1->data_at() != ev2->data_at()) {
+  if (ev1->basis_order() != ev2->basis_order()) {
     error("Vector fields must have the same data_at.");
     return;
   }
@@ -117,7 +117,7 @@ VectorFieldsToTensorField::execute()
   }
 
   if (mask) {
-    if (ev1->data_at() != mask->data_at()) {
+    if (ev1->basis_order() != mask->basis_order()) {
       error("Vector fields and mask must have the same data_at.");
       return;
     }
@@ -131,7 +131,7 @@ VectorFieldsToTensorField::execute()
   }
 
 
-  LatVolField<int> *tfield = scinew LatVolField<int>(ev1mesh, ev1->data_at());
+  LatVolField<int> *tfield = scinew LatVolField<int>(ev1mesh, ev1->basis_order());
 
   Vector *v1 = ev1->fdata().begin();
   Vector *v2 = ev2->fdata().begin();
