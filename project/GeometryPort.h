@@ -45,6 +45,7 @@ class GeometryOPort : public OPort {
     int portid;
     GeomID serial;
     int dirty;
+    int* busy_bit;
 
     virtual void reset();
     virtual void finish();
@@ -58,18 +59,27 @@ public:
     void delObj(GeomID);
     void delAll();
     void flushViews();
+
+    int busy();
+};
+
+struct GeomReply {
+    int portid;
+    int* busy_bit;
+    GeomReply();
+    GeomReply(int, int*);
 };
 
 class GeometryComm : public MessageBase {
 public:
-    GeometryComm(Mailbox<int>*);
+    GeometryComm(Mailbox<GeomReply>*);
     GeometryComm(int, GeomID, GeomObj*, const clString&);
     GeometryComm(int, GeomID);
     GeometryComm(int);
     GeometryComm();
     virtual ~GeometryComm();
 
-    Mailbox<int>* reply;
+    Mailbox<GeomReply>* reply;
     int portno;
     GeomID serial;
     GeomObj* obj;

@@ -58,9 +58,11 @@ void GeometryOPort::reset()
 	Module* mod=connection->iport->get_module();
 	outbox=&mod->mailbox;
 	// Send the registration message...
-	Mailbox<int> tmp(1);
+	Mailbox<GeomReply> tmp(1);
 	outbox->send(new GeometryComm(&tmp));
-	portid=tmp.receive();
+	GeomReply reply=tmp.receive();
+	portid=reply.portid;
+	busy_bit=reply.busy_bit;
 	serial=1;
 	turn_off();
     }
@@ -110,7 +112,12 @@ void GeometryOPort::flushViews()
     turn_off();
 }
 
-GeometryComm::GeometryComm(Mailbox<int>* reply)
+int GeometryOPort::busy()
+{
+    return *busy_bit;
+}
+
+GeometryComm::GeometryComm(Mailbox<GeomReply>* reply)
 : MessageBase(MessageTypes::GeometryInit), reply(reply)
 {
 }
@@ -140,5 +147,14 @@ GeometryComm::GeometryComm()
 }
 
 GeometryComm::~GeometryComm()
+{
+}
+
+GeomReply::GeomReply()
+{
+}
+
+GeomReply::GeomReply(int portid, int* busy_bit)
+: portid(portid), busy_bit(busy_bit)
 {
 }

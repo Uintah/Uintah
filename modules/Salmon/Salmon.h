@@ -29,6 +29,7 @@ class Roe;
 class XQColor;
 
 class Salmon : public Module {
+    int busy_bit;
     Array1<Roe*> topRoe;
     virtual void do_execute();
     virtual void create_interface();
@@ -72,7 +73,7 @@ public:
     Salmon(const Salmon&, int deep);
     virtual ~Salmon();
     virtual Module* clone(int deep);
-    void initPort(Mailbox<int>*);
+    void initPort(Mailbox<GeomReply>*);
     void addObj(int portno, GeomID serial, GeomObj *obj,
 		const clString&);
     void delObj(int portno, GeomID serial);

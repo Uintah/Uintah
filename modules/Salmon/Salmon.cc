@@ -59,6 +59,7 @@ Salmon::Salmon()
 				  Color(.6,0,0),
 				  Color(.7,.7,.7),
 				  10);
+    busy_bit=1;
 }
 
 Salmon::~Salmon()
@@ -79,7 +80,9 @@ void Salmon::do_execute()
 	    for(int i=0;i<topRoe.size();i++)
 		topRoe[i]->redraw_if_needed();
 	}
+	busy_bit=0;
 	MessageBase* msg=mailbox.receive();
+	busy_bit=1;
 	GeometryComm* gmsg=(GeometryComm*)msg;
 	switch(msg->type){
 	case MessageTypes::DoCallback:
@@ -348,9 +351,9 @@ int Salmon::should_execute()
     return changed;
 }
 
-void Salmon::initPort(Mailbox<int>* reply)
+void Salmon::initPort(Mailbox<GeomReply>* reply)
 {
-    reply->send(max_portno++);
+    reply->send(GeomReply(max_portno++, &busy_bit));
 }
 
 void Salmon::flushViews()
