@@ -113,7 +113,7 @@ public:
   virtual const TypeDescription *get_type_description() const;
 
 private:
-  bool inside8_p(Cell::index_type i, const Point &p) const;
+  double inside8_p(Cell::index_type i, const Point &p) const;
 
   Array3<Point> points_;
 
