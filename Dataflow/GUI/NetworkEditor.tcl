@@ -1739,8 +1739,8 @@ proc maybeWrite_init_DATADIR_and_DATASET { out } {
 	    upvar \#0 $module-$var val
 	    if { [info exists val] && \
 		![string equal $val [subDATADIRandDATASET $val]] } {
-		puts $out "# Ask SCIRun to tell us where the data is"
-		puts $out "init_DATADIR_and_DATASET\n"
+		puts $out "\n# Ask SCIRun to tell us where the data is"
+		puts $out "init_DATADIR_and_DATASET"
 		return
 	    }
 	}
