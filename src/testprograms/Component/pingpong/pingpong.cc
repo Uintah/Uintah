@@ -41,6 +41,7 @@
  */
 
 #include <iostream>
+#include <unistd.h>
 #include <Core/CCA/PIDL/PIDL.h>
 
 #include <Core/CCA/PIDL/MalformedURL.h>
@@ -60,6 +61,7 @@ void usage(char* progname)
     cerr << "valid options are:\n";
     cerr << "  -server  - server process\n";
     cerr << "  -client URL  - client process\n";
+    cerr << "  -reps n  - repeat n times\n";
     cerr << "\n";
     exit(1);
 }
@@ -104,22 +106,23 @@ int main(int argc, char* argv[])
 	    usage(argv[0]);
 
 	if(server) {
-	    PingPong_impl::pointer pp(new PingPong_impl);
+	    PingPong::pointer pp(new PingPong_impl);
 	    pp->addReference();
 	    cerr << "Waiting for pingpong connections...\n";
 	    cerr << pp->getURL().getString() << '\n';
 	} else {
+	  //cerr << "calling objcetFrom\n";
 	  Object::pointer obj=PIDL::objectFrom(client_url);
-	  cerr << "Object_from completed\n";
-
-	  PingPong::pointer pp=pidl_cast<PingPong::pointer>(obj);
-	  cerr << "pidl_case completed\n";
+	  //cerr << "objectFrom completed\n";
+	  //cerr << "calling pidl_cast\n";
+	  PingPong::pointer pp=  pidl_cast<PingPong::pointer>(obj);
+	  //cerr << "pidl_case completed\n";
 	  if(pp.isNull()){
 	    cerr << "pp_isnull\n";
 	    abort();
 	  }
 	  double stime=Time::currentSeconds();
-	  for(int i=0;i<reps;i++){
+	  	  for(int i=0;i<reps;i++){
 	    int j=pp->pingpong(i);
 	    if(i != j)
 	      cerr << "BAD data: " << i << " vs. " << j << '\n';
@@ -129,6 +132,7 @@ int main(int argc, char* argv[])
 	  cerr << reps << " reps in " << dt << " seconds\n";
 	  double us=dt/reps*1000*1000;
 	  cerr << us << " us/rep\n";
+	 
  	}
     } catch(const MalformedURL& e) {
 	cerr << "pingpong.cc: Caught MalformedURL exception:\n";

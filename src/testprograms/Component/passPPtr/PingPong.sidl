@@ -37,12 +37,11 @@ package PingPong_ns {
     };
 
     interface Service{
-	collective void testPort(in Port port);
+	void testPort(in Port port);
     };
 
     interface PingPong {
 	collective void setService(in Service svc);
     };
-
 
 };
