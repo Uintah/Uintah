@@ -1546,9 +1546,9 @@ ViewSlices::setup_gl_view(SliceWindow &window)
   }
   GL_ERROR();
   
-  glTranslated((axis==0)?-double(window.slice_num_):0.0,
-  	       (axis==1)?-double(window.slice_num_):0.0,
-  	       (axis==2)?-double(window.slice_num_):0.0);
+  glTranslated((axis==0)?-double(window.slice_num_)*scale_[0]:0.0,
+  	       (axis==1)?-double(window.slice_num_)*scale_[1]:0.0,
+  	       (axis==2)?-double(window.slice_num_)*scale_[2]:0.0);
   GL_ERROR();
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -3129,9 +3129,10 @@ void
 ViewSlices::add_paint_widget() {
   paint_widget_ = scinew PaintCM2Widget();	
   vector<CM2WidgetHandle> widgets;
-  widgets.reserve(cm2_->widgets().size()+1);
+  const unsigned int size = cm2_.get_rep() ? cm2_->widgets().size() : 0;
+  widgets.reserve(size+1);
   int added = -1;
-  for (unsigned int w = 0; w < cm2_->widgets().size(); ++w) {
+  for (unsigned int w = 0; w < size; ++w) {
     PaintCM2Widget *paint_layer = 
       dynamic_cast<PaintCM2Widget*>(cm2_->widgets()[w].get_rep());
     if (!paint_layer && (added == -1)) {
@@ -3140,7 +3141,8 @@ ViewSlices::add_paint_widget() {
     }
     widgets.push_back(cm2_->widgets()[w]);
   }
-  cm2_= scinew ColorMap2(widgets, false, cm2_->faux());
+  const bool faux = cm2_.get_rep() ? cm2_->faux() : false;
+  cm2_= scinew ColorMap2(widgets, false, faux);
   cm2_->selected() = added;
   want_to_execute();
 }
@@ -3455,9 +3457,8 @@ ViewSlices::fill_paint_slices(SliceWindow &window) {
     double val, grad;
     int cval;
     int pos;
-    double min = double(window.clut_wl_) - double(window.clut_ww_)/2.0;
-    double max = double(window.clut_wl_) + double(window.clut_ww_)/2.0;
-    double scale = 255.0 / (max - min);
+    const double min = double(window.clut_wl_) - int(window.clut_ww_)/2;
+    double scale = 255.999 / double(window.clut_ww_);
     for (int y = 0; y <= max_slice_[y_ax]; ++y) {
       for (int x = 0; x < max_slice_[x_ax]; ++x) {
 	val = get_value(volumes_[0]->nrrd_->nrrd, 
@@ -3468,7 +3469,7 @@ ViewSlices::fill_paint_slices(SliceWindow &window) {
 			 (x_ax==0)?x:((y_ax==0)?y:z),
 			 (x_ax==1)?x:((y_ax==1)?y:z),
 			 (x_ax==2)?x:((y_ax==2)?y:z));
-	cval = Round((val-min)*scale);
+	cval = Floor((val-min)*scale);
 	pos = (y*wid+x)*4;
 	if (cval >= 0 && cval <= 255)
 	  memcpy(paintdata+pos, 
@@ -3565,8 +3566,11 @@ ViewSlices::do_paint(SliceWindow &window) {
   ps.tex_dirty_ = true;
   Nrrd *gradient_nrrd = gradient_->nrrd;
   Nrrd *data_nrrd = volumes_[0]->nrrd_->nrrd;
-  double offset = min_;
-  double scale = 1.0/(max_ - min_);
+  const double offset = double(window.clut_wl_) - int(window.clut_ww_)/2;
+  const double scale = 1 / double(window.clut_ww_);
+
+  //  double offset = min_;
+  //double scale = 1.0/(max_ - min_);
   float *paintdata = (float *)ps.nrrd_->nrrd->data;
   int x = xyz[x_axis(window)];
   int y = xyz[y_axis(window)];
