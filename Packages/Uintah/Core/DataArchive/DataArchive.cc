@@ -591,7 +591,9 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
   timestep = indices[i];
   d_restartTimestepDoc = d_tstop[i];
   d_restartTimestepURL = d_tsurl[i];
-   
+
+  lb->restartInitialize(d_restartTimestepDoc, d_restartTimestepURL);
+
   ASSERTL3(indices.size() == d_tstop.size());
   ASSERTL3(d_tsurl.size() == d_tstop.size());
 
@@ -647,7 +649,7 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
 	    }
           }
         }
-      }
+    }
   }
 }
 bool DataArchive::queryRestartTimestep(int& timestep)
@@ -891,13 +893,13 @@ void DataArchive::PatchHashMaps::init(XMLURL tsUrl, ProblemSpecP tsTopNode,
       string proc = attributes["proc"];
       /* - Remove this check for restarts.  We need to accurately
          determine which patch goes on which proc, and for the moment
-         we need to be able to parse all pxxxx.xml files.  --BJW 
+         we need to be able to parse all pxxxx.xml files.  --BJW  
       if (proc != "") {
         int procnum = atoi(proc.c_str());
         if ((procnum % numProcessors) != processor)
           continue;
       }
-      */ 
+      */
       string datafile = attributes["href"];
       if(datafile == "")
         throw InternalError("timestep href not found");
