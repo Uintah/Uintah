@@ -686,6 +686,30 @@ int Face::operator==(const Face& f) const
     return n[0]==f.n[0] && n[1]==f.n[1] && n[2]==f.n[2];
 }
 
+Edge::Edge(int n0, int n1)
+{
+    if (n0 < n1)
+    {
+	n[0] = n0;
+	n[1] = n1;
+    }
+    else
+    {
+	n[0] = n1;
+	n[1] = n0;
+    }
+}
+
+int Edge::hash(int hash_size) const
+{
+    return (((n[0]*7+5)^(n[1]*5+3))^(3*hash_size+1))%hash_size;
+}
+
+int Edge::operator==(const Edge& e) const
+{
+    return n[0]==e.n[0] && n[1]==e.n[1];
+}
+
 int Mesh::face_idx(int p, int f)
 {
     Element* e=elems[p];

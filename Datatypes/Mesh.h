@@ -81,6 +81,13 @@ struct Face {
     int operator==(const Face&) const;
 };
 
+struct Edge{
+    int n[2];
+    Edge(int, int);
+    int hash(int hash_size) const;
+    int operator==(const Edge&) const;
+};
+
 class Mesh;
 typedef LockingHandle<Mesh> MeshHandle;
 
@@ -117,6 +124,7 @@ public:
     void pack_all();
     int face_idx(int, int);
     void add_node_neighbors(int node, Array1<int>& idx);
+    void new_element(Element* ne, HashTable<Face, int> *new_faces);
 
     // Persistent representation...
     virtual void io(Piostream&);
