@@ -97,3 +97,7 @@ Callback_Message::Callback_Message(MotifCallbackBase* mcb, CallbackData* cbdata)
 {
 }
 
+Callback_Message::~Callback_Message()
+{
+}
+

@@ -56,7 +56,13 @@ private:
 class Scheduler_Module_Message : public MessageBase {
 public:
     Scheduler_Module_Message();
+    virtual ~Scheduler_Module_Message();
 };
 
+class Module_Scheduler_Message : public MessageBase {
+public:
+    Module_Scheduler_Message();
+    virtual ~Module_Scheduler_Message();
+};
 
 #endif

@@ -46,7 +46,7 @@ MemStats::MemStats(NetworkEditor* netedit)
     textwidth=355;
     graphwidth=200;
     drawing_a->SetWidth(textwidth+graphwidth);
-    drawing_a->SetHeight(805);
+    drawing_a->SetHeight(830);
     drawing_a->SetShadowThickness(0);
     drawing_a->SetResizePolicy(XmRESIZE_NONE);
     // Add redraw callback...
@@ -253,6 +253,8 @@ void MemStats::timer(CallbackData*, void*)
 
 void MemStats::popup()
 {
+    evl->lock();
     XtPopup(*dialog, XtGrabNone);
+    evl->unlock();
 }
 

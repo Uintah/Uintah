@@ -16,6 +16,7 @@
 
 #include <Classlib/Array1.h>
 #include <Classlib/String.h>
+#include <MessageBase.h>
 
 class clString;
 class CallbackData;
@@ -41,6 +42,7 @@ public:
     void reconfigure();
 
     void popup();
+    void popdown();
 
     UserModule* get_module();
 };
@@ -50,8 +52,17 @@ protected:
     clString name;
     MUI_window* window;
     void* cbdata;
+
+    void dispatch(const clString&, clString*, int);
+    void dispatch(double, double*, int);
+    void dispatch(int, int*, int);
 public:
-    MUI_widget(const clString& name, void* cbdata);
+    enum DispatchPolicy {
+	Immediate,
+	NotExecuting,
+    };
+    MUI_widget(const clString& name, void* cbdata,
+	       DispatchPolicy);
     virtual ~MUI_widget();
     virtual void attach(MUI_window*, EncapsulatorC*)=0;
     enum Orientation {
@@ -60,11 +71,15 @@ public:
     };
     void set_title(const clString&);
     void set_dimensions(int width, int height);
+private:
+    DispatchPolicy dispatch_policy;
 };
 
 class MUI_slider_real : public MUI_widget {
     ScaleC* scale;
     double* data;
+    int dispatch_drag;
+    double base;
     void drag_callback(CallbackData*, void*);
     void value_callback(CallbackData*, void*);
 public:
@@ -74,6 +89,7 @@ public:
 	ThumbWheel,
     };
     MUI_slider_real(const clString& name, double* data,
+		    DispatchPolicy, int dispatch_drag,
 		    Style=Slider, Orientation=Horizontal,
 		    void* cbdata=0);
     virtual ~MUI_slider_real();
@@ -83,25 +99,55 @@ public:
     void set_value(double);
     void set_orientation(MUI_widget::Orientation);
     void set_style(Style);
+    enum Event {
+	Drag, Value,
+    };
 };
 
 class MUI_onoff_switch : public MUI_widget {
 public:
     MUI_onoff_switch(const clString& name, int* data,
-		     int value=0, int cbdata=0);
+		     DispatchPolicy,
+		     void* cbdata=0);
     ~MUI_onoff_switch();
     virtual void attach(MUI_window*, EncapsulatorC*);
 };
 
 class MUI_file_selection : public MUI_widget {
     FileSelectionBoxC* sel;
-    MUI_window* window;
     clString* filename;
+
+    void ok_callback(CallbackData*, void*);
+    void cancel_callback(CallbackData*, void*);
 public:
     MUI_file_selection(const clString& name, clString* filename,
+		       DispatchPolicy,
 		       void* cbdata=0);
     ~MUI_file_selection();
     virtual void attach(MUI_window*, EncapsulatorC*);
+};
+
+class MUI_Module_Message : public MessageBase {
+    clString newstr;
+    clString* str;
+    double newddata;
+    double* ddata;
+    enum Type {
+	DoubleData,
+	StringData,
+    };
+    Type type;
+public:
+    MUI_Module_Message(UserModule* module,
+		       const clString&, clString*, void*, int);
+    MUI_Module_Message(UserModule* module,
+		       double, double*, void*, int);
+    virtual ~MUI_Module_Message();
+
+    void do_it();
+    UserModule* module;
+    void* cbdata;
+    int flags;
 };
 
 #endif /* SCI_project_MUI_h */

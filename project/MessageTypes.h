@@ -20,6 +20,9 @@ public:
     enum MessageType {
 	DoCallback,
 	ExecuteModule,
+	ReSchedule,
+
+	MUIDispatch,
     };
 };
 

@@ -11,11 +11,54 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+// Someday, we should delete these four lines, when the
+// compiler stops griping about const cast away...
+#include <X11/Intrinsic.h>
+#include "myStringDefs.h"
+#include "myXmStrDefs.h"
+#include "myShell.h"
+
 #include <CallbackCloners.h>
 #include <NotFinished.h>
+#include <Classlib/Assert.h>
+#include <Mt/FileSelectionBox.h>
+#include <Mt/Scale.h>
 
 CallbackData* CallbackCloners::scale_clone(void* vdata)
 {
-    NOT_FINISHED("scale_clone");
-    return 0;
+    XmScaleCallbackStruct* cbs=(XmScaleCallbackStruct*)vdata;
+    return new CallbackData(cbs->value);
+}
+
+CallbackData* CallbackCloners::selection_clone(void* vdata)
+{
+    XmFileSelectionBoxCallbackStruct* cbs=(XmFileSelectionBoxCallbackStruct*)vdata;
+    char* str;
+    if(!XmStringGetLtoR(cbs->value, (char*)XmSTRING_DEFAULT_CHARSET, &str))
+	return new CallbackData("Internal Error");
+    CallbackData* cbdata=new CallbackData(str);
+    free(str);
+    return cbdata;
+}
+
+CallbackData::CallbackData(const clString& string_data)
+: string_data(string_data), type(TypeString)
+{
+}
+
+CallbackData::CallbackData(int int_data)
+: int_data(int_data), type(TypeInt)
+{
+}
+
+int CallbackData::get_int()
+{
+    ASSERT(type==TypeInt);
+    return int_data;
+}
+
+clString CallbackData::get_string()
+{
+    ASSERT(type==TypeString);
+    return string_data;
 }

@@ -43,6 +43,7 @@ public:
 class Callback_Message : public MessageBase {
 public:
     Callback_Message(MotifCallbackBase* mcb, CallbackData* cbdata);
+    virtual ~Callback_Message();
     MotifCallbackBase* mcb;
     CallbackData* cbdata;
 };

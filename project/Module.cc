@@ -13,30 +13,12 @@
 
 #include <Module.h>
 #include <Connection.h>
+#include <ModuleHelper.h>
 #include <MotifCallbackBase.h>
+#include <NetworkEditor.h>
 #include <NotFinished.h>
 #include <stdlib.h>
 
-#define DEFAULT_MODULE_PRIORITY 90
-ModuleHelper::ModuleHelper(Module* module)
-: Task(module->name, 1, DEFAULT_MODULE_PRIORITY),
-  module(module)
-{
-}
-
-ModuleHelper::~ModuleHelper()
-{
-}
-
-int ModuleHelper::body(int)
-{
-    while(1){
-	MessageBase* msg=module->mailbox.receive();
-	delete msg;
-	module->do_execute();
-    }
-    return 0;
-}
 Module::Module(const clString& name, SchedClass sched_class)
 : name(name), sched_class(sched_class), state(NeedData), mailbox(5),
   xpos(10), ypos(10)
@@ -124,3 +106,10 @@ IPort* Module::iport(int i)
 {
     return iports[i];
 }
+
+void Module::want_to_execute()
+{
+    sched_state=SchedNewData;
+    netedit->mailbox.send(new Module_Scheduler_Message);
+}
+

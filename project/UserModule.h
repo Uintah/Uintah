@@ -60,6 +60,7 @@ public:
     virtual void do_execute();
     virtual void execute()=0;
     virtual int should_execute();
+    virtual void mui_callback(void*, int);
 
     // Our interface...
     GC gc;

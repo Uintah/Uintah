@@ -1,6 +1,6 @@
 
 /*
- *  XQColor.h: Automagically quantizing colors for X
+ *  MessageBase.h: Base class for messages
  *
  *  Written by:
  *   Steven G. Parker
@@ -19,7 +19,8 @@
 class MessageBase {
 public:
     MessageTypes::MessageType type;
-    MessageBase(MessageTypes::MessageType type): type(type) {}
+    MessageBase(MessageTypes::MessageType type);
+    virtual ~MessageBase();
 };
 
 #endif

@@ -456,6 +456,7 @@ int UserModule::should_execute()
 		break;
 	    }
 	}
+	if(!have_outputs)cerr << "Not executing - not hooked up...\n";
 	if(!have_outputs)return 0; // Don't bother checking stuff...
     }
     if(sched_state == SchedDormant){
@@ -463,7 +464,7 @@ int UserModule::should_execute()
 	for(int i=0;i<oports.size();i++){
 	    OPort* port=oports[i];
 	    for(int c=0;c<port->nconnections();c++){
-		Module* mod=port->connection(c)->oport->get_module();
+		Module* mod=port->connection(c)->iport->get_module();
 		if(mod->sched_state == SchedNewData
 		   || mod->sched_state == SchedRegenData){
 		    sched_state=SchedRegenData;
@@ -479,7 +480,8 @@ int UserModule::should_execute()
 	for(int i=0;i<iports.size();i++){
 	    IPort* port=iports[i];
 	    for(int c=0;c<port->nconnections();c++){
-		Module* mod=port->connection(c)->iport->get_module();
+		Module* mod=port->connection(c)->oport->get_module();
+		cerr << "upstream: (" << mod << ") sched_state=" << mod->sched_state << endl;
 		if(mod->sched_state == SchedNewData){
 		    sched_state=SchedNewData;
 		    changed=1;
@@ -537,3 +539,9 @@ void UserModule::widget_button(CallbackData*, void* data)
 	break;
     }
 }
+
+void UserModule::mui_callback(void*, int)
+{
+    // Default - do nothing...
+}
+

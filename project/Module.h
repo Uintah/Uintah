@@ -14,26 +14,15 @@
 #ifndef SCI_project_Module_h
 #define SCI_project_Module_h 1
 
-#include <MessageBase.h>
 #include <Classlib/Array1.h>
 #include <Classlib/String.h>
 #include <Multitask/ITC.h>
-#include <Multitask/Task.h>
 class Connection;
 class IPort;
-class Module;
+class MessageBase;
 class Network;
 class NetworkEditor;
 class OPort;
-
-class ModuleHelper : public Task {
-    Module* module;
-public:
-    ModuleHelper(Module* module);
-    virtual ~ModuleHelper();
-
-    virtual int body(int);
-};
 
 class Module {
 public:
@@ -42,8 +31,6 @@ public:
 	Executing,
 	Completed,
     };
-private:
-    ModuleHelper* helper;
 protected:
     friend class ModuleHelper;
     virtual void do_execute()=0;
@@ -53,6 +40,8 @@ protected:
     State state;
     Array1<OPort*> oports;
     Array1<IPort*> iports;
+private:
+    ModuleHelper* helper;
 public:
     enum ConnectionMode {
 	Connected,
@@ -87,6 +76,7 @@ public:
     // Used by Module subclasses
     void update_progress(double);
     void update_progress(int, int);
+    void want_to_execute();
 
     // User Interface information
     NetworkEditor* netedit;

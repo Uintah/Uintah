@@ -14,9 +14,20 @@
 #ifndef SCI_project_CallbackCloners_h
 #define SCI_project_CallbackCloners_h 1
 
+#include <Classlib/String.h>
+
 class CallbackData {
+    int int_data;
+    clString string_data;
+    enum Type {
+	TypeInt, TypeString,
+    };
+    Type type;
 public:
-    virtual ~CallbackData();
+    CallbackData(const clString&);
+    CallbackData(int);
+    int get_int();
+    clString get_string();
 };
 
 class CallbackCloners {
@@ -24,6 +35,7 @@ class CallbackCloners {
 public:
     static CallbackData* input_clone(void*);
     static CallbackData* scale_clone(void*);
+    static CallbackData* selection_clone(void*);
 };
 
 #endif

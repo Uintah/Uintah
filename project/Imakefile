@@ -5,7 +5,7 @@ LOCALINCLUDES = -I. -I../modules -I../../wrapper -I../../wrapper/Mt -I../../wrap
 OBJS = CallbackCloners.o \
 	ColorManager.o  Connection.o  \
 	Field3D.o  Field3DPort.o  GeometryPort.o  \
-	HelpUI.o  MemStats.o  MenuBar.o  \
+	HelpUI.o  MemStats.o  MessageBase.o  MenuBar.o  ModuleHelper.o  \
 	Module.o  Modules.o  ModuleList.o  MotifCallbackBase.o  \
 	MUI.o  \
 	MtXEventLoop.o \
@@ -16,7 +16,7 @@ OBJS = CallbackCloners.o \
 SRCS = CallbackCloners.cc \
 	ColorManager.cc Connection.cc \
 	Field3D.cc Field3DPort.cc GeometryPort.cc \
-	HelpUI.cc MemStats.cc MenuBar.cc \
+	HelpUI.cc MemStats.cc MessageBase.cc MenuBar.cc ModuleHelper.cc \
 	Module.cc Modules.cc ModuleList.cc MotifCallbackBase.cc \
 	MUI.cc \
 	MtXEventLoop.cc \

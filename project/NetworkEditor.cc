@@ -135,6 +135,9 @@ void NetworkEditor::main_loop()
 		delete cmsg->cbdata;
 	    }
 	    break;
+	case MessageTypes::ReSchedule:
+	    do_scheduling();
+	    break;
 	default:
 	    cerr << "Unknown message type: " << msg->type << endl;
 	    break;
@@ -158,6 +161,7 @@ void NetworkEditor::do_scheduling()
     // A module is considered 'Repeat' if any of it's downstream modules
     // are 'Repeat'
     //
+    cerr << "Scheduler started...\n";
     int changed=1;
     int nmodules=net->nmodules();
     int any_changed=0;
@@ -167,11 +171,13 @@ void NetworkEditor::do_scheduling()
 	for(int i=0;i<nmodules;i++){
 	    Module* mod=net->module(i);
 	    changed |= mod->should_execute();
+	    cerr << "Module (" << mod << ") " << i << " state=" << mod->sched_state << endl;
 	}
 	any_changed|=changed;
     }
     if(first_schedule || any_changed){
 	// Do the scheduling...
+	cerr << "Executing Modules...\n";
 	for(int i=0;i<nmodules;i++){
 	    Module* module=net->module(i);
 
@@ -182,11 +188,26 @@ void NetworkEditor::do_scheduling()
 	    module->sched_state=Module::SchedDormant;
 	}
 	first_schedule=0;
+    } else {
+	cerr << "Scheduler decided not to execute\n";
     }
 }
 
 Scheduler_Module_Message::Scheduler_Module_Message()
 : MessageBase(MessageTypes::ExecuteModule)
+{
+}
+
+Scheduler_Module_Message::~Scheduler_Module_Message()
+{
+}
+
+Module_Scheduler_Message::Module_Scheduler_Message()
+: MessageBase(MessageTypes::ReSchedule)
+{
+}
+
+Module_Scheduler_Message::~Module_Scheduler_Message()
 {
 }
 
