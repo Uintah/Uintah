@@ -139,12 +139,12 @@ c*********************************************************************
       iEndGhost = domainHigh(1)
       jEndGhost = domainHigh(2)
       kEndGhost = domainHigh(3)
-      IST = iBegGhost+1
-      JST = jBegGhost+1
-      KST = kBegGhost+1
-      IEND = iEndGhost-1
-      JEND = jEndGhost-1
-      KEND = kEndGhost-1
+      IST = indexLow(1)
+      JST = indexLow(2)
+      KST = indexLow(3)
+      IEND = indexHigh(1)
+      JEND = indexHigh(2)
+      KEND = indexHigh(3)
 
 C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
@@ -425,6 +425,10 @@ C$DIR NO_RECURRENCE
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/07/01 05:21:01  bbanerje
+c Changed CellInformation calcs for Turbulence model requirements ..
+c CellInformation still needs work.
+c
 c Revision 1.3  2000/06/19 18:00:38  rawat
 c added function to compute velocity and density profiles and inlet bc.
 c Fixed bugs in CellInformation.cc

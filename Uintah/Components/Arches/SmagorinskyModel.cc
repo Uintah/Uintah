@@ -247,15 +247,15 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
 	      zeroGhostCells);
   old_dw->get(viscosity, d_viscosityINLabel, matlIndex, patch, Ghost::None,
 	      zeroGhostCells);
+
   PerPatch<CellInformation*> cellinfop;
-  if (old_dw->exists(d_cellInfoLabel, patch)) {
+  //if (old_dw->exists(d_cellInfoLabel, patch)) {
     old_dw->get(cellinfop, d_cellInfoLabel, matlIndex, patch);
-  } else {
-    cellinfop.setData(scinew CellInformation(patch));
-    old_dw->put(cellinfop, d_cellInfoLabel, matlIndex, patch);
-  }
+  //} else {
+  //  cellinfop.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellinfop, d_cellInfoLabel, matlIndex, patch);
+  //}
   CellInformation* cellinfo = cellinfop;
-  
 
   //  DataWarehouseP top_dw = new_dw->getTop();
   // Get the patch details
@@ -273,6 +273,7 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
   IntVector domHiVis = viscosity.getFortHighIndex();
   IntVector lowIndex = patch->getCellFORTLowIndex();
   IntVector highIndex = patch->getCellFORTHighIndex();
+
     // get physical constants
   double mol_viscos; // molecular viscosity
   mol_viscos = d_physicalConsts->getMolecularViscosity();
@@ -291,6 +292,12 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
 		 cellinfo->stb.get_objs(), &mol_viscos,
 		 &d_CF, &d_factorMesh, &d_filterl);
   
+  cout << "Viscosity calculated by smagmodel\n";
+  for (int kk = domLoVis.z(); kk <= domHiVis.z(); kk++) 
+    for (int jj = domLoVis.y(); jj <= domHiVis.y(); jj++) 
+      for (int ii = domLoVis.x(); ii <= domHiVis.x(); ii++) 
+	cout << "(" << ii << "," << jj << "," << kk << ") : "
+	     << " VIS = " << viscosity[IntVector(ii,jj,kk)] << endl;
 
   // Create the new viscosity variable to write the result to 
   // and allocate space in the new data warehouse for this variable
@@ -681,6 +688,10 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.23  2000/07/01 05:20:59  bbanerje
+// Changed CellInformation calcs for Turbulence model requirements ..
+// CellInformation still needs work.
+//
 // Revision 1.22  2000/06/30 06:29:42  bbanerje
 // Got Inlet Area to be calculated correctly .. but now two CellInformation
 // variables are being created (Rawat ... check that).
