@@ -30,7 +30,7 @@
 
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Persistent/PersistentSTL.h>
-
+#include <sci_hash_map.h>
 
 namespace SCIRun {
 
@@ -678,6 +678,9 @@ TriSurfMesh::clip(Clipper &clipper)
 {
   TriSurfMesh *clipped = scinew TriSurfMesh();
 
+  hash_map<under_type, under_type, hash<under_type>,
+    equal_to<under_type> > nodemap;
+
   Elem::iterator bi, ei;
   begin(bi); end(ei);
   while (bi != ei)
@@ -687,17 +690,22 @@ TriSurfMesh::clip(Clipper &clipper)
     if (clipper.inside_p(p))
     {
       // Add this element to the new mesh.
-      Node::array_type nodes;
-      get_nodes(nodes, *bi);
-      
-      Point t0, t1, t2;
-      get_center(t0, nodes[0]);
-      get_center(t1, nodes[1]);
-      get_center(t2, nodes[2]);
+      Node::array_type onodes;
+      get_nodes(onodes, *bi);
+      Node::array_type nnodes(onodes.size());
 
-      clipped->add_triangle(clipped->add_find_point(t0),
-			    clipped->add_find_point(t1),
-			    clipped->add_find_point(t2));
+      for (unsigned int i=0; i<onodes.size(); i++)
+      {
+	if (nodemap.find(onodes[i]) == nodemap.end())
+	{
+	  Point np;
+	  get_center(np, onodes[i]);
+	  nodemap[onodes[i]] = clipped->add_point(np);
+	}
+	nnodes[i] = nodemap[onodes[i]];
+      }
+
+      clipped->add_triangle(nnodes[0], nnodes[1], nnodes[2]);
     }
     
     ++bi;
