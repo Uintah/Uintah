@@ -90,8 +90,8 @@
     <keywords>Compile, Red Hat, Mandrake, GCC 2.96, GCC 2.97</keywords> 
     <question>
       <p>
-        I'm trying to SCIRun on Red Hat 7.0+ or Mandrake 8.0+ linux machine
-        but the compile fails.  What's wrong?
+        I'm trying to build SCIRun on Red Hat 7.0+ or Mandrake 8.0+ linux
+	machine but the compile fails.  What's wrong?
       </p>
     </question>
     <answer>
