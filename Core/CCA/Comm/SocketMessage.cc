@@ -155,6 +155,7 @@ SocketMessage::sendMessage(int handler){
 void 
 SocketMessage::waitReply(){
   DTMessage *wmsg=spchan->sp->getMessage();
+  msg_length=wmsg->length;
   wmsg->autofree=false;
   if(msg!=NULL) free(msg);
   msg=wmsg->buf;
@@ -225,8 +226,8 @@ void SocketMessage::destroyMessage() {
 
 int SocketMessage::getRecvBufferCopy(void* buf)
 {
-  memcpy(buf, msg, msg_size);
-  return msg_size;
+  memcpy(buf, msg, msg_length);
+  return msg_length;
 }
 
 int SocketMessage::getSendBufferCopy(void* buf)
@@ -239,7 +240,8 @@ void SocketMessage::setRecvBuffer(void* buf, int len)
 {
   if(msg!=NULL) free(msg);
   msg=buf;
-  msg_size=len;
+  msg_length=len;
+  msg_size=sizeof(int); //skip the handler id.
 }
 
 void SocketMessage::setSendBuffer(void* buf, int len)
