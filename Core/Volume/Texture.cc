@@ -57,15 +57,31 @@ Texture::Texture()
 {
   nb_[0] = 0;
   nb_[1] = 0;
+  bricks_.resize(1);
+  bricks_[0].resize(0);
 }
 
 Texture::~Texture()
 {}
 
+// void
+// Texture::get_sorted_bricks(vector<TextureBrick*>& bricks, const Ray& view)
+// {
+//   bricks.resize(0);
+//   vector<double> dist;
+//   for(unsigned int i=0; i<brick_.size(); i++) {
+//     bricks.push_back(brick_[i]);
+//     dist.push_back(-(brick_[i]->center()-view.origin()).length());
+//   }
+//   Sort(dist, bricks);
+// }
+
 void
-Texture::get_sorted_bricks(vector<TextureBrick*>& bricks, const Ray& view)
+Texture::get_sorted_bricks(vector<TextureBrick*>& bricks, const Ray& view,
+			   int idx)
 {
   bricks.resize(0);
+  vector<TextureBrick*>& brick_ = bricks_[idx];
   vector<double> dist;
   for(unsigned int i=0; i<brick_.size(); i++) {
     bricks.push_back(brick_[i]);
@@ -73,5 +89,36 @@ Texture::get_sorted_bricks(vector<TextureBrick*>& bricks, const Ray& view)
   }
   Sort(dist, bricks);
 }
+
+// clear doesn't really clear everything probably bad programming-kz
+void
+Texture::clear()
+{
+  std::vector<std::vector<TextureBrick*> >::iterator it = bricks_.begin();
+  std::vector<std::vector<TextureBrick*> >::iterator end = bricks_.end();
+    
+  std::vector<TextureBrick*>::iterator b_it;
+  std::vector<TextureBrick*>::iterator b_end;
+  for(; it != end; ++it){
+    b_it = (*it).begin();
+    b_end = (*it).end();
+    for( ; b_it != b_end; ++b_it){
+      TextureBrick* b = *b_it;
+      delete b;
+    }
+  }
+  
+  nx_ = 0;
+  ny_ = 0;
+  nz_ = 0;
+  nc_ = 0;
+  vmin_ = 0;
+  vmax_ = 0;
+  gmin_ = 0;
+  gmax_ = 0;
+  nb_[0] = 0;
+  nb_[1] = 0;
+  bricks_.resize(1);
+  bricks_[0].resize(0);}
 
 } // namespace SCIRun

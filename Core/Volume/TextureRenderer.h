@@ -52,6 +52,15 @@ class Pbuffer;
 class FragmentProgramARB;
 class VolShaderFactory;
 
+struct cmap_data {
+public:
+  cmap_data() : tex_id_(0), dirty_(true), alpha_dirty_(true) {}
+  Array2<unsigned char>  data_;
+  unsigned int tex_id_;
+  bool dirty_;
+  bool alpha_dirty_;
+};
+
 class TextureRenderer : public GeomObj
 {
 public:
@@ -69,6 +78,8 @@ public:
   bool use_pbuffer() { return use_pbuffer_; }
   void set_blend_num_bits(int b);
   bool use_blend_buffer();
+  void set_stencil(bool use){ use_stencil_ = use; }
+  void invert_opacity(bool invert){ invert_opacity_ = invert; }
   inline void set_interp(bool i) { interp_ = i; }
   
   enum RenderMode { MODE_NONE, MODE_OVER, MODE_MIP, MODE_SLICE };
@@ -119,6 +130,8 @@ protected:
   int blend_num_bits_;
   bool use_blend_buffer_;
   int free_tex_mem_;
+  bool use_stencil_;
+  bool invert_opacity_;
   
   struct TexParam
   {
@@ -141,9 +154,13 @@ protected:
 			       vector<int>& poly,
 			       bool normal, bool fog, Pbuffer* buffer);
 
-  void build_colormap1();
+  void build_colormap1(Array2< unsigned char>& cmap_array,
+		       unsigned int& cmap_tex, bool& cmap_dirty,
+		       bool& alpha_dirty,  double level_exponent = 0.0);
+//   void build_colormap1();
   void build_colormap2();
-  void bind_colormap1();
+  void bind_colormap1(unsigned int cmap_tex );
+//   void bind_colormap1();
   void bind_colormap2();
   void release_colormap1();
   void release_colormap2();

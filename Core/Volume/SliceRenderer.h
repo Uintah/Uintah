@@ -67,6 +67,7 @@ public:
     }
     draw_view_ = b;
   }
+  inline void set_level_outline( bool b ) { draw_level_outline_ = b;}
 
   bool draw_x() const { return draw_x_; }
   bool draw_y() const { return draw_y_; }
@@ -77,7 +78,7 @@ public:
   double phi0() const { return phi0_; }
   double phi1() const { return phi1_; }
   bool draw_cyl() const { return draw_cyl_; }
-
+  bool draw_level_outline () { return draw_level_outline_; }
   void set_cylindrical(bool cyl_active, bool draw_phi0, double phi0, 
 		       bool draw_phi1, double phi1) {
     draw_cyl_ = cyl_active;
@@ -89,9 +90,14 @@ public:
 
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
+//    virtual void draw();
+  virtual void draw_slice();
+  virtual void draw_wireframe();
+  void multi_level_draw();
 #endif
 
   virtual GeomObj* clone();
+  void set_draw_level( int i, bool b){ draw_level_[i] = b; }
 
 protected:
   Point control_point_;
@@ -104,11 +110,8 @@ protected:
   bool draw_phi1_;
   double phi1_;
   bool draw_cyl_;
-
-#ifdef SCI_OPENGL
-  virtual void draw_slice();
-  virtual void draw_wireframe();
-#endif
+  bool draw_level_outline_;
+  vector< bool > draw_level_;
 
 };
 
