@@ -13,23 +13,23 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #  
-#    File   : TendExpand.tcl
+#    File   : TendAnhist.tcl
 #    Author : Darby Van Uitert
 #    Date   : April 2004
 
-itcl_class Teem_Tend_TendExpand {
+itcl_class Teem_Tend_TendAnhist {
     inherit Module
     constructor {config} {
-        set name TendExpand
+        set name TendAnhist
         set_defaults
     }
 
     method set_defaults {} {
-	global $this-threshold
-	set $this-threshold 0.5
+	global $this-westin
+	set $this-westin 1
 
-	global $this-scale
-	set $this-scale 1.0
+	global $this-resolution
+	set $this-resolution 256
     }
 
     method ui {} {
@@ -45,16 +45,16 @@ itcl_class Teem_Tend_TendExpand {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-	iwidgets::entryfield $w.f.options.threshold \
-	    -labeltext "Threshold:" \
-	    -textvariable $this-threshold
-        pack $w.f.options.threshold -side top -expand yes -fill x
+       iwidgets::entryfield $w.f.options.westin \
+	    -labeltext "Version of Westin's Anisotropy\nMetric Triple: (1 or 2):" \
+	    -textvariable $this-westin
+        pack $w.f.options.westin -side top -expand yes -fill x
 	
 
-        iwidgets::entryfield $w.f.options.scale \
-	    -labeltext "Scale:" \
-	    -textvariable $this-scale
-        pack $w.f.options.scale -side top -expand yes -fill x
+        iwidgets::entryfield $w.f.options.resolution \
+	    -labeltext "Resolution:" \
+	    -textvariable $this-resolution
+        pack $w.f.options.resolution -side top -expand yes -fill x
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
@@ -62,3 +62,5 @@ itcl_class Teem_Tend_TendExpand {
 	pack $w.f -expand 1 -fill x
     }
 }
+
+

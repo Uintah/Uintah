@@ -13,7 +13,7 @@
 //  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 //  University of Utah. All Rights Reserved.
 //  
-//    File   : TendShrink.cc
+//    File   : TendEvalAdd.cc
 //    Author : Martin Cole
 //    Date   : Mon Sep  8 09:46:49 2003
 
@@ -27,30 +27,33 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class TendShrink : public Module {
+class TendEvalAdd : public Module {
 public:
-  TendShrink(SCIRun::GuiContext *ctx);
-  virtual ~TendShrink();
+  TendEvalAdd(SCIRun::GuiContext *ctx);
+  virtual ~TendEvalAdd();
   virtual void execute();
 
 private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
+  GuiDouble          value_;
+
 };
 
-DECLARE_MAKER(TendShrink)
+DECLARE_MAKER(TendEvalAdd)
 
-TendShrink::TendShrink(SCIRun::GuiContext *ctx) : 
-  Module("TendShrink", ctx, Filter, "Tend", "Teem")
+TendEvalAdd::TendEvalAdd(SCIRun::GuiContext *ctx) : 
+  Module("TendEvalAdd", ctx, Filter, "Tend", "Teem"),
+  value_(ctx->subVar("value"))
 {
 }
 
-TendShrink::~TendShrink() {
+TendEvalAdd::~TendEvalAdd() {
 }
 
 void 
-TendShrink::execute()
+TendEvalAdd::execute()
 {
   NrrdDataHandle nrrd_handle;
 
@@ -78,9 +81,9 @@ TendShrink::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-  if (tenShrink(nout, NULL, nin)) {
+  if (tenEigenvalueAdd(nout, nin, value_.get())) {
     char *err = biffGetDone(TEN);
-    error(string("Error Converting 7-value volume to 9-value DT: ") + err);
+    error(string("Error adding constant to eigenvalues: ") + err);
     free(err);
     return;
   }
@@ -88,12 +91,9 @@ TendShrink::execute()
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
 
-  nrrd->nrrd->axis[0].kind = nrrdKind3DMaskedSymTensor;
-
   NrrdDataHandle out(nrrd);
 
   onrrd_->send(out);
 }
 
 } // End namespace SCITeem
-

@@ -13,7 +13,7 @@
 //  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 //  University of Utah. All Rights Reserved.
 //  
-//    File   : TendShrink.cc
+//    File   : TendAnhist.cc
 //    Author : Martin Cole
 //    Date   : Mon Sep  8 09:46:49 2003
 
@@ -27,30 +27,35 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class TendShrink : public Module {
+class TendAnhist : public Module {
 public:
-  TendShrink(SCIRun::GuiContext *ctx);
-  virtual ~TendShrink();
+  TendAnhist(SCIRun::GuiContext *ctx);
+  virtual ~TendAnhist();
   virtual void execute();
 
 private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
+  GuiInt          westin_;
+  GuiInt          resolution_;
+
 };
 
-DECLARE_MAKER(TendShrink)
+DECLARE_MAKER(TendAnhist)
 
-TendShrink::TendShrink(SCIRun::GuiContext *ctx) : 
-  Module("TendShrink", ctx, Filter, "Tend", "Teem")
+TendAnhist::TendAnhist(SCIRun::GuiContext *ctx) : 
+  Module("TendAnhist", ctx, Filter, "Tend", "Teem"),
+  westin_(ctx->subVar("westin")),
+  resolution_(ctx->subVar("resolution"))
 {
 }
 
-TendShrink::~TendShrink() {
+TendAnhist::~TendAnhist() {
 }
 
 void 
-TendShrink::execute()
+TendAnhist::execute()
 {
   NrrdDataHandle nrrd_handle;
 
@@ -78,9 +83,9 @@ TendShrink::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-  if (tenShrink(nout, NULL, nin)) {
+  if (tenAnisoHistogram(nout, nin, westin_.get(), resolution_.get())) {
     char *err = biffGetDone(TEN);
-    error(string("Error Converting 7-value volume to 9-value DT: ") + err);
+    error(string("Error generating barycentric histograms of anisotropy: ") + err);
     free(err);
     return;
   }
@@ -88,12 +93,12 @@ TendShrink::execute()
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
 
-  nrrd->nrrd->axis[0].kind = nrrdKind3DMaskedSymTensor;
-
   NrrdDataHandle out(nrrd);
 
   onrrd_->send(out);
 }
 
 } // End namespace SCITeem
+
+
 

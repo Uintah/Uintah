@@ -13,23 +13,27 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #  
-#    File   : TendExpand.tcl
+#    File   : TendEvq.tcl
 #    Author : Darby Van Uitert
 #    Date   : April 2004
 
-itcl_class Teem_Tend_TendExpand {
+itcl_class Teem_Tend_TendEvq {
     inherit Module
     constructor {config} {
-        set name TendExpand
+        set name TendEvq
         set_defaults
     }
 
     method set_defaults {} {
-	global $this-threshold
-	set $this-threshold 0.5
+	global $this-index
+	set $this-index 0
 
-	global $this-scale
-	set $this-scale 1.0
+	global $this-anisotropy
+	set $this-anisotropy "cl1"
+
+	global $this-ns
+	set $this-ns 0
+
     }
 
     method ui {} {
@@ -45,16 +49,22 @@ itcl_class Teem_Tend_TendExpand {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-	iwidgets::entryfield $w.f.options.threshold \
-	    -labeltext "Threshold:" \
-	    -textvariable $this-threshold
-        pack $w.f.options.threshold -side top -expand yes -fill x
-	
+        iwidgets::entryfield $w.f.options.index \
+	    -labeltext "Evec Index:" \
+	    -textvariable $this-index
+        pack $w.f.options.index -side top -expand yes -fill x
 
-        iwidgets::entryfield $w.f.options.scale \
-	    -labeltext "Scale:" \
-	    -textvariable $this-scale
-        pack $w.f.options.scale -side top -expand yes -fill x
+        iwidgets::entryfield $w.f.options.anisotropy \
+	    -labeltext "Anisotropy Metric to Plot:" \
+	    -textvariable $this-anisotropy
+        pack $w.f.options.anisotropy -side top -expand yes -fill x
+
+
+
+        checkbutton $w.f.options.ns \
+	    -text "Don't attenuate the color by Anisotropy:" \
+	    -variable $this-ns
+        pack $w.f.options.ns -side top -expand yes -fill x
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
@@ -62,3 +72,5 @@ itcl_class Teem_Tend_TendExpand {
 	pack $w.f -expand 1 -fill x
     }
 }
+
+

@@ -13,23 +13,20 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #  
-#    File   : TendExpand.tcl
+#    File   : TendSim.tcl
 #    Author : Darby Van Uitert
 #    Date   : April 2004
 
-itcl_class Teem_Tend_TendExpand {
+itcl_class Teem_Tend_TendSim {
     inherit Module
     constructor {config} {
-        set name TendExpand
+        set name TendSim
         set_defaults
     }
 
     method set_defaults {} {
-	global $this-threshold
-	set $this-threshold 0.5
-
-	global $this-scale
-	set $this-scale 1.0
+	global $this-bvalue
+	set $this-bvalue 1.0
     }
 
     method ui {} {
@@ -45,16 +42,8 @@ itcl_class Teem_Tend_TendExpand {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-	iwidgets::entryfield $w.f.options.threshold \
-	    -labeltext "Threshold:" \
-	    -textvariable $this-threshold
-        pack $w.f.options.threshold -side top -expand yes -fill x
-	
-
-        iwidgets::entryfield $w.f.options.scale \
-	    -labeltext "Scale:" \
-	    -textvariable $this-scale
-        pack $w.f.options.scale -side top -expand yes -fill x
+        iwidgets::entryfield $w.f.options.bvalue -labeltext "B Value:" -textvariable $this-bvalue
+        pack $w.f.options.bvalue -side top -expand yes -fill x
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
@@ -62,3 +51,7 @@ itcl_class Teem_Tend_TendExpand {
 	pack $w.f -expand 1 -fill x
     }
 }
+
+
+
+

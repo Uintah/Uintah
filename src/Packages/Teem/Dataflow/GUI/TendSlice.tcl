@@ -13,29 +13,33 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #  
-#    File   : TendShrink.tcl
-#    Author : Martin Cole
-#    Date   : Mon Sep  8 09:46:23 2003
+#    File   : TendSlice.tcl
+#    Author : Darby Van Uitert
+#    Date   : April 2004
 
-catch {rename Teem_Tend_TendShrink ""}
-
-itcl_class Teem_Tend_TendShrink {
+itcl_class Teem_Tend_TendSlice {
     inherit Module
     constructor {config} {
-        set name TendShrink
+        set name TendSlice
         set_defaults
     }
-    method set_defaults {} {
 
+    method set_defaults {} {
+	global $this-axis
+	set $this-axis 1
+
+	global $this-position
+	set $this-position 0
+
+	global $this-dimension
+	set $this-dimension 3
     }
 
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
-
         toplevel $w
 
         frame $w.f
@@ -44,9 +48,25 @@ itcl_class Teem_Tend_TendShrink {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
+	iwidgets::entryfield $w.f.options.axis \
+	    -labeltext "Axis:" \
+	    -textvariable $this-axis
+        pack $w.f.options.axis -side top -expand yes -fill x
+	
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
+        iwidgets::entryfield $w.f.options.position \
+	    -labeltext "Position:" \
+	    -textvariable $this-position
+        pack $w.f.options.position -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.dimension \
+	    -labeltext "Dimension:" \
+	    -textvariable $this-dimension
+        pack $w.f.options.dimension -side top -expand yes -fill x
+
+	makeSciButtonPanel $w.f $w $this
+	moveToCursor $w
+
 	pack $w.f -expand 1 -fill x
     }
 }

@@ -50,9 +50,7 @@ SRCS := \
 	$(SRCDIR)/TendExpand.tcl\
 	$(SRCDIR)/TendFiber.tcl\
 	$(SRCDIR)/TendNorm.tcl\
-	$(SRCDIR)/TendPoint.tcl\
 	$(SRCDIR)/TendSatin.tcl\
-	$(SRCDIR)/TendShrink.tcl\
 	$(SRCDIR)/Unu1op.tcl\
 	$(SRCDIR)/Unu2op.tcl\
 	$(SRCDIR)/UnuAxdelete.tcl\
@@ -91,6 +89,13 @@ SRCS := \
 	$(SRCDIR)/UnuSwap.tcl\
 	$(SRCDIR)/NrrdToMatrix.tcl\
 	$(SRCDIR)/UnuUnquantize.tcl\
+	$(SRCDIR)/TendSim.tcl\
+	$(SRCDIR)/TendSten.tcl\
+	$(SRCDIR)/TendAnplot.tcl\
+	$(SRCDIR)/TendAnhist.tcl\
+	$(SRCDIR)/TendSlice.tcl\
+	$(SRCDIR)/TendEvalAdd.tcl\
+	$(SRCDIR)/TendEvq.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

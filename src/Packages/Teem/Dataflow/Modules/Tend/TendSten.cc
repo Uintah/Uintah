@@ -13,7 +13,7 @@
 //  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 //  University of Utah. All Rights Reserved.
 //  
-//    File   : TendShrink.cc
+//    File   : TendSten.cc
 //    Author : Martin Cole
 //    Date   : Mon Sep  8 09:46:49 2003
 
@@ -27,30 +27,37 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class TendShrink : public Module {
+class TendSten : public Module {
 public:
-  TendShrink(SCIRun::GuiContext *ctx);
-  virtual ~TendShrink();
+  TendSten(SCIRun::GuiContext *ctx);
+  virtual ~TendSten();
   virtual void execute();
 
 private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
+  GuiInt          diffscale_;
+  GuiInt          intscale_;
+  GuiInt          factor_;
+
 };
 
-DECLARE_MAKER(TendShrink)
+DECLARE_MAKER(TendSten)
 
-TendShrink::TendShrink(SCIRun::GuiContext *ctx) : 
-  Module("TendShrink", ctx, Filter, "Tend", "Teem")
+TendSten::TendSten(SCIRun::GuiContext *ctx) : 
+  Module("TendSten", ctx, Filter, "Tend", "Teem"),
+  diffscale_(ctx->subVar("diffscale")),
+  intscale_(ctx->subVar("intscale")),
+  factor_(ctx->subVar("factor"))
 {
 }
 
-TendShrink::~TendShrink() {
+TendSten::~TendSten() {
 }
 
 void 
-TendShrink::execute()
+TendSten::execute()
 {
   NrrdDataHandle nrrd_handle;
 
@@ -78,9 +85,10 @@ TendShrink::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-  if (tenShrink(nout, NULL, nin)) {
+  if (gageStructureTensor(nout, nin, diffscale_.get(), intscale_.get(), 
+			  factor_.get())) {
     char *err = biffGetDone(TEN);
-    error(string("Error Converting 7-value volume to 9-value DT: ") + err);
+    error(string("Error calculating tensors: ") + err);
     free(err);
     return;
   }
@@ -88,11 +96,10 @@ TendShrink::execute()
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
 
-  nrrd->nrrd->axis[0].kind = nrrdKind3DMaskedSymTensor;
-
   NrrdDataHandle out(nrrd);
 
   onrrd_->send(out);
+
 }
 
 } // End namespace SCITeem
