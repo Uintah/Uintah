@@ -950,6 +950,12 @@ ViewImage::draw_label(SliceWindow &window, string text, int x, int y,
   BBox bbox;
   FreeTypeText fttext(text, font);
   fttext.get_bounds(bbox);
+  if (bbox.min().y() < 0) {
+    fttext.set_position(Point(0, -bbox.min().y(), 0));
+    bbox.reset();
+    fttext.get_bounds(bbox);
+  }
+
   unsigned int wid = pow2(Round(bbox.max().x()));
   unsigned int hei = pow2(Round(bbox.max().y()));
   GLubyte *buf = scinew GLubyte[wid*hei*4];
@@ -1829,11 +1835,11 @@ ViewImage::handle_gui_keypress(GuiArgs &args) {
       redraw_all();
     } else if (args[4] == "y") {
       for (unsigned int v = 0; v < volumes_.size(); ++v) 
-	volumes_[v]->flip_y_ = volumes_[v]->flip_y_?1:0;
+	volumes_[v]->flip_y_ = volumes_[v]->flip_y_?0:1;
       redraw_all();
     } else if (args[4] == "z") {
       for (unsigned int v = 0; v < volumes_.size(); ++v) 
-	volumes_[v]->flip_z_ = volumes_[v]->flip_z_?1:0;
+	volumes_[v]->flip_z_ = volumes_[v]->flip_z_?0:1;
       redraw_all();
     } else if (args[4] == "a") {
       //      window.scale_ /= 1.1;
