@@ -65,6 +65,34 @@ public:
     virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
+
+class SCICORESHARE GeomTexts : public GeomObj {
+public:
+  vector<string> text_;
+  vector<Point>  location_;
+  vector<Color>  color_;
+
+public:
+  GeomTexts();
+  GeomTexts(const GeomTexts &);
+  virtual ~GeomTexts();
+  virtual GeomObj* clone();
+
+
+  void add (const string &, const Point &, const Color &c = Color(1,1,1));
+
+  virtual void reset_bbox();
+  virtual void get_bounds(BBox&);
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+};
+
+
 } // End namespace SCIRun
 
 
