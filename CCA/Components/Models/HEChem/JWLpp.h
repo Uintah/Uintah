@@ -45,6 +45,9 @@ WARNING
 
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);
+
+    virtual void activateModel(GridP& grid, SimulationStateP& sharedState,
+                               ModelSetup* setup);
       
     virtual void scheduleInitialize(SchedulerP&,
 				    const LevelP& level,
@@ -93,6 +96,7 @@ WARNING
     ICELabel* Ilb;
     MaterialSet* mymatls;
     
+    bool d_active;
     double d_G;
     double d_b;
     double d_E0;

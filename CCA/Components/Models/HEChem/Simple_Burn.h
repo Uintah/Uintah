@@ -47,6 +47,9 @@ WARNING
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);
       
+    virtual void activateModel(GridP& grid, SimulationStateP& sharedState,
+			       ModelSetup* setup);
+
     virtual void scheduleInitialize(SchedulerP&,
 				    const LevelP& level,
 				    const ModelInfo*);
@@ -76,9 +79,9 @@ WARNING
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-		               const MaterialSubset* matls, 
+		             const MaterialSubset* matls, 
                              DataWarehouse*, 
-		               DataWarehouse* new_dw, 
+		             DataWarehouse* new_dw, 
                              const ModelInfo*);
 
     Simple_Burn(const Simple_Burn&);
@@ -97,6 +100,7 @@ WARNING
     MPMLabel* Mlb;
     MaterialSet* mymatls;
     
+    bool d_active;
     double d_thresholdTemp;
     double d_thresholdPress;
     double d_Enthalpy;

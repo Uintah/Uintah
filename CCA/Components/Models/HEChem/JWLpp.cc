@@ -51,6 +51,44 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
 {
   cout << "I'm in problem setup" << endl;
   d_sharedState = sharedState;
+  bool defaultActive=true;
+  params->getWithDefault("Active", d_active, defaultActive);
+  if(d_active){
+    matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
+    matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
+    params->require("G",    d_G);
+    params->require("b",    d_b);
+    params->require("E0",   d_E0);
+    params->require("rho0", d_rho0);
+    params->require("ThresholdPressure",   d_threshold_pressure);
+
+    //__________________________________
+    //  define the materialSet
+    vector<int> m_tmp(2);
+    m_tmp[0] = matl0->getDWIndex();
+    m_tmp[1] = matl1->getDWIndex();
+    mymatls = new MaterialSet();            
+ 
+    if( m_tmp[0] != 0 && m_tmp[1] != 0){
+      vector<int> m(3);
+      m[0] = 0;    // needed for the pressure and NC_CCWeight 
+      m[1] = m_tmp[0];
+      m[2] = m_tmp[1];
+      mymatls->addAll(m);
+    }else{
+      vector<int> m(2);
+      m[0] = m_tmp[0];
+      m[1] = m_tmp[1];
+      mymatls->addAll(m);
+    }
+    mymatls->addReference();
+  }
+}
+
+void JWLpp::activateModel(GridP&, SimulationStateP& sharedState, ModelSetup*)
+{
+  cout << "I'm in problem setup" << endl;
+  d_active=true;
   matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
   params->require("G",    d_G);
@@ -58,17 +96,17 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
   params->require("E0",   d_E0);
   params->require("rho0", d_rho0);
   params->require("ThresholdPressure",   d_threshold_pressure);
-
+                                                                                
   //__________________________________
   //  define the materialSet
   vector<int> m_tmp(2);
   m_tmp[0] = matl0->getDWIndex();
   m_tmp[1] = matl1->getDWIndex();
-  mymatls = new MaterialSet();            
- 
+  mymatls = new MaterialSet();
+                                                                                
   if( m_tmp[0] != 0 && m_tmp[1] != 0){
     vector<int> m(3);
-    m[0] = 0;    // needed for the pressure and NC_CCWeight 
+    m[0] = 0;    // needed for the pressure and NC_CCWeight
     m[1] = m_tmp[0];
     m[2] = m_tmp[1];
     mymatls->addAll(m);
@@ -80,6 +118,7 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
   }
   mymatls->addReference();
 }
+
 //______________________________________________________________________
 //     
 void JWLpp::scheduleInitialize(SchedulerP&,
@@ -103,42 +142,44 @@ void JWLpp::scheduleComputeModelSources(SchedulerP& sched,
                                        const LevelP& level,
                                        const ModelInfo* mi)
 {
-  Task* t = scinew Task("JWLpp::computeModelSources", this, 
-                        &JWLpp::computeModelSources, mi);
-  cout_doing << "JWLpp::scheduleComputeModelSources "<<  endl;  
-  t->requires( Task::OldDW, mi->delT_Label);
-  Ghost::GhostType  gn  = Ghost::None;
-  const MaterialSubset* react_matl = matl0->thisMaterial();
-  const MaterialSubset* prod_matl  = matl1->thisMaterial();
-  MaterialSubset* one_matl     = scinew MaterialSubset();
-  one_matl->add(0);
-  one_matl->addReference();
-  MaterialSubset* press_matl   = one_matl;
+  if(d_active){
+    Task* t = scinew Task("JWLpp::computeModelSources", this, 
+                          &JWLpp::computeModelSources, mi);
+    cout_doing << "JWLpp::scheduleComputeModelSources "<<  endl;  
+    t->requires( Task::OldDW, mi->delT_Label);
+    Ghost::GhostType  gn  = Ghost::None;
+    const MaterialSubset* react_matl = matl0->thisMaterial();
+    const MaterialSubset* prod_matl  = matl1->thisMaterial();
+    MaterialSubset* one_matl     = scinew MaterialSubset();
+    one_matl->add(0);
+    one_matl->addReference();
+    MaterialSubset* press_matl   = one_matl;
   
-  //__________________________________
-  // Products
-  t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
+    //__________________________________
+    // Products
+    t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
   
-  //__________________________________
-  // Reactants
-  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
-  t->requires(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
-  t->requires(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
-  t->requires(Task::NewDW, Ilb->specific_heatLabel,react_matl, gn);
+    //__________________________________
+    // Reactants
+    t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
+    t->requires(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
+    t->requires(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
+    t->requires(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
+    t->requires(Task::NewDW, Ilb->specific_heatLabel,react_matl, gn);
 
-  t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
-  t->computes(reactedFractionLabel, react_matl);
-  t->computes(delFLabel,            react_matl);
+    t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
+    t->computes(reactedFractionLabel, react_matl);
+    t->computes(delFLabel,            react_matl);
 
-  t->modifies(mi->mass_source_CCLabel);
-  t->modifies(mi->momentum_source_CCLabel);
-  t->modifies(mi->energy_source_CCLabel);
-  t->modifies(mi->sp_vol_source_CCLabel); 
-  sched->addTask(t, level->eachPatch(), mymatls);
+    t->modifies(mi->mass_source_CCLabel);
+    t->modifies(mi->momentum_source_CCLabel);
+    t->modifies(mi->energy_source_CCLabel);
+    t->modifies(mi->sp_vol_source_CCLabel); 
+    sched->addTask(t, level->eachPatch(), mymatls);
 
-  if (one_matl->removeReference())
-    delete one_matl;
+    if (one_matl->removeReference())
+      delete one_matl;
+  }
 }
 
 //______________________________________________________________________
