@@ -17,6 +17,6 @@ proc uiMorphMesher3d {modid} {
     fscale $w.f.num_layers.scale -variable num_layers,$modid \
         -from 1 -to 9 -command "$modid needexecute "\
         -showvalue true -tickinterval 1 \
-        -activeforeground SteelBlue2 -orient horizontal
+        -orient horizontal
     pack $w.f.num_layers.label $w.f.num_layers.scale -fill x
 }

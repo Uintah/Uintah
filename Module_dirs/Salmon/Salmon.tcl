@@ -143,8 +143,7 @@ proc makeRoe {salmon rid} {
 	    -anchor nw
 
     scrollbar $m.objlist.scroll -relief sunken \
-	    -command "$m.objlist.canvas yview" \
-	    -foreground plum2 -activeforeground SteelBlue2
+	    -command "$m.objlist.canvas yview"
     pack $m.objlist.scroll -fill y -side right -padx 2 -pady 2
 
     frame $w.wframe -borderwidth 3 -relief sunken
@@ -223,7 +222,7 @@ proc makeViewPopup {rid} {
     fscale $w.f.fov -orient horizontal -variable fov,$view \
 	    -from 0 -to 180 -label "Field of View:" \
 	    -showvalue true -tickinterval 30 \
-	    -activeforeground SteelBlue2 -digits 3 \
+	    -digits 3 \
 	    -command $c
     pack $w.f.fov -expand yes -fill x
 }

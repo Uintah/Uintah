@@ -102,6 +102,7 @@ class Streamline : public Module {
     MaterialHandle matl;
 
     virtual void geom_moved(int, double, const Vector&, void*);
+    virtual void geom_release(void*);
 public:
     Streamline(const clString& id);
     Streamline(const Streamline&, int deep);
@@ -420,31 +421,6 @@ void Streamline::execute()
 	}
 	widget_id=ogeom->addObj(widget, widget_name);
     }
-    // Upedate the widget...
-    if(widgettype.get() == "Point"){
-	widget_p1->move(p1, 1*widget_scale);
-    } else if(widgettype.get() == "Line"){
-	widget_p1->move(p1, 1*widget_scale);
-	widget_p2->move(p2, 1*widget_scale);
-	widget_edge1->move(p1, p2, 0.5*widget_scale);
-	Vector spvec(p2-p1);
-	spvec.normalize();
-	Point sp(p1+spvec*slider1_dist);
-	Point sp2(sp+spvec*(widget_scale*0.5));
-	Point sp1(sp-spvec*(widget_scale*0.5));
-	widget_slider1body->move(sp1, sp2, 1*widget_scale);
-	widget_slider1cap1->move(sp2, spvec, 1*widget_scale);
-	widget_slider1cap2->move(sp1, -spvec, 1*widget_scale);
-	Vector v1,v2;
-	spvec.find_orthogonal(v1, v2);
-	widget_p1->get_pick()->set_principal(spvec, v1, v2);
-	widget_p2->get_pick()->set_principal(spvec, v1, v2);
-	widget_edge1->get_pick()->set_principal(spvec, v1, v2);
-	widget_slider1->get_pick()->set_principal(spvec);
-	widget->reset_bbox();
-    } else if(widgettype.get() == "Square"){
-	NOT_FINISHED("Square widget");
-    }
     GeomGroup* group=new GeomGroup;
     group->set_matl(matl);
 
@@ -564,6 +540,7 @@ void Streamline::geom_moved(int axis, double dist, const Vector& delta,
 {
     if(widgettype.get() == "Point"){
 	p1+=delta;
+	widget_p1->move(p1, 1*widget_scale);
     } else if(widgettype.get() == "Line"){
 	switch((int)cbdata){
 	case 1:
@@ -592,11 +569,34 @@ void Streamline::geom_moved(int axis, double dist, const Vector& delta,
 		break;
 	    }
 	}
+	// Reconfigure...
+	widget_p1->move(p1, 1*widget_scale);
+	widget_p2->move(p2, 1*widget_scale);
+	widget_edge1->move(p1, p2, 0.5*widget_scale);
+	Vector spvec(p2-p1);
+	spvec.normalize();
+	Point sp(p1+spvec*slider1_dist);
+	Point sp2(sp+spvec*(widget_scale*0.5));
+	Point sp1(sp-spvec*(widget_scale*0.5));
+	widget_slider1body->move(sp1, sp2, 1*widget_scale);
+	widget_slider1cap1->move(sp2, spvec, 1*widget_scale);
+	widget_slider1cap2->move(sp1, -spvec, 1*widget_scale);
+	Vector v1,v2;
+	spvec.find_orthogonal(v1, v2);
+	widget_p1->get_pick()->set_principal(spvec, v1, v2);
+	widget_p2->get_pick()->set_principal(spvec, v1, v2);
+	widget_edge1->get_pick()->set_principal(spvec, v1, v2);
+	widget_slider1->get_pick()->set_principal(spvec);
+	widget->reset_bbox();
     } else if(widgettype.get() == "Square"){
 	NOT_FINISHED("Square widget");
     } else {
 	error("Unknown widgettype in Streamline");
     }
+}
+
+void Streamline::geom_release(void*)
+{
     if(!abort_flag){
 	abort_flag=1;
 	want_to_execute();

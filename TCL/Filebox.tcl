@@ -27,10 +27,8 @@ proc makeFilebox {w var command cancel} {
     bind $w.f.bro.file.files <Double-Button-1> \
 	    "fbchoose %y $w $files $var \"$command\""
     scrollbar $w.f.bro.file.filess1 -relief sunken \
-	    -foreground plum2 -activeforeground SteelBlue2 \
 	    -command "$w.f.bro.file.files yview"
     scrollbar $w.f.bro.file.filess2 -relief sunken -orient horizontal \
-	    -foreground plum2 -activeforeground SteelBlue2 \
 	    -command "$w.f.bro.file.files xview"
     pack $w.f.bro.file.filesl -in $w.f.bro.file -side top -padx 2 \
 	    -pady 2 -anchor w
@@ -50,10 +48,8 @@ proc makeFilebox {w var command cancel} {
     tk_listboxSingleSelect $dirs
     bind $w.f.bro.dir.dirs <Double-Button-1> "fbdirs %y $w $dirs $files"
     scrollbar $w.f.bro.dir.dirss1 -relief sunken \
-	    -foreground plum2 -activeforeground SteelBlue2 \
 	    -command "$w.f.bro.dir.dirs yview"
     scrollbar $w.f.bro.dir.dirss2 -relief sunken -orient horizontal \
-	    -foreground plum2 -activeforeground SteelBlue2 \
 	    -command "$w.f.bro.dir.dirs xview"
     pack $w.f.bro.dir.dirsl -in $w.f.bro.dir -side top -padx 2 -pady 2 \
 	    -anchor w

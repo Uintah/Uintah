@@ -15,10 +15,10 @@ proc uiSurfToGeom {modid} {
     fscale $w.f.min -variable range_min,$modid -digits 4 \
 	    -from 0.0 -to 90 -label "Color min:" \
 	    -resolution .01 -showvalue true \
-	    -activeforeground SteelBlue2 -orient horizontal
+	    -orient horizontal
     fscale $w.f.max -variable range_max,$modid -digits 4 \
 	    -from 0.0 -to 90 -label "Color max:" \
 	    -resolution .01 -showvalue true \
-	    -activeforeground SteelBlue2 -orient horizontal
+	    -orient horizontal
     pack $w.f.min $w.f.max -side top -fill x
 }

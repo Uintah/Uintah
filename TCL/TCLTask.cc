@@ -20,6 +20,7 @@
 #include <tcl/tk3.6/tk.h>
 
 extern "C" int tkMain(int argc, char** argv);
+extern "C" void Tk_FirstPrompt();
 extern Tcl_Interp* the_interp;
 
 static Mutex* tlock=0;
@@ -76,6 +77,7 @@ TCLTask::~TCLTask()
 
 int TCLTask::body(int)
 {
+    Tk_FirstPrompt();
     Tk_MainLoop();
     Tcl_Eval(the_interp, "exit");
     return 0;
