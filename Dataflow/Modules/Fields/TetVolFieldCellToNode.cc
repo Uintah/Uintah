@@ -30,7 +30,6 @@ private:
   Field          *infield_;
   FieldHandle    inhandle_;
   FieldIPort     *inport_;
-  TetVolField<Vector> *vf_;
 
   Field          *outfield_;
   FieldHandle    outhandle_;
@@ -80,9 +79,7 @@ void TetVolFieldCellToNode::execute()
   }
 
   // we expect that the input field is a TetVolField<Vector>
-  if (infield_->get_type_description()->get_name() !=
-      get_type_description((TetVolField<Vector> *)0)->get_name())
-  {
+  if( inhandle_.get_rep()->get_type_name() != "TetVolField<Vector>" ) {
     postMessage("TetVolFieldCellToNode: ERROR: Cell centered volume is not a "
 		"TetVolField of Vectors.  Exiting.");
     return;
@@ -92,12 +89,10 @@ void TetVolFieldCellToNode::execute()
     postMessage("TetVolFieldCellToNode: ERROR: Cell centered volume is not "
 		"cell centered.  Exiting.");
     return;
-  }                         
-
-  vf_ = (TetVolField<Vector>*)infield_;
-
-  TetVolMesh *mesh = 
-    dynamic_cast<TetVolMesh*>(vf_->get_typed_mesh().get_rep());
+  }
+                        
+  TetVolField<Vector> *tvf = (TetVolField<Vector>*)(inhandle_.get_rep());
+  TetVolMesh *mesh = (TetVolMesh*)(tvf->get_typed_mesh().get_rep());
 
   TetVolMesh::Node::size_type nsize;
   TetVolMesh::Cell::size_type csize;
@@ -129,8 +124,8 @@ void TetVolFieldCellToNode::execute()
       index = *ni;
 
       ref_counts[index] += 1;
-      vector_sums[index] += vf_->value(*ci);
-      mag_sums[index] += (vf_->value(*ci)).length2();
+      vector_sums[index] += tvf->value(*ci);
+      mag_sums[index] += (tvf->value(*ci)).length2();
 
     }
 
