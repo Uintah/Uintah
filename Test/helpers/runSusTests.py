@@ -240,7 +240,8 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     # Run normal test
     environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
     rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, tests_to_do, "no", newalgo)
-
+    system("rm inputs")
+    
     # rc of 2 means it failed comparison or memory test, so try to run restart
     # anyway
     if rc == 0 or rc == 2:
@@ -249,16 +250,17 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
           failcode = 1
       mkdir("restart")
       chdir("restart")
-      symlink(inputpath, "inputs")
       # call the callback function before running each test
       callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism);
 
       # Run restart test
       if do_restart == 1:
+        symlink(inputpath, "inputs")
         environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
         rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, tests_to_do, "yes", newalgo)
         if rc > 0:
           failcode = 1
+        system("rm inputs")
       chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure
       failcode = 1
