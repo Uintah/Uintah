@@ -114,11 +114,13 @@ int main(int argc, char* argv[])
   int yres=360;
   int use_bv=1;
   char* scenename=0;
-  int gridcellsize=4;
+
+  int gridcellsize = -1;
   int gridcellsizeL2=4;
   int gridcellsizeL3=4;
   int minObjs1 = 100;
   int minObjs2 = 20;
+
   int c0;
   int c1;
   int ncounters=0;
@@ -344,7 +346,12 @@ int main(int argc, char* argv[])
       } else if(use_bv==2){
 	scene->set_object(new BV2(scene->get_object()));
       } else if(use_bv==3){
-	scene->set_object(new Grid(scene->get_object(), gridcellsize));
+	  if (gridcellsize == -1) {
+	      Array1<Object*> prims;	
+	      scene->get_object()->collect_prims(prims);
+	      gridcellsize = (int)ceil(pow(prims.size(),1./3.));
+	  }
+	  scene->set_object(new Grid(scene->get_object(), gridcellsize));
       } else if(use_bv==4){
 	  scene->set_object(new HierarchicalGrid( scene->get_object(), 
 						  gridcellsize, 
