@@ -73,6 +73,10 @@ ScalarMinMaxAlgoCountT<FIELD>::execute(FieldHandle field,
    
     typename FIELD::mesh_type *m = fld->get_typed_mesh().get_rep();
 
+    IntVector offset(0,0,0);
+    fld->get_property( "offset", offset);
+      
+
     if( field->data_at() == Field::CELL ){
       typename FIELD::mesh_type::CellIter iter; m->begin( iter );
       typename FIELD::mesh_type::CellIter iter_end; m->end( iter_end );
@@ -85,9 +89,9 @@ ScalarMinMaxAlgoCountT<FIELD>::execute(FieldHandle field,
 	  } else {
 	    min_val = value;
 	    n_mins = 1;
-	    min_idx.x(iter.i_);
-	    min_idx.y(iter.j_);
-	    min_idx.z(iter.k_);
+	    min_idx.x(iter.i_ + offset.x());
+	    min_idx.y(iter.j_ + offset.y());
+	    min_idx.z(iter.k_ + offset.z());
 	  }
 	}
 	if( max_val <= value) {
@@ -96,9 +100,9 @@ ScalarMinMaxAlgoCountT<FIELD>::execute(FieldHandle field,
 	  } else {
 	    max_val = value;
 	    n_maxs = 1;
-	    max_idx.x(iter.i_);
-	    max_idx.y(iter.j_);
-	    max_idx.z(iter.k_);
+	    max_idx.x(iter.i_ + offset.x());
+	    max_idx.y(iter.j_ + offset.y());
+	    max_idx.z(iter.k_ + offset.z());
 	  }
 	}
       }
@@ -114,9 +118,9 @@ ScalarMinMaxAlgoCountT<FIELD>::execute(FieldHandle field,
 	  } else {
 	    min_val = value;
 	    n_mins = 1;
-	    min_idx.x(iter.i_);
-	    min_idx.y(iter.j_);
-	    min_idx.z(iter.k_);
+	    min_idx.x(iter.i_ + offset.x());
+	    min_idx.y(iter.j_ + offset.y());
+	    min_idx.z(iter.k_ + offset.z());
 	  }
 	}
 	if( max_val <= value) {
@@ -125,9 +129,9 @@ ScalarMinMaxAlgoCountT<FIELD>::execute(FieldHandle field,
 	  } else {
 	    max_val = value;
 	    n_maxs = 1;
-	    max_idx.x(iter.i_);
-	    max_idx.y(iter.j_);
-	    max_idx.z(iter.k_);
+	    max_idx.x(iter.i_ + offset.x());
+	    max_idx.y(iter.j_ + offset.y());
+	    max_idx.z(iter.k_ + offset.z());
 	  }
 	}
       }
