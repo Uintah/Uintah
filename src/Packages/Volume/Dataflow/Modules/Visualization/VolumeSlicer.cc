@@ -75,6 +75,8 @@ private:
 
   TextureHandle          old_tex_;
   ColorMapHandle         old_cmap_;
+  Point                  old_min_, old_max_;
+  GeomID                 geom_id_;
   SliceRenderer          *slice_ren_;
   Point                   dmin_;
   Vector                  ddx_;
@@ -109,6 +111,8 @@ VolumeSlicer::VolumeSlicer(GuiContext* ctx)
     cyl_active_(ctx->subVar("cyl_active")),
     old_tex_(0),
     old_cmap_(0),
+    old_min_(Point(0,0,0)), old_max_(Point(0,0,0)),
+    geom_id_(-1),
     slice_ren_(0)
 {
 }
@@ -178,7 +182,7 @@ void
     slice_ren_ = new SliceRenderer(tex_, cmap);
     slice_ren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
     //    ogeom->delAll();
-    ogeom_->addObj( slice_ren_, "Volume Slicer");
+    geom_id_ = ogeom_->addObj( slice_ren_, "Volume Slicer");
     cyl_active_.reset();
     draw_phi0_.reset();
     phi0_.reset();
@@ -188,11 +192,22 @@ void
 			     draw_phi1_.get(), phi1_.get());
     old_tex_ = tex_;
     old_cmap_ = cmap;
+    BBox b;
+    tex_->get_bounds(b);
+    old_min_ = b.min();
+    old_max_ = b.max();
   } else {
-    if( tex_.get_rep() != old_tex_.get_rep() ){
+    BBox b;
+    tex_->get_bounds(b);
+    if( tex_.get_rep() != old_tex_.get_rep() ||
+	b.min() != old_min_ || b.max() != old_max_ ){
       old_tex_ = tex_;
-      BBox b;
-      tex_->get_bounds(b);
+      old_min_ = b.min();
+      old_max_ = b.max();
+      if( geom_id_ != -1 ){
+	ogeom_->delObj( geom_id_ );
+	geom_id_ = ogeom_->addObj( slice_ren_, "Volume Slicer");
+      }
       Vector dv(b.diagonal());
       int nx, ny, nz;
       tex_->get_dimensions(nx,ny,nz);
