@@ -1,166 +1,357 @@
-
+#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
 #include <Packages/Uintah/CCA/Components/Models/test/SimpleRxn.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
+
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/UnionGeometryPiece.h>
+#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Core/Containers/StaticArray.h>
+#include <Core/Math/MiscMath.h>
 #include <iostream>
+#include <Core/Util/DebugStream.h>
+#include <stdio.h>
 
 using namespace Uintah;
 using namespace std;
-
-SimpleRxn::SimpleRxn(const ProcessorGroup* myworld, ProblemSpecP& params)
+//__________________________________
+//  To turn on the output
+//  setenv SCI_DEBUG "SIMPLE_RXN_DOING_COUT:+,SIMPLE_RXN_DBG_COUT:+"
+//  SIMPLE_RXN_DBG:  dumps out during problemSetup 
+//  SIMPLE_RXN_DOING_COUT:   dumps when tasks are scheduled and performed
+static DebugStream cout_doing("SIMPLE_RXN_DOING_COUT", false);
+static DebugStream cout_dbg("SIMPLE_RXN_DBG_COUT", false);
+//______________________________________________________________________              
+SimpleRxn::SimpleRxn(const ProcessorGroup* myworld, 
+                               ProblemSpecP& params)
   : ModelInterface(myworld), params(params)
 {
-  mymatls = 0;
-
-  massFraction = VarLabel::create("SimpleRxn::massFraction",
-				  CCVariable<double>::getTypeDescription());
+  mymatl = 0;
 }
 
+//__________________________________
 SimpleRxn::~SimpleRxn()
 {
-  if(mymatls && mymatls->removeReference())
-    delete mymatls;
-  VarLabel::destroy(massFraction);
+  if(mymatl && mymatl->removeReference()) {
+    delete mymatl;
+  }
+  VarLabel::destroy(d_scalar->scalar_CCLabel);
+  VarLabel::destroy(d_scalar->scalar_source_CCLabel);
+  for(vector<Region*>::iterator iter = d_scalar->regions.begin();
+                                iter != d_scalar->regions.end(); iter++){
+    Region* region = *iter;
+    delete region->piece;
+    delete region;
+  }
 }
 
-void SimpleRxn::problemSetup(GridP&, SimulationStateP& sharedState,
-			     ModelSetup*)
+//__________________________________
+SimpleRxn::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
+  : piece(piece)
 {
+  ps->require("scalar", initialScalar);
+}
+//______________________________________________________________________
+//     P R O B L E M   S E T U P
+void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
+                        ModelSetup* setup)
+{
+  cout_doing << "Doing problemSetup \t\t\t\tSIMPLE_RXN" << endl;
+  sharedState = in_state;
   matl = sharedState->parseAndLookupMaterial(params, "material");
-  params->require("rate", rate);
 
   vector<int> m(1);
   m[0] = matl->getDWIndex();
-  mymatls = new MaterialSet();
-  mymatls->addAll(m);
-  mymatls->addReference();
- 
+  mymatl = new MaterialSet();
+  mymatl->addAll(m);
+  mymatl->addReference();
+
   // determine the specific heat of that matl.
   Material* matl = sharedState->getMaterial( m[0] );
   ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-  MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-  if (mpm_matl){
-    d_cv_0 = mpm_matl->getSpecificHeat();
-  }
   if (ice_matl){
-    d_cv_0 = ice_matl->getSpecificHeat();
+    d_cp = ice_matl->getSpecificHeat();
+  }   
+  //__________________________________
+  // - create scalar and scalar_src Label names
+  // - register the scalar to be transported
+  d_scalar = new Scalar();
+  d_scalar->index = 0;
+  d_scalar->name  = "f";
+  d_scalar->scalar_CCLabel = 
+      VarLabel::create( "scalar-f",    CCVariable<double>::getTypeDescription());
+  d_scalar->scalar_source_CCLabel = 
+      VarLabel::create("scalar-f_src", CCVariable<double>::getTypeDescription());
+
+  setup->registerTransportedVariable(mymatl->getSubset(0),
+                                     d_scalar->scalar_CCLabel,
+                                     d_scalar->scalar_source_CCLabel);  
+  
+  //__________________________________
+  // Read in the constants for the scalar
+   ProblemSpecP child = params->findBlock("scalar");
+   if (!child){
+     throw ProblemSetupException("SimpleRxn: Couldn't find scalar tag");    
+   }
+   ProblemSpecP const_ps = child->findBlock("constants");
+   if(!const_ps) {
+     throw ProblemSetupException("SimpleRxn: Couldn't find constants tag");
+   }
+    
+  const_ps->getWithDefault("f_stoichometric",d_scalar->f_stoic,   -9);         
+  const_ps->getWithDefault("diffusivity",   d_scalar->diff_coeff, -9);       
+  const_ps->getWithDefault("initialize_diffusion_knob",       
+                            d_scalar->initialize_diffusion_knob,   0);   
+  if( d_scalar->f_stoic == -9  ) {
+    ostringstream warn;
+    warn << " ERROR SimpleRxn: Input variable(s) not specified \n" 
+         << "\n f_stoichometric  "<< d_scalar->f_stoic 
+         << "\n diffusivity      "<< d_scalar->diff_coeff<< endl;
+    throw ProblemSetupException(warn.str());
+  } 
+
+  //__________________________________
+  //  Read in the geometry objects for the scalar
+  for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
+    geom_obj_ps != 0;
+    geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+    vector<GeometryPiece*> pieces;
+    GeometryPieceFactory::create(geom_obj_ps, pieces);
+
+    GeometryPiece* mainpiece;
+    if(pieces.size() == 0){
+     throw ParameterNotFound("No piece specified in geom_object");
+    } else if(pieces.size() > 1){
+     mainpiece = scinew UnionGeometryPiece(pieces);
+    } else {
+     mainpiece = pieces[0];
+    }
+
+    d_scalar->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
+  }
+  if(d_scalar->regions.size() == 0) {
+    throw ProblemSetupException("Variable: scalar-f does not have any initial value regions");
   }
 }
+//______________________________________________________________________
+//      S C H E D U L E   I N I T I A L I Z E
+void SimpleRxn::scheduleInitialize(SchedulerP& sched,
+                                   const LevelP& level,
+                                   const ModelInfo*)
+{
+  cout_doing << "SIMPLERXN::scheduleInitialize " << endl;
+  Task* t = scinew Task("SimpleRxn::initialize", this, &SimpleRxn::initialize);
+  t->computes(d_scalar->scalar_CCLabel);
+  sched->addTask(t, level->eachPatch(), mymatl);
+}
+//______________________________________________________________________
+//       I N I T I A L I Z E
+void SimpleRxn::initialize(const ProcessorGroup*, 
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse*,
+                           DataWarehouse* new_dw)
+{
+  cout_doing << "Doing Initialize \t\t\t\t\tSIMPLE_RXN" << endl;
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int indx = matl->getDWIndex();
+    CCVariable<double>  var;
+    new_dw->allocateAndPut(var, d_scalar->scalar_CCLabel, indx, patch);
+    
+    ///__________________________________
+    //  initialize the scalar field in a region
+    var.initialize(0);
 
-void SimpleRxn::scheduleInitialize(SchedulerP&,
-				   const LevelP& level,
-				   const ModelInfo*)
-{
-  //schedule the init of massFraction...;
-  // None necessary...
+    for(vector<Region*>::iterator iter = d_scalar->regions.begin();
+                                  iter != d_scalar->regions.end(); iter++){
+      Region* region = *iter;
+
+      for(CellIterator iter = patch->getExtraCellIterator();
+          !iter.done(); iter++){
+        IntVector c = *iter;
+        Point p = patch->cellPosition(c);            
+        if(region->piece->inside(p)) {
+          var[c] = region->initialScalar;
+        }
+      } // Over cells
+    } // regions
+
+    //__________________________________
+    //  Smooth out initial distribution with some diffusion
+    // This may have not be perfect on multiple patches
+    double FakeDiffusivity = 1.0;
+    double fakedelT = 1.0;
+    for( int i =1 ; i < d_scalar->initialize_diffusion_knob; i++ ){
+      bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
+      constCCVariable<double> placeHolder;
+
+      scalarDiffusionOperator(new_dw, patch, use_vol_frac,
+                              placeHolder, placeHolder,  var,
+                              var, FakeDiffusivity, fakedelT); 
+    }
+  }  // patches
 }
-      
-void SimpleRxn::scheduleComputeStableTimestep(SchedulerP&,
-					      const LevelP&,
-					      const ModelInfo*)
-{
-  // None necessary...
-}
-      
+//______________________________________________________________________
 void SimpleRxn::scheduleMassExchange(SchedulerP& sched,
-				     const LevelP& level,
-				     const ModelInfo* mi)
+                              const LevelP& level,
+                              const ModelInfo* mi)
 {
-  Task* t = scinew Task("SimpleRxn::massExchange",
-			this, &SimpleRxn::massExchange, mi);
-  t->modifies(mi->mass_source_CCLabel);
-  t->modifies(mi->momentum_source_CCLabel);
-  t->modifies(mi->energy_source_CCLabel);
-  Ghost::GhostType  gn  = Ghost::None;
-  t->requires(Task::OldDW, mi->density_CCLabel,    matl->thisMaterial(), gn);
-  t->requires(Task::OldDW, mi->velocity_CCLabel,   matl->thisMaterial(), gn);
-  t->requires(Task::OldDW, mi->temperature_CCLabel,matl->thisMaterial(), gn);
-  t->requires(Task::OldDW, mi->delT_Label);
-  sched->addTask(t, level->eachPatch(), mymatls);
-}
+  cout_doing << "SIMPLE_RXN::scheduleMassExchange" << endl;
+  Task* t = scinew Task("SimpleRxn::massExchange", 
+                   this,&SimpleRxn::massExchange, mi);
 
+  t->requires(Task::OldDW, mi->density_CCLabel,  Ghost::None);
+  t->modifies(mi->mass_source_CCLabel);
+  t->modifies(mi->sp_vol_source_CCLabel);
+  sched->addTask(t, level->eachPatch(), mymatl);
+}
+//______________________________________________________________________
 void SimpleRxn::massExchange(const ProcessorGroup*, 
-			     const PatchSubset* patches,
-			     const MaterialSubset* matls,
-			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     const ModelInfo* mi)
+                             const PatchSubset* patches,
+                             const MaterialSubset*,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw,
+                             const ModelInfo* mi)
 {
-#if 0
   delt_vartype delT;
   old_dw->get(delT, mi->delT_Label);
-  double dt = delT;
-  ASSERT(matls->size() == 2);
-  int m0 = matl0->getDWIndex();
-  int m1 = matl1->getDWIndex();
- 
+  
   for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);  
-    CCVariable<double> mass_source_0;
-    CCVariable<Vector> momentum_source_0;
-    CCVariable<double> energy_source_0;
-    new_dw->getModifiable(mass_source_0,     mi->mass_source_CCLabel, 
-                       m0, patch);
-    new_dw->getModifiable(momentum_source_0, mi->momentum_source_CCLabel,
-			  m0, patch);
-    new_dw->getModifiable(energy_source_0,   mi->energy_source_CCLabel,
-			  m0, patch);
-
-    CCVariable<double> mass_source_1;
-    CCVariable<Vector> momentum_source_1;
-    CCVariable<double> energy_source_1;
-    new_dw->getModifiable(mass_source_1,     mi->mass_source_CCLabel, 
-                      m1, patch);
-    new_dw->getModifiable(momentum_source_1, mi->momentum_source_CCLabel,
-			  m1, patch);
-    new_dw->getModifiable(energy_source_1,   mi->energy_source_CCLabel,
-			  m1, patch);
-
-    constCCVariable<double> density_0;
-    constCCVariable<Vector> vel_0;
-    constCCVariable<double> temp_0;
-    old_dw->get(density_0, mi->density_CCLabel,     m0, patch, Ghost::None, 0);
-    old_dw->get(vel_0,     mi->velocity_CCLabel,    m0, patch, Ghost::None, 0);
-    old_dw->get(temp_0,    mi->temperature_CCLabel, m0, patch, Ghost::None, 0);
+    const Patch* patch = patches->get(p);
+    int indx = matl->getDWIndex();
+    cout_doing << "Doing massExchange on patch "<<patch->getID()<< "\t\t\t\t SIMPLERXN" << endl;
+    CCVariable<double> mass_src, sp_vol_src;
+    new_dw->getModifiable(mass_src,   mi->mass_source_CCLabel,  indx,patch);
+    new_dw->getModifiable(sp_vol_src, mi->sp_vol_source_CCLabel,indx,patch);
+    // current does nothing.
+  }
+}
+//______________________________________________________________________
+void SimpleRxn::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
+                                          const LevelP& level,
+                                          const ModelInfo* mi)
+{
+  cout_doing << "SIMPLE_RXN::scheduleMomentumAndEnergyExchange " << endl;
+  Task* t = scinew Task("SimpleRxn::momentumAndEnergyExchange", 
+                   this,&SimpleRxn::momentumAndEnergyExchange, mi);
+                     
+  Ghost::GhostType  gn = Ghost::None;  
+  Ghost::GhostType  gac = Ghost::AroundCells; 
+  t->requires(Task::OldDW, d_scalar->scalar_CCLabel, gac,1); 
+  t->requires(Task::OldDW, mi->density_CCLabel,     gn);
+  t->requires(Task::OldDW, mi->temperature_CCLabel, gn);
+  t->requires(Task::OldDW, mi->delT_Label);
+  
+  t->modifies(mi->momentum_source_CCLabel);
+  t->modifies(mi->energy_source_CCLabel);
+  t->modifies(d_scalar->scalar_source_CCLabel);
+  sched->addTask(t, level->eachPatch(), mymatl);
+}
+//______________________________________________________________________
+void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*, 
+                                            const PatchSubset* patches,
+                                            const MaterialSubset* matls,
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw,
+                                            const ModelInfo* mi)
+{
+  delt_vartype delT;
+  old_dw->get(delT, mi->delT_Label);
+  Ghost::GhostType gn = Ghost::None;         
+  Ghost::GhostType gac = Ghost::AroundCells; 
+  
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing momentumAndEnergyExh... on patch "<<patch->getID()<< "\t\tSIMPLERXN" << endl;
 
     Vector dx = patch->dCell();
-    double volume = dx.x()*dx.y()*dx.z();
-    double tm = 0;
-    double trate = rate*dt;
-    if(trate > 1)
-      trate=1;
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
-      double mass = density_0[*iter] * volume;
-      double massx = mass*trate;
-      mass_source_0[*iter] -= massx;
-      mass_source_1[*iter] += massx;
+    double volume = dx.x()*dx.y()*dx.z();     
+    double new_f;
+    constCCVariable<double> rho_CC_old,f_old;
+    CCVariable<double> eng_src, sp_vol_src, f_src;
+    CCVariable<Vector> mom_src;
+    
+    int indx = matl->getDWIndex();
+    old_dw->get(rho_CC_old, mi->density_CCLabel,     indx, patch, gn, 0);  
+    old_dw->get(f_old,      d_scalar->scalar_CCLabel,indx, patch, gac, 1); 
+    new_dw->allocateAndPut(f_src, d_scalar->scalar_source_CCLabel,
+                                                      indx, patch, gn, 0);
+                                                      
+    new_dw->getModifiable(mom_src,    mi->momentum_source_CCLabel,indx,patch);
+    new_dw->getModifiable(eng_src,    mi->energy_source_CCLabel,  indx,patch);
 
-      Vector momx = vel_0[*iter]*massx;
-      momentum_source_0[*iter] -= momx;
-      momentum_source_1[*iter] += momx;
-      
-      double energyx = temp_0[*iter] * massx * d_cv_0;
-      energy_source_0[*iter] -= energyx;
-      energy_source_1[*iter] += energyx;
 
-      tm += massx;
+    //__________________________________
+    // rho=1/(f/rho_fuel+(1-f)/rho_air)
+    double fuzzyOne = 1.0 + 1e-10;
+    double fuzzyZero = 0.0 - 1e10;
+    int     numCells = 0, sum = 0;
+    double f_stoic= d_scalar->f_stoic;
+    //__________________________________   
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      double mass_old = rho_CC_old[c]*volume;
+      double f = f_old[c];
+      numCells++;
+
+      f = min(f,1.0);    // keep 0 < f < 1
+      f = max(f,0.0);
+      //__________________________________
+      //  Inside the flame    
+      if (f_stoic < f && f <= fuzzyOne ){  
+        sum++;
+      }                     // Does nothing right now
+      //__________________________________
+      //  At the flame surface        
+      if (f_stoic == f ){ 
+        sum++;
+      }
+      //__________________________________
+      //  outside the flame
+      if (fuzzyZero <= f && f < f_stoic ){ 
+         sum++;
+      }  
+      f_src[c] += new_f - f;
+    }  //iter
+
+    //__________________________________
+    //  bulletproofing
+    if (sum != numCells) {
+      ostringstream warn;
+      warn << "ERROR: SimpleRxn Model: invalid value for f "
+           << "somewhere in the scalar field: "<< sum
+           << " cells were touched out of "<< numCells
+           << " Total cells ";
+      throw InvalidValue(warn.str());
+    }         
+    //__________________________________
+    //  Tack on diffusion
+    double diff_coeff = d_scalar->diff_coeff;
+    if(diff_coeff != 0.0){ 
+      bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
+      constCCVariable<double> placeHolder;
+
+      scalarDiffusionOperator(new_dw, patch, use_vol_frac,
+                              placeHolder, placeHolder,  f_old,
+                              f_src, diff_coeff, delT);
     }
-    cerr << "Total mass transferred: " << tm << '\n';
   }
-#endif
 }
-
-void SimpleRxn::scheduleMomentumAndEnergyExchange(SchedulerP&,
-				       const LevelP&,
-				       const ModelInfo*)
+//__________________________________      
+void SimpleRxn::scheduleComputeStableTimestep(SchedulerP&,
+                                      const LevelP&,
+                                      const ModelInfo*)
 {
-  // None
+  // None necessary...
 }
