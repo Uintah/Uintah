@@ -216,16 +216,18 @@ void BuildFEMatrixQuadratic::execute()
 
 void BuildFEMatrixQuadratic::parallel(int proc)
 {
+  if (proc==0){
+    qtvm_->compute_edges();
+    qtvm_->compute_nodes();
+  }
+
+
   QuadraticTetVolMesh::Node::size_type nnodes;
   qtvm_->size(nnodes);
   int start_node=nnodes*proc/np; 
   int end_node=nnodes*(proc+1)/np; 
   int ndof=end_node-start_node;
 
-  if (proc==0){
-    qtvm_->compute_edges();
-    qtvm_->compute_node_neighbors();
-  }
 
   int r=start_node;
   int i;

@@ -107,10 +107,17 @@ public:
 
   bool test_nodes_range(Cell::index_type ci, int sn, int en);
 
+  virtual void compute_nodes();
+
 protected:
-  virtual void calc_node_cells_map();
+
 
 private:
+  vector<int> node_2_edge_;
+  typedef hash_multimap<int,int,Edge::CellEdgeHasher, Edge::eqEdge> E2N;
+  E2N edge_2_node_;
+  bool phantom_nodes_computed_p_;
+
   double calc_jac_derivs(Vector &dxi, Vector &dnu, Vector &dgam, 
 			 double xi, double nu, double gam, 
 			 Cell::index_type ci) const;

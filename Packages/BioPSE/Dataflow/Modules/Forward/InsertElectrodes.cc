@@ -201,7 +201,7 @@ void InsertElectrodes::insertContourIntoTetMesh(
 	if (electrodeElements) {
 	  Point pts[4];
 	  for (i=0; i<4; i++) tet_mesh->get_point(pts[i], tet_nodes[i]);
-	  electrodeElements->add_tet_unconnected(pts[0], pts[1], pts[2], pts[3]);
+	  electrodeElements->add_tet(pts[0], pts[1], pts[2], pts[3]);
 	}
 	int remap=0;
 	for (i=0; i<4; i++) {
