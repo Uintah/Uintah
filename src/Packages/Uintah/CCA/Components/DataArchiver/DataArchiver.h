@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/Grid/MaterialSetP.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Core/OS/Dir.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Thread/Mutex.h>
@@ -54,7 +55,8 @@ using std::pair;
 
       //////////
       // Insert Documentation Here:
-      virtual void problemSetup(const ProblemSpecP& params);
+      virtual void problemSetup(const ProblemSpecP& params,
+                                SimulationStateP& state);
 
       //////////
       // This function will set up the output for the simulation.  As part
@@ -92,7 +94,7 @@ using std::pair;
 
       //////////
       // Call this after the timestep has been executed.
-      virtual void executedTimestep();
+      virtual void executedTimestep(double delt);
      
       //////////
       // Insert Documentation Here:
@@ -129,14 +131,12 @@ using std::pair;
 				     DataWarehouse* new_dw);
 
       //////////
-      // Get the current time step
+      // Use the sharedState directly if you can, but if you must use these...
       virtual int getCurrentTimestep()
-      { return d_currentTimestep; }
+      { return d_sharedState->getCurrentTopLevelTimeStep(); }
        
-      //////////
-      // Get the current time
       virtual double getCurrentTime()
-      { return  d_currentTime; }
+      { return  d_sharedState->getElapsedTime(); }
 
       //////////
       // Returns true if the last timestep was one
@@ -191,6 +191,10 @@ using std::pair;
       void beginOutputTimestep(double time, double delt,
 			       const GridP& grid);
 
+      //////////
+      // Call this after a timestep restart to make sure we still
+      // have an output timestep
+      virtual void reEvaluateOutputTimestep(double old_delt, double new_delt);
       // helper for problemSetup
       void createIndexXML(Dir& dir);
 
@@ -208,6 +212,7 @@ using std::pair;
       void indexAddGlobals();
 
       string d_filebase;
+      SimulationStateP d_sharedState;
 
       // only one of these should be nonzero
       double d_outputInterval;
@@ -215,7 +220,7 @@ using std::pair;
      
       double d_nextOutputTime; // used when d_outputInterval != 0
       int d_nextOutputTimestep; // used when d_outputTimestepInterval != 0
-      int d_currentTimestep;
+      //int d_currentTimestep;
       Dir d_dir;
       bool d_writeMeta;
       string d_lastTimestepLocation;
@@ -224,7 +229,7 @@ using std::pair;
       bool d_saveParticleVariables;
       bool d_saveP_x;
 
-      double d_currentTime;
+      //double d_currentTime;
 
       // d_saveLabelNames is a temporary list containing VarLabel
       // names to be saved and the materials to save them for.  The
