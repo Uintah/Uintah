@@ -92,9 +92,10 @@ itcl_class SCIRun_Render_ViewSlices {
 	upvar \#0 [modname]-min min [modname]-max max
 	set ww [expr $max-$min]
 	set wl [expr $min+$ww/2]
+	set rez [expr $ww/1000]
 	foreach tab $vp_tabs {
-	    $tab.clutww.scale configure -from $min -to $max
-	    $tab.clutwl.scale configure -from $min -to $max
+	    $tab.clutww.scale configure -from 0 -to $ww -resolution $rez
+	    $tab.clutwl.scale configure -from $min -to $max -resolution $rez
 	    $tab.clutww.scale set $ww
 	    $tab.clutwl.scale set $wl
 	}
@@ -202,11 +203,11 @@ itcl_class SCIRun_Render_ViewSlices {
 	$f.zoom.scale configure -command \
 	    "$this-c redraw $gl"
 
-	labeledSlider $f.clutww "Window Width:" $prefix-clut_ww 1 2000 3
+	labeledSlider $f.clutww "Window Width:" [modname]-clut_ww 1 2000 3
 	$f.clutww.scale configure -command \
 	    "$this-c rebind $gl"
 
-	labeledSlider $f.clutwl "Window Level:" $prefix-clut_wl 1 2000 3
+	labeledSlider $f.clutwl "Window Level:" [modname]-clut_wl 1 2000 3
 	$f.clutwl.scale configure -command \
 	    "$this-c rebind $gl"
 
