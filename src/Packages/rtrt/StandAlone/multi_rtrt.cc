@@ -135,7 +135,6 @@ int main(int argc, char* argv[])
     if(strcmp(argv[i], "-np")==0){
       i++;
       rtrt_engine->nworkers=atoi(argv[i]);
-      rtrt_engine->np = rtrt_engine->nworkers;
     } else if(strcmp(argv[i], "-nr")==0){
       i++;
       num_rtrt=atoi(argv[i]);
@@ -372,8 +371,7 @@ int main(int argc, char* argv[])
 
     // Start up display thread...
     Dpy* dpy=new Dpy(scene, rtrt_engine, criteria1, criteria2,
-                     rtrt_engine->nworkers, bench,
-		     ncounters, c0, c1, 1.0, 1.0, display_frames,
+                     bench, ncounters, c0, c1, 1.0, 1.0, display_frames,
 		     pp_size, scratchsize, false, do_frameless==true, false);
     /* <<<< bigler >>>> */
     char buf1[100];
