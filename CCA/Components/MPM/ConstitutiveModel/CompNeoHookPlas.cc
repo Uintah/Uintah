@@ -175,7 +175,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
 
   // Create array for the particle stress
   ParticleVariable<Matrix3> pstress;
-  new_dw->allocate(pstress, lb->pStressAfterStrainRateLabel, pset);
+  new_dw->allocate(pstress, lb->pStressLabel, pset);
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<StateData> statedata;

@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 
 namespace Uintah {
+
 Fracture::
 Fracture(ProblemSpecP& ps)
 {
@@ -12,6 +13,5 @@ Fracture(ProblemSpecP& ps)
 Fracture::~Fracture()
 {
 }
-} // End namespace Uintah
-  
 
+} // End namespace Uintah
