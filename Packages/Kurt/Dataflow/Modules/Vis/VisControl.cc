@@ -337,21 +337,21 @@ VisControl::buildData(DataArchive& archive, vector< double >& times,
   LevelP level = grid->getLevel( 0 );
 
   // get index and spatial ranges 
-  BBox indexbox;
   BBox spatialbox;
-  level->getIndexRange(indexbox);
+  IntVector minIV, maxIV;
+  level->getIndexRange(minIV, maxIV);
   level->getSpatialRange(spatialbox);
 
   vf = new VectorFieldRG();
   sf = new ScalarFieldRGdouble();
 
   // resize and set bounds
-  vf->resize(indexbox.max().x() - indexbox.min().x(),
-	     indexbox.max().y() - indexbox.min().y(),
-	     indexbox.max().z() - indexbox.min().z());
-  sf->resize(indexbox.max().x() - indexbox.min().x(),
-	     indexbox.max().y() - indexbox.min().y(),
-	     indexbox.max().z() - indexbox.min().z());
+  vf->resize(maxIV.x() - minIV.x(),
+	     maxIV.y() - minIV.y(),
+	     maxIV.z() - minIV.z());
+  sf->resize(maxIV.x() - minIV.x(),
+	     maxIV.y() - minIV.y(),
+	     maxIV.z() - minIV.z());
   vf->set_bounds(spatialbox.min(), spatialbox.max());
   sf->set_bounds(spatialbox.min(), spatialbox.max());
   std::cerr<< "Bounds = ( "<<spatialbox.min()<<", "<<spatialbox.max()<<
