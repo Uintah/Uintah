@@ -12,37 +12,54 @@ using namespace SCIRun;
 static const int    NLOCKS=123;
 static       Mutex* locks[NLOCKS];
 static       bool   initialized = false;
+static Mutex initlock("RefCounted initialization lock");
 
 static AtomicCounter nextIndex("RefCounted nextIndex count", 0);
+static AtomicCounter freeIndex("RefCoutned freeIndex count", 0);
 #include <iostream>
 using namespace std;
 
 RefCounted::RefCounted()
     : d_refCount(0)
 {
+  if(!initialized){
+    initlock.lock();
     if(!initialized){
-	// This sucks - it needs to be made thread-safe
-	for(int i=0;i<NLOCKS;i++)
-	    locks[i] = scinew Mutex("RefCounted Mutex");
-	initialized=true;
+      for(int i=0;i<NLOCKS;i++)
+	locks[i] = scinew Mutex("RefCounted Mutex");
+      initialized=true;
     }
-    d_lockIndex = (nextIndex++)%NLOCKS;
-    ASSERT(d_lockIndex >= 0);
+    initlock.unlock();
+  }
+  d_lockIndex = (nextIndex++)%NLOCKS;
+  ASSERT(d_lockIndex >= 0);
 }
 
 RefCounted::~RefCounted()
 {
-    ASSERTEQ(d_refCount, 0);
+  ASSERTEQ(d_refCount, 0);
+  int index = ++freeIndex;
+  if(index == nextIndex){
+    initlock.lock();
+    if(freeIndex == nextIndex){
+      initialized = false;
+      for(int i=0;i<NLOCKS;i++){
+	delete locks[i];
+	locks[i]=0;
+      }
+    }
+    initlock.unlock();
+  }
 }
 
-void RefCounted::addReference()
+void RefCounted::addReference() const
 {
     locks[d_lockIndex]->lock();
     d_refCount++;
     locks[d_lockIndex]->unlock();
 }
 
-bool RefCounted::removeReference()
+bool RefCounted::removeReference() const
 {
     locks[d_lockIndex]->lock();
     bool status = (--d_refCount == 0);
@@ -50,4 +67,3 @@ bool RefCounted::removeReference()
     locks[d_lockIndex]->unlock();
     return status;
 }
-

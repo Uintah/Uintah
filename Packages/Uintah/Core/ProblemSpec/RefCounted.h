@@ -40,11 +40,11 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      void addReference();
+      void addReference() const;
       
       //////////
       // Insert Documentation Here:
-      bool removeReference();
+      bool removeReference() const;
 
       int getReferenceCount() const {
 	 return d_refCount;
@@ -52,7 +52,7 @@ WARNING
    private:
       //////////
       // Insert Documentation Here:
-      int d_refCount;
+      mutable int d_refCount;
       int d_lockIndex;
    };
 } // End namespace Uintah
