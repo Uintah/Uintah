@@ -242,7 +242,8 @@ void setBC(CCVariable<double>& press_CC,
         
         if (gravity[p_dir] == 0) { 
           IveSetBC = setNeumanDirichletBC<double>(patch, face, press_CC,bound, 
-						        bc_kind, bc_value, cell_dx);
+						  bc_kind, bc_value, cell_dx,
+						  mat_id,child);
         }
         //__________________________________
         // With gravity
@@ -342,7 +343,7 @@ void setBC(CCVariable<double>& var_CC,
         //__________________________________
         // Apply the boundary condition
         IveSetBC =  setNeumanDirichletBC<double>
-                       (patch, face, var_CC,bound, bc_kind, bc_value, cell_dx);
+	  (patch, face, var_CC,bound, bc_kind, bc_value, cell_dx,mat_id,child);
 
         //__________________________________
         // Temperature and Gravity and ICE Matls
@@ -423,7 +424,8 @@ void setBC(CCVariable<Vector>& var_CC,
       if (bc_kind != "NotSet" && bc_kind != "LODI") {
  
         IveSetBC = setNeumanDirichletBC<Vector>(patch, face, var_CC,bound, 
-						      bc_kind, bc_value, cell_dx);
+						bc_kind, bc_value, cell_dx,
+						mat_id,child);
 
         //__________________________________
         //  Tangent components Neumann = 0
