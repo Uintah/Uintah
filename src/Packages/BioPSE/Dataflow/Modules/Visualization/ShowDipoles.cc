@@ -414,13 +414,14 @@ ShowDipoles::generate_output_field()
 
 
 void
-ShowDipoles::widget_moved(bool redraw)
+ShowDipoles::widget_moved(bool release)
 {
-  if (redraw) {
+  if (release) {
     output_dirty_ = true;
     scaleModeGui_.reset();
     string scaleMode = scaleModeGui_.get();
     double max = max_len_.get();
+#if 0
     double old_max = max;
     double new_max = 0.;   
     //may have a new max length for normalize.
@@ -442,7 +443,7 @@ ShowDipoles::widget_moved(bool redraw)
     max_len_.set(new_max);
     max_len_.reset();
     max = new_max;
-
+#endif
     // dont know which widget moved so update all of them
     for (int i = 0; i < num_dipoles_.get(); i++) {
 
@@ -455,7 +456,8 @@ ShowDipoles::widget_moved(bool redraw)
 	// need to renormalize...
 	double old = widget_[i]->GetScale();
 	// undo the old normalize
-	double vec = (old * old_max) / widgetSizeGui_.get();
+//	double vec = (old * old_max) / widgetSizeGui_.get();
+	double vec = (old * max) / widgetSizeGui_.get();
 	sc = widgetSizeGui_.get() * (vec / max);
 	widget_[i]->SetScale(sc); 
 	new_magnitudes_[i]->set(sc);
@@ -471,6 +473,7 @@ ShowDipoles::widget_moved(bool redraw)
     draw_lines();
     if (ogeom_) ogeom_->flushViews();
   }
+  if (release) want_to_execute();
 }
 
 void 
