@@ -145,7 +145,7 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches
   // This task requires scalar and density from old time step for transient
   // calculation
   //DataWarehouseP old_dw = new_dw->getTop();
-  tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel,
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_scalarINLabel,
 		Ghost::None, zeroGhostCells);
@@ -315,7 +315,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO(index)
-    old_dw->get(scalarVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->get(scalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(scalarVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);

@@ -84,7 +84,7 @@ c intrusion boundary, fix coeffs
                   if (pcell(i,j+1,k).eq.mmwallid)
      $                 an(i,j,k) = zero
                   if (pcell(i,j,k-1).eq.mmwallid)
-     $                 ab(i,j,k-1) = zero
+     $                 ab(i,j,k) = zero
                   if (pcell(i,j,k+1).eq.mmwallid)
      $                 at(i,j,k) = zero
                END IF

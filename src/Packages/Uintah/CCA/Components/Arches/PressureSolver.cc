@@ -179,7 +179,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
   // Requires
   // from old_dw for time integration
   // get old_dw from getTop function
-    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel,
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		  Ghost::AroundCells, numGhostCells);
   // checkpointing
   //      tsk->requires(new_dw, d_lab->d_cellInfoLabel, matlIndex, patch,
@@ -255,7 +255,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
     // Requires
     // from old_dw for time integration
   // get old_dw from getTop function
-    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, 
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		  Ghost::AroundCells, numGhostCells);
     // fix it
     tsk->requires(Task::OldDW, d_lab->d_densityINLabel,
@@ -576,7 +576,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     old_dw->get(pressureVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-    old_dw->get(pressureVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->get(pressureVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     
     for(int index = 1; index <= Arches::NDIM; ++index) {
@@ -796,7 +796,7 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
     // *** warning fix it
     old_dw->get(pressureVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-    old_dw->get(pressureVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->get(pressureVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
   
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
