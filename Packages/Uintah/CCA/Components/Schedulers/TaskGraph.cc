@@ -546,7 +546,7 @@ TaskGraph::createDetailedTasks( const ProcessorGroup* pg,
     }
   }
   ASSERT(grid != 0);
-  lb->createNeighborhood(grid, pg);
+  lb->createNeighborhood(grid, pg, sc);
 
   DetailedTasks* dt = scinew DetailedTasks(sc, pg, this, useInternalDeps );
   for(int i=0;i<(int)sorted_tasks.size();i++){
@@ -558,7 +558,9 @@ TaskGraph::createDetailedTasks( const ProcessorGroup* pg,
 	const PatchSubset* pss = ps->getSubset(p);
 	for(int m=0;m<ms->size();m++){
 	  const MaterialSubset* mss = ms->getSubset(m);
-	  if(lb->inNeighborhood(pss, mss))
+	  if(lb->inNeighborhood(pss, mss)) // can we move this comparison up
+          	                  //(does mss determines neighborhood)? - bryan
+
 	    createDetailedTask(dt, task, pss, mss);
 	}
       }
@@ -958,7 +960,9 @@ int TaskGraph::findVariableLocation(LoadBalancer* lb,
 {
   // This needs to be improved, especially for re-distribution on
   // restart from checkpoint.
-  int proc = lb->getPatchwiseProcessorAssignment(patch, pg);
+  int proc = lb->getOldProcessorAssignment(patch, pg);
+  //int proc = lb->getPatchwiseProcessorAssignment(patch, pg);
+
   return proc;
 }
 
