@@ -42,6 +42,7 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   dws_[ Task::OldDW ] = dws_[ Task::NewDW ] = 0;
   dts_ = 0;
   emit_taskgraph = false;
+  memlogfile = 0;
 }
 
 SchedulerCommon::~SchedulerCommon()
