@@ -229,6 +229,40 @@ template<class T>
 
 /*___________________________________________________________________
  Function~  AMRICE::linearInterpolation--
+ 
+ X-Y PLANE 1
+
+           |       x   |
+           |     |---| |
+___________|___________|_______________
+  |  |  |  |  |  |  |  |  |
+__|__|__|__|__|__|__|__|__|
+  |  |  |  |  |  |  |  |  |
+__|__*__|__|__|__o__|x1|__|  ---o         Q_x1 = (1-x)Q  + (x)Q(i+1)
+  |  |  |  |  |  |  |  |  |   |
+__|__|__|__|__|__|__|__|__|   |  y
+  |  |  |  |  |  |  |  |  |   |
+__|__|__|__|__|__|__|__|__|___|________
+  |  |  |  |  |  |  |+ |  |  ---
+__|__|__|__|__|__|__|__|__|
+           |           |
+           |           |
+     *     |     o   x2        o          Q_x2 = (1-x)Q(j-1) + (x)(Q(i+1,j-1))
+           |           |
+           |           |
+___________|___________|_______________
+
+* coarse cell centers                   
+o cells used for interpolation          
++ fine cell cell center
+
+ Q_fc_plane_1 = (1-y)Q_x1 + (y)*Q_x2
+              = (1-y)(1-x)Q + (1-y)(x)Q(i+1) + (1-x)(y)Q(j-1) + (x)(y)Q(i+1)(j-1)
+              = (w0)Q + (w1)Q(i+1) + (w2)Q(j-1) + (w3)Q(i+1)(j-1)               
+
+Q_fc_plane_2 is identical to Q_fc_plane_1 with except for a z offset.
+
+Q_FC =(1-z)Q_fc_plane_1 + (z) * Q_fc_plane2
 _____________________________________________________________________*/
 template<class T>
   void linearInterpolation(constCCVariable<T>& q_CL,// course level
