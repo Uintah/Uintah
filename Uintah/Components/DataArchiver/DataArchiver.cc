@@ -12,6 +12,7 @@
 #include <Uintah/Interface/OutputContext.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Parallel/Parallel.h>
 #include <Uintah/Parallel/ProcessorGroup.h>
 #include <PSECore/XMLUtil/SimpleErrorHandler.h>
 #include <PSECore/XMLUtil/XMLUtil.h>
@@ -22,6 +23,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -63,29 +65,104 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 
    d_nextOutputTime=0.0;
 
-   d_dir = makeVersionedDir(d_filebase);
+   if(Parallel::usingMPI()){
+      // See if we have a shared filesystem
+      bool shared;
+      if(d_myworld->myrank() == 0){
+	 d_dir = makeVersionedDir(d_filebase);
+	 string tmpname = d_dir.getName()+"/tmp.tmp";
+	 ostringstream test_string;
+	 char hostname[MAXHOSTNAMELEN];
+	 if(gethostname(hostname, MAXHOSTNAMELEN) != 0)
+	    strcpy(hostname, "unknown???");
+	 test_string << hostname << " " << getpid() << '\n';
+	 {
+	    ofstream tmpout(tmpname.c_str());
+	    tmpout << test_string.str();
+	 }
+	 int outlen = (int)(test_string.str().length()+tmpname.length()+2);
+	 char* outbuf = new char[outlen];
+	 strcpy(outbuf, test_string.str().c_str());
+	 strcpy(outbuf+test_string.str().length()+1, tmpname.c_str());
+	 MPI_Bcast(&outlen, 1, MPI_INT, 0, d_myworld->getComm());
+	 MPI_Bcast(outbuf, outlen, MPI_CHAR, 0, d_myworld->getComm());
+	 delete[] outbuf;
+	 shared=true;
+      } else {
+	 int inlen;
+	 MPI_Bcast(&inlen, 1, MPI_INT, 0, d_myworld->getComm());
+	 char* inbuf = new char[inlen];
+	 MPI_Bcast(inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm());
+	 char* test_string = inbuf;
+	 char* tmpname = test_string+strlen(test_string)+1;
+	 ifstream tmpin(tmpname);
+	 if(tmpin){
+	    char* in = new char[strlen(test_string)+1];
+	    tmpin.read(in, (int)strlen(test_string));
+	    in[strlen(test_string)]=0;
+	    if(strcmp(test_string, in) != 0){
+	       cerr << "Different strings?\n";
+	       shared=false;
+	    } else {
+	       shared=true;
+	    }
+	 }
+	 char* p = tmpname+strlen(tmpname)-1;
+	 while(p>tmpname && *p != '/')
+	    p--;
+	 *p=0;
+	 d_dir = Dir(tmpname);
+	 cerr << d_myworld->myrank() << " dir=" << d_dir.getName();
+	 if(shared)
+	    cerr << " shared\n";
+	 else
+	    cerr << " NOT shared\n";
+	 delete[] inbuf;
+      }
+      int s = shared;
+      int allshared;
+      MPI_Allreduce(&s, &allshared, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
+      if(allshared){
+	 if(d_myworld->myrank() == 0){
+	    d_writeMeta = true;
+	 } else {
+	    d_writeMeta = false;
+	 }
+      } else {
+	 d_writeMeta = true;
+      }
+      if(d_myworld->myrank() == 0){
+	 string tmpname = d_dir.getName()+"/tmp.tmp";
+	 unlink(tmpname.c_str());
+      }
+   } else {
+      d_dir = makeVersionedDir(d_filebase);
+      d_writeMeta = true;
+   }
 
-   DOM_DOMImplementation impl;
+   if(d_writeMeta){
+      DOM_DOMImplementation impl;
     
-   DOM_Document doc = impl.createDocument(0,"Uintah_DataArchive",
-					  DOM_DocumentType());
-   DOM_Element rootElem = doc.getDocumentElement();
+      DOM_Document doc = impl.createDocument(0,"Uintah_DataArchive",
+					     DOM_DocumentType());
+      DOM_Element rootElem = doc.getDocumentElement();
 
-   appendElement(rootElem, "numberOfProcessors", d_myworld->size());
+      appendElement(rootElem, "numberOfProcessors", d_myworld->size());
 
-   DOM_Element metaElem = doc.createElement("Meta");
-   rootElem.appendChild(metaElem);
-   appendElement(metaElem, "username", getenv("LOGNAME"));
-   time_t t = time(NULL) ;
-   appendElement(metaElem, "date", ctime(&t));
+      DOM_Element metaElem = doc.createElement("Meta");
+      rootElem.appendChild(metaElem);
+      appendElement(metaElem, "username", getenv("LOGNAME"));
+      time_t t = time(NULL) ;
+      appendElement(metaElem, "date", ctime(&t));
 
-   string iname = d_dir.getName()+"/index.xml";
-   ofstream out(iname.c_str());
-   out << doc << endl;
+      string iname = d_dir.getName()+"/index.xml";
+      ofstream out(iname.c_str());
+      out << doc << endl;
 
-   string inputname = d_dir.getName()+"/input.xml";
-   ofstream out2(inputname.c_str());
-   out2 << params->getNode().getOwnerDocument() << endl;
+      string inputname = d_dir.getName()+"/input.xml";
+      ofstream out2(inputname.c_str());
+      out2 << params->getNode().getOwnerDocument() << endl;
+   }
 }
 
 void DataArchiver::finalizeTimestep(double time, double delt,
@@ -104,11 +181,11 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 
 
    Task* t = scinew Task("DataArchiver::outputReduction", new_dw, new_dw,
-		  this, &DataArchiver::outputReduction, time);
+			 this, &DataArchiver::outputReduction, time);
 
-    for(int i=0;i<ivars.size();i++){
+   for(int i=0;i<ivars.size();i++){
       t->requires(new_dw, ivars[i]) ;
-    }
+   }
 
    sched->addTask(t);
 
@@ -123,98 +200,99 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 
    d_nextOutputTime+=d_outputInterval;
 
-   ostringstream tname;
-   tname << "t" << setw(4) << setfill('0') << timestep;
-
    // Create the directory for this timestep, if necessary
-   Dir tdir;
-   try {
-      tdir = d_dir.createSubdir(tname.str());
+   if(d_writeMeta){
+      Dir tdir;
+      ostringstream tname;
+      tname << "t" << setw(4) << setfill('0') << timestep;
+      try {
 
-      DOM_DOMImplementation impl;
+	 tdir = d_dir.createSubdir(tname.str());
+
+	 DOM_DOMImplementation impl;
     
-      DOM_Document doc = impl.createDocument(0,"Uintah_timestep",
-					     DOM_DocumentType());
-      DOM_Element rootElem = doc.getDocumentElement();
+	 DOM_Document doc = impl.createDocument(0,"Uintah_timestep",
+						DOM_DocumentType());
+	 DOM_Element rootElem = doc.getDocumentElement();
 
-      DOM_Element timeElem = doc.createElement("Time");
-      rootElem.appendChild(timeElem);
+	 DOM_Element timeElem = doc.createElement("Time");
+	 rootElem.appendChild(timeElem);
 
-      appendElement(timeElem, "timestepNumber", timestep);
-      appendElement(timeElem, "currentTime", time);
-      appendElement(timeElem, "delt", delt);
+	 appendElement(timeElem, "timestepNumber", timestep);
+	 appendElement(timeElem, "currentTime", time);
+	 appendElement(timeElem, "delt", delt);
 
-      DOM_Element gridElem = doc.createElement("Grid");
-      rootElem.appendChild(gridElem);
+	 DOM_Element gridElem = doc.createElement("Grid");
+	 rootElem.appendChild(gridElem);
 
-      GridP grid = level->getGrid();
-      int numLevels = grid->numLevels();
-      appendElement(gridElem, "numLevels", numLevels);
-      for(int l = 0;l<numLevels;l++){
-	 LevelP level = grid->getLevel(l);
-	 DOM_Element levelElem = doc.createElement("Level");
-	 gridElem.appendChild(levelElem);
+	 GridP grid = level->getGrid();
+	 int numLevels = grid->numLevels();
+	 appendElement(gridElem, "numLevels", numLevels);
+	 for(int l = 0;l<numLevels;l++){
+	    LevelP level = grid->getLevel(l);
+	    DOM_Element levelElem = doc.createElement("Level");
+	    gridElem.appendChild(levelElem);
 
-	 appendElement(levelElem, "numPatches", level->numPatches());
-	 appendElement(levelElem, "totalCells", level->totalCells());
-	 appendElement(levelElem, "cellspacing", level->dCell());
-	 appendElement(levelElem, "anchor", level->getAnchor());
-	 Level::const_patchIterator iter;
-	 for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
-	    const Patch* patch=*iter;
-	    DOM_Element patchElem = doc.createElement("Patch");
-	    levelElem.appendChild(patchElem);
-	    appendElement(patchElem, "id", patch->getID());
-	    appendElement(patchElem, "lowIndex", patch->getCellLowIndex());
-	    appendElement(patchElem, "highIndex", patch->getCellHighIndex());
-	    Box box = patch->getBox();
-	    appendElement(patchElem, "lower", box.lower());
-	    appendElement(patchElem, "upper", box.upper());
-	    appendElement(patchElem, "totalCells", patch->totalCells());
+	    appendElement(levelElem, "numPatches", level->numPatches());
+	    appendElement(levelElem, "totalCells", level->totalCells());
+	    appendElement(levelElem, "cellspacing", level->dCell());
+	    appendElement(levelElem, "anchor", level->getAnchor());
+	    Level::const_patchIterator iter;
+	    for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
+	       const Patch* patch=*iter;
+	       DOM_Element patchElem = doc.createElement("Patch");
+	       levelElem.appendChild(patchElem);
+	       appendElement(patchElem, "id", patch->getID());
+	       appendElement(patchElem, "lowIndex", patch->getCellLowIndex());
+	       appendElement(patchElem, "highIndex", patch->getCellHighIndex());
+	       Box box = patch->getBox();
+	       appendElement(patchElem, "lower", box.lower());
+	       appendElement(patchElem, "upper", box.upper());
+	       appendElement(patchElem, "totalCells", patch->totalCells());
+	    }
 	 }
+	 DOM_Element dataElem = doc.createElement("Data");
+	 rootElem.appendChild(dataElem);
+	 ostringstream lname;
+	 lname << "l0"; // Hard coded - steve
+	 for(int i=0;i<d_myworld->size();i++){
+	    ostringstream pname;
+	    pname << lname.str() << "/p" << setw(5) << setfill('0') << i << ".xml";
+	    DOM_Text leader = doc.createTextNode("\n\t");
+	    dataElem.appendChild(leader);
+	    DOM_Element df = doc.createElement("Datafile");
+	    dataElem.appendChild(df);
+	    df.setAttribute("href", pname.str().c_str());
+	    ostringstream labeltext;
+	    labeltext << "Processor " << i << " of " << d_myworld->size();
+	    DOM_Text label = doc.createTextNode(labeltext.str().c_str());
+	    df.appendChild(label);
+	    DOM_Text trailer = doc.createTextNode("\n");
+	    dataElem.appendChild(trailer);
+	 }
+	 string name = tdir.getName()+"/timestep.xml";
+	 ofstream out(name.c_str());
+	 out << doc << endl;
+	 
+      } catch(ErrnoException& e) {
+	 if(e.getErrno() != EEXIST)
+	    throw;
+	 tdir = d_dir.getSubdir(tname.str());
       }
-      DOM_Element dataElem = doc.createElement("Data");
-      rootElem.appendChild(dataElem);
+      
+      // Create the directory for this level, if necessary
       ostringstream lname;
       lname << "l0"; // Hard coded - steve
-      for(int i=0;i<d_myworld->size();i++){
-	 ostringstream pname;
-	 pname << lname.str() << "/p" << setw(5) << setfill('0') << i << ".xml";
-	 DOM_Text leader = doc.createTextNode("\n\t");
-	 dataElem.appendChild(leader);
-	 DOM_Element df = doc.createElement("Datafile");
-	 dataElem.appendChild(df);
-	 df.setAttribute("href", pname.str().c_str());
-	 ostringstream labeltext;
-	 labeltext << "Processor " << i << " of " << d_myworld->size();
-	 DOM_Text label = doc.createTextNode(labeltext.str().c_str());
-	 df.appendChild(label);
-	 DOM_Text trailer = doc.createTextNode("\n");
-	 dataElem.appendChild(trailer);
+      Dir ldir;
+      try {
+	 ldir = tdir.createSubdir(lname.str());
+      } catch(ErrnoException& e) {
+	 if(e.getErrno() != EEXIST)
+	    throw;
+	 ldir = tdir.getSubdir(lname.str());
       }
-      string name = tdir.getName()+"/timestep.xml";
-      ofstream out(name.c_str());
-      out << doc << endl;
-
-   } catch(ErrnoException& e) {
-      if(e.getErrno() != EEXIST)
-	 throw;
-      tdir = d_dir.getSubdir(tname.str());
    }
-
-   // Create the directory for this level, if necessary
-   ostringstream lname;
-   lname << "l0"; // Hard coded - steve
-   Dir ldir;
-   try {
-      ldir = tdir.createSubdir(lname.str());
-   } catch(ErrnoException& e) {
-      if(e.getErrno() != EEXIST)
-	 throw;
-      ldir = tdir.getSubdir(lname.str());
-   }
-
-   
+      
    vector<const VarLabel*> vars;
    vector<int> number;
    new_dw->getSaveSet(vars, number);
@@ -398,91 +476,88 @@ void DataArchiver::output(const ProcessorGroup*,
    ofstream out(pname_s.c_str());
    out << doc << endl;
 
-   // Rewrite the index if necessary...
-   string iname = d_dir.getName()+"/index.xml";
-   // Instantiate the DOM parser.
-   DOMParser parser;
-   parser.setDoValidation(false);
+   if(d_writeMeta){
+      // Rewrite the index if necessary...
+      string iname = d_dir.getName()+"/index.xml";
+      // Instantiate the DOM parser.
+      DOMParser parser;
+      parser.setDoValidation(false);
 
-   SimpleErrorHandler handler;
-   parser.setErrorHandler(&handler);
+      SimpleErrorHandler handler;
+      parser.setErrorHandler(&handler);
 
-   // Parse the input file
-   // No exceptions just yet, need to add
+      parser.parse(iname.c_str());
 
-   parser.parse(iname.c_str());
+      if(handler.foundError)
+	 throw InternalError("Error reading file: "+pname_s);
 
-   if(handler.foundError)
-      throw InternalError("Error reading file: "+pname_s);
-
-   // Add the parser contents to the ProblemSpecP d_doc
-   DOM_Document topDoc = parser.getDocument();
-   DOM_Node ts = findNode("timesteps", topDoc.getDocumentElement());
-   if(ts == 0){
-      ts = topDoc.createElement("timesteps");
-      topDoc.getDocumentElement().appendChild(ts);
-   }
-   bool found=false;
-   for(DOM_Node n = ts.getFirstChild(); n != 0; n=n.getNextSibling()){
-      if(n.getNodeName().equals(DOMString("timestep"))){
-	 int readtimestep;
-	 if(!get(n, readtimestep))
-	    throw InternalError("Error parsing timestep number");
-	 if(readtimestep == timestep){
-	    found=true;
-	    break;
+      DOM_Document topDoc = parser.getDocument();
+      DOM_Node ts = findNode("timesteps", topDoc.getDocumentElement());
+      if(ts == 0){
+	 ts = topDoc.createElement("timesteps");
+	 topDoc.getDocumentElement().appendChild(ts);
+      }
+      bool found=false;
+      for(DOM_Node n = ts.getFirstChild(); n != 0; n=n.getNextSibling()){
+	 if(n.getNodeName().equals(DOMString("timestep"))){
+	    int readtimestep;
+	    if(!get(n, readtimestep))
+	       throw InternalError("Error parsing timestep number");
+	    if(readtimestep == timestep){
+	       found=true;
+	       break;
+	    }
 	 }
       }
-
-   }
-   if(!found){
-      string timestepindex = tname.str()+"/timestep.xml";      
-      DOM_Text leader = topDoc.createTextNode("\n\t");
-      ts.appendChild(leader);
-      DOM_Element newElem = topDoc.createElement("timestep");
-      ts.appendChild(newElem);
-      ostringstream value;
-      value << timestep;
-      DOM_Text newVal = topDoc.createTextNode(value.str().c_str());
-      newElem.appendChild(newVal);
-      newElem.setAttribute("href", timestepindex.c_str());
-      DOM_Text trailer = topDoc.createTextNode("\n");
-      ts.appendChild(trailer);
-   }
-
-   DOM_Node vs = findNode("variables", topDoc.getDocumentElement());
-   if(vs == 0){
-      vs = topDoc.createElement("variables");
-      topDoc.getDocumentElement().appendChild(vs);
-   }
-   found=false;
-   for(DOM_Node n = vs.getFirstChild(); n != 0; n=n.getNextSibling()){
-      if(n.getNodeName().equals(DOMString("variable"))){
-	 DOM_NamedNodeMap attributes = n.getAttributes();
-	 DOM_Node varname = attributes.getNamedItem("name");
-	 if(varname == 0)
-	    throw InternalError("varname not found");
-	 string vn = toString(varname.getNodeValue());
-	 if(vn == var->getName()){
-	    found=true;
-	    break;
-	 }
+      if(!found){
+	 string timestepindex = tname.str()+"/timestep.xml";      
+	 DOM_Text leader = topDoc.createTextNode("\n\t");
+	 ts.appendChild(leader);
+	 DOM_Element newElem = topDoc.createElement("timestep");
+	 ts.appendChild(newElem);
+	 ostringstream value;
+	 value << timestep;
+	 DOM_Text newVal = topDoc.createTextNode(value.str().c_str());
+	 newElem.appendChild(newVal);
+	 newElem.setAttribute("href", timestepindex.c_str());
+	 DOM_Text trailer = topDoc.createTextNode("\n");
+	 ts.appendChild(trailer);
       }
 
+      DOM_Node vs = findNode("variables", topDoc.getDocumentElement());
+      if(vs == 0){
+	 vs = topDoc.createElement("variables");
+	 topDoc.getDocumentElement().appendChild(vs);
+      }
+      found=false;
+      for(DOM_Node n = vs.getFirstChild(); n != 0; n=n.getNextSibling()){
+	 if(n.getNodeName().equals(DOMString("variable"))){
+	    DOM_NamedNodeMap attributes = n.getAttributes();
+	    DOM_Node varname = attributes.getNamedItem("name");
+	    if(varname == 0)
+	       throw InternalError("varname not found");
+	    string vn = toString(varname.getNodeValue());
+	    if(vn == var->getName()){
+	       found=true;
+	       break;
+	    }
+	 }
+	 
+      }
+      if(!found){
+	 DOM_Text leader = topDoc.createTextNode("\n\t");
+	 vs.appendChild(leader);
+	 DOM_Element newElem = topDoc.createElement("variable");
+	 vs.appendChild(newElem);
+	 newElem.setAttribute("type", var->typeDescription()->getName().c_str());
+	 newElem.setAttribute("name", var->getName().c_str());
+	 DOM_Text trailer = topDoc.createTextNode("\n");
+	 vs.appendChild(trailer);
+      }
+      
+      ofstream topout(iname.c_str());
+      topout << topDoc << endl;
    }
-   if(!found){
-      DOM_Text leader = topDoc.createTextNode("\n\t");
-      vs.appendChild(leader);
-      DOM_Element newElem = topDoc.createElement("variable");
-      vs.appendChild(newElem);
-      newElem.setAttribute("type", var->typeDescription()->getName().c_str());
-      newElem.setAttribute("name", var->getName().c_str());
-      DOM_Text trailer = topDoc.createTextNode("\n");
-      vs.appendChild(trailer);
-   }
-
-   ofstream topout(iname.c_str());
-   topout << topDoc << endl;
 }
 
 static Dir makeVersionedDir(const std::string nameBase)
@@ -548,6 +623,9 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.16  2000/08/25 17:41:15  sparker
+// All output from an MPI run now goes into a single UDA dir
+//
 // Revision 1.15  2000/07/26 20:14:09  jehall
 // Moved taskgraph/dependency output files to UDA directory
 // - Added output port parameter to schedulers

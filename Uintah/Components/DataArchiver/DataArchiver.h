@@ -79,6 +79,7 @@ namespace Uintah {
       double d_nextOutputTime;
       int d_currentTimestep;
       Dir d_dir;
+      bool d_writeMeta;
 
       DataArchiver(const DataArchiver&);
       DataArchiver& operator=(const DataArchiver&);
@@ -88,6 +89,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.10  2000/08/25 17:41:15  sparker
+// All output from an MPI run now goes into a single UDA dir
+//
 // Revision 1.9  2000/07/26 20:14:09  jehall
 // Moved taskgraph/dependency output files to UDA directory
 // - Added output port parameter to schedulers
