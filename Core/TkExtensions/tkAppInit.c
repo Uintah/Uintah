@@ -81,6 +81,8 @@ extern int BLineInit _ANSI_ARGS_((void));
 
 extern EXPORT int Blt_SafeInit _ANSI_ARGS_((Tcl_Interp *interp));
 extern EXPORT int Blt_Init _ANSI_ARGS_((Tcl_Interp *interp));
+extern EXPORT int Pltk_Init _ANSI_ARGS_((Tcl_Interp *interp));
+
 extern int Table_Init _ANSI_ARGS_((Tcl_Interp* interp));
 
 /* include tclInt.h for access to namespace API */
@@ -236,9 +238,21 @@ Tcl_AppInit(interp)
 	return TCL_ERROR;
     }
 
+#ifdef DEF_PLPLOT
+    fflush(stdout);
+    printf("PLplot, ");
+    if (Pltk_Init(interp) == TCL_ERROR) {
+      printf("Pltk_Init() failed\n");
+	return TCL_ERROR;
+    }
+#endif
+
     Tcl_StaticPackage(interp, "Itcl", Itcl_Init, Itcl_SafeInit);
     Tcl_StaticPackage(interp, "Itk", Itk_Init, (Tcl_PackageInitProc *) NULL);
     Tcl_StaticPackage(interp, "BLT", Blt_Init, Blt_SafeInit);
+#ifdef DEF_PLPLOT
+    Tcl_StaticPackage(interp, "Pltk", Pltk_Init, (Tcl_PackageInitProc *) NULL);
+#endif
 
     printf("Done.\n");
     fflush(stdout);
