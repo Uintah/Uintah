@@ -90,7 +90,8 @@ void init_notes ()
     //userID = getuid () ;
     //strcpy (n, getlogin()) ;
 #ifndef _WIN32
-    strcpy (n, cuserid(NULL)) ;
+    //strcpy (n, cuserid(NULL)) ;
+    strcpy(n, getenv("LOGNAME"));
     printf ("User Name: %s\n", n) ;
 #endif
 
@@ -689,6 +690,9 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.12  2000/03/20 21:50:13  yarden
+// Linux port: replace the now defunct cuserid with getenv(LOGNAME)
+//
 // Revision 1.11  2000/03/18 00:17:38  moulding
 // Experimental automatic package maker added
 //
