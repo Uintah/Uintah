@@ -134,6 +134,7 @@ private:
       previous_(0),
       index_(-1),
       snd_(0),
+      clamp_(0),
       lines_(0),
       draw_aux_data_(0),
       auxindex_(-1),
@@ -154,6 +155,7 @@ private:
     int       previous_;
     int       index_;
     int       snd_;
+    int       clamp_;
     int       lines_;
     int       draw_aux_data_;
     int       auxindex_;
@@ -173,6 +175,13 @@ private:
   GuiInt                               gui_dump_frames_;
   GuiInt                               gui_time_markers_mode_;
   GuiInt                               gui_selected_marker_;
+  GuiDouble			       gui_top_margin_;
+  GuiDouble			       gui_left_margin_;
+  GuiDouble			       gui_plot_spacing_;
+  GuiDouble			       gui_font_scale_;
+  GuiInt			       gui_show_name_;
+  GuiInt			       gui_show_date_;
+
   GuiInt                               gui_plot_count_;
   vector<GuiString*>                   gui_nw_label_;
   vector<GuiString*>                   gui_sw_label_;
@@ -184,6 +193,7 @@ private:
   vector<GuiDouble*>                   gui_max_;
   vector<GuiInt*>                      gui_idx_;
   vector<GuiInt*>                      gui_snd_;
+  vector<GuiInt*>                      gui_clamp_;
   vector<GuiInt*>                      gui_lines_;
   vector<GuiInt*>                      gui_draw_aux_data_;
   vector<GuiInt*>                      gui_auxidx_;
@@ -209,6 +219,10 @@ private:
   vector<int>                           markers_;
   int                                   cur_idx_;
   bool                                  plots_dirty_;
+  LabelTex 				*name_label;
+  string 				name_text;
+  LabelTex 				*date_label;
+  string 				date_text;
   unsigned int                          frame_count_;
 
   bool                  make_current();
@@ -221,7 +235,7 @@ private:
   static unsigned int	pow2(const unsigned int);
   void 			setTimeLabel();
   void 			addMarkersToMenu();
-  void 			setWindowTitle();
+  void 			setNameAndDate();
   void                  save_image(int x, int y,const string& fname,
 				   const string &ftype);
 };
@@ -317,10 +331,8 @@ ICUMonitor::LabelTex::bind(FreeTypeFace *font)
   memset(buf, 0, tex_width_ * tex_height_ * 4);
   fttext.render(tex_width_, tex_height_, buf);     
 
-  GLboolean istex = glIsTexture(tex_id_);
-  if (istex) {
+  if (glIsTexture(tex_id_))
     glDeleteTextures(1, &tex_id_);
-  }
 
   glEnable(GL_TEXTURE_2D);
   glGenTextures(1, &tex_id_);
@@ -354,6 +366,12 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   gui_dump_frames_(ctx->subVar("dump_frames")),
   gui_time_markers_mode_(ctx->subVar("time_markers_mode")),
   gui_selected_marker_(ctx->subVar("selected_marker")),
+  gui_top_margin_(ctx->subVar("top_margin")),
+  gui_left_margin_(ctx->subVar("left_margin")),
+  gui_plot_spacing_(ctx->subVar("plot_spacing")),
+  gui_font_scale_(ctx->subVar("font_scale")),
+  gui_show_name_(ctx->subVar("show_name")),
+  gui_show_date_(ctx->subVar("show_date")),
   gui_plot_count_(ctx->subVar("plot_count")),
   ctx_(0),
   dpy_(0),
@@ -370,6 +388,10 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   markers_(0),
   cur_idx_(0),
   plots_dirty_(true),
+  name_label(0),
+  name_text(" "),
+  date_label(0),
+  date_text(" "),
   frame_count_(0)
 {
   try {
@@ -554,6 +576,7 @@ ICUMonitor::synch_plot_vars(int s)
   clear_vector(gui_max_, s);
   clear_vector(gui_idx_, s);
   clear_vector(gui_snd_, s);
+  clear_vector(gui_clamp_, s);
   clear_vector(gui_lines_, s);
   clear_vector(gui_draw_aux_data_, s);
   clear_vector(gui_auxidx_, s);
@@ -577,6 +600,15 @@ ICUMonitor::init_plots()
   FreeTypeFace *font = fonts_["anatomical"];
   if (! font) return;
 
+  font->set_points(14.0 * gui_font_scale_.get());
+  if (name_label) delete name_label;
+  name_label = scinew LabelTex(name_text);
+  name_label->bind(font);
+
+  if (date_label) delete date_label;
+  date_label = scinew LabelTex(date_text);
+  date_label->bind(font);
+
   int i = 0;
   vector<Plot>::iterator iter = plots_.begin();
   while (iter != plots_.end()) {
@@ -584,11 +616,13 @@ ICUMonitor::init_plots()
     Plot &g = *iter++;
 
     font->set_points(36.0);
+
     if (g.aux_data_) delete g.aux_data_;
       g.aux_data_ = scinew LabelTex(" ");
       g.aux_data_->bind(font);
 
-    font->set_points(12.0);
+    font->set_points(12.0 * gui_font_scale_.get());
+
     if (! gui_nw_label_[i]) {
       gui_nw_label_[i] = scinew GuiString(ctx->subVar("nw_label-" + num));
     }
@@ -607,7 +641,28 @@ ICUMonitor::init_plots()
       g.sw_label_->bind(font);
     }
 
-    font->set_points(18.0);
+    if (! gui_min_ref_label_[i]) {
+      gui_min_ref_label_[i] = scinew GuiString(
+					ctx->subVar("min_ref_label-" + num));
+    }
+    if (gui_min_ref_label_[i]->get() != string("")) {
+      if (g.min_ref_label_) delete g.min_ref_label_;
+      g.min_ref_label_ = scinew LabelTex(gui_min_ref_label_[i]->get());
+      g.min_ref_label_->bind(font);
+    }
+
+    if (! gui_max_ref_label_[i]) {
+      gui_max_ref_label_[i] = scinew GuiString(
+					 ctx->subVar("max_ref_label-" + num));
+    }
+    if (gui_max_ref_label_[i]->get() != string("")) {
+      if (g.max_ref_label_) delete g.max_ref_label_;
+      g.max_ref_label_ = scinew LabelTex(gui_max_ref_label_[i]->get());
+      g.max_ref_label_->bind(font);
+    }
+
+    font->set_points(14.0 * gui_font_scale_.get());
+
     if (! gui_label_[i]) {
       gui_label_[i] = scinew GuiString(ctx->subVar("label-" + num));
     }
@@ -625,25 +680,6 @@ ICUMonitor::init_plots()
       g.aux_data_label_->bind(font);
     }
 
-    font->set_points(14.0);
-    if (! gui_min_ref_label_[i]) {
-      gui_min_ref_label_[i] = scinew GuiString(
-					ctx->subVar("min_ref_label-" + num));
-    }
-    if (gui_min_ref_label_[i]->get() != string("")) {
-      if (g.min_ref_label_) delete g.min_ref_label_;
-      g.min_ref_label_ = scinew LabelTex(gui_min_ref_label_[i]->get());
-      g.min_ref_label_->bind(font);
-    }
-    if (! gui_max_ref_label_[i]) {
-      gui_max_ref_label_[i] = scinew GuiString(
-					 ctx->subVar("max_ref_label-" + num));
-    }
-    if (gui_max_ref_label_[i]->get() != string("")) {
-      if (g.max_ref_label_) delete g.max_ref_label_;
-      g.max_ref_label_ = scinew LabelTex(gui_max_ref_label_[i]->get());
-      g.max_ref_label_->bind(font);
-    }
       
     if (! gui_min_[i]) {
       gui_min_[i] = scinew GuiDouble(ctx->subVar("min-" + num));
@@ -661,6 +697,10 @@ ICUMonitor::init_plots()
       gui_snd_[i] = scinew GuiInt(ctx->subVar("snd-" + num));
     }
     g.snd_ = gui_snd_[i]->get();
+    if (! gui_clamp_[i]) {
+      gui_clamp_[i] = scinew GuiInt(ctx->subVar("clamp-" + num));
+    }
+    g.clamp_ = gui_clamp_[i]->get();
     if (! gui_lines_[i]) {
       gui_lines_[i] = scinew GuiInt(ctx->subVar("lines-" + num));
     }
@@ -705,64 +745,98 @@ ICUMonitor::draw_plots()
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
   glEnable(GL_BLEND);
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   const float w = width_;
   const float h = height_;
   const float sx = 1.0 / w;
   const float sy = 1.0 / h;
+  const int gp = 3;
+  const float cw = 0.70;
+  const int cg = 25;
 
-  float cur_x = 20;
-  float cur_y = h - 30;
-  
+  float cur_x = gui_left_margin_.get();
+  float cur_y = h - gui_top_margin_.get();
 
   glLineWidth(1.0);
   glLineStipple(3, 0x1001);
+
+  if (name_label && gui_show_name_.get()) { 
+    float yoff = name_label->tex_height_ * name_label->v_ * 1.5;
+    name_label->draw(cur_x, h - yoff, sx, sy);
+  }
+  if (date_label && gui_show_date_.get()) { 
+    float yoff = date_label->tex_height_ * date_label->v_ * 1.5;
+    //float xoff = 0;
+    //if (name_label && gui_show_name_.get()) { 
+     // xoff = name_label->tex_width_ * name_label->u_ + cg;
+    //}
+    //date_label->draw(cur_x + xoff, h - yoff, sx, sy);
+      float xoff = date_label->tex_width_ * date_label->u_;
+      //g.label_->draw(cur_x + w * cw, cur_y, sx, sy);
+      date_label->draw((cur_x + (w*cw)) - xoff, h - yoff, sx, sy);
+  }
+
   vector<Plot>::iterator iter = plots_.begin();
   while (iter != plots_.end())
   {
     Plot &g = *iter++;
+
     glColor4f(g.r_, g.g_, g.b_, 1.0);
 
     if (g.nw_label_) { 
-      float xoff = g.nw_label_->tex_width_ * g.nw_label_->u_;
+      float xoff = g.nw_label_->tex_width_ * g.nw_label_->u_ + gp;
       g.nw_label_->draw(cur_x - xoff, cur_y, sx, sy);
     }    
     if (g.sw_label_) { 
-      float xoff = g.sw_label_->tex_width_ * g.sw_label_->u_;
+      float xoff = g.sw_label_->tex_width_ * g.sw_label_->u_ + gp;
       g.sw_label_->draw(cur_x - xoff, cur_y - gr_ht * 0.5, sx, sy);
     }
     if (g.min_ref_label_) { 
-      float xoff = g.min_ref_label_->tex_width_ * g.min_ref_label_->u_ + 3;
+      float xoff = g.min_ref_label_->tex_width_ * g.min_ref_label_->u_ + gp;
       float yoff = g.min_ref_label_->tex_height_ * g.min_ref_label_->v_ * 0.5;
-      g.min_ref_label_->draw(cur_x, cur_y - gr_ht - yoff, sx, sy);
+      //g.min_ref_label_->draw(cur_x, cur_y - gr_ht - yoff, sx, sy);
+      g.min_ref_label_->draw(cur_x - xoff, cur_y - gr_ht - yoff, sx, sy);
       if (g.lines_ == 1) {
         glDisable(GL_TEXTURE_2D);
         glBegin(GL_LINES);
-        glVertex2f((cur_x + xoff) * sx, (cur_y - gr_ht) * sy);
-        glVertex2f((cur_x + (w * .70)) * sx, (cur_y - gr_ht) * sy);
+        //glVertex2f((cur_x + xoff) * sx, (cur_y - gr_ht) * sy);
+        glVertex2f(cur_x * sx, (cur_y - gr_ht) * sy);
+        glVertex2f((cur_x + (w * cw)) * sx, (cur_y - gr_ht) * sy);
         glEnd();
         glEnable(GL_TEXTURE_2D);
       }
     }    
     if (g.max_ref_label_) { 
-      float xoff = g.max_ref_label_->tex_width_ * g.max_ref_label_->u_ + 3;
+      float xoff = g.max_ref_label_->tex_width_ * g.max_ref_label_->u_ + gp;
       float yoff = g.max_ref_label_->tex_height_ * g.max_ref_label_->v_ * 0.5;
-      g.max_ref_label_->draw(cur_x, cur_y - yoff, sx, sy);
+      //g.max_ref_label_->draw(cur_x, cur_y - yoff, sx, sy);
+      g.max_ref_label_->draw(cur_x - xoff, cur_y - yoff, sx, sy);
       if (g.lines_ == 1) {
+        xoff = 0;
+        if (g.label_) { 
+          xoff = g.label_->tex_width_ * g.label_->u_ + gp;
+        }
         glDisable(GL_TEXTURE_2D);
         glBegin(GL_LINES);
-        glVertex2f((cur_x + xoff) * sx, cur_y * sy);
-        glVertex2f((cur_x + (w * .70)) * sx, cur_y * sy);
+        //glVertex2f((cur_x + xoff) * sx, cur_y * sy);
+        glVertex2f(cur_x * sx, cur_y * sy);
+        glVertex2f((cur_x + (w * cw) - xoff) * sx, cur_y * sy);
         glEnd();
         glEnable(GL_TEXTURE_2D);
       }
     }
     if (g.label_) { 
-      g.label_->draw(cur_x + w * 0.70, cur_y, sx, sy);
+      float xoff = g.label_->tex_width_ * g.label_->u_;
+      //g.label_->draw(cur_x + w * cw, cur_y, sx, sy);
+      g.label_->draw((cur_x + (w*cw)) - xoff, cur_y, sx, sy);
     }
+
+    glColor4f(g.r_, g.g_, g.b_, 1.0);
+
     if (g.draw_aux_data_ == 1) { 
       if (g.aux_data_label_)
-        g.aux_data_label_->draw(cur_x + w * 0.70 + 80, cur_y, sx, sy);
+        g.aux_data_label_->draw(cur_x + w * cw + cg, cur_y, sx, sy);
 
       if (data_.get_rep()) {
          int idx = cur_idx_;
@@ -782,15 +856,16 @@ ICUMonitor::draw_plots()
          FreeTypeFace *font = fonts_["anatomical"];
          font->set_points(50.0);
 	 if (val == -1)
-         g.aux_data_->set(prevstr.str());
+           g.aux_data_->set(prevstr.str());
 	 else {
-         g.aux_data_->set(auxstr.str());
-         g.previous_ = val;
+           g.aux_data_->set(auxstr.str());
+           g.previous_ = val;
 	 }
 
          g.aux_data_->bind(font);
 
-         g.aux_data_->draw(cur_x + w * 0.70 + 70, cur_y - 50, sx, sy);
+         float yoff = g.aux_data_->tex_height_ * g.aux_data_->v_;
+         g.aux_data_->draw(cur_x + w * cw + cg + 15, cur_y - yoff*1.25, sx, sy);
       }
     }
     if (data_.get_rep()) {
@@ -802,7 +877,7 @@ ICUMonitor::draw_plots()
       const float sweep_speed = gui_sweep_speed_.get() * pixels_per_mm; 
       const float samp_rate = gui_sample_rate_.get();  // samples per second.
       const float pix_per_sample = sweep_speed / samp_rate;
-      const float gwidth = w * .75;  // total width of the drawable area.
+      const float gwidth = w * cw;  // total width of the drawable area.
       const float samples = gwidth / pix_per_sample;
       float start_y = cur_y - gr_ht;
       //glColor4f(0.0, 0.9, 0.1, 1.0);
@@ -816,19 +891,29 @@ ICUMonitor::draw_plots()
 	}
 	float *dat = (float*)data_->nrrd->data;
 	int dat_index = idx * data_->nrrd->axis[0].size + g.index_;
-	float val = (dat[dat_index] - g.min_) * norm;
-	glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, (start_y + val) * sy);
+        float tmpdat = dat[dat_index];
+        if (g.clamp_) {
+          if (tmpdat > g.max_) tmpdat = g.max_;
+          if (tmpdat < g.min_) tmpdat = g.min_;
+        }
+	//float val = (dat[dat_index] - g.min_) * norm;
+        float val = (tmpdat - g.min_) * norm;
+	//glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, (start_y + val) * sy);
+	glVertex2f((cur_x + (i * pix_per_sample)) * sx, (start_y + val) * sy);
 
 	if (idx % (int)samp_rate == 0){
 	  float tick = gr_ht * .15;// * norm;
 	  if (gui_time_markers_mode_.get()) {
 	     //glColor4f(0.0, 0.1, 0.9, 1.0);
-	     glColor4f(1.0, 1.0, 1.0, 1.0);
-	     glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
+	     glColor4f(1.0, 1.0, 0.0, 1.0);
+	     //glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
+	     glVertex2f((cur_x + (i * pix_per_sample)) * sx, 
 	   	     (start_y + val + tick) * sy);
-	     glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
+	     //glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
+	     glVertex2f((cur_x + (i * pix_per_sample)) * sx, 
 	   	     (start_y + val - tick) * sy);
-	     glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
+	     //glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
+	     glVertex2f((cur_x + (i * pix_per_sample)) * sx, 
 	   	     (start_y + val) * sy);
 	  }
 	  glColor4f(g.r_, g.g_, g.b_, 1.0);
@@ -845,7 +930,13 @@ ICUMonitor::draw_plots()
           }
           float *dat = (float*)data2_->nrrd->data;
           int dat_index = idx * data2_->nrrd->axis[0].size + g.index_;
-          float val = (dat[dat_index] - g.min_) * norm;
+          float tmpdata2 = dat[dat_index];
+          if (g.clamp_) {
+            if (tmpdata2 > g.max_) tmpdata2 = g.max_;
+            if (tmpdata2 < g.min_) tmpdata2 = g.min_;
+          }
+          //float val = (dat[dat_index] - g.min_) * norm;
+          float val = (tmpdata2 - g.min_) * norm;
           glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, (start_y + val) * sy);
 
           glColor4f(0.5, 0.5, 0.5, 0.7);
@@ -856,7 +947,7 @@ ICUMonitor::draw_plots()
       glEnable(GL_TEXTURE_2D);     
     }
 
-    cur_y -= gr_ht + 20;
+    cur_y -= gr_ht + gui_plot_spacing_.get();
   }
   gui_dump_frames_.reset();
   if (gui_dump_frames_.get()) {
@@ -891,6 +982,8 @@ ICUMonitor::redraw_all()
 {
   gui->lock();
   if (! make_current()) return;
+
+  glXMakeCurrent(dpy_, win_, ctx_);
 
   init_plots();
 
@@ -929,6 +1022,7 @@ ICUMonitor::setup_gl_view()
   glClearColor(0.0, .25, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
+  //gui->unlock();
 }
 
 void 
@@ -977,13 +1071,33 @@ ICUMonitor::addMarkersToMenu()
 }
 
 void 
-ICUMonitor::setWindowTitle()
+ICUMonitor::setNameAndDate()
 {
   char *name = nrrdKeyValueGet(data_->nrrd, "name");
 
   if (name != NULL) {
     string title(name);
     gui->execute(id + " setWindowTitle {ICU Monitor: " + name + "}");
+
+    ostringstream titlestr;
+    titlestr << "Name: " << title;
+
+    name_text.replace(0, name_text.length(), titlestr.str());
+
+    plots_dirty_ = true;
+  }
+
+  char *date = nrrdKeyValueGet(data_->nrrd, "date");
+
+  if (date != NULL) {
+    string created(date);
+    //ostringstream datestr;
+    //datestr << "Date: " << created;
+
+    //date_text.replace(0, date_text.length(), datestr.str());
+    date_text.replace(0, date_text.length(), created);
+
+    plots_dirty_ = true;
   }
 }
 
@@ -1012,7 +1126,7 @@ ICUMonitor::execute()
 
   addMarkersToMenu();
 
-  setWindowTitle();
+  setNameAndDate();
 
   NrrdIPort *nrrd2_port = (NrrdIPort*)get_iport("Nrrd2");
 
