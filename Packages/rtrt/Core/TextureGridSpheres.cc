@@ -1200,6 +1200,7 @@ void TextureGridSphere::shade(Color& result, const Ray& ray,
   if (tex_index >= ntextures) {
     // bad index
     result = Color(1,0,1);
+    return;
   }
 
   // Get the hitpos
