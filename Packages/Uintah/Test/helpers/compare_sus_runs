@@ -42,7 +42,9 @@ if [ -d "$TEST_UDADIR" ]; then
 	cp -r $TEST_UDADIR $COMPARE_UDADIR
     fi
 
-    cd $COMPARE_ROOT/$TEST
+    chgrp -R csafe "$COMPARE_ROOT/$TEST"
+    chmod -R g+rwX "$COMPARE_ROOT/$TEST"
+
     exit -2
 #    find $UDADIR -type d | xargs cvs add
 #    find $UDADIR -name "*.dat" | xargs cvs add
