@@ -76,7 +76,7 @@ public:
 		       const IntVector& h, ProblemSpecP /*varnode*/);
   virtual void readRLE(istream& /*in*/, bool swapbytes, int nByteMode);
   
-  virtual void allocate(const Patch* patch) = 0;
+  virtual void allocate(const Patch* patch, const IntVector& boundary) = 0;
 
   // Only affects grid variables
   virtual void offsetGrid(const IntVector& /*offset*/);

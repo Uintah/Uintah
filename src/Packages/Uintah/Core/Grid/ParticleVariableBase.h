@@ -66,10 +66,15 @@ WARNING
       // Make a new default object of the base class.
       virtual ParticleVariableBase* cloneType() const = 0;
       virtual constParticleVariableBase* cloneConstType() const = 0;
-     
-      virtual void copyData(const ParticleVariableBase* src) = 0;
 
-      virtual void allocate(const Patch*) = 0; // will throw an InternalError
+      // not something we normally do, but helps in AMR when we copy
+      // data from one patch to another where they are the same boundaries
+      // instead of copying all the data
+      void setParticleSubset(ParticleSubset* pset);
+
+      virtual void copyData(const ParticleVariableBase* src) = 0;
+      
+      virtual void allocate(const Patch*, const IntVector& boundary) = 0; // will throw an InternalError
       virtual void allocate(ParticleSubset*) = 0;
       virtual void gather(ParticleSubset* dest,
 			  std::vector<ParticleSubset*> subsets,
