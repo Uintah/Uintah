@@ -113,6 +113,12 @@ get_raw_data_ptr<FData2d<float> >(FData2d<float> &data, int) {
   return &(data(0,0));
 }
 
+template <>
+void* 
+get_raw_data_ptr<FData2d<double> >(FData2d<double> &data, int) {
+  return &(data(0,0));
+}
+
 
 template <>
 void* 

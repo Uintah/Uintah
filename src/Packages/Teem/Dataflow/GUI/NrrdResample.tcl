@@ -35,27 +35,72 @@ itcl_class Teem_Filters_NrrdResample {
     }
     method set_defaults {} {
         global $this-filtertype
-        global $this-resampAxis1
-        global $this-resampAxis2
-        global $this-resampAxis3
 	global $this-sigma
 	global $this-extent
+	global $this-dim
+
         set $this-filtertype gaussian
-        set $this-resampAxis1 x1
-        set $this-resampAxis2 x1
-        set $this-resampAxis3 x1
 	set $this-sigma 1
 	set $this-extent 6
+	set $this-dim 0
     }
-    method make_entry {w text v c} {
+
+    # never resample the tuple axis (axis 0) so no interface for axis 0
+    method make_min_max {} {
+	set w .ui[modname]
+        if {[winfo exists $w]} {
+ 	    if {[winfo exists $w.f.f.axesf.t]} {
+		destroy $w.f.f.axesf.t
+	    }
+	    for {set i 1} {$i < [set $this-dim]} {incr i} {
+		#puts $i
+		if {! [winfo exists $w.f.f.axesf.a$i]} {
+		    make_entry $w.f.f.axesf.a$i "Axis$i :" $this-resampAxis$i
+		    pack $w.f.f.axesf.a$i -side top -expand 1 -fill x
+		}
+	    }
+	}
+    }
+    
+    # never resample the tuple axis (axis 0)
+    method init_axes {} {
+	for {set i 0} {$i < [set $this-dim]} {incr i} {
+	    #puts "init_axes----$i"
+
+	    if { [catch { set t [set $this-resampAxis$i] } ] } {
+		set $this-resampAxis$i "x1"
+		#puts "made minAxis$i"
+	    }
+	}
+	make_min_max
+    }
+ 
+    method clear_axes {} {
+	set w .ui[modname]
+        if {[winfo exists $w]} {
+	    
+	    if {[winfo exists $w.f.f.axesf.t]} {
+		destroy $w.f.f.axesf.t
+	    }
+	    for {set i 1} {$i < [set $this-dim]} {incr i} {
+		#puts $i
+		if {[winfo exists $w.f.f.axesf.a$i]} {
+		    destroy $w.f.f.axesf.a$i
+		}
+		unset $this-resampAxis$i
+	    }
+	}
+    }
+
+    method make_entry {w text v} {
         frame $w
         label $w.l -text "$text"
         pack $w.l -side left
         global $v
         entry $w.e -textvariable $v
-        bind $w.e <Return> $c
         pack $w.e -side right
     }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -77,18 +122,22 @@ itcl_class Teem_Filters_NrrdResample {
 		{"Quartic" quartic} \
 		{"Gaussian" gaussian}}
 	global $this-sigma
-	make_entry $w.f.s "   Guassian sigma:" $this-sigma "$this-c needexecute"
+	make_entry $w.f.s "   Guassian sigma:" $this-sigma 
 	global $this-extent
-	make_entry $w.f.e "   Guassian extent:" $this-extent "$this-c needexecute"
+	make_entry $w.f.e "   Guassian extent:" $this-extent 
 	frame $w.f.f
 	label $w.f.f.l -text "Number of samples (e.g. `128')\nor, if preceded by an x,\nthe resampling ratio\n(e.g. `x0.5' -> half as many samples)"
-	global $this-resampAxis1
-	make_entry $w.f.f.fi "Axis1:" $this-resampAxis1 "$this-c needexecute"
-	global $this-resampAxis2
-	make_entry $w.f.f.fj "Axis2:" $this-resampAxis2 "$this-c needexecute"
-	global $this-resampAxis3
-	make_entry $w.f.f.fk "Axis3:" $this-resampAxis3 "$this-c needexecute"
-	pack $w.f.f.l $w.f.f.fi $w.f.f.fj $w.f.f.fk -side top -expand 1 -fill x
+
+	frame $w.f.f.axesf
+
+	if {[set $this-dim] == 0} {
+	    label $w.f.f.axesf.t -text "Need Execute to know the number of Axes."
+	    pack $w.f.f.axesf.t
+	} else {
+	    init_axes 
+	}
+
+	pack $w.f.f.l $w.f.f.axesf -side top -expand 1 -fill x
 	button $w.f.b -text "Execute" -command "$this-c needexecute"
 	pack $w.f.t $w.f.s $w.f.e $w.f.f $w.f.b -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
