@@ -47,9 +47,19 @@
       <call>SetUpperThreshold</call>
     </param>
     <param>
-      <name>curvature</name>
+      <name>curvature_scaling</name>
       <type>double</type>
       <call>SetCurvatureScaling</call>
+    </param>
+    <param>
+      <name>propagation_scaling</name>
+      <type>double</type>
+      <call>SetPropagationScaling</call>
+    </param>
+    <param>
+      <name>edge_weight</name>
+      <type>double</type>
+      <call>SetEdgeWeight</call>
     </param>
     <param>
       <name>max_iterations</name>
@@ -64,12 +74,28 @@
     <param>
       <name>negative_features</name>
       <type>bool</type>
-      <call>SetReverseExpansionDirection</call>
+      <call value="on">ReverseExpansionDirectionOn</call>
+      <call value="off">ReverseExpansionDirectionOff</call>
     </param>
     <param>
       <name>isovalue</name>
       <type>double</type>
       <call>SetIsoSurfaceValue</call>
+    </param>
+    <param>
+      <name>smoothing_iterations</name>
+      <type>int</type>
+      <call>SetSmoothingIterations</call>
+    </param>
+    <param>
+      <name>smoothing_time_step</name>
+      <type>double</type>
+      <call>SetSmoothingTimeStep</call>
+    </param>
+    <param>
+      <name>smoothing_conductance</name>
+      <type>double</type>
+      <call>SetSmoothingConductance</call>
     </param>
   </parameters>
   <includes>

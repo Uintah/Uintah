@@ -12,6 +12,10 @@
       <default>itk::Image&lt;float, 2&gt;</default>
       <default>itk::Image&lt;float, 2&gt;</default>
     </defaults>
+    <defaults>
+      <default>itk::Image&lt;float, 3&gt;</default>
+      <default>itk::Image&lt;float, 3&gt;</default>
+    </defaults>
   </templated>
 
   <inputs>
