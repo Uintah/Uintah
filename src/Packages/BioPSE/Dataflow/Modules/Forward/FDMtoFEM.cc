@@ -102,10 +102,10 @@ void FDMtoFEM::execute() {
     return;
   }
     
-  Array1<Tensor> conds;
+  Array1<Tensor> *conds = scinew Array1<Tensor>;
   if (ifdmH->get_type_name(1) == "Tensor" ||
       (ifdmH->get_type_name(1) == "unsigned_char" && 
-       ifdmH->get("conductivity_table", conds))) {
+       ifdmH->get("conductivity_table", *conds))) {
 
     // first check to see if it's the same field as last time, though...
     //   if so, resend old results
@@ -118,8 +118,9 @@ void FDMtoFEM::execute() {
     // build the new TetVolMesh based on nodes and cells from the LatVolMesh
     LatVolMesh *lvm = dynamic_cast<LatVolMesh*>(ifdmH->mesh().get_rep());
     TetVolMesh *tvm = scinew TetVolMesh;
-    Array3<TetVolMesh::Node::index_type> node_lookup(lvm->get_nz(), lvm->get_ny(),
-					       lvm->get_nx());
+    Array3<TetVolMesh::Node::index_type> node_lookup(lvm->get_nz(), 
+						     lvm->get_ny(),
+						     lvm->get_nx());
 
     // store a table of which nodes are valid (a node is valid if any of
     //   its surrounding cells are valid)
@@ -136,8 +137,8 @@ void FDMtoFEM::execute() {
 	  dynamic_cast<MaskedLatticeVol<unsigned char> *>(ifdmH.get_rep());
 	mask.copy(mlv->mask());
       } else { // Tensor
-	MaskedLatticeVol<unsigned char> *mlv =
-	  dynamic_cast<MaskedLatticeVol<unsigned char> *>(ifdmH.get_rep());
+	MaskedLatticeVol<Tensor> *mlv =
+	  dynamic_cast<MaskedLatticeVol<Tensor> *>(ifdmH.get_rep());
 	mask.copy(mlv->mask());
       }
       LatVolMesh::Node::array_type lat_nodes(8);
@@ -148,6 +149,7 @@ void FDMtoFEM::execute() {
 	  for (int i=0; i<8; i++) 
 	    valid_nodes(lat_nodes[i].k_, lat_nodes[i].j_, lat_nodes[i].i_) = 1;
 	}
+	++ci;
       }
     // otherwise, just initialize the mask to 1's
     } else {
@@ -175,7 +177,7 @@ void FDMtoFEM::execute() {
     LatVolMesh::Cell::iterator ci = lvm->cell_begin();
     ci = lvm->cell_begin();
     while (ci != lvm->cell_end()) {
-      if (!mask[*ci]) continue;
+      if (!mask[*ci]) { ++ci; continue; }
       lvm->get_nodes(lat_nodes, *ci);
       for (int i=0; i<8; i++)
 	tet_nodes[i] = 
@@ -188,12 +190,13 @@ void FDMtoFEM::execute() {
 	tvm->add_tet(tet_nodes[0], tet_nodes[4], tet_nodes[5], tet_nodes[7]);
 	tvm->add_tet(tet_nodes[2], tet_nodes[5], tet_nodes[6], tet_nodes[7]);
       } else {
-	tvm->add_tet(tet_nodes[1], tet_nodes[1], tet_nodes[3], tet_nodes[4]);
-	tvm->add_tet(tet_nodes[1], tet_nodes[1], tet_nodes[2], tet_nodes[6]);
-	tvm->add_tet(tet_nodes[1], tet_nodes[1], tet_nodes[4], tet_nodes[6]);
-	tvm->add_tet(tet_nodes[1], tet_nodes[1], tet_nodes[4], tet_nodes[6]);
-	tvm->add_tet(tet_nodes[3], tet_nodes[3], tet_nodes[7], tet_nodes[0]);
+	tvm->add_tet(tet_nodes[1], tet_nodes[0], tet_nodes[3], tet_nodes[4]);
+	tvm->add_tet(tet_nodes[1], tet_nodes[3], tet_nodes[2], tet_nodes[6]);
+	tvm->add_tet(tet_nodes[1], tet_nodes[3], tet_nodes[4], tet_nodes[6]);
+	tvm->add_tet(tet_nodes[1], tet_nodes[5], tet_nodes[4], tet_nodes[6]);
+	tvm->add_tet(tet_nodes[3], tet_nodes[4], tet_nodes[7], tet_nodes[6]);
       }
+      ++ci;
     }
 
     // now that the mesh has been built, we have to set conductivities (fdata)
@@ -208,11 +211,13 @@ void FDMtoFEM::execute() {
       ci = lvm->cell_begin();
       TetVolMesh::Cell::iterator ci_tet = tvm->cell_begin();
       int count=0;
-      while (ci_tet != tvm->cell_end(), count++) {
-	conds.add(lv->fdata()[*ci]);
+      while (ci_tet != tvm->cell_end()) {
+	conds->add(lv->fdata()[*ci]);
 	for (int i=0; i<5; i++, ++ci_tet) {
 	  tv->fdata()[*ci_tet]=count;
 	}
+	count++;
+	++ci;
       }
     } else {
       // we have unsigned_char's -- the "conds" array has the tensors
@@ -228,9 +233,10 @@ void FDMtoFEM::execute() {
 	}
       }      
     }
+    cerr << "Conds->size() == "<<conds->size()<<"\n";
     tv->store("data_storage", string("table"));
-    tv->store("name", string("consudcitvity"));
-    tv->store("conductivity_table", conds);
+    tv->store("name", string("conductivity"));
+    tv->store("conductivity_table", *conds);
     ofemH_ = tv;
     ofem_->send(ofemH_);
   } else {

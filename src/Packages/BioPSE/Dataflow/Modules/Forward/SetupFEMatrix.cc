@@ -32,20 +32,24 @@
  *  Copyright (C) 1994, 2001 SCI Group
  */
 
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
-#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/InterpolantTypes.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/TetVol.h>
-#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+
+#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
+
 #include <iostream>
 
 using std::cerr;
@@ -56,12 +60,12 @@ namespace BioPSE {
 using namespace SCIRun;
 typedef LockingHandle<TetVol<int> >    CondMeshHandle;
 typedef LockingHandle<TetVol<double> > DirBCMeshHandle;
-typedef LockingHandle<FieldSet>        FieldSetHanlde;
 
 class SetupFEMatrix : public Module {
   
   //! Private data
   FieldIPort*        iportField_;
+  FieldIPort*        iportInterp_;
   MatrixOPort*       oportRhs_;
   MatrixOPort*       oportMtrx_;
  
@@ -69,7 +73,7 @@ class SetupFEMatrix : public Module {
   int                lastUseCond_;
   
   GuiString          uiBCFlag_;
-  string           lastBCFlag_;
+  string             lastBCFlag_;
   MatrixHandle       hGblMtrx_;
   MatrixHandle       hRhs_;
   int                gen_;
@@ -106,6 +110,7 @@ SetupFEMatrix::~SetupFEMatrix(){
 void SetupFEMatrix::execute(){
   
   iportField_ = (FieldIPort *)get_iport("Mesh");
+  iportInterp_ = (FieldIPort *)get_iport("Interpolant");
   oportMtrx_ = (MatrixOPort *)get_oport("FEM Matrix");
   oportRhs_ = (MatrixOPort *)get_oport("RHS");
 
@@ -114,7 +119,10 @@ void SetupFEMatrix::execute(){
     msgStream_ << "Error: Cann't get field" << endl;
     return;
   }
-  
+
+  FieldHandle hInterp;
+  iportInterp_->get(hInterp);
+
   if (hField->generation == gen_ 
       && hGblMtrx_.get_rep() 
       && hRhs_.get_rep()
@@ -126,7 +134,6 @@ void SetupFEMatrix::execute(){
   }
   
   gen_ = hField->generation;
-  
   CondMeshHandle hCondMesh;
   if (hField->get_type_name(0)=="TetVol" && hField->get_type_name(1)=="int"){
     
@@ -148,9 +155,18 @@ void SetupFEMatrix::execute(){
   string bcFlag = uiBCFlag_.get();
   if (bcFlag != "none") {
     if (bcFlag=="GroundZero"){
-      msgStream_ << "Grounding node 0" << endl;
+      refNode_=0;
+      if (hInterp.get_rep()) {
+	PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = dynamic_cast<PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > > *>(hInterp.get_rep());
+	if (!interp) {
+	  cerr << "Input field wasn't interp'ing PointCloud from a TetVolMesh::Node\n";
+	} else {
+	  refNode_=interp->fdata()[0].begin()->first;
+	}
+      }
+      msgStream_ << "Grounding node "<<refNode_<< endl;
       dirBC.erase(dirBC.begin(), dirBC.end());
-      dirBC.push_back(pair<int, double>(0, 0.0));
+      dirBC.push_back(pair<int, double>(refNode_, 0.0));
     } else { // bcFlag == DirSub
       if (!hField->get("dirichlet", dirBC)){
 	msgStream_ << "The Field Set doesn't contain Dirichlet boundary conditions" << endl;
