@@ -40,6 +40,7 @@ Tk_DrawBeveledLine(display, drawable, border, pointPtr, numPoints,
 				 * polygon.  All points must be
 				 * absolute (CoordModeOrigin). */
     int numPoints;		/* Number of points at *pointPtr. */
+    int width;
     int borderWidth;		/* Width of border, measured in
 				 * pixels to the left of the polygon's
 				 * trajectory.   May be negative. */
@@ -51,7 +52,7 @@ Tk_DrawBeveledLine(display, drawable, border, pointPtr, numPoints,
     XPoint x1, x2, x3, x4;
     XPoint b1, b2, b3, b4;
     XPoint c1, c2, c3, c4;
-    XPoint* p1Ptr, *p2Ptr, *p3Ptr;
+    XPoint* p1Ptr, *p2Ptr, *p3Ptr=0;
     XPoint poly[4];
     int lightOnLeft;
     int dx, dy;
