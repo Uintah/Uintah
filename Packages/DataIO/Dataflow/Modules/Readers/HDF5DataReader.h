@@ -32,6 +32,8 @@
 #include <Packages/Teem/Core/Datatypes/NrrdData.h>
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
 
+#include <Dataflow/Ports/MatrixPort.h>
+
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <Packages/DataIO/share/share.h>
@@ -137,6 +139,7 @@ protected:
   int strides_[MAX_DIMS];
 
   NrrdDataHandle nHandles_[MAX_PORTS];
+  MatrixHandle mHandle_;
 
   bool loop_;
   bool error_;
