@@ -19,6 +19,7 @@
 #include "myShell.h"
 
 #include <UserModule.h>
+#include <CallbackCloners.h>
 #include <Connection.h>
 #include <MUI.h>
 #include <MotifCallback.h>
@@ -28,6 +29,7 @@
 #include <Port.h>
 #include <XQColor.h>
 #include <Mt/DrawingArea.h>
+#include <Mt/PushButton.h>
 
 #include <stdio.h>
 
@@ -56,7 +58,7 @@ extern MtXEventLoop* evl;
 #define PIPE_SHADOW_WIDTH 2
 
 UserModule::UserModule(const clString& name, SchedClass sched_class)
-: Module(name, sched_class), window(0), mapped(0)
+: Module(name, sched_class), window(0), mapped(0), popup_on_create(0)
 {
 }
 
@@ -74,8 +76,11 @@ UserModule::UserModule(const UserModule& copy, int deep)
 // User interface stuff...
 void UserModule::add_ui(MUI_widget* widget)
 {
-    if(!window)
+    if(!window){
 	window=new MUI_window(this);
+	if(popup_on_create)
+	    window->popup();
+    }
     window->attach(widget);
 }
 
@@ -155,11 +160,40 @@ void UserModule::create_widget()
     drawing_a->SetMarginWidth(0);
     drawing_a->SetShadowThickness(0);
     drawing_a->SetBackground(bgcolor->pixel());
+    drawing_a->SetResizePolicy(XmRESIZE_NONE);
     // Add redraw callback...
     new MotifCallback<UserModule>FIXCB(drawing_a, XmNexposeCallback,
 				       &netedit->mailbox, this,
 				       &UserModule::redraw_widget, 0, 0);
+
+    new MotifCallback<UserModule>FIXCB(drawing_a, XmNinputCallback,
+				       &netedit->mailbox, this,
+				       &UserModule::input_widget, 0, 0);
     drawing_a->Create(*netedit->drawing_a, "usermodule");
+
+    // Create the buttons...
+    btn=new PushButtonC*[MODULE_NBUTTONS];
+    int xbleft=MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER+MODULE_BUTTON_BORDER;
+    int xbsize=MODULE_BUTTON_BORDER+MODULE_BUTTON_SIZE+2*MODULE_BUTTON_EDGE;
+    int xbsize2=xbsize-MODULE_BUTTON_BORDER;
+    int ybtop=MODULE_EDGE_WIDTH+MODULE_PORT_SIZE+MODULE_PORT_SPACE+MODULE_BUTTON_BORDER;
+    for(int i=0;i<MODULE_NBUTTONS;i++){
+	btn[i]=new PushButtonC;
+	btn[i]->SetShadowThickness(MODULE_BUTTON_EDGE);
+	btn[i]->SetUnitType(XmPIXELS);
+	int x=xbleft+i*xbsize;
+	btn[i]->SetX(x);
+	btn[i]->SetY(ybtop);
+	btn[i]->SetWidth(xbsize2);
+	btn[i]->SetHeight(xbsize2);
+	btn[i]->SetBackground(bgcolor->pixel());
+	btn[i]->SetHighlightThickness(0);
+	new MotifCallback<UserModule>FIXCB(btn[i], XmNactivateCallback,
+					   &netedit->mailbox, this,
+					   &UserModule::widget_button,
+					   (void*)i, 0);
+	btn[i]->Create(*drawing_a, "button");
+    }
 
     // Allocate colors...
     top_shadow=bgcolor->top_shadow();
@@ -285,13 +319,6 @@ void UserModule::redraw_widget(CallbackData*, void*)
 	XDrawLine(dpy, win, gc, x, ybtop, x, ybbot);
 	x+=xbsize;
     }
-    x=xbleft;
-    int xbsize2=xbsize-MODULE_BUTTON_BORDER;
-    for(i=0;i<MODULE_NBUTTONS;i++){
-	draw_shadow(dpy, win, gc, x, ybtop, x+xbsize2-1, ybbot,
-		    MODULE_BUTTON_EDGE, top_shadow->pixel(), bottom_shadow->pixel());
-	x+=xbsize;
-    }
 
     // Draw title
     XSetFont(dpy, gc, netedit->name_font->fid);
@@ -303,6 +330,24 @@ void UserModule::redraw_widget(CallbackData*, void*)
     update_module(0);
 
     evl->unlock();
+}
+
+void UserModule::draw_button(Display* dpy, Window win, GC gc, int which)
+{
+    int xbleft=MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER+MODULE_BUTTON_BORDER;
+    int xbsize=MODULE_BUTTON_BORDER+MODULE_BUTTON_SIZE+2*MODULE_BUTTON_EDGE;
+    int x=xbleft+which*xbsize;
+    int xbsize2=xbsize-MODULE_BUTTON_BORDER;
+    int ybtop=MODULE_EDGE_WIDTH+MODULE_PORT_SIZE+MODULE_PORT_SPACE+MODULE_BUTTON_BORDER;
+    int ybbot=ybtop+MODULE_BUTTON_BORDER+MODULE_BUTTON_EDGE+MODULE_BUTTON_SIZE
+	+MODULE_BUTTON_EDGE-2*MODULE_BUTTON_BORDER;
+    draw_shadow(dpy, win, gc, x, ybtop, x+xbsize2-1, ybbot,
+		MODULE_BUTTON_EDGE, top_shadow->pixel(), bottom_shadow->pixel());
+    switch(which){
+    default:
+	NOT_FINISHED("Drawing buttons...");
+	break;
+    }
 }
 
 void UserModule::update_module(int clear_first)
@@ -480,3 +525,23 @@ void UserModule::do_execute()
 	port->finish();
     }
 }
+
+void UserModule::input_widget(CallbackData*, void*)
+{
+    NOT_FINISHED("UserModule::input_widget");
+}
+
+void UserModule::widget_button(CallbackData*, void* data)
+{
+    int which=(int)data;
+    cerr << "Button " << which << " pushed...\n";
+    switch(which){
+    case 0:
+	// User interface...
+	if(window)
+	    window->popup();
+	else
+	    popup_on_create=1;
+    }
+}
+

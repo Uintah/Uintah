@@ -182,7 +182,9 @@ XQColor_named_colors.insert("firebrick", RGBColor(0.698039,0.133333,0.133333));
 XQColor_named_colors.insert("brown", RGBColor(0.647059,0.164706,0.164706));
 XQColor_named_colors.insert("dark salmon", RGBColor(0.913725,0.588235,0.478431));
 XQColor_named_colors.insert("DarkSalmon", RGBColor(0.913725,0.588235,0.478431));
+#endif
 XQColor_named_colors.insert("salmon", RGBColor(0.980392,0.501961,0.447059));
+#if 0
 XQColor_named_colors.insert("light salmon", RGBColor(1,0.627451,0.478431));
 XQColor_named_colors.insert("LightSalmon", RGBColor(1,0.627451,0.478431));
 XQColor_named_colors.insert("orange", RGBColor(1,0.647059,0));

@@ -17,14 +17,18 @@
 class UserModule;
 class MUI_widget;
 class clString;
+class MUI_window_private;
 
 class MUI_window {
+    MUI_window_private* priv;
 public:
     MUI_window(UserModule*);
     ~MUI_window();
     void attach(MUI_widget*);
     void detach(MUI_widget*);
     void reconfigure();
+
+    void popup();
 };
 
 class MUI_widget {

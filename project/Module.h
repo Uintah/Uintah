@@ -48,7 +48,6 @@ protected:
     friend class ModuleHelper;
     virtual void do_execute()=0;
 
-    clString name;
     int need_update;
     double progress;
     State state;
@@ -92,6 +91,7 @@ public:
     // User Interface information
     NetworkEditor* netedit;
     Network* network;
+    clString name;
 public:
     IPort* iport(int);
     OPort* oport(int);

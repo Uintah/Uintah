@@ -1,6 +1,6 @@
 
 /*
- *  SoundData.cc: Handle to the Sound Data type
+ *  SoundPort.cc: Handle to the Sound Data type
  *
  *  Written by:
  *   Steven G. Parker

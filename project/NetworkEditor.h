@@ -19,6 +19,7 @@
 #include <MessageBase.h>
 #include <WrapperLite.h>
 #include <X11/Xlib.h>
+class ApplicationShellC;
 class ColorManager;
 class Connection;
 class Datatype;
@@ -31,8 +32,9 @@ class NetworkEditor : public Task {
     Network* net;
     void do_scheduling();
 
-    // The user interface..
 public:
+    // The user interface..
+    ApplicationShellC* window;
     DrawingAreaC* drawing_a;
     Display* display;
     ColorManager* color_manager;

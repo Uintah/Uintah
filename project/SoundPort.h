@@ -1,6 +1,6 @@
 
 /*
- *  SoundData.h: Handle to the Sound Data type
+ *  SoundPort.h: Handle to the Sound Data type
  *
  *  Written by:
  *   Steven G. Parker
@@ -11,8 +11,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_project_SoundData_h
-#define SCI_project_SoundData_h 1
+#ifndef SCI_project_SoundPort_h
+#define SCI_project_SoundPort_h 1
 
 #include <Port.h>
 #include <Multitask/ITC.h>
@@ -92,4 +92,4 @@ public:
     virtual void finish();
 };
 
-#endif /* SCI_project_SoundData_h */
+#endif /* SCI_project_SoundPort_h */

@@ -1,8 +1,8 @@
 
 #include <config/sci.cf>
 
-LOCALINCLUDES = -I. -I../modules -I../../wrapper -I../../wrapper/Mt
-OBJS = ColorManager.o  Connection.o  \
+LOCALINCLUDES = -I. -I../modules -I../../wrapper -I../../wrapper/Mt -I../../wrapper/libMInT
+OBJS = ColorManager.o  Connection.o  Field3DPort.o  GeometryPort.o  \
 	Module.o  Modules.o  ModuleList.o  MotifCallbackBase.o  \
 	MUI.o  \
 	MtXEventLoop.o \
@@ -10,7 +10,7 @@ OBJS = ColorManager.o  Connection.o  \
 	SoundPort.o \
 	UserModule.o  XQColor.o \
 	main.o
-SRCS = ColorManager.cc Connection.cc \
+SRCS = ColorManager.cc Connection.cc Field3DPort.cc GeometryPort.cc \
 	Module.cc Modules.cc ModuleList.cc MotifCallbackBase.cc \
 	MUI.cc \
 	MtXEventLoop.cc \

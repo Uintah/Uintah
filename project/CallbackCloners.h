@@ -22,7 +22,7 @@ public:
 class CallbackCloners {
     CallbackCloners();
 public:
-    //static CallbackData* ???();
+    static CallbackData* input_clone(void*);
 };
 
 #endif

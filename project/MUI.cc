@@ -11,17 +11,37 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <MUI.h>
-#include <NotFinished.h>
+// Someday, we should delete these four lines, when the
+// compiler stops griping about const cast away...
+#include <X11/Intrinsic.h>
+#include "myStringDefs.h"
+#include "myXmStrDefs.h"
+#include "myShell.h"
 
-MUI_window::MUI_window(UserModule*)
+#include <MUI.h>
+#include <MtXEventLoop.h>
+#include <NetworkEditor.h>
+#include <NotFinished.h>
+#include <UserModule.h>
+#include <Mt/DialogShell.h>
+extern MtXEventLoop* evl;
+
+struct MUI_window_private {
+    DialogShellC* app;
+};
+
+MUI_window::MUI_window(UserModule* module)
 {
-    NOT_FINISHED("MUI");
+    priv=new MUI_window_private;
+    priv->app=new DialogShellC;
+    priv->app->Create("sci", "sci", evl->get_display());
+//module->netedit->window, module->name());
 }
 
 MUI_window::~MUI_window()
 {
-    NOT_FINISHED("MUI");
+    delete priv->app;
+    delete priv;
 }
 
 void MUI_window::attach(MUI_widget*)
@@ -36,6 +56,14 @@ void MUI_window::detach(MUI_widget*)
 
 void MUI_window::reconfigure()
 {
+    NOT_FINISHED("MUI");
+}
+
+void MUI_window::popup()
+{
+    evl->lock();
+    XtPopup(*priv->app, XtGrabNone);
+    evl->unlock();
     NOT_FINISHED("MUI");
 }
 

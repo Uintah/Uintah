@@ -19,6 +19,7 @@
 #include <X11/Xlib.h>
 class CallbackData;
 class DrawingAreaC;
+class PushButtonC;
 class MUI_window;
 class MUI_widget;
 class MUI_onoff_switch;
@@ -28,8 +29,10 @@ class XQColor;
 
 class UserModule : public Module {
     MUI_window* window;
+    int popup_on_create;
     int old_gwidth;
     WallClockTimer timer;
+    PushButtonC** btn;
 public:
     UserModule(const clString& name, SchedClass);
     UserModule(const UserModule&, int deep);
@@ -48,6 +51,9 @@ public:
     // Callbacks...
     virtual void create_widget();
     void redraw_widget(CallbackData*, void*);
+    void input_widget(CallbackData*, void*);
+    void widget_button(CallbackData*, void*);
+    void draw_button(Display*, Window, GC, int);
     int mapped;
 
     void update_module(int);

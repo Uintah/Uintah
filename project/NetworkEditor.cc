@@ -55,9 +55,9 @@ NetworkEditor::~NetworkEditor()
 int NetworkEditor::body(int)
 {
     // Create User interface...
-    ApplicationShellC window;
-    window.SetTitle("Project with no name");
-    window.Create("sci", "sci", display);
+    window=new ApplicationShellC;
+    window->SetTitle("Project with no name");
+    window->Create("sci", "sci", display);
 
     // Allocate fonts...
     evl->lock();
@@ -78,7 +78,7 @@ int NetworkEditor::body(int)
     scroller.SetWidth(NETEDIT_WINDOW_WIDTH);
     scroller.SetHeight(NETEDIT_WINDOW_HEIGHT);
     scroller.SetScrollingPolicy(XmAUTOMATIC);
-    scroller.Create(window, "scroller");
+    scroller.Create(*window, "scroller");
 
     drawing_a=new DrawingAreaC;
     drawing_a->SetUnitType(XmPIXELS);
@@ -89,7 +89,7 @@ int NetworkEditor::body(int)
     drawing_a->SetResizePolicy(XmRESIZE_NONE);
     drawing_a->SetBackground(background.pixel());
     drawing_a->Create(scroller, "drawing_a");
-    window.Realize();
+    window->Realize();
 
     // Initialize the network
     net->initialize(this);

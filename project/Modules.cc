@@ -16,6 +16,10 @@
 
 void ModuleList::initialize_list()
 {
+    Module* make_IsoSurface();
+    ModuleList::insert("IsoSurface", make_IsoSurface);
+    Module* make_Salmon();
+    ModuleList::insert("Salmon", make_Salmon);
     Module* make_SoundFilter();
     ModuleList::insert("SoundFilter", make_SoundFilter);
     Module* make_SoundInput();
