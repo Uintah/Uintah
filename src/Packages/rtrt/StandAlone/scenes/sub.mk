@@ -6,6 +6,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/gl.mo \
 	$(SRCDIR)/simple.mo \
 	$(SRCDIR)/simple_spheres.mo \
+	$(SRCDIR)/grout.mo \
 	$(SRCDIR)/1.mo \
 	$(SRCDIR)/2.mo \
 	$(SRCDIR)/3.mo \

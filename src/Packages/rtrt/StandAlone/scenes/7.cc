@@ -125,7 +125,7 @@ static Object* make_obj(int size, char* texfile)
     Object* obj1=new Rect(matl2, Point(0,0,0), Vector(planesize,planesize*1.1,0), Vector(-planesize*1.1,planesize,0));
     world->add(obj1);
 
-    ImageMaterial* texmatl=new ImageMaterial(texfile, ImageMaterial::Tile,
+    ImageMaterial* texmatl=new ImageMaterial(1, texfile, ImageMaterial::Tile,
 					     ImageMaterial::Tile,
 					     Color(0,0,0), 1,
 					     Color(0,0,0), 0);
@@ -139,7 +139,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 {
     int scenesize=2;
     double light_radius=0.8;
-    char* texfile="7.tex.raw";
+    char* texfile="/usr/sci/projects/rtrt/textures/7.tex.raw";
     for(int i=1;i<argc;i++){
 	if(strcmp(argv[i], "-size")==0){
 	    i++;

@@ -80,7 +80,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
         teapotT.pre_rotate(M_PI_4,Vector(0,0,1));
         teapotT.post_translate(Vector(20,0,0));
  
-        fp = fopen("teapot.dat","r");
+        fp = fopen("/usr/sci/projects/rtrt/geometry/teapot.dat","r");
 	Group* teapot=new Group();
         while (fscanf(fp,"%s",buf) != EOF) {
   	if (!strcasecmp(buf,"bezier")) {
@@ -113,7 +113,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
         Transform bunnyT;
 
 
-    fp = fopen("bun.ply","r");
+    fp = fopen("/usr/sci/projects/rtrt/geometry/bun.ply","r");
     if (!fp) {
       fprintf(stderr,"No such file!\n");
       exit(-1);
@@ -153,7 +153,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     fclose(fp);
     
     Material* vwmat=new Phong (Color(.4,.4,.4),Color(.6,.6,0),Color(.5,.5,.5),30);
-    fp = fopen("vw.geom","r");
+    fp = fopen("/usr/sci/projects/rtrt/geometry/vw.geom","r");
     if (!fp) {
       fprintf(stderr,"No such file!\n");
       exit(-1);
@@ -212,7 +212,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   //printf("Pmax %lf %lf %lf\nPmin %lf %lf %lf\n",max.x(),max.y(),max.z(),
   //min.x(),min.y(),min.z());
 
-   Material* bookcoverimg = new ImageMaterial("i3d97.smaller.gamma",
+   Material* bookcoverimg = new ImageMaterial(1,
+					      "/usr/sci/projects/rtrt/textures/i3d97.smaller.gamma",
                                               ImageMaterial::Clamp,
                                               ImageMaterial::Clamp,
                                               Color(0,0,0), 1,
@@ -310,8 +311,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       
       //room
 
-      Material* whittedimg = new ImageMaterial("whitted",ImageMaterial::Clamp,
-                                              ImageMaterial::Clamp,
+      Material* whittedimg = new ImageMaterial(1,
+					       "/usr/sci/projects/rtrt/textures/whitted",
+					       ImageMaterial::Clamp,
+					       ImageMaterial::Clamp,
 					       Color(0,0,0), 1,
 					       Color(0,0,0), 0);
 
@@ -321,7 +324,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	     new Parallelogram(whittedimg, Point(300,-1600+22,700),whittedframev1,whittedframev2)
 	     ;
 
-      Material* bumpimg = new ImageMaterial("bump",ImageMaterial::Clamp,
+      Material* bumpimg = new ImageMaterial(1,
+					    "/usr/sci/projects/rtrt/textures/bump",
+					    ImageMaterial::Clamp,
 					    ImageMaterial::Clamp,
 					    Color(0,0,0), 1,
 					    Color(0,0,0), 0);
