@@ -7,6 +7,6 @@ SRCS     = ArrowWidget.cc BaseWidget.cc BoxWidget.cc CriticalPointWidget.cc \
            PathWidget.cc PointWidget.cc RingWidget.cc ScaledBoxWidget.cc \
            ScaledFrameWidget.cc ViewWidget.cc
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

@@ -4,6 +4,6 @@ OBJTOP   = ../..
 
 SRCS     = Debug.cc Timer.cc soloader.cc
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP) -I$(SRCTOP)
 
 include $(SRCTOP)/scripts/objs.mk

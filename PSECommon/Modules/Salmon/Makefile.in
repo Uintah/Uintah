@@ -10,7 +10,7 @@ SRCS     = Ball.cc BallAux.cc BallMath.cc Tex.cc close.c name.c \
            open.c rdwr.c rle.c MpegEncoder.cc row.c Roe.cc OpenGL.cc \
            Renderer.cc Salmon.cc SalmonGeom.cc
 
-INCLUDES = -I$(OBJTOP) \
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP) \
            -I$(TCL_INCLUDE_DIR) -I$(TK_INCLUDE_DIR) -I$(ITCL_INCLUDE_DIR)
 
 include $(SRCTOP)/scripts/objs.mk

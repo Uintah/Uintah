@@ -19,7 +19,7 @@ SRCS      = main.cc
 CFLAGS   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/PSECore/GUI\" \
                       -DSCICORETCL=\"$(SRCTOP_ABS)/SCICore/GUI\" \
                       -DDEFAULT_PACKAGE_PATH=\"@PACKAGE_PATH@2\"
-INCLUDES  = -I$(OBJTOP)
+INCLUDES  = -I$(SRCTOP) -I$(OBJTOP)
             
 PROGRAM   = @EXENAME@
 LIBRARIES = $(LDRUN_PREFIX)$(TCL_LIB_DIR) \

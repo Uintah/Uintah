@@ -7,6 +7,6 @@ SRCS     = Guard.cc ParallelBase.cc \
 	   SimpleReducer.cc Thread_unix.cc ThreadGroup.cc \
 	   WorkQueue.cc @THREAD_IMPL@ @TIME_IMPL@
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

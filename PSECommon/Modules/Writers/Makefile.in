@@ -7,6 +7,6 @@ SRCS     = ColorMapWriter.cc ColumnMatrixWriter.cc ContourSetWriter.cc \
            MultiScalarFieldWriter.cc ScalarFieldWriter.cc SurfaceWriter.cc \
            TetraWriter.cc VectorFieldWriter.cc VoidStarWriter.cc
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

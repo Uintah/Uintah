@@ -10,7 +10,7 @@ SUBDIRS = SCICore $(COMPONENT_DIRS) PSECore main PSECommon @PACKAGE_DIRS@
 
 all:: sci_config.h
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(OBJTOP)/scripts/recurse.mk
 
 _cleanHere::
 	rm -f uintah scirun davew

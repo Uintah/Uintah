@@ -5,6 +5,6 @@ OBJTOP   = ../../..
 SRCS     = BldBRDF.cc BldScene.cc RTrace.cc Radiosity.cc RayMatrix.cc \
 	   RayTest.cc XYZtoRGB.cc
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

@@ -4,6 +4,6 @@ OBJTOP   = ../../..
 
 SRCS     = ImagePort.o
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

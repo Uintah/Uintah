@@ -7,6 +7,6 @@ SUBDIRS = Image Writers
 include $(SRCTOP)/scripts/recurse.mk
 
 SRCS     = index.cc
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

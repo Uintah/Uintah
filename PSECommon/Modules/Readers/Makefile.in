@@ -8,6 +8,6 @@ SRCS     = ColorMapReader.cc ColumnMatrixReader.cc ContourSetReader.cc \
            ScalarFieldReader.cc SurfaceReader.cc VectorFieldReader.cc \
            VoidStarReader.cc
 
-INCLUDES = -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk
