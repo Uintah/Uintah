@@ -63,7 +63,7 @@ namespace Uintah {
                         const CCVariable<T>& q_grad_x,
                         const CCVariable<T>& q_grad_y,
                         const CCVariable<T>& q_grad_z,
-                        StaticArray<CCVariable<T> >& q_OAFS,
+                        CCVariable<facedata<T> >& q_OAFS,
                         StaticArray<CCVariable<T> >& q_OAFE,
                         StaticArray<CCVariable<T> >& q_OAFC);
 
@@ -71,12 +71,12 @@ namespace Uintah {
       void  allocateAndCompute_Q_ave( const CCVariable<T>& q_CC,
                                       const Patch* patch,
                                       DataWarehouse* new_dw,
-                                      StaticArray<CCVariable<T> >& q_OAFS,
+                                      CCVariable<facedata<T> >& q_OAFS,
                                       StaticArray<CCVariable<T> >& q_OAFE,
                                       StaticArray<CCVariable<T> >& q_OAFC ); 
                                  
     template <class T, typename F> 
-      void advect(  StaticArray<CCVariable<T> >& q_OAFS,
+      void advect(  CCVariable<facedata<T> >& q_OAFS,
                     StaticArray<CCVariable<T> >& q_OAFE,
 		      StaticArray<CCVariable<T> >& q_OAFC,
                     const Patch* patch,
