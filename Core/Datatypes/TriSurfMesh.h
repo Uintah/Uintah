@@ -118,7 +118,11 @@ public:
 
   void unlocate(Point &result, const Point &p);
 
-  void get_point(Point &result, node_index index) const;
+  void get_point(Point &result, node_index index) const
+  { result = points_[index]; }
+    
+  void set_point(const Point &point, node_index index)
+  { points_[index] = point; }
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

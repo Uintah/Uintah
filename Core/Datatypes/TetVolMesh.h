@@ -109,7 +109,10 @@ public:
 
   void unlocate(Point &result, const Point &p);
 
-  void get_point(Point &result, node_index index) const;
+  void get_point(Point &result, node_index index) const
+  { result = points_[index]; }
+  void set_point(const Point &point, node_index index)
+  { points_[index] = point; }
   
   //! the double return val is the volume of the tet.
   double get_gradient_basis(cell_index ci, Vector& g0, Vector& g1, 

@@ -246,13 +246,6 @@ TriSurfMesh::unlocate(Point &result, const Point &p)
 }
 
 
-void
-TriSurfMesh::get_point(Point &result, node_index index) const
-{
-  result = points_[index];
-}
-
-
 bool
 TriSurfMesh::inside4_p(int i, const Point &p)
 {
