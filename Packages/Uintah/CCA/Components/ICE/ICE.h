@@ -18,9 +18,6 @@
 #include <vector>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
 
-#define ADVECT_TEST
-//#undef ADVECT_TEST
-
 namespace Uintah {
 
 using namespace SCIRun;
@@ -210,20 +207,22 @@ using namespace SCIRun;
       void setBC(SFCXVariable<Vector>& variable,const std::string& type,
 		 const Patch* p, const int mat_id);   
 
-      void printData(const  Patch* patch,int include_GC,char message1[],
-		     char message2[], const  CCVariable<int>& q_CC);
+      void printData(const  Patch* patch,int include_GC,const string& message1,
+		     const string& message2, const  CCVariable<int>& q_CC);
                    
-      void printData(const  Patch* patch,int include_GC,char message1[],
-		     char message2[], const  CCVariable<double>& q_CC); 
+      void printData(const  Patch* patch,int include_GC,const string& message1,
+		     const string& message2, const  CCVariable<double>& q_CC); 
 
-      void printVector(const  Patch* patch,int include_GC,char message1[],
-		       char message2[], int component, 
+      void printVector(const  Patch* patch,int include_GC,
+		       const string& message1,
+		       const string& message2, int component, 
 		       const CCVariable<Vector>& q_CC);
                    
-      void Message(int abort, char message1[],char message2[],char message3[]);
+      void Message(int abort, const string& message1, const string& message2,
+		   const string& message3);
 
-      void readData(const Patch* patch, int include_GC, char filename[],
-		    char var_name[], CCVariable<double>& q_CC);
+      void readData(const Patch* patch, int include_GC, const string& filename,
+		    const string& var_name, CCVariable<double>& q_CC);
                  
       void hydrostaticPressureAdjustment(const Patch* patch, 
                       const CCVariable<double>& rho_micro_CC, 
@@ -296,14 +295,20 @@ using namespace SCIRun;
                           const Vector dx,
                           SFCZVariable<Vector>& tau_Z_FC);
                    
-       void printData_FC(const  Patch* patch,int include_GC,char message1[],
-		      char message2[], const SFCXVariable<double>& q_FC);
+       void printData_FC(const  Patch* patch,int include_GC,
+			 const string& message1,
+			 const string& message2, 
+			 const SFCXVariable<double>& q_FC);
                     
-       void printData_FC(const  Patch* patch,int include_GC,char message1[],
-		      char message2[], const SFCYVariable<double>& q_FC);
+       void printData_FC(const  Patch* patch,int include_GC,
+			 const string& message1,
+			 const string& message2, 
+			 const SFCYVariable<double>& q_FC);
                     
-       void printData_FC(const  Patch* patch,int include_GC,char message1[],
-		      char message2[], const SFCZVariable<double>& q_FC);
+       void printData_FC(const  Patch* patch,int include_GC,
+			 const string& message1,
+			 const string& message2, 
+			 const SFCZVariable<double>& q_FC);
       
       ICELabel* lb; 
       MPMICELabel* MIlb;
