@@ -80,6 +80,7 @@ void GuiContext::erase(const std::string& subname)
     if((*iter)->getfullname() == fullname) 
     {
       children.erase( iter );
+      gui->execute("setVarStates \""+fullname+"\" 0 0");
       return;
     } 
   }
