@@ -251,23 +251,17 @@ TaskGraph::setupTaskConnections()
 	  if(req->var->typeDescription() != compiter->first->typeDescription())
 	    throw TypeMismatchException("Type mismatch for variable: "+req->var->getName());
 	  // Make sure that we get the comp from the reduction task
-	  bool add;
+	  bool add=false;
 	  if(task->isReductionTask()){
 	    // Only those that overlap
 	    if(overlaps(compiter->second, req))
 	      add=true;
-	    else
-	      add=false;
 	  } else if(req->var->typeDescription()->isReductionVariable()){
 	    if(compiter->second->task->isReductionTask())
 	      add=true;
-	    else
-	      add=false;
 	  } else {
 	    if(overlaps(compiter->second, req))
 	      add=true;
-	    else
-	      add=false;
 	  }
 	  if(add){
 	    Task::Edge* edge = scinew Task::Edge(compiter->second, req);
@@ -278,13 +272,6 @@ TaskGraph::setupTaskConnections()
 	    dbg << "Creating edge from task: " << *compiter->second->task << " to task: " << *task << '\n';
 	    dbg << "Req=" << *req << '\n';
 	    dbg << "Comp=" << *compiter->second << '\n';
-#if 0
-	    if(count > 1 && !req->var->allowsMultipleComputes()){
-	      throw InternalError("Found too many productions for variable: "+req->var->getName()+", required for task: "+task->getName());
-	    }
-#else
-	    NOT_FINISHED("multiple computes check is wrong");
-#endif
 	  }
 	}
 	if(count == 0)
