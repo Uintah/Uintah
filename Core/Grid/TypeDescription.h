@@ -49,6 +49,7 @@ class Variable;
 	 SFCZVariable,
 	 ParticleVariable,
 	 ScatterGatherVariable,
+	 PerPatch,
 	 Point,
 	 Vector,
 	 Matrix3,
@@ -107,7 +108,8 @@ class Variable;
        
       TypeDescription(const TypeDescription&);
       TypeDescription& operator=(const TypeDescription&);
-       
+
+     void register_type();
    };
 
 } // End namespace Uintah
