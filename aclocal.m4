@@ -323,6 +323,99 @@ AC_DEFUN(SCI_CHECK_VERSION,
   ])
 
 ##
+##  SCI_REMOVE_MINUS_L(lib_flag,dirs,libs)
+##
+##  lib_flag     : variable to set with the final list of libs.
+##  dirs         : List of dirs (eg: -L/usr/X11R6/lib -L/usr/lib -L/sci/thirdparty)
+##  libs         : List of libs (eg: -lm -lX11)
+##
+##  Parses a library include line ('dirs') looking for each library (in
+##  'libs').  Assigns to the variabl 'lib_flag' the exact library file
+##  (instead of using -l) (if it is found in one of the 'dirs' directories.
+##  For example, with the example lines given above, the final output would be:
+## 
+##  lib_flag:      -lm /usr/X11R6/lib/libX11.so
+##
+##  If a '.so' and a '.a' file exist in the lib directory, the .so is given 
+##  preference.  (We also check for .dylib files.)
+
+AC_DEFUN(SCI_REMOVE_MINUS_L,
+  [
+    ##  SCI_REMOVE_MINUS_L
+
+   dirs="$2"
+   libs="$3"
+
+   if test -z "$dirs" || test -z "$libs"; then
+       AC_MSG_ERROR(The dirs '$dirs' and/or libs '$libs' parameters of SCI-REMOVE-MINUS-L are empty.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
+   else
+
+     sci_temp_lib=
+
+     # list of libraries that have been found
+     found_libs=
+
+     for libflag in $libs; do
+
+       # Cut of the '-l'
+       the_lib=lib`echo $libflag | sed 's/-l//'`
+  
+       checked_dirs=
+       for dirflag in $dirs; do
+
+         # Cut of the '-L' from each library directory.
+         the_dir=`echo $dirflag | sed 's/-L//'`
+  
+         # Disregard generic libraries:
+         if test "$the_dir" = "/usr/lib"; then
+           continue
+         fi
+
+         already_checked=`echo $checked_dirs | grep "$the_dir "`
+         if test -n "$already_checked"; then
+           AC_MSG_WARN($the_dir listed more than once as a -L flag.  Skipping.)
+           continue
+         else
+           checked_dirs="$checked_dirs$the_dir "
+         fi
+
+         sci_found=
+         # Check to see if the .so exists in the given directory
+         if test -e $the_dir/$the_lib.so; then
+           sci_temp_lib="$sci_temp_lib $the_dir/$the_lib.so"
+           sci_found=$the_lib
+         else
+           # If no .so, then look for a '.dylib' file.
+           if test -e $the_dir/$the_lib.dylib; then
+              sci_temp_lib="$sci_temp_lib $the_dir/$the_lib.dylib"
+              sci_found=$the_lib
+           else
+             # If no .so, then look for a '.a' file.
+             if test -e $the_dir/$the_lib.a; then
+                sci_temp_lib="$sci_temp_lib $the_dir/$the_lib.a"
+                sci_found=$the_lib
+             fi
+           fi
+         fi
+
+         if test -n "$sci_found"; then
+           already_found=`echo $found_libs | grep "$sci_found "`
+         fi
+
+         if test -n "$already_found"; then
+           AC_MSG_ERROR($libflag found in more than one location -- $the_dir and $already_found!)
+         else
+           if test -n "$sci_found"; then
+             found_libs="$found_libs$the_dir/$sci_found "
+           fi
+         fi
+       done
+     done 
+     $1=$sci_temp_lib
+  fi
+  ])
+
+##
 ##  SCI_CHECK_VAR_VERSION(name,var,need-version,if-correct,if-not-correct,comp)
 ##
 ##  check whether the var (which represents a version number) version
