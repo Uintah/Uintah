@@ -1,0 +1,27 @@
+<faq>
+<!-- 
+
+  each faq is a collection of entries.  Entries are a paired question and
+  answer, along with a set of keywords.  Questions and answers are delimited
+  with <p> or <pre> tags.
+
+  <entry>
+    <keywords>SGI, endian</keywords>
+    <question>
+      <p>
+        ...
+      </p>
+      ...
+    </question>
+    <answer>
+      <p>
+        ...
+      </p>
+      ...
+    </answer>
+  </entry>
+          
+
+ -->
+
+</faq>
