@@ -981,7 +981,7 @@ void FractureMPM::scheduleMoveCracks(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
-  // cpset
+  // Set up cpset -- crack node subset in each patch
   Task* t = scinew Task("Crack::CrackPointSubset", crackMethod,
                         &Crack::CrackPointSubset);
   crackMethod->addComputesAndRequiresCrackPointSubset(t, patches, matls);
@@ -993,11 +993,6 @@ void FractureMPM::scheduleMoveCracks(SchedulerP& sched,
   crackMethod->addComputesAndRequiresMoveCracks(t, patches, matls);
   sched->addTask(t, patches, matls);
 
-  // Update crack extent and normals
-  t = scinew Task("Crack::UpdateCrackExtentAndNormals", crackMethod,
-                        &Crack::UpdateCrackExtentAndNormals);
-  crackMethod->addComputesAndRequiresUpdateCrackExtentAndNormals(t,
-                                                       patches, matls);
   sched->addTask(t, patches, matls);
 }
 
