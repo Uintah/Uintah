@@ -23,7 +23,7 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/BaseDial.tcl $(SRCDIR)/ColorPicker.tcl \
-	$(SRCDIR)/DebugSettings.tcl $(SRCDIR)/Dial.tcl \
+	$(SRCDIR)/Dial.tcl \
 	$(SRCDIR)/Dialbox.tcl $(SRCDIR)/Doublefile.tcl \
 	$(SRCDIR)/Filebox.tcl $(SRCDIR)/HelpPage.tcl \
 	$(SRCDIR)/BioPSEFilebox.tcl\

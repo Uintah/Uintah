@@ -29,7 +29,6 @@
  */
 
 #include <Core/GuiInterface/MemStats.h>
-#include <Core/GuiInterface/DebugSettings.h>
 #include <Core/GuiInterface/ThreadStats.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/TCL.h>
@@ -38,8 +37,6 @@ namespace SCIRun {
 
 void TCL::initialize()
 {
-    DebugSettings* debugs=scinew DebugSettings;
-    debugs->init_tcl();
     MemStats* memstats=scinew MemStats;
     memstats->init_tcl();
     ThreadStats* threadstats=scinew ThreadStats;
