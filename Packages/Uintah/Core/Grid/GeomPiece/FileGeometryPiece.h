@@ -6,6 +6,7 @@
 #include <Core/Geometry/Point.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <list>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
@@ -15,36 +16,60 @@ namespace Uintah {
 	
   \class FileGeometryPiece
 	
-  \brief Reads in a set of points and optionally a volume for each point 
-  from an input text file.
-	
+  \brief Reads in a set of points and optionally volume, external forces and 
+  fiber directions for each point from an input text file.
+  
   \author John A. Schmidt \n
   Department of Mechanical Engineering \n
   University of Utah \n
   Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n
 	
-  Reads in a set of points from an input file.  Optionally, if the
-  <var> tag is present, the volume will be read in for each point set.
+  Reads in a set of points from an input file.  
+
+  The input form looks like this:
+  \verbatim
+    <file>
+      <name>file_name.txt</name>
+      <format>split</format>
+      <var1>p.volume</var1>
+      <var2>p.fiberdir</var2>
+      <var3>p.externalforce</var3>
+    </file>
+  \endverbatim
+  
   Requires one input: file name <name>points.txt</name>
-  Optional input : <var1>p.volume </var1>
+  
+  The format field can be used to specify that the point file is 
+    split - pre-processed across processors using pfs (the default)
+    text  - plain text list of points (slow for may processors)
+    lsb   - least significant byte binary double
+    msb   - most significant byte binary double
+
+    the 'split' format must match the number of processors, and 
+    expects files in file_name.txt.iproc
+    where iproc is the mpi rank of the processor.
+    it has a bounding box a the first line.
+  
+  If <var?> tags are present, extra fields values can be assigned to each 
+  point.
+
+  the order of the var field determines the expected column order of 
+  the field; one column for volume and three for force and direction.
+  
   There are methods for checking if a point is inside the box
   and also for determining the bounding box for the box (which
   just returns the box itself).
-  The input form looks like this:
-  \verbatim
-    <name>file_name.txt</name>
-      <var1>p.volume</var1>
-      <var2>p.externalforce</var2>
-      <var3>p.fiberdir</var3>
-  \endverbatim
-	
+  
 */
 /////////////////////////////////////////////////////////////////////////////
 	
   using std::vector;
 
   class FileGeometryPiece : public SmoothGeomPiece {
-	 
+  private:
+    enum FileFormat {FFText, FFSplit, FFLSBBin, FFMSBBin, FFGzip};
+    enum InputVar   {IVvolume, IVextforces, IVfiberdirn};
+    
   public:
     //////////////////////////////////////////////////////////////////////
     /*! \brief Constructor that takes a ProblemSpecP argument.   
@@ -56,7 +81,7 @@ namespace Uintah {
     /*! Construct a box from a min/max point */
     //////////////////////////////////////////////////////////////////////
     FileGeometryPiece(const string& file_name);
-	 
+    
     //////////
     // Destructor
     virtual ~FileGeometryPiece();
@@ -77,12 +102,15 @@ namespace Uintah {
     int createPoints();
 
   private:
-    Box d_box;
-    bool d_var1_bool;
-    bool d_var2_bool;
-    bool d_var3_bool;
-    string d_file_name,d_var_name1,d_var_name2,d_var_name3;
+    Box                 d_box;
+    string              d_file_name;
+    FileFormat          d_file_format;
+    std::list<InputVar> d_vars;
+    
+  private:
+    bool read_line(std::istream & is, Point & xmin, Point & xmax);
   };
+  
 } // End namespace Uintah
 
 #endif // __FILE_GEOMTRY_Piece_H__
