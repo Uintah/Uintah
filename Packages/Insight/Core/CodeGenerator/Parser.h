@@ -45,7 +45,12 @@ public:
   void write_node(ostream&, DOMNode*);
   void output_content(ostream&,  string chars );
 
+  void set_path_to_insight_package(string f);
+  string get_path_to_insight_package( void );
+
 
 private:
+
+  string path_to_insight_package_;
 
 };

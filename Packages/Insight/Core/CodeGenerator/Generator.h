@@ -38,6 +38,8 @@ public:
   string get_gui_out( void );
   void set_xml_out(string f);
   string get_xml_out( void );
+  void set_path_to_insight_package(string f);
+  string get_path_to_insight_package( void );
 
   // execute the generator
   bool generate( void );
@@ -53,4 +55,5 @@ private:
   string cc_out_;
   string gui_out_;
   string xml_out_;
+  string path_to_insight_package_;
 };

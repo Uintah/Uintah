@@ -34,7 +34,8 @@ public:
   void set_gui_xsl(string);
   string get_gui_xsl();
   void set_xml_xsl(string);
-  string set_xml_xsl();
+  string get_xml_xsl();
+
 
   bool translate(string xml_source, string cc_output, string gui_output, string xml_output);
 
