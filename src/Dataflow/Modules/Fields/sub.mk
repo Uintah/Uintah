@@ -31,13 +31,14 @@ SRCDIR   := Dataflow/Modules/Fields
 SRCS     += \
 	$(SRCDIR)/ApplyInterpolant.cc\
 	$(SRCDIR)/BuildInterpolant.cc\
+	$(SRCDIR)/CastMLVtoHV.cc\
+	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/ClippingPlane.cc\
 	$(SRCDIR)/DirectInterpolate.cc\
 	$(SRCDIR)/DirectInterpolateAlgo.cc\
 	$(SRCDIR)/EditField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/Gradient.cc\
-	$(SRCDIR)/LatticeToHex.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\
 	$(SRCDIR)/ScaleFieldData.cc\
