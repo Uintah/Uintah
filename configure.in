@@ -329,6 +329,8 @@ AC_ARG_WITH(mpi,
 
 if test -z "$mpi"; then
   MPI_INCLUDE_DIR=""
+  oldcppflags=$CPPFLAGS
+  CPPFLAGS="$CPPFLAGS -DMPIPP_H"
   for trylib in mpi mpich; do
      AC_MSG_CHECKING(for MPI in -l$trylib)
      LIBS="$oldLibs -l$trylib"
@@ -340,10 +342,11 @@ if test -z "$mpi"; then
      MPI_Init(&argc, &argv);
 , mpi_dir=""; mpi_lib=$trylib; echo "found"; break, echo "not found")
   done
+  CPPFLAGS=$oldcppflags
 else
   oldcppflags=$CPPFLAGS
   MPI_INCLUDE_DIR=$mpi/include
-  CPPFLAGS="$CPPFLAGS -I$MPI_INCLUDE_DIR"
+  CPPFLAGS="$CPPFLAGS -I$MPI_INCLUDE_DIR -DMPIPP_H"
   oldLibs=$LIBS
   for trydir in lib lib32 lib64; do
      for trylib in mpi mpich; do
