@@ -882,7 +882,8 @@ OpenGL::redraw_frame()
 
 	// Now set up the fog stuff.
 	double fognear, fogfar;
-	compute_fog_depth(view, fognear, fogfar);
+	compute_fog_depth(view, fognear, fogfar,
+			  view_window_->gui_fog_visibleonly_.get());
 	glFogi(GL_FOG_MODE, GL_LINEAR);
 	const float fnear =
 	  fognear + (fogfar - fognear) * view_window_->gui_fog_start_.get();
@@ -2169,12 +2170,20 @@ OpenGL::compute_depth(const View& view, double& znear, double& zfar)
 
 
 bool
-OpenGL::compute_fog_depth(const View &view, double &znear, double &zfar)
+OpenGL::compute_fog_depth(const View &view, double &znear, double &zfar,
+			  bool visible_only)
 {
   znear=MAXDOUBLE;
   zfar=-MAXDOUBLE;
   BBox bb;
-  view_window_->get_bounds_all(bb);
+  if (visible_only)
+  {
+    view_window_->get_bounds(bb);
+  }
+  else
+  {
+    view_window_->get_bounds_all(bb);
+  }
   if(bb.valid())
   {
     // We have something to draw.

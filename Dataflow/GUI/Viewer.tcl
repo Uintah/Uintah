@@ -224,6 +224,7 @@ itcl_class BaseViewWindow {
 	initGlobal $this-fogcolor-b 1.0
 	initGlobal $this-fog-start 0.0
 	initGlobal $this-fog-end 0.714265
+	initGlobal $this-fog-visibleonly 1
 
 	setGlobal $this-global-light 1
 	setGlobal $this-global-fog 0
@@ -964,6 +965,9 @@ itcl_class ViewWindow {
 	wm title $w "Fog Controls"
 	wm iconname $w fog
 
+	checkbutton $w.vis -text "Compute using only visible objects" \
+	    -variable $this-fog-visibleonly -command "$this-c redraw"
+
 	checkbutton $w.usebg -text "Use background color" \
 	    -variable $this-fogusebg -command "$this-c redraw"
 
@@ -989,8 +993,9 @@ itcl_class ViewWindow {
 	    -variable $this-fog-end -orient horizontal -from 0 -to 1.75 \
 	    -resolution 0.01 -showvalue true -tickinterval 1 -digits 3
 	    
-	pack $w.usebg $w.colorFrame $w.start $w.end \
-	    -side top -padx 4 -pady 4 -anchor w -fill x
+	pack $w.vis $w.usebg $w.colorFrame $w.start $w.end \
+	    -side top -padx 4 -pady 4 -anchor w
+	pack $w.start $w.end -side top -padx 4 -pady 4 -anchor w -fill x
     }
 
     method makeFogColorPopup {} {
