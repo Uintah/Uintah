@@ -21,10 +21,11 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
+
 namespace Uintah {
-using namespace SCIRun;
-using std::vector;
-using std::string;
+   using namespace SCIRun;
+   using std::vector;
+   using std::string;
 
    class DataWarehouse;
    class MPMLabel;
@@ -154,33 +155,37 @@ class Crack
 
  private:
 
-     /************************ PRIVATE DATA MEMBERS *************************/
+    /************************ PRIVATE DATA MEMBERS *************************/
     MPI_Comm mpi_crack_comm;
 
     SimulationStateP d_sharedState;
-    Output* dataArchiver;
-    string udaDir;
     int d_8or27;
     int NGP;
     int NGN;
-    double d_SMALL_NUM_MPM;
-    short NO;
-    short YES;
-    int R;
-    int L;    
+    
+    Output* dataArchiver;          // data archiving information
+    string udaDir;                 // Base file directory
+    short NO;                      // NO=0 by default 
+    short YES;                     // YES=1 by default
+    int R;                         // Refer to "right", R=0 by default
+    int L;                         // Refer to "left", L=1 by default  
 
-    string GridBCType[Patch::numFaces];  // BC types of global grid
+    string 
+    GridBCType[Patch::numFaces];   // BC types of global grid
     Point GLP, GHP;                // Lowest and highest pt of real global grid 
-    int NJ;                        // rJ = NJ*min_dCell
+    int    NJ;                     // rJ = NJ*min_dCell
     double rJ;                     // NJ = rJ/min_dCell
-    int mS;                        // matID of saving J-integral
     double rdadx;                  // Ratio of crack growth to cell-size
-    bool useVolumeIntegral;        // Flag if use the second term to get J-integral
-    bool doCrackVisualization;     // Flag if output of crack elems, points
-    bool smoothCrackFront;         // Flag if smooth crack-front by cubic-spline
-
+    bool useVolumeIntegral;        // Flag if use volume intergarl in J calculation,
+                                   // "no" by default
+    bool saveCrackGeometry;        // Flag if save crack geometry for visulizatio,n
+                                   // "yes" by default
+    bool smoothCrackFront;         // Flag if smooth crack-front by cubic-spline,
+                                   // "no" by default
     string d_calFractParameters;   // Flag if calculating fracture parameters
+                                   // "no" by default
     string d_doCrackPropagation;   // Flag if doing crack propagation
+                                   // "no" by default
     short calFractParameters;      // Flag if calculating fract para at this step
     short doCrackPropagation;      // Flag if doing crack propagation at this step
     double calFractParasInterval;  // Interval of calculating fracture parameters
@@ -234,13 +239,14 @@ class Crack
     vector<Point> cmin,cmax;  
 
     // Crack data after mesh  
-    vector<double>               cs0;     // Average length of crack-front segs
+    vector<double>               css;     // Average length of crack-front segs
+    vector<double>               csa;     // Average angle between adjacent crack-front segs  
     vector<vector<Point> >        cx;     // Crack points
     vector<vector<IntVector> >    ce;     // Crack elems
     vector<vector<int> >  cfSegNodes;     // Crack-front-seg nodes
     vector<vector<int> > cfSegPreIdx;     // node[i]=node[preIdx]
-    vector<vector<int> > cfSegMinIdx;     // Minimum index of the sub-crack
-    vector<vector<int> > cfSegMaxIdx;     // Maximum index of the sub-crack
+    vector<vector<int> > cfSegMinIdx;     // Min node-index of the sub-crack
+    vector<vector<int> > cfSegMaxIdx;     // Max node-index of the sub-crack
     vector<vector<Point> > cfSegPtsT;     // Crack-front points after propagation
     vector<vector<Vector> >  cfSegV1;     // Bi-normals at crack-front nodes
     vector<vector<Vector> >  cfSegV2;     // Normals at crack-front nodes
@@ -253,43 +259,60 @@ class Crack
 
 
     /*************************** PRIVATE METHODS ***************************/
+
     // Detect if doing fracture analysis at this time step
     void DetectIfDoingFractureAnalysisAtThisTimeStep(double);
+    
     // Calculate normal of a triangle
     Vector TriangleNormal(const Point&,const Point&,const Point&);
+
     // Detect position relation between particle, node and crack plane
     short ParticleNodeCrackPLaneRelation(const Point&,const Point&,const 
                                       Point&,const Point&,const Point&);
+
     // Calculate signed volume of a tetrahedron
     double Volume(const Point&,const Point&,const Point&,const Point&);
+
     // A private function
     IntVector CellOffset(const Point&, const Point&, Vector);
+
     // Detect if a line is included in another line
     short TwoLinesDuplicate(const Point&,const Point&,const Point&,const Point&);
-    // Direction consines of two points
+
+    // Direction consine of two points
     Vector TwoPtsDirCos(const Point&,const Point&);
-    // Find plane equation by three points on it
+
+    // Find the equation of a plane which is composed of three points
     void FindPlaneEquation(const Point&,const Point&,const Point&,
                            double&,double&,double&,double&);
+
     // Detect if a point is within a triangle
     short PointInTriangle(const Point&,const Point&,const Point&,const Point&); 
-    // Find parameters of J-contour
+
+    // Find the parameters of J-contour circle
     void FindJPathCircle(const Point&,const Vector&,const Vector&,
                          const Vector&,double []);
+
     // Find intersection between J-contour and crack plane
     bool FindIntersectionOfJPathAndCrackPlane(const int&,const double& r,
                                               const double [],Point&); 
+
     // Find the segment(s) connected by the node
     void FindSegsFromNode(const int&,const int&, int []);
-    // Find the minimum and maximum indexes of the sub-crack
+
+    // Find the min and max node-indexes of the sub-crack
     void FindCrackFrontNodeIndexes(const int&);
+
     // Detect if a point is within or around the real global grid
     short PhysicalGlobalGridContainsPoint(const double&,const Point&);
-    // Trim line-segment with a cell
-    short TrimCrackFrontWithGrid(const Point&, Point&,
+
+    // Trim line-segment with a box
+    void TrimLineSegmentWithBox(const Point&, Point&,
 	 	                 const Point&, const Point&);
+
     // Apply symmetric boundary condition to crack points
     void ApplySymmetricBCsToCrackPoints(const Vector&,const Point&,Point&); 
+
     // Output crack-front position and fracture parameters
     void OutputCrackFrontResults(const int&); 
 
@@ -309,20 +332,22 @@ class Crack
     void DiscretizePartialEllipticCracks(const int&,int&);
     void OutputInitialCrackMesh(const int&);
  
-    // Move crack-front points if they become unreasoanable
-    void PruneCrackFrontAfterPropagation(const int& m);
+    // Prune crack front points if the angle of the two segments of 
+    // any point connected by it is larger than a critical angle (ca)
+    void PruneCrackFrontAfterPropagation(const int& m, const double& ca);
     
     // Calculate crack-front normals, tangential normals and bi-normals
     void CalculateCrackFrontNormals(const int& m);
 
     // Smooth crack-front and then calculate crack-front normals
     short SmoothCrackFrontAndCalculateNormals(const int& m);
+
     // Cubic-spline fitting function
     short CubicSpline(const int& n, const int& m, const int& n1,
                       double [], double [], double [],
                       int [], double [], const double&);
                                                          
-    // Output crack elems and crack points for visualization
+    // Output crack elems and crack points for visualization with scirun
     void OutputCrackGeometry(const int&, const int&);
 
  protected:
