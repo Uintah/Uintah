@@ -169,6 +169,7 @@ itcl_class Teem_Unu_UnuAxinfo {
 		set $this-max$i 0
 	    }
 	}
+
 	# fill_tuple_tab
 	add_tabs
     }
@@ -178,7 +179,7 @@ itcl_class Teem_Unu_UnuAxinfo {
         if {[winfo exists $w]} {
 	    
 	    set af [$w.att childsite]
-	    
+
 	    if {[set $this-initialized]} {
 		for {set i 1} {$i < [set $this-dimension]} {incr i} {
 		    set t [$af.tabs add -label "Axis $i" \
@@ -300,14 +301,14 @@ itcl_class Teem_Unu_UnuAxinfo {
     
     method make_kind_optionmenu { win var i} {
 	global $var
-	
+
 	iwidgets::optionmenu $win -labeltext "Kind" \
 	    -labelpos w -command "$this update_kind $win $var"
 	$win insert end nrrdKindUnknown nrrdKindDomain nrrdKindScalar \
 	    nrrdKind3Color nrrdKind3Vector nrrdKind3Normal \
 	    nrrdKind3DSymTensor nrrdKind3DMaskedSymTensor nrrdKind3DTensor
-	if {[info exists $this-kind$i]} {
-	    $win select [set $this-kind$i]
+	if {[info exists $var] && [set $var] != ""} {
+	    $win select [set $var]
 	} else {
 	    $win select nrrdKindUnknown
 	}
@@ -331,6 +332,5 @@ itcl_class Teem_Unu_UnuAxinfo {
 	    $op select [set $this-kind$i]
 	}
     }
-
 
 }
