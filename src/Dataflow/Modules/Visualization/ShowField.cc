@@ -918,14 +918,14 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     def_material_->diffuse = 
       Color(def_color_r_.get(), def_color_g_.get(), def_color_b_.get());
     def_material_->transparency = def_color_a_.get();
-    ogeom_->flushViews();
+    if (ogeom_) ogeom_->flushViews();
   } else if (args[1] == "text_color_change") {
     text_color_r_.reset();
     text_color_g_.reset();
     text_color_b_.reset();
     text_material_->diffuse =
       Color(text_color_r_.get(), text_color_g_.get(), text_color_b_.get());
-    ogeom_->flushViews();
+    if (ogeom_) ogeom_->flushViews();
   } else if (args[1] == "node_display_type") {
     nodes_dirty_ = true;
     if (now && node_id_) {
@@ -958,7 +958,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     else if (!nodes_on_.get() && node_id_)
     {
       ogeom_->delObj(node_id_);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
       node_id_ = 0;
     }
   } else if (args[1] == "toggle_display_edges"){
@@ -972,7 +972,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     else if (!edges_on_.get() && edge_id_)
     {
       ogeom_->delObj(edge_id_);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
       edge_id_ = 0;
     }
   } else if (args[1] == "rerender_nodes"){
@@ -1007,7 +1007,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     else if (!faces_on_.get() && face_id_)
     {
       ogeom_->delObj(face_id_);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
       face_id_ = 0;
     }
   } else if (args[1] == "toggle_display_vectors"){
@@ -1021,7 +1021,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     else if (!vectors_on_.get() && data_id_)
     {
       ogeom_->delObj(data_id_);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
       data_id_ = 0;
     }
   } else if (args[1] == "toggle_display_tensors"){
@@ -1035,7 +1035,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     else if (!tensors_on_.get() && data_id_)
     {
       ogeom_->delObj(data_id_);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
       data_id_ = 0;
     }
   } else if (args[1] == "toggle_display_scalars"){
@@ -1049,7 +1049,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     else if (!scalars_on_.get() && data_id_)
     {
       ogeom_->delObj(data_id_);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
       data_id_ = 0;
     }
   } else if (args[1] == "toggle_display_text"){
@@ -1062,14 +1062,14 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     }
     else if (!text_on_.get() && text_id_)
     {
-      ogeom_->delObj(text_id_);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->delObj(text_id_);
+      if (ogeom_) ogeom_->flushViews();
       text_id_ = 0;
     }
   } else if (args[1] == "rerender_text"){
     text_dirty_ = true;
     if (now && text_id_) {
-      ogeom_->delObj(text_id_);
+      if (ogeom_) ogeom_->delObj(text_id_);
       text_id_ = 0;
     }
     maybe_execute(TEXT);
