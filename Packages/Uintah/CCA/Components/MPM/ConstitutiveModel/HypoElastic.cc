@@ -359,7 +359,7 @@ void HypoElastic::computePressEOSCM(const double rho_cur, double& pressure,
   double p_g = bulk*(1.0 - rho_orig/rho_cur);
   pressure = p_ref + p_g;
   dp_drho  = bulk*rho_orig/(rho_cur*rho_cur);
-  tmp = sqrt((bulk + 4.*G/3.)/rho_cur);  // speed of sound squared
+  tmp = (bulk + 4.*G/3.)/rho_cur;  // speed of sound squared
 
 #if 0
   cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR HypoElastic"
