@@ -82,7 +82,7 @@ WARNING
 
       //! Try to remember if this PerPatch needs to delete the memory, since we copy the pointer
       //! Don't use RefCounted, as simple and/or pre-existing types probably don't use refcounted.
-      mutable deleteData; 
+      mutable bool deleteData; 
       // this function only exists to satisfy the TypeDescription, it will return null.
       static Variable* maker();
    };
