@@ -477,10 +477,10 @@ DEALINGS IN THE SOFTWARE.
 		<phrase>Turning on Volume Rendering</phrase>
 	      </textobject>
 	      <imageobject>
-		<imagedata fileref="Figures/show_vol_ren_button.eps" align="center" format="EPS"/>
+		<imagedata fileref="Figures/volrender_tab.eps" align="center" format="EPS"/>
 	      </imageobject>
 	      <imageobject>
-		<imagedata fileref="Figures/show_vol_ren_button.jpg" align="center" format="JPG"/>
+		<imagedata fileref="Figures/volrender_tab.jpg" align="center" format="JPG"/>
 	      </imageobject>
 	    </mediaobject>
 	  </figure>
