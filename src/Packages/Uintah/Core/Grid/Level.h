@@ -72,7 +72,8 @@ WARNING
 
    class Level : public RefCounted {
    public:
-      Level(Grid* grid, const Point& anchor, const Vector& dcell, int index,
+      Level(Grid* grid, const Point& anchor, const Vector& dcell, int index, 
+            IntVector refinementRatio,
 	    int id = -1);
       virtual ~Level();
       
@@ -187,10 +188,7 @@ WARNING
        return d_index;
      }
      inline IntVector getRefinementRatio() const {
-       return refinementRatio;
-     }
-     inline void setRefinementRatio(const IntVector& ratio) {
-       refinementRatio = ratio;
+       return d_refinementRatio;
      }
 
      //! Use this when you're done setting the delt, and this function
@@ -221,7 +219,7 @@ WARNING
       std::vector<Patch*> d_virtualAndRealPatches; // real and virtual
 
       int d_id;
-     IntVector refinementRatio;
+     IntVector d_refinementRatio;
      int d_timeRefinementRatio;
 #ifdef SELECT_GRID
       IntVector d_idxLow;
