@@ -19,7 +19,10 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Switch.tcl\
 	$(SRCDIR)/ImageReaderFloat2D.tcl\
 	$(SRCDIR)/ImageReaderFloat3D.tcl\
-	$(SRCDIR)/ThresholdSegmentationLevelSetImageFilter.tcl\
+#	$(SRCDIR)/BinaryThresholdImageFilter.tcl\
+#	$(SRCDIR)/ReflectImageFilter.tcl\
+#	$(SRCDIR)/GradientMagnitudeImageFilter.tcl\
+#	$(SRCDIR)/ThresholdSegmentationLevelSetImageFilter.tcl\
 #	$(SRCDIR)/DiscreteGaussianImageFilter.tcl\
 #	$(SRCDIR)/GradientAnisotropicDiffusionImageFilter.tcl\
 #	$(SRCDIR)/CannySegmentationLevelSetImageFilter.tcl\
