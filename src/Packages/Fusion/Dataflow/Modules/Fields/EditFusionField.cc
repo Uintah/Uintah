@@ -229,6 +229,8 @@ void EditFusionField::execute(){
 			     istart_, jstart_, kstart_,
 			     iend_, jend_, kend_,
 			     iskip_, jskip_, kskip_);
+
+    delete ci;
   }
 
   // Get a handle to the output field port.
