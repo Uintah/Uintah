@@ -23,21 +23,23 @@ extern "C" {
 #define ptolemy_scirun_SCIRunJNIActor_ATTRIBUTES 32L
 /* Inaccessible static: _DEFAULT_WORKSPACE */
 /* Inaccessible static: class_00024ptolemy_00024data_00024type_00024Typeable */
-/*
- * Class:     ptolemy_scirun_SCIRunJNIActor
- * Method:    scirunGetResults
- * Signature: ([Ljava/lang/String;)V
- */
-JNIEXPORT void JNICALL Java_ptolemy_scirun_SCIRunJNIActor_scirunGetResults
-  (JNIEnv *, jobject, jobjectArray);
-
+/* Inaccessible static: scirunStarted */
+/* Inaccessible static: class_00024ptolemy_00024scirun_00024SCIRunJNIActor */
 /*
  * Class:     ptolemy_scirun_SCIRunJNIActor
  * Method:    getScirun
- * Signature: ()I
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)I
  */
 JNIEXPORT jint JNICALL Java_ptolemy_scirun_SCIRunJNIActor_getScirun
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jstring, jstring, jstring, jint);
+
+/*
+ * Class:     ptolemy_scirun_SCIRunJNIActor
+ * Method:    sendSCIRunData
+ * Signature: (Lptolemy/scirun/SCIRunData;)I
+ */
+JNIEXPORT jint JNICALL Java_ptolemy_scirun_SCIRunJNIActor_sendSCIRunData
+  (JNIEnv *, jobject, jobject);
 
 #ifdef __cplusplus
 }

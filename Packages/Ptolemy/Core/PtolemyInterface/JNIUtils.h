@@ -7,17 +7,35 @@
 #include <jni.h>
 #include <string>
 
+#include <Core/Containers/Array2.h>
 #include <Core/Thread/Semaphore.h>
+#include <Dataflow/Network/Network.h>
+#include <Dataflow/Network/Module.h>
+#include <Packages/Ptolemy/Dataflow/Modules/Converters/PTIIDataToNrrd.h>
+#include <Packages/Ptolemy/Core/PtolemyInterface/PTIISCIRun.h>
 
-using SCIRun::Semaphore;
+using namespace SCIRun;
+using namespace Ptolemy;
 
-// Meyers Singleton pattern
 class JNIUtils {
 public:
+    // make sure this matches SCIRunData class
+    enum {
+        TYPE_MESH = 1,
+        TYPE_DOUBLE = 100,
+        TYPE_FLOAT,
+        TYPE_INT
+    } scirunData;
+
     static Semaphore& sem();
+    static Semaphore& dataSem();
     static JavaVM *cachedJVM;
+    static Network* cachedNet;
+    static std::string modName;
+
     static const int DEFAULT = 1;
 
+    static bool getSCIRunMesh(JNIEnv *env, jobject meshObj);
     static void setSCIRunStarted(JNIEnv *env, jobject obj);
 
     // from
@@ -51,7 +69,6 @@ private:
 
 // void JNICALL semUp_impl(JNIEnv *env, jobject self);
 // void JNICALL semDown_impl(JNIEnv *env, jobject self);
-
 
 extern JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *jvm, void *reserved);

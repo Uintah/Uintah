@@ -45,16 +45,14 @@ SRCS     += \
             $(SRCDIR)/JNIUtils.cc \
             $(SRCDIR)/PTIISCIRun.cc \
             $(SRCDIR)/ptolemy_scirun_SCIRunJNIActor.cc \
-	    $(SRCDIR)/pt_S_scirun.cc \
 #[INSERT NEW CODE FILE HERE]
-#$(SRCDIR)/PTIIJNIUtil.cc \
 
 ifeq ($(LARGESOS),yes)
     PSELIBS := Dataflow Core
 else
     PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
                Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-               Core/Malloc Core/Services Dataflow/XMLUtil Core/SystemCall
+               Core/Malloc Core/Services Dataflow/XMLUtil Core/SystemCall Packages/Ptolemy/Dataflow/Modules/Converters
   ifeq ($(OS_NAME),Darwin)
       PSELIBS += Core/Datatypes Core/ImportExport
   endif

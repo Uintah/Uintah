@@ -118,6 +118,8 @@ void StartSCIRun::run()
     packageDB = new PackageDB(gui);
     //packageDB = new PackageDB(0);
     Network* net=new Network();
+    JNIUtils::cachedNet = net;
+
     Scheduler* sched_task=new Scheduler(net);
     new NetworkEditor(net, gui);
 
@@ -152,7 +154,7 @@ void StartSCIRun::run()
 	
 	Module* mod;
 	//string command = "loadnet {/scratch/SCIRun/test.net}";
-	if(netName != ""){
+	if (runNet != 0 && netName != "") {
 		gui->eval("loadnet {" + netName + "}");
 		if(dataPath != "" && readerName != ""){
 			
@@ -179,7 +181,7 @@ void StartSCIRun::run()
 
 	
 	//should just have a general run network here.
-	if(runNet==1 && readerName != ""){
+	if(runNet == 1 && readerName != ""){
 		mod->want_to_execute();  //tell the first module that it wants to execute
 	}
 	
@@ -200,29 +202,16 @@ void StartSCIRun::run()
 }
 
 
-void PTIIWorker::run()
+void AddModule::run()
 {
     JNIUtils::sem().down();
-}
-
-//add network
-AddNet::AddNet(){
+    std::cerr << "AddModule::run: " << command << std::endl;
 	
-    command = "loadnet {/scratch/SCIRun/test.net}";
-	
-	//command called in main to load a network from the command line
-	//gui->eval("loadnet {"+string(argv[startnetno])+"}");
-	
-}
-
-
-void AddNet::run()
-{
-    JNIUtils::sem().down();
-    std::cerr << "AddNet::run: " << command << std::endl;
-    //gui->eval(command);
-	
-	std::cerr << "AddNet flag set" << std::endl;
     JNIUtils::sem().up();
 }
 
+void SignalExecuteReady::run()
+{
+    //converterMod->sendJNIData(np, nc, pDim, cDim, *p, *c);
+    JNIUtils::dataSem().up();
+}

@@ -2,11 +2,19 @@
 
 #include <Packages/Ptolemy/Core/PtolemyInterface/JNIUtils.h>
 #include <Core/Util/Assert.h>
+#include <Dataflow/Network/Network.h>
+#include <Core/Thread/Thread.h>
 
 #include <iostream>
 
+
+// All static variables must be explicitly initialized
+// otherwise the Java native library loader will complain.
 JavaVM* JNIUtils::cachedJVM = 0;
+Network* JNIUtils::cachedNet = 0;
+std::string JNIUtils::modName;
 // static jweak Class_C = 0;
+
 
 JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *jvm, void *reserved)
@@ -14,13 +22,14 @@ JNI_OnLoad(JavaVM *jvm, void *reserved)
 std::cerr << "JNI_OnLoad" << std::endl;
      JNIEnv *env;
      JNIUtils::cachedJVM = jvm;  // cache the JavaVM pointer
-printf("jvm=%#x\n", (unsigned int) JNIUtils::cachedJVM);
+     //printf("jvm=%#x\n", (unsigned int) JNIUtils::cachedJVM);
  
      if (jvm->GetEnv((void **)&env, JNI_VERSION_1_4) != JNI_OK) {
         // check for 1.2?  We probably shouldn't bother with anything
         // older than that.
          return JNI_ERR; // JNI version not supported
      }
+#if 0
 //      jclass cls;
 //      cls = env->FindClass("ptolemy/scirun/SCIRunJNIActor");
 //      if (cls == NULL) {
@@ -46,7 +55,6 @@ printf("jvm=%#x\n", (unsigned int) JNIUtils::cachedJVM);
 
 //     env->RegisterNatives(cls, (const JNINativeMethod*) &nm, 2);
 
-#if 0
 //      /* Compute and cache the method ID */
 //      MID_C_g = (*env)->GetMethodID(env, cls, "g", "()V");
 //      if (MID_C_g == NULL) {
@@ -69,6 +77,107 @@ printf("jvm=%#x\n", (unsigned int) JNIUtils::cachedJVM);
 //      return;
 // }
 #endif
+
+bool
+JNIUtils::getSCIRunMesh(JNIEnv *env, jobject meshObj)
+{
+    std::cerr << "JNIUtils::getSCIRunMesh" << std::endl;
+    jfieldID fidPts, fidConn;
+    jobjectArray pts, conn;
+
+    jclass cls = env->GetObjectClass(meshObj);
+
+    jfieldID fidPtsNum = env->GetFieldID(cls, "connecNum", "I");
+    ASSERT(fidPtsNum);
+    jint ptsNum = env->GetIntField(meshObj, fidPtsNum);
+    jfieldID fidPtsDim = env->GetFieldID(cls, "ptsDim", "I");
+    ASSERT(fidPtsDim);
+    jint ptsDim = env->GetIntField(meshObj, fidPtsDim);
+
+    jfieldID fidConnNum = env->GetFieldID(cls, "connecNum", "I");
+    ASSERT(fidConnNum);
+    jint connNum = env->GetIntField(meshObj, fidConnNum);
+    jfieldID fidConnDim = env->GetFieldID(cls, "connecDim", "I");
+    ASSERT(fidConnDim);
+    jint connDim = env->GetIntField(meshObj, fidConnDim);
+
+    jfieldID fidType = env->GetFieldID(cls, "type", "I");
+    // error check
+    ASSERT(fidType);
+    jint type = env->GetIntField(meshObj, fidType);
+
+	Module* mod = cachedNet->get_module_by_id(JNIUtils::modName);
+    ASSERT(mod);
+//     if (mod == 0) {
+//         // hardcode for now - should parse from module name!
+//         // WARNING: not supported yet!
+//         mod = cachedNet->add_module("Ptolemy", "Converters", "PTIIDataToNrrd");
+//     }
+    PTIIDataToNrrd* converterMod = dynamic_cast<PTIIDataToNrrd*>(mod);
+    ASSERT(converterMod);
+
+    if (type == JNIUtils::TYPE_DOUBLE) {
+        Array2<double> points(ptsNum, ptsDim);
+        Array2<double> connections(connNum, connDim);
+        fidPts = env->GetFieldID(cls, "pts", "[[D");
+        ASSERT(fidPts);
+
+        // 2D array of doubles: ptsNum x ptsDim
+        jobjectArray localPts = (jobjectArray) env->GetObjectField(meshObj, fidPts); 
+        ASSERT(localPts);
+        pts = (jobjectArray) env->NewGlobalRef((jobject) localPts);
+        ASSERT(pts);
+        for (int i = 0; i < ptsNum; i++) {
+            jdoubleArray dArr = (jdoubleArray) env->GetObjectArrayElement(pts, i);
+            ASSERT(dArr);
+            double *d = new double[ptsDim];
+            env->GetDoubleArrayRegion(dArr, 0, ptsDim, d);
+            for (int j = 0; j < ptsDim; j++) {
+                points(i, j) = d[j];
+                //std::cerr << "points("<< i << ", " << j << ")=" << points(i, j) << std::endl;
+            }
+            delete [] d;
+        }
+
+        fidConn = env->GetFieldID(cls, "connections", "[[D");
+        ASSERT(fidConn);
+
+        // 2D array of doubles: connNum x connDim            
+        jobjectArray localConn = (jobjectArray) env->GetObjectField(meshObj, fidConn); 
+        ASSERT(localConn);
+        conn = (jobjectArray) env->NewGlobalRef(localConn);
+        ASSERT(conn);
+        for (int i = 0; i < connNum; i++) {
+            jdoubleArray dArr = (jdoubleArray) env->GetObjectArrayElement(conn, i);
+            ASSERT(dArr);
+            double *d = new double[connDim];
+            env->GetDoubleArrayRegion(dArr, 0, connDim, d);
+            for (int j = 0; j < connDim; j++) {
+                connections(i, j) = d[j];
+                //std::cerr << "connections("<< i << ", " << j << ")=" << connections(i, j) << std::endl;
+            }
+            delete [] d;
+        }
+
+        converterMod->sendJNIData(ptsNum, connNum, ptsDim, connDim, points, connections);
+
+        SignalExecuteReady *dataThread = new SignalExecuteReady();
+        Thread *t = new Thread(dataThread, "send Ptolemy data", 0, Thread::NotActivated);
+        t->setStackSize(1024*1024);
+        t->activate(false);
+        t->join();
+
+
+        env->DeleteGlobalRef(pts);
+        env->DeleteGlobalRef(conn);
+    } else {
+        // throw Java exception by name?
+        std::cerr << "Unsupported data type" << std::endl;
+        return false;
+    }
+    return true;
+}
+
 
 void
 JNIUtils::setSCIRunStarted(JNIEnv *env, jobject obj)
@@ -152,7 +261,7 @@ JNIUtils::GetStringNativeChars(JNIEnv *env, jstring jstr)
 
 JNIEnv* JNIUtils::GetEnv()
 {
-printf("JNIUtils::GetEnv jvm=%#x\n", (unsigned int) JNIUtils::cachedJVM);
+    //printf("JNIUtils::GetEnv jvm=%#x\n", (unsigned int) JNIUtils::cachedJVM);
     JNIEnv *env;
 
     if (JNIUtils::cachedJVM->GetEnv((void **)&env, JNI_VERSION_1_4) != JNI_OK) {
@@ -186,16 +295,8 @@ Semaphore& JNIUtils::sem()
     return sem_;
 }
 
-// void JNICALL semUp_impl(JNIEnv *env, jobject obj)
-// {
-// std::cerr << "void JNICALL semUp_impl" << std::endl;
-//     // try to do semaphore stuff from JNI
-//     JNIUtils::sem().up();
-// }
-
-// void JNICALL semDown_impl(JNIEnv *env, jobject obj)
-// {
-// std::cerr << "void JNICALL semDown_impl" << std::endl;
-//     // try to do semaphore stuff from JNI
-//     JNIUtils::sem().down();
-// }
+Semaphore& JNIUtils::dataSem()
+{
+    static Semaphore sem_("data semaphore", 0);
+    return sem_;
+}
