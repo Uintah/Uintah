@@ -28,7 +28,7 @@ if { $results == "failed" } {
     set DATASET [lindex $results 1]
 }
 
-source $DATADIR/$DATASET/$DATASET.settings
+source $DATADIR/brain-eg/brain-eg.settings
 
 ::netedit dontschedule
 
@@ -56,7 +56,7 @@ set $m0-notes {}
 set $m0-show_status {1}
 set $m1-notes {}
 set $m1-show_status {1}
-set $m1-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+set $m1-filename $DATADIR/brain-eg/brain-eg-mesh.tvt.fld
 set $m2-notes {}
 set $m2-show_status {1}
 set $m2-nodes-on {1}

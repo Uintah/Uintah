@@ -1,0 +1,20 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 101 165]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 64 60]
+
+addConnection $m1 0 $m0 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-filename {/scratch/callahan/SCIRunData/sphere/sphere-voltage.tvd.fld}
+$m0 initialize_ui
+
+::netedit scheduleok
