@@ -23,7 +23,7 @@ Finish and FIX:
       Bounding box interactions
       Axis objects
       Camera objects
-      Light source objects
+      Light source objects - Finish
       Light source editor
       Fix camera editor popup - use thumbwheels???
       Orthographic projections
@@ -108,7 +108,7 @@ TCL/TK:
 
 Modules that need work:
    ApplyBC - implement
-   BuildFEMatrix - implement
+   BuildFEMatrix - optimize, UI, finish
    CrossFader - UI
    GenSurface - UI/finish
    GenerateMesh - implement
