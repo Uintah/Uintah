@@ -45,7 +45,7 @@ SUBDIRS := \
 #	$(SRCDIR)/Parts \
 #	$(SRCDIR)/PartsGui
 
-ifeq ($(BUILD_PARALLEL),yes)
+ifeq ($(BUILD_SCIRUN2),yes)
 SUBDIRS := \
 	$(SUBDIRS) \
 	$(SRCDIR)/globus_threads \
