@@ -90,7 +90,7 @@ struct PointCloudMeshCell {
 };
 
 
-class SCICORESHARE PointCloudMesh : public Mesh
+class PointCloudMesh : public Mesh
 {
 public:
 

@@ -66,7 +66,7 @@ namespace SCIRun {
 
 using std::string;
 
-class SCICORESHARE StructCurveMesh : public ScanlineMesh
+class StructCurveMesh : public ScanlineMesh
 {
 public:
   StructCurveMesh() {}

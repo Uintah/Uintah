@@ -43,14 +43,12 @@
 #ifndef SCI_project_Color_h
 #define SCI_project_Color_h 1
 
-#include <Core/share/share.h>
-
 namespace SCIRun {
   class Piostream;
 
 class HSVColor;
 
-class SCICORESHARE Color {
+class Color {
 protected:
     double _r, _g, _b;
 public:
@@ -107,12 +105,12 @@ public:
       }
     }
 
-    friend SCICORESHARE void Pio( Piostream&, Color& );
+    friend void Pio( Piostream&, Color& );
 
     friend class HSVColor;
 };
 
-class SCICORESHARE Colorub { // unsigned byte color
+class Colorub { // unsigned byte color
   unsigned char data[3]; // data...
 public:
   Colorub() {};
@@ -131,7 +129,7 @@ public:
   // should be enough for now - this is less bandwidth...
 };
 
-class SCICORESHARE HSVColor {
+class HSVColor {
     double _hue;
     double _sat;
     double _val;
@@ -168,7 +166,7 @@ public:
   This structure holds a simple RGB color in char format.
 *********************************************************/
 
-class SCICORESHARE CharColor {
+class CharColor {
 public:
   char red;
   char green;
@@ -188,7 +186,7 @@ public:
 
   int operator!= ( const CharColor& ) const;
 
-  friend SCICORESHARE void Pio( Piostream&, CharColor& );
+  friend void Pio( Piostream&, CharColor& );
 };
 
 } // End namespace SCIRun

@@ -85,7 +85,7 @@ struct ScanlineMeshCell {
 };
 
 
-class SCICORESHARE ScanlineMesh : public Mesh
+class ScanlineMesh : public Mesh
 {
 public:
 

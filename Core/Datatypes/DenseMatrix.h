@@ -43,8 +43,6 @@
 #ifndef SCI_project_DenseMatrix_h
 #define SCI_project_DenseMatrix_h 1
 
-#include <Core/share/share.h>
-
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Math/MiscMath.h>
@@ -59,7 +57,7 @@ using std::vector;
 class ColumnMatrix;
 class SparseRowMatrix;
 
-class SCICORESHARE DenseMatrix : public Matrix {
+class DenseMatrix : public Matrix {
   //!private data
   int nc;
   int nr;
@@ -154,13 +152,13 @@ public:
   void eigenvectors(ColumnMatrix&, ColumnMatrix&, DenseMatrix&);
 
   //! Friend functions
-  friend SCICORESHARE void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-  friend SCICORESHARE void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-  friend SCICORESHARE void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-  friend SCICORESHARE void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
-  friend SCICORESHARE void Add(double, DenseMatrix&, double, const DenseMatrix&);
-  friend SCICORESHARE void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-  friend SCICORESHARE void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+  friend void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+  friend void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+  friend void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+  friend void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
+  friend void Add(double, DenseMatrix&, double, const DenseMatrix&);
+  friend void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+  friend void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 };
 
 } // End namespace SCIRun

@@ -207,7 +207,7 @@ struct ImageMeshCell {
 };
 
 
-class SCICORESHARE ImageMesh : public Mesh
+class ImageMesh : public Mesh
 {
 public:
 

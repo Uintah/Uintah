@@ -72,7 +72,7 @@ namespace SCIRun {
 
 using std::string;
 
-class SCICORESHARE StructHexVolMesh : public LatVolMesh
+class StructHexVolMesh : public LatVolMesh
 {
 public:
 

@@ -192,7 +192,7 @@ private:
 
 
 
-class SCICORESHARE QuadraticLatVolMesh : public LatVolMesh
+class QuadraticLatVolMesh : public LatVolMesh
 {
 public:
 

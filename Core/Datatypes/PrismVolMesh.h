@@ -107,7 +107,7 @@ struct PrismVolMeshCell {
 };
 
 
-class SCICORESHARE PrismVolMesh : public Mesh
+class PrismVolMesh : public Mesh
 {
 public:
 

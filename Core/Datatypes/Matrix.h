@@ -50,6 +50,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
+#include <Core/Datatypes/share.h>
 
 namespace SCIRun {
 using namespace std;
@@ -62,7 +63,7 @@ class Matrix;
 class MatrixRow;
 typedef LockingHandle<Matrix> MatrixHandle;
 
-class SCICORESHARE Matrix : public PropertyManager
+class SHARE Matrix : public PropertyManager
 {
 public:
   Matrix() : separate_raw_(false), raw_filename_("") {}
@@ -99,8 +100,8 @@ public:
   virtual void    put(int r, int c, double val) = 0;
   inline MatrixRow operator[](int r);
 
-  //friend SCICORESHARE Matrix *Add(Matrix *, Matrix *);
-  //friend SCICORESHARE Matrix *Mult(Matrix *, Matrix *);
+  //friend Matrix *Add(Matrix *, Matrix *);
+  //friend Matrix *Mult(Matrix *, Matrix *);
 
   virtual string type_name() { return "Matrix"; }
 
@@ -166,7 +167,7 @@ protected:
 };
 
 
-class SCICORESHARE MatrixRow
+class MatrixRow
 {
   Matrix* matrix;
   int row;
