@@ -135,7 +135,7 @@ OnDemandDataWarehouse::put(Variable* var, const VarLabel* label,
 
    if ((castVar.reduction = dynamic_cast<ReductionVariableBase*>(var))
        != NULL)
-      put(*castVar.reduction, label, patch->getLevel(), matlIndex);
+      put(*castVar.reduction, label, patch?patch->getLevel():0, matlIndex);
    else if ((castVar.particle = dynamic_cast<ParticleVariableBase*>(var))
 	    != NULL)
       put(*castVar.particle, label);
