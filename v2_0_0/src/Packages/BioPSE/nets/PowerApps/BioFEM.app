@@ -249,7 +249,7 @@ class BioFEMApp {
 	set viewer_width 640
 	set viewer_height 670
 	
-	set vis_width [expr $notebook_width + 40]
+	set vis_width [expr $notebook_width + 60]
 	set vis_height $viewer_height
 
         set initialized 0
