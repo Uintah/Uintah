@@ -94,7 +94,12 @@ WARNING
 			    ParticleSubset*) = 0;
       virtual void get(ParticleVariableBase&, const VarLabel*,
 		       ParticleSubset*) = 0;
-      virtual void put(const ParticleVariableBase&, const VarLabel*) = 0;
+      virtual void put(const ParticleVariableBase&, const VarLabel*,
+		       bool replace = false) = 0;
+      inline void modify(const ParticleVariableBase& var,
+			 const VarLabel* label)
+      { put(var, label, true); }
+     
       virtual ParticleVariableBase* getParticleVariable(const VarLabel*,
 							ParticleSubset*) = 0;
       
@@ -105,7 +110,10 @@ WARNING
       virtual void get(NCVariableBase&, const VarLabel*, int matlIndex,
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void put(const NCVariableBase&, const VarLabel*,
-		       int matlIndex, const Patch*) = 0;
+		       int matlIndex, const Patch*, bool replace = false) = 0;
+      inline void modify(const NCVariableBase& var, const VarLabel* label,
+		       int matlIndex, const Patch* patch)
+      { put(var, label, matlIndex, patch, true); }
       
       // Cell Centered (CC) Variables
       virtual void allocate(CCVariableBase&, const VarLabel*,
@@ -114,7 +122,10 @@ WARNING
       virtual void get(CCVariableBase&, const VarLabel*, int matlIndex,
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void put(const CCVariableBase&, const VarLabel*,
-		       int matlIndex, const Patch*) = 0;
+		       int matlIndex, const Patch*, bool replace = false) = 0;
+      inline void modify(const CCVariableBase& var, const VarLabel* label,
+			  int matlIndex, const Patch* patch)
+      { put(var, label, matlIndex, patch, true); }
 
       // Staggered Variables in all three directions (SFCX, SFCY, SFCZ)
       virtual void allocate(SFCXVariableBase&, const VarLabel*,
@@ -122,27 +133,39 @@ WARNING
       virtual void get(SFCXVariableBase&, const VarLabel*, int matlIndex,
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void put(const SFCXVariableBase&, const VarLabel*,
-		       int matlIndex, const Patch*) = 0;
+		       int matlIndex, const Patch*, bool replace = false) = 0;
+      inline void modify(const SFCXVariableBase& var, const VarLabel* label,
+			  int matlIndex, const Patch* patch)
+      { put(var, label, matlIndex, patch, true); }
 
       virtual void allocate(SFCYVariableBase&, const VarLabel*,
 			    int matlIndex, const Patch*) = 0;
       virtual void get(SFCYVariableBase&, const VarLabel*, int matlIndex,
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void put(const SFCYVariableBase&, const VarLabel*,
-		       int matlIndex, const Patch*) = 0;
+		       int matlIndex, const Patch*, bool replace = false) = 0;
+      inline void modify(const SFCYVariableBase& var, const VarLabel* label,
+			 int matlIndex, const Patch* patch)
+      { put(var, label, matlIndex, patch, true); }
 
       virtual void allocate(SFCZVariableBase&, const VarLabel*,
 			    int matlIndex, const Patch*) = 0;
       virtual void get(SFCZVariableBase&, const VarLabel*, int matlIndex,
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void put(const SFCZVariableBase&, const VarLabel*,
-		       int matlIndex, const Patch*) = 0;
+		       int matlIndex, const Patch*, bool replace = false) = 0;
+      inline void modify(const SFCZVariableBase& var, const VarLabel* label,
+			  int matlIndex, const Patch* patch)
+      { put(var, label, matlIndex, patch, true); }
 
       // PerPatch Variables
       virtual void get(PerPatchBase&, const VarLabel*,
 				int matlIndex, const Patch*) = 0;
       virtual void put(const PerPatchBase&, const VarLabel*,
-				int matlIndex, const Patch*) = 0;
+		       int matlIndex, const Patch*, bool replace = false) = 0;
+      inline void modify(const PerPatchBase& var, const VarLabel* label,
+			  int matlIndex, const Patch* patch)
+      { put(var, label, matlIndex, patch, true); }
      
       // Remove particles that are no longer relevant
       virtual void deleteParticles(ParticleSubset* delset) = 0;
