@@ -87,10 +87,11 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebug_PressFC             = false;
   switchDebugLagrangianValues     = false;
   switchDebugLagrangianSpecificVol= false;
-  switchDebugMomentumExchange_CC  = false;
-  switchDebugSource_Sink          = false;
-  switchDebug_advance_advect      = false;
-  switchTestConservation          = false;
+  switchDebugLagrangianTransportedVars = false;
+  switchDebugMomentumExchange_CC       = false; 
+  switchDebugSource_Sink               = false; 
+  switchDebug_advance_advect           = false; 
+  switchTestConservation               = false; 
 
   d_RateForm          = false;
   d_EqForm            = false; 
@@ -3740,7 +3741,7 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
     // get mass_L for all ice matls
     StaticArray<constCCVariable<double> > mass_L(numMatls);
     for (int m = 0; m < numMatls; m++ ) {
-      Material* matl = d_sharedState->getMaterial( m );
+      Material* matl = d_sharedState->getICEMaterial( m );
       int indx = matl->getDWIndex();
       new_dw->get(mass_L[m], lb->mass_L_CCLabel,indx, patch,gn,0);
     }
@@ -3753,11 +3754,10 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
       TransportedVariable* tvar = *t_iter;
       
       for (int m = 0; m < numMatls; m++ ) {
-        Material* matl = d_sharedState->getMaterial( m );
+        Material* matl = d_sharedState->getICEMaterial( m );
         int indx = matl->getDWIndex();
        
         if(tvar->matls->contains(indx)){  
-         
           constCCVariable<double> q_old,q_src;
           CCVariable<double> q_L_CC;
           old_dw->get(q_old,             tvar->var, indx, patch, gn, 0);
@@ -3766,7 +3766,7 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
           // initialize q_L to q_old
           q_L_CC.copyData(q_old);
 
-           // If there's a source tack it on.     
+          // If there's a source tack it on.     
           if(tvar->src){
             new_dw->get(q_src,  tvar->src, indx, patch, gn, 0);
             for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
@@ -3783,6 +3783,19 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
             IntVector c = *iter;                            
             q_L_CC[c] *= mass_L[m][c];
           }
+          
+          //---- P R I N T   D A T A ------
+          if (switchDebugLagrangianTransportedVars ) {
+            ostringstream desc;
+            desc <<"BOT_LagrangianTransVars_BC_Mat_" <<indx<<"_patch_" 
+                 <<patch->getID();
+            printData(  indx, patch,1, desc.str(), tvar->var->getName(), q_old);
+            if(tvar->src){
+              printData(indx, patch,1, desc.str(), tvar->src->getName(), q_src);
+            }
+            printData(  indx, patch,1, desc.str(), Labelname, q_L_CC); 
+          }   
+             
         }  // tvar matl
       }  // ice matl loop
     }  // tvar loop
@@ -4620,7 +4633,17 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
                   
             //  Set Boundary Conditions 
             string Labelname = tvar->var->getName();
-            setBC(q_CC, Labelname,  patch, d_sharedState, indx, new_dw);            
+            setBC(q_CC, Labelname,  patch, d_sharedState, indx, new_dw);  
+            
+            //---- P R I N T   D A T A ------   
+            if (switchDebug_advance_advect ) {
+              ostringstream desc;
+              desc <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"
+                   <<patch->getID();
+              string Lag_labelName = tvar->var_Lagrangian->getName();
+              printData(indx, patch,1, desc.str(), Lag_labelName, q_L_CC);
+              printData(indx, patch,1, desc.str(), Labelname,     q_CC);
+            }    
           }
         }
       } 
