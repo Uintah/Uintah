@@ -398,9 +398,9 @@ class BioImageApp {
                 set ww [expr int([expr abs([expr $val_max-$val_min])])]
                 set wl [expr [expr int($ww/2)]]
 
-		set $mods(ViewSlices)-sagittal-viewport0-axis 0
-		set $mods(ViewSlices)-coronal-viewport0-axis 1
-		set $mods(ViewSlices)-axial-viewport0-axis 2
+		setGlobal $mods(ViewSlices)-sagittal-viewport0-axis 0
+		setGlobal $mods(ViewSlices)-coronal-viewport0-axis 1
+		setGlobal $mods(ViewSlices)-axial-viewport0-axis 2
 
 
 		set $mods(ViewSlices)-axial-viewport0-clut_ww $ww
@@ -872,6 +872,12 @@ class BioImageApp {
 	    pack $slice_frame($axis).bd.$axis -expand 1 -fill both \
 		-side top -padx 0 -ipadx 0 -pady 0 -ipady 0
 	}
+
+	setGlobal $mods(ViewSlices)-sagittal-viewport0-axis 0
+	setGlobal $mods(ViewSlices)-coronal-viewport0-axis 1
+	setGlobal $mods(ViewSlices)-axial-viewport0-axis 2
+	
+
 
 	# embed viewer in top left
 	global mods
@@ -2574,6 +2580,14 @@ class BioImageApp {
 	pack $page.buttons.paint $page.buttons.undo -side left \
            -fill x -padx 10 -pady 3 -expand 1
         pack $page.buttons -side top -expand 0 -padx 0 -fill x -pady 3
+
+	set f $page.applyColormap2D
+	frame $f -bd 0
+	checkbutton $f.button -text "Show Transfer Function in 2D" \
+	    -variable "$mods(ViewSlices)-show_colormap2" \
+            -command "$mods(ViewSlices)-c needexecute"
+	pack $f.button -side left
+	pack $f -fill x -side top
 
         $mods(EditColorMap2D) label_widget_columns $page.widgets_label
         pack $page.widgets_label -side top -fill x -padx 2
