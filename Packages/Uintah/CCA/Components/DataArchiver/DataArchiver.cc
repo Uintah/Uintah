@@ -309,7 +309,9 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
       copyDatFiles(restartFromDir, d_dir, startTimestep,
 		   timestep, removeOldDir);
 
-      copySection(restartFromDir, "restarts");
+      copySection(restartFromDir, d_dir, "restarts");
+      copySection(restartFromDir, d_dir, "variables");
+      copySection(restartFromDir, d_dir, "globals");
 
       // partial copy of index.xml and timestep directories and
       // similarly for checkpoints
@@ -319,12 +321,14 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
       bool areCheckpoints = true;
       copyTimesteps(checkpointsFromDir, d_checkpointsDir, startTimestep,
 		    timestep, removeOldDir, areCheckpoints);
+      copySection(checkpointsFromDir, d_checkpointsDir, "variables");
+      copySection(checkpointsFromDir, d_checkpointsDir, "globals");
       if (removeOldDir)
 	 restartFromDir.forceRemove();
    }
    else if (d_writeMeta) {
      // just add <restart from = ".." timestep = ".."> tag.
-     copySection(restartFromDir, "restarts");
+     copySection(restartFromDir, d_dir, "restarts");
      string iname = d_dir.getName()+"/index.xml";
      DOM_Document indexDoc = loadDocument(iname);
      if (timestep >= 0)
@@ -348,12 +352,12 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
       d_nextCheckpointTimestep = d_currentTimestep + d_checkpointTimestepInterval;
 }
 
-void DataArchiver::copySection(Dir& fromDir, string section)
+void DataArchiver::copySection(Dir& fromDir, Dir& toDir, string section)
 {
   string iname = fromDir.getName()+"/index.xml";
   DOM_Document indexDoc = loadDocument(iname);
 
-  iname = d_dir.getName()+"/index.xml";
+  iname = toDir.getName()+"/index.xml";
   DOM_Document myIndexDoc = loadDocument(iname);
   
   DOM_Node sectionNode = findNode(section, indexDoc.getDocumentElement());
@@ -729,7 +733,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 	LevelP level = grid->getLevel(l);
 	DOM_Element levelElem = doc.createElement("Level");
 	gridElem.appendChild(levelElem);
-	
+
 	appendElement(levelElem, "numPatches", level->numPatches());
 	appendElement(levelElem, "totalCells", level->totalCells());
 	appendElement(levelElem, "cellspacing", level->dCell());
