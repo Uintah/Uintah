@@ -174,7 +174,7 @@ void GeometryOPort::forward(GeometryComm* msg)
 void GeometryOPort::delObj(GeomID id, int del)
 {
     if (module->showStats()) turn_on();
-    GeometryComm* msg=scinew GeometryComm(portid, id, del);
+    GeometryComm* msg=scinew GeometryComm(portid, id);
     if(outbox)
 	outbox->send(msg);
     else
@@ -317,11 +317,10 @@ GeometryComm::GeometryComm(int portno, GeomID serial, GeomHandle obj,
 {
 }
 
-GeometryComm::GeometryComm(int portno, GeomID serial, int del)
+GeometryComm::GeometryComm(int portno, GeomID serial)
   : MessageBase(MessageTypes::GeometryDelObj),
     portno(portno),
-    serial(serial),
-    del(del)
+    serial(serial)
 {
 }
 
@@ -366,6 +365,7 @@ GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
     nreply(nreply)
 {
 }
+
 
 GeometryComm::~GeometryComm()
 {
