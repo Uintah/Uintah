@@ -108,6 +108,7 @@ namespace Uintah {
 
       const VarLabel* void_frac_CCLabel;
       const VarLabel* void_frac_old_CCLabel;
+      const VarLabel* solid_frac_sum_CCLabel;
 
       // Stability Factor Labels
       
@@ -180,6 +181,7 @@ namespace Uintah {
       const VarLabel* d_normal1Label;
       const VarLabel* d_normal2Label;
       const VarLabel* d_normal3Label;
+      const VarLabel* d_normalLabel;
       const VarLabel* d_centroid1Label;
       const VarLabel* d_centroid2Label;
       const VarLabel* d_centroid3Label;

@@ -62,7 +62,7 @@ class MPMArches : public UintahParallelComponent, public SimulationInterface {
 public:
   MPMArches(const ProcessorGroup* myworld);
   virtual ~MPMArches();
-	 
+
   // Read inputs from ups file for MPMArches case
   virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
 			    SimulationStateP&);
@@ -74,6 +74,10 @@ public:
   virtual void scheduleInitializeKStability(SchedulerP& sched,
 					    const PatchSet* patches,
 					    const MaterialSet* arches_matls);
+
+  virtual void scheduleInitializeCutCells(SchedulerP& sched,
+					  const PatchSet* patches,
+					  const MaterialSet* arches_matls);
 
   // Interpolate particle information from particles to grid
   // for the initial condition
@@ -88,6 +92,11 @@ public:
   //////////
   virtual void scheduleTimeAdvance( const LevelP& level, 
 				    SchedulerP&, int step, int nsteps );
+
+  // Copy cut cell information from time step to next time step
+  void scheduleCopyCutCells(SchedulerP& sched,
+			    const PatchSet* patches,
+			    const MaterialSet* arches_matls);
 
   // Interpolate Particle variables from Nodes to cell centers
   void scheduleInterpolateNCToCC(SchedulerP&,
@@ -163,11 +172,23 @@ public:
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw);
 
+    void initializeCutCells(const ProcessorGroup*,
+			    const PatchSubset* patches,
+			    const MaterialSubset* arches_matls,
+			    DataWarehouse* old_dw,
+			    DataWarehouse* new_dw);
+
     void interpolateParticlesToGrid(const ProcessorGroup*,
 				  const PatchSubset* patches,
 				  const MaterialSubset* ,
 				  DataWarehouse* old_dw,
 				  DataWarehouse* new_dw);
+
+  void copyCutCells(const ProcessorGroup*,
+		    const PatchSubset* patches,
+		    const MaterialSubset*,
+		    DataWarehouse* old_dw,
+		    DataWarehouse* new_dw);
 
   void interpolateNCToCC(const ProcessorGroup*,
 			 const PatchSubset* patches,
@@ -288,6 +309,11 @@ public:
   bool d_inviscid;
   bool d_restart;
   bool fixCellType;
+  bool d_fixTemp;
+  bool d_ifTestingCutCells;
+  bool calcVolFracMPM;
+  bool calcVel;
+  bool d_stairstep;
 
   enum CENTROID {CENX=1, CENY, CENZ};    
   enum SURFNORM {NORMX=4, NORMY, NORMZ};
