@@ -44,6 +44,7 @@
 #include <Core/Datatypes/builtin.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TypeName.h>
+#include <Core/Datatypes/MeshTypes.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/PersistentSTL.h>
