@@ -176,17 +176,15 @@ DEALINGS IN THE SOFTWARE.
   </para>
 
   <para>
-    Read  <citetitle pubwork="section"><xref linkend="sec.prepare"
-    /></citetitle> after
+    Read  <xref linkend="sec.prepare"
+    /> after
     installing &sr;.
   </para>
 
-  <para>Proceed to <citetitle
-  pubwork="section"><xref linkend="sec.rpminst"
-  /></citetitle> if installing &sr; from an
-  <acronym>RPM</acronym>.  Otherwise, start with <citetitle
-  pubwork="section"><xref linkend="sec.source_inst"
-  /></citetitle> to install &sr; from 
+  <para>Proceed to <xref linkend="sec.rpminst"
+  /> if installing &sr; from an
+  <acronym>RPM</acronym>.  Otherwise, start with <xref linkend="sec.source_inst"
+  /> to install &sr; from 
   source code.</para>
 
   <section id="intro.nvidia_notes">

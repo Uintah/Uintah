@@ -38,19 +38,19 @@ Before starting &sr;, the following must be done:
 <itemizedlist>
 <listitem>
 <para>On &osx; the limit on open files must be increased (See
- <citetitle><link linkend="sec.prepare.limits"
-/></citetitle>)</para>
+ <link linkend="sec.prepare.limits"
+/>)</para>
 </listitem>
 <listitem>
 <para>Understand <firstterm>dynamic compilation</firstterm> (See
- <citetitle><link linkend="sec.dyncomp"
-/></citetitle>)</para>
+ <link linkend="sec.dyncomp"
+/>)</para>
 </listitem>
 <listitem>
 <para>Environment variables <envar>SCIRUN_DATA</envar>, and
 <envar>SCIRUN_DATASET</envar> should be initialized (See
- <citetitle><link linkend="sec.prepare.datasets"
-/></citetitle>)</para>
+ <link linkend="sec.prepare.datasets"
+/>)</para>
 </listitem>
 </itemizedlist>
 The following sections discuss each of these tasks.

@@ -82,9 +82,8 @@ DEALINGS IN THE SOFTWARE.
 	      and <ulink
 	      url="http://www.netlib.org/lapack/"><acronym>LAPACK</acronym></ulink>
 	      libraries must be installed on SGI and Linux before
-	      installing <acronym>PETSc</acronym>.  See <citetitle
-	      pubwork="section"><xref 
-	      linkend="sec.blas_lapack_inst"/></citetitle> for <ulink
+	      installing <acronym>PETSc</acronym>.  See <xref 
+	      linkend="sec.blas_lapack_inst"/> for <ulink
 	      url="http://www.netlib.org/blas/"><acronym>BLAS</acronym></ulink>
 	      and <ulink
 	      url="http://www.netlib.org/lapack/"><acronym>LAPACK</acronym></ulink>
@@ -96,9 +95,9 @@ DEALINGS IN THE SOFTWARE.
 	  <listitem>
 	    <para>
 	      <acronym>PETSc</acronym> must be installed before
-	      installing &sr;. See <citetitle pubwork="section"><xref
+	      installing &sr;. See <xref
 	      
-	      linkend="sec.petsc_inst"/></citetitle> for
+	      linkend="sec.petsc_inst"/> for
 	      <acronym>PETSc</acronym> installation instructions.
 	    </para>
 	  </listitem>
@@ -229,9 +228,8 @@ make test
 
     <para>The configure options below add support for PETSc
     in &sr;.  Include these options in the &sr;
-    <command>configure</command> command (see <citetitle
-    pubwork="section"><xref linkend="sec.build-sr"
-    /></citetitle>).
+    <command>configure</command> command (see <xref linkend="sec.build-sr"
+    />).
     <variablelist>
       <varlistentry>
 	<term><option>--with-unipetsc=<replaceable>path-to-petsc</replaceable></option></term>
@@ -296,8 +294,8 @@ make test
   <section>
     <title>Next</title> 
 
-    <para>Proceed to <citetitle pubwork="section"><xref
-    linkend="sec.itk_inst" /></citetitle> when adding support for the
+    <para>Proceed to <xref
+    linkend="sec.itk_inst" /> when adding support for the
     Insight toolkit.  Otherwise, proceed to <xref
     linkend="sec.build-sr" /> after <acronym>PETSc has been
     installed.</acronym></para>

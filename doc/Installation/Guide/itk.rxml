@@ -58,10 +58,10 @@ Guide</ulink> for more information.</para>
 <emphasis>includes</emphasis> support for <acronym>ITK</acronym>.  The
 <acronym>RPM</acronym> distribution installs Insight libraries in
 /usr/local/lib/InsightTookit.  The instructions  in sections
-<citetitle><link 
-linkend="sec.obitk"/></citetitle>, <citetitle><link
-linkend="sec.cmake"/></citetitle>, and <citetitle><link
-linkend="sec.itk_configsr"/></citetitle>
+<link 
+linkend="sec.obitk"/>, <link
+linkend="sec.cmake"/>, and <link
+linkend="sec.itk_configsr"/>
 apply only
 to source code installation of &sr;.</para>
 </note>
@@ -153,16 +153,15 @@ Configure Options</title>
 
 <para>The configure options below add support for Insight
 in &sr;.  Include these options in the &sr;
-<command>configure</command> command (see <citetitle
-pubwork="section"><xref linkend="sec.build-sr"
-/></citetitle>).
+<command>configure</command> command (see <xref linkend="sec.build-sr"
+/>).
 <variablelist>
 <varlistentry>
 <term><option>--with-insight=<replaceable>path-to-insight-libs</replaceable></option></term>
 <listitem>
 <para>Specifies the directory containing the <acronym>ITK</acronym>
 libraries.  The
-<citetitle>ITK Software Guide</citetitle> refers to this directory as
+ITK Software Guide refers to this directory as
 ITK_BINARY_DIR.  The <acronym>ITK</acronym> library (or binary)
 directory is commonly
 <filename>/usr/local/lib/InsightToolkit</filename>.  The directory
