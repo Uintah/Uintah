@@ -60,6 +60,7 @@ WARNING
 	 RigidBodyContact& operator=(const RigidBodyContact &con);
 	 
 	 SimulationStateP d_sharedState;
+	 double d_stop_time;
 	 
       public:
 	 // Constructor

@@ -33,6 +33,7 @@ RigidBodyContact::RigidBodyContact(ProblemSpecP& ps,
 
   IntVector v_f;
   ps->require("vel_fields",v_f);
+  ps->require("stop_time",d_stop_time);
   std::cout << "vel_fields = " << v_f << endl;
   
   d_sharedState = d_sS;
@@ -62,6 +63,7 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
   double centerOfMassMass;
 
   int numMatls = d_sharedState->getNumMPMMatls();
+  double elapsed_time = d_sharedState->getElapsedTime();
 
   // Retrieve necessary data from DataWarehouse
   vector<NCVariable<double> > gmass(numMatls);
