@@ -311,7 +311,9 @@ using namespace SCIRun;
                         const string& message2, int component, 
                         const CCVariable<Vector>& q_CC);
                      
-      void adjust_dbg_indices( const IntVector d_dbgBeginIndx,
+      void adjust_dbg_indices( const int include_EC,
+                               const  Patch* patch,
+                               const IntVector d_dbgBeginIndx,
                                const IntVector d_dbgEndIndx,  
                                IntVector& low,                 
                                IntVector& high);               
