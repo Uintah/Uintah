@@ -12,9 +12,6 @@ itcl_class PSECommon_Salmon_Salmon {
     constructor {config} {
 	set name Salmon
 	set_defaults
-	set make_progress_graph 0
-	set make_time 0
-	set roe ""
     }
     destructor {
 	foreach rid $roe {
@@ -25,6 +22,10 @@ itcl_class PSECommon_Salmon_Salmon {
     }
 
     method set_defaults {} {
+	set make_progress_graph 0
+	set make_time 0
+	set roe ""
+    
     }
 
     method makeRoeID {} {
@@ -68,6 +69,11 @@ itcl_class Roe {
 	wm title $w "Roe"
 	wm iconname $w "Roe"
 	wm minsize $w 100 100
+	global $this-saveFile
+	global $this-saveType
+	set $this-saveFile "out.raw"
+	set $this-saveType "raw"
+
 	frame $w.menu -relief raised -borderwidth 3
 	pack $w.menu -fill x
 	menubutton $w.menu.file -text "File" -underline 0 \
@@ -480,9 +486,9 @@ itcl_class Roe {
 		-digits 3 \
 		-command $c
 	pack $w.f.fov -expand yes -fill x
-# 	entry $w.f.fove -textvariable $view-fov
-# 	pack $w.f.fove -side top -expand yes -fill x
-# 	bind $w.f.fove <Return> "$command $view-fov"
+#  	entry $w.f.fove -textvariable $view-fov
+#  	pack $w.f.fove -side top -expand yes -fill x
+#  	bind $w.f.fove <Return> "$command $view-fov"
     }
 
     method makeBackgroundPopup {} {
@@ -924,5 +930,65 @@ itcl_class Roe {
     method doSaveObjects {} {
 	global $this-saveobjfile $this-saveformat
 	$this-c saveobj [set $this-saveobjfile] [set $this-saveformat]
+    }
+    method makeSaveImagePopup {} {
+	global $this-saveFile
+	global $this-saveType
+	toplevel .ui[modname]-saveImage
+	set w .ui[modname]-saveImage
+	puts [set $this-saveFile]
+	makeFilebox $w \
+	    $this-saveFile "$this doSaveImage" \
+	    "destroy $w"
+	#$w.f.sel.sel configure -textvariable $saveFile
+	set ex $w.f.extra
+	radiobutton $ex.raw -variable $this-saveType \
+	    -text "Raw File" -value "raw" \
+	    -command "$this changeName $w raw"
+	pack $ex.raw -side top -anchor w
+	set sgi [$this-c sgi_defined]
+	if { $sgi == 1 } {
+	    radiobutton $ex.rgb -variable $this-saveType \
+		-text "SGI RGB File" -value "rgb" \
+	    -command "$this changeName $w rgb"
+	    radiobutton $ex.ppm -variable $this-saveType \
+		-text "PPM File" -value "ppm" \
+	    -command "$this changeName $w ppm"
+	    radiobutton $ex.jpg -variable $this-saveType \
+		-text "JPEG File" -value "jpg" \
+	    -command "$this changeName $w jpg"
+	} else {
+	    radiobutton $ex.rgb -variable $this-saveType \
+		-text "SGI RGB File" -value "rgb" \
+		-state disabled -disabledforeground ""
+	    radiobutton $ex.ppm -variable $this-saveType \
+		-text "PPM File" -value "ppm" \
+		-state disabled -disabledforeground ""
+
+	    radiobutton $ex.jpg -variable $this-saveType \
+		-text "JPEG File" -value "jpg" \
+		-state disabled -disabledforeground ""
+	}
+
+	if { [set $this-saveType] == "rgb" } { 
+	    $ex.rgb select 
+	} elseif { [set $this-saveType] == "ppm" } {
+	    $ex.ppm select
+	} elseif { [set $this-saveType] == "jpg" } {
+	    $ex.jpg select
+	} else { $ex.raw select }
+	pack $ex.rgb $ex.ppm $ex.jpg -side top -anchor w
+    }
+
+    method changeName { w type} {
+	global $this-saveFile
+	set name [split [set $this-saveFile] .]
+	set newname [lreplace $name end end $type]
+	set $this-saveFile [join $newname .]
+    }
+    method doSaveImage {} {
+	global $this-saveFile
+	global $this-saveType
+	$this-c dump_roe [set $this-saveFile] [set $this-saveType]
     }
 }
