@@ -2524,8 +2524,6 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(pressureVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(pressureVars.cellType, d_lab->d_cellTypeLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     if (d_MAlab) {
       new_dw->getCopy(pressureVars.cellType, d_lab->d_cellTypeLabel, 
 		      matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
