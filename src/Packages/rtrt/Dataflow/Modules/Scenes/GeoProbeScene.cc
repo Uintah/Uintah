@@ -26,6 +26,8 @@
 #include <Packages/rtrt/Core/HVolume.h>
 #include <Packages/rtrt/Core/BrickArray3.h>
 #include <Packages/rtrt/Core/CutVolumeDpy.h>
+#include <Packages/rtrt/Core/PlaneDpy.h>
+#include <Packages/rtrt/Core/CutPlane.h>
 
 // all the module stuff
 #include <Dataflow/Network/Module.h>
@@ -53,6 +55,12 @@ private:
   int first_execute_;
   int cmap_generation_;
   string execute_string_;
+  CutPlane *xacp;
+  CutPlane *xbcp;
+  CutPlane *yacp;
+  CutPlane *ybcp;
+  CutPlane *zacp;
+  CutPlane *zbcp;
   GuiDouble xa_;
   GuiDouble xb_;
   GuiDouble ya_;
@@ -72,6 +80,8 @@ private:
   void update_isosurface_color();
 
   Object *hvol;
+  // The physical extents of the data
+  Point min, max;
   
   Scene* make_scene(Object *obj);
   SceneContainerHandle sceneHandle_;
@@ -89,6 +99,7 @@ GeoProbeScene::GeoProbeScene(GuiContext* ctx)
     first_execute_(1),
     cmap_generation_(-1),
     execute_string_(""),
+    xacp(0), xbcp(0), yacp(0), ybcp(0), zacp(0), zbcp(0), 
     xa_(ctx->subVar("xa")),
     xb_(ctx->subVar("xb")),
     ya_(ctx->subVar("ya")),
@@ -165,7 +176,6 @@ void GeoProbeScene::execute()
 
   if (first_execute_) {
     int nx, ny, nz;
-    Point min, max;
     unsigned char datamin, datamax;
     Array3<unsigned char> data;
     cerr << "input file = "<<gpfilename_.get()<<"\n";
@@ -207,7 +217,10 @@ void GeoProbeScene::execute()
       BrickArray3<VMCell<unsigned char> > >
       (surfmat, vdpy, 3 /*depth*/, 2 /*np*/, nx, ny, nz, 
        min, max, datamin, datamax, data);
-    g->add(hvol);
+    // Add the cutting planes
+    xacp = new CutPlane(hvol, Vector(1/(max.x()-min.x()),0,0), xa_.get());
+    xacp->set_matl(new LambertianMaterial(Color(0.1,0.1,0.9)));
+    g->add(xacp);
 #if 0
     BBox temp;
     hvol->compute_bounds(temp, 0);
@@ -301,21 +314,30 @@ void GeoProbeScene::update_isosurface_value() {
 }
 
 void GeoProbeScene::update_cutting_plane(string which, float val) {
-  cout << "Updating cutting plane ";
+  //  cout << "Updating cutting plane ";
+  CutPlane *plane = 0;
   if (which == "xa") {
-    cout << "xa";
+    //    cout << "xa";
+    plane = xacp;
   } else if (which == "xb") {
-    cout << "xb";
+    //    cout << "xb";
+    plane = xbcp;
   } else if (which == "ya") {
-    cout << "ya";
+    //    cout << "ya";
+    plane = yacp;
   } else if (which == "yb") {
-    cout << "yb";
+    //    cout << "yb";
+    plane = ybcp;
   } else if (which == "za") {
-    cout << "za";
+    //    cout << "za";
+    plane = zacp;
   } else if (which == "zb") {
-    cout << "zb";
+    //    cout << "zb";
+    plane = zbcp;
   }
   cout <<" with value "<<val<<"\n";
+  if (plane)
+    plane->update_displacement(val);
 }
 
 } // End namespace rtrt
