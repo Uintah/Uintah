@@ -62,7 +62,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
    }
 
    if( MPMPhysicalModules::thermalContactModel ) {
-     ps->require("heat_transfer_coefficient",d_heatTransferCoefficient);
+//     ps->require("heat_transfer_coefficient",d_heatTransferCoefficient);
    }
 
    // Step 3 -- Loop through all of the pieces in this geometry object
@@ -337,6 +337,10 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.40  2000/07/20 19:45:12  guilkey
+// Commented out requirement for a heat transfer coefficient as the
+// current ThermalContact class doesn't use it.
+//
 // Revision 1.39  2000/07/05 23:43:34  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling
