@@ -41,7 +41,7 @@ extern DebugStream mixedDebug;
 static DebugStream dbg("SchedulerCommon", false);
 
 SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
-  : UintahParallelComponent(myworld), graph(this), m_outPort(oport),
+  : UintahParallelComponent(myworld), graph(this, myworld), m_outPort(oport),
     m_graphDoc(NULL), m_nodes(NULL)
 {
   d_generation = 0;
@@ -369,14 +369,14 @@ void SchedulerCommon::doEmitTaskGraphDocs()
   emit_taskgraph=true;
 }
 
-void SchedulerCommon::compile( const ProcessorGroup * pg)
+void SchedulerCommon::compile()
 {
-  actuallyCompile(pg);
+  actuallyCompile();
   m_locallyComputedPatchVarMap.reset();
 
   if (dts_ != 0) {
 
-    dts_->computeLocalTasks(pg->myrank());
+    dts_->computeLocalTasks(d_myworld->myrank());
     dts_->createScrubCounts();
     
     // figure out the locally computed patches for each variable.
