@@ -23,8 +23,13 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/Clipper.h>
 
 namespace SCIRun {
+
+class Mesh;
+typedef LockingHandle<Mesh> MeshHandle;
+
 
 class Mesh : public PropertyManager {
 public:
@@ -42,6 +47,7 @@ public:
   virtual bool has_normals() const { return false; }
   // Required interfaces
 
+  virtual MeshHandle clip(Clipper &c) { return 0; }
 
   //! Persistent I/O.
   void    io(Piostream &stream);
@@ -53,7 +59,8 @@ public:
   virtual const TypeDescription *get_type_description() const = 0;
 };
 
-typedef LockingHandle<Mesh> MeshHandle;
+
+
 
 } // end namespace SCIRun
 
