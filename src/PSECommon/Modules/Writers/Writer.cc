@@ -12,7 +12,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Persistent/Pstreams.h>
 #include <PSECommon/Dataflow/Module.h>
 #include <PSECommon/CommonDatatypes/TYPEPort.h>
@@ -96,6 +95,10 @@ void TYPEWriter::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/19 23:18:02  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.3  1999/08/18 20:20:17  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

@@ -136,7 +136,6 @@ public:
 
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Util/NotFinished.h>
 
 namespace SCICore {
 namespace Containers {
@@ -242,13 +241,6 @@ Array3<T>::get_onedim_byte( unsigned char *v )
 	v[index++] = objs[i][j][k];
 }
 
-template<class T>
-Array3<T>& Array3<T>::operator=(const Array3<T>&)
-{
-    NOT_FINISHED("Array2::operator=");
-    return *this;
-}
-
 #define ARRAY3_VERSION 1
 
 template<class T>
@@ -293,6 +285,10 @@ void Pio(Piostream& stream, Containers::Array3<T>*& data) {
 
 //
 // $Log$
+// Revision 1.3  1999/08/19 23:18:04  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.2  1999/08/17 06:38:35  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

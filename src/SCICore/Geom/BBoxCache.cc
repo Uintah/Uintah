@@ -13,7 +13,6 @@
  */
 
 #include <SCICore/Geom/BBoxCache.h>
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 
@@ -110,6 +109,10 @@ bool GeomBBoxCache::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.4  1999/08/19 23:18:05  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.3  1999/08/17 23:50:17  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

@@ -16,7 +16,6 @@
 #include <PSECore/CommonDatatypes/GeometryComm.h>
 
 #include <SCICore/Util/Assert.h>
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/Connection.h>
 #include <PSECore/Dataflow/Module.h>
@@ -328,6 +327,10 @@ GeometryData::Print()
 
 //
 // $Log$
+// Revision 1.3  1999/08/19 23:18:03  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.2  1999/08/17 06:38:08  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -10,7 +10,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Util/NotFinished.h>
 #include <PSECommon/Dataflow/Module.h>
 #include <SCICore/Geom/Sphere.h>
 #include <SCICore/Geom/Group.h>

@@ -15,7 +15,6 @@
 #include <SCICore/CoreDatatypes/Matrix.h>
 #include <SCICore/CoreDatatypes/ColumnMatrix.h>
 #include <SCICore/Util/Assert.h>
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 
 namespace SCICore {
@@ -105,6 +104,10 @@ void Mult(ColumnMatrix& result, const Matrix& mat, const ColumnMatrix& v)
 
 //
 // $Log$
+// Revision 1.3  1999/08/19 23:18:05  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.2  1999/08/17 06:38:47  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -15,7 +15,6 @@
 #include <SCICore/Geom/GeomArrows.h>
 
 #include <SCICore/Geom/GeomSave.h>
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Malloc/Allocator.h>
