@@ -237,12 +237,14 @@ int SocketMessage::getSendBufferCopy(void* buf)
 
 void SocketMessage::setRecvBuffer(void* buf, int len)
 {
+  if(msg!=NULL) free(msg);
   msg=buf;
   msg_size=len;
 }
 
 void SocketMessage::setSendBuffer(void* buf, int len)
 {
+  if(msg!=NULL) free(msg);
   msg=buf;
   msg_size=len;
 }
