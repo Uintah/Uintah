@@ -9,9 +9,8 @@ static char *id="@(#) $Id$";
 using namespace Uintah;
 using namespace std;
 
-UintahParallelComponent::UintahParallelComponent( int MpiRank, 
-						  int MpiProcesses ) :
-  d_MpiRank( MpiRank ), d_MpiProcesses( MpiProcesses )
+UintahParallelComponent::UintahParallelComponent(const ProcessorGroup* myworld)
+   : d_myworld(myworld)
 {
 }
 
@@ -53,6 +52,9 @@ void UintahParallelComponent::releasePort(const std::string&)
 
 //
 // $Log$
+// Revision 1.8  2000/06/17 07:06:49  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.7  2000/05/30 20:19:43  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

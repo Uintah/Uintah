@@ -2,6 +2,7 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Interface/DWMpiHandler.h>
+#include <Uintah/Parallel/ProcessorGroup.h>
 
 #include <SCICore/Exceptions/InternalError.h>
 
@@ -69,7 +70,7 @@ void
 DWMpiHandler::run()
 {
   cerr << "DWMpiHandler run() called\n";
-  if( !d_dw.get_rep() || d_dw->d_MpiProcesses == 1 ) {
+  if( !d_dw.get_rep() || d_dw->d_myworld->size() == 1 ) {
 
     cerr << "Only 1 MPI process, DWMpiHandler doesn't need to be running\n";
 
@@ -87,7 +88,7 @@ DWMpiHandler::run()
 
   while( !done ) {
 
-    cerr << "DWMpiHandler " << d_dw->d_MpiRank 
+    cerr << "DWMpiHandler " << d_dw->d_myworld->myrank()
 	 << " waiting for a connection\n";
 
     MPI_Recv( buffer, sizeof( MpiDataRequest ), MPI_BYTE, MPI_ANY_SOURCE,
@@ -101,7 +102,7 @@ DWMpiHandler::run()
       continue;
     }
 
-    cerr << "DWMpiHandler " << d_dw->d_MpiRank << " received this " 
+    cerr << "DWMpiHandler " << d_dw->d_myworld->myrank() << " received this " 
 	 << "request:\n";
 
     cerr << "from: " << request->fromMpiRank << "\n";
@@ -123,7 +124,7 @@ DWMpiHandler::run()
     MPI_Get_count(&status,MPI_INT,&mpi_size);
     cerr << "Size:   " << mpi_size << "\n";
 
-    if( d_dw->d_MpiRank != request->toMpiRank || 
+    if( d_dw->d_myworld->myrank() != request->toMpiRank || 
 	status.MPI_SOURCE != request->fromMpiRank ) {
       throw InternalError( "Data Notification Message sent "
 			   "to/received by wrong process..." );
@@ -168,6 +169,9 @@ DWMpiHandler::run()
 
 //
 // $Log$
+// Revision 1.5  2000/06/17 07:06:45  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.4  2000/06/14 23:38:54  jas
 // Added FCVariables.
 //

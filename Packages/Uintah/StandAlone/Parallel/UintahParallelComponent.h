@@ -9,6 +9,7 @@ namespace Uintah {
 
    using std::string;
    class UintahParallelPort;
+   class ProcessorGroup;
 
 /**************************************
 
@@ -46,7 +47,7 @@ WARNING
       };
       std::map<string, PortRecord*> portmap;
    public:
-      UintahParallelComponent( int MpiRank, int MpiProcesses );
+      UintahParallelComponent(const ProcessorGroup* myworld);
       virtual ~UintahParallelComponent();
       
       //////////
@@ -57,14 +58,16 @@ WARNING
       void releasePort(const std::string& name);
       
    protected:
-      int d_MpiRank;
-      int d_MpiProcesses;
+      const ProcessorGroup* d_myworld;
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.6  2000/06/17 07:06:50  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.5  2000/04/26 06:49:16  sparker
 // Streamlined namespaces
 //
