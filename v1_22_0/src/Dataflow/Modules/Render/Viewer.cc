@@ -53,6 +53,7 @@
 #include <Core/Thread/FutureValue.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
+#include <Core/Math/MiscMath.h>
 
 #include <iostream>
 using std::cerr;
@@ -276,13 +277,31 @@ Viewer::process_event()
   case MessageTypes::ViewWindowMouse:
     {
       ViewWindowMouseMessage* rmsg=(ViewWindowMouseMessage*)msg;
+      float NX = 1.0, NY = 1.0;
+      bool tracking = false;
       for(unsigned int i=0;i<view_window_.size();i++)
       {
 	ViewWindow* r=view_window_[i];
 	if(r->id == rmsg->rid)
 	{
 	  (r->*(rmsg->handler))(rmsg->action, rmsg->x, rmsg->y, rmsg->state, rmsg->btn, rmsg->time);
-	  break;
+	  if (i == 0) {
+	    tracking = true;
+	    r->NormalizeMouseXY(rmsg->x, rmsg->y, &NX, &NY);
+	  }
+	}
+      }
+      if (tracking) {
+	for(unsigned int i=0;i<view_window_.size();i++)
+	{
+	  ViewWindow* r=view_window_[i];
+	  r->track_view_window_0_.reset();
+	  if(r->id != rmsg->rid && r->track_view_window_0_.get())
+	  {
+	    int xx,yy;
+	    r->UnNormalizeMouseXY(NX,NY,&xx,&yy);
+	    (r->*(rmsg->handler))(rmsg->action, xx, yy, rmsg->state, rmsg->btn, rmsg->time);
+	  }
 	}
       }
     }
@@ -475,12 +494,16 @@ void Viewer::delete_patch_portnos(int portid)
 	  const string::size_type loc = si->getString().find_last_of('(');
 	  string newname =
 	    si->getString().substr(0, loc+1) + to_string(i) + ")";
-
+	  string cached_name = si->getString();
 	  // Do a rename here.
 	  for (unsigned int j = 0; j < view_window_.size(); j++)
 	  {
+	    // itemRenamed will set si->name_ = newname
+	    // so we need to reset it for other windows
+	    si->getString() = cached_name;
 	    view_window_[j]->itemRenamed(si, newname);
 	  }
+	  si->getString() = newname;
 	}
       }
     }
