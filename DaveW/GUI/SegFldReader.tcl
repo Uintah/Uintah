@@ -1,6 +1,6 @@
 catch {rename DaveW_Readers_SegFldReader ""}
 
-itcl_class Davew_Readers_SegFldReader {
+itcl_class DaveW_Readers_SegFldReader {
     inherit Module
     constructor {config} {
 	set name SegFldReader

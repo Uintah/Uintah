@@ -1,6 +1,6 @@
 catch {rename DaveW_Readers_TensorFieldReader ""}
 
-itcl_class Davew_Readers_TensorFieldReader {
+itcl_class DaveW_Readers_TensorFieldReader {
     inherit Module
     constructor {config} {
 	set name TensorFieldReader
