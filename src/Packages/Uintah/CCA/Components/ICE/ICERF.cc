@@ -655,7 +655,10 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
     StaticArray<constSFCXVariable<double> > uvel_FC(numMatls);
     StaticArray<constSFCYVariable<double> > vvel_FC(numMatls);
     StaticArray<constSFCZVariable<double> > wvel_FC(numMatls);
-
+    StaticArray<constSFCXVariable<double> > vol_fracX_FC(numMatls);
+    StaticArray<constSFCYVariable<double> > vol_fracY_FC(numMatls);
+    StaticArray<constSFCZVariable<double> > vol_fracZ_FC(numMatls);
+    
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->get(press_CC,     lb->press_CCLabel,  0, patch, gn,  0);
@@ -671,10 +674,13 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx    = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      new_dw->get(vol_frac[m],lb->vol_frac_CCLabel,  indx, patch, gac, 1);
-      new_dw->get(uvel_FC[m], lb->uvel_FCMELabel,    indx, patch, gac, 1);
-      new_dw->get(vvel_FC[m], lb->vvel_FCMELabel,    indx, patch, gac, 1);
-      new_dw->get(wvel_FC[m], lb->wvel_FCMELabel,    indx, patch, gac, 1);
+      new_dw->get(vol_frac[m],     lb->vol_frac_CCLabel, indx, patch, gac, 1);
+      new_dw->get(uvel_FC[m],      lb->uvel_FCMELabel,   indx, patch, gac, 1);
+      new_dw->get(vvel_FC[m],      lb->vvel_FCMELabel,   indx, patch, gac, 1);
+      new_dw->get(wvel_FC[m],      lb->wvel_FCMELabel,   indx, patch, gac, 1);
+      new_dw->get(vol_fracX_FC[m], lb->vol_fracX_FCLabel,indx, patch, gac, 2);        
+      new_dw->get(vol_fracY_FC[m], lb->vol_fracY_FCLabel,indx, patch, gac, 2);        
+      new_dw->get(vol_fracZ_FC[m], lb->vol_fracZ_FCLabel,indx, patch, gac, 2);  
       if(ice_matl){
         old_dw->get(vel_CC[m],lb->vel_CCLabel,       indx, patch, gn,0);   
       } else {
@@ -696,7 +702,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       new_dw->get(pressDiffY_FC, lb->press_diffY_FCLabel,indx,patch,gac, 1);      
       new_dw->get(pressDiffZ_FC, lb->press_diffZ_FCLabel,indx,patch,gac, 1);
       old_dw->get(Temp_CC,       lb->temp_CCLabel,       indx,patch,gac, 1);
-      new_dw->get(thermalCond,   lb->thermalCondLabel,   indx,patch,gac, 1);         
+      new_dw->get(thermalCond,   lb->thermalCondLabel,   indx,patch,gac, 1); 
       new_dw->allocateAndPut(int_eng_source, 
                                  lb->int_eng_source_CCLabel, indx,patch);
       int_eng_source.initialize(0.0);
@@ -715,25 +721,17 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         double tmp_T = 0.0, tmp_BOT = 0.0;
         double tmp_F = 0.0, tmp_BK  = 0.0;
       
-        for(int mat = 0; mat < numMatls; mat++) {
-          //   O H   T H I S   I S   G O I N G   T O   B E   S L O W   
+        for(int mat = 0; mat < numMatls; mat++) {  
           //__________________________________
           //  use the upwinded vol_frac
-          IntVector upwc;    
-          upwc     = upwindCell_X(c,       uvel_FC[mat][right],  1.0);
-          tmp_R   += vol_frac[mat][upwc] * uvel_FC[mat][right];
-          upwc     = upwindCell_X(c,       uvel_FC[mat][left],   0.0);
-          tmp_L   += vol_frac[mat][upwc] * uvel_FC[mat][left];
+          tmp_R   += vol_fracX_FC[mat][right] * uvel_FC[mat][right];
+          tmp_L   += vol_fracX_FC[mat][left]  * uvel_FC[mat][left];
           
-          upwc     = upwindCell_Y(c,       vvel_FC[mat][top],    1.0);
-          tmp_T   += vol_frac[mat][upwc] * vvel_FC[mat][top];
-          upwc     = upwindCell_Y(c,       vvel_FC[mat][bottom], 0.0);
-          tmp_BOT += vol_frac[mat][upwc] * vvel_FC[mat][bottom];
+          tmp_T   += vol_fracY_FC[mat][top]    * vvel_FC[mat][top];
+          tmp_BOT += vol_fracY_FC[mat][bottom] * vvel_FC[mat][bottom];
           
-          upwc     = upwindCell_Z(c,       wvel_FC[mat][front],  1.0);
-          tmp_F   += vol_frac[mat][upwc] * wvel_FC[mat][front];
-          upwc     = upwindCell_Z(c,       wvel_FC[mat][back],   0.0);
-          tmp_BK  += vol_frac[mat][upwc] * wvel_FC[mat][back];
+          tmp_F   += vol_fracZ_FC[mat][front] * wvel_FC[mat][front];
+          tmp_BK  += vol_fracZ_FC[mat][back]  * wvel_FC[mat][back];
         }
 
 
@@ -788,9 +786,9 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         double thermalCond_test = ice_matl->getThermalConductivity();
         if(thermalCond_test != 0.0){ 
           bool use_vol_frac = true; // include vol_frac in diffusion calc.
-          scalarDiffusionOperator(new_dw, patch, use_vol_frac,
-                                  rho_CC, sp_vol_CC,  Temp_CC,
-                                  int_eng_source, thermalCond, delT);
+          scalarDiffusionOperator(new_dw, patch, use_vol_frac,Temp_CC,
+                               vol_fracX_FC[m], vol_fracY_FC[m], vol_fracZ_FC[m],
+                               int_eng_source, thermalCond, delT);
         } 
       }
       
