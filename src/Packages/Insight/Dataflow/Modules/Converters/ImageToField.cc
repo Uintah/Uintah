@@ -32,6 +32,9 @@
 #include <Packages/Insight/Core/Datatypes/ITKImageField.h>
 #include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
 
+#include <Core/Datatypes/ImageField.h>
+#include <Core/Datatypes/LatVolField.h>
+
 #include <Core/Datatypes/ImageMesh.h>
 
 #include <Packages/Insight/share/share.h>
@@ -88,15 +91,9 @@ ImageToField::~ImageToField(){
 template<class InputImageType>
 FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
 
-  if(gui_copy_.get() == 0) {
-    std::cout << "\nReference Data...\n";
-  }
-  if(gui_copy_.get() == 1) {
-    std::cout << "\nCopy Data...\n";
-  }
-
-
   typedef ITKImageField<typename InputImageType::PixelType> ITKImageFieldType;
+  typedef ImageField<typename InputImageType::PixelType> ImageFieldType;
+
   InputImageType *n = dynamic_cast< InputImageType * >( nrd.get_rep()->data_.GetPointer() );
 
   double spc[2];
@@ -115,7 +112,40 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
   FieldHandle fh;
   int mn_idx, mx_idx;
   
-  fh = new ITKImageFieldType(mh, Field::NODE, n); 
+  if(gui_copy_.get() == 0) {
+    // simply point to the itk image
+    fh = new ITKImageFieldType(mh, Field::NODE, n); 
+  }
+  else if(gui_copy_.get() == 1) {
+    // copy the data into a SCIRun ImageField
+    fh = new ImageFieldType(mh, Field::NODE);
+    ImageMesh::Node::iterator iter, end;
+    mh->begin(iter);
+    mh->end(end);
+    
+    // fill data
+    typename InputImageType::IndexType pixelIndex;
+    typedef ImageFieldType::value_type val_t;
+    val_t tmp;
+    ImageFieldType* fld = (ImageFieldType* )fh.get_rep();
+    
+    for(int row=0; row < size_y; row++) {
+      for(int col=0; col < size_x; col++) {
+	if(iter == end) {
+	  return fh;
+	}
+	pixelIndex[0] = col;
+	pixelIndex[1] = row;
+	
+	tmp = n->GetPixel(pixelIndex);
+	fld->set_value(tmp, *iter);
+	++iter;
+      }
+    }
+  }
+  else {
+    ASSERTFAIL("ImageToField Error");
+  }
   return fh;
 }
 
@@ -123,6 +153,8 @@ template<class InputImageType>
 FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &nrd) {
   
   typedef ITKLatVolField<typename InputImageType::PixelType> ITKLatVolFieldType;
+  typedef LatVolField<typename InputImageType::PixelType> LatVolFieldType;
+
   InputImageType *n = dynamic_cast< InputImageType * >( nrd.get_rep()->data_.GetPointer() );
 
   // get number of data points
@@ -157,7 +189,43 @@ FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &nrd) {
   FieldHandle fh;
   int mn_idx, mx_idx;
   
-  fh = new ITKLatVolFieldType(mh, Field::NODE, n); 
+  if(gui_copy_.get() == 0) {
+    // simply referenc itk image
+    fh = new ITKLatVolFieldType(mh, Field::NODE, n); 
+  }
+  else if(gui_copy_.get() == 1) {
+    // copy the data into a SCIRun LatVolField
+    fh = new LatVolFieldType(mh, Field::NODE); 
+    LatVolMesh::Node::iterator iter, end;
+    mh->begin(iter);
+    mh->end(end);
+    
+    // fill data
+    typename InputImageType::IndexType pixelIndex;
+    typedef LatVolFieldType::value_type val_t;
+    val_t tmp;
+    LatVolFieldType* fld = (LatVolFieldType* )fh.get_rep();
+    
+    for(int z=0; z < size_z; z++) {
+      for(int row=0; row < size_y; row++) {
+	for(int col=0; col < size_x; col++) {
+	  if(iter == end) {
+	    return fh;
+	  }
+	  pixelIndex[0] = col;
+	  pixelIndex[1] = row;
+	  pixelIndex[2] = z;
+	  
+	  tmp = n->GetPixel(pixelIndex);
+	  fld->set_value(tmp, *iter);
+	  ++iter;
+	}
+      }
+    }
+  }
+  else {
+    ASSERTFAIL("ImageToField Error");
+  }
   return fh;
 }
 
