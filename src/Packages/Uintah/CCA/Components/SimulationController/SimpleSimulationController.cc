@@ -258,7 +258,8 @@ SimpleSimulationController::run()
 		 << " to minimum: " << timeinfo.delt_min << '\n';
 	 delt = timeinfo.delt_min;
       }
-      if(iterations > 1 && delt > (1+timeinfo.max_delt_increase)*prev_delt){
+      if(iterations > 1 && timeinfo.max_delt_increase < 1.e90
+	 && delt > (1+timeinfo.max_delt_increase)*prev_delt){
 	if(d_myworld->myrank() == 0)
 	  cerr << "WARNING: lowering delt from " << delt 
 	       << " to maxmimum: " << (1+timeinfo.max_delt_increase)*prev_delt
