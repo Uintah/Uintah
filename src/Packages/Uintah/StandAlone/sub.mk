@@ -93,6 +93,32 @@ LIBS 	:= $(XML_LIBRARY) $(MPI_LIBRARY) -lm
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+SRCS := $(SRCDIR)/restart_merger.cc
+PROGRAM := Packages/Uintah/StandAlone/restart_merger
+ifeq ($(LARGESOS),yes)
+PSELIBS := Datflow Packages/Uintah
+else
+PSELIBS := \
+	Packages/Uintah/Core/Exceptions \
+	Packages/Uintah/Core/Grid \
+	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core/Parallel \
+	Packages/Uintah/CCA/Ports \
+	Packages/Uintah/CCA/Components/DataArchiver \
+	Packages/Uintah/CCA/Components/ProblemSpecification \
+	Dataflow/XMLUtil \
+	Core/Exceptions  \
+	Core/Geometry    \
+	Core/Thread      \
+	Core/Util        \
+	Core/OS          \
+	Core/Containers
+endif
+LIBS 	:= $(XML_LIBRARY) -lm
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+
 # A convenience target (use make sus)
 sus: Packages/Uintah/StandAlone/sus
 
