@@ -196,15 +196,16 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
     
       {
 	 /*
-	  * computerNodesVisibility
+	  * computerNodesVisibilityAndCrackSurfaceContactForce
 	  *   in(P.X, P.VOLUME, P.ISBROKEN, P.CRACKSURFACENORMAL)
 	  *   operation(computer the visibility information of particles to the
 	  *             related nodes)
 	  * out(P.VISIBILITY)
 	  */
-	 Task* t = scinew Task("SerialMPM::computerNodesVisibility",
-			    patch, old_dw, new_dw,
-			    this,&SerialMPM::computerNodesVisibility);
+	 Task* t = scinew Task(
+	    "SerialMPM::computerNodesVisibilityAndCrackSurfaceContactForce",
+	    patch, old_dw, new_dw,
+	    this,&SerialMPM::computerNodesVisibilityAndCrackSurfaceContactForce);
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
@@ -223,6 +224,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
    	    }
 
 	    t->computes(new_dw, lb->pVisibilityLabel, idx, patch );
+	    t->computes(new_dw, lb->pCrackSurfaceContactForceLabel, idx, patch );
 	 }
 	 sched->addTask(t);
       }
@@ -249,6 +251,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	    t->requires(old_dw, lb->pXLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
 	    t->requires(old_dw, lb->pExternalForceLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+	    t->requires(new_dw, lb->pCrackSurfaceContactForceLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
 
             t->requires(old_dw, lb->pTemperatureLabel, idx, patch,
@@ -444,6 +448,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	    t->requires( new_dw, lb->gMassLabel, idx, patch,
 			 Ghost::None);
 	    t->requires( new_dw, lb->gInternalForceLabel, idx, patch,
+			 Ghost::None);
+	    t->requires( new_dw, lb->gExternalForceLabel, idx, patch,
 			 Ghost::None);
 
 	    t->computes( new_dw, lb->gAccelerationLabel, idx, patch);
@@ -979,10 +985,11 @@ void SerialMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 {
 }
 
-void SerialMPM::computerNodesVisibility(const ProcessorGroup*,
-					   const Patch* patch,
-					   DataWarehouseP& old_dw,
-					   DataWarehouseP& new_dw)
+void SerialMPM::computerNodesVisibilityAndCrackSurfaceContactForce(
+                   const ProcessorGroup*,
+		   const Patch* patch,
+		   DataWarehouseP& old_dw,
+		   DataWarehouseP& new_dw)
 {
   int numMatls = d_sharedState->getNumMatls();
 
@@ -992,7 +999,7 @@ void SerialMPM::computerNodesVisibility(const ProcessorGroup*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl) {
       if(mpm_matl->getFractureModel()) {
-        mpm_matl->getFractureModel()->computerNodesVisibility(
+        mpm_matl->getFractureModel()->computerNodesVisibilityAndCrackSurfaceContactForce(
 	  patch, mpm_matl, old_dw, new_dw);
       }
     }
@@ -1034,8 +1041,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pTemperature,   lb->pTemperatureLabel, pset);
       
       ParticleVariable<int> pVisibility;
+      ParticleVariable<Vector> pCrackSurfaceContactForce;
       if(mpm_matl->getFractureModel()) {
         new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
+	new_dw->get(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel, pset);
       }
 
       // Create arrays for the grid data
@@ -1085,7 +1094,12 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	    if(patch->containsNode(ni[k]) && vis.visible(k) ) {
 	       gmass[ni[k]] += pmass[idx] * S[k];
 	       gvelocity[ni[k]] += pvelocity[idx] * pmass[idx] * S[k];
+	       
 	       gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
+	       if(mpm_matl->getFractureModel()) {
+  	         gexternalforce[ni[k]] += pCrackSurfaceContactForce[idx] * S[k];
+	       }
+	       
 	       totalmass += pmass[idx] * S[k];
 	       
                gTemperature[ni[k]] += pTemperature[idx] * pmass[idx] * S[k];
@@ -1848,6 +1862,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.145  2000/09/11 19:01:47  tan
+// Crack surface contact force is now considered in the simulation.
+//
 // Revision 1.144  2000/09/11 17:55:08  guilkey
 // Commented out some code that is apparently breaking the 1000grains
 // runs.
