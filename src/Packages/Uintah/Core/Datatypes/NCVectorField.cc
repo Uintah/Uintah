@@ -20,7 +20,7 @@ NCVectorField::NCVectorField()
 
 NCVectorField::NCVectorField(const NCVectorField& copy)
   //  : UintahScalarField( copy )
-  :VectorFieldRG( copy ), grid(copy.grid), level(copy.level),
+  :VectorFieldRG( copy ), grid(copy.grid), _level(copy._level),
     _varname(copy._varname), _matIndex(copy._matIndex)
 {
   for(int i = 0; i < copy._vars.size(); i++){
@@ -33,7 +33,7 @@ NCVectorField::NCVectorField(GridP grid, LevelP level,
 				string var, int mat,
 				const vector< NCVariable<Vector> >& vars)
   //  : UintahScalarField( grid, level, var, mat )
-  : VectorFieldRG( ), grid(grid), level(level),
+  : VectorFieldRG( ), grid(grid), _level(level),
     _varname(var), _matIndex(mat)
 {
   for(int i = 0; i < vars.size(); i++){
@@ -63,8 +63,8 @@ void NCVectorField::compute_bounds()
   Point min(1e30,1e30,1e30);
   Point max(-1e30,-1e30,-1e30);
  
-  for(Level::const_patchIterator r = level->patchesBegin();
-      r != level->patchesEnd(); r++){
+  for(Level::const_patchIterator r = _level->patchesBegin();
+      r != _level->patchesEnd(); r++){
     min = SCICore::Geometry::Min( min, (*r)->getBox().lower());
     max = SCICore::Geometry::Max( max, (*r)->getBox().upper());
   }
@@ -110,59 +110,36 @@ int NCVectorField::interpolate(const Point& p, Vector& value, int&, int)
 int NCVectorField::interpolate(const Point& p, Vector& value)
 {
   using SCICore::Math::Interpolate;
-
-  Uintah::Box b;
-  int i;
   Level::const_patchIterator r;
-  for(i = 0, r = level->patchesBegin();
-      r != level->patchesEnd(); r++, i++){
-    b = (*r)->getBox();
-    if(b.contains(p)){
-      break;
+  int i;
+  for(i = 0, r = _level->patchesBegin();
+      r != _level->patchesEnd(); r++, i++){
+    
+    if (i >= _vars.size())
+      return 0;
+
+    IntVector ni[8];
+    double S[8];
+    if((*r)->findCellAndWeights(p, ni, S)){
+      value=Vector(0,0,0);
+      for(int k = 0; k < 8; k++){
+	if((*r)->containsNode(ni[k])){
+	  value += _vars[i][ni[k]]*S[k];
+	} else {
+	  Level::const_patchIterator r1;
+	  int j;
+	  for(j = 0, r1 = _level->patchesBegin();
+	      r1 != _level->patchesEnd(); r1++, j++)
+	    if( (*r1)->containsNode(ni[k])){
+	      value += _vars[j][ni[k]]*S[k];
+	      break;
+	    }
+	}
+      }
+      return 1;
     }
   }
-
-  if (i >= _vars.size())
-    return 0;
-  
-  IntVector index;
-  if( !(*r)->findCell( p, index))
-    return 0;
-  
-  int ix = index.x();
-  int iy = index.y();
-  int iz = index.z();
-  int ix1 = ix+1;
-  int iy1 = iy+1;
-  int iz1 = iz+1;
-  IntVector upper = (*r)->getNodeHighIndex();
-  IntVector lower = (*r)->getNodeLowIndex();
-  Vector diag = b.upper() - b.lower();
-  Vector pn = p - b.lower();
-  double x = pn.x()*(upper.x() - lower.x()-1)/diag.x();
-  double y = pn.y()*(upper.y() - lower.y()-1)/diag.y();
-  double z = pn.z()*(upper.z() - lower.z()-1)/diag.z();
-
-
-    if (ix1>=upper.x()) { ix1=ix; }
-    if (iy1>=upper.y()) { iy1=iy; }
-    if (iz1>=upper.z()) { iz1=iz; }
-    double fx=x-ix;
-    double fy=y-iy;
-    double fz=z-iz;
-    typedef IntVector iv;
-    Vector x00= SCICore::Geometry::Interpolate(_vars[i][iv(ix, iy, iz)], 
-			   _vars[i][iv(ix1, iy, iz)], fx);
-    Vector x01=SCICore::Geometry::Interpolate(_vars[i][iv(ix, iy, iz1)],
-			   _vars[i][iv(ix1, iy, iz1)], fx);
-    Vector x10=SCICore::Geometry::Interpolate(_vars[i][iv(ix, iy1, iz)],
-			   _vars[i][iv(ix1, iy1, iz)], fx);
-    Vector x11=SCICore::Geometry::Interpolate(_vars[i][iv(ix, iy1, iz1)],
-			   _vars[i][iv(ix1, iy1, iz1)], fx);
-    Vector y0=SCICore::Geometry::Interpolate(x00, x10, fy);
-    Vector y1=SCICore::Geometry::Interpolate(x01, x11, fy);
-    value=SCICore::Geometry::Interpolate(y0, y1, fz);
-    return 1;
+  return 0;
 }
 
 

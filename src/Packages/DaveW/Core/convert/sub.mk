@@ -8,12 +8,28 @@ SRCDIR := DaveW/convert
 ifeq ($(LARGESOS),yes)
 PSELIBS := SCICore
 else
-PSELIBS := SCICore/Datatypes SCICore/Containers SCICore/Persistent SCICore/Exceptions SCICore/Thread SCICore/Geometry
+PSELIBS := PSECore/Datatypes DaveW/ThirdParty/NumRec SCICore/Datatypes SCICore/Containers SCICore/Persistent SCICore/Exceptions SCICore/Thread SCICore/Geometry
 endif
 LIBS := -lm
 
 PROGRAM := $(SRCDIR)/BldDisks
 SRCS := $(SRCDIR)/BldDisks.cc
+include $(SRCTOP)/scripts/program.mk
+
+PROGRAM := $(SRCDIR)/TestProto
+SRCS := $(SRCDIR)/TestProto.cc
+include $(SRCTOP)/scripts/program.mk
+
+PROGRAM := $(SRCDIR)/MakeRadialCylinder
+SRCS := $(SRCDIR)/MakeRadialCylinder.cc
+include $(SRCTOP)/scripts/program.mk
+
+PROGRAM := $(SRCDIR)/DuckReader
+SRCS := $(SRCDIR)/DuckReader.cc
+include $(SRCTOP)/scripts/program.mk
+
+PROGRAM := $(SRCDIR)/DuckWriter
+SRCS := $(SRCDIR)/DuckWriter.cc
 include $(SRCTOP)/scripts/program.mk
 
 #PROGRAM := $(SRCDIR)/BldTensor
@@ -110,8 +126,19 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.2.2.2  2000/10/26 10:02:54  moulding
+# merge HEAD into FIELD_REDESIGN
+#
 # Revision 1.2.2.1  2000/09/28 03:19:39  mcole
 # merge trunk into FIELD_REDESIGN branch
+#
+# Revision 1.4  2000/10/24 23:58:19  zyp
+# This program (DuckWriter) converts a file containing a ColumnMatrix of
+# values from a forward problem solve of electrical injection into the
+# head on to the readout voltage points and a file containing a
+# ColumnMatrix of the injection points and creates a text file that
+# hopefully is simple enough for the University of Oregon people working
+# on this problem.
 #
 # Revision 1.3  2000/07/18 17:44:03  lfox
 # added GEtoSF.cc
