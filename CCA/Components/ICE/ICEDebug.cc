@@ -456,10 +456,10 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     cout << "Doing printConservedQuantities on patch " << patch->getID()
      << "\t\t ICE" << endl;
-    CCVariable<Vector> vel_CC;
-    CCVariable<double> rho_CC;
-    CCVariable<double> Temp_CC;
-    CCVariable<double> delP_Dilatate;
+    constCCVariable<Vector> vel_CC;
+    constCCVariable<double> rho_CC;
+    constCCVariable<double> Temp_CC;
+    constCCVariable<double> delP_Dilatate;
     Vector dx       = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
     new_dw->get(delP_Dilatate,lb->delP_DilatateLabel, 0, patch,Ghost::None, 0);
