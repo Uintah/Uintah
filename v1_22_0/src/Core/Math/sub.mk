@@ -61,7 +61,6 @@ SRCS     += $(SRCDIR)/CubicPWI.cc              \
             $(SRCDIR)/ssmult.c
 
 PSELIBS := Core/Exceptions Core/Containers
-INCLUDES += $(TEEM_INCLUDE)
-LIBS := $(M_LIBRARY) $(DL_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) $(TEEM_LIBRARY)
+LIBS := $(M_LIBRARY) $(DL_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

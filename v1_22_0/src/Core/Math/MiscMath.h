@@ -45,7 +45,6 @@
 #define SCI_Math_MiscMath_h 1
 
 #include <Core/share/share.h>
-#include <teem/air.h>
 
 namespace SCIRun {
 
@@ -194,15 +193,15 @@ inline SCICORESHARE int Tile(int tile, int tf)
   }
 }
 
-const airDouble airDoubleMax = {AIR_ULLONG(0x7fefffffffffffff)};
-const airDouble airDoubleMin = {AIR_ULLONG(0x0010000000000000)};
-
 inline SCICORESHARE double MakeReal(double value) 
 {
-  const int is_inf = airIsInf_d(value);
-  if (is_inf == 1) value = airDoubleMax.d;
-  if (is_inf == -1) value = airDoubleMin.d;
-  else if (airIsNaN(value)) value = 0.0;
+  if (!finite(value))
+  {
+    const int is_inf = isinf(value);
+    if (is_inf == 1) value = (double)(0x7fefffffffffffffULL);
+    if (is_inf == -1) value = (double)(0x0010000000000000ULL);
+    else value = 0.0; // Assumed NaN
+  }
   return value;
 }
 
