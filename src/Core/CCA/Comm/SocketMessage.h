@@ -44,6 +44,7 @@
 #define CORE_CCA_COMM_SOCKETMESSAGE_H
 
 #include <Core/CCA/Comm/Message.h>
+#include <Core/CCA/Comm/DT/DTMessageTag.h>
 
 namespace SCIRun {
   class SocketEpChannel;
@@ -98,6 +99,7 @@ namespace SCIRun {
     static const int INIT_SIZE=1024;
     SocketSpChannel *spchan;
     DTMessage *dtmsg;
+    DTMessageTag tag;
   };
 }
 

@@ -70,13 +70,16 @@
 using namespace std;
 using namespace SCIRun;
 
+//TODO: handle network byte order and local byte order compitablility.
+
 
 SocketMessage::SocketMessage(DTMessage *dtmsg)
 {
-  this->msg=dtmsg->buf;
+  msg=dtmsg->buf;
   if(dtmsg->autofree) dtmsg->buf=NULL;
   else{
-    cerr<<"TODO: shoudl copy memory here"<<endl;
+    msg=malloc(dtmsg->length);
+    memcpy(msg, dtmsg->buf, dtmsg->length);
   }
   this->dtmsg=dtmsg;
   msg_size=sizeof(int); //skip handler_id
@@ -106,7 +109,6 @@ SocketMessage::createMessage()  {
 void 
 SocketMessage::marshalInt(const int *buf, int size){
   marshalBuf(buf, size*sizeof(int));
-  //  cerr<<"Marshal Int("<<size<<")="<<*buf<<endl;
 }
 
 void 
@@ -117,9 +119,6 @@ SocketMessage::marshalByte(const char *buf, int size){
 void 
 SocketMessage::marshalChar(const char *buf, int size){
   marshalBuf(buf, size*sizeof(char));
-  //cerr<<"Marshal Char("<<size<<")=";
-  //for(int i=0; i<size; i++) cerr<<*(buf+i);
-  //cerr<<endl;
 }
 
 void 
@@ -145,14 +144,14 @@ SocketMessage::marshalSpChannel(SpChannel* channel){
 
 void 
 SocketMessage::marshalOpaque(void **buf, int size){
-  marshalBuf(&(PIDL::getDT()->getAddress()), sizeof(DTAddress));
+  DTAddress addr=PIDL::getDT()->getAddress();
+  marshalBuf(&addr, sizeof(DTAddress));
   marshalBuf(buf, size*sizeof(void*));
 }
 
 
 void 
 SocketMessage::sendMessage(int handler){
-  //cerr<<"SocketMessage::sendMessage handler id="<<handler<<endl;
   memcpy(msg, &handler, sizeof(int));
   DTMessage *wmsg=new DTMessage;
   wmsg->buf=(char*)msg;
@@ -163,19 +162,18 @@ SocketMessage::sendMessage(int handler){
     wmsg->tag=dtmsg->tag;  //reply
     wmsg->recver=dtmsg->sender;
     wmsg->to_addr=dtmsg->fr_addr;
-    dtmsg->recver->putMessage(wmsg);
+    dtmsg->recver->putReplyMessage(wmsg);
   }
   else{
-    wmsg->tag=(int)this;  //initial message
     wmsg->recver=spchan->ep;
     wmsg->to_addr= spchan->ep_addr;
-    spchan->sp->putMessage(wmsg);
+    tag=spchan->sp->putInitialMessage(wmsg);//initial message, save the tag
   }
 }
 
 void 
 SocketMessage::waitReply(){
-  DTMessage *wmsg=spchan->sp->getMessage((int)this);
+  DTMessage *wmsg=spchan->sp->getMessage(tag);
   msg_length=wmsg->length;
   wmsg->autofree=false;
   if(msg!=NULL) free(msg);
