@@ -1171,7 +1171,40 @@ void GetGlobalStats(Allocator* a,
 	bytes_overhead+=sizeof(OSHunk);
     bytes_overhead+=a->mysize;
 
-    // Count the allocators memory...
+    a->unlock();
+}
+
+// Shorter/faster version that doesn't do full accounting...
+void GetGlobalStats(Allocator* a,
+		    size_t& nalloc, size_t& sizealloc,
+		    size_t& nfree, size_t& sizefree,
+		    size_t& nfillbin,
+		    size_t& nmmap, size_t& sizemmap,
+		    size_t& nmunmap, size_t& sizemunmap,
+		    size_t& highwater_alloc, size_t& highwater_mmap,
+		    size_t& nlonglocks, size_t& nnaps)
+{
+    if(!a){
+	nalloc=sizealloc=nfree=sizefree=nfillbin=0;
+	nmmap=sizemmap=nmunmap=sizemunmap=0;
+	highwater_alloc=highwater_mmap=nlonglocks=nnaps=0;
+	return;
+    }
+    a->lock();
+    nalloc=a->nalloc;
+    sizealloc=a->sizealloc;
+    nfree=a->nfree;
+    sizefree=a->sizefree;
+    nfillbin=a->nfillbin;
+    nmmap=a->nmmap;
+    sizemmap=a->sizemmap;
+    nmunmap=a->nmunmap;
+    sizemunmap=a->sizemunmap;
+    highwater_alloc=a->highwater_alloc;
+    highwater_mmap=a->highwater_mmap;
+    nlonglocks=a->nlonglocks;
+    nnaps=a->nnaps;
+    
     a->unlock();
 }
 
