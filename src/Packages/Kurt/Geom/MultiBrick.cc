@@ -52,14 +52,14 @@ int MultiBrick::traversalTable[27][8] = { {7,3,5,6,1,2,4,0},
   
 MultiBrick::MultiBrick(int id, int slices, double alpha,
 		       int maxdim, Point min, Point max,
-		       bool drawMIP, bool debug,
+		       int mode, bool debug,
 		       int X, int Y, int Z,
 		       const ScalarFieldRGuchar* tex,
 		       const GLvoid* cmap) :
   GeomObj(id), alpha(alpha),  slices(slices),
   tex( tex ), cmap(cmap), min(min), max(max), debug(debug),
-  X(X), Y(Y), Z(Z), drawMIP(drawMIP), drawWireFrame( false ),
-  drawLevel(0),
+  X(X), Y(Y), Z(Z), mode(mode), drawWireFrame( false ),
+  drawLevel(0), reload( (unsigned char*)&tex->grid(0,0,0)),
   xmax(maxdim),ymax(maxdim),zmax(maxdim), treeDepth(0), nodeId(0)
 {
   
@@ -93,6 +93,27 @@ dz = diag.z()/(Z-1);
 
 }
  
+void
+MultiBrick::SetVol( const ScalarFieldRGuchar *tex )
+{
+  this->tex = tex;
+  X = tex->nx;
+  Y = tex->ny;
+  Z = tex->nz;
+  
+  Vector diag = max - min;
+  dx = diag.x()/(X-1);
+  dy = diag.y()/(Y-1);
+  dz = diag.z()/(Z-1);
+#ifdef SCI_OPENGL
+//octree = buildOctree(min, max, 0, 0, 0, X, Y, Z, 0);
+  computeTreeDepth(); 
+  nodeId = 0; 
+  octree = buildBonTree(min, max, 0, 0, 0, X, Y, Z, 0,0);
+#endif
+
+}
+
 MultiBrick::~MultiBrick()
 {
 #ifdef SCI_OPENGL
@@ -126,19 +147,19 @@ void MultiBrick::computeTreeDepth()
 
 void MultiBrick::SetMaxBrickSize(int x,int y,int z)
 {
-  GLint xtex, ytex, ztex;
-  glTexImage3DEXT(GL_PROXY_TEXTURE_3D_EXT, 0, 4, x, y, z, 0,
-                    GL_RGBA, GL_UNSIGNED_BYTE, tex);
-  glGetTexLevelParameteriv( GL_PROXY_TEXTURE_3D_EXT, 0,
-                            GL_TEXTURE_WIDTH, &xtex);
-  glGetTexLevelParameteriv( GL_PROXY_TEXTURE_3D_EXT, 0,
-                            GL_TEXTURE_HEIGHT, &ytex);
-  glGetTexLevelParameteriv( GL_PROXY_TEXTURE_3D_EXT, 0,
-                            GL_TEXTURE_DEPTH_EXT, &ztex);
+/*   GLint xtex, ytex, ztex; */
+/*   glTexImage3DEXT(GL_PROXY_TEXTURE_3D_EXT, 0, 4, x, y, z, 0, */
+/*                     GL_RGBA, GL_UNSIGNED_BYTE, tex); */
+/*   glGetTexLevelParameteriv( GL_PROXY_TEXTURE_3D_EXT, 0, */
+/*                             GL_TEXTURE_WIDTH, &xtex); */
+/*   glGetTexLevelParameteriv( GL_PROXY_TEXTURE_3D_EXT, 0, */
+/*                             GL_TEXTURE_HEIGHT, &ytex); */
+/*   glGetTexLevelParameteriv( GL_PROXY_TEXTURE_3D_EXT, 0, */
+/*                             GL_TEXTURE_DEPTH_EXT, &ztex); */
 
-  if( xtex && ytex && ztex) { // we can accommodate
+/*   if( xtex && ytex && ztex) { // we can accommodate */
     xmax = x; ymax = y; zmax = z;
-  }
+/*   } */
 }
 
 VolumeOctree<Brick*>*
@@ -500,20 +521,36 @@ void MultiBrick::makeLowResBrickData(int xmax, int ymax, int zmax,
       dx = 1; padx=(xmax - xsize);
     } else {
       dx = pow(2.0, treeDepth - level);
+      if( xmax * dx > xsize){
+	padx = (xmax*dx - xsize)/dx;
+      }
     }
     if( ymax > ysize ) {
       dy = 1; pady = (ymax - ysize);
     } else {
       dy = pow(2.0, treeDepth - level);
+      if( ymax * dy > ysize){
+	pady = (ymax*dy - ysize)/dy;
+      }
     }
     if( zmax > zsize ) {
       dz = 1; padz = (zmax - zsize);
     } else {
       dz = pow(2.0, treeDepth - level);
+      if( zmax * dz > zsize){
+	padz = (zmax*dz - zsize)/dz;
+      }
     }
     if(debug){
-      cerr<<"dx, dy, dz = "<< dx<<", "<<dy<<", "<<dz;
+      cerr<<"xmax = "<< xmax * dx<<", xsize = "<<xsize<<endl;
+      cerr<<"ymax = "<< ymax * dy<<", ysize = "<<ysize<<endl;
+      cerr<<"zmax = "<< zmax * dz<<", zsize = "<<zsize<<endl;
+      cerr<<"dx, dy, dz = "<< dx<<", "<<dy<<", "<<dz<<endl;
+      cerr<<"padx, pady, padz = "<< padx<<", "<<pady<<", "<<padz<<endl;
     }
+/*     dx = pow(2.0, treeDepth - level); */
+/*     dy = pow(2.0, treeDepth - level); */
+/*     dz = pow(2.0, treeDepth - level); */
     for(kk = 0, k = zoff; kk < zmax; kk++, k+=dz){
       for(jj = 0, j = yoff; jj < ymax; jj++, j+=dy){
 	for(ii = 0, i = xoff; ii < xmax; ii++, i+=dx){
@@ -608,19 +645,20 @@ MultiBrick::drawSlices()
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
   glPrintError("glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE)");
   //glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  if( cmap ) {
 #ifdef __sgi
-  //cerr << "Using Lookup!\n";
-  glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
-  glPrintError("glEnable(GL_TEXTURE_COLOR_TABLE_SGI)");
-  glColorTableSGI(GL_TEXTURE_COLOR_TABLE_SGI,
-		  GL_RGBA,
-		  256, // try larger sizes?
-		  GL_RGBA,  // need an alpha value...
-		  GL_UNSIGNED_BYTE, // try shorts...
-		  cmap);
-  glPrintError("glColorTableSGI");
+    //cerr << "Using Lookup!\n";
+    glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
+    glPrintError("glEnable(GL_TEXTURE_COLOR_TABLE_SGI)");
+    glColorTableSGI(GL_TEXTURE_COLOR_TABLE_SGI,
+		    GL_RGBA,
+		    256, // try larger sizes?
+		    GL_RGBA,  // need an alpha value...
+		    GL_UNSIGNED_BYTE, // try shorts...
+		    cmap);
+    glPrintError("glColorTableSGI");
 #endif
-  
+  }
   glColor4f(1,1,1,1); // set to all white for modulation
   glPrintError("glColor4f(1,1,1,1)");
   
@@ -629,28 +667,39 @@ MultiBrick::drawSlices()
   glPrintError("glEnable(GL_BLEND)");
 
   // Maximum Intensity Projections
-  if( drawMIP ){
-    glBlendEquationEXT(GL_MAX_EXT);
-    glPrintError("glBlendEquationEXT(GL_MAX_EXT)");
-    glBlendFunc(GL_ONE, GL_ONE);  //glBlendFunc(GL_ONE, GL_ONE);
-    glPrintError("glBlendFunc(GL_ONE, GL_ONE)");
-  } else {
-    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-    glPrintError("glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)");
+  if( mode != 3 ) {
+    if( mode == 2 ){
+      glBlendEquationEXT(GL_MAX_EXT);
+      glPrintError("glBlendEquationEXT(GL_MAX_EXT)");
+      glBlendFunc(GL_ONE, GL_ONE);  //glBlendFunc(GL_ONE, GL_ONE);
+      glPrintError("glBlendFunc(GL_ONE, GL_ONE)");
+    } else if( mode == 1) {
+      glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+      glPrintError("glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)");
+    } else {
+      //glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_REPLACE); 
+      //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+      glDisable(GL_BLEND);
+      glEnable(GL_DEPTH_TEST);
+    }
+    // This combo works
+    //glBlendEquationEXT(GL_FUNC_ADD_EXT);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    
+    
+    SliceTable st(min,max, viewRay, treeDepth, slices);
+    drawBonTree( octree, viewRay, st);
+    /*   drawBonTree( octree, viewRay); */
+    // NOT_FINISHED("MultiBrick::drawSlices()");
   }
-  // This combo works
-  //glBlendEquationEXT(GL_FUNC_ADD_EXT);
-  //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-  
-  SliceTable st(min,max, viewRay, treeDepth, slices);
-  drawBonTree( octree, viewRay, st);
-/*   drawBonTree( octree, viewRay); */
-  // NOT_FINISHED("MultiBrick::drawSlices()");
-
+  if ( mode ){
+    glDepthMask(GL_TRUE);
+    glBlendEquationEXT(GL_FUNC_ADD_EXT);
+  }
   glDisable(GL_BLEND);
 #ifdef __sgi
-  glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
+  if( cmap )
+    glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
 #endif
   glDisable(GL_TEXTURE_3D_EXT);
   glEnable(GL_DEPTH_TEST);  
@@ -670,9 +719,13 @@ void MultiBrick::drawBonTree( const VolumeOctree<Brick*>* node,
     st.getParameters( brick, tmin, tmax, dt );
     if(debug)
       cerr<<"drawing node "<< node->getId()<<" at level "<<brick->getLevel()<<endl;
-
-    brick->draw( viewRay, alpha, drawWireFrame, tmin, tmax, dt);
-/*     for( i = 0; i < 8; i++) */
+    if(!mode) {
+    brick->draw(viewRay, drawWireFrame, reload != 0,  widgetPoint );
+  } else {
+    brick->draw( viewRay, alpha, drawWireFrame, reload != 0, tmin, tmax, dt);/*     for( i = 0; i < 8; i++) */
+  }
+    if( reload !=0 )
+      reload = 0;
 /*       ts[i] = intersectParam(-viewRay.direction(), */
 /* 			     brick->getCorner(i), viewRay); */
 /*     sortParameters(ts,8); */
@@ -734,13 +787,21 @@ void MultiBrick::drawTree( const VolumeOctree<Brick*>* node, bool useLevel,
   if ( node == NULL ) return;
    
   Brick* brick = (*node)(); // get the contents of the node
+
+
   if( node->getType() == VolumeOctree<Brick*>::LEAF ||
       (brick->getLevel() >= drawLevel && useLevel)) {
      st.getParameters( brick, tmin, tmax, dt );
   if(debug)
     cerr<<"drawing node "<< node->getId()<<" at level "<<brick->getLevel()<<endl;
 
-     brick->draw( viewRay, alpha, drawWireFrame, tmin, tmax, dt);
+  if(!mode) {
+    brick->draw(viewRay, drawWireFrame, reload != 0,  widgetPoint );
+  } else {
+     brick->draw( viewRay, alpha, drawWireFrame, reload != 0, tmin, tmax, dt);
+  }  
+  if(reload !=0)
+    reload = 0;
 /*     for( i = 0; i < 8; i++) */
 /*       ts[i] = intersectParam(-viewRay.direction(), */
 /* 			     brick->getCorner(i), viewRay); */

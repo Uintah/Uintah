@@ -26,7 +26,6 @@
 #include <Kurt/Geom/VolumeUtils.h>
 
 
-unsigned char textureMem[32][32][32];
 
 namespace Kurt {
 namespace Modules {
@@ -41,6 +40,7 @@ using namespace SCICore::Geometry;
 using namespace SCICore::Math;
 using std::cerr;
 
+static clString widget_name("VolVisLocatorWidget");
 
 extern "C" Module* make_VolVis( const clString& id) {
   return new VolVis(id);
@@ -86,6 +86,9 @@ void VolVis::tcl_command( TCLArgs& args, void* userdata)
     if (args[2] == "Mode") {
       args[3].get_int(mode);
       cerr<< "Set Mode = "<< mode << endl;
+      if( brick ){
+	brick->SetMode( mode );
+      }
     } else if (args[2] == "NumSlices") {
       int ns;
       args[3].get_int(ns);
@@ -103,7 +106,7 @@ void VolVis::tcl_command( TCLArgs& args, void* userdata)
     }
   } else if (args[1] == "MoveWidget") {
       if (!widget) return;
-      Point w(0,0,0);
+      Point w(widget->ReferencePoint());
       if (args[2] == "xplus") {
 	  w+=Vector(ddv.x(), 0, 0);
       } else if (args[2] == "xminus") {
@@ -117,8 +120,8 @@ void VolVis::tcl_command( TCLArgs& args, void* userdata)
       } else {	// (args[3] == "zminus")
 	  w-=Vector(0, 0, ddv.z());
       }
-      //widget->SetPosition(w);
-      //widget_moved(1);
+      widget->SetPosition(w);
+      widget_moved(1);
       cerr<< "MoveWidgit " << w << endl;
   } else if (args[1] == "Clear") {
       cerr << "Clear "<< endl;
@@ -127,10 +130,45 @@ void VolVis::tcl_command( TCLArgs& args, void* userdata)
   }
 }
 
+void VolVis::widget_moved(int /*last*/)
+{
+  cerr<<"is brick set? "<< (( brick == 0)? "NO":"YES")<<endl;
+  cerr<<"mode is "<<mode<<endl;
+  cerr<<"moving widget to "<<widget->ReferencePoint()<<endl;
+  if( !mode && brick )
+    {
+      brick->SetPlaneIntersection(widget->ReferencePoint());
+    }
+}
 
+void VolVis::SwapXZ( ScalarFieldHandle sfh )
+{
+  ScalarFieldRGuchar *ifu, *ofu;
+  ifu = sfh->getRGBase()->getRGUchar();
+  int nx=ifu->nx;
+  int ny=ifu->ny;
+  int nz=ifu->nz;
+  Point min;
+  Point max;
+  sfh->get_bounds(min, max);
+
+  ofu = scinew ScalarFieldRGuchar();
+  ofu->resize(nx,ny,nz);
+  ofu->set_bounds(Point(min.z(), min.y(), min.x()), 
+		  Point(max.z(), max.y(), max.x()));
+  for (int i=0, ii=0; i<nx; i++, ii++)
+    for (int j=0, jj=0; j<ny; j++, jj++)
+      for (int k=0, kk=0; k<nz; k++, kk++)
+	ofu->grid(k,j,i)=ifu->grid(ii,jj,kk);
+
+  sfh = ScalarFieldHandle( ofu );
+
+}
+  
 void VolVis::execute(void)
 {
-  ScalarFieldHandle sfield;
+  static ScalarFieldHandle sfield;
+  static ScalarFieldHandle field = 0;
   const clString base("draw");
   const clString modes("mode");
 
@@ -140,7 +178,6 @@ void VolVis::execute(void)
   else if (!sfield.get_rep()) {
     return;
   }
-  
   if (!sfield->getRGBase())
     return;
 
@@ -156,35 +193,80 @@ void VolVis::execute(void)
     cerr << "Not a char field!\n";
     return;
   } else {
+    if( field.get_rep() != sfield.get_rep() ){
+      field = sfield;
+      SwapXZ( sfield );
+    }
     int nx, ny, nz;
     int padx = 0, pady = 0, padz = 0;
-    
     Point pmin,pmax;
     rgchar->get_bounds(pmin, pmax);
 
-      cerr << "slices, alpha "<<num_slices.get()<<", "<<alpha.get()<<endl;
-      cerr << "max dim, pmin, pmax, "<<max_brick_dim.get()<<", "<<pmin<<", "<< pmax<<endl;
-      cerr << "field size "<<rgchar->nx <<", "<<rgchar->ny <<", "<<rgchar->nz <<endl;
-    brick = new MultiBrick( 0x12345676, num_slices.get(), alpha.get(),
-			  max_brick_dim.get(), pmin, pmax,
-			  (draw_mode.get() == 2), debug.get(),
-			  rgchar->nz, rgchar->ny, rgchar->nx,
-			  rgchar, (unsigned char*)cmap->raw1d);
-    brick->SetDrawLevel(level.get());
+    if(!init){
+      init=1;
+      widget=scinew PointWidget(this, &widget_lock, 0.2);
+      GeomObj *w=widget->GetWidget();
+      ogeom->addObj(w, widget_name, &widget_lock);
+      widget->Connect(ogeom);
     
-    int l = brick->getMaxLevel();
-    int dim = brick->getMaxSize();
-    TCL::execute( id + " SetDims " + to_string( dim ));
-    TCL::execute( id + " SetLevels " + to_string( l ));
+      // DAVE: HACK!
+      //    sfield->get_bounds(Smin, Smax);
 
+      Smin=Point(pmin.z(), pmin.y(), pmin.x());
+      Smax=Point(pmax.z(), pmax.y(), pmax.x());
+      cerr << "Smin="<<Smin<<"  Smax="<<Smax<<"\n";
+      widget->SetPosition(Interpolate(Smin,Smax,0.5));
+      Vector dv(Smax-Smin);
+      ddv.x(dv.x()/(rgchar->nz - 1));
+      ddv.y(dv.y()/(rgchar->ny - 1));
+      ddv.z(dv.z()/(rgchar->nx - 1));
+      widget->SetScale(rgchar->longest_dimension()/80.0);
 
-    ogeom->delAll();
-    ogeom->addObj( brick, "TexBrick" );
+    }
+    
+    
+      //ogeom->addObj(triangles,"Cutting Planes TransParent");
+    if( !brick ){
+      brick = new MultiBrick( 0x12345676, num_slices.get(), alpha.get(),
+			      max_brick_dim.get(), pmin, pmax,
+			      draw_mode.get(), debug.get(),
+			      rgchar->nz, rgchar->ny, rgchar->nx,
+			      rgchar, (unsigned char*)cmap->raw1d);
+      brick->SetDrawLevel(level.get());
+    
+      if( init )
+	brick->SetPlaneIntersection(widget->ReferencePoint());
+      int l = brick->getMaxLevel();
+      int dim = brick->getMaxSize();
+      TCL::execute( id + " SetDims " + to_string( dim ));
+      TCL::execute( id + " SetLevels " + to_string( l ));
+      ogeom->addObj( brick, "TexBrick" ); 
+    } else {
+      brick->Reload();
+      brick->SetMaxBrickSize( max_brick_dim.get(), max_brick_dim.get(),
+			       max_brick_dim.get());
+      brick->SetColorMap((unsigned char*)cmap->raw1d);
+      brick->SetDebug( debug.get());
+      brick->SetAlpha( alpha.get());
+      brick->SetNSlices( num_slices.get());
+      brick->SetVol( rgchar );
+      //      brick->SetMode( mode );
+      brick->SetDrawLevel(level.get());
+      //brick->SetPlaneIntersection(widget->ReferencePoint());
+      int l = brick->getMaxLevel();
+      int dim = brick->getMaxSize();
+      TCL::execute( id + " SetDims " + to_string( dim ));
+      TCL::execute( id + " SetLevels " + to_string( l ));
 
-    ogeom->flushViews();
+      Vector dv(Smax-Smin);
+      ddv.x(dv.x()/(rgchar->nz - 1));
+      ddv.y(dv.y()/(rgchar->ny - 1));
+      ddv.z(dv.z()/(rgchar->nx - 1));
+
+      ogeom->flushViews();
+    }
   }
 }
-
 } // End namespace Modules
 } // End namespace Uintah
 

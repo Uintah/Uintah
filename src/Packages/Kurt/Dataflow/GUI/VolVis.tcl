@@ -125,6 +125,9 @@ itcl_class Kurt_VolVis_VolVis {
 	global $this-max_brick_dim
 	set w .ui[modname]
 
+	if {![winfo exists $w]} {
+	    return
+	}
 	if {[winfo exists $w.f.dimframe.f]} {
 	    destroy $w.f.dimframe.f
 	}
@@ -142,6 +145,9 @@ itcl_class Kurt_VolVis_VolVis {
 	global $this-level
 	set w .ui[modname]
 
+	if {![winfo exists $w]} {
+	    return
+	}
 	
 	if {[winfo exists $w.f.levelframe.f]} {
 	    destroy $w.f.levelframe.f

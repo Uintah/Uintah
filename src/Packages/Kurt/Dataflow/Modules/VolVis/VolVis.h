@@ -52,7 +52,7 @@ private:
   int init;
   CrowdMonitor widget_lock;
   PointWidget *widget;
-
+  void widget_moved(int /*last*/);
   int widgetMoved;
   
   int field_id; // id for the scalar field...
@@ -75,7 +75,7 @@ private:
   int mode;
 
   MultiBrick *brick;
-  
+  void SwapXZ( ScalarFieldHandle sfh );
 
 };
 
