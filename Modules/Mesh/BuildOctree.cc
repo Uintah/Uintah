@@ -45,8 +45,8 @@ public:
     virtual ~BuildOctree();
     virtual Module* clone(int deep);
     void partial_execute();
-    virtual void geom_moved(int, double, const Vector& delta, void*);
-    virtual void geom_release(void *);
+    virtual void geom_moved(GeomPick*, int, double, const Vector& delta, void*);
+    virtual void geom_release(GeomPick*, void *);
     virtual void execute();
     virtual void tcl_command(TCLArgs&, void*);
 };
@@ -72,7 +72,6 @@ BuildOctree::BuildOctree(const clString& id)
     owidget=new GeometryOPort(this, "Widget Geometry", GeometryIPort::Atomic);
     add_oport(owidget);
     widget = new CrosshairWidget(this, &widget_lock, .1);
-    widget->widget_execute();
     owidget->addObj(widget->GetWidget(), "CrosshairWidget", &widget_lock);
     owidget->flushViews();
 }
@@ -92,12 +91,12 @@ Module* BuildOctree::clone(int deep)
     return new BuildOctree(*this, deep);
 }
 
-void BuildOctree::geom_moved(int, double, const Vector&,
+void BuildOctree::geom_moved(GeomPick*, int, double, const Vector&,
 				void*)
 {    
 }
 
-void BuildOctree::geom_release(void*)
+void BuildOctree::geom_release(GeomPick*, void*)
 {    
 }
 

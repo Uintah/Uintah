@@ -341,7 +341,6 @@ void MeshView::execute()
 	}
     }
 
-    startingTet -> execute();
     geom_lock.write_unlock();
 
 

@@ -86,8 +86,8 @@ public:
     virtual ~BuildMultiMesh();
     virtual Module* clone(int deep);
     void partial_execute();
-    virtual void geom_moved(int, double, const Vector& delta, void*);
-    virtual void geom_release(void *);
+    virtual void geom_moved(GeomPick*, int, double, const Vector& delta, void*);
+    virtual void geom_release(GeomPick*, void *);
     virtual void connection(Module::ConnectionMode, int, int);
     virtual void execute();
     virtual void tcl_command(TCLArgs&, void*);
@@ -188,7 +188,7 @@ void BuildMultiMesh::connection(ConnectionMode mode, int which_port,
     }
 }
 
-void BuildMultiMesh::geom_release(void *) {
+void BuildMultiMesh::geom_release(GeomPick*, void *) {
     if (PE.get()) {
 	want_partial_execute_only=1;
 	widget_changed=1;
@@ -196,7 +196,7 @@ void BuildMultiMesh::geom_release(void *) {
     }
 }
 
-void BuildMultiMesh::geom_moved(int, double, const Vector&,
+void BuildMultiMesh::geom_moved(GeomPick*, int, double, const Vector&,
 				void*)
 {    
 }
