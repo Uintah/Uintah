@@ -86,9 +86,12 @@ void NrrdToField::execute()
   int ny = ninH->nrrd->size[1];
   int nz = ninH->nrrd->size[2];
   
-  Point minP, maxP;
+  Point minP(0,0,0), maxP((nx-1)*ninH->nrrd->spacing[0],
+			  (ny-1)*ninH->nrrd->spacing[1],
+			  (nz-1)*ninH->nrrd->spacing[2]);	  
   FieldHandle fieldH;
 
+#if 0
   minP.x(ninH->nrrd->axisMin[0]);
   if ((minP.x()<1 || minP.x()>-1)) {	// !NaN
     minP.y(ninH->nrrd->axisMin[1]);
@@ -100,6 +103,7 @@ void NrrdToField::execute()
     minP=Point(0,0,0);
     maxP=Point(nx-1, ny-1, nz-1);
   }
+#endif
  
   int i, j, k;
   LatVolMesh *lvm = scinew LatVolMesh(nx, ny, nz, minP, maxP);
