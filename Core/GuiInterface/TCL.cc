@@ -96,32 +96,15 @@ static string application()
 }
 
 #endif
-
-void
-TCL::execute(const string& str)
+void TCL::execute(const string& str)
 {
-  TCLTask::lock();
-  int code = Tcl_Eval(the_interp, ccast_unsafe(str));
-  if(code != TCL_OK)
-    Tk_BackgroundError(the_interp);
-  TCLTask::unlock();
+  GuiManager::execute(str);
 }
-
 
 int TCL::eval(const string& str, string& result)
 {
-    TCLTask::lock();
-    int code = Tcl_Eval(the_interp, ccast_unsafe(str));
-    if(code != TCL_OK){
-	Tk_BackgroundError(the_interp);
-	result="";
-    } else {
-	result=string(the_interp->result);
-    }
-    TCLTask::unlock();
-    return code == TCL_OK;
+  return GuiManager::eval(str, result);
 }
-
 
 void TCL::source_once(const string& filename)
 {

@@ -33,6 +33,7 @@
 
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/GuiInterface/GuiManager.h>
 #include <string>
 
 using std::string;
@@ -71,8 +72,8 @@ class SCICORESHARE TCL {
 public:
     virtual void emit_vars(std::ostream& out, string& midx);
     static void initialize();
-    static void execute(const string&);
-    static int eval(const string&, string& result);
+    static void execute(const string& str);
+    static int eval(const string& str, string& result);
     static void source_once(const string&);
     static void add_command(const string&, TCL*, void*);
     static void delete_command( const string& command );
