@@ -233,6 +233,13 @@ private:
   LabelTex 				*status_label3;
   LabelTex				*name_label;
   LabelTex				*x_axis_label;
+  LabelTex				*x_range_g_label;
+  LabelTex				*x_range_b_label;
+  LabelTex				*x_range_l_label;
+  LabelTex				*y_axis_label;
+  LabelTex				*y_range_g_label;
+  LabelTex				*y_range_b_label;
+  LabelTex				*y_range_l_label;
   string				name_text;
   LabelTex				*time_label;
   string				time_text;
@@ -252,6 +259,13 @@ private:
   tuple					*injury_point;
   tuple					*alarm_point;
   tuple					*x_axis_point;
+  tuple					*x_range_g_point;
+  tuple					*x_range_b_point;
+  tuple					*x_range_l_point;
+  tuple					*y_axis_point;
+  tuple					*y_range_g_point;
+  tuple					*y_range_b_point;
+  tuple					*y_range_l_point;
 
   bool                  make_current();
   void                  synch_plot_vars(int s);
@@ -429,6 +443,13 @@ ExecutiveState::ExecutiveState(GuiContext* ctx) :
   scale_(-8.0),
   name_label(0),
   x_axis_label(0),
+  x_range_g_label(0),
+  x_range_b_label(0),
+  x_range_l_label(0),
+  y_axis_label(0),
+  y_range_g_label(0),
+  y_range_b_label(0),
+  y_range_l_label(0),
   name_text(" "),
   time_label(0),
   time_text("Time: 00:00:00"),
@@ -680,6 +701,34 @@ ExecutiveState::init_plots()
   x_axis_label = scinew LabelTex("Amplitude, LV Waveform");
   x_axis_label->bind(font);
 
+  if (x_range_g_label) delete x_range_g_label;
+  x_range_g_label = scinew LabelTex("Baseline");
+  x_range_g_label->bind(font);
+
+  if (x_range_b_label) delete x_range_b_label;
+  x_range_b_label = scinew LabelTex("Decline");
+  x_range_b_label->bind(font);
+
+  if (x_range_l_label) delete x_range_l_label;
+  x_range_l_label = scinew LabelTex("LV");
+  x_range_l_label->bind(font);
+
+  if (y_axis_label) delete y_axis_label;
+  y_axis_label = scinew LabelTex("Amplitude, RV Waveform");
+  y_axis_label->bind(font);
+
+  if (y_range_g_label) delete y_range_g_label;
+  y_range_g_label = scinew LabelTex("Baseline");
+  y_range_g_label->bind(font);
+
+  if (y_range_b_label) delete y_range_b_label;
+  y_range_b_label = scinew LabelTex("Decline");
+  y_range_b_label->bind(font);
+
+  if (y_range_l_label) delete y_range_l_label;
+  y_range_l_label = scinew LabelTex("RV");
+  y_range_l_label->bind(font);
+
   font->set_points(36.0 * gui_font_scale_.get());
   if (alarm_label) delete alarm_label;
   alarm_label = scinew LabelTex("Alarm");
@@ -930,6 +979,14 @@ ExecutiveState::draw_plots()
     glGetDoublev(GL_PROJECTION_MATRIX, pm);
 
     gluProject((GLdouble)5.0, (GLdouble)-0.1, (GLdouble)0.0, mm, pm, vp, &x_axis_point->x, &x_axis_point->y, &x_axis_point->z);
+    gluProject((GLdouble)10.0, (GLdouble)10.0, (GLdouble)0.0, mm, pm, vp, &x_range_g_point->x, &x_range_g_point->y, &x_range_g_point->z);
+    gluProject((GLdouble)0.0, (GLdouble)10.0, (GLdouble)0.0, mm, pm, vp, &x_range_b_point->x, &x_range_b_point->y, &x_range_b_point->z);
+    gluProject((GLdouble)5.0, (GLdouble)10.0, (GLdouble)0.0, mm, pm, vp, &x_range_l_point->x, &x_range_l_point->y, &x_range_l_point->z);
+
+    gluProject((GLdouble)-0.1, (GLdouble)5.0, (GLdouble)0.0, mm, pm, vp, &y_axis_point->x, &y_axis_point->y, &y_axis_point->z);
+    gluProject((GLdouble)10.1, (GLdouble)10.0, (GLdouble)0.0, mm, pm, vp, &y_range_g_point->x, &y_range_g_point->y, &y_range_g_point->z);
+    gluProject((GLdouble)10.1, (GLdouble)0.0, (GLdouble)0.0, mm, pm, vp, &y_range_b_point->x, &y_range_b_point->y, &y_range_b_point->z);
+    gluProject((GLdouble)10.1, (GLdouble)5.0, (GLdouble)0.0, mm, pm, vp, &y_range_l_point->x, &y_range_l_point->y, &y_range_l_point->z);
 
     // path, points on path, crosshairs, second difference vector
     if (data_.get_rep()) {
@@ -1060,6 +1117,54 @@ ExecutiveState::draw_plots()
       float xoff = x_axis_label->tex_width_ * x_axis_label->u_;
       float yoff = x_axis_label->tex_height_ * x_axis_label->v_ * 1.5;
       x_axis_label->draw(x_axis_point->x - xoff/2, x_axis_point->y - yoff, sx, sy);
+    }
+
+    if (y_axis_label) {
+      glColor4f(1.0, 1.0, 0.0, 1.0);
+      float xoff = y_axis_label->tex_width_ * y_axis_label->u_;
+      y_axis_label->draw(y_axis_point->x - xoff, y_axis_point->y, sx, sy);
+    }
+
+    if (x_range_l_label) {
+      glColor4f(1.0, 1.0, 0.0, 1.0);
+      float xoff = x_range_l_label->tex_width_ * x_range_l_label->u_;
+      float yoff = x_range_l_label->tex_height_ * x_range_l_label->v_ * 0.5;
+      x_range_l_label->draw(x_range_l_point->x - xoff/2, x_range_l_point->y + yoff, sx, sy);
+    }
+
+    if (y_range_l_label) {
+      glColor4f(1.0, 1.0, 0.0, 1.0);
+      //float xoff = y_range_l_label->tex_width_ * y_range_l_label->u_;
+      //float yoff = y_range_l_label->tex_height_ * y_range_l_label->v_ * 0.5;
+      y_range_l_label->draw(y_range_l_point->x, y_range_l_point->y, sx, sy);
+    }
+
+    if (x_range_g_label) {
+      glColor4f(0.0, 1.0, 0.0, 1.0);
+      float xoff = x_range_g_label->tex_width_ * x_range_g_label->u_;
+      float yoff = x_range_g_label->tex_height_ * x_range_g_label->v_ * 0.5;
+      x_range_g_label->draw(x_range_g_point->x - xoff, x_range_g_point->y + yoff, sx, sy);
+    }
+
+    if (y_range_g_label) {
+      glColor4f(0.0, 1.0, 0.0, 1.0);
+      //float xoff = y_range_g_label->tex_width_ * y_range_g_label->u_;
+      float yoff = y_range_g_label->tex_height_ * y_range_g_label->v_;
+      y_range_g_label->draw(y_range_g_point->x, y_range_g_point->y - yoff, sx, sy);
+    }
+
+    if (x_range_b_label) {
+      glColor4f(1.0, 0.0, 0.0, 1.0);
+      //float xoff = x_range_b_label->tex_width_ * x_range_b_label->u_;
+      float yoff = x_range_b_label->tex_height_ * x_range_b_label->v_ * 0.5;
+      x_range_b_label->draw(x_range_b_point->x, x_range_b_point->y + yoff, sx, sy);
+    }
+
+    if (y_range_b_label) {
+      glColor4f(1.0, 0.0, 0.0, 1.0);
+      //float xoff = y_range_b_label->tex_width_ * y_range_b_label->u_;
+      //float yoff = y_range_b_label->tex_height_ * y_range_b_label->v_ * 0.5;
+      y_range_b_label->draw(y_range_b_point->x, y_range_b_point->y, sx, sy);
     }
 
     if (time_label) {
@@ -1505,6 +1610,13 @@ ExecutiveState::createDecisionSpace()
   injury_point = new tuple;
   alarm_point = new tuple;
   x_axis_point = new tuple;
+  x_range_g_point = new tuple;
+  x_range_b_point = new tuple;
+  x_range_l_point = new tuple;
+  y_axis_point = new tuple;
+  y_range_g_point = new tuple;
+  y_range_b_point = new tuple;
+  y_range_l_point = new tuple;
 
   CONTROL_SPACE_LIST = glGenLists(1);
                                                                                 
