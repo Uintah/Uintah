@@ -424,6 +424,8 @@ int ExplicitSolver::noSolve(const LevelP& level,
   d_props->sched_computeDrhodt(sched, patches, matls,
 				 nosolve_timelabels);
 
+  d_boundaryCondition->sched_setInletFlowRates(sched, patches, matls);
+
   sched_dummySolve(sched, patches, matls);
 
   sched_interpolateFromFCToCC(sched, patches, matls, nosolve_timelabels);
@@ -548,73 +550,6 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   if (d_MAlab)
     tsk->computes(d_lab->d_densityMicroINLabel);
   sched->addTask(tsk, patches, matls);
-}
-
-// ****************************************************************************
-// Schedule data copy for first time step of Multimaterial algorithm
-// ****************************************************************************
-void
-ExplicitSolver::sched_dummySolve(SchedulerP& sched,
-			       const PatchSet* patches,
-			       const MaterialSet* matls)
-{
-  Task* tsk = scinew Task( "ExplicitSolver::dataCopy",
-			   this, &ExplicitSolver::dummySolve);
-
-  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-
-  /*
-  int nofScalarVars = d_props->getNumMixStatVars();
-  if (nofScalarVars > 0) {
-    for (int ii = 0; ii < nofScalarVars; ii++) {
-      tsk->requires(Task::OldDW, d_lab->d_scalarVarSPLabel, 
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-  }
-  */
-
-  tsk->computes(d_lab->d_pressurePSLabel);
-  tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
-
-  // warning **only works for one scalar
-
-  tsk->computes(d_lab->d_uvwoutLabel);
-  tsk->computes(d_lab->d_totalflowINLabel);
-  tsk->computes(d_lab->d_totalflowOUTLabel);
-  tsk->computes(d_lab->d_netflowOUTBCLabel);
-  tsk->computes(d_lab->d_denAccumLabel);
-  tsk->computes(d_lab->d_scalarEfficiencyLabel);
-  tsk->computes(d_lab->d_carbonEfficiencyLabel);
-
-  tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
-  tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
-  tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
-
-  tsk->requires(Task::OldDW, d_lab->d_maxUxplus_label);
-  tsk->requires(Task::OldDW, d_lab->d_avUxplus_label);
-
-  tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->computes(d_lab->d_divConstraintLabel);
-
-  /*
-  if (nofScalarVars > 0) {
-    for (int ii = 0; ii < nofScalarVars; ii++) {
-      tsk->computes(d_lab->d_scalarVarSPLabel);
-    }
-  }
-  */
-
-  tsk->computes(d_lab->d_maxAbsU_label);
-  tsk->computes(d_lab->d_maxAbsV_label);
-  tsk->computes(d_lab->d_maxAbsW_label);
-
-  tsk->computes(d_lab->d_maxUxplus_label);
-  tsk->computes(d_lab->d_avUxplus_label);
-
-  sched->addTask(tsk, patches, matls);  
-  
 }
 
 // ****************************************************************************
@@ -1688,6 +1623,75 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
 
 
 // ****************************************************************************
+// Schedule data copy for first time step of Multimaterial algorithm
+// ****************************************************************************
+void
+ExplicitSolver::sched_dummySolve(SchedulerP& sched,
+			       const PatchSet* patches,
+			       const MaterialSet* matls)
+{
+  Task* tsk = scinew Task( "ExplicitSolver::dataCopy",
+			   this, &ExplicitSolver::dummySolve);
+
+  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  /*
+  int nofScalarVars = d_props->getNumMixStatVars();
+  if (nofScalarVars > 0) {
+    for (int ii = 0; ii < nofScalarVars; ii++) {
+      tsk->requires(Task::OldDW, d_lab->d_scalarVarSPLabel, 
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+  }
+  */
+
+  tsk->computes(d_lab->d_pressurePSLabel);
+  tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
+
+  // warning **only works for one scalar
+
+  tsk->computes(d_lab->d_uvwoutLabel);
+  tsk->computes(d_lab->d_totalflowINLabel);
+  tsk->computes(d_lab->d_totalflowOUTLabel);
+  tsk->computes(d_lab->d_netflowOUTBCLabel);
+  tsk->computes(d_lab->d_denAccumLabel);
+  tsk->computes(d_lab->d_scalarEfficiencyLabel);
+  tsk->computes(d_lab->d_carbonEfficiencyLabel);
+  tsk->computes(d_lab->d_CO2FlowRateLabel);
+  tsk->computes(d_lab->d_scalarFlowRateLabel);
+
+  tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
+  tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
+  tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
+
+  tsk->requires(Task::OldDW, d_lab->d_maxUxplus_label);
+  tsk->requires(Task::OldDW, d_lab->d_avUxplus_label);
+
+  tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->computes(d_lab->d_divConstraintLabel);
+
+  /*
+  if (nofScalarVars > 0) {
+    for (int ii = 0; ii < nofScalarVars; ii++) {
+      tsk->computes(d_lab->d_scalarVarSPLabel);
+    }
+  }
+  */
+
+  tsk->computes(d_lab->d_maxAbsU_label);
+  tsk->computes(d_lab->d_maxAbsV_label);
+  tsk->computes(d_lab->d_maxAbsW_label);
+
+  tsk->computes(d_lab->d_maxUxplus_label);
+  tsk->computes(d_lab->d_avUxplus_label);
+
+  sched->addTask(tsk, patches, matls);  
+  
+}
+
+// ****************************************************************************
 // Actual Data Copy for first time step of MPMArches
 // ****************************************************************************
 
@@ -1778,7 +1782,8 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     double denAccum = 0.0;
     double carbon_efficiency = 0.0;
     double scalar_efficiency = 0.0;
-
+    double CO2FlowRate = 0.0;
+    double scalarFlowRate = 0.0;
 
     new_dw->put(delt_vartype(uvwout), d_lab->d_uvwoutLabel);
     new_dw->put(delt_vartype(flowIN), d_lab->d_totalflowINLabel);
@@ -1787,6 +1792,8 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     new_dw->put(delt_vartype(denAccum), d_lab->d_denAccumLabel);
     new_dw->put(delt_vartype(carbon_efficiency), d_lab->d_carbonEfficiencyLabel);
     new_dw->put(delt_vartype(scalar_efficiency), d_lab->d_scalarEfficiencyLabel);
+    new_dw->put(delt_vartype(CO2FlowRate), d_lab->d_CO2FlowRateLabel);
+    new_dw->put(delt_vartype(scalarFlowRate), d_lab->d_scalarFlowRateLabel);
 
   }
 }
