@@ -24,7 +24,7 @@
       <gui>text-entry</gui>
       <default>10</default>
     </param>
-    <param name="negative_features">
+    <param name="reverse_expansion_direction">
       <gui>checkbutton</gui>
       <default>1</default>
     </param>

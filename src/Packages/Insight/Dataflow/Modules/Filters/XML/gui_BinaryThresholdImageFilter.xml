@@ -27,7 +27,7 @@
 
     <param name="upper_threshold">
       <gui>text-entry</gui>
-      <default>3.0</default>
+      <default>1.0</default>
     </param>
 
     <param name="inside_value">
