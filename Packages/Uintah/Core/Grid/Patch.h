@@ -58,6 +58,7 @@ WARNING
        None,
        Fixed,
        Symmetry,
+       Periodic,
        Neighbor
      };
      
@@ -371,6 +372,22 @@ WARNING
 
      void setLayoutHint(const IntVector& pos);
      bool getLayoutHint(IntVector& pos) const;
+
+     // true for wrap around patches (periodic boundary conditions) that
+     // represent other real patches.
+     bool isVirtual() const
+     { return d_realPatch != 0; }
+
+     const Patch* getRealPatch() const
+     { return isVirtual() ? d_realPatch : this; }
+
+     IntVector getVirtualOffset() const
+     { return d_lowIndex - getRealPatch()->d_lowIndex; }
+
+     Vector getVirtualOffsetVector() const
+     { return cellPosition(d_lowIndex) -
+	 cellPosition(getRealPatch()->d_lowIndex); }     
+     
    protected:
      friend class Level;
      
@@ -383,9 +400,12 @@ WARNING
 	   const IntVector& d_inHighIndex,
 	   int id=-1);
      ~Patch();
-     
+
+     Patch* createVirtualPatch(const IntVector& offset) const
+     { return scinew Patch(this, offset); }
    private:
      Patch(const Patch&);
+     Patch(const Patch* realPatch, const IntVector& virtualOffset);
      Patch& operator=(const Patch&);
      
      const Level* d_level; // I live in this grid level;
@@ -404,13 +424,18 @@ WARNING
      IntVector d_nodeHighIndex;
      
      int d_id;
+
+     // NULL, unless this patch is a virtual patch (wrap-around
+     // from periodic boundary conditions).
+     const Patch* d_realPatch;
+     
      // Added an extra vector<> for each material
      BCType d_bctypes[numFaces];
      vector<BCData> d_bcs;
      friend class NodeIterator;
      bool in_database;
-       bool have_layout;
-       IntVector layouthint;
+     bool have_layout;
+     IntVector layouthint;
    };
 
 inline IntVector Patch::getLowIndex(VariableBasis basis) const

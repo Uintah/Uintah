@@ -32,7 +32,7 @@ Patch::Patch(const Level* level,
     : d_level(level), d_level_index(-1),
       d_lowIndex(lowIndex), d_highIndex(highIndex),
       d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
-      d_id( id )
+      d_realPatch(0), d_id( id )
 {
   have_layout=false;
   if(d_id == -1){
@@ -62,6 +62,25 @@ Patch::Patch(const Level* level,
 	       IntVector(getBCType(xplus) == Neighbor?0:1,
 			 getBCType(yplus) == Neighbor?0:1,
 			 getBCType(zplus) == Neighbor?0:1);
+}
+
+Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
+    : d_level(realPatch->d_level),
+      d_level_index(realPatch->d_level_index),
+      d_lowIndex(realPatch->d_lowIndex + virtualOffset),
+      d_highIndex(realPatch->d_highIndex + virtualOffset),
+      d_inLowIndex(realPatch->d_inLowIndex + virtualOffset),
+      d_inHighIndex(realPatch->d_inHighIndex + virtualOffset),
+      d_nodeHighIndex(realPatch->d_nodeHighIndex + virtualOffset),
+      d_realPatch(realPatch), d_id(-1000 - realPatch->getID()),
+      d_bcs(realPatch->d_bcs),
+      have_layout(realPatch->have_layout),
+      layouthint(realPatch->layouthint),
+      in_database(false)
+{
+  for (int i = 0; i < numFaces; i++)
+    d_bctypes[i] = realPatch->d_bctypes[i];
+
 }
 
 Patch::~Patch()
