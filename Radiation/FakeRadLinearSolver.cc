@@ -55,6 +55,9 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
 			   CCVariable<double>& ,
 			   CCVariable<double>& ,
 			   CCVariable<double>& ,
+			   CCVariable<double>& ,
+			   CCVariable<double>& ,
+			   CCVariable<double>& ,
 			   CCVariable<double>& )
 {
   throw InternalError("PetscSolver not configured");
