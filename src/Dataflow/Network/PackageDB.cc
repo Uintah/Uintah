@@ -300,9 +300,13 @@ Module* PackageDB::instantiateModule(const clString& packageName,
 #endif
   
   Module *module = (moduleInfo->maker)(instanceName);
-  //module->packageName = packageName;
-  //module->moduleName = moduleName;
-  //module->categoryName = categoryName;
+  clString unknown("unknown");
+  if (unknown == module->packageName)
+    module->packageName=packageName;
+  if (unknown == module->categoryName)
+    module->categoryName=categoryName;
+  if (unknown == module->moduleName)
+    module->moduleName = moduleName;
   
   return module;
 }
@@ -378,6 +382,13 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.28  2000/12/01 23:05:41  moulding
+// if, when the packageDB instantiates a module, the module doesn't
+// itself know which package and category it belongs to, let the
+// packageDB assign them after the instantiation.  This fixes a bug
+// in which modules have "unknown" categories and packages when a network
+// is saved to a file.
+//
 // Revision 1.27  2000/11/30 22:21:47  moulding
 // added text that lets you know that package loading is done.
 //
