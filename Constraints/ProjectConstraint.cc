@@ -80,7 +80,7 @@ ProjectConstraint::Satisfy( const Index index, const Scheme scheme, const Real E
       var = vars[1];
       return 1;
    case 2:
-      Error("ProjectConstraint:  Can only satisfy projection");
+      ASSERT(!"ProjectConstraint:  Can only satisfy projection");
       break;
    default:
       cerr << "Unknown variable in Project Constraint!" << endl;

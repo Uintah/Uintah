@@ -22,7 +22,7 @@ class PointWidget : public BaseWidget {
 public:
    PointWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    PointWidget( const PointWidget& );
-   ~PointWidget();
+   virtual ~PointWidget();
 
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, int);
@@ -31,7 +31,7 @@ public:
    virtual Point ReferencePoint() const;
 
    void SetPosition( const Point& );
-   const Point& GetPosition() const;
+   Point GetPosition() const;
 
    // Variable indexs
    enum { PointVar };

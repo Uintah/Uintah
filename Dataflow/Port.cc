@@ -23,9 +23,9 @@
 Port::Port(Module* module, const clString& typename,
 	   const clString& portname, const clString& colorname,
 	   int protocols)
-: module(module), typename(typename),
-  portname(portname), colorname(colorname),
-  protocols(protocols), u_proto(0), portstate(Off)
+: typename(typename), portname(portname), colorname(colorname),
+  protocols(protocols), u_proto(0), module(module), which_port(-1),
+  portstate(Off)
 {
 }
 

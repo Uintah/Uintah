@@ -22,7 +22,7 @@ class ScaledBoxWidget : public BaseWidget {
 public:
    ScaledBoxWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    ScaledBoxWidget( const ScaledBoxWidget& );
-   ~ScaledBoxWidget();
+   virtual ~ScaledBoxWidget();
 
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, int);

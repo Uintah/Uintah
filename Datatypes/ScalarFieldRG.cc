@@ -72,7 +72,7 @@ void ScalarFieldRG::locate(const Point& p, int& ix, int& iy, int& iz)
 
 void ScalarFieldRG::io(Piostream& stream)
 {
-    int version=stream.begin_class("ScalarFieldRG", SCALARFIELDRG_VERSION);
+    /*int version=*/stream.begin_class("ScalarFieldRG", SCALARFIELDRG_VERSION);
     // Do the base class first...
     ScalarField::io(stream);
 

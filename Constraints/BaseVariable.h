@@ -60,7 +60,7 @@ public:
    void MoveDelta( const Vector& deltaValue );
    void MoveDelta( const Real deltaValue );
    
-   inline const Point& point() const;
+   inline Point point() const;
    inline operator Point() const;
    inline Real real() const;
    inline operator Real() const;
@@ -104,7 +104,7 @@ inline int HigherPriority( const VPriority p1, const VPriority p2 )
 }
 
 
-inline const Point&
+inline Point
 BaseVariable::point() const
 {
    return (Point)data;

@@ -19,8 +19,8 @@ class TCL;
 
 class TCLvar {
 protected:
-    int is_reset;
     clString varname;
+    int is_reset;
     TCL* tcl;
 public:
     TCLvar(const clString& name, const clString& id, TCL* tcl);

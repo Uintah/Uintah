@@ -54,7 +54,7 @@ void ScalarFieldUG::compute_bounds()
 
 void ScalarFieldUG::io(Piostream& stream)
 {
-    int version=stream.begin_class("ScalarFieldUG", SCALARFIELDUG_VERSION);
+    /*int version=*/stream.begin_class("ScalarFieldUG", SCALARFIELDUG_VERSION);
     // Do the base class....
     ScalarField::io(stream);
 

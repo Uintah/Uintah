@@ -20,12 +20,11 @@
 GeomTube::GeomTube(int nu)
 : nu(nu)
 {
-
 }
 
 GeomTube::GeomTube(const GeomTube& copy)
-: GeomVertexPrim(copy), radii(copy.radii), directions(copy.directions),
-  nu(copy.nu)
+: GeomVertexPrim(copy), nu(copy.nu),
+  directions(copy.directions), radii(copy.radii)
 {
 }
 

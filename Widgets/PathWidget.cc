@@ -73,7 +73,8 @@ private:
 };
 
 PathPoint::PathPoint( PathWidget* w, const Index i, const Point& p )
-: PointVar("Point", w->solve, Scheme1, p),
+: widget(w), index(i),
+  PointVar("Point", w->solve, Scheme1, p),
   TangentVar("Tangent", w->solve, Scheme1, p+Vector(w->dist->real(),0,0)),
   OrientVar("Orient", w->solve, Scheme1, p+Vector(0,w->dist->real(),0)),
   UpVar("Up", w->solve, Scheme2, p+Vector(0,0,w->dist->real())),
@@ -88,14 +89,13 @@ PathPoint::PathPoint( PathWidget* w, const Index i, const Point& p )
   OrientHeadMatl((GeomObj*)&GeomOrientHead, w->SpecialMaterial),
   UpShaftMatl((GeomObj*)&GeomUpShaft, w->SpecialMaterial),
   UpHeadMatl((GeomObj*)&GeomUpHead, w->SpecialMaterial),
-  PickPoint(&PointMatl, w->module, w, i),
   tangent(new GeomGroup(0)),
   orient(new GeomGroup(0)),
   up(new GeomGroup(0)),
+  PickPoint(&PointMatl, w->module, w, i),
   PickTangent(tangent, w->module, w, i+10000),
   PickOrient(orient, w->module, w, i+20000),
-  PickUp(up, w->module, w, i+30000),
-  index(i), widget(w)
+  PickUp(up, w->module, w, i+30000)
 {
    ConstTangent.VarChoices(Scheme1, 0, 0, 0);
    ConstTangent.VarChoices(Scheme2, 0, 0, 0);
@@ -131,7 +131,7 @@ PathPoint::PathPoint( PathWidget* w, const Index i, const Point& p )
    w->tangentgroup->add(&PickTangent);
    w->orientgroup->add(&PickOrient);
    w->upgroup->add(&PickUp);
-   w->points.insert(i, this);
+   w->points.insert(i, (PathPoint*)this);
    w->npoints++;
 }
 
@@ -250,7 +250,7 @@ const Index NumSwtchs = 5;
 PathWidget::PathWidget( Module* module, CrowdMonitor* lock, double widget_scale,
 			Index num_points )
 : BaseWidget(module, lock, 0, 0, 0, 0, NumMdes, NumSwtchs, widget_scale),
-  points(num_points*2), npoints(0)
+  npoints(0), points(num_points*2)
 {
    dist = new RealVariable("Dist", solve, Scheme1, widget_scale*5.0);
    sqrt2dist = new RealVariable("sqrt2Dist", solve, Scheme1, sqrt(2)*widget_scale*5.0);

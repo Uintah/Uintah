@@ -96,7 +96,7 @@ void Array3<T>::initialize(const T& t)
 template<class T>
 void Pio(Piostream& stream, Array3<T>& data)
 {
-    int version=stream.begin_class("Array3", ARRAY3_VERSION);
+    /*int version=*/stream.begin_class("Array3", ARRAY3_VERSION);
     if(stream.reading()){
 	// Allocate the array...
 	int d1, d2, d3;

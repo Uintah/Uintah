@@ -162,8 +162,8 @@ int Dialbox::get_event_type()
     // Create the device...
     // Called by event loop, so we don't have to lock...
     have_dials=0;
-    int ndev;
 #ifdef SCI_HAVE_INPUT_EXTENSION
+    int ndev;
     Display* display=evl->get_display();
     XDeviceInfo* devinfo=XListInputDevices(display, &ndev);
     for(int i=0;i<ndev;i++){
@@ -240,7 +240,7 @@ DialMsg::DialMsg(DBContext* context)
 }
 
 DialMsg::DialMsg(int which, int info)
-: MessageBase(MessageTypes::DialMoved), info(info), which(which)
+: MessageBase(MessageTypes::DialMoved), which(which), info(info)
 {
 }
 

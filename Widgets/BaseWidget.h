@@ -37,7 +37,7 @@ public:
 	       const Index modes, const Index switches,
 	       const Real widget_scale );
    BaseWidget( const BaseWidget& );
-   ~BaseWidget();
+   virtual ~BaseWidget();
 
    void SetScale( const Real scale );
    double GetScale() const;
@@ -57,7 +57,7 @@ public:
    virtual void NextMode();
    Index GetMode() const;
 
-   inline const Point& GetPointVar( const Index vindex ) const;
+   inline Point GetPointVar( const Index vindex ) const;
    inline Real GetRealVar( const Index vindex ) const;
    
    void execute();
@@ -72,11 +72,14 @@ public:
    void print( ostream& os=cout ) const;
 
 protected:
+   Module* module;
+   CrowdMonitor* lock;
+
    ConstraintSolver* solve;
    
    virtual void widget_execute()=0;
-   Index NumConstraints;
    Index NumVariables;
+   Index NumConstraints;
    Index NumGeometries;
    Index NumPicks;
 
@@ -86,11 +89,11 @@ protected:
    Array1<GeomPick*> picks;
 
    enum {Mode0,Mode1,Mode2,Mode3,Mode4,Mode5,Mode6,Mode7,Mode8,Mode9};
-   Index CurrentMode;
-   Index NumSwitches;
-   Array1<GeomSwitch*> mode_switches;
    Index NumModes;
+   Index NumSwitches;
    Array1<long> modes;
+   Array1<GeomSwitch*> mode_switches;
+   Index CurrentMode;
    // modes contains the bitwise OR of Switch0-Switch8
    const long Switch0 = 0x0001;
    const long Switch1 = 0x0002;
@@ -112,9 +115,6 @@ protected:
    GeomSwitch* widget;
    Real widget_scale;
    Real epsilon;
-
-   Module* module;
-   CrowdMonitor* lock;
 
    void CreateModeSwitch( const Index snum, GeomObj* o );
    void SetMode( const Index mode, const long swtchs );
@@ -141,7 +141,7 @@ operator<<( ostream& os, BaseWidget& w )
 }
 
 
-inline const Point&
+inline Point
 BaseWidget::GetPointVar( const Index vindex ) const
 {
    ASSERT(vindex<NumVariables);

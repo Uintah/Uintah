@@ -21,8 +21,9 @@
 #include <Math/Trig.h>
 
 GeomSphere::GeomSphere(int nu, int nv)
-: GeomObj(), nu(nu), nv(nv), cen(0,0,0), rad(1)
+: GeomObj(), cen(0,0,0), rad(1), nu(nu), nv(nv)
 {
+    adjust();
 }
 
 GeomSphere::GeomSphere(const Point& cen, double rad, int nu, int nv)

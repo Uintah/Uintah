@@ -92,7 +92,7 @@ BaseConstraint::VarChoices( const Scheme scheme,
 int
 BaseConstraint::Satisfy( const Index, const Scheme, const Real, BaseVariable*&, VarCore& )
 {
-   Error("BaseConstraint: Can't satisfy!");
+   ASSERT(!"BaseConstraint: Can't satisfy!");
    return 0;
 }
 

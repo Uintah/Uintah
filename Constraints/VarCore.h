@@ -57,10 +57,10 @@ public:
    inline int epsilonequal( const Real Epsilon, const VarCore& v );
    friend ostream& operator<<( ostream& os, VarCore& c );
 private:
-   Rigidity rigidity;
    VarType vartype;
    Point pointvalue;
    Real realvalue;
+   Rigidity rigidity;
 };
 
 

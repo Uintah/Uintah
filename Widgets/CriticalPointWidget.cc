@@ -34,7 +34,7 @@ enum { Pick };
 
 CriticalPointWidget::CriticalPointWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMdes, NumSwtchs, widget_scale),
-  direction(0, 0, 1.0), crittype(Regular)
+  crittype(Regular), direction(0, 0, 1.0)
 {
    variables[PointVar] = new PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
 
@@ -122,7 +122,8 @@ CriticalPointWidget::widget_execute()
    Point cylinder3end1, cylinder3end2;
    Point cylinder4end1, cylinder4end2;
    Point torus1center, torus2center, torus3center, torus4center;
-   Real torus1start, torus2start, torus3start, torus4start, torusangle(3.14159);
+   Real torus1start=0, torus2start=0, torus3start=0, torus4start=0,
+       torusangle(3.14159);
    Point cone1end1, cone1end2;
    Point cone2end1, cone2end2;
    Point cone3end1, cone3end2;
@@ -241,6 +242,8 @@ CriticalPointWidget::widget_execute()
       cone4end2 = center-v1*sphererad;
       cone4end1 = cone4end2-(v1-v2*1.4)/2.4*conelen;
       break;
+   default:
+      break;
    }
 
    if (mode_switches[0]->get_state()) {
@@ -351,7 +354,7 @@ CriticalPointWidget::SetPosition( const Point& p )
 }
 
 
-const Point&
+Point
 CriticalPointWidget::GetPosition() const
 {
    return variables[PointVar]->point();

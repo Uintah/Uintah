@@ -22,7 +22,7 @@ class GaugeWidget : public BaseWidget {
 public:
    GaugeWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    GaugeWidget( const GaugeWidget& );
-   ~GaugeWidget();
+   virtual ~GaugeWidget();
 
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, int);

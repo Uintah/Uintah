@@ -17,6 +17,7 @@
 class MessageTypes {
     MessageTypes();
 public:
+    void dummy(); // Keeps g++ happy...
     enum MessageType {
 	DoCallback,
 	DoDBCallback,

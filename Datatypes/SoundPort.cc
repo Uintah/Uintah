@@ -26,7 +26,7 @@ static clString sound_color("aquamarine4");
 
 SoundIPort::SoundIPort(Module* module, const clString& portname, int protocol)
 : IPort(module, sound_type, portname, sound_color, protocol),
-  mailbox(10), state(Begin), sample_buf(0)
+  state(Begin), sample_buf(0), mailbox(10)
 {
 }
 
@@ -46,7 +46,7 @@ void SoundOPort::reset()
 
 SoundOPort::SoundOPort(Module* module, const clString& portname, int protocol)
 : OPort(module, sound_type, portname, sound_color, protocol),
-  sbuf(0), in(0), ptr(0)
+  sbuf(0), ptr(0), in(0)
 {
 }
 

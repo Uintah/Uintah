@@ -66,7 +66,7 @@ int VectorFieldUG::interpolate(const Point& p, Vector& value)
 
 void VectorFieldUG::io(Piostream& stream)
 {
-    int version=stream.begin_class("VectorFieldUG", VECTORFIELDUG_VERSION);
+    /*int version=*/stream.begin_class("VectorFieldUG", VECTORFIELDUG_VERSION);
     // Do the base class....
     VectorField::io(stream);
 

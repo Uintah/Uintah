@@ -90,7 +90,7 @@ Mesh* Mesh::clone()
 
 void Mesh::io(Piostream& stream)
 {
-    int version=stream.begin_class("Mesh", MESH_VERSION);
+    /*int version=*/stream.begin_class("Mesh", MESH_VERSION);
     Pio(stream, nodes);
     Pio(stream, elems);
     stream.end_class();
@@ -124,14 +124,14 @@ void Pio(Piostream& stream, Node*& data)
 }
 
 Element::Element(Mesh* mesh, int n1, int n2, int n3, int n4)
-: mesh(mesh), cond(0)
+: cond(0), mesh(mesh)
 {
     n[0]=n1; n[1]=n2; n[2]=n3; n[3]=n4;
     faces[0]=faces[1]=faces[2]=faces[3]=-2;
 }
 
 Element::Element(const Element& copy, Mesh* mesh)
-: mesh(mesh), cond(copy.cond)
+: cond(copy.cond), mesh(mesh)
 {
     faces[0]=copy.faces[0];
     faces[1]=copy.faces[1];
@@ -662,8 +662,8 @@ int Mesh::insert_delaunay(int node)
     Array1<int> to_remove;
     to_remove.add(in_element);
 
-    Element* ee=elems[in_element];
 #if 0
+    Element* ee=elems[in_element];
     for(int ii=0;ii<4;ii++){
 	double dist2=(p-nodes[ee->n[ii]]->p).length2();
 	if(dist2 < 1.e-2){

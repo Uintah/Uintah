@@ -21,8 +21,8 @@
 BaseVariable::BaseVariable( const clString& name,
 			    ConstraintSolver* s, const Scheme scheme,
 			    const Point& value )
-: name(name), scheme(scheme), data(value, VarCore::Rigid),
-  numconstraints(0), levellevel(0), level(0), solver(s)
+: name(name), data(value, VarCore::Rigid), solver(s),
+  levellevel(0), level(0), numconstraints(0), scheme(scheme)
 {
    solver->AddVariable(this);
 }
@@ -31,8 +31,8 @@ BaseVariable::BaseVariable( const clString& name,
 BaseVariable::BaseVariable( const clString& name,
 			    ConstraintSolver* s, const Scheme scheme,
 			    const Real value )
-: name(name), scheme(scheme), data(value, VarCore::Rigid),
-  numconstraints(0), levellevel(0), level(0), solver(s)
+: name(name), data(value, VarCore::Rigid), solver(s),
+  levellevel(0), level(0), numconstraints(0), scheme(scheme)
 {
    solver->AddVariable(this);
 }

@@ -20,7 +20,7 @@
 
 template<class Key, class Data>
 TreeLink<Key, Data>::TreeLink(const Key& key, const Data& data)
-: key(key), data(data), parent(0), left(0), right(0),
+: key(key), data(data), left(0), right(0), parent(0), 
   balance_factor(0), deleted(0)
 {
 }

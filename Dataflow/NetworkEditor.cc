@@ -25,7 +25,7 @@
 
 NetworkEditor::NetworkEditor(Network* net)
 : Task("Network Editor", 1), net(net),
-  mailbox(100), first_schedule(1)
+  first_schedule(1), mailbox(100)
 {
     // Create User interface...
     TCL::add_command("netedit", this, 0);

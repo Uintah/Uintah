@@ -118,8 +118,6 @@ void SoundMixer::execute()
     int nend=0;
     double buf[20];
     int bs=20;
-    int nb=0;
-    double bsum=0;
     for(i=0;i<bs;i++)
 	buf[i]=0;
     while(nend < ni){

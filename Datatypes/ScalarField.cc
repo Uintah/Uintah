@@ -17,7 +17,7 @@
 PersistentTypeID ScalarField::type_id("ScalarField", "Datatype", 0);
 
 ScalarField::ScalarField(Representation rep)
-: rep(rep), have_bounds(0), have_minmax(0)
+: have_bounds(0), have_minmax(0), rep(rep)
 {
 }
 
@@ -76,7 +76,7 @@ void ScalarField::get_bounds(Point& min, Point& max)
 
 void ScalarField::io(Piostream& stream)
 {
-    int version=stream.begin_class("ScalarField", SCALARFIELD_VERSION);
+    /*int version=*/stream.begin_class("ScalarField", SCALARFIELD_VERSION);
     int* repp=(int*)&rep;
     stream.io(*repp);
     if(stream.reading()){

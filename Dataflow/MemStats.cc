@@ -118,7 +118,7 @@ void MemStats::tcl_command(TCLArgs& args, void*)
 	    old_ssbrk=ssbrk;
 
 	    char buf[500];
-	    sprintf(buf, "Calls to malloc/new: %d (%d bytes)\nCalls to free/delete: %d (%d bytes)\nCalls to fillbin: %d (%.2f%%)\nRequests from system: %d (%d bytes)\nMissing allocations: %d (%d bytes)\n\n  ssize   lsize        reqd     deld  inlist  inuse", old_nnew, old_snew, old_ndelete, old_sdelete, old_nfillbin, 100.*(double)old_nfillbin/(double)old_nnew, old_nsbrk, old_ssbrk, old_nnew-old_ndelete, old_snew-old_sdelete);
+	    sprintf(buf, "Calls to malloc/new: %ld (%ld bytes)\nCalls to free/delete: %ld (%ld bytes)\nCalls to fillbin: %ld (%.2f%%)\nRequests from system: %ld (%ld bytes)\nMissing allocations: %ld (%ld bytes)\n\n  ssize   lsize        reqd     deld  inlist  inuse", old_nnew, old_snew, old_ndelete, old_sdelete, old_nfillbin, 100.*(double)old_nfillbin/(double)old_nnew, old_nsbrk, old_ssbrk, old_nnew-old_ndelete, old_snew-old_sdelete);
 	    args.result(buf);
 	} else {
 	    redraw_globals=0;

@@ -17,7 +17,7 @@
 #define PAGESIZE 8176  // Leave some room for malloc's overhead
 
 TrivialAllocator::TrivialAllocator(unsigned int size)
-: size(size), freelist(0), chunklist(0)
+: freelist(0), chunklist(0), size(size)
 {
     nalloc=(PAGESIZE-sizeof(List))/size;
     alloc_size=nalloc*size+sizeof(List);

@@ -17,7 +17,7 @@
 PersistentTypeID VectorField::type_id("VectorField", "Datatype", 0);
 
 VectorField::VectorField(Representation rep)
-: rep(rep), have_bounds(0)
+: have_bounds(0), rep(rep)
 {
 }
 
@@ -66,7 +66,7 @@ void VectorField::get_bounds(Point& min, Point& max)
 
 void VectorField::io(Piostream& stream)
 {
-    int version=stream.begin_class("VectorField", VECTORFIELD_VERSION);
+    /*int version=*/stream.begin_class("VectorField", VECTORFIELD_VERSION);
     int* repp=(int*)&rep;
     stream.io(*repp);
     if(stream.reading()){

@@ -192,8 +192,8 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     }
     Array1<GeomObj*> free;
     Array1<GeomObj*> dontfree;
-    HashTableIter<int, PortInfo*> portiter(&salmon->portHash);
 #ifdef USE_do_for_visible
+    HashTableIter<int, PortInfo*> portiter(&salmon->portHash);
     for(portiter.first();portiter.ok();++portiter){
 	HashTableIter<int, SceneItem*> objiter(portiter.get_data()->objs);
 	for(objiter.first();objiter.ok();++objiter){

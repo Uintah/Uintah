@@ -121,7 +121,7 @@ ArrowWidget::SetPosition( const Point& p )
 }
 
 
-const Point&
+Point
 ArrowWidget::GetPosition() const
 {
    return variables[PointVar]->point();

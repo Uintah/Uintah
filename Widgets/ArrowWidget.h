@@ -22,7 +22,7 @@ class ArrowWidget : public BaseWidget {
 public:
    ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    ArrowWidget( const ArrowWidget& );
-   ~ArrowWidget();
+   virtual ~ArrowWidget();
 
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, int);
@@ -31,7 +31,7 @@ public:
    virtual Point ReferencePoint() const;
 
    void SetPosition( const Point& );
-   const Point& GetPosition() const;
+   Point GetPosition() const;
    
    void SetDirection( const Vector& v );
    const Vector& GetDirection() const;

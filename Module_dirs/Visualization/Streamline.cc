@@ -68,9 +68,9 @@ hook up user interface buttons
 class Streamline;
 
 struct SLTracer {
-    int inside;
-    double s,t;
     Point p;
+    double s,t;
+    int inside;
     Vector grad;
 
     SLTracer(const Point&, double s, double t,
@@ -95,8 +95,8 @@ struct SLRK4Tracer : public SLTracer {
 
 struct SLSource {
     Streamline* sl;
-    BaseWidget* widget;
     clString name;
+    BaseWidget* widget;
     int selected;
     SLSource(Streamline* sl, const clString& name);
     virtual ~SLSource();
@@ -747,7 +747,7 @@ void Streamline::do_streamribbon(SLSourceInfo* si,
 		field->interpolate(left_tracer(tracers, i)->p, grad);
 		Vector n1(Cross(grad, vec));
 		GeomVertex* lvtx=get_vertex(left_tracer(tracers, i)->p,
-					   sfield, cmap, vec);
+					   sfield, cmap, n1);
 
 		// Get right vertex
 		grad=right_tracer(tracers, i)->grad;
@@ -845,7 +845,7 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
 		field->interpolate(left->p, grad);
 		Vector n1(Cross(grad, vec));
 		GeomVertex* lvtx=get_vertex(left->p,
-					    sfield, cmap, vec);
+					    sfield, cmap, n1);
 
 		// Get right vertex
 		SLTracer* right=tracers[i+1];
@@ -940,7 +940,7 @@ void Streamline::geom_release(void*)
 }
 
 SLSource::SLSource(Streamline* sl, const clString& name)
-: sl(sl), name(name), selected(0), widget(0)
+: sl(sl), name(name), widget(0), selected(0)
 {
 }
 
@@ -1042,7 +1042,7 @@ void SLLineSource::get_n(int& ns, int& nt)
     if(ratio < 1.e-3)
 	ns=1;
     else
-	ns=1./ratio;
+	ns=Floor(1./ratio);
     nt=1;
 }
 
@@ -1094,7 +1094,7 @@ void SLRingSource::get_n(int& ns, int& nt)
     if(ratio < 1.e-3)
 	ns=1;
     else
-	ns=1./ratio;
+	ns=Floor(1./ratio);
     nt=1;
 }
 

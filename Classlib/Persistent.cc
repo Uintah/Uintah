@@ -40,7 +40,7 @@ Persistent::~Persistent()
 }
 
 Piostream::Piostream(Direction dir, int version)
-: dir(dir), version(version), err(0), inpointers(0), outpointers(0),
+: dir(dir), version(version), err(0), outpointers(0), inpointers(0),
   current_pointer_id(1)
 {
 }

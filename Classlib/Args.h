@@ -54,8 +54,8 @@ public:
 // Base class for the exclusive/nonexclusive classes
 class Arg_set : public Arg_base {
     int exclusive;
-    int set;
     Arg_item* current_choice;
+    int set;
     HashTable<clString, Arg_item*> valid_choices;
     virtual int handle(int, char**, int&);
     virtual void usage_specific();

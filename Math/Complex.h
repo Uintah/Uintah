@@ -39,9 +39,9 @@ public:
     Complex operator/(const Complex&) const;
     Complex& operator/=(const Complex&);
     Complex& operator+=(const Complex&);
-    friend Complex Sqrt(const Complex&);
-    friend Complex Exp(const Complex&);
-    friend ostream& operator<<(ostream&, const Complex&);
+    friend inline Complex Sqrt(const Complex&);
+    friend inline Complex Exp(const Complex&);
+    friend inline ostream& operator<<(ostream&, const Complex&);
 };
 
 inline Complex::Complex()

@@ -22,7 +22,7 @@
 #include <Math/Trig.h>
 
 GeomTorus::GeomTorus(int nu, int nv)
-: GeomObj(), nu(nu), nv(nv), cen(0,0,0), axis(0,0,1), rad1(1), rad2(.1)
+: GeomObj(), cen(0,0,0), axis(0,0,1), rad1(1), rad2(.1), nu(nu), nv(nv)
 {
     adjust();
 }

@@ -166,7 +166,7 @@ void MorphMesher3d::find_a_crossing(Point *s, TriSurface *ts, const Point &p,
 				    double t){
     Point pout;
     Array1<int> res;
-    double dist=ts->distance(p,res,&pout);
+    /*double dist=*/ts->distance(p,res,&pout);
 
     *s=AffineCombination(p,t,pout,(1-t));
 }
@@ -439,10 +439,9 @@ void count_grid(const Grid &grid, int tris) {
     for (int i=0; i<400; i++) {
 	count[i]=0;
     }
-    int a,b,c;
-    for (a=0; a<grid.dim1(); a++) {
-	for (b=0; b<grid.dim2(); b++) {
-	    for (c=0; c<grid.dim3(); c++) {
+    for (int a=0; a<grid.dim1(); a++) {
+	for (int b=0; b<grid.dim2(); b++) {
+	    for (int c=0; c<grid.dim3(); c++) {
 		Array1<int>* e=grid.get_members(a,b,c);
 		if (e) {
 		    int tmp=e->size();
@@ -455,7 +454,7 @@ void count_grid(const Grid &grid, int tris) {
     cerr << "   Total # of triangles: " << tris << "\n";
     cerr << "   Total # of intersections: " << total << "\n";
     cerr << "   Density: " << total*1./tris << "\n";
-    cerr << "   Grid size = (" << a << "," << b << "," << c << ")\n";
+    cerr << "   Grid size = (" << grid.dim1() << "," << grid.dim2() << "," << grid.dim3() << ")\n";
     cerr << "   Min. Point = (" << min.x() << "," << min.y() << "," << min.z()
 	<< ")\n";
     cerr << "   Spacing = " << grid.get_spacing() << "\n";
@@ -474,7 +473,6 @@ void MorphMesher3d::mesh_mult_surfs(const Array1<SurfaceHandle> &surfs,
 	ASSERT(!"Can't deal with more than one inner-surface yet!");
     }
     BBox bb;
-    Point mid;
 
     TriSurface* outer=surfs[0]->getTriSurface();
     TriSurface* inner=surfs[1]->getTriSurface();
@@ -529,15 +527,15 @@ cerr << "MorphMesher starting on t=" << t << "\n";
 
 	int px, py, pz;
 	int nx, ny, nz, xmin, ymin, zmin;
-	xmin=(int)floor(bb.min().x()*scale); 
-	ymin=(int)floor(bb.min().y()*scale); 
-	zmin=(int)floor(bb.min().z()*scale);
-	nx=(int)(bb.max().x()*scale-xmin+1); 
-	ny=(int)(bb.max().y()*scale-ymin+1); 
-	nz=(int)(bb.max().z()*scale-zmin+1);
-	px=floor(s.x());
-	py=floor(s.y());
-	pz=floor(s.z());
+	xmin=Floor(bb.min().x()*scale); 
+	ymin=Floor(bb.min().y()*scale); 
+	zmin=Floor(bb.min().z()*scale);
+	nx=Floor(bb.max().x()*scale-xmin+1); 
+	ny=Floor(bb.max().y()*scale-ymin+1); 
+	nz=Floor(bb.max().z()*scale-zmin+1);
+	px=Floor(s.x());
+	py=Floor(s.y());
+	pz=Floor(s.z());
 	HashTable<int, int> visitedPts;
 	Queue<int> surfQ;
 ///
@@ -761,15 +759,15 @@ void MorphMesher3d::mesh_single_surf(const Array1<SurfaceHandle> &surfs,
 
 	int px, py, pz;
 	int nx, ny, nz, xmin, ymin, zmin;
-	xmin=(int)floor(bb.min().x()*scale); 
-	ymin=(int)floor(bb.min().y()*scale); 
-	zmin=(int)floor(bb.min().z()*scale);
-	nx=(int)(bb.max().x()*scale-xmin+1); 
-	ny=(int)(bb.max().y()*scale-ymin+1); 
-	nz=(int)(bb.max().z()*scale-zmin+1);
-	px=floor(s.x());
-	py=floor(s.y());
-	pz=floor(s.z());
+	xmin=Floor(bb.min().x()*scale); 
+	ymin=Floor(bb.min().y()*scale); 
+	zmin=Floor(bb.min().z()*scale);
+	nx=Floor(bb.max().x()*scale-xmin+1); 
+	ny=Floor(bb.max().y()*scale-ymin+1); 
+	nz=Floor(bb.max().z()*scale-zmin+1);
+	px=Floor(s.x());
+	py=Floor(s.y());
+	pz=Floor(s.z());
 	HashTable<int, int> visitedPts;
 	Queue<int> surfQ;
 	int pLoc=((((pz-zmin)*ny)+(py-ymin))*nx)+(px-xmin);

@@ -68,9 +68,9 @@ static clString mesh_name("Mesh");
 
 MeshView::MeshView(const clString& id)
 : Module("MeshView", id, Filter), numLevels("numLevels", id, this),
-  seedTet("seedTet", id, this), clipX("clipX", id, this), 
-  clipNX("clipNX", id, this), clipY("clipY", id, this), 
-  clipNY("clipNY", id, this), clipZ("clipZ", id, this),
+  seedTet("seedTet", id, this), clipX("clipX", id, this),
+  clipY("clipY", id, this), clipZ("clipZ", id, this),
+  clipNX("clipNX", id, this), clipNY("clipNY", id, this), 
   clipNZ("clipNZ", id, this), allLevels("allLevels", id, this)
 {
 
@@ -97,9 +97,9 @@ MeshView::MeshView(const clString& id)
 
 MeshView::MeshView(const MeshView& copy, int deep)
 : Module(copy, deep), numLevels("numLevels", id, this),
-  seedTet("seedTet", id, this), clipX("clipX", id, this), 
-  clipNX("clipNX", id, this), clipY("clipY", id, this), 
-  clipNY("clipNY", id, this), clipZ("clipZ", id, this),
+  seedTet("seedTet", id, this), clipX("clipX", id, this),
+  clipY("clipY", id, this), clipZ("clipZ", id, this),
+  clipNX("clipNX", id, this), clipNY("clipNY", id, this), 
   clipNZ("clipNZ", id, this), allLevels("allLevels", id, this)
 {
     NOT_FINISHED("MeshView::MeshView");

@@ -270,8 +270,6 @@ void
 ViewWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 		        int cbdata )
 {
-   Vector delt(delta);
-   
    switch(cbdata){
    case PickEye:
       variables[EyeVar]->SetDelta(delta);
@@ -319,7 +317,7 @@ ViewWidget::ReferencePoint() const
 }
 
 
-View&
+View
 ViewWidget::GetView()
 {
    return View(variables[EyeVar]->point(), variables[LookAtVar]->point(),
@@ -327,7 +325,7 @@ ViewWidget::GetView()
 }
 
 
-Vector&
+Vector
 ViewWidget::GetUpVector()
 {
    return GetUpAxis();

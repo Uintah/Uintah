@@ -17,7 +17,7 @@
 PersistentTypeID Surface::type_id("Surface", "Datatype", 0);
 
 Surface::Surface(Representation rep, int closed)
-: rep(rep), grid(0), closed(closed)
+: rep(rep), closed(closed), grid(0)
 {
 }
 

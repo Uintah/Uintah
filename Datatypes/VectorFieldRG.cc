@@ -57,7 +57,7 @@ void VectorFieldRG::locate(const Point& p, int& ix, int& iy, int& iz)
 
 void VectorFieldRG::io(Piostream& stream)
 {
-    int version=stream.begin_class("VectorFieldRG", VectorFIELDRG_VERSION);
+    /*int version=*/stream.begin_class("VectorFieldRG", VectorFIELDRG_VERSION);
     // Do the base class first...
     VectorField::io(stream);
 

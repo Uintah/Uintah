@@ -147,7 +147,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	}
 	glXMakeCurrent(dpy, win, cx);
 	current_drawer=this;
-	int data[1];
+	GLint data[1];
 	glGetIntegerv(GL_MAX_LIGHTS, data);
 	maxlights=data[0];
 	TCLTask::unlock();
@@ -354,7 +354,7 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 	glViewport(0, 0, xres, yres);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	int viewport[4];
+	GLint viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	gluPickMatrix(x, viewport[3]-y, pick_window, pick_window, viewport);
 	gluPerspective(fovy, aspect, znear, zfar);
@@ -411,7 +411,7 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 
 void OpenGL::dump_image(const clString& name) {
     ofstream dumpfile(name());
-    int vp[4];
+    GLint vp[4];
     glGetIntegerv(GL_VIEWPORT,vp);
     int n=3*vp[2]*vp[3];
     unsigned char* pxl=new unsigned char[n];

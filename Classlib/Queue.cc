@@ -18,7 +18,7 @@
 #endif
 
 template<class T> Queue<T>::Queue()
-: _length(0), head(0), tail(0)
+: head(0), tail(0), _length(0)
 {
 }
 

@@ -176,6 +176,7 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
    } else if(args[1] == "scale"){
 //       widget_lock.write_lock();
        widgets[widget_type.get()]->SetScale(widget_scale.get());
+       widgets[widget_type.get()]->execute();
 //       widget_lock.write_unlock();
        ogeom->flushViews();
     } else {

@@ -22,7 +22,7 @@ class CrosshairWidget : public BaseWidget {
 public:
    CrosshairWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    CrosshairWidget( const CrosshairWidget& );
-   ~CrosshairWidget();
+   virtual ~CrosshairWidget();
 
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, int);
@@ -31,7 +31,7 @@ public:
    virtual Point ReferencePoint() const;
 
    void SetPosition( const Point& );
-   const Point& GetPosition() const;
+   Point GetPosition() const;
 
    // They should be orthogonal.
    void SetAxes( const Vector& v1, const Vector& v2, const Vector& v3 );

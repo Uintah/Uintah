@@ -79,7 +79,6 @@ int
 CenterConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
 			     BaseVariable*& var, VarCore& c )
 {
-   PointVariable& center = *vars[0];
    PointVariable& p1 = *vars[1];
    PointVariable& p2 = *vars[2];
 
@@ -114,15 +113,15 @@ CenterConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
       return 1;
    case 1:
    case 2:
-      Error("CenterConstraint:  Can only satisfy center");
+      ASSERT(!"CenterConstraint:  Can only satisfy center");
       break;
    case 3:
       ASSERT(varCount >= 4);
-      Error("CenterConstraint:  Can only satisfy center");
+      ASSERT(!"CenterConstraint:  Can only satisfy center");
       break;
    case 4:
       ASSERT(varCount >= 5);
-      Error("CenterConstraint:  Can only satisfy center");
+      ASSERT(!"CenterConstraint:  Can only satisfy center");
       break;
    default:
       cerr << "Unknown variable in Center Constraint!" << endl;

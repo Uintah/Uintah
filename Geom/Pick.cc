@@ -41,7 +41,7 @@ GeomPick::GeomPick(GeomObj* obj, Module* module,
 }
 
 GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1)
-: GeomContainer(obj), module(module), directions(2), cbdata(0),
+: GeomContainer(obj), module(module), cbdata(0),directions(2), 
   widget(0), selected(0)
 {
     directions[0]=v1;
@@ -49,7 +49,7 @@ GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1)
 }
 
 GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector& v2)
-: GeomContainer(obj), module(module), directions(4), cbdata(0),
+: GeomContainer(obj), module(module), cbdata(0), directions(4), 
   widget(0), selected(0)
 {
     directions[0]=v1;
@@ -60,7 +60,7 @@ GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector&
 
 GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector& v2,
 		   const Vector& v3)
-: GeomContainer(obj), module(module), directions(6), cbdata(0),
+: GeomContainer(obj), module(module), cbdata(0), directions(6), 
   widget(0), selected(0)
 {
     directions[0]=v1;
@@ -72,9 +72,9 @@ GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector&
 }
 
 GeomPick::GeomPick(const GeomPick& copy)
-: GeomContainer(copy), directions(copy.directions), highlight(copy.highlight),
-  cbdata(copy.cbdata), module(copy.module), widget(copy.widget),
-  selected(copy.selected)
+: GeomContainer(copy), module(copy.module), cbdata(copy.cbdata), 
+  directions(copy.directions), widget(copy.widget),
+  selected(copy.selected), highlight(copy.highlight)
 {
 }
 

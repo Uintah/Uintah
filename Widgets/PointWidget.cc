@@ -95,7 +95,7 @@ PointWidget::SetPosition( const Point& p )
 }
 
 
-const Point&
+Point
 PointWidget::GetPosition() const
 {
    return variables[PointVar]->point();

@@ -25,16 +25,15 @@ class MessageBase;
 class Module;
 
 class GeomPick : public GeomContainer {
-    Array1<Vector> directions;
-    MaterialHandle highlight;
     Module* module;
     void* cbdata;
-    GeomPick(const GeomPick&);
-
-    int selected;
-
+    Array1<Vector> directions;
     BaseWidget* widget;
     int widget_data;
+    int selected;
+    MaterialHandle highlight;
+
+    GeomPick(const GeomPick&);
 public:
     GeomPick(GeomObj*, Module* module);
     GeomPick(GeomObj*, Module* module, BaseWidget*, int widget_data);

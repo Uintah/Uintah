@@ -27,7 +27,7 @@ inline int Abs(int i)
 }
 
 // Signs
-inline double Sign(double d)
+inline int Sign(double d)
 {
   return d<0?-1:1;
 }

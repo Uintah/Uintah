@@ -44,9 +44,10 @@ const int MODEBUFSIZE = 100;
 static DebugSwitch autoview_sw("Roe", "autoview");
 
 Roe::Roe(Salmon* s, const clString& id)
-: id(id), manager(s), view("view", id, this), shading("shading", id, this),
-  bgcolor("bgcolor", id, this),
-  homeview(Point(.55, .5, 0), Point(.55, .5, .5), Vector(0,1,0), 25)
+: manager(s), id(id),
+  view("view", id, this),
+  homeview(Point(.55, .5, 0), Point(.55, .5, .5), Vector(0,1,0), 25),
+  bgcolor("bgcolor", id, this), shading("shading", id, this)
 {
     bgcolor.set(Color(0,0,0));
     view.set(homeview);

@@ -246,7 +246,7 @@ void ContoursToSurf::break_edge(int tri1, int tri2, int e1, int e2, int pt_id,
 void ContoursToSurf::add_point(const Point& p, TriSurface* surf) {
     Array1<int> res;
 
-    double dist=surf->distance(p, res);
+    /*double dist=*/surf->distance(p, res);
     if (res.size() > 4) {	// we were closest to a vertex
 	return;
     } 

@@ -47,20 +47,21 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
 			const Index NumModes,
 			const Index NumSwitches,
 			const double widget_scale )
-: NumVariables(NumVariables), NumConstraints(NumConstraints),
+: module(module), lock(lock),
+  solve(new ConstraintSolver), 
+  NumVariables(NumVariables), NumConstraints(NumConstraints),
   NumGeometries(NumGeometries), NumPicks(NumPicks),
-  NumModes(NumModes), NumSwitches(NumSwitches),
   constraints(NumConstraints), variables(NumVariables),
   geometries(NumGeometries), picks(NumPicks),
-  modes(NumModes), mode_switches(NumSwitches),
-  module(module), widget_scale(widget_scale), lock(lock),
-  solve(new ConstraintSolver), CurrentMode(0),
+  NumModes(NumModes), NumSwitches(NumSwitches),
+  modes(NumModes), mode_switches(NumSwitches), CurrentMode(0),
   PointMaterial(PointWidgetMaterial),
   EdgeMaterial(EdgeWidgetMaterial),
   SliderMaterial(SliderWidgetMaterial),
   ResizeMaterial(ResizeWidgetMaterial),
   SpecialMaterial(SpecialWidgetMaterial),
   HighlightMaterial(HighlightWidgetMaterial),
+  widget_scale(widget_scale),
   epsilon(1e-6)
 {
    for (Index i=0; i<NumSwitches; i++)
@@ -86,14 +87,14 @@ BaseWidget::~BaseWidget()
 void
 BaseWidget::MoveDelta( const Vector& )
 {
-   Error("BaseWidget can't MoveDelta!");
+    ASSERT(!"BaseWidget can't MoveDelta!");
 }
 
 
 Point
 BaseWidget::ReferencePoint() const
 {
-   Error("BaseWidget can't find ReferencPoint!");
+   ASSERT(!"BaseWidget can't find ReferencPoint!");
    return Point(0,0,0);
 }
 

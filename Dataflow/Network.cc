@@ -25,7 +25,7 @@
 static Arg_stringval initial_net("net", "", "specify initial network to load");
 
 Network::Network(int first)
-: first(first), netedit(0)
+: netedit(0), first(first)
 {
 }
 

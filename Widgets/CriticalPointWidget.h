@@ -27,7 +27,7 @@ public:
 
    CriticalPointWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    CriticalPointWidget( const CriticalPointWidget& );
-   ~CriticalPointWidget();
+   virtual ~CriticalPointWidget();
 
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, int);
@@ -41,7 +41,7 @@ public:
    Index GetCriticalType() const;
 
    void SetPosition( const Point& );
-   const Point& GetPosition() const;
+   Point GetPosition() const;
    
    void SetDirection( const Vector& v );
    const Vector& GetDirection() const;

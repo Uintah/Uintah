@@ -129,7 +129,7 @@ CrosshairWidget::SetPosition( const Point& p )
 }
 
 
-const Point&
+Point
 CrosshairWidget::GetPosition() const
 {
    return variables[CenterVar]->point();

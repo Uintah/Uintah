@@ -89,7 +89,6 @@ void Delaunay::execute()
     double le=1.0001*bbox.longest_edge();
     Vector diag(le, le, le);
     Point bmin(center-diag/2.);
-    Point bmax(center+diag/2.);
 
     // Make the initial mesh with a tetra which encloses the bounding
     // box.  The first point is at the minimum point.  The other 3

@@ -22,7 +22,7 @@ class BoxWidget : public BaseWidget {
 public:
    BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    BoxWidget( const BoxWidget& );
-   ~BoxWidget();
+   virtual ~BoxWidget();
 
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, int);

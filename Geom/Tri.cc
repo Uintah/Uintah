@@ -74,7 +74,7 @@ void GeomTri::get_bounds(BSphere& bs)
     double e2l2=e2.length2();
     double e3l2=e3.length2();
     Point cen;
-    double rad;
+    double rad=0;
     int do_circum=0;
     if(e1l2 > e2l2 && e1l2 > e3l2){
 	cen=Interpolate(p1, p2, 0.5);

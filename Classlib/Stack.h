@@ -14,11 +14,11 @@
 #ifndef SCI_Classlib_Stack_h
 #define SCI_Classlib_Stack_h 1
 
-#include <Classlib/Array1.h>
-
 #ifdef __GNUG__
 #pragma interface
 #endif
+
+#include <Classlib/Array1.h>
 
 template<class T> class Stack {
     Array1<T> stack;
@@ -27,55 +27,31 @@ template<class T> class Stack {
 public:
     Stack(int initial_alloc=0, int growsize=100);
     ~Stack();
-    void push(const T&);
+    inline void push(const T& item) {
+	if(sp >= stack.size())
+	    stack.grow(growsize);
+	stack[sp++]=item;
+    }
+    inline T pop() {
+	return stack[--sp];
+    }
     void dup();
-    T pop();
     void yank(int);
     void remove_all();
-    inline T& top() const;
-    inline int size() const;
-    inline int empty() const;
+    inline T& top() const {
+	return stack[sp-1];
+    }
+    inline int size() const {
+	return sp;
+    }
+    inline int empty() const {
+	return sp==0;
+    }
 
     // Accesses the nth element of the stack (0=bottom)
     inline T& operator[](int n) const {
 	return stack[n];
     }
-
 };
-
-template<class T>
-inline
-T& Stack<T>::top() const
-{
-    return stack[sp-1];
-}
-
-template<class T>
-inline
-int Stack<T>::size() const
-{
-    return sp;
-}
-
-template<class T>
-inline
-int Stack<T>::empty() const
-{
-    return sp==0;
-}
-
-template<class T>
-inline void Stack<T>::push(const T& item)
-{
-    if(sp >= stack.size())
-	stack.grow(growsize);
-    stack[sp++]=item;
-}
-
-template<class T>
-inline T Stack<T>::pop()
-{
-    return stack[--sp];
-}
 
 #endif

@@ -132,9 +132,9 @@ static clString widget_name("IsoSurface Widget");
 static clString surface_name("IsoSurface");
 
 IsoSurface::IsoSurface(const clString& id)
-: Module("IsoSurface", id, Filter), emit_surface("emit_surface", id, this),
+: Module("IsoSurface", id, Filter), seed_point("seed_point", id, this),
   have_seedpoint("have_seedpoint", id, this), isoval("isoval", id, this),
-  do_3dwidget("do_3dwidget", id, this), seed_point("seed_point", id, this),
+  do_3dwidget("do_3dwidget", id, this), emit_surface("emit_surface", id, this),
   show_progress("show_progress", id, this)
 {
     // Create the input ports
@@ -169,9 +169,9 @@ IsoSurface::IsoSurface(const clString& id)
 }
 
 IsoSurface::IsoSurface(const IsoSurface& copy, int deep)
-: Module(copy, deep), emit_surface("emit_surface", id, this),
+: Module(copy, deep), seed_point("seed_point", id, this),
   have_seedpoint("have_seedpoint", id, this), isoval("isoval", id, this),
-  do_3dwidget("do_3dwidget", id, this), seed_point("seed_point", id, this),
+  do_3dwidget("do_3dwidget", id, this), emit_surface("emit_surface", id, this),
   show_progress("show_progress", id, this)
 {
     NOT_FINISHED("IsoSurface::IsoSurface");

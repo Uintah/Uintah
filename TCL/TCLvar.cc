@@ -219,6 +219,8 @@ TCLvarintp::TCLvarintp(int* value,
 {
     TCLTask::lock();
     char* l=Tcl_GetVar(the_interp, varname(), TCL_GLOBAL_ONLY);
+    if(l)
+	Tcl_GetInt(the_interp, l, value);
     if(Tcl_LinkVar(the_interp, varname(), (char*)value, TCL_LINK_INT) != TCL_OK){
 	cerr << "Error linking variable: " << varname << endl;
     }

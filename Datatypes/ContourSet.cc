@@ -48,9 +48,9 @@ ContourSet::ContourSet()
 };
 
 ContourSet::ContourSet(const ContourSet &copy)
-: space(copy.space), origin(copy.origin), contours(copy.contours),
-  name(copy.name), bbox(copy.bbox), conductivity(copy.conductivity),
-  bdry_type(copy.bdry_type)
+: contours(copy.contours), conductivity(copy.conductivity),
+  bdry_type(copy.bdry_type), origin(copy.origin), bbox(copy.bbox),
+  space(copy.space), name(copy.name)
 {
     basis[0]=copy.basis[0];
     basis[1]=copy.basis[1];

@@ -19,7 +19,8 @@
 #include <Math/Trig.h>
 
 GeomCone::GeomCone(int nu, int nv)
-: GeomObj(), nu(nu), nv(nv), bottom(0,0,0), top(0,0,1), bot_rad(1), top_rad(0)
+: GeomObj(), bottom(0,0,0), top(0,0,1), bot_rad(1), top_rad(0),
+  nu(nu), nv(nv)
 {
     adjust();
 }

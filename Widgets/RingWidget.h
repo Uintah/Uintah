@@ -22,7 +22,7 @@ class RingWidget : public BaseWidget {
 public:
    RingWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    RingWidget( const RingWidget& );
-   ~RingWidget();
+   virtual ~RingWidget();
 
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, int);
