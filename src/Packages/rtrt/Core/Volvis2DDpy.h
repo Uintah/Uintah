@@ -2,20 +2,24 @@
 #define __2DVOLVISDPY_H__
 
 #include <Packages/rtrt/Core/DpyBase.h>
-#include <Core/Thread/Runnable.h>
 #include <Packages/rtrt/Core/shape.h>
 #include <Packages/rtrt/Core/texture.h>
 #include <Packages/rtrt/Core/widget.h>
-#include <vector>
 #include <Packages/rtrt/Core/VolumeVis2D.h>
+#include <Core/Thread/Runnable.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <vector>
+#include <sgi_stl_warnings_on.h>
 
 // used only for rendering hack
 #define CLEAN 0
 #define FAST 1
 
-using std::vector;
-
 namespace rtrt {
+
+  using std::vector;
+
   //  template<class T>
   class Volvis2DDpy : public DpyBase {
     // creates the background texture

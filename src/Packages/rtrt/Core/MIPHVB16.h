@@ -4,8 +4,10 @@
 
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Material.h>
+
 #include <Core/Thread/WorkQueue.h>
 #include <Core/Geometry/Point.h>
+
 #include <stdlib.h>
 
 namespace rtrt {

@@ -1,7 +1,6 @@
 #ifndef __RTRT_VOLUMEVIS2D_H__
 #define __RTRT_VOLUMEVIS2D_H__
 
-#include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/BrickArray3.h>
@@ -10,10 +9,16 @@
 #include <Packages/rtrt/Core/PlaneDpy.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Ray.h>
-#include <stdlib.h>
+#include <Packages/rtrt/Core/MouseCallBack.h>
+
+#include <Core/Geometry/Point.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <map>
-#include <Packages/rtrt/Core/MouseCallBack.h>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdlib.h>
 
 namespace rtrt {
 
@@ -156,7 +161,7 @@ public:
     vobj->mouseDown( ray, hit );
   }
   void mouseDown( const Ray& ray, const HitInfo& hit );
-  static void mouseUp_Wrap( Object *obj, const Ray& ray, const HitInfo& hit) {
+  static void mouseUp_Wrap( Object *obj, const Ray&, const HitInfo&) {
     VolumeVis2D *vobj = (VolumeVis2D*) obj;
     vobj->mouseUp();
   }

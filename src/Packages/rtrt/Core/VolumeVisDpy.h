@@ -2,12 +2,11 @@
 #ifndef __VOLUMEVISDPY_H__
 #define __VOLUMEVISDPY_H__
 
-//#include <GL/glx.h>
-//#include <GL/glu.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <Packages/rtrt/Core/DpyBase.h>
+
 #include <Core/Thread/Runnable.h>
 
 namespace rtrt {

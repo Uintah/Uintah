@@ -1,19 +1,24 @@
 #include <Packages/rtrt/Core/Volvis2DDpy.h>
-#include <Core/Thread/Thread.h>
-#include <GL/glx.h>
-#include <GL/glu.h>
-#include <values.h>
-#include <iostream>
-#include <fstream>
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <vector>
-#include <algorithm>
 #include <Packages/rtrt/Core/shape.h>
 #include <Packages/rtrt/Core/texture.h>
 #include <Packages/rtrt/Core/widget.h>
 #include <Packages/rtrt/Core/Array2.h>
+#include <Core/Thread/Thread.h>
+
+#include <GL/glx.h>
+#include <GL/glu.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <algorithm>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include <values.h>
 
 using std::vector;
 using namespace rtrt;

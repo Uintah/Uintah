@@ -4,12 +4,15 @@
 
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array2.h>
-#include <vector>
+
 #include <Core/Persistent/PersistentSTL.h>
 
+#include <sgi_stl_warnings_off.h>
+#include <vector>
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <sgi_stl_warnings_on.h>
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -3,9 +3,12 @@
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/UVPlane.h>
-#include <iostream>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Material.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace rtrt;
 using namespace SCIRun;

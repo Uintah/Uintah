@@ -5,12 +5,15 @@
 
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/Names.h>
+
 #include <Core/Geometry/Transform.h>
 #include <Core/Persistent/Persistent.h>
-#include <Packages/rtrt/Core/Names.h>
-#include <iostream>
 
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
   class Point;

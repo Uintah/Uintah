@@ -3,7 +3,10 @@
 #define TILEIMAGEMATERIAL_H 1
 
 #include <Packages/rtrt/Core/ImageMaterial.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace rtrt {
 class TileImageMaterial;
