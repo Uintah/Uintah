@@ -7,17 +7,18 @@ namespace Uintah {
 namespace MPM {
 
 Lattice::
-Lattice(const Patch* patch,const ParticleVariable<Point>& pX)
-: Array3<Cell>( patch->getCellLowIndex()-IntVector(1,1,1),
-                patch->getCellHighIndex()+IntVector(1,1,1) ),
-  d_patch(patch), d_pX(pX)
+Lattice(const ParticleVariable<Point>& pX)
+: d_patch( pX.getParticleSubset()->getPatch() ),
+  Array3<Cell>( d_patch->getCellLowIndex()-IntVector(1,1,1),
+                d_patch->getCellHighIndex()+IntVector(1,1,1) ),
+  d_pX(pX)
 {
-  ParticleSubset* pset = pX.getParticleSubset();
+  ParticleSubset* pset = d_pX.getParticleSubset();
 
   for(ParticleSubset::iterator part_iter = pset->begin();
       part_iter != pset->end(); part_iter++)
   {
-    (*this)[ patch->getLevel()->getCellIndex(pX[*part_iter]) ].insert(*part_iter);
+    (*this)[ d_patch->getLevel()->getCellIndex(pX[*part_iter]) ].insert(*part_iter);
   }
 }
 
@@ -37,7 +38,7 @@ const Patch* Lattice::getPatch() const
   return d_patch;
 }
 
-const ParticleVariable<Point>& Lattice::getParticlesPosition() const
+const ParticleVariable<Point>& Lattice::getpX() const
 {
   return d_pX;
 }
@@ -46,6 +47,10 @@ const ParticleVariable<Point>& Lattice::getParticlesPosition() const
 } //namespace Uintah
 
 // $Log$
+// Revision 1.9  2000/09/05 06:34:27  tan
+// Introduced BrokenCellShapeFunction for SerialMPM::interpolateParticlesToGrid
+// where farcture is involved.
+//
 // Revision 1.8  2000/06/20 02:29:22  tan
 // Modification to make getCellIndex work.
 //
