@@ -44,11 +44,20 @@
 
       double t = d_sharedState->getElapsedTime();
       double time = t + d_sharedState->getTimeOffset();
-      
-      Vector hardWired_velocity = Vector(0,0,0);    // put relationship here
-      if (time > 0.012589) {                        // root of curve fit
-        hardWired_velocity = Vector(20.0,0,0);
+      vector<double> c(4);
+      c[3] = 5.191382077671874e+05;
+      c[2] = -6.077090505408908e+03;
+      c[1] =  1.048411519176967e+01;
+      c[0] =  1.606269799418405e-01;
+
+      double vel_x = c[3]*pow(time,3) + c[2]*pow(time,2) + c[1]*time + c[0];
+      Vector hardWired_velocity = Vector(vel_x,0,0);
+
+#if 0
+      if (patch->getID() ){
+        cout << " hardWired_velocity " << hardWired_velocity << endl;
       }
+#endif
 
       for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); 
                                                                           iter++){
@@ -63,8 +72,8 @@
 
           for(int k = 0; k < 8; k++) {
             if(patch->containsNode(ni[k])) {
-              gacceleration[0][ni[k]]   = (hardWired_velocity - gvelocity_star_org[ni[k]])/delT;
-	       gvelocity_star[0][ni[k]]  = hardWired_velocity; 
+              gacceleration[0][ni[k]] = (hardWired_velocity - gvelocity_star_org[ni[k]])/delT;
+	      gvelocity_star[0][ni[k]]= hardWired_velocity; 
             }
           }
         }  // second stage only
@@ -144,7 +153,7 @@
   //__________________________________
   //  Inside ICE/BoundaryCond.cc: setBC(Pressure)
   //  hard code the pressure as a function of time
-  #ifdef ICEBoundaryCond_1
+#ifdef ICEBoundaryCond_1
     BCGeomBase* bc_geom_type = patch->getBCDataArray(face)->getChild(mat_id,child);
     cmp_type<CircleBCData> nozzle;
 
@@ -153,18 +162,17 @@
      
       //__________________________________
       //  curve fit for the pressure
-      double mean = 3.205751633986928e-02;
-      double std  = 2.020912741291855e-02;
+      double mean = 3.2e-02;
+      double std  = 1.851850425925377e-02;
       vector<double> c(8);
-      c[7] = -2.084666863540239e+05;
-      c[6] = -2.768180990368879e+04;
-      c[5] =  1.216851029348476e+06;
-      c[4] =  8.665056462676427e+04;
-
-      c[3] = -2.554361910136362e+06;
-      c[2] =  6.697085748135508e+04;
-      c[1] =  3.276185586871563e+06;    
-      c[0] =  1.794787251771923e+06;
+      c[7] = -2.233767893099373e+05;
+      c[6] = -5.824923861605825e+04;
+      c[5] =  1.529343908400654e+06;
+      c[4] =  1.973796762592652e+05;
+      c[3] =  -3.767381404747613e+06;
+      c[2] =  5.939587204102841e+04;
+      c[1] =  5.692124635957888e+06;    
+      c[0] =  3.388928006241853e+06;
       
       
       double t = sharedState->getElapsedTime();
@@ -172,23 +180,32 @@
       
       double tbar = (time - mean)/std;
       
-      double pressfit = c[7] * pow(tbar,7) + c[6]*pow(tbar,6) + c[5]*pow(tbar,5)
-                      + c[4] * pow(tbar,4) + c[3]*pow(tbar,3) + c[2]*pow(tbar,2)
-                      + c[1] * tbar + c[0];
-      
+      double stag_press = c[7] * pow(tbar,7) + c[6]*pow(tbar,6) + c[5]*pow(tbar,5)
+                       + c[4] * pow(tbar,4) + c[3]*pow(tbar,3) + c[2]*pow(tbar,2)
+                       + c[1] * tbar + c[0];
+      //__________________________________
+      //  Isenentrop relations for A/A* = 1.88476
+      double p_p0     = 0.92850;
+      double static_press = p_p0 * stag_press;
+#if 0
+      if(patch->getID() == 0){
+        cout << " time " << time 
+              << " static_press " << static_press << endl;
+      }
+#endif
       for (iter=bound.begin(); iter != bound.end(); iter++) {
-        press_CC[*iter] = pressfit;
+        press_CC[*iter] = static_press;
       }
       //cout << "Time " << time << " Pressure:   child " << child 
       //     <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1) << endl;
     }
-  #endif  // ICEBoundaryCond_1
+#endif  // ICEBoundaryCond_1
 
 
   //__________________________________
   //  Inside ICE/BoundaryCond.cc: setBC(Temperature/Densiity)
   //  hard code the temperature and density as a function of time
-  #ifdef ICEBoundaryCond_2
+#ifdef ICEBoundaryCond_2
     BCGeomBase* bc_geom_type = patch->getBCDataArray(face)->getChild(mat_id,child);
     cmp_type<CircleBCData> nozzle;
 
@@ -198,39 +215,49 @@
       //__________________________________
       //  constants and curve fit for pressure
       double pascals_per_psi = 6894.4;
-      double mean = 3.205751633986928e-02;
-      double std  = 2.020912741291855e-02;
-      double temp_static_stag =0.83333333;
       
       double gamma = 1.4;
       double cv    = 716;
       
+      double mean = 3.2e-02;
+      double std  = 1.851850425925377e-02;
       vector<double> c(8);
-      c[7] = -2.084666863540239e+05;
-      c[6] = -2.768180990368879e+04;
-      c[5] =  1.216851029348476e+06;
-      c[4] =  8.665056462676427e+04;
-
-      c[3] = -2.554361910136362e+06;
-      c[2] =  6.697085748135508e+04;
-      c[1] =  3.276185586871563e+06;    
-      c[0] =  1.794787251771923e+06;
+      c[7] = -2.233767893099373e+05;
+      c[6] = -5.824923861605825e+04;
+      c[5] =  1.529343908400654e+06;
+      c[4] =  1.973796762592652e+05;
+      c[3] =  -3.767381404747613e+06;
+      c[2] =  5.939587204102841e+04;
+      c[1] =  5.692124635957888e+06;    
+      c[0] =  3.388928006241853e+06;
       
       double t = sharedState->getElapsedTime();
       double time = t + sharedState->getTimeOffset();
 
       double tbar = (time - mean)/std;
       
-      double pressfit = c[7] * pow(tbar,7) + c[6]*pow(tbar,6) + c[5]*pow(tbar,5)
-                      + c[4] * pow(tbar,4) + c[3]*pow(tbar,3) + c[2]*pow(tbar,2)
-                      + c[1] * tbar + c[0];
+      double stag_press = c[7] * pow(tbar,7) + c[6]*pow(tbar,6) + c[5]*pow(tbar,5)
+                       + c[4] * pow(tbar,4) + c[3]*pow(tbar,3) + c[2]*pow(tbar,2)
+                       + c[1] * tbar + c[0];
       
-      double static_temp  = temp_static_stag*(2.7988e3 +110.5*log(pressfit/pascals_per_psi) ); 
-      double static_rho   = pressfit/((gamma - 1.0) * cv * static_temp);
+      double stag_temp  = (2.7988e3 +110.5*log(stag_press/pascals_per_psi) ); 
+      double stag_rho   = stag_press/((gamma - 1.0) * cv * stag_temp);
 
-      //cout << " time " << time << " pressfit " << pressfit
-      //     << " static_temp " << static_temp << " static_rho " << static_rho << endl;
-      
+      //__________________________________
+      //  Isenentrop relations for A/A* = 1.88476
+      double T_T0     = 0.97993;
+      double rho_rho0 = 0.94839;
+
+      double static_temp = T_T0 * stag_temp;
+      double static_rho  = rho_rho0 * stag_rho;
+
+#if 0
+      if (patch->getID() ) {
+        cout << " time " << time 
+             << " static_temp " << static_temp
+             << " static_rho " << static_rho << endl;
+      } 
+#endif     
       if(desc == "Temperature") {
         for (iter=bound.begin(); iter != bound.end(); iter++) {
           var_CC[*iter] = static_temp;
@@ -243,5 +270,59 @@
       }
     } 
   #endif  //  ICEBoundaryCond_2
+
+  //__________________________________
+  //  Inside ICE/BoundaryCond.cc: setBC(Velocity)
+#ifdef ICEBoundaryCond_3
+    BCGeomBase* bc_geom_type = patch->getBCDataArray(face)->getChild(mat_id,child);
+    cmp_type<CircleBCData> nozzle;
+
+    if(face == Patch:: xminus && mat_id == 1 && nozzle(bc_geom_type)){
+      vector<IntVector>::const_iterator iter;
+
+      //__________________________________
+      //  constants and curve fit for pressure
+      double pascals_per_psi = 6894.4;
+  
+      double mean = 3.2e-02;
+      double std  = 1.851850425925377e-02;
+      vector<double> c(8);
+      c[7] = -2.233767893099373e+05;
+      c[6] = -5.824923861605825e+04;
+      c[5] =  1.529343908400654e+06;
+      c[4] =  1.973796762592652e+05;
+      c[3] =  -3.767381404747613e+06;
+      c[2] =  5.939587204102841e+04;
+      c[1] =  5.692124635957888e+06;    
+      c[0] =  3.388928006241853e+06;
+      
+      double t = sharedState->getElapsedTime();
+      double time = t + sharedState->getTimeOffset();
+
+      double tbar = (time - mean)/std;
+      
+      double stag_press = c[7] * pow(tbar,7) + c[6]*pow(tbar,6) + c[5]*pow(tbar,5)
+                       + c[4] * pow(tbar,4) + c[3]*pow(tbar,3) + c[2]*pow(tbar,2)
+                       + c[1] * tbar + c[0];
+      
+      double stag_temp  = (2.7988e3 +110.5*log(stag_press/pascals_per_psi) ); 
+
+      //__________________________________
+      //  Isenentrop relations for A/A* = 1.88476
+      double T_T0     = 0.97902;
+      double Mach     = 0.32725;
+      double R        = 287.0;
+      double gamma    = 1.4;
+      double static_temp = T_T0 * stag_temp;
+      
+      double velX = Mach * sqrt(gamma * R * static_temp); 
+    //  cout << "nozzle Velocity " << velX << " static_temp " << static_temp << endl;     
+      if(desc == "Velocity") {
+        for (iter=bound.begin(); iter != bound.end(); iter++) {
+          var_CC[*iter] = Vector(velX, 0.,0.);
+        }
+      }
+    } 
+  #endif  //  ICEBoundaryCond_3
 
 #endif  //running_NGC_nozzle
