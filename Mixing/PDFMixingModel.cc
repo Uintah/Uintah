@@ -729,29 +729,28 @@ PDFMixingModel::readBetaTable() {
       stateSpaceVars.d_drhodf = value;
       mixfile >> value;
       stateSpaceVars.d_drhodh = value;
-      for (vector<double>::iterator iter = 
-	   stateSpaceVars.d_speciesConcn.begin(); 
-	   iter != stateSpaceVars.d_speciesConcn.end(); ++iter) {
+      for (unsigned int iter = 0; 
+	   iter < stateSpaceVars.d_speciesConcn.size(); ++iter) {
 	mixfile >> value;
-	stateSpaceVars.d_speciesConcn.push_back(value);
+	stateSpaceVars.d_speciesConcn[iter] = value;
       }
       if (d_numRxnVars > 0) {
-	for (vector<double>::iterator iter = stateSpaceVars.d_rxnVarRates.begin(); 
-	     iter != stateSpaceVars.d_rxnVarRates.end(); ++iter) {
+	for (unsigned int iter = 0; 
+	     iter < stateSpaceVars.d_rxnVarRates.size(); ++iter) {
 	  mixfile >> value;
-	  stateSpaceVars.d_rxnVarRates.push_back(value);
+	  stateSpaceVars.d_rxnVarRates[iter] = value;
 	}
-	for (vector<double>::iterator iter = stateSpaceVars.d_rxnVarNorm.begin(); 
-	     iter != stateSpaceVars.d_rxnVarNorm.end(); ++iter){
+	for (unsigned int iter = 0; 
+	     iter < stateSpaceVars.d_rxnVarNorm.size(); ++iter){
 	  mixfile >> value;
-	  stateSpaceVars.d_rxnVarNorm.push_back(value);
+	  stateSpaceVars.d_rxnVarNorm[iter] = value;
 	}
       }
       if (lsoot) {
-	for (vector<double>::iterator iter = stateSpaceVars.d_sootData.begin(); 
-	     iter != stateSpaceVars.d_sootData.end(); ++iter) {
+	for (unsigned int iter = 0; 
+	     iter < stateSpaceVars.d_sootData.size(); ++iter) {
 	  mixfile >> value;
-	  stateSpaceVars.d_sootData.push_back(value);
+	  stateSpaceVars.d_sootData[iter] = value;
 	}
       }
       mixfile.ignore(50,'\n');    //Move to next line
@@ -809,7 +808,7 @@ PDFMixingModel::createBetaTable() {
 
   //vector<double> vec_stateSpaceVars;
   int *tableIndex = new int[d_tableDimension];
-  vector<int> numEntries(d_tableDimension, 0.0);
+  vector<int> numEntries(d_tableDimension, 0);
   Stream stateSpaceVars, prevStateSpaceVars;
   vector<double> indepVars(d_tableDimension, 0.0);
   int entryCount = 0;

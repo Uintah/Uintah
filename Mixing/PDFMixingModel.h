@@ -117,7 +117,7 @@ public:
       inline int getTableDimension() const{
 	return d_tableDimension;
       }
-      inline int getStoicPt() const{ 
+      inline double getStoicPt() const{ 
 	return d_stoicValue; 
       }
       inline std::string getMixTableType() const{
