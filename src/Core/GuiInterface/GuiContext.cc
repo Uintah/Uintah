@@ -223,10 +223,10 @@ void GuiContext::emit(std::ostream& out, const string& midx)
     {
       char *tmp;
       // Replace DATADIR
-      if (tmp = getenv("SCIRUN_DATA"))
+      if ((tmp = getenv("SCIRUN_DATA")))
       {
 	const string datadir(tmp);
-	string::size_type loc = result.find(datadir);
+	const string::size_type loc = result.find(datadir);
 	if (loc != string::npos)
 	{
 	  result.replace(loc, datadir.size(), "$DATADIR");
@@ -234,12 +234,12 @@ void GuiContext::emit(std::ostream& out, const string& midx)
       }
       
       // Replace DATASET
-      if (tmp = getenv("SCIRUN_DATASET"))
+      if ((tmp = getenv("SCIRUN_DATASET")))
       {
 	const string dataset(tmp);
 	while (1)
 	{
-	  string::size_type loc = result.find(dataset);
+	  const string::size_type loc = result.find(dataset);
 	  if (loc != string::npos)
 	  {
 	    result.replace(loc, dataset.size(), "$DATASET");
