@@ -1,11 +1,7 @@
 #ifndef UINTAH_HOMEBREW_ICELABEL_H
 #define UINTAH_HOMEBREW_ICELABEL_H
 
-
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
-#include <vector>
-
-using std::vector;
 
 namespace Uintah {
 
