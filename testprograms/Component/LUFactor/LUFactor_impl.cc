@@ -79,6 +79,7 @@ int LUFactor_impl::LUFactorize(const SIDL::array2<double>& A)
 
     MPI_Datatype Column;
     MPI_Type_vector(SIZE, 1, SIZE, MPI_FLOAT, &Column);      
+    MPI_Type_commit(&Column);
     MPI_Bcast((void*) &(A[0][j]), 1, Column, (j % size), MPI_COMM_WORLD);
     
 #ifdef DEBUG
