@@ -32,7 +32,7 @@
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomPick.h>
 #include <Core/Geom/GeomSphere.h>
-#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomPoint.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
@@ -151,6 +151,7 @@ GridVisualizer::GridVisualizer(GuiContext* ctx):
   radius(ctx->subVar("radius")),
   polygons(ctx->subVar("polygons")),
   widget_lock("GridVusualizer widget lock"),
+  need_2d(1),
   init(1),
   selected_sphere_geom_id(0),
   show_selected_node(ctx->subVar("show_selected_node"))
@@ -197,9 +198,9 @@ void GridVisualizer::update_widget() {
     grid->getSpatialRange(gridBB);
     // Need to extend the BBox just a smidgen to correct for floating
     // point error.
-    Point offset(1e-12, 1e-12, 1e-12);
-    min = (gridBB.min()-offset).asPoint();
-    max = (gridBB.max()+offset).asPoint();
+    Vector offset(1e-12, 1e-12, 1e-12);
+    min = gridBB.min()-offset;
+    max = gridBB.max()+offset;
     
     Point center = min + (max-min)/2.0;
     double max_scale;
@@ -381,7 +382,7 @@ void GridVisualizer::execute()
     GeomLines* edges = scinew GeomLines();
 
     // nodes consists of the nodes in all the patches in the level
-    GeomPts* nodes = scinew GeomPts(1); // 1 is the number of points
+    GeomPoints* nodes = scinew GeomPoints(1); // 1 is the number of points
 
     // spheres that will be the selectable nodes
     GeomGroup* spheres = scinew GeomGroup;
