@@ -234,7 +234,6 @@ DWDatabase<VarType>::cleanForeign()
 	    const VarType* var = pr->getVars()[m].var;
 	    if(var && var->isForeign()){
 	      pr->removeVar(m);
-	      cerr << "Cleaning foreign: " << nr->label->getName() << "\n";
 	    }
 	 }
       }
