@@ -17,7 +17,7 @@ Fracture* FractureFactory::create(const ProblemSpecP& ps)
      if (fracture_type == "normal") 
         return(scinew NormalFracture(fractureProb));
      else if (fracture_type == "simple") 
-        return(scinew ExplosiveFracture(fractureProb));
+        return(scinew SimpleFracture(fractureProb));
      else if (fracture_type == "explosive") 
         return(scinew ExplosiveFracture(fractureProb));
      else {
@@ -32,6 +32,10 @@ Fracture* FractureFactory::create(const ProblemSpecP& ps)
 
 
 // $Log$
+// Revision 1.4  2000/12/07 08:33:03  tan
+// Compare the times for running the disk without fracture and with
+// fracture (Simple fracture).
+//
 // Revision 1.3  2000/11/21 20:48:29  tan
 // Implemented different models for fracture simulations.  SimpleFracture model
 // is for the simulation where the resolution focus only on macroscopic major
