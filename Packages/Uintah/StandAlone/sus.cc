@@ -214,7 +214,7 @@ main( int argc, char** argv )
     bool   restart=false;
     bool   combine_patches=false;
     int    restartTimestep = -1;
-    int    udaSuffix;
+    int    udaSuffix = -1;
     string udaDir; // for restart or combine_patches
     bool   restartFromScratch = true;
     bool   restartRemoveOldDir = false;
