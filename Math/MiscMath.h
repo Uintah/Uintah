@@ -96,6 +96,18 @@ inline int RoundDown(double d)
   }
 }
 
+inline int RoundUp(double d)
+{
+    if(d>=0){
+	if((d-(int)d) == 0)
+	    return (int)d;
+	else 
+	    return (int)(d+1);
+    } else {
+	return (int)d;
+    }
+}
+
 inline int Round(double d)
 {
   return (int)(d+0.5);
