@@ -35,7 +35,7 @@ ColorMapDpy::ColorMapDpy(Array1<ColorPos> &matls, int num_bins):
   data_min(MAXFLOAT), data_max(-MAXFLOAT),
   selected_point(-1)
 {
-  set_resolution(400,200);
+  set_resolution(350,150);
   // Allocate memory for the color and alpha transform
   color_transform.set_results_ptr(new Array1<Color>(num_bins));
   alpha_transform.set_results_ptr(new Array1<float>(num_bins));
@@ -84,6 +84,15 @@ ColorMapDpy::~ColorMapDpy()
     free(filebase);
 }
 
+void ColorMapDpy::set_viewport_params() {
+  xstart = 5;
+  xend = xres-5;
+  width = xend - xstart;
+  ystart = 5;
+  yend = yres - 5;
+  height = yend - ystart;
+}
+
 void ColorMapDpy::attach(float min_in, float max_in) {
   data_min = min(data_min, min_in);
   data_max = max(data_max, max_in);
@@ -94,9 +103,15 @@ void ColorMapDpy::attach(float min_in, float max_in) {
 }
 
 void ColorMapDpy::init() {
-  glShadeModel(GL_FLAT);
+  glShadeModel(GL_BLEND);
   glClearColor(0, 0, 0, 1);
   //  cerr << "VolumeVisDpy::setup_vars:start\n";
+
+  set_viewport_params();
+  glViewport(xstart, ystart, width, height);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glMatrixMode(GL_PROJECTION);
 }
 
 void ColorMapDpy::display() {
@@ -108,6 +123,13 @@ void ColorMapDpy::display() {
   if (window_mode & BufferModeMask == DoubleBuffered)
     glXSwapBuffers(dpy, win);
   XFlush(dpy);
+}
+
+void ColorMapDpy::resize(const int new_width, const int new_height) {
+  xres = new_width;
+  yres = new_height;
+  set_viewport_params();
+  glViewport(xstart, ystart, width, height);
 }
 
 #if 0
@@ -330,16 +352,12 @@ void ColorMapDpy::run() {
 // the corresponding colors, by the alpha value.
 void ColorMapDpy::draw_transform() {
   // set up the frame for the lower half of the user interface.
-  int s=5;
-  int e=yres-5;
-  int h=e-s;
-  int width = xres -10;
-  glViewport(5, s, width, h);
+  //  glViewport(5, s, width, h);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   gluOrtho2D(0, 1, 0, 1);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
+  //  glMatrixMode(GL_MODELVIEW);
+  //  glLoadIdentity();
 
   glBegin(GL_QUAD_STRIP);
   for(int i = 0; i < colors_index.size(); i++) {
@@ -353,11 +371,16 @@ void ColorMapDpy::draw_transform() {
   glEnd();
 
   // Draw the circles around the end points
+  //  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(0, width, 0, height);
+  //  glMatrixMode(GL_MODELVIEW);
+  //  glLoadIdentity();
   glColor3f(1.0, 0.5, 1.0);
   int radius = (width/100)*3;
   for(unsigned int k = 0; k < colors_index.size(); k++) {
     draw_circle(radius, (int)(colors_index[k].x*width),
-		(int)(colors_index[k].val*h));
+		(int)(colors_index[k].val*height));
   }
 }
 
@@ -384,7 +407,7 @@ void ColorMapDpy::create_transfer() {
     for (int i = start; i <= end; i++) {
       //    cout << "val = "<<val<<", ";
       color_transform[i] = color;
-      color += color;
+      color += color_inc;
       alpha_transform[i] = val;
       val += val_inc;
     }
