@@ -15,10 +15,10 @@ string IncorrectAllocation::makeMessage(const VarLabel* expectedLabel,
 					const VarLabel* actualLabel)
 {
   if (actualLabel == 0) {
-    return string("Variable Allocation Warning: putting into label ") + expectedLabel->getName() + " but not allocated for any label";
+    return string("Variable Allocation Error: putting into label ") + expectedLabel->getName() + " but not allocated for any label";
   }
   else {
-    return string("Variable Allocation Warning: putting into label ") + expectedLabel->getName() + " but allocated for " + actualLabel->getName();
+    return string("Variable Allocation Error: putting into label ") + expectedLabel->getName() + " but allocated for " + actualLabel->getName();
   }
 }
 
