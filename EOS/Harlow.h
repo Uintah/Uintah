@@ -59,9 +59,6 @@ WARNING
 
         double getGasConstant() const;
 
-        protected:
-
-        ICELabel* lb;
       private:
        double d_gas_constant;
       };
