@@ -28,46 +28,46 @@ SRCS	+= $(SRCDIR)/ICE_doNothing.cc
 endif
 
 ifneq ($(ICE),)
-SRCS += $(SRCDIR)/ICE_schedule.cc       	          	    	 \
-    	 $(SRCDIR)/ICE_actual.cc 	     	          	    	 \
-    	 $(SRCDIR)/array_conversion.cc   	          	    	 \
-    	 $(SRCDIR)/ICE_wrappers.cc   	          	    	 \
-    	 $(ICE_DIR)/input.c	\
-	 $(ICE_DIR)/Plot_routines/plot_vector.c			\
-        $(ICE_DIR)/Plot_routines/plot_control.c			\
-        $(ICE_DIR)/Plot_routines/plot_face_center.c		\
-        $(ICE_DIR)/Plot_routines/plot_common.c			\
-	 $(ICE_DIR)/Plot_routines/plot_contour.c			\
-        $(ICE_DIR)/Plot_routines/plot_2d_line.c			\
-        $(ICE_DIR)/Plot_routines/plot_cursor_pos.c		\
-        $(ICE_DIR)/p_face.c					       \
-        $(ICE_DIR)/explicit_delPress.c				\
-        $(ICE_DIR)/equate_ptr_addrss.c				\
-        $(ICE_DIR)/interpolate_vel_CC_to_FC.c			\
-        $(ICE_DIR)/grid.c					       \
-        $(ICE_DIR)/flux_or_primitive.c				\
-        $(ICE_DIR)/Equation_of_state/equation_of_state.c	\
-        $(ICE_DIR)/Equation_of_state/speed_of_sound.c		\
-        $(ICE_DIR)/lagrangian.c					\
-        $(ICE_DIR)/commonFunctions.c				\
-        $(ICE_DIR)/timeadvanced.c				       \
-        $(ICE_DIR)/Advection_2D/advect_grad_limiter.c		\
-        $(ICE_DIR)/Advection_2D/advect_centroids.c		\
-        $(ICE_DIR)/Advection_2D/advect_preprocess.c		\
-        $(ICE_DIR)/Advection_2D/advect_q.c			\
-        $(ICE_DIR)/Advection_2D/advect_q_flux.c			\
-        $(ICE_DIR)/Advection_2D/advect_q_vertex.c		\
-        $(ICE_DIR)/Boundary_Cond/boundary_cond_FC.c		\
-        $(ICE_DIR)/Boundary_Cond/boundary_cond.c		       \
-        $(ICE_DIR)/Write_output/output_FC.c			\
-        $(ICE_DIR)/Write_output/output_CC.c			\
-        $(ICE_DIR)/Write_output/output_misc.c			\
-        $(ICE_DIR)/Source_Sinks/energy.c			       \
-        $(ICE_DIR)/Source_Sinks/momentum.c			\
-        $(ICE_DIR)/Source_Sinks/shear_stress.c			\
-        $(ICE_DIR)/initialize_variables.c			       \
+SRCS += $(SRCDIR)/ICE_schedule.cc                                        \
+         $(SRCDIR)/ICE_actual.cc                                         \
+         $(SRCDIR)/array_conversion.cc                                   \
+         $(SRCDIR)/ICE_wrappers.cc                               \
+         $(ICE_DIR)/input.c     \
+         $(ICE_DIR)/Plot_routines/plot_vector.c                 \
+        $(ICE_DIR)/Plot_routines/plot_control.c                 \
+        $(ICE_DIR)/Plot_routines/plot_face_center.c             \
+        $(ICE_DIR)/Plot_routines/plot_common.c                  \
+         $(ICE_DIR)/Plot_routines/plot_contour.c                        \
+        $(ICE_DIR)/Plot_routines/plot_2d_line.c                 \
+        $(ICE_DIR)/Plot_routines/plot_cursor_pos.c              \
+        $(ICE_DIR)/p_face.c                                            \
+        $(ICE_DIR)/explicit_delPress.c                          \
+        $(ICE_DIR)/equate_ptr_addrss.c                          \
+        $(ICE_DIR)/interpolate_vel_CC_to_FC.c                   \
+        $(ICE_DIR)/grid.c                                              \
+        $(ICE_DIR)/flux_or_primitive.c                          \
+        $(ICE_DIR)/Equation_of_state/equation_of_state.c        \
+        $(ICE_DIR)/Equation_of_state/speed_of_sound.c           \
+        $(ICE_DIR)/lagrangian.c                                 \
+        $(ICE_DIR)/commonFunctions.c                            \
+        $(ICE_DIR)/timeadvanced.c                                      \
+        $(ICE_DIR)/Advection_2D/advect_grad_limiter.c           \
+        $(ICE_DIR)/Advection_2D/advect_centroids.c              \
+        $(ICE_DIR)/Advection_2D/advect_preprocess.c             \
+        $(ICE_DIR)/Advection_2D/advect_q.c                      \
+        $(ICE_DIR)/Advection_2D/advect_q_flux.c                 \
+        $(ICE_DIR)/Advection_2D/advect_q_vertex.c               \
+        $(ICE_DIR)/Boundary_Cond/boundary_cond_FC.c             \
+        $(ICE_DIR)/Boundary_Cond/boundary_cond.c                       \
+        $(ICE_DIR)/Write_output/output_FC.c                     \
+        $(ICE_DIR)/Write_output/output_CC.c                     \
+        $(ICE_DIR)/Write_output/output_misc.c                   \
+        $(ICE_DIR)/Source_Sinks/energy.c                               \
+        $(ICE_DIR)/Source_Sinks/momentum.c                      \
+        $(ICE_DIR)/Source_Sinks/shear_stress.c                  \
+        $(ICE_DIR)/initialize_variables.c                              \
         $(ICE_DIR)/nrutil+.c
-endif
+
 #__________________________________
 #   Tweak this path if you want a test 
 #   case  
@@ -75,9 +75,6 @@ endif
 TEST_CASE =  -I$(ICE_DIR)/Tests/MM
 INCLUDES += $(TEST_CASE) -I$(ICE_DIR)/Tests/Advection2D -I$(ICE_DIR)/Header_files
 
-PSELIBS := Uintah/Interface Uintah/Grid SCICore/Exceptions \
-	Uintah/Exceptions SCICore/Geometry
-       
 LIBS 	     := $(XML_LIBRARY) \
                -L$(ICE_LIBS) -ltecio \
                -lcpgplot -lpgplot $(X11_LIBS) \
@@ -86,6 +83,11 @@ LIBS 	     := $(XML_LIBRARY) \
 PGPLOT  = $(SRCTOP_ABS)/$(ICE_DIR)/Libraries
 CFLAGS += -DPGPLOT_DIR=\"$(PGPLOT)\"
 
+endif
+
+PSELIBS := Uintah/Interface Uintah/Grid SCICore/Exceptions \
+	Uintah/Exceptions SCICore/Geometry
+       
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #__________________________________
@@ -113,6 +115,9 @@ icelinks:
 	ln -sf `pwd`/$(ICE_DIR)/Tests/Stagnation_pf/if $(SRCTOP)/Uintah/inputs/ICE/if_stagnation 
 #
 # $Log$
+# Revision 1.13  2000/07/05 22:26:19  dav
+# tweaked
+#
 # Revision 1.12  2000/07/05 21:05:17  harman
 # added icelink and ability to include testcase header files
 #
