@@ -69,43 +69,57 @@ converter and an export converter.
 \section{Exporting a Field}
 \label{sec:export_field}
 
-To export a field, a simple \sci{} network and two converters are used.
+To export a \sr{} field to text files, a \sr{} network and two
+converters are used.
 
-The components of a field are exported to three files.  Mesh node
-locations are exported to a file, mesh connectivity data are export to
-a second file, and field data values are exported to a third file.
+Because a field object cannot be exported directly by converters, a
+field must first be split into its mesh part, a field object with no
+data, and its data part, a matrix object, using a simple \sr{} network
+(described below).  Converters are then used to generate text files
+containing node locations, connectivity information, and matrix data.
 
-Field objects cannot be exported directly by the converters.  A field
-is first split into a mesh part (a field object with no data) and a
-data part (a matrix object) using a simple \sr{} network.  The
-network is constructed using modules \datatype{FieldReader},
+The \sr{} network that splits a field into its mesh and data parts
+consists of modules \datatype{FieldReader},
 \datatype{ManageFieldData}, and \datatype{MatrixWriter}.  A
 \datatype{FieldReader} module reads the field to be split.
 \datatype{FieldReader}'s output port is connected to
 \datatype{ManageFieldData}'s input port (\datatype{ManageFieldData}'s
 matrix input port is unconnected).  \datatype{ManageFieldData}'s
 matrix output port is connected to \datatype{MatrixWriter}'s input
-port.  The (executed) network saves the field's data as a matrix object.
+port.  The (executed) network saves the field's data as a \sr{} matrix
+object.
 
-After a field is split, its mesh and data parts are exported to
-text files using field and matrix converters.  A field converter
-produces two files: a node location file (called a ``pts'' file) and a
-node connectivity file (``tri'', ``tet'', ``quad'', or ``hex'' files).
-A matrix converter produces a file of data values (``txt'' files).
+After a field is split, its mesh and data parts are exported to text
+files using field and matrix converters.  A field converter produces
+two files: a node location file (a ``pts'' file) and a node
+connectivity file (``tri'', ``tet'', ``quad'', or ``hex''
+file)\footnote{With the exception of point cloud fields.  They
+  contain no connectivity data.}.  A matrix converter produces a file
+of data values (``txt'' files).
+
+\secref{Node Location File}{sec:node_loc_fmt} describes the format of
+a node location text file.  \secref{Connectivity Files}{sec:node_conn_fmt}
+describes the format of a connectivity text file.
+
+\secref{Column Matrix}{sec:colmat}, \secref{Dense
+  Matrix}{sec:dense_matrix}, and \secref{Sparse Row
+  Matrix}{sparse_row_matrix}, describe the format of matrix text
+files.
 
 \section{Importing a Field}
 \label{sec:import_field}
 
-To import a field, two converters and a simple \sr{} network are used.
+To import data from text files into a \sr{} field, two converters and
+a simple \sr{} network are used.
 
-A field converter is used to produce an incomplete (mesh data only)
-persistent field object from node location and node connectivity
-files.  A matrix converter is used to produce a persistent matrix
-object from a node data file.
+A field converter is used to produce an incomplete (node location and
+connectivity data only) persistent field object from node location and
+node connectivity files.  A matrix converter is used to produce a
+persistent matrix object from a node data file.
 
-A complete field (mesh and data) is assembled in \sr{} by
-constructing a simple network using modules \datatype{FieldReader},
-\datatype{MatrixReader},  \datatype{ManageFieldData}, and
+A complete field (mesh and data) is assembled in \sr{} by constructing
+a simple network using modules \datatype{FieldReader},
+\datatype{MatrixReader}, \datatype{ManageFieldData}, and
 \datatype{FieldWriter}.
 
 A \datatype{FieldReader} module reads the incomplete field object.
@@ -299,6 +313,7 @@ converter (\command{TextToStructCurveField},
 values.
 
 \subsection{Column Matrix}
+\label{sec:colmat}
 
 The column matrix file format is:
 
@@ -328,6 +343,7 @@ values in the matrix.
 \verb|N| is followed by a list of data values.
 
 \subsection{Dense Matrix}
+\label{sec:dense_matrix}
 
 The dense matrix file format is:
 
@@ -360,6 +376,7 @@ major order.
 
 
 \subsection{Sparse Row Matrix}
+\label{sparse_row_matrix}
 
 The sparse row matrix file format is:
 

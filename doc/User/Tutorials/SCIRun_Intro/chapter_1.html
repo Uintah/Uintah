@@ -78,7 +78,7 @@
     <I>Net</I> (see <A HREF="#figure-1.3">Figure 1.3</A>).  An
     infinite number of nets can be created, each solving a separate
     problem. Chapter 1 of this tutorial demonstrates the use of SCIRun
-    to visualize a tetrahedral mesh. This chapter demonstartes the
+    to visualize a tetrahedral mesh. This chapter demonstrates the
     construction of  a network comprised of three standard modules:
     FieldReader, ShowField, and Viewer.  This chapter also instructs the
     user on reading <I>Field</I> data from a file, setting 
@@ -91,8 +91,8 @@
     <p>Before running the <I>scirun</I> executable, an environment
     needs to be set up.  (For more information about environment
     variables consult the <a
-    HREF="../Guide/usersguide/srug3.html#sec:scirundata"><i>User's
-    Guide</i> 3.4, "SCIRUN_DATA"</a>.)
+    HREF="../../Guide/usersguide/srug4_4.html#sec:scirundata"><i>User's
+    Guide</i> 4.4, "SCIRUN_DATA"</a>.)
 
     <p> The following three environment variables need to be set
         in the shell.
@@ -185,7 +185,7 @@
    <B>Figure 1.4</B>).</p>
 
 <p>For a more complete description of modules, consult the <a
-    HREF="../Guide/usersguide/srug2.html#sec:modulesandnetworks"><i>User's
+    HREF="../../Guide/usersguide/srug2_3.html"><i>User's
     Guide</i>, Section 2.3 "Modules and Networks."</a></p>
 
 <p> All modules have an indicator that alerts the user to messages
@@ -208,7 +208,7 @@
     Ports of the same color correspond to the same datatype and can
     be connected. These colors are described in detail
     in the <a
-    HREF="../Guide/usersguide/srug4.html#sec:anatomyofamodule"><i>User's
+    HREF="../../Guide/usersguide/srug5_1.html"><i>User's
     Guide</i>, Section 4.2, "Anatomy of a Module"</a>.</p>
 
 <p> Two or more connected modules form a SCIRun network, or <i>net</i>.</p>
@@ -219,7 +219,7 @@
     create a FieldReader module, which will be used to load a
     SCIRun Field dataset from disk.
 
-    <ul><li>Select SCIRun->DataIO->FieldReader from the menu bar,
+    <ul><li>Select SCIRun-&gt;DataIO-&gt;FieldReader from the menu bar,
     as shown in <b>Figure 1.5</b>.</ul>
 
     <center>
@@ -280,7 +280,7 @@
    
      <OL>
         <LI value="1."> Create a ShowField module using the
-             SCIRun/Visualization menu (use the same menus 
+             SCIRun-&gt;Visualization menu (use the same menus 
              used to create the FieldReader module).
 	<BR><P>
         <LI> Position the mouse pointer over the yellow output port on
@@ -349,12 +349,16 @@
            values. Set Red and Green to 0.00, and Blue to 1.00. The
            Alpha value remains at 0.50.
       <BR><P>
-      <LI> Select the OK button in the Color Chooser GUI. Notice that the
+      <LI> Select the Apply button in the Color Chooser GUI. Notice that the
            Default Color swatch in the ShowField GUI has changed to
            blue.  SCIRun and the ShowField GUI should now look like
            <b>Figure 1.9</b>.
       <BR><P>
-      <LI> Close the Color Chooser GUI.
+      <LI> Close the Color Chooser GUI.<BR><P>
+      <LI> Set the name of the Field to <U>Voltage</U>.  This 
+             makes it easy to identify the Field in the Viewer Window
+             (discussed later).
+      <BR><P>
     </OL>
 
     <center>
@@ -369,7 +373,8 @@
         <LI> In the ShowField GUI, a slider widget represents the Node
              Scale. The <I>Node Scale</I> interval can be increased or
              decreased by a power of 10 by pressing the + or - button.
-             Set the Node Scale to 2.
+             Set the Node Scale to 2.  Make sure the Node Display Type
+             is set to Spheres.
 	<BR><P>
         <LI> Set the <I>Sphere and Disk Resolution</I> to 5.
 	<BR><P>
@@ -377,10 +382,6 @@
              deselecting the <I>Show Edges</I> check box.
 	<BR><P>
         <LI> Go the the Faces tab and repeat the same action.
-	<BR><P>
-	<LI> Set the name of the Field to <U>Voltage</U>.  This 
-             makes it easy to identify the Field in the Viewer Window
-             (discussed later).
 	<BR><P>
 	<LI> Close the ShowField GUI by pressing the <I>Close</I> button.
       </OL>
@@ -391,18 +392,18 @@
       <I>Execute button only</I> box to delay all changes until the
       <I>Execute</I> button is pressed. This is useful with large
       dataset,when rendering takes a long time.)  Consult the <a
-      HREF="../Guide/usersguide/srug4.html#sec:executenet"> <i>User's
-      Guide</i> 4.5, "Executing a Network"</a>, for more details.</p>
+      HREF="../../Guide/usersguide/srug5_22.html"> <i>User's
+      Guide</i> 5.22, "Executing a Network"</a>, for more details.</p>
 
      <H2><A name="section-5">Viewer module</A></H2>
     
      The Viewer is the last module that will be added to the
      network. (More information about the Viewer can be found in the <a
-     HREF="../Guide/usersguide/srug5.html#sec:viewer"><i>User's
-     Guide</i> 5.0, "Visualization with the Viewer."</a>) 
+     HREF="../../Guide/usersguide/srug6.html"><i>User's
+     Guide</i> 6.0, "Visualization with the Viewer."</a>) 
 
      <OL>
-       <LI> Create a Viewer module by using the SCIRun/Render menu.
+       <LI> Create a Viewer module by using the SCIRun-&gt;Render menu.
        <BR><P> <LI> Connect the output port from ShowField into the
        Viewer input port. Notice the Viewer module automatically
        creates a new input port; this is an example of a SCIRun module
@@ -430,8 +431,8 @@
     
      Since the Viewer is one of the most important SCIRun modules, we
      suggest reading <a
-     HREF="../Guide/usersguide/srug5.html#sec:view-anatomy">User's
-     Guide 5.1, "Anatomy of the ViewWindow"</a> for a full description
+     HREF="../../Guide/usersguide/srug6_1.html">User's
+     Guide 6.1, "Anatomy of the ViewWindow"</a> for a full description
      of the Viewer.
 
      <UL>
@@ -444,8 +445,8 @@
     
     In the Viewer, the mouse can be used to rotate, scale, and
     translate the image.  The <a
-    HREF="../Guide/usersguide/srug5.html#sec:view-mouse"><i>User's
-    Guide</i> 5.2, "Mouse Control in the Viewer"</a> provides more
+    HREF="../../Guide/usersguide/srug6_3.html#sec:view-mouse"><i>User's
+    Guide</i> 6.3, "Mouse Control in the Viewer Window"</a> provides more
     complete information.</p>
     <P>
     <B>Translating the image (Left Button)</B> <p><ol><li> Move the
@@ -503,8 +504,8 @@
 	  "+" button in the lower right corner of the ViewWindow (see
 	  <b>Figure 1.14</b>). For a more complete description, read
 	  the <a
-	  HREF="../Guide/usersguide/srug5.html#sec:view-control"><i>User's
-	  Guide</i> 5.3, "Extended Control Window.:"</a></p>
+	  HREF="../../Guide/usersguide/srug6_4.html"><i>User's
+	  Guide</i> 6.4, "Extended Control Window.:"</a></p>
           Notice that in the <I>Objects</I> list, the geometry is
 	  named "Voltage Nodes" based on the name given to the
 	  field using the ShowField GUI earlier.
@@ -565,8 +566,8 @@
     are two options for re-saving the net:</p>
    
       <p><ol><li>Overwrite existing show-torso-mesh.net file by
-	  using File/Save from the drop-down menu.</p>  
-      <p><li>Save the net to a new file by using File/Save As...</p>  
+	  using File-&gt;Save from the drop-down menu.</p>  
+      <p><li>Save the net to a new file by using File-&gt;Save As...</p>  
     </ol>
     
     <H2><A name="summary">Summary</A></H2> 

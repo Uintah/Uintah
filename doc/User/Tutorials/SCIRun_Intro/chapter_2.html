@@ -112,7 +112,7 @@ net created in <a href="chapter_1.html#chapter1">Chapter 1</a>.
        saved in Chapter 1).</p>
 
   <LI> Now, add both modules: GenStandardColorMap and RescaleColorMap,
-       located under the SCIRun/Visualization menu (see <b>Figure 2.1</b>).</p>
+       located under the SCIRun-&gt;Visualization menu (see <b>Figure 2.1</b>).</p>
 
   <LI> Connect the output from GenStandardColorMaps to the input of
        RescaleColorMap.</p>
@@ -210,23 +210,23 @@ To complete this net, read in a Field.
         In GenStandardColorMaps, change the color map from Inverse
 	Rainbow to Inverse Darkhue. This changes the image in the
 	ViewWindow from the image originally generated (<b>Figure
-	2.2</b>) to the one seen in <b>Figure 2.5</b>.
+	2.2</b>) to the one seen in <b>Figure 2.4</b>.
         <P>
 	<center>
 	<img width="500" height="364" src="images/figures/2_6.gif"><br>
-	<b>Figure 2.5: Image Using Darkhue Color Map.</b>
+	<b>Figure 2.4: Image Using the Inverse Darkhue Color Map.</b>
 	</center>
 
 <H2><A name="section-4">RescaleColorMap GUI</A></H2>
 
         The RescaleColorMap module is used to change the way the color
         map is mapped onto data.  This allows the image to be
-        easily interpreted by the user.  <b>Figure 2.4</b> shows the
+        easily interpreted by the user.  <b>Figure 2.5</b> shows the
         UI for the RescaleColorMap module.
         <P>
 	<center>
 	<img width="297" height="143" src="images/figures/2_5.gif"><br>
-	<b>Figure 2.4: RescaleColorMap UI.</b>
+	<b>Figure 2.5: RescaleColorMap UI.</b>
 	</center>
 
 	<UL>
@@ -239,11 +239,9 @@ To complete this net, read in a Field.
         </UL>
                   
         Change the color map range in the RescaleColorMap UI to a
-        Fixed Scale of -30 to 30.  Notice that by using this range,
-        the electrodes appear very homogeneous.  However, if you
-        select <I>Auto Scale</I> (and press <I>Execute</I>) the
-        electrodes with the highest potentials are easy to identify
-        (see <B>Figure 2.6</B>).
+        Fixed Scale of -30 to 30 and click Execute.  <b>Figure 2.6 </b> shows the image with 
+        the Fixed Scale.  Notice that by using this range,
+        the electrodes appear very homogeneous.  
         <P>
 	<center>
 	<img width="563" height="484" src="images/figures/2_7.gif"><br>

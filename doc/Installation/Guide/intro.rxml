@@ -41,6 +41,18 @@ Disk space requirements for build from source code are listed in <xref
 linkend="tbl.disk_space"/>.
 </para>
 
+<para>See <xref linkend="intro.nvidia_notes"
+endterm="intro.nvidia_notes.title"/> for information on the use of
+Nvidia graphics cards with the Linux operating system.</para>
+
+<para>See <xref endterm="intro.ati_notes.title"
+linkend="intro.ati_notes"/> for information on the use of ATI cards
+and drivers with the Linux operating system.</para>
+
+<para>See <xref linkend="intro.redhat_ent_notes"
+endterm="intro.redhat_ent_notes.title"/> for information about the use
+of Red Hat Enterprise Linux.</para>
+
 <table id="tbl.pltfm_req">
 <title>Platform Guidelines</title>
 <tgroup cols="3">
@@ -85,16 +97,12 @@ linkend="tbl.disk_space"/>.
 <entry>
 <itemizedlist>
 <listitem>
-<para>Mac OS X 10.2.6, 10.2.7, 10.2.8, or OS X 10.3</para>
+<para>OS X 10.3 (Panther)</para>
 </listitem>
 <listitem>
-<para>December 2002 developer tools for &osx; 10.2</para>
 <para>&osx; 10.3 compatible developer tools for &osx; 10.3</para>
 </listitem>
 <listitem>
-<para>Apple's <ulink url="http://www.apple.com/macosx/x11/">X11
-Public Beta 3</ulink> and X11 <acronym>SDK</acronym> for &osx;
-10.2</para> 
 
 <para>Apple's X11 and X11 <acronym>SDK</acronym> for &osx; 10.3.
 X11 is distributed with &osx; 10.3 but must be installed separately</para>
@@ -178,6 +186,67 @@ source code.</para>
 </listitem>
 </orderedlist>
 </para>
+
+<section id="intro.nvidia_notes">
+<title id="intro.nvidia_notes.title">Linux and Nvidia Driver Notes</title>
+
+<para>
+Nvidia drivers, versions 1.0-5328 and 1.0-5336, will not work for
+hardware based texture volume rendering in SCIRun.  Please do not
+update to these drivers if you wish your volume rendering to work.
+</para>
+
+<para>Driver versions 1.0-4496, 1.0-4363 are known to work.</para>
+
+<para>
+Driver version 1.0-4191 does not work.  SCI has not tested versions
+earlier than 1.0-4191&mdash;they may or may not work.
+</para>
+
+</section>
+
+<section id="intro.ati_notes">
+<title id="intro.ati_notes.title">Linux and ATI Graphics Cards Notes</title>
+
+<para>The SCI Institute has spent some time experimenting with the use
+of ATI graphics cards under the Linux operating system.  Several
+different ATI cards and several different flavors of Linux have been
+tried with mixed results:
+<itemizedlist>
+<listitem>
+<para>On one system, ATI drivers installed with apparent success, but
+the system did not report using the drivers and only software
+rendering appeared to be used.</para>
+</listitem>
+<listitem>
+<para>Under Red Hat Enterprise the drivers installed and worked, but the
+graphics were very choppy, producing a mostly unusable rendering.</para>
+</listitem>
+<listitem>
+<para>On another system, drivers installed and were used but vertex
+arrays did not work, which caused some objects to be rendered
+incorrectly</para>
+</listitem>
+<listitem>
+<para>One card did work well under Redhat 9.</para>
+</listitem>
+</itemizedlist>
+Based on these experiences, SCI does not recommend the use of ATI
+cards with &sr; software at this time.  We suggest the use of an
+NVidia card instead.  SCI investigate ATI cards further when
+ATI releases new drivers.
+</para>
+</section>
+
+<section id="intro.redhat_ent_notes">
+<title id="intro.redhat_ent_notes.title">Redhat Enterprise
+Notes</title> 
+
+<para>SCI has experienced a number of strange behaviors when running
+&sr; on Red Hat Enterprise Linux.  We do not recommend running &sr; on
+this system at this time.  SCI will evaluate future versions of Redhat
+Enterprise</para>
+</section>
 
 </section>
 

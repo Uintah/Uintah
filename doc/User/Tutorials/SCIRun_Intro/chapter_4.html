@@ -76,7 +76,7 @@ To perform isosufacing in SCIRun, do the following:
 <ul>
    <li> <p>Create a FieldReader module, and load the utahtorso-lowres-voltage.tvd.fld file.</p>
    
-   <li> <p>Create an Isosurface module from the SCIRun/Visualization
+   <li> <p>Create an Isosurface module from the SCIRun-&gt;Visualization
         menu.  Connect it to the FieldReader.</p>
    
    <li> <p>Create a Viewer module, and connect it to the Isosurface
@@ -156,13 +156,13 @@ following items:
        href="chapter_3.html#section-1">3A</a> in Chapter 3.</p>
   <li> <p>Do the same for <a href="chapter_3.html#section-2">3B</a>
        and <a href="chapter_3.html#section-3">3C</a>, but <b>reuse the
-       FieldReader and Viewer modules created for net 3A.</p></B>
+       FieldReader, GenStandardColorMaps, RescaleColorMap and Viewer modules created for net 3A.</p></B>
   <P>
 </UL>
 <p>
 Option two:
 <P>
-Use the <I>File->Insert</I> menu to insert all nets and their settinga
+Use the <I>File-&gt;Insert</I> menu to insert all nets and their settinga
 saved in Chapter 3. Keep one Viewer module.   Destroy the other Viewer
 modules by
 right-clicking on each one, and selecting the <I>Destroy</I> option.  To
@@ -173,7 +173,7 @@ utahtorso-lowres-voltage.tvd.fld file.
 Keep one FieldReader module that reads voltage
 data, and destroy the others.  Do not destroy the FieldReader module reading electrode
 data  (There should be two FieldReader modules, one reading voltage data,
-and one reading electrode data).
+and one reading electrode data).  Also, use the same GenStandardColorMaps and RescaleColorMap for all the ShowFields except the one connected to the FieldBoundary module.
 <P>
 Note, <B>Figure 4.2</B> has been annotated to display the important
 user interface settings for each module.  If the image does not look
