@@ -4,7 +4,14 @@
 # if not revert to the 1st test_dir
 hostname=`uname -n`
 
-test_dir=/home/jas/SCIRun/TestData
+if test ${#GOLD_STANDARD} = 0; 
+    then
+    test_dir=/home/jas/SCIRun/TestData
+else
+    test_dir=${GOLD_STANDARD}
+fi
+
+
 did_mount=0
 
 hostname_test=`uname -n | grep inf`
@@ -18,6 +25,12 @@ else
     	/home/jas/bin/mount_testdata;
 	did_mount=1;
     fi
+fi
+
+if test ! -d $test_dir/dbg
+    then
+    echo "GOLD_STANDARD directory is not valid"
+    exit
 fi
 
 #Set the default TestData directory
