@@ -307,15 +307,18 @@ class BioImageApp {
 		bind  .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal <ButtonRelease> "$mods(ViewImage)-c release  %W %b %s %X %Y; $this update_ViewImage_button_release %b"
 
 
-		set UnuQuantize [lindex [lindex $filters(0) $modules] 7] 
-		set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
-		global [set UnuQuantize]-maxf [set UnuQuantize]-minf
-		global [set UnuJhisto]-maxs [set UnuJhisto]-mins
+  	        set min [expr $wl-$ww/2]
+	        set max [expr $wl+$ww/2]
 
-		set [set UnuQuantize]-maxf $ww
-		set [set UnuQuantize]-minf $wl
-		set [set UnuJhisto]-maxs "$ww nan"
-		set [set UnuJhisto]-mins "$wl nan"
+ 		set UnuQuantize [lindex [lindex $filters(0) $modules] 7] 
+ 		set UnuJhisto [lindex [lindex $filters(0) $modules] 21] 
+ 		global [set UnuQuantize]-maxf [set UnuQuantize]-minf
+ 		global [set UnuJhisto]-maxs [set UnuJhisto]-mins
+
+ 		set [set UnuQuantize]-maxf $max
+ 		set [set UnuQuantize]-minf $min
+ 		set [set UnuJhisto]-maxs "$max nan"
+ 		set [set UnuJhisto]-mins "$min nan"
 
 		global planes_threshold
 		global $mods(ViewImage)-min
