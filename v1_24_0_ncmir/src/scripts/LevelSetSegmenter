@@ -38,4 +38,17 @@ export SCIRUN_ITCL_WIDGETS=${SCIRUN_THIRDPARTY_DIR}/lib/iwidgets/scripts
 export DYLD_LIBRARY_PATH=${SCIRUN_THIRDPARTY_DIR}/lib:${SCIRUN_OBJDIR}/lib/:/usr/local/mdsplus/lib:${SCIRUN_OBJDIR}/../Freetype/lib
 export TCL_LIBRARY=${SCIRUN_THIRDPARTY_DIR}/lib/tcl
 export LOAD_PACKAGE=SCIRun,Teem,Insight
-exec ${SCIRUN_OBJDIR}/scirun-bin ${SCIRUN_SRCDIR}/Packages/Insight/nets/PowerApps/LevelSetSegmenter.app $1 $2 $3 $4 $5 $6 $7 $8 $9
+
+# Check if filenames were passed in as arguments
+if test "$1" != ""; then
+    export LEVELSETSEGMENTER_LOAD_FILE="$1"
+fi
+
+if test "$2" != ""; then
+    export LEVELSETSEGMENTER_SAVE_BINARY_FILE="$2"
+fi
+
+if test "$3" != ""; then
+    export LEVELSETSEGMENTER_SAVE_FLOAT_FILE="$3"
+fi
+exec ${SCIRUN_OBJDIR}/scirun-bin ${SCIRUN_SRCDIR}/Packages/Insight/nets/PowerApps/LevelSetSegmenter.app 
