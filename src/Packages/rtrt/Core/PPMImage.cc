@@ -57,9 +57,11 @@ PPMImage::read_image(const char* filename)
   }
     
   indata >> token; // P6
-  if (token != "P6" && token != "P3") {
+  if (token != "P6" && token != "P3" && token != "P5" && token != "P2") {
     cerr << "PPMImage: WARNING: format error: file not a PPM: "
 	 << filename << "\n";
+    valid_ = false;
+    return false;
   }
 
   cerr << "PPMImage: reading image: " << filename;
@@ -104,7 +106,7 @@ PPMImage::read_image(const char* filename)
 	}
       }
     }    
-  } else { // P3
+  } else if (token == "P3") { // P3
     int r, g, b;
     for(unsigned v=0;v<v_;++v){
       for(unsigned u=0;u<u_;++u){
@@ -120,6 +122,41 @@ PPMImage::read_image(const char* filename)
 	}
       }
     }    
+  } else if (token == "P5") { // P3
+    for(unsigned v=0;v<v_;++v){
+      for(unsigned u=0;u<u_;++u){
+	indata.read((char*)color, 1);
+	if (flipped_) {
+	  image_[(v_-v-1)*u_+u]=rtrt::Color(color[0]/(double)max_,
+					    color[0]/(double)max_,
+					    color[0]/(double)max_);
+	} else {
+	  image_[v*u_+u]=rtrt::Color(color[0]/(double)max_,
+				     color[0]/(double)max_,
+				     color[0]/(double)max_);
+	}
+      }
+    }    
+  } else if (token == "P2") { // P3
+    int val;
+    for(unsigned v=0;v<v_;++v){
+      for(unsigned u=0;u<u_;++u){
+	indata >> val;
+	if (flipped_) {
+	  image_[(v_-v-1)*u_+u]=rtrt::Color(val/(double)max_,
+					    val/(double)max_,
+					    val/(double)max_);
+	} else {
+	  image_[v*u_+u]=rtrt::Color(val/(double)max_,
+				     val/(double)max_,
+				     val/(double)max_);
+	}
+      }
+    }    
+  } else {
+    cerr << "Don't know how to read image with magic number "<<token<<"\n";
+    valid_ = false;
+    return false;
   }
   valid_ = true;
   return true;
