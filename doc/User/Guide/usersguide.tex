@@ -34,27 +34,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
 
-\begin{rawhtml}
-<script type="text/javascript">
-var treetop="";
-var path = location.pathname;
-if (path.charAt(path.length-1) == "/") {
-  path += "bogus.html"
-}
-var base = path.substr(path.lastIndexOf("/")+1);
-var roottag = "doc";
-while (base != roottag && base != "") {
-  treetop += "../";
-  path = path.substr(0, path.lastIndexOf("/"));
-  base = path.substr(path.lastIndexOf("/")+1);
-}
-var inDocTree = base == roottag;
-if (inDocTree) {
-document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
-}
-</script>
-\end{rawhtml}
-
 % The title page
 \input{title}
 \newpage
