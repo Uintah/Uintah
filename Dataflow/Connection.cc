@@ -38,8 +38,9 @@ void Connection::connect()
 
 Connection::~Connection()
 {
-    if(connected){
-	NOT_FINISHED("detach...");
+    if (connected) {
+	iport->detach(this);
+	oport->detach(this);
     }
 }
 

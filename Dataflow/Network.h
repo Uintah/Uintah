@@ -50,6 +50,7 @@ public:
     int nconnections();
     Connection* connection(int);
     clString connect(Module*, int, Module*, int);
+    int disconnect(const clString&);
     
     Module* add_module(const clString& name);
     int delete_module(const clString& name);

@@ -90,6 +90,17 @@ clString Network::connect(Module* m1, int p1, Module* m2, int p2)
     return id;
 }
 
+int Network::disconnect(const clString& connId) {
+    for (int i=0; i<connections.size(); i++)
+	if (connections[i]->id == connId) break;
+    if (i == connections.size()) {
+	return 0;
+    }
+    delete connections[i];
+    connections.remove(i);
+    return 1;
+}
+
 void Network::initialize(NetworkEditor* _netedit)
 {
     netedit=_netedit;
@@ -132,10 +143,17 @@ Module* Network::get_module_by_id(const clString& id)
     }
 }
 
-int Network::delete_module(const clString&)
+int Network::delete_module(const clString& id)
 {	
-    NOT_FINISHED("Network::delete_module");
-    return 0;
+    Module* mod=get_module_by_id(id);
+    if (!mod) return 0;
+    for (int i=0; i<modules.size(); i++)
+	if (modules[i] == mod) break;
+    if (i==modules.size()) return 0;
+    
+    modules.remove(i);
+    module_ids.remove(id);
+    return 1;
 }
 
 #ifdef __GNUG__

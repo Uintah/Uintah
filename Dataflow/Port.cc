@@ -50,9 +50,16 @@ void Port::attach(Connection* conn)
     module->connection(Module::Connected, which_port, this==conn->oport);
 }
 
-void Port::detach(Connection*)
+void Port::detach(Connection* conn)
 {
-    NOT_FINISHED("Port::detach");
+    for (int i=0; i<connections.size(); i++)
+	if (connections[i] == conn) break;
+    if (i == connections.size()) {
+	cerr << "Error: connection not found!\n";
+	return;
+    }
+    connections.remove(i);
+    module->connection(Module::Disconnected, which_port, this==conn->oport);
 }
 
 int Port::nconnections()

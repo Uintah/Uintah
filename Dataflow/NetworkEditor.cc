@@ -180,7 +180,6 @@ void NetworkEditor::do_scheduling(Module* exclude)
 	if(module->need_execute){
 	    module->mailbox.send(scinew Scheduler_Module_Message);
 	    module->need_execute=0;
-	    //cerr << "Firing " << module->name << endl;
 	}
     }
 
@@ -351,6 +350,13 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	}
 	args.result(net->connect(omod, owhich, imod, iwhich));
     } else if(args[1] == "deleteconnection"){
+	if (args.count() < 3){
+	    args.error("netedit deleteconnection needs 1 arg");
+	    return;
+	}
+	if (!net->disconnect(args[2])) {
+	    args.error("Cannot find connection "+args[2]+" for deletion");
+	}
     } else if(args[1] == "getconnected"){
 	if(args.count() < 3){
 	    args.error("netedit getconnections needs a module name");

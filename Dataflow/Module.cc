@@ -53,6 +53,9 @@ void Module::update_state(State st)
     case NeedData:
 	s="NeedData";
 	break;
+    case JustStarted:
+	s="JustStarted";
+	break;
     case Executing:
 	s="Executing";
 	break;
@@ -66,6 +69,8 @@ void Module::update_state(State st)
 
 void Module::update_progress(double p)
 {
+    if (state == JustStarted)
+	update_state(Executing);
     int opp=(int)(progress*100);
     int npp=(int)(p*100);
     if(opp != npp){
@@ -77,6 +82,8 @@ void Module::update_progress(double p)
 
 void Module::update_progress(double p, Timer &t)
 {
+    if (state == JustStarted)
+	update_state(Executing);
     int opp=(int)(progress*100);
     int npp=(int)(p*100);
     if(opp != npp){
@@ -307,10 +314,16 @@ void Module::do_execute()
     abort_flag=0;
     // Reset all of the ports...
     int i;
+
     for(i=0;i<oports.size();i++){
 	OPort* port=oports[i];
 	port->reset();
     }
+//    if (iports.size()) {
+//	update_state(NeedData);
+//	reset_vars();
+//    }
+
     for(i=0;i<iports.size();i++){
 	IPort* port=iports[i];
 	port->reset();
@@ -319,7 +332,7 @@ void Module::do_execute()
     reset_vars();
 
     // Call the User's execute function...
-    update_state(Executing);
+    update_state(JustStarted);
     timer.clear();
     timer.start();
     execute();

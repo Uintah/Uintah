@@ -75,7 +75,7 @@ itcl_class Module {
 		    -width $graph_width
 	    pack $p.inset -side left -fill y -padx 2 -pady 2
 	    frame $p.inset.graph -relief raised -width 0 -borderwidth 2 \
-		    -background red
+		    -background green
 	    # Don't pack it in yet - the width is zero... 
 	    #pack $p.inset.graph -fill y -expand yes -anchor nw
 	}
@@ -275,18 +275,22 @@ itcl_class Module {
     }
     method update_time {} {
 	if {!$make_time} return
-	if {$time < 60} {
-	    set secs [expr int($time)]
-	    set frac [expr int(100*($time-$secs))]
-	    set tstr [format "%2d.%02d" $secs $frac]
-	} elseif {$time < 3600} {
-	    set mins [expr int($time/60)]
-	    set secs [expr int($time-$mins*60)]
-	    set tstr [format "%2d:%02d" $mins $secs]
+	if {$state == "JustStarted"} {
+	    set tstr " ?.??"
 	} else {
-	    set hrs [expr int($time/3600)]
-	    set mins [expr int($time-$hrs*3600)]
-	    set tstr [format "%d::%02d" $hrs $mins]
+	    if {$time < 60} {
+		set secs [expr int($time)]
+		set frac [expr int(100*($time-$secs))]
+		set tstr [format "%2d.%02d" $secs $frac]
+	    } elseif {$time < 3600} {
+		set mins [expr int($time/60)]
+		set secs [expr int($time-$mins*60)]
+		set tstr [format "%2d:%02d" $mins $secs]
+	    } else {
+		set hrs [expr int($time/3600)]
+		set mins [expr int($time-$hrs*3600)]
+		set tstr [format "%d::%02d" $hrs $mins]
+	    }
 	}
 	foreach t $canvases {
 	    set modframe $t.module$this
@@ -295,9 +299,15 @@ itcl_class Module {
     }
     method update_state {} {
 	if {!$make_progress_graph} return
-	if {$state == "Executing"} {
+	if {$state == "JustStarted"} {
+	    set p 0.5
+	    set color red
+	} elseif {$state == "Executing"} {
 	    set p 0
 	    set color red
+	} elseif {$state == "NeedData"} {
+	    set p 1
+	    set color yellow
 	} elseif {$state == "Completed"} {
 	    set p 1
 	    set color green
@@ -336,7 +346,7 @@ proc startIPortConnection {imodid iwhich x y} {
     set coords [computeIPortCoords $imodid $iwhich]
     set typename [lindex [lindex [$imodid-c iportinfo] $iwhich] 2]
     eval $netedit_canvas create text [lindex $coords 0] [lindex $coords 1] \
-	    -anchor s -text $typename -tags "tempname"
+	    -anchor sw -text $typename -tags "tempname"
     foreach i $conn_oports {
 	set omodid [lindex $i 0]
 	set owhich [lindex $i 1]
@@ -357,7 +367,7 @@ proc startOPortConnection {omodid owhich x y} {
     set coords [computeOPortCoords $omodid $owhich]
     set typename [lindex [lindex [$omodid-c oportinfo] $owhich] 2]
     eval $netedit_canvas create text [lindex $coords 0] [lindex $coords 1] \
-	    -anchor n -text $typename -tags "tempname"
+	    -anchor nw -text $typename -tags "tempname"
     foreach i $conn_iports {
 	set imodid [lindex $i 0]
 	set iwhich [lindex $i 1]
@@ -375,8 +385,18 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
     eval $netedit_canvas create bline $path -width 7 \
 	-borderwidth 2 -fill \"$portcolor\" \
 	-tags $connid
+    $netedit_canvas bind $connid <3> \
+	 "destroyConnection $connid $omodid $imodid"
 }
 
+proc destroyConnection {connid omodid imodid} {
+    netedit deleteconnection $connid $omodid $imodid
+    global netedit_canvas
+    $netedit_canvas delete $connid
+    configureOPorts $omodid
+    configureIPorts $imodid
+}
+	
 proc rebuildConnection {connid omodid owhich imodid iwhich} {
     set path [routeConnection $omodid $owhich $imodid $iwhich]
     global netedit_canvas
@@ -594,6 +614,20 @@ proc moduleHelp {name} {
 }
 
 proc moduleDestroy {c modid} {
-    puts "moduleDestroy not implemented."
+    set modList [netedit getconnected $modid]
+    foreach i $modList {
+	set connid [lindex $i 0]
+	set omodid [lindex $i 1]
+	set owhich [lindex $i 2]
+	set imodid [lindex $i 3]
+	set iwhich [lindex $i 4]
+	destroyConnection $connid $omodid $imodid
+    }
+    $c delete $modid
+    destroy ${c}.module$modid
+    if {[winfo exists .ui$modid]} {
+	destroy .ui$modid
+    }
+    netedit deletemodule $modid
+    $modid delete
 }
-
