@@ -86,6 +86,11 @@ public:
 				 DataWarehouseP&,
 				 DataWarehouseP&);
 
+  void scheduleInterpolateCCToFC(const LevelP& level,
+				 SchedulerP&,
+				 DataWarehouseP&,
+				 DataWarehouseP&);
+
 
   void scheduleComputeVoidFrac(const LevelP& level,
 			       SchedulerP& sched,
@@ -102,6 +107,11 @@ public:
 protected:
 
   void interpolateNCToCC(const ProcessorGroup*,
+			 const Patch* patch,
+			 DataWarehouseP& old_dw,
+			 DataWarehouseP& new_dw);
+
+  void interpolateCCToFC(const ProcessorGroup*,
 			 const Patch* patch,
 			 DataWarehouseP& old_dw,
 			 DataWarehouseP& new_dw);
@@ -129,11 +139,12 @@ protected:
   MPMArches& operator=(const MPMArches&);
 	 
   SimulationStateP d_sharedState;
-  MPMLabel* d_Mlb;
+  MPMLabel* Mlb;
   const ArchesLabel* d_Alab;
   const MPMArchesLabel* d_MAlb;
   SerialMPM*       d_mpm;
   Arches*          d_arches;
+  bool             d_fracture;
 };
       
 } // End namespace Uintah
