@@ -131,13 +131,13 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     if(!compare(centerOfMassMass,0.0)){
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
 
-      // Loop over velocity fields.  Only proceed if velocity field
+      // Loop over velocity fields.  Only proceed if velocity field mass
       // is nonzero (not numerical noise) and the difference from
       // the centerOfMassVelocity is nonzero (More than one velocity
       // field is contributing to grid vertex).
       for(int n = 0; n < NVFs; n++){
         Vector deltaVelocity=gvelocity[n][*iter]-centerOfMassVelocity;
-        if(!compare(gvelocity[n][*iter].length(),0.0)
+        if(!compare(gmass[n][*iter]/centerOfMassMass,0.0)
            && !compare(deltaVelocity.length(),0.0)){
 
           // Apply frictional contact if the surface is in compression
@@ -145,7 +145,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
           // Otherwise apply free surface conditions (do nothing).
           double normalDeltaVelocity=Dot(deltaVelocity,surfnorm[n][*iter]);
           if((normtraction[n][*iter] < 0.0) ||
-             (!compare(fabs(normtraction[n][*iter]),0.0) &&
+             (compare(fabs(normtraction[n][*iter]),0.0) &&
               normalDeltaVelocity>0.0)){
 
               // Specialize algorithm in case where approach velocity
@@ -154,7 +154,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                         -surfnorm[n][*iter]*normalDeltaVelocity).length(),0.0)){
                 gvelocity[n][*iter]-= surfnorm[n][*iter]*normalDeltaVelocity;
               }
-	      else{
+	      else if(!compare(fabs(normalDeltaVelocity),0.0)){
                 Vector surfaceTangent=
 		(deltaVelocity-surfnorm[n][*iter]*normalDeltaVelocity)/
                 (deltaVelocity-surfnorm[n][*iter]*normalDeltaVelocity).length();
@@ -505,13 +505,13 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     if(!compare(centerOfMassMass,0.0)){
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
 
-      // Loop over velocity fields.  Only proceed if velocity field
+      // Loop over velocity fields.  Only proceed if velocity field mass
       // is nonzero (not numerical noise) and the difference from
       // the centerOfMassVelocity is nonzero (More than one velocity
       // field is contributing to grid vertex).
       for(int n = 0; n < NVFs; n++){
         Vector deltaVelocity=gvelocity_star[n][*iter]-centerOfMassVelocity;
-        if(!compare(gvelocity_star[n][*iter].length(),0.0)
+        if(!compare(gmass[n][*iter]/centerOfMassMass,0.0)
            && !compare(deltaVelocity.length(),0.0)){
 
           // Apply frictional contact if the surface is in compression
@@ -519,7 +519,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
           // Otherwise apply free surface conditions (do nothing).
           double normalDeltaVelocity=Dot(deltaVelocity,gsurfnorm[n][*iter]);
           if((normtraction[n][*iter] < 0.0) ||
-	     (!compare(fabs(normtraction[n][*iter]),0.0) &&
+	     (compare(fabs(normtraction[n][*iter]),0.0) &&
               normalDeltaVelocity>0.0)){
 
 	    // Specialize algorithm in case where approach velocity
@@ -529,7 +529,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 		 -gsurfnorm[n][*iter]*normalDeltaVelocity).length(),0.0)){
 	      gvelocity_star[n][*iter]-=gsurfnorm[n][*iter]*normalDeltaVelocity;
 	    }
-	    else{
+	    else if(!compare(fabs(normalDeltaVelocity),0.0)){
 	      Vector surfaceTangent=
 	       (deltaVelocity-gsurfnorm[n][*iter]*normalDeltaVelocity)/
                (deltaVelocity-gsurfnorm[n][*iter]*normalDeltaVelocity).length();
@@ -599,6 +599,10 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.28  2000/07/28 22:13:14  bard
+// Added logic to handle degenerate case (previously could cause divide by zero)
+// and fixed a typo.
+//
 // Revision 1.27  2000/07/05 23:43:36  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling
