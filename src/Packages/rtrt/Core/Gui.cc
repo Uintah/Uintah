@@ -41,8 +41,8 @@ static Transform prev_trans;
 
 #define LIGHT_LIST_ID            100
 #define LIGHTS_BUTTON_ID         101
-#define TOGGLE_OTHER_LIGHTS_ID   102
-#define TOGGLE_AMBIENT_LIGHT_ID  103
+#define TOGGLE_LIGHT_SWITCHES_ID 102
+#define TOGGLE_SHOW_LIGHTS_ID    103
 
 #define ROUTE_LIST_ID            110
 #define ROUTE_BUTTON_ID          111
@@ -86,12 +86,23 @@ Gui::Gui() :
   r_color_spin(NULL), g_color_spin(NULL), b_color_spin(NULL), 
   lightIntensity_(NULL),
   lightBrightness_(1.0), ambientBrightness_(1.0),
-  mouseDown_(0), shiftDown_(false), beQuiet_(true)
+  mouseDown_(0), shiftDown_(false), beQuiet_(true),
+  lightsOn_(true), lightsBeingRendered_(false)
 {
 }
 
 Gui::~Gui()
 {
+}
+
+void
+Gui::quit()
+{
+  // Stop threads...
+  activeGui->dpy_->scene->rtrt_engine->exit_clean(1);
+  // Stop Glut mainloop.
+  usleep(1000);
+  Thread::exitAll( 0 );
 }
 
 void
@@ -105,11 +116,7 @@ Gui::handleMenuCB( int item )
     activeGui->toggleGui();
     break;
   case QUIT_MENU_ID:
-    // Stop threads...
-    activeGui->dpy_->scene->rtrt_engine->exit_clean(1);
-    // Stop Glut mainloop.
-    usleep(1000);
-    Thread::exitAll( 0 );
+    activeGui->quit();
     break;
   }
 }
@@ -227,11 +234,7 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     activeGui->stealth_->goDown(); // Accelerate DOWN
     break;
   case 'q':
-    // Stop threads...
-    activeGui->dpy_->scene->rtrt_engine->exit_clean(1);
-    // Stop Glut mainloop.
-    usleep(1000);
-    Thread::exitAll( 0 );
+    activeGui->quit();
     break;
   case 'G': // Toggle Display of Gui
     activeGui->toggleGui();
@@ -342,26 +345,12 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     //doing_frameless = 1-doing_frameless; // just toggle...
     cerr << synch_frameless << " Synch?\n";
     break;
-  case '0':    // STOP rotations (pitch/turn)
-    activeGui->stealth_->stopPitchAndRotate();
-    break;
-  case XK_Escape:
   case '2':
     stereo=!stereo;
     break;
   case '1':
     cout << "NOTICE: Use 2 key to toggle Stereo\n";
     cout << "      : 1 key is deprecated and may go away\n";
-    break;
-  case '-':
-    maxdepth--;
-    if(maxdepth<0)
-      maxdepth=0;
-    cerr << "maxdepth=" << maxdepth << '\n';
-    break;
-  case '=': // + ('plus') key without the shift...
-    maxdepth++;
-    cerr << "maxdepth=" << maxdepth << '\n';
     break;
   case 'f':
     FPS -= 1;
@@ -378,8 +367,11 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     scene->get_image(showing_scene)->save("images/image.raw");
     break;
 #endif
+  case 27: // Escape key... need to find a symbolic name for this...
+    activeGui->quit();
+    break;
   default:
-    printf("unknown key %d\n", key);
+    printf("unknown regular key %d\n", key);
     break;
   }
 } // end handleKeyPress();
@@ -417,7 +409,7 @@ Gui::handleSpecialKeyCB( int key, int /*mouse_x*/, int /*mouse_y*/ )
     printf("glut_key_insert\n");
     break;
   default:
-    printf("unknow key %d\n", key);
+    printf("unknown special key %d\n", key);
     break;
   }
 }
@@ -693,6 +685,12 @@ Gui::updateLightPanelCB( int /*id*/ )
   activeGui->b_color_spin->set_float_val( color.blue() );
 
   activeGui->lightIntensity_->set_float_val( light->get_intensity() );
+
+  if( light->isOn() )
+    activeGui->lightsColorPanel_->enable();
+  else
+    activeGui->lightsColorPanel_->disable();
+
 }
 
 void
@@ -708,8 +706,33 @@ Gui::updateObjectCB( int /*id*/ )
 }
 
 void
-Gui::toggleOtherLights( int /*id*/ )
+Gui::toggleShowLightsCB( int /*id*/ )
 {
+  if( activeGui->lightsBeingRendered_ ) {
+    activeGui->toggleShowLightsBtn_->set_name( "Show Lights" );
+    activeGui->dpy_->showLights_ = false;
+    activeGui->lightsBeingRendered_ = false;
+  } else {
+    activeGui->toggleShowLightsBtn_->set_name( "Hide Lights" );
+    activeGui->dpy_->showLights_ = true;
+    activeGui->lightsBeingRendered_ = true;
+  }
+}
+
+void
+Gui::toggleLightSwitchesCB( int /*id*/ )
+{
+  if( activeGui->lightsOn_ ) {
+    activeGui->toggleLightsOnOffBtn_->set_name( "Turn On Lights" );
+    activeGui->dpy_->turnOffAllLights_ = true;
+    activeGui->lightsOn_ = false;
+    activeGui->lightsColorPanel_->disable();
+  } else {
+    activeGui->toggleLightsOnOffBtn_->set_name( "Turn Off Lights" );
+    activeGui->dpy_->turnOnAllLights_ = true;
+    activeGui->lightsOn_ = true;
+    activeGui->lightsColorPanel_->enable();
+  }
 }
 
 void
@@ -830,20 +853,20 @@ Gui::createLightWindow( GLUI * window )
   lightList = window->add_listbox_to_panel( panel, "Selected Light:",
 					    &selectedLightId, 
 					    LIGHT_LIST_ID, updateLightPanelCB);
-  GLUI_Panel * color_panel = window->add_panel_to_panel( panel, "Color" );
+  lightsColorPanel_ = window->add_panel_to_panel( panel, "Color" );
 
   r_color_spin = 
-    window->add_spinner_to_panel( color_panel, "R:", GLUI_SPINNER_FLOAT );
+    window->add_spinner_to_panel( lightsColorPanel_,"R:", GLUI_SPINNER_FLOAT );
   r_color_spin->set_float_limits( 0.0, 1.0 );
   r_color_spin->set_speed( 0.01 );
 
   g_color_spin = 
-    window->add_spinner_to_panel( color_panel, "G:", GLUI_SPINNER_FLOAT);
+    window->add_spinner_to_panel( lightsColorPanel_,"G:", GLUI_SPINNER_FLOAT );
   g_color_spin->set_float_limits( 0.0, 1.0 );
   g_color_spin->set_speed( 0.01 );
 
   b_color_spin = 
-    window->add_spinner_to_panel( color_panel, "B:", GLUI_SPINNER_FLOAT );
+    window->add_spinner_to_panel( lightsColorPanel_,"B:", GLUI_SPINNER_FLOAT );
   b_color_spin->set_float_limits( 0.0, 1.0 );
   b_color_spin->set_speed( 0.01 );
 
@@ -858,18 +881,24 @@ Gui::createLightWindow( GLUI * window )
   ambientIntensity_ = 
     window->add_spinner_to_panel( panel, "Ambient Level:", GLUI_SPINNER_FLOAT,
 				  &ambientBrightness_, -1, updateAmbientCB );
-  ambientIntensity_->set_float_limits( 0.0, 5.0 );
+  ambientIntensity_->set_float_limits( 0.0, 1.0 );
   ambientIntensity_->set_speed( 0.01 );
 
   GLUI_Rollout * moreControls = 
     window->add_rollout_to_panel( panel, "More Controls", false );  
 
-  window->add_button_to_panel(moreControls, "Toggle All Other Lights",
-			      TOGGLE_OTHER_LIGHTS_ID, toggleOtherLights );
-
-  window->add_button_to_panel(moreControls, "Goto Light" );
-
   window->add_separator_to_panel( moreControls );
+
+  toggleLightsOnOffBtn_ = 
+    window->add_button_to_panel(moreControls, "Turn Off Lights",
+				TOGGLE_LIGHT_SWITCHES_ID,
+				toggleLightSwitchesCB );
+  toggleShowLightsBtn_ = 
+    window->add_button_to_panel(moreControls, "Show Lights",
+				TOGGLE_SHOW_LIGHTS_ID, toggleShowLightsCB );
+  GLUI_Button * gotoLightBtn =
+    window->add_button_to_panel(moreControls, "Goto Light" );
+  gotoLightBtn->disable();
 
 }
 
@@ -1188,11 +1217,24 @@ Gui::toggleGui()
 void
 Gui::updateIntensityCB( int /*id*/ )
 {
+  cout << "set light intensity to " << activeGui->lightBrightness_ << "\n";
+
   if( activeGui->lights_.size() == 0 ) return;
 
   Light * light = activeGui->lights_[ activeGui->selectedLightId ];
 
   light->updateIntensity( activeGui->lightBrightness_ );
+
+  if( activeGui->lightBrightness_ == 0.0 )
+    {
+      activeGui->lightsColorPanel_->disable();
+      activeGui->dpy_->turnOffLight_ = light;
+    }
+  else if( !light->isOn() )
+    {
+      activeGui->lightsColorPanel_->enable();
+      activeGui->dpy_->turnOnLight_ = light;
+    }
 }
 
 void
