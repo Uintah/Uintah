@@ -65,6 +65,8 @@ public:
   std::vector<Connection*> getConnections();
   BuilderWindow* p2BuilderWindow;
 
+  void addChild( Module* child, int x = 0, int y = 0 );
+
 public slots:
   void removeModule(Module *);
 

@@ -221,31 +221,57 @@ void NetworkCanvasView::contentsMouseMoveEvent(QMouseEvent* e)
   }
 }
 
+// TEK
+// updates position of the new module w/in view
+void NetworkCanvasView::addChild( Module* mod2add, int x , int y )
+{
+  std::vector<Module*> add_module = this->getModules();
+
+  int buf = 20;
+  QPoint stdOrigin(buf, buf);
+  QSize stdSize(120,mod2add->height());
+  QSize stdDisp=stdSize+QSize(buf,buf);
+  int maxrow= height()/stdDisp.height();
+  int maxcol= width()/stdDisp.width();
+
+  for(int icol=0; icol<maxcol; icol++){
+    
+    for(int irow=0; irow<maxrow; irow++){
+
+      QRect candidateRect=  QRect(stdOrigin.x()+stdDisp.width()*icol, 
+				  stdOrigin.y()+stdDisp.height()*irow,
+				  stdSize.width(), stdSize.height());
+      
+      // check with all the viewable modules - can new module be placed?
+      // searching through all points of mod2add for conflicts
+
+      bool intersects=false;
+
+      for(unsigned int i=0; i < add_module.size(); i++ ){
+	
+	QRect rect(add_module[i]->x(), add_module[i]->y(), 
+		   add_module[i]->width(),add_module[i]->height() );
+	
+	intersects |=candidateRect.intersects(rect);
+      }
+      if(!intersects){
+	QPoint p=viewportToContents(candidateRect.topLeft());
+	QScrollView::addChild( mod2add, p.x(), p.y());
+	return;
+      }
+    }
+  }
+  cerr<<"not candidate rect found!"<<endl;
+  QPoint p=viewportToContents(QPoint(0,0));
+  QScrollView::addChild( mod2add, p.x(), p.y());
+}
+
+
 void NetworkCanvasView::addModule( const string& name, int x, int y,
 				  CIA::array1<std::string> & up,
 				  CIA::array1<std::string> &pp ,
 				  const gov::cca::ComponentID::pointer &cid)
 {
-  /*
-  if( up.size() ) {
-    cerr << "up.size() = " << up.size() << endl;
-    for( int i = 0; i < up.size(); i++ ) {
-      cerr << "up[" << i << "] = " << up[i] << endl;
-    }
-  }
-  else
-    cerr << "UP IS EMPTY !" << endl;
-
-  if( pp.size() ) {
-    cerr << "pp.size() = " << pp.size() << endl;
-    for( int j = 0; j < pp.size(); j++ ) {
-      cerr << "pp[" << j << "] = " << pp[j] << endl;
-    }
-  }
-  else
-    cerr << "PP IS EMPTY!" << endl;
-  */
-    
   Module *module=new Module(this,name,up,pp, services, cid);
   //  addChild(module,20, 20);
   addChild(module, x, y );
