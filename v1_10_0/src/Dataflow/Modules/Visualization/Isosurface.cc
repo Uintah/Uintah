@@ -259,17 +259,14 @@ Isosurface::execute()
   }
   else if (gui_active_isoval_selection_tab_.get() == "2")
   { // list
-    string vlist = gui_iso_value_list_.get();
-    char *value_str = new char[500];
-    strncpy(value_str, vlist.c_str(), 500);
-    char *val;
-    while ((val = strtok(value_str, " "))) {
-      //value_str = 0;
-      isovals.push_back(atof(val));
+    istringstream vlist(gui_iso_value_list_.get());
+    double val;
+    while(!vlist.eof())
+    {
+      vlist >> val;
+      if (vlist.fail()) { break; }
+      isovals.push_back(val);
     }
-//    cerr << "Number of isovalues="<<isovals.size()<<"\n";
-//    for (int idx=0; idx<isovals.size(); idx++) 
-//      cerr << "  "<<idx<<" - "<<isovals[idx]<<"\n";
   }
   else
   {
