@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 #include <Packages/Uintah/CCA/Components/LoadBalancers/ParticleLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
+#include <Packages/Uintah/CCA/Components/Scheduler3/DetailedTasks3.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -102,12 +103,86 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
 	task->assignResource(0);
       }
     }
-    if( mixedDebug.active() ) {
-      cerrLock.lock();
-      mixedDebug << "For Task: " << *task << "\n";
-      cerrLock.unlock();
-    }
+  }
 
+  //ParticleLoadBalancer* plb = (ParticleLoadBalancer*) this;
+  //for (int i = 0; i < d_myworld->size(); i++) {
+  //cout << d_myworld->myrank() << " Patch " << i
+  //     << " -> proc " << plb->d_processorAssignment[i] << " old: "
+  //     << plb->d_oldAssignment[i] << endl;
+  //}
+}
+
+void LoadBalancerCommon::assignResources(DetailedTasks3& graph)
+{
+  int nTasks = graph.numTasks();
+
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    mixedDebug << "Assigning Tasks to Resources!\n";
+    cerrLock.unlock();
+  }
+
+  for(int i=0;i<nTasks;i++){
+    DetailedTask3* task = graph.getTask(i);
+
+    const PatchSubset* patches = task->getPatches();
+    if(patches && patches->size() > 0){
+      const Patch* patch = patches->get(0);
+
+      int idx = getPatchwiseProcessorAssignment(patch);
+      ASSERTRANGE(idx, 0, d_myworld->size());
+
+      if (task->getTask()->getType() == Task::Output) {
+        task->assignResource((idx/d_outputNthProc)*d_outputNthProc);
+      }
+      else        
+        task->assignResource(idx);
+
+      if( mixedDebug.active() ) {
+	cerrLock.lock();
+	mixedDebug << "1) Task " << *(task->getTask()) << " put on resource "
+		   << idx << "\n";
+	cerrLock.unlock();
+      }
+
+      ostringstream ostr;
+      ostr << patch->getID() << ':' << idx;
+
+      for(int i=1;i<patches->size();i++){
+	const Patch* p = patches->get(i);
+	int pidx = getPatchwiseProcessorAssignment(p);
+        ostr << ' ' << p->getID() << ';' << pidx;
+	ASSERTRANGE(pidx, 0, d_myworld->size());
+	if(pidx != idx){
+	  cerrLock.lock();
+	  cerr << d_myworld->myrank() << " WARNING: inconsistent task (" << task->getTask()->getName() 
+	       << ") assignment (" << pidx << ", " << idx 
+	       << ") in LoadBalancerCommon\n";
+	  cerrLock.unlock();
+	}
+      }
+    } else {
+      if( Parallel::usingMPI() && task->getTask()->isReductionTask() ){
+	task->assignResource( d_myworld->myrank() );
+
+	if( mixedDebug.active() ) {
+	  cerrLock.lock();
+	  mixedDebug << "  Resource (for no patch task) is : " 
+		     << d_myworld->myrank() << "\n";
+	  cerrLock.unlock();
+	}
+
+      } else if( task->getTask()->getType() == Task::InitialSend){
+	// Already assigned, do nothing
+	ASSERT(task->getAssignedResourceIndex() != -1);
+      } else {
+#if DAV_DEBUG
+	cerr << "Task " << *task << " IS ASSIGNED TO PG 0!\n";
+#endif
+	task->assignResource(0);
+      }
+    }
   }
 
   //ParticleLoadBalancer* plb = (ParticleLoadBalancer*) this;
