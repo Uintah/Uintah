@@ -994,14 +994,15 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     if (switchDebug_equilibration_press) {
     
       new_dw->allocate(n_iters_equil_press, lb->scratchLabel, 0, patch);
-      
+      char description[50];
+            
     #if 0
-      printData( patch, 1, "TOP_equilibration", "Press_CC_top", press);
+      sprintf(description, "TOP_equilibration_patch_%d ", patch->getID());
+      printData( patch, 1, description, "Press_CC_top", press);
 
      for (int m = 0; m < numMatls; m++)  {
        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
        int indx = matl->getDWIndex(); 
-       char description[50];
        sprintf(description, "TOP_equilibration_Mat_%d_patch_%d ", 
                                                         indx, patch->getID());
        printData( patch, 1, description, "rho_CC",          rho_CC[m]);
@@ -1180,12 +1181,13 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
    //---- P R I N T   D A T A ------   
     if (switchDebug_equilibration_press) {
-     printData( patch, 1, "BOTTOM", "Press_CC_equil", press_new);
+     char description[50];
+     sprintf(description, "BOT_equilibration_patch_%d ",patch->getID());
+     printData( patch, 1, description, "Press_CC_equil", press_new);
 
      for (int m = 0; m < numMatls; m++)  {
        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
        int indx = matl->getDWIndex(); 
-       char description[50];
        sprintf(description, "BOT_equilibration_Mat_%d_patch_%d ", 
               indx, patch->getID());
        printData( patch, 1, description, "rho_CC",       rho_CC[m]);
@@ -1839,10 +1841,11 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
    //---- P R I N T   D A T A ------  
     if (switchDebug_explicit_press) {
-      printData( patch, 1, "Bottom_of_explicit_Pressure ", "delPress_CC",  
-                                                                    delPress);
-      printData( patch, 1, "Bottom_of_explicit_Pressure",  "Press_CC",    
-                                                                    press_CC);
+      char description[50];
+      sprintf(description, "Bottom_of_explicit_Pressure_patch_%d ", 
+                  patch->getID());
+      printData( patch, 1,description, "delPress_CC", delPress);
+      printData( patch, 1,description, "Press_CC",    press_CC);
     }
   }  // patch loop
 }
@@ -1945,9 +1948,11 @@ void ICE::computePressFC(const ProcessorGroup*,
 
    //---- P R I N T   D A T A ------ 
     if (switchDebug_PressFC) {
-      printData_FC( patch,0,"press_FC",   "press_FC_RIGHT", pressX_FC);
-      printData_FC( patch,0,"press_FC",   "press_FC_TOP",   pressY_FC);
-      printData_FC( patch,0,"press_FC",   "press_FC_FRONT", pressZ_FC);
+      char description[50];
+      sprintf(description, "press_FC_patch_%d ", patch->getID());
+      printData_FC( patch,0,description, "press_FC_RIGHT", pressX_FC);
+      printData_FC( patch,0,description, "press_FC_TOP",   pressY_FC);
+      printData_FC( patch,0,description, "press_FC_FRONT", pressZ_FC);
     }
   }  // patch loop
 }
@@ -3967,7 +3972,7 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
 #if 0
  if( face == Patch::endFace) {
   char description[50];
-  sprintf(description, "backoutGCPress");
+  sprintf(description, "backoutGCPress_patch_%d ", patch->getID());
   printData(   patch, 1, description, "press_CC",    press_CC);
   printData(   patch, 1, description, "vel_FC",      vel_FC[m]);
  // getchar();
