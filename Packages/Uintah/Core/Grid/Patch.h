@@ -158,34 +158,7 @@ WARNING
      void findNodesFromCell( const IntVector& cellIndex,
 			     IntVector nodeIndex[8]) const;
      
-     //////////
-     // The first three of these are for linear interpolation
-     void findCellAndWeights(const Point& pos,
-			     IntVector ni[8],
-                             double S[8]) const;
-     
-     void findCellAndShapeDerivatives(const Point& pos,
-			              IntVector ni[8],
-				      Vector S[8]) const;
 
-     void findCellAndWeightsAndShapeDerivatives(const Point& pos,
-						IntVector ni[8], 
-						double S[8],
-						Vector d_S[8]) const;
-     //////////
-     // These are for higher order (27 node) interpolation
-     void findCellAndWeights27(const Point& pos,
-                                     IntVector ni[27],
-                                     double S[27],const Vector& size) const;
-     
-     void findCellAndShapeDerivatives27(const Point& pos,
-			                IntVector ni[27],
-				        Vector S[27], const Vector& size) const;
-
-     void findCellAndWeightsAndShapeDerivatives27(const Point& pos,
-                                                  IntVector ni[27], 
-                                                  double S[27], Vector d_S[27],
-                                                  const Vector& size) const;
      //////////
      //////////
      // Insert Documentation Here:  
