@@ -24,6 +24,7 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+#include <float.h> // for DBL_MAX
 
 namespace SCIRun {
 
@@ -54,24 +55,25 @@ public:
 
 private:
   double find_closest(typename LSRC::index_type &index,
-		      MSRC *mesh, const Point &p, double dist);
+		      MSRC *mesh, const Point &p);
 };
 
 
 
 template <class MSRC, class LSRC, class MDST, class LDST, class FOUT>
 double
-BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest(typename LSRC::index_type &index, MSRC *mesh, const Point &p, double dist)
+BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest(typename LSRC::index_type &index, MSRC *mesh, const Point &p)
 {
+  double mindist = DBL_MAX;
+  
   typename LSRC::iterator itr, eitr;
   mesh->begin(itr);
   mesh->end(eitr);
-  double mindist = dist;
   while (itr != eitr)
   {
     Point c;
     mesh->get_center(c, *itr);
-    const double dist = (p - c).length();
+    const double dist = (p - c).length2();
     if (dist < mindist)
     {
       mindist = dist;
@@ -91,6 +93,10 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
   MDST *dst_mesh = dynamic_cast<MDST *>(dst_meshH.get_rep());
   FOUT *ofield = scinew FOUT(dst_mesh, loc);
 
+  // FIXME:  Just synchronize needed elements.
+  src_mesh->synchronize(ALL_ELEMENTS_E);
+  dst_mesh->synchronize(ALL_ELEMENTS_E);
+  
   typename LDST::iterator itr, end_itr;
   dst_mesh->begin(itr);
   dst_mesh->end(end_itr);
@@ -119,7 +125,7 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
     else if (closest)
     {
       typename LSRC::index_type index;
-      if (find_closest(index, src_mesh, p, dist) < dist)
+      if (find_closest(index, src_mesh, p) < dist)
       {
 	v.push_back(pair<typename LSRC::index_type, double>(index, 1.0));
       }
