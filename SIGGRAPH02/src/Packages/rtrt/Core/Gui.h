@@ -33,6 +33,7 @@ class  Worker;
 class  DepthStats;
 class  Stats;
 class  Light;
+class  PPMImage;
 class  SelectableGroup;
 class  SpinningInstance;
 class  CutGroup;
@@ -64,6 +65,7 @@ public:
   void update();
 
   // Used by GLUT
+  static void redrawBackgroundCB();
   static void handleWindowResizeCB( int width, int height );
   static void handleKeyPressCB( unsigned char key,
 			      int /*mouse_x*/, int /*mouse_y*/ );
@@ -118,6 +120,8 @@ private:
 
   Trigger * bottomGraphicTrig_;
   Trigger * leftGraphicTrig_;
+
+  PPMImage * backgroundImage_;
 
   // Gui Component Variables
 
@@ -379,6 +383,7 @@ private:
   void updateSoundPanel();
   void loadAllRoutes();
   void handleTriggers();
+  void setBackgroundImage( int room );
 
   // Functions to draw text, etc on GL window.
   void displayText(GLuint fontbase, double x, double y,
