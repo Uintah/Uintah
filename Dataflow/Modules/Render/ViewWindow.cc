@@ -2175,7 +2175,7 @@ ViewWindowMouseMessage::~ViewWindowMouseMessage()
 
 void ViewWindow::animate_to_view(const View& v, double /*time*/)
 {
-  NOT_FINISHED("ViewWindow::animate_to_view");
+  //NOT_FINISHED("ViewWindow::animate_to_view");  // Quiet please.
   view.set(v);
   manager->mailbox.send(scinew ViewerMessage(id));
 }
