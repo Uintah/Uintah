@@ -141,7 +141,10 @@ void SimulationController::run()
    if(mpmcfd) {
       sharedState->d_mpm_cfd=true;
       mpmcfd->problemSetup(ups, grid, sharedState);
-  }
+   }
+
+   // Finalize the shared state/materials
+   sharedState->finalizeMaterials();
 
    // Initialize the MD components --tan
    MDInterface* md = dynamic_cast<MDInterface*>(getPort("md"));
@@ -151,10 +154,11 @@ void SimulationController::run()
    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
    sched->problemSetup(ups);
    SchedulerP scheduler(sched);
-   DataWarehouseP null_dw = 0;
-   DataWarehouseP old_dw = scheduler->createDataWarehouse(null_dw);
 
-   old_dw->setGrid(grid);
+   if(d_myworld->myrank() == 0)
+     cerr << "Compiling taskgraph...";
+   double start = Time::currentSeconds();
+   scheduler->advanceDataWarehouse(grid);
    
    scheduler->initialize();
 
@@ -171,7 +175,7 @@ void SimulationController::run()
       DataArchive archive(checkpointRestartDir.getName(),
 			  d_myworld->myrank(), d_myworld->size());
       
-      archive.restartInitialize(d_restartTimestep, grid, old_dw, &t);
+      archive.restartInitialize(d_restartTimestep, grid, &t);
       
       output->restartSetup(restartFromDir, d_restartTimestep, t,
 			   d_restartRemoveOldDir);
@@ -179,7 +183,7 @@ void SimulationController::run()
       // Initialize the CFD and/or MPM data
       for(int i=0;i<grid->numLevels();i++){
 	 LevelP level = grid->getLevel(i);
-	 scheduleInitialize(level, scheduler, old_dw, cfd, mpm, mpmcfd, md);
+	 scheduleInitialize(level, scheduler, cfd, mpm, mpmcfd, md);
       }
    }
    
@@ -196,15 +200,18 @@ void SimulationController::run()
      t = timeinfo.initTime;
    }
    
-   scheduleComputeStableTimestep(level,scheduler, old_dw, cfd, mpm, mpmcfd, md);
+   scheduleComputeStableTimestep(level,scheduler, cfd, mpm, mpmcfd, md);
    Analyze* analyze = dynamic_cast<Analyze*>(getPort("analyze"));
    if(analyze)
       analyze->problemSetup(ups, grid, sharedState);
    
    if(output)
-      output->finalizeTimestep(t, 0, level, scheduler, old_dw);
-
-   scheduler->execute(d_myworld, old_dw, old_dw);
+      output->finalizeTimestep(t, 0, level, scheduler);
+   scheduler->compile(d_myworld);
+   double dt=Time::currentSeconds()-start;
+   if(d_myworld->myrank() == 0)
+     cerr << "done (" << dt << " seconds)\n";
+   scheduler->execute(d_myworld);
 
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
    int n = 0;
@@ -212,12 +219,12 @@ void SimulationController::run()
    double prevWallTime;
 #endif
 
+   bool first=true;
    while(t < timeinfo.maxTime) {
-
       double wallTime = Time::currentSeconds() - start_time;
 
       delt_vartype delt_var;
-      old_dw->get(delt_var, sharedState->get_delt_label());
+      scheduler->get_new_dw()->get(delt_var, sharedState->get_delt_label());
 
       double delt = delt_var;
       delt *= timeinfo.delt_factor;
@@ -234,8 +241,8 @@ void SimulationController::run()
 		 << " to maxmimum: " << timeinfo.delt_max << '\n';
 	 delt = timeinfo.delt_max;
       }
-      old_dw->override(delt_vartype(delt), sharedState->get_delt_label());
-      
+      scheduler->get_new_dw()->override(delt_vartype(delt),
+					sharedState->get_delt_label());
 #ifndef DISABLE_SCI_MALLOC
       size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
 	nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
@@ -267,62 +274,62 @@ void SimulationController::run()
       
       
       if(d_myworld->myrank() == 0){
-
-
 	if( analyze ) analyze->showStepInformation();
-	else {
-          cout << "Time=" << t << ", delT=" << delt 
-	       << ", elap T = " << wallTime 
-	       << ", DW: " << old_dw->getID() << ", Mem Use = ";
-	  if (avg_memuse == max_memuse)
-	    cout << avg_memuse << endl;
-	  else
-	    cout << avg_memuse << " (avg), " << max_memuse << " (max)\n";
+	cout << "Time=" << t << ", delT=" << delt 
+	     << ", elap T = " << wallTime 
+	     << ", DW: " << scheduler->get_new_dw()->getID() << ", Mem Use = ";
+	if (avg_memuse == max_memuse)
+	  cout << avg_memuse << endl;
+	else
+	  cout << avg_memuse << " (avg), " << max_memuse << " (max)\n";
 
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
-	  if (n > 1) // ignore first set of elapsed times
-	    wallTimes.push_back(wallTime - prevWallTime);
+	if (n > 1) // ignore first set of elapsed times
+	  wallTimes.push_back(wallTime - prevWallTime);
 
-	  if (wallTimes.size() > 1) {
-	    double stdDev, mean;
-	    stdDev = stdDeviation(wallTimes, mean);
-	    ofstream timefile("avg_elapsed_walltime.txt");
-	    timefile << mean << " +- " << stdDev << endl;
-	  }
-	  prevWallTime = wallTime;
-	  n++;
-#endif
+	if (wallTimes.size() > 1) {
+	  double stdDev, mean;
+	  stdDev = stdDeviation(wallTimes, mean);
+	  ofstream timefile("avg_elapsed_walltime.txt");
+	  timefile << mean << " +- " << stdDev << endl;
 	}
+	prevWallTime = wallTime;
+	n++;
+#endif
       }
-
+      scheduler->advanceDataWarehouse(grid);
       // put the current time into the shared state so other components
       // can access it
       sharedState->setElapsedTime(t);
+      if(first || need_recompile(t, delt, level, cfd, mpm, mpmcfd, md, output)){
+	first=false;
+	if(d_myworld->myrank() == 0)
+	  cerr << "Compiling taskgraph...";
+	double start = Time::currentSeconds();
+	scheduler->initialize();
 
-      scheduler->initialize();
+	scheduleTimeAdvance(t, delt, level, scheduler,
+			    cfd, mpm, mpmcfd, md);
 
-      /* I THINK THIS SHOULD BE null_dw, NOT old_dw... Dd: */
-      DataWarehouseP new_dw = scheduler->createDataWarehouse(/*old_dw*/null_dw);
-      //DataWarehouseP new_dw = scheduler->createDataWarehouse(old_dw);
+	//data analyze in each step
+	if(analyze) {
+	  analyze->performAnalyze(t, delt, level, scheduler);
+	}
+      
+	if(output)
+	  output->finalizeTimestep(t, delt, level, scheduler);
+      
+	// Begin next time step...
+	scheduleComputeStableTimestep(level, scheduler, cfd, mpm, mpmcfd, md);
+	scheduler->compile(d_myworld);
 
-      scheduleTimeAdvance(t, delt, level, scheduler, old_dw, new_dw,
-			  cfd, mpm, mpmcfd, md);
-
-      //data analyze in each step
-      if(analyze) {
-        analyze->performAnalyze(t, delt, level, scheduler, old_dw, new_dw);
+	double dt=Time::currentSeconds()-start;
+	if(d_myworld->myrank() == 0)
+	  cerr << "done (" << dt << " seconds)\n";
       }
-      
+      // Execute the current timestep
+      scheduler->execute(d_myworld);
       t += delt;
-      if(output)
-	 output->finalizeTimestep(t, delt, level, scheduler, new_dw);
-      
-      // Begin next time step...
-      scheduleComputeStableTimestep(level, scheduler, new_dw, cfd, mpm, mpmcfd,
-									 md);
-      scheduler->execute(d_myworld, old_dw, new_dw);
-
-      old_dw = new_dw;
    }
 }
 
@@ -419,7 +426,7 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	IntVector resolution(highCell-lowCell);
 	IntVector inResolution(inHighCell-inLowCell);
 	if(resolution.x() < 1 || resolution.y() < 1 || resolution.z() < 1)
-	  throw ProblemSetupException("Degeneration patch");
+	  throw ProblemSetupException("Degenerate patch");
 	
 	IntVector patches;
 	IntVector inLowIndex,inHighIndex;
@@ -452,168 +459,85 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 
 void SimulationController::scheduleInitialize(LevelP& level,
 					      SchedulerP& sched,
-					      DataWarehouseP& new_dw,
 					      CFDInterface* cfd,
 					      MPMInterface* mpm,
 					      MPMCFDInterface* mpmcfd,
 					      MDInterface* md)
 {
   if(mpmcfd){
-    mpmcfd->scheduleInitialize(level, sched, new_dw);
+    mpmcfd->scheduleInitialize(level, sched);
   }
   else {
     if(cfd) {
-      cfd->scheduleInitialize(level, sched, new_dw);
+      cfd->scheduleInitialize(level, sched);
     }
     if(mpm) {
-      mpm->scheduleInitialize(level, sched, new_dw);
+      mpm->scheduleInitialize(level, sched);
     }
   }
   if(md) {
-    md->scheduleInitialize(level, sched, new_dw);
+    md->scheduleInitialize(level, sched);
   }
 }
 
 void SimulationController::scheduleComputeStableTimestep(LevelP& level,
 							SchedulerP& sched,
-							DataWarehouseP& new_dw,
 							CFDInterface* cfd,
 							MPMInterface* mpm,
 							MPMCFDInterface* mpmcfd,
 							MDInterface* md)
 {
   if(mpmcfd){
-    mpmcfd->scheduleComputeStableTimestep(level, sched, new_dw);
+    mpmcfd->scheduleComputeStableTimestep(level, sched);
   }
   else {
      if(cfd)
-        cfd->scheduleComputeStableTimestep(level, sched, new_dw);
+        cfd->scheduleComputeStableTimestep(level, sched);
      if(mpm)
-        mpm->scheduleComputeStableTimestep(level, sched, new_dw);
+        mpm->scheduleComputeStableTimestep(level, sched);
    }
    if(md)
-      md->scheduleComputeStableTimestep(level, sched, new_dw);
+      md->scheduleComputeStableTimestep(level, sched);
 }
 
 void SimulationController::scheduleTimeAdvance(double t, double delt,
 					       LevelP& level,
 					       SchedulerP& sched,
-					       DataWarehouseP& old_dw,
-					       DataWarehouseP& new_dw,
 					       CFDInterface* cfd,
 					       MPMInterface* mpm,
 					       MPMCFDInterface* mpmcfd,
 					       MDInterface* md)
 {
-   // Temporary - when cfd/mpm are coupled this will need help
+  // Temporary - when cfd/mpm are coupled this will need help
   if(mpmcfd){
-      mpmcfd->scheduleTimeAdvance(t, delt, level, sched, old_dw, new_dw);
+      mpmcfd->scheduleTimeAdvance(t, delt, level, sched);
   }
   else {
    if(cfd)
-      cfd->scheduleTimeAdvance(t, delt, level, sched, old_dw, new_dw);
+     cfd->scheduleTimeAdvance(t, delt, level, sched);
    if(mpm)
-      mpm->scheduleTimeAdvance(t, delt, level, sched, old_dw, new_dw);
+      mpm->scheduleTimeAdvance(t, delt, level, sched);
   }
       
    // Added molecular dynamics module, currently it will not be coupled with 
    // cfd/mpm.  --tan
    if(md)
-      md->scheduleTimeAdvance(t, delt, level, sched, old_dw, new_dw);
+      md->scheduleTimeAdvance(t, delt, level, sched);
    
-#if 0
-   
-   /* If we aren't doing any chemistry, skip this step */
-#if 0
-   if(chem)
-      chem->calculateChemistryEffects();
-#endif
-   
-   /* If we aren't doing MPM, skip this step */
-   if(mpm){
-#if 0
-      mpm->zeroMPMGridData();
-      mpm->interpolateParticlesToGrid(/* consume */ p_mass, p_velocity,
-				      p_extForce, p_temperature,
-				      /* produce */ g_mass, g_velocity, g_exForce,
-				      g_volFraction, g_temperature);
-#endif
-   }
-   if(mpm && !cfd){  // In other words, doing MPM only
-#if 0
-      mpm->exchangeMomentum2();
-      mpm->computeVelocityGradients(/* arguments left as an exercise */);
-      mpm->computeStressTensor();
-      mpm->computeInternalForces(/* arguments left as an exercise */);
-#endif
-   }
-   
-   /* If we aren't doing CFD, sking this step */
-   if(cfd && !mpm){
-#if 0
-      cfd->pressureAndVelocitySolve(/* consume */ g_density, g_massFraction,
-				    g_temperature,
-				    maybe other stuff,
-				    
-				    /* produce */ g_velocity, g_pressure);
-#endif
-   }
-   
-   if(mpm && cfd){
-#if 0
-      coupling->pressureVelocityStressSolve();
-      /* produce */ cell centered pressure,
-		       face centered velocity,
-		       particle stresses
-		       mpm->computeInternalForces();
-#endif
-   }
-   
-   if(mpm){
-#if 0
-      mpm->solveEquationsOfMotion(/* consume */ g_deltaPress, p_stress,
-				  some boundary conditions,
-				  /* produce */ p_acceleration);
-      mpm->integrateAceleration(/* consume */ p_acceleration);
-#endif
-   }
-   if(cfd){
-#if 0
-      /* This may be different, or a no-op for arches. - Rajesh? */
-      cfd->addLagragianEffects(...);
-#endif
-   }
-   /* Is this CFD or MPM, or what? */
-   /* It's "or what" hence I prefer using the coupling module so
-      neither of the others have to know about it.               */
-   if(mpm && cfd){       // Do coupling's version of Exchange
-#if 0
-      coupling->calculateMomentumAndEnergyExchange( ... );
-#endif
-   }
-   else if(mpm && !cfd){ // Do mpm's version of Exchange
-#if 0
-      mpm->exchangeMomentum();
-#endif
-   }
-   else if(cfd && !mpm){ // Do cfd's version of Exchange
-#if 0
-      cfd->momentumExchange();
-#endif
-   }
-   
-   if(cfd){
-#if 0
-      cfd->advect(...);
-      cfd->advanceInTime(...);
-#endif
-   }
-   if(mpm){
-#if 0
-      mpm->interpolateGridToParticles(...);
-      mpm->updateParticleVelocityAndPosition(...);
-#endif
-   }
-#endif
+}
+
+bool
+SimulationController::need_recompile(double time, double delt,
+				     const LevelP& level, CFDInterface* cfd,
+				     MPMInterface* mpm,
+				     MPMCFDInterface* mpmcfd,
+				     MDInterface* md,
+				     Output* output)
+{
+  // Currently, nothing but output can request a recompile.  This
+  // should be fixed - steve
+  if(output && output->need_recompile(time, delt, level))
+    return true;
+  return false;
 }
 
