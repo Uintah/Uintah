@@ -1076,3 +1076,10 @@ Arches::getCCVelocities(const ProcessorGroup* ,
   }
 }
 
+double Arches::recomputeTimestep(double current_dt) {
+  return d_nlSolver->recomputeTimestep(current_dt);
+}
+      
+bool Arches::restartableTimesteps() {
+  return d_nlSolver->restartableTimesteps();
+}

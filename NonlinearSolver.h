@@ -92,6 +92,9 @@ public:
 	{
 	  return d_timeIntegratorType;
 	}
+      virtual double recomputeTimestep(double current_dt) = 0;
+      
+      virtual bool restartableTimesteps() = 0;
 protected:
    const ProcessorGroup* d_myworld;
    string d_timeIntegratorType;

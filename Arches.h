@@ -185,6 +185,9 @@ public:
 	{
 	  return d_turbModel;
 	}
+      virtual double recomputeTimestep(double current_dt);
+      
+      virtual bool restartableTimesteps();
 
 
 protected:

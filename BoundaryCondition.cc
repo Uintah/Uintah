@@ -818,6 +818,7 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
   tsk->computes(d_lab->d_maxAbsV_label);
   tsk->computes(d_lab->d_maxAbsW_label);
   tsk->computes(d_lab->d_maxUxplus_label);
+  tsk->computes(d_lab->d_avUxplus_label);
 
 //#ifdef divergenceconstraint
     tsk->computes(d_lab->d_divConstraintLabel);
@@ -985,6 +986,12 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     IntVector indexLow;
     IntVector indexHigh;
     double maxUxplus = -10000000000.0;
+    double avUxplus = 0.0;
+    const Level* level = patch->getLevel();
+    IntVector low, high;
+    level->findCellIndexRange(low, high);
+    IntVector range = high-low;
+    double num_elem = range.y()*range.z();
     
       indexLow = patch->getSFCXFORTLowIndex();
       indexHigh = patch->getSFCXFORTHighIndex();
@@ -1010,12 +1017,16 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
               IntVector currCell(colX, colY, colZ);
               IntVector xplusCell(colX+1, colY, colZ);
 
-	      if (cellType[xplusCell] == outlet_celltypeval)
+	      if (cellType[xplusCell] == outlet_celltypeval) {
 	        maxUxplus = Max(uVelocity[currCell], maxUxplus);
+		avUxplus += uVelocity[currCell];
+	      }
           }
         }
       }
-      new_dw->put(max_vartype(maxUxplus), d_lab->d_maxUxplus_label); 
+      new_dw->put(max_vartype(maxUxplus), d_lab->d_maxUxplus_label);
+      avUxplus /= num_elem;
+      new_dw->put(sum_vartype(avUxplus), d_lab->d_avUxplus_label);
 
       indexLow = patch->getSFCYFORTLowIndex();
       indexHigh = patch->getSFCYFORTHighIndex();
@@ -3450,9 +3461,11 @@ BoundaryCondition::velRhoHatInletBC(const ProcessorGroup* ,
 			    const Patch* patch,
 			    CellInformation*,
 			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars)
+			    ArchesConstVariables* constvars,
+			    double time_shift)
 {
   double time = d_lab->d_sharedState->getElapsedTime();
+  double current_time = time + time_shift;
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
@@ -3471,7 +3484,7 @@ BoundaryCondition::velRhoHatInletBC(const ProcessorGroup* ,
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     fort_inlbcs(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat,
       	  idxLo, idxHi, constvars->new_density, constvars->cellType, 
-      	  fi.d_cellTypeID, time,
+      	  fi.d_cellTypeID, current_time,
       	  xminus, xplus, yminus, yplus, zminus, zplus,
 	  d_ramping_inlet_flowrate);
     
