@@ -37,6 +37,7 @@ protected:
 
   Color color(const Vector &N, const Vector &V, const Vector &L, 
 	      const Color &object_color, const Color &light_color) const;
+  int rtrtGageProbe(gageContext *ctx, gage_t x, gage_t y, gage_t z);
 public:
   SketchMaterial(ArrayType &indata, BBox &bbox);
   virtual ~SketchMaterial();
@@ -45,7 +46,8 @@ public:
 		     const HitInfo& hit, int depth,
 		     double atten, const Color& accumcolor,
 		     Context* cx);
-  int rtrtGageProbe(gageContext *ctx, gage_t x, gage_t y, gage_t z);
+
+  virtual void animate(double t, bool& changed);
 };
 
 template<class ArrayType, class DataType>
@@ -146,7 +148,7 @@ SketchMaterial<ArrayType, DataType>::SketchMaterial(ArrayType &indata, BBox &bbo
     return;
   }
 
-  int fd = GAGE_FD(main_ctx);
+  //  int fd = GAGE_FD(main_ctx);
   //  fprintf();
   
   //  fprintf(stderr, "%s: gageKernelSet for all finished without errors\n", me);
@@ -171,7 +173,7 @@ SketchMaterial<ArrayType, DataType>::SketchMaterial(ArrayType &indata, BBox &bbo
   
   // We need to know how many threads we could possibly use.  Lets
   // check with the thread library.
-  ctx_pool.resize(Thread::numProcessors());
+  ctx_pool.resize(SCIRun::Thread::numProcessors());
   fprintf(stderr, "%s: ctx_pool resized to %d\n", me, ctx_pool.size());
   for(int i = 0; i< ctx_pool.size(); i++) {
     // Allocate a new ctx
@@ -392,6 +394,12 @@ SketchMaterial<ArrayType, DataType>::color(const Vector &N, const Vector &V,
 #endif
   
   return result;
+}
+
+template<class ArrayType, class DataType>
+void
+SketchMaterial<ArrayType, DataType>::animate(double t, bool& changed) {
+  // Here we can update all the gage stuff if we need to.
 }
 
 } // end namespace rtrt
