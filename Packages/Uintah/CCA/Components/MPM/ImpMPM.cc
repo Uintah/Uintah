@@ -118,6 +118,8 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
        mpm_ps->get("convergence_criteria_disp",  d_conv_crit_disp);
        mpm_ps->get("convergence_criteria_energy",d_conv_crit_energy);
        mpm_ps->get("dynamic",d_dynamic);
+       mpm_ps->getWithDefault("iters_before_timestep_restart",
+                               d_max_num_iterations, 25);
      }
      else{
       throw ProblemSetupException("Can't use explicit integration with -impm");
@@ -786,10 +788,26 @@ void ImpMPM::iterate(const ProcessorGroup*,
     if ((dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp) &&
         dispIncNormMax != 0.0)
       dispInc = true;
-    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy)
+    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy &&
+        dispIncQNorm/(dispIncQNorm0 + 1e-100) > 0.0)
       dispIncQ = true;
     // Check to see if the residual is likely a nan, if so, we'll restart.
+    bool restart_nan=false;
+    bool restart_neg_residual=false;
+    bool restart_num_iters=false;
     if (isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax)){
+      restart_nan=true;
+      cerr << "Restarting due to a nan residual" << endl;
+    }
+    if (dispIncQNorm/dispIncQNorm0 < 0. ||dispIncNorm/dispIncNormMax < 0.){
+      restart_neg_residual=true;
+      cerr << "Restarting due to a negative residual" << endl;
+    }
+    if (count > d_max_num_iterations){
+      restart_num_iters=true;
+      cerr << "Restarting due to exceeding max number of iterations" << endl;
+    }
+    if (restart_nan || restart_neg_residual || restart_num_iters){
       new_dw->abortTimestep();
       new_dw->restartTimestep();
       return;
@@ -2257,5 +2275,5 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 
 double ImpMPM::recomputeTimestep(double current_dt)
 {
-  return current_dt/2;
+  return current_dt*.6;
 }
