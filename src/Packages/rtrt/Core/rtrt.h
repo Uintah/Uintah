@@ -25,7 +25,9 @@ namespace rtrt {
       display_run_gl_test(false),
       exit_scene(false),
       exit_engine(false),
-      exit_scene_with_engine(true)
+      exit_scene_with_engine(true),
+      hotSpotsMode(HotSpotsOff),
+      frameMode(FullFrame)
     {}
     // semephores
     SCIRun::Mutex cameralock; // to synchronize camera...
@@ -80,6 +82,21 @@ namespace rtrt {
       stop_scene();
       stop_engine();
     }
+
+    enum {
+      HotSpotsOff = 0,
+      HotSpotsOn,
+      HotSpotsHalfScreen
+    };
+    int hotSpotsMode; // defaults to HotSpotsOff
+
+    enum {
+      FullFrame = 0,
+      Frameless,
+      Interlaced,
+      OddRows
+    };
+    int frameMode; // defaults to FullFrame
   };
   
 } // end namespace rtrt
