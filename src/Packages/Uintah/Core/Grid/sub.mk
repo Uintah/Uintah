@@ -33,6 +33,7 @@ SRCS     += \
 	$(SRCDIR)/TemperatureBoundCond.cc \
 	$(SRCDIR)/PressureBoundCond.cc \
 	$(SRCDIR)/DensityBoundCond.cc \
+	$(SRCDIR)/MassFracBoundCond.cc \
 	$(SRCDIR)/BoundCondFactory.cc \
 	$(SRCDIR)/BoundCondReader.cc \
 	$(SRCDIR)/BoundCondData.cc \
