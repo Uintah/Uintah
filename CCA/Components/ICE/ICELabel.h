@@ -82,6 +82,7 @@ namespace Uintah {
     const VarLabel* modelMass_srcLabel;
     const VarLabel* modelMom_srcLabel;
     const VarLabel* modelEng_srcLabel;
+    const VarLabel* modelVol_srcLabel;
     
     //Misc Labels
     const VarLabel* IveBeenHereLabel;
