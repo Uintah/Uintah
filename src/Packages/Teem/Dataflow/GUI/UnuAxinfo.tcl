@@ -73,34 +73,6 @@ itcl_class Teem_Unu_UnuAxinfo {
 	}
     }
     
-    #     method fill_tuple_tab {} {
-    #         set w .ui[modname]
-    
-    # 	if {![winfo exists $w]} {
-    #             return
-    #         }
-    # 	set att [$w.att childsite]
-    # 	# tuple tab is always first
-    # 	set tuple [$att.tabs childsite 0]
-    # 	#parse the label axis string to gather all the info out of it.
-    # 	set l [regexp -inline -all -- {([\w-]+):(\w+),?} [set $this-label0]]
-    
-    # 	set last [$tuple.listbox index end]
-    # 	$tuple.listbox delete 0 $last
-    # 	$tuple.listbox insert 0 "Name (Type)"
-    
-    # 	if {[llength $l]} {
-    # 	    set ind 1
-    # 	    foreach {match axname type} $l {
-    # 		$tuple.listbox insert $ind "$axname ($type)"
-    # 		incr ind
-    # 	    }
-    # 	} else {
-    # 	    $tuple.listbox insert 1 "unknown tuple axis label format"
-    # 	    $tuple.listbox insert 2 [set $this-label0]
-    # 	}
-    #     }
-    
     method clear_axes {} {
 	set w .ui[modname]
         if {[winfo exists $w]} {
@@ -142,31 +114,34 @@ itcl_class Teem_Unu_UnuAxinfo {
 	    set $this-min0 "---"
 	    set $this-max0 "---"
 	}
+	set $this-initialized 0
     }
     
     method init_axes {} {
-	for {set i 0} {$i < [set $this-dimension]} {incr i} {
-	    
-	    if { [catch { set t [set $this-label$i] } ] } {
-		set $this-label$i ""
-	    }
-	    if { [catch { set t [set $this-kind$i] } ] } {
-		set $this-kind$i ""
-	    }
-	    if { [catch { set t [set $this-center$i]}] } {
-		set $this-center$i ""
-	    }
-	    if { [catch { set t [set $this-size$i]}] } {
-		set $this-size$i 0
-	    }
-	    if { [catch { set t [set $this-spacing$i]}] } {
-		set $this-spacing$i 0
-	    }
-	    if { [catch { set t [set $this-min$i]}] } {
-		set $this-min$i 0
-	    }
-	    if { [catch { set t [set $this-max$i]}] } {
-		set $this-max$i 0
+	if {![set $this-initialized]} {
+	    for {set i 0} {$i < [set $this-dimension]} {incr i} {
+		
+		if { [catch { set t [set $this-label$i] } ] } {
+		    set $this-label$i ""
+		}
+		if { [catch { set t [set $this-kind$i] } ] } {
+		    set $this-kind$i ""
+		}
+		if { [catch { set t [set $this-center$i]}] } {
+		    set $this-center$i ""
+		}
+		if { [catch { set t [set $this-size$i]}] } {
+		    set $this-size$i 0
+		}
+		if { [catch { set t [set $this-spacing$i]}] } {
+		    set $this-spacing$i 0
+		}
+		if { [catch { set t [set $this-min$i]}] } {
+		    set $this-min$i 0
+		}
+		if { [catch { set t [set $this-max$i]}] } {
+		    set $this-max$i 0
+		}
 	    }
 	}
 
@@ -180,7 +155,29 @@ itcl_class Teem_Unu_UnuAxinfo {
 	    
 	    set af [$w.att childsite]
 
-	    if {[set $this-initialized]} {
+	    if {[set $this-initialized] || [set $this-dimension] > 0} {
+		# Create Axis 0 if it hasn't already been created
+		if {![winfo exists $af.tabs.canvas.notebook.cs.page1.cs.l]} {
+		    set t [$af.tabs add -label "Axis 0" \
+			       -command "$this set_active_tab \"Axis 0\""]
+		    
+		    makelabelentry $t.l "Label" $this-label0
+		    Tooltip $t.l "Change the label\nfor Axis 0."
+		    make_kind_optionmenu $t.k $this-kind0 0
+		    labelpair $t.c "Center" $this-center0
+		    labelpair $t.sz "Size" $this-size0
+		    makelabelentry $t.sp "Spacing" $this-spacing0
+		    Tooltip $t.sp "Change spacing between\nsamples along Axis 0. This\nshould be expressed as a\ndouble."
+		    makelabelentry $t.mn "Min" $this-min0
+		    Tooltip $t.mn "Change the minimum value\nalong Axis 0. This should\nbe expressed as a double."
+		    makelabelentry $t.mx "Max" $this-max0
+		    Tooltip $t.mx "Change the maximum value\nalong Axis 0. This should\nbe expressed as a double."
+		    
+		    pack $t.l $t.c $t.sz  $t.sp $t.mn $t.mx  -side top
+		    pack $t -side top -fill both -expand 1	
+		}
+
+		# Create the rest of the tabs
 		for {set i 1} {$i < [set $this-dimension]} {incr i} {
 		    set t [$af.tabs add -label "Axis $i" \
 			       -command "$this set_active_tab \"Axis $i\""]
@@ -218,23 +215,11 @@ itcl_class Teem_Unu_UnuAxinfo {
 		
 		pack $t.l $t.c $t.sz  $t.sp $t.mn $t.mx  -side top
 		pack $t -side top -fill both -expand 1	
-		set $this-initialized 1
-		
+		set $this-initialized 1		
 	    }
 	}
     }
     
-    #     method add_tuple_tab {af} {
-    
-    # 	set tuple [$af.tabs add -label "Tuple Axis" \
-	# 		       -command "$this set_active_tab \"Tuple Axis\""]
-    
-    # 	iwidgets::scrolledlistbox $tuple.listbox -vscrollmode static \
-	# 	    -hscrollmode dynamic -scrollmargin 3 -height 60
-    
-    # 	 fill_tuple_tab
-    # 	 pack $tuple.listbox -side top -fill both -expand 1
-    #     }
     
     method ui {} {
         set w .ui[modname]
