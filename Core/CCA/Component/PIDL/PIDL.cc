@@ -31,6 +31,7 @@
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/Object_proxy.h>
 #include <Core/CCA/Component/PIDL/Warehouse.h>
+#include <Core/CCA/Component/Comm/DT/DataTransmitter.h>
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
@@ -54,8 +55,8 @@
 #endif
 
 //Inter-Component Comm libraries supported
+#define COMM_NEXUS 0
 #define COMM_SOCKET 1
-#define COMM_NEXUS 2
 
 //Intra-Component Comm libraries supported
 #define INTRA_COMM_MPI 1
@@ -65,6 +66,8 @@ static int intra_comm_type = 0;
 using namespace SCIRun;
 
 Warehouse* PIDL::warehouse;
+
+DataTransmitter *PIDL::theDataTransmitter;
 
 void
 PIDL::initialize(int, char*[])
@@ -77,7 +80,11 @@ PIDL::initialize(int, char*[])
 #endif
   switch (comm_type) {
   case COMM_SOCKET:
-    pid=getpid();
+    if(!theDataTransmitter){
+      theDataTransmitter=new DataTransmitter;
+      theDataTransmitter->run();
+      //TODO: sb should delete theDataTransmitter
+    }
     break;
 #ifdef HAVE_GLOBUS
   case COMM_NEXUS:
@@ -94,6 +101,7 @@ PIDL::initialize(int, char*[])
   if(!warehouse){
     warehouse=new Warehouse;
   }
+
 }
 
 void
@@ -101,6 +109,7 @@ PIDL::finalize()
 {
   switch (comm_type) {
   case COMM_SOCKET:
+    theDataTransmitter->exit();
     break;
 #ifdef HAVE_GLOBUS
   case COMM_NEXUS:
@@ -129,7 +138,6 @@ PIDL::getEpChannel() {
   switch (comm_type) {
   case COMM_SOCKET:
     return (new SocketEpChannel());
-
 #ifdef HAVE_GLOBUS
   case COMM_NEXUS:
     return (new NexusEpChannel());
@@ -209,16 +217,12 @@ PIDL::setIntraCommunication(int c)
   }
 }
 
-bool
-PIDL::isNexus(){
-  return comm_type==COMM_NEXUS;
+DataTransmitter*
+PIDL::getDT(){
+  return theDataTransmitter;
 }
 
-int
-PIDL::pid(-1);
-
-int
-PIDL::getPID()
-{
-  return pid;
+bool
+PIDL::isNexus(){
+  return comm_type== COMM_NEXUS;
 }

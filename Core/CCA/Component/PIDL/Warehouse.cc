@@ -69,6 +69,16 @@ int Warehouse::registerObject(Object* object)
   return id;
 }
 
+
+int Warehouse::registerObject(int id, Object* object)
+{
+  mutex.lock();
+  objects[id]=object;
+  mutex.unlock();
+  return id;
+}
+
+
 Object* Warehouse::unregisterObject(int id)
 {
   mutex.lock();

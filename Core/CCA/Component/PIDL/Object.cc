@@ -131,7 +131,7 @@ Object::_addReference()
   Mutex* m=getMutexPool()->getMutex(mutex_index);
   m->lock();
   ref_cnt++;
-  //::std::cout << "Reference count is now " << ref_cnt << "\n";
+  ::std::cout << "Reference count is now " << ref_cnt << "\n";
   m->unlock();
 }
 
@@ -141,7 +141,7 @@ Object::_deleteReference()
   Mutex* m=getMutexPool()->getMutex(mutex_index);
   m->lock();
   ref_cnt--;
-  //::std::cout << "Reference count is now " << ref_cnt << "\n";
+  ::std::cout << "Reference count is now " << ref_cnt << "\n";
   bool del;
   if(ref_cnt == 0)
     del=true;
@@ -161,8 +161,15 @@ void
 Object::activateObject() const
 {
   Warehouse* warehouse=PIDL::getWarehouse();
-  d_serverContext->d_objid=warehouse->registerObject(const_cast<Object*>(this));
-  d_serverContext->activateEndpoint();
+  if(PIDL::isNexus()){
+    d_serverContext->d_objid=warehouse->registerObject(const_cast<Object*>(this));
+    d_serverContext->activateEndpoint();
+  }
+  else{
+    d_serverContext->activateEndpoint();
+    warehouse->registerObject(d_serverContext->d_objid, const_cast<Object*>(this));
+  }
+
 }
 
 MutexPool*

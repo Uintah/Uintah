@@ -89,6 +89,8 @@ DESCRIPTION
     // an empty string if a spec was not specified in the URL.
     std::string getSpec() const;
 
+    long getIP();
+
   protected:
   private:
     //////////
