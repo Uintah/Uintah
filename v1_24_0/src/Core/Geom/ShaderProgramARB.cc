@@ -36,6 +36,7 @@
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Geom/TkOpenGLContext.h>
 
 #include <iostream>
 using std::cerr;
@@ -188,6 +189,7 @@ ShaderProgramARB::shaders_supported()
 #else
       mSupported = false;
 #endif
+
       mInit = true;
     }
     ShaderProgramARB_mInitMutex.unlock();
@@ -195,6 +197,19 @@ ShaderProgramARB::shaders_supported()
   return mSupported;
 }
 
+
+
+void
+ShaderProgramARB_init_shaders_supported()
+{
+  TkOpenGLContext *context =
+    new TkOpenGLContext(".testforshadersupport", 0, 0, 0);
+  context->make_current();
+  const bool result = ShaderProgramARB::shaders_supported();
+  delete context;
+  std::cout << "SHADERS_SUPPORTED=" << result << "\n";
+}
+  
 
 bool
 ShaderProgramARB::create()
