@@ -1,6 +1,7 @@
 #!/bin/sh
 #
-# This is crude
+# This is very crude
+# $Id$
 #
 
 if test "$1" = "" -o "$2" = "" -o "$3" = ""; then
