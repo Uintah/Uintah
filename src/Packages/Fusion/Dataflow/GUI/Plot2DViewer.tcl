@@ -557,12 +557,19 @@ itcl_class Fusion_Render_Plot2DViewer {
 	}
     }
 
+    # {w loopback} = the plplot window
+    # plt = the plot number
+    # dat = the field port number
+    # fill = the plotting style
+
     method plot2D {{w loopback} plt dat fill } {
 
 	global $this-idim-$dat
 	global $this-jdim-$dat
 
-	if { [set $this-idim-$dat] > 1 && [set $this-jdim-$dat] > 1 } {
+# Make sure there is data for this data.
+	if { [set $this-idim-$dat] > 1 &&
+	     [set $this-jdim-$dat] > 1 } {
 
 	    global haveData
 
@@ -573,21 +580,26 @@ itcl_class Fusion_Render_Plot2DViewer {
 	    matrix y float [set $this-idim-$dat] [set $this-jdim-$dat]
 	    matrix v float [set $this-idim-$dat] [set $this-jdim-$dat]
 
-	    #  Get the values from the c++ code.
+# Get the values from the c++ code.
 	    $this-c vertex_coords $dat $this-slice-$plt-$dat x y v
 
+# Make sure the data was retrived properly.
 	    if { $haveData != 1 } return
 
 #Create a rainbow color map.
 	    rainbow_cmap1 $w 36 1
 	    set cOffset [expr 1.0/([set $this-zmax]-[set $this-zmin])]
 
+# Create the title and lable the axis.
 	    set title "Plot "
 	    append title $plt
 
+# Select color 1 from colormap 0
 	    $w cmd plcol0 1
+# Set the plotting envelope i.e. the min-max of the plot.
 	    $w cmd plenv [set $this-xmin] [set $this-xmax] \
 		         [set $this-ymin] [set $this-ymax] 0 0
+# Select color 2 from colormap 0
 	    $w cmd plcol0 2
 	    $w cmd pllab "R" "Z" $title
 
@@ -608,6 +620,7 @@ itcl_class Fusion_Render_Plot2DViewer {
 			set col [expr ([v $i $j]-[set $this-zmin])*$cOffset]
 
 			$w cmd plcol1 $col
+# Plot a symbol 
 			$w cmd plpoin 1 xPt yPt 1
 		    }
 		}
@@ -621,6 +634,7 @@ itcl_class Fusion_Render_Plot2DViewer {
 		for {set j $inc} {$j < [set $this-jdim-$dat]} {incr j $inc } {
 		    for {set i $inc} {$i < [set $this-idim-$dat]} {incr i $inc} {
 
+# Create a polygon for this index.
 			set i1 [expr $i-$inc]
 			set j1 [expr $j-$inc]
 			
@@ -655,7 +669,15 @@ itcl_class Fusion_Render_Plot2DViewer {
     }
 
 
+    # {w loopback} = the plplot window
+    # plt = the plot number
+    # dat = the field port number
+    # fill = the plotting style
+
     method plot3D {{w loopback} plt dat fill} {
+
+# For some reason we have to advance to the next plot with 3D plots.
+# This is notthe case with 2D plots.
 	$w cmd pladv 0
 
 	global $this-altitude-$plt
@@ -664,6 +686,7 @@ itcl_class Fusion_Render_Plot2DViewer {
 	global $this-idim-$dat
 	global $this-jdim-$dat
 
+# Make sure there is data for this data.
 	if { [set $this-idim-$dat] > 1 &&
 	     [set $this-jdim-$dat] > 1 } {
 
@@ -679,6 +702,7 @@ itcl_class Fusion_Render_Plot2DViewer {
 #  Get the values from the c++ code.
 	    $this-c vertex_coords $dat $this-slice-$plt-$dat x y z
 
+# Make sure the data was retrived properly.
 	    if { $haveData != 1 } return
 	    
 #Create a rainbow color map.
@@ -696,15 +720,15 @@ itcl_class Fusion_Render_Plot2DViewer {
 		    [set $this-xmin] [set $this-xmax] \
 		    [set $this-ymin] [set $this-ymax] \
 		    [set $this-zmin] [set $this-zmax] \
-		    [set $this-altitude-$num] [set $this-azimuth-$num]
+		    [set $this-altitude-$plt] [set $this-azimuth-$plt]
 
 # Draw a box with axes, etc, in 3-d
 		$w cmd plcol0 2
 
 		set title [format "Plot %d Alt=%.0f, Az=%.0f" \
-			       $plt
-			       [set $this-altitude-$num] \
-			       [set $this-azimuth-$num] ]
+			       $plt \
+			       [set $this-altitude-$plt] \
+			       [set $this-azimuth-$plt] ]
 		$w cmd plmtex "t" 1.0 0.5 0.5 $title
 
 		$w cmd plbox3 "bnstu" "R" 0.0 0 \
@@ -735,7 +759,8 @@ itcl_class Fusion_Render_Plot2DViewer {
 		}
 	    } else {
 
-# Draw a plot for each j index.
+
+# Draw a polygon or a filled polygon.
 		matrix xPoly float 5
 		matrix yPoly float 5
 		matrix zPoly float 5
@@ -744,6 +769,7 @@ itcl_class Fusion_Render_Plot2DViewer {
 		for {set j $inc} {$j < [set $this-jdim-$dat]} {incr j $inc} {
 		    for {set i $inc} {$i < [set $this-idim-$dat]} {incr i $inc} {
 
+# Create a polygon for this index.
 			set i1 [expr $i-$inc]
 			set j1 [expr $j-$inc]
 
