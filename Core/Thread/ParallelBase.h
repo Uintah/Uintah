@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_ParallelBase_h
 #define SCICore_Thread_ParallelBase_h
 
+namespace SCICore {
+    namespace Thread {
 /**************************************
  
 CLASS
@@ -26,15 +28,8 @@ KEYWORDS
 DESCRIPTION
    Helper class for Parallel class.  This will never be used
    by a user program.  See <b>Parallel</b> instead.
-PATTERNS
-
-
-WARNING
    
 ****************************************/
-
-namespace SCICore {
-    namespace Thread {
 	class ParallelBase {
 	public:
 	    //////////
@@ -59,6 +54,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.7  1999/09/02 16:52:43  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.6  1999/08/28 03:46:49  sparker
 // Final updates before integration with PSE
 //

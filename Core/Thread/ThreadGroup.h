@@ -15,6 +15,13 @@
 #ifndef SCICore_Thread_ThreadGroup_h
 #define SCICore_Thread_ThreadGroup_h
 
+#include <SCICore/Thread/Mutex.h>
+#include <vector>
+
+namespace SCICore {
+    namespace Thread {
+	class Thread;
+
 /**************************************
  
 CLASS
@@ -28,20 +35,7 @@ DESCRIPTION
    and control purposes.  The threads may be stopped, resumed
    and alerted simultaneously.
  
-PATTERNS
-
-
-WARNING
-   
 ****************************************/
-
-#include <SCICore/Thread/Mutex.h>
-#include <vector>
-
-namespace SCICore {
-    namespace Thread {
-	class Thread;
-
 	class ThreadGroup {
 	public:
 	    
@@ -117,6 +111,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.7  1999/09/02 16:52:44  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.6  1999/08/28 03:46:51  sparker
 // Final updates before integration with PSE
 //
