@@ -53,17 +53,17 @@ class MatlabInterfaceSHARE MatrixReceive : public Module
  MatrixOPort *omat2;
 
 public:
-  MatrixReceive(const clString& id);
+  MatrixReceive(const string& id);
   virtual ~MatrixReceive();
   virtual void execute();
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" MatlabInterfaceSHARE Module* make_MatrixReceive(const clString& id) {
+extern "C" MatlabInterfaceSHARE Module* make_MatrixReceive(const string& id) {
   return scinew MatrixReceive(id);
 }
 
-MatrixReceive::MatrixReceive(const clString& id)
+MatrixReceive::MatrixReceive(const string& id)
   : Module("MatrixReceive", id, Source, "DataIO", "MatlabInterface") , hpTCL("hpTCL",id,this)
 {
     imat1=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
@@ -83,7 +83,7 @@ void MatrixReceive::execute()
 {
 /* OBTAIN HOST:PORT INFORMATION */
 
- const char *hport=hpTCL.get()();
+ const char *hport=hpTCL.get().c_str();
  DenseMatrix     *matr;
  MatrixHandle    mIH;
  SparseRowMatrix *smatr;

@@ -53,18 +53,18 @@ class MatlabInterfaceSHARE MatrixSend : public Module
  MatrixOPort *omat;
 
  public:
-  MatrixSend(const clString& id);
+  MatrixSend(const string& id);
   virtual ~MatrixSend();
   virtual void execute();
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" MatlabInterfaceSHARE Module* make_MatrixSend(const clString& id) 
+extern "C" MatlabInterfaceSHARE Module* make_MatrixSend(const string& id) 
 {
   return scinew MatrixSend(id);
 }
 
-MatrixSend::MatrixSend(const clString& id)
+MatrixSend::MatrixSend(const string& id)
 : Module("MatrixSend", id, Filter), hpTCL("hpTCL",id,this)
 //  : Module("MatrixSend", id, Source, "DataIO", "MatlabInterface")
 {
@@ -85,7 +85,7 @@ void MatrixSend::execute()
 
 /* OBTAIN HOST:PORT INFORMATION */
 
- const char *hport=hpTCL.get()();
+ const char *hport=hpTCL.get().c_str();
  DenseMatrix *matr;
  ColumnMatrix *cmatr;
  SparseRowMatrix *smatr;

@@ -9,7 +9,6 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Containers/String.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -30,7 +29,7 @@ namespace Modules {
 
 class MorganSHARE DenseMatrixSQLReader : public Module {
 public:
-  DenseMatrixSQLReader(const clString& id);
+  DenseMatrixSQLReader(const string& id);
 
   virtual ~DenseMatrixSQLReader();
 
@@ -52,12 +51,12 @@ private:
   MatrixOPort* omatrix;
 };
 
-extern "C" MorganSHARE Module* make_DenseMatrixSQLReader(const clString& id) {
+extern "C" MorganSHARE Module* make_DenseMatrixSQLReader(const string& id) {
   return new DenseMatrixSQLReader(id);
 }
 
 #define init_var(name) name##_ui(#name, id, this)
-DenseMatrixSQLReader::DenseMatrixSQLReader(const clString& id)
+DenseMatrixSQLReader::DenseMatrixSQLReader(const string& id)
   : Module("DenseMatrixSQLReader", id, Source),
     init_var(database),
     init_var(hostname),
@@ -74,11 +73,11 @@ DenseMatrixSQLReader::~DenseMatrixSQLReader(){
 }
 
 void DenseMatrixSQLReader::execute() {
-    auto_ptr<Dbd> dbd(connect(database_ui.get()(),
-                              hostname_ui.get()(),
-                              atoi(port_ui.get()()), 
-                              username_ui.get()(), 
-                              password_ui.get()()));
+    auto_ptr<Dbd> dbd(connect(database_ui.get().c_str(),
+                              hostname_ui.get().c_str(),
+                              atoi(port_ui.get().c_str()), 
+                              username_ui.get().c_str(), 
+                              password_ui.get().c_str()));
 
     if(!dbd.get()) {
         fprintf(stderr, "Unable to connect to database\n");
@@ -88,8 +87,8 @@ void DenseMatrixSQLReader::execute() {
     int rows = 0;
 
     // count the number of rows
-    if(!dbd->execute(sql_ui.get()())) {
-        fprintf(stderr, "Can't execute SQL query %s\n", sql_ui.get()());
+    if(!dbd->execute(sql_ui.get().c_str())) {
+        fprintf(stderr, "Can't execute SQL query %s\n", sql_ui.get().c_str());
     }
 
     while(!dbd->at_end()) {
@@ -97,8 +96,8 @@ void DenseMatrixSQLReader::execute() {
         dbd->next_row();
     }
 
-    if(!dbd->execute(sql_ui.get()())) {
-        fprintf(stderr, "Can't execute SQL query %s\n", sql_ui.get()());
+    if(!dbd->execute(sql_ui.get().c_str())) {
+        fprintf(stderr, "Can't execute SQL query %s\n", sql_ui.get().c_str());
     }
 
     int cols = dbd->cols();
