@@ -35,6 +35,7 @@
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
 #include <iostream>
 using std::cerr;
+using std::cin;
 using std::endl;
 
 #define CP_PLANE 0
@@ -173,7 +174,7 @@ CuttingPlane::CuttingPlane(const string& id) :
 {
     // Create the input ports
     // Need a scalar field and a ColorMap
-    infield = scinew FieldIPort( this, "Field",
+    infield = scinew FieldIPort( this, "ScalarField",
 					FieldIPort::Atomic);
     add_iport( infield);
     inColorMap = scinew ColorMapIPort( this, "ColorMap",
@@ -337,6 +338,7 @@ void CuttingPlane::execute()
          
     // calculate the corner and the
     // u and v vectors of the cutting plane
+    
     corner = (center - v1) - v2;
     Vector u = v1 * 2.0,
            v = v2 * 2.0;
@@ -395,7 +397,7 @@ void CuttingPlane::execute()
 	int i, j;
 
 	int haveval=0;
-	double min, max, invrange;
+	double minval, maxval, invrange;
 
 	if (localMinMax) {
 	    // get the min and max values from this slice
@@ -409,13 +411,13 @@ void CuttingPlane::execute()
 // 			sfield->
 // 			  interpolate( p, sval, ix, EPS, EPS, exhaustive)) {
 		    if( interpolate( field, p, sval) ){
-		      if (!haveval) { min=max=sval; haveval=1; }
-		      else if (sval<min) min=sval;
-		      else if (sval>max) max=sval;
+		      if (!haveval) { minval=maxval=sval; haveval=1; }
+		      else if (sval<minval) minval=sval;
+		      else if (sval>maxval) maxval=sval;
 		    }
 
 		}
-	    invrange=(cmapmax-cmapmin)/(max-min);
+	    invrange=(cmapmax-cmapmin)/(maxval-minval);
 	}
 
 	for (i = 0; i < u_num; i++)
@@ -431,7 +433,7 @@ void CuttingPlane::execute()
 // 		sfield->interpolate( p, sval, ix, EPS, EPS, exhaustive)) {
 	    if( interpolate( field, p, sval) ){
 		if (localMinMax)	// use local min/max to scale
-		    sval=(sval-min)*invrange+cmapmin;
+		    sval=(sval-minval)*invrange+cmapmin;
 		matl = cmap->lookup( sval);
 #if 0
 		alpha = 0.8;
@@ -473,10 +475,10 @@ void CuttingPlane::execute()
 
     else
     {
-	double min, max, invrange;
+	double minval, maxval, invrange;
 	get_minmax(field);
-	min = minmax_.first;
-	max = minmax_.second;
+	minval = minmax_.first;
+	maxval = minmax_.second;
 
 	if (localMinMax) {
 	    // get the min and max values from this slice
@@ -494,17 +496,17 @@ void CuttingPlane::execute()
 // 			sfield->
 // 			interpolate( p, sval, ix, EPS, EPS, exhaustive)) {
 		    if( interpolate( field, p, sval) ){
-			if (!haveval) { min=max=sval; haveval=1; }
-			else if (sval<min) min=sval;
-			else if (sval>max) max=sval;
+			if (!haveval) { minval=maxval=sval; haveval=1; }
+			else if (sval<minval) minval=sval;
+			else if (sval>maxval) maxval=sval;
 		    }
 		}
-	    invrange=(cmapmax-cmapmin)/(max-min);
+	    invrange=(cmapmax-cmapmin)/(maxval-minval);
 	} else {
 	    // get the min and max values from the field
 	  get_minmax(field);
-	  min = minmax_.first;
-	  max = minmax_.second;
+	  minval = minmax_.first;
+	  maxval = minmax_.second;
 	}
 	// get the number of contours
 	int contours = num_contours.get();
@@ -523,7 +525,7 @@ void CuttingPlane::execute()
 	    {
 		if (localMinMax) values[i]=i/(contours-1.)*
 				     (cmapmax-cmapmin)+cmapmin;
-		else values[i]=((double)i/(contours - 1)) * (max - min) + min;
+		else values[i]=((double)i/(contours - 1)) * (maxval - minval) + minval;
 		MaterialHandle matl;
 		matl = cmap->lookup( values[i] );
 		col_group[i] = new GeomLines;
@@ -563,10 +565,10 @@ void CuttingPlane::execute()
 			interpolate(field, p4, sval4))
 		    {
 			if (localMinMax) {	// use local min/max to scale
-			    sval1=(sval1-min)*invrange+cmapmin;
-			    sval2=(sval2-min)*invrange+cmapmin;
-			    sval3=(sval3-min)*invrange+cmapmin;
-			    sval4=(sval4-min)*invrange+cmapmin;
+			    sval1=(sval1-minval)*invrange+cmapmin;
+			    sval2=(sval2-minval)*invrange+cmapmin;
+			    sval3=(sval3-minval)*invrange+cmapmin;
+			    sval4=(sval4-minval)*invrange+cmapmin;
 			}			    
 			// find the indices of the values array between smin & smax
 			double smin = Min( Min( sval1, sval2), Min( sval3, sval4)),
@@ -576,14 +578,14 @@ void CuttingPlane::execute()
 			    i1 = RoundUp((smin-cmapmin)*(contours - 1)/(cmapmax-cmapmin));
 			    i2 = RoundDown((smax-cmapmin)*(contours - 1)/(cmapmax-cmapmin));
 			} else {
-			    i1=RoundUp((smin-min)*(contours - 1)/(max - min));
-			    i2=RoundDown((smax-min)*(contours-1)/(max - min));
+			    i1=RoundUp((smin-minval)*(contours - 1)/(maxval - minval));
+			    i2=RoundDown((smax-minval)*(contours-1)/(maxval - minval));
 			}
-			if(!localMinMax && (smin < min || smax > max))
+			if(!localMinMax && (smin < minval || smax > maxval))
 			{
 			    cerr << "OOPS: " << endl;
 			    cerr << "smin, smax=" << smin << " " << smax << endl;
-			    cerr << "min, max=" << min << " " << max << endl;
+			    cerr << "minval, maxval=" << minval << " " << maxval << endl;
 			    continue;
 			}
 			
