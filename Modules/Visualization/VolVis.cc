@@ -11,57 +11,213 @@
  */
 
 
-#include <Classlib/Array2.h>
-#include <Classlib/NotFinished.h>
-#include <Classlib/String.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/ScalarFieldRGchar.h>
-#include <Datatypes/ScalarFieldRGBase.h>
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/ColormapPort.h>
 
 
 #include <Geom/View.h>
+#include <Geom/TCLView.h>
+#include <Geom/TCLGeom.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
-#include <Math/Trig.h>
 
+#include <Geom/GeomOpenGL.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glx.h>
 
 
 #include <Malloc/Allocator.h>
-#include <Math/MinMax.h>
-#include <Math/MiscMath.h>
 #include <TCL/TCLTask.h>
 #include <TCL/TCL.h>
-
-#include <Datatypes/ColormapPort.h>
-
 
 #include <tcl/tcl/tcl.h>
 #include <tcl/tk/tk.h>
 
+#include <Classlib/Array2.h>
+#include <Classlib/NotFinished.h>
+#include <Classlib/String.h>
 #include <iostream.h>
-#include <string.h>
 #include <stdlib.h>
-
-
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glx.h>
-#include <Geom/GeomOpenGL.h>
-
-#include <Geom/TCLView.h>
 
 #include <Modules/Visualization/LevoyVis.h>
 #include "kuswik.h"
 
-#define TRUE 1
-#define FALSE 0
+// the initial view data
 
-const View homeview(Point(2, 0.5, 0.5), Point(0.5, 0.5, 0.5), Vector(.0,.0,1), 45);
+const View homeview
+(Point(2, 0.5, 0.5), Point(0.5, 0.5, 0.5), Vector(.0,.0,1), 45);
+
+// the_interp is the tcl interpreter corresponding to this
+// module
 
 extern Tcl_Interp* the_interp;
+
+// the OpenGL context structure
+
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
+
+
+/**************************************************************
+ *
+ * the Volume Visualization class.  provides for the interface
+ * with TCL and Levoy volume visualization code, as well as
+ * displays the image of a volume.
+ *
+ **************************************************************/
+
+
+class VolVis : public Module {
+
+  // scalar field input port, provides the 3D image data
+  
+  ScalarFieldIPort *iport;
+
+  // color map input port, provides scalar field to color map
+  // if non-existant, white is the color used
+
+  ColormapIPort* colormapport;
+
+  // handle to the scalar field
+  
+  ScalarFieldHandle homeSFHandle;
+
+  // remember last generation of scalar field
+
+  int homeSFgeneration;
+  
+  // OpenGL window size
+  
+  int ViewPort;
+
+  // the size in pixels of output window
+  
+  double x_pixel_size;
+  double y_pixel_size;
+
+  
+
+  // the view: eyepoint, atpoint, up vector, and field of view
+  
+  TCLView iView;
+
+  // background color
+
+  TCLColor ibgColor;
+
+  // raster dimensions
+  
+  TCLint iRasterX, iRasterY;
+
+  // min and max scalar values
+
+  TCLint minSV, maxSV;
+
+  // a list of {x,y}positions {x=scalar value, y=opacity}
+  // associated with the nodes of "Opacity map" widget
+  
+  TCLstring Xarray, Yarray;
+
+  // projection type
+
+  TCLint projection;
+
+  
+  // raster dimensions
+
+  int rasterX, rasterY;
+
+  // background color
+  
+  Color bgColor;
+
+  // arrays with scalar value -- opacity mapping
+  
+  Array1<double> Opacity;
+  Array1<double> ScalarVal;
+  
+  double    Xvalues[CANVAS_WIDTH], Yvalues[CANVAS_WIDTH];
+
+  // the number of nodes
+  
+  int       NodeCount;
+  
+  // the image is stored in this 2d-array.  it contains
+  // pixel values arranged in the order row then column
+
+  Array2<CharColor> Image;
+
+
+
+  // TEMP?  what are these used for anyways?
+
+  Display* dpy;
+
+
+  
+  // mutex to prevent problems related to changes of the
+  // Image array
+
+  Mutex imagelock;
+
+  
+  
+  // initialize an OpenGL window
+  
+  int makeCurrent();
+
+  int Validate ( ScalarFieldRG **homeSFRGrid );
+
+  // place the {x,y}positions supplied by tcl-lists
+  // into the arrays.
+
+  void UpdateTransferFncArray( clString x, clString y );
+
+public:
+
+  // constructor
+  
+  VolVis(const clString& id);
+
+  // copy constructor
+  
+  VolVis(const VolVis&, int deep);
+
+  // destructor
+  
+  virtual ~VolVis();
+
+  // clones the VolVis module
+  
+  virtual Module* clone(int deep);
+
+  // calculate and display the new image
+  
+  virtual void execute();
+
+  // process commands sent from tcl
+  
+  void tcl_command( TCLArgs&, void * );
+
+  // redraw the OpenGL window
+  
+  void redraw_all();
+  
+};
+
+
+
+
+/**************************************************************
+ *
+ * TEMP!
+ *
+ **************************************************************/
+
+static VolVis* current_drawer=0;
+
 
 
 /**************************************************************
@@ -70,557 +226,308 @@ extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
  *
  **************************************************************/
 
-
-class VolVis : public Module {
-
-    ScalarFieldIPort *iport;
-    ScalarFieldOPort *oport;
-    ScalarFieldHandle last_homeSFHandle;	// last input fld
-    ScalarFieldRG* last_homeSFRGrid;		// just a convenience
-
-    double x_pixel_size;
-    double y_pixel_size;
-    double z_pixel_size;
-    int x_win_min;
-    int y_win_min;
-    int drawing;
-
-    // the image is stored in this 2d-array.  it contains
-    // pixel values arranged in the order row then column
-    Array2<char> image;
-
-    Array2<CharColor> Image;
-
-    clString myid;
-    Tk_Window tkwin;
-    Window win;
-    Display* dpy;
-    GLXContext cx;
-    int tcl_execute;
-public:
-  /*&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&*/
-
-    // holds the value of current viewing vector
-    View myview;
-
-    // the size in pixels of output window
-    
-    int rasterX, rasterY;
-
-    // newly added
-    TCLint interactiveRasterX, interactiveRasterY;
-    TCLint curX, curY;
-    TCLint minSV, maxSV;
-    TCLdouble xpos, ypos;
-
-    TCLdouble node1x, node1y;
-    TCLdouble node2x, node2y;
-    TCLdouble node3x, node3y;
-    TCLdouble node4x, node4y;
-    TCLdouble node5x, node5y;
-    TCLdouble t1x, t1y;
-
-    double Xvals[5];
-    double Yvals[5];
-    
-    Vector rayIncrementU, rayIncrementV;
-//    double rayStep;
-    Point eye;
-    double farthest;
-
-    // holds the values supplied by the tcl interface
-    TCLView interactiveView;
-
-    // holds the values of the last interactive view
-    // (so that no execution takes place if the view didn't
-    // change)
-    View lastInteractiveView;
-  
-    ColormapIPort* colormapport;
-
-    Color backgroundColor;
-
-    TCLint interactiveRed;
-    TCLint interactiveGreen;
-    TCLint interactiveBlue;
-
-    int cmapGeneration;
-
-  /*&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&*/
-  
-    VolVis(const clString& id);
-    VolVis(const VolVis&, int deep);
-    virtual ~VolVis();
-    virtual Module* clone(int deep);
-    virtual void execute();
-    void set_str_vars();
-    void tcl_command( TCLArgs&, void * );
-    void redraw_all();
-    int makeCurrent();
-
-    int ValidHandle ( ScalarFieldHandle& homeSFHandle,
-			 ScalarFieldRG **homeSFRGrid,
-		     ColormapHandle& cmap, int& cmapFlag );
-  };
-
-
-static VolVis* current_drawer=0;
-
 extern "C" {
-Module* make_VolVis(const clString& id)
-{
-    return scinew VolVis(id);
-}
+  Module* make_VolVis(const clString& id)
+    {
+      return scinew VolVis(id);
+    }
 };
 
+
+
+
+/**************************************************************
+ *
+ * constructor
+ *
+ **************************************************************/
+
 VolVis::VolVis(const clString& id)
-: Module("VolVis", id, Source), tcl_execute(0),
-  interactiveView("interactiveView", id, this),
-  interactiveRasterX("rasterX", id, this),
-  interactiveRasterY("rasterY", id, this),
-  curX("curX", id, this),
-  curY("curY", id, this),
+: Module("VolVis", id, Source),
+  iView("View", id, this),
+  iRasterX("rasterX", id, this),
+  iRasterY("rasterY", id, this),
   minSV("minSV", id, this),
   maxSV("maxSV", id, this),
-  xpos("xpos", id, this),
-  ypos("ypos", id, this),
-  node1x("n1x", id, this),
-  node2x("n2x", id, this),
-  node3x("n3x", id, this),
-  node4x("n4x", id, this),
-  node5x("n5x", id, this),
-  node1y("n1y", id, this),
-  node2y("n2y", id, this),
-  node3y("n3y", id, this),
-  node4y("n4y", id, this),
-  node5y("n5y", id, this),
-  t1x("t1x", id, this),
-  t1y("t1y", id, this),
-  interactiveRed("red", id, this),
-  interactiveGreen("green", id, this),
-  interactiveBlue("blue", id, this),
-  drawing(0)
+  ibgColor("bgColor", id, this),
+  projection("project", id, this),
+  Xarray("Xarray", id, this),
+  Yarray("Yarray", id, this)
 {
-  // Create the input port
-    colormapport=scinew ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
-    add_iport(colormapport);
+  // Create a Colormap input port
+  
+  colormapport=scinew ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
+  add_iport(colormapport);
 
-    // Create the input port
-    myid=id;
-    iport = scinew ScalarFieldIPort(this, "HOMESFRGRID", ScalarFieldIPort::Atomic);
-    add_iport(iport);
+  // Create a ScalarField input port
+  
+  iport = scinew ScalarFieldIPort(this, "RGScalarField", ScalarFieldIPort::Atomic);
+  add_iport(iport);
 
-//    rasterX = 64;
-//    rasterY = 128;
+  // initialize raster size
+  
+  iRasterX.set( 100 );
+  iRasterY.set( 100 );
 
-    rasterX = rasterY = 100;
-    interactiveRasterX.set( rasterX );
-    interactiveRasterY.set( rasterY );
+  iView.set( homeview );
 
-    myview = homeview;
-    lastInteractiveView = homeview;
-    interactiveView.set( myview );
+  // initialize OpenGL window size (viewport size)
+  
+  ViewPort = 600;
 
-    Color temp( 0, 0, 0 );
-    backgroundColor = temp;
+  x_pixel_size = 1;
+  y_pixel_size = 1;
 
-    curX.set( 0 );
-    curY.set( 0 );
+  Xarray.set("0 40 55 70 200");
+  Yarray.set("200 200 150 200 200");
 
-    minSV.set( 0 );
-    maxSV.set( 0 );
+  Color temp(0.,0.,0.);
+  ibgColor.set( temp );
 
-    Xvals[0] = 0;
-    Yvals[0] = 202;
+  homeSFgeneration = -1;
 
-    Xvals[1] = 40;
-    Yvals[1] = 202;
-    
-    Xvals[2] = 55;
-    Yvals[2] = 150;
+//  minSV.set(0);
+//  maxSV.set(121);
 
-    Xvals[3] = 70;
-    Yvals[3] = 202;
+}
 
-    Xvals[4] = 202;
-    Yvals[4] = 202;
 
-    node1x.set(0);
-    node1y.set(202);
 
-    node2x.set(40);
-    node2y.set(202);
-
-    node3x.set(55);
-    node3y.set(150);
-
-    node4x.set(70);
-    node4y.set(202);
-
-    node5x.set(202);
-    node5y.set(202);
-  }
+/**************************************************************
+ *
+ * copy constructor
+ *
+ **************************************************************/
 
 VolVis::VolVis(const VolVis& copy, int deep)
-: Module(copy, deep), tcl_execute(0), drawing(0),
-  interactiveView("interactiveView", id, this),
-  interactiveRasterX("rasterX", id, this),
-  interactiveRasterY("rasterY", id, this),
-  curX("curX", id, this),
-  curY("curY", id, this),
+: Module(copy, deep),
+  iView("View", id, this),
+  iRasterX("rasterX", id, this),
+  iRasterY("rasterY", id, this),
   maxSV("maxSV", id, this),
   minSV("minSV", id, this),
-  xpos("xpos", id, this),
-  ypos("ypos", id, this),
-  node1x("n1x", id, this),
-  node2x("n2x", id, this),
-  node3x("n3x", id, this),
-  node4x("n4x", id, this),
-  node5x("n5x", id, this),
-  node1y("n1y", id, this),
-  node2y("n2y", id, this),
-  node3y("n3y", id, this),
-  node4y("n4y", id, this),
-  node5y("n5y", id, this),
-  t1x("t1x", id, this),
-  t1y("t1y", id, this),
-  interactiveRed("red", id, this),
-  interactiveGreen("green", id, this),
-  interactiveBlue("blue", id, this)
+  ibgColor("bgColor", id, this),
+  projection("project", id, this),
+  Xarray("Xarray", id, this),
+  Yarray("Yarray", id, this)
 {
-    NOT_FINISHED("VolVis::VolVis");
+  NOT_FINISHED("VolVis::VolVis");
 }
+
+
+
+/**************************************************************
+ *
+ * destructor
+ *
+ **************************************************************/
 
 VolVis::~VolVis()
 {
 }
 
+
+
+/**************************************************************
+ *
+ * clones this class
+ *
+ **************************************************************/
+
 Module*
 VolVis::clone(int deep)
 {
-    return scinew VolVis(*this, deep);
+  return scinew VolVis(*this, deep);
 }
 
+
+
+/**************************************************************
+ *
+ * make sure that the scalar field handle points to valid
+ * data.  initialize some variables.
+ *
+ **************************************************************/
+
 int
-VolVis::ValidHandle ( ScalarFieldHandle &homeSFHandle,
-			 ScalarFieldRG **homeSFRGrid, ColormapHandle &cmap,
-			int& cmapflag)
+VolVis::Validate ( ScalarFieldRG **homeSFRGrid )
 {
-  // get the scalar field handle
-  iport->get(homeSFHandle);
+  double min, max;
   
+  // make sure TCL variables are updated
+  
+  reset_vars();
+
+  // get the scalar field handle
+  
+  iport->get(homeSFHandle);
+
   // Make sure this is a valid scalar field
 
   if ( ! homeSFHandle.get_rep() )
     return 0;
 
-  if ( lastInteractiveView == interactiveView.get() )
-    cout << "the view hasn't changed\n";
-  else
-    cout << "view is changed!!!\n";
-
-
-  Color c( interactiveRed.get()/255.0, interactiveGreen.get()/255.0,
-	  interactiveBlue.get()/255.0 );
-
-  // if tcl did not make it execute then why execute?
-  // if we are using the same scalar field like last time, why execute?
-
-  // newly added
-  // check if the interactive raster size has changed
-
-  if ( ( !tcl_execute ) &&
-      ( homeSFHandle.get_rep() == last_homeSFHandle.get_rep() ) &&
-      ( lastInteractiveView == interactiveView.get() )          &&
-      ( rasterX == interactiveRasterX.get() )                   &&
-      ( rasterY == interactiveRasterY.get() )                   &&
-      ( backgroundColor == c                ) )
-    return 0;
-//      ( cmap->generation == cmapGeneration  ) )
-  
-//  cmapGeneration = cmap->generation;
-
   // make sure scalar field is a regular grid
+  
   if ( ( (*homeSFRGrid) = homeSFHandle->getRG()) == 0)
     return 0;
 
-  // i've got to assign min and max Scalar values somewhere....
-  // i'll do it here since i got the sfhandle
-
-  int max=-9999;
-  int min=9999;
-	for (int i=0; i<(*homeSFRGrid)->nx; i++)
-	  for (int j=0; j<(*homeSFRGrid)->ny; j++)
-	    for (int k=0; k<(*homeSFRGrid)->nz; k++) {
-	      char c=(char)(*homeSFRGrid)->grid(i,j,k);
-	      if (c>max)max=c;
-	      if (c<min)min=c;
-//      fout << c;
-	    }
-//	cout << "Max value from Scalar field was: " << max << "\n";
-//	cout << "Min value from Scalar field was: " << min << "\n";
-
-  minSV.set( min );
-  maxSV.set( max );
-
-  // must have a colormap in order to do anything
-  if ( colormapport->get(cmap) )
-    cmapflag = 1;
-
-    return 1;
-}
-
-void
-VolVis::execute()
-{
-  ScalarFieldHandle homeSFHandle;
-  ScalarFieldRG *homeSFRGrid;
-  ColormapHandle cmap;
-
-  int cmapflag = 0;
-  // make sure that the input port is valid
-
-  // make SURE TO RESET VARS FROM TCL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  reset_vars();
-
-  if ( ! ValidHandle ( homeSFHandle, &homeSFRGrid, cmap, cmapflag ) )
-    return;
-
-  lastInteractiveView = interactiveView.get();
-  myview = lastInteractiveView;
-
-  // newly added
-
-  rasterX = interactiveRasterX.get();
-  rasterY = interactiveRasterY.get();
-
-  at();
-  cout << "rasters: " << rasterX << " " << rasterY << endl;
-
-  // newly added
-
-  Color ccc( interactiveRed.get()/255.0, interactiveGreen.get()/255.0,
-	    interactiveBlue.get()/255.0 );
-  backgroundColor = ccc;
-	 
-  // initialize the image array
+  if ( homeSFgeneration != homeSFHandle->generation )
+  {
+    // remember the generation
   
-  image.newsize( rasterY, rasterX );
-  image.initialize(0);
+    homeSFgeneration = homeSFHandle->generation;
 
-  CharColor fff;
+    // get the min, max values of the new field
 
-  Image.newsize( rasterY, rasterX );
-  Image.initialize(fff);
-  
-  // do the work => trace each ray
+    homeSFHandle->get_minmax( min, max );
 
-  Levoy levoyModule ( homeSFRGrid );
-  levoyModule.AssignRaster ( rasterX, rasterY );
+    // set the tcl/tk min and max scalar values
 
-  cout << "this is the cmapflag" << cmapflag << endl;
-  levoyModule.colormapFlag = cmapflag;
-  levoyModule.cmap = cmap;
-
-  levoyModule.minSV = minSV.get();
-  levoyModule.maxSV = maxSV.get();
-  
-  cout << "before trace rays\n";
-
-  at();
-
-  cout << "dim1 : " << Image.dim1();
-  cout << "\n dim2 : " << Image.dim2() << endl;
-  
-  levoyModule.TraceRays ( myview, image, Image, backgroundColor,
-			 Xvals, Yvals );
-
-  cout << "after trace rays\n";
-
-  cout << "dim1 : " << Image.dim1();
-  cout << "\n dim2 : " << Image.dim2() << endl;
-  
-  // memorize the last scalar field => will not execute
-  // with no purpose
-  
-  last_homeSFHandle=homeSFHandle;
-  last_homeSFRGrid=homeSFRGrid;
-    
-    Point pmin;
-    Point pmax;
-
-    x_pixel_size = 1;
-    y_pixel_size = 1;
-    z_pixel_size = 1;
-
-    x_win_min = 0;
-    y_win_min = rasterY;
-
-  cout << "before redraw all\n";
-  at();
-    redraw_all();
-  cout << "after redreaw sakjdl\n";
-  at();
-
-    // tcl has executed
-    tcl_execute=0;
-}
-
-/*
- * redraws but does not recalculate everything
- */
-
-void
-VolVis::redraw_all()
-{
-  if (!makeCurrent()) return;
-
-//  glClearColor(0, 1, 0, 0);
-  glClearColor( backgroundColor.r(), backgroundColor.g(), backgroundColor.b(), 0 );
-  
-  glClear(GL_COLOR_BUFFER_BIT);
-  
-  // if the handle was empty, just flush the buffer (to clear the window)
-    // and return.
-  
-  if (!last_homeSFHandle.get_rep())
-    {
-      glFlush();
-      glXMakeCurrent(dpy, None, NULL);
-      TCLTask::unlock();
-      return;
-    }
-  
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  
-  glPixelZoom(x_pixel_size, y_pixel_size);
-  
-  glRasterPos2i( x_pixel_size, y_pixel_size * (rasterY+1) );
-  
-  int loop;
-
-
-      Color c(1, 0, 1);
-
-#if 0  
-  for ( loop = 0; loop < rasterX/2; loop++ )
-    {
-      image(loop, 10) = (char)50;
-      image(loop, 50) = (char)50;
-
-    }
-#endif  
-
-  
-//  char *pixels=&(image(0,0));
-
-  void *joy = &(Image(0,0));
-  char *pixels = (char*) joy;
-
-  // make sure that the routine to draw pixels is given the raster y first.
-  // it wants width, then height
-  
-//  glDrawPixels( rasterX, rasterY, GL_LUMINANCE, GL_UNSIGNED_BYTE, pixels );
-  glDrawPixels( rasterX, rasterY, GL_RGB, GL_UNSIGNED_BYTE, pixels );
-  
-  int errcode;
-  while((errcode=glGetError()) != GL_NO_ERROR){
-    cerr << "plot_matrices got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+    minSV.set( int( min ) );
+    maxSV.set( int( max ) );
   }
-  glXMakeCurrent(dpy, None, NULL);
-  TCLTask::unlock();
-}	    
-
-void
-VolVis::tcl_command(TCLArgs& args, void* userdata) {
-
-  if (args[1] == "redraw_all" && !drawing)
-      {
-	drawing=1;
-	reset_vars();
-	redraw_all();
-	drawing=0;
-      }
-    else if ( args[1] == "hope" )
-      {
-	reset_vars();
-	cout <<"hello says hope " <<  t1x.get() << endl;
-	cout <<"hello says hope " <<  t1y.get() << endl;
-      }
-  
-    else if ( args[1] == "wanna_exec" )
-      {
-	reset_vars();
-	tcl_execute = 1;
-	want_to_execute();
-      }
-    else if ( args[1] == "incredible" )
-      {
-	reset_vars();
-	int x, y, width;
-	
-	// the empty parentheses after the args[1-3] are used
-	// to convert from clString to char*
-
-	if ( !args[2].get_int(x) )
-	  {
-	    args.error("Error parsing X");
-	    return;
-	  }
-	
-	if ( !args[3].get_int(y) )
-	  {
-	    args.error("Error parsing Y");
-	    return;
-	  }
-	
-	if ( !args[4].get_int(width) )
-	  {
-	    args.error("Error parsing width");
-	    return;
-	  }
-	
-	xpos.set( 1.0 * x * (maxSV.get() - minSV.get()) / width * 1.0 );
-	ypos.set( 1.0 * (width - y) / width );
-      }
-    else if ( args[1] == "get_data" )
-      {
-      reset_vars();
-
-      cout << node1x.get() << endl;
-      cout << node1y.get() << endl;
-
-      cout << node2x.get() << endl;
-      cout << node2y.get() << endl;
-      
-      cout << node3x.get() << endl;
-      cout << node3y.get() << endl;
-      
-      cout << node4x.get() << endl;
-      cout << node4y.get() << endl;
-
-      Xvals[0] = node1x.get();
-      Xvals[1] = node2x.get();
-      Xvals[2] = node3x.get();
-      Xvals[3] = node4x.get();
-      Xvals[4] = node5x.get();
-
-      Yvals[0] = node1y.get();
-      Yvals[1] = node2y.get();
-      Yvals[2] = node3y.get();
-      Yvals[3] = node4y.get();
-      Yvals[4] = node5y.get();
-    }
-    else
-    {
-      Module::tcl_command(args, userdata);
-    }
+    
+  return 1;
 }
 
-/* this procedure initializes an open gl window. */
+
+
+/**************************************************************
+ *
+ * Parses the strings x, y which are lists of integers
+ * corresponding to nodes of the transfer function.
+ *
+ **************************************************************/
+
+void
+VolVis::UpdateTransferFncArray( clString x, clString y )
+{
+  int i, len, position;
+  char * array;
+  char * suppl = new char[CANVAS_WIDTH*4+1];
+  char * form = new char[64];
+
+  cerr << "The 2 strings are: #@\n";
+  cerr << x << endl;
+  cerr << y << endl;
+
+  // clear the scalar value and opacity arrays
+
+  Opacity.remove_all();
+  ScalarVal.remove_all();
+
+  // read in an integer and store the rest of the string
+  // in suppl
+  
+  sprintf( form, "%%d %%%dc", CANVAS_WIDTH*4+1 );
+
+  // clear suppl
+
+  for ( i = 0; i < CANVAS_WIDTH*4+1; i++ )
+    suppl[i] = '\0';
+  
+  /* read in the x-position */
+
+  array = x();
+  NodeCount = 0;
+  len   = 1;
+
+  while ( len )
+    {
+      sscanf( array, form, &position, suppl );
+      strcpy( array, suppl );
+
+      len = strlen( suppl );
+
+      // clear the last few digits of suppl because %c does
+      // not attach a null character
+
+      if ( len - 5 > 0 )
+	for ( i = len - 1; i >= len - 5; i-- )
+	  suppl[i] = '\0';
+      else
+	for ( i = len - 1; i >= 0; i-- )
+	  suppl[i] = '\0';
+
+      ScalarVal.add( 1.0 * position / CANVAS_WIDTH *
+	( maxSV.get() - minSV.get() ) + minSV.get() );
+      
+      Xvalues[NodeCount++] = 1.0 * position / CANVAS_WIDTH *
+	( maxSV.get() - minSV.get() ) + minSV.get();
+
+    }
+
+  /* read in the y-position */
+
+  array = y();
+  NodeCount = 0;
+  len   = 1;
+
+  while ( len )
+    {
+      sscanf( array, form, &position, suppl );
+      strcpy( array, suppl );
+
+      len = strlen( suppl );
+
+      // clear the last few digits of suppl
+
+      if ( len - 5 > 0 )
+	for ( i = len - 1; i >= len - 5; i-- )
+	  suppl[i] = '\0';
+      else
+	for ( i = len - 1; i >= 0; i-- )
+	  suppl[i] = '\0';
+
+      // in tcl, the y value increases as one moves down
+
+      Opacity.add( 1.0 * ( CANVAS_WIDTH - position )
+	/ ( CANVAS_WIDTH ) );
+
+      Yvalues[NodeCount++] = 1.0 * ( CANVAS_WIDTH - position )
+	/ ( CANVAS_WIDTH );
+    }
+
+  // check the 2 arrays (TEMP)
+
+  cerr << "The arrays are #" << NodeCount << ":\n";
+  
+  for ( i = 0; i < NodeCount; i++ )
+    {
+      cerr << i << ": ( " << Xvalues[i] << ", " << Yvalues[i]
+	<< " )\n";
+    }
+
+  cerr << "SV @# " << ScalarVal.size() << endl;
+  for ( i = 0; i < ScalarVal.size(); i++ )
+    cerr << i << " #@: " << ScalarVal[i] << endl;
+
+  cerr << "Opacity @# " << Opacity.size() << endl;
+  for ( i = 0; i < Opacity.size(); i++ )
+    cerr << i << " #@: " << Opacity[i] << endl;
+
+}
+
+
+
+
+/**************************************************************
+ *
+ * Initializes an OpenGL window.
+ *
+ **************************************************************/
 
 int
 VolVis::makeCurrent() {
+
+  // TEMP!!!  this used to be in the class; but i didn't need
+  // it!  so, i moved these declarations down here...
+
+  Tk_Window tkwin;
+  Window win;
+  GLXContext cx;
+
 
   // lock a mutex
   TCLTask::lock();
@@ -629,10 +536,7 @@ VolVis::makeCurrent() {
   clString myname(clString(".ui")+id+".gl.gl");
 
   // find the tk window token for the window
-
   tkwin=Tk_NameToWindow(the_interp, myname(), Tk_MainWindow(the_interp));
-
-//  cout << "my name returned " << myname() << endl;
 
   // check if a token was associated
   if(!tkwin)
@@ -651,6 +555,7 @@ VolVis::makeCurrent() {
   win=Tk_WindowId(tkwin);
 
   // create an open gl context
+  // this command prints "cx=some_number" something to the screen
   cx=OpenGLGetContext(the_interp, myname());
 
   // check if it was created
@@ -664,19 +569,19 @@ VolVis::makeCurrent() {
   current_drawer=this;
 
   // sets up a bunch of stuff for OpenGL
-  
   if ( ! glXMakeCurrent(dpy, win, cx) )
     cerr << "*glXMakeCurrent failed.\n";
 
   // Clear the screen...
-  
-  glViewport(0, 0, 599, 599);
-  
+  glViewport( 0, 0, ViewPort-1, ViewPort-1 );
+
   glMatrixMode(GL_PROJECTION);
-  
+
   glLoadIdentity();
-  
-  glOrtho(0, 599, 599, 0, -1, 1);
+
+  // Set up an orthogonal projection to the screen
+  // of size ViewPort
+  glOrtho(0, ViewPort-1, ViewPort-1, 0, -1, 1);
   
   glMatrixMode(GL_MODELVIEW);
   
@@ -684,3 +589,169 @@ VolVis::makeCurrent() {
   
   return 1;
 }
+
+
+
+/**************************************************************
+ *
+ * redraws but does not recalculate everything
+ *
+ **************************************************************/
+
+void
+VolVis::redraw_all()
+{
+  if ( ! makeCurrent() ) return;
+
+  // clear the GLwindow to background color
+
+  glClearColor( bgColor.r(), bgColor.g(), bgColor.b(), 0 );
+  
+  glClear(GL_COLOR_BUFFER_BIT);
+  
+  // if the handle was empty, just flush the buffer (to clear the window)
+  // and return.
+  
+  if (! homeSFHandle.get_rep())
+    {
+      glFlush();
+      glXMakeCurrent(dpy, None, NULL);
+      TCLTask::unlock();
+      return;
+    }
+
+  // lock because Image will be used
+
+  imagelock.lock();
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  
+  glPixelZoom(x_pixel_size, y_pixel_size);
+  
+  glRasterPos2i( x_pixel_size, y_pixel_size * (rasterY+1) );
+  
+  Color c(1, 0, 1);
+
+  char *pixels=(char *) ( &(Image(0,0)) );
+
+  // make sure that the routine to draw pixels is given the raster y first.
+  // it wants width, then height
+  
+  glDrawPixels( rasterX, rasterY, GL_RGB, GL_UNSIGNED_BYTE, pixels );
+
+  imagelock.unlock();
+
+  int errcode;
+  while((errcode=glGetError()) != GL_NO_ERROR){
+    cerr << "plot_matrices got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+  }
+  glXMakeCurrent(dpy, None, NULL);
+
+
+  TCLTask::unlock();
+}	    
+
+
+
+/**************************************************************
+ *
+ * if the scalar field is valid, calculates the new image.
+ *
+ **************************************************************/
+
+void
+VolVis::execute()
+{
+  ScalarFieldRG *homeSFRGrid;
+  ColormapHandle cmap;
+  CharColor temp;
+  Array2<CharColor> * tempImage;
+
+  // execute if the input ports are valid and if it is necessary
+  // to execute
+
+  if ( ! Validate( &homeSFRGrid ) )
+    return;
+
+  cerr << "        EXECUTING\n";
+
+  // retrieve the scalar value-opacity values, and store them
+  // in an array
+
+  UpdateTransferFncArray( Xarray.get(), Yarray.get() );
+
+  // instantiate the levoy class
+
+  Levoy levoyModule ( homeSFRGrid, colormapport,
+		     ibgColor.get() * ( 1. / 255 ), ScalarVal, Opacity );
+
+  // TEMP!!!!!!  sometimes a seg fault happens here
+// should be here if i don't want a seg fault.  talk
+  // to Steve on how in the world can i fix it.  the seg
+  // fault happens when i click on 'ui' when it is calcing.
+  // TEMP!!! imagelock.lock();
+
+  // calculate the new image
+
+  // LOCK_PROB:
+  // if i place  "imagelock.lock();" here, and unlock it after
+  // setting the raster sizes, sr simply stalls and after performing
+  // the calculation ( it happily just sits there...)
+  
+  tempImage = levoyModule.TraceRays ( iView.get(),
+			 iRasterX.get(), iRasterY.get(), projection.get() );
+
+  // LOCK_PROB:
+  // if i leave  "imagelock.lock();" here, and during the calculation
+  // i move to my other virtual environment, it gives
+  // me an Array2 dimensions error!
+  // basically, it dies when i try to redraw!!!!!!!!!!!!!!!!!!!!!!!!
+
+  
+  // lock it because the Image array will be modified
+
+  imagelock.lock();
+
+  Image = *tempImage;
+
+  // also, the bgColor accessed by the redraw_all fnc
+  // can now be changed.
+
+  bgColor = ibgColor.get() * ( 1. / 255 );
+  rasterX = iRasterX.get();
+  rasterY = iRasterY.get();
+
+  // the Image array has been modified, it is now safe to let
+  // go of the thread
+  
+  imagelock.unlock();
+
+  delete tempImage;
+
+  // TEMP!  what does this do?
+
+  TCL::execute(id+" redraw_when_idle");
+  
+}
+
+
+
+
+/**************************************************************
+ *
+ * processes requests initiated by tcl module code
+ *
+ **************************************************************/
+
+void
+VolVis::tcl_command(TCLArgs& args, void* userdata) {
+  
+  if ( args[1] == "redraw_all" )
+      redraw_all();
+  else if ( args[1] == "wanna_exec" )
+    want_to_execute();
+  else
+      Module::tcl_command(args, userdata);
+}
+
+
