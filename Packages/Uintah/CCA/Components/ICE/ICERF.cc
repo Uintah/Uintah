@@ -1122,7 +1122,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       int indx = matl->getDWIndex();
       new_dw->get(Tdot[m],    lb->Tdot_CCLabel,    indx,patch, gn,0);  
-      new_dw->get(vol_frac[m],lb->vol_frac_CCLabel,indx,patch, gn,0);
+      new_dw->get(vol_frac[m],lb->vol_frac_CCLabel,indx,patch, gac, 1);
       new_dw->get(uvel_FC[m], lb->uvel_FCMELabel,  indx, patch,gac, 1);   
       new_dw->get(vvel_FC[m], lb->vvel_FCMELabel,  indx, patch,gac, 1);   
       new_dw->get(wvel_FC[m], lb->wvel_FCMELabel,  indx, patch,gac, 1);
