@@ -22,29 +22,22 @@
 #include <Geom/Geom.h>
 #include <Geom/Group.h>
 #include <Geom/Tetra.h>
+#include <TCL/TCLvar.h>
+#include <iostream.h>
+#include <strstream.h>
 
-typedef struct _list
-{
-        int tetra;
-        struct _list * next;
-} LIST;
-
-typedef LIST * LPTR;
-
-typedef LIST QUEUE;
-typedef QUEUE * QPTR;
 
 class MeshView : public Module {
     MeshIPort* inport;
     GeometryOPort* ogeom;
     
-    int numLevels, oldLev;
-    int seedTet, oldSeed;
-    double Xmin, Xmax, Ymin, Ymax, Zmin, Zmax;
-    double clipX, oldClipX, clipY, oldClipY, clipZ, oldClipZ;
+    TCLint numLevels, seedTet;
+    int oldLev, oldSeed;
+    TCLdouble clipX, clipY, clipZ;
+    double oldClipX, oldClipY, oldClipZ;
     int deep;
-    int allLevels;
-    int numShare, oldShare;
+    TCLint allLevels;
+//    int numShare, oldShare;
     Array1<int> levels;
 
     MaterialHandle mat1;
@@ -67,62 +60,14 @@ static Module* make_MeshView(const clString& id)
 
 static RegisterModule db1("Fields", "MeshView", make_MeshView);
 static RegisterModule db2("Visualization", "MeshView", make_MeshView);
-
 static clString mesh_name("Mesh");
 
 MeshView::MeshView(const clString& id)
-: Module("MeshView", id, Filter)
+: Module("MeshView", id, Filter), numLevels("numLevels", id, this),
+  seedTet("seedTet", id, this), clipX("clipX", id, this), 
+  clipY("clipY", id, this), clipZ("clipZ", id, this),
+  allLevels("allLevels", id, this)
 {
-#ifdef OLDUI
-    numLevels=0;
-    levSlide = new MUI_slider_int("Number of Levels",
-				  &numLevels,
-				  MUI_widget::Immediate, 1);
-    add_ui(levSlide);
-    deep = 4;
-    levSlide -> set_minmax(0, deep);
-
-    oldSeed = -1;
-    seedTet = 0;
-    seedSlide = new MUI_slider_int("Starting Tetra", &seedTet,
-				   MUI_widget::Immediate, 1);
-    add_ui(seedSlide);	
-
-    oldShare = 1;
-    numShare = 3;
-    MUI_slider_int *tmp = new MUI_slider_int("Shared Verts", &numShare,
-					     MUI_widget::Immediate, 1);
-    add_ui(tmp);
-    tmp -> set_minmax(1,3);
-
-    oldClipX = Xmax;
-    clipX = Xmin;
-    MUI_slider_real *XclipSlide = new MUI_slider_real("X Clipping plane", 
-						     &clipX,
-						     MUI_widget::Immediate, 1);
-    add_ui(XclipSlide);
-    XclipSlide -> set_minmax(Xmin, Xmax);
-
-    oldClipY = Ymax;
-    clipY = Ymin;
-    MUI_slider_real *YclipSlide = new MUI_slider_real("Y Clipping plane", 
-						     &clipY,
-						     MUI_widget::Immediate, 1);
-    add_ui(YclipSlide);
-    YclipSlide -> set_minmax(Ymin, Ymax);
-
-    oldClipZ = Zmax;
-    clipZ = Zmin;
-    MUI_slider_real *ZclipSlide = new MUI_slider_real("Z Clipping plane", 
-						     &clipZ,
-						     MUI_widget::Immediate, 1);
-    add_ui(ZclipSlide);
-    ZclipSlide -> set_minmax(Zmin, Zmax);
-
-    allLevels = 1;
-    add_ui(new MUI_onoff_switch("Show all levels", &allLevels,
-				MUI_widget::Immediate));
-#endif
 
     inport=new MeshIPort(this, "Mesh", MeshIPort::Atomic);
     add_iport(inport);
@@ -130,6 +75,9 @@ MeshView::MeshView(const clString& id)
     // Create the output port
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
+
+	oldSeed = -1; 
+	oldClipY = 10000; oldClipX = 10000; oldClipZ = 10000;
 
     // Set up Material Properties
     mat1=new Material(Color(.5, .5, .5), Color(.5, .5, .5),
@@ -139,7 +87,10 @@ MeshView::MeshView(const clString& id)
 }	
 
 MeshView::MeshView(const MeshView& copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep), numLevels("numLevels", id, this),
+  seedTet("seedTet", id, this), clipX("clipX", id, this), 
+  clipY("clipY", id, this), clipZ("clipZ", id, this),
+  allLevels("allLevels", id, this)
 {
     NOT_FINISHED("MeshView::MeshView");
 }
@@ -158,49 +109,74 @@ void MeshView::execute()
     MeshHandle mesh;
     if(!inport->get(mesh))
 	return;
+    Point bmin, bmax;
+    mesh->get_bounds(bmin, bmax);
+    char buf[1000];
+    ostrstream str(buf, 1000);
+    str << "MeshView_set_bounds " << id << " " << bmin.x() << " " << bmax.x() << " " << bmin.y() << " " << bmax.y() << " " << bmin.z() << " " << bmax.z() << endl;
+
+    TCL::execute(str.str());
     
     ogeom->delAll();
 
-    if ((oldSeed != seedTet) || (numShare != oldShare)){
+    if (oldSeed != seedTet.get()) 
+    {
 	makeLevels(mesh);
-#ifdef OLDUI
-	levSlide -> set_minmax(0, deep);
-#endif
-	oldSeed = seedTet;
-	oldShare = numShare;
+	ostrstream str3(buf, 1000);
+	str3 << "MeshView_set_minmax_nl " << id << " " << 0 << " " << deep << endl;
+	TCL::execute(str3.str());
+	oldSeed = seedTet.get();
     }
 
-    oldLev = numLevels;
-    oldClipX = clipX;
-    oldClipY = clipY;
-    oldClipZ = clipZ;
+    oldLev = numLevels.get();
+    oldClipX = clipX.get();
+    oldClipY = clipY.get();
+    oldClipZ = clipZ.get();
     GeomGroup *othGroup = new GeomGroup;
     GeomGroup *levGroup = new GeomGroup;
     GeomGroup *group = new GeomGroup;
     int numTetra=mesh->elems.size();
-#ifdef OLDUI
-    seedSlide -> set_minmax(0, numTetra - 1);
-#endif
+
+    ostrstream str2(buf, 1000);
+    str2 << "MeshView_set_minmax_numTet " << id << " " << 0 << " " << numTetra - 1 << endl;
+    TCL::execute(str2.str());
+
+    int aL, nL;
+    double cX, cY, cZ;
+    aL = allLevels.get();
+    nL = numLevels.get() + 1;
+    cX = clipX.get();
+    cY = clipY.get();
+    cZ = clipZ.get();
+
     for (int i = 0; i < numTetra; i++){
-	if (((allLevels == 0) && (levels[i] == numLevels)) ||
-	    ((allLevels == 1) && (levels[i] <= numLevels))) {
+	if (((aL == 0) && (levels[i] == nL)) ||
+	    ((aL == 1) && (levels[i] <= nL))) 
+	{
 	    Element* e=mesh->elems[i];
 	    Point p1(mesh->nodes[e->n[0]]->p);
 	    Point p2(mesh->nodes[e->n[1]]->p);
 	    Point p3(mesh->nodes[e->n[2]]->p);
 	    Point p4(mesh->nodes[e->n[3]]->p);
 
-	    if (((p1.x() >= clipX) && (p2.x() >= clipX) && (p3.x() >= clipX) &&
-		 (p4.x() >= clipX)) &&
-		((p1.y() >= clipY) && (p2.y() >= clipY) && (p3.y() >= clipY) &&
-		 (p4.y() >= clipY)) &&
-		((p1.z() >= clipZ) && (p2.z() >= clipZ) && (p3.z() >= clipZ) &&
-		 (p4.z() >= clipZ))) {
+	    if (((p1.x() >= cX) && (p2.x() >= cX) && (p3.x() >= cX) &&
+		 (p4.x() >= cX)) &&
+		((p1.y() >= cY) && (p2.y() >= cY) && (p3.y() >= cY) &&
+		 (p4.y() >= cY)) &&
+		((p1.z() >= cZ) && (p2.z() >= cZ) && (p3.z() >= cZ) &&
+		 (p4.z() >= cZ))) 
+		{
 		GeomTetra *nTet = new GeomTetra(p1, p2, p3, p4);
-		if (levels[i] == numLevels)
+		if (levels[i] == nL)
+		{
 		    levGroup -> add(nTet);
+			cerr << "Adding " << i << "to levGroup\n";
+		}
 		else	
+		{
 		    othGroup -> add(nTet);
+			cerr << "Adding " << i << "to objGroup\n";
+		}
 	    }
 	}
     }
@@ -224,20 +200,25 @@ void MeshView::makeLevels(const MeshHandle& mesh)
 	levels[i] = -1;
 
     Queue<int> q;
-    q.append(seedTet);
+    q.append(seedTet.get() + 1);
     q.append(-2);
 	
     deep = 0;
-    while(counter < numTetra){
+    while(counter < numTetra)
+    {
 	int x = q.pop();
-	if (x == -2) {
+	if (x == -2) 
+	{
 	    deep++;
 	    q.append(-2);
-	} else {
+	} 
+	else if (levels[x] == -1)
+	{
 	    levels[x] = deep;
 	    counter++;
 	    Element* e=mesh->elems[x];
-	    for(int i=0;i<4;i++){
+	    for(int i = 0; i < 4; i++)
+	    {
 		int neighbor=e->face(i);
 		if(neighbor !=-1 && levels[neighbor] == -1)
 		    q.append(neighbor);
