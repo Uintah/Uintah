@@ -243,6 +243,7 @@ proc createSubnet { from_subnet { modules "" } } {
 	set canvas $Subnet(Subnet$Subnet($modid)_canvas)
 	set modbbox [$canvas bbox $modid]
 	$canvas delete $modid
+	destroy $canvas.module$modid
 	set x [expr [lindex $modbbox 0] - [lindex $bbox 0] + 10]
 	set y [expr [lindex $modbbox 1] - [lindex $bbox 1] + 25]
 	set Subnet($modid) $subnet
@@ -277,7 +278,7 @@ proc createSubnet { from_subnet { modules "" } } {
 
 
 proc expandSubnet { modid } {
-    global Subnet
+    global Subnet CurrentlySelectedModules
     set from $Subnet(${modid}_num)
     set to $Subnet($modid)
 
@@ -295,26 +296,28 @@ proc expandSubnet { modid } {
 	set Subnet($module) $to
 	lappend Subnet(Subnet${to}_Modules) $module
 	$fromcanvas delete $module
-	$module make_icon $newx $newy
-	foreach iconn $Subnet(Subnet${from}_connections) {
-	    lappend toDelete $iconn
-	    foreach econn $Subnet(SubnetIcon${from}_connections) {
-		lappend toDelete $econn
-		if { [iNum econn] == [oNum iconn] && \
-			 [isaSubnetIcon [iMod econn]] && \
-			 [isaSubnet [oMod iconn]] } {
-		    lappend toAdd \
-			"[oMod econn] [oNum econn] [iMod iconn] [iNum iconn]"
-		}
-		if { [oNum econn] == [iNum iconn] && \
-			 [isaSubnetIcon [oMod econn]] && \
-			 [isaSubnet [iMod iconn]] } {
-		    lappend toAdd \
-			"[oMod iconn] [oNum iconn] [iMod econn] [iNum econn]"
-		}
+	destroy $fromcanvas.module$module
+	$module make_icon $newx $newy 1
+    }	
+    foreach iconn $Subnet(Subnet${from}_connections) {
+	lappend toDelete $iconn
+	foreach econn $Subnet(SubnetIcon${from}_connections) {
+	    lappend toDelete $econn
+	    if { [iNum econn] == [oNum iconn] && \
+		     [isaSubnetIcon [iMod econn]] && \
+		     [isaSubnet [oMod iconn]] } {
+		lappend toAdd \
+		    "[oMod econn] [oNum econn] [iMod iconn] [iNum iconn]"
+	    }
+	    if { [oNum econn] == [iNum iconn] && \
+		     [isaSubnetIcon [oMod econn]] && \
+		     [isaSubnet [iMod iconn]] } {
+		lappend toAdd \
+		    "[oMod iconn] [oNum iconn] [iMod econn] [iNum econn]"
 	    }
 	}
-    }	
+    }
+
     foreach conn $toDelete {
 	destroyConnection $conn 0 0
     }
@@ -323,12 +326,20 @@ proc expandSubnet { modid } {
 	createConnection $conn 0 0
     }
 
+
+    set CurrentlySelectedModules $Subnet(Subnet${from}_Modules)
     foreach module $Subnet(Subnet${from}_Modules) {
 	drawConnections $Subnet(${module}_connections)
+	$module setColorAndTitle
     }
 
 #    moduleDestroy $modid
+    trace vdelete Subnet(Subnet${from}_Name) w updateSubnetName
     array unset Subnet Subnet${from}*
+    array unset Subnet SubnetIcon${from}*
+    destroy .subnet$from
+
+    
 }
 
 
