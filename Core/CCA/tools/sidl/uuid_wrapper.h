@@ -18,8 +18,10 @@
 #ifndef UUID_MASTER
 #define UUID_MASTER 8
 
-#include <string>
 #include <sci_config.h>
+
+#include <string>
+#include <iostream>
 
 #if HAVE_SYS_UUID_H
 extern "C" { // SGI uuid.h doesn't have this, so we need extern C here
@@ -49,13 +51,13 @@ std::string getUUID()
   uint_t status;
   uuid_create(&uuid, &status);
   if(status != uuid_s_ok){
-    cerr << "Error creating uuid!\n";
+    std::cerr << "Error creating uuid!\n";
     exit(1);
   }
 
   uuid_to_string(&uuid, &uuid_str, &status);
   if(status != uuid_s_ok){
-    cerr << "Error creating uuid string!\n";
+    std::cerr << "Error creating uuid string!\n";
     exit(1);
   }
 #endif
