@@ -502,12 +502,12 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
     new_dw->get(constReactscalarVars.old_density, timelabels->density_in, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(constReactscalarVars.old_scalar, timelabels->reactscalar_in, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     // for explicit calculation
     new_dw->allocateAndPut(reactscalarVars.scalar, timelabels->reactscalar_out, 
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->copyOut(reactscalarVars.scalar, timelabels->reactscalar_in, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->get(constReactscalarVars.uVelocity, timelabels->uvelocity_in, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
