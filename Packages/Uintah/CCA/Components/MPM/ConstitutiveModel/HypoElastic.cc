@@ -26,6 +26,7 @@ HypoElastic::HypoElastic(ProblemSpecP& ps)
 {
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
+  d_se=0;
 
   p_statedata_label = scinew VarLabel("p.statedata_hypo",
                                 ParticleVariable<StateData>::getTypeDescription());
@@ -50,6 +51,7 @@ void HypoElastic::initializeCMData(const Patch* patch,
    // constitutive model parameters and deformationMeasure
    Matrix3 Identity, zero(0.);
    Identity.Identity();
+   d_se=0;
 
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
@@ -130,13 +132,9 @@ void HypoElastic::computeStressTensor(const Patch* patch,
   //               Obtain and modify particle temperature (deg K)
   //
   Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
-  double J,se=0.;
   double c_dil=0.0,Jinc;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
   double onethird = (1.0/3.0);
-  double onesixth = (1.0/6.0);
-  double sqrtopf=sqrt(1.5);
-  double PI = 3.141592654;
 
   Identity.Identity();
 
@@ -208,6 +206,7 @@ void HypoElastic::computeStressTensor(const Patch* patch,
 
       // This is the (updated) Cauchy stress
 
+      Matrix3 OldStress = pstress[idx];
       pstress[idx] += (DPrime*2.*G + Identity*bulk*D.Trace())*delT;
 
       // Compute the deformation gradient increment using the time_step
@@ -222,18 +221,19 @@ void HypoElastic::computeStressTensor(const Patch* patch,
                              deformationGradient[idx];
 
       // get the volumetric part of the deformation
-      J = deformationGradient[idx].Determinant();
+      double J = deformationGradient[idx].Determinant();
 
       pvolume[idx]=Jinc*pvolume[idx];
 
       // Compute the strain energy for all the particles
-      se += (D(1,1)*pstress[idx](1,1) +
-             D(2,2)*pstress[idx](2,2) +
-             D(3,3)*pstress[idx](3,3) +
-             2.*(D(1,2)*pstress[idx](1,2) +
-		 D(1,3)*pstress[idx](1,3) +
-		 D(2,3)*pstress[idx](2,3))
-	     )*pvolume[idx];
+      OldStress = (pstress[idx] + OldStress)*.5;
+      d_se += (D(1,1)*OldStress(1,1) +
+	       D(2,2)*OldStress(2,2) +
+	       D(3,3)*OldStress(3,3) +
+	       2.*(D(1,2)*OldStress(1,2) +
+		   D(1,3)*OldStress(1,3) +
+		   D(2,3)*OldStress(2,3))
+	       )*pvolume[idx]*delT;
 
       // Compute wave speed at each particle, store the maximum
 
@@ -256,7 +256,7 @@ void HypoElastic::computeStressTensor(const Patch* patch,
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
 
   // Put the strain energy in the data warehouse
-  new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
+  new_dw->put(sum_vartype(d_se), lb->StrainEnergyLabel);
 
   // This is updated
   new_dw->put(statedata, p_statedata_label_preReloc);

@@ -45,11 +45,7 @@ ViscoScram::ViscoScram(ProblemSpecP& ps)
   ps->require("Beta",d_initialData.Beta);
   ps->require("Gamma",d_initialData.Gamma);
   ps->require("DCp_DTemperature",d_initialData.DCp_DTemperature);
-  //
-  //  FIX  Need to add load curve reader
-  //  ps->require("LoadCurveNumber",d_initialData.LoadCurveNumber);
-  //  ps->require("NumberOfPoints",d_initialData.NumberOfPoints);
-
+  d_se=0;
 
   p_statedata_label = scinew VarLabel("p.statedata_vs",
                                 ParticleVariable<StateData>::getTypeDescription());
@@ -74,6 +70,7 @@ void ViscoScram::initializeCMData(const Patch* patch,
    // constitutive model parameters and deformationMeasure
    Matrix3 Identity, zero(0.);
    Identity.Identity();
+   d_se=0;
 
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
@@ -161,7 +158,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   //  FIX  To do:  Obtain and modify particle temperature (deg K)
   //
   Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
-  double J,se=0.;
+  double J;
   double c_dil=0.0,Jinc;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
   double onethird = (1.0/3.0);
@@ -443,6 +440,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
       // This is the (updated) Cauchy stress
 
+      Matrix3 OldStress = pstress[idx];
       pstress[idx] = DevStress + Identity*p;
 
       // Viscoelastic work rate
@@ -490,13 +488,14 @@ void ViscoScram::computeStressTensor(const Patch* patch,
       //      ptemperature[idx] += (svedot + scrdot)/rhocv*delT;
 
       // Compute the strain energy for all the particles
-      se += (D(1,1)*pstress[idx](1,1) +
-             D(2,2)*pstress[idx](2,2) +
-             D(3,3)*pstress[idx](3,3) +
-             2.*(D(1,2)*pstress[idx](1,2) +
-		 D(1,3)*pstress[idx](1,3) +
-		 D(2,3)*pstress[idx](2,3))
-	     )*pvolume[idx];
+      OldStress = (pstress[idx] + OldStress)*.5;
+      d_se += (D(1,1)*OldStress(1,1) +
+	       D(2,2)*OldStress(2,2) +
+	       D(3,3)*OldStress(3,3) +
+	       2.*(D(1,2)*OldStress(1,2) +
+		   D(1,3)*OldStress(1,3) +
+		   D(2,3)*OldStress(2,3))
+	       )*pvolume[idx]*delT;
 
       // Compute wave speed at each particle, store the maximum
 
@@ -519,7 +518,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
 
   // Put the strain energy in the data warehouse
-  new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
+  new_dw->put(sum_vartype(d_se), lb->StrainEnergyLabel);
 
   // This is updated
   new_dw->put(statedata, p_statedata_label_preReloc);
