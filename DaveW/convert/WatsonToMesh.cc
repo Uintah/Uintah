@@ -40,7 +40,8 @@ int main(int argc, char **argv)
     }
     MeshHandle mesh=new Mesh;
 
-    ifstream ptsfile(clString(clString(argv[1])+".pts")());
+    clString base1(argv[1]);
+    ifstream ptsfile((base1+".pts")());
 //    int n;
 //    ptsfile >> n;
 //    cerr << "nnodes in pts file=" << n << endl;
@@ -53,7 +54,7 @@ int main(int argc, char **argv)
     }
     cerr << "nnodes in mesh=" << mesh->nodes.size() << endl;
 
-    ifstream tetrafile(clString(clString(argv[1])+".tetras")());
+    ifstream tetrafile((base1+".tetras")());
 //    int t;
 //    tetrafile >> t;
 //    cerr << "nelems in tetras files=" << t << endl;
@@ -103,7 +104,7 @@ int main(int argc, char **argv)
     }
 #endif
 
-    TextPiostream stream(clString(argv[1])+".mesh", Piostream::Write);
+    TextPiostream stream(base1+".mesh", Piostream::Write);
     Pio(stream, mesh);
     return 0;
 }

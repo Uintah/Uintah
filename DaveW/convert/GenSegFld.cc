@@ -80,7 +80,7 @@ char getVal(int i, int j, int k) {
     return '1';
 }
     
-void main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     nx=ny=nz=33;
 
     ScalarFieldRGchar *sf = new ScalarFieldRGchar;
@@ -95,4 +95,5 @@ void main(int argc, char *argv[]) {
     TextPiostream stream(fname, Piostream::Write);
     ScalarFieldHandle sfh=sf;
     Pio(stream, sfh);
+    return 1;
 }

@@ -40,7 +40,8 @@ int main(int argc, char **argv)
     }
     MeshHandle mesh=new Mesh;
 
-    ifstream ptsfile(clString(clString(argv[1])+".pts")());
+    clString basename(argv[1]);
+    ifstream ptsfile((basename+".pts")());
     int n;
     ptsfile >> n;
     cerr << "nnodes in pts file=" << n << endl;
@@ -53,7 +54,7 @@ int main(int argc, char **argv)
     }
     cerr << "nnodes in mesh=" << mesh->nodes.size() << endl;
 
-    ifstream tetrafile(clString(clString(argv[1])+".tetras")());
+    ifstream tetrafile((basename+".tetras")());
     int t;
     tetrafile >> t;
     cerr << "nelems in tetras files=" << t << endl;
@@ -70,7 +71,7 @@ int main(int argc, char **argv)
     }
     cerr << "nelems in mesh=" << mesh->elems.size() << endl;
 
-    ifstream condfile(clString(clString(argv[1])+".cond")());
+    ifstream condfile((basename+".cond")());
     condfile >> t;
     cerr << "number of conductivities="<<t<< endl;
     mesh->cond_tensors.resize(t);
@@ -96,7 +97,7 @@ int main(int argc, char **argv)
 	}
     }
 
-    BinaryPiostream stream(clString(argv[1])+".mesh", Piostream::Write);
+    BinaryPiostream stream(basename+".mesh", Piostream::Write);
     Pio(stream, mesh);
     return 0;
 }

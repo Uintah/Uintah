@@ -29,7 +29,7 @@ using namespace SCICore::PersistentSpace;
 using namespace SCICore::Datatypes;
 using namespace SCICore::Geometry;
 
-main(int argc, char **argv) {
+int main(int argc, char **argv) {
 
     int i;
     MeshHandle mesh;
@@ -38,8 +38,9 @@ main(int argc, char **argv) {
 	printf("Need the basename\n");
 	exit(0);
     }
-    clString fin(clString(argv[1])+clString(".mesh"));
-    clString fout(clString(argv[1])+clString(".sfug"));
+    clString base1(argv[1]);
+    clString fin(base1+".mesh");
+    clString fout(base1+".sfug");
 
     Piostream* stream=auto_istream(fin);
     if (!stream) {
