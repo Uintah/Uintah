@@ -733,7 +733,7 @@ NodeHedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
     if( field_type == "LatticeVol"){
    // use virtual field interpolation
       VectorFieldInterface *vfi;
-      if( vfi = vfld->query_vector_interface()){
+      if(( vfi = vfld->query_vector_interface())){
 	return vfi->interpolate( val, p);
       } 
     }    
@@ -779,7 +779,7 @@ NodeHedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
   } else if( sfld->get_type_name(0) == "LatticeVol" ){
     // use virtual field interpolation
     ScalarFieldInterface *sfi;
-    if( sfi = sfld->query_scalar_interface()){
+    if(( sfi = sfld->query_scalar_interface())){
       return sfi->interpolate( val, p);
     }
     return false;
