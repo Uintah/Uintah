@@ -25,7 +25,7 @@ NormalMapMaterial::NormalMapMaterial(Material *m, char *filename, double persist
   //if(read_file(filename) == 0)
   if(readfromppm(filename) == 0)
     {
-      cout << "FILE NOT READ - PROBLEMS IMMINENT" << endl;
+      cout << "FILE " << filename  <<" NOT READ - PROBLEMS IMMINENT" << endl;
       dimension_x = 1;
       dimension_y = 1;
       normalmapimage = new Vector[1];
@@ -73,13 +73,14 @@ void NormalMapMaterial::shade(Color& result, const Ray& ray,
     Object* obj=hit.hit_obj;
     Point hitpos(ray.origin()+ray.direction()*nearest);
     Vector normal(obj->normal(hitpos, hit));
-    perturbnormal(normal,ray,hit);
-    Object *o2 = (Object *)(new BumpObject(normal));
-    //BumpObject o(normal);
+    perturbnormal(normal,ray,hit); 
+    BumpObject n = BumpObject(normal);
+    BumpObject *n2 = &n;
+    Object *o2 = (Object *)n2;
+   //BumpObject o(normal);
     HitInfo h2 = hit;
     h2.hit_obj = o2;
     material->shade(result,ray,h2,depth,a,c,cx);
-    delete o2;
     
 }
 
@@ -192,7 +193,7 @@ int NormalMapMaterial::readfromppm6(char *filename)
   //val = (Color *)malloc(width*height*sizeof(Color));
   //values = (int *)malloc(sizeof(int)*width*height);
   printf("Converting from 0->%d (x3) to Vector 0->1 by division\n",temp);
-  printf("Reading in File %s\n",filename);
+  printf("Reading in File for a Normal Map%s\n",filename);
   for(int j = dimension_y-1; j >= 0; j--)
     for(int i = 0; i < dimension_x; i++)
       { //ramsey
@@ -248,7 +249,7 @@ int NormalMapMaterial::readfromppm6(char *filename)
     //val = (Color *)malloc(width*height*sizeof(Color));
     //values = (int *)malloc(sizeof(int)*width*height);
     normalmapimage = (Vector *)malloc(dimension_x*dimension_y*sizeof(Vector));
-    printf("Reading in File %s\n",filename);
+    printf("Reading in File for a Normal Map%s\n",filename);
     for(int j = dimension_y-1; j >= 0; j--)
       for(int i = 0; i < dimension_x; i++)
         {

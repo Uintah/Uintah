@@ -34,6 +34,9 @@ public:
   int read_file(char *filename);
   double fval(double u, double v);
   double get_persistence() {return persistence;}
+  int readfromppm6(char *);
+  //int readfromppm(char *);
+  FILE * readcomments (FILE*fin);
 
 };
 
