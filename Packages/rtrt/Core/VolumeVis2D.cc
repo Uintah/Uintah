@@ -29,6 +29,7 @@ using namespace rtrt;
 // // initialize the static member type_id
 // PersistentTypeID VolumeVis2D::type_id("VolumeVis2D", "Object", vv_maker);
 
+// template<class T>
 VolumeVis2D::VolumeVis2D(BrickArray3<Voxel2D<float> >& _data,
 			 Voxel2D<float> data_min, Voxel2D<float> data_max,
 			 int nx, int ny, int nz,
@@ -77,65 +78,69 @@ VolumeVis2D::VolumeVis2D(BrickArray3<Voxel2D<float> >& _data,
   dpy->attach(this);
 }
 
+// template<class T>
 VolumeVis2D::~VolumeVis2D() {
 }
 
+// template<class T>
 void VolumeVis2D::intersect(Ray& ray, HitInfo& hit, DepthStats*,
-			  PerProcessorContext*) {
+			    PerProcessorContext*) {
   // determines the min and max t of the intersections with the boundaries
-   double t1, t2, tx1, tx2, ty1, ty2, tz1, tz2;
+  double t1, t2, tx1, tx2, ty1, ty2, tz1, tz2;
 
-   Point sub_min = Max(min, min);
-   Point sub_max = Max(max, max);
+  Point sub_min = Max(min, min);
+  Point sub_max = Max(max, max);
    
-   if (ray.direction().x() > 0) {
-     tx1 = (sub_min.x() - ray.origin().x()) / ray.direction().x();
-     tx2 = (sub_max.x() - ray.origin().x()) / ray.direction().x();
-   }
-   else {
-     tx1 = (sub_max.x() - ray.origin().x()) / ray.direction().x();
-     tx2 = (sub_min.x() - ray.origin().x()) / ray.direction().x();
-   }
+  if (ray.direction().x() > 0) {
+    tx1 = (sub_min.x() - ray.origin().x()) / ray.direction().x();
+    tx2 = (sub_max.x() - ray.origin().x()) / ray.direction().x();
+  }
+  else {
+    tx1 = (sub_max.x() - ray.origin().x()) / ray.direction().x();
+    tx2 = (sub_min.x() - ray.origin().x()) / ray.direction().x();
+  }
    
-   if (ray.direction().y() > 0) {
-     ty1 = (sub_min.y() - ray.origin().y()) / ray.direction().y();
-     ty2 = (sub_max.y() - ray.origin().y()) / ray.direction().y();
-   }
-   else {
-     ty1 = (sub_max.y() - ray.origin().y()) / ray.direction().y();
-     ty2 = (sub_min.y() - ray.origin().y()) / ray.direction().y();
-   }
+  if (ray.direction().y() > 0) {
+    ty1 = (sub_min.y() - ray.origin().y()) / ray.direction().y();
+    ty2 = (sub_max.y() - ray.origin().y()) / ray.direction().y();
+  }
+  else {
+    ty1 = (sub_max.y() - ray.origin().y()) / ray.direction().y();
+    ty2 = (sub_min.y() - ray.origin().y()) / ray.direction().y();
+  }
    
-   if (ray.direction().z() > 0) {
-     tz1 = (sub_min.z() - ray.origin().z()) / ray.direction().z();
-     tz2 = (sub_max.z() - ray.origin().z()) / ray.direction().z();
-   }
-   else {
-     tz1 = (sub_max.z() - ray.origin().z()) / ray.direction().z();
-     tz2 = (sub_min.z() - ray.origin().z()) / ray.direction().z();
-   }
+  if (ray.direction().z() > 0) {
+    tz1 = (sub_min.z() - ray.origin().z()) / ray.direction().z();
+    tz2 = (sub_max.z() - ray.origin().z()) / ray.direction().z();
+  }
+  else {
+    tz1 = (sub_max.z() - ray.origin().z()) / ray.direction().z();
+    tz2 = (sub_min.z() - ray.origin().z()) / ray.direction().z();
+  }
    
-   t1 =  DBL_MIN; 
-   t2 =  DBL_MAX;
+  //     t1 =  DBL_MIN; 
+  //     t2 =  DBL_MAX;
    
-   if (tx1 > t1) t1 = tx1;
-   if (ty1 > t1) t1 = ty1;
-   if (tz1 > t1) t1 = tz1;
+  //     if (tx1 > t1) t1 = tx1;
+  t1 = tx1;
+  if (ty1 > t1) t1 = ty1;
+  if (tz1 > t1) t1 = tz1;
    
-   if (tx2 < t2) t2 = tx2;
-   if (ty2 < t2) t2 = ty2;
-   if (tz2 < t2) t2 = tz2;
+  //     if (tx2 < t2) t2 = tx2;
+  t2 = tx2;
+  if (ty2 < t2) t2 = ty2;
+  if (tz2 < t2) t2 = tz2;
 
-   // t1 is t_min and t2 is t_max
-   if (t2 > t1) {
-     if (t1 > FLT_EPSILON) {
-       hit.hit(this, t1);
-       float* tmax=(float*)hit.scratchpad;
-       *tmax = t2;
-     }
-     //else if (t2 > FLT_EPSILON)
-     //hit.hit(this, t2);
-   }
+  // t1 is t_min and t2 is t_max
+  if (t2 > t1) {
+    if (t1 > FLT_EPSILON) {
+      hit.hit(this, t1);
+      float* tmax=(float*)hit.scratchpad;
+      *tmax = t2;
+    }
+    //else if (t2 > FLT_EPSILON)
+    //hit.hit(this, t2);
+  }
    
 }
 
@@ -172,15 +177,16 @@ void VolumeVis2D::intersect(Ray& ray, HitInfo& hit, DepthStats*,
   * R is the reflection vector
   * V is the viewing vector
   */
+// template<class T>
 Color VolumeVis2D::color(const Vector &N, const Vector &V, const Vector &L, 
-		       const Color &object_color, const Color &light_color) {
+			 const Color &object_color, const Color &light_color) {
 
   Color result; // the resulting color
 
   double L_N_dot = Dot(L, N);
 
 #if 1 // Double Sided shading
-  double attenuation = 1;
+  //  double attenuation = 1;
   Vector L_use;
 
   // the dot product is negative then the objects face points
@@ -203,26 +209,30 @@ Color VolumeVis2D::color(const Vector &N, const Vector &V, const Vector &L,
   exponent = Dot(R, V);
 #endif
   double spec;
+  // double attenuation = 1;
   if (exponent > 0) {
-    spec = attenuation * specular * pow(exponent, spec_coeff*0.5);
+    //    spec = attenuation * specular * pow(exponent, spec_coeff*0.5);
+    spec = specular*pow(exponent,spec_coeff*0.5);
   } else {
     spec = 0;
   }
   
-  result = light_color * (object_color *(ambient+attenuation*diffuse*L_N_dot)
+  result = light_color * (object_color *(ambient+diffuse*L_N_dot)
 			  + Color(spec, spec, spec));
 #else
   // the dot product is negative then the objects face points
   // away from the light and should only contribute an ambient term
   if (L_N_dot > 0) {
     // do the ambient, diffuse, and specular calculations
-    double attenuation = 1;
+    //    double attenuation = 1;
 
     Vector R = N * (2.0 * L_N_dot) - L;
-    double spec = attenuation * specular * pow(Max(Dot(R, V),0.0), spec_coeff);
-
-    result = light_color * (object_color *(ambient+attenuation*diffuse*L_N_dot)
-			    + Color(spec, spec, spec));
+    //    double spec = attenuation * specular * pow(Max(Dot(R, V),0.0), spec_coeff);
+    double spec = specular * pow( Max( Dot( R, V ), 0.0 ), spec_coeff );
+    //    result = light_color * (object_color *(ambient+attenuation*diffuse*L_N_dot)
+    //		    + Color(spec, spec, spec));
+    result = light_color * (object_color * (ambient + diffuse*L_N_dot )
+			    + Color( spec, spec, spec ) );
   }
   else {
     // do only the ambient calculations
@@ -233,27 +243,34 @@ Color VolumeVis2D::color(const Vector &N, const Vector &V, const Vector &L,
   return result;
 }
 	
+// template<class T>
 Vector VolumeVis2D::normal(const Point&, const HitInfo& hit) {
   // the normal should be placed in the scratchpad
   Vector* norm = (Vector*)hit.scratchpad;
   return *norm;
 }
 
+// template<class T>
 void VolumeVis2D::compute_bounds(BBox& bbox, double offset) {
-    bbox.extend( min - Vector(offset, offset, offset) );
-    bbox.extend( max + Vector(offset, offset, offset) );
+  bbox.extend( min - Vector(offset, offset, offset) );
+  bbox.extend( max + Vector(offset, offset, offset) );
 }
 
+// template<class T>
 void VolumeVis2D::print(ostream& out) {
-    out << "VolumeVis2D: min=" << min << ", max=" << max << '\n';
+  out << "VolumeVis2D: min=" << min << ", max=" << max << '\n';
 }
 
 #define RAY_TERMINATION_THRESHOLD 0.98
 
+// template<class T>
 void VolumeVis2D::shade(Color& result, const Ray& ray,
-		      const HitInfo& hit, int depth,
-		      double atten, const Color& accumcolor,
-		      Context* cx) {
+			const HitInfo& hit, int depth,
+			double atten, const Color& accumcolor,
+			Context* cx) {
+
+  unsigned int render_mode = dpy->render_mode;
+
   float t_min = hit.min_t;
   float* t_maxp = (float*)hit.scratchpad;
   float t_max = *t_maxp;
@@ -263,127 +280,144 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
   //                                  0 - completly transparent
   float alpha = 0;
   Color total(0,0,0);
-  Point p;
 
+  Vector p_inc = dpy->t_inc*ray.direction();
+  Point p = ray.origin() + ray.direction() * t_min - min.vector();
+
+  float norm_step_x = inv_diag.x() * (nx - 1 );
+  float norm_step_y = inv_diag.y() * (ny - 1 );
+  float norm_step_z = inv_diag.z() * (nz - 1 );
+
+  p -= p_inc;
+
+  float step;
+  int x_low, x_high, y_low, y_high, z_low, z_high;
+  float x_weight_low, y_weight_low, y_interpolate, z_weight_low, z_interpolate;
+  Voxel2D<float> a,b,c,d,e,f,g,h;
+  Voxel2D<float> lz1, lz2, lz3, lz4, ly1, ly2, value;
+  float alpha_factor;
+  Color value_color;
+  float dx, dy, dz;
+  float dy1, dy2;
+  float dz1, dz2, dz3, dz4, dzly1, dzly2;
+
+  Light* light=cx->scene->light(0);
+  Vector light_dir;
+  
   for(float t = t_min; t < t_max; t += dpy->t_inc) {
-    // opaque values are 0, so terminate the ray at alpha values close to zero
-    if (alpha < RAY_TERMINATION_THRESHOLD) {
-      // get the point to interpolate
-      p = ray.origin() + ray.direction() * t - min.vector();
-
-      ////////////////////////////////////////////////////////////
-      // interpolate the point
-
-      // get the indices and weights for the indicies
-      float norm = p.x() * inv_diag.x();
-      float step = norm * (nx - 1);
-      int x_low = bound((int)step, 0, data.dim1()-2);
-      int x_high = x_low+1;
-      float x_weight_low = x_high - step;
-
-      norm = p.y() * inv_diag.y();
-      step = norm * (ny - 1);
-      int y_low = bound((int)step, 0, data.dim2()-2);
-      int y_high = y_low+1;
-      float y_weight_low = y_high - step;
-
-      norm = p.z() * inv_diag.z();
-      step = norm * (nz - 1);
-      int z_low = bound((int)step, 0, data.dim3()-2);
-      int z_high = z_low+1;
-      float z_weight_low = z_high - step;
-
-      ////////////////////////////////////////////////////////////
-      // do the interpolation
-
-      Voxel2D<float> a,b,c,d,e,f,g,h;
-      a = data(x_low,  y_low,  z_low);
-      b = data(x_low,  y_low,  z_high);
-      c = data(x_low,  y_high, z_low);
-      d = data(x_low,  y_high, z_high);
-      e = data(x_high, y_low,  z_low);
-      f = data(x_high, y_low,  z_high);
-      g = data(x_high, y_high, z_low);
-      h = data(x_high, y_high, z_high);
-
-      Voxel2D<float> lz1, lz2, lz3, lz4, ly1, ly2, value;
-      lz1 = a * z_weight_low + b * (1 - z_weight_low);
-      lz2 = c * z_weight_low + d * (1 - z_weight_low);
-      lz3 = e * z_weight_low + f * (1 - z_weight_low);
-      lz4 = g * z_weight_low + h * (1 - z_weight_low);
-
-      ly1 = lz1 * y_weight_low + lz2 * (1 - y_weight_low);
-      ly2 = lz3 * y_weight_low + lz4 * (1 - y_weight_low);
-
-      value = ly1 * x_weight_low + ly2 * (1 - x_weight_low);
+    // get the point to interpolate
+    p += p_inc;
+    
+    ////////////////////////////////////////////////////////////
+    // interpolate the point
+    
+    // get the indices and weights for the indices
+    step = p.x() * norm_step_x;
+    x_low = bound((int)step, 0, data.dim1()-2);
+    x_high = x_low+1;
+    x_weight_low = x_high - step;
+    
+    step = p.y() * norm_step_y;
+    y_low = bound((int)step, 0, data.dim2()-2);
+    y_high = y_low+1;
+    y_weight_low = y_high - step;
+    y_interpolate = 1 - y_weight_low;
+    
+    step = p.z() * norm_step_z;
+    z_low = bound((int)step, 0, data.dim3()-2);
+    z_high = z_low+1;
+    z_weight_low = z_high - step;
+    z_interpolate = 1 - z_weight_low;
+    
+    ////////////////////////////////////////////////////////////
+    // do the interpolation
+    
+    a = data(x_low,  y_low,  z_low);
+    d = data(x_low,  y_high, z_high);
+    f = data(x_high, y_low,  z_high);
+    g = data(x_high, y_high, z_low);
+    // user-selectable acceleration method
+    // (works best when widget areas are larger)
+    if( render_mode && dpy->skip_alpha( a, d, f, g ) )
+      continue;
+    b = data(x_low,  y_low,  z_high);
+    c = data(x_low,  y_high, z_low);
+    e = data(x_high, y_low,  z_low);
+    h = data(x_high, y_high, z_high);
+    
+    lz1 = a * z_weight_low + b * (z_interpolate);
+    lz2 = c * z_weight_low + d * (z_interpolate);
+    lz3 = e * z_weight_low + f * (z_interpolate);
+    lz4 = g * z_weight_low + h * (z_interpolate);
+    
+    ly1 = lz1 * y_weight_low + lz2 * (y_interpolate);
+    ly2 = lz3 * y_weight_low + lz4 * (y_interpolate);
       
-      //cout << "value = " << value << endl;
+    value = ly1 * x_weight_low + ly2 * (1 - x_weight_low);
 
+    //cout << "value = " << value << endl;
 #if 0
-      // One thing to note is that this bit of code indicated that there were
-      // occasions when value was close to 0, but on the negative side.  This
-      // is OK, because rounding schemes would basically round that number to
-      // 0 rather than -1 which would be bad.
-      //
-      // The moral of the story is that negative numbers of very small
-      // magnitude are OK, and don't need to be clamped.
-      if (value.v() < data_min.v() || value.v() > data_max.v()) {
-	cerr << "value.v is bad!! value.v = "<<value.v()<<", data_min.v = "<<data_min.v()<<", data_max.v = "<<data_max.v()<<endl;
-	flush(cerr);
-      }
-      if (value.g() < data_min.g() || value.g() > data_max.g()) {
-	cerr << "value.g is bad!! value.g = "<<value.g()<<", data_min.g = "<<data_min.g()<<", data_max.g = "<<data_max.g()<<endl;
-	flush(cerr);
-      }
+    // One thing to note is that this bit of code indicated that there were
+    // occasions when value was close to 0, but on the negative side.  This
+    // is OK, because rounding schemes would basically round that number to
+    // 0 rather than -1 which would be bad.
+    //
+    // The moral of the story is that negative numbers of very small
+    // magnitude are OK, and don't need to be clamped.
+    if (value.v() < data_min.v() || value.v() > data_max.v()) {
+      cerr << "value.v is bad!! value.v = "<<value.v()<<", data_min.v = "<<data_min.v()<<", data_max.v = "<<data_max.v()<<endl;
+      flush(cerr);
+    }
+    if (value.g() < data_min.g() || value.g() > data_max.g()) {
+      cerr << "value.g is bad!! value.g = "<<value.g()<<", data_min.g = "<<data_min.g()<<", data_max.g = "<<data_max.g()<<endl;
+      flush(cerr);
+    }
 #endif
-      float alpha_factor;
-      Color value_color;
-      dpy->lookup(value, value_color, alpha_factor);
-      alpha_factor *= 1-alpha;
-      if (alpha_factor > 0.001) {
-	//      if (true) {
-	// the point is contributing, so compute the color
-
-	// compute the gradient This should probably take into
-	// consideration the other value of the voxel, but I'm not
-	// sure how to compute that just yet.
-	Vector gradient;
-	float dx = ly2.v() - ly1.v();
-	
-	float dy, dy1, dy2;
-	dy1 = lz2.v() - lz1.v();
-	dy2 = lz4.v() - lz3.v();
-	dy = dy1 * x_weight_low + dy2 * (1 - x_weight_low);
-	
-	float dz, dz1, dz2, dz3, dz4, dzly1, dzly2;
-	dz1 = b.v() - a.v();
-	dz2 = d.v() - c.v();
-	dz3 = f.v() - e.v();
-	dz4 = h.v() - g.v();
-	dzly1 = dz1 * y_weight_low + dz2 * (1 - y_weight_low);
-	dzly2 = dz3 * y_weight_low + dz4 * (1 - y_weight_low);
-	dz = dzly1 * x_weight_low + dzly2 * (1 - x_weight_low);
-	if (dx || dy || dz){
-	  float length2 = dx*dx+dy*dy+dz*dz;
-	  // this lets the compiler use a special 1/sqrt() operation
-	  float ilength2 = 1/sqrtf(length2);
-	  gradient = Vector(dx*ilength2, dy*ilength2, dz*ilength2);
-	} else
-	  gradient = Vector(0,0,0);
-
-	Light* light=cx->scene->light(0);
-	Vector light_dir;
-	light_dir = light->get_pos()-p;
-
-	Color temp = color(gradient, ray.direction(), light_dir.normal(), 
-			   value_color,light->get_color());
-	total += temp * alpha_factor;
-	alpha += alpha_factor;
+    dpy->lookup(value, value_color, alpha_factor);
+    alpha_factor *= 1-alpha;
+    if (alpha_factor > 0.001) {
+      //if (true) {
+      // the point is contributing, so compute the color
+      
+      // compute the gradient This should probably take into
+      // consideration the other value of the voxel, but I'm not
+      // sure how to compute that just yet.
+      dx = ly2.v() - ly1.v();
+      
+      dy1 = lz2.v() - lz1.v();
+      dy2 = lz4.v() - lz3.v();
+      dy = dy1 * x_weight_low + dy2 * (1 - x_weight_low);
+      
+      dz1 = b.v() - a.v();
+      dz2 = d.v() - c.v();
+      dz3 = f.v() - e.v();
+      dz4 = h.v() - g.v();
+      dzly1 = dz1 * y_weight_low + dz2 * (y_interpolate);
+      dzly2 = dz3 * y_weight_low + dz4 * (y_interpolate);
+      dz = dzly1 * x_weight_low + dzly2 * (1 - x_weight_low);
+      
+      Vector gradient;
+      if (dx || dy || dz){
+	float length2 = dx*dx+dy*dy+dz*dz;
+	// this lets the compiler use a special 1/sqrt() operation
+	float ilength2 = 1/sqrtf(length2);
+	gradient = Vector(dx*ilength2, dy*ilength2, dz*ilength2);
+      } else {
+	gradient = Vector(0,0,0);
       }
-    } else {
-      break;
+      
+      light_dir = light->get_pos()-p;
+      
+      Color temp = color(gradient, ray.direction(), light_dir.normal(), 
+			 value_color,light->get_color());
+      total += temp * alpha_factor;
+      alpha += alpha_factor;
+      // opaque values are 1, so terminate the ray at alpha values close to one
+      if( alpha >= RAY_TERMINATION_THRESHOLD )
+	break;
     }
   }
+  
   if (alpha < RAY_TERMINATION_THRESHOLD) {
     Color bgcolor;
     Point origin(p.x(),p.y(),p.z());
@@ -395,6 +429,7 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
   result = total;
 }
 
+// template<class T>
 void VolumeVis2D::animate(double, bool& changed)
 {
   dpy->animate(changed);
@@ -402,6 +437,13 @@ void VolumeVis2D::animate(double, bool& changed)
 
 const int VVIS2D_VERSION = 1;
 
+// template<class T>
+void VolumeVis2D::cblookup( Object* obj )
+{
+
+}
+
+// template<class T>
 void 
 VolumeVis2D::io(SCIRun::Piostream &str)
 {
