@@ -1,5 +1,6 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/ConservationTest.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
 #include <Packages/Uintah/CCA/Components/Models/test/SimpleRxn.h>
@@ -53,6 +54,7 @@ SimpleRxn::~SimpleRxn()
   VarLabel::destroy(d_scalar->scalar_source_CCLabel);
   VarLabel::destroy(d_scalar->diffusionCoefLabel);
   VarLabel::destroy(Slb->lastProbeDumpTimeLabel);
+  VarLabel::destroy(Slb->sum_scalar_fLabel);
   delete lb;
   delete Slb;
   
@@ -102,6 +104,8 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
                                  VarLabel::create("scalar-f_src",  td_CCdouble);
   Slb->lastProbeDumpTimeLabel =  VarLabel::create("lastProbeDumpTime", 
                                             max_vartype::getTypeDescription());
+  Slb->sum_scalar_fLabel      =  VarLabel::create("sum_scalar_f", 
+                                            sum_vartype::getTypeDescription());                         
   
   d_modelComputesThermoTransportProps = true;
   
@@ -114,6 +118,8 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
    if (!child){
      throw ProblemSetupException("SimpleRxn: Couldn't find scalar tag");    
    }
+   child->getWithDefault("test_conservation", d_test_conservation, false);
+   
    ProblemSpecP const_ps = child->findBlock("constants");
    if(!const_ps) {
      throw ProblemSetupException("SimpleRxn: Couldn't find constants tag");
@@ -561,6 +567,77 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
     } // if(probePts)  
   }
 }
+//______________________________________________________________________
+void SimpleRxn::scheduleTestConservation(SchedulerP& sched,
+                                         const PatchSet* patches,
+                                         const ModelInfo* mi)
+{
+  if(d_test_conservation){
+    cout_doing << "SIMPLE_RXN::scheduleTestConservation " << endl;
+    Task* t = scinew Task("SimpleRxn::testConservation", 
+                     this,&SimpleRxn::testConservation, mi);
+
+    Ghost::GhostType  gn = Ghost::None;
+    t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
+    t->requires(Task::NewDW, mi->density_CCLabel,      gn,0);
+    t->requires(Task::NewDW, lb->uvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, lb->vvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, lb->wvel_FCMELabel,       gn,0); 
+    t->computes(Slb->sum_scalar_fLabel);
+
+    sched->addTask(t, patches, d_matl_set);
+  }
+}
+
+//______________________________________________________________________
+void SimpleRxn::testConservation(const ProcessorGroup*, 
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* /*matls*/,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw,
+                                 const ModelInfo* mi)
+{
+  const Level* level = getLevel(patches);
+  delt_vartype delT;
+  old_dw->get(delT, mi->delT_Label, level);     
+  Ghost::GhostType gn = Ghost::None; 
+  
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing testConservation on patch "<<patch->getID()
+               << "\t\t\t SimpleRxn" << endl;
+               
+    //__________________________________
+    //  conservation of f test
+    constCCVariable<double> rho_CC, f;
+    constSFCXVariable<double> uvel_FC;
+    constSFCYVariable<double> vvel_FC;
+    constSFCZVariable<double> wvel_FC;
+    int indx = d_matl->getDWIndex();
+    new_dw->get(f,       d_scalar->scalar_CCLabel,indx,patch,gn,0);
+    new_dw->get(rho_CC,  mi->density_CCLabel,     indx,patch,gn,0); 
+    new_dw->get(uvel_FC, lb->uvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(vvel_FC, lb->vvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(wvel_FC, lb->wvel_FCMELabel,      indx,patch,gn,0); 
+    Vector dx = patch->dCell();
+    double cellVol = dx.x()*dx.y()*dx.z();
+
+    CCVariable<double> q_CC;
+    new_dw->allocateTemporary(q_CC, patch);
+
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      q_CC[c] = rho_CC[c]*cellVol*f[c];
+    }
+
+    double sum_mass_f;
+    conservationTest(patch, delT, q_CC, uvel_FC, vvel_FC, wvel_FC, sum_mass_f);
+    
+    new_dw->put(sum_vartype(sum_mass_f), Slb->sum_scalar_fLabel);
+  }
+}
+
+
 //__________________________________      
 void SimpleRxn::scheduleComputeStableTimestep(SchedulerP&,
                                       const LevelP&,
