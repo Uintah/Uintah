@@ -515,7 +515,16 @@ probe_center_compute_index(LatVolMesh::Node::index_type &index,
 			   LatVolMesh::Node::size_type &size,
 			   const LatVolMesh *mesh, const string &indexstr)
 {
-  istringstream istr(indexstr);
+  string tempstr;
+  for (unsigned int pos = 0; pos < indexstr.size(); pos++)
+    if ((int)indexstr[pos] >= (int)'0' &&
+	(int)indexstr[pos] <= (int)'9') {
+      tempstr += indexstr[pos];
+    } else {
+      tempstr += " ";
+    }
+
+  istringstream istr(tempstr);
 
   int i;
   unsigned int idx[3];
@@ -550,7 +559,16 @@ probe_center_compute_index(LatVolMesh::Cell::index_type &index,
 			   LatVolMesh::Cell::size_type &size,
 			   const LatVolMesh *mesh, const string &indexstr)
 {
-  istringstream istr(indexstr);
+  string tempstr;
+  for (unsigned int pos = 0; pos < indexstr.size(); pos++)
+    if ((int)indexstr[pos] >= (int)'0' &&
+	(int)indexstr[pos] <= (int)'9') {
+      tempstr += indexstr[pos];
+    } else {
+      tempstr += " ";
+    }
+
+  istringstream istr(tempstr);
 
   int i;
   unsigned int idx[3];
@@ -587,7 +605,17 @@ probe_center_compute_index(StructHexVolMesh::Node::index_type &index,
 			   const StructHexVolMesh *mesh,
 			   const string &indexstr)
 {
-  istringstream istr(indexstr);
+  string tempstr;
+  for (unsigned int pos = 0; pos < indexstr.size(); pos++)
+    if ((int)indexstr[pos] >= (int)'0' &&
+	(int)indexstr[pos] <= (int)'9') {
+      tempstr += indexstr[pos];
+    } else {
+      tempstr += " ";
+    }
+
+  istringstream istr(tempstr);
+
 
   int i;
   unsigned int idx[3];
@@ -624,8 +652,17 @@ probe_center_compute_index(StructHexVolMesh::Cell::index_type &index,
 			   const StructHexVolMesh *mesh,
 			   const string &indexstr)
 {
-  istringstream istr(indexstr);
+  string tempstr;
+  for (unsigned int pos = 0; pos < indexstr.size(); pos++)
+    if ((int)indexstr[pos] >= (int)'0' &&
+	(int)indexstr[pos] <= (int)'9') {
+      tempstr += indexstr[pos];
+    } else {
+      tempstr += " ";
+    }
 
+  istringstream istr(tempstr);
+ 
   int i;
   unsigned int idx[3];
   for (i = 0; i < 3 && !istr.eof() && !istr.fail(); i++)
@@ -661,7 +698,16 @@ probe_center_compute_index(ImageMesh::Node::index_type &index,
 			   ImageMesh::Node::size_type &size,
 			   const ImageMesh *mesh, const string &indexstr)
 {
-  istringstream istr(indexstr);
+  string tempstr;
+  for (unsigned int pos = 0; pos < indexstr.size(); pos++)
+    if ((int)indexstr[pos] >= (int)'0' &&
+	(int)indexstr[pos] <= (int)'9') {
+      tempstr += indexstr[pos];
+    } else {
+      tempstr += " ";
+    }
+
+  istringstream istr(tempstr);
 
   int i;
   unsigned int idx[2];
@@ -694,7 +740,16 @@ probe_center_compute_index(ImageMesh::Face::index_type &index,
 			   ImageMesh::Face::size_type &size,
 			   const ImageMesh *mesh, const string &indexstr)
 {
-  istringstream istr(indexstr);
+  string tempstr;
+  for (unsigned int pos = 0; pos < indexstr.size(); pos++)
+    if ((int)indexstr[pos] >= (int)'0' &&
+	(int)indexstr[pos] <= (int)'9') {
+      tempstr += indexstr[pos];
+    } else {
+      tempstr += " ";
+    }
+
+  istringstream istr(tempstr);
 
   int i;
   unsigned int idx[2];
@@ -728,7 +783,16 @@ probe_center_compute_index(StructQuadSurfMesh::Node::index_type &index,
 			   const StructQuadSurfMesh *mesh,
 			   const string &indexstr)
 {
-  istringstream istr(indexstr);
+  string tempstr;
+  for (unsigned int pos = 0; pos < indexstr.size(); pos++)
+    if ((int)indexstr[pos] >= (int)'0' &&
+	(int)indexstr[pos] <= (int)'9') {
+      tempstr += indexstr[pos];
+    } else {
+      tempstr += " ";
+    }
+
+  istringstream istr(tempstr);
 
   int i;
   unsigned int idx[2];
@@ -762,7 +826,16 @@ probe_center_compute_index(StructQuadSurfMesh::Face::index_type &index,
 			   const StructQuadSurfMesh *mesh,
 			   const string &indexstr)
 {
-  istringstream istr(indexstr);
+  string tempstr;
+  for (unsigned int pos = 0; pos < indexstr.size(); pos++)
+    if ((int)indexstr[pos] >= (int)'0' &&
+	(int)indexstr[pos] <= (int)'9') {
+      tempstr += indexstr[pos];
+    } else {
+      tempstr += " ";
+    }
+
+  istringstream istr(tempstr);
 
   int i;
   unsigned int idx[2];
