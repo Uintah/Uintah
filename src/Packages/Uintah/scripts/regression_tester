@@ -155,21 +155,42 @@ REMOVE () {
     rm -rf *.uda*
 }
 
+run_test () {
+    echo; echo "Running sus $opts $INPUTS/$CASE/$n.ups"
+    sus $opts $INPUTS/$CASE/$n.ups &> $n.out
+    success=`grep "successfully" $n.out`
+    if test -n "$success";
+	then 
+	echo $success
+    else
+	echo; echo "FAILURE running sus . . ."
+	continue;
+    fi
+}
+
+compare_results () {
+
+    echo "Comparing results"
+    echo "compare_uda $test_dir/$DIR/$CASE/$udadir/$uda $uda &> $n.compare"
+    compare_uda $test_dir/$DIR/$CASE/$udadir/$uda $uda &> $n.compare
+    compare=`grep "passed" $n.compare`
+    if test -n "$compare";
+	then
+	echo $compare
+    else
+	echo; echo "FAILURE running compare_uda . . ."
+    fi
+
+}
+
 mpm_test () {
     echo; echo "Testing $mpm_test_cases"
     
     for n in $mpm_test_cases; do
-	echo; echo "Running sus -mpm $INPUTS/MPM/$n.ups"
-	uda=`grep filebase $INPUTS/MPM/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | awk '{print $1}'  `
-	sus -mpm $INPUTS/MPM/$n.ups &> $n.out
-	success=`grep "successfully" $n.out`
-	if test -n "$success";
-	    then 
-	    echo $success
-	else
-	    echo; echo "FAILURE running sus . . ."
-	    continue;
-	fi
+	run_test
+
+	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | awk '{print $1}'  `
+
 	udadir=$n
 	if test "$n" = "disks2mat4patch"; 
 	    then
@@ -180,15 +201,8 @@ mpm_test () {
 	    udadir=foam_crush
 	fi
 
-	echo "compare_uda $test_dir/$DIR/MPM/$udadir/$uda $uda &> $n.compare"
-	compare_uda $test_dir/$DIR/MPM/$udadir/$uda $uda &> $n.compare
-	compare=`grep "passed" $n.compare`
-	if test -n "$compare";
-	    then
-	    echo $compare
-	else
-	    echo; echo "FAILURE running compare_uda . . ."
-	fi
+	compare_results
+
     done
 }
 
@@ -196,17 +210,10 @@ mpmice_test () {
     echo; echo "Testing $mpmice_test_cases"
     
     for n in $mpmice_test_cases; do
-	echo; echo "Running sus -mpmice $INPUTS/MPMICE/$n.ups"
-	uda=`grep filebase $INPUTS/MPMICE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
-	sus -mpmice $INPUTS/MPMICE/$n.ups &> $n.out
-	success=`grep "successfully" $n.out`
-	if test -n "$success";
-	    then 
-	    echo $success
-	    else
-	    echo; echo "FAILURE running sus . . ."
-	    continue;
-	fi
+	run_test
+
+	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
+
 	udadir=$n
 	if test "$n" = "advect"; then
 	    udadir=advect_mpmice
@@ -215,15 +222,9 @@ mpmice_test () {
 	    then
 	    udadir=guni2d
 	fi
-	echo "compare_uda $test_dir/$DIR/MPMICE/$udadir/$uda $uda &> $n.compare"
-	compare_uda $test_dir/$DIR/MPMICE/$udadir/$uda $uda &> $n.compare
-	compare=`grep "passed" $n.compare`
-	if test -n "$compare";
-	    then
-	    echo $compare
-	else
-	    echo; echo "FAILURE running compare_uda . . ."
-	fi
+	
+	compare_results
+
     done
 }
 
@@ -231,30 +232,17 @@ impm_test () {
     echo; echo "Testing $impm_test_cases"
     
     for n in $impm_test_cases; do
-	echo; echo "Running sus -impm $INPUTS/IMPM/$n.ups"
-	uda=`grep filebase $INPUTS/IMPM/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
-	sus -impm $INPUTS/IMPM/$n.ups &> $n.out
-	success=`grep "successfully" $n.out`
-	if test -n "$success";
-	    then 
-	    echo $success
-	    else
-	    echo; echo "FAILURE running sus . . ."
-	    continue;
-	fi
+	run_test
+
+	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
+
 	udadir=$n
 	if test "$n" = "4disks_2d.1mat"; then
 	    udadir=4disks1mat
 	fi
-	echo "compare_uda $test_dir/$DIR/IMPM/$udadir/$uda $uda &> $n.compare"
-	compare_uda $test_dir/$DIR/IMPM/$udadir/$uda $uda &> $n.compare
-	compare=`grep "passed" $n.compare`
-	if test -n "$compare";
-	    then
-	    echo $compare
-	else
-	    echo; echo "FAILURE running compare_uda . . ."
-	fi
+	
+	compare_results
+
     done
 }
 
@@ -262,27 +250,14 @@ smpm_test () {
     echo; echo "Testing $smpm_test_cases"
     
     for n in $smpm_test_cases; do
-	echo; echo "Running sus -smpm $INPUTS/SMPM/$n.ups"
-	uda=`grep filebase $INPUTS/SMPM/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-	sus -smpm $INPUTS/SMPM/$n.ups &> $n.out
-	success=`grep "successfully" $n.out`
-	if test -n "$success";
-	    then 
-	    echo $success
-	else
-	    echo; echo "FAILURE running sus . . ."
-	    continue;
-	fi
+	run_test
+
+	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+
 	udadir=$n
-	echo "compare_uda $test_dir/$DIR/SMPM/$udadir/$uda $uda &> $n.compare"
-	compare_uda $test_dir/$DIR/SMPM/$udadir/$uda $uda &> $n.compare
-	compare=`grep "passed" $n.compare`
-	if test -n "$compare";
-	    then
-	    echo $compare
-	else
-	    echo; echo "FAILURE running compare_uda . . ."
-	fi
+
+	compare_results
+
     done
 }
 
@@ -291,30 +266,17 @@ ice_test () {
     echo; echo "Testing $ice_test_cases"
     
     for n in $ice_test_cases; do
-	echo; echo "Running sus -ice $INPUTS/ICE/$n.ups"
-	uda=`grep filebase $INPUTS/ICE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-	sus -ice $INPUTS/ICE/$n.ups &> $n.out
-	success=`grep "successfully" $n.out`
-	if test -n "$success";
-	    then 
-	    echo $success
-	else
-	    echo; echo "FAILURE running sus . . ."
-	    continue;
-	fi
+	run_test
+
+	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+
 	udadir=$n
 	if test "$n" = "hotBlob2mat8patch"; then
 	    udadir=hotBlob8patch
 	fi
-	echo "compare_uda $test_dir/$DIR/ICE/$udadir/$uda $uda &> $n.compare"
-	compare_uda $test_dir/$DIR/ICE/$udadir/$uda $uda &> $n.compare
-	compare=`grep "passed" $n.compare`
-	if test -n "$compare";
-	    then
-	    echo $compare
-	else
-	    echo; echo "FAILURE running compare_uda . . ."
-	fi
+
+	compare_results
+
     done
 }
 
@@ -323,11 +285,11 @@ arches_test () {
     echo; echo "Testing $arches_test_cases"
     
     for n in $arches_test_cases; do
-	echo; echo "Running mpirun -np 1 sus -arches -mpi $INPUTS/ARCHES/$n.ups"
-	uda=`grep filebase $INPUTS/ARCHES/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+	echo; echo "Running mpirun -np 1 sus -arches -mpi $INPUTS/$CASE/$n.ups"
+	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
 	cp $INPUTS/ARCHES/chem_meth.linux.bin chem.bin
 	cp $INPUTS/ARCHES/input.dtd input.dtd
-	mpirun -np 1 sus -arches -mpi $INPUTS/ARCHES/$n.ups &> $n.out
+	mpirun -np 1 sus -arches -mpi $INPUTS/$CASE/$n.ups &> $n.out
 	success=`grep "successfully" $n.out`
 	if test -n "$success";
 	    then 
@@ -340,15 +302,9 @@ arches_test () {
 	if test "$n" = "methane_explicit_table"; then
 	    udadir=methane_explicit
 	fi
-	echo "compare_uda $test_dir/$DIR/ARCHES/$udadir/$uda $uda &> $n.compare"
-	compare_uda $test_dir/$DIR/ARCHES/$udadir/$uda $uda &> $n.compare
-	compare=`grep "passed" $n.compare`
-	if test -n "$compare";
-	    then
-	    echo $compare
-	else
-	    echo; echo "FAILURE running compare_uda . . ."
-	fi
+
+	compare_results
+
     done
 }
 
@@ -356,9 +312,9 @@ mpmarches_test () {
     echo; echo "Testing $mpmarches_test_cases"
     
     for n in $mpmarches_test_cases; do
-	echo; echo "Running sus -mpmarches $INPUTS/MPMARCHES/$n.ups"
-	uda=`grep filebase /MPMARCHES/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-	sus -mpmarches $INPUTS/MPMARCHES/$n.ups &> $n.out
+	echo; echo "Running sus -mpmarches $INPUTS/$CASE/$n.ups"
+	uda=`grep filebase /$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+	sus -mpmarches $INPUTS/$CASE/$n.ups &> $n.out
 	success=`grep "successfully" $n.out`
 	if test -n "$success";
 	    then 
@@ -371,15 +327,9 @@ mpmarches_test () {
 	if test "$n" = "hotBlob2mat8patch"; then
 	    udadir=hotBlob8patch
 	fi
-	echo "compare_uda $test_dir/$DIR/MPMARCHES/$udadir/$uda $uda &> $n.compare"
-	compare_uda $test_dir/$DIR/MPMARCHES/$udadir/$uda $uda &> $n.compare
-	compare=`grep "passed" $n.compare`
-	if test -n "$compare";
-	    then
-	    echo $compare
-	else
-	    echo; echo "FAILURE running compare_uda . . ."
-	fi
+
+	compare_results
+
     done
 }
 
@@ -387,9 +337,9 @@ examples_test () {
     echo; echo "Testing $examples_test_cases"
     
     for n in $examples_test_cases; do
-	echo; echo "Running sus -poisson1 $INPUTS/Examples/$n.ups"
-	uda=`grep filebase $INPUTS/Examples/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-	sus -poisson1 $INPUTS/Examples/$n.ups &> $n.out
+	echo; echo "Running sus -poisson1 $INPUTS/$CASE/$n.ups"
+	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+	sus -poisson1 $INPUTS/$CASE/$n.ups &> $n.out
 	success=`grep "successfully" $n.out`
 	if test -n "$success";
 	    then 
@@ -399,15 +349,9 @@ examples_test () {
 	    continue;
 	fi
 	udadir=$n
-	echo "compare_uda $test_dir/$DIR/Examples/$udadir/$uda $uda &> $n.compare"
-	compare_uda $test_dir/$DIR/Examples/$udadir/$uda $uda &> $n.compare
-	compare=`grep "passed" $n.compare`
-	if test -n "$compare";
-	    then
-	    echo $compare
-	else
-	    echo; echo "FAILURE running compare_uda . . ."
-	fi
+
+	compare_results
+
     done
 }
 
@@ -430,34 +374,49 @@ echo "Using $test_dir"
 echo
 
 if test $do_mpm -eq 1; then
+    CASE=MPM
+    opts=-mpm
     mpm_test
 fi
 
 if test $do_ice -eq 1; then
+    CASE=ICE
+    opts=-ice
     ice_test
 fi
 
 if test $do_mpmice -eq 1; then
+    CASE=MPMICE
+    opts=-mpmice
     mpmice_test
 fi
 
 if test $do_smpm -eq 1; then
+    CASE=SMPM
+    opts=-smpm
     smpm_test
 fi
 
 if test $do_impm -eq 1; then
+    CASE=IMPM
+    opts=impm
     impm_test
 fi
 
 if test $do_arches -eq 1; then
+    CASE=ARCHES
+    opts=-arches
     arches_test
 fi
 
 if test $do_mpmarches -eq 1; then
+    CASE=MPMARCHES
+    opts=-mpmarches
     mpmarches_test
 fi
 
 if test $do_examples -eq 1; then
+    CASE=Examples
     examples_test
 fi
 
