@@ -27,6 +27,7 @@ public:
     ~Mailbox();
     void send(Item);
     Item receive();
+    int try_receive(Item&);
     int size() const;
     int nitems() const;
 };

@@ -88,6 +88,23 @@ Item Mailbox<Item>::receive()
 }
 
 template<class Item>
+int Mailbox<Item>::try_receive(Item& item)
+{
+    priv->mutex.lock();
+    if(priv->len == 0){
+	priv->mutex.unlock();
+	return 0;
+    }
+    item=priv->ring_buffer[priv->head];
+    priv->head=NEXT(priv->head, 1, priv->max);
+    priv->len--;
+    if(priv->send_wait)
+	priv->send_condition.cond_signal();
+    priv->mutex.unlock();
+    return 1;
+}
+
+template<class Item>
 int Mailbox<Item>::size() const
 {
     return priv->max;
