@@ -63,20 +63,26 @@ void* realloc(void* p, size_t s)
     return default_allocator->realloc(p, s);
 }
 
-void* memalign(size_t, size_t)
+void* memalign(size_t alignment, size_t size)
 {
-    AllocError("memalign not finished");
-    return 0;
+    if(!default_allocator)
+	MakeDefaultAllocator();
+    return default_allocator->memalign(alignment, size, "Unknown - memalign");
 }
 
-void* valloc(size_t)
+void* valloc(size_t size)
 {
-    AllocError("valloc not finished");
-    return 0;
+    if(!default_allocator)
+	MakeDefaultAllocator();
+    return default_allocator->memalign(getpagesize(), size,
+				       "Unknown - valloc");
 }
 
 //
 // $Log$
+// Revision 1.5  1999/09/30 00:33:46  sparker
+// Added support for memalign (got orphaned in move from SCIRun)
+//
 // Revision 1.4  1999/09/01 05:34:30  sparker
 // malloc/free shouldn't be in the SCICore::Malloc namespace
 //

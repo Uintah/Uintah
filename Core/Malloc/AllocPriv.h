@@ -30,7 +30,7 @@ struct Tag {
 //    Allocator* allocator;
 //    size_t size;
     AllocBin* bin;
-    char* tag;
+    const char* tag;
     Tag* next;
     Tag* prev;
     OSHunk* hunk;
@@ -55,9 +55,10 @@ struct Allocator {
     void longlock();
     inline void unlock();
 
-    void* alloc_big(size_t size, char* tag);
+    void* alloc_big(size_t size, const char* tag);
     
-    void* alloc(size_t size, char* tag);
+    void* memalign(size_t alignment, size_t size, const char* tag);
+    void* alloc(size_t size, const char* tag);
     void free(void*);
     void* realloc(void* p, size_t size);
 
@@ -107,6 +108,9 @@ void AllocError(char*);
 
 //
 // $Log$
+// Revision 1.4  1999/09/30 00:33:46  sparker
+// Added support for memalign (got orphaned in move from SCIRun)
+//
 // Revision 1.3  1999/09/25 08:30:54  sparker
 // Added support for MALLOC_STATS environment variable.  If set, it will
 //   send statistics about malloc and a list of all unfreed objects at
