@@ -30,13 +30,21 @@ MPMLabel::MPMLabel()
   pXXLabel = scinew VarLabel("p.positionXX",
 			ParticleVariable<Point>::getTypeDescription());
   
-  pStressAfterFractureReleaseLabel = scinew VarLabel(
-                        "p.stressAfterFractureRelease",
+  pStressLabel_afterFracture = scinew VarLabel(
+                        "p.stress_afterFracture",
 			ParticleVariable<Matrix3>::getTypeDescription());
 
-  pStressAfterStrainRateLabel = scinew VarLabel(
-                        "p.stressAfterStrainRate",
+  pStressLabel_afterStrainRate = scinew VarLabel(
+                        "p.stress_afterStrainRate",
 			ParticleVariable<Matrix3>::getTypeDescription());
+
+  pVelocityLabel_afterFracture = scinew VarLabel(
+                        "p.velocity_afterFracture",
+			ParticleVariable<Vector>::getTypeDescription());
+
+  pVelocityLabel_afterUpdate = scinew VarLabel(
+                        "p.velocity_afterUpdate",
+			ParticleVariable<Vector>::getTypeDescription());
 
   pStrainEnergyLabel = scinew VarLabel("p.strainEnergy",
 			ParticleVariable<double>::getTypeDescription());
@@ -99,7 +107,10 @@ MPMLabel::MPMLabel()
   pToughnessLabel = scinew VarLabel( "p.toughness",
 			ParticleVariable<double>::getTypeDescription() );
 
-  pEnergyReleaseRateLabel = scinew VarLabel( "p.energyReleaseRateLabel",
+  pEnergyReleaseRateLabel = scinew VarLabel( "p.energyReleaseRate",
+			ParticleVariable<double>::getTypeDescription() );
+
+  pCrackSurfacePressureLabel = scinew VarLabel( "p.crackSurfacePressure",
 			ParticleVariable<double>::getTypeDescription() );
 
   pParticleIDLabel = scinew VarLabel("p.particleID",
@@ -158,8 +169,12 @@ MPMLabel::MPMLabel()
   pToughnessLabel_preReloc = scinew VarLabel( "p.toughness+",
 			ParticleVariable<double>::getTypeDescription() );
 
-  pEnergyReleaseRateLabel_preReloc =scinew VarLabel("p.energyReleaseRateLabel+",
+  pEnergyReleaseRateLabel_preReloc =scinew VarLabel("p.energyReleaseRate+",
 			ParticleVariable<double>::getTypeDescription() );
+
+  pCrackSurfacePressureLabel_preReloc = scinew 
+                        VarLabel( "p.crackSurfacePressure+",
+                        ParticleVariable<double>::getTypeDescription() );
 
   pParticleIDLabel_preReloc = scinew VarLabel("p.particleID+",
 			ParticleVariable<long>::getTypeDescription() );
@@ -293,8 +308,10 @@ MPMLabel::~MPMLabel()
   delete pTouchNormalLabel;
   delete pXXLabel;
 
-  delete pStressAfterFractureReleaseLabel;
-  delete pStressAfterStrainRateLabel;
+  delete pStressLabel_afterFracture;
+  delete pStressLabel_afterStrainRate;
+  delete pVelocityLabel_afterFracture;
+  delete pVelocityLabel_afterUpdate;
 
   delete pStrainEnergyLabel;
   delete pRotationRateLabel;
@@ -317,6 +334,7 @@ MPMLabel::~MPMLabel()
   delete pExtensionDirectionLabel;
   delete pToughnessLabel;
   delete pEnergyReleaseRateLabel;
+  delete pCrackSurfacePressureLabel;
   delete pParticleIDLabel;
   delete pIsIgnitedLabel;
   delete pMassRateLabel;
@@ -339,6 +357,7 @@ MPMLabel::~MPMLabel()
   delete pExtensionDirectionLabel_preReloc;
   delete pToughnessLabel_preReloc;
   delete pEnergyReleaseRateLabel_preReloc;
+  delete pCrackSurfacePressureLabel_preReloc;
   delete pParticleIDLabel_preReloc;
   delete pIsIgnitedLabel_preReloc;
   delete pMassRateLabel_preReloc;

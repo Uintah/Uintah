@@ -109,6 +109,11 @@ WARNING
          double getHeatTransferCoefficient() const;
          double getInitialDensity() const;
 
+         //for FractureModel
+	 double getPressureRate() const;
+	 double getExplosivePressure() const;
+	 double getInitialPressure() const;
+
          // For MPMICE
          double getGamma() const;
 				
@@ -136,6 +141,11 @@ WARNING
 
          //for ThermalContactModel
          double d_heatTransferCoefficient;
+
+         //for FractureModel
+         double d_pressureRate;
+	 double d_explosivePressure;
+	 double d_initialPressure;
 
 	 std::vector<GeometryObject*> d_geom_objs;
 

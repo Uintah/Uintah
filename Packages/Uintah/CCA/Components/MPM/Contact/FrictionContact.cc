@@ -340,7 +340,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                                                lb->pXLabel);
       ParticleVariable<Matrix3> pstress;
       NCVariable<Matrix3>       gstress;
-      new_dw->get(pstress, lb->pStressAfterStrainRateLabel, pset);
+      new_dw->get(pstress, lb->pStressLabel_afterStrainRate, pset);
       new_dw->allocate(gstress, lb->gStressLabel, matlindex, patch);
       gstress.initialize(Matrix3(0.0));
       
@@ -507,7 +507,7 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 					     const PatchSet* ,
 					     const MaterialSet* ) const
 {
-  t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel,
+  t->requires(Task::NewDW, lb->pStressLabel_afterStrainRate,
 	      Ghost::AroundNodes, 1);
   t->requires(Task::NewDW,  lb->gMassLabel, Ghost::AroundNodes, 1);
   t->requires(Task::NewDW,  lb->gVelocityStarLabel, Ghost::None);
