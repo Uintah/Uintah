@@ -31,23 +31,20 @@
 #include <iostream>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Parts/Part.h>
-#include <Core/Framework/CoreFramework.h>
 #include <Core/Parts/GuiVar.h>
+#include <Core/Parts/PartPort.h>
+#include <Core/Framework/CoreFramework.h>
 #include <Core/GuiInterface/GuiManager.h>
 
 namespace SCIRun {
 
 using namespace std;
   
-Signal1<const string &> Part::tcl_execute;
-Signal2<const string &, string &> Part::tcl_eval;
-Signal3<const string &, Part *, void *> Part::tcl_add_command;
-Signal1<const string &> Part::tcl_delete_command;
-
-
-Part::Part( Part *parent, const string &name, const string &type )
+Part::Part( Part *parent, const string &name, const string &type,
+	    bool initialize)
   : name_(name), type_(type), parent_(parent)
 {
+  if ( initialize ) init();
 }
 
 
@@ -100,52 +97,27 @@ Part::rem_child( Part *child )
 void 
 Part::emit_vars( ostream& out, string &midx )
 {
-  for (unsigned i=0; i!= vars_.size(); i++)
-    vars_[i]->emit(out,midx);
+  map<string,GuiVar *>::iterator i;
+  for ( i=vars_.begin(); i!=vars_.end(); i++)
+    i->second->emit(out,midx);
 }
 
 void 
 Part::add_gui_var( GuiVar *v )
 {
-  vars_.push_back(v);
+  vars_[ v->name() ] = v;
 }
 
 void 
 Part::rem_gui_var( GuiVar *v )
 {
-  for (unsigned i=0; i<vars_.size(); i++)
-    if ( vars_[i] == v ) {
-      vars_.erase( vars_.begin()+i );
-      return;
-    }
+  map<string,GuiVar *>::iterator i = vars_.find(v->name());
+  if ( i != vars_.end() )
+    vars_.erase( i );
 }
 
-void
-Part::reset_vars()
-{
-  for (unsigned i=0; i<vars_.size(); i++)
-    vars_[i]->reset();
-}
-     
 
 // tcl compatibity
-
-const string &
-Part::get_var( const string &obj, const string &var )
-{
-  static string res;
-  //  tcl_eval( obj + " get-var " + var, res );
-  tcl_eval( obj + " cget  -" + var, res );
-  cerr << "Part::get_var = " << obj << " cget -" << var << " =  " <<res<<endl;
-  return res;
-}
-
-void
-Part::set_var( const string &obj, const string &var, const string &value )
-{
-  cerr << "Part::set_var = " << obj << " configure -" << var << " " << value << endl;
-  tcl_execute( obj + " configure -" + var + " " + value );
-}
 
 int 
 Part::get_gui_stringvar(const string &base, const string &name, string &value )
@@ -169,6 +141,28 @@ void
 Part::set_gui_var(const string &base, const string &name, const string &value )
 {
   return gm->set_guivar( base, name, value );
+}
+
+void
+Part::var_set( GuiVar *var )
+{
+  port_->var_set( var );
+}
+
+// 
+// PartPort
+//
+
+const string &
+PartPort::type()
+{
+  return part_->type();
+} 
+
+void
+PartPort::command( TCLArgs &args ) 
+{
+  part_->tcl_command( args, 0 );
 }
 
 } // namespace SCIRun

@@ -41,16 +41,13 @@ using namespace std;
 
 //////////
 // Constructor/Destructor
-TCLstrbuff::TCLstrbuff(const string& name, const string& id, Part* tcl):
-  GuiVar(name, id, tcl),
-  ostringstream()
+TCLstrbuff::TCLstrbuff(const string& name, const string& id, Part* part):
+  GuiVar(name, part), ostringstream()
 {
-  //  gm->create_var( varname_ );
 }
 
 TCLstrbuff::~TCLstrbuff()
 {
-  // gm->remove_var( varname_ );
 }
 
 //////////
@@ -63,8 +60,6 @@ void TCLstrbuff::emit(std::ostream&, string&){
 //
 TCLstrbuff& TCLstrbuff::flush()
 {
-  //  gm->set_var( varname_, ostringstream::str() );
-
   cerr << "TCLstrbuff: " << ostringstream::str() << endl;
   // reinitializing the stream
   ostringstream::clear();
