@@ -24,6 +24,8 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Modules/Fields/SelectField.h>
+#include <Dataflow/Widgets/ScaledBoxWidget.h>
+#include <Core/Datatypes/BoxClipper.h>
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <iostream>
@@ -178,7 +180,9 @@ SelectField::execute()
     }
     bool replace_p = false;
     if (mode_.get() == 2) { replace_p = true; }
-    algo->execute(output_field_, box_, value_.get(), replace_p, 0);
+
+    BoxClipper clipper = box_->get_clipper();
+    algo->execute(output_field_, clipper, value_.get(), replace_p, 0);
 
     output_field_->generation++;
     forward_p = true;

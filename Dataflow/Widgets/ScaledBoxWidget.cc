@@ -768,4 +768,29 @@ ScaledBoxWidget::AxisAligned( const Index yesno )
    execute(0);
 }
 
+
+BoxClipper
+ScaledBoxWidget::get_clipper()
+{
+  Point center, right, down, in;
+  GetPosition(center, right, down, in);
+
+  // Rotate * Scale * Translate.
+  Transform t, r;
+  Point unused;
+  t.load_identity();
+  r.load_frame(unused, (right-center).normal(),
+	       (down-center).normal(),
+	       (in-center).normal());
+  t.pre_trans(r);
+  t.pre_scale(Vector((right-center).length(),
+		     (down-center).length(),
+		     (in-center).length()));
+  t.pre_translate(Vector(center.x(), center.y(), center.z()));
+  t.invert();
+
+  return BoxClipper(t);
+}
+
+
 } // End namespace SCIRun

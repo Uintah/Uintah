@@ -24,7 +24,7 @@
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
-#include <Dataflow/Widgets/ScaledBoxWidget.h>
+#include <Core/Datatypes/Clipper.h>
 #include <Core/Datatypes/Matrix.h>
 
 namespace SCIRun {
@@ -65,7 +65,7 @@ SelectFieldCreateAlgoT<MESH, FIELD>::execute(MeshHandle mesh_h,
 class SelectFieldFillAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(FieldHandle src, ScaledBoxWidget *box, int value,
+  virtual void execute(FieldHandle src, Clipper &clipper, int value,
 		       bool replace_p, int replace_value) = 0;
 
   //! support the dynamically compiled algorithm concept
@@ -79,7 +79,7 @@ class SelectFieldFillAlgoT : public SelectFieldFillAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(FieldHandle src, ScaledBoxWidget *box, int value,
+  virtual void execute(FieldHandle src, Clipper &clipper, int value,
 		       bool replace_p, int replace_value);
 };
 
@@ -87,7 +87,7 @@ public:
 template <class FIELD, class LOC>
 void
 SelectFieldFillAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
-					  ScaledBoxWidget *box,
+					  Clipper &clipper,
 					  int value, bool replace_p,
 					  int replace_value)
 {
@@ -96,33 +96,13 @@ SelectFieldFillAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
   typename LOC::iterator iter, eiter;
   field->get_typed_mesh()->begin(iter);
   field->get_typed_mesh()->end(eiter);
-  
-  Point center, right, down, in;
-  box->GetPosition(center, right, down, in);
-
-  // Rotate * Scale * Translate.
-  Transform t, r;
-  Point unused;
-  t.load_identity();
-  r.load_frame(unused, (right-center).normal(),
-	       (down-center).normal(),
-	       (in-center).normal());
-  t.pre_trans(r);
-  t.pre_scale(Vector((right-center).length(),
-		     (down-center).length(),
-		     (in-center).length()));
-  t.pre_translate(Vector(center.x(), center.y(), center.z()));
-  t.invert();
 
   while (iter != eiter)
   {
-    Point p, ptrans;
+    Point p;
     field->get_typed_mesh()->get_center(p, *iter);
 
-    ptrans = t.project(p);
-    if (ptrans.x() >= -1.0 && ptrans.x() < 1.0 &&
-	ptrans.y() >= -1.0 && ptrans.y() < 1.0 &&
-	ptrans.z() >= -1.0 && ptrans.z() < 1.0)
+    if (clipper.inside_p(p))
     {
       field->set_value(value, *iter);
     }
