@@ -168,3 +168,30 @@ performanceTest[SecondOrder]
 
 0.564265  - changed r_out_(x,y,z) from CCVariable<fflux> to CCVariable<faceData<Vector> >
             (not committed)
+
+
+0.572064 - steves version
+0.571975 - const Vector& in gradQ
+0.571667 - rearranged gradQ
+         - SecondOrder seems to be done without more drastic measures
+
+FirstOrder
+0.44659 - steves version
+0.43308 - pulled constants out of loops in advectSlabs
+0.428396 - moved velocity computation in addExchangeToMomentumAndEnergy
+0.424983 - moved more constants around in addExchangeToMomentumAndEnergy
+
+
+
+
+------------------------------------------------------------------
+9/16/04 - Exchange in 5 matl JP8
+Time for 20x80x20 on muse for 10 timesteps (average per timestep)
+19.7811 - Original (after some of Jim's JWL changes and backing out FastMatrix)
+18.4857 - rearranged loops
+17.6934 - dual-column solve, etc.
+
+TODO:
+Specialized FastMatrix code for unrolled loops
+Specialize offset for vel_FC exchange...
+Don't update matrix in backsolve?
