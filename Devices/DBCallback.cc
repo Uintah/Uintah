@@ -16,7 +16,7 @@
 #endif
 
 #include <Multitask/ITC.h>
-#include <DBCallback.h>
+#include <Devices/DBCallback.h>
 
 #ifdef __GNUG__
 #if 0
