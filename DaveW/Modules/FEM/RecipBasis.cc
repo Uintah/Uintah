@@ -34,6 +34,7 @@ class RecipBasis : public Module {
     MatrixIPort* sol_iport;
     ColumnMatrixOPort* rhs_oport;
     MatrixOPort* basis_oport;
+    MatrixOPort* basis2_oport;
 public:
     RecipBasis(const clString& id);
     virtual ~RecipBasis();
@@ -61,9 +62,12 @@ RecipBasis::RecipBasis(const clString& id)
     rhs_oport = new ColumnMatrixOPort(this,"RHS Vector",
 				       ColumnMatrixIPort::Atomic);
     add_oport(rhs_oport);
-    basis_oport = new MatrixOPort(this, "Basis Matrix",
+    basis_oport = new MatrixOPort(this, "EBasis (nelems x (nelecs-1)x3)",
 				  MatrixIPort::Atomic);
     add_oport(basis_oport);
+    basis2_oport = new MatrixOPort(this, "EBasis (nelecs x nelemsx3)",
+				  MatrixIPort::Atomic);
+    add_oport(basis2_oport);
 }
 
 RecipBasis::~RecipBasis(){}
@@ -84,6 +88,8 @@ void RecipBasis::execute() {
     int nelems=mesh_in->elems.size();
     int counter=0;
     DenseMatrix *bmat=new DenseMatrix(nelems, (nelecs-1)*3);
+    DenseMatrix *bmat2=new DenseMatrix(nelecs, nelems*3);
+    bmat2->zero();
 
     while (counter<(nelecs-1)) {
 	// send rhs
@@ -102,14 +108,16 @@ void RecipBasis::execute() {
 	    return;
 	}
 	for (i=0; i<nelems; i++)
-	    for (int j=0; j<3; j++)
+	    for (int j=0; j<3; j++) {
 		(*bmat)[i][counter*3+j]=-(*sol_in.get_rep())[i][j];
+		(*bmat2)[counter+1][i*3+j]=-(*sol_in.get_rep())[i][j];
+	    }
 	cerr << "RecipBasis: "<<counter<<"/"<<nelecs-1<<"\n";
 	counter++;
 
     }
-    
     basis_oport->send(bmat);
+    basis2_oport->send(bmat2);
     cerr << "Done with the Module!"<<endl;
 }
 } // End namespace Modules
@@ -117,6 +125,9 @@ void RecipBasis::execute() {
 
 //
 // $Log$
+// Revision 1.9  2000/08/01 18:03:04  dmw
+// fixed errors
+//
 // Revision 1.8  2000/03/17 09:25:44  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

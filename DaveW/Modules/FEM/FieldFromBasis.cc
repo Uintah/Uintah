@@ -13,9 +13,7 @@
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
 #include <PSECore/Datatypes/MatrixPort.h>
 #include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
 #include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
 
 #include <iostream>
 using std::cerr;
@@ -36,8 +34,8 @@ class FieldFromBasis : public Module {
     int matrixGen;
     ColumnMatrixIPort* rms_iport;
     MatrixOPort* elem_oport;
-    ScalarFieldOPort* field_oport;
-    ScalarFieldHandle sfh;
+    ColumnMatrixOPort* vec_oport;
+    ColumnMatrixHandle vecH;
 public:
     FieldFromBasis(const clString& id);
     virtual ~FieldFromBasis();
@@ -65,9 +63,9 @@ FieldFromBasis::FieldFromBasis(const clString& id)
     elem_oport = new MatrixOPort(this,"Element Vectors",
 				 MatrixIPort::Atomic);
     add_oport(elem_oport);
-    field_oport = new ScalarFieldOPort(this, "Error Field",
-				       ScalarFieldIPort::Atomic);
-    add_oport(field_oport);
+    vec_oport = new ColumnMatrixOPort(this, "Error Vector",
+				      ColumnMatrixIPort::Atomic);
+    add_oport(vec_oport);
     matrixGen=-1;
 }
 
@@ -89,13 +87,16 @@ void FieldFromBasis::execute() {
     int nnodes=mesh->nodes.size();
     cerr << "basisH->nrows()="<<basisH->nrows()<<" cols="<<basisH->ncols()<<"\n";
     cerr << "     mesh->elems.size()="<<nelems<<" mesh->nodes.size()="<<nnodes<<"\n";
-    if (matrixGen == basisH->generation && sfh.get_rep()) {
-	field_oport->send(sfh);
+    if (matrixGen == basisH->generation && vecH.get_rep()) {
+	vec_oport->send(vecH);
 	return;
     }
     matrixGen=basisH->generation;
     int counter=0;
-    Array1<double> errors(nelems);
+
+    ColumnMatrix *vec=new ColumnMatrix(nelems);
+    double *errors = vec->get_rhs();
+
     while (counter<nelems) {
 	if (counter && counter%100 == 0)
 	    cerr << "FieldFromBasis: "<<counter<<"/"<<nelems<<"\n";
@@ -119,6 +120,25 @@ void FieldFromBasis::execute() {
 	    }
 	    errors[counter]=(*err_in.get_rep())[0];
 	    counter++;
+	} else if (nelems == basis->ncols()/3) {
+	    int nelecs=basis->nrows();
+	    DenseMatrix* bas=new DenseMatrix(nelecs,3);
+	    int i;
+	    for (i=0; i<nelecs; i++) 
+		for (int j=0; j<3; j++)
+		    (*bas)[i][j]=(*basis)[i][counter*3+j];
+	    if (counter<(nelems-1)) elem_oport->send_intermediate(bas);
+	    else elem_oport->send(bas);
+	    
+	    // read error
+	    ColumnMatrixHandle err_in;
+	    if (!rms_iport->get(err_in) || !(err_in.get_rep()) || 
+		(err_in->nrows() != 1)) {
+		cerr <<"FieldFromBasis -- couldn't get error vector.\n";
+		return;
+	    }
+	    errors[counter]=(*err_in.get_rep())[0];
+	    counter++;	    
 	} else if (nnodes == basis->ncols()) {
 	    int nelecs=basis->nrows();
 	    DenseMatrix* bas=new DenseMatrix(nelecs,4);
@@ -145,11 +165,8 @@ void FieldFromBasis::execute() {
 	}
     }
 
-    ScalarFieldUG *sfug=new ScalarFieldUG(mesh, 
-					  ScalarFieldUG::ElementValues);
-    sfug->data=errors;
-    sfh=sfug;
-    field_oport->send(sfh);
+    vecH=vec;
+    vec_oport->send(vecH);
     cerr << "Done with the Module!"<<endl;
 }
 } // End namespace Modules
@@ -157,6 +174,9 @@ void FieldFromBasis::execute() {
 
 //
 // $Log$
+// Revision 1.6  2000/08/01 18:03:03  dmw
+// fixed errors
+//
 // Revision 1.5  2000/03/17 09:25:44  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

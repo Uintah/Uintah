@@ -46,6 +46,7 @@ class DipoleMatToGeom : public Module {
     int gen;
     MatrixHandle dipoleMatH;
     TCLstring widgetSizeTCL;
+    TCLint fixedSizeTCL;
     int which;
     double lastSize;
     clString execMsg;
@@ -74,7 +75,8 @@ extern "C" Module* make_DipoleMatToGeom(const clString& id)
 DipoleMatToGeom::DipoleMatToGeom(const clString& id)
 : Module("DipoleMatToGeom", id, Filter), 
   widgetSizeTCL("widgetSizeTCL", id, this),
-  widget_lock("DipoleMatToGeom widget lock")
+  widget_lock("DipoleMatToGeom widget lock"),
+  fixedSizeTCL("fixedSizeTCL", id, this)
 {
     // Create the input port
     imat=scinew MatrixIPort(this, "DipoleMatrix", MatrixIPort::Atomic);
@@ -145,27 +147,27 @@ void DipoleMatToGeom::execute()
 		 }
 		 nDips=mp->nrows();
 	     }
-	     widget[nDips-1]->SetCurrentMode(1);
+	     widget[nDips-1]->SetCurrentMode(2);
 	     widget[nDips-1]->SetMaterial(0, greenMatl);
 	 }
 	 Array1<Point> pts;
 	 int i;
+	 int fixedSize=fixedSizeTCL.get();
 	 for (i=0; i<mp->nrows(); i++) {
 	     Point p((*mp)[i][0], (*mp)[i][1], (*mp)[i][2]);
 	     pts.add(p);
 	     widget[i]->SetPosition(p);
 	     Vector v((*mp)[i][3], (*mp)[i][4], (*mp)[i][5]);
-	     cerr << "widget["<<i<<"] is at position "<<p<<" and dir "<<v<<"\n";
+//	     cerr << "widget["<<i<<"] is at position "<<p<<" and dir "<<v<<"\n";
 	     double str=v.length();
 	     if (str<0.0000001) v.z(1);
+	     if (fixedSize) str=1;
 	     v.normalize();
 	     widget[i]->SetDirection(v);
 //	     widget[i]->SetScale(str*widgetSize);
 //	     widget[i]->SetScale(widgetSize);
-	     if (i==mp->nrows()-1) 
-		 widget[i]->SetScale(str*widgetSize);
-	     else
-		 widget[i]->SetScale(str*widgetSize);
+	     widget[i]->SetScale(str*widgetSize);
+	     widget[i]->SetLength(2*str*widgetSize);
 	 }
 	 GeomLines *g=new GeomLines;
 	 for (i=0; i<pts.size()-2; i++) 
@@ -216,13 +218,13 @@ void DipoleMatToGeom::execute()
 	 omat->send(dipoleMatH);
      }
 
-     cerr << "DipoleMatToGeom: Here are the dipoles...\n";
+//     cerr << "DipoleMatToGeom: Here are the dipoles...\n";
      for (int i=0; i<mp->nrows(); i++) {
-	 cerr << "   "<<i<<"   ";
+//	 cerr << "   "<<i<<"   ";
 	 for (int j=0; j<mp->ncols(); j++) {
-	     cerr << (*mp)[i][j]<<" ";
+//	     cerr << (*mp)[i][j]<<" ";
 	 }
-	 cerr << "\n";
+//	 cerr << "\n";
      }
 
 }
@@ -241,6 +243,9 @@ void DipoleMatToGeom::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.5  2000/08/01 18:03:03  dmw
+// fixed errors
+//
 // Revision 1.4  2000/03/17 09:25:43  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

@@ -31,6 +31,7 @@ class DipoleSourceRHS : public Module {
     ColumnMatrixIPort * isource;
     ColumnMatrixIPort* irhs;
     ColumnMatrixOPort* orhs;
+    ColumnMatrixOPort* oidx;
     int loc;
     int gen;
 public:
@@ -58,6 +59,8 @@ DipoleSourceRHS::DipoleSourceRHS(const clString& id)
     // Create the output ports
     orhs=scinew ColumnMatrixOPort(this,"Output RHS",ColumnMatrixIPort::Atomic);
     add_oport(orhs);
+    oidx=scinew ColumnMatrixOPort(this,"Elem Index",ColumnMatrixIPort::Atomic);
+    add_oport(oidx);
 }
 
 DipoleSourceRHS::~DipoleSourceRHS()
@@ -87,15 +90,16 @@ void DipoleSourceRHS::execute()
 
      Vector dir((*mp)[3], (*mp)[4], (*mp)[5]);
      Point p((*mp)[0], (*mp)[1], (*mp)[2]);
+     if (mp->nrows() == 7) loc=(int)((*mp)[6]);
      if (mesh->locate(p, loc)) {
-	 cerr << "DipoleSourceRHS: Found Dipole in element "<<loc<<"\n";
+//	 cerr << "DipoleSourceRHS: Found Dipole in element "<<loc<<"\n";
 	 double s1, s2, s3, s4;
 
 	 // use these next six lines if we're using a dipole
 	 Vector g1, g2, g3, g4;
 	 mesh->get_grad(mesh->elems[loc], p, g1, g2, g3, g4);
 
-	 cerr << "DipoleSourceRHS :: p="<<p<<"  dir="<<dir<<"\n";
+//	 cerr << "DipoleSourceRHS :: p="<<p<<"  dir="<<dir<<"\n";
 //	 cerr << "Dir="<<dir<<"  g1="<<g1<<"  g2="<<g2<<"\n";
 //	 cerr << "g3="<<g3<<"  g4="<<g4<<"\n";
 	 s1=Dot(g1,dir);
@@ -129,12 +133,24 @@ void DipoleSourceRHS::execute()
 #endif
 
      } else {
+	 loc=0;
+	 dir=Vector(0,0,0);
 	 cerr << "Dipole: "<<p<<" not located within mesh!\n";
      }
      gen=rhsh->generation;
 //     cerr << "DipoleSourceRHS: about to send result...\n";
      orhs->send(rhsh);
 //     cerr << "DipoleSourceRHS: sent result!\n";
+     
+     ColumnMatrix *idxvec = new ColumnMatrix(6);
+     idxvec->zero();
+     (*idxvec)[0]=loc*3;
+     (*idxvec)[1]=dir.x();
+     (*idxvec)[2]=loc*3+1;
+     (*idxvec)[3]=dir.y();
+     (*idxvec)[4]=loc*3+2;
+     (*idxvec)[5]=dir.z();
+     oidx->send(ColumnMatrixHandle(idxvec));
 }
 
 } // End namespace Modules
@@ -143,6 +159,9 @@ void DipoleSourceRHS::execute()
 
 //
 // $Log$
+// Revision 1.6  2000/08/01 18:03:03  dmw
+// fixed errors
+//
 // Revision 1.5  2000/03/17 09:25:43  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
