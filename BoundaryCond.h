@@ -15,7 +15,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Containers/StaticArray.h>
-#include <ctime>
+#include <time.h>
 
 namespace Uintah {
  // setenv SCI_DEBUG "ICE_BC_DBG:+,ICE_BC_DOING:+"
