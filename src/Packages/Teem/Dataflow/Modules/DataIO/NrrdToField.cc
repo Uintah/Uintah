@@ -39,8 +39,6 @@
 
 #include <iostream>
 
-//#include <Teem/Dataflow/Modules/DataIO/ConvertToField.h>
-//#include <Teem/Dataflow/Modules/DataIO/NrrdFieldConverter.h>
 #include <Teem/Dataflow/Modules/DataIO/NrrdToField.h>
 
 namespace SCITeem {
@@ -270,43 +268,69 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
     }
 
     mHandle = origfieldH->mesh();
-    
-    // Now create field based on the mesh created above and send it
-    const TypeDescription *mtd = mHandle->get_type_description();
-    
-    string fname = mtd->get_name();
-    string::size_type pos = fname.find( "Mesh" );
-    fname.replace( pos, 4, "Field" );
-    
-    CompileInfoHandle ci;
-    
+
+    // verify the data will "fit" into the mesh passed in
     if (has_data_) {
-      ci = NrrdFieldConverterFieldAlgo::get_compile_info(mtd,
-							 fname,
-							 dataH->nrrd->type, 
-							 data_rank);
+      const TypeDescription *td = origfieldH->get_type_description();
+      CompileInfoHandle ci = NrrdToFieldTestMeshAlgo::get_compile_info(td);
+      Handle<NrrdToFieldTestMeshAlgo> algo;
+      if ((module_dynamic_compile(ci, algo)) && 
+	  (algo->execute(origfieldH, dataH, ofield_handle, data_rank))) 
+	{
+	  remark("Creating a Field from original mesh in input nrrd");
+	  
+	  // Now create field based on the mesh created above and send it
+	  const TypeDescription *mtd = mHandle->get_type_description();
+	  
+	  string fname = mtd->get_name();
+	  string::size_type pos = fname.find( "Mesh" );
+	  fname.replace( pos, 4, "Field" );
+	  
+	  CompileInfoHandle ci;
+	  
+	  ci = NrrdToFieldFieldAlgo::get_compile_info(mtd,
+							     fname,
+							     dataH->nrrd->type, 
+							     data_rank);
+	  
+	  Handle<NrrdToFieldFieldAlgo> algo;
+	  if (!module_dynamic_compile(ci, algo)) return 0;
+	  
+	  if ((nrrdKindSize( dataH->nrrd->axis[0].kind) == 9) && build_eigens) {
+	    warning("Attempting to build eigendecomposition of Tensors with non symmetric tensor");
+	  }
+	  
+	  ofield_handle = algo->execute( mHandle, dataH, build_eigens);
+	  
+	  return ofield_handle;
+	}
     } else {
-      ci = NrrdFieldConverterFieldAlgo::get_compile_info(mtd,
+      dataH = 0;
+      
+      // Now create field based on the mesh created above and send it
+      const TypeDescription *mtd = mHandle->get_type_description();
+      
+      string fname = mtd->get_name();
+      string::size_type pos = fname.find( "Mesh" );
+      fname.replace( pos, 4, "Field" );
+      
+      CompileInfoHandle ci;
+      
+      ci = NrrdToFieldFieldAlgo::get_compile_info(mtd,
 							 fname,
 							 pointsH->nrrd->type, 
 							 data_rank);
+      
+      Handle<NrrdToFieldFieldAlgo> algo;
+      if (!module_dynamic_compile(ci, algo)) return 0;
+      
+      ofield_handle = algo->execute( mHandle, dataH, build_eigens);
+      
+      return ofield_handle;
     }
-    
-    Handle<NrrdFieldConverterFieldAlgo> algo;
-    if (!module_dynamic_compile(ci, algo)) return 0;
-    
-    if (!has_data_) 
-      dataH = 0;
-
-    if (has_data_ && (nrrdKindSize( dataH->nrrd->axis[0].kind) == 9) && build_eigens) {
-      warning("Attempting to build eigendecomposition of Tensors with non symmetric tensor");
-    }
-    
-    ofield_handle = algo->execute( mHandle, dataH, build_eigens);
-    
-    return ofield_handle;
+    cerr << "Tried to use field but failed\n";
   }
-
+  
 
 
 
@@ -441,12 +465,12 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
       remark( "Creating an unstructured " + mtd->get_name() );
       
       CompileInfoHandle ci_mesh =
-	NrrdFieldConverterMeshAlgo::get_compile_info("Unstructured",
+	NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
 						     mtd,
 						     pointsH->nrrd->type,
 						     connectH->nrrd->type);
       
-      Handle<UnstructuredNrrdFieldConverterMeshAlgo> algo_mesh;
+      Handle<UnstructuredNrrdToFieldMeshAlgo> algo_mesh;
       
       if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return 0;
       
@@ -594,12 +618,12 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	remark( "Creating a structured " + mtd->get_name() );
 	
 	CompileInfoHandle ci_mesh =
-	  NrrdFieldConverterMeshAlgo::get_compile_info( "Structured",
+	  NrrdToFieldMeshAlgo::get_compile_info( "Structured",
 							mtd,
 							pointsH->nrrd->type,
 							pointsH->nrrd->type);
 	
-	Handle<StructuredNrrdFieldConverterMeshAlgo> algo_mesh;
+	Handle<StructuredNrrdToFieldMeshAlgo> algo_mesh;
 	
 	if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return 0;
 
@@ -807,19 +831,19 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
   CompileInfoHandle ci;
 
   if (has_data_) {
-    ci = NrrdFieldConverterFieldAlgo::get_compile_info(mtd,
+    ci = NrrdToFieldFieldAlgo::get_compile_info(mtd,
 						       fname,
 						       dataH->nrrd->type, 
 						       data_rank);
   } else {
-    ci = NrrdFieldConverterFieldAlgo::get_compile_info(mtd,
+    ci = NrrdToFieldFieldAlgo::get_compile_info(mtd,
 						       fname,
 						       pointsH->nrrd->type, 
 						       data_rank);
     dataH = 0;
   }
   
-  Handle<NrrdFieldConverterFieldAlgo> algo;
+  Handle<NrrdToFieldFieldAlgo> algo;
   
   if (!module_dynamic_compile(ci, algo)) return 0;
   
@@ -896,15 +920,15 @@ void get_nrrd_compile_type( const unsigned int type,
 }
 
 CompileInfoHandle
-NrrdFieldConverterMeshAlgo::get_compile_info( const string topoStr,
+NrrdToFieldMeshAlgo::get_compile_info( const string topoStr,
 					      const TypeDescription *mtd,
 					      const unsigned int ptype,
 					      const unsigned int ctype)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  const string base_class_name(topoStr + "NrrdFieldConverterMeshAlgo");
-  const string template_class_name(topoStr + "NrrdFieldConverterMeshAlgoT");
+  const string base_class_name(topoStr + "NrrdToFieldMeshAlgo");
+  const string template_class_name(topoStr + "NrrdToFieldMeshAlgoT");
 
   string pTypeStr,  cTypeStr;
   string pTypeName, cTypeName;
@@ -928,14 +952,14 @@ NrrdFieldConverterMeshAlgo::get_compile_info( const string topoStr,
 }
 
 CompileInfoHandle
-NrrdFieldConverterFieldAlgo::get_compile_info(const TypeDescription *mtd,
+NrrdToFieldFieldAlgo::get_compile_info(const TypeDescription *mtd,
 					      const string fname,
 					      const unsigned int type,
 					      int rank)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string base_class_name("NrrdFieldConverterFieldAlgo");
+  static const string base_class_name("NrrdToFieldFieldAlgo");
   
   string typeStr, typeName;
   
@@ -979,6 +1003,30 @@ NrrdFieldConverterFieldAlgo::get_compile_info(const TypeDescription *mtd,
   rval->add_namespace("SCITeem");
   mtd->fill_compile_info(rval);
   return rval;
+}
+ 
+NrrdToFieldTestMeshAlgo::~NrrdToFieldTestMeshAlgo()
+{
+}
+
+
+CompileInfoHandle
+NrrdToFieldTestMeshAlgo::get_compile_info(const TypeDescription *td) 
+{
+  CompileInfo *rval = scinew CompileInfo(dyn_file_name(td), 
+					 base_class_name(), 
+					 template_class_name(), 
+					 td->get_name());
+  rval->add_include(get_h_file_path());
+  rval->add_namespace("SCITeem");
+  td->fill_compile_info(rval);
+  return rval;
+}
+
+const string& 
+NrrdToFieldTestMeshAlgo::get_h_file_path() {
+  static const string path(TypeDescription::cc_to_h(__FILE__));
+  return path;
 }
 
 

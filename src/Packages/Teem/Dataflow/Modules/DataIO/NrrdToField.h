@@ -15,7 +15,7 @@
   University of Utah. All Rights Reserved.
 */
 
-//    File   : NrrdFieldConverter.h
+//    File   : NrrdToField.h
 //    Author : Allen Sanderson
 //             School of Computing
 //             University of Utah
@@ -57,7 +57,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class NrrdFieldConverterMeshAlgo : public DynamicAlgoBase
+class NrrdToFieldMeshAlgo : public DynamicAlgoBase
 {
 public:
   //! support the dynamically compiled algorithm concept
@@ -70,7 +70,7 @@ public:
 
 
 
-class RegularNrrdFieldConverterMeshAlgo : public NrrdFieldConverterMeshAlgo
+class RegularNrrdToFieldMeshAlgo : public NrrdToFieldMeshAlgo
 {
 public:
   virtual void execute(MeshHandle& mHandle,
@@ -79,8 +79,8 @@ public:
 
 
 template< class MESH, class DNTYPE, class CNTYPE>
-class RegularNrrdFieldConverterMeshAlgoT : 
-  public RegularNrrdFieldConverterMeshAlgo
+class RegularNrrdToFieldMeshAlgoT : 
+  public RegularNrrdToFieldMeshAlgo
 {
 public:
   virtual void execute(MeshHandle& mHandle,
@@ -89,7 +89,7 @@ public:
 
 template< class MESH, class DNTYPE, class CNTYPE>
 void
-RegularNrrdFieldConverterMeshAlgoT< MESH, DNTYPE, CNTYPE>::
+RegularNrrdToFieldMeshAlgoT< MESH, DNTYPE, CNTYPE>::
 execute(MeshHandle& mHandle, NrrdDataHandle dataH, int data_size)
 {
   Point minpt, maxpt;
@@ -145,7 +145,7 @@ execute(MeshHandle& mHandle, NrrdDataHandle dataH, int data_size)
 }
 
 
-class StructuredNrrdFieldConverterMeshAlgo : public NrrdFieldConverterMeshAlgo
+class StructuredNrrdToFieldMeshAlgo : public NrrdToFieldMeshAlgo
 {
 public:
   virtual void execute(MeshHandle& mHandle,
@@ -155,8 +155,8 @@ public:
 
 
 template< class MESH, class PNTYPE, class CNTYPE >
-class StructuredNrrdFieldConverterMeshAlgoT : 
-  public StructuredNrrdFieldConverterMeshAlgo
+class StructuredNrrdToFieldMeshAlgoT : 
+  public StructuredNrrdToFieldMeshAlgo
 {
 public:
 
@@ -168,7 +168,7 @@ public:
 
 template< class MESH, class PNTYPE, class CNTYPE >
 void
-StructuredNrrdFieldConverterMeshAlgoT< MESH, PNTYPE, CNTYPE >::
+StructuredNrrdToFieldMeshAlgoT< MESH, PNTYPE, CNTYPE >::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle pointsH,
 	int idim, int jdim, int kdim)
@@ -205,8 +205,8 @@ execute(MeshHandle& mHandle,
 
 
 
-class UnstructuredNrrdFieldConverterMeshAlgo : 
-  public NrrdFieldConverterMeshAlgo
+class UnstructuredNrrdToFieldMeshAlgo : 
+  public NrrdToFieldMeshAlgo
 {
 public:
   virtual void execute(MeshHandle& mHandle,
@@ -216,8 +216,8 @@ public:
 };
 
 template< class MESH, class PNTYPE, class CNTYPE >
-class UnstructuredNrrdFieldConverterMeshAlgoT : 
-  public UnstructuredNrrdFieldConverterMeshAlgo
+class UnstructuredNrrdToFieldMeshAlgoT : 
+  public UnstructuredNrrdToFieldMeshAlgo
 {
 public:
   virtual void execute(MeshHandle& mHandle,
@@ -229,7 +229,7 @@ public:
 
 template< class MESH, class PNTYPE, class CNTYPE >
 void
-UnstructuredNrrdFieldConverterMeshAlgoT< MESH, PNTYPE, CNTYPE >::
+UnstructuredNrrdToFieldMeshAlgoT< MESH, PNTYPE, CNTYPE >::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle pointsH,
 	NrrdDataHandle connectH,
@@ -294,7 +294,7 @@ execute(MeshHandle& mHandle,
 
 
 
-class NrrdFieldConverterFieldAlgo : public DynamicAlgoBase
+class NrrdToFieldFieldAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(MeshHandle& mHandle,
@@ -314,7 +314,7 @@ public:
 };
 
 template< class FIELD, class MESH, class NTYPE >
-class NrrdFieldConverterFieldAlgoScalar : public NrrdFieldConverterFieldAlgo
+class NrrdToFieldFieldAlgoScalar : public NrrdToFieldFieldAlgo
 {
 public:
   //! virtual interface.
@@ -331,7 +331,7 @@ public:
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
-NrrdFieldConverterFieldAlgoScalar<FIELD, MESH, NTYPE>::
+NrrdToFieldFieldAlgoScalar<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
 	int build_eigens,
@@ -387,7 +387,7 @@ execute(MeshHandle& mHandle,
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
-NrrdFieldConverterFieldAlgoScalar<FIELD, MESH, NTYPE>::
+NrrdToFieldFieldAlgoScalar<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
 	int build_eigens)
@@ -433,7 +433,7 @@ execute(MeshHandle& mHandle,
 
 
 template< class FIELD, class MESH, class NTYPE >
-class NrrdFieldConverterFieldAlgoVector : public NrrdFieldConverterFieldAlgo
+class NrrdToFieldFieldAlgoVector : public NrrdToFieldFieldAlgo
 {
 public:
   //! virtual interface.
@@ -450,7 +450,7 @@ public:
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
-NrrdFieldConverterFieldAlgoVector<FIELD, MESH, NTYPE>::
+NrrdToFieldFieldAlgoVector<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
 	int build_eigens,
@@ -504,7 +504,7 @@ execute(MeshHandle& mHandle,
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
-NrrdFieldConverterFieldAlgoVector<FIELD, MESH, NTYPE>::
+NrrdToFieldFieldAlgoVector<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
 	int build_eigens)
@@ -556,7 +556,7 @@ execute(MeshHandle& mHandle,
 
 
 template< class FIELD, class MESH, class NTYPE >
-class NrrdFieldConverterFieldAlgoTensor : public NrrdFieldConverterFieldAlgo
+class NrrdToFieldFieldAlgoTensor : public NrrdToFieldFieldAlgo
 {
 public:
   //! virtual interface.
@@ -573,7 +573,7 @@ public:
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
-NrrdFieldConverterFieldAlgoTensor<FIELD, MESH, NTYPE>::
+NrrdToFieldFieldAlgoTensor<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
 	int build_eigens,
@@ -798,7 +798,7 @@ execute(MeshHandle& mHandle,
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
-NrrdFieldConverterFieldAlgoTensor<FIELD, MESH, NTYPE>::
+NrrdToFieldFieldAlgoTensor<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
 	int build_eigens)
@@ -992,6 +992,173 @@ execute(MeshHandle& mHandle,
     ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
   }
   return FieldHandle( ifield );
+}
+
+
+class NrrdToFieldTestMeshAlgo : public DynamicAlgoBase
+{
+public:
+  virtual bool execute(SCIRun::FieldHandle, NrrdDataHandle, 
+		       SCIRun::FieldHandle &, const int a0_size) = 0;
+  virtual ~NrrdToFieldTestMeshAlgo();
+
+  static const string& get_h_file_path();
+  static string dyn_file_name(const TypeDescription *td) {
+    // add no extension.
+    return template_class_name() + "." + td->get_filename() + ".";
+  }
+
+  static const string base_class_name() {
+    static string name("NrrdToFieldTestMeshAlgo");
+    return name;
+  }
+
+  static const string template_class_name() {
+    static string name("NrrdToFieldTestMesh");
+    return name;
+  }
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription *td);
+};
+
+template< class Fld >
+class NrrdToFieldTestMesh : public NrrdToFieldTestMeshAlgo
+{
+public:
+  //! virtual interface.
+  bool execute(SCIRun::FieldHandle fld, 
+	       NrrdDataHandle      in,
+	       SCIRun::FieldHandle &out,
+	       const int a0_size);
+};
+
+
+template< class Fld>
+bool
+NrrdToFieldTestMesh<Fld>::execute(SCIRun::FieldHandle fld, 
+				  NrrdDataHandle      in,
+				  SCIRun::FieldHandle &out,
+				  const int a0_size)
+{
+  Nrrd *inrrd = in->nrrd;
+
+  vector<unsigned int> dims;
+
+  typedef typename Fld::mesh_type Msh;
+  Msh *mesh = dynamic_cast<Msh*>(fld->mesh().get_rep());
+  ASSERT(mesh != 0);
+  int off = 0;
+  bool uns = false;
+  if (! mesh->get_dim(dims)) {
+    // Unstructured fields fall into this category, for them we create nrrds
+    // of dimension 1 (2 if vector or scalar data).
+    uns = true;
+    switch (fld->data_at()) {
+    case Field::NODE :
+      {
+	typename Fld::mesh_type::Node::size_type sz;
+	mesh->size(sz);
+	dims.push_back(sz);
+      }
+    break;
+    case Field::EDGE :
+      {
+	typename Fld::mesh_type::Edge::size_type sz;
+	mesh->size(sz);
+	dims.push_back(sz);
+      }
+    break;
+    case Field::FACE :
+      {
+	typename Fld::mesh_type::Face::size_type sz;
+	mesh->size(sz);
+	dims.push_back(sz);
+      }
+    break;
+    case Field::CELL :
+      {
+	typename Fld::mesh_type::Cell::size_type sz;
+	mesh->size(sz);
+	dims.push_back(sz);
+      }
+    break;
+    default:
+      return false;
+    }
+    
+    // if vector/tensor data store 3 or 7 at the end of dims vector
+    if (a0_size > 1) 
+      dims.push_back(a0_size);
+  }
+  if ((!uns) && fld->data_at() == Field::CELL) {
+    off = 1;
+  }
+
+  // If the data was vector or tensor it will have an extra axis.
+  // It is axis 0.  Make sure sizes along each dim still match.
+  if (inrrd->dim != (int)dims.size()) {
+    return false;
+  }
+
+  // If a0_size equals 3 or 7 then the first axis contains
+  // vector or tensor data and a ND nrrd would convert
+  // to a (N-1)D type field. 
+
+  int field_dim = inrrd->dim;
+  if (a0_size > 1) // tensor or vector data in first dimension
+    field_dim -= 1;
+  switch (field_dim) {
+  case 1:
+    {
+      // make sure size of dimensions match up
+      unsigned int nx = 0;
+      if (a0_size > 1) {
+	nx = inrrd->axis[1].size + off;
+      } else {
+	nx = inrrd->axis[0].size + off;
+      }
+      if (nx != dims[0]) { return false; }
+    }
+    break;
+  case 2:
+    {
+      unsigned int nx = 0, ny = 0;
+      if (a0_size > 1) {
+	nx = inrrd->axis[1].size + off;
+	ny = inrrd->axis[2].size + off;
+      } else {
+	nx = inrrd->axis[0].size + off;
+	ny = inrrd->axis[1].size + off;
+      }
+      if ((nx != dims[0]) || (ny != dims[1])) {
+	return false;
+      }
+    }
+    break;
+  case 3:
+    {
+      unsigned int nx = 0, ny = 0, nz = 0;
+      if (a0_size > 1) {
+	nx = inrrd->axis[1].size + off;
+	ny = inrrd->axis[2].size + off;
+        nz = inrrd->axis[3].size + off;
+      } else {
+	nx = inrrd->axis[0].size + off;
+	ny = inrrd->axis[1].size + off;
+        nz = inrrd->axis[2].size + off;
+      }
+      if ((nx != dims[0]) || (ny != dims[1]) || (nz != dims[2])) {
+	return false;
+      }
+    }
+    break;
+  default:   // anything else is invalid.
+    return false;
+  }
+
+  // Things match up, create the new output field.
+  return true;
 }
   
 
