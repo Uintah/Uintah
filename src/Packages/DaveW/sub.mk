@@ -4,8 +4,8 @@ include $(SRCTOP_ABS)/scripts/largeso_prologue.mk
 
 SRCDIR := Packages/DaveW
 SUBDIRS := \
-	$(SRCDIR)/Dataflow \
 	$(SRCDIR)/StandAlone \
+#	$(SRCDIR)/Dataflow \
 #	$(SRCDIR)/Core \
 
 include $(SRCTOP_ABS)/scripts/recurse.mk
