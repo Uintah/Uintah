@@ -45,6 +45,8 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
    pXLabel =   new VarLabel( "p.x",
 			     ParticleVariable<Point>::getTypeDescription(),
 			     VarLabel::PositionVariable);
+   pSurfLabel = new VarLabel( "p.issurf",
+			      ParticleVariable<int>::getTypeDescription() );
 
   // Follow the layout of the input file
   // Steps:
@@ -146,17 +148,21 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->allocate(pmass, pMassLabel, getDWIndex(), region);
    ParticleVariable<double> pvolume;
    new_dw->allocate(pvolume, pVolumeLabel, getDWIndex(), region);
+   ParticleVariable<int> pissurf;
+   new_dw->allocate(pissurf, pSurfLabel, getDWIndex(), region);
 
    particleIndex start = 0;
    for(int i=0; i<d_geom_objs.size(); i++)
       start += createParticles(d_geom_objs[i], start, position,
-			       pvelocity,pexternalforce,pmass,pvolume, region);
+			       pvelocity,pexternalforce,pmass,pvolume,
+							pissurf,region);
 
    new_dw->put(position, pXLabel, getDWIndex(), region);
    new_dw->put(pvelocity, pVelocityLabel, getDWIndex(), region);
    new_dw->put(pexternalforce, pExternalForceLabel, getDWIndex(), region);
    new_dw->put(pmass, pMassLabel, getDWIndex(), region);
    new_dw->put(pvolume, pVolumeLabel, getDWIndex(), region);
+   new_dw->put(pissurf, pSurfLabel, getDWIndex(), region);
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,
@@ -193,13 +199,14 @@ particleIndex MPMMaterial::countParticles(GeometryObject* obj,
 
 
 particleIndex MPMMaterial::createParticles(GeometryObject* obj,
-					   particleIndex start,
-					   ParticleVariable<Point>& position,
-					   ParticleVariable<Vector>& velocity,
-					   ParticleVariable<Vector>& pexternalforce,
-					   ParticleVariable<double>& mass,
-					   ParticleVariable<double>& volume,
-					   const Region* region)
+				   particleIndex start,
+				   ParticleVariable<Point>& position,
+				   ParticleVariable<Vector>& velocity,
+				   ParticleVariable<Vector>& pexternalforce,
+				   ParticleVariable<double>& mass,
+				   ParticleVariable<double>& volume,
+				   ParticleVariable<int>& pissurf,
+				   const Region* region)
 {
    GeometryPiece* piece = obj->getPiece();
    Box b1 = piece->getBoundingBox();
@@ -225,6 +232,8 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 		  volume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
 		  velocity[start+count]=obj->getInitialVelocity();
 		  mass[start+count]=d_density * volume[start+count];
+		  // Determine if particle is on the surface
+		  pissurf[start+count]=checkForSurface(piece,p,dxpp);
 		  pexternalforce[start+count]=Vector(0,0,0); // for now
 		  count++;
 	       }
@@ -236,3 +245,39 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
    return count;
 }
 
+int MPMMaterial::checkForSurface(const GeometryPiece* piece, const Point p,
+							const Vector dxpp)
+{
+
+//  Check the candidate points which surround the point just passed
+//  in.  If any of those points are not also inside the object
+//  the current point is on the surface
+
+  int ss = 0;
+
+  // Check to the left (-x)
+  if(!piece->inside(p-Vector(dxpp.x(),0.,0.)))
+    ss++;
+  // Check to the right (+x)
+  if(!piece->inside(p+Vector(dxpp.x(),0.,0.)))
+    ss++;
+  // Check behind (-y)
+  if(!piece->inside(p-Vector(0.,dxpp.y(),0.)))
+    ss++;
+  // Check in front (+y)
+  if(!piece->inside(p+Vector(0.,dxpp.y(),0.)))
+    ss++;
+  // Check below (-z)
+  if(!piece->inside(p-Vector(0.,0.,dxpp.z())))
+    ss++;
+  // Check above (+z)
+  if(!piece->inside(p+Vector(0.,0.,dxpp.z())))
+    ss++;
+
+  if(ss>0){
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}

@@ -19,6 +19,7 @@ namespace Uintah {
    class VarLabel;
    namespace MPM {
       class GeometryObject;
+      class GeometryPiece;
       class ConstitutiveModel;
       using SCICore::Geometry::Point;
       using SCICore::Geometry::Vector;
@@ -75,7 +76,12 @@ WARNING
 				       ParticleVariable<Vector>& pexternalforce,
 				       ParticleVariable<double>& mass,
 				       ParticleVariable<double>& volume,
+				       ParticleVariable<int>& pissurf,
 				       const Region*);
+
+	 int checkForSurface(const GeometryPiece* piece,
+				const Point p, const Vector dxpp);
+
       private:
 	 
 	 // Specific constitutive model associated with this material
@@ -100,6 +106,7 @@ WARNING
 	 const VarLabel* pVelocityLabel;
 	 const VarLabel* pExternalForceLabel;
 	 const VarLabel* pXLabel;
+	 const VarLabel* pSurfLabel;
       };
 
 } // end namespace MPM
@@ -108,6 +115,13 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.13  2000/05/19 23:15:52  guilkey
+// Added code to fish out which particles are on the surface.  This
+// is stored in the DW as an int 1 (it is a surface particle) or 0
+// (it isn't).  Tried to do this with bools but got some stupid compiler
+// error.  This will hopefully be used in conjunction with the HE burn
+// models that we're going to implement.
+//
 // Revision 1.12  2000/05/02 06:07:12  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //
