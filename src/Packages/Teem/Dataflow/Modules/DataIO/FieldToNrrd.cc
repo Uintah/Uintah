@@ -118,16 +118,28 @@ void FieldToNrrd::execute()
   }
   
   FieldHandle field_handle; 
-  if (!ifield_->get(field_handle))
+  if (!(ifield_->get(field_handle) && field_handle.get_rep())) {
     return;
+  }
 
-  // TODO:  Need to cache this such that we can reconnect and not be broken.
-  //const bool compute_points_p = opoints_->nconnections();
-  //const bool compute_connects_p = oconnect_->nconnections();
-  //const bool compute_data_p = field_handle->basis_order() != -1;
-  const bool compute_points_p = true;
-  const bool compute_connects_p = true;
-  const bool compute_data_p = true;
+  // Just data for lattices, data and points for structured, all for rest.
+  bool compute_points_p = true;
+  bool compute_connects_p = true;
+  bool compute_data_p = true;
+
+  if (!field_handle->mesh()->is_editable())
+  {
+    remark("Not computing connections for non-editable mesh type.");
+    compute_connects_p = false;
+  }
+  
+  const string meshstr =
+    field_handle->get_type_description(0)->get_name().substr(0, 6);
+  if (!(field_handle->mesh()->is_editable() || meshstr == "Struct"))
+  {
+    remark("Not computing points for strict lattice.");
+    compute_points_p = false;
+  }
 
   if (ifield_generation_ != field_handle->generation)
   {
