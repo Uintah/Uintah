@@ -188,7 +188,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
         rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, DO_RESTART, newalgo)
         if rc > 0:
           failcode = 1
-        chdir("..")
+      chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure
       failcode = 1
 
