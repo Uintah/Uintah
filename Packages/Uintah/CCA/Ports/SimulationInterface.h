@@ -1,5 +1,5 @@
-#ifndef UINTAH_HOMEBREW_MDInterface_H
-#define UINTAH_HOMEBREW_MDInterface_H
+#ifndef UINTAH_HOMEBREW_SimulationInterface_H
+#define UINTAH_HOMEBREW_SimulationInterface_H
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
@@ -14,13 +14,13 @@ namespace Uintah {
 /**************************************
 
 CLASS
-   MDInterface
+   SimulationInterface
    
    Short description...
 
 GENERAL INFORMATION
 
-   MDInterface.h
+   SimulationInterface.h
 
    Steven G. Parker
    Department of Computer Science
@@ -31,7 +31,7 @@ GENERAL INFORMATION
    Copyright (C) 2000 SCI Group
 
 KEYWORDS
-   MD_Interface
+   Simulation_Interface
 
 DESCRIPTION
    Long description...
@@ -40,10 +40,10 @@ WARNING
   
 ****************************************/
 
-   class MDInterface : public UintahParallelPort {
+   class SimulationInterface : public UintahParallelPort {
    public:
-      MDInterface();
-      virtual ~MDInterface();
+      SimulationInterface();
+      virtual ~SimulationInterface();
       
       //////////
       // Insert Documentation Here:
@@ -63,10 +63,14 @@ WARNING
       //////////
       // Insert Documentation Here:
       virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&) = 0;
+
+
    private:
-      MDInterface(const MDInterface&);
-      MDInterface& operator=(const MDInterface&);
+      SimulationInterface(const SimulationInterface&);
+      SimulationInterface& operator=(const SimulationInterface&);
    };
 } // End namespace Uintah
+   
+
 
 #endif
