@@ -176,27 +176,6 @@
 			[NEED TO ADD MORE DETAILS]
 			</desclistdef>
 		</desclistitem>
-		<desclistitem>
-		<desclistterm> FIELDNAME .rotation </desclistterm>
-			<desclistdef>
-			This field describes a 3x3 rotation matrix and is an alternate way of specifying the transformation of the mesh. In order for
-			the module to use this field no transform matrix should be supplied as that one overrules the setting of the rotation matrix.
-			</desclistdef>
-		</desclistitem>
-		<desclistitem>
-		<desclistterm> FIELDNAME .offset </desclistterm>
-			<desclistdef>
-			This field defines the origin of the mesh. This field should be vector of three elements specifying the origin of the mesh.
-			In case a transform matrix is supplied this field is ignored. This field can be used in combination with the rotation field.
-			</desclistdef>
-		</desclistitem>
-		<desclistitem>
-		<desclistterm> FIELDNAME .scale </desclistterm>
-			<desclistdef>
-			This field defines the spacing in each direction of the mesh. This field needs to be a vector of 1, 2, or 3, elements defining
-			the spacing in each direction. In case a transform matrix is supplied this field is ignored. 
-			</desclistdef>
-		</desclistitem>
 	</desclist>	
 	</p>
 	
@@ -214,37 +193,28 @@
 	</p>
 	</section>		
 	
+	
 	<section>
 	<title>Field Data</title>
 	
 	<desclist>
 		<desclistitem>
-			<desclistterm> FIELDNAME .scalarfield OR .field OR .data </desclistterm>
+			<desclistterm> FIELDNAME .field </desclistterm>
 			<desclistdef>
-			A matrix specifying scalar data for each node/element in the mesh. Each subsequent element in this vector is added to the
+			A matrix specifying scalar/vector/tensor data for each node/element in the mesh. Each subsequent element in this vector is added to the
 			next node/element in the field. Use the field FIELDLOCATION to specify where the data should be located. The module detects
-			the type of data
+			the type of data. The tensor and respectively the vector dimension is assumed to be the first one.
 			</desclistdef>
 		</desclistitem>
-		<desclistitem>
-			<desclistterm> FIELDNAME .vectorfield </desclistterm>
+		<desclistitem>		
+			<desclistterm> FIELDNAME .fieldtype </desclistterm>
 			<desclistdef>
-			A matrix specifying vector data for each node/element in the mesh. This field should be a 3 by N matrix, where the first 
-			dimension specifies the vector. Each subsequent column in this matrix is added to the
-			next node/element in the field. Use the field FIELDLOCATION to specify where the data should be located. 
+			A string specifying the type of data stored in field. Currently three value are accepted: 'scalar', 'vector', and 'tensor'. If this type
+			information is omitted it defaults to 'scalar'
 			</desclistdef>
 		</desclistitem>
 		<desclistitem>
-			<desclistterm> FIELDNAME .tensorfield </desclistterm>
-			<desclistdef>
-			A matrix specifying tensor data for each node/element in the mesh. This field should be a 6 by N matrix for a compressed
-			tensor representation [xx,yy,zz,xy,xz,yz], or a 9 by N matrix for a n uncompressed tensor representation
-			[xx,xy,xz,yx,yy,yz,zx,zy,zz]. Each subsequent column in this matrix is added to the
-			next node/element in the field. Use the field FIELDLOCATION to specify where the data should be located. 
-			</desclistdef>
-		</desclistitem>
-		<desclistitem>
-			<desclistterm> FIELDNAME .fieldlocation </desclistterm>
+			<desclistterm> FIELDNAME .fieldat </desclistterm>
 			<desclistdef>
 			The location of the data. This field is a string describing where the data should be located.
 			The default field location is assumed to be the nodes, meaning each node has a scalar, vector, or tensor value. 
@@ -254,8 +224,11 @@
 		</desclistitem>
 	</desclist>
 	</section>
-
-		
+	<note>
+	The way of specifying a field was different in version 1.22 of SCIRun. The modules still support input through the fields 'vectorfield', 'tensorfield',
+	and 'scalarfield'. However to be compatible with future additions this has been changed to a combination of 'field' and 'fieldtype'. The new fieldwriters
+	will use this convention instead of the old one.
+	</note>	
 	<note>
 	The module will try to reconstruct data, for instance if a matrix is transposed, it will detect this and read the data properly.
 	Most of the fields mentioned are optional and are not necessary. Only choose those fields from the list that are needed to 
@@ -319,11 +292,14 @@
 	<section>
 	<title>See Also </title>
 	<p>
+	<modref package="MatlabInterface" name="MatlabDataReader" />,	
+	<modref package="MatlabInterface" name="MatlabDataWriter" />,	
 	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
+	<modref package="MatlabInterface" name="MatlabFieldsWriteer" />,
 	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
-	<modref package="MatlabInterface" name="MatlabNrrdsReader" />,
+	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
 	<modref package="MatlabInterface" name="MatlabMatricesWriter" />,
-	<modref package="MatlabInterface" name="MatlabNrrdsWriter" />	
+	<modref package="MatlabInterface" name="MatlabFieldsWriter" />	
 	</p>
 	</section>  
 	  

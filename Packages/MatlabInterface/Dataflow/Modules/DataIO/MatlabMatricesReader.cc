@@ -85,7 +85,7 @@ private:
 	//   string to TCL with all the names and formats of the matrices.
 	//   NOTE: This Function explicitly depends on the TCL code.
 	
-	void		indexmatlabfile();
+	void		indexmatlabfile(bool postmsg);
 	
 	// readmatlabarray():
 	//   This function reads the in the gui selected matlab array. It
@@ -135,7 +135,7 @@ MatlabMatricesReader::MatlabMatricesReader(GuiContext* ctx)
 	guimatrixname_(ctx->subVar("matrixname")),
 	guidisabletranspose_(ctx->subVar("disable-transpose"))
 {
-	indexmatlabfile();
+	indexmatlabfile(false);
 }
 
 // Destructor:
@@ -198,7 +198,7 @@ void MatlabMatricesReader::execute()
 			// creates a SCIRun matrix object
 	
 			SCIRun::MatrixHandle mh;
-			translate_.mlArrayTOsciMatrix(ma,mh);
+			translate_.mlArrayTOsciMatrix(ma,mh,static_cast<SCIRun::Module *>(this));
 			
 			// Put the SCIRun matrix in the hands of the scheduler
 			omatrix_[p]->send(mh);
@@ -255,7 +255,7 @@ void MatlabMatricesReader::tcl_command(GuiArgs& args, void* userdata)
 		ctx->reset();
 		
 		// Find out what the .mat file contains
-		indexmatlabfile();
+		indexmatlabfile(true);
 		return;
 	}
 	else 
@@ -312,7 +312,7 @@ matlabarray MatlabMatricesReader::readmatlabarray(long p)
 
 
 
-void MatlabMatricesReader::indexmatlabfile()
+void MatlabMatricesReader::indexmatlabfile(bool postmsg)
 {
 	
 	std::string filename = "";
@@ -323,6 +323,8 @@ void MatlabMatricesReader::indexmatlabfile()
 	
 	guimatrixinfotexts_.set(matrixinfotexts);
 	guimatrixnames_.set(matrixnames);
+	
+	translate_.setpostmsg(postmsg);
 	
 	filename = guifilename_.get();	
 
@@ -373,7 +375,7 @@ void MatlabMatricesReader::indexmatlabfile()
 		for (p=0, r=0;p<mfile.getnummatlabarrays();p++)
 		{
 			ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
-			if (cindex = translate_.sciMatrixCompatible(ma,infotext))
+			if (cindex = translate_.sciMatrixCompatible(ma,infotext,static_cast<SCIRun::Module *>(this)))
 			{
 				// in case we need to propose a matrix to load, select
 				// the one that is most compatible with the data

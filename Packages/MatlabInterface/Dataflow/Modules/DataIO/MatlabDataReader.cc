@@ -94,7 +94,7 @@ private:
 	//   string to TCL with all the names and formats of the matrices.
 	//   NOTE: This Function explicitly depends on the TCL code.
 	
-	void		indexmatlabfile();
+	void		indexmatlabfile(bool postmsg);
 	
 	// readmatlabarray():
 	//   This function reads the in the gui selected matlab array. It
@@ -143,7 +143,7 @@ MatlabDataReader::MatlabDataReader(GuiContext* ctx)
     guimatrixnameslist_(ctx->subVar("matrixnameslist")),    
 	guimatrixname_(ctx->subVar("matrixname"))
 {
-	indexmatlabfile();
+	indexmatlabfile(false);
 }
 
 // Destructor:
@@ -188,7 +188,7 @@ void MatlabDataReader::execute()
 			}
 
 			SCIRun::FieldHandle mh;
-			translate_.mlArrayTOsciField(ma,mh);
+			translate_.mlArrayTOsciField(ma,mh,static_cast<SCIRun::Module *>(this));
 			ofield_[p]->send(mh);
 		}
 		
@@ -211,7 +211,7 @@ void MatlabDataReader::execute()
 			}
 
 			SCIRun::MatrixHandle mh;
-			translate_.mlArrayTOsciMatrix(ma,mh);
+			translate_.mlArrayTOsciMatrix(ma,mh,static_cast<SCIRun::Module *>(this));
 			omatrix_[p]->send(mh);
 		}
 
@@ -234,7 +234,7 @@ void MatlabDataReader::execute()
 			}
 
 			SCITeem::NrrdDataHandle mh;
-			translate_.mlArrayTOsciNrrdData(ma,mh);
+			translate_.mlArrayTOsciNrrdData(ma,mh,static_cast<SCIRun::Module *>(this));
 			onrrd_[p]->send(mh);
 		}
 	}
@@ -289,7 +289,7 @@ void MatlabDataReader::tcl_command(GuiArgs& args, void* userdata)
 		ctx->reset();
 		
 		// Find out what the .mat file contains
-		indexmatlabfile();
+		indexmatlabfile(true);
 		return;
 	}
 	else 
@@ -346,7 +346,7 @@ matlabarray MatlabDataReader::readmatlabarray(long p)
 
 
 
-void MatlabDataReader::indexmatlabfile()
+void MatlabDataReader::indexmatlabfile(bool postmsg)
 {
 	
 	std::string filename = "";
@@ -359,6 +359,8 @@ void MatlabDataReader::indexmatlabfile()
 	
 	guimatrixinfotextslist_.set(matrixinfotextslist);
 	guimatrixnameslist_.set(matrixnameslist);
+	
+	translate_.setpostmsg(postmsg);
 	
 	filename = guifilename_.get();	
 
@@ -413,9 +415,9 @@ void MatlabDataReader::indexmatlabfile()
 			ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
 			for (long q=0;q<NUMPORTS;q++)
 			{
-				if ((q==0)||(q==1)||(q==2)) cindex = translate_.sciFieldCompatible(ma,infotext);
-				if ((q==3)||(q==4)||(q==5)) cindex = translate_.sciMatrixCompatible(ma,infotext);
-				if ((q==6)||(q==7)||(q==8)) cindex = translate_.sciNrrdDataCompatible(ma,infotext);
+				if ((q==0)||(q==1)||(q==2)) cindex = translate_.sciFieldCompatible(ma,infotext,static_cast<SCIRun::Module *>(this));
+				if ((q==3)||(q==4)||(q==5)) cindex = translate_.sciMatrixCompatible(ma,infotext,static_cast<SCIRun::Module *>(this));
+				if ((q==6)||(q==7)||(q==8)) cindex = translate_.sciNrrdDataCompatible(ma,infotext,static_cast<SCIRun::Module *>(this));
 				
 				if (cindex)
 				{
