@@ -1,8 +1,6 @@
-version gov 0.1;
-version cca 0.6; 
 
 package gov {
-package cca {
+package cca version 0.6.3 {
 
     /** All ports must derive from this port type */
     interface Port {} 
@@ -13,54 +11,62 @@ package cca {
      */
     enum CCAExceptionType {
 
-	/* Someone caught a non-CCAException that was declared
+	/** 
+         *  Someone caught a non-CCAException that was declared
 	 *  at an interface that claims it throws ONLY CCAException. 
 	 */
 	Unexpected = -1,
 	
-	/* A CCAException that is carrying a non-standard message. */
+	/** 
+         * A CCAException that is carrying a non-standard message. 
+         */
 	Nonstandard = 1,
 	
-	/* Action attempted on a port name that is neither registered
+	/** 
+         * Action attempted on a port name that is neither registered
 	 * nor added. 
 	 */
 	PortNotDefined = 2,
 	
-	/* Adding/registering an already added/registered Port was
+	/** 
+         * Adding/registering an already added/registered Port was
 	 *  attempted. 
 	 */
 	PortAlreadyDefined = 3,
 	
-	/* Attempt to getPort, getPortNonblocking, or releasePort
+	/** 
+         * Attempt to getPort, getPortNonblocking, or releasePort
 	 * with a port named that is not connected. 
 	 */
 	PortNotConnected = 4,
 	
-	/* Redundant attempt to release a Port. */
+	/** 
+         * Redundant attempt to release a Port. 
+         */
 	PortNotInUse = 5,
 	
-	/* Attempt to unregister a Port that is still being used. */
+	/** Attempt to unregister a Port that is still being used. */
 	UsesPortNotReleased = 6,
 	
-	/* Port name given to createPortInfo is bogus. */
+	/** Port name given to createPortInfo is bogus. */
 	BadPortName = 7,
 	
-	/* Port class/type given to createPortInfo is bogus. */
+	/** Port class/type given to createPortInfo is bogus. */
 	BadPortType = 8,
 	
-	/* 
+	/** 
 	 * Port properties given to createPortInfo is bogus.
 	 * Note: null is NOT a bogus input, but a fairly common one. 
 	 */
 	BadProperties = 9,
 	
-	/* PortInfo given in port add/register call is bogus or null. */
+	/** PortInfo given in port add/register call is bogus or null. */
 	BadPortInfo = 10,
 	
-	/* Services implementation failed to allocate memory. */
+	/** Services implementation failed to allocate memory. */
 	OutOfMemory = 11,
 	
-	/* Port (or function within it) died on a remote error. */
+	/** Port (or function within it) died on a remote error. */
 	NetworkError = 12,
 	
     } // end enum CCAExceptionType
@@ -68,9 +74,9 @@ package cca {
 
    
     /** Most CCA interfaces throw this exception */
-    abstract class CCAException extends SIDL.BaseException {
-	abstract CCAExceptionType getCCAExceptionType();
-    } // end class CCAException
+    interface CCAException extends sidl.BaseException {
+	CCAExceptionType getCCAExceptionType();
+    } // end CCAException
 
 
     interface Services {
@@ -104,8 +110,6 @@ package cca {
 	 */
 	Port getPort(in string portName) throws CCAException;
 	
-	
-
 	/** 
 	 * Get a previously registered Port (defined by
 	 * either addProvide or registerUses) and return that
@@ -235,18 +239,20 @@ package cca {
 	    throws CCAException ;
 	
 
-	/** Returns the complete list of the properties for a Port.  This
+	/** 
+	 * Returns the complete list of the properties for a Port.  This
 	 * includes the properties defined when the port was registered
 	 * (these properties can be modified by the framework), two special
 	 * properties "cca.portName" and "cca.portType", and any other
 	 * properties that the framework wishes to disclose to the component.
 	 * The framework may also choose to provide only the subset of input
 	 * properties (i.e. from addProvidesPort/registerUsesPort) that it
-	 * will honor.      
+	 * will honor.
 	 */
         TypeMap getPortProperties(in string name) ;
 
-	/** Notifies the framework that a previously exposed Port is no longer 
+	/** 
+	 * Notifies the framework that a previously exposed Port is no longer 
 	 * available for use. The Port being removed must exist
 	 * until this call returns, or a CCAException may occur.
 	 * @param name The name of a provided Port.
@@ -260,19 +266,41 @@ package cca {
 	 * Services object belongs. 
 	 */
 	ComponentID getComponentID();
+
+        /** Obtain a callback for component destruction.
+         * @param callback an object that implements the ComponentRelease
+         * interface that will be called when the component is to be destroyed.
+         *
+         * Register a callback to be executed when the component is going
+         * to be destroyed.  During this callback, the Services object passed
+         * through setServices will still be valid, but after all such
+         * callbacks are made for a specific component, subsequent usage
+         * of the Services object is not allowed/is undefined.
+         */
+        void registerForRelease(in ComponentRelease callback) throws CCAException;
     }
 
-
     /**
-     * All components must implement this interface.
+     * This is the one-method interface that must be implemented
+     * for an object to be a Component and be managed by a CCA-compliant framework.
      */
     interface Component {
-	/** 
-	 * Obtain Services handle, through which the 
-	 * component communicates with the framework. 
-	 * This is the one method that every CCA Component
-	 * must implement. 
-	 */
+        /** Starts up a component presence in the calling framework.
+         * @param Svc the component instance's handle on the framework world.
+         * Contracts concerning Svc and setServices:
+         *
+         * The component interaction with the CCA framework
+         * and Ports begins on the call to setServices by the framework.
+         *
+         * This function is called exactly once for each instance created
+         * by the framework.
+         *
+         * The argument Svc will never be nil/null.
+         *
+         * Those uses ports which are automatically connected by the framework
+         * (so-called service-ports) may be obtained via getPort during
+         * setServices.
+         */
 	void setServices(in Services services);
     }
 
@@ -280,6 +308,7 @@ package cca {
      * An opaque reference to a Component.
      */
     interface ComponentID { 
+
 	/** 
 	 * Returns the instance name provided in 
 	 * <code>BuilderService.createInstance()</code>
@@ -297,18 +326,56 @@ package cca {
 	string getSerialization() throws CCAException ;
     }
 
+    interface ComponentRelease {
+
+        /**
+         * Shuts down a component presence in the calling framework.
+         * @param Svc the component instance's handle on the framework world.
+         * Contracts concerning Svc and setServices:
+         *
+         * This function is called exactly once for each callback registered
+         * through Services.
+         *
+         * The argument Svc will never be nil/null.
+         * The argument Svc will always be the same as that received in
+         * setServices.
+         *
+         * During this call the component should release any interfaces
+         * acquired by getPort().
+         *
+         * During this call the component should reset to nil any stored
+         * reference to Svc.
+         *
+         * After this call, the component instance will be removed from the
+         * framework. If the component instance was created by the
+         * framework, it will be destroyed, not recycled, The behavior of
+         * any port references obtained from this component instance and
+         * stored elsewhere becomes undefined.
+         *
+         * Notes for the component implementor:
+         * 1) The component writer may perform blocking activities
+         * within releaseServices, such as waiting for remote computations
+         * to shutdown.
+         * 2) It is good practice during releaseServices for the component
+         * writer to remove or unregister all the ports it defined.
+         */
+        void releaseServices(in Services Svc) throws CCAException;
+
+    }
+
     enum Type {
 	None, Int, Long, Float, Double, Fcomplex, Dcomplex, String, Bool, 
 	IntArray, LongArray, FloatArray, DoubleArray, FcomplexArray, 
 	DcomplexArray, StringArray, BoolArray
     }
 
-    
-    abstract class TypeMismatchException extends CCAException {
+    interface TypeMismatchException extends CCAException {
+
 	/** @return the enumerated value Type sought */
-        abstract Type getRequestedType();
+        Type getRequestedType();
+
 	/** @return the enumerated value Type sought */
-	abstract Type getActualType();        
+	Type getActualType();        
     }
     
     /** 
@@ -319,6 +386,7 @@ package cca {
      *  fail (i.e. return the default value). 
      */
     interface TypeMap {
+
 	/** Create an exact copy of this Map */
 	TypeMap cloneTypeMap();
 
@@ -399,8 +467,6 @@ package cca {
 	Type typeOf(in string key);
 	
     }  // end interface TypeMap
-    
-
 
     /** 
      *  This is an interface presented by a CCA-compliant framework to access its 
@@ -458,6 +524,7 @@ package cca {
      *  </pre></code>
      */
     interface AbstractFramework {
+
 	/** 
 	 *  Create an empty TypeMap. Presumably this would be used in 
 	 *  an ensuing call to <code>getServices()</code>. The "normal" method of
@@ -535,6 +602,7 @@ package cca {
 	 * of another instance.	 
 	 */
 	AbstractFramework createEmptyFramework() throws CCAException;
+
 	//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	/** start to share the CCA components with other CCA frameworks by
 	1. broadcasting its own framework URL
@@ -547,6 +615,7 @@ package cca {
 	*/	 
 	//string createComponent(in string name, in string type);
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
     }  // end interface AbstractFramework
     
     /**
@@ -779,7 +848,7 @@ package cca {
 	    cca.ComponentID createInstance(in string instanceName, in string className, 
 					       in cca.TypeMap properties) 
 		throws cca.CCAException ; 
-
+	    
 	    /** 
 	     *  Get component list.
 	     *  @return a ComponentID for each component currently created.
@@ -940,6 +1009,8 @@ package cca {
 	     */
 	    void disconnectAll(in cca.ComponentID id1, in cca.ComponentID id2, 
 			       in float timeout) throws cca.CCAException ; 
+
+
 	    //<<<<<<<<<<<<<<<<<<<<<<<
 	   /* get available ports in c2 that can be connected to port1 of c1*/ 	
    	   array<string> getCompatiblePortList(in gov.cca.ComponentID c1,
@@ -949,6 +1020,8 @@ package cca {
 	    //void registerFramework(in string frameworkURL); 	
 	    //void registerServices(in gov.cca.Services svc);
 	    //>>>>>>>>>>>>>>>>>>>>>		
+
+	    
 	} // end interface BuilderService
 	
 	/** 
@@ -973,10 +1046,619 @@ package cca {
 	     */
 	    array<cca.ComponentClassDescription> getAvailableComponentClasses() 
 		throws cca.CCAException ;
+	    
 	} // end of cca.ports.ComponentRepository
 
-//<<<<<<<<<<<<<<<<<<<<<<<<<
-//#include "SCIRun2Ports.sidl"
+        /** 
+         * This type of interface is exported for manipulation by other
+         * components or by a user-interface (UI) (text or graphic).
+         * This version of the Port is so simple that mere mortal component
+         * writers could implement it.
+         * It is not nearly so self-documenting at runtime as the
+         * full-service ParameterPort.
+         */
+        interface BasicParameterPort extends gov.cca.Port {
+
+            /** Return a TypeMap of runtime configuration parameters. 
+             *  @throws gov.cca.CCAException if mapName is unknown.
+             */
+            gov.cca.TypeMap readConfigurationMap() throws gov.cca.CCAException;
+
+            /** Copy the parameter values given in map into the
+             * internal map, for those parameters which
+             * are already defined by the internal map.
+             * The outsider does not get to cause arbitrary
+             * keys to be copied into the internal map.
+             * @throws gov.cca.CCAException if TypeMap operations fail.
+             */
+            void writeConfigurationMap(in gov.cca.TypeMap map);
+
+            /** Fetch the list of keys in the TypeMap that are
+             *   for public configuration purposes. Other values found in
+             *   the TypeMap must not be changed.
+             */
+            array<string> readConfigurationKeys();
+            
+        } // end BasicParameterPort
+
+
+        /** 
+         * This type of interface is exported for manipulation by other
+         * components or by a user-interface (UI) (text or graphic).
+         * By using the port ParameterFactory the component
+         * writer never actually has to implement this port directly.
+         * The recommended instance name for this port type is "CONFIG",
+         * if a component provides only one such port. 
+         * Component assembly or user interface rendering agents might 
+         * assume this name. However, clever agents will act based on
+         * port type rather than port instance name.
+         * 
+         * Data types represented: Anything representable in a TypeMap.
+         * The following auxiliary information is managed for the benefit
+         * of component end-user, UI, and other agents. 
+         * Per map:
+         * - title -- a name suitable to a top level window frame.
+         * - group names -- data items are put in subsets (groups)
+         *                  as, for example, in tabbed dialogs.
+         * - list of all published parameter keys, those defined
+         *   with the add functions of ParameterPortFactory. 
+         * Per group name:
+         * - group title -- ui-appropriate subset title, typically a tab heading.
+         * - group keys -- list of data item keys in a named group.
+         * Per data item key:
+         * - default value 
+         * - current value -- queryable directly from TypeMap by key name.
+         * - help string -- potentially long-winded explanation of parameter use.
+         * - prompt string -- shorter than help string and usually shown
+         *                    in UI somehow while soliciting input.
+         * - numeric bounds or value choice list. Where data type is
+         *   an array type, the choice or bound restrictions are applied
+         *   element-wise.
+         * 
+         * 
+         * Special notes:
+         * - The rendering of array-valued parameters in UI's poses a variety
+         * of thorny problems in human-computer interaction. Use of
+         * array parameters should be considered carefully. Not all UI
+         * agents may be able to render array-valued parameters.
+         * - Keys in the TypeMap with names starting with "gcpPPF." are
+         *   reserved for private use by the 
+         *   ParameterPortFactory implementation.
+         */
+        interface ParameterPort extends BasicParameterPort {
+
+            /** Return a TypeMap of runtime configuration parameters. 
+             *  @throws gov.cca.CCAException if mapName is unknown.
+             */
+            gov.cca.TypeMap readConfigurationMap() throws gov.cca.CCAException;
+            
+            /** Copy the parameter values given in map into the
+             *  internal map, for those parameters which
+             *  are already defined by the internal map.
+             *  The outsider does not get to cause arbitrary
+             *  keys to be copied into the internal map.
+             *  @throws gov.cca.CCAException if TypeMap operations fail.
+             */
+            void writeConfigurationMap(in gov.cca.TypeMap map);
+            
+            /** Fetch names of all configurable data items,
+             *  unsorted and ungrouped.  Useful, but probably not for UIs.
+             */
+            array<string> readConfigurationKeys();
+
+            /** Fetch configuration title. 
+             *  @return Description of data set.
+             */
+            string readTitle();
+ 
+            /** Fetch the names of groups. Each page in a tabbed dialog
+             *  goes with a group, for example.
+             */
+            array<string> readGroupNames();
+            
+            /** Fetch UI-appropriate name for group.
+             *  Group name and group title may be the same.
+             *  @throws gov.cca.CCAException if groupName is unknown.
+             */
+            string readGroupTitle(in string groupName) throws gov.cca.CCAException ;
+
+            /** Fetch data item keys associated with groupName.
+             *  Array order will be the same as the order in which
+             *  the additions were made in the ParameterPortFactory interface.
+             *  @throws gov.cca.CCAException if groupName is unknown.
+             */
+            array<string> readGroupKeys(in string groupName) throws gov.cca.CCAException;
+
+            /** Fetch the help string for key.
+             *  @throws gov.cca.CCAException if key is unknown.
+             */
+            string readHelp(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the prompt string for key.
+             *  @throws gov.cca.CCAException if key is unknown.
+             */
+            string readPrompt(in string key) throws gov.cca.CCAException;
+
+            /** By default, bounds are defined except for complex numbers
+             *  booleans, and strings. On array types, bounds apply
+             *  element-wise. i.e.  low <= arr[i] <= high for all i.
+             *  @return true if simple bounds are defined for a key.
+             *  @throws gov.cca.CCAException if key is unknown.
+             */
+            bool hasBounds(in string key) throws gov.cca.CCAException;
+
+            /** By default, lists of choices are not defined for scalars or arrays.
+             *  Choices are applied element-wise for array types.
+             *  I.e. (arr[i] IN choice-set) == true  for all i.
+             *  @return true if choice list is defined for a key.
+             *  @throws gov.cca.CCAException if key is unknown.
+             */
+            bool hasChoices(in string key) throws gov.cca.CCAException;
+
+
+            /* The next section defines typed versions for the functions
+             * readDefaultTYPE
+             * readBoundsTYPE bounds is a two-element array, low, high for
+             *                real and integer types. Bounds are not currently
+             *                supported for complex numbers.
+             * readChoicesTYPE choices is an array of acceptable values,
+             *      in the order of definition in ParameterPortFactory.
+             * Where type may be an array or a scalar.
+             */
+
+            /** Fetch the default for boolean-typed key. 
+             *  @thr2ows gov.cca.CCAException if key is unknown or mistyped.
+             */
+            bool readDefaultBoolean(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for string-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            string readDefaultString(in string key) throws gov.cca.CCAException;
+            
+            /** Fetch the default for integer-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            int readDefaultInt(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for long-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            long readDefaultLong(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for float-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            float readDefaultFloat(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for double-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            double readDefaultDouble(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for fcomplex-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            fcomplex readDefaultFcomplex(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for dcomplex-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            dcomplex readDefaultDcomplex(in string key) throws gov.cca.CCAException;
+
+
+            /** Fetch the default for string-array-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            array<string> readDefaultStringArray(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for boolean-array-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            array<bool> readDefaultBooleanArray(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for integer-array-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            array<int> readDefaultIntArray(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for long-array-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            array<long> readDefaultLongArray(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for float-array-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            array<float> readDefaultFloatArray(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for double-array-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            array<double> readDefaultDoubleArray(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for fcomplex-array-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            array<fcomplex> readDefaultFcomplexArray(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for dcomplex-array-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            array<dcomplex> readDefaultDcomplexArray(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the bounds for integer-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            void readBoundsInt(in string key, out int low, out int high) throws gov.cca.CCAException;
+
+            /** Fetch the default for long-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            void readBoundsLong(in string key, out long low, out long high) throws gov.cca.CCAException;
+
+            /** Fetch the default for float-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            void readBoundsFloat(in string key, out float low, out float high) throws gov.cca.CCAException;
+
+            /** Fetch the default for double-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+	    //gkk returned "double" in original spec
+            void readBoundsDouble(in string key, out double low, out double high) throws gov.cca.CCAException;
+
+            /** Fetch the choices for string(-array)-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            array<string> readChoicesString(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the choices for integer(-array)-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            array<int> readChoicesInt(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the choices for long(-array)-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            array<long> readChoicesLong(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the choices for float(-array)-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            array<float> readChoicesFloat(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for double(-array)-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            array<double> readChoicesDouble(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for fcomplex(-array)-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            array<fcomplex> readChoicesFcomplex(in string key) throws gov.cca.CCAException;
+
+            /** Fetch the default for dcomplex(-array)-typed key. 
+             *  @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+	    //gkk was readChoicesDcomplexArray in spec
+            array<dcomplex> readChoicesDcomplex(in string key) throws gov.cca.CCAException;
+            
+        } // end interface ParameterPort
+
+        /** This interface supercedes the ccaffeine 
+         * ConfigurableParameterPortFactory,
+         * the parameters library, and all the associated cruft that
+         * gunked up a component. The component writer now just needs to
+         * use this port and one or more typemaps.
+         *
+         * All the function names and meanings are as identical to
+         * the existing ccaffeine interfaces as possible. Most just have
+         * a TypeMap argument added and modernized (stl) string usage.
+         * Additional functions to support the full generality of TypeMap
+         * have been added.
+         *
+         * Each ParameterPort is defined on a typemap the component owns.
+         * A component writer can define more than one such port for a component,
+         * and each will show up as a ParameterPort for UI agents.
+         * The component writer can choose to be notified of 
+         * parameter reads and writes using the related Listener interfaces.
+         *
+         * All strings (help, prompt, value, etc) passed to this 
+         * interface must be free
+         * of \n and other line-breaking characters if certain
+         * ancient gui clients are going to be used. This limitation is
+         * in the clients rather than the ParameterPort implementation.
+         * Those clients are prone to compressing redundant whitespace 
+         * as well. In a rosy future, these client limitations will go away.
+         */
+        interface ParameterPortFactory extends gov.cca.Port {
+            /** Initialize the portData for use in a ParameterPort
+             *  with name portName.
+             *  More than one such port can be defined.
+             *  The given string portName will be cached in the TypeMap
+             *  as the result of this function and must not be changed
+             *  by the component henceforth.
+             *  
+             *  @param portData the user-supplied TypeMap associated with the port;
+             *       It is somehow shared between the ParameterPortFactory
+             *       and the component. The ParameterPortFactory will
+             *       not read or change preexisting values in portData except those
+             *       requested via the addRequest functions and those
+             *       keys starting with the reserved prefix "gcpPPF.".
+             *  @param portName The name of the ParameterPort to appear in
+             *       the component. It must not conflict with other port
+             *       names in the same component. The port name "CONFIG"
+             *       is recommended if only one ParameterPort is being defined.
+             *  
+             **/
+            void initParameterData(inout gov.cca.TypeMap portData, in string portName);
+            
+            /** 
+             * Define the window title for the parameter UI dialog.
+             */
+            void setBatchTitle(in gov.cca.TypeMap portData, in string title);
+            
+            /** Define the next tab/group title to use. All
+             * addRequest subsequent calls will add to this group.
+             * Multiple dialog tabs/groups can be defined in this way.
+             */
+            void setGroupName(in gov.cca.TypeMap portData, in string newGroupName);
+            void setGroupName[AndTitle](in gov.cca.TypeMap portData, in string newGroupName, in string groupTitle);
+    
+            /** Define a boolean parameter and its default state.
+             * The configured value is always available by
+             * portData->getBool(name, ...);
+             * @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+
+            void addRequestBoolean(in gov.cca.TypeMap portData,
+                                   in string  name, 
+                                   in string  help,
+                                   in string  prompt,
+                                   in bool bdefault) throws gov.cca.CCAException ;
+
+            /** Define a int parameter and its default state.
+             * The configured value is always available by
+             * portData->getInt(name, ...) and it will be
+             * in the range [low, high]. The initially given bounds
+             * can be replaced with a choice list later.
+             * @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            void addRequestInt(in gov.cca.TypeMap portData,
+                               in string  name, 
+                               in string  help,
+                               in string  prompt,
+                               in int idefault,
+                               in int low,
+                               in int high) throws gov.cca.CCAException;
+            
+            /** Define a long parameter and its default state.
+             * The configured value is always available by
+             * portData->getLong(name, ...) and it will be
+             * in the range [low, high]. The initially given bounds
+             * can be replaced with a choice list later.
+             * @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            void addRequestLong(in gov.cca.TypeMap portData,
+                                in string  name, 
+                                in string  help,
+                                in string  prompt,
+                                in long ldefault,
+                                in long low,
+                                in long high) throws gov.cca.CCAException ;
+            
+            /** Define a float parameter and its default state.
+             * The configured value is always available by
+             * portData->getFloat(name, ...) and it will be
+             * in the range [low, high]. The initially given bounds
+             * can be replaced with a choice list later.
+             * @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            void addRequestFloat(in gov.cca.TypeMap portData,
+                                 in string  name, 
+                                 in string  help,
+                                 in string  prompt,
+                                 in float fdefault,
+                                 in float low,
+                                 in float high) throws gov.cca.CCAException;
+
+            /** Define a double parameter and its default state.
+             * The configured value is always available by
+             * portData->getDouble(name, ...) and it will be
+             * in the range [low, high]. The initially given bounds
+             * can be replaced with a choice list later.
+             * @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            void addRequestDouble(in gov.cca.TypeMap portData,
+                                  in string  name, 
+                                  in string  help,
+                                  in string  prompt,
+                                  in double ddefault,
+                                  in double low,
+                                  in double high) throws gov.cca.CCAException;
+            
+            /** Define a string parameter and its default state.
+             * The configured value is always available by
+             * portData->getString(name, ...).
+             * If no addRequestStringChoice calls are made, the
+             * user input may be any string. If addRequestStringChoice
+             * is used, the value will be one among the choices.
+             * If addRequestStringChoice is used, deflt must
+             * be among the choices defined.
+             * @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            void addRequestString(in gov.cca.TypeMap portData,
+                                  in string  name, 
+                                  in string  help,
+                                  in string  prompt,
+                                  in string  sdefault) throws gov.cca.CCAException;
+
+            /** Define a new choice for a string parameter.
+             *  If no calls to this function are made for a given
+             *  name, then any form of string will be acceptable input.
+             * @throws gov.cca.CCAException if key is unknown or mistyped.
+             */
+            void addRequestStringChoice(in gov.cca.TypeMap portData,
+                                        in string key,
+                                        in string choice) throws gov.cca.CCAException;
+            
+            /** As addRequestStringChoice, but in bulk. */
+            void addStringChoices(in gov.cca.TypeMap portData,
+                                  in string key,
+                                  in array<string> choices) throws gov.cca.CCAException;
+            
+            /** Replace the bounds on the named parameter by a list. */
+            void addIntChoices(in gov.cca.TypeMap portData,
+                               in string name, 
+                               in array<int> choices) throws gov.cca.CCAException;
+            
+            /** Replace the bounds on the named parameter by a list. */
+            void addLongChoices(in gov.cca.TypeMap portData,
+                                in string name, 
+                                in array<long> choices) throws gov.cca.CCAException;
+
+            /** Replace the bounds on the named parameter by a list. */
+            void addFloatChoices(in gov.cca.TypeMap portData,
+                                 in string name, 
+                                 in array<float> choices) throws gov.cca.CCAException;
+
+            /** Replace the bounds on the named parameter by a list. */
+            void addDoubleChoices(in gov.cca.TypeMap portData,
+                                  in string name, 
+                                  in array<double> choices) throws gov.cca.CCAException;
+            
+            /** Replace the bounds on the named parameter by a list. */
+            void addFcomplexChoices(in gov.cca.TypeMap portData,
+                                    in string name, 
+                                    in array<fcomplex> choices) throws gov.cca.CCAException;
+            
+            /** Replace the bounds on the named parameter by a list. */
+            void addDcomplexChoices(in gov.cca.TypeMap portData,
+                                    in string name, 
+                                    in array<dcomplex> choices) throws gov.cca.CCAException;
+            
+            /** Clear all previously added requests, titles, groups. After
+             *  this call, it is as if the ParameterPort has
+             *  seen initParameterData but otherwise never configured.
+             *  The values of
+             *  previously defined parameters (but not bounds, etc)
+             *  remain in the TypeMap.
+             *  Typically, this is used only by someone implementing
+             *  the updateParameterPort function from
+             *  interface ParameterGetListener.
+             */
+            void clearRequests(in gov.cca.TypeMap portData);
+            
+            /** 
+             * Register listener (the component) that wishes to have
+             * a chance to change the contents of its ParameterPort
+             * just before the parameters TypeMap is read.
+             * @param powner a pointer to the listener that will be
+             * forgotten when it is no longer needed. 
+             */
+            void registerUpdater(in gov.cca.TypeMap portData, 
+                                 in ParameterGetListener powner);
+            
+            /** Register listener (the component) if it wishes to be
+             * informed when an parameter is changed via writeConfigurationMap.
+             * Listeners are called after values are set.
+             */
+            void registerUpdatedListener(in gov.cca.TypeMap portData,
+                                         in ParameterSetListener powner);
+            
+            /** Signal that the ParameterPort is fully defined and should
+             * now pop out on the component.
+             * The component is free to hold the portData map internally
+             * without adding it until some desired time.
+             * The Services passed here
+             * must be the component's own Services handle.
+             * The ParameterPortFactory takes care of addProvidesPort.
+             */
+            void addParameterPort(in gov.cca.TypeMap portData,
+                                  in gov.cca.Services svc);
+            
+            /** Cause a previously defined parameter port to go away.
+             * This function should be called at component shutdown
+             * (setService(0)) time for any parameter ports that have
+             * been added but not yet removed.
+             * The ParameterPortFactory takes care of removeProvidesPort.
+             * This does not change the parameter values in the
+             * TypeMap.
+             */
+            void removeParameterPort(in gov.cca.TypeMap portData,
+                                     in gov.cca.Services svc);
+            
+        } // end interface ParameterPortFactory
+
+
+        /** This interface is typically implemented by a 
+         * component writer using the ParameterPortFactory
+         * in a very dynamic fashion.
+         *  
+         *  The ParameterGet listeners are called when
+         *  the readMap function is called on
+         *  the ParameterPort interface. 
+         *  The listener (usually the component owning the typemap) can change the 
+         *  contents (title, groups, parameters) of the ParameterPort
+         *  in their updateParameterPort function. These changed
+         *  values will be returned to the caller (framework/gui).
+         *  
+         *  This is handy when the contents of one ParameterPort depend
+         *  on values already set in another ParameterPort
+         *  on the same component. E.g. selection of a particular chemical
+         *  reaction mechanism in the first ParameterPort defines the
+         *  set of chemical species that need initial-concentrations defined
+         *  in the second ParameterPort.
+         *
+         *  The fact that looking at a ParameterPort
+         *  gives an opportunity for it to change will lead to Heisenbugs
+         *  in the hands of an inept programmer.
+         *
+         *  The name of the parameter port which is being used is passed
+         *  so the component using the ParameterPortFactory to manage more 
+         *  than one Parameter port can tell which one is being updated.
+         *
+         *  The component should return TRUE if the contents of the
+         *  parameter port were changed (cleared or added to) in the
+         *  update function or if the component wants to receive all fresh input
+         *  for current values.
+         * 
+         *  @see ParameterSetListener
+         */
+        interface ParameterGetListener {
+            
+            /** Inform the listener that someone is about to fetch their 
+             * typemap. The return should be true if the listener
+             * has changed the ParameterPort definitions.
+             */
+            bool updateParameterPort(in string portName);
+
+        } // end interface ParameterGetListener
+      
+
+        /** This interface is typically implemented by a 
+         * component writer using the ParameterPortFactory in a dynamic
+         * fashion.
+         *   The ParameterSet listener is called after the writeMap
+         *   function is called so the component can react to configuration
+         *   changes.
+         *   @see ParameterGetListener
+         */
+        interface ParameterSetListener {
+            
+            /** The component wishing to be told after a parameter is changed
+             * implements this function.
+             * @param portName the name of the port (typemap) on which the
+             * value was set.
+             * @param fieldName the name of the value in the typemap.
+             */
+            void updatedParameterValue(in string portName, in string fieldName);
+        } // end interface ParameterSetListener
+
+	
+
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 //abstract interface 
 	interface UIPort extends cca.Port
@@ -990,14 +1672,7 @@ package cca {
         	*/
 		string getID();
    	};
-
-	
-    } // end of package cca.ports
 //<<<<<<<<<<<<<<<<<<<<<<<<<
-//#include "SCIRun2Classes.sidl"
-//>>>>>>>>>>>>>>>>>>>>>>>>>
+    } // end of package cca.ports
 } // end of package cca
 } // end package gov
-
-
-

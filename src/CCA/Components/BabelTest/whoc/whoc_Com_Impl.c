@@ -77,7 +77,7 @@ impl_whoc_Com_setServices(
 {
   /* DO-NOT-DELETE splicer.begin(whoc.Com.setServices) */
 
-  SIDL_BaseException ex;
+  sidl_BaseException ex;
   gov_cca_TypeMap properties=gov_cca_Services_createTypeMap(
        services, &ex);
 

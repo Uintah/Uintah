@@ -39,7 +39,12 @@
 #include <Core/CCA/PIDL/PIDL.h>
 #include <string>
 #include "framework.hh"
-#include "SIDL.hh"
+#include "sidl.hh"
+
+extern "C" {
+#include <string.h>
+#include <stdlib.h>
+}
 
 #ifdef __sgi
 #define IRIX
@@ -56,12 +61,32 @@
 #endif
 
 #include <iostream>
-using namespace std;
 using namespace SCIRun;
 
 BabelComponentModel::BabelComponentModel(SCIRunFramework* framework)
   : ComponentModel("babel"), framework(framework)
 {
+  // Record the path to XML descriptions of components.  The environment
+  // variable SIDL_XML_PATH should be set, otherwise use a default.
+  const char *component_path = getenv("SIDL_XML_PATH");
+  if (component_path != 0)
+    {
+    this->setSidlXMLPath( std::string(component_path) );
+    }
+  else
+    {
+    this->setSidlXMLPath("../src/CCA/Components/BabelTest/xml");
+    }
+
+  // Now append the SIDL_XML_PATH to the sidl::Loader search path.  This
+  // is the path that sidl::Loader will search for .scl files.  Babel .scl
+  // files are necessary for mapping component names with their DLLs.
+  std::string search_path = sidl::Loader::getSearchPath();
+  if (search_path.find(this->getSidlXMLPath()) == std::string::npos)
+    {// SIDL_XML_PATH is not already in the sidl runtime search path
+    sidl::Loader::addSearchPath( this->getSidlXMLPath() );     
+    }
+
   buildComponentList();
 }
 
@@ -73,50 +98,62 @@ BabelComponentModel::~BabelComponentModel()
 void BabelComponentModel::destroyComponentList()
 {
   for(componentDB_type::iterator iter=components.begin();
-      iter != components.end(); iter++){
+      iter != components.end(); iter++)
+    {
     delete iter->second;
-  }
+    }
   components.clear();
 }
 
 void BabelComponentModel::buildComponentList()
 {
   // Initialize the XML4C system
-  try {
+  try
+    {
     XMLPlatformUtils::Initialize();
-  } catch (const XMLException& toCatch) {
+    }
+  catch (const XMLException& toCatch)
+    {
     std::cerr << "Error during initialization! :\n"
-	 << StrX(toCatch.getMessage()) << endl;
+              << StrX(toCatch.getMessage()) << std::endl;
     return;
-  }
+    }
 
   destroyComponentList();
-  string component_path = "../src/CCA/Components/BabelTest/xml";
-  while(component_path != ""){
-    unsigned int firstColon = component_path.find(':');
-    string dir;
-    if(firstColon < component_path.size()){
+
+  std::string component_path(this->getSidlXMLPath());
+
+  while(component_path != "")
+    {
+    unsigned int firstColon = component_path.find(';');
+    std::string dir;
+    if(firstColon < component_path.size())
+      {
       dir=component_path.substr(0, firstColon);
       component_path = component_path.substr(firstColon+1);
-    } else {
+      }
+    else
+      {
       dir = component_path;
       component_path="";
-    }
+      }
     Dir d(dir);
-    cerr << "Looking at directory: " << dir << '\n';
-    vector<string> files;
+
+    std::cerr << "Looking at directory: " << dir << std::endl;
+
+    std::vector<std::string> files;
     d.getFilenamesBySuffix(".cca", files);
-    for(vector<string>::iterator iter = files.begin();
-	iter != files.end(); iter++){
-      string& file = *iter;
+    for(std::vector<std::string>::iterator iter = files.begin();
+        iter != files.end(); iter++)
+      {
+      std::string& file = *iter;
       readComponentDescription(dir+"/"+file);
+      }
     }
-  }
 }
 
 void BabelComponentModel::readComponentDescription(const std::string& file)
 {
-  cerr << "Reading file " << file << '\n';
   // Instantiate the DOM parser.
   XercesDOMParser parser;
   parser.setDoValidation(false);
@@ -124,41 +161,68 @@ void BabelComponentModel::readComponentDescription(const std::string& file)
   SCIRunErrorHandler handler;
   parser.setErrorHandler(&handler);
   
-  try {
+  try
+    {
     parser.parse(file.c_str());
-  }  catch (const XMLException& toCatch) {
+    }
+  catch (const XMLException& toCatch)
+    {
     std::cerr << "Error during parsing: '" <<
       file << "'\nException message is:  " <<
-      xmlto_string(toCatch.getMessage()) << '\n';
+      xmlto_string(toCatch.getMessage()) << std::endl;
     handler.foundError=true;
     return;
-  }
+    }
   
   DOMDocument* doc = parser.getDocument();
   DOMNodeList* list = doc->getElementsByTagName(to_xml_ch_ptr("component"));
   int nlist = list->getLength();
-  if(nlist == 0){
-    cerr << "WARNING: file " << file << " has no components!\n";
-  }
-  for (int i=0;i<nlist;i++){
+  if(nlist == 0)
+    {
+    std::cerr << "WARNING: file " << file << " has no components!" << std::endl;
+    }
+  for (int i=0;i<nlist;i++)
+    {    
     DOMNode* d = list->item(i);
     BabelComponentDescription* cd = new BabelComponentDescription(this);
+
+    // Is this component a Babel component?
+    DOMNode* model= d->getAttributes()->getNamedItem(to_xml_ch_ptr("model"));
+    if (model != 0)
+      { 
+      if ( strcmp(to_char_ptr(model->getNodeValue()), this->prefixName.c_str()) != 0 )
+        {// not a babel component, ignore it
+        continue;
+        }
+      }
+    else
+      { // no model, ignore this component
+      std::cerr << "ERROR: Component has no model in file" << file << std::endl;
+      continue;
+      }
+
     DOMNode* name = d->getAttributes()->getNamedItem(to_xml_ch_ptr("name"));
-    if (name==0) {
-      cout << "ERROR: Component has no name." << endl;
+    if (name==0)
+      {
+      std::cout << "ERROR: Component has no name." << std::endl;
       cd->type = "unknown type";
-    } else {
+      }
+    else
+      {
       cd->type = to_char_ptr(name->getNodeValue());
-    }
-  
+      }
+    
     componentDB_type::iterator iter = components.find(cd->type);
-    if(iter != components.end()){
-      cerr << "WARNING: Component multiply defined: " << cd->type << '\n';
-    } else {
-      cerr << "Added Babel component of type: " << cd->type << '\n';
-      components[cd->type]=cd;
+    if(iter != components.end())
+      {
+      std::cerr << "WARNING: Component multiply defined: " << cd->type << std::endl;
+      }
+    else
+      {
+        std::cerr << "Added Babel component of type: " << cd->type << std::endl;
+        components[cd->type]=cd;
+      }
     }
-  }
 }
 
 gov::cca::Services
@@ -181,30 +245,39 @@ BabelComponentModel::createServices(const std::string& instanceName,
 
   */
   gov::cca::Services svc;
-  cerr<<"BabelComponentModel::createServices() is not implemented !"<<endl;
+  std::cerr << "BabelComponentModel::createServices() is not implemented !"
+            << std::endl;
   return svc;
 }
 
 bool BabelComponentModel::haveComponent(const std::string& type)
 {
-  cerr << "CCA(Babel) looking for babel component of type: " << type << '\n';
+  std::cerr << "CCA(Babel) looking for babel component of type: " << type
+            << std::endl;
   return components.find(type) != components.end();
 }
 
 ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
 						       const std::string& type)
 {
-  
   gov::cca::Component component;
-  if(true){  //local component 
+  if (true)
+    {  //local component 
+
     componentDB_type::iterator iter = components.find(type);
+    
     if(iter == components.end())
+      {
+      std::cerr << "ERROR: Component " << type << " is not a registered component."
+                << std::endl;
       return 0;
+      }
+
     /*
-    string lastname=type.substr(type.find('.')+1);  
-    string so_name("lib/libBabel_Components_");
+    std::string lastname=type.substr(type.find('.')+1);  
+    std::string so_name("lib/libBabel_Components_");
     so_name=so_name+lastname+".so";
-    cerr<<"type="<<type<<" soname="<<so_name<<endl;
+    cerr<<"type="<<type<<" soname="<<so_name<<std::endl;
 
     LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
     if(!handle){
@@ -213,12 +286,12 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
       return 0;
     }
 
-    string makername = "make_"+type;
+    std::string makername = "make_"+type;
     for(int i=0;i<(int)makername.size();i++)
       if(makername[i] == '.')
 	makername[i]='_';
     
-    cerr<<"looking for symbol:"<< makername<<endl;
+    cerr<<"looking for symbol:"<< makername<<std::endl;
     void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
     if(!maker_v){
       cerr <<"Cannot load component symbol " << type << '\n';
@@ -226,25 +299,51 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
       return 0;
     }
     gov::cca::Component (*maker)() = (gov::cca::Component (*)())(maker_v);
-    cerr<<"about to create babel component"<<endl;
+    cerr<<"about to create babel component"<<std::endl;
     component = (*maker)();
     */
-    SIDL::BaseClass sidl_class = SIDL::Loader::createClass(type);
-    component = sidl_class;
-    if ( component._not_nil() ) { 
-      cerr<<"babel component of type "<<type<< " is loaded!"<<endl;
-    }
+    
+    // sidl::BaseClass sidl_class = sidl::Loader::createClass(type);
+    // For upgrade to babel 0.9.0 --josh 4/21/04
+    sidl::DLL library = sidl::Loader::findLibrary(type, "ior/impl",
+                  ::sidl::Scope_SCLSCOPE, ::sidl::Resolve_SCLRESOLVE);
+    std::cout << "sidl::Loader::getSearchPath=" << sidl::Loader::getSearchPath() << std::endl;
+    if (library._not_nil())
+      {
+      std::cerr << "Found library for class " << type << std::endl;
+      }
     else
-            cerr<<"Cannot load babel component of type "<<type<<endl;
-    cerr<<"babel component created!"<<endl;
- 	
-    }
+      {
+      std::cerr << "FATAL ERROR: Could not find library for type " << type
+                << std::endl;
+      return 0;
+      }
+
+    sidl::BaseClass sidl_class = library.createClass(type);
+
+    // end upgrade
+
+    // jc--why is this assignment necessary??
+    component = sidl_class;
+    if ( component._not_nil() )
+      { 
+      std::cerr << "babel component of type " << type << " is loaded!"
+                << std::endl;
+      }
+    else
+      {
+      std::cerr << "Cannot load babel component of type " << type << std::endl;
+      std::cerr << "FATAL ERROR: babel component not created!" << std::endl;
+      return 0;
+      }
+      
+  }
   else{ //remote component: need to be created by framework at url 
-    cerr<<"remote babel components creation is not done!"<<endl;
+    std::cerr << "remote babel components creation is not done!" << std::endl;
     /*
     Object::pointer obj=PIDL::objectFrom(url);
     if(obj.isNull()){
-      cerr<<"got null obj (framework) from "<<url<<endl;
+      cerr<<"got null obj (framework) from "<<url<<std::endl;
       return 0;
     }
 
@@ -252,10 +351,10 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
       pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
 
     std::string comURL=remoteFramework->createComponent(name, type);
-    //cerr<<"comURL="<<comURL<<endl;
+    //cerr<<"comURL="<<comURL<<std::endl;
     Object::pointer comObj=PIDL::objectFrom(comURL);
     if(comObj.isNull()){
-      cerr<<"got null obj(Component) from "<<url<<endl;
+      cerr<<"got null obj(Component) from "<<url<<std::endl;
       return 0;
     }
     component=pidl_cast<sci::cca::Component::pointer>(comObj);
@@ -263,36 +362,36 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
   }
 
 
-  cerr<<"about to create services"<<endl;
+  std::cerr<<"about to create services"<<std::endl;
   framework::Services svc=framework::Services::_create();
-  cerr<<"services created !"<<endl;
+  std::cerr<<"services created !"<<std::endl;
   component.setServices(svc);
-  cerr<<"component.setService done!"<<endl;
+  std::cerr<<"component.setService done!"<<std::endl;
   gov::cca::Component nullMap;
 
   BabelComponentInstance* ci = new BabelComponentInstance(framework, name, type,
 							  nullMap, 
 							  component,
 							  svc);
-  cerr<<"comopnent instance ci is created!"<<endl;
+  std::cerr<<"comopnent instance ci is created!"<<std::endl;
   //ci->addReference();
   return ci;
 }
 
 bool BabelComponentModel::destroyInstance(ComponentInstance *ci)
 {
-  cerr<<"BabelComponentModel::destroyInstance() is not done"<<endl;
+  std::cerr<<"BabelComponentModel::destroyInstance() is not done"<<std::endl;
   //make sure why ci->addReference() is called in createInstace();
   delete ci;  
   return false;
 }
 
-string BabelComponentModel::getName() const
+std::string BabelComponentModel::getName() const
 {
-  return "Babel";
+  return "babel";
 }
 
-void BabelComponentModel::listAllComponentTypes(vector<ComponentDescription*>& list,
+void BabelComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
 					      bool /*listInternal*/)
 {
   for(componentDB_type::iterator iter=components.begin();
@@ -313,27 +412,27 @@ std::string BabelComponentModel::createComponent(const std::string& name,
   if(iter == components.end())
     return "";
   
-  string lastname=type.substr(type.find('.')+1);  
-  string so_name("lib/libBabel_Components_");
+  std::string lastname=type.substr(type.find('.')+1);  
+  std::string so_name("lib/libBabel_Components_");
   so_name=so_name+lastname+".so";
-  //cerr<<"type="<<type<<" soname="<<so_name<<endl;
+  //cerr<<"type="<<type<<" soname="<<so_name<<std::endl;
   
   LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
   if(!handle){
-    cerr << "Cannot load component " << type << '\n';
-    cerr << SOError() << '\n';
+    std::cerr << "Cannot load component " << type << '\n';
+    std::cerr << SOError() << '\n';
     return "";
   }
 
-  string makername = "make_"+type;
+  std::string makername = "make_"+type;
   for(int i=0;i<(int)makername.size();i++)
     if(makername[i] == '.')
       makername[i]='_';
   
   void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
   if(!maker_v){
-    cerr << "Cannot load component " << type << '\n';
-    cerr << SOError() << '\n';
+    std::cerr << "Cannot load component " << type << '\n';
+    std::cerr << SOError() << '\n';
     return "";
   }
   /*  sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);

@@ -1,8 +1,8 @@
 //test components
 
-version whof77 1.0;
+//version whof77 1.0;
 
-package whof77{
+package whof77 version 1.0{
 
   class IDPort implements-all gov.cca.ports.IDPort{
   };

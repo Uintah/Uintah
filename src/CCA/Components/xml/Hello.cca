@@ -1,3 +1,2 @@
-
-<component name="SCIRun.Hello">
+<component name="SCIRun.Hello" model="cca">
 </component>

@@ -1,3 +1,3 @@
 
-<component name="Vtk.StructuredPointsReader">
+<component name="Vtk.StructuredPointsReader" model="vtk">
 </component>

@@ -32,6 +32,7 @@
 #include <SCIRun/ComponentModel.h>
 #include <SCIRun/ComponentInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
+#include <vector>
 #include <string>
 #include <map>
 
@@ -60,11 +61,22 @@ namespace SCIRun {
     int addLoader(resourceReference *rr);
     int removeLoader(const std::string &loaderName);
 
+    /**
+     * Get/Set the directory path to the XML files describing CCA
+     * components. By default, sidlXMLPath is initialized to the
+     * environment variable SIDL_XML_PATH.
+     */
+    std::string getSidlXMLPath() const
+    { return sidlXMLPath; }
+    void setSidlXMLPath( const std::string& s)
+    { sidlXMLPath = s; }
+    
   private:
     SCIRunFramework* framework;
     typedef std::map<std::string, CCAComponentDescription*> componentDB_type;
     componentDB_type components;
-
+    std::string sidlXMLPath;
+    
     void destroyComponentList();
     void buildComponentList();
     void readComponentDescription(const std::string& file);
@@ -73,7 +85,6 @@ namespace SCIRun {
     CCAComponentModel& operator=(const CCAComponentModel&);
 
     std::vector<resourceReference* > loaderList;
-
   };
 }
 

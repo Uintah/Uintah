@@ -31,7 +31,7 @@ SRCS     += \
 
 PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL  Core/CCA/Comm\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
-LIBS := $(QT_LIBRARY)
+LIBS := $(QT_LIBRARY) $(LIBS)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
@@ -39,7 +39,8 @@ PROGRAM := builder_main
 SRCS := $(SRCDIR)/builder_main.cc
 PSELIBS := CCA/Components/Builder Core/CCA/SSIDL \
 	Core/CCA/PIDL Core/Exceptions Core/CCA/spec SCIRun
-LIBS := $(QT_LIBRARY)
+
+LIBS := $(QT_LIBRARY) $(LIBS)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

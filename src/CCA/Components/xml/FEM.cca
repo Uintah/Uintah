@@ -1,3 +1,2 @@
-
-<component name="SCIRun.FEM">
+<component name="SCIRun.FEM" model="cca">
 </component>
