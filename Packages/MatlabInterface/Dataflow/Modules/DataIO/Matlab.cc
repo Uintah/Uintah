@@ -76,6 +76,8 @@ void Matlab::execute()
  cmdTCL.reset();
  string s1=cmdTCL.get();
  char *cmd=(char *)s1.c_str(); // Command is taken from interface
+ cmd=scinew char[strlen(cmd)+1];
+ strcpy(cmd,(char *)s1.c_str());
 
  /* OBTAIN GUI STRING - HOST:PORT */
  hpTCL.reset();
@@ -89,10 +91,12 @@ void Matlab::execute()
  MatrixHandle mhi[5],mho[5],err;
  int ioflags[10];
 
+ fprintf(stderr,"Command is: \n%s\n",cmd); 
+
  cmdparse(ioflags,cmd);                  /* PARSE THE STRING FOR i o NAMES, delete \n */
 
- fprintf(stderr,"Command is: \n%s\n",cmd); 
- return;
+ // delete [] cmd;
+ // return;
 
  // for(int k=0;k<10;k++) ioflags[k]=0;
  // ioflags[0]=1;
@@ -138,6 +142,8 @@ void Matlab::execute()
 
  for(int k=0;k<5;k++)                    /* SEND DATA TO RELEVANT OUTPUT PORTS */
   if(ioflags[k+5]) op[k]->send(mho[k]);             
+
+ delete [] cmd;
 }
 
 /****************************END OF MAIN ROUTINE**************************************/
