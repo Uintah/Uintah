@@ -286,10 +286,9 @@ CalcFMField<ElecField, CondField, PointField, MagField>::calc_forward_magnetic_f
   mod->update_progress(1, sz);
  
   data_out_.resize(np_);
+
   // do the parallel work.
-  Thread::parallel(Parallel1<AlgoType, ProgressReporter*>(this, 
-						     &AlgoType::calc_parallel,
-						      mod), np_, true);
+  Thread::parallel(this, &AlgoType::calc_parallel, np_, mod);
   
   //iterate over output fields and set the values...
   set_parallel_data(fout, fscalarout);

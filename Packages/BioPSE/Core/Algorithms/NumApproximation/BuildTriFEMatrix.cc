@@ -105,8 +105,7 @@ bool BuildTriFEMatrix::build_FEMatrix(TriSurfFieldIntHandle hFieldInt,
     new BuildTriFEMatrix(hFieldInt, hFieldTensor, index_based, tens, 
 			 hA, np, unitsScale);
 
-  Parallel<BuildTriFEMatrix> p(hMaker.get_rep(), &BuildTriFEMatrix::parallel);
-  Thread::parallel(p, np, true);
+  Thread::parallel(hMaker.get_rep(), &BuildTriFEMatrix::parallel, np);
   
   // -- refer to the object one more time not to make it die before
   hMaker = 0;

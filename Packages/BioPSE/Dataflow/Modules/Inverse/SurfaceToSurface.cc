@@ -379,8 +379,7 @@ SurfaceToSurface::buildAc(double **Ac, int ns, int nc,
   if (np>4) np/=2;	// being nice - just using half the processors. :)
   msgStream_ << "np="<<np<<"\n";
   msgStream_ << "Starting back substitution ("<<nc<<")...("<<timer.time()<<")... ";
-  Thread::parallel(Parallel<SurfaceToSurface>(this, &SurfaceToSurface::parallel),
-		   np, true);
+  Thread::parallel(this, &SurfaceToSurface::parallel, np);
   msgStream_ << "Done! (timer="<<timer.time()<<")\n";
 
   free(fwdMap);

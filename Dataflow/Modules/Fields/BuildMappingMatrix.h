@@ -211,17 +211,9 @@ BuildMappingMatrixAlgoT<MSRC, LSRC, MDST,
     d.dstmap = scinew vector<unsigned int>[dst_size];
   }
 
-  // Do the execute.
-  if (np==1)
-  {
-    parallel_execute(0, &d);
-  }
-  else
-  {
-    Thread::parallel(this, 
-       &BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute,
-       np, true, &d);
-  }
+  Thread::parallel(this, 
+                   &BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute,
+                   np, &d);
 
   // Collect the data back into a sparse row matrix.
   // This is for source_to_single_dest.

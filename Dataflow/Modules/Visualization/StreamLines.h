@@ -278,16 +278,9 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
   
   d.cf = cf;
 
-  if (np > 1)
-  {
-    Thread::parallel (this,
-		      &StreamLinesAlgoT<SMESH, SLOC>::parallel_generate,
-		      np, true, &d);
-  }
-  else
-  {
-    parallel_generate(0, &d);
-  }
+  Thread::parallel(this,
+                   &StreamLinesAlgoT<SMESH, SLOC>::parallel_generate,
+                   np, &d);
 
   cf->freeze();
 

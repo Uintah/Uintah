@@ -226,9 +226,7 @@ BuildFEMatrixQuadratic::execute()
   QuadraticTetVolMesh::Cell::array_type array;
   qtvm_->get_cells(array,(QuadraticTetVolMesh::Node::index_type)0);
 
-  Parallel<BuildFEMatrixQuadratic> p(this, &BuildFEMatrixQuadratic::parallel);
-  Thread::parallel(p, np, true);
-
+  Thread::parallel(this, &BuildFEMatrixQuadratic::parallel, np);
 
   current_time = time(NULL);
   remark(string("End simulation: ") + ctime(&current_time) + ".");
