@@ -64,6 +64,13 @@
         <name>Input TimeStep</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
+      <port>
+        <description>
+          <p>Input port -- Color Map</p>
+        </description>
+        <name>Input ColorMap</name>
+        <datatype>SCIRun::ColorMap</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
@@ -101,6 +108,13 @@
         </description>
         <name>Physiology Data</name>
         <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <description>
+          <p>Output Color Map.</p>
+        </description>
+        <name>Output ColorMap</name>
+        <datatype>SCIRun::ColorMap</datatype>
       </port>
     </outputs>
   </io>
