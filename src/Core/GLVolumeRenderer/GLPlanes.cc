@@ -29,12 +29,14 @@ GLPlanes::GLPlanes(const GLVolumeRenderer* glvr) :
 void GLPlanes::preDraw()
 {
   //  glBlendColorEXT(1.f, 1.f, 1.f, 1.f/volren->slices);
+  glDepthMask(GL_TRUE);
   glEnable(GL_ALPHA_TEST);
   glAlphaFunc(GL_GREATER, 0.0);
 }
 
 void GLPlanes::postDraw()
 {
+  glDepthMask(GL_FALSE);
   glDisable(GL_ALPHA_TEST);
 }
 

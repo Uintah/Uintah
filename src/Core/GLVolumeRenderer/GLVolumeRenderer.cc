@@ -207,7 +207,6 @@ GLVolumeRenderer::setup()
   glDepthMask(GL_FALSE);
 }
 
-
 void
 GLVolumeRenderer::cleanup()
 {
