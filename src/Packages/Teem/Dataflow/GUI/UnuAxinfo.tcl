@@ -291,7 +291,8 @@ itcl_class Teem_Unu_UnuAxinfo {
 	    -labelpos w -command "$this update_kind $win $var"
 	$win insert end nrrdKindUnknown nrrdKindDomain nrrdKindScalar \
 	    nrrdKind3Color nrrdKind3Vector nrrdKind3Normal \
-	    nrrdKind3DSymTensor nrrdKind3DMaskedSymTensor nrrdKind3DTensor
+	    nrrdKind3DSymTensor nrrdKind3DMaskedSymTensor nrrdKind3DTensor \
+	    nrrdKindList nrrdKindStub
 	if {[info exists $var] && [set $var] != ""} {
 	    $win select [set $var]
 	} else {

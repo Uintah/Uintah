@@ -230,6 +230,9 @@ UnuResample::execute()
     msgStream_ << "NrrdResample sizes: ";
     info->samples[a]=nin->axis[a].size;
     char *str = strdup(resampAxes_[a]->get().c_str());
+    if (nrrdKindSize(nin->axis[a].kind) > 1 && str != "=") {
+      warning("Trying to resample along axis " + to_string(a) + " which is not of nrrdKindDomain or nrrdKindUnknown.");
+    }
     int none=0;
     if (getint(str, &(info->samples[a]), &none)) {
       error("NrrdResample -- bad size."); 

@@ -240,6 +240,16 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
 	    << " {nrrdKind3DTensor}";
 	gui->execute(kind.str());
 	break;
+      case nrrdKindList:
+	kind << "set " << id.c_str() << "-kind" << i 
+	    << " {nrrdKindList}";
+	gui->execute(kind.str());
+	break;	
+      case nrrdKindStub:
+	kind << "set " << id.c_str() << "-kind" << i 
+	    << " {nrrdKindStub}";
+	gui->execute(kind.str());
+	break;	
       default:
 	nh->nrrd->axis[i].kind = nrrdKindUnknown;
 	kind << "set " << id.c_str() << "-kind" << i 

@@ -271,7 +271,8 @@ itcl_class Teem_Unu_UnuMake {
 	    -labelpos w -command "$this update_kind $inf.kind"
 	$inf.kind insert end nrrdKindUnknown nrrdKindDomain nrrdKindScalar \
 	    nrrdKind3Color nrrdKind3Vector nrrdKind3Normal \
-	    nrrdKind3DSymTensor nrrdKind3DMaskedSymTensor nrrdKind3DTensor
+	    nrrdKind3DSymTensor nrrdKind3DMaskedSymTensor nrrdKind3DTensor \
+	    nrrdKindList nrrdKindStub
 	pack $inf.kind -side top -anchor nw -padx 3 -pady 3
 	$inf.kind select nrrdKindUnknown
 
