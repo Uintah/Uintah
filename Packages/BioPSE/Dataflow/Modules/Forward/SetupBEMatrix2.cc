@@ -86,7 +86,7 @@ public:
 };
 
 
-DECLARE_MAKER(SetupBEMatrix2);
+DECLARE_MAKER(SetupBEMatrix2)
 
 
 SetupBEMatrix2::SetupBEMatrix2(GuiContext *context): 
