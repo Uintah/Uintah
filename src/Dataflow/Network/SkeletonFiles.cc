@@ -135,7 +135,7 @@ char share_skeleton[] = \
 "\n";
 
 char package_submk_skeleton[] = \
-"include $(OBJTOP_ABS)/scripts/largeso_prologue.mk\n"
+"include $(SRCTOP)/scripts/largeso_prologue.mk\n"
 "\n"
 "SRCDIR := Packages/%s\n" /* package name */
 "\n"
@@ -143,17 +143,17 @@ char package_submk_skeleton[] = \
 "        $(SRCDIR)/Core \\\n"
 "        $(SRCDIR)/Dataflow \\\n"
 "\n"
-"include $(OBJTOP_ABS)/scripts/recurse.mk\n"
+"include $(SRCTOP)/scripts/recurse.mk\n"
 "\n"
 "PSELIBS := \n"
 "LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm\n"
 "\n"
-"include $(OBJTOP_ABS)/scripts/largeso_epilogue.mk\n"
+"include $(SRCTOP)/scripts/largeso_epilogue.mk\n"
 "\n"
 "\n";
 
 char dataflow_submk_skeleton[] = \
-"include $(OBJTOP_ABS)/scripts/largeso_prologue.mk\n"
+"include $(SRCTOP)/scripts/largeso_prologue.mk\n"
 "\n"
 "SRCDIR := Packages/%s/Dataflow\n" /* package name */
 "\n"
@@ -161,29 +161,29 @@ char dataflow_submk_skeleton[] = \
 "        $(SRCDIR)/GUI \\\n"
 "        $(SRCDIR)/Modules \\\n"
 "\n"
-"include $(OBJTOP_ABS)/scripts/recurse.mk\n"
+"include $(SRCTOP)/scripts/recurse.mk\n"
 "\n"
 "PSELIBS := \n"
 "LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm\n"
 "\n"
-"include $(OBJTOP_ABS)/scripts/largeso_epilogue.mk\n"
+"include $(SRCTOP)/scripts/largeso_epilogue.mk\n"
 "\n"
 "\n";
 
 char core_submk_skeleton[] = \
-"include $(OBJTOP_ABS)/scripts/largeso_prologue.mk\n"
+"include $(SRCTOP)/scripts/largeso_prologue.mk\n"
 "\n"
 "SRCDIR := Packages/%s/Core\n" /* package name */
 "\n"
 "SUBDIRS := \\\n"
 "        $(SRCDIR)/Datatypes \\\n"
 "\n"
-"include $(OBJTOP_ABS)/scripts/recurse.mk\n"
+"include $(SRCTOP)/scripts/recurse.mk\n"
 "\n"
 "PSELIBS := \n"
 "LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm\n"
 "\n"
-"include $(OBJTOP_ABS)/scripts/largeso_epilogue.mk\n"
+"include $(SRCTOP)/scripts/largeso_epilogue.mk\n"
 "\n"
 "\n";
 
@@ -203,7 +203,7 @@ char modules_submk_skeleton[] = \
 "SUBDIRS := \\\n"
 "#[INSERT NEW CATEGORY DIR HERE]\n"
 "\n"
-"include $(OBJTOP_ABS)/scripts/recurse.mk\n"
+"include $(SRCTOP)/scripts/recurse.mk\n"
 "\n"
 "\n";
 
@@ -218,7 +218,7 @@ char category_submk_skeleton[] = \
 "# if you want to edit this file by hand, see the \"Create A New Component\"\n"
 "# documentation on how to do it correctly.\n"
 "\n"
-"include $(OBJTOP_ABS)/scripts/smallso_prologue.mk\n"
+"include $(SRCTOP)/scripts/smallso_prologue.mk\n"
 "\n"
 "SRCDIR   := Packages/%s/Dataflow/Modules/%s\n" /* package name, category name */
 "\n"
@@ -232,7 +232,7 @@ char category_submk_skeleton[] = \
 "        Core/TkExtensions\n"
 "LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm\n"
 "\n"
-"include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk\n"
+"include $(SRCTOP)/scripts/smallso_epilogue.mk\n"
 "\n"
 "\n";
 
@@ -247,7 +247,7 @@ char datatypes_submk_skeleton[] = \
 "# if you want to edit this file by hand, see the \"Create A New Component\"\n"
 "# documentation on how to do it correctly.\n"
 "\n"
-"include $(OBJTOP_ABS)/scripts/smallso_prologue.mk\n"
+"include $(SRCTOP)/scripts/smallso_prologue.mk\n"
 "\n"
 "SRCDIR   := Packages/%s/Core/Datatypes\n" /* package name */
 "\n"
@@ -257,7 +257,7 @@ char datatypes_submk_skeleton[] = \
 "PSELIBS :=\n"
 "LIBS :=\n"
 "\n"
-"include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk"
+"include $(SRCTOP)/scripts/smallso_epilogue.mk"
 "\n"
 "\n";
 
@@ -286,11 +286,4 @@ char gui_submk_skeleton[] = \
 "\n";
 
 } // End namespace SCIRun
-
-
-
-
-
-
-
 
