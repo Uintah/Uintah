@@ -53,6 +53,7 @@ SUBDIRS := \
 	$(SRCDIR)/Thread \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
+#	$(SRCDIR)/Util/Comm \
 	$(SRCDIR)/2d \
 #	$(SRCDIR)/Parts \
 #	$(SRCDIR)/PartsGui
