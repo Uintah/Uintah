@@ -65,8 +65,13 @@ itcl_class PSECommon_Matrix_BldTransform {
 	    raise $w
 	    return;
 	}
+
 	toplevel $w
 	wm minsize $w 200 50
+
+	set mouseXLoc [winfo pointerx .]
+	set mouseYLoc [winfo pointery .]
+	wm geometry $w +$mouseXLoc+$mouseYLoc
 
 	frame $w.f
 	pack $w.f -side top -fill x -padx 2 -pady 2
