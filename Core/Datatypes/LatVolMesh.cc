@@ -555,9 +555,9 @@ LatVolMesh::locate(Cell::index_type &cell, const Point &p)
   // Rounds down, so catches intervals.  Might lose numerical precision on
   // upper edge (ie nodes on upper edges are not in any cell).
   // Nodes over 2 billion might suffer roundoff error.
-  cell.i_ = (unsigned int)r.x();
-  cell.j_ = (unsigned int)r.y();
-  cell.k_ = (unsigned int)r.z();
+  cell.i_ = (unsigned int)((r.x()-0.5) * (ni_/(ni_-1.0)));
+  cell.j_ = (unsigned int)((r.y()-0.5) * (nj_/(nj_-1.0)));
+  cell.k_ = (unsigned int)((r.z()-0.5) * (nk_/(nk_-1.0)));
 
   if (cell.i_ >= (ni_-1) ||
       cell.j_ >= (nj_-1) ||
