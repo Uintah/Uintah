@@ -81,7 +81,6 @@ TclObj::tcl_eval( const string &s, string &result )
 void
 TclObj::tcl_exec()
 {
-  //cerr << "TclObj::exec " << tcl_.str() << endl;
   TCL::execute( tcl_.str().c_str() );
   tcl_.str( " ");
   tcl_ << id_ << " ";
