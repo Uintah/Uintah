@@ -39,11 +39,11 @@ class Grid2 : public Object {
 public:
     Grid2(Object* obj, int nside);
     virtual ~Grid2();
-    virtual void intersect(const Ray& ray,
+    virtual void intersect(Ray& ray,
 			   HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*);
     virtual Vector normal(const Point&, const HitInfo& hit);
-    virtual void light_intersect(Light* light, const Ray& ray,
+    virtual void light_intersect(Light* light, Ray& ray,
 				 HitInfo& hit, double dist, Color& atten,
 				 DepthStats* st, PerProcessorContext*);
     void add(Object* obj);

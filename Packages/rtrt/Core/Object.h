@@ -26,13 +26,13 @@ using std::string;
 
 struct DepthStats;
 
-class  HitInfo;
-class  Material;
-class  Ray;
-class  Light;
-class  BBox;
-class  PerProcessorContext;
-class  UVMapping;
+class HitInfo;
+class Material;
+class Ray;
+class Light;
+class BBox;
+class PerProcessorContext;
+class UVMapping;
 class Object;
 
 template<class T> class Array1;
@@ -43,9 +43,19 @@ void Pio(Piostream&, rtrt::Object*&);
 
 namespace rtrt {
 
+/*
+ * Each object now has a unique identification number
+ * This is used when animating objects.
+ * On start-up each object will have an odd number,
+ * the first bit being used to identify whether it has
+ * moved outside the initial spatial subdivision.
+ * Used in conjunction with the Grid2.cc implementation
+ */
+
 class Object : public virtual SCIRun::Persistent {
   Material* matl;
   UVMapping* uv;
+  unsigned long number; // id number
 protected:
   bool was_preprocessed;
 public:
@@ -53,6 +63,13 @@ public:
 
   Object(Material* matl, UVMapping* uv=0);
   virtual ~Object();
+
+  inline void set_grid_position (int inside, int outside) {
+    number = (number & ~3) + inside + (outside << 1);
+  }
+  inline unsigned long get_id () {
+    return number;
+  }
 
   //! Persistent I/O.
   static  SCIRun::PersistentTypeID type_id;
@@ -84,6 +101,16 @@ public:
   virtual void collect_prims(Array1<Object*>& prims);
   virtual void print(ostream& out);
   virtual void transform(Transform&) {}
+
+  // stuff for Grid2
+  virtual void allow_animation ();
+  virtual void disallow_animation ();
+  virtual void remove(Object* obj, const BBox& bbox); // For dynamic updates
+  virtual void insert(Object* obj, const BBox& bbox); // Idem
+  virtual void rebuild ();
+  virtual void recompute_bbox ();
+  virtual void set_scene (Object *);
+  virtual void update(const Vector& update);
 
   // This function should return TRUE when the point in question
   // (ray.v * t + ray.t0) can be mapped to a value by the object.

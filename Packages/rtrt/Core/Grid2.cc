@@ -12,6 +12,7 @@
 #include <stdlib.h>
 
 using namespace rtrt;
+using namespace std;
 using SCIRun::Thread;
 using SCIRun::Time;
 
@@ -134,7 +135,7 @@ void Grid2::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     cerr << "Done building grid for " << prims.size() << " primitives.\n";
 }
 
-void Grid2::intersect(const Ray& ray, HitInfo& hit,
+void Grid2::intersect(Ray& ray, HitInfo& hit,
 		      DepthStats* st, PerProcessorContext* ppc)
 {
     int    phys_far_x;
@@ -352,7 +353,7 @@ void Grid2::intersect(const Ray& ray, HitInfo& hit,
     }
 }
 
-void Grid2::light_intersect(Light*, const Ray& lightray,
+void Grid2::light_intersect(Light*, Ray& lightray,
 			  HitInfo& hit, double, Color&,
 			  DepthStats* ds, PerProcessorContext* ppc)
 {
