@@ -19,6 +19,7 @@ namespace SCIRun {
 
 class LinAlgUnary : public Module {
   GuiString op_;
+  void insertion_sort(double *x, int n);
 public:
   LinAlgUnary(const string& id);
   virtual ~LinAlgUnary();
@@ -38,6 +39,15 @@ LinAlgUnary::LinAlgUnary(const string& id)
 
 LinAlgUnary::~LinAlgUnary()
 {
+}
+
+void LinAlgUnary::insertion_sort(double *x, int n) {
+  double tmp;
+  for (int i=0; i<n-1; i++)
+    for (int j=i+1; j<n; j++)
+      if (x[i] > x[j]) {
+	tmp = x[i]; x[i]=x[j]; x[j]=tmp;
+      }
 }
 
 void LinAlgUnary::execute() {
@@ -65,6 +75,12 @@ void LinAlgUnary::execute() {
   string op = op_.get();
   if (op == "Transpose") {
     Matrix *m = mh->transpose();
+    omat_->send(MatrixHandle(m));
+  } else if (op == "Sort") {
+    MatrixHandle m = mh->clone();
+    double *x = &((*(m.get_rep()))[0][0]);
+    int n = m->nrows()*m->ncols();
+    insertion_sort(x, n);
     omat_->send(MatrixHandle(m));
   } else {
     warning("Don't know operation "+op);

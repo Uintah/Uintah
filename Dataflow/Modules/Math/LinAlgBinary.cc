@@ -68,17 +68,14 @@ void LinAlgBinary::execute() {
   
   update_state(NeedData);
   MatrixHandle aH, bH;
-  if (!imatA_->get(aH))
+  if (!imatA_->get(aH) && !imatB_->get(bH))
     return;
+  
   if (!aH.get_rep()) {
-    warning("Empty input matrix.");
-    return;
+    warning("Empty input matrix A.");
   }
-  if (!imatB_->get(bH))
-    return;
   if (!bH.get_rep()) {
-    warning("Empty input matrix.");
-    return;
+    warning("Empty input matrix B.");
   }
 
   string op = op_.get();
@@ -88,6 +85,11 @@ void LinAlgBinary::execute() {
     error("LinAlgBinary: Add has not been implemented yet.");
     return;
   } else if (op == "Mult") {
+    if (!aH.get_rep()) {
+      aH = scinew DenseMatrix(Transform());
+    } else if (!bH.get_rep()) {
+      bH = scinew DenseMatrix(Transform());
+    }
     if (aH->nrows() == 4 && aH->ncols() == 4 &&
 	bH->nrows() == 4 && bH->ncols() == 4) {
       Transform aT(aH->toTransform());
