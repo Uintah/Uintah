@@ -1,0 +1,42 @@
+<!ELEMENT filter-itk (description, templated, inputs, outputs, parameters, includes)>
+  <!ATTLIST filter-itk name CDATA #REQUIRED>
+
+<!ELEMENT description (#PCDATA)>
+
+<!ELEMENT templated (base, template*, defaults*)>
+
+<!ELEMENT base (#PCDATA)>
+
+<!ELEMENT template (#PCDATA)>
+  <!ATTLIST template type CDATA #IMPLIED>
+
+<!ELEMENT defaults (default*)>
+
+<!ELEMENT default (#PCDATA)>
+
+<!ELEMENT inputs (input*)>
+
+<!ELEMENT input (value, call, name)>
+  <!ATTLIST input num CDATA #REQUIRED>
+
+<!ELEMENT value (#PCDATA)>
+
+<!ELEMENT call (#PCDATA)>
+  <!ATTLIST call const (yes|no) "no">
+
+<!ELEMENT name (#PCDATA)>
+
+<!ELEMENT outputs (output*)>
+
+<!ELEMENT output (value, call, name)>
+  <!ATTLIST output num CDATA #REQUIRED>
+
+<!ELEMENT parameters (param*)>
+
+<!ELEMENT param (name, type, call)>
+
+<!ELEMENT type (#PCDATA)>
+
+<!ELEMENT includes (file*)>
+
+<!ELEMENT file (#PCDATA)>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
 <filter-itk name="itk::watershed::SegmentTreeGenerator">
   <description>
 This filter is a process object class that implements a step in the N-d watershed segmentation algorithm. It produces an ordered list (SegmentTree) of binary merges between segments at increasing saliency levels. This filter is used in conjunction with WatershedSegmenter and WatershedRelabeler to process an initial segmentation into a final relabeled volume. See itk::WatershedImageFilter for an overview of watershed segmentation.
@@ -44,7 +46,7 @@ This filter is a process object class that implements a step in the N-d watershe
   </parameters>
 
   <includes>
-    <include>itkWatershedSegmentTreeGenerator.h</include>
+    <file>itkWatershedSegmentTreeGenerator.h</file>
   </includes>
 </filter-itk>
 
