@@ -46,7 +46,7 @@ namespace SCIRun {
 class ViewWidget : public BaseWidget {
 public:
    ViewWidget( Module* module, CrowdMonitor* lock, double widget_scale,
-	       const Real AspectRatio=1.3333);
+	       double AspectRatio = 1.3333);
    ViewWidget( const ViewWidget& );
    virtual ~ViewWidget();
 
@@ -58,12 +58,12 @@ public:
 
    View GetView();
    Vector GetUpVector();
-   Real GetFOV() const;
+   double GetFOV() const;
 
    void SetView( const View& view );
 
-   Real GetAspectRatio() const;
-   void SetAspectRatio( const Real aspect );
+   double GetAspectRatio() const;
+   void SetAspectRatio( const double aspect );
    
    const Vector& GetEyeAxis();
    const Vector& GetUpAxis();
@@ -86,7 +86,7 @@ protected:
    virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
-   Real ratio;
+   double ratio;
    Vector oldaxis1;
    Vector oldaxis2;
 };

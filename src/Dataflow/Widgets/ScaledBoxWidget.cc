@@ -87,7 +87,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock,
   is_aligned_(aligned), is_slideable_(slideable),
   oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0), oldinaxis(0, 0, 1)
 {
-   Real INIT = 5.0*widget_scale;
+   double INIT = 5.0*widget_scale;
    variables[CenterVar] = scinew PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
    variables[PointRVar] = scinew PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
    variables[PointDVar] = scinew PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
@@ -386,7 +386,7 @@ ScaledBoxWidget::~ScaledBoxWidget()
 void
 ScaledBoxWidget::redraw()
 {
-   Real sphererad(widget_scale), resizerad(0.5*widget_scale), cylinderrad(0.5*widget_scale);
+   double sphererad(widget_scale), resizerad(0.5*widget_scale), cylinderrad(0.5*widget_scale);
    Vector Right(GetRightAxis()*variables[DistRVar]->real());
    Vector Down(GetDownAxis()*variables[DistDVar]->real());
    Vector In(GetInAxis()*variables[DistIVar]->real());
@@ -570,7 +570,7 @@ ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
       if (is_slideable_)
       {
 	  if (axis==1) dist*=-1.0;
-	  Real sdist(variables[SDistRVar]->real()+dist/2.0);
+	  double sdist(variables[SDistRVar]->real()+dist/2.0);
 	  if (sdist<0.0) sdist=0.0;
 	  else if (sdist>variables[DistRVar]->real()) sdist=variables[DistRVar]->real();
 	  variables[SDistRVar]->Set(sdist);
@@ -580,7 +580,7 @@ ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
       if (is_slideable_)
       {
 	  if (axis==1) dist*=-1.0;
-	  Real sdist = variables[SDistDVar]->real()+dist/2.0;
+	  double sdist = variables[SDistDVar]->real()+dist/2.0;
 	  if (sdist<0.0) sdist=0.0;
 	  else if (sdist>variables[DistDVar]->real()) sdist=variables[DistDVar]->real();
 	  variables[SDistDVar]->Set(sdist);
@@ -590,7 +590,7 @@ ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
       if (is_slideable_)
       {
 	  if (axis==1) dist*=-1.0;
-	  Real sdist = variables[SDistIVar]->real()+dist/2.0;
+	  double sdist = variables[SDistIVar]->real()+dist/2.0;
 	  if (sdist<0.0) sdist=0.0;
 	  else if (sdist>variables[DistIVar]->real()) sdist=variables[DistIVar]->real();
 	  variables[SDistIVar]->Set(sdist);
@@ -641,9 +641,9 @@ ScaledBoxWidget::SetPosition( const Point& center, const Point& R, const Point& 
    variables[PointRVar]->Move(R);
    variables[PointDVar]->Move(D);
    variables[PointIVar]->Move(I);
-   Real sizeR((R-center).length());
-   Real sizeD((D-center).length());
-   Real sizeI((I-center).length());
+   double sizeR((R-center).length());
+   double sizeD((D-center).length());
+   double sizeI((I-center).length());
    variables[DistRVar]->Move(sizeR);
    variables[DistDVar]->Move(sizeD);
    variables[DistIVar]->Move(sizeI);
@@ -667,7 +667,7 @@ ScaledBoxWidget::GetPosition( Point& center, Point& R, Point& D, Point& I )
 
 
 void
-ScaledBoxWidget::SetRatioR( const Real ratio )
+ScaledBoxWidget::SetRatioR( const double ratio )
 {
    ASSERT((ratio>=0.0) && (ratio<=1.0));
    variables[RatioRVar]->Set(ratio);
@@ -676,7 +676,7 @@ ScaledBoxWidget::SetRatioR( const Real ratio )
 }
 
 
-Real
+double
 ScaledBoxWidget::GetRatioR() const
 {
    return (variables[RatioRVar]->real());
@@ -684,7 +684,7 @@ ScaledBoxWidget::GetRatioR() const
 
 
 void
-ScaledBoxWidget::SetRatioD( const Real ratio )
+ScaledBoxWidget::SetRatioD( const double ratio )
 {
    ASSERT((ratio>=0.0) && (ratio<=1.0));
    variables[RatioDVar]->Set(ratio);
@@ -693,7 +693,7 @@ ScaledBoxWidget::SetRatioD( const Real ratio )
 }
 
 
-Real
+double
 ScaledBoxWidget::GetRatioD() const
 {
    return (variables[RatioDVar]->real());
@@ -701,7 +701,7 @@ ScaledBoxWidget::GetRatioD() const
 
 
 void
-ScaledBoxWidget::SetRatioI( const Real ratio )
+ScaledBoxWidget::SetRatioI( const double ratio )
 {
    ASSERT((ratio>=0.0) && (ratio<=1.0));
    variables[RatioIVar]->Set(ratio);
@@ -710,7 +710,7 @@ ScaledBoxWidget::SetRatioI( const Real ratio )
 }
 
 
-Real
+double
 ScaledBoxWidget::GetRatioI() const
 {
    return (variables[RatioIVar]->real());

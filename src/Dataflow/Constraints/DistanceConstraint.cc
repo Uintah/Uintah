@@ -82,15 +82,16 @@ DistanceConstraint::~DistanceConstraint()
  * Satisfy should return 1 if it is able to satisfy the constraint, and
  *      0 otherwise.
  */
-int
-DistanceConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
+bool
+DistanceConstraint::Satisfy( const Index index, const Scheme scheme,
+			     const double Epsilon,
 			     BaseVariable*& var, VarCore& c )
 {
    PointVariable& p1 = *vars[0];
    PointVariable& p2 = *vars[1];
    RealVariable& dist = *vars[2];
    Vector v;
-   Real t;
+   double t;
 
    if (dc_debug) {
       ChooseChange(index, scheme);
@@ -110,7 +111,8 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme, const Real 
 	 t = dist;
       var = vars[0];
       c = (Point)p2 + (v * t);
-      return 1;
+      return true;
+
    case 1:
       v = ((Point)p2 - p1);
       if (v.length2() < Epsilon)
@@ -123,7 +125,8 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme, const Real 
 	 t = dist;
       var = vars[1];
       c = (Point)p1 + (v * t);
-      return 1;
+      return true;
+
    case 2:
       t = ((Point)p2 - p1).length();
       if (t < minimum) {
@@ -131,12 +134,13 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme, const Real 
       }
       var = vars[2];
       c = t;
-      return 1;
+      return true;
+
    default:
       cerr << "Unknown variable in Distance Constraint!" << endl;
       break;
    }
-   return 0;
+   return false;
 }
 
 
@@ -148,7 +152,7 @@ DistanceConstraint::SetDefault( const Vector& v )
 
 
 void
-DistanceConstraint::SetMinimum( const Real min )
+DistanceConstraint::SetMinimum( const double min )
 {
    ASSERT(min>0.0);
 

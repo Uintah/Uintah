@@ -76,16 +76,16 @@ public:
 	       const Index NumMaterials,
 	       const Index NumModes,
 	       const Index NumSwitches,
-	       const Real widget_scale );
+	       const double widget_scale );
    BaseWidget( const BaseWidget& );
    virtual ~BaseWidget();
 
    void *userdata;	// set this after construction if you want to use it
 
-   void SetScale( const Real scale );
+   void SetScale( const double scale );
    double GetScale() const;
 
-   void SetEpsilon( const Real Epsilon );
+   void SetEpsilon( const double Epsilon );
 
    GeomSwitch* GetWidget();
    void Connect(GeometryOPort*);
@@ -113,7 +113,7 @@ public:
    virtual string GetDefaultMaterialName( const Index mindex ) const;
 
    inline Point GetPointVar( const Index vindex ) const;
-   inline Real GetRealVar( const Index vindex ) const;
+   inline double GetRealVar( const Index vindex ) const;
    
    virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
    virtual void geom_release(GeomPick*, int, const BState& bs);
@@ -172,8 +172,8 @@ protected:
   };
 
    GeomSwitch* widget;
-   Real widget_scale;
-   Real epsilon;
+   double widget_scale;
+   double epsilon;
 
    Array1<GeometryOPort*> oports;
    void flushViews() const;

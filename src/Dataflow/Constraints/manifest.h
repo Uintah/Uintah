@@ -34,15 +34,7 @@
 
 namespace SCIRun {
 
-typedef double Real;
 typedef unsigned int Index;
-
-inline PSECORESHARE Real
-RealAbs ( Real x )
-{
-   return x<0?-x:x;
-}
-
 
 } // End namespace SCIRun
 

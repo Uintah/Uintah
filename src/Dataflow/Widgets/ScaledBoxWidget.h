@@ -58,12 +58,12 @@ public:
 		     const Point& I );
    void GetPosition( Point& center, Point& R, Point& D, Point& I );
 
-   void SetRatioR( const Real ratio );
-   Real GetRatioR() const;
-   void SetRatioD( const Real ratio );
-   Real GetRatioD() const;
-   void SetRatioI( const Real ratio );
-   Real GetRatioI() const;
+   void SetRatioR( const double ratio );
+   double GetRatioR() const;
+   void SetRatioD( const double ratio );
+   double GetRatioD() const;
+   void SetRatioI( const double ratio );
+   double GetRatioI() const;
 
    const Vector& GetRightAxis();
    const Vector& GetDownAxis();

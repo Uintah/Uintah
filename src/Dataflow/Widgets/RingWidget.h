@@ -53,16 +53,16 @@ public:
    virtual void MoveDelta( const Vector& delta );
    virtual Point ReferencePoint() const;
 
-   void SetPosition( const Point& center, const Vector& normal, const Real radius );
-   void GetPosition( Point& center, Vector& normal, Real& radius ) const;
+   void SetPosition( const Point& center, const Vector& normal, const double radius );
+   void GetPosition( Point& center, Vector& normal, double& radius ) const;
    
-   void SetRatio( const Real ratio );
-   Real GetRatio() const;
+   void SetRatio( const double ratio );
+   double GetRatio() const;
 
    void GetPlane( Vector& v1, Vector& v2);
 
-   void SetRadius( const Real radius );
-   Real GetRadius() const;
+   void SetRadius( const double radius );
+   double GetRadius() const;
    
    const Vector& GetRightAxis();
    const Vector& GetDownAxis();

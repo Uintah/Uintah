@@ -57,7 +57,7 @@ public:
 
    void Get( Point& p, Vector& tangent, Vector& orient, Vector& up ) const;
    
-   void set_scale( const Real scale );
+   void set_scale( const double scale );
 
    void SetIndex( const Index i );
    Index GetIndex() const;
@@ -200,8 +200,8 @@ PathPoint::execute()
    Vector v1(((Point)TangentVar-PointVar).normal()),
       v2(((Point)OrientVar-PointVar).normal()),
       v3(((Point)UpVar-PointVar).normal());
-   Real shaftlen(3.0*widget->widget_scale), arrowlen(5.0*widget->widget_scale);
-   Real sphererad(widget->widget_scale), shaftrad(0.5*widget->widget_scale);
+   double shaftlen(3.0*widget->widget_scale), arrowlen(5.0*widget->widget_scale);
+   double sphererad(widget->widget_scale), shaftrad(0.5*widget->widget_scale);
 
    if (widget->mode_switches[1]->get_state()) {
       GeomPoint.move(PointVar, sphererad);
@@ -330,7 +330,7 @@ PathWidget::PathWidget( Module* module, CrowdMonitor* lock, double widget_scale,
    SetMode(Mode3, Switch0|Switch1);
    SetMode(Mode4, Switch0);
 
-   Real xoffset(2.0*widget_scale*num_points/2.0);
+   double xoffset(2.0*widget_scale*num_points/2.0);
    for (Index i=0; i<num_points; i++)
       scinew PathPoint(this, i, Point(2.0*widget_scale*i-xoffset, 0, 0));
 

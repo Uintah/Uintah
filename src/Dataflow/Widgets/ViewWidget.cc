@@ -73,12 +73,12 @@ enum { PickUp, PickCyls, PickShaft,
  * Much of the work is accomplished in the BaseWidget constructor which
  *      includes some consistency checking to ensure full initialization.
  */
-ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale,
-			const Real AspectRatio )
+ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock,
+			double widget_scale, double AspectRatio )
 : BaseWidget(module, lock, "ViewWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   ratio(AspectRatio), oldaxis1(1, 0, 0), oldaxis2(1, 0, 0)
 {
-   Real INIT = 10.0*widget_scale;
+   double INIT = 10.0*widget_scale;
    // Scheme5 are used by the pick in GeomMoved!!
    variables[EyeVar] = scinew PointVariable("Eye", solve, Scheme1, Point(0, 0, -5*INIT));
    variables[ForeVar] = scinew PointVariable("Fore", solve, Scheme2, Point(0, 0, -3*INIT));
@@ -252,7 +252,7 @@ ViewWidget::~ViewWidget()
 void
 ViewWidget::redraw()
 {
-   Real sphererad(widget_scale), cylinderrad(0.5*widget_scale);
+   double sphererad(widget_scale), cylinderrad(0.5*widget_scale);
 
    if (mode_switches[0]->get_state()) {
       ((GeomSphere*)geometries[GeomEye])->move(variables[EyeVar]->point(), sphererad);
@@ -405,7 +405,7 @@ ViewWidget::GetUpVector()
 }
 
 
-Real
+double
 ViewWidget::GetFOV() const
 {
    return 2.0*atan(variables[FOVVar]->real());
@@ -425,7 +425,7 @@ ViewWidget::SetView( const View& view )
 }
 
 
-Real
+double
 ViewWidget::GetAspectRatio() const
 {
    return ratio;
@@ -433,7 +433,7 @@ ViewWidget::GetAspectRatio() const
 
 
 void
-ViewWidget::SetAspectRatio( const Real aspect )
+ViewWidget::SetAspectRatio( const double aspect )
 {
    ratio = aspect;
 
@@ -502,7 +502,7 @@ ViewWidget::GetFrontDL()
 Point
 ViewWidget::GetBackUL()
 {
-   Real t((variables[LookAtVar]->point()-variables[EyeVar]->point()).length()
+   double t((variables[LookAtVar]->point()-variables[EyeVar]->point()).length()
 	  / variables[EyeDistVar]->real());
    return (variables[LookAtVar]->point()
 	   + GetUpAxis() * variables[UpDistVar]->real() * t
@@ -513,7 +513,7 @@ ViewWidget::GetBackUL()
 Point
 ViewWidget::GetBackUR()
 {
-   Real t((variables[LookAtVar]->point()-variables[EyeVar]->point()).length()
+   double t((variables[LookAtVar]->point()-variables[EyeVar]->point()).length()
 	  / variables[EyeDistVar]->real());
    return (variables[LookAtVar]->point()
 	   + GetUpAxis() * variables[UpDistVar]->real() * t
@@ -524,7 +524,7 @@ ViewWidget::GetBackUR()
 Point
 ViewWidget::GetBackDR()
 {
-   Real t((variables[LookAtVar]->point()-variables[EyeVar]->point()).length()
+   double t((variables[LookAtVar]->point()-variables[EyeVar]->point()).length()
 	  / variables[EyeDistVar]->real());
    return (variables[LookAtVar]->point()
 	   - GetUpAxis() * variables[UpDistVar]->real() * t
@@ -535,7 +535,7 @@ ViewWidget::GetBackDR()
 Point
 ViewWidget::GetBackDL()
 {
-   Real t((variables[LookAtVar]->point()-variables[EyeVar]->point()).length()
+   double t((variables[LookAtVar]->point()-variables[EyeVar]->point()).length()
 	  / variables[EyeDistVar]->real());
    return (variables[LookAtVar]->point()
 	   - GetUpAxis() * variables[UpDistVar]->real() * t

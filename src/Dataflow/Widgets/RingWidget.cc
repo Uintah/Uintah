@@ -71,11 +71,11 @@ enum { PickSphU, PickSphR, PickSphD, PickSphL,
  * Much of the work is accomplished in the BaseWidget constructor which
  *      includes some consistency checking to ensure full initialization.
  */
-RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
+RingWidget::RingWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 : BaseWidget(module, lock, "RingWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0)
 {
-   Real INIT = 5.0*widget_scale;
+   double INIT = 5.0*widget_scale;
    // Scheme4/5 are used to resize.
    variables[PointRVar] = scinew PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
    variables[PointDVar] = scinew PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
@@ -330,7 +330,7 @@ RingWidget::geom_moved( GeomPick*, int axis, double dist,
 			const Vector& delta, int pick, const BState& )
 {
    Point p;
-   Real ResizeMin(1.5*widget_scale);
+   double ResizeMin(1.5*widget_scale);
    if (axis==1) dist = -dist;
 
    ((DistanceConstraint*)constraints[ConstRC])->SetDefault(GetRightAxis());
@@ -419,7 +419,7 @@ RingWidget::ReferencePoint() const
 
 
 void
-RingWidget::SetPosition( const Point& center, const Vector& normal, const Real radius )
+RingWidget::SetPosition( const Point& center, const Vector& normal, const double radius )
 {
    Vector v1, v2;
    normal.find_orthogonal(v1, v2);
@@ -432,7 +432,7 @@ RingWidget::SetPosition( const Point& center, const Vector& normal, const Real r
 
 
 void
-RingWidget::GetPosition( Point& center, Vector& normal, Real& radius ) const
+RingWidget::GetPosition( Point& center, Vector& normal, double& radius ) const
 {
    center = variables[CenterVar]->point();
    normal = Plane(variables[PointRVar]->point(),
@@ -443,7 +443,7 @@ RingWidget::GetPosition( Point& center, Vector& normal, Real& radius ) const
 
 
 void
-RingWidget::SetRatio( const Real ratio )
+RingWidget::SetRatio( const double ratio )
 {
    ASSERT((ratio>=0.0) && (ratio<=1.0));
    variables[AngleVar]->Set(ratio*2.0*Pi - Pi);
@@ -452,10 +452,10 @@ RingWidget::SetRatio( const Real ratio )
 }
 
 
-Real
+double
 RingWidget::GetRatio() const
 {
-   Real ratio=variables[AngleVar]->real() / (2.0 * Pi);
+   double ratio=variables[AngleVar]->real() / (2.0 * Pi);
    if(ratio < 0)
        ratio+=Pi;
    return ratio;
@@ -463,13 +463,13 @@ RingWidget::GetRatio() const
 
 
 void
-RingWidget::SetRadius( const Real radius )
+RingWidget::SetRadius( const double radius )
 {
    ASSERT(radius>=0.0);
    
    Vector axis1(variables[PointRVar]->point() - variables[CenterVar]->point());
    Vector axis2(variables[PointDVar]->point() - variables[CenterVar]->point());
-   Real ratio(radius/variables[DistVar]->real());
+   double ratio(radius/variables[DistVar]->real());
 
    variables[PointRVar]->Move(variables[CenterVar]->point()+axis1*ratio);
    variables[PointDVar]->Move(variables[CenterVar]->point()+axis2*ratio);
@@ -480,7 +480,7 @@ RingWidget::SetRadius( const Real radius )
 }
 
 
-Real
+double
 RingWidget::GetRadius() const
 {
    return variables[DistVar]->real();

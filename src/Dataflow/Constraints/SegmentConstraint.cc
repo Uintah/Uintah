@@ -81,8 +81,9 @@ SegmentConstraint::~SegmentConstraint()
  * Satisfy should return 1 if it is able to satisfy the constraint, and
  *      0 otherwise.
  */
-int
-SegmentConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
+bool
+SegmentConstraint::Satisfy( const Index index, const Scheme scheme,
+			    const double Epsilon,
 			    BaseVariable*& var, VarCore& c )
 {
    PointVariable& end1 = *vars[0];
@@ -102,26 +103,28 @@ SegmentConstraint::Satisfy( const Index index, const Scheme scheme, const Real E
       if (v1.length2() < v2.length2()) {
 	 c = (Point)p;
 	 var = vars[0];
-	 return 1;
+	 return true;
       }
       break;
+
    case 1:
       v1 = (Point)end1 - end2;
       v2 = (Point)p - end2;
       if (v1.length2() < v2.length2()) {
 	 c = (Point)p;
 	 var = vars[1];
-	 return 1;
+	 return true;
       }
       break;
+
    case 2:
       {
 	  Vector norm((Point)end2 - end1);
 	  if (norm.length2() < Epsilon) {
 	      c = (Point)end2;
 	  } else {
-	      Real length = norm.normalize();
-	      Real t = Dot((Point)p - end1, norm);
+	      const double length = norm.normalize();
+	      double t = Dot((Point)p - end1, norm);
 	      // Check if new point is outside segment.
 	      if (t < 0)
 		  t = 0;
@@ -131,12 +134,14 @@ SegmentConstraint::Satisfy( const Index index, const Scheme scheme, const Real E
 	  }
 	  var = vars[2];
       }
-      return 1;
+      return true;
+
    default:
       cerr << "Unknown variable in Segment Constraint!" << endl;
       break;
    }
-   return 0;
+
+   return false;
 }
 
 } // End namespace SCIRun

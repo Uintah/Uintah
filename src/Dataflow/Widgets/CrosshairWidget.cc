@@ -119,7 +119,7 @@ CrosshairWidget::redraw()
       ((GeomSphere*)geometries[GeomCenter])->move(center, widget_scale);
 
    if (mode_switches[1]->get_state()) {
-      Real axislen(100.0*widget_scale), axisrad(0.5*widget_scale);
+      const double axislen(100.0*widget_scale), axisrad(0.5*widget_scale);
       ((GeomCappedCylinder*)geometries[GeomAxis1])->move(center - (axis1 * axislen),
 							 center + (axis1 * axislen),
 							 axisrad);
@@ -260,7 +260,7 @@ CrosshairWidget::widget_tcl( TCLArgs& args )
 	 args.error("crosshair widget needs axis translation");
 	 return;
       }
-      Real trans;
+      double trans;
       if (!string_to_double(args[3], trans)) {
 	 args.error("crosshair widget can't parse translation `"+args[3]+"'");
 	 return;

@@ -88,8 +88,9 @@ AngleConstraint::~AngleConstraint()
  * Satisfy should return 1 if it is able to satisfy the constraint, and
  *      0 otherwise.
  */
-int
-AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
+bool
+AngleConstraint::Satisfy( const Index index, const Scheme scheme,
+			  const double Epsilon,
 			  BaseVariable*& var, VarCore& c )
 {
    PointVariable& center = *vars[0];
@@ -127,11 +128,11 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 	       c = (Point)end1;
 	    } else {
 	       v.normalize();
-	       Real t(Dot((Point)p - center, v));
+	       double t(Dot((Point)p - center, v));
 	       c = (Point)center + (v * t);
 	    }
 	    var = vars[3];
-	    return 1;
+	    return true;
 	 }
       }
    case 4:
@@ -144,12 +145,12 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 	 if (v2.length2() >= Epsilon) {
 	    v2 = Cross(v1, v2.normal()); // Find orthogonal v2.
 	    
-	    Real x(Dot(v1, v)), y(Dot(v2, v));
+	    const double x(Dot(v1, v)), y(Dot(v2, v));
 
-	    if ((Abs(x) > Epsilon) || (Abs(y) > Epsilon)) {
+	    if ((fabs(x) > Epsilon) || (fabs(y) > Epsilon)) {
 	       var = vars[4];
 	       c = atan2(y,x);
-	       return 1;
+	       return true;
 	    }
 	 }
       }
@@ -158,7 +159,7 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
       cerr << "Unknown variable in Angle Constraint!" << endl;
       break;
    }
-   return 0;
+   return false;
 }
 
 } // End namespace SCIRun

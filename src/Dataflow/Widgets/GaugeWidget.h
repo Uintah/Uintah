@@ -53,8 +53,8 @@ public:
    virtual void MoveDelta( const Vector& delta );
    virtual Point ReferencePoint() const;
 
-   void SetRatio( const Real ratio );
-   Real GetRatio() const;
+   void SetRatio( const double ratio );
+   double GetRatio() const;
 
    void SetEndpoints( const Point& end1, const Point& end2 );
    void GetEndpoints( Point& end1, Point& end2 ) const;

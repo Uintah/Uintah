@@ -66,7 +66,7 @@ GaugeWidget::GaugeWidget( Module* module, CrowdMonitor* lock, double widget_scal
 : BaseWidget(module, lock, "GaugeWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   oldaxis(1, 0, 0)
 {
-   Real INIT = 10.0*widget_scale;
+   double INIT = 10.0*widget_scale;
    // Scheme3 is for resizing.
    variables[PointLVar] = scinew PointVariable("PntL", solve, Scheme1, Point(0, 0, 0));
    variables[PointRVar] = scinew PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
@@ -231,7 +231,7 @@ GaugeWidget::geom_moved( GeomPick*, int axis, double dist,
    case PickSlider:
       {
 	  if (axis==1) dist*=-1.0;
-	  Real sdist(variables[SDistVar]->real()+dist);
+	  double sdist(variables[SDistVar]->real()+dist);
 	  if (sdist<0.0) sdist=0.0;
 	  else if (sdist>variables[DistVar]->real()) sdist=variables[DistVar]->real();
 	  variables[SDistVar]->Set(sdist);
@@ -276,7 +276,7 @@ GaugeWidget::ReferencePoint() const
 
 
 void
-GaugeWidget::SetRatio( const Real ratio )
+GaugeWidget::SetRatio( const double ratio )
 {
    ASSERT((ratio>=0.0) && (ratio<=1.0));
    variables[RatioVar]->Set(ratio);
@@ -285,7 +285,7 @@ GaugeWidget::SetRatio( const Real ratio )
 }
 
 
-Real
+double
 GaugeWidget::GetRatio() const
 {
    return (variables[RatioVar]->real());

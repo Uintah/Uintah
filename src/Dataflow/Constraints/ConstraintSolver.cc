@@ -80,7 +80,7 @@ ConstraintSolver::ConstraintSolver()
 }
 
 
-ConstraintSolver::ConstraintSolver( const Real epsilon )
+ConstraintSolver::ConstraintSolver( const double epsilon )
   : Epsilon(epsilon),
     MaxDepth(25),
     changed(false),
@@ -95,13 +95,13 @@ ConstraintSolver::~ConstraintSolver()
 
 
 void
-ConstraintSolver::SetEpsilon( const Real epsilon )
+ConstraintSolver::SetEpsilon( const double epsilon )
 {
    Epsilon = epsilon;
 }
 
 
-Real
+double
 ConstraintSolver::GetEpsilon() const
 {
    return Epsilon;

@@ -64,11 +64,11 @@ struct PSECORESHARE StackItem {
 class PSECORESHARE ConstraintSolver {
 public:
    ConstraintSolver();
-   ConstraintSolver( const Real epsilon );
+   ConstraintSolver( const double epsilon );
    ~ConstraintSolver();
    
-   void SetEpsilon( const Real epsilon );
-   Real GetEpsilon() const;
+   void SetEpsilon( const double epsilon );
+   double GetEpsilon() const;
    
    void SetMaxDepth( const Index max );
    Index GetMaxDepth() const;
@@ -83,7 +83,7 @@ private:
    void RemoveVariable( BaseVariable* v );
    void Solve( BaseVariable* var, const VarCore& newValue, const Scheme scheme );
    
-   Real Epsilon;
+   double Epsilon;
    Index MaxDepth;
    bool changed;
    

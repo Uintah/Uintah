@@ -48,15 +48,16 @@ public:
    // Use this to set the default direction used when p1==p2.
    // Defaults to (1,0,0).
    void SetDefault( const Vector& v );
-   void SetMinimum( const Real min );
+   void SetMinimum( const double min );
    
 protected:
-   virtual int Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
-			BaseVariable*& var, VarCore& c );
+   virtual bool Satisfy( const Index index, const Scheme scheme,
+			 const double Epsilon,
+			 BaseVariable*& var, VarCore& c );
 
 private:
    Vector guess;
-   Real minimum;
+   double minimum;
 };
 
 } // End namespace SCIRun

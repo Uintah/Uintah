@@ -47,8 +47,9 @@ public:
    virtual ~AngleConstraint();
 
 protected:
-   virtual int Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
-			BaseVariable*& v, VarCore& c );
+   virtual bool Satisfy( const Index index, const Scheme scheme,
+			 const double Epsilon,
+			 BaseVariable*& v, VarCore& c );
 };
 
 } // End namespace SCIRun

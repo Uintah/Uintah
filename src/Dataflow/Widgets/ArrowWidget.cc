@@ -307,7 +307,7 @@ ArrowWidget::widget_tcl( TCLArgs& args )
 	 args.error("arrow widget needs axis translation");
 	 return;
       }
-      Real trans;
+      double trans;
       if (!string_to_double(args[3], trans)) {
 	 args.error("arrow widget can't parse translation `" + args[3] + "'");
 	 return;

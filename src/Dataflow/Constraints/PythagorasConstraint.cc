@@ -80,14 +80,15 @@ PythagorasConstraint::~PythagorasConstraint()
  * Satisfy should return 1 if it is able to satisfy the constraint, and
  *      0 otherwise.
  */
-int
-PythagorasConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
+bool
+PythagorasConstraint::Satisfy( const Index index, const Scheme scheme,
+			       const double,
 			       BaseVariable*& var, VarCore& c )
 {
    RealVariable& dist1 = *vars[0];
    RealVariable& dist2 = *vars[1];
    RealVariable& hypo = *vars[2];
-   Real t;
+   double t;
 
    if (pc_debug) {
       ChooseChange(index, scheme);
@@ -99,28 +100,32 @@ PythagorasConstraint::Satisfy( const Index index, const Scheme scheme, const Rea
       if ((t = hypo * hypo - dist2 * dist2) >= 0.0) {
 	 var = vars[0];
 	 c = sqrt(t);
-	 return 1;
+	 return true;
       }
       break;
+
    case 1:
       if ((t = hypo * hypo - dist1 * dist1) >= 0.0) {
 	 var = vars[1];
 	 c = sqrt(t);
-	 return 1;
+	 return true;
       }
       break;
+
    case 2:
       if ((t = dist1 * dist1 + dist2 * dist2) >= 0.0) {
 	 var = vars[2];
 	 c = sqrt(t);
-	 return 1;
+	 return true;
       }
       break;
+
    default:
       cerr << "Unknown variable in Pythagoras Constraint!" << endl;
       break;
    }
-   return 0;
+
+   return false;
 }
 
 } // End namespace SCIRun
