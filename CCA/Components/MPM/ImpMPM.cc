@@ -1035,24 +1035,38 @@ void ImpMPM::rigidBody(const ProcessorGroup*,
     // Get rigid body data
     constNCVariable<Vector> velocity_rigid;                     
     constNCVariable<double> mass_rigid;                     
-    new_dw->get(velocity_rigid, lb->gVelocityLabel,1,patch, Ghost::None,0);
-    new_dw->get(mass_rigid,     lb->gMassLabel,    1,patch, Ghost::None,0);
+    int numMatls = d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      if(mpm_matl->getIsRigid()){
+        int RM = mpm_matl->getDWIndex();
+        new_dw->get(velocity_rigid, lb->gVelocityLabel,RM,patch,Ghost::None,0);
+        new_dw->get(mass_rigid,     lb->gMassLabel,    RM,patch,Ghost::None,0);
+      }
+    }
 
-    // Get matl 0 (non-rigid) data
-    NCVariable<Vector> dispNew;                     
-    new_dw->getModifiable(dispNew,lb->dispNewLabel,0, patch);
 
-    delt_vartype dt;
-    old_dw->get(dt, d_sharedState->get_delt_label() );
+    // Get and modify non-rigid data
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int matl = mpm_matl->getDWIndex();
+      if(!mpm_matl->getIsRigid()){
+        NCVariable<Vector> dispNew;                     
+        new_dw->getModifiable(dispNew,lb->dispNewLabel,matl, patch);
 
-    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
-      IntVector n = *iter;
-      if(!compare(mass_rigid[n],0.0)){
-        //Y_ONLY
-//        dispNew[n] = Vector(dispNew[n].x(),velocity_rigid[n].y()*dt,
-//                            dispNew[n].z());
-        //ALL
-        dispNew[n] = velocity_rigid[n]*dt;
+        delt_vartype dt;
+        old_dw->get(dt, d_sharedState->get_delt_label() );
+
+        for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+          IntVector n = *iter;
+          if(!compare(mass_rigid[n],0.0)){
+            //Y_ONLY
+//          dispNew[n] = Vector(dispNew[n].x(),velocity_rigid[n].y()*dt,
+//                              dispNew[n].z());
+            //ALL
+            dispNew[n] = velocity_rigid[n]*dt;
+          }
+        }
       }
     }
   }
@@ -1528,7 +1542,6 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
 				 const bool recursion)
 {
   int num_nodes = 0;
-  int rig_index = 1;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -1542,11 +1555,19 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
     IntVector nodes = patch->getNNodes();
     num_nodes += (nodes.x())*(nodes.y())*(nodes.z())*3;
     
-   //  The following is used to pull the mass of the rigid material from
-   //  the DW.  This mass is then used below to remove certain nodal DOFs.
-   //  In particular, those nodes which have non-zero mass of the rigid matl.
+    //  The following is used to pull the mass of the rigid material from
+    //  the DW.  This mass is then used below to remove certain nodal DOFs.
+    //  In particular, those nodes which have non-zero mass of the rigid matl.
+    int rig_index=-99;
     constNCVariable<double> mass_rig;
     if(d_rigid_body){
+     int numMatls = d_sharedState->getNumMPMMatls();
+     for(int m = 0; m < numMatls; m++){
+        MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+        if(mpm_matl->getIsRigid()){
+          rig_index = mpm_matl->getDWIndex();
+        }
+     }
      if (recursion) {
        DataWarehouse* parent_new_dw = 
           new_dw->getOtherDataWarehouse(Task::ParentNewDW);
@@ -1623,13 +1644,13 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
-      d_solver[m]->solve();
 
       NCVariable<Vector> dispInc;
       new_dw->allocateAndPut(dispInc,lb->dispIncLabel,matlindex,patch);
       dispInc.initialize(Vector(0.,0.,0.));
 
-      if(matlindex==0 || d_rigid_body==false){
+      if(!mpm_matl->getIsRigid()){  // i.e. Leave dispInc zero for Rigd Bodies
+        d_solver[m]->solve();
         IntVector lowIndex = patch->getNodeLowIndex();
         IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
         Array3<int> l2g(lowIndex,highIndex);
@@ -1669,7 +1690,14 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
 
     Ghost::GhostType  gnone = Ghost::None;
 
-    int rig_index = 1;
+    int rig_index=-99;
+    int numMatls = d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMatls; m++){
+       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+       if(mpm_matl->getIsRigid()){
+         rig_index = mpm_matl->getDWIndex();
+       }
+    }
     constNCVariable<double> mass_rig;
     constNCVariable<Vector> velocity_rig;
     if(d_rigid_body){
@@ -1686,7 +1714,6 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
       }
     }
 
-    int numMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
@@ -1725,25 +1752,25 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
       if (recursion) {
         dispNew.copyData(dispNew_old);
       }
-      if(m==0 || d_rigid_body==false){ // don't do the rigid_body matl. for now
-        for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
-          IntVector n = *iter;
-          dispNew[n] += dispInc[n];
-          velocity[n] = dispNew[n]*(2./dt) - oneifdyn*velocity_old[n];
-        }
+
+      for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+        IntVector n = *iter;
+        dispNew[n] += dispInc[n];
+        velocity[n] = dispNew[n]*(2./dt) - oneifdyn*velocity_old[n];
       }
-      if(d_rigid_body){
+
+      if(d_rigid_body){  // overwrite some of the values computed above
         for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
 	  IntVector n = *iter;
           if(!compare(mass_rig[n],0.)){
 //  Y_ONLY  // Switch the #if 1 to #if 0 and the #if 0 to #if 1 to 
             // only get rigid effect in the y-direction
 #if 0
-            if(m==0){
+            if(m!=rig_index){
               dispNew[n] = Vector(dispNew[n].x(),velocity_rig[n].y()*dt,
                                   dispNew[n].z());
             }
-            if(m==1){
+            if(m==rig_index){
               dispNew[n] = Vector(0.0,velocity_rig[n].y()*dt,0.0);
             }
 #endif
@@ -1780,8 +1807,7 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
      int matlindex = mpm_matl->getDWIndex();
      d_solver[m]->copyL2G(l2g,patch);
 
-     if(matlindex==0 || d_rigid_body==false){
-
+     if(!mpm_matl->getIsRigid()){
       constNCVariable<Vector> dispInc;
       new_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
       
