@@ -1516,56 +1516,59 @@ void ICE::actuallyStep3(const ProcessorGroup*,
 
 #if 1
    // This can't be uncommented until ExtraCells are implemented
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     IntVector curcell = *iter;
 
    // Top face
-    IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z());
-
-    sum_rho=0.0;
-    sum_rho_adj  = 0.0;
-    for(int m = 0; m < numMatls; m++){
+    if (curcell.y() < (patch->getCellHighIndex()).y()-1) {
+      IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z());
+      
+      sum_rho=0.0;
+      sum_rho_adj  = 0.0;
+      for(int m = 0; m < numMatls; m++){
 	sum_rho      += (rho_CC[m][curcell] + d_SMALL_NUM);
 	sum_rho_adj  += (rho_CC[m][adjcell] + d_SMALL_NUM);
+      }
+      sum_all_rho  = sum_rho     +  sum_rho_adj;
+      
+      pressX_FC[curcell+IntVector(0,1,0)]      =
+	(press_CC[curcell] * sum_rho
+	 +  press_CC[adjcell] * sum_rho_adj)/sum_all_rho;
+      
     }
-    sum_all_rho  = sum_rho     +  sum_rho_adj;
-
-    pressX_FC[curcell+IntVector(0,1,0)]      =
-             (press_CC[curcell] * sum_rho
-           +  press_CC[adjcell] * sum_rho_adj)/sum_all_rho;
-
-
-   // Right face
-    adjcell = IntVector(curcell.x()+1,curcell.y(),curcell.z());
-
-    sum_rho=0.0;
-    sum_rho_adj  = 0.0;
-    for(int m = 0; m < numMatls; m++){
+      // Right face
+    if (curcell.x() < (patch->getCellHighIndex()).x()-1) {
+      IntVector adjcell(curcell.x()+1,curcell.y(),curcell.z());
+      
+      sum_rho=0.0;
+      sum_rho_adj  = 0.0;
+      for(int m = 0; m < numMatls; m++){
 	sum_rho      += (rho_CC[m][curcell] + d_SMALL_NUM);
 	sum_rho_adj  += (rho_CC[m][adjcell] + d_SMALL_NUM);
+      }
+      sum_all_rho  = sum_rho     +  sum_rho_adj;
+      
+      pressY_FC[curcell+IntVector(1,0,0)]    =
+	(press_CC[curcell] * sum_rho
+	 +  press_CC[adjcell] * sum_rho_adj)/sum_all_rho;
     }
-    sum_all_rho  = sum_rho     +  sum_rho_adj;
-
-    pressY_FC[curcell+IntVector(1,0,0)]    =
-             (press_CC[curcell] * sum_rho
-           +  press_CC[adjcell] * sum_rho_adj)/sum_all_rho;
-
 
    // Front face
-    adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1);
-
-    sum_rho=0.0;
-    sum_rho_adj  = 0.0;
-    for(int m = 0; m < numMatls; m++){
+    if (curcell.z() < (patch->getCellHighIndex()).z()-1) {
+      IntVector adjcell(curcell.x(),curcell.y(),curcell.z()+1);
+      
+      sum_rho=0.0;
+      sum_rho_adj  = 0.0;
+      for(int m = 0; m < numMatls; m++){
 	sum_rho      += (rho_CC[m][curcell] + d_SMALL_NUM);
 	sum_rho_adj  += (rho_CC[m][adjcell] + d_SMALL_NUM);
+      }
+      sum_all_rho  = sum_rho     +  sum_rho_adj;
+      
+      pressZ_FC[curcell+IntVector(0,0,1)]    =
+	(press_CC[curcell] * sum_rho
+	 +  press_CC[adjcell] * sum_rho_adj)/sum_all_rho;
     }
-    sum_all_rho  = sum_rho     +  sum_rho_adj;
-
-    pressZ_FC[curcell+IntVector(0,0,1)]    =
-             (press_CC[curcell] * sum_rho
-           +  press_CC[adjcell] * sum_rho_adj)/sum_all_rho;
-
   }
 #endif
 
@@ -2797,6 +2800,9 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.63  2000/12/05 20:56:56  jas
+// Fixes for step3.  Put in extraCellIterator and guards around adjacent cells.
+//
 // Revision 1.62  2000/12/05 20:45:49  jas
 // Iterate over all the cells in influxOutfluxVolume.  Now step 2 is working.
 //
