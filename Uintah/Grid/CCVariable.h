@@ -60,6 +60,10 @@ WARNING
       // Insert Documentation Here:
       virtual void allocate(const Region*);
       
+      //////////
+      // Insert Documentation Here:
+      void initialize(const T& value);
+      
       CCVariable<T>& operator=(const CCVariable<T>&);
    private:
    };
@@ -121,11 +125,20 @@ WARNING
       {
 	 std::cerr << "CCVariable::allocate not done!\n";
       }
+
+   template<class T>
+      void initialize(const T& value) {
+	 std::cerr << "CCVariable::initialize!\n";
+      }
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.5  2000/05/10 20:31:14  tan
+// Added initialize member function. Currently nothing in the function,
+// just to make the complilation work.
+//
 // Revision 1.4  2000/04/26 06:48:47  sparker
 // Streamlined namespaces
 //
