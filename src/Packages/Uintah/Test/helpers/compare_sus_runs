@@ -13,8 +13,6 @@ cd $WD
 TEST_UDADIR=$TEST_DIR/$UDADIR
 COMPARE_UDADIR=$COMPARE_ROOT/$TEST/$UDADIR
 
-echo "Testing $TEST"
-
 if [ -d "$TEST_UDADIR" ]; then
   if [ ! -d "$COMPARE_ROOT" ]; then
     echo "Creating $COMPARE_ROOT directory"
@@ -53,7 +51,7 @@ if [ -d "$TEST_UDADIR" ]; then
 #    find $UDADIR -name "*.xml" | xargs cvs add
 #    cvs commit -R -m "Automated Tester storing dat files" $UDADIR
   else
-
+      echo "Testing $TEST"
       compare_sus_runs_by_udas $TEST_UDADIR $COMPARE_UDADIR $SUS_DIR
       exit $?
   fi

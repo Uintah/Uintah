@@ -6,6 +6,10 @@ SUS_DIR=$3
 
 inputs_differ=0
 echo
+echo "*************************"
+echo "Comparing $TEST_UDADIR with $COMPARE_UDADIR"
+echo "*************************"
+echo
 echo "Checking input files"
 echo
 diff -B $TEST_UDADIR/input.xml $COMPARE_UDADIR/input.xml
