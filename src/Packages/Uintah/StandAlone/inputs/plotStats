@@ -51,7 +51,7 @@ rm -f .elapsedTime .meanTime .physicalTime .delT .memUse1 .memUse2 .memUse3  .me
 rm -f .plotStats_tmp
 echo "Done extracting data"
 
-
+echo "" > gp
 #__________________________________
 # if making a hardcopy
 if( $hardcopy == "y" || $hardcopy == "Y" ) then 

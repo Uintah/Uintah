@@ -43,7 +43,7 @@ paste -d "  " .elapsedTime .delT .tmp2>& .data
 rm -f .elapsedTime .physicalTime .delT .restartTime .tmp .tmp2
 echo "Done extracting data"
 
-
+echo "" > gp
 #__________________________________
 # if making a hardcopy
 if( $hardcopy == "y" || $hardcopy == "Y" ) then 
