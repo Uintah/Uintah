@@ -114,6 +114,7 @@ using std::vector;
       const VarLabel* KineticEnergyLabel;
       const VarLabel* TotalMassLabel;
       const VarLabel* NTractionZMinusLabel;
+      const VarLabel* integralAreaLabel;
       const VarLabel* CenterOfMassPositionLabel;
       const VarLabel* CenterOfMassVelocityLabel;
 
