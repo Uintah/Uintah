@@ -12,7 +12,7 @@
  */
 
 
-#include "FrameWidget.h"
+#include <Widgets/FrameWidget.h>
 #include <Constraints/DistanceConstraint.h>
 #include <Constraints/HypotenousConstraint.h>
 

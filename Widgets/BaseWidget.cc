@@ -12,7 +12,7 @@
  */
 
 
-#include "BaseWidget.h"
+#include <Widgets/BaseWidget.h>
 
 
 BaseWidget::BaseWidget( Module* module,
