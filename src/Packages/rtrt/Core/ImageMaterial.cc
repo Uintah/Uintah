@@ -13,7 +13,9 @@
 #include <Packages/rtrt/Core/Context.h>
 #include <math.h>
 #include <Packages/rtrt/Core/PPMImage.h>
-#include <Packages/rtrt/Core/PNGImage.h>
+#ifdef HAVE_PNG
+#  include <Packages/rtrt/Core/PNGImage.h>
+#endif
 #include <iostream>
 #include <stdio.h>
 #include <fstream>
@@ -73,6 +75,7 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 
   else if(sub_string == "png")
     {
+#ifdef HAVE_PNG
       PNGImage png(texfile,1);
       if (png.valid()) {
 	valid_=true;
@@ -80,6 +83,12 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 	png.get_dimensions_and_data(image, alpha,nu, nv);
 
       }
+#else
+      cerr << "ERROR: Support for png images is not enabled.  Please configure with png support.\n";
+      image.resize(3,3);
+      image(0,0)=Color(1,0,1);
+#endif
+      
     }
 
         
@@ -120,7 +129,7 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
   else if(sub_string == "png")
     {
       
-      
+#ifdef HAVE_PNG      
       PNGImage png(texfile,1);
       
       if (png.valid()) {
@@ -129,6 +138,11 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 	png.get_dimensions_and_data(image, alpha,nu, nv);
 	
       } 
+#else
+      cerr << "ERROR: Support for png images is not enabled.  Please configure with png support.\n";
+      image.resize(3,3);
+      image(0,0)=Color(1,0,1);
+#endif
     }
   
   else {
