@@ -108,7 +108,7 @@ Index* MxNScheduler::makeBlock(int rank, int size, int length)
 
   sta = rank * sizePproc;
   fin = std::min(((rank+1) * sizePproc),length);
-  return (new Index(sta,fin-1,1));  
+  return (new Index(sta,fin,1));  
 }
 
 Index* MxNScheduler::makeCyclic(int rank, int size, int length)
