@@ -335,6 +335,7 @@ namespace Uintah {
       // label for ref_density and pressure
 
       const VarLabel* d_refDensity_label;
+      const VarLabel* d_refDensityPred_label;
       const VarLabel* d_refPressure_label;
 
       // labels for nonlinear residuals
@@ -394,6 +395,7 @@ namespace Uintah {
       const VarLabel* d_tempINLabel;
       const VarLabel* d_co2INLabel;
       const VarLabel* d_denRefArrayLabel;
+      const VarLabel* d_denRefArrayPredLabel;
       const VarLabel* d_densityMicroLabel;
       const VarLabel* d_densityMicroINLabel;
       const VarLabel* d_pressPlusHydroLabel;

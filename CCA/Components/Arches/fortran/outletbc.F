@@ -67,6 +67,8 @@ c*********************************************************************
       print*,'jend',jend
       print*,'kend',kend
 #endif
+c      if (yminus) jst = jst + 1
+c      if (zminus) kst = kst + 1
       if (xplus) then
          I = iend+1
          DO 190 K=KST,KEND
