@@ -37,9 +37,6 @@ namespace C_Magick {
 }
 #endif
 
-//using std::ifstream;
-//using std::ostringstream;
-
 using namespace SCIRun;
 using namespace SCITeem;
 
