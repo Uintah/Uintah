@@ -97,6 +97,8 @@ class SCICORESHARE MeshRG : public Datatype
   };
 
 public:
+  friend class NodeIter;
+  friend class Cell3Iter;
 
   typedef IPoint          node_index;
   typedef NodeIter       node_iterator;
