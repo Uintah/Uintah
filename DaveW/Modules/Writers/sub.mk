@@ -7,9 +7,13 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := DaveW/Modules/Writers
 
-SRCS     += $(SRCDIR)/ContourSetWriter.cc $(SRCDIR)/PathWriter.cc \
-	$(SRCDIR)/SegFldWriter.cc $(SRCDIR)/SigmaSetWriter.cc \
-	$(SRCDIR)/TensorFieldWriter.cc
+SRCS     += \
+	$(SRCDIR)/ContourSetWriter.cc\
+	$(SRCDIR)/PathWriter.cc\
+	$(SRCDIR)/SegFldWriter.cc\
+	$(SRCDIR)/SigmaSetWriter.cc\
+	$(SRCDIR)/TensorFieldWriter.cc\
+#[INSERT NEW MODULE HERE]
 
 PSELIBS := DaveW/Datatypes/General PSECore/Datatypes PSECore/Dataflow \
 	SCICore/Persistent SCICore/Exceptions SCICore/Containers \
@@ -20,6 +24,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/06/07 20:55:02  moulding
+# made changes to allow the module maker to add to and edit this file
+#
 # Revision 1.2  2000/03/20 19:36:22  sparker
 # Added VPATH support
 #
