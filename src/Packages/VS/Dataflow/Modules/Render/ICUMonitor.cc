@@ -1163,7 +1163,10 @@ ICUMonitor::setConfigFromData()
   string name;
 
   // find how many plots we are drawing and call init_plots()
-  data_->get_property(string("DSPY_plot_count"), value);
+  if (!data_->get_property(string("DSPY_plot_count"), value)) 
+  {
+    return;
+  }
   // set gui int plot count
   gui_plot_count_.set(intValue);
   if(intValue < 10) idxDigits = 1;
