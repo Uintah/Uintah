@@ -71,11 +71,14 @@ using namespace SCIRun;
 #include <iomanip>
 #include <sci_values.h>
 
+
 using namespace std;
 using namespace Uintah;
 using namespace rtrt;
 
 bool debug = false;
+
+bool write_data = false;
 
 // don't know if this is the way to do it --bigler
 extern "C" void AuditDefaultAllocator() {
@@ -277,6 +280,24 @@ void get_material(rtrt::Array1<Material*> &matls) {
   }
 }
 
+void writeData(float *spheres, int nspheres, int ndata, int tindex) {
+  char buf[200];
+  sprintf(buf, "uintahout/spheredata%03d.raw", tindex);
+  cerr << "Writing out dataset to "<<buf<<"\n";
+  FILE *out = fopen(buf, "wb");
+  if (!out) {
+    cerr << "Could not open "<<buf<<" for writing.\n";
+  }
+  int nvalues = nspheres * ndata;
+  size_t wrote = fwrite(spheres, sizeof(float), nvalues, out);
+  if (wrote != nvalues) {
+    cerr << "Only wrote out "<<wrote<<" floats instead of "<<nvalues<<"\n";
+    return;
+  }
+  
+  cerr << "Done writing out dataset\n";
+}
+
 void append_spheres(rtrt::Array1<SphereData> &data_group,
 		    PatchData patchdata,
 		    const Uintah::Patch* patch,
@@ -403,7 +424,8 @@ void append_spheres(rtrt::Array1<SphereData> &data_group,
 
 GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
 				int colordata, int gridcellsize,
-				int griddepth, char *cmap_file) {
+				int griddepth, char *cmap_file,
+				int timestep) {
   // need from the group
   // 1. total number of spheres
   // 2. make sure the numvars is the same
@@ -474,7 +496,11 @@ GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
     mins[i] =  FLT_MAX;
     maxs[i] = -FLT_MAX;
   }
+
   cerr << "Total number of spheres: " << total_spheres << endl;
+  if (write_data) {
+    writeData(data, total_spheres, numvars, timestep);
+  }
   return new GridSpheres(data, mins, maxs, total_spheres, numvars-3, gridcellsize, griddepth, radius, matls.size(), &matls[0], data_group[0].var_names);  
 }
 
@@ -878,6 +904,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       }
       i++;
       var_include.push_back(argv[i]);
+    } else if (s == "-writedata") {
+      write_data = true;
     } else {
       if(filebase!="") {
 	usage(s, argv[0]);
@@ -1268,7 +1296,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       thread_sema->down(rtrt::Min(nworkers,5));
       cout << "Adding timestep.\n";
       GridSpheres* obj = create_GridSpheres(sphere_data,colordata,
-					    gridcellsize,griddepth, cmap_file);
+					    gridcellsize,griddepth, cmap_file,
+					    t);
       thread_sema->up(rtrt::Min(nworkers,5));
       display->attach(obj);
       alltime->add((Object*)obj);
