@@ -230,13 +230,16 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
            cv[*iter]         = d_specificHeat; 
            IveBeenHere[*iter]= obj; 
         }   
+           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
+           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+           cv[*iter]         = d_specificHeat; 
       }    
     }  // Loop over domain
     //__________________________________
     // John is there a cleaner way to use
     //  printData
     /*`==========DEBUGGING==========*/
-#if 0
+#if 1
     ICE* d_ice;
     d_ice->printData( patch,1, "cellInitialization","IveBeenHere",IveBeenHere);
     d_ice->printData( patch,1, "cellInitialization","press_CC",press_CC);
