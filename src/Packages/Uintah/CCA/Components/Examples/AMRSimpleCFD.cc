@@ -647,6 +647,7 @@ void AMRSimpleCFD::scheduleErrorEstimate(const LevelP& coarseLevel,
   task->requires(Task::NewDW, lb_->density,     gac, 1);
   
   task->modifies(sharedState_->get_refineFlag_label());
+  task->computes(sharedState_->get_refinePatchFlag_label());
   task->computes(lb_->density_gradient_mag);
   task->computes(lb_->temperature_gradient_mag);
   task->computes(lb_->pressure_gradient_mag);
@@ -669,6 +670,7 @@ void AMRSimpleCFD::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
   task->requires(Task::NewDW, lb_->density,     gac, 1);
   
   task->modifies(sharedState_->get_refineFlag_label());
+  task->computes(sharedState_->get_refinePatchFlag_label());
   task->computes(lb_->temperature_gradient_mag);
   task->computes(lb_->pressure_gradient_mag);
   task->computes(lb_->ccvorticitymag);
@@ -1210,9 +1212,9 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
       Vector inv_dx(1./dx.x(), 1./dx.y(), 1./dx.z());
 
       CCVariable<int> refineFlag;
+      PerPatch<int> refinePatchFlag(0);
       new_dw->getModifiable(refineFlag, sharedState_->get_refineFlag_label(),
 			    matl, patch);
-
       IntVector l(patch->getCellLowIndex());
       IntVector h(patch->getCellHighIndex());
 
@@ -1255,8 +1257,10 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
           }
           Vector grad(gx, gy, gz);
           density_gradient_mag[idx]=grad.length();
-          if(density_gradient_mag[idx] > err_density_grad)
+          if(density_gradient_mag[idx] > err_density_grad) {
             refineFlag[idx]=true;
+            refinePatchFlag.setData(true);
+          }
           density_gradient_mag[idx] *= err_density_grad_inv;
         }
       }
@@ -1296,8 +1300,10 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
 	  }
 	  Vector grad(gx, gy, gz);
 	  temperature_gradient_mag[idx]=grad.length();
-	  if(temperature_gradient_mag[idx] > err_temperature_grad)
+	  if(temperature_gradient_mag[idx] > err_temperature_grad) {
 	    refineFlag[idx]=true;
+            refinePatchFlag.setData(true);
+          }
 	  temperature_gradient_mag[idx] *= inv_err_temperature_grad;
 	}
       }
@@ -1337,8 +1343,10 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
 	  }
 	  Vector grad(gx, gy, gz);
 	  pressure_gradient_mag[idx]=grad.length();
-	  if(pressure_gradient_mag[idx] > err_pressure_grad)
+	  if(pressure_gradient_mag[idx] > err_pressure_grad) {
 	    refineFlag[idx]=true;
+            refinePatchFlag.setData(true);
+          }
 	  pressure_gradient_mag[idx] *= inv_err_pressure_grad;
 	}
       }
@@ -1378,11 +1386,15 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
 	  }
 	  Vector w(gy.z()-gz.y(), gz.x()-gx.z(), gx.y()-gy.x());
 	  ccvorticitymag[idx]=w.length();
-	  if(ccvorticitymag[idx] > err_vorticity_mag)
+	  if(ccvorticitymag[idx] > err_vorticity_mag) {
 	    refineFlag[idx]=true;
+            refinePatchFlag.setData(true);
+          }
 	  ccvorticitymag[idx] *= inv_err_vorticity_mag;
 	}
       }
+      new_dw->put(refinePatchFlag, sharedState_->get_refinePatchFlag_label(),
+                  matl, patch);
     }
   }
 }
