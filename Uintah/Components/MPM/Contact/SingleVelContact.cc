@@ -1,3 +1,6 @@
+/* REFERENCED */
+static char *id="@(#) $Id$";
+
 // SingleVel.cc
 //
 // One of the derived Contact classes.  This particular
@@ -7,9 +10,10 @@
 // ensure that one can get the same answer using prescribed
 // contact as can be gotten using "automatic" contact.
 
-#include "SingleVel.h"
+#include "SingleVelContact.h"
 
-#ifdef WONT_COMPILE_YET
+namespace Uintah {
+namespace Components {
 
 SingleVel::SingleVel()
 {
@@ -118,9 +122,13 @@ void SingleVel::exMomIntegrated(const Region* region,
 
 }
 
-#endif
+} // end namespace Components
+} // end namespace Uintah
 
 // $Log$
+// Revision 1.1  2000/03/20 23:50:44  dav
+// renames SingleVel to SingleVelContact
+//
 // Revision 1.2  2000/03/20 17:17:12  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //

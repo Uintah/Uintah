@@ -1,8 +1,49 @@
-
 #ifndef __CONTACT_H__
 #define __CONTACT_H__
 
-#ifdef WONT_COMPILE_YET
+#include <Uintah/Interface/DataWarehouseP.h>
+
+#include <math.h>
+
+namespace Uintah {
+
+  namespace Grid {
+    class Region;
+  }
+
+namespace Components {
+
+using Uintah::Grid::Region;
+using Uintah::Interface::DataWarehouseP;
+
+/**************************************
+
+CLASS
+   Contact
+   
+   Short description...
+
+GENERAL INFORMATION
+
+   Contact.h
+
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 SCI Group
+
+KEYWORDS
+   Contact_Model
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
 
 class Contact {
 public:
@@ -29,11 +70,13 @@ inline bool compare(double num1, double num2)
   return (fabs(num1-num2) <= EPSILON);
 }
 
-#endif
-
-#endif __CONTACT_H__
+} // end namespace Components
+} // end namespace Uintah
 
 // $Log$
+// Revision 1.3  2000/03/20 23:50:44  dav
+// renames SingleVel to SingleVelContact
+//
 // Revision 1.2  2000/03/20 17:17:12  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //
@@ -42,3 +85,6 @@ inline bool compare(double num1, double num2)
 // class and SingleVel, a class which reclaims the single velocity
 // field result from a multiple velocity field problem.
 //
+
+#endif // __CONTACT_H__
+
