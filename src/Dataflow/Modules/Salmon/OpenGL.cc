@@ -417,12 +417,13 @@ void OpenGL::redraw_frame()
 	throttle.start();
 	Vector eyesep(0,0,0);
 	if(do_stereo){
-	    double eye_sep_dist=0.025/2;
-	    Vector u, v;
-	    view.get_viewplane(aspect, 1.0, u, v);
-	    u.normalize();
-	    double zmid=(znear+zfar)/2.;
-	    eyesep=u*eye_sep_dist*zmid;
+	  //double eye_sep_dist=0.025/2;
+	  double eye_sep_dist=roe->sbase.get()*(roe->sr.get()?0.048:0.0125);
+	  Vector u, v;
+	  view.get_viewplane(aspect, 1.0, u, v);
+	  u.normalize();
+	  double zmid=(znear+zfar)/2.;
+	  eyesep=u*eye_sep_dist*zmid;
 	}
 	
 	GLfloat realStylusMatrix[16], realPinchMatrix[16];
@@ -506,10 +507,12 @@ void OpenGL::redraw_frame()
 		if(do_stereo){
 		  if(i==0){
 		    eyep-=eyesep;
-		    lookat-=eyesep;
+		    if (!roe->sr.get())
+		      lookat-=eyesep;
 		  } else {
 		    eyep+=eyesep;
-		    lookat+=eyesep;
+		    if(!roe->sr.get())
+		       lookat+=eyesep;
 		  }
 		}
 		Vector up(view.up());
@@ -1800,6 +1803,9 @@ ImgReq::ImgReq(const clString& n, const clString& t)
 
 //
 // $Log$
+// Revision 1.29  2000/09/29 08:06:59  samsonov
+// Changes in stereo implementation
+//
 // Revision 1.28  2000/08/12 20:41:52  dmw
 // set fog color to be the same as the background color (instead of always being black)
 //

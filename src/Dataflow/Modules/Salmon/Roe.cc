@@ -69,7 +69,9 @@ Roe::Roe(Salmon* s, const clString& id)
   view("view", id, this),
   homeview(Point(.55, .5, 0), Point(.0, .0, .0), Vector(0,1,0), 25),
   bgcolor("bgcolor", id, this), shading("shading", id, this),
-  do_stereo("do_stereo", id, this), 
+  do_stereo("do_stereo", id, this),
+  sbase("sbase", id, this),
+    sr("sr", id, this),
   // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
   do_bawgl("do_bawgl", id, this),
   // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
@@ -78,6 +80,7 @@ Roe::Roe(Salmon* s, const clString& id)
   id(id),doingMovie(false),makeMPEG(false),
   curFrame(0),curName("movie")
   {
+    sr.set(1);
     inertia_mode=0;
     bgcolor.set(Color(0,0,0));
     view.set(homeview);
@@ -1246,6 +1249,9 @@ void Roe::setView(View newView) {
 
 //
 // $Log$
+// Revision 1.18  2000/09/29 08:06:59  samsonov
+// Changes in stereo implementation
+//
 // Revision 1.17  2000/08/11 15:51:22  bigler
 // Removed set_index(int) calls to GeomPick class and replaced them with
 // set_picked_obj(GeomObj*).
