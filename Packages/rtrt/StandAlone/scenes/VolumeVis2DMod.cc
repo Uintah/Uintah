@@ -441,6 +441,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 //    int color_map_type = 0;
 //    char *nrrd_color_map_file = 0;
 //    char *nrrd_alpha_map = 0;
+  bool loadWidgetFile = false;
+  char* widgetFile;
   Color bgcolor(1.,1.,1.);
   
   for(int i=1;i<argc;i++){
@@ -521,6 +523,11 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       g = atof(argv[++i]);
       b = atof(argv[++i]);
       bgcolor = Color(r,g,b);
+    } else if(strcmp(argv[i], "-loadfile")==0){
+      loadWidgetFile = true;
+      widgetFile = argv[++i];
+//        ifstream in(argv[i]);
+//        in >> widgetFile;
     } else {
       cerr << "Unknown option: " << argv[i] << '\n';
       cerr << "Valid options for scene: " << argv[0] << '\n';
@@ -546,6 +553,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       cerr << " -colormap nrrd [filename.nrrd] - read in a nrrd for the colormap with alphas\n";
       cerr << " -alpha [filename.nrrd] - read in a nrrd with just the alpha transfer function\n";
       cerr << " -bgcolor [float] [float] [float] - the three floats are r, g, b\n";
+      cerr << " -loadfile [filename.txt] - read in a widget configuration to load upon initialization\n";
       return 0;
     }
   }
@@ -568,6 +576,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   //  Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
   
   Volvis2DDpy *dpy = new Volvis2DDpy(t_inc, cut);
+  if(loadWidgetFile)
+    dpy->loadWidgets( widgetFile );
 
   PlaneDpy *cdpy;
   if(cut) {
