@@ -42,6 +42,7 @@ namespace SCIRun {
 using std::string;
 using std::vector;
 using std::map;
+using std::pair;
   
 class PartInterface;
 
