@@ -1,4 +1,3 @@
-
 #include <Packages/rtrt/Core/HierarchicalGrid.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Group.h>
@@ -19,6 +18,11 @@ int HierarchicalGrid::L1counter = 0;
 int HierarchicalGrid::L2counter = 0;
 int HierarchicalGrid::L3counter = 0;
 
+struct GridData
+{
+    int sx, sy, sz, ex, ey, ez;
+};
+
 HierarchicalGrid::HierarchicalGrid( Object* obj, int nsides,
 				    int nSidesLevel2, int nSidesLevel3,
 				    int minObjects1, int minObjects2,
@@ -38,6 +42,8 @@ HierarchicalGrid::HierarchicalGrid( Object* obj, int nsides,
 	HierarchicalGrid::L2counter++;
     if( level == 3 )
 	HierarchicalGrid::L3counter++;
+    else 
+	cerr << "Error: We should not be building a hierarchy at level " << level << endl;
 
 }
 
@@ -92,14 +98,17 @@ void
 HierarchicalGrid::preprocess( double maxradius, int& pp_offset, 
 			      int& scratchsize )
 {
-  if (_level == 1) {
-    cerr << "L1\n";
-  } else if (_level == 2) {
-    cerr << "  L2\n";
-  } else if (_level == 3) {
-    cerr << "   L3\n";
-  }
+
+    cerr << "Building hierarchical grid at level " << _level << endl;;
+    if (_level == 1) {
+	cerr << "L1\n";
+    } else if (_level == 2) {
+	cerr << "  L2\n";
+    } else if (_level == 3) {
+	cerr << "   L3\n";
+    }
 //    cerr << "Building hierarchical grid\n";
+
     double time=Time::currentSeconds();
     int numHierL2 = 0;
     int numHierL3 = 0;
@@ -109,12 +118,17 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
 
     Array1<Object*> prims;
     obj->collect_prims(prims);
+    Array1<BBox> primsBBox( prims.size() );
+    Array1<GridData> primsGridData( prims.size() );
+    
+    cerr << "2/8 Collect prims took " << Time::currentSeconds()-time << " seconds\n";
 //    cerr << "2/8 Collect prims took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
 
     bbox.reset();
-    obj->compute_bounds(bbox, maxradius);
-//    cerr << "3/8 Compute bounds took " << Time::currentSeconds()-time << " seconds\n";
+    obj->compute_bounds( bbox, maxradius );
+    cerr << "3/8 Compute bounds took " << Time::currentSeconds()-time << " seconds\n";
+
     time=Time::currentSeconds();
 
     int ncells = nsides*nsides*nsides;
@@ -151,8 +165,13 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
     for( int i = 0; i < ngrid*2; i++ )
 	counts[i] = 0;
     
+    //
+    // Allocate group of objects
+    //
     Array1<Group*> objList( ngrid );
-    objList.initialize(0);
+    //    for( int i = 0; i < ngrid; i++ )
+    //	objList[i] = new Group();
+    objList.initialize( 0 );
 
     double itime=time;
     int nynz=ny*nz;
@@ -163,14 +182,16 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
 	    itime=tnow;
 	}
 	BBox obj_bbox;
-	prims[i]->compute_bounds(obj_bbox, maxradius);
-	int sx, sy, sz, ex, ey, ez;
-	calc_se(obj_bbox, bbox, diag, nx, ny, nz, sx, sy, sz, ex, ey, ez);
-	for(int x=sx;x<=ex;x++){
-	    for(int y=sy;y<=ey;y++){
-		int idx=x*nynz+y*nz+sz;
-		for(int z=sz;z<=ez;z++){
- 		    if (!objList[idx]) objList[idx]=new Group;
+	prims[i]->compute_bounds( primsBBox[i], maxradius );
+	calc_se( primsBBox[i], bbox, diag, nx, ny, nz, 
+		 primsGridData[i].sx, primsGridData[i].sy, primsGridData[i].sz,
+		 primsGridData[i].ex, primsGridData[i].ey, primsGridData[i].ez );
+	for(int x=primsGridData[i].sx;x<=primsGridData[i].ex;x++){
+	    for(int y=primsGridData[i].sy;y<=primsGridData[i].ey;y++){
+		int idx=x*nynz+y*nz+primsGridData[i].sz;
+		for(int z=primsGridData[i].sz;z<=primsGridData[i].ez;z++){
+ 		    if( !objList[idx] ) 
+			objList[idx] = new Group();
 		    objList[idx]->add( prims[i] );
 		    counts[idx*2+1]++;
 		    idx++;
@@ -178,6 +199,7 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
 	    }
 	}
     }
+    cerr << "4/8 Counting cells took " << Time::currentSeconds()-time << " seconds\n";
 
 //    cerr << "4/8 Counting cells took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
@@ -232,7 +254,7 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
 	// Array of objects that will be put in a grid at lower level
 	//
 	
-	prims[i]->compute_bounds(obj_bbox, maxradius);
+	prims[i]->compute_bounds( obj_bbox, maxradius );
 	int sx, sy, sz, ex, ey, ez;
 	calc_se(obj_bbox, bbox, diag, nx, ny, nz, sx, sy, sz, ex, ey, ez);
 	for(int x=sx;x<=ex;x++){
@@ -265,13 +287,23 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
 	    cerr << i << "/" << prims.size() << '\n';
 	    itime=tnow;
 	}
-	BBox obj_bbox;
 	//
 	// Array of objects that will be put in a grid at lower level
 	//
-	prims[i]->compute_bounds(obj_bbox, maxradius);
-	int sx, sy, sz, ex, ey, ez;
-	calc_se(obj_bbox, bbox, diag, nx, ny, nz, sx, sy, sz, ex, ey, ez);
+	// Already computed and cached -- no need to do it again
+	//
+	// prims[i]->compute_bounds(obj_bbox, maxradius);
+
+	int sx = primsGridData[i].sx;
+	int sy = primsGridData[i].sy;
+	int sz = primsGridData[i].sz;
+	int ex = primsGridData[i].ex;
+	int ey = primsGridData[i].ey;
+	int ez = primsGridData[i].ez;
+	//
+	// Already computed and cached
+	//
+	// calc_se( primsBBox[i], bbox, diag, nx, ny, nz, sx, sy, sz, ex, ey, ez);
 	for(int x=sx;x<=ex;x++){
 	    for(int y=sy;y<=ey;y++){
 		int idx=x*nynz+y*nz+sz;
@@ -294,6 +326,7 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
     }
 
     for( int i = 0; i < whichCell.size(); i++ ) {
+	if( whichCell[i] > 0 ) {
         if (_level == 1 && (i%100) == 1) cerr << "Completed "<<i<<"/"<<whichCell.size()<<" ("<<i*100./whichCell.size()<<"%)\n";
 	if( whichCell[i] > 0 )
 	    // grid[whichCellPos[i]] = ( Object* ) 0;
@@ -305,14 +338,29 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
 							      _minObjects1,
 							      _minObjects2,  
 							      _level + 1 );
-		grid[whichCellPos[i]]->preprocess(maxradius, pp_offset, scratchsize);
-	  } else 
-		cerr << "Something is wrong!!!" << endl;
-	
+	    grid[whichCellPos[i]]->preprocess( maxradius, pp_offset, scratchsize );
+	  }
+	}
     }
+    
+    //
+    // Deallocate group of objects
+    //
+    for( int i = 0; i < ngrid; i++ )
+	delete objList[i];
+
+    cerr << "6/7 Filling grid took " << Time::currentSeconds()-time << " seconds\n";
+
+    /*    cerr << "We allocated " << HierarchicalGrid::L1counter << " grids at level 1" << endl;
+    cerr << "We allocated " << HierarchicalGrid::L2counter << " grids at level 2" << endl;
+    cerr << "We allocated " << HierarchicalGrid::L3counter << " grids at level 2" << endl;
+    
+    cerr << "it should be " << numHierL2 << " for Level 2" << endl;
+    cerr << "it should be " << numHierL3 << " for Level 3" << endl;
 	
 //    cerr << "6/7 Filling grid took " << Time::currentSeconds()-time << " seconds\n";
 
+    */
 //    cerr << "We allocated " << HierarchicalGrid::L1counter << " grids at level 1" << endl;
 //    cerr << "We allocated " << HierarchicalGrid::L2counter << " grids at level 2" << endl;
 //    cerr << "We allocated " << HierarchicalGrid::L3counter << " grids at level 2" << endl;
@@ -320,7 +368,6 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
 //    cerr << "it should be " << numHierL2 << " for Level 2" << endl;
 //    cerr << "it should be " << numHierL3 << " for Level 3" << endl;
 
-    
     time=Time::currentSeconds();
     for(int i=0;i<ngrid;i++){
 	if( ( current[i] != counts[i*2+1] ) ) {
@@ -341,10 +388,7 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
     }
 //    cerr << "7/7 Verifying grid took " << Time::currentSeconds()-time << " seconds\n";
 
-//    time=Time::currentSeconds();
-//    for( int i = 0 ; i < ngrid; i++ ){
-//	Array1<Object*> objs;
-//    }
+    time=Time::currentSeconds();
 
 //    cerr << "REBUILDING THE GRID -- building a hierarchy took " << Time::currentSeconds()-time << " seconds\n";
 //    cerr << "Done building hierarchical grid\n";
