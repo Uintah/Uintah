@@ -13,12 +13,16 @@
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
-#include <Datatypes/MatrixPort.h>
+#include <Datatypes/ColumnMatrixPort.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/ScalarFieldUG.h>
 #include <Geometry/Point.h>
 
 class MakeScalarField : public Module {
+    MeshIPort* inmesh;
+    ColumnMatrixIPort* inrhs;
+    ScalarFieldOPort* ofield;
 public:
     MakeScalarField(const clString& id);
     MakeScalarField(const MakeScalarField&, int deep);
@@ -37,10 +41,13 @@ static RegisterModule db1("Unfinished", "MakeScalarField", make_MakeScalarField)
 MakeScalarField::MakeScalarField(const clString& id)
 : Module("MakeScalarField", id, Filter)
 {
-    add_iport(new MeshIPort(this, "Mesh", MeshIPort::Atomic));
-    add_iport(new MatrixIPort(this, "Geometry", MatrixIPort::Atomic));
+    inmesh=new MeshIPort(this, "Mesh", MeshIPort::Atomic);
+    add_iport(inmesh);
+    inrhs=new ColumnMatrixIPort(this, "RHS", ColumnMatrixIPort::Atomic);
+    add_iport(inrhs);
     // Create the output port
-    add_oport(new ScalarFieldOPort(this, "Geometry", ScalarFieldIPort::Atomic));
+    ofield=new ScalarFieldOPort(this, "ScalarField", ScalarFieldIPort::Atomic);
+    add_oport(ofield);
 }
 
 MakeScalarField::MakeScalarField(const MakeScalarField& copy, int deep)
@@ -60,5 +67,21 @@ Module* MakeScalarField::clone(int deep)
 
 void MakeScalarField::execute()
 {
-    NOT_FINISHED("MakeScalarField::execute");
+    MeshHandle mesh;
+    if(!inmesh->get(mesh))
+	return;
+    ColumnMatrixHandle rhshandle;
+    if(!inrhs->get(rhshandle))
+	return;
+    ScalarFieldUG* sf=new ScalarFieldUG;
+    sf->mesh=mesh;
+    ColumnMatrix& rhs=*rhshandle.get_rep();
+    sf->data.resize(rhs.nrows());
+    for(int i=0;i<rhs.nrows();i++){
+	if(mesh->nodes[i]->ndof>0)
+	    sf->data[i]=rhs[i];
+	else
+	    sf->data[i]=mesh->nodes[i]->value;
+    }
+    ofield->send(sf);
 }
