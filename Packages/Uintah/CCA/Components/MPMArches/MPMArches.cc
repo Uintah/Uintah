@@ -122,11 +122,67 @@ void MPMArches::scheduleInitialize(const LevelP& level,
   scheduleComputeVoidFrac(sched, patches, arches_matls, mpm_matls, all_matls);
 #endif
 
+  const PatchSet* patches = level->eachPatch();
+  const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
+  scheduleInitializeKStability(sched, patches, arches_matls);
+
   d_arches->scheduleInitialize(      level, sched);
 
   cerr << "Doing Initialization \t\t\t MPMArches" <<endl;
   cerr << "--------------------------------\n"<<endl; 
 }
+
+//______________________________________________________________________
+//
+
+void MPMArches::scheduleInitializeKStability(SchedulerP& sched,
+					     const PatchSet* patches,
+					     const MaterialSet* arches_matls)
+{
+  // set initial values for Stability factors due to drag
+  Task* t = scinew Task("MPMArches::initializeKStability",
+			this, &MPMArches::initializeKStability);
+  t->computes(d_MAlb->KStabilityULabel);
+  t->computes(d_MAlb->KStabilityVLabel);
+  t->computes(d_MAlb->KStabilityWLabel);
+  t->computes(d_MAlb->KStabilityHLabel);
+  sched->addTask(t, patches, arches_matls);
+}
+
+//______________________________________________________________________
+//
+
+void MPMArches::initializeKStability(const ProcessorGroup*,
+				     const PatchSubset* patches,
+				     const MaterialSubset* arches_matls,
+				     DataWarehouse* /*old_dw*/,
+				     DataWarehouse* new_dw)
+
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> KStabilityU;
+    CCVariable<double> KStabilityV;
+    CCVariable<double> KStabilityW;
+    CCVariable<double> KStabilityH;
+    new_dw->allocateAndPut(KStabilityU, d_MAlb->KStabilityULabel,
+			   matlindex, patch); 
+    KStabilityU.initialize(0.);
+    new_dw->allocateAndPut(KStabilityV, d_MAlb->KStabilityULabel,
+			   matlindex, patch); 
+    KStabilityV.initialize(0.);
+    new_dw->allocateAndPut(KStabilityW, d_MAlb->KStabilityULabel,
+			   matlindex, patch); 
+    KStabilityW.initialize(0.);
+    new_dw->allocateAndPut(KStabilityH, d_MAlb->KStabilityHLabel,
+			   matlindex, patch); 
+    KStabilityH.initialize(0.);
+  }
+}
+
 
 //______________________________________________________________________
 //
@@ -196,8 +252,11 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
 
+  double time = d_Alab->d_sharedState->getElapsedTime();
+
   nofTimeSteps++ ;
-  if (nofTimeSteps < 2) {
+  //  if (nofTimeSteps < 2) {
+  if (time < 1.0E-10) {
     cout << "Performing MPMArches calculations for time step " << nofTimeSteps << endl;
     d_recompile = true;
   }
@@ -652,6 +711,8 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   
   // computes, for arches, su_drag[x,y,z], sp_drag[x,y,z] at the
   // face centers and cell centers
+  // Also computes stability factors for u,v, and w equations
+  // due to fluid drag
   
   t->computes(d_MAlb->d_uVel_mmLinSrc_CCLabel, arches_matls->getUnion());
   t->computes(d_MAlb->d_uVel_mmLinSrc_FCYLabel, arches_matls->getUnion());
@@ -677,6 +738,10 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   t->computes(d_MAlb->d_wVel_mmNonlinSrc_FCXLabel, arches_matls->getUnion());
   t->computes(d_MAlb->d_wVel_mmNonlinSrc_FCYLabel, arches_matls->getUnion());
   
+  t->computes(d_MAlb->KStabilityULabel, arches_matls->getUnion());
+  t->computes(d_MAlb->KStabilityVLabel, arches_matls->getUnion());
+  t->computes(d_MAlb->KStabilityWLabel, arches_matls->getUnion());
+
   // requires, from mpm, solid velocities at cc, fcx, fcy, and fcz
 
   t->requires(Task::NewDW, d_MAlb->solid_fraction_CCLabel, 
@@ -970,6 +1035,10 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
   t->requires(Task::OldDW, d_Alab->d_densityMicroLabel, 
 	      arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
+
+  t->requires(Task::OldDW, d_Alab->d_enthalpySPLabel,
+	      arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
   
   if (d_DORad) {
   // stuff for radiative heat flux to intrusions
@@ -999,6 +1068,10 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
   t->computes(d_MAlb->d_enth_mmNonLinSrc_FCXLabel,     arches_matls->getUnion());
   t->computes(d_MAlb->d_enth_mmNonLinSrc_FCYLabel,     arches_matls->getUnion());
   t->computes(d_MAlb->d_enth_mmNonLinSrc_FCZLabel,     arches_matls->getUnion());
+
+  // computes Stability Factor for multimaterial heat exchange
+
+  t->computes(d_MAlb->KStabilityHLabel, arches_matls->getUnion());
 
   // computes heat fluxes at face centers for all three 
   // directions and convective heat flux at cell centers
@@ -1875,7 +1948,8 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     // multimaterial contribution to SP and SU terms 
     // in Arches momentum eqns currently at cc and fcs.  
     // Later we will interpolate to where Arches wants 
-    // them.
+    // them.  Also, stability factors for u, v, and w
+    // due to fluid drag.
     
     CCVariable<double> uVelLinearSrc_cc; 
     SFCYVariable<double> uVelLinearSrc_fcy; 
@@ -1901,6 +1975,10 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     SFCXVariable<double> wVelNonlinearSrc_fcx; 
     SFCYVariable<double> wVelNonlinearSrc_fcy; 
     
+    CCVariable<double> KStabilityU; 
+    CCVariable<double> KStabilityV; 
+    CCVariable<double> KStabilityW; 
+
     int numGhostCells = 1;
     int zeroGhostCells = 0;
     
@@ -1940,7 +2018,8 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // computes su_drag[x,y,z], sp_drag[x,y,z] for arches at cell centers
-    // and face centers
+    // and face centers; also, stability factors due to drag
+    // for u-, v-, and w-momentum equations
     
     new_dw->allocateAndPut(uVelLinearSrc_cc, d_MAlb->d_uVel_mmLinSrc_CCLabel, 
 		     matlIndex, patch);
@@ -1983,6 +2062,16 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 		     matlIndex, patch);
     new_dw->allocateAndPut(wVelNonlinearSrc_fcy, d_MAlb->d_wVel_mmNonlinSrc_FCYLabel,
 		     matlIndex, patch);
+
+    new_dw->allocateAndPut(KStabilityU, d_MAlb->KStabilityULabel,
+			   matlIndex, patch);
+    KStabilityU.initialize(0.);
+    new_dw->allocateAndPut(KStabilityV, d_MAlb->KStabilityVLabel,
+			   matlIndex, patch);
+    KStabilityV.initialize(0.);
+    new_dw->allocateAndPut(KStabilityW, d_MAlb->KStabilityWLabel,
+			   matlIndex, patch);
+    KStabilityW.initialize(0.);
     
     uVelLinearSrc_cc.initialize(0.);
     uVelLinearSrc_fcy.initialize(0.);
@@ -2128,6 +2217,7 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 						uVelLinearSrc_fcz,
 						uVelNonlinearSrc_cc,
 						uVelLinearSrc_cc,
+						KStabilityU,
 						dragForceX_fcy[m],
 						dragForceX_fcz[m],
 						dragForceX_cc[m],
@@ -2164,6 +2254,7 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 						vVelLinearSrc_fcx,
 						vVelNonlinearSrc_cc,
 						vVelLinearSrc_cc,
+						KStabilityV,
 						dragForceY_fcz[m],
 						dragForceY_fcx[m],
 						dragForceY_cc[m],
@@ -2200,6 +2291,7 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 						wVelLinearSrc_fcy,
 						wVelNonlinearSrc_cc,
 						wVelLinearSrc_cc,
+						KStabilityW,
 						dragForceZ_fcx[m],
 						dragForceZ_fcy[m],
 						dragForceZ_cc[m],
@@ -2972,6 +3064,11 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     SFCZVariable<double> htfluxRadZ;
     SFCZVariable<double> htfluxZ;
     CCVariable<double> htfluxConvCC;
+
+    // Stability factor
+
+    CCVariable<double> KStabilityH;
+    constCCVariable<double> enthalpy;
     
     int numGhostCells = 1;
     
@@ -3136,6 +3233,8 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
       radfluxB.initialize(0.);
     }
 
+    old_dw->get(enthalpy, d_Alab->d_enthalpySPLabel, matlIndex, 
+		patch, Ghost::AroundCells, numGhostCellsG);
     // allocates
 
     new_dw->allocateAndPut(sp_enth_cc, d_MAlb->d_enth_mmLinSrc_tmp_CCLabel,
@@ -3206,6 +3305,10 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 			   matlIndex, patch);
     htfluxConvCC.initialize(0.);
 
+    new_dw->allocateAndPut(KStabilityH, d_MAlb->KStabilityHLabel,
+			   matlIndex, patch);
+    KStabilityH.initialize(0.);
+
     // Begin loop to calculate gas-solid exchange terms for each
     // solid material with the gas phase
     
@@ -3245,6 +3348,7 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 			      sp_enth_fcy,
 			      su_enth_fcz, 
 			      sp_enth_fcz,
+			      KStabilityH,
 			      tempGas, 
 			      tempSolid_cc[m],
 			      tempSolid_fcx[m],
@@ -3263,6 +3367,7 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 			      upFCZ[m],
 			      vpFCZ[m],
 			      denMicro,
+			      enthalpy,
 			      radfluxE,
 			      radfluxW,
 			      radfluxN,

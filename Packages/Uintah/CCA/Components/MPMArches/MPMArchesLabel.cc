@@ -195,8 +195,19 @@ MPMArchesLabel::MPMArchesLabel()
 
   // Gas void fraction
 
-  void_frac_CCLabel  = VarLabel::create( "void_frac_CC",
-					 CCVariable<double>::getTypeDescription() );
+  void_frac_CCLabel  = VarLabel::create("void_frac_CC",
+					CCVariable<double>::getTypeDescription() );
+
+  // Stability Factor Labels
+
+  KStabilityULabel  = VarLabel::create("KStabilityU",
+				       CCVariable<double>::getTypeDescription() );
+  KStabilityVLabel  = VarLabel::create("KStabilityV",
+				       CCVariable<double>::getTypeDescription() );
+  KStabilityWLabel  = VarLabel::create("KStabilityW",
+				       CCVariable<double>::getTypeDescription() );
+  KStabilityHLabel  = VarLabel::create("KStabilityH",
+				       CCVariable<double>::getTypeDescription() );
 
   // u-velocity source term labels
 
@@ -448,6 +459,11 @@ MPMArchesLabel::~MPMArchesLabel()
   VarLabel::destroy(totHtFluxZLabel);
 
   VarLabel::destroy(void_frac_CCLabel);
+
+  VarLabel::destroy(KStabilityULabel);
+  VarLabel::destroy(KStabilityVLabel);
+  VarLabel::destroy(KStabilityWLabel);
+  VarLabel::destroy(KStabilityHLabel);
 
   VarLabel::destroy(d_uVel_mmLinSrc_CCLabel);
   VarLabel::destroy(d_uVel_mmLinSrc_CC_CollectLabel);
