@@ -22,6 +22,7 @@
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Geometry/BBox.h>
 #include <Packages/BioPSE/Core/Algorithms/Forward/SphericalVolumeConductor.h>
 
 namespace BioPSE {
@@ -117,10 +118,9 @@ void CreateDisAnisoSpheres::execute() {
 	conductivity->put(i, RAD, cond_->get(i, RAD));
 	conductivity->put(i, TAN, cond_->get(i, TAN));
   }
-
-  // increase scalp artificially 
-  // radius->put(SCALP, radius->get(SCALP)*1.1);
+ 
   max = radius->get(SCALP);
+
   //radius->put(AIR, radius->get(SCALP)*1.1); 
   //max = radius->get(AIR);
 
@@ -172,21 +172,25 @@ void CreateDisAnisoSpheres::processHexField() {
   LockingHandle<HexVolField<int> > hexField = dynamic_cast<HexVolField<int>* >(field_.get_rep());
   HexVolMeshHandle mesh_ = hexField->get_typed_mesh();
   HexVolMesh *newMesh_   = scinew HexVolMesh(*mesh_->clone()); 
-  newHexField = scinew HexVolField<int>(newMesh_, Field::NODE);
+  newHexField = scinew HexVolField<int>(newMesh_, Field::CELL);  // cell-wise conductivity tensors -> set data location to cells
+  newMesh_->synchronize(HexVolMesh::FACES_E);
+  HexVolMesh::Face::iterator fii;
+  newMesh_->begin(fii);
+  double face_area   = newMesh_->get_area(*fii);
+  double edge_length = sqrt(face_area);
+  max += edge_length * radius->get(SCALP);
+  //cout << "edge length: " << edge_length << endl;
   // set positions of the nodes and enumerate them
   HexVolMesh::Node::iterator nii, nie;
   newMesh_->begin(nii);
   newMesh_->end(nie);
   Point p;
-  int i = 0;
   for(; nii != nie; ++nii) {
 	mesh_->get_point(p, *nii);
 	p.x(p.x()*max);
 	p.y(p.y()*max);
 	p.z(p.z()*max);
 	newMesh_->set_point(p, *nii);
-	newHexField->set_value(i, *nii);
-	i++;
   }
   // assign conductivity tensors
   HexVolMesh::Cell::iterator cii, cie;
@@ -197,7 +201,7 @@ void CreateDisAnisoSpheres::processHexField() {
   newMesh_->size(ncells);
   vector<pair<string, Tensor> > tensor;
   tensor.resize(ncells);
-  i = 0;
+  int i = 0;
   Point c;
   for(; cii != cie; ++cii) {
 	newMesh_->get_center(c, *cii);
@@ -205,6 +209,7 @@ void CreateDisAnisoSpheres::processHexField() {
 	assignCompartment(c, d.length(), t);
 	Tensor ten(t);
 	tensor[i] = pair<string, Tensor>(to_string((int)i), ten);
+	newHexField->set_value(i, *cii);
 	i++;
   }
   newHexField->set_property("conductivity_table", tensor, false);
@@ -214,21 +219,18 @@ void CreateDisAnisoSpheres::processTetField() {
   LockingHandle<TetVolField<int> > tetField = dynamic_cast<TetVolField<int>* >(field_.get_rep());
   TetVolMeshHandle mesh_ = tetField->get_typed_mesh();
   TetVolMesh *newMesh_   = scinew TetVolMesh(*mesh_->clone());
-  newTetField = scinew TetVolField<int>(newMesh_, Field::NODE);
+  newTetField = scinew TetVolField<int>(newMesh_, Field::CELL);
   // set positions of the nodes and enumerate them
   TetVolMesh::Node::iterator nii, nie;
   newMesh_->begin(nii);
   newMesh_->end(nie);
   Point p;
-  int i = 0;
   for(; nii != nie; ++nii) {
 	mesh_->get_point(p, *nii);
 	p.x(p.x()*max);
 	p.y(p.y()*max);
 	p.z(p.z()*max);
 	newMesh_->set_point(p, *nii);
-	newTetField->set_value(i, *nii);
-	i++;
   }
   // assign conductivity tensors
   TetVolMesh::Cell::iterator cii, cie;
@@ -239,7 +241,7 @@ void CreateDisAnisoSpheres::processTetField() {
   newMesh_->size(ncells);
   vector<pair<string, Tensor> > tensor;
   tensor.resize(ncells);
-  i = 0;
+  int i = 0;
   Point c;
   for(; cii != cie; ++cii) {
 	newMesh_->get_center(c, *cii);
@@ -247,6 +249,7 @@ void CreateDisAnisoSpheres::processTetField() {
 	assignCompartment(c, d.length(), t);
 	Tensor ten(t);
 	tensor[i] = pair<string, Tensor>(to_string((int)i), ten);
+	newTetField->set_value(i, *cii);
 	i++;
   }
   newTetField->set_property("conductivity_table", tensor, false);
@@ -265,8 +268,8 @@ void CreateDisAnisoSpheres::assignCompartment(Point center, double distance, vec
 		getCondTensor(center, SKULL, tensor);
 	  }
 	  else {
-		getCondTensor(center, SCALP, tensor); // scalp
-		//if(distance <= radius->get(SCALP)) {
+		getCondTensor(center, SCALP, tensor);
+		//if(distance <= radius->get(SCALP)) { // scalp
 		//getCondTensor(center, SCALP, tensor);
 		//}
 		//else {
