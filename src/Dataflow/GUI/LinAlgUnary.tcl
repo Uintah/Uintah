@@ -62,5 +62,10 @@ itcl_class SCIRun_Math_LinAlgUnary {
 	make_entry $w.f.f "    specify function:" $this-function "$this-c needexecute"	
 	pack $w.f.r $w.f.f -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
-    }
+	
+	frame $w.exec
+	pack $w.exec -side bottom -padx 5 -pady 5
+	button $w.exec.execute -text "Execute" -command "$this-c needexecute"
+	pack $w.exec.execute -side top -e n
+     }
 }
