@@ -138,13 +138,11 @@ proc setVars { tovar name1 name2 op} {
     return 1
 }
 
-proc auto_needexecute { this args } {
-    $this-c needexecute
-}
 
 
 itcl_class SCIRun_Visualization_GenAxes {
     inherit Module
+    protected dont_execute_ 0
     constructor {config} {
         set name GenAxes
         set_defaults
@@ -178,16 +176,23 @@ itcl_class SCIRun_Visualization_GenAxes {
 	return $ret
     }
 
+    method auto_needexecute { args } {
+	if { $dont_execute_ } return
+	puts "autoneedexecute: $this $args"
+	$this-c needexecute
+    }
+
+
     method createGlobal { var val } {
 	setGlobal $var $val
-	uplevel \#0 trace variable \"$var\" w \"auto_needexecute $this\"
+	uplevel \#0 trace variable \"$var\" w \"$this auto_needexecute\"
     }
     
     method createDefaultPlaneAxisVariables { varPrefix } {
 	
-	createGlobal $varPrefix-divisions		"10"
+	createGlobal $varPrefix-divisions       "10"
 	createGlobal $varPrefix-percent		"10"
-	createGlobal $varPrefix-absolute		""
+	createGlobal $varPrefix-absolute	""
 	createGlobal $varPrefix-offset		"1"
 	
 	createGlobal $varPrefix-range-first	"0.0"
@@ -197,25 +202,24 @@ itcl_class SCIRun_Visualization_GenAxes {
 	createGlobal $varPrefix-min-absolute	"0.0"
 	createGlobal $varPrefix-max-absolute	"1.0"
 	
-	
-	createGlobal $varPrefix-minplane		"2"
-	createGlobal $varPrefix-maxplane		"2"
+	createGlobal $varPrefix-minplane	"2"
+	createGlobal $varPrefix-maxplane	"2"
 	createGlobal $varPrefix-lines		"2"
-	createGlobal $varPrefix-minticks		"2"
-	createGlobal $varPrefix-maxticks		"2"
-	createGlobal $varPrefix-minlabel		"2"
-	createGlobal $varPrefix-maxlabel		"2"
-	createGlobal $varPrefix-minvalue		"2"
-	createGlobal $varPrefix-maxvalue		"2"
+	createGlobal $varPrefix-minticks	"2"
+	createGlobal $varPrefix-maxticks	"2"
+	createGlobal $varPrefix-minlabel	"2"
+	createGlobal $varPrefix-maxlabel	"2"
+	createGlobal $varPrefix-minvalue	"2"
+	createGlobal $varPrefix-maxvalue	"2"
 	
 	createGlobal $varPrefix-width		"1"
-	createGlobal $varPrefix-tickangle		"0"
-	createGlobal $varPrefix-ticktilt 		"0"
-	createGlobal $varPrefix-labelangle		"0"
+	createGlobal $varPrefix-tickangle	"0"
+	createGlobal $varPrefix-ticktilt 	"0"
+	createGlobal $varPrefix-labelangle	"0"
 	createGlobal $varPrefix-labelheight	"6"
-	createGlobal $varPrefix-ticksize		"5"
+	createGlobal $varPrefix-ticksize	"5"
 	createGlobal $varPrefix-valuesquash	"1.0"	
-	createGlobal $varPrefix-valuesize		"3"
+	createGlobal $varPrefix-valuesize	"3"
     }
 
     method linkVars { allaxes vars } {
@@ -552,8 +556,8 @@ itcl_class SCIRun_Visualization_GenAxes {
 		          setGlobal $this-valuefont \"$font\""
 	    incr i
 	}
-	trace variable $this-valuefont w "auto_needexecute $this"
-	trace variable $this-labelfont w "auto_needexecute $this"
+	trace variable $this-valuefont w "$this auto_needexecute"
+	trace variable $this-labelfont w "$this auto_needexecute"
 
 	if $i {
 	    $frame.menu.m invoke $def
@@ -561,9 +565,6 @@ itcl_class SCIRun_Visualization_GenAxes {
 	}
 
     }
-
-
-
 
     method ui {} {
         set w .ui[modname]
@@ -578,7 +579,7 @@ itcl_class SCIRun_Visualization_GenAxes {
 	    -backdrop gray -equaltabs 0 -bevelamount 5 -borderwidth 0
 	pack $w.tabs -expand 1 -fill both
 
-
+	set dont_execute_ 1
 	build_all_tab $w.tabs
 	build_plane_tab $w.tabs "0 1"
 	build_plane_tab $w.tabs "0 2"
@@ -588,6 +589,7 @@ itcl_class SCIRun_Visualization_GenAxes {
 	$w.tabs view 0
 
 	makeSciButtonPanel $w $w $this
+	set dont_execute_ 0
 
     }
 }
