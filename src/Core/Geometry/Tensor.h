@@ -44,6 +44,7 @@ private:
   double l1_, l2_, l3_;
   int have_eigens_;
 public:
+
   Tensor();
   Tensor(const Tensor&);
   Tensor(int);
@@ -67,7 +68,11 @@ public:
   void build_mat_from_eigens();
   void build_eigens_from_mat();
 
+  bool have_eigens() { return have_eigens_; }
   void get_eigenvectors(Vector &e1, Vector &e2, Vector &e3);
+  const Vector &get_eigenvector1() { ASSERT(have_eigens_); return e1_; }
+  const Vector &get_eigenvector2() { ASSERT(have_eigens_); return e2_; }
+  const Vector &get_eigenvector3() { ASSERT(have_eigens_); return e3_; }
   void get_eigenvalues(double &l1, double &l2, double &l3);
   void set_eigens(const Vector &e1, const Vector &e2, const Vector &e3);
 
