@@ -94,6 +94,12 @@ TransformData::execute()
     return;
   }
 
+  if (ifieldhandle->basis_order() == -1)
+  {
+    warning("Field contains no data to transform.");
+    return;
+  }
+
   string outputdatatype = outputdatatype_.get();
   if (outputdatatype == "input")
   {

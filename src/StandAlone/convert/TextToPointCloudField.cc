@@ -143,8 +143,7 @@ main(int argc, char **argv) {
   }
   cerr << "done adding points.\n";
 
-  PointCloudField<double> *pc = 
-    scinew PointCloudField<double>(pcm, 0);
+  PointCloudField<double> *pc = scinew PointCloudField<double>(pcm, -1);
   FieldHandle pcH(pc);
   
   if (binOutput) {

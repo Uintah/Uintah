@@ -413,7 +413,8 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
     Vector vec(0,0,0);
     double val;
 
-    if (sfld->basis_order() > 0) {
+    if ((sfld->basis_order() > 0) || (sfld->basis_order() == 0 && 
+				     mesh->dimensionality() == 1)) {
       typename Fld::value_type tmp;
       sfld->value(tmp, *niter);
 	
@@ -593,7 +594,8 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
     Point p1, p2;
     mesh->get_point(p1, nodes[0]);
     mesh->get_point(p2, nodes[1]);
-    if (sfld->basis_order() > 0) {
+    if (sfld->basis_order() > 0 || (sfld->basis_order() == 0 && 
+				    mesh->dimensionality() == 1)) {
       typename Fld::value_type val0, val1;
       sfld->value(val0, nodes[0]);
       sfld->value(val1, nodes[1]);

@@ -254,8 +254,13 @@ SampleStructHex::execute()
   }
 
   int basis_order;
-  if (data_at_.get() == "Cells") basis_order = 0;
-  else basis_order = 1;
+  if (data_at_.get() == "Nodes") basis_order = 1;
+  else if (data_at_.get() == "Cells") basis_order = 0;
+  else if (data_at_.get() == "None") basis_order = -1;
+  else {
+    error("Unsupported data_at location " + data_at_.get() + ".");
+    return;
+  }
 
   // Create Image Field.
   FieldHandle ofh;
@@ -263,40 +268,48 @@ SampleStructHex::execute()
   {
     StructHexVolField<double> *lvf = 
       scinew StructHexVolField<double>(mesh, basis_order);
-    StructHexVolField<double>::fdata_type::iterator itr = lvf->fdata().begin();
-    while (itr != lvf->fdata().end())
+    if (basis_order != -1)
     {
-      *itr = 0.0;
-      ++itr;
+      StructHexVolField<double>::fdata_type::iterator itr = 
+	lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = 0.0;
+	++itr;
+      }
     }
-
     ofh = lvf;
   } 
   else if (datatype == VECTOR)
   {
     StructHexVolField<Vector> *lvf = 
       scinew StructHexVolField<Vector>(mesh, basis_order);
-
-    StructHexVolField<Vector>::fdata_type::iterator itr = lvf->fdata().begin();
-    while (itr != lvf->fdata().end())
+    if (basis_order != -1)
     {
-      *itr = Vector(0.0, 0.0, 0.0);
-      ++itr;
+      StructHexVolField<Vector>::fdata_type::iterator itr = 
+	lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = Vector(0.0, 0.0, 0.0);
+	++itr;
+      }
     }
-
     ofh = lvf;
   }				    
   else // if (datatype == TENSOR)	    
   {				    
     StructHexVolField<Tensor> *lvf = 
       scinew StructHexVolField<Tensor>(mesh, basis_order);
-    StructHexVolField<Tensor>::fdata_type::iterator itr = lvf->fdata().begin();
-    while (itr != lvf->fdata().end())
+    if (basis_order != -1)
     {
-      *itr = Tensor(0.0);
-      ++itr;
+      StructHexVolField<Tensor>::fdata_type::iterator itr = 
+	lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = Tensor(0.0);
+	++itr;
+      }
     }
-    
     ofh = lvf;
   }				    
 

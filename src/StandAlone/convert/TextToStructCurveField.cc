@@ -146,8 +146,7 @@ main(int argc, char **argv) {
   }
   cerr << "done adding points.\n";
 
-  StructCurveField<double> *cf =
-    scinew StructCurveField<double>(cm, 0);
+  StructCurveField<double> *cf = scinew StructCurveField<double>(cm, -1);
   FieldHandle cH(cf);
   
   if (binOutput) {

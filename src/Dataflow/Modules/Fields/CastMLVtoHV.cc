@@ -112,7 +112,7 @@ void CastMLVtoHV::execute()
   }                     
 
   if (ifieldH->basis_order() != 1) {
-    error("Input volume data isn't node-centered.");
+    error("Input volume data doesn't have a linear basis.");
     return;
   }                         
 
@@ -122,11 +122,21 @@ void CastMLVtoHV::execute()
   switch (ifieldH->basis_order())
   {
   case 0:
-    ldst_td = get_type_description((HexVolMesh::Cell *)0);
+    if (ifieldH->mesh()->dimensionality() == 1) {
+      ldst_td = get_type_description((HexVolMesh::Edge *)0);
+    } else if (ifieldH->mesh()->dimensionality() == 2) {
+      ldst_td = get_type_description((HexVolMesh::Face *)0);
+    } else if (ifieldH->mesh()->dimensionality() == 3) {
+      ldst_td = get_type_description((HexVolMesh::Cell *)0);
+    }
+
     break;
   case 1:
     ldst_td = get_type_description((HexVolMesh::Node *)0);
     break;
+  default:
+    error("Unsupported basis order.");
+    return;
   }
 
   CompileInfoHandle ci =

@@ -374,6 +374,7 @@ Probe::execute()
   VectorFieldInterfaceHandle vfi = 0;
   TensorFieldInterfaceHandle tfi = 0;
   if (!input_field_p ||
+      ifieldhandle->basis_order() == -1 ||
       !gui_show_value_.get())
   {
     valstr << 0;
@@ -448,7 +449,17 @@ Probe::execute()
       index = atoi(nodestr.c_str());
       break;
     case 0:
-      index = atoi(cellstr.c_str());
+      {
+	if (ifieldhandle->mesh()->dimensionality() == 1) {
+	  index = atoi(edgestr.c_str());
+	} else if (ifieldhandle->mesh()->dimensionality() == 2) {
+	  index = atoi(facestr.c_str());
+	} else if (ifieldhandle->mesh()->dimensionality() == 3) {
+	  index = atoi(cellstr.c_str());
+	}
+      }
+      break;
+    case -1:
       break;
     }
     MatrixHandle cm = scinew ColumnMatrix(1);

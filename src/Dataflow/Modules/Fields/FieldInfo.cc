@@ -152,6 +152,9 @@ FieldInfo::update_input_attributes(FieldHandle f)
   case 0:
     gui_dataat_.set("Cells");
     break;
+  case -1:
+    gui_dataat_.set("None");
+    break;
   }
 
   Point center;

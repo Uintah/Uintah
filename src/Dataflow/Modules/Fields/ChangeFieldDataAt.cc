@@ -85,6 +85,8 @@ ChangeFieldDataAt::update_input_attributes(FieldHandle f)
   case 1:
     inputdataat_.set("Nodes");
     break;
+  case -1: 
+    inputdataat_.set("None");
   default: ;
   }
 
@@ -148,6 +150,11 @@ ChangeFieldDataAt::execute()
   {
     basis_order = 0;
   }
+  else if (d == "None")
+  {
+    basis_order = -1;
+  }
+
   if (basis_order == fh->basis_order())
   {
     // No changes, just send the original through (it may be nothing!).

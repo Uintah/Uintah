@@ -231,7 +231,7 @@ ShowField::ShowField(GuiContext* ctx) :
   vectors_usedefcolor_(ctx->subVar("vectors-usedefcolor")),
   data_dirty_(true),
   cur_field_data_type_("none"),
-  cur_field_basis_order_(0),
+  cur_field_basis_order_(-1),
   tensors_on_(ctx->subVar("tensors-on")),
   has_tensor_data_(ctx->subVar("has_tensor_data")),
   tensors_usedefcolor_(ctx->subVar("tensors-usedefcolor")),
