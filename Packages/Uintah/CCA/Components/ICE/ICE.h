@@ -375,6 +375,13 @@ using namespace SCIRun;
       double d_pressure;
       double d_initialDt;
       double d_CFL;
+      double d_dbgTime; 
+      double d_dbgStartTime;
+      double d_dbgStopTime;
+      double d_dbgOutputInterval;
+      double d_dbgNextDumpTime;
+      double d_dbgOldTime;
+
       
      // exchange coefficients -- off diagonal terms
       vector<double> d_K_mom, d_K_heat;
