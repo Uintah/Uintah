@@ -421,7 +421,7 @@ BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
 	  std::sort(v.begin(), v.end(), pair_less);
 	  for (unsigned int i = 0; i < locs.size(); i++)
 	  {
-	    coldatav.push_back(v[i].first);
+	    coldatav.push_back((unsigned int)(v[i].first));
 	    datav.push_back(v[i].second);
 	  }
 	}
@@ -438,7 +438,7 @@ BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
 	    }
 	  }
 	  rowdata[rcount+1] = lastrdata + 1;
-	  coldatav.push_back(locs[max_idx]);
+	  coldatav.push_back((unsigned int)(locs[max_idx]));
 	  datav.push_back(1.0);
 	}
       }
@@ -449,7 +449,7 @@ BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
 	if (dist <= 0 || dd < dist * dist)
 	{
 	  rowdata[rcount+1] = lastrdata + 1;
-	  coldatav.push_back(index);
+	  coldatav.push_back((unsigned int)index);
 	  datav.push_back(1.0);
 	}
       }
