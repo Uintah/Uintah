@@ -208,8 +208,6 @@ class BioImageApp {
         set updating_crop_ui 0
         set needs_update 1
 
-	set crop_reset 0
-
 
 
 	### Define Tooltips
@@ -253,12 +251,32 @@ class BioImageApp {
 
         # disregard UnuCrop errors, hopefully they are due to 
 	# upstream crops changing bounds
-	if {[string first "UnuCrop" $which] != -1 && $msg_state == "Warning"} {
-	    #tk_messageBox -message "One of your cropping values was out of range.  This could be due to recent changes to an upstream crop filter's settings affecting a downstream crop filter. The downstream crop values were reset to the bounding box." -type ok -icon info 
-		#return
-	    puts "One of the crop filters axis was reset due to bad vals"
-	    #after 700 "$this stop_crop"
-	    #set crop_reset 1
+	if {[string first "UnuCrop" $which] != -1 && ($msg_state == "Warning" \
+						      || $msg_state == "Error")} {
+	    if {![winfo exists .standalone.cropwarn]} {
+		toplevel .standalone.cropwarn
+		wm minsize .standalone.cropwarn 150 50
+		wm title .standalone.cropwarn "Reset Crop Bounds"
+  	        set pos_x [expr $screen_width / 2]
+	        set pos_y [expr $screen_height / 2]
+		wm geometry .standalone.cropwarn "+$pos_x+$pos_y"
+
+		label .standalone.cropwarn.warn -text "W A R N I N G" \
+		    -foreground "#830101"
+		label .standalone.cropwarn.message \
+		    -text "One or more of your cropping values was out of\nrange. This could be due to recent changes to\nan upstream crop filter's settings affecting a\ndownstream crop filter. The downstream crop\nvalues were reset to the new bounding box and the\ncrop widget was turned off." 
+		    
+		button .standalone.cropwarn.button -text " Ok " \
+		    -command "wm withdraw .standalone.cropwarn" 
+		pack .standalone.cropwarn.warn \
+		    .standalone.cropwarn.message \
+		    .standalone.cropwarn.button \
+		    -side top -anchor n -pady 2 -padx 2
+	    } else {
+		SciRaise .standalone.cropwarn
+	    }
+	    after 700 "$this stop_crop"
+	    return
 	}         
 
 
@@ -589,15 +607,7 @@ class BioImageApp {
 			change_indicator_labels "Visualizing..."
 		    }
 
-# 		    if {$crop_reset == 1} {
-# 			# if {$turn_off_crop == 1} {
-# 			    $this stop_crop
-# 			# }
-# 			puts "Crop axes out of range"
-# 			#tk_messageBox -message "One of your cropping values was out of range.  This could be due to recent changes to an upstream crop filter's settings affecting a downstream crop filter. The downstream crop values were reset to the bounding box. Crop widget was turned off." -type ok -icon info -parent .standalone
-# 			set crop_reset 0
-# 		    }
-		} elseif {$executing_modules < 0} {
+
 		    # something wasn't caught, reset
 		    set executing_modules 0
 		    set indicate 2
@@ -805,7 +815,7 @@ class BioImageApp {
 	    -from 0 -to 20 -width 15 \
 	    -length 120 -showvalue false \
 	    -orient horizontal -command "$this update_axial_slice"
-	bind $topr.modes.slider.slice.s <Motion> "app update_axial_slice 1"
+	    
 
 	entry $topr.modes.slider.slice.l -width 3 \
 	    -textvariable $mods(ViewImage)-axial-viewport0-slice -relief flat
@@ -822,7 +832,7 @@ class BioImageApp {
 	    -length 130 -rangecolor "#830101" -width 15 \
 	    -varmin axial_min -varmax axial_max \
 	    -command "$this update_axial_slab $axial_min $axial_max"
-	bind $topr.modes.slider.slab.s <Motion> "app update_axial_slab 1 1 1"
+
 	label $topr.modes.slider.slab.max -textvariable axial_max 
 
 	pack $topr.modes.slider.slab.min $topr.modes.slider.slab.s \
@@ -872,7 +882,6 @@ class BioImageApp {
 	    -from 0 -to 20 -width 15 \
 	    -length 120 -showvalue false \
 	    -orient horizontal -command "$this update_sagittal_slice"
-	bind $botl.modes.slider.slice.s <Motion> "app update_sagittal_slice 1"
 
 	entry $botl.modes.slider.slice.l -width 3 \
 	    -textvariable $mods(ViewImage)-sagittal-viewport0-slice -relief flat
@@ -889,7 +898,7 @@ class BioImageApp {
 	    -length 130 -rangecolor "#830101" -width 15 \
 	    -varmin sagittal_min -varmax sagittal_max \
 	    -command "$this update_sagittal_slab $sagittal_min $sagittal_max"
-	bind $botl.modes.slider.slab.s <Motion> "app update_sagittal_slab 1 1 1"
+
 	label $botl.modes.slider.slab.max -textvariable sagittal_max 
 
 	pack $botl.modes.slider.slab.min $botl.modes.slider.slab.s \
@@ -937,7 +946,6 @@ class BioImageApp {
 	    -from 0 -to 20 -width 15 \
 	    -length 120 -showvalue false \
 	    -orient horizontal -command "$this update_coronal_slice"
-	bind $botr.modes.slider.slice.s <Motion> "app update_coronal_slice 1"
 
 	entry $botr.modes.slider.slice.l -width 3 \
 	    -textvariable $mods(ViewImage)-coronal-viewport0-slice -relief flat
@@ -954,7 +962,7 @@ class BioImageApp {
 	    -length 130 -rangecolor "#830101" -width 15 \
 	    -varmin coronal_min -varmax coronal_max \
 	    -command "$this update_coronal_slab $coronal_min $coronal_max"
-	bind $botr.modes.slider.slab.s <Motion> "app update_coronal_slab 1 1 1"
+
 	label $botr.modes.slider.slab.max -textvariable coronal_max 
 
 	pack $botr.modes.slider.slab.min $botr.modes.slider.slab.s \
@@ -2039,25 +2047,7 @@ class BioImageApp {
 
 	    set page [$vis.tnb add -label "Planes" -command "$this check_crop"]
 
-#             # display window and level
-#             global $mods(ViewImage)-axial-viewport0-clut_ww $mods(ViewImage)-axial-viewport0-clut_wl
-#             iwidgets::labeledframe $page.winlevel \
-#                  -labeltext "Window/Level Controls" \
-#                  -labelpos nw
-#             pack $page.winlevel -side top -anchor nw -expand no -fill x
-#             set winlevel [$page.winlevel childsite]
-
-#             scale $winlevel.ww -variable $mods(ViewImage)-axial-viewport0-clut_ww \
-#                 -from 0 -to 1300 \
-#                 -showvalue true -orient horizontal
-
-#             scale $winlevel.wl -variable $mods(ViewImage)-axial-viewport0-clut_wl \
-#                 -from 0 -to 1299 \
-#                 -showvalue true -orient horizontal
-#             pack $winlevel.ww $winlevel.wl -side top -anchor n -pady 1
-
-
-            frame $page.planes -relief groove -borderwidth 2
+            frame $page.planes 
             pack $page.planes -side top -anchor nw -expand no -fill x
 
 	    global show_plane_x show_plane_y show_plane_z
@@ -2103,6 +2093,47 @@ class BioImageApp {
             grid configure $page.planes.zp -row 2 -column 0 -sticky "w"
             grid configure $page.planes.zm -row 2 -column 1 -sticky "w"
 
+            # display window and level
+            global $mods(ViewImage)-axial-viewport0-clut_ww 
+            global $mods(ViewImage)-axial-viewport0-clut_wl
+            global $mods(ViewImage)-min $mods(ViewImage)-max
+
+            iwidgets::labeledframe $page.winlevel \
+                 -labeltext "Window/Level Controls" \
+                 -labelpos nw
+            pack $page.winlevel -side top -anchor nw -expand no -fill x \
+                -pady 3
+            set winlevel [$page.winlevel childsite]
+
+            frame $winlevel.ww
+            frame $winlevel.wl
+            pack $winlevel.ww $winlevel.wl -side top -anchor ne -pady 0
+
+            label $winlevel.ww.l -text "Window Width"
+            scale $winlevel.ww.s -variable $mods(ViewImage)-axial-viewport0-clut_ww \
+                -from 0 -to 129 -length 170 -width 15 \
+                -showvalue false -orient horizontal \
+                -command "$this change_window_width"
+            bind $winlevel.ww.s <ButtonRelease> "$this update_planes_threshold"
+            entry $winlevel.ww.e -textvariable $mods(ViewImage)-axial-viewport0-clut_ww \
+                -relief flat
+bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_threshold"
+            pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left -anchor n -pady 1
+
+            label $winlevel.wl.l -text "Window Level "
+            scale $winlevel.wl.s -variable $mods(ViewImage)-axial-viewport0-clut_wl \
+                -from 0 -to 1299 -length 170 -width 15 \
+                -showvalue false -orient horizontal \
+                -command "$this change_window_level"
+            bind $winlevel.wl.s <ButtonRelease> "$this update_planes_threshold"
+            entry $winlevel.wl.e -textvariable $mods(ViewImage)-axial-viewport0-clut_wl \
+                -relief flat
+            bind $winlevel.wl.e <Return> "$this change_window_level 1; $this update_planes_threshold"
+            pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left -anchor n -pady 1
+
+            trace variable $mods(ViewImage)-min w "$this update_window_level_scales"
+            trace variable $mods(ViewImage)-max w "$this update_window_level_scales"
+
             # Background threshold
             global planes_threshold
             frame $page.thresh 
@@ -2113,7 +2144,7 @@ class BioImageApp {
             scale $page.thresh.s \
                 -from 0 -to 100 \
  	        -orient horizontal -showvalue false \
- 	        -length 110 \
+ 	        -length 110 -width 15 \
 	        -variable planes_threshold
             label $page.thresh.l2 -textvariable planes_threshold
 
@@ -3005,6 +3036,65 @@ class BioImageApp {
 
     }
 
+    method update_window_level_scales {varname varele varop} {
+	global mods
+	global $mods(ViewImage)-min $mods(ViewImage)-max
+	global $mods(ViewImage)-axial-viewport0-clut_ww
+	global $mods(ViewImage)-axial-viewport0-clut_wl
+
+	set min [set $mods(ViewImage)-min]
+	set max [set $mods(ViewImage)-max]
+
+	# configure window width scale
+	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.winlevel.childsite.ww.s \
+	    configure -from $min -to $max
+	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.winlevel.childsite.ww.s \
+	    configure -from $min -to $max
+
+	# configure window level scale
+	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.winlevel.childsite.wl.s \
+	    configure -from $min -to $max
+	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.winlevel.childsite.wl.s \
+	    configure -from $min -to $max
+	
+    }
+
+    method change_window_width { val } {
+	# sync other windows with axial window width
+	global mods
+	global $mods(ViewImage)-axial-viewport0-clut_ww
+	global $mods(ViewImage)-sagittal-viewport0-clut_ww
+	global $mods(ViewImage)-coronal-viewport0-clut_ww
+
+	set val [set $mods(ViewImage)-axial-viewport0-clut_ww]
+
+	set $mods(ViewImage)-sagittal-viewport0-clut_ww $val
+	set $mods(ViewImage)-coronal-viewport0-clut_ww $val
+
+	# set windows to be dirty
+	$mods(ViewImage)-c setclut
+
+	$mods(ViewImage)-c redrawall
+    }
+
+    method change_window_level { val } {
+	# sync other windows with axial window level
+	global mods
+	global $mods(ViewImage)-axial-viewport0-clut_wl
+	global $mods(ViewImage)-sagittal-viewport0-clut_wl
+	global $mods(ViewImage)-coronal-viewport0-clut_wl
+
+	set val [set $mods(ViewImage)-axial-viewport0-clut_wl]
+
+	set $mods(ViewImage)-sagittal-viewport0-clut_wl $val
+	set $mods(ViewImage)-coronal-viewport0-clut_wl $val
+
+	# set windows to be dirty
+	$mods(ViewImage)-c setclut
+
+	$mods(ViewImage)-c redrawall
+    }
+
     method check_crop {} {
 	if {$turn_off_crop == 1} {
 	    $this stop_crop
@@ -3012,6 +3102,7 @@ class BioImageApp {
     }
 
     method start_crop {which} {
+
         global mods
 
         if {!$loading && [lindex $filters($which) $filter_type] == "crop"} {
@@ -3669,28 +3760,6 @@ class BioImageApp {
 
     method update_changes {} {
 	set mod ""
-	if {$has_executed == 1} {
-
-            if {$num_filters == 1} {
-                set mod [lindex [lindex $filters(0) $input] 0]
-	    } else {
-	        # find first valid filter and execute that
- 	        for {set i 1} {$i < $num_filters} {incr i} {
-                    if {[info exists filters($i)]} {
-		        set tmp_row [lindex $filters($i) $which_row]
-		        if {$tmp_row != -1} {
-			    set mod [lindex [lindex $filters($i) $input] 0]
- 	  	   	    break
-	 	        }
-		    }
-                }
-            }
-            $mod-c needexecute
-	} else {
-            $this execute_Data
-	}
-
-        set has_executed 1
 
         # for any crops in the pipeline, save out crop pads for widgets
   	for {set i 1} {$i < $num_filters} {incr i} {
@@ -3724,6 +3793,29 @@ class BioImageApp {
 		 set filters($i) [lreplace $filters($i) 11 11 $pad_vals]
   	    }
   	}
+
+	if {$has_executed == 1} {
+
+            if {$num_filters == 1} {
+                set mod [lindex [lindex $filters(0) $input] 0]
+	    } else {
+	        # find first valid filter and execute that
+ 	        for {set i 1} {$i < $num_filters} {incr i} {
+                    if {[info exists filters($i)]} {
+		        set tmp_row [lindex $filters($i) $which_row]
+		        if {$tmp_row != -1} {
+			    set mod [lindex [lindex $filters($i) $input] 0]
+ 	  	   	    break
+	 	        }
+		    }
+                }
+            }
+            $mod-c needexecute
+	} else {
+            $this execute_Data
+	}
+
+        set has_executed 1
 
         $this disable_update
     }
@@ -3826,6 +3918,7 @@ class BioImageApp {
 	    
 	    toplevel .standalone.change_label
 	    wm minsize .standalone.change_label 150 50
+            wm title .standalone.change_label "Change Label"
 	    set x [expr $x + 10]
 	    wm geometry .standalone.change_label "+$x+$y"
 	    
@@ -4604,7 +4697,6 @@ class BioImageApp {
     variable turn_off_crop
     variable updating_crop_ui
     variable needs_update
-    variable crop_reset
 }
 
 
