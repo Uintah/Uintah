@@ -247,7 +247,7 @@ class PowerAppBase {
 	$m.main_menu.help.menu add command -label "Help Contents" \
 	    -underline 0 -command "$this show_help" -state active
 	
-	$m.main_menu.help.menu add command -label "About BioTensor" \
+	$m.main_menu.help.menu add command -label "About [appname]" \
 	    -underline 0 -command "$this show_about" -state active
 	
 	pack $m.main_menu.help -side left
