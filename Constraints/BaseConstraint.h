@@ -18,6 +18,7 @@
 #include <Constraints/manifest.h>
 #include <Geometry/Point.h>
 #include <Classlib/Array1.h>
+#include <Classlib/Array2.h>
 #include <Classlib/String.h>
 
 
@@ -115,7 +116,7 @@ protected:
    Index varCount;
    Array1<Variable*> vars;
    Array1<Index> var_indexs; // The var's index for this constraint.
-   Array1<Index*> var_choices;
+   Array2<Index> var_choices;
    Index whichMethod, callingMethod;
 
    void Register();

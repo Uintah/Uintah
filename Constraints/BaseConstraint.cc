@@ -160,17 +160,13 @@ Variable::printc( ostream& os, const Index c )
 BaseConstraint::BaseConstraint( const clString& name, const Index nschemes,
 				const Index varCount )
 : name(name), nschemes(nschemes), varCount(varCount),
-  vars(varCount), var_indexs(varCount), var_choices(nschemes)
+  vars(varCount), var_indexs(varCount), var_choices(nschemes, varCount)
 {
    whichMethod = 0;
-   for (Index i = 0; i < nschemes; i++)
-      var_choices[i] = new Index[varCount];
 }
 
 BaseConstraint::~BaseConstraint()
 {
-    for (Index i = 0; i < nschemes; i++)
-	delete var_choices[i];
 }
 
 void
@@ -214,19 +210,19 @@ BaseConstraint::VarChoices( const Scheme scheme,
    Index p=0;
    
    if (p == varCount) return;
-   var_choices[scheme][p++] = i1;
+   var_choices(scheme, p++) = i1;
    if (p == varCount) return;
-   var_choices[scheme][p++] = i2;
+   var_choices(scheme, p++) = i2;
    if (p == varCount) return;
-   var_choices[scheme][p++] = i3;
+   var_choices(scheme, p++) = i3;
    if (p == varCount) return;
-   var_choices[scheme][p++] = i4;
+   var_choices(scheme, p++) = i4;
    if (p == varCount) return;
-   var_choices[scheme][p++] = i5;
+   var_choices(scheme, p++) = i5;
    if (p == varCount) return;
-   var_choices[scheme][p++] = i6;
+   var_choices(scheme, p++) = i6;
    if (p == varCount) return;
-   var_choices[scheme][p++] = i7;
+   var_choices(scheme, p++) = i7;
 }
 
 void
@@ -240,7 +236,7 @@ BaseConstraint::ChooseChange( const Index index )
 {
    callingMethod = index;
    
-   return whichMethod = var_choices[currentScheme][index];
+   return whichMethod = var_choices(currentScheme, index);
 }
 
 void
@@ -254,13 +250,13 @@ BaseConstraint::print( ostream& os )
        if (i != whichMethod) {
 	  os << "\t";
 	  vars[i]->printc(os, var_indexs[i]);
-	  os << " (->" << var_choices[currentScheme][i] << ")";
+	  os << " (->" << var_choices(currentScheme, i) << ")";
 	  os << endl;
        }
     }
     os << "\t-> ";
     vars[whichMethod]->printc(os, var_indexs[whichMethod]);
-    os << " (->" << var_choices[currentScheme][whichMethod] << ")";
+    os << " (->" << var_choices(currentScheme, whichMethod) << ")";
     os << ")" << endl;
 }
 

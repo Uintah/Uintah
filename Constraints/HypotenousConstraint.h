@@ -22,11 +22,11 @@ class HypotenousConstraint : public BaseConstraint {
 public:
    HypotenousConstraint( const clString& name,
 			 const Index numSchemes,
-			 Variable* HypoInX, Variable* distInX );
+			 Variable* distInX, Variable* hypoInX );
     virtual ~HypotenousConstraint();
    
 protected:
-   void Satisfy( const Index index );
+   virtual void Satisfy( const Index index );
 };
 
 #endif
