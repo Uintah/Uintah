@@ -1,5 +1,5 @@
 /*
- *  MeshTet.h: Templated Meshs defined on a 3D Regular Grid
+ *  SurfDEG.h: Templated Meshs defined on a 3D Regular Grid
  *
  *  Written by:
  *   Michael Callahan
@@ -11,8 +11,8 @@
  *
  */
 
-#ifndef SCI_project_MeshTet_h
-#define SCI_project_MeshTet_h 1
+#ifndef SCI_project_SurfDEG_h
+#define SCI_project_SurfDEG_h 1
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Geometry/BBox.h>
@@ -23,7 +23,7 @@ namespace SCIRun {
 
 
 
-class SCICORESHARE MeshTet : public Datatype
+class SCICORESHARE SurfDEG : public Datatype
 {
 private:
 
@@ -49,16 +49,16 @@ public:
   typedef int          face_index;
   typedef IntIter      face_iterator;
 
-  typedef int          cell_index;
-  typedef IntIter      cell_iterator;
+  //typedef int          cell_index;
+  //typedef IntIter      cell_iterator;
 
   typedef vector<node_index> node_array;
   typedef vector<edge_index> edge_array;
-  typedef vector<face_index> face_array;
+  //typedef vector<face_index> face_array;
 
-  MeshTet();
-  MeshTet(const MeshTet &copy);
-  virtual ~MeshTet();
+  SurfDEG();
+  SurfDEG(const SurfDEG &copy);
+  virtual ~SurfDEG();
 
   virtual BBox get_bounding_box() const;
 
@@ -68,22 +68,22 @@ public:
   edge_iterator edge_end() const;
   face_iterator face_begin() const;
   face_iterator face_end() const;
-  cell_iterator cell_begin() const;
-  cell_iterator cell_end() const;
+  //cell_iterator cell_begin() const;
+  //cell_iterator cell_end() const;
 
   void get_nodes_from_edge(node_array &array, edge_index idx) const;
   void get_nodes_from_face(node_array &array, face_index idx) const;
-  void get_nodes_from_cell(node_array &array, cell_index idx) const;
+  //void get_nodes_from_cell(node_array &array, cell_index idx) const;
   void get_edges_from_face(edge_array &array, face_index idx) const;
-  void get_edges_from_cell(edge_array &array, cell_index idx) const;
-  void get_faces_from_cell(face_array &array, cell_index idx) const;
+  //void get_edges_from_cell(edge_array &array, cell_index idx) const;
+  //void get_faces_from_cell(face_array &array, cell_index idx) const;
 
-  void get_neighbor_from_face(cell_index &neighbor, face_index idx) const;
+  void get_neighbor_from_edge(face_index &neighbor, edge_index idx) const;
 
   void locate_node(node_index &node, const Point &p);
   //void locate_edge(edge_index &edge, const Point &p);
   //void locate_face(face_index &face, const Point &p);
-  void locate_cell(cell_index &cell, const Point &p);
+  //void locate_cell(cell_index &cell, const Point &p);
 
   void unlocate(Point &result, const Point &p);
 
@@ -99,7 +99,7 @@ private:
 
 
   Array1<Point> points_;
-  Array1<int>   tets_;
+  Array1<int>   tris_;
   Array1<int>   neighbors_;
 
 };
@@ -107,4 +107,4 @@ private:
 } // namespace SCIRun
 
 
-#endif // SCI_project_MeshTet_h
+#endif // SCI_project_SurfDEG_h

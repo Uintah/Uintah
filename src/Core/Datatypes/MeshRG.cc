@@ -64,6 +64,7 @@ MeshRG::locate_node(node_index &node, const Point &p)
   node.k_ = (int)(p.z() + 0.5);
 }
 
+#if 0
 void
 MeshRG::locate_edge(edge_index & /* edge */, const Point & /* p */)
 {
@@ -75,6 +76,7 @@ MeshRG::locate_face(face_index & /* face */, const Point & /* p */)
 {
   // NOT IMPLEMENTED
 }
+#endif
 
 
 void
@@ -156,6 +158,50 @@ MeshRG::cell_end() const
 {
   return cell_iterator(this, nx_-1, ny_-1, nz_-1);
 }
+
+#if 0
+void
+MeshRG::get_nodes_from_edge(node_array &array, const edge_index &idx) const
+{
+}
+
+
+void
+MeshRG::get_nodes_from_face(node_array &array, const face_index &idx) const
+{
+}
+
+
+void
+MeshRG::get_nodes_from_cell(node_array &array, const cell_index &idx) const
+{
+}
+
+
+void
+MeshRG::get_edges_from_face(edge_array &array, const face_index &idx) const
+{
+}
+
+
+void
+MeshRG::get_edges_from_cell(edge_array &array, const cell_index &idx) const
+{
+}
+
+
+void
+MeshRG::get_faces_from_cell(face_array &array, const cell_index &idx) const
+{
+}
+
+
+void
+MeshRG::get_neighbor_from_face(cell_index &neighbor,
+			       const face_index &idx) const
+{
+}
+#endif
 
 
 #define MESHRG_VERSION 1
