@@ -653,7 +653,7 @@ void MDSPlusFieldReader::execute(){
       }
 
       if( readData || modeChange ) {
-	StructHexVolMesh *hvm = scinew StructHexVolMesh(nRadial, nTheta, nPhi);
+	StructHexVolMesh *hvm = scinew StructHexVolMesh(nRadial, nTheta-1, nPhi-1);
 
 	StructHexVolField<double> *sField[MAX_SCALAR];
 	StructHexVolField<Vector> *vField[MAX_VECTOR];
@@ -716,11 +716,11 @@ void MDSPlusFieldReader::execute(){
 	    remark( str.str() );
 	  }
 
-	  for( k=0; k<kdim; k++ ) {  // Phi loop.
+	  for( k=0; k<kdim-1; k++ ) {  // Phi loop.
 
 	    phi = grid_data[2][k];
 
-	    for( j=0; j<jdim; j++ ) {  // Theta loop.
+	    for( j=0; j<jdim-1; j++ ) {  // Theta loop.
 	      for( i=0; i<idim; i++ ) {  // R loop.
 
 		for( n=0; n<MAX_SCALAR; n++ ) {
@@ -785,13 +785,13 @@ void MDSPlusFieldReader::execute(){
 
 	int jIndex;
 
-	for( k=0; k<kdim; k++ ) {
+	for( k=0; k<kdim-1; k++ ) {
 
 	  node.k_ = k;
 
 	  phi = grid_data[2][k];
 
-	  for( j=0; j<jdim; j++ ) {
+	  for( j=0; j<jdim-1; j++ ) {
 
 	    node.j_ = j;
 
