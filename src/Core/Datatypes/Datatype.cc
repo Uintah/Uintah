@@ -33,20 +33,27 @@
 
 namespace SCIRun {
 
-static AtomicCounter current_generation("Datatypes generation counter", 1);
+static AtomicCounter* current_generation = 0;
+static Mutex init_lock("Datatypes generation counter initialization lock");
 
 Datatype::Datatype()
 : lock("Datatype ref_cnt lock")
 {
     ref_cnt=0;
-    generation=current_generation++;
+    if(!current_generation){
+      init_lock.lock();
+      if(!current_generation)
+	current_generation = new AtomicCounter("Datatypes generation counter", 1);
+      init_lock.unlock();
+    }
+    generation=(*current_generation)++;
 }
 
 Datatype::Datatype(const Datatype&)
     : lock("Datatype ref_cnt lock")
 {
     ref_cnt=0;
-    generation=current_generation++;
+    generation=(*current_generation)++;
 }
 
 Datatype& Datatype::operator=(const Datatype&)
@@ -54,7 +61,7 @@ Datatype& Datatype::operator=(const Datatype&)
     // XXX:
     // Should probably throw an exception if ref_cnt is > 0 or
     // something.
-    generation=current_generation++;
+    generation=(*current_generation)++;
     return *this;
 }
 
