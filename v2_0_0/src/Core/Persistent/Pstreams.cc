@@ -34,9 +34,6 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StringUtil.h>
-
-#include <sci_defs.h>
-
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
@@ -880,8 +877,7 @@ void FastPiostream::emit_pointer(int& have_data, int& pointer_id)
 // BinaryPiostream -- portable
 BinaryPiostream::~BinaryPiostream()
 {
-#if 0 //defined(__APPLE__) -- changed by DMW: I couldn't find any platforms
-      //                      that still require this. [11/13/03]
+#if defined(__APPLE__) && (__GNUC__ == 3) && (__GNUC_MINOR__  < 3)
   if (xdr)
     if ((xdr)->x_ops)
       if ((xdr)->x_ops->x_destroy)
