@@ -250,9 +250,10 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 		  for(int k=0;k<patches.z();k++){
 		     IntVector startcell = resolution*IntVector(i,j,k)/patches;
 		     IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches;
-		     const Patch* r = level->addPatch(lower+diag*Vector(i,j,k)*scale,
-							lower+diag*Vector(i+1,j+1,k+1)*scale,
-							startcell, endcell);
+		     const Patch* r = level->addPatch
+					(lower+diag*Vector(i,j,k)*scale,
+					 lower+diag*Vector(i+1,j+1,k+1)*scale,
+					 startcell, endcell);
 		     all(i,j,k)=const_cast<Patch*>(r);
 		  }
 	       }
@@ -427,6 +428,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.28  2000/06/05 19:51:56  guilkey
+// Formatting
+//
 // Revision 1.27  2000/05/31 23:44:55  rawat
 // modified arches and properties
 //
