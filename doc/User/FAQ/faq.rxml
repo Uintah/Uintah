@@ -70,22 +70,21 @@ doc.insertDocType("article", entities)
           problem by following these steps:
 	</para>
 	<para>
-	  <itemizedlist>
+	  <orderedlist>
 	    <listitem>
-	      <simpara>Edit src/Dataflow/Modules/Render/OpenGL.cc and replace this:</simpara>
-	    </listitem>
-	    <listitem>
-<pre>
+	      <simpara>Edit
+	      <filename>src/Dataflow/Modules/Render/OpenGL.cc</filename>
+	      and replace this:</simpara>
+	      <programlisting>
 if(!helper)
 {
   my_openglname= "OpenGL: " + myname_;
   helper=new OpenGLHelper(this);
   helper_thread_ = new Thread(helper, my_openglname.c_str());
 }
-</pre>
-	    </listitem>
-	    <listitem><simpara>With this:</simpara>
-	      <pre>
+	      </programlisting>
+	      <simpara>With this:</simpara>
+	      <programlisting>
 if(!helper_)
 {
   helper_=new OpenGLHelper(this);
@@ -96,13 +95,14 @@ if(!helper_)
   helper_thread_->activate(false);
   helper_thread_->detach();
 }
-</pre>
+	      </programlisting>
 	    </listitem>
 	    <listitem>
-	      <simpara>Change directoreis to SCIRun/&lt;bin&gt;/ and
-                       type 'gmake'</simpara>
+	      <simpara>Change directoreis to
+	      <filename>SCIRun/&lt;bin></filename>/ and type
+	      <command>gmake</command>.</simpara>
 	    </listitem>
-	  </itemizedlist> 
+	  </orderedlist>
 	</para>
       </answer>
     </qandaentry>
@@ -232,9 +232,10 @@ if(!helper_)
 	      </imageobject>
 	      <caption>
 		<para>
-		  This figure shows the relationship among &sr; and its packages.
-		  BioPSE consists of the basic &sr; software together with the BioPSE
-		  modules and support libraries.
+		  This figure shows the relationship among &sr; and
+		  its packages.  BioPSE consists of the basic &sr;
+		  software together with the BioPSE modules and
+		  support libraries.
 		</para>
 	      </caption>
 	    </mediaobject>
