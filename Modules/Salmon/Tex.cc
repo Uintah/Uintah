@@ -281,6 +281,11 @@ void GeomTexVolRender::SetQuantStuff(Array1< Vector > &vecs, int *v, int sz)
 
   quantnvol = v; // that should be it...
 }
+
+void GeomTexVolRender::set_bounds(Point &min, Point &max) {
+    myCube.Init(min, max);
+}
+
 void GeomTexVolRender::get_bounds(BBox& bound)
 {	
   for(int i=0;i<8;i++)

@@ -178,6 +178,7 @@ public:
   virtual GeomObj* clone();
   virtual void get_bounds(BBox&);
   virtual void get_bounds(BSphere&);
+  void set_bounds(Point &min, Point &max);
   
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
