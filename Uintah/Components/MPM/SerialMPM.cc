@@ -444,6 +444,26 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 	}
       }
 
+      // Apply grid boundary conditions to the velocity
+      // before storing the data
+      for(int face = 0; face<6; face++){
+	int bctype = region->getBCType(face);
+	switch(bctype){
+	  case NONE:
+	     // Do nothing
+	     break;
+	  case FIXED:
+	     gvelocity.fillFace(face,Vector(0.0,0.0,0.0));
+	     break;
+	  case SYMMETRY:
+	     gvelocity.fillFaceNormal(face);
+	     break;
+	  case NEIGHBOR:
+	     // Do nothing
+	     break;
+	}
+      }
+
       new_dw->put(gmass,         gMassLabel, vfindex, region);
       new_dw->put(gvelocity,     gVelocityLabel, vfindex, region);
       new_dw->put(externalforce, gExternalForceLabel, vfindex, region);
@@ -649,15 +669,37 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 
       old_dw->get(px,        pXLabel, matlindex, region, 0);
       old_dw->get(pvelocity, pVelocityLabel, matlindex, region, 0);
-      old_dw->get(pmass,          pMassLabel, matlindex, region, 0);
+      old_dw->get(pmass,     pMassLabel, matlindex, region, 0);
 
       // Get the arrays of grid data on which the new particle values depend
       NCVariable<Vector> gvelocity_star;
       NCVariable<Vector> gacceleration;
       delt_vartype delt;
 
-      new_dw->get(gvelocity_star, gMomExedVelocityStarLabel, vfindex, region, 0);
-      new_dw->get(gacceleration,  gMomExedAccelerationLabel, vfindex, region, 0);
+      new_dw->get(gvelocity_star,gMomExedVelocityStarLabel, vfindex, region, 0);
+      new_dw->get(gacceleration, gMomExedAccelerationLabel, vfindex, region, 0);
+
+      // Apply grid boundary conditions to the velocity_star and
+      // acceleration before interpolating back to the particles
+      for(int face = 0; face<6; face++){
+	int bctype = region->getBCType(face);
+	switch(bctype){
+	  case NONE:
+	     // Do nothing
+	     break;
+	  case FIXED:
+	     gvelocity_star.fillFace(face,Vector(0.0,0.0,0.0));
+	     gacceleration.fillFace(face,Vector(0.0,0.0,0.0));
+	     break;
+	  case SYMMETRY:
+	     gvelocity_star.fillFaceNormal(face);
+	     gacceleration.fillFaceNormal(face);
+	     break;
+	  case NEIGHBOR:
+	     // Do nothing
+	     break;
+	}
+      }
 
       old_dw->get(delt, deltLabel);
 
@@ -720,6 +762,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.41  2000/05/04 19:10:52  guilkey
+// Added code to apply boundary conditions.  This currently calls empty
+// functions which will be implemented soon.
+//
 // Revision 1.40  2000/05/04 17:30:32  tan
 //   Add surfaceNormal for boundary particle tracking.
 //

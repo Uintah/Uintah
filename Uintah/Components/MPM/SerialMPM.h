@@ -65,8 +65,13 @@ WARNING
 	 //////////
 	 // Insert Documentation Here:
 	 virtual void scheduleTimeAdvance(double t, double dt,
-					  const LevelP& level, SchedulerP&,
-					  const DataWarehouseP&, DataWarehouseP&);
+				  const LevelP& level, SchedulerP&,
+				  const DataWarehouseP&, DataWarehouseP&);
+
+  enum bctype { NONE=0,
+                FIXED,
+                SYMMETRY,
+                NEIGHBOR };
       private:
 	 //////////
 	 // Insert Documentation Here:
@@ -150,6 +155,10 @@ WARNING
    
 //
 // $Log$
+// Revision 1.20  2000/05/04 19:10:52  guilkey
+// Added code to apply boundary conditions.  This currently calls empty
+// functions which will be implemented soon.
+//
 // Revision 1.19  2000/05/04 17:31:17  tan
 //   Add surfaceNormal for boundary particle tracking.
 //
