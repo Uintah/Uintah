@@ -598,21 +598,23 @@ void ICE:: scheduleComputeLagrangianValues(const Patch* patch,
                             patch, old_dw, new_dw,this,
 			       &ICE::computeLagrangianValues);
 
-  int numICEMatls=d_sharedState->getNumICEMatls();
-  for (int m = 0; m < numICEMatls; m++)   {
+  int numALLMatls=d_sharedState->getNumMatls();
+  for (int m = 0; m < numALLMatls; m++)   {
     Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-    task->requires( new_dw,lb->rho_CCLabel,dwindex,patch,Ghost::None);
-    task->requires( old_dw,lb->vel_CCLabel,dwindex,patch,Ghost::None);
-    task->requires( old_dw,lb->temp_CCLabel,dwindex,patch,Ghost::None);
-    task->requires( new_dw,lb->mom_source_CCLabel,dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->int_eng_source_CCLabel,
-                  dwindex,patch,Ghost::None);
+    if(ice_matl){
+      task->requires( new_dw, lb->rho_CCLabel,       dwindex,patch,Ghost::None);
+      task->requires( old_dw, lb->vel_CCLabel,       dwindex,patch,Ghost::None);
+      task->requires( old_dw, lb->temp_CCLabel,      dwindex,patch,Ghost::None);
+      task->requires( new_dw, lb->mom_source_CCLabel,dwindex,patch,Ghost::None);
+      task->requires( new_dw, lb->int_eng_source_CCLabel,
+				                     dwindex,patch,Ghost::None);
 
-    task->computes( new_dw, lb->mom_L_CCLabel,      dwindex,patch);
-    task->computes( new_dw, lb->int_eng_L_CCLabel,  dwindex,patch);
-    task->computes( new_dw, lb->mass_L_CCLabel,     dwindex,patch);
+      task->computes( new_dw, lb->mom_L_CCLabel,      dwindex,patch);
+      task->computes( new_dw, lb->int_eng_L_CCLabel,  dwindex,patch);
+      task->computes( new_dw, lb->mass_L_CCLabel,     dwindex,patch);
+    }
  }
   sched->addTask(task);
 }
@@ -2121,63 +2123,53 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,  const Patch* patch,
 #endif
 
   int numALLMatls = d_sharedState->getNumMatls();
-  int numICEMatls = d_sharedState->getNumICEMatls();
   Vector    dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z();
-  vector<CCVariable<double> > rho_CC(numICEMatls);
-  vector<CCVariable<double> > temp_CC(numICEMatls);
-  vector<CCVariable<Vector> > vel_CC(numICEMatls);
-  vector<CCVariable<double> > int_eng_source(numICEMatls);
-  vector<CCVariable<Vector> > mom_source(numICEMatls);
-  vector<CCVariable<Vector> > mom_L(numICEMatls);
-  vector<CCVariable<double> > int_eng_L(numICEMatls); 
-  vector<CCVariable<double> > mass_L(numICEMatls);  
-/**/  int i, j, k;
-/**/  double d_rho, d_cv, d_temp;
-  
+
   //__________________________________ 
   //  Compute the Lagrangian quantities
-  for(int m = 0; m < numICEMatls; m++) {
-    Material* matl = d_sharedState->getMaterial( m );
-    int dwindex = matl->getDWIndex();
-    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-
-    new_dw->get(rho_CC[m],  lb->rho_CCLabel,     dwindex,patch,Ghost::None, 0);
-    old_dw->get(vel_CC[m],  lb->vel_CCLabel,     dwindex,patch,Ghost::None, 0);
-    old_dw->get(temp_CC[m], lb->temp_CCLabel,    dwindex,patch,Ghost::None, 0);
-    new_dw->get(mom_source[m],     lb->mom_source_CCLabel,dwindex,patch,
+  for(int m = 0; m < numALLMatls; m++) {
+   Material* matl = d_sharedState->getMaterial( m );
+   int dwindex = matl->getDWIndex();
+   ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+   if(ice_matl)  {               //  I C E
+    CCVariable<double> rho_CC, temp_CC;
+    CCVariable<Vector> vel_CC;
+    CCVariable<double> int_eng_source;
+    CCVariable<Vector> mom_source;
+    CCVariable<Vector> mom_L;
+    CCVariable<double> int_eng_L,mass_L;  
+    new_dw->get(rho_CC,  lb->rho_CCLabel,     dwindex,patch,Ghost::None, 0);
+    old_dw->get(vel_CC,  lb->vel_CCLabel,     dwindex,patch,Ghost::None, 0);
+    old_dw->get(temp_CC, lb->temp_CCLabel,    dwindex,patch,Ghost::None, 0);
+    new_dw->get(mom_source,     lb->mom_source_CCLabel,dwindex,patch,
 		                                            Ghost::None, 0);
-    new_dw->get(int_eng_source[m], lb->int_eng_source_CCLabel,dwindex,patch,
+    new_dw->get(int_eng_source, lb->int_eng_source_CCLabel,dwindex,patch,
 		                                            Ghost::None, 0);
-    new_dw->allocate(mom_L[m],     lb->mom_L_CCLabel,     dwindex,patch);
-    new_dw->allocate(int_eng_L[m], lb->int_eng_L_CCLabel, dwindex,patch);
-    new_dw->allocate(mass_L[m],    lb->mass_L_CCLabel,    dwindex,patch);
+    new_dw->allocate(mom_L,     lb->mom_L_CCLabel,     dwindex,patch);
+    new_dw->allocate(int_eng_L, lb->int_eng_L_CCLabel, dwindex,patch);
+    new_dw->allocate(mass_L,    lb->mass_L_CCLabel,    dwindex,patch);
     double cv = ice_matl->getSpecificHeat();
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
 	iter++) {
-        IntVector curcell = *iter;       
-/**/    i = curcell.x();
-/**/    j = curcell.y();
-/**/    k = curcell.z();
-/**/    d_rho = rho_CC[m][*iter];
-/**/    d_cv  = cv;
-/**/    d_temp= temp_CC[m][*iter];
-       
-      double mass = rho_CC[m][*iter] * vol;
-      mass_L[m][*iter] = mass; 
-        // +  mass_source[m][*iter];
+      IntVector curcell = *iter;       
 
-      mom_L[m][*iter] = vel_CC[m][*iter] * mass
-	  //- vel_CC[m][*iter] * mass_source[m][*iter]
-	  + mom_source[m][*iter];
+      double mass = rho_CC[*iter] * vol;
+      mass_L[*iter] = mass; 
+        // +  mass_source[*iter];
 
-      int_eng_L[m][*iter] = mass * cv * temp_CC[m][*iter]
-	  //-cv * temp_CC[m][*iter] * mass_source[m][*iter]
-	  + int_eng_source[m][*iter];
+      mom_L[*iter] = vel_CC[*iter] * mass
+	  //- vel_CC[m][*iter] * mass_source[][*iter]
+	  + mom_source[*iter];
+
+      int_eng_L[*iter] = mass * cv * temp_CC[*iter]
+	  //-cv * temp_CC[*iter] * mass_source[*iter]
+	  + int_eng_source[*iter];
     }
-    new_dw->put(mom_L[m],     lb->mom_L_CCLabel,     dwindex,patch);
-    new_dw->put(int_eng_L[m], lb->int_eng_L_CCLabel, dwindex,patch);
-    new_dw->put(mass_L[m],    lb->mass_L_CCLabel,    dwindex,patch);
+    new_dw->put(mom_L,     lb->mom_L_CCLabel,     dwindex,patch);
+    new_dw->put(int_eng_L, lb->int_eng_L_CCLabel, dwindex,patch);
+    new_dw->put(mass_L,    lb->mass_L_CCLabel,    dwindex,patch);
+   }
   }  // end of numALLMatl loop
    
   /*`==========DEBUG============*/ 
