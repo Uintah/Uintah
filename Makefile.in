@@ -189,6 +189,11 @@ cleanrest::
 
 objs: $(CLEANOBJS)
 
+cleantau:
+	rm -f Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.o
+	rm -f Packages/Uintah/CCA/Components/Schedulers/ThreadPool.o
+	rm -f Packages/Uintah/StandAlone/sus.o
+
 ifeq (,$(findstring objs,$(MAKECMDGOALS)))
 # This includes all of the dependencies.  We prepend the absolute path
 # to the obj dir to prevent make from wasting time searching for them
