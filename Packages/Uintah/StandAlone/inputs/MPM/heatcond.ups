@@ -26,20 +26,25 @@
 	<time_integrator>explicit</time_integrator>
    </MPM>
 
-   <PhysicalConstants>
+
+
+    <PhysicalConstants>
 	<gravity>[0,0,0]</gravity>
 	<ideal_gas_constant>1.0</ideal_gas_constant>
 	<pressure>1.0</pressure>
 	<viscosity>0.3</viscosity>
-   </PhysicalConstants>
+    </PhysicalConstants>
 
-   <MaterialProperties>
+    <MaterialProperties>
 	<MPM>
 	    <material>
                 <burn>
                  <type>null</type>
                 </burn>
                 <density>1000.0</density>
+                <thermal_conductivity>237</thermal_conductivity>
+                <specific_heat>903</specific_heat>
+                <heat_transfer_coefficient>111</heat_transfer_coefficient>
                 <comp_neo_hook>
                     <bulk_modulus>2000.0</bulk_modulus>
                     <shear_modulus>1500.0</shear_modulus>
@@ -55,7 +60,7 @@
 			<NormalForce>5</NormalForce>
 			<FaceForce face="x+">[1,0,0]</FaceForce>
 		    </BoundaryConditions>
-		    <temperature>600.</temperature>
+		    <temperature>873.</temperature>
  		</geom_object>
 
 		<geom_object>
@@ -69,22 +74,20 @@
 			<NormalForce>5</NormalForce>
 			<FaceForce face="x+">[1,0,0]</FaceForce>
 		    </BoundaryConditions>
-		    <temperature>300.</temperature>
+		    <temperature>573.</temperature>
+                    <thermal_conductivity>237</thermal_conductivity>
+                    <specific_heat>903</specific_heat>
  		</geom_object>
 		<velocity_field>0</velocity_field>
 
 	    </material>
 
-	    <contact>
-	      <type>single_velocity</type>
-	      <vel_fields>[1,2,3]</vel_fields>
-	    </contact>
+            <contact>
+               <type>single_velocity</type>
+               <vel_fields>[1,2,3]</vel_fields>
+            </contact>
 
-            <heat_conduction>
-              <thermal_conductivity>237</thermal_conductivity>
-              <specific_heat>903</specific_heat>
-              <heat_transfer_coefficient>111</heat_transfer_coefficient>
-            </heat_conduction>
+            <heat_conduction></heat_conduction>
 	    
 	</MPM>
 
@@ -116,4 +119,3 @@
     </InitialConditions>
 
 </Uintah_specification>
-
