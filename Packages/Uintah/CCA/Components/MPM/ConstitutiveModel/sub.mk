@@ -20,8 +20,8 @@ SRCS     += \
 	$(SRCDIR)/DamageModelFactory.cc \
 	$(SRCDIR)/DefaultHypoElasticEOS.cc \
 	$(SRCDIR)/DefaultHyperElasticEOS.cc \
-	$(SRCDIR)/EquationOfState.cc \
-	$(SRCDIR)/EquationOfStateFactory.cc \
+	$(SRCDIR)/MPMEquationOfState.cc \
+	$(SRCDIR)/MPMEquationOfStateFactory.cc \
 	$(SRCDIR)/HypoElasticPlastic.cc \
 	$(SRCDIR)/HyperElasticPlastic.cc \
 	$(SRCDIR)/IsoHardeningPlastic.cc \
