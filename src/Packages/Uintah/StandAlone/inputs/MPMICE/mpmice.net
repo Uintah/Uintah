@@ -20,7 +20,7 @@ set m3 [addModuleAtPosition "Uintah" "Selectors" "VectorFieldExtractor" 246 158]
 set m4 [addModuleAtPosition "Uintah" "Selectors" "ScalarFieldExtractor" 57 158]
 set m5 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 217 30]
 set m6 [addModuleAtPosition "SCIRun" "Render" "Viewer" 11 448]
-set m7 [addModuleAtPosition "Uintah" "Visualization" "NodeHedgehog" 243 315]
+set m7 [addModuleAtPosition "Uintah" "Visualization" "NodeHedgehog" 246 315]
 set m8 [addModuleAtPosition "Uintah" "Visualization" "GridVisualizer" 808 160]
 set m9 [addModuleAtPosition "Uintah" "Visualization" "RescaleColorMap" 76 235]
 set m10 [addModuleAtPosition "Uintah" "Selectors" "ParticleFieldExtractor" 426 159]
@@ -32,11 +32,9 @@ set m14 [addModuleAtPosition "Uintah" "Selectors" "ParticleFieldExtractor" 617 1
 addConnection $m0 0 $m2 0
 addConnection $m2 0 $m4 0
 addConnection $m2 0 $m3 0
-addConnection $m2 0 $m7 0
 addConnection $m7 0 $m6 0
 addConnection $m4 0 $m1 0
 addConnection $m1 0 $m6 1
-addConnection $m3 0 $m7 2
 addConnection $m2 0 $m8 0
 addConnection $m8 0 $m6 2
 addConnection $m4 0 $m9 1
@@ -49,6 +47,8 @@ addConnection $m12 0 $m13 1
 addConnection $m13 0 $m11 4
 addConnection $m10 0 $m13 0
 addConnection $m2 0 $m14 0
+addConnection $m5 0 $m7 2
+addConnection $m3 0 $m7 0
 
 set $m0-notes {}
 set $m0-show_status {1}
@@ -134,10 +134,10 @@ set $m6-ViewWindow_0-view-up-y {0.999751}
 set $m6-ViewWindow_0-view-up-z {0.0217845}
 set $m6-ViewWindow_0-view-fov {1.0055}
 set $m6-ViewWindow_0-view-eyep_offset-x {0}
-set $m6-ViewWindow_0-view-eyep_offset-y {1.36868e-315}
+set $m6-ViewWindow_0-view-eyep_offset-y {2.36241}
 set $m6-ViewWindow_0-view-eyep_offset-z {4.49664e-270}
 set $m6-ViewWindow_0-view-eyep_offset-x {0}
-set $m6-ViewWindow_0-view-eyep_offset-y {1.36868e-315}
+set $m6-ViewWindow_0-view-eyep_offset-y {2.36241}
 set $m6-ViewWindow_0-view-eyep_offset-z {4.49664e-270}
 set $m6-ViewWindow_0-bgcolor-r {0}
 set $m6-ViewWindow_0-bgcolor-g {0}
@@ -157,6 +157,10 @@ set $m6-ViewWindow_0-sr {1}
 set $m6-ViewWindow_0-do_bawgl {0}
 set $m6-ViewWindow_0-drawimg {0}
 set $m6-ViewWindow_0-saveprefix {}
+set $m6-ViewWindow_0-resx {0}
+set $m6-ViewWindow_0-resy {0}
+set $m6-ViewWindow_0-aspect {0}
+set $m6-ViewWindow_0-aspect_ratio {0}
 set $m7-notes {}
 set $m7-show_status {1}
 set $m7-length_scale {551}
@@ -175,23 +179,7 @@ set $m7-max_vector_z {0}
 set $m7-max_vector_length {1.41696e-05}
 set $m8-notes {}
 set $m8-show_status {1}
-set $m8-level1_grid_color {red}
-set $m8-level2_grid_color {green}
-set $m8-level3_grid_color {yellow}
-set $m8-level4_grid_color {magenta}
-set $m8-level5_grid_color {cyan}
-set $m8-level6_grid_color {blue}
-set $m8-level1_node_color {red}
-set $m8-level2_node_color {green}
-set $m8-level3_node_color {yellow}
-set $m8-level4_node_color {magenta}
-set $m8-level5_node_color {cyan}
-set $m8-level6_node_color {blue}
-set $m8-plane_on {0}
-set $m8-node_select_on {0}
 set $m8-var_orientation {1}
-set $m8-radius {0.01}
-set $m8-polygons {8}
 set $m8-nl {1}
 set $m8-index_x {0}
 set $m8-index_y {0}
