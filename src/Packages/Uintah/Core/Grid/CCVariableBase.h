@@ -45,7 +45,8 @@ WARNING
   
 ****************************************/
 
-#define constCCVariableBase constVariableBase<CCVariableBase>
+  class CCVariableBase;
+  typedef constVariableBase<CCVariableBase> constCCVariableBase;
 
    class CCVariableBase : public Variable {
    public:

@@ -46,7 +46,7 @@ WARNING
   
 ****************************************/
 
-#define constParticleVariableBase constVariableBase<ParticleVariableBase>
+  typedef constVariableBase<ParticleVariableBase> constParticleVariableBase;
 
    class ParticleVariableBase : public Variable {
    public:
