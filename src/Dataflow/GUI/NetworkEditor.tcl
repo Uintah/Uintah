@@ -101,6 +101,17 @@ proc makeNetworkEditor {} {
 
 
     pack .main_menu.file -side left
+    
+    menubutton .main_menu.help -text "Help" -underline 0 \
+	-menu .main_menu.help.menu -direction below
+    menu .main_menu.help.menu -tearoff false
+    .main_menu.help.menu add command -label "About..." -underline 0 \
+	-command  "showSplash"
+    .main_menu.help.menu add command -label "License..." -underline 0 \
+	-command  "licenseDialog"
+
+    pack .main_menu.help -side right
+    
     tk_menuBar .main_menu .main_menu.file
 
     frame .top -borderwidth 5
@@ -831,18 +842,127 @@ proc displayErrorWarningOrInfo { msg status } {
 }
 
 proc showSpash { steps image_file } {
+    showSplash $steps
+}
+
+proc showSplash { {steps none} } {
+    global SCIRUN_SRCDIR
+    set filename [file join $SCIRUN_SRCDIR main scisplash.ppm]
     toplevel .loading
     wm geometry .loading 504x482+135+170
     wm title .loading {Welcome to SCIRun}
     update idletasks
-    image create photo ::img::splash -file "$image_file"
+    image create photo ::img::splash -file "$filename"
     label .loading.splash -image ::img::splash
     pack .loading.splash
-    iwidgets::feedback .loading.fb -steps $steps -labeltext \
-	"{Loading package:                 }"
-    pack .loading.fb -padx 5 -fill x
+    if { ![string equal $steps none ] } {
+	iwidgets::feedback .loading.fb -steps $steps -labeltext \
+	    "{Loading package:                 }"
+	pack .loading.fb -padx 5 -fill x
+    } else {
+	button .loading.ok -text "OK" \
+	    -command "destroy .loading"
+	pack .loading.ok -side bottom -padx 5 -pady 5 -fill none
+    }
+
     update idletasks
 }
+
+ proc scroll {type W args} {
+
+ # ----------------------------------------------------------------------
+
+   set w $W.$type
+   set x $W.x
+   set y $W.y
+
+ # ----------------------------------------------------------------------
+
+   array set arg [list \
+     -borderwidth 0 \
+     -highlightthickness 0 \
+     -relief flat \
+     -xscrollcommand [list $x set] \
+     -yscrollcommand [list $y set] \
+   ]
+   array set arg $args
+
+ # ----------------------------------------------------------------------
+
+   frame $W \
+     -borderwidth 1 \
+     -class Scroll \
+     -highlightthickness 1 \
+     -relief sunken \
+     -takefocus 0
+
+   # create the scrollable widget
+   uplevel [linsert [array get arg] 0 $type $w]
+
+   scrollbar $x \
+     -borderwidth 0 \
+     -elementborderwidth 1 \
+     -orient horizontal \
+     -takefocus 0 \
+     -highlightthickness 0 \
+     -command [list $w xview]
+
+   scrollbar $y \
+     -borderwidth 0 \
+     -elementborderwidth 1 \
+     -orient vertical \
+     -takefocus 0 \
+     -highlightthickness 0 \
+     -command [list $w yview]
+
+   grid columnconfigure $W 1 -weight 1
+   grid    rowconfigure $W 1 -weight 1
+
+   grid $w -column 1 -row 1 -sticky nsew
+   grid $x -column 1 -row 2 -sticky nsew
+   grid $y -column 2 -row 1 -sticky nsew
+
+ # ----------------------------------------------------------------------
+
+   return $w
+
+ }
+
+
+
+proc licenseDialog {} {
+    global SCIRUN_SRCDIR
+    set filename [file join $SCIRUN_SRCDIR LICENSE]
+    set stream [open $filename r]
+    toplevel .license
+    wm geometry .license 504x482+135+170
+    wm title .license {UNIVERSITY OF UTAH RESEARCH FOUNDATION PUBLIC LICENSE}
+    frame .license.text -borderwidth 1 -class Scroll -highlightthickness 1 \
+	-relief sunken -takefocus 0
+    text .license.text.text -wrap word  -borderwidth 0 -relief flat \
+	-yscrollcommand ".license.text.y set"
+    scrollbar .license.text.y -borderwidth 0 -elementborderwidth 1 \
+	-orient vertical -takefocus 0 -highlightthicknes 0 \
+	-command ".license.text.text yview"
+    grid columnconfigure .license.text 0 -weight 1
+    grid rowconfigure .license.text    0 -weight 1
+    grid .license.text.text -column 0 -row 0 -sticky news
+    grid .license.text.y -column 1 -row 0 -sticky news
+
+    pack .license.text -expand 1 -fill both -side top
+    while { ![eof $stream] } {
+	gets $stream line
+	.license.text.text insert end "$line\n"
+    }
+    close $stream
+    .license.text.text configure -state disabled
+    bind .license.text.text <1> {focus %W}
+    button .license.ok -text OK -command {destroy .license}
+    pack .license.ok -padx 5 -pady 5 -side bottom
+
+    update idletasks
+}
+
 
 
 # Removes the element at pos from a list without a set - similar to lappend
