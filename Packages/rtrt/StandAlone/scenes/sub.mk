@@ -87,7 +87,7 @@ $(SRCDIR)/uintahisosurface.mo: $(SRCDIR)/uintahisosurface.o
 #	$(CXX) -c $(CCFLAGS) $<
 
 .SUFFIXES: .mo
-.o.mo:
+.o.mo: lib/libPackages_rtrt_Core.so lib/libCore_Extensions.so lib/libCore_Geometry.so lib/libCore_Malloc.so lib/libCore_Thread.so
 	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Malloc -lCore_Thread -lm
 
 CLEANPROGS := $(CLEANPROGS) $(SCENES) 
