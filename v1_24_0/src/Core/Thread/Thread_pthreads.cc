@@ -739,16 +739,20 @@ Mutex::Mutex(const char* name)
 
 Mutex::~Mutex()
 {
- // RHE 3.0 pthread_mutex_destroy returns EBUSY if you unlock an already
- // unlocked thread first.  So we force a lock/unlock before
- // destroying.  Probably better to just remove the unlock altogether
- // but this breaks the shutdown behavior.
+  // RHE 3.0 pthread_mutex_destroy returns EBUSY if you unlock an
+  // already unlocked thread first.  So we force a lock/unlock before
+  // destroying.  Probably better to just remove the unlock altogether
+  // but this breaks the shutdown behavior.  TODO: This fix doesn't
+  // really work.  Race condition can relock between our unlock and
+  // destroy calls.
   pthread_mutex_trylock(&priv_->mutex);
   pthread_mutex_unlock(&priv_->mutex);
-  if(pthread_mutex_destroy(&priv_->mutex) != 0) {
-    fprintf(stderr, "pthread_mutex_destroy() failed!!\n mutex=%s errno=%d\n",name_,errno);
+  const int tmp = pthread_mutex_destroy(&priv_->mutex);
+  if(tmp != 0 && tmp != EBUSY) {
+    fprintf(stderr, "pthread_mutex_destroy() failed!!\n mutex=%s errno=%d\n",
+            name_, tmp);
     throw ThreadError(std::string("pthread_mutex_destroy: ")
-		      +strerror(errno));
+                      +strerror(errno));
   }
   delete priv_;
   priv_=0;
@@ -844,14 +848,17 @@ RecursiveMutex::RecursiveMutex(const char* name)
 
 RecursiveMutex::~RecursiveMutex()
 {
- // RHE 3.0 pthread_mutex_destroy returns EBUSY if you unlock an already
- // unlocked thread first.  So we force a lock/unlock before
- // destroying.  Probably better to just remove the unlock altogether
- // but this breaks the shutdown behavior.
+  // RHE 3.0 pthread_mutex_destroy returns EBUSY if you unlock an
+  // already unlocked thread first.  So we force a lock/unlock before
+  // destroying.  Probably better to just remove the unlock altogether
+  // but this breaks the shutdown behavior.  TODO: This fix doesn't
+  // really work.  Race condition can relock between our unlock and
+  // destroy calls.
   pthread_mutex_trylock(&priv_->mutex);
   pthread_mutex_unlock(&priv_->mutex);
-  if(pthread_mutex_destroy(&priv_->mutex) != 0)
-      throw ThreadError(std::string("pthread_mutex_destroy: ")
+  const int tmp = pthread_mutex_destroy(&priv_->mutex);
+  if(tmp != 0 && tmp != EBUSY)
+    throw ThreadError(std::string("pthread_mutex_destroy: ")
 			+strerror(errno));
   delete priv_;
   priv_=0;
