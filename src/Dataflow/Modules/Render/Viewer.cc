@@ -809,7 +809,8 @@ Viewer::flushPort(int portid)
       {
 	const string name = string("snapshot") + to_string(i) + ".ppm";
 	view_window_[i]->redraw_if_needed();
-	view_window_[i]->renderer_->saveImage(name, "ppm", 640, 512);
+        // Make sure that the 640x480 here matches up with ViewWindow.cc defaults.
+	view_window_[i]->renderer_->saveImage(name, "ppm", 640, 480);
       }
       geomlock_.writeLock();
       flushViews();

@@ -78,17 +78,7 @@ void CastMLVtoHV::execute()
 {
   // must find ports and have valid data on inputs
   FieldIPort *iport_ = (FieldIPort*)get_iport("MaskedLatVolField");
-
-  if (!iport_) {
-    error("Unable to initialize iport 'MaskedLatVolField'.");
-    return;
-  }
-  
   FieldOPort *oport_ = (FieldOPort*)get_oport("HexVolField");
-  if (!oport_) {
-    error("Unable to initialize oport 'HexVolField'.");
-    return;
-  }
 
   FieldHandle ifieldH;
   if (!iport_->get(ifieldH) || 

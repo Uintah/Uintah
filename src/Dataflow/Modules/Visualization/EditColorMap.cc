@@ -1014,20 +1014,6 @@ EditColorMap::execute()
 {
   ColorMapIPort *inport = (ColorMapIPort *)get_iport("ColorMap");
   ColorMapOPort *outport = (ColorMapOPort *)get_oport("ColorMap");
-  GeometryOPort *ogeomport = (GeometryOPort *)get_oport("Geometry");
-
-  if (!inport) {
-    error("Unable to initialize iport 'ColorMap'.");
-    return;
-  }
-  if (!outport) {
-    error("Unable to initialize oport 'ColorMap'.");
-    return;
-  }
-  if (!ogeomport) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
 
   ColorMapHandle newcmap;
   if (inport->get(newcmap) && newcmap.get_rep() &&

@@ -27,12 +27,12 @@
 */
 
 
-//    File   : BuildInterpMatrix.h
+//    File   : BuildMappingMatrix.h
 //    Author : Michael Callahan
 //    Date   : Jan 2005
 
-#if !defined(BuildInterpMatrix_h)
-#define BuildInterpMatrix_h
+#if !defined(BuildMappingMatrix_h)
+#define BuildMappingMatrix_h
 
 #include <Core/Thread/Thread.h>
 #include <Core/Util/TypeDescription.h>
@@ -43,7 +43,7 @@
 
 namespace SCIRun {
 
-class BuildInterpMatrixAlgo : public DynamicAlgoBase
+class BuildMappingMatrixAlgo : public DynamicAlgoBase
 {
 public:
   virtual MatrixHandle execute(MeshHandle src, MeshHandle dst,
@@ -69,7 +69,7 @@ protected:
 
 
 template <class MSRC, class LSRC, class MDST, class LDST>
-class BuildInterpMatrixAlgoT : public BuildInterpMatrixAlgo
+class BuildMappingMatrixAlgoT : public BuildMappingMatrixAlgo
 {
 public:
   //! virtual interface. 
@@ -115,7 +115,7 @@ private:
 // Returns dist * dist, don't bother to do sqrt.
 template <class MSRC, class LSRC, class MDST, class LDST>
 double
-BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::find_closest_src_loc(typename LSRC::index_type &index, MSRC *mesh, const Point &p) const
+BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::find_closest_src_loc(typename LSRC::index_type &index, MSRC *mesh, const Point &p) const
 {
   double mindist = DBL_MAX;
 
@@ -141,7 +141,7 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::find_closest_src_loc(typename LS
 // Returns dist * dist, don't bother to do sqrt.
 template <class MSRC, class LSRC, class MDST, class LDST>
 double
-BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::find_closest_dst_loc(typename LDST::index_type &index, MDST *mesh, const Point &p) const
+BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::find_closest_dst_loc(typename LDST::index_type &index, MDST *mesh, const Point &p) const
 {
   double mindist = DBL_MAX;
   
@@ -166,7 +166,7 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::find_closest_dst_loc(typename LD
 
 template <class MSRC, class LSRC, class MDST, class LDST>
 MatrixHandle
-BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, 
+BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, 
 		       LDST>::execute(MeshHandle src_meshH, 
 				      MeshHandle dst_meshH, 
 				      int interp_basis,
@@ -177,6 +177,7 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
 {
   unsigned int i, j;
 
+  // Set up the data for the parallel run.
   BIData d;
   d.src_meshH = src_meshH;
   d.dst_meshH = dst_meshH;
@@ -188,7 +189,6 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
   MSRC *src_mesh = dynamic_cast<MSRC *>(src_meshH.get_rep());
   MDST *dst_mesh = dynamic_cast<MDST *>(dst_meshH.get_rep());
 
-  // output here
   typename LSRC::size_type src_size0;
   src_mesh->size(src_size0);
   typename LDST::size_type dst_size0;
@@ -197,6 +197,7 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
   const unsigned int src_size = (unsigned int)src_size0;
   const unsigned int dst_size = (unsigned int)dst_size0;
 
+  // Divide up the data amongst the processors in contiguous blocks.
   d.rowdata = scinew int[(dst_size)+1];
   d.rowdata[0] = 0;
   d.coldatav = scinew vector<int>[np];
@@ -210,20 +211,20 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
     d.dstmap = scinew vector<unsigned int>[dst_size];
   }
 
-#if 1  
+  // Do the execute.
   if (np==1)
-    parallel_execute(0, &d);
-  else
-    Thread::parallel(this, 
-       &BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute,
-       np, true, &d);
-#else
-  for (int i = 0; i < np; i++)
   {
-    parallel_execute(i, &d);
+    parallel_execute(0, &d);
   }
-#endif
+  else
+  {
+    Thread::parallel(this, 
+       &BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute,
+       np, true, &d);
+  }
 
+  // Collect the data back into a sparse row matrix.
+  // This is for source_to_single_dest.
   if ((interp_basis == 0) && source_to_single_dest)
   {
     for (i = 0; i < dst_size; i++)
@@ -254,10 +255,12 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
     return matrix;
   }
 
+  // Collect the data back into a sparse row matrix.
+  // All but source_to_single_dest go through here.
   unsigned int dsize = 0;
   for (j = 0; j < (unsigned int)np; j++)
   {
-    dsize = d.coldatav[j].size();
+    dsize += d.coldatav[j].size();
   }
   
   int *coldata = scinew int[dsize];
@@ -266,17 +269,6 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
   for (j = 0; j < (unsigned int)np; j++)
   {
     for (i = 0; i < d.coldatav[j].size(); i++)
-    {
-      coldata[c] = d.coldatav[j][i];
-      data[c] = d.datav[j][i];
-      ++c;
-    }
-  }
-
-  c = 0;
-  for (j = 0; j < (unsigned int)np; j++)
-  {
-    for (i=0; i < d.coldatav[j].size(); i++)
     {
       coldata[c] = d.coldatav[j][i];
       data[c] = d.datav[j][i];
@@ -304,7 +296,7 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
 
 template <class MSRC, class LSRC, class MDST, class LDST>
 void
-BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
+BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
 								 BIData *d)
 {
   const int interp_basis = d->interp_basis;
@@ -471,4 +463,4 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
 
 } // end namespace SCIRun
 
-#endif // BuildInterpMatrix_h
+#endif // BuildMappingMatrix_h

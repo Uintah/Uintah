@@ -262,19 +262,6 @@ void SolveMatrix::execute()
   rhsport = (MatrixIPort *)get_iport("RHS");
   solport = (MatrixOPort *)get_oport("Solution");
   
-  if (!matrixport) {
-    error("Unable to initialize iport 'Matrix'.");
-    return;
-  }
-  if (!rhsport) {
-    error("Unable to initialize iport 'RHS'.");
-    return;
-  }
-  if (!solport) {
-    error("Unable to initialize oport 'Solution'.");
-    return;
-  }
-  
   MatrixHandle matrix;
   MatrixHandle rhs;
   

@@ -74,15 +74,6 @@ void ConfigureElectrode::execute() {
   FieldIPort* ielec = (FieldIPort *) get_iport("Electrode");
   FieldOPort* oelec = (FieldOPort *) get_oport("Electrode");
   
-  if (!ielec) {
-    error("Unable to initialize iport 'Electrode'.");
-    return;
-  }
-  if (!oelec) {
-    error("Unable to initialize oport 'Electrode'.");
-    return;
-  }
-  
   FieldHandle ielecH;
 
   if (!ielec->get(ielecH))

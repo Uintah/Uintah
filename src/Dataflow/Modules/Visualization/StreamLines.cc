@@ -110,7 +110,7 @@ StreamLines::~StreamLines()
 
 
 //! interpolate using the generic linear interpolator
-static bool
+static inline bool
 interpolate(const VectorFieldInterfaceHandle &vfi, const Point &p, Vector &v)
 {
   return vfi->interpolate(v, p) && (v.safe_normalize() > 0.0);
@@ -428,12 +428,6 @@ StreamLines::execute()
   FieldHandle vfHandle;
   Field *vField;  // vector field
   
-  //must find vector field input port
-  if (!vfport) {
-    error("Unable to initialize iport 'Flow field'.");
-    return;
-  }
-   
   // the vector field input is required
   if (!vfport->get(vfHandle) || !(vField = vfHandle.get_rep())) {
     error( "No Vector field handle or representation" );
@@ -457,12 +451,6 @@ StreamLines::execute()
   FieldIPort* sfport = (FieldIPort*)get_iport("Seeds");
   FieldHandle sfHandle;
   Field *sField;  // seed point field
-
-  // must find seed field input port
-  if (!sfport) {
-    error("Unable to initialize iport 'Seeds'.");
-    return;
-  }
 
   // the seed field input is required
   if (!sfport->get(sfHandle) || !(sField = sfHandle.get_rep())) {
@@ -561,17 +549,10 @@ StreamLines::execute()
     update_state(Completed);
   }
    
-  // Get a handle to the output field port.
-  if( fHandle_.get_rep() ) {
-    FieldOPort *ofield_port = 
-      (FieldOPort *) get_oport("Streamlines");
-
-    if (!ofield_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
+  // Send the data downstream
+  if( fHandle_.get_rep() )
+  {
+    FieldOPort *ofield_port = (FieldOPort *) get_oport("Streamlines");
     ofield_port->send( fHandle_ );
   }
 }

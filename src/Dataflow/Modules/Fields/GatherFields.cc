@@ -101,12 +101,7 @@ GatherFields::execute()
     while (pi != range.second)
     {
       FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
-      if (!ifield)
-      {
-	error("Unable to initialize iport '" + to_string(pi->second) + "'.");
-	return;
-      }
-      
+
       // Increment here!  We do this because last one is always
       // empty so we can test for it before issuing empty warning.
       ++pi;
@@ -204,15 +199,11 @@ GatherFields::execute()
 	  warning("Copying data does not work for data of different kinds.");
 	  copy_data = false;
 	}
-        else if (same_data_location && fHandles[0]->basis_order() != 1)
-        {
-	  warning("Copying data does not work for non-node data locations.");
-	  copy_data = false;
-	}
+        const int new_basis = same_data_location?fHandles[0]->basis_order():1;
 	CompileInfoHandle ci = GatherFieldsAlgo::get_compile_info(ftd0);
 	Handle<GatherFieldsAlgo> algo;
 	if (!module_dynamic_compile(ci, algo)) return;
-	fHandle_ = algo->execute(fHandles, copy_data);
+	fHandle_ = algo->execute(fHandles, new_basis, copy_data);
       }
       else
       {
@@ -245,19 +236,10 @@ GatherFields::execute()
     }
   }
 
-  // Get a handle to the output field port.
+  // Send the data downstream
   if( fHandle_.get_rep() )
   {
-    FieldOPort *ofield_port = 
-      (FieldOPort *) get_oport("Output Field");
-
-    if (!ofield_port)
-    {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
+    FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
     ofield_port->send( fHandle_ );
   }    
 }

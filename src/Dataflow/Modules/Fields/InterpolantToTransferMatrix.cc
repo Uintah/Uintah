@@ -82,13 +82,11 @@ InterpolantToTransferMatrix::~InterpolantToTransferMatrix()
 void
 InterpolantToTransferMatrix::execute()
 {
+  warning("This module is deprecated, build a Mapping Matrix instead.");
+
   FieldIPort *itp_port = (FieldIPort *)get_iport("Interpolant");
   FieldHandle fitp_h;
 
-  if (!itp_port) {
-    error("Unable to initialize iport 'Interpolant'.");
-    return;
-  }
   if (!(itp_port->get(fitp_h) && fitp_h.get_rep()))
   {
     error("Could not get a handle or representation.");
@@ -105,16 +103,11 @@ InterpolantToTransferMatrix::execute()
     return;
   }
 
-  MatrixOPort *omp = (MatrixOPort *)getOPort("Transfer");
-  if (!omp) {
-    error("Unable to initialize oport 'Transfer'.");
-    return;
-  }
-    
   MatrixHandle omatrixhandle(algo->execute(this, fitp_h));
 
   if (omatrixhandle.get_rep())
   {
+    MatrixOPort *omp = (MatrixOPort *)getOPort("Transfer");
     omp->send(omatrixhandle);
   }
 }

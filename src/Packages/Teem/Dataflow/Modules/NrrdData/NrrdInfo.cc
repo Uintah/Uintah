@@ -292,11 +292,6 @@ void
 NrrdInfo::execute()
 {
   NrrdIPort *iport = (NrrdIPort*)get_iport("Query Nrrd"); 
-  if (!iport) 
-  {
-    error("Unable to initialize iport 'Query Nrrd'.");
-    return;
-  }
   
   // The input port (with data) is required.
   NrrdDataHandle nh;

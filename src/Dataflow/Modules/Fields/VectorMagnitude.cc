@@ -79,14 +79,7 @@ void
 VectorMagnitude::execute()
 {
   FieldIPort* ifp = (FieldIPort *)get_iport("Input Field");
-
   FieldHandle fieldin;
-
-  if (!ifp)
-  {
-    error( "Unable to initialize iport 'Input Field'.");
-    return;
-  }
 
   if (!(ifp->get(fieldin) && fieldin.get_rep()))
   {
@@ -119,12 +112,6 @@ VectorMagnitude::execute()
   if ( fieldout_.get_rep() )
   {
     FieldOPort* ofp = (FieldOPort *) get_oport("Output VectorMagnitude");
-
-    if (!ofp)
-    {
-      error("Unable to initialize oport 'Output VectorMagnitude'.");
-      return;
-    }
 
     // Send the data downstream
     ofp->send(fieldout_);

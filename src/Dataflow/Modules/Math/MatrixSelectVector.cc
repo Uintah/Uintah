@@ -114,16 +114,7 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which,
 				   int ncopy, bool cache)
 {
   MatrixOPort *ovec = (MatrixOPort *)get_oport("Vector");
-  if (!ovec) {
-    error("Unable to initialize oport 'Vector'.");
-    return;
-  }
-
   MatrixOPort *osel = (MatrixOPort *)get_oport("Selected Index");
-  if (!osel) {
-    error("Unable to initialize oport 'Selected Index'.");
-    return;
-  }
 
   MatrixHandle matrix(0);
   if (use_row_) {
@@ -221,11 +212,6 @@ MatrixSelectVector::execute()
   update_state(NeedData);
 
   MatrixIPort *imat = (MatrixIPort *)get_iport("Matrix");
-  if (!imat) {
-    error("Unable to initialize iport 'Matrix'.");
-    return;
-  }
-
   MatrixHandle mh;
   if (!(imat->get(mh) && mh.get_rep()))
   {
@@ -324,17 +310,9 @@ MatrixSelectVector::execute()
   // Specialized matrix multiply, with Weight Vector given as a sparse
   // matrix.  It's not clear what this has to do with MatrixSelectVector.
   MatrixIPort *ivec = (MatrixIPort *)get_iport("Weight Vector");
-  if (!ivec) {
-    error("Unable to initialize iport 'Weight Vector'.");
-    return;
-  }
   MatrixHandle weightsH;
   if (ivec->get(weightsH) && weightsH.get_rep()) {
     MatrixOPort *ovec = (MatrixOPort *)get_oport("Vector");
-    if (!ovec) {
-      error("Unable to initialize oport 'Vector'.");
-      return;
-    }
 
     ColumnMatrix *w = dynamic_cast<ColumnMatrix*>(weightsH.get_rep());
     if (w == 0)  {
@@ -374,11 +352,6 @@ MatrixSelectVector::execute()
 
   // If there is a current index matrix, use it.
   MatrixIPort *icur = (MatrixIPort *)get_iport("Current Index");
-  if (!icur) {
-    error("Unable to initialize iport 'Current Index'.");
-    return;
-  }
-
   MatrixHandle currentH;
   if (icur->get(currentH) && currentH.get_rep()) {
     which = (int)(currentH->get(0, 0));

@@ -91,10 +91,6 @@ TransformMesh::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle fHandle;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
   if (!(ifp->get(fHandle) && fHandle.get_rep())) {
     error("Input field is empty.");
     return;
@@ -150,10 +146,6 @@ TransformMesh::execute()
 
   if( fHandle_.get_rep() ) {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-    if (!ofield_port) {
-      error("Unable to initialize oport 'Output Field'.");
-      return;
-    }
     ofield_port->send(fHandle_);
   }
 }

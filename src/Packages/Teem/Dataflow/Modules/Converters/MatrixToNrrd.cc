@@ -94,23 +94,6 @@ void
   nrows_ = (NrrdOPort *)get_oport("Rows");
   ncols_ = (NrrdOPort *)get_oport("Columns");
 
-  if (!imat_) {
-    error("Unable to initialize iport 'Matrix'.");
-    return;
-  }
-  if (!ndata_) {
-    error("Unable to initialize oport 'Data'.");
-    return;
-  }
-  if (!nrows_) {
-    error("Unable to initialize oport 'Rows'.");
-    return;
-  }
-  if (!ncols_) {
-    error("Unable to initialize oport 'Columns'.");
-    return;
-  }
-
   // Determine if it is a Column, Dense or Sparse matrix
   MatrixHandle matH;
   if (!imat_->get(matH)) {

@@ -27,12 +27,12 @@
 */
 
 
-//    File   : ApplyInterpMatrix.h
+//    File   : ApplyMappingMatrix.h
 //    Author : Michael Callahan
 //    Date   : June 2002
 
-#if !defined(ApplyInterpMatrix_h)
-#define ApplyInterpMatrix_h
+#if !defined(ApplyMappingMatrix_h)
+#define ApplyMappingMatrix_h
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
@@ -42,16 +42,16 @@
 
 namespace SCIRun {
 
-class ApplyInterpMatrixAlgo : public DynamicAlgoBase
+class ApplyMappingMatrixAlgo : public DynamicAlgoBase
 {
 public:
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle src, MeshHandle dst,
-			      MatrixHandle interp,
+			      MatrixHandle mapping,
 			      int basis_order) = 0;
 
   virtual void execute_aux(FieldHandle src, FieldHandle dst,
-			   MatrixHandle interp) = 0;
+			   MatrixHandle mapping) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -64,32 +64,32 @@ public:
 
 
 template <class FSRC, class LSRC, class FDST, class LDST, class ACCUM>
-class ApplyInterpMatrixAlgoT : public ApplyInterpMatrixAlgo
+class ApplyMappingMatrixAlgoT : public ApplyMappingMatrixAlgo
 {
 public:
 
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle src, MeshHandle dst,
-			      MatrixHandle interp, int basis_order);
+			      MatrixHandle mapping, int basis_order);
 
   virtual void execute_aux(FieldHandle src, FieldHandle dst,
-			   MatrixHandle interp);
+			   MatrixHandle mapping);
 };
 
 
 template <class FSRC, class LSRC, class FDST, class LDST, class ACCUM>
 FieldHandle
-ApplyInterpMatrixAlgoT<FSRC, LSRC, 
+ApplyMappingMatrixAlgoT<FSRC, LSRC, 
 		       FDST, LDST, ACCUM>::execute(FieldHandle src_h,
 						   MeshHandle dst_h,
-						   MatrixHandle interp,
+						   MatrixHandle mapping,
 						   int basis_order)
 {
   typename FDST::mesh_type *dstmesh =
     dynamic_cast<typename FDST::mesh_type *>(dst_h.get_rep());
 
   FieldHandle ofield = scinew FDST(dstmesh, basis_order);
-  execute_aux(src_h, ofield, interp);
+  execute_aux(src_h, ofield, mapping);
 
   return ofield;
 }
@@ -97,18 +97,18 @@ ApplyInterpMatrixAlgoT<FSRC, LSRC,
 
 template <class FSRC, class LSRC, class FDST, class LDST, class ACCUM>
 void
-ApplyInterpMatrixAlgoT<FSRC, LSRC, 
+ApplyMappingMatrixAlgoT<FSRC, LSRC, 
 		       FDST, LDST, ACCUM>::execute_aux(FieldHandle src_h,
 						       FieldHandle dst_h,
-						       MatrixHandle interp)
+						       MatrixHandle mapping)
 {
   FSRC *fsrc = dynamic_cast<FSRC *>(src_h.get_rep());
   FDST *fdst = dynamic_cast<FDST *>(dst_h.get_rep());
   typename FSRC::mesh_handle_type msrc = fsrc->get_typed_mesh();
 
-  //ASSERT(interp.is_sparse());
-  ASSERT((unsigned int)(interp->nrows()) == fdst->fdata().size())
-  ASSERT((unsigned int)(interp->ncols()) == fsrc->fdata().size())
+  //ASSERT(mapping.is_sparse());
+  ASSERT((unsigned int)(mapping->nrows()) == fdst->fdata().size())
+  ASSERT((unsigned int)(mapping->ncols()) == fsrc->fdata().size())
 
   typename LDST::iterator dbi, dei;
   Array1<int> idx;
@@ -123,7 +123,7 @@ ApplyInterpMatrixAlgoT<FSRC, LSRC,
   {
     idx.remove_all();
     val.remove_all();
-    interp->getRowNonzeros(counter, idx, val);
+    mapping->getRowNonzeros(counter, idx, val);
     
     ACCUM accum(0);
     for (i = 0; i < idx.size(); i++)
@@ -144,4 +144,4 @@ ApplyInterpMatrixAlgoT<FSRC, LSRC,
 
 } // end namespace SCIRun
 
-#endif // ApplyInterpMatrix_h
+#endif // ApplyMappingMatrix_h

@@ -165,7 +165,7 @@ void Tensor::build_mat_from_eigens() {
     for (j=0; j<3; j++) {
       SE[i][j]=0;
       for (k=0; k<3; k++)
-	SE[i][j] += S[i][k] * E[k][j];
+	SE[i][j] += S[i][k] * E[j][k];  // S x E-transpose
     }
   for (i=0; i<3; i++)
     for (j=0; j<3; j++) {

@@ -62,7 +62,12 @@ ImageMesh::ImageMesh(unsigned i, unsigned j,
   transform_.pre_scale(max - min);
   transform_.pre_translate(Vector(min));
   transform_.compute_imat();
+
+  normal_ = Vector(0.0, 0.0, 0.0);
+  transform_.project_normal(normal_);
+  normal_.safe_normalize();
 }
+
 
 BBox
 ImageMesh::get_bounding_box() const
@@ -90,6 +95,19 @@ ImageMesh::get_canonical_transform(Transform &t)
 {
   t = transform_;
   t.post_scale(Vector(ni_ - 1.0, nj_ - 1.0, 1.0));
+}
+
+bool
+ImageMesh::synchronize(unsigned int flag)
+{
+  if (flag & NORMALS_E)
+  {
+    normal_ = Vector(0.0, 0.0, 0.0);
+    transform_.project_normal(normal_);
+    normal_.safe_normalize();
+    return true;
+  }
+  return false;
 }
 
 void

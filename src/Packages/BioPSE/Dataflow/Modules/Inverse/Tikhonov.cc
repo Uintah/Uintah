@@ -295,33 +295,6 @@ void Tikhonov::execute()
   MatrixOPort *oportRegParam = (MatrixOPort *)get_oport("RegParam");
   MatrixOPort *oportRegInvMat = (MatrixOPort *)get_oport("RegInverseMat");
 
-
-  if (!iportForMat) 
-  {
-    error("Unable to initialize iport 'ForwardMat'.");
-    return;
-  }
-  if (!iportRegMat) 
-  {
-    error("Unable to initialize iport 'RegularizationMat'.");
-    return;
-  }
-  if (!iportMeasDat) 
-  {
-    error("Unable to initialize iport 'MeasuredPots'.");
-    return;
-  }
-  if (!oportInvSol) 
-  {
-    error("Unable to initialize oport 'InverseSoln'.");
-    return;
-  }
-  if (!oportRegInvMat) 
-  {
-    error("Unable to initialize oport 'RegInverseMat'.");
-    return;
-  }
-    	
   // DEFINE MATRIX HANDLES FOR INPUT/OUTPUT PORTS
   MatrixHandle hMatrixForMat, hMatrixRegMat, hMatrixMeasDat;
   //MatrixHandle hMatrixRegInvMat, hMatrixInvSol;

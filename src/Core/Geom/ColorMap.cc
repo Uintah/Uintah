@@ -61,6 +61,11 @@ Persistent* ColorMap::maker()
 PersistentTypeID ColorMap::type_id("ColorMap", "Datatype", maker);
 
 
+GeomColormapInterface::~GeomColormapInterface()
+{
+}
+
+
 ColorMap::ColorMap()
   : rawRampAlpha_(),
     rawRampAlphaT_(),

@@ -92,9 +92,10 @@ itcl_class SCIRun_Render_ViewSlices {
 	upvar \#0 [modname]-min min [modname]-max max
 	set ww [expr $max-$min]
 	set wl [expr $min+$ww/2]
+	set rez [expr $ww/1000]
 	foreach tab $vp_tabs {
-	    $tab.clutww.scale configure -from $min -to $max
-	    $tab.clutwl.scale configure -from $min -to $max
+	    $tab.clutww.scale configure -from 0 -to $ww -resolution $rez
+	    $tab.clutwl.scale configure -from $min -to $max -resolution $rez
 	    $tab.clutww.scale set $ww
 	    $tab.clutwl.scale set $wl
 	}
@@ -202,11 +203,11 @@ itcl_class SCIRun_Render_ViewSlices {
 	$f.zoom.scale configure -command \
 	    "$this-c redraw $gl"
 
-	labeledSlider $f.clutww "Window Width:" $prefix-clut_ww 1 2000 3
+	labeledSlider $f.clutww "Window Width:" [modname]-clut_ww 1 2000 3
 	$f.clutww.scale configure -command \
 	    "$this-c rebind $gl"
 
-	labeledSlider $f.clutwl "Window Level:" $prefix-clut_wl 1 2000 3
+	labeledSlider $f.clutwl "Window Level:" [modname]-clut_wl 1 2000 3
 	$f.clutwl.scale configure -command \
 	    "$this-c rebind $gl"
 
@@ -339,6 +340,29 @@ itcl_class SCIRun_Render_ViewSlices {
 	pack [gl_frame $botr "Bottom Right" $main] -expand 1 -fill both
 
 
+    }
+
+    method raise_color {button color module_command} {
+        global $color
+        set windowname .ui[modname]_color
+        if {[winfo exists $windowname]} {
+	    destroy $windowname
+	}
+	# makeColorPicker now creates the $window.color toplevel.
+	makeColorPicker $windowname $color \
+	    "$this set_color $button $color $module_command" \
+	    "destroy $windowname"
+    }
+    
+    method set_color { button color { module_command "" } } {
+	upvar \#0 $color-r r $color-g g $color-b b
+	# format the r,g,b colors into a hexadecimal string representation
+	set colstr [format \#%04x%04x%04x [expr int($r * 65535)] \
+			[expr int($g * 65535)] [expr int($b * 65535)]]
+	$button config -background $colstr -activebackground $colstr
+	if { [string length $module_command] } {
+	    $this-c $module_command
+	}
     }
 
 }

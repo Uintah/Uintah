@@ -141,7 +141,7 @@ void BuildTriFEMatrix::parallel(int proc)
 
   barrier_.wait(np_);
   
-  TriSurfMesh::Node::array_type neib_nodes;
+  vector<TriSurfMesh::Node::index_type> neib_nodes;
 
   for(i=start_node;i<end_node;i++){
     rows_[r++]=mycols.size();
@@ -294,7 +294,7 @@ void BuildTriFEMatrix::add_lcl_gbl(double lcl_a[3][3], TriSurfMesh::Face::index_
     if (ii>=s && ii<e)          //! the row to update belongs to the process, proceed...
       for (int j=0; j<3; j++) {      
 	int jj = face_nodes[j];
-	pA_->get(ii, jj) += lcl_a[i][j];
+	pA_->add(ii, jj, lcl_a[i][j]);
       }
   }
 

@@ -253,7 +253,7 @@ execute(MeshHandle& mHandle,
   MESH *imesh = (MESH *) mHandle.get_rep();
   typename MESH::Node::iterator inodeItr;
   bool single_element = false;
-  if (connectH->nrrd->dim == 1)
+  if (connectH != 0 && connectH->nrrd->dim == 1)
     single_element = true;
 
   imesh->begin( inodeItr );

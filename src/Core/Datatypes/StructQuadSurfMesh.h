@@ -133,6 +133,7 @@ public:
   double get_area(const Face::index_type &idx) const { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
 
+  virtual bool has_normals() const { return true; }
   void get_normal(Vector &, const Node::index_type &) const;
 
   //! get the center point (in object space) of an element

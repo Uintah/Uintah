@@ -301,16 +301,6 @@ MRITissueClassifier::execute()
   NrrdIPort *FSport = (NrrdIPort*)get_iport("FATSAT");
   NrrdOPort *OutPort = (NrrdOPort *)get_oport("Tissue");
 
-  if (!T1port || !T2port || !PDport || !FSport) 
-  {
-    error("Unable to initialize iport.");
-    return;
-  }
-  
-  if (!OutPort) {
-    error("Unable to initialize Out Port 'Tissue'.");
-    return;
-  }
   update_state(Module::NeedData);
   if (!T1port->get(m_T1_Data) || !m_T1_Data.get_rep() ||
       !T2port->get(m_T2_Data) || !m_T2_Data.get_rep() ||

@@ -75,10 +75,6 @@ void
 ChooseNrrd::execute()
 {
   NrrdOPort *onrrd = (NrrdOPort *)get_oport("Nrrd");
-  if (!onrrd) {
-    error("Unable to initialize oport 'Nrrd'.");
-    return;
-  }
 
   port_range_type range = get_iports("Nrrd");
   if (range.first == range.second)
@@ -120,10 +116,6 @@ ChooseNrrd::execute()
     }
 
     inrrd = (NrrdIPort *)get_iport(port_number);
-    if (!inrrd) {
-      error("Unable to initialize iport '" + to_string(port_number) + "'.");
-      return;
-    }
     inrrd->get(nrrd);
   }
   

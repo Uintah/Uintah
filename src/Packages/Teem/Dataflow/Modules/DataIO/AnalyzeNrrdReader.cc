@@ -192,15 +192,8 @@ void AnalyzeNrrdReader::execute(){
   // Create handle to data
   NrrdDataHandle sciNrrdHandle(sciNrrd);
 
-  // Initialize output port
-  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
-
-  if( !onrrd_ ) {
-    error("(AnalyzeNrrdReader::execute) Unable to initialize oport 'Nrrd'.");
-    return;
-  }
-
   // Send nrrd data downstream
+  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
   onrrd_->send(sciNrrdHandle);
 
   /*

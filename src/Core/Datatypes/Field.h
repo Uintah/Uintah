@@ -77,6 +77,8 @@ public:
   virtual const string get_type_name(int n = -1) const;
   virtual bool is_scalar() const = 0;
 
+  virtual unsigned int data_size() const = 0;
+
 protected:
   //! Where data is associated.
   int           order_;

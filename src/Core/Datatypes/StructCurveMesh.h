@@ -111,7 +111,8 @@ public:
   bool get_neighbor(Edge::index_type &neighbor, Edge::index_type edge,
 		    Node::index_type node) const
   {ASSERTFAIL("StructCurveMesh::get_neighbor for edges needs to be implemented"); }
-  void get_neighbors(Node::array_type &array, Node::index_type idx) const
+  void get_neighbors(vector<Node::index_type> &array,
+                     Node::index_type idx) const
   {ASSERTFAIL("StructCurveMesh::get_neighbor for nodes needs to be implemented"); }
 
   //! Get the size of an elemnt (length, area, volume)

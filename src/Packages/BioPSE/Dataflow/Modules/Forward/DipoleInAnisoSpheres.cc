@@ -110,32 +110,12 @@ void DipoleInAnisoSpheres::execute() {
 
   // get input ports
   hInSource = (FieldIPort*)get_iport("Dipole Sources");
-  if(!hInSource) { // verify that the port was found
-	error("impossible to initialize input port 'Dipole Sources'");
-	return;
-  }
   hInElectrodes = (FieldIPort*)get_iport("Electrodes");
-  if(!hInElectrodes) {
-	error("impossible to initialize input port 'Electrodes'");
-	return;
-  }
   hInConductivities = (MatrixIPort*)get_iport("AnisoConductivities");
-  if(!hInConductivities) {
-	error("impossible to initialize input port 'AnisoConductivities'");
-	return;
-  }
   hInRadii = (MatrixIPort*)get_iport("Radii");
-  if(!hInRadii) {
-	error("impossible to initialize input port 'Radii'");
-	return;
-  }
 
   // get output ports
   hOutPotentials = (FieldOPort*)get_oport("ElectrodePotentials");
-  if(!hOutPotentials) {
-	error("impossible to initialize output port 'ElectrodePotentials'");
-	return;
-  }
 
   update_state(NeedData);
 

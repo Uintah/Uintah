@@ -41,6 +41,7 @@ itcl_class SCIRun_FieldsOther_FieldInfo {
 
 	# these won't be saved 
 	global $this-fldname
+	global $this-generation
 	global $this-typename
 	global $this-datamin
 	global $this-datamax
@@ -54,6 +55,7 @@ itcl_class SCIRun_FieldsOther_FieldInfo {
         global $this-sizey
         global $this-sizez
 	set $this-fldname "---"
+	set $this-generation "---"
 	set $this-typename "---"
 	set $this-datamin "---"
 	set $this-datamax "---"
@@ -87,6 +89,7 @@ itcl_class SCIRun_FieldsOther_FieldInfo {
 	set att [$w.att childsite]
 	
 	entrypair $att.l1 "Name" $this-fldname
+	entrypair $att.l1a "Generation" $this-generation
 	labelpair $att.l2 "Typename" $this-typename
         labelpair3 $att.l3 "Center (x,y,z)" $this-cx $this-cy $this-cz
         labelpair3 $att.l4 "Size (x,y,z)" $this-sizex $this-sizey $this-sizez
@@ -94,7 +97,7 @@ itcl_class SCIRun_FieldsOther_FieldInfo {
 	labelpair $att.l7 "# Nodes" $this-numnodes
 	labelpair $att.l8 "# Elements" $this-numelems
 	labelpair $att.l9 "Data at" $this-dataat
-	pack $att.l1 $att.l2 $att.l3 $att.l4 $att.l5 \
+	pack $att.l1 $att.l1a $att.l2 $att.l3 $att.l4 $att.l5 \
 	     $att.l7 $att.l8 $att.l9 -side top -expand y -fill x
 
 	makeSciButtonPanel $w $w $this

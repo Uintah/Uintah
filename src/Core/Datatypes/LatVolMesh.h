@@ -472,7 +472,7 @@ public:
   { get_center(p, i); }
 
   void get_normal(Vector &/*normal*/, const Node::index_type &/*index*/) const
-  { ASSERTFAIL("not implemented") }
+  { ASSERTFAIL("LatVolMesh::get_normal not implemented") }
 
   void get_random_point(Point &, const Elem::index_type &, int seed=0) const;
 

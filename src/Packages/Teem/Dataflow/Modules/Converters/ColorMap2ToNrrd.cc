@@ -89,25 +89,12 @@ ColorMap2ToNrrd::execute()
     last_generation_ = cmap2->generation;
 
     Array3<float> adata(256, 512, 4);
-    
-    // Clear the image.
-    for (int i=0; i<adata.dim1(); i++)
-    {
-      for(int j=0; j<adata.dim2(); j++)
-      {
-	adata(i,j,0) = 0.0;
-	adata(i,j,1) = 0.0;
-	adata(i,j,2) = 0.0;
-	adata(i,j,3) = 0.0;
-      }
-    }
+    adata.initialize(0.0);
 
     // Rasterize widgets
     vector<CM2WidgetHandle>& widget = cmap2->widgets();
     for (unsigned int i=0; i<widget.size(); i++)
-    {
-      widget[i]->rasterize(adata, cmap2->faux());
-    }
+      widget[i]->rasterize(adata);
 
     // Clean up any image overflows.
     for (int i=0; i<adata.dim1(); i++)

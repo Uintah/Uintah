@@ -1332,6 +1332,27 @@ ViewWindow::redraw_if_needed()
   }
 }
 
+
+// Used by "redraw" tcl_command.  We check to see if there is aleady a
+// redraw message on the mailbox queue before we bother to add a new
+// one.
+static bool
+check_for_redraw_msg(MessageBase *const& a, MessageBase *const& b)
+{
+  if (a->type == MessageTypes::ViewWindowRedraw &&
+      b->type == MessageTypes::ViewWindowRedraw)
+  {
+    ViewerMessage *av = (ViewerMessage *)a;
+    ViewerMessage *bv = (ViewerMessage *)b;
+    if (av->rid == bv->rid)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 void
 ViewWindow::tcl_command(GuiArgs& args, void*)
 {
@@ -1372,16 +1393,15 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     // We need to dispatch this one to the  remote thread We use an ID string
     // instead of a pointer in case this viewwindow gets killed by the time the
     // redraw message gets dispatched.
-
-    // TODO: Pointer works as well as tag, just need to verify it's
-    // still valid. - MIKE
-    // TODO: Make mailbox send that discards redundant messages.
 #ifdef __APPLE__
     if (args.count() > 2) renderer_->apple_wait_a_second_=true;
 #endif
-    if(!viewer_->mailbox.trySend(scinew ViewerMessage(id_)))
+    
+    ViewerMessage *tmp = scinew ViewerMessage(id_);
+    if (!viewer_->mailbox.sendIfNotSentLast(tmp, check_for_redraw_msg))
     {
-      //cerr << "Redraw event dropped, mailbox full!\n";
+      // Message wasn't needed, delete it.
+      delete tmp;
     }
   } else if(args[1] == "anim_redraw"){
     // We need to dispatch this one to the remote thread We use an ID string

@@ -289,9 +289,8 @@ itcl_class expscale {
 	set enum [format "%e" $value]
 	set spl [split $enum e] 
 	set left [lindex $spl 0]
-	set right [format "%d" [lindex $spl end]]
-	
-	#set tright [expr $right * 1]
+	set right [format "%.0f" [lindex $spl end]]
+
 	set decimalplaces [expr abs($right) + 2]
 
 	set exp 2

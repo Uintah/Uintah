@@ -130,19 +130,6 @@ TendEpireg::execute()
   igrad_ = (NrrdIPort *)get_iport("ngrad");
   onrrd_ = (NrrdOPort *)get_oport("nout");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'nin'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'nout'.");
-    return;
-  }
-  if (!igrad_) {
-    error("Unage to initialize iport 'ngrad'.");
-    return;
-  }
-
   bool we_own_the_data;
   vector<double> *mat=0;
 

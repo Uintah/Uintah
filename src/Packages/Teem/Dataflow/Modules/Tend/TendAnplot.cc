@@ -81,10 +81,6 @@ TendAnplot::execute()
 
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!onrrd_) {
-    error("Unable to initialize oport 'OutputNrrd'.");
-    return;
-  }
   Nrrd *nout = nrrdNew();
 
   if (tenAnisoPlot(nout, get_anisotropy(anisotropy_.get()), 

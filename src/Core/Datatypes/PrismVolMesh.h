@@ -527,7 +527,8 @@ public:
   // Use this one instead
   bool get_neighbor(Face::index_type &neighbor, Face::index_type idx) const;
   void get_neighbors(Cell::array_type &array, Cell::index_type idx) const;
-  void get_neighbors(Node::array_type &array, Node::index_type idx) const;
+  void get_neighbors(vector<Node::index_type> &array,
+                     Node::index_type idx) const;
 
   void get_center(Point &result, Node::index_type idx) const;
   void get_center(Point &result, Edge::index_type idx) const;

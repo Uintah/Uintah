@@ -157,27 +157,6 @@ void
   ifield_ = (FieldIPort *)get_iport("OriginalField");
   ofield_ = (FieldOPort *)get_oport("OutputField");
 
-  if (!ndata_) {
-    error("Unable to initialize iport 'Data'.");
-    return;
-  }
-  if (!npoints_) {
-    error("Unable to initialize iport 'Points'.");
-    return;
-  }
-  if (!nconnect_) {
-    error("Unable to initialize iport 'Connections'.");
-    return;
-  }
-  if (!ifield_) {
-    error("Unable to initialize iport 'OriginalField'.");
-    return;
-  }
-  if (!ofield_) {
-    error("Unable to initialize oport 'OutputField'.");
-    return;
-  }
-  
   NrrdDataHandle dataH;
   NrrdDataHandle pointsH;
   NrrdDataHandle connectH;
@@ -639,7 +618,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       
     // create mesh
     const TypeDescription *mtd = mHandle->get_type_description();
-      
+
     remark( "Creating an unstructured " + mtd->get_name() );
       
     CompileInfoHandle ci_mesh =
@@ -771,14 +750,21 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     if (topology_ == UNSTRUCTURED) {
       // This would only get here for point clouds with no connectivity
       const TypeDescription *mtd = mHandle->get_type_description();
-	  
+
       remark( "Creating an unstructured " + mtd->get_name() );
-	  
-      CompileInfoHandle ci_mesh =
-	NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
+
+      CompileInfoHandle ci_mesh = 0;
+      if (has_data_) {
+	ci_mesh = NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
 					      mtd,
 					      pointsH->nrrd->type,
 					      dataH->nrrd->type);
+      } else {
+	ci_mesh = NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
+					      mtd,
+					      pointsH->nrrd->type,
+					      pointsH->nrrd->type);
+      }
 	  
       Handle<UnstructuredNrrdToFieldMeshAlgo> algo_mesh;
 	  

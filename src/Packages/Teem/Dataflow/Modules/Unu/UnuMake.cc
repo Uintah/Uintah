@@ -606,10 +606,6 @@ void UnuMake::execute()
 
   // Send the data downstream.
   NrrdOPort *outport = (NrrdOPort *)get_oport("OutputNrrd");
-  if (!outport) {
-    error("Unable to initialize oport 'OutportNrrd'.");
-    return;
-  }
   outport->send(read_handle_);
 
   update_state(Completed);

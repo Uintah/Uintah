@@ -36,7 +36,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Modules/Fields/ChangeFieldBasis.h>
-#include <Dataflow/Modules/Fields/ApplyInterpMatrix.h>
+#include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
 #include <Core/Containers/StringUtil.h>
 #include <map>
 #include <iostream>
@@ -107,11 +107,7 @@ ChangeFieldBasis::update_input_attributes(FieldHandle f)
 void
 ChangeFieldBasis::execute()
 {
-  FieldIPort *iport = (FieldIPort*)get_iport("Input Field"); 
-  if (!iport) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
+  FieldIPort *iport = (FieldIPort*)get_iport("Input"); 
   
   // The input port (with data) is required.
   FieldHandle fh;
@@ -129,18 +125,10 @@ ChangeFieldBasis::execute()
   }
 
   // The output port is required.
-  FieldOPort *ofport = (FieldOPort*)get_oport("Output Field");
-  if (!ofport) {
-    error("Unable to initialize oport 'Output Field'.");
-    return;
-  }
+  FieldOPort *ofport = (FieldOPort*)get_oport("Output");
 
   // The output port is required.
-  MatrixOPort *omport = (MatrixOPort*)get_oport("Interpolant");
-  if (!omport) {
-    error("Unable to initialize oport 'Interpolant'.");
-    return;
-  }
+  MatrixOPort *omport = (MatrixOPort*)get_oport("Mapping");
 
   int basis_order = fh->basis_order();
   const string &bstr = outputdataat_.get();
@@ -168,9 +156,11 @@ ChangeFieldBasis::execute()
   {
     // No changes, just send the original through (it may be nothing!).
     remark("Passing field from input port to output port unchanged.");
-    warning("Interpolant for that location combination is not yet supported.");
     ofport->send(fh);
-    omport->send(0);
+
+    MatrixHandle m(SparseRowMatrix::identity(fh->data_size()));
+    omport->send(m);
+
     return;
   }
 
@@ -195,10 +185,10 @@ ChangeFieldBasis::execute()
     const TypeDescription *oftd = ef->get_type_description();
     const TypeDescription *oltd = ef->order_type_description();
     CompileInfoHandle ci =
-      ApplyInterpMatrixAlgo::get_compile_info(iftd, iltd,
+      ApplyMappingMatrixAlgo::get_compile_info(iftd, iltd,
 					      oftd, oltd,
 					      actype, false);
-    Handle<ApplyInterpMatrixAlgo> algo;
+    Handle<ApplyMappingMatrixAlgo> algo;
     if (module_dynamic_compile(ci, algo))
     {
       algo->execute_aux(fh, ef, interpolant);
@@ -209,11 +199,11 @@ ChangeFieldBasis::execute()
   {
     if (omport->nconnections() > 0)
     {
-      error("Interpolant for that location combination is not supported.");
+      error("Mapping for that location combination is not supported.");
     }
     else
     {
-      warning("Interpolant for that location combination is not supported.");
+      warning("Mapping for that location combination is not supported.");
     }
   }
 

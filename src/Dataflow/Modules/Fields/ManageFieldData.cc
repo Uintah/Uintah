@@ -85,10 +85,6 @@ ManageFieldData::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
   if (!(ifp->get(ifieldhandle) && (ifieldhandle.get_rep())))
   {
     error( "No field available in the 'Input Field' port.");
@@ -130,13 +126,7 @@ ManageFieldData::execute()
     else
     {
       MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
-      if (!omp) {
-	error("Unable to initialize oport 'Output Matrix'.");
-      }
-      else
-      {
-	omp->send(algo_field->execute(ifieldhandle, datasize));
-      }
+      omp->send(algo_field->execute(ifieldhandle, datasize));
     }
   }
 
@@ -144,10 +134,6 @@ ManageFieldData::execute()
   FieldHandle result_field;
   MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
   MatrixHandle imatrixhandle;
-  if (!imatrix_port) {
-    error("Unable to initialize iport 'Input Matrix'.");
-    return;
-  }
   if (!(imatrix_port->get(imatrixhandle) && imatrixhandle.get_rep()))
   {
     remark("No input matrix connected, sending field as is.");
@@ -246,10 +232,6 @@ ManageFieldData::execute()
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
-  if (!ofp) {
-    error("Unable to initialize oport 'Output Field'.");
-    return;
-  }
   ofp->send(result_field);
 }
 

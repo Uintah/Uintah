@@ -147,18 +147,6 @@ void BuildTransform::execute()
   ogeom_ = (GeometryOPort *)get_oport("Geometry");
   string which_transform=which_transform_gui_.get();
 
-  if (!imatrix_) {
-    error("Unable to initialize iport 'Matrix'.");
-    return;
-  }
-  if (!omatrix_) {
-    error("Unable to initialize oport 'Matrix'.");
-    return;
-  }
-  if (!ogeom_) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
   // create the widget
   if (!have_been_initialized_) {
     Point C, R, D, I;

@@ -125,11 +125,6 @@ UnuCrop::execute()
   NrrdDataHandle nrrdH;
   NrrdIPort* inrrd = (NrrdIPort *)get_iport("Nrrd");
 
-  if (!inrrd) {
-    error("Unable to initialize iport 'Nrrd'.");
-    return;
-  }
-
   if (!inrrd->get(nrrdH) || !nrrdH.get_rep()) {
     error( "No handle or representation" );
     return;
@@ -137,11 +132,6 @@ UnuCrop::execute()
 
   MatrixHandle matrixH;
   MatrixIPort* imatrix = (MatrixIPort *)get_iport("Current Index");
-
-  if (!imatrix) {
-    error("Unable to initialize iport 'Current Index'.");
-    return;
-  }
 
   num_axes_.reset();
 
@@ -366,7 +356,7 @@ UnuCrop::execute()
     last_nrrdH_ = NrrdDataHandle(nrrd);
 
     // Copy the properies, kinds, and labels.
-    *((PropertyManager *)nrrd) = *((PropertyManager *)(nrrdH.get_rep()));
+    nrrd->copy_properties(nrrdH.get_rep());
 
     for( int i=0; i<nin->dim; i++ ) {
       nout->axis[i].kind  = nin->axis[i].kind;
@@ -378,25 +368,15 @@ UnuCrop::execute()
       nout->axis[0].kind = nrrdKindDomain;
   }
 
-  if (last_nrrdH_.get_rep()) {
-
+  if (last_nrrdH_.get_rep())
+  {
     NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
-    if (!onrrd) {
-      error("Unable to initialize oport 'Nrrd'.");
-      return;
-    }
-
     onrrd->send(last_nrrdH_);
   }
 
-  if (last_matrixH_.get_rep()) {
+  if (last_matrixH_.get_rep())
+  {
     MatrixOPort* omatrix = (MatrixOPort *)get_oport("Selected Index");
-    
-    if (!omatrix) {
-      error("Unable to initialize oport 'Selected Index'.");
-      return;
-    }
-    
     omatrix->send( last_matrixH_ );
   }
 }

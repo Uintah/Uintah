@@ -192,23 +192,6 @@ EITAnalyticSolution::execute(){
 
   oportPotentialVector_ = (MatrixOPort *)get_oport("PotentialVector");
 
-  if (!iportField_) {
-    error("Unable to initialize iport 'Mesh'.");
-    return;
-  }
-  if (!iportCurrentPatternIndex_) {
-    error("Unable to initialize iport 'Current Pattern Index'.");
-    return;
-  }
-  if (!iportElectrodeParams_) {
-    error("Unable to initialize iport 'Electrode Params'.");
-    return;
-  }
-  if (!oportPotentialVector_) {
-    error("Unable to initialize oport 'Potential Vector'.");
-    return;
-  }
-
   //! Obtaining handles to computation objects
   FieldHandle hField;
   

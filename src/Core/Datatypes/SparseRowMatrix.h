@@ -53,8 +53,9 @@ class ColumnMatrix;
 class SparseRowMatrix;
 
 class SparseRowMatrix : public Matrix {
-  int nnrows;
-  int nncols;
+private:
+  SparseRowMatrix(); // This is only used by the maker function.
+
 public:
   //! Public data
   int* rows;
@@ -72,24 +73,11 @@ public:
   //         row/col orderand corresponds with the spaces in the rr array.
   //   nnz = number of non zero entries.
   //   d   = non zero data values.
-private:
-  SparseRowMatrix(); // This is only used by the maker function.
-public:
   SparseRowMatrix(int r, int c, int *rr, int *cc, int nnz, double *d = 0);
   SparseRowMatrix(const SparseRowMatrix&);
-  
-  static SparseRowMatrix *identity(int size) { 
-    int *r = scinew int[size+1];
-    int *c = scinew int[size];
-    double *d = scinew double[size];
-    int i;
-    for (i=0; i<size; i++) {
-      c[i]=r[i]=i;
-      d[i]=1.0;
-    }
-    r[i]=i;
-    return scinew SparseRowMatrix(size, size, r, c, size, d);
-  }
+
+  virtual SparseRowMatrix* clone();
+  SparseRowMatrix& operator=(const SparseRowMatrix&);
 
   //! Destructor
   virtual ~SparseRowMatrix();
@@ -98,48 +86,44 @@ public:
   virtual SparseRowMatrix *sparse();
   virtual ColumnMatrix *column();
 
-  //! Assignement operator
-  SparseRowMatrix& operator=(const SparseRowMatrix&);
+  virtual double *get_data_pointer();
+  virtual size_t get_data_size();
 
-
-  virtual double& get(int, int) const;
-  virtual void put(int row, int col, double val);
-  virtual void add(int row, int col, double val);
-
-  virtual SparseRowMatrix *transpose();
   int getIdx(int, int);
   int get_nnz() { return nnz; }
   
-  //! 
-  virtual string type_name() { return "SparseRowMatrix"; }
-  virtual int nrows() const;
-  virtual int ncols() const;
-  
-  virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
-  virtual void solve(ColumnMatrix&);
+  virtual double* get_val() { return a; }
+  virtual int*    get_row() { return rows; }
+  virtual int*    get_col() { return columns; }
+
   virtual void zero();
+  virtual double get(int, int) const;
+  virtual void put(int row, int col, double val);
+  virtual void add(int row, int col, double val);
+  virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
+
+  //! 
+  virtual SparseRowMatrix *transpose();
   virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
 		    int& flops, int& memrefs, int beg=-1, int end=-1,
 		    int spVec=0) const;
   virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 			      int& flops, int& memrefs, int beg=-1, 
 			      int end=-1, int spVec=0) const;
+  virtual void scalar_multiply(double s);
+  virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
 
   void sparse_mult(const DenseMatrix& x, DenseMatrix& b) const;
+  MatrixHandle sparse_sparse_mult(const SparseRowMatrix &x) const;
+  void solve(ColumnMatrix&);
+
+  static SparseRowMatrix *identity(int size);
 
   virtual void print() const;
   virtual void print(std::ostream&) const;
  
-  virtual double* get_val(){return a;}
-  virtual int*    get_row(){return rows;}
-  virtual int*    get_col(){return columns;}
-  
-  virtual SparseRowMatrix* clone();
-
-  virtual void scalar_multiply(double s);
-  virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
-
   //! Persistent representation...
+  virtual string type_name() { return "SparseRowMatrix"; }
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 

@@ -153,58 +153,8 @@ void ApplyFEMCurrentSource::execute()
 
   // The following output is only produced in TriSurf + ElectrodeSet mode
   oportMeshToElectrodeMap_ = (MatrixOPort *)get_oport("Mesh to Electrode Map"); 
-
-  if (!iportField_) {
-    error("Unable to initialize iport 'Mesh'.");
-    return;
-  }
-  if (!iportSource_) {
-    error("Unable to initialize iport 'Dipole Sources'.");
-    return;
-  }
-  if (!iportRhs_) {
-    error("Unable to initialize iport 'Input RHS'.");
-    return;
-  }
-  if (!iportCurrentPattern_) {
-    error("Unable to initialize iport 'Current Pattern'.");
-    return;
-  }
-  if (!iportCurrentPatternIndex_) {
-    error("Unable to initialize iport 'CurrentPatternIndex'.");
-    return;
-  }
-  if (!iportElectrodeParams_) {
-    error("Unable to initialize iport 'Electrode Params'.");
-    return;
-  }
-  if (!iportInterp_) {
-    error("Unable to initialize iport 'Interpolant'.");
-    return;
-  }
   // FieldBoundary and BoundaryInterp inputs are only utilized in the
   // TriSurf + ElectrodeSet configuration  
-  if (!iportFieldBoundary_) {
-    error("Unable to initialize iport 'Boundary'.");
-    return;
-  }
-  if (!iportBoundaryToMesh_) {
-    error("Unable to initialize iport 'Boundary Transfer Matrix'.");
-    return;
-  }
-
-  if (!oportRhs_) {
-    error("Unable to initialize oport 'Output RHS'.");
-    return;
-  }
-  if (!oportWeights_) {
-    error("Unable to initialize oport 'Output Weights'.");
-    return;
-  }
-  if (!oportMeshToElectrodeMap_) {
-    error("Unable to initialize oport 'Mesh to Electrode Map'.");
-    return;
-  }
   
   //! Obtaining handles to computation objects
   FieldHandle hField;
