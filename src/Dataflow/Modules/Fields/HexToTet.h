@@ -77,6 +77,11 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   typename FSRC::mesh_type *hvmesh = hvfield->get_typed_mesh().get_rep();
   TetVolMeshHandle tvmesh = scinew TetVolMesh();
 
+  typename FSRC::mesh_type::Node::size_type hnsize; hvmesh->size(hnsize);
+  typename FSRC::mesh_type::Elem::size_type hesize; hvmesh->size(hesize);
+
+  tvmesh->node_reserve((unsigned int)hnsize);
+
   // Copy points directly, assuming they will have the same order.
   typename FSRC::mesh_type::Node::iterator nbi, nei;
   hvmesh->begin(nbi); hvmesh->end(nei);
@@ -90,10 +95,9 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
 
   hvmesh->synchronize(Mesh::NODE_NEIGHBORS_E);
 
-  vector<typename FSRC::mesh_type::Elem::index_type> elemmap;
+  tvmesh->elem_reserve((unsigned int)hesize * 5);
 
-  typename FSRC::mesh_type::Node::size_type hnsize; hvmesh->size(hnsize);
-  typename FSRC::mesh_type::Elem::size_type hesize; hvmesh->size(hesize);
+  vector<typename FSRC::mesh_type::Elem::index_type> elemmap;
 
   vector<bool> visited(hesize, false);
 
@@ -258,6 +262,10 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   typename FSRC::mesh_type *hvmesh = hvfield->get_typed_mesh().get_rep();
   TetVolMeshHandle tvmesh = scinew TetVolMesh();
 
+  typename FSRC::mesh_type::Node::size_type lnsize;
+  hvmesh->size(lnsize);
+  tvmesh->node_reserve((unsigned int)lnsize);
+
   // Copy points directly, assuming they will have the same order.
   typename FSRC::mesh_type::Node::iterator nbi, nei;
   hvmesh->begin(nbi); hvmesh->end(nei);
@@ -268,6 +276,10 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     tvmesh->add_point(p);
     ++nbi;
   }
+
+  typename FSRC::mesh_type::Elem::size_type lesize;
+  hvmesh->size(lesize);
+  tvmesh->elem_reserve((unsigned int)lesize * 5);
 
   typename FSRC::mesh_type::Elem::iterator bi, ei;
   hvmesh->begin(bi); hvmesh->end(ei);
