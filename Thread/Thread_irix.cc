@@ -1304,7 +1304,7 @@ void Barrier::wait()
     } else {
 	priv->mutex.lock();
 	ConditionVariable& cond=priv->cc?priv->cond0:priv->cond1;
-	int me=priv->nwait++;
+	priv->nwait++;
 	if(priv->nwait == n){
 	    // Wake everybody up...
 	    priv->nwait=0;
@@ -1772,6 +1772,6 @@ void Thread::profile(FILE* in, FILE* out) {
     pass_sprofil(out, tid, 0, 0, 0, 0);
 }
 
-void Thread::alert(int code) {
+void Thread::alert(int) {
     fprintf(stderr, "Thread::alert not finished\n");
 }
