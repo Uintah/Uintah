@@ -89,7 +89,7 @@ using std::string;
 #      define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
 #    endif /* APPLE */
 #  endif /* HAVE_GLEW */
-#  if !defined(CORRECT_OGL_HDRS)
+#  if !defined(CORRECT_OGLEXT_HDRS)
   static PFNGLGENPROGRAMSARBPROC glGenProgramsARB = 0;
   static PFNGLDELETEPROGRAMSARBPROC glDeleteProgramsARB = 0;
   static PFNGLBINDPROGRAMARBPROC glBindProgramARB = 0;
