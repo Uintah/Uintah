@@ -208,11 +208,10 @@ MPIScheduler::initiateTask( const ProcessorGroup  * pg,
   TAU_MAPPING_PROFILE_STOP(0);
   TAU_PROFILE_STOP(doittimer);
 
-  task->done();
-
   double sendstart = Time::currentSeconds();
   sendMPIData( pg, task, mpi_info, sends, ss, dws, reloc_label );
-
+  task->done();
+  
   scrub( task );
 
   double start = Time::currentSeconds();
