@@ -148,6 +148,7 @@ WARNING
     int d_gamma_index;
     int d_cv_index;
     int d_viscosity_index;
+    int d_thermalcond_index;
     int d_temp_index;
     int d_ref_cv_index;
     int d_ref_gamma_index;
