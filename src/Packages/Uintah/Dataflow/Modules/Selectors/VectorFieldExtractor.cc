@@ -233,10 +233,10 @@ void VectorFieldExtractor::execute()
 	thread_sema->down(max_workers);
 	if( thread_sema ) delete thread_sema;
 	// set the generation and timestep in the field
-	vfd->store("varname",string(var));
-	vfd->store("generation",generation);
-	vfd->store("timestep",idx);
-	vfd->store("delta_t",dt);
+	vfd->store("varname",string(var), true);
+	vfd->store("generation",generation, true);
+	vfd->store("timestep",idx, true);
+	vfd->store("delta_t",dt, true);
 	// do timer stuff
 	timer.add( my_timer.time() );
 	my_timer.stop();
@@ -277,10 +277,10 @@ void VectorFieldExtractor::execute()
 	thread_sema->down(max_workers);
 	if( thread_sema ) delete thread_sema;
 	// set the generation and timestep in the field
-	vfd->store("varname",string(var));
-	vfd->store("generation",generation);
-	vfd->store("timestep",idx);
-	vfd->store("delta_t",dt);
+	vfd->store("varname",string(var), true);
+	vfd->store("generation",generation, true);
+	vfd->store("timestep",idx, true);
+	vfd->store("delta_t",dt, true);
 	// do timer stuff
 	timer.add( my_timer.time() );
 	my_timer.stop();
