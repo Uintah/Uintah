@@ -56,7 +56,18 @@ void bisect(const string& div, int num, int factor,
   static int levels_of_recursion = -1;
 
   int index;
-  if(div[num] == 'x')
+  if(div[num] == 'l') { // l is to bisect in the dimension of the largest amount of cells
+    int x = high.x() - low.x();
+    int y = high.y() - low.y();
+    int z = high.z() - low.z();
+    if (x >= y && x >= z)
+      index = 0;
+    else if (y > x && y >= z)
+      index = 1;
+    else if (z > y && z > x)
+      index = 2;
+  }
+  else if(div[num] == 'x')
     index=0;
   else if(div[num] == 'y')
     index=1;
@@ -248,7 +259,7 @@ main(int argc, char *argv[])
     string infile;
     string outfile;
     int submultiples = 1;
-    string divisions = "xyz";
+    string divisions = "l";
     
     parseArgs( argc, argv, nump, weight, infile, outfile,
                divisions, submultiples );
