@@ -60,7 +60,7 @@ public:
     
     friend inline Vector Interpolate(const Vector&, const Vector&, double);
     
-    void find_orthogonal(Vector&, Vector&);
+    void find_orthogonal(Vector&, Vector&) const;
     
     friend void Pio(Piostream&, Vector&);
 };

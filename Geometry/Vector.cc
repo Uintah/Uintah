@@ -28,7 +28,7 @@ double Vector::normalize()
     return l;
 }
 
-void Vector::find_orthogonal(Vector& v1, Vector& v2)
+void Vector::find_orthogonal(Vector& v1, Vector& v2) const
 {
     ASSERTL4(!uninit);
     Vector v0(Cross(*this, Vector(1,0,0)));
