@@ -17,6 +17,7 @@
 #include <Datatypes/GeometryPort.h>
 #include <Geometry/Point.h>
 #include <Geom/Geom.h>
+#include <Geom/Group.h>
 
 #include <iostream.h>
 #include <fstream.h>

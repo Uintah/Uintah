@@ -17,9 +17,8 @@
 #include <Classlib/NotFinished.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/ContourSet.h>
-#include <Datatypes/ContourSetPort.h>
 #include <Datatypes/Surface.h>
-#include <Datatypes/SurfacePort.h>
+#include <Datatypes/TriSurface.h>
 #include <Geometry/Grid.h>
 #include <Math/MiscMath.h>
 #include <Math/MinMax.h>

@@ -21,6 +21,8 @@
 #include <Geometry/Vector.h>
 #include <Geom/Geom.h>
 
+class GeomGroup;
+class Module;
 
 class BaseWidget {
 public:
@@ -33,7 +35,7 @@ public:
    inline void SetScale( const double scale );
    inline double GetScale() const;
 
-   inline ObjGroup* GetWidget();
+   inline GeomGroup* GetWidget();
 
    virtual void execute();
    const Point& GetVar( const Index vindex ) const;
@@ -56,9 +58,9 @@ protected:
    Array1<BaseConstraint*> constraints;
    Array1<Variable*> variables;
    Array1<GeomObj*> geometries;
-   Array1<MaterialProp*> materials;
+   Array1<MaterialHandle> materials;
 
-   ObjGroup* widget;
+   GeomGroup* widget;
    double widget_scale;
 
    Module* module;
@@ -81,7 +83,7 @@ BaseWidget::GetScale() const
 }
 
 
-inline ObjGroup*
+inline GeomGroup*
 BaseWidget::GetWidget()
 {
    return widget;

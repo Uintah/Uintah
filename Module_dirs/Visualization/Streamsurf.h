@@ -19,15 +19,15 @@
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/VectorField.h>
 #include <Datatypes/VectorFieldPort.h>
+#include <Geom/Geom.h>
 #include <Geometry/Point.h>
 class ColormapPort;
 class GeomCylinder;
 class GeomDisc;
+class GeomGroup;
 class GeomPick;
 class GeomSphere;
 class GeometryOPort;
-class MaterialProp;
-class ObjGroup;
 
 
 class Streamsurf : public Module {
@@ -55,11 +55,11 @@ private:
     Point p2;
     double slider1_dist;
 
-    ObjGroup* widget;
+    GeomGroup* widget;
     GeomSphere* widget_p1;
     GeomSphere* widget_p2;
     GeomCylinder* widget_edge1;
-    ObjGroup* widget_slider1;
+    GeomGroup* widget_slider1;
     GeomCylinder* widget_slider1body;
     GeomDisc* widget_slider1cap1;
     GeomDisc* widget_slider1cap2;
@@ -72,10 +72,11 @@ private:
 
     int streamsurf_id;
 
-    MaterialProp* widget_point_matl;
-    MaterialProp* widget_edge_matl;
-    MaterialProp* widget_slider_matl;
-    MaterialProp* widget_highlight_matl;
+    MaterialHandle widget_point_matl;
+    MaterialHandle widget_edge_matl;
+    MaterialHandle widget_slider_matl;
+    MaterialHandle widget_highlight_matl;
+    MaterialHandle matl;
 
     virtual void geom_moved(int, double, const Vector&, void*);
 public:

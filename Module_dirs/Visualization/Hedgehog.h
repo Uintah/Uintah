@@ -15,14 +15,10 @@
 #define SCI_project_module_Hedgehog_h
 
 #include <Dataflow/Module.h>
-#include <Datatypes/ScalarField.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/VectorField.h>
+#include <Datatypes/GeometryPort.h>
 #include <Datatypes/VectorFieldPort.h>
 #include <Geometry/Point.h>
-class GeometryOPort;
-class MaterialProp;
-
+#include <Geom/Geom.h>
 
 class Hedgehog : public Module {
     VectorFieldIPort* infield;
@@ -41,8 +37,8 @@ class Hedgehog : public Module {
 
     int hedgehog_id;
 
-    MaterialProp* front_matl;
-    MaterialProp* back_matl;
+    MaterialHandle front_matl;
+    MaterialHandle back_matl;
     virtual void geom_moved(int, double, const Vector&, void*);
 public:
     Hedgehog(const clString& id);

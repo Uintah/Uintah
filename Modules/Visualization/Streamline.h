@@ -19,17 +19,16 @@
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/VectorField.h>
 #include <Datatypes/VectorFieldPort.h>
+#include <Geom/Geom.h>
 #include <Geometry/Point.h>
 #include <TCL/TCLvar.h>
 class ColormapPort;
 class GeomCylinder;
 class GeomDisc;
+class GeomGroup;
 class GeomPick;
 class GeomSphere;
 class GeometryOPort;
-class MaterialProp;
-class ObjGroup;
-
 
 class Streamline : public Module {
     VectorFieldIPort* infield;
@@ -55,7 +54,7 @@ class Streamline : public Module {
     double slider1_dist;
     double slider2_dist;
 
-    ObjGroup* widget;
+    GeomGroup* widget;
     GeomSphere* widget_p1;
     GeomSphere* widget_p2;
     GeomSphere* widget_p3;
@@ -64,8 +63,8 @@ class Streamline : public Module {
     GeomCylinder* widget_edge2;
     GeomCylinder* widget_edge3;
     GeomCylinder* widget_edge4;
-    ObjGroup* widget_slider1;
-    ObjGroup* widget_slider2;
+    GeomGroup* widget_slider1;
+    GeomGroup* widget_slider2;
     GeomCylinder* widget_slider1body;
     GeomCylinder* widget_slider2body;
     GeomDisc* widget_slider1cap1;
@@ -87,10 +86,11 @@ class Streamline : public Module {
 
     int streamline_id;
 
-    MaterialProp* widget_point_matl;
-    MaterialProp* widget_edge_matl;
-    MaterialProp* widget_slider_matl;
-    MaterialProp* widget_highlight_matl;
+    MaterialHandle widget_point_matl;
+    MaterialHandle widget_edge_matl;
+    MaterialHandle widget_slider_matl;
+    MaterialHandle widget_highlight_matl;
+    MaterialHandle matl;
 
     virtual void geom_moved(int, double, const Vector&, void*);
 public:

@@ -15,7 +15,10 @@
 #include <Widgets/FrameWidget.h>
 #include <Constraints/DistanceConstraint.h>
 #include <Constraints/HypotenousConstraint.h>
-
+#include <Geom/Cylinder.h>
+#include <Geom/Group.h>
+#include <Geom/Pick.h>
+#include <Geom/Sphere.h>
 
 const Index NumCons = 7;
 const Index NumVars = 6;
@@ -97,55 +100,55 @@ FrameWidget::FrameWidget( Module* module )
    constraints[FrameW_ConstDRDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[FrameW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[FrameW_PointMatl] = new MaterialProp(Color(0,0,0), Color(.54, .60, 1),
-						  Color(.5,.5,.5), 20);
-   materials[FrameW_EdgeMatl] = new MaterialProp(Color(0,0,0), Color(.54, .60, .66),
-						 Color(.5,.5,.5), 20);
-   materials[FrameW_HighMatl] = new MaterialProp(Color(0,0,0), Color(.7,.7,.7),
-						 Color(0,0,.6), 20);
+   materials[FrameW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
+					      Color(.5,.5,.5), 20);
+   materials[FrameW_EdgeMatl] = new Material(Color(0,0,0), Color(.54, .60, .66),
+					     Color(.5,.5,.5), 20);
+   materials[FrameW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
+					     Color(0,0,.6), 20);
 
    geometries[FrameW_SphereUL] = new GeomSphere;
-   geometries[FrameW_SphereUL]->pick = new GeomPick(module);
-   geometries[FrameW_SphereUL]->pick->set_highlight(materials[FrameW_HighMatl]);
-   geometries[FrameW_SphereUL]->pick->set_cbdata((void*)FrameW_SphereUL);
+   geometries[FrameW_SphereUL]->set_pick(new GeomPick(module));
+   geometries[FrameW_SphereUL]->get_pick()->set_highlight(materials[FrameW_HighMatl]);
+   geometries[FrameW_SphereUL]->get_pick()->set_cbdata((void*)FrameW_SphereUL);
    geometries[FrameW_SphereUL]->set_matl(materials[FrameW_PointMatl]);
    geometries[FrameW_SphereUR] = new GeomSphere;
-   geometries[FrameW_SphereUR]->pick = new GeomPick(module);
-   geometries[FrameW_SphereUR]->pick->set_highlight(materials[FrameW_HighMatl]);
-   geometries[FrameW_SphereUR]->pick->set_cbdata((void*)FrameW_SphereUR);
+   geometries[FrameW_SphereUR]->set_pick(new GeomPick(module));
+   geometries[FrameW_SphereUR]->get_pick()->set_highlight(materials[FrameW_HighMatl]);
+   geometries[FrameW_SphereUR]->get_pick()->set_cbdata((void*)FrameW_SphereUR);
    geometries[FrameW_SphereUR]->set_matl(materials[FrameW_PointMatl]);
    geometries[FrameW_SphereDR] = new GeomSphere;
-   geometries[FrameW_SphereDR]->pick = new GeomPick(module);
-   geometries[FrameW_SphereDR]->pick->set_highlight(materials[FrameW_HighMatl]);
-   geometries[FrameW_SphereDR]->pick->set_cbdata((void*)FrameW_SphereDR);
+   geometries[FrameW_SphereDR]->set_pick(new GeomPick(module));
+   geometries[FrameW_SphereDR]->get_pick()->set_highlight(materials[FrameW_HighMatl]);
+   geometries[FrameW_SphereDR]->get_pick()->set_cbdata((void*)FrameW_SphereDR);
    geometries[FrameW_SphereDR]->set_matl(materials[FrameW_PointMatl]);
    geometries[FrameW_SphereDL] = new GeomSphere;
-   geometries[FrameW_SphereDL]->pick = new GeomPick(module);
-   geometries[FrameW_SphereDL]->pick->set_highlight(materials[FrameW_HighMatl]);
-   geometries[FrameW_SphereDL]->pick->set_cbdata((void*)FrameW_SphereDL);
+   geometries[FrameW_SphereDL]->set_pick(new GeomPick(module));
+   geometries[FrameW_SphereDL]->get_pick()->set_highlight(materials[FrameW_HighMatl]);
+   geometries[FrameW_SphereDL]->get_pick()->set_cbdata((void*)FrameW_SphereDL);
    geometries[FrameW_SphereDL]->set_matl(materials[FrameW_PointMatl]);
    geometries[FrameW_CylU] = new GeomCylinder;
-   geometries[FrameW_CylU]->pick = new GeomPick(module);
-   geometries[FrameW_CylU]->pick->set_highlight(materials[FrameW_HighMatl]);
-   geometries[FrameW_CylU]->pick->set_cbdata((void*)FrameW_CylU);
+   geometries[FrameW_CylU]->set_pick(new GeomPick(module));
+   geometries[FrameW_CylU]->get_pick()->set_highlight(materials[FrameW_HighMatl]);
+   geometries[FrameW_CylU]->get_pick()->set_cbdata((void*)FrameW_CylU);
    geometries[FrameW_CylU]->set_matl(materials[FrameW_EdgeMatl]);
    geometries[FrameW_CylR] = new GeomCylinder;
-   geometries[FrameW_CylR]->pick = new GeomPick(module);
-   geometries[FrameW_CylR]->pick->set_highlight(materials[FrameW_HighMatl]);
-   geometries[FrameW_CylR]->pick->set_cbdata((void*)FrameW_CylR);
+   geometries[FrameW_CylR]->set_pick(new GeomPick(module));
+   geometries[FrameW_CylR]->get_pick()->set_highlight(materials[FrameW_HighMatl]);
+   geometries[FrameW_CylR]->get_pick()->set_cbdata((void*)FrameW_CylR);
    geometries[FrameW_CylR]->set_matl(materials[FrameW_EdgeMatl]);
    geometries[FrameW_CylD] = new GeomCylinder;
-   geometries[FrameW_CylD]->pick = new GeomPick(module);
-   geometries[FrameW_CylD]->pick->set_highlight(materials[FrameW_HighMatl]);
-   geometries[FrameW_CylD]->pick->set_cbdata((void*)FrameW_CylD);
+   geometries[FrameW_CylD]->set_pick(new GeomPick(module));
+   geometries[FrameW_CylD]->get_pick()->set_highlight(materials[FrameW_HighMatl]);
+   geometries[FrameW_CylD]->get_pick()->set_cbdata((void*)FrameW_CylD);
    geometries[FrameW_CylD]->set_matl(materials[FrameW_EdgeMatl]);
    geometries[FrameW_CylL] = new GeomCylinder;
-   geometries[FrameW_CylL]->pick = new GeomPick(module);
-   geometries[FrameW_CylL]->pick->set_highlight(materials[FrameW_HighMatl]);
-   geometries[FrameW_CylL]->pick->set_cbdata((void*)FrameW_CylL);
+   geometries[FrameW_CylL]->set_pick(new GeomPick(module));
+   geometries[FrameW_CylL]->get_pick()->set_highlight(materials[FrameW_HighMatl]);
+   geometries[FrameW_CylL]->get_pick()->set_cbdata((void*)FrameW_CylL);
    geometries[FrameW_CylL]->set_matl(materials[FrameW_EdgeMatl]);
 
-   widget=new ObjGroup;
+   widget=new GeomGroup;
    widget->add(geometries[FrameW_SphereUL]);
    widget->add(geometries[FrameW_SphereUR]);
    widget->add(geometries[FrameW_SphereDR]);
@@ -154,7 +157,7 @@ FrameWidget::FrameWidget( Module* module )
    widget->add(geometries[FrameW_CylR]);
    widget->add(geometries[FrameW_CylD]);
    widget->add(geometries[FrameW_CylL]);
-   widget->pick=new GeomPick(module);
+   widget->set_pick(new GeomPick(module));
 
    // Init variables.
    for (Index vindex=0; vindex<NumVariables; vindex++)
@@ -199,14 +202,14 @@ FrameWidget::execute()
    spvec1.normalize();
    spvec2.normalize();
    Vector v = Cross(spvec1, spvec2);
-   geometries[FrameW_SphereUL]->pick->set_principal(spvec1, spvec2, v);
-   geometries[FrameW_SphereUR]->pick->set_principal(spvec1, spvec2, v);
-   geometries[FrameW_SphereDR]->pick->set_principal(spvec1, spvec2, v);
-   geometries[FrameW_SphereDL]->pick->set_principal(spvec1, spvec2, v);
-   geometries[FrameW_CylU]->pick->set_principal(spvec1, spvec2, v);
-   geometries[FrameW_CylR]->pick->set_principal(spvec1, spvec2, v);
-   geometries[FrameW_CylD]->pick->set_principal(spvec1, spvec2, v);
-   geometries[FrameW_CylL]->pick->set_principal(spvec1, spvec2, v);
+   geometries[FrameW_SphereUL]->get_pick()->set_principal(spvec1, spvec2, v);
+   geometries[FrameW_SphereUR]->get_pick()->set_principal(spvec1, spvec2, v);
+   geometries[FrameW_SphereDR]->get_pick()->set_principal(spvec1, spvec2, v);
+   geometries[FrameW_SphereDL]->get_pick()->set_principal(spvec1, spvec2, v);
+   geometries[FrameW_CylU]->get_pick()->set_principal(spvec1, spvec2, v);
+   geometries[FrameW_CylR]->get_pick()->set_principal(spvec1, spvec2, v);
+   geometries[FrameW_CylD]->get_pick()->set_principal(spvec1, spvec2, v);
+   geometries[FrameW_CylL]->get_pick()->set_principal(spvec1, spvec2, v);
 }
 
 void

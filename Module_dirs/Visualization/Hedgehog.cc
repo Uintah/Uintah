@@ -17,6 +17,8 @@
 #include <Datatypes/GeometryPort.h>
 #include <Geometry/Point.h>
 #include <Geom/Geom.h>
+#include <Geom/Group.h>
+#include <Geom/Line.h>
 #include <iostream.h>
 #include <fstream.h>
 
@@ -34,7 +36,8 @@ Hedgehog::Hedgehog(const clString& id)
 : Module("Hedgehog", id, Filter)
 {
     // Create the input ports
-    infield=new VectorFieldIPort(this, "Vector Field", ScalarFieldIPort::Atomic);
+    infield=new VectorFieldIPort(this, "Vector Field",
+				 VectorFieldIPort::Atomic);
     add_iport(infield);
 
     // Create the output port
@@ -118,7 +121,7 @@ void Hedgehog::execute()
 	length_scale=Min(space_x, space_y, space_z)*.75;
 	need_minmax=0;
     }
-    ObjGroup* group=new ObjGroup;
+    GeomGroup* group=new GeomGroup;
     cerr << "length_scale=" << length_scale << endl;
     for(double x=min.x();x<=max.x();x+=space_x){
 	for(double y=min.y();y<=max.y();y+=space_y){

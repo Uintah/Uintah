@@ -18,16 +18,16 @@
 #include <Datatypes/ScalarField.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Geometry/Point.h>
+#include <Geom/Geom.h>
 class ColormapPort;
 class Element;
 class GeomCone;
 class GeomCylinder;
 class GeomDisc;
+class GeomGroup;
 class GeomSphere;
 class GeometryOPort;
-class MaterialProp;
 class Mesh;
-class ObjGroup;
 
 
 class IsoSurface : public Module {
@@ -44,7 +44,7 @@ class IsoSurface : public Module {
     int make_normals;
     int do_3dwidget;
     double scalar_val;
-    ObjGroup* widget;
+    GeomGroup* widget;
     GeomSphere* widget_sphere;
     GeomCylinder* widget_cylinder;
     GeomCone* widget_cone;
@@ -57,16 +57,17 @@ class IsoSurface : public Module {
     double old_min;
     double old_max;
 
-    MaterialProp* widget_matl;
-    MaterialProp* widget_highlight_matl;
+    MaterialHandle widget_matl;
+    MaterialHandle widget_highlight_matl;
+    MaterialHandle matl;
 
-    int iso_cube(int, int, int, double, ObjGroup*, ScalarFieldRG*);
-    int iso_tetra(Element*, Mesh*, ScalarFieldUG*, double, ObjGroup*);
+    int iso_cube(int, int, int, double, GeomGroup*, ScalarFieldRG*);
+    int iso_tetra(Element*, Mesh*, ScalarFieldUG*, double, GeomGroup*);
 
-    void iso_reg_grid(ScalarFieldRG*, const Point&, ObjGroup*);
-    void iso_reg_grid(ScalarFieldRG*, double, ObjGroup*);
-    void iso_tetrahedra(ScalarFieldUG*, const Point&, ObjGroup*);
-    void iso_tetrahedra(ScalarFieldUG*, double, ObjGroup*);
+    void iso_reg_grid(ScalarFieldRG*, const Point&, GeomGroup*);
+    void iso_reg_grid(ScalarFieldRG*, double, GeomGroup*);
+    void iso_tetrahedra(ScalarFieldUG*, const Point&, GeomGroup*);
+    void iso_tetrahedra(ScalarFieldUG*, double, GeomGroup*);
 
     void find_seed_from_value(const ScalarFieldHandle&);
 

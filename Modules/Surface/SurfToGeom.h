@@ -15,18 +15,16 @@
 #define SCI_project_module_SurfToGeom_h
 
 #include <Dataflow/Module.h>
-#include <Datatypes/ContourSet.h>
 #include <Datatypes/GeometryPort.h>
-#include <Datatypes/Surface.h>
 #include <Datatypes/SurfacePort.h>
-#include <Geom/Geom.h>
+
+class GeomGroup;
 
 class SurfToGeom : public Module {
     SurfaceIPort* isurface;
     GeometryOPort* ogeom;
 
-    void surf_to_geom(const SurfaceHandle&, ObjGroup*);
-
+    void surf_to_geom(const SurfaceHandle&, GeomGroup*);
 public:
     SurfToGeom(const clString& id);
     SurfToGeom(const SurfToGeom&, int deep);

@@ -21,7 +21,14 @@
 #include <Datatypes/Mesh.h>
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldUG.h>
+#include <Geom/Cone.h>
+#include <Geom/Cylinder.h>
+#include <Geom/Disc.h>
 #include <Geom/Geom.h>
+#include <Geom/Group.h>
+#include <Geom/Pick.h>
+#include <Geom/Sphere.h>
+#include <Geom/Tri.h>
 #include <iostream.h>
 #include <fstream.h>
 
@@ -91,10 +98,12 @@ IsoSurface::IsoSurface(const clString& id)
     need_seed=0;
 #endif
 
-    widget_matl=new MaterialProp(Color(0,0,0), Color(0,0,.6),
-				 Color(.5,.5,.5), 20);
-    widget_highlight_matl=new MaterialProp(Color(0,0,0), Color(.7,.7,.7),
-					   Color(0,0,.6), 20);
+    widget_matl=new Material(Color(0,0,0), Color(0,0,.6),
+			     Color(.5,.5,.5), 20);
+    widget_highlight_matl=new Material(Color(0,0,0), Color(.7,.7,.7),
+				       Color(0,0,.6), 20);
+    matl=new Material(Color(0,0,0), Color(0,.6,0),
+		      Color(0,0.5,0), 20);
     widget=0;
     isosurface_id=0;
 }
@@ -159,7 +168,7 @@ void IsoSurface::execute()
 				     0.75*widget_scale, 0);
 	    widget_disc=new GeomDisc(cyl_top, -grad,
 				     0.75*widget_scale);
-	    widget=new ObjGroup;
+	    widget=new GeomGroup;
 	    widget->add(widget_sphere);
 	    widget->add(widget_cylinder);
 	    widget->add(widget_cone);
@@ -178,14 +187,14 @@ void IsoSurface::execute()
 	    // Just the point...
 	    widget_scale=0.00001;
 	    grad=Vector(0,0,1);
-	    widget->pick->set_principal(Vector(1,0,0),
-					Vector(0,1,0),
-					Vector(0,0,1));
+	    widget->get_pick()->set_principal(Vector(1,0,0),
+					      Vector(0,1,0),
+					      Vector(0,0,1));
 	} else {
 	    grad.normalize();
 	    Vector v1, v2;
 	    grad.find_orthogonal(v1, v2);
-	    widget->pick->set_principal(grad, v1, v2);
+	    widget->get_pick()->set_principal(grad, v1, v2);
 	}
 	Point cyl_top(seed_point+grad*(2*widget_scale));
 	widget_cylinder->bottom=seed_point;
@@ -203,9 +212,8 @@ void IsoSurface::execute()
 	widget_disc->rad=0.75*widget_scale;
 	widget_disc->adjust();
     }
-    ObjGroup* group=new ObjGroup;
-    group->set_matl(new MaterialProp(Color(0,0,0), Color(0,.6,0),
-				     Color(0,0.5,0), 20));
+    GeomGroup* group=new GeomGroup;
+    group->set_matl(matl);
     ScalarFieldRG* regular_grid=field->getRG();
     ScalarFieldUG* unstructured_grid=field->getUG();
     if(regular_grid){
@@ -234,7 +242,7 @@ void IsoSurface::execute()
 }
 
 int IsoSurface::iso_cube(int i, int j, int k, double isoval,
-			 ObjGroup* group, ScalarFieldRG* field)
+			 GeomGroup* group, ScalarFieldRG* field)
 {
     double oval[9];
     oval[1]=field->grid(i, j, k)-isoval;
@@ -273,7 +281,7 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
 	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	}
 	break;
     case 2:
@@ -281,9 +289,9 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p2(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
 	    Point p3(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    Point p4(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(new Triangle(p3, p4, p1));
+	    group->add(new GeomTri(p3, p4, p1));
 	}
 	break;
     case 3:
@@ -291,11 +299,11 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
 	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    Point p4(Interpolate(v[3], v[2], val[3]/(val[3]-val[2])));
 	    Point p5(Interpolate(v[3], v[7], val[3]/(val[3]-val[7])));
 	    Point p6(Interpolate(v[3], v[4], val[3]/(val[3]-val[4])));
-	    group->add(new Triangle(p4, p5, p6));
+	    group->add(new GeomTri(p4, p5, p6));
 	}
 	break;
     case 4:
@@ -303,11 +311,11 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
 	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    Point p4(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
 	    Point p5(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
 	    Point p6(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
-	    group->add(new Triangle(p4, p5, p6));
+	    group->add(new GeomTri(p4, p5, p6));
 	}
 	break;
     case 5:
@@ -315,11 +323,11 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
-	    group->add(new Triangle(p4, p3, p2));
+	    group->add(new GeomTri(p4, p3, p2));
 	    Point p5(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    group->add(new Triangle(p5, p4, p2));
+	    group->add(new GeomTri(p5, p4, p2));
 	}
 	break;
     case 6:
@@ -327,13 +335,13 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p2(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
 	    Point p3(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    Point p4(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(new Triangle(p3, p4, p1));
+	    group->add(new GeomTri(p3, p4, p1));
 	    Point p5(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
 	    Point p6(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
 	    Point p7(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
-	    group->add(new Triangle(p5, p6, p7));
+	    group->add(new GeomTri(p5, p6, p7));
 	}
 	break;
     case 7:
@@ -341,15 +349,15 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    Point p4(Interpolate(v[4], v[1], val[4]/(val[4]-val[1])));
 	    Point p5(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
 	    Point p6(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
-	    group->add(new Triangle(p4, p5, p6));
+	    group->add(new GeomTri(p4, p5, p6));
 	    Point p7(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
 	    Point p8(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
 	    Point p9(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
-	    group->add(new Triangle(p7, p8, p9));
+	    group->add(new GeomTri(p7, p8, p9));
 	}
 	break;
     case 8:
@@ -357,9 +365,9 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
-	    group->add(new Triangle(p4, p1, p3));
+	    group->add(new GeomTri(p4, p1, p3));
 	}
 	break;
     case 9:
@@ -367,13 +375,13 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
 	    Point p2(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
 	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    Point p4(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
-	    group->add(new Triangle(p1, p3, p4));
+	    group->add(new GeomTri(p1, p3, p4));
 	    Point p5(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(new Triangle(p1, p4, p5));
+	    group->add(new GeomTri(p1, p4, p5));
 	    Point p6(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
-	    group->add(new Triangle(p5, p4, p6));
+	    group->add(new GeomTri(p5, p4, p6));
 	}
 	break;
     case 10:
@@ -381,15 +389,15 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
 	    Point p2(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
 	    Point p3(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    Point p4(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
-	    group->add(new Triangle(p2, p4, p3));
+	    group->add(new GeomTri(p2, p4, p3));
 	    Point p5(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
 	    Point p6(Interpolate(v[6], v[5], val[6]/(val[6]-val[5])));
 	    Point p7(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
-	    group->add(new Triangle(p5, p6, p7));
+	    group->add(new GeomTri(p5, p6, p7));
 	    Point p8(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
-	    group->add(new Triangle(p2, p8, p3));
+	    group->add(new GeomTri(p2, p8, p3));
 	}
 	break;
     case 11:
@@ -397,13 +405,13 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
 	    Point p2(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
 	    Point p3(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
-	    group->add(new Triangle(p1, p3, p4));
+	    group->add(new GeomTri(p1, p3, p4));
 	    Point p5(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(new Triangle(p1, p4, p5));
+	    group->add(new GeomTri(p1, p4, p5));
 	    Point p6(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
-	    group->add(new Triangle(p4, p3, p6));
+	    group->add(new GeomTri(p4, p3, p6));
 	}
 	break;
     case 12:
@@ -411,15 +419,15 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
-	    group->add(new Triangle(p3, p2, p4));
+	    group->add(new GeomTri(p3, p2, p4));
 	    Point p5(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    group->add(new Triangle(p5, p2, p5));
+	    group->add(new GeomTri(p5, p2, p5));
 	    Point p6(Interpolate(v[4], v[1], val[4]/(val[4]-val[1])));
 	    Point p7(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
 	    Point p8(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
-	    group->add(new Triangle(p6, p7, p8));
+	    group->add(new GeomTri(p6, p7, p8));
 	}
 	break;
     case 13:
@@ -427,19 +435,19 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
 	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    Point p4(Interpolate(v[3], v[2], val[3]/(val[3]-val[2])));
 	    Point p5(Interpolate(v[3], v[7], val[3]/(val[3]-val[7])));
 	    Point p6(Interpolate(v[3], v[4], val[3]/(val[3]-val[4])));
-	    group->add(new Triangle(p4, p5, p6));
+	    group->add(new GeomTri(p4, p5, p6));
 	    Point p7(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
 	    Point p8(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
 	    Point p9(Interpolate(v[6], v[5], val[6]/(val[6]-val[5])));
-	    group->add(new Triangle(p7, p8, p9));
+	    group->add(new GeomTri(p7, p8, p9));
 	    Point p10(Interpolate(v[8], v[5], val[8]/(val[8]-val[5])));
 	    Point p11(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
 	    Point p12(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
-	    group->add(new Triangle(p10, p11, p12));
+	    group->add(new GeomTri(p10, p11, p12));
 	}
 	break;
     case 14:
@@ -447,13 +455,13 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
 	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    Point p4(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
-	    group->add(new Triangle(p1, p3, p4));
+	    group->add(new GeomTri(p1, p3, p4));
 	    Point p5(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
-	    group->add(new Triangle(p1, p4, p5));
+	    group->add(new GeomTri(p1, p4, p5));
 	    Point p6(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
-	    group->add(new Triangle(p3, p6, p4));
+	    group->add(new GeomTri(p3, p6, p4));
 	}
 	break;
     default:
@@ -464,7 +472,7 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 }
 
 void IsoSurface::iso_reg_grid(ScalarFieldRG* field, double isoval,
-			      ObjGroup* group)
+			      GeomGroup* group)
 {
     int nx=field->nx;
     int ny=field->ny;
@@ -482,7 +490,7 @@ void IsoSurface::iso_reg_grid(ScalarFieldRG* field, double isoval,
 }
 
 void IsoSurface::iso_reg_grid(ScalarFieldRG* field, const Point& p,
-			      ObjGroup* group)
+			      GeomGroup* group)
 {
     int nx=field->nx;
     int ny=field->ny;
@@ -581,7 +589,7 @@ void IsoSurface::iso_reg_grid(ScalarFieldRG* field, const Point& p,
 
 int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 			  ScalarFieldUG* field, double isoval,
-			  ObjGroup* group)
+			  GeomGroup* group)
 {
     double v1=field->data[element->n1]-isoval;
     double v2=field->data[element->n2]-isoval;
@@ -609,7 +617,7 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 	    Point p1(Interpolate(n4->p, n1->p, v4/(v4-v1)));
 	    Point p2(Interpolate(n4->p, n2->p, v4/(v4-v2)));
 	    Point p3(Interpolate(n4->p, n3->p, v4/(v4-v3)));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    faces=FACE1|FACE2|FACE3;
 	}
 	break;
@@ -620,7 +628,7 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 	    Point p1(Interpolate(n3->p, n1->p, v3/(v3-v1)));
 	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
 	    Point p3(Interpolate(n3->p, n4->p, v3/(v3-v4)));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    faces=FACE1|FACE2|FACE4;
 	}
 	break;
@@ -632,8 +640,8 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
 	    Point p3(Interpolate(n4->p, n1->p, v4/(v4-v1)));
 	    Point p4(Interpolate(n4->p, n2->p, v4/(v4-v2)));
-	    group->add(new Triangle(p1, p2, p3));
-	    group->add(new Triangle(p2, p3, p4));
+	    group->add(new GeomTri(p1, p2, p3));
+	    group->add(new GeomTri(p2, p3, p4));
 	    faces=ALLFACES;
 	}
 	break;
@@ -644,7 +652,7 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
 	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
 	    Point p3(Interpolate(n2->p, n4->p, v2/(v2-v4)));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    faces=FACE1|FACE3|FACE4;
 	}
 	break;
@@ -656,8 +664,8 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
 	    Point p3(Interpolate(n4->p, n1->p, v4/(v4-v1)));
 	    Point p4(Interpolate(n4->p, n3->p, v4/(v4-v3)));
-	    group->add(new Triangle(p1, p2, p3));
-	    group->add(new Triangle(p2, p3, p4));
+	    group->add(new GeomTri(p1, p2, p3));
+	    group->add(new GeomTri(p2, p3, p4));
 	    faces=ALLFACES;
 	}
 	break;
@@ -669,8 +677,8 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 	    Point p2(Interpolate(n2->p, n4->p, v2/(v2-v4)));
 	    Point p3(Interpolate(n3->p, n1->p, v3/(v3-v1)));
 	    Point p4(Interpolate(n3->p, n4->p, v3/(v3-v4)));
-	    group->add(new Triangle(p1, p2, p3));
-	    group->add(new Triangle(p2, p3, p4));
+	    group->add(new GeomTri(p1, p2, p3));
+	    group->add(new GeomTri(p2, p3, p4));
 	    faces=ALLFACES;
 	}
 	break;
@@ -681,7 +689,7 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 	    Point p1(Interpolate(n1->p, n2->p, v1/(v1-v2)));
 	    Point p2(Interpolate(n1->p, n3->p, v1/(v1-v3)));
 	    Point p3(Interpolate(n1->p, n4->p, v1/(v1-v4)));
-	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new GeomTri(p1, p2, p3));
 	    faces=FACE2|FACE3|FACE4;
 	}
 	break;
@@ -690,7 +698,7 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 }
 
 void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, double isoval,
-				ObjGroup* group)
+				GeomGroup* group)
 {
     Mesh* mesh=field->mesh.get_rep();
     int nelems=mesh->elems.size();
@@ -704,7 +712,7 @@ void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, double isoval,
 }
 
 void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
-				ObjGroup* group)
+				GeomGroup* group)
 {
     Mesh* mesh=field->mesh.get_rep();
     int nelems=mesh->elems.size();
@@ -779,7 +787,7 @@ void IsoSurface::find_seed_from_value(const ScalarFieldHandle& field)
     int nx=field->get_nx();
     int ny=field->get_ny();
     int nz=field->get_nz();
-    ObjGroup group;
+    GeomGroup group;
     for (int i=0; i<nx-1;i++) {
 	for (int j=0; j<ny-1; j++) {
 	    for (int k=0; k<nz-1; k++) {
