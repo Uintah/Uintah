@@ -103,15 +103,8 @@ void Register::execute(){
 	error("You must specify a name for both the attribute and the geometry.");
 	return;
       }
-      sfh->get_geom()->set_name(geom);
-      sfh->get_attrib()->set_name(attrib);
-      Field* sfb = sfh->get_base();
-      //      if(Field<double>* sfd = dynamic_cast<Field<double>* >(sfb)){
-      //	if(Interpolate<double>* inter = dynamic_cast<Interpolate<double>* >(sfd)){
-      //	  double l;
-      //	  inter->interpolate(l, Point(0, 0, 0));
-      //	}
-      //}
+      sfh->get_geom()->setName(geom);
+      sfh->get_attrib()->setName(attrib);
       fwh = fw = 0;
       fwh = fw = new FieldWrapper(sfh, NEW);
       oport->send(fw);
@@ -130,7 +123,7 @@ void Register::execute(){
   
 }
 
-void Register::connection(ConnectionMode mode, int which_port, int is_oport){
+void Register::connection(ConnectionMode mode, int, int is_oport){
   if(mode != Disconnected){ 
     dbg << "oport = " << oport->get_which_port() << ", ifield = " << ifield->get_which_port() << endl;
     if(is_oport){
@@ -153,14 +146,6 @@ void Register::connection(ConnectionMode mode, int which_port, int is_oport){
 
 } // End namespace Modules
 } // End namespace PSECommon
-
-
-
-
-
-
-
-
 
 
 // "We shall not cease from exploration, and the end of our
