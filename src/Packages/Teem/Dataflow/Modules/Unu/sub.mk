@@ -32,22 +32,22 @@ SRCS     += \
 	$(SRCDIR)/UnuCmedian.cc\
 	$(SRCDIR)/UnuConvert.cc\
 	$(SRCDIR)/UnuCrop.cc\
+	$(SRCDIR)/UnuInset.cc\
 	$(SRCDIR)/UnuJoin.cc\
 	$(SRCDIR)/UnuMake.cc\
+	$(SRCDIR)/UnuMinmax.cc\
 	$(SRCDIR)/UnuPad.cc\
 	$(SRCDIR)/UnuPermute.cc\
 	$(SRCDIR)/UnuProject.cc\
 	$(SRCDIR)/UnuQuantize.cc\
 	$(SRCDIR)/UnuResample.cc\
+	$(SRCDIR)/UnuReshape.cc\
 	$(SRCDIR)/UnuSlice.cc\
+	$(SRCDIR)/UnuSplice.cc\
+	$(SRCDIR)/UnuUnquantize.cc\
 #[INSERT NEW CODE FILE HERE]
 
 # the following are stubs that need implementa
-#	$(SRCDIR)/UnuAxmerge.cc\
-#	$(SRCDIR)/UnuAxsplit.cc\
-#	$(SRCDIR)/UnuDhisto.cc\
-#	$(SRCDIR)/UnuFlip.cc\
-#	$(SRCDIR)/UnuHisto.cc\
 
 
 PSELIBS := Packages/Teem/Core/Datatypes Core/Datatypes \
