@@ -190,9 +190,13 @@ Task::requires(WhichDW dw, const VarLabel* var, const PatchSubset* patches,
 	       const MaterialSubset* matls)
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
-  if(!vartype == TypeDescription::PerPatch)
+  if (vartype == TypeDescription::SoleVariable)
+    requires(dw, var, (const Level*)0, matls);
+  else if(vartype == TypeDescription::PerPatch )
+    requires(dw,var,patches,NormalDomain,matls,NormalDomain,Ghost::None,0);
+  else
     SCI_THROW(InternalError("Requires should specify ghost type or level for this variable"));
-  requires(dw, var, patches, NormalDomain, matls, NormalDomain, Ghost::None, 0);
+  
 }
 
 void
@@ -200,9 +204,11 @@ Task::requires(WhichDW dw, const VarLabel* var, const MaterialSubset* matls)
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
   if(!(vartype == TypeDescription::PerPatch
-       || vartype == TypeDescription::ReductionVariable))
+       || vartype == TypeDescription::ReductionVariable
+       || vartype == TypeDescription::SoleVariable))
     SCI_THROW(InternalError("Requires should specify ghost type for this variable"));
-  if(vartype == TypeDescription::ReductionVariable)
+  if(vartype == TypeDescription::ReductionVariable 
+     || vartype == TypeDescription::SoleVariable)
     requires(dw, var, (const Level*)0, matls);
   else
     requires(dw, var, 0, NormalDomain, matls, NormalDomain, Ghost::None, 0);
@@ -213,7 +219,8 @@ Task::requires(WhichDW dw, const VarLabel* var, const Level* level,
 	       const MaterialSubset* matls, DomainSpec matls_dom)
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
-  if(vartype != TypeDescription::ReductionVariable)
+  if(!(vartype == TypeDescription::ReductionVariable ||
+       vartype == TypeDescription::SoleVariable))
     SCI_THROW(InternalError("Requires should specify ghost type for this variable"));
 
   if (matls == 0){
@@ -267,7 +274,9 @@ void
 Task::computes(const VarLabel* var, const PatchSubset* patches,
                const MaterialSubset* matls)
 {
-  if (var->typeDescription()->isReductionVariable()) 
+  TypeDescription::Type vartype = var->typeDescription()->getType();
+  if (vartype == TypeDescription::ReductionVariable ||
+      vartype == TypeDescription::SoleVariable)
     computes(var, (const Level*)0, matls);
   else
     computes(var, patches, NormalDomain, matls, NormalDomain);
@@ -297,7 +306,9 @@ void
 Task::computes(const VarLabel* var, const Level* level,
 	       const MaterialSubset* matls, DomainSpec matls_dom)
 {
-  if (!var->typeDescription()->isReductionVariable()) 
+  TypeDescription::Type vartype = var->typeDescription()->getType();
+  if (!(vartype == TypeDescription::ReductionVariable ||
+      vartype == TypeDescription::SoleVariable))
     SCI_THROW(InternalError("Computes should only be used for reduction variable"));
 
   if (matls == 0) {
