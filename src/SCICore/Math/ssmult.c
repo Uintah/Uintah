@@ -80,7 +80,7 @@ SCICORESHARE void ssmult_uppersub(int nrows, int beg, int end, int* rows, int* c
 	int l, h;
 	int row_idx=rows[i];
 	int next_idx=rows[i+1];
-	//register double r=xp[i];
+	/*register double r=xp[i];*/
 	register double sum=bp[i]+a[row_idx]*xp[columns[row_idx]];
 	for(j=row_idx+1;j<next_idx;j++){
 	    register double aj=a[j];
