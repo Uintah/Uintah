@@ -70,6 +70,8 @@
 #include <iostream>
 #include <sstream>
 
+using namespace std;
+
 namespace SCIRun {
 
 SCIRunLoader::SCIRunLoader(const std::string &loaderName,
