@@ -53,14 +53,17 @@ template<class Types>
 class DirectStencil7 : public RefCounted {
 public:
   DirectStencil7(const Level* level,
-		 const MaterialSet* matlset,
-		 const VarLabel* A,
-		 const VarLabel* x, bool modifies_x,
-		 const VarLabel* b,
-		 const DirectSolveParams* params)
+		   const MaterialSet* matlset,
+	          const VarLabel* A, Task::WhichDW which_A_dw,
+	          const VarLabel* x, bool modifies_x,
+	          const VarLabel* b, Task::WhichDW which_b_dw,
+		   const DirectSolveParams* params)
     : level(level), matlset(matlset),
-      A_label(A), X_label(x), B_label(b),
-      modifies_x(modifies_x), params(params)
+      A_label(A), which_A_dw(which_A_dw),
+      X_label(x), 
+      B_label(b), which_b_dw(which_b_dw),
+      modifies_x(modifies_x),
+      params(params)
   {
   }
 
@@ -74,6 +77,9 @@ public:
 	     Handle<DirectStencil7<Types> >)
   {
     cout_doing << "DirectSolve::solve" << endl;
+    DataWarehouse* A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
+    DataWarehouse* b_dw = new_dw->getOtherDataWarehouse(which_b_dw);
+    
     double tstart = Time::currentSeconds();
     long64 flops = 0, memrefs = 0;
     for(int m = 0;m<matls->size();m++){
@@ -83,9 +89,9 @@ public:
       ASSERTEQ(patches->size(), 1);
       const Patch* patch = patches->get(0);
       typename Types::const_type B;
-      new_dw->get(B, B_label, matl, patch, Ghost::None, 0);
+      b_dw->get(B, B_label, matl, patch, Ghost::None, 0);
       typename Types::matrix_type A;
-      new_dw->get(A, A_label, matl, patch, Ghost::None, 0);
+      A_dw->get(A, A_label, matl, patch, Ghost::None, 0);
 
       typename Types::sol_type X;
       if(modifies_x)
@@ -214,8 +220,10 @@ private:
   const Level* level;
   const MaterialSet* matlset;
   const VarLabel* A_label;
+  Task::WhichDW which_A_dw;
   const VarLabel* X_label;
   const VarLabel* B_label;
+  Task::WhichDW which_b_dw;
   bool modifies_x;
   const DirectSolveParams* params;
 };
@@ -227,12 +235,13 @@ SolverParameters* DirectSolve::readParameters(ProblemSpecP& params, const string
 }
 
 void DirectSolve::scheduleSolve(const LevelP& level, SchedulerP& sched,
-			     const MaterialSet* matls,
-			     const VarLabel* A, const VarLabel* x,
-			     bool modifies_x,
-                             const VarLabel* b, const VarLabel* guess,
-			     Task::WhichDW guess_dw,
-			     const SolverParameters* params)
+			           const MaterialSet* matls,
+                                const VarLabel* A,    Task::WhichDW which_A_dw,  
+                                const VarLabel* x,
+			           bool modifies_x,
+                                const VarLabel* b,    Task::WhichDW which_b_dw,  
+                                const VarLabel* guess,Task::WhichDW guess_dw,
+			           const SolverParameters* params)
 {
   if(level->numPatches() != 1)
     throw InternalError("DirectSolve only works with 1 patch");
@@ -247,40 +256,40 @@ void DirectSolve::scheduleSolve(const LevelP& level, SchedulerP& sched,
   ASSERTEQ(domtype, b->typeDescription()->getType());
   const DirectSolveParams* dparams = dynamic_cast<const DirectSolveParams*>(params);
   if(!dparams)
-    throw InternalError("Wrong type of params passed to cg solver!");
+    throw InternalError("Wrong type of params passed to Direct solver!");
 
   switch(domtype){
   case TypeDescription::SFCXVariable:
     {
-      DirectStencil7<SFCXTypes>* that = new DirectStencil7<SFCXTypes>(level.get_rep(), matls, A, x, modifies_x, b, dparams);
+      DirectStencil7<SFCXTypes>* that = new DirectStencil7<SFCXTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
       Handle<DirectStencil7<SFCXTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &DirectStencil7<SFCXTypes>::solve, handle);
     }
     break;
   case TypeDescription::SFCYVariable:
     {
-      DirectStencil7<SFCYTypes>* that = new DirectStencil7<SFCYTypes>(level.get_rep(), matls, A, x, modifies_x, b, dparams);
+      DirectStencil7<SFCYTypes>* that = new DirectStencil7<SFCYTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
       Handle<DirectStencil7<SFCYTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &DirectStencil7<SFCYTypes>::solve, handle);
     }
     break;
   case TypeDescription::SFCZVariable:
     {
-      DirectStencil7<SFCZTypes>* that = new DirectStencil7<SFCZTypes>(level.get_rep(), matls, A, x, modifies_x, b, dparams);
+      DirectStencil7<SFCZTypes>* that = new DirectStencil7<SFCZTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
       Handle<DirectStencil7<SFCZTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &DirectStencil7<SFCZTypes>::solve, handle);
     }
     break;
   case TypeDescription::CCVariable:
     {
-      DirectStencil7<CCTypes>* that = new DirectStencil7<CCTypes>(level.get_rep(), matls, A, x, modifies_x, b, dparams);
+      DirectStencil7<CCTypes>* that = new DirectStencil7<CCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
       Handle<DirectStencil7<CCTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &DirectStencil7<CCTypes>::solve, handle);
     }
     break;
   case TypeDescription::NCVariable:
     {
-      DirectStencil7<NCTypes>* that = new DirectStencil7<NCTypes>(level.get_rep(), matls, A, x, modifies_x, b, dparams);
+      DirectStencil7<NCTypes>* that = new DirectStencil7<NCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, dparams);
       Handle<DirectStencil7<NCTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &DirectStencil7<NCTypes>::solve, handle);
     }
@@ -289,13 +298,13 @@ void DirectSolve::scheduleSolve(const LevelP& level, SchedulerP& sched,
     throw InternalError("Unknown variable type in scheduleSolve");
   }
 
-  task->requires(Task::NewDW, A, Ghost::None, 0);
+  task->requires(which_A_dw, A, Ghost::None, 0);
   if(modifies_x)
     task->modifies(x);
   else
     task->computes(x);
 
-  task->requires(Task::NewDW, b, Ghost::None, 0);
+  task->requires(which_b_dw, b, Ghost::None, 0);
   sched->addTask(task, level->eachPatch(), matls);
 }
 
