@@ -29,9 +29,7 @@ GLOverOp::GLOverOp(const GLVolumeRenderer* glvr) :
 void GLOverOp::preDraw()
 {
   glEnable(GL_BLEND);
-#ifdef __sgi
   glBlendEquation(GL_FUNC_ADD_EXT);
-#endif
   glBlendFunc( GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 }
 
