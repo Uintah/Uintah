@@ -20,14 +20,14 @@ OBJS = BitVisualize.o  BoxClipSField.o BoundGrid.o \
 	Hedgehog.o  IsoMask.o  IsoSurface.o IsoSurfaceSP.o IsoSurfaceMRSG.o \
 	OctIsoSurface.o   CuttingPlaneTex.o  \
 	RescaleColorMap.o  Streamline.o  VectorSeg.o  VolVis.o   \
-	WidgetTest.o AddWells.o
+	WidgetTest.o AddWells.o FieldCage.o  AddWells2.o
 SRCS = BitVisualize.cc BoxClipSField.cc BoundGrid.cc \
 	CuttingPlane.cc FastRender.c    \
 	GenAxes.cc GenColorMap.cc GenFieldEdges.cc GenTransferFunc.cc \
 	Hedgehog.cc IsoMask.o  IsoSurface.cc IsoSurfaceSP.cc IsoSurfaceMRSG.cc\
 	 OctIsoSurface.cc   CuttingPlaneTex.cc \
 	RescaleColorMap.cc Streamline.cc VectorSeg.cc  VolVis.cc \
-	WidgetTest.cc AddWells.cc
+	WidgetTest.cc AddWells.cc FieldCage.cc AddWells2.cc
 
 LIBNAME = Visualization
 
