@@ -123,15 +123,15 @@ itcl_class SCIRun_Render_ViewImage {
     #
     # 'scriptVar' is the name of the TCL variable one level
     # up that we will append our commands to 
-    # 'i' is the number indicating the prefix for the variables
+    # 'prefix' is the prefix the variables
     # 'tab' is the indent string to make it look pretty
-    method writeStateToScript { scriptVar i { tab "" }} {
-	Module::writeStateToScript $scriptVar $i $tab
+    method writeStateToScript { scriptVar prefix { tab "" }} {
+	Module::writeStateToScript $scriptVar $prefix $tab
 	upvar 1 $scriptVar script2
 	set num 0
 	foreach w [winfo children .] {
 	    if { [string first .ui[modname] $w] == 0 } {
-		append script2 "\n${tab}\$m$i ui"
+		append script2 "\n${tab}${prefix} ui"
 	    }
 	}
     }

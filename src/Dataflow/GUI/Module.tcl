@@ -757,9 +757,9 @@ itcl_class Module {
     #
     # 'scriptVar' is the name of the TCL variable one level
     # up that we will append our commands to 
-    # 'i' is the number indicating the prefix for the variables
+    # 'prefix' is a prefix written for all for the variables
     # 'tab' is the indent string to make it look pretty
-    method writeStateToScript { scriptVar i { tab "" }} {
+    method writeStateToScript { scriptVar prefix { tab "" }} {
 	if [isaSubnetIcon [modname]] return
 	upvar 1 $scriptVar script
 	set module [modname]
@@ -775,18 +775,14 @@ itcl_class Module {
 		}
 	    }
 	}
-
+	
 	if { [llength $write_vars] } {
 	    # Write the comment line for this modules GUI values
 	    append script "\n"
 	    append script "${tab}\# Set GUI variables for the $modstr Module\n"
 	    foreach var $write_vars {
 		upvar \#0 $module-$var val
-		if {[winfo exists .standalone]} {
-		    set varname "$i-${var}"
-		} else {
-		    set varname "\$m$i-${var}"
-		}
+		set varname "${prefix}-${var}"
 		if { [llength $varname] > 1 } {
 		    set varname \"${varname}\"
 		}
@@ -814,13 +810,9 @@ itcl_class Module {
 	# Write command to open GUI on load if it was open on save
 	if [windowIsMapped .ui$module] {
 	    append script "\n${tab}\# Open the $modstr UI\n"
-	    if {[winfo exists .standalone]} {
-		append script "${tab}$i initialize_ui\n"
-	    } else {
-		append script "${tab}\$m$i initialize_ui\n"
-	    }
+	    append script "${tab}${prefix} initialize_ui\n"
 	}	
-    }    
+    }
 }   
 
 proc fadeinIcon { modid { seconds 0.333 } { center 0 }} {
@@ -1085,7 +1077,7 @@ proc scalePath { path } {
     global SCALEX SCALEY
     foreach pt $path {
 	lappend opath [expr round($pt/(([llength $opath]%2)?$SCALEY:$SCALEX))]
-    }
+    } 
     return $opath
 }
     

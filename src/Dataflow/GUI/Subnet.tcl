@@ -1190,7 +1190,7 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
     
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
-	$module writeStateToScript script [incr i] $tab
+	$module writeStateToScript script "\$m[incr i]" $tab
     }
 
     return $script
