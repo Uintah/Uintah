@@ -7,6 +7,7 @@
 #include <Uintah/Grid/ParticleSubset.h>
 #include <iostream> //TEMPORARY
 
+
 namespace Uintah {
 
    class TypeDescription;
@@ -166,6 +167,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.8  2000/04/28 20:24:44  jas
+// Moved some private copy constructors to public for linux.  Velocity
+// field is now set from the input file.  Simulation state now correctly
+// determines number of velocity fields.
+//
 // Revision 1.7  2000/04/28 07:35:37  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works

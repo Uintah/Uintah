@@ -69,12 +69,12 @@ WARNING
       //////////
       // Insert Documentation Here:
       bool findCellAndWeights(const SCICore::Geometry::Vector& pos,
-			      Array3Index ni[8], double S[8]) const;
+				Array3Index ni[8], double S[8]) const{ }
       //////////
       // Insert Documentation Here:
       bool findCellAndShapeDerivatives(const SCICore::Geometry::Vector& pos,
 				       Array3Index ni[8],
-				       SCICore::Geometry::Vector S[8]) const;
+				       SCICore::Geometry::Vector S[8]) const{ }
       //////////
       // Insert Documentation Here:
       inline NodeIterator begin() const;
@@ -173,6 +173,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.10  2000/04/28 20:24:44  jas
+// Moved some private copy constructors to public for linux.  Velocity
+// field is now set from the input file.  Simulation state now correctly
+// determines number of velocity fields.
+//
 // Revision 1.9  2000/04/27 23:18:50  sparker
 // Added problem initialization for MPM
 //

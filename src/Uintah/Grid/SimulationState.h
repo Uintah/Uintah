@@ -4,11 +4,15 @@
 #include <Uintah/Grid/RefCounted.h>
 #include <vector>
 #include <iostream>
+#include <SCICore/Math/MinMax.h>
+#include <Uintah/Grid/Material.h>
 using std::cerr;
 using std::endl;
+using SCICore::Math::Max;
+using Uintah::Material;
 
 namespace Uintah {
-   class Material;
+
    class VarLabel;
    
     /**************************************
@@ -52,8 +56,11 @@ namespace Uintah {
 	 return (int)matls.size();
       }
       int getNumVelFields() const {
-	 cerr << "This needs to be fixed " << endl;
-	 return (int)matls.size();
+	int num_vf=0;
+	for (int i = 0; i < (int)matls.size(); i++) {
+	  num_vf = Max(num_vf,matls[i]->getVFIndex());
+	}
+	return num_vf;
       }
       Material* getMaterial(int idx) const {
 	 return matls[idx];
@@ -70,6 +77,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.5  2000/04/28 20:24:44  jas
+// Moved some private copy constructors to public for linux.  Velocity
+// field is now set from the input file.  Simulation state now correctly
+// determines number of velocity fields.
+//
 // Revision 1.4  2000/04/26 06:48:55  sparker
 // Streamlined namespaces
 //

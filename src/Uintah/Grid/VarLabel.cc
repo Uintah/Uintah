@@ -9,8 +9,15 @@ VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
 {
 }
 
+
+
 //
 // $Log$
+// Revision 1.4  2000/04/28 20:24:44  jas
+// Moved some private copy constructors to public for linux.  Velocity
+// field is now set from the input file.  Simulation state now correctly
+// determines number of velocity fields.
+//
 // Revision 1.3  2000/04/28 07:35:37  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works

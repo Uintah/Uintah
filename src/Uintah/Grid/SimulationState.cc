@@ -14,12 +14,16 @@ SimulationState::SimulationState()
 void SimulationState::registerMaterial(Material* matl)
 {
    matl->setDWIndex((int)matls.size());
-   matl->setVFIndex((int)matls.size());
    matls.push_back(matl);
 }
 
 //
 // $Log$
+// Revision 1.5  2000/04/28 20:24:44  jas
+// Moved some private copy constructors to public for linux.  Velocity
+// field is now set from the input file.  Simulation state now correctly
+// determines number of velocity fields.
+//
 // Revision 1.4  2000/04/28 08:11:33  sparker
 // ConstitutiveModelFactory should return null on failure
 // MPMMaterial checks for failed constitutive model creation
