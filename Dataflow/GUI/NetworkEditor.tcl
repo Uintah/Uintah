@@ -1688,6 +1688,12 @@ proc getOnTheFlyLibsDir {} {
 
     if ![validDir $dir] {
 	set dir $binOTF
+	
+	# if this is a windows dir, it won't think this is a valid dir with the '/'s in the name
+        set ostype [netedit getenv OS]
+        if { [string equal $ostype "Windows_NT"] } {
+            return $binOTF
+        }
     }
 
     if ![validDir $dir] {
