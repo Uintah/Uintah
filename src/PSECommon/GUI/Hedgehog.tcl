@@ -16,12 +16,6 @@ itcl_class PSECommon_Visualization_Hedgehog {
 	set name Hedgehog
 	set_defaults
     }
-    destructor {
-	set w .ui[modname]
-	if {[winfo exists $w]} {
-	    ::delete class expscale 
-	}
-    }
 
     method set_defaults {} {
 	global $this-length_scale
@@ -39,6 +33,7 @@ itcl_class PSECommon_Visualization_Hedgehog {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
+	    wm deiconify $w
 	    raise $w
 	    return;
 	}
@@ -98,7 +93,7 @@ itcl_class PSECommon_Visualization_Hedgehog {
 		-variable $this-shaft_rad -command $n
 	pack $w.f2.shaft_scale -side left -fill x -pady 2
 	
-	button $w.close -text "Close" -command "delete class expscale; destroy $w"
+	button $w.close -text "Close" -command "wm withdraw $w"
 	pack $w.close -side bottom -expand yes -fill x
     }
 }
