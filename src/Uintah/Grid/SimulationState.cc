@@ -12,12 +12,6 @@ SimulationState::SimulationState(ProblemSpecP &ps)
    delt_label = new VarLabel("delT",
     ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
 
-   strain_energy_label = new VarLabel("StrainEnergy",
-    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
-
-   kinetic_energy_label = new VarLabel("KineticEnergy",
-    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
-
   // Get the physical constants that are shared between codes.
   // For now it is just gravity.
 
@@ -34,6 +28,9 @@ void SimulationState::registerMaterial(Material* matl)
 
 //
 // $Log$
+// Revision 1.11  2000/06/27 20:14:09  guilkey
+// Removed Kinetic and Strain energy labels and associated stuff.
+//
 // Revision 1.10  2000/05/31 22:27:52  guilkey
 // Added stuff for integrated quanities.
 //
