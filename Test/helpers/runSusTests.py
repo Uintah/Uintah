@@ -268,8 +268,8 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   
   chdir("..")
 
-  system("chgrp -R csafe %s" % resultsdir)
-  system("chmod -R g+rwX %s" % resultsdir)
+  system("chgrp -R csafe %s > /dev/null 2>&1" % resultsdir)
+  system("chmod -R g+rwX %s > /dev/null 2>&1" % resultsdir)
 
   # copy results to web server.
   if outputpath != startpath:
