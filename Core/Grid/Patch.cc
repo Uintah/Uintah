@@ -1582,6 +1582,26 @@ Patch::getNodeIterator(const Box& b) const
    return NodeIterator(low, high);
 }
 
+NodeIterator Patch::getNodeIterator(int n8or27) const
+{
+  if(n8or27!=27){
+   return getNodeIterator();
+  }
+  else{
+    IntVector low = d_inLowIndex -
+    IntVector(getBCType(xminus) == Neighbor?0:1,
+              getBCType(yminus) == Neighbor?0:1,
+              getBCType(zminus) == Neighbor?0:1);
+
+    IntVector hi = d_inHighIndex +
+    IntVector(getBCType(xplus) == Neighbor?0:2,
+              getBCType(yplus) == Neighbor?0:2,
+              getBCType(zplus) == Neighbor?0:2);
+
+    return NodeIterator(low, hi);
+  }
+}
+
 IntVector Patch::getInteriorNodeLowIndex() const {
     return d_inLowIndex;
 }
