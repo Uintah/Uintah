@@ -31,3 +31,10 @@ PSELIBS := Packages/Teem/Core Dataflow Core
 LIBS := $(TEEM_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
+
+ifeq ($(LARGESOS),yes)
+TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
+endif
+
+teemmodules: prereqs $(TEEM_MODULES)
+

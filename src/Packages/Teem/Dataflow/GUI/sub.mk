@@ -64,3 +64,5 @@ SRCS := \
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
+TEEM_MODULES := $(TEEM_MODULES) $(TCLINDEX)
+

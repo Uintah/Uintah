@@ -33,3 +33,7 @@ LIBS := $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+ifeq ($(LARGESOS),no)
+TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
+endif
+
