@@ -2,7 +2,13 @@
 # Makefile fragment for this subdirectory
 # $Id$
 #
-
+#___________________________________________________
+#  You need to set the environmental variable
+#   in your .cshrc file inorder to compile all of the
+#  source code.  This allows the PSE to make only a portion of
+#   ice
+#___________________________________________________
+#   
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Components/ICE
@@ -14,41 +20,33 @@ else
 ICE_LIBS := $(ICE_DIR)/Libraries/n32bit
 endif
 
-SRCS	+= $(SRCDIR)/ICE_actual.cc $(SRCDIR)/ICE_schedule.cc \
-           $(SRCDIR)/array_conversion.cc
+ifneq ($(ICE), yes)
+SRCS	+= $(SRCDIR)/ICE_doNothing.cc
+endif
 
-INCLUDES += -I$(ICE_DIR)/Header_files
-
-PSELIBS := Uintah/Interface Uintah/Grid SCICore/Exceptions 
-LIBS 	:= $(XML_LIBRARY) \
-           -L$(ICE_DIR) -lICE -L$(ICE_LIBS) -ltecio \
-           -lcpgplot -lpgplot  -lX11 -L. -lmalloc_cv \
-           -lftn -lm
-
-include $(SRCTOP)/scripts/smallso_epilogue.mk
-
-
-PROGRAM	:= $(SRCDIR)/ice
-SRCS	:= $(ICE_DIR)/main2.c	\
-	$(ICE_DIR)/input.c					\
-	$(ICE_DIR)/Plot_routines/plot_vector.c			\
+ifneq ($(ICE),)
+SRCS += $(SRCDIR)/ICE_schedule.cc       	          	    	 \
+    	 $(SRCDIR)/ICE_actual.cc 	     	          	    	 \
+    	 $(SRCDIR)/array_conversion.cc   	          	    	 \
+    	 $(ICE_DIR)/input.c					       \
+	 $(ICE_DIR)/Plot_routines/plot_vector.c			\
         $(ICE_DIR)/Plot_routines/plot_control.c			\
         $(ICE_DIR)/Plot_routines/plot_face_center.c		\
         $(ICE_DIR)/Plot_routines/plot_common.c			\
-	$(ICE_DIR)/Plot_routines/plot_contour.c			\
+	 $(ICE_DIR)/Plot_routines/plot_contour.c			\
         $(ICE_DIR)/Plot_routines/plot_2d_line.c			\
         $(ICE_DIR)/Plot_routines/plot_cursor_pos.c		\
-        $(ICE_DIR)/p_face.c					\
+        $(ICE_DIR)/p_face.c					       \
         $(ICE_DIR)/explicit_delPress.c				\
         $(ICE_DIR)/equate_ptr_addrss.c				\
         $(ICE_DIR)/interpolate_vel_CC_to_FC.c			\
-        $(ICE_DIR)/grid.c					\
+        $(ICE_DIR)/grid.c					       \
         $(ICE_DIR)/flux_or_primitive.c				\
         $(ICE_DIR)/Equation_of_state/equation_of_state.c	\
         $(ICE_DIR)/Equation_of_state/speed_of_sound.c		\
         $(ICE_DIR)/lagrangian.c					\
         $(ICE_DIR)/commonFunctions.c				\
-        $(ICE_DIR)/timeadvanced.c				\
+        $(ICE_DIR)/timeadvanced.c				       \
         $(ICE_DIR)/Advection_2D/advect_grad_limiter.c		\
         $(ICE_DIR)/Advection_2D/advect_centroids.c		\
         $(ICE_DIR)/Advection_2D/advect_preprocess.c		\
@@ -56,22 +54,60 @@ SRCS	:= $(ICE_DIR)/main2.c	\
         $(ICE_DIR)/Advection_2D/advect_q_flux.c			\
         $(ICE_DIR)/Advection_2D/advect_q_vertex.c		\
         $(ICE_DIR)/Boundary_Cond/boundary_cond_FC.c		\
-        $(ICE_DIR)/Boundary_Cond/boundary_cond.c		\
+        $(ICE_DIR)/Boundary_Cond/boundary_cond.c		       \
         $(ICE_DIR)/Write_output/output_FC.c			\
         $(ICE_DIR)/Write_output/output_CC.c			\
         $(ICE_DIR)/Write_output/output_misc.c			\
-        $(ICE_DIR)/Source_Sinks/energy.c			\
+        $(ICE_DIR)/Source_Sinks/energy.c			       \
         $(ICE_DIR)/Source_Sinks/momentum.c			\
         $(ICE_DIR)/Source_Sinks/shear_stress.c			\
-        $(ICE_DIR)/initialize_variables.c			\
+        $(ICE_DIR)/initialize_variables.c			       \
         $(ICE_DIR)/nrutil+.c
-LIBS:= -L$(ICE_LIBS) -ltecio -lcpgplot -lpgplot  -lX11 -L. -lmalloc_cv \
+endif
+
+INCLUDES += -I$(ICE_DIR)/Header_files
+
+PSELIBS := Uintah/Interface Uintah/Grid SCICore/Exceptions \
+	Uintah/Exceptions SCICore/Geometry
+LIBS 	:= $(XML_LIBRARY) \
+           -L$(ICE_LIBS) -ltecio \
+           -lcpgplot -lpgplot $(X11_LIBS) \
+           -lftn -lm
+
+PGPLOT = $(SRCTOP_ABS)/$(ICE_DIR)/Libraries
+CFLAGS += -DPGPLOT_DIR=\"$(PGPLOT)\"
+
+include $(SRCTOP)/scripts/smallso_epilogue.mk
+
+#__________________________________
+#   
+#___________________________________
+ifneq ($(ICE),)
+PROGRAM      := $(SRCDIR)/ice
+SRCS	     := $(ICE_DIR)/main2.c
+PSELIBS     := Uintah/Components/ICE
+LIBS        := -L$(ICE_LIBS) -ltecio -lcpgplot -lpgplot  $(X11_LIBS) \
 	 -lftn -lm
 include $(SRCTOP)/scripts/program.mk
+endif
+
+iceclean:
+	/bin/rm -f $(OBJTOP)/Uintah/Components/ICE/*.o
+	/bin/rm -f $(OBJTOP)/lib/libUintah_Components_ICE.so
+	/bin/rm -fr $(OBJTOP)/Uintah/Components/ICE/ii_files
+	( cd $(ICE_DIR) ; $(MAKE) clean )
 
 
 #
 # $Log$
+# Revision 1.10  2000/06/28 21:50:07  harman
+# sparker, mcq, harman: - No longer need to make libICE.a in ice_sm for sus
+#                       - Added iceclean to sub.mk
+#                       - User now has to set environmental varialbe ICE = yes
+#                       to compile the real ice code otherwise it compiles
+#                       ICE_doNothing.cc
+#                       - Removed the hardwired PGPLOTDIR path
+#
 # Revision 1.9  2000/06/28 05:15:43  sparker
 # Fix the build
 #
