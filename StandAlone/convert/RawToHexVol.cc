@@ -111,7 +111,7 @@ main(int argc, char **argv) {
     }
     count++;
     hvm->add_hex(nodeIndex[i0], nodeIndex[i1], nodeIndex[i2], nodeIndex[i3],
-		 nodeIndex[i4], nodeIndex[i5], nodeIndex[16], nodeIndex[i7]);
+		 nodeIndex[i4], nodeIndex[i5], nodeIndex[i6], nodeIndex[i7]);
   }
   if (count != ncells) {
     cerr <<"Error -- was told "<<ncells<<" cells, but found "<<count<<"\n";
