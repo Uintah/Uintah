@@ -185,7 +185,7 @@ void DenseMatrix::solve(ColumnMatrix& sol)
     // Gauss-Jordan with partial pivoting
     int i;
     for(i=0;i<nr;i++){
-	cout << "Solve: " << i << " of " << nr << endl;
+//	cout << "Solve: " << i << " of " << nr << endl;
 	double max=Abs(data[i][i]);
 	int row=i;
 	int j;
@@ -219,7 +219,7 @@ void DenseMatrix::solve(ColumnMatrix& sol)
 
     // Back-substitution
     for(i=1;i<nr;i++){
-	cout << "Solve: " << i << " of " << nr << endl;
+//	cout << "Solve: " << i << " of " << nr << endl;
 	ASSERT(Abs(data[i][i]) > 1.e-12);
 	double denom=1./data[i][i];
 	double* r1=data[i];
@@ -235,7 +235,7 @@ void DenseMatrix::solve(ColumnMatrix& sol)
 
     // Normalize
     for(i=0;i<nr;i++){
-	cout << "Solve: " << i << " of " << nr << endl;
+//	cout << "Solve: " << i << " of " << nr << endl;
 	ASSERT(Abs(data[i][i]) > 1.e-12);
 	double factor=1./data[i][i];
 	for(int j=0;j<nr;j++)
@@ -502,6 +502,9 @@ void DenseMatrix::mult(double s)
 
 //
 // $Log$
+// Revision 1.5  1999/12/09 09:53:23  dmw
+// commented out debug info in DenseMatrix::solve()
+//
 // Revision 1.4  1999/10/07 02:07:31  sparker
 // use standard iostreams and complex type
 //
