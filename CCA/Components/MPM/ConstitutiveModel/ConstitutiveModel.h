@@ -73,9 +73,11 @@ WARNING
 				       std::vector<const VarLabel*>& to) = 0;
 
          virtual double computeRhoMicroCM(double pressure,
+                                     const double p_ref,
 					  const MPMMaterial* matl) = 0;
 
          virtual void computePressEOSCM(double rho_m, double& press_eos,
+                                        const double p_ref,
                                         double& dp_drho, double& ss_new,
 	        		        const MPMMaterial* matl) = 0;
 
