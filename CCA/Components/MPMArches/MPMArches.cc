@@ -13,6 +13,7 @@
 #include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -771,14 +772,14 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
 	    if (bc->getKind() == "Dirichlet") {
 
 	      //cout << "Velocity bc value = " << bc->getValue() << endl;
-	      gvelocity.fillFace(patch, face, bc->getValue(),offset);
+	      fillFace(gvelocity,patch, face, bc->getValue(),offset);
 
 	    }
 	  }
 
 	  if (sym_bcs != 0) {
 
-	     gvelocity.fillFaceNormal(patch, face, offset);
+	     fillFaceNormal(gvelocity,patch, face, offset);
 
 	  }
 
@@ -788,7 +789,7 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
 	      dynamic_cast<TemperatureBoundCond*>(temp_bcs);
 	    if (bc->getKind() == "Dirichlet") {
 
-	      gTemperature.fillFace(patch, face, bc->getValue(),offset);
+	      fillFace(gTemperature,patch, face, bc->getValue(),offset);
 
 	    }
 
