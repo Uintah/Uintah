@@ -24,7 +24,7 @@ public:
 		       const Index numSchemes,
 		       Variable* p1, Variable* p2,
 		       Variable* distInX );
-   ~DistanceConstraint();
+    virtual ~DistanceConstraint();
 
 protected:
    void Satisfy( const Index index );
