@@ -47,7 +47,10 @@ void Pio (Piostream& stream, TSEdge*& data);
 
 class SCICORESHARE TriSurface : public Surface
 {
+private:
   friend class SurfTree;
+
+  int empty_index;
 
 public:
   Array1<Point> points_;
@@ -63,10 +66,7 @@ public:
 
   Array1<Vector> normals;
 
-private:
-  int empty_index;
 
-public:
   TriSurface();
   TriSurface(const TriSurface& copy);
   virtual ~TriSurface();
@@ -87,6 +87,9 @@ public:
 
   SurfTree *toSurfTree();
 
+  const Point &point(int i) { return points_[i]; }
+  void point(int i, const Point &p) { points_[i] = p; }
+  int point_count() { return points_.size(); }
 
   // these two were implemented for isosurfacing btwn two surfaces
   // (MorphMesher3d module/class)
