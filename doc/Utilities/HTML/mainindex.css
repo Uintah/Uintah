@@ -46,11 +46,10 @@ font-size: large;
 background-color:#003333;
 color:#FFCC33}
 
-tr {
-vertical-align: top}
+tr {}
 
 td { 
-}
+vertical-align: top}
 
 p {
 font-size: small}
