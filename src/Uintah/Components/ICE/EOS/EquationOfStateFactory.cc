@@ -1,5 +1,6 @@
 #include "EquationOfStateFactory.h"
 #include "IdealGas.h"
+#include "Harlow.h"
 #include <Uintah/Interface/ProblemSpec.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <fstream>
@@ -18,6 +19,9 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
       std::string mat_type = child->getNodeName();
       if (mat_type == "ideal_gas") {
 		 return(scinew IdealGas(child));
+      }
+      if (mat_type == "harlow") {
+		 return(scinew Harlow(child));
       } else {
 	 cerr << "Unknown Material Type R (" << mat_type << ")" << std::endl;;
 	 //      exit(1);
@@ -26,6 +30,9 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
    return 0;
 }
 //$Log$
+//Revision 1.2  2000/10/26 23:43:14  jas
+//Added Harlow to factory.
+//
 //Revision 1.1  2000/10/06 04:02:16  jas
 //Move into a separate EOS directory.
 //
