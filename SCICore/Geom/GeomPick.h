@@ -39,61 +39,66 @@ using PSECore::Widgets::BaseWidget;
 using PSECore::Comm::MessageBase;
 
 class SCICORESHARE GeomPick : public GeomContainer {
-    Pickable* module;
-    void* cbdata;
-    int pick_index;
-    Array1<Vector> directions;
-    Pickable* widget;
-    int widget_data;
-    int selected;
-    int ignore;
-    MaterialHandle highlight;
-
-    GeomPick(const GeomPick&);
+  Pickable* module;
+  void* cbdata;
+  //int pick_index;
+  GeomObj* picked_obj;
+  Array1<Vector> directions;
+  Pickable* widget;
+  int widget_data;
+  int selected;
+  int ignore;
+  MaterialHandle highlight;
+  
+  GeomPick(const GeomPick&);
 public:
-    bool drawOnlyOnPick;
-    GeomPick(GeomObj*, Pickable* module);
-    GeomPick(GeomObj*, Pickable* module, Pickable*, int widget_data);
-    GeomPick(GeomObj*, Pickable* module,
-	     const Vector&);
-    GeomPick(GeomObj*, Pickable* module,
-	     const Vector&, const Vector&);
-    GeomPick(GeomObj*, Pickable* module,
-	     const Vector&, const Vector&, const Vector&);
-    GeomPick(GeomObj*, Pickable* module, const Array1<Vector>&);
-    virtual ~GeomPick();
-    virtual GeomObj* clone();
-    int nprincipal();
-    Vector principal(int i);
-    void set_principal(const Vector&);
-    void set_principal(const Vector&, const Vector&);
-    void set_principal(const Vector&, const Vector&, const Vector&);
-    void set_highlight(const MaterialHandle& matl);
-    void set_module_data(void*);
-    void set_widget_data(int);
-
-    void set_index(int);
-    void pick(Roe* roe, const BState& bs);
-    void moved(int axis, double distance, const Vector& delta, const BState& bs);
-    void release(const BState& bs);
-
-    void ignore_until_release();
-
-    // For OpenGL
+  bool drawOnlyOnPick;
+  GeomPick(GeomObj*, Pickable* module);
+  GeomPick(GeomObj*, Pickable* module, Pickable*, int widget_data);
+  GeomPick(GeomObj*, Pickable* module,
+	   const Vector&);
+  GeomPick(GeomObj*, Pickable* module,
+	   const Vector&, const Vector&);
+  GeomPick(GeomObj*, Pickable* module,
+	   const Vector&, const Vector&, const Vector&);
+  GeomPick(GeomObj*, Pickable* module, const Array1<Vector>&);
+  virtual ~GeomPick();
+  virtual GeomObj* clone();
+  int nprincipal();
+  Vector principal(int i);
+  void set_principal(const Vector&);
+  void set_principal(const Vector&, const Vector&);
+  void set_principal(const Vector&, const Vector&, const Vector&);
+  void set_highlight(const MaterialHandle& matl);
+  void set_module_data(void*);
+  void set_widget_data(int);
+  
+  void set_picked_obj(GeomObj *);
+  void pick(Roe* roe, const BState& bs);
+  void moved(int axis, double distance, const Vector& delta, const BState& bs);
+  void release(const BState& bs);
+  
+  void ignore_until_release();
+  
+  // For OpenGL
 #ifdef SCI_OPENGL
-    virtual void draw(DrawInfoOpenGL*, Material*, double time);
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
-
-    virtual void io(Piostream&);
-    static PersistentTypeID type_id;
-    virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
+  
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
-
+  
 } // End namespace GeomSpace
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.5  2000/08/11 15:49:06  bigler
+// Removed the int index and replaced it with a GeomObj* picked_obj.
+// The index can be accessed though picked_obj->getID(int or IntVector).
+//
 // Revision 1.4  1999/10/07 02:07:43  sparker
 // use standard iostreams and complex type
 //
