@@ -41,11 +41,14 @@
 
       endif
 
-c      if((j.eq.1).and.(k.eq.7))write(6,*)i,qfluxn(i,j,k)
 10    continue
 20    continue
 30    continue
 
       RETURN
       end
+
+
+
+
 

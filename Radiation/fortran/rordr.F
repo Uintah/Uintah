@@ -4,6 +4,7 @@ C     SUBROUTINE RORDR (RORDR stands for "Radiation-ORDinates-Rectangular")
 C     Generates the table of direction cosines and quadrature weights for 
 C     discrete ordinates calculations in rectangular co-ordinates 
 C     This is called before the intensity iterations.
+C     The following is the Carlson and Lathrop quadrature set.
 C     Written by Gautham 12/01.
 C***********************************************************************
 C      dimension ORD(SN),OXI(SN*(SN+2)),OMU(SN*(SN+2)),
@@ -12,7 +13,7 @@ c*********************************************************************
 c     Local Variables :
 c*********************************************************************
 
-       integer TOTORD, ORDOCT, i, j, total,count,m
+      integer TOTORD, ORDOCT, i, j, total,count,m
 
         TOTORD = SN*(SN+2)
         ORDOCT = SN*(SN+2)/8     
