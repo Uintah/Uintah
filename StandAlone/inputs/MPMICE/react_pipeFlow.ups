@@ -209,6 +209,7 @@
          <ThresholdPressure>     500                     </ThresholdPressure>
          <Enthalpy>              0.0                     </Enthalpy>
          <BurnCoeff>             1.0                     </BurnCoeff>
+         <refPressure>           1.0                     </refPressure>
          </burn>
          <EOS type = "ideal_gas">
            <gas_constant>      188.92                     </gas_constant>
