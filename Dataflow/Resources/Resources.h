@@ -24,11 +24,11 @@
 #include <vector>
 #include <map>
 
+namespace SCIRun {
 using std::string;
 using std::vector;
-using std::map   ;
+using std::map;
 
-namespace SCIRun {
 
 /*
  * Port
