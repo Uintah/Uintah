@@ -457,22 +457,7 @@ InsertElectrodes::execute()
 {
   FieldIPort* imesh = (FieldIPort *) get_iport("TetMesh");
   FieldOPort* omesh = (FieldOPort *) get_oport("TetMesh");
-  if (!imesh)
-  {
-    error("Unable to initialize iport 'TetMesh'.");
-    return;
-  }
-  if (!omesh)
-  {
-    error("Unable to initialize oport 'Tetmesh'.");
-    return;
-  }
   FieldOPort* oelec = (FieldOPort *) get_oport("ElectrodeElements");
-  if (!oelec)
-  {
-    error("Unable to initialize oport 'ElectrodeElements'.");
-    return;
-  }
   
   FieldHandle imeshH, ielecH;
 

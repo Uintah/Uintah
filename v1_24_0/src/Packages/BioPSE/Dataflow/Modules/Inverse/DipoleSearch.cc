@@ -543,35 +543,6 @@ void DipoleSearch::execute() {
   // point cloud of one vector, just the test dipole (for vis)
   dipole_oport_ = (FieldOPort *)get_oport("TestDipole");
 
-  if (!seeds_iport_) {
-    error("Unable to initialize iport 'DipoleSeeds'.");
-    return;
-  }
-  if (!mesh_iport_) {
-    error("Unable to initialize iport 'TetMesh'.");
-    return;
-  }
-  if (!misfit_iport_) {
-    error("Unable to initialize iport 'TestMisfit'.");
-    return;
-  }
-  if (!dir_iport_) {
-    error("Unable to initialize iport 'TestDirection'.");
-    return;
-  }
-  if (!leadfield_select_oport_) {
-    error("Unable to initialize oport 'LeadFieldSelectionMatrix'.");
-    return;
-  }
-  if (!simplex_oport_) {
-    error("Unable to initialize oport 'DipoleSimplex'.");
-    return;
-  }
-  if (!dipole_oport_) {
-    error("Unable to initialize oport 'TestDipole'.");
-    return;
-  }
-
   read_field_ports(valid_data, new_data);
   if (!valid_data) return;
   if (!new_data) {

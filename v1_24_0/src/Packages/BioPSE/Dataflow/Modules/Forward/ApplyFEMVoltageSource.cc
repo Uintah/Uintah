@@ -91,27 +91,6 @@ void ApplyFEMVoltageSource::execute()
   MatrixOPort *oportMatrix_ = (MatrixOPort *)get_oport("Forward Matrix");
   MatrixOPort *oportRhs_ = (MatrixOPort *)get_oport("RHS");
 
-  if (!iportField_) {
-    error("Unable to initialize iport 'Mesh'.");
-    return;
-  }
-  if (!iportMatrix_) {
-    error("Unable to initialize iport 'Stiffness Matrix'.");
-    return;
-  }
-  if (!iportRhs_) {
-    error("Unable to initialize iport 'RHS'.");
-    return;
-  }
-  if (!oportMatrix_) {
-    error("Unable to initialize oport 'Forward Matrix'.");
-    return;
-  }
-  if (!oportRhs_) {
-    error("Unable to initialize oport 'RHS'.");
-    return;
-  }
-  
   //! Obtaining handles to computation objects
   FieldHandle hField;
   

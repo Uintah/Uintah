@@ -100,19 +100,6 @@ void
   ilut_ = (NrrdIPort *)get_iport("LookupTableNrrd");
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'InputNrrd'.");
-    return;
-  }
-  if (!ilut_) {
-    error("Unable to initialize iport 'LookupTableNrrd'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'OutputNrrd'.");
-    return;
-  }
-
   if (!inrrd_->get(nrrd_handle))
     return;
   if (!ilut_->get(lut_handle))

@@ -88,20 +88,12 @@ SegFieldOps::~SegFieldOps()
 void
 SegFieldOps::execute()
 {
-  // make sure the ports exist
+  // Make sure the ports exist.
   FieldIPort *ifp = (FieldIPort *)get_iport("LatVol or SegField");
-  FieldHandle ifieldH;
-  if (!ifp) {
-    error("Unable to initialize iport 'LatVol of SegField'.");
-    return;
-  }
   FieldOPort *ofp = (FieldOPort *)get_oport("SegField");
-  if (!ofp) {
-    error("Unable to initialize oport 'SegField'.");
-    return;
-  }
 
-  // make sure the input data exists
+  // Make sure the input data exists.
+  FieldHandle ifieldH;
   if (!ifp->get(ifieldH) || !ifieldH.get_rep()) {
     error("No input data");
     return;

@@ -107,15 +107,6 @@ TendBmat::execute()
   inrrd_ = (NrrdIPort *)get_iport("nin");
   onrrd_ = (NrrdOPort *)get_oport("nout");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'nin'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'nout'.");
-    return;
-  }
-
   bool we_own_the_data;
   vector<double> *mat=0;
   Nrrd *nin;

@@ -100,19 +100,6 @@ void
   idmap_ = (NrrdIPort *)get_iport("RegularMapNrrd");
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'InputNrrd'.");
-    return;
-  }
-  if (!idmap_) {
-    error("Unable to initialize iport 'RegularMapNrrd'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'OutputNrrd'.");
-    return;
-  }
-
   if (!inrrd_->get(nrrd_handle))
     return;
   if (!idmap_->get(dmap_handle))

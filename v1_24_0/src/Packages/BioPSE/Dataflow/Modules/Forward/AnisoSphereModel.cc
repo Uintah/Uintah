@@ -121,18 +121,10 @@ void AnisoSphereModel::execute() {
   
   // get input ports
   hInElectrodes = (FieldIPort*)get_iport("ElectrodePositions");
-  if(!hInElectrodes) {
-	error("DipoleInAnisoSpheres::execute() -> impossible to initialize input port 'ElectrodePositions'");
-	return;
-  }
   hInConductivities = (MatrixIPort *)get_iport("AnisoConductivities");
 
   // get output ports
   hOutElectrodes = (FieldOPort*)get_oport("ElectrodePositions");
-  if(!hOutElectrodes) {
-	error("impossible to initialize output port 'ElectrodePositions'");
-	return;
-  }
 
   hOutRadii = (MatrixOPort*)get_oport("SphereRadii");
   hOutConductivities = (MatrixOPort*)get_oport("AnisoConductivities");

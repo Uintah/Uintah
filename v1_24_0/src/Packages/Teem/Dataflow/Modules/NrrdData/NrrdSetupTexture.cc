@@ -171,11 +171,6 @@ NrrdSetupTexture::execute()
   NrrdDataHandle nin_handle;
   update_state(NeedData);
   NrrdIPort *inrrd_ = (NrrdIPort *)get_iport("Value");
-  if (!inrrd_) {
-    error("Unable to initialize iport 'Value'.");
-    return;
-  }
-
   if (!inrrd_->get(nin_handle))
     return;
 
@@ -378,17 +373,9 @@ NrrdSetupTexture::execute()
   gmout_handle->copy_properties(nin_handle.get_rep());
 
   NrrdOPort *onvnrrd = (NrrdOPort *)get_oport("Normal/Value");
-  if (!onvnrrd) {
-    error("Unable to initialize oport 'Normal/Value'.");
-    return;
-  }
   onvnrrd->send(nvout_handle);
 
   NrrdOPort *ogmnrrd = (NrrdOPort *)get_oport("Gradient Magnitude");
-  if (!ogmnrrd) {
-    error("Unable to initialize oport 'Gradient Magnitude'.");
-    return;
-  }
   ogmnrrd->send(gmout_handle);
 }
 
