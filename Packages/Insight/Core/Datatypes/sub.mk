@@ -15,6 +15,7 @@ SRCDIR   := Packages/Insight/Core/Datatypes
 
 SRCS     += $(SRCDIR)/ITKDatatype.cc \
 	$(SRCDIR)ITKLatVolField.h \
+	$(SRCDIR)ITKImageField.h \
 
 #[INSERT NEW CODE FILE HERE]
 

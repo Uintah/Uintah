@@ -427,7 +427,6 @@ template <class T>
 const TypeDescription*
 ITKLatVolField<T>::get_type_description(int n) const
 {
-  std::cerr << "In ITKLatVolField get_type_description " << n << std::endl;
   ASSERT((n >= -1) && n <= 1);
 
   TypeDescription* td = 0;
