@@ -3,6 +3,9 @@
 
 #include <map>
 #include <vector>
+#include <SCICore/Exceptions/InternalError.h>
+
+using SCICore::Exceptions::InternalError;
 
 namespace Uintah {
    
@@ -173,6 +176,9 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
 
 //
 // $Log$
+// Revision 1.2  2000/04/28 21:12:05  jas
+// Added some includes to get it to compile on linux.
+//
 // Revision 1.1  2000/04/28 07:36:13  sparker
 // Utility class for datawarehousen
 //
