@@ -1133,7 +1133,7 @@ template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 template<int SIDE>
 template<class BoundTester>
 inline bool
-RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::Traverser::
+RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::Traverser<SIDE>::
 goNext(const BoundTester& boundTester)
 {
   const int OTHER_SIDE = (SIDE + 1) % 2;
@@ -1151,8 +1151,8 @@ template<int SIDE, int BOUND_FROM_SIDE>
 template<class BoundTester>
 inline bool
 RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
-CascadeTraverser::goNext(const BoundTester& boundTester,
-			 bool quitOnBadIndex /*=true*/)
+CascadeTraverser<SIDE, BOUND_FROM_SIDE>::goNext(const BoundTester& boundTester,
+					       bool quitOnBadIndex /*=true*/)
 {
   const int OTHER_SIDE = (SIDE + 1) % 2;
   ASSERT(!node_->isLeaf());
