@@ -44,6 +44,5 @@ itcl_class SCIRun_Fields_IsoClip {
 	button $w.execute -text "Execute" -command "$this-c needexecute"
 	pack $w.entry $w.lte $w.gte -side top -anchor w
 	pack $w.execute -side bottom -fill x
-	
     }
 }

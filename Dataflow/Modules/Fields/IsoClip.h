@@ -133,6 +133,7 @@ private:
 };
 
 
+
 template <class FIELD>
 typename FIELD::mesh_type::Node::index_type
 IsoClipAlgoTet<FIELD>::edge_lookup(unsigned int u0, unsigned int u1,
@@ -154,6 +155,7 @@ IsoClipAlgoTet<FIELD>::edge_lookup(unsigned int u0, unsigned int u1,
     return edgemap[np];
   }
 }
+
 
 
 template <class FIELD>
@@ -208,6 +210,7 @@ IsoClipAlgoTet<FIELD>::face_lookup(unsigned int u0, unsigned int u1,
 }
 
 
+
 template <class FIELD>
 FieldHandle
 IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
@@ -233,6 +236,7 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   {
     mesh->get_nodes(onodes, *bi);
 
+    // Get the values and compute an inside/outside mask.
     unsigned int inside = 0;
     for (unsigned int i = 0; i < onodes.size(); i++)
     {
@@ -245,6 +249,7 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       }
     }
 
+    // Invert the mask if we are doing less than.
     if (lte) { inside = ~inside & 0xf; }
 
     if (inside == 0)
@@ -512,6 +517,7 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
   *(PropertyManager *)ofield = *(PropertyManager *)(fieldh.get_rep());
 
+  // Add the data values from the old field to the new field.
   typename node_hash_type::iterator nmitr = nodemap.begin();
   while (nmitr != nodemap.end())
   {
@@ -523,6 +529,7 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     ++nmitr;
   }
 
+  // Put the isovalue at the edge break points.
   typename edge_hash_type::iterator emitr = edgemap.begin();
   while (emitr != edgemap.end())
   {
@@ -532,6 +539,9 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     ++emitr;
   }
 
+  // Put the isovalue at the face break points.  Assumes linear
+  // interpolation across the faces (which seems safe, this is what we
+  // used to cut with.)
   typename face_hash_type::iterator fmitr = facemap.begin();
   while (fmitr != facemap.end())
   {
@@ -582,10 +592,6 @@ private:
   typedef map<pair<unsigned int, unsigned int>,
 	      typename FIELD::mesh_type::Node::index_type,
 	      equal_to<pair<unsigned int, unsigned int> > > edge_hash_type;
-
-  typedef map<utripple,
-	      typename FIELD::mesh_type::Node::index_type,
-	      utrippleequal> face_hash_type;
 #endif
 
   typename FIELD::mesh_type::Node::index_type
@@ -593,6 +599,7 @@ private:
 	      const Point &p, edge_hash_type &edgemap,
 	      typename FIELD::mesh_type *clipped) const;
 };
+
 
 
 template <class FIELD>
@@ -643,6 +650,7 @@ IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   {
     mesh->get_nodes(onodes, *bi);
 
+    // Get the values and compute an inside/outside mask.
     unsigned int inside = 0;
     for (unsigned int i = 0; i < onodes.size(); i++)
     {
@@ -655,6 +663,7 @@ IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       }
     }
 
+    // Invert the mask if we are doing less than.
     if (lte) { inside = ~inside & 0x7; }
 
     if (inside == 0)
@@ -685,6 +694,7 @@ IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     }
     else if (inside == 0x1 || inside == 0x2 || inside == 0x4)
     {
+      // Add the corner containing the inside point to the mesh.
       const int *perm = tri_permute_table[inside];
       typename FIELD::mesh_type::Node::array_type nnodes(onodes.size());
       if (nodemap.find((unsigned int)onodes[perm[0]]) == nodemap.end())
@@ -717,6 +727,9 @@ IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     }
     else
     {
+      // Lop off the one point that is outside of the mesh, then add
+      // the remaining quad to the mesh by dicing it into two
+      // triangles.
       const int *perm = tri_permute_table[inside];
       typename FIELD::mesh_type::Node::array_type inodes(4);
       if (nodemap.find((unsigned int)onodes[perm[1]]) == nodemap.end())
@@ -775,6 +788,7 @@ IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
   *(PropertyManager *)ofield = *(PropertyManager *)(fieldh.get_rep());
 
+  // Add the data values from the old field to the new field.
   typename node_hash_type::iterator nmitr = nodemap.begin();
   while (nmitr != nodemap.end())
   {
@@ -786,6 +800,7 @@ IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     ++nmitr;
   }
 
+  // Put the isovalue at the edge break points.
   typename edge_hash_type::iterator emitr = edgemap.begin();
   while (emitr != edgemap.end())
   {
