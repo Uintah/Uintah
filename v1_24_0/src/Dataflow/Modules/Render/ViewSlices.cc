@@ -346,7 +346,7 @@ class ViewSlices : public Module
   void			setup_gl_view(SliceWindow &);
   int			draw_slice(NrrdSlice &);
   void			bind_slice(NrrdSlice &,float *tex=0,bool filter=true);
-  void			bind_nrrd(Nrrd &);
+  bool			bind_nrrd(Nrrd &);
   void			draw_slice_quad(NrrdSlice &);
   void			draw_guide_lines(SliceWindow &, float, float, float);
   void			draw_slice_lines(SliceWindow &);
