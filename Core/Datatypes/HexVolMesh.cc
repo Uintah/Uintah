@@ -773,6 +773,111 @@ HexVolMesh::get_weights(const Point &p,
   }
 }
 
+
+// The volume x 6, used by get_weights to compute barycentric coordinates.
+static double
+tet_vol6(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
+{
+  const double x1=p1.x();
+  const double y1=p1.y();
+  const double z1=p1.z();
+  const double x2=p2.x();
+  const double y2=p2.y();
+  const double z2=p2.z();
+  const double x3=p3.x();
+  const double y3=p3.y();
+  const double z3=p3.z();
+  const double x4=p4.x();
+  const double y4=p4.y();
+  const double z4=p4.z();
+  const double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+  const double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+  const double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+  const double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+  return fabs(a1+a2+a3+a4);
+}
+
+
+// Tet inside test, cut and pasted from TetVolMesh.cc
+static bool
+tet_inside_p(const Point &p, const Point &p0, const Point &p1,
+	  const Point &p2, const Point &p3)
+{
+  const double x0 = p0.x();
+  const double y0 = p0.y();
+  const double z0 = p0.z();
+  const double x1 = p1.x();
+  const double y1 = p1.y();
+  const double z1 = p1.z();
+  const double x2 = p2.x();
+  const double y2 = p2.y();
+  const double z2 = p2.z();
+  const double x3 = p3.x();
+  const double y3 = p3.y();
+  const double z3 = p3.z();
+
+  const double a0 = + x1*(y2*z3-y3*z2) + x2*(y3*z1-y1*z3) + x3*(y1*z2-y2*z1);
+  const double a1 = - x2*(y3*z0-y0*z3) - x3*(y0*z2-y2*z0) - x0*(y2*z3-y3*z2);
+  const double a2 = + x3*(y0*z1-y1*z0) + x0*(y1*z3-y3*z1) + x1*(y3*z0-y0*z3);
+  const double a3 = - x0*(y1*z2-y2*z1) - x1*(y2*z0-y0*z2) - x2*(y0*z1-y1*z0);
+  const double iV6 = 1.0 / (a0+a1+a2+a3);
+
+  const double b0 = - (y2*z3-y3*z2) - (y3*z1-y1*z3) - (y1*z2-y2*z1);
+  const double c0 = + (x2*z3-x3*z2) + (x3*z1-x1*z3) + (x1*z2-x2*z1);
+  const double d0 = - (x2*y3-x3*y2) - (x3*y1-x1*y3) - (x1*y2-x2*y1);
+  const double s0 = iV6 * (a0 + b0*p.x() + c0*p.y() + d0*p.z());
+  if (s0 < -1.e-12)
+    return false;
+
+  const double b1 = + (y3*z0-y0*z3) + (y0*z2-y2*z0) + (y2*z3-y3*z2);
+  const double c1 = - (x3*z0-x0*z3) - (x0*z2-x2*z0) - (x2*z3-x3*z2);
+  const double d1 = + (x3*y0-x0*y3) + (x0*y2-x2*y0) + (x2*y3-x3*y2);
+  const double s1 = iV6 * (a1 + b1*p.x() + c1*p.y() + d1*p.z());
+  if (s1 < -1.e-12)
+    return false;
+
+  const double b2 = - (y0*z1-y1*z0) - (y1*z3-y3*z1) - (y3*z0-y0*z3);
+  const double c2 = + (x0*z1-x1*z0) + (x1*z3-x3*z1) + (x3*z0-x0*z3);
+  const double d2 = - (x0*y1-x1*y0) - (x1*y3-x3*y1) - (x3*y0-x0*y3);
+  const double s2 = iV6 * (a2 + b2*p.x() + c2*p.y() + d2*p.z());
+  if (s2 < -1.e-12)
+    return false;
+
+  const double b3 = +(y1*z2-y2*z1) + (y2*z0-y0*z2) + (y0*z1-y1*z0);
+  const double c3 = -(x1*z2-x2*z1) - (x2*z0-x0*z2) - (x0*z1-x1*z0);
+  const double d3 = +(x1*y2-x2*y1) + (x2*y0-x0*y2) + (x0*y1-x1*y0);
+  const double s3 = iV6 * (a3 + b3*p.x() + c3*p.y() + d3*p.z());
+  if (s3 < -1.e-12)
+    return false;
+
+  return true;
+}
+
+static void
+tetinterp(const Point &p, Point nodes[8],
+	  vector<double> &w, int a, int b, int c, int d)
+{
+  int i;
+  w.resize(8);
+  for (i=0; i < 8; i++)
+  {
+    w[i] = 0.0;
+  }
+  
+  const double wa = tet_vol6(p, nodes[b], nodes[c], nodes[d]); 
+  const double wb = tet_vol6(p, nodes[a], nodes[c], nodes[d]); 
+  const double wc = tet_vol6(p, nodes[a], nodes[b], nodes[d]); 
+  const double wd = tet_vol6(p, nodes[a], nodes[b], nodes[c]); 
+
+  const double sum = 1.0 / (wa + wb + wc + wd);
+  
+  w[a] = wa * sum;
+  w[b] = wb * sum;
+  w[c] = wc * sum;
+  w[d] = wd * sum;
+}
+
+
 void
 HexVolMesh::get_weights(const Point &p,
 			Node::array_type &nodes, vector<double> &w)
@@ -781,109 +886,32 @@ HexVolMesh::get_weights(const Point &p,
   if (locate(cell, p))
   {
     get_nodes(nodes, cell);
-    Vector v[8];
-    double vol[8];
+    Point v[8];
     int i;
     for (i = 0; i < 8; i++)
     {
-      Point np;
-      get_point(np, nodes[i]);
-      v[i] = np - p;
+      get_point(v[i], nodes[i]);
     }
-    vol[0] =
-      Cross(Cross(v[1], v[2]), v[6]).length() +
-      Cross(Cross(v[1], v[3]), v[2]).length() +
-      Cross(Cross(v[1], v[4]), v[5]).length() +
-      Cross(Cross(v[1], v[6]), v[5]).length() +
-      Cross(Cross(v[2], v[5]), v[6]).length() +
-      Cross(Cross(v[3], v[4]), v[7]).length() +
-      Cross(Cross(v[3], v[6]), v[7]).length() +
-      Cross(Cross(v[4], v[5]), v[6]).length() +
-      Cross(Cross(v[4], v[6]), v[7]).length();
-
-    vol[1] =
-      Cross(Cross(v[0], v[2]), v[3]).length() +
-      Cross(Cross(v[0], v[3]), v[7]).length() +
-      Cross(Cross(v[0], v[4]), v[5]).length() +
-      Cross(Cross(v[0], v[4]), v[7]).length() +
-      Cross(Cross(v[2], v[3]), v[7]).length() +
-      Cross(Cross(v[2], v[5]), v[6]).length() +
-      Cross(Cross(v[2], v[6]), v[7]).length() +
-      Cross(Cross(v[4], v[5]), v[7]).length() +
-      Cross(Cross(v[5], v[6]), v[7]).length();
-
-    vol[2] =
-      Cross(Cross(v[0], v[1]), v[3]).length() +
-      Cross(Cross(v[0], v[1]), v[4]).length() +
-      Cross(Cross(v[0], v[3]), v[4]).length() +
-      Cross(Cross(v[1], v[4]), v[5]).length() +
-      Cross(Cross(v[1], v[5]), v[6]).length() +
-      Cross(Cross(v[3], v[4]), v[7]).length() +
-      Cross(Cross(v[3], v[6]), v[7]).length() +
-      Cross(Cross(v[4], v[5]), v[6]).length() +
-      Cross(Cross(v[4], v[6]), v[7]).length();
-
-    vol[3] =
-      Cross(Cross(v[0], v[1]), v[2]).length() +
-      Cross(Cross(v[0], v[1]), v[4]).length() +
-      Cross(Cross(v[0], v[4]), v[7]).length() +
-      Cross(Cross(v[1], v[2]), v[5]).length() +
-      Cross(Cross(v[1], v[4]), v[5]).length() +
-      Cross(Cross(v[2], v[5]), v[6]).length() +
-      Cross(Cross(v[2], v[6]), v[7]).length() +
-      Cross(Cross(v[4], v[5]), v[7]).length() +
-      Cross(Cross(v[5], v[6]), v[7]).length();
-
-    vol[4] =
-      Cross(Cross(v[0], v[1]), v[2]).length() +
-      Cross(Cross(v[0], v[1]), v[5]).length() +
-      Cross(Cross(v[0], v[2]), v[3]).length() +
-      Cross(Cross(v[0], v[3]), v[7]).length() +
-      Cross(Cross(v[1], v[2]), v[5]).length() +
-      Cross(Cross(v[2], v[3]), v[6]).length() +
-      Cross(Cross(v[2], v[5]), v[6]).length() +
-      Cross(Cross(v[3], v[6]), v[7]).length() +
-      Cross(Cross(v[5], v[6]), v[7]).length();
-
-    vol[5] =
-      Cross(Cross(v[0], v[1]), v[3]).length() +
-      Cross(Cross(v[0], v[1]), v[4]).length() +
-      Cross(Cross(v[0], v[3]), v[4]).length() +
-      Cross(Cross(v[1], v[2]), v[3]).length() +
-      Cross(Cross(v[1], v[2]), v[6]).length() +
-      Cross(Cross(v[2], v[3]), v[6]).length() +
-      Cross(Cross(v[3], v[4]), v[7]).length() +
-      Cross(Cross(v[3], v[6]), v[7]).length() +
-      Cross(Cross(v[4], v[6]), v[7]).length();
-
-    vol[6] =
-      Cross(Cross(v[0], v[1]), v[2]).length() +
-      Cross(Cross(v[0], v[1]), v[5]).length() +
-      Cross(Cross(v[0], v[2]), v[3]).length() +
-      Cross(Cross(v[0], v[3]), v[4]).length() +
-      Cross(Cross(v[0], v[4]), v[5]).length() +
-      Cross(Cross(v[1], v[2]), v[5]).length() +
-      Cross(Cross(v[2], v[3]), v[7]).length() +
-      Cross(Cross(v[3], v[4]), v[7]).length() +
-      Cross(Cross(v[4], v[5]), v[7]).length();
-
-    vol[7] =
-      Cross(Cross(v[0], v[1]), v[3]).length() +
-      Cross(Cross(v[0], v[1]), v[4]).length() +
-      Cross(Cross(v[0], v[3]), v[4]).length() +
-      Cross(Cross(v[1], v[2]), v[3]).length() +
-      Cross(Cross(v[1], v[2]), v[6]).length() +
-      Cross(Cross(v[1], v[4]), v[5]).length() +
-      Cross(Cross(v[1], v[5]), v[6]).length() +
-      Cross(Cross(v[2], v[3]), v[6]).length() +
-      Cross(Cross(v[4], v[5]), v[6]).length();
-
-    const double suminv = 1.0 / (vol[0] + vol[1] + vol[2] + vol[3] +
-				 vol[4] + vol[5] + vol[6] + vol[7]);
-
-    for (i = 0; i < 8; i++)
+    
+    if (tet_inside_p(p, v[0], v[4], v[3], v[1]))
     {
-      w.push_back(vol[i] * suminv);
+      tetinterp(p, v, w, 0, 4, 3, 1);
+    }
+    else if (tet_inside_p(p, v[2], v[6], v[1], v[3]))
+    {
+      tetinterp(p, v, w, 2, 6, 1, 3);
+    }
+    else if (tet_inside_p(p, v[5], v[1], v[6], v[4]))
+    {
+      tetinterp(p, v, w, 5, 1, 6, 4);
+    }
+    else if (tet_inside_p(p, v[7], v[3], v[4], v[6]))
+    {
+      tetinterp(p, v, w, 7, 3, 4, 6);
+    }
+    else
+    {
+      tetinterp(p, v, w, 1, 3, 4, 6);
     }
   }
 }
