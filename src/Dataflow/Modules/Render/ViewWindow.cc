@@ -2204,64 +2204,58 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
       (r->*pmf)(manager, this, viewwindow_objs[i].get_rep());
     }
   }
-
-  vector<GeomViewerItem*> transp_objs; // transparent objects - drawn last
-
-  GeomIndexedGroup::IterIntGeomObj iter = manager->ports_.getIter();
   
-  for ( ; iter.first != iter.second; iter.first++) {
+  
+  for (int pass=0; pass < 4; pass++)
+  {
+
+    GeomIndexedGroup::IterIntGeomObj iter = manager->ports_.getIter();
+  
+    for ( ; iter.first != iter.second; iter.first++) {
       
-    GeomIndexedGroup::IterIntGeomObj serIter = 
-      ((GeomViewerPort*)((*iter.first).second.get_rep()))->getIter();
+      GeomIndexedGroup::IterIntGeomObj serIter = 
+	((GeomViewerPort*)((*iter.first).second.get_rep()))->getIter();
     
-    for ( ; serIter.first != serIter.second; serIter.first++) {
+      for ( ; serIter.first != serIter.second; serIter.first++) {
 	    
-      GeomViewerItem *si =
-	(GeomViewerItem*)((*serIter.first).second.get_rep());
+	GeomViewerItem *si =
+	  (GeomViewerItem*)((*serIter.first).second.get_rep());
       
-      // Look up the name to see if it should be drawn...
-      ObjTag* vis;
+	// Look up the name to see if it should be drawn...
+	ObjTag* vis;
       
-      viter = visible.find(si->name_);
-      if (viter != visible.end()) { // if found
-	vis = (*viter).second;
-	if (vis->visible->get()) {
-	  if (strstr(si->name_.c_str(),"TransParent") ||
-	      strstr(si->name_.c_str(),"Culled Text")) { // delay drawing
-	    transp_objs.push_back(si);
-	  }
-	  else {
-	    if(si->crowd_lock_)
-	      si->crowd_lock_->readLock();
-	    (r->*pmf)(manager, this, si);
-	    if(si->crowd_lock_)
-	      si->crowd_lock_->readUnlock();
+	viter = visible.find(si->name_);
+	if (viter != visible.end()) // if found
+	{
+	  vis = (*viter).second;
+	  if (vis->visible->get())
+	  {
+	    const bool transparent = strstr(si->name_.c_str(), "TransParent");
+	    const bool culledtext = strstr(si->name_.c_str(), "Culled Text");
+	    const bool sticky = strstr(si->name_.c_str(), "Sticky");
+	    if ((pass == 0 && !transparent && !culledtext && !sticky) ||
+		(pass == 1 && transparent && !culledtext && !sticky) ||
+		(pass == 2 && culledtext && !sticky) ||
+		(pass == 3 && sticky))
+	    {
+	      if(si->crowd_lock_)
+		si->crowd_lock_->readLock();
+	      (r->*pmf)(manager, this, si);
+	      if(si->crowd_lock_)
+		si->crowd_lock_->readUnlock();
+	    }
 	  }
 	}
-      }
-      else {
-	cerr << "Warning: object " << si->name_ <<
-	  " not in visibility database...\n";
+	else
+	{
+	  cerr << "Warning: Object " << si->name_ <<
+	    " not in visibility database.\n";
+	}
       }
     }
   }
-
-  // now run through the transparent objects...
-
-  for(i=0;i<transp_objs.size();i++)
-  {
-    GeomViewerItem *si = transp_objs[i];    
-
-    if(si->crowd_lock_)
-      si->crowd_lock_->readLock();
-    (r->*pmf)(manager, this, si);
-    if(si->crowd_lock_)
-      si->crowd_lock_->readUnlock();
-  }
-
-  // now you are done...
-
 }
+
 
 void ViewWindow::set_current_time(double time)
 {
