@@ -33,6 +33,7 @@
 
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Containers/StringUtil.h>
 #include <fstream>
 using std::ifstream;
 using std::ofstream;
@@ -829,8 +830,9 @@ void BinaryPiostream::io(string& data)
 {
     if(err)return;
     char* p=0;
-    if(dir==Write)
-	p=const_cast<char *>(data.c_str());
+    if(dir==Write) {
+      p = ccast_unsafe(data);
+    }
     if(!xdr_wrapstring(xdr, &p)){
 	err=1;
 	cerr << "xdr_wrapstring failed\n";

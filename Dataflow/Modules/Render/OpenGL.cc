@@ -345,8 +345,7 @@ void OpenGL::redraw_frame()
 {
   // Get window information
   TCLTask::lock();
-  Tk_Window new_tkwin=Tk_NameToWindow(the_interp,
-				      const_cast<char *>(myname.c_str()),
+  Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname),
 				      Tk_MainWindow(the_interp));
   if(!new_tkwin){
     cerr << "Unable to locate window!\n";
@@ -357,7 +356,7 @@ void OpenGL::redraw_frame()
     tkwin=new_tkwin;
     dpy=Tk_Display(tkwin);
     win=Tk_WindowId(tkwin);
-    cx=OpenGLGetContext(the_interp, const_cast<char *>(myname.c_str()));
+    cx=OpenGLGetContext(the_interp, ccast_unsafe(myname));
     if(!cx){
       cerr << "Unable to create OpenGL Context!\n";
       TCLTask::unlock();
@@ -1512,8 +1511,7 @@ void OpenGL::listvisuals(TCLArgs& args)
   
   cerr << "Calling allow..." << getpid() << "\n";
   Thread::allow_sgi_OpenGL_page0_sillyness();
-  Tk_Window topwin=Tk_NameToWindow(the_interp,
-				   const_cast<char *>(args[2].c_str()),
+  Tk_Window topwin=Tk_NameToWindow(the_interp, ccast_unsafe(args[2]),
 				   Tk_MainWindow(the_interp));
   if(!topwin){
     cerr << "Unable to locate window!\n";
