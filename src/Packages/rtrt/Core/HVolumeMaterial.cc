@@ -1,5 +1,5 @@
 #include <Packages/rtrt/Core/Color.h>
-#include <Packages/rtrt/Core/Array1.cc>
+#include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/VolumeDpy.h>
 #include <Packages/rtrt/Core/HVolumeMaterial.h>

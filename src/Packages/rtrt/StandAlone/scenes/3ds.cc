@@ -767,11 +767,11 @@ void read_3ds(char* filename, Scene* scene, double light_radius, int maxtri)
 
 #ifdef __GNUG__
 
-#include "Array1.cc"
+#include <Packages/rtrt/Core/Array1.h>
 template class Array1<Face>;
 
-#include "HashTable.cc"
-#include "HashTableEntry.cc"
+#include <Packages/rtrt/Core/HashTable.cc>
+#include <Packages/rtrt/Core/HashTableEntry.cc>
 template class HashTable<clString, Material*>;
 template class HashTableEntry<clString, Material*>;
 

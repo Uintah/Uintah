@@ -24,7 +24,7 @@
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/VolumeDpy.h>
-#include <Packages/rtrt/Core/Array1.cc>
+#include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/TimeObj.h>
 #include <Core/Thread/Thread.h>
 #include <iostream>

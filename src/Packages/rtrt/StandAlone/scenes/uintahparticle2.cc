@@ -22,7 +22,7 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/TimeObj.h>
-#include <Packages/rtrt/Core/Array1.cc>
+#include <Packages/rtrt/Core/Array1.h>
 #if 0
 #undef Exception
 #undef SCI_ASSERTION_LEVEL

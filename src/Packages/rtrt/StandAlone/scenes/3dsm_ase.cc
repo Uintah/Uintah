@@ -1,7 +1,7 @@
 #include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/BV1.h>
-#include <Packages/rtrt/Core/Array1.cc>
-#include <Packages/rtrt/Core/Array3.cc>
+#include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/Array3.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Grid.h>
 #include <Packages/rtrt/Core/Group.h>

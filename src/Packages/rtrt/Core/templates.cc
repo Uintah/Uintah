@@ -1,5 +1,5 @@
 
-#include <Packages/rtrt/Core/Array1.cc>
+#include <Packages/rtrt/Core/Array1.h>
 
 using rtrt::Array1;
 
