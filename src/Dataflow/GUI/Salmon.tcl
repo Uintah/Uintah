@@ -22,12 +22,9 @@ itcl_class PSECommon_Salmon_Salmon {
     }
 
     method set_defaults {} {
-        global $this-pos
 	set make_progress_graph 0
 	set make_time 0
 	set roe ""
-        set $this-pos "nothing"
-	
     }
 
     method makeRoeID {} {
@@ -261,11 +258,14 @@ itcl_class Roe {
 	pack $w.bframe.dolly.o.b $w.bframe.dolly.o.o $w.bframe.dolly.o.s \
 		-fill x -padx 2 -pady 2 -side left -expand 1
 	pack $w.bframe.dolly.i $w.bframe.dolly.o -fill x -anchor nw
+
+	# button $w.bframe.dolly.snap -text Snap -command "$this-c Snap" 
+	# pack $w.bframe.dolly.snap -pady 2 -padx 2 -anchor se -side left
 	
 	frame $w.bframe.dolly.views             
 	pack $w.bframe.dolly.views -side left -anchor nw
 	
-	menubutton $w.bframe.dolly.views.def -text "     Views     " -menu $w.bframe.dolly.views.def.m -relief raised -padx 2 -pady 2 
+	menubutton $w.bframe.dolly.views.def -text Views -menu $w.bframe.dolly.views.def.m -relief raised -padx 2 -pady 2 
 	
 	menu $w.bframe.dolly.views.def.m
 	$w.bframe.dolly.views.def.m add cascade -label "Look down +X Axis" \
@@ -421,6 +421,8 @@ itcl_class Roe {
 	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
+        set $this-caxes 1
+	$this-c autoview  
     }
 
     method removeMFrame {w} {
@@ -604,6 +606,11 @@ itcl_class Roe {
         } else {
 	    puts "Non-existing frame to initialize!"
 	}
+
+        checkbutton $m.caxes -text "Center Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c centerGenAxes; $this-c redraw"
+	# checkbutton $m.iaxes -text "Icon Axes" -variable $this-iaxes -onvalue 1 -offvalue 0 -command "$this-c iconGenAxes; $this-c redraw"
+	# pack $m.caxes $m.iaxes -side top
+	pack $m.caxes -side top
     }
 
     method switch_frames {} {
