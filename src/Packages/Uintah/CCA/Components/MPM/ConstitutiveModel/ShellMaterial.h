@@ -215,7 +215,7 @@ WARNING
 				    double delT);
 
     // Calculate the total rotation matrix for a shell particle
-    Matrix3 calcTotalRotation(const Vector& n0, const Vector& n);
+    void calcTotalRotation(const Vector& n0, const Vector& n, Matrix3& R);
 
     // Calculate the rotation matrix given and angle and the axis
     // of rotation
@@ -225,9 +225,12 @@ WARNING
     void calcInPlaneGradient(const Vector& n, Matrix3& velGrad,
                              Matrix3& rotGrad);
 
+    // Calculate the shell elastic stress
+    void computeShellElasticStress(Matrix3& F, Matrix3& sig);
+
     // Calculate the plane stress deformation gradient corresponding
     // to sig33 = 0 and the Cauchy stress
-    void computePlaneStressDefGrad(Matrix3& F, Matrix3& sig);
+    bool computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig);
 
   };
 } // End namespace Uintah
