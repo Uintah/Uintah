@@ -3,9 +3,11 @@
 #include <Packages/Uintah/Core/Grid/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
 using namespace Uintah;
 using namespace SCIRun;
+
 
 SphereGeometryPiece::SphereGeometryPiece(ProblemSpecP& ps)
 {
@@ -15,7 +17,10 @@ SphereGeometryPiece::SphereGeometryPiece(ProblemSpecP& ps)
 
   ps->require("origin",orig);
   ps->require("radius",rad);
-
+  
+  if ( rad <= 0.0)
+    throw ProblemSetupException("Input File Error: Sphere radius must be > 0.0");
+  
   d_origin = orig;
   d_radius = rad;
 }
