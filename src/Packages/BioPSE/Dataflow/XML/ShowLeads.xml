@@ -8,28 +8,27 @@
     <authors>
       <author>Martin Cole</author>
     </authors>
-    <summary>Graph a Matrix that has rows of potentials </summary>
+    <summary>The ShowLeads module graphs a Matrix that has rows of potentials.</summary>
     <description>
-      <p>The input matrix must be a DenseMatrix.  Unlimited rows. Each
+      <p>The input matrix must be a DenseMatrix, which has unlimited rows. Each
 row can have an unlimited number of time instances. The scalar value
-at each (row,col) is considered a potential measurment. The graph is a
-series of graphs. for each row in the matrix ShowLeads displays a line
-graph of the potentials over regular ime intervals. time progresses
+at each (row,column) is a potential measurement, and the graph is a
+series of graphs. For each row in the matrix ShowLeads displays a line
+graph of the potentials over regular time intervals, and time progresses
 along the x-axis.</p>
-      <p>Units for time are displayed along the x-axis. The units are
+      <p>Time units are displayed along the x-axis, where they are
 taken as a string from the properties in the Matrix. </p>
-      <p>Properties that ShowLeads use are: time-units, time-start,
-and time-end time-units is a string that is displayed along the
-x-axis, and the start and end time determine the values for time.</p>
-      <p>Using the sliders at the top of the dialog, zooms the display
-to just the leads that are desired. Changing the Vertical Scale simply
+      <p>The ShowLeads module properties are: time-units, time-start,
+and time-end time-units; a string that displays along the
+x-axis. The start and end time determine the values for time.</p>
+      <p>The sliders at the top of the dialog zoom the display, showing 
+desired leads only. Changing the Vertical Scale simply
 applies a multiplier to the scalar values before display.</p>
       <p>Dragging the yellow vertical bars in the graph window updates
-the value at each lead on the left side of the graph.  This allows for
+the value at each lead on the left side of the graph, allowing for
 closer data inspection.</p>
-      <p>Data is arranged as follows.  Each row in the matrix is a
-lead, each column is a time instance.  So at each lead, time(row,col)
-is a potential(scalar)</p>
+      <p>Data is arranged as follows: Each row in the matrix is a
+lead; each column is a time instance.  Thus, time (row, column) is a potential (scalar) at each lead.</p>
     </description>
   </overview>
   <implementation>
