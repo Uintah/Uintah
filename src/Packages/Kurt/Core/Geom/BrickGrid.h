@@ -12,6 +12,10 @@
 #include <Core/Datatypes/LatticeVol.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
+
+
+using std::pair;
+
 namespace Kurt {
 
 using SCIRun::Array3;
@@ -25,6 +29,7 @@ using SCIRun::Piostream;
 using Uintah::ShareAssignArray3;
 using Uintah::LevelField;
 class GridVolRen;
+
 
 
 class BrickGrid : public Datatype {
