@@ -14,4 +14,4 @@
 #include <Datatypes/ContourSetPort.h>
 
 clString SimpleIPort<ContourSetHandle>::port_type("ContourSet");
-clString SimpleIPort<ContourSetHandle>::port_color("SGITeal");
+clString SimpleIPort<ContourSetHandle>::port_color("#388e8e");
