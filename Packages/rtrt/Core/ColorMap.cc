@@ -42,8 +42,8 @@ ColorMap::ColorMap(char * filebase) {
 
 Color ColorMap::indexColorMap(float v) {
   //look up a value and return a color
-  if (v < 0.0) v = 0.0;
-  if (v > 1.0) v = 1.0;
+  if (v < 0.0f) v = 0.0f;
+  if (v > 1.0f) v = 1.0f;
     
   if (valid) {
 
@@ -51,8 +51,9 @@ Color ColorMap::indexColorMap(float v) {
     int middle = ColorCells.size()/2;
     int nearesthigh = ColorCells.size();
 
-    bool found = false;
-    while (!found) {
+    //    bool found = false;
+    //    while (!found) {
+    for (;;) {
       if (nearestlow+1 == nearesthigh) {
 	break;
       }
