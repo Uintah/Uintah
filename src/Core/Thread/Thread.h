@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  Thread.h: The thread class
+ *  Thread: The thread class
  *
  *  Written by:
  *   Author: Steve Parker
@@ -26,6 +26,10 @@ KEYWORDS
    Thread
    
 DESCRIPTION
+
+   The Thread class provides a new context in which to run.  A single
+   Runnable class is attached to a single Thread class, which are
+   executed in another thread.
  
 PATTERNS
 
@@ -43,55 +47,6 @@ namespace SCICore {
 	class ThreadGroup;
 	
 	class Thread {
-	    friend class Mutex;
-	    friend class Semaphore;
-	    friend class Barrier;
-	    
-	    Thread(const Thread&);
-	    
-	    ~Thread();
-	    bool d_daemon;
-	    bool d_detached;
-	    Runnable* d_runner;
-	    const std::string d_threadname;
-	    Thread_private* d_priv;
-	    ThreadGroup* d_group;
-	    int d_cpu;
-	    int d_priority;
-	    
-	    //////////
-	    // This method is specific to a particular thread implementation.
-	    void os_start(bool stopped);
-	    
-	    //////////
-	    // This is for an internal initialization.  Do not call it
-	    // directly.
-	    static void initialize();
-	    
-	    //////////
-	    // Private constructor for internal use only
-	    Thread(ThreadGroup* g, const std::string& name);
-	    friend class Runnable;
-	    
-	    friend void Thread_run(Thread*);
-	    
-	    friend void Thread_shutdown(Thread*);
-	    
-	    void run_body();
-	    class ParallelHelper : public Runnable {
-		const ParallelBase* d_helper;
-		int d_proc;
-	    public:
-		ParallelHelper(const ParallelBase* helper, int proc)
-		    : d_helper(helper), d_proc(proc) {}
-		virtual ~ParallelHelper() {}
-		virtual void run() {
-		    ParallelBase* cheat=(ParallelBase*)d_helper;
-		    cheat->run(d_proc);
-		}
-	    };
-	    
-	    static void checkExit();
 	public:
 	    //////////
 	    // Create a thread, which will execute the <b>run()</b>
@@ -101,27 +56,17 @@ namespace SCICore {
 	    // specifies the ThreadGroup that to which this thread
 	    // should belong.  If no group is specified (group==0),
 	    // the default group is used.
-	    Thread(Runnable* runner, const std::string& name,
+	    Thread(Runnable* runner, const char* name,
 		   ThreadGroup* group=0, bool stopped=false);
 	    
 	    //////////
 	    // Return the <b>ThreadGroup</b> associated with this thread.
-	    ThreadGroup* threadGroup();
+	    ThreadGroup* getThreadGroup();
 	    
 	    //////////
 	    // Flag the thread as a daemon thread.  When all non-deamon
 	    // threads exit, the program will exit.
 	    void setDaemon(bool to=true);
-	    
-	    //////////
-	    // Set the priority for the thread.  Priorities range from
-	    // 1 to 10, with 10 having the highest priority.  The default
-	    // priority is 5.
-	    void setPriority(int priority);
-	    
-	    //////////
-	    // Return the current priority of the thread.
-	    int getPriority() const;
 	    
 	    //////////
 	    // Returns true if the thread is tagged as a daemon thread.
@@ -138,12 +83,28 @@ namespace SCICore {
 	    bool isDetached() const;
 	    
 	    //////////
+	    // Set the stack size for a particular thread.  In order
+	    // to use this thread, you must create the thread in the
+	    // stopped state, set the stack size, and then start the
+	    // thread.  Setting the stack size for a thread that is
+	    // running or has ever been run, will throw an exception.
+	    void setStackSzie(unsigned long stackSize);
+	    
+	    //////////
+	    // Returns the stack size for the thread
+	    unsigned long getStackSize() const;
+	    
+	    //////////
 	    // Kill all threads and exit with <b>code</b>.
 	    static void exitAll(int code);
 	    
 	    //////////
+	    // Exit the currently running thread
+	    static void exit();
+	    
+	    //////////
 	    // Returns a pointer to the currently running thread.
-	    static Thread* currentThread();
+	    static Thread* self();
 	    
 	    //////////
 	    // Stop the thread.
@@ -160,7 +121,7 @@ namespace SCICore {
 	    
 	    //////////
 	    // Returns the name of the thread
-	    const std::string& threadName() const;
+	    const char* getThreadName() const;
 	    
 	    //////////
 	    // Returns the number of processors on the system
@@ -171,11 +132,6 @@ namespace SCICore {
 	    // If <i>proc</i> is -1, then the thread is free to run
 	    // anywhere.
 	    void migrate(int proc);
-	    
-	    //////////
-	    // Returns the private pointer - should only be used by
-	    // the thread implementation
-	    Thread_private* getPrivate() const;
 	    
 	    //////////
 	    // Start up several threads that will run in parallel.  A new
@@ -209,7 +165,62 @@ namespace SCICore {
 	    //////////
 	    // Voluntarily give up time to another processor
 	    static void yield();
+
+	private:
+	    friend class Barrier;
+	    friend class Mutex;
+	    friend class Runnable;	    
+	    friend class Semaphore;
+	    friend class Thread_private;
 	    
+	    Thread(const Thread&);
+	    ~Thread();
+
+	    Runnable* d_runner;
+	    const char* d_threadname;
+	    Thread_private* d_priv;
+	    ThreadGroup* d_group;
+	    unsigned long d_stacksize;
+	    int d_cpu;
+	    bool d_daemon;
+	    bool d_detached;
+	    
+	    void os_start(bool stopped);
+	    static void initialize();
+	    Thread(ThreadGroup* g, const char* name);
+	    void run_body();	    
+	    static void checkExit();
+
+	    enum ThreadState {
+		STARTUP,
+		RUNNING,
+		IDLE,
+		SHUTDOWN,
+		DIED,
+		PROGRAM_EXIT,
+		JOINING,
+		BLOCK_ANY,
+		BLOCK_BARRIER,
+		BLOCK_MUTEX,
+		BLOCK_SEMAPHORE
+	    };
+	    static int push_bstack(Thread_private*, ThreadState s,
+				   const char* why);
+	    static void pop_bstack(Thread_private*, int oldstate);
+	    
+
+	    class ParallelHelper : public Runnable {
+		const ParallelBase* helper;
+		int proc;
+	    public:
+		ParallelHelper(const ParallelBase* helper, int proc)
+		    : helper(helper), proc(proc) {}
+		virtual ~ParallelHelper() {}
+		virtual void run() {
+		    ParallelBase* cheat=(ParallelBase*)helper;
+		    cheat->run(proc);
+		}
+	    };
 	};	
     }
 }
@@ -218,6 +229,11 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 19:00:51  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.4  1999/08/25 02:38:00  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun

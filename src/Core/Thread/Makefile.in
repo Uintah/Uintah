@@ -2,10 +2,9 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../..
 
-SRCS     = AtomicCounter.cc ConditionVariable.cc CrowdMonitor.cc \
-	   Guard.cc ParallelBase.cc RecursiveMutex.cc Reducer.cc \
-	   Runnable.cc Thread.cc ThreadGroup.cc WorkQueue.cc \
-	   @THREAD_IMPL@ @TIME_IMPL@
+SRCS     = Guard.cc ParallelBase.cc Reducer.cc \
+	   Runnable.cc Thread.cc ThreadError.cc ThreadGroup.cc \
+	   WorkQueue.cc @THREAD_IMPL@ @TIME_IMPL@
 
 INCLUDES = -I$(OBJTOP)
 

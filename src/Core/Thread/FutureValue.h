@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  FutureValue.h: Delayed return values
+ *  FutureValue: Delayed return values
  *
  *  Written by:
  *   Author: Steve Parker
@@ -22,7 +22,7 @@ CLASS
    FutureValue
    
 KEYWORDS
-   FutureValue
+   Thread
    
 DESCRIPTION
    Creates a single slot for some return value.  The <i>wait</i> method
@@ -44,15 +44,12 @@ WARNING
    
 ****************************************/
 
-#include <SCICore/Thread/Thread.h>
 #include <SCICore/Thread/Semaphore.h>
+#include <SCICore/Thread/Thread.h>
 
 namespace SCICore {
     namespace Thread {
 	template<class Item> class FutureValue {
-	    const char* name;
-	    Item value;
-	    Semaphore sema;
 	public:
 	    //////////
 	    // Create the FutureValue object.  <i>name</i> should be a
@@ -67,11 +64,16 @@ namespace SCICore {
 	    //////////
 	    // Wait until the reply is sent by anothe thread, then return
 	    // that reply.
-	    Item wait();
+	    Item receive();
 
 	    //////////
 	    // Send the reply to the waiting thread.
-	    void reply(const Item& reply);
+	    void send(const Item& reply);
+
+	private:
+	    const char* name;
+	    Item value;
+	    Semaphore sema;
 	};
     }
 }
@@ -108,6 +110,11 @@ SCICore::Thread::FutureValue<Item>::reply(const Item& reply)
 
 //
 // $Log$
+// Revision 1.2  1999/08/25 19:00:48  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.1  1999/08/25 02:37:55  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun

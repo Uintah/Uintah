@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  Guard.h: Automatically lock/unlock a mutex or crowdmonitor.
+ *  Guard: Automatically lock/unlock a mutex or crowdmonitor.
  *
  *  Written by:
  *   Author: Steve Parker
@@ -22,7 +22,7 @@ CLASS
    Guard
    
 KEYWORDS
-   Guard
+   Thread
    
 DESCRIPTION
    Utility class to lock and unlock a <b>Mutex</b> or a <b>CrowdMonitor</b>.
@@ -43,14 +43,12 @@ WARNING
    
 ****************************************/
 
-class SCICore {
-    class Thread {
+namespace SCICore {
+    namespace Thread {
 	class CrowdMonitor;
 	class Mutex;
 
 	class Guard {
-	    Mutex* d_mutex;
-	    CrowdMonitor* d_monitor;
 	public:
 	    //////////
 	    // Attach the <b>Guard</b> object to the <i>mutex</i>, and
@@ -75,6 +73,8 @@ class SCICore {
 	    ~Guard();
 	private:
 	    Which action;
+	    Mutex* d_mutex;
+	    CrowdMonitor* d_monitor;
 	};
     }
 }
@@ -83,6 +83,11 @@ class SCICore {
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 19:00:48  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.2  1999/08/25 02:37:56  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun
