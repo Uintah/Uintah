@@ -42,26 +42,29 @@ using std::endl;
 namespace SCITeem {
 
 class NrrdResample : public Module {
-  NrrdIPort* inrrd_;
-  NrrdOPort* onrrd_;
-  GuiString filtertype_;
-  GuiString resampAxis0_;
-  GuiString resampAxis1_;
-  GuiString resampAxis2_;
-  GuiDouble sigma_;
-  GuiDouble extent_;
-  string last_filtertype_;
-  string last_resampAxis0_;
-  string last_resampAxis1_;
-  string last_resampAxis2_;
-  int last_generation_;
-  NrrdDataHandle last_nrrdH_;
 public:
   int getint(const char *str, int *n, int *none);
   int get_sizes(string *resampAxis, Nrrd *nrrd, NrrdResampleInfo *info);
   NrrdResample(GuiContext *ctx);
   virtual ~NrrdResample();
   virtual void execute();
+
+private:
+  NrrdIPort          *inrrd_;
+  NrrdOPort          *onrrd_;
+  GuiString           filtertype_;
+  GuiString           resampAxis1_;
+  GuiString           resampAxis2_;
+  GuiString           resampAxis3_;
+  GuiDouble           sigma_;
+  GuiDouble           extent_;
+  string              last_filtertype_;
+  string              last_resampAxis1_;
+  string              last_resampAxis2_;
+  string              last_resampAxis3_;
+  int                 last_generation_;
+  NrrdDataHandle      last_nrrdH_;
+
 };
 
 } // End namespace SCITeem
@@ -69,23 +72,30 @@ using namespace SCITeem;
 
 DECLARE_MAKER(NrrdResample)
 
-NrrdResample::NrrdResample(GuiContext *ctx)
-  : Module("NrrdResample", ctx, Filter, "Filters", "Teem"),
-    filtertype_(ctx->subVar("filtertype")),
-    resampAxis0_(ctx->subVar("resampAxis0")), 
-    resampAxis1_(ctx->subVar("resampAxis1")), 
-    resampAxis2_(ctx->subVar("resampAxis2")), 
-    sigma_(ctx->subVar("sigma")),
-    extent_(ctx->subVar("extent")),
-    last_filtertype_(""), last_resampAxis0_(""), last_resampAxis1_(""),
-    last_resampAxis2_(""), last_generation_(-1), last_nrrdH_(0)
+NrrdResample::NrrdResample(GuiContext *ctx) : 
+  Module("NrrdResample", ctx, Filter, "Filters", "Teem"),
+  filtertype_(ctx->subVar("filtertype")),
+  resampAxis1_(ctx->subVar("resampAxis1")), 
+  resampAxis2_(ctx->subVar("resampAxis2")), 
+  resampAxis3_(ctx->subVar("resampAxis3")), 
+  sigma_(ctx->subVar("sigma")),
+  extent_(ctx->subVar("extent")),
+  last_filtertype_(""), 
+  last_resampAxis1_(""), 
+  last_resampAxis2_(""),
+  last_resampAxis3_(""), 
+  last_generation_(-1), 
+  last_nrrdH_(0)
 {
 }
 
-NrrdResample::~NrrdResample() {
+NrrdResample::~NrrdResample() 
+{
 }
 
-int NrrdResample::getint(const char *str, int *n, int *none) {
+int 
+NrrdResample::getint(const char *str, int *n, int *none) 
+{
   if (!strlen(str)) return 1;
   if (str[0] == 'x') {
     if (strlen(str) > 1) {
@@ -105,19 +115,24 @@ int NrrdResample::getint(const char *str, int *n, int *none) {
   return 0;
 }
 
-// only do work on geometric axes FIX_ME MC
-int NrrdResample::get_sizes(string *resampAxis, Nrrd *nrrd,
-			    NrrdResampleInfo *info) {
+
+int 
+NrrdResample::get_sizes(string *resampAxis, Nrrd *nrrd, NrrdResampleInfo *info)
+{
   msgStream_ << "NrrdResample sizes: ";
-  for (int a=1; a<4; a++) {
-    info->samples[a]=nrrd->axis[a].size;
+  // set tuple axis info
+  info->samples[0] = nrrd->axis[0].size;
+  info->kernel[0] = 0;
+  for (int a = 1; a < 4; a++) {
+    // only do work on geometric axes.
+    info->samples[a] = nrrd->axis[a].size;
     const char *str = resampAxis[a].c_str();
     int none=0;
     if (getint(str, &(info->samples[a]), &none)) { 
       msgStream_ << "NrrdResample -- bad size.\n"; 
       return 0;
     }
-    if (none) info->kernel[a]=0;
+    if (none) info->kernel[a] = 0;
     msgStream_ << info->samples[a];
     if (!info->kernel[a]) msgStream_ << "=";
     msgStream_ << " ";
@@ -149,16 +164,19 @@ NrrdResample::execute()
   }
 
   string ftype=filtertype_.get();
-  string resampAxis[3];
-  resampAxis[0]=resampAxis0_.get();
-  resampAxis[1]=resampAxis1_.get();
-  resampAxis[2]=resampAxis2_.get();
+  string resampAxis[4];
+  resampAxis[0] = "x1";
+  resampAxis[1] = resampAxis1_.get();
+  resampAxis[2] = resampAxis2_.get();
+  resampAxis[3] = resampAxis3_.get();
+
   if (last_generation_ == nrrdH->generation &&
       last_filtertype_ == ftype &&
-      last_resampAxis0_ == resampAxis[0] &&
       last_resampAxis1_ == resampAxis[1] &&
       last_resampAxis2_ == resampAxis[2] &&
-      last_nrrdH_.get_rep()) {
+      last_resampAxis3_ == resampAxis[3] &&
+      last_nrrdH_.get_rep()) 
+  {
     onrrd_->send(last_nrrdH_);
     return;
   }
@@ -166,18 +184,33 @@ NrrdResample::execute()
   NrrdResampleInfo *info = nrrdResampleInfoNew();
 
   Nrrd *nin = nrrdH->nrrd;
-  msgStream_ << "Resampling with a "<<ftype<<" filter."<<endl;
+  msgStream_ << "Resampling with a " << ftype << " filter." << endl;
   NrrdKernel *kern;
   double p[NRRD_KERNEL_PARMS_NUM];
   memset(p, 0, NRRD_KERNEL_PARMS_NUM * sizeof(double));
-  p[0]=1.0;
-  if (ftype == "box") kern=nrrdKernelBox;
-  else if (ftype == "tent") kern=nrrdKernelTent;
-  else if (ftype == "gaussian") { kern=nrrdKernelGaussian; p[1]=sigma_.get(); p[2]=extent_.get(); }
-  else if (ftype == "cubicCR") { kern=nrrdKernelBCCubic; p[1]=0; p[2]=0.5; }
-  else if (ftype == "cubicBS") { kern=nrrdKernelBCCubic; p[1]=1; p[2]=0; }
-  else /* if (ftype == "quartic") */ { kern=nrrdKernelAQuartic; p[1]=0.0834; }
-  for (int a=1; a<4; a++) {
+  p[0] = 1.0;
+  if (ftype == "box") {
+    kern = nrrdKernelBox;
+  } else if (ftype == "tent") {
+    kern = nrrdKernelTent;
+  } else if (ftype == "gaussian") { 
+    kern = nrrdKernelGaussian; 
+    p[1] = sigma_.get(); 
+    p[2] = extent_.get(); 
+  } else if (ftype == "cubicCR") { 
+    kern = nrrdKernelBCCubic; 
+    p[1] = 0; 
+    p[2] = 0.5; 
+  } else if (ftype == "cubicBS") { 
+    kern = nrrdKernelBCCubic; 
+    p[1] = 1; 
+    p[2] = 0; 
+  } else  { // default is quartic
+    kern = nrrdKernelAQuartic; 
+    p[1] = 0.0834; 
+  }
+
+  for (int a = 0; a < 4; a++) {
     info->kernel[a] = kern;
     memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
     if (!(AIR_EXISTS(nin->axis[a].min) && AIR_EXISTS(nin->axis[a].max)))
@@ -193,15 +226,15 @@ NrrdResample::execute()
 
   last_generation_ = nrrdH->generation;
   last_filtertype_ = ftype;
-  last_resampAxis0_ = resampAxis[0];
   last_resampAxis1_ = resampAxis[1];
   last_resampAxis2_ = resampAxis[2];
+  last_resampAxis3_ = resampAxis[3];
 
   NrrdData *nrrd = scinew NrrdData;
   if (nrrdSpatialResample(nrrd->nrrd=nrrdNew(), nin, info)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble resampling: ") +  err);
-    msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+    msgStream_ << "  input Nrrd: nin->dim=" << nin->dim << "\n";
     free(err);
   }
   nrrdResampleInfoNix(info);  
