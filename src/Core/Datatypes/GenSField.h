@@ -12,7 +12,7 @@
 //
 //  This class represents a basic scalar field, containing one
 //  attribute and one geometry.  The attribute (template argument A)
-//  defaults to a FlatSAttrib unless otherwise specified at compile
+//  defaults to a DiscreteSAttrib unless otherwise specified at compile
 //  time.
 //
 //
@@ -24,7 +24,7 @@
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Datatypes/SField.h>
-#include <SCICore/Datatypes/FlatAttrib.h>
+#include <SCICore/Datatypes/DiscreteAttrib.h>
 
 namespace SCICore{
 namespace Datatypes{
@@ -34,7 +34,7 @@ using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
 
 
-template <class T, class G, class A=FlatAttrib<T> > class SCICORESHARE GenSField:
+template <class T, class G, class A=DiscreteAttrib<T> > class SCICORESHARE GenSField:
 public SField,
 public SLInterpolate{
 public:
