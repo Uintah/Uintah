@@ -6,6 +6,11 @@ ParticleException::ParticleException(const std::string& msg)
 {
 }
 
+ParticleException::ParticleException(const ParticleException& copy)
+    : msg(copy.msg)
+{
+}
+
 const char* ParticleException::message() const
 {
     return msg.c_str();
