@@ -170,6 +170,17 @@ void MatlabFieldsWriter::execute()
 	// Get the contents of the filename entrybox
 	std::string filename = guifilename_.get();
 	
+	// Make sure we have a .mat extension
+	int filenamesize = filename.size();
+	if (filenamesize < 4) 
+	{   
+		filename += ".mat";
+	}
+	else
+	{
+		if (filename.substr(filenamesize-4,filenamesize) != ".mat") filename += ".mat";
+	}
+	
 	// If the filename is empty, launch an error
 	if (filename == "")
 	{
