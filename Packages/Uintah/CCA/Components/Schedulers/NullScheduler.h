@@ -87,6 +87,8 @@ WARNING
       virtual VarLabelMaterialMap* makeVarLabelMaterialMap()
       { return graph.makeVarLabelMaterialMap(); }
 
+      virtual const vector<const Task::Dependency*>& getInitialRequires()
+      { return graph.getInitialRequires(); }
    private:
       NullScheduler(const NullScheduler&);
       NullScheduler& operator=(const NullScheduler&);

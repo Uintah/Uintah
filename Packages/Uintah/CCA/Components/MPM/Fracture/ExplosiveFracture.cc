@@ -162,7 +162,7 @@ stressRelease(const Patch* patch,
   //patch variables
   ParticleVariable<Matrix3> pStress;
   ParticleVariable<int> pIsBroken;
-  ParticleVariable<Vector> pCrackSurfaceNormal;
+  ParticleVariable<Vector> pCrackNormal;
   ParticleVariable<double> pMass;
   ParticleVariable<double> pStrainEnergy;
   ParticleVariable<Vector> pImageVelocity;
@@ -170,7 +170,7 @@ stressRelease(const Patch* patch,
   ParticleSubset* insidePset = old_dw->getParticleSubset(matlindex, patch);
   new_dw->get(pStress, lb->pStressAfterStrainRateLabel, insidePset);
   old_dw->get(pIsBroken, lb->pIsBrokenLabel, insidePset);
-  old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, insidePset);
+  old_dw->get(pCrackNormal, lb->pCrackNormalLabel, insidePset);
 
   old_dw->get(pMass, lb->pMassLabel, insidePset);
   new_dw->get(pStrainEnergy, lb->pStrainEnergyLabel, insidePset);
@@ -179,10 +179,8 @@ stressRelease(const Patch* patch,
   ParticleVariable<int> pStressReleased;
   new_dw->allocate(pStressReleased, lb->pStressReleasedLabel, insidePset);
 
-  delt_vartype delTAfterConstitutiveModel;
-  new_dw->get(delTAfterConstitutiveModel, lb->delTAfterConstitutiveModelLabel);
-  double delTAfterFracture = delTAfterConstitutiveModel;
-  
+  double delTAfterFracture = 1.e12;
+
   for(ParticleSubset::iterator iter = insidePset->begin(); 
      iter != insidePset->end(); iter++)
   {
@@ -206,7 +204,7 @@ stressRelease(const Patch* patch,
       ParticlesNeighbor particlesNeighbor;
       particlesNeighbor.buildIn(cellIdx,lattice);
       
-      Vector N = pCrackSurfaceNormal[idx];
+      Vector N = pCrackNormal[idx];
       particleIndex pairIdx = -1;
       double pairRatio = 0;
       double maxStress = Dot(pStress[idx]*N,N);
@@ -277,12 +275,12 @@ stressRelease(const Patch* patch,
   }
 */
   
-  new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel_preReloc);
+  new_dw->put(pCrackNormal, lb->pCrackNormalLabel_preReloc);
   new_dw->put(pIsBroken, lb->pIsBrokenLabel_preReloc);
   new_dw->put(pStress, lb->pStressAfterFractureReleaseLabel);
   new_dw->put(pImageVelocity, lb->pImageVelocityLabel_preReloc);
 
-  new_dw->put(delt_vartype(delTAfterFracture), lb->delTAfterFractureLabel);
+  new_dw->put(delt_vartype(delTAfterFracture), lb->delTLabel);
 }
 
 ExplosiveFracture::
@@ -290,6 +288,5 @@ ExplosiveFracture(ProblemSpecP& ps)
 : Fracture(ps)
 {
 }
+
 } // End namespace Uintah
-
-

@@ -76,12 +76,27 @@ public:
 				   const LevelP& level, SchedulerP&,
 				   DataWarehouseP&, DataWarehouseP&);
 
+  void scheduleInterpolateNCToCC(const Patch* patch,
+                                 SchedulerP&,
+                                 DataWarehouseP&,
+                                 DataWarehouseP&);
+
+  void scheduleCCMomExchange(const Patch* patch,
+                             SchedulerP&,
+                             DataWarehouseP&,
+                             DataWarehouseP&);
+
   //////////
   // Insert Documentation Here:
   void interpolateNCToCC(const ProcessorGroup*,
                          const Patch* patch,
                          DataWarehouseP& old_dw,
                          DataWarehouseP& new_dw);
+
+  void doCCMomExchange(const ProcessorGroup*,
+                       const Patch* patch,
+                       DataWarehouseP& old_dw,
+                       DataWarehouseP& new_dw);
 
   enum bctype { NONE=0,
                 FIXED,
@@ -96,6 +111,7 @@ protected:
   SimulationStateP d_sharedState;
   MPMLabel* Mlb;
   ICELabel* Ilb;
+  MPMICELabel* MIlb;
   bool             d_burns;
   double           d_nextOutputTime;
   double           d_outputInterval;
@@ -105,6 +121,7 @@ protected:
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
 };
+      
 } // End namespace Uintah
       
 #endif

@@ -97,6 +97,9 @@ WARNING
       virtual VarLabelMaterialMap* makeVarLabelMaterialMap()
       { return graph.makeVarLabelMaterialMap(); }
 
+      virtual const vector<const Task::Dependency*>& getInitialRequires()
+      { return graph.getInitialRequires(); }
+     
    private:
       void scatterParticles(const ProcessorGroup*,
 			    const Patch* patch,
