@@ -280,9 +280,9 @@ Dpy::run()
       if(bench){
 	if(frame==10){
 	  cerr << "Warmup done, starting bench\n";
-	  benchstart=Time::currentSeconds();
+	  benchstart=SCIRun::Time::currentSeconds();
 	} else if(frame == 110){
-	  double dt=Time::currentSeconds()-benchstart;
+	  double dt=SCIRun::Time::currentSeconds()-benchstart;
 	  cerr << "Benchmark completed in " <<  dt << " seconds ("
 	       << (frame-10)/dt << " frames/second)\n";
 	  Thread::exitAll(0);

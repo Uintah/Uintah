@@ -70,7 +70,7 @@ Trigger::check( const Point & eye )
     }
   else if( timeLeft_ > 0 )
     {
-      double curTime = Time::currentSeconds();
+      double curTime = SCIRun::Time::currentSeconds();
       double elapsedTime = curTime - lastTime_;
       lastTime_ = curTime;
       timeLeft_ -= elapsedTime;
@@ -90,7 +90,7 @@ Trigger::activate()
   if( timeLeft_ == 0 ) 
     {
       Trigger * dummy;
-      lastTime_ = Time::currentSeconds();
+      lastTime_ = SCIRun::Time::currentSeconds();
       timeLeft_ = delay_;
       return advance( dummy );
     }
