@@ -11,7 +11,8 @@ SRCS     += \
 	$(SRCDIR)/MPMMaterial.cc              \
 	$(SRCDIR)/ViscoScram.cc               \
 	$(SRCDIR)/HypoElastic.cc              \
-	$(SRCDIR)/MWViscoElastic.cc 
+	$(SRCDIR)/MWViscoElastic.cc           \
+	$(SRCDIR)/Membrane.cc 
 
 PSELIBS := Packages/Uintah/Core/Grid \
 	Packages/Uintah/CCA/Components/ICE \
