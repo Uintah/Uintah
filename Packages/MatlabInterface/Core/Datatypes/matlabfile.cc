@@ -51,62 +51,62 @@ matlabfile::~matlabfile()
 
 void matlabfile::open(std::string filename,std::string accessmode)
 {
-  matfile::open(filename,accessmode);
+    matfile::open(filename,accessmode);
     
-  if (isreadaccess())
+    if (isreadaccess())
     {   //scan the file for the number of matrices
-      // This function will index the file and get all the matrix names
-      // If it is a compressed file, it will automatically uncompress every
-      // block (this behavior may be changed to become more memory efficient)
+		// This function will index the file and get all the matrix names
+		// If it is a compressed file, it will automatically uncompress every
+		// block (this behavior may be changed to become more memory efficient)
     	
-      long tagptr;
-      matfiledata mfd;
-      std::stack<long> ptrstack;
-      std::stack<std::string> strstack;
-      bool compressedmatrix = false;
+    	long tagptr;
+    	matfiledata mfd;
+    	std::stack<long> ptrstack;
+		std::stack<std::string> strstack;
+		bool compressedmatrix = false;
 		
-      tagptr = firsttag();
-      while(tagptr)
+		tagptr = firsttag();
+    	while(tagptr)
     	{
-          readtag(mfd);
+    	    readtag(mfd);
 			
-          // Bug fix, this bool was not reset
-          compressedmatrix = false;
-          // If the tag tells that the next block is compressed
-          // Open this compressed block before continuing
-          if (mfd.type() == miCOMPRESSED)
-            {
-              compressedmatrix = true; // to mark that we have to close the compressed session
-              opencompression(); // uncompress the data
-              readtag(mfd); // read the first tag, which should be miMATRIX
-            }
-          if (mfd.type() != miMATRIX) throw invalid_file_format();
+			// Bug fix, this bool was not reset
+			compressedmatrix = false;
+			// If the tag tells that the next block is compressed
+			// Open this compressed block before continuing
+			if (mfd.type() == miCOMPRESSED)
+			{
+				compressedmatrix = true; // to mark that we have to close the compressed session
+				opencompression(); // uncompress the data
+				readtag(mfd); // read the first tag, which should be miMATRIX
+			}
+			if (mfd.type() != miMATRIX) throw invalid_file_format();
     	    
-          openchild();
-          readtag(mfd);
-          nexttag();
-          readtag(mfd);
-          nexttag();
-          readdat(mfd);
-          closechild();
-          if (compressedmatrix) closecompression();
+			openchild();
+				readtag(mfd);
+				nexttag();
+				readtag(mfd);
+				nexttag();
+				readdat(mfd);
+			closechild();
+			if (compressedmatrix) closecompression();
 			
-          strstack.push(mfd.getstring());
-          ptrstack.push(tagptr);
-          tagptr = nexttag();    		
+			strstack.push(mfd.getstring());
+    	    ptrstack.push(tagptr);
+			tagptr = nexttag();    		
     	}
     	
-      matrixaddress_.resize(ptrstack.size());
-      matrixname_.resize(strstack.size());
-      for (long p=static_cast<long>(ptrstack.size()-1);p>=0;p--) 
-        {
-          matrixaddress_[p] = ptrstack.top();
-          ptrstack.pop();
-          matrixname_[p] = strstack.top();
-          strstack.pop();
-        }
+		matrixaddress_.resize(ptrstack.size());
+    	matrixname_.resize(strstack.size());
+		for (long p=static_cast<long>(ptrstack.size()-1);p>=0;p--) 
+		{
+			matrixaddress_[p] = ptrstack.top();
+			ptrstack.pop();
+			matrixname_[p] = strstack.top();
+			strstack.pop();
+		}
 		
-      rewind();
+		rewind();
     }
 	
 }
@@ -367,8 +367,8 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
 {
 
     // make sure the matrix is cleared
-	matrix.clear();
-	bool compressedmatrix = false;
+    matrix.clear();
+    bool compressedmatrix = false;
     
     matfiledata matrixheader;
     matfiledata matrixclass;
@@ -379,22 +379,22 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
     // If this is not a matrix header the file pointer
     // is not pointing to a matrix
     readtag(matrixheader);
-	if (matrixheader.type() == miCOMPRESSED)
-	{
-		// A compressed matrix is encapsulated in another
-		// data header. opencompressed will now open and
-		// decompress part of the file if needed.
-		compressedmatrix = true; // mark that we still need to close the compressed memory block
-		opencompression();
-		readtag(matrixheader); // This tag should now contain a miMATRIX tag
-	}
+    if (matrixheader.type() == miCOMPRESSED)
+    {
+      // A compressed matrix is encapsulated in another
+      // data header. opencompressed will now open and
+      // decompress part of the file if needed.
+      compressedmatrix = true; // mark that we still need to close the compressed memory block
+      opencompression();
+      readtag(matrixheader); // This tag should now contain a miMATRIX tag
+    }
 	
     if (matrixheader.type() != miMATRIX) return;
     
     if (!openchild()) return;
     
     if (!firsttag()) { closechild(); return; } 
-	readdat(matrixclass);
+    readdat(matrixclass);
     if (!nexttag()) { closechild(); return; } 
     readdat(matrixdims);  
     if (!nexttag()) { closechild(); return; }
@@ -408,7 +408,7 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
 	
 	if (matrixclass.size() == 0) { closechild(); return; }
 	unsigned long classinfo =  matrixclass.getandcastvalue<unsigned long>(0);
-    mxtype matrixtype = static_cast<mxtype>((0x000000FF & classinfo));
+  mxtype matrixtype = static_cast<mxtype>((0x000000FF & classinfo));
 	
 	// the second byte contains flags.
 	// logical = logical matrix 
@@ -419,63 +419,60 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
 	if (classinfo & 0x0800) matrix.setcomplex(1);
 		
 
-    std::vector<long> dims;
+  std::vector<long> dims;
 	matrixdims.getandcastvector(dims);
-    std::string name = matrixname.getstring();
+  std::string name = matrixname.getstring();
        
     // All matrices contain the data pieces read so far
     // From here on it depends on the matrix class
 		 
     switch(matrixtype)
     {
-        // numeric types
-        case mxINT8: case mxUINT8: case mxINT16: case mxUINT16: 
-        case mxINT32: case mxUINT32: case mxSINGLE: case mxDOUBLE:
-			
+      // numeric types
+      case mxINT8: case mxUINT8: case mxINT16: case mxUINT16: 
+      case mxINT32: case mxUINT32: case mxSINGLE: case mxDOUBLE:
+    
 			{
             // create the numeric array
-            matrix.createdensearray(dims,converttype(matrixtype));
-			matrix.setname(name);
+        matrix.createdensearray(dims,converttype(matrixtype));
+        matrix.setname(name);
                 
             // read the real and imaginary (optional) parts of the data    
-			if (nexttag()) 
-            { matfiledata preal = matrix.getpreal(); if (mode == 2) { readdat(preal); } else { readtag(preal); } }
-            if (nexttag()) 
-            { matfiledata pimag = matrix.getpimag(); if (mode == 2) { readdat(pimag); } else { readtag(pimag); } }
-            }
-			
-			break;
- 
-        case mxCELL:
+        if (nexttag()) 
+              { matfiledata preal = matrix.getpreal(); if (mode == 2) { readdat(preal); } else { readtag(preal); } }
+              if (nexttag()) 
+              { matfiledata pimag = matrix.getpimag(); if (mode == 2) { readdat(pimag); } else { readtag(pimag); } }
+      }
+      break;
+
+      case mxCELL:
+			{
+        // create cell matrix
+        matrix.createcellarray(dims);
+        matrix.setname(name);
+            
+        long numcells = matrix.getnumelements();
+        matlabarray submatrix;
         
-			{
-            // create cell matrix
-            matrix.createcellarray(dims);
-			matrix.setname(name);
-            
-            long numcells = matrix.getnumelements();
-            matlabarray submatrix;
-            
-			if (mode)
-			{
-				for (long p=0;p<numcells;p++)
-				{
-					if(!nexttag()) break; // no more matrices
-					importmatlabarray(submatrix,mode);
-					matrix.setcell(p,submatrix);
-				}
-			}
+        if (mode)
+        {
+          for (long p=0;p<numcells;p++)
+          {
+            if(!nexttag()) break; // no more matrices
+            importmatlabarray(submatrix,mode);
+            matrix.setcell(p,submatrix);
+          }
+        }
 			}
 			
-            break;
-            
-        case mxSTRUCT:
-        
+      break;
+      case mxSTRUCT:
+  
 			{
             matfiledata matrixfieldnamelength;
             matfiledata matrixfieldnames;
             
-			nexttag();
+            nexttag();
             readdat(matrixfieldnamelength);
             nexttag();
             readdat(matrixfieldnames);
@@ -484,25 +481,24 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
             std::vector<std::string> fieldnames = matrixfieldnames.getstringarray(fieldnamelength);
             
             matrix.createstructarray(dims,fieldnames); 
-			matrix.setname(name);
+            matrix.setname(name);
             
             long numcells = matrix.getnumelements()*matrix.getnumfields();
             matlabarray submatrix;
             
-			if (mode)
-			{
-				for (long p=0;p<numcells;p++)
-				{
-					if(!nexttag()) break; // nomore matrices
-					importmatlabarray(submatrix,mode);
-					matrix.setcell(p,submatrix);
-				}
+            if (mode)
+            {
+              for (long p=0;p<numcells;p++)
+              {
+                if(!nexttag()) break; // nomore matrices
+                importmatlabarray(submatrix,mode);
+                matrix.setcell(p,submatrix);
+              }
+            }
 			}
-			}
-            break;
+      break;
             
-        case mxOBJECT:
-        
+      case mxOBJECT:
 			{
             matfiledata matrixfieldnamelength;
             matfiledata matrixfieldnames;
@@ -520,26 +516,24 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
             std::string classname = matrixclassname.getstring();
 			
             matrix.createclassarray(dims,fieldnames,classname); 
-			matrix.setname(name);
+            matrix.setname(name);
             
             long numcells = matrix.getnumelements()*matrix.getnumfields();
             matlabarray submatrix;
             
-			if (mode)
-			{
-				for (long p=0;p<numcells;p++)
-				{
-					if(!nexttag()) break; // nomore matrices
-					importmatlabarray(submatrix,mode);
-					matrix.setcell(p,submatrix);
-				}
-			}
-			}
-            break;
-            
-        case mxCHAR:
-        
-			{
+            if (mode)
+            {
+              for (long p=0;p<numcells;p++)
+              {
+                if(!nexttag()) break; // nomore matrices
+                importmatlabarray(submatrix,mode);
+                matrix.setcell(p,submatrix);
+              }
+            }
+      }
+      break;
+      case mxCHAR:
+  		{
             matfiledata matrixstring;
             
             nexttag();
@@ -547,37 +541,34 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
             
             std::string str = matrixstring.getstring();            
             matrix.createstringarray(str);
-			matrix.setname(name);
-			}
-		
-			break;
-			
-		case mxSPARSE:
-		
-			{
-			matrix.createsparsearray(dims,miDOUBLE);
-			matrix.setname(name);
-		
-			if (nexttag())
-			{
-				matfiledata rowindex = matrix.getprows(); if (mode==2) { readdat(rowindex); } else { readtag(rowindex); }
-			}
-			if (nexttag())
-			{
-				matfiledata colindex = matrix.getpcols(); if (mode==2) { readdat(colindex); } else { readtag(colindex); }
-			}
-			if (nexttag())
-			{
-				matfiledata preal = matrix.getpreal(); if (mode==2) { readdat(preal); } else { readtag(preal); }
-				matrix.settype(preal.type());
-			}
-			if (nexttag())
-			{
-				matfiledata pimag = matrix.getpimag(); if (mode==2) { readdat(pimag); } else { readtag(pimag); }
-			}
+            matrix.setname(name);
 			}
 			break;
-		default:
+      case mxSPARSE:
+			{
+            matrix.createsparsearray(dims,miDOUBLE);
+            matrix.setname(name);
+          
+            if (nexttag())
+            {
+              matfiledata rowindex = matrix.getprows(); if (mode==2) { readdat(rowindex); } else { readtag(rowindex); }
+            }
+            if (nexttag())
+            {
+              matfiledata colindex = matrix.getpcols(); if (mode==2) { readdat(colindex); } else { readtag(colindex); }
+            }
+            if (nexttag())
+            {
+              matfiledata preal = matrix.getpreal(); if (mode==2) { readdat(preal); } else { readtag(preal); }
+              matrix.settype(preal.type());
+            }
+            if (nexttag())
+            {
+              matfiledata pimag = matrix.getpimag(); if (mode==2) { readdat(pimag); } else { readtag(pimag); }
+            }
+			}
+			break;
+      default:
 			break;
     }
      		      
