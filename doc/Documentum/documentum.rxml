@@ -797,8 +797,9 @@ End:
 -->
 ]]>
 </programlisting>
-Replace <quote>&lt;top-of-cvs-tree&gt;</quote> with the relative path from the
-document to the <filename>doc</filename> directory of the &sr; CVS tree.
+Replace <replaceable>top-of-cvs-tree</replaceable> with the relative
+path from the document to the <filename>doc</filename> directory of
+the &sr; CVS tree.
 </para>
 <para>Note that the file <filename>docbook.ced</filename> is a precompiled
 DTD for the docbook language.  Replace
