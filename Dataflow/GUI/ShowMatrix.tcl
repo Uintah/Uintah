@@ -31,48 +31,37 @@ itcl_class SCIRun_Visualization_ShowMatrix {
     inherit Module
     constructor {config} {
         set name ShowMatrix
-
-	global $this-xpos
-	set $this-xpos 0.0
-
-	global $this-ypos
-	set $this-ypos 0.0
-
-	global $this-xscale
-	set $this-xscale 1.0
-
-	global $this-yscale
-	set $this-yscale 2.0
-
-	global $this-col_begin
-	set $this-col_begin 0
-	
-	global $this-col_end
-#	set $this-col_end 1
-
-	global $this-row_begin
-	set $this-row_begin 0
-
-	global $this-row_end
-#	set $this-row_end 1
-	
-	global $this-displaymode
-	set $this-displaymode 3D
-
-	global $this-gmode
-	set $this-gmode 1
-
-	global $this-colormapmode
-	set $this-colormapmode 0
-
-	global $this-showtext
-	set $this-showtext 0
-
-#	global $this-swap
-#	set $this-swap
+	set_defaults
     }
 
     method set_defaults {} {
+	initGlobal $this-xpos 0.0
+	initGlobal $this-ypos 0.0
+	initGlobal $this-xscale 1.0
+	initGlobal $this-yscale 2.0
+	initGlobal $this-col_begin 0
+	initGlobal $this-row_begin 0
+	initGlobal $this-cols 10000
+	initGlobal $this-rows 10000
+	initGlobal $this-3d_mode 1
+	initGlobal $this-gmode 1
+	initGlobal $this-colormapmode 0
+	initGlobal $this-showtext 0
+	trace variable $this-cols w "$this maxChanged"
+	trace variable $this-rows w "$this maxChanged"
+    }
+
+    method maxChanged {args} {
+	upvar \#0 $this-rows rows $this-cols cols
+	set w .ui[modname].row.f.s
+	if { [winfo exists $w] } {
+	    $w configure -to $rows
+	}
+
+	set w .ui[modname].col.f.s
+	if { [winfo exists $w] } {
+	    $w configure -to $cols
+	}
     }
 
     method ui {} {
@@ -89,8 +78,8 @@ itcl_class SCIRun_Visualization_ShowMatrix {
 	
 	frame $w.mode -relief groove -borderwidth 2
 	label $w.mode.label -text "Display Mode"
-	radiobutton $w.mode.two -text "2D" -variable $this-displaymode -value 2D -command "$this-c needexecute"
-	radiobutton $w.mode.three -text "3D" -variable $this-displaymode -value 3D -command "$this-c needexecute"
+	radiobutton $w.mode.two -text "2D" -variable $this-3d_mode -value 0 -command "$this-c needexecute"
+	radiobutton $w.mode.three -text "3D" -variable $this-3d_mode -value 1 -command "$this-c needexecute"
 	pack $w.mode.label -side top -expand yes -fill both
 	pack $w.mode.two $w.mode.three -side top -anchor w
 
@@ -140,39 +129,31 @@ itcl_class SCIRun_Visualization_ShowMatrix {
 #	scale $w.pos.yslide -orient horizontal -label "Y Translate" -from -1 -to 1 
 #	-showvalue true -variable $this-ypos -resolution 0.01 -tickinterval 0.25
 
-
-	frame $w.col -relief groove -borderwidth 2
-	frame $w.col.label
-	
-	label $w.col.label.from -text "Column Begin:"
-	label $w.col.label.to -text "Column End:"
-	pack $w.col.label.from $w.col.label.to -side top
-
-	frame $w.col.entry
-	entry $w.col.entry.from -textvariable $this-col_begin -width 4
-	set $w.col.entry.from $this-col_begin
-
-	entry $w.col.entry.to -textvariable $this-col_end -width 4
-#	set $w.col.entry.to $this-col_end
-	pack $w.col.entry.from $w.col.entry.to -side top
-	pack $w.col.label $w.col.entry -side left -expand yes -fill x
-
-
-	frame $w.row -relief groove -borderwidth 2
-	frame $w.row.label
-	
-	label $w.row.label.from -text "Row Begin:"
-	label $w.row.label.to -text "Row End:"
-	pack $w.row.label.from $w.row.label.to -side top
-
-	frame $w.row.entry
-	entry $w.row.entry.from -textvariable $this-row_begin -width 4
-	set $w.row.entry.from $this-row_begin
-
-	entry $w.row.entry.to -textvariable $this-row_end -width 4
-#	set $w.row.entry.to $this-row_end
-	pack $w.row.entry.from $w.row.entry.to -side top
-	pack $w.row.label $w.row.entry -side left -expand yes -fill x
+	foreach {dim title} {row Row col Column} {
+	    set f $w.${dim}
+	    frame $f -bd 2 -relief groove
+	    label $f.label -text "$title Range"
+	    pack $f.label -side top -expand 1 -fill x
+	    set f $f.f
+	    # Create range widget for slab mode
+	    frame $f
+	    # min range value label
+	    entry $f.min -textvariable $this-${dim}_begin \
+		-justify right -width 3 
+	    bind $f.min <Return> "$this-c needexecute"
+	    # MIP slab range widget
+	    upvar \#0 $this-${dim}s max
+	    range $f.s -from 0 -to 100 -orient horizontal -showvalue false \
+		-rangecolor "#830101" -width 16 -command "$this-c needexecute"\
+		-varmin $this-${dim}_begin -varmax $this-${dim}_end
+	    # max range value label
+	    entry $f.max -textvariable $this-${dim}_end -justify left -width 3
+	    bind $f.max <Return> "$this-c needexecute"
+	    pack $f.min -anchor w -side left -padx 0 -pady 0 -expand 0 
+	    pack $f.max -anchor e -side right -padx 0 -pady 0 -expand 0 
+	    pack $f.s -side left -anchor n -padx 0 -pady 0 -expand 1 -fill x
+	    pack $f -side top -expand 1 -fill x
+	}
 
 
 	bind $w.pos <ButtonRelease> "$this-c needexecute"
@@ -187,16 +168,12 @@ itcl_class SCIRun_Visualization_ShowMatrix {
 	bind $w.pos.xscaleslide.scale <B1-Motion> "$this-c needexecute"
 #	bind $w.pos.yscaleslide.scale <B1-Motion> "$this-c needexecute"
 
-	bind $w.col.entry.from <Return> "$this-c needexecute"
-	bind $w.col.entry.to <Return> "$this-c needexecute"
-	bind $w.row.entry.from <Return> "$this-c needexecute"
-	bind $w.row.entry.to <Return> "$this-c needexecute"
 
 #	bind $w.col.cto <Return> "$this-c needexecute"
 #	bind $w.row.rfrom <Return> "$this-c needexecute"
 #	bind $w.row.rto <Return> "$this-c needexecute"
 
-	pack $w.row $w.col $w.graph $w.cmap $w.text $w.mode $w.poslabel $w.pos -side top -e y -f both -padx 5 -pady 5
+	pack $f $w.row $w.col $w.graph $w.cmap $w.text $w.mode $w.poslabel $w.pos -side top -e y -f both -padx 5 -pady 5
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
