@@ -5,10 +5,12 @@
 #include <Packages/Uintah/CCA/Components/MPM/ParticleInterpolator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <vector>
 
 namespace Uintah {
 
   using namespace SCIRun;
+  using std::vector;
 
   class LinearInterpolator : public ParticleInterpolator {
     
@@ -20,7 +22,8 @@ namespace Uintah {
     
     virtual LinearInterpolator* clone(const Patch*);
     
-    inline void findCellAndWeights(const Point& pos,IntVector *ni, double *S)
+    inline void findCellAndWeights(const Point& pos,vector<IntVector>& ni, 
+				   vector<double>& S)
       {
 	Point cellpos = d_patch->getLevel()->positionToIndex(pos);
 	int ix = Floor(cellpos.x());
@@ -49,11 +52,11 @@ namespace Uintah {
 	S[6] = fx * fy * fz1;
 	S[7] = fx * fy * fz;
       };
-    virtual void findCellAndWeights(const Point& p,IntVector *ni, 
-				    double *S,const Vector& size);
+    virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni, 
+				    vector<double>& S,const Vector& size);
     inline void findCellAndShapeDerivatives(const Point& pos,
-					    IntVector *ni,
-					    Vector *d_S)
+					    vector<IntVector>& ni,
+					    vector<Vector>& d_S)
       {
 	Point cellpos = d_patch->getLevel()->positionToIndex(pos);
 	int ix = Floor(cellpos.x());
@@ -83,13 +86,13 @@ namespace Uintah {
 	d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
       };
     virtual void findCellAndShapeDerivatives(const Point& pos,
-					     IntVector *ni,
-					     Vector *d_S,
+					     vector<IntVector>& ni,
+					     vector<Vector>& d_S,
 					     const Vector& size);
     inline void findCellAndWeightsAndShapeDerivatives(const Point& pos,
-						      IntVector *ni,
-						      double *S,
-						      Vector *d_S) 
+						      vector<IntVector>& ni,
+						      vector<double>& S,
+						      vector<Vector>& d_S) 
       {
 	Point cellpos = d_patch->getLevel()->positionToIndex(pos);
 	int ix = Floor(cellpos.x());
@@ -127,9 +130,9 @@ namespace Uintah {
 	d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
       };
     virtual void findCellAndWeightsAndShapeDerivatives(const Point& pos,
-						       IntVector *ni,
-						       double *S,
-						       Vector *d_S,
+						       vector<IntVector>& ni,
+						       vector<double>& S,
+						       vector<Vector>& d_S,
 						       const Vector& size);
     virtual int size();
 

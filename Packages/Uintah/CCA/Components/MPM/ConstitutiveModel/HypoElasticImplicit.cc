@@ -145,10 +145,10 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
@@ -418,8 +418,6 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
      }
     }
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
   }
   solver->flushMatrix();
 }
@@ -442,10 +440,10 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
     double onethird = (1.0/3.0);
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
 
     Identity.Identity();
@@ -549,8 +547,6 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
       new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
     }
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
    }
 }
 

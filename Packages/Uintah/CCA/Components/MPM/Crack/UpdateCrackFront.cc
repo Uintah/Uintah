@@ -127,10 +127,10 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
 
     Vector dx = patch->dCell();
 
@@ -342,8 +342,6 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
     } // End of loop over matls
     delete interpolator;
-    delete[] S;
-    delete[] ni;
   } // End of loop over patches
 }
 

@@ -221,10 +221,10 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     Vector deformed_fiber_vector;
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
 //
     Matrix3 Identity;
@@ -605,8 +605,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
       }  // end of loop over particles
     }
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
   }
   solver->flushMatrix();
 }
@@ -631,10 +629,10 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      Matrix3 deformationGradientInc,dispGrad;
 
      LinearInterpolator* interpolator = new LinearInterpolator(patch);
-     IntVector* ni;
-     ni = new IntVector[interpolator->size()];
-     Vector* d_S;
-     d_S = new Vector[interpolator->size()];
+     vector<IntVector> ni;
+     ni.reserve(interpolator->size());
+     vector<Vector> d_S;
+     d_S.reserve(interpolator->size());
 
      Matrix3 Identity;
 
@@ -813,8 +811,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
       }
      }
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
    }
 }
 

@@ -94,10 +94,10 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
 
     Vector surnor(0.0,0.0,0.0);
 
@@ -497,8 +497,6 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     }          // NodeIterator
 
     delete interpolator;
-    delete[] S;
-    delete[] ni;
   }  // patches
   
 }

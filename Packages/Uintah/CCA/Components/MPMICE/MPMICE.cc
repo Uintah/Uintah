@@ -912,10 +912,10 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
     old_dw->get(delT, d_sharedState->get_delt_label());
 
     ParticleInterpolator* interpolator = d_mpm->flags->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
 
     IntVector cIdx[8];
     double p_ref = d_sharedState->getRefPress();
@@ -980,8 +980,6 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
       }
     }  // numMPMMatls
     delete interpolator;
-    delete[] S;
-    delete[] ni;
   } //patches
 }
 

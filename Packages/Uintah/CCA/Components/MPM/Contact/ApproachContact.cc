@@ -86,10 +86,10 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
     double cell_vol = dx.x()*dx.y()*dx.z();
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
@@ -488,8 +488,6 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
       }        // if(!compare(centerOfMassMass,0.0))
     }          // NodeIterator
     delete interpolator;
-    delete[] S;
-    delete[] ni;
   }  // patches
   
 }

@@ -1359,10 +1359,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
 
 
     NCVariable<double> gmassglobal,gtempglobal;
@@ -1508,8 +1508,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gvelglobal[c] /= gmassglobal[c];
     }
     delete interpolator;
-    delete[] S;
-    delete[] ni;
   }  // End loop over patches
 }
 
@@ -1644,10 +1642,10 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1708,8 +1706,6 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
       }
     }
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
   }
 
 }
@@ -1819,12 +1815,12 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     Id.Identity();
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
@@ -1990,9 +1986,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       gstressglobal[c] /= gmassglobal[c];
     }
     delete interpolator;
-    delete[] S;
-    delete[] ni;
-    delete[] d_S;
   }
   new_dw->put(sum_vartype(partvoldef), lb->TotalVolumeDeformedLabel);
   
@@ -2034,12 +2027,12 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
       cout_heat << " Patch = " << patch->getID() << endl;
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
     Vector dx = patch->dCell();
     double oodx[3];
@@ -2196,9 +2189,6 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
       }
     }  // End of loop over materials
     delete interpolator;
-    delete[] S;
-    delete[] ni;
-    delete[] d_S;
   }  // End of loop over patches
 }
 
@@ -2646,12 +2636,12 @@ void SerialMPM::calculateDampingRate(const ProcessorGroup*,
       int numMPMMatls=d_sharedState->getNumMPMMatls();
 
       ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-      IntVector* ni;
-      ni = new IntVector[interpolator->size()];
-      double* S;
-      S = new double[interpolator->size()];
-      Vector* d_S;
-      d_S = new Vector[interpolator->size()];
+      vector<IntVector> ni;
+      ni.reserve(interpolator->size());
+      vector<double> S;
+      S.reserve(interpolator->size());
+      vector<Vector> d_S;
+      d_S.reserve(interpolator->size());
 
       for(int m = 0; m < numMPMMatls; m++){
         MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2686,9 +2676,6 @@ void SerialMPM::calculateDampingRate(const ProcessorGroup*,
       } 
       new_dw->put(sum_vartype(alphaDot), lb->pDampingRateLabel);
       delete interpolator;
-      delete[] S;
-      delete[] ni;
-      delete[] d_S;
     }
   }
 }
@@ -3008,12 +2995,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -3259,9 +3246,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // cout << "THERMAL ENERGY " << thermal_energy << endl;
 
     delete interpolator;
-    delete[] S;
-    delete[] ni;
-    delete[] d_S;
   }
   
 }
