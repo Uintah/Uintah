@@ -109,6 +109,17 @@ ICE::~ICE()
     delete d_modelSetup;
 }
 
+
+bool ICE::restartableTimesteps()
+{
+  return true;
+}
+
+double ICE::recomputeTimestep(double current_dt)
+{
+  return current_dt/2;
+}
+
 /* ---------------------------------------------------------------------
  Function~  ICE::problemSetup--
 _____________________________________________________________________*/
