@@ -553,6 +553,16 @@ inline Vector operator*(const Vector& v, const Matrix3& m3) {
 } // End namespace Uintah
 
 std::ostream & operator << (std::ostream &out_file, const Uintah::Matrix3 &m3);
+// Added for compatibility with core types
+#include <Core/Datatypes/TypeName.h>
+#include <string>
+namespace SCIRun {
+
+using std::string;
+using Uintah::Matrix3;
+template<> const string find_type_name(Matrix3*);
+
+} // namespace SCIRun
 
 #endif  // __MATRIX3_H__
 
