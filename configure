@@ -1470,6 +1470,37 @@ sci_check_globus=no
 sci_check_qt=no
 sci_check_uuid=no
 
+## find the machine's pwd, and don't use the sh built-in pwd.
+## sh pwd can print the wd with symbolic links depending on
+## how you got to that directory, and thus has the potential
+## to print different pwd's for the same wd, and change files
+## like sci_defs.h
+
+sci_pwd=""
+for my_pwd in pwd /bin/pwd /usr/bin/pwd; do
+  mkdir pwd_test
+  ln -s pwd_test pwd_temp
+
+  cd pwd_test
+  pwd_1=`$my_pwd`
+
+  cd ../pwd_temp
+  pwd_2=`$my_pwd`
+
+  cd ..
+  rm -r pwd_test pwd_temp
+  if test "$pwd_1" = "$pwd_2"; then
+    sci_pwd=$my_pwd
+    alias pwd="$my_pwd"
+    break
+  fi
+done
+if test -z "$sci_pwd"; then
+   { echo "$as_me:$LINENO: WARNING: \"Using unstable version of pwd\"" >&5
+echo "$as_me: WARNING: \"Using unstable version of pwd\"" >&2;}
+   sci_pwd=pwd
+fi
+
 
 ##  initialize the recognized argument lists
 sci_arg_with_list="--no-create --no-recursion"
@@ -3415,7 +3446,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3418:" \
+echo "$as_me:3449:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4454,14 +4485,8 @@ echo "${ECHO_T}no" >&6
     ;;
 
   *)
+    # linux
     ac_objext=o
-    #
-    # put '_' at end and two '_'s if there is a '_' in name.
-    # This flag is used by the genfspec.pl script in Uintah (generated
-    # from fspec.pl.in).
-    #
-    FORTRAN_UNDERSCORE=linux
-
     BASE_LIB_DIR=lib
     CFLAGS=" -Wall"
     if test "$CC" != "pgcc"; then
@@ -5119,6 +5144,13 @@ fi
       *g77*)
          # extra_fflags has array checking if in debug mode.
          FFLAGS="$FFLAGS $extra_cflags $extra_fflags"
+
+         # put '_' at end and two '_'s if there is a '_' in name.
+         # This flag is used by the genfspec.pl script in Uintah (generated
+         # from fspec.pl.in).
+
+	 echo "linux g77 underscore"
+	 FORTRAN_UNDERSCORE=linux
          ;;
       *)
          FFLAGS="$FFLAGS $extra_cflags"
@@ -5222,6 +5254,18 @@ echo "$as_me:$LINENO: result: $CC_DEPEND_REGEN (mode: $CC_DEPEND_MODE, ext: $CC_
 echo "${ECHO_T}$CC_DEPEND_REGEN (mode: $CC_DEPEND_MODE, ext: $CC_DEPEND_EXT)" >&6
 rm -f configure-test.*
 rm -rf configure-test-dir
+
+# pgi compilers don't handle template instantiations the same way as other
+# compilers.  We need to know if we are a pgi compiler or not
+
+if test "$CC" == "pgcc"; then
+  DEF_PGCC="#define PGCC 1"
+else
+  DEF_PGCC=""
+fi
+
+
+
 
 F77_DEPEND_REGEN=$CC_DEPEND_REGEN
 F77_DEPEND_MODE=$CC_DEPEND_MODE
@@ -12112,7 +12156,7 @@ _sci_includes=''
       ;;
     *linux*)
       # Linux Library Check
-      if test "$F77" = "pgf90"; then
+      if test "$F77" = "pgf77"; then
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -19459,6 +19503,16 @@ fi
 no_create=no
 no_recursion=no
 
+# these are to alias pwd to the right thing in the config.status
+# script so that pwd returns the same value for a path even if you
+# get there by two different paths (symbolic links)
+cat > sedscript << SCIEOF
+/debug=false/i\\
+alias pwd=$sci_pwd
+SCIEOF
+
+
+
 
 ac_config_commands="$ac_config_commands do_stamp"
 
@@ -20061,6 +20115,7 @@ s,@LARGESOS@,$LARGESOS,;t t
 s,@TIME_IMPL@,$TIME_IMPL,;t t
 s,@AS@,$AS,;t t
 s,@LD@,$LD,;t t
+s,@DEF_PGCC@,$DEF_PGCC,;t t
 s,@CC_DEPEND_MODE@,$CC_DEPEND_MODE,;t t
 s,@CC_DEPEND_REGEN@,$CC_DEPEND_REGEN,;t t
 s,@CC_DEPEND_EXT@,$CC_DEPEND_EXT,;t t
@@ -20730,6 +20785,9 @@ _ACEOF
 chmod +x $CONFIG_STATUS
 ac_clean_files=$ac_clean_files_save
 
+sed -f sedscript < config.status > config_test.status;\
+			    mv config_test.status config.status ;\
+			    chmod 755 config.status
 
 # configure is writing to config.log, and then calls config.status.
 # config.status does its own redirection, appending to config.log.
