@@ -143,7 +143,11 @@ void NetworkEditor::do_scheduling(Module* exclude)
 		   && !m->need_execute && m != exclude){
 		    // If this oport already has the data, add it
 		    // to the to_trigger list...
-		    if(oport->have_data()){
+		    cerr << "oport=" << oport << endl;
+		    cerr << "oport->typename=" << oport->get_portname() << endl;
+		    cerr << "oport->portname=" << oport->get_portname() << endl;
+		    //cerr << "have_data=" << oport->have_data() << endl;
+		    if(0 && oport->have_data()){
 			to_trigger.add(conn);
 		    } else {
 			m->need_execute=1;
