@@ -29,6 +29,7 @@
  */
 
 #include <Core/GeomInterface/Pickable.h>
+#include <Core/Geom/GeomPick.h>
 #include <Core/Util/NotFinished.h>
 
 namespace SCIRun {
