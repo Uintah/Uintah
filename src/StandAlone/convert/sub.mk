@@ -27,6 +27,10 @@ PSELIBS := Core/Datatypes Core/Disclosure Core/Containers Core/Persistent \
 endif
 LIBS := -lm
 
+PROGRAM := $(SRCDIR)/CVRTItoTetVolDirichlet
+SRCS := $(SRCDIR)/CVRTItoTetVolDirichlet.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/CVRTItoTetVolGrad
 SRCS := $(SRCDIR)/CVRTItoTetVolGrad.cc
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -61,6 +65,14 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RawToContourField
 SRCS := $(SRCDIR)/RawToContourField.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/RawToColumnMatrix
+SRCS := $(SRCDIR)/DataToColumnMatrix.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/RawToDenseMatrix
+SRCS := $(SRCDIR)/DataToDenseMatrix.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RawToLatticeVol
