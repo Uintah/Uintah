@@ -437,7 +437,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   Group* group=new Group();
   group->add(timeobj1);
-  new Thread(dpy, "Volume GUI thread");
+  (new Thread(dpy, "Volume GUI thread"))->detach();
   
   double bgscale=0.3;
   Color groundcolor(0,0,0);
@@ -461,7 +461,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->shadow_mode=0;
   scene->ambient_hack=false;
   scene->maxdepth=0;
-  
+  scene->attach_display(dpy);
   return scene;
 }
 
