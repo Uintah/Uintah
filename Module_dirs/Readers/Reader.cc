@@ -16,6 +16,7 @@
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/TYPEPort.h>
 #include <Datatypes/TYPE.h>
+#include <TCL/TCLTask.h>
 #include <TCL/TCLvar.h>
 
 class TYPEReader : public Module {
@@ -61,6 +62,22 @@ Module* TYPEReader::clone(int deep)
     return new TYPEReader(*this, deep);
 }
 
+static void watcher(double pd, void* cbdata)
+{
+    TYPEReader* reader=(TYPEReader*)cbdata;
+    if(TCLTask::try_lock()){
+	// Try the malloc lock once before we call update_progress
+	// If we can't get it, then back off, since our caller might
+	// have it locked
+	if(!Task::test_malloc_lock()){
+	    TCLTask::unlock();
+	    return;
+	}
+	reader->update_progress(pd);
+	TCLTask::unlock();
+    }
+}
+
 void TYPEReader::execute()
 {
     clString fn(filename.get());
@@ -72,13 +89,17 @@ void TYPEReader::execute()
 	    return; // Can't open file...
 	}
 	// Read the file...
+	stream->watch_progress(watcher, (void*)this);
 	Pio(*stream, handle);
+	cerr << "Pio done!\n";
 	if(!handle.get_rep()){
 	    error("Error reading TYPE from file");
 	    delete stream;
 	    return;
 	}
+	cerr << "deleting stream:" << stream << "\n";
 	delete stream;
+	cerr << "delete done\n";
     }
     outport->send(handle);
 }
