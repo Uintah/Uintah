@@ -115,6 +115,10 @@ NrrdSelectTime::send_selection(NrrdDataHandle nrrd_handle,
   onrrd_handle = out;
   onrrd_handle->copy_sci_data(*(nrrd_handle.get_rep()));
 
+  // Copy the properties.
+  *((PropertyManager *) onrrd_handle.get_rep()) =
+    *((PropertyManager *) nrrd_handle.get_rep());
+
   if (last_p) {
     onrrd->send(onrrd_handle);
   } else {
