@@ -288,22 +288,33 @@ itcl_class SCIRun_Fields_EditField {
 	}
 	set att [$w.att childsite]
 	set edit [$w.edit childsite]
-	if {"[set $this-fldname]"!="--- Name Not Assigned ---"} {
+        if {"[set $this-cfldname]"!="1"} {
+	  if {"[set $this-fldname]"!="--- Name Not Assigned ---"} {
 	    set $this-fldname2 [set $this-fldname]
-	} else {
+	  } else {
 	    set $this-fldname2 ""
-	}
-	config_labelcombo $edit.l9 {Nodes Edges Faces Cells} [set $this-dataat]
-	set $this-datamin2 [set $this-datamin]
-	set $this-datamax2 [set $this-datamax]
-	set $this-minx2 [set $this-minx]
-	set $this-miny2 [set $this-miny]
-	set $this-minz2 [set $this-minz]
-	set $this-maxx2 [set $this-maxx]
-	set $this-maxy2 [set $this-maxy]
-	set $this-maxz2 [set $this-maxz]
-	config_labelcombo $edit.l2 [possible_typenames [set $this-typename]] \
-                          [set $this-typename]
+	  }
+        }
+        if {"[set $this-cdataat]"!="1"} {
+	  config_labelcombo $edit.l9 {Nodes Edges Faces Cells} \
+            [set $this-dataat]
+        }
+        if {"[set $this-cdataminmax]"!="1"} {
+	  set $this-datamin2 [set $this-datamin]
+	  set $this-datamax2 [set $this-datamax]
+        }
+        if {"[set $this-cbbox]"!="1"} {
+	  set $this-minx2 [set $this-minx]
+	  set $this-miny2 [set $this-miny]
+	  set $this-minz2 [set $this-minz]
+	  set $this-maxx2 [set $this-maxx]
+	  set $this-maxy2 [set $this-maxy]
+	  set $this-maxz2 [set $this-maxz]
+        }
+        if {"[set $this-typename]"!="1"} {
+	  config_labelcombo $edit.l2 [possible_typenames \
+            [set $this-typename]] [set $this-typename]
+        }
     }
 
     method possible_typenames { type } {
