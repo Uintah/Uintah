@@ -58,6 +58,7 @@
 			<NormalForce>5</NormalForce>
 			<FaceForce face="x+">[1,0,0]</FaceForce>
 		    </BoundaryConditions>
+		    <temperature>12</temperature>
  		</geom_object>
 
 		<geom_object>
@@ -72,13 +73,13 @@
 			<NormalForce>5</NormalForce>
 			<FaceForce face="x+">[1,0,0]</FaceForce>
 		    </BoundaryConditions>
+		    <temperature>12</temperature>
  		</geom_object>
-		<temperature>12</temperature>
 		<velocity_field>0</velocity_field>
 	    </material>
 
 	    <contact>
-	      <type>single_velocity</type>
+	      <type>null</type>
 	      <vel_fields>[0,0,0]</vel_fields>
 	    </contact>
 	</MPM>
