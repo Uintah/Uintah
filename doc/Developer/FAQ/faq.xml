@@ -313,6 +313,20 @@ Unmap failed - leaking memory
       </para>
     </answer>
   </entry>
+<entry>
+<keywords>Thread startup</keywords>
+<question>
+<para>When exactly does a thread start running?  Is it when you instantiate a
+Thread or when you do something like join or detach?</para>
+</question>
+<answer>
+<para>It starts running immediately, unless you specify Stopped or
+NotActivated in the Thread constructor.  In that case, you then
+use thread->resume() or thread->activate() (respectively) to
+start it going.</para>
+<para>Stopped/thread->resume() is the preferred method.</para>
+</answer>
+</entry>
 </faq>
 
 <!-- Keep this comment at the end of the file
