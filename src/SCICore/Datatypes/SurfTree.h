@@ -114,7 +114,8 @@ public:
     void bldNormals();
     void bldNodeInfo();
     void printNbrInfo();
-    int extractTriSurface(TriSurface*, Array1<int>&, Array1<int>&, int);
+    int extractTriSurface(TriSurface*, Array1<int>&, Array1<int>&, int, 
+			  int RemapPoints=1);
 
     virtual int inside(const Point& p);
     virtual void construct_hash(int, int, const Point &, double);
@@ -131,6 +132,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  1999/11/17 00:35:08  dmw
+// added support for not renumbering the nodes when extracting a trisurface from a surftree
+//
 // Revision 1.4  1999/09/01 06:16:28  dmw
 // took out dependence of SurfTree on TopoSurfTree
 //
