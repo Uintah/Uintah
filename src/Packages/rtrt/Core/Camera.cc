@@ -7,6 +7,7 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/Light.h>
 #include <Core/Geometry/Transform.h>
 #include <iostream>
 
@@ -26,9 +27,9 @@ Camera::Camera()
 }
 
 Camera::Camera(const Point& eye, const Point& lookat,
-	       const Vector& up, double fov) :
+	       const Vector& up, double fov, double ray_offset) :
   eye(eye), lookat(lookat), up(up), fov(fov), 
-  verticalFov_(fov), windowAspectRatio_(1.0),
+  verticalFov_(fov), ray_offset(ray_offset), windowAspectRatio_(1.0),
   eyesep(1)
 {
   setup();
@@ -40,7 +41,6 @@ Camera::~Camera()
 
 void Camera::makeRay(Ray& ray, double x, double y, double ixres, double iyres)
 {
-    ray.set_origin(eye);
     double screenx=(x+0.5)*ixres-0.5;
     Vector sv(v*screenx);
     double screeny=(y+0.5)*iyres-0.5;
@@ -48,11 +48,11 @@ void Camera::makeRay(Ray& ray, double x, double y, double ixres, double iyres)
     Vector raydir=su+sv+direction;
     raydir.normalize();
     ray.set_direction(raydir);
+    ray.set_origin(eye + raydir*ray_offset);
 }
 
 void Camera::makeRayL(Ray& ray, double x, double y, double ixres, double iyres)
 {
-    ray.set_origin(eye-v*5*eyesep*iyres);
     double screenx=(x+0.5)*ixres-0.5;
     Vector sv(v*screenx+v*5*iyres*eyesep);
     double screeny=(y+0.5)*iyres-0.5;
@@ -60,11 +60,11 @@ void Camera::makeRayL(Ray& ray, double x, double y, double ixres, double iyres)
     Vector raydir=su+sv+direction;
     raydir.normalize();
     ray.set_direction(raydir);
+    ray.set_origin(eye - v*5*eyesep*iyres + raydir*ray_offset);
 }
 
 void Camera::makeRayR(Ray& ray, double x, double y, double ixres, double iyres)
 {
-    ray.set_origin(eye+v*5*eyesep*iyres);
     double screenx=(x+0.5)*ixres-0.5;
     Vector sv(v*screenx-v*5*iyres*eyesep);
     double screeny=(y+0.5)*iyres-0.5;
@@ -72,6 +72,7 @@ void Camera::makeRayR(Ray& ray, double x, double y, double ixres, double iyres)
     Vector raydir=su+sv+direction;
     raydir.normalize();
     ray.set_direction(raydir);
+    ray.set_origin(eye + v*5*eyesep*iyres + raydir*ray_offset);
 }
 
 void Camera::get_viewplane(Vector& uu, Vector& vv) const
@@ -299,6 +300,14 @@ Camera::updatePosition( Stealth & stealth,
 	    cout << "going up: time: " << time << "\n";
 	  }
       }
+  }
+
+  // Move the lights that are fixed to the eye
+  for(int i = 0; i < scene->nlights(); i++) {
+    Light *light = scene->light(i);
+    if (light->fixed_to_eye) {
+      light->updatePosition(eye);
+    }
   }
 }
 
