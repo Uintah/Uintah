@@ -33,7 +33,6 @@
 #include <SCICore/Datatypes/IndexAttrib.h>
 #include <SCICore/Datatypes/AnalytAttrib.h>
 #include <SCICore/Geometry/Point.h>
-//#include <SCICore/Geometry/Tensor.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Datatypes/FieldPort.h>
