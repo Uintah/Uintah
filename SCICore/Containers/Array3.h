@@ -14,6 +14,14 @@
 #ifndef SCI_Containers_Array3_h
 #define SCI_Containers_Array3_h 1
 
+#include <iostream>
+#include <stdio.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/times.h>
+
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Persistent/Persistent.h>
 
@@ -118,10 +126,17 @@ public:
     inline T*** get_dataptr() {return objs;}
 
     //////////
+    //read/write from a separate raw file
+    virtual int input( const clString& );
+    virtual int output( const clString&);
+
+    //////////
     //Rigorous Tests
     static void test_rigorous(RigorousTest* __test);
     
     friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>&);
+    friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>&, 
+					       const clString &);
     friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>*&);
 
 };
@@ -279,6 +294,8 @@ void Pio(Piostream& stream, Containers::Array3<T>& data)
     stream.end_class();
 }
 
+
+
 template<class T>
 void Pio(Piostream& stream, Containers::Array3<T>*& data) {
     if (stream.reading()) {
@@ -287,11 +304,121 @@ void Pio(Piostream& stream, Containers::Array3<T>*& data) {
     Containers::Pio(stream, *data);
 }
 
+template<class T>
+void Pio(Piostream& stream, Containers::Array3<T>& data, 
+         const clString& filename)
+{
+#ifdef __GNUG__
+    using namespace SCICore::Geometry;
+    using namespace SCICore::PersistentSpace;
+    using namespace SCICore::Containers;
+#else
+    using SCICore::Geometry::Pio;
+    using SCICore::PersistentSpace::Pio;
+    using SCICore::Containers::Pio;
+#endif
+
+    /*int version=*/stream.begin_class("Array3", ARRAY3_VERSION);
+    if(stream.reading()){
+        // Allocate the array...
+        int d1, d2, d3;
+        Pio(stream, d1);
+        Pio(stream, d2);
+        Pio(stream, d3);
+        data.newsize(d1, d2, d3);
+        data.input( filename );
+    } else {
+        Pio(stream, data.dm1);
+        Pio(stream, data.dm2);
+        Pio(stream, data.dm3);
+        data.output( filename );
+    }
+    
+    stream.end_class();
+}
+
+template<class T>
+int
+Array3<T>::input( const clString &filename ) 
+{
+  cerr << "Array3: Split input\n";
+
+  // get raw data
+  int file=open( filename(), O_RDONLY, 0666);
+  if ( file == -1 ) {
+    printf("can not open file %s\n", filename());
+    return 0;
+  }
+  
+  int maxiosz=1024*1024;
+  long size = dm1*dm2*dm3*long(sizeof(T));
+  int n = int(size / maxiosz);
+  cerr << "grid size = " << size << endl;
+  char *p = (char *) objs[0][0];
+
+  for ( ; n> 0 ; n--, p+= maxiosz) {
+    int i = read( file, p, maxiosz);
+    if ( i != maxiosz ) 
+      perror( "io read ");
+  }
+  int i =  read( file, p, size % maxiosz);
+  if ( i != (size % maxiosz) ) 
+    perror("on last io");
+        
+  fsync(file);
+  close(file);
+
+  return 1;
+}
+
+template<class T>
+int
+Array3<T>::output( const clString &filename ) 
+{
+  cerr << "Array3 output to " << filename << endl;
+  // get raw data
+  //  printf("output [%s] [%s]\n", filename(), rawfile() );
+  int file=open( filename(), O_WRONLY|O_CREAT|O_TRUNC, 0666);
+  if ( file == -1 ) {
+    perror("open file");
+    return 0;
+  }
+  
+  int maxiosz=1024*1024;
+
+  int size = dm1*dm2*dm3*sizeof(T);
+  int n = size / maxiosz;
+  char *p = (char *)objs[0][0];
+
+  printf("Start writing...%d %d %d\n", size, maxiosz, n);
+
+  for ( ; n> 0 ; n--, p+= maxiosz) {
+    int l = write( file, p, maxiosz);
+    if ( l != maxiosz ) 
+      perror("write ");
+  }
+  int sz = (size % maxiosz );
+  int l = write( file, p, sz); 
+  if ( l != (size % maxiosz ) ) {
+    printf("Error: wrote %d / %d\n", l,(size % maxiosz )); 
+    perror("write ");
+  }
+        
+  fsync(file);
+  close(file);
+
+  return 1;
+} 
+
 } // End namespace Containers
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.10  2000/02/04 00:07:51  yarden
+// provide methods for writing and reading the array in to/from a seperate
+// file in a binary mode.
+//
 // Revision 1.9  1999/09/16 23:03:49  mcq
 // Fixed a few little bugs, hopefully didn't introduce more.  Started ../doc
 //
