@@ -194,6 +194,7 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
     }
 
     if (nh->nrrd->axis[i].kind == NULL || nh->nrrd->axis[i].kind == nrrdKindUnknown) {
+      nh->nrrd->axis[i].kind = nrrdKindUnknown;
       kind << "set " << id.c_str() << "-kind" << i 
 	  << " {" << "nrrdKindUnknown" << "}";
       gui->execute(kind.str());
@@ -240,6 +241,7 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
 	gui->execute(kind.str());
 	break;
       default:
+	nh->nrrd->axis[i].kind = nrrdKindUnknown;
 	kind << "set " << id.c_str() << "-kind" << i 
 	    << " {" << "nrrdKindUnknown" << "}";
 	gui->execute(kind.str());
