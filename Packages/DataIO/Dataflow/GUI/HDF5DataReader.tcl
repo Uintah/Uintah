@@ -160,8 +160,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	makeOpenFilebox \
 		-parent $w \
 		-filevar $this-filename \
-		-command "wm withdraw $w" \
-		-execute "$this-c needexecute; wm withdraw $w" \
+		-setcmd "wm withdraw $w" \
+		-command "$this-c needexecute; wm withdraw $w" \
 		-cancel "wm withdraw $w" \
 		-title $title \
 		-filetypes $types \

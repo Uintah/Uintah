@@ -86,8 +86,8 @@ itcl_class SCIRun_DataIO_PathWriter {
 		-parent $w \
 		-filevar $this-filename \
 		-cancel "wm withdraw $w" \
-		-command "wm withdraw $w" \
-		-execute "$this-c needexecute; wm withdraw $w" \
+		-setcmd "wm withdraw $w" \
+		-command "$this-c needexecute; wm withdraw $w" \
 		-title $title \
 		-filetypes $types \
 	        -initialfile $defname \

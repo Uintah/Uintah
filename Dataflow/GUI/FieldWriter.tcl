@@ -83,8 +83,8 @@ itcl_class SCIRun_DataIO_FieldWriter {
 	makeSaveFilebox \
 		-parent $w \
 		-filevar $this-filename \
-		-command "wm withdraw $w" \
-		-execute "$this-c needexecute; wm withdraw $w" \
+   	        -setcmd "wm withdraw $w" \
+		-command "$this-c needexecute; wm withdraw $w" \
 		-cancel "wm withdraw $w" \
 		-title $title \
 		-filetypes $types \
