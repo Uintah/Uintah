@@ -56,6 +56,7 @@ DEALINGS IN THE SOFTWARE.
 	</listitem>
       </orderedlist>
     </para>
+    <para>Proceed to <xref linkend="sec.sources"/>.</para>
   </section>
 
   &download_src;

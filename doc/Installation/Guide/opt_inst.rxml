@@ -127,8 +127,8 @@ DEALINGS IN THE SOFTWARE.
   <para><xref linkend="sec.hdf5_inst"/> provides installation
   instructions for the <acronym>HDF5</acronym> libraries.</para>
 
-  <!--%= doc.ifNotP(Doc::Irix) {%Q{-->
   <para><xref linkend="sec.mdsplus_inst"/> provides installation
   instructions for the <acronym>MDSplus</acronym> libraries.</para>
-  <!--}} %-->
+
+  <para>Proceed to <xref linkend="sec.build-sr"/>.</para>
 </section>
