@@ -22,6 +22,7 @@ class LinAlgUnary : public Module {
   GuiString op_;
   GuiString function_;
   void insertion_sort(double *x, int n);
+  void subtract_mean(double *x, int n);
 public:
   LinAlgUnary(GuiContext* ctx);
   virtual ~LinAlgUnary();
@@ -46,6 +47,17 @@ void LinAlgUnary::insertion_sort(double *x, int n) {
       if (x[i] > x[j]) {
 	tmp = x[i]; x[i]=x[j]; x[j]=tmp;
       }
+}
+
+void LinAlgUnary::subtract_mean(double *x, int n) {
+  double sum = 0.0;
+  for (int i=0; i<n; i++) {
+    sum = sum + x[i];
+  }
+  double avg = sum / (double)n;
+  for (int i=0; i<n; i++) {
+    x[i] = x[i] - avg;
+  }
 }
 
 void LinAlgUnary::execute() {
@@ -79,6 +91,12 @@ void LinAlgUnary::execute() {
     double *x = &((*(m.get_rep()))[0][0]);
     int n = m->nrows()*m->ncols();
     insertion_sort(x, n);
+    omat_->send(MatrixHandle(m));
+  } else if (op == "Subtract_Mean") {
+    MatrixHandle m = mh->clone();
+    double *x = &((*(m.get_rep()))[0][0]);
+    int n = m->nrows()*m->ncols();
+    subtract_mean(x, n);
     omat_->send(MatrixHandle(m));
   } else if (op == "Function") {
     Function *f = new Function(1);
