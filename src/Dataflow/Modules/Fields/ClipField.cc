@@ -226,6 +226,7 @@ ClipField::execute()
   bool using_function_p = false;
   if (usefunction_.get())
   {
+    ifieldhandle->mesh()->synchronize(Mesh::LOCATE_E);
     ScalarFieldInterface *sfi = ifieldhandle->query_scalar_interface();
     if (sfi)
     {
