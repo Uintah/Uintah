@@ -751,7 +751,7 @@ SparseRowMatrix::submatrix(int r1, int c1, int r2, int c2)
   vector<double> valsv;
 
   rs[0] = 0;
-  for (i = r1; i < nnrows; i++)
+  for (i = r1; i <= r2; i++)
   {
     rs[i-r1+1] = rs[i-r1];
     for (j = rows[i]; j < rows[i+1]; j++)
