@@ -682,6 +682,7 @@ RecursiveMutex::RecursiveMutex(const char* name)
 
 RecursiveMutex::~RecursiveMutex()
 {
+  pthread_mutex_unlock(&d_priv->mutex);
     if(pthread_mutex_destroy(&d_priv->mutex) != 0)
 	throw ThreadError(std::string("pthread_mutex_destroy: ")
 			  +strerror(errno));
@@ -728,11 +729,17 @@ Semaphore::Semaphore(const char* name, int value)
     
 Semaphore::~Semaphore()
 {
-    if(sem_destroy(&d_priv->sem) != 0)
-	throw ThreadError(std::string("sem_destroy: ")
-			  +strerror(errno));
-
-    delete d_priv;
+  int val;
+  sem_getvalue(&d_priv->sem,&val);
+  while(val<=0) {
+    sem_post(&d_priv->sem);
+    sem_getvalue(&d_priv->sem,&val);
+  }
+  if(sem_destroy(&d_priv->sem) != 0)
+    throw ThreadError(std::string("sem_destroy: ")
+		      +strerror(errno));
+  
+  delete d_priv;
 }
 
 void
@@ -791,6 +798,7 @@ ConditionVariable::ConditionVariable(const char* name)
 
 ConditionVariable::~ConditionVariable()
 {
+  pthread_cond_broadcast(&d_priv->cond);
     if(pthread_cond_destroy(&d_priv->cond) != 0)
 	throw ThreadError(std::string("pthread_cond_destroy: ")
 			  +strerror(errno));
@@ -852,6 +860,10 @@ ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.18  2000/12/01 06:57:10  moulding
+// fixed the rest of the pthread implementation of destructors of IPC primitives.
+// Now destroying a module on linux does not crash the PSE.
+//
 // Revision 1.17  2000/12/01 06:07:44  moulding
 // added call to pthread_mutex_unlock() before call to pthread_mutex_destroy().
 // This prevents the SIGABRT at system exit on linux.
