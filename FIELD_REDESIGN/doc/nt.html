@@ -1,0 +1,174 @@
+<h1><center>Things You Need To Know About How To Build the PSE for NT <br> (in house only)</center></h1>
+
+<h3>1 - Configuring your environment</h3>
+
+  Before you can build PSE for NT, you must meet certain system requirements.<p>
+
+  First, you need to have the following third party software packages installed
+  on the the machine you intend to build on:<p>
+
+  Microsoft Visual C++ version 6.0 (or higher)<br>
+  Tcl/Tk version 8.0.4 (or 8.0.5)<br>
+  Itcl/Itk version 3.0.1<br>
+  ONCRPC (by Martin Gergeleit)<br>
+  zlib  version 1.1.3<p>
+
+  if you want to access the development repository you also need to have these:<br>
+  Cyclic software CVS version 1.10<br>
+  ssh (a secure shell login program)<p>
+
+  All of these packages are available in the PSE\3rdParty directory, if you don't already
+  have them.<p>
+
+  Second, you need to appropriately configure your environment by making changes to your startup
+  environment variables (My Computer - Properties - Environment).  The changes needed are described
+  in the following sections.<p>
+
+  <h4>1.1 - Putting stuff in your PATH</h4>
+
+  You should edit your PATH environment variable to include
+  the following:<p>
+
+  <ul><code>
+    c:\progra~1\micros~1\vc98 (the path to your Visual C++ directory)<br>
+	c:\progra~1\micros~1\vc98\bin (the path to your vc++ executables)<br>
+	c:\progra~1\micros~1\vc98\lib (the path to yoru vc++ libraries)<br>
+	c:\progra~1\micros~1\common\msdev98\bin (the path to your msdev executables)<br>
+	c:\progra~1\tcl\install\lib (the path to your Tcl/Tk, and related, dll libraries)<br>
+	c:\progra~1\oncrpc\lib (the path to your oncrpc dll library)<br>
+	c:\progra~1\zlib\lib (the path to your zlib dll library)<br>
+	c:\progra~1\cyclic~1\cvs (the path to your cvs executables)<br>
+	c:\progra~1\ssh (the path to your ssh executables)
+  </code></ul>
+
+  The paths shown above are just example paths.  You need to substitute the paths
+  that match your machine setup.<p>
+  
+  <h4>1.1 - Getting ssh access to csf</h4>
+
+  The PSE sources are kept on the C-SAFE server, csf.cs.utah.edu.  You must
+  be able to ssh to this machine in order to aquire the sources.  Most people
+  already have access to this machine.  At a prompt (in these examples, ">" is
+  the prompt), type:<p>
+
+  <ul><code>
+    > ssh csf
+  </code></ul>
+
+  You may be asked for your password, but should successfully be able to log
+  into csf.  If not, go talk to Someone Who Fixes These Things and get it
+  fixed.<p>
+
+  <h4>1.2 - Setting up CVS</h4>
+
+  The PSE source tree is managed by CVS.  CVS uses the "ssh" command to
+  access the source repository on csf.cs.utah.edu.<p>
+
+  You need to have the following environment variables set:
+
+  <ul><code>
+    CVS_RSH = ssh<br>
+    CVSROOT = csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot
+  </code></ul>
+
+
+<h4>1.3 - Setting up Tcl/Tk (and related stuff)</h4>
+
+  Set the following environment variables:<p>
+
+  <ul><code>
+    TCL_LIBRARY=c:\progra~1\tcl\install\lib\tcl8.0.4<br>
+    TK_LIBRARY=c:\progra~1\tcl\install\lib\tk8.0.4<br>
+    ITCL_LIBRARY=c:\progra~1\tcl\install\lib\itcl3.0<br>
+    ITK_LIBRARY=c:\progra~1\tcl\install\lib\itk3.0<br>
+    PACKAGE_PATH=../PSECommon<br>
+  </code></ul>
+
+  Again, the paths shown above are just example paths.<p>
+
+<h3>2 - Checking out and Building PSE</h3>
+
+  <h4>2.1 - Log into a build machine</h4>
+
+  Log into any NT box that meets the system requirements outlined in section 1.<p>
+
+  <h4>2.2 - Checking out the PSE sources with CVS</h4>
+
+  The PSE sources are managed by the CVS version control system.  In a CMD shell go to
+  whatever directory you want to work in and check out the sources:<p>
+
+  <ul><code>
+     > cd myWorkingDirectory<br>
+	 > cvs -d :ext:%CVSROOT% PSE
+  </code>
+  </ul>
+  [ lots of files go by]<p>
+
+  <h4>2.3 - Configure the build for your system setup</h4>
+
+  Edit the following file: <p>
+
+  PSE\src\scripts\Makefile.vc.config<p>
+
+  to look something like this:<p>
+
+##########################  EDIT HERE  #########################<p>
+
+## set the command macros<br>
+CC            = cl<br>
+LINK          = link<br>
+MAKE          = nmake<br>
+RM            = del<p>
+
+## set VERSION to build debug or release versions of all binaries<br>
+## NOTE: "d" will be appended to the names of debug libraries (ala tcl/tk).<br>
+VERSION       = Release<br>
+#VERSION      = Debug<p>
+
+## set the warning level<br>
+#WARNING      = -W2<br>
+WARNING       = -W1<p>
+
+## the default paths to 3rd party libraries<br>
+LIBPATH       = -LIBPATH:c:\progra~1\oncrpc\lib\<br>
+				-LIBPATH:c:\progra~1\zlib\lib\<br>
+		        -LIBPATH:c:\progra~1\tcl\install\lib<p>
+
+## the default paths to 3rd party include files<br>
+INCPATH       = -Ic:\progra~1\oncrpc\<br>
+                -Ic:\progra~1\oncrpc\rpc\<br>
+                -Ic:\progra~1\zlib\include\<br>
+				-Ic:\progra~1\tcl\src\tcl8.0.5\generic\<br>
+				-Ic:\progra~1\tcl\src\tcl8.0.5\win\<br>
+				-Ic:\progra~1\tcl\src\tk8.0.5\generic\<br>
+				-Ic:\progra~1\tcl\src\tk8.0.5\win\<br>
+				-Ic:\progra~1\tcl\src\tk8.0.5\xlib\<br>
+				-Ic:\progra~1\tcl\src\itcl3.0.1\itcl\generic\<br>
+				-Ic:\progra~1\tcl\src\itcl3.0.1\itcl\win\<br>
+				-Ic:\progra~1\tcl\src\itcl3.0.1\itk\generic\<br>
+				-Ic:\progra~1\tcl\src\itcl3.0.1\itk\win\<br>
+				-Ic:\progra~1\tcl\src\blt2.4i\include\<p>
+
+################################################################<p>
+
+  <h4>2.4 - Build the sources</h4>
+
+  You must build the sources with the 'nmake' command.  Other make's
+  won't do.  From the PSE\src directory:<p>
+
+  <ul><code>
+    > nmake -fMakefile.vc
+  </code></ul>
+
+<h3>3 - Starting the PSE</h3>
+
+  When finished building, you'll have a "pse" binary in PSE\src\main which you
+  can run to start the PSE.  This binary has hard-coded paths to the locations
+  of its components, including the PSE packages, the [i]Tcl/Tk libraries and
+  files, and others.<p>
+
+  <ul><code>
+    > cd PSE\src\main<br>
+    > pse
+  </code></ul>
+
