@@ -16,7 +16,7 @@
 */
 
 /*
- *  PolyDataMapper.cc:
+ *  Actor.cc:
  *
  *  Written by:
  *   Keming Zhang
@@ -28,28 +28,23 @@
 
 #include <iostream>
 #include <SCIRun/Vtk/Port.h>
-#include <CCA/Components/VtkTest/Renderer/Renderer.h>
+#include <CCA/Components/VtkTest/Actor/Actor.h>
 
-#include "vtkRenderer.h"
-#include "vtkRenderWindowInteractor.h"
-#include "vtkRenderWindow.h"
-#include "vtkCamera.h"
-#include "vtkMapper.h"
-#include "vtkProp.h"
 #include "vtkActor.h"
+#include "vtkMapper.h"
 
 using namespace std;
 using namespace SCIRun;
 using namespace vtk;
 
-extern "C" vtk::Component* make_Vtk_Renderer()
+extern "C" vtk::Component* make_Vtk_Actor()
 {
-  return new Renderer;
+  return new Actor;
 }
 
 //Input Port
-IPort::IPort(vtkRenderer *ren){
-  this->ren=ren;
+IPort::IPort(vtkActor *actor){
+  this->actor=actor;  
 }
 
 IPort::~IPort(){
@@ -63,59 +58,58 @@ IPort::isInput(){
 
 std::string
 IPort::getName(){
-  return "Renderer::input";
+  return "Actor::input";
 }
-
 
 bool 
 IPort::accept(Port* port){
-  return dynamic_cast<vtkProp*>(port->getObj())!=0;
+  return dynamic_cast<vtkMapper*>(port->getObj())!=0;
 }
 
 void
 IPort::connect(Port* port){
-  ren->AddActor(dynamic_cast<vtkProp*>(port->getObj()));
+  actor->SetMapper(dynamic_cast<vtkMapper*>(port->getObj()));
 }
 
-Renderer::Renderer(){
-  ren1=vtkRenderer::New();
+//Output Port
 
-  iports.push_back(new IPort(ren1));
-  
-  renWin=vtkRenderWindow::New();
-  iren=vtkRenderWindowInteractor::New();
-
-  ren1->GetActiveCamera()->Azimuth(20);
-  
-  ren1->GetActiveCamera()->Elevation(30);
-
-  ren1->SetBackground(0.1,0.2,0.4);
-  
-  renWin->SetSize( 500, 500);
-
-  ren1->GetActiveCamera()->Zoom(1.4);
-
-  ren1->ResetCameraClippingRange();
+OPort::OPort(vtkActor *actor){
+  this->actor=actor;
 }
 
-Renderer::~Renderer(){
-  ren1->Delete();
-  renWin->Delete();
-  iren->Delete();
+OPort::~OPort(){
 
 }
 
 bool
-Renderer::haveUI(){
-  return true;
+OPort::isInput(){
+  return false;
 }
 
-int
-Renderer::popupUI(){
-  renWin->Render();
+std::string
+OPort::getName(){
+  return "Actor::output";
+}
 
-  iren->Initialize();
+vtkObject *
+OPort::getObj(){
+  return actor;
+}
 
-  iren->Start();  
-  return 0;
+
+Actor::Actor(){
+
+  actor=vtkActor::New();
+  iports.push_back(new IPort(actor));
+  oports.push_back(new OPort(actor));
+}
+
+Actor::~Actor(){
+  for(unsigned int i=0; i<iports.size(); i++){
+    delete iports[i];
+  }
+  for(unsigned int i=0; i<oports.size(); i++){
+    delete oports[i];
+  }
+  actor->Delete();
 }

@@ -16,7 +16,7 @@
 */
 
 /*
- *  PolyDataMapper.h
+ *  StructuredPointsReader.h
  *
  *  Written by:
  *   Keming Zhang 
@@ -26,50 +26,40 @@
  *
  */
 
-#ifndef SCIRun_VTK_Components_PolyDataMapper_h
-#define SCIRun_VTK_Components_PolyDataMapper_h
+#ifndef SCIRun_VTK_Components_StructuredPointsReader_h
+#define SCIRun_VTK_Components_StructuredPointsReader_h
 
 #include <SCIRun/Vtk/Port.h>
 #include <SCIRun/Vtk/Component.h>
 #include <vector>
 
-#define IPort PolyDataMapper_IPort
+#define OPort StructuredPointsReader_OPort
 
-class vtkPolyDataMapper;
+class vtkStructuredPointsReader;
 
 namespace SCIRun {
   namespace vtk{
-  class IPort : public vtk::Port {
-  public:
-    IPort(vtkPolyDataMapper *mapper);
-    virtual ~IPort();
-    bool isInput();
-    std::string getName();
-    bool accept(Port* port);
-    void connect(Port* p);
-    vtkPolyDataMapper *mapper;
-  };
 
   class OPort : public vtk::Port {
   public:
-    OPort(vtkPolyDataMapper *mapper);
+    OPort(vtkStructuredPointsReader *reader);
     virtual ~OPort();
     bool isInput();
     std::string getName();
     vtkObject* getObj();
-    vtkPolyDataMapper *mapper;
+    vtkStructuredPointsReader *reader;
   };
   
-  class PolyDataMapper: public vtk::Component{
+  class StructuredPointsReader: public vtk::Component{
     
   public:
-    PolyDataMapper();
-    virtual ~PolyDataMapper();
+    StructuredPointsReader();
+    virtual ~StructuredPointsReader();
   private:
-    vtkPolyDataMapper *mapper;
+    vtkStructuredPointsReader *reader;
 
-    PolyDataMapper(const PolyDataMapper&);
-    PolyDataMapper& operator=(const PolyDataMapper&);
+    StructuredPointsReader(const StructuredPointsReader&);
+    StructuredPointsReader& operator=(const StructuredPointsReader&);
   };
   
   

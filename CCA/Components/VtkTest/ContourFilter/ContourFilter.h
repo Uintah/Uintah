@@ -16,7 +16,7 @@
 */
 
 /*
- *  PolyDataMapper.h
+ *  ContourFilter.h
  *
  *  Written by:
  *   Keming Zhang 
@@ -26,50 +26,53 @@
  *
  */
 
-#ifndef SCIRun_VTK_Components_PolyDataMapper_h
-#define SCIRun_VTK_Components_PolyDataMapper_h
+#ifndef SCIRun_VTK_Components_ContourFilter_h
+#define SCIRun_VTK_Components_ContourFilter_h
 
 #include <SCIRun/Vtk/Port.h>
 #include <SCIRun/Vtk/Component.h>
 #include <vector>
 
-#define IPort PolyDataMapper_IPort
+#define IPort ContourFilter_IPort
+#define OPort ContourFilter_OPort
 
-class vtkPolyDataMapper;
+class vtkContourFilter;
 
 namespace SCIRun {
   namespace vtk{
   class IPort : public vtk::Port {
   public:
-    IPort(vtkPolyDataMapper *mapper);
+    IPort(vtkContourFilter *filter);;
     virtual ~IPort();
     bool isInput();
     std::string getName();
-    bool accept(Port* port);
+    bool accept(Port *);
     void connect(Port* p);
-    vtkPolyDataMapper *mapper;
+    vtkContourFilter *filter;
   };
 
   class OPort : public vtk::Port {
   public:
-    OPort(vtkPolyDataMapper *mapper);
+    OPort(vtkContourFilter *filter);
     virtual ~OPort();
     bool isInput();
     std::string getName();
     vtkObject* getObj();
-    vtkPolyDataMapper *mapper;
+    vtkContourFilter *filter;
   };
   
-  class PolyDataMapper: public vtk::Component{
+  class ContourFilter: public vtk::Component{
     
   public:
-    PolyDataMapper();
-    virtual ~PolyDataMapper();
+    ContourFilter();
+    virtual ~ContourFilter();
+    bool haveUI();
+    int popupUI();
   private:
-    vtkPolyDataMapper *mapper;
+    vtkContourFilter *filter;
 
-    PolyDataMapper(const PolyDataMapper&);
-    PolyDataMapper& operator=(const PolyDataMapper&);
+    ContourFilter(const ContourFilter&);
+    ContourFilter& operator=(const ContourFilter&);
   };
   
   
