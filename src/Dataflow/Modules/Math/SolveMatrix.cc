@@ -180,7 +180,9 @@ public:
   GuiInt maxiter;
   GuiInt use_previous_soln;
   GuiInt emit_partial;
-  int ep;
+  GuiInt emit_iter;
+  bool ep;
+  int epcount;
   GuiString status;
   GuiInt tcl_np;
   CGData data;
@@ -206,6 +208,7 @@ SolveMatrix::SolveMatrix(const string& id)
     maxiter("maxiter", id, this),
     use_previous_soln("use_previous_soln", id, this),
     emit_partial("emit_partial", id, this),
+    emit_iter("emit_iter", id, this),
     status("status",id,this),
     tcl_np("np", id, this)
 {
@@ -284,7 +287,8 @@ void SolveMatrix::execute()
     return;
   }
   
-  ep=emit_partial.get();
+  ep = emit_partial.get();
+  epcount = Max(1, emit_iter.get());
   string meth=method.get();
 
   if(meth == "Conjugate Gradient & Precond. (SCI)"){
@@ -561,7 +565,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 
 	    double progress=(log_orig-log(err))/(log_orig-log_targ);
 	    update_progress(progress);
-	    if(ep && niter%50 == 0)
+	    if(ep && niter%epcount == 0)
 		solport->send_intermediate(rhs.clone());
 	}
     }
@@ -805,7 +809,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
 	  }
 	}
 
-	if(ep && data.niter%60 == 0)
+	if(ep && data.niter%epcount == 0)
 	  solport->send_intermediate(lhs.clone());
 
       }
