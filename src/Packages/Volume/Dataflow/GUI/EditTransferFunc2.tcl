@@ -28,12 +28,12 @@
 
 
 
-catch {rename GenTransferFunc2 ""}
+catch {rename EditTransferFunc2 ""}
 
-itcl_class Volume_Visualization_GenTransferFunc2 {
+itcl_class Volume_Visualization_EditTransferFunc2 {
     inherit Module
     constructor {config} {
-	set name GenTransferFunc2
+	set name EditTransferFunc2
 	set_defaults
     }
     method set_defaults {} {

@@ -5,11 +5,11 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Volume/Dataflow/Modules/Visualization
 
 SRCS     += \
-	$(SRCDIR)/TextureBuilder.cc \
+	$(SRCDIR)/EditTransferFunc2.cc \
 	$(SRCDIR)/NrrdTextureBuilder.cc \
+	$(SRCDIR)/TextureBuilder.cc \
 	$(SRCDIR)/VolumeSlicer.cc \
 	$(SRCDIR)/VolumeVisualizer.cc \
-	$(SRCDIR)/GenTransferFunc2.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
