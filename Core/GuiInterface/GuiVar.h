@@ -70,10 +70,8 @@ public:
     return value_;
   }
   inline void set(const T value) {
-    if (value != value_) {  // buggy if value_ happens to initialize to value
-      value_ = value;
-      ctx->set(value_);
-    }
+    value_ = value;
+    ctx->set(value_);
   }
 };
 
