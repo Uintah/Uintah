@@ -73,10 +73,10 @@ main(int argc, char **argv) {
   }
   cerr << "done adding elements.\n";
 
-  tsm->connect();
-  TriSurfMeshHandle tsmh(tsm);
+  TriSurf<double> *tsd = scinew TriSurf<double>(tsm, Field::NODE);
+  FieldHandle fh(tsd);
 
   TextPiostream out_stream(argv[3], Piostream::Write);
-  Pio(out_stream, tsmh);
+  Pio(out_stream, fh);
   return 0;  
 }    
