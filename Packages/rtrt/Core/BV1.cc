@@ -189,12 +189,13 @@ static void my_qsort(Object** odata, double* sdata, int n, int compare_axis)
     }
 }
 
-void BV1::make_tree(int nprims, Object** subprims, double* slabs){
+void BV1::make_tree(int nprims, Object** subprims, double* slabs, int which){
     if(nprims==1){
 	return;
     } else {
 	int i;	
 	int split=(nprims+1)/2;
+#if 1
 	// Sort by X...
 	my_qsort(&subprims[0], slabs, nprims, 0);
 	BBox xbox1;
@@ -223,17 +224,17 @@ void BV1::make_tree(int nprims, Object** subprims, double* slabs){
 	    zbox2.extend(&slabs[6*i]);
 
 	Point x1(Max(xbox1.min(), xbox2.min()));
-	Point x2(Min(xbox2.max(), xbox2.max()));
+	Point x2(Min(xbox1.max(), xbox2.max()));
 	Vector ox(x2-x1);
 	double overx=ox.minComponent();
 	
 	Point y1(Max(ybox1.min(), ybox2.min()));
-	Point y2(Min(ybox2.max(), ybox2.max()));
+	Point y2(Min(ybox1.max(), ybox2.max()));
 	Vector oy(y2-y1);
 	double overy=oy.minComponent();
 
 	Point z1(Max(zbox1.min(), zbox2.min()));
-	Point z2(Min(zbox2.max(), zbox2.max()));
+	Point z2(Min(zbox1.max(), zbox2.max()));
 	Vector oz(z2-z1);
 	double overz=oz.minComponent();
 
@@ -244,8 +245,12 @@ void BV1::make_tree(int nprims, Object** subprims, double* slabs){
 	} else {
 	    my_qsort(&subprims[0], slabs, nprims, 2);
 	}
-	make_tree(split, subprims, slabs);
-	make_tree(nprims-split, subprims+split, slabs+split*6);
+#else
+	// cycle through axes
+	my_qsort(&subprims[0], slabs, nprims, which);
+#endif
+	make_tree(split, subprims, slabs, (which + 1)%3);
+	make_tree(nprims-split, subprims+split, slabs+split*6, (which +1)%3);
     }
 }
 
