@@ -1195,7 +1195,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   if (debug) cerr << "Finished processdata/patch\n";
   if (debug) cerr << "Creating GridSpheres display thread\n";
   //#if 0
-  new Thread(display, "GridSpheres display thread\n");
   //#endif
   
   rtrt::Plane groundplane (rtrt::Point(-500, 300, 0), rtrt::Vector(7, -3, 2));
@@ -1210,9 +1209,24 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Scene* scene=new Scene(all, cam,
 			 bgcolor, cdown, cup, groundplane, 
 			 ambient_scale);
-  
-  scene->add_light(new Light(rtrt::Point(500,-300,300), Color(.8,.8,.8), 0));
-  //  scene->shadow_mode=1;
+
+  // Add all the lights.
+  Light *light = new Light(rtrt::Point(500,-300,300), Color(.8,.8,.8), 0);
+  light->name_ = "Main Light";
+  scene->add_light(light);
+
+  // Add all the displays.
+#if 0 // GridSpheresDpy needs to be made to inherit DpyBase.
+  scene->attach_display(display);
+  display->setName("Particle Vis");
+  scene->attach_auxiliary_display(display);
+#endif
+  (new Thread(display, "GridSpheres display thread\n"))->detach();
+
+  // Add objects of interest
+  scene->addObjectOfInterest(alltime, true);
+
+  scene->select_shadow_mode( No_Shadows );
   return scene;
 }
 
