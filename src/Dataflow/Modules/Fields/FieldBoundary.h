@@ -40,7 +40,8 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *mesh);
-  static bool determine_tri_order(const Point p[3], const Point &inside);
+  static bool determine_tri_order(const Point &p0, const Point &p1,
+				  const Point &p2, const Point &inside);
 };
 
 
@@ -66,8 +67,6 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
   map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type> vertex_map;
   typename map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type>::iterator node_iter;
   vector<typename Msh::Node::index_type> reverse_map;
-
-  TriSurfMesh::Node::index_type node_idx[3];
 
   TriSurfMeshHandle tmesh = scinew TriSurfMesh;
 
@@ -104,10 +103,12 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
 	typename Msh::Node::array_type nodes;
 	mesh->get_nodes(nodes, fi);
 	// Creating triangles, so fan if more than 3 nodes.
-	Point p[3]; // cache points off
+	vector<Point> p(nodes.size()); // cache points off
+	TriSurfMesh::Node::array_type node_idx(nodes.size());
+
 	typename Msh::Node::array_type::iterator niter = nodes.begin();
 
-	for (int i=0; i<3; i++)
+	for (unsigned int i=0; i<nodes.size(); i++)
 	{
 	  node_iter = vertex_map.find(*niter);
 	  mesh->get_point(p[i], *niter);
@@ -121,43 +122,19 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
 	  {
 	    node_idx[i] = (*node_iter).second;
 	  }
-	  ++niter;
-	}
-	if (determine_tri_order(p, center))
-	{
-	  tmesh->add_triangle(node_idx[0], node_idx[1], node_idx[2]);
-	}
-	else
-	{
-	  tmesh->add_triangle(node_idx[2], node_idx[1], node_idx[0]);
-	}
-
-	while (niter != nodes.end())
-	{
-	  node_idx[1] = node_idx[2];
-	  p[1] = p[2];
-	  node_iter = vertex_map.find(*niter);
-	  mesh->get_point(p[2], *niter);
-	  if (node_iter == vertex_map.end())
+	  if (i >= 2)
 	  {
-	    node_idx[2] = tmesh->add_point(p[2]);
-	    vertex_map[*niter] = node_idx[2];
-	    reverse_map.push_back(*niter);
-	  }
-	  else
-	  {
-	    node_idx[2] = (*node_iter).second;
+	    if (determine_tri_order(p[0], p[i-1], p[i], center))
+	    {
+	      tmesh->add_triangle(node_idx[0], node_idx[i-1], node_idx[i]);
+	    }
+	    else
+	    {
+	      tmesh->add_triangle(node_idx[0], node_idx[i-1], node_idx[i]);
+	    }
 	  }
 	  ++niter;
-	  if (determine_tri_order(p, center))
-	  {
-	    tmesh->add_triangle(node_idx[0], node_idx[1], node_idx[2]);
-	  }
-	  else
-	  {
-	    tmesh->add_triangle(node_idx[2], node_idx[1], node_idx[0]);
-	  }
-	} 
+	}
       }
     }
   }
