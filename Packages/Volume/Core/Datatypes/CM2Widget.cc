@@ -42,104 +42,119 @@ using namespace SCIRun;
 
 namespace Volume {
 
+#define CM2_TRIANGLE_BASE \
+"!!ARBfp1.0 \n" \
+"PARAM color = program.local[0]; \n" \
+"PARAM geom0 = program.local[1]; # {base, top_x, top_y, 0.0} \n" \
+"PARAM geom1 = program.local[2]; # {width, bottom, 0.0, 0.0} \n" \
+"PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n" \
+"TEMP c, p, t;" \
+"MUL p.xy, fragment.position.xyyy, sz.xyyy; \n" \
+"MUL p.z, geom1.y, geom0.z; \n" \
+"SUB p.z, p.y, p.z; \n" \
+"KIL p.z; \n" \
+"RCP t.z, geom0.z; \n" \
+"MUL t.x, p.y, t.z; \n" \
+"LRP c.x, t.x, geom0.y, geom0.x; \n" \
+"MUL c.y, t.x, geom1.x; \n" \
+"MUL c.y, c.y, 0.5; \n" \
+"RCP c.y, c.y; \n" \
+"SUB c.z, p.x, c.x; \n" \
+"MUL c.z, c.y, c.z; \n" \
+"ABS c.z, c.z; \n" \
+"SUB t.w, 1.0, c.z; \n"
+
+#define CM2_RECTANGLE_1D_BASE \
+"!!ARBfp1.0 \n" \
+"PARAM color = program.local[0]; \n" \
+"PARAM geom0 = program.local[1]; # {left_x, left_y, width, height} \n" \
+"PARAM geom1 = program.local[2]; # {offset, 1/offset, 1/(1-offset), 0.0} \n" \
+"PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n" \
+"TEMP c, p, t; \n" \
+"MUL p.xy, fragment.position.xyyy, sz.xyyy; \n" \
+"SUB p.xy, p.xyyy, geom0.xyyy; \n" \
+"RCP p.z, geom0.z; \n" \
+"RCP p.w, geom0.w; \n" \
+"MUL p.xy, p.xyyy, p.zwww; \n" \
+"SUB t.x, p.x, geom1.x; \n" \
+"MUL t.y, t.x, geom1.y; \n" \
+"MUL t.z, t.x, geom1.z; \n" \
+"CMP t.w, t.y, t.y, t.z; \n" \
+"ABS t.w, t.w; \n" \
+"SUB t.w, 1.0, t.w; \n" \
+
+#define CM2_RECTANGLE_ELLIPSOID_BASE \
+"!!ARBfp1.0 \n" \
+"PARAM color = program.local[0]; \n" \
+"TEMP c, p, t;"
+
+#define CM2_FRAGMENT_BLEND \
+"TEX t, fragment.position.xyyy, texture[0], RECT; \n" \
+"SUB p.w, 1.0, c.w; \n" \
+"MAD result.color, t, p.w, c; \n" \
+"END"
+
+#define CM2_RASTER_BLEND \
+"MOV result.color, c; \n" \
+"END"
+
+#define CM2_REGULAR \
+"MUL c.w, color.w, t.w; \n" \
+"MOV c.xyz, color.xyzz; \n"
+
+#define CM2_FAUX \
+"MUL c, color, t.w; \n"
+
 const string CM2ShaderString[CM2_LAST] =
   {
     // CM2_TRIANGLE
-    "!!ARBfp1.0 \n"
-    "PARAM color = program.local[0]; \n"
-    "PARAM geom0 = program.local[1]; # {base, top_x, top_y, 0.0} \n"
-    "PARAM geom1 = program.local[2]; # {width, bottom, 0.0, 0.0} \n"
-    "PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n"
-    "TEMP c, p, t;"
-    "MUL p.xy, fragment.position.xyyy, sz.xyyy; \n"
-    "MUL p.z, geom1.y, geom0.z; \n"
-    "SUB p.z, p.y, p.z; \n"
-    "KIL p.z; \n"
-    "RCP t.z, geom0.z; \n"
-    "MUL t.x, p.y, t.z; \n"
-    "LRP c.x, t.x, geom0.y, geom0.x; \n"
-    "MUL c.y, t.x, geom1.x; \n"
-    "MUL c.y, c.y, 0.5; \n"
-    "RCP c.y, c.y; \n"
-    "SUB c.z, p.x, c.x; \n"
-    "MUL c.z, c.y, c.z; \n"
-    "ABS c.z, c.z; \n"
-    "SUB c.z, 1.0, c.z; \n"
-    "MUL c.w, color.w, c.z; \n"
-    "MOV c.xyz, color.xyzz; \n"
-    "MOV result.color, c; \n"
-    "END",
+    CM2_TRIANGLE_BASE
+    CM2_REGULAR
+    CM2_RASTER_BLEND,
     // CM2_TRIANGLE_FAUX
-    "!!ARBfp1.0 \n"
-    "PARAM color = program.local[0]; \n"
-    "PARAM geom0 = program.local[1]; # {base, top_x, top_y, 0.0} \n"
-    "PARAM geom1 = program.local[2]; # {width, bottom, 0.0, 0.0} \n"
-    "PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n"
-    "TEMP c, p, t;"
-    "MUL p.xy, fragment.position.xyyy, sz.xyyy; \n"
-    "MUL p.z, geom1.y, geom0.z; \n"
-    "SUB p.z, p.y, p.z; \n"
-    "KIL p.z; \n"
-    "RCP t.z, geom0.z; \n"
-    "MUL t.x, p.y, t.z; \n"
-    "LRP c.x, t.x, geom0.y, geom0.x; \n"
-    "MUL c.y, t.x, geom1.x; \n"
-    "MUL c.y, c.y, 0.5; \n"
-    "RCP c.y, c.y; \n"
-    "SUB c.z, p.x, c.x; \n"
-    "MUL c.z, c.y, c.z; \n"
-    "ABS c.z, c.z; \n"
-    "SUB c.z, 1.0, c.z; \n"
-    "MUL result.color, color, c.z; \n"
-    "END",
+    CM2_TRIANGLE_BASE
+    CM2_FAUX
+    CM2_RASTER_BLEND,
+    // CM2_TRIANGLE_BLEND
+    CM2_TRIANGLE_BASE
+    CM2_REGULAR
+    CM2_FRAGMENT_BLEND,
+    // CM2_TRIANGLE_FAUX_BLEND
+    CM2_TRIANGLE_BASE
+    CM2_FAUX
+    CM2_FRAGMENT_BLEND,
     // CM2_RECTANGLE_1D
-    "!!ARBfp1.0 \n"
-    "PARAM color = program.local[0]; \n"
-    "PARAM geom0 = program.local[1]; # {left_x, left_y, width, height} \n"
-    "PARAM geom1 = program.local[2]; # {offset, 1/offset, 1/(1-offset), 0.0} \n"
-    "PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n"
-    "TEMP c, p, t; \n"
-    "MUL p.xy, fragment.position.xyyy, sz.xyyy; \n"
-    "SUB p.xy, p.xyyy, geom0.xyyy; \n"
-    "RCP p.z, geom0.z; \n"
-    "RCP p.w, geom0.w; \n"
-    "MUL p.xy, p.xyyy, p.zwww; \n"
-    "SUB t.x, p.x, geom1.x; \n"
-    "MUL t.y, t.x, geom1.y; \n"
-    "MUL t.z, t.x, geom1.z; \n"
-    "CMP t.w, t.y, t.y, t.z; \n"
-    "ABS t.w, t.w; \n"
-    "SUB t.w, 1.0, t.w; \n"
-    "MUL c.w, color.w, t.w; \n"
-    "MOV c.xyz, color.xyzz; \n"
-    "MOV result.color, c; \n"
-    "END",
+    CM2_RECTANGLE_1D_BASE
+    CM2_REGULAR
+    CM2_RASTER_BLEND,
     // CM2_RECTANGLE_1D_FAUX
-    "!!ARBfp1.0 \n"
-    "PARAM color = program.local[0]; \n"
-    "PARAM geom0 = program.local[1]; # {left_x, left_y, width, height} \n"
-    "PARAM geom1 = program.local[2]; # {offset, 1/offset, 1/(1-offset), 0.0} \n"
-    "PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n"
-    "TEMP c, p, t; \n"
-    "MUL p.xy, fragment.position.xyyy, sz.xyyy; \n"
-    "SUB p.xy, p.xyyy, geom0.xyyy; \n"
-    "RCP p.z, geom0.z; \n"
-    "RCP p.w, geom0.w; \n"
-    "MUL p.xy, p.xyyy, p.zwww; \n"
-    "SUB t.x, p.x, geom1.x; \n"
-    "MUL t.y, t.x, geom1.y; \n"
-    "MUL t.z, t.x, geom1.z; \n"
-    "CMP t.w, t.y, t.y, t.z; \n"
-    "ABS t.w, t.w; \n"
-    "SUB t.w, 1.0, t.w; \n"
-    "MUL result.color, color, t.w; \n"
-    "END",
+    CM2_RECTANGLE_1D_BASE
+    CM2_FAUX
+    CM2_RASTER_BLEND,
+    // CM2_RECTANGLE_1D_BLEND
+    CM2_RECTANGLE_1D_BASE
+    CM2_REGULAR
+    CM2_FRAGMENT_BLEND,
+    // CM2_RECTANGLE_1D_FAUX_BLEND
+    CM2_RECTANGLE_1D_BASE
+    CM2_FAUX
+    CM2_FRAGMENT_BLEND,
     // CM2_RECTANGLE_ELLIPSOID
-    "!!ARBfp1.0 \n"
-    "END",
+    CM2_RECTANGLE_ELLIPSOID_BASE
+    CM2_REGULAR
+    CM2_RASTER_BLEND,
     // CM2_RECTANGLE_ELLIPSOID_FAUX
-    "!!ARBfp1.0 \n"
-    "END"
+    CM2_RECTANGLE_ELLIPSOID_BASE
+    CM2_FAUX
+    CM2_RASTER_BLEND,
+    // CM2_RECTANGLE_ELLIPSOID_BLEND
+    CM2_RECTANGLE_ELLIPSOID_BASE
+    CM2_REGULAR
+    CM2_FRAGMENT_BLEND,
+    // CM2_RECTANGLE_ELLIPSOID_FAUX_BLEND
+    CM2_RECTANGLE_ELLIPSOID_BASE
+    CM2_FAUX
+    CM2_FRAGMENT_BLEND
   };
 
 CM2ShaderFactory::CM2ShaderFactory()
@@ -178,7 +193,7 @@ CM2ShaderFactory::destroy()
 FragmentProgramARB*
 CM2ShaderFactory::shader(int type)
 {
-  return type < CM2_LAST ? shader_[type] : 0;
+  return (type < CM2_LAST && type >= 0) ? shader_[type] : 0;
 }
 
 CM2Widget::CM2Widget()
@@ -248,9 +263,11 @@ TriangleCM2Widget::clone()
 }
 
 void
-TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux)
+TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, bool blend)
 {
-  FragmentProgramARB* shader = factory.shader(faux ? CM2_TRIANGLE_FAUX : CM2_TRIANGLE);
+  int type = CM2_TRIANGLE + (int)blend*2 + (int)faux;
+  FragmentProgramARB* shader = factory.shader(type);
+
   shader->bind();
   shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
   shader->setLocalParam(1, base_, base_+top_x_, top_y_, 0.0);
@@ -556,9 +573,10 @@ RectangleCM2Widget::clone()
 }
 
 void
-RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux)
+RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, bool blend)
 {
-  FragmentProgramARB* shader = factory.shader(faux ? type_+1 : type_);
+  int type = type_ + (int)blend*2 + (int)faux;
+  FragmentProgramARB* shader = factory.shader(type);
 
   shader->bind();
   shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);

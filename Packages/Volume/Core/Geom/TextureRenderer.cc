@@ -786,10 +786,12 @@ TextureRenderer::build_colormap2()
       // hardware rasterization
       if(cmap2_dirty_) {
         raster_buffer_->activate();
+        raster_buffer_->set_use_texture_matrix(false);
         glDrawBuffer(GL_FRONT);
         glViewport(0, 0, raster_buffer_->width(), raster_buffer_->height());
         glClearColor(0.0, 0.0, 0.0, 0.0);
         glClear(GL_COLOR_BUFFER_BIT);
+        raster_buffer_->swapBuffers();
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glMatrixMode(GL_MODELVIEW);
@@ -799,17 +801,22 @@ TextureRenderer::build_colormap2()
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_LIGHTING);
         glDisable(GL_CULL_FACE);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glDisable(GL_BLEND);
+        //glEnable(GL_BLEND);
+        //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glActiveTexture(GL_TEXTURE0);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         // rasterize widgets
         vector<CM2Widget*> widgets = cmap2_->widgets();
-        for (unsigned int i=0; i<widgets.size(); i++)
-        {
-          widgets[i]->rasterize(*shader_factory_, cmap2_->faux());
+        for (unsigned int i=0; i<widgets.size(); i++) {
+          raster_buffer_->bind(GL_FRONT);
+          widgets[i]->rasterize(*shader_factory_, cmap2_->faux(), true);
+          raster_buffer_->release(GL_FRONT);
+          raster_buffer_->swapBuffers();
         }
-        glDisable(GL_BLEND);
-        raster_buffer_->swapBuffers();
+        //glDisable(GL_BLEND);
         raster_buffer_->deactivate();
+        raster_buffer_->set_use_texture_matrix(true);
       }
       //--------------------------------------------------------------
       // opacity correction and quantization
