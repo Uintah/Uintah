@@ -11,6 +11,7 @@ namespace SCIRun {
 namespace Uintah {
 
 class Matrix3;
+class Stencil7;
 class TypeDescription;
 
 using namespace SCIRun;
@@ -26,6 +27,14 @@ const TypeDescription* fun_getTypeDescription(double*);
 const TypeDescription* fun_getTypeDescription(Point*);
 const TypeDescription* fun_getTypeDescription(Vector*);
 const TypeDescription* fun_getTypeDescription(Matrix3*);
+
+// THIS IS A GUESS -> Because of the order of instantiation of
+// templates by the IBM xlC compiler, we can not declare the
+// fun_getTypeDescription(Stencil7*) in Stencil7.h (where it probably
+// should be.)  Instead we have to put it here.  I believe this is
+// true for Matrix3 too.  However, both the fun_getTypeDescription of
+// Matrix3 and Stencil7 are inplemented in their respective .cc files.
+const TypeDescription* fun_getTypeDescription(Stencil7*);
 
 } // End namespace Uintah
    
