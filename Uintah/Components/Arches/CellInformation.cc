@@ -26,17 +26,17 @@ CellInformation::CellInformation(const Patch* patch)
   for (int ii = 1; ii < Size.x()-1; ii++) {
     xx[ii] = xx[ii-1]+patch->dCell().x();
   }
-  xx[Size.x()-1] = (patch->getBox().upper()).x();
+  xx[Size.x()-1] = (patch->getBox().upper()).x()-0.5*(patch->dCell()).x();
   yy[0] = (patch->getBox().lower()).y()+0.5*(patch->dCell()).y();
   for (int ii = 1; ii < Size.y()-1; ii++) {
     yy[ii] = yy[ii-1]+patch->dCell().y();
   }
-  yy[Size.y()-1] = (patch->getBox().upper()).y();
+  yy[Size.y()-1] = (patch->getBox().upper()).y()-0.5*(patch->dCell()).y();
   zz[0] = (patch->getBox().lower()).z()+0.5*(patch->dCell()).z();
   for (int ii = 1; ii < Size.z()-1; ii++) {
     zz[ii] = zz[ii-1]+patch->dCell().z();
   }
-  zz[Size.z()-1] = (patch->getBox().upper()).z();
+  zz[Size.z()-1] = (patch->getBox().upper()).z()-0.5*(patch->dCell()).z();
 
   cout << "Lower x = " << patch->getBox().lower().x() << endl;
   for (int ii = 0; ii < Size.x(); ii++) {
