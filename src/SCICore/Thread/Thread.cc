@@ -15,6 +15,7 @@
 #include <SCICore/Thread/Thread.h>
 #include <SCICore/Exceptions/Exception.h>
 #include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Runnable.h>
 #include <SCICore/Thread/ThreadError.h>
 #include <SCICore/Thread/ThreadGroup.h>
 #include <errno.h>
@@ -27,9 +28,23 @@
 
 #define THREAD_DEFAULT_STACKSIZE 64*1024
 
+using SCICore::Thread::ParallelBase;
 using SCICore::Thread::Runnable;
 using SCICore::Thread::Thread;
 using SCICore::Thread::ThreadGroup;
+
+class ParallelHelper : public Runnable {
+    const ParallelBase* helper;
+    int proc;
+public:
+    ParallelHelper(const ParallelBase* helper, int proc)
+	: helper(helper), proc(proc) {}
+    virtual ~ParallelHelper() {}
+    virtual void run() {
+	ParallelBase* cheat=(ParallelBase*)helper;
+	cheat->run(proc);
+    }
+};
 
 Thread::~Thread()
 {
@@ -154,10 +169,15 @@ Thread::parallel(const ParallelBase& helper, int nthreads,
 {
     ThreadGroup* newgroup=new ThreadGroup("Parallel group",
     				      threadGroup);
+    if(!block){
+	// Extra synchronization to make sure that helper doesn't
+	// get destroyed before the threads actually start
+	helper.d_wait=new Semaphore("Thread::parallel startup wait", 0);
+    }
     for(int i=0;i<nthreads;i++){
         char buf[50];
         sprintf(buf, "Parallel thread %d of %d", i, nthreads);
-        new Thread(new ParallelHelper(&helper, i), buf,
+        new Thread(new ParallelHelper(&helper, i), strdup(buf),
 		   newgroup, Thread::Stopped);
     }
     newgroup->gangSchedule();
@@ -167,6 +187,8 @@ Thread::parallel(const ParallelBase& helper, int nthreads,
         delete newgroup;
         return 0;
     } else {
+	helper.d_wait->down(nthreads);
+	delete helper.d_wait;
         newgroup->detach();
     }
     return newgroup;
@@ -281,6 +303,13 @@ Thread::getStateString(ThreadState state)
 
 //
 // $Log$
+// Revision 1.9  1999/09/03 19:51:16  sparker
+// Fixed bug where if Thread::parallel was called with block=false, the
+//   helper object could get destroyed before it was used.
+// Removed include of SCICore/Thread/ParallelBase and
+//  SCICore/Thread/Runnable from Thread.h to minimize dependencies
+// Fixed naming of parallel helper threads.
+//
 // Revision 1.8  1999/08/31 08:59:05  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library
