@@ -357,7 +357,7 @@ static void handle_halt_signals(int sig, int code, sigcontext_t* context)
     // Kill all of the threads...
     char* signam=signal_name(sig, code, (caddr_t)context->eip);
     fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s.  Going down...\n", tname, getpid(), signam);
-    TaskManager::exit_all(-1);
+    Task::exit_all(-1);
 }
 
 static void handle_abort_signals(int sig, int code, sigcontext_t* context)
@@ -382,7 +382,7 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
 	    if(mprotect(self->priv->stackbot+self->priv->redlen, pagesize,
 			PROT_READ|PROT_WRITE) == -1){
 		fprintf(stderr, "Error extending stack for thread \"%s\"", tname);
-		TaskManager::exit_all(-1);
+		Task::exit_all(-1);
 	    }
 	    fprintf(stderr, "extended stack for thread %s\n", tname);
 	    fprintf(stderr, "stacksize is now %d bytes\n",
@@ -397,11 +397,11 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
     buf[0]='n';
     if(!fgets(buf, 100, stdin)){
 	// Exit without an abort...
-	TaskManager::exit_all(-1);
+	Task::exit_all(-1);
     }
     if(buf[0] == 'n' || buf[0] == 'N'){
 	// Exit without an abort...
-	TaskManager::exit_all(-1);
+	Task::exit_all(-1);
     } else {
 	// Abort...
 	fprintf(stderr, "Dumping core...\n");
@@ -416,7 +416,7 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
     }
 }
 
-void TaskManager::exit_all(int code)
+void Task::exit_all(int code)
 {
     exit_code=code;
     exiting=1;
@@ -435,7 +435,7 @@ static void unlocker()
     malloc_lock->unlock();
 }
 
-void TaskManager::initialize(char* pn)
+void Task::initialize(char* pn)
 {
     malloc_lock=new LibMutex;
     MemoryManager::set_locker(locker, unlocker);
@@ -513,7 +513,7 @@ void TaskManager::initialize(char* pn)
     }
 }
 
-int TaskManager::nprocessors()
+int Task::nprocessors()
 {
     static int nproc=-1;
     if(nproc==-1){
@@ -530,7 +530,7 @@ int TaskManager::nprocessors()
     return nproc;
 }
 
-void TaskManager::main_exit()
+void Task::main_exit()
 {
     // Remove ourselves from the ready and run the next task
     if(!current_task){
@@ -773,7 +773,7 @@ void Task::sleep(const TaskTime& time)
     NOT_FINISHED("Task::sleep");
 }
 
-TaskInfo* TaskManager::get_taskinfo()
+TaskInfo* Task::get_taskinfo()
 {
     lock_scheduler();
     TaskInfo* ti=new TaskInfo(ntasks);
@@ -788,12 +788,12 @@ TaskInfo* TaskManager::get_taskinfo()
     return ti;
 }
 
-void TaskManager::coredump(Task* task)
+void Task::coredump(Task* task)
 {
     kill(pid, SIGABRT);
 }
 
-void TaskManager::debug(Task* task)
+void Task::debug(Task* task)
 {
     char buf[1000];
     char* dbx=getenv("SCI_DEBUGGER");
