@@ -16,7 +16,6 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/TrivialAllocator.h>
 #include <Geometry/BBox.h>
-#include <Geometry/Dot.h>
 #include <Geometry/Grid.h>
 #include <Math/MiscMath.h>
 #include <Malloc/Allocator.h>

@@ -13,7 +13,6 @@
 
 #include <Datatypes/BasicSurfaces.h>
 #include <Classlib/NotFinished.h>
-#include <Geometry/Dot.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Group.h>
 #include <Geom/Sphere.h>
