@@ -7,7 +7,7 @@ c*********************************************************************
       SUBROUTINE uvelcoef(domLoU, domHiU, idxLoU, idxHiU, UU,
      &     CESAV, CWSAV, CNSAV, CSSAV, CTSAV, CBSAV,
      &     AP, AE, AW, AN, AS, AT, AB,
-     &     DU,
+c     &     DU,
      &     domLoV, domHiV, VV,
      &     domLoW, domHiW, WW,
      &     domLo, domHi, DEN, VIS, 
@@ -60,8 +60,8 @@ c*********************************************************************
      &     domLoU(3):domHiU(3))
       double precision CBSAV(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
      &     domLoU(3):domHiU(3))
-      double precision DU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
+c      double precision DU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
+c     &     domLoU(3):domHiU(3))
       integer domLoV(3), domHiV(3)
       double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
      &     domLoV(3):domHiV(3))
@@ -261,7 +261,7 @@ C-----------------------------------------------------------------------
                ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
                ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
                ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
-               DU(I,J,K) = VOL/DXPW(I)
+c               DU(I,J,K) = VOL/DXPW(I)
 c              TSUM = TSUM + TEW+TNS+TTB
 C----------------------------------------------------------------------
 C      PROVISIONS FOR VARIOUS UPWIND DIFFERENCING SCHEMES
@@ -321,6 +321,9 @@ c                 SU(I,J,K) = 0.0
 c*********************************************************************
 c
 c $Log$
+c Revision 1.6  2000/08/10 21:29:14  rawat
+c fixed a bug in cellinformation
+c
 c Revision 1.5  2000/08/10 00:56:38  rawat
 c added pressure bc for scalar and changed discretization option for velocity
 c

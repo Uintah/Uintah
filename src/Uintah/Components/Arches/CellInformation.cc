@@ -30,12 +30,12 @@ CellInformation::CellInformation(const Patch* patch)
   xx[Size.x()-1] = (patch->getBox().upper()).x()-0.5*(patch->dCell()).x();
   yy[0] = (patch->getBox().lower()).y()+0.5*(patch->dCell()).y();
   for (int ii = 1; ii < Size.y()-1; ii++) {
-    yy[ii] = yy[ii-1]+patch->dCell().y()-0.5*(patch->dCell()).y();
+    yy[ii] = yy[ii-1]+patch->dCell().y();
   }
   yy[Size.y()-1] = (patch->getBox().upper()).y()-0.5*(patch->dCell()).y();
   zz[0] = (patch->getBox().lower()).z()+0.5*(patch->dCell()).z();
   for (int ii = 1; ii < Size.z()-1; ii++) {
-    zz[ii] = zz[ii-1]+patch->dCell().z()-0.5*(patch->dCell()).z();
+    zz[ii] = zz[ii-1]+patch->dCell().z();
   }
   zz[Size.z()-1] = (patch->getBox().upper()).z()-0.5*(patch->dCell()).z();
 

@@ -7,7 +7,7 @@ c*********************************************************************
       SUBROUTINE wvelcoef(domLoW, domHiW, idxLoW, idxHiW, WW,
      &     CESAV, CWSAV, CNSAV, CSSAV, CTSAV, CBSAV,
      &     AP, AE, AW, AN, AS, AT, AB,
-     &     DDW,
+c     &     DDW,
      &     domLoU, domHiU, UU,
      &     domLoV, domHiV, VV,
      &     domLo, domHi, DEN, VIS, 
@@ -60,8 +60,8 @@ c*********************************************************************
      &     domLoW(3):domHiW(3))
       double precision CBSAV(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
      &     domLoW(3):domHiW(3))
-      double precision DDW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
-     &     domLoW(3):domHiW(3))
+c      double precision DDW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
+c     &     domLoW(3):domHiW(3))
       integer domLoU(3), domHiU(3)
       double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
      &     domLoU(3):domHiU(3))
@@ -282,7 +282,7 @@ C-----------------------------------------------------------------------
                ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
                ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
                ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
-               DDW(I,J,K) = VOL/DZPB(K)
+c               DDW(I,J,K) = VOL/DZPB(K)
 C----------------------------------------------------------------------
 C      PROVISIONS FOR VARIOUS CONVECTION DIFFERENCING SCHEMES
 C----------------------------------------------------------------------
@@ -341,6 +341,9 @@ c                 SU(I,J,K) = 0.0
 c*********************************************************************
 c
 c $Log$
+c Revision 1.5  2000/08/10 21:29:15  rawat
+c fixed a bug in cellinformation
+c
 c Revision 1.4  2000/08/10 00:56:38  rawat
 c added pressure bc for scalar and changed discretization option for velocity
 c

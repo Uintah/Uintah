@@ -111,36 +111,36 @@ c     viscous sources
          do 110 j = JSTW,JENDW
             do 100 i = ISTW,IENDW
                VOL = SEW(I)*SNS(J)*STBW(K)
-c               VISE = PT25*(VIS(I,J,K)+VIS(I+1,J,K)+
-c     &              VIS(I,J,K-1)+VIS(I+1,J,K-1))
-c               VISW = PT25*(VIS(I,J,K)+VIS(I-1,J,K)+
-c     &              VIS(I,J,K-1)+VIS(I-1,J,K-1))
-c               VISN = PT25*(VIS(I,J,K)+VIS(I,J+1,K)+
-c     &              VIS(I,J,K-1)+VIS(I,J+1,K-1))
-c               VISS = PT25*(VIS(I,J,K)+VIS(I,J-1,K)+
-c     &              VIS(I,J,K-1)+VIS(I,J-1,K-1))
-c               VIST = FAC1W(K)*VIS(I,J,K)+FAC2W(K)*
-c     &              VIS(I,J,K+KTSDW(K))
-c               VISB = FAC3W(K)*VIS(I,J,K-1)+FAC4W(K)*
-c     &              VIS(I,J,K+KBSDW(K))
-c               DUDZE = (UU(I+1,J,K)-UU(I+1,J,K-1))/DZPB(K)
-c               DUDZW = (UU(I,J,K)-UU(I,J,K-1))/DZPB(K)
-c               VISEI = CEE(I)*VISE + CWE(I)*VISW
-c               VISWI = CWW(I)*VISW - CWE(I)*VISE
-c               DVDZN = (VV(I,J+1,K)-VV(I,J+1,K-1))/DZPB(K)
-c               DVDZS = (VV(I,J,K)-VV(I,J,K-1))/DZPB(K)
-c               VISNI = CNN(J)*VISN + CSN(J)*VISS
-c               VISSI = CSS(J)*VISS - CSN(J)*VISN
-c               DWDZT = (WW(I,J,K+1)-WW(I,J,K))/STB(K)
-c               DWDZB = (WW(I,J,K)-WW(I,J,K-1))/STB(K-1)
-c               VISTI = CTTW(K)*VIST + CBTW(K)*VISB
-c               VISBI = CBBW(K)*VISB - CBTW(K)*VIST
+               VISE = PT25*(VIS(I,J,K)+VIS(I+1,J,K)+
+     &              VIS(I,J,K-1)+VIS(I+1,J,K-1))
+               VISW = PT25*(VIS(I,J,K)+VIS(I-1,J,K)+
+     &              VIS(I,J,K-1)+VIS(I-1,J,K-1))
+               VISN = PT25*(VIS(I,J,K)+VIS(I,J+1,K)+
+     &              VIS(I,J,K-1)+VIS(I,J+1,K-1))
+               VISS = PT25*(VIS(I,J,K)+VIS(I,J-1,K)+
+     &              VIS(I,J,K-1)+VIS(I,J-1,K-1))
+               VIST = FAC1W(K)*VIS(I,J,K)+FAC2W(K)*
+     &              VIS(I,J,K+KTSDW(K))
+               VISB = FAC3W(K)*VIS(I,J,K-1)+FAC4W(K)*
+     &              VIS(I,J,K+KBSDW(K))
+               DUDZE = (UU(I+1,J,K)-UU(I+1,J,K-1))/DZPB(K)
+               DUDZW = (UU(I,J,K)-UU(I,J,K-1))/DZPB(K)
+               VISEI = CEE(I)*VISE + CWE(I)*VISW
+               VISWI = CWW(I)*VISW - CWE(I)*VISE
+               DVDZN = (VV(I,J+1,K)-VV(I,J+1,K-1))/DZPB(K)
+               DVDZS = (VV(I,J,K)-VV(I,J,K-1))/DZPB(K)
+               VISNI = CNN(J)*VISN + CSN(J)*VISS
+               VISSI = CSS(J)*VISS - CSN(J)*VISN
+               DWDZT = (WW(I,J,K+1)-WW(I,J,K))/STB(K)
+               DWDZB = (WW(I,J,K)-WW(I,J,K-1))/STB(K-1)
+               VISTI = CTTW(K)*VIST + CBTW(K)*VISB
+               VISBI = CBBW(K)*VISB - CBTW(K)*VIST
                SU(I,J,K) = SU(I,J,K)+
-c     &              ((VISEI/DUDZE-VISWI/DUDZW)/SEW(I) +
-c     &               (VISNI*DVDZN-VISSI*DVDZS)/SNS(J) +
-c     &               (VISTI*DWDZT-VISBI*DWDZB)/STBW(K)+
+     &              ((VISEI*DUDZE-VISWI*DUDZW)/SEW(I) +
+     &               (VISNI*DVDZN-VISSI*DVDZS)/SNS(J) +
+     &               (VISTI*DWDZT-VISBI*DWDZB)/STBW(K)+
      &               (old_DEN(I,J,K)*(old_WW(I,J,K)-WW(I,J,K))/DELTAT +
-     &               (PT5*(DEN(I,J,K-1)+DEN(I,J,K))-DEN_REF)*GRAV)*VOL
+     &               (PT5*(DEN(I,J,K-1)+DEN(I,J,K))-DEN_REF)*GRAV))*VOL
  100        continue
  110     continue
  120  continue
@@ -150,6 +150,9 @@ c     &               (VISTI*DWDZT-VISBI*DWDZB)/STBW(K)+
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/08/10 21:29:15  rawat
+c fixed a bug in cellinformation
+c
 c Revision 1.2  2000/07/28 02:31:04  rawat
 c moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 c coeffecients

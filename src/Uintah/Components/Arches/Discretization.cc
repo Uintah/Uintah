@@ -136,7 +136,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  coeff_vars->uVelocityCoeff[Arches::AS].getPointer(), 
 		  coeff_vars->uVelocityCoeff[Arches::AT].getPointer(), 
 		  coeff_vars->uVelocityCoeff[Arches::AB].getPointer(), 
-		  coeff_vars->variableCalledDU.getPointer(),
+		  //		  coeff_vars->variableCalledDU.getPointer(),
 		  domLoV.get_pointer(), domHiV.get_pointer(),
 		  coeff_vars->vVelocity.getPointer(),
 		  domLoW.get_pointer(), domHiW.get_pointer(),
@@ -332,7 +332,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  coeff_vars->vVelocityCoeff[Arches::AS].getPointer(), 
 		  coeff_vars->vVelocityCoeff[Arches::AT].getPointer(), 
 		  coeff_vars->vVelocityCoeff[Arches::AB].getPointer(), 
-		  coeff_vars->variableCalledDV.getPointer(),
+		  //		  coeff_vars->variableCalledDV.getPointer(),
 		  domLoU.get_pointer(), domHiU.get_pointer(),
 		  coeff_vars->uVelocity.getPointer(),
 		  domLoW.get_pointer(), domHiW.get_pointer(),
@@ -528,7 +528,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  coeff_vars->wVelocityCoeff[Arches::AS].getPointer(), 
 		  coeff_vars->wVelocityCoeff[Arches::AT].getPointer(), 
 		  coeff_vars->wVelocityCoeff[Arches::AB].getPointer(), 
-		  coeff_vars->variableCalledDW.getPointer(),
+		  //		  coeff_vars->variableCalledDW.getPointer(),
 		  domLoU.get_pointer(), domHiU.get_pointer(),
 		  coeff_vars->uVelocity.getPointer(),
 		  domLoV.get_pointer(), domHiV.get_pointer(),
@@ -1861,6 +1861,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.42  2000/08/10 21:29:09  rawat
+// fixed a bug in cellinformation
+//
 // Revision 1.41  2000/08/09 20:47:37  bbanerje
 // Added more debug stuff.
 //

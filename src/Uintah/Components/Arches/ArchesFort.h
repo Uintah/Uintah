@@ -263,7 +263,7 @@ extern "C"
 		  double* uVelocityCoeff_AS,
 		  double* uVelocityCoeff_AT,
 		  double* uVelocityCoeff_AB,
-		  double* variableCalledDU,
+		  //		  double* variableCalledDU,
 		  const int* domLoV, const int* domHiV,
 		  const double* vVelocity,
 		  const int* domLoW, const int* domHiW,
@@ -308,7 +308,7 @@ extern "C"
 		  double* vVelocityCoeff_AS,
 		  double* vVelocityCoeff_AT,
 		  double* vVelocityCoeff_AB,
-		  double* variableCalledDV,
+		  //		  double* variableCalledDV,
 		  const int* domLoU, const int* domHiU,
 		  const double* uVelocity,
 		  const int* domLoW, const int* domHiW,
@@ -353,7 +353,7 @@ extern "C"
 		  double* wVelocityCoeff_AS,
 		  double* wVelocityCoeff_AT,
 		  double* wVelocityCoeff_AB,
-		  double* variableCalledDW,
+		  //		  double* variableCalledDW,
 		  const int* domLoU, const int* domHiU,
 		  const double* uVelocity,
 		  const int* domLoV, const int* domHiV,
@@ -784,6 +784,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.29  2000/08/10 21:29:09  rawat
+// fixed a bug in cellinformation
+//
 // Revision 1.28  2000/08/09 20:19:25  rawat
 // modified scalcoef.F
 //

@@ -196,6 +196,8 @@ PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
 			   &PicardNonlinearSolver::setInitialGuess);
       int numGhostCells = 0;
       int matlIndex = 0;
+      tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
       tsk->requires(old_dw, d_lab->d_pressureSPBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
       tsk->requires(old_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
@@ -214,7 +216,7 @@ PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
 		    Ghost::None, numGhostCells);
       tsk->requires(old_dw, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-
+      tsk->computes(new_dw, d_lab->d_cellTypeLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_pressureINLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_uVelocityINLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_vVelocityINLabel, matlIndex, patch);
@@ -242,7 +244,9 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
   // old datawarehouse
   int matlIndex = 0;
   int nofGhostCells = 0;
-
+  CCVariable<int> cellType;
+  old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
+	      Ghost::None, nofGhostCells);
   CCVariable<double> pressure;
   old_dw->get(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch, 
 	      Ghost::None, nofGhostCells);
@@ -274,6 +278,14 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 
 
   // Create vars for new_dw
+  CCVariable<int> cellType_new;
+  new_dw->allocate(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
+  cellType_new = cellType;
+    // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  cellInfoP.setData(scinew CellInformation(patch));
+  new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+
   CCVariable<double> pressure_new;
   new_dw->allocate(pressure_new, d_lab->d_pressureINLabel, matlIndex, patch);
   pressure_new = pressure; // copy old into new
@@ -303,6 +315,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
   viscosity_new = viscosity; // copy old into new
 
   // Copy the variables into the new datawarehouse
+  new_dw->put(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
   new_dw->put(pressure_new, d_lab->d_pressureINLabel, matlIndex, patch);
   new_dw->put(uVelocity_new, d_lab->d_uVelocityINLabel, matlIndex, patch);
   new_dw->put(vVelocity_new, d_lab->d_vVelocityINLabel, matlIndex, patch);
@@ -350,6 +363,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.40  2000/08/10 21:29:09  rawat
+// fixed a bug in cellinformation
+//
 // Revision 1.39  2000/08/08 23:34:18  rawat
 // fixed some bugs in profv.F and Properties.cc
 //

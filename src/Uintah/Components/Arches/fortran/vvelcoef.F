@@ -7,7 +7,7 @@ c*********************************************************************
       SUBROUTINE vvelcoef(domLoV, domHiV, idxLoV, idxHiV, VV,
      &     CESAV, CWSAV, CNSAV, CSSAV, CTSAV, CBSAV,
      &     AP, AE, AW, AN, AS, AT, AB,
-     &     DV,
+c     &     DV,
      &     domLoU, domHiU, UU,
      &     domLoW, domHiW, WW,
      &     domLo, domHi, DEN, VIS, 
@@ -60,8 +60,8 @@ c*********************************************************************
      &     domLoV(3):domHiV(3))
       double precision CBSAV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
      &     domLoV(3):domHiV(3))
-      double precision DV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
-     &     domLoV(3):domHiV(3))
+c      double precision DV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+c     &     domLoV(3):domHiV(3))
       integer domLoU(3), domHiU(3)
       double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
      &     domLoU(3):domHiU(3))
@@ -279,7 +279,7 @@ C-----------------------------------------------------------------------
                ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
                ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
                ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
-               DV(I,J,K) = VOL/DYPS(J)
+c               DV(I,J,K) = VOL/DYPS(J)
 C----------------------------------------------------------------------
 C      PROVISIONS FOR SIMPLEST
 C----------------------------------------------------------------------
@@ -338,6 +338,9 @@ c                 SU(I,J,K) = 0.0
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/08/10 21:29:14  rawat
+c fixed a bug in cellinformation
+c
 c Revision 1.3  2000/08/10 00:56:38  rawat
 c added pressure bc for scalar and changed discretization option for velocity
 c
