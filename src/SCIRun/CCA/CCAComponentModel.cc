@@ -262,12 +262,12 @@ void CCAComponentModel::listAllComponentTypes(vector<ComponentDescription*>& lis
     list.push_back(iter->second);
   }
 
-  for(int i=0; i<loaderList.size(); i++){
+  for(unsigned int i=0; i<loaderList.size(); i++){
     ::SSIDL::array1<std::string> typeList;
     loaderList[i]->listAllComponentTypes(typeList);
     //convert typeList to component description list
     //by attaching a loader (resourceReferenece) to it.
-    for(int j=0; j<typeList.size(); j++){
+    for(unsigned int j=0; j<typeList.size(); j++){
       CCAComponentDescription* cd = new CCAComponentDescription(this);
       cd->type=typeList[j];
       cd->setLoaderName(loaderList[i]->getName());
@@ -299,7 +299,7 @@ int CCAComponentModel::removeLoader(const std::string &loaderName)
 resourceReference *
 CCAComponentModel::getLoader(std::string loaderName){
   resourceReference *rr=0;
-  for(int i=0; i<loaderList.size(); i++){
+  for(unsigned int i=0; i<loaderList.size(); i++){
     if(loaderList[i]->getName()==loaderName){
       rr=loaderList[i];
       break;
