@@ -145,35 +145,36 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
 			   patch, old_dw, new_dw, this,
 			   &PressureSolver::buildLinearMatrix, delta_t);
 
-      int numGhostCells = 0;
+      int numGhostCells = 1;
+      int zeroGhostCells = 0;
       int matlIndex = 0;
       int nofStencils = 7;
       // Requires
       // from old_dw for time integration
       // get old_dw from getTop function
       tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::None, zeroGhostCells);
       tsk->requires(old_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::None, zeroGhostCells);
       tsk->requires(old_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::None, zeroGhostCells);
       tsk->requires(old_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::None, zeroGhostCells);
       // from new_dw
       tsk->requires(new_dw, d_lab->d_pressureINLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::None, zeroGhostCells);
       tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
 
       /// requires convection coeff because of the nodal
       // differencing
@@ -259,18 +260,19 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 	  tasks[proc]=tsk;
        }
 
-       int numGhostCells = 0;
+       int numGhostCells = 1;
+       int zeroGhostCells = 0;
        int matlIndex = 0;
        int nofStencils = 7;
        // Requires
        // coefficient for the variable for which solve is invoked
        tsk->requires(new_dw, d_lab->d_pressureINLabel, matlIndex, patch, 
-		     Ghost::None, numGhostCells);
+		     Ghost::AroundCells, numGhostCells);
        for (int ii = 0; ii < nofStencils; ii++)
 	  tsk->requires(new_dw, d_lab->d_presCoefPBLMLabel, ii, patch, 
-			Ghost::None, numGhostCells);
+			Ghost::None, zeroGhostCells);
        tsk->requires(new_dw, d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch, 
-		     Ghost::None, numGhostCells);
+		     Ghost::None, zeroGhostCells);
        // computes global residual
        //      tsk->computes(new_dw, d_lab->d_presResidPSLabel, matlIndex, patch);
        //      tsk->computes(new_dw, d_lab->d_presTruncPSLabel, matlIndex, patch);
@@ -335,7 +337,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   old_dw->get(d_pressureVars->old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
   old_dw->get(d_pressureVars->cellType, d_lab->d_cellTypeLabel, 
-		matlIndex, patch, Ghost::None, zeroGhostCells);
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
   
   for(int index = 1; index <= Arches::NDIM; ++index) {
 #if  0
@@ -645,6 +647,9 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.51  2000/09/25 16:29:23  rawat
+// modified requires in PressureSolver for multiple patches
+//
 // Revision 1.50  2000/09/21 21:45:05  rawat
 // added petsc parallel stuff
 //

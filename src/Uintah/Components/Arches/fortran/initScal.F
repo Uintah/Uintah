@@ -59,12 +59,12 @@ c*********************************************************************
 c*********************************************************************
 c     Get the indices of interest
 c*********************************************************************
-      iBeg = domainLow(1)
-      jBeg = domainLow(2)
-      kBeg = domainLow(3)
-      iEnd = domainHigh(1)
-      jEnd = domainHigh(2)
-      kEnd = domainHigh(3)
+      iBeg = indexLow(1)
+      jBeg = indexLow(2)
+      kBeg = indexLow(3)
+      iEnd = indexHigh(1)
+      jEnd = indexHigh(2)
+      kEnd = indexHigh(3)
 
 C-----------------------------------------------------------------------
 C     INITIALIZE ALL CARDINAL VARIABLES  
@@ -83,6 +83,9 @@ C-----------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/09/25 16:29:24  rawat
+c modified requires in PressureSolver for multiple patches
+c
 c Revision 1.2  2000/06/28 08:14:55  bbanerje
 c Changed the init routines a bit.
 c
