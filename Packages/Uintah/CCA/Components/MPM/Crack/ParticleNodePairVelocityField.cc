@@ -59,10 +59,6 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int numMatls = d_sharedState->getNumMPMMatls();
 
-    // Detect if doing fracture analysis at this time step
-    double time = d_sharedState->getElapsedTime();
-    FindTimeStepForFractureAnalysis(time);
-        
     enum {SAMESIDE=0,ABOVE_CRACK,BELOW_CRACK};
         
     Vector dx = patch->dCell(); 
