@@ -438,7 +438,6 @@ void CuttingPlane::execute()
     }
     int nx, ny, nz;
     get_dimensions(field, nx,ny,nz);
-    if(field->basis_order() == 0){ nx--; ny--; nz--; }
     int most=Max(Max(nx, ny), nz);
     u_num=v_num=most;
   }
