@@ -136,6 +136,67 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
 	 }
 
        };
+
+  // Set the Neumann BC condition using a 1st order approximation
+      void fillFaceFlux(Patch::FaceType face, const T& value, const Vector& dx)
+	{ 
+	  IntVector low = getLowIndex();
+	  IntVector hi = getHighIndex();
+	  switch (face) {
+	  case Patch::xplus:
+	    for (int j = low.y(); j<hi.y(); j++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(hi.x()-1,j,k)] = 
+		   (*this)[IntVector(hi.x()-2,j,k)] - value*dx.x();
+	      }
+	    }
+	    break;
+	  case Patch::xminus:
+	    for (int j = low.y(); j<hi.y(); j++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(low.x(),j,k)] = 
+		  (*this)[IntVector(low.x()+1,j,k)] - value * dx.x();
+	      }
+	    }
+	    break;
+	  case Patch::yplus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(i,hi.y()-1,k)] = 
+		  (*this)[IntVector(i,hi.y()-2,k)] - value * dx.y();
+	      }
+	    }
+	    break;
+	  case Patch::yminus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(i,low.y(),k)] = 
+		  (*this)[IntVector(i,low.y()+1,k)] - value * dx.y();
+	      }
+	    }
+	    break;
+	  case Patch::zplus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int j = low.y(); j<hi.y(); j++) {
+		(*this)[IntVector(i,j,hi.z()-1)] = 
+		  (*this)[IntVector(i,j,hi.z()-2)] - value * dx.z();
+	      }
+	    }
+	    break;
+	  case Patch::zminus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int j = low.y(); j<hi.y(); j++) {
+		(*this)[IntVector(i,j,low.z())] = 
+		  (*this)[IntVector(i,j,low.z()+1)] -  value * dx.z();
+	      }
+	    }
+	    break;
+	  case Patch::numFaces:
+	    break;
+	  }
+
+	};
+     
      
      // Use to apply symmetry boundary conditions.  On the
      // indicated face, replace the component of the vector
@@ -383,6 +444,9 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
 
 //
 // $Log$
+// Revision 1.9  2000/12/05 16:05:48  jas
+// Added BC fillFace and other BC related things needed for ICE.
+//
 // Revision 1.8  2000/10/12 20:05:37  sparker
 // Removed print statement from FCVariable
 // Added rewindow to SFC{X,Y,Z}Variables
