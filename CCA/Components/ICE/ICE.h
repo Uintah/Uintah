@@ -94,10 +94,10 @@ using namespace SCIRun;
                                 const PatchSet*,
 				    const MaterialSet*);
                              
-      void schedulePrintConservedQuantities(SchedulerP&, 
-                                            const PatchSet*,
-					         const MaterialSet*);
-            
+      void schedulePrintConservedQuantities(SchedulerP&, const PatchSet*,
+					    const MaterialSubset*,
+					    const MaterialSet*);
+      
       void setICELabel(ICELabel* Ilb) {
 	lb = Ilb;
       };

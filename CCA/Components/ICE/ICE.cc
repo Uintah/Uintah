@@ -327,8 +327,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
 
   scheduleMassExchange(sched, patches, all_matls);
 
-  scheduleAccumulateMomentumSourceSinks(sched, patches, press_matl,
-                                                        all_matls);
+  scheduleAccumulateMomentumSourceSinks(sched, patches, press_matl,all_matls);
 
   scheduleAccumulateEnergySourceSinks(sched, patches, press_matl,
                                                       all_matls);
@@ -341,7 +340,8 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
   scheduleAdvectAndAdvanceInTime(sched, patches, all_matls);
 
   if (switchTestConservation){ 
-    schedulePrintConservedQuantities(sched, allPatches, all_matls); 
+    schedulePrintConservedQuantities(sched, allPatches, press_matl,
+				     all_matls); 
   }
 }
 
@@ -656,6 +656,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::schedulePrintConservedQuantities(SchedulerP& sched,
 					   const PatchSet* patches,
+					   const MaterialSubset* press_matl,
 					   const MaterialSet* matls)
 {
 #ifdef DOING
@@ -664,6 +665,8 @@ void ICE::schedulePrintConservedQuantities(SchedulerP& sched,
   Task* task = scinew Task("ICE::printConservedQuantities",
                      this, &ICE::printConservedQuantities);
 
+  task->requires(Task::NewDW, lb->press_CCLabel,press_matl,Ghost::None);
+  task->requires(Task::NewDW, lb->delPress_CCLabel, press_matl,Ghost::None);
   task->requires(Task::NewDW,lb->rho_CCLabel, Ghost::None);
   task->requires(Task::NewDW,lb->vel_CCLabel, Ghost::None);
   task->requires(Task::NewDW,lb->temp_CCLabel,Ghost::None);
@@ -1171,6 +1174,7 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
 {
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
+    
 
   #ifdef DOING
     cout << "Doing compute_face_centered_velocities on patch " 
@@ -2836,7 +2840,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
     } 
     
     fprintf(stderr, "[%i]Fluid mass %6.5g \n",m, mat_mass[m]);
-    fprintf(stderr, "[%i]Fluid momentum[ %6.5g, %6.5g %6.5g]\t",
+    fprintf(stderr, "[%i]Fluid momentum[ %6.5g, %6.5g, %6.5g]\t",
                     m,mat_mom_xyz[m].x(), mat_mom_xyz[m].y(), mat_mom_xyz[m].z()); 
     fprintf(stderr, "Components Sum: %6.5g\n",mat_total_mom[m]);
     fprintf(stderr, "[%i]Fluid eng[internal %6.5g, Kinetic: %6.5g]: %6.5g\n",
@@ -2870,8 +2874,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
  Purpose~   Takes care Pressure_CC
  ---------------------------------------------------------------------  */
 void ICE::setBC(CCVariable<double>& press_CC, CCVariable<double>& rho_micro,
-              const string& kind, 
-		const Patch* patch)
+              const string& kind, const Patch* patch)
 {
   
   Vector dx = patch->dCell();
