@@ -143,7 +143,6 @@ void SimulationController::run()
    scheduler->execute(d_myworld, old_dw, old_dw);
 
    while(t < timeinfo.maxTime) {
-      cerr << "SimulationController: Beginning of time step\n";
 
       double wallTime = Time::currentSeconds() - start_time;
 
@@ -167,9 +166,6 @@ void SimulationController::run()
       }
       old_dw->override(delt_vartype(delt), sharedState->get_delt_label());
       if(d_myworld->myrank() == 0){
-	cout << "Time=" << t << ", delT=" << delt 
-	     << ", elapsed time = " << wallTime << '\n';
-	cout << "DW Generation: " << old_dw->getID() << "\n";
 
 	size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
 	  nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
@@ -184,7 +180,9 @@ void SimulationController::run()
 					bytes_overhead, bytes_free,
 					bytes_fragmented, bytes_inuse,
 					bytes_inhunks);
-	cerr << "Memory Leak: (sizealloc - sizefree) = " 
+	cout << "Time=" << t << ", delT=" << delt 
+	     << ", elap T = " << wallTime 
+	     << ", DW: " << old_dw->getID() << ", Mem Use = " 
 	     << sizealloc - sizefree << "\n";
       }
 
@@ -471,6 +469,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.42  2000/08/24 22:17:15  dav
+// Modified output messages
+//
 // Revision 1.41  2000/08/24 21:21:31  dav
 // Removed DWMpiHandler stuff
 //
