@@ -1,7 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h> // 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -32,6 +31,7 @@
 #include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Core/Util/DebugStream.h>
+#include <Packages/Uintah/Core/Grid/fillFace.h>
 #include <set>
 #include <iostream>
 #include <fstream>
