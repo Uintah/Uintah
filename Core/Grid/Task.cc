@@ -779,6 +779,9 @@ operator << (ostream &out, const Task::TaskType & tt)
   case Task::InitialSend:
     out << "InitialSend";
     break;
+  case Task::Output:
+    out << "Output";
+    break;
   }
   return out;
 }

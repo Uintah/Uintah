@@ -296,7 +296,8 @@ WARNING
     enum TaskType {
       Normal,
       Reduction,
-      InitialSend
+      InitialSend,
+      Output
     };
     
     Task(const SimpleString& taskName, TaskType type)
