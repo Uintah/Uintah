@@ -1009,7 +1009,7 @@ Barrier_private::Barrier_private()
 	throw ThreadError(std::string("fetchop_alloc failed")
 			  +strerror(errno));
 
-      storeop_store(pvar, 0);
+      atomic_store(pvar, 0);
     } else {
       // Use normal SGI barrier
       barrier=new_barrier(arena);
@@ -1053,7 +1053,7 @@ Barrier::wait(int n)
       int gen=priv_->flag;
       atomic_var_t val=atomic_fetch_and_increment(priv_->pvar);
       if(val == n-1){
-	storeop_store(priv_->pvar, 0);
+	atomic_store(priv_->pvar, 0);
 	priv_->flag++;
       }
       while(priv_->flag==gen)
