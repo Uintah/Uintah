@@ -58,7 +58,7 @@ void TYPEReader::execute()
 	    return; // Can't open file...
 	}
 	// Read the file...
-	TYPE* object=(TYPE*)stream->io(ScalarField::typeid);
+	TYPE* object=(TYPE*)stream->io(TYPE::typeid);
 	if(!object){
 	    error("Error reading TYPE from file");
 	    delete stream;
