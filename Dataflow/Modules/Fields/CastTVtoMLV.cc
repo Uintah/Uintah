@@ -88,9 +88,9 @@ void CastTVtoMLV::execute()
   int nz = nz_.get();
 
   LatVolMesh *lvm = scinew LatVolMesh(nx, ny, nz, b.min(), b.max());
-  MaskedLatVolField<Vector> *lv = 
-    scinew MaskedLatVolField<Vector>(lvm, Field::NODE);
-  lv->initialize_mask(1);
+  MaskedLatVolField<Vector> *lv ;//= 
+  //    scinew MaskedLatVolField<Vector>(lvm, Field::NODE);
+  //  lv->initialize_mask(1);
 
   // for each node in the LatVol, check to see if it's inside the TetMesh
   //    if it is, use the weights from get_weights and interpolate
@@ -112,9 +112,9 @@ void CastTVtoMLV::execute()
       for (unsigned int i=0; i<nodes.size(); i++) {
 	f1+=tv->fdata()[nodes[i]] * weights[i];
       }
-      lv->fdata()[*ib]=f1;
+      //      lv->fdata()[*ib]=f1;
     } else {
-      lv->mask()[*ib] = 0;
+      //      lv->mask()[*ib] = 0;
     }
     ++ib;
   }

@@ -145,11 +145,11 @@ void FDMtoFEM::execute() {
       if (ifdmH->get_type_name(1) == "int") {
 	MaskedLatVolField<int> *mlv =
 	  dynamic_cast<MaskedLatVolField<int> *>(ifdmH.get_rep());
-	mask.copy(mlv->mask());
+	//	mask.copy(mlv->mask());
       } else { // Tensor
 	MaskedLatVolField<Tensor> *mlv =
 	  dynamic_cast<MaskedLatVolField<Tensor> *>(ifdmH.get_rep());
-	mask.copy(mlv->mask());
+	//	mask.copy(mlv->mask());
       }
       LatVolMesh::Node::array_type lat_nodes(8);
       LatVolMesh::Cell::iterator ci, cie;

@@ -68,8 +68,11 @@ main(int argc, char **argv) {
     cerr << "Error - input field wasn't a LatVolField\n";
     exit(0);
   }
+  Point z(0,0,0);
+  Point o(0,0,0);
+  
 
-  MaskedLatVolMesh *mlvm = new MaskedLatVolMesh(lvm->get_ni(), lvm->get_nj(), lvm->get_nk());
+  MaskedLatVolMesh *mlvm = new MaskedLatVolMesh(lvm->get_ni(), lvm->get_nj(), lvm->get_nk(),z,o); 
 
   mlvm->set_transform(lvm->get_transform());
   
