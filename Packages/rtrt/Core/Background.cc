@@ -3,6 +3,7 @@
 #include <Packages/rtrt/Core/MiscMath.h>
 #endif
 
+#include <fstream>
 #include <Core/Geometry/Vector.h>
 
 using namespace rtrt;
@@ -81,6 +82,8 @@ EnvironmentMapBackground::EnvironmentMapBackground( char* filename,
     _u = PerpendicularVector( _up );
     _v = Cross( _up, _u );
     read_image( filename );
+
+    cout << "env_map width, height: " << _width << ", " << _height << endl;
 }
 
 EnvironmentMapBackground::~EnvironmentMapBackground( void )
@@ -115,12 +118,43 @@ EnvironmentMapBackground::color_in_direction( const Vector& DIR ) const
     // double v = ( ( asin( dir.z() ) + (0.5*M_PI) ) / M_PI );
     //double u = Clamp( r * cos( phi ) + 0.5, 0.0, 1.0 );
     //double v = Clamp( r * sin( phi ) + 0.5, 0.0, 1.0 );
-    return _image( int( u*( _width - 1 ) ), int( v*( _height - 1 ) ) );
+
+    //double l1 = sqrt(dir.x()*dir.x()+dir.y()*dir.y());
+    //double l2 = sqrt(dir.x()*dir.x()+dir.y()*dir.y()+dir.z()*dir.z());
+    //double v = asin(dir.z()/l2);
+    //double u = (dir.x()<0)?M_PI-asin(dir.y()/l1):asin(dir.y()/l1);      
+
+    //dir.normalize();
+    
+    //double v = (DIR.x()+1)/2.;
+    //double u = (DIR.z()+1)/2.;
+
+    return _image( int( v*( _width - 1 ) ), int( u*( _height - 1 ) ) );
+}
+
+static void eat_comments_and_whitespace(ifstream &str)
+{
+  char c;
+  str.get(c);
+  while (1) {
+    if (c==' '||c=='\t'||c=='\n') {
+      str.get(c);
+      continue;
+    } else if (c=='#') {
+      str.get(c);
+      while(c!='\n')
+        str.get(c);
+    } else {
+      str.unget();
+      break;
+    }
+  }
 }
 
 void 
 EnvironmentMapBackground::read_image( char* filename ) 
 {
+#if 0
   _text = ReadPPMTexture( filename );
   
   char* color = _text->texImage;
@@ -147,5 +181,36 @@ EnvironmentMapBackground::read_image( char* filename )
       free( _text );
   }
 
+#else
+
+  unsigned nu, nv;
+  double size;
+  ifstream indata(filename);
+  unsigned char color[3];
+  string token;
+
+  if (!indata.is_open()) {
+    cerr << "ImageMaterial: WARNING: I/O fault: no such file: " << filename << endl;
+  }
+    
+  indata >> token; // P6
+  eat_comments_and_whitespace(indata);
+  indata >> _width >> _height;
+  eat_comments_and_whitespace(indata);
+  indata >> size;
+  eat_comments_and_whitespace(indata);
+  _image.resize(_width, _height);
+  for(unsigned v=0;v<_height;++v){
+    for(unsigned u=0;u<_width;++u){
+      indata.read((char*)color, 3);
+      double r=color[0]/size;
+      double g=color[1]/size;
+      double b=color[2]/size;
+      _image(u,v)=Color(r,g,b);
+    }
+  }
+
+  //valid_ = true;
+#endif
 }
 
