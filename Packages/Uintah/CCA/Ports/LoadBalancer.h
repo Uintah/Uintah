@@ -98,7 +98,7 @@ WARNING
     virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level) = 0;
 
     //! For dynamic load balancers, Check if we need to rebalance the load, and do so if necessary.
-    virtual bool possiblyDynamicallyReallocate(const GridP&) { return false;}
+    virtual bool possiblyDynamicallyReallocate(const GridP&, bool force) { return false;}
 
     //! Returns the value of n (every n procs it performs output tasks).
     virtual int getNthProc() { return 1; }
