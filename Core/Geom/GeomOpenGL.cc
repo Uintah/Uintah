@@ -1121,6 +1121,19 @@ GeomColoredCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 
     di->polycount+=points_.size() * nu_ * 2;
 
+    const bool texturing =
+      di->using_cmtexture_ && indices_.size() == points_.size();
+    if (texturing)
+    {
+      glColor4d(1.0, 1.0, 1.0, 1.0);
+
+      glEnable(GL_TEXTURE_1D);
+      glDisable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+    }
+
+    const bool coloring = colors_.size() == points_.size();
+
     float tabx[40];
     float taby[40];
     for (int j=0; j<nu_; j++)
@@ -1158,18 +1171,32 @@ GeomColoredCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       glPushMatrix();
       glMultMatrixf(matrix);
 
-      glBegin(GL_TRIANGLE_STRIP);
+      glBegin(GL_QUAD_STRIP);
       for (int k=0; k<nu_+1; k++)
       {
 	glNormal3f(tabx[k%nu_], taby[k%nu_], 0.0);
-	glColor3d(colors_[i]->diffuse.r(),
-		  colors_[i]->diffuse.g(),
-		  colors_[i]->diffuse.b());
+	if (coloring)
+	{
+	  glColor3f(colors_[i]->diffuse.r(),
+		    colors_[i]->diffuse.g(),
+		    colors_[i]->diffuse.b());
+	}
+	if (texturing)
+	{
+	  glTexCoord1f(indices_[i]);
+	}
 	glVertex3f(tabx[k%nu_], taby[k%nu_], 0.0);
 
-	glColor3d(colors_[i+1]->diffuse.r(),
-		  colors_[i+1]->diffuse.g(),
-		  colors_[i+1]->diffuse.b());
+	if (coloring)
+	{
+	  glColor3f(colors_[i+1]->diffuse.r(),
+		    colors_[i+1]->diffuse.g(),
+		    colors_[i+1]->diffuse.b());
+	}
+	if (texturing)
+	{
+	  glTexCoord1f(indices_[i+1]);
+	}
 	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
       }
       glEnd();
@@ -1178,6 +1205,8 @@ GeomColoredCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
     }
 
     glLineWidth(1.0);
+
+    glDisable(GL_TEXTURE_1D);
 
     post_draw(di);
 }

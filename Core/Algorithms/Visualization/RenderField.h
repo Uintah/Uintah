@@ -644,14 +644,13 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 
   GeomLines* lines = NULL;
   GeomColoredCylinders* cylinders = NULL;
-  GeomSwitch *edge_switch;
+  GeomDL *display_list;
   if (cyl)
   {
     cylinders = scinew GeomColoredCylinders;
     cylinders->set_radius(edge_scale);
     cylinders->set_nu_nv(cylinder_resolution, 1);
-    GeomDL *display_list = scinew GeomDL(cylinders);
-    edge_switch = scinew GeomSwitch(display_list);
+    display_list = scinew GeomDL(cylinders);
   }
   else
   {
@@ -664,11 +663,12 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
       lines = scinew GeomLines;
     }
     lines->setLineWidth(edge_scale);
-    GeomDL *display_list =
-      scinew GeomDL(scinew GeomMaterial(lines, def_mat_handle_));
-    edge_switch = scinew GeomSwitch(scinew GeomColorMap(display_list,
-							color_handle_));
+    display_list = scinew GeomDL(lines);
   }
+  GeomSwitch *edge_switch =
+    scinew GeomSwitch(scinew GeomColorMap(scinew GeomMaterial(display_list,
+							      def_mat_handle_),
+					  color_handle_));
 
   // Second pass: over the edges
   mesh->synchronize(Mesh::EDGES_E);
@@ -684,37 +684,34 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
     switch (sfld->data_at()) {
     case Field::NODE:
       {
+	typename Fld::value_type val0, val1;
+	sfld->value(val0, nodes[0]);
+	sfld->value(val1, nodes[1]);
+	double dval0, dval1;
+	to_double(val0, dval0);
+	to_double(val1, dval1);
 	if (cyl)
 	{
-	  MaterialHandle m1 = choose_mat(false, nodes[0]);
-	  MaterialHandle m2 = choose_mat(false, nodes[1]);
-	  cylinders->add(p1, m1, p2, m2);
+	  cylinders->add(p1, dval0, p2, dval1);
 	}
 	else
 	{
-	  typename Fld::value_type val0, val1;
-	  sfld->value(val0, nodes[0]);
-	  sfld->value(val1, nodes[1]);
-	  double dval0, dval1;
-	  to_double(val0, dval0);
-	  to_double(val1, dval1);
 	  lines->add(p1, dval0, p2, dval1);
 	}
       }
       break;
     case Field::EDGE:
       {
+	typename Fld::value_type val;
+	sfld->value(val, *eiter);
+	double dval;
+	to_double(val, dval);
 	if (cyl)
 	{
-	  MaterialHandle m1 = choose_mat(false, *eiter);
-	  cylinders->add(p1, m1, p2, m1);
+	  cylinders->add(p1, dval, p2, dval);
 	}
 	else
 	{
-	  typename Fld::value_type val;
-	  sfld->value(val, *eiter);
-	  double dval;
-	  to_double(val, dval);
 	  lines->add(p1, dval, p2, dval);
 	}
       }
@@ -725,8 +722,7 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
       {
 	if (cyl)
 	{
-	  MaterialHandle m1 = choose_mat(true, 0);
-	  cylinders->add(p1, m1, p2, m1);
+	  cylinders->add(p1, p2);
 	}
 	else
 	{
