@@ -55,6 +55,17 @@ def texFragToTexDoc(texFile)
 \\begin{htmlonly}
 \\input{#{texUtils}/scirun-doc.tex}
 \\end{htmlonly}
+\\newcommand{\\ModuleRef}[3]{\\section{#1} #1 is in Category #2 of Package #3}
+\\newcommand{\\Package}[1]{#1}
+\\newcommand{\\Category}[1]{#1}
+\\newcommand{\\Module}[1]{#1}
+\\newcommand{\\ModuleRefSummary}{\\subsection*{Summary}}
+\\newcommand{\\ModuleRefUse}{\\subsection*{Use}}
+\\newcommand{\\ModuleRefDetails}{\\subsection*{Details}}
+\\newcommand{\\ModuleRefNotes}{\\subsection*{Notes}}
+\\newcommand{\\ModuleRefCredits}{\\subsection*{Credits}}
+\\newcommand{\\ModuleRefSubSection}[1]{\\subsubsection*{#1}}
+\\newcommand{\\ModuleRefSubSubSection}[1]{\\paragraph*{#1}}
 \\begin{document}\n")
     f.write(File.open(origTexFile, "r").readlines)
     f.write("\\end{document}\n")
@@ -83,7 +94,7 @@ while (path.substr(path.lastIndexOf("/")+1) != "src") {
 treetop += "../";
 path = path.substr(0, path.lastIndexOf("/"));
 }
-document.write("<link href='",treetop,"doc/Utilities/HTML/srlatex2html.css' rel='stylesheet' type='text/css'>")
+document.write("<link href='",treetop,"doc/Utilities/HTML/srlatex2html.css' rel='stylesheet' type='text/css'\>")
 </script>
 EndOfString
 )
