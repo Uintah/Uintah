@@ -51,7 +51,21 @@ SR_LIBS = \
 SR_LDFLAGS = SCI_LAUDIO SCI_LM SCI_LTHREAD SCI_LGL SCI_LX11
 SCIProgramTarget($(SR_TARGET), $(SR_OBJS), $(SR_LIBS), $(SR_LDFLAGS))
 
-SRCS = $(SR_SRCS)
+SEG_TARGET = SegToCS
+SEG_SRCS = SegToCS.cc
+SEG_OBJS = SegToCS.o
+SEG_LIBS = \
+	Datatypes/libDatatypes.a \
+	Geometry/libGeometry.a \
+	Classlib/libClasslib.a \
+	Multitask/libMultitask.a \
+	Classlib/libClasslib.a \
+	Malloc/libMalloc.a
+
+SEG_LDFLAGS = SCI_LM
+SCIProgramTarget2($(SEG_TARGET), $(SEG_OBJS), $(SEG_LIBS), $(SEG_LDFLAGS))
+
+SRCS = $(SR_SRCS) $(SEG_SRCS)
 SCIDependTarget($(SRCS))
 
 World:
