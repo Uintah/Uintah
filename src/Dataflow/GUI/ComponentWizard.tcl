@@ -87,19 +87,20 @@ proc ComponentWizard { {window .componentWizard} } {
 
     pack $w.buttons.create $w.buttons.close -side right -expand yes -fill x -padx $PADi
 
-    set io_gui [$w.tabs add -label "I/O and GUI"]
+    set io_gui [$w.tabs add -label "I/O"]
     make_io_gui_pane $io_gui $tmpd
 
-    set overview [$w.tabs add -label "Overview"]
-    make_overview_pane $overview $tmpd
+    set overview [$w.tabs add -label "Description"]
+    make_description_pane $overview $tmpd
 
-    set implementation [$w.tabs add -label "Implementation"]
-    make_implementation_pane $implementation $tmpd
+    # For now, under the 'simple is better' ideology, turn off the Implementation and Testing panes.
+    #set implementation [$w.tabs add -label "Implementation"]
+    #make_implementation_pane $implementation $tmpd
+    #
+    #set testing [$w.tabs add -label "Testing"]
+    #make_testing_pane $testing $tmpd
     
-    set testing [$w.tabs add -label "Testing"]
-    make_testing_pane $testing $tmpd
-    
-    $w.tabs view "I/O and GUI"
+    $w.tabs view "I/O"
 
     moveToCursor $w "leave_up"
 }
@@ -175,9 +176,6 @@ proc make_io_gui_pane {p d} {
     label $p.cp.path.label -text "Path to SCIRun: " -width 20 -anchor e
     entry $p.cp.path.entry -textvar ${d}(path) -width 30
 
-    set uiinfo $p.uiinfo
-    create_text_entry $uiinfo "GUI Info:" $d uiinfo
-
     pack $p.cmds.add_iport -padx $PADi -pady $PADi -ipady $PADi -expand no -side top -fill x
     pack $p.cmds.add_oport -padx $PADi -pady $PADi -ipady $PADi -expand no -side top -fill x
 
@@ -199,12 +197,10 @@ proc make_io_gui_pane {p d} {
     #    .cf (Canvas Frame) | .cmds (Command Frame)
     #    .cbf (Check Buttons Frame)
     #    .cp (Name entries)
-    #    .uiinfo (GUI Info)
     #
     grid $p.cf   -sticky news -padx 5 -pady 2
     grid $p.cmds -column 1 -row 0 -sticky nws -pady 2
     grid $p.cbf  -sticky ew -padx 5 -ipadx 5 -ipady 2
-    grid $p.uiinfo -columnspan 2 -padx 5 -pady 10
     grid $p.cp     -columnspan 2 -pady 0 -padx 5 -sticky ew
 
 #    pack $guidescript -fill x -side bottom -anchor sw \
@@ -212,23 +208,30 @@ proc make_io_gui_pane {p d} {
 }
 
 
-proc update_title_entry_bind {a b c} {
+proc update_title_entry_bind {} {
     global .componentWizard.tmpdata
 
-    set p [.componentWizard.tabs childsite "I/O and GUI"]
+    set p [.componentWizard.tabs childsite "I/O"]
     set title_pentry $p.cf.c.moduleFakeModule.ff.title
     set tmp [set .componentWizard.tmpdata(title)]
+
+    puts "here: title is $tmp"
+
     set_prompted_entry $title_pentry $tmp
 }
 
 
-proc make_overview_pane {p d} {
+proc make_description_pane {p d} {
     global $d
 
     set authors $p.authors
     create_clb_entry $authors "Authors:" "<enter new author here>" $d authors
+
     set summary $p.summary
     create_text_entry $summary "Summary:" $d summary
+
+    set uiinfo $p.uiinfo
+    create_text_entry $uiinfo "GUI Info:" $d uiinfo
 
     set descript $p.descript
     create_text_entry $descript "Description:" $d descript
@@ -245,9 +248,11 @@ proc make_overview_pane {p d} {
         set_prompted_entry $p.eexamplesr [set ${d}(examplesr)]
     }
 
-    pack $authors -side top -fill both -expand true -padx .1c -pady .1c
-    pack $summary -side top -anchor w -fill x -expand true -padx .1c -pady .1c
+    pack $authors  -side top -fill both -expand true -padx .1c -pady .1c
+    pack $summary  -side top -anchor w -fill x -expand true -padx .1c -pady .1c
     pack $descript -side top -anchor w -fill x -expand true -padx .1c -pady .1c
+    pack $uiinfo   -side top -anchor w -fill x -expand true -padx .1c -pady .1c
+
     pack $lexamplesr -side left -anchor e -padx .1c -pady .1c
     pack $eexamplesr -side left -anchor w -padx .1c -pady .1c
 
@@ -413,13 +418,23 @@ proc add_port {modframe type d} {
     global $portnum
     lappend ${d}($ports) $portnum
     configPorts $modframe $type $d
+
+    # DELETE The following lines:
+    #qwerty
+    #$menu add command -label "Edit" -command "edit_port $portnum"
 }
 
 proc configPorts {icon type d} {
     set ports ${type}ports
     set i 0
     global $d
+
+    puts "ports is $ports"
+
     foreach t [set ${d}($ports)] {
+
+        puts "t is $t"
+
         placePort $icon $t $i $type $d
         incr i
     }
@@ -473,7 +488,10 @@ proc edit_port {portnum} {
     }
 
     toplevel $w
-    wm geometry $w 374x368+294+333
+    wm withdraw $w; # immediately withdraw it to avoid flicker
+
+    wm title $w "Edit Port Information"
+    wm minsize $w 470 600
 
     set f $w.f
     global $f
@@ -568,8 +586,11 @@ proc edit_port {portnum} {
     pack $fcompnames -fill both -expand yes -side top
     pack $fbuttons -fill both -expand yes -side top
 
+    moveToCursor $w "leave_up"
+
     focus $w
     grab $w
+
     tkwait variable $w
 }
 
@@ -614,7 +635,7 @@ proc generateXML { d } {
               {"Module Name, Package Name, Category Name, Path to SCIRun"}] \n] -error
       return
     } 
-    puts $id "<component name=\"[set ${d}(title)]\" category=\"[set ${d}(category)]\">"
+    puts $id "<component name=\"[set ${d}(title)]\" category=\"[set ${d}(category)]\" optional=false>"
     puts $id "  <overview>"
     if {[info exists ${d}(authors)]} {
       puts $id "    <authors>"
