@@ -15,13 +15,13 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
+#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+
 
 #include <sgi_stl_warnings_off.h>
 #include <map>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
-
-using namespace std;
 
 namespace Uintah {
 
@@ -29,7 +29,6 @@ using namespace SCIRun;
  class DataWarehouse;
  class MPMLabel;
  class ProcessorGroup;
- class Patch;
  class VarLabel;
  class Task; 
  class MPMPetscSolver;
@@ -107,7 +106,7 @@ public:
     Explicit,
     Implicit 
   };
-  
+
 private:
   //////////
   // Insert Documentation Here:
@@ -369,7 +368,8 @@ private:
   double           d_delT_decrease_factor;
   double           d_delT_increase_factor;
 
-  
+  list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, ...
+
   const PatchSet* d_perproc_patches;
 
 #ifdef HAVE_PETSC

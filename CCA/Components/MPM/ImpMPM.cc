@@ -56,6 +56,20 @@ using namespace std;
 
 static DebugStream cout_doing("IMPM", false);
 
+static int face_index(Patch::FaceType f)
+{
+  switch(f) {
+  case Patch::xminus: return 0;
+  case Patch::xplus:  return 1;
+  case Patch::yminus: return 2;
+  case Patch::yplus:  return 3;
+  case Patch::zminus: return 4;
+  case Patch::zplus:  return 5;
+  default:
+    return -1; // oops !
+  }
+}
+
 ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
@@ -128,6 +142,25 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      else{
       throw ProblemSetupException("Can't use explicit integration with -impm");
      }
+
+    std::vector<std::string> bndy_face_txt_list;
+    mpm_ps->get("boundary_traction_faces", bndy_face_txt_list);
+                                                                                
+    // convert text representation of face into FaceType
+    std::vector<std::string>::const_iterator ftit;
+    for(ftit=bndy_face_txt_list.begin(); ftit!=bndy_face_txt_list.end();ftit++){
+        Patch::FaceType face = Patch::invalidFace;
+        for(Patch::FaceType ft=Patch::startFace;ft<=Patch::endFace;
+                                                ft=Patch::nextFace(ft)) {
+          if(Patch::getFaceName(ft)==*ftit) face =  ft;
+        }
+        if(face!=Patch::invalidFace) {
+          d_bndy_traction_faces.push_back(face);
+        } else {
+          std::cerr << "warning: ignoring unknown face '" 
+                    << *ftit<< "'" << std::endl;
+        }
+    }
    }
 
    //Search for the MaterialProperties block and then get the MPM section
@@ -638,9 +671,20 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pMassLabel,           Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->gMassLabel,           Ghost::None);
+  t->requires(Task::NewDW,lb->gVolumeLabel,         Ghost::None);
   t->requires(Task::NewDW,lb->gInternalForceLabel,  Ghost::None);
 
   t->computes(lb->gStressForSavingLabel);
+  if (d_bndy_traction_faces.size()>0) {
+                                                                                
+    for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
+        ftit!=d_bndy_traction_faces.end();ftit++) {
+      int iface = face_index(*ftit);
+      t->computes(lb->BndyForceLabel[iface]);       // node based
+      t->computes(lb->BndyContactAreaLabel[iface]); // node based
+    }
+                                                                                
+  }
   sched->addTask(t, patches, matls);
 }
 
@@ -2052,6 +2096,13 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw)
 {
+  // node based forces
+  Vector bndyForce[6];
+  double bndyArea[6];
+  for(int iface=0;iface<6;iface++) {
+      bndyForce[iface]  = Vector(0.);
+      bndyArea [iface]  = 0.;
+  }
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing <<"Doing interpolateStressToGrid on patch " << patch->getID()
@@ -2066,7 +2117,10 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     GSTRESS.initialize(Matrix3(0.));
     StaticArray<NCVariable<Matrix3> >         gstress(numMatls);
     StaticArray<constNCVariable<double> >     gmass(numMatls);
+    StaticArray<constNCVariable<double> >     gvolume(numMatls);
     StaticArray<constNCVariable<Vector> >     gintforce(numMatls);
+
+    Vector dx = patch->dCell();
 
     //Vector dx = patch->dCell();
     for(int m = 0; m < numMatls; m++){
@@ -2081,9 +2135,10 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
                                               Ghost::AroundNodes,1,lb->pXLabel);
       old_dw->get(px,          lb->pXLabel,    pset);
       old_dw->get(pmass,       lb->pMassLabel, pset);
-      new_dw->get(gmass[m],    lb->gMassLabel, dwi, patch,Ghost::None,0);
+      new_dw->get(gmass[m],    lb->gMassLabel,   dwi, patch,Ghost::None,0);
+      new_dw->get(gvolume[m],  lb->gVolumeLabel, dwi, patch,Ghost::None,0);
       new_dw->get(gintforce[m],lb->gInternalForceLabel,
-                                               dwi, patch,Ghost::None,0);
+                                                 dwi, patch,Ghost::None,0);
       new_dw->allocateAndPut(gstress[m],lb->gStressForSavingLabel,dwi, patch);
 
       new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
@@ -2124,7 +2179,57 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
      }
     }  // Loop over matls
 
+
+    // save boundary forces before apply symmetry boundary condition.
+    bool did_it_already=false;
+    for(int m = 0; m < numMatls; m++){
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     if(!did_it_already && !mpm_matl->getIsRigid()){
+      did_it_already=true;
+      for(list<Patch::FaceType>::const_iterator fit(d_bndy_traction_faces.begin());
+          fit!=d_bndy_traction_faces.end();fit++) {
+        Patch::FaceType face = *fit;
+        int iface = face_index(face);
+                                                                                
+        // Check if the face is on an external boundary
+        if(patch->getBCType(face)==Patch::Neighbor)
+           continue;
+                                                                                
+        // We are on the boundary, i.e. not on an interior patch
+        // boundary, and also on the correct side,
+        // so do the traction accumulation . . .
+        // loop nodes to find forces
+        IntVector projlow, projhigh;
+        patch->getFaceNodes(face, 0, projlow, projhigh);
+                                                                                
+        for (int i = projlow.x(); i<projhigh.x(); i++) {
+          for (int j = projlow.y(); j<projhigh.y(); j++) {
+            for (int k = projlow.z(); k<projhigh.z(); k++) {
+              IntVector ijk(i,j,k);
+              // flip sign so that pushing on boundary gives positive force
+              bndyForce[iface] -= gintforce[m][ijk];
+                                                                                
+              double celldepth  = dx[iface/2];
+              bndyArea [iface] += gvolume[m][ijk]/celldepth;
+            }
+          }
+        }
+                                                                                
+      } // faces
+     } // if
+   }  // matls
   }
+
+  // be careful only to put the fields that we have built
+  // that way if the user asks to output a field that has not been built
+  // it will fail early rather than just giving zeros.
+  for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
+      ftit!=d_bndy_traction_faces.end();ftit++) {
+    int iface = face_index(*ftit);
+    new_dw->put(sumvec_vartype(bndyForce[iface]),lb->BndyForceLabel[iface]);
+    new_dw->put(sum_vartype(bndyArea [iface]),lb->BndyContactAreaLabel[iface]);
+  }
+
 }
 
 void ImpMPM::setSharedState(SimulationStateP& ssp)
