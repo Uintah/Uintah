@@ -744,7 +744,7 @@ HexVolMesh::locate(Face::index_type &face, const Point &p)
 bool
 HexVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
-  if (!synchronized_ & LOCATE_E)
+  if ( (!synchronized_) & LOCATE_E) // I hope I got the () right.
     synchronize(LOCATE_E);
   ASSERT(grid_.get_rep());
 
