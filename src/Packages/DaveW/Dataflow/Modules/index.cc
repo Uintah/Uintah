@@ -58,8 +58,12 @@ MP(MagneticScalarField)
 MP(SurfToVectGeom)
 MP(FieldCurl)
 
+// MEG
+MP(EditPath)
+
 // Readers
 MP(ContourSetReader)
+MP(PathReader)
 MP(SegFldReader)
 MP(SigmaSetReader)
 MP(TensorFieldReader)
@@ -77,6 +81,7 @@ MP(TensorAnisotropy)
 
 // Writers
 MP(ContourSetWriter)
+MP(PathWriter)
 MP(SegFldWriter)
 MP(SigmaSetWriter)
 MP(TensorFieldWriter)
@@ -140,8 +145,12 @@ void initPackage(const clString& tcl) {
   RM("MEG",	      "SurfToVectGeom",		 make_SurfToVectGeom,	    tcl+"/SurfToVectGeom.tcl");
   RM("MEG",	      "FieldCurl",		 make_FieldCurl,	    "");
 
+  // Path
+  RM("Path",	      "EditPath", 		make_EditPath, 		    "tcl+/EditPath.tcl");
+
   // Readers
   RM("Readers",	      "ContourSetReader",	 make_ContourSetReader,	    tcl+"/ContourSetReader.tcl");
+  RM("Readers",	      "PathReader",	 	 make_PathReader,	    tcl+"/PathReader.tcl");
   RM("Readers",	      "SegFldReader",		 make_SegFldReader,	    tcl+"/SegFldReader.tcl");
   RM("Readers",	      "SigmaSetReader",		 make_SigmaSetReader,	    tcl+"/SigmaSetReader.tcl");
   RM("Readers",	      "TensorFieldReader",	 make_TensorFieldReader,    tcl+"/TensorFieldReader.tcl");
@@ -159,6 +168,7 @@ void initPackage(const clString& tcl) {
 
   // Writers
   RM("Writers",	      "ContourSetWriter",	 make_ContourSetWriter,	    tcl+"/ContourSetWriter.tcl");
+  RM("Writers",	      "PathWriter",	 	 make_PathWriter,	    tcl+"/PathWriter.tcl");
   RM("Writers",	      "SegFldWriter",		 make_SegFldWriter,	    tcl+"/SegFldWriter.tcl");
   RM("Writers",	      "SigmaSetWriter",		 make_SigmaSetWriter,	    tcl+"/SigmaSetWriter.tcl");
   RM("Writers",	      "TensorFieldWriter",	 make_TensorFieldWriter,    tcl+"/TensorFieldWriter.tcl");
