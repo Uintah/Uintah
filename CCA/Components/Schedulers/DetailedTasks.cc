@@ -88,6 +88,10 @@ DependencyBatch::~DependencyBatch()
 void
 DetailedTasks::assignMessageTags(vector<Task*>& tasks)
 {
+  // maps from, to pairs to indices for each batch of that pair
+  map< pair<int, int>, int > perPairBatchIndices;
+  int maxPerPairBatchIndex = 0;
+  
   int ntasks = (int)tasks.size()+(int)stasks.size();
   int taskbits = 0;
   while(1<<taskbits < ntasks)
@@ -99,6 +103,22 @@ DetailedTasks::assignMessageTags(vector<Task*>& tasks)
   int n=(int)tasks.size();
   for(int i=0;i<(int)stasks.size();i++,n++)
     stasks[i]->setTaskNumber(n);
+
+  // figure out how many bits we need for the batch indices
+  for(int i=0;i<(int)batches.size();i++){
+    DependencyBatch* batch = batches[i];
+    int fromTask = batch->fromTask->getTask()->getTaskNumber();
+    list<DetailedTask*>::iterator iter = batch->toTasks.begin();
+    int toTask = (*iter)->getTask()->getTaskNumber();
+    pair<int, int> fromToPair = make_pair(fromTask, toTask);
+    if (++perPairBatchIndices[fromToPair] > maxPerPairBatchIndex)
+      maxPerPairBatchIndex = perPairBatchIndices[fromToPair];
+  }
+
+  int batchbits = 0;
+  while(1<<batchbits < maxPerPairBatchIndex)
+    batchbits++;  
+
   for(int i=0;i<(int)batches.size();i++){
     DependencyBatch* batch = batches[i];
     int fromTask = batch->fromTask->getTask()->getTaskNumber();
@@ -111,9 +131,15 @@ DetailedTasks::assignMessageTags(vector<Task*>& tasks)
     for(;iter != batch->toTasks.end();iter++)
       ASSERTEQ(toTask, (*iter)->getTask()->getTaskNumber());
     */
-    int tag = (fromTask<<taskbits)|toTask;
-    batches[i]->messageTag = tag;
-  }
+
+    // Easier to go in reverse order now, instead of reinitializing
+    // perPairBatchIndices.
+    pair<int, int> fromToPair = make_pair(fromTask, toTask);    
+    int batchIndex = perPairBatchIndices[fromToPair]--;
+    int tag = ((fromTask<<taskbits)|toTask) << batchbits | batchIndex;
+    batches[i]->messageTag = tag;    
+
+  }  
 } // end assignMessageTags()
 
 void
@@ -182,12 +208,14 @@ DetailedTask::DetailedTask(Task* task, const PatchSubset* patches,
 {
   if(patches) {
     // patches and matls must be sorted
-    ASSERT(is_sorted(patches->getVector().begin(), patches->getVector().end()));
+    ASSERT(is_sorted(patches->getVector().begin(), patches->getVector().end(),
+		     Patch::Compare()));
     patches->addReference();
   }
   if(matls) {
     // patches and matls must be sorted
-    ASSERT(is_sorted(patches->getVector().begin(), patches->getVector().end()));    
+    ASSERT(is_sorted(patches->getVector().begin(), patches->getVector().end(),
+		     Patch::Compare()));    
     matls->addReference();
   }
 }
@@ -324,6 +352,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
       if(!warned){
 	cerr << "WARNING: Possible extra communication between patches!\n";
 	cerr << "This warning will only appear once\n";
+	
 	warned=true;
       }
     }
