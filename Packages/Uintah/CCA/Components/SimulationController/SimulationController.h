@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
@@ -58,7 +59,27 @@ class LoadBalancer;
      
       // for calculating memory usage when sci-malloc is disabled.
       static char* start_addr;
+
+   protected:
+
+      double getWallTime   ( void );
+      void   calcWallTime  ( void );
+
+      double getStartTime  ( void );
+      void   calcStartTime ( void );
+
+      void initSimulationStatsVars ( void );
+      void printSimulationStats    ( Uintah::SimulationStateP sharedState, double delt, double time );
+
    private:
+
+      int    d_n;
+      double d_wallTime;
+      double d_startTime;
+      double d_prevWallTime;
+      double d_sumOfWallTimes;
+      double d_sumOfWallTimeSquares;
+      
    /*
       void problemSetup(const ProblemSpecP&, GridP&) = 0;
       bool needRecompile(double t, double delt, const LevelP& level,
