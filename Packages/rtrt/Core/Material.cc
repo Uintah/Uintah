@@ -149,6 +149,8 @@ Material::io(SCIRun::Piostream &str)
   str.end_class();
 }
 
+void Material::animate(double, bool&) {}
+
 namespace SCIRun {
 void Pio(SCIRun::Piostream& stream, rtrt::Material*& obj)
 {
