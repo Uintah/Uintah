@@ -3,6 +3,7 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Checker.h>
 #include <Packages/rtrt/Core/Group.h>
+#include <Packages/rtrt/Core/CellGroup.h>
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/Trigger.h>
 #include <Packages/rtrt/Core/Rect.h>
@@ -65,7 +66,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     cerr <<"\n";
   }
 
-  Group *g = new Group;
+  CellGroup *g = new CellGroup;
   vector<Trigger*> allTriggers;
 
   for (s=0; s<nscenes; s++) {
@@ -100,7 +101,23 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	allTriggers.push_back( triggers[cnt] );
       }
 
-    g->objs.add(scene[s]->get_object());
+    if (strncmp(argv[scene_first_arg[s]], "scenes/sea", strlen("scenes/sea")) == 0) {
+      std::cerr << "\n\n"
+		<< " ==== Adding scene's objs to CellGroup WITHOUT a bbox ==="
+		<< "\n\n";
+      g->add_non_bbox_obj(scene[s]->get_object());
+    } else if (strncmp(argv[scene_first_arg[s]], "scenes/basic-sea", strlen("scenes/basic-sea")) == 0) {
+      std::cerr << "\n\n"
+		<< " ==== Adding scene's objs to CellGroup WITHOUT a bbox ==="
+		<< "\n\n";
+      g->add_non_bbox_obj(scene[s]->get_object());
+    } else {
+      std::cerr << "\n\n"
+		<< " ==== Adding scene's objs to CellGroup WITH a bbox ==="
+		<< "\n\n";
+      g->add_bbox_obj(scene[s]->get_object());
+    }
+
     if (s!=0)
       for (int l=0; l<scene[s]->nlights(); l++)
 	scene[0]->add_light(scene[s]->light(l));
