@@ -596,7 +596,7 @@ WARNING
     //////////
     // Prints out all information about the task, including dependencies
     void displayAll( ostream & out ) const;
-
+    
     // Assume that any data required/modified from the new dw that doesn't
     // get computed in the TaskGraph will already be in the new dw.
     void assumeDataInNewDW()
@@ -609,7 +609,6 @@ WARNING
     friend class TaskGraph;
     bool visited;
     bool sorted;
-    int taskNumber;
     void setSets(const PatchSet* patches, const MaterialSet* matls);
     
   private: // class Task
