@@ -63,6 +63,8 @@ public:
   /////////
   // resize the geometry
   virtual void resize(int x, int y, int z) = 0;
+  virtual void resize(int x, int y) = 0;
+  virtual void resize(int x) = 0;
   
 protected:
   /////////
