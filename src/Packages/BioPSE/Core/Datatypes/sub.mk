@@ -10,9 +10,13 @@ include $(SRCTOP_ABS)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Core/Datatypes
 
 SRCS     += \
+	$(SRCDIR)/NeumannBC.cc \
+	$(SRCDIR)/TypeName.cc \
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS :=
+PSELIBS := Core/Datatypes Core/Persistent Core/Exceptions Core/Containers \
+	Core/Thread Core/Geometry Core/Geom Core/TclInterface \
+	Core/Math Core/Util
 LIBS :=
 
 include $(SRCTOP_ABS)/scripts/smallso_epilogue.mk
