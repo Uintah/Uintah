@@ -1320,7 +1320,7 @@ class BioImageApp {
 	global mods
 
 	frame $history.$which
-	grid config $history.$which -column 0 -row $row -sticky "nw" -pady 0
+	grid config $history.$which -column 0 -row $row -pady 0 -sticky news
 
 	### Load Data UI
 	set ChooseNrrd [lindex [lindex $filters($which) $modules] $load_choose_vis] 
@@ -1328,7 +1328,7 @@ class BioImageApp {
  	    -labeltext "Load Data" \
  	    -labelpos nw 
 
- 	grid config $history.$which.f$which -column 1 -row 0 -sticky "nw"
+ 	grid config $history.$which.f$which -column 0 -row 0 -sticky news
 
  	set data [$history.$which.f$which childsite]
 	
@@ -1356,22 +1356,25 @@ class BioImageApp {
  	pack $data.ui.samples -side top -anchor nw -pady 3
 
 	# Build data tabs
-	iwidgets::tabnotebook $data.ui.tnb \
-	    -width [expr $process_width - 110] -height 75 \
-	    -tabpos n -equaltabs false
-	pack $data.ui.tnb -side top -anchor nw \
-	    -padx 0 -pady 3
-	Tooltip $data.ui.tnb "Load 3D volume in Nrrd,\nDicom, Analyze, or Field format."
+	iwidgets::tabnotebook $data.ui.tnb -width [expr $process_width-80] \
+	    -height 75 -tabpos n -equaltabs false -backdrop gray
+	pack $data.ui.tnb -side top -anchor nw -padx 0 -pady 3
+	Tooltip $data.ui.tnb \
+	    "Load 3D volume in Nrrd,\nDicom, Analyze, or Field format."
 	
 	# Make pointers to modules 
 	set NrrdReader  [lindex [lindex $filters($which) $modules] $load_nrrd]
-	set DicomNrrdReader  [lindex [lindex $filters($which) $modules] $load_dicom]
-	set AnalzyeNrrdReader  [lindex [lindex $filters($which) $modules] $load_analyze]
-	set FieldReader  [lindex [lindex $filters($which) $modules] $load_field]
+	set DicomNrrdReader \
+	    [lindex [lindex $filters($which) $modules] $load_dicom]
+	set AnalzyeNrrdReader \
+	    [lindex [lindex $filters($which) $modules] $load_analyze]
+	set FieldReader \
+	    [lindex [lindex $filters($which) $modules] $load_field]
 
 	# Nrrd
 	set page [$data.ui.tnb add -label "Generic" \
-		      -command "$this set_cur_data_tab Nrrd; $this configure_readers Nrrd"]       
+		      -command "$this set_cur_data_tab Nrrd
+                                $this configure_readers Nrrd"]       
 
 	global $NrrdReader-filename
 	frame $page.file
@@ -1396,7 +1399,8 @@ class BioImageApp {
 	
 	### Dicom
 	set page [$data.ui.tnb add -label "Dicom" \
-		      -command "$this set_cur_data_tab Dicom; $this configure_readers Dicom"]
+		      -command "$this set_cur_data_tab Dicom
+                                $this configure_readers Dicom"]
 	
 	button $page.load -text "Dicom Loader" \
 	    -command "$this enable_update $which
@@ -1408,7 +1412,8 @@ class BioImageApp {
 	
 	### Analyze
 	set page [$data.ui.tnb add -label "Analyze" \
-		      -command "$this set_cur_data_tab Analyze; $this configure_readers Analyze"]
+		      -command "$this set_cur_data_tab Analyze
+                                $this configure_readers Analyze"]
 	
 	button $page.load -text "Analyze Loader" \
 	    -command "$this enable_update $which
@@ -1459,7 +1464,8 @@ class BioImageApp {
 	    "Edit the entries to indicate the various orientations.\n" \
 	    $orient_text
 	
-	grid config $w.orient -row 0 -column 1 -columnspan 3 -rowspan 4 -sticky "n"
+	grid config $w.orient -row 0 -rowspan 4  \
+	    -column 1 -columnspan 3 -sticky "n"
 	set orient_text "Indicates the current orientation.\n$orient_text"
 
 	# Top entry
@@ -1877,66 +1883,36 @@ class BioImageApp {
     # data tab is selected (Nrrd, Dicom, Analyze) the other
     # readers must be disabled to avoid errors.
     method configure_readers { which } {
-	set ChooseNrrd  [lindex [lindex $filters(0) $modules] $load_choose_input]
-	set NrrdReader  [lindex [lindex $filters(0) $modules] $load_nrrd]
-	set DicomNrrdReader  [lindex [lindex $filters(0) $modules] $load_dicom]
-	set AnalyzeNrrdReader  [lindex [lindex $filters(0) $modules] $load_analyze]
-	set FieldReader  [lindex [lindex $filters(0) $modules] $load_field]
-
-        global $ChooseNrrd-port-index
-
+	set load_mods [lindex $filters(0) $modules]
+	set ChooseNrrd [lindex $load_mods $load_choose_input]
+	set NrrdReader [lindex $load_mods $load_nrrd]
+	set DicomNrrdReader [lindex $load_mods $load_dicom]
+	set AnalyzeNrrdReader [lindex $load_mods $load_analyze]
+	set FieldReader [lindex $load_mods $load_field]
 	if {$which == "Nrrd"} {
-	    set $ChooseNrrd-port-index 0
+	    setGlobal $ChooseNrrd-port-index 0
 	    disableModule $NrrdReader 0
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 1
         } elseif {$which == "Dicom"} {
-	    set $ChooseNrrd-port-index 1
+	    setGlobal $ChooseNrrd-port-index 1
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 0
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 1
         } elseif {$which == "Analyze"} {
-	    # Analyze
-	    set $ChooseNrrd-port-index 2
+	    setGlobal $ChooseNrrd-port-index 2
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 0
 	    disableModule $FieldReader 1
         } elseif {$which == "Field"} {
-	    # Field
-	    set $ChooseNrrd-port-index 3
+	    setGlobal $ChooseNrrd-port-index 3
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 0
-	} elseif {$which == "all"} {
-	    if {[set $ChooseNrrd-port-index] == 0} {
-		# nrrd
-		disableModule $NrrdReader 0
-		disableModule $DicomNrrdReader 1
-		disableModule $AnalyzeNrrdReader 1
-		disableModule $FieldReader 1
-	    } elseif {[set $ChooseNrrd-port-index] == 1} {
-		# dicom
-		disableModule $NrrdReader 1
-		disableModule $DicomNrrdReader 0
-		disableModule $AnalyzeNrrdReader 1
-		disableModule $FieldReader 1
-	    } elseif {[set $ChooseNrrd-port-index] == 2} {
-		# analyze
-		disableModule $NrrdReader 1
-		disableModule $DicomNrrdReader 1
-		disableModule $AnalyzeNrrdReader 0
-		disableModule $FieldReader 1
-	    } else {
-		# field
-		disableModule $NrrdReader 1
-		disableModule $DicomNrrdReader 1
-		disableModule $AnalyzeNrrdReader 1
-		disableModule $FieldReader 0
-	    }
 	}
     }
     
@@ -2492,17 +2468,21 @@ class BioImageApp {
     }
 
     method add_insert_bar {f which} {
+	set f $f.f
+	frame $f
 	set rb $f.eye_$which
  	radiobutton $rb -variable eye -value $which \
 	    -command "$this change_eye"
 	Tooltip $rb "Select to change current view\nof 3D and 2D windows"
- 	grid config $rb -column 0 -row 1
+# 	grid config $rb -column 0 -row 1
 
 	# Add a bar that when a user clicks, will bring
 	# up the menu of filters to insert
 	global insertimg
   	button $f.insert -image $insertimg -anchor n -relief sunken -borderwidth 0 
-	grid config $f.insert -row 1 -column 1 -pady 0	
+#	grid config $f.insert -row 1 -column 1 -pady 0	
+	pack $rb $f.insert -side left -fill x -expand 1
+	grid config $f -column 0 -row 1
 	bind $f.insert <ButtonPress-1> "app popup_insert_menu %X %Y $which"
   	bind $f.insert <ButtonPress-2> "app popup_insert_menu %X %Y $which"
   	bind $f.insert <ButtonPress-3> "app popup_insert_menu %X %Y $which"
@@ -2510,7 +2490,6 @@ class BioImageApp {
         TooltipMultiline $f.insert "Click on this bar to insert any of the\n" \
 	    "pre-processing filters at this location"
     }
-
 
     method popup_insert_menu {x y which} {
 	set mouseX $x
@@ -2577,14 +2556,11 @@ class BioImageApp {
 	    set NrrdReader [lindex [lindex $filters(0) $modules] $load_nrrd]
 	    upvar \#0 $mods(EditColorMap2D)-filename cm2filename
 	    upvar \#0 $NrrdReader-filename nrrdfilename
-	    set path [split $nrrdfilename \/]
-	    set path [join [lrange $path 0 end-1] \/]
-	    foreach dataset {tooth engine CThead} {
-		if {[string first "volume/${dataset}.nhdr" $nrrdfilename] != -1 && 
-		    [file exists "${path}/${dataset}.cmap2"]} {
-		    set cm2filename "${path}/${dataset}.cmap2"
-		    $mods(EditColorMap2D)-c load
-		}
+	    set cmap2 [join [lrange [split $nrrdfilename .] 0 end-1] .].cmap2
+	    puts "cmap2: $cmap2"
+	    if { [validFile $cmap2] } {
+		set cm2filename $cmap2
+		$mods(EditColorMap2D)-c load
 	    }
 	}
 	set 2D_fixed 0
@@ -2999,13 +2975,13 @@ class BioImageApp {
 
     method add_Resample_UI {history row which} {
 	frame $history.$which
-	grid config $history.$which -column 0 -row $row -sticky "nw" -pady 0
+	grid config $history.$which -column 0 -row $row -pady 0 -sticky news
 
 	iwidgets::labeledframe $history.$which.f$which \
 	    -labeltext "Resample" \
 	    -labelpos nw \
 	    -borderwidth 2 
-	grid config $history.$which.f$which -column 1 -row 0 -sticky "nw"
+	grid config $history.$which.f$which -column 0 -row 0 -sticky news
 
 	set w [$history.$which.f$which childsite]
 
@@ -3077,11 +3053,11 @@ class BioImageApp {
 
     method add_Crop_UI {history row which} {
 	frame $history.$which
-	grid config $history.$which -column 0 -row $row -sticky "nw" -pady 0
+	grid config $history.$which -column 0 -row $row -pady 0 -sticky news
 
 	iwidgets::labeledframe $history.$which.f$which -labeltext Crop \
 	    -labelpos nw  -borderwidth 2 
-	grid config $history.$which.f$which -column 1 -row 0 -sticky "nw"
+	grid config $history.$which.f$which -column 0 -row 0 -sticky news
 
 	set w [$history.$which.f$which childsite]
 
@@ -3226,13 +3202,13 @@ class BioImageApp {
 
     method add_Cmedian_UI {history row which} {
 	frame $history.$which
-	grid config $history.$which -column 0 -row $row -sticky "nw" -pady 0
+	grid config $history.$which -column 0 -row $row -pady 0 -sticky news
 
 	iwidgets::labeledframe $history.$which.f$which \
 	    -labeltext "Median Filtering" \
 	    -labelpos nw \
 	    -borderwidth 2 
-	grid config $history.$which.f$which -column 1 -row 0 -sticky "nw"
+	grid config $history.$which.f$which -column 0 -row 0 -sticky news
 
 	set w [$history.$which.f$which childsite]
 
@@ -3281,14 +3257,14 @@ class BioImageApp {
 
     method add_Histo_UI {history row which} {
 	frame $history.$which
-       	grid config $history.$which -column 0 -row $row -sticky "nw" -pady 0
+       	grid config $history.$which -column 0 -row $row -pady 0 -sticky news
 	set updatecmd "$this enable_update $which"
 
 	iwidgets::labeledframe $history.$which.f$which \
 	    -labeltext "Histogram" \
 	    -labelpos nw \
 	    -borderwidth 2 
-	grid config $history.$which.f$which -column 1 -row 0 -sticky "nw"
+	grid config $history.$which.f$which -column 0 -row 0 -sticky news
 
 	set w [$history.$which.f$which childsite]
 
@@ -3561,8 +3537,8 @@ class BioImageApp {
 	for {set i 0} {$i < [llength $re_pack]} {incr i} {
 	    set index [lindex $re_pack $i]
 	    set new_row [lindex $filters($index) $which_row]
-            grid config $history0.$index -row $new_row -column 0 -sticky "nw"
-            grid config $history1.$index -row $new_row -column 0 -sticky "nw"
+            grid config $history0.$index -row $new_row -column 0
+            grid config $history1.$index -row $new_row -column 0
 	}
     }
 
@@ -3585,8 +3561,8 @@ class BioImageApp {
 	for {set i 0} {$i < [llength $re_pack]} {incr i} {
 	    set index [lindex $re_pack $i]
 	    set new_row [lindex $filters($index) $which_row]
-            grid config $history0.$index -row $new_row -column 0 -sticky "nw"
-            grid config $history1.$index -row $new_row -column 0 -sticky "nw"
+            grid config $history0.$index -row $new_row -column 0
+            grid config $history1.$index -row $new_row -column 0
 	}
     }
 
