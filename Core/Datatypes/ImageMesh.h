@@ -71,6 +71,14 @@ public:
     IFaceIndex() : ImageIndex() {}
     IFaceIndex(const ImageMesh *m, unsigned i, unsigned j) 
       : ImageIndex(m, i, j) {}
+
+    operator unsigned() const { 
+      if (mesh_ == 0) 
+        return i_*j_; 
+      else
+        return i_ + j_ * (mesh_->ni_-1);
+    }
+
     friend void Pio(Piostream&, IFaceIndex&);
     friend const TypeDescription* get_type_description(IFaceIndex *);
     friend const string find_type_name(IFaceIndex *);
@@ -272,7 +280,7 @@ public:
   void get_nodes(Node::array_type &, Edge::index_type) const;
   void get_nodes(Node::array_type &, Face::index_type) const;
   void get_nodes(Node::array_type &, Cell::index_type) const {}
-  void get_edges(Edge::array_type &, Face::index_type) const {}
+  void get_edges(Edge::array_type &, Face::index_type) const;
   void get_edges(Edge::array_type &, Cell::index_type) const {}
   void get_faces(Face::array_type &, Cell::index_type) const {}
 
@@ -322,6 +330,10 @@ public:
   int get_valence(Face::index_type idx) const { return 0; }
   int get_valence(Cell::index_type idx) const { return 0; }
 
+
+  bool get_neighbor(Face::index_type &neighbor,
+		    Face::index_type from,
+		    Edge::index_type idx) const;
   void get_normal(Vector &, const Node::index_type &) const
   { ASSERTFAIL("not implemented") }
 
