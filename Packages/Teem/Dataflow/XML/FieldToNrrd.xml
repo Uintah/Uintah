@@ -29,14 +29,22 @@
 nrrd and pass it out.
     </summary>
     <description>
-      <p>Inputs: a field or multiple fields that share the *same* mesh.
-         Output: a NrrdData.
+      <p>Inputs: a field or multiple fields that share the *same*
+mesh. Output: a NrrdData.
       </p>
       <p>
-         This module combines sets of data for a given mesh, into one object for storage. This object is a NrrdData.  There are many operations that can be applied to the data as a nrrd, <slink path="http://www.cs.utah.edu/~gk/teem/unnrrdu/index.html"></slink> many of which are supported in this Teem package.
+         This module combines sets of data for a given mesh, into one
+object for storage. This object is a NrrdData.  There are many
+operations that can be applied to the data as a nrrd, <slink
+path="http://www.cs.utah.edu/~gk/teem/unnrrdu/index.html"></slink>
+many of which are supported in this Teem package.
       </p>
       <p>
-         The input port is dynamic.  Each field that is accepted as input, must share a mesh, otherwise an error is signaled.  Data from each field as added to the nrrd that is output.  So and entire time series can be built up,or slices can be stacked up to create a volume, or scanlines can be stacked up to form an Image etc..
+         The input Field's data is wrapped by a nrrd and stored in a
+NrrdData. A handle to the Mesh that belongs to the input field is
+stored in the NrrdData, for use downstream, and for possible
+conversion back to a Field. The User may want to use NrrdJoin to
+combine sets of data that map to the same mesh into a single NrrdData.
       </p>
     </description>
   </overview>
