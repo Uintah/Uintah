@@ -2105,6 +2105,9 @@ DynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
      tsk->computes(d_lab->d_scalarVarSPLabel);
@@ -2141,6 +2144,10 @@ DynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     	new_dw->getModifiable(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
 			       patch);
     scalarVar.initialize(0.0);
+
+    constCCVariable<int> cellType;
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -2218,7 +2225,90 @@ DynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	}
       }
     }
-    // Put the calculated viscosityvalue into the new data warehouse
+
+    /*
+    // boundary conditions
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    int outlet_celltypeval = d_boundaryCondition->outletCellType();
+    int pressure_celltypeval = d_boundaryCondition->pressureCellType();
+    if (xminus) {
+      int colX = idxLo.x();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	  IntVector currCell(colX-1, colY, colZ);
+          if ((cellType[currCell] == outlet_celltypeval)||
+            (cellType[currCell] == pressure_celltypeval))
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (xplus) {
+      int colX = idxHi.x();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	  IntVector currCell(colX+1, colY, colZ);
+          if ((cellType[currCell] == outlet_celltypeval)||
+            (cellType[currCell] == pressure_celltypeval))
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (yminus) {
+      int colY = idxLo.y();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector currCell(colX, colY-1, colZ);
+          if ((cellType[currCell] == outlet_celltypeval)||
+            (cellType[currCell] == pressure_celltypeval))
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (yplus) {
+      int colY = idxHi.y();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector currCell(colX, colY+1, colZ);
+          if ((cellType[currCell] == outlet_celltypeval)||
+            (cellType[currCell] == pressure_celltypeval))
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (zminus) {
+      int colZ = idxLo.z();
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ-1);
+          if ((cellType[currCell] == outlet_celltypeval)||
+            (cellType[currCell] == pressure_celltypeval))
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (zplus) {
+      int colZ = idxHi.z();
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ+1);
+          if ((cellType[currCell] == outlet_celltypeval)||
+            (cellType[currCell] == pressure_celltypeval))
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    */
   }
 }
 //****************************************************************************
@@ -2243,6 +2333,9 @@ DynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // Computes
@@ -2284,6 +2377,10 @@ DynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
        new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,
 			      matlIndex, patch);
     scalarDiss.initialize(0.0);
+
+    constCCVariable<int> cellType;
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -2298,11 +2395,11 @@ DynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
 	  double scale = 0.5*(scalar[currCell]+
 			      scalar[IntVector(colX+1,colY,colZ)]);
@@ -2324,5 +2421,89 @@ DynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
 	}
       }
     }
+
+    /*
+    // boundary conditions
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    int outlet_celltypeval = d_boundaryCondition->outletCellType();
+    int pressure_celltypeval = d_boundaryCondition->pressureCellType();
+    if (xminus) {
+      int colX = idxLo.x();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	  IntVector currCell(colX-1, colY, colZ);
+          if ((cellType[currCell] == outlet_celltypeval)||
+            (cellType[currCell] == pressure_celltypeval))
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (xplus) {
+      int colX = idxHi.x();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	  IntVector currCell(colX+1, colY, colZ);
+          if ((cellType[currCell] == outlet_celltypeval)||
+            (cellType[currCell] == pressure_celltypeval))
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (yminus) {
+      int colY = idxLo.y();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector currCell(colX, colY-1, colZ);
+          if ((cellType[currCell] == outlet_celltypeval)||
+            (cellType[currCell] == pressure_celltypeval))
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (yplus) {
+      int colY = idxHi.y();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector currCell(colX, colY+1, colZ);
+          if ((cellType[currCell] == outlet_celltypeval)||
+            (cellType[currCell] == pressure_celltypeval))
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (zminus) {
+      int colZ = idxLo.z();
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ-1);
+          if ((cellType[currCell] == outlet_celltypeval)||
+            (cellType[currCell] == pressure_celltypeval))
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (zplus) {
+      int colZ = idxHi.z();
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ+1);
+          if ((cellType[currCell] == outlet_celltypeval)||
+            (cellType[currCell] == pressure_celltypeval))
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    */
   }
 }

@@ -546,9 +546,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
 	  // construct an InletStream for input to the computeProps
 	  // of mixingModel
-	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
-	    inStream.d_mixVars[ii] = (scalar[ii])[currCell];
-	  }
 	  bool local_enthalpy_init;
 	  if (d_enthalpySolve && ((scalar[0])[currCell] == -1.0)) {
 	    (scalar[0])[currCell] = 0.0;
@@ -556,6 +553,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
           }
 	  else
 	    local_enthalpy_init = false;
+
+	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
+	    inStream.d_mixVars[ii] = (scalar[ii])[currCell];
+	  }
 
 	  if (d_numMixStatVars > 0) {
 	    for (int ii = 0; ii < d_numMixStatVars; ii++ ) {
