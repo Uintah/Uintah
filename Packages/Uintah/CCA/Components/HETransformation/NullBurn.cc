@@ -27,7 +27,8 @@ void NullBurn::computeBurn(double gasTemperature,
 			     double materialMass,
 			     double materialTemperature,
 			     double &burnedMass,
-			     double &releasedHeat)
+			     double &releasedHeat,
+			     double &delT)
 {
   burnedMass = 0;
   releasedHeat = 0;

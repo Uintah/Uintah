@@ -1720,6 +1720,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(delT, d_sharedState->get_delt_label() );
 
       double Cp=mpm_matl->getSpecificHeat();
+      double rho_init=mpm_matl->getInitialDensity();
 
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
@@ -1901,12 +1902,25 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pxnew[idx]      = px[idx] + vel * delT;
           pvelocitynew[idx] = pvelocity[idx] + acc * delT;
           pTemperatureNew[idx] = pTemperature[idx] + tempRate * delT;
-	  double rho = pmass[idx]/pvolume[idx];
-          pmassNew[idx]        = pmass[idx]*(1.    - burnFraction);
-	  if(pmassNew[idx] < 0.0){
-		pmassNew[idx] = 0.;
+          double rho;
+	  if(pvolume[idx] > 0.){
+	    rho = pmass[idx]/pvolume[idx];
 	  }
+	  else{
+	    rho = rho_init;
+	  }
+          pmassNew[idx]        = pmass[idx]*(1.    - burnFraction);
           pvolumeNew[idx]      = pmassNew[idx]/rho;
+	  if(pmassNew[idx] <= 0.0){
+		pmassNew[idx] = 0.;
+		pvolumeNew[idx] = 0.;
+	  }
+#if 1
+	  if(pmassNew[idx] <= 3.e-15){
+		pvelocitynew[idx] = Vector(0.,0.,0);
+	        pxnew[idx] = px[idx];
+	  }
+#endif
 
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
           ke += .5*pmass[idx]*pvelocitynew[idx].length2();
