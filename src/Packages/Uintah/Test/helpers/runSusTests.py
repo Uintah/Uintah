@@ -122,9 +122,14 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     # Run normal test
     rc = runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism)
     if rc == 0:
-      # Run restart test
+      # Prepare for restart test
       mkdir("restart")
       chdir("restart")
+    
+      # call the callback function before running each test
+      callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism);
+
+      # Run restart test
       rc = runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism, DO_RESTART)
       if rc == 1:
         failcode = 1
