@@ -761,7 +761,8 @@ void Thread::initialize() {
     unlock_scheduler();
 
     thread_local->current_thread=mainthread;
-    install_signal_handlers();
+    if(!getenv("THREAD_NO_CATCH_SIGNALS"))
+	install_signal_handlers();
 
 #if 0
     if(prctl(PR_SETEXITSIG, SIGUSR2) == -1){
@@ -821,7 +822,8 @@ void Thread_run(Thread* t) {
 
 static void run_threads(void* priv_v, size_t) {
     Thread_private* priv=(Thread_private*)priv_v;
-    install_signal_handlers();
+    if(!getenv("THREAD_NO_CATCH_SIGNALS"))
+	install_signal_handlers();
     for(;;){
 	/* Wait to be started... */
 	priv->state=STATE_IDLE;
