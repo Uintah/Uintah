@@ -493,19 +493,21 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 		# Reselect the datasets
 		foreach dataset $tmp {
-		    set id [eval $treeview find -exact -full "{$dataset}"]
-
-		    if {"$id" != ""} {
-			if { [eval $treeview entry isopen $id] == 0 } {
-			    $treeview open $id
+		    set ids [eval $treeview find -exact -full "{$dataset}"]
+		    
+		    foreach id $ids {
+			if {"$id" != ""} {
+			    if { [eval $treeview entry isopen $id] == 0 } {
+				$treeview open $id
+			    }
+			    
+			    $treeview selection set $id
+			} else {
+			    set message "Could not find dataset: "
+			    append message $dataset
+			    $this-c error $message
+			    return
 			}
-
-			$treeview selection set $id
-		    } else {
-			set message "Could not find dataset: "
-			append message $dataset
-			$this-c error $message
-			return
 		    }
 		}
 	    }
@@ -1065,16 +1067,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 		foreach idx $indices {
 		    if { $index == $idx } { 
-			set id [eval $treeview find -exact -full "{$dataset}"]
+			set ids [eval $treeview find -exact -full "{$dataset}"]
 			
-			if {"$id" != ""} {
-			    $treeview selection clear $id
-			    $treeview open $id
-			} else {			    
-			    set message "Could not find dataset: "
-			    append message $dataset
-			    $this-c error $message
-			    return
+			foreach id $ids {
+			    if {"$id" != ""} {
+				$treeview selection clear $id
+				$treeview open $id
+			    } else {			    
+				set message "Could not find dataset: "
+				append message $dataset
+				$this-c error $message
+				return
+			    }
 			}
 		    }
 		}
