@@ -4,4 +4,4 @@ OBJTOP  = ../..
 
 SUBDIRS = mpeg
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(OBJTOP)/scripts/recurse.mk
