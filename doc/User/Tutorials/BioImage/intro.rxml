@@ -28,5 +28,28 @@ DEALINGS IN THE SOFTWARE.
 
 <chapter id="intro">
   <title>Introduction</title>
-  <para></para>
+  <para>BioImage is a program that allows the user to pre-process and
+  visualize a volume. The application loads a three dimensional
+  regular scalar volume such as CT or MRI as input, offers a range
+  pre-processing filters such as resampling and cropping, and provides
+  visualization in two and three dimensions.</para>
+
+  <para>BioImage offers 2D visualization of three standard planes:
+  axial, sagittal, and coronal. The 2D views provide a fast means of
+  investigating a volume slice by slice or through a maximum intensity
+  projection. They also provide standard zooming and translation
+  capabilities as well as the ability to change the brightness and
+  contrast (also known as window and level) of the windows. Section 6
+  (link to section 6) discusses the 2D viewers in more detail. One of
+  the main strengths of BioImage is the volume rendering, which allows
+  the user to interactively visualize an area of interest by assigning
+  a color to a range of values in the volume.</para>
+  
+  <para>This tutorial walks the user through launching BioImage,
+  loading a volume of a tooth, resampling the volume using one of the
+  pre-processing filters, and visualizing planes as well as generating
+  a volume rendering. It is meant to provide a simple example BioImage
+  session. More detailed explainations and advanced options are
+  furthur discussed in the Reference Guide (link to Reference
+  Guide).</para>
 </chapter>
