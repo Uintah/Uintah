@@ -3975,5 +3975,185 @@ BoundaryCondition::enthalpyLisolve_mm(const ProcessorGroup*,
 
 }
 
+//****************************************************************************
+// Set zero gradient for scalar on pressure bc
+//****************************************************************************
+void 
+BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
+			    const Patch* patch,
+			    int /*index*/,
+			    CellInformation*,
+			    ArchesVariables* vars)
+{
+  // Get the low and high index for the patch
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  int press_celltypeval = d_pressureBdry->d_cellTypeID;
+
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  if (xminus) {
+    int colX = idxLo.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xminusCell(colX-1, colY, colZ);
+        if (vars->cellType[xminusCell] == press_celltypeval)
+                        vars->scalar[xminusCell] = vars->scalar[currCell];
+      }
+    }
+  }
+  if (xplus) {
+    int colX = idxHi.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xplusCell(colX+1, colY, colZ);
+        if (vars->cellType[xplusCell] == press_celltypeval)
+                        vars->scalar[xplusCell] = vars->scalar[currCell];
+      }
+    }
+  }
+  if (yminus) {
+    int colY = idxLo.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yminusCell(colX, colY-1, colZ);
+        if (vars->cellType[yminusCell] == press_celltypeval)
+                        vars->scalar[yminusCell] = vars->scalar[currCell];
+      }
+    }
+  }
+  if (yplus) {
+    int colY = idxHi.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yplusCell(colX, colY+1, colZ);
+        if (vars->cellType[yplusCell] == press_celltypeval)
+                        vars->scalar[yplusCell] = vars->scalar[currCell];
+      }
+    }
+  }
+  if (zminus) {
+    int colZ = idxLo.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zminusCell(colX, colY, colZ-1);
+        if (vars->cellType[zminusCell] == press_celltypeval)
+                        vars->scalar[zminusCell] = vars->scalar[currCell];
+      }
+    }
+  }
+  if (zplus) {
+    int colZ = idxHi.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zplusCell(colX, colY, colZ+1);
+        if (vars->cellType[zplusCell] == press_celltypeval)
+                        vars->scalar[zplusCell] = vars->scalar[currCell];
+      }
+    }
+  }
+}
 
 
+
+//****************************************************************************
+// Set zero gradient for enthalpy on pressure bc
+//****************************************************************************
+void 
+BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
+			    const Patch* patch,
+			    CellInformation*,
+			    ArchesVariables* vars)
+{
+  // Get the low and high index for the patch
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  int press_celltypeval = d_pressureBdry->d_cellTypeID;
+
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  if (xminus) {
+    int colX = idxLo.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xminusCell(colX-1, colY, colZ);
+        if (vars->cellType[xminusCell] == press_celltypeval)
+                        vars->enthalpy[xminusCell] = vars->enthalpy[currCell];
+      }
+    }
+  }
+  if (xplus) {
+    int colX = idxHi.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xplusCell(colX+1, colY, colZ);
+        if (vars->cellType[xplusCell] == press_celltypeval)
+                        vars->enthalpy[xplusCell] = vars->enthalpy[currCell];
+      }
+    }
+  }
+  if (yminus) {
+    int colY = idxLo.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yminusCell(colX, colY-1, colZ);
+        if (vars->cellType[yminusCell] == press_celltypeval)
+                        vars->enthalpy[yminusCell] = vars->enthalpy[currCell];
+      }
+    }
+  }
+  if (yplus) {
+    int colY = idxHi.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yplusCell(colX, colY+1, colZ);
+        if (vars->cellType[yplusCell] == press_celltypeval)
+                        vars->enthalpy[yplusCell] = vars->enthalpy[currCell];
+      }
+    }
+  }
+  if (zminus) {
+    int colZ = idxLo.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zminusCell(colX, colY, colZ-1);
+        if (vars->cellType[zminusCell] == press_celltypeval)
+                        vars->enthalpy[zminusCell] = vars->enthalpy[currCell];
+      }
+    }
+  }
+  if (zplus) {
+    int colZ = idxHi.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zplusCell(colX, colY, colZ+1);
+        if (vars->cellType[zplusCell] == press_celltypeval)
+                        vars->enthalpy[zplusCell] = vars->enthalpy[currCell];
+      }
+    }
+  }
+}

@@ -336,6 +336,15 @@ public:
 			      ArchesVariables* vars,
 			      CellInformation* cellinfo,
 			      const ArchesLabel*);
+      void scalarPressureBC(const ProcessorGroup* pc,
+		    const Patch* patch,
+		    int index,
+		    CellInformation* cellinfo,
+		    ArchesVariables* vars);
+      void enthalpyPressureBC(const ProcessorGroup* pc,
+		    const Patch* patch,
+		    CellInformation* cellinfo,
+		    ArchesVariables* vars);
 private:
 
       // GROUP:  Actual Computations (Private)  :

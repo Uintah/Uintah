@@ -731,6 +731,11 @@ namespace Uintah {
       const VarLabel* d_filteredRhoUjULabel;
       const VarLabel* d_filteredRhoUjVLabel;
       const VarLabel* d_filteredRhoUjWLabel;
+// kinetic energy
+      const VarLabel* d_kineticEnergyLabel;
+      const VarLabel* d_totalKineticEnergyLabel;
+      const VarLabel* d_totalKineticEnergyPredLabel;
+      const VarLabel* d_totalKineticEnergyIntermLabel;
  
     }; // End class ArchesLabel
 } // End namespace Uintah

@@ -29,6 +29,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #ifdef PetscFilter
 #include <Packages/Uintah/CCA/Components/Arches/Filter.h>
 #endif
@@ -269,6 +270,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
 			Runge_Kutta_current_step, Runge_Kutta_last_step);
 
+    sched_printTotalKE(sched, patches, matls, Runge_Kutta_current_step,
+		       Runge_Kutta_last_step);
+
   #ifdef Runge_Kutta_3d
     // intermediate step for 3d order Runge-Kutta method
     Runge_Kutta_current_step = Arches::SECOND;
@@ -333,6 +337,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_interpolateFromFCToCCInterm(sched, patches, matls);
     d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
 			Runge_Kutta_current_step, Runge_Kutta_last_step);
+
+    sched_printTotalKE(sched, patches, matls, Runge_Kutta_current_step,
+		       Runge_Kutta_last_step);
   #endif
 
   #ifdef correctorstep
@@ -408,9 +415,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_interpolateFromFCToCC(sched, patches, matls);
     d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
 			Runge_Kutta_current_step, Runge_Kutta_last_step);
-  #endif
-  // print information at probes provided in input file
 
+    sched_printTotalKE(sched, patches, matls, Runge_Kutta_current_step,
+		       Runge_Kutta_last_step);
+  #endif
+
+  // print information at probes provided in input file
   if (d_probe_data)
     sched_probeData(sched, patches, matls);
 
@@ -670,6 +680,9 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   tsk->computes(d_lab->d_uVelRhoHat_CCLabel);
   tsk->computes(d_lab->d_vVelRhoHat_CCLabel);
   tsk->computes(d_lab->d_wVelRhoHat_CCLabel);
+
+  tsk->computes(d_lab->d_kineticEnergyLabel);
+  tsk->computes(d_lab->d_totalKineticEnergyLabel);
       
   sched->addTask(tsk, patches, matls);  
 }
@@ -1157,11 +1170,13 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     CCVariable<double> newCCUVel;
     CCVariable<double> newCCVVel;
     CCVariable<double> newCCWVel;
+    CCVariable<double> kineticEnergy;
     new_dw->allocateAndPut(oldCCVel, d_lab->d_oldCCVelocityLabel, matlIndex, patch);
     new_dw->allocateAndPut(newCCVel, d_lab->d_newCCVelocityLabel, matlIndex, patch);
     new_dw->allocateAndPut(newCCUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
     new_dw->allocateAndPut(newCCVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
     new_dw->allocateAndPut(newCCWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
+    new_dw->allocateAndPut(kineticEnergy, d_lab->d_kineticEnergyLabel, matlIndex, patch);
 
     CCVariable<double> uHatVel_CC;
     CCVariable<double> vHatVel_CC;
@@ -1171,6 +1186,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     new_dw->allocateAndPut(vHatVel_CC, d_lab->d_vVelRhoHat_CCLabel, matlIndex, patch);
     new_dw->allocateAndPut(wHatVel_CC, d_lab->d_wVelRhoHat_CCLabel, matlIndex, patch);
 
+    double total_kin_energy = 0.0;
     // Interpolate the FC velocity to the CC
     for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
@@ -1220,6 +1236,8 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCUVel[idx] = new_u;
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
+          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+	  total_kin_energy += kineticEnergy[idx];
 
 	  uHatVel_CC[idx] = uhat;
 	  vHatVel_CC[idx] = vhat;
@@ -1228,6 +1246,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	}
       }
     }
+    new_dw->put(sum_vartype(total_kin_energy), d_lab->d_totalKineticEnergyLabel); 
 
   // Put the calculated stuff into the new_dw
     // allocateAndPut instead:
@@ -1388,6 +1407,8 @@ ExplicitSolver::sched_interpolateFromFCToCCPred(SchedulerP& sched,
   tsk->computes(d_lab->d_newCCVVelocityPredLabel);
   tsk->computes(d_lab->d_newCCWVelocityPredLabel);
       
+  tsk->computes(d_lab->d_totalKineticEnergyPredLabel);
+
   sched->addTask(tsk, patches, matls);
 
   
@@ -1435,6 +1456,7 @@ ExplicitSolver::interpolateFromFCToCCPred(const ProcessorGroup* ,
     new_dw->allocateAndPut(newCCWVel, d_lab->d_newCCWVelocityPredLabel,
 			   matlIndex, patch);
 
+    double total_kin_energy = 0.0;
     // Interpolate the FC velocity to the CC
     for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
@@ -1461,9 +1483,11 @@ ExplicitSolver::interpolateFromFCToCCPred(const ProcessorGroup* ,
 	  newCCUVel[idx] = new_u;
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
+	  total_kin_energy += (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	}
       }
     }
+    new_dw->put(sum_vartype(total_kin_energy), d_lab->d_totalKineticEnergyPredLabel); 
   }
 }
 
@@ -1489,6 +1513,8 @@ ExplicitSolver::sched_interpolateFromFCToCCInterm(SchedulerP& sched,
   tsk->computes(d_lab->d_newCCVVelocityIntermLabel);
   tsk->computes(d_lab->d_newCCWVelocityIntermLabel);
       
+  tsk->computes(d_lab->d_totalKineticEnergyIntermLabel);
+
   sched->addTask(tsk, patches, matls);
 
   
@@ -1536,6 +1562,7 @@ ExplicitSolver::interpolateFromFCToCCInterm(const ProcessorGroup* ,
     new_dw->allocateAndPut(newCCWVel, d_lab->d_newCCWVelocityIntermLabel,
 			   matlIndex, patch);
 
+    double total_kin_energy = 0.0;
     // Interpolate the FC velocity to the CC
     for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
@@ -1562,8 +1589,72 @@ ExplicitSolver::interpolateFromFCToCCInterm(const ProcessorGroup* ,
 	  newCCUVel[idx] = new_u;
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
+	  total_kin_energy += (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	}
       }
     }
+    new_dw->put(sum_vartype(total_kin_energy), d_lab->d_totalKineticEnergyIntermLabel); 
   }
+}
+void 
+ExplicitSolver::sched_printTotalKE(SchedulerP& sched, const PatchSet* patches,
+				   const MaterialSet* matls,
+				   const int Runge_Kutta_current_step,
+				   const bool Runge_Kutta_last_step)
+{
+  Task* tsk = scinew Task( "ExplicitSolver::printTotalKE",
+			  this, &ExplicitSolver::printTotalKE, Runge_Kutta_current_step, Runge_Kutta_last_step);
+  
+  if (Runge_Kutta_last_step)
+  tsk->requires(Task::NewDW, d_lab->d_totalKineticEnergyLabel);
+  else { 
+	 switch (Runge_Kutta_current_step) {
+	 case Arches::FIRST:
+  tsk->requires(Task::NewDW, d_lab->d_totalKineticEnergyPredLabel);
+	 break;
+
+	 case Arches::SECOND:
+  tsk->requires(Task::NewDW, d_lab->d_totalKineticEnergyIntermLabel);
+	 break;
+
+	 default:
+  throw InvalidValue("Invalid Runge-Kutta step in printTKE");
+	 }
+  }
+
+  sched->addTask(tsk, patches, matls);
+  
+}
+void 
+ExplicitSolver::printTotalKE(const ProcessorGroup* ,
+			     const PatchSubset* ,
+			     const MaterialSubset*,
+			     DataWarehouse*,
+			     DataWarehouse* new_dw,
+			     const int Runge_Kutta_current_step,
+			     const bool Runge_Kutta_last_step)
+{
+
+  sum_vartype tke;
+  if (Runge_Kutta_last_step)
+  new_dw->get(tke, d_lab->d_totalKineticEnergyLabel);
+  else { 
+	 switch (Runge_Kutta_current_step) {
+	 case Arches::FIRST:
+  new_dw->get(tke, d_lab->d_totalKineticEnergyPredLabel);
+	 break;
+
+	 case Arches::SECOND:
+  new_dw->get(tke, d_lab->d_totalKineticEnergyIntermLabel);
+	 break;
+
+	 default:
+  throw InvalidValue("Invalid Runge-Kutta step in printTKE");
+	 }
+  }
+  double total_kin_energy = tke;
+  int me = d_myworld->myrank();
+  if (me == 0)
+     cerr << "Total kinetic energy " <<  total_kin_energy << endl;
+
 }
