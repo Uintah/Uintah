@@ -72,10 +72,13 @@ fi
    Compiler: Delta        (Always use this on the SGI)
    Assertion Level: 3     (Good for debugging)
    OpenGL: True
+   ogl normalizes primitives: (This does not make a difference right now)
+   Pthreads:		  (No - for now)
    Quarks: False
-   Irix 6: False          (Unless you are building on a Power machine)
-   Mesa: False
+   Irix binary format:    (Choose the proper format for your machine)
 
+   Choose the Apply button and then the Exit button
+ 
 8) type "xmkmf" to build the initial Makefile
 
 9) type "make World" and wait for it to build.
