@@ -748,70 +748,76 @@ proc popupLoadMenu {} {
 }
 
 proc ClearCanvas {} {
-    # destroy all modules
-    global modules
-    if { [info exists modules] } {
-	foreach m $modules {
-	    moduleDestroy .bot.neteditFrame.canvas \
-		    .top.globalViewFrame.canvas $m
-	}
-    }
-
-    # reset all the NetworkEditor globals to their initial values
-    set mainCanvasWidth    4500.0
-    set mainCanvasHeight   4500.0
-    set miniCanvasWidth     150.0
-    set miniCanvasHeight    150.0
-    set SCALEX [expr $mainCanvasWidth/$miniCanvasWidth]
-    set SCALEY [expr $mainCanvasHeight/$miniCanvasHeight]
+   # destroy all modules
     
-    set mouseX 0
-    set mouseY 0
+    set result [tk_messageBox -type okcancel -parent . -message \
+	    "ALL modules and connections will be cleared. \nDo you wish to proceed?"\
+	    -icon warning ]
     
-    global maincanvas
-    set maincanvas ".bot.neteditFrame.canvas"
-    global minicanvs
-    set minicanvas ".top.globalViewFrame.canvas"
-    
-    global loading
-    set loading 0
-    
-    global inserting
-    set inserting 0
-    
-    global insertPosition
-    set insertPosition 0
-    
-    global modulesBBox
-    set modulesBbox {0 0 0 0}
-    
-    global netedit_savefile
-    set netedit_savefile ""
-
-    #reset Module.tcl variables
-    global connection_list
-    set connection_list ""
-    
-    global selected_color
-    set selected_color darkgray
-    
-    global unselected_color
-    set unselected_color gray
-    
-    global MModuleFakeConnections
-    set MModuleFakeConnections ""
-    
-    global CurrentlySelectedModules
-    set CurrentlySelectedModules ""
-    
-    global CurrentMacroModules
-    set CurrentMacroModules ""
-    
-    global MacroedModules
-    set MacroedModules ""
-    
-    global modules
-    set modules ""
+    if {[string compare "ok" $result] == 0} {
+	global modules
+	if { [info exists modules] } {
+	    foreach m $modules {
+		moduleDestroy .bot.neteditFrame.canvas \
+			.top.globalViewFrame.canvas $m
+	    }
+	}    
+	# reset all the NetworkEditor globals to their initial values
+	set mainCanvasWidth    4500.0
+	set mainCanvasHeight   4500.0
+	set miniCanvasWidth     150.0
+	set miniCanvasHeight    150.0
+	set SCALEX [expr $mainCanvasWidth/$miniCanvasWidth]
+	set SCALEY [expr $mainCanvasHeight/$miniCanvasHeight]
+	
+	set mouseX 0
+	set mouseY 0
+	
+	global maincanvas
+	set maincanvas ".bot.neteditFrame.canvas"
+	global minicanvs
+	set minicanvas ".top.globalViewFrame.canvas"
+	
+	global loading
+	set loading 0
+	
+	global inserting
+	set inserting 0
+	
+	global insertPosition
+	set insertPosition 0
+	
+	global modulesBBox
+	set modulesBbox {0 0 0 0}
+	
+	global netedit_savefile
+	set netedit_savefile ""
+	
+	#reset Module.tcl variables
+	global connection_list
+	set connection_list ""
+	
+	global selected_color
+	set selected_color darkgray
+	
+	global unselected_color
+	set unselected_color gray
+	
+	global MModuleFakeConnections
+	set MModuleFakeConnections ""
+	
+	global CurrentlySelectedModules
+	set CurrentlySelectedModules ""
+	
+	global CurrentMacroModules
+	set CurrentMacroModules ""
+	
+	global MacroedModules
+	set MacroedModules ""
+	
+	global modules
+	set modules ""
+    }   
 }
 
 
