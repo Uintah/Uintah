@@ -253,12 +253,12 @@
       
     int iteration=0;
       
-    Array1< Color.h> lastC;
-    Array1< Color.h> lastCs; // sum...
-    Array1< Color.h> lastCa;
-    Array1< Color.h> lastCb;
-    Array1< Color.h> lastCc;
-    Array1< Color.h> lastCd;
+    Array1< Color > lastC;
+    Array1< Color > lastCs; // sum...
+    Array1< Color > lastCa;
+    Array1< Color > lastCb;
+    Array1< Color > lastCc;
+    Array1< Color > lastCd;
 
       // lets precompute jittered masks for each pixel as well...
 

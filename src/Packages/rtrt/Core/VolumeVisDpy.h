@@ -48,7 +48,7 @@ class VolumeVisDpy : public DpyBase {
   int ncolors;
   int nalphas;
 
-  ScalarTransform1D<float,Color.h> color_transform;
+  ScalarTransform1D<float,Color*> color_transform;
   ScalarTransform1D<float,float> alpha_transform;
   ScalarTransform1D<int,float> alpha_stripes;
 

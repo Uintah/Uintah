@@ -85,7 +85,7 @@ VideoMap::VideoMap (char* fileName, int _numFrames, double _framesPerSec,
 	 }
       }
       /* load image into frames array */		      
-      Array2<Color> * tempArray = new Array2< Color.h>(nx, ny);
+      Array2<Color> * tempArray = new Array2<Color>(nx, ny);
       ppm.get_dimensions_and_data(*tempArray, nx, ny);
       frames[i] = tempArray;
       
