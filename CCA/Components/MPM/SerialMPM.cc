@@ -1602,7 +1602,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         old_dw->get(psize, lb->pSizeLabel,                   pset);
       }
       new_dw->get(gmass,   lb->gMassLabel, dwi, patch, Ghost::None, 0);
-      new_dw->get(gvolume, lb->gMassLabel, dwi, patch, Ghost::None, 0);
+      new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
       new_dw->get(pErosion,lb->pErosionLabel_preReloc,       pset);
 
       new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
@@ -1696,13 +1696,12 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         for (int i = projlow.x(); i<projhigh.x(); i++) {
           for (int j = projlow.y(); j<projhigh.y(); j++) {
             for (int k = projlow.z(); k<projhigh.z(); k++) {
+              IntVector ijk(i,j,k);	
               // flip sign so that pushing on boundary gives positive force
-              bndyForce[iface] -= internalforce[IntVector(i,j,k)];
+              bndyForce[iface] -= internalforce[ijk];
               
               double celldepth  = dx[iface/2];
-              // FIXME: use NC_CCweights to get this factor.
-              double nodaldepth = celldepth/2.; // made up factor, since node only sees half the cell !
-              bndyArea [iface] += gvolume[IntVector(i,j,k)]/nodaldepth;
+              bndyArea [iface] += gvolume[ijk]/celldepth;
             }
           }
         }
