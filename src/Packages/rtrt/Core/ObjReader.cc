@@ -170,8 +170,8 @@ void addObjMaterial(Array1<Material*> &matl,
   Material *m=0;
   if (has_tmap) {
     ImageMaterial *im = new ImageMaterial(tmap_name, ImageMaterial::Tile,
-					  ImageMaterial::Tile, 1, 
-					  Color(0,0,0), 0);
+					  ImageMaterial::Tile, Ks, 1, 
+					  R0, 1-opacity, 0);
     if (!im->valid()) {
       cerr << "Error - unable to load texture map >>"<<tmap_name<<"<<\n";
       has_tmap=0;
@@ -236,7 +236,8 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
    double scale_bump=1;
    is_glass=0;
    is_metal=0;
-
+   R0=0;
+   opacity=1;
    while(fgets(buf,4096,f)) {
      if (buf[0] == '#') continue;
      if (strncmp(&(buf[0]), "newmtl", strlen("newmtl")) == 0) {
@@ -253,6 +254,8 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 	 has_bmap=0;
 	 matl_complete=0;
 	 scale_bump=1;
+	 R0=0;
+	 opacity=1;
        }
        name=string(&buf[7]);
        fgets(buf,4096,f);
@@ -282,6 +285,9 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 	 extinction_scale=scratch[10];
        } else if (strncmp(&buf[2], "metal", strlen("metal")) == 0) {
 	 is_metal=1;
+       } else if (strncmp(&buf[2], "R0", strlen("R0")) == 0) {
+	 R0=atof(&buf[5]);
+	 cerr << "Using R0="<< R0 << "\n";
        } else if (strncmp(&buf[2], "opacity", strlen("opacity")) == 0) {
 	 Get1d(&buf[10], scratch);
 	 opacity=scratch[0];

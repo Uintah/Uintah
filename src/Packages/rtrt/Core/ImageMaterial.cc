@@ -55,11 +55,11 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 }
 
 ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
-			     ImageMaterial::Mode vmode, double Kd,
-			     const Color& specular, double specpow,
+			     ImageMaterial::Mode vmode, 
+			     const Color& specular, double Kd, double specpow,
 			     double refl,  double transp, 
 			     bool flipped) :
-  umode(umode), vmode(vmode), Kd(Kd), specular(specular),
+  umode(umode), vmode(vmode), specular(specular), Kd(Kd),
   specpow(specpow), refl(refl),  transp(transp), valid_(false)
 {
   PPMImage ppm(texfile,flipped);
