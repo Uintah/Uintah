@@ -173,7 +173,7 @@ ICELabel::ICELabel()
 		      CCVariable<double>::getTypeDescription());
   modelMom_srcLabel =
     VarLabel::create( "modelMom_src",
-		      CCVariable<double>::getTypeDescription());
+		      CCVariable<Vector>::getTypeDescription());
   modelEng_srcLabel =
     VarLabel::create( "modelEng_src",
 		      CCVariable<double>::getTypeDescription());
