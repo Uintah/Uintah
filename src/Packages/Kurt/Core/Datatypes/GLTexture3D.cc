@@ -5,6 +5,14 @@
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Persistent/Persistent.h>
 #include <SCICore/Containers/String.h>
+#include <SCICore/Datatypes/ScalarFieldRGint.h>
+#include <SCICore/Datatypes/ScalarFieldRGshort.h>
+#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
+#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
+#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
+#include <SCICore/Datatypes/ScalarFieldRGchar.h>
+#include <Uintah/Datatypes/NCScalarField.h>
+#include <Uintah/Datatypes/CCScalarField.h>
 
 
 #include <GL/gl.h>
@@ -18,12 +26,20 @@
 namespace Kurt {
 namespace Datatypes {
 
-using SCICore::Datatypes::ScalarField;
-using SCICore::Datatypes::Persistent;
+using namespace SCICore::Datatypes;
 using SCICore::Containers::clString;
 using std::cerr;
 using std::endl;
 using std::string;
+
+
+// NCScalarField<double> sfdr0;
+// NCScalarField<int> sfir0; 
+// NCScalarField<long> sflr0; 
+// CCScalarField<double> sfdr1; 
+// CCScalarField<int> sfir1; 
+// CCScalarField<long> sflr1; 
+
 
 void glPrintError(const string& word){
   GLenum errCode;
@@ -40,7 +56,7 @@ static Persistent* maker()
     return scinew GLTexture3D;
 }
 
-PersistentTypeID GLTexture3D::type_id("ScalarFieldRGuchar", "ScalarField"
+PersistentTypeID GLTexture3D::type_id("GLTexture3D", "Datatype"
 , maker);
 #define GLTexture3D_VERSION 3
 void GLTexture3D::io(Piostream&)
@@ -50,62 +66,118 @@ void GLTexture3D::io(Piostream&)
     using SCICore::Geometry::Pio;
     NOT_FINISHED("GLTexture3D::io(Piostream&)");
 }
+
 GLTexture3D::GLTexture3D() :
-  tex(0), X(0), Y(0),
-  Z(0), xmax(0), ymax(0), zmax(0)
+  _tex(0), X(0), Y(0),
+  Z(0), xmax(0), ymax(0), zmax(0), isCC(false)
 {
 }
 
-GLTexture3D::GLTexture3D(ScalarFieldRGuchar *tex ) :
-  tex(tex), X(tex->grid.dim1()), Y(tex->grid.dim2()),
-  Z(tex->grid.dim3()),  xmax(64), ymax(64), zmax(64)
+GLTexture3D::GLTexture3D(ScalarFieldRGBase *tex ) :
+  _tex(tex), X(tex->nx), Y(tex->ny),
+  Z(tex->nz),  xmax(64), ymax(64), zmax(64), isCC(false)
 {
   tex->get_bounds( minP, maxP );
+  tex->get_minmax( _min, _max );
+  SetBounds();
+  computeTreeDepth(); 
+//   bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, tex, 0);
+  BuildTexture();
+}
 
+void GLTexture3D::SetBounds()
+{
   Vector diag = maxP - minP;
   std::cerr<<"Bounds = "<<minP<<", "<<maxP<<std::endl;
 
   dx = diag.x()/(X-1);
   dy = diag.y()/(Y-1);
   dz = diag.z()/(Z-1); 
+}
 
-  computeTreeDepth(); 
-  bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,0);
+void GLTexture3D::BuildTexture()
+{
+  cerr<<"Type = "<<_tex->getType()<<endl;
+  if( _tex->getRGDouble() ){
+    bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,
+			   _tex->getRGDouble(), 0);
+  } else if( _tex->getRGFloat() ){
+    bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,
+			   _tex->getRGFloat(), 0);
+  } else if( _tex->getRGInt() ) {
+    bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,
+			   _tex->getRGInt(), 0);
+  } else if( _tex->getRGShort() ){
+    bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,
+			   _tex->getRGShort(), 0);
+  } else if( _tex->getRGUchar() ){
+    bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,
+			   _tex->getRGUchar(), 0);
+  } else if( _tex->getRGChar() ){
+    bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,
+			   _tex->getRGChar(), 0);
+  } else if(NCScalarField<double> *sfd =
+	    dynamic_cast<NCScalarField<double> *> (_tex)){
+    cerr<<"Type = <NCScalarField<double>\n";
+    bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, sfd, 0);
+} else if(NCScalarField<int> *sfi =
+	    dynamic_cast<NCScalarField<int> *> (_tex)){
+    cerr<<"Type = NCScalarField<int>\n";
+    bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, sfi, 0);
+  } else if(NCScalarField<long> *sfl =
+	    dynamic_cast<NCScalarField<long> *> (_tex)){
+    cerr<<"Type = NCScalarField<long>\n";
+    bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, sfl, 0);
+  } else if(CCScalarField<double> *sfd =
+	    dynamic_cast<CCScalarField<double> *> (_tex)){
+    cerr<<"Type = CCScalarField<double>\n";
+    isCC = true;
+    bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, sfd, 0);
+  } else if(CCScalarField<int> *sfi =
+	    dynamic_cast<CCScalarField<int> *> (_tex)) {
+    cerr<<"Type = CCScalarField<int>\n";
+    isCC = true;
+    bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, sfi, 0);
+  } else if(CCScalarField<long> *sfl =
+	    dynamic_cast<CCScalarField<long> *> (_tex)) {
+    cerr<<"Type = CCScalarField<long>\n";
+    isCC = true;
+    bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, sfl, 0);
+  } else {
+    cerr<<"Error: cast didn't work!\n";
+  }
 }
 
 bool
 GLTexture3D::SetBrickSize(int bsize)
 {
   xmax = ymax = zmax = bsize;
-  X = tex->grid.dim3();
-  Y = tex->grid.dim2();
-  Z = tex->grid.dim1();
+  X = _tex->nx;
+  Y = _tex->ny;
+  Z = _tex->nz;
   
   if( bontree ) delete bontree;
   computeTreeDepth();
-  bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,0);
+//   bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, tex, 0);
+  BuildTexture();
   return true;
 }
 
 void
-GLTexture3D::SetField( ScalarFieldRGuchar *tex )
+GLTexture3D::SetField( ScalarFieldRGBase *tex )
 {
-  this->tex = tex;
-  X = tex->grid.dim3();
-  Y = tex->grid.dim2();
-  Z = tex->grid.dim1();
+  this->_tex = tex;
+  X = tex->nx;
+  Y = tex->ny;
+  Z = tex->nz;
 
   int size = std::max(X,Y);
   size = std::max(size,Z);
 
   tex->get_bounds( minP, maxP );
+  tex->get_minmax( _min, _max );
   xmax = ymax = zmax = 64;
 
-  Vector diag = maxP - minP;
-
-  dx = diag.x()/(X-1);
-  dy = diag.y()/(Y-1);
-  dz = diag.z()/(Z-1); 
 
 // #ifdef SCI_OPENGL
 //   int i;
@@ -118,9 +190,10 @@ GLTexture3D::SetField( ScalarFieldRGuchar *tex )
 //     }
 //   }
 // #endif
-  
-  computeTreeDepth(); 
-  bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,0);
+   SetBounds();
+   computeTreeDepth(); 
+//   bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, tex, 0);
+  BuildTexture();
 } 
  
 void GLTexture3D::computeTreeDepth()
@@ -183,11 +256,12 @@ bool GLTexture3D::SetMaxBrickSize(int maxBrick)
    }
 }
 
+template <class T>
 Octree<Brick*>*
 GLTexture3D::buildBonTree(Point min, Point max,
             int xoff, int yoff, int zoff,
             int xsize, int ysize, int zsize,
-	    int level, Octree<Brick*>* parent)
+	    int level, T *tex, Octree<Brick*>* parent)
 {
 
     /* The cube is numbered in the following way 
@@ -239,7 +313,8 @@ GLTexture3D::buildBonTree(Point min, Point max,
       newz = zmax;
     }
 
-    makeBrickData(newx,newy,newz,xsize,ysize,zsize, xoff,yoff,zoff, brickData);
+    makeBrickData(newx,newy,newz,xsize,ysize,zsize, xoff,yoff,zoff,
+		  tex, brickData);
 
     brick = new Brick(min, max, padx,  pady, padz, level, brickData);
 
@@ -248,7 +323,8 @@ GLTexture3D::buildBonTree(Point min, Point max,
   } else { // we must subdivide
 
     makeLowResBrickData(xmax, ymax, zmax, xsize, ysize, zsize,
-			xoff, yoff, zoff, level, padx, pady, padz, brickData);
+			xoff, yoff, zoff, level, padx, pady, padz,
+			tex, brickData);
 
     brick = new Brick(min, max, padx, pady, padz, level, brickData);
 
@@ -286,7 +362,7 @@ GLTexture3D::buildBonTree(Point min, Point max,
 						  dz* (sz-1));
       for(int i = 0; i < 8; i++){
 	BuildChild(i, min, mid, max, xoff, yoff, zoff,
-		    xsize, ysize, zsize, sx, sy, sz,level,node);
+		    xsize, ysize, zsize, sx, sy, sz,level,tex, node);
       }
     } else if( Z2 > Y2 && Z2 > X2 ) {
       mid = min + Vector(diag.x(),
@@ -294,70 +370,71 @@ GLTexture3D::buildBonTree(Point min, Point max,
 			 dz*(sz-1));
       
       BuildChild(0, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, ysize, sz, level, node);
+		 xsize, ysize, zsize, xsize, ysize, sz, level, tex, node);
       BuildChild(1, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, ysize, sz, level, node);
+		 xsize, ysize, zsize, xsize, ysize, sz, level, tex, node);
     } else  if( Y2 > Z2 && Y2 > X2 ) {
       mid = min + Vector(diag.x(),
 			 dy*(sy - 1),
 			 diag.z());
       BuildChild(0, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, zsize, level, node);
+		 xsize, ysize, zsize, xsize, sy, zsize, level, tex, node);
       BuildChild(2, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, zsize, level, node);
+		 xsize, ysize, zsize, xsize, sy, zsize, level, tex, node);
     } else  if( X2 > Z2 && X2 > Y2 ) {
       mid = min + Vector(dx*(sx-1),
 			 diag.y(),
 			 diag.z());
       BuildChild(0, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, zsize, level, node);
+		 xsize, ysize, zsize, sx, ysize, zsize, level, tex, node);
       BuildChild(4,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, zsize, level, node);
+		 xsize, ysize, zsize, sx, ysize, zsize, level, tex, node);
     } else if( Z2 == Y2 ){
       mid = min + Vector(diag.x(),
 			 dy * (sy - 1),
 			 dz* (sz - 1));
       BuildChild(0,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, sz, level, node);
+		 xsize, ysize, zsize, xsize, sy, sz, level, tex, node);
       BuildChild(1,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, sz, level, node);
+		 xsize, ysize, zsize, xsize, sy, sz, level, tex, node);
       BuildChild(2,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, sz, level, node);
+		 xsize, ysize, zsize, xsize, sy, sz, level, tex, node);
       BuildChild(3,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, sz, level, node);
+		 xsize, ysize, zsize, xsize, sy, sz, level, tex, node);
     } else if( X2 == Y2 ){
       mid = min + Vector(dx*(sx - 1), dy*(sy-1),
 			 diag.z());
       BuildChild(0,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, sy, zsize, level, node);
+		 xsize, ysize, zsize, sx, sy, zsize, level, tex, node);
       BuildChild(2,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, sy, zsize, level, node);
+		 xsize, ysize, zsize, sx, sy, zsize, level, tex, node);
       BuildChild(4,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, sy, zsize, level, node);
+		 xsize, ysize, zsize, sx, sy, zsize, level, tex, node);
       BuildChild(6,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, sy, zsize, level, node);
+		 xsize, ysize, zsize, sx, sy, zsize, level, tex, node);
     } else if( Z2 == X2 ){
       mid = min + Vector(dx*(sx-1),
 			 diag.y(),
 			 dz*(sz-1));
       BuildChild(0,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, sz, level, node);
+		 xsize, ysize, zsize, sx, ysize, sz, level, tex, node);
       BuildChild(1,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, sz, level, node);
+		 xsize, ysize, zsize, sx, ysize, sz, level, tex, node);
       BuildChild(4,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, sz, level, node);
+		 xsize, ysize, zsize, sx, ysize, sz, level, tex, node);
       BuildChild(5,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, sz, level, node);
+		 xsize, ysize, zsize, sx, ysize, sz, level, tex, node);
     }
   }
   return node;
 }
 
+template <class T>
 void GLTexture3D::BuildChild(int i, Point min, Point mid, Point max,
 			       int xoff, int yoff, int zoff,
 			       int xsize, int ysize, int zsize,
 			       int X2, int Y2, int Z2,
-			       int level,  Octree<Brick*>* node)
+			       int level,  T* tex, Octree<Brick*>* node)
 {
   Point pmin, pmax;
 
@@ -366,7 +443,7 @@ void GLTexture3D::BuildChild(int i, Point min, Point mid, Point max,
     pmin = min;
     pmax = mid;
     node->SetChild(0, buildBonTree(pmin, pmax, xoff, yoff, zoff,
-				   X2, Y2, Z2, level, node));
+				   X2, Y2, Z2, level, tex, node));
     break;
   case 1:
     pmin = min;
@@ -375,7 +452,7 @@ void GLTexture3D::BuildChild(int i, Point min, Point mid, Point max,
     pmax.z(max.z());
     node->SetChild(1, buildBonTree(pmin, pmax,
 				   xoff, yoff, zoff + Z2 -1,
-				   X2, Y2, zsize-Z2+1, level, node));
+				   X2, Y2, zsize-Z2+1, level, tex, node));
     break;
   case 2:
     pmin = min;
@@ -384,7 +461,7 @@ void GLTexture3D::BuildChild(int i, Point min, Point mid, Point max,
     pmax.y(max.y());
     node->SetChild(2, buildBonTree(pmin, pmax,
 				   xoff, yoff + Y2 - 1, zoff,
-				   X2, ysize - Y2 + 1, Z2, level, node));
+				   X2, ysize - Y2 + 1, Z2, level, tex, node));
     break;
   case 3:
     pmin = mid;
@@ -393,7 +470,7 @@ void GLTexture3D::BuildChild(int i, Point min, Point mid, Point max,
     pmax.x(mid.x());
     node->SetChild(3, buildBonTree(pmin, pmax,
 				   xoff, yoff + Y2 - 1 , zoff + Z2 - 1,
-				   X2, ysize - Y2 + 1, zsize - Z2 + 1, level, node));
+				   X2, ysize - Y2 + 1, zsize - Z2 + 1, level, tex, node));
     break;
   case 4:
     pmin = min;
@@ -402,7 +479,7 @@ void GLTexture3D::BuildChild(int i, Point min, Point mid, Point max,
     pmax.x(max.x());
     node->SetChild(4, buildBonTree(pmin, pmax,
 				   xoff + X2 - 1, yoff, zoff,
-				   xsize - X2 + 1, Y2, Z2, level, node));
+				   xsize - X2 + 1, Y2, Z2, level, tex, node));
     break;
   case 5:
     pmin = mid;
@@ -411,7 +488,7 @@ void GLTexture3D::BuildChild(int i, Point min, Point mid, Point max,
     pmax.y(mid.y());
     node->SetChild(5, buildBonTree(pmin, pmax,
 				   xoff + X2 - 1, yoff, zoff +  Z2 - 1,
-				   xsize - X2 + 1, Y2, zsize - Z2 + 1, level, node));
+				   xsize - X2 + 1, Y2, zsize - Z2 + 1, level, tex, node));
     break;
   case 6:
     pmin = mid;
@@ -420,7 +497,7 @@ void GLTexture3D::BuildChild(int i, Point min, Point mid, Point max,
     pmax.z(mid.z());
     node->SetChild(6, buildBonTree(pmin, pmax,
 				   xoff + X2 - 1, yoff + Y2 - 1, zoff,
-				   xsize - X2 + 1, ysize - Y2 + 1, Z2, level, node));
+				   xsize - X2 + 1, ysize - Y2 + 1, Z2, level, tex, node));
     break;
   case 7:
    pmin = mid;
@@ -428,19 +505,26 @@ void GLTexture3D::BuildChild(int i, Point min, Point mid, Point max,
    node->SetChild(7, buildBonTree(pmin, pmax,  xoff + X2 - 1,
 				  yoff + Y2 - 1, zoff +  Z2 - 1,
 				  xsize - X2 + 1, ysize - Y2 + 1,
-				  zsize - Z2 + 1, level, node));
+				  zsize - Z2 + 1, level, tex, node));
    break;
   default:
     break;
   }
 }
 
+double
+GLTexture3D::SETVAL(double val) {
+  double v = (val - _min)*255/(_max - _min);
+  if ( v < 0 ) return 0;
+  else if (v > 255) return 255;
+  else return v;
+}
 
-
+template <class T>
 void GLTexture3D::makeBrickData(int newx, int newy, int newz,
-			       int xsize, int ysize, int zsize,
-			       int xoff, int yoff, int zoff,
-			       Array3<unsigned char>*& bd)
+				int xsize, int ysize, int zsize,
+				int xoff, int yoff, int zoff, T *tex,
+				Array3<unsigned char>*& bd)
 {
   int i,j,k,ii,jj,kk;
 
@@ -448,16 +532,18 @@ void GLTexture3D::makeBrickData(int newx, int newy, int newz,
   for(kk = 0, k = zoff; kk < zsize; kk++, k++)
     for(jj = 0, j = yoff; jj < ysize; jj++, j++)
       for(ii = 0, i = xoff; ii < xsize; ii++, i++){
-	(*bd)(kk,jj,ii) = tex->grid(i,j,k);
+	(*bd)(kk,jj,ii) = SETVAL( tex->grid(i,j,k) );
   }
 
 }
-						
+
+template <class T>						
 void GLTexture3D::makeLowResBrickData(int xmax, int ymax, int zmax,
-				     int xsize, int ysize, int zsize,
-				     int xoff, int yoff, int zoff,
-				     int level, int& padx, int& pady,
-				     int& padz, Array3<unsigned char>*& bd)
+				      int xsize, int ysize, int zsize,
+				      int xoff, int yoff, int zoff,
+				      int level, int& padx, int& pady,
+				      int& padz, T* tex,
+				      Array3<unsigned char>*& bd)
 {
   using SCICore::Math::Interpolate;
 
@@ -483,10 +569,14 @@ void GLTexture3D::makeLowResBrickData(int xmax, int ymax, int zmax,
 	for(ii = 0, i = xoff; ii < xmax; ii++, i+=dx){
 	  i1 = ((int)i + 1 >= xoff+xsize-1)?i:(int)i + 1 ;
 	  if( i1 == (int)i){ di = 0;} else {di = i1 - i;}
-	  k00 = Interpolate(tex->grid(i,j,k),tex->grid(i,j,k1),dk);
-	  k01 = Interpolate(tex->grid(i1,j,k),tex->grid(i1,j,k1),dk);
-	  k10 = Interpolate(tex->grid(i,j1,k),tex->grid(i,j,k1),dk);
-	  k11 = Interpolate(tex->grid(i1,j1,k),tex->grid(i1,j1,k1),dk);
+	  k00 = Interpolate(SETVAL( tex->grid(i,j,k) ),
+			    SETVAL( tex->grid(i,j,k1)),dk);
+	  k01 = Interpolate(SETVAL( tex->grid(i1,j,k)),
+			    SETVAL( tex->grid(i1,j,k1)),dk);
+	  k10 = Interpolate(SETVAL( tex->grid(i,j1,k)),
+			    SETVAL( tex->grid(i,j,k1)),dk);
+	  k11 = Interpolate(SETVAL( tex->grid(i1,j1,k)),
+			    SETVAL( tex->grid(i1,j1,k1)),dk);
 	  j00 = Interpolate(k00,k10,dj);
 	  j01 = Interpolate(k01,k11,dj);
 	  (*bd)(kk,jj,ii) = Interpolate(j00,j01,di);
@@ -532,7 +622,7 @@ void GLTexture3D::makeLowResBrickData(int xmax, int ymax, int zmax,
       for(jj = 0, j = yoff; jj < ymax; jj++, j+=dy){
 	for(ii = 0, i = xoff; ii < xmax; ii++, i+=dx){
 	  if( i < xoff + xsize && j < yoff + ysize && k < zoff + zsize){
-	    (*bd)(kk,jj,ii) = tex->grid(i,j,k);
+	    (*bd)(kk,jj,ii) = SETVAL( tex->grid(i,j,k) );
 	  }
 	}
       }
