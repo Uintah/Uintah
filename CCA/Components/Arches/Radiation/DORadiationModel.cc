@@ -74,18 +74,12 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("DORadiationModel");
   if (db) {
-    if (db->findBlock("ordinates"))
-      db->require("ordinates",d_sn);
-    else
-      d_sn = 2;
-    if (db->findBlock("opl"))
-      db->require("opl",d_xumax);
-    else
-      d_xumax = 1.0;
+    db->getWithDefault("ordinates",d_sn,2);
+    db->getWithDefault("opl",d_xumax,3.0);
   }
   else {
-    d_sn = 2;
-    d_xumax=1.0;
+    d_sn=2;
+    d_xumax=3.0;
   }
   lprobone = false;
   lprobtwo = false;
