@@ -1,3 +1,5 @@
+#ifndef _MPREAD_H
+#define _MPREAD_H
 //static char *id="@(#) $Id$";
 
 /****************************************
@@ -139,3 +141,4 @@ class MPRead {
 
 } // end namespace Modules
 } // end namespace Uintah
+#endif
