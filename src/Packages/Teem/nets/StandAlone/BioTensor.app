@@ -891,7 +891,7 @@ set $m44-ViewWindow_0-global-light {1}
 set $m44-ViewWindow_0-global-fog {0}
 set $m44-ViewWindow_0-global-debug {0}
 set $m44-ViewWindow_0-global-clip {0}
-set $m44-ViewWindow_0-global-cull {0}
+set $m44-ViewWindow_0-global-cull {1}
 set $m44-ViewWindow_0-global-dl {0}
 set $m44-ViewWindow_0-global-type {Gouraud}
 set $m44-ViewWindow_0-ortho-view {1}
@@ -1865,7 +1865,7 @@ class BioTensorApp {
 
 	set c_procedure_tab "Load Data"
 	set c_data_tab "Nrrd"
-	set c_left_tab "Data Vis"
+	set c_left_tab "Vis Options"
 	set c_vis_tab "Variance"
 
 	set loading 0
@@ -1982,33 +1982,188 @@ class BioTensorApp {
 	
 	### Define Tooltips
 	##########################
-	# General
 	global tips
-	set tips(IndicatorBar) \
-	    "Indicates the status of\napplication. Click when\nred to view error\nmessages"
-	set tips(IndicatorLabel) \
-	    "Indicates the current event"
 
-	# Data Acquisition Tab
-	set tips(DataTab) "Select to access\nparameters for\nthe Loading Data\nstep"
-        set tips(Execute-DataAcquisition) "Select to execute the\nLoading Data step"
-	set tips(Next-DataAcquisition) "Select to proceed to\nthe Registration step"
+ 	# Menu
+ 	set tips(FileMenuSaveSession) \
+ 	    "Save a BioTensor session\nto load at a later time"
+ 	set tips(FileMenuLoadSession) \
+ 	    "Load a BioTensor session\n"
+ 	set tips(FileMenuQuit) \
+ 	    "Quit BioTensor"
+ 	set tips(HelpMenuTooltips) \
+ 	    "Turn tooltips on or off"
+ 	set tips(HelpMenuHelp) \
+ 	    "Help for BioTensor"
+ 	set tips(HelpMenuAbout) \
+ 	    "Information about\nBioTensor"
 
-	# Registration Tab
-	set tips(Execute-Registration) "Select to execute the\nRegistration step"
-	set tips(Next-Registration) "Select to build\ndiffusion tensors"
+ 	# Process Tabs
+ 	set tips(LoadDataTab) \
+ 	    "Load DWI Images,\na T2 Reference\nImage\n or Tensors depending\non mode."
+ 	set tips(RegistrationTab) \
+ 	    "EPI Registration paramters"
+ 	set tips(BuildTensorsTab) \
+ 	    "Parameters for\nBuilding Tensors"
 
-	# Build Tensors Tab
-	set tips(Execute-DT) "Select to execute building\nof diffusion tensors\nand start visualization"
-	set tips(Next-DT) "Select to view first\nvisualization tab"
+ 	# Indicator
+ 	set tips(IndicatorBar) \
+ 	    "Indicates the status of\napplication. Click when\nred to view error\nmessages"
+ 	set tips(IndicatorLabel) \
+ 	    "Indicates the current\nstep in progress"
 
-	# Attach/Detach Mouseovers
-	set tips(PDetachedMsg) "Click hash marks to\nAttach to Viewer"
-	set tips(PAttachedMsg) "Click hash marks to\nDetach from the Viewer"
-	set tips(VDetachedMsg) "Click hash marks to\nAttach to Viewer"
-	set tips(VAttachedMsg) "Click hash marks to\nDetach from the Viewer"
 
-	# Global Options Tab
+ 	# Data Tab
+ 	set tips(DataExecute) \
+ 	    "Click to load data"
+ 	set tips(DataNext) \
+ 	    "Click to proceed to\nthe Registration step\nonly after completing\nthe Load Data step"
+
+ 	# Registration Tab
+ 	set tips(RegToggle) \
+ 	    "Perform\nEPI Registration\nor skip step entirely\nand build tensors"
+ 	set tips(RegImpRefImg) \
+ 	    "Select to register\nall images to eachother"
+ 	set tips(RegChooseRefImg) \
+ 	    "Select a reference\nimage to register\nall images to"
+ 	set tips(RegRefImgSlider) \
+ 	    "Select a reference image\nby adjusting the slider"
+ 	set tips(RegBlurX) \
+ 	    "Gaussian Smoothing\nin the X direction\n(units=samples)"
+ 	set tips(RegBlurY) \
+ 	    "Gaussian Smoothing\nin the Y direction\n(units=samples)"
+ 	set tips(RegFitting) \
+ 	    "Select the percentage of\nslices for parameter\nestimation"
+ 	set tips(RegExecute) \
+ 	    "Click to apply Registration\nchanges"
+ 	set tips(RegNext) \
+ 	    "Click to proceed to\nBuilding Tensors"
+	
+ 	# Build Tensors Tab
+ 	set tips(DTToggleSmoothing) \
+ 	    "Perform Smoothing"
+ 	set tips(DTSmoothXY) \
+ 	    "DWI Smoothing in the\nX and Y directions\n(units=samples)"
+ 	set tips(DTSmoothZ) \
+ 	    "DWI Smoothing in the\nZ direction\n(units=samples)"
+ 	set tips(DTBMatrixCompute) \
+ 	    "Select to compute the\nB-Matrix using the\nGradients file specified\nin the Registration\nstep"
+ 	set tips(DTBMatrixLoad) \
+ 	    "Select to Load a\nB-Matrix file\ndirectly. Specify\nthe file using the\nentry or browse\nbutton"
+ 	set tips(DTExecute) \
+ 	    "Click to apply changes\nfor Building Tensors\nand start visualization"
+
+ 	# Variance Tab
+ 	set tips(VarToggleOrig) \
+ 	    "Turn visibility of\nOriginal Variance Slice\non or off"
+ 	set tips(VarToggleReg) \
+ 	    "Turn visibility of\nRegistered Variance Slice\non or off"
+
+ 	# Planes Tab
+ 	set tips(PlanesToggle) \
+ 	    "Turn visibility of\nall planes on or off"
+ 	set tips(PlanesXToggle) \
+ 	    "Turn visibility of\nX plane on or off"
+ 	set tips(PlanesYToggle) \
+ 	    "Turn visibility of\nY plane on or off"
+ 	set tips(PlanesZToggle) \
+ 	    "Turn visibility of\nZ plane on or off"
+ 	set tips(PlanesXSlider) \
+ 	    "Select a position\nof the plane in\nX. This applies\nto the visible planes,\nclipping planes,\nand grid selections"
+ 	set tips(PlanesYSlider) \
+ 	    "Select a position\nof the plane in\nY. This applies\nto the visible planes,\nclipping planes,\nand grid selections"
+ 	set tips(PlanesZSlider) \
+ 	    "Select a position\nof the plane in\nZ. This applies\nto the visible planes,\nclipping planes,\nand grid selections"
+ 	set tips(PlanesColorMap) \
+ 	    "Select a colormap\nto color the planes.\nThis will not apply when\nPrinciple Eigenvector\nis selected"
+ 	set tips(PlanesClipToIso) \
+ 	    "Select to clip the planes to the Isosurface"
+
+	# Isosurface Tab
+	set tips(IsoToggle) \
+	    "Turn visibility of\nisosurface on or off"
+	set tips(IsoColorMap) \
+ 	    "Select a colormap\nto color the isosurface.\nThis will not apply when\nPrinciple Eigenvector\nis selected"
+	set tips(ToggleClipPlanes) \
+	    "Turn clipping by planes\non or off"
+	set tips(FlipX) \
+	    "Flip about X Plane.\nOnly available when\nClip by Planes\n is set to on"
+	set tips(FlipY) \
+	    "Flip about Y Plane.\nOnly available when\nClip by Planes\n is set to on"
+	set tips(FlipZ) \
+	    "Flip about Z Plane.\nOnly available when\nClip by Planes\n is set to on"
+
+	# Glyphs Tab
+	set tips(GlyphsToggle) \
+	    "Turn visibility of\nGlyphs on or off"
+	set tips(GlyphsToggleShape) \
+	    "Turn shape exageration\non or off"
+	set tips(GlyphsShapeSlider) \
+	    "Adjust the shape\nexageration by \nmoving the slider. Values < 1.0 will\nmake it more isotropic.\nValues > 1.0 will make\nit more anisotropic"
+	set tips(GlyphsSeedPoint) \
+	    "Seed the Glyphs\nat a Point\nusing the Probe\nwidget (sphere)"
+	set tips(GlyphsSeedLine) \
+	    "Seed the Glyphs\nalong a line\nusing the Rake\nwidget"
+	set tips(GlyphsSeedPlanes) \
+	    "Seed the Glyphs\non the planes"
+	set tips(GlyphsSeedGrid) \
+	    "Seed the Glyphs\nin the grid defined\nby the planes"
+	set tips(GlyphsColorMap) \
+ 	    "Select a colormap\nto color the Glyphs.\nThis will not apply when\nPrinciple Eigenvector\nis selected"
+	set tips(GlyphsTogglePoint) \
+	    "Turn the visibility\nof the Probe widget\non or off"
+	set tips(GlyphsToggleLine) \
+	    "Turn the visibility\nof the Rake widget\non or off"
+
+
+	# Fibers Tab
+	set tips(FibersToggle) \
+	    "Turn visibility of\nFibers on or off"
+	set tips(FibersAlgEigen) \
+	    "Select the Major\nEigenvector algorithm"
+	set tips(FibersAlgTL) \
+	    "Select the TensorLines\nalgorithm"
+	set tips(FibersSeedPoint) \
+	    "Seed the Fibers\nat a Point\nusing the Probe\nwidget (sphere)"
+	set tips(FibersSeedLine) \
+	    "Seed the Fibers\nalong a line\nusing the Rake\nwidget"
+	set tips(FibersSeedPlanes) \
+	    "Seed the Fibers\non the planes"
+	set tips(FibersSeedGrid) \
+	    "Seed the Fibers\nin the grid defined\nby the planes"
+	set tips(FibersTogglePoint) \
+	    "Turn the visibility\nof the Probe widget\non or off"
+	set tips(FibersToggleLine) \
+	    "Turn the visibility\nof the Rake widget\non or off"
+	set tips(FibersColorMap) \
+ 	    "Select a colormap\nto color the fibers.\nThis will not apply when\nPrinciple Eigenvector\nis selected"
+	set tips(FibersColorMap) \
+ 	    "Select a colormap\nto color the Fibers.\nThis will not apply when\nPrinciple Eigenvector\nis selected"
+
+
+ 	# Attach/Detach Mouseovers
+ 	set tips(ProcAttachHashes) "Click hash marks to\nAttach to Viewer"
+ 	set tips(ProcDetachHashes) "Click hash marks to\nDetach from the Viewer"
+ 	set tips(VisAttachHashes) "Click hash marks to\nAttach to Viewer"
+ 	set tips(VisDetachHashes) "Click hash marks to\nDetach from the Viewer"
+
+	# Viewer Options Tab
+	set tips(ViewerLighting) \
+	    "Toggle whether or not the\nViewer applies lighting to\nthe display. Objects\nwithout lighting have\na constant color"
+	set tips(ViewerFog) \
+	    "Toggle to draw objects\nwith variable intensity\nbased on their distance\nfrom the user. Also\nknown as depth cueing.\nClose objects appear brighter"
+	set tips(ViewerBBox) \
+	    "Toggle whether the Viewer\ndraws the selected objects\nin full detail or as\na simple bounding box"
+	set tips(ViewerCull) \
+	    "Display only the forward\nfacing facets."
+	set tips(ViewerSetHome) \
+	    "Captures the current view\nso the user can return\nto it later by clicking\nGo Home"
+	set tips(ViewerGoHome) \
+	    "Restores the current\nhome view"
+	set tips(ViewerViews) \
+	    "Lists a number of\nstandard viewing angles\nand orientations"
+	set tips(ViewerAutoview) \
+	    "Restores the viewer\nto the default condition"
 
     }
     
@@ -2189,8 +2344,8 @@ class BioTensorApp {
 	    $m.main_menu.file.menu add command -label "Save Session... Ctr+S" \
 		-underline 0 -command "$this save_session" -state active
 
-	    $m.main_menu.file.menu add command -label "Save Image..." \
-		-underline 0 -command "$mods(Viewer)-ViewWindow_0 makeSaveImagePopup" -state active
+#	    $m.main_menu.file.menu add command -label "Save Image..." \
+#		-underline 0 -command "$mods(Viewer)-ViewWindow_0 makeSaveImagePopup" -state active
 	    
 	    $m.main_menu.file.menu add command -label "Quit        Ctr+Q" \
 		-underline 0 -command "$this exit_app" -state active
@@ -2233,6 +2388,7 @@ class BioTensorApp {
                 -height [expr $process_height - 120] \
                 -tabpos n -equaltabs 0
 	    pack $process.tnb -side top -anchor n 
+
 	    
             set step_tab [$process.tnb add -label "Load Data" -command "$this change_processing_tab Data"]
 
@@ -2386,13 +2542,13 @@ class BioTensorApp {
 		-activebackground $execute_color \
 		-width 8 \
 		-command "$this execute_Data"
-	    Tooltip $step_tab.last.ex $tips(Execute-DataAcquisition)
+	    Tooltip $step_tab.last.ex $tips(DataExecute)
 
 	    button $step_tab.last.ne -text "Next" \
                 -command "$this change_processing_tab Registration" -width 8 \
                 -activebackground $next_color \
                 -background grey75 -state disabled 
-	    Tooltip $step_tab.last.ne $tips(Next-DataAcquisition)
+	    Tooltip $step_tab.last.ne $tips(DataNext)
 
             pack $step_tab.last.ne $step_tab.last.ex -side right -anchor ne \
 		-padx 2 -pady 0
@@ -2620,11 +2776,11 @@ class BioTensorApp {
 		-padx 3 -pady 3
             button $step_tab.last.ex -text "Execute" -state disabled -width 8 \
 		-command "$this execute_Registration"
-	    Tooltip $step_tab.last.ex $tips(Execute-Registration)
+	    Tooltip $step_tab.last.ex $tips(RegExecute)
 
 	    button $step_tab.last.ne -text "Next" -state disabled -width 8 \
 		-command "$this change_processing_tab \"Build Tensors\"" 
-	    Tooltip $step_tab.last.ne $tips(Next-Registration)
+	    Tooltip $step_tab.last.ne $tips(RegNext)
 
             pack $step_tab.last.ne $step_tab.last.ex -side right \
 		-anchor ne -padx 2 -pady 0
@@ -2776,7 +2932,7 @@ class BioTensorApp {
             button $step_tab.last.ex -text "Execute" \
 		-width 16 -state disabled \
 		-command "$this execute_DT"
-	    Tooltip $step_tab.last.ex $tips(Execute-DT)
+	    Tooltip $step_tab.last.ex $tips(DTExecute)
 
             pack $step_tab.last.ex -side right -anchor ne \
 		-padx 2 -pady 0
@@ -2819,9 +2975,9 @@ class BioTensorApp {
                     -command "$this switch_P_frames" 
 	        pack $m.d.cut$i -side top -anchor se -pady 0 -padx 0
                 if {$case == 0} {
-		    Tooltip $m.d.cut$i $tips(PDetachedMsg)
+		    Tooltip $m.d.cut$i $tips(ProcAttachHashes)
 		} else {
-		    Tooltip $m.d.cut$i $tips(PAttachedMsg)
+		    Tooltip $m.d.cut$i $tips(ProcDetachHashes)
 		}
             }
 	    
@@ -2856,9 +3012,9 @@ class BioTensorApp {
                set vis_frame_tab2 $vis.tnb	    
             }
 	    
-	    set page [$vis.tnb add -label "Data Vis" -command "$this change_vis_frame \"Data Vis\""]
+	    set page [$vis.tnb add -label "Vis Options" -command "$this change_vis_frame \"Vis Options\""]
 	    
-	    ### Data Vis Tab
+	    ### Vis Options Tab
 	    # Add tabs for each visualization
             # Variance, Planes, Isosurface, Glyphs, Fibers
 	    iwidgets::tabnotebook $page.vis_tabs \
@@ -2954,9 +3110,9 @@ class BioTensorApp {
                     -command "$this switch_V_frames" 
 	        pack $m.d.cut$i -side top -anchor se -pady 0 -padx 0
 		if {$case == 0} {
-		    Tooltip $m.d.cut$i $tips(VDetachedMsg)
+		    Tooltip $m.d.cut$i $tips(VisAttachHashes)
 		} else {
-		    Tooltip $m.d.cut$i $tips(VAttachedMsg)
+		    Tooltip $m.d.cut$i $tips(VisDetachHashes)
 		}
             }
 	}
@@ -2965,7 +3121,7 @@ class BioTensorApp {
 
     method create_viewer_tab { vis } {
 	global mods
-	set page [$vis.tnb add -label "Global Options" -command "$this change_vis_frame \"Global Options\""]
+	set page [$vis.tnb add -label "Viewer Options" -command "$this change_vis_frame \"Viewer Options\""]
 	
 	iwidgets::labeledframe $page.viewer_opts \
 	    -labelpos nw -labeltext "Global Render Options"
@@ -2988,9 +3144,14 @@ class BioTensorApp {
 	checkbutton $view_opts.eframe.bbox -text "BBox" \
 	    -variable $mods(Viewer)-ViewWindow_0-global-debug \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+
+	checkbutton $view_opts.eframe.cull -text "Back Cull" \
+	    -variable $mods(Viewer)-ViewWindow_0-global-cull \
+	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+	$view_opts.eframe.cull select
 	
 	pack $view_opts.eframe.light $view_opts.eframe.fog \
-	    $view_opts.eframe.bbox  \
+	    $view_opts.eframe.bbox  $view_opts.eframe.cull\
 	    -side left -anchor n -padx 4 -pady 4
 	
 	
@@ -3132,7 +3293,7 @@ class BioTensorApp {
 	pack $view_opts.buttons.v2.sethome $view_opts.buttons.v2.gohome \
 	    -side top -padx 2 -pady 2 -anchor ne -fill x
 	
-	$vis.tnb view "Data Vis"
+	$vis.tnb view "Vis Options"
     }
 
 
@@ -3931,114 +4092,131 @@ class BioTensorApp {
 	global data_mode
         global mods
         global $mods(ChooseNrrd-DT)-port-index
+	global $mods(NrrdReader1)-type
 	
         if {$data_mode == "DWI"} {
-           configure_readers all
-
+	    configure_readers all
+	    
 	    # configure text for DWI Volume
-	   $nrrd_tab1.dwil configure -text "DWI Volume:"
-	   $nrrd_tab2.dwil configure -text "DWI Volume:"
-
-           $dicom_tab1.dwil configure -text "DWI Volume:"
-           $dicom_tab2.dwil configure -text "DWI Volume:"
-
-           $analyze_tab1.dwil configure -text "DWI Volume:"
-           $analyze_tab2.dwil configure -text "DWI Volume:"
-
-           # enable T2 stuff
-           $nrrd_tab1.t2l configure -state normal
-           $nrrd_tab2.t2l configure -state normal
-           $nrrd_tab1.file2 configure -state normal -foreground black
-           $nrrd_tab2.file2 configure -state normal -foreground black
-           $nrrd_tab1.load2 configure -state normal
-           $nrrd_tab2.load2 configure -state normal
-
-           $dicom_tab1.t2l configure -state normal
-           $dicom_tab2.t2l configure -state normal
-           $dicom_tab1.load2 configure -state normal
-           $dicom_tab2.load2 configure -state normal
-
-           $analyze_tab1.t2l configure -state normal
-           $analyze_tab2.t2l configure -state normal
-           $analyze_tab1.load2 configure -state normal
-           $analyze_tab2.load2 configure -state normal
-
-           # configure ChooseNrrd
-           set $mods(ChooseNrrd-DT)-port-index 0
-
-           # enable registration and dt tabs
+	    $nrrd_tab1.dwil configure -text "DWI Volume:"
+	    $nrrd_tab2.dwil configure -text "DWI Volume:"
+	    
+	    $dicom_tab1.dwil configure -text "DWI Volume:"
+	    $dicom_tab2.dwil configure -text "DWI Volume:"
+	    
+	    $analyze_tab1.dwil configure -text "DWI Volume:"
+	    $analyze_tab2.dwil configure -text "DWI Volume:"
+	    
+	    # enable T2 stuff
+	    $nrrd_tab1.t2l configure -state normal
+	    $nrrd_tab2.t2l configure -state normal
+	    $nrrd_tab1.file2 configure -state normal -foreground black
+	    $nrrd_tab2.file2 configure -state normal -foreground black
+	    $nrrd_tab1.load2 configure -state normal
+	    $nrrd_tab2.load2 configure -state normal
+	    
+	    $dicom_tab1.t2l configure -state normal
+	    $dicom_tab2.t2l configure -state normal
+	    $dicom_tab1.load2 configure -state normal
+	    $dicom_tab2.load2 configure -state normal
+	    
+	    $analyze_tab1.t2l configure -state normal
+	    $analyze_tab2.t2l configure -state normal
+	    $analyze_tab1.load2 configure -state normal
+	    $analyze_tab2.load2 configure -state normal
+	    
+	    set $mods(NrrdReader1)-type Scalar
+	    # configure ChooseNrrd
+	    set $mods(ChooseNrrd-DT)-port-index 0
+	    
+	    # enable registration and dt tabs
 	    #activate_registration
-
+	    
 	    #activate_dt
-	
+	    
         } else {
-           configure_readers all
-
-           # configure labels
-	   $nrrd_tab1.dwil configure -text "Tensor Volume:"
-	   $nrrd_tab2.dwil configure -text "Tensor Volume:"
-
-           $dicom_tab1.dwil configure -text "Tensor Volume:"
-           $dicom_tab2.dwil configure -text "Tensor Volume:"
-
-           $analyze_tab1.dwil configure -text "Tensor Volume:"
-           $analyze_tab2.dwil configure -text "Tensor Volume:"
-
-           # disable T2 stuff
-           $nrrd_tab1.t2l configure -state disabled
-           $nrrd_tab2.t2l configure -state disabled
-           $nrrd_tab1.file2 configure -state disabled -foreground grey64
-           $nrrd_tab2.file2 configure -state disabled -foreground grey64
-           $nrrd_tab1.load2 configure -state disabled
-           $nrrd_tab2.load2 configure -state disabled
-
-           $dicom_tab1.t2l configure -state disabled
-           $dicom_tab2.t2l configure -state disabled
-           $dicom_tab1.load2 configure -state disabled
-           $dicom_tab2.load2 configure -state disabled
-
-           $analyze_tab1.t2l configure -state disabled
-           $analyze_tab2.t2l configure -state disabled
-           $analyze_tab1.load2 configure -state disabled
-           $analyze_tab2.load2 configure -state disabled
-
-           # configure ChooseNrrd
-           set $mods(ChooseNrrd-DT)-port-index 1
-
+	    configure_readers all
+	    
+	    # configure labels
+	    $nrrd_tab1.dwil configure -text "Tensor Volume:"
+	    $nrrd_tab2.dwil configure -text "Tensor Volume:"
+	    
+	    $dicom_tab1.dwil configure -text "Tensor Volume:"
+	    $dicom_tab2.dwil configure -text "Tensor Volume:"
+	    
+	    $analyze_tab1.dwil configure -text "Tensor Volume:"
+	    $analyze_tab2.dwil configure -text "Tensor Volume:"
+	    
+	    # disable T2 stuff
+	    $nrrd_tab1.t2l configure -state disabled
+	    $nrrd_tab2.t2l configure -state disabled
+	    $nrrd_tab1.file2 configure -state disabled -foreground grey64
+	    $nrrd_tab2.file2 configure -state disabled -foreground grey64
+	    $nrrd_tab1.load2 configure -state disabled
+	    $nrrd_tab2.load2 configure -state disabled
+	    
+	    $dicom_tab1.t2l configure -state disabled
+	    $dicom_tab2.t2l configure -state disabled
+	    $dicom_tab1.load2 configure -state disabled
+	    $dicom_tab2.load2 configure -state disabled
+	    
+	    $analyze_tab1.t2l configure -state disabled
+	    $analyze_tab2.t2l configure -state disabled
+	    $analyze_tab1.load2 configure -state disabled
+	    $analyze_tab2.load2 configure -state disabled
+	    
+	    set $mods(NrrdReader1)-type Tensor
+	    
+	    # configure ChooseNrrd
+	    set $mods(ChooseNrrd-DT)-port-index 1
+	    
 	    # disable Next button
 	    $data_next_button1 configure -state disabled \
-	       -background grey75 -foreground grey64
+		-background grey75 -foreground grey64
 	    $data_next_button2 configure -state disabled \
-	       -background grey75 -foreground grey64
-
-           # disable registation and dt tabs
-  	   foreach w [winfo children $reg_tab1] {
-	     disable_widget $w
-           }
-	   foreach w [winfo children $reg_tab2] {
-	     disable_widget $w
-           }
-
+		-background grey75 -foreground grey64
+	    
+	    # disable registation and dt tabs
+	    foreach w [winfo children $reg_tab1] {
+		disable_widget $w
+	    }
+	    foreach w [winfo children $reg_tab2] {
+		disable_widget $w
+	    }
+	    
 	    # fix next and execute in registration
 	    $reg_tab1.last.ne configure -foreground grey64 -background grey75
 	    $reg_tab2.last.ne configure -foreground grey64 -background grey75
-
+	    
 	    $reg_tab1.last.ex configure -foreground grey64 -background grey75
 	    $reg_tab2.last.ex configure -foreground grey64 -background grey75
-
-
-  	   foreach w [winfo children $dt_tab1] {
-	     disable_widget $w
-           }
-	   foreach w [winfo children $dt_tab2] {
-	     disable_widget $w
-           }
-
+	    
+	    
+	    foreach w [winfo children $dt_tab1] {
+		disable_widget $w
+	    }
+	    foreach w [winfo children $dt_tab2] {
+		disable_widget $w
+	    }
+	    
 	    # fix execute in dt
 	    $dt_tab1.last.ex configure -foreground grey64 -background grey75
 	    $dt_tab2.last.ex configure -foreground grey64 -background grey75
 	    
         }
+
+	# re-execute reader
+	global $mods(ChooseNrrd1)-port-index
+	if {[set $mods(ChooseNrrd1)-port-index] == 0} {
+	    # nrrd
+	    $mods(NrrdReader1)-c needexecute
+	} elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
+	    # dicom
+	    $mods(DicomReader1)-c needexecute
+	} else {
+	    # analyze
+	    $mods(AnalyzeReader1)-c needexecute
+	}
     }
 
 
@@ -6148,6 +6326,29 @@ class BioTensorApp {
 	    
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3	
 
+
+	    global $mods(ShowField-Glyphs)-data-resolution
+	    
+	    frame $f.disc
+	    pack $f.disc -side top -anchor nw -padx 8 -pady 0
+	    
+	    label $f.disc.la -text "Discretization: " -state disabled
+	    
+	    scale $f.disc.s -from 3 -to 20 \
+                -resolution 1 \
+  		-length 135  -width 15 \
+		-sliderlength 15 \
+                -orient horizontal \
+   	        -state disabled \
+		-showvalue false \
+   	        -foreground grey64 \
+	        -variable $mods(ShowField-Glyphs)-data-resolution
+	    label $f.disc.l -textvariable $mods(ShowField-Glyphs)-data-resolution -state disabled
+	    bind $f.disc.s <ButtonRelease> {app change_glyph_disc}
+	    
+	    pack $f.disc.la $f.disc.s $f.disc.l -side left -anchor nw -padx 1 -pady 0
+
+
 	    global scale_glyph
 	    global $mods(TendNorm-Glyphs)-target
 	    global $mods(ShowField-Glyphs)-tensors_scale
@@ -6173,29 +6374,6 @@ class BioTensorApp {
 	    bind $f.scale.s <ButtonRelease> {app change_glyph_scale}
 	    
 	    pack $f.scale.b $f.scale.s $f.scale.l -side left -anchor nw -padx 1 -pady 0
-
-
-
-	    global $mods(ShowField-Glyphs)-data-resolution
-	    
-	    frame $f.disc
-	    pack $f.disc -side top -anchor nw -padx 8 -pady 0
-	    
-	    label $f.disc.la -text "Discretization: " -state disabled
-	    
-	    scale $f.disc.s -from 3 -to 20 \
-                -resolution 1 \
-  		-length 100  -width 15 \
-		-sliderlength 15 \
-                -orient horizontal \
-   	        -state disabled \
-		-showvalue false \
-   	        -foreground grey64 \
-	        -variable $mods(ShowField-Glyphs)-data-resolution
-	    label $f.disc.l -textvariable $mods(ShowField-Glyphs)-data-resolution -state disabled
-	    bind $f.disc.s <ButtonRelease> {app change_glyph_disc}
-	    
-	    pack $f.disc.la $f.disc.s $f.disc.l -side left -anchor nw -padx 1 -pady 0
 
 	    
 	    global exag_glyph
@@ -8110,15 +8288,15 @@ class BioTensorApp {
 	# change tabs for attached and detached
 
         if {$initialized != 0} {
-	    if {$which == "Data Vis"} {
-		# Data Vis
-		$vis_frame_tab1 view "Data Vis"
-		$vis_frame_tab2 view "Data Vis"
-		set c_left_tab "Data Vis"
+	    if {$which == "Vis Options"} {
+		# Vis Options
+		$vis_frame_tab1 view "Vis Options"
+		$vis_frame_tab2 view "Vis Options"
+		set c_left_tab "Vis Options"
 	    } else {
- 		$vis_frame_tab1 view "Global Options"
- 		$vis_frame_tab2 view "Global Options"
-		set c_left_tab "Global Options"
+ 		$vis_frame_tab1 view "Viewer Options"
+ 		$vis_frame_tab2 view "Viewer Options"
+		set c_left_tab "Viewer Options"
 	    }
 	}
     }
