@@ -31,6 +31,9 @@ Plane::Plane(const Point &p1, const Point &p2, const Point &p3) {
     d=-(p1.x()*a+p1.y()*b+p1.z()*c);
 }
 
+Plane::~Plane() {
+}
+
 void Plane::flip() {
     a=-a; b=-b; c=-c; c=-d;
 }
