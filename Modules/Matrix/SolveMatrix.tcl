@@ -174,6 +174,7 @@ itcl_class SolveMatrix {
 	set iter 1
 	$w.graph element configure "Target Error" -data "0 $err $iter $err"
 	set min_error $err
+	$w.graph element configure "Current Target" -data "0 $err"
     }
 
     method append_graph {iter values errvalues} {

@@ -226,16 +226,12 @@ void SolveMatrix::jacobi(Matrix* matrix,
 	}
 
 	Mult(Z, invdiag, Z, flop, memref);
-	Sub(lhs, lhs, Z, flop, memref);
+	ScMult_Add(lhs, 1, lhs, Z, flop, memref);
+//	Sub(lhs, lhs, Z, flop, memref);
 
 	matrix->mult(lhs, Z, flop, memref);
-	Sub(Z, Z, rhs, flop, memref);
+	Sub(Z, rhs, Z, flop, memref);
 	err=Z.vector_norm(flop, memref)/bnorm;
-
-	{
-	    ColumnMatrix dd(lhs.nrows());
-	    matrix->mult(lhs, dd, flop, memref);
-	}
 
 	errlist.add(err);
 
