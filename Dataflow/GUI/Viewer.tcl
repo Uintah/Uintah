@@ -345,7 +345,7 @@ itcl_class ViewWindow {
 	button $bsframe.v1.autoview -text "Autoview" \
 	    -command "$this-c autoview" -width 10
 	pack $bsframe.v1.autoview -fill x -pady 2 -padx 2
-	TooltipMultiline $bsframe.v1.autoview \
+	Tooltip $bsframe.v1.autoview \
            "Instructs the Viewer to move the camera to a position that will\n"\
            "allow all geometry to be rendered visibly in the viewing window."
 
@@ -355,7 +355,7 @@ itcl_class ViewWindow {
 	menubutton $bsframe.v1.views.def -text "Views..." \
 	    -menu $bsframe.v1.views.def.m \
 	    -relief raised -padx 2 -pady 2 -width 10	
-	TooltipMultiline $bsframe.v1.views.def \
+	Tooltip $bsframe.v1.views.def \
 	  "Allows the user to easily specify that the viewer align the axes\n"\
           "such that they are perpendicular and/or horizontal to the viewer."
 	create_view_menu $bsframe.v1.views.def.m
@@ -589,7 +589,7 @@ itcl_class ViewWindow {
 	# Global Fog Checkbutton
 	checkbutton $m.eframe.fog -text "Fog" \
 	    -variable $this-global-fog -command "$this-c redraw"
-	TooltipMultiline $m.eframe.fog \
+	Tooltip $m.eframe.fog \
 	    "Toggles on/off fog.  This will make objects further\n" \
 	    "away from the viewer appear dimmer and make it easier\n" \
 	    "to judge distances."
@@ -597,7 +597,7 @@ itcl_class ViewWindow {
 	# Global BBox Checkbutton
 	checkbutton $m.eframe.bbox -text "BBox" \
 	    -variable $this-global-debug  -command "$this-c redraw"
-	TooltipMultiline $m.eframe.bbox \
+	Tooltip $m.eframe.bbox \
 	    "Toggles on/off whether only the bounding box of every piece\n" \
 	    "of geometry is displayed.  Individual bounding boxes may be\n" \
 	    "toggled on/off using the 'Options' button in the 'Objects' frame."
@@ -610,7 +610,7 @@ itcl_class ViewWindow {
 	# Global Cull Checkbutton
 	checkbutton $m.eframe.cull -text "Back Cull" \
 	    -variable $this-global-cull -command "$this-c redraw"
-	TooltipMultiline $m.eframe.cull \
+	Tooltip $m.eframe.cull \
 	    "Toggles on/off whether polygons that face away from\n" \
 	    "the camera are rendered."
 
@@ -682,14 +682,14 @@ itcl_class ViewWindow {
         checkbutton $m.raxes -text "Orientation" -variable $this-raxes \
 	    -onvalue 1 -offvalue 0 \
 	    -command "$this-c rotateGenAxes; $this-c redraw"
-	TooltipMultiline $m.raxes \
+	Tooltip $m.raxes \
 	    "Toggles on/off the orientation axes displayed in\n" \
 	    "the upper right corner of the viewer window."
 
 	# Ortho View Checkbutton
 	checkbutton $m.ortho -text "Ortho View" -variable $this-ortho-view \
 	    -onvalue 1 -offvalue 0 -command "$this-c redraw"
-	TooltipMultiline $m.ortho  \
+	Tooltip $m.ortho  \
 	    "Toggles on/off the use of an orthographic projection.\n" \
 	    "SCIRun defaults to using the prospective projection."
 
@@ -700,7 +700,7 @@ itcl_class ViewWindow {
 	# Stereo View Options
 	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo \
 		-command "$this-c redraw"
-	TooltipMultiline $m.stereo \
+	Tooltip $m.stereo \
 	    "Switch into stereo rendering mode.  Special hardware may be\n" \
 	    "necessary to use this function."
 	pack $m.stereo -side top -anchor w
@@ -709,7 +709,7 @@ itcl_class ViewWindow {
 	scale $m.sbase -variable $this-sbase -length 100 -from 0.1 -to 2 \
 		-resolution 0.02 -orient horizontal -label "Fusion Scale:" \
 		-command "$this-c redraw"
-	TooltipMultiline $m.sbase \
+	Tooltip $m.sbase \
 	    "Specifies how far the left and right eye images are\n" \
 	    "offset when rendering in stereo mode."
 	pack $m.sbase -side top -anchor w
