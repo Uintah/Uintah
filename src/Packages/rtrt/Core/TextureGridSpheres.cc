@@ -1187,15 +1187,19 @@ void TextureGridSphere::shade(Color& result, const Ray& ray,
 			      double /*atten*/, const Color& /*accumcolor*/,
 			      Context* /*cx*/)
 {
-  // cell is the index of the sphere which was intersected
+  // cell is the index of the sphere which was intersected.  To get to
+  // the actuall data you need to simply just add cell to spheres.  To
+  // get the number of the sphere which was intersected you need to
+  // divide by the number of data items.
   int cell=*(int*)hit.scratchpad;
+  int sphere_index = cell / ndata;
 
   // Get the texture index
   int tex_index;
   if (tex_indices)
-    tex_index = *(tex_indices + cell);
+    tex_index = *(tex_indices + sphere_index);
   else
-    tex_index = cell;
+    tex_index = sphere_index;
 
   if (tex_index >= ntextures) {
     // bad index
