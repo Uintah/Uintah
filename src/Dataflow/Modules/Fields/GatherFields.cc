@@ -71,6 +71,8 @@ GatherFields::~GatherFields()
 void
 GatherFields::execute()
 {
+  unsigned int i;
+
   port_range_type range = get_iports("Field");
   if (range.first == range.second)
     return;
@@ -103,13 +105,70 @@ GatherFields::execute()
   }
 
   FieldHandle ofield(0);
-  if (fields.size())
+  if (fields.size() == 1)
   {
-    const TypeDescription *td = fields[0]->get_type_description();
-    CompileInfoHandle ci = GatherFieldsAlgo::get_compile_info(td);
-    Handle<GatherFieldsAlgo> algo;
-    if (!module_dynamic_compile(ci, algo)) return;
-    ofield = algo->execute(fields);
+    ofield = fields[0];
+  }
+  else if (fields.size() > 1)
+  {
+    const TypeDescription *mtd0 = fields[0]->mesh()->get_type_description();
+    const TypeDescription *ftd0 = fields[0]->get_type_description();
+    const int loc0 = fields[0]->data_at();
+    bool same_field_kind = true;
+    bool same_mesh_kind = true;
+    bool same_data_location = true;
+    for (i = 1; i < fields.size(); i++)
+    {
+      if (fields[i]->mesh()->get_type_description() != mtd0)
+      {
+	same_mesh_kind = false;
+      }
+      if (fields[i]->get_type_description() != ftd0)
+      {
+	same_field_kind = false;
+      }
+      if (fields[i]->data_at() != loc0)
+      {
+	same_data_location = false;
+      }
+    }
+    
+    if (same_field_kind || same_mesh_kind)
+    {
+      bool copy_data = same_data_location;
+      if (!same_data_location)
+      {
+	warning("Cannot copy data from meshes with different data locations.");
+      }
+      else if (!same_field_kind)
+      {
+	warning("Copying data does not work for data of different kinds.");
+	copy_data = false;
+      }
+      else if (same_data_location && fields[0]->data_at() != Field::NODE)
+      {
+	warning("Copying data does not work for non-node data locations.");
+	copy_data = false;
+      }
+      CompileInfoHandle ci = GatherFieldsAlgo::get_compile_info(ftd0);
+      Handle<GatherFieldsAlgo> algo;
+      if (!module_dynamic_compile(ci, algo)) return;
+      ofield = algo->execute(fields, copy_data);
+    }
+    else
+    {
+      warning("Different mesh types detected, outputting PointCloudField.");
+      PointCloudMeshHandle pc = scinew PointCloudMesh;
+      for (i = 0; i < fields.size(); i++)
+      {
+	const TypeDescription *mtd = fields[i]->mesh()->get_type_description();
+	CompileInfoHandle ci = GatherPointsAlgo::get_compile_info(mtd);
+	Handle<GatherPointsAlgo> algo;
+	if (!module_dynamic_compile(ci, algo)) return;
+	algo->execute(fields[i]->mesh(), pc);
+      }
+      ofield = scinew PointCloudField<double>(pc, Field::NODE);
+    }
   }
 
   FieldOPort *ofld = (FieldOPort *)get_oport("Field");
