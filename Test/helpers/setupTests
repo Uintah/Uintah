@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/bin/sh
 
 # usage setupTests <SCIRUN-ROOT> <SCIRUN-BUILD-ROOT> <dbg or opt> <maxProcs>
 # will set up tests in cwd.
