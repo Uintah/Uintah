@@ -709,8 +709,8 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 }
 
 
-void DataArchiver::beginOutputTimestep(double time, double delt,
-				       const GridP& grid)
+void DataArchiver::beginOutputTimestep( double time, double delt,
+					const GridP& grid )
 {
   d_currentTime=time+delt;
   dbg << "beginOutputTimestep called at time=" << d_currentTime << '\n';
@@ -723,8 +723,9 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
       while (d_currentTime >= d_nextOutputTime)
 	d_nextOutputTime+=d_outputInterval;
     }
-    else
+    else {
       d_wasOutputTimestep = false;
+    }
   }
   else if (d_outputTimestepInterval != 0 && delt != 0) {
     if(d_currentTimestep >= d_nextOutputTimestep) {
@@ -732,11 +733,13 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
       d_wasOutputTimestep = true;
       outputTimestep(d_dir, d_saveLabels, time, delt, grid,
 		     &d_lastTimestepLocation);
-      while (d_currentTimestep >= d_nextOutputTimestep)
+      while (d_currentTimestep >= d_nextOutputTimestep) {
 	d_nextOutputTimestep+=d_outputTimestepInterval;
+      }
     }
-    else
+    else {
       d_wasOutputTimestep = false;
+    }
   }
   
   if ((d_checkpointInterval != 0.0 && d_currentTime >= d_nextCheckpointTime) ||
@@ -800,7 +803,8 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
   } else {
     d_wasCheckpointTimestep=false;
   }
-}
+  dbg << "end beginOutputTimestep()\n";
+} // end beginOutputTimestep
 
 void DataArchiver::outputTimestep(Dir& baseDir,
 				  vector<DataArchiver::SaveItem>&,
@@ -809,6 +813,8 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 				  string* pTimestepDir /* passed back */,
 				  bool hasGlobals /* = false */)
 {
+  dbg << "begin outputTimestep()\n";
+
   int numLevels = grid->numLevels();
   int timestep = d_currentTimestep;
   
@@ -844,6 +850,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 	levelElem->appendElement("id", level->getID());
 
 	Level::const_patchIterator iter;
+
 	for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
 	  const Patch* patch=*iter;
 	  Box box = patch->getBox();
@@ -863,7 +870,9 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 	lname << "l" << l;
 	for(int i=0;i<d_myworld->size();i++){
 	  ostringstream pname;
-	  pname << lname.str() << "/p" << setw(5) << setfill('0') << i << ".xml";
+	  pname << lname.str() << "/p" << setw(5) << setfill('0') << i 
+		<< ".xml";
+
 	  ProblemSpecP df = dataElem->appendChild("Datafile",1);
 	  df->setAttribute("href",pname.str());
 	  
@@ -873,6 +882,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 	  
 	  ostringstream labeltext;
 	  labeltext << "Processor " << i << " of " << d_myworld->size();
+
 	  df->appendText(labeltext.str().c_str());
 	  dataElem->appendText("\n");
 	}
