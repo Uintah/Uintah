@@ -29,16 +29,16 @@
 
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/TetVolMesh.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/TriSurfMesh.h>
-#include <Core/Datatypes/ContourMesh.h>
-#include <Core/Datatypes/PointCloudMesh.h>
-#include <Core/Datatypes/TriSurf.h>
-#include <Core/Geom/GeomTriangles.h>
-#include <Core/Malloc/Allocator.h>
+//#include <Core/Datatypes/TetVolMesh.h>
+//#include <Core/Datatypes/LatVolMesh.h>
+//#include <Core/Datatypes/ContourMesh.h>
+//#include <Core/Datatypes/PointCloudMesh.h>
+//#include <Core/Datatypes/TriSurf.h>
+//#include <Core/Geom/GeomTriangles.h>
+//#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Modules/Fields/FieldBoundary.h>
 
-#include <Core/Datatypes/DispatchMesh1.h>
+//#include <Core/Datatypes/DispatchMesh1.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -52,16 +52,6 @@ public:
 
 private:
   
-  //! Iterates over mesh, and build TriSurf at the boundary
-  template <class Msh> void boundary(const Msh *mesh);
-  template <class NIndex>
-  void add_ordered_tri(const Point p[3], NIndex nidx[3],
-		       const Point &inside, TriSurfMeshHandle tmesh);
-
-  void add_face(const Point &p0, const Point &p1, const Point &p2, 
-		MaterialHandle m0, MaterialHandle m1, 
-		MaterialHandle m2, GeomTriangles *g);
-
   //! Input should be a volume field.
   FieldIPort*              infield_;
   int                      infield_gen_;
@@ -90,135 +80,10 @@ FieldBoundary::FieldBoundary(const string& id) :
   tri_fh_(0), interp_fh_(0)
 {
 }
-void 
-FieldBoundary::add_face(const Point &p0, const Point &p1, const Point &p2, 
-			MaterialHandle m0, MaterialHandle m1, 
-			MaterialHandle m2, GeomTriangles *g) 
-{
-  g->add(p0, m0, 
-	 p1, m2, 
-	 p2, m1);
-}
 
 FieldBoundary::~FieldBoundary()
 {
 }
-
-template <class NIndex>
-void 
-FieldBoundary::add_ordered_tri(const Point p[3], NIndex nidx[3], 
-			       const Point &inside, TriSurfMeshHandle tmesh)
-{
-  const Vector v1 = p[1] - p[0];
-  const Vector v2 = p[2] - p[1];
-  const Vector norm = Cross(v1, v2);
-
-  const Vector tmp = inside - p[0];
-  const double val = Dot(norm, tmp);
-  if (val > 0.0L) {
-    // normal points inside, reverse the order.
-    tmesh->add_triangle(nidx[2], nidx[1], nidx[0]);
-  } else {
-    // normal points outside.
-    tmesh->add_triangle(nidx[0], nidx[1], nidx[2]);
-  }
-}
-
-template <> void FieldBoundary::boundary(const ContourMesh *) {
-  error("FieldBoundary::boundary can't extract a surface from a ContourMesh");
-}
-
-template <> void FieldBoundary::boundary(const PointCloudMesh *) {
-  error("FieldBoundary::boundary can't extract a surface from a PointCloudMesh");
-}
-
-/*
-template <> void FieldBoundary::boundary(const LatVolMesh *) {
-  error("FieldBoundary::boundary can't take the boundary of a LatVolMesh today...");
-}
-*/
-
-template <> void FieldBoundary::boundary(const TriSurfMesh *mesh) {
-  // Casting away const.  We need const correct handles.
-  tri_fh_ = FieldHandle(scinew TriSurf<double>(TriSurfMeshHandle((TriSurfMesh *)mesh), Field::NODE));
-}
-
-template <class Msh>
-void 
-FieldBoundary::boundary(const Msh *mesh)
-{
-  map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type> vertex_map_;
-  map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type>::iterator node_iter;
-  Array1<typename Msh::Node::index_type> reverse_map;
-
-  TriSurfMesh::Node::index_type node_idx[3];
-
-  TriSurfMeshHandle tmesh = scinew TriSurfMesh;
-  // Walk all the cells in the mesh.
-  Point center;
-  typename Msh::Cell::iterator citer = mesh->cell_begin();
-  while (citer != mesh->cell_end()) {
-    typename Msh::Cell::index_type ci = *citer;
-    ++citer;
-    mesh->get_center(center, ci);
-    // Get all the faces in the cell.
-    typename Msh::Face::array_type faces;
-    mesh->get_faces(faces, ci);
-    // Check each face for neighbors
-    typename Msh::Face::array_type::iterator fiter = faces.begin();
-    while (fiter != faces.end()) {
-      typename Msh::Cell::index_type nci;
-      typename Msh::Face::index_type fi = *fiter;
-      ++fiter;
-      if (! mesh->get_neighbor(nci , ci, fi)) {
-	// Faces with no neighbors are on the boundary, build a tri.
-	typename Msh::Node::array_type nodes;
-	mesh->get_nodes(nodes, fi);
-	// Creating triangles, so fan if more than 3 nodes.
-	Point p[3]; // cache points off
-	typename Msh::Node::array_type::iterator niter = nodes.begin();
-
-	for (int i=0; i<3; i++) {
-	  node_iter = vertex_map_.find(*niter);
-	  mesh->get_point(p[i], *niter);
-	  if (node_iter == vertex_map_.end()) {
-	    node_idx[i] = tmesh->add_point(p[i]);
-	    vertex_map_[*niter] = node_idx[i];
-	    reverse_map.add(*niter);
-	  } else {
-	    node_idx[i] = (*node_iter).second;
-	  }
-	  ++niter;
-	}
-	add_ordered_tri(p, node_idx, center, tmesh);
-
-	while (niter != nodes.end()) {
-	  node_idx[1] = node_idx[2];
-	  p[1] = p[2];
-	  node_iter = vertex_map_.find(*niter);
-	  mesh->get_point(p[2], *niter);
-	  if (node_iter == vertex_map_.end()) {
-	    node_idx[2] = tmesh->add_point(p[2]);
-	    vertex_map_[*niter] = node_idx[2];
-	    reverse_map.add(*niter);
-	  } else {
-	    node_idx[2] = (*node_iter).second;
-	  }
-	  ++niter;
-	  add_ordered_tri(p, node_idx, center, tmesh);
-	} 
-      }
-    }
-  }
-  TriSurf<double> *ts = scinew TriSurf<double>(tmesh, Field::NODE);
-  TriSurf<vector<pair<typename Msh::Node::index_type, double> > >* interp =
-    scinew TriSurf<vector<pair<typename Msh::Node::index_type, double> > >(tmesh, Field::NODE);
-  for (int i=0; i<reverse_map.size(); i++)
-    interp->fdata()[i].push_back(pair<typename Msh::Node::index_type, double>(reverse_map[i], 1.0));
-  tri_fh_ = ts;
-  interp_fh_ = interp;
-}
-
 
 
 void 
@@ -236,10 +101,89 @@ FieldBoundary::execute()
     infield_gen_ = input->generation;
     MeshBaseHandle mesh = input->mesh();
     mesh->finish_mesh();
-    dispatch_mesh1(input->mesh(), boundary);
+
+    const TypeDescription *mtd = mesh->get_type_description();
+    CompileInfo *ci = FieldBoundaryAlgo::get_compile_info(mtd);
+    DynamicAlgoHandle algo_handle;
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+    {
+      cout << "Could not compile algorithm." << std::endl;
+      return;
+    }
+    FieldBoundaryAlgo *algo =
+      dynamic_cast<FieldBoundaryAlgo *>(algo_handle.get_rep());
+    if (algo == 0)
+    {
+      cout << "Could not get algorithm." << std::endl;
+      return;
+    }
+    algo->execute(mesh, tri_fh_, interp_fh_);
   }
   osurf_->send(tri_fh_);
   ointerp_->send(interp_fh_);
+}
+
+
+bool
+FieldBoundaryAlgoAux::determine_tri_order(const Point p[3],
+					  const Point &inside)
+{
+  const Vector v1 = p[1] - p[0];
+  const Vector v2 = p[2] - p[1];
+  const Vector norm = Cross(v1, v2);
+
+  const Vector tmp = inside - p[0];
+  const double val = Dot(norm, tmp);
+  if (val > 0.0L) {
+    // normal points inside, reverse the order.
+    return false;
+  } else {
+    // normal points outside.
+    return true;
+  }
+}
+
+CompileInfo *
+FieldBoundaryAlgo::get_compile_info(const TypeDescription *mesh_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("FieldBoundaryAlgoT");
+  static const string base_class_name("FieldBoundaryAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       mesh_td->get_name(".", ".") + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       mesh_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  mesh_td->fill_compile_info(rval);
+  return rval;
+}
+
+
+CompileInfo *
+FieldBoundaryAlgoAux::get_compile_info(const TypeDescription *mesh_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("FieldBoundaryAlgoAuxT");
+  static const string base_class_name("FieldBoundaryAlgoAux");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       mesh_td->get_name(".", ".") + "." ,
+                       base_class_name, 
+                       template_class_name, 
+                       mesh_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  mesh_td->fill_compile_info(rval);
+  return rval;
 }
 
 
