@@ -40,15 +40,15 @@
 namespace SCIRun {
 
 // LUTs for the RK-fehlberg algorithm 
-double a[]   ={16.0/135, 0, 6656.0/12825, 28561.0/56430, -9.0/50, 2.0/55};
-double ab[]  ={1.0/360, 0, -128.0/4275, -2197.0/75240, 1.0/50, 2.0/55};
-double c[]   ={0, 1.0/4, 3.0/8, 12.0/13, 1.0, 1.0/2}; /* not used */
-double d[][5]={{0, 0, 0, 0, 0},
-	       {1.0/4, 0, 0, 0, 0},
-	       {3.0/32, 9.0/32, 0, 0, 0},
-	       {1932.0/2197, -7200.0/2197, 7296.0/2197, 0, 0},
-	       {439.0/216, -8.0, 3680.0/513, -845.0/4104, 0},
-	       {-8.0/27, 2.0, -3544.0/2565, 1859.0/4104, -11.0/40}};
+const double a[]  ={16.0/135, 0, 6656.0/12825, 28561.0/56430, -9.0/50, 2.0/55};
+const double ab[]  ={1.0/360, 0, -128.0/4275, -2197.0/75240, 1.0/50, 2.0/55};
+const double c[]   ={0, 1.0/4, 3.0/8, 12.0/13, 1.0, 1.0/2}; /* not used */
+const double d[][5]={{0, 0, 0, 0, 0},
+		     {1.0/4, 0, 0, 0, 0},
+		     {3.0/32, 9.0/32, 0, 0, 0},
+		     {1932.0/2197, -7200.0/2197, 7296.0/2197, 0, 0},
+		     {439.0/216, -8.0, 3680.0/513, -845.0/4104, 0},
+		     {-8.0/27, 2.0, -3544.0/2565, 1859.0/4104, -11.0/40}};
 
 class PSECORESHARE StreamLines : public Module {
 public:
@@ -75,7 +75,7 @@ private:
   GuiDouble                     stepsize_;
   GuiDouble                     tolerance_;
   GuiInt                        maxsteps_;
-
+  GuiInt                        remove_colinear_;
 };
 
 extern "C" PSECORESHARE Module* make_StreamLines(const string& id) {
@@ -86,9 +86,10 @@ StreamLines::StreamLines(const string& id) :
   Module("StreamLines", id, Source, "Visualization", "SCIRun"),
   vf_(0),
   sf_(0),
-  stepsize_("stepsize",id,this),
-  tolerance_("tolerance",id,this),
-  maxsteps_("maxsteps",id,this)  
+  stepsize_("stepsize", id, this),
+  tolerance_("tolerance", id, this),
+  maxsteps_("maxsteps", id, this),
+  remove_colinear_("remove-colinear", id, this)
 {
 }
 
@@ -98,9 +99,9 @@ StreamLines::~StreamLines()
 
 
 //! interpolate using the generic linear interpolator
-bool
-StreamLinesAlgo::interpolate(VectorFieldInterface *vfi,
-			     const Point &p, Vector &v)
+static bool
+interpolate(VectorFieldInterface *vfi,
+	    const Point &p, Vector &v)
 {
   if (vfi->interpolate(v,p))
   {
@@ -113,11 +114,11 @@ StreamLinesAlgo::interpolate(VectorFieldInterface *vfi,
 }
 
 
-bool
-StreamLinesAlgo::ComputeRKFTerms(vector<Vector> &v, // storage for terms
-				 const Point &p,    // previous point
-				 double s,          // current step size
-				 VectorFieldInterface *vfi)
+static bool
+ComputeRKFTerms(vector<Vector> &v, // storage for terms
+		const Point &p,    // previous point
+		double s,          // current step size
+		VectorFieldInterface *vfi)
 {
   if (!interpolate(vfi, p, v[0]))
   {
@@ -160,14 +161,16 @@ StreamLinesAlgo::ComputeRKFTerms(vector<Vector> &v, // storage for terms
   return true;
 }
 
-  
+
+
 void
 StreamLinesAlgo::FindStreamLineNodes(vector<Point> &v, // storage for points
 				     Point x,          // initial point
 				     double t2,       // square error tolerance
 				     double s,         // initial step size
 				     int n,            // max number of steps
-				     VectorFieldInterface *vfi) // the field
+				     VectorFieldInterface *vfi, // the field
+				     bool remove_colinear_p)
 {
   vector <Vector> terms(6, Vector(0.0, 0.0, 0.0));
 
@@ -207,7 +210,25 @@ StreamLinesAlgo::FindStreamLineNodes(vector<Point> &v, // storage for points
     Vector xv;
     if (vfi->interpolate(xv, x))
     {
-      v.push_back(x);
+      if (remove_colinear_p && v.size() > 1)
+      {
+	const Vector a = v[v.size()-2] - v[v.size()-1];
+	const Vector b = x - v[v.size()-1];
+	if (Cross(a, b).length2() > 1.0e-12 && Dot(a, b) < 0.0)
+	{
+	  // Not colinear, push.
+	  v.push_back(x);
+	}
+	else
+	{
+	  // Colinear, replace.
+	  v[v.size()-1] = x;
+	}
+      }
+      else
+      {
+	v.push_back(x);
+      }
     }
     else
     {
@@ -287,7 +308,7 @@ void StreamLines::execute()
     return;
   }
   algo->execute(sf_->mesh(), vfi,
-		tolerance, stepsize, maxsteps, cmesh);
+		tolerance, stepsize, maxsteps, cmesh, remove_colinear_.get());
 
   cf->resize_fdata();
   cf->freeze();
