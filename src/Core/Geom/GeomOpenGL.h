@@ -47,14 +47,11 @@
 #include <Core/Geometry/Point.h>
 
 namespace SCIRun {
-  class ViewWindow;
-}
-
-namespace SCIRun {
 
 
 #define GEOM_FONT_COUNT 5
 
+class ViewWindow;
 class Material;
 
 const int CLIP_P0 = 1;
