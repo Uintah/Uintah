@@ -36,8 +36,32 @@ DONE               that it is supported (OpenGL)
       Mode widget
 DONE      Background editor
       Clipping plane editor
+      More Light types
+DONE      Nix Material Stacks
+	NNix objdraw - pass lighting innnto objdraw
+	Nit lit member
+      Finish Headlight for multiple bounces
+      Fix segfault when autoview on no objects
       Raytracer
+DONE	 Progressive refinement
 	 Pass Material* instead of MaterialHandle
+	 Finish intersection routines
+	    Cone
+	    Cylinder
+	    Disc
+	    Line
+	    Tube
+	    PointLight
+	    Polyline
+	    Tetra
+	    Tri
+	    TriStrip
+	    VCTri
+	    VCTriStrip
+	    Tube
+	 PointLight
+	 Fix transformations
+	 Bounding boxes
       Postscript renderer
       X11 renderer
          Verify transformations
