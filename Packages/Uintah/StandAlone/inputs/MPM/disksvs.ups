@@ -37,12 +37,31 @@
                 </burn>
 		<density>1000.0</density>
                 <visco_scram>
-                    <bulk_modulus>2000.0</bulk_modulus>
-                    <shear_modulus>1500.0</shear_modulus>
+		    <PR>0.3</PR>
+		    <CrackParameterA>1.e-3</CrackParameterA>
+		    <CrackPowerValue>10.0</CrackPowerValue>
+		    <CrackMaxGrowthRate>300.0</CrackMaxGrowthRate>
+		    <StressIntensityF>500.0</StressIntensityF>
+		    <CrackFriction>0.35</CrackFriction>
+		    <InitialCrackRadius>3.e-5</InitialCrackRadius>
+		    <CrackGrowthRate>12.</CrackGrowthRate>
+		    <G1>2.75e8</G1>
+		    <G2>1.739e8</G2>
+		    <G3>5.212e8</G3>
+		    <G4>9.085e8</G4>
+		    <G5>6.875e8</G5>
+		    <RTau1>0.0</RTau1>
+		    <RTau2>7.32e3</RTau2>
+		    <RTau3>7.32e4</RTau3>
+		    <RTau4>7.32e5</RTau4>
+		    <RTau5>2.e6</RTau5>
+		    <Beta>1.5e-4</Beta>
+		    <Gamma>1.0</Gamma>
+		    <DCp_DTemperature>3.30773</>
                 </visco_scram>
 		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
-		<specific_heat>5</specific_heat>
+		<specific_heat>1004.88</specific_heat>
 		<geom_object>
 		    <cylinder label="gp1">
 			<bottom>[.25,.25,.05]</bottom>
@@ -51,7 +70,7 @@
 		    </cylinder>
 		    <res>[2,2,2]</res>
 		    <velocity>[0.1,0.1,0]</velocity>
-		    <temperature>12</temperature>
+		    <temperature>293.</temperature>
  		</geom_object>
 
 		<geom_object>
