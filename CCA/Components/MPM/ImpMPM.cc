@@ -14,7 +14,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/LinearInterpolator.h>
-
+#include <Packages/Uintah/CCA/Components/MPM/HeatConduction/HeatConduction.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -75,6 +75,7 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   d_forceIncrementFactor = 1.0;
   d_integrator = Implicit;
   d_dynamic = true;
+  heatConductionModel = 0;
 }
 
 bool ImpMPM::restartableTimesteps()
@@ -93,6 +94,7 @@ ImpMPM::~ImpMPM()
   }
 
   delete d_solver;
+  delete heatConductionModel;
 
 }
 
@@ -192,6 +194,8 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    d_solver = scinew SimpleSolver();
 #endif
    d_solver->initialize();
+
+   heatConductionModel = scinew HeatConduction(sharedState,lb,flags);
 
   // Pull out from Time section
   d_initialDt = 10000.0;

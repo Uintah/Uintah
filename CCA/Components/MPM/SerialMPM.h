@@ -24,6 +24,7 @@ namespace Uintah {
 using namespace SCIRun;
 
 class ThermalContact;
+class HeatConduction;
 
 /**************************************
 
@@ -61,6 +62,7 @@ public:
 
   Contact*         contactModel;
   ThermalContact*  thermalContactModel;
+  HeatConduction* heatConductionModel;
 	 
   //////////
   // Insert Documentation Here:
@@ -264,13 +266,6 @@ protected:
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
 
-  //////////
-  // Insert Documentation Here:
-  virtual void computeInternalHeatRate(const ProcessorGroup*,
-				       const PatchSubset* patches,
-				       const MaterialSubset* matls,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -282,27 +277,12 @@ protected:
 
   //////////
   // Insert Documentation Here:
-  virtual void solveHeatEquations(const ProcessorGroup*,
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* /*old_dw*/,
-				  DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
   virtual void integrateAcceleration(const ProcessorGroup*,
 				     const PatchSubset* patches,
 				     const MaterialSubset* matls,
 				     DataWarehouse* old_dw,
 				     DataWarehouse* new_dw);
 
-  //////////
-  // Insert Documentation Here:
-  virtual void integrateTemperatureRate(const ProcessorGroup*,
-					const PatchSubset* patches,
-					const MaterialSubset* matls,
-					DataWarehouse* old_dw,
-					DataWarehouse* new_dw);
   //////////
   // Insert Documentation Here:                            
   void setGridBoundaryConditions(const ProcessorGroup*,

@@ -35,6 +35,7 @@ using namespace SCIRun;
  class Task; 
  class MPMPetscSolver;
  class SimpleSolver;
+ class HeatConduction;
 
 /**************************************
 
@@ -354,6 +355,8 @@ private:
   SimulationStateP d_sharedState;
   MPMLabel* lb;
   MPMFlags* flags;
+
+  HeatConduction* heatConductionModel;
 
   double           d_nextOutputTime;
   double           d_outputInterval;
