@@ -200,14 +200,14 @@ int main(int argc, char *argv[]) {
   if (verbose)
     cout<<"Subtracting mean values from textures"<<endl;
   
-  float *in_data=(float*)(tex->data);
+  float *tex_data=(float*)(tex->data);
   float *mean_data=(float*)(mean->data);
   for (int y=0; y<height; y++) {
     for (int x=0; x<height; x++) {
       for(int tex=0; tex<ntextures; tex++)
-	in_data[tex]-=mean_data[tex];
+	tex_data[tex]-=mean_data[tex];
       
-      in_data+=ntextures;
+      tex_data+=ntextures;
     }
   }
   
