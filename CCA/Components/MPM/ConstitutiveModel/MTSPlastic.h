@@ -34,10 +34,13 @@ namespace Uintah {
     \f$\sigma_a\f$ = athermal component of mechanical threshold stress 
     = (for Cu) 40 MPa \n
     \f$\mu\f$ = temperature dependent shear modulus given by \n
+    \f[
+    \mu = \mu_0 - \frac{D}{\exp\frac{T_0}{T} - 1} 
+    \f] 
+    or,
     \f$
-    \mu/\mu_0 = 1 - (D/\mu_0)/(\exp(T_0/T) - 1) 
-    = 1 - (b_2/b_1)/(exp(b_3/T) - 1) 
-    \f$ \n
+    \mu/\mu_0= 1 - (b_2/b_1)/(exp(b_3/T) - 1) 
+    \f$
     \f$\mu_0, b_1\f$ = shear modulus at 0 K \n
     \f$D, T_0, b_2, b_3\f$ = empirical constants \n
     \f$T\f$ = absolute temperature \n
