@@ -27,8 +27,10 @@ static SCICore::Thread::AtomicCounter ids("Patch ID counter", 0);
 
 Patch::Patch(const Level* level,
 	     const IntVector& lowIndex, const IntVector& highIndex,
+	     const IntVector& inLowIndex, const IntVector& inHighIndex,
 	     int id)
     : d_level(level), d_lowIndex(lowIndex), d_highIndex(highIndex),
+      d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
       d_id( id )
 {
    if(d_id == -1)
@@ -269,8 +271,17 @@ Patch::getCellIterator(const Box& b) const
 CellIterator
 Patch::getCellIterator() const
 {
-   return CellIterator(getCellLowIndex(), getCellHighIndex());
+  //   return CellIterator(getCellLowIndex(), getCellHighIndex());
+   return CellIterator(d_inLowIndex, d_inHighIndex);
 }
+
+CellIterator
+Patch::getExtraCellIterator() const
+{
+  return CellIterator(getCellLowIndex(), getCellHighIndex());
+}
+
+
 
 Box Patch::getGhostBox(const IntVector& lowOffset,
 		       const IntVector& highOffset) const
@@ -678,6 +689,9 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.26  2000/11/14 03:53:33  jas
+// Implemented getExtraCellIterator.
+//
 // Revision 1.25  2000/11/02 21:25:55  jas
 // Rearranged the boundary conditions so there is consistency between ICE
 // and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now

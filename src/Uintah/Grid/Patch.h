@@ -125,6 +125,7 @@ WARNING
      //////////
      // Insert Documentation Here:
      CellIterator getCellIterator() const;
+     CellIterator getExtraCellIterator() const;
      
      CellIterator getCellIterator(const Box& b) const;
      
@@ -275,8 +276,10 @@ WARNING
      //////////
      // Insert Documentation Here:
      Patch(const Level*,
-	   const SCICore::Geometry::IntVector& d_lowIndex,
-	   const SCICore::Geometry::IntVector& d_highIndex,
+	   const IntVector& d_lowIndex,
+	   const IntVector& d_highIndex,
+	   const IntVector& d_inLowIndex,
+	   const IntVector& d_inHighIndex,
 	   int id=-1);
      ~Patch();
      
@@ -290,6 +293,9 @@ WARNING
      // Insert Documentation Here:
      IntVector d_lowIndex;
      IntVector d_highIndex;
+
+     IntVector d_inLowIndex;
+     IntVector d_inHighIndex;
      
      int d_id;
      BCType d_bctypes[numFaces];
@@ -303,6 +309,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.21  2000/11/14 03:53:34  jas
+// Implemented getExtraCellIterator.
+//
 // Revision 1.20  2000/11/02 21:25:55  jas
 // Rearranged the boundary conditions so there is consistency between ICE
 // and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
