@@ -1,4 +1,21 @@
 
+Waves:
+UI
+Steerable parameters
+Thread scheduling
+Fix normals
+
+Test adaptive demo
+ - fix Salmon
+
+Test heat problem
+
+Test CFDlib stuff
+
+Do diffpack stuff
+
+
+
 Mesher:
 UI - random order, tolerances
 Tune it for 50^3 and 100^3, make sure that it still works on others.

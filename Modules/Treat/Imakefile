@@ -1,0 +1,19 @@
+
+#include <config/sci.cf>
+
+OBJS = TreatFEM.o  property.o   element.o   sparseMatrix.o   \
+	readData.o   block.o
+SRCS = TreatFEM.cc property.cpp element.cpp sparseMatirx.cpp \
+	readData.cpp block.cpp
+
+LIBNAME = Treat
+
+LOCALINCLUDES =
+SO_LIBS =
+
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL -lClasslib \
+	-lMultitask -ltk -lMalloc -lGeometry \
+	-lm -lC -lc
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

@@ -15,6 +15,7 @@
 #define SCI_project_VectorFieldRG_h 1
 
 #include <Datatypes/VectorField.h>
+#include <Classlib/Array1.h>
 #include <Classlib/Array3.h>
 
 class VectorFieldRG : public VectorField {
@@ -27,7 +28,7 @@ public:
     void locate(const Point&, int&, int&, int&);
 
     void resize(int, int, int);
-    void set_minmax(const Point&, const Point&);
+    void set_bounds(const Point&, const Point&);
 
     VectorFieldRG();
     virtual ~VectorFieldRG();
@@ -36,6 +37,7 @@ public:
     virtual void compute_bounds();
     virtual int interpolate(const Point&, Vector&);
     virtual int interpolate(const Point&, Vector&, int&);
+    virtual void get_boundary_lines(Array1<Point>& lines);
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;

@@ -6,7 +6,8 @@ all:
 #define all convertall
 #include <config/sci.cf>
 
-SO_LDFLAGS = -L$(TOP)/lib -lVisualization -lSalmon -lDatatypes -lGeom -lGeometry -lMath \
+SO_LDFLAGS = -L$(TOP)/lib -lSalmon -lDatatypes -lDataflow -lGeom \
+	-lGeometry -lMath -lTCL \
 	-lClasslib -lMultitask -lMalloc -lm
 
 #define ConvertProgram(name) @@\
@@ -15,6 +16,7 @@ SCIProgramTarget(name, name.o, , $(SO_LDFLAGS)) @@\
 SCIDependTarget(name.cc)
 
 
+ConvertProgram(runsolve)
 ConvertProgram(ConvMesh)
 ConvertProgram(First)
 ConvertProgram(GEtoSF)
@@ -31,4 +33,8 @@ ConvertProgram(SurfToJAS)
 ConvertProgram(VPtoTriSurf)
 ConvertProgram(mbench)
 ConvertProgram(convert_geom)
-
+ConvertProgram(benchsolve)
+ConvertProgram(matconv)
+ConvertProgram(mpbench)
+ConvertProgram(ffttest)
+ConvertProgram(tecread)

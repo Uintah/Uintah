@@ -57,6 +57,7 @@ public:
     ScalarFieldRGBase(const ScalarFieldRGBase&);
     virtual ~ScalarFieldRGBase();
     virtual void compute_bounds();
+    virtual void get_boundary_lines(Array1<Point>& lines);
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;

@@ -51,6 +51,8 @@
 
 #include <Multitask/Task.h>
 
+struct CGData;
+
 class SolveMatrix : public Module {
     MatrixIPort* matrixport;
     ColumnMatrixIPort* rhsport;
@@ -77,6 +79,7 @@ class SolveMatrix : public Module {
 		       const Array1<double>& targetlist,
 		       int& last_errupdate);
 public:
+    void parallel_conjugate_gradient(CGData*, int proc);
     SolveMatrix(const clString& id);
     SolveMatrix(const SolveMatrix&, int deep);
     virtual ~SolveMatrix();
@@ -249,7 +252,7 @@ void SolveMatrix::append_values(int niter, const Array1<double>& errlist,
 				int& last_errupdate)
 {
     char buf[10000];
-    ostrstream str(buf, 1000);
+    ostrstream str(buf, 10000);
     str << id << " append_graph " << niter << " \"";
     int i;
     for(i=last_update;i<errlist.size();i++){
@@ -840,9 +843,289 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
     append_values(niter, errlist, last_update, targetidx, targetlist, last_errupdate);
 }
 
+struct PStats {
+    int flop;
+    int memref;
+    int gflop;
+    int grefs;
+    int pad[28];
+};
+
+struct Result {
+    double r;
+    double pad[15];
+};
+
+struct CGData {
+    SolveMatrix* module;
+    WallClockTimer* timer;
+    ColumnMatrix* rhs;
+    ColumnMatrix* lhs;
+    Matrix* mat;
+    ColumnMatrix* diag;
+    int niter;
+    int toomany;
+    ColumnMatrix* Z;
+    ColumnMatrix* R;
+    ColumnMatrix* P;
+    double max_error;
+    Barrier barrier;
+    int np;
+    Result* res1;
+    Result* res2;
+    Result* res3;
+    PStats* stats;
+    double err;
+    double bnorm;
+};
+
+
+void do_parallel_conjugate_gradient(void* d, int processor)
+{
+    CGData* data=(CGData*)d;
+    data->module->parallel_conjugate_gradient(data, processor);
+}
+
+
+
 void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
 				    ColumnMatrix& lhs, ColumnMatrix& rhs)
 {
+    cerr << "cg started\n";
+    CPUTimer timer;
+    timer.start();
+    int np=Task::nprocessors();
+    cerr << "np=" << np << endl;
+    CGData* data=new CGData;
+    data->module=this;
+    data->np=np;
+    data->rhs=&rhs;
+    data->lhs=&lhs;
+    data->mat=matrix;
+    data->timer=new WallClockTimer;
+    data->stats=new PStats[data->np];
+    Task::multiprocess(data->np, do_parallel_conjugate_gradient, data);
+    delete data->timer;
+    delete data->stats;
+    timer.stop();
+    cerr << "cg done: " << timer.time() << " seconds\n";
+}
+
+void SolveMatrix::parallel_conjugate_gradient(CGData* data, int processor)
+{
+    Matrix* matrix=data->mat;
+    PStats* stats=&data->stats[processor];
+    int size=matrix->nrows();
+
+    int beg=processor*size/data->np;
+    int end=(processor+1)*size/data->np;
+    stats->flop=0;
+    stats->memref=0;
+    stats->gflop=0;
+    stats->grefs=0;
+    Array1<int> targetidx;
+    Array1<double> targetlist;
+    Array1<double> errlist;
+
+    int last_update=0;
+
+    int last_errupdate=0;
+
+    if(processor == 0){
+        data->timer->clear();
+        data->timer->start();
+        flops.set(0);
+        floprate.set(0);
+        memrefs.set(0);
+        memrate.set(0);
+        iteration.set(0);
+
+        data->diag=new ColumnMatrix(size);
+        // We should try to do a better job at preconditioning...
+        int i;
+
+        for(i=0;i<size;i++){
+            ColumnMatrix& diag=*data->diag;
+            diag[i]=1./matrix->get(i,i);
+        }
+        stats->flop+=size;
+        stats->memref+=2*size*sizeof(double);
+        data->R=new ColumnMatrix(size);
+        ColumnMatrix& R=*data->R;
+        ColumnMatrix& lhs=*data->lhs;
+        matrix->mult(lhs, R, stats->flop, stats->memref);
+
+
+        ColumnMatrix& rhs=*data->rhs;
+        Sub(R, rhs, R, stats->flop, stats->memref);
+        data->bnorm=rhs.vector_norm(stats->flop, stats->memref);
+
+        data->Z=new ColumnMatrix(size);
+        ColumnMatrix& Z=*data->Z;
+        matrix->mult(R, Z, stats->flop, stats->memref);
+
+        data->P=new ColumnMatrix(size);
+        ColumnMatrix& P=*data->P;
+        data->err=R.vector_norm(stats->flop, stats->memref)/data->bnorm;
+        if(data->err == 0){
+            lhs=rhs;
+            stats->memref+=2*size*sizeof(double);
+            return;
+        }
+
+        data->niter=0;
+        data->toomany=maxiter.get();
+        if(data->toomany == 0)
+            data->toomany=2*size;
+        data->max_error=target_error.get();
+        data->res1=new Result[data->np];
+        data->res2=new Result[data->np];
+        data->res3=new Result[data->np];
+
+        stats->gflop+=stats->flop/1000000000;
+        stats->flop=stats->flop%1000000000;
+        stats->grefs+=stats->memref/1000000000;
+        stats->memref=stats->memref%1000000000;
+        orig_error.set(data->err);
+        current_error.set(data->err);
+
+        double time=data->timer->time();
+        flops.set(stats->gflop*1.e9+stats->flop);
+        floprate.set((stats->gflop*1.e3+stats->flop*1.e-6)/time);
+        memrefs.set(stats->grefs*1.e9+stats->memref);
+        memrate.set((stats->grefs*1.e3+stats->memref*1.e-6)/time);
+
+        TCL::execute(id+" reset_graph");
+        errlist.add(data->err);
+        targetidx.add(0);
+        targetlist.add(data->max_error);
+
+        append_values(1, errlist, last_update, targetidx, targetlist, last_errupdate);
+    }
+    double log_orig=log(data->err);
+    double log_targ=log(data->max_error);
+    data->barrier.wait(data->np);
+    double err=data->err;
+    double bkden=0;
+    while(data->niter < data->toomany){
+        if(err < data->max_error)
+            break;
+
+        ColumnMatrix& Z=*data->Z;
+        ColumnMatrix& P=*data->P;
+        if(processor==0){
+            data->niter++;
+            double new_error;
+            if(get_tcl_doublevar(id, "target_error", new_error)
+               && new_error != data->max_error){
+                targetidx.add(data->niter);
+                targetlist.add(data->max_error);
+                data->max_error=new_error;
+            }
+            targetidx.add(data->niter);
+            targetlist.add(data->max_error);
+        }
+        data->barrier.wait(data->np);
+        if(err < data->max_error)
+            break;
+
+        // Simple Preconditioning...
+        ColumnMatrix& diag=*data->diag;
+        ColumnMatrix& R=*data->R;
+        Mult(Z, R, diag, stats->flop, stats->memref, beg, end);
+
+        // Calculate coefficient bk and direction vectors p and pp
+        data->res1[processor].r=Dot(Z, R, stats->flop, stats->memref, beg, end);
+        data->barrier.wait(data->np);
+
+        double  bknum=0;
+        for(int ii=0;ii<data->np;ii++)
+            bknum+=data->res1[ii].r;
+
+        if(data->niter==1){
+            Copy(P, Z, stats->flop, stats->memref, beg, end);
+        } else {
+            double bk=bknum/bkden;
+            ScMult_Add(P, bk, P, Z, stats->flop, stats->memref, beg, end);
+        }
+        data->barrier.wait(data->np);
+        // Calculate coefficient ak, new iterate x and new residuals r and rr
+        matrix->mult(P, Z, stats->flop, stats->memref, beg, end);
+        bkden=bknum;
+        data->res2[processor].r=Dot(Z, P, stats->flop, stats->memref, beg, end);
+        data->barrier.wait(data->np);
+
+        double akden=0;
+        for(ii=0;ii<data->np;ii++)
+            akden+=data->res2[ii].r;
+        double ak=bknum/akden;
+        ColumnMatrix& lhs=*data->lhs;
+        ScMult_Add(lhs, ak, P, lhs, stats->flop, stats->memref, beg, end);
+        ColumnMatrix& rhs=*data->rhs;
+        ScMult_Add(R, -ak, Z, R, stats->flop, stats->memref, beg, end);
+
+        data->res3[processor].r=R.vector_norm(stats->flop, stats->memref, beg, end)/data->bnorm;
+        data->barrier.wait(data->np);
+        err=0;
+        for(ii=0;ii<data->np;ii++)
+            err+=data->res3[ii].r;
+        stats->gflop+=stats->flop/1000000000;
+        stats->flop=stats->flop%1000000000;
+        stats->grefs+=stats->memref/1000000000;
+        stats->memref=stats->memref%1000000000;
+
+        if(processor == 0){
+            errlist.add(err);
+
+            stats->gflop+=stats->flop/1000000000;
+            stats->flop=stats->flop%1000000000;
+            stats->grefs+=stats->memref/1000000000;
+            stats->memref=stats->memref%1000000000;
+
+            if(data->niter == 1 || data->niter == 10 || data->niter%20 == 0){
+                if(data->niter <= 60 || data->niter%60 == 0){
+                    iteration.set(data->niter);
+                    current_error.set(err);
+                    double time=timer.time();
+                    flops.set(14*stats->gflop*1.e9+stats->flop);
+                    floprate.set(14*(stats->gflop*1.e3+stats->flop*1.e-6)/time);                    memrefs.set(14*stats->grefs*1.e9+stats->memref);
+                    memrate.set(14*(stats->grefs*1.e3+stats->memref*1.e-6)/time);
+                    append_values(data->niter, errlist, last_update, targetidx,
+targetlist, last_errupdate);
+
+                    if(err > 0){
+                        double progress=(log_orig-log(err))/(log_orig-log_targ);                        cerr << "err=" << err << endl;
+                        cerr << "log_orig=" << log_orig << endl;
+                        update_progress(progress);
+                    }
+                }
+
+                if(data->niter%60 == 0)
+                    solport->send_intermediate(lhs.clone());
+            }
+        }
+    }
+    if(processor == 0){
+        data->niter++;
+
+        iteration.set(data->niter);
+        current_error.set(err);
+        data->timer->stop();
+        double time=data->timer->time();
+        flops.set(14*stats->gflop*1.e9+stats->flop);
+        floprate.set(14*(stats->gflop*1.e3+stats->flop*1.e-6)/time);
+        memrefs.set(14*stats->grefs*1.e9+stats->memref);
+        memrate.set(14*(stats->grefs*1.e3+stats->memref*1.e-6)/time);
+        cerr << "Done in " << time << " seconds\n";
+
+        TCL::execute(id+" finish_graph");
+        append_values(data->niter, errlist, last_update, targetidx, targetlist,
+last_errupdate);
+
+    }
+}
+
+#ifdef SERIAL
     int size=matrix->nrows();
 
     int flop=0;
@@ -1003,3 +1286,4 @@ void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
     append_values(niter, errlist, last_update, targetidx, targetlist, last_errupdate);
 }
 
+#endif

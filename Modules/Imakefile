@@ -1,14 +1,9 @@
 
 #include <config/sci.cf>
 
-SUBDIRS = Contours EEG FDM FEM Fields Iterators Matrix Mesh Readers \
-	Salmon Surface Visualization Writers
+SUBDIRS = Contours DP EEG FDM FEM Fields Image Iterators Matrix Mesh Readers \
+	Salmon Surface Treat Visualization Writers
 
 
 SCISubdirs($(SUBDIRS))
 
-OBJS = Contours/libContours.o EEG/libEEG.o FDM/libFDM.o FEM/libFEM.o \
-	Fields/libFields.o Matrix/libMatrix.o \
-	Mesh/libMesh.o Readers/libReaders.o Salmon/libSalmon.o \
-	Surface/libSurface.o \
-	Visualization/libVisualization.o Writers/libWriters.o

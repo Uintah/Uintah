@@ -111,6 +111,15 @@ double ColumnMatrix::vector_norm(int& flops, int& memrefs)
     return vector_norm();
 }
 
+double ColumnMatrix::vector_norm(int& flops, int& memrefs, int beg, int end)
+{
+    ASSERTRANGE(end, 0, rows+1);
+    ASSERTRANGE(beg, 0, end);
+    flops+=(end-beg)*2;
+    memrefs+=(end-beg)*sizeof(double);
+    return linalg_norm2((end-beg), data+beg);
+}
+
 void ColumnMatrix::print(ostream& str)
 {
     str << "Column Matrix: " << rows << endl;
@@ -152,6 +161,18 @@ void Mult(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
     memrefs+=result.rows*3*sizeof(double);
 }
 
+void Mult(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
+	  int& flops, int& memrefs, int beg, int end)
+{
+    ASSERTEQ(result.rows, a.rows);
+    ASSERTEQ(result.rows, b.rows);
+    ASSERTRANGE(end, 0, result.rows+1);
+    ASSERTRANGE(beg, 0, end);
+    linalg_mult(end-beg, result.data+beg, a.data+beg, b.data+beg);
+    flops+=(end-beg);
+    memrefs+=(end-beg)*3*sizeof(double);
+}
+
 void Sub(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b)
 {
     ASSERTEQ(result.rows, a.rows);
@@ -187,6 +208,19 @@ void ScMult_Add(ColumnMatrix& result, double s, const ColumnMatrix& a,
     memrefs+=result.rows*3*sizeof(double);
 }
 
+void ScMult_Add(ColumnMatrix& result, double s, const ColumnMatrix& a,
+		const ColumnMatrix& b, int& flops, int& memrefs,
+		int beg, int end)
+{
+    ASSERTEQ(result.rows, a.rows);
+    ASSERTEQ(result.rows, b.rows);
+    ASSERTRANGE(end, 0, result.rows+1);
+    ASSERTRANGE(beg, 0, end);
+    linalg_smadd(end-beg, result.data+beg, s, a.data+beg, b.data+beg);
+    flops+=(end-beg)*2;
+    memrefs+=(end-beg)*3*sizeof(double);
+}
+
 double Dot(const ColumnMatrix& a, const ColumnMatrix& b)
 {
     ASSERTEQ(a.rows, b.rows);
@@ -202,11 +236,33 @@ double Dot(const ColumnMatrix& a, const ColumnMatrix& b,
     return linalg_dot(a.rows, a.data, b.data);
 }
 
+double Dot(const ColumnMatrix& a, const ColumnMatrix& b,
+	   int& flops, int& memrefs, int beg, int end)
+{
+    ASSERTEQ(a.rows, b.rows);
+    ASSERTRANGE(end, 0, a.rows+1);
+    ASSERTRANGE(beg, 0, end);
+    flops+=(end-beg)*2;
+    memrefs+=2*sizeof(double)*(end-beg);
+    return linalg_dot((end-beg), a.data+beg, b.data+beg);
+}
+
 void Copy(ColumnMatrix& out, const ColumnMatrix& in)
 {
     ASSERTEQ(out.rows, in.rows);
     for(int i=0;i<out.rows;i++)
 	out.data[i]=in.data[i];
+}
+
+void Copy(ColumnMatrix& out, const ColumnMatrix& in, int&, int& refs,
+	  int beg, int end)
+{
+    ASSERTEQ(out.rows, in.rows);
+    ASSERTRANGE(end, 0, out.rows+1);
+    ASSERTRANGE(beg, 0, end);
+    for(int i=beg;i<end;i++)
+	out.data[i]=in.data[i];
+    refs+=sizeof(double)*(end-beg);
 }
 
 void AddScMult(ColumnMatrix& result, const ColumnMatrix& a,
@@ -221,8 +277,7 @@ void Add(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b)
 {
     ASSERTEQ(result.rows, a.rows);
     ASSERTEQ(result.rows, b.rows);
-    for(int i=0;i<result.rows;i++)
-	result.data[i]=a.data[i]+b.data[i];
+    linalg_add(result.rows, result.data, a.data, b.data);
 }
 
 void Add(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,

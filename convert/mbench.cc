@@ -10,7 +10,7 @@
 
 void usage(char* progname)
 {
-    cerr << progname << " vnorm|vvmult|vvdot|ssmmult r n [k]\n";
+    cerr << progname << " vnorm|vvmult|vvdot|vvsmadd|ssmmult r n [k]\n";
     exit(-1);
 
 }
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
 	    A.mult(x, b, flops, s);
 	}
 	timer.stop();
-	size+=n*sizeof(double)*2+n*k*(sizeof(double)+sizeof(int))+(n+1)*sizeof(int);
+	size+=n*sizeof(double)+n*k*(2*sizeof(double)+sizeof(int))+2*(n+1)*sizeof(int);
 	double norm=b.vector_norm();
  	cout << "norm=" << norm << endl;
     } else {

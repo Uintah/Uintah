@@ -38,6 +38,7 @@ protected:
 	symsparse,
 	dense,
 	tridiagonal,
+	other,
     };
 
     Sym sym;

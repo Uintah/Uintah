@@ -20,6 +20,10 @@ SymSparseRowMatrix::SymSparseRowMatrix()
 : Matrix(Matrix::symmetric, Matrix::symsparse), nnrows(0), nncols(0), a(0),
   columns(0), rows(0), nnz(0)
 {
+    upper_rows=0;
+    upper_columns=0;
+    upper_a=0;
+    upper_nnz=0;
 }
 
 SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
@@ -39,6 +43,7 @@ SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
     for(i=0;i<in_cols.size();i++){
 	columns[i]=in_cols[i];
     }
+    //compute_upper();
 }
 
 SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
@@ -48,6 +53,7 @@ SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
   nncols(nncols), rows(rows), columns(columns), nnz(nnz)
 {
     a=scinew double[nnz];
+    //compute_upper();
 }
 
 SymSparseRowMatrix::~SymSparseRowMatrix()
@@ -168,6 +174,10 @@ void SymSparseRowMatrix::solve(ColumnMatrix&)
 
 extern "C" void ssmult(int beg, int end, int* rows, int* columns,
 		       double* a, double* xp, double* bp);
+extern "C" void ssmult_upper(int beg, int end, int* rows, int* columns,
+			     double* a, double* xp, double* bp);
+extern "C" void ssmult_uppersub(int nrows, int beg, int end, int* rows, int* columns,
+			     double* a, double* xp, double* bp);
 
 void SymSparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
 			      int& flops, int& memrefs, int beg, int end) const
@@ -179,7 +189,11 @@ void SymSparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
     if(end==-1)end=nnrows;
     double* xp=&x[0];
     double* bp=&b[0];
-    ssmult(beg, end, rows, columns, a, xp, bp);
+    //if(beg==0 && end==nnrows)
+	//ssmult_upper(beg, end, upper_rows, upper_columns, upper_a, xp, bp);
+    //else
+	//ssmult_uppersub(nnrows, beg, end, upper_rows, upper_columns, upper_a, xp, bp);
+        ssmult(beg, end, rows, columns, a, xp, bp);
 
     int nnz=2*(rows[end]-rows[beg]);
     flops+=2*(rows[end]-rows[beg]);
@@ -252,5 +266,33 @@ void SymSparseRowMatrix::io(Piostream& stream)
     stream.end_cheap_delim();
 
     stream.end_class();
+    //compute_upper();
 }
 
+void SymSparseRowMatrix::compute_upper()
+{
+    if(upper_rows)
+	delete[] upper_rows;
+    if(upper_columns)
+	delete[] upper_columns;
+    if(upper_a)
+	delete[] upper_a;
+    upper_nnz=(nnz-nnrows)/2+nnrows;
+    upper_columns=new int[upper_nnz];
+    upper_rows=new int[nnrows+1];
+    upper_a=new double[upper_nnz];
+    int idx=0;
+    for(int i=0;i<nnrows;i++){
+	upper_rows[i]=idx;
+	int start=rows[i];
+	int last=rows[i+1];
+	while(columns[start]<i)start++;
+	for(;start<last;start++){
+	    upper_a[idx]=a[start];
+	    upper_columns[idx]=columns[start];
+	    idx++;
+	}
+    }
+    ASSERTEQ(idx, upper_nnz);
+    upper_rows[nnrows]=idx;
+}

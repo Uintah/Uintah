@@ -342,7 +342,13 @@ static void handle_halt_signals(int sig, int code, sigcontext_t* context)
     Task* self=Task::self();
     char* tname=self?self->get_name():"main";
     if(exiting && sig==SIGQUIT){
+	if(uspsema(sched_lock) == -1){
+	    perror("uspsema");
+	}
 	fprintf(stderr, "Thread \"%s\"(pid %d) exiting...\n", tname, getpid());
+	if(usvsema(sched_lock) == -1){
+	    perror("usvsema");
+	}
 	exit(exit_code);
     }
 	
@@ -425,6 +431,7 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
 
 void Task::exit_all(int code)
 {
+    fprintf(stderr, "Task::exit_all sending SIGQUIT to thread group\n");
     exit_code=code;
     exiting=1;
     kill(0, SIGQUIT);

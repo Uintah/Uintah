@@ -23,7 +23,7 @@ static Persistent* maker()
     return scinew ManhattanDist;
 }
 
-PersistentTypeID ManhattanDist::type_id("ManhattanDist", "ManhattanDist", maker);
+PersistentTypeID ManhattanDist::type_id("ManhattanDist", "ScalarFieldRGint", maker);
 
 ManhattanDist::ManhattanDist(const Array1<Point>&Pts, int n, int init,
 			     double minX, double minY, double minZ,

@@ -103,6 +103,11 @@ void VectorFieldUG::io(Piostream& stream)
     stream.end_class();
 }
 
+void VectorFieldUG::get_boundary_lines(Array1<Point>& lines)
+{
+    mesh->get_boundary_lines(lines);
+}
+
 #ifdef __GNUG__
 
 #include <Classlib/Array1.cc>

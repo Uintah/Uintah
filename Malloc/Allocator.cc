@@ -967,6 +967,11 @@ void AuditAllocator(Allocator* a)
     a->unlock();
 }
 
+void AuditDefaultAllocator()
+{
+    AuditAllocator(default_allocator);
+}
+
 static void dump_bin(Allocator*, AllocBin* bin, FILE* fp)
 {
     for(Tag* p=bin->inuse;p!=0;p=p->next){

@@ -209,7 +209,8 @@ static MaterialHandle white=scinew Material(Color(0,0,0), Color(.6, .6, .6),
 GeomObj* VectorFieldOcean::makesurf(int downsample)
 {
   GeomGrid* grid=new GeomGrid(1280/downsample, 896/downsample,
-			      Point(0,0,0), Vector(1280,0,0), Vector(0,896,0));
+			      Point(0,0,0), Vector(1280,0,0), Vector(0,896,0),
+			      GeomGrid::WithNormAndMatl);
   for(int j=0;j<896;j+=downsample){
     for(int i=0;i<1280;i+=downsample){
       int deep=depth[j*nx+i];
@@ -229,3 +230,7 @@ GeomObj* VectorFieldOcean::makesurf(int downsample)
   return grid;
 }
 
+void VectorFieldOcean::get_boundary_lines(Array1<Point>& lines)
+{
+    NOT_FINISHED("VectorFieldOcean::get_boundary_lines");
+}

@@ -23,10 +23,15 @@
 #include <unistd.h>
 #include <dlfcn.h>
 
+int global_argc;
+char** global_argv;
+
 int main(int argc, char** argv)
 {
     // Initialize the multithreader
     Task::initialize(argv[0]);
+    global_argc=argc;
+    global_argv=argv;
 
     // Start up TCL...
     TCLTask* tcl_task = new TCLTask(argc, argv);

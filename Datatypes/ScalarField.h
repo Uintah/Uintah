@@ -15,6 +15,7 @@
 #define SCI_project_ScalarField_h 1
 
 #include <Datatypes/Datatype.h>
+#include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
 #include <Geometry/Vector.h>
 #include <Geometry/Point.h>
@@ -42,6 +43,7 @@ protected:
 	RegularGridBase,
 	UnstructuredGrid,
 	RegularGrid,
+	Zones,
     };
     ScalarField(Representation);
 private:
@@ -59,6 +61,7 @@ public:
     virtual Vector gradient(const Point&)=0;
     virtual int interpolate(const Point&, double&, double epsilon1=1.e-6, double epsilon2=1.e-6)=0;
     virtual int interpolate(const Point&, double&, int& ix, double epsilon1=1.e-6, double epsilon2=1.e-6)=0;
+    virtual void get_boundary_lines(Array1<Point>& lines)=0;
 
     // Persistent representation...
     virtual void io(Piostream&);

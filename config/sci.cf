@@ -36,6 +36,10 @@ OTHERINCLUDES = -I$(CPPINCLUDES)
 .cc.o:
 	$(CCC) $(CCFLAGS) -c $<
 
+.SUFFIXES: .cpp
+.cpp.o:
+	$(CCC) $(CCFLAGS) -c $<
+
 
 default: all
 

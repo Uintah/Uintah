@@ -27,6 +27,7 @@ Port::Port(Module* module, const clString& type_name,
   protocols(protocols), u_proto(0), module(module), which_port(-1),
   portstate(Off)
 {
+    cout << "Setting module to " << module << endl;
 }
 
 IPort::IPort(Module* module, const clString& type_name,

@@ -63,7 +63,7 @@ void NetworkEditor::main_loop()
 	switch(msg->type){
 	case MessageTypes::MultiSend:
 	    {
-	      cerr << "Got multisend\n";
+		//cerr << "Got multisend\n";
 		Module_Scheduler_Message* mmsg=(Module_Scheduler_Message*)msg;
 		multisend(mmsg->p1);
 		if(mmsg->p2)
@@ -142,18 +142,22 @@ void NetworkEditor::do_scheduling(Module* exclude)
 		Connection* conn=iport->connection(0);
 		OPort* oport=conn->oport;
 		Module* m=oport->get_module();
-		if(module->sched_class != Module::SalmonSpecial
-		   && !m->need_execute && m != exclude){
-		    // If this oport already has the data, add it
-		    // to the to_trigger list...
-		    if(oport->have_data()){
-			to_trigger.add(conn);
-		    } else {
-			m->need_execute=1;
-			needexecute.append(m);
+		if(!m->need_execute){
+		    if(m != exclude){
+			if(module->sched_class != Module::SalmonSpecial){
+			    // If this oport already has the data, add it
+			    // to the to_trigger list...
+			    if(oport->have_data()){
+				to_trigger.add(conn);
+			    } else {
+				m->need_execute=1;
+				needexecute.append(m);
+			    }
+			}
 		    }
 		}
 	    }
+
 	}
     }
 
@@ -162,7 +166,7 @@ void NetworkEditor::do_scheduling(Module* exclude)
 	Connection* conn=to_trigger[i];
 	OPort* oport=conn->oport;
 	Module* module=oport->get_module();
-	cerr << "Triggering " << module->name << endl;
+	//cerr << "Triggering " << module->name << endl;
 	if(module->need_execute){
 	    // Executing this module, don't actually trigger....
 	} else {
@@ -176,7 +180,7 @@ void NetworkEditor::do_scheduling(Module* exclude)
 	if(module->need_execute){
 	    module->mailbox.send(scinew Scheduler_Module_Message);
 	    module->need_execute=0;
-	    cerr << "Firing " << module->name << endl;
+	    //cerr << "Firing " << module->name << endl;
 	}
     }
 

@@ -12,9 +12,9 @@ main()
 {
     unsigned long int tot=0;
     unsigned long int bytes=0;
-    for(int i=0;i<50;i++){
-	int n=rand()%10+1;
-	void* p[10];
+    for(int i=0;i<100;i++){
+	int n=rand()%40+1;
+	void* p[40];
 	int j;
 	for(j=0;j<n;j++){
 	    int s=(rand()|(rand()<<15))%(2*1024*1024);

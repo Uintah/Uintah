@@ -6,7 +6,7 @@ main()
 {
     unsigned long int tot=0;
     unsigned long int bytes=0;
-    for(int i=0;i<500;i++){
+    for(int i=0;i<1000;i++){
 	int n=rand()%1000+1;
 	void* p[1000];
 	int j;

@@ -35,7 +35,7 @@ public:
 	Executing,
 	Completed,
     };
-protected:
+public:
     friend class ModuleHelper;
     virtual void do_execute();
     virtual void execute()=0;

@@ -19,6 +19,7 @@ extern "C" {
     double linalg_norm2(int n, double* data);
     void linalg_mult(int n, double* result, double* a, double* b);
     void linalg_sub(int n, double* result, double* a, double* b);
+    void linalg_add(int n, double* result, double* a, double* b);
     double linalg_dot(int n, double* a, double* b);
     void linalg_smadd(int n, double* result, double s, double* a, double* b);
     typedef double LinAlg_TriDiagRow[3];

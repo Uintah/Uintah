@@ -212,3 +212,29 @@ void ScalarFieldRGBase::compute_bounds()
 {
     // Nothing to do - we store the bounds in the base class...
 }
+
+void ScalarFieldRGBase::get_boundary_lines(Array1<Point>& lines)
+{
+    Point min, max;
+    get_bounds(min, max);
+    for(int i=0;i<4;i++){
+	double x=(i&1)?min.x():max.x();
+	double y=(i&2)?min.y():max.y();
+	lines.add(Point(x, y, min.z()));
+	lines.add(Point(x, y, max.z()));
+    }
+    for(i=0;i<4;i++){
+	double y=(i&1)?min.y():max.y();
+	double z=(i&2)?min.z():max.z();
+	lines.add(Point(min.x(), y, z));
+	lines.add(Point(max.x(), y, z));
+    }
+    for(i=0;i<4;i++){
+	double x=(i&1)?min.x():max.x();
+	double z=(i&2)?min.z():max.z();
+	lines.add(Point(x, min.y(), z));
+	lines.add(Point(x, max.y(), z));
+    }
+}
+
+

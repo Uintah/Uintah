@@ -1,0 +1,16 @@
+
+#include <config/sci.cf>
+
+OBJS = FFTImage.o  IFFTImage.o  PMFilterImage.o WhiteNoiseImage.o \
+	ImageToGeom.o FilterImage.o
+SRCS = FFTImage.cc IFFTImage.cc PMFilterImage.cc WhiteNoiseImage.cc \
+	ImageToGeom.cc FilterImage.cc
+
+LIBNAME = Image
+
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lMath -lTCL \
+	-lClasslib -lMultitask -lMalloc -lC -lc -lm
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

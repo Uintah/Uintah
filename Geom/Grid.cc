@@ -17,20 +17,43 @@
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 #include <Malloc/Allocator.h>
+#include <Math/hf.h>
 
 Persistent* make_GeomGrid()
 {
-    return scinew GeomGrid(0,0,Point(0,0,0), Vector(1,0,0), Vector(0,0,1));
+    return scinew GeomGrid(0,0,Point(0,0,0), Vector(1,0,0), Vector(0,0,1),
+			   GeomGrid::Regular);
 }
 
 PersistentTypeID GeomGrid::type_id("GeomGrid", "GeomObj", make_GeomGrid);
 
 GeomGrid::GeomGrid(int nu, int nv, const Point& corner,
-		   const Vector& u, const Vector& v)
-: verts(nu, nv), corner(corner), u(u), v(v)
+		   const Vector& u, const Vector& v,
+		   Format format)
+: nu(nu), nv(nv), corner(corner), u(u), v(v), format(format)
 {
     have_matls=0;
     have_normals=0;
+    switch(format){
+    case Regular:
+	stride=3;
+	offset=0;
+	break;
+    case WithNormals:
+	stride=6;
+	offset=3;
+	break;
+    case WithMaterials:
+	stride=7;
+	offset=4;
+	break;
+    case WithNormAndMatl:
+	stride=10;
+	offset=7;
+	break;
+    }
+    data.resize(nu*nv*stride);
+    vstride=stride*nu;
     adjust();
 }
 
@@ -47,82 +70,31 @@ void GeomGrid::adjust()
 {
     w=Cross(u, v);
     w.normalize();
-}
-
-void GeomGrid::set(int i, int j, double v)
-{
-    verts(i, j)=v;
-}
-
-void GeomGrid::set(int i, int j, double v, const Vector& normal)
-{
-    if(!have_normals){
-	normals.newsize(verts.dim1(), verts.dim2());
-	have_normals=1;
-    }
-    verts(i, j)=v;
-    normals(i, j)=normal;
-}
-
-void GeomGrid::set(int i, int j, double v, const MaterialHandle& matl)
-{
-    if(!have_matls){
-	matls.newsize(verts.dim1(), verts.dim2());
-	have_matls=1;
-    }
-    verts(i, j)=v;
-    matls(i, j)=matl;
-}
-
-void GeomGrid::set(int i, int j, double v, const Vector& normal,
-		   const MaterialHandle& matl)
-{
-    if(!have_matls){
-	matls.newsize(verts.dim1(), verts.dim2());
-	have_matls=1;
-    }
-    if(!have_normals){
-	normals.newsize(verts.dim1(), verts.dim2());
-	have_normals=1;
-    }
-    verts(i, j)=v;
-    matls(i, j)=matl;
-    normals(i, j)=normal;
+    uu=u/(nu-1);
+    vv=v/(nv-1);
 }
 
 void GeomGrid::get_bounds(BBox& bb)
 {
-    int nu=verts.dim1();
-    int nv=verts.dim2();
-    Vector uu(u/(nu-1));
-    Vector vv(v/(nv-1));
-    Point rstart(corner);
-    for(int i=0;i<nu;i++){
-	Point p(rstart);
-	for(int j=0;j<nv;j++){
-	    Point pp(p+w*verts(i, j));
-	    bb.extend(pp);
-	    p+=vv;
-	}
-	rstart+=uu;
+    int n=nu*nv;
+    float* p=&data[offset];
+    float min, max;
+    hf_minmax_float_s6(&data[offset], nu, nv, &min, &max);
+    for(int i=0;i<8;i++){
+	Point pp(corner+uu*(i&1?0:nu)+vv*(i&2?0:nv)+w*(i&4?min:max));
+	bb.extend(pp);
+	p+=stride;
     }
 }
 
 void GeomGrid::get_bounds(BSphere& bs)
 {
-    int nu=verts.dim1();
-    int nv=verts.dim2();
-    Vector uu(u/(nu-1));
-    Vector vv(v/(nv-1));
-    Point rstart(corner);
-    for(int i=0;i<nu;i++){
-	Point p(rstart);
-	for(int j=0;j<nv;j++){
-	    Point pp(p+w*verts(i, j));
-	    bs.extend(pp);
-	    p+=uu;
-	}
-	rstart+=vv;
+    int n=nu*nv;
+    float* p=&data[offset];
+    for(int i=0;i<data.size();i+=stride){
+	Point pp(corner+uu*p[0]+vv*p[1]+w*p[2]);
+	bs.extend(pp);
+	p+=stride;
     }
 }
 
@@ -147,20 +119,17 @@ void GeomGrid::intersect(const Ray&, Material*, Hit&)
     NOT_FINISHED("GeomGrid::intersect");
 }
 
-#define GEOMGRID_VERSION 1
+#define GEOMGRID_VERSION 2
 
 void GeomGrid::io(Piostream& stream)
 {
-    stream.begin_class("GeomGrid", GEOMGRID_VERSION);
+    int version=stream.begin_class("GeomGrid", GEOMGRID_VERSION);
     GeomObj::io(stream);
-    Pio(stream, verts);
-    Pio(stream, have_matls);
-    Pio(stream, matls);
-    Pio(stream, have_normals);
-    Pio(stream, normals);
-    Pio(stream, corner);
-    Pio(stream, u);
-    Pio(stream, v);
+    if(version == 1){
+	cerr << "Go talk to Steve and tell him to implement this code real quick\n";
+	ASSERT(0);
+    }
+    ASSERT(!"Not finished");
     if(stream.reading())
 	adjust();
     stream.end_class();
@@ -170,6 +139,11 @@ bool GeomGrid::saveobj(ostream&, const clString& format, GeomSave*)
 {
     NOT_FINISHED("GeomGrid::saveobj");
     return false;
+}
+
+void GeomGrid::compute_normals()
+{
+    hf_float_s6(&data[0], nu, nv);
 }
 
 #ifdef __GNUG__

@@ -22,19 +22,23 @@ class AddMatrices;
 class SymSparseRowMatrix : public Matrix {
     int nnrows;
     int nncols;
-    int* rows;
-    int nnz;
     double dummy;
     double minVal;
     double maxVal;
 protected:
-    int* columns;
 public:
+    int* columns;
+    int* rows;
+    int nnz;
     double* a;
-
+    int* upper_columns;
+    int* upper_rows;
+    double* upper_a;
+    int upper_nnz;
+    void compute_upper();
     virtual double* get_val(){return a;}
-  virtual int* get_row(){return rows;}
-  virtual int* get_col(){return columns;}
+    virtual int* get_row(){return rows;}
+    virtual int* get_col(){return columns;}
   
     SymSparseRowMatrix();
     SymSparseRowMatrix(int, int, Array1<int>&, Array1<int>&);

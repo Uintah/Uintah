@@ -12,7 +12,7 @@ itcl_class SolveMatrix {
 	global $this-use_previous_so
 
         set $this-target_error 1.e-4
-	set $this-method conjugate_gradient
+	set $this-method conjugate_gradient_sci
         set $this-precond Diag_P
 	set $this-orig_error 0
 	set $this-current_error 0

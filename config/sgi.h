@@ -27,18 +27,23 @@
 #define SCI_DeltaDebugCFlags -g
 #ifdef SCI_IRIX_BIN_o32
 #define SCI_BinFlags -32 -mips2
+#define WOFF_FLAGS
 #else
 #ifdef SCI_IRIX_BIN_n32_mips3
 #define SCI_BinFlags -n32 -mips3
+#define WOFF_FLAGS -Wl,-woff,85
 #else
 #ifdef SCI_IRIX_BIN_n32_mips4
-#define SCI_BinFlags -n32 -mips4
+#define SCI_BinFlags -n32 -mips4 -r8000
+#define WOFF_FLAGS -Wl,-woff,85
 #else
 #ifdef SCI_IRIX_BIN_64_mips3
 #define SCI_BinFlags -64 -mips3
+#define WOFF_FLAGS -Wl,-woff,85
 #else
 #ifdef SCI_IRIX_BIN_64_mips4
 #define SCI_BinFlags -64 -mips4
+#define WOFF_FLAGS -Wl,-woff,85
 #else
 #error "Unknown irix binary format"
 #endif

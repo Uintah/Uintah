@@ -361,7 +361,85 @@ void
 Levoy::CalculateRayIncrements ( ExtendedView myview,
 			       Vector& rayIncrementU, Vector& rayIncrementV )
 {
+<<<<<<< LevoyVis.cc
+
+  // as the ray passes through the volume, the voxel's
+  // color contribution decreases
+  
+  double contribution;
+
+  // the current location in the volume
+
+  Point atPoint;
+
+  // accumulated color as the ray passes through the volume
+  
+  Color accumulatedColor;
+
+  // a scalar value corresponds to a particular point
+  // in space
+  
+  double scalarValue;
+
+  
+  // contribution of the first voxel's color and opacity
+  
+  contribution = 1.0;
+  
+  // begin trace at the eye (somewhat inefficient, TEMP)
+  
+  atPoint = eye;
+
+  // since no voxels have been crossed, no color has been
+  // accumulated.
+
+  accumulatedColor = BLACK;
+
+  // find step vector
+  
+  step.normalize();
+
+  step *= rayStep;
+
+  Color colr;
+
+  double opacity;
+
+  // keep going through the volume until the contribution of the voxel
+  // color is almost none.  also, keep going through if the we are still
+  // in the volume
+  
+  while ( contribution > EpsilonContribution &&  ( atPoint - eye ).length() < dmax )
+    {
+      atPoint += step;
+      scalarValue = 0;
+
+      if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
+	{
+	  
+	  Color tempcolr( AssociateValue( scalarValue,
+					 ScalarVals[1], AssociatedVals[1],
+					 Slopes[1] ),
+			 AssociateValue( scalarValue,
+					ScalarVals[2], AssociatedVals[2],
+					Slopes[2] ),
+			 AssociateValue( scalarValue,
+					ScalarVals[3], AssociatedVals[3],
+					Slopes[3] )
+			 );
+
+	  colr = tempcolr;
+
+	  opacity = AssociateValue( scalarValue,ScalarVals[0],
+				   AssociatedVals[0], Slopes[0]  );
+	  
+	  accumulatedColor += colr * ( contribution * opacity );
+	  contribution = contribution * ( 1.0 - opacity );
+	}
+    }
+=======
   myview.get_normalized_viewplane( rayIncrementU, rayIncrementV );
+>>>>>>> 1.16
 
   double aspect = double( myview.xres() ) / double( myview.yres() );
   double fovy=RtoD(2*Atan(aspect*Tan(DtoR(myview.fov()/2.))));

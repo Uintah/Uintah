@@ -40,12 +40,12 @@ public:
     virtual void finish();
 };
 
-class Image;
+class ColorImage;
 class DepthImage;
 class View;
 
 struct GeometryData {
-    Image* colorbuffer;
+    ColorImage* colorbuffer;
     DepthImage* depthbuffer;
 
     View* view;

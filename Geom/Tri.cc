@@ -71,6 +71,7 @@ GeomObj* GeomTri::clone()
     return scinew GeomTri(*this);
 }
 
+#ifdef BSPHERE
 void GeomTri::get_bounds(BSphere& bs)
 {
     Point p1(verts[0]->p);
@@ -134,6 +135,7 @@ void GeomTri::get_bounds(BSphere& bs)
     ASSERT((cen-p3).length() <= rad*1.00001);
     bs.extend(cen, rad);
 }
+#endif
 
 void GeomTri::make_prims(Array1<GeomObj*>&,
 			  Array1<GeomObj*>& dontfree)

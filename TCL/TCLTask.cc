@@ -162,3 +162,8 @@ int TCLTask::try_lock()
 	return 0;
     }
 }
+
+Task* TCLTask::get_owner()
+{
+    return owner;
+}

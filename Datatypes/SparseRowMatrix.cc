@@ -42,12 +42,11 @@ SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 }
 
 SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
-				       int* rows, int* columns,
-				       int nnz)
+				 int* rows, int* columns,
+				 int nnz, double* a)
 : Matrix(Matrix::symmetric, Matrix::sparse), nnrows(nnrows),
-  nncols(nncols), rows(rows), columns(columns), nnz(nnz)
+  nncols(nncols), rows(rows), columns(columns), nnz(nnz), a(a)
 {
-    a=scinew double[nnz];
 }
 
 SparseRowMatrix::~SparseRowMatrix()

@@ -33,7 +33,7 @@ public:
     double* a;
     SparseRowMatrix();
     SparseRowMatrix(int, int, Array1<int>&, Array1<int>&);
-    SparseRowMatrix(int, int, int*, int*, int);
+    SparseRowMatrix(int, int, int*, int*, int, double*);
     virtual ~SparseRowMatrix();
     SparseRowMatrix(const SparseRowMatrix&);
     SparseRowMatrix& operator=(const SparseRowMatrix&);
@@ -54,6 +54,9 @@ public:
     virtual void print();
     MatrixRow operator[](int r);
     friend class AddMatrices;
+    virtual double* get_val(){return a;}
+    virtual int* get_row(){return rows;}
+    virtual int* get_col(){return columns;}
 
     // Persistent representation...
     virtual void io(Piostream&);

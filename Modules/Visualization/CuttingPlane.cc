@@ -203,7 +203,11 @@ void CuttingPlane::execute()
     if (cptype != CP_CONTOUR)
     {
 	double alpha=1.0;
-	GeomGrid* grid = new GeomGrid( u_num, v_num, corner, u, v);
+	GeomGrid::Format format=GeomGrid::WithMaterials;
+	if (cptype == CP_SURFACE)
+	    format=GeomGrid::WithNormAndMatl;
+	GeomGrid* grid = new GeomGrid( u_num, v_num, corner, u, v,
+				      format);
         Vector unorm=u.normal();
         Vector vnorm=v.normal();
         Vector N(Cross(unorm, vnorm));

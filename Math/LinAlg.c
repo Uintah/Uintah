@@ -56,6 +56,14 @@ void linalg_sub(int rows, double* res, double* a, double* b)
     }
 }
 
+void linalg_add(int rows, double* res, double* a, double* b)
+{
+    int i=0;
+    for(;i<rows;i++){
+	res[i]=a[i]+b[i];
+    }
+}
+
 double linalg_dot(int rows, double* a, double* b)
 {
     double dot=0;

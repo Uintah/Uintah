@@ -15,6 +15,7 @@
 #define SCI_project_VectorField_h 1
 
 #include <Datatypes/Datatype.h>
+#include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
 #include <Geometry/Vector.h>
 #include <Geometry/Point.h>
@@ -38,6 +39,7 @@ protected:
 	RegularGrid,
 	UnstructuredGrid,
 	OceanFile,
+	Zones,
     };
     VectorField(Representation);
 private:
@@ -53,6 +55,7 @@ public:
     double longest_dimension();
     virtual int interpolate(const Point&, Vector&)=0;
     virtual int interpolate(const Point&, Vector&, int& cache)=0;
+    virtual void get_boundary_lines(Array1<Point>& lines)=0;
 
     // Persistent representation...
     virtual void io(Piostream&);

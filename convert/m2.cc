@@ -21,15 +21,15 @@ public:
     ~FDMatrix();
     virtual double& get(int, int);
     virtual void put(int, int, const double&);
-    virtual int nrows();
-    virtual int ncols();
+    virtual int nrows() const;
+    virtual int ncols() const;
     virtual double minValue();
     virtual double maxValue();
     double density();
     virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
     virtual void zero();
     virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
-		      int& flops, int& memrefs, int beg=-1, int end=-1);
+		      int& flops, int& memrefs, int beg=-1, int end=-1) const;
     virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 				int& flops, int& memrefs, int beg=-1, int end=-1);
     virtual void print();
@@ -216,7 +216,7 @@ void FDMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 }
 
 void FDMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
-		    int& flops, int& memrefs, int, int)
+		    int& flops, int& memrefs, int, int) const
 {
     double eps2=eps+2;
     double eps3=eps+3;
@@ -253,12 +253,12 @@ void FDMatrix::zero()
     NOT_FINISHED("FDMatrix::zero");
 }
 
-int FDMatrix::nrows()
+int FDMatrix::nrows() const
 {
     return size;
 }
 
-int FDMatrix::ncols()
+int FDMatrix::ncols() const
 {
     return size;
 }

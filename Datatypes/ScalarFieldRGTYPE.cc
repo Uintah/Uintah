@@ -209,7 +209,6 @@ ScalarFieldRGTYPE::get_normal( int x, int y, int z )
   return normal;
 }
 
-
 #ifdef __GNUG__
 
 #include <Classlib/Array3.cc>

@@ -26,7 +26,7 @@ class ColumnMatrix : public Datatype {
     double* data;
 public:
 
-  double* get_rhs(){return data;}
+  double* get_rhs() const {return data;}
   void put_lhs(double* lhs) {data = lhs;}
   
     ColumnMatrix(int);
@@ -39,23 +39,33 @@ public:
 
     double vector_norm();
     double vector_norm(int& flops, int& memrefs);
+    double vector_norm(int& flops, int& memrefs, int beg, int end);
 
     friend void Mult(ColumnMatrix&, const ColumnMatrix&, double s);
     friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
     friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
 		     int& flops, int& memrefs);
+    friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+		     int& flops, int& memrefs, int beg, int end);
     friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
     friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
 		    int& flops, int& memrefs);
     friend double Dot(const ColumnMatrix&, const ColumnMatrix&);
     friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
 		      int& flops, int& memrefs);
+    friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
+		      int& flops, int& memrefs, int beg, int end);
     friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
 			   const ColumnMatrix&);
     friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
 			   const ColumnMatrix&, int& flops, int& memrefs);
+    friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+			   const ColumnMatrix&, int& flops, int& memrefs,
+			   int beg, int end);
 
     friend void Copy(ColumnMatrix&, const ColumnMatrix&);
+    friend void Copy(ColumnMatrix&, const ColumnMatrix&, int& flops, int& refs,
+		     int beg, int end);
     friend void AddScMult(ColumnMatrix&, const ColumnMatrix&, double s, const ColumnMatrix&);
     friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
     friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);

@@ -39,7 +39,7 @@ public:
 	Atomic=0x01,
     };
 
-protected:
+public:
     friend class SimpleOPort<T>;
     Mailbox<SimplePortComm<T>*> mailbox;
 

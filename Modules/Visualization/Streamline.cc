@@ -693,11 +693,15 @@ void Streamline::parallel_streamline(int proc)
     double t=tracers[i]->starttime;
     int inside=1;
     GeomPolylineTC* line=new GeomPolylineTC(drawmode, drawdist);
+    if(inside){
+	line->add(t, tracers[i]->p,
+		  Color(.5,0,0));/*cmap->lookup2(tracers[i]->p.z()*50/-5200)->diffuse);*/
+    }
     while(step++< maxsteps && inside){
       inside=tracers[i]->advance(field, stepsize, skip);
       if(inside){
 	line->add(t, tracers[i]->p,
-		  cmap->lookup2(tracers[i]->p.z()*50/-5200)->diffuse);
+		  Color(.5,0,0));/*cmap->lookup2(tracers[i]->p.z()*50/-5200)->diffuse);*/
       } else {
 	if(tracers[i]->p.x() >= 1280){
 	  SLTracer* ot=tracers[i];

@@ -4,6 +4,13 @@ LaceContours
 LaceContoursTemp
 TransformCS
 
+Category: DP
+DPNavierStokes
+DPGenGrid
+DPNonLinearSolver
+DPMakeSystem
+DPLinearSolver
+
 Category: EEG
 Coregister
 
@@ -25,6 +32,14 @@ Downsample
 FieldFilter
 Gradient
 Magnitude
+
+Category: Image
+FFTImage
+FilterImage
+IFFTImage
+ImageToGeom
+PMFilterImage
+WhiteNoiseImage
 
 Category: Matrix
 EditMatrix
@@ -80,6 +95,9 @@ AugmentSurf
 ContoursToSurf
 GenSurface
 SurfToGeom
+
+Category: Treat
+TreatFEM
 
 Category: Visualization
 BitVisualize

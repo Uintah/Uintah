@@ -80,7 +80,7 @@ static void _dummy_(Piostream& p1, Array1<clString>& p2)
     Pio(p1, p2);
 }
 
-static void _dummy_(Piostream& p1, Array2<double> >& p2)
+static void _dummy_(Piostream& p1, Array2<double> & p2)
 {
     Pio(p1, p2);
 }

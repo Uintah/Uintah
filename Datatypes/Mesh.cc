@@ -1526,6 +1526,11 @@ DirichletBC::DirichletBC(const SurfaceHandle& fromsurf, double value)
 {
 }
 
+void Mesh::get_boundary_lines(Array1<Point>& lines)
+{
+    NOT_FINISHED("VectorFieldOcean::get_boundary_lines");
+}
+
 #ifdef __GNUG__
 
 #include <Classlib/LockingHandle.cc>

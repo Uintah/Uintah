@@ -136,6 +136,11 @@ Vector ScalarFieldUG::gradient(const Point& p)
     return g1*data[e->n[0]]+g2*data[e->n[1]]+g3*data[e->n[2]]+g4*data[e->n[3]];
 }
 
+void ScalarFieldUG::get_boundary_lines(Array1<Point>& lines)
+{
+    mesh->get_boundary_lines(lines);
+}
+
 #ifdef __GNUG__
 
 #include <Classlib/Array1.cc>

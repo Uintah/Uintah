@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     }
     cerr << "nelems=" << mesh->elems.size() << endl;
 
-    ScalarFieldUG* sf=new ScalarFieldUG(mesh);
+    ScalarFieldUG* sf=new ScalarFieldUG(mesh, ScalarFieldUG::NodalValues);
     VectorFieldUG* vf=new VectorFieldUG(mesh, VectorFieldUG::NodalValues);
 
     ifstream outfile(argv[3]);

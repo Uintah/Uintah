@@ -28,7 +28,9 @@ public:
     GeomTri(const GeomTri&);
     virtual ~GeomTri();
 
+#ifdef BSPHERE
     virtual void get_bounds(BSphere& bs);
+#endif
 
     virtual GeomObj* clone();
 

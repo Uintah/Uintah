@@ -29,6 +29,7 @@ protected:
 public:
     TCLTask(int argc, char* argv[]);
     virtual ~TCLTask();
+    static Task* get_owner();
     static void lock();
     static int try_lock();
     static void unlock();

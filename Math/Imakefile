@@ -1,8 +1,10 @@
 
 #include <config/sci.cf>
 
-OBJS = LinAlg.o  Mat.o  MusilRNG.o  TrigTable.o  CatmullRomSpline.o 
-SRCS = LinAlg.c  Mat.c MusilRNG.cc TrigTable.cc CatmullRomSpline.cc
+OBJS = LinAlg.o  Mat.o  MusilRNG.o  TrigTable.o  CatmullRomSpline.o  \
+	ssmult.o fft.o hf.o
+SRCS = LinAlg.c  Mat.c MusilRNG.cc TrigTable.cc CatmullRomSpline.cc \
+	ssmult.c fft.c hf.c
 
 LIBNAME = Math
 
@@ -20,8 +22,10 @@ OPTLEVEL = -O2
 OPTLEVEL = -O3 -OPT:alias=restrict -woff 1174
 #endif
 OPTFLAGS = SCI_BinFlags -I$(TOP) -sopt,-r=3 $(OPTLEVEL)  -fullwarn
+OPTFLAGS2 = SCI_BinFlags -I$(TOP) $(OPTLEVEL)  -fullwarn
 #else
 OPTFLAGS = $(CFLAGS)
+OPTFLAGS2 = $(CFLAGS)
 #endif
 
 
@@ -30,3 +34,12 @@ LinAlg.o: LinAlg.c LinAlg.h
 
 Mat.o: Mat.c LinAlg.h
 	$(CC) $(OPTFLAGS) -c Mat.c
+
+ssmult.o: ssmult.c
+	$(CC) $(OPTFLAGS2) -c ssmult.c
+
+fft.o: fft.c
+	$(CC) $(OPTFLAGS2) -c fft.c
+
+hf.o: hf.c
+	$(CC) $(OPTFLAGS2) -c hf.c
