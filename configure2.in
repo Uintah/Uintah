@@ -608,7 +608,7 @@ SCI_ARG_ENABLE(largesos,
   [  --enable-largesos                 Build one .so per directory],
   [largesos="$enableval"],
   [largesos=${largesos='no'}])
-SCI_ARG_ENABLE(enable_sci_malloc,
+SCI_ARG_ENABLE(sci_malloc,
   [  --enable-sci-malloc               Use SCI malloc checker],
   [enable_sci_malloc="$enableval"],
   [enable_sci_malloc=${enable_sci_malloc='yes'}])
@@ -616,7 +616,7 @@ SCI_ARG_ENABLE(assertion-level,
   [  --enable-assertion-level=N        Use assertion level N (0-3)],
   [enable_assertion_level="$enableval"],
   [enable_assertion_level=${enable_assertion_level=3}])
-SCI_ARG_ENABLE(enable_parallel,
+SCI_ARG_ENABLE(parallel,
   [  --enable-parallel                 build experimental distributed memory],
   [enable_parallel="$enableval"],
   [enable_parallel=${enable_parallel='no'}])
@@ -1284,15 +1284,12 @@ for i in $tcl $thirdparty $SCI_LAB_TP_DEFAULT; do
   SCI_CHECK_HEADERS($TK_SRC_DIR/generic/, tk.h tk3d.h tkPort.h,,
     break,-I$INCTCL_H)
 
-  SCI_CHECK_LIB($i/lib,itcl,main,
-    if test -f "$i/lib/itclConfig.sh"; then . $i/lib/itclConfig.sh; fi,
-    continue, -L$LIBTCL -ltcl)
-  SCI_CHECK_HEADER($ITCL_SRC_DIR/generic,itcl.h,,,-I$INCTCL_H)
+  SCI_CHECK_LIB($i/lib,itcl,main,,continue, -L$LIBTCL -ltcl)
+  SCI_CHECK_HEADER($LIBITCL/../include,itcl.h,,,-I$INCTCL_H)
 
-  SCI_CHECK_LIB($i/lib,itk,main,
-    if test -f "$i/lib/itkConfig.sh"; then . $i/lib/itkConfig.sh; fi,continue,
+  SCI_CHECK_LIB($i/lib,itk,main,,continue,
     -L$LIBITCL -litcl -L$LIBTK -ltk -L$LIBTCL -ltcl)
-  SCI_CHECK_HEADER($ITK_SRC_DIR/generic,itk.h,,, 
+  SCI_CHECK_HEADER($ITKLIB/../include,itk.h,,, 
     -I$INCITCL_H -I$INCTK_H -I$INCTCL_H)
 
   SCI_CHECK_LIB($i/lib,BLT,main,,continue,-L$LIBTK -ltk -L$LIBTCL -ltcl)
