@@ -114,6 +114,7 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
   mesh->transform(trans);
 
   FIELD *fld = scinew FIELD(mesh, lv->data_at());
+  *(PropertyManager *)fld = *(PropertyManager *)lv;
 
   if (lv->data_at() == Field::NODE)
   {
