@@ -6,11 +6,14 @@
 #
 
 ifeq ($(LARGESOS),yes)
-include scripts/so_epilogue.mk
+include $(SRCTOP)/scripts/so_epilogue.mk
 endif
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:39:10  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:30:55  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

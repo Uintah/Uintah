@@ -17,12 +17,15 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/Binop.tcl $(SRCDIR)/Delaunay.tcl \
 	$(SRCDIR)/Snakes.tcl $(SRCDIR)/Subsample.tcl $(SRCDIR)/Ted.tcl \
 	$(SRCDIR)/Threshold.tcl $(SRCDIR)/TiffReader.tcl \
 	$(SRCDIR)/TiffWriter.tcl $(SRCDIR)/Transforms.tcl $(SRCDIR)/Unop.tcl
-	scripts/createTclIndex SCIRun/GUI
+	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/SCIRun/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:38:09  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:28:58  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

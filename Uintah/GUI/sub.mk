@@ -13,12 +13,15 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
 	$(SRCDIR)/TecplotFileSelector.tcl $(SRCDIR)/TriangleReader.tcl \
 	$(SRCDIR)/application.tcl $(SRCDIR)/cfdGridLines.tcl \
 	$(SRCDIR)/test.tcl $(SRCDIR)/GridLines.tcl
-	scripts/createTclIndex Uintah/GUI
+	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Uintah/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:38:34  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:29:56  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

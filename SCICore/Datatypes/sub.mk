@@ -3,7 +3,7 @@
 # $Id$
 #
 
-include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := SCICore/Datatypes
 
@@ -82,7 +82,7 @@ PSELIBS := SCICore/Persistent SCICore/Exceptions SCICore/Containers \
 	SCICore/Math
 LIBS := -lm
 
-include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 clean::
 	rm -f $(GENSRCS)
@@ -90,6 +90,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:37:35  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:28:19  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

@@ -3,7 +3,7 @@
 # $Id$
 #
 
-include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := DaveW/ThirdParty/Nrrd
 
@@ -14,13 +14,15 @@ SRCS     += $(SRCDIR)/arrays.c $(SRCDIR)/err.c $(SRCDIR)/histogram.c \
 PSELIBS :=
 LIBS := -lm
 
-include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:36:29  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:26:11  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository
 # Plus many other changes to make these two things work
-#
 #

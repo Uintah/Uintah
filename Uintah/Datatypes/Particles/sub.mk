@@ -3,7 +3,7 @@
 # $Id$
 #
 
-include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Datatypes/Particles
 
@@ -38,10 +38,13 @@ PSELIBS := $(PSELIBS) Component/CIA Component/PIDL
 LIBS := $(LIBS) $(GLOBUS_LIBS) -lglobus_nexus
 endif
 
-include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:38:31  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:29:51  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

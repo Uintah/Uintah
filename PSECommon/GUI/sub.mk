@@ -49,12 +49,15 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/AddWells.tcl $(SRCDIR)/AddWells2.tcl \
 	$(SRCDIR)/VolRendTexSlices.tcl $(SRCDIR)/VolVis.tcl \
 	$(SRCDIR)/WidgetTest.tcl $(SRCDIR)/Writer.tcl \
 	$(SRCDIR)/cConjGrad.tcl $(SRCDIR)/cPhase.tcl
-	scripts/createTclIndex PSECommon/GUI
+	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/PSECommon/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:36:50  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:26:45  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

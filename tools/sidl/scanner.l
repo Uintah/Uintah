@@ -1,6 +1,6 @@
 %{
-#include "Spec.h"
-#include "parser.h"
+#include <tools/sidl/Spec.h>
+#include <tools/sidl/parser.h>
 #include <string.h>
 int lineno;
 char* curfile;
@@ -89,6 +89,9 @@ int yywrap()
 
 //
 // $Log$
+// Revision 1.4  2000/03/20 19:39:41  sparker
+// Added VPATH support
+//
 // Revision 1.3  1999/08/30 20:19:29  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations

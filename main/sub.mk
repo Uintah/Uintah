@@ -34,10 +34,13 @@ CFLAGS_MAIN   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/PSECore/GUI\" \
 $(SRCDIR)/main.o:	$(SRCDIR)/main.cc
 	$(CXX) $(CFLAGS_MAIN) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 
-include $(OBJTOP_ABS)/scripts/program.mk
+include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:39:00  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:30:48  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

@@ -3,7 +3,7 @@
 # $Id$
 #
 
-include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := DaveW/Modules/Path
 
@@ -14,10 +14,13 @@ PSELIBS := DaveW/Datatypes/General PSECore/Dataflow PSECore/Datatypes \
 	SCICore/Math SCICore/Thread SCICore/Geom SCICore/TclInterface
 LIBS := 
 
-include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:36:15  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:25:54  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

@@ -3,7 +3,7 @@
 # $Id$
 #
 
-include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := SCICore/Geom
 
@@ -34,10 +34,13 @@ PSELIBS := SCICore/Persistent SCICore/Geometry SCICore/Exceptions \
 	SCICore/TclInterface
 LIBS := $(GL_LIBS) -lm
 
-include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:37:40  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:28:25  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository
