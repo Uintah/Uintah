@@ -23,8 +23,11 @@
 # in the Modules directory.
 #
 
+packageName = ARGV[0]
+packageDir = ARGV[1]
+
 begin
-  File.open("index.html", "w") do |index|
+  File.open("#{packageName}.html", "w") do |index|
 
 # Insert boilerplate at top of file
   index.print <<ZZZZZ
@@ -65,13 +68,12 @@ document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML
 ZZZZZ
 
   # Generate page heading.
-  package = File.basename(`pwd`).strip
-  index.print("<p class='title'> #{package} Module Descriptions</p>\n")
+#  package = File.basename(`pwd`).strip
+  index.print("<p class='title'> #{packageName} Module Descriptions</p>\n")
   index.print("<hr size='1'/>")
 
   # Generate index of modules.  Alphabetical order in 3 columns.
-  files = Dir["*.html"].sort
-  files.delete("index.html")
+  files = Dir["#{packageDir}/*.html"].sort
   numCols = 3
   numRows = files.size() / numCols
   extras = files.size() % numCols
@@ -119,6 +121,6 @@ ZZZZZ
   end
 
 rescue
-  print("Unable to build index.html for package ", package, "\n")
+  print("Unable to build #{packageName}.html for package\n")
   print($!, "\n")
 end
