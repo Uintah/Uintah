@@ -30,7 +30,9 @@
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Dataflow/SCIRunComponentModel.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
+#if HAVE_BABEL
 #include <SCIRun/Babel/BabelComponentModel.h>
+#endif
 #include <SCIRun/ComponentInstance.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
@@ -48,7 +50,9 @@ SCIRunFramework::SCIRunFramework()
   models.push_back(internalServices=new InternalComponentModel(this));
   models.push_back(new SCIRunComponentModel(this));
   models.push_back(cca=new CCAComponentModel(this));
+#if HAVE_BABEL
   models.push_back(babel=new BabelComponentModel(this));
+#endif
 }
 
 SCIRunFramework::~SCIRunFramework()

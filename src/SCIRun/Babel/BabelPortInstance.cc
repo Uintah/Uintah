@@ -35,7 +35,7 @@ BabelPortInstance::BabelPortInstance(const std::string& name,
 				 const std::string& type,
 				 const govcca::TypeMap& properties,
 				 PortType porttype)
-  : name(name), type(type), properties(properties), porttype(porttype),
+  : porttype(porttype), name(name), type(type), properties(properties),
     useCount(0)
 {
 }
@@ -45,8 +45,8 @@ BabelPortInstance::BabelPortInstance(const std::string& name,
 				 const govcca::TypeMap& properties,
 				 const govcca::Port& port,
 				 PortType porttype)
-  : name(name), type(type), properties(properties), port(port),
-    porttype(porttype), useCount(0)
+  : porttype(porttype), name(name), type(type), properties(properties),
+    port(port), useCount(0)
 {
 }
 

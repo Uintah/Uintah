@@ -27,8 +27,10 @@
  */
 
 #include <SCIRun/PortInstance.h>
-#include <iostream.h>
+#include <iostream>
 using namespace SCIRun;
+using namespace std;
+
 std::string PortInstance::getType()
 {
   return "default type";

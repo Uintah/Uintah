@@ -32,7 +32,10 @@ SRCS     += \
 	$(SRCDIR)/PortInstanceIterator.cc\
 	$(SRCDIR)/CCACommunicator.cc
 
-SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal $(SRCDIR)/Babel
+SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal
+ifeq ($(HAVE_BABEL),yes)
+  SUBDIRS += $(SRCDIR)/Babel
+endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
@@ -41,12 +44,9 @@ PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
 	Core/CCA/Component/PIDL Core/CCA/Component/CIA \
 	Core/Exceptions Core/TkExtensions Core/Thread
 
-LIBS := $(XML_LIBRARY) -L${BABELDIR}/lib -Wl,-rpath -Wl,${BABELDIR}/lib -lsidl
+LIBS := $(XML_LIBRARY)
+ifeq ($(HAVE_BABEL),yes)
+  LIBS := $(LIBS) $(SIDL_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-$(SRCDIR)/BuilderService.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/SCIRunFramework.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/Services.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/ComponentInstance.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/CCACommunicator.o: Core/CCA/spec/cca_sidl.h
