@@ -135,6 +135,7 @@ void MPMICE::scheduleTimeAdvance(double, double,
     d_ice->scheduleAccumulateEnergySourceSinks(     patch,sched,old_dw,new_dw);
     d_ice->scheduleComputeLagrangianValues(         patch,sched,old_dw,new_dw);
 
+    scheduleInterpolatePressCCToPressNC(            patch,sched,old_dw,new_dw);
     scheduleInterpolatePAndGradP(                   patch,sched,old_dw,new_dw);
    
     d_mpm->scheduleComputeInternalForce(            patch,sched,old_dw,new_dw);
@@ -146,6 +147,7 @@ void MPMICE::scheduleTimeAdvance(double, double,
 
     scheduleInterpolateNCToCC(                      patch,sched,old_dw,new_dw);
     scheduleCCMomExchange(                          patch,sched,old_dw,new_dw);
+    scheduleInterpolateCCToNC(                      patch,sched,old_dw,new_dw);
 //    d_mpm->scheduleExMomIntegrated(patch,sched,old_dw,new_dw);
 //    d_ice->scheduleAddExchangeToMomentumAndEnergy(patch,sched,old_dw,new_dw);
     d_mpm->scheduleInterpolateToParticlesAndUpdate( patch,sched,old_dw,new_dw);
@@ -164,6 +166,23 @@ void MPMICE::scheduleTimeAdvance(double, double,
 				     Mlb->pXLabel, Mlb->d_particleState,
 				     numMPMMatls);
 }
+
+
+void MPMICE::scheduleInterpolatePressCCToPressNC(const Patch* patch,
+						 SchedulerP& sched,
+						 DataWarehouseP& old_dw,
+						 DataWarehouseP& new_dw)
+{
+  Task* t=scinew Task("MPMICE::interpolatePressCCToPressNC",
+		      patch, old_dw, new_dw,
+		      this, &MPMICE::interpolatePressCCToPressNC);
+  
+  t->requires(new_dw,Ilb->press_CCLabel,0, patch, Ghost::AroundCells, 1);
+  t->computes(new_dw, MIlb->press_NCLabel,0,patch);
+  
+  sched->addTask(t);
+
+}
 //______________________________________________________________________
 //
 void MPMICE::scheduleInterpolatePAndGradP(const Patch* patch,
@@ -177,7 +196,7 @@ void MPMICE::scheduleInterpolatePAndGradP(const Patch* patch,
 		        patch, old_dw, new_dw,
 		        this, &MPMICE::interpolatePAndGradP);
 
-   t->requires(new_dw,Ilb->press_CCLabel,0, patch, Ghost::AroundCells, 1);
+   t->requires(new_dw,MIlb->press_NCLabel,0, patch, Ghost::AroundCells, 1);
 
    for(int m = 0; m < numMPMMatls; m++){
      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -279,6 +298,8 @@ void MPMICE::scheduleInterpolateNCToCC(const Patch* patch,
 		Ghost::AroundCells, 1);
      t->requires(new_dw, Mlb->gMassLabel,         idx, patch,
 		Ghost::AroundCells, 1);
+     t->requires(new_dw, Mlb->gTemperatureStarLabel,idx, patch,
+		Ghost::AroundCells, 1);
 
      t->computes(new_dw, Ilb->mom_L_CCLabel,     idx, patch);
      t->computes(new_dw, Ilb->int_eng_L_CCLabel, idx, patch);
@@ -294,9 +315,9 @@ void MPMICE::scheduleCCMomExchange(const Patch* patch,
                                    DataWarehouseP& old_dw,
                                    DataWarehouseP& new_dw)
 {
-   Task* t=scinew Task("MPMICE::doCCMomExchange",
-		        patch, old_dw, new_dw,
-		        this, &MPMICE::doCCMomExchange);
+  Task* t=scinew Task("MPMICE::doCCMomExchange",
+		      patch, old_dw, new_dw,
+		      this, &MPMICE::doCCMomExchange);
   int numALLMatls  = d_sharedState->getNumMatls();                      
   for (int m = 0; m < numALLMatls; m++) {
     Material* matl = d_sharedState->getMaterial( m );
@@ -310,10 +331,8 @@ void MPMICE::scheduleCCMomExchange(const Patch* patch,
     if(mpm_matl){                    // M P M
      t->requires(new_dw, Mlb->gVelocityStarLabel,   idx,patch,Ghost::None,0);
      t->requires(new_dw, Mlb->gAccelerationLabel,   idx,patch,Ghost::None,0);
-
-     t->computes(new_dw, Mlb->gMomExedVelocityStarLabel, idx, patch);
-     t->computes(new_dw, Mlb->gMomExedAccelerationLabel, idx, patch);
-     t->computes(new_dw, Mlb->dTdt_NCLabel,              idx, patch);
+     t->computes(new_dw, MIlb->dTdt_CCLabel,              idx, patch);
+     t->computes(new_dw, MIlb->dvdt_CCLabel,              idx, patch);
     }
     t->requires(new_dw,  Ilb->rho_CCLabel,         idx,patch,Ghost::None);
     t->requires(new_dw,  Ilb->mom_L_CCLabel,       idx,patch,Ghost::None,0);
@@ -322,6 +341,35 @@ void MPMICE::scheduleCCMomExchange(const Patch* patch,
     t->requires(new_dw,  Ilb->vol_frac_CCLabel,    idx,patch,Ghost::None);
   }
    sched->addTask(t);
+
+}
+
+void MPMICE::scheduleInterpolateCCToNC(const Patch* patch,
+				       SchedulerP& sched,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw)
+{
+  Task* t=scinew Task("MPMICE::interpolateCCToNC",
+		      patch, old_dw, new_dw,
+		      this, &MPMICE::interpolateCCToNC);
+  int numALLMatls  = d_sharedState->getNumMatls();                      
+  for (int m = 0; m < numALLMatls; m++) {
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    int idx = matl->getDWIndex();
+    if(mpm_matl){                    // M P M
+      t->requires(new_dw, Mlb->gVelocityStarLabel,   idx,patch,Ghost::None,0);
+      t->requires(new_dw, Mlb->gAccelerationLabel,   idx,patch,Ghost::None,0);
+      t->requires(new_dw, MIlb->dTdt_CCLabel,idx,patch,Ghost::AroundCells,1);
+      t->requires(new_dw, MIlb->dvdt_CCLabel,idx,patch,Ghost::AroundCells,1);
+
+      
+      t->computes(new_dw, Mlb->gMomExedVelocityStarLabel, idx, patch);
+      t->computes(new_dw, Mlb->gMomExedAccelerationLabel, idx, patch);
+      t->computes(new_dw, Mlb->dTdt_NCLabel,              idx, patch);
+    }
+  }
+  sched->addTask(t);
 
 }
 /* ---------------------------------------------------------------------
@@ -395,22 +443,20 @@ void MPMICE::finishMPMICEinitialize(const ProcessorGroup*, const Patch*,
 
 }
 
-//______________________________________________________________________
-//
-void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
-                                  const Patch* patch,
-                                  DataWarehouseP& old_dw,
-                                  DataWarehouseP& new_dw)
-{
-//  cout << "Doing interpolatePressureToParticles \t\t MPMICE" << endl;
+
+void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
+				       const Patch* patch,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw)
+{			       
+
+
+  cout << "Doing interpolatePressCCToPressNC \t\t MPMICE" << endl;
   
   CCVariable<double> pressCC;
   NCVariable<double> pressNC;
-  IntVector ni[8];
-  double S[8];
-  Vector zero(0.,0.,0.);
 
-  new_dw->get(pressCC,       Ilb->press_CCLabel, 0, patch,Ghost::None, 0);
+  new_dw->get(pressCC, Ilb->press_CCLabel, 0, patch,Ghost::AroundCells, 1);
   new_dw->allocate(pressNC, MIlb->press_NCLabel, 0, patch);
 
   IntVector cIdx[8];
@@ -422,6 +468,29 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
 	pressNC[*iter]  += .125*pressCC[cIdx[in]];
      }
   }
+  new_dw->put(pressNC,MIlb->press_NCLabel,0,patch);
+
+}
+
+
+
+
+//______________________________________________________________________
+//
+void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
+                                  const Patch* patch,
+                                  DataWarehouseP& old_dw,
+                                  DataWarehouseP& new_dw)
+{
+  cout << "Doing interpolatePressureToParticles \t\t MPMICE" << endl;
+  
+  NCVariable<double> pressNC;
+  IntVector ni[8];
+  double S[8];
+  Vector zero(0.,0.,0.);
+  IntVector cIdx[8];
+  
+  new_dw->get(pressNC,MIlb->press_NCLabel,0,patch,Ghost::AroundCells,1);
 
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -435,17 +504,17 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
 
     // Interpolate NC pressure to particles
     for(ParticleSubset::iterator iter = pset->begin();
-				          iter != pset->end(); iter++){
-	particleIndex idx = *iter;
-	double press = 0.;
-
-	// Get the node indices that surround the cell
-	patch->findCellAndWeights(px[idx], ni, S);
-	for (int k = 0; k < 8; k++) {
-	    press += pressNC[ni[k]] * S[k];
-	}
-// HARDWIRING
-	pPressure[idx] = press-101325.0;
+	iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      double press = 0.;
+      
+      // Get the node indices that surround the cell
+      patch->findCellAndWeights(px[idx], ni, S);
+      for (int k = 0; k < 8; k++) {
+	press += pressNC[ni[k]] * S[k];
+      }
+      // HARDWIRING
+      pPressure[idx] = press-101325.0;
     }
 
     CCVariable<Vector> mom_source;
@@ -499,33 +568,33 @@ void MPMICE::interpolateVelIncFCToNC(const ProcessorGroup*,
     new_dw->allocate(velInc_NC, MIlb->velInc_NCLabel, dwindex, patch);
     double xcomp,ycomp,zcomp;
 
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-        IntVector cur = *iter;
-        IntVector adjx(cur.x()+1,cur.y(),  cur.z());
-        IntVector adjy(cur.x(),  cur.y()+1,cur.z());
-        IntVector adjz(cur.x(),  cur.y(),  cur.z()+1);
-	xcomp = ((uvel_FCME[cur]  - uvel_FC[cur]) +
-		 (uvel_FCME[adjx] - uvel_FC[adjx]))*0.5;
-	ycomp = ((vvel_FCME[cur]  - vvel_FC[cur]) +
-		 (vvel_FCME[adjy] - vvel_FC[adjy]))*0.5;
-	zcomp = ((wvel_FCME[cur]  - wvel_FC[cur]) +
-		 (wvel_FCME[adjz] - wvel_FC[adjz]))*0.5;
-
-        velInc_CC[*iter] = Vector(xcomp,ycomp,zcomp);
+    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      IntVector cur = *iter;
+      IntVector adjx(cur.x()+1,cur.y(),  cur.z());
+      IntVector adjy(cur.x(),  cur.y()+1,cur.z());
+      IntVector adjz(cur.x(),  cur.y(),  cur.z()+1);
+      xcomp = ((uvel_FCME[cur]  - uvel_FC[cur]) +
+	       (uvel_FCME[adjx] - uvel_FC[adjx]))*0.5;
+      ycomp = ((vvel_FCME[cur]  - vvel_FC[cur]) +
+	       (vvel_FCME[adjy] - vvel_FC[adjy]))*0.5;
+      zcomp = ((wvel_FCME[cur]  - wvel_FC[cur]) +
+	       (wvel_FCME[adjz] - wvel_FC[adjz]))*0.5;
+      
+      velInc_CC[*iter] = Vector(xcomp,ycomp,zcomp);
     }
-
+    
     IntVector cIdx[8];
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-	patch->findCellsFromNode(*iter,cIdx);
-	velInc_NC[*iter]  = zero;
-	for (int in=0;in<8;in++){
-	   velInc_NC[*iter]     +=  velInc_CC[cIdx[in]]*.125;
-        }
-	gvelocity[*iter] += velInc_NC[*iter];
+      patch->findCellsFromNode(*iter,cIdx);
+      velInc_NC[*iter]  = zero;
+      for (int in=0;in<8;in++){
+	velInc_NC[*iter]     +=  velInc_CC[cIdx[in]]*.125;
+      }
+      gvelocity[*iter] += velInc_NC[*iter];
     }
-
+    
     new_dw->put(gvelocity, Mlb->gMomExedVelocityLabel, dwindex, patch);
-
+    
   }
 
 }
@@ -539,7 +608,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
   int numMatls = d_sharedState->getNumMPMMatls();
   Vector zero(0.0,0.0,0.);
   Vector dx = patch->dCell();
-//  cout << "Doing interpolateNCToCC_0 \t\t\t MPMICE" << endl;
+  cout << "Doing interpolateNCToCC_0 \t\t\t MPMICE" << endl;
 
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -615,7 +684,7 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 {
   int numMatls = d_sharedState->getNumMPMMatls();
   Vector zero(0.,0.,0.);
-//  cout << "Doing interpolateNCToCC \t\t\t MPMICE" << endl;
+  cout << "Doing interpolateNCToCC \t\t\t MPMICE" << endl;
 
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -679,7 +748,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
                              DataWarehouseP& old_dw,
                              DataWarehouseP& new_dw)
 {
-//  cout << "Doing Heat and momentum exchange \t\t MPMICE" << endl;
+  cout << "Doing Heat and momentum exchange \t\t MPMICE" << endl;
+
   int numMPMMatls = d_sharedState->getNumMPMMatls();
   int numICEMatls = d_sharedState->getNumICEMatls();
   int numALLMatls = numMPMMatls + numICEMatls;
@@ -736,25 +806,19 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     int dwindex = matl->getDWIndex();
     if(mpm_matl){
-      new_dw->get(gvelocity[m],    Mlb->gVelocityStarLabel,   dwindex, patch,
-							Ghost::None, 0);
-      new_dw->get(gacceleration[m],Mlb->gAccelerationLabel,   dwindex, patch,
-							Ghost::None, 0);
-      new_dw->get(cmass[m],        MIlb->cMassLabel,          dwindex, patch,
-							Ghost::None, 0);
-      new_dw->allocate(vel_CC[m],  MIlb->velstar_CCLabel,     dwindex, patch);
+      new_dw->get(gvelocity[m],Mlb->gVelocityStarLabel, dwindex, patch,
+		  Ghost::None, 0);
+      new_dw->get(gacceleration[m],Mlb->gAccelerationLabel,dwindex, patch,
+		  Ghost::None, 0);
+      new_dw->get(cmass[m], MIlb->cMassLabel, dwindex, patch,
+		  Ghost::None, 0);
+      new_dw->allocate(vel_CC[m],  MIlb->velstar_CCLabel, dwindex, patch);
       new_dw->allocate(Temp_CC[m], MIlb->temp_CC_scratchLabel,dwindex, patch);
-
-      new_dw->allocate(gMEvelocity[m],     Mlb->gMomExedVelocityStarLabel,
-						             dwindex, patch);
-      new_dw->allocate(gMEacceleration[m], Mlb->gMomExedAccelerationLabel,
-						             dwindex, patch);
-      new_dw->allocate(dTdt_NC[m], Mlb->dTdt_NCLabel,        dwindex, patch);
       cv[m] = mpm_matl->getSpecificHeat();
     }
     if(ice_matl){
-      new_dw->allocate(vel_CC[m],      Ilb->vel_CCLabel,         dwindex,patch);
-      new_dw->allocate(Temp_CC[m],     Ilb->temp_CCLabel,        dwindex,patch);
+      new_dw->allocate(vel_CC[m], Ilb->vel_CCLabel,  dwindex,patch);
+      new_dw->allocate(Temp_CC[m],Ilb->temp_CCLabel, dwindex,patch);
       cv[m] = ice_matl->getSpecificHeat();
     }
 
@@ -796,7 +860,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   Vector total_mom(0.,0.,0.);
   for (int m = 0; m < numALLMatls; m++) {
     Vector matl_mom(0.,0.,0.);
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
 	matl_mom += mom_L[m][*iter];
     }
     cout << "Momentum for material " << m << " = " << matl_mom << endl;
@@ -940,6 +1004,9 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       d_ice->printData(   patch,1, description, "int_eng_L_ME",int_eng_L_ME[m]);
     }
   }
+
+
+  // Cut and now have to do the interpolation in a separate function.
     /*==========DEBUG============`*/
 
 #if 0
@@ -949,7 +1016,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     Vector matl_mom(0.,0.,0.);
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
 	matl_mom += mom_L_ME[m][*iter];
         if(mpm_matl){
 	   dvdt_CC[m][*iter] = vel_CC[m][*iter]-vel_CC_old[m][*iter];
@@ -960,6 +1027,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   }
   cout << "TOTAL Momentum AFTER = " << total_moma << endl;
 #endif
+
 
   //HARDWIRING FOR NEUMANN TEMPERATURE BCS
   for(int m = 0; m < numALLMatls; m++){
@@ -972,6 +1040,94 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   //__________________________________
   // This is where I interpolate the CC 
   // changes to NCs for the MPMMatls
+#if 0
+  IntVector cIdx[8];
+
+  Vector total_momwithdvdt(0.,0.,0.);
+  for(int m = 0; m < numALLMatls; m++){
+     Material* matl = d_sharedState->getMaterial( m );
+     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+     if(mpm_matl){
+       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+         patch->findCellsFromNode(*iter,cIdx);
+	 gMEvelocity[m][*iter]     = gvelocity[m][*iter];
+	 gMEacceleration[m][*iter] = gacceleration[m][*iter];
+	 dTdt_NC[m][*iter]         = 0.0;
+	 for (int in=0;in<8;in++){
+	   gMEvelocity[m][*iter]     +=  dvdt_CC[m][cIdx[in]]*.125;
+	   gMEacceleration[m][*iter] += (dvdt_CC[m][cIdx[in]]/delT)*.125;
+	   dTdt_NC[m][*iter]         += (dTdt_CC[m][cIdx[in]]/delT)*.125;
+         }
+       }
+     }
+  }
+#endif
+  //__________________________________
+  //    Put into new_dw
+  for (int m = 0; m < numALLMatls; m++) {
+    Material* matl = d_sharedState->getMaterial( m );
+    int dwindex = matl->getDWIndex();
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+     if(ice_matl){
+       new_dw->put(mom_L_ME[m],    Ilb->mom_L_ME_CCLabel,    dwindex, patch);
+       new_dw->put(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel,dwindex, patch);
+     }
+     if(mpm_matl){
+      new_dw->put(dvdt_CC[m],MIlb->dvdt_CCLabel,dwindex,patch);
+      new_dw->put(dTdt_CC[m],MIlb->dTdt_CCLabel,dwindex,patch);
+    }
+  }  
+}
+
+void MPMICE::interpolateCCToNC(const ProcessorGroup*,
+				       const Patch* patch,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw)
+{
+  cout << "Doing interpolation of CC to NC  \t\t MPMICE" << endl;
+  //__________________________________
+  // This is where I interpolate the CC 
+  // changes to NCs for the MPMMatls
+
+  int numALLMatls = d_sharedState->getNumMPMMatls() + 
+    d_sharedState->getNumICEMatls();
+
+  delt_vartype delT;
+  old_dw->get(delT, d_sharedState->get_delt_label());
+
+  vector<CCVariable<Vector> > dvdt_CC(numALLMatls);
+  vector<CCVariable<double> > dTdt_CC(numALLMatls);
+  vector<NCVariable<Vector> > gacceleration(numALLMatls);
+  vector<NCVariable<Vector> > gvelocity(numALLMatls);
+
+  vector<NCVariable<Vector> > gMEacceleration(numALLMatls);
+  vector<NCVariable<Vector> > gMEvelocity(numALLMatls);
+  vector<NCVariable<double> > dTdt_NC(numALLMatls);
+
+  for (int m = 0; m < numALLMatls; m++) {
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    int dwindex = matl->getDWIndex();
+    if(mpm_matl){
+      new_dw->get(gvelocity[m],Mlb->gVelocityStarLabel, dwindex, patch,
+		  Ghost::None, 0);
+      new_dw->get(gacceleration[m],Mlb->gAccelerationLabel,dwindex, patch,
+		  Ghost::None, 0);
+      new_dw->get(dvdt_CC[m], MIlb->dvdt_CCLabel,dwindex, patch,
+		  Ghost::AroundCells,1);
+      new_dw->get(dTdt_CC[m], MIlb->dTdt_CCLabel,dwindex, patch,
+		  Ghost::AroundCells,1);      
+      new_dw->allocate(gMEvelocity[m], Mlb->gMomExedVelocityStarLabel,
+		       dwindex, patch);
+      new_dw->allocate(gMEacceleration[m], Mlb->gMomExedAccelerationLabel,
+		       dwindex, patch);
+      new_dw->allocate(dTdt_NC[m], Mlb->dTdt_NCLabel,        dwindex, patch);
+
+    }
+  }
+
+  
   IntVector cIdx[8];
 
   Vector total_momwithdvdt(0.,0.,0.);
@@ -997,22 +1153,18 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   for (int m = 0; m < numALLMatls; m++) {
     Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
-    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-     if(ice_matl){
-       new_dw->put(mom_L_ME[m],    Ilb->mom_L_ME_CCLabel,    dwindex, patch);
-       new_dw->put(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel,dwindex, patch);
-     }
-     if(mpm_matl){
-      new_dw->put(gMEvelocity[m],
-			Mlb->gMomExedVelocityStarLabel,dwindex,patch);
-      new_dw->put(gMEacceleration[m],
-			Mlb->gMomExedAccelerationLabel,dwindex,patch);
-      new_dw->put(dTdt_NC[m],
-			Mlb->dTdt_NCLabel,             dwindex,patch);
+    if(mpm_matl){
+      new_dw->put(gMEvelocity[m],Mlb->gMomExedVelocityStarLabel,dwindex,patch);
+      new_dw->put(gMEacceleration[m],Mlb->gMomExedAccelerationLabel,dwindex,
+		  patch);
+      new_dw->put(dTdt_NC[m],Mlb->dTdt_NCLabel, dwindex,patch);
     }
   }  
+
 }
+
+
 
 /* --------------------------------------------------------------------- 
  Function~  MPMICE::computeEquilibrationPressure--
@@ -1128,7 +1280,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       if(ice_matl){                // I C E
          rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
-
           double gamma   = ice_matl->getGamma(); 
          ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
                                            cv[m],Temp[m][*iter],
