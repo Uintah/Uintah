@@ -48,6 +48,8 @@ public:
 				     double dist,
 				     DepthStats* st, PerProcessorContext* ppc);
   void add(Object* obj);
+  int add2(Object* obj);
+  void remove2(int idx);
   void prime(int n);
   int numObjects() { return objs.size(); }
   virtual void animate(double t, bool& changed);

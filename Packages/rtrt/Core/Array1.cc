@@ -105,6 +105,14 @@ void Array1<T>::add(const T& obj)
 }
 
 template<class T>
+int Array1<T>::add2(const T& obj)
+{
+    grow(1, default_grow_size);
+    objs[_size-1]=obj;
+    return _size-1;
+}
+
+template<class T>
 void Array1<T>::insert(int idx, const T& obj)
 {
     grow(1, default_grow_size);

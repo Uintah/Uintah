@@ -56,6 +56,7 @@ public:
   //  grow(1)
   //  array[array.size()-1]=data;
   void add(const T&);
+  int add2(const T&);
 
   // Insert one element into the array.  This is very inefficient
   // if you insert anything besides the (new) last element.
