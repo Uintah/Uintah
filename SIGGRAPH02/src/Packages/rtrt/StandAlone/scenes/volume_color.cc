@@ -40,13 +40,14 @@ using SCIRun::Thread;
 Array1<DpyBase*> dpys;
 Array1<Object*> objects_of_interest;
 
-//#define DATA_TYPE float
-//#define DATA_LOCATION "/usr/sci/data/Geometry/volumes2/CSAFE"
+typedef float datatype;
+#define DATA_LOCATION "/usr/sci/data/Geometry/volumes2/CSAFE"
 
-typedef unsigned char datatype;
-#define DATA_LOCATION "/usr/sci/data/CSAFE/quantize"
+//typedef unsigned char datatype;
+//#define DATA_LOCATION "/usr/sci/data/CSAFE/quantize"
 
-void add_fire2(Group *g, int nworkers) {
+void add_fire2(Group *g, int nworkers, int finc, int fstart, int fend,
+	       float dt) {
   // Create a default color map.
   int size = 5;
   Array1<ColorPos> colors(size);
@@ -72,22 +73,13 @@ void add_fire2(Group *g, int nworkers) {
   ////////////////////////////////////////////////////////////////
   //  Load up a group
   
-  int fstart = 32;
-  int fend = 152;
-  //  int fstart = 64;
-  //  int fend = 80;
-  int finc = 8; // never less than 8, must be a multiple of 8
-  //  int finc = 16; // 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160
-  //  int finc = 24; // 0, 24, 48, 72, 96, 120, 144, 168
-  //  int finc = 32; // 0, 32, 64, 96, 128, 160
-  //  int finc = 40; // 0, 40, 80, 120, 160
-  SelectableGroup *fire_geom = new SelectableGroup(0.5);
+  SelectableGroup *fire_geom = new SelectableGroup(dt);
   fire_geom->set_name("CSAFE Fire Time Step Selector");
   //  TimeObj *fire_time = new TimeObj(5);
   for(int f = fstart; f <= fend; f+= finc) {
     char buf[1000];
     // load in the temperature field to color by
-    sprintf(buf, DATA_LOCATION"/h300_%04d.uchar.raw", f);
+    sprintf(buf, DATA_LOCATION"/heptane300_velmag_%04d.uchar.raw", f);
     //    cout << "Reading "<<buf<<endl;
     // Send 1 for depth since we don't need to render it and preprocess
     // goes much quickley.
@@ -107,7 +99,7 @@ void add_fire2(Group *g, int nworkers) {
        fcdpy->get_alpha_transfer_pointer());
 
     // Load the velocity field that will be used to isosurface.
-    sprintf(buf, DATA_LOCATION"/heptane300_velmag_%04d.uchar.raw", f);
+    sprintf(buf, DATA_LOCATION"/h300_%04d.uchar.raw", f);
     HVolume<datatype, BrickArray3<datatype>, BrickArray3<VMCell<datatype> > > *vel =
       new HVolume<datatype, BrickArray3<datatype>, BrickArray3<VMCell<datatype> > >
       (temp_color_map, vel_dpy, buf, 3, nworkers);
@@ -141,6 +133,7 @@ void add_fire(Group *g, int nworkers) {
   (*color)[2] = Color(0,1,0);
   (*color)[3] = Color(0,1,1);
   (*color)[4] = Color(0,0,1);
+  (*opacity)[0] = 0;
 
   ScalarTransform1D<float, float> *opacity_transform =
     new ScalarTransform1D<float, float>(opacity);
@@ -265,23 +258,54 @@ void add_head(Group *g, int nworkers) {
 }
 
 extern "C"
-Scene* make_scene(int /*argc*/, char* /*argv[]*/, int nworkers)
+Scene* make_scene(int argc, char* argv[], int nworkers)
 {
+  int fstart = 32;
+  int fend = 152;
+  //  int fstart = 64;
+  //  int fend = 80;
+  int finc = 8; // never less than 8, must be a multiple of 8
+  //  int finc = 16; // 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160
+  //  int finc = 24; // 0, 24, 48, 72, 96, 120, 144, 168
+  //  int finc = 32; // 0, 32, 64, 96, 128, 160
+  //  int finc = 40; // 0, 40, 80, 120, 160
+  int which = 2;
+  float dt = 0.5;
+
+  for(int i = 1; i < argc; i++) {
+    if (!strcmp("-fstart", argv[i])) {
+      fstart = atoi(argv[++i]);
+    } else if (!strcmp("-fend", argv[i])) {
+      fend = atoi(argv[++i]);
+    } else if (!strcmp("-finc", argv[i])) {
+      finc = atoi(argv[++i]);
+    } else if (!strcmp("-which", argv[i])) {
+      which = atoi(argv[++i]);
+    } else if (!strcmp("-dt", argv[i])) {
+      dt = atof(argv[++i]);
+    }
+  }
 
   Group *g = new Group();
   //  g->add(new Sphere(new Phong(Color(1,0.5,0.5), Color(1,1,1), 100),
   //		    Point(0,0,0), 1));
-  //  add_head(g, nworkers);
-  //  add_fire(g, nworkers);
-  add_fire2(g, nworkers);
+  switch (which) {
+  case 0:
+    add_head(g, nworkers);
+    break;
+  case 1:
+    add_fire(g, nworkers);
+    break;
+  case 2:
+    add_fire2(g, nworkers, finc, fstart, fend, dt);
+    break;
+  }
   
-  
-		    
   Color cdown(0.1, 0.1, 0.1);
   Color cup(0.1, 0.1, 0.1);
 
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
-  Color bgcolor(0.3, 0.3, 0.3);
+  Color bgcolor(0.0, 0.0, 0.0);
 
   Point Eye(-11.85, 8.05916, 1.30671);
   Point Lookat(-8.83055, 8.24346, 1.21209);
@@ -303,16 +327,18 @@ Scene* make_scene(int /*argc*/, char* /*argv[]*/, int nworkers)
   ///////////////////////////////////////////////////////////
   // Set up the scene parameters
   scene->select_shadow_mode( No_Shadows );
-  scene->maxdepth = 8;
-  Light *science_room_light0 = new Light(Point(-8, 8, 3.9), Color(.5,.5,.5), 0, .3);
+  scene->maxdepth = 6;
+  Light *science_room_light0 = new Light(Point(-8, 300, 300), Color(1,1,1), 0, .3);
   science_room_light0->name_ = "science room overhead";
   scene->add_light(science_room_light0);
 //  Light *science_room_light1 = new Light(Point(-5, 11, 3), Color(.5,.5,.5), 0);
 //  science_room_light1->name_ = "science room corner";
 //  scene->add_light(science_room_light1);
+#if 0
   Light *science_room_light1 = new Light(Point(-5, 8, 3), Color(.5,.5,.5), 0, .3);
   science_room_light1->name_ = "science room corner1";
   scene->add_light(science_room_light1);
+#endif
   Light *science_room_light2 = new Light(Point(-8, 5, 3), Color(.5,.5,.5), 0, .3);
   science_room_light2->name_ = "science room corner2";
   scene->add_light(science_room_light2);
