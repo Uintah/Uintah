@@ -217,10 +217,31 @@ void NrrdReader::execute()
   string ax(axis_.get());
   ax.erase(ax.begin(), ax.begin() + 4); // get rid of the word axis
   int axis = atoi(ax.c_str());
+  cout << "The selected axis index is: " << axis << endl;
 
   if (axis != 0) {
     // purmute so that 0 is the tuple axis
+    const int sz = handle_->nrrd->dim;
+    int perm[NRRD_DIM_MAX];
+    Nrrd *pn = nrrdNew();
+    // init the perm array.
+    for(int i = 0; i < sz; i++) {
+      perm[i] = i;
+    }
+    //swap the selected axis with 0
+    perm[0] = axis;
+    perm[axis] = 0;
 
+    if (nrrdPermuteAxes(pn, handle_->nrrd, perm)){
+      char *err = biffGetDone(NRRD);
+      error(string("Error adding a tuple axis: ") + err);
+      free(err);
+      return;
+    }
+    NrrdData *newnrrd = new NrrdData();
+    newnrrd->nrrd = pn;
+    newnrrd->copy_sci_data(*handle_.get_rep());
+    handle_ = newnrrd;
   }
 
   handle_->nrrd->axis[0].label = strdup(lbl.c_str());
