@@ -1,4 +1,6 @@
 
+#include <TauProfilerForSCIRun.h>
+
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Mutex.h>
@@ -855,7 +857,8 @@ void
 OnDemandDataWarehouse::allocateTemporary(ParticleVariableBase& var,
                                          ParticleSubset* pset)
 {  
-   var.allocate(pset);
+  //TAU_PROFILE("allocateTemporary()", "OnDemand.cc", TAU_USER);
+  var.allocate(pset);
 }
 
 void
