@@ -27,6 +27,8 @@ XMLS :=  \
 	sci_WatershedSegmenter.xml \
 	sci_CannySegmentationLevelSetImageFilter.xml \
 	sci_ThresholdSegmentationLevelSetImageFilter.xml \
+	sci_ReflectImageFilter.xml \
+	sci_BinaryThresholdImageFilter.xml \
 #[INSERT NEW CODE FILE HERE]
 
 
