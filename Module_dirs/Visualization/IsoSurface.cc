@@ -38,7 +38,7 @@
 #include <Math/Expon.h>
 #include <TCL/TCLvar.h>
 #include <iostream.h>
-#include <Datatypes/TriSurface.h>
+#include <strstream.h>
 
 class IsoSurface : public Module {
     ScalarFieldIPort* infield;
@@ -47,16 +47,15 @@ class IsoSurface : public Module {
     GeometryOPort* ogeom;
     SurfaceOPort* osurf;
     int abort_flag;
-    TriSurface* surf;
+
+    TCLPoint seed_point;
+    TCLint have_seedpoint;
+    TCLdouble isoval;
+    TCLint do_3dwidget;
     TCLint emit_surface;
 
-    int have_seedpoint;
-    Point seed_point;
-    int need_seed;
-    double isoval;
-    int make_normals;
-    int do_3dwidget;
-    double scalar_val;
+    TriSurface* surf;
+
     GeomGroup* widget;
     GeomSphere* widget_sphere;
     GeomCylinder* widget_cylinder;
@@ -66,6 +65,7 @@ class IsoSurface : public Module {
 
     int widget_id;
     int isosurface_id;
+    int need_seed;
 
     double old_min;
     double old_max;
@@ -123,7 +123,9 @@ static clString widget_name("IsoSurface Widget");
 static clString surface_name("IsoSurface");
 
 IsoSurface::IsoSurface(const clString& id)
-: Module("IsoSurface", id, Filter), emit_surface("emit_surface.get()", id, this)
+: Module("IsoSurface", id, Filter), emit_surface("emit_surface", id, this),
+  have_seedpoint("have_seedpoint", id, this), isoval("isoval", id, this),
+  do_3dwidget("do_3dwidget", id, this), seed_point("seed_point", id, this)
 {
     // Create the input ports
     infield=new ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
@@ -139,31 +141,8 @@ IsoSurface::IsoSurface(const clString& id)
     osurf=new SurfaceOPort(this, "Surface", SurfaceIPort::Atomic);
     add_oport(osurf);
 
-    isoval=1;
-#ifdef OLDUI
-    value_slider=new MUI_slider_real("IsoContour value", &isoval,
-			       MUI_widget::Immediate, 1);
-    add_ui(value_slider);
-    have_seedpoint=0;
-//    seed_point=Point(0,0,0);
-    have_seedpoint=1;
-    seed_point=Point(.5,.5,.8);
-    add_ui(new MUI_point("Seed Point", &seed_point,
-			 MUI_widget::Immediate, 1));
-    scalar_val=0;
-    add_ui(new MUI_slider_real("Scalar value", &scalar_val,
-			       MUI_widget::Immediate, 0,
-			       MUI_slider_real::Guage));
-    make_normals=0;
-    add_ui(new MUI_onoff_switch("Smooth", &make_normals,
-				MUI_widget::Immediate));
-    do_3dwidget=1;
-    add_ui(new MUI_onoff_switch("3D widget", &do_3dwidget,
-				MUI_widget::Immediate));
-    old_min=-1.e30;
-    old_max=1.e30;
-    need_seed=0;
-#endif
+    isoval.set(1);
+    need_seed=1;
 
     widget_matl=new Material(Color(0,0,0), Color(0,0,.6),
 			     Color(.5,.5,.5), 20);
@@ -176,7 +155,9 @@ IsoSurface::IsoSurface(const clString& id)
 }
 
 IsoSurface::IsoSurface(const IsoSurface& copy, int deep)
-: Module(copy, deep), emit_surface("emit_surface.get()", id, this)
+: Module(copy, deep), emit_surface("emit_surface", id, this),
+  have_seedpoint("have_seedpoint", id, this), isoval("isoval", id, this),
+  do_3dwidget("do_3dwidget", id, this), seed_point("seed_point", id, this)
 {
     NOT_FINISHED("IsoSurface::IsoSurface");
 }
@@ -202,9 +183,10 @@ void IsoSurface::execute()
     double min, max;
     field->get_minmax(min, max);
     if(min != old_min || max != old_max){
-#ifdef OLDUI
-	value_slider->set_minmax(min, max);
-#endif
+	char buf[1000];
+	ostrstream str(buf, 1000);
+	str << "IsoSurface_set_minmax " << id << " " << min << " " << max << endl;
+	TCL::execute(str.str());
 	old_min=min;
 	old_max=max;
     }
@@ -212,23 +194,27 @@ void IsoSurface::execute()
 	find_seed_from_value(field);
 	need_seed=0;
     }
-    if(do_3dwidget){
+    if(do_3dwidget.get()){
 	widget_scale=0.01*field->longest_dimension();
 	if(!widget){
 	    Point min, max;
 	    field->get_bounds(min, max);
-	    seed_point=Interpolate(min, max, 0.5);
-	    widget_sphere=new GeomSphere(seed_point, 1*widget_scale);
-	    Vector grad(field->gradient(seed_point));
-	    if(grad.length2() < 1.e-6){
+	    Point sp(Interpolate(min, max, 0.5));
+	    seed_point.set(sp);
+	    widget_sphere=new GeomSphere(sp, 1*widget_scale);
+	    Vector grad(field->gradient(sp));
+	    if(grad.length2() < 1.e-4){
 		// Just the point...
 		widget_scale=0.00001;
 		grad=Vector(0,0,1);
 	    } else {
 		grad.normalize();
 	    }
-	    Point cyl_top(seed_point+grad*(2*widget_scale));
-	    widget_cylinder=new GeomCylinder(seed_point, cyl_top,
+	    cerr << "grad=" << grad << endl;
+	    cerr << "widget_scale=" << widget_scale << endl;
+	    Point cyl_top(sp+grad*(2*widget_scale));
+	    cerr << "sp=" << sp << ", cyl_top=" << cyl_top << endl;
+	    widget_cylinder=new GeomCylinder(sp, cyl_top,
 					     0.5*widget_scale);
 	    Point cone_top(cyl_top+grad*(1.0*widget_scale));
 	    widget_cone=new GeomCone(cyl_top, cone_top,
@@ -246,10 +232,11 @@ void IsoSurface::execute()
 	    widget->set_pick(pick);
 	    widget_id=ogeom->addObj(widget, widget_name);
 	}
-	widget_sphere->cen=seed_point;
+	Point sp(seed_point.get());
+	widget_sphere->cen=sp;
 	widget_sphere->rad=1*widget_scale;
 	widget_sphere->adjust();
-	Vector grad(field->gradient(seed_point));
+	Vector grad(field->gradient(sp));
 	if(grad.length2() < 1.e-6){
 	    // Just the point...
 	    widget_scale=0.00001;
@@ -263,8 +250,8 @@ void IsoSurface::execute()
 	    grad.find_orthogonal(v1, v2);
 	    widget->get_pick()->set_principal(grad, v1, v2);
 	}
-	Point cyl_top(seed_point+grad*(2*widget_scale));
-	widget_cylinder->bottom=seed_point;
+	Point cyl_top(sp+grad*(2*widget_scale));
+	widget_cylinder->bottom=sp;
 	widget_cylinder->top=cyl_top;
 	widget_cylinder->rad=0.5*widget_scale;
 	widget_cylinder->adjust();
@@ -297,16 +284,20 @@ void IsoSurface::execute()
     ScalarFieldRG* regular_grid=field->getRG();
     ScalarFieldUG* unstructured_grid=field->getUG();
     if(regular_grid){
-	if(have_seedpoint){
-	    iso_reg_grid(regular_grid, seed_point, group);
+	if(have_seedpoint.get()){
+	    Point sp(seed_point.get());
+	    iso_reg_grid(regular_grid, sp, group);
 	} else {
-	    iso_reg_grid(regular_grid, isoval, group);
+	    double iv=isoval.get();
+	    iso_reg_grid(regular_grid, iv, group);
 	}
     } else if(unstructured_grid){
-	if(have_seedpoint){
-	    iso_tetrahedra(unstructured_grid, seed_point, group);
+	if(have_seedpoint.get()){
+	    Point sp(seed_point.get());
+	    iso_tetrahedra(unstructured_grid, sp, group);
 	} else {
-	    iso_tetrahedra(unstructured_grid, isoval, group);
+	    double iv=isoval.get();
+	    iso_tetrahedra(unstructured_grid, iv, group);
 	}
     } else {
 	error("I can't IsoSurface this type of field...");
@@ -688,14 +679,13 @@ void IsoSurface::iso_reg_grid(ScalarFieldRG* field, const Point& p,
     int nx=field->nx;
     int ny=field->ny;
     int nz=field->nz;
-    if(!field->interpolate(p, isoval)){
+    double iv;
+    if(!field->interpolate(p, iv)){
 	error("Seed point not in field boundary");
 	return;
     }
-#ifdef OLDUI
-    value_slider->set_value(isoval);
-#endif
-    cerr << "Isoval = " << isoval << "\n";
+    isoval.set(iv);
+    cerr << "Isoval = " << iv << "\n";
     HashTable<int, int> visitedPts;
     Queue<int> surfQ;
     int px, py, pz;
@@ -725,7 +715,7 @@ void IsoSurface::iso_reg_grid(ScalarFieldRG* field, const Point& p,
 	dummy=pLoc%(nx*ny);
 	py=dummy/nx;
 	px=dummy%nx;
-	int nbrs=iso_cube(px, py, pz, isoval, group, field);
+	int nbrs=iso_cube(px, py, pz, iv, group, field);
 	if ((nbrs & 1) && (px!=0)) {
 	    pLoc-=1;
 	    if (!visitedPts.lookup(pLoc, dummy)) {
@@ -909,14 +899,13 @@ void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
 {
     Mesh* mesh=field->mesh.get_rep();
     int nelems=mesh->elems.size();
-    if(!field->interpolate(p, isoval)){
+    double iv;
+    if(!field->interpolate(p, iv)){
 	error("Seed point not in field boundary");
 	return;
     }
-#ifdef OLDUI
-    value_slider->set_value(isoval);
-#endif
-    cerr << "Isoval = " << isoval << "\n";
+    isoval.set(iv);
+    cerr << "Isoval = " << iv << "\n";
     BitArray1 visited(nelems, 0);
     Queue<int> surfQ;
     int ix;
@@ -938,7 +927,7 @@ void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
 	}
 	ix=surfQ.pop();
 	Element* element=mesh->elems[ix];
-	int nbrs=iso_tetra(element, mesh, field, isoval, group);
+	int nbrs=iso_tetra(element, mesh, field, iv, group);
 	if(nbrs & FACE1){
 	    int f0=element->face(0);
 	    if(f0 != -1 && !visited.is_set(f0)){
@@ -997,8 +986,7 @@ void IsoSurface::find_seed_from_value(const ScalarFieldHandle& field)
 
 void IsoSurface::geom_moved(int, double, const Vector& delta, void*)
 {
-    seed_point+=delta;
-    have_seedpoint=1;
+    seed_point.set(seed_point.get()+delta);
     if(!abort_flag){
 	abort_flag=1;
 	want_to_execute();
