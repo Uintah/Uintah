@@ -718,9 +718,10 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
 			   const VarLabel* label,
 			   ParticleSubset* pset)
 {
-  ParticleVariableBase& var = *constVar.cloneType();
-  getModifiable(var, label, pset);
-  constVar = var;
+  ParticleVariableBase* var = constVar.cloneType();
+  getModifiable(*var, label, pset);
+  constVar = *var;
+  delete var;
 }
 
 void
@@ -824,10 +825,11 @@ OnDemandDataWarehouse::get(constNCVariableBase& constVar,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
   checkGetAccess(label, matlIndex, patch);
-  NCVariableBase& var = *constVar.cloneType();
-  getGridVar<Patch::NodeBased>(var, d_ncDB, label, matlIndex, patch,
+  NCVariableBase* var = constVar.cloneType();
+  getGridVar<Patch::NodeBased>(*var, d_ncDB, label, matlIndex, patch,
 			       gtype, numGhostCells);
-  constVar = var;
+  constVar = *var;
+  delete var;
 }
 
 void
@@ -929,10 +931,11 @@ OnDemandDataWarehouse::get(constCCVariableBase& constVar,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
   checkGetAccess(label, matlIndex, patch);
-  CCVariableBase& var = *constVar.cloneType();  
-  getGridVar<Patch::CellBased>(var, d_ccDB, label, matlIndex, patch,
+  CCVariableBase* var = constVar.cloneType();  
+  getGridVar<Patch::CellBased>(*var, d_ccDB, label, matlIndex, patch,
 			       gtype, numGhostCells);
-  constVar = var;
+  constVar = *var;
+  delete var;
 }
 
 void
@@ -983,10 +986,11 @@ OnDemandDataWarehouse::get(constSFCXVariableBase& constVar,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
   checkGetAccess(label, matlIndex, patch);
-  SFCXVariableBase& var = *constVar.cloneType();
-  getGridVar<Patch::XFaceBased>(var, d_sfcxDB, label, matlIndex, patch,
+  SFCXVariableBase* var = constVar.cloneType();
+  getGridVar<Patch::XFaceBased>(*var, d_sfcxDB, label, matlIndex, patch,
 				gtype, numGhostCells);
-  constVar = var;
+  constVar = *var;
+  delete var;
 }
 
 void
@@ -1048,10 +1052,11 @@ OnDemandDataWarehouse::get(constSFCYVariableBase& constVar,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
   checkGetAccess(label, matlIndex, patch);
-  SFCYVariableBase& var = *constVar.cloneType();
-  getGridVar<Patch::YFaceBased>(var, d_sfcyDB, label, matlIndex, patch,
+  SFCYVariableBase* var = constVar.cloneType();
+  getGridVar<Patch::YFaceBased>(*var, d_sfcyDB, label, matlIndex, patch,
 				gtype, numGhostCells);
-  constVar = var;
+  constVar = *var;
+  delete var;
 }
 
 void
@@ -1113,10 +1118,11 @@ OnDemandDataWarehouse::get(constSFCZVariableBase& constVar,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
   checkGetAccess(label, matlIndex, patch);
-  SFCZVariableBase& var = *constVar.cloneType();
-  getGridVar<Patch::ZFaceBased>(var, d_sfczDB, label, matlIndex, patch,
+  SFCZVariableBase* var = constVar.cloneType();
+  getGridVar<Patch::ZFaceBased>(*var, d_sfczDB, label, matlIndex, patch,
 				gtype, numGhostCells);
-  constVar = var;
+  constVar = *var;
+  delete var;
 }
 
 void
