@@ -2206,10 +2206,10 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       }
 
 #ifdef ANNULUSICE
-      if(n_iter <= 250){
+      if(n_iter <= 1.e10){
         if(m==2){
           for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-            int_eng_source[*iter] += 0.1 * 716.0 * rho_CC[*iter] * vol;
+            int_eng_source[*iter] += 1.e10 * delT * rho_CC[*iter] * vol;
           }
         }
       }
