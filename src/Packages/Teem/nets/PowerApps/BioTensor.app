@@ -4429,6 +4429,13 @@ class BioTensorApp {
 	global data_mode
 	global $mods(ChooseNrrd1)-port-index
 
+	# Call toggle_data_mode to reset the data state which
+	# helps maintain state of disabled/enabled modules when
+	# the user executes twice
+	if {!$loading} {
+	    $this toggle_data_mode
+	}
+
 	if {$data_mode == "DWI" || $data_mode == "DWIknownB0" || $data_mode == "B0DWI"} {
 	    # determine if we are loading nrrd, dicom, or analyze
 	    # and check if both DWI and T2 files have been specified
