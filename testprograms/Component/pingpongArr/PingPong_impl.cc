@@ -48,7 +48,7 @@ PingPong_impl::~PingPong_impl()
 {
 }
 
-int PingPong_impl::pingpong(const SIDL::array1<int>& arg)
+int PingPong_impl::pingpong(const SSIDL::array1<int>& arg)
 {
   int sum = 0;
   for(unsigned int i = 0; i < arg.size() ; i++)
