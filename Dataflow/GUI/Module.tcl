@@ -1923,21 +1923,24 @@ proc lightPort { { port "" } { color "black" } } {
     global Subnet LitPorts
 
     if ![string length $port] {
-	if [info exists LitPorts] {
-	    foreach port [lsort -unique $LitPorts] {
-		lightPort $port black
-	    }
-	}
-	return
+ 	if [info exists LitPorts] {
+ 	    foreach port $LitPorts {
+ 		lightPort $port black
+ 	    }
+	    set LitPorts [lreplace $LitPorts 0 end]
+ 	}
+ 	return
     }
 
     if {![info exists Subnet([pMod port])]} return
-		
-    lappend LitPorts $port
+
+    if {![info exists LitPorts] || [lsearch $LitPorts $port] == -1} { 
+	lappend LitPorts $port
+    }
     set canvas $Subnet(Subnet$Subnet([pMod port])_canvas)
     set p $canvas.module[pMod port].portlight[pType port][pNum port]
     if {[winfo exists $p]} {
-	$p configure -background $color
+  	$p configure -background $color
     }
 }
 
