@@ -538,11 +538,11 @@ is_injured(char *targetName, vector<VH_injury> &injured_tissue_list)
 } // end is_injured()
  
 /******************************************************************************
- * VH_injury::isset()
+ * VH_injury::iscomplete()
  *
  * Return whether node is in its completed state or not.
  ******************************************************************************/
-bool VH_injury::isset()
+bool VH_injury::iscomplete()
 {
   bool state = isGeometry == true && timeSet == true && nameSet == true &&
                (((geom_type == "line") &&
@@ -558,7 +558,7 @@ bool VH_injury::isset()
                   rad0set == true && rad1set == true)
                );
   return state;
-} // end VH_injury::isset()
+} // end VH_injury::iscomplete()
 
 /******************************************************************************
  * VH_injury::print()

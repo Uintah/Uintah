@@ -170,7 +170,7 @@ class VH_injury
              context = UNSET; rad0set = rad1set = false;
              inside_rad0set = inside_rad1set = false;
              nameSet = true; timeSet = point0set = point1set = false; };
-  bool isset();
+  bool iscomplete();
   void print();
 };
 
