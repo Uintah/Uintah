@@ -995,7 +995,7 @@ set $m62-notes {}
 set $m63-notes {}
 set $m63-label {unknown}
 set $m63-type {Scalar}
-set $m63-axis {}
+set $m63-axis {axis0}
 set $m63-add {0}
 set $m63-filename {}
 set $m64-notes {}
@@ -1403,7 +1403,7 @@ set $m118-notes {}
 set $m118-port-index {1}
 set $m119-notes {}
 set $m120-notes {}
-set $m120-port-index {0}
+set $m120-port-index {2}
 set $m121-notes {}
 set $m121-interpolation_basis {linear}
 set $m121-map_source_to_single_dest {0}
@@ -1413,19 +1413,18 @@ set $m121-np {1}
 set $m122-notes {}
 set $m122-port-index {3}
 set $m123-notes {}
-# different {evec1}
 set $m123-fibertype {tensorline}
 set $m123-puncture {0.0}
 set $m123-neighborhood {2.0}
-set $m123-stepsize {0.01}
+set $m123-stepsize {0.005}
 set $m123-integration {Euler}
 set $m123-use-aniso {1}
 set $m123-aniso-metric {tenAniso_Cl2}
-set $m123-aniso-thresh {0.4}
+set $m123-aniso-thresh {0.5}
 set $m123-use-length {1}
 set $m123-length {1}
 set $m123-use-steps {0}
-set $m123-steps {1000}
+set $m123-steps {200}
 set $m123-use-conf {1}
 set $m123-conf-thresh {0.5}
 set $m123-kernel {tent}
@@ -1436,10 +1435,10 @@ set $m124-exhaustive_search {0}
 set $m124-exhaustive_search_max_dist {-1}
 set $m124-np {1}
 set $m125-notes {}
-set $m125-nodes-on {1}
+set $m125-nodes-on {0}
 set $m125-nodes-transparency {0}
 set $m125-nodes-as-disks {0}
-set $m125-edges-on {1}
+set $m125-edges-on {0}
 set $m125-edges-transparency {0}
 set $m125-faces-on {0}
 set $m125-use-normals {0}
@@ -1566,6 +1565,7 @@ set mods(ChooseNrrd-ToProcess) $m113
 ### Registered
 set mods(ShowField-Reg) $m9
 set mods(UnuSlice2) $m5
+set mods(UnuJoin) $m47
 set mods(TendEpireg) $m2
 set mods(ChooseNrrd2) $m49
 set mods(ChooseNrrd-ToReg) $m105
@@ -1586,7 +1586,7 @@ set mods(GenStandardColorMaps1)  $m58
 set mods(RescaleColorMap2) $m61
 
 ### Build DT
-set mods(TendEstim1) $m3
+set mods(TendEstim) $m3
 set mods(UnuResample-XY) $m103
 set mods(UnuResample-Z) $m106
 set mods(ChooseNrrd-DT) $m114
@@ -1682,7 +1682,7 @@ set plane_z 0
 global ref_image
 set ref_image 1
 global ref_image_state
-set ref_imgage_state 0
+set ref_image_state 0
 
 global clip_to_isosurface
 set clip_to_isosurface 0
@@ -1706,9 +1706,6 @@ global z_radius
 set z_radius 1.0
 
 ### isosurface variables
-global show_isosurface
-set show_isosurface 0
-
 global clip_by_planes
 set clip_by_planes 0
 
@@ -1756,13 +1753,21 @@ set fiber_color-g 0.5
 global fiber_color-b
 set fiber_color-b 0.5
 
+global fibers_stepsize
+set fibers_stepsize 0.5
+
+global fibers_length
+set fibers_length 100
+
+global fibers_steps
+set fibers_steps 200
+
 
                                                                                
 #######################################################
 # Build up a simplistic standalone application.
 #######################################################
-wm deiconify .
-# wm withdraw .
+wm withdraw .
 
 class BioTensorApp {
     
@@ -1780,10 +1785,10 @@ class BioTensorApp {
 	
 	set viewer_width 640
 	set viewer_height 670
-    
+	
 	set process_width 365
 	set process_height $viewer_height
-
+	
 	set vis_width [expr $notebook_width + 40]
 	set vis_height $viewer_height
 
@@ -1791,6 +1796,9 @@ class BioTensorApp {
 	set screen_height [winfo screenheight .]
 
         set initialized 0
+	set data_completed 0
+	set reg_completed 0
+	set dt_completed 0
 
         set indicator1 ""
         set indicator2 ""
@@ -1822,15 +1830,6 @@ class BioTensorApp {
         set dt_tab1 ""
         set dt_tab2 ""
 
-        set dt_thresh1 ""
-        set dt_thresh2 ""
-
-        set dt_bmatrix1 ""
-        set dt_bmatrix2 ""
-
-        set dt_smooth1 ""
-        set dt_smooth2 ""
-
 	set volumes 0
         set size_x 0
         set size_y 0
@@ -1841,9 +1840,6 @@ class BioTensorApp {
 
         set reg_thresh1 ""
         set reg_thresh2 ""
-
-        set reg_rf1 ""
-        set reg_rf2 ""
 
         set error_module ""
 
@@ -1862,9 +1858,6 @@ class BioTensorApp {
         set fibers_tab1 ""
         set fibers_tab2 ""
 
-        set original_plane 2
-        set original_slice 0
-
         set nrrd_tab1 ""
         set nrrd_tab2 ""
         set dicom_tab1 ""
@@ -1872,15 +1865,16 @@ class BioTensorApp {
         set analyze_tab1 ""
         set analyze_tab2 ""
 
-        set current_step "Data Acquisition"
-        set current_tab "Data Acquisition"
+	set data_next_button1 ""
+	set data_next_button2 ""
+	set data_ex_button1 ""
+	set data_ex_button2 ""
 
         set proc_color "dark red"
-        set next_color "#eae712"
+	set next_color "#cdc858"
 	set execute_color "#5377b5"
         set feedback_color "dodgerblue4"
         set error_color "red4"
-        set bg_color "pink"
 
         # planes
         set last_x 2
@@ -1894,6 +1888,9 @@ class BioTensorApp {
         set clip_y "<"
         set clip_z "<"
         set glyph_type "Principle Eigenvector"
+
+	# fibers
+        set fiber_type "Principle Eigenvector"
 
         # colormaps
         set colormap_width 150
@@ -1929,7 +1926,6 @@ class BioTensorApp {
 
 	# Global Options Tab
 
-
     }
     
 
@@ -1941,34 +1937,24 @@ class BioTensorApp {
     method initialize_blocks {} { 
 	global mods
 	
-        # Blocking Data Section
+        # Blocking Data Section (Analyze and Dicom modules)
 	
-        set data_blocked 1
         disableModule $mods(DicomToNrrd1) 1
         disableModule $mods(AnalyzeToNrrd1) 1
 	
         disableModule $mods(DicomToNrrd-T2) 1
         disableModule $mods(AnalyzeToNrrd-T2) 1
 
+	# Blocking Registration
         disableModule $mods(TendEpireg) 1
+	disableModule $mods(UnuJoin) 1
         disableModule $mods(ChooseNrrd-ToReg) 1
         disableModule $mods(RescaleColorMap2) 1
-   
-        #disableModule $mods(ChooseNrrd-ToProcess) 1
-
-        set reg_blocked 1
-        set dt_blocked 1
-
-        # Isosurface of Original 
-
-        # B-matrix
+  
+        # Building Diffusion Tensors
         disableModule $mods(NrrdReader-BMatrix) 1
-
-        disableModule $mods(TendEstim1) 1
+        disableModule $mods(TendEstim) 1
 	disableModule $mods(ChooseNrrd-DT) 1
-
-
-        # Vis Steps
 
         # Planes
         disableModule $mods(QuadToTri-X) 1
@@ -1987,12 +1973,14 @@ class BioTensorApp {
         disableModule $mods(SampleField-GlyphSeeds) 1
         disableModule $mods(DirectInterpolate-GlyphSeeds) 1
  	disableModule $mods(ChooseField-Glyphs) 1
+	disableModule $mods(RescaleColorMap-Glyphs) 1
 
 	# Fibers
         disableModule $mods(Probe-FiberSeeds) 1
         disableModule $mods(SampleField-FiberSeeds) 1
         disableModule $mods(DirectInterpolate-FiberSeeds) 1
  	disableModule $mods(ChooseField-Fibers) 1
+	disableModule $mods(RescaleColorMap-Fibers) 1
 	
     }
 
@@ -2003,9 +1991,6 @@ class BioTensorApp {
 	# Embed the Viewer
 	set eviewer [$mods(Viewer) ui_embedded]
 	$eviewer setWindow $win.viewer
-	
-	set att_msg "Detach from Viewer"
-	set det_msg " Attach to Viewer "
 	
 	
 	### Processing Part
@@ -2034,8 +2019,8 @@ class BioTensorApp {
 	set detachedPFr $win.detachedP
 	set attachedPFr $win.attachedP
 
-	init_Pframe $detachedPFr.f $det_msg 0
-	init_Pframe $attachedPFr.f $att_msg 1
+	init_Pframe $detachedPFr.f 0
+	init_Pframe $attachedPFr.f 1
 
 	### create detached width and heigh
 	append geomP $process_width x $process_height
@@ -2067,8 +2052,8 @@ class BioTensorApp {
 	set detachedVFr $win.detachedV
 	set attachedVFr $win.attachedV
 	
-	init_Vframe $detachedVFr.f $det_msg 0
-	init_Vframe $attachedVFr.f $att_msg 1
+	init_Vframe $detachedVFr.f 0
+	init_Vframe $attachedVFr.f 1
 
 
 	### pack 3 frames
@@ -2088,20 +2073,16 @@ class BioTensorApp {
 
         set initialized 1
 
-        # change_indicator
-
-        #disableModule $mods(ChooseNrrd-ToProcess) 1
     }
 
 
-    method init_Pframe { m msg case } {
+    method init_Pframe { m case } {
         global mods
         
 	if { [winfo exists $m] } {
 	    ### Menu
 	    frame $m.main_menu -relief raised -borderwidth 3
 	    pack $m.main_menu -fill x -anchor nw
-	    
 
 
 	    menubutton $m.main_menu.file -text "File" -underline 0 \
@@ -2157,7 +2138,7 @@ class BioTensorApp {
                 -tabpos n
 	    pack $process.tnb -side top -anchor n 
 	    
-            set step_tab [$process.tnb add -label "Data" -command "$this change_processing_tab 0"]
+            set step_tab [$process.tnb add -label "Data" -command "$this change_processing_tab Data"]
 	    
             if {$case == 0} {
                 set proc_tab1 $process.tnb
@@ -2165,19 +2146,20 @@ class BioTensorApp {
                 set proc_tab2 $process.tnb
             }
 
-	    
+
+	    # Radiobuttons for by-passing any processing and loading
+	    # the tensors directly
             global data_mode
+
             radiobutton $step_tab.mode1 -text "Load Diffusion Weighted Images (DWI)" \
                 -variable data_mode -value "DWI" \
-                -command "$this toggle_data_mode $step_tab"
+                -command "$this toggle_data_mode"
 
-
-            radiobutton $step_tab.mode2 -text "Load Tensor Volume" \
+            radiobutton $step_tab.mode2 -text "Load Tensor Volumes" \
                 -variable data_mode -value "tensor" \
-                -command "$this toggle_data_mode $step_tab"
+                -command "$this toggle_data_mode"
 
             pack $step_tab.mode1 $step_tab.mode2 -side top -anchor nw -padx 3 -pady 3
-
 
 
 	    ### Data Acquisition
@@ -2194,19 +2176,7 @@ class BioTensorApp {
             }
 	    
             ### Nrrd
-            set page [$step_tab.tnb add -label "Nrrd" -command {
-		global mods
-		global $mods(ChooseNrrd1)-port-index
-		global $mods(ChooseNrrd-T2)-port-index
-		global $mods(ChooseNrrd-ToProcess)-port-index
-		
-		# configure DWI reader and T2 reader
-		set $mods(ChooseNrrd1)-port-index 0
-		set $mods(ChooseNrrd-T2)-port-index 0
-		set $mods(ChooseNrrd-ToProcess)-port-index 0
-		
-                app configure_readers
-	    }]
+            set page [$step_tab.tnb add -label "Nrrd" -command {app configure_readers Nrrd}]
 
 	    if {$case == 0} {
                 set nrrd_tab1 $page
@@ -2220,12 +2190,12 @@ class BioTensorApp {
 
             iwidgets::entryfield $page.file -labeltext "Nrrd File:" -labelpos w \
                 -textvariable $mods(NrrdReader1)-filename \
-                -command "$this execute_reader_and_set_tuple_axis"
+                -command "$this execute_Data"
             pack $page.file -side top -padx 3 -pady 6 -anchor n \
 	        -fill x 
 	    
             button $page.load -text "Browse" \
-                -command "$this load_nrrd" \
+                -command "$this load_nrrd_dwi" \
                 -width 12
             pack $page.load -side top -anchor n -padx 3 -pady 6
 	    
@@ -2236,31 +2206,18 @@ class BioTensorApp {
             pack $page.t2l -side top -anchor nw -padx 3 -pady 3
 
             iwidgets::entryfield $page.file2 -labeltext "Nrrd File:" -labelpos w \
-                -textvariable $mods(NrrdReader-T2)-filename \
-                -command "$this execute_reader_and_set_tuple_axis2"
+                -textvariable $mods(NrrdReader-T2)-filename 
             pack $page.file2 -side top -padx 3 -pady 6 -anchor n \
 	        -fill x 
 	    
             button $page.load2 -text "Browse" \
-                -command "$this load_nrrd2" \
+                -command "$this load_nrrd_t2" \
                 -width 12
             pack $page.load2 -side top -anchor n -padx 3 -pady 6
 	    
 	    
             ### Dicom
-            set page [$step_tab.tnb add -label "Dicom" -command {
-		global mods
-		global $mods(ChooseNrrd1)-port-index
-		global $mods(ChooseNrrd-T2)-port-index
-		global $mods(ChooseNrrd-ToProcess)-port-index
-		
-		# configure DWI reader and T2 reader
-		set $mods(ChooseNrrd1)-port-index 1
-		set $mods(ChooseNrrd-T2)-port-index 1
-		set $mods(ChooseNrrd-ToProcess)-port-index 1
-		
-                app configure_readers
-            }]
+            set page [$step_tab.tnb add -label "Dicom" -command {app configure_readers Dicom}]
 
 	    if {$case == 0} {
                 set dicom_tab1 $page
@@ -2287,20 +2244,9 @@ class BioTensorApp {
 	    pack $page.load2 -side top -anchor n \
 		-padx 3 -pady 5 -ipadx 2 -ipady 2
 	    
-            ### Analyze
-            set page [$step_tab.tnb add -label "Analyze" -command {
-		global mods
-		global $mods(ChooseNrrd1)-port-index
-		global $mods(ChooseNrrd-T2)-port-index
-		global $mods(ChooseNrrd-ToProcess)-port-index
-		
-		# configure DWI reader and T2 reader
-		set $mods(ChooseNrrd1)-port-index 2
-		set $mods(ChooseNrrd-T2)-port-index 2
-		set $mods(ChooseNrrd-ToProcess)-port-index 2
 
-                app configure_readers
-            }]
+            ### Analyze
+            set page [$step_tab.tnb add -label "Analyze" -command {app configure_readers Analyze}]
 
 	    if {$case == 0} {
                 set analyze_tab1 $page
@@ -2328,9 +2274,12 @@ class BioTensorApp {
 	    pack $page.load2 -side top -anchor n \
 		-padx 3 -pady 5 -ipadx 2 -ipady 2
             
+
+	    # Set default view to be Nrrd
             $step_tab.tnb view "Nrrd"
 	    
 	    
+	    # Execute and Next buttons
             frame $step_tab.last
             pack $step_tab.last -side bottom -anchor ne \
 		-padx 5 -pady 5
@@ -2339,21 +2288,29 @@ class BioTensorApp {
 		-background $execute_color \
 		-activebackground $execute_color \
 		-width 8 \
-		-command "$this execute_reader_and_set_tuple_axis"
+		-command "$this execute_Data"
 	    Tooltip $step_tab.last.ex $tips(Execute-DataAcquisition)
 
 	    button $step_tab.last.ne -text "Next" \
-                -command "$this view_Registration" -width 8 \
+                -command "$this change_processing_tab Registration" -width 8 \
                 -activebackground $next_color \
-                -background $next_color 
+                -background grey75 -state disabled 
 	    Tooltip $step_tab.last.ne $tips(Next-DataAcquisition)
 
             pack $step_tab.last.ne $step_tab.last.ex -side right -anchor ne \
 		-padx 2 -pady 0
+
+	    if {$case == 0} {
+		set data_next_button1 $step_tab.last.ne
+		set data_ex_button1 $step_tab.last.ex
+	    } else {
+		set data_next_button2 $step_tab.last.ne
+		set data_ex_button2 $step_tab.last.ex
+	    }
 	    
 	    
 	    ### Registration
-            set step_tab [$process.tnb add -label "Registration" -command "$this change_processing_tab 1"]          
+            set step_tab [$process.tnb add -label "Registration" -command "$this change_processing_tab Registration"]          
 	    
             if {$case == 0} {
 		set reg_tab1 $step_tab
@@ -2361,20 +2318,21 @@ class BioTensorApp {
 		set reg_tab2 $step_tab
             }
 	    
+	    # Checkbutton to skip Registration entirely
             global do_registration
             checkbutton $step_tab.doreg -text "Perform Global EPI Registration" \
                 -variable do_registration \
                 -command "$this toggle_do_registration"
             pack $step_tab.doreg -side top -anchor nw -padx 7 -pady 0
 	    
+	    # Gradient File
 	    iwidgets::labeledframe $step_tab.gradients \
                 -labeltext "Gradients" \
                 -labelpos nw
             pack $step_tab.gradients -side top -anchor n \
-		-fill x -expand 1 -padx 3 -pady 0
+		-fill x -padx 3 -pady 2
 	    
 	    set gradients [$step_tab.gradients childsite]
-	    
 	    
             iwidgets::entryfield $gradients.file -labeltext "Gradients File:" \
                 -labelpos w \
@@ -2436,10 +2394,6 @@ class BioTensorApp {
             pack $refimg.s.ref -side top -anchor ne -padx 0 -pady 0
 	    
 	    
-	    global mods
-	    global  $mods(TendEpireg)-reference
-            set $mods(TendEpireg)-reference "-1"
-            $refimg.est select
 	    
             ### Segmentation
             iwidgets::labeledframe $step_tab.seg \
@@ -2544,7 +2498,7 @@ class BioTensorApp {
 		-sliderlength 15 \
 		-showvalue false \
 		-orient horizontal \
-		-command "$this configure_fitting_label $step_tab.fit.f"
+		-command "$this configure_fitting_label "
 	    
             pack $step_tab.fit.f $step_tab.fit.p \
 		$step_tab.fit.s  -side left \
@@ -2554,36 +2508,33 @@ class BioTensorApp {
 	    iwidgets::optionmenu $step_tab.rf -labeltext "Resampling Filter" \
                 -labelpos w -width 160  \
                 -state disabled \
-                -command "$this set_resampling_filter $case"
+                -command "$this set_resampling_filter $step_tab.rf"
 	    
             pack $step_tab.rf -side top \
 		-anchor nw -padx 8 -pady 3
 	    
-            if {$case == 0} {
-		set reg_rf1 $step_tab.rf
-            } else {
-		set reg_rf2 $step_tab.rf
-            }
-	    
-            $step_tab.rf insert end Catmull-Rom Linear "Windowed Sinc"
+            $step_tab.rf insert end Linear Catmull-Rom "Windowed Sinc"
+
+	    $step_tab.rf select "Catmull-Rom"
 	    
 	    
+	    # Execute and Next buttons
             frame $step_tab.last
             pack $step_tab.last -side bottom -anchor ne  \
 		-padx 5 -pady 5
             button $step_tab.last.ex -text "Execute" -state disabled -width 8 \
-		-command "$this execute_TendEpireg"
+		-command "$this execute_Registration"
 	    Tooltip $step_tab.last.ex $tips(Execute-Registration)
 
 	    button $step_tab.last.ne -text "Next" -state disabled -width 8 \
-		-command "$this view_DT" 
+		-command "$this change_processing_tab \"Build DTs\"" 
 	    Tooltip $step_tab.last.ne $tips(Next-Registration)
 
             pack $step_tab.last.ne $step_tab.last.ex -side right \
 		-anchor ne -padx 2 -pady 0
 	    
 	    ### Build DT
-            set step_tab [$process.tnb add -label "Build DTs" -command "$this change_processing_tab 2"]
+            set step_tab [$process.tnb add -label "Build DTs" -command "$this change_processing_tab \"Build DTs\""]
 	    
             if {$case == 0} {
 		set dt_tab1 $step_tab
@@ -2591,6 +2542,7 @@ class BioTensorApp {
 		set dt_tab2 $step_tab
             }
 	    
+	    # DWI Smooting
             iwidgets::labeledframe $step_tab.blur \
 		-labeltext "DWI Smoothing" \
 		-labelpos nw
@@ -2599,11 +2551,6 @@ class BioTensorApp {
 	    
             set blur [$step_tab.blur childsite]
 	    
-            if {$case == 0} {
-		set dt_smooth1 $blur
-            } else {
-		set dt_smooth2 $blur
-            }
 	    
             global do_smoothing
             checkbutton $blur.smooth -text "Do Smoothing" \
@@ -2630,7 +2577,6 @@ class BioTensorApp {
             pack $blur.rad1.l $blur.rad1.s $blur.rad1.v -side left -anchor nw \
 		-padx 3 -pady 0
 	    
-	    
             frame $blur.rad2
             pack $blur.rad2 -side top -anchor n -padx 3 -pady 0
 	    
@@ -2648,7 +2594,8 @@ class BioTensorApp {
             pack $blur.rad2.l $blur.rad2.s $blur.rad2.v -side left -anchor nw \
 		-padx 3 -pady 0
 	    
-	    
+
+	    # Masking Threshold
             iwidgets::labeledframe $step_tab.thresh \
 		-labeltext "Masking Threshold" \
 		-labelpos nw
@@ -2657,17 +2604,11 @@ class BioTensorApp {
 	    
             set thresh [$step_tab.thresh childsite]
 	    
-	    if {$case == 0} {
-		set dt_thresh1 $thresh
-            } else {
-		set dt_thresh2 $thresh
-            }
 	    
-	    
-            global $mods(TendEstim1)-use-default-threshold
+            global $mods(TendEstim)-use-default-threshold
             radiobutton $thresh.def -text "Automatically Determine Threshold" \
 		-state disabled \
-		-variable $mods(TendEstim1)-use-default-threshold \
+		-variable $mods(TendEstim)-use-default-threshold \
 		-value 1 \
 		-command "$this toggle_dt_threshold"
             pack $thresh.def -side top -anchor nw -padx 2 -pady 0
@@ -2677,16 +2618,17 @@ class BioTensorApp {
 	    
             radiobutton $thresh.choose.button -text "Specify Threshold:" \
 		-state disabled \
-		-variable $mods(TendEstim1)-use-default-threshold -value 0 \
+		-variable $mods(TendEstim)-use-default-threshold -value 0 \
 		-command "$this toggle_dt_threshold" 
             entry $thresh.choose.entry -width 10 \
-		-textvariable $mods(TendEstim1)-threshold \
+		-textvariable $mods(TendEstim)-threshold \
 		-state disabled -foreground grey64
             pack $thresh.choose.button $thresh.choose.entry -side left \
 		-anchor n -padx 2 -pady 3
 	    
             $thresh.def select
-	    
+
+	    # B-Matrix
             iwidgets::labeledframe $step_tab.bm \
 		-labeltext "B-Matrix" \
 		-labelpos nw 
@@ -2694,12 +2636,6 @@ class BioTensorApp {
 		-fill x -padx 3 -pady 0 -anchor n
 	    
             set bm [$step_tab.bm childsite]
-	    
-	    if {$case == 0} {
-		set dt_bmatrix1 $bm
-            } else {
-		set dt_bmatrix2 $bm              
-            }
 	    
 	    global bmatrix
             radiobutton $bm.computeb -text "Compute B-Matrix Using Gradients Provided" \
@@ -2730,23 +2666,18 @@ class BioTensorApp {
 	    
             pack $bm.browse -side top -anchor ne -padx 35 -pady 5
 	    
-            $bm.computeb select
-	    
+        
+	    # Execute and Next
             frame $step_tab.last
             pack $step_tab.last -side bottom -anchor ne \
 		-padx 5 -pady 5
 	    
             button $step_tab.last.ex -text "Execute" \
-		-width 8 -state disabled \
+		-width 16 -state disabled \
 		-command "$this execute_DT"
 	    Tooltip $step_tab.last.ex $tips(Execute-DT)
 
-	    button $step_tab.last.ne -text "Next" \
-                -command "$this view_Vis" -width 8 \
-                -state disabled 
-	    Tooltip $step_tab.last.ne $tips(Next-DT)
-
-            pack $step_tab.last.ne $step_tab.last.ex -side right -anchor ne \
+            pack $step_tab.last.ex -side right -anchor ne \
 		-padx 2 -pady 0
 	    
 	    
@@ -2774,7 +2705,6 @@ class BioTensorApp {
 	    
             construct_indicator $process.indicator.canvas
 	    
-	    
             $process.tnb view "Data"
 	    
 	    ### Attach/Detach button
@@ -2800,7 +2730,7 @@ class BioTensorApp {
     
     
 
-    method init_Vframe { m msg case} {
+    method init_Vframe { m case} {
 	global mods
 	if { [winfo exists $m] } {
 	    ### Visualization Frame
@@ -2808,7 +2738,6 @@ class BioTensorApp {
 	    iwidgets::labeledframe $m.vis \
 		-labelpos n -labeltext "Visualization" 
 	    pack $m.vis -side right -anchor n 
-                # -fill both -expand 1
 	    
 	    set vis [$m.vis childsite]
 	    
@@ -2842,7 +2771,7 @@ class BioTensorApp {
             }
 	    
             ### Variance
-            set vis_tab [$page.vis_tabs add -label "Variance" -command "$this change_vis_tab 0"]
+            set vis_tab [$page.vis_tabs add -label "Variance" -command "$this change_vis_tab Variance"]
 	    
 	    if {$case == 0} {
 		set variance_tab1 $vis_tab
@@ -2852,7 +2781,7 @@ class BioTensorApp {
             
 	    
 	    ### Planes
-            set vis_tab [$page.vis_tabs add -label "Planes" -command "$this change_vis_tab 1"]
+            set vis_tab [$page.vis_tabs add -label "Planes" -command "$this change_vis_tab Planes"]
 	    
 	    if {$case == 0} {
 		set planes_tab1 $vis_tab
@@ -2862,7 +2791,7 @@ class BioTensorApp {
 	    
 	    
 	    ### Isosurface
-            set vis_tab [$page.vis_tabs add -label "Isosurface" -command "$this change_vis_tab 2"]
+            set vis_tab [$page.vis_tabs add -label "Isosurface" -command "$this change_vis_tab Isosurface"]
 	    if {$case == 0} {
 		set isosurface_tab1 $vis_tab
 	    } else {
@@ -2871,7 +2800,7 @@ class BioTensorApp {
 	    
 	    
 	    ### Glyphs
-            set vis_tab [$page.vis_tabs add -label "Glyphs" -command "$this change_vis_tab 3"]
+            set vis_tab [$page.vis_tabs add -label "Glyphs" -command "$this change_vis_tab Glyhps"]
 	    
 	    if {$case == 0} {
 		set glyphs_tab1 $vis_tab
@@ -2881,7 +2810,7 @@ class BioTensorApp {
 	    
 	    
 	    ### Fibers
-            set vis_tab [$page.vis_tabs add -label "Fibers" -command "$this change_vis_tab 4"]
+            set vis_tab [$page.vis_tabs add -label "Fibers" -command "$this change_vis_tab Fibers"]
 	    if {$case == 0} {
 		set fibers_tab1 $vis_tab
 	    } else {
@@ -2891,6 +2820,7 @@ class BioTensorApp {
 	    
             $page.vis_tabs view "Variance"
 	    
+
 	    ### Renderer Options Tab
 	    create_viewer_tab $vis
 	    
@@ -2925,28 +2855,24 @@ class BioTensorApp {
 	
 	set view_opts [$page.viewer_opts childsite]
 	
-	frame $view_opts.eframe -relief flat
-	pack $view_opts.eframe -side top -padx 4 -pady 4
+	frame $view_opts.eframe -relief groove -borderwidth 2
+	pack $view_opts.eframe -side top -anchor n -padx 4 -pady 4
 	
-	frame $view_opts.eframe.a -relief groove -borderwidth 2
-	pack $view_opts.eframe.a -side left 
-	
-	
-	checkbutton $view_opts.eframe.a.light -text "Lighting" \
+	checkbutton $view_opts.eframe.light -text "Lighting" \
 	    -variable $mods(Viewer)-ViewWindow_0-global-light \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
 	
-	checkbutton $view_opts.eframe.a.fog -text "Fog" \
+	checkbutton $view_opts.eframe.fog -text "Fog" \
 	    -variable $mods(Viewer)-ViewWindow_0-global-fog \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
 	
-	checkbutton $view_opts.eframe.a.bbox -text "BBox" \
+	checkbutton $view_opts.eframe.bbox -text "BBox" \
 	    -variable $mods(Viewer)-ViewWindow_0-global-debug \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
 	
-	pack $view_opts.eframe.a.light $view_opts.eframe.a.fog \
-	    $view_opts.eframe.a.bbox  \
-	    -side top -anchor w -padx 4 -pady 4
+	pack $view_opts.eframe.light $view_opts.eframe.fog \
+	    $view_opts.eframe.bbox  \
+	    -side left -anchor n -padx 4 -pady 4
 	
 	
 	frame $view_opts.buttons -relief flat
@@ -2971,7 +2897,8 @@ class BioTensorApp {
 	    -menu $view_opts.buttons.v1.views.def.m -relief raised \
 	    -padx 3 -pady 3  -width 12
 	
-	menu $view_opts.buttons.v1.views.def.m
+	menu $view_opts.buttons.v1.views.def.m -tearoff 0
+
 	$view_opts.buttons.v1.views.def.m add cascade -label "Look down +X Axis" \
 	    -menu $view_opts.buttons.v1.views.def.m.posx
 	$view_opts.buttons.v1.views.def.m add cascade -label "Look down +Y Axis" \
@@ -2988,7 +2915,7 @@ class BioTensorApp {
 	
 	pack $view_opts.buttons.v1.views.def -side left -pady 3 -padx 3 -fill x
 	
-	menu $view_opts.buttons.v1.views.def.m.posx
+	menu $view_opts.buttons.v1.views.def.m.posx -tearoff 0
 	$view_opts.buttons.v1.views.def.m.posx add radiobutton -label "Up vector +Y" \
 	    -variable $mods(Viewer)-ViewWindow_0-pos -value x1_y1 \
 	    -command "$mods(Viewer)-ViewWindow_0-c Views"
@@ -3002,7 +2929,7 @@ class BioTensorApp {
 	    -variable $mods(Viewer)-ViewWindow_0-pos -value x1_z0 \
 	    -command "$mods(Viewer)-ViewWindow_0-c Views"
 	
-	menu $view_opts.buttons.v1.views.def.m.posy
+	menu $view_opts.buttons.v1.views.def.m.posy -tearoff 0
 	$view_opts.buttons.v1.views.def.m.posy add radiobutton -label "Up vector +X" \
 	    -variable $mods(Viewer)-ViewWindow_0-pos -value y1_x1 \
 	    -command "$mods(Viewer)-ViewWindow_0-c Views" 
@@ -3016,7 +2943,7 @@ class BioTensorApp {
 	    -variable $mods(Viewer)-ViewWindow_0-pos -value y1_z0 \
 	    -command "$mods(Viewer)-ViewWindow_0-c Views"
 	
-	menu $view_opts.buttons.v1.views.def.m.posz
+	menu $view_opts.buttons.v1.views.def.m.posz -tearoff 0
 	$view_opts.buttons.v1.views.def.m.posz add radiobutton -label "Up vector +X" \
 	    -variable $mods(Viewer)-ViewWindow_0-pos -value z1_x1 \
 	    -command "$mods(Viewer)-ViewWindow_0-c Views" 
@@ -3030,7 +2957,7 @@ class BioTensorApp {
 	    -variable $mods(Viewer)-ViewWindow_0-pos -value z1_y0 \
 	    -command "$mods(Viewer)-ViewWindow_0-c Views"
 	
-	menu $view_opts.buttons.v1.views.def.m.negx
+	menu $view_opts.buttons.v1.views.def.m.negx -tearoff 0
 	$view_opts.buttons.v1.views.def.m.negx add radiobutton -label "Up vector +Y" \
 	    -variable $mods(Viewer)-ViewWindow_0-pos -value x0_y1 \
 	    -command "$mods(Viewer)-ViewWindow_0-c Views"
@@ -3044,7 +2971,7 @@ class BioTensorApp {
 	    -variable $mods(Viewer)-ViewWindow_0-pos -value x0_z0 \
 	    -command "$mods(Viewer)-ViewWindow_0-c Views"
 	
-	menu $view_opts.buttons.v1.views.def.m.negy
+	menu $view_opts.buttons.v1.views.def.m.negy -tearoff 0
 	$view_opts.buttons.v1.views.def.m.negy add radiobutton -label "Up vector +X" \
 	    -variable $mods(Viewer)-ViewWindow_0-pos -value y0_x1 \
 	    -command "$mods(Viewer)-ViewWindow_0-c Views" 
@@ -3058,7 +2985,7 @@ class BioTensorApp {
 	    -variable $mods(Viewer)-ViewWindow_0-pos -value y0_z0 \
 	    -command "$mods(Viewer)-ViewWindow_0-c Views"
 	
-	menu $view_opts.buttons.v1.views.def.m.negz
+	menu $view_opts.buttons.v1.views.def.m.negz -tearoff 0
 	$view_opts.buttons.v1.views.def.m.negz add radiobutton -label "Up vector +X" \
 	    -variable $mods(Viewer)-ViewWindow_0-pos -value z0_x1 \
 	    -command "$mods(Viewer)-ViewWindow_0-c Views" 
@@ -3087,7 +3014,6 @@ class BioTensorApp {
 	    -side top -padx 2 -pady 2 -anchor ne -fill x
 	
 	$vis.tnb view "Data Vis"
-	
     }
 
 
@@ -3117,18 +3043,6 @@ class BioTensorApp {
 	    wm geometry $win $geom
 	    set IsPAttached 1
 	}
-
-        # configure reference state
-        toggle_reference_image_state
-
-        # configure reg threshold
-        toggle_registration_threshold
-
-        # configure dt threshold
-        toggle_dt_threshold
-
-        # configure dt b-matrix state
-        toggle_b_matrix
     }
 
 
@@ -3158,7 +3072,6 @@ class BioTensorApp {
 	    wm geometry $win $geom
 	    set IsVAttached 1
 	}
-	# update
     }
 
 
@@ -3171,29 +3084,34 @@ class BioTensorApp {
         update idletasks
 	
  	global $mods(NrrdReader-Gradient)-axis
-	set $mods(NrrdReader-Gradient)-axis 0
+	set $mods(NrrdReader-Gradient)-axis axis0
     }
     
-    method load_nrrd {} {
+    method load_nrrd_dwi {} {
 	global mods
         $mods(NrrdReader1) make_file_open_box
 	
 	tkwait window .ui$mods(NrrdReader1)-fb
 	
 	update idletasks
+
+ 	global $mods(NrrdReader1)-axis
+	set $mods(NrrdReader1)-axis axis0
 	
-        execute_reader_and_set_tuple_axis
+        #execute_Data
     }
     
-    method load_nrrd2 {} {
+    method load_nrrd_t2 {} {
 	global mods
         $mods(NrrdReader-T2) make_file_open_box
 	
 	tkwait window .ui$mods(NrrdReader-T2)-fb
+
+ 	global $mods(NrrdReader-T2)-axis
+	set $mods(NrrdReader-T2)-axis axis0
 	
 	update idletasks
 	
-        execute_reader_and_set_tuple_axis2
     } 
     
     
@@ -3222,14 +3140,200 @@ class BioTensorApp {
 	    set fileid [open $savefile w]
 	    
 	    # Save out data information 
-	    puts $fileid "Save\n"
-	    
+	    puts $fileid "# BioTensor Session\n"
+	    puts $fileid "set version 1.0"
+
+	    save_module_variables $fileid
+	    save_class_variables $fileid
+	    save_global_variables $fileid
+	    save_disabled_modules $fileid
+
 	    close $fileid
 	}
     }
+
+    method save_module_variables { fileid } {
+	# make globals accessible
+	foreach g [info globals] {
+	    global $g
+	}
+	
+	puts $fileid "# Save out module variables\n"
+	
+	set searchID [array startsearch mods]
+	while {[array anymore mods $searchID]} {
+	    set m [array nextelement mods $searchID]
+	    foreach v [info vars $mods($m)*] {
+		set var [get_module_variable_name $v]
+		if {$var != "msgStream" && ![array exists $v]} {
+		    puts $fileid "set \$mods($m)-$var \{[set $mods($m)-$var]\}"
+		}
+	    }
+	}
+	array donesearch mods $searchID
+    }
     
-    method load_session {} {
-	global mods
+    method get_module_variable_name { var } {
+	# take out the module part of the variable name
+	set end [string length $var]
+	set start [string first "-" $var]
+	set start [expr 1 + $start]
+	
+	return [string range $var $start $end]
+    }
+
+    method save_disabled_modules { fileid } {
+	global mods Disabled
+
+	puts $fileid "\n# Disabled Modules\n"
+	
+	set searchID [array startsearch mods]
+	while {[array anymore mods $searchID]} {
+	    set m [array nextelement mods $searchID]
+	    if {[info exists Disabled($mods($m))] && $Disabled($mods($m))} {
+		puts $fileid "disableModule \$mods($m) 1"
+	    }
+	}
+	array donesearch mods $searchID
+    }
+
+    method save_class_variables { fileid } {
+	puts $fileid "\n# Class Variables\n"
+	
+	foreach v [info variable] {
+	    set var [get_class_variable_name $v]
+	    if {![array exists $var] && $var != "this"} {
+		puts $fileid "set $var \{[set $var]\}"
+	    }
+	}
+    }
+    
+    
+    method save_global_variables { fileid } {
+	puts $fileid "\n# Global Variables\n"
+	
+	#foreach g [info globals] {
+	# puts $fileid "set $g \{[set $g]\}"
+	#}
+	
+	# Save out my globals by hand because otherwise they conflict with
+	# the module variables
+	global data_mode
+	puts $fileid "set data_mode $data_mode"
+	
+	### planes variables that must be globals (all checkbuttons)
+	global show_planes
+	puts $fileid "set show_planes \{$show_planes\}"
+	global show_plane_x
+	puts $fileid "set show_plane_x $show_plane_x"
+	global show_plane_y
+	puts $fileid "set show_plane_y $show_plane_y"
+	global show_plane_z
+	puts $fileid "set show_plane_z $show_plane_z"
+	global plane_x
+	puts $fileid "set plane_x $plane_x"
+	global plane_y
+	puts $fileid "set plane_y $plane_y"
+	global plane_z
+	puts $fileid "set plane_z $plane_z"
+	
+	### registration globals
+	global ref_image
+	puts $fileid "set ref_image $ref_image"
+	global ref_image_state
+	puts $fileid "set ref_image_state $ref_image_state"
+	
+	global clip_to_isosurface
+	puts $fileid "set clip_to_isosurface $clip_to_isosurface"
+	
+	global clip_to_isosurface_color
+	puts $fileid "set clip_to_isosurface_color $clip_to_isosurface_color"
+	global clip_to_isosurface_color-r
+	puts $fileid "set clip_to_isosurface_color-r $clip_to_isosurface_color-r"
+	global clip_to_isosurface_color-g
+	puts $fileid "set clip_to_isosurface_color-g $clip_to_isosurface_color-g"
+	global clip_to_isosurface_color-b
+	puts $fileid "set clip_to_isosurface_color-b $clip_to_isosurface_color-b"
+	
+	global bmatrix
+	puts $fileid "set bmatrix $bmatrix"
+	
+	### DT Globals
+	global xy_radius
+	puts $fileid "set xy_radius $xy_radius"
+	global z_radius 
+	puts $fileid "set z_radius $z_radius"
+	
+	### isosurface variables
+	global clip_by_planes
+	puts $fileid "set clip_by_planes $clip_by_planes"
+	
+	global do_registration 
+	puts $fileid "set do_registration $do_registration"
+	
+	global do_smoothing
+	puts $fileid "set do_smoothing $do_smoothing"
+	
+	global isosurface_color
+	puts $fileid "set isosurface_color $isosurface_color"
+	global isosurface_color-r
+	puts $fileid "set isosurface_color-r $isosurface_color-r"
+	global isosurface_color-g
+	puts $fileid "set isosurface_color-g $isosurface_color-g"
+	global isosurface_color-b
+	puts $fileid "set isosurface_color-b $isosurface_color-b"
+	
+	# glyphs
+	global glyph_display_type
+	puts $fileid "set glyph_display_type $glyph_display_type"
+	
+	global glyph_color
+	puts $fileid "set glyph_color $glyph_color"
+	global glyph_color-r
+	puts $fileid "set glyph_color-r $glyph_color-r"
+	global glyph_color-g
+	puts $fileid "set glyph_color-g $glyph_color-g"
+	global glyph_color-b
+	puts $fileid "set glyph_color-b $glyph_color-b"
+	
+	global scale_glyph
+	puts $fileid "set scale_glyph $scale_glyph"
+	
+	global exag_glyph
+	puts $fileid "set exag_glyph $exag_glyph"
+	
+	# fibers
+	global fiber_color
+	puts $fileid "set fiber_color $fiber_color"
+	global fiber_color-r
+	puts $fileid "set fiber_color-r $fiber_color-r"
+	global fiber_color-g
+	puts $fileid "set fiber_color-g $fiber_color-g"
+	global fiber_color-b
+	puts $fileid "set fiber_color-b $fiber_color-b"
+	
+	global fibers_stepsize
+	puts $fileid "set fibers_stepsize $fibers_stepsize"
+	
+	global fibers_length
+	puts $fileid "set fibers_length $fibers_length"
+	
+	global fibers_steps
+	puts $fileid "set fibers_steps $fibers_steps"
+    }
+    
+    
+    method get_class_variable_name { var } {
+	# Remove the :: from the variables
+	set end [string length $var]
+	set start [string last "::" $var]
+	set start [expr 2 + $start]
+	
+	return [string range $var $start $end]
+    }
+    
+    
+    method load_session {} {	
 	set types {
 	    {{App Settings} {.set} }
 	    {{Other} { * }}
@@ -3237,12 +3341,45 @@ class BioTensorApp {
 	
 	set file [tk_getOpenFile -filetypes $types]
 	if {$file != ""} {
+	    
+	    # Reset application 
+	    reset_app
+	    
+	    foreach g [info globals] {
+		global $g
+	    }
+	    
 	    source $file
 	    
+	    # configure attach/detach
+	    
+	    # configure all tabs by calling all configure functions
+	    
+	    # activate proper step tabs
+	    
+            # fix next buttons
+	    
+	    # execute?
 	}	
     }
 
-        
+
+    method reset_app {} {
+	global mods
+	# enable all modules
+	set searchID [array startsearch mods]
+	while {[array anymore mods $searchID]} {
+	    set m [array nextelement mods $searchID]
+	    disableModule $mods($m) 0
+	}
+	array donesearch mods $searchID
+	
+	# disable registration and building dt tabs
+	
+	# remove stuff on vis tabs if there???
+    }
+    
+    
     method exit_app {} {
 	NiceQuit
     }
@@ -3254,7 +3391,7 @@ class BioTensorApp {
     method show_about {} {
 	tk_messageBox -message "BioTensor About Box" -type ok -icon info -parent .standalone
     }
-
+    
     method display_module_error {} {
         if {$error_module != ""} {
 	    set result [$error_module displayLog]
@@ -3263,146 +3400,133 @@ class BioTensorApp {
     
     method indicate_dynamic_compile { which mode } {
 	if {$mode == "start"} {
-	    $indicatorL1 configure -text "Compiling..."
-	    $indicatorL2 configure -text "Compiling..."
+	    change_indicator_labels "Dynamically Compiling Code..."
         } else {
-	    if {$current_step == "Visualization"} {
-		$indicatorL1 configure -text "Visualization..."
-		$indicatorL2 configure -text "Visualization..."
+	    if {$dt_completed} {
+		change_indicator_labels "Visualization..."
+	    } elseif {$reg_completed} {
+		change_indicator_labels "Building Diffusion Tensors..."
+	    } elseif {$data_completed} {
+		change_indicator_labels "Registration..."
 	    } else {
-		$indicatorL1 configure -text "$current_tab..."
-		$indicatorL2 configure -text "$current_tab..."
+		change_indicator_labels "Data Acquisition..."
 	    }
-        }
+	}
     }
     
     
     method update_progress { which state } {
 	global mods
-	if {$current_tab == "Data Acquisition"} {
-	    if {$which == $mods(ChooseNrrd1)} {
-		if {$state == "NeedData"} {
-		    change_indicate_val 1
-		} elseif {$state == "Completed"} {
-		    change_indicate_val 2
-		} 
-	    } elseif {$which == $mods(ShowField-Orig) && $state == "Completed"} {
-		after 100
-		# Bring images into view
-		$mods(Viewer)-ViewWindow_0-c autoview
-		global $mods(Viewer)-ViewWindow_0-pos 
-		set $mods(Viewer)-ViewWindow_0-pos "z1_y0"
-		$mods(Viewer)-ViewWindow_0-c Views
-	    } 
-	} elseif {$current_tab == "Registration"} {
-	    if {$which == $mods(TendEpireg)} {
-		global do_registration
-		if {$do_registration == 1} {
-		    if {$state == "NeedData"} {
-			change_indicate_val 1
-		    } elseif {$state == "Completed"} {
-			change_indicate_val 2
-			if {$current_step == "Registration"} {
-			    activate_dt
-			}
-		    } 
-		}
-	    } elseif {$which == $mods(ChooseNrrd-ToReg) && $state == "Completed"} {
-		global do_registration
-                if {$do_registration == 0} {
-		    change_indicate_val 2
-                }
-	    } elseif {$which == $mods(ShowField-Reg) && $state == "Completed"} {
-		after 100
-		# Bring images into view
-		$mods(Viewer)-ViewWindow_0-c autoview
-		global $mods(Viewer)-ViewWindow_0-pos 
-		set $mods(Viewer)-ViewWindow_0-pos "z1_y0"
-		$mods(Viewer)-ViewWindow_0-c Views
-	    }
-        } elseif {$current_tab == "Building DTs"} {
-	    if {$which == $mods(TendEstim1)} {
-		if {$state == "NeedData"} {
-		    change_indicate_val 1
-		} elseif {$state == "Completed"} {
-		    change_indicate_val 2
-		} 
-	    } elseif {$which == $mods(ShowField-X) && $state == "Completed"} {
-		if {$current_step == "Building Diffusion Tensors"} {
-                    activate_vis
-		}
-	    }
-        } 
+	global $mods(ShowField-Isosurface)-faces-on
+	global $mods(ShowField-Glyphs)-tensors-on
+	global $mods(ShowField-Fibers)-edges-on
+	global show_plane_x show_plane_y show_plane_z
 	
-        if {$which == $mods(NrrdInfo1) && $state == "Completed"} {
-	    global $mods(NrrdInfo1)-size1
+	
+	if {$which == $mods(ChooseNrrd1) && $state == "NeedData"} {
+	    change_indicator_labels "Data Acquisition..."
+	    change_indicate_val 1
+	} elseif {$which == $mods(ChooseNrrd1) && $state == "Completed"} {
+	    change_indicate_val 2
+	} elseif {$which == $mods(ShowField-Orig) && $state == "Completed"} {
+	    after 100
+	    # Bring images into view
+	    $mods(Viewer)-ViewWindow_0-c autoview
+	    global $mods(Viewer)-ViewWindow_0-pos 
+	    set $mods(Viewer)-ViewWindow_0-pos "z1_y0"
+	    $mods(Viewer)-ViewWindow_0-c Views
+	} elseif {$which == $mods(TendEpireg) && $state == "NeedData"} {
+	    change_indicator_labels "Registration..."
+	    change_indicate_val 1
+	} elseif {$which == $mods(TendEpireg) && $state == "Completed"} {
+	    change_indicate_val 2
+	    # activate next button
+	    $reg_tab1.last.ne configure -state normal \
+		-foreground black -background $next_color
+	    $reg_tab2.last.ne configure -state normal \
+		-foreground black -background $next_color
 
+	    if {$reg_completed} {
+		activate_dt
+	    }
+	} elseif {$which == $mods(ShowField-Reg) && $state == "Completed"} {
+	    after 100
+	    # Bring images into view
+	    $mods(Viewer)-ViewWindow_0-c autoview
+	    global $mods(Viewer)-ViewWindow_0-pos 
+	    set $mods(Viewer)-ViewWindow_0-pos "z1_y0"
+	    $mods(Viewer)-ViewWindow_0-c Views
+        } elseif {$which == $mods(TendEstim) && $state == "NeedData"} {
+	    change_indicator_labels "Building Diffusion Tensors..."
+	    change_indicate_val 1
+	} elseif {$which == $mods(TendEstim) && $state == "Completed"} {
+	    change_indicate_val 2
+	} elseif {$which == $mods(NrrdInfo1) && $state == "Completed"} {
+	    global $mods(NrrdInfo1)-size1
+	    
             global data_mode
-            if {$data_mode == "DWI"} {
 	    if {[info exists $mods(NrrdInfo1)-size1]} {
 		global $mods(NrrdInfo1)-size0
 		global $mods(NrrdInfo1)-size1
 		global $mods(NrrdInfo1)-size2
 		global $mods(NrrdInfo1)-size3
 		
-		set volumes [expr [set $mods(NrrdInfo1)-size0] + 1]
+		set volumes [set $mods(NrrdInfo1)-size0]
 		set size_x [expr [set $mods(NrrdInfo1)-size1] - 1]
 		set size_y [expr [set $mods(NrrdInfo1)-size2] - 1]
 		set size_z [expr [set $mods(NrrdInfo1)-size3] - 1]
 		
 		configure_sample_planes
-		#configure_sample_sliders
 		
-		# new data has been loaded, build/configure
-		# the variance slider
-		fill_in_data_pages
-		
-		# reconfigure registration reference image slider
-		$ref_image1.s.ref configure -from 1 -to $volumes
-		$ref_image2.s.ref configure -from 1 -to $volumes
-	    } else {
-		$mods(NrrdInfo1)-c needexecute
+		if {$data_mode == "DWI"} {
+		    # new data has been loaded, build/configure
+		    # the variance slider
+		    fill_in_data_pages
+		    
+		    # reconfigure registration reference image slider
+		    $ref_image1.s.ref configure -from 1 -to $volumes
+		    $ref_image2.s.ref configure -from 1 -to $volumes
+		} else {
+		    set data_completed 1
+		    set reg_completed 1
+		    set dt_completed 1
+		    activate_vis
+		}
 	    }
-            } else {
+        } elseif {$which == $mods(SamplePlane-X) && $state == "NeedData" && $show_plane_x == 1} {
+	    change_indicator_labels "Visualization..."
+	    change_indicate_val 1
+	} elseif {$which == $mods(ShowField-X) && $state == "Completed" && $show_plane_x == 1} {
+	    if {$dt_completed} {
 		activate_vis
-            }
-        }
-
-	global $mods(ShowField-Glyphs)-tensors-on
-	global $mods(ShowField-Fibers)-edges-on
-
-        if {$current_step == "Visualization"} {
-	    # Visualization
-	    global show_plane_x show_plane_y show_plane_z show_isosurface
-
-	    if {$which == $mods(SamplePlane-X) && $state == "NeedData" && $show_plane_x == 1} {
-		change_indicate_val 1
-	    } elseif {$which == $mods(ShowField-X) && $state == "Completed" && $show_plane_x == 1} {
-		change_indicate_val 0
-	    } elseif {$which == $mods(SamplePlane-Y) && $state == "NeedData" && $show_plane_y == 1} {
-		change_indicate_val 1
-	    } elseif {$which == $mods(ShowField-Y) && $state == "Completed" && $show_plane_y == 1} {
-		change_indicate_val 0
-	    } elseif {$which == $mods(SamplePlane-Z) && $state == "NeedData" && $show_plane_z == 1} {
-		change_indicate_val 1
-	    } elseif {$which == $mods(ShowField-Z) && $state == "Completed" && $show_plane_z == 1} {
-		change_indicate_val 0
-	    } elseif {$which == $mods(Isosurface) && $state == "NeedData" && $show_isosurface == 1} {
-		change_indicate_val 1
-	    } elseif {$which == $mods(ShowField-Isosurface) && $state == "Completed" && $show_isosurface == 1} {
-		change_indicate_val 0
-	    } elseif {$which == $mods(ChooseField-GlyphSeeds) && $state == "NeedData" && [set $mods(ShowField-Glyphs)-tensors-on]} {
-		change_indicate_val 1
-	    } elseif {$which == $mods(ShowField-Glyphs) && $state == "Completed" && [set $mods(ShowField-Glyphs)-tensors-on]} {
-		change_indicate_val 0
-	    } elseif {$which == $mods(ChooseField-FiberSeeds) && $state == "NeedData" && [set $mods(ShowField-Fibers)-edges-on]} {
-		change_indicate_val 1
-	    } elseif {$which == $mods(ShowField-Fibers) && $state == "Completed" && [set $mods(ShowField-Fibers)-edges-on]} {
-		change_indicate_val 0
-	    } 
-	}
-
-	if {$which == $mods(SampleField-GlyphSeeds) && $state == "Completed" && ![set $mods(ShowField-Glyphs)-tensors-on]} {
+	    }
+	    change_indicate_val 0
+	} elseif {$which == $mods(SamplePlane-Y) && $state == "NeedData" && $show_plane_y == 1} {
+	    change_indicator_labels "Visualization..."
+	    change_indicate_val 1
+	} elseif {$which == $mods(ShowField-Y) && $state == "Completed" && $show_plane_y == 1} {
+	    change_indicate_val 0
+	} elseif {$which == $mods(SamplePlane-Z) && $state == "NeedData" && $show_plane_z == 1} {
+	    change_indicator_labels "Visualization..."
+	    change_indicate_val 1
+	} elseif {$which == $mods(ShowField-Z) && $state == "Completed" && $show_plane_z == 1} {
+	    change_indicate_val 0
+	} elseif {$which == $mods(Isosurface) && $state == "NeedData" && [set $mods(ShowField-Isosurface)-faces-on] == 1} {
+	    change_indicator_labels "Visualization..."
+	    change_indicate_val 1
+	} elseif {$which == $mods(ShowField-Isosurface) && $state == "Completed" && [set $mods(ShowField-Isosurface)-faces-on] == 1} {
+	    change_indicate_val 0
+	} elseif {$which == $mods(ChooseField-GlyphSeeds) && $state == "NeedData" && [set $mods(ShowField-Glyphs)-tensors-on]} {
+	    change_indicator_labels "Visualization..."
+	    change_indicate_val 1
+	} elseif {$which == $mods(ShowField-Glyphs) && $state == "Completed" && [set $mods(ShowField-Glyphs)-tensors-on]} {
+	    change_indicate_val 0
+	} elseif {$which == $mods(ChooseField-FiberSeeds) && $state == "NeedData" && [set $mods(ShowField-Fibers)-edges-on]} {
+	    change_indicator_labels "Visualization..."
+	    change_indicate_val 1
+	} elseif {$which == $mods(ShowField-Fibers) && $state == "Completed" && [set $mods(ShowField-Fibers)-edges-on]} {
+	    change_indicate_val 0
+	} elseif {$which == $mods(SampleField-GlyphSeeds) && $state == "Completed" && ![set $mods(ShowField-Glyphs)-tensors-on]} {
 	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	} elseif {$which == $mods(Probe-GlyphSeeds) && $state == "Completed" && ![set $mods(ShowField-Glyphs)-tensors-on]} {
 	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
@@ -3411,8 +3535,6 @@ class BioTensorApp {
 	} elseif {$which == $mods(Probe-FiberSeeds) && $state == "Completed" && ![set $mods(ShowField-Fibers)-edges-on]} {
 	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	} 
-
-
     }
 
     
@@ -3467,101 +3589,71 @@ class BioTensorApp {
     }
     
 
-    method configure_sample_sliders {} {
-	$planes_tab1.axis.x.slider configure -to $size_x
-	$planes_tab2.axis.x.slider configure -to $size_x
-	
-	$planes_tab1.axis.y.slider configure -to $size_y
-	$planes_tab2.axis.y.slider configure -to $size_y
-	
-	$planes_tab1.axis.z.slider configure -to $size_z
-	$planes_tab2.axis.z.slider configure -to $size_z
-    }
-
-
     method indicate_error { which msg_state } {
 	if {$msg_state == "Error"} {
 	    if {$error_module == ""} {
 		set error_module $which
 		# turn progress graph red
-		$indicatorL1 configure -text "ERROR"
-		$indicatorL2 configure -text "ERROR"
-		 change_indicate_val 3
+		change_indicator_labels "E R R O R !"
+		change_indicate_val 3
 	    }
-	}
-	if {$msg_state == "Reset" || $msg_state == "Remark" || \
-		$msg_state == "Warning"} {
+	} else {
 	    if {$which == $error_module} {
 		set error_module ""
-   	       if {$current_step == "Visualization"} {
-		   $indicatorL1 configure -text "Visualization..."
-  	   	   $indicatorL2 configure -text "Visualization..."
-	       } else {
-		   $indicatorL1 configure -text "$current_tab..."
-		   $indicatorL2 configure -text "$current_tab..."
-               }
- 	       change_indicate_val 0
-            }
+		
+		if {$dt_completed} {
+		    change_indicator_labels "Visualization..."
+		} elseif {$reg_completed} {
+		    change_indicator_labels "Building Diffusion Tensors..."
+		} elseif {$data_completed} {
+		    change_indicator_labels "Registration..."
+		} else {
+		    change_indicator_labels "Data Acquisition..."
+		}
+		change_indicate_val 0
+	    }
 	}
     }
-
-
-    method execute_TendEpireg {} {
+	
+	
+    method execute_Registration {} {
 	global mods
-	global do_registration
 	
 	# Check gradient has been loaded
 	global $mods(NrrdReader-Gradient)-filename
 	
-	if {$do_registration == 0} {
-	    # execute
-	    if {$reg_blocked} {
-		# unblock modules
-		disableModule $mods(ChooseNrrd-ToReg) 0
-		disableModule $mods(RescaleColorMap2) 0
-		set reg_blocked 0
+	if {[set $mods(NrrdReader-Gradient)-filename] != ""} {
+	    # unblock modules
+	    disableModule $mods(TendEpireg) 0
+	    disableModule $mods(UnuJoin) 0
+	    disableModule $mods(ChooseNrrd-ToReg) 0
+	    disableModule $mods(RescaleColorMap2) 0
 		
-		# activate reg variance checkbutton
-		$variance_tab1.reg configure -state normal
-		$variance_tab2.reg configure -state normal
-		$mods(ChooseNrrd-ToReg)-c needexecute
-		activate_dt
-	    }
-	    $mods(ChooseNrrd-ToReg)-c needexecute
-	} elseif {[set $mods(NrrdReader-Gradient)-filename] != ""} {
-	    if {$reg_blocked} {
-		# unblock modules
-		disableModule $mods(TendEpireg) 0
-		disableModule $mods(ChooseNrrd-ToReg) 0
-		disableModule $mods(RescaleColorMap2) 0
-		set reg_blocked 0
-		
-		# activate reg variance checkbutton
-		$variance_tab1.reg configure -state normal
-		$variance_tab2.reg configure -state normal
-	    }
+	    # activate reg variance checkbutton
+	    $variance_tab1.reg configure -state normal
+	    $variance_tab2.reg configure -state normal
+
 	    # execute
-	    $mods(ChooseNrrd-ToReg)-c needexecute
+	    $mods(TendEpireg)-c needexecute
+
+	    set reg_completed 1
 	} else {
 	    set answer [tk_messageBox -message \
 			    "Please load a text file containing the gradients by clicking \"Load Gradients\"" -type ok -icon info -parent .standalone]
 	    
 	}
     }
+    
 
-
-    method toggle_data_mode { w } {
+    method toggle_data_mode { } {
 	global data_mode
         global mods
         global $mods(ChooseNrrd-DT)-port-index
 	
         if {$data_mode == "DWI"} {
-           # configure labels
-           #disableModule $mods(ChooseNrrd-ToProcess) 1
-           #disableModule $mods(ChooseNrrd1) 0
+           configure_readers all
 
-           configure_readers
-
+	    # configure text for DWI Volume
 	   $nrrd_tab1.dwil configure -text "DWI Volume:"
 	   $nrrd_tab2.dwil configure -text "DWI Volume:"
 
@@ -3593,25 +3685,12 @@ class BioTensorApp {
            set $mods(ChooseNrrd-DT)-port-index 0
 
            # enable registration and dt tabs
-  	   foreach w [winfo children $reg_tab1] {
-	     activate_widget $w
-           }
-	   foreach w [winfo children $reg_tab2] {
-	     activate_widget $w
-           }
+	    activate_registration
 
-  	   foreach w [winfo children $dt_tab1] {
-	     activate_widget $w
-           }
-	   foreach w [winfo children $dt_tab2] {
-	     activate_widget $w
-           }
+	    activate_dt
 	
         } else {
-           #disableModule $mods(ChooseNrrd-ToProcess) 0
-           #disableModule $mods(ChooseNrrd1) 1
-
-           configure_readers
+           configure_readers all
 
            # configure labels
 	   $nrrd_tab1.dwil configure -text "Tensor Volume:"
@@ -3644,6 +3723,12 @@ class BioTensorApp {
            # configure ChooseNrrd
            set $mods(ChooseNrrd-DT)-port-index 1
 
+	    # disable Next button
+	    $data_next_button1 configure -state disabled \
+	       -background grey75 -foreground grey64
+	    $data_next_button2 configure -state disabled \
+	       -background grey75 -foreground grey64
+
            # disable registation and dt tabs
   	   foreach w [winfo children $reg_tab1] {
 	     disable_widget $w
@@ -3652,88 +3737,144 @@ class BioTensorApp {
 	     disable_widget $w
            }
 
+	    # fix next and execute in registration
+	    $reg_tab1.last.ne configure -foreground grey64 -background grey75
+	    $reg_tab2.last.ne configure -foreground grey64 -background grey75
+
+	    $reg_tab1.last.ex configure -foreground grey64 -background grey75
+	    $reg_tab2.last.ex configure -foreground grey64 -background grey75
+
+
   	   foreach w [winfo children $dt_tab1] {
 	     disable_widget $w
            }
 	   foreach w [winfo children $dt_tab2] {
 	     disable_widget $w
            }
+
+	    # fix execute in dt
+	    $dt_tab1.last.ex configure -foreground grey64 -background grey75
+	    $dt_tab2.last.ex configure -foreground grey64 -background grey75
+	    
         }
     }
 
 
-    method configure_readers {} {
+    method configure_readers { which } {
         global mods
         global $mods(ChooseNrrd1)-port-index
+	global $mods(ChooseNrrd-T2)-port-index
+	global $mods(ChooseNrrd-ToProcess)-port-index
         global data_mode
 
-        if {[set $mods(ChooseNrrd1)-port-index] == 0} {
+	if {$which == "Nrrd"} {
+	    set $mods(ChooseNrrd1)-port-index 0
+	    set $mods(ChooseNrrd-T2)-port-index 0
+	    set $mods(ChooseNrrd-ToProcess)-port-index 0
+
 	    disableModule $mods(NrrdReader1) 0
+	    disableModule $mods(NrrdReader-T2) 0
+
 	    disableModule $mods(DicomToNrrd1) 1
+	    disableModule $mods(DicomToNrrd-T2) 1
+
 	    disableModule $mods(AnalyzeToNrrd1) 1
+	    disableModule $mods(AnalyzeToNrrd-T2) 1
+
 	    if {$initialized != 0} {
 		$data_tab1 view "Nrrd"
 		$data_tab2 view "Nrrd"
 	    }
-        } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
+        } elseif {$which == "Dicom"} {
+	    set $mods(ChooseNrrd1)-port-index 1
+	    set $mods(ChooseNrrd-T2)-port-index 1
+	    set $mods(ChooseNrrd-ToProcess)-port-index 1
+
 	    disableModule $mods(NrrdReader1) 1
+	    disableModule $mods(NrrdReader-T2) 1
+
 	    disableModule $mods(DicomToNrrd1) 0
+	    disableModule $mods(DicomToNrrd-T2) 0
+
 	    disableModule $mods(AnalyzeToNrrd1) 1
+	    disableModule $mods(AnalyzeToNrrd-T2) 1
+
             if {$initialized != 0} {
 		$data_tab1 view "Dicom"
 		$data_tab2 view "Dicom"
 	    }
-        } else {
+        } elseif {$which == "Analyze"} {
+	    # Analyze
+	    set $mods(ChooseNrrd1)-port-index 2
+	    set $mods(ChooseNrrd-T2)-port-index 2
+	    set $mods(ChooseNrrd-ToProcess)-port-index 2
+
 	    disableModule $mods(NrrdReader1) 1
+	    disableModule $mods(NrrdReader-T2) 1
+
 	    disableModule $mods(DicomToNrrd1) 1
+	    disableModule $mods(DicomToNrrd-T2) 1
+
 	    disableModule $mods(AnalyzeToNrrd1) 0
+	    disableModule $mods(AnalyzeToNrrd-T2) 0
+
 	    if {$initialized != 0} {
 		$data_tab1 view "Analyze"
 		$data_tab2 view "Analyze"
 	    }
-        }
+        } elseif {$which == "all"} {
+	    if {[set $mods(ChooseNrrd1)-port-index] == 0} {
+		# nrrd
+		disableModule $mods(NrrdReader1) 0
+		disableModule $mods(NrrdReader-T2) 0
+		
+		disableModule $mods(DicomToNrrd1) 1
+		disableModule $mods(DicomToNrrd-T2) 1
+		
+		disableModule $mods(AnalyzeToNrrd1) 1
+		disableModule $mods(AnalyzeToNrrd-T2) 1
+	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
+		# dicom
+		disableModule $mods(NrrdReader1) 1
+		disableModule $mods(NrrdReader-T2) 1
+		
+		disableModule $mods(DicomToNrrd1) 0
+		disableModule $mods(DicomToNrrd-T2) 0
+		
+		disableModule $mods(AnalyzeToNrrd1) 1
+		disableModule $mods(AnalyzeToNrrd-T2) 1
+	    } else {
+		# analyze
+		disableModule $mods(NrrdReader1) 1
+		disableModule $mods(NrrdReader-T2) 1
+		
+		disableModule $mods(DicomToNrrd1) 1
+		disableModule $mods(DicomToNrrd-T2) 1
+		
+		disableModule $mods(AnalyzeToNrrd1) 0
+		disableModule $mods(AnalyzeToNrrd-T2) 0
+	    }
+	}
     }
 
-    method execute_reader_and_set_tuple_axis {} {
+    method execute_Data {} {
 	global mods 
 	global data_mode
-        #global $mods(NrrdReader1)-filename
-        #global $mods(NrrdReader-T2)-filename
+	
+	if {$data_mode == "tensor"} {
+	    disableModule $mods(ChooseNrrd-DT) 0
+	    disableModule $mods(TendEstim) 1
+	}
 
-        if {$data_mode == "DWI"} {
-#           if {[set $mods(NrrdReader1)-filename] != ""} {
-	       # set tuple axis to 0 always
-	       global $mods(NrrdReader1)-axis
-   	       set $mods(NrrdReader1)-axis 0
-	     
-	       $mods(ChooseNrrd1)-c needexecute
-	    
-   	       if {$current_step == "Data Acquisition"} {
-		   activate_registration
-  	       }
- #          } else {
- #              set answer [tk_messageBox -message \
-#			    "Please select a Nrrd by entering a file into the entry box or selecting the Browse button." -type ok -icon info -parent .standalone]
- #          }
-        } else {
-	   $mods(ChooseNrrd1)-c needexecute
-           $mods(ChooseNrrd-DT)-c needexecute
-        }
-    }
-    
-    method execute_reader_and_set_tuple_axis2 {} {
-	global mods 
-#        global $mods(NrrdReader-T2)-filename
+	$mods(ChooseNrrd1)-c needexecute
+	set data_completed 1	
+	activate_registration
 
-#        if {[set $mods(NrrdReader-T2)-filename] != ""} {
-	    # set tuple axis to 0 always
-	    global $mods(NrrdReader-T2)-axis
-	    set $mods(NrrdReader-T2)-axis 0
-	    
-#        } else {
-#            set answer [tk_messageBox -message \
-#			    "Please select a Nrrd by entering a file into the entry box or selecting the Browse button." -type ok -icon info -parent .standalone]
-#        }
+	# enable Next button
+	$data_next_button1 configure -state normal \
+	    -foreground black -background $next_color
+	$data_next_button2 configure -state normal \
+	    -foreground black -background $next_color
     }
     
     
@@ -3742,374 +3883,384 @@ class BioTensorApp {
 	global show_planes
 	global show_plane_x show_plane_y show_plane_z
 	global plane_x plane_y plane_z
-	
-	checkbutton $f.show -text "Show Planes:" -variable show_planes \
-	    -command "$this toggle_show_planes"
-	pack $f.show -side top -anchor nw -padx 3 -pady 3
-	
-	frame $f.axis -relief groove -borderwidth 2
-	pack $f.axis -side top -anchor n -padx 3 -pady 3
-	
-	frame $f.axis.x
-	pack $f.axis.x -side top -anchor nw 
-	
-	checkbutton $f.axis.x.check -text "X" \
-            -variable show_plane_x \
-            -command "$this toggle_plane 0"
-	scale $f.axis.x.slider -from 0 -to $size_x \
-            -variable plane_x \
-            -showvalue false \
-            -length 200  -width 15 \
-            -sliderlength 15 \
-            -orient horizontal  
-	bind $f.axis.x.slider <ButtonRelease> "app update_plane_x"
-	label $f.axis.x.label -textvariable plane_x
-	pack $f.axis.x.check $f.axis.x.slider $f.axis.x.label -side left -anchor nw \
-            -padx 2 -pady 3
-	
-	frame $f.axis.y
-	pack $f.axis.y -side top -anchor nw 
-	checkbutton $f.axis.y.check -text "Y" \
-            -variable show_plane_y \
-            -command "$this toggle_plane 1"
-	scale $f.axis.y.slider -from 0 -to $size_y \
-            -variable plane_y \
-            -showvalue false \
-            -length 200  -width 15 \
-            -sliderlength 15 \
-            -orient horizontal 
-	bind $f.axis.y.slider <ButtonRelease> "app update_plane_y"
-	label $f.axis.y.label -textvariable plane_y
-	pack $f.axis.y.check $f.axis.y.slider $f.axis.y.label -side left -anchor nw \
-            -padx 2 -pady 3
-	
-	frame $f.axis.z
-	pack $f.axis.z -side top -anchor nw 
-	checkbutton $f.axis.z.check -text "Z" \
-            -variable show_plane_z \
-            -command "$this toggle_plane 2"
-	scale $f.axis.z.slider -from 0 -to $size_z \
-            -variable plane_z \
-            -showvalue false \
-            -length 200  -width 15 \
-            -sliderlength 15 \
-            -orient horizontal 
-	bind $f.axis.z.slider <ButtonRelease> "app update_plane_z"
-	label $f.axis.z.label -textvariable plane_z
-	pack $f.axis.z.check $f.axis.z.slider $f.axis.z.label -side left -anchor nw \
-            -padx 2 -pady 3
-		
-	iwidgets::labeledframe $f.color \
-            -labelpos nw -labeltext "Color Planes Based On"
-	pack $f.color -side top -anchor nw -padx 3 -pady 3
-	
-	set fr [$f.color childsite]
-	frame $fr.select
-	pack $fr.select -side top -anchor nw -padx 3 -pady 3
-	
-	iwidgets::optionmenu $fr.select.color -labeltext "" \
-	    -labelpos w \
-	    -command "$this select_color_planes_color $fr.select"
-	pack $fr.select.color -side left -anchor n -padx 3 -pady 3
-	
-	addColorSelection $fr.select "Color" clip_to_isosurface_color "clip_color_change"
-	
-	$fr.select.color insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant"
-	
-	$fr.select.color select "Principle Eigenvector"
-	
-	iwidgets::labeledframe $fr.maps \
-	    -labelpos nw -labeltext "Color Maps"
-	pack $fr.maps -side top -anchor n -padx 3 -pady 3
-	
-	set maps [$fr.maps childsite]
-	
-	global $mods(GenStandardColorMaps-ColorPlanes)-mapType
-	
-	
-	# Gray
-	frame $maps.gray
-	pack $maps.gray -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.gray.b -text "Gray" \
-	    -variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
-	    -value 0 \
-	    -command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
-	pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.gray.f -relief sunken -borderwidth 2
-	pack $maps.gray.f -padx 2 -pady 0 -side right -anchor e
-	canvas $maps.gray.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.gray.f.canvas -anchor e \
-	    -fill both -expand 1
-	
-	draw_gray_colormap $maps.gray.f.canvas
-	
-	# Rainbow
-	frame $maps.rainbow
-	pack $maps.rainbow -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.rainbow.b -text "Rainbow" \
-	    -variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
-	    -value 2 \
-	    -command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
-	pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.rainbow.f -relief sunken -borderwidth 2
-	pack $maps.rainbow.f -padx 2 -pady 0 -side right -anchor e
-	canvas $maps.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.rainbow.f.canvas -anchor e
-	
-	draw_rainbow_colormap $maps.rainbow.f.canvas
-	
-	# Darkhue
-	frame $maps.darkhue
-	pack $maps.darkhue -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.darkhue.b -text "Darkhue" \
-	    -variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
-	    -value 5 \
-	    -command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
-	pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.darkhue.f -relief sunken -borderwidth 2
-	pack $maps.darkhue.f -padx 2 -pady 0 -side right -anchor e
-	canvas $maps.darkhue.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.darkhue.f.canvas -anchor e
-	
-	draw_darkhue_colormap $maps.darkhue.f.canvas
-	
-	
-	# Blackbody
-	frame $maps.blackbody
-	pack $maps.blackbody -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.blackbody.b -text "Blackbody" \
-	    -variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
-	    -value 7 \
-	    -command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
-	pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.blackbody.f -relief sunken -borderwidth 2 
-	pack $maps.blackbody.f -padx 2 -pady 0 -side right -anchor e
-	canvas $maps.blackbody.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.blackbody.f.canvas -anchor e
-	
-	draw_blackbody_colormap $maps.blackbody.f.canvas
-	
-	
-	# BP Seismic
-	frame $maps.bpseismic
-	pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.bpseismic.b -text "BP Seismic" \
-	    -variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
-	    -value 17 \
-	    -command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
-	pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.bpseismic.f -relief sunken -borderwidth 2
-	pack $maps.bpseismic.f -padx 2 -pady 0 -side left -anchor e
-	canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.bpseismic.f.canvas -anchor e
-	
-	draw_bpseismic_colormap $maps.bpseismic.f.canvas
 
-	global clip_to_isosurface
-	global clip_to_isosurface_color
-	checkbutton $f.clipiso -text "Clip to Isosurface" \
-            -variable clip_to_isosurface \
-            -command "$this toggle_clip_to_isosurface"
-	pack $f.clipiso -side top -anchor nw -padx 5 -pady 5
+	if {![winfo exists $f.show]} {
+	    checkbutton $f.show -text "Show Planes:" -variable show_planes \
+		-command "$this toggle_show_planes"
+	    pack $f.show -side top -anchor nw -padx 3 -pady 3
+	    
+	    frame $f.axis -relief groove -borderwidth 2
+	    pack $f.axis -side top -anchor n -padx 3 -pady 3
+	    
+	    frame $f.axis.x
+	    pack $f.axis.x -side top -anchor nw 
+	    
+	    checkbutton $f.axis.x.check -text "X" \
+		-variable show_plane_x \
+		-command "$this toggle_plane X"
+	    scale $f.axis.x.slider -from 0 -to $size_x \
+		-variable plane_x \
+		-showvalue false \
+		-length 200  -width 15 \
+		-sliderlength 15 \
+		-orient horizontal  
+	    bind $f.axis.x.slider <ButtonRelease> "app update_plane_x"
+	    label $f.axis.x.label -textvariable plane_x
+	    pack $f.axis.x.check $f.axis.x.slider $f.axis.x.label -side left -anchor nw \
+		-padx 2 -pady 3
+	    
+	    frame $f.axis.y
+	    pack $f.axis.y -side top -anchor nw 
+	    checkbutton $f.axis.y.check -text "Y" \
+		-variable show_plane_y \
+		-command "$this toggle_plane Y"
+	    scale $f.axis.y.slider -from 0 -to $size_y \
+		-variable plane_y \
+		-showvalue false \
+		-length 200  -width 15 \
+		-sliderlength 15 \
+		-orient horizontal 
+	    bind $f.axis.y.slider <ButtonRelease> "app update_plane_y"
+	    label $f.axis.y.label -textvariable plane_y
+	    pack $f.axis.y.check $f.axis.y.slider $f.axis.y.label -side left -anchor nw \
+		-padx 2 -pady 3
+	    
+	    frame $f.axis.z
+	    pack $f.axis.z -side top -anchor nw 
+	    checkbutton $f.axis.z.check -text "Z" \
+		-variable show_plane_z \
+		-command "$this toggle_plane Z"
+	    scale $f.axis.z.slider -from 0 -to $size_z \
+		-variable plane_z \
+		-showvalue false \
+		-length 200  -width 15 \
+		-sliderlength 15 \
+		-orient horizontal 
+	    bind $f.axis.z.slider <ButtonRelease> "app update_plane_z"
+	    label $f.axis.z.label -textvariable plane_z
+	    pack $f.axis.z.check $f.axis.z.slider $f.axis.z.label -side left -anchor nw \
+		-padx 2 -pady 3
+	    
+	    iwidgets::labeledframe $f.color \
+		-labelpos nw -labeltext "Color Planes Based On"
+	    pack $f.color -side top -anchor nw -padx 3 -pady 3
+	    
+	    set fr [$f.color childsite]
+	    frame $fr.select
+	    pack $fr.select -side top -anchor nw -padx 3 -pady 3
+	    
+	    iwidgets::optionmenu $fr.select.color -labeltext "" \
+		-labelpos w \
+		-command "$this select_color_planes_color $fr.select"
+	    pack $fr.select.color -side left -anchor n -padx 3 -pady 3
+	    
+	    addColorSelection $fr.select "Color" clip_to_isosurface_color "clip_color_change"
+	    
+	    $fr.select.color insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant"
+	    
+	    $fr.select.color select "Principle Eigenvector"
+	    
+	    iwidgets::labeledframe $fr.maps \
+		-labelpos nw -labeltext "Color Maps"
+	    pack $fr.maps -side top -anchor n -padx 3 -pady 3
+	    
+	    set maps [$fr.maps childsite]
+	    
+	    global $mods(GenStandardColorMaps-ColorPlanes)-mapType
+	    
+	    
+	    # Gray
+	    frame $maps.gray
+	    pack $maps.gray -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.gray.b -text "Gray" \
+		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
+		-value 0 \
+		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.gray.f -relief sunken -borderwidth 2
+	    pack $maps.gray.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.gray.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.gray.f.canvas -anchor e \
+		-fill both -expand 1
+	    
+	    draw_colormap Gray $maps.gray.f.canvas
+	    
+	    # Rainbow
+	    frame $maps.rainbow
+	    pack $maps.rainbow -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.rainbow.b -text "Rainbow" \
+		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
+		-value 2 \
+		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.rainbow.f -relief sunken -borderwidth 2
+	    pack $maps.rainbow.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.rainbow.f.canvas -anchor e
+	    
+	    draw_colormap Rainbow $maps.rainbow.f.canvas
+	    
+	    # Darkhue
+	    frame $maps.darkhue
+	    pack $maps.darkhue -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.darkhue.b -text "Darkhue" \
+		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
+		-value 5 \
+		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.darkhue.f -relief sunken -borderwidth 2
+	    pack $maps.darkhue.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.darkhue.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.darkhue.f.canvas -anchor e
+	    
+	    draw_colormap Darkhue $maps.darkhue.f.canvas
+	    
+	    
+	    # Blackbody
+	    frame $maps.blackbody
+	    pack $maps.blackbody -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.blackbody.b -text "Blackbody" \
+		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
+		-value 7 \
+		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.blackbody.f -relief sunken -borderwidth 2 
+	    pack $maps.blackbody.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.blackbody.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.blackbody.f.canvas -anchor e
+	    
+	    draw_colormap Blackbody $maps.blackbody.f.canvas
+	    
+	    
+	    # BP Seismic
+	    frame $maps.bpseismic
+	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.bpseismic.b -text "BP Seismic" \
+		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
+		-value 17 \
+		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.bpseismic.f -relief sunken -borderwidth 2
+	    pack $maps.bpseismic.f -padx 2 -pady 0 -side left -anchor e
+	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.bpseismic.f.canvas -anchor e
+	    
+	    draw_colormap "BP Seismic" $maps.bpseismic.f.canvas
+	    
+	    global clip_to_isosurface
+	    global clip_to_isosurface_color
+	    checkbutton $f.clipiso -text "Clip to Isosurface" \
+		-variable clip_to_isosurface \
+		-command "$this toggle_clip_to_isosurface"
+	    pack $f.clipiso -side top -anchor nw -padx 5 -pady 5
+
+	} else {
+	    puts "FIX ME: Configure values of planes tab?? (like fill_in_data_pages)"
+	}
 
     }
 
 
     method build_isosurface_tab { f } {
 	global mods
-	global show_isosurface
-	checkbutton $f.show -text "Show Isosurface" \
-	    -variable show_isosurface \
-	    -command "$this toggle_show_isosurface"
-	pack $f.show -side top -anchor nw -padx 3 -pady 3
-	
-	# Isoval
-	frame $f.isoval
-	pack $f.isoval -side top -anchor nw -padx 3 -pady 3
-	
-	label $f.isoval.l -text "Isoval:" -state disabled
-	scale $f.isoval.s -from 0.0 -to 1.0 \
-	    -length 200 -width 15 \
-	    -sliderlength 15 \
-	    -resolution 0.0001 \
-	    -variable $mods(Isosurface)-isoval \
-	    -showvalue false \
-	    -state disabled \
-	    -orient horizontal \
-	    -command "$this update_isovals"
-	
-	bind $f.isoval.s <ButtonRelease> "$this execute_isoval_change"
-	
-	label $f.isoval.val -textvariable $mods(Isosurface)-isoval -state disabled
-	
-	pack $f.isoval.l $f.isoval.s $f.isoval.val -side left -anchor nw -padx 3      
-	
-	iwidgets::optionmenu $f.isovalcolor -labeltext "Isoval Based On:" \
-	    -labelpos w \
-	    -state disabled \
-	    -command "$this select_isoval_based_on $f"
-	pack $f.isovalcolor -side top -anchor nw -padx 3 -pady 5
-	
-	$f.isovalcolor insert end "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy"
-	
-	$f.isovalcolor select "Fractional Anisotropy"
-	
-	
-	global isosurface_color
-	iwidgets::labeledframe $f.isocolor \
-	    -labeltext "Color Isosurface Based On" \
-	    -labelpos nw -foreground grey64
-	pack $f.isocolor -side top -anchor nw -padx 3 -pady 5
-	
-	set isocolor [$f.isocolor childsite]
-	frame $isocolor.select
-	pack $isocolor.select -side top -anchor nw -padx 3 -pady 3
-	
-	iwidgets::optionmenu $isocolor.select.color -labeltext "" \
-	    -labelpos w \
-	    -state disabled \
-	    -command "$this select_isosurface_color $isocolor.select"
-	pack $isocolor.select.color -side left -anchor n -padx 3 -pady 3
-	
-	
-	addColorSelection $isocolor.select "Color" isosurface_color "clip_color_change"
-	
-	$isocolor.select.color insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant"
-	
-	$isocolor.select.color select "Principle Eigenvector"
-	
-	
-	iwidgets::labeledframe $isocolor.maps \
-	    -labeltext "Color Maps" \
-	    -labelpos nw -foreground grey64
-	pack $isocolor.maps -side top -anchor n -padx 3 -pady 0 -fill x
-	
-	set maps [$isocolor.maps childsite]
-	global $mods(GenStandardColorMaps-Isosurface)-mapType
-	
-	# Gray
-	frame $maps.gray
-	pack $maps.gray -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.gray.b -text "Gray" \
-	    -variable $mods(GenStandardColorMaps-Isosurface)-mapType \
-	    -value 0 \
-	    -state disabled \
-	    -command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
-	pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.gray.f -relief sunken -borderwidth 2
-	pack $maps.gray.f -padx 2 -pady 0 -side right -anchor e
-	canvas $maps.gray.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.gray.f.canvas -anchor e \
-	    -fill both -expand 1
-	
-	draw_gray_colormap $maps.gray.f.canvas
-	
-	# Rainbow
-	frame $maps.rainbow
-	pack $maps.rainbow -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.rainbow.b -text "Rainbow" \
-	    -variable $mods(GenStandardColorMaps-Isosurface)-mapType \
-	    -value 2 \
-	    -state disabled \
-	    -command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
-	pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.rainbow.f -relief sunken -borderwidth 2
-	pack $maps.rainbow.f -padx 2 -pady 0 -side right -anchor e
-	canvas $maps.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.rainbow.f.canvas -anchor e
-	
-	draw_rainbow_colormap $maps.rainbow.f.canvas
-	
-	# Darkhue
-	frame $maps.darkhue
-	pack $maps.darkhue -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.darkhue.b -text "Darkhue" \
-	    -variable $mods(GenStandardColorMaps-Isosurface)-mapType \
-	    -value 5 \
-	    -state disabled \
-	    -command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
-	pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.darkhue.f -relief sunken -borderwidth 2
-	pack $maps.darkhue.f -padx 2 -pady 0 -side right -anchor e
-	canvas $maps.darkhue.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.darkhue.f.canvas -anchor e
-	
-	draw_darkhue_colormap $maps.darkhue.f.canvas
-	
-	
-	# Blackbody
-	frame $maps.blackbody
-	pack $maps.blackbody -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.blackbody.b -text "Blackbody" \
-	    -variable $mods(GenStandardColorMaps-Isosurface)-mapType \
-	    -value 7 \
-	    -state disabled \
-	    -command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
-	pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.blackbody.f -relief sunken -borderwidth 2 
-	pack $maps.blackbody.f -padx 2 -pady 0 -side right -anchor e
-	canvas $maps.blackbody.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.blackbody.f.canvas -anchor e
-	
-	draw_blackbody_colormap $maps.blackbody.f.canvas
-	
-	# BP Seismic
-	frame $maps.bpseismic
-	pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.bpseismic.b -text "BP Seismic" \
-	    -variable $mods(GenStandardColorMaps-Isosurface)-mapType \
-	    -value 17 \
-	    -state disabled \
-	    -command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
-	pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.bpseismic.f -relief sunken -borderwidth 2
-	pack $maps.bpseismic.f -padx 2 -pady 0 -side right -anchor e
-	canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.bpseismic.f.canvas -anchor e
-	
-	draw_bpseismic_colormap $maps.bpseismic.f.canvas
-	
-	
-	global clip_by_planes
-	frame $f.clip
-	pack $f.clip -side top -anchor nw -padx 3 -pady 5
-	
-	checkbutton $f.clip.check -text "Clip by Planes" \
-	    -variable clip_by_planes \
-	    -command "$this toggle_clip_by_planes $f.clip"
-	
-	button $f.clip.flipx -text "Flip X" \
-	    -command "$this flip_x_clipping_plane" \
-	    -state disabled
-	button $f.clip.flipy -text "Flip Y" \
-	    -command "$this flip_y_clipping_plane" \
-	    -state disabled
-	button $f.clip.flipz -text "Flip Z" \
-	    -command "$this flip_z_clipping_plane" \
-	    -state disabled
-	
-	pack $f.clip.check $f.clip.flipx $f.clip.flipy $f.clip.flipz \
-	    -side left -anchor nw -padx 3 -pady 3 -ipadx 2 
+	global $mods(ShowField-Isosurface)-faces-on
+
+	if {![winfo exists $f.show]} {
+	    checkbutton $f.show -text "Show Isosurface" \
+		-variable $mods(ShowField-Isosurface)-faces-on \
+		-command "$this toggle_show_isosurface"
+	    pack $f.show -side top -anchor nw -padx 3 -pady 3
+	    
+	    # Isoval
+	    frame $f.isoval
+	    pack $f.isoval -side top -anchor nw -padx 3 -pady 3
+	    
+	    label $f.isoval.l -text "Isoval:" -state disabled
+	    scale $f.isoval.s -from 0.0 -to 1.0 \
+		-length 200 -width 15 \
+		-sliderlength 15 \
+		-resolution 0.0001 \
+		-variable $mods(Isosurface)-isoval \
+		-showvalue false \
+		-state disabled \
+		-orient horizontal \
+		-command "$this update_isovals"
+	    
+	    bind $f.isoval.s <ButtonRelease> "$this execute_isoval_change"
+	    
+	    label $f.isoval.val -textvariable $mods(Isosurface)-isoval -state disabled
+	    
+	    pack $f.isoval.l $f.isoval.s $f.isoval.val -side left -anchor nw -padx 3      
+	    
+	    iwidgets::optionmenu $f.isovalcolor -labeltext "Isoval Based On:" \
+		-labelpos w \
+		-state disabled \
+		-command "$this select_isoval_based_on $f"
+	    pack $f.isovalcolor -side top -anchor nw -padx 3 -pady 5
+	    
+	    $f.isovalcolor insert end "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy"
+	    
+	    $f.isovalcolor select "Fractional Anisotropy"
+	    
+	    
+	    global isosurface_color
+	    iwidgets::labeledframe $f.isocolor \
+		-labeltext "Color Isosurface Based On" \
+		-labelpos nw -foreground grey64
+	    pack $f.isocolor -side top -anchor nw -padx 3 -pady 5
+	    
+	    set isocolor [$f.isocolor childsite]
+	    frame $isocolor.select
+	    pack $isocolor.select -side top -anchor nw -padx 3 -pady 3
+	    
+	    iwidgets::optionmenu $isocolor.select.color -labeltext "" \
+		-labelpos w \
+		-state disabled \
+		-command "$this select_isosurface_color $isocolor.select"
+	    pack $isocolor.select.color -side left -anchor n -padx 3 -pady 3
+	    
+	    
+	    addColorSelection $isocolor.select "Color" isosurface_color "clip_color_change"
+	    
+	    $isocolor.select.color insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant"
+	    
+	    $isocolor.select.color select "Principle Eigenvector"
+	    
+	    
+	    iwidgets::labeledframe $isocolor.maps \
+		-labeltext "Color Maps" \
+		-labelpos nw -foreground grey64
+	    pack $isocolor.maps -side top -anchor n -padx 3 -pady 0 -fill x
+	    
+	    set maps [$isocolor.maps childsite]
+	    global $mods(GenStandardColorMaps-Isosurface)-mapType
+	    
+	    # Gray
+	    frame $maps.gray
+	    pack $maps.gray -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.gray.b -text "Gray" \
+		-variable $mods(GenStandardColorMaps-Isosurface)-mapType \
+		-value 0 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.gray.f -relief sunken -borderwidth 2
+	    pack $maps.gray.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.gray.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.gray.f.canvas -anchor e \
+		-fill both -expand 1
+	    
+	    draw_colormap Gray $maps.gray.f.canvas
+	    
+	    # Rainbow
+	    frame $maps.rainbow
+	    pack $maps.rainbow -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.rainbow.b -text "Rainbow" \
+		-variable $mods(GenStandardColorMaps-Isosurface)-mapType \
+		-value 2 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.rainbow.f -relief sunken -borderwidth 2
+	    pack $maps.rainbow.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.rainbow.f.canvas -anchor e
+	    
+	    draw_colormap Rainbow $maps.rainbow.f.canvas
+	    
+	    # Darkhue
+	    frame $maps.darkhue
+	    pack $maps.darkhue -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.darkhue.b -text "Darkhue" \
+		-variable $mods(GenStandardColorMaps-Isosurface)-mapType \
+		-value 5 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.darkhue.f -relief sunken -borderwidth 2
+	    pack $maps.darkhue.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.darkhue.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.darkhue.f.canvas -anchor e
+	    
+	    draw_colormap Darkhue $maps.darkhue.f.canvas
+	    
+	    
+	    # Blackbody
+	    frame $maps.blackbody
+	    pack $maps.blackbody -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.blackbody.b -text "Blackbody" \
+		-variable $mods(GenStandardColorMaps-Isosurface)-mapType \
+		-value 7 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.blackbody.f -relief sunken -borderwidth 2 
+	    pack $maps.blackbody.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.blackbody.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.blackbody.f.canvas -anchor e
+	    
+	    draw_colormap Blackbody $maps.blackbody.f.canvas
+	    
+	    # BP Seismic
+	    frame $maps.bpseismic
+	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.bpseismic.b -text "BP Seismic" \
+		-variable $mods(GenStandardColorMaps-Isosurface)-mapType \
+		-value 17 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.bpseismic.f -relief sunken -borderwidth 2
+	    pack $maps.bpseismic.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.bpseismic.f.canvas -anchor e
+	    
+	    draw_colormap "BP Seismic" $maps.bpseismic.f.canvas
+	    
+	    
+	    global clip_by_planes
+	    frame $f.clip
+	    pack $f.clip -side top -anchor nw -padx 3 -pady 5
+	    
+	    checkbutton $f.clip.check -text "Clip by Planes" \
+		-variable clip_by_planes \
+		-command "$this toggle_clip_by_planes $f.clip"
+	    
+	    button $f.clip.flipx -text "Flip X" \
+		-command "$this flip_x_clipping_plane" \
+		-state disabled
+	    button $f.clip.flipy -text "Flip Y" \
+		-command "$this flip_y_clipping_plane" \
+		-state disabled
+	    button $f.clip.flipz -text "Flip Z" \
+		-command "$this flip_z_clipping_plane" \
+		-state disabled
+	    
+	    pack $f.clip.check $f.clip.flipx $f.clip.flipy $f.clip.flipz \
+		-side left -anchor nw -padx 3 -pady 3 -ipadx 2 
+	} else {
+	    puts "FIX ME: Configure values for isosurface tab?? (like fill_in_data_pages)"
+	}
     }
     
     
@@ -4117,210 +4268,221 @@ class BioTensorApp {
 	global mods
         global $mods(ShowField-Glyphs)-tensors-on
 	
-	checkbutton $f.show -text "Show Glyphs" \
-	    -variable $mods(ShowField-Glyphs)-tensors-on \
-	    -command "$this toggle_show_glyphs"
-	
-        pack $f.show -side top -anchor nw -padx 3 -pady 3
-	
-        # Seed at
-        iwidgets::labeledframe $f.seed \
-	    -labeltext "Seed At" \
-	    -labelpos nw -foreground grey64
-        pack $f.seed -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x
-	
-        set seed [$f.seed childsite]
-	
-	global $mods(ChooseField-GlyphSeeds)-port-index
-        radiobutton $seed.point -text "Single Point" \
-	    -variable $mods(ChooseField-GlyphSeeds)-port-index \
-	    -value 0 \
-	    -state disabled \
-	    -command "$this update_glyph_seed_method"
-	
-        radiobutton $seed.rake -text "Along Line" \
-	    -variable $mods(ChooseField-GlyphSeeds)-port-index \
-	    -value 1 \
-	    -state disabled \
-	    -command "$this update_glyph_seed_method"
-	
-        radiobutton $seed.plane -text "On Planes" \
-	    -variable $mods(ChooseField-GlyphSeeds)-port-index \
-	    -value 2 \
-	    -state disabled \
-	    -command "$this update_glyph_seed_method"
-	
-        radiobutton $seed.grid -text "On Grid" \
-	    -variable $mods(ChooseField-GlyphSeeds)-port-index \
-	    -value 3 \
-	    -state disabled \
-	    -command "$this update_glyph_seed_method"
-	
-        pack $seed.point $seed.rake $seed.plane $seed.grid -side top \
-	    -anchor nw -padx 3 -pady 1
-	
-        iwidgets::labeledframe $f.rep \
-	    -labeltext "Representation and Color" \
-	    -labelpos nw -foreground grey64
-        pack $f.rep -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x
-	
-        set rep [$f.rep childsite]
-	
-        global glyph_display_type
-        frame $rep.f1 
-        pack $rep.f1 -side top -anchor nw -padx 3 -pady 1
-	
-        radiobutton $rep.f1.boxes -text "Boxes     " \
-            -variable glyph_display_type \
-            -value boxes \
-	    -state disabled \
-            -command "$this change_glyph_display_type 0 $rep"
-	
-        iwidgets::optionmenu $rep.f1.type -labeltext "" \
-            -width 180 -state disabled \
-            -command "$this change_glyph_display_type 1 $rep.f1"
-        pack $rep.f1.boxes $rep.f1.type -side left -anchor nw -padx 2 -pady 0
-	
-        $rep.f1.type insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant" "RGB"
-	
-        frame $rep.f2
-        pack $rep.f2 -side top -anchor nw -padx 3 -pady 1
-	
-        radiobutton $rep.f2.ellips -text "Ellipsoids" \
-            -variable glyph_display_type \
-            -value ellipsoids \
-	    -state disabled \
-            -command "$this change_glyph_display_type 0 $rep"
-	
-        iwidgets::optionmenu $rep.f2.type -labeltext "" \
-            -width 180 \
-            -command "$this change_glyph_display_type 1 $rep.f2" \
-            -state disabled
-        pack $rep.f2.ellips $rep.f2.type -side left -anchor nw -padx 2 -pady 0
-	
-        $rep.f2.type insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant"
-
-        global glyph_color
-        frame $rep.select
-        pack $rep.select -side top -anchor n -padx 3 -pady 3
-       	addColorSelection $rep.select "Color" glyph_color "glyph_color_change"
-
-        iwidgets::labeledframe $rep.maps \
-	    -labeltext "Color Maps" \
-            -labelpos nw -foreground grey64
-        pack $rep.maps -side top -anchor n -padx 3 -pady 3
-
-        set maps [$rep.maps childsite]
-	global $mods(GenStandardColorMaps-Glyphs)-mapType
-
-	# Gray
-	frame $maps.gray
-	pack $maps.gray -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.gray.b -text "Gray" \
-	    -variable $mods(GenStandardColorMaps-Glyphs)-mapType \
-	    -value 0 \
-	    -state disabled \
-	    -command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
-	pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.gray.f -relief sunken -borderwidth 2
-	pack $maps.gray.f -padx 2 -pady 0 -side right -anchor e
-	canvas $maps.gray.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.gray.f.canvas -anchor e \
-	    -fill both -expand 1
-	
-	draw_gray_colormap $maps.gray.f.canvas
-	
-	# Rainbow
-	frame $maps.rainbow
-	pack $maps.rainbow -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.rainbow.b -text "Rainbow" \
-	    -variable $mods(GenStandardColorMaps-Glyphs)-mapType \
-	    -value 2 \
-	    -state disabled \
-	    -command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
-	pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.rainbow.f -relief sunken -borderwidth 2
-	pack $maps.rainbow.f -padx 2 -pady 0 -side right -anchor e
-	canvas $maps.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.rainbow.f.canvas -anchor e
-	
-	draw_rainbow_colormap $maps.rainbow.f.canvas
-	
-	# Darkhue
-	frame $maps.darkhue
-	pack $maps.darkhue -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.darkhue.b -text "Darkhue" \
-	    -variable $mods(GenStandardColorMaps-Glyphs)-mapType \
-	    -value 5 \
-	    -state disabled \
-	    -command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
-	pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.darkhue.f -relief sunken -borderwidth 2
-	pack $maps.darkhue.f -padx 2 -pady 0 -side right -anchor e
-	canvas $maps.darkhue.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.darkhue.f.canvas -anchor e
-	
-	draw_darkhue_colormap $maps.darkhue.f.canvas
-	
-	
-	# Blackbody
-	frame $maps.blackbody
-	pack $maps.blackbody -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.blackbody.b -text "Blackbody" \
-	    -variable $mods(GenStandardColorMaps-Glyphs)-mapType \
-	    -value 7 \
-	    -state disabled \
-	    -command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
-	pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.blackbody.f -relief sunken -borderwidth 2 
-	pack $maps.blackbody.f -padx 2 -pady 0 -side right -anchor e
-	canvas $maps.blackbody.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.blackbody.f.canvas -anchor e
-	
-	draw_blackbody_colormap $maps.blackbody.f.canvas
-	
-	
-	# BP Seismic
-	frame $maps.bpseismic
-	pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 0 \
-	    -fill x -expand 1
-	radiobutton $maps.bpseismic.b -text "BP Seismic" \
-	    -variable $mods(GenStandardColorMaps-Glyphs)-mapType \
-	    -value 17 \
-	    -state disabled \
-	    -command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
-	pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
-	
-	frame $maps.bpseismic.f -relief sunken -borderwidth 2
-	pack $maps.bpseismic.f -padx 2 -pady 0 -side left -anchor e
-	canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	pack $maps.bpseismic.f.canvas -anchor e
-	
-	draw_bpseismic_colormap $maps.bpseismic.f.canvas
-
-
-        global scale_glyph
-        global $mods(TendNorm-Glyphs)-target
-
-        frame $f.scale 
-        pack $f.scale -side top -anchor nw -padx 3 -pady 0
-
-        checkbutton $f.scale.b -text "Glyph Size           " \
-           -variable scale_glyph \
-           -state disabled \
-           -command "$this toggle_scale_glyph"
-
-        scale $f.scale.s -from 0.2 -to 5.0 \
+	if {![winfo exists $f.show]} {
+	    checkbutton $f.show -text "Show Glyphs" \
+		-variable $mods(ShowField-Glyphs)-tensors-on \
+		-command "$this toggle_show_glyphs"
+	    
+	    pack $f.show -side top -anchor nw -padx 3 -pady 3	
+	    
+	    # Seed at
+	    iwidgets::labeledframe $f.seed \
+		-labeltext "Seed At" \
+		-labelpos nw -foreground grey64
+	    pack $f.seed -side top -anchor nw -padx 3 -pady 0 \
+		-fill x
+	    
+	    set seed [$f.seed childsite]
+	    
+	    global $mods(ChooseField-GlyphSeeds)-port-index
+	    frame $seed.a
+	    pack $seed.a -side left -anchor n -padx 10
+	    radiobutton $seed.a.point -text "Single Point" \
+		-variable $mods(ChooseField-GlyphSeeds)-port-index \
+		-value 0 \
+		-state disabled \
+		-command "$this update_glyph_seed_method"
+	    
+	    radiobutton $seed.a.rake -text "Along Line" \
+		-variable $mods(ChooseField-GlyphSeeds)-port-index \
+		-value 1 \
+		-state disabled \
+		-command "$this update_glyph_seed_method"
+	    
+	    frame $seed.b
+	    pack $seed.b -side right -anchor n -padx 10
+	    radiobutton $seed.b.plane -text "On Planes" \
+		-variable $mods(ChooseField-GlyphSeeds)-port-index \
+		-value 2 \
+		-state disabled \
+		-command "$this update_glyph_seed_method"
+	    
+	    radiobutton $seed.b.grid -text "On Grid" \
+		-variable $mods(ChooseField-GlyphSeeds)-port-index \
+		-value 3 \
+		-state disabled \
+		-command "$this update_glyph_seed_method"
+	    
+	    pack $seed.a.point $seed.a.rake  -side top \
+		-anchor nw -padx 3 -pady 1
+	    
+	    pack $seed.b.plane $seed.b.grid -side top \
+		-anchor nw -padx 3 -pady 1
+	    
+	    iwidgets::labeledframe $f.rep \
+		-labeltext "Representation and Color" \
+		-labelpos nw -foreground grey64
+	    pack $f.rep -side top -anchor nw -padx 3 -pady 0 \
+		-fill x
+	    
+	    set rep [$f.rep childsite]
+	    
+	    global glyph_display_type
+	    frame $rep.f1 
+	    pack $rep.f1 -side top -anchor nw -padx 3 -pady 1
+	    
+	    radiobutton $rep.f1.boxes -text "Boxes     " \
+		-variable glyph_display_type \
+		-value boxes \
+		-state disabled \
+		-command "$this change_glyph_display_type radio $rep"
+	    
+	    iwidgets::optionmenu $rep.f1.type -labeltext "" \
+		-width 180 -state disabled \
+		-command "$this change_glyph_display_type men $rep.f1"
+	    pack $rep.f1.boxes $rep.f1.type -side left -anchor nw -padx 2 -pady 0
+	    
+	    $rep.f1.type insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant" "RGB"
+	    $rep.f1.type select "Principle Eigenvector"
+	    
+	    frame $rep.f2
+	    pack $rep.f2 -side top -anchor nw -padx 3 -pady 1
+	    
+	    radiobutton $rep.f2.ellips -text "Ellipsoids" \
+		-variable glyph_display_type \
+		-value ellipsoids \
+		-state disabled \
+		-command "$this change_glyph_display_type radio $rep"
+	    
+	    iwidgets::optionmenu $rep.f2.type -labeltext "" \
+		-width 180 \
+		-command "$this change_glyph_display_type men $rep.f2" \
+		-state disabled
+	    pack $rep.f2.ellips $rep.f2.type -side left -anchor nw -padx 2 -pady 0
+	    
+	    $rep.f2.type insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant"
+	    
+	    $rep.f2.type select "Principle Eigenvector"
+	    
+	    global glyph_color
+	    frame $rep.select
+	    pack $rep.select -side top -anchor n -padx 3 -pady 3
+	    addColorSelection $rep.select "Color" glyph_color "glyph_color_change"
+	    
+	    iwidgets::labeledframe $rep.maps \
+		-labeltext "Color Maps" \
+		-labelpos nw -foreground grey64
+	    pack $rep.maps -side top -anchor n -padx 3 -pady 3
+	    
+	    set maps [$rep.maps childsite]
+	    global $mods(GenStandardColorMaps-Glyphs)-mapType
+	    
+	    # Gray
+	    frame $maps.gray
+	    pack $maps.gray -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.gray.b -text "Gray" \
+		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
+		-value 0 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.gray.f -relief sunken -borderwidth 2
+	    pack $maps.gray.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.gray.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.gray.f.canvas -anchor e \
+		-fill both -expand 1
+	    
+	    draw_colormap Gray $maps.gray.f.canvas
+	    
+	    # Rainbow
+	    frame $maps.rainbow
+	    pack $maps.rainbow -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.rainbow.b -text "Rainbow" \
+		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
+		-value 2 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.rainbow.f -relief sunken -borderwidth 2
+	    pack $maps.rainbow.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.rainbow.f.canvas -anchor e
+	    
+	    draw_colormap Rainbow $maps.rainbow.f.canvas
+	    
+	    # Darkhue
+	    frame $maps.darkhue
+	    pack $maps.darkhue -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.darkhue.b -text "Darkhue" \
+		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
+		-value 5 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.darkhue.f -relief sunken -borderwidth 2
+	    pack $maps.darkhue.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.darkhue.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.darkhue.f.canvas -anchor e
+	    
+	    draw_colormap Darkhue $maps.darkhue.f.canvas
+	    
+	    
+	    # Blackbody
+	    frame $maps.blackbody
+	    pack $maps.blackbody -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.blackbody.b -text "Blackbody" \
+		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
+		-value 7 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.blackbody.f -relief sunken -borderwidth 2 
+	    pack $maps.blackbody.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.blackbody.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.blackbody.f.canvas -anchor e
+	    
+	    draw_colormap Blackbody $maps.blackbody.f.canvas
+	    
+	    
+	    # BP Seismic
+	    frame $maps.bpseismic
+	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.bpseismic.b -text "BP Seismic" \
+		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
+		-value 17 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.bpseismic.f -relief sunken -borderwidth 2
+	    pack $maps.bpseismic.f -padx 2 -pady 0 -side left -anchor e
+	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.bpseismic.f.canvas -anchor e
+	    
+	    draw_colormap "BP Seismic" $maps.bpseismic.f.canvas
+	    
+	    
+	    global scale_glyph
+	    global $mods(TendNorm-Glyphs)-target
+	    
+	    frame $f.scale 
+	    pack $f.scale -side top -anchor nw -padx 3 -pady 0
+	    
+	    checkbutton $f.scale.b -text "Glyph Size:          " \
+		-variable scale_glyph \
+		-state disabled \
+		-command "$this toggle_scale_glyph"
+	    
+	    scale $f.scale.s -from 0.2 -to 5.0 \
                 -resolution 0.01 \
   		-length 150  -width 15 \
 		-sliderlength 15 \
@@ -4328,23 +4490,23 @@ class BioTensorApp {
    	        -state disabled \
    	        -foreground grey64 \
 	        -variable $mods(TendNorm-Glyphs)-target
-        bind $f.scale.s <ButtonRelease> {global mods; $mods(TendNorm-Glyphs)-c needexecute}
- 
-        pack $f.scale.b -side left -anchor w -padx 3 -pady 0
-        pack  $f.scale.s -side left -anchor ne -padx 3 -pady 0
-
-        global exag_glyph
-        global $mods(TendAnscale-Glyphs)-scale
-
-        frame $f.exag 
-        pack $f.exag -side top -anchor nw -padx 3 -pady 0
-
-        checkbutton $f.exag.b -text "Shape Exaggerate" \
-           -variable exag_glyph \
-	   -state disabled \
-           -command "$this toggle_exag_glyph"
-
-        scale $f.exag.s -from 0.2 -to 5.0 \
+	    bind $f.scale.s <ButtonRelease> {global mods; $mods(TendNorm-Glyphs)-c needexecute}
+	    
+	    pack $f.scale.b -side left -anchor w -padx 3 -pady 0
+	    pack  $f.scale.s -side left -anchor ne -padx 3 -pady 0
+	    
+	    global exag_glyph
+	    global $mods(TendAnscale-Glyphs)-scale
+	    
+	    frame $f.exag 
+	    pack $f.exag -side top -anchor nw -padx 3 -pady 0
+	    
+	    checkbutton $f.exag.b -text "Shape Exaggerate:" \
+		-variable exag_glyph \
+		-state disabled \
+		-command "$this toggle_exag_glyph"
+	    
+	    scale $f.exag.s -from 0.2 -to 5.0 \
                 -resolution 0.01 \
   		-length 150  -width 15 \
 		-sliderlength 15 \
@@ -4352,21 +4514,492 @@ class BioTensorApp {
    	        -state disabled \
    	        -foreground grey64 \
 	        -variable $mods(TendAnscale-Glyphs)-scale
-        bind $f.exag.s <ButtonRelease> {global mods; $mods(TendAnscale-Glyphs)-c needexecute}
- 
-        pack $f.exag.b -side left -anchor w -padx 3 -pady 0
-        pack  $f.exag.s -side left -anchor ne -padx 3 -pady 0
-       
-        message $f.exagm -text "A value less than 1.0 will make the glyphs more isotropic while a value greater than 1.0 will make them more anisotropic.  Setting the value to 1.0 will not change the glyphs." -width 300 -foreground grey64
-
-        pack $f.exagm -side top -anchor n -padx 3 -pady 0
-
-          
+	    bind $f.exag.s <ButtonRelease> {global mods; $mods(TendAnscale-Glyphs)-c needexecute}
+	    
+	    pack $f.exag.b -side left -anchor w -padx 3 -pady 0
+	    pack  $f.exag.s -side left -anchor ne -padx 3 -pady 0
+	    
+	    message $f.exagm -text "A value less than 1.0 will make the glyphs more isotropic while a value greater than 1.0 will make them more anisotropic.  Setting the value to 1.0 will not change the glyphs." -width 300 -foreground grey64
+	    
+	    pack $f.exagm -side top -anchor n -padx 3 -pady 0
+	} else {
+	    puts "FIX ME: Configure values for glyphs tab?? (like fill_in_data_pages)"
+	}
     }
     
     
-    method build_fibers_tab { f } {
+	method build_fibers_tab { f } {
+	    global mods
+        global $mods(ShowField-Fibers)-edges-on
 
+	if {![winfo exists $f.show]} {
+	    checkbutton $f.show -text "Show Fibers" \
+		-variable $mods(ShowField-Fibers)-edges-on \
+		-command "$this toggle_show_fibers"
+	    
+	    pack $f.show -side top -anchor nw -padx 3 -pady 3
+	    
+	    # Fiber Algorigthm
+	    iwidgets::labeledframe $f.algo \
+		-labeltext "Fiber Algorithm" \
+		-labelpos nw -foreground grey64
+	    
+	    pack $f.algo -side top -anchor nw -padx 3 -pady 0 -fill x
+	    set algo [$f.algo childsite]
+	    
+	    global $mods(TendFiber)-fibertype
+	    frame $algo.f 
+	    pack $algo.f -side top -anchor nw -padx 3 -pady 1
+	    radiobutton $algo.f.evec1 -text "Major Eigenvector" \
+		-variable $mods(TendFiber)-fibertype \
+		-value evec1 \
+		-command "$mods(TendFiber)-c needexecute" \
+		-state disabled
+	    
+	    radiobutton $algo.f.tl -text "Tensorlines (TL)" \
+		-variable $mods(TendFiber)-fibertype \
+		-value tensorline \
+		-command "$mods(TendFiber)-c needexecute" \
+		-state disabled
+	    
+	    pack $algo.f.evec1 $algo.f.tl -side left -anchor nw -padx 5 -pady 1
+	    
+	    global fibers_stepsize
+	    frame $algo.stepsize
+	    pack $algo.stepsize -side top -anchor nw -padx 3 -pady 1
+	    
+	    label $algo.stepsize.l -text "Step Size:" -state disabled
+	    scale $algo.stepsize.step -label "" \
+		-from 0.1 -to 10 \
+		-resolution 0.1 \
+		-length 150  -width 15 \
+		-sliderlength 15 \
+		-orient horizontal \
+		-showvalue false \
+		-variable fibers_stepsize \
+		-state disabled -foreground grey64
+	    label $algo.stepsize.val -textvariable fibers_stepsize -state disabled
+	    pack $algo.stepsize.l $algo.stepsize.step $algo.stepsize.val -side left -anchor nw -padx 3 -pady 1
+	    bind $algo.stepsize.step <ButtonRelease> {app configure_fibers_stepsize}
+	    
+	    frame $algo.method 
+	    pack $algo.method -side top -anchor nw -padx 3 -pady 0
+	    
+	    global $mods(TendFiber)-integration
+	    label $algo.method.l -text "Integration Method: " -state disabled
+	    radiobutton $algo.method.e -text "Euler" \
+		-variable $mods(TendFiber)-integration \
+		-value Euler \
+		-state disabled \
+		-command "$mods(TendFiber)-c needexecute"
+	    radiobutton $algo.method.rk -text "RK4" \
+		-variable $mods(TendFiber)-integration \
+		-value RK4 \
+		-state disabled \
+		-command "$mods(TendFiber)-c needexecute"
+	    
+	    pack $algo.method.l $algo.method.e $algo.method.rk -side left -anchor nw \
+		-padx 3 -pady 0
+	    
+	    # Resampling Filter
+	    iwidgets::labeledframe $f.rs \
+		-labeltext "Sampling Kernel" \
+		-labelpos nw -foreground grey64
+	    
+	    pack $f.rs -side top -anchor nw -padx 3 -pady 0 -fill x
+	    set rs [$f.rs childsite]
+	    global $mods(TendFiber)-kernel
+	    
+	    frame $rs.f
+	    pack $rs.f -side top -anchor n
+	    
+	    radiobutton $rs.f.tent -text "Tent" \
+		-variable $mods(TendFiber)-kernel \
+		-value tent \
+		-state disabled \
+		-command "$mods(TendFiber)-c needexecute"
+	    
+	    radiobutton $rs.f.cat -text "Catmull-Rom" \
+		-variable $mods(TendFiber)-kernel \
+		-value cubicCR \
+		-state disabled \
+		-command "$mods(TendFiber)-c needexecute"
+	    
+	    radiobutton $rs.f.b -text "B-Spline" \
+		-variable $mods(TendFiber)-kernel \
+		-value cubicBS \
+		-state disabled \
+		-command "$mods(TendFiber)-c needexecute"
+	    
+	    pack $rs.f.tent $rs.f.cat $rs.f.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    iwidgets::labeledframe $f.stop \
+		-labeltext "Stopping Criteria" \
+		-labelpos nw -foreground grey64
+	    pack $f.stop -side top -anchor nw -padx 3 -pady 0 -fill x
+	    set stop [$f.stop childsite]
+	    
+	    # Max Fiber Length
+	    global $mods(TendFiber)-use-length
+	    global fibers_length
+	    frame $stop.fiber
+	    pack $stop.fiber -side top -anchor nw
+	    
+	    checkbutton $stop.fiber.check -text "Max Fiber Length:" \
+		-variable $mods(TendFiber)-use-length \
+		-command "$this toggle_fibers_fiber_length; $mods(TendFiber)-c needexecute" \
+		-state disabled -foreground grey64
+	    scale $stop.fiber.val -label "" \
+		-from 1 -to 400 \
+		-resolution 1 \
+		-length 120  -width 15 \
+		-sliderlength 15 \
+		-orient horizontal \
+		-showvalue false \
+		-variable fibers_length \
+		-state disabled -foreground grey64
+	    label $stop.fiber.l -textvariable fibers_length -state disabled
+	    pack $stop.fiber.check $stop.fiber.val $stop.fiber.l -side left \
+		-anchor nw -padx 3 -pady 0
+	    bind $stop.fiber.val <ButtonRelease> {app change_fibers_fiber_length}
+	    
+	    # Number of Steps
+	    global $mods(TendFiber)-use-steps
+	    global fibers_steps
+	    frame $stop.steps
+	    pack $stop.steps -side top -anchor nw
+	    
+	    checkbutton $stop.steps.check -text "Number of Steps:" \
+		-variable $mods(TendFiber)-use-steps \
+		-command "$this toggle_fibers_steps; $mods(TendFiber)-c needexecute" \
+		-state disabled -foreground grey64
+	    scale $stop.steps.val -label "" \
+		-from 10 -to 1000 \
+		-resolution 10 \
+		-length 120  -width 15 \
+		-sliderlength 15 \
+		-orient horizontal \
+		-showvalue false \
+		-variable fibers_steps \
+		-state disabled -foreground grey64
+	    label $stop.steps.l -textvariable fibers_steps -state disabled
+	    pack $stop.steps.check $stop.steps.val $stop.steps.l -side left \
+		-anchor nw -padx 3 -pady 0
+	    bind $stop.steps.val <ButtonRelease> {app change_fibers_steps}
+	    
+	    # Anisotropy
+	    global $mods(TendFiber)-use-aniso
+	    global $mods(TendFiber)-aniso-metric
+	    global $mods(TendFiber)-aniso-thresh
+	    
+	    frame $stop.aniso1
+	    pack $stop.aniso1 -side top -anchor nw
+	    
+	    checkbutton $stop.aniso1.check -text "Anisotropy Threshold:" \
+		-variable $mods(TendFiber)-use-aniso \
+		-command "$this toggle_fibers_aniso; $mods(TendFiber)-c needexecute" \
+		-state disabled -foreground grey64
+	    scale $stop.aniso1.val -label "" \
+		-from 0.0 -to 1.0 \
+		-resolution 0.01 \
+		-length 95  -width 15 \
+		-sliderlength 15 \
+		-orient horizontal \
+		-showvalue false \
+		-variable $mods(TendFiber)-aniso-thresh \
+		-state disabled -foreground grey64
+	    label $stop.aniso1.l -textvariable $mods(TendFiber)-aniso-thresh -state disabled
+	    pack $stop.aniso1.check $stop.aniso1.val $stop.aniso1.l -side left \
+		-anchor nw -padx 3 -pady 0
+	    
+	    frame $stop.aniso2
+	    pack $stop.aniso2 -side top -anchor e
+	    
+	    radiobutton $stop.aniso2.cl -text "Linear Anisotropy" \
+		-variable $mods(TendFiber)-aniso-metric \
+		-value tenAniso_Cl2 \
+		-state disabled \
+		-command "$mods(TendFiber)-c needexecute"
+	    
+	    radiobutton $stop.aniso2.fa -text "Fractional Anisotropy" \
+		-variable $mods(TendFiber)-aniso-metric \
+		-value tenAniso_FA \
+		-state disabled \
+		-command "$mods(TendFiber)-c needexecute"
+	    pack $stop.aniso2.cl $stop.aniso2.fa -side left -anchor nw -padx 3 -pady 0
+	    
+	    
+	    
+	    # Seed at
+	    iwidgets::labeledframe $f.seed \
+		-labeltext "Seed At" \
+		-labelpos nw -foreground grey64
+	    pack $f.seed -side top -anchor nw -padx 3 -pady 0 \
+		-fill x
+	    
+	    set seed [$f.seed childsite]
+	    
+	    global $mods(ChooseField-FiberSeeds)-port-index
+	    
+	    frame $seed.a
+	    pack $seed.a -side left -anchor n -padx 10 
+	    radiobutton $seed.a.point -text "Single Point" \
+		-variable $mods(ChooseField-FiberSeeds)-port-index \
+		-value 0 \
+		-state disabled \
+		-command "$this update_fiber_seed_method"
+	    
+	    radiobutton $seed.a.rake -text "Along Line" \
+	    -variable $mods(ChooseField-FiberSeeds)-port-index \
+		-value 1 \
+		-state disabled \
+		-command "$this update_fiber_seed_method"
+	    
+	    frame $seed.b
+	    pack $seed.b -side right -anchor n -padx 10
+	    radiobutton $seed.b.plane -text "On Planes" \
+		-variable $mods(ChooseField-FiberSeeds)-port-index \
+		-value 2 \
+		-state disabled \
+		-command "$this update_fiber_seed_method"
+	    
+	    radiobutton $seed.b.grid -text "On Grid" \
+		-variable $mods(ChooseField-FiberSeeds)-port-index \
+		-value 3 \
+		-state disabled \
+		-command "$this update_fiber_seed_method"
+	    
+	    pack $seed.a.point $seed.a.rake  -side top \
+		-anchor nw -padx 5 -pady 1
+	    
+	    pack $seed.b.plane $seed.b.grid -side top \
+		-anchor nw -padx 5 -pady 1
+	    
+	    iwidgets::labeledframe $f.rep \
+		-labeltext "Color Fibers Based On" \
+		-labelpos nw -foreground grey64
+	    pack $f.rep -side top -anchor nw -padx 3 -pady 0 \
+		-fill x
+	    
+	    set rep [$f.rep childsite]
+	    
+	    frame $rep.f1 
+	    pack $rep.f1 -side top -anchor nw -padx 3 -pady 1
+	    
+	    iwidgets::optionmenu $rep.f1.type -labeltext "" \
+		-width 180 -state disabled \
+		-command "$this change_fiber_color_by $rep.f1"
+	    pack $rep.f1.type -side left -anchor nw -padx 2 -pady 0
+	    
+	    $rep.f1.type insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant"
+	    
+	    $rep.f1.type select "Principle Eigenvector"
+	    
+	    
+	    global fiber_color
+	    
+	    addColorSelection $rep.f1 "Color" fiber_color "fiber_color_change"
+	    
+	    iwidgets::labeledframe $rep.maps \
+		-labeltext "Color Maps" \
+		-labelpos nw -foreground grey64
+	    pack $rep.maps -side top -anchor n -padx 3 -pady 3
+	    
+	    set maps [$rep.maps childsite]
+	    global $mods(GenStandardColorMaps-Fibers)-mapType
+	    
+	    # Gray
+	    frame $maps.gray
+	    pack $maps.gray -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.gray.b -text "Gray" \
+		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
+		-value 0 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.gray.f -relief sunken -borderwidth 2
+	    pack $maps.gray.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.gray.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.gray.f.canvas -anchor e \
+		-fill both -expand 1
+	    
+	    draw_colormap Gray $maps.gray.f.canvas
+	    
+	    # Rainbow
+	    frame $maps.rainbow
+	    pack $maps.rainbow -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.rainbow.b -text "Rainbow" \
+		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
+		-value 2 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.rainbow.f -relief sunken -borderwidth 2
+	    pack $maps.rainbow.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.rainbow.f.canvas -anchor e
+	    
+	    draw_colormap Rainbow $maps.rainbow.f.canvas
+	    
+	    # Darkhue
+	    frame $maps.darkhue
+	    pack $maps.darkhue -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.darkhue.b -text "Darkhue" \
+		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
+		-value 5 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.darkhue.f -relief sunken -borderwidth 2
+	    pack $maps.darkhue.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.darkhue.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.darkhue.f.canvas -anchor e
+	    
+	    draw_colormap Darkhue $maps.darkhue.f.canvas
+	    
+	    
+	    # Blackbody
+	    frame $maps.blackbody
+	    pack $maps.blackbody -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.blackbody.b -text "Blackbody" \
+		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
+		-value 7 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.blackbody.f -relief sunken -borderwidth 2 
+	    pack $maps.blackbody.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.blackbody.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.blackbody.f.canvas -anchor e
+	    
+	    draw_colormap Blackbody $maps.blackbody.f.canvas
+	    
+	    
+	    # BP Seismic
+	    frame $maps.bpseismic
+	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.bpseismic.b -text "BP Seismic" \
+		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
+		-value 17 \
+		-state disabled \
+		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.bpseismic.f -relief sunken -borderwidth 2
+	    pack $maps.bpseismic.f -padx 2 -pady 0 -side left -anchor e
+	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.bpseismic.f.canvas -anchor e
+	    
+	    draw_colormap "BP Seismic" $maps.bpseismic.f.canvas
+	} else {
+	    puts "FIX ME: Configure values for fibers tab?? (like fill_in_data_pages)"
+	}
+    }
+    
+    method change_fibers_fiber_length {} {
+	global mods
+	global $mods(TendFiber)-length
+	global fibers_length
+	
+	set $mods(TendFiber)-length [expr $fibers_length/100.0]
+	
+	$mods(TendFiber)-c needexecute
+    }
+    
+    method toggle_fibers_fiber_length {} {
+	global mods
+	global $mods(TendFiber)-use-length
+
+	if {[set $mods(TendFiber)-use-length] == 0} {
+	    # disable scale
+	    $fibers_tab1.stop.childsite.fiber.val configure -state disabled
+	    $fibers_tab2.stop.childsite.fiber.val configure -state disabled
+
+	    $fibers_tab1.stop.childsite.fiber.l configure -state disabled
+	    $fibers_tab2.stop.childsite.fiber.l configure -state disabled
+	} else {
+	    # enable scale
+	    $fibers_tab1.stop.childsite.fiber.val configure -state normal
+	    $fibers_tab2.stop.childsite.fiber.val configure -state normal
+
+	    $fibers_tab1.stop.childsite.fiber.l configure -state normal
+	    $fibers_tab2.stop.childsite.fiber.l configure -state normal
+	}
+    }
+
+
+    method change_fibers_steps {} {
+	global mods
+	global $mods(TendFiber)-steps
+	global fibers_steps
+	
+	set $mods(TendFiber)-steps [expr $fibers_steps/100.0]
+
+	$mods(TendFiber)-c needexecute
+    }
+
+
+    method toggle_fibers_steps {} {
+	global mods
+	global $mods(TendFiber)-use-steps
+
+	if {[set $mods(TendFiber)-use-steps] == 0} {
+	    # disable scale
+	    $fibers_tab1.stop.childsite.steps.val configure -state disabled
+	    $fibers_tab2.stop.childsite.steps.val configure -state disabled
+
+	    $fibers_tab1.stop.childsite.steps.l configure -state disabled
+	    $fibers_tab2.stop.childsite.steps.l configure -state disabled
+	} else {
+	    # enable scale
+	    $fibers_tab1.stop.childsite.steps.val configure -state normal
+	    $fibers_tab2.stop.childsite.steps.val configure -state normal
+
+	    $fibers_tab1.stop.childsite.steps.l configure -state normal
+	    $fibers_tab2.stop.childsite.steps.l configure -state normal
+	}
+    }
+
+    method toggle_fibers_aniso {} {
+	global mods
+	global $mods(TendFiber)-use-aniso
+
+	if {[set $mods(TendFiber)-use-aniso] == 0} {
+	    # disable scale
+	    $fibers_tab1.stop.childsite.aniso1.val configure -state disabled
+	    $fibers_tab2.stop.childsite.aniso1.val configure -state disabled
+
+	    $fibers_tab1.stop.childsite.aniso1.l configure -state disabled
+	    $fibers_tab2.stop.childsite.aniso1.l configure -state disabled
+
+	    $fibers_tab1.stop.childsite.aniso2.cl configure -state disabled
+	    $fibers_tab2.stop.childsite.aniso2.cl configure -state disabled
+
+	    $fibers_tab1.stop.childsite.aniso2.fa configure -state disabled
+	    $fibers_tab2.stop.childsite.aniso2.fa configure -state disabled
+	} else {
+	    # enable scale
+	    $fibers_tab1.stop.childsite.aniso1.val configure -state normal
+	    $fibers_tab2.stop.childsite.aniso1.val configure -state normal
+
+	    $fibers_tab1.stop.childsite.aniso1.l configure -state normal
+	    $fibers_tab2.stop.childsite.aniso1.l configure -state normal
+
+	    $fibers_tab1.stop.childsite.aniso2.cl configure -state normal
+	    $fibers_tab2.stop.childsite.aniso2.cl configure -state normal
+
+	    $fibers_tab1.stop.childsite.aniso2.fa configure -state normal
+	    $fibers_tab2.stop.childsite.aniso2.fa configure -state normal
+	}
     }
 
     method toggle_scale_glyph {} {
@@ -4411,6 +5044,43 @@ class BioTensorApp {
            $mods(TendAnscale-Glyphs)-c needexecute
         }
     }
+
+    method change_fiber_color_by { f } {
+	global mods
+	global $mods(ChooseField-Fibers)-port-index
+
+	# get selection and change appropriate port
+	set type [$f.type get]
+
+	# configure color
+	if {$type == "Principle Eigenvector"} {
+	    set fiber_type "Principle Eigenvector"
+	    set $mods(ChooseField-Fibers)-port-index 3
+	    disableModule $mods(RescaleColorMap-Fibers) 1
+	} elseif {$type == "Fractional Anisotropy"} {
+	    set fiber_type "Fractional Anisotropy"
+	    set $mods(ChooseField-Fibers)-port-index 0
+	    disableModule $mods(RescaleColorMap-Fibers) 0
+	} elseif {$type == "Linear Anisotropy"} {
+	    set fiber_type "Linear Anisotropy"
+	    set $mods(ChooseField-Fibers)-port-index 1
+	    disableModule $mods(RescaleColorMap-Fibers) 0
+	} elseif {$type == "Planar Anisotropy"} {
+	    set fiber_type "Planar Anisotropy"
+	    set $mods(ChooseField-Fibers)-port-index 2
+	    disableModule $mods(RescaleColorMap-Fibers) 0
+	} elseif {$type == "Constant"} {
+	    set fiber_type "Constant"
+	    disableModule $mods(RescaleColorMap-Fibers) 1
+	}
+	
+	# sync attached/detached optionmenus
+	$fibers_tab1.rep.childsite.f1.type select $type
+	$fibers_tab2.rep.childsite.f1.type select $type
+
+	$mods(ShowField-Fibers)-c data_display_type
+	$mods(ChooseField-Fibers)-c needexecute
+    }
  
 
 
@@ -4422,7 +5092,7 @@ class BioTensorApp {
 	
         set type ""
 	
-        if {$change == 0} {
+        if {$change == "radio"} {
 	    # radio button changed  
 	    if {$glyph_display_type == "boxes"} {
 		set type [$w.f1.type get]
@@ -4430,6 +5100,7 @@ class BioTensorApp {
 		set type [$w.f2.type get]
 	    }       	
         } else {
+	    # optionmenu changed
 	    set type [$w.type get]
         }
 	
@@ -4469,6 +5140,7 @@ class BioTensorApp {
 	    disableModule $mods(RescaleColorMap-Glyphs) 1
 	}
 	
+	# sync attached/detached optionmenus
 	configure_glyphs_tabs
 
 	$mods(ShowField-Glyphs)-c data_display_type
@@ -4482,7 +5154,7 @@ class BioTensorApp {
 
         if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
-        } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
+        } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 1
         } else {
@@ -4490,7 +5162,7 @@ class BioTensorApp {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
         }
 	
-        $mods(ChooseField-GlyphSeeds)-c needexecute
+        $mods(ChooseField-FiberSeeds)-c needexecute
 	
 	after 100 "$mods(Viewer)-ViewWindow_0-c redraw"
     }
@@ -4564,7 +5236,7 @@ class BioTensorApp {
 	
         if {[set $mods(ShowField-Fibers)-edges-on] == 0} {
 	    # sync nodes
-	    set $mods(ShowField-Fibers)-nodes-on0 
+	    set $mods(ShowField-Fibers)-nodes-on 0 
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
 
@@ -4584,7 +5256,7 @@ class BioTensorApp {
             if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
 		# enable Probe Widget
 		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
-            } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
+            } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
 		# enable rake
 		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 1
             }
@@ -4692,131 +5364,43 @@ class BioTensorApp {
     }
     
     
-    method draw_gray_colormap { canvas } {
-	set color { "Gray" { { 0 0 0 } { 255 255 255 } } }
-        set colorMap [$this set_color_map $color]
-	
-	set width $colormap_width
-        set height $colormap_height
-	
-	set n [llength $colorMap]
-	$canvas delete map
-	set dx [expr $width/double($n)] 
-	set x 0
-	for {set i 0} {$i < $n} {incr i 1} {
-	    set color [lindex $colorMap $i]
-	    set r [lindex $color 0]
-	    set g [lindex $color 1]
-	    set b [lindex $color 2]
-	    set c [format "#%02x%02x%02x" $r $g $b]
-	    set oldx $x
-	    set x [expr ($i+1)*$dx]
-	    $canvas create rectangle \
-		$oldx 0 $x $height -fill $c -outline $c -tags map
+    method draw_colormap { which canvas } {
+	set color ""
+	if {$which == "Gray"} {
+	    set color { "Gray" { { 0 0 0 } { 255 255 255 } } }
+	} elseif {$which == "Rainbow"} {
+	    set color { "Rainbow" {	
+		{ 255 0 0}  { 255 102 0}
+		{ 255 204 0}  { 255 234 0}
+		{ 204 255 0}  { 102 255 0}
+		{ 0 255 0}    { 0 255 102}
+		{ 0 255 204}  { 0 204 255}
+		{ 0 102 255}  { 0 0 255}}}
+	} elseif {$which == "Blackbody"} {
+	    set color { "Blackbody" {	
+		{0 0 0}   {52 0 0}
+		{102 2 0}   {153 18 0}
+		{200 41 0}   {230 71 0}
+		{255 120 0}   {255 163 20}
+		{255 204 55}   {255 228 80}
+		{255 247 120}   {255 255 180}
+		{255 255 255}}}
+	} elseif {$which == "Darkhue"} {
+	    set color { "Darkhue" {	
+		{ 0  0  0 }  { 0 28 39 }
+		{ 0 30 55 }  { 0 15 74 }
+		{ 1  0 76 }  { 28  0 84 }
+		{ 32  0 85 }  { 57  1 92 }
+		{ 108  0 114 }  { 135  0 105 }
+		{ 158  1 72 }  { 177  1 39 }
+		{ 220  10 10 }  { 229 30  1 }
+		{ 246 72  1 }  { 255 175 36 }
+		{ 255 231 68 }  { 251 255 121 }
+		{ 239 253 174 }}}
+	} elseif {$which == "BP Seismic"} {
+	    set color { "BP Seismic" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
 	}
-    }
-    
-    
-    method draw_rainbow_colormap { canvas } {
-	set color { "Rainbow" {	
-	    { 255 0 0}  { 255 102 0}
-	    { 255 204 0}  { 255 234 0}
-	    { 204 255 0}  { 102 255 0}
-	    { 0 255 0}    { 0 255 102}
-	    { 0 255 204}  { 0 204 255}
-	    { 0 102 255}  { 0 0 255}}}
-        set colorMap [$this set_color_map $color]
-	
-	set width $colormap_width
-        set height $colormap_height
-	
-	set n [llength $colorMap]
-	$canvas delete map
-	set dx [expr $width/double($n)] 
-	set x 0
-	for {set i 0} {$i < $n} {incr i 1} {
-	    set color [lindex $colorMap $i]
-	    set r [lindex $color 0]
-	    set g [lindex $color 1]
-	    set b [lindex $color 2]
-	    set c [format "#%02x%02x%02x" $r $g $b]
-	    set oldx $x
-	    set x [expr ($i+1)*$dx]
-	    $canvas create rectangle \
-		$oldx 0 $x $height -fill $c -outline $c -tags map
-	}
-    }
-    
-    
-    method draw_blackbody_colormap { canvas } {
-	set color { "Blackbody" {	
-	    {0 0 0}   {52 0 0}
-	    {102 2 0}   {153 18 0}
-	    {200 41 0}   {230 71 0}
-	    {255 120 0}   {255 163 20}
-	    {255 204 55}   {255 228 80}
-	    {255 247 120}   {255 255 180}
-	    {255 255 255}}}
-        set colorMap [$this set_color_map $color]
-	
-	set width $colormap_width
-        set height $colormap_height
-	
-	set n [llength $colorMap]
-	$canvas delete map
-	set dx [expr $width/double($n)] 
-	set x 0
-	for {set i 0} {$i < $n} {incr i 1} {
-	    set color [lindex $colorMap $i]
-	    set r [lindex $color 0]
-	    set g [lindex $color 1]
-	    set b [lindex $color 2]
-	    set c [format "#%02x%02x%02x" $r $g $b]
-	    set oldx $x
-	    set x [expr ($i+1)*$dx]
-	    $canvas create rectangle \
-		$oldx 0 $x $height -fill $c -outline $c -tags map
-	}
-    }
-    
-    
-    method draw_darkhue_colormap { canvas } {
-	set color { "Darkhue" {	
-	    { 0  0  0 }  { 0 28 39 }
-	    { 0 30 55 }  { 0 15 74 }
-	    { 1  0 76 }  { 28  0 84 }
-	    { 32  0 85 }  { 57  1 92 }
-	    { 108  0 114 }  { 135  0 105 }
-	    { 158  1 72 }  { 177  1 39 }
-	    { 220  10 10 }  { 229 30  1 }
-	    { 246 72  1 }  { 255 175 36 }
-	    { 255 231 68 }  { 251 255 121 }
-	    { 239 253 174 }}}
-        set colorMap [$this set_color_map $color]
-	
-	set width $colormap_width
-        set height $colormap_height
-	
-	set n [llength $colorMap]
-	$canvas delete map
-	set dx [expr $width/double($n)] 
-	set x 0
-	for {set i 0} {$i < $n} {incr i 1} {
-	    set color [lindex $colorMap $i]
-	    set r [lindex $color 0]
-	    set g [lindex $color 1]
-	    set b [lindex $color 2]
-	    set c [format "#%02x%02x%02x" $r $g $b]
-	    set oldx $x
-	    set x [expr ($i+1)*$dx]
-	    $canvas create rectangle \
-		$oldx 0 $x $height -fill $c -outline $c -tags map
-	}
-    }
-    
 
-    method draw_bpseismic_colormap { canvas } {
-	set color { "BP Seismic" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
         set colorMap [$this set_color_map $color]
 	
 	set width $colormap_width
@@ -4840,7 +5424,7 @@ class BioTensorApp {
     }
     
     
-
+    
     method set_color_map { map } {
         set resolution $colormap_res
 	set colorMap {}
@@ -4921,53 +5505,7 @@ class BioTensorApp {
 	return $index*$range
     }
     
-    
-    
-    method select_color_planes_color { w } {
-        global mods
-	global $mods(ChooseField-ColorPlanes)-port-index
-
-        set which [$w.color get]
-	
-        if {$which == "Principle Eigenvector"} {
-	    set plane_type "Principle Eigenvector"
-            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
-            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
-	    disableModule $mods(RescaleColorMap-ColorPlanes) 1
-	    set $mods(ChooseField-ColorPlanes)-port-index 3
-        } elseif {$which == "Fractional Anisotropy"} {
-	    set plane_type "Fractional Anisotropy"
-            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
-            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
-	    disableModule $mods(RescaleColorMap-ColorPlanes) 0
-	    set $mods(ChooseField-ColorPlanes)-port-index 0
-        } elseif {$which == "Linear Anisotropy"} {
-	    set plane_type "Linear Anisotropy"
-            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
-            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
-	    disableModule $mods(RescaleColorMap-ColorPlanes) 0
-	    set $mods(ChooseField-ColorPlanes)-port-index 1
-        } elseif {$which == "Planar Anisotropy"} {
-	    set plane_type "Planar Anisotropy"
-            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
-            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
-	    disableModule $mods(RescaleColorMap-ColorPlanes) 0
-	    set $mods(ChooseField-ColorPlanes)-port-index 2
-        } else {
-	    set plane_type "Constant"
-	    # specified color
-            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state normal
-            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state normal
-	    disableModule $mods(RescaleColorMap-ColorPlanes) 1
-        }
-
-	$planes_tab1.color.childsite.select.color select $which
-	$planes_tab2.color.childsite.select.color select $which
-	
-        # execute 
-        $mods(ChooseField-ColorPlanes)-c needexecute
-    }
-
+ 
 
     method addColorSelection {frame text color mod} {
 	#add node color picking 
@@ -4984,57 +5522,56 @@ class BioTensorApp {
 	frame $frame.colorFrame.col -relief ridge -borderwidth \
 	    4 -height 0.6c -width 1.0c \
 	    -background [format #%04x%04x%04x $ir $ig $ib]
-			 
+	
 	set cmmd "$this raiseColor $frame.colorFrame.col $color $mod"
 	button $frame.colorFrame.set_color \
 	    -state disabled \
 	    -text $text -command $cmmd
-			 
+	
 	#pack the node color frame
 	pack $frame.colorFrame.set_color \
 	    -side left -ipadx 3 -ipady 3
 	pack $frame.colorFrame.col -side left 
 	pack $frame.colorFrame -side left -padx 3
     }
-	
-
-
+    
+    
     method raiseColor {col color mod} {
 	global $color
-	 set window .standalone
-	 if {[winfo exists $window.color]} {
-	     raise $window.color
-	     return;
-	 } else {
-	     toplevel $window.color
-	     makeColorPicker $window.color $color \
-		     "$this setColor $col $color $mod" \
-		     "destroy $window.color"
-	 }
+	set window .standalone
+	if {[winfo exists $window.color]} {
+	    raise $window.color
+	    return;
+	} else {
+	    toplevel $window.color
+	    makeColorPicker $window.color $color \
+		"$this setColor $col $color $mod" \
+		"destroy $window.color"
+	}
     }
-
+    
     method setColor {col color mod} {
-	 global $color
-	 global $color-r
-	 global $color-g
-	 global $color-b
-	 set ir [expr int([set $color-r] * 65535)]
-	 set ig [expr int([set $color-g] * 65535)]
-	 set ib [expr int([set $color-b] * 65535)]
-
-	 set window .standalone
-	 $col config -background [format #%04x%04x%04x $ir $ig $ib]
-
-         if {$color == "clip_to_isosurface_color"} {
-            # set the default colors for the three ShowFields
-            global mods
-            global $mods(ShowField-X)-def-color-r
-            global $mods(ShowField-X)-def-color-g
-            global $mods(ShowField-X)-def-color-b
+	global $color
+	global $color-r
+	global $color-g
+	global $color-b
+	set ir [expr int([set $color-r] * 65535)]
+	set ig [expr int([set $color-g] * 65535)]
+	set ib [expr int([set $color-b] * 65535)]
+	
+	set window .standalone
+	$col config -background [format #%04x%04x%04x $ir $ig $ib]
+	
+	if {$color == "clip_to_isosurface_color"} {
+	    # set the default colors for the three ShowFields
+	    global mods
+	    global $mods(ShowField-X)-def-color-r
+	    global $mods(ShowField-X)-def-color-g
+	    global $mods(ShowField-X)-def-color-b
             set $mods(ShowField-X)-def-color-r [set $color-r]
             set $mods(ShowField-X)-def-color-g [set $color-g]
             set $mods(ShowField-X)-def-color-b [set $color-b]
-
+	    
             global $mods(ShowField-Y)-def-color-r
             global $mods(ShowField-Y)-def-color-g
             global $mods(ShowField-Y)-def-color-b
@@ -5089,6 +5626,52 @@ class BioTensorApp {
 
     }
 
+   
+    
+    method select_color_planes_color { w } {
+        global mods
+	global $mods(ChooseField-ColorPlanes)-port-index
+	
+        set which [$w.color get]
+	
+        if {$which == "Principle Eigenvector"} {
+	    set plane_type "Principle Eigenvector"
+            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
+            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
+	    disableModule $mods(RescaleColorMap-ColorPlanes) 1
+	    set $mods(ChooseField-ColorPlanes)-port-index 3
+        } elseif {$which == "Fractional Anisotropy"} {
+	    set plane_type "Fractional Anisotropy"
+            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
+            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
+	    disableModule $mods(RescaleColorMap-ColorPlanes) 0
+	    set $mods(ChooseField-ColorPlanes)-port-index 0
+        } elseif {$which == "Linear Anisotropy"} {
+	    set plane_type "Linear Anisotropy"
+            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
+            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
+	    disableModule $mods(RescaleColorMap-ColorPlanes) 0
+	    set $mods(ChooseField-ColorPlanes)-port-index 1
+        } elseif {$which == "Planar Anisotropy"} {
+	    set plane_type "Planar Anisotropy"
+            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
+            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
+	    disableModule $mods(RescaleColorMap-ColorPlanes) 0
+	    set $mods(ChooseField-ColorPlanes)-port-index 2
+        } else {
+	    set plane_type "Constant"
+	    # specified color
+            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state normal
+            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state normal
+	    disableModule $mods(RescaleColorMap-ColorPlanes) 1
+        }
+
+	$planes_tab1.color.childsite.select.color select $which
+	$planes_tab2.color.childsite.select.color select $which
+	
+        # execute 
+        $mods(ChooseField-ColorPlanes)-c needexecute
+    }
   
 
     method initialize_clip_info {} {
@@ -5463,7 +6046,7 @@ class BioTensorApp {
 
        # turn off showfields and configure global clipping planes
 
-       if {$which == 0} {
+       if {$which == "X"} {
           global $clip-visible-$last_x
           if {$show_plane_x == 0} {
               # turn off 
@@ -5475,7 +6058,7 @@ class BioTensorApp {
           }  
           $mods(ShowField-X)-c toggle_display_faces  
           $mods(Viewer)-ViewWindow_0-c redraw
-       } elseif {$which == 1} {
+       } elseif {$which == "Y"} {
           global $clip-visible-$last_y
           if {$show_plane_y == 0} {
               set $mods(ShowField-Y)-faces-on 0
@@ -5487,6 +6070,7 @@ class BioTensorApp {
           $mods(ShowField-Y)-c toggle_display_faces
           $mods(Viewer)-ViewWindow_0-c redraw
        } else {
+	   # Z plane
           global $clip-visible-$last_z
           if {$show_plane_z == 0} {
               set $mods(ShowField-Z)-faces-on 0
@@ -5579,12 +6163,10 @@ class BioTensorApp {
     }
 
     method toggle_show_isosurface {} {
-       global show_isosurface
        global mods
        global $mods(ShowField-Isosurface)-faces-on
  
-	if {$show_isosurface == 1} {
-	    set $mods(ShowField-Isosurface)-faces-on 1
+	if {[set $mods(ShowField-Isosurface)-faces-on] == 1} {
 	    disableModule $mods(DirectInterpolate-Isosurface) 0
 	    foreach w [winfo children $isosurface_tab1] {
 		activate_widget $w
@@ -5593,7 +6175,6 @@ class BioTensorApp {
 		activate_widget $w
 	    }
 	} else {
-	    set $mods(ShowField-Isosurface)-faces-on 0
 	    disableModule $mods(DirectInterpolate-Isosurface) 1
 	    foreach w [winfo children $isosurface_tab1] {
 		disable_widget $w
@@ -5707,10 +6288,8 @@ class BioTensorApp {
       global mods
       $mods(UnuSlice1)-c needexecute
 
-      if {$reg_blocked == 0} {
+      if {$reg_completed} {
         $mods(UnuSlice2)-c needexecute
-	# execute_TendEpireg
-        # $mods(TendEpireg)-c needexecute
       }
 
     }
@@ -5722,34 +6301,30 @@ class BioTensorApp {
        global $mods(NrrdReader-BMatrix)-filename
        global bmatrix
 
-       if {$bmatrix == "load"} {
-          if {[set $mods(NrrdReader-BMatrix)-filename] != ""} {
-             if {$dt_blocked} {
-                # unblock modules
-                disableModule $mods(TendEstim1) 0
-		disableModule $mods(ChooseNrrd-DT) 0
-                set dt_blocked 0
-             }
- 
-             # execute
-             $mods(ChooseNrrd-ToSmooth)-c needexecute
-          } else {
-             set answer [tk_messageBox -message \
-                 "Please load a B-Matrix file containing." -type ok -icon info -parent .standalone]
-          }
-       } else {
-          if {$dt_blocked} {
-             # unblock modules
-             disableModule $mods(TendEstim1) 0
-	     disableModule $mods(ChooseNrrd-DT) 0
-             set dt_blocked 0
-          }
- 
-          # execute
-          $mods(ChooseNrrd-ToSmooth)-c needexecute
-       }
+	if {$bmatrix == "load"} {
+	    if {[set $mods(NrrdReader-BMatrix)-filename] == ""} {
+		set answer [tk_messageBox -message \
+				"Please load a B-Matrix file containing." -type ok -icon info -parent .standalone]
+		return
+	    }
+	} else {
+	    # unblock modules
+	    disableModule $mods(TendEstim) 0
+	    disableModule $mods(ChooseNrrd-DT) 0
+	    
+	    # unblock modules
+	    disableModule $mods(TendEstim) 0
+	    disableModule $mods(ChooseNrrd-DT) 0
+	    
+	    # execute
+	    $mods(ChooseNrrd-ToSmooth)-c needexecute
 
+	    set dt_completed 1
+	    
+	    view_Vis
+	}
     }
+
 
     method change_variance_slice { val } {
        global mods
@@ -5757,51 +6332,9 @@ class BioTensorApp {
        set $mods(UnuSlice2)-position $val
     }
 
-    method view_Registration {} {
-        if {$current_step == "Registration"} {
-            # view registration tab
-            $proc_tab1 view "Registration"
-            $proc_tab2 view "Registration"
-            
-        } elseif {$current_step == "Data Acquisition"} {
-            set answer [tk_messageBox -message \
-                 "Please complete the Data Acquisition step before Registration. Select the \"Execute\" button to begin this process." -type ok -icon info -parent .standalone]
-        } elseif {$current_step == "Visualization"} {
-            set answer [tk_messageBox -message \
-                 "Visualize the loaded in Tensor Volume by selecting visualization tabs from the Visualization Frame." -type ok -icon info -parent .standalone]
-
-        }
-
-    }
-
-    method view_DT {} {
-        global do_registration
-        if {!$do_registration} {
-            global mods
-            disableModule $mods(ChooseNrrd-ToReg) 0
-            disableModule $mods(RescaleColorMap2) 0
-            $mods(ChooseNrrd-ToReg)-c needexecute
-            $proc_tab1 view "Build DTs"
-            $proc_tab2 view "Build DTs"
-
-            $variance_tab1.reg configure -state normal
-            $variance_tab2.reg configure -state normal
-
-            activate_dt
-        } elseif {$current_step == "Building Diffusion Tensors"} {
-            # view registration tab
-            $proc_tab1 view "Build DTs"
-            $proc_tab2 view "Build DTs"
-
-
-        } else {
-            set answer [tk_messageBox -message \
-                 "Please complete the Registration step before building the Diffusion Tensors." -type ok -icon info -parent .standalone]
-        }
-    }
 
     method view_Vis {} {
-        if {$current_step == "Visualization"} {
+        if {$dt_completed} {
             # view planes tab
             $vis_tab1 view "Planes"
             $vis_tab2 view "Planes"
@@ -5811,13 +6344,6 @@ class BioTensorApp {
         }
     }
 
-    method unblock_data_pipes {} {
-        global mods
-
-	if {$data_blocked} {
-          set data_blocked 0
-       }
-    }
 
     method activate_registration { } {
         global mods
@@ -5829,8 +6355,20 @@ class BioTensorApp {
 	    activate_widget $w
         }
 
-        set current_step "Registration"
+	# configure Registrations next button
+	if {$reg_completed} {
+	    $reg_tab1.last.ne configure -state normal \
+		-foreground black -background $next_color
+	    $reg_tab2.last.ne configure -state normal \
+		-foreground black -background $next_color
+	} else {
+	    $reg_tab1.last.ne configure -state disabled \
+		-foreground grey64 -background grey75
+	    $reg_tab2.last.ne configure -state disabled \
+		-foreground grey64 -background grey75
 
+	}
+	
         toggle_reference_image_state
 	toggle_registration_threshold
 
@@ -5839,22 +6377,6 @@ class BioTensorApp {
         $ref_image1.s.ref configure -from 1 -to [expr [set $mods(NrrdInfo1)-size0] + 1]
         $ref_image2.s.ref configure -from 1 -to [expr [set $mods(NrrdInfo1)-size0] + 1]
 
-
-    }
-
-
-    method execute_registration {} {
-	global mods
- 
-        # execute modules
-
-        if {$current_step == "Registration"} {
-
-           activate_dt 
-
-           view_dt
-
-        }
 
     }
 
@@ -5868,8 +6390,6 @@ class BioTensorApp {
 	    activate_widget $w
         }
 
-        set current_step "Building Diffusion Tensors"
-
         toggle_do_smoothing
 
         toggle_dt_threshold
@@ -5878,11 +6398,6 @@ class BioTensorApp {
 
     }
 
-
-    method execute_dt {} {
-        puts "unblock dt connections"
-
-    }
 
     method activate_vis {} {
        global mods
@@ -5939,13 +6454,13 @@ class BioTensorApp {
           # setup global clipping planes
 	  initialize_clip_info
 
-          set current_step "Visualization"
-          $indicatorL1 configure -text "Visualization..."
-          $indicatorL2 configure -text "Visualization..."
+          change_indicator_labels "Visualization..."
 
           # bring planes tab forward
           view_Vis
-      } 
+      } else {
+	  puts "FIX ME: Configure tabs???"
+      }
     }
 
     method activate_widget {w} {
@@ -6021,25 +6536,8 @@ class BioTensorApp {
         }
     }
 
-    method set_resampling_filter { case } {
-        set value ""
-        if {$case == 0} {
-          # detached case
-          # set resampling filter value
-          set value [$reg_rf1 get]
-
-          # set optionmenu for detached win
-          set index [$reg_rf1 index $value]
-          $reg_rf2 select $index
-        } else {
-          # attached case
-          # set resampling filter value
-          set value [$reg_rf2 get]
-
-          # set optionmenu for detached win
-          set index [$reg_rf2 index $value]
-          $reg_rf1 select $index
-        }
+    method set_resampling_filter { w } {
+        set value [$w get]
 
 	$reg_tab1.rf select $value
 	$reg_tab2.rf select $value
@@ -6063,23 +6561,23 @@ class BioTensorApp {
 	# change vis tab for attached/detached
 
         if {$initialized != 0} {
-	    if {$which == 0} {
+	    if {$which == "Variance"} {
 		# Variance
 		$vis_tab1 view "Variance"
 		$vis_tab2 view "Variance"
-	    } elseif {$which == 1} {
+	    } elseif {$which == "Planes"} {
 		# Planes
 		$vis_tab1 view "Planes"
 		$vis_tab2 view "Planes"
-	    } elseif {$which == 2} {
+	    } elseif {$which == "Isosurface"} {
 		# Isosurface
 		$vis_tab1 view "Isosurface"
 		$vis_tab2 view "Isosurface"
-	    } elseif {$which == 3} {
+	    } elseif {$which == "Glyphs"} {
 		# Glyphs
 		$vis_tab1 view "Glyphs"
 		$vis_tab2 view "Glyphs"
-	    } else {
+	    } elseif {$which == "Fibers"} {
 		# Fibers
 		$vis_tab1 view "Fibers"
 		$vis_tab2 view "Fibers"
@@ -6106,40 +6604,53 @@ class BioTensorApp {
     
 
     method change_processing_tab { which } {
-      change_indicate_val 0
-      if {$initialized} {
-         if {$which == 0} {
-           # Data Acquisition step
-           set current_tab "Data Acquisition"
-           $proc_tab1 view "Data"
-           $proc_tab2 view "Data"
-         } elseif {$which == 1} {
-           # Registration step
-           set current_tab Registration
-           $proc_tab1 view "Registration"
-           $proc_tab2 view "Registration"
-         } elseif {$which == 2} {
-           # Building DTs step
-           set current_tab "Building DTs"
-           $proc_tab1 view "Build DTs"
-           $proc_tab2 view "Build DTs"
-         }
+	global mods
+	global do_registration
 
-         set indicator 0
-         $indicatorL1 configure -text "$current_tab..."
-         $indicatorL2 configure -text "$current_tab..."
-         update
-
-      }
+	change_indicate_val 0
+	if {$initialized} {
+	    if {$which == "Data"} {
+		# Data Acquisition step
+		$proc_tab1 view "Data"
+		$proc_tab2 view "Data"
+		change_indicator_labels "Data Acquisition..."
+	    } elseif {$which == "Registration"} {
+		# Registration step
+		if {$data_completed} {
+		    $proc_tab1 view "Registration"
+		    $proc_tab2 view "Registration"
+		    change_indicator_labels "Registration..."
+		} 
+	    } elseif {$which == "Build DTs"} {
+		if {!$do_registration} {
+		    set reg_completed 1
+		    disableModule $mods(ChooseNrrd-ToReg) 0
+		    disableModule $mods(RescaleColorMap2) 0
+		    disableModule $mods(TendEpireg) 1
+		    disableModule $mods(UnuJoin) 1
+		    $mods(ChooseNrrd-ToReg)-c needexecute
+		    activate_dt
+		    $proc_tab1 view "Build DTs"
+		    $proc_tab2 view "Build DTs"
+		} elseif {$reg_completed} {
+		    # Building DTs step
+		    $proc_tab1 view "Build DTs"
+		    $proc_tab2 view "Build DTs"
+		    change_indicator_labels "Building Diffusion Tensors..."
+		}
+	    }
+	    
+	    set indicator 0
+	}
     }
-
-
+	
+	
     method configure_isosurface_tabs {} {
 	global mods
-	global show_isosurface
+	global $mods(ShowField-Isosurface)-faces-on
 
 	if {$initialized != 0} {
-	    if {$show_isosurface} {
+	    if {[set $mods(ShowField-Isosurface)-faces-on] == 1} {
 		# configure color button
 		if {$plane_type == "Constant"} {
 		    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state normal
@@ -6224,28 +6735,51 @@ class BioTensorApp {
 
     method configure_fibers_tabs {} {
         global mods
-	global $mods(ShowField-Fibers)-edges-on        
-
+	global $mods(ShowField-Fibers)-edges-on  
+	
         if {[set $mods(ShowField-Fibers)-edges-on] == 1} {
+	    # configure checkbutton/radiobutton widgets
+	    puts "FIX ME: Finish configure_fibers_tab"
 
+	    toggle_fibers_fiber_length
+	    toggle_fibers_steps
+	    toggle_fibers_aniso
+
+
+	    # configure color swatch
+	    if {$fiber_type == "Constant"} {
+		$fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state normal
+		$fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state normal
+	    } else {
+		$fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
+		$fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
+	    }
 
 	}
-
-	# configure color swatch
-
     }
 
+
+    method configure_fibers_stepsize {} {
+	global mods
+	global $mods(TendFiber)-stepsize
+
+	global fibers_stepsize
+
+	set $mods(TendFiber)-stepsize [expr $fibers_stepsize/100.0]
+
+	$mods(TendFiber)-c needexecute
+    }
    
-    method configure_fitting_label { w val } {
-	$w configure -text "[expr round([expr $val * 100])]"
+    method configure_fitting_label { val } {
+	$reg_tab1.fit.f configure -text "[expr round([expr $val * 100])]"
+	$reg_tab2.fit.f configure -text "[expr round([expr $val * 100])]"
     }
 
 
     method toggle_registration_threshold {} {
        global mods
        global $mods(TendEpireg)-use-default-threshold
-       global do_registration
-       if {[set $mods(TendEpireg)-use-default-threshold] == 0 && $do_registration} {
+       if {[set $mods(TendEpireg)-use-default-threshold] == 0 } {
           $reg_thresh1.choose.entry configure -state normal -foreground black
           $reg_thresh2.choose.entry configure -state normal -foreground black
        } else {
@@ -6256,14 +6790,14 @@ class BioTensorApp {
 
     method toggle_dt_threshold {} {
 	global mods
-        global $mods(TendEstim1)-use-default-threshold
+        global $mods(TendEstim)-use-default-threshold
 
-        if {[set $mods(TendEstim1)-use-default-threshold] == 1} {
-            $dt_thresh1.choose.entry configure -state disabled -foreground grey64
-            $dt_thresh2.choose.entry configure -state disabled -foreground grey64
+        if {[set $mods(TendEstim)-use-default-threshold] == 1} {
+            $dt_tab1.thresh.childsite.choose.entry configure -state disabled -foreground grey64
+            $dt_tab2.thresh.childsite.choose.entry configure -state disabled -foreground grey64
         } else {
-            $dt_thresh1.choose.entry configure -state normal -foreground black
-            $dt_thresh2.choose.entry configure -state normal -foreground black
+            $dt_tab1.thresh.childsite.choose.entry configure -state normal -foreground black
+            $dt_tab2.thresh.childsite.choose.entry configure -state normal -foreground black
         }
     }
 
@@ -6271,21 +6805,21 @@ class BioTensorApp {
 	global bmatrix
 	
 	if {$bmatrix == "compute"} {
-            $dt_bmatrix1.load.e configure -state disabled \
+            $dt_tab1.bm.childsite.load.e configure -state disabled \
                 -foreground grey64
-            $dt_bmatrix1.browse configure -state disabled
+            $dt_tab1.bm.childsite.browse configure -state disabled
 	    
-            $dt_bmatrix2.load.e configure -state disabled \
+            $dt_tab2.bm.childsite.load.e configure -state disabled \
                 -foreground grey64
-            $dt_bmatrix2.browse configure -state disabled
+            $dt_tab2.bm.childsite.browse configure -state disabled
 	} else {
-            $dt_bmatrix1.load.e configure -state normal \
+            $dt_tab1.bm.childsite.load.e configure -state normal \
                 -foreground black
-            $dt_bmatrix1.browse configure -state normal
+            $dt_tab1.bm.childsite.browse configure -state normal
 	    
-            $dt_bmatrix2.load.e configure -state normal \
+            $dt_tab2.bm.childsite.load.e configure -state normal \
                 -foreground black
-            $dt_bmatrix2.browse configure -state normal
+            $dt_tab2.bm.childsite.browse configure -state normal
 	}
     }
 
@@ -6294,10 +6828,6 @@ class BioTensorApp {
        global mods
        global  $mods(TendEpireg)-reference
        global ref_image_state ref_image
-
-       # for some reason the radiobutton variable
-       # won't change so I am manually changing it in
-       # this function and have both radiobuttons call this
 
        if {$ref_image_state == 0 } {
           # implicit reference image
@@ -6334,44 +6864,44 @@ class BioTensorApp {
 
         if {$do_smoothing == 0} {
            # activate smoothing scrollbar
-           $dt_smooth1.rad1.l configure -state disabled
-           $dt_smooth2.rad1.l configure -state disabled
+           $dt_tab1.blur.childsite.rad1.l configure -state disabled
+           $dt_tab2.blur.childsite.rad1.l configure -state disabled
 
-           $dt_smooth1.rad1.s configure -state disabled -foreground grey64
-           $dt_smooth2.rad1.s configure -state disabled -foreground grey64
+           $dt_tab1.blur.childsite.rad1.s configure -state disabled -foreground grey64
+           $dt_tab2.blur.childsite.rad1.s configure -state disabled -foreground grey64
 
-           $dt_smooth1.rad1.v configure -state disabled
-           $dt_smooth2.rad1.v configure -state disabled
+           $dt_tab1.blur.childsite.rad1.v configure -state disabled
+           $dt_tab2.blur.childsite.rad1.v configure -state disabled
 
-           $dt_smooth1.rad2.l configure -state disabled
-           $dt_smooth2.rad2.l configure -state disabled
+           $dt_tab1.blur.childsite.rad2.l configure -state disabled
+           $dt_tab2.blur.childsite.rad2.l configure -state disabled
 
-           $dt_smooth1.rad2.s configure -state disabled -foreground grey64
-           $dt_smooth2.rad2.s configure -state disabled -foreground grey64
+           $dt_tab1.blur.childsite.rad2.s configure -state disabled -foreground grey64
+           $dt_tab2.blur.childsite.rad2.s configure -state disabled -foreground grey64
 
-           $dt_smooth1.rad2.v configure -state disabled
-           $dt_smooth2.rad2.v configure -state disabled
+           $dt_tab1.blur.childsite.rad2.v configure -state disabled
+           $dt_tab2.blur.childsite.rad2.v configure -state disabled
 
            set $mods(ChooseNrrd-ToSmooth)-port-index 1
         } else {
            # disable smoothing scrollbar
-           $dt_smooth1.rad1.l configure -state normal
-           $dt_smooth2.rad1.l configure -state normal
+           $dt_tab1.blur.childsite.rad1.l configure -state normal
+           $dt_tab2.blur.childsite.rad1.l configure -state normal
 
-           $dt_smooth1.rad1.s configure -state normal -foreground black
-           $dt_smooth2.rad1.s configure -state normal -foreground black
+           $dt_tab1.blur.childsite.rad1.s configure -state normal -foreground black
+           $dt_tab2.blur.childsite.rad1.s configure -state normal -foreground black
 
-           $dt_smooth1.rad1.v configure -state normal
-           $dt_smooth2.rad1.v configure -state normal
+           $dt_tab1.blur.childsite.rad1.v configure -state normal
+           $dt_tab2.blur.childsite.rad1.v configure -state normal
 
-           $dt_smooth1.rad2.l configure -state normal
-           $dt_smooth2.rad2.l configure -state normal
+           $dt_tab1.blur.childsite.rad2.l configure -state normal
+           $dt_tab2.blur.childsite.rad2.l configure -state normal
 
-           $dt_smooth1.rad2.s configure -state normal -foreground black
-           $dt_smooth2.rad2.s configure -state normal -foreground black
+           $dt_tab1.blur.childsite.rad2.s configure -state normal -foreground black
+           $dt_tab2.blur.childsite.rad2.s configure -state normal -foreground black
 
-           $dt_smooth1.rad2.v configure -state normal
-           $dt_smooth2.rad2.v configure -state normal
+           $dt_tab1.blur.childsite.rad2.v configure -state normal
+           $dt_tab2.blur.childsite.rad2.v configure -state normal
 
            set $mods(ChooseNrrd-ToSmooth)-port-index 0
 
@@ -6382,50 +6912,48 @@ class BioTensorApp {
         global mods
         global $mods(ChooseNrrd-ToReg)-port-index
         global do_registration
-
+	
 	if {$do_registration == 1} {
-          disableModule $mods(TendEpireg) 0
-          # enable registration tab
-	  foreach w [winfo children $reg_tab1] {
-	    activate_widget $w
-          }
-	  foreach w [winfo children $reg_tab2] {
-	    activate_widget $w
-          } 
+	    disableModule $mods(TendEpireg) 0
+	    disableModule $mods(UnuJoin) 0
+	    
+	    activate_registration
 
-          toggle_reference_image_state
-          toggle_registration_threshold
-
-          # change ChooseNrrd
-          set $mods(ChooseNrrd-ToReg)-port-index 0
-
+	    # change ChooseNrrd
+	    set $mods(ChooseNrrd-ToReg)-port-index 0
         } else {
-          disableModule $mods(TendEpireg) 1
-	  # disable registration tab
-	  foreach w [winfo children $reg_tab1] {
-	    disable_widget $w
-          }
-	  foreach w [winfo children $reg_tab2] {
-	    disable_widget $w
-          }
+	    disableModule $mods(TendEpireg) 1
+	    disableModule $mods(UnuJoin) 1
+	    
+	    # disable registration tab
+	    foreach w [winfo children $reg_tab1] {
+		disable_widget $w
+	    }
+	    foreach w [winfo children $reg_tab2] {
+		disable_widget $w
+	    }
+	    
+	    toggle_reference_image_state
+	    toggle_registration_threshold
+	    
+	    # re-enable checkbutton 
+	    $reg_tab1.doreg configure -state normal -foreground black
+	    $reg_tab2.doreg configure -state normal -foreground black
+	    
+	    # re-enable next button
+	    $reg_tab1.last.ne configure -state normal \
+		-foreground black -background $next_color
+	    $reg_tab2.last.ne configure -state normal \
+		-foreground black -background $next_color
 
-          toggle_reference_image_state
-          toggle_registration_threshold
+	    # grey out execute button
+	    $reg_tab1.last.ex configure -background grey75 -foreground grey64
+	    $reg_tab2.last.ex configure -background grey75 -foreground grey64
+	    	    
+	    # change ChooseNrrd
+	    set $mods(ChooseNrrd-ToReg)-port-index 1
 
-          $reg_tab1.doreg configure -state normal -foreground black
-          $reg_tab2.doreg configure -state normal -foreground black
-
-          $reg_tab1.last.ne configure -state normal -foreground black
-          $reg_tab2.last.ne configure -state normal -foreground black
-
-          $reg_tab1.last.ex configure -state normal -foreground black
-          $reg_tab2.last.ex configure -state normal -foreground black
-
-
-          # change ChooseNrrd
-          set $mods(ChooseNrrd-ToReg)-port-index 1
         }
-
     }
 
     method change_xy_smooth { val } {
@@ -6604,38 +7132,63 @@ class BioTensorApp {
        set b 242
        set c [format "#%02x%02x%02x" $r $g $b]
        $canvas create rectangle \
-          0 0 $i_width $i_height -fill $c -outline $c -tags res
-
+	   0 0 $i_width $i_height -fill $c -outline $c -tags res
+       
        bind $canvas <ButtonPress> {app display_module_error}
        Tooltip $canvas $tips(Indicator)
-     }
-
-
-     method change_indicate_val { v } {
-	 if {$indicate != 3 || $error_module == ""} {
-	     # only change an error state if it has been cleared (error_module empty)
-	     # it will be changed by the indicate_error method when fixed
-	     set indicate $v
-	     change_indicator
-         }
-     }
-
-
+   }
+    
+    
+    method change_indicate_val { v } {
+	if {$indicate != 3 || $error_module == ""} {
+	    # only change an error state if it has been cleared (error_module empty)
+	    # it will be changed by the indicate_error method when fixed
+	    set indicate $v
+	    change_indicator
+	}
+    }
+    
+    method change_indicator_labels { msg } {
+	$indicatorL1 configure -text $msg
+	$indicatorL2 configure -text $msg
+    }
+    
+    
+    # Tooltips array
     variable tips
 
+    # Embedded Viewer
     variable eviewer
 
+    # Standalone
     variable win
 
-    variable data
-
+    # Data size variables
     variable volumes
     variable size_x
     variable size_y
     variable size_z
 
+    # Flag to indicate whether entire gui has been built
     variable initialized
 
+    # State
+    variable data_completed
+    variable reg_completed
+    variable dt_completed
+
+    
+    variable IsPAttached
+    variable detachedPFr
+    variable attachedPFr
+
+    variable IsVAttached
+    variable detachedVFr
+    variable attachedVFr
+
+
+    # Indicator
+    variable indicatorID
     variable indicator1
     variable indicator2
     variable indicatorL1
@@ -6647,15 +7200,15 @@ class BioTensorApp {
     variable stripes
     variable i_move
     variable i_back
+    variable error_module
 
+    # Procedures frame tabnotebook
     variable proc_tab1
     variable proc_tab2
- 
-    variable vis_frame_tab1
-    variable vis_frame_tab2
 
-    variable vis_tab1
-    variable vis_tab2
+    # Procedures
+    variable data_tab1
+    variable data_tab2
 
     variable reg_tab1
     variable reg_tab2
@@ -6663,40 +7216,25 @@ class BioTensorApp {
     variable dt_tab1
     variable dt_tab2
 
-    variable dt_thresh1
-    variable dt_thresh2
-
-    variable dt_bmatrix1
-    variable dt_bmatrix2
-
-    variable dt_smooth1
-    variable dt_smooth2
-
-    variable data_tab1
-    variable data_tab2
-
-    variable data_blocked
-    variable reg_blocked
-    variable dt_blocked
-    variable original_plane
-    variable original_slice 
-
+    # Data tabs
     variable nrrd_tab1
     variable nrrd_tab2
     variable dicom_tab1
     variable dicom_tab2
     variable analyze_tab1
     variable analyze_tab2
+    variable data_next_button1
+    variable data_next_button2
+    variable data_ex_button1
+    variable data_ex_button2
 
+    # Visualiztion frame tabnotebook
+    variable vis_frame_tab1
+    variable vis_frame_tab2
 
-    # pointers to widgets
-    variable ref_image1
-    variable ref_image2
-
-    variable reg_thresh1
-    variable reg_thresh2
-    variable reg_rf1
-    variable reg_rf2
+    # Vis tabs notebook
+    variable vis_tab1
+    variable vis_tab2
 
     variable variance_tab1
     variable variance_tab2
@@ -6713,16 +7251,17 @@ class BioTensorApp {
     variable fibers_tab1
     variable fibers_tab2
 
+    # pointers to widgets
+    variable ref_image1
+    variable ref_image2
+
+    variable reg_thresh1
+    variable reg_thresh2
+
+
+    # Application placing and size
     variable notebook_width
     variable notebook_height
-
-    variable IsPAttached
-    variable detachedPFr
-    variable attachedPFr
-
-    variable IsVAttached
-    variable detachedVFr
-    variable attachedVFr
 
     variable process_width
     variable process_height
@@ -6736,23 +7275,15 @@ class BioTensorApp {
     variable screen_width
     variable screen_height
 
-    variable error_module
 
-    variable current_step
-    variable current_tab
-
+    # Colors
     variable proc_color
     variable next_color
     variable execute_color
     variable feedback_color
     variable error_color
-    variable bg_color
-
-    variable steps1
-    variable steps2
 
     # planes
-    variable plane
     variable last_x
     variable last_y
     variable last_z
@@ -6765,21 +7296,19 @@ class BioTensorApp {
     variable clip_z
     variable glyph_type
 
+    # fibers
+    variable fiber_type
+
     # colormaps
     variable colormap_width
     variable colormap_height
     variable colormap_res
-
-    variable indicatorID
 
 }
 
 BioTensorApp app
 
 app build_app
-
-
-
 
 
 
