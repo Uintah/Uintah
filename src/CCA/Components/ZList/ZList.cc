@@ -32,9 +32,9 @@
 #include <qmessagebox.h>
 #include "ZList.h"
 //#include "ListForm.h"
-extern "C" gov::cca::Component::pointer make_SCIRun_ZList()
+extern "C" sci::cca::Component::pointer make_SCIRun_ZList()
 {
-  return gov::cca::Component::pointer(new ZList());
+  return sci::cca::Component::pointer(new ZList());
 }
 
 
@@ -48,15 +48,15 @@ ZList::~ZList()
 {
 }
 
-void ZList::setServices(const gov::cca::Services::pointer& svc)
+void ZList::setServices(const sci::cca::Services::pointer& svc)
 {
   services=svc;
   //register provides ports here ...
 
-  gov::cca::TypeMap::pointer props = svc->createTypeMap();
+  sci::cca::TypeMap::pointer props = svc->createTypeMap();
   ImUIPort1::pointer uip(&uiport);
   ImZListPort::pointer zlp(&listport);
-  svc->addProvidesPort(uip,"ui","gov.cca.UIPort", props);
+  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
   svc->addProvidesPort(zlp,"listport","ZListPort", props);
 }
 
@@ -67,8 +67,8 @@ int ImUIPort1::ui()
   return 0;
 }
 
-SIDL::array1<double> ImZListPort::getList()
+SSIDL::array1<double> ImZListPort::getList()
 {
- SIDL::array1<double> data;
+ SSIDL::array1<double> data;
  return com->datalist;
 }
