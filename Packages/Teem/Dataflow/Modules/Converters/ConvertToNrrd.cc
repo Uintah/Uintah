@@ -75,6 +75,11 @@ void fill_data<Tensor>(Tensor &t, double *p) {
   p += 7;
 }
 
+
+// TODO: These all look horribly broken as they pass someone else's
+// memory to the NrrdData type which would then cause it to be deleted
+// twice.  -- Michael
+
 template <>
 void* 
 get_raw_data_ptr<FData2d<char> >(FData2d<char> &data, int) {
