@@ -85,12 +85,11 @@ namespace Uintah {
     public:
       inline bool operator()(const VarLabel* v1, const VarLabel* v2) const {
 	// because of uniqueness, we can use pointer comparisons
-	return v1 < v2;
-	/* old way
-	   if(v1 == v2)
-	   return false;
-	   return v1->getName() < v2->getName();
-	*/
+	//return v1 < v2;
+	// No we cannot, because we need the order to be the same on different processes
+	if(v1 == v2)
+	  return false;
+	return v1->getName() < v2->getName();
       }
     private:
     };
