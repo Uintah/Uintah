@@ -91,32 +91,32 @@ template <>
 class ScalarDiagGen<float> {
 public:
   static const int number = 1;
-  const string name(int idiag) const { return ""; }
-  double gen(double v, int idiag) const { return v; }
+  const string name(int /*idiag*/) const { return ""; }
+  double gen(double v, int /*idiag*/) const { return v; }
 };
 
 template <>
 class ScalarDiagGen<double> {
 public:
   static const int number = 1;
-  const string name(int idiag) const { return ""; }
-  double gen(double v, int idiag) const { return v; }
+  const string name(int /*idiag*/) const { return ""; }
+  double gen(double v, int /*idiag*/) const { return v; }
 };
 
 template <>
 class ScalarDiagGen<Vector> {
 public: 
   static const int number = 1;
-  const string name(int idiag) const { return ""; }
-  double gen(const Vector & v, int idiag) const { return sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]); }
+  const string name(int /*idiag*/) const { return ""; }
+  double gen(const Vector & v, int /*idiag*/) const { return sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]); }
 };
 
 template <>
 class ScalarDiagGen<Point> {
 public:
   static const int number = 1;
-  const string name(int idiag) const { return "mag"; }
-  double gen(const Point & v, int idiag) const { return sqrt(v(0)*v(0)+v(1)*v(1)+v(2)*v(2)); }
+  const string name(int /*idiag*/) const { return "mag"; }
+  double gen(const Point & v, int /*idiag*/) const { return sqrt(v(0)*v(0)+v(1)*v(1)+v(2)*v(2)); }
 };
 
 template <>
@@ -170,7 +170,8 @@ public:
           return 0.;
         }
       }
-      return t.MaxAbsElem();
+      // THIS LINE IS NOT REACHABLE!
+      //return t.MaxAbsElem();
     default:
       return 0.;
     }
@@ -188,28 +189,28 @@ public:
   
   class Step {
   public:
-    Step(int index_, double time_) : index(index_), time(time_) {}
+    Step(int index, double time) : index_(index), time_(time) {}
     
     virtual ~Step();
     
-    virtual void storeGrid () = 0;
-    virtual void storeField(string fieldname, const Uintah::TypeDescription * type) = 0;
+    virtual void   storeGrid() = 0;
+    virtual void   storeField(string fieldname, const Uintah::TypeDescription * type) = 0;
     virtual string infostr() const = 0;
     
-    int    index;
-    double time;
+    int    index_;
+    double time_;
   };
   
   virtual Step * addStep(int index, double time) = 0;
   virtual void finishStep(Step *) = 0;
 
 protected:
-  DataArchive* da;
-  string       datadir;
+  DataArchive* da_;
+  string       datadir_;
 };
 
-Dumper::Dumper(DataArchive * da_, string datadir_)
-  : da(da_),datadir(datadir_)
+Dumper::Dumper(DataArchive * da, string datadir)
+  : da_(da),datadir_(datadir)
 {
 }
 
@@ -225,7 +226,7 @@ class TextDumper : public Dumper
 public:
   TextDumper(DataArchive* da, string datadir, bool onedim=false, bool tseries=false);
 
-  void addField(string fieldname, const Uintah::TypeDescription * type) {}
+  void addField(string /*fieldname*/, const Uintah::TypeDescription * /*type*/) {}
   
   class Step : public Dumper::Step {
   public:
@@ -234,15 +235,14 @@ public:
     void storeGrid ();
     void storeField(string fieldname, const Uintah::TypeDescription * type);
     
-    string infostr() const { return stepdname; }
+    string infostr() const { return stepdname_; }
     
   private:
-    string stepdname;
+    string stepdname_;
     
-  private:
-    DataArchive* da;
-    string datadir;
-    bool onedim, tseries;
+    DataArchive* da_;
+    string       datadir_;
+    bool         onedim_, tseries_;
   };
   
   //
@@ -257,13 +257,13 @@ private:
 			     string materialType_file="", string extension="");
   
 private:
-  ofstream idxos;
-  bool onedim, tseries;
-  FILE*        filelist;
+  ofstream idxos_;
+  bool     onedim_, tseries_;
+  FILE*    filelist_;
 };
 
-TextDumper::TextDumper(DataArchive* da_, string datadir_, bool onedim_, bool tseries_)
-  : Dumper(da_, datadir_+"_text"), onedim(onedim_), tseries(tseries_)
+TextDumper::TextDumper(DataArchive* da, string datadir, bool onedim, bool tseries)
+  : Dumper(da, datadir+"_text"), onedim_(onedim), tseries_(tseries)
 {
   // set defaults for cout
   cout.setf(ios::scientific,ios::floatfield);
@@ -275,14 +275,14 @@ TextDumper::TextDumper(DataArchive* da_, string datadir_, bool onedim_, bool tse
   Dir dumpdir;
   try {
     dumpdir.create(datadir);
-  } catch (Exception& e) {
+  } catch (Exception& /*e*/) {
     ;
   }
   
   // set up the file that contains a list of all the files
   string filelistname = datadir + string("/") + string("timelist");
-  filelist = fopen(filelistname.c_str(),"w");
-  if (!filelist) {
+  filelist_ = fopen(filelistname.c_str(),"w");
+  if (!filelist_) {
     cerr << "Can't open output file " << filelistname << endl;
     abort();
   }
@@ -335,29 +335,29 @@ TextDumper::makeFileName(string datadir, string time_file, string variable_file,
 TextDumper::Step * 
 TextDumper::addStep(int index, double time)
 {
-  return new Step(da, datadir, index, time, onedim, tseries);
+  return new Step(da_, datadir_, index, time, onedim_, tseries_);
 }  
 
 void
 TextDumper::finishStep(Dumper::Step * s)
 {
-  fprintf(filelist, "%10d %16.8g  %20s\n", s->index, s->time, s->infostr().c_str());
+  fprintf(filelist_, "%10d %16.8g  %20s\n", s->index_, s->time_, s->infostr().c_str());
 }
 
-TextDumper::Step::Step(DataArchive * da_, string datadir_, int index_, double time_,  bool onedim_, bool tseries_)
+TextDumper::Step::Step(DataArchive * da, string datadir, int index, double time,  bool onedim, bool tseries)
   : 
-  Dumper::Step(index_, time_),
-  da(da_), datadir(datadir_), onedim(onedim_), tseries(tseries_)
+  Dumper::Step(index, time),
+  da_(da), datadir_(datadir), onedim_(onedim), tseries_(tseries)
 {
   if(tseries)
-    stepdname = TextDumper::makeFileName(datadir, TextDumper::time_string(time));
+    stepdname_ = TextDumper::makeFileName(datadir, TextDumper::time_string(time_));
   else
-    stepdname = TextDumper::makeFileName(datadir);
-  if(!tseries || index==1)
+    stepdname_ = TextDumper::makeFileName(datadir);
+  if(!tseries_ || index_==1)
     {
       Dir stepdir;
       try {
-        stepdir.create(stepdname);
+        stepdir.create(stepdname_);
       } catch (...) {
         ; // 
       }
@@ -367,12 +367,13 @@ TextDumper::Step::Step(DataArchive * da_, string datadir_, int index_, double ti
 void
 TextDumper::Step::storeGrid()
 {
-  GridP grid = da->queryGrid(time);
+  //GridP grid = da->queryGrid(time_);
   
   // dont store grid info in flat text mode
 }
 
-bool _outside(IntVector p, IntVector mn, IntVector mx)
+bool
+_outside(IntVector p, IntVector mn, IntVector mx)
 {
   return  ( p[0]<mn[0] || p[0]>=mx[0] ||
 	    p[1]<mn[1] || p[1]>=mx[1] ||
@@ -382,7 +383,7 @@ bool _outside(IntVector p, IntVector mn, IntVector mx)
 void
 TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 {
-  GridP grid = da->queryGrid(time);
+  GridP grid = da_->queryGrid(time_);
   
   cout << "   " << fieldname << endl;
   
@@ -393,7 +394,7 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
     LevelP level = grid->getLevel(l);
     for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
-      ConsecutiveRangeSet matls= da->queryMaterials(fieldname, patch, time);
+      ConsecutiveRangeSet matls= da_->queryMaterials(fieldname, patch, time_);
       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++) {
 	int matl = *matlIter;
 	if(matl>=nmats) nmats = matl+1;
@@ -405,14 +406,14 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
   for(int imat=0;imat<nmats;imat++) {
     string matname = TextDumper::mat_string(imat);
     string tname   = "";
-    if(!tseries) tname = time_string(time);
-    string fname   = TextDumper::makeFileName(datadir, tname, fieldname, matname, "txt");
+    if(!tseries_) tname = time_string(time_);
+    string fname   = TextDumper::makeFileName(datadir_, tname, fieldname, matname, "txt");
     
     cout << "     " << fname << endl;
-    if(!tseries || index==1)
+    if(!tseries_ || index_==1)
       {
         outfiles[imat] = scinew ofstream(fname.c_str());
-        *(outfiles[imat]) << "# time = " << time << ", field = " << fieldname << ", mat " << matname << endl;
+        *(outfiles[imat]) << "# time = " << time_ << ", field = " << fieldname << ", mat " << matname << endl;
       }
     else
       {
@@ -427,7 +428,7 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
     
     IntVector minind, maxind;
     level->findNodeIndexRange(minind, maxind);
-    if(this->onedim) {
+    if(onedim_) {
       IntVector ghostl(-minind);
       minind[0] += ghostl[0];
       maxind[0] -= ghostl[0];
@@ -443,7 +444,7 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	iter != level->patchesEnd(); iter++){
       const Patch* patch = *iter;
 	    
-      ConsecutiveRangeSet matls = da->queryMaterials(fieldname, patch, time);
+      ConsecutiveRangeSet matls = da_->queryMaterials(fieldname, patch, time_);
 	    
       // loop over materials
       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
@@ -454,7 +455,7 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	      
 	ParticleVariable<Point> partposns;
 	if(td->getType()==Uintah::TypeDescription::ParticleVariable) {
-	  da->query(partposns, "p.x", matl, patch, time);
+	  da_->query(partposns, "p.x", matl, patch, time_);
 	}
 	
 	switch(subtype->getType()) {
@@ -464,13 +465,13 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::NCVariable:
 	      {
 		NCVariable<float> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 		
 		for(NodeIterator iter = patch->getNodeIterator();
 		    !iter.done(); iter++){
 		  if(_outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -481,13 +482,13 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::CCVariable:
 	      {
 		CCVariable<float> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 		
 		for(CellIterator iter = patch->getCellIterator();
 		    !iter.done(); iter++){
 		  if(_outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -498,12 +499,12 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::ParticleVariable:
 	      {
 		ParticleVariable<float> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 		ParticleSubset* pset = value.getParticleSubset();
 		for(ParticleSubset::iterator iter = pset->begin();
 		    iter != pset->end(); iter++) {
 		  Point xpt = partposns[*iter];
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -521,13 +522,13 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::NCVariable:
 	      {
 		NCVariable<double> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 			
 		for(NodeIterator iter = patch->getNodeIterator();
 		    !iter.done(); iter++){
 		  if(_outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -538,13 +539,13 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::CCVariable:
 	      {
 		CCVariable<double> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 			
 		for(CellIterator iter = patch->getCellIterator();
 		    !iter.done(); iter++){
 		  if(_outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -555,12 +556,12 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::ParticleVariable:
 	      {
 		ParticleVariable<double> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 		ParticleSubset* pset = value.getParticleSubset();
 		for(ParticleSubset::iterator iter = pset->begin();
 		    iter != pset->end(); iter++) {
 		  Point xpt = partposns[*iter];
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -578,13 +579,13 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::NCVariable:
 	      {
 		NCVariable<Point> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 		    
 		for(NodeIterator iter = patch->getNodeIterator();
 		    !iter.done(); iter++){
 		  if(_outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -597,13 +598,13 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::CCVariable:
 	      {
 		CCVariable<Point> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 		    
 		for(CellIterator iter = patch->getCellIterator();
 		    !iter.done(); iter++){
 		  if(_outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -616,12 +617,12 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::ParticleVariable:
 	      {
 		ParticleVariable<Point> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 		ParticleSubset* pset = value.getParticleSubset();
 		for(ParticleSubset::iterator iter = pset->begin();
 		    iter != pset->end(); iter++) {
 		  Point xpt = partposns[*iter];
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -641,13 +642,13 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::NCVariable:
 	      {
 		NCVariable<Vector> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 		      
 		for(NodeIterator iter = patch->getNodeIterator();
 		    !iter.done(); iter++){
 		  if(_outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -660,13 +661,13 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::CCVariable:
 	      {
 		CCVariable<Vector> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 		      
 		for(CellIterator iter = patch->getCellIterator();
 		    !iter.done(); iter++){
 		  if(_outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -679,12 +680,12 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::ParticleVariable:
 	      {
 		ParticleVariable<Vector> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 		ParticleSubset* pset = value.getParticleSubset();
 		for(ParticleSubset::iterator iter = pset->begin();
 		    iter != pset->end(); iter++) {
 		  Point xpt = partposns[*iter];
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -704,13 +705,13 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::NCVariable:
 	      {
 		NCVariable<Matrix3> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 		    
 		for(NodeIterator iter = patch->getNodeIterator();
 		    !iter.done(); iter++){
 		  if(_outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -729,13 +730,13 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::CCVariable:
 	      {
 		CCVariable<Matrix3> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 		    
 		for(CellIterator iter = patch->getCellIterator();
 		    !iter.done(); iter++){
 		  if(_outside(*iter, minind, maxind)) continue;
 		  Point xpt = patch->nodePosition(*iter);
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -754,12 +755,12 @@ TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * t
 	    case Uintah::TypeDescription::ParticleVariable:
 	      {
 		ParticleVariable<Matrix3> value;
-		da->query(value, fieldname, matl, patch, time);
+		da_->query(value, fieldname, matl, patch, time_);
 		ParticleSubset* pset = value.getParticleSubset();
 		for(ParticleSubset::iterator iter = pset->begin();
 		    iter != pset->end(); iter++) {
 		  Point xpt = partposns[*iter];
-                  if(tseries) *outfiles[matl] << time << " ";
+                  if(tseries_) *outfiles[matl] << time_ << " ";
                   *outfiles[matl]  << xpt(0) << " " 
                                    << xpt(1) << " " 
                                    << xpt(2) << " ";
@@ -804,58 +805,58 @@ private:
   struct FldDumper { 
     // ensight is very fussy about the format of the text, so it's nice
     // to have this all in one place
-    FldDumper(bool bin_) : bin(bin_), os(0) {}
+    FldDumper(bool bin) : bin_(bin), os_(0) {}
     
-    void setstrm(ostream * os_) { os = os_; }
-    void unsetstrm() { os = 0; }
+    void setstrm(ostream * os) { os_ = os; }
+    void unsetstrm() { os_ = 0; }
     
     void textfld(string v, int width=80) {
-      *os << setw(width) << setiosflags(ios::left) << v;
+      *os_ << setw(width) << setiosflags(ios::left) << v;
     }
     
     void textfld(string v, int width, int binwidth) {
-      if(this->bin)
-        *os << setw(binwidth)  << setiosflags(ios::left) << v;
+      if(bin_)
+        *os_ << setw(binwidth)  << setiosflags(ios::left) << v;
       else
-        *os << setw(width)  << setiosflags(ios::left) << v;
+        *os_ << setw(width)  << setiosflags(ios::left) << v;
     }
     
     void textfld(int v, int width=10) {
-      *os << setiosflags(ios::left) << setw(width) << v;
+      *os_ << setiosflags(ios::left) << setw(width) << v;
     }
     
     void textfld(float v) { 
       char b[13];
       snprintf(b, 13, "%12.5e", v);
-      *os << b;
+      *os_ << b;
     }
     
     void textfld(double v) { 
       char b[13];
       snprintf(b, 13, "%12.5e", v);
-      *os << b;
+      *os_ << b;
     }
     
     void numfld(int v, int wid=10) { 
-      if(!this->bin) {
+      if(!bin_) {
         textfld(v, wid);
       } else {
-        os->write((char*)&v, sizeof(int));
+        os_->write((char*)&v, sizeof(int));
       }
     }
     
     void endl() { 
-      if(!this->bin) {
-        *os << std::endl;
+      if(!bin_) {
+        *os_ << std::endl;
       }
     }
     
     void numfld(float v) { 
       v = (fabs(v)<FLT_MIN)?0.:v;
-      if(!this->bin) {
+      if(!bin_) {
         textfld(v);
       } else {
-        os->write((char*)&v, sizeof(float));
+        os_->write((char*)&v, sizeof(float));
       }
     }
     
@@ -863,18 +864,18 @@ private:
       numfld((float)v);
     }
     
-    bool bin;
-    ostream * os;
+    bool      bin_;
+    ostream * os_;
   };
 
   struct Data {
-    Data(DataArchive * da_, string dir_, FldDumper * dumper_, bool onemesh_, bool withpart_)
-      : da(da_), dir(dir_), dumper(dumper_), onemesh(onemesh_), withpart(withpart_) {}
+    Data(DataArchive * da, string dir, FldDumper * dumper, bool onemesh, bool withpart)
+      : da_(da), dir_(dir), dumper_(dumper), onemesh_(onemesh), withpart_(withpart) {}
     
-    DataArchive * da;
-    string dir;
-    FldDumper * dumper;
-    bool onemesh, withpart;
+    DataArchive * da_;
+    string        dir_;
+    FldDumper   * dumper_;
+    bool          onemesh_, withpart_;
   };
   
 public:
@@ -892,21 +893,21 @@ public:
     void storeGrid ();
     void storeField(string filename, const Uintah::TypeDescription * type);
     
-    string infostr() const { return stepdesc; }
+    string infostr() const { return stepdesc_; }
     
   private:
     void storePartField(string filename, const Uintah::TypeDescription * type);
     void storeGridField(string filename, const Uintah::TypeDescription * type);
     
   private:
-    int    fileindex;
-    string stepdname;
-    string stepdesc;
+    int    fileindex_;
+    string stepdname_;
+    string stepdesc_;
     
   private:
-    Data * data;
-    bool needmesh;
-    IntVector vshape, minind;
+    Data    * data_;
+    bool      needmesh_;
+    IntVector vshape_, minind_;
   };
   friend class Step;
   
@@ -926,64 +927,64 @@ private:
   }
   
 private:
-  int           nsteps;
-  ofstream      casestrm;
-  int           tscol;
-  ostringstream tsstrm;
-  FldDumper     flddumper;
-  Data          data;
+  int           nsteps_;
+  ofstream      casestrm_;
+  int           tscol_;
+  ostringstream tsstrm_;
+  FldDumper     flddumper_;
+  Data          data_;
 };
 
 EnsightDumper::EnsightDumper(DataArchive* da_, string datadir_, bool bin_, bool onemesh_, bool withpart_)
   : 
-  Dumper(da_, datadir_+"_ensight"), nsteps(0), flddumper(bin_), 
-  data(da_,datadir_+"_ensight",&flddumper,onemesh_,withpart_)
+  Dumper(da_, datadir_+"_ensight"), nsteps_(0), flddumper_(bin_), 
+  data_(da_,datadir_+"_ensight",&flddumper_,onemesh_,withpart_)
 {
   cerr << "using bin = " << bin_ << endl;
   
   // Create a directory if it's not already there.
   Dir dumpdir;
   try {
-    dumpdir.create(data.dir);
-  } catch (Exception& e) {
+    dumpdir.create(data_.dir_);
+  } catch (Exception& /*e*/) {
     ; // ignore failure
   }
   
   // set up the file that contains a list of all the files
-  string casefilename = data.dir + string("/") + string("ensight.case");
-  casestrm.open(casefilename.c_str());
-  if (!casestrm) {
+  string casefilename = data_.dir_ + string("/") + string("ensight.case");
+  casestrm_.open(casefilename.c_str());
+  if (!casestrm_) {
     cerr << "Can't open output file " << casefilename << endl;
     abort();
   }
   cout << "     " << casefilename << endl;
   
   // header
-  casestrm << "FORMAT" << endl;
-  casestrm << "type: ensight gold" << endl;
-  casestrm << endl;
-  casestrm << "GEOMETRY" << endl;
-  if(data.onemesh)
-    casestrm << "model:       gridgeo" << endl;
+  casestrm_ << "FORMAT" << endl;
+  casestrm_ << "type: ensight gold" << endl;
+  casestrm_ << endl;
+  casestrm_ << "GEOMETRY" << endl;
+  if(data_.onemesh_)
+    casestrm_ << "model:       gridgeo" << endl;
   else
-    casestrm << "model:   1   gridgeo****" << endl;
-  casestrm << endl;
-  casestrm << "VARIABLE" << endl;
+    casestrm_ << "model:   1   gridgeo****" << endl;
+  casestrm_ << endl;
+  casestrm_ << "VARIABLE" << endl;
   
   // time step data
-  tscol  = 0;
-  tsstrm << "time values: ";;
+  tscol_  = 0;
+  tsstrm_ << "time values: ";;
 }
 
 EnsightDumper::~EnsightDumper()
 {
-  casestrm << endl;
-  casestrm << "TIME" << endl;
-  casestrm << "time set: 1 " << endl;
-  casestrm << "number of steps: " << nsteps << endl;
-  casestrm << "filename start number: 0" << endl;
-  casestrm << "filename increment: 1" << endl;
-  casestrm << tsstrm.str() << endl;
+  casestrm_ << endl;
+  casestrm_ << "TIME" << endl;
+  casestrm_ << "time set: 1 " << endl;
+  casestrm_ << "number of steps: " << nsteps_ << endl;
+  casestrm_ << "filename start number: 0" << endl;
+  casestrm_ << "filename increment: 1" << endl;
+  casestrm_ << tsstrm_.str() << endl;
 }
 
 static string nodots(string n)
@@ -1017,48 +1018,48 @@ EnsightDumper::addField(string fieldname, const Uintah::TypeDescription * td)
   if(subtype->getType()==Uintah::TypeDescription::Matrix3)
     {
       for(int idiag=0;idiag<4;idiag++)
-	casestrm << "scalar per " << typestr << ": 1 " 
+	casestrm_ << "scalar per " << typestr << ": 1 " 
                  << fieldname << "_" << tensor_diagname(idiag) 
                  << " " << nodots(fieldname) << tensor_diagname(idiag) << "****" << endl;
     }
   else
     {
-      casestrm << subtypestr << " per " << typestr << ": 1 " << fieldname << " " << nodots(fieldname) << "****" << endl;
+      casestrm_ << subtypestr << " per " << typestr << ": 1 " << fieldname << " " << nodots(fieldname) << "****" << endl;
     }
 }
 
 EnsightDumper::Step * 
 EnsightDumper::addStep(int index, double time)
 {
-  Step * res = new Step(&data, index, time, nsteps);
-  nsteps++;
+  Step * res = new Step(&data_, index, time, nsteps_);
+  nsteps_++;
   return res;
 }
 
 void
 EnsightDumper::finishStep(Dumper::Step * step)
 {
-  tsstrm << step->time << " ";
-  if(++tscol==10) {
-    tsstrm << endl << "  ";
-    tscol = 0;
+  tsstrm_ << step->time_ << " ";
+  if(++tscol_==10) {
+    tsstrm_ << endl << "  ";
+    tscol_ = 0;
   }
 }
 
-EnsightDumper::Step::Step(Data * data_, int index_, double time_, int fileindex_)
+EnsightDumper::Step::Step(Data * data, int index, double time, int fileindex)
   :
-  Dumper::Step(index_, time_),
-  fileindex(fileindex_),
-  data(data_),
-  needmesh(!data->onemesh||(fileindex_==0))
+  Dumper::Step(index, time),
+  fileindex_(fileindex),
+  data_(data),
+  needmesh_(!data->onemesh_||(fileindex==0))
 {
 }
 
 void
 EnsightDumper::Step::storeGrid()
 {
-  GridP grid = data->da->queryGrid(this->time);
-  FldDumper * fd = data->dumper;
+  GridP grid = data_->da_->queryGrid(time_);
+  FldDumper * fd = data_->dumper_;
   
   // only support level 0 for now
   int lnum = 0;
@@ -1067,32 +1068,32 @@ EnsightDumper::Step::storeGrid()
   // store to basename/grid.geo****
   char goutname[1024];
   char poutname[1024];
-  if(data->onemesh) {
-    snprintf(goutname, 1024, "%s/gridgeo", data->dir.c_str());
+  if(data_->onemesh_) {
+    snprintf(goutname, 1024, "%s/gridgeo", data_->dir_.c_str());
   } else {
-    snprintf(goutname, 1024, "%s/gridgeo%04d", data->dir.c_str(), this->fileindex);
+    snprintf(goutname, 1024, "%s/gridgeo%04d", data_->dir_.c_str(), fileindex_);
   }
-  snprintf(poutname, 1024, "%s/partgeo%04d", data->dir.c_str(), this->fileindex);
+  snprintf(poutname, 1024, "%s/partgeo%04d", data_->dir_.c_str(), fileindex_);
   
-  if(this->needmesh) {
+  if(needmesh_) {
     
     // find ranges
     // dont bother dumping ghost stuff to ensight
     IntVector minind, maxind;
     level->findNodeIndexRange(minind, maxind);
-    this->minind = minind;
-    this->vshape = (maxind-minind);
+    minind_ = minind;
+    vshape_ = (maxind-minind);
   
     cout << "  " << goutname << endl;
-    cout << "   minind = " << minind << endl;
+    cout << "   minind = " << minind_ << endl;
     cout << "   maxind = " << maxind << endl;
-    cout << "   vshape = " << vshape << endl;
+    cout << "   vshape = " << vshape_ << endl;
     cout << endl;
   
     ofstream gstrm(goutname);
     fd->setstrm(&gstrm);
   
-    if(fd->bin) fd->textfld("C Binary",79,80);
+    if(fd->bin_) fd->textfld("C Binary",79,80);
     fd->textfld("grid description",79,80) ; fd->endl();
     fd->textfld("grid description",79,80) ; fd->endl();
     fd->textfld("node id off",     79,80) ; fd->endl();
@@ -1102,15 +1103,15 @@ EnsightDumper::Step::storeGrid()
     fd->numfld(1); fd->endl();
     fd->textfld("3d regular block",79,80); fd->endl();
     fd->textfld("block",79,80); fd->endl();
-    fd->numfld(vshape(0),10);
-    fd->numfld(vshape(1),10);
-    fd->numfld(vshape(2),10);
+    fd->numfld(vshape_(0),10);
+    fd->numfld(vshape_(1),10);
+    fd->numfld(vshape_(2),10);
     fd->endl();
     
     for(int id=0;id<3;id++) {
-      for(int k=minind[2];k<maxind[2];k++) {
-        for(int j=minind[1];j<maxind[1];j++) {
-          for(int i=minind[0];i<maxind[0];i++) {
+      for(int k=minind_[2];k<maxind[2];k++) {
+        for(int j=minind_[1];j<maxind[1];j++) {
+          for(int i=minind_[0];i<maxind[0];i++) {
             fd->numfld(level->getNodePosition(IntVector(i,j,k))(id)) ; fd->endl();
           }
         }
@@ -1120,7 +1121,7 @@ EnsightDumper::Step::storeGrid()
     fd->unsetstrm();
   }
   
-  if(data->withpart) {
+  if(data_->withpart_) {
     // store particles   
     cout << "  " << poutname << endl;
     
@@ -1135,7 +1136,7 @@ EnsightDumper::Step::storeGrid()
         iter != level->patchesEnd(); iter++){
       const Patch* patch = *iter;
     
-      ConsecutiveRangeSet matls = data->da->queryMaterials("p.x", patch, time);
+      ConsecutiveRangeSet matls = data_->da_->queryMaterials("p.x", patch, time_);
     
       // loop over materials
       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
@@ -1145,7 +1146,7 @@ EnsightDumper::Step::storeGrid()
         const int matl = *matlIter;
       
         ParticleVariable<Point> partposns;
-        data->da->query(partposns, "p.x", matl, patch, time);
+        data_->da_->query(partposns, "p.x", matl, patch, time_);
       
         ParticleSubset* pset = partposns.getParticleSubset();
         for(ParticleSubset::iterator iter = pset->begin();
@@ -1176,16 +1177,16 @@ void
 EnsightDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 {
   if(td->getType()==Uintah::TypeDescription::ParticleVariable) 
-    this->storePartField(fieldname, td);
+    storePartField(fieldname, td);
   else 
-    this->storeGridField(fieldname, td);
+    storeGridField(fieldname, td);
 }
 
 void
 EnsightDumper::Step::storeGridField(string fieldname, const Uintah::TypeDescription * td)
 {
-  GridP grid = data->da->queryGrid(this->time);
-  FldDumper * fd = data->dumper;
+  GridP grid = data_->da_->queryGrid(time_);
+  FldDumper * fd = data_->dumper_;
   
   const Uintah::TypeDescription* subtype = td->getSubType();
   int ndiags;
@@ -1199,10 +1200,10 @@ EnsightDumper::Step::storeGridField(string fieldname, const Uintah::TypeDescript
       
       if(subtype->getType()==Uintah::TypeDescription::Matrix3)
 	snprintf(outname, 1024, "%s/%s%s%04d", 
-		 data->dir.c_str(), nodots(fieldname).c_str(), 
-		 tensor_diagname(idiag).c_str(), this->fileindex);
+		 data_->dir_.c_str(), nodots(fieldname).c_str(), 
+		 tensor_diagname(idiag).c_str(), fileindex_);
       else
-	snprintf(outname, 1024, "%s/%s%04d", data->dir.c_str(), nodots(fieldname).c_str(), this->fileindex);
+	snprintf(outname, 1024, "%s/%s%04d", data_->dir_.c_str(), nodots(fieldname).c_str(), fileindex_);
       
       int icol(0);
       
@@ -1211,7 +1212,7 @@ EnsightDumper::Step::storeGridField(string fieldname, const Uintah::TypeDescript
       fd->setstrm(&vstrm);
       
       ostringstream descb;
-      descb << "data field " << nodots(fieldname) << " at " << this->time;
+      descb << "data field " << nodots(fieldname) << " at " << time_;
       fd->textfld(descb.str(),79,80); fd->endl();
       fd->textfld("part",     79,80); fd->endl();
       fd->numfld(1); fd->endl();
@@ -1236,7 +1237,7 @@ EnsightDumper::Step::storeGridField(string fieldname, const Uintah::TypeDescript
       
       for(int icomp=0;icomp<nc;icomp++) {
         
-	Uintah::Array3<double> vals(vshape[0],vshape[1],vshape[2]);
+	Uintah::Array3<double> vals(vshape_[0],vshape_[1],vshape_[2]);
 	for(Uintah::Array3<double>::iterator vit(vals.begin());vit!=vals.end();vit++)
 	  {
 	    *vit = 0.;
@@ -1249,7 +1250,7 @@ EnsightDumper::Step::storeGridField(string fieldname, const Uintah::TypeDescript
           IntVector ilow, ihigh;
           patch->computeVariableExtents(subtype->getType(), IntVector(0,0,0), Ghost::None, 0, ilow, ihigh);
           
-          ConsecutiveRangeSet matls = data->da->queryMaterials(fieldname, patch, time);
+          ConsecutiveRangeSet matls = data_->da_->queryMaterials(fieldname, patch, time_);
           
           // loop over materials
           for(ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++) {
@@ -1260,63 +1261,63 @@ EnsightDumper::Step::storeGridField(string fieldname, const Uintah::TypeDescript
             case Uintah::TypeDescription::float_type:
               {
                 NCVariable<float> value;
-                data->da->query(value, fieldname, matl, patch, time);
+                data_->da_->query(value, fieldname, matl, patch, time_);
                 for(k=ilow[2];k<ihigh[2];k++) for(j=ilow[1];j<ihigh[1];j++) for(i=ilow[0];i<ihigh[0];i++) {
                   IntVector ijk(i,j,k);
-                  vals[ijk-minind] += value[ijk];
+                  vals[ijk-minind_] += value[ijk];
                 }
 	      } break;
 	    case Uintah::TypeDescription::double_type:
 	      {
                 NCVariable<double> value;
-                data->da->query(value, fieldname, matl, patch, time);
+                data_->da_->query(value, fieldname, matl, patch, time_);
                 for(k=ilow[2];k<ihigh[2];k++) for(j=ilow[1];j<ihigh[1];j++) for(i=ilow[0];i<ihigh[0];i++) {
                   IntVector ijk(i,j,k);
-                  vals[ijk-minind] += value[ijk];
+                  vals[ijk-minind_] += value[ijk];
                 }
 	      } break;
 	    case Uintah::TypeDescription::Point:
 	      {
                 NCVariable<Point> value;
-                data->da->query(value, fieldname, matl, patch, time);
+                data_->da_->query(value, fieldname, matl, patch, time_);
                 for(k=ilow[2];k<ihigh[2];k++) for(j=ilow[1];j<ihigh[1];j++) for(i=ilow[0];i<ihigh[0];i++) {
                   IntVector ijk(i,j,k);
-                  vals[ijk-minind] += value[ijk](icomp);
+                  vals[ijk-minind_] += value[ijk](icomp);
                 }
 	      } break;
 	    case Uintah::TypeDescription::Vector:
 	      {
                 NCVariable<Vector> value;
-                data->da->query(value, fieldname, matl, patch, time);
+                data_->da_->query(value, fieldname, matl, patch, time_);
                 for(k=ilow[2];k<ihigh[2];k++) for(j=ilow[1];j<ihigh[1];j++) for(i=ilow[0];i<ihigh[0];i++) {
                   IntVector ijk(i,j,k);
-                  vals[ijk-minind] += value[ijk][icomp];
+                  vals[ijk-minind_] += value[ijk][icomp];
                 }
 	      } break;
 	    case Uintah::TypeDescription::Matrix3:
 	      {
 		NCVariable<Matrix3> value;
-		data->da->query(value, fieldname, matl, patch, time);
+		data_->da_->query(value, fieldname, matl, patch, time_);
                 
                 for(k=ilow[2];k<ihigh[2];k++) for(j=ilow[1];j<ihigh[1];j++) for(i=ilow[0];i<ihigh[0];i++) {
                   IntVector ijk(i,j,k);
                   const Matrix3 t = value[ijk];
                   switch(idiag) {
                   case 0: // mag
-                    vals[ijk-minind] = t.Norm();
+                    vals[ijk-minind_] = t.Norm();
                     break;
                   case 1: // equiv
                     {
                       const double  p  = t.Trace()/3.;
                       const Matrix3 ti = t - Matrix3(p,0,0, 0,p,0, 0,0,p);
-                      vals[ijk-minind] = ti.Norm();
+                      vals[ijk-minind_] = ti.Norm();
                     }
                     break;
                   case 2: // trace
-                    vals[ijk-minind] = t.Trace();
+                    vals[ijk-minind_] = t.Trace();
                     break;
                   case 3: // max absolute element
-                    vals[ijk-minind] = t.MaxAbsElem();
+                    vals[ijk-minind_] = t.MaxAbsElem();
                     break;
 		  }
 		}
@@ -1328,9 +1329,9 @@ EnsightDumper::Step::storeGridField(string fieldname, const Uintah::TypeDescript
 	} // patches
 	
 	// dump this component as text
-	for(int k=0;k<vshape[2];k++) 
-	  for(int j=0;j<vshape[1];j++) 
-	    for(int i=0;i<vshape[0];i++) {
+	for(int k=0;k<vshape_[2];k++) 
+	  for(int j=0;j<vshape_[1];j++) 
+	    for(int i=0;i<vshape_[0];i++) {
 	      fd->numfld(vals[IntVector(i,j,k)]);
 	      if(++icol==1) 
 		{
@@ -1347,7 +1348,7 @@ EnsightDumper::Step::storeGridField(string fieldname, const Uintah::TypeDescript
 }
 
 void
-EnsightDumper::Step::storePartField(string fieldname, const Uintah::TypeDescription * td)
+EnsightDumper::Step::storePartField(string /*fieldname*/, const Uintah::TypeDescription * /*td*/)
 {
   // WRITEME
 }
@@ -1366,9 +1367,9 @@ public:
     FldWriter(string datadir, string fieldname);
     ~FldWriter();
     
-    int dxobj;
-    ofstream strm;
-    list< pair<float,int> > timesteps;
+    int      dxobj_;
+    ofstream strm_;
+    list< pair<float,int> > timesteps_;
   };
   
   class Step : public Dumper::Step {
@@ -1379,15 +1380,15 @@ public:
     void storeGrid ();
     void storeField(string filename, const Uintah::TypeDescription * type);
     
-    string infostr() const { return dxstrm.str()+"\n"+fldstrm.str()+"\n"; }
+    string infostr() const { return dxstrm_.str()+"\n"+fldstrm_.str()+"\n"; }
     
   private:
-    DataArchive*  da;
-    int           fileindex;
-    string        datadir;
-    ostringstream dxstrm, fldstrm;
-    const map<string,FldWriter*> & fldwriters;
-    bool bin, onedim;
+    DataArchive*  da_;
+    int           fileindex_;
+    string        datadir_;
+    ostringstream dxstrm_, fldstrm_;
+    const map<string,FldWriter*> & fldwriters_;
+    bool          bin_, onedim_;
   };
   friend class Step;
   
@@ -1396,30 +1397,30 @@ public:
   void finishStep(Dumper::Step * step);
   
 private:  
-  int      nsteps;
-  int      dxobj;
-  ostringstream timestrm;
-  ofstream dxstrm;
-  map<string,FldWriter*> fldwriters;
-  bool bin;
-  bool onedim;
+  int           nsteps_;
+  int           dxobj_;
+  ostringstream timestrm_;
+  ofstream      dxstrm_;
+  map<string,FldWriter*> fldwriters_;
+  bool          bin_;
+  bool          onedim_;
 };
 
-DxDumper::DxDumper(DataArchive* da_, string datadir_, bool bin_, bool onedim_)
-  : Dumper(da_, datadir_+"_dx"), nsteps(0), dxobj(0), bin(bin_), onedim(onedim_)
+DxDumper::DxDumper(DataArchive* da, string datadir, bool bin, bool onedim)
+  : Dumper(da, datadir+"_dx"), nsteps_(0), dxobj_(0), bin_(bin), onedim_(onedim)
 {
   // Create a directory if it's not already there.
   Dir dumpdir;
   try {
-    dumpdir.create(datadir);
-  } catch (Exception& e) {
+    dumpdir.create(datadir_);
+  } catch (Exception& /*e*/) {
     ; // ignore failure
   }
   
   // set up the file that contains a list of all the files
-  string indexfilename = datadir + string("/") + string("index.dx");
-  dxstrm.open(indexfilename.c_str());
-  if (!dxstrm) {
+  string indexfilename = datadir_ + string("/") + string("index.dx");
+  dxstrm_.open(indexfilename.c_str());
+  if (!dxstrm_) {
     cerr << "Can't open output file " << indexfilename << endl;
     abort();
   }
@@ -1428,43 +1429,43 @@ DxDumper::DxDumper(DataArchive* da_, string datadir_, bool bin_, bool onedim_)
 
 DxDumper::~DxDumper()
 {
-  dxstrm << "object \"udadata\" class series" << endl;
-  dxstrm << timestrm.str();
-  dxstrm << endl;
-  dxstrm << "default \"udadata\"" << endl;
-  dxstrm << "end" << endl;
+  dxstrm_ << "object \"udadata\" class series" << endl;
+  dxstrm_ << timestrm_.str();
+  dxstrm_ << endl;
+  dxstrm_ << "default \"udadata\"" << endl;
+  dxstrm_ << "end" << endl;
   
-  for(map<string,FldWriter*>::iterator fit(fldwriters.begin());fit!=fldwriters.end();fit++) {
+  for(map<string,FldWriter*>::iterator fit(fldwriters_.begin());fit!=fldwriters_.end();fit++) {
     delete fit->second;
   }
 }
 
 void
-DxDumper::addField(string fieldname, const Uintah::TypeDescription * td)
+DxDumper::addField(string fieldname, const Uintah::TypeDescription * /*td*/)
 {
-  fldwriters[fieldname] = new FldWriter(datadir, fieldname);
+  fldwriters_[fieldname] = new FldWriter(datadir_, fieldname);
 }
 
 DxDumper::Step * 
 DxDumper::addStep(int index, double time)
 {
-  DxDumper::Step * r = new Step(da, datadir, index, time, nsteps++, fldwriters, bin, onedim);
+  DxDumper::Step * r = new Step(da_, datadir_, index, time, nsteps_++, fldwriters_, bin_, onedim_);
   return r;
 }
   
 void
 DxDumper::finishStep(Dumper::Step * step)
 {
-  dxstrm << step->infostr() << endl;
-  timestrm << "  member " << nsteps-1 << " " << step->time << " \"step " << nsteps << "\" " << endl;
+  dxstrm_ << step->infostr() << endl;
+  timestrm_ << "  member " << nsteps_-1 << " " << step->time_ << " \"stepf " << nsteps_ << "\" " << endl;
 }
 
 DxDumper::FldWriter::FldWriter(string datadir, string fieldname)
-  : dxobj(0)
+  : dxobj_(0)
 {
   string outname = datadir+"/"+fieldname+".dx";
-  strm.open(outname.c_str());
-  if(!strm) {
+  strm_.open(outname.c_str());
+  if(!strm_) {
     cerr << "Can't open output file " << outname << endl;
     abort();
   }
@@ -1473,33 +1474,35 @@ DxDumper::FldWriter::FldWriter(string datadir, string fieldname)
 
 DxDumper::FldWriter::~FldWriter()
 {
-  strm << "# time series " << endl;
-  strm << "object " << ++dxobj << " series" << endl;
+  strm_ << "# time series " << endl;
+  strm_ << "object " << ++dxobj_ << " series" << endl;
   int istep(0);
-  for(list< pair<float,int> >::iterator tit(timesteps.begin());tit!=timesteps.end();tit++)
+  for(list< pair<float,int> >::iterator tit(timesteps_.begin());tit!=timesteps_.end();tit++)
     {
-      strm << "  member " << istep++ << " " << tit->first << " " << tit->second << endl;
+      strm_ << "  member " << istep++ << " " << tit->first << " " << tit->second << endl;
     }
-  strm << endl;
+  strm_ << endl;
   
-  strm << "default " << dxobj << endl;
-  strm << "end" << endl;
+  strm_ << "default " << dxobj_ << endl;
+  strm_ << "end" << endl;
 }
 
-DxDumper::Step::Step(DataArchive * da_, string datadir_, int index_, double time_, int fileindex_, 
-		     const map<string,DxDumper::FldWriter*> & fldwriters_, bool bin_, bool onedim_)
+DxDumper::Step::Step(DataArchive * da, string datadir, int index, double time, int fileindex, 
+		     const map<string,DxDumper::FldWriter*> & fldwriters, bool bin, bool onedim)
   :
-  Dumper::Step(index_, time_),
-  da(da_), 
-  fileindex(fileindex_),
-  datadir(datadir_),
-  fldwriters(fldwriters_),
-  bin(bin_), onedim(onedim_)
+  Dumper::Step(index, time),
+  da_(da), 
+  fileindex_(fileindex),
+  datadir_(datadir),
+  fldwriters_(fldwriters),
+  bin_(bin), onedim_(onedim)
 {
-  fldstrm << "object \"step " << fileindex_+1 << "\" class group" << endl;
+  fldstrm_ << "object \"step " << fileindex_+1 << "\" class group" << endl;
 }
 
-static double REMOVE_SMALL(double v)
+static
+double
+REMOVE_SMALL(double v)
 {
   if(fabs(v)<FLT_MIN) return 0;
   else return v;
@@ -1513,10 +1516,10 @@ DxDumper::Step::storeGrid()
 void
 DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 {
-  FldWriter * fldwriter = fldwriters.find(fieldname)->second;
-  ostream & os = fldwriter->strm;
+  FldWriter * fldwriter = fldwriters_.find(fieldname)->second;
+  ostream & os = fldwriter->strm_;
   
-  GridP grid = da->queryGrid(this->time);
+  GridP grid = da_->queryGrid(time_);
   
   const Uintah::TypeDescription* subtype = td->getSubType();
   
@@ -1525,7 +1528,7 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
   LevelP level = grid->getLevel(lnum);
   
   string dmode;
-  if(bin) {
+  if(bin_) {
     if(isLittleEndian()) dmode = " lsb";
     else                 dmode = " msb";
   } else                 dmode = " text";
@@ -1551,10 +1554,10 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
     minind  = indlow;
     midind  = IntVector(ncells[0]/2, ncells[1]/2, ncells[2]/2);
     
-    os << "# step " << this->index << " positions" << endl;
-    if(this->onedim)
+    os << "# step " << index_ << " positions" << endl;
+    if(onedim_)
       {
-	os << "object " << ++fldwriter->dxobj << " class array type float items " 
+	os << "object " << ++fldwriter->dxobj_ << " class array type float items " 
 	   << nnodes[0] << " data follows " << endl;
 	for(int i=0;i<nnodes[0];i++)
 	  {
@@ -1563,7 +1566,7 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
       }
     else
       {
-	os << "object " << ++fldwriter->dxobj << " class gridpositions counts " 
+	os << "object " << ++fldwriter->dxobj_ << " class gridpositions counts " 
 	   << nnodes[0] << " " << nnodes[1] << " " << nnodes[2] << endl;
 	os << "origin " << x0(0)-minind[0]*dx[0] << " " << x0(1)-minind[1]*dx[1] << " " << x0(2)-minind[2]*dx[2] << endl;
 	os << "delta " << dx[0] << " " << 0. << " " << 0. << endl;
@@ -1571,26 +1574,26 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	os << "delta " << 0. << " " << 0. << " " << dx[2] << endl;
 	os << endl;
       }
-    posnobj = fldwriter->dxobj;
+    posnobj = fldwriter->dxobj_;
     
-    os << "# step " << this->index << " connections" << endl;
-    if(this->onedim)
+    os << "# step " << index_ << " connections" << endl;
+    if(onedim_)
       {
-	os << "object " << ++fldwriter->dxobj << " class gridconnections counts " 
+	os << "object " << ++fldwriter->dxobj_ << " class gridconnections counts " 
 	   << nnodes[0] << endl; // dx wants node counts here !
 	os << "attribute \"element type\" string \"lines\"" << endl;
       } 
     else
       {
-	os << "object " << ++fldwriter->dxobj << " class gridconnections counts " 
+	os << "object " << ++fldwriter->dxobj_ << " class gridconnections counts " 
 	   << nnodes[0] << " " << nnodes[1] << " " << nnodes[2] << endl; // dx wants node counts here !
 	os << "attribute \"element type\" string \"cubes\"" << endl;
       }
     os << "attribute \"ref\" string \"positions\"" << endl;
     os << endl;
-    connobj = fldwriter->dxobj;
+    connobj = fldwriter->dxobj_;
     
-    if(this->onedim)
+    if(onedim_)
       nparts = strides(0);
     else
       nparts = strides(0)*strides(1)*strides(2);
@@ -1600,38 +1603,38 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
     for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
       
-      ConsecutiveRangeSet matls = da->queryMaterials("p.x", patch, time);
+      ConsecutiveRangeSet matls = da_->queryMaterials("p.x", patch, time_);
       
       // loop over materials
       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++) {
 	const int matl = *matlIter;
 	
 	ParticleVariable<Point> partposns;
-	da->query(partposns, "p.x", matl, patch, time);
+	da_->query(partposns, "p.x", matl, patch, time_);
 	ParticleSubset* pset = partposns.getParticleSubset();
 	nparts += pset->numParticles();
       }
     }
     
-    os << "# step " << this->index << " positions" << endl;
-    os << "object " << ++fldwriter->dxobj << " class array rank 1 shape 3 items " << nparts;
+    os << "# step " << index_ << " positions" << endl;
+    os << "object " << ++fldwriter->dxobj_ << " class array rank 1 shape 3 items " << nparts;
     os << dmode << " data follows " << endl;;
     
     for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
       
-      ConsecutiveRangeSet matls = da->queryMaterials("p.x", patch, time);
+      ConsecutiveRangeSet matls = da_->queryMaterials("p.x", patch, time_);
       
       // loop over materials
       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++) {
 	const int matl = *matlIter;
 	
 	ParticleVariable<Point> partposns;
-	da->query(partposns, "p.x", matl, patch, time);
+	da_->query(partposns, "p.x", matl, patch, time_);
 	ParticleSubset* pset = partposns.getParticleSubset();
 	for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
 	  Point xpt = partposns[*iter];
-	  if(!bin)
+	  if(!bin_)
 	    os << xpt(0) << " " << xpt(1) << " " << xpt(2) << endl;
 	  else
 	    {
@@ -1645,25 +1648,25 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
       
     } // patches
     os << endl;
-    posnobj = fldwriter->dxobj;
+    posnobj = fldwriter->dxobj_;
   }
   
   int ncomps, rank;
   string shp, source;
   vector<float> minval, maxval;
   
-  if(1) { // FIXME: skip p.x
+  /*if(1)*/ { // FIXME: skip p.x
     int nvals;
     switch (td->getType()) { 
     case Uintah::TypeDescription::NCVariable:
-      if(this->onedim)
+      if(onedim_)
 	nvals = strides(0);
       else
 	nvals = strides(0)*strides(1)*strides(2);
       source = "nodes";
       break;
     case Uintah::TypeDescription::CCVariable:
-      if(this->onedim)
+      if(onedim_)
 	nvals = strides(0);
       else
 	nvals = strides(0)*strides(1)*strides(2);
@@ -1704,7 +1707,7 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
     for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
       
-      ConsecutiveRangeSet matls = da->queryMaterials(fieldname, patch, time);
+      ConsecutiveRangeSet matls = da_->queryMaterials(fieldname, patch, time_);
       
       // loop over materials
       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
@@ -1716,7 +1719,7 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	  {
 	    if(td->getType()==Uintah::TypeDescription::ParticleVariable) {
 	      ParticleVariable<float> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      ParticleSubset* pset = value.getParticleSubset();
 	      for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
 		float val = REMOVE_SMALL(value[*iter]);
@@ -1726,9 +1729,9 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else if(td->getType()==Uintah::TypeDescription::CCVariable) {
 	      CCVariable<float> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-		if(this->onedim && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
+		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
 		int ioff = ind[2]+strides[2]*(ind[1]+strides[1]*ind[0]);
 		float val = REMOVE_SMALL(value[*iter]);
@@ -1738,9 +1741,9 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else {
 	      NCVariable<float> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
-		if(this->onedim && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
+		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
 		int ioff = ind[2]+strides[2]*(ind[1]+strides[1]*ind[0]);
 		float val = REMOVE_SMALL(value[*iter]);
@@ -1754,7 +1757,7 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	  {
 	    if(td->getType()==Uintah::TypeDescription::ParticleVariable) {
 	      ParticleVariable<double> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      ParticleSubset* pset = value.getParticleSubset();
 	      for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
 		float val = REMOVE_SMALL(value[*iter]);
@@ -1764,11 +1767,11 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else if(td->getType()==Uintah::TypeDescription::CCVariable) {
 	      CCVariable<double> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
 		IntVector ind(*iter-minind);
 		cout << "index: " << ind << endl;
-		if(this->onedim && (ind[1]!=midind[1] ||ind[2]!=midind[2])) continue;
+		if(onedim_ && (ind[1]!=midind[1] ||ind[2]!=midind[2])) continue;
 		
 		int ioff = ind[2]+strides[2]*(ind[1]+strides[1]*ind[0]);
 		double val = REMOVE_SMALL(value[*iter]);
@@ -1780,9 +1783,9 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else {
 	      NCVariable<double> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
-		if(this->onedim && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
+		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
 		int ioff = ind[2]+strides[2]*(ind[1]+strides[1]*ind[0]);
 		float val = REMOVE_SMALL(value[*iter]);
@@ -1796,7 +1799,7 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	  {
 	    if(td->getType()==Uintah::TypeDescription::ParticleVariable) {
 	      ParticleVariable<Point> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      ParticleSubset* pset = value.getParticleSubset();
 	      for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
 		for(int ic=0;ic<3;ic++) {
@@ -1808,9 +1811,9 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else if(td->getType()==Uintah::TypeDescription::CCVariable) {
 	      CCVariable<Point> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-		if(this->onedim && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
+		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
 		int ioff = ind[2]+strides[2]*(ind[1]+strides[1]*ind[0]);
 		for(int ic=0;ic<3;ic++){
@@ -1822,9 +1825,9 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else {
 	      NCVariable<Point> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
-		if(this->onedim && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
+		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
 		int ioff = ind[2]+strides[2]*(ind[1]+strides[1]*ind[0]);
 		for(int ic=0;ic<3;ic++){
@@ -1840,7 +1843,7 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	  {
 	    if(td->getType()==Uintah::TypeDescription::ParticleVariable) {
 	      ParticleVariable<Vector> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      ParticleSubset* pset = value.getParticleSubset();
 	      for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
 		for(int ic=0;ic<3;ic++) {
@@ -1852,9 +1855,9 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else if(td->getType()==Uintah::TypeDescription::CCVariable) {
 	      CCVariable<Vector> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-		if(this->onedim && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
+		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
 		int ioff = ind[2]+strides[2]*(ind[1]+strides[1]*ind[0]);
 		for(int ic=0;ic<3;ic++){
@@ -1866,9 +1869,9 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else {
 	      NCVariable<Vector> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
-		if(this->onedim && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
+		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
 		int ioff = ind[2]+strides[2]*(ind[1]+strides[1]*ind[0]);
 		for(int ic=0;ic<3;ic++) {
@@ -1884,7 +1887,7 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	  {
 	    if(td->getType()==Uintah::TypeDescription::ParticleVariable) {
 	      ParticleVariable<Matrix3> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      ParticleSubset* pset = value.getParticleSubset();
 	      for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
 		for(int jc=0;jc<3;jc++)
@@ -1897,9 +1900,9 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else if(td->getType()==Uintah::TypeDescription::CCVariable) {
 	      CCVariable<Matrix3> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
-		if(this->onedim && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
+		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
 		int ioff = ind[2]+strides[2]*(ind[1]+strides[1]*ind[0]);
 		for(int jc=0;jc<3;jc++)
@@ -1912,9 +1915,9 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else {
 	      NCVariable<Matrix3> value;
-	      da->query(value, fieldname, matl, patch, time);
+	      da_->query(value, fieldname, matl, patch, time_);
 	      for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
-		if(this->onedim && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
+		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
 		int ioff = ind[2]+strides[2]*(ind[1]+strides[1]*ind[0]);
 		for(int jc=0;jc<3;jc++)
@@ -1936,17 +1939,17 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
       } // materials
     } // patches
     
-    os << "# step " << this->index << " values" << endl;
-    os << "object " << ++fldwriter->dxobj << " class array rank " << rank << " " << shp << " items " << nparts;
+    os << "# step " << index_ << " values" << endl;
+    os << "object " << ++fldwriter->dxobj_ << " class array rank " << rank << " " << shp << " items " << nparts;
     os << dmode << " data follows " << endl;;
     int ioff = 0;
     for(int iv=0;iv<nvals;iv++) { 
       for(int ic=0;ic<ncomps;ic++) 
-	if(!bin)
+	if(!bin_)
 	  os << vals[ioff++] << " ";
 	else
 	  os.write((char *)&vals[ioff++], sizeof(float));
-      if(!bin) os << endl;
+      if(!bin_) os << endl;
     }
     os << endl;
     if(iscell) 
@@ -1958,48 +1961,48 @@ DxDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	os << "attribute \"dep\" string \"positions\"" << endl;
       }
     
-    dataobj = fldwriter->dxobj;
+    dataobj = fldwriter->dxobj_;
   }
   
   // build field object
-  os << "# step " << this->index << " " << fieldname << " field" << endl;
-  os << "object " << ++fldwriter->dxobj << " class field" << endl;
+  os << "# step " << index_ << " " << fieldname << " field" << endl;
+  os << "object " << ++fldwriter->dxobj_ << " class field" << endl;
   if(posnobj!=-1) os << "  component \"positions\" value " << posnobj << endl;
   if(connobj!=-1) os << "  component \"connections\" value " << connobj << endl;
   if(dataobj!=-1) os << "  component \"data\" value " << dataobj << endl;
   os << endl;
   
-  fldwriter->timesteps.push_back( pair<float,int>(this->time, fldwriter->dxobj));
+  fldwriter->timesteps_.push_back( pair<float,int>(time_, fldwriter->dxobj_));
   
-  int istep = this->fileindex+1;
-  dxstrm << "# step " << istep << " " << fieldname << " minimum " << endl;
-  dxstrm << "object \"" << fieldname << " " << istep << " min\" "
+  int istep = fileindex_+1;
+  dxstrm_ << "# step " << istep << " " << fieldname << " minimum " << endl;
+  dxstrm_ << "object \"" << fieldname << " " << istep << " min\" "
 	 << "class array type float rank " << rank << " " << shp << " items " << 1
 	 << " data follows" << endl;
   for(int ic=0;ic<ncomps;ic++)
-    dxstrm << minval[ic] << " ";
-  dxstrm << endl << endl;
+    dxstrm_ << minval[ic] << " ";
+  dxstrm_ << endl << endl;
   
-  dxstrm << "# step " << istep << " " << fieldname << " maximum " << endl;
-  dxstrm << "object \"" << fieldname << " " << istep << " max\" "
+  dxstrm_ << "# step " << istep << " " << fieldname << " maximum " << endl;
+  dxstrm_ << "object \"" << fieldname << " " << istep << " max\" "
 	 << "class array type float rank " << rank << " " << shp << " items " << 1
 	 << " data follows" << endl;
   for(int ic=0;ic<ncomps;ic++)
-    dxstrm << maxval[ic] << " ";
-  dxstrm << endl << endl;
+    dxstrm_ << maxval[ic] << " ";
+  dxstrm_ << endl << endl;
   
-  dxstrm << "object \"" << fieldname << " " << istep << " filename\" class string \"" << fieldname << ".dx\"" << endl;
-  dxstrm << endl;
+  dxstrm_ << "object \"" << fieldname << " " << istep << " filename\" class string \"" << fieldname << ".dx\"" << endl;
+  dxstrm_ << endl;
   
-  dxstrm << "# step " << istep << " info " << endl;
-  dxstrm << "object \"" << fieldname << " " << istep << " info\" class group" << endl;
-  dxstrm << "  member \"minimum\" \"" << fieldname << " " << istep << " min\"" << endl;
-  dxstrm << "  member \"maximum\" \"" << fieldname << " " << istep << " max\"" << endl;
-  dxstrm << "  member \"filename\" \"" << fieldname << " " << istep << " filename\"" << endl;
-  dxstrm << "  attribute \"source\" string \"" << source << "\"" << endl;
-  dxstrm << endl;
+  dxstrm_ << "# step " << istep << " info " << endl;
+  dxstrm_ << "object \"" << fieldname << " " << istep << " info\" class group" << endl;
+  dxstrm_ << "  member \"minimum\" \"" << fieldname << " " << istep << " min\"" << endl;
+  dxstrm_ << "  member \"maximum\" \"" << fieldname << " " << istep << " max\"" << endl;
+  dxstrm_ << "  member \"filename\" \"" << fieldname << " " << istep << " filename\"" << endl;
+  dxstrm_ << "  attribute \"source\" string \"" << source << "\"" << endl;
+  dxstrm_ << endl;
   
-  fldstrm << "  member \"" << fieldname <<  "\" " << "\"" << fieldname << " " << istep << " info\"" << endl;
+  fldstrm_ << "  member \"" << fieldname <<  "\" " << "\"" << fieldname << " " << istep << " info\"" << endl;
 }
 
 // -----------------------------------------------------------------------------
@@ -2009,7 +2012,7 @@ class HistogramDumper : public Dumper
 public:
   HistogramDumper(DataArchive* da, string datadir, int nbins=256);
   
-  void addField(string fieldname, const Uintah::TypeDescription * type) {}
+  void addField(string /*fieldname*/, const Uintah::TypeDescription * /*theType*/) {}
   
   class Step : public Dumper::Step {
   public:
@@ -2018,20 +2021,25 @@ public:
     void storeGrid () {}
     void storeField(string fieldname, const Uintah::TypeDescription * type);
     
-    string infostr() const { return stepdname; }
+    string infostr() const { return stepdname_; }
     
   private:
-    string stepdname;
+    string stepdname_;
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#  pragma set woff 1424 // Template parameter not used in declaring arguments.
+#endif                  // This turns of SGI compiler warning.
     template <class ElemT>
-    void _binvals(LevelP level, Uintah::TypeDescription::Type type_, 
+    void _binvals(LevelP level, Uintah::TypeDescription::Type type, 
                   const string & fieldname, int imat, int idiag,
                   double & minval, double & maxval, vector<int> & counts, string & ext);
-    
-  private:
-    DataArchive* da;
-    string datadir;
-    int nbins;
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#  pragma reset woff 1424
+#endif  
+
+    DataArchive* da_;
+    string       datadir_;
+    int          nbins_;
   };
   
   //
@@ -2046,13 +2054,13 @@ private:
 			     string materialType_file="", string ext="");
   
 private:
-  ofstream idxos;
-  int      nbins;
-  FILE*    filelist;
+  ofstream idxos_;
+  int      nbins_;
+  FILE*    filelist_;
 };
 
-HistogramDumper::HistogramDumper(DataArchive* da_, string datadir_, int nbins_)
-  : Dumper(da_, datadir_+"_hist"), nbins(nbins_)
+HistogramDumper::HistogramDumper(DataArchive* da, string datadir, int nbins)
+  : Dumper(da, datadir+"_hist"), nbins_(nbins)
 {
   // set defaults for cout
   cout.setf(ios::scientific,ios::floatfield);
@@ -2064,14 +2072,14 @@ HistogramDumper::HistogramDumper(DataArchive* da_, string datadir_, int nbins_)
   Dir dumpdir;
   try {
     dumpdir.create(datadir);
-  } catch (Exception& e) {
+  } catch (Exception& /*e*/) {
     ;
   }
   
   // set up the file that contains a list of all the files
   string filelistname = datadir + string("/") + string("timelist");
-  filelist = fopen(filelistname.c_str(),"w");
-  if (!filelist) {
+  filelist_ = fopen(filelistname.c_str(),"w");
+  if (!filelist_) {
     cerr << "Can't open output file " << filelistname << endl;
     abort();
   }
@@ -2124,24 +2132,24 @@ HistogramDumper::makeFileName(string datadir, string time_file, string variable_
 HistogramDumper::Step * 
 HistogramDumper::addStep(int index, double time)
 {
-  return new Step(da, datadir, index, time, nbins);
+  return new Step(da_, datadir_, index, time, nbins_);
 }  
 
 void
 HistogramDumper::finishStep(Dumper::Step * s)
 {
-  fprintf(filelist, "%10d %16.8g  %20s\n", s->index, s->time, s->infostr().c_str());
+  fprintf(filelist_, "%10d %16.8g  %20s\n", s->index_, s->time_, s->infostr().c_str());
 }
 
-HistogramDumper::Step::Step(DataArchive * da_, string datadir_, int index_, double time_,  int nbins_)
+HistogramDumper::Step::Step(DataArchive * da, string datadir, int index, double time,  int nbins)
   : 
-  Dumper::Step(index_, time_),
-  da(da_), datadir(datadir_), nbins(nbins_)
+  Dumper::Step(index, time),
+  da_(da), datadir_(datadir), nbins_(nbins)
 {
-  stepdname = HistogramDumper::makeFileName(datadir, TextDumper::time_string(time));
+  stepdname_ = HistogramDumper::makeFileName(datadir, TextDumper::time_string(time_));
   Dir stepdir;
   try {
-    stepdir.create(stepdname);
+    stepdir.create(stepdname_);
   } catch (...) {
     ; // 
   }
@@ -2153,15 +2161,18 @@ static inline double MAX(double a, double b) { if(a>b) return a; return b; }
 static void _binval(vector<int> & bins, double minval, double maxval, double val)
 {
   if(val<minval || val>maxval) return;
-  int nbins = bins.size();
+  int nbins = (int)bins.size();
   int ibin = (int)(nbins*(val-minval)/(maxval-minval+1.e-5));
   bins[ibin]++;
 }
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#  pragma set woff 1424 // Template parameter not used in declaring arguments.
+#endif                  // This turns of SGI compiler warning.
 template <class ElemT>
 void 
 HistogramDumper::Step::
-_binvals(LevelP level, Uintah::TypeDescription::Type type_, 
+_binvals(LevelP level, Uintah::TypeDescription::Type theType, 
          const string & fieldname, int imat, int idiag,
          double & minval, double & maxval, vector<int> & counts, string & ext)
 {
@@ -2180,21 +2191,21 @@ _binvals(LevelP level, Uintah::TypeDescription::Type type_,
     for(Level::const_patchIterator iter = level->patchesBegin();
         iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
-      ConsecutiveRangeSet matls = da->queryMaterials(fieldname, patch, time);
+      ConsecutiveRangeSet matls = da_->queryMaterials(fieldname, patch, time_);
       
       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
           matlIter != matls.end(); matlIter++) {
 	const int matl = *matlIter;
         if (matl!=imat) break;
         
-        switch(type_){
+        switch(theType){
         case Uintah::TypeDescription::NCVariable:
           {
             NCVariable<ElemT>  value;
             NCVariable<double> Mvalue;
             
-            da->query(value, fieldname, matl, patch, time);
-            da->query(Mvalue, "g.mass", matl, patch, time);
+            da_->query(value, fieldname, matl, patch, time_);
+            da_->query(Mvalue, "g.mass", matl, patch, time_);
             
             for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
               if(_outside(*iter, minind, maxind)) continue;
@@ -2215,7 +2226,7 @@ _binvals(LevelP level, Uintah::TypeDescription::Type type_,
         case Uintah::TypeDescription::CCVariable:
           {
             CCVariable<ElemT>  value;
-            da->query(value, fieldname, matl, patch, time);
+            da_->query(value, fieldname, matl, patch, time_);
             
             for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
               if(_outside(*iter, minind, maxind)) continue;
@@ -2232,7 +2243,7 @@ _binvals(LevelP level, Uintah::TypeDescription::Type type_,
         case Uintah::TypeDescription::ParticleVariable:
           {
             ParticleVariable<ElemT> value;
-            da->query(value, fieldname, matl, patch, time);
+            da_->query(value, fieldname, matl, patch, time_);
             ParticleSubset* pset = value.getParticleSubset();
             for(ParticleSubset::iterator iter = pset->begin();
                 iter != pset->end(); iter++) {
@@ -2248,7 +2259,7 @@ _binvals(LevelP level, Uintah::TypeDescription::Type type_,
           
         default:
           break;
-        } // type switch
+        } // theType switch
         
       } // materials
     } // patches
@@ -2261,20 +2272,23 @@ _binvals(LevelP level, Uintah::TypeDescription::Type type_,
   } // pass
   
 }
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#  pragma reset woff 1424
+#endif
 
 void
 HistogramDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 {
   cout << "   " << fieldname << endl;
   
-  GridP grid = da->queryGrid(time);
+  GridP grid = da_->queryGrid(time_);
   
   int nmats = 0;
   for(int l=0;l<=0;l++) {
     LevelP level = grid->getLevel(l);
     for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
-      ConsecutiveRangeSet matls= da->queryMaterials(fieldname, patch, time);
+      ConsecutiveRangeSet matls= da_->queryMaterials(fieldname, patch, time_);
       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++) {
 	int matl = *matlIter;
 	if(matl>=nmats) nmats = matl+1;
@@ -2298,7 +2312,7 @@ HistogramDumper::Step::storeField(string fieldname, const Uintah::TypeDescriptio
     
     for(int idiag=0;idiag<ndiags;idiag++) {
       double minval, maxval;
-      vector<int> bins(nbins);
+      vector<int> bins(nbins_);
       
       // only support level 0 for now
       switch(td->getSubType()->getType()){
@@ -2326,20 +2340,20 @@ HistogramDumper::Step::storeField(string fieldname, const Uintah::TypeDescriptio
       if(minval>maxval) continue;
       
       string matname = HistogramDumper::mat_string(imat);
-      string fname   = HistogramDumper::makeFileName(datadir, time_string(time), fieldname+ext, matname, "hist");
+      string fname   = HistogramDumper::makeFileName(datadir_, time_string(time_), fieldname+ext, matname, "hist");
       cout << "     " << fname << endl;
       cout << "       mat " << imat << ", "
            << "range = " << minval << "," << maxval
            << endl;
       
       ofstream os(fname.c_str());
-      os << "# time = " << time << ", field = " 
+      os << "# time = " << time_ << ", field = " 
          << fieldname << ", mat " << matname << endl;
       os << "# min = " << minval << endl;
       os << "# max = " << maxval << endl;
       
-      for(int ibin=0;ibin<nbins;ibin++) {
-        double xmid = minval+(ibin+0.5)*(maxval-minval)/nbins;
+      for(int ibin=0;ibin<nbins_;ibin++) {
+        double xmid = minval+(ibin+0.5)*(maxval-minval)/nbins_;
         os << xmid << " " << bins[ibin] << endl;
       }
     } // idiag
@@ -2379,7 +2393,7 @@ main(int argc, char** argv)
   /*
    * Parse arguments
    */
-  bool do_verbose = false;
+  //bool do_verbose = false;
   int time_step_lower = 0;
   int time_step_upper = INT_MAX;
   int time_step_inc   = 1;
@@ -2397,13 +2411,13 @@ main(int argc, char** argv)
     string s=argv[i];
     
     if (s == "-verbose") {
-      do_verbose = true;
+      //do_verbose = true;
     } else if (s == "-timesteplow") {
-      time_step_lower = strtoul(argv[++i],(char**)NULL,10);
+      time_step_lower = (int)strtoul(argv[++i],(char**)NULL,10);
     } else if (s == "-timestephigh") {
-      time_step_upper = strtoul(argv[++i],(char**)NULL,10);
+      time_step_upper = (int)strtoul(argv[++i],(char**)NULL,10);
     } else if (s == "-timestepinc") {
-      time_step_inc = strtoul(argv[++i],(char**)NULL,10);
+      time_step_inc = (int)strtoul(argv[++i],(char**)NULL,10);
     } else if (s == "-field") {
       fieldnames = argv[++i];
     } else if (s == "-basename") {
@@ -2417,7 +2431,7 @@ main(int argc, char** argv)
     } else if (s == "-onedim") {
       onedim = true;
     } else if (s == "-nbins") {
-      nbins = strtoul(argv[++i],(char**)NULL,10);
+      nbins = (int)strtoul(argv[++i],(char**)NULL,10);
     } else if (s == "-tseries") {
       tseries = true;
     } else if (s == "-withpart") {
@@ -2455,15 +2469,15 @@ main(int argc, char** argv)
     cout << "There are " << index.size() << " timesteps:\n";
     
     if(time_step_lower<0)                  time_step_lower = 0;
-    if(time_step_upper>=(int)index.size()) time_step_upper = index.size()-1;
+    if(time_step_upper>=(int)index.size()) time_step_upper = (int)index.size()-1;
     if(time_step_inc<=0)                   time_step_inc   = 1;
     
     // build list of variables to dump
     list<typed_varname> dumpvars;
-    int nvars = allvars.size();
+    int nvars = (int)allvars.size();
     if(fieldnames.size()) {
       vector<string> requested_fields = split(fieldnames,',',false);
-      int nreq = requested_fields.size();
+      int nreq = (int)requested_fields.size();
       for(int j=0;j<nreq;j++) {
         bool foundvar = false;
         string fname = requested_fields[j];
