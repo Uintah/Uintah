@@ -281,7 +281,8 @@ void setBC(CCVariable<double>& press_CC,
            SimulationStateP& sharedState, 
            const int mat_id,
            DataWarehouse* new_dw,
-           Lodi_vars_pressBC* lv)
+           Lodi_vars_pressBC* lv,
+           NG_BC_vars* NGVars)      // NG hack
 {
   BC_doing << "setBC (press_CC) "<< kind <<" " << which_Var
            << " mat_id = " << mat_id << endl;
@@ -353,7 +354,7 @@ void setBC(CCVariable<double>& press_CC,
         if (bc_kind == "Custom") {
           setNGC_Nozzle_BC<CCVariable<double>,double>
           (patch, face, press_CC, "Pressure", "CC",
-           bound, bc_kind,mat_id, child, sharedState);
+           bound, bc_kind,mat_id, child, sharedState,NGVars);
         }                          
                                             
         //__________________________________________________________
@@ -406,7 +407,8 @@ void setBC(CCVariable<double>& var_CC,
            SimulationStateP& sharedState, 
            const int mat_id,
            DataWarehouse*  /*new_dw*/,
-           Lodi_vars* lv)
+           Lodi_vars* lv,
+           NG_BC_vars* NGVars)    // NG hack
 {
   BC_doing << "setBC (double) "<< desc << " mat_id = " << mat_id << endl;
   Vector cell_dx = patch->dCell();
@@ -478,7 +480,7 @@ void setBC(CCVariable<double>& var_CC,
               bc_kind == "Custom") {
           setNGC_Nozzle_BC<CCVariable<double>,double>
                 (patch, face, var_CC, desc,"CC", bound, 
-                 bc_kind,mat_id, child, sharedState);
+                 bc_kind,mat_id, child, sharedState, NGVars);
         }
 
         //__________________________________
@@ -520,7 +522,8 @@ void setBC(CCVariable<Vector>& var_CC,
            SimulationStateP& sharedState, 
            const int mat_id,
            DataWarehouse* /*new_dw*/,
-           Lodi_vars* lv)
+           Lodi_vars* lv,
+           NG_BC_vars* NGVars)
 {
   BC_doing <<"setBC (Vector_CC) "<< desc <<" mat_id = " <<mat_id<< endl;
   Vector cell_dx = patch->dCell();
@@ -571,7 +574,7 @@ void setBC(CCVariable<Vector>& var_CC,
         //__________________________________
         //  hardwiring for NGC nozzle simulation
         setNGCVelocity_BC(patch,face,var_CC,desc,
-                          bound, bc_kind,  mat_id, child, sharedState); 
+                          bound, bc_kind,  mat_id, child, sharedState,NGVars);
          
         //__________________________________
         //  Tangent components Neumann = 0
@@ -665,10 +668,14 @@ void setBC(CCVariable<double>& var,
   lv->setLodiBcs = false;
   constCCVariable<double> placeHolder;
   
-  setBC(var, type, placeHolder, placeHolder, patch, sharedState, 
-        mat_id, new_dw,lv);
+  NG_BC_vars* ng = new NG_BC_vars;  // NG hack
+  ng->setNGBcs = false;;
   
-  delete lv;
+  
+  setBC(var, type, placeHolder, placeHolder, patch, sharedState, 
+        mat_id, new_dw,lv,ng);
+  
+  delete lv, ng;
 } 
   
 void setBC(CCVariable<double>& press_CC,          
@@ -683,11 +690,13 @@ void setBC(CCVariable<double>& press_CC,
          DataWarehouse* new_dw) {
   Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(0);
   lv->setLodiBcs = false;
+  NG_BC_vars* ng = new NG_BC_vars;  // NG hack
+  ng->setNGBcs = false;;
   
   setBC(press_CC, rho_micro, sp_vol, surroundingMatl_indx,
-        whichVar, kind, p, sharedState, mat_id, new_dw, lv); 
+        whichVar, kind, p, sharedState, mat_id, new_dw, lv, ng); 
         
-  delete lv;           
+  delete lv,ng;           
 }          
 void setBC(CCVariable<Vector>& variable,
           const std::string& type,
@@ -699,9 +708,12 @@ void setBC(CCVariable<Vector>& variable,
   Lodi_vars* lv = new Lodi_vars();
   lv->setLodiBcs = false;
   
-  setBC( variable, type, p, sharedState, mat_id, new_dw, lv);
+  NG_BC_vars* ng = new NG_BC_vars;  // NG hack
+  ng->setNGBcs = false;;
+   
+  setBC( variable, type, p, sharedState, mat_id, new_dw, lv, ng);
   
-  delete lv; 
+  delete lv, ng; 
 }
 
 
