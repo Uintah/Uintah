@@ -9,6 +9,9 @@
 #include <GL/glx.h>
 #include <GL/glu.h>
 
+// Needed for the decoding of keyboard macros
+#include <X11/keysym.h>
+
 namespace rtrt {
 
 using SCIRun::Runnable;
@@ -42,7 +45,7 @@ protected:
   // if it was successful.
 
   // This opens the window.
-  int open_display(Window parent = 0, bool needevents = false);
+  int open_display(Window parent = 0, bool needevents = true);
   // Closes the display
   int close_display();
 
