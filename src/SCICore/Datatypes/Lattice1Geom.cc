@@ -54,7 +54,7 @@ Point Lattice1Geom::get_point(int i){
   }
   double x;
   x=bbox.min().x()+i*dx;
-  return Point(x, 0, 0, 0);
+  return Point(x);
 }
 
 bool Lattice1Geom::locate(const Point& p, int& ix){
