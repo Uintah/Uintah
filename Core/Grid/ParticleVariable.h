@@ -120,9 +120,7 @@ public:
 		      std::vector<ParticleSubset*> subsets,
 		      std::vector<ParticleVariableBase*> srcs,
 		      const std::vector<const Patch*>& /*srcPatches*/,
-		      particleIndex extra = 0)
-  { gather(dest, subsets, srcs, extra); }
-  
+		      particleIndex extra = 0);  
   virtual void gather(ParticleSubset* dest,
 		      std::vector<ParticleSubset*> subsets,
 		      std::vector<ParticleVariableBase*> srcs,
@@ -135,8 +133,7 @@ public:
   // specialized for T=Point
   virtual void packMPI(void* buf, int bufsize, int* bufpos,
 		       const ProcessorGroup* pg, ParticleSubset* pset,
-		       const Patch* /*forPatch*/)
-  { packMPI(buf, bufsize, bufpos, pg, pset); }
+		       const Patch* /*forPatch*/);
   virtual void packsizeMPI(int* bufpos,
 			   const ProcessorGroup* pg,
 			   ParticleSubset* pset);
@@ -310,7 +307,23 @@ private:
     copyPointer(*c);
   }
   
+  // specialization for T=Point
+  template <>
+  void ParticleVariable<Point>::gather(ParticleSubset* pset,
+				       vector<ParticleSubset*> subsets,
+				       vector<ParticleVariableBase*> srcs,
+				       const vector<const Patch*>& srcPatches,
+				       particleIndex extra);
+
   template<class T>
+    void ParticleVariable<T>::gather(ParticleSubset* pset,
+				            vector<ParticleSubset*> subsets,
+				            vector<ParticleVariableBase*> srcs,
+				            const vector<const Patch*>& srcPatches,
+				            particleIndex extra)
+  { gather(pset, subsets, srcs, extra); }
+
+template<class T>
   void
   ParticleVariable<T>::gather(ParticleSubset* pset,
 			      std::vector<ParticleSubset*> subsets,
@@ -341,15 +354,6 @@ private:
     }
     ASSERT(dstiter+extra == pset->end());
   }
-
-  // specialization for T=Point
-  template <>
-  void ParticleVariable<Point>::gather(ParticleSubset* pset,
-				       vector<ParticleSubset*> subsets,
-				       vector<ParticleVariableBase*> srcs,
-				       const vector<const Patch*>& srcPatches,
-				       particleIndex extra);
-
   
   template<class T>
   void*
@@ -385,6 +389,22 @@ private:
     }
   }
   
+  // specialized for T=Point
+  template<>
+  void
+    ParticleVariable<Point>::packMPI(void* buf, int bufsize, int* bufpos,
+				     const ProcessorGroup* pg,
+				     ParticleSubset* pset,
+				     const Patch* forPatch);
+  template<class T>
+  void
+    ParticleVariable<T>::packMPI(void* buf, int bufsize, int* bufpos,
+				 const ProcessorGroup* pg,
+				 ParticleSubset* pset,
+				 const Patch* forPatch)
+    { packMPI(buf, bufsize, bufpos, pg, pset); }
+
+
   template<class T>
   void
   ParticleVariable<T>::packMPI(void* buf, int bufsize, int* bufpos,
@@ -403,14 +423,6 @@ private:
       throw InternalError("packMPI not finished\n");
     }
   }
-
-  // specialized for T=Point
-  template<>
-  void
-  ParticleVariable<Point>::packMPI(void* buf, int bufsize, int* bufpos,
-				   const ProcessorGroup* pg,
-				   ParticleSubset* pset,
-				   const Patch* forPatch);
 
   template<class T>
   void
