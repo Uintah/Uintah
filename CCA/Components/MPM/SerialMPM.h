@@ -72,8 +72,7 @@ public:
 	 
   //////////
   // Insert Documentation Here:
-  virtual void scheduleTimeAdvance(double t, double dt,
-				   const LevelP& level, SchedulerP&);
+  virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
 
   void setSharedState(SimulationStateP& ssp);
 

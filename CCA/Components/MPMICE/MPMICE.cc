@@ -117,8 +117,7 @@ void MPMICE::scheduleComputeStableTimestep(const LevelP& level,
 
 //______________________________________________________________________
 //
-void MPMICE::scheduleTimeAdvance(double, double,
-				 const LevelP&   level,
+void MPMICE::scheduleTimeAdvance(const LevelP&   level,
 				 SchedulerP&     sched)
 {
   const PatchSet* patches = level->eachPatch();

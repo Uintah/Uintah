@@ -316,7 +316,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleTimeAdvance--
 _____________________________________________________________________*/
-void ICE::scheduleTimeAdvance(double /*t*/, double /*dt*/,const LevelP& level,
+void ICE::scheduleTimeAdvance(const LevelP& level,
 			      SchedulerP& sched)
 {
   cout_doing << "ICE::scheduleTimeAdvance" << endl;
