@@ -1,7 +1,7 @@
 //abstract interface 
 interface StringPort extends sci.cca.Port
 {
-	string getString();
+	collective string getString();
 }
 
 

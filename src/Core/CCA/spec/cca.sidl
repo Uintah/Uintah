@@ -649,7 +649,7 @@ package cca {
 	     * used further, and -2 if error so severe that component cannot
 	     * be further used safely.
 	     */
-	    int go();
+	    collective int go();
 	}
 
 	/** 
