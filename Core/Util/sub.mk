@@ -25,6 +25,7 @@ SRCS     += \
 	$(SRCDIR)/Debug.cc \
 	$(SRCDIR)/soloader.cc \
 	$(SRCDIR)/DebugStream.cc \
+	$(SRCDIR)/Endian.cc \
 	$(SRCDIR)/Timer.cc \
 	$(SRCDIR)/sci_system.c \
 	$(SRCDIR)/RCParse.cc \
