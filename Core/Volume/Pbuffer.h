@@ -39,7 +39,6 @@ namespace SCIRun {
 class Pbuffer
 {
 public:
-  Pbuffer(int width, int height, bool isRenderTex);
   Pbuffer(int width, int height, int format = GL_INT /* GL_INT or GL_FLOAT */,
           int numColorBits = 8 /* 8, 16, 32 */,
           /* int numChannels / 1, 2, 3, 4 /, */
