@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Schedulers/LocallyComputedPatchVarMap.h>
+#include <Packages/Uintah/Core/Grid/LocallyComputedPatchVarMap.h>
 #include <Core/Exceptions/InternalError.h>
 
 #include <iostream>

@@ -1,5 +1,5 @@
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/LocallyComputedPatchVarMap.h>
+#include <Packages/Uintah/Core/Grid/LocallyComputedPatchVarMap.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/MaterialSetP.h>

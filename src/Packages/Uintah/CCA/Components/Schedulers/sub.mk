@@ -27,13 +27,13 @@ SRCS += \
 	$(SRCDIR)/TaskGraph.cc \
 	$(SRCDIR)/ThreadPool.cc \
 	$(SRCDIR)/GhostOffsetVarMap.cc \
-	$(SRCDIR)/LocallyComputedPatchVarMap.cc \
 	$(SRCDIR)/DependencyException.cc \
 	$(SRCDIR)/IncorrectAllocation.cc \
 	$(SRCDIR)/Util.cc \
 	$(SRCDIR)/templates.cc
 
 PSELIBS := \
+	Packages/Uintah/CCA/Components/ProblemSpecification \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/ProblemSpec \

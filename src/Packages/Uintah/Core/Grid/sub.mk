@@ -14,6 +14,7 @@ SRCS     += \
 	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc \
 	$(SRCDIR)/MaterialProperties.cc \
 	$(SRCDIR)/PatchRangeTree.cc \
+	$(SRCDIR)/LocallyComputedPatchVarMap.cc \
 	$(SRCDIR)/NCVariableBase.cc $(SRCDIR)/ParticleSet.cc \
 	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ParticleVariableBase.cc \
 	$(SRCDIR)/ReductionVariableBase.cc \
