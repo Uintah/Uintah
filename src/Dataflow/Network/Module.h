@@ -200,25 +200,7 @@ namespace SCIRun {
   protected:
 
     template <class DC>
-    bool module_dynamic_compile(const CompileInfo &ci, DC &result)
-    {
-      DynamicAlgoHandle algo_handle;
-      if (! DynamicLoader::scirun_loader().get(ci, algo_handle))
-      {
-	error("Could not compile algorithm for '" +
-	      ci.template_class_name_ + "<" + ci.template_arg_ + ">'.");
-	return false;
-      }
-
-      result = dynamic_cast<typename DC::pointer_type>(algo_handle.get_rep());
-      if (result.get_rep() == 0) 
-      {
-	error("Could not get algorithm for '" +
-	      ci.template_class_name_ + "<" + ci.template_arg_ + ">'.");
-	return false;
-      }
-      return true;
-    }
+    bool module_dynamic_compile(const CompileInfo &ci, DC &result);
 
     virtual void tcl_command(GuiArgs&, void*);
 
@@ -302,6 +284,38 @@ namespace SCIRun {
     Module(const Module&);
     Module& operator=(const Module&);
   };
+
+
+template <class DC>
+bool
+Module::module_dynamic_compile(const CompileInfo &ci, DC &result)
+{
+  DynamicAlgoHandle algo_handle;
+  if (! DynamicLoader::scirun_loader().fetch(ci, algo_handle))
+  {
+    // Turn on indicator here.
+    bool status = DynamicLoader::scirun_loader().compile_and_store(ci);
+    // Turn off indicator here.
+
+    if (! (status && DynamicLoader::scirun_loader().fetch(ci, algo_handle)))
+    {
+      error("Could not compile algorithm for '" +
+	    ci.template_class_name_ + "<" + ci.template_arg_ + ">'.");
+      return false;
+    }
+  }
+
+  result = dynamic_cast<typename DC::pointer_type>(algo_handle.get_rep());
+  if (result.get_rep() == 0) 
+  {
+    error("Could not get algorithm for '" +
+	  ci.template_class_name_ + "<" + ci.template_arg_ + ">'.");
+    return false;
+  }
+  return true;
+}
+
+
 }
 
 #endif
