@@ -46,6 +46,8 @@
 #include <Core/Algorithms/Visualization/TextureBuilderAlgo.h>
 #include <Core/Util/DebugStream.h>
 
+#include <Core/Datatypes/MRLatVolField.h>
+
 namespace SCIRun {
 
 static SCIRun::DebugStream dbg("TextureBuilder", false);
@@ -173,8 +175,20 @@ TextureBuilder::execute()
     }
   }
 
-  if (build_texture(&my_reporter_, vfield, gfield))
-  {
+  if(   MRLatVolField<double>* vmrfield =
+      dynamic_cast< MRLatVolField< double >* > (vfield.get_rep()) ) {
+
+    for(unsigned int i = 0 ; i < vmrfield->nlevels(); i++ ){
+      const MultiResLevel<double>* lev = vmrfield->level( i );
+      for(unsigned int j = 0; j < lev->patches.size(); j++ ){
+	LatVolField<double>* vmr = lev->patches[j].get_rep(); 
+	LatVolMeshHandle mesh = vmr->get_typed_mesh();
+//  	cerr<<"Mesh "<<j<<" grabbed at level "<<i<<" with value = "<<mesh.get_rep()<<"\n";
+      }
+    }
+  }
+  
+  if(build_texture(&my_reporter_, vfield, gfield)) {
     otexture->send(texture_);
   }
 }
@@ -210,19 +224,19 @@ TextureBuilder::new_vfield(FieldHandle vfield)
     error("Input scalar field does not contain scalar data.");
     return false;
   }
-
-  // set vmin/vmax
-  pair<double, double> vminmax;
-  sfi->compute_min_max(vminmax.first, vminmax.second);
-  if (vminmax.first != vminval_ || vminmax.second != vmaxval_)
-  {
-    if (!gui_fixed_.get())
-    {
+  if( gui_fixed_.get() ){
+    vminval_ = gui_vminval_.get();
+    vmaxval_ = gui_vmaxval_.get();
+  } else {
+    // set vmin/vmax
+    pair<double, double> vminmax;
+    sfi->compute_min_max(vminmax.first, vminmax.second);
+    if(vminmax.first != vminval_ || vminmax.second != vmaxval_) {
       gui_vminval_.set(vminmax.first);
       gui_vmaxval_.set(vminmax.second);
+      vminval_ = vminmax.first;
+      vmaxval_ = vminmax.second;
     }
-    vminval_ = vminmax.first;
-    vmaxval_ = vminmax.second;
   }
   return true;
 }

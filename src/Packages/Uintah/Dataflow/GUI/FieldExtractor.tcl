@@ -146,6 +146,12 @@ itcl_class Uintah_Selectors_FieldExtractor {
                 -variable $this-level  -value $j -command $c
             pack $w.lf.bf.b$j -side left
         }
+ 
+       if {$levels > 1} {
+            $buttontype $w.lf.bf.b$levels -text all \
+                -variable $this-level -value $levels -command $c
+            pack $w.lf.bf.b$levels -side left
+        }
 	
 	if { [set $this-level] > $levels } {
 	    set $this-level [expr $levels -1]

@@ -39,6 +39,8 @@ LOG
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Grid/LocallyComputedPatchVarMap.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Geometry/Transform.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
@@ -130,8 +132,8 @@ double FieldExtractor::field_update()
 
    // Deal with changed level information
    int n = grid->numLevels();
-   if (level_.get() >= (n-1)){
-     level_.set(n-1);
+   if (level_.get() > (n-1)){
+     level_.set(n);
    }
    if (levelnum != level_.get() ){
      mesh_handle_ = 0;
@@ -149,7 +151,8 @@ void FieldExtractor::update_GUI(const string& var,
 {
   DataArchive& archive = *((*(archiveH.get_rep()))());
   int levels = grid->numLevels();
-  LevelP level = grid->getLevel( level_.get() );
+  int guilevel = level_.get();
+  LevelP level = grid->getLevel((guilevel == levels ? 0 : guilevel) );
 
   Patch* r = *(level->patchesBegin());
   ConsecutiveRangeSet matls = 
@@ -225,8 +228,10 @@ FieldExtractor::execute()
   archiveH = handle;
   DataArchive& archive = *((*(archiveH.get_rep()))());
 
+  cerr<<"Gui say levels = "<<level_.get()<<"\n";
   // get time, set timestep, set generation, update grid and update gui
   double time = field_update(); // yeah it does all that
+  cerr<<"Field updated; do we get here\n";
 
   if(type == 0){
     warning( "No variables found.");
@@ -240,580 +245,878 @@ FieldExtractor::execute()
   else if (times.size() > 1)
     dt = times[timestep] - times[timestep-1];
 
-  LevelP level = grid->getLevel( level_.get() );
-  IntVector hi, low, range;
-  level->findIndexRange(low, hi);
-  range = hi - low;
-  BBox box;
-  level->getSpatialRange(box);
-  //  cerr<<"level  = "<<level_.get()<<" box: min("<<box.min()<<"), max("<<box.max()<<"), index range is imin = "<<low<<", imax = "<<hi<<", range = "<<range<<"\n";
+  bool get_all_levels = false;
+  int lev = level_.get();
+  if (lev == grid->numLevels()){
+    get_all_levels = true;
+  }
 
-  IntVector cellHi, cellLo;
-  level->findCellIndexRange(cellLo, cellHi);
-
-  const TypeDescription* subtype = type->getSubType();
+  cerr<<"grid->numLevels() = "<<grid->numLevels()<<" and get_all_levels = "<<
+    get_all_levels<<"\n";
   string var(sVar.get());
   int mat = sMatNum.get();
   if(var != ""){
+    
+    const TypeDescription* subtype = type->getSubType();
+    LevelP level;
+    
+    if( get_all_levels ){ 
+      level = grid->getLevel( 0 );
+    } else {
+      level = grid->getLevel( level_.get() );
+    }
+    IntVector hi, low, range;
+    level->findIndexRange(low, hi);
+    range = hi - low;
+    BBox box;
+    level->getSpatialRange(box);
+//      IntVector cellHi, cellLo;
+//      level->findCellIndexRange(cellLo, cellHi);
+
+    cerr<<"before anything data range is:  "<<range.x()<<"x"<<range.y()<<"x"<<
+      range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+
     switch( type->getType() ) {
 
     case TypeDescription::NCVariable:
-      if( mesh_handle_.get_rep() == 0 ){
-	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
-					 range.z(), box.min(),
-					 box.max());
-      }else if(mesh_handle_->get_ni() != (unsigned int) range.x() ||
-	       mesh_handle_->get_nj() != (unsigned int) range.y() ||
-	       mesh_handle_->get_nk() != (unsigned int) range.z() ){
-	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
-					 range.z(), box.min(),
-					 box.max());
-      }
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
 	{
 	  NCVariable<double> gridVar;
-	  LatVolField<double> *sfd =
-	    scinew LatVolField<double>( mesh_handle_, 1 );
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  // 	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",int(TypeDescription::NCVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<double>* mrfield = 0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::NCVariable,
+				     TypeDescription::double_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::NCVariable, mesh_handle_);
+	    LatVolField<double> *sfd =
+	      scinew LatVolField<double>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::NCVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::float_type:
 	{
 	  NCVariable<float> gridVar;
-	  LatVolField<float> *sfd =
-	    scinew LatVolField<float>( mesh_handle_, 1 );
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",int(TypeDescription::NCVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<float>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::NCVariable,
+				     TypeDescription::float_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::NCVariable, mesh_handle_);
+	    LatVolField<float> *sfd =
+	      scinew LatVolField<float>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::NCVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::int_type:
 	{
 	  NCVariable<int> gridVar;
-	  LatVolField<int> *sfd =
-	    scinew LatVolField<int>( mesh_handle_, 1 );
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",int(TypeDescription::NCVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<int>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::NCVariable,
+				     TypeDescription::int_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::NCVariable, mesh_handle_);
+	    LatVolField<int> *sfd =
+	      scinew LatVolField<int>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::NCVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::long64_type:
 	{
 	  NCVariable<long64> gridVar;
-	  LatVolField<long64> *sfd =
-	    scinew LatVolField<long64>( mesh_handle_, 1 );
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",int(TypeDescription::NCVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<long64>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::NCVariable,
+				     TypeDescription::long64_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::NCVariable, mesh_handle_);
+	    LatVolField<long64> *sfd =
+	      scinew LatVolField<long64>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::NCVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::Vector:
 	{	
 	  NCVariable<Vector> gridVar;
-	  LatVolField<Vector> *vfd =
-	    scinew LatVolField<Vector>( mesh_handle_, 1 );
-	  // set the generation and timestep in the field
-	  vfd->set_property("varname",string(var), true);
-	  vfd->set_property("generation",generation, true);
-	  vfd->set_property("timestep",timestep, true);
-	  vfd->set_property( "offset", IntVector(low), true);
-	  vfd->set_property("delta_t",dt, true);
-	  vfd->set_property( "vartype",
-			     int(TypeDescription::NCVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, vfd );
-	  // send the field out to the port
-	  fout->send(vfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<Vector>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::NCVariable,
+				     TypeDescription::Vector, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::NCVariable, mesh_handle_);
+	    LatVolField<Vector> *vfd =
+	      scinew LatVolField<Vector>( mesh_handle_, 1 );
+	    // set the generation and timestep in the field
+	    set_vector_properties( vfd, var, generation, timestep, low, dt,
+				   TypeDescription::NCVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, vfd );
+	    // send the field out to the port
+	    fout->send(vfd);
+	    return;
+	  }
 	}
       case TypeDescription::Matrix3:
 	{	
 	  NCVariable<Matrix3> gridVar;
-	  LatVolField<Matrix3> *tfd =
-	    scinew LatVolField<Matrix3>( mesh_handle_, 1 );
-	  // set the generation and timestep in the field
-	  tfd->set_property( "vartype",
-			     int(TypeDescription::NCVariable),true);
-	  tfd->set_property( "offset", IntVector(low), true);
-	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
-	  // send the field out to the port
-	  fout->send(tfd);
-	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<Matrix3>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::NCVariable,
+				     TypeDescription::Matrix3, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::NCVariable, mesh_handle_);
+	    LatVolField<Matrix3> *tfd =
+	      scinew LatVolField<Matrix3>( mesh_handle_, 1 );
+	    // set the generation and timestep in the field
+	    set_tensor_properties( tfd, low, TypeDescription::NCVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, tfd );
+	    // send the field out to the port
+	    fout->send(tfd);
+	    // 	DumpAllocator(default_allocator, "TensorDump.allocator");
+	    return;
+	  }
 	}
       default:
 	error("NCVariable<?>  Unknown scalar type.");
 	return;
       }
     case TypeDescription::CCVariable:
-      if( mesh_handle_.get_rep() == 0 ){
-	if(is_periodic_bcs(cellHi, hi)){
-	  IntVector newrange(0,0,0);
-	  get_periodic_bcs_range( cellHi, hi, range, newrange);
-	  mesh_handle_ = scinew LatVolMesh(newrange.x(), newrange.y(),
-					   newrange.z(), box.min(),
-					   box.max());
-	} else {
-	  mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
-					   range.z(), box.min(),
-					   box.max());
-	}
-      } else if(mesh_handle_->get_ni() != (unsigned int) range.x() ||
-		mesh_handle_->get_nj() != (unsigned int) range.y() ||
-		mesh_handle_->get_nk() != (unsigned int) range.z() ){
-	if(is_periodic_bcs(cellHi, hi)){
-	  IntVector newrange(0,0,0);
-	  get_periodic_bcs_range( cellHi, hi, range, newrange);
-	  mesh_handle_ = scinew LatVolMesh(newrange.x(), newrange.y(),
-					   newrange.z(), box.min(),
-					   box.max());
-	} else {
-	  mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
-					   range.z(), box.min(),
-					   box.max());
-	}
-      }	
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
 	{
 	  CCVariable<double> gridVar;
-	  LatVolField<double> *sfd =
-	    scinew LatVolField<double>( mesh_handle_, 0 );
-	  
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",int(TypeDescription::CCVariable),true);
- 	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
- 	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    cerr<<"getting all levels\n";
+	    cerr.flush();
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<double>* mrfield =0;
+	    cerr<<"building multi-level field\n";
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 0,
+				     TypeDescription::CCVariable,
+				     TypeDescription::double_type, mrfield);
+	    cerr<<"multi-level field built\n";
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    cerr<<"Before update_mesh_handled: type = "<<
+	      TypeDescription::CCVariable<<"\n";
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::CCVariable, mesh_handle_);
+	    LatVolField<double> *sfd =
+	      scinew LatVolField<double>( mesh_handle_, 0 );
+	    cerr<<"setting scalar properties\n";
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::CCVariable);
+	    cerr<<"properties set...building field\n";
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    cerr<<"field built\n";
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::float_type:
 	{
 	  CCVariable<float> gridVar;
-	  LatVolField<float> *sfd =
-	    scinew LatVolField<float>( mesh_handle_, 0 );
-	  
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",int(TypeDescription::CCVariable),true);
- 	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
- 	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<float>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 0,
+				     TypeDescription::CCVariable,
+				     TypeDescription::float_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::CCVariable, mesh_handle_);
+	    LatVolField<float> *sfd =
+	      scinew LatVolField<float>( mesh_handle_, 0 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::CCVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::int_type:
 	{
 	  CCVariable<int> gridVar;
-	  LatVolField<int> *sfd =
-	    scinew LatVolField<int>( mesh_handle_, 0 );
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",int(TypeDescription::CCVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<int>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 0,
+				     TypeDescription::CCVariable,
+				     TypeDescription::int_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::CCVariable, mesh_handle_);
+	    LatVolField<int> *sfd =
+	      scinew LatVolField<int>( mesh_handle_, 0 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::CCVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::bool_type:
 	{
 	  CCVariable<unsigned char> gridVar;
-	  LatVolField<unsigned char> *sfd =
-	    scinew LatVolField<unsigned char>( mesh_handle_, 0 );
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",int(TypeDescription::CCVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<unsigned char>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 0,
+				     TypeDescription::CCVariable,
+				     TypeDescription::bool_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::CCVariable, mesh_handle_);
+	    LatVolField<unsigned char> *sfd =
+	      scinew LatVolField<unsigned char>( mesh_handle_, 0 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::CCVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::long64_type:
       case TypeDescription::long_type:
 	{
 	  CCVariable<long64> gridVar;
-	  LatVolField<long64> *sfd =
-	    scinew LatVolField<long64>( mesh_handle_, 0 );
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",int(TypeDescription::CCVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<long64>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 0,
+				     TypeDescription::CCVariable,
+				     TypeDescription::long64_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::CCVariable, mesh_handle_);
+	    LatVolField<long64> *sfd =
+	      scinew LatVolField<long64>( mesh_handle_, 0 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::CCVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::Vector:
 	{	
 	  CCVariable<Vector> gridVar;
-	  LatVolField<Vector> *vfd =
-	    scinew LatVolField<Vector>( mesh_handle_, 0 );
-	  // set the generation and timestep in the field
-	  vfd->set_property("varname",string(var), true);
-	  vfd->set_property("generation",generation, true);
-	  vfd->set_property("timestep",timestep, true);
-	  vfd->set_property( "offset", IntVector(low), true);
-	  vfd->set_property("delta_t",dt, true);
-	  vfd->set_property( "vartype",
-			     int(TypeDescription::CCVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, vfd );
-	  // send the field out to the port
-	  fout->send(vfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<Vector>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 0,
+				     TypeDescription::CCVariable,
+				     TypeDescription::Vector, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::CCVariable, mesh_handle_);
+	    LatVolField<Vector> *vfd =
+	      scinew LatVolField<Vector>( mesh_handle_, 0 );
+	    // set the generation and timestep in the field
+	    set_vector_properties( vfd, var, generation, timestep, low, dt,
+				   TypeDescription::CCVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, vfd );
+	    // send the field out to the port
+	    fout->send(vfd);
+	    return;
+	  }
 	}
       case TypeDescription::Matrix3:
 	{
 	  CCVariable<Matrix3> gridVar;
-	  LatVolField<Matrix3> *tfd =
-	    scinew LatVolField<Matrix3>( mesh_handle_, 0 );
-	  // set the generation and timestep in the field
-	  tfd->set_property( "vartype",
-			     int(TypeDescription::CCVariable),true);
-	  tfd->set_property( "offset", IntVector(low), true);
-	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
-	  // send the field out to the port
-	  fout->send(tfd);
-	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<Matrix3>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 0,
+				     TypeDescription::CCVariable,
+				     TypeDescription::Matrix3, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::CCVariable, mesh_handle_);
+	    LatVolField<Matrix3> *tfd =
+	      scinew LatVolField<Matrix3>( mesh_handle_, 0 );
+	    // set the generation and timestep in the field
+	    set_tensor_properties( tfd, low, TypeDescription::CCVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, tfd );
+	    // send the field out to the port
+	    fout->send(tfd);
+	    // 	DumpAllocator(default_allocator, "TensorDump.allocator");
+	    return;
+	  }
 	}
       default:
 	error("CCVariable<?> Unknown scalar type.");
 	return;
       }
     case TypeDescription::SFCXVariable:
-      if( mesh_handle_.get_rep() == 0 ){
-	mesh_handle_ = scinew LatVolMesh(range.x(), range.y() - 1,
-					 range.z() - 1, box.min(),
-					 box.max());
-      } else if(mesh_handle_->get_ni() != (unsigned int) range.x() ||
-		mesh_handle_->get_nj() != (unsigned int) range.y() -1 ||
-		mesh_handle_->get_nk() != (unsigned int) range.z() -1 ){
-	mesh_handle_ = scinew LatVolMesh(range.x(), range.y() - 1,
-					 range.z()-1, box.min(),
-					 box.max());
-      }
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
 	{
 	  SFCXVariable<double> gridVar;
-	  LatVolField<double> *sfd =
-	    scinew LatVolField<double>( mesh_handle_, 1 );
-	  
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",
-			     int(TypeDescription::SFCXVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<double>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCXVariable,
+				     TypeDescription::double_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCXVariable, mesh_handle_);
+	    LatVolField<double> *sfd =
+	      scinew LatVolField<double>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::SFCXVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::float_type:
 	{
 	  SFCXVariable<float> gridVar;
-	  LatVolField<float> *sfd =
-	    scinew LatVolField<float>( mesh_handle_, 1 );
-	  
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",
-			     int(TypeDescription::SFCXVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<float>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCXVariable,
+				     TypeDescription::float_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCXVariable, mesh_handle_);
+	    LatVolField<float> *sfd =
+	      scinew LatVolField<float>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::SFCXVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::int_type:
 	{
 	  SFCXVariable<int> gridVar;
-	  LatVolField<int> *sfd =
-	    scinew LatVolField<int>( mesh_handle_, 1 );
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",
-			     int(TypeDescription::SFCXVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<int>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCXVariable,
+				     TypeDescription::int_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCXVariable, mesh_handle_);
+	    LatVolField<int> *sfd =
+	      scinew LatVolField<int>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::SFCXVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::long64_type:
       case TypeDescription::long_type:
 	{
 	  SFCXVariable<long64> gridVar;
-	  LatVolField<long64> *sfd =
-	    scinew LatVolField<long64>( mesh_handle_, 1 );
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "vartype",
-			     int(TypeDescription::SFCXVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<long64>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCXVariable,
+				     TypeDescription::long64_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCXVariable, mesh_handle_);
+	    LatVolField<long64> *sfd =
+	      scinew LatVolField<long64>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::SFCXVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::Vector:
 	{	
 	  SFCXVariable<Vector> gridVar;
-	  LatVolField<Vector> *vfd =
-	    scinew LatVolField<Vector>( mesh_handle_, 1 );
-	  // set the generation and timestep in the field
-	  vfd->set_property("varname",string(var), true);
-	  vfd->set_property("generation",generation, true);
-	  vfd->set_property("timestep",timestep, true);
-	  vfd->set_property( "offset", IntVector(low), true);
-	  vfd->set_property("delta_t",dt, true);
-	  vfd->set_property( "vartype",
-			     int(TypeDescription::SFCXVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, vfd );
-	  // send the field out to the port
-	  fout->send(vfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<Vector>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCXVariable,
+				     TypeDescription::Vector, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCXVariable, mesh_handle_);
+	    LatVolField<Vector> *vfd =
+	      scinew LatVolField<Vector>( mesh_handle_, 1 );
+	    // set the generation and timestep in the field
+	    set_vector_properties( vfd, var, generation, timestep, low, dt,
+				   TypeDescription::SFCXVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, vfd );
+	    // send the field out to the port
+	    fout->send(vfd);
+	    return;
+	  }
 	}
       case TypeDescription::Matrix3:
 	{
 	  SFCXVariable<Matrix3> gridVar;
-	  LatVolField<Matrix3> *tfd =
-	    scinew LatVolField<Matrix3>( mesh_handle_, 0 );
-	  // set the generation and timestep in the field
-	  tfd->set_property( "vartype",
-			     int(TypeDescription::SFCXVariable),true);
-	  tfd->set_property( "offset", IntVector(low), true);
-	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
-	  // send the field out to the port
-	  fout->send(tfd);
-	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<Matrix3>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCXVariable,
+				     TypeDescription::Matrix3, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCXVariable, mesh_handle_);
+	    LatVolField<Matrix3> *tfd =
+	      scinew LatVolField<Matrix3>( mesh_handle_, 1 );
+	    // set the generation and timestep in the field
+	    tfd->set_property( "vartype",
+			       int(TypeDescription::SFCXVariable),true);
+	    tfd->set_property( "offset", IntVector(low), true);
+	    build_field( archive, level, low, var, mat, time, gridVar, tfd );
+	    // send the field out to the port
+	    fout->send(tfd);
+	    // 	DumpAllocator(default_allocator, "TensorDump.allocator");
+	    return;
+	  }
 	}
       default:
 	error("SFCXVariable<?> Unknown scalar type.");
 	return;
       }
+      
     case TypeDescription::SFCYVariable:
-      if( mesh_handle_.get_rep() == 0 ){
-	mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y(),
-					 range.z()-1, box.min(),
-					 box.max());
-      } else if(mesh_handle_->get_ni() != (unsigned int) range.x() -1 ||
-		mesh_handle_->get_nj() != (unsigned int) range.y() ||
-		mesh_handle_->get_nk() != (unsigned int) range.z() -1 ){
-	mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y(),
-					 range.z()-1, box.min(),
-					 box.max());
-      }
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
 	{
 	  SFCYVariable<double> gridVar;
-	  LatVolField<double> *sfd =
-	    scinew LatVolField<double>( mesh_handle_, 1 );
-	  
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",
-			     int(TypeDescription::SFCYVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<double>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCYVariable,
+				     TypeDescription::double_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCYVariable, mesh_handle_);
+	    LatVolField<double> *sfd =
+	      scinew LatVolField<double>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::SFCYVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::float_type:
 	{
 	  SFCYVariable<float> gridVar;
-	  LatVolField<float> *sfd =
-	    scinew LatVolField<float>( mesh_handle_, 1 );
-	  
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",
-			     int(TypeDescription::SFCYVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<float>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCYVariable,
+				     TypeDescription::float_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCYVariable, mesh_handle_);
+	    LatVolField<float> *sfd =
+	      scinew LatVolField<float>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::SFCYVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::int_type:
 	{
 	  SFCYVariable<int> gridVar;
-	  LatVolField<int> *sfd =
-	    scinew LatVolField<int>( mesh_handle_, 1 );
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",
-			     int(TypeDescription::SFCYVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<int>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCYVariable,
+				     TypeDescription::int_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCYVariable, mesh_handle_);
+	    LatVolField<int> *sfd =
+	      scinew LatVolField<int>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::SFCYVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::long64_type:
       case TypeDescription::long_type:
 	{
 	  SFCYVariable<long64> gridVar;
-	  LatVolField<long64> *sfd =
-	    scinew LatVolField<long64>( mesh_handle_, 1 );
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",
-			     int(TypeDescription::SFCYVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<long64>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCYVariable,
+				     TypeDescription::long64_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCYVariable, mesh_handle_);
+	    LatVolField<long64> *sfd =
+	      scinew LatVolField<long64>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::SFCYVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::Vector:
 	{	
 	  SFCYVariable<Vector> gridVar;
-	  LatVolField<Vector> *vfd =
-	    scinew LatVolField<Vector>( mesh_handle_, 1 );
-	  // set the generation and timestep in the field
-	  vfd->set_property("varname",string(var), true);
-	  vfd->set_property("generation",generation, true);
-	  vfd->set_property("timestep",timestep, true);
-	  vfd->set_property( "offset", IntVector(low), true);
-	  vfd->set_property("delta_t",dt, true);
-	  vfd->set_property( "vartype",
-			     int(TypeDescription::SFCYVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, vfd );
-	  // send the field out to the port
-	  fout->send(vfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<Vector>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCYVariable,
+				     TypeDescription::Vector, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCYVariable, mesh_handle_);
+	    LatVolField<Vector> *vfd =
+	      scinew LatVolField<Vector>( mesh_handle_, 1 );
+	    // set the generation and timestep in the field
+	    set_vector_properties( vfd, var, generation, timestep, low, dt,
+				   TypeDescription::SFCYVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, vfd );
+	    // send the field out to the port
+	    fout->send(vfd);
+	    return;
+	  }
 	}
       case TypeDescription::Matrix3:
 	{
 	  SFCYVariable<Matrix3> gridVar;
-	  LatVolField<Matrix3> *tfd =
-	    scinew LatVolField<Matrix3>( mesh_handle_, 1 );
-	  // set the generation and timestep in the field
-	  tfd->set_property( "vartype",
-			     int(TypeDescription::SFCYVariable),true);
-	  tfd->set_property( "offset", IntVector(low), true);
-	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
-	  // send the field out to the port
-	  fout->send(tfd);
-	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<Matrix3>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCYVariable,
+				     TypeDescription::Matrix3, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCYVariable, mesh_handle_);
+	    LatVolField<Matrix3> *tfd =
+	      scinew LatVolField<Matrix3>( mesh_handle_, 1 );
+	    // set the generation and timestep in the field
+	    tfd->set_property( "vartype",
+			       int(TypeDescription::SFCYVariable),true);
+	    tfd->set_property( "offset", IntVector(low), true);
+	    build_field( archive, level, low, var, mat, time, gridVar, tfd );
+	    // send the field out to the port
+	    fout->send(tfd);
+	    // 	DumpAllocator(default_allocator, "TensorDump.allocator");
+	    return;
+	  }
 	}
       default:
 	error("SFCYVariable<?> Unknown scalar type.");
 	return;
       }
     case TypeDescription::SFCZVariable:
-      if( mesh_handle_.get_rep() == 0 ){
-	mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y()-1,
-					 range.z(), box.min(),
-					 box.max());
-      } else if(mesh_handle_->get_ni() != (unsigned int) range.x() -1 ||
-		mesh_handle_->get_nj() != (unsigned int) range.y() -1 ||
-		mesh_handle_->get_nk() != (unsigned int) range.z() ){
-	mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y()-1,
-					 range.z(), box.min(),
-					 box.max());
-      }     
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
 	{
 	  SFCZVariable<double> gridVar;
-	  LatVolField<double> *sfd =
-	    scinew LatVolField<double>( mesh_handle_, 1 );
-	  
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",
-			     int(TypeDescription::SFCZVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<double>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCZVariable,
+				     TypeDescription::double_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCZVariable, mesh_handle_);
+	    LatVolField<double> *sfd =
+	      scinew LatVolField<double>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::SFCZVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::float_type:
 	{
 	  SFCZVariable<float> gridVar;
-	  LatVolField<float> *sfd =
-	    scinew LatVolField<float>( mesh_handle_, 1 );
-	  
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",
-			     int(TypeDescription::SFCZVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<float>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCZVariable,
+				     TypeDescription::float_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCZVariable, mesh_handle_);
+	    LatVolField<float> *sfd =
+	      scinew LatVolField<float>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::SFCZVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::int_type:
 	{
 	  SFCZVariable<int> gridVar;
-	  LatVolField<int> *sfd =
-	    scinew LatVolField<int>( mesh_handle_, 1 );
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",
-			     int(TypeDescription::SFCZVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<int>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCZVariable,
+				     TypeDescription::int_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCZVariable, mesh_handle_);
+	    LatVolField<int> *sfd =
+	      scinew LatVolField<int>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::SFCZVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::long64_type:
       case TypeDescription::long_type:
 	{
 	  SFCZVariable<long64> gridVar;
-	  LatVolField<long64> *sfd =
-	    scinew LatVolField<long64>( mesh_handle_, 1 );
-	  sfd->set_property( "variable", string(var), true );
-	  sfd->set_property( "time", double( time ), true);
-	  sfd->set_property( "offset", IntVector(low), true);
-	  sfd->set_property( "vartype",
-			     int(TypeDescription::SFCZVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	  fout->send(sfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<long64>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCZVariable,
+				     TypeDescription::long64_type, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCZVariable, mesh_handle_);
+	    LatVolField<long64> *sfd =
+	      scinew LatVolField<long64>( mesh_handle_, 1 );
+	    set_scalar_properties( sfd, var, time, low, 
+				   TypeDescription::SFCZVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	    fout->send(sfd);
+	    return;
+	  }
 	}
       case TypeDescription::Vector:
 	{	
 	  SFCZVariable<Vector> gridVar;
-	  LatVolField<Vector> *vfd =
-	    scinew LatVolField<Vector>( mesh_handle_, 1 );
-	  // set the generation and timestep in the field
-	  vfd->set_property("varname",string(var), true);
-	  vfd->set_property("generation",generation, true);
-	  vfd->set_property("timestep",timestep, true);
-	  vfd->set_property( "offset", IntVector(low), true);
-	  vfd->set_property("delta_t",dt, true);
-	  vfd->set_property( "vartype",
-			     int(TypeDescription::SFCZVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, vfd );
-	  // send the field out to the port
-	  fout->send(vfd);
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<Vector>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCZVariable,
+				     TypeDescription::Vector, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCZVariable, mesh_handle_);
+	    LatVolField<Vector> *vfd =
+	      scinew LatVolField<Vector>( mesh_handle_, 1 );
+	    // set the generation and timestep in the field
+	    set_vector_properties( vfd, var, generation, timestep, low, dt,
+				   TypeDescription::SFCZVariable);
+	    build_field( archive, level, low, var, mat, time, gridVar, vfd );
+	    // send the field out to the port
+	    fout->send(vfd);
+	    return;
+	  }
 	}
       case TypeDescription::Matrix3:
 	{
 	  SFCZVariable<Matrix3> gridVar;
-	  LatVolField<Matrix3> *tfd =
-	    scinew LatVolField<Matrix3>( mesh_handle_, 1 );
-	  // set the generation and timestep in the field
-	  tfd->set_property( "vartype",
-			     int(TypeDescription::SFCZVariable),true);
-	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
-	  // send the field out to the port
-	  fout->send(tfd);
-	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
-	  return;
+	  if(get_all_levels){
+	    GridP newGrid = build_minimal_patch_grid( grid );
+	    MRLatVolField<Matrix3>* mrfield =0;
+	    build_multi_level_field( archive, newGrid, var, gridVar,
+				     mat, generation, time, timestep,
+				     dt, 1,
+				     TypeDescription::SFCZVariable,
+				     TypeDescription::Matrix3, mrfield);
+	    fout->send(mrfield);
+	    return;
+	  } else {
+	    update_mesh_handle( level, hi, range, box,
+				TypeDescription::SFCZVariable, mesh_handle_);
+	    LatVolField<Matrix3> *tfd =
+	      scinew LatVolField<Matrix3>( mesh_handle_, 1 );
+	    // set the generation and timestep in the field
+	    tfd->set_property( "vartype",
+			       int(TypeDescription::SFCZVariable),true);
+	    build_field( archive, level, low, var, mat, time, gridVar, tfd );
+	    // send the field out to the port
+	    fout->send(tfd);
+	    // 	DumpAllocator(default_allocator, "TensorDump.allocator");
+	    return;
+	  }
 	}
       default:
 	error("SFCZVariable<?> Unknown type.");
@@ -826,6 +1129,173 @@ FieldExtractor::execute()
   }
 }
 
+GridP 
+FieldExtractor::build_minimal_patch_grid( GridP oldGrid )
+{
+  int nlevels = oldGrid->numLevels();
+  GridP newGrid = scinew Grid();
+  const SuperPatchContainer* superPatches;
+
+  for( int i = 0; i < nlevels; i++ ){
+    LevelP level = oldGrid->getLevel(i);
+    LocallyComputedPatchVarMap patchGrouper;
+    const PatchSubset* patches = level->allPatches()->getUnion();
+    patchGrouper.addComputedPatchSet(0, patches);
+    patchGrouper.makeGroups();
+    superPatches = patchGrouper.getSuperPatches(0, level.get_rep());
+    ASSERT(superPatches != 0);
+
+    LevelP newLevel =
+      newGrid->addLevel(level->getAnchor(), level->dCell());
+
+    cerr<<"Level "<<i<<":\n";
+    int count = 0;
+    SuperPatchContainer::const_iterator superIter;
+    for (superIter = superPatches->begin();
+	 superIter != superPatches->end(); superIter++) {
+      IntVector low = (*superIter)->getLow();
+      IntVector high = (*superIter)->getHigh();
+      IntVector inLow = high; // taking min values starting at high
+      IntVector inHigh = low; // taking max values starting at low
+
+      cerr<<"\tcombined patch "<<count++<<" is "<<low<<", "<<high<<"\n";
+
+      for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
+	const Patch* patch = (*superIter)->getBoxes()[p];
+	inLow = Min(inLow, patch->getInteriorCellLowIndex());
+	inHigh = Max(inHigh, patch->getInteriorCellHighIndex());
+      }
+      
+      Patch* newPatch =
+	newLevel->addPatch(low, high, inLow, inHigh);
+      for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
+	const Patch* patch = (*superIter)->getBoxes()[p];
+	new2OldPatchMap_[newPatch].push_back(patch);
+      }
+    }
+    newLevel->finalizeLevel();
+  }
+  return newGrid;
+}
+
+void FieldExtractor::update_mesh_handle( LevelP& level,
+					 IntVector& hi,
+					 IntVector& range,
+					 BBox& box,
+					 TypeDescription::Type type,
+					 LatVolMeshHandle& mesh_handle)
+{
+  cerr<<"In update_mesh_handled: type = "<<type<<"\n";
+  
+  switch ( type ){
+  case TypeDescription::CCVariable:
+    {
+      IntVector cellHi, cellLo, levelHi, levelLo;
+      level->findCellIndexRange(cellLo, cellHi);
+      level->findIndexRange( levelLo, levelHi);
+      if( mesh_handle.get_rep() == 0 ){
+	if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+	  IntVector newrange(0,0,0);
+	  get_periodic_bcs_range( cellHi, hi, range, newrange);
+	  mesh_handle = scinew LatVolMesh(newrange.x(),newrange.y(),
+					   newrange.z(), box.min(),
+					   box.max());
+	} else {
+	  mesh_handle = scinew LatVolMesh(range.x(), range.y(),
+					   range.z(), box.min(),
+					   box.max());
+	  cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+	    range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+	}
+      } else if(mesh_handle->get_ni() != (unsigned int) range.x() ||
+		mesh_handle->get_nj() != (unsigned int) range.y() ||
+		mesh_handle->get_nk() != (unsigned int) range.z() ){
+	if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+	  IntVector newrange(0,0,0);
+	  get_periodic_bcs_range( cellHi, hi, range, newrange);
+	  mesh_handle = scinew LatVolMesh(newrange.x(),newrange.y(),
+					   newrange.z(), box.min(),
+					   box.max());
+	} else {
+	  mesh_handle = scinew LatVolMesh(range.x(), range.y(),
+					   range.z(), box.min(),
+					   box.max());
+	  cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+	    range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+	}
+      }	
+      return;
+    }
+  case TypeDescription::NCVariable:
+    {
+      if( mesh_handle.get_rep() == 0 ){
+	mesh_handle = scinew LatVolMesh(range.x(), range.y(),
+					 range.z(), box.min(),
+					 box.max());
+	cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+	  range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+      }else if(mesh_handle->get_ni() != (unsigned int) range.x() ||
+	       mesh_handle->get_nj() != (unsigned int) range.y() ||
+	       mesh_handle->get_nk() != (unsigned int) range.z() ){
+	mesh_handle = scinew LatVolMesh(range.x(), range.y(),
+					 range.z(), box.min(),
+					 box.max());
+	cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+	  range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+      }
+      return;
+    }
+  case TypeDescription::SFCXVariable:
+    {
+      if( mesh_handle.get_rep() == 0 ){
+	mesh_handle = scinew LatVolMesh(range.x(), range.y() - 1,
+					 range.z() - 1, box.min(),
+					 box.max());
+      } else if(mesh_handle->get_ni() != (unsigned int) range.x() ||
+		mesh_handle->get_nj() != (unsigned int) range.y() -1 ||
+		mesh_handle->get_nk() != (unsigned int) range.z() -1 ){
+	mesh_handle = scinew LatVolMesh(range.x(), range.y() - 1,
+					 range.z()-1, box.min(),
+					 box.max());
+      }
+      return;
+    }
+  case TypeDescription::SFCYVariable:
+    {
+      if( mesh_handle.get_rep() == 0 ){
+	mesh_handle = scinew LatVolMesh(range.x()-1, range.y(),
+					 range.z()-1, box.min(),
+					 box.max());
+      } else if(mesh_handle->get_ni() != (unsigned int) range.x() -1 ||
+		mesh_handle->get_nj() != (unsigned int) range.y() ||
+		mesh_handle->get_nk() != (unsigned int) range.z() -1 ){
+	mesh_handle = scinew LatVolMesh(range.x()-1, range.y(),
+					 range.z()-1, box.min(),
+					 box.max());
+      }
+      return;
+    }
+  case TypeDescription::SFCZVariable:
+    {
+      if( mesh_handle.get_rep() == 0 ){
+	mesh_handle = scinew LatVolMesh(range.x()-1, range.y()-1,
+					 range.z(), box.min(),
+					 box.max());
+      } else if(mesh_handle->get_ni() != (unsigned int) range.x() -1 ||
+		mesh_handle->get_nj() != (unsigned int) range.y() -1 ||
+		mesh_handle->get_nk() != (unsigned int) range.z() ){
+	mesh_handle = scinew LatVolMesh(range.x()-1, range.y()-1,
+					 range.z(), box.min(),
+					 box.max());
+      }     
+      return;
+    }
+  default:
+    error("in update_mesh_handle:: Not a Uintah type.");
+  }
+}
+
+  
 
 
 } // End namespace Uintah
