@@ -11,7 +11,7 @@
 
 namespace Uintah {
   class TypeDescription;
-/**************************************
+  /**************************************
 
 CLASS
    JohnsonCook
@@ -65,145 +65,157 @@ DESCRIPTION
              
 WARNING
   
-****************************************/
+  ****************************************/
 
-      class JohnsonCook : public ConstitutiveModel {
-	 // Create datatype for storing model parameters
-      private:
+  class JohnsonCook : public ConstitutiveModel {
+    // Create datatype for storing model parameters
+  private:
 
-      public:
-	 struct CMData {
-	    double Bulk;
-	    double Shear;
-            double A;
-            double B;
-            double C;
-            double n;
-            double m;
-            double TRoom;
-            double TMelt;
-            double D1;
-            double D2;
-            double D3;
-            double D4;
-            double D5;
-	 };	 
+  public:
+    struct CMData {
+      double Bulk;
+      double Shear;
+      double A;
+      double B;
+      double C;
+      double n;
+      double m;
+      double TRoom;
+      double TMelt;
+      double D1;
+      double D2;
+      double D3;
+      double D4;
+      double D5;
+    };	 
 
-      const VarLabel* pLeftStretchLabel;  // For Hypoelastic-plasticity
-      const VarLabel* pLeftStretchLabel_preReloc;  // For Hypoelastic-plasticity
-      const VarLabel* pRotationLabel;  // For Hypoelastic-plasticity
-      const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
-      const VarLabel* pDeformRatePlasticLabel;  // For Hypoelastic-plasticity
-      const VarLabel* pDeformRatePlasticLabel_preReloc;  // For Hypoelastic-plasticity
-      const VarLabel* pPlasticStrainLabel;  // For Hypoelastic-plasticity
-      const VarLabel* pPlasticStrainLabel_preReloc;  // For Hypoelastic-plasticity
-      const VarLabel* pDamageLabel;  // For Hypoelastic-plasticity
-      const VarLabel* pDamageLabel_preReloc;  // For Hypoelastic-plasticity
+    const VarLabel* pLeftStretchLabel;  // For Hypoelastic-plasticity
+    const VarLabel* pLeftStretchLabel_preReloc;  // For Hypoelastic-plasticity
+    const VarLabel* pRotationLabel;  // For Hypoelastic-plasticity
+    const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
+    const VarLabel* pDeformRatePlasticLabel;  // For Hypoelastic-plasticity
+    const VarLabel* pDeformRatePlasticLabel_preReloc;  // For Hypoelastic-plasticity
+    const VarLabel* pPlasticStrainLabel;  // For Hypoelastic-plasticity
+    const VarLabel* pPlasticStrainLabel_preReloc;  // For Hypoelastic-plasticity
+    const VarLabel* pDamageLabel;  // For Hypoelastic-plasticity
+    const VarLabel* pDamageLabel_preReloc;  // For Hypoelastic-plasticity
 
-      private:
-	 friend const TypeDescription* fun_getTypeDescription(CMData*);
+  private:
+    friend const TypeDescription* fun_getTypeDescription(CMData*);
 
-	 CMData d_initialData;
+    CMData d_initialData;
 	 
-	 // Prevent copying of this class
-	 // copy constructor
-	 JohnsonCook(const JohnsonCook &cm);
-	 JohnsonCook& operator=(const JohnsonCook &cm);
+    // Prevent copying of this class
+    // copy constructor
+    JohnsonCook(const JohnsonCook &cm);
+    JohnsonCook& operator=(const JohnsonCook &cm);
 
-      public:
-	 // constructors
-	 JohnsonCook(ProblemSpecP& ps, MPMLabel* lb,int n8or27);
+  public:
+    // constructors
+    JohnsonCook(ProblemSpecP& ps, MPMLabel* lb,int n8or27);
 	 
-	 // destructor 
-	 virtual ~JohnsonCook();
+    // destructor 
+    virtual ~JohnsonCook();
 	 
-	 // compute stable timestep for this patch
-	 virtual void computeStableTimestep(const Patch* patch,
-					    const MPMMaterial* matl,
-					    DataWarehouse* new_dw);
-
-	 // compute stress at each particle in the patch
-	 virtual void computeStressTensor(const PatchSubset* patches,
-					  const MPMMaterial* matl,
-					  DataWarehouse* old_dw,
-					  DataWarehouse* new_dw);
-
-         // initialize  each particle's constitutive model data
-         virtual void initializeCMData(const Patch* patch,
+    // compute stable timestep for this patch
+    virtual void computeStableTimestep(const Patch* patch,
 				       const MPMMaterial* matl,
 				       DataWarehouse* new_dw);
 
-	 virtual void addInitialComputesAndRequires(Task* task,
-					     const MPMMaterial* matl,
-					     const PatchSet* patches) const;
+    // compute stress at each particle in the patch
+    virtual void computeStressTensor(const PatchSubset* patches,
+				     const MPMMaterial* matl,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw);
 
-	 virtual void addComputesAndRequires(Task* task,
-					     const MPMMaterial* matl,
-					     const PatchSet* patches) const;
+    virtual void computeStressTensor(const PatchSubset* patches,
+				     const MPMMaterial* matl,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw,
+				     Solver* solver,
+				     const bool recursion);
+	 
+    // initialize  each particle's constitutive model data
+    virtual void initializeCMData(const Patch* patch,
+				  const MPMMaterial* matl,
+				  DataWarehouse* new_dw);
 
-         virtual double computeRhoMicroCM(double pressure,
-                                          const double p_ref,
-                                          const MPMMaterial* matl);
+    virtual void addInitialComputesAndRequires(Task* task,
+					       const MPMMaterial* matl,
+					       const PatchSet* patches) const;
 
-	 virtual void computePressEOSCM(double rho_m, double& press_eos,
-				       double p_ref,
-                                        double& dp_drho, double& ss_new,
-                                        const MPMMaterial* matl);
+    virtual void addComputesAndRequires(Task* task,
+					const MPMMaterial* matl,
+					const PatchSet* patches) const;
 
-         virtual double getCompressibility();
+    virtual void addComputesAndRequires(Task* task,
+					const MPMMaterial* matl,
+					const PatchSet* patches,
+					const bool recursion) const;
 
-	 virtual void addParticleState(std::vector<const VarLabel*>& from,
-				       std::vector<const VarLabel*>& to);
+    virtual double computeRhoMicroCM(double pressure,
+				     const double p_ref,
+				     const MPMMaterial* matl);
 
-         // class function to read correct number of parameters
-         // from the input file
-         static void readParameters(ProblemSpecP ps, double *p_array);
+    virtual void computePressEOSCM(double rho_m, double& press_eos,
+				   double p_ref,
+				   double& dp_drho, double& ss_new,
+				   const MPMMaterial* matl);
 
-         // class function to write correct number of parameters
-         // from the input file, and create a new object
-         static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
+    virtual double getCompressibility();
 
-         // member function to read correct number of parameters
-         // from the input file, and any other particle information
-         // need to restart the model for this particle
-         // and create a new object
-         static ConstitutiveModel* readRestartParametersAndCreate(
-                                                        ProblemSpecP ps);
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+				  std::vector<const VarLabel*>& to);
 
-         // class function to create a new object from parameters
-         static ConstitutiveModel* create(double *p_array);
+    // class function to read correct number of parameters
+    // from the input file
+    static void readParameters(ProblemSpecP ps, double *p_array);
+
+    // class function to write correct number of parameters
+    // from the input file, and create a new object
+    static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
+
+    // member function to read correct number of parameters
+    // from the input file, and any other particle information
+    // need to restart the model for this particle
+    // and create a new object
+    static ConstitutiveModel* readRestartParametersAndCreate(
+							     ProblemSpecP ps);
+
+    // class function to create a new object from parameters
+    static ConstitutiveModel* create(double *p_array);
   
-      protected:
+  protected:
 
-         Matrix3 computeVelocityGradient(const Patch* patch,
-                                         const double* oodx, 
-					 const Point& px, 
-					 const Vector& psize, 
-					 constNCVariable<Vector>& gVelocity);
+    Matrix3 computeVelocityGradient(const Patch* patch,
+				    const double* oodx, 
+				    const Point& px, 
+				    const Vector& psize, 
+				    constNCVariable<Vector>& gVelocity);
 
-         Matrix3 computeVelocityGradient(const Patch* patch,
-                                         const double* oodx, 
-					 const Point& px, 
-					 constNCVariable<Vector>& gVelocity);
+    Matrix3 computeVelocityGradient(const Patch* patch,
+				    const double* oodx, 
+				    const Point& px, 
+				    constNCVariable<Vector>& gVelocity);
 
-         void computeUpdatedVR(const double& delT,
-                               const Matrix3& DD, 
-                               const Matrix3& WW,
-                               Matrix3& VV, 
-                               Matrix3& RR);  
+    void computeUpdatedVR(const double& delT,
+			  const Matrix3& DD, 
+			  const Matrix3& WW,
+			  Matrix3& VV, 
+			  Matrix3& RR);  
 
-	 Matrix3 computeRateofRotation(const Matrix3& tensorV, 
-				       const Matrix3& tensorD,
-				       const Matrix3& tensorW);
+    Matrix3 computeRateofRotation(const Matrix3& tensorV, 
+				  const Matrix3& tensorD,
+				  const Matrix3& tensorW);
 
-	 double evaluateFlowStress(const double& ep, 
-				   const double& epdot,
-				   const double& T);
+    double evaluateFlowStress(const double& ep, 
+			      const double& epdot,
+			      const double& T);
 
-         double calcStrainAtFracture(const Matrix3& sig, 
-                                     const double& epdot,
-                                     const double& T);
-      };
+    double calcStrainAtFracture(const Matrix3& sig, 
+				const double& epdot,
+				const double& T);
+  };
 
 } // End namespace Uintah
 

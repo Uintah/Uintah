@@ -441,6 +441,16 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void 
+Membrane::computeStressTensor(const PatchSubset* ,
+			      const MPMMaterial* ,
+			      DataWarehouse* ,
+			      DataWarehouse* ,
+			      Solver* ,
+			      const bool )
+{
+}
+	 
 void Membrane::addInitialComputesAndRequires(Task* task,
                                              const MPMMaterial* matl,
                                              const PatchSet*) const
@@ -478,6 +488,14 @@ void Membrane::addComputesAndRequires(Task* task,
    task->computes(lb->pTang1Label_preReloc,              matlset);
    task->computes(lb->pTang2Label_preReloc,              matlset);
    task->computes(lb->pNormLabel_preReloc,               matlset);
+}
+
+void 
+Membrane::addComputesAndRequires(Task* ,
+				 const MPMMaterial* ,
+				 const PatchSet* ,
+				 const bool ) const
+{
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model

@@ -31,6 +31,4 @@ PlasticityModel* PlasticityModelFactory::create(ProblemSpecP& ps)
       return(scinew MTSPlastic(child));
    else 
       throw ProblemSetupException("Unknown Plasticity Model ("+mat_type+")");
-
-   return 0;
 }

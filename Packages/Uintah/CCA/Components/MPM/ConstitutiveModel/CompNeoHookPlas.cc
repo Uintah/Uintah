@@ -335,6 +335,16 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void 
+CompNeoHookPlas::computeStressTensor(const PatchSubset* ,
+				const MPMMaterial* ,
+				DataWarehouse* ,
+				DataWarehouse* ,
+				Solver* ,
+				const bool )
+{
+}
+	 
 void CompNeoHookPlas::addInitialComputesAndRequires(Task* task,
                                                     const MPMMaterial* matl,
                                                     const PatchSet*) const
@@ -367,6 +377,14 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
   task->computes(bElBarLabel_preReloc,                  matlset);
   task->computes(p_statedata_label_preReloc,            matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
+}
+
+void 
+CompNeoHookPlas::addComputesAndRequires(Task* ,
+				   const MPMMaterial* ,
+				   const PatchSet* ,
+				   const bool ) const
+{
 }
 
 double CompNeoHookPlas::computeRhoMicroCM(double pressure,
