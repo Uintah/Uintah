@@ -60,10 +60,10 @@ proc change_radio_var {root newvar} {
 #
 itcl_class expscale {
 
-#    method modname { c } {
-#	set n [string range $c [expr [string last "::" $c] + 2] end]
-#	return $n
-#    }
+    method modname { c } {
+	set n [string range $c [expr [string last "::" $c] + 2] end]
+	return $n
+    }
 
     constructor {config} {
 
@@ -74,6 +74,7 @@ itcl_class expscale {
 	#puts "entering expscale constructor"
 	#puts "dollar this is $this"
 	#puts "name received by expscale = [modname $this]"
+	#puts "dollar this info class = [ $this info class] "
 
 	set class [modname [$this info class]]
 	set w [modname $this]
@@ -119,6 +120,7 @@ itcl_class expscale {
     destructor {
 	set w [modname $this]
 	destroy $w.scale
+	destroy $w.e
     }
 
     method config {config} {
