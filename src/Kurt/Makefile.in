@@ -1,0 +1,32 @@
+SRCTOP  = @top_srcdir@
+SRCDIR  = @srcdir@
+OBJTOP  = ..
+
+TCL_LIB_DIR   = @TCL_LIB_DIR@
+TCL_LIB_FLAG  = @TCL_LIB_FLAG@
+TK_LIB_DIR    = @TK_LIB_DIR@
+
+TK_LIB_FLAG   = @TK_LIB_FLAG@
+ITCL_LIB_DIR  = @ITCL_LIB_DIR@
+ITCL_LIB_FLAG = @ITCL_LIB_FLAG@
+
+SUBDIRS = GUI Geom Modules
+SOLIB   = libKurt.so
+ifeq (@BUILD_PARALLEL@,yes)
+COMPONENTLIBS = -L$(OBJTOP)/Component -lComponent
+GLOBUS_INCLUDE = @GLOBUS_INCLUDE@
+GLOBUS_LIB_DIR = @GLOBUS_LIB@
+GLOBUSLIBS = -L$(GLOBUS_LIB_DIR) -lglobus_nexus -lglobus_io
+endif
+
+SOLIBRARIES = -lGLU -lGL \
+              -L$(OBJTOP)/PSECore -lPSECore \
+	      $(COMPONENTLIBS) \
+              -L$(OBJTOP)/SCICore -lSCICore \
+	      $(GLOBUSLIBS) \
+              -L$(ITCL_LIB_DIR) $(ITCL_LIB_FLAG) \
+              -L$(TK_LIB_DIR) $(TK_LIB_FLAG) \
+              -L$(TCL_LIB_DIR) $(TCL_LIB_FLAG) \
+              -lm
+
+include $(SRCTOP)/scripts/solib.mk
