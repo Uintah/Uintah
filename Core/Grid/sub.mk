@@ -43,6 +43,7 @@ SRCS     += \
 	$(SRCDIR)/SimpleMaterial.cc \
 	$(SRCDIR)/NCVariable_special.cc \
 	$(SRCDIR)/CCVariable_special.cc \
+	$(SRCDIR)/ParticleVariable_special.cc \
 	$(SRCDIR)/ucg_templates.cc
 
 
