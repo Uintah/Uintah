@@ -200,6 +200,10 @@ private:
   float           rotateSensitivity_;
   float           translateSensitivity_;
 
+  GLUI_Button   * WhiteBGButton_;
+  GLUI_Button   * BlackBGButton_;
+  GLUI_Button   * OrigBGButton_;
+  
   GLUI_Listbox  * shadowModeLB_;
   GLUI_Listbox  * ambientModeLB_;
   GLUI_Button   * jitterButton_;
@@ -321,6 +325,7 @@ private:
   static void goToNextMarkerCB( int id );
   static void goToPrevMarkerCB( int id );
   static void goToRouteBeginningCB( int id );
+  static void bgColorCB( int id );
 
   // Light Window Callbacks
   void createLightWindow( GLUI * window );
