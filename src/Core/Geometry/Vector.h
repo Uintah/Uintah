@@ -35,7 +35,7 @@ public:
   { }
   inline Vector(const Vector&);
   inline Vector();
-  inline Vector(double pad) : _x(pad), _y(pad), _z(pad) {}
+  inline Vector(double init) : _x(init), _y(init), _z(init) {ASSERT(init==0)}
   inline double length() const;
   inline double length2() const;
   friend SCICORESHARE inline double Dot(const Vector&, const Vector&);
