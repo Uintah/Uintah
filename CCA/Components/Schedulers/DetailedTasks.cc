@@ -91,58 +91,22 @@ DependencyBatch::~DependencyBatch()
 void
 DetailedTasks::assignMessageTags(vector<Task*>& tasks)
 {
-  // maps from, to pairs to indices for each batch of that pair
+  // maps from, to (process) pairs to indices for each batch of that pair
   map< pair<int, int>, int > perPairBatchIndices;
-  int maxPerPairBatchIndex = 0;
-  
-  int ntasks = (int)tasks.size()+(int)stasks.size();
-  int taskbits = 0;
-  while(1<<taskbits < ntasks)
-    taskbits++;
-  if(taskbits*2 >= (int)sizeof(int)*8)
-    throw InternalError("assignMessageTags needs more bits to handle this number of tasks!");
-  for(int i=0;i<(int)tasks.size();i++)
-    tasks[i]->setTaskNumber(i);
-  int n=(int)tasks.size();
-  for(int i=0;i<(int)stasks.size();i++,n++)
-    stasks[i]->setTaskNumber(n);
-
-  // figure out how many bits we need for the batch indices
-  for(int i=0;i<(int)batches.size();i++){
-    DependencyBatch* batch = batches[i];
-    int fromTask = batch->fromTask->getTask()->getTaskNumber();
-    list<DetailedTask*>::iterator iter = batch->toTasks.begin();
-    int toTask = (*iter)->getTask()->getTaskNumber();
-    pair<int, int> fromToPair = make_pair(fromTask, toTask);
-    if (++perPairBatchIndices[fromToPair] > maxPerPairBatchIndex)
-      maxPerPairBatchIndex = perPairBatchIndices[fromToPair];
-  }
-
-  int batchbits = 0;
-  while(1<<batchbits < maxPerPairBatchIndex)
-    batchbits++;  
 
   for(int i=0;i<(int)batches.size();i++){
     DependencyBatch* batch = batches[i];
-    int fromTask = batch->fromTask->getTask()->getTaskNumber();
-    ASSERT(fromTask != -1);
-    list<DetailedTask*>::iterator iter = batch->toTasks.begin();
-    ASSERT(iter != batch->toTasks.end());
-    int toTask = (*iter)->getTask()->getTaskNumber();
-    ASSERT(toTask != -1);
-    /*
-    for(;iter != batch->toTasks.end();iter++)
-      ASSERTEQ(toTask, (*iter)->getTask()->getTaskNumber());
-    */
+    int from = batch->fromTask->getAssignedResourceIndex();
+    ASSERT(from != -1);
+    int to = batch->to;
+    ASSERT(to != -1);
 
     // Easier to go in reverse order now, instead of reinitializing
     // perPairBatchIndices.
-    pair<int, int> fromToPair = make_pair(fromTask, toTask);    
-    int batchIndex = perPairBatchIndices[fromToPair]--;
-    int tag = ((fromTask<<taskbits)|toTask) << batchbits | batchIndex;
-    batches[i]->messageTag = tag;    
-
-  }  
+    pair<int, int> fromToPair = make_pair(from, to);    
+    batches[i]->messageTag = ++perPairBatchIndices[fromToPair]; /* start with
+								   one */
+  }
 } // end assignMessageTags()
 
 void
