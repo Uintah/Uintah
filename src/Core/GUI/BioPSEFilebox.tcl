@@ -62,6 +62,7 @@
 #               -filevar $this-saveFile \
 #               -setcmd "wm withdraw $w" \ 
 #               -command "$this doSaveImage; wm withdraw $w" \
+#               -commandname "execute" \
 #               -cancel "wm withdraw $w" \
 #               -title $title \
 #               -filetypes $types \
