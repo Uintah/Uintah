@@ -124,7 +124,7 @@ if (!oldStyleAdvect.active()){
   temp_index = table->addDependentVariable("Temp(K)");
   density_index = table->addDependentVariable("density (kg/m3)");
   gamma_index = table->addDependentVariable("gamma");
-  cv_index = table->addDependentVariable("heat capacity Cv(kj/kg-K)");
+  cv_index = table->addDependentVariable("heat capacity Cv(j/kg-K)");
   viscosity_index = table->addDependentVariable("viscosity");
   table->setup();
   
