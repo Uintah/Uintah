@@ -1,0 +1,266 @@
+
+ #define IS_POSITIVE(x) ( (x) <= 0 ? 0:1)
+
+ #define TOP_R 1
+ #define TOP_L 2
+ #define BOT_L 3
+ #define BOT_R 4
+
+/*__________________________________
+*   Compute the OUTFLUX slab for
+*   each face subtract off the corner
+*   flux contribution
+*___________________________________*/
+    for each cell and ghost cells
+    {
+    
+        delY_top    = MAX(0.0, *vvel_FC[i][j][k][TOP]     * delt );
+        delY_bottom = MAX(0.0,-*vvel_FC[i][j][k][BOTTOM]  * delt );
+        delX_right  = MAX(0.0, *uvel_FC[i][j][k][RIGHT]   * delt );
+        delX_left   = MAX(0.0,-*uvel_FC[i][j][k][LEFT]    * delt );
+        
+        delX_tmp    = delX - delX_right - delX_left;
+        outflux_vol[i][j][k][TOP][m]      = MAX(0.0, *vvel_FC[i][j][k][TOP]     * delt * delX_tmp * delZ);
+        outflux_vol[i][j][k][BOTTOM][m]   = MAX(0.0,-*vvel_FC[i][j][k][BOTTOM]  * delt * delX_tmp * delZ);
+
+        delY_tmp    = delY - delY_top - delY_bottom;
+        outflux_vol[i][j][k][RIGHT][m]    = MAX(0.0, *uvel_FC[i][j][k][RIGHT]   * delt * delY_tmp * delZ);
+        outflux_vol[i][j][k][LEFT][m]     = MAX(0.0,-*uvel_FC[i][j][k][LEFT]    * delt * delY_tmp * delZ);
+        
+        #if 0   /* need for 3D  */
+        outflux_vol[i][j][k][FRONT][m]    = MAX(0.0, *wvel_FC[i][j][k][FRONT]   * delt * delX * delY);
+        outflux_vol[i][j][k][BACK][m]     = MAX(0.0,-*wvel_FC[i][j][k][BACK]    * delt * delX * delY);  
+        #endif   
+    }
+      
+/*__________________________________
+*   compute each corner flux volume
+*___________________________________*/    
+    for each cell and ghostcells
+    {
+    
+        delY_top    = MAX(0.0, *vvel_FC[i][j][k][TOP]     * delt );
+        delY_bottom = MAX(0.0,-*vvel_FC[i][j][k][BOTTOM]  * delt );
+        delX_right  = MAX(0.0, *uvel_FC[i][j][k][RIGHT]   * delt );
+        delX_left   = MAX(0.0,-*uvel_FC[i][j][k][LEFT]    * delt );
+        
+        outflux_vol_CF[i][j][k][TOP_R] = delY_top * delX_right;
+        outflux_vol_CF[i][j][k][TOP_L] = delY_top * delX_left;
+ 
+        outflux_vol_CF[i][j][k][BOT_R] = delY_bottom * delX_right;
+        outflux_vol_CF[i][j][k][BOT_L] = delY_bottom * delX_left;       
+    
+    }
+
+/*__________________________________
+*   Influx of volume
+*___________________________________*/  
+    for each cell and ghost cells
+    {
+        /*__________________________________
+        *   Contributions from the slabs
+        *___________________________________*/
+        influx_vol[i][j][k][TOP]        = outflux_vol[i][j+1][k][BOTTOM][m];
+        influx_vol[i][j][k][BOTTOM]     = outflux_vol[i][j-1][k][TOP][m];
+        
+        influx_vol[i][j][k][RIGHT]      = outflux_vol[i+1][j][k][LEFT][m];
+        influx_vol[i][j][k][LEFT]       = outflux_vol[i-1][j][k][RIGHT][m];
+        
+        influx_vol[i][j][k][FRONT]      = outflux_vol[i][j][k+1][BACK][m];
+        influx_vol[i][j][k][BACK]       = outflux_vol[i][j][k-1][FRONT][m];
+        
+        /*__________________________________
+        *   Contributions from the corner flux volumes
+        *___________________________________*/
+        influx_vol_CF[i][j][k][TOP_R]   = outflux_vol_CF[i+1][j+1][k][BOT_L]
+        influx_vol_CF[i][j][k][BOT_R]   = outflux_vol_CF[i+1][j-1][k][TOP_L]
+
+        influx_vol_CF[i][j][k][TOP_L]   = outflux_vol_CF[i-1][j+1][k][BOT_R]
+        influx_vol_CF[i][j][k][BOT_L]   = outflux_vol_CF[i-1][j-1][k][TOP_R]        
+        
+    }
+    
+    
+    
+/*__________________________________
+*   Compute the centroid of each outflux
+*   slab
+*___________________________________*/
+    for each cell and ghost cell
+    {
+ 
+        delY_top    = MAX(0.0, *vvel_FC[i][j][k][TOP]     * delt );
+        delY_bottom = MAX(0.0,-*vvel_FC[i][j][k][BOTTOM]  * delt );
+        delX_right  = MAX(0.0, *uvel_FC[i][j][k][RIGHT]   * delt );
+        delX_left   = MAX(0.0,-*uvel_FC[i][j][k][LEFT]    * delt );
+        
+        y0      = delY_bottom;
+        ytop    = delY - delY_top;
+        x0      = delX_left;
+        xright  = delX - delX_right;        
+
+        r_y     = (ytop - y0)/2.0 + y0 - delY/2.0;
+        r_out_x[i][j][k][m][RIGHT]      =   delX/2.0        - delX_right/2.0;
+        r_out_y[i][j][k][m][RIGHT]      =   r_y;
+        
+        r_out_x[i][j][k][m][LEFT]       =   delX_left/2.0   - delX/2.0;
+        r_out_y[i][j][k][m][LEFT]       =   r_y;
+
+        r_x     = (xright - x0)/2.0 + x0 - delX/2.0;
+        r_out_x[i][j][k][m][TOP]        =   r_x
+        r_out_y[i][j][k][m][TOP]        =   delY/2.0        - delY_top/2.0;
+        
+        r_out_x[i][j][k][m][BOTTOM]     =   r_x
+        r_out_y[i][j][k][m][BOTTOM]     =   delY_bottom/2.0 - delY/2.0;
+        
+    }
+    
+    
+/*__________________________________
+*   Compute the centroid of each outflux
+*   corner flux
+*___________________________________*/
+    for each cell and ghost cell
+    {
+ 
+        delY_top    = MAX(0.0, *vvel_FC[i][j][k][TOP]     * delt );
+        delY_bottom = MAX(0.0,-*vvel_FC[i][j][k][BOTTOM]  * delt );
+        delX_right  = MAX(0.0, *uvel_FC[i][j][k][RIGHT]   * delt );
+        delX_left   = MAX(0.0,-*uvel_FC[i][j][k][LEFT]    * delt );
+       
+        rx_TOP_R = delX/2.0          - delX_right/2.0;
+        rx_TOP_L = delX_left/2.0     - delX/2.0;
+        ry_TOP_R = delY/2.0          - delY_top/2.0;
+        ry_BOT_R = delY_bottom/2.0   - delY/2.0;     
+
+        r_out_x_CF[i][j][k][m][TOP_R]     =   rx_TOP_R;
+        r_out_y_CF[i][j][k][m][TOP_R]     =   ry_TOP_R;
+        
+        r_out_x_CF[i][j][k][m][TOP_L]     =   rx_TOP_L;
+        r_out_y_CF[i][j][k][m][TOP_L]     =   ry_TOP_R;
+
+        r_out_x_CF[i][j][k][m][BOTTOM_R]  =   rx_TOP_R;
+        r_out_y_CF[i][j][k][m][BOTTOM_R]  =   ry_BOT_R;
+        
+        r_out_x_CF[i][j][k][m][BOT_L]     =   rx_TOP_L;
+        r_out_y_CF[i][j][k][m][BOT_L]     =   rx_BOT_R;
+        
+    }
+/*______________________________________________________________________
+*   Find q_outflux and q_influx for each face
+*   Need to pass in the gradient limiter
+*_______________________________________________________________________*/    
+
+    for each cell including ghost cells
+    {
+        grad_x = 0.0;
+        grad_y = 0.0;
+        grad_z = 0.0;
+
+        #if( LIMIT_GRADIENT_FLAG > 0 && SECOND_ORDER_ADVECTION == 1)
+
+            grad_x = grad_q_X[i][j][k] * gradient_limiter[i][j][k];
+            grad_y = grad_q_Y[i][j][k] * gradient_limiter[i][j][k];
+            grad_z = grad_q_Z[i][j][k] * gradient_limiter[i][j][k];
+        #endif
+        #if( LIMIT_GRADIENT_FLAG == 0 && SECOND_ORDER_ADVECTION == 1)
+
+            grad_x = grad_q_X[i][j][k];
+            grad_y = grad_q_Y[i][j][k];
+            grad_z = grad_q_Z[i][j][k];
+        #endif    
+        /*__________________________________
+        *  Find the outflux of q for cell i,j,k
+        *  if there is a outflux of vol in that volume
+        *  segment
+        *___________________________________*/                       
+        for ( f = ; face <= face_4; face ++)
+        {
+            q_outflux[i][j][k][m][f] = 0.0;
+
+            if ( outflux_volume[i][j][k][f] > SMALL_NUM)
+            {
+                q_outflux[i][j][k][m][f] = 
+                    q_CC[i][j][k][m] 
+                 +  grad_x * r_out_x[i][j][k][m][f]
+                 +  grad_y * r_out_y[i][j][k][m][f] 
+                 +  grad_z * r_out_z[i][j][k][m][f];
+            }
+        }        
+         
+         
+        for each corner
+        {
+            q_outflux_CF[i][j][k][m][corner] = 0.0;
+            if(outflux_vol_CF[i][j][k][corner] > SMALL_NUM)
+            {
+                q_outflux_CF[i][j][k][m][corner] = 
+                    q_CC[i][j][k][m] 
+                 +  grad_x * r_out_x_CF[i][j][k][m][corner]
+                 +  grad_y * r_out_y_CF[i][j][k][m][corner] 
+                 +  grad_z * r_out_z_CF[i][j][k][m][corner];
+            }
+            
+        } 
+        
+         /*__________________________________
+        *   Contributions from the slabs
+        *___________________________________*/
+        q_influx[i][j][k][TOP]        = q_outflux[i][j+1][k][BOTTOM][m];
+        q_influx[i][j][k][BOTTOM]     = q_outflux[i][j-1][k][TOP][m];
+        
+        q_influx[i][j][k][RIGHT]      = q_outflux[i+1][j][k][LEFT][m];
+        q_influx[i][j][k][LEFT]       = q_outflux[i-1][j][k][RIGHT][m];
+        
+        q_influx[i][j][k][FRONT]      = q_outflux[i][j][k+1][BACK][m];
+        q_influx[i][j][k][BACK]       = q_outflux[i][j][k-1][FRONT][m];
+        
+        /*__________________________________
+        *   Contributions from the corner flux volumes
+        *___________________________________*/
+        q_influx_CF[i][j][k][TOP_R]   = q_outflux_CF[i+1][j+1][k][BOT_L]
+        q_influx_CF[i][j][k][BOT_R]   = q_outflux_CF[i+1][j-1][k][TOP_L]
+
+        q_influx_CF[i][j][k][TOP_L]   = q_outflux_CF[i-1][j+1][k][BOT_R]
+        q_influx_CF[i][j][k][BOT_L]   = q_outflux_CF[i-1][j-1][k][TOP_R]           
+    
+    }
+/*______________________________________________________________________
+*   Finally compute the advection of q
+*_______________________________________________________________________*/
+    for each interior cell
+    {
+    
+        /*__________________________________
+        *   Sum the influx contributions
+        *___________________________________*/
+        for each face
+        {
+            sum_q_influx = sum_q_influx +
+                            q_influx[i][j][k][face] * influx_vol[i][j][k][face];
+            
+        }
+        for each corner
+        {
+            sum_q_influx_CF = sum_q_influx_CF + 
+                            q_influx_CF[i][j][k][corner]   * influx_vol_CF[i][j][k][corner];
+        }    
+    
+    
+        /*__________________________________
+        *   Sum the outflux contributions
+        *___________________________________*/
+        for each face
+        {
+            sum_q_outflux = sum_q_outflux +
+                            q_outflux[i][j][k][face] * outflux_vol[i][j][k][face];
+            
+        }
+        for each corner
+        {
+            sum_q_outflux_CF = sum_q_outflux_CF + 
+                            q_outflux_CF[i][j][k][corner]   * outflux_vol_CF[i][j][k][corner];
+        }
+        advect_q_CC[i][j][k] = -sum_q_outflux - sum_q_outflux_CF + sum_q_influx + sum_q_influx_CF;
+    
+    }

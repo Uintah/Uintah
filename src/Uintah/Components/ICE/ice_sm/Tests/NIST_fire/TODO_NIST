@@ -1,0 +1,21 @@
+-   Verification of each function.
+
+
+-   Note that currently gravity is turned off in this version of ICE.  Gravity
+    is turned on in NIST Fire
+
+-   Add u_eject to the thermal elements. 
+
+
+-   In the function compute_initial_constants_NIST_TE the following variables
+    have been hardwired in cp_inf, T_inf, A_fire, and rho_inf.
+    
+ -   Add some mechanism so that only the TEs inside of the domain are "active" (long Term)
+
+
+-   There is some checkerboarding in the pressure field that needs to be checked out
+
+-   Dump thermal element's data to tecplot files
+
+-   Add movie making capabilities to plot_particles function
+
