@@ -47,7 +47,7 @@ Persistent* make_ParametricPolyline()
   return scinew ParametricPolyline;
 }
 
-PersistentTypeID ParametricPolyline::type_id("polyline", "DrawObj", make_ParametricPolyline);
+PersistentTypeID ParametricPolyline::type_id("ParametricPolyline", "DrawObj", make_ParametricPolyline);
 
 
 ParametricPolyline::ParametricPolyline( const map<double, pair<double, double> > &data, const string &name )
