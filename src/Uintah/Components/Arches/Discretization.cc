@@ -100,7 +100,7 @@ Discretization::Discretization()
 				   CCVariable<double>::getTypeDescription() );
 
   // calculateScalarCoeff
-  d_scalarINLabel = scinew VarLabel("scalarIN",
+  d_scalarSPLabel = scinew VarLabel("scalarSP",
 				   CCVariable<double>::getTypeDescription() );
   d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
 				    CCVariable<double>::getTypeDescription() );
@@ -156,25 +156,25 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   // Get the required data
   switch(eqnType) {
   case PRESSURE:
-    old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
-    old_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
-    old_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
-    old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     break;
   case MOMENTUM:
-    old_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
-    old_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
-    old_dw->get(wVelocity, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(wVelocity, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
-    old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
@@ -396,17 +396,17 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
 
   // (** WARNING **) velocity is a FC variable
   CCVariable<double> uVelocity;
-  old_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   CCVariable<double> vVelocity;
-  old_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   CCVariable<double> wVelocity;
-  old_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   CCVariable<double> density;
-  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   CCVariable<double> viscosity;
@@ -415,7 +415,7 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
 
   // ithe componenet of scalar vector
   CCVariable<double> scalar;
-  old_dw->get(scalar, d_scalarINLabel, index, patch, Ghost::None,
+  old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
 	      numGhostCells);
 
 #ifdef WONT_COMPILE_YET
@@ -643,6 +643,10 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.17  2000/06/21 07:50:59  bbanerje
+// Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
+// and made the stuff go through schedule_time_advance.
+//
 // Revision 1.16  2000/06/18 01:20:15  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver

@@ -54,7 +54,7 @@ PicardNonlinearSolver::PicardNonlinearSolver(Properties* props,
 				    CCVariable<double>::getTypeDescription() );
   d_wVelocitySPLabel = scinew VarLabel("wVelocitySP",
 				    CCVariable<double>::getTypeDescription() );
-  d_scalarINLabel = scinew VarLabel("scalarIN",
+  d_scalarSPLabel = scinew VarLabel("scalarSP",
 				  CCVariable<double>::getTypeDescription() );
   d_densityCPLabel = scinew VarLabel("densityCP",
 				   CCVariable<double>::getTypeDescription() );
@@ -148,7 +148,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     // and puts them in nonlinear_dw
     // require : densitySIVBC, pressurePS, [u,v,w]VelocitySIVBC
     // compute : [u,v,w]VelocityCPBC
-    d_boundaryCondition->sched_computePressureBC(level, sched, old_dw,
+    d_boundaryCondition->sched_computePressureBC(level, sched, new_dw,
 						 new_dw);
 
     // Momentum solver
@@ -163,7 +163,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     }
     
     // equation for scalars
-    // require : scalarIN, [u,v,w]VelocityMS, densitySIVBC, viscosityCTS
+    // require : scalarSP, [u,v,w]VelocityMS, densitySIVBC, viscosityCTS
     // compute : scalarCoefSBLM, scalarLinSrcSBLM, scalarNonLinSrcSBLM
     //           scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSS
     for (int index = 0;index < d_props->getNumMixVars(); index ++) {
@@ -175,7 +175,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     // update properties
     // require : densitySIVBC
     // compute : densityRCP
-    d_props->sched_reComputeProps(level, sched, old_dw, new_dw);
+    d_props->sched_reComputeProps(level, sched, new_dw, new_dw);
 
     // LES Turbulence model to compute turbulent viscosity
     // that accounts for sub-grid scale turbulence
@@ -233,7 +233,7 @@ PicardNonlinearSolver::sched_initialize(const LevelP& level,
 
       int nofScalars = d_props->getNumMixVars();
       for (int ii = 0; ii < nofScalars; ii++) {
-	tsk->requires(old_dw, d_scalarINLabel, ii, patch, Ghost::None,
+	tsk->requires(old_dw, d_scalarSPLabel, ii, patch, Ghost::None,
 		      numGhostCells);
       }
       tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
@@ -246,7 +246,7 @@ PicardNonlinearSolver::sched_initialize(const LevelP& level,
       tsk->computes(new_dw, d_vVelocitySPLabel, matlIndex, patch);
       tsk->computes(new_dw, d_wVelocitySPLabel, matlIndex, patch);
       for (int ii = 0; ii < nofScalars; ii++) {
-	tsk->computes(new_dw, d_scalarINLabel, ii, patch);
+	tsk->computes(new_dw, d_scalarSPLabel, ii, patch);
       }
       tsk->computes(new_dw, d_densityCPLabel, matlIndex, patch);
       tsk->computes(new_dw, d_viscosityCTSLabel, matlIndex, patch);
@@ -288,7 +288,7 @@ PicardNonlinearSolver::initialize(const ProcessorGroup* ,
   int nofScalars = d_props->getNumMixVars();
   vector<CCVariable<double> > scalar(nofScalars);
   for (int ii = 0; ii < nofScalars; ii++) {
-    old_dw->get(scalar[ii], d_scalarINLabel, ii, patch, Ghost::None,
+    old_dw->get(scalar[ii], d_scalarSPLabel, ii, patch, Ghost::None,
 		nofGhostCells);
   }
 
@@ -319,7 +319,7 @@ PicardNonlinearSolver::initialize(const ProcessorGroup* ,
 
   vector<CCVariable<double> > scalar_new(nofScalars);
   for (int ii = 0; ii < nofScalars; ii++) {
-    new_dw->allocate(scalar_new[ii], d_scalarINLabel, ii, patch);
+    new_dw->allocate(scalar_new[ii], d_scalarSPLabel, ii, patch);
     scalar_new[ii] = scalar[ii]; // copy old into new
   }
 
@@ -337,7 +337,7 @@ PicardNonlinearSolver::initialize(const ProcessorGroup* ,
   new_dw->put(vVelocity_new, d_vVelocitySPLabel, matlIndex, patch);
   new_dw->put(wVelocity_new, d_wVelocitySPLabel, matlIndex, patch);
   for (int ii = 0; ii < nofScalars; ii++) {
-    new_dw->put(scalar_new[ii], d_scalarINLabel, ii, patch);
+    new_dw->put(scalar_new[ii], d_scalarSPLabel, ii, patch);
   }
   new_dw->put(density_new, d_densityCPLabel, matlIndex, patch);
   new_dw->put(viscosity_new, d_viscosityCTSLabel, matlIndex, patch);
@@ -379,6 +379,10 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.29  2000/06/21 07:51:00  bbanerje
+// Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
+// and made the stuff go through schedule_time_advance.
+//
 // Revision 1.28  2000/06/21 06:49:21  bbanerje
 // Straightened out some of the problems in data location .. still lots to go.
 //

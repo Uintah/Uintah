@@ -96,7 +96,7 @@ Source::Source()
 				  CCVariable<double>::getTypeDescription() );
   d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
 				  CCVariable<double>::getTypeDescription() );
-  d_scalarINLabel = scinew VarLabel("scalarIN",
+  d_scalarSPLabel = scinew VarLabel("scalarSP",
 				  CCVariable<double>::getTypeDescription() );
   d_scalLinSrcSBLMLabel = scinew VarLabel("scalLinSrcSBLM",
 				CCVariable<double>::getTypeDescription() );
@@ -417,25 +417,25 @@ Source::calculateScalarSource(const ProcessorGroup*,
   int matlIndex = 0;
 
   CCVariable<double> uVelocity;
-  old_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   CCVariable<double> vVelocity;
-  old_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   CCVariable<double> wVelocity;
-  old_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   //FCVariable<Vector> velocity;
   //old_dw->get(velocity, "velocity", patch, 1);
 
   // ** WARNING ** The scalar is got based on the input index
   CCVariable<double> scalar;
-  old_dw->get(scalar, d_scalarINLabel, index, patch, Ghost::None,
+  old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
 	      numGhostCells);
   //old_dw->get(scalar, "scalar", patch, 1);
 
   CCVariable<double> density;
-  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   //old_dw->get(density, "density", patch, 1);
 

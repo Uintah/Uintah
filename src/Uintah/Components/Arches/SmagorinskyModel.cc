@@ -196,15 +196,15 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(const LevelP& level,
       int matlIndex = 0;
 
       // Requires
-      tsk->requires(old_dw, d_densityRCPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_densityRCPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
       // Computes
@@ -306,17 +306,17 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
   int matlIndex = 0;
   int numGhostCells = 0;
   CCVariable<double> uVelocity;
-  old_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   CCVariable<double> vVelocity;
-  old_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   CCVariable<double> wVelocity;
-  old_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   CCVariable<double> density;
-  old_dw->get(density, d_densityRCPLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(density, d_densityRCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   CCVariable<double> viscosity;
@@ -588,6 +588,10 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.17  2000/06/21 07:51:01  bbanerje
+// Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
+// and made the stuff go through schedule_time_advance.
+//
 // Revision 1.16  2000/06/21 06:12:12  bbanerje
 // Added missing VarLabel* mallocs .
 //

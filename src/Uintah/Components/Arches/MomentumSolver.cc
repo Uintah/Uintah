@@ -133,14 +133,15 @@ MomentumSolver::solve(const LevelP& level,
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
   // pressure solve.
-  DataWarehouseP matrix_dw = sched->createDataWarehouse(d_generation);
-  ++d_generation;
+  //DataWarehouseP matrix_dw = sched->createDataWarehouse(d_generation);
+  //++d_generation;
 
   //computes stencil coefficients and source terms
   // require : pressurePS, [u,v,w]VelocityCPBC, densitySIVBC, viscosityCTS
   // compute : [u,v,w]VelCoefMBLM, [u,v,w]VelConvCoefMBLM
   //           [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
-  sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t, index);
+  //sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t, index);
+  sched_buildLinearMatrix(level, sched, old_dw, new_dw, delta_t, index);
     
   // Schedules linear velocity solve
   // require : [u,v,w]VelocityCPBC, [u,v,w]VelCoefMBLM,
@@ -148,7 +149,8 @@ MomentumSolver::solve(const LevelP& level,
   // compute : [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
   //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
   //           [u,v,w]VelocityMS
-  d_linearSolver->sched_velSolve(level, sched, new_dw, matrix_dw, index);
+  //d_linearSolver->sched_velSolve(level, sched, new_dw, matrix_dw, index);
+  d_linearSolver->sched_velSolve(level, sched, new_dw, new_dw, index);
     
 }
 
@@ -178,15 +180,15 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
 
       int numGhostCells = 0;
       int matlIndex = 0;
-      tsk->requires(old_dw, d_pressurePSLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_pressurePSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
@@ -232,7 +234,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // Calculate velocity source
   // inputs : [u,v,w]VelocityCPBC, densitySIVBC, viscosityCTS
   // outputs: [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
-  d_source->calculateVelocitySource(pc, patch, old_dw, new_dw, 
+  d_source->calculateVelocitySource(pc, patch, new_dw, new_dw, 
 				    delta_t, index,
 				    Discretization::MOMENTUM);
 
@@ -241,32 +243,36 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   //           [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
   //  outputs: [u,v,w]VelCoefMBLM, [u,v,w]VelLinSrcMBLM, 
   //           [u,v,w]VelNonLinSrcMBLM
-  d_boundaryCondition->velocityBC(pc, patch, old_dw, new_dw, 
+  d_boundaryCondition->velocityBC(pc, patch, new_dw, new_dw, 
 				  index,
 				  Discretization::MOMENTUM);
 
   // similar to mascal
   // inputs :
   // outputs:
-  d_source->modifyVelMassSource(pc, patch, old_dw,
+  d_source->modifyVelMassSource(pc, patch, new_dw,
 			     new_dw, delta_t, index);
 
   // Calculate Velocity Diagonal
   //  inputs : [u,v,w]VelCoefMBLM, [u,v,w]VelLinSrcMBLM
   //  outputs: [u,v,w]VelCoefMBLM
-  d_discretize->calculateVelDiagonal(pc, patch, old_dw, new_dw, 
+  d_discretize->calculateVelDiagonal(pc, patch, new_dw, new_dw, 
 				     index,
 				     Discretization::MOMENTUM);
 
   // Add the pressure source terms
   // inputs :
   // outputs:
-  d_source->addPressureSource(pc, patch, old_dw, new_dw, index);
+  d_source->addPressureSource(pc, patch, new_dw, new_dw, index);
 
 }
 
 //
 // $Log$
+// Revision 1.11  2000/06/21 07:51:00  bbanerje
+// Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
+// and made the stuff go through schedule_time_advance.
+//
 // Revision 1.10  2000/06/21 06:00:12  bbanerje
 // Added two labels that were causing seg violation.
 //

@@ -199,7 +199,7 @@ private:
       const VarLabel* d_uVelocityMSLabel ;
       const VarLabel* d_vVelocityMSLabel ;
       const VarLabel* d_wVelocityMSLabel ;
-      const VarLabel* d_scalarINLabel ;
+      const VarLabel* d_scalarSPLabel ;
       const VarLabel* d_scalLinSrcSBLMLabel ;
       const VarLabel* d_scalNonLinSrcSBLMLabel ;
 
@@ -211,6 +211,10 @@ private:
   
 //
 // $Log$
+// Revision 1.14  2000/06/21 07:51:02  bbanerje
+// Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
+// and made the stuff go through schedule_time_advance.
+//
 // Revision 1.13  2000/06/18 01:20:17  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver
