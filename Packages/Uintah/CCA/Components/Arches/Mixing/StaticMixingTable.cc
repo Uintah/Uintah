@@ -57,8 +57,10 @@ StaticMixingTable::problemSetup(const ProblemSpecP& params)
   db->require("inputfile",d_inputfile);
   // Set up for MixingModel table
   d_numMixingVars = 1;
+  // Table always has 1 variance
+  int table_numMixStatVars = 1;
   // Define mixing table, which includes call reaction model constructor
-  d_tableDimension = d_numMixingVars + d_numRxnVars + d_numMixStatVars + !(d_adiabatic);
+  d_tableDimension = d_numMixingVars + d_numRxnVars + table_numMixStatVars + !(d_adiabatic);
   readMixingTable(d_inputfile);
   // Moving the index by adding the properties before the species 
   co2_index=co2_index+5;
