@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     }
 
     // Initialize the multithreader
-    TaskManager::initialize(argv[0]);
+    Task::initialize(argv[0]);
 
     // Start up TCL...
     TCLTask* tcl_task = new TCLTask(argc, argv);
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
     dialtask->activate(0);
 
     // This will wait until all tasks have completed before exiting
-    TaskManager::main_exit();
+    Task::main_exit();
 
     // Never reached
     return 0;
