@@ -172,51 +172,27 @@ AccelAttrib<T>::~AccelAttrib()
 template <class T> T &
 AccelAttrib<T>::fget1(int ix)
 {
-#ifdef MIKE_DEBUG
-  if (dim != 1) {
-    throw DimensionMismatch(1, dim);
-  }
-  if (ix >= nx) {
-    throw ArrayIndexOutOfBounds(ix, 0, nx);
-  }
-#endif
+  ASSERTEQ(dim, 1);
+  CHECKARRAYBOUNDS(ix, 0, nx);
   return data[ix];
 }
 
 template <class T> T &
 AccelAttrib<T>::fget2(int ix, int iy)
 {
-#ifdef MIKE_DEBUG
-  if (dim != 2) {
-    throw DimensionMismatch(2, dim);
-  }
-  if (ix >= nx) {
-    throw ArrayIndexOutOfBounds(ix, 0, nx);
-  }
-  if (iy >= ny) {
-    throw ArrayIndexOutOfBounds(iy, 0, ny);
-  }
-#endif
+  ASSERTEQ(dim, 2);
+  CHECKARRAYBOUNDS(ix, 0, nx);
+  CHECKARRAYBOUNDS(iy, 0, ny);
   return accel2[iy][ix];  
 }
 
 template <class T> T &
 AccelAttrib<T>::fget3(int ix, int iy, int iz)
 {
-#ifdef MIKE_DEBUG
-  if (dim != 3) {
-    throw DimensionMismatch(3, dim);
-  }
-  if(ix >= nx) {
-    throw ArrayIndexOutOfBounds(ix, 0, nx);
-  }
-  if (iy >= ny) {
-    throw ArrayIndexOutOfBounds(iy, 0, ny);
-  }
-  if (iz >= nz) {
-    throw ArrayIndexOutOfBounds(iz, 0, nz);
-  }
-#endif
+  ASSERTEQ(dim, 3);
+  CHECKARRAYBOUNDS(ix, 0, nx);
+  CHECKARRAYBOUNDS(iy, 0, ny);
+  CHECKARRAYBOUNDS(iz, 0, nz);
   return accel3[iz][iy][ix];  
 }
 
@@ -265,14 +241,8 @@ AccelAttrib<T>::get3(int ix, int iy, int iz)
 template <class T> void
 AccelAttrib<T>::fset1(int ix, const T& val)
 {
-#ifdef MIKE_DEBUG
-  if (dim != 1) {
-    throw DimensionMismatch(1, dim);
-  }
-  if (ix >= nx) {
-    throw ArrayIndexOutOfBounds(ix, 0, nx);
-  }
-#endif
+  ASSERTEQ(dim, 1);
+  CHECKARRAYBOUNDS(ix, 0, nx);
   data[ix] = val;
 }
 
@@ -280,17 +250,9 @@ AccelAttrib<T>::fset1(int ix, const T& val)
 template <class T> void
 AccelAttrib<T>::fset2(int ix, int iy, const T& val)
 {
-#ifdef MIKE_DEBUG
-  if (dim != 2) {
-    throw DimensionMismatch(2, dim);
-  }
-  if (ix >= nx) {
-    throw ArrayIndexOutOfBounds(ix, 0, nx);
-  }
-  if (iy >= ny) {
-    throw ArrayIndexOutOfBounds(iy, 0, ny);
-  }
-#endif
+  ASSERTEQ(dim, 2);
+  CHECKARRAYBOUNDS(ix, 0, nx);
+  CHECKARRAYBOUNDS(iy, 0, ny);
   accel2[iy][ix] = val;
 }
 
@@ -298,20 +260,10 @@ AccelAttrib<T>::fset2(int ix, int iy, const T& val)
 template <class T> void
 AccelAttrib<T>::fset3(int ix, int iy, int iz, const T& val)
 {
-#ifdef MIKE_DEBUG
-  if (dim != 3) {
-    throw DimensionMismatch(3, dim);
-  }
-  if (ix >= nx) {
-    throw ArrayIndexOutOfBounds(ix, 0, nx);
-  }
-  if (iy >= ny) {
-    throw ArrayIndexOutOfBounds(iy, 0, ny);
-  }
-  if (iz >= nz) {
-    throw ArrayIndexOutOfBounds(iz, 0, nz);
-  }
-#endif
+  ASSERTEQ(dim, 3);
+  CHECKARRAYBOUNDS(ix, 0, nx);
+  CHECKARRAYBOUNDS(iy, 0, ny);
+  CHECKARRAYBOUNDS(iz, 0, nz);
   accel3[iz][iy][ix] = val;
 }
 
