@@ -20,12 +20,12 @@ static DebugSwitch sc_debug("BaseConstraint", "Segment");
 
 SegmentConstraint::SegmentConstraint( const clString& name,
 				      const Index numSchemes,
-				      Variable* segment_p1, Variable* segment_p2,
-				      Variable* p )
+				      PointVariable* end1, PointVariable* end2,
+				      PointVariable* p )
 :BaseConstraint(name, numSchemes, 3)
 {
-   vars[0] = segment_p1;
-   vars[1] = segment_p2;
+   vars[0] = end1;
+   vars[1] = end2;
    vars[2] = p;
    whichMethod = 0;
 
@@ -41,9 +41,9 @@ SegmentConstraint::~SegmentConstraint()
 void
 SegmentConstraint::Satisfy( const Index index, const Scheme scheme )
 {
-   Variable& v0 = *vars[0];
-   Variable& v1 = *vars[1];
-   Variable& v2 = *vars[2];
+   PointVariable& v0 = *vars[0];
+   PointVariable& v1 = *vars[1];
+   PointVariable& v2 = *vars[2];
 
    if (sc_debug) {
       ChooseChange(index, scheme);
@@ -58,18 +58,18 @@ SegmentConstraint::Satisfy( const Index index, const Scheme scheme )
       NOT_FINISHED("Segment Constraint:  segment_p2");
       break;
    case 2:
-      Vector norm(v1.Get() - v0.Get());
+      Vector norm(v1.GetPoint() - v0.GetPoint());
       if (norm.length2() < v2.GetEpsilon()) {
-	 v2.Assign(v1.Get(), scheme);
+	 v2.Assign(v1.GetPoint(), scheme);
       } else {
 	 Real length = norm.normalize();
-	 Real t = Dot(v2.Get() - v0.Get(), norm);
+	 Real t = Dot(v2.GetPoint() - v0.GetPoint(), norm);
 	 // Check if new point is outside segment.
 	 if (t < 0)
 	    t = 0;
 	 else if (t > length)
 	    t = length;
-	 v2.Assign(v0.Get() + (norm * t), scheme);
+	 v2.Assign(v0.GetPoint() + (norm * t), scheme);
       }
       break;
    default:

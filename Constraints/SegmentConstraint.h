@@ -22,8 +22,8 @@ class SegmentConstraint : public BaseConstraint {
 public:
    SegmentConstraint( const clString& name,
 		      const Index numSchemes,
-		      Variable* segment_p1, Variable* segment_p2,
-		      Variable* p );
+		      PointVariable* end1, PointVariable* end2,
+		      PointVariable* p );
    virtual ~SegmentConstraint();
 
 protected:

@@ -22,9 +22,9 @@ class AngleConstraint : public BaseConstraint {
 public:
    AngleConstraint( const clString& name,
 		    const Index numSchemes,
-		    Variable* center, Variable* end1,
-		    Variable* end2, Variable* p,
-		    Variable* angleInX );
+		    PointVariable* center, PointVariable* end1,
+		    PointVariable* end2, PointVariable* p,
+		    RealVariable* angle );
    virtual ~AngleConstraint();
 
 protected:

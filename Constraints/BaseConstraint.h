@@ -24,20 +24,29 @@
 
 /* Priority levels */
 // P_constant is for a variable in reference to a constraint.
-enum VPriority { P_Constant = 0, P_Lowest, P_LowMedium,
+enum VPriority { P_Constant, P_Lowest, P_LowMedium,
 		 P_Default, P_HighMedium, P_Highest };
 
-enum Scheme { Scheme1 = 0, Scheme2, Scheme3, Scheme4,
+enum Scheme { Scheme1, Scheme2, Scheme3, Scheme4,
 	      Scheme5, Scheme6, Scheme7, Scheme8, DefaultScheme };
 
+enum VarType { PointVar, RealVar };
+
+
+class BaseVariable;
+
+// USE THESE TO BE CLEAR!
+typedef BaseVariable PointVariable;
+typedef BaseVariable RealVariable;
 
 class BaseConstraint;
 
-class Variable {
+class BaseVariable {
    friend class BaseConstraint;
 public:
-   Variable( const clString& name, const Scheme s, const Point& initialValue );
-   ~Variable();
+   BaseVariable( const clString& name, const Scheme s, const Point& initialValue );
+   BaseVariable( const clString& name, const Scheme s, const Real initialValue );
+   ~BaseVariable();
 
    void Order(); // Use to let the Variable order its constraints.
    void Resolve(); // Use to initially fulfill constraints.
@@ -46,13 +55,20 @@ public:
 
    // Widgets use these instead of Assign!
    void Set( const Point& newValue, const Scheme s = DefaultScheme );
+   void Set( const Real newValue, const Scheme s = DefaultScheme );
    void SetDelta( const Vector& deltaValue, const Scheme s = DefaultScheme );
+   void SetDelta( const Real deltaValue, const Scheme s = DefaultScheme );
+
    // Widgets use these to move whole widget.
    // i.e. they don't change constraints!!
    inline void Move( const Point& newValue );
+   inline void Move( const Real newValue );
    inline void MoveDelta( const Vector& deltaValue );
+   inline void MoveDelta( const Real deltaValue );
    
-   inline const Point& Get() const;
+   inline const Point& GetPoint() const;
+   inline Real GetReal() const;
+
    inline void SetEpsilon( const Real epsilon );
    inline Real GetEpsilon() const;
    
@@ -61,10 +77,15 @@ public:
    // Constraints use this instead of Set!
    // ONLY Constraints use this...
    void Assign( const Point& newValue, const Scheme scheme );
+   void Assign( const Real newValue, const Scheme scheme );
 
 private:
    clString name;
-   Point value;
+   VarType vartype;
+   
+   Point pointvalue;
+   Real realvalue;
+   
    Real Epsilon;
 
    int levellevel, level;
@@ -81,18 +102,11 @@ private:
    inline void RegisterPriority( const Index index, const VPriority p );
    void printc( ostream& os, const Index c );
 };
-inline ostream& operator<<( ostream& os, Variable& v );
-
-
-inline void
-Variable::Reset()
-{
-   levellevel = level = 0;
-}
+inline ostream& operator<<( ostream& os, BaseVariable& v );
 
 
 class BaseConstraint {
-   friend class Variable;
+   friend class BaseVariable;
 public:
    BaseConstraint( const clString& name, const Index numSchemes,
 		   const Index VariableCount );
@@ -128,7 +142,7 @@ protected:
    Index nschemes;
    
    Index varCount;
-   Array1<Variable*> vars;
+   Array1<BaseVariable*> vars;
    Array1<Index> var_indexs; // The var's index for this constraint.
    Array2<Index> var_choices;
    Index whichMethod, callingMethod;
@@ -136,9 +150,8 @@ protected:
    void Register();
    virtual inline Index ChooseChange( const Index index, const Scheme scheme );
    virtual void Satisfy( const Index index, const Scheme scheme );
-   inline const Point& operator[]( const Index i ) const;
 };
-inline ostream& operator<<( ostream& os, Variable& v );
+inline ostream& operator<<( ostream& os, BaseVariable& v );
 
 
 /* Miscellaneous */
@@ -158,35 +171,60 @@ inline int HigherPriority( const VPriority p1, const VPriority p2 )
 
 
 inline void
-Variable::Move( const Point& newValue )
+BaseVariable::Reset()
 {
-   value = newValue;
+   levellevel = level = 0;
 }
 
 
 inline void
-Variable::MoveDelta( const Vector& deltaValue )
+BaseVariable::Move( const Point& newValue )
 {
-   value += deltaValue;
+   ASSERT(vartype==PointVar);
+   pointvalue = newValue;
 }
 
 
 inline void
-Variable::SetEpsilon( const Real epsilon )
+BaseVariable::Move( const Real newValue )
+{
+   ASSERT(vartype==RealVar);
+   realvalue = newValue;
+}
+
+
+inline void
+BaseVariable::MoveDelta( const Vector& deltaValue )
+{
+   ASSERT(vartype==PointVar);
+   pointvalue += deltaValue;
+}
+
+
+inline void
+BaseVariable::MoveDelta( const Real deltaValue )
+{
+   ASSERT(vartype==RealVar);
+   realvalue += deltaValue;
+}
+
+
+inline void
+BaseVariable::SetEpsilon( const Real epsilon )
 {
    Epsilon = epsilon;
 }
 
 
 inline Real
-Variable::GetEpsilon() const
+BaseVariable::GetEpsilon() const
 {
    return Epsilon;
 }
 
 
 inline Index
-Variable::Register( BaseConstraint* constraint, const Index index )
+BaseVariable::Register( BaseConstraint* constraint, const Index index )
 {
    constraints.grow(1);
    constraints[numconstraints] = constraint;
@@ -203,7 +241,7 @@ Variable::Register( BaseConstraint* constraint, const Index index )
 
 
 inline void
-Variable::RegisterPriority( const Index index, const VPriority p )
+BaseVariable::RegisterPriority( const Index index, const VPriority p )
 {
    ASSERT(index < numconstraints);
 
@@ -215,9 +253,18 @@ Variable::RegisterPriority( const Index index, const VPriority p )
 
 
 inline const Point&
-Variable::Get() const
+BaseVariable::GetPoint() const
 {
-   return value;
+   ASSERT(vartype==PointVar);
+   return pointvalue;
+}
+
+
+inline Real
+BaseVariable::GetReal() const
+{
+   ASSERT(vartype==RealVar);
+   return realvalue;
 }
 
 
@@ -228,16 +275,8 @@ BaseConstraint::ChooseChange( const Index index, const Scheme scheme )
 }
 
 
-/* macro to reference a BaseConstraint variable value */
-inline const Point&
-BaseConstraint::operator[]( const Index i ) const
-{
-   return (vars[i])->Get();
-}
-
-
 inline ostream&
-operator<<( ostream& os, Variable& v )
+operator<<( ostream& os, BaseVariable& v )
 {
    v.print(os);
    return os;
@@ -250,5 +289,6 @@ operator<<( ostream& os, BaseConstraint& c )
    c.print(os);
    return os;
 }
+
 
 #endif

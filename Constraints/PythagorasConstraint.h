@@ -22,8 +22,8 @@ class PythagorasConstraint : public BaseConstraint {
 public:
    PythagorasConstraint( const clString& name,
 			 const Index numSchemes,
-			 Variable* dist1InX, Variable* dist2InX,
-			 Variable* hypoInX );
+			 RealVariable* dist1, RealVariable* dist2,
+			 RealVariable* hypo );
    virtual ~PythagorasConstraint();
    
 protected:

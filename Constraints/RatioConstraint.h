@@ -22,8 +22,8 @@ class RatioConstraint : public BaseConstraint {
 public:
    RatioConstraint( const clString& name,
 		    const Index numSchemes,
-		    Variable* numerInX, Variable* denomInX,
-		    Variable* ratioInX );
+		    RealVariable* numer, RealVariable* denom,
+		    RealVariable* ratio );
    virtual ~RatioConstraint();
 
 protected:

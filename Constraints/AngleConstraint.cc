@@ -21,16 +21,16 @@ static DebugSwitch ac_debug("BaseConstraint", "Angle");
 
 AngleConstraint::AngleConstraint( const clString& name,
 				  const Index numSchemes,
-				  Variable* center, Variable* end1,
-				  Variable* end2, Variable* p,
-				  Variable* angleInX )
+				  PointVariable* center, PointVariable* end1,
+				  PointVariable* end2, PointVariable* p,
+				  RealVariable* angle )
 :BaseConstraint(name, numSchemes, 5)
 {
    vars[0] = center;
    vars[1] = end1;
    vars[2] = end2;
    vars[3] = p;
-   vars[4] = angleInX;
+   vars[4] = angle;
 
    whichMethod = 0;
 
@@ -46,11 +46,11 @@ AngleConstraint::~AngleConstraint()
 void
 AngleConstraint::Satisfy( const Index index, const Scheme scheme )
 {
-   Variable& v0 = *vars[0];
-   Variable& v1 = *vars[1];
-   Variable& v2 = *vars[2];
-   Variable& v3 = *vars[3];
-   Variable& v4 = *vars[4];
+   PointVariable& v0 = *vars[0];
+   PointVariable& v1 = *vars[1];
+   PointVariable& v2 = *vars[2];
+   PointVariable& v3 = *vars[3];
+   RealVariable& v4 = *vars[4];
    Vector v;
 
    if (ac_debug) {
@@ -69,24 +69,24 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme )
       NOT_FINISHED("Line Constraint:  end2");
       break;
    case 3:
-      v = ((v1.Get() - v0.Get()) * cos(v4.Get().x())
-	   + (v2.Get() - v0.Get()) * sin(v4.Get().x()));
+      v = ((v1.GetPoint() - v0.GetPoint()) * cos(v4.GetReal())
+	   + (v2.GetPoint() - v0.GetPoint()) * sin(v4.GetReal()));
 
       if (v.length2() < v3.GetEpsilon()) {
-	 v3.Assign(v1.Get(), scheme);
+	 v3.Assign(v1.GetPoint(), scheme);
       } else {
 	 v.normalize();
-	 Real t = Dot(v3.Get() - v0.Get(), v);
-	 v3.Assign(v0.Get() + (v * t), scheme);
+	 Real t = Dot(v3.GetPoint() - v0.GetPoint(), v);
+	 v3.Assign(v0.GetPoint() + (v * t), scheme);
       }
       break;
    case 4:
-      v = v3.Get() - v0.Get();
-      Real x(Dot(v1.Get() - v0.Get(),v));
-      Real y(Dot(v2.Get() - v0.Get(),v));
+      v = v3.GetPoint() - v0.GetPoint();
+      Real x(Dot(v1.GetPoint() - v0.GetPoint(),v));
+      Real y(Dot(v2.GetPoint() - v0.GetPoint(),v));
       
       if ((fabs(x) > v4.GetEpsilon()) || (fabs(y) > v4.GetEpsilon()))
-	 v4.Assign(Point(atan2(y,x), 0, 0), scheme);
+	 v4.Assign(atan2(y,x), scheme);
       break;
    default:
       cerr << "Unknown variable in Angle Constraint!" << endl;

@@ -19,13 +19,13 @@ static DebugSwitch pc_debug("BaseConstraint", "Pythagoras");
 
 PythagorasConstraint::PythagorasConstraint( const clString& name,
 					    const Index numSchemes,
-					    Variable* dist1InX, Variable* dist2InX,
-					    Variable* hypoInX )
+					    RealVariable* dist1, RealVariable* dist2,
+					    RealVariable* hypo )
 :BaseConstraint(name, numSchemes, 3)
 {
-   vars[0] = dist1InX;
-   vars[1] = dist2InX;
-   vars[2] = hypoInX;
+   vars[0] = dist1;
+   vars[1] = dist2;
+   vars[2] = hypo;
    whichMethod = 0;
 
    // Tell the variables about ourself.
@@ -40,9 +40,9 @@ PythagorasConstraint::~PythagorasConstraint()
 void
 PythagorasConstraint::Satisfy( const Index index, const Scheme scheme )
 {
-   Variable& v0 = *vars[0];
-   Variable& v1 = *vars[1];
-   Variable& v2 = *vars[2];
+   RealVariable& v0 = *vars[0];
+   RealVariable& v1 = *vars[1];
+   RealVariable& v2 = *vars[2];
    Real t;
 
    if (pc_debug) {
@@ -53,16 +53,16 @@ PythagorasConstraint::Satisfy( const Index index, const Scheme scheme )
    /* A^2 + B^2 = C^2 */
    switch (ChooseChange(index, scheme)) {
    case 0:
-      if ((t = v2.Get().x() * v2.Get().x() - v1.Get().x() * v1.Get().x()) >= 0.0)
-	 v0.Assign(Point(sqrt(t), 0, 0), scheme);
+      if ((t = v2.GetReal() * v2.GetReal() - v1.GetReal() * v1.GetReal()) >= 0.0)
+	 v0.Assign(sqrt(t), scheme);
       break;
    case 1:
-      if ((t = v2.Get().x() * v2.Get().x() - v0.Get().x() * v0.Get().x()) >= 0.0)
-	 v1.Assign(Point(sqrt(t), 0, 0), scheme);
+      if ((t = v2.GetReal() * v2.GetReal() - v0.GetReal() * v0.GetReal()) >= 0.0)
+	 v1.Assign(sqrt(t), scheme);
       break;
    case 2:
-      if ((t = v0.Get().x() * v0.Get().x() + v1.Get().x() * v1.Get().x()) >= 0.0)
-	 v2.Assign(Point(sqrt(t), 0, 0), scheme);
+      if ((t = v0.GetReal() * v0.GetReal() + v1.GetReal() * v1.GetReal()) >= 0.0)
+	 v2.Assign(sqrt(t), scheme);
       break;
    default:
       cerr << "Unknown variable in Pythagoras Constraint!" << endl;

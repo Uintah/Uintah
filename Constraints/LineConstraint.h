@@ -22,8 +22,8 @@ class LineConstraint : public BaseConstraint {
 public:
    LineConstraint( const clString& name,
 		   const Index numSchemes,
-		   Variable* line_p1, Variable* line_p2,
-		   Variable* p );
+		   PointVariable* p1, PointVariable* p2,
+		   PointVariable* p3 );
    virtual ~LineConstraint();
 
 protected:

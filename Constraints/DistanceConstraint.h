@@ -22,8 +22,8 @@ class DistanceConstraint : public BaseConstraint {
 public:
    DistanceConstraint( const clString& name,
 		       const Index numSchemes,
-		       Variable* p1, Variable* p2,
-		       Variable* distInX );
+		       PointVariable* p1, PointVariable* p2,
+		       RealVariable* dist );
    virtual ~DistanceConstraint();
 
    // Use this to set the default direction used when p1==p2.

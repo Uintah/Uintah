@@ -22,8 +22,8 @@ class MidpointConstraint : public BaseConstraint {
 public:
    MidpointConstraint( const clString& name,
 		       const Index numSchemes,
-		       Variable* end1, Variable* end2,
-		       Variable* p );
+		       PointVariable* end1, PointVariable* end2,
+		       PointVariable* p );
    virtual ~MidpointConstraint();
    
 protected:
