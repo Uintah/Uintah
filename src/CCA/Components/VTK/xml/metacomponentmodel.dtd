@@ -1,0 +1,8 @@
+<!ELEMENT metacomponentmodel (library+)>
+<!ELEMENT library (component+)>
+<!ELEMENT component EMPTY>
+
+<!ATTLIST metacomponentmodel name CDATA #REQUIRED>
+<!ATTLIST library name CDATA #REQUIRED>
+<!ATTLIST component name CDATA #REQUIRED>
+
