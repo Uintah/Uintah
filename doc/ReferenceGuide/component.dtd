@@ -41,10 +41,9 @@ Component  specification dtd.
 <!ELEMENT devicename (#PCDATA)>
 
 <!-- Top level -->
-<!ELEMENT component (overview, io, gui?, testing)>
+<!ELEMENT component (overview, implementation?, io, gui?, testing)>
 <!ATTLIST component 
         name CDATA #REQUIRED
-        package CDATA #REQUIRED
         category CDATA #REQUIRED>
 
 <!--  Overview of component's purpose  -->
@@ -62,6 +61,18 @@ Component  specification dtd.
 <!-- Name of sr file which demonstrates use of this component  -->
 <!ELEMENT examplesr %filename;>
 
+<!-- All the extra code files needed to build this component -->
+<!ELEMENT implementation (ccfile | cfile | ffile)+>
+
+<!-- The name of a single .cc file -->
+<!ELEMENT ccfile (#PCDATA)>
+
+<!-- The name of a single .c file -->
+<!ELEMENT cfile (#PCDATA)>
+
+<!-- The name of a single .f file -->
+<!ELEMENT ffile (#PCDATA)>
+
 <!-- Component's inputs and outputs  -->
 <!ELEMENT io (inputs, outputs)>
 
@@ -77,7 +88,10 @@ Component  specification dtd.
 
 <!-- Describe data on port (i.e. temperature data) and the datatype being
      transmitted.  --> 
-<!ELEMENT port (description, datatype, componentname+)>
+<!ELEMENT port (name, description, datatype, componentname+)>
+
+<!-- The user-defined name for this port -->
+<!ELEMENT name (#PCDATA)>
 
 <!-- Describe data on device -->
 <!ELEMENT device (devicename, description)>
@@ -104,7 +118,7 @@ Component  specification dtd.
 <!ELEMENT plan (description, step+)>
 
 <!-- Specify 1 testing step -->
-<!ELEMENT  step (#PCDATA)>
+<!ELEMENT  step %DescFlow;>
 
 <!-- Mini-documentation environment -->
 <!ELEMENT description %DescFlow;>
