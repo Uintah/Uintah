@@ -197,9 +197,6 @@ SamplePlane::execute()
     return;
   }
 
-  if (data_at_.get() == "Faces") basis_order = 0;
-  else basis_order = 1;
-
   // Create Image Field.
   FieldHandle ofh;
   if (datatype == VECTOR)
