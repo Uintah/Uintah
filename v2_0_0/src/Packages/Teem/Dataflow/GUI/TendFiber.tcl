@@ -82,7 +82,7 @@ itcl_class Teem_Tend_TendFiber {
         toplevel $w
 
         frame $w.f
-	pack $w.f -padx 2 -pady 2 -side top -expand yes
+	pack $w.f -padx 2 -pady 2 -side top -expand yes -fill both
 	
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes

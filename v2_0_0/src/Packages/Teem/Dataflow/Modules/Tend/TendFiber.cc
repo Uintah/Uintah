@@ -304,6 +304,7 @@ TendFiber::execute()
 
   tenFiberParmSet(tfx, tenFiberParmStepSize, stepsize);
   tenFiberParmSet(tfx, tenFiberParmWPunct, stepsize);
+  tenFiberParmSet(tfx, tenFiberParmUseIndexSpace, AIR_TRUE);
 
   Nrrd *nout = nrrdNew();
 
@@ -313,25 +314,36 @@ TendFiber::execute()
 
   Array1<Array1<Point> > fibers;
 
+  Vector min(nin->axis[1].min, nin->axis[2].min, nin->axis[3].min);
+  Vector spacing(nin->axis[1].spacing, nin->axis[2].spacing, nin->axis[3].spacing);
   int fiberIdx=0;
   while (ib != ie) {
     Point p;
     pcm->get_center(p, *ib);
-    start[0]=p.x();
-    start[1]=p.y();
-    start[2]=p.z();
-    if (tenFiberTrace(tfx, nout, start)) {
+    p-=min;
+    start[0]=p.x()/spacing.x();
+    start[1]=p.y()/spacing.y();
+    start[2]=p.z()/spacing.z();
+
+    bool failed;
+    if (failed = tenFiberTrace(tfx, nout, start)) {
       char *err = biffGetDone(TEN);
-      error(string("Error tracing fiber: ") + err);
+//      error(string("Error tracing fiber: ") + err);
       free(err);
-      return;
+//      return;
     }
+//    cerr << "nout->axis[0].size="<<nout->axis[0].size<<"\n";
+//    cerr << "nout->axis[1].size="<<nout->axis[1].size<<"\n";
+
     fibers.resize(fiberIdx+1);
-    fibers[fiberIdx].resize(nout->axis[0].size);
-    double *data = (double *)(nout->data);
-    for (int i=0; i<nout->axis[0].size; i+=3)
-      fibers[fiberIdx][i] = 
-	Point(data[i], data[i+1], data[i+2]);
+    if (!failed) {
+      fibers[fiberIdx].resize(nout->axis[1].size);
+      double *data = (double *)(nout->data);
+      for (int i=0; i<nout->axis[1].size * 3; i+=3)
+	fibers[fiberIdx][i/3] = Point(data[i]*spacing.x(),
+				      data[i+1]*spacing.y(),
+				      data[i+2]*spacing.z())+min;
+    }
     ++fiberIdx;
     ++ib;
   }
@@ -341,18 +353,22 @@ TendFiber::execute()
   CurveMesh *cm = scinew CurveMesh;
   CurveMesh::Node::array_type a;
   a.resize(2);
+//  cerr << "got "<<fibers.size()<<" fibers.\n";
   for (int i=0; i<fibers.size(); i++) {
     if (fibers[i].size()) {
       a[1] = cm->add_point(fibers[i][0]);
+//      cerr << "   fiber["<<i<<"] has "<<fibers[i].size()<<" nodes.\n";
+//      cerr << "     adding point: "<<fibers[i][0]<<"\n";
       for (int j=1; j<fibers[i].size(); j++) {
 	a[0] = a[1];
 	a[1] = cm->add_point(fibers[i][j]);
+//	cerr << "     adding point: "<<fibers[i][j]<<"\n";
 	cm->add_elem(a);
       }
     }
   }
   
-  CurveField<double> *cf = scinew CurveField<double>(cm, Field::NONE);
+  CurveField<double> *cf = scinew CurveField<double>(cm, Field::NODE);
   ofibers_->send(cf);
 }
 
