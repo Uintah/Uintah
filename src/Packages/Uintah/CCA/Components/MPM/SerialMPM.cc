@@ -173,6 +173,9 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(d_sharedState->get_delt_label());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
 
+  // Compute the accumulated strain energy
+  t->computes(lb->AccStrainEnergyLabel);
+
   // artificial damping coeff initialized to 0.0
   if (d_artificialDampCoeff > 0.0) {
      t->computes(d_dampingRateLabel); 
@@ -331,6 +334,14 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
   t->computes(d_sharedState->get_delt_label());
   t->computes(lb->StrainEnergyLabel);
 
+  sched->addTask(t, patches, matls);
+
+  // Compute the accumulated strain energy
+  t = scinew Task("SerialMPM::computeAccStrainEnergy",
+		  this, &SerialMPM::computeAccStrainEnergy);
+  t->requires(Task::OldDW, lb->AccStrainEnergyLabel);
+  t->requires(Task::NewDW, lb->StrainEnergyLabel);
+  t->computes(lb->AccStrainEnergyLabel);
   sched->addTask(t, patches, matls);
 }
 
@@ -674,6 +685,26 @@ void SerialMPM::printParticleCount(const ProcessorGroup* pg,
   }
 }
 
+void SerialMPM::computeAccStrainEnergy(const ProcessorGroup*,
+				       const PatchSubset*,
+				       const MaterialSubset*,
+				       DataWarehouse* old_dw,
+				       DataWarehouse* new_dw)
+{
+  // Get the totalStrainEnergy from the old datawarehouse
+  max_vartype accStrainEnergy;
+  old_dw->get(accStrainEnergy, lb->AccStrainEnergyLabel);
+	
+  // Get the incremental strain energy from the new datawarehouse
+  sum_vartype incStrainEnergy;
+  new_dw->get(incStrainEnergy, lb->StrainEnergyLabel);
+	                  
+  // Add the two a put into new dw
+  double totalStrainEnergy = 
+    (double) accStrainEnergy + (double) incStrainEnergy;
+  new_dw->put(max_vartype(totalStrainEnergy), lb->AccStrainEnergyLabel);
+}
+
 void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 				   const PatchSubset* patches,
 				   const MaterialSubset* matls,
@@ -691,14 +722,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
     cellNAPID.initialize(0);
 
-    // Initialize the artificial damping ceofficient (alpha) to zero
-    if (d_artificialDampCoeff > 0.0) {
-      double alpha = 0.0;    
-      double alphaDot = 0.0;    
-      new_dw->put(max_vartype(alpha), d_dampingCoeffLabel);
-      new_dw->put(sum_vartype(alphaDot), d_dampingRateLabel);
-    }
-
     for(int m=0;m<matls->size();m++){
       //cerrLock.lock();
       //NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
@@ -713,6 +736,18 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 						mpm_matl, new_dw);
     }
   }
+
+  // Initialize the accumulated strain energy
+  new_dw->put(max_vartype(0.0), lb->AccStrainEnergyLabel);
+  
+  // Initialize the artificial damping ceofficient (alpha) to zero
+  if (d_artificialDampCoeff > 0.0) {
+    double alpha = 0.0;    
+    double alphaDot = 0.0;    
+    new_dw->put(max_vartype(alpha), d_dampingCoeffLabel);
+    new_dw->put(sum_vartype(alphaDot), d_dampingRateLabel);
+  }
+
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 }
 
