@@ -999,7 +999,7 @@ HexVolMesh::inside8_p(Cell::index_type i, const Point &p) const
     const Vector normal = Cross(v0, v1);
     const Vector off0(p - p0);
     const Vector off1(center - p0);
-    if (Dot(off0, normal) * Dot(off1, normal) < -1.0e-12)
+    if (Dot(off0, normal) * Dot(off1, normal) < 0.0)
     {
       return false;
     }
