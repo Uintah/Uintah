@@ -22,7 +22,7 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
     print "%s-%s: Running restart test for %s on %s" % (ALGO, mode, testname, date())
   else:
     print "%s-%s: Running test %s on %s" % (ALGO, mode, testname, date())
-  if mode == "mpi":
+  if mode in ('mpi', 'dbgmpi'):
     command = "mpirun -np %s %s/sus -%s" % (num_processes(test), susdir, algo)
     datmode = "opt"
   else:
