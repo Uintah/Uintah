@@ -275,9 +275,9 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   IntVector idxLoW = patch->getSFCZFORTLowIndex();
   IntVector idxHiW = patch->getSFCZFORTHighIndex();
 
-
   switch(index) {
   case Arches::XDIR:
+
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
     FORT_UVELSOURCE(domLoU.get_pointer(), domHiU.get_pointer(),
@@ -304,20 +304,79 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
 		    cellinfo->sewu.get_objs(), cellinfo->sew.get_objs(),
 		    cellinfo->sns.get_objs(),
 		    cellinfo->stb.get_objs(),
-		    cellinfo->dxepu.get_objs(), cellinfo->dxpwu.get_objs(),
 		    cellinfo->dxpw.get_objs(),
-		    cellinfo->dynp.get_objs(), cellinfo->dyps.get_objs(), 
-		    cellinfo->dztp.get_objs(), cellinfo->dzpb.get_objs(), 
 		    cellinfo->fac1u.get_objs(), cellinfo->fac2u.get_objs(),
 		    cellinfo->fac3u.get_objs(), 
 		    cellinfo->fac4u.get_objs(),
-		    cellinfo->iesdu.get_objs(), cellinfo->iwsdu.get_objs(), 
-		    cellinfo->enfac.get_objs(), cellinfo->sfac.get_objs(),
-		    cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs());
+		    cellinfo->iesdu.get_objs(), cellinfo->iwsdu.get_objs());
     break;
   case Arches::YDIR:
+
+    // computes remaining diffusion term and also computes 
+    // source due to gravity...need to pass ipref, jpref and kpref
+    FORT_VVELSOURCE(domLoV.get_pointer(), domHiV.get_pointer(),
+		    idxLoV.get_pointer(), idxHiV.get_pointer(),
+		    vVelocity.getPointer(),
+		    old_vVelocity.getPointer(),
+		    vVelNonlinearSrc.getPointer(), 
+		    vVelLinearSrc.getPointer(), 
+		    domLoU.get_pointer(), domHiU.get_pointer(),
+		    uVelocity.getPointer(), 
+		    domLoW.get_pointer(), domHiW.get_pointer(),
+		    wVelocity.getPointer(), 
+		    domLo.get_pointer(), domHi.get_pointer(),
+		    density.getPointer(),
+		    old_density.getPointer(),
+		    viscosity.getPointer(), 
+		    &gravity, &delta_t, &den_ref,
+		    cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(), 
+		    cellinfo->cww.get_objs(),
+		    cellinfo->cnnv.get_objs(), cellinfo->csnv.get_objs(),
+		    cellinfo->cssv.get_objs(),
+		    cellinfo->ctt.get_objs(), cellinfo->cbt.get_objs(),
+		    cellinfo->cbb.get_objs(),
+		    cellinfo->sew.get_objs(), 
+		    cellinfo->snsv.get_objs(), cellinfo->sns.get_objs(),
+		    cellinfo->stb.get_objs(),
+		    cellinfo->dyps.get_objs(),
+		    cellinfo->fac1v.get_objs(), cellinfo->fac2v.get_objs(),
+		    cellinfo->fac3v.get_objs(), 
+		    cellinfo->fac4v.get_objs(),
+		    cellinfo->jnsdv.get_objs(), cellinfo->jssdv.get_objs()); 
     break;
   case Arches::ZDIR:
+
+    // computes remaining diffusion term and also computes 
+    // source due to gravity...need to pass ipref, jpref and kpref
+    FORT_WVELSOURCE(domLoW.get_pointer(), domHiW.get_pointer(),
+		    idxLoW.get_pointer(), idxHiW.get_pointer(),
+		    wVelocity.getPointer(),
+		    old_wVelocity.getPointer(),
+		    wVelNonlinearSrc.getPointer(), 
+		    wVelLinearSrc.getPointer(), 
+		    domLoU.get_pointer(), domHiU.get_pointer(),
+		    uVelocity.getPointer(), 
+		    domLoV.get_pointer(), domHiV.get_pointer(),
+		    vVelocity.getPointer(), 
+		    domLo.get_pointer(), domHi.get_pointer(),
+		    density.getPointer(),
+		    old_density.getPointer(),
+		    viscosity.getPointer(), 
+		    &gravity, &delta_t, &den_ref,
+		    cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(), 
+		    cellinfo->cww.get_objs(),
+		    cellinfo->cnn.get_objs(), cellinfo->csn.get_objs(),
+		    cellinfo->css.get_objs(),
+		    cellinfo->cttw.get_objs(), cellinfo->cbtw.get_objs(),
+		    cellinfo->cbbw.get_objs(),
+		    cellinfo->sew.get_objs(), 
+		    cellinfo->sns.get_objs(),
+		    cellinfo->stbw.get_objs(), cellinfo->stb.get_objs(),
+		    cellinfo->dzpb.get_objs(), 
+		    cellinfo->fac1w.get_objs(), cellinfo->fac2w.get_objs(),
+		    cellinfo->fac3w.get_objs(), 
+		    cellinfo->fac4w.get_objs(),
+		    cellinfo->ktsdw.get_objs(), cellinfo->kbsdw.get_objs()); 
     break;
   default:
     throw InvalidValue("Invalid index in Source::calcVelSrc");
@@ -716,6 +775,11 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.23  2000/07/12 05:14:25  bbanerje
+//Added vvelsrc and wvelsrc .. some changes to uvelsrc.
+//Rawat :: Labels are getting hopelessly muddled unless we can do something
+//about the time stepping thing.
+//
 //Revision 1.22  2000/07/11 15:46:28  rawat
 //added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
 //

@@ -10,12 +10,13 @@ c*********************************************************************
      &     domLoW, domHiW, WW,
      &     domLo, domHi, den, old_den, vis,
      &     grav, deltat, den_ref,
-     &     CEEU, CWEU, CWWU, CNN, CSN, CSS,
-     &     CTT, CBT, CBB, SEWU, SEW, SNS, STB,
-     &     DXEPU, DXPWU, DXPW, DYNP, DYPS, DZTP, DZPB, 
+     &     CEEU, CWEU, CWWU, 
+     &     CNN, CSN, CSS,
+     &     CTT, CBT, CBB, 
+     &     SEWU, SEW, SNS, STB,
+     &     DXPW, 
      &     FAC1U, FAC2U, FAC3U, FAC4U, 
      &     IESDU, IWSDU,
-     &     ENFAC, SFAC, TFAC, BFAC,
      &     ierr)
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
@@ -51,7 +52,7 @@ c*********************************************************************
      &     domLo(3):domHi(3))
       double precision VIS(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
-      double precision DELTAT, grav, den_ref
+      double precision DELTAT, GRAV, DEN_REF
       double precision CEEU(domLo(1):domHi(1))
       double precision CWEU(domLo(1):domHi(1))
       double precision CWWU(domLo(1):domHi(1))
@@ -65,23 +66,13 @@ c*********************************************************************
       double precision SEW(domLo(1):domHi(1))
       double precision SNS(domLo(2):domHi(2))
       double precision STB(domLo(3):domHi(3))
-      double precision DXEPU(domLo(1):domHi(1))
-      double precision DXPWU(domLo(1):domHi(1))
       double precision DXPW(domLo(1):domHi(1))
-      double precision DYNP(domLo(2):domHi(2))
-      double precision DYPS(domLo(2):domHi(2))
-      double precision DZTP(domLo(3):domHi(3))
-      double precision DZPB(domLo(3):domHi(3))
       double precision FAC1U(domLo(1):domHi(1))
       double precision FAC2U(domLo(1):domHi(1))
       double precision FAC3U(domLo(1):domHi(1))
       double precision FAC4U(domLo(1):domHi(1))
       integer IESDU(domLo(1):domHi(1))
       integer IWSDU(domLo(1):domHi(1))
-      double precision ENFAC(domLo(2):domHi(2))
-      double precision SFAC(domLo(2):domHi(2))
-      double precision TFAC(domLo(3):domHi(3))
-      double precision BFAC(domLo(3):domHi(3))
       integer ierr
 
 c*********************************************************************
@@ -90,22 +81,11 @@ c*********************************************************************
       integer ISTU, JSTU, KSTU, IENDU, JENDU, KENDU
       integer i, j, k
 
-      logical L2UP, LSMPT, LCEND, LTEST, LTIM
-
-      double precision AREAN, AREAS, AREAEW, AREATB, VOL
-      double precision GE, GP, GW, GN, GNW, GS, GSW, GT, GTW, GTP, GBW
-      double precision CEO, CWO, CNO, CSO, CTO, CBO
-      double precision CE, CW, CN, CS, CT, CB
-      double precision CPE, CPW, GVP, CPN, CPS, GWP, CPT, CPB
+      double precision VOL
       double precision VISE, VISW, VISN, VISS, VIST, VISB
-      double precision DEO, DWO, DNO, DSO, DTO, DBO
-      double precision DE, DW, DN, DS, DT, DB
-      double precision COEFE, COEFW, COEFN, COEFS, COEFT, COEFB
-      double precision TEW, TNS, TTB
-      double precision AEC, AWC, ANC, ASC, ATC, ABC
-      double precision dudxe, dudxw, visei, viswi
-      double precision dvdxn, dvdxs, visni, vissi
-      double precision dwdxb, dwdxt, visti, visbi
+      double precision DUDXE, DUDXW, VISEI, VISWI
+      double precision DVDXN, DVDXS, VISNI, VISSI
+      double precision DWDXB, DWDXT, VISTI, VISBI
 
 c*********************************************************************
 c     Start :
@@ -117,64 +97,64 @@ c*********************************************************************
       JENDU = idxHiU(2)
       KENDU = idxHiU(3)
 
-c*********************************************************************
-c     Set all flags except one to false (** WARNING ** need to change)
-c*********************************************************************
-      L2UP = .TRUE.
-      LSMPT = .FALSE.
-      LCEND = .FALSE.
-      LTEST = .FALSE.
-      LTIM = .TRUE.
-
 c-----------------------------------------------------------------------
 c     assemble source coefficients
 c-----------------------------------------------------------------------
-      VOL = SEWU(I)*SNS(J)*STB(K)
-      call arrass(su,zero,
+      call ARRASS(SU,ZERO,
      $     domLoU, domHiU, idxLoU, idxHiU)
-      call arrass(sp,zero,
+      call ARRASS(SP,ZERO,
      $     domLoU, domHiU, idxLoU, idxHiU)
 
 c     viscous sources
 
-      do 120 k=idxLoU(3),idxHiU(3)
-         do 110 j=idxLoU(2),idxHiU(2)
-            do 100 i=idxLoU(1),idxHiU(1)
-               vise = fac1u(i)*vis(i,j,k)+fac2u(i)*vis(i+iesdu(i),j,k)
-               visw = fac3u(i)*vis(i-1,j,k)+fac4u(i)*
-     $              vis(i+iwsdu(i),j,k)
-               visn = pt25*(vis(i,j,k)+vis(i,j+1,k)+
-     &              vis(i-1,j,k)+vis(i-1,j+1,k))
-               viss = pt25*(vis(i,j,k)+vis(i,j-1,k)+
-     &              vis(i-1,j,k)+vis(i-1,j-1,k))
-               vist = pt25*(vis(i,j,k)+vis(i,j,k+1)+
-     &              vis(i-1,j,k)+vis(i-1,j,k+1))
-               visb = pt25*(vis(i,j,k)+vis(i,j,k-1)+
-     &              vis(i-1,j,k)+vis(i-1,j,k-1))  
-               dudxe  = (uu(i+1,j,k)-uu(i,j,k))/sew(i)
-               dudxw  = (uu(i,j,k)-uu(i-1,j,k))/sew(i-1)
-               visei = ceeu(i)*vise + cweu(i)*visw
-               viswi = cwwu(i)*visw - cweu(i)*vise
-               su(i,j,k) = su(i,j,k)+(visei*dudxe-viswi*dudxw)/
-     &              sewu(i)*vol
-               dvdxn  = (vv(i,j+1,k)-vv(i-1,j+1,k))/dxpw(i)
-               dvdxs  = (vv(i,j,k)-vv(i-1,j,k))/dxpw(i)
-               visni = cnn(j)*visn + csn(j)*viss
-               vissi = css(j)*viss - csn(j)*visn
-               su(i,j,k) = su(i,j,k)+(visni*dvdxn-
-     &              vissi*dvdxs)/sns(j)*vol
-               dwdxt = (ww(i,j,k+1)-ww(i-1,j,k+1))/dxpw(i)
-               dwdxb = (ww(i,j,k)-ww(i-1,j,k))/dxpw(i)
-               visti = ctt(k)*vist + cbt(k)*visb
-               visbi = cbb(k)*visb - cbt(k)*vist
-               su(i,j,k) = su(i,j,k)+(visti*dwdxt-visbi*dwdxb)/
-     &              stb(k)*vol
+      do 120 k = KSTU,KENDU
+         do 110 j = JSTU,JENDU
+            do 100 i = ISTU,IENDU
+               VOL = SEWU(I)*SNS(J)*STB(K)
+               VISE = FAC1U(I)*VIS(I,J,K)+FAC2U(I)*VIS(I+IESDU(I),J,K)
+               VISW = FAC3U(I)*VIS(I-1,J,K)+FAC4U(I)*
+     $              VIS(I+IWSDU(I),J,K)
+               VISN = PT25*(VIS(I,J,K)+VIS(I,J+1,K)+
+     &              VIS(I-1,J,K)+VIS(I-1,J+1,K))
+               VISS = PT25*(VIS(I,J,K)+VIS(I,J-1,K)+
+     &              VIS(I-1,J,K)+VIS(I-1,J-1,K))
+               VIST = PT25*(VIS(I,J,K)+VIS(I,J,K+1)+
+     &              VIS(I-1,J,K)+VIS(I-1,J,K+1))
+               VISB = PT25*(VIS(I,J,K)+VIS(I,J,K-1)+
+     &              VIS(I-1,J,K)+VIS(I-1,J,K-1))  
+               DUDXE  = (UU(I+1,J,K)-UU(I,J,K))/SEW(I)
+               DUDXW  = (UU(I,J,K)-UU(I-1,J,K))/SEW(I-1)
+               VISEI = CEEU(I)*VISE + CWEU(I)*VISW
+               VISWI = CWWU(I)*VISW - CWEU(I)*VISE
+c              SU(I,J,K) = SU(I,J,K)+(VISEI*DUDXE-VISWI*DUDXW)/
+c    &              SEWU(I)*VOL
+               DVDXN  = (VV(I,J+1,K)-VV(I-1,J+1,K))/DXPW(I)
+               DVDXS  = (VV(I,J,K)-VV(I-1,J,K))/DXPW(I)
+               VISNI = CNN(J)*VISN + CSN(J)*VISS
+               VISSI = CSS(J)*VISS - CSN(J)*VISN
+c              SU(I,J,K) = SU(I,J,K)+(VISNI*DVDXN-
+c    &              VISSI*DVDXS)/SNS(J)*VOL
+               DWDXT = (WW(I,J,K+1)-WW(I-1,J,K+1))/DXPW(I)
+               DWDXB = (WW(I,J,K)-WW(I-1,J,K))/DXPW(I)
+               VISTI = CTT(K)*VIST + CBT(K)*VISB
+               VISBI = CBB(K)*VISB - CBT(K)*VIST
+c              SU(I,J,K) = SU(I,J,K)+(VISTI*DWDXT-VISBI*DWDXB)/
+c    &              STB(K)*VOL
 c     transient
-               su(i,j,k) = su(i,j,k) + old_DEN(i,j,k)*vol*
-     &                     (old_UU(i,j,k)-uu(i,j,k))/deltat
+c              SU(I,J,K) = SU(I,J,K) + old_den(I,J,K)*VOL*
+c    &                     (old_UU(I,J,K)-UU(I,J,K))/DELTAT
 c     gravity
-               su(i,j,k) = su(i,j,k) + (pt5*(den(i,j,k)+den(i-1,j,k))-
-     &                                  den_ref)*grav*vol 
+c              SU(I,J,K) = SU(I,J,K) + (PT5*(DEN(I,J,K)+DEN(I-1,J,K))-
+c    &                                  DEN_REF)*GRAV*VOL 
+c
+c   Add all the source terms at one go (don't need as many array searches)
+c
+               SU(I,J,K) = SU(I,J,K)+
+     &              ((VISEI*DUDXE-VISWI*DUDXW)/SEWU(I) +
+     &              (VISNI*DVDXN-VISSI*DVDXS)/SNS(J)   +
+     &              (VISTI*DWDXT-VISBI*DWDXB)/STB(K)   +
+     &              old_DEN(I,J,K)*(old_UU(I,J,K)-UU(I,J,K))/DELTAT +
+     &              (PT5*(DEN(I,J,K)+DEN(I-1,J,K))-DEN_REF)*GRAV)*VOL 
  100        continue
  110     continue
  120  continue
@@ -184,6 +164,11 @@ c     gravity
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/07/12 05:14:27  bbanerje
+c Added vvelsrc and wvelsrc .. some changes to uvelsrc.
+c Rawat :: Labels are getting hopelessly muddled unless we can do something
+c about the time stepping thing.
+c
 c Revision 1.2  2000/07/11 15:46:30  rawat
 c added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
 c
