@@ -289,7 +289,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     compare_msg = '\tSee %s/compare_sus_runs.log.txt for more comparison information.' % (logpath)
     memory_msg  = '\tSee %s/mem_leak_check.log.txt for more comparison information.' % (logpath)
       
-  rc = system("nice %s %s > sus.log.txt 2>&1" % (command, susinput))
+  rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
   print "Command Line: %s %s" % (command, susinput)
 
   if mode == "dbg":
