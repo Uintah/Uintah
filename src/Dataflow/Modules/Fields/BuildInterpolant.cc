@@ -50,9 +50,10 @@ class BuildInterpolant : public Module
   FieldIPort *src_port;
   FieldIPort *dst_port;
   FieldOPort *ofp; 
-  GuiInt     use_interp_;
-  GuiInt     use_closest_;
-  GuiDouble  closeness_distance_;
+  GuiString  interpolation_basis_;
+  GuiInt     map_source_to_single_dest_;
+  GuiInt     exhaustive_search_;
+  GuiDouble  exhaustive_search_max_dist_;
 
 public:
   BuildInterpolant(GuiContext* ctx);
@@ -66,17 +67,16 @@ public:
 DECLARE_MAKER(BuildInterpolant)
 BuildInterpolant::BuildInterpolant(GuiContext* ctx) : 
   Module("BuildInterpolant", ctx, Filter, "Fields", "SCIRun"),
-  use_interp_(ctx->subVar("use_interp")),
-  use_closest_(ctx->subVar("use_closest")),
-  closeness_distance_(ctx->subVar("closeness_distance"))
+  interpolation_basis_(ctx->subVar("interpolation_basis")),
+  map_source_to_single_dest_(ctx->subVar("map_source_to_single_dest")),
+  exhaustive_search_(ctx->subVar("exhaustive_search")),
+  exhaustive_search_max_dist_(ctx->subVar("exhaustive_search_max_dist"))
 {
 }
 
 BuildInterpolant::~BuildInterpolant()
 {
 }
-
-
 
 void
 BuildInterpolant::execute()
@@ -120,11 +120,11 @@ BuildInterpolant::execute()
   }
   fsrc_h->mesh()->synchronize(Mesh::LOCATE_E);
   ofp->send(algo->execute(fsrc_h->mesh(), fdst_h->mesh(), fdst_h->data_at(),
-			  use_interp_.get(),
-			  use_closest_.get(), closeness_distance_.get()));
+			  interpolation_basis_.get(),
+			  map_source_to_single_dest_.get(),
+			  exhaustive_search_.get(),
+			  exhaustive_search_max_dist_.get()));
 }
-
-
 
 CompileInfoHandle
 BuildInterpAlgo::get_compile_info(const TypeDescription *msrc,
@@ -162,8 +162,5 @@ BuildInterpAlgo::get_compile_info(const TypeDescription *msrc,
   fdst->fill_compile_info(rval);
   return rval;
 }
-
-
-
 
 } // End namespace SCIRun
