@@ -1,7 +1,11 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/GursonYield.h>	
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
 #include <math.h>
 
+using namespace std;
 using namespace Uintah;
 
 GursonYield::GursonYield(ProblemSpecP& ps)
@@ -33,12 +37,20 @@ GursonYield::evalYieldCondition(const double sigEqv,
   double fStar = porosity;
   if (porosity > f_c) fStar = f_c + k*(porosity - f_c);
 
+  ASSERT(sigFlow != 0);
+  double a = 1.0 + q3*fStar*fStar;
+  double b = 2.0*q1*fStar*cosh(0.5*q2*traceSig/sigFlow);
+  double aminusb = a - b;
+  double Phi = -1.0;
   double sigYSq = sigFlow*sigFlow;
-  sig = sigYSq*(1.0+q3*fStar*fStar) -
-        sigYSq*2.0*q1*fStar*cosh(0.5*q2*traceSig/sigFlow);
-  double Phi = sigEqv*sigEqv - sig;
-  sig = sqrt(sig);
-
+  if (aminusb < 0.0) {
+    Phi = sigEqv*sigEqv - sigYSq;
+    sig = sigFlow;
+  } else {
+    sig = sigYSq*(a-b);
+    Phi = sigEqv*sigEqv - sig;
+    sig = sqrt(sig);
+  }
   return Phi;
 }
 
