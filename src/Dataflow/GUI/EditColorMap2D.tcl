@@ -448,7 +448,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	scale $frame.shisto -variable $this-histo \
 	    -from 0.0 -to 1.0 -label "Histogram Opacity" \
 	    -showvalue true -resolution 0.001 \
-	    -orient horizontal -command "$this-c redraw true"
+	    -orient horizontal -command "$this-c redraw"
 	pack $frame.shisto -side top -fill x -padx 4
 	# faux shading
 	frame $frame.f0 -relief groove -borderwidth 2
