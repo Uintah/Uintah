@@ -641,7 +641,7 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
 	}
       }
     }
-    else if (mesh->dimensionality() == 1)
+    else if (sfld->basis_order() != -1  && mesh->dimensionality() == 1)
     {
       typename Fld::value_type val;
       sfld->value(val, *eiter);
