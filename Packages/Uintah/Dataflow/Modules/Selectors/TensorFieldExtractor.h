@@ -32,8 +32,8 @@ LOG
 
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Modules/Selectors/FieldExtractor.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Network/Module.h> 
 #include <Core/GuiInterface/GuiVar.h> 
 #include <string>
 #include <vector>
@@ -42,7 +42,7 @@ LOG
 namespace Uintah {
 using namespace SCIRun;
 
-class TensorFieldExtractor : public Module { 
+class TensorFieldExtractor : public FieldExtractor { 
   
 public: 
 
@@ -63,7 +63,8 @@ public:
   //  void tcl_command( TCLArgs&, void* );
 
 protected:
-  
+   virtual void get_vars(vector< string >&,
+			vector< const TypeDescription *>&); 
 private:
 
   GuiString tcl_status;
@@ -77,9 +78,6 @@ private:
   FieldOPort *tfout;
   
   std::string positionName;
-
-  ArchiveHandle  archiveH;
-  void setVars();
 
 }; //class 
 } // End namespace Uintah
