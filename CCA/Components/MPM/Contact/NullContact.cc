@@ -84,11 +84,6 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
 
       new_dw->allocate(frictionalWork, lb->frictionalWorkLabel, dwi, patch);
       frictionalWork.initialize(0.);
-      // Store new velocities in DataWarehouse
-      /* Not necessary when using getModifiable
-	 new_dw->modify(gv_star,           lb->gVelocityStarLabel, dwi, patch);
-	 new_dw->modify(gacc,              lb->gAccelerationLabel, dwi, patch);
-      */
       new_dw->put(frictionalWork,    lb->frictionalWorkLabel,dwi,patch);
     }
   }
