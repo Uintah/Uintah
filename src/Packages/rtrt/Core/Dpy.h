@@ -50,6 +50,7 @@ struct DpyPrivate;
 
   friend class Gui;
   friend class DpyGui;
+  friend class Worker;
 
   bool       fullScreenMode_;
     Window parentWindow;
