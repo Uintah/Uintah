@@ -35,6 +35,10 @@ SCICore::Thread::ConditionVariable_private::ConditionVariable_private()
 {
 }
 
+SCICore::Thread::ConditionVariable_private::~ConditionVariable_private()
+{
+}
+
 SCICore::Thread::ConditionVariable::ConditionVariable(const char* name)
     : d_name(name)
 {
@@ -84,6 +88,9 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.2  1999/08/25 22:36:01  sparker
+// More thread library updates - now compiles
+//
 // Revision 1.1  1999/08/25 19:00:47  sparker
 // More updates to bring it up to spec
 // Factored out common pieces in Thread_irix and Thread_pthreads
