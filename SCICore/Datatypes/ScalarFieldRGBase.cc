@@ -89,6 +89,8 @@ clString ScalarFieldRGBase::getType() const {
         return ("int");
     else if (rep==Short)
         return ("short");
+    else if (rep==Ushort)
+        return ("ushort");
     else if (rep==Char)
         return ("char");
     else if (rep==Uchar)
@@ -127,6 +129,13 @@ ScalarFieldRGshort* ScalarFieldRGBase::getRGShort()
 {
     if (rep==Short)
 	return (ScalarFieldRGshort*) this;
+    else
+	return 0;
+}
+ScalarFieldRGushort* ScalarFieldRGBase::getRGUshort()
+{
+    if (rep==Ushort)
+	return (ScalarFieldRGushort*) this;
     else
 	return 0;
 }
@@ -374,6 +383,9 @@ void ScalarFieldRGBase::distribute_samples()
 
 //
 // $Log$
+// Revision 1.7  2000/12/06 04:16:07  kuzimmer
+// Added ScalarFieldRGushort* getRGUshort(); to be changed with new Field Redesign
+//
 // Revision 1.6  1999/12/28 20:45:17  kuzimmer
 // added cell-centered data structures
 //
