@@ -8,7 +8,7 @@
 #include "Crack.h"
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h> // for Fracture
+#include <Packages/Uintah/Core/Math/Short27.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -144,7 +144,8 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
           int preIdx=cfSegPreIdx[m][i];
           if(preIdx<0) { // Not operated
             // Count the nodes which propagate among (2ns+1) nodes around pt
-            int ns=(maxIdx-minIdx+1)/10+2;
+            int ns=(maxIdx-minIdx+1)/16+1;
+            // ns=1 for 1-7 segs; ns=2 for 8-14 segs; ...
             int np=0;
             for(int j=-ns; j<=ns; j++) {
               int cIdx=i+2*j;
@@ -157,8 +158,8 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
             double fraction=(double)np/(2*ns+1);
             Point new_pt=pt+fraction*da[i];
 
-            /* Step 3: Deal with edge nodes: extending new_pt out to
-                       the boundary by (fraction*rdadx*dx_max)
+            /* Step 3: Deal with edge nodes, extending new_pt out to
+                       the boundary by (fraction*rdadx*dx_max*2)
                        if it is inside of material
             */
             if((segs[R]<0||segs[L]<0) &&  // Edge nodes
@@ -206,7 +207,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
                 }
 
                 Vector v=TwoPtsDirCos(cx[m][n1],cx[m][n2]);
-                new_pt=tmp_pt+v*(fraction*rdadx*dx_max);
+                new_pt=tmp_pt+v*(fraction*rdadx*dx_max*2.);
 
                 // Check if it beyond the global gird
                 FindIntersectionLineAndGridBoundary(tmp_pt,new_pt);
