@@ -130,6 +130,8 @@ public:
   bool locate(Cell::index_type &loc, const Point &p);
 
   void get_point(Point &result, Node::index_type index) const;
+  void get_normal(Vector &/*normal*/, Node::index_type /*index*/) const
+  { ASSERTFAIL("not implemented") }
 
   void get_weights(const Point& p, Node::array_type &l, vector<double> &w);
   void get_weights(const Point &, Edge::array_type &, vector<double> &) 

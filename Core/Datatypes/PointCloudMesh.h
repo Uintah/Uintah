@@ -165,6 +165,8 @@ public:
 
   void get_point(Point &p, Node::index_type i) const { get_center(p,i); }
   void set_point(const Point &p, Node::index_type i) { points_[i] = p; }
+  void get_normal(Vector &/*normal*/, Node::index_type /*index*/) const
+  { ASSERTFAIL("not implemented") }
 
   //! use these to build up a new PointCloudField mesh
   Node::index_type add_node(const Point &p) { return add_point(p); }
