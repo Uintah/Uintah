@@ -326,7 +326,8 @@ Run the third party installation script:
 ./install.sh <replaceable>dir</replaceable>
 </literallayout>
 where <replaceable>dir</replaceable> is the third-party installation
-directory.  For example:
+directory.  <replaceable>Dir</replaceable> must be an absolute
+path.  For example:
 <literallayout class="monospaced">
 ./install.sh /usr/local/&sr;/Thirdparty_osx
 </literallayout>
