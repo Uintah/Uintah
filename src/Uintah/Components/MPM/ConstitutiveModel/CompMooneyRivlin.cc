@@ -160,10 +160,10 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   ParticleVariable<Vector> pvelocity;
   old_dw->get(pvelocity, lb->pVelocityLabel, pset);
 
-   // As a side-effect of computeStressTensor, pDilatationalWaveSpeed
+   // As a side-effect of computeStressTensor, pDilationalWaveSpeed
    // are calculated and for delT and saved that will be used later by fracture
-  ParticleVariable<double> pDilatationalWaveSpeed;
-  new_dw->allocate(pDilatationalWaveSpeed, lb->pDilatationalWaveSpeedLabel, pset);
+  ParticleVariable<double> pDilationalWaveSpeed;
+  new_dw->allocate(pDilationalWaveSpeed, lb->pDilationalWaveSpeedLabel, pset);
 
   NCVariable<Vector> gvelocity;
 
@@ -184,7 +184,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 	
     lattice = scinew Lattice(px);
     brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
-	   pIsBroken,pCrackSurfaceNormal,pMicrocrackSize);
+	   pvolume,pIsBroken,pCrackSurfaceNormal,pMicrocrackSize);
   }
 
   for(ParticleSubset::iterator iter = pset->begin();
@@ -277,7 +277,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
             C3*(1.0/(invar3*invar3) - 1.0) +
             C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx]/J;
 
-      pDilatationalWaveSpeed[idx] = c_dil;
+      pDilationalWaveSpeed[idx] = c_dil;
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
@@ -293,7 +293,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     // Volume is currently just carried forward, but will be updated.
     new_dw->put(pvolume, lb->pVolumeDeformedLabel);
 
-    new_dw->put(pDilatationalWaveSpeed, lb->pDilatationalWaveSpeedLabel);
+    new_dw->put(pDilationalWaveSpeed, lb->pDilationalWaveSpeedLabel);
 
     if(matl->getFractureModel()) {
         delete lattice;
@@ -343,7 +343,7 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
    task->computes(new_dw, p_cmdata_label_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
    
-   task->computes(new_dw, lb->pDilatationalWaveSpeedLabel, matl->getDWIndex(), patch);
+   task->computes(new_dw, lb->pDilationalWaveSpeedLabel, matl->getDWIndex(), patch);
 }
 
 double CompMooneyRivlin::computeStrainEnergy(const Patch* patch,
@@ -382,8 +382,12 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.59  2000/09/08 18:23:19  tan
+// Added visibility calculation to fracture broken cell shape function
+// interpolation.
+//
 // Revision 1.58  2000/09/08 01:45:28  tan
-// Added pDilatationalWaveSpeedLabel for fracture and is saved as a
+// Added pDilationalWaveSpeedLabel for fracture and is saved as a
 // side-effect of computeStressTensor in each constitutive model class.
 //
 // Revision 1.57  2000/09/07 21:17:49  tan

@@ -2,18 +2,21 @@
 
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Components/MPM/Fracture/Lattice.h>
+#include <Uintah/Components/MPM/Fracture/ParticlesNeighbor.h>
 
 namespace Uintah {
 namespace MPM {
 
 BrokenCellShapeFunction::
 BrokenCellShapeFunction( const Lattice& lattice,
+                         const ParticleVariable<double>& pVolume,
                          const ParticleVariable<int>& pIsBroken,
 			 const ParticleVariable<Vector>& pCrackSurfaceNormal,
 			 const ParticleVariable<double>& pMicrocrackSize )
 
 
 : d_lattice(lattice),
+  d_pVolume(pVolume),
   d_pIsBroken(pIsBroken),
   d_pCrackSurfaceNormal(pCrackSurfaceNormal),
   d_pMicrocrackSize(pMicrocrackSize)
@@ -32,7 +35,7 @@ findCellAndWeights( int partIdx,
   return false;
 
   for(int i=0;i<8;++i) {
-    visiable[i] = getVisiability( partIdx,nodeIdx[i] );
+    visiable[i] = getVisibility( partIdx,nodeIdx[i] );
   }
   return true;
 }
@@ -49,7 +52,7 @@ findCellAndShapeDerivatives( int partIdx,
   return false;
   
   for(int i=0;i<8;++i) {
-    visiable[i] = getVisiability( partIdx,nodeIdx[i] );
+    visiable[i] = getVisibility( partIdx,nodeIdx[i] );
   }
 
   return true;
@@ -72,7 +75,7 @@ findCellAndWeightsAndShapeDerivatives( int partIdx,
   return false;
   
   for(int i=0;i<8;++i) {
-    visiable[i] = getVisiability( partIdx,nodeIdx[i] );
+    visiable[i] = getVisibility( partIdx,nodeIdx[i] );
   }
 
   return true;
@@ -80,15 +83,30 @@ findCellAndWeightsAndShapeDerivatives( int partIdx,
 
 bool
 BrokenCellShapeFunction::
-getVisiability(int partIdx,const IntVector& nodeIdx) const
+getVisibility(int partIdx,const IntVector& nodeIdx) const
 {
-  return true;
+  IntVector cellIdx;
+  d_lattice.getPatch()->findCell(d_lattice.getpX()[partIdx],cellIdx);
+
+  ParticlesNeighbor particles( d_lattice.getpX(),
+                               d_pVolume,
+			       d_pIsBroken,
+			       d_pCrackSurfaceNormal,
+			       d_pMicrocrackSize);
+  particles.buildIn(cellIdx,d_lattice);
+
+  return particles.visible(d_lattice.getpX()[partIdx],
+                           d_lattice.getPatch()->nodePosition(nodeIdx) );
 }
 
 } //namespace MPM
 } //namespace Uintah
 
 // $Log$
+// Revision 1.7  2000/09/08 18:24:51  tan
+// Added visibility calculation to fracture broken cell shape function
+// interpolation.
+//
 // Revision 1.6  2000/09/07 21:11:10  tan
 // Added particle variable pMicrocrackSize for fracture.
 //

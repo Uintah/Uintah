@@ -12,8 +12,17 @@
 namespace Uintah {
 namespace MPM {
 
-ParticlesNeighbor::ParticlesNeighbor(const ParticleVariable<Point>& pX)
-: std::vector<particleIndex>(), d_pX(pX)
+ParticlesNeighbor::ParticlesNeighbor(const ParticleVariable<Point>& pX,
+                          const ParticleVariable<double>& pVolume,
+	                  const ParticleVariable<int>& pIsBroken,
+			  const ParticleVariable<Vector>& pCrackSurfaceNormal,
+			  const ParticleVariable<double>& pMicrocrackSize)
+: std::vector<particleIndex>(),
+  d_pX(pX),
+  d_pVolume(pVolume),
+  d_pIsBroken(pIsBroken),
+  d_pCrackSurfaceNormal(pCrackSurfaceNormal),
+  d_pMicrocrackSize(pMicrocrackSize)
 {
 }
 
@@ -88,10 +97,41 @@ void  ParticlesNeighbor::interpolateInternalForce(LeastSquare& ls,
   }
 }
 
+bool ParticlesNeighbor::visible(const Point& A,const Point& B) const
+{
+  for(int i=0; i<size(); i++) {
+      int index = (*this)[i];
+      if( d_pIsBroken[index] ) {
+        Vector N = d_pCrackSurfaceNormal[index];
+        double size2 = d_pMicrocrackSize[index] * d_pMicrocrackSize[index];
+        Point O = d_pX[index] + N *
+           ( pow(d_pVolume[index],0.3333) /2 );
+
+	double A_N = Dot(A,N);
+	
+        double a = A_N - Dot(O,N);
+        double b = A_N - Dot(B,N);
+	
+	if(b != 0) {
+	  double lambda = a/b;
+	  Point p( A.x() * (1-lambda) + B.x() * lambda,
+                   A.y() * (1-lambda) + B.y() * lambda,
+		   A.z() * (1-lambda) + B.z() * lambda );
+	  if( (p - O).length2() < size2 ) return false;
+	}
+      }
+  }
+  return true;
+}
+
 } //namespace MPM
 } //namespace Uintah
 
 // $Log$
+// Revision 1.9  2000/09/08 18:25:44  tan
+// Added visibility calculation to fracture broken cell shape function
+// interpolation.
+//
 // Revision 1.8  2000/07/06 16:59:34  tan
 // Least square interpolation added for particle velocities and stresses
 // updating.

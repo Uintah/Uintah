@@ -20,9 +20,15 @@ class LeastSquare;
 class ParticlesNeighbor : public std::vector<particleIndex> {
 public:
 
-        ParticlesNeighbor(const ParticleVariable<Point>& pX);
+        ParticlesNeighbor(const ParticleVariable<Point>& pX,
+                          const ParticleVariable<double>& pVolume,
+	                  const ParticleVariable<int>& pIsBroken,
+			  const ParticleVariable<Vector>& pCrackSurfaceNormal,
+			  const ParticleVariable<double>& pMicrocrackSize);
 
   void  buildIn(const IntVector& cellIndex,const Lattice& lattice);
+  
+  bool  visible(const Point& A,const Point& B) const;
 
   void  interpolateVector(LeastSquare& ls,
                           const particleIndex& pIdx,
@@ -43,6 +49,10 @@ public:
 
 private:
   const ParticleVariable<Point>&  d_pX;
+  const ParticleVariable<int>&    d_pIsBroken;
+  const ParticleVariable<Vector>& d_pCrackSurfaceNormal;
+  const ParticleVariable<double>& d_pMicrocrackSize;
+  const ParticleVariable<double>& d_pVolume;
 };
 
 } //namespace MPM
@@ -51,6 +61,10 @@ private:
 #endif //__PARTICLESNEIGHBOR_H__
 
 // $Log$
+// Revision 1.7  2000/09/08 18:25:35  tan
+// Added visibility calculation to fracture broken cell shape function
+// interpolation.
+//
 // Revision 1.6  2000/07/06 16:59:24  tan
 // Least square interpolation added for particle velocities and stresses
 // updating.
