@@ -149,15 +149,14 @@ double ICEMaterial::getSpeedOfSound() const
  |____|____|____|____|          |____|____|____|____|=
 _____________________________________________________________________*/
 void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
-                              CCVariable<double>& sp_vol_CC,
+                                  CCVariable<double>& sp_vol_CC,
 				  CCVariable<double>& rho_CC,
 				  CCVariable<double>& temp,
 				  CCVariable<double>& speedSound,
-				  CCVariable<double>& visc_CC,
 				  CCVariable<double>& vol_frac_CC,
 				  CCVariable<Vector>& vel_CC,
-                              CCVariable<double>& press_CC,
-                              int numMatls,
+                                  CCVariable<double>& press_CC,
+                                  int numMatls,
 				  const Patch* patch,DataWarehouse* new_dw)
 {
   CCVariable<int> IveBeenHere;
@@ -170,7 +169,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
   temp.initialize(0.);
   vol_frac_CC.initialize(0.);
   speedSound.initialize(0.);
-  visc_CC.initialize(0.);
   
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
    GeometryPiece* piece = d_geom_objs[obj]->getPiece();
@@ -216,7 +214,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
-          visc_CC[*iter]    = d_viscosity;
 	  IveBeenHere[*iter]= 1;
         }
 
@@ -229,7 +226,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
-          visc_CC[*iter]    = d_viscosity;
 	  IveBeenHere[*iter]= 2;
         } 
       }   
@@ -242,7 +238,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
            rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +SMALL_NUM;
            temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
            speedSound[*iter] = d_speed_of_sound;
-           visc_CC[*iter]    = d_viscosity;
 	   IveBeenHere[*iter]= obj; 
       }    
    }  // Loop over domain

@@ -74,7 +74,7 @@ WARNING
 			CCVariable<double>&sp_vol,
 			CCVariable<double>& rhC,
 			CCVariable<double>& temp, 
-			CCVariable<double>& ss,    CCVariable<double>& vsc,
+			CCVariable<double>& ss,
 			CCVariable<double>& volf,  CCVariable<Vector>& vCC,
 			CCVariable<double>& press,
 			int numMatls,
