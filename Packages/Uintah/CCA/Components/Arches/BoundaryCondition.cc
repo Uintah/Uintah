@@ -1613,7 +1613,8 @@ BoundaryCondition::uVelocityBC(const Patch* patch,
 	      vars->uVelocityConvectCoeff[Arches::AB],
 	      constvars->vVelocity, constvars->wVelocity,
 	      idxLo, idxHi, constvars->cellType,
-	      wall_celltypeval, outlet_celltypeval, press_celltypeval, VISCOS,
+	      wall_celltypeval, outlet_celltypeval, press_celltypeval,
+	      constvars->viscosity,
 	      cellinfo->sewu, cellinfo->sns, cellinfo->stb,
 	      cellinfo->yy, cellinfo->yv, cellinfo->zz, cellinfo->zw,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
@@ -1690,7 +1691,8 @@ BoundaryCondition::vVelocityBC(const Patch* patch,
 	      vars->vVelocityConvectCoeff[Arches::AB],
 	      constvars->uVelocity, constvars->wVelocity,
 	      idxLo, idxHi, constvars->cellType,
-	      wall_celltypeval, outlet_celltypeval, press_celltypeval, VISCOS,
+	      wall_celltypeval, outlet_celltypeval, press_celltypeval,
+	      constvars->viscosity,
 	      cellinfo->sew, cellinfo->snsv, cellinfo->stb,
 	      cellinfo->xx, cellinfo->xu, cellinfo->zz, cellinfo->zw,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
@@ -1766,7 +1768,8 @@ BoundaryCondition::wVelocityBC(const Patch* patch,
 	      vars->wVelocityConvectCoeff[Arches::AB],
 	      constvars->uVelocity, constvars->vVelocity,
 	      idxLo, idxHi, constvars->cellType,
-	      wall_celltypeval, outlet_celltypeval, press_celltypeval, VISCOS,
+	      wall_celltypeval, outlet_celltypeval, press_celltypeval,
+	      constvars->viscosity,
 	      cellinfo->sew, cellinfo->sns, cellinfo->stbw,
 	      cellinfo->xx, cellinfo->xu, cellinfo->yy, cellinfo->yv,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
@@ -4369,7 +4372,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
         if (constvars->cellType[xminusCell] == press_celltypeval)
-	  if (constvars->uVelocity[currCell] < 0.0)
+	  if (constvars->uVelocity[currCell] <= 0.0)
                         vars->scalar[xminusCell] = vars->scalar[currCell];
 	  else vars->scalar[xminusCell] = 0.0;
       }
@@ -4382,7 +4385,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xplusCell] == press_celltypeval)
-	  if (constvars->uVelocity[xplusCell] > 0.0)
+	  if (constvars->uVelocity[xplusCell] >= 0.0)
                         vars->scalar[xplusCell] = vars->scalar[currCell];
 	  else vars->scalar[xplusCell] = 0.0;
       }
@@ -4395,7 +4398,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
         if (constvars->cellType[yminusCell] == press_celltypeval)
-	  if (constvars->vVelocity[currCell] < 0.0)
+	  if (constvars->vVelocity[currCell] <= 0.0)
                         vars->scalar[yminusCell] = vars->scalar[currCell];
 	  else vars->scalar[yminusCell] = 0.0;
       }
@@ -4408,7 +4411,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yplusCell] == press_celltypeval)
-	  if (constvars->vVelocity[yplusCell] > 0.0)
+	  if (constvars->vVelocity[yplusCell] >= 0.0)
                         vars->scalar[yplusCell] = vars->scalar[currCell];
 	  else vars->scalar[yplusCell] = 0.0;
       }
@@ -4421,7 +4424,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
         if (constvars->cellType[zminusCell] == press_celltypeval)
-	  if (constvars->wVelocity[currCell] < 0.0)
+	  if (constvars->wVelocity[currCell] <= 0.0)
                         vars->scalar[zminusCell] = vars->scalar[currCell];
 	  else vars->scalar[zminusCell] = 0.0;
       }
@@ -4434,7 +4437,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zplusCell] == press_celltypeval)
-	  if (constvars->wVelocity[zplusCell] > 0.0)
+	  if (constvars->wVelocity[zplusCell] >= 0.0)
                         vars->scalar[zplusCell] = vars->scalar[currCell];
 	  else vars->scalar[zplusCell] = 0.0;
       }
@@ -4683,7 +4686,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector xminusCell(colX-1, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xminusCell] == out_celltypeval) {
-	  if (constvars->uVelocity[currCell] < 0.0) {
+	  if (constvars->uVelocity[currCell] <= 0.0) {
            vars->scalar[xminusCell]= - delta_t * constvars->uVelocity[xplusCell] *
               (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
                constvars->old_density[xminusCell]*constvars->old_scalar[xminusCell]) /
@@ -4709,7 +4712,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xplusCell] == out_celltypeval) {
-	  if (constvars->uVelocity[xplusCell] > 0.0) {
+	  if (constvars->uVelocity[xplusCell] >= 0.0) {
            vars->scalar[xplusCell]= - delta_t * constvars->uVelocity[currCell] *
               (constvars->old_density[xplusCell]*constvars->old_scalar[xplusCell] -
                constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
@@ -4736,7 +4739,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector yminusCell(colX, colY-1, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yminusCell] == out_celltypeval) {
-	  if (constvars->vVelocity[currCell] < 0.0) {
+	  if (constvars->vVelocity[currCell] <= 0.0) {
            vars->scalar[yminusCell]= - delta_t * constvars->vVelocity[yplusCell] *
               (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
                constvars->old_density[yminusCell]*constvars->old_scalar[yminusCell]) /
@@ -4762,7 +4765,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yplusCell] == out_celltypeval) {
-	  if (constvars->vVelocity[yplusCell] > 0.0) {
+	  if (constvars->vVelocity[yplusCell] >= 0.0) {
            vars->scalar[yplusCell]= - delta_t * constvars->vVelocity[currCell] *
               (constvars->old_density[yplusCell]*constvars->old_scalar[yplusCell] -
                constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
@@ -4789,7 +4792,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector zminusCell(colX, colY, colZ-1);
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zminusCell] == out_celltypeval) {
-	  if (constvars->wVelocity[currCell] < 0.0) {
+	  if (constvars->wVelocity[currCell] <= 0.0) {
            vars->scalar[zminusCell]= - delta_t * constvars->wVelocity[zplusCell] *
               (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
                constvars->old_density[zminusCell]*constvars->old_scalar[zminusCell]) /
@@ -4815,7 +4818,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zplusCell] == out_celltypeval) {
-	  if (constvars->wVelocity[zplusCell] > 0.0) {
+	  if (constvars->wVelocity[zplusCell] >= 0.0) {
            vars->scalar[zplusCell]= - delta_t * constvars->wVelocity[currCell] *
               (constvars->old_density[zplusCell]*constvars->old_scalar[zplusCell] -
                constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
