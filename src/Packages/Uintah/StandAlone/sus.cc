@@ -32,6 +32,7 @@
 #include <Packages/Uintah/CCA/Components/Examples/Poisson2.h>
 #include <Packages/Uintah/CCA/Components/Examples/Burger.h>
 #include <Packages/Uintah/CCA/Components/Examples/ParticleTest1.h>
+#include <Packages/Uintah/CCA/Components/Examples/RegridderTest.h>
 #include <Packages/Uintah/CCA/Components/Examples/Poisson3.h>
 #include <Packages/Uintah/CCA/Components/Examples/SimpleCFD.h>
 #include <Packages/Uintah/CCA/Components/Examples/AMRSimpleCFD.h>
@@ -204,6 +205,7 @@ main( int argc, char** argv )
     bool   do_arches=false;
     bool   do_ice=false;
     bool   do_particletest1=false;
+    bool   do_regriddertest=false;
     bool   do_burger=false;
     bool   do_poisson1=false;
     bool   do_poisson2=false;
@@ -277,6 +279,8 @@ main( int argc, char** argv )
 	    do_mpm=true;
 	} else if(s == "-particletest1"){
 	    do_particletest1=true;
+	} else if(s == "-regriddertest"){
+	    do_regriddertest=true;
 	} else if(s == "-burger"){
 	    do_burger=true;
 	} else if(s == "-poisson1"){
@@ -385,7 +389,10 @@ main( int argc, char** argv )
 	usage( "ICE and Arches do not work together", "", argv[0]);
     }
 
-    if(!(do_ice || do_arches || do_mpm || do_mpmf  || do_rmpm || do_smpm || do_smpmice || do_rmpmice || do_impmpm || do_burger || do_particletest1 || do_poisson1 || do_poisson2 || do_poisson3 || do_simplecfd || combine_patches)){
+    if(!(do_ice || do_arches || do_mpm || do_mpmf  || do_rmpm || do_smpm ||
+	 do_smpmice || do_rmpmice || do_impmpm || do_burger || do_particletest1 ||
+	 do_regriddertest || do_poisson1 || do_poisson2 || do_poisson3 ||
+	 do_simplecfd || combine_patches)){
 	usage( "You need to specify -arches, -ice, -mpmf, -rmpm, -smpm or -mpm", "", argv[0]);
     }
 
@@ -527,6 +534,10 @@ main( int argc, char** argv )
 	  ParticleTest1* pt1 = scinew ParticleTest1(world);
 	  sim = pt1;
 	  comp = pt1;
+	} else if(do_regriddertest){
+	  RegridderTest* rgt = scinew RegridderTest(world);
+	  sim = rgt;
+	  comp = rgt;
 	} else if(do_poisson2){
 	  Poisson2* poisson2 = scinew Poisson2(world);
 	  sim = poisson2;
