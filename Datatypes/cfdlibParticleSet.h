@@ -20,6 +20,7 @@
 struct cfdlibTimeStep {
     double time;
     Array1<Vector> positions;
+    Array1<double> scalars;
 };
 
 class cfdlibParticleSet : public ParticleSet {
@@ -53,6 +54,9 @@ public:
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+
+  // testing
+  void print();
 };
 
 #endif

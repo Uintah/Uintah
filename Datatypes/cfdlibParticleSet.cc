@@ -43,8 +43,8 @@ int cfdlibParticleSet::position_vector()
     return 0;
 }
 
-void cfdlibParticleSet::get(int timestep, int vectorid, Array1<Vector>& values,
-			    int start, int end)
+void cfdlibParticleSet::get(int timestep, int vectorid,
+			    Array1<Vector>& values, int start, int end)
 {
     cfdlibTimeStep* ts=timesteps[timestep];
     if(start==-1)
@@ -83,4 +83,63 @@ void cfdlibParticleSet::io(Piostream& stream)
     stream.end_class();
 }
 
+// The following functions added by psutton to make things compile.
+// I doubt any do what they're supposed to.
+ParticleSet *cfdlibParticleSet::clone() const
+{
+  return scinew cfdlibParticleSet();
+}
 
+int cfdlibParticleSet::find_scalar(const clString& name)
+{
+  return 0;
+}
+
+void cfdlibParticleSet::list_scalars(Array1<clString>& names)
+{
+}
+
+int cfdlibParticleSet::find_vector(const clString& name)
+{
+  return 0;
+}
+
+void cfdlibParticleSet::list_vectors(Array1<clString>& names)
+{
+}
+  
+void cfdlibParticleSet::get(int timestep, int scalarid, Array1<double>& value,
+			    int start, int end)
+{
+  cfdlibTimeStep* ts=timesteps[timestep];
+  if(start==-1)
+    start=0;
+  if(end==-1)
+    end=ts->positions.size();
+  int n=end-start;
+  value.resize(n);
+  for(int i=0;i<n;i++)
+    value[i]=ts->scalars[i+start];
+}
+
+void cfdlibParticleSet::interpolate(double time, int vectorid, Vector& value,
+				    int start, int end)
+{
+}
+
+void cfdlibParticleSet::interpolate(double time, int scalarid, double& value,
+				    int start, int end)
+{
+}
+
+void cfdlibParticleSet::print() {
+  cout << "Particle Set.  t = " << timesteps[0]->time << endl;
+  int i;
+  int n = timesteps[0]->positions.size();
+  for(i=0;i<n;i++) {
+    cout << (timesteps[0]->positions[i]).x() << " " 
+	 << (timesteps[0]->positions[i]).y() << " "
+	 << (timesteps[0]->positions[i]).z() << ":\t"
+	 << timesteps[0]->scalars[i] << endl;
+  }
+}

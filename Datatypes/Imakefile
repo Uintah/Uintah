@@ -22,7 +22,8 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o \
         HexMesh.o HexMeshPort.o  ScalarFieldHUG.o VectorFieldHUG.o \
 	VoidStar.o  VoidStarPort.o cMatrix.o cSMatrix.o cDMatrix.o \
-	cVector.o cVectorPort.o cMatrixPort.o ParticleSet.o ParticleSetPort.o \
+	cVector.o cVectorPort.o cMatrixPort.o \
+	ParticleSet.o ParticleSetPort.o \
 	cfdlibParticleSet.o
 GENSRCS = ScalarFieldRGchar.cc  ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
 	ScalarFieldRGdouble.cc  ScalarFieldRG.cc
@@ -48,7 +49,8 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc \
         HexMesh.cc HexMeshPort.cc ScalarFieldHUG.cc VectorFieldHUG.cc \
 	LockArray3.cc \
-	VectorFieldZone.cc ParticleSetPort.cc ParticleSet.cc \
+	VectorFieldZone.cc \
+	ParticleSetPort.cc ParticleSet.cc \
 	cfdlibParticleSet.cc
 GENH = ScalarFieldRGchar.h  ScalarFieldRGint.h  ScalarFieldRGfloat.h \
 	ScalarFieldRGdouble.h ScalarFieldRG.h \
