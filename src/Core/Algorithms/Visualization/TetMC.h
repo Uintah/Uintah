@@ -101,7 +101,12 @@ void TetMC<Field>::reset( int n, bool build_trisurf )
   typename Field::mesh_type::Node::size_type nsize;
   mesh_->size(nsize);
   nnodes_ = nsize;
-  node_vector_ = vector<long int>(nsize, -1);
+  if (field_->data_at() == Field::CELL)
+  {
+    mesh_->synchronize(Mesh::FACES_E);
+    mesh_->synchronize(Mesh::FACE_NEIGHBORS_E);
+    node_vector_ = vector<long int>(nsize, -1);
+  }
 
   if (build_trisurf_)
     trisurf_ = new TriSurfMesh; 
@@ -152,37 +157,41 @@ void TetMC<Field>::extract( cell_index_type cell, double v )
 }
 
 template<class Field>
-void TetMC<Field>::extract_c( cell_index_type cell, double v )
+void TetMC<Field>::extract_c( cell_index_type cell, double iso )
 {
-  value_type selfvalue;
+  value_type selfvalue, nbrvalue;
   if (!field_->value( selfvalue, cell )) return;
-  typename mesh_type::Node::array_type node;
-  mesh_->get_nodes( node, cell );
-  int i;
-  Point p[4];
-  for (i=0; i<4; i++)
-    mesh_->get_point( p[i], node[i] );
-  typename mesh_type::Cell::array_type nbr_indices;
-  mesh_->synchronize(Mesh::FACE_NEIGHBORS_E);
-  mesh_->get_neighbors(nbr_indices, cell);
-  value_type value[4];
-  for (i=0; i<4; i++)
-    if (field_->value( value[i], nbr_indices[i] ) &&
-	selfvalue > value[i] &&
-	(value[i]-v)*(selfvalue-v) < 0) {
-      int counter=0;
-      int indices[3];
-      int j;
-      for (j=0; j<4; j++) if (i!=j) indices[counter++] = j;
-      triangles_->add(p[indices[0]], p[indices[1]], p[indices[2]]);
-      if (build_trisurf_) {
-	TriSurfMesh::Node::index_type vertices[3];
-	for (j=0; j<3; j++) 
-	  vertices[j]=find_or_add_nodepoint(node[vertices[j]]);
+  typename mesh_type::Face::array_type faces;
+  mesh_->get_faces(faces, cell);
+
+  cell_index_type nbr;
+  Point p[3];
+  typename mesh_type::Node::array_type nodes;
+  TriSurfMesh::Node::index_type vertices[3];
+  unsigned int i, j;
+  for (i = 0; i < faces.size(); i++)
+  {
+    if (mesh_->get_neighbor(nbr, cell, faces[i]) &&
+	field_->value(nbrvalue, nbr) &&
+	(selfvalue > nbrvalue) &&
+	((selfvalue-iso) * (nbrvalue-iso) < 0))
+    {
+      mesh_->get_nodes(nodes, faces[i]);
+      for (j=0; j < 3; j++) { mesh_->get_center(p[j], nodes[j]); }
+      triangles_->add(p[0], p[1], p[2]);
+
+      if (build_trisurf_)
+      {
+	for (j=0; j < 3;j ++)
+	{
+	  vertices[j] = find_or_add_nodepoint(nodes[j]);
+	}
 	trisurf_->add_triangle(vertices[0], vertices[1], vertices[2]);
       }
     }
+  }
 }
+
 
 template<class Field>
 void TetMC<Field>::extract_n( cell_index_type cell, double v )
