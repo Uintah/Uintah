@@ -69,24 +69,23 @@ bool Region::findCellAndWeights(const Point& pos,
    return ix>= 0 && iy>=0 && iz>=0 && ix<d_res.x() && iy<d_res.y() && iz<d_res.z();
 }
 
-#if 0
-bool Region::findCellAndShapeDerivatives(const Vector& pos,
-					 Array3Index ni[8],
+
+bool Region::findCellAndShapeDerivatives(const Point& pos,
+					 IntVector ni[8],
 					 Vector d_S[8]) const
 {
-    Vector cellpos = (pos-d_lower.asVector())*
-                      Vector(d_nx, d_ny, d_nz)/(d_upper-d_lower);
+    Vector cellpos = (pos-d_box.lower())*d_res/(d_box.upper()-d_box.lower());
     int ix = Floor(cellpos.x());
     int iy = Floor(cellpos.y());
     int iz = Floor(cellpos.z());
-    ni[0] = Array3Index(ix, iy, iz);
-    ni[1] = Array3Index(ix, iy, iz+1);
-    ni[2] = Array3Index(ix, iy+1, iz);
-    ni[3] = Array3Index(ix, iy+1, iz+1);
-    ni[4] = Array3Index(ix+1, iy, iz);
-    ni[5] = Array3Index(ix+1, iy, iz+1);
-    ni[6] = Array3Index(ix+1, iy+1, iz);
-    ni[7] = Array3Index(ix+1, iy+1, iz+1);
+    ni[0] = IntVector(ix, iy, iz);
+    ni[1] = IntVector(ix, iy, iz+1);
+    ni[2] = IntVector(ix, iy+1, iz);
+    ni[3] = IntVector(ix, iy+1, iz+1);
+    ni[4] = IntVector(ix+1, iy, iz);
+    ni[5] = IntVector(ix+1, iy, iz+1);
+    ni[6] = IntVector(ix+1, iy+1, iz);
+    ni[7] = IntVector(ix+1, iy+1, iz+1);
     double fx = cellpos.x() - ix;
     double fy = cellpos.y() - iy;
     double fz = cellpos.z() - iz;
@@ -101,9 +100,9 @@ bool Region::findCellAndShapeDerivatives(const Vector& pos,
     d_S[5] = Vector(  fy1 * fz,  -fx  * fz,   fx  * fy1);
     d_S[6] = Vector(  fy  * fz1,  fx  * fz1, -fx  * fy);
     d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
-    return ix>= 0 && iy>=0 && iz>=0 && ix<d_nx && iy<d_ny && iz<d_nz;
+    return ix>= 0 && iy>=0 && iz>=0 && ix<d_res.x() && iy<d_res.y() && iz<d_res.z();
 }
-#endif
+
 
 void decompose(int numProcessors, int sizex, int sizey, int sizez,
 	       int& numProcessors_x, int& numProcessors_y,
@@ -232,6 +231,9 @@ NodeIterator Region::getNodeIterator() const
 
 //
 // $Log$
+// Revision 1.12  2000/05/02 20:30:59  jas
+// Fixed the findCellAndShapeDerivatives.
+//
 // Revision 1.11  2000/05/02 20:13:05  sparker
 // Implemented findCellAndWeights
 //
