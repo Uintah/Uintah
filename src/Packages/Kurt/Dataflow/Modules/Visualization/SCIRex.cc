@@ -92,7 +92,8 @@ void SCIRex::execute(void)
   static double old_min = 0;
   static double old_max = 1;
   static bool old_fixed = false;
-  static int dumpcounter = 0;
+  static GeomID geom_id = -1;
+//   static int dumpcounter = 0;
 
   infield_ = (FieldIPort *)get_iport("Texture Field");
   incolormap_ = (ColorMapIPort *)get_iport("Color Map");
@@ -112,11 +113,11 @@ void SCIRex::execute(void)
   }
 
   if (!infield_->get(tex_)) {
-    error("Did not get FieldHandle!");
+    warning("Did not get FieldHandle!");
     return;
   }
   else if (!tex_.get_rep()) {
-    error("FieldHandle does not have data.");
+    warning("FieldHandle does not have data.");
     return;
   }
   
@@ -125,74 +126,85 @@ void SCIRex::execute(void)
     return;
   }
 
-
-
-  //AuditAllocator(default_allocator);
-  if( !volren_ ){
-    vector<char*> dpys; // hard code for now
-    dpys.push_back(":0.0");
-    dpys.push_back(":0.0");
-    cerr<<"min = "<<min_.get()<<" max = "<<max_.get()<<endl;
-    volren_ = scinew SCIRexRenderer(0x123456, dpys, 2, tex_, cmap,
-				    (is_fixed_.get() == 1),
-				    min_.get(), max_.get());
-    if( tex_->data_at() == Field::CELL ){
-      volren_->SetInterp(false);
-      interp_mode_.set(0);
-    }
-    std::cerr<<"Need to initialize volren\n";
-    old_cmap = cmap;
-    old_tex = tex_;
-    gui->execute(id + " SetDims " + to_string( volren_->getBrickSize()));
-    max_brick_dim_.set(  volren_->getBrickSize() );
-    old_brick_size = max_brick_dim_.get();
-    if( is_fixed_.get() !=1 ){
-      volren_->getRange( old_min, old_max);
-      min_.set(old_min);
-      max_.set(old_max);
-    }
-    old_fixed = ( is_fixed_.get() == 1);
-    ogeom_->delAll();
-    ogeom_->addObj( volren_, "SCIRex TransParent");
-    
-  } else {
-    bool needbuild = false;
-    if( tex_.get_rep() != old_tex.get_rep() ){
-      volren_->SetVol( tex_ );
-      old_tex = tex_;
-      needbuild = true;
-    }
-    if( max_brick_dim_.get() != old_brick_size ){
-      volren_->SetBrickSize(  max_brick_dim_.get() );
-      old_brick_size = max_brick_dim_.get();
-      needbuild = true;
-    }
-    if( is_fixed_.get() == 1 &&
-	(old_min != min_.get() || old_max!= max_.get()) ){
-      volren_->SetRange( min_.get(), max_.get() );
-      volren_->RangeIsFixed( true );
-      old_min = min_.get();
-      old_max = max_.get();
-      old_fixed = ( is_fixed_.get() == 1);
-      needbuild = true;
-    }
-    if( old_fixed == true && is_fixed_.get() == 0 ){
-      old_fixed = ( is_fixed_.get() == 1);
-      needbuild = true;
-    }
-    if( cmap.get_rep() != old_cmap.get_rep() ){
-      volren_->SetColorMap( cmap );
-      old_cmap = cmap;
-    }
-    if( needbuild ) {
-      volren_->Build();
-      volren_->getRange( old_min, old_max);
-      min_.set(old_min);
-      max_.set(old_max);
-    }
-    
-    std::cerr<<"Initialized\n";
+  if(tex_->get_type_name(0) != "LatVolField"){
+    warning("SCIRex only works with LatVolFields, no action.");
+    return;
   }
+
+  vector<char*> dpys; // hard code for now
+  dpys.push_back(":0.0");
+  dpys.push_back(":0.0");
+  int ncomp = 3;
+  //AuditAllocator(default_allocator);
+  if(geom_id != -1)
+    ogeom_->delObj(geom_id, 0);
+  
+  if( volren_ )
+    delete volren_;
+
+  cerr<<"min = "<<min_.get()<<" max = "<<max_.get()<<endl;
+  volren_ =
+    scinew SCIRexRenderer(0x123456, dpys, ncomp, tex_, cmap,
+			  (is_fixed_.get() == 1),
+			  min_.get(), max_.get());
+  if( tex_->data_at() == Field::CELL ){
+    volren_->SetInterp(false);
+    interp_mode_.set(0);
+  }
+  std::cerr<<"Need to initialize volren\n";
+  old_cmap = cmap;
+  old_tex = tex_;
+  gui->execute(id + " SetDims " + to_string( volren_->getBrickSize()));
+  max_brick_dim_.set(  volren_->getBrickSize() );
+  old_brick_size = max_brick_dim_.get();
+  if( is_fixed_.get() !=1 ){
+    volren_->getRange( old_min, old_max);
+    min_.set(old_min);
+    max_.set(old_max);
+  }
+  old_fixed = ( is_fixed_.get() == 1);
+  ogeom_->delAll();
+  geom_id = ogeom_->addObj( volren_, "SCIRex TransParent");
+  
+//   } 
+// else {
+//     bool needbuild = false;
+//     if( tex_.get_rep() != old_tex.get_rep() ){
+//       volren_->SetVol( tex_ );
+//       old_tex = tex_;
+//       needbuild = true;
+//     }
+//     if( max_brick_dim_.get() != old_brick_size ){
+//       volren_->SetBrickSize(  max_brick_dim_.get() );
+//       old_brick_size = max_brick_dim_.get();
+//       needbuild = true;
+//     }
+//     if( is_fixed_.get() == 1 &&
+// 	(old_min != min_.get() || old_max!= max_.get()) ){
+//       volren_->SetRange( min_.get(), max_.get() );
+//       volren_->RangeIsFixed( true );
+//       old_min = min_.get();
+//       old_max = max_.get();
+//       old_fixed = ( is_fixed_.get() == 1);
+//       needbuild = true;
+//     }
+//     if( old_fixed == true && is_fixed_.get() == 0 ){
+//       old_fixed = ( is_fixed_.get() == 1);
+//       needbuild = true;
+//     }
+//     if( cmap.get_rep() != old_cmap.get_rep() ){
+//       volren_->SetColorMap( cmap );
+//       old_cmap = cmap;
+//     }
+//     if( needbuild ) {
+//       volren_->Build(dpys, ncomp, tex_, cmap);
+//       volren_->getRange( old_min, old_max);
+//       min_.set(old_min);
+//       max_.set(old_max);
+//     }
+    
+//     std::cerr<<"Initialized\n";
+//   }
  
   //AuditAllocator(default_allocator);
   volren_->SetInterp( bool(interp_mode_.get()));
@@ -216,10 +228,10 @@ void SCIRex::execute(void)
   //ogeom->flushViews();	
   ogeom_->flushViewsAndWait();
   //AuditAllocator(default_allocator);
-  ostringstream num;
-  num <<dumpcounter++;
-  std::string dump_string("SCIRex dump_string");
-  dump_string += num.str();
+//   ostringstream num;
+//   num <<dumpcounter++;
+//   std::string dump_string("SCIRex dump_string");
+//   dump_string += num.str();
   //  DumpAllocator(default_allocator, dump_string.c_str() );
 
 

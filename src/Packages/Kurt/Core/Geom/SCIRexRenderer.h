@@ -181,6 +181,8 @@ private:
 
   double slice_alpha_;
   DrawInfoOpenGL* di_;
+
+  Transform field_transform;
   
   bool windows_init_;
   bool cmapHasChanged_;
@@ -191,6 +193,12 @@ private:
   vector<GLTexture3D *> textures;
   vector<GLVolumeRenderer *> renderers;
   SCIRexRenderData *render_data_;
+
+  void make_render_windows(FieldHandle tex_, 
+		     double& min_, double& max_,
+		     bool is_fixed_, int brick_size_,
+		     vector<char *>& displays);
+
 
 };
 

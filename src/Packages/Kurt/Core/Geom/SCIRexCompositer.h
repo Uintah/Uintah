@@ -34,11 +34,11 @@ public:
   void doComposite();
   void kill(){ die_ = true; }
   void SetFrame(int,int,int,int);
-  void SetOffset( int );
+
 protected:
 
   vector<SCIRexWindow *> renderers;
-  int xmin,ymin,xmax,ymax, offset;
+  int xmin,ymin,xmax,ymax, begin_offset, end_offset;
   SCIRexRenderData *render_data_;
   Mutex *mutex_;
   bool die_;
