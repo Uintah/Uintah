@@ -55,6 +55,8 @@ typedef void (Roe::*MouseHandler)(int, int x, int y);
 typedef void (Renderer::*RoeVisPMF)(Salmon*, Roe*, GeomObj*);
 
 class Roe : public TCL {
+protected:
+    friend class Salmon;
     Salmon* manager;
     HashTable<clString, Renderer*> renderers;
 
@@ -79,6 +81,7 @@ class Roe : public TCL {
 
     void animate_to_view(const View& v, double time);
     void redraw();
+    void redraw(double tbeg, double tend, int nframes, double framerate);
 public:
     Renderer* current_renderer;
     Renderer* get_renderer(const clString&);
@@ -128,6 +131,8 @@ public:
 
     // Object processing utility routines
     void do_for_visible(Renderer*, RoeVisPMF);
+
+    void set_current_time(double time);
 };
 
 class RoeMouseMessage : public MessageBase {

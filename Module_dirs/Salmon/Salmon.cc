@@ -115,15 +115,21 @@ int Salmon::process_event(int block)
     case MessageTypes::RoeRedraw:
 	{
 	    SalmonMessage* rmsg=(SalmonMessage*)msg;
+	    Roe* r=0;
 	    for(int i=0;i<roe.size();i++){
-		Roe* r=roe[i];
-		if(r->id == rmsg->rid){
-		    r->need_redraw=1;
+		r=roe[i];
+		if(r->id == rmsg->rid)
 		    break;
-		}
 	    }
 	    if(i==roe.size()){
 		cerr << "Warning: Roe not found for redraw! (id=" << rmsg->rid << "\n";
+	    } else if(rmsg->nframes == 0){
+		// Normal redraw (lazy)
+		r->need_redraw=1;
+	    } else {
+		// Do animation...
+		r->redraw(rmsg->tbeg, rmsg->tend, rmsg->nframes,
+			  rmsg->framerate);
 	    }
 	}
 	break;
@@ -321,8 +327,17 @@ void Salmon::execute()
 }
 
 SalmonMessage::SalmonMessage(const clString& rid)
-: MessageBase(MessageTypes::RoeRedraw), rid(rid)
+: MessageBase(MessageTypes::RoeRedraw), rid(rid), nframes(0)
 {
+}
+
+SalmonMessage::SalmonMessage(const clString& rid, double tbeg, double tend,
+			     int nframes, double framerate)
+: MessageBase(MessageTypes::RoeRedraw), rid(rid), tbeg(tbeg), tend(tend),
+  nframes(nframes), framerate(framerate)
+{
+    if(nframes == 0)
+	cerr << "Warning - nframes shouldn't be zero for animation\n";
 }
 
 SalmonMessage::SalmonMessage(const clString& rid, const clString& filename)

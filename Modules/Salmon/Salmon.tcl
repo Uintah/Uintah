@@ -37,10 +37,25 @@ itcl_class Roe {
 	menubutton $w.menu.renderer -text "Renderer" -underline 0 \
 		-menu $w.menu.renderer.menu
 	menu $w.menu.renderer.menu
+	# Animation parameters
+	global $this-current_time
+	set $this-current_time 0
+	global $this-tbeg
+	set $this-tbeg 0
+	global $this-tend
+	set $this-tend 1
+	global $this-framerate
+	set $this-framerate 15
+	global $this-totframes
+	set $this-totframes 30
+
+	#
+	# Get the list of supported renderers for the pulldown
+	#
 	set r [$salmon-c listrenderers]
 	
 	# OpenGL is the preferred renderer, X11 the next best.
-	# Otherwise just pick the first one
+	# Otherwise just pick the first one for the default
 	global $this-renderer
 	if {[lsearch -exact $r OpenGL] != -1} {
 	    set $this-renderer OpenGL
@@ -64,6 +79,8 @@ itcl_class Roe {
 	$w.menu.edit.menu add command -label "Background..." -underline 0 \
 		-command "$this makeBackgroundPopup"
 	$w.menu.edit.menu add command -label "Clipping Planes..." -underline 0
+	$w.menu.edit.menu add command -label "Animation..." -underline 0 \
+		-command "$this makeAnimationPopup"
 	menubutton $w.menu.spawn -text "Spawn" -underline 0 \
 		-menu $w.menu.spawn.menu
 	menu $w.menu.spawn.menu
@@ -255,4 +272,159 @@ itcl_class Roe {
 	set m $w.mframe.f
 	pack forget $m.objlist.canvas.frame.obj$objid
     }
+
+    method makeAnimationPopup {} {
+	set w .anim$this
+	toplevel $w
+	wm title $w "Animation"
+	wm iconname $w "Animation"
+	wm minsize $w 100 100
+	frame $w.ctl
+	pack $w.ctl -side top -fill x
+	set afont "-adobe-helvetica-bold-r-*-*-24-*-*-*-*-*-*-*"
+	button $w.ctl.rstep -text "<-" -font $afont \
+		-command "$this rstep"
+	button $w.ctl.rew -text "<<" -font $afont \
+		-command "$this rew"
+	button $w.ctl.rplay -text "<" -font $afont \
+		-command "$this rplay"
+	button $w.ctl.stop -text "\[\]" -font $afont \
+		-command "$this stop"
+	button $w.ctl.play -text ">" -font $afont \
+		-command "$this play"
+	button $w.ctl.ff -text ">>" -font $afont \
+		-command "$this ff"
+	button $w.ctl.step -text "->" -font $afont \
+		-command "$this step"
+	pack $w.ctl.rstep $w.ctl.rew $w.ctl.rplay $w.ctl.stop \
+		$w.ctl.play $w.ctl.ff $w.ctl.step \
+		-side left -ipadx 3 -ipady 3
+
+	scale $w.rate -orient horizontal -variable $this-framerate \
+		-from 0 -to 60 -label "Frame rate:" \
+		-showvalue true -tickinterval 10
+	pack $w.rate -side top -fill x
+	frame $w.arate
+	pack $w.arate -side top -fill x
+	label $w.arate.lab -text "Actual Rate:"
+	pack $w.arate.lab -side left
+	label $w.arate.value -text ""
+	pack $w.arate.value -side left
+
+	scale $w.tframes -orient horizontal \
+		-from 0 -to 60 -label "Total frames:" \
+		-variable $this-totframes \
+		-showvalue true -tickinterval 10
+	pack $w.tframes -side top -fill x
+	scale $w.tbeg -orient horizontal -variable $this-tbeg \
+		-from 0 -to 10 -label "Begin time:" \
+		-resolution 0.01 -digits 4 \
+		-showvalue true -tickinterval 2
+	scale $w.tend -orient horizontal -variable $this-tend \
+		-from 0 -to 10 -label "End time:" \
+		-resolution 0.01 -digits 4 \
+		-showvalue true -tickinterval 2
+	scale $w.ct -orient horizontal -variable $this-current_time \
+		-from 0 -to 10 -label "Current time:" \
+		-resolution 0.01 -digits 4 \
+		-showvalue true -tickinterval 2
+	pack $w.tbeg $w.tend $w.ct -side top -fill x
+    }
+    method setFrameRate {rate} {
+	set w .anim$this
+	if {[winfo exists $w]} {
+	    $w.arate.value config -text $rate
+	    update idletasks
+	}
+    }
+    method frametime {} {
+	global $this-tbeg $this-tend $this-totframes
+	set tbeg [set $this-tbeg]
+	set tend [set $this-tend]
+	set tframes [set $this-totframes]
+	return [expr ($tend-$tbeg)/$tframes]
+    }
+    method rstep {} {
+	global $this-current_time $this-tbeg
+	set frametime [$this frametime]
+	set ctime [set $this-current_time]
+	set newtime [expr $ctime-$frametime]
+	set tbeg [set $this-tbeg]
+	if {$newtime < $tbeg} {
+	    set newtime $tbeg
+	}
+	$this-c anim_redraw $newtime $newtime 1 0
+    }
+    method rew {} {
+	global $this-tbeg
+	set newtime [set $this-tbeg]
+	$this-c anim_redraw $newtime $newtime 1 0
+    }
+    method rplay {} {
+	global $this-current_time $this-tbeg $this-tend \
+		$this-framerate $this-totframes
+	set ctime [set $this-current_time]
+	set tbeg [set $this-tbeg]
+	set tend [set $this-tend]
+	set frametime [$this frametime]
+	if {$ctime < [expr $tbeg+$frametime]} {
+	    set ctime $tend
+	}
+	set framerate [set $this-framerate]
+	set totframes [set $this-totframes]
+	set nframes [expr ($ctime-$tbeg)/($tend-$tbeg)*$totframes]
+	$this-c anim_redraw $ctime $tbeg $nframes $framerate
+    }
+
+    method play {} {
+	global $this-current_time $this-tbeg $this-tend \
+		$this-framerate $this-totframes
+	set ctime [set $this-current_time]
+	set tbeg [set $this-tbeg]
+	set tend [set $this-tend]
+	set frametime [$this frametime]
+	if {$ctime > [expr $tend-$frametime]} {
+	    set ctime $tbeg
+	}
+	set framerate [set $this-framerate]
+	set totframes [set $this-totframes]
+	set nframes [expr ($tend-$ctime)/($tend-$tbeg)*$totframes]
+	$this-c anim_redraw $ctime $tend $nframes $framerate
+    }
+    method step {} {
+	global $this-current_time $this-tend
+	set frametime [$this frametime]
+	set ctime [set $this-current_time]
+	set newtime [expr $ctime+$frametime]
+	set tend [set $this-tend]
+	if {$newtime > $tend} {
+	    set newtime $tend
+	}
+	$this-c anim_redraw $newtime $newtime 1 0
+    }
+    method ff {} {
+	global $this-tend
+	set newtime [set $this-tend]
+	$this-c anim_redraw $newtime $newtime 1 0
+    }
+    method crap {} {
+	make_labeled_radio $w.sw "Animation:" "$this-c redraw" \
+		left $this-do_animation \
+		{ {On 1} {Off 0} }
+	scale $w.anim.tbeg -orient horizontal -variable $this-tbeg \
+		-from 0 -to 30 -label "Begin Time:" \
+		-showvalue true -tickinterval 10
+	scale $w.anim.tend -orient horizontal -variable $this-tend \
+		-from 0 -to 30 -label "End Time:" \
+		-showvalue true -tickinterval 10
+	scale $w.anim.nsteps -orient horizontal -variable $this-ntimesteps \
+		-from 0 -to 100 -label "Timesteps:" \
+		-showvalue true -tickinterval 20
+	scale $w.anim.atime -orient horizontal -variable $this-animation_time \
+		-from 0 -to 10 -label "Time:" \
+		-showvalue true -tickinterval 2
+	button $w.anim.go -text "Go" -command "$this-c redraw"
+    }
+
 }
+

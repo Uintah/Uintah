@@ -712,6 +712,40 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	} else {
 	    manager->mailbox.send(new SalmonMessage(id));
 	}
+    } else if(args[1] == "anim_redraw"){
+	// We need to dispatch this one to the remote thread
+	// We use an ID string instead of a pointer in case this roe
+	// gets killed by the time the redraw message gets dispatched.
+	if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
+	    cerr << "Redraw event dropped, mailbox full!\n";
+	} else {
+	    if(args.count() != 6){
+		args.error("anim_redraw wants tbeg tend nframes framerate");
+		return;
+	    }
+	    double tbeg;
+	    if(!args[2].get_double(tbeg)){
+		args.error("Can't figure out tbeg");
+		return;
+	    } 
+	    double tend;
+	    if(!args[3].get_double(tend)){
+		args.error("Can't figure out tend");
+		return;
+	    }
+	    int nframes;
+	    if(!args[4].get_int(nframes)){
+		args.error("Can't figure out nframes");
+		return;
+	    }
+	    double framerate;
+	    if(!args[5].get_double(framerate)){
+		args.error("Can't figure out framerate");
+		return;
+	    }	    
+	    manager->mailbox.send(new SalmonMessage(id, tbeg, tend,
+						    nframes, framerate));
+	}
     } else if(args[1] == "mtranslate"){
 	do_mouse(&Roe::mouse_translate, args);
     } else if(args[1] == "mrotate"){
@@ -807,7 +841,23 @@ void Roe::redraw()
 {
     need_redraw=0;
     reset_vars();
-    current_renderer->redraw(manager, this);
+
+    // Get animation variables
+    double ct;
+    if(!get_tcl_doublevar(id, "current_time", ct)){
+	manager->error("Error reading current_time");
+	return;
+    }
+    current_renderer->redraw(manager, this, ct, ct, 1, 0);
+}
+
+void Roe::redraw(double tbeg, double tend, int nframes, double framerate)
+{
+    need_redraw=0;
+    reset_vars();
+
+    // Get animation variables
+    current_renderer->redraw(manager, this, tbeg, tend, nframes, framerate);
 }
 
 void Roe::update_mode_string(const char* msg)
@@ -907,3 +957,7 @@ void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
     }
 }
 
+void Roe::set_current_time(double time)
+{
+    set_tclvar(id, "current_time", to_string(time));
+}

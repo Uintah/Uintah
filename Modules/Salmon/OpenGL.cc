@@ -44,6 +44,7 @@ class OpenGL : public Renderer {
     int maxlights;
     DrawInfoOpenGL* drawinfo;
     WallClockTimer fpstimer;
+    double current_time;
 
     void redraw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
     void pick_draw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
@@ -54,7 +55,8 @@ public:
 				   const clString& name,
 				   const clString& width,
 				   const clString& height);
-    virtual void redraw(Salmon*, Roe*);
+    virtual void redraw(Salmon*, Roe*, double tbeg, double tend,
+			int ntimesteps, double frametime);
     virtual void get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&);
     virtual void hide();
     virtual void dump_image(const clString&);
@@ -112,7 +114,8 @@ clString OpenGL::create_window(Roe*,
     return "opengl "+name+" -geometry "+width+"x"+height+" -doublebuffer true -direct "+(d?"true":"false")+" -rgba true -redsize 2 -greensize 2 -bluesize 2 -depthsize 2";
 }
 
-void OpenGL::redraw(Salmon* salmon, Roe* roe)
+void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
+		    int nframes, double framerate)
 {
     // Start polygon counter...
     WallClockTimer timer;
@@ -168,7 +171,6 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
     glViewport(0, 0, xres, yres);
     Color bg(roe->bgcolor.get());
     glClearColor(bg.r(), bg.g(), bg.b(), 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Setup the view...
     View view(roe->view.get());
@@ -244,13 +246,47 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	while((errcode=glGetError()) != GL_NO_ERROR){
 	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
 	}
-	// Draw it all...
-	roe->do_for_visible(this, (RoeVisPMF)&OpenGL::redraw_obj);
-    }
 
-    // Show the pretty picture
-    glXSwapBuffers(dpy, win);
-    glXWaitGL();
+	// Do the redraw loop for each time value
+	double dt=(tend-tbeg)/nframes;
+	double frametime=framerate==0?0:1./framerate;
+	TimeThrottle throttle;
+	throttle.start();
+	for(int t=0;t<nframes;t++){
+	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	    double modeltime=t*dt+tbeg;
+	    roe->set_current_time(modeltime);
+
+	    // Draw it all...
+	    current_time=modeltime;
+	    roe->do_for_visible(this, (RoeVisPMF)&OpenGL::redraw_obj);
+
+	    // Wait for the right time before swapping buffers
+	    TCLTask::unlock();
+	    double realtime=t*frametime;
+	    throttle.wait_for_time(realtime);
+	    TCLTask::lock();
+	    TCL::execute("update idletasks");
+
+	    // Show the pretty picture
+	    glXSwapBuffers(dpy, win);
+	    glXWaitGL();
+	}
+	throttle.stop();
+	double fps=nframes/throttle.time();
+	int fps_whole=(int)fps;
+	int fps_hund=(int)((fps-fps_whole)*100);
+	ostrstream str(strbuf, STRINGSIZE);
+	str << roe->id << " setFrameRate " << fps_whole << "." << fps_hund << '\0';
+	TCL::execute(str.str());
+	roe->set_current_time(tend);
+    } else {
+	// Just show the cleared screen
+	roe->set_current_time(tend);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glXSwapBuffers(dpy, win);
+	glXWaitGL();
+    }
 
     // Look for errors
     int errcode;
@@ -261,7 +297,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
     // Report statistics
     timer.stop();
     fpstimer.stop();
-    double fps=1./fpstimer.time();
+    double fps=nframes/fpstimer.time();
     fps+=0.05; // Round to nearest tenth
     int fps_whole=(int)fps;
     int fps_tenths=(int)((fps-fps_whole)*10);
@@ -420,11 +456,11 @@ void OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
 void OpenGL::pick_draw_obj(Salmon* salmon, Roe*, GeomObj* obj)
 {
     glLoadName((GLuint)obj);
-    obj->draw(drawinfo, salmon->default_matl.get_rep());
+    obj->draw(drawinfo, salmon->default_matl.get_rep(), current_time);
 }
 
 void OpenGL::redraw_obj(Salmon* salmon, Roe*, GeomObj* obj)
 {
-    obj->draw(drawinfo, salmon->default_matl.get_rep());
+    obj->draw(drawinfo, salmon->default_matl.get_rep(), current_time);
 }
 
