@@ -13,7 +13,7 @@
 #include <Classlib/Array1.h>
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/ColormapPort.h>
+#include <Datatypes/ColorMapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/VectorFieldPort.h>
@@ -37,7 +37,7 @@
 class Hedgehog : public Module {
    VectorFieldIPort *invectorfield;
    ScalarFieldIPort* inscalarfield;
-   ColormapIPort *incolormap;
+   ColorMapIPort *inColorMap;
    GeometryOPort* ogeom;
    CrowdMonitor widget_lock;
    int init;
@@ -83,16 +83,16 @@ Hedgehog::Hedgehog(const clString& id)
 {
     cerr << 1 << endl;
     // Create the input ports
-    // Need a scalar field and a colormap
+    // Need a scalar field and a ColorMap
     invectorfield = scinew VectorFieldIPort( this, "Vector Field",
 					     VectorFieldIPort::Atomic);
     add_iport( invectorfield);
     inscalarfield = scinew ScalarFieldIPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_iport( inscalarfield);
-    incolormap = scinew ColormapIPort( this, "Colormap",
-				     ColormapIPort::Atomic);
-    add_iport( incolormap);
+    inColorMap = scinew ColorMapIPort( this, "ColorMap",
+				     ColorMapIPort::Atomic);
+    add_iport( inColorMap);
 					
     cerr << 5 << endl;
     // Create the output port
@@ -139,14 +139,14 @@ void Hedgehog::execute()
 {
     int old_grid_id = grid_id;
 
-    // get the scalar field and colormap...if you can
+    // get the scalar field and ColorMap...if you can
     VectorFieldHandle vfield;
     if (!invectorfield->get( vfield ))
 	return;
     ScalarFieldHandle ssfield;
     int have_sfield=inscalarfield->get( ssfield );
-    ColormapHandle cmap;
-    int have_cmap=incolormap->get( cmap );
+    ColorMapHandle cmap;
+    int have_cmap=inColorMap->get( cmap );
     if(!have_cmap)
 	have_sfield=0;
 

@@ -17,13 +17,13 @@
 #include <Classlib/Queue.h>
 #include <Classlib/Stack.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/ColormapPort.h>
+#include <Datatypes/ColorMapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/Mesh.h>
 #include <Datatypes/ScalarField.h>
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldUG.h>
-#include <Datatypes/ScalarFieldRGchar.h>
+//#include <Datatypes/ScalarFieldRGchar.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Datatypes/TriSurface.h>
@@ -51,7 +51,7 @@ class IsoMask : public Module {
     ScalarFieldIPort* incolorfield;
     ScalarFieldIPort* inmask;
 
-    ColormapIPort* incolormap;
+    ColorMapIPort* inColorMap;
 
     GeometryOPort* ogeom;
     SurfaceOPort* osurf;
@@ -83,8 +83,8 @@ class IsoMask : public Module {
     void iso_tetra_strip(int, Mesh*, ScalarFieldUG*, double, 
 			 GeomGroup*, BitArray1&);
 
-    void iso_reg_grid(ScalarFieldRG*, const Point&, GeomTrianglesP*, ScalarFieldRGchar*);
-    void iso_reg_grid(ScalarFieldRG*, double, GeomTrianglesP*, ScalarFieldRGchar*);
+    void iso_reg_grid(ScalarFieldRG*, const Point&, GeomTrianglesP*, ScalarFieldRG*);
+    void iso_reg_grid(ScalarFieldRG*, double, GeomTrianglesP*, ScalarFieldRG*);
     void iso_tetrahedra(ScalarFieldUG*, const Point&, GeomTrianglesP*);
     void iso_tetrahedra(ScalarFieldUG*, double, GeomTrianglesP*);
 
@@ -159,14 +159,14 @@ IsoMask::IsoMask(const clString& id)
   show_progress("show_progress", id, this)
 {
     // Create the input ports
-    infield=scinew ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
-    add_iport(infield);
     inmask=scinew ScalarFieldIPort(this, "Mask", ScalarFieldIPort::Atomic);
     add_iport(inmask);
+    infield=scinew ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
+    add_iport(infield);
     incolorfield=scinew ScalarFieldIPort(this, "Color Field", ScalarFieldIPort::Atomic);
     add_iport(incolorfield);
-    incolormap=scinew ColormapIPort(this, "Color Map", ColormapIPort::Atomic);
-    add_iport(incolormap);
+    inColorMap=scinew ColorMapIPort(this, "Color Map", ColorMapIPort::Atomic);
+    add_iport(inColorMap);
     
 
     // Create the output port
@@ -221,17 +221,20 @@ void IsoMask::execute()
     ScalarFieldHandle maskHand;
     if(!inmask->get(maskHand))
 	return;
-    ScalarFieldRGBase* maskBase = maskHand->getRGBase();
-    if(!maskBase)
-	return;
-    ScalarFieldRGchar* mask = maskBase->getRGChar();
+//    ScalarFieldRGBase* maskBase = maskHand->getRGBase();
+//    if(!maskBase)
+//	return;
+//    ScalarFieldRGchar* mask = maskBase->getRGChar();
+//    if(!mask)
+//	return;
+    ScalarFieldRG* mask = maskHand->getRG();
     if(!mask)
 	return;
 
     ScalarFieldHandle colorfield;
     int have_colorfield=incolorfield->get(colorfield);
-    ColormapHandle cmap;
-    int have_colormap=incolormap->get(cmap);
+    ColorMapHandle cmap;
+    int have_ColorMap=inColorMap->get(cmap);
 
     if(init == 1){
 	init=0;
@@ -309,10 +312,10 @@ void IsoMask::execute()
     GeomTrianglesP* group = scinew GeomTrianglesP;
     GeomGroup* tgroup=scinew GeomGroup;
     GeomObj* topobj=tgroup;
-    if(have_colormap && !have_colorfield){
-	// Paint entire surface based on colormap
+    if(have_ColorMap && !have_colorfield){
+	// Paint entire surface based on ColorMap
 	topobj=scinew GeomMaterial(tgroup, cmap->lookup(iv));
-    } else if(have_colormap && have_colorfield){
+    } else if(have_ColorMap && have_colorfield){
 	// Nothing - done per vertex
     } else {
 	// Default material
@@ -727,9 +730,9 @@ int IsoMask::iso_cube(int i, int j, int k, double isoval,
 }
 
 void IsoMask::iso_reg_grid(ScalarFieldRG* field, double isoval,
-			      GeomTrianglesP* group, ScalarFieldRGchar* mask)
+			      GeomTrianglesP* group, ScalarFieldRG* mask)
 {
-    ScalarFieldRGchar* mm=scinew ScalarFieldRGchar();
+    ScalarFieldRG* mm=scinew ScalarFieldRG();
     int nx=field->nx;
     int ny=field->ny;
     int nz=field->nz;
@@ -786,7 +789,7 @@ void IsoMask::iso_reg_grid(ScalarFieldRG* field, double isoval,
 }
 
 void IsoMask::iso_reg_grid(ScalarFieldRG* field, const Point& p,
-			      GeomTrianglesP* group, ScalarFieldRGchar* mask)
+			      GeomTrianglesP* group, ScalarFieldRG* mask)
 {
     int nx=field->nx;
     int ny=field->ny;

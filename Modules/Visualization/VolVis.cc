@@ -15,7 +15,7 @@
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/GeometryPort.h>
-#include <Datatypes/ColormapPort.h>
+#include <Datatypes/ColorMapPort.h>
 
 #include <Geometry/BBox.h>
 #include <Geom/View.h>
@@ -63,7 +63,7 @@
 #define NEWINVALIDSCALARFIELD   6
 #define NEWBACKGROUND    7
 #define NEWLINEARATTENUATION 8
-#define NEWCOLORMAP      9
+#define NEWColorMap      9
 
 #define VTABLE_SIZE      2000
 
@@ -136,7 +136,7 @@ class VolVis : public Module {
   ScalarFieldHandle homeSFHandle;
 
   // PETE
-  ColormapHandle cmap;
+  ColorMapHandle cmap;
 
   // remember last generation of scalar field
   int homeSFgeneration;
@@ -312,7 +312,7 @@ class VolVis : public Module {
   double newLinearA, LinAtten;
 
   void LinearAChanged( clString a );
-  ColormapIPort* incolormap;
+  ColorMapIPort* inColorMap;
 
   void ReadTransfermap();
 
@@ -416,10 +416,10 @@ VolVis::VolVis(const clString& id)
   iport = scinew ScalarFieldIPort(this, "RGScalarField", ScalarFieldIPort::Atomic);
   add_iport(iport);
 
-  incolormap=scinew  
-    ColormapIPort(this, "Color Map", ColormapIPort::Atomic);
+  inColorMap=scinew  
+    ColorMapIPort(this, "Color Map", ColorMapIPort::Atomic);
   
-  add_iport(incolormap);
+  add_iport(inColorMap);
 					
   // Create the output port
   ogeom = scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
@@ -1048,10 +1048,10 @@ VolVis::execute()
 
   if ( jelly )
     {
-      incolormap->get( cmap );
+      inColorMap->get( cmap );
       cerr<<"jeller\n";
       if ( cmap.get_rep() )
-	msgs.send( NEWCOLORMAP );
+	msgs.send( NEWColorMap );
       
       jelly = 0;
     }
@@ -1109,7 +1109,7 @@ VolVis::tcl_command(TCLArgs& args, void* userdata)
     BBackgroundChanged( args[2] );
   else if ( args[1] == "LinearAChanged" )
     LinearAChanged( args[2] );
-  else if ( args[1] == "ReadColormap" )
+  else if ( args[1] == "ReadColorMap" )
     {
       cerr << "JOYOUOUOU\n";
       jelly = 1;
@@ -1318,7 +1318,7 @@ VolVis::RenderLoop( )
   int NewTransferMap = 0;
   int InvalidScalarField = 1;
   int NewBackground = 0;
-  int NewColormap = 0;
+  int NewColorMap = 0;
 
   double oneover255 = 1.0 / 255;
   Vector rayToTrace;
@@ -1395,9 +1395,9 @@ VolVis::RenderLoop( )
 		LinAtten = newLinearA;
 		break;
 	      }
-	    case NEWCOLORMAP:
+	    case NEWColorMap:
 	      {
-		NewColormap = 1;
+		NewColorMap = 1;
 		break;
 	      }
 	    }
@@ -1431,16 +1431,16 @@ VolVis::RenderLoop( )
 	    CastRay = &ColorVolRender;
 	}
 
-      if ( NewColormap )
+      if ( NewColorMap )
 	{
 	  SVR = cmap->rawRed;
 	  SVG = cmap->rawGreen;
 	  SVB = cmap->rawBlue;
 	  SVOpacity = cmap->rawAlpha;
 
-	  cerr << "getting a new colormap\n";
+	  cerr << "getting a new ColorMap\n";
 	  CastRay = &ColorVolRender;
-	  NewColormap = 0;
+	  NewColorMap = 0;
 	}
       
       if ( NewScalarField )

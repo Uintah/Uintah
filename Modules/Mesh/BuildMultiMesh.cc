@@ -14,13 +14,14 @@
 #include <Classlib/Pstreams.h>		// for writing temp meshes out
 #include <Classlib/String.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/Colormap.h>
-#include <Datatypes/ColormapPort.h>
+#include <Datatypes/ColorMap.h>
+#include <Datatypes/ColorMapPort.h>
 #include <Datatypes/GeometryPort.h>
-#include <Datatypes/MeshPort.h>
+#include <Datatypes/MultiMeshPort.h>
 #include <Datatypes/Mesh.h>
 #include <Datatypes/MultiMesh.h>
-#include <Datatypes/MultiMeshPort.h>
+#include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/ScalarFieldUG.h>
 #include <Geom/Color.h>
 #include <Geom/Geom.h>
 #include <Geom/Material.h>
@@ -36,15 +37,20 @@
 #include <TCL/TCLvar.h>
 #include <Widgets/PointWidget.h>
 
+#include <stdio.h>
+
 class BuildMultiMesh : public Module {
-    MeshIPort* imesh;
-    ColormapIPort* icmap;
+    ScalarFieldIPort* isf;
+    ColorMapIPort* icmap;
     MultiMeshOPort* ommesh;
+    ScalarFieldOPort* osf;
     GeometryOPort* opoints;
     Array1<GeometryOPort* > owidgets;
 
     MeshHandle mesh_handle;
-
+    ScalarFieldHandle sf_handle;
+    ScalarFieldUG* sfug;
+    ScalarFieldUG* sfout;
     Array1<int> point_ids;
     CrowdMonitor widget_lock;
     Array1<PointWidget *> widgets;
@@ -54,6 +60,7 @@ class BuildMultiMesh : public Module {
     Array1<Array1<int> > level_sets;
     Array1<MaterialHandle> level_matl;
 
+    Array1<int> node_map;
     Array1<int> last_source_sel;
     Array1<double> last_charge;
     Array1<double> last_falloff;
@@ -62,6 +69,7 @@ class BuildMultiMesh : public Module {
     Array1<TCLdouble* > charge;
     Array1<TCLdouble* > falloff;
     Array1<TCLdouble* > wsize;
+    double last_bias;
     int last_levels;
     int last_gl_falloff;
     int widget_changed;
@@ -72,14 +80,21 @@ class BuildMultiMesh : public Module {
     TCLint sameInput;
     TCLint gl_falloff;
     TCLint levels;
+    TCLdouble bias;
     TCLdouble min_weight;
     TCLdouble max_weight;
+
     clString myid;
     int have_ever_executed;
     int need_full_execute;
     MultiMeshHandle mmeshHndl;
     MultiMesh *mmesh;
     int want_partial_execute_only;
+
+    int read1;
+    int read2;
+    int write;
+
 public:
     BuildMultiMesh(const clString& id);
     BuildMultiMesh(const BuildMultiMesh&, int deep);
@@ -105,18 +120,21 @@ BuildMultiMesh::BuildMultiMesh(const clString& id)
   have_ever_executed(0), sameInput("sameInput", id, this), 
   levels("levels", id, this), gl_falloff("gl_falloff", id, this),
   min_weight("min_weight", id, this), max_weight("max_weight", id, this),
-  PE("PE", id, this), need_to_addObj_widget(0), want_partial_execute_only(0)
+  PE("PE", id, this), need_to_addObj_widget(0), want_partial_execute_only(0), 
+  bias("bias", id, this), read1(0), read2(0), write(0)
 {
     myid=id;
     widget_changed=0;
-    imesh=scinew MeshIPort(this, "Input Mesh", MeshIPort::Atomic);
-    add_iport(imesh);
-    icmap=scinew ColormapIPort(this, "Input ColorMap", ColormapIPort::Atomic);
+    isf=scinew ScalarFieldIPort(this, "Input Field", ScalarFieldIPort::Atomic);
+    add_iport(isf);
+    icmap=scinew ColorMapIPort(this, "Input ColorMap", ColorMapIPort::Atomic);
     add_iport(icmap);
     ommesh=scinew MultiMeshOPort(this, "Output MultiMesh",MultiMeshIPort::Atomic);
     add_oport(ommesh);
     opoints=scinew GeometryOPort(this, "Node Geometry", GeometryIPort::Atomic);
     add_oport(opoints);
+    osf=scinew ScalarFieldOPort(this, "Ouput Field", ScalarFieldIPort::Atomic);
+    add_oport(osf);
     owidgets.add(scinew GeometryOPort(this, "Node Geometry", GeometryIPort::Atomic));
     add_oport(owidgets[0]);
 }
@@ -126,7 +144,8 @@ BuildMultiMesh::BuildMultiMesh(const BuildMultiMesh& copy, int deep)
   have_ever_executed(0), sameInput("sameInput", id, this),
   levels("levels", id, this), gl_falloff("gl_falloff", id, this),
   min_weight("min_weight", id, this), max_weight("max_weight", id, this),
-  PE("PE", id, this), need_to_addObj_widget(0), want_partial_execute_only(0)
+  PE("PE", id, this), need_to_addObj_widget(0), want_partial_execute_only(0),
+  bias("bias", id, this), read1(0), read2(0), write(0)
 {
     NOT_FINISHED("BuildMultiMesh::BuildMultiMesh");
 }
@@ -143,7 +162,7 @@ Module* BuildMultiMesh::clone(int deep)
 void BuildMultiMesh::connection(ConnectionMode mode, int which_port, 
 				int output) {
     if (!output) return;
-    if (which_port >= 2) {
+    if (which_port >= 3) {
 	if (mode==Disconnected) {
 	    numSources.set(numSources.get()-1);
 	    remove_oport(which_port);
@@ -210,9 +229,19 @@ void BuildMultiMesh::geom_moved(GeomPick*, int, double, const Vector&,
 // Orders and groups nodes by weightings (matl indicates node level)
 void BuildMultiMesh::partial_execute() {
     int data_changed=widget_changed;
+    if (read2) {
+	data_changed=1;
+	widgets[0]->SetPosition(Point(0.576, 0.464, 0.7295));
+cerr << "Widgets[0] is at: "<<widgets[0]->GetPosition()<<"\n";
+    }
     widget_changed=0;
-    if(!imesh->get(mesh_handle))
+    if(!isf->get(sf_handle))
 	return;
+    if (!(sfug=sf_handle->getUG())) {
+	cerr << "Can't handle Regular Grids in BuildMultiMesh";
+	return;
+    }
+    mesh_handle=sfug->mesh;
     Mesh *mesh=mesh_handle.get_rep();
     if (!have_ever_executed || !sameInput.get()) {
 	if (!have_ever_executed) {
@@ -230,6 +259,7 @@ void BuildMultiMesh::partial_execute() {
 	level_matl.resize(levels.get());
     }
     if (gl_falloff.get() != last_gl_falloff) data_changed=1;
+    if (bias.get() != last_bias) data_changed=1;
     if (!data_changed) {	
 	for (int i=0; i<numSources.get(); i++) {
 	    if (source_sel[i]->get() != last_source_sel[i]) data_changed=1;
@@ -242,6 +272,7 @@ void BuildMultiMesh::partial_execute() {
     // update "last" values
     last_levels=levels.get();
     last_gl_falloff=gl_falloff.get();
+    last_bias=bias.get();
     for (int i=0; i<numSources.get(); i++) {
 	last_source_sel[i]=source_sel[i]->get();
 	widget_lock.write_lock();
@@ -261,6 +292,7 @@ void BuildMultiMesh::partial_execute() {
 	double total=0;
 	// compute new node weights
 	int i;
+cerr << "Widgets[0] is at: "<<widgets[0]->GetPosition()<<"\n";
 	for (i=0; i<numNodes; i++) {
 //	    rand_list[i]=.5;
 	    rand_list[i]=rng();
@@ -286,16 +318,17 @@ void BuildMultiMesh::partial_execute() {
 	    if (last_charge[i] > max) max=last_charge[i];
 	    if (last_charge[i] < min) min=last_charge[i];
 	}
-	// update min and max values of colormap -- build cmap if necessary
+	// update min and max values of ColorMap -- build cmap if necessary
 	min_weight.set(min);
 	max_weight.set(max);
-	ColormapHandle cmap;
+	ColorMapHandle cmap;
 	int have_cmap=icmap->get(cmap);
 	if (!have_cmap) {
 	    cmap=scinew ColorMap(30, min, max);
 	    cmap->build_default();
 	}
 	// set source widget sizes and colors, and on/off switches
+
 	for (i=0; i<numSources.get(); i++) {
 	    widgets[i]->SetMaterial(PointWidget::PointMatl, cmap->lookup(last_charge[i]));
 	    widgets[i]->SetScale(last_wsize[i]);
@@ -319,7 +352,7 @@ void BuildMultiMesh::partial_execute() {
 	for (i=0; i<last_levels; i++) {
 	    level_sets[i].remove_all();
 	    if (i==0) {
-		cut_offs[0]=1;
+		cut_offs[i]=last_gl_falloff/100.;;
 	    } else {
 		cut_offs[i]=cut_offs[i-1]*last_gl_falloff/100.;
 	    }
@@ -327,16 +360,28 @@ void BuildMultiMesh::partial_execute() {
 
 	// add nodes to level_sets
 	for (i=0; i<numNodes; i++) {
-	    int done;
-	    int lvl;
-	    for (done=lvl=0; !done && lvl<last_levels-1; lvl++) {
-		if (rand_list[i] > weightings[i]*recip_avg*cut_offs[lvl]) {
+            int done=0;
+	    double sc_wtng=weightings[i]*recip_avg;
+	    double bias_wtng=sc_wtng*last_bias+rand_list[i]*(1-last_bias);
+	    for (int lvl=0; !done && lvl<last_levels-1; lvl++) {
+		if (bias_wtng > cut_offs[lvl]) {
 		    level_sets[lvl].add(i);
 		    done=1;
 		}
 	    }
 	    if (!done) {
 		level_sets[last_levels-1].add(i);
+	    }
+	}
+
+	node_map.resize(numNodes);
+	for (int lvl=0, cc=0; lvl<level_sets.size(); lvl++) {
+	    for (int k=0; k<level_sets[lvl].size(); k++, cc++) {
+		for (i=0; i<numNodes; i++) {
+		    if ((level_sets[lvl])[k] == i) {
+			node_map[cc]=i;
+		    }
+		}
 	    }
 	}
 
@@ -363,7 +408,7 @@ void BuildMultiMesh::partial_execute() {
 	for (i=0; i<last_levels; i++) {
 	    GeomPts *geomPts=scinew GeomPts(level_sets[i].size());
 	    for (int j=0; j<level_sets[i].size(); j++) {
-		geomPts->pts.add(mesh->nodes[(level_sets[i])[j]]->p);
+		geomPts->add(mesh->nodes[(level_sets[i])[j]]->p);
 	    }
 	    GeomMaterial *geomMat=scinew GeomMaterial(geomPts, level_matl[i]);
 	    clString pntName="Nodes Level " + to_string(i+1);
@@ -371,10 +416,74 @@ void BuildMultiMesh::partial_execute() {
 	}
 	opoints->flushViews();
 	need_full_execute=1;
+cerr << "Recomputing and resending the nodes w/ new materials!\n";
+    }
+    if (write) {
+	FILE *f;
+	char nm[250];
+	for (i=0; i<last_levels; i++) {
+	    sprintf(nm,"/home/sci/u2/dweinste/mydata/mm/dump/%d/a.pts", i);
+	    f=fopen(nm,"wt");
+	    for (int k=0; k<=i; k++) {
+		for(int j=0; j<level_sets[k].size(); j++) {
+		    Point p(mesh->nodes[(level_sets[k])[j]]->p);
+		    fprintf(f, "%lf %lf %lf\n", p.x(), p.y(), p.z());
+		}
+	    }
+	    fclose(f);
+	}
+	write=0;
     }
 }
 
+#if 0
 
+void BuildMultiMesh::partial_execute() {
+    int data_changed=widget_changed;
+    if(!isf->get(sf_handle))
+	return;
+    if (!(sfug=sf_handle->getUG())) {
+	cerr << "Can't handle Regular Grids in BuildMultiMesh";
+	return;
+    }
+    mesh_handle=sfug->mesh;
+    Mesh *mesh=mesh_handle.get_rep();
+    if (!have_ever_executed) {
+	level_sets.resize(levels.get());
+	level_matl.resize(levels.get());
+	have_ever_executed = 1;
+	data_changed=1;
+    }
+    
+    // now we have to compare old and new values
+    if (levels.get() != last_levels) {
+	data_changed=1;
+	level_sets.resize(levels.get());
+	level_matl.resize(levels.get());
+    }
+
+    // update "last" values
+    last_levels=levels.get();
+    if (data_changed) {
+	numNodes=mesh->nodes.size();
+	int numPer=numNodes/level_sets.size();
+	for (int i=0; i<level_sets.size(); i++) {
+	    level_matl[i]=new Material(Color(0,0,0), Color(.7,.7,.7),
+				       Color(.5,.5,.5), 20);
+	    GeomPts *geomPts=new GeomPts(numPer);
+	    for (int j=i*numPer; j<(i+1)*numPer; j++) {
+		geomPts->add(mesh->nodes[j]->p);
+	    }
+	    GeomMaterial *geomMat=new GeomMaterial(geomPts, level_matl[i]);
+	    clString pntName="Nodes Level "+ to_string(i+1);
+	    opoints->addObj(geomMat, pntName);
+	}
+	opoints->flushViews();
+	need_full_execute=1;
+    }
+}
+
+#endif
 // Handles multimesh construction.  partial_execute() checks changed status,
 //	and handles first time allocations/namings.  This code builds the
 //	multimesh from the weightings through an incremental Delaunay
@@ -389,13 +498,18 @@ void BuildMultiMesh::execute()
     } else {
 	want_partial_execute_only=1;
     }
-    if (!mesh_handle.get_rep() || !need_full_execute) return;
+
+
+    if (!sfug || !mesh_handle.get_rep() || !need_full_execute) return;
     need_full_execute=0;
 
     mmeshHndl=mmesh=0;
     mmeshHndl=mmesh=scinew MultiMesh;
     mmesh->meshes.resize(last_levels);
-    MeshHandle mesh = scinew Mesh;
+    MeshHandle mesh;
+
+    if (!read1 && !read2) {
+    mesh = scinew Mesh;
 
     BBox bbox;
     int nn=mesh_handle->nodes.size();
@@ -429,20 +543,41 @@ void BuildMultiMesh::execute()
     el->orient();
     el->faces[0]=el->faces[1]=el->faces[2]=el->faces[3]=-1;
     mesh->elems.add(el);
+    }
+
+    sfout = new ScalarFieldUG(ScalarFieldUG::NodalValues);
 
     int count=0;
-    for (i=0; i<level_sets.size(); i++) {
+    for (int i=0; i<level_sets.size(); i++) {
+
+	if (read1 || read2) {
+	    int r;
+	    if (read1) r=1; else r=2;
+	    char fn[250];
+	    sprintf(fn, "/home/sci/u2/dweinste/mydata/mm/w%d/%d/a.mesh", r, i);
+	    Piostream* stream=auto_istream(fn);
+	    Pio(*stream, mesh);
+	}
+
 	for (int j=0; j<level_sets[i].size(); j++) {
-	    mesh->insert_delaunay(mesh_handle->nodes[(level_sets[i])[j]]->p);
+
+	    if (!read1 && !read2 && count<100)
+		mesh->insert_delaunay(mesh_handle->nodes[(level_sets[i])[j]]->p);
+
+	    sfout->data.add(sfug->data[node_map[count]]);
 	    if (!((count++)%50)) {	//update progress every fifty nodes
 		update_progress(count, mesh_handle->nodes.size());
 	    }
 	}
+	if (!read1 && !read2)
 	mesh->pack_elems();
 	mmesh->add_mesh(mesh, i);
     }
-    mmesh->clean_up();
+    if (!read1 && !read2) 
+	mmesh->clean_up();
+    read1=read2=0;
     ommesh->send(mmeshHndl);
+    osf->send(sfout);
 }
 
 void BuildMultiMesh::tcl_command(TCLArgs& args, void* userdata)
@@ -454,6 +589,18 @@ void BuildMultiMesh::tcl_command(TCLArgs& args, void* userdata)
    if (args[1] == "partial_execute") {
        widget_changed=1;
        want_to_execute();
+   } else if (args[1] == "read1") {
+       need_full_execute=1;
+       read1=1;
+       want_to_execute();
+   } else if (args[1] == "read2") {
+       need_full_execute=1;
+       read2=1;
+       want_to_execute();
+   } else if (args[1] == "write") {
+       want_partial_execute_only=1;
+       write=1;
+       want_to_execute();
    } else if (args[1] == "needexecute") {
        cerr << "In needexecute...\n";
        want_partial_execute_only=0;
@@ -462,6 +609,27 @@ void BuildMultiMesh::tcl_command(TCLArgs& args, void* userdata)
        Module::tcl_command(args, userdata);
    }
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/LockingHandle.cc>
+
+template void Pio(Piostream&, MeshHandle&);
+
+#endif
+
+#ifdef __sgi
+#if _MIPS_SZPTR == 64
+#include <Classlib/LockingHandle.cc>
+
+static void _dummy_(Piostream& p1, MeshHandle& p2)
+{
+    Pio(p1, p2);
+}
+
+#endif
+#endif
+
 
 #ifdef __GNUG__
 

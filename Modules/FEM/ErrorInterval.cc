@@ -13,16 +13,16 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/ColormapPort.h>
+#include <Datatypes/ColorMapPort.h>
 #include <Datatypes/IntervalPort.h>
 #include <Geometry/Point.h>
 #include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
 class ErrorInterval : public Module {
-    ColormapIPort* icmap;
+    ColorMapIPort* icmap;
     IntervalOPort* ointerval;
-    ColormapOPort* ocmap;
+    ColorMapOPort* ocmap;
     TCLdouble low;
     TCLdouble high;
 public:
@@ -44,11 +44,11 @@ ErrorInterval::ErrorInterval(const clString& id)
 : Module("ErrorInterval", id, Filter), low("low", id, this),
   high("high", id, this)
 {
-    icmap=new ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
+    icmap=new ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
     add_iport(icmap);
     ointerval=new IntervalOPort(this, "Interval", IntervalIPort::Atomic);
     add_oport(ointerval);
-    ocmap=new ColormapOPort(this, "Colormap", ColormapIPort::Atomic);
+    ocmap=new ColorMapOPort(this, "ColorMap", ColorMapIPort::Atomic);
     add_oport(ocmap);
 }
 
@@ -71,7 +71,7 @@ void ErrorInterval::execute()
 {
     Interval* interval=new Interval(low.get(), high.get());
     ointerval->send(interval);
-    ColormapHandle cmap;
+    ColorMapHandle cmap;
     if(icmap->get(cmap)){
         cmap.detach();
 	cmap->min=low.get();

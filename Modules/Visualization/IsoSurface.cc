@@ -18,7 +18,7 @@
 #include <Classlib/Queue.h>
 #include <Classlib/Stack.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/ColormapPort.h>
+#include <Datatypes/ColorMapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/Mesh.h>
 #include <Datatypes/ScalarField.h>
@@ -50,7 +50,7 @@
 class IsoSurface : public Module {
     ScalarFieldIPort* infield;
     ScalarFieldIPort* incolorfield;
-    ColormapIPort* incolormap;
+    ColorMapIPort* inColorMap;
 
     GeometryOPort* ogeom;
     SurfaceOPort* osurf;
@@ -168,8 +168,8 @@ IsoSurface::IsoSurface(const clString& id)
     add_iport(infield);
     incolorfield=scinew ScalarFieldIPort(this, "Color Field", ScalarFieldIPort::Atomic);
     add_iport(incolorfield);
-    incolormap=scinew ColormapIPort(this, "Color Map", ColormapIPort::Atomic);
-    add_iport(incolormap);
+    inColorMap=scinew ColorMapIPort(this, "Color Map", ColorMapIPort::Atomic);
+    add_iport(inColorMap);
     
 
     // Create the output port
@@ -222,8 +222,8 @@ void IsoSurface::execute()
 	return;
     ScalarFieldHandle colorfield;
     int have_colorfield=incolorfield->get(colorfield);
-    ColormapHandle cmap;
-    int have_colormap=incolormap->get(cmap);
+    ColorMapHandle cmap;
+    int have_ColorMap=inColorMap->get(cmap);
 
     if(init == 1){
 	init=0;
@@ -293,10 +293,10 @@ void IsoSurface::execute()
     }
     GeomGroup* tgroup=scinew GeomGroup;
     GeomObj* topobj=tgroup;
-    if(have_colormap && !have_colorfield){
-	// Paint entire surface based on colormap
+    if(have_ColorMap && !have_colorfield){
+	// Paint entire surface based on ColorMap
 	topobj=scinew GeomMaterial(tgroup, cmap->lookup(iv));
-    } else if(have_colormap && have_colorfield){
+    } else if(have_ColorMap && have_colorfield){
 	// Nothing - done per vertex
     } else {
 	// Default material
@@ -960,9 +960,11 @@ void IsoSurface::parallel_reg_grid(int proc)
   int sx=proc*(nx-1)/np;
   int ex=(proc+1)*(nx-1)/np;
   GeomTrianglesP* tris=new GeomTrianglesP;
+  CPUTimer threadtime;
+  threadtime.start();
   for(int i=sx;i<ex;i++){
     if(proc==0)
-      update_progress(i, ex);
+      update_progress(i, ex, threadtime);
     for(int j=0;j<ny-1;j++){
       for(int k=0;k<nz-1;k++){
 	iso_cube2(i,j,k, the_isoval, tris, rgfield);
@@ -974,6 +976,8 @@ void IsoSurface::parallel_reg_grid(int proc)
   grouplock.lock();
   maingroup->add(tris);
   grouplock.unlock();
+  threadtime.stop();
+  timer.add(threadtime.time());
 }
 
 static void do_parallel_reg_grid(void* obj, int proc)

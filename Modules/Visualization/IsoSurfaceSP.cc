@@ -17,7 +17,7 @@
 #include <Classlib/Queue.h>
 #include <Classlib/Stack.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/ColormapPort.h>
+#include <Datatypes/ColorMapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/Mesh.h>
 #include <Datatypes/ScalarField.h>
@@ -45,10 +45,31 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+typedef struct xedges {
+    int Front;
+    int Bottom;
+    int Back;
+    int Top;
+} XEDGES;
+
+typedef struct yedges {
+    int Front;
+    int Right;
+    int Back;
+    int Left;
+} YEDGES;
+
+typedef struct zedges {
+    int Bottom;
+    int Right;
+    int Top;
+    int Left;
+} ZEDGES;
+
 class IsoSurfaceSP : public Module {
     ScalarFieldIPort* infield;
     ScalarFieldIPort* incolorfield;
-    ColormapIPort* incolormap;
+    ColorMapIPort* inColorMap;
 
     GeometryOPort* ogeom;
     SurfaceOPort* osurf;
@@ -64,6 +85,20 @@ class IsoSurfaceSP : public Module {
     int IsoSurfaceSP_id;
     int need_seed;
 
+    XEDGES XEDGES_NEW;
+    YEDGES YEDGES_NEW;
+    ZEDGES ZEDGES_NEW;
+    Array1<XEDGES> xring;
+    Array1<YEDGES> yring;
+
+    int xring_idx;
+    int yring_idx;
+    ZEDGES zedges;
+
+    XEDGES next_x;
+    YEDGES next_y;
+    ZEDGES next_z;
+
     double old_min;
     double old_max;
     Point old_bmin;
@@ -73,7 +108,7 @@ class IsoSurfaceSP : public Module {
 
     MaterialHandle matl;
 
-    int iso_cube(int, int, int, double, GeomTrianglesP*, ScalarFieldRG*);
+    int iso_cube(int, int, int, double, GeomTrianglesP*, ScalarFieldRG*, int, int);
     int iso_tetra(Element*, Mesh*, ScalarFieldUG*, double, GeomTrianglesP*);
     int iso_tetra_s(int,Element*, Mesh*, ScalarFieldUG*, double, 
 		    GeomTriStripList*);
@@ -97,6 +132,7 @@ class IsoSurfaceSP : public Module {
     void find_seed_from_value(const ScalarFieldHandle&);
     void order_and_add_points(const Point &p1, const Point &p2, 
 			      const Point &p3, const Point &v1, double val);
+    void print_edges();
 
     virtual void widget_moved(int last);
     CrowdMonitor widget_lock;
@@ -106,8 +142,7 @@ class IsoSurfaceSP : public Module {
     int need_find;
 
     int init;
-    Point ov[9];
-    Point v[9];
+    Point v[8];
 public:
     IsoSurfaceSP(const clString& id);
     IsoSurfaceSP(const IsoSurfaceSP&, int deep);
@@ -136,7 +171,7 @@ struct MCubeTable {
     int nbrs;
 };
 
-#include "mcube.h"
+#include "mcube2.h"
 
 extern "C" {
 Module* make_IsoSurfaceSP(const clString& id)
@@ -160,8 +195,8 @@ IsoSurfaceSP::IsoSurfaceSP(const clString& id)
     add_iport(infield);
     incolorfield=scinew ScalarFieldIPort(this, "Color Field", ScalarFieldIPort::Atomic);
     add_iport(incolorfield);
-    incolormap=scinew ColormapIPort(this, "Color Map", ColormapIPort::Atomic);
-    add_iport(incolormap);
+    inColorMap=scinew ColorMapIPort(this, "Color Map", ColorMapIPort::Atomic);
+    add_iport(inColorMap);
     
 
     // Create the output port
@@ -184,6 +219,10 @@ IsoSurfaceSP::IsoSurfaceSP(const clString& id)
     widget = scinew ArrowWidget(this, &widget_lock, INIT);
     need_find=1;
     init=1;
+    XEDGES_NEW.Front=XEDGES_NEW.Back=XEDGES_NEW.Top=XEDGES_NEW.Bottom=
+	YEDGES_NEW.Front=YEDGES_NEW.Back=YEDGES_NEW.Left=YEDGES_NEW.Right=
+	    ZEDGES_NEW.Top=ZEDGES_NEW.Bottom=ZEDGES_NEW.Left=ZEDGES_NEW.Right=
+		-1;
 }
 
 IsoSurfaceSP::IsoSurfaceSP(const IsoSurfaceSP& copy, int deep)
@@ -214,8 +253,8 @@ void IsoSurfaceSP::execute()
 	return;
     ScalarFieldHandle colorfield;
     int have_colorfield=incolorfield->get(colorfield);
-    ColormapHandle cmap;
-    int have_colormap=incolormap->get(cmap);
+    ColorMapHandle cmap;
+    int have_ColorMap=inColorMap->get(cmap);
 
     if(init == 1){
 	init=0;
@@ -286,10 +325,10 @@ void IsoSurfaceSP::execute()
     GeomTrianglesP* group = scinew GeomTrianglesP;
     GeomGroup* tgroup=scinew GeomGroup;
     GeomObj* topobj=tgroup;
-    if(have_colormap && !have_colorfield){
-	// Paint entire surface based on colormap
+    if(have_ColorMap && !have_colorfield){
+	// Paint entire surface based on ColorMap
 	topobj=scinew GeomMaterial(tgroup, cmap->lookup(iv));
-    } else if(have_colormap && have_colorfield){
+    } else if(have_ColorMap && have_colorfield){
 	// Nothing - done per vertex
     } else {
 	// Default material
@@ -309,16 +348,10 @@ void IsoSurfaceSP::execute()
     }   
 
     if(regular_grid){
-	if (emit_surface.get()) {
-	    surf=scinew TriSurface;
-	    int nx=regular_grid->nx;
-	    int ny=regular_grid->ny;
-	    int nz=regular_grid->nz;
-	    spacing=Max(diff.x()/nx, diff.y()/ny, diff.z()/nz);
-	    surf->construct_grid(nx+2, ny+2, nz+2, 
-				 minPt+(Vector(1.001,1.029,0.917)*(-.001329)),
-				 spacing);
-	}	
+	surf=scinew TriSurface;
+//	if (emit_surface.get()) {
+//	    surf=scinew TriSurface;
+//	}	
 	if(have_seedpoint.get()){
 	    iso_reg_grid(regular_grid, sp, group);
 	} else {
@@ -364,359 +397,269 @@ void IsoSurfaceSP::execute()
     }
 }
 
-
-// Given the points p1,p2,p3 and a point v1 that lies in front of the plane
-// and it's implicit value, we calculate the whether the point is in front
-// of or beind the plane that p1,p2,p3 define, and make sure that val has
-// the apropriate sign (i.e. the points are cw --> negative val is outside.
-// finally we "cautiously-add" the correctly directed triangle to surf.
- 
-void IsoSurfaceSP::order_and_add_points(const Point &p1, const Point &p2, 
-				      const Point &p3, const Point &v1,
-				      double val) 
-{
-
-    if (Plane(p1,p2,p3).eval_point(v1)*val >= 0)	// is the order right?
-	surf->cautious_add_triangle(p1,p2,p3,1);
-    else	
-	surf->cautious_add_triangle(p2,p1,p3,1);
+void IsoSurfaceSP::print_edges() {
+    cerr << "z 0:"<<zedges.Bottom<<" 1:"<<zedges.Right<<" 2:"<<zedges.Top<<" 3:"<<zedges.Left<<"  4:"<<next_z.Bottom<<" 5:"<<next_z.Right<<" 6:"<<next_z.Top<<" 7:"<<next_z.Left;
+    cerr << "  y 0:"<<yring[yring_idx].Front<<" 4:"<<yring[yring_idx].Back<<" 8:"<<yring[yring_idx].Left<<" 9:"<<yring[yring_idx].Right<<"  2:"<<next_y.Front<<" 6:"<<next_y.Back<<" 10:"<<next_y.Left<<" 11:"<<next_y.Right;
+    cerr << "  x 1:"<<xring[xring_idx].Front<<" 5:"<<xring[xring_idx].Back<<" 9:"<<xring[xring_idx].Bottom<<" 11:"<<xring[xring_idx].Top<<"  3:"<<next_x.Front<<" 7:"<<next_x.Back<<" 8:"<<next_x.Bottom<<" 10:"<<next_x.Top<<"\n";
 }
-
-
-//The IsoSurfaceSP code needs to be able to create clockwise ordered triangles for it to be useful to me.  Clearly we have the information to judge which side of any triangle we generate is inside -- the side which has positive values.   
- 
-//My first thought was to generate a point off the centroid, just a tad away from the face in the direction of the triangle's normal.  Then, get the "value" of the point (in the field), if it's negative, switch the ordering.
-
-
+			       
 int IsoSurfaceSP::iso_cube(int i, int j, int k, double isoval,
-			 GeomTrianglesP* group, ScalarFieldRG* field)
+			   GeomTrianglesP* group, ScalarFieldRG* field,
+			   int marching, int building_trisurf)
 {
-    double oval[9];
-    oval[1]=field->grid(i, j, k)-isoval;
-    oval[2]=field->grid(i+1, j, k)-isoval;
-    oval[3]=field->grid(i+1, j+1, k)-isoval;
-    oval[4]=field->grid(i, j+1, k)-isoval;
-    oval[5]=field->grid(i, j, k+1)-isoval;
-    oval[6]=field->grid(i+1, j, k+1)-isoval;
-    oval[7]=field->grid(i+1, j+1, k+1)-isoval;
-    oval[8]=field->grid(i, j+1, k+1)-isoval;
-    ov[1]=field->get_point(i,j,k);
-    ov[2]=field->get_point(i+1, j, k);
-    ov[3]=field->get_point(i+1, j+1, k);
-    ov[4]=field->get_point(i, j+1, k);
-    ov[5]=field->get_point(i, j, k+1);
-    ov[6]=field->get_point(i+1, j, k+1);
-    ov[7]=field->get_point(i+1, j+1, k+1);
-    ov[8]=field->get_point(i, j+1, k+1);
+    //cerr << "xring.size(): "<<xring.size()<<"  yring.size(): "<<yring.size()<<"\n";
+    double val[8];
+    val[0]=field->grid(i, j, k)-isoval;
+    val[1]=field->grid(i+1, j, k)-isoval;
+    val[2]=field->grid(i+1, j+1, k)-isoval;
+    val[3]=field->grid(i, j+1, k)-isoval;
+    val[4]=field->grid(i, j, k+1)-isoval;
+    val[5]=field->grid(i+1, j, k+1)-isoval;
+    val[6]=field->grid(i+1, j+1, k+1)-isoval;
+    val[7]=field->grid(i, j+1, k+1)-isoval;
     int mask=0;
     int idx;
-    for(idx=1;idx<=8;idx++){
-	if(oval[idx]<0)
-	    mask|=1<<(idx-1);
+    for(idx=0;idx<8;idx++){
+	if(val[idx]<0)
+	    mask|=1<<idx;
     }
-    MCubeTable* tab=&mcube_table[mask];
-    double val[9];
-    for(idx=1;idx<=8;idx++){
-	val[idx]=oval[tab->permute[idx-1]];
-	v[idx]=ov[tab->permute[idx-1]];
+    if (mask==0 || mask==255) return 0;
+    v[0]=field->get_point(i, j, k);
+    v[1]=field->get_point(i+1, j, k);
+    v[2]=field->get_point(i+1, j+1, k);
+    v[3]=field->get_point(i, j+1, k);
+    v[4]=field->get_point(i, j, k+1);
+    v[5]=field->get_point(i+1, j, k+1);
+    v[6]=field->get_point(i+1, j+1, k+1);
+    v[7]=field->get_point(i, j+1, k+1);
+    static int edge_table[12][2] = {{0,1}, {1,2}, {3,2}, {0,3},
+				    {4,5}, {5,6}, {7,6}, {4,7},
+				    {0,4}, {1,5}, {3,7}, {2,6}};
+    TRIANGLE_CASES *tcase=triCases+mask;
+    EDGE_LIST *edges=tcase->edges;
+    Point p[3];
+    
+    for (; edges[0]>-1; edges+=3) {
+	int idx[3];
+	for (i=0; i<3; i++) {
+	    int v1 = edge_table[edges[i]][0];
+	    int v2 = edge_table[edges[i]][1];
+	    int vidx;
+	    if (marching && building_trisurf) {
+		switch(edges[i]) {
+		    case 0:
+		        if ((vidx=zedges.Bottom) == -1) {
+			    vidx=zedges.Bottom=surf->points.size();
+			    p[i]=Interpolate(v[v1], v[v2], val[v1]/(val[v1]-
+								    val[v2]));
+			    surf->points.add(p[i]);
+			} else {
+			    p[i]=surf->points[vidx];
+			}
+			break;
+		    case 1:
+			if ((vidx=zedges.Right) == -1) {
+			    vidx=zedges.Right=next_x.Front=
+				surf->points.size();
+			    p[i]=Interpolate(v[v1], v[v2], val[v1]/(val[v1]-
+								    val[v2]));
+			    surf->points.add(p[i]);
+			} else {
+			    next_x.Front=vidx;
+			    p[i]=surf->points[vidx];
+			}
+			break;
+		    case 2:
+			if ((vidx=zedges.Top) == -1) {
+			    vidx=zedges.Top=next_y.Front=
+				surf->points.size();
+			    p[i]=Interpolate(v[v1], v[v2], val[v1]/(val[v1]-
+								    val[v2]));
+			    surf->points.add(p[i]);
+			} else {
+			    next_y.Front=vidx;
+			    p[i]=surf->points[vidx];
+			}
+			break;
+		    case 3:
+			if ((vidx=zedges.Left) == -1) {
+			    vidx=zedges.Left=surf->points.size();
+			    p[i]=Interpolate(v[v1], v[v2], val[v1]/(val[v1]-
+								    val[v2]));
+			    surf->points.add(p[i]);
+			} else {
+			    p[i]=surf->points[vidx];
+			}
+			break;
+		    case 4:
+			if ((vidx=yring[yring_idx].Back) == -1) {
+			    vidx=yring[yring_idx].Back=next_z.Bottom=surf->points.size();
+			    p[i]=Interpolate(v[v1], v[v2], val[v1]/(val[v1]-
+								    val[v2]));
+			    surf->points.add(p[i]);
+			} else {
+			    next_z.Bottom=vidx;
+			    p[i]=surf->points[vidx];
+			}
+			break;
+	            case 5:
+			if ((vidx=next_z.Right) == -1) {
+			    if ((vidx=next_x.Back) == -1) {
+				vidx=next_z.Right=next_x.Back=surf->points.size();
+				p[i]=Interpolate(v[v1], v[v2], 
+						 val[v1]/(val[v1]-val[v2]));
+				surf->points.add(p[i]);
+			    } else {
+				next_z.Right=vidx;
+				p[i]=surf->points[vidx];
+			    }
+			} else {
+			    next_x.Back=vidx;
+			    p[i]=surf->points[vidx];
+			}
+			break;
+	            case 6:
+			if ((vidx=next_z.Top) == -1) {
+			    if ((vidx=next_y.Back) == -1) {
+				vidx=next_z.Top=next_y.Back=surf->points.size();
+				p[i]=Interpolate(v[v1], v[v2], 
+						 val[v1]/(val[v1]-val[v2]));
+				surf->points.add(p[i]);
+			    } else {
+				next_z.Top=vidx;
+				p[i]=surf->points[vidx];
+			    }
+			} else {
+			    next_y.Back=vidx;
+			    p[i]=surf->points[vidx];
+			}
+			break;
+		    case 7:
+			if ((vidx=xring[xring_idx].Back) == -1) {
+			    vidx=xring[xring_idx].Back=next_z.Left=surf->points.size();
+			    p[i]=Interpolate(v[v1], v[v2], val[v1]/(val[v1]-
+								    val[v2]));
+			    surf->points.add(p[i]);
+			} else {
+			    next_z.Left=vidx;
+			    p[i]=surf->points[vidx];
+			}
+			break;
+		    case 8:
+			if ((vidx=yring[yring_idx].Left) == -1) {
+			    vidx=yring[yring_idx].Left=surf->points.size();
+			    p[i]=Interpolate(v[v1], v[v2], val[v1]/(val[v1]-
+								    val[v2]));
+			    surf->points.add(p[i]);
+			} else {
+			    p[i]=surf->points[vidx];
+			}
+			break;
+		    case 9:
+			if ((vidx=yring[yring_idx].Right) == -1) {
+			    vidx=yring[yring_idx].Right=next_x.Bottom=surf->points.size();
+			    p[i]=Interpolate(v[v1], v[v2], val[v1]/(val[v1]-
+								    val[v2]));
+			    surf->points.add(p[i]);
+			} else {
+			    p[i]=surf->points[vidx];
+			}
+			break;
+		    case 10:
+			if ((vidx=xring[xring_idx].Top) == -1) {
+			    vidx=xring[xring_idx].Top=next_y.Left=surf->points.size();
+			    p[i]=Interpolate(v[v1], v[v2], val[v1]/(val[v1]-
+								    val[v2]));
+			    surf->points.add(p[i]);
+			} else {
+			    next_y.Left=vidx;
+			    p[i]=surf->points[vidx];
+			}
+			break;
+	            case 11:
+			if ((vidx=next_y.Right) == -1) {
+			    if ((vidx=next_x.Top) == -1) {
+				vidx=next_y.Right=next_x.Top=surf->points.size();
+				p[i]=Interpolate(v[v1], v[v2], 
+						 val[v1]/(val[v1]-val[v2]));
+				surf->points.add(p[i]);
+			    } else {
+				next_y.Right=vidx;
+				p[i]=surf->points[vidx];
+			    }
+			} else {
+			    next_x.Top=vidx;
+			    p[i]=surf->points[vidx];
+			}
+			break;
+		    default:
+			cerr << "Major error, unnkown edges: " << edges[i] << "\n";
+		    }
+		idx[i]=vidx;
+	    } else {
+		p[i]=Interpolate(v[v1], v[v2], val[v1]/(val[v1]-
+							val[v2]));
+	    }
+	}
+	if (group->add(p[0], p[1], p[2]))
+	    if (building_trisurf) {
+		surf->add_triangle(idx[0], idx[1], idx[2]);
+	    }
     }
-    int wcase=tab->which_case;
-    switch(wcase){
-    case 0:
-	break;
-    case 1:
-	{
-	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
-	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
-	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    if (group->add(p1, p2, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p2,p3,v[1],val[1]);
-	}
-	break;
-    case 2:
-	{
-	    Point p1(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
-	    Point p2(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
-	    Point p3(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
-	    if (group->add(p1, p2, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p2,p3,v[1],val[1]);
-	    Point p4(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    if (group->add(p3, p4, p1))
-		if (emit_surface.get())
-		    order_and_add_points(p3,p4,p1,v[1],val[1]);
-	}
-	break;
-    case 3:
-	{
-	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
-	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
-	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    if (group->add(p1, p2, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p2,p3,v[1],val[1]);
-	    Point p4(Interpolate(v[3], v[2], val[3]/(val[3]-val[2])));
-	    Point p5(Interpolate(v[3], v[7], val[3]/(val[3]-val[7])));
-	    Point p6(Interpolate(v[3], v[4], val[3]/(val[3]-val[4])));
-	    if (group->add(p4, p5, p6))
-		if (emit_surface.get())
-		    order_and_add_points(p4,p5,p6,v[3],val[3]);
-	}
-	break;
-    case 4:
-	{
-	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
-	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
-	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    if (group->add(p1, p2, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p2,p3,v[1],val[1]);
-	    Point p4(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
-	    Point p5(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
-	    Point p6(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
-	    if (group->add(p4, p5, p6))
-		if (emit_surface.get())
-		    order_and_add_points(p4,p5,p6,v[7],val[7]);
-	}
-	break;
-    case 5:
-	{
-	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
-	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
-	    Point p3(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
-	    if (group->add(p1, p2, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p2,p3,v[2],val[2]);
-	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
-	    if (group->add(p4, p3, p2))
-		if (emit_surface.get())
-		    order_and_add_points(p4,p3,p2,v[2],val[2]);
-	    Point p5(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    if (group->add(p5, p4, p2))
-		if (emit_surface.get())
-		    order_and_add_points(p5,p4,p2,v[2],val[2]);
-	}
-	break;
-    case 6:
-	{
-	    Point p1(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
-	    Point p2(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
-	    Point p3(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
-	    if (group->add(p1, p2, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p2,p3,v[1],val[1]);
-	    Point p4(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    if (group->add(p3, p4, p1))
-		if (emit_surface.get())
-		    order_and_add_points(p3,p4,p1,v[1],val[1]);
-	    Point p5(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
-	    Point p6(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
-	    Point p7(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
-	    if (group->add(p5, p6, p7))
-		if (emit_surface.get())
-		    order_and_add_points(p5,p6,p7,v[7],val[7]);
-	}
-	break;
-    case 7:
-	{
-	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
-	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
-	    Point p3(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
-	    if (group->add(p1, p2, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p2,p3,v[2],val[2]);
-	    Point p4(Interpolate(v[4], v[1], val[4]/(val[4]-val[1])));
-	    Point p5(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
-	    Point p6(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
-	    if (group->add(p4, p5, p6))
-		if (emit_surface.get())
-		    order_and_add_points(p4,p5,p6,v[4],val[4]);
-	    Point p7(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
-	    Point p8(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
-	    Point p9(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
-	    if (group->add(p7, p8, p9))
-		if (emit_surface.get())
-		    order_and_add_points(p7,p8,p9,v[7],val[7]);
-	}
-	break;
-    case 8:
-	{
-	    Point p1(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
-	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    if (group->add(p1, p2, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p2,p3,v[1],val[1]);
-	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
-	    if (group->add(p4, p1, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p4,p1,p3,v[1],val[1]);
-	}
-	break;
-    case 9:
-	{
-	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
-	    Point p2(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
-	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    if (group->add(p1, p2, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p2,p3,v[5],val[5]);
-	    Point p4(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
-	    if (group->add(p1, p3, p4))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p3,p4,v[5],val[5]);
-	    Point p5(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    if (group->add(p1, p4, p5))
-		if (emit_surface.get())	
-		    order_and_add_points(p1,p4,p5,v[5],val[5]);
-	    Point p6(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
-	    if (group->add(p5, p4, p6))
-		if (emit_surface.get())
-		    order_and_add_points(p5,p4,p6,v[5],val[5]);
-	}
-	break;
-    case 10:
-	{
-	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
-	    Point p2(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
-	    Point p3(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
-	    if (group->add(p1, p2, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p2,p3,v[1],val[1]);
-	    Point p4(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
-	    if (group->add(p2, p4, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p2,p4,p3,v[1],val[1]);
-	    Point p5(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
-	    Point p6(Interpolate(v[6], v[5], val[6]/(val[6]-val[5])));
-	    Point p7(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
-	    if (group->add(p5, p6, p7))
-		if (emit_surface.get())
-		    order_and_add_points(p5,p6,p7,v[6],val[6]);
-	    Point p8(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
-	    if (group->add(p2, p8, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p2,p8,p3,v[6],val[6]);
-	}
-	break;
-    case 11:
-	{
-	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
-	    Point p2(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
-	    Point p3(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
-	    if (group->add(p1, p2, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p2,p3,v[5],val[5]);
-	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
-	    if (group->add(p1, p3, p4))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p3,p4,v[5],val[5]);
-	    Point p5(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    if (group->add(p1, p4, p5))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p4,p5,v[5],val[5]);
-	    Point p6(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
-	    if (group->add(p4, p3, p6))
-		if (emit_surface.get())	
-		    order_and_add_points(p4,p3,p6,v[5],val[5]);
-	}
-	break;
-    case 12:
-	{
-	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
-	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
-	    Point p3(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
-	    if (group->add(p1, p2, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p2,p3,v[5],val[5]);
-	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
-	    if (group->add(p3, p2, p4))
-		if (emit_surface.get())	
-		    order_and_add_points(p3,p2,p4,v[5],val[5]);
-	    Point p5(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    if (group->add(p4, p2, p5))
-		if (emit_surface.get())
-		    order_and_add_points(p4,p2,p5,v[5],val[5]);
-	    Point p6(Interpolate(v[4], v[1], val[4]/(val[4]-val[1])));
-	    Point p7(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
-	    Point p8(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
-	    if (group->add(p6, p7, p8))
-		if (emit_surface.get())
-		    order_and_add_points(p6,p7,p8,v[4],val[4]);
-	}
-	break;
-    case 13:
-	{
-	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
-	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
-	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
-	    if (group->add(p1, p2, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p2,p3,v[1],val[1]);
-	    Point p4(Interpolate(v[3], v[2], val[3]/(val[3]-val[2])));
-	    Point p5(Interpolate(v[3], v[7], val[3]/(val[3]-val[7])));
-	    Point p6(Interpolate(v[3], v[4], val[3]/(val[3]-val[4])));
-	    if (group->add(p4, p5, p6))
-		if (emit_surface.get())
-		    order_and_add_points(p4,p5,p6,v[3],val[3]);
-	    Point p7(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
-	    Point p8(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    Point p9(Interpolate(v[6], v[5], val[6]/(val[6]-val[5])));
-	    if (group->add(p7, p8, p9))
-		if (emit_surface.get())
-		    order_and_add_points(p7,p8,p9,v[6],val[6]);
-	    Point p10(Interpolate(v[8], v[5], val[8]/(val[8]-val[5])));
-	    Point p11(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
-	    Point p12(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
-	    if (group->add(p10, p11, p12))
-		if (emit_surface.get())
-		    order_and_add_points(p10,p11,p12,v[8],val[8]);
-	}
-	break;
-    case 14:
-	{
-	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
-	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
-	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
-	    if (group->add(p1, p2, p3))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p2,p3,v[5],val[5]);
-	    Point p4(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
-	    if (group->add(p1, p3, p4))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p3,p4,v[5],val[5]);
-	    Point p5(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
-	    if (group->add(p1, p4, p5))
-		if (emit_surface.get())
-		    order_and_add_points(p1,p4,p5,v[5],val[5]);
-	    Point p6(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
-	    if (group->add(p3, p6, p4))
-		if (emit_surface.get())
-		    order_and_add_points(p3,p6,p4,v[5],val[5]);
-	}
-	break;
-    default:
-	error("Bad case in marching cubes!\n");
-	break;
+    if (marching && building_trisurf) {
+	zedges = next_z;
+	xring[xring_idx] = next_x;
+	yring[yring_idx] = next_y;
     }
-    return(tab->nbrs);
+    return(tcase->nbrs);
 }
 
 void IsoSurfaceSP::iso_reg_grid(ScalarFieldRG* field, double isoval,
 			      GeomTrianglesP* group)
 {
-    int nx=field->nx;
-    int ny=field->ny;
-    int nz=field->nz;
-    for(int i=0;i<nx-1;i++){
-	//update_progress(i, nx);
-	for(int j=0;j<ny-1;j++){
-	    for(int k=0;k<nz-1;k++){
-		iso_cube(i,j,k, isoval, group, field);
+    int building_trisurf = emit_surface.get();
+
+    if (building_trisurf) {
+	int nx=field->nx;
+	int ny=field->ny;
+	int nz=field->nz;
+	xring.resize((ny-1)*(nz-1));
+	yring.resize(nz-1);
+	for (int ii=0; ii<xring.size(); ii++)
+	    xring[ii]=XEDGES_NEW;
+	for(int i=0;i<nx-1;i++){
+	    update_progress(i, nx);
+	    xring_idx=0;
+	    for (int jj=0; jj<yring.size(); jj++)
+		yring[jj]=YEDGES_NEW;
+	    for(int j=0;j<ny-1;j++){
+		yring_idx=0;
+		zedges = ZEDGES_NEW;
+		for(int k=0;k<nz-1;k++){
+		    next_z=ZEDGES_NEW;
+		    next_y=YEDGES_NEW;
+		    next_x=XEDGES_NEW;
+		    iso_cube(i,j,k,isoval,group,field,1,building_trisurf);
+		    xring_idx++;
+		    yring_idx++;
+		}
+		if(sp && abort_flag)
+		    return;
 	    }
-	    if(sp && abort_flag)
-		return;
+	}
+    } else {
+	int nx=field->nx;
+	int ny=field->ny;
+	int nz=field->nz;
+	for(int i=0;i<nx-1;i++){
+	    update_progress(i, nx);
+	    for(int j=0;j<ny-1;j++){
+		for(int k=0;k<nz-1;k++){
+		    iso_cube(i,j,k,isoval,group,field,1,building_trisurf);
+		}
+		if(sp && abort_flag)
+		    return;
+	    }
 	}
     }
 }
@@ -765,7 +708,7 @@ void IsoSurfaceSP::iso_reg_grid(ScalarFieldRG* field, const Point& p,
 	dummy=pLoc%(nx*ny);
 	py=dummy/nx;
 	px=dummy%nx;
-	int nbrs=iso_cube(px, py, pz, iv, group, field);
+	int nbrs=iso_cube(px, py, pz, iv, group, field, 0, 0);
 	if ((nbrs & 1) && (px!=0)) {
 	    pLoc-=1;
 	    if (!visitedPts.lookup(pLoc, dummy)) {
@@ -1749,7 +1692,7 @@ void IsoSurfaceSP::find_seed_from_value(const ScalarFieldHandle& /*field*/)
     for (int i=0; i<nx-1;i++) {
 	for (int j=0; j<ny-1; j++) {
 	    for (int k=0; k<nz-1; k++) {
-		if(iso_cube(i,j,k,isoval, &group, field)) {
+		if(iso_cube(i,j,k,isoval,&group,field,0,0)) {
 		    seed_point=Point(i,j,k);
 		    cerr << "New seed=" << seed_point.string() << endl;
 		    return;

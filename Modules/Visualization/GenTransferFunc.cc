@@ -1,13 +1,13 @@
 /*
- * This is basicaly a colormap, just it works...
+ * This is basicaly a ColorMap, just it works...
  * Only handles diffuse colors for now (rest is constant)
  * Peter-Pike Sloan
  */
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/ColormapPort.h>
-#include <Datatypes/Colormap.h>
+#include <Datatypes/ColorMapPort.h>
+#include <Datatypes/ColorMap.h>
 #include <Datatypes/GeometryPort.h>
 
 #include <Math/CatmullRomSpline.h>
@@ -49,7 +49,7 @@ struct ColorPoint {
 
 class GenTransferFunc : public Module {
 
-  ColormapOPort         *outport;  // outputs a colormap
+  ColorMapOPort         *outport;  // outputs a ColorMap
   GeometryOPort         *ogeom;  
   TCLint		RGBorHSV; // which mode
   TCLint		lineVSspline; // linear vs. spline interpolate
@@ -77,7 +77,7 @@ class GenTransferFunc : public Module {
   Window		win1;
   Window		win2;
 
-  ColormapHandle	cmap;  // created once, first execute...
+  ColorMapHandle	cmap;  // created once, first execute...
 
 public:
   GenTransferFunc( const clString& id);
@@ -137,7 +137,7 @@ GenTransferFunc::GenTransferFunc( const clString& id)
   cmap = 0; // start as nothing...
 
   // Create the output port
-  outport = scinew ColormapOPort(this,"Colormap",ColormapIPort::Atomic);
+  outport = scinew ColorMapOPort(this,"ColorMap",ColorMapIPort::Atomic);
   add_oport(outport);
 
   ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
@@ -372,7 +372,7 @@ void GenTransferFunc::DrawGraphs()
   glXSwapBuffers(dpy[2],win2);
 
   
-  // here you update this colormap thing...
+  // here you update this ColorMap thing...
   
   if (cmap.get_rep()) {
     Array1<Color> ncolors(points.size());

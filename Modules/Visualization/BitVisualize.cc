@@ -33,15 +33,18 @@
 #include <Geom/Material.h>
 #include <Geom/Tri.h>
 #include <Malloc/Allocator.h>
+#include <Multitask/Task.h>
 #include <TCL/TCLvar.h>
 #include <iostream.h>
 #include <strstream.h>
 
-#define NUM_MATERIALS 5
+// just so I can see the proccess id...
 
-inline Point mp(const Point &a, const Point &b) { 
-    return Point((a.x()+b.x())/2, (a.y()+b.y())/2, (a.z()+b.z())/2);
-}
+#include <sys/types.h>
+#include <unistd.h>
+
+
+#define NUM_MATERIALS 5
 
 class BitVisualize : public Module {
     ScalarFieldIPort* infield;
@@ -50,25 +53,28 @@ class BitVisualize : public Module {
     Array1<SurfaceOPort* > osurfs;
     Array1<SurfaceHandle> surf_hands;
     Array1<TriSurface*> surfs;
-    TCLint emit_surface;
     Array1<TCLint*> isovals;
-    Array1<GeomPts*> geomPts;
     Array1<int> BitVisualize_id;
     Array1<int> calc_mat;
     int isoChanged;
-    int last_emit_surf;
-    int sp;
-    TCLint show_progress;
-
+    ScalarFieldRG* sfrg;
     Array1<MaterialHandle> matls;
     Array1<GeomGroup*> groups;
     Array1<int> geom_allocated;
-    void vol_render_grid(ScalarFieldRG*);
-    void iso_reg_grid(ScalarFieldRG*);
+    void vol_render1_grid();
 
     Point ov[9];
     Point v[9];
+    Point maxP;
+    Point minP;
+    Point pmid;
+    int bit;
+
+    Mutex grouplock;
+    int np;
+    void vol_render1();
 public:
+    void parallel_vol_render1(int proc);
     BitVisualize(const clString& id);
     BitVisualize(const BitVisualize&, int deep);
     virtual ~BitVisualize();
@@ -98,8 +104,7 @@ Module* make_BitVisualize(const clString& id)
 };
 
 BitVisualize::BitVisualize(const clString& id)
-: Module("BitVisualize", id, Filter), emit_surface("emit_surface", id, this),
-  show_progress("show_progress", id, this)
+: Module("BitVisualize", id, Filter)
 {
     // Create the input ports
     infield=scinew ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
@@ -107,9 +112,7 @@ BitVisualize::BitVisualize(const clString& id)
     // Create the output port
     ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
-    last_emit_surf=0;
     groups.resize(NUM_MATERIALS);
-    geomPts.resize(NUM_MATERIALS);
     surfs.resize(NUM_MATERIALS);
     surf_hands.resize(NUM_MATERIALS);
     for (int i=0; i<NUM_MATERIALS; i++) {
@@ -127,14 +130,13 @@ BitVisualize::BitVisualize(const clString& id)
 	int r=(i+1)%2;		// 1 0 1 0 1 0
 	int g=(((i+2)/3)%2);	// 0 1 1 1 0 0
 	int b=((i/3)%2);	// 0 0 0 1 1 1
-	matls.add(scinew Material(Color(0,0,0), Color(r*.6, g*.6, b*.6), 
+	matls.add(scinew Material(Color(.2,.2,.2), Color(r*.6, g*.6, b*.6), 
 			       Color(r*.5, g*.5, b*.5), 20));
     }	
 }
 
 BitVisualize::BitVisualize(const BitVisualize& copy, int deep)
-: Module(copy, deep), emit_surface("emit_surface", id, this),
-  show_progress("show_progress", id, this)
+: Module(copy, deep)
 {
     NOT_FINISHED("BitVisualize::BitVisualize");
 }
@@ -153,15 +155,15 @@ void BitVisualize::execute()
     ScalarFieldHandle field;
     if(!infield->get(field))
 	return;
-    sp=show_progress.get();
-    ScalarFieldRG* regular_grid=field->getRG();
-    if(regular_grid){
-	isoChanged=(int)regular_grid->grid(0,0,0);
-	regular_grid->grid(0,0,0)=0;
+    sfrg=field->getRG();
+    if(sfrg){
+//	isoChanged=(int)sfrg->grid(0,0,0);
+//	isoChanged=(1<<NUM_MATERIALS)-1;
+	sfrg->grid(0,0,0)=0;
 	int i;
 	for (i=0; i<NUM_MATERIALS; i++) {
-	    int bit=1<<i;
-	    if (isoChanged & bit) {		    // fld changed...
+//	    bit=1<<i;
+//	    if (isoChanged & bit) {		    // fld changed...
 		if (isovals[i]->get()) {	    //   want this material...
 		    if (geom_allocated[i]) {	    //     it's allocated...
 			ogeom->delObj(BitVisualize_id[i]);//	      DELETE
@@ -169,379 +171,108 @@ void BitVisualize::execute()
 			geom_allocated[i]=1; 	    // 	      MARK as ALLOCED
 		    }
 		    groups[i]=scinew GeomGroup;	    //	   ALLOCATE THEM
-		    geomPts[i]=scinew GeomPts(10000);
 		    calc_mat[i]=1;		    //	   *Calculate mat.*
 		} else {			    //   don't want material...
 		    if (geom_allocated[i]) {	    //     it's allocated...
-			ogeom->delObj(BitVisualize_id[i]);//	      DELETE
+			ogeom->delObj(BitVisualize_id[i]);//	 DELETE
 			geom_allocated[i]=0;	    //	      MARK as UNALLOCED
 		    }
 		    calc_mat[i]=0;		    //	   *Don't calc. mat.*
 		}
-	    } else {				    // fld didn't change...
-		if (isovals[i]->get()) {	    //	 want this material...
-		    if (geom_allocated[i]) {	    //	   it's allocated...
-			calc_mat[i]=0;		    //	      *Don't calc. mat*
-		    } else {			    //	   not allocated
-			geom_allocated[i]=1;	    //	      MARK
-			groups[i]=scinew GeomGroup;    //	      ALLOCATE THEM
-			geomPts[i]=scinew GeomPts(10000);
-			calc_mat[i]=1;		    //	      *Calcluate mat*
-		    }		
-		} else {			    //   don't want material
-		    calc_mat[i]=0;		    //     *Don't calc mat*
-		    if (geom_allocated[i]) {	    //	   it's allocated...
-			ogeom->delObj(BitVisualize_id[i]);//	      DELETE
-			geom_allocated[i]=0;	    //	      MARK as UNALLOCED
-		    }				    //	   not allocated
-		}				    //        NOTHING TO DO!
-	    }
+//	    } else {				    // fld didn't change...
+//		if (isovals[i]->get()) {	    //	 want this material...
+//		    if (geom_allocated[i]) {	    //	   it's allocated...
+//			calc_mat[i]=0;		    //	      *Don't calc. mat*
+//		    } else {			    //	   not allocated
+//			geom_allocated[i]=1;	    //	      MARK
+//			groups[i]=scinew GeomGroup; //	      ALLOCATE THEM
+//			geomPts[i]=scinew GeomGroup;
+//			calc_mat[i]=1;		    //	      *Calcluate mat*
+//		    }		
+//		} else {			    //   don't want material
+//		    calc_mat[i]=0;		    //     *Don't calc mat*
+//		    if (geom_allocated[i]) {	    //	   it's allocated...
+//			ogeom->delObj(BitVisualize_id[i]);//	      DELETE
+//			geom_allocated[i]=0;	    //	      MARK as UNALLOCED
+//		    }				    //	   not allocated
+//		}				    //        NOTHING TO DO!
+//	    }
 	}
-	vol_render_grid(regular_grid);
+	vol_render1_grid();
 	for (i=0; i<NUM_MATERIALS; i++) {
 	    if (calc_mat[i]) {
-		groups[i]->add(geomPts[i]);
-		GeomObj* topobj=scinew GeomMaterial(groups[i], matls[i]);
-		clString nm = "Material " + to_string(i+1);
-		BitVisualize_id[i] = ogeom->addObj(topobj, nm);
+		if (groups[i]->size()) {
+		    GeomObj* topobj=scinew GeomMaterial(groups[i], matls[i]);
+		    clString nm = "Material " + to_string(i+1);
+		    BitVisualize_id[i] = ogeom->addObj(topobj, nm);
+		} else {
+		    geom_allocated[i]=0;
+		}
 	    }
 	}
 	ogeom->flushViews();
-	if (emit_surface.get()) {
-	    int build_surfs=0;
-	    for (i=0; i<NUM_MATERIALS; i++) {
-		calc_mat[i]=0;
-		int bit=1<<i;
-		if ((isoChanged & bit) || !last_emit_surf) {
-		    if (isovals[i]->get()) {
-			build_surfs=1;
-			calc_mat[i]=1;
-		    }
-		    surf_hands[i]=surfs[i]=0;
-		}
-	    }
-	    if (build_surfs)
-		iso_reg_grid(regular_grid);
-
-	    for (i=0; i<NUM_MATERIALS; i++) {
-		osurfs[i]->send(surf_hands[i]);
-	    }
-	} else {
-	    for (i=0; i<NUM_MATERIALS; i++) {
-		surf_hands[i]=surfs[i]=0;	    
-	    }
-	}
-	last_emit_surf = emit_surface.get();
     } else {
 	error("I can't BitVisualize this type of field...");
     }
 }
 
-void BitVisualize::vol_render_grid(ScalarFieldRG* field) {
-    int nx=field->nx;
-    int ny=field->ny;
-    int nz=field->nz;
-    Point minP, maxP;
-    field->get_bounds(minP, maxP);
-    double tweak[NUM_MATERIALS];
-    Point pmid;
+static void do_parallel_vol_render1(void* obj, int proc)
+{
+  BitVisualize* module=(BitVisualize*)obj;
+  module->parallel_vol_render1(proc);
+}
+
+void BitVisualize::vol_render1()
+{
+    np=Task::nprocessors();
+    Task::multiprocess(np, do_parallel_vol_render1, this);
+}
+
+
+void BitVisualize::parallel_vol_render1(int proc) {
+    int nx=sfrg->nx;
+    int ny=sfrg->ny;
+    int nz=sfrg->nz;
+    double dx=(maxP.x()-minP.x())/(nx-1);
+    double dy=(maxP.y()-minP.y())/(ny-1);
+    double dz=(maxP.z()-minP.z())/(nz-1);
+    int sx=proc*(nx-1)/np;
+    int ex=(proc+1)*(nx-1)/np;
+    Array1<GeomPts*> geomPts(NUM_MATERIALS);
     for (int m=0; m<NUM_MATERIALS; m++) {
 	int bit=1<<m;
 	if (calc_mat[m]) {
-	    tweak[m]=m/20.;
-	    for (int i=0, ii=(int)minP.x(); i<nx; i++, ii++) {
-		for (int j=0, jj=(int)minP.y(); j<ny; j++, jj++) {
-		    for (int k=0, kk=(int)minP.z(); k<nz; k++, kk++) {
-			pmid.x(ii+tweak[m]);
-			pmid.y(jj+tweak[m]);
-			pmid.z(kk+tweak[m]);
-			int val=(int)(field->grid(i,j,k));
-			if ((val & bit) != 0)
-			    geomPts[m]->pts.add(pmid);
-		    }
-		}	
-	    }
-	}
-    }
-}
-
-void BitVisualize::iso_reg_grid(ScalarFieldRG* field) {
-    NOT_FINISHED("BitVisualize::iso_reg_grid is broken for now - it takes too long to compile.");
-#if 0
-    int nx=field->nx;
-    int ny=field->ny;
-    int nz=field->nz;
-    int o[9];
-    int oval[9];
-    int val[9];
-    Point pmin, pmax;
-    field->get_bounds(pmin, pmax);
-    int pminx=(int)pmin.x();
-    int pminy=(int)pmin.y();
-    int pminz=(int)pmin.z();
-    int i;
-    for (i=0; i<NUM_MATERIALS; i++) {
-	if (calc_mat[i]) {
-	    surf_hands[i]=surfs[i]=0;
-	    surf_hands[i]=surfs[i]=scinew TriSurface();
-	    surfs[i]->points.grow(1000);
-	    surfs[i]->points.grow(-1000);
-	    surfs[i]->elements.grow(1000);
-	    surfs[i]->elements.grow(-1000);
-	    surfs[i]->construct_hash(nx, ny, pmin, .5);
-	}
-    }
-    for(i=0;i<nx-1;i++){
-	//update_progress(i, nx);
-	for(int j=0;j<ny-1;j++){
-	    for(int k=0;k<nz-1;k++){
-		int o1=o[1]=(int)field->grid(i, j, k);
-		int o2=o[2]=(int)field->grid(i+1, j, k);
-		int o3=o[3]=(int)field->grid(i+1, j+1, k);
-		int o4=o[4]=(int)field->grid(i, j+1, k);
-		int o5=o[5]=(int)field->grid(i, j, k+1);
-		int o6=o[6]=(int)field->grid(i+1, j, k+1);
-		int o7=o[7]=(int)field->grid(i+1, j+1, k+1);
-		int o8=o[8]=(int)field->grid(i, j+1, k+1);
-		int andall=o1 & o2 & o3 & o4 & o5 & o6 & o7 & o8;
-		int orall=o1 | o2 | o3 | o4 | o5 | o6 | o7 | o8;
-		int xall=andall ^ orall;
-		int do_mat[NUM_MATERIALS];
-		int check_box=0;
-		for (int ii=0; ii<NUM_MATERIALS; ii++) {
-		    if ((do_mat[ii]=(calc_mat[ii] && (xall & (1<<ii)))))
-			check_box=1;
-		}
-		if (check_box) {
-		    ov[1]=Point(pminx+i,pminy+j,pminz+k);
-		    ov[2]=Point(pminx+i+1,pminy+j,pminz+k);
-		    ov[3]=Point(pminx+i+1,pminy+j+1,pminz+k);
-		    ov[4]=Point(pminx+i,pminy+j+1,pminz+k);
-		    ov[5]=Point(pminx+i,pminy+j,pminz+k+1);
-		    ov[6]=Point(pminx+i+1,pminy+j,pminz+k+1);
-		    ov[7]=Point(pminx+i+1,pminy+j+1,pminz+k+1);
-		    ov[8]=Point(pminx+i,pminy+j+1,pminz+k+1);
-		    for (int m=0; m<NUM_MATERIALS; m++) {
-			if (do_mat[m]) {
-			    int a = (1 << m);
-			    for (int jj=1; jj<9; jj++)
-				if ((o[jj] & a)!=0) oval[jj]=1;else oval[jj]=0;
-			    int mask=0;
-			    int idx;
-			    for(idx=1;idx<=8;idx++){
-				if(oval[idx])
-				    mask|=1<<(idx-1);
-			    }
-			    MCubeTable* tab=&mcube_table[mask];
-			    for(idx=1;idx<=8;idx++){
-				val[idx]=oval[tab->permute[idx-1]];
-				v[idx]=ov[tab->permute[idx-1]];
-			    }
-			    int wcase=tab->which_case;
-			    switch(wcase) {
-			    case 0:
-				cerr << "Shouldn't be here! \n";
-				break;
-			    case 1:
-				{
-                                    Point p1(mp(v[1], v[2]));
-                                    Point p2(mp(v[1], v[5]));
-                                    Point p3(mp(v[1], v[4]));
-				    surfs[m]->cautious_add_triangle(p1,p2,p3);
-				}
-				break;
-			    case 2:
-				{
-                                    Point p1(mp(v[1], v[5]));
-                                    Point p2(mp(v[2], v[6]));
-                                    Point p3(mp(v[2], v[3]));
-				    surfs[m]->cautious_add_triangle(p1,p2,p3);
-                                    Point p4(mp(v[1], v[4]));
-				    surfs[m]->cautious_add_triangle(p3,p4,p1);
-				}
-				break;
-			    case 3:
-				{
-                                    Point p1(mp(v[1], v[2]));
-                                    Point p2(mp(v[1], v[5]));
-                                    Point p3(mp(v[1], v[4]));
-				    surfs[m]->cautious_add_triangle(p1,p2,p3);
-                                    Point p4(mp(v[3], v[2]));
-                                    Point p5(mp(v[3], v[7]));
-                                    Point p6(mp(v[3], v[4]));
-				    surfs[m]->cautious_add_triangle(p4,p5,p6);
-				}
-				break;
-			    case 4:
-				{
-                                    Point p1(mp(v[1], v[2]));
-                                    Point p2(mp(v[1], v[5]));
-                                    Point p3(mp(v[1], v[4]));
-				    surfs[m]->cautious_add_triangle(p1,p2,p3);
-                                    Point p4(mp(v[7], v[3]));
-                                    Point p5(mp(v[7], v[8]));
-                                    Point p6(mp(v[7], v[6]));
-				    surfs[m]->cautious_add_triangle(p4,p5,p6);
-				}
-				break;
-			    case 5:
-				{
-                                    Point p1(mp(v[2], v[1]));
-                                    Point p2(mp(v[2], v[3]));
-                                    Point p3(mp(v[5], v[1]));
-				    surfs[m]->cautious_add_triangle(p1,p2,p3);
-                                    Point p4(mp(v[5], v[8]));
-				    surfs[m]->cautious_add_triangle(p4,p3,p2);
-                                    Point p5(mp(v[6], v[7]));
-				    surfs[m]->cautious_add_triangle(p5,p4,p2);
-				}
-				break;
-			    case 6:
-				{
-                                    Point p1(mp(v[1], v[5]));
-                                    Point p2(mp(v[2], v[6]));
-                                    Point p3(mp(v[2], v[3]));
-				    surfs[m]->cautious_add_triangle(p1,p2,p3);
-                                    Point p4(mp(v[1], v[4]));
-				    surfs[m]->cautious_add_triangle(p3,p4,p1);
-                                    Point p5(mp(v[7], v[3]));
-                                    Point p6(mp(v[7], v[8]));
-                                    Point p7(mp(v[7], v[6]));
-				    surfs[m]->cautious_add_triangle(p5,p6,p7);
-				}
-				break;
-			    case 7:
-				{
-                                    Point p1(mp(v[2], v[1]));
-                                    Point p2(mp(v[2], v[3]));
-                                    Point p3(mp(v[2], v[6]));
-				    surfs[m]->cautious_add_triangle(p1,p2,p3);
-                                    Point p4(mp(v[4], v[1]));
-                                    Point p5(mp(v[4], v[3]));
-                                    Point p6(mp(v[4], v[8]));
-				    surfs[m]->cautious_add_triangle(p4,p5,p6);
-                                    Point p7(mp(v[7], v[8]));
-                                    Point p8(mp(v[7], v[6]));
-                                    Point p9(mp(v[7], v[3]));
-				    surfs[m]->cautious_add_triangle(p7,p8,p9);
-				}
-				break;
-			    case 8:
-				{
-                                    Point p1(mp(v[1], v[4]));
-                                    Point p2(mp(v[2], v[3]));
-                                    Point p3(mp(v[6], v[7]));
-				    surfs[m]->cautious_add_triangle(p1,p2,p3);
-                                    Point p4(mp(v[5], v[8]));
-				    surfs[m]->cautious_add_triangle(p4,p1,p3);
-				}
-				break;
-			    case 9:
-				{
-                                    Point p1(mp(v[1], v[2]));
-                                    Point p2(mp(v[6], v[2]));
-                                    Point p3(mp(v[6], v[7]));
-				    surfs[m]->cautious_add_triangle(p1,p2,p3);
-                                    Point p4(mp(v[8], v[7]));
-				    surfs[m]->cautious_add_triangle(p1,p3,p4);
-                                    Point p5(mp(v[1], v[4]));
-				    surfs[m]->cautious_add_triangle(p1,p4,p5);
-                                    Point p6(mp(v[8], v[4]));
-				    surfs[m]->cautious_add_triangle(p5,p4,p6);
-				}
-				break;
-			    case 10:
-				{
-                                    Point p1(mp(v[1], v[2]));
-                                    Point p2(mp(v[4], v[3]));
-                                    Point p3(mp(v[1], v[5]));
-				    surfs[m]->cautious_add_triangle(p1,p2,p3);
-                                    Point p4(mp(v[4], v[8]));
-				    surfs[m]->cautious_add_triangle(p2,p4,p3);
-                                    Point p5(mp(v[6], v[2]));
-                                    Point p6(mp(v[6], v[5]));
-                                    Point p7(mp(v[7], v[3]));
-				    surfs[m]->cautious_add_triangle(p5,p6,p7);
-                                    Point p8(mp(v[7], v[8]));
-				    surfs[m]->cautious_add_triangle(p2,p8,p3);
-				}
-				break;
-			    case 11:
-				{
-                                    Point p1(mp(v[1], v[2]));
-                                    Point p2(mp(v[6], v[2]));
-                                    Point p3(mp(v[7], v[3]));
-				    surfs[m]->cautious_add_triangle(p1,p2,p3);
-                                    Point p4(mp(v[5], v[8]));
-				    surfs[m]->cautious_add_triangle(p1,p3,p4);
-                                    Point p5(mp(v[1], v[4]));
-				    surfs[m]->cautious_add_triangle(p1,p4,p5);
-                                    Point p6(mp(v[7], v[8]));
-				    surfs[m]->cautious_add_triangle(p4,p3,p6);
-				}
-				break;
-			    case 12:
-				{
-                                    Point p1(mp(v[2], v[1]));
-                                    Point p2(mp(v[2], v[3]));
-                                    Point p3(mp(v[5], v[1]));
-				    surfs[m]->cautious_add_triangle(p1,p2,p3);
-				    Point p4(mp(v[5], v[8]));
-				    surfs[m]->cautious_add_triangle(p3,p2,p4);
-                                    Point p5(mp(v[6], v[7]));
-				    surfs[m]->cautious_add_triangle(p4,p2,p5);
-                                    Point p6(mp(v[4], v[1]));
-                                    Point p7(mp(v[4], v[3]));
-                                    Point p8(mp(v[4], v[8]));
-				    surfs[m]->cautious_add_triangle(p6,p7,p8);
-				}
-				break;
-			    case 13:
-				{
-                                    Point p1(mp(v[1], v[2]));
-                                    Point p2(mp(v[1], v[5]));
-                                    Point p3(mp(v[1], v[4]));
-				    surfs[m]->cautious_add_triangle(p1,p2,p3);
-                                    Point p4(mp(v[3], v[2]));
-                                    Point p5(mp(v[3], v[7]));
-                                    Point p6(mp(v[3], v[4]));
-				    surfs[m]->cautious_add_triangle(p4,p5,p6);
-                                    Point p7(mp(v[6], v[2]));
-                                    Point p8(mp(v[6], v[7]));
-                                    Point p9(mp(v[6], v[5]));
-				    surfs[m]->cautious_add_triangle(p7,p8,p9);
-                                    Point p10(mp(v[8], v[5]));
-                                    Point p11(mp(v[8], v[7]));
-                                    Point p12(mp(v[8], v[4]));
-				    surfs[m]->cautious_add_triangle(p10,p11,p12);
-				}
-				break;
-			    case 14:
-				{
-                                    Point p1(mp(v[2], v[1]));
-                                    Point p2(mp(v[2], v[3]));
-                                    Point p3(mp(v[6], v[7]));
-				    surfs[m]->cautious_add_triangle(p1,p2,p3);
-                                    Point p4(mp(v[8], v[4]));
-				    surfs[m]->cautious_add_triangle(p1,p3,p4);
-                                    Point p5(mp(v[5], v[1]));
-				    surfs[m]->cautious_add_triangle(p1,p4,p5);
-				    Point p6(mp(v[8], v[7]));
-				    surfs[m]->cautious_add_triangle(p3,p6,p4);
-				}
-				break;
-			    default:
-				break;
-			    }
+	    geomPts[m]=scinew GeomPts(10000, Vector(0,0,1));
+	    double ii=minP.x()+sx*dx;
+	    for (int i=sx; i<ex; i++, ii+=dx) {
+		if (proc==0) update_progress(i,nx);
+		double jj=minP.y();
+		for (int j=0; j<ny; j++, jj+=dy) {
+		    double kk=minP.z();
+		    for (int k=0; k<nz; k++, kk+=dz) {
+			int val=(int)(sfrg->grid(i,j,k));
+			if ((val & bit) != 0) {
+			    geomPts[m]->add(Point(ii,jj,kk));
 			}
 		    }
 		}
 	    }
-	    if(sp && abort_flag)
-		return;
+	}	
+    }
+    grouplock.lock();
+    for (m=0; m<NUM_MATERIALS; m++) {
+	if (calc_mat[m]) {
+	    if (geomPts[m]->pts.size())
+		groups[m]->add(geomPts[m]);
+//	    cerr << "adding material "<<m+1<<" with "<<geomPts[m]->pts.size()<<" points.\n";
 	}
     }
-#endif
+    grouplock.unlock();
+}
+
+void BitVisualize::vol_render1_grid() {
+    sfrg->get_bounds(minP, maxP);
+    vol_render1();
 }
 
 #ifdef __GNUG__

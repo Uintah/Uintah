@@ -32,7 +32,7 @@ hook up user interface buttons
 #include <Classlib/NotFinished.h>
 #include <Math/Trig.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/ColormapPort.h>
+#include <Datatypes/ColorMapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarField.h>
 #include <Datatypes/ScalarFieldRG.h>
@@ -209,7 +209,7 @@ struct SLSourceInfo {
 
 class Streamline : public Module {
     VectorFieldIPort* infield;
-    ColormapIPort* incolormap;
+    ColorMapIPort* inColorMap;
     ScalarFieldIPort* incolorfield;
     GeometryOPort* ogeom;
 
@@ -246,7 +246,7 @@ class Streamline : public Module {
     Mutex grouplock;
     VectorFieldHandle field;
     ScalarFieldHandle sfield;
-    ColormapHandle cmap;
+    ColorMapHandle cmap;
     SLSourceInfo* si;
 
     int upstream, downstream;
@@ -271,14 +271,14 @@ public:
 	    
     GeomVertex* get_vertex(double t, double maxt, const Point& p,
 			   const ScalarFieldHandle& sfield,
-			   const ColormapHandle& cmap);
+			   const ColorMapHandle& cmap);
     GeomVertex* get_vertex(double t, double maxt, const Point& p,
 			   const ScalarFieldHandle& sfield,
-			   const ColormapHandle& cmap,
+			   const ColorMapHandle& cmap,
 			   const Vector& normal);
     GeomVertex* get_vertex(double t, double maxt, const Point& p,
 			   const ScalarFieldHandle& sfield,
-			   const ColormapHandle& cmap,
+			   const ColorMapHandle& cmap,
 			   const Vector& normal,
 			   int& ix);
 public:
@@ -312,8 +312,8 @@ Streamline::Streamline(const clString& id)
     incolorfield=scinew ScalarFieldIPort(this, "Color Field",
 				      ScalarFieldIPort::Atomic);
     add_iport(incolorfield);
-    incolormap=scinew ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
-    add_iport(incolormap);
+    inColorMap=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
+    add_iport(inColorMap);
 
     // Create the output port
     ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
@@ -341,7 +341,7 @@ void Streamline::execute()
     if(!infield->get(field))
 	return;
     incolorfield->get(sfield);
-    int have_cmap=incolormap->get(cmap);
+    int have_cmap=inColorMap->get(cmap);
     if(!have_cmap)
 	sfield=0;
 
@@ -579,7 +579,7 @@ void SLSourceInfo::make_anim_groups(const clString& animation, GeomGroup* top,
 
 GeomVertex* Streamline::get_vertex(double t, double maxt, const Point& p,
 				   const ScalarFieldHandle& sfield,
-				   const ColormapHandle& cmap)
+				   const ColorMapHandle& cmap)
 {
     if(sfield.get_rep()){
 	double sval;
@@ -596,7 +596,7 @@ GeomVertex* Streamline::get_vertex(double t, double maxt, const Point& p,
 
 GeomVertex* Streamline::get_vertex(double t, double maxt, const Point& p,
 				   const ScalarFieldHandle& sfield,
-				   const ColormapHandle& cmap,
+				   const ColorMapHandle& cmap,
 				   const Vector& normal)
 {
     Vector n(normal);
@@ -623,7 +623,7 @@ GeomVertex* Streamline::get_vertex(double t, double maxt, const Point& p,
 
 GeomVertex* Streamline::get_vertex(double t, double maxt, const Point& p,
 				   const ScalarFieldHandle& sfield,
-				   const ColormapHandle& cmap,
+				   const ColorMapHandle& cmap,
 				   const Vector& normal,
 				   int& ix)
 {

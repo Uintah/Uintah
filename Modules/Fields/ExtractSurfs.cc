@@ -17,7 +17,7 @@
 #include <Classlib/Queue.h>
 #include <Classlib/Stack.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/ColormapPort.h>
+#include <Datatypes/ColorMapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/Mesh.h>
 #include <Datatypes/ScalarField.h>

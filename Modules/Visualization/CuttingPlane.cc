@@ -15,7 +15,7 @@
 #include <Dataflow/Module.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ColormapPort.h>
+#include <Datatypes/ColorMapPort.h>
 #include <Geom/Grid.h>
 #include <Geom/Group.h>
 #include <Geom/Line.h>
@@ -34,7 +34,7 @@
 
 class CuttingPlane : public Module {
    ScalarFieldIPort *inscalarfield;
-   ColormapIPort *incolormap;
+   ColorMapIPort *inColorMap;
    GeometryOPort* ogeom;
    CrowdMonitor widget_lock;
    int init;
@@ -76,13 +76,13 @@ CuttingPlane::CuttingPlane(const clString& id)
   num_contours("num_contours", id, this)
 {
     // Create the input ports
-    // Need a scalar field and a colormap
+    // Need a scalar field and a ColorMap
     inscalarfield = scinew ScalarFieldIPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_iport( inscalarfield);
-    incolormap = scinew ColormapIPort( this, "Colormap",
-				     ColormapIPort::Atomic);
-    add_iport( incolormap);
+    inColorMap = scinew ColorMapIPort( this, "ColorMap",
+				     ColorMapIPort::Atomic);
+    add_iport( inColorMap);
 					
     // Create the output port
     ogeom = scinew GeometryOPort(this, "Geometry", 
@@ -120,12 +120,12 @@ void CuttingPlane::execute()
 {
     int old_grid_id = grid_id;
 
-    // get the scalar field and colormap...if you can
+    // get the scalar field and ColorMap...if you can
     ScalarFieldHandle sfield;
     if (!inscalarfield->get( sfield ))
 	return;
-    ColormapHandle cmap;
-    if (!incolormap->get( cmap ))
+    ColorMapHandle cmap;
+    if (!inColorMap->get( cmap ))
 	return;
 
     if (init == 1) 

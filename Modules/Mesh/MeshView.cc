@@ -18,8 +18,8 @@
 #include <Dataflow/Module.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/MeshPort.h>
-#include <Datatypes/Colormap.h>
-#include <Datatypes/ColormapPort.h>
+#include <Datatypes/ColorMap.h>
+#include <Datatypes/ColorMapPort.h>
 #include <Geometry/Point.h>
 #include <Geom/Geom.h>
 #include <Geom/Group.h>
@@ -51,7 +51,7 @@
 
 class MeshView : public Module {
     MeshIPort* inport;
-    ColormapIPort* colorPort;
+    ColorMapIPort* colorPort;
     GeometryOPort* ogeom;
     MeshOPort* oport;
 
@@ -123,10 +123,10 @@ public:
     virtual Module* clone(int deep);
     virtual void execute();
     void doChecks(const MeshHandle& Mesh,
-			   const ColormapHandle& genColors);
+			   const ColorMapHandle& genColors);
     void updateInfo(const MeshHandle& Mesh);
     void getElements(const MeshHandle& mesh, 
-			   const ColormapHandle& genColors);
+			   const ColorMapHandle& genColors);
     void initList();
     void addTet(int row, int ind);
     void makeLevels(const MeshHandle&);
@@ -136,13 +136,13 @@ public:
 
     void makeEdges(const MeshHandle& mesh);
     void calcMeasures(const MeshHandle& mesh, double *min, double *max);
-    int getMeas(const MeshHandle& mesh, const ColormapHandle& col);
+    int getMeas(const MeshHandle& mesh, const ColorMapHandle& col);
     double volume(Point p1, Point p2, Point p3, Point p4);
     double aspect_ratio(Point p1, Point p2, Point p3, Point p4);
     double calcSize(const MeshHandle& mesh, int ind);
     void get_sphere(Point p1, Point p2, Point p3, Point p4, double& rad);
     double getDistance(Point p0, Point p1, Point p2, Point p3);
-    int findElement(Point p, const MeshHandle& mesh, const ColormapHandle&);
+    int findElement(Point p, const MeshHandle& mesh, const ColorMapHandle&);
     void geom_release(GeomPick*, void*);
     void geom_moved(GeomPick*, int, double, const Vector&, void*);
     int doEdit(const MeshHandle& mesh);
@@ -179,8 +179,8 @@ MeshView::MeshView(const clString& id)
     inport=new MeshIPort(this, "Mesh", MeshIPort::Atomic);
     add_iport(inport);
 
-    // Create a colormap input port
-    colorPort = new ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
+    // Create a ColorMap input port
+    colorPort = new ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
     add_iport(colorPort);
 
 
@@ -320,13 +320,13 @@ Module* MeshView::clone(int deep)
 void MeshView::execute()
 {
     MeshHandle mesh;
-    ColormapHandle genColors;
+    ColorMapHandle genColors;
 
     // Wait until we have a mesh
     if(!inport->get(mesh))
 	return;
 
-    // If we don't have a colormap, then create a generic one.
+    // If we don't have a ColorMap, then create a generic one.
     if (!colorPort -> get(genColors)){
 	genColors = new ColorMap;
 	genColors -> build_default();
@@ -351,7 +351,7 @@ void MeshView::execute()
  * Function to determine whether anything in the interface has been changed
  * and then act appropriately.
  */
-void MeshView::doChecks(const MeshHandle& mesh, const ColormapHandle& cmap)
+void MeshView::doChecks(const MeshHandle& mesh, const ColorMapHandle& cmap)
 {
     int numTetra=mesh->elems.size();
     char buf[1000];
@@ -529,7 +529,7 @@ void MeshView::doChecks(const MeshHandle& mesh, const ColormapHandle& cmap)
  * quantitative measures and manipulative techniques.
  */
 void MeshView::getElements(const MeshHandle& mesh, 
-			   const ColormapHandle& genColors)
+			   const ColorMapHandle& genColors)
 {
     int numTetra = mesh -> elems.size();
     int nL = numLevels.get();
@@ -990,7 +990,7 @@ void MeshView::calcMeasures(const MeshHandle& mesh, double *min, double *max)
  * Procedure for determining which elements fall inside (or out) of the given
  * range for the particular measure
  */
-int MeshView::getMeas(const MeshHandle& mesh, const ColormapHandle& genColors)
+int MeshView::getMeas(const MeshHandle& mesh, const ColorMapHandle& genColors)
 {
     GeomGroup *gr = new GeomGroup;
     int e = elmMeas.get();
@@ -1313,7 +1313,7 @@ void MeshView::get_sphere(Point p0, Point p1, Point p2, Point p3, double& rad)
  * function to determine which element the crosshair point is in.
  */
 int MeshView::findElement(Point p, const MeshHandle& mesh,
-			  const ColormapHandle& genColors)
+			  const ColorMapHandle& genColors)
 {
     int j, which = (tech.get() == 2) ? lastTech : tech.get();
 

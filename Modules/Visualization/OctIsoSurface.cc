@@ -14,7 +14,7 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/ColormapPort.h>
+#include <Datatypes/ColorMapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/Mesh.h>
 #include <Datatypes/Octree.h>
@@ -31,7 +31,7 @@
 
 class OctIsoSurface : public Module {
     OctreeIPort* intree;
-    ColormapIPort* incolormap;
+    ColorMapIPort* inColorMap;
 
     GeometryOPort* ogeom;
 
@@ -97,8 +97,8 @@ OctIsoSurface::OctIsoSurface(const clString& id)
     // Create the input ports
     intree=scinew OctreeIPort(this, "Octree", OctreeIPort::Atomic);
     add_iport(intree);
-    incolormap=scinew ColormapIPort(this, "Color Map", ColormapIPort::Atomic);
-    add_iport(incolormap);
+    inColorMap=scinew ColorMapIPort(this, "Color Map", ColorMapIPort::Atomic);
+    add_iport(inColorMap);
     
 
     // Create the output port
@@ -132,7 +132,7 @@ void OctIsoSurface::execute()
     OctreeTopHandle topTree;
     if(!intree->get(topTree))
 	return;
-    ColormapHandle cmap;
+    ColorMapHandle cmap;
     if (!topTree.get_rep()) return;
     Octree* tree = topTree.get_rep()->tree;
     if (!tree) return;
@@ -189,10 +189,10 @@ void OctIsoSurface::execute()
     GeomGroup* group=scinew GeomGroup;
     GeomObj* topobj=group;
 
-    int have_colormap=incolormap->get(cmap);
+    int have_ColorMap=inColorMap->get(cmap);
 
-    if(have_colormap) {
-	// Paint entire surface based on colormap
+    if(have_ColorMap) {
+	// Paint entire surface based on ColorMap
 	topobj=scinew GeomMaterial(group, cmap->lookup(last_isoval));
     } else {
 	MaterialHandle matl = scinew Material(Color(0,0,0), Color(.6,0,0),
