@@ -2307,6 +2307,18 @@ if test "$pkg_rtrt" = "yes"; then
 
   SCI_CHECK_LIB($dirs,audio,main,,,optional)
   SCI_CHECK_LIB($dirs,audiofile,main,,,optional)
+
+  if test "$HAVE_LIB_AUDIO" && test "$HAVE_LIB_AUDIOFILE"; then
+    DEF_AUDIO="#define HAVE_AUDIO 1"
+    HAVE_AUDIO="yes"
+  fi
+
+  if test "$with_audio" && test ! "$DEF_AUDIO"; then
+    echo
+    AC_MSG_ERROR(One or more of the AUDIO components is missing.)
+    echo
+  fi
+
 fi
 
 if test "$HAVE_LIB_OOGL" && test "$HAVE_OOGL_BASICTEXTURE_H"; then
@@ -2327,6 +2339,8 @@ AC_SUBST(DEF_OOGL)
 AC_SUBST(OOGL_LIB_FLAG)
 AC_SUBST(OOGL_LIB_DIR_FLAG)
 
+AC_SUBST(DEF_AUDIO)
+AC_SUBST(HAVE_AUDIO)
 AC_SUBST(AUDIO_LIB_FLAG)
 AC_SUBST(AUDIO_LIB_DIR_FLAG)
 

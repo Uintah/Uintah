@@ -4,16 +4,14 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
 SRCDIR := Packages/rtrt
 
-ifeq ($(findstring -n32, $(C_FLAGS)),-n32)
-#ifneq ($(USE_SOUND),no)
-    SOUNDDIR := $(SRCDIR)/Sound
-endif
-
 SUBDIRS := \
 	$(SRCDIR)/Core         \
 	$(SRCDIR)/Dataflow     \
-	$(SOUNDDIR)            \
 	$(SRCDIR)/visinfo
+
+ifeq ($(HAVE_AUDIO),yes)
+SUBDIRS += $(SRCDIR)/Sound
+endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
