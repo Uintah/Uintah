@@ -457,6 +457,18 @@ Patch::getNodeIterator(const Box& b) const
    return NodeIterator(low, high);
 }
 
+IntVector Patch::getInteriorNodeLowIndex() const {
+    return d_inLowIndex;
+}
+
+ IntVector Patch::getInteriorNodeHighIndex() const {
+   IntVector hi = d_inHighIndex;
+   hi +=IntVector(getBCType(xplus) == Neighbor?0:1,
+                  getBCType(yplus) == Neighbor?0:1,
+                  getBCType(zplus) == Neighbor?0:1);
+   return hi;
+ }
+
 IntVector Patch::getSFCXHighIndex() const
 {
    IntVector h(d_highIndex+
