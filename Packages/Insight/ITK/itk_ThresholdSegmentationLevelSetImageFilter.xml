@@ -72,7 +72,7 @@
       <call>SetMaximumRMSError</call>
     </param>
     <param>
-      <name>negative_features</name>
+      <name>reverse_expansion_direction</name>
       <type>bool</type>
       <call value="on">ReverseExpansionDirectionOn</call>
       <call value="off">ReverseExpansionDirectionOff</call>
