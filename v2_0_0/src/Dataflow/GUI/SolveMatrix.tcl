@@ -254,28 +254,28 @@ itcl_class SCIRun_Math_SolveMatrix {
 	pack $w.converg.current.val -side right
 	
 	frame $w.converg.flopcount
-	pack $w.converg.flopcount -side top -fill x
+#	pack $w.converg.flopcount -side top -fill x
 	label $w.converg.flopcount.lab -text "Flop Count: "
 	pack $w.converg.flopcount.lab -side left
 	label $w.converg.flopcount.val -textvariable $this-flops
 	pack $w.converg.flopcount.val -side right
 	
 	frame $w.converg.floprate
-	pack $w.converg.floprate -side top -fill x
+#	pack $w.converg.floprate -side top -fill x
 	label $w.converg.floprate.lab -text "MFlops: "
 	pack $w.converg.floprate.lab -side left
 	label $w.converg.floprate.val -textvariable $this-floprate
 	pack $w.converg.floprate.val -side right
 	
 	frame $w.converg.memcount
-	pack $w.converg.memcount -side top -fill x
+#	pack $w.converg.memcount -side top -fill x
 	label $w.converg.memcount.lab -text "Memory bytes accessed: "
 	pack $w.converg.memcount.lab -side left
 	label $w.converg.memcount.val -textvariable $this-memrefs
 	pack $w.converg.memcount.val -side right
 	
 	frame $w.converg.memrate
-	pack $w.converg.memrate -side top -fill x
+#	pack $w.converg.memrate -side top -fill x
 	label $w.converg.memrate.lab -text "Memory bandwidth (MB/sec):"
 	pack $w.converg.memrate.lab -side left
 	label $w.converg.memrate.val -textvariable $this-memrate
