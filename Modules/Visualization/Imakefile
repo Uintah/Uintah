@@ -1,18 +1,35 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_MESA
+OPENGLINCS = -I$(TOP)/Mesa/include
+OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
+#else
+OPENGLINCS =
+OPENGLLIBS = -lGLU -lGL -lXext -lX11
+#endif
+
+#ifndef SCI_OPENGL
+OPENGLOBJS =
+OPENGLSRCS = 
+#endif
+
 OBJS = BitVisualize.o  CuttingPlane.o  GenAxes.o  GenColormap.o  \
-	Hedgehog.o  IsoSurface.o  OctIsoSurface.o  \
-	RescaleColormap.o  Streamline.o  VectorSeg.o  WidgetTest.o
+	Hedgehog.o  IsoSurface.o LevoyVis.o  OctIsoSurface.o     \
+	RescaleColormap.o  Streamline.o  VectorSeg.o  VolVis.o   \
+	WidgetTest.o
 SRCS = BitVisualize.cc CuttingPlane.cc GenAxes.cc GenColormap.cc \
-	Hedgehog.cc IsoSurface.cc OctIsoSurface.cc \
-	RescaleColormap.cc Streamline.cc VectorSeg.cc WidgetTest.cc
+	Hedgehog.cc IsoSurface.cc LevoyVis.o OctIsoSurface.cc    \
+	RescaleColormap.cc Streamline.cc VectorSeg.cc  VolVis.cc \
+	WidgetTest.cc
 
 LIBNAME = Visualization
 
+LOCALINCLUDES = $(OPENGLINCS)
+
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lWidgets -lDatatypes -lDataflow -lGeom -lGeometry \
-	-lTCL -lClasslib -lMultitask -lMalloc -lm
+	-lTCL -lClasslib -lMultitask  $(OPENGLLIBS) -lMalloc -lm
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
