@@ -278,6 +278,25 @@ GeometryData::GeometryData()
     depthbuffer=0;
 }
 
+void
+GeometryData::Print()
+{
+  cerr << "GEOMETRY data review\n\n";
+  cerr << "X resolution: " << xres << " Y resolution: " << yres << endl;
+  cerr << "Clipping planes.  Near = " << znear << " Far = " << zfar << endl;
+
+  if ( depthbuffer == NULL )
+    cerr << "depthbuffer has nothing\n";
+
+  if ( colorbuffer == NULL )
+    cerr << "colorbuffer has nothing\n";
+
+  if ( view == NULL )
+    cerr << "view has nothing\n";
+
+  cerr << endl;
+}
+
 #ifdef __GNUG__
 
 #include <Multitask/Mailbox.cc>

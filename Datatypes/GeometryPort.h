@@ -53,6 +53,7 @@ struct GeometryData {
     double znear, zfar;
     GeometryData();
     ~GeometryData();
+    void Print();
 };
 
 #define GEOM_VIEW 1
