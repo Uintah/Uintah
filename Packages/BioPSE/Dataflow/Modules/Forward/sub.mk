@@ -30,8 +30,8 @@ SRCDIR   := Packages/BioPSE/Dataflow/Modules/Forward
 SRCS     += $(SRCDIR)/ApplyFEMCurrentSource.cc\
 	    $(SRCDIR)/DipoleInSphere.cc\
 	    $(SRCDIR)/SetupFEMatrix.cc\
-	    
-#[INSERT NEW CODE FILE HERE]
+	$(SRCDIR)/SetupBEMatrix.cc\
+#[INSERT NEW CODE FILE HERE]	
 
 
 PSELIBS := Packages/BioPSE/Core/Datatypes \
