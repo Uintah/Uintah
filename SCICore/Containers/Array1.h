@@ -176,7 +176,7 @@ public:
     //Rigorous Tests
     static void test_rigorous(RigorousTest* __test);
 
-    friend void TEMPLATE_TAG Pio <> (Piostream&, Array1<T>&);
+    friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array1<T>&);
 };
 
 } // End namespace Containers
@@ -386,6 +386,12 @@ void Pio(Piostream& stream, Containers::Array1<T>*& array) {
 
 //
 // $Log$
+// Revision 1.10  1999/08/31 08:59:04  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.9  1999/08/30 20:19:26  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations

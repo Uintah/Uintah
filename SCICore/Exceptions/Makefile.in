@@ -2,7 +2,7 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../..
 
-SRCS     = Exceptions.cc
+SRCS     = Exceptions.cc InternalError.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 

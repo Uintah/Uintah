@@ -16,18 +16,30 @@ static char *id="$Id$";
 
 #include <SCICore/Exceptions/InternalError.h>
 
-SCICore::Exceptions::InternalError::InternalError(const std::string& message)
+using SCICore::Exceptions::InternalError;
+
+InternalError::InternalError(const std::string& message)
     : d_message(message)
 {
 }
 
-std::string SCICore::Exceptions::InternalError::message() const
+InternalError::~InternalError()
+{
+}
+
+std::string InternalError::message() const
 {
     return d_message;
 }
 
 //
 // $Log$
+// Revision 1.2  1999/08/31 08:59:04  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.1  1999/08/25 19:03:16  sparker
 // Exception base class and generic error class
 //

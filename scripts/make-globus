@@ -1,0 +1,115 @@
+#!/bin/sh
+#
+# This is crude
+#
+
+if test "$1" = "" -o "$2" = "" -o "$3" = ""; then
+  echo "usage: make-globus GLOBUSTOP PSETOP THREADLIBS"
+  echo "GLOBUSTOP is the directory where to install globus"
+  echo "PSETOP is the directory where the PSE/src is located"
+  echo "THREADLIBS is either -lpthread or -lfetchop"
+fi
+
+set globuspath = $1
+set psepath = $2
+set threadlibs = $3
+
+echo "Building globus in $globuspath"
+
+if ! test -d $globuspath; then
+  echo "Making directory $globuspath"
+  mkdir $globuspath || (echo "mkdir failed" && exit)
+fi
+
+echo "Checkout out tarballs"
+echo "You may be prompted for your cvs password four times"
+cd $globuspath
+cvs checkout dist/globus-1.1.0-beta-latest.tar.gz
+cvs checkout dist/SSLeay-0.9.0b.tar.gz
+cvs checkout dist/ssleay-0.9.0-irix-patch
+cvs checkout dist/globus-1.1-utah.patch
+
+echo "Untarring"
+gunzip < dist/globus-1.1.0-beta-latest.tar.gz | tar xf -
+gunzip < dist/SSLeay-0.9.0b.tar.gz | tar xf -
+
+echo "Patching ssl"
+cd SSLeay-0.9.0b
+patch -p0 < ../dist/ssleay-0.9.0-irix-patch || (echo "patch failed" && exit)
+cd ..
+
+echo "Building SSL"
+cd SSLeay-0.9.0b
+make INSTALLTOP=$globuspath CFLAG=-O
+make INSTALLTOP=$globuspath CFLAG=-O install
+cd ..
+
+echo "turning SSL into a shared library"
+cd lib
+mkdir tmp
+cd tmp
+ar x ../libssl.a
+CC -shared -o ../libssl.so *.o
+rm *.o
+rm ../libssl.a
+ar x ../libcrypto.a
+CC -shared -o ../libcrypto.so *.o
+rm *.o
+rm ../libcrypto.a
+rm so_locations
+cd ..
+rmdir tmp
+
+echo "patching globus"
+cd globus
+patch -p0 < ../dist/globus-1.1-utah.patch
+echo "re-autoconfing globus - this will take a while"
+for t in `find . -name configure -print`; do
+  echo "running autoconf in $t"
+  (cd `dirname $t` && autoconf)
+done
+
+echo "Tricking globus configure"
+cd ..
+echo > x.c
+cc -shared -o $psepath/SCICore/libSCICore.so x.c
+
+echo "configuring globus"
+mkdir globus_build
+cd globus_build
+../globus/configure --with-threads=external --enable-sharedlib \
+	--with-tcp --with-udp --prefix=$globuspath --enable-nexus \
+	--enable-gssapi --with-ssl-path=$globuspath \
+	--with-thread-library="-rpath $psepath/SCICore/libSCICore.so $threadlibs" \
+	--with-thread-includes="$psepath/SCICore/globus_threads -I$psepath"
+
+rm $psepath/SCICore/libSCICore.so
+
+echo "Building headers"
+make headers
+
+echo "Building libraries"
+make libraries
+
+echo "Installing globus libraries"
+echo "You will get errors here because the globus makefiles are broken"
+make install
+
+echo "Renaming globus libaries because the globus makefiles are broken"
+cd ../lib
+for t in globus*.so; do
+  mv $t lib$t
+done
+
+cd ../include
+cp $2/SCICore/globus_threads/globus_external_threads.h .
+
+cd ..
+
+echo "Now go build PSE."
+echo "You can go to the globus/globus_build directory and type make"
+echo "  to build the globus executables if you care"
+
+echo "or you can remove everything in:"
+echo $1
+echo "except for include and lib"

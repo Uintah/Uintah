@@ -18,6 +18,8 @@
 #include <Component/PIDL/URL.h>
 #include <globus_nexus.h>
 
+using Component::PIDL::Reference;
+
 Reference::Reference()
 {
     d_startpoint=0;
@@ -78,6 +80,12 @@ Reference& Reference::operator=(const Reference& copy)
 }
 //
 // $Log$
+// Revision 1.2  1999/08/31 08:59:02  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.1  1999/08/30 17:39:47  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

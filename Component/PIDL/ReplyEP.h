@@ -15,7 +15,7 @@
 #ifndef Component_PIDL_ReplyEP_h
 #define Component_PIDL_ReplyEP_h
 
-#include <Component/Thread/Semaphore.h>
+#include <SCICore/Thread/Semaphore.h>
 #include <globus_nexus.h>
 
 namespace Component {
@@ -37,7 +37,7 @@ namespace Component {
 	    ReplyEP(const ReplyEP&);
 	    globus_nexus_endpoint_t d_ep;
 	    globus_nexus_startpoint_t d_sp;
-	    Semaphore d_sema;
+	    SCICore::Thread::Semaphore d_sema;
 	    globus_nexus_buffer_t d_bufferHandoff;
 	};
     }
@@ -46,6 +46,12 @@ namespace Component {
 #endif
 //
 // $Log$
+// Revision 1.2  1999/08/31 08:59:02  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.1  1999/08/30 17:39:48  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

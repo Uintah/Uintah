@@ -27,6 +27,7 @@
 
 #define THREAD_DEFAULT_STACKSIZE 64*1024
 
+using SCICore::Thread::Runnable;
 using SCICore::Thread::Thread;
 using SCICore::Thread::ThreadGroup;
 
@@ -114,6 +115,12 @@ ThreadGroup*
 Thread::getThreadGroup()
 {
     return d_group;
+}
+
+Runnable*
+Thread::getRunnable()
+{
+    return d_runner;
 }
 
 void
@@ -274,6 +281,12 @@ Thread::getStateString(ThreadState state)
 
 //
 // $Log$
+// Revision 1.8  1999/08/31 08:59:05  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.7  1999/08/29 00:47:01  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

@@ -71,6 +71,10 @@ namespace SCICore {
 	    ThreadGroup* getThreadGroup();
 	    
 	    //////////
+	    // Return the <b>Runnable</b> associated with this thread.
+	    Runnable* getRunnable();
+	    
+	    //////////
 	    // Flag the thread as a daemon thread.  When all non-deamon
 	    // threads exit, the program will exit.
 	    void setDaemon(bool to=true);
@@ -247,6 +251,12 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.9  1999/08/31 08:59:05  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.8  1999/08/29 00:47:02  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++
