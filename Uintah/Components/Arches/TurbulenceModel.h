@@ -59,11 +59,11 @@ public:
 					 const DataWarehouseP& old_dw,
 					 DataWarehouseP& new_dw) = 0;
   virtual void calcVelocityWallBC(const ProcessorContext*,
-				  const Region* region,
+				  const Patch* patch,
 				  const DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw, int index) = 0;
   virtual void calcVelocitySource(const ProcessorContext*,
-				  const Region* region,
+				  const Patch* patch,
 				  const DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw, int index) = 0;
   virtual void problemSetup(const ProblemSpecP& db) = 0;

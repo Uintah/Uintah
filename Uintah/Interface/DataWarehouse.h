@@ -69,29 +69,29 @@ WARNING
       
       // Particle Variables
       virtual void allocate(int numParticles, ParticleVariableBase&,
-			    const VarLabel*, int matlIndex, const Region*) = 0;
+			    const VarLabel*, int matlIndex, const Patch*) = 0;
       virtual void allocate(ParticleVariableBase&, const VarLabel*, 
-			    int matlIndex, const Region*) = 0;
+			    int matlIndex, const Patch*) = 0;
       virtual void get(ParticleVariableBase&, const VarLabel*, int matlIndex,
-		       const Region*, Ghost::GhostType, int numGhostCells) = 0;
+		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void put(const ParticleVariableBase&, const VarLabel*,
-		       int matlIndex, const Region*) = 0;
+		       int matlIndex, const Patch*) = 0;
       
       // Node Centered (NC) Variables
       virtual void allocate(NCVariableBase&, const VarLabel*,
-			    int matlIndex, const Region*) = 0;
+			    int matlIndex, const Patch*) = 0;
       virtual void get(NCVariableBase&, const VarLabel*, int matlIndex,
-		       const Region*, Ghost::GhostType, int numGhostCells) = 0;
+		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void put(const NCVariableBase&, const VarLabel*,
-		       int matlIndex, const Region*) = 0;
+		       int matlIndex, const Patch*) = 0;
       
       // Cell Centered (CC) Variables
       virtual void allocate(CCVariableBase&, const VarLabel*,
-			    int matlIndex, const Region*) = 0;
+			    int matlIndex, const Patch*) = 0;
       virtual void get(CCVariableBase&, const VarLabel*, int matlIndex,
-		       const Region*, Ghost::GhostType, int numGhostCells) = 0;
+		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void put(const CCVariableBase&, const VarLabel*,
-		       int matlIndex, const Region*) = 0;
+		       int matlIndex, const Patch*) = 0;
      
       //////////
       // Insert Documentation Here:
@@ -104,14 +104,14 @@ WARNING
       // know which mpiNode has the data so that if this DataWarehouse
       // needs the data, it will know who to ask for it.
       virtual void registerOwnership( const VarLabel * label,
-				      const Region   * region,
+				      const Patch   * patch,
 				            int        mpiNode ) = 0;
       //////////
       // Searches through the list containing which DataWarehouse's
       // have which data to find the mpiNode that the requested
-      // variable (in the given region) is on.
+      // variable (in the given patch) is on.
       virtual int findMpiNode( const VarLabel * label,
-			       const Region   * region ) = 0;
+			       const Patch   * patch ) = 0;
 
       //////////
       // Adds a variable to the save set
@@ -123,7 +123,7 @@ WARNING
 			      std::vector<int>&) const = 0;
 
       virtual void emit(OutputContext&, const VarLabel* label,
-			int matlIndex, const Region* region) const = 0;
+			int matlIndex, const Patch* patch) const = 0;
    protected:
       DataWarehouse( int MpiRank, int MpiProcesses, int generation );
       int d_MpiRank, d_MpiProcesses;
@@ -139,6 +139,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.23  2000/05/30 20:19:40  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.22  2000/05/15 19:39:52  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups
@@ -156,7 +160,7 @@ WARNING
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.18  2000/05/05 06:42:46  dav
 // Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
@@ -202,7 +206,7 @@ WARNING
 // Finishing Exception modifications
 //
 // Revision 1.5  2000/03/22 00:37:17  sparker
-// Added accessor for PerRegion data
+// Added accessor for PerPatch data
 //
 // Revision 1.4  2000/03/17 18:45:43  dav
 // fixed a few more namespace problems

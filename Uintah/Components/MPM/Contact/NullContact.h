@@ -65,30 +65,30 @@ WARNING
       virtual ~NullContact();
 
       // Initialize contact data areas
-      virtual void initializeContact(const Region* region,
+      virtual void initializeContact(const Patch* patch,
 				     int vfindex,
 				     DataWarehouseP& new_dw);
       
       // Basic contact methods
       virtual void exMomInterpolated(const ProcessorContext*,
-				     const Region* region,
+				     const Patch* patch,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw);
       
       virtual void exMomIntegrated(const ProcessorContext*,
-				   const Region* region,
+				   const Patch* patch,
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw);
       
       virtual void addComputesAndRequiresInterpolated(Task* task,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const;
 
       virtual void addComputesAndRequiresIntegrated(Task* task,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const;
 
@@ -98,6 +98,10 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.9  2000/05/30 20:19:09  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.8  2000/05/25 23:05:10  guilkey
 // Created addComputesAndRequiresInterpolated and addComputesAndRequiresIntegrated
 // for each of the three derived Contact classes.  Also, got the NullContact

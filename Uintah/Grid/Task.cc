@@ -3,10 +3,11 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/Material.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/TypeDescription.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <SCICore/Exceptions/InternalError.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace Uintah;
@@ -40,20 +41,20 @@ Task::usesThreads(bool state)
 }
 
 void
-Task::subregionCapable(bool state)
+Task::subpatchCapable(bool state)
 {
-  d_subregionCapable = state;
+  d_subpatchCapable = state;
 }
 
 void
 Task::requires(const DataWarehouseP& ds, const VarLabel* var)
 {
-  d_reqs.push_back(new Dependency(this, ds, var, -1, 0));
+  d_reqs.push_back(scinew Dependency(this, ds, var, -1, 0));
 }
 
 void
 Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
-	       const Region* region, Ghost::GhostType gtype, int numGhostCells)
+	       const Patch* patch, Ghost::GhostType gtype, int numGhostCells)
 {
    const TypeDescription* td = var->typeDescription();
    int l,h;
@@ -107,10 +108,10 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
    for(int ix=l;ix<=h;ix++){
       for(int iy=l;iy<=h;iy++){
 	 for(int iz=l;iz<=h;iz++){
-	    const Region* neighbor = region->getNeighbor(IntVector(ix,iy,iz));
+	    const Patch* neighbor = patch->getNeighbor(IntVector(ix,iy,iz));
 	    if(neighbor)
-	       d_reqs.push_back(new Dependency(this, ds, var, matlIndex,
-					       neighbor));
+	       d_reqs.push_back(scinew Dependency(this, ds, var, matlIndex,
+						  neighbor));
 	 }
       }
    }
@@ -119,14 +120,14 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 void
 Task::computes(const DataWarehouseP& ds, const VarLabel* var)
 {
-  d_comps.push_back(new Dependency(this, ds, var, -1, 0));
+  d_comps.push_back(scinew Dependency(this, ds, var, -1, 0));
 }
 
 void
 Task::computes(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
-	       const Region*)
+	       const Patch*)
 {
-  d_comps.push_back(new Dependency(this, ds, var, matlIndex, d_region));
+  d_comps.push_back(scinew Dependency(this, ds, var, matlIndex, d_patch));
 }
 
 void
@@ -134,18 +135,18 @@ Task::doit(const ProcessorContext* pc)
 {
   if( d_completed )
       throw InternalError("Task performed, but already completed");
-  d_action->doit(pc, d_region, d_fromDW, d_toDW);
+  d_action->doit(pc, d_patch, d_fromDW, d_toDW);
   d_completed=true;
 }
 
 Task::Dependency::Dependency(Task* task, const DataWarehouseP& dw,
 			     const VarLabel* var, int matlIndex,
-			     const Region* region)
+			     const Patch* patch)
     : d_task(task),
       d_dw(dw),
       d_var(var),
       d_matlIndex(matlIndex),
-      d_region(region)
+      d_patch(patch)
 {
 }
 
@@ -163,6 +164,10 @@ Task::getRequires() const
 
 //
 // $Log$
+// Revision 1.12  2000/05/30 20:19:34  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.11  2000/05/20 08:09:27  sparker
 // Improved TypeDescription
 // Finished I/O
@@ -174,7 +179,7 @@ Task::getRequires() const
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.9  2000/05/07 06:02:13  sparker
 // Added beginnings of multiple patch support and real dependencies

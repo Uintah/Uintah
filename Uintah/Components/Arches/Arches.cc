@@ -13,7 +13,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/FCVariable.h>
 #include <Uintah/Interface/ProblemSpec.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/ReductionVariable.h>
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SoleVariable.h>
@@ -37,18 +37,15 @@ using namespace Uintah::ArchesSpace;
 Arches::Arches( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
-  // don't need deltLabel can get it from sharedState
-  //  d_deltLabel = new VarLabel("delt",
-  //			     delt_vartype::getTypeDescription() );
-  d_densityLabel = new VarLabel("density", 
+  d_densityLabel = scinew VarLabel("density", 
 				CCVariable<double>::getTypeDescription() );
-  d_pressureLabel = new VarLabel("pressure", 
+  d_pressureLabel = scinew VarLabel("pressure", 
 				 CCVariable<double>::getTypeDescription() );
-  d_scalarLabel = new VarLabel("scalars", 
+  d_scalarLabel = scinew VarLabel("scalars", 
 			       CCVariable<Vector>::getTypeDescription() );
-  d_velocityLabel = new VarLabel("velocity", 
+  d_velocityLabel = scinew VarLabel("velocity", 
 				 CCVariable<Vector>::getTypeDescription() );
-  d_viscosityLabel = new VarLabel("viscosity", 
+  d_viscosityLabel = scinew VarLabel("viscosity", 
 				  CCVariable<double>::getTypeDescription() );
 }
 
@@ -67,7 +64,7 @@ Arches::problemSetup(const ProblemSpecP& params, GridP&,
   db->require("grow_dt", d_deltaT);
 
   // physical constants
-  d_physicalConsts = new PhysicalConstants();
+  d_physicalConsts = scinew PhysicalConstants();
 
   // ** BB 5/19/2000 ** For now read the Physical constants from the 
   // CFD-ARCHES block
@@ -76,21 +73,21 @@ Arches::problemSetup(const ProblemSpecP& params, GridP&,
   d_physicalConsts->problemSetup(db);
 
   // read properties, boundary and turbulence model
-  d_props = new Properties();
+  d_props = scinew Properties();
   d_props->problemSetup(db);
   string turbModel;
   db->require("turbulence_model", turbModel);
   if (turbModel == "smagorinsky") 
-    d_turbModel = new SmagorinskyModel(d_physicalConsts);
+    d_turbModel = scinew SmagorinskyModel(d_physicalConsts);
   else 
     throw InvalidValue("Turbulence Model not supported" + turbModel);
   d_turbModel->problemSetup(db);
-  d_boundaryCondition = new BoundaryCondition(d_turbModel);
+  d_boundaryCondition = scinew BoundaryCondition(d_turbModel);
   d_boundaryCondition->problemSetup(db);
   string nlSolver;
   db->require("nonlinear_solver", nlSolver);
   if(nlSolver == "picard")
-    d_nlSolver = new PicardNonlinearSolver(d_props, d_boundaryCondition,
+    d_nlSolver = scinew PicardNonlinearSolver(d_props, d_boundaryCondition,
 					   d_turbModel, d_physicalConsts);
   else
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver);
@@ -136,14 +133,7 @@ Arches::scheduleComputeStableTimestep(const LevelP&,
 				      SchedulerP&,
 				      DataWarehouseP& dw)
 {
-  cerr << "Arches::scheduleComputeStableTimestep\n";
-
-#ifdef WONT_COMPILE_YET
-  delt_vartype delt_var = d_deltaT; // not sure if this will work
-  dw->put((ReductionVariableBase&)d_deltaT,  d_sharedState->get_delt_label()); 
-#endif
-
-  cerr << "Done: Arches::scheduleComputeStableTimestep\n";
+  dw->put(delt_vartype(d_deltaT),  d_sharedState->get_delt_label()); 
 }
 
 void 
@@ -173,19 +163,19 @@ Arches::sched_paramInit(const LevelP& level,
 			SchedulerP& sched, 
 			DataWarehouseP& dw)
 {
-  for(Level::const_regionIterator iter=level->regionsBegin();
-      iter != level->regionsEnd(); iter++){
-    const Region* region=*iter;
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
     {
       Task* tsk = new Task("Arches::paramInit",
-			   region, dw, dw, this,
+			   patch, dw, dw, this,
 			   &Arches::paramInit);
       cerr << "New task created successfully\n";
-      tsk->computes(dw, d_velocityLabel, 0, region);
-      tsk->computes(dw, d_pressureLabel, 0, region);
-      tsk->computes(dw, d_scalarLabel, 0, region);
-      tsk->computes(dw, d_densityLabel, 0, region);
-      tsk->computes(dw, d_viscosityLabel, 0, region);
+      tsk->computes(dw, d_velocityLabel, 0, patch);
+      tsk->computes(dw, d_pressureLabel, 0, patch);
+      tsk->computes(dw, d_scalarLabel, 0, patch);
+      tsk->computes(dw, d_densityLabel, 0, patch);
+      tsk->computes(dw, d_viscosityLabel, 0, patch);
       sched->addTask(tsk);
       cerr << "New task added successfully to scheduler\n";
     }
@@ -194,7 +184,7 @@ Arches::sched_paramInit(const LevelP& level,
 
 void
 Arches::paramInit(const ProcessorContext* ,
-		  const Region* region,
+		  const Patch* patch,
 		  DataWarehouseP& old_dw,
 		  DataWarehouseP& new_dw)
 {
@@ -210,15 +200,15 @@ Arches::paramInit(const ProcessorContext* ,
 
   cerr << "Actual initialization - before allocation : old_dw = " 
        << old_dw <<"\n";
-  old_dw->allocate(velocity, d_velocityLabel, 0, region);
-  old_dw->allocate(pressure, d_pressureLabel, 0, region);
-  old_dw->allocate(scalar, d_scalarLabel, 0, region);
-  old_dw->allocate(density, d_densityLabel, 0, region);
-  old_dw->allocate(viscosity, d_viscosityLabel, 0, region);
+  old_dw->allocate(velocity, d_velocityLabel, 0, patch);
+  old_dw->allocate(pressure, d_pressureLabel, 0, patch);
+  old_dw->allocate(scalar, d_scalarLabel, 0, patch);
+  old_dw->allocate(density, d_densityLabel, 0, patch);
+  old_dw->allocate(viscosity, d_viscosityLabel, 0, patch);
   cerr << "Actual initialization - after allocation\n";
 
-  IntVector lowIndex = region->getCellLowIndex();
-  IntVector highIndex = region->getCellHighIndex();
+  IntVector lowIndex = patch->getCellLowIndex();
+  IntVector highIndex = patch->getCellHighIndex();
 
 #ifdef WONT_COMPILE_YET
   FORT_INIT(velocity, pressure, scalar, density, viscosity,
@@ -226,17 +216,21 @@ Arches::paramInit(const ProcessorContext* ,
 #endif
   cerr << "Actual initialization - before put : old_dw = " 
        << old_dw <<"\n";
-  old_dw->put(velocity, d_velocityLabel, 0, region);
-  old_dw->put(pressure, d_pressureLabel, 0, region);
-  old_dw->put(scalar, d_scalarLabel, 0, region);
-  old_dw->put(density, d_densityLabel, 0, region);
-  old_dw->put(viscosity, d_viscosityLabel, 0, region);
+  old_dw->put(velocity, d_velocityLabel, 0, patch);
+  old_dw->put(pressure, d_pressureLabel, 0, patch);
+  old_dw->put(scalar, d_scalarLabel, 0, patch);
+  old_dw->put(density, d_densityLabel, 0, patch);
+  old_dw->put(viscosity, d_viscosityLabel, 0, patch);
   cerr << "Actual initialization - after put \n";
 }
   
 
 //
 // $Log$
+// Revision 1.29  2000/05/30 20:18:45  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.28  2000/05/30 17:06:11  dav
 // added Cocoon doc template.  fixed non compilation problem.
 //

@@ -36,7 +36,7 @@ WARNING
 
 ****************************************/
 
-//using Uintah::Grid::Region;
+//using Uintah::Grid::Patch;
 //using Uintah::Interface::DataWarehouseP;
 
 
@@ -76,6 +76,10 @@ WARNING
 #endif // __MATERIAL_H__
 
 // $Log$
+// Revision 1.7  2000/05/30 20:19:29  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.6  2000/04/28 08:11:33  sparker
 // ConstitutiveModelFactory should return null on failure
 // MPMMaterial checks for failed constitutive model creation

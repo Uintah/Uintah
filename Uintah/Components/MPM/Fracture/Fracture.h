@@ -12,45 +12,45 @@ namespace Uintah {
 
    class VarLabel;
    class ProcessorContext;
-   class Region;
+   class Patch;
 
 namespace MPM {
 
 class Fracture {
 public:
-  void   materialDefectsInitialize(const Region* region,
+  void   materialDefectsInitialize(const Patch* patch,
                                    DataWarehouseP& new_dw);
   
-  void   initializeFracture(const Region* region,
+  void   initializeFracture(const Patch* patch,
                            DataWarehouseP& new_dw);
   
   void   updateSurfaceNormalOfBoundaryParticle(
            const ProcessorContext*,
-           const Region* region,
+           const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
   
   void   labelSelfContactNodesAndCells (
            const ProcessorContext*,
-           const Region* region,
+           const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
   void   updateParticleInformationInContactCells (
            const ProcessorContext*,
-           const Region* region,
+           const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
   void   updateNodeInformationInContactCells (
            const ProcessorContext*,
-           const Region* region,
+           const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
   void   crackGrow(
            const ProcessorContext*,
-           const Region* region,
+           const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
@@ -69,6 +69,10 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.10  2000/05/30 20:19:13  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.9  2000/05/30 04:36:46  tan
 // Using MPMLabel instead of VarLabel.
 //

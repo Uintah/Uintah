@@ -3,7 +3,7 @@
 #define UINTAH_HOMEBREW_CellIterator_H
 
 #include <Uintah/Grid/Array3Index.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <SCICore/Geometry/IntVector.h>
 
 namespace Uintah {
@@ -90,8 +90,8 @@ WARNING
    private:
       CellIterator();
       CellIterator& operator=(const CellIterator& copy);
-      inline CellIterator(const Region* region, int ix, int iy, int iz)
-	 : d_sx(ix), d_sy(iy), d_sz(iz), d_ix(ix), d_iy(iy), d_iz(iz), d_ex(region->getNCells().x()), d_ey(region->getNCells().y()), d_ez(region->getNCells().z()) {
+      inline CellIterator(const Patch* patch, int ix, int iy, int iz)
+	 : d_sx(ix), d_sy(iy), d_sz(iz), d_ix(ix), d_iy(iy), d_iz(iz), d_ex(patch->getNCells().x()), d_ey(patch->getNCells().y()), d_ez(patch->getNCells().z()) {
       }
       
       //////////
@@ -107,6 +107,10 @@ std::ostream& operator<<(std::ostream& out, const Uintah::CellIterator& b);
 
 //
 // $Log$
+// Revision 1.4  2000/05/30 20:19:28  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.3  2000/04/28 20:24:43  jas
 // Moved some private copy constructors to public for linux.  Velocity
 // field is now set from the input file.  Simulation state now correctly

@@ -4,8 +4,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Handle.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Exceptions/InvalidGrid.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream>
 using namespace Uintah;
 using namespace SCICore::Geometry;
@@ -18,69 +19,69 @@ Level::Level(Grid* grid)
 
 Level::~Level()
 {
-  // Delete all of the regions managed by this level
-  for(regionIterator iter=d_regions.begin(); iter != d_regions.end(); iter++)
+  // Delete all of the patches managed by this level
+  for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++)
     delete *iter;
 }
 
-Level::const_regionIterator Level::regionsBegin() const
+Level::const_patchIterator Level::patchesBegin() const
 {
-    return d_regions.begin();
+    return d_patches.begin();
 }
 
-Level::const_regionIterator Level::regionsEnd() const
+Level::const_patchIterator Level::patchesEnd() const
 {
-    return d_regions.end();
+    return d_patches.end();
 }
 
-Level::regionIterator Level::regionsBegin()
+Level::patchIterator Level::patchesBegin()
 {
-    return d_regions.begin();
+    return d_patches.begin();
 }
 
-Level::regionIterator Level::regionsEnd()
+Level::patchIterator Level::patchesEnd()
 {
-    return d_regions.end();
+    return d_patches.end();
 }
 
-Region* Level::addRegion(const Point& lower, const Point& upper,
+Patch* Level::addPatch(const Point& lower, const Point& upper,
 			 const IntVector& lowIndex, const IntVector& highIndex)
 {
-    Region* r = new Region(lower, upper, lowIndex, highIndex);
-    d_regions.push_back(r);
+    Patch* r = scinew Patch(lower, upper, lowIndex, highIndex);
+    d_patches.push_back(r);
     return r;
 }
 
-Region* Level::addRegion(const Point& lower, const Point& upper,
+Patch* Level::addPatch(const Point& lower, const Point& upper,
 			 const IntVector& lowIndex, const IntVector& highIndex,
 			 int ID)
 {
-    Region* r = new Region(lower, upper, lowIndex, highIndex, ID);
-    d_regions.push_back(r);
+    Patch* r = scinew Patch(lower, upper, lowIndex, highIndex, ID);
+    d_patches.push_back(r);
     return r;
 }
 
-int Level::numRegions() const
+int Level::numPatches() const
 {
-  return (int)d_regions.size();
+  return (int)d_patches.size();
 }
 
 void Level::performConsistencyCheck() const
 {
-  for(int i=0;i<d_regions.size();i++){
-    Region* r = d_regions[i];
+  for(int i=0;i<d_patches.size();i++){
+    Patch* r = d_patches[i];
     r->performConsistencyCheck();
   }
 
   // This is O(n^2) - we should fix it someday if it ever matters
-  for(int i=0;i<d_regions.size();i++){
-    Region* r1 = d_regions[i];
-    for(int j=i+1;j<d_regions.size();j++){
-      Region* r2 = d_regions[j];
+  for(int i=0;i<d_patches.size();i++){
+    Patch* r1 = d_patches[i];
+    for(int j=i+1;j<d_patches.size();j++){
+      Patch* r2 = d_patches[j];
       if(r1->getBox().overlaps(r2->getBox())){
 	cerr << "r1: " << r1 << '\n';
 	cerr << "r2: " << r2 << '\n';
-	throw InvalidGrid("Two regions overlap");
+	throw InvalidGrid("Two patches overlap");
       }
     }
   }
@@ -90,8 +91,8 @@ void Level::performConsistencyCheck() const
 
 void Level::getIndexRange(BBox& b)
 {
-  for(int i=0;i<d_regions.size();i++){
-    Region* r = d_regions[i];
+  for(int i=0;i<d_patches.size();i++){
+    Patch* r = d_patches[i];
     IntVector l( r->getNodeLowIndex() );
     IntVector u( r->getNodeHighIndex() );
     Point lower( l.x(), l.y(), l.z() );
@@ -102,8 +103,8 @@ void Level::getIndexRange(BBox& b)
 }
 void Level::getSpatialRange(BBox& b)
 {
-  for(int i=0;i<d_regions.size();i++){
-    Region* r = d_regions[i];
+  for(int i=0;i<d_patches.size();i++){
+    Patch* r = d_patches[i];
     b.extend(r->getBox().lower());
     b.extend(r->getBox().upper());
   }
@@ -112,8 +113,8 @@ void Level::getSpatialRange(BBox& b)
 long Level::totalCells() const
 {
   long total=0;
-  for(int i=0;i<d_regions.size();i++)
-    total+=d_regions[i]->totalCells();
+  for(int i=0;i<d_patches.size();i++)
+    total+=d_patches[i]->totalCells();
   return total;
 }
 
@@ -124,6 +125,10 @@ GridP Level::getGrid() const
 
 //
 // $Log$
+// Revision 1.10  2000/05/30 20:19:29  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.9  2000/05/20 08:09:21  sparker
 // Improved TypeDescription
 // Finished I/O
@@ -142,7 +147,7 @@ GridP Level::getGrid() const
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.5  2000/04/26 06:48:49  sparker
 // Streamlined namespaces

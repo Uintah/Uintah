@@ -17,7 +17,7 @@ namespace Uintah {
 
 class DataItem;
 class TypeDescription;
-class Region;
+class Patch;
 
 /**************************************
 
@@ -62,29 +62,29 @@ public:
 
    // Particle Variables
    virtual void allocate(int numParticles, ParticleVariableBase&,
-			 const VarLabel*, int matlIndex, const Region*);
+			 const VarLabel*, int matlIndex, const Patch*);
    virtual void allocate(ParticleVariableBase&, const VarLabel*,
-			 int matlIndex, const Region*);
+			 int matlIndex, const Patch*);
    virtual void get(ParticleVariableBase&, const VarLabel*, int matlIndex,
-		    const Region*, Ghost::GhostType, int numGhostCells);
+		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void put(const ParticleVariableBase&, const VarLabel*,
-		    int matlIndex, const Region*);
+		    int matlIndex, const Patch*);
 
    // NCVariables Variables
    virtual void allocate(NCVariableBase&, const VarLabel*,
-			 int matlIndex, const Region*);
+			 int matlIndex, const Patch*);
    virtual void get(NCVariableBase&, const VarLabel*, int matlIndex,
-		    const Region*, Ghost::GhostType, int numGhostCells);
+		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void put(const NCVariableBase&, const VarLabel*,
-		    int matlIndex, const Region*);
+		    int matlIndex, const Patch*);
 
    // CCVariables Variables -- fron Tan... need to be fixed...
    virtual void allocate(CCVariableBase&, const VarLabel*,
-			 int matlIndex, const Region*);
+			 int matlIndex, const Patch*);
    virtual void get(CCVariableBase&, const VarLabel*, int matlIndex,
-		    const Region*, Ghost::GhostType, int numGhostCells);
+		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void put(const CCVariableBase&, const VarLabel*,
-		    int matlIndex, const Region*);
+		    int matlIndex, const Patch*);
 
    //////////
    // Insert Documentation Here:
@@ -97,19 +97,19 @@ public:
    // know which mpiNode has the data so that if this DataWarehouse
    // needs the data, it will know who to ask for it.
    virtual void registerOwnership( const VarLabel * label,
-				   const Region   * region,
+				   const Patch   * patch,
 				         int        mpiNode );
    //////////
    // Searches through the list containing which DataWarehouse's
    // have which data to find the mpiNode that the requested
-   // variable (with materialIndex, and in the given region) is on.
+   // variable (with materialIndex, and in the given patch) is on.
    virtual int findMpiNode( const VarLabel * label,
-			    const Region   * region );
+			    const Patch   * patch );
 
    bool isFinalized() const {
       return d_finalized;
    }
-   bool exists(const VarLabel*, const Region*) const;
+   bool exists(const VarLabel*, const Patch*) const;
 
    void finalize() {
       d_finalized=true;
@@ -125,14 +125,14 @@ public:
 			   std::vector<int>&) const;
        
    virtual void emit(OutputContext&, const VarLabel* label,
-		     int matlIndex, const Region* region) const;
+		     int matlIndex, const Patch* patch) const;
 private:
 
    void sendMpiDataRequest( const string & varName,
-			          Region * region,
+			          Patch * patch,
 			          int      numGhostCells );
    struct dataLocation {
-      const Region   * region;
+      const Patch   * patch;
             int        mpiNode;
    };
 
@@ -175,6 +175,10 @@ private:
 
 //
 // $Log$
+// Revision 1.22  2000/05/30 20:19:23  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.21  2000/05/30 17:09:38  dav
 // MPI stuff
 //
@@ -194,7 +198,7 @@ private:
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.16  2000/05/07 06:02:08  sparker
 // Added beginnings of multiple patch support and real dependencies
@@ -237,7 +241,7 @@ private:
 // More implementation to get this to work
 //
 // Revision 1.4  2000/03/22 00:36:37  sparker
-// Added new version of getRegionData
+// Added new version of getPatchData
 //
 // Revision 1.3  2000/03/17 01:03:17  dav
 // Added some cocoon stuff, fixed some namespace stuff, etc

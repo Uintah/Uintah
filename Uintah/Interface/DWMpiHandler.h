@@ -23,7 +23,7 @@ public:
     int toMpiRank;   // Rank of the process being sent the data.
     int tag;         // Tag to use in the actual send.
     char     varName[ 48 ];
-    int      region;
+    int      patch;
     int      generation; // Generation of DW making request.
                          //   Should match generation of the currently
                          //   registered DW with this DWMpiHandler.
@@ -59,6 +59,10 @@ private:
 
 //
 // $Log$
+// Revision 1.3  2000/05/30 20:19:40  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.2  2000/05/11 20:10:22  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

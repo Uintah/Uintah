@@ -5,6 +5,7 @@
 #include "CompNeoHookPlas.h"
 #include "HyperElasticDamage.h"
 #include "ViscoElasticDamage.h"
+#include <SCICore/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -20,22 +21,22 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps)
 	child = child->findNextBlock()) {
       std::string mat_type = child->getNodeName();
       if (mat_type == "elastic")
-	 return(new ElasticConstitutiveModel(child));
+	 return(scinew ElasticConstitutiveModel(child));
       
       else if (mat_type == "comp_mooney_rivlin")
-	 return(new CompMooneyRivlin(child));
+	 return(scinew CompMooneyRivlin(child));
       
       else if (mat_type ==  "comp_neo_hook")
-	 return(new CompNeoHook(child));
+	 return(scinew CompNeoHook(child));
       
       else if (mat_type == "comp_neo_hook_plastic")
-	 return(new CompNeoHookPlas(child));
+	 return(scinew CompNeoHookPlas(child));
       
       else if (mat_type == "hyper_elastic_damage")
-	 return(new HyperElasticDamage(child));
+	 return(scinew HyperElasticDamage(child));
       
       else if (mat_type == "visco_elastic_damage")
-	 return(new ViscoElasticDamage(child));
+	 return(scinew ViscoElasticDamage(child));
       
       else {
 	 cerr << "Unknown Material Type R (" << mat_type << ")" << std::endl;;

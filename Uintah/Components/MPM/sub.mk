@@ -25,6 +25,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.11  2000/05/30 20:18:59  sparker
+# Changed new to scinew to help track down memory leaks
+# Changed region to patch
+#
 # Revision 1.10  2000/05/30 17:55:19  dav
 # commited the previous one with a test file.  now it is removed
 #
@@ -45,7 +49,7 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 # Do not schedule fracture tasks if fracture not enabled
 # Added fracture directory to MPM sub.mk
 # Be more uniform about using IntVector
-# Made regions have a single uniform index space - still needs work
+# Made patches have a single uniform index space - still needs work
 #
 # Revision 1.5  2000/04/26 06:48:12  sparker
 # Streamlined namespaces

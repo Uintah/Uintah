@@ -31,7 +31,7 @@ none
 #ifndef included_Source
 #define included_Source
 #include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Parallel/ProcessorContext.h>
@@ -70,32 +70,32 @@ public:
    // Set source terms. Will need more parameters...like velocity and
    // scalars
    void calculatePressureSource(const ProcessorContext* pc,
-				const Region* region,
+				const Patch* patch,
 				const DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw,
 				double delta_t, const int index);
    void calculateVelocitySource(const ProcessorContext* pc,
-				const Region* region,
+				const Patch* patch,
 				const DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw,
 				double delta_t, const int index);
    void calculateScalarSource(const ProcessorContext* pc,
-			      const Region* region,
+			      const Patch* patch,
 			      const DataWarehouseP& old_dw,
 			      DataWarehouseP& new_dw,
 			      double delta_t, const int index);
    void modifyVelMassSource(const ProcessorContext* pc,
-			    const Region* region,
+			    const Patch* patch,
 			    const DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw,
 			    double delta_t, const int index);
    void modifyScalarMassSource(const ProcessorContext* pc,
-			       const Region* region,
+			       const Patch* patch,
 			       const DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw,
 			       double delta_t, const int index);
    void addPressureSource(const ProcessorContext* pc,
-			  const Region* region,
+			  const Patch* patch,
 			  const DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw,
 			  const int index);

@@ -5,7 +5,7 @@
 #include <Uintah/Interface/CFDInterface.h>
 namespace Uintah {
 class ProcessorContext;
-class Region;
+class Patch;
 
 namespace ICESpace {
 
@@ -24,13 +24,13 @@ public:
 					      SchedulerP&,
 					      DataWarehouseP&);
    void actuallyComputeStableTimestep(const ProcessorContext*,
-				      const Region* region,
+				      const Patch* patch,
 				      const DataWarehouseP&,
 				      DataWarehouseP&);
    virtual void scheduleTimeAdvance(double t, double dt, const LevelP&, SchedulerP&,
 				    const DataWarehouseP&, DataWarehouseP&);
    void actuallyTimeStep(const ProcessorContext*,
-			 const Region* region,
+			 const Patch* patch,
 			 const DataWarehouseP&,
 			 DataWarehouseP&);
    

@@ -39,7 +39,7 @@ void PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   bool calPress;
   db->require("cal_pressure", calPress);
   if (calPress) {
-    d_pressSolver = new PressureSolver(d_turbModel, d_boundaryCondition,
+    d_pressSolver = scinew PressureSolver(d_turbModel, d_boundaryCondition,
 				       d_physicalConsts);
     d_pressSolver->problemSetup(db);
   }
@@ -47,7 +47,7 @@ void PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   db->require("cal_momentum", calMom);
   if (calMom) {
 #if 0
-    d_momSolver = new MomentumSolver(d_turbModel, d_boundaryCondition,
+    d_momSolver = scinew MomentumSolver(d_turbModel, d_boundaryCondition,
 				     d_physicalConsts);
     d_momSolver->problemSetup(db);
 #endif
@@ -56,7 +56,7 @@ void PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   db->require("cal_scalar", calScalar);
   if (calScalar) {
 #if 0
-    d_scalarSolver = new ScalarSolver(d_turbModel, d_boundaryCondition,
+    d_scalarSolver = scinew ScalarSolver(d_turbModel, d_boundaryCondition,
 				      d_physicalConsts);
     d_scalarSolver->problemSetup(db);
 #endif
@@ -156,36 +156,36 @@ void PicardNonlinearSolver::sched_initialize(const LevelP& level,
 					     DataWarehouseP& new_dw)
 {
 #if 0
-  for(Level::const_regionIterator iter=level->regionsBegin();
-      iter != level->regionsEnd(); iter++){
-    const Region* region=*iter;
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
     {
       //copies old db to new_db and then uses non-linear
       //solver to compute new values
-      Task* tsk = new Task("PicardNonlinearSolver::initialize",region,
+      Task* tsk = scinew Task("PicardNonlinearSolver::initialize",patch,
 			   old_dw, new_dw, this,
 			   PicardNonlinearSolver::initialize);
-      tsk->requires(old_dw, "pressure", region, 0,
+      tsk->requires(old_dw, "pressure", patch, 0,
 		    CCVariable<double>::getTypeDescription());
-      tsk->requires(old_dw, "velocity", region, 0,
+      tsk->requires(old_dw, "velocity", patch, 0,
 		    FCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "scalar", region, 0,
+      tsk->requires(old_dw, "scalar", patch, 0,
 		    CCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "density", region, 0,
+      tsk->requires(old_dw, "density", patch, 0,
 		    CCVariable<double>::getTypeDescription());
-      tsk->requires(old_dw, "viscosity", region,0,
+      tsk->requires(old_dw, "viscosity", patch,0,
 		    CCVariable<double>::getTypeDescription());
       // do we need 0 or 1...coz we need to use ghost cell information
       // for computing stencil coefficients
-      tsk->computes(new_dw "pressure", region, 0,
+      tsk->computes(new_dw "pressure", patch, 0,
 		    CCVariable<double>::getTypeDescription());
-      tsk->computes(new_dw, "velocity", region, 0,
+      tsk->computes(new_dw, "velocity", patch, 0,
 		    FCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "scalar", region, 0,
+      tsk->computes(new_dw, "scalar", patch, 0,
 		    CCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "density", region, 0,
+      tsk->computes(new_dw, "density", patch, 0,
 		    CCVariable<double>::getTypeDescription());
-      tsk->computes(new_dw, "viscosity", region, 0,
+      tsk->computes(new_dw, "viscosity", patch, 0,
 		    CCVariable<double>::getTypeDescription());
       sched->addTask(tsk);
     }
@@ -197,42 +197,42 @@ void PicardNonlinearSolver::sched_initialize(const LevelP& level,
 
 
 void PicardNonlinearSolver::initialize(const ProcessorContext* pc,
-				       const Region* region,
+				       const Patch* patch,
 				       const DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw)
 {
 #if 0
   CCVariable<double> pressure;
-  old_dw->get(pressure, "pressure", region, 0);
+  old_dw->get(pressure, "pressure", patch, 0);
   FCVariable<Vector> velocity;
-  old_dw->get(velocity, "velocity", region, 0);
+  old_dw->get(velocity, "velocity", patch, 0);
   CCVariable<Vector> scalar;
-  old_dw->get(scalar, "scalar", region, 0);
+  old_dw->get(scalar, "scalar", patch, 0);
   CCVariable<double> density;
-  old_dw->get(density, "density", region, 0);
+  old_dw->get(density, "density", patch, 0);
   CCVariable<double> viscosity;
-  old_dw->get(viscosity, "viscosity", region, 0);
+  old_dw->get(viscosity, "viscosity", patch, 0);
   // Create vars for new_dw
   CCVariable<double> pressure_new;
-  new_dw->allocate(pressure_new,"pressure",region, 1);
+  new_dw->allocate(pressure_new,"pressure",patch, 1);
   pressure_new = pressure; // copy old into new
   FCVariable<Vector> velocity_new;
-  new_dw->allocate(velocity_new,"velocity",region, 1);
+  new_dw->allocate(velocity_new,"velocity",patch, 1);
   velocity_new = velocity; // copy old into new
   CCVariable<Vector> scalar_new;
-  new_dw->allocate(scalar_new,"scalar",region, 1);
+  new_dw->allocate(scalar_new,"scalar",patch, 1);
   scalar_new = scalar; // copy old into new
   CCVariable<double> density_new;
-  new_dw->allocate(density_new,"density",region, 1);
+  new_dw->allocate(density_new,"density",patch, 1);
   density_new = density; // copy old into new
   CCVariable<double> viscosity_new;
-  new_dw->allocate(viscosity_new,"viscosity",region, 1);
+  new_dw->allocate(viscosity_new,"viscosity",patch, 1);
   viscosity_new = viscosity; // copy old into new
-  new_dw->put(pressure_new, "pressure", region, 0);
-  new_dw->put(velocity_new, "velocity", region, 0);
-  new_dw->put(scalar_new, "scalar", region, 0);
-  new_dw->put(density_new, "density", region, 0);
-  new_dw->put(viscosity_new, "viscosity", region, 0);
+  new_dw->put(pressure_new, "pressure", patch, 0);
+  new_dw->put(velocity_new, "velocity", patch, 0);
+  new_dw->put(scalar_new, "scalar", patch, 0);
+  new_dw->put(density_new, "density", patch, 0);
+  new_dw->put(viscosity_new, "viscosity", patch, 0);
 #endif
 }
 

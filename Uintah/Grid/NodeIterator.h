@@ -3,7 +3,7 @@
 #define UINTAH_HOMEBREW_NodeIterator_H
 
 #include <Uintah/Grid/Array3Index.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 
 namespace Uintah {
 
@@ -101,13 +101,17 @@ WARNING
 
 //
 // $Log$
+// Revision 1.10  2000/05/30 20:19:30  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.9  2000/05/10 20:03:00  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.8  2000/05/02 06:07:22  sparker
 // Implemented more of DataWarehouse and SerialMPM

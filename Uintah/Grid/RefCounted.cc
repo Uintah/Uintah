@@ -5,6 +5,7 @@ static char *id="@(#) $Id$";
 #include <SCICore/Thread/AtomicCounter.h>
 #include <SCICore/Thread/Mutex.h>
 #include <SCICore/Util/Assert.h>
+#include <SCICore/Malloc/Allocator.h>
 using namespace Uintah;
 using namespace SCICore::Thread;
 
@@ -20,7 +21,7 @@ RefCounted::RefCounted()
     if(!initialized){
 	// This sucks - it needs to be made thread-safe
 	for(int i=0;i<NLOCKS;i++)
-	    locks[i] = new Mutex("RefCounted Mutex");
+	    locks[i] = scinew Mutex("RefCounted Mutex");
 	initialized=true;
     }
     d_lockIndex = (nextIndex++)%NLOCKS;
@@ -49,6 +50,10 @@ bool RefCounted::removeReference()
 
 //
 // $Log$
+// Revision 1.5  2000/05/30 20:19:33  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.4  2000/04/26 06:48:53  sparker
 // Streamlined namespaces
 //

@@ -3,6 +3,7 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <SCICore/Util/NotFinished.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <algorithm>
 
 using namespace Uintah;
@@ -24,7 +25,7 @@ UintahParallelComponent::attachPort(const string& name,
 {
     map<string, PortRecord*>::iterator iter = portmap.find(name);
     if(iter == portmap.end()){
-	portmap[name]=new PortRecord(port);
+	portmap[name]=scinew PortRecord(port);
     } else {
 	iter->second->connections.push_back(port);
     }
@@ -52,6 +53,10 @@ void UintahParallelComponent::releasePort(const std::string&)
 
 //
 // $Log$
+// Revision 1.7  2000/05/30 20:19:43  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.6  2000/04/26 06:49:16  sparker
 // Streamlined namespaces
 //

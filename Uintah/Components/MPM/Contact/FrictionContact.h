@@ -76,30 +76,30 @@ WARNING
 	 virtual ~FrictionContact();
 
          // Initialiation function create storage for traction and surf. norm.
-         virtual void initializeContact(const Region* region,
+         virtual void initializeContact(const Patch* patch,
                                         int vfindex,
                                         DataWarehouseP& new_dw);
 	 
 	 // Basic contact methods
 	 virtual void exMomInterpolated(const ProcessorContext*,
-					const Region* region,
+					const Patch* patch,
 					DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw);
 	 
 	 virtual void exMomIntegrated(const ProcessorContext*,
-				      const Region* region,
+				      const Patch* patch,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw);
 	 
          virtual void addComputesAndRequiresInterpolated(Task* task,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const;
 
          virtual void addComputesAndRequiresIntegrated(Task* task,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const;
       };
@@ -110,6 +110,10 @@ WARNING
 #endif /* __FRICTION_H__ */
 
 // $Log$
+// Revision 1.10  2000/05/30 20:19:09  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.9  2000/05/26 22:05:40  jas
 // Using Singleton class MPMLabel for label management.
 //

@@ -21,7 +21,7 @@
 #endif
 
 namespace Uintah {
-   class Region;
+   class Patch;
    
    /**************************************
      
@@ -75,8 +75,8 @@ public:
    
 #if 0
    //////////
-   // Does a variable exist in a particular region?
-   bool exists(const std::string&, const Region*, int) {
+   // Does a variable exist in a particular patch?
+   bool exists(const std::string&, const Patch*, int) {
       return true;
    }
 #endif
@@ -86,10 +86,10 @@ public:
    void queryLifetime( double& min, double& max, particleId id);
    
    //////////
-   // how long does a region live?  Not variable specific
-   void queryLifetime( double& min, double& max, const Region* region);
+   // how long does a patch live?  Not variable specific
+   void queryLifetime( double& min, double& max, const Patch* patch);
 
-   int queryNumMaterials(const std::string& name, const Region* region,
+   int queryNumMaterials(const std::string& name, const Patch* patch,
 			double time);
 
    //////////
@@ -107,7 +107,7 @@ public:
    // syntax.
    template<class T>
    void query( ParticleVariable< T >&, const std::string& name, int matlIndex,
-	      const Region*, double time );
+	      const Patch*, double time );
    
    //////////
    // query the variable value for a particular particle  overtime;
@@ -115,7 +115,7 @@ public:
    // syntax.
    template<class T>
    void query( NCVariable< T >&, const std::string& name, int matlIndex,
-	      const Region*, double time );
+	      const Patch*, double time );
 
 
    //////////
@@ -130,18 +130,18 @@ public:
 #if 0
    //////////
    // similarly, we want to be able to track variable values in a particular
-   // region cell over time.
+   // patch cell over time.
    template<class T>
    void query( std::vector< T >, const std::string& name,  
-	      const Region *,
+	      const Patch *,
 	      IntVector i, const time& min, const time& max);
    
    //////////
    // In other cases we will have noticed something interesting and we
-   // will want to access some small portion of a region.  We will need
+   // will want to access some small portion of a patch.  We will need
    // to request some range of data in index space.
    template<class T> void get(T& data, const std::string& name,
-			      const Region* region, cellIndex min, cellIndex max);
+			      const Patch* patch, cellIndex min, cellIndex max);
 #endif
 
    
@@ -165,7 +165,7 @@ private:
    std::vector<DOM_Node> d_tstop;
    std::vector<XMLURL> d_tsurl;
 
-   DOM_Node findVariable(const string& name, const Region* region,
+   DOM_Node findVariable(const string& name, const Patch* patch,
 			 int matl, double time, XMLURL& url);
 };
 
@@ -173,6 +173,10 @@ private:
 
 //
 // $Log$
+// Revision 1.5  2000/05/30 20:19:40  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.4  2000/05/21 08:19:11  sparker
 // Implement NCVariable read
 // Do not fail if variable type is not known

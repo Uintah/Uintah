@@ -14,6 +14,7 @@
 #include <Uintah/Grid/ParticleSubset.h>
 #include <Uintah/Grid/TypeDescription.h>
 #include <Uintah/Grid/TypeUtils.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <unistd.h>
 #include <errno.h>
 
@@ -119,7 +120,7 @@ WARNING
       {
 	 static TypeDescription* td;
 	 if(!td){
-	    td = new TypeDescription(TypeDescription::ParticleVariable,
+	    td = scinew TypeDescription(TypeDescription::ParticleVariable,
 				     "ParticleVariable",
 				     fun_getTypeDescription((T*)0));
 	 }
@@ -146,7 +147,7 @@ WARNING
       : d_pset(pset)
       {
 	 d_pset->addReference();
-	 d_pdata=new ParticleData<T>(pset->getParticleSet()->numParticles());
+	 d_pdata=scinew ParticleData<T>(pset->getParticleSet()->numParticles());
 	 d_pdata->addReference();
       }
    
@@ -160,7 +161,7 @@ WARNING
 
 	 d_pset=pset;
 	 d_pset->addReference();
-	 d_pdata=new ParticleData<T>(pset->getParticleSet()->numParticles());
+	 d_pdata=scinew ParticleData<T>(pset->getParticleSet()->numParticles());
 	 d_pdata->addReference();
       }
    
@@ -168,7 +169,7 @@ WARNING
       ParticleVariable<T>*
       ParticleVariable<T>::clone() const
       {
-	 return new ParticleVariable<T>(*this);
+	 return scinew ParticleVariable<T>(*this);
       }
    
    template<class T>
@@ -222,7 +223,7 @@ WARNING
 	    delete d_pset;
 	 d_pset = pset;
 	 pset->addReference();
-	 d_pdata=new ParticleData<T>(pset->getParticleSet()->numParticles());
+	 d_pdata=scinew ParticleData<T>(pset->getParticleSet()->numParticles());
 	 d_pdata->addReference();
 	 ASSERTEQ(subsets.size(), srcs.size());
 	 ParticleSubset::iterator dstiter = pset->begin();
@@ -299,6 +300,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.15  2000/05/30 20:19:31  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.14  2000/05/20 08:09:25  sparker
 // Improved TypeDescription
 // Finished I/O
@@ -317,7 +322,7 @@ WARNING
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.10  2000/05/07 06:02:12  sparker
 // Added beginnings of multiple patch support and real dependencies

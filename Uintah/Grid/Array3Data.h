@@ -4,6 +4,7 @@
 #include "RefCounted.h"
 #include <SCICore/Geometry/IntVector.h>
 #include <SCICore/Util/Assert.h>
+#include <SCICore/Malloc/Allocator.h>
 
 /**************************************
 
@@ -88,11 +89,11 @@ namespace Uintah {
       : d_size(size)
       {
 	 if(d_size.x() && d_size.y() && d_size.z())
-	    d_data=new T[d_size.x()*d_size.y()*d_size.z()];
+	    d_data=scinew T[d_size.x()*d_size.y()*d_size.z()];
 	 else
 	    d_data=0;
-	 d_data3=new T**[d_size.x()];
-	 d_data3[0]=new T*[d_size.x()*d_size.y()];
+	 d_data3=scinew T**[d_size.x()];
+	 d_data3[0]=scinew T*[d_size.x()*d_size.y()];
 	 d_data3[0][0]=d_data;
 	 for(int i=1;i<d_size.x();i++){
 	    d_data3[i]=d_data3[i-1]+d_size.y();
@@ -116,6 +117,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.9  2000/05/30 20:19:27  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.8  2000/05/10 20:02:58  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

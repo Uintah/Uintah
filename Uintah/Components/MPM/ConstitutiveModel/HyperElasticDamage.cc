@@ -36,6 +36,7 @@
 
 #include "ConstitutiveModelFactory.h"
 #include "HyperElasticDamage.h"
+#include <SCICore/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
 using namespace std;
@@ -176,7 +177,7 @@ std::vector<double> HyperElasticDamage::getMechProps() const
 
 }
 
-void HyperElasticDamage::computeStressTensor(const Region* region,
+void HyperElasticDamage::computeStressTensor(const Patch* patch,
 					     const MPMMaterial* matl,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw)
@@ -263,7 +264,7 @@ void HyperElasticDamage::computeStressTensor(const Region* region,
 #endif
 }
 
-double HyperElasticDamage::computeStrainEnergy(const Region* region,
+double HyperElasticDamage::computeStrainEnergy(const Patch* patch,
 					       const MPMMaterial* matl,
 					       DataWarehouseP& new_dw)
 {
@@ -274,7 +275,7 @@ double HyperElasticDamage::computeStrainEnergy(const Region* region,
 #endif
 }
 
-void HyperElasticDamage::initializeCMData(const Region* region,
+void HyperElasticDamage::initializeCMData(const Patch* patch,
 					  const MPMMaterial* matl,
 					  DataWarehouseP& new_dw)
 {
@@ -284,7 +285,7 @@ void HyperElasticDamage::initializeCMData(const Region* region,
 
 void HyperElasticDamage::addComputesAndRequires(Task* task,
 						const MPMMaterial* matl,
-						const Region* region,
+						const Patch* patch,
 						DataWarehouseP& old_dw,
 						DataWarehouseP& new_dw) const
 {
@@ -370,7 +371,7 @@ ConstitutiveModel* HyperElasticDamage::readRestartParametersAndCreate(ProblemSpe
 
 ConstitutiveModel* HyperElasticDamage::create(double *p_array)
 {
-  return(new HyperElasticDamage(p_array[0],p_array[1],p_array[2],
+  return(scinew HyperElasticDamage(p_array[0],p_array[1],p_array[2],
 				p_array[3],p_array[4]));
 }
 
@@ -400,7 +401,7 @@ void HyperElasticDamage::printParameterNames(ofstream& out) const
 
 ConstitutiveModel* HyperElasticDamage::copy() const
 {
-  return( new HyperElasticDamage(*this) );
+  return( scinew HyperElasticDamage(*this) );
 }
 
 int HyperElasticDamage::getSize() const
@@ -421,6 +422,10 @@ int HyperElasticDamage::getSize() const
 
 //
 // $Log$
+// Revision 1.9  2000/05/30 20:19:04  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.8  2000/05/11 20:10:15  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

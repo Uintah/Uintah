@@ -35,12 +35,12 @@ int main(int argc, char **argv)
       exit(1);
     }
   int      i;
-  ConstitutiveModel *elastic     = new ElasticConstitutiveModel;
-  ConstitutiveModel *mooney      = new CompMooneyRivlin;
-  ConstitutiveModel *neohook     = new CompNeoHook;
-  ConstitutiveModel *neohookplas = new CompNeoHookPlas;
-  ConstitutiveModel *hypelastdam = new HyperElasticDamage;
-  ConstitutiveModel *viselastdam = new ViscoElasticDamage;
+  ConstitutiveModel *elastic     = scinew ElasticConstitutiveModel;
+  ConstitutiveModel *mooney      = scinew CompMooneyRivlin;
+  ConstitutiveModel *neohook     = scinew CompNeoHook;
+  ConstitutiveModel *neohookplas = scinew CompNeoHookPlas;
+  ConstitutiveModel *hypelastdam = scinew HyperElasticDamage;
+  ConstitutiveModel *viselastdam = scinew ViscoElasticDamage;
   // add new Model's variable initalization here
   
   ConstitutiveModel *materials[ConstitutiveModelFactory::CM_MAX-1] =

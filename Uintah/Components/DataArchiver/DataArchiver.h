@@ -57,7 +57,7 @@ namespace Uintah {
       //////////
       // Insert Documentation Here:
       void output(const ProcessorContext*,
-		  const Region* region,
+		  const Patch* patch,
 		  DataWarehouseP& old_dw,
 		  DataWarehouseP& new_dw,
 		  int timestep,
@@ -77,6 +77,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.3  2000/05/30 20:18:55  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.2  2000/05/20 08:09:04  sparker
 // Improved TypeDescription
 // Finished I/O

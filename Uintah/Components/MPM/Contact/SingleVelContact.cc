@@ -17,7 +17,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/NCVariable.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/NodeIterator.h>
 #include <Uintah/Grid/ReductionVariable.h>
 #include <Uintah/Grid/SimulationState.h>
@@ -56,7 +56,7 @@ SingleVelContact::~SingleVelContact()
 
 }
 
-void SingleVelContact::initializeContact(const Region* /*region*/,
+void SingleVelContact::initializeContact(const Patch* /*patch*/,
 					 int /*vfindex*/,
 					 DataWarehouseP& /*new_dw*/)
 {
@@ -64,7 +64,7 @@ void SingleVelContact::initializeContact(const Region* /*region*/,
 }
 
 void SingleVelContact::exMomInterpolated(const ProcessorContext*,
-					 const Region* region,
+					 const Patch* patch,
 					 DataWarehouseP&,
 					 DataWarehouseP& new_dw)
 {
@@ -86,14 +86,14 @@ void SingleVelContact::exMomInterpolated(const ProcessorContext*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , region,
+      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , patch,
 		  Ghost::None, 0);
-      new_dw->get(gvelocity[vfindex], lb->gVelocityLabel, vfindex, region,
+      new_dw->get(gvelocity[vfindex], lb->gVelocityLabel, vfindex, patch,
 		  Ghost::None, 0);
     }
   }
 
-  for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
+  for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
     centerOfMassMass=0.0; 
     for(int n = 0; n < NVFs; n++){
@@ -112,12 +112,12 @@ void SingleVelContact::exMomInterpolated(const ProcessorContext*,
 
   // Store new velocities in DataWarehouse
   for(int n=0; n< NVFs; n++){
-    new_dw->put(gvelocity[n], lb->gMomExedVelocityLabel, n, region);
+    new_dw->put(gvelocity[n], lb->gMomExedVelocityLabel, n, patch);
   }
 }
 
 void SingleVelContact::exMomIntegrated(const ProcessorContext*,
-				  const Region* region,
+				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw)
 {
@@ -141,17 +141,17 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , region, Ghost::None, 0);
+      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , patch, Ghost::None, 0);
       new_dw->get(gvelocity_star[vfindex], lb->gVelocityStarLabel, vfindex,
-		  region, Ghost::None, 0);
+		  patch, Ghost::None, 0);
       new_dw->get(gacceleration[vfindex], lb->gAccelerationLabel, vfindex,
-		  region, Ghost::None, 0);
+		  patch, Ghost::None, 0);
     }
   }
   delt_vartype delT;
-  old_dw->get(delT, lb->delTLabel);
+  old_dw->get(delT, lb->deltLabel);
 
-  for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
+  for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
     centerOfMassMass=0.0; 
     for(int  n = 0; n < NVFs; n++){
@@ -173,47 +173,51 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
 
   // Store new velocities and accelerations in DataWarehouse
   for(int n = 0; n < NVFs; n++){
-    new_dw->put(gvelocity_star[n], lb->gMomExedVelocityStarLabel, n, region);
-    new_dw->put(gacceleration[n], lb->gMomExedAccelerationLabel, n, region);
+    new_dw->put(gvelocity_star[n], lb->gMomExedVelocityStarLabel, n, patch);
+    new_dw->put(gacceleration[n], lb->gMomExedAccelerationLabel, n, patch);
   }
 }
 
 void SingleVelContact::addComputesAndRequiresInterpolated( Task* t,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const
 {
   const MPMLabel* lb = MPMLabel::getLabels();
   int idx = matl->getDWIndex();
-  t->requires( new_dw, lb->gMassLabel, idx, region, Ghost::None);
-  t->requires( new_dw, lb->gVelocityLabel, idx, region, Ghost::None);
+  t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
+  t->requires( new_dw, lb->gVelocityLabel, idx, patch, Ghost::None);
 
-  t->computes( new_dw, lb->gMomExedVelocityLabel, idx, region );
+  t->computes( new_dw, lb->gMomExedVelocityLabel, idx, patch );
 
 
 }
 
 void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const
 {
 
   int idx = matl->getDWIndex();
   const MPMLabel* lb = MPMLabel::getLabels();
-  t->requires(new_dw, lb->gMassLabel, idx, region, Ghost::None);
-  t->requires(new_dw, lb->gVelocityStarLabel, idx, region, Ghost::None);
-  t->requires(new_dw, lb->gAccelerationLabel, idx, region, Ghost::None);
+  t->requires(new_dw, lb->gMassLabel, idx, patch, Ghost::None);
+  t->requires(new_dw, lb->gVelocityStarLabel, idx, patch, Ghost::None);
+  t->requires(new_dw, lb->gAccelerationLabel, idx, patch, Ghost::None);
 
-  t->computes( new_dw, lb->gMomExedVelocityStarLabel, idx, region);
-  t->computes( new_dw, lb->gMomExedAccelerationLabel, idx, region);
+  t->computes( new_dw, lb->gMomExedVelocityStarLabel, idx, patch);
+  t->computes( new_dw, lb->gMomExedAccelerationLabel, idx, patch);
 
 
 }
 
 // $Log$
+// Revision 1.20  2000/05/30 20:19:10  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.19  2000/05/30 17:08:54  dav
 // Changed delt to delT
 //
@@ -235,7 +239,7 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.14  2000/05/08 22:45:34  guilkey
 // Fixed a few stupid errors in the FrictionContact.

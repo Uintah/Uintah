@@ -140,24 +140,24 @@ void GeometryObject::norm(Vector &norm, Point part_pos, int sf[7],
 
 void GeometryObject::fillWithParticles(vector<Material *> &materials,
 				vector<BoundCond> &BC,
-				const Region* region,
+				const Patch* patch,
 				DataWarehouseP& dw)
 {
 
 
     cerr << "In FillWParticles\n";
     ParticleVariable<Vector> pposition;
-    dw->get(pposition, "p.x", region, 0);
+    dw->get(pposition, "p.x", patch, 0);
     ParticleVariable<double> pvolume;
-    dw->get(pvolume, "p.volume", region, 0);
+    dw->get(pvolume, "p.volume", patch, 0);
     ParticleVariable<double> pmass;
-    dw->get(pmass, "p.mass", region, 0);
+    dw->get(pmass, "p.mass", patch, 0);
     ParticleVariable<Vector> pvel;
-    dw->get(pvel, "p.velocity", region, 0);
+    dw->get(pvel, "p.velocity", patch, 0);
     ParticleVariable<Vector> pexternalforce;
-    dw->get(pexternalforce, "p.externalforce", region, 0);
+    dw->get(pexternalforce, "p.externalforce", patch, 0);
     ParticleVariable<CompMooneyRivlin> pconmod;
-    dw->get(pconmod, "p.conmod", region, 0);
+    dw->get(pconmod, "p.conmod", patch, 0);
 
     int ocount=pposition.getParticleSubset()->numParticles();
     for(int pass=0;pass<2;pass++){
@@ -306,18 +306,22 @@ void GeometryObject::fillWithParticles(vector<Material *> &materials,
 	pconmod.resize(count);
     }
     }
-    dw->put(pposition, "p.x", region, 0);
-    dw->put(pvolume, "p.volume", region, 0);
-    dw->put(pmass, "p.mass", region, 0);
-    dw->put(pvel, "p.velocity", region, 0);
-    dw->put(pexternalforce, "p.externalforce", region, 0);
-    dw->put(pconmod, "p.conmod", region, 0);
+    dw->put(pposition, "p.x", patch, 0);
+    dw->put(pvolume, "p.volume", patch, 0);
+    dw->put(pmass, "p.mass", patch, 0);
+    dw->put(pvel, "p.velocity", patch, 0);
+    dw->put(pexternalforce, "p.externalforce", patch, 0);
+    dw->put(pconmod, "p.conmod", patch, 0);
 
 }
 
 #endif
   
 // $Log$
+// Revision 1.14  2000/05/30 20:19:14  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.13  2000/05/03 23:52:47  guilkey
 // Fixed some small errors in the MPM code to make it work
 // and give what appear to be correct answers.

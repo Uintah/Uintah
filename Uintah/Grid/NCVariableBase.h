@@ -10,7 +10,7 @@ namespace SCICore {
 
 namespace Uintah {
    class OutputContext;
-   class Region;
+   class Patch;
    using SCICore::Geometry::IntVector;
 
 /**************************************
@@ -55,7 +55,7 @@ WARNING
 
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
-      virtual void copyRegion(NCVariableBase* src,
+      virtual void copyPatch(NCVariableBase* src,
 			      const IntVector& lowIndex,
 			      const IntVector& highIndex) = 0;
       virtual void emit(OutputContext&) = 0;
@@ -71,6 +71,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.6  2000/05/30 20:19:30  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.5  2000/05/15 19:39:48  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups
@@ -81,7 +85,7 @@ WARNING
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.3  2000/05/02 06:07:22  sparker
 // Implemented more of DataWarehouse and SerialMPM

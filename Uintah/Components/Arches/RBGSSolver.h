@@ -38,7 +38,7 @@ none
 #define included_RBGSSolver
 
 #include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Parallel/ProcessorContext.h>
@@ -97,39 +97,39 @@ public:
 		      DataWarehouseP& new_dw);
  private:
    void press_underrelax(const ProcessorContext* pc,
-			 const Region* region,
+			 const Patch* patch,
 			 const DataWarehouseP& old_dw,
 			 DataWarehouseP& new_dw);
    void press_lisolve(const ProcessorContext* pc,
-		      const Region* region,
+		      const Patch* patch,
 		      const DataWarehouseP& old_dw,
 		      DataWarehouseP& new_dw);
    void press_residCalculation(const ProcessorContext* pc,
-			       const Region* region,
+			       const Patch* patch,
 			       const DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw);
    void vel_underrelax(const ProcessorContext* pc,
-		       const Region* region,
+		       const Patch* patch,
 		       const DataWarehouseP& old_dw,
 		       DataWarehouseP& new_dw, int index);
    void vel_lisolve(const ProcessorContext* pc,
-		    const Region* region,
+		    const Patch* patch,
 		    const DataWarehouseP& old_dw,
 		    DataWarehouseP& new_dw, int index);
    void vel_residCalculation(const ProcessorContext* pc,
-			     const Region* region,
+			     const Patch* patch,
 			     const DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw, int index);
    void scalar_underrelax(const ProcessorContext* pc,
-			  const Region* region,
+			  const Patch* patch,
 			  const DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw, int index);
    void scalar_lisolve(const ProcessorContext* pc,
-		       const Region* region,
+		       const Patch* patch,
 		       const DataWarehouseP& old_dw,
 		       DataWarehouseP& new_dw, int index);
    void scalar_residCalculation(const ProcessorContext* pc,
-				const Region* region,
+				const Patch* patch,
 				const DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw, int index);
    int d_maxSweeps;

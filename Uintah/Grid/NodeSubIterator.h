@@ -104,7 +104,7 @@ WARNING
 	 : d_ix(sx), d_iy(sy), d_iz(sz), d_sx(sx), d_sy(sy), d_sz(sz),
 	   d_ex(ex), d_ey(ey), d_ez(ez) {
       }
-      friend class Region;
+      friend class Patch;
       
       //////////
       // Insert Documentation Here:
@@ -117,6 +117,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/05/30 20:19:30  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.3  2000/04/26 06:48:50  sparker
 // Streamlined namespaces
 //

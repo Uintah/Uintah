@@ -41,7 +41,7 @@ namespace Uintah {
 namespace ArchesSpace {
 
     class Stencil {
-	Stencil(const DataWarehouseP&, const std::string&, const Region*);
+	Stencil(const DataWarehouseP&, const std::string&, const Patch*);
     };
 
 }

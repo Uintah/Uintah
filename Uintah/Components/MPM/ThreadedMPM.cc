@@ -12,10 +12,10 @@
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/ProblemSpec.h>
 #include <Uintah/Parallel/ProcessorContext.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Grid/SoleVariable.h>
-#include <Uintah/Grid/SubRegion.h>
+#include <Uintah/Grid/SubPatch.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Components/MPM/CompMooneyRivlin.h> // TEMPORARY
 #include <SCICore/Geometry/Vector.h>
@@ -63,40 +63,40 @@ void ThreadedMPM::problemSetup(const ProblemSpecP&, GridP& grid,
     int ny = (int)(diag.y()/dx[2]+0.5);
     int nz = (int)(diag.z()/dx[3]+0.5);
     
-    level->addRegion(lower, upper, nx, ny, nz);
-    for(Level::const_regionIterator iter=level->regionsBegin();
-	iter != level->regionsEnd(); iter++){
-	const Region* region=*iter;
-	ParticleSet* pset = new ParticleSet();
-	ParticleSubset* psubset = new ParticleSubset(pset);
+    level->addPatch(lower, upper, nx, ny, nz);
+    for(Level::const_patchIterator iter=level->patchesBegin();
+	iter != level->patchesEnd(); iter++){
+	const Patch* patch=*iter;
+	ParticleSet* pset = scinew ParticleSet();
+	ParticleSubset* psubset = scinew ParticleSubset(pset);
 	ParticleVariable<Vector> px(psubset);
-	dw->put(px, "p.x", region, 0);
+	dw->put(px, "p.x", patch, 0);
 	ParticleVariable<double> pvolume(psubset);
-	dw->put(pvolume, "p.volume", region, 0);
+	dw->put(pvolume, "p.volume", patch, 0);
 	ParticleVariable<double> pmass(psubset);
-	dw->put(pmass, "p.mass", region, 0);
+	dw->put(pmass, "p.mass", patch, 0);
 	ParticleVariable<Vector> pvel(psubset);
-	dw->put(pvel, "p.velocity", region, 0);
+	dw->put(pvel, "p.velocity", patch, 0);
 	ParticleVariable<Vector> pexternalforce(psubset);
-	dw->put(pexternalforce, "p.externalforce", region, 0);
+	dw->put(pexternalforce, "p.externalforce", patch, 0);
 	ParticleVariable<CompMooneyRivlin> pconmod(psubset);
-	dw->put(pconmod, "p.conmod", region, 0);
-	cerr << "Creating particles for region\n";
-	Enigma.createParticles(region, dw);
+	dw->put(pconmod, "p.conmod", patch, 0);
+	cerr << "Creating particles for patch\n";
+	Enigma.createParticles(patch, dw);
 	cerr << "Done creating " << pset->numParticles() << " particles\n";
 
 	NCVariable<double> gmass;
-	dw->allocate(gmass, "g.mass", region, 0);
+	dw->allocate(gmass, "g.mass", patch, 0);
 	NCVariable<Vector> gvelocity;
-	dw->allocate(gvelocity, "g.velocity", region, 0);
+	dw->allocate(gvelocity, "g.velocity", patch, 0);
 	NCVariable<Vector> externalforce;
-	dw->allocate(externalforce, "g.externalforce", region, 0);
+	dw->allocate(externalforce, "g.externalforce", patch, 0);
 	NCVariable<Vector> internalforce;
-	dw->allocate(internalforce, "g.internalforce", region, 0);
+	dw->allocate(internalforce, "g.internalforce", patch, 0);
 	NCVariable<Vector> acceleration;
-	dw->allocate(acceleration, "g.acceleration", region, 0);
+	dw->allocate(acceleration, "g.acceleration", patch, 0);
 	NCVariable<Vector> velocity_star;
-	dw->allocate(velocity_star, "g.velocity_star", region, 0);
+	dw->allocate(velocity_star, "g.velocity_star", patch, 0);
 
     }
     cerr << "ThreadedMPM::problemSetup not done\n";
@@ -105,13 +105,13 @@ void ThreadedMPM::problemSetup(const ProblemSpecP&, GridP& grid,
 void ThreadedMPM::computeStableTimestep(const LevelP& level,
 				      SchedulerP& sched, DataWarehouseP& dw)
 {
-    for(Level::const_regionIterator iter=level->regionsBegin();
-	iter != level->regionsEnd(); iter++){
-	const Region* region=*iter;
+    for(Level::const_patchIterator iter=level->patchesBegin();
+	iter != level->patchesEnd(); iter++){
+	const Patch* patch=*iter;
 
-	Task* t = new Task("ThreadedMPM::computeStableTimestep", region, dw, dw,
+	Task* t = scinew Task("ThreadedMPM::computeStableTimestep", patch, dw, dw,
 			   this, ThreadedMPM::actuallyComputeStableTimestep);
-	t->requires(dw, "velocity", region, 0,
+	t->requires(dw, "velocity", patch, 0,
 		    ParticleVariable<Vector>::getTypeDescription());
 	t->requires(dw, "params", ProblemSpec::getTypeDescription());
 	t->computes(dw, "delt", SoleVariable<double>::getTypeDescription());
@@ -124,21 +124,21 @@ void ThreadedMPM::timeStep(double t, double dt,
 			 const LevelP& level, SchedulerP& sched,
 			 const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-    for(Level::const_regionIterator iter=level->regionsBegin();
-	iter != level->regionsEnd(); iter++){
-	const Region* region=*iter;
+    for(Level::const_patchIterator iter=level->patchesBegin();
+	iter != level->patchesEnd(); iter++){
+	const Patch* patch=*iter;
 	{
 	    /*
 	     * findOwners
 	     *   in(P.X)
 	     * out(P.OWNERS)
 	     */
-	    Task* t = new Task("ThreadedMPM::findOwners",
-			       region, old_dw, new_dw,
+	    Task* t = scinew Task("ThreadedMPM::findOwners",
+			       patch, old_dw, new_dw,
 			       this, ThreadedMPM::findOwners);
-	    t->requires(old_dw, "p.x", region, 0,
+	    t->requires(old_dw, "p.x", patch, 0,
 			ParticleVariable<Point>::getTypeDescription());
-	    t->computes(new_dw, "p.owner", region, 0,
+	    t->computes(new_dw, "p.owner", patch, 0,
 			ParticleVariable<ParticleSet::index>::getTypeDescription());
 	    t->usesThreads(true);
 	    sched->addTask(t);
@@ -152,21 +152,21 @@ void ThreadedMPM::timeStep(double t, double dt,
 	     * out(G.MASS, G.VELOCITY)
 	     */
 	    Task* t = new Task("ThreadedMPM::interpolateParticlesToGrid",
-			       region, old_dw, new_dw,
+			       patch, old_dw, new_dw,
 			       this, ThreadedMPM::interpolateParticlesToGrid);
-	    t->requires(old_dw, "p.mass", region, 0,
+	    t->requires(old_dw, "p.mass", patch, 0,
 			ParticleVariable<double>::getTypeDescription());
-	    t->requires(old_dw, "p.velocity", region, 0,
+	    t->requires(old_dw, "p.velocity", patch, 0,
 			ParticleVariable<Vector>::getTypeDescription());
-	    t->requires(old_dw, "p.externalforce", region, 0,
+	    t->requires(old_dw, "p.externalforce", patch, 0,
 			ParticleVariable<Vector>::getTypeDescription());
-	    t->requires(old_dw, "p.x", region, 0,
+	    t->requires(old_dw, "p.x", patch, 0,
 			ParticleVariable<Point>::getTypeDescription());
-	    t->computes(new_dw, "g.mass", region, 0,
+	    t->computes(new_dw, "g.mass", patch, 0,
 			NCVariable<double>::getTypeDescription());
-	    t->computes(new_dw, "g.velocity", region, 0,
+	    t->computes(new_dw, "g.velocity", patch, 0,
 			NCVariable<Vector>::getTypeDescription());
-	    t->computes(new_dw, "g.externalforce", region, 0,
+	    t->computes(new_dw, "g.externalforce", patch, 0,
 			NCVariable<Vector>::getTypeDescription());
 	    t->usesThreads(true);
 	    sched->addTask(t);
@@ -182,15 +182,15 @@ void ThreadedMPM::timeStep(double t, double dt,
 	     * out(P.CONMOD)
 	     */
 	    Task* t = new Task("ThreadedMPM::computeStressTensor",
-			       region, old_dw, new_dw,
+			       patch, old_dw, new_dw,
 			       this, ThreadedMPM::computeStressTensor);
-	    t->requires(new_dw, "g.velocity", region, 0,
+	    t->requires(new_dw, "g.velocity", patch, 0,
 			NCVariable<Vector>::getTypeDescription());
-	    t->requires(old_dw, "p.conmod", region, 0,
+	    t->requires(old_dw, "p.conmod", patch, 0,
 			ParticleVariable<CompMooneyRivlin>::getTypeDescription());
 	    t->requires(old_dw, "delt",
 			SoleVariable<double>::getTypeDescription());
-	    t->computes(new_dw, "p.conmod", region, 0,
+	    t->computes(new_dw, "p.conmod", patch, 0,
 			ParticleVariable<CompMooneyRivlin>::getTypeDescription());
 	    t->usesThreads(true);
 	    sched->addTask(t);
@@ -206,13 +206,13 @@ void ThreadedMPM::timeStep(double t, double dt,
 	     * out(G.F_INTERNAL)
 	     */
 	    Task* t = new Task("ThreadedMPM::computeInternalForce",
-			       region, old_dw, new_dw,
+			       patch, old_dw, new_dw,
 			       this, ThreadedMPM::computeInternalForce);
-	    t->requires(new_dw, "p.conmod", region, 0,
+	    t->requires(new_dw, "p.conmod", patch, 0,
 			ParticleVariable<CompMooneyRivlin>::getTypeDescription());
-	    t->requires(old_dw, "p.volume", region, 0,
+	    t->requires(old_dw, "p.volume", patch, 0,
 			ParticleVariable<double>::getTypeDescription());
-	    t->computes(new_dw, "g.internalforce", region, 0,
+	    t->computes(new_dw, "g.internalforce", patch, 0,
 			NCVariable<Vector>::getTypeDescription());
 	    t->usesThreads(true);
 	    sched->addTask(t);
@@ -227,13 +227,13 @@ void ThreadedMPM::timeStep(double t, double dt,
 	     * 
 	     */
 	    Task* t = new Task("ThreadedMPM::solveEquationsMotion",
-			       region, old_dw, new_dw,
+			       patch, old_dw, new_dw,
 			       this, ThreadedMPM::solveEquationsMotion);
-	    t->requires(new_dw, "g.mass", region, 0,
+	    t->requires(new_dw, "g.mass", patch, 0,
 			NCVariable<double>::getTypeDescription());
-	    t->requires(new_dw, "g.internalforce", region, 0,
+	    t->requires(new_dw, "g.internalforce", patch, 0,
 			NCVariable<Vector>::getTypeDescription());
-	    t->computes(new_dw, "g.acceleration", region, 0,
+	    t->computes(new_dw, "g.acceleration", patch, 0,
 			NCVariable<Vector>::getTypeDescription());
 	    t->usesThreads(true);
 	    sched->addTask(t);
@@ -248,15 +248,15 @@ void ThreadedMPM::timeStep(double t, double dt,
 	     * 
 	     */
 	    Task* t = new Task("ThreadedMPM::integrateAcceleration",
-			       region, old_dw, new_dw,
+			       patch, old_dw, new_dw,
 			       this, ThreadedMPM::integrateAcceleration);
-	    t->requires(new_dw, "g.acceleration", region, 0,
+	    t->requires(new_dw, "g.acceleration", patch, 0,
 			NCVariable<Vector>::getTypeDescription());
-	    t->requires(new_dw, "g.velocity", region, 0,
+	    t->requires(new_dw, "g.velocity", patch, 0,
 			NCVariable<Vector>::getTypeDescription());
 	    t->requires(old_dw, "delt",
 			SoleVariable<double>::getTypeDescription());
-	    t->computes(new_dw, "g.velocity_star", region, 0,
+	    t->computes(new_dw, "g.velocity_star", patch, 0,
 			NCVariable<Vector>::getTypeDescription());
 	    t->usesThreads(true);
 	    sched->addTask(t);
@@ -272,19 +272,19 @@ void ThreadedMPM::timeStep(double t, double dt,
 	     * out(P.VELOCITY, P.X, P.NAT_X)
 	     */
 	    Task* t = new Task("ThreadedMPM::interpolateToParticlesAndUpdate",
-			       region, old_dw, new_dw,
+			       patch, old_dw, new_dw,
 			       this, ThreadedMPM::interpolateToParticlesAndUpdate);
-	    t->requires(new_dw, "g.acceleration", region, 0,
+	    t->requires(new_dw, "g.acceleration", patch, 0,
 			NCVariable<Vector>::getTypeDescription());
-	    t->requires(new_dw, "g.velocity_star", region, 0,
+	    t->requires(new_dw, "g.velocity_star", patch, 0,
 			NCVariable<Vector>::getTypeDescription());
-	    t->requires(old_dw, "p.x", region, 0,
+	    t->requires(old_dw, "p.x", patch, 0,
 			ParticleVariable<Point>::getTypeDescription());
 	    t->requires(old_dw, "delt",
 			SoleVariable<double>::getTypeDescription());
-	    t->computes(new_dw, "p.velocity", region, 0,
+	    t->computes(new_dw, "p.velocity", patch, 0,
 			ParticleVariable<Vector>::getTypeDescription());
-	    t->computes(new_dw, "p.x", region, 0,
+	    t->computes(new_dw, "p.x", patch, 0,
 			ParticleVariable<Point>::getTypeDescription());
 	    t->usesThreads(true);
 	    sched->addTask(t);
@@ -334,14 +334,14 @@ static string s_pconmod("p.conmod");
 static string s_delt("delt");
 
 void ThreadedMPM::actuallyComputeStableTimestep(const ProcessorContext* pc,
-					      const Region* region,
+					      const Patch* patch,
 					      const DataWarehouseP& old_dw,
 					      DataWarehouseP& new_dw)
 {
     ParticleVariable<double> pmass;
-    new_dw->get(pmass, s_pmass, region, 0);
+    new_dw->get(pmass, s_pmass, patch, 0);
     ParticleVariable<double> pvolume;
-    new_dw->get(pvolume, s_pvolume, region, 0);
+    new_dw->get(pvolume, s_pvolume, patch, 0);
     ParticleSubset* pset = pmass.getParticleSubset();
     ASSERT(pset == pvolume.getParticleSubset());
 
@@ -386,7 +386,7 @@ void ThreadedMPM::actuallyComputeStableTimestep(const ProcessorContext* pc,
     }
     }
     double c = Max(c_rot, c_dil);
-    Vector dCell = region->dCell();
+    Vector dCell = patch->dCell();
     double width = Max(dCell.x(), dCell.y(), dCell.z());
     double delt = 0.5*width/c;
 
@@ -421,17 +421,17 @@ extern void decompose(int numProcessors, int sizex, int sizey, int sizez,
 		      int& numProcessors_x, int& numProcessors_y,
 		      int& numProcessors_z);
 
-void makeOwnerArrays(const Region* region,
+void makeOwnerArrays(const Patch* patch,
 		     int numProcessors)
 {
-    px.resize(region->getNx());
-    py.resize(region->getNy());
-    pz.resize(region->getNz());
+    px.resize(patch->getNx());
+    py.resize(patch->getNy());
+    pz.resize(patch->getNz());
 
     int npx, npy, npz;
-    int nodesx = region->getNx()+1;
-    int nodesy = region->getNy()+1;
-    int nodesz = region->getNz()+1;
+    int nodesx = patch->getNx()+1;
+    int nodesy = patch->getNy()+1;
+    int nodesz = patch->getNz()+1;
     decompose(numProcessors, nodesx, nodesy, nodesz, npx, npy, npz);
     for(int ipx = 0; ipx < npx; ipx++){
 	int sx = ipx*nodesx/npx;
@@ -500,12 +500,12 @@ void makeOwnerArrays(const Region* region,
 #endif
 }
 
-static int findOwners(const Region* region,
+static int findOwners(const Patch* patch,
 		      const Vector& pos, ParticleSet::index list[8],
 		      ParticleSet::index& owner)
 {
     int ix, iy, iz;
-    region->findCell(pos, ix, iy, iz);
+    patch->findCell(pos, ix, iy, iz);
     int nx = px[ix].n;
     int ny = py[iy].n;
     int nz = pz[iz].n;
@@ -523,23 +523,23 @@ static int findOwners(const Region* region,
 }
 
 void ThreadedMPM::findOwners(const ProcessorContext* pc,
-			     const Region* region,
+			     const Patch* patch,
 			     const DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw)
 {
     ParticleVariable<Vector> px;
-    old_dw->get(px, s_px, region, 0);
+    old_dw->get(px, s_px, patch, 0);
 
 #if 0
     ParticleVariable<ParticleSet::index> powner;
-    new_dw->create(powner, "p.owner", region, 0);
+    new_dw->create(powner, "p.owner", patch, 0);
 #endif
 
     if(pc->threadNumber() == 0){
 	if(!owners){
 	    owners=new OwnerTable[pc->numThreads()];
 	    owners[0].info = new OwnerInfo[pc->numThreads()*pc->numThreads()];
-	    makeOwnerArrays(region, pc->numThreads());
+	    makeOwnerArrays(patch, pc->numThreads());
 	}
     }
     pc->barrier_wait();
@@ -572,7 +572,7 @@ void ThreadedMPM::findOwners(const ProcessorContext* pc,
 	    ParticleSet::index idx = *iter;
 	    ParticleSet::index owner;
 	    ParticleSet::index glist[8];
-	    int n = ::findOwners(region, px[idx], glist, owner);
+	    int n = ::findOwners(patch, px[idx], glist, owner);
 	    for(int i=0;i<n;i++)
 		otab->info[glist[i]].ghost.push_back(idx);
 	    otab->info[owner].owned.push_back(idx);
@@ -584,7 +584,7 @@ void ThreadedMPM::findOwners(const ProcessorContext* pc,
 	    ParticleSet::index idx = *iter;
 	    ParticleSet::index owner;
 	    ParticleSet::index glist[8];
-	    int n = ::findOwners(region, px[idx], glist, owner);
+	    int n = ::findOwners(patch, px[idx], glist, owner);
 	    for(int i=0;i<n;i++)
 		otab->info[glist[i]].ghost.push_back(idx);
 	    otab->info[owner].owned.push_back(idx);
@@ -655,33 +655,33 @@ void ThreadedMPM::findOwners(const ProcessorContext* pc,
 
     pc->barrier_wait();
     if(pc->threadNumber() == 0){
-	new_dw->put(powner, s_powner, region, 0);
+	new_dw->put(powner, s_powner, patch, 0);
     }
 #endif
 }
 
 void ThreadedMPM::interpolateParticlesToGrid(const ProcessorContext* pc,
-					   const Region* region,
+					   const Patch* patch,
 					   const DataWarehouseP& old_dw,
 					   DataWarehouseP& new_dw)
 {
     // Create arrays for the particle data
     ParticleVariable<Vector> px;
-    old_dw->get(px, s_px, region, 0);
+    old_dw->get(px, s_px, patch, 0);
     ParticleVariable<double> pmass;
-    old_dw->get(pmass, s_pmass, region, 0);
+    old_dw->get(pmass, s_pmass, patch, 0);
     ParticleVariable<Vector> pvelocity;
-    old_dw->get(pvelocity, s_pvelocity, region, 0);
+    old_dw->get(pvelocity, s_pvelocity, patch, 0);
     ParticleVariable<Vector> pexternalforce;
-    old_dw->get(pexternalforce, s_pexternalforce, region, 0);
+    old_dw->get(pexternalforce, s_pexternalforce, patch, 0);
 
     // Create arrays for the grid data
     NCVariable<double> gmass;
-    old_dw->get(gmass, s_gmass, region, 0);
+    old_dw->get(gmass, s_gmass, patch, 0);
     NCVariable<Vector> gvelocity;
-    old_dw->get(gvelocity, s_gvelocity, region, 0);
+    old_dw->get(gvelocity, s_gvelocity, patch, 0);
     NCVariable<Vector> externalforce;
-    old_dw->get(externalforce, s_gexternalforce, region, 0);
+    old_dw->get(externalforce, s_gexternalforce, patch, 0);
 
     ParticleSubset* pset = px.getParticleSubset();
     ASSERT(pset == pmass.getParticleSubset());
@@ -693,10 +693,10 @@ void ThreadedMPM::interpolateParticlesToGrid(const ProcessorContext* pc,
     // Vector from the individual mass matrix and velocity vector (per cell).
     // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
 
-    SubRegion subregion(region->subregion(pc->threadNumber(), pc->numThreads()));
+    SubPatch subpatch(patch->subpatch(pc->threadNumber(), pc->numThreads()));
 
     NodeSubIterator iter, end;
-    region->subregionIteratorPair(pc->threadNumber(), pc->numThreads(),
+    patch->subpatchIteratorPair(pc->threadNumber(), pc->numThreads(),
 				  iter, end);
     gmass.initialize(0, iter.x(), iter.y(), iter.z(),
 		     end.x(), end.y(), end.z());
@@ -711,7 +711,7 @@ void ThreadedMPM::interpolateParticlesToGrid(const ProcessorContext* pc,
 	ParticleSet::index idx = *iter;
 
 #if 0
-	if(!subregion.contains(px[idx])){
+	if(!subpatch.contains(px[idx])){
 	   cerr << "PARTICLE SUBSET MESSED!\n";
 	    continue;
 	}
@@ -720,12 +720,12 @@ void ThreadedMPM::interpolateParticlesToGrid(const ProcessorContext* pc,
 	// Get the node indices that surround the cell
 	Array3Index ni[8];
 	double S[8];
-	if(!region->findCellAndWeights(px[idx], ni, S))
+	if(!patch->findCellAndWeights(px[idx], ni, S))
 	    continue;
 	// Add each particles contribution to the local mass & velocity 
 	// Must use the node indices
 	for(int k = 0; k < 8; k++) {
-	    if(subregion.contains(ni[k])){
+	    if(subpatch.contains(ni[k])){
 		gmass[ni[k]] += pmass[idx] * S[k];
 		gvelocity[ni[k]] += pvelocity[idx] * pmass[idx] * S[k];
 		externalforce[ni[k]] += pexternalforce[idx] * S[k];
@@ -740,20 +740,20 @@ void ThreadedMPM::interpolateParticlesToGrid(const ProcessorContext* pc,
     }
     pc->barrier_wait();
     if(pc->threadNumber() == 0){
-	new_dw->put(gmass, s_gmass, region, 0);
-	new_dw->put(gvelocity, s_gvelocity, region, 0);
-	new_dw->put(externalforce, s_gexternalforce, region, 0);
+	new_dw->put(gmass, s_gmass, patch, 0);
+	new_dw->put(gvelocity, s_gvelocity, patch, 0);
+	new_dw->put(externalforce, s_gexternalforce, patch, 0);
     }
 }
 
 void ThreadedMPM::computeStressTensor(const ProcessorContext* pc,
-				      const Region* region,
+				      const Patch* patch,
 				      const DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw)
 {
 
     Matrix3 velGrad;
-    Vector dx = region->dCell();
+    Vector dx = patch->dCell();
     double oodx[3];
     oodx[0] = 1.0/dx.x();
     oodx[1] = 1.0/dx.y();
@@ -762,12 +762,12 @@ void ThreadedMPM::computeStressTensor(const ProcessorContext* pc,
     // Create arrays for the particle position
     // and the constitutive model
     ParticleVariable<Vector> px;
-    old_dw->get(px, s_px, region, 0);
+    old_dw->get(px, s_px, patch, 0);
     ParticleVariable<CompMooneyRivlin> pconmod;
-    old_dw->get(pconmod, s_pconmod, region, 0);
+    old_dw->get(pconmod, s_pconmod, patch, 0);
 
     NCVariable<Vector> gvelocity;
-    new_dw->get(gvelocity, s_gvelocity, region, 0);
+    new_dw->get(gvelocity, s_gvelocity, patch, 0);
     SoleVariable<double> delt;
     old_dw->get(delt, s_delt);
 
@@ -797,7 +797,7 @@ void ThreadedMPM::computeStressTensor(const ProcessorContext* pc,
        // Get the node indices that surround the cell
        Array3Index ni[8];
        Vector d_S[8];
-       if(!region->findCellAndShapeDerivatives(px[idx], ni, d_S))
+       if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
 	   continue;
 
         for(int k = 0; k < 8; k++) {
@@ -827,17 +827,17 @@ void ThreadedMPM::computeStressTensor(const ProcessorContext* pc,
     pc->barrier_wait();
 
     if(pc->threadNumber() == 0)
-	new_dw->put(pconmod, s_pconmod, region, 0);
+	new_dw->put(pconmod, s_pconmod, patch, 0);
 
 }
 
 void ThreadedMPM::computeInternalForce(const ProcessorContext* pc,
-				     const Region* region,
+				     const Patch* patch,
 				     const DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw)
 {
 
-    Vector dx = region->dCell();
+    Vector dx = patch->dCell();
     double oodx[3];
     oodx[0] = 1.0/dx.x();
     oodx[1] = 1.0/dx.y();
@@ -846,24 +846,24 @@ void ThreadedMPM::computeInternalForce(const ProcessorContext* pc,
     // Create arrays for the particle position, volume
     // and the constitutive model
     ParticleVariable<Vector> px;
-    old_dw->get(px, s_px, region, 0);
+    old_dw->get(px, s_px, patch, 0);
     ParticleVariable<double> pvol;
-    old_dw->get(pvol, s_pvolume, region, 0);
+    old_dw->get(pvol, s_pvolume, patch, 0);
     ParticleVariable<CompMooneyRivlin> pconmod;
-    old_dw->get(pconmod, s_pconmod, region, 0);
+    old_dw->get(pconmod, s_pconmod, patch, 0);
 
     NCVariable<Vector> internalforce;
-    old_dw->get(internalforce, s_ginternalforce, region, 0);
+    old_dw->get(internalforce, s_ginternalforce, patch, 0);
 
     ParticleSubset* pset = px.getParticleSubset();
     ASSERT(pset == px.getParticleSubset());
     ASSERT(pset == pvol.getParticleSubset());
     ASSERT(pset == pconmod.getParticleSubset());
 
-    SubRegion subregion(region->subregion(pc->threadNumber(), pc->numThreads()));
+    SubPatch subpatch(patch->subpatch(pc->threadNumber(), pc->numThreads()));
 
     NodeSubIterator iter, end;
-    region->subregionIteratorPair(pc->threadNumber(), pc->numThreads(),
+    patch->subpatchIteratorPair(pc->threadNumber(), pc->numThreads(),
 				  iter, end);
     internalforce.initialize(Vector(0,0,0), iter.x(), iter.y(), iter.z(),
 			     end.x(), end.y(), end.z());
@@ -874,7 +874,7 @@ void ThreadedMPM::computeInternalForce(const ProcessorContext* pc,
        ParticleSet::index idx = *iter;
 
 #if 0
-       if(!subregion.contains(px[idx])){
+       if(!subpatch.contains(px[idx])){
 	   cerr << "PARTICLE SUBSET MESSED!\n";
 	    continue;
        }
@@ -883,12 +883,12 @@ void ThreadedMPM::computeInternalForce(const ProcessorContext* pc,
        // Get the node indices that surround the cell
        Array3Index ni[8];
        Vector d_S[8];
-       if(!region->findCellAndShapeDerivatives(px[idx], ni, d_S))
+       if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
 	   continue;
 
        for (int k = 0; k < 8; k++){
 	   Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-	    if(subregion.contains(ni[k])){
+	    if(subpatch.contains(ni[k])){
 		internalforce[ni[k]] -=
 		    (div * pconmod[idx].getStressTensor() * pvol[idx]);
 	    }
@@ -897,29 +897,29 @@ void ThreadedMPM::computeInternalForce(const ProcessorContext* pc,
 
     pc->barrier_wait();
     if(pc->threadNumber() == 0)
-	new_dw->put(internalforce, s_ginternalforce, region, 0);
+	new_dw->put(internalforce, s_ginternalforce, patch, 0);
 }
 
 void ThreadedMPM::solveEquationsMotion(const ProcessorContext* pc,
-				     const Region* region,
+				     const Patch* patch,
 				     const DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw)
 {
-    // Get required variables for this region
+    // Get required variables for this patch
     NCVariable<double> mass;
-    new_dw->get(mass, s_gmass, region, 0);
+    new_dw->get(mass, s_gmass, patch, 0);
     NCVariable<Vector> internalforce;
-    new_dw->get(internalforce, s_ginternalforce, region, 0);
+    new_dw->get(internalforce, s_ginternalforce, patch, 0);
     NCVariable<Vector> externalforce;
-    new_dw->get(externalforce, s_gexternalforce, region, 0);
+    new_dw->get(externalforce, s_gexternalforce, patch, 0);
 
     // Create variables for the results
     NCVariable<Vector> acceleration;
-    old_dw->get(acceleration, s_gacceleration, region, 0);
+    old_dw->get(acceleration, s_gacceleration, patch, 0);
 
     // Do the computation of a = F/m for nodes where m!=0.0
     NodeSubIterator iter, end;
-    region->subregionIteratorPair(pc->threadNumber(), pc->numThreads(),
+    patch->subpatchIteratorPair(pc->threadNumber(), pc->numThreads(),
 				  iter, end);
     for(; iter != end; iter++){
 	if(mass[*iter]>0.0){
@@ -933,30 +933,30 @@ void ThreadedMPM::solveEquationsMotion(const ProcessorContext* pc,
     // Put the result in the datawarehouse
     pc->barrier_wait();
     if(pc->threadNumber() == 0)
-	new_dw->put(acceleration, s_gacceleration, region, 0);
+	new_dw->put(acceleration, s_gacceleration, patch, 0);
 
 }
 
 void ThreadedMPM::integrateAcceleration(const ProcessorContext* pc,
-				      const Region* region,
+				      const Patch* patch,
 				      const DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw)
 {
-    // Get required variables for this region
+    // Get required variables for this patch
     NCVariable<Vector> acceleration;
-    new_dw->get(acceleration, s_gacceleration, region, 0);
+    new_dw->get(acceleration, s_gacceleration, patch, 0);
     NCVariable<Vector> velocity;
-    new_dw->get(velocity, s_gvelocity, region, 0);
+    new_dw->get(velocity, s_gvelocity, patch, 0);
     SoleVariable<double> delt;
     old_dw->get(delt, s_delt);
 
     // Create variables for the results
     NCVariable<Vector> velocity_star;
-    old_dw->get(velocity_star, s_gvelocity_star, region, 0);
+    old_dw->get(velocity_star, s_gvelocity_star, patch, 0);
 
     // Do the computation
     NodeSubIterator iter, end;
-    region->subregionIteratorPair(pc->threadNumber(), pc->numThreads(),
+    patch->subpatchIteratorPair(pc->threadNumber(), pc->numThreads(),
 				  iter, end);
     for(; iter != end; iter++)
 	velocity_star[*iter] = velocity[*iter] + acceleration[*iter] * delt;
@@ -964,11 +964,11 @@ void ThreadedMPM::integrateAcceleration(const ProcessorContext* pc,
     // Put the result in the datawarehouse
     pc->barrier_wait();
     if(pc->threadNumber() == 0)
-	new_dw->put(velocity_star, s_gvelocity_star, region, 0);
+	new_dw->put(velocity_star, s_gvelocity_star, patch, 0);
 }
 
 void ThreadedMPM::interpolateToParticlesAndUpdate(const ProcessorContext* pc,
-						const Region* region,
+						const Patch* patch,
 						const DataWarehouseP& old_dw,
 						DataWarehouseP& new_dw)
 {
@@ -978,15 +978,15 @@ void ThreadedMPM::interpolateToParticlesAndUpdate(const ProcessorContext* pc,
 
     // Get the arrays of particle values to be changed
     ParticleVariable<Vector> px;
-    old_dw->get(px, s_px, region, 0);
+    old_dw->get(px, s_px, patch, 0);
     ParticleVariable<Vector> pvelocity;
-    old_dw->get(pvelocity, s_pvelocity, region, 0);
+    old_dw->get(pvelocity, s_pvelocity, patch, 0);
 
     // Get the arrays of grid data on which the new particle values depend
     NCVariable<Vector> gvelocity_star;
-    new_dw->get(gvelocity_star, s_gvelocity_star, region, 0);
+    new_dw->get(gvelocity_star, s_gvelocity_star, patch, 0);
     NCVariable<Vector> gacceleration;
-    new_dw->get(gacceleration, s_gacceleration, region, 0);
+    new_dw->get(gacceleration, s_gacceleration, patch, 0);
     SoleVariable<double> delt;
     old_dw->get(delt, s_delt);
 
@@ -1005,7 +1005,7 @@ void ThreadedMPM::interpolateToParticlesAndUpdate(const ProcessorContext* pc,
       // Get the node indices that surround the cell
       Array3Index ni[8];
       double S[8];
-      if(!region->findCellAndWeights(px[idx], ni, S))
+      if(!patch->findCellAndWeights(px[idx], ni, S))
 	  continue;
 
 
@@ -1038,17 +1038,17 @@ void ThreadedMPM::interpolateToParticlesAndUpdate(const ProcessorContext* pc,
 	ts++;
 
 	// Store the new result
-	new_dw->put(px, s_px, region, 0);
-	new_dw->put(pvelocity, s_pvelocity, region, 0);
+	new_dw->put(px, s_px, patch, 0);
+	new_dw->put(pvelocity, s_pvelocity, patch, 0);
 
 	ParticleVariable<double> pmass;
-	old_dw->get(pmass, s_pmass, region, 0);
-	new_dw->put(pmass, s_pmass, region, 0);
+	old_dw->get(pmass, s_pmass, patch, 0);
+	new_dw->put(pmass, s_pmass, patch, 0);
 	ParticleVariable<double> pvolume;
-	old_dw->get(pvolume, s_pvolume, region, 0);
-	new_dw->put(pvolume, s_pvolume, region, 0);
+	old_dw->get(pvolume, s_pvolume, patch, 0);
+	new_dw->put(pvolume, s_pvolume, patch, 0);
 	ParticleVariable<Vector> pexternalforce;
-	old_dw->get(pexternalforce, s_pexternalforce, region, 0);
-	new_dw->put(pexternalforce, s_pexternalforce, region, 0);
+	old_dw->get(pexternalforce, s_pexternalforce, patch, 0);
+	new_dw->put(pexternalforce, s_pexternalforce, patch, 0);
     }
 }

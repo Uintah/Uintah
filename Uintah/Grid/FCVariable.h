@@ -59,7 +59,7 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      virtual void allocate(const Region*);
+      virtual void allocate(const Patch*);
       
       FCVariable<T>& operator=(const FCVariable<T>&);
    private:
@@ -91,7 +91,7 @@ WARNING
       FCVariable<T>*
       FCVariable<T>::clone() const
       {
-	 return new FCVariable<T>(*this);
+	 return scinew FCVariable<T>(*this);
       }
    
    template<class T>
@@ -117,7 +117,7 @@ WARNING
       }
    
    template<class T>
-      void FCVariable<T>::allocate(const Region*)
+      void FCVariable<T>::allocate(const Patch*)
       {
 	 std::cerr << "FCVariable::allocate not done!\n";
       }
@@ -126,6 +126,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/05/30 20:19:28  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.3  2000/05/15 19:39:47  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups
@@ -135,7 +139,7 @@ WARNING
 //
 // Revision 1.1  2000/03/22 00:32:12  sparker
 // Added Face-centered variable class
-// Added Per-region data class
+// Added Per-patch data class
 // Added new task constructor for procedures with arguments
 // Use Array3Index more often
 //

@@ -1,7 +1,8 @@
 
 #include "ConstitutiveModelFactory.h"
 #include "CompNeoHook.h"
-#include <Uintah/Grid/Region.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/ParticleSet.h>
@@ -44,7 +45,7 @@ CompNeoHook::~CompNeoHook()
  
 }
 
-void CompNeoHook::initializeCMData(const Region* region,
+void CompNeoHook::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouseP& new_dw)
 {
@@ -56,14 +57,14 @@ void CompNeoHook::initializeCMData(const Region* region,
    const MPMLabel* lb = MPMLabel::getLabels();
 
    ParticleVariable<CMData> cmdata;
-   new_dw->allocate(cmdata, p_cmdata_label, matl->getDWIndex(), region);
+   new_dw->allocate(cmdata, p_cmdata_label, matl->getDWIndex(), patch);
    ParticleVariable<Matrix3> deformationGradient;
    new_dw->allocate(deformationGradient,
-                lb->pDeformationMeasureLabel, matl->getDWIndex(), region);
+                lb->pDeformationMeasureLabel, matl->getDWIndex(), patch);
    ParticleVariable<Matrix3> pstress;
-   new_dw->allocate(pstress, lb->pStressLabel, matl->getDWIndex(), region);
+   new_dw->allocate(pstress, lb->pStressLabel, matl->getDWIndex(), patch);
    ParticleVariable<Matrix3> bElBar;
-   new_dw->allocate(bElBar,  bElBarLabel, matl->getDWIndex(), region);
+   new_dw->allocate(bElBar,  bElBarLabel, matl->getDWIndex(), patch);
 
    ParticleSubset* pset = cmdata.getParticleSubset();
    for(ParticleSubset::iterator iter = pset->begin();
@@ -73,33 +74,33 @@ void CompNeoHook::initializeCMData(const Region* region,
           bElBar[*iter] = Identity;
           pstress[*iter] = zero;
    }
-   new_dw->put(cmdata, p_cmdata_label, matl->getDWIndex(), region);
+   new_dw->put(cmdata, p_cmdata_label, matl->getDWIndex(), patch);
    new_dw->put(deformationGradient, lb->pDeformationMeasureLabel,
-                                 matl->getDWIndex(), region);
-   new_dw->put(pstress, lb->pStressLabel, matl->getDWIndex(), region);
-   new_dw->put(bElBar, bElBarLabel, matl->getDWIndex(), region);
+                                 matl->getDWIndex(), patch);
+   new_dw->put(pstress, lb->pStressLabel, matl->getDWIndex(), patch);
+   new_dw->put(bElBar, bElBarLabel, matl->getDWIndex(), patch);
 
-   computeStableTimestep(region, matl, new_dw);
+   computeStableTimestep(patch, matl, new_dw);
 
 }
 
-void CompNeoHook::computeStableTimestep(const Region* region,
+void CompNeoHook::computeStableTimestep(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouseP& new_dw)
 {
    // This is only called for the initial timestep - all other timesteps
    // are computed as a side-effect of computeStressTensor
-  Vector dx = region->dCell();
+  Vector dx = patch->dCell();
   int matlindex = matl->getDWIndex();
 
   const MPMLabel* lb = MPMLabel::getLabels();
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
+  new_dw->get(cmdata, p_cmdata_label, matlindex, patch, Ghost::None, 0);
   ParticleVariable<double> pmass;
-  new_dw->get(pmass, lb->pMassLabel, matlindex, region, Ghost::None, 0);
+  new_dw->get(pmass, lb->pMassLabel, matlindex, patch, Ghost::None, 0);
   ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, lb->pVolumeLabel, matlindex, region, Ghost::None, 0);
+  new_dw->get(pvolume, lb->pVolumeLabel, matlindex, patch, Ghost::None, 0);
 
   ParticleSubset* pset = pmass.getParticleSubset();
   ASSERT(pset == pvolume.getParticleSubset());
@@ -118,11 +119,11 @@ void CompNeoHook::computeStableTimestep(const Region* region,
     double WaveSpeed = sqrt(Max(c_rot,c_dil));
     // Fudge factor of .8 added, just in case
     double delT_new = .8*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
-    new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+    new_dw->put(delt_vartype(delT_new), lb->deltLabel);
 
 }
 
-void CompNeoHook::computeStressTensor(const Region* region,
+void CompNeoHook::computeStressTensor(const Patch* patch,
                                           const MPMMaterial* matl,
                                           DataWarehouseP& old_dw,
                                           DataWarehouseP& new_dw)
@@ -135,39 +136,39 @@ void CompNeoHook::computeStressTensor(const Region* region,
 
   Identity.Identity();
 
-  Vector dx = region->dCell();
+  Vector dx = patch->dCell();
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
   int matlindex = matl->getDWIndex();
   const MPMLabel* lb = MPMLabel::getLabels();
   // Create array for the particle position
   ParticleVariable<Point> px;
-  old_dw->get(px, lb->pXLabel, matlindex, region, Ghost::None, 0);
+  old_dw->get(px, lb->pXLabel, matlindex, patch, Ghost::None, 0);
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
   old_dw->get(deformationGradient, lb->pDeformationMeasureLabel,
-              matlindex, region, Ghost::None, 0);
+              matlindex, patch, Ghost::None, 0);
   ParticleVariable<Matrix3> bElBar;
-  old_dw->get(bElBar, bElBarLabel, matlindex, region, Ghost::None, 0);
+  old_dw->get(bElBar, bElBarLabel, matlindex, patch, Ghost::None, 0);
 
   // Create array for the particle stress
   ParticleVariable<Matrix3> pstress;
-  new_dw->allocate(pstress, lb->pStressLabel, matlindex, region);
+  new_dw->allocate(pstress, lb->pStressLabel, matlindex, patch);
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  old_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
+  old_dw->get(cmdata, p_cmdata_label, matlindex, patch, Ghost::None, 0);
   ParticleVariable<double> pmass;
-  old_dw->get(pmass, lb->pMassLabel, matlindex, region, Ghost::None, 0);
+  old_dw->get(pmass, lb->pMassLabel, matlindex, patch, Ghost::None, 0);
   ParticleVariable<double> pvolume;
-  old_dw->get(pvolume, lb->pVolumeLabel, matlindex, region, Ghost::None, 0);
+  old_dw->get(pvolume, lb->pVolumeLabel, matlindex, patch, Ghost::None, 0);
 
   NCVariable<Vector> gvelocity;
 
-  new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,region,
+  new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
               Ghost::None, 0);
   delt_vartype delT;
-  old_dw->get(delT, lb->delTLabel);
+  old_dw->get(delT, lb->deltLabel);
 
   ParticleSubset* pset = px.getParticleSubset();
   ASSERT(pset == pstress.getParticleSubset());
@@ -183,7 +184,7 @@ void CompNeoHook::computeStressTensor(const Region* region,
      // Get the node indices that surround the cell
      IntVector ni[8];
      Vector d_S[8];
-     if(!region->findCellAndShapeDerivatives(px[idx], ni, d_S))
+     if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
          continue;
 
       for(int k = 0; k < 8; k++) {
@@ -238,20 +239,20 @@ void CompNeoHook::computeStressTensor(const Region* region,
   WaveSpeed = sqrt(Max(c_rot,c_dil));
   // Fudge factor of .8 added, just in case
   double delT_new = .8*Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
-  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
-  new_dw->put(pstress, lb->pStressLabel, matlindex, region);
+  new_dw->put(delt_vartype(delT_new), lb->deltLabel);
+  new_dw->put(pstress, lb->pStressLabel, matlindex, patch);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel,
-                matlindex, region);
-  new_dw->put(bElBar, bElBarLabel, matlindex, region);
+                matlindex, patch);
+  new_dw->put(bElBar, bElBarLabel, matlindex, patch);
 
   // This is just carried forward with the updated alpha
-  new_dw->put(cmdata, p_cmdata_label, matlindex, region);
+  new_dw->put(cmdata, p_cmdata_label, matlindex, patch);
   // Volume is currently being carried forward, will be updated
-  new_dw->put(pvolume,lb->pVolumeLabel, matlindex,region);
+  new_dw->put(pvolume,lb->pVolumeLabel, matlindex,patch);
 
 }
 
-double CompNeoHook::computeStrainEnergy(const Region* region,
+double CompNeoHook::computeStrainEnergy(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouseP& new_dw)
 {
@@ -261,16 +262,16 @@ double CompNeoHook::computeStrainEnergy(const Region* region,
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
   new_dw->get(deformationGradient, lb->pDeformationMeasureLabel,
-              matlindex, region, Ghost::None, 0);
+              matlindex, patch, Ghost::None, 0);
 
   // Get the elastic part of the shear strain
   ParticleVariable<Matrix3> bElBar;
-  new_dw->get(bElBar, bElBarLabel, matlindex, region, Ghost::None, 0);
+  new_dw->get(bElBar, bElBarLabel, matlindex, patch, Ghost::None, 0);
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
+  new_dw->get(cmdata, p_cmdata_label, matlindex, patch, Ghost::None, 0);
   ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, lb->pVolumeLabel, matlindex, region, Ghost::None, 0);
+  new_dw->get(pvolume, lb->pVolumeLabel, matlindex, patch, Ghost::None, 0);
 
   ParticleSubset* pset = deformationGradient.getParticleSubset();
   ASSERT(pset == pvolume.getParticleSubset());
@@ -295,34 +296,33 @@ double CompNeoHook::computeStrainEnergy(const Region* region,
 
 void CompNeoHook::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
-					 const Region* region,
+					 const Patch* patch,
 					 DataWarehouseP& old_dw,
 					 DataWarehouseP& new_dw) const
 {
   const  MPMLabel* lb = MPMLabel::getLabels();
-   task->requires(old_dw, lb->pXLabel, matl->getDWIndex(), region,
+   task->requires(old_dw, lb->pXLabel, matl->getDWIndex(), patch,
                   Ghost::None);
-   task->requires(old_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), region,
+   task->requires(old_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch,
                   Ghost::None);
-   task->requires(old_dw, p_cmdata_label, matl->getDWIndex(),  region,
+   task->requires(old_dw, p_cmdata_label, matl->getDWIndex(),  patch,
                   Ghost::None);
-   task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),  region,
+   task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),  patch,
                   Ghost::None);
-   task->requires(old_dw, lb->pVolumeLabel, matl->getDWIndex(),  region,
+   task->requires(old_dw, lb->pVolumeLabel, matl->getDWIndex(),  patch,
                   Ghost::None);
-   task->requires(new_dw, lb->gMomExedVelocityLabel, matl->getDWIndex(), region,
+   task->requires(new_dw, lb->gMomExedVelocityLabel, matl->getDWIndex(), patch,
                   Ghost::AroundCells, 1);
-   task->requires(old_dw, bElBarLabel, matl->getDWIndex(), region,
+   task->requires(old_dw, bElBarLabel, matl->getDWIndex(), patch,
                   Ghost::None);
-   task->requires(old_dw, lb->delTLabel);
+   task->requires(old_dw, lb->deltLabel);
 
-   task->computes(new_dw, lb->delTLabel);
-   task->computes(new_dw, lb->pStressLabel, matl->getDWIndex(),  region);
-   task->computes(new_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), region);
-   task->computes(new_dw, bElBarLabel, matl->getDWIndex(),  region);
-   task->computes(new_dw, p_cmdata_label, matl->getDWIndex(),  region);
-   task->computes(new_dw, lb->pVolumeLabel, matl->getDWIndex(), region);
-
+   task->computes(new_dw, lb->deltLabel);
+   task->computes(new_dw, lb->pStressLabel, matl->getDWIndex(),  patch);
+   task->computes(new_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch);
+   task->computes(new_dw, bElBarLabel, matl->getDWIndex(),  patch);
+   task->computes(new_dw, p_cmdata_label, matl->getDWIndex(),  patch);
+   task->computes(new_dw, lb->pVolumeLabel, matl->getDWIndex(), patch);
 }
 #ifdef __sgi
 #define IRIX
@@ -344,6 +344,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.12  2000/05/30 20:19:02  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.11  2000/05/30 17:08:26  dav
 // Changed delt to delT
 //

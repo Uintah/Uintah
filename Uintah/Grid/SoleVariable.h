@@ -50,7 +50,7 @@ WARNING
       }
       virtual void get(DataItem&) const;
       virtual SoleVariable<T>* clone() const;
-      virtual void allocate(const Region*);
+      virtual void allocate(const Patch*);
    private:
       SoleVariable<T>& operator=(const SoleVariable<T>& copy);
       T value;
@@ -82,7 +82,7 @@ WARNING
       SoleVariable<T>*
       SoleVariable<T>::clone() const
       {
-	 return new SoleVariable<T>(*this);
+	 return scinew SoleVariable<T>(*this);
       }
    
    template<class T>
@@ -95,7 +95,7 @@ WARNING
    
    template<class T>
       void
-      SoleVariable<T>::allocate(const Region*)
+      SoleVariable<T>::allocate(const Patch*)
       {
 	 throw TypeMismatchException("SoleVariable shouldn't use allocate");
       }
@@ -104,6 +104,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.8  2000/05/30 20:19:33  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.7  2000/05/15 19:39:49  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups

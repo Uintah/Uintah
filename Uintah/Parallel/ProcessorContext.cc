@@ -6,6 +6,7 @@ static char *id="@(#) $Id$";
 #include <SCICore/Thread/Mutex.h>
 #include <SCICore/Thread/Thread.h>
 #include <SCICore/Exceptions/InternalError.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace Uintah;
@@ -22,7 +23,7 @@ ProcessorContext::getRootContext()
     if(!rootContext) {
 	rootlock.lock();
 	if(!rootContext){
-	    rootContext = new ProcessorContext(0,0,Thread::numProcessors(),0);
+	    rootContext = scinew ProcessorContext(0,0,Thread::numProcessors(),0);
 	}
 	rootlock.unlock();
     }
@@ -46,7 +47,7 @@ ProcessorContext::createContext(int threadNumber,
 				int numThreads,
 				SimpleReducer* reducer) const
 {
-    return new ProcessorContext(this, threadNumber, numThreads, reducer);
+    return scinew ProcessorContext(this, threadNumber, numThreads, reducer);
 }
 
 void
@@ -67,6 +68,10 @@ ProcessorContext::reduce_min(double mymin) const
 
 //
 // $Log$
+// Revision 1.5  2000/05/30 20:19:43  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.4  2000/04/26 06:49:15  sparker
 // Streamlined namespaces
 //

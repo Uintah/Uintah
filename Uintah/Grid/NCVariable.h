@@ -10,7 +10,8 @@
 #include <SCICore/Exceptions/InternalError.h>
 #include <SCICore/Geometry/Vector.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <unistd.h>
 #include <errno.h>
 
@@ -73,53 +74,53 @@ class NCVariable : public Array3<T>, public NCVariableBase {
      virtual void allocate(const IntVector& lowIndex,
 			   const IntVector& highIndex);
      
-     virtual void copyRegion(NCVariableBase* src,
+     virtual void copyPatch(NCVariableBase* src,
 			     const IntVector& lowIndex,
 			     const IntVector& highIndex);
      NCVariable<T>& operator=(const NCVariable<T>&);
      
      // Replace the values on the indicated face with value
-     void fillFace(Region::FaceType face, const T& value)
+     void fillFace(Patch::FaceType face, const T& value)
        { 
 	 IntVector low = getLowIndex();
 	 IntVector hi = getHighIndex();
 	 switch (face) {
-	 case Region::xplus:
+	 case Patch::xplus:
 	   for (int j = low.y(); j<hi.y(); j++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
 		(*this)[IntVector(hi.x()-1,j,k)] = value;
 	     }
 	   }
 	   break;
-	 case Region::xminus:
+	 case Patch::xminus:
 	   for (int j = low.y(); j<hi.y(); j++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
 	       (*this)[IntVector(low.x(),j,k)] = value;
 	     }
 	   }
 	   break;
-	 case Region::yplus:
+	 case Patch::yplus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
 	       (*this)[IntVector(i,hi.y()-1,k)] = value;
 	     }
 	   }
 	   break;
-	 case Region::yminus:
+	 case Patch::yminus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
 	       (*this)[IntVector(i,low.y(),k)] = value;
 	     }
 	   }
 	   break;
-	 case Region::zplus:
+	 case Patch::zplus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int j = low.y(); j<hi.y(); j++) {
 	       (*this)[IntVector(i,j,hi.z()-1)] = value;
 	     }
 	   }
 	   break;
-	 case Region::zminus:
+	 case Patch::zminus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int j = low.y(); j<hi.y(); j++) {
 		(*this)[IntVector(i,j,low.z())] = value;
@@ -133,12 +134,12 @@ class NCVariable : public Array3<T>, public NCVariableBase {
      // Use to apply symmetry boundary conditions.  On the
      // indicated face, replace the component of the vector
      // normal to the face with 0.0
-     void fillFaceNormal(Region::FaceType face)
+     void fillFaceNormal(Patch::FaceType face)
        {
 	 IntVector low = getLowIndex();
 	 IntVector hi = getHighIndex();
 	 switch (face) {
-	 case Region::xplus:
+	 case Patch::xplus:
 	   for (int j = low.y(); j<hi.y(); j++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
 		(*this)[IntVector(hi.x()-1,j,k)] =
@@ -147,7 +148,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	     }
 	   }
 	   break;
-	 case Region::xminus:
+	 case Patch::xminus:
 	   for (int j = low.y(); j<hi.y(); j++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
 	       (*this)[IntVector(low.x(),j,k)] = 
@@ -156,7 +157,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	     }
 	   }
 	   break;
-	 case Region::yplus:
+	 case Patch::yplus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
 	       (*this)[IntVector(i,hi.y()-1,k)] =
@@ -165,7 +166,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	     }
 	   }
 	   break;
-	 case Region::yminus:
+	 case Patch::yminus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
 	       (*this)[IntVector(i,low.y(),k)] =
@@ -174,7 +175,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	     }
 	   }
 	   break;
-	 case Region::zplus:
+	 case Patch::zplus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int j = low.y(); j<hi.y(); j++) {
 	       (*this)[IntVector(i,j,hi.z()-1)] =
@@ -183,7 +184,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	     }
 	   }
 	   break;
-	 case Region::zminus:
+	 case Patch::zminus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int j = low.y(); j<hi.y(); j++) {
 		(*this)[IntVector(i,j,low.z())] =
@@ -210,7 +211,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
       {
 	 static TypeDescription* td;
 	 if(!td){
-	    td = new TypeDescription(TypeDescription::NCVariable,
+	    td = scinew TypeDescription(TypeDescription::NCVariable,
 				     "NCVariable",
 				     fun_getTypeDescription((T*)0));
 	 }
@@ -226,7 +227,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
       NCVariable<T>*
       NCVariable<T>::clone() const
       {
-	 return new NCVariable<T>(*this);
+	 return scinew NCVariable<T>(*this);
       }
    
    template<class T>
@@ -272,7 +273,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
       }
    template<class T>
       void
-      NCVariable<T>::copyRegion(NCVariableBase* srcptr,
+      NCVariable<T>::copyPatch(NCVariableBase* srcptr,
 				const IntVector& lowIndex,
 				const IntVector& highIndex)
       {
@@ -335,6 +336,10 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 
 //
 // $Log$
+// Revision 1.24  2000/05/30 20:19:29  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.23  2000/05/28 17:25:54  dav
 // adding code. someone should check to see if i did it corretly
 //
@@ -367,7 +372,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.15  2000/05/10 19:56:46  guilkey
 // D'ohhh!!!  Got a little carried away with my last "correction".  fillFace

@@ -1,7 +1,7 @@
-#ifndef UINTAH_HOMEBREW_Region_H
-#define UINTAH_HOMEBREW_Region_H
+#ifndef UINTAH_HOMEBREW_Patch_H
+#define UINTAH_HOMEBREW_Patch_H
 
-#include <Uintah/Grid/SubRegion.h>
+#include <Uintah/Grid/SubPatch.h>
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/Box.h>
 
@@ -35,13 +35,13 @@ namespace Uintah {
 /**************************************
       
 CLASS
-   Region
+   Patch
       
    Short Description...
       
 GENERAL INFORMATION
       
-   Region.h
+   Patch.h
       
    Steven G. Parker
    Department of Computer Science
@@ -52,7 +52,7 @@ GENERAL INFORMATION
    Copyright (C) 2000 SCI Group
       
 KEYWORDS
-   Region
+   Patch
       
 DESCRIPTION
    Long description...
@@ -61,7 +61,7 @@ WARNING
      
 ****************************************/
     
-   class Region {
+   class Patch {
    public:
 
      enum BCType {
@@ -112,12 +112,12 @@ WARNING
 
       //////////
       // Insert Documentation Here:
-      void subregionIteratorPair(int i, int n,
+      void subpatchIteratorPair(int i, int n,
 				 NodeSubIterator& iter,
 				 NodeSubIterator& end) const;
       //////////
       // Insert Documentation Here:
-      SubRegion subregion(int i, int n) const;
+      SubPatch subpatch(int i, int n) const;
       
       IntVector getNodeLowIndex() const {
 	 return d_lowIndex;
@@ -157,9 +157,9 @@ WARNING
       }
 
       //////////
-      // Determines if "region" is within (or the same as) this
-      // region.
-      inline bool contains(const Region& region) const {
+      // Determines if "patch" is within (or the same as) this
+      // patch.
+      inline bool contains(const Patch& patch) const {
 	    int myMinX = Min( d_box.lower().x(), d_box.upper().x() );
 	    int myMinY = Min( d_box.lower().y(), d_box.upper().y() );
 	    int myMinZ = Min( d_box.lower().z(), d_box.upper().z() );
@@ -168,19 +168,19 @@ WARNING
 	    int myMaxY = Max( d_box.lower().y(), d_box.upper().y() );
 	    int myMaxZ = Max( d_box.lower().z(), d_box.upper().z() );
 
-	    int regMinX = Min( region.d_box.lower().x(), 
-			       region.d_box.upper().x() );
-	    int regMinY = Min( region.d_box.lower().y(), 
-			       region.d_box.upper().y() );
-	    int regMinZ = Min( region.d_box.lower().z(),
-			       region.d_box.upper().z() );
+	    int regMinX = Min( patch.d_box.lower().x(), 
+			       patch.d_box.upper().x() );
+	    int regMinY = Min( patch.d_box.lower().y(), 
+			       patch.d_box.upper().y() );
+	    int regMinZ = Min( patch.d_box.lower().z(),
+			       patch.d_box.upper().z() );
 
-	    int regMaxX = Max( region.d_box.lower().x(),
-			       region.d_box.upper().x() );
-	    int regMaxY = Max( region.d_box.lower().y(),
-			       region.d_box.upper().y() );
-	    int regMaxZ = Max( region.d_box.lower().z(),
-			       region.d_box.upper().z() );
+	    int regMaxX = Max( patch.d_box.lower().x(),
+			       patch.d_box.upper().x() );
+	    int regMaxY = Max( patch.d_box.lower().y(),
+			       patch.d_box.upper().y() );
+	    int regMaxZ = Max( patch.d_box.lower().z(),
+			       patch.d_box.upper().z() );
 
 	 return( myMinX >= regMinX && myMaxX <= regMaxX && 
 		 myMinY >= regMinY && myMaxY <= regMaxY && 
@@ -203,23 +203,23 @@ WARNING
       int getID() const {
 	 return d_id;
       }
-      const Region* getNeighbor(const IntVector&) const;
-      void setNeighbor(const IntVector&, const Region*);
+      const Patch* getNeighbor(const IntVector&) const;
+      void setNeighbor(const IntVector&, const Patch*);
    protected:
       friend class Level;
       
       //////////
       // Insert Documentation Here:
-      Region(const SCICore::Geometry::Point& min,
+      Patch(const SCICore::Geometry::Point& min,
 	     const SCICore::Geometry::Point& max,
 	     const SCICore::Geometry::IntVector& d_lowIndex,
 	     const SCICore::Geometry::IntVector& d_highIndex,
 	     int id=-1);
-      ~Region();
+      ~Patch();
 
    private:
-      Region(const Region&);
-      Region& operator=(const Region&);
+      Patch(const Patch&);
+      Patch& operator=(const Patch&);
       
       //////////
       // Insert Documentation Here:
@@ -227,7 +227,7 @@ WARNING
 
       //////////
       // These are just coordinates of the ghostcell boxes around
-      // this region.  There are 26 of them.
+      // this patch.  There are 26 of them.
       Box d_top, d_topRight, d_topLeft, d_topBack, d_topFront,
 	  d_topRightBack, d_topRightFront, d_topLeftBack, 
 	  d_topLeftFront;
@@ -236,14 +236,11 @@ WARNING
 	  d_bottomLeftBack, d_bottomLeftFront;
       Box d_right, d_left, d_back, d_front, d_rightBack,
 	  d_rightFront, d_leftBack, d_leftFront;
-
-      // Number of Ghost Cells used in the calculation of the ghost regions.
-      int d_numGhostCells;
       
       ////////// 
       // Pre-calculates the upper/lower points of the 26 adjacent
-      // regions based on the number of ghost cells.
-      void determineGhostRegions( int numGhostCells );
+      // patches based on the number of ghost cells.
+      void determineGhostPatches( int numGhostCells );
 
       //////////
       // Insert Documentation Here:
@@ -251,7 +248,7 @@ WARNING
       IntVector d_highIndex;
       IntVector d_res;
 
-      const Region* d_neighbors[27];
+      const Patch* d_neighbors[27];
       
       int d_id;
       friend class NodeIterator;
@@ -259,12 +256,13 @@ WARNING
    
 } // end namespace Uintah
 
-std::ostream& operator<<(std::ostream& out, const Uintah::Region* r);
+std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
 
 //
 // $Log$
-// Revision 1.22  2000/05/30 17:10:11  dav
-// MPI stuff
+// Revision 1.1  2000/05/30 20:19:32  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
 //
 // Revision 1.21  2000/05/28 17:25:06  dav
 // adding mpi stuff
@@ -280,7 +278,7 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Region* r);
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.18  2000/05/09 03:24:40  jas
 // Added some enums for grid boundary conditions.
@@ -333,7 +331,7 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Region* r);
 //
 // Revision 1.4  2000/03/22 00:32:13  sparker
 // Added Face-centered variable class
-// Added Per-region data class
+// Added Per-patch data class
 // Added new task constructor for procedures with arguments
 // Use Array3Index more often
 //

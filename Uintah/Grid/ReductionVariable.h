@@ -6,6 +6,7 @@
 #include <Uintah/Grid/TypeDescription.h>
 #include <Uintah/Grid/TypeUtils.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace Uintah {
    class TypeDescription;
@@ -66,7 +67,7 @@ WARNING
 	 static TypeDescription* td;
 	 if(!td){
 	    T* junk=0;
-	    td = new TypeDescription(TypeDescription::ReductionVariable,
+	    td = scinew TypeDescription(TypeDescription::ReductionVariable,
 				     "ReductionVariable",
 				     fun_getTypeDescription(junk));
 	 }
@@ -82,7 +83,7 @@ WARNING
       ReductionVariable<T, Op>*
       ReductionVariable<T, Op>::clone() const
       {
-	 return new ReductionVariable<T, Op>(*this);
+	 return scinew ReductionVariable<T, Op>(*this);
       }
 
    template<class T, class Op>
@@ -118,6 +119,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.7  2000/05/30 20:19:32  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.6  2000/05/20 08:09:26  sparker
 // Improved TypeDescription
 // Finished I/O

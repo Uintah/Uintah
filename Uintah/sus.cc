@@ -120,21 +120,21 @@ int main(int argc, char** argv)
      * Create the components
      */
     try {
-	SimulationController* sim = new SimulationController( MpiRank,
+	SimulationController* sim = scinew SimulationController( MpiRank,
 							      MpiProcesses );
 
 	// Reader
-	ProblemSpecInterface* reader = new ProblemSpecReader(filename);
+	ProblemSpecInterface* reader = scinew ProblemSpecReader(filename);
 	sim->attachPort("problem spec", reader);
 
 	// Connect a MPM module if applicable
 	if(do_mpm){
 	    MPMInterface* mpm;
 	    if(numThreads == 0){
-		mpm = new MPM::SerialMPM( MpiRank, MpiProcesses );
+		mpm = scinew MPM::SerialMPM( MpiRank, MpiProcesses );
 	    } else {
 #ifdef WONT_COMPILE_YET
-		mpm = new ThreadedMPM();
+		mpm = scinew ThreadedMPM();
 #else
 		mpm = 0;
 #endif
@@ -145,21 +145,21 @@ int main(int argc, char** argv)
 	// Connect a CFD module if applicable
 	CFDInterface* cfd = 0;
 	if(do_arches){
-	    cfd = new ArchesSpace::Arches( MpiRank, MpiProcesses );
+	    cfd = scinew ArchesSpace::Arches( MpiRank, MpiProcesses );
 	}
 	if(do_ice){
-	    cfd = new ICESpace::ICE();
+	    cfd = scinew ICESpace::ICE();
 	}
 	if(cfd)
 	    sim->attachPort("cfd", cfd);
 
 	// Output
-	Output* output = new DataArchiver(MpiRank, MpiProcesses );
+	Output* output = scinew DataArchiver(MpiRank, MpiProcesses );
 	sim->attachPort("output", output);
 
 	// Scheduler
 	BrainDamagedScheduler* sched = 
-	  new BrainDamagedScheduler( MpiRank, MpiProcesses );
+	   scinew BrainDamagedScheduler( MpiRank, MpiProcesses );
 	sched->setNumThreads(numThreads);
 	sim->attachPort("scheduler", sched);
 
@@ -183,6 +183,10 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.11  2000/05/30 20:18:40  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.10  2000/05/15 19:39:29  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups

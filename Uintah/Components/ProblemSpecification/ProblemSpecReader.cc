@@ -4,6 +4,7 @@
 #include <Uintah/Interface/ProblemSpec.h>
 #include <PSECore/XMLUtil/SimpleErrorHandler.h>
 #include <PSECore/XMLUtil/XMLUtil.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream>
 #include <stdio.h>
 using namespace std;
@@ -52,7 +53,7 @@ ProblemSpecP ProblemSpecReader::readInputFile()
       // Add the parser contents to the ProblemSpecP d_doc
 
       DOM_Document doc = parser.getDocument();
-      prob_spec = new ProblemSpec(doc.getDocumentElement());
+      prob_spec = scinew ProblemSpec(doc.getDocumentElement());
   } catch(const XMLException& ex) {
       throw ProblemSetupException("XML Exception: "+toString(ex.getMessage()));
   }

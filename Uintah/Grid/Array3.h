@@ -3,6 +3,7 @@
 
 #include "Array3Window.h"
 #include <SCICore/Geometry/IntVector.h>
+#include <SCICore/Malloc/Allocator.h>
 
 /**************************************
 
@@ -40,7 +41,7 @@ namespace Uintah {
 	 d_window = 0;
       }
       Array3(int size1, int size2, int size3) {
-	 d_window=new Array3Window<T>(new Array3Data<T>(size1, size2, size3));
+	 d_window=scinew Array3Window<T>(new Array3Data<T>(size1, size2, size3));
 	 d_window->addReference();
       }
       Array3(const IntVector& lowIndex, const IntVector& highIndex);
@@ -78,7 +79,7 @@ namespace Uintah {
 	 if(d_window && d_window->removeReference())
 	    delete d_window;
 	 IntVector size = highIndex-lowIndex;
-	 d_window=new Array3Window<T>(new Array3Data<T>(size), lowIndex, highIndex);
+	 d_window=scinew Array3Window<T>(new Array3Data<T>(size), lowIndex, highIndex);
 	 d_window->addReference();
       }
       T& operator[](const IntVector& idx) const {
@@ -115,6 +116,10 @@ namespace Uintah {
    
 //
 // $Log$
+// Revision 1.11  2000/05/30 20:19:27  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.10  2000/05/15 19:39:46  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups

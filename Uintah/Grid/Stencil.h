@@ -40,7 +40,7 @@ WARNING
    template<class T> class Stencil : public DataItem {
    public:
       Stencil();
-      Stencil(const Region*);
+      Stencil(const Patch*);
       Stencil(const Stencil<T>&);
       virtual ~Stencil();
       
@@ -58,7 +58,7 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      virtual void allocate(const Region*);
+      virtual void allocate(const Patch*);
       
       Stencil<T>& operator=(const Stencil<T>&);
    private:
@@ -91,7 +91,7 @@ WARNING
       Stencil<T>*
       Stencil<T>::clone() const
       {
-	 return new Stencil<T>(*this);
+	 return scinew Stencil<T>(*this);
       }
    
    template<class T>
@@ -117,7 +117,7 @@ WARNING
       }
    
    template<class T>
-      void Stencil<T>::allocate(const Region*)
+      void Stencil<T>::allocate(const Patch*)
       {
 	 std::cerr << "Stencil::allocate not done!\n";
       }
@@ -126,6 +126,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/05/30 20:19:33  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.3  2000/05/15 19:39:49  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups

@@ -5,7 +5,7 @@ static char *id="@(#) $Id$";
 
 #include <SCICore/Exceptions/InternalError.h>
 
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Interface/DataWarehouse.h>
 
 #include <iostream>
@@ -108,7 +108,7 @@ DWMpiHandler::run()
     cerr << "to:   " << request->toMpiRank << "\n";
     cerr << "tag:  " << request->tag << "\n";
     cerr << "var:  " << request->varName << "\n";
-    cerr << "regn: " << request->region << "\n";
+    cerr << "regn: " << request->patch << "\n";
     cerr << "gen:  " << request->generation << "\n\n";
 
     cerr << "Status is:\n";
@@ -162,6 +162,10 @@ DWMpiHandler::run()
 
 //
 // $Log$
+// Revision 1.2  2000/05/30 20:19:39  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.1  2000/05/11 20:28:58  dav
 // Added DWMpiHandler.cc
 //

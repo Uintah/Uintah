@@ -14,7 +14,7 @@
 
 namespace Uintah {
 
-   class Region;
+   class Patch;
    class Task;
    
 /**************************************
@@ -22,7 +22,7 @@ namespace Uintah {
 CLASS
    Level
    
-   Just a container class that manages a set of Regions that
+   Just a container class that manages a set of Patches that
    make up this level.
 
 GENERAL INFORMATION
@@ -52,25 +52,25 @@ WARNING
       Level(Grid* grid);
       virtual ~Level();
       
-      typedef std::vector<Region*>::iterator regionIterator;
-      typedef std::vector<Region*>::const_iterator const_regionIterator;
-      const_regionIterator regionsBegin() const;
-      const_regionIterator regionsEnd() const;
-      regionIterator regionsBegin();
-      regionIterator regionsEnd();
+      typedef std::vector<Patch*>::iterator patchIterator;
+      typedef std::vector<Patch*>::const_iterator const_patchIterator;
+      const_patchIterator patchesBegin() const;
+      const_patchIterator patchesEnd() const;
+      patchIterator patchesBegin();
+      patchIterator patchesEnd();
       
-      Region* addRegion(const SCICore::Geometry::Point& lower,
+      Patch* addPatch(const SCICore::Geometry::Point& lower,
 			const SCICore::Geometry::Point& upper,
 			const SCICore::Geometry::IntVector& lowIndex,
 			const SCICore::Geometry::IntVector& highIndex);
       
-      Region* addRegion(const SCICore::Geometry::Point& lower,
+      Patch* addPatch(const SCICore::Geometry::Point& lower,
 			const SCICore::Geometry::Point& upper,
 			const SCICore::Geometry::IntVector& lowIndex,
 			const SCICore::Geometry::IntVector& highIndex,
 			int ID);
       
-      int numRegions() const;
+      int numPatches() const;
       long totalCells() const;
 
       void getIndexRange(SCICore::Geometry::BBox& b);
@@ -82,7 +82,7 @@ WARNING
       Level(const Level&);
       Level& operator=(const Level&);
       
-      std::vector<Region*> d_regions;
+      std::vector<Patch*> d_patches;
       Grid* grid;
    };
    
@@ -90,6 +90,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.13  2000/05/30 20:19:29  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.12  2000/05/20 08:09:22  sparker
 // Improved TypeDescription
 // Finished I/O
@@ -108,7 +112,7 @@ WARNING
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.8  2000/04/26 06:48:49  sparker
 // Streamlined namespaces
@@ -119,7 +123,7 @@ WARNING
 //
 // Revision 1.6  2000/03/22 00:32:12  sparker
 // Added Face-centered variable class
-// Added Per-region data class
+// Added Per-patch data class
 // Added new task constructor for procedures with arguments
 // Use Array3Index more often
 //

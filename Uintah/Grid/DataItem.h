@@ -4,7 +4,7 @@
 
 namespace Uintah {
 
-   class Region;
+   class Patch;
 
 /**************************************
 
@@ -41,7 +41,7 @@ WARNING
       virtual ~DataItem();
       virtual void get(DataItem&) const = 0;
       virtual DataItem* clone() const = 0;
-      virtual void allocate(const Region*) = 0;
+      virtual void allocate(const Patch*) = 0;
       
    protected:
       DataItem(const DataItem&);
@@ -55,6 +55,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/05/30 20:19:28  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.3  2000/04/26 06:48:47  sparker
 // Streamlined namespaces
 //

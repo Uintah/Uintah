@@ -7,7 +7,7 @@
 
 namespace Uintah {
    class Task;
-   class Region;
+   class Patch;
    class VarLabel;
    namespace MPM {
       class MPMMaterial;
@@ -49,26 +49,26 @@ WARNING
 	 
 	 //////////
 	 // Basic constitutive model calculations
-	 virtual void computeStressTensor(const Region* region,
+	 virtual void computeStressTensor(const Patch* patch,
 					  const MPMMaterial* matl,
 					  DataWarehouseP& old_dw,
 					  DataWarehouseP& new_dw) = 0;
 	 
 	 //////////
 	 // Computation of strain energy.  Useful for tracking energy balance.
-	 virtual double computeStrainEnergy(const Region* region,
+	 virtual double computeStrainEnergy(const Patch* patch,
 					    const MPMMaterial* matl,
 					    DataWarehouseP& new_dw) = 0;
 	 
 	 //////////
 	 // Create space in data warehouse for CM data
-	 virtual void initializeCMData(const Region* region,
+	 virtual void initializeCMData(const Patch* patch,
 				       const MPMMaterial* matl,
 				       DataWarehouseP& new_dw) = 0;
 
 	 virtual void addComputesAndRequires(Task* task,
 					     const MPMMaterial* matl,
-					     const Region* region,
+					     const Patch* patch,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const = 0;
 	 /*
@@ -88,6 +88,10 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.16  2000/05/30 20:19:03  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.15  2000/05/26 21:37:34  jas
 // Labels are now created and accessed using Singleton class MPMLabel.
 //
@@ -131,7 +135,7 @@ WARNING
 //
 // Revision 1.3  2000/03/15 20:05:56  guilkey
 // Worked over the ConstitutiveModel base class, and the CompMooneyRivlin
-// class to operate on all particles in a region of that material type at once,
+// class to operate on all particles in a patch of that material type at once,
 // rather than on one particle at a time.  These changes will require some
 // improvements to the DataWarehouse before compilation will be possible.
 //

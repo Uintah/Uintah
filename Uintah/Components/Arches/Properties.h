@@ -8,7 +8,7 @@
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/CFDInterface.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Parallel/ProcessorContext.h>
 namespace Uintah {
 namespace ArchesSpace {
@@ -28,7 +28,7 @@ public:
 private:
     static const int MAX_MIXSTREAMS = 10;
     void computeProps(const ProcessorContext*,
-		      const Region* region,
+		      const Patch* patch,
 		      const DataWarehouseP& old_dw,
 		      DataWarehouseP& new_dw);
     Properties(const Properties&);

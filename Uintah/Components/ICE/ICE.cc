@@ -46,7 +46,7 @@ Version   Programmer         Date       Description
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Interface/ProblemSpec.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/SoleVariable.h>
 #include <SCICore/Geometry/Vector.h>
 using SCICore::Geometry::Vector;
@@ -227,18 +227,17 @@ void ICE::scheduleComputeStableTimestep(const LevelP&,
 					DataWarehouseP&)
 {
 #if 0
-    for(Level::const_regionIterator iter=level->regionsBegin();
-	iter != level->regionsEnd(); iter++){
-	const Region* region=*iter;
-	Task* t = new Task("ICE::computeStableTimestep", region, dw, dw,
-			   this, ICE::actuallyComputeStableTimestep);
-	t->requires(dw, "vel_CC", region, 0, 
+    for(Level::const_patchIterator iter=level->patchBegin();
+	iter != level->patchEnd(); iter++){
+	const Patch* patch=*iter;
+	Task* t = scinew Task("ICE::computeStableTimestep", patch, dw, dw,
+			      this, ICE::actuallyComputeStableTimestep);
+	t->requires(dw, "vel_CC", patch, 0, 
 		    CCVariable<Vector>::getTypeDescription());
 	t->requires(dw, "params", ProblemSpec::getTypeDescription());
 	t->computes(dw, "delt", SoleVariable<double>::getTypeDescription());
 	t->usesMPI(false);
 	t->usesThreads(false);
-	t->subregionCapable(true);
 	//t->whatis the cost model?();
 	sched->addTask(t);
     }
@@ -246,14 +245,14 @@ void ICE::scheduleComputeStableTimestep(const LevelP&,
 }
 
 void ICE::actuallyComputeStableTimestep(const ProcessorContext*,
-					const Region*,
+					const Patch*,
 					const DataWarehouseP&,
 					DataWarehouseP&)
 {
 #if 0
 #if 0
     CCVariable<Vector> vel_CC;
-    fromDW->get(vel_CC, "vel_CC", region);
+    fromDW->get(vel_CC, "vel_CC", patch);
 #endif
 
     /*__________________________________
@@ -278,19 +277,18 @@ void ICE::scheduleTimeAdvance(double t, double delt,
 			      const DataWarehouseP&, DataWarehouseP&)
 {
 #if 0
-    for(Level::const_regionIterator iter=level->regionsBegin();
-	iter != level->regionsEnd(); iter++){
-	const Region* region=*iter;
-	Task* t = new Task("ICE::timeStep", region, old_dw, new_dw,
-			   this, ICE::actuallyTimeStep);
-	t->requires(old_dw, "vel_CC", region, 0, 
+    for(Level::const_patchIterator iter=level->patchBegin();
+	iter != level->patchEnd(); iter++){
+	const Patch* patch=*iter;
+	Task* t = scinew Task("ICE::timeStep", patch, old_dw, new_dw,
+			      this, ICE::actuallyTimeStep);
+	t->requires(old_dw, "vel_CC", patch, 0, 
 		    CCVariable<Vector>::getTypeDescription());
 	t->requires(old_dw, "params", ProblemSpec::getTypeDescription());
 	t->computes(new_dw, "vel_CC",
 		    CCVariable<Vector>::getTypeDescription());
 	t->usesMPI(false);
 	t->usesThreads(false);
-	t->subregionCapable(false);
 	//t->whatis the cost model?();
 	sched->addTask(t);
     }
@@ -300,7 +298,7 @@ void ICE::scheduleTimeAdvance(double t, double delt,
 }
 
 void ICE::actuallyTimeStep(const ProcessorContext*,
-			   const Region*,
+			   const Patch*,
 			   const DataWarehouseP&,
 			   DataWarehouseP&)
 {
