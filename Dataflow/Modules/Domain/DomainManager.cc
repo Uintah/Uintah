@@ -101,10 +101,10 @@ void DomainManager::grab(const FieldWrapperHandle& ifwh){
     case FIELD:
       {
 	FieldHandle sfh(ifwh->get_field());
-	AttribHandle ah(sfh->get_attrib());
+	AttribHandle ah(sfh->getAttrib());
 	domain->attribs[ah->getName()] = ah;
-	GeomHandle gh(sfh->get_geom());
-	domain->geoms[gh->get_name()] = gh;
+	GeomHandle gh(sfh->getGeom());
+	domain->geoms[gh->getName()] = gh;
 	break;
       }
     default:
@@ -125,12 +125,12 @@ void DomainManager::update_lists(){
     
     if(geomitr!=domain->geoms.end()){
       geomlist = geomitr->first;
-      geominfo = geomitr->second->get_info();
+      geominfo = geomitr->second->getInfo();
     }
     
     for(geomitr++; geomitr!=domain->geoms.end(); geomitr++){
       geomlist = geomlist + "," + geomitr->first;
-      geominfo = geomlist + "," + geomitr->second->get_info();
+      geominfo = geomlist + "," + geomitr->second->getInfo();
     }
     dbg << "updating lists... geomlist: " << geomlist << endl;
     if(!geomlist.empty()){
