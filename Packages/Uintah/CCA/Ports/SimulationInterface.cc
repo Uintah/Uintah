@@ -13,7 +13,7 @@ SimulationInterface::~SimulationInterface()
 {
 }
 
-void SimulationInterface::scheduleRefine(const LevelP&, 
+void SimulationInterface::scheduleRefine(const PatchSet*, 
 					 SchedulerP&)
 {
   throw InternalError("scheduleRefine not implemented for this component\n");
