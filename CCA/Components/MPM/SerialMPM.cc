@@ -124,6 +124,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 			lb->pToughnessLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pIsBrokenLabel,
 			lb->pIsBrokenLabel_preReloc); 
+       lb->registerPermanentParticleState(m,lb->pIsolatedLabel,
+			lb->pIsolatedLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pCrackSurfacePressureLabel,
 			lb->pCrackSurfacePressureLabel_preReloc); 
      }
@@ -164,6 +166,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pParticleIDLabel);
   if(d_fracture){
     t->computes(lb->pIsBrokenLabel);
+    t->computes(lb->pIsolatedLabel);
     t->computes(lb->pCrackNormalLabel);
     t->computes(lb->pTipNormalLabel);
     t->computes(lb->pExtensionDirectionLabel);
@@ -281,10 +284,12 @@ void SerialMPM::scheduleComputeConnectivity(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pXXLabel, Ghost::None);
   t->requires(Task::OldDW, lb->pVolumeLabel, Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pIsBrokenLabel, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pIsolatedLabel, Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pCrackNormalLabel, Ghost::AroundCells, 1);
   t->requires(Task::NewDW, lb->pTouchNormalLabel, Ghost::AroundCells, 1);
 
   t->computes(lb->pConnectivityLabel);
+  t->computes(lb->pIsolatedLabel_preReloc);
   t->computes(lb->pContactNormalLabel);
 
   sched->addTask(t, patches, matls);

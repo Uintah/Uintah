@@ -53,6 +53,7 @@ using std::vector;
       const VarLabel* pXLabel;
       const VarLabel* pSurfLabel;
       const VarLabel* pIsBrokenLabel; //for fracture
+      const VarLabel* pIsolatedLabel; //for fracture
       const VarLabel* pCrackNormalLabel; //for fracture
       const VarLabel* pTipNormalLabel; //for fracture
       const VarLabel* pExtensionDirectionLabel; //for fracture
@@ -75,6 +76,7 @@ using std::vector;
       const VarLabel* pXLabel_preReloc;
       const VarLabel* pSurfLabel_preReloc;
       const VarLabel* pIsBrokenLabel_preReloc; //for fracture
+      const VarLabel* pIsolatedLabel_preReloc; //for fracture
       const VarLabel* pCrackNormalLabel_preReloc; //for fracture
       const VarLabel* pTipNormalLabel_preReloc; //for fracture
       const VarLabel* pExtensionDirectionLabel_preReloc; //for fracture
