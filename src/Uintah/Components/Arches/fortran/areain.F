@@ -5,12 +5,12 @@ c
 c*********************************************************************
 
       SUBROUTINE areain(domainLow, domainHigh,
-     &     indexLow, indexHigh, PCELL, PFIELD, 
+     &     indexLow, indexHigh,
      &     SEW, SNS, STB, 
 c     &     RA, RV, 
-     &     AREAPR,
+     &     AREAPR, PCELL, PFIELD) 
 c     &     LCORD, LPRIN,
-     &     ierr)
+c     &     ierr)
 C---------------------------------------------------------------------
 C     THIS SUBROUTINE WILL CALCULATE INLET
 C     AREAS FOR THE PRIMARY (AREAPR) AND SECONDARY (AREASC)
@@ -39,7 +39,7 @@ c     &     RV(domainLow(2): domainHigh(2))
       double precision AREAPR
       integer PFIELD
 c      logical LCORD, LPRIN
-      integer ierr
+c      integer ierr
 
 c*********************************************************************
 c     Local Variables :
@@ -117,6 +117,9 @@ c     &              ' NO PRIMARY INLET AREA IN INPUT GEOMETRY '
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/06/15 23:47:59  rawat
+c modified Archesfort to fix function call
+c
 c Revision 1.2  2000/06/15 22:13:24  rawat
 c modified boundary stuff
 c

@@ -126,7 +126,7 @@ extern "C"
 	     double* fac1v, double* fac2v, double* fac3v, double* fac4v,
 	     double* fac1w, double* fac2w, double* fac3w, double* fac4w,
 	     double* iesdu, double* iwsdu, double* jnsdv, double* jssdv, double* ktsdw,double*  kbsdw);
-}
+
 
 
     ////////////////////////////////////////////////////////////////////////
@@ -136,13 +136,18 @@ extern "C"
     void
     FORT_AREAIN(const int* domainLow, const int* domainHigh, 
 		const int* indexLow, const int* indexHigh,
-		int* celltype, int* celltypeID, double* sew, double* sns,
-		double* stb, double* area);
+		  double* sew, double* sns,
+		double* stb, double* area, int* celltype, 
+		int* celltypeID);
+}
 
 #endif
 
 //
 // $Log$
+// Revision 1.4  2000/06/15 23:47:56  rawat
+// modified Archesfort to fix function call
+//
 // Revision 1.3  2000/06/15 22:13:21  rawat
 // modified boundary stuff
 //

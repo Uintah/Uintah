@@ -351,7 +351,7 @@ BoundaryCondition::computeInletFlowArea(const ProcessorContext*,
       indexLow[indx] = domainLow[indx]+1;
       indexHigh[indx] = domainHigh[indx]-1;
     }
-    double inlet_area;
+  
 #ifdef WONT_COMPILE_YET
   // using chain of responsibility pattern for getting cell information
     DataWarehouseP top_dw = new_dw->getTop();
@@ -366,12 +366,12 @@ BoundaryCondition::computeInletFlowArea(const ProcessorContext*,
 #endif
   // ** WARNING ** this is just for compilation purposes
     CellInformation* cellinfo = scinew CellInformation(patch);
-
+    double inlet_area;
+    int cellid = d_flowInlets[ii].d_cellTypeID;
     FORT_AREAIN(domainLow, domainHigh, indexLow, indexHigh,
-		cellType.getPointer(), &d_flowInlets[ii].d_cellTypeID,
 		cellinfo->sew.get_objs(),
 		cellinfo->sns.get_objs(), cellinfo->stb.get_objs(),
-		&inlet_area);
+		&inlet_area, cellType.getPointer(), &cellid);
     old_dw->put(sum_vartype(inlet_area),d_flowInlets[ii].d_area_label);
   }
 }
@@ -1327,6 +1327,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.19  2000/06/15 23:47:56  rawat
+// modified Archesfort to fix function call
+//
 // Revision 1.18  2000/06/15 22:13:22  rawat
 // modified boundary stuff
 //
