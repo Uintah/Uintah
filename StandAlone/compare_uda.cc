@@ -212,7 +212,6 @@ int main(int argc, char** argv)
 	usage("-tolerance, no value given", argv[0]);
       else
 	tolerance = atof(argv[i]);
-      usage( "", argv[0] );
     } else {
       if (filebase1 != "") {
 	if (filebase2 != "")
