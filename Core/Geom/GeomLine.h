@@ -90,8 +90,8 @@ public:
 class SCICORESHARE GeomCLines : public GeomObj {
 protected:
   double line_width_;
-  vector<Point> points_;
-  vector<MaterialHandle> colors_;
+  vector<float> points_;
+  vector<unsigned char> colors_;
 
 public:
   GeomCLines();

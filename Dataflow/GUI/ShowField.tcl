@@ -30,6 +30,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-edges-on
 	global $this-faces-on
 	global $this-vectors-on
+	global $this-text-on
 	global $this-use-normals
 	global $this-use-transparency
 	global $this-normalize_vectors
@@ -47,6 +48,10 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-interactive_mode
 	global $this-bidirectional
 	global $this-arrow-heads-on
+	global $this-text-use-default-color
+	global $this-text-color-r
+	global $this-text-color-g
+	global $this-text-color-b
 	set $this-node_display_type Spheres
 	set $this-edge_display_type Lines
 	set $this-node_scale 0.03
@@ -60,6 +65,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-nodes-as-disks 0
 	set $this-edges-on 1
 	set $this-faces-on 1
+	set $this-text-on 1
 	set $this-vectors-on 0
 	set $this-normalize_vectors 0
 	set $this-resolution 4
@@ -70,6 +76,10 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-interactive_mode "Interactive"
 	set $this-bidirectional 0
 	set $this-arrow-heads-on 1
+	set $this-text-use-default-color 1
+	set $this-text-color-r 1.0
+	set $this-text-color-g 1.0
+	set $this-text-color-b 1.0
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-has_vec_data w "$this vec_tab_changed"
 	trace variable $this-nodes-as-disks w "$this disk_render_status_changed"
@@ -103,7 +113,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	 $this-c $colMsg
     }
 
-    method addColorSelection {frame color colMsg} {
+    method addColorSelection {frame text color colMsg} {
 	 #add node color picking 
 	 global $color
 	 global $color-r
@@ -120,7 +130,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	 
 	 set cmmd "$this raiseColor $frame.colorFrame.col $color $colMsg"
 	 button $frame.colorFrame.set_color \
-		 -text "Default Color" -command $cmmd
+		 -text $text -command $cmmd
 	 
 	 #pack the node color frame
 	 pack $frame.colorFrame.set_color $frame.colorFrame.col -side left
@@ -260,6 +270,28 @@ itcl_class SCIRun_Visualization_ShowField {
 		"$this-c data_scale"
     }
 
+    # Text Tab
+    method add_text_tab {dof} {
+	set text [$dof.tabs add -label "Text" \
+		-command "$this set_active_tab \"Text\""]
+	checkbutton $text.show_text \
+		-text "Show Text" \
+		-command "$this-c toggle_display_text" \
+		-variable $this-text-on
+	checkbutton $text.use_def_col \
+		-text "Use default color" \
+		-command "$this-c rerender_text" \
+		-variable $this-text-use-default-color
+
+	frame $text.def_col -borderwidth 2
+
+	addColorSelection $text.def_col "Text Color" $this-text-color \
+	    "text_color_change"
+
+	pack $text.show_text $text.use_def_col $text.def_col \
+		-side top -fill y -anchor w
+    }
+
     method disk_render_status_changed {name1 name2 op} {
 	#puts stdout "called disk_render_status_changed"
 	set window .ui[modname]
@@ -313,6 +345,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	add_faces_tab $dof
 	if {[set $this-has_vec_data] == 1} {
 	    add_vector_tab $dof
+	} else {
+	    add_text_tab $dof
 	}
 
 	global $this-active_tab
@@ -330,7 +364,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	frame $window.control -relief groove -borderwidth 2 -width 500
 	frame $window.def_col -borderwidth 2
 
-	addColorSelection $window.def_col $this-def-color \
+	addColorSelection $window.def_col "Default Color" $this-def-color \
 		"default_color_change"
 
 	button $window.def_col.calcdefs -text "Calculate Defaults" \

@@ -30,12 +30,14 @@
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomCylinder.h>
 #include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomDL.h>
 #include <Core/Geom/Pt.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/ColorMap.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+#include <Core/Containers/StringUtil.h>
 #include <sci_hash_map.h>
 #include <Core/Datatypes/TetVolMesh.h>
 
@@ -65,6 +67,10 @@ public:
 		      double ns, double es, double vs, bool normalize, 
 		      int res, bool use_normals, bool use_transparency,
 		      bool bidirectional, bool arrow_heads) = 0;
+
+  virtual GeomSwitch *render_text(FieldHandle fld,
+				  bool use_default_material,
+				  MaterialHandle default_material) = 0;
 
   RenderFieldBase();
   virtual ~RenderFieldBase();
@@ -102,7 +108,6 @@ public:
 		      bool bidirectional, bool arrow_heads);
 
 private:
-
   GeomSwitch *render_nodes(const Fld *fld, 
 			   const string &node_display_type,
 			   double node_scale);
@@ -112,6 +117,10 @@ private:
   GeomSwitch *render_faces(const Fld *fld, 
 			   bool use_normals,
 			   bool use_transparency);
+
+  virtual GeomSwitch *render_text(FieldHandle fld,
+				  bool use_default_material,
+				  MaterialHandle default_material);
 
   void render_data(const Fld *fld, 
 		   const string &data_display_type,
@@ -278,7 +287,6 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
   if (edges)   { edge_switch_ = render_edges(fld, edt, es); }
   if (faces)   { face_switch_ = render_faces(fld, use_normals,
 					     use_transparency); }
-  
   if (data)
   {
     if (arrow_heads) vec_node_ = scinew GeomArrows(0.15, 0.6);
@@ -463,7 +471,7 @@ RenderField<Fld, Loc>::render_materials(const Fld *sfld,
       mesh->begin(citer);  
       typename Fld::mesh_type::Cell::iterator citer_end;  
       mesh->end(citer_end);
-      
+       
       while (citer != citer_end) {
 	typename Fld::value_type tmp;
 	
@@ -783,6 +791,47 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
   return face_switch;
 }
 
+
+template <class Fld, class Loc>
+GeomSwitch *
+RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
+				   bool use_default_material,
+				   MaterialHandle default_material)
+{
+  Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
+  ASSERT(fld);
+
+  typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
+
+  GeomGroup *texts = scinew GeomGroup;
+  GeomSwitch *text_switch = scinew GeomSwitch(texts);
+
+  typename Loc::iterator iter, end;
+  mesh->begin(iter);
+  mesh->end(end);
+  while (iter != end) {
+    typename Fld::value_type tmp;
+    if (fld->value(tmp, *iter)) {
+      Point p;
+      mesh->get_center(p, *iter);
+      double val;
+      to_double(tmp, val);
+      const std::string as_str = to_string(val);
+      MaterialHandle m;
+      if (use_default_material)
+      {
+	m = default_material;
+      }
+      else
+      {
+	m = choose_mat(use_default_material, *iter);
+      }
+      texts->add(scinew GeomText(as_str, p, m->diffuse));
+    }
+    ++iter;
+  }
+  return text_switch;
+}
 
 } // end namespace SCIRun
 
