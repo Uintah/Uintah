@@ -30,6 +30,8 @@ namespace rtrt {
     float current_color[3];
     int colormap_x_offset;
     int colormap_y_offset;
+    int stored_x;
+    int stored_y;
 
     /*********************************/
     // COLORMAP CODE
@@ -53,13 +55,21 @@ namespace rtrt {
 	out_color[i] = color_1[i] * (1-interpolate) + color_2[i] * interpolate;
     }
 
+    void
+      store_position( int x, int y ) {
+      stored_x = x;
+      stored_y = y;
+    }
+
     void 
-      colormap( int dx, int dy ) {
+      colormap( int X, int Y ) {
+      float dx = X - stored_x;
+      float dy = Y - stored_y;
       const int xmin = 0;
       const int ymin = 30;
       const int xmax = 400;
       const int ymax = 400;
-      int x = (colormap_x_offset + dx + xmax)%xmax;
+      int x = (int)(colormap_x_offset + dx + xmax)%xmax;
       int y = colormap_y_offset + dy;
       if( y > ymax )
 	y = ymax;
@@ -142,6 +152,8 @@ namespace rtrt {
 
       colormap_x_offset = x;
       colormap_y_offset = y;
+      stored_x = X;
+      stored_y = Y;
     }
     /*********************************/
     // END OF COLORMAP CODE
