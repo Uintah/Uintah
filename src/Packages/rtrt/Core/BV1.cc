@@ -67,6 +67,11 @@ BV1::~BV1()
 
 void BV1::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 {
+  if (name_ != "") std::cerr << "\n\n"
+                             << "\n==========================================================\n"
+                             << "* Building BV1 for Object " << name_
+                             << "\n==========================================================\n";
+
     obj->preprocess(maxradius, pp_offset, scratchsize);
     normal_tree=make_tree(0);
     if(maxradius == 0)
