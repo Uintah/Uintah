@@ -167,13 +167,12 @@ Thread_shutdown(Thread* thread)
       throw ThreadError(std::string("sem_post failed")
 			+strerror(errno));
 
-   delete thread;
-
    // Wait to be deleted...
    if (priv->threadid != 0)
       if(sem_wait(&priv->delete_ready) == -1)
 	 throw ThreadError(std::string("sem_wait failed")
 			   +strerror(errno));
+   delete thread;
 
    // Allow this thread to run anywhere...
    if(thread->cpu_ != -1)
@@ -348,11 +347,12 @@ Thread::resume()
 void
 Thread::detach()
 {
+    detached_=true;
+    pthread_t id = priv_->threadid;
     if(sem_post(&priv_->delete_ready) != 0)
 	throw ThreadError(std::string("sem_post failed")
 			  +strerror(errno));
-    detached_=true;
-    if(pthread_detach(priv_->threadid) != 0)
+    if(pthread_detach(id) != 0)
 	throw ThreadError(std::string("pthread_detach failed")
 			  +strerror(errno));
 }
