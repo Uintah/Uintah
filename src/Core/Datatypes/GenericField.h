@@ -46,7 +46,7 @@ public:
   virtual ~GenericField() {};
 
   //! Required virtual functions from field base.
-  virtual MeshBaseHandle get_mesh() const
+  virtual MeshBaseHandle mesh() const
   { return MeshBaseHandle(mesh_.get_rep()); }
 
   //! Required interfaces from field base.

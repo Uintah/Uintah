@@ -27,7 +27,7 @@ public:
 
   data_location data_at() const { return data_at_; }
   //! Required virtual functions
-  virtual MeshBaseHandle get_mesh() const = 0;
+  virtual MeshBaseHandle mesh() const = 0;
 
   //! Required interfaces
   virtual InterpolateToScalar* query_interpolate_to_scalar() const = 0;
