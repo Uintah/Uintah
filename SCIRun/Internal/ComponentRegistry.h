@@ -69,7 +69,7 @@ public:
   static InternalComponentInstance* create(SCIRunFramework* fwk,
                                            const std::string& name);
   
-  /** ? */
+  /** Returns this service (?) - overrides InternalComponentInstance::getService. */
   sci::cca::Port::pointer getService(const std::string&);
 
   /** Returns a list of ComponentClassDescriptions that represents all of the
@@ -78,6 +78,8 @@ public:
       gives all of the components that the framework knows how to create. */
   virtual SSIDL::array1<sci::cca::ComponentClassDescription::pointer>
   getAvailableComponentClasses();
+
+  virtual void addComponentClass(const std::string& componentClassName);
 
 private:
   ComponentRegistry(SCIRunFramework* fwk, const std::string& name);
