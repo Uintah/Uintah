@@ -39,8 +39,8 @@ void Pio(Piostream&, Transform*&);
 
 class SCICORESHARE Transform : public Persistent {
   double mat[4][4];
-  double imat[4][4];
-  int inverse_valid;
+  mutable double imat[4][4];
+  mutable int inverse_valid;
   void install_mat(double[4][4]);
   void build_permute(double m[4][4], int, int, int, int pre);
   void build_rotate(double m[4][4], double, const Vector&);
@@ -93,21 +93,21 @@ public:
   void pre_translate(const Vector&);
   void post_translate(const Vector&);
 
-  Point unproject(const Point& p);
-  void unproject(const Point& p, Point& res);
-  void unproject_inplace(Point& p);
-  Vector unproject(const Vector& p);
-  void unproject(const Vector& v, Vector& res);
-  void unproject_inplace(Vector& v);
+  Point unproject(const Point& p) const;
+  void unproject(const Point& p, Point& res) const;
+  void unproject_inplace(Point& p) const;
+  Vector unproject(const Vector& p) const;
+  void unproject(const Vector& v, Vector& res) const;
+  void unproject_inplace(Vector& v) const;
   Point project(const Point& p) const;
   void project(const Point& p, Point& res) const;
   void project_inplace(Point& p) const;
   Vector project(const Vector& p) const;
   void project(const Vector& p, Vector& res) const;
   void project_inplace(Vector& p) const;
-  Vector project_normal(const Vector&);
-  void project_normal(const Vector&, Vector& res);
-  void project_normal_inplace(Vector&);
+  Vector project_normal(const Vector&) const;
+  void project_normal(const Vector&, Vector& res) const;
+  void project_normal_inplace(Vector&) const;
   void get(double*) const;
   void get_trans(double*) const;
   void set(double*);
@@ -116,7 +116,7 @@ public:
 		   const Vector& up, double fov,
 		   double znear, double zfar,
 		   int xres, int yres);
-  void compute_imat();
+  void compute_imat() const;
   void invert();
   bool inv_valid()
   {
