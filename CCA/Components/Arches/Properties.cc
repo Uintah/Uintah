@@ -2730,7 +2730,9 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
 			  const int Runge_Kutta_current_step,
 			  const bool Runge_Kutta_last_step)
 {
-  double time = d_lab->d_sharedState->getElapsedTime();
+  int drhodt_1st_order = 1;
+  int current_step = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  if (d_MAlab) drhodt_1st_order = 2;
   delt_vartype delT, old_delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   if (Runge_Kutta_current_step == Arches::FIRST)
@@ -2801,7 +2803,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     // compute drhodt and add its filtered value
     drhodt.resize(patch->getLowIndex(), patch->getHighIndex());
 
-    if (time == 0.0) {
+    if (current_step <= drhodt_1st_order) {
 // 1st order drhodt
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
         for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
