@@ -184,8 +184,11 @@ class Matlab2 : public Module, public ServiceBase
 
 	// Fields per port
 	std::vector<std::string>   input_matrix_name_list_;
+	std::vector<std::string>   input_matrix_name_list_old_;
 	std::vector<std::string>   input_field_name_list_;
+	std::vector<std::string>   input_field_name_list_old_;
 	std::vector<std::string>   input_nrrd_name_list_;
+	std::vector<std::string>   input_nrrd_name_list_old_;
 	std::vector<std::string>   input_matrix_type_list_;
 	std::vector<std::string>   input_nrrd_type_list_;
 	std::vector<std::string>   input_matrix_array_list_;
@@ -421,6 +424,13 @@ Matlab2::Matlab2(GuiContext *context) :
 	for (int p = 0; p<NUM_MATRIX_PORTS; p++)  matrix_oport_[p] = static_cast<MatrixOPort *>(get_oport(portnum++));
 	for (int p = 0; p<NUM_FIELD_PORTS; p++)  field_oport_[p] = static_cast<FieldOPort *>(get_oport(portnum++));
 	for (int p = 0; p<NUM_NRRD_PORTS; p++)  nrrd_oport_[p] = static_cast<NrrdOPort *>(get_oport(portnum++));
+
+	input_matrix_name_list_.resize(NUM_MATRIX_PORTS);
+	input_matrix_name_list_old_.resize(NUM_MATRIX_PORTS);
+    input_field_name_list_.resize(NUM_FIELD_PORTS);
+	input_field_name_list_old_.resize(NUM_FIELD_PORTS);
+	input_nrrd_name_list_.resize(NUM_NRRD_PORTS);
+	input_nrrd_name_list_old_.resize(NUM_NRRD_PORTS);
 
 }
 
@@ -1082,7 +1092,7 @@ bool Matlab2::save_input_matrices()
 			}
 			// if the data as the same before
 			// do nothing
-			if (handle == matrix_handle_[p])
+			if ((handle == matrix_handle_[p])&&(input_matrix_name_list_[p]==input_matrix_name_list_old_[p]))
 			{
 				// this one was not created again
 				// hence we do not need to translate it again
@@ -1117,6 +1127,7 @@ bool Matlab2::save_input_matrices()
 			loadcmd = "load " + file_transfer_->remote_file(input_matrix_matfile_[p]) + ";\n";
 			m_file << loadcmd;
             
+            
             if (need_file_transfer_) 
             {
                 if(!(file_transfer_->put_file(file_transfer_->local_file(input_matrix_matfile_[p]),file_transfer_->remote_file(input_matrix_matfile_[p]))))
@@ -1128,6 +1139,7 @@ bool Matlab2::save_input_matrices()
                 }
                 
             }
+            input_matrix_name_list_old_[p] = input_matrix_name_list_[p];
 		}
 
 		for (int p = 0; p < NUM_FIELD_PORTS; p++)
@@ -1147,7 +1159,7 @@ bool Matlab2::save_input_matrices()
 			}
 			// if the data as the same before
 			// do nothing
-			if (handle == field_handle_[p])
+			if ((handle == field_handle_[p])&&(input_field_name_list_[p]==input_field_name_list_old_[p]))
 			{
 				// this one was not created again
 				// hence we do not need to translate it again
@@ -1192,6 +1204,7 @@ bool Matlab2::save_input_matrices()
                 }
                 
             }
+            input_field_name_list_old_[p] = input_field_name_list_[p];
         }
 
 		for (int p = 0; p < NUM_NRRD_PORTS; p++)
@@ -1211,7 +1224,7 @@ bool Matlab2::save_input_matrices()
 			}
 			// if the data as the same before
 			// do nothing
-			if (handle == nrrd_handle_[p])
+			if ((handle == nrrd_handle_[p])&&(input_nrrd_name_list_[p]==input_nrrd_name_list_old_[p]))
 			{
 				// this one was not created again
 				// hence we do not need to translate it again
@@ -1255,7 +1268,8 @@ bool Matlab2::save_input_matrices()
                     return(false);
                 }
                 
-            }            
+            }  
+            input_nrrd_name_list_old_[p] = input_nrrd_name_list_[p];          
 		}
 	}
 	catch (matlabfile::could_not_open_file)
