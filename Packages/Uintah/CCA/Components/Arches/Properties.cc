@@ -112,6 +112,9 @@ void
 Properties::computeInletProperties(const InletStream& inStream, 
 				   Stream& outStream)
 {
+  //inStream.d_initEnthalpy = true;  //Controls initialization of
+  // enthalpy field with adiabatic enthalpy. If flamelet model is
+  // used, this variable will need to be set
   if (dynamic_cast<const ColdflowMixingModel*>(d_mixingModel))
     d_mixingModel->computeProps(inStream, outStream);
   else if (dynamic_cast<const FlameletMixingModel*>(d_mixingModel)) {
@@ -373,10 +376,12 @@ Properties::computeProps(const ProcessorGroup* pc,
 
 	  if (!d_mixingModel->isAdiabatic())
 	    inStream.d_enthalpy = 0.0;
+	  inStream.d_initEnthalpy = true;
 	  d_mixingModel->computeProps(inStream, outStream);
 	  double local_den = outStream.getDensity();
 	  if (d_enthalpySolve)
 	    enthalpy[currCell] = outStream.getEnthalpy();
+	  //cout << "Properties H = " << enthalpy[currCell] << endl;
 	  if (d_reactingFlow) {
 	    temperature[currCell] = outStream.getTemperature();
 	    cp[currCell] = outStream.getCP();
@@ -1158,6 +1163,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  }
 
   TAU_PROFILE_START(mixing);
+          inStream.d_initEnthalpy = false;
 	  d_mixingModel->computeProps(inStream, outStream);
   TAU_PROFILE_STOP(mixing);
 
@@ -1191,7 +1197,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    // bc is the mass-atoms 0f carbon per mas of reactnat mixture
 	    // taken from radcoef.f
 	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
-	    // optical path length
 	    if (d_mixingModel->getNumRxnVars()) 
 	      sootFV[currCell] = outStream.getSootFV();
 	    else {
