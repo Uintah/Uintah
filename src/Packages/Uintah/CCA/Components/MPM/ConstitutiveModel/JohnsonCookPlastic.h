@@ -83,6 +83,17 @@ namespace Uintah {
 					const MPMMaterial* matl,
 					const PatchSet* patches) const;
 
+
+    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
+					   const PatchSet* patch, 
+					   MPMLabel* lb) const;
+
+    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
+				   ParticleSubset* addset,
+				   map<const VarLabel*, ParticleVariableBase*>* newState,
+				   ParticleSubset* delset,
+				   DataWarehouse* old_dw);
+
     virtual void addParticleState(std::vector<const VarLabel*>& from,
 				  std::vector<const VarLabel*>& to);
 

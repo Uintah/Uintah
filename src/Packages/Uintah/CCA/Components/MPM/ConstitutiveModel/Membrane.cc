@@ -85,9 +85,11 @@ void Membrane::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
-void Membrane::allocateCMData(DataWarehouse* new_dw,
-			      ParticleSubset* subset,
-			      map<const VarLabel*, ParticleVariableBase*>* newState)
+void Membrane::allocateCMDataAdd(DataWarehouse* new_dw,
+				 ParticleSubset* subset,
+				 map<const VarLabel*, ParticleVariableBase*>* newState,
+				 ParticleSubset* delset,
+				 DataWarehouse* old_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure

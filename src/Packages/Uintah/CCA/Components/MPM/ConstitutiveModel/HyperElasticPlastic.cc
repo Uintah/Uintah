@@ -165,35 +165,42 @@ HyperElasticPlastic::initializeCMData(const Patch* patch,
 
 
 void 
-HyperElasticPlastic::allocateCMData(DataWarehouse* new_dw,
-				    ParticleSubset* subset,
-				    map<const VarLabel*, ParticleVariableBase*>* newState)
+HyperElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
+				       ParticleSubset* addset,
+				       map<const VarLabel*, ParticleVariableBase*>* newState,
+				       ParticleSubset* delset,
+				       DataWarehouse* old_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  Matrix3 one, zero(0.); one.Identity();
+  Matrix3 zero(0.); 
+  ParticleSubset::iterator n,o;
 
   ParticleVariable<Matrix3> pDeformGrad, pStress;
   ParticleVariable<Matrix3> pBbarElastic;
   ParticleVariable<double> pDamage;
 
-  new_dw->allocateTemporary(pDeformGrad,subset);
-  new_dw->allocateTemporary(pStress,subset);
-  new_dw->allocateTemporary(pDamage,subset);
-  new_dw->allocateTemporary(pBbarElastic,subset);
+  constParticleVariable<Matrix3> o_DeformGrad,o_Stress;
+  constParticleVariable<Matrix3> o_BbarElastic;
+  constParticleVariable<double> o_Damage;
 
-  for(ParticleSubset::iterator iter =subset->begin();iter != subset->end(); 
-      iter++){
+  new_dw->allocateTemporary(pDeformGrad,addset);
+  new_dw->allocateTemporary(pStress,addset);
+  new_dw->allocateTemporary(pDamage,addset);
+  new_dw->allocateTemporary(pBbarElastic,addset);
 
-    // To fix : For a material that is initially stressed we need to
-    // modify the left Cauchy-Green and stress tensors to comply with the
-    // initial stress state
-    pBbarElastic[*iter] = one;
-    pDeformGrad[*iter] = one;
-    pStress[*iter] = zero;
-    pDamage[*iter] = 0.0;
+  old_dw->get(o_DeformGrad,lb->pDeformationMeasureLabel,delset);
+  old_dw->get(o_Stress,lb->pStressLabel,delset);
+  old_dw->get(o_BbarElastic,pBbarElasticLabel,delset);
+  old_dw->get(o_Damage,pDamageLabel,delset);
+  
+  n = addset->begin();
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
+    pBbarElastic[*n] = o_BbarElastic[*o];
+    pDeformGrad[*n] = o_DeformGrad[*o];
+    pStress[*n] = zero;
+    pDamage[*n] = o_Damage[*o];
   }
-
 
   (*newState)[lb->pDeformationMeasureLabel] = pDeformGrad.clone();
   (*newState)[lb->pStressLabel] = pStress.clone();
@@ -202,7 +209,7 @@ HyperElasticPlastic::allocateCMData(DataWarehouse* new_dw,
 
 
   // Initialize the data for the plasticity model
-  d_plasticity->initializeInternalVars(subset, new_dw);
+  d_plasticity->allocateCMDataAdd(new_dw,addset, newState,delset,old_dw);
 
 
 }

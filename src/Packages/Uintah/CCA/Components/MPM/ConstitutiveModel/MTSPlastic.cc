@@ -89,6 +89,45 @@ MTSPlastic::addParticleState(std::vector<const VarLabel*>& from,
 }
 
 void 
+MTSPlastic::allocateCMDataAddRequires(Task* task,
+				      const MPMMaterial* matl,
+				      const PatchSet* patch,
+				      MPMLabel* lb) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW,pPlasticStrainLabel, Ghost::None);
+}
+
+void 
+MTSPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
+			      ParticleSubset* addset,
+			      map<const VarLabel*, ParticleVariableBase*>* newState,
+			      ParticleSubset* delset,
+			      DataWarehouse* old_dw)
+{
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+ 
+  ParticleVariable<double> plasticStrain;
+
+  new_dw->allocateTemporary(plasticStrain,addset);
+
+  for(ParticleSubset::iterator iter = addset->begin();iter != addset->end(); 
+      iter++){
+
+    // To fix : For a material that is initially stressed we need to
+    // modify the leftStretch and the stress tensors to comply with the
+    // initial stress state
+    plasticStrain[*iter] = 0.0;
+  }
+
+  (*newState)[pPlasticStrainLabel]=plasticStrain.clone();
+
+}
+
+
+
+void 
 MTSPlastic::initializeInternalVars(ParticleSubset* pset,
 				   DataWarehouse* new_dw)
 {
