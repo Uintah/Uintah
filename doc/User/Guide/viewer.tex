@@ -54,16 +54,29 @@
   \htmladdimg[alt="extended view window"]{../Figures/viewbottom.gif}}
 \end{htmlonly}
 
-%% Gauge widget image
+%% Point widget image
 %begin{latexonly}
-\newcommand{\gaugewidget}{%
+\newcommand{\pointwidget}{%
+  \centerline{\includegraphics[bb=0 0 230 222,height=2in]
+    {Figures/widget-point.eps.gz}}
+}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\pointwidget}{%
+    \htmladdimg[alt="pointwidget"]{../Figures/widget-point.gif}
+  }
+\end{htmlonly}
+
+%% Rake widget image
+%begin{latexonly}
+\newcommand{\rakewidget}{%
   \centerline{\includegraphics[bb=0 0 457 340,height=2in]
     {Figures/widget-gauge.eps.gz}}
 }
 %end{latexonly}
 \begin{htmlonly}
-  \newcommand{\gaugewidget}{%
-    \htmladdimg[alt="gaugewidget"]{../Figures/widget-gauge.gif}
+  \newcommand{\rakewidget}{%
+    \htmladdimg[alt="rakewidget"]{../Figures/widget-gauge.gif}
   }
 \end{htmlonly}
 
@@ -384,32 +397,16 @@ window.
 \end{figure}
 
 
-\subsection{Object Selection and Settings}
-
-The middle panel is a list of objects in the display.  Each entry in
-the list consists of the following (from left to right):
-
-\begin{itemize}
-\item Selection button.  An object is selected when the selection
-  button is depressed.  The \viewer{} window only displays selected
-  objects.
-\item An object's name.
-\item A \menu{Options...} pop-up menu.  The \menu{Options...} menu
-  controls object specific rendering settings.  If item \menuitem{Use
-    Global Controls} is set then object specific settings are ignored
-  and global rendering settings are used.  Use of rendering settings
-  are discussed in \secref{Rendering Controls}{sec:view-rendering}.
-\end{itemize}
-
-
 \subsection{Rendering Controls}
 \label{sec:view-rendering} 
 \index{Viewer@\viewer{}!rendering}
 
 The left part of the extended \viewer{} window contains global
-rendering settings.  Objects can override global settings.
+rendering settings.  Objects can override global settings.  See
+\secref{Object Selection and Settings}{sec:object-settings} for making
+object specific settings.
 
-The redenering options are:
+The rendering options are:
 
 \begin{description}
   \descitem{Lighting} Toggles whether or not the \viewer{} applies
@@ -435,23 +432,62 @@ The redenering options are:
   This option accelerates rendering when the content of the display
   does not change.
 
-  \descitem{Shading} Selects the type of shading for objects from the
-        following options:
-        \begin{description}
-          \descitem{Wire} Show only the wire mesh of objects.
-          \descitem{Flat} Draw each facet with a constant color.
-          \descitem{Gouraud} Linearly interpolate the color across facets. 
-        \end{description}
+  \descitem{Wire} Show only the wire mesh of objects.
+
+  \descitem{Flat} Draw each facet with a constant color.
+
+  \descitem{Gouraud} Linearly interpolate color across facets. 
 \end{description}
 
 The right column of the extended \viewer{} window contains controls
 for displaying the axes and creating stereoscopic rendering.  
 
-\paragraph{Stereo viewing: } requires hardware LCD glasses synchronized
-with the display, so visibility in each eye coincides with the
-display of the appropriate view.  The ``Fusion Scale'' control provides a
-means of setting the eye separation, and thus setting the view that is most
+\subsection{Object Selection and Settings}
+\label{sec:object-settings}
+
+The middle panel of the extended \viewer{} window lists objects
+displayed in the \viewer{} window.  Each list entry consists of the
+following items (from left to right):
+
+\begin{itemize}
+\item Selection button.  An object is selected when the selection
+  button is depressed.  The \viewer{} window only displays selected
+  objects.
+\item An object's name.
+\item A \menu{Options...} pop-up menu.  The \menu{Options...} menu
+  controls object specific rendering settings.  If item \menuitem{Use
+    Global Controls} is set then object specific settings are ignored
+  and global rendering settings are used.  Rendering settings
+  are discussed in \secref{Rendering Controls}{sec:view-rendering}.
+\end{itemize}
+
+
+\subsection{Miscellaneous Settings}
+
+The right part of the of the extended \viewer{} window contains the
+following settings:
+
+\begin{description}
+\descitem{Show Axes} Toggles the display of coordinate axes centered at
+coordinate (0, 0, 0).
+
+\descitem{Orientation} Toggles the display of orientation axes.
+Orientation axes are displayed in the upper right corner of the
+\viewer{} window.
+
+\descitem{Ortho View} Toggles between perspective and orthographic views.
+
+\descitem{Stereo} Toggles stereo view on and off.  Stereo view
+requires hardware LCD glasses synchronized with the display, so
+visibility in each eye coincides with the display of the appropriate
+view.
+
+\descitem{Fusion Scale} Controls left and right eye image separation
+for stereo viewing.  Allows the user to establish a separation that is
 suited to facial anatomy and distance from the screen.
+
+\end{description}
+
 
 \section{Control Widgets}
 \label{sec:view-widgets} 
@@ -466,33 +502,52 @@ manipulation.
 possible. For example, controlling parameters is usually done by
 clicking and dragging on a cylindrical ``collar'' or a sphere element
 of the widget. Note that a single widget can have more than one
-purpose depending on the context in which it exists. The Gauge widget,
+purpose depending on the context in which it exists. The Rake widget,
 for example, selects a clipping or display plane through a
 three-dimensional object, and sets the seed points for a streamline
 module.
 
 This section describes the widgets available within \SR{} and \BIOPSE{}.
  
-\subsection{Gauge Widget}
-\label{sec:view-gaugewidget} 
+\subsection{Point Widget}
+\label{sec:view-pointwidget} 
 
 \begin{figure}[htb]
   \begin{makeimage}
   \end{makeimage}
-  \gaugewidget
+  \pointwidget
+  \caption{\label{fig:pointwidget} The point widget for probing fields}
+\end{figure}
+
+\paragraph{Appearance} The Point widget consists of a sphere (see Figure~\ref{fig:pointwidget}).
+
+\paragraph{Purpose} The primary purpose of the Point Widget is to
+select and retrieve information about a point, for example when
+probing a field.
+
+\paragraph{Controls} Clicking and dragging the sphere moves the point
+widget to a new location.
+
+\subsection{Rake Widget}
+\label{sec:view-rakewidget} 
+
+\begin{figure}[htb]
+  \begin{makeimage}
+  \end{makeimage}
+  \rakewidget
 %    \framebox{\parbox[3in]{\columnwidth}{The\dotfill Figure\\
 %    \vspace{2in}\\
 %    With some \dotfill dummy text}}
-  \caption{\label{fig:gaugewidget} The gauge widget for setting location and
+  \caption{\label{fig:rakewidget} The rake widget for setting location and
     density of seed points}
 \end{figure}
 
-\paragraph{Appearance} The Gauge
-Widget has an orientation, length, and value (see Figure~\ref{fig:gaugewidget}). It consists of two spheres (A) connected by a cylinder (B) with a
+\paragraph{Appearance} The Rake
+Widget has an orientation, length, and value (see Figure~\ref{fig:rakewidget}). It consists of two spheres (A) connected by a cylinder (B) with a
 small slider collar (C) on the cylinder.  There are also small resize
 cylinders (D) extending from the spheres.
 
-\paragraph{Purpose} The primary use of the Gauge Widget is to set the
+\paragraph{Purpose} The primary use of the Rake Widget is to set the
 location and density of streamlines emerging from the long cylinder.  It
 can also be used as a more general purpose three-dimensional slider, or a
 source for a stream surface. 
