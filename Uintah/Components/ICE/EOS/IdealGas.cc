@@ -100,7 +100,9 @@ void IdealGas::computeSpeedSound(const Patch* patch,
     double press    = (gamma - 1.0)   * rho_micro[*iter]*cv[*iter]*temp[*iter];
     double denom    = rho_micro[*iter]*rho_micro[*iter];
     speedSound[*iter] =  sqrt(dp_drho + dp_de* (press/(denom)));
+#if 0
     cout << "speedSound"<<*iter<<"="<<speedSound[*iter]<<endl;
+#endif
   }
 
   new_dw->put(speedSound,lb->speedSound_CCLabel,dwindex,patch);
@@ -179,6 +181,9 @@ void IdealGas::computePressEOS(const Patch* patch,
 
 
 //$Log$
+//Revision 1.11  2000/12/18 23:25:56  jas
+//2d ice works for simple advection.
+//
 //Revision 1.10  2000/11/28 03:50:30  jas
 //Added {X,Y,Z}FCVariables.  Things still don't work yet!
 //

@@ -121,6 +121,7 @@ ICELabel::ICELabel()
      scinew VarLabel("tau_Y_FC",   SFCYVariable<Vector>::getTypeDescription() );
     tau_Z_FCLabel       = 
      scinew VarLabel("tau_Z_FC",   SFCZVariable<Vector>::getTypeDescription() );
+    
 } 
 
 ICELabel::~ICELabel()
@@ -174,6 +175,9 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.16  2000/12/18 23:25:55  jas
+// 2d ice works for simple advection.
+//
 // Revision 1.15  2000/12/05 15:45:30  jas
 // Now using SFC{X,Y,Z} data types.  Fixed some small bugs and things appear
 // to be working up to the middle of step 2.
