@@ -41,7 +41,7 @@ namespace SCIRun {
     virtual PortInstance* getPortInstance(const std::string& name);
     virtual ~InternalComponentInstance();
 
-    virtual gov::cca::Port::pointer getService(const std::string& name) = 0;
+    virtual sci::cca::Port::pointer getService(const std::string& name) = 0;
     virtual PortInstanceIterator* getPorts();
 
     void incrementUseCount();

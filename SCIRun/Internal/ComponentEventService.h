@@ -36,25 +36,25 @@
 
 namespace SCIRun {
   class SCIRunFramework;
-  class ComponentEventService : public gov::cca::ports::ComponentEventService, public InternalComponentInstance {
+  class ComponentEventService : public sci::cca::ports::ComponentEventService, public InternalComponentInstance {
   public:
     virtual ~ComponentEventService();
     static InternalComponentInstance* create(SCIRunFramework* fwk,
 					     const std::string& name);
-    gov::cca::Port::pointer getService(const std::string&);
+    sci::cca::Port::pointer getService(const std::string&);
 
-    virtual void addComponentEventListener(gov::cca::ports::ComponentEventType type,
-					   const gov::cca::ports::ComponentEventListener::pointer& l,
+    virtual void addComponentEventListener(sci::cca::ports::ComponentEventType type,
+					   const sci::cca::ports::ComponentEventListener::pointer& l,
 					   bool playInitialEvents);
-    virtual void removeComponentEventListener(gov::cca::ports::ComponentEventType type,
-					      const gov::cca::ports::ComponentEventListener::pointer& l);
-    virtual void moveComponent(const gov::cca::ComponentID::pointer& id, int x, int y);
+    virtual void removeComponentEventListener(sci::cca::ports::ComponentEventType type,
+					      const sci::cca::ports::ComponentEventListener::pointer& l);
+    virtual void moveComponent(const sci::cca::ComponentID::pointer& id, int x, int y);
   private:
 
     struct Listener {
-      gov::cca::ports::ComponentEventType type;
-      gov::cca::ports::ComponentEventListener::pointer l;
-      Listener(gov::cca::ports::ComponentEventType type, const gov::cca::ports::ComponentEventListener::pointer& l)
+      sci::cca::ports::ComponentEventType type;
+      sci::cca::ports::ComponentEventListener::pointer l;
+      Listener(sci::cca::ports::ComponentEventType type, const sci::cca::ports::ComponentEventListener::pointer& l)
 	: type(type), l(l)
       {
       }

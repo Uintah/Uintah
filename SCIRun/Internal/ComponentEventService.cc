@@ -52,14 +52,14 @@ InternalComponentInstance* ComponentEventService::create(SCIRunFramework* framew
   return n;
 }
 
-gov::cca::Port::pointer ComponentEventService::getService(const std::string&)
+sci::cca::Port::pointer ComponentEventService::getService(const std::string&)
 {
-  return gov::cca::Port::pointer(this);
+  return sci::cca::Port::pointer(this);
 }
 
 void
-ComponentEventService::addComponentEventListener(gov::cca::ports::ComponentEventType type,
-						 const gov::cca::ports::ComponentEventListener::pointer& l,
+ComponentEventService::addComponentEventListener(sci::cca::ports::ComponentEventType type,
+						 const sci::cca::ports::ComponentEventListener::pointer& l,
 						 bool playInitialEvents)
 {
   listeners.push_back(new Listener(type, l));
@@ -69,13 +69,13 @@ ComponentEventService::addComponentEventListener(gov::cca::ports::ComponentEvent
 }
 
 void
-ComponentEventService::removeComponentEventListener(gov::cca::ports::ComponentEventType /*type*/,
-						    const gov::cca::ports::ComponentEventListener::pointer& /*l*/)
+ComponentEventService::removeComponentEventListener(sci::cca::ports::ComponentEventType /*type*/,
+						    const sci::cca::ports::ComponentEventListener::pointer& /*l*/)
 {
   cerr << "removeComponentEventListener not done!\n";
 }
 
-void ComponentEventService::moveComponent(const gov::cca::ComponentID::pointer& /*id*/,
+void ComponentEventService::moveComponent(const sci::cca::ComponentID::pointer& /*id*/,
 					  int /*x*/, int /*y*/)
 {
   cerr << "moveComponent not done!\n";
