@@ -130,7 +130,7 @@ SimpleOPort<T>::SimpleOPort(Module* module,
   : OPort(module, SimpleIPort<T>::port_type_, portname,
 	  SimpleIPort<T>::port_color_),
     cache_(true),
-    sent_something_(false),
+    sent_something_(true),
     handle_(0)
 {
 }
@@ -205,6 +205,8 @@ SimpleOPort<T>::finish()
 
     if (module->show_stats()) { turn_off(); }
   }
+
+  sent_something_ = true;
 }
 
 
@@ -216,8 +218,8 @@ SimpleOPort<T>::detach(Connection *conn)
   {
     SimplePortComm<T>* msg = scinew SimplePortComm<T>(0);
     ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
-    sent_something_ = true;
   }
+  sent_something_ = true;
   OPort::detach(conn);
 }
 
