@@ -261,6 +261,50 @@ void ViewWindow::itemDeleted(GeomViewerItem *si)
   need_redraw=true;
 }
 
+void ViewWindow::itemRenamed(GeomViewerItem *si, string newname)
+{
+  // Remove old
+  {
+    ObjTag *vis;
+    viter = visible.find(si->name_);
+    if (viter == visible.end()) { // if not found
+      cerr << "Where did that object go???" << "\n";
+    }
+    else {
+      vis = (*viter).second;
+      ostringstream str;
+      str << id << " removeObject " << vis->tagid;
+      gui->execute(str.str());
+    }
+  }
+
+  // Rename.
+  si->name_ = newname;
+
+  // Reinsert.
+  {
+    ObjTag* vis;
+    
+    viter = visible.find(si->name_);
+    if(viter==visible.end()){
+      // Make one...
+      vis=scinew ObjTag;
+      vis->visible=scinew GuiInt(ctx->subVar(si->name_), 1);
+      vis->tagid=maxtag++;
+      visible[si->name_] = vis;
+      ostringstream str;
+      str << id << " addObject " << vis->tagid << " \"" << si->name_ << "\"";
+      gui->execute(str.str());
+    } else {
+      vis = (*viter).second;
+      ostringstream str;
+      str << id << " addObject2 " << vis->tagid;
+      gui->execute(str.str());
+    }
+  }
+}
+
+
 // need to fill this in!   
 #ifdef OLDUI
 void ViewWindow::itemCB(CallbackData*, void *gI) {

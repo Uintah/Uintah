@@ -341,11 +341,67 @@ int Viewer::process_event()
 void Viewer::initPort(Mailbox<GeomReply>* reply)
 {
   int portid=max_portno_++;
-				// Create the port
-  // PortInfo* pi=scinew PortInfo;
+  portno_map_.push_back(portid);
+
+  // Create the port
   GeomViewerPort *pi = new GeomViewerPort(portid);
   ports_.addObj(pi,portid);
   reply->send(GeomReply(portid));
+}
+
+//----------------------------------------------------------------------
+int Viewer::real_portno(int portno)
+{
+  for (unsigned int i=0; i < portno_map_.size(); i++)
+  {
+    if (portno == portno_map_[i])
+    {
+      return i + 1;
+    }
+  }
+  ASSERTFAIL("PORTNO NOT FOUND");
+  return 0;
+}
+
+//----------------------------------------------------------------------
+void Viewer::delete_patch_portnos(int portid)
+{
+  int found = -1;
+  for (unsigned int i=0; i < portno_map_.size(); i++)
+  {
+    if (found >= 0)
+    {
+      GeomViewerPort *pi;
+      if(!(pi = ((GeomViewerPort*)ports_.getObj(portno_map_[i]).get_rep())))
+      {
+	warning("Geometry message sent to bad port!!!\n");
+	continue;
+      }
+      GeomIndexedGroup::IterIntGeomObj iter = pi->getIter();
+      for (; iter.first != iter.second; iter.first++)
+      {
+	GeomViewerItem* si;
+	if (si = dynamic_cast<GeomViewerItem*>((*iter.first).second.get_rep()))
+	{
+	  const string::size_type loc = si->getString().find_last_of('(');
+	  string newname =
+	    si->getString().substr(0, loc+1) + to_string(i) + ")";
+
+	  // Do a rename here.
+	  for (unsigned int j = 0; j < view_window_.size(); j++)
+	  {
+	    view_window_[j]->itemRenamed(si, newname);
+	  }
+	}
+      }
+    }
+    else if (portid == portno_map_[i])
+    {
+      found = i;
+    }
+  }
+  if (found >= 0) { portno_map_.erase(portno_map_.begin() + found); }
+
 }
 
 //----------------------------------------------------------------------
@@ -359,6 +415,9 @@ void Viewer::detachPort(int portid)
   }
   delAll(pi);
   ports_.delObj(portid);
+
+  delete_patch_portnos(portid);
+
   flushViews();
 }
 
@@ -369,11 +428,12 @@ void Viewer::flushViews()
     view_window_[i]->force_redraw();
 }
 
+
 //----------------------------------------------------------------------
 void Viewer::addObj(GeomViewerPort* port, int serial, GeomHandle obj,
 		    const string& name, CrowdMonitor* lock)
 {
-  string pname(name+" ("+to_string(port->portno)+")");
+  string pname(name + " ("+to_string(real_portno(port->portno))+")");
   GeomViewerItem* si = scinew GeomViewerItem(obj, pname, lock);
   port->addObj(si,serial);
   // port->objs->insert(serial, si);
