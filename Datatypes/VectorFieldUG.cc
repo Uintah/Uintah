@@ -57,10 +57,16 @@ void VectorFieldUG::compute_bounds()
     have_bounds=1;
 }
 
-int VectorFieldUG::interpolate(const Point&, Vector&)
+int VectorFieldUG::interpolate(const Point& p, Vector& value)
 {
-    NOT_FINISHED("VectorFieldUG::interpolate");
-    return 0;
+    int ix;
+    if(!mesh->locate(p, ix))
+	return 0;
+    double s1,s2,s3,s4;
+    Element* e=mesh->elems[ix];
+    mesh->get_interp(e, p, s1, s2, s3, s4);
+    value=data[e->n[0]]*s1+data[e->n[1]]*s2+data[e->n[2]]*s3+data[e->n[3]]*s4;
+    return 1;
 }
 
 #define VECTORFIELDUG_VERSION 1
