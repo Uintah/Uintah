@@ -131,7 +131,6 @@ itcl_class SCIRun_FieldsCreate_Probe {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -201,13 +200,8 @@ itcl_class SCIRun_FieldsCreate_Probe {
 	bind $w.f.g.entries.face <KeyPress-Return> "$this move_face"
 	bind $w.f.g.entries.cell <KeyPress-Return> "$this move_cell"
 
-	frame $w.controls
-	button $w.controls.reset -text "Reset" -command "$this move_center"
-	button $w.controls.close -text "Close" -command "destroy $w"
-	pack $w.controls.reset $w.controls.close -side left -expand yes -fill x
-
-
-	pack $w.f $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+	makeSciButtonPanel $w $w $this -no_execute "\"Reset\" \"$this move_center\" \"\""
+	moveToCursor $w
     }
 }
 

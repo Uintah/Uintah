@@ -44,8 +44,7 @@ itcl_class SCIRun_FieldsCreate_ClipByFunction {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -74,5 +73,8 @@ itcl_class SCIRun_FieldsCreate_ClipByFunction {
 
 	pack $w.location $w.function -side top -fill x -expand 1 \
 	    -padx 5 -pady 5
+
+	makeSciButtonPanel $w $w $this -no_execute
+	moveToCursor $w
     }
 }
