@@ -2137,8 +2137,9 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 /*===========TESTING==========`*/
     setBC(press_new,   rho_micro, placeHolder, d_surroundingMatl_indx,
           "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, lv, ng);
-    delete lv, ng;
-    
+    delete lv;
+    delete ng;
+   
     press_copy.copyData(press_new);
     
     //__________________________________
