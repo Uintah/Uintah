@@ -86,7 +86,7 @@ public:
   
 private:
   void addBoxGeometry(GeomLines* edges, const Box& box);
-  GridP getGrid();
+  bool getGrid();
   void setupColors();
   MaterialHandle getColor(string color, int type);
   void add_type(string &type_list,const TypeDescription *subtype);
@@ -153,7 +153,11 @@ private:
   vector< const TypeDescription *> types;
   double time;
   DataArchive* archive;
+  int old_generation;
+  int old_timestep;
+  GridP grid;
   map< string, string > material_data_list;
+  // call material_data_list.clear() to erase all entries
 };
 
 static string widget_name("GridVisualizer Widget");
@@ -188,7 +192,8 @@ GridVisualizer::GridVisualizer(const string& id)
   index_l("index_l",id,this),
   curr_var("curr_var",id,this),
   widget_lock("GridVusualizer widget lock"),
-  init(1), need_2d(1), node_selected(false)
+  init(1), need_2d(1), node_selected(false),
+  old_generation(-1), old_timestep(0), grid(NULL)
 {
 
   float INIT(0.1);
@@ -199,6 +204,43 @@ GridVisualizer::~GridVisualizer()
 {
 }
 
+// assigns a grid based on the archive and the timestep to grid
+// return true if there was a new grid, false otherwise
+bool GridVisualizer::getGrid()
+{
+  ArchiveHandle handle;
+  if(!in->get(handle)){
+    std::cerr<<"Didn't get a handle\n";
+    grid = NULL;
+    return false;
+  }
+
+  // access the grid through the handle and dataArchive
+  archive = (*(handle.get_rep()))();
+  int new_generation = (*(handle.get_rep())).generation;
+  bool archive_dirty =  new_generation != old_generation;
+  int timestep = (*(handle.get_rep())).timestep();
+  if (archive_dirty) {
+    old_generation = new_generation;
+    vector< int > indices;
+    times.clear();
+    archive->queryTimesteps( indices, times );
+    // set old_timestep to something that will cause a new grid
+    // to be queried.
+    old_timestep = -1;
+    // clean out the cached information if the grid has changed
+    material_data_list.clear();
+  }
+  if (timestep != old_timestep) {
+    time = times[timestep];
+    grid = archive->queryGrid(time);
+    old_timestep = timestep;
+    return true;
+  }
+  return false;
+}
+
+#if 0
 // returns a pointer to the grid
 GridP GridVisualizer::getGrid()
 {
@@ -220,6 +262,7 @@ GridP GridVisualizer::getGrid()
 
   return grid;
 }
+#endif
 
 // adds the lines to edges that make up the box defined by box 
 void GridVisualizer::addBoxGeometry(GeomLines* edges, const Box& box)
@@ -314,10 +357,6 @@ void GridVisualizer::add_type(string &type_list,const TypeDescription *subtype)
 }  
 
 void GridVisualizer::setVars(GridP grid) {
-  names.clear();
-  types.clear();
-  archive->queryVariables(names, types);
-
   string varNames("");
   string type_list("");
   const Patch* patch = *(grid->getLevel(0)->patchesBegin());
@@ -388,21 +427,27 @@ void GridVisualizer::execute()
   id_list.clear();
 
   // Get the handle on the grid and the number of levels
-  GridP grid = getGrid();
+  bool new_grid = getGrid();
   if(!grid)
     return;
   int numLevels = grid->numLevels();
 
   // setup the tickle stuff
   setupColors();
-  nl.set(numLevels);
+  if (new_grid) {
+    nl.set(numLevels);
+    names.clear();
+    types.clear();
+    archive->queryVariables(names, types);
+  }
+  // make sure the variables are properly displayed
   setVars(grid);
   string visible;
   TCL::eval(id + " isVisible", visible);
   if ( visible == "1") {
     TCL::execute(id + " destroyFrames");
     TCL::execute(id + " build");
-
+    
     TCL::execute("update idletasks");
     reset_vars();
   }
