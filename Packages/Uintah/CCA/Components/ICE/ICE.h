@@ -95,6 +95,7 @@ namespace Uintah {
       
       void scheduleAddExchangeContributionToFCVel(SchedulerP&, 
                                             const PatchSet*,
+                                            const MaterialSubset*,
                                             const MaterialSet*, 
                                             const bool);
       
