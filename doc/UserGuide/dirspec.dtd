@@ -1,12 +1,25 @@
-<!-- directory documentation specificatio -->
+<!-- directory documentation specification -->
 
 <!-- ********** Elements ********** -->
 <!ELEMENT p (#PCDATA)>
 
-<!-- Top level -->
-<!ELEMENT dir (fit, use)>
+
+
+
+<!-- top level -->
+<!ELEMENT dir (fit, use, definition+, example+)>
+
+<!-- phase 1 elements -->
 <!ATTLIST dir name CDATA #REQUIRED>
+
 <!ELEMENT fit (p+)>
+
 <!ELEMENT use (when, why)>
 <!ELEMENT when (p+)>
 <!ELEMENT why (p+)>
+
+<!-- phase 2 elements -->
+<!ELEMENT definition (term, p+)>
+<!ELEMENT term (#PCDATA)>
+
+<!ELEMENT example (p+)>
