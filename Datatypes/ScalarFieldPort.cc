@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <ScalarFieldPort.h>
+#include <Datatypes/ScalarFieldPort.h>
 
 clString SimpleIPort<ScalarFieldHandle>::port_type("ScalarField");
 clString SimpleIPort<ScalarFieldHandle>::port_color("VioletRed2");

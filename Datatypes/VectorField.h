@@ -14,7 +14,7 @@
 #ifndef SCI_project_VectorField_h
 #define SCI_project_VectorField_h 1
 
-#include <Datatype.h>
+#include <Datatypes/Datatype.h>
 #include <Classlib/LockingHandle.h>
 #include <Geometry/Vector.h>
 #include <Geometry/Point.h>

@@ -14,8 +14,8 @@
 #ifndef SCI_project_MeshPort_h
 #define SCI_project_MeshPort_h 1
 
-#include <SimplePort.h>
-#include <Mesh.h>
+#include <Datatypes/SimplePort.h>
+#include <Datatypes/Mesh.h>
 
 typedef Mailbox<SimplePortComm<MeshHandle>*> _cfront_bug_Mesh_;
 typedef SimpleIPort<MeshHandle> MeshIPort;

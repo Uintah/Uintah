@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <ContourSetPort.h>
+#include <Datatypes/ContourSetPort.h>
 
 clString SimpleIPort<ContourSetHandle>::port_type("ContourSet");
 clString SimpleIPort<ContourSetHandle>::port_color("SGITeal");

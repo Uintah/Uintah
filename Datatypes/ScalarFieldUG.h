@@ -14,8 +14,8 @@
 #ifndef SCI_project_ScalarFieldUG_h
 #define SCI_project_ScalarFieldUG_h 1
 
-#include <ScalarField.h>
-#include <Mesh.h>
+#include <Datatypes/ScalarField.h>
+#include <Datatypes/Mesh.h>
 #include <Classlib/Array1.h>
 
 class ScalarFieldUG : public ScalarField {

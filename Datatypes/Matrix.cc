@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Matrix.h>
+#include <Datatypes/Matrix.h>
 
 PersistentTypeID Matrix::type_id("Matrix", "Datatype", 0);
 

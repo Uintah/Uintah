@@ -14,9 +14,9 @@
 #ifndef SCI_project_GeometryPort_h
 #define SCI_project_GeometryPort_h 1
 
-#include <MessageBase.h>
-#include <Port.h>
 #include <Classlib/String.h>
+#include <Comm/MessageBase.h>
+#include <Dataflow/Port.h>
 #include <Geometry/Vector.h>
 #include <Geometry/Point.h>
 #include <Multitask/ITC.h>

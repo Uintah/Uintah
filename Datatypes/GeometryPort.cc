@@ -11,13 +11,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <GeometryPort.h>
-#include <Connection.h>
-#include <Module.h>
-#include <NotFinished.h>
-#include <Port.h>
+#include <Datatypes/GeometryPort.h>
+
 #include <Classlib/Assert.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
+#include <Dataflow/Connection.h>
+#include <Dataflow/Module.h>
+#include <Dataflow/Port.h>
+
 #include <iostream.h>
 
 static clString Geometry_type("Geometry");

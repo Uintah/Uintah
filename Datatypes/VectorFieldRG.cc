@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <VectorFieldRG.h>
+#include <Datatypes/VectorFieldRG.h>
 #include <Classlib/String.h>
 #include <iostream.h>
 

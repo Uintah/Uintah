@@ -10,7 +10,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Datatype.h>
+#include <Datatypes/Datatype.h>
 
 Datatype::Datatype() {
     ref_cnt=0;

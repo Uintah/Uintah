@@ -10,11 +10,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <ContourSet.h>
-#include <Surface.h>
-#include <Geom.h>
+#include <Datatypes/ContourSet.h>
+
 #include <Classlib/String.h>
+#include <Datatypes/Surface.h>
 #include <Geometry/Transform.h>
+#include <Geom/Geom.h>
+
 #include <iostream.h>
 
 #define Sqr(x) ((x)*(x))
@@ -45,10 +47,6 @@ ContourSet::ContourSet()
     origin=Vector(0,0,0);
     space=1;
 };
-
-ContourSet *ContourSet::clone() {
-    return new ContourSet(*this);
-}
 
 ContourSet::ContourSet(const ContourSet &copy)
 : space(copy.space), origin(copy.origin), contours(copy.contours),

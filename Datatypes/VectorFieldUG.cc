@@ -11,9 +11,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <VectorFieldUG.h>
+#include <Datatypes/VectorFieldUG.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
-#include <NotFinished.h>
 
 static Persistent* maker()
 {

@@ -14,7 +14,7 @@
 #ifndef SCI_project_SoundPort_h
 #define SCI_project_SoundPort_h 1
 
-#include <Port.h>
+#include <Dataflow/Port.h>
 #include <Multitask/ITC.h>
 
 struct SoundComm {

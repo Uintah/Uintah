@@ -14,7 +14,7 @@
 #ifndef SCI_project_ScalarFieldRG_h
 #define SCI_project_ScalarFieldRG_h 1
 
-#include <ScalarField.h>
+#include <Datatypes/ScalarField.h>
 #include <Classlib/Array3.h>
 
 class ScalarFieldRG : public ScalarField {

@@ -14,8 +14,8 @@
 #ifndef SCI_project_VectorFieldPort_h
 #define SCI_project_VectorFieldPort_h 1
 
-#include <SimplePort.h>
-#include <VectorField.h>
+#include <Datatypes/SimplePort.h>
+#include <Datatypes/VectorField.h>
 
 typedef Mailbox<SimplePortComm<VectorFieldHandle>*> _cfront_bug_VectorField_;
 typedef SimpleIPort<VectorFieldHandle> VectorFieldIPort;

@@ -14,13 +14,14 @@
 #ifndef SCI_project_ContourSet_h
 #define SCI_project_ContourSet_h 1
 
-#include <Datatype.h>
+#include <Datatypes/Datatype.h>
+
 #include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
 #include <Classlib/String.h>
 #include <Geometry/BBox.h>
+#include <Geometry/Point.h>
+#include <Geometry/Vector.h>
 
 class ContourSet;
 typedef LockingHandle<ContourSet> ContourSetHandle;
@@ -36,7 +37,6 @@ public:
 
     ContourSet();
     ContourSet(const ContourSet &copy);
-    ContourSet* clone();
     virtual ~ContourSet();
     virtual ContourSet* clone();
     void translate(const Vector &v);

@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <VectorField.h>
+#include <Datatypes/VectorField.h>
 #include <Classlib/String.h>
 
 PersistentTypeID VectorField::type_id("VectorField", "Datatype", 0);

@@ -11,12 +11,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SoundPort.h>
-#include <Connection.h>
-#include <NotFinished.h>
-#include <Port.h>
+#include <Datatypes/SoundPort.h>
+
 #include <Classlib/Assert.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
+#include <Dataflow/Connection.h>
+#include <Dataflow/Port.h>
+
 #include <iostream.h>
 
 static clString sound_type("Sound");

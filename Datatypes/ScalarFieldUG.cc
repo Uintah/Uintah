@@ -11,8 +11,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <ScalarFieldUG.h>
-#include <NotFinished.h>
+#include <Datatypes/ScalarFieldUG.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 
 static Persistent* maker()
