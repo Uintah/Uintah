@@ -6,6 +6,9 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <float.h>
+#include <limits.h>
+
 using namespace SCIRun;
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -158,6 +161,70 @@ const TypeDescription* fun_getTypeDescription(Vector*)
 				  "Vector", true, &makeMPI_Vector);
    }
    return td;
+}
+
+void fun_getLargeValue(double* val)
+{
+  *val = DBL_MAX;
+}
+
+void fun_getSmallValue(double* val)
+{
+  *val = -DBL_MAX;
+}
+
+void fun_getZeroValue(double* val)
+{
+  *val = 0;
+}
+
+void fun_getLargeValue(bool* val)
+{
+  // this should never get called.  It doesn't make sense for a bool
+  // to get used in a min or max op
+  *val = true;
+}
+
+void fun_getSmallValue(bool* val)
+{
+  // this should never get called.  It doesn't make sense for a bool
+  // to get used in a min or max op
+  *val = false;
+}
+
+void fun_getZeroValue(bool* val)
+{
+  *val = false;
+}
+
+void fun_getLargeValue(long64* val)
+{
+  *val = LONG_MAX;
+}
+
+void fun_getSmallValue(long64* val)
+{
+  *val = LONG_MIN;
+}
+
+void fun_getZeroValue(long64* val)
+{
+  *val = 0;
+}
+
+void fun_getLargeValue(Vector* val)
+{
+  *val = Vector(DBL_MAX,DBL_MAX,DBL_MAX);
+}
+
+void fun_getSmallValue(Vector* val)
+{
+  *val = Vector(-DBL_MAX,-DBL_MAX,-DBL_MAX);
+}
+
+void fun_getZeroValue(Vector* val)
+{
+  *val = Vector(0,0,0);
 }
 
 
