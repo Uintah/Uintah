@@ -23,7 +23,6 @@
 #include <SCICore/Util/DebugStream.h>
 #include <sstream>
 
-#define MIKE_DEBUG
 #define BITBOUND 0
 
 namespace SCICore {
@@ -265,51 +264,27 @@ BrickAttrib<T>::linearize(int x, int y, int z)
 template <class T> T &
 BrickAttrib<T>::fget1(int ix)
 {
-#ifdef MIKE_DEBUG
-  if (dim != 1) {
-    throw DimensionMismatch(1, dim);
-  }
-  if (ix >= nx) {
-    throw ArrayIndexOutOfBounds(ix, 0, nx);
-  }
-#endif
+  ASSERTEQ(dim, 1);
+  CHECKARRAYBOUNDS(ix, 0, nx);
   return data[ix];
 }
 
 template <class T> T &
 BrickAttrib<T>::fget2(int ix, int iy)
 {
-#ifdef MIKE_DEBUG
-  if (dim != 2) {
-    throw DimensionMismatch(2, dim);
-  }
-  if (ix >= nx) {
-    throw ArrayIndexOutOfBounds(ix, 0, nx);
-  }
-  if (iy >= ny) {
-    throw ArrayIndexOutOfBounds(iy, 0, ny);
-  }
-#endif
+  ASSERTEQ(dim, 2);
+  CHECKARRAYBOUNDS(ix, 0, nx);
+  CHECKARRAYBOUNDS(iy, 0, ny);
   return data[linearize(ix, iy)];
 }
 
 template <class T> T &
 BrickAttrib<T>::fget3(int ix, int iy, int iz)
 {
-#ifdef MIKE_DEBUG
-  if (dim != 3) {
-    throw DimensionMismatch(3, dim);
-  }
-  if(ix >= nx) {
-    throw ArrayIndexOutOfBounds(ix, 0, nx);
-  }
-  if (iy >= ny) {
-    throw ArrayIndexOutOfBounds(iy, 0, ny);
-  }
-  if (iz >= nz) {
-    throw ArrayIndexOutOfBounds(iz, 0, nz);
-  }
-#endif
+  ASSERTEQ(dim, 3);
+  CHECKARRAYBOUNDS(ix, 0, nx);
+  CHECKARRAYBOUNDS(iy, 0, ny);
+  CHECKARRAYBOUNDS(iz, 0, nz);
   return data[linearize(ix, iy, iz)];
 }
 
@@ -357,31 +332,17 @@ BrickAttrib<T>::get3(int ix, int iy, int iz)
 template <class T> void
 BrickAttrib<T>::fset1(int ix, const T& val)
 {
-#ifdef MIKE_DEBUG
-  if (dim != 1) {
-    throw DimensionMismatch(1, dim);
-  }
-  if (ix >= nx) {
-    throw ArrayIndexOutOfBounds(ix, 0, nx);
-  }
-#endif
+  ASSERTEQ(dim, 1);
+  CHECKARRAYBOUNDS(ix, 0, nx);
   data[ix] = val;
 }
 
 template <class T> void
 BrickAttrib<T>::fset2(int ix, int iy, const T& val)
 {
-#ifdef MIKE_DEBUG
-  if (dim != 2) {
-    throw DimensionMismatch(2, dim);
-  }
-  if (ix >= nx) {
-    throw ArrayIndexOutOfBounds(ix, 0, nx);
-  }
-  if (iy >= ny) {
-    throw ArrayIndexOutOfBounds(iy, 0, ny);
-  }
-#endif
+  ASSERTEQ(dim, 2);
+  CHECKARRAYBOUNDS(ix, 0, nx);
+  CHECKARRAYBOUNDS(iy, 0, ny);
   data[linearize(ix, iy)] = val;
 }
 
@@ -389,20 +350,10 @@ BrickAttrib<T>::fset2(int ix, int iy, const T& val)
 template <class T> void
 BrickAttrib<T>::fset3(int ix, int iy, int iz, const T& val)
 {
-#ifdef MIKE_DEBUG
-  if (dim != 3) {
-    throw DimensionMismatch(3, dim);
-  }
-  if(ix >= nx) {
-    throw ArrayIndexOutOfBounds(ix, 0, nx);
-  }
-  if (iy >= ny) {
-    throw ArrayIndexOutOfBounds(iy, 0, ny);
-  }
-  if (iz >= nz) {
-    throw ArrayIndexOutOfBounds(iz, 0, nz);
-  }
-#endif
+  ASSERTEQ(dim, 3);
+  CHECKARRAYBOUNDS(ix, 0, nx);
+  CHECKARRAYBOUNDS(iy, 0, ny);
+  CHECKARRAYBOUNDS(iz, 0, nz);
   data[linearize(ix, iy, iz)] = val;
 }
 

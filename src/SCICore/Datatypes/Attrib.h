@@ -22,6 +22,7 @@
 #include <SCICore/Exceptions/DimensionMismatch.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
+#include <SCICore/Util/FancyAssert.h>
 
 
 namespace SCICore {
