@@ -1,6 +1,6 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Thread/Thread.h>
-
+#include <Packages/rtrt/Core/ObjReader.h>
 #include <Packages/rtrt/Core/BrickArray2.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Light.h>
@@ -311,8 +311,14 @@ read_geom(Group *g, char *geomfile, char *locfile)
     double tx,ty,tz,sx,sy,sz;
 
     tris = new Group();
-
-    parseobj(geomfp, tris);
+    Transform t;
+    string objname = geomfile;
+    //parseobj(geomfp, tris);
+    if(!readObjFile( objname+ ".obj", objname + ".mtl", t, tris)) 
+      {
+	cout << "Error reading file\n";
+	exit(0);
+      }
 
     BBox tris_bbox;
     tris->compute_bounds(tris_bbox,0);
@@ -321,12 +327,12 @@ read_geom(Group *g, char *geomfile, char *locfile)
     //BV1 *tri_grid;
     InstanceWrapperObject *tri_wrap;
     if (!realgeom) {
-	tri_grid = new HierarchicalGrid(tris,
-					10,10,10,10,10,1);
-//  	tri_grid = new HierarchicalGrid(tris,
-//  					15,10,10,5,10,1);
-//  	tri_grid = new HierarchicalGrid(tris,
-//  					4,8,16,16,32,1);
+      tri_grid = new HierarchicalGrid(tris,
+      				10,10,10,10,10,1);
+      //  	tri_grid = new HierarchicalGrid(tris,
+      //				15,10,10,5,10,1);
+      //tri_grid = new HierarchicalGrid(tris,
+      //				4,8,16,16,32,1);
       //tri_grid = new BV1(tris);
 	tri_wrap = new InstanceWrapperObject(tri_grid);
     }
@@ -352,12 +358,12 @@ read_geom(Group *g, char *geomfile, char *locfile)
 	
 	if (realgeom) 
 	{
-	    
+	
 	    Transform T;
 	    T.load_identity();
   	    T.pre_scale(scale);
 	    T.pre_translate(trans);
-
+	    
 	    for (int i=0; i<tris->objs.size(); i++)
 	    {
 		Tri *oldt = (Tri *)tris->objs[i];
@@ -368,20 +374,28 @@ read_geom(Group *g, char *geomfile, char *locfile)
 	}
 	else 
 	{
+	
 	    Transform *T = new Transform();
+	    T->load_identity();
+	    T->pre_rotate(drand48()*360.0, Vector(0,0,1));
 	    T->pre_scale(scale);
 	    T->pre_translate(trans);
-
-	    geomgrp->add(new Instance(tri_wrap, T,tris_bbox));
+	    //new line for getting the tree on the ground;
+	    T->pre_translate(Vector(0,5,0));
+	    
+	    geomgrp->add(new Instance(tri_wrap, T));//,tris_bbox));
 	    
 	}
     }
     if (realgeom)
     {
+     
 	g->add(new Grid(geomgrp,25));
     } else 
     {
-      g->add(new HierarchicalGrid(geomgrp,10,10,10,20,20,1));
+    
+      //g->add(new HierarchicalGrid(geomgrp,10,10,10,20,20,1));
+      g->add(new HierarchicalGrid(geomgrp,10,10,10,10,10,1));
 //  	g->add(geomgrp);
     }
 
@@ -526,8 +540,12 @@ Scene* make_scene(int argc, char* argv[])
 
   EnvironmentMapBackground *emap = 
     new EnvironmentMapBackground("/opt/SCIRun/data/Geometry/textures/terrain/sunset2.ppm",
+      Vector(0,0,1));
+  /*new EnvironmentMapBackground("/home/collaborator/dghosh/sunset2.ppm",
 				 Vector(0,0,1));
-    scene->set_ambient_environment_map(emap);
+  */
+
+  scene->set_ambient_environment_map(emap);
     if (headlight) {
       
       Light * rightHeadlight = new PhongLight(Color(0.5,0.5,0.5), Point(2,2,2), 
@@ -552,7 +570,7 @@ Scene* make_scene(int argc, char* argv[])
     }
 
     scene->select_shadow_mode( No_Shadows );
-    scene->maxdepth=0;
+    scene->maxdepth=4;
     scene->set_background_ptr(new EnvironmentMapBackground("/opt/SCIRun/data/Geometry/models/stadium/SKY3.ppm"));
     
 
