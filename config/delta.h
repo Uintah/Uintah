@@ -20,7 +20,7 @@
 #define SCI_Linker SCI_DeltaLinker
 #define SCI_LinkerFlags SCI_DeltaLinkerFlags
 #define SCI_LinkerLib SCI_DeltaLinkerLib
-#define SCI_PrelinkCommand /usr/lib/DCC/edg_prelink
+#define SCI_PrelinkCommand SCI_DeltaPrelinkCommand
 
 #define CppNeedsIncludes
 #define LinkerNeedsCppFlags

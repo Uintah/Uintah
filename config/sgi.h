@@ -35,7 +35,7 @@
 #define SCI_DeltaLinkerFlags -ptv
 #define SCI_DeltaLinkerNeedsCppFlags
 #define SCI_DeltaLinkerLib
-#define SCI_DeltaPrelinkCommand /usr/lib/DCC/edg_prelink
+#define SCI_DeltaPrelinkCommand /usr/lib/DCC/edg_prelink -v
 
 #define SCI_GNUCCompiler gcc
 #define SCI_GNUOptimizeCFlags -O2
