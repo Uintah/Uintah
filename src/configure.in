@@ -248,10 +248,10 @@ case $host in
 #           fi
 	   F77=f77
 	   FFLAGS="$BINARYFLAGS ${FFLAGS}"
-           CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
+           CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS -DMPIPP_H $extra_cflags"
 	   ASFLAGS="$BINARYFLAGS ${ASFLAGS}"
            SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(LIBDIR)so_locations $(TLINK) ${SOFLAGS}"
-           LDFLAGS="$BINARYFLAGS -LANG:std -no_unresolved"
+           LDFLAGS="$BINARYFLAGS -LANG:std -DMPIPP_H -no_unresolved"
            LDRUN_PREFIX="-Wl,-rpath -Wl,"
 	   TEMPLATE_TAG=
 	   TEMPLATE_BOX="<>"
