@@ -36,10 +36,10 @@
         properties for the nodes, edges, and faces (<i>e.g.</i> the
         nodes will be rendered as blue spheres), and will render the
         geometry to the screen in an interactive viewing window.  We
-        will begin constructing a net from scratch as shown,
-        completed, in <b>Figure 1.1.</b> In future chapters we expand
-        on this network, adding more features and more functionality
-        with each successive iteration.
+        will begin by constructing a net from scratch (as shown,
+        completed, in <b>Figure 1.1</b>). In the chapters that follow, we
+        will expand on this network, adding more features and
+        functionality with each successive iteration.
 
 	</div>
 	<center>
@@ -58,13 +58,13 @@
         networks can be run with a variety of inputs, the
         SCIRUN_DATASET variable indicates which dataset to load.
 
-        <p>For example, the network that we construct in this chapter
-        loads a geometric mesh from disk and render it to the screen.
+        <p>For example, in this chapter, we construct a network that
+        loads a geometric mesh from disk and renders it to the screen.
         Such a network will work on a wide variety of inputs, and so
-        the SCIRUN_DATASET variable indicates which one the user would
-        like to see.  In your Unix shell window, set your SCIRUN_DATA
-        variable to point where you have installed the SCIRun data,
-        and set your SCIRUN_DATASET variable to utahtorso-lowres (as
+        the SCIRUN_DATASET variable indicates a selction for what the user
+        would like to see.  To begin, in your Unix shell window, set your
+        SCIRUN_DATA variable to point where you have installed the SCIRun
+        data. Also set your SCIRUN_DATASET variable to utahtorso-lowres (as
         shown in <b>Figure 1.2.</b>)
 
 	</div>
@@ -89,8 +89,7 @@
 	<div align="left">
 	<p><br>
 
-        <p>The first module we instantiate in our network will be a
-        FieldReader.  To create a FieldReader module, pulldown the
+        <p>We will first create a FieldReader module. Go to the pulldown the
         SCIRun menu and select DataIO/FieldReader, as shown in
         <b>Figure 1.3.1.</b><p>
 
@@ -102,7 +101,7 @@
 	<div align="left">
 	<p><br>
 
-        <p>As the module instantiates, appears on the network map
+        <p>As the module starts up, it appears on the network map
         as a box, as seen in <b>Figure 1.4.</b><p>
 
 	</div>
@@ -113,17 +112,16 @@
 	<div align="left">
 	<p><br>
 
-        <p>The box has a user interface button that, when pressed,
-        launches a file browser window.  You can type, or
-        point-and-click navigate to the
+        <p>To launch the file browser window, press the user interface
+        button.You can type, or point-and-click navigate to the
         utahtorso-lowres/utahtorso-lowres-voltage.tvd.fld input file.
         This dataset is a low resolution tetrahedral mesh of a human
-        torso.  When you select the filename in the file- browser
-        window, and press &quot;OK&quot;, the file-browser window will
-        disappear, and the FieldReader module will begin to execute.
-        When the module finishes computing, the progress bar turns
-        green and the module icon displays a number indicating the
-        amount of CPU time required to complete (<b>Figure 1.5</b>).
+        torso.  When you select the filename in the file-browser
+        window, and press &quot;OK&quot;, the file-browser window
+        disappears, and the FieldReader module begins to execute. When
+        the module finishes computing, the progress bar turns green and the
+        module icon displays a number indicating the amount of CPU time
+        required to complete (<b>Figure 1.5</b>).
 
 	</div>
 	<center>
@@ -133,12 +131,11 @@
 	<div align="left">
 	<p><br>
 
-	<p> The dataset that we just read-in is called a SCIRun
-        &quot;Field&quot;.  The definition of a Field is that it
-        contains a geometric mesh, and a collection of data values
-        mapped onto that mesh.  In this case, we have a tetrahedral
-        mesh, with voltages defined at the nodes of the mesh.  We
-        provide a brief overview below, describing the various types
+	<p> We have just finished reading-in the SCIRun
+        &quot;Field&quot; dataset.  A Field contains a geometric mesh, and
+        a collection of data values mapped onto that mesh.  In this case,
+        we use a tetrahedra mesh, with voltages defined at the nodes of the
+        mesh.  The brief overview below describes the various types
         of geometric meshes, datavalues, and mappings that SCIRun
         supports.
 
@@ -186,11 +183,11 @@
 
         <p>We will now add a second module to our network.  Select
         ShowField from the SCIRun/Visualization menu.  This module is
-        used for visualizing our various field types.  The module's
-        User Interface (UI) has options for rendering various geometry
-        from the field, as well as some special options for rendering
+        used for visualizing various field types.  ShowField has a User
+        Interface (UI) option for rendering geometry
+        from the field, and special options for rendering
         vector data.  ShowField can use color to represent data within
-        the geometry if so desired.  For now we will want to just
+        the geometry if so desired.  For now, we will 
         render the nodes of the geometry as blue spheres.
 
         <p>Select the UI button on the ShowField module (<b>Figure 1.6</b>).
@@ -202,7 +199,7 @@
 	</center>
 	<div align="left">
 
-        <p><br> The Nodes tab is selected by default in addition to
+        <p><br> The Nodes tab selects by default in addition to
         the Sphere Display Type.  However, the default color is grey.
         To change the default color, select the Default Color button
         near the bottom of the dialogue.  This will pop up a new
@@ -223,18 +220,17 @@
         <p>Now that you have two modules in your canvas, they need to
         be connected so that data can flow between them.  Output ports
         in SCIRun are always on the bottom of the module, whereas
-        input ports are always on top.  Ports that have the same color
-        may be connected.  Each datatype in SCIRun that can be passed
-        through ports has a unique color.
+        input ports are always on top. Ports of the same color may be
+        connected. Each datatype in SCIRun that can be passed through ports
+        has a unique color.
                   
-        <p>Using your middle mouse select the yellow output port on
+        <p>Using your middle mouse button,  select the yellow output port on
         the FieldReader (<b>Figure 1.7.1</b>).  You should see the
-        name of the port pop up, as well as lines drawn indicating
-        possible connections.  If you then drag your middle mouse
-        towards the ShowField input Field port (the yellow one)
-        eventually you will see the line turn red (<b>Figure
-        1.7.2</b>).  Once it is red you may release the middle mouse
-        button.  What you should see is a yellow datapipe connection
+        name of the port, and lines that indicate possible
+        connections. Drag your middle mouse towards the ShowField input
+        Field port (the yellow one). Eventually, the line turns
+        red (<b>Figure 1.7.2</b>), and you may release the mouse
+        button. You should see a yellow datapipe connection
         between FieldReader and ShowField (<b>Figure 1.7.3</b>).
 
 	</div>
@@ -259,47 +255,45 @@
 	<div align="left">
 	<p><br>
 
-	<p>Press the "Execute" button on the ShowField UI to force the
-        module to execute its algorithm. ShowField is expected to work
+	<p>Next, press the "Execute" button on the ShowField UI that forces the
+        module to execute its algorithm. ShowField should work
         on any of our Field types. We have numerous field types, each
         that can contain any data type. For example ShowField should
-        visualize TetVol's with double data, or TetVol's with Vector
-        or Tensor data. This is true of TriSurf's and all of our Field
-        types. You may see how this creates a combinatorial explosion
-        of accepted types.  As you might quess we have used the C++
-        Template mechanism to achieve this versatility, but it comes
-        at the price of having to compile all of the types we might
+        visualize TetVol with double data, or TetVol with Vector
+        or Tensor data. This is true of TriSurf and all of our Field
+        types. This creates a combined explosion of accepted types. We have
+        used the C++ template mechanism to achieve this versatility, though
+        this requires compiling all of the types we might
         ever use into our code base.
 
-        <p>Our approach is to only compile algorithms that use an
-        exact field type. This information is not known until a module
-        gets its input data, so we wait and compile that algorithm
-        then. We use <a
+        <p>We have compiled only algorithms with an
+        exact field type. This information becomes known only after a module
+        recieves its input data. We use <a
         href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
-        Compilation</a> to accomplish this.  So when ShowField
-        executes for the first time, you will notice a delay while it
-        compiles the algorithm specific to the field type and loads it
+        Compilation</a> to accomplish this. You will notice a delay when
+        ShowField executes for the first time. This happens when the module
+        compiles the algorithm specific to the field type, and loads it
         into SCIRun.  We cache away this compiled algorithm in a
-        shared library so that it can be loaded the next time you run
-        without delay.
+        shared library, loading it without delay the next time you run
+        SCIRun.
 
         <p>ShowField will then execute the newly loaded algorithm
         passing its results along downstream.
 
         <p><b>Viewer module</b><br>
 
-	<p>The last module we will add to this network will be the
-	Viewer module.  This module is located under the SCIRun/Render
-	menu.  Once the module has been instantiated, connect the
-	output port from ShowField into the Viewer input port.  You
-	probably noticed that the Viewer module generated a new input
-	port.  Some modules in SCIRun have dynamic input ports, Viewer
-	is an example of this.  This allows the Viewer to always
+	<p>The viewer module is the last module that we will add to this
+	network. This module is located under the SCIRun/Render
+	menu.  To use this module, connect the
+	output port from ShowField into the Viewer input port.  As you may
+	have noted, the Viewer module generated a new input
+	port.  Some modules in SCIRun have dynamic input ports, and the Viewer
+	provides an example of this.  This allows the Viewer to always
 	accept additional data to Render.
 
-	<p>To see the graphical rendering of the data (<b>Figure 1.10</b>) that has been
-	passed into the Viewer module, press the Viewer UI button
-	.<p>
+	<p>To see the graphical rendering of the data (<b>Figure 1.10</b>)
+	that passes into the Viewer module, press the Viewer UI button.
+	
 
 	</div>
 	<center>
@@ -313,24 +307,22 @@
 
 	<p>The viewer is one of the most important elements of SCIRun
 	and you will want to spend some time getting acquainted with
-	its functionality.  The full description of the viewer is
-	available in the User's Guide [|<add link>].  Here, we
-	describe only the basic commands and actions.
+	its functionality.  The User's Guide (add link) provides a full
+	description of the viewer.  
  
-	<p> <b>Figure 1.10</b> shows the viewer window with the results of the
-	network you have built in the previous sections of this
-	chapter.  Controls for setting the diplay parameters may be
-	found in the lower panel of the window. We will talk about
-	these controls shortly, but the controls you will most often
+	<p> <b>Figure 1.10</b> shows the viewer window with the
+	network you have built earlier in this
+	chapter.  You may find controls for setting the display in the
+	lower panel of the window. However, the controls you will most often
 	use are not visible in this display.
  
-	<P><B>Mouse controls</b><br>
+	<p><b>Mouse controls</b><br>
  
 	<p>The mouse is loaded with functionality that you will use
 	often with the viewer.  If you first move the mouse to the
 	center of the viewer window, click and hold the left mouse
 	button. Then slide the mouse, and the objects in the view
-	window will shift to follow the mouse movement.  Try the same
+	window shift to follow the mouse movement.  Try the same
 	action with the middle mouse button, and the objects stop
 	shifting and instead begin to rotate.
  
@@ -399,8 +391,8 @@
  
 	<p>Widgets are graphical elements---objects in the
 	viewer---whose main purpose is to allow interactive user
-	control of the display.  \sr{} supports a family of widgets
-	that have similar look and feel but manipulate different
+	control of the display.  SCIRun supports a family of widgets
+	that have similar look and feel, but manipulate different
 	aspects of the display.
  
 	<p>To include a widget in the display requires the presence of
@@ -411,14 +403,14 @@
 	<p>The user controls the widgets by shift-clicking and
 	dragging on different parts of them.  Selecting some neutral
 	spot on a widget allows the user to move it around the screen,
-	which selects the region of the display where they widget
+	which selects the region of the display where the widget
 	should act.  Selecting spheres and cylinders on the widget
 	usually provide the means of altering either the orientation
 	of widget or the parameters it controls, for example, density
-	o streamlines.
+	of streamlines.
  
-	<p>So try to select and move the widget in your network by
-	making sure it is visible (via the extended control window)
+	<p>Try to select and move the widget in your network by
+	making sure it is visible (via the extended control window),
 	and then shift-clicking with the left mouse button on some
 	part of the widget.  Moving the mouse should move the widget
 	around.  Shift-clicking the spheres (control points) of the
@@ -427,14 +419,13 @@
 	<p><b>Summary</b><br>
  
 	<p>There are many more features available in the viewer and
-	learning more about this component of \sr{} will greatly
-	enhance your enjoyment and capabilities.  Progress is usually
-	best through some combination of trying the features available
-	and consulting the User's Guide.
+	learning more about this component of SCIRun will greatly
+	enhance your capabilities.  For ease of progress with using SCIRun,
+	try the features available and consult the User's Guide.
  
         <p><b>Saving and reloading networks</b><br>
 
-        <p>The three module network we created earlier will serve as a
+        <p>The three module network that we created earlier will serve as a
         foundation for the nets we will create through the rest of
         this tutorial.  As such, we will take a few moments to examine
         how nets can be saved to disk and then can be reloaded in a
