@@ -195,7 +195,7 @@ ShowDipoles::load_gui()
     }
 
     // it is possible that these were created already, dont do it twice.
-    if (widget_id_.size() != num_dipoles_.get()) {
+    if ((int)widget_id_.size() != num_dipoles_.get()) {
       GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
       if (!ogeom) {
 	error("Unable to initialize oport 'Geometry'.");
