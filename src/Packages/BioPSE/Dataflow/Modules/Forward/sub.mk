@@ -11,6 +11,7 @@ SRCDIR   := Packages/BioPSE/Dataflow/Modules/Forward
 
 SRCS     += \
 #	$(SRCDIR)/DipoleInSphere.cc\
+	$(SRCDIR)/BuildFDMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
