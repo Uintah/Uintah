@@ -31,6 +31,8 @@
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
@@ -2292,7 +2294,7 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       int indext1 =  2;
       int indext2 =  3;
       
-      fort_momentum_exchange_term_continuous_cc(uVelNonlinearSrc_fcy,
+      fort_momentum_exchange_cont_cc(uVelNonlinearSrc_fcy,
 						uVelLinearSrc_fcy,
 						uVelNonlinearSrc_fcz,
 						uVelLinearSrc_fcz,
@@ -2329,7 +2331,7 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       indext1 =  3;
       indext2 =  1;
 
-      fort_momentum_exchange_term_continuous_cc(vVelNonlinearSrc_fcz,
+      fort_momentum_exchange_cont_cc(vVelNonlinearSrc_fcz,
 						vVelLinearSrc_fcz,
 						vVelNonlinearSrc_fcx,
 						vVelLinearSrc_fcx,
@@ -2366,7 +2368,7 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       indext1 =  1;
       indext2 =  2;
       
-      fort_momentum_exchange_term_continuous_cc(wVelNonlinearSrc_fcx,
+      fort_momentum_exchange_cont_cc(wVelNonlinearSrc_fcx,
 						wVelLinearSrc_fcx,
 						wVelNonlinearSrc_fcy,
 						wVelLinearSrc_fcy,
