@@ -45,13 +45,12 @@
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Core/Geom/View.h>
 #include <Core/Volume/SliceRenderer.h>
-#include <Core/Volume/Texture.h>
 #include <Dataflow/Ports/TexturePort.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Dataflow/Ports/Colormap2Port.h>
 
 #include <iostream>
 #include <algorithm>
-#include <Core/Volume/Utils.h>
 #include <Core/Volume/VideoCardInfo.h>
 
 namespace SCIRun {
@@ -173,18 +172,21 @@ void VolumeSlicer::execute()
 
   if (c2)
   {
-#ifndef HAVE_AVR_SUPPORT
-    warning("ColorMap2 usage is not supported by this build.");
-    cmap2 = 0;
-    c2 = false;
-#else
-    if (tex_->nc() == 1)
+    if (!ShaderProgramARB::shaders_supported())
     {
-      warning("ColorMap2 requires gradient magnitude in the texture.");
+      warning("ColorMap2 usage is not supported by this machine.");
       cmap2 = 0;
       c2 = false;
     }
-#endif
+    else
+    {
+      if (tex_->nc() == 1)
+      {
+        warning("ColorMap2 requires gradient magnitude in the texture.");
+        cmap2 = 0;
+        c2 = false;
+      }
+    }
   }
 
   if (!c1 && !c2)

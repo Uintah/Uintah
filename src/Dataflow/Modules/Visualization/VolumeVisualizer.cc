@@ -45,10 +45,10 @@
 #include <Dataflow/Widgets/PointWidget.h>
 
 #include <Core/Volume/VolumeRenderer.h>
-#include <Core/Volume/Texture.h>
 #include <Dataflow/Ports/TexturePort.h>
 #include <Dataflow/Ports/Colormap2Port.h>
 #include <Core/Volume/VideoCardInfo.h>
+#include <Core/Geom/ShaderProgramARB.h>
 
 #include <iostream>
 #include <sstream>
@@ -164,11 +164,12 @@ VolumeVisualizer::execute()
     return;
   }
 
-#ifdef HAVE_AVR_SUPPORT
-  const bool shading_state = (tex->nb(0) == 1);
-#else
-  const bool shading_state = false;
-#endif
+  bool shading_state = false;
+  if (ShaderProgramARB::shaders_supported())
+  {
+    shading_state = (tex->nb(0) == 1);
+  }
+
   gui->execute(id + " change_shading_state " + (shading_state?"0":"1"));
   
   ColorMapHandle cmap1;
@@ -178,18 +179,21 @@ VolumeVisualizer::execute()
 
   if (c2)
   {
-#ifndef HAVE_AVR_SUPPORT
-    warning("ColorMap2 usage is not supported by this build.");
-    cmap2 = 0;
-    c2 = false;
-#else
-    if (tex->nc() == 1)
+    if (!ShaderProgramARB::shaders_supported())
     {
-      warning("ColorMap2 requires gradient magnitude in the texture.");
+      warning("ColorMap2 usage is not supported by this machine.");
       cmap2 = 0;
       c2 = false;
     }
-#endif
+    else
+    {
+      if (tex->nc() == 1)
+      {
+        warning("ColorMap2 requires gradient magnitude in the texture.");
+        cmap2 = 0;
+        c2 = false;
+      }
+    }
   }
 
   if (!c1 && !c2)
