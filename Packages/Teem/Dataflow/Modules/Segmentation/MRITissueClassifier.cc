@@ -321,6 +321,37 @@ MRITissueClassifier::execute()
     if (m_FatSat)
       generation_[3] = m_FATSAT_Data.get_rep()->generation;
       
+    int temp = m_T1_Data->nrrd->axis[0].size;
+    m_width = m_T1_Data->nrrd->axis[1].size;
+    m_height = m_T1_Data->nrrd->axis[2].size;
+    m_depth = m_T1_Data->nrrd->axis[3].size;
+
+    
+
+    m_Label		= create_nrrd_of_ints(m_width, m_height, m_depth);
+    m_DistBG		= create_nrrd_of_floats(m_width, m_height, m_depth);
+    m_Energy		= create_nrrd_of_floats(m_width, m_height, m_depth);
+    m_CSF_Energy	= create_nrrd_of_floats(m_width, m_height, m_depth);
+    
+
+    ColumnMatrix tempvec;
+    for (int x=0;x<m_width;x++)
+      for (int y=0;y<m_height;y++)
+	for (int z=0;z<m_depth;z++)
+	{
+	  tempvec=get_m_Data(x,y,z);
+	  set_nrrd_float(m_CSF_Energy, tempvec.get(1)-tempvec.get(0),x,y,z); // T2 - T1
+	}
+    
+    if (m_EyesVisible)
+      EyeDetection();
+    else
+    {
+      m_TopOfEyeSlice = -1;
+      m_EyeSlice = -1;
+    }
+
+
 
     BackgroundDetection();
     ComputeForegroundCenter();
@@ -343,21 +374,11 @@ MRITissueClassifier::MRITissueClassifier (GuiContext *ctx) :
   m_Data(0),
   generation_(4)
 {
-  std::cout<<"INITIALIZATION\n";
-  int i, j, x, y, z, zp, yp, NData;
-
-
 #ifdef MCKAY_TODO
-  //  sprintf(m_OutputPrefix,"");                    
-  TRYKEYWORD(m_OutputPrefix,"","OUTPUT_PREFIX"); // prefix for all output files
-  TRYKEYWORD(m_width,"", "WIDTH");               // data volume dimensions
-  TRYKEYWORD(m_height,"","HEIGHT");
-  TRYKEYWORD(m_depth,"", "DEPTH");
   m_MaxIteration = 1000;
   m_MinChange = 0.1;
   TRYKEYWORD(m_MaxIteration,"","MAX_ITERATION"); // max iterations for EM algorithms
-  TRYKEYWORD(m_MinChange,"","MIN_CHANGE");       // min change percantage to decide
-                                                 // convergence for EM algorithm
+  TRYKEYWORD(m_MinChange,"","MIN_CHANGE");       // min change percantage to decide/                                                 // convergence for EM algorithm
   m_Top=m_Anterior=1;
   TRYKEYWORD(m_Top,"","TOP");                    // data volume orientation information
   TRYKEYWORD(m_Anterior,"","ANTERIOR");
@@ -367,152 +388,7 @@ MRITissueClassifier::MRITissueClassifier (GuiContext *ctx) :
   TRYKEYWORD(m_SliceThickness,"","SLICE_THICKNESS"); // slice thickness in mm
   m_EyesVisible=0;
   TRYKEYWORD(m_EyesVisible,"","EYES");           // scan cover eyes?
-  m_FatSat = 0;
-  TRYKEYWORD(m_FatSat,"","FATSAT");              // do we have a fatsat image?
 
-  // allocate memory
-#ifdef MCKAY_TODO
-  m_Data      = VISVolume<VISVector> (m_width, m_height, m_depth);
-  m_Label     = VISVolume<int>       (m_width, m_height, m_depth);
-  m_DistBG    = VISVolume<float>     (m_width, m_height, m_depth);
-  m_Energy    = VISVolume<float>     (m_width, m_height, m_depth);
-  m_CSF_Energy= VISVolume<float>     (m_width, m_height, m_depth);
-#endif
-
-  m_Label	= create_nrrd_of_ints(m_width, m_height, m_depth);
-  m_DistBG	= create_nrrd_of_floats(m_width, m_height, m_depth);
-  m_Energy	= create_nrrd_of_floats(m_width, m_height, m_depth);
-  m_CSF_Energy	= create_nrrd_of_floats(m_width, m_height, m_depth);
-
-  m_Label = T_BACKGROUND;
-  ColumnMatrix tempvec;
-  if (m_FatSat) tempvec = ColumnMatrix(4);
-  else tempvec = ColumnMatrix(3);
-
-  for (x=0;x<m_width;x++)
-    for (y=0;y<m_height;y++)
-      for (z=0;z<m_depth;z++)
-        m_Data.poke(x,y,z)=tempvec;
-
-  // load data
-  NData = m_width * m_height * m_depth;
-  float *tempdata = (float*)calloc(NData,sizeof(float));
-
-  TRYKEYWORD(filename,"","T1_FILE");
-  if ((fp=fopen(filename,"r")) != NULL)
-    {
-    fread(tempdata,sizeof(float),NData,fp);
-    fclose(fp);
-    j = 0;
-    for (z=0;z<m_depth;z++)
-      for (y=0;y<m_height;y++)
-        for (x=0;x<m_width;x++)
-          {
-          // put everything in a standard coordinate frame
-          // top of head higher z
-          // face towards higher y
-          if (m_Top!=1) zp=m_depth-1-z; else zp=z;
-          if (m_Anterior!=1) yp=m_height-1-y; else yp=y;
-          tempvec = m_Data(x,yp,zp);
-          tempvec.poke(0)=tempdata[j++];
-          m_Data.poke(x,yp,zp) = tempvec;
-          }
-    }
-  else
-    {
-    std::cout<<"Can't open file "<<keyword<<std::endl;
-    exit(-1);
-    }
-  
-  TRYKEYWORD(filename,"","T2_FILE");
-  if ((fp=fopen(filename,"r")) != NULL)
-    {
-    fread(tempdata,sizeof(float),NData,fp);
-    fclose(fp);
-    j = 0;
-    for (z=0;z<m_depth;z++)
-      for (y=0;y<m_height;y++)
-        for (x=0;x<m_width;x++)
-          {
-          if (m_Top!=1) zp=m_depth-1-z; else zp=z;
-          if (m_Anterior!=1) yp=m_height-1-y; else yp=y;
-          tempvec = m_Data(x,yp,zp);
-          tempvec.poke(1)=tempdata[j++];
-          m_Data.poke(x,yp,zp) = tempvec;
-          }
-    }
-  else
-    {
-    std::cout<<"Can't open file "<<keyword<<std::endl;
-    exit(-1);
-    }
-  
-  TRYKEYWORD(filename,"","PD_FILE");
-  if ((fp=fopen(filename,"r")) != NULL)
-    {
-    fread(tempdata,sizeof(float),NData,fp);
-    fclose(fp);
-    j = 0;
-    for (z=0;z<m_depth;z++)
-      for (y=0;y<m_height;y++)
-        for (x=0;x<m_width;x++)
-          {
-          if (m_Top!=1) zp=m_depth-1-z; else zp=z;
-          if (m_Anterior!=1) yp=m_height-1-y; else yp=y;
-          tempvec = m_Data(x,yp,zp);
-          tempvec.poke(2)=tempdata[j++];
-          m_Data.poke(x,yp,zp) = tempvec;
-          }
-    }
-  else
-    {
-    std::cout<<"Can't open file "<<keyword<<std::endl;
-    exit(-1);
-    }
-
-  if (m_FatSat)
-    {
-    TRYKEYWORD(filename,"","T1_FATSAT_FILE");
-    if ((fp=fopen(filename,"r")) != NULL)
-      {
-      fread(tempdata,sizeof(float),NData,fp);
-      fclose(fp);
-      j = 0;
-      for (z=0;z<m_depth;z++)
-        for (y=0;y<m_height;y++)
-          for (x=0;x<m_width;x++)
-            {
-            if (m_Top!=1) zp=m_depth-1-z; else zp=z;
-            if (m_Anterior!=1) yp=m_height-1-y; else yp=y;
-            tempvec = m_Data(x,yp,zp);
-            tempvec.poke(3)=tempdata[j++];
-            m_Data.poke(x,yp,zp) = tempvec;
-            }
-      }
-    else
-      {
-      std::cout<<"Can't open file "<<keyword<<std::endl;
-      exit(-1);
-      }
-    }
-  free (tempdata);
-
-  ColumnMatrix tempvec;
-  for (x=0;x<m_width;x++)
-    for (y=0;y<m_height;y++)
-      for (z=0;z<m_depth;z++)
-      {
-        tempvec=get_m_Data(x,y,z);
-        set_nrrd_float(m_CSF_Energy, tempvec.get(1)-tempvec.get(0),x,y,z); // T2 - T1
-      }
-
-  if (m_EyesVisible)
-    EyeDetection();
-  else
-  {
-    m_TopOfEyeSlice = -1;
-    m_EyeSlice = -1;
-  }
 #endif
 }
 
@@ -1493,18 +1369,18 @@ MRITissueClassifier::BackgroundDetection ()
   for (z=0;z<m_depth;z++)
     for (y=0;y<m_height;y++)
       for (x=0;x<m_width;x++)
-        {
+      {
         e=0.0;
         vec=get_m_Data(x,y,z);
         for (i=0;i<3;i++) e+=vec.get(i);
         set_nrrd_float(m_Energy, e, x, y, z);
         if (!(x||y||z)) min=max=e;
         else
-          {
+	{
           if (e>max) max=e;
           else if (e<min) min=e;
-          }
-        }
+	}
+      }
   w = 1.0/((float)(m_width*m_height*m_depth));
   std::cout<<"Energy min = "<<min<<" , max = "<<max<<std::endl;
   // compute 1d histogram
@@ -1691,9 +1567,11 @@ MRITissueClassifier::BackgroundDetection ()
   
   free(slicebg);
 
-#ifdef MCKAY_TODO
-  m_DistBG2D = m_DistBG; // save 2D distance transform
-#endif
+  // m_DistBG2D = m_DistBG; // save 2D distance transform
+  m_DistBG2D = scinew NrrdData;
+  nrrdCopy(m_DistBG2D->nrrd, m_DistBG->nrrd);
+  
+  
   // fix 2D distance to approximate 3D distance  
   for (x=0;x<m_width;x++)
     for (y=0;y<m_height;y++)
@@ -3595,6 +3473,7 @@ float *MRITissueClassifier::SmoothProbabilities (float *prob, int c, int l, int 
 	  }
           else 
 	    set_nrrd_float(p,0.0f,x,y,z);
+    
 #ifdef MCKAY_TODO
     p = p.gauss(sigma);
 #endif
@@ -3719,29 +3598,31 @@ MRITissueClassifier::ScalpClassification ()
 void
 MRITissueClassifier::dilate(NrrdDataHandle data, NrrdDataHandle mask)
 {
-#ifdef MCKAY_TODO
-  VISImage<T> r = this->createToSize();
+  ASSERT(data->nrrd->type == nrrdTypeInt);
+  const int w = data->nrrd->axis[1].size;
+  const int h = data->nrrd->axis[2].size;
+  const int wm = mask->nrrd->axis[1].size;
+  const int hm = mask->nrrd->axis[2].size;
+
+  NrrdDataHandle r = create_nrrd_of_ints(w, h);
+					 
   int val;
   int x, y, xm, ym, xo, yo;
-  int w = this->width();
-  int h = this->height();
-  int wm = mask.width();
-  int hm = mask.height();
-  int cx = (wm-1)/2;
-  int cy = (hm-1)/2;
-  for (x = 0; x<<w; x++)
-    for (y = 0; y<<h; y++)
+  const int cx = (wm-1)/2;
+  const int cy = (hm-1)/2;
+  for (x = 0; x < w; x++)
+    for (y = 0; y < h; y++)
     {
       val = 0;
-      for (xm = 0; xm<wm; xm++)
+      for (xm = 0; xm < wm; xm++)
       {
-	for (ym = 0; ym<hm; ym++)
-	  if (get_nrrd_int(mask,xm,ym)>0)
+	for (ym = 0; ym < hm; ym++)
+	  if (get_nrrd_int(mask,xm,ym) > 0)
 	  {
 	    xo = x + xm - cx;
 	    yo = y + ym - cy;
 	    if ((xo>=0)&&(xo<w)&&(yo>=0)&&(yo<h)&&
-		(get_nrrd_int(data,xo,yo)>0))
+		(get_nrrd_int(data,xo,yo) > 0))
 	    {
 	      val = 1;
 	      break;
@@ -3749,88 +3630,98 @@ MRITissueClassifier::dilate(NrrdDataHandle data, NrrdDataHandle mask)
 	  }
 	if (val>0) break;
       }
-      r.poke(x,y) = Tval;
+      set_nrrd_int(r, val, x, y);
     }
-  return r;
-#endif
+  data = r;
 }
 
 
-
+// 2d nrrd of ints
 void
 MRITissueClassifier::erode(NrrdDataHandle data, NrrdDataHandle mask)
 {
-#ifdef MCKAY_TODO
-  VISImage<T> r = this->createToSize();
-  T Tzero = (T)0;
-  T Tone  = (T)1;
-  T Tval;
+  ASSERT(data->nrrd->type == nrrdTypeInt);
+  const int w = data->nrrd->axis[1].size;
+  const int h = data->nrrd->axis[2].size;
+  const int wm = mask->nrrd->axis[1].size;
+  const int hm = mask->nrrd->axis[2].size;
+
+  NrrdDataHandle r = create_nrrd_of_ints(w, h);
+					 
+  int val;
   int x, y, xm, ym, xo, yo;
-  int w = this->width();
-  int h = this->height();
-  int wm = mask.width();
-  int hm = mask.height();
-  int cx = (wm-1)/2;
-  int cy = (hm-1)/2;
-  for (x = 0; x<<w; x++)
-    for (y = 0; y<<h; y++)
+  const int cx = (wm-1)/2;
+  const int cy = (hm-1)/2;
+  for (x = 0; x <w; x++)
+    for (y = 0; y <h; y++)
     {
-      Tval = Tone;
-      for (xm = 0; xm<<wm; xm++)
+      val = 1;
+      for (xm = 0; xm <wm; xm++)
       {
-	for (ym = 0; ym<<hm; ym++)
-	  if (get_nrrd_int(mask,xm,ym)>Tzero)
+	for (ym = 0; ym <hm; ym++)
+	  if (get_nrrd_int(mask,xm,ym) > 0)
 	  {
 	    xo = x + xm - cx;
 	    yo = y + ym - cy;
-	    if ((xo>=0)&&(xo<<w)&&(yo>=0)&&(yo<<h)&&((this->peek(xo,yo))<<=Tzero))
+	    if ((xo>=0)&&(xo<<w)&&(yo>=0)&&(yo<<h)&&
+		get_nrrd_int(data, xo, yo) <= 0)
 	    {
-	      Tval = Tzero;
+	      val = 0;
 	      break;
 	    }
 	  }
-	if (Tval<<Tone) break;
+	if (val < 1) break;
       }
-      r.poke(x,y) = Tval;
+      set_nrrd_int(r,val,x,y);
     }
-  return r;
-#endif
+  data = r;
 }
 
 
-
+// 2d nrrd of ints
 void
 MRITissueClassifier::opening(NrrdDataHandle data, NrrdDataHandle mask) 
 {
-#ifdef MCKAY_TODO
-  VISImage<T> temp = this->erode (mask);
-  return temp.dilate (mask);
-#endif
+  erode(data, mask);
+  dilate(data,mask);
 }
 
-
+// 2d nrrd of ints
 void
 MRITissueClassifier::closing(NrrdDataHandle data, NrrdDataHandle mask)
 {
-#ifdef MCKAY_TODO
-  int px = (mask.width()-1)/2;
-  int py = (mask.height()-1)/2;
-  int w = this->width();
-  int h = this->height();
+  const int mw = mask->nrrd->axis[1].size;
+  const int mh = mask->nrrd->axis[2].size;
+  const int px = (mw-1)/2;
+  const int py = (mh-1)/2;
+  const int w = data->nrrd->axis[1].size;
+  const int h = data->nrrd->axis[2].size;
   // we need to pad the image because dilation might spill outside the
   // boundaries of the original image making it impossible to recover the
   // original with erosion
   //  VISImage <T> padim = VISImage<T> (w+mask.width(), h+mask.height());
-  NrrdDataHandle padim = create_nrrd_of_ints(w+mask.width(), h+mask.height());
-  padim = (T)0;
+  NrrdDataHandle padim = create_nrrd_of_ints(w+mw, h+mh);
+  memset(padim->nrrd->data, 0, (w+mw)*(h+mh)*sizeof(int));
   int x, y;
   for (x=0;x<w;x++)
-    for (y=0;y<h;y++)
-      
-      padim.poke(x+px,y+py)=this->peek(x,y);
-  VISImage<T> temp  = padim.dilate (mask);
-  return (temp.erode (mask)).getROI(px,py,this->width(),this->height());
-#endif
+    for (y=0;y<h;y++)     
+      set_nrrd_int(padim, get_nrrd_int(data, x, y), x+px,y+py);
+
+  //VISImage<T> temp  = padim.dilate (mask);
+  //return (temp.erode (mask)).getROI(px,py,this->width(),this->height());
+
+  dilate(padim,mask);
+  erode(padim, mask);
+
+  int *min = scinew int[3];
+  int *max = scinew int[3];
+  min[0] = 0;
+  max[0] = data->nrrd->axis[0].size;
+  min[1] = px;
+  min[2] = py;
+  max[1] = px+w;
+  max[2] = py+h;
+  nrrdCrop(data->nrrd, padim->nrrd, min, max);
 }
 
 
@@ -3966,32 +3857,52 @@ MRITissueClassifier::floodFill(NrrdDataHandle data, int label_from, int label_to
 NrrdDataHandle
 MRITissueClassifier::extract_nrrd_slice_int(NrrdDataHandle data, int z)
 {
-  return 0;
+  const int dx = data->nrrd->axis[1].size;
+  const int dy = data->nrrd->axis[2].size;
+  
+  NrrdDataHandle ret = create_nrrd_of_ints(dx, dy);
+  const int *source = (int *)data->nrrd->data;
+  memcpy(ret->nrrd->data, source + z*dx*dy, dx*dy*sizeof(int));
+  return ret;
 }
 
 
 NrrdDataHandle
 MRITissueClassifier::create_nrrd_of_ints(int x, int y, int z)
 {
-  return 0;
+  NrrdData *data = scinew NrrdData();
+  data->nrrd = nrrdNew();
+  nrrdAlloc(data->nrrd, nrrdTypeInt, 4, 1, x, y, z);
+  return data;
 }
 
 NrrdDataHandle
 MRITissueClassifier::create_nrrd_of_floats(int x, int y, int z) 
 {
-  return 0;
+  NrrdData *data = scinew NrrdData();
+  data->nrrd = nrrdNew();
+  nrrdAlloc(data->nrrd, nrrdTypeFloat, 4, 1, x, y, z);
+  return data;
 }
 
 int
 MRITissueClassifier::get_nrrd_int(NrrdDataHandle data, int x, int y, int z) 
 {
-  return 0;
+  ASSERT(data->nrrd->dim == 4);
+  ASSERT(nrrd_check_bounds(data,x,y,z));
+  int *idata = (int*)data->nrrd->data;
+  return idata[z*data->nrrd->axis[1].size*data->nrrd->axis[2].size+
+	       y*data->nrrd->axis[1].size+x];
 }
 
 float
 MRITissueClassifier::get_nrrd_float(NrrdDataHandle data, int x, int y, int z) 
 {
-  return 0;
+  ASSERT(data->nrrd->dim == 4);
+  ASSERT(nrrd_check_bounds(data,x,y,z));
+  float *fdata = (float*)data->nrrd->data;
+  return fdata[z*data->nrrd->axis[1].size*data->nrrd->axis[2].size+
+	       y*data->nrrd->axis[1].size+x];
 }
 
 
@@ -3999,68 +3910,121 @@ void
 MRITissueClassifier::set_nrrd_int(NrrdDataHandle data, int val,
 				  int x, int y, int z) 
 {
+  ASSERT(data->nrrd->dim == 4);
+  ASSERT(nrrd_check_bounds(data,x,y,z));
+  int *idata = (int*)data->nrrd->data;
+  idata[z*data->nrrd->axis[1].size*data->nrrd->axis[2].size+
+	y*data->nrrd->axis[1].size+x] = val;
+
 }
 
 void
 MRITissueClassifier::set_nrrd_float(NrrdDataHandle data, float val,
 				    int x, int y, int z)
 {
+  ASSERT(data->nrrd->dim == 4);
+  ASSERT(nrrd_check_bounds(data,x,y,z));
+  float *fdata = (float*)data->nrrd->data;
+  fdata[z*data->nrrd->axis[1].size*data->nrrd->axis[2].size+
+	y*data->nrrd->axis[1].size+x] = val;
+
 }
 
 bool
 MRITissueClassifier::nrrd_check_bounds(NrrdDataHandle data, 
 				       int x, int y, int z) 
 {
-  return false;
+  return (x >= 0 && x < data->nrrd->axis[1].size &&
+	  y >= 0 && y < data->nrrd->axis[2].size &&
+	  z >= 0 && z < data->nrrd->axis[3].size);
 }
 
 
 NrrdDataHandle
 MRITissueClassifier::create_nrrd_of_ints(int x, int y)
 {
-  return 0;
+  NrrdData *data = scinew NrrdData();
+  data->nrrd = nrrdNew();
+  nrrdAlloc(data->nrrd, nrrdTypeInt, 3, 1, x, y);
+  return data;
 }
 
 NrrdDataHandle
 MRITissueClassifier::create_nrrd_of_floats(int x, int y) 
 {
-  return 0;
+  NrrdData *data = scinew NrrdData();
+  data->nrrd = nrrdNew();
+  nrrdAlloc(data->nrrd, nrrdTypeFloat, 3, 1, x, y);
+  return data;
 }
 
 int
 MRITissueClassifier::get_nrrd_int(NrrdDataHandle data, int x, int y) 
 {
-  return 0;
+  ASSERT(data->nrrd->dim == 3);
+  ASSERT(nrrd_check_bounds(data,x,y));
+  ASSERT(data->nrrd->type == nrrdTypeInt);
+  int *idata = (int*)data->nrrd->data;
+  return idata[y*data->nrrd->axis[1].size+x];
 }
 
 float
 MRITissueClassifier::get_nrrd_float(NrrdDataHandle data, int x, int y) 
 {
-  return 0;
+  ASSERT(data->nrrd->dim == 3);
+  ASSERT(nrrd_check_bounds(data,x,y));
+  ASSERT(data->nrrd->type == nrrdTypeFloat);
+  float *fdata = (float*)data->nrrd->data;
+  return fdata[y*data->nrrd->axis[1].size+x];
 }
 
 
 void
-MRITissueClassifier::set_nrrd_int(NrrdDataHandle data, int val, int x, int y) 
+MRITissueClassifier::set_nrrd_int(NrrdDataHandle data, int val,
+				  int x, int y) 
 {
+  ASSERT(data->nrrd->dim == 3);
+  ASSERT(nrrd_check_bounds(data,x,y));
+  ASSERT(data->nrrd->type == nrrdTypeInt);
+  int *idata = (int*)data->nrrd->data;
+  idata[y*data->nrrd->axis[1].size+x] = val;
+
 }
 
 void
-MRITissueClassifier::set_nrrd_float(NrrdDataHandle data, float val, 
+MRITissueClassifier::set_nrrd_float(NrrdDataHandle data, float val,
 				    int x, int y)
 {
+  ASSERT(data->nrrd->dim == 3);
+  ASSERT(nrrd_check_bounds(data,x,y));
+  ASSERT(data->nrrd->type == nrrdTypeFloat);
+  float *fdata = (float*)data->nrrd->data;
+  fdata[y*data->nrrd->axis[1].size+x] = val;
+
 }
+
 
 bool
 MRITissueClassifier::nrrd_check_bounds(NrrdDataHandle data, int x, int y) 
 {
-  return false;
+  return (x >= 0 && x < data->nrrd->axis[1].size &&
+	  y >= 0 && y < data->nrrd->axis[1].size);
 }
 
 ColumnMatrix
 MRITissueClassifier::get_m_Data(int x, int y, int z)
 {
-  return ColumnMatrix();
+  ColumnMatrix m_data(m_FatSat?4:3);
+  ASSERT(m_T1_Data.get_rep());
+  ASSERT(m_T2_Data.get_rep());
+  ASSERT(m_PD_Data.get_rep());
+  m_data[0] = get_nrrd_float(m_T1_Data, x, y, z);
+  m_data[1] = get_nrrd_float(m_T2_Data, x, y, z);
+  m_data[2] = get_nrrd_float(m_PD_Data, x, y, z);
+  if (m_FatSat) 
+    m_data[3] = get_nrrd_float(m_FATSAT_Data, x, y, z);
+  
+  return m_data;
 }
 
 
