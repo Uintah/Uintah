@@ -5,12 +5,9 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Components/Models/test/Mixing.h>
-#include <Packages/Uintah/CCA/Components/Models/test/Mixing2.h>
 #include <Packages/Uintah/CCA/Components/Models/test/AdiabaticTable.h>
-#include <Packages/Uintah/CCA/Components/Models/test/PinTo300Test.h>
 #include <Packages/Uintah/CCA/Components/Models/test/PassiveScalar.h>
 #include <Packages/Uintah/CCA/Components/Models/test/SimpleRxn.h>
-#include <Packages/Uintah/CCA/Components/Models/test/TableTest.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TestModel.h>
 #include <Packages/Uintah/CCA/Components/Models/test/flameSheet_rxn.h>
 #include <Packages/Uintah/CCA/Components/Models/test/VorticityConfinement.h>
@@ -44,13 +41,12 @@ void ModelFactory::makeModels(const ProblemSpecP& params, GridP&,
   for(ProblemSpecP model = m->findBlock("Model"); model != 0;
       model = model->findNextBlock("Model")){
     string type;
-    if(!model->getAttribute("type", type))
+    if(!model->getAttribute("type", type)){
       throw ProblemSetupException("Model does not specify type=\"name\"");
-
+    }
+    
     if(type == "SimpleRxn")
       models.push_back(scinew SimpleRxn(d_myworld, model));
-    else if(type == "TableTest")
-      models.push_back(scinew TableTest(d_myworld, model));
     else if(type == "AdiabaticTable")
       models.push_back(scinew AdiabaticTable(d_myworld, model));
     else if(type == "Test")
@@ -69,8 +65,6 @@ void ModelFactory::makeModels(const ProblemSpecP& params, GridP&,
       models.push_back(scinew LightTime(d_myworld, model));
     else if(type == "flameSheet_rxn")
       models.push_back(scinew flameSheet_rxn(d_myworld, model));
-    else if(type == "PinTo300Test")
-      models.push_back(scinew PinTo300Test(d_myworld, model));
     else if(type == "PassiveScalar")
       models.push_back(scinew PassiveScalar(d_myworld, model));
     else if(type == "VorticityConfinement")
