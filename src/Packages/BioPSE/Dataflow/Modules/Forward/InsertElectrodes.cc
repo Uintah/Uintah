@@ -102,11 +102,11 @@ InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet
 					   TetVolMesh* electrodeElements)
 {
   Plane electrode_plane;
-  if (Cross(inner[1]-inner[0], inner[1]-inner[2]).length2()>1.e-5)
+  if (Cross(inner[1]-inner[0], inner[1]-inner[2]).length2()>1.e-10)
   {
     electrode_plane=Plane(inner[1], inner[0], inner[2]);
   }
-  else if (Cross(inner[1]-inner[0], inner[1]-inner[3]).length2()>1.e-5)
+  else if (Cross(inner[1]-inner[0], inner[1]-inner[3]).length2()>1.e-10)
   {
     electrode_plane=Plane(inner[1], inner[0], inner[3]);
   }
