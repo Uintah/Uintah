@@ -343,8 +343,8 @@ NodeHedgehog::NodeHedgehog(const string& id)
   init = 1;
   float INIT(.1);
   
-  widget2d = scinew FrameWidget(this, &widget_lock, INIT, true);
-  widget3d = scinew BoxWidget(this, &widget_lock, INIT, false, true);
+  widget2d = scinew FrameWidget(this, &widget_lock, INIT, false);
+  widget3d = scinew BoxWidget(this, &widget_lock, INIT, true, false);
   geom_id=0;
   
   need_find2d=1;
@@ -479,7 +479,7 @@ void NodeHedgehog::execute()
   widget2d->SetState(!do_3d);
   widget3d->SetState(do_3d);
   // set thier mode to resize/translate only
-  widget2d->SetCurrentMode(6);
+  widget2d->SetCurrentMode(3);
   widget3d->SetCurrentMode(6);
 
   BBox mesh_boundary = vfield->mesh()->get_bounding_box();
