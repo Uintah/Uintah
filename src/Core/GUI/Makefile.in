@@ -2,6 +2,8 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../..
 
+VPATH = $(SRCDIR)
+
 include $(OBJTOP)/scripts/targets.mk
 
 all:: tclIndex
@@ -10,5 +12,6 @@ tclIndex : BaseDial.tcl ColorPicker.tcl DebugSettings.tcl Dial.tcl \
            Dialbox.tcl Doublefile.tcl Filebox.tcl HelpPage.tcl Histogram.tcl \
            Makefile.in MaterialEditor.tcl MemStats.tcl PointVector.tcl \
            ThreadStats.tcl Util.tcl VTRDial.tcl
-	$(SRCTOP)/scripts/createTclIndex
+	$(SRCTOP)/scripts/createTclIndex $(SRCDIR)
+
 
