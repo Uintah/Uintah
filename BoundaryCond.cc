@@ -16,7 +16,7 @@
 #define JET_BC 0
 
 #define JOHN_BCS
-//#undef  JOHN_BCS
+#undef  JOHN_BCS
 /*==========TESTING==========`*/
 
 
