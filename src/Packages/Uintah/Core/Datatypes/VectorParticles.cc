@@ -5,11 +5,14 @@
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/Grid.h>
 
 namespace Uintah {
 namespace Datatypes {
 
-using namespace Uintah;
+using Uintah::DataArchive;
+using Uintah::ParticleVariable;
+
 using SCICore::Datatypes::Persistent;
 using SCICore::PersistentSpace::PersistentTypeID;
 
