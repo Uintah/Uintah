@@ -16,8 +16,7 @@
 /*`==========TESTING==========*/
 #define JET_BC 0
 
-//#define JOHN_BCS
-#undef  JOHN_BCS
+#undef ORG_BCS    // original setBC 
 
 // LODI_BCS IS DEFINED IN BOUNDARYCOND.H
 /*==========TESTING==========`*/
@@ -224,7 +223,7 @@ void setHydrostaticPressureBC(CCVariable<double>& press,Patch::FaceType face,
 }
 
 
-#ifndef JOHN_BCS
+#ifdef ORG_BCS
 /* --------------------------------------------------------------------- 
  Function~  setBC--
  Purpose~   Takes care Pressure_CC
@@ -827,7 +826,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
 //______________________________________________________________________
 //                  J O H N ' S   B C
 
-#ifdef JOHN_BCS
+#ifndef ORG_BCS
 // Takes care of Pressure_CC
 void setBC(CCVariable<double>& press_CC,
               const CCVariable<double>& rho_micro,
@@ -838,7 +837,7 @@ void setBC(CCVariable<double>& press_CC,
               const int mat_id,
               DataWarehouse* new_dw)
 {
-  //  cout << " I ' M   U S I N G   J O H N ' S   B C"<< endl;
+//    cout << " I ' M   U S I N G   J O H N ' S   B C"<< endl;
   Vector dx = patch->dCell();
   for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
        face=Patch::nextFace(face)) {
