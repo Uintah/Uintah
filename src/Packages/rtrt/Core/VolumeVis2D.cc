@@ -106,10 +106,6 @@ VolumeVis2D::mouseDown( const Ray& ray, const HitInfo& hit)
   dpy->delete_voxel_storage();
   Point p = ray.origin() + ray.direction() * hit.min_t - min.vector();
 
-  float norm_step_x = inv_diag.x() * (nx - 1 );
-  float norm_step_y = inv_diag.y() * (ny - 1 );
-  float norm_step_z = inv_diag.z() * (nz - 1 );
-
   // get the indices and weights for the indices
   float step = p.x() * norm_step_x;
   int x_low = bound((int)step, 0, data.dim1()-2);
@@ -171,10 +167,6 @@ void
 VolumeVis2D::mouseMotion( const Ray& ray, const HitInfo& hit )
 {
   Point p = ray.origin() + ray.direction() * hit.min_t - min.vector();
-
-  float norm_step_x = inv_diag.x() * (nx - 1 );
-  float norm_step_y = inv_diag.y() * (ny - 1 );
-  float norm_step_z = inv_diag.z() * (nz - 1 );
 
   // get the indices and weights for the indices
   float step = p.x() * norm_step_x;
@@ -487,11 +479,6 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
   Vector p_inc = dpy->t_inc*ray.direction();
   Point p = ray.origin() + ray.direction() * t_min - min.vector();
 
-  float norm_step_x = inv_diag.x() * (nx - 1 );
-  float norm_step_y = inv_diag.y() * (ny - 1 );
-  float norm_step_z = inv_diag.z() * (nz - 1 );
-
-
   //  cerr <<__LINE__<<"("<<cx->scene->nlights()<<")Number of lights in the scene\n"; cerr.flush();
 
   float opacity_factor;
@@ -513,14 +500,11 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
 	       sample_color * sample_opacity) * opacity;
     }
   } // if cutplane is active
-  p -= p_inc;
 
   for(float t = t_min; t < t_max; t += dpy->t_inc) {
     // opaque values are 1, so terminate the ray at opacity values close to one
     if( opacity >= RAY_TERMINATION_THRESHOLD )
       break;
-    // get the point to interpolate
-    p += p_inc;
 
     ////////////////////////////////////////////////////////////
     // interpolate the point
@@ -634,6 +618,8 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
       total += temp * opacity_factor;
       opacity += opacity_factor;
     }
+    // get the new point to interpolate
+    p += p_inc;
   }
 
   if (opacity < RAY_TERMINATION_THRESHOLD) {
