@@ -15,7 +15,11 @@
 #include <Widgets/ArrowWidget.h>
 #include <Constraints/DistanceConstraint.h>
 #include <Constraints/HypotenousConstraint.h>
-
+#include <Geom/Cone.h>
+#include <Geom/Cylinder.h>
+#include <Geom/Group.h>
+#include <Geom/Pick.h>
+#include <Geom/Sphere.h>
 
 const Index NumCons = 0;
 const Index NumVars = 1;
@@ -31,34 +35,37 @@ ArrowWidget::ArrowWidget( Module* module )
 {
    variables[ArrowW_Point] = new Variable("Point", Scheme1, Point(0, 0, 0));
 
-   materials[ArrowW_PointMatl] = new MaterialProp(Color(0,0,0), Color(.54, .60, 1),
+   materials[ArrowW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
 						  Color(.5,.5,.5), 20);
-   materials[ArrowW_EdgeMatl] = new MaterialProp(Color(0,0,0), Color(.54, .60, .66),
+   materials[ArrowW_EdgeMatl] = new Material(Color(0,0,0), Color(.54, .60, .66),
 						 Color(.5,.5,.5), 20);
-   materials[ArrowW_HighMatl] = new MaterialProp(Color(0,0,0), Color(.7,.7,.7),
+   materials[ArrowW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
 						 Color(0,0,.6), 20);
 
    geometries[ArrowW_Sphere] = new GeomSphere;
-   geometries[ArrowW_Sphere]->pick = new GeomPick(module);
-   geometries[ArrowW_Sphere]->pick->set_highlight(materials[ArrowW_HighMatl]);
-   geometries[ArrowW_Sphere]->pick->set_cbdata((void*)ArrowW_Sphere);
+   GeomPick* p=new GeomPick(module);
+   p->set_highlight(materials[ArrowW_HighMatl]);
+   p->set_cbdata((void*)ArrowW_Sphere);
+   geometries[ArrowW_Sphere]->set_pick(p);
    geometries[ArrowW_Sphere]->set_matl(materials[ArrowW_PointMatl]);
    geometries[ArrowW_Cylinder] = new GeomCylinder;
-   geometries[ArrowW_Cylinder]->pick = new GeomPick(module);
-   geometries[ArrowW_Cylinder]->pick->set_highlight(materials[ArrowW_HighMatl]);
-   geometries[ArrowW_Cylinder]->pick->set_cbdata((void*)ArrowW_Cylinder);
+   p=new GeomPick(module);
+   p->set_highlight(materials[ArrowW_HighMatl]);
+   p->set_cbdata((void*)ArrowW_Cylinder);
+   geometries[ArrowW_Cylinder]->set_pick(p);
    geometries[ArrowW_Cylinder]->set_matl(materials[ArrowW_EdgeMatl]);
    geometries[ArrowW_Cone] = new GeomCone;
-   geometries[ArrowW_Cone]->pick = new GeomPick(module);
-   geometries[ArrowW_Cone]->pick->set_highlight(materials[ArrowW_HighMatl]);
-   geometries[ArrowW_Cone]->pick->set_cbdata((void*)ArrowW_Cone);
+   p = new GeomPick(module);
+   p->set_highlight(materials[ArrowW_HighMatl]);
+   p->set_cbdata((void*)ArrowW_Cone);
+   geometries[ArrowW_Cone]->set_pick(p);
    geometries[ArrowW_Cone]->set_matl(materials[ArrowW_EdgeMatl]);
 
-   widget = new ObjGroup;
+   widget = new GeomGroup;
    for (Index geom = 0; geom <= NumGeoms; geom++) {
       widget->add(geometries[geom]);
    }
-   widget->pick=new GeomPick(module);
+   widget->set_pick(new GeomPick(module));
 
    // Init variables.
    for (Index vindex=0; vindex<NumVariables; vindex++)
@@ -91,7 +98,7 @@ ArrowWidget::execute()
 					      0);
 
    for (Index geom = 0; geom <= NumGeoms; geom++) {
-      geometries[geom]->pick->set_principal(direction);
+      geometries[geom]->get_pick()->set_principal(direction);
    }
 }
 

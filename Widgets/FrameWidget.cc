@@ -99,11 +99,11 @@ FrameWidget::FrameWidget( Module* module )
    constraints[FrameW_ConstDRDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[FrameW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[FrameW_PointMatl] = new MaterialProp(Color(0,0,0), Color(.54, .60, 1),
+   materials[FrameW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
 						  Color(.5,.5,.5), 20);
-   materials[FrameW_EdgeMatl] = new MaterialProp(Color(0,0,0), Color(.54, .60, .66),
+   materials[FrameW_EdgeMatl] = new Material(Color(0,0,0), Color(.54, .60, .66),
 						 Color(.5,.5,.5), 20);
-   materials[FrameW_HighMatl] = new MaterialProp(Color(0,0,0), Color(.7,.7,.7),
+   materials[FrameW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
 						 Color(0,0,.6), 20);
 
    Index geom;
@@ -119,12 +119,12 @@ FrameWidget::FrameWidget( Module* module )
       geometries[geom] = new GeomCylinder;
       GeomPick* p=new GeomPick(module);
       p->set_highlight(materials[FrameW_HighMatl]);
-      p->pick->set_cbdata((void*)geom);
+      p->set_cbdata((void*)geom);
       geometries[geom]->set_pick(p);
       geometries[geom]->set_matl(materials[FrameW_EdgeMatl]);
    }
 
-   widget = new ObjGroup;
+   widget = new GeomGroup;
    for (geom = 0; geom <= NumGeoms; geom++) {
       widget->add(geometries[geom]);
    }
