@@ -150,7 +150,7 @@ ArchesLabel::ArchesLabel()
   // labels for ref density and pressure
   d_refDensity_label = VarLabel::create("refDensityLabel",
 				       sum_vartype::getTypeDescription() );
-  d_refDensity_label = VarLabel::create("refDensityPredLabel",
+  d_refDensityPred_label = VarLabel::create("refDensityPredLabel",
 				       sum_vartype::getTypeDescription() );
   d_refPressure_label = VarLabel::create("refPressureLabel",
 				       sum_vartype::getTypeDescription() );
