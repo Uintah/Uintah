@@ -154,7 +154,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
       // the same subroutine can be used to solve multiple scalars
       d_scalarSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
     }
-#if 0    
+
 
     // update properties
     // require : densityIN
@@ -169,7 +169,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
 
     ++nlIterations;
-
+#if 0    
     // residual represents the degrees of inaccuracies
     nlResidual = computeResidual(level, sched, old_dw, new_dw);
 #endif
@@ -523,6 +523,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& /*level*/,
 
 //
 // $Log$
+// Revision 1.50  2000/10/12 00:03:18  rawat
+// running for more than one timestep.
+//
 // Revision 1.49  2000/10/09 18:47:39  sparker
 // Start to do scalar solver
 //

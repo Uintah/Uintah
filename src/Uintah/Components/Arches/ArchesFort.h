@@ -214,11 +214,12 @@ extern "C"
 		   double* vVelocity, 
 		   const int* domLoW, const int* domHiW, 
 		   double* wVelocity, 
-		   const int* domLo, const int* domHi, 
+		   const int* domLoDen, const int* domHiDen, 
 		   double* density,
 		   const int* domLoVis, const int* domHiVis, 
 		   const int* idxLoVis, const int* idxHiVis,
 		   double* viscosity,
+		   const int* domLo, const int* domHi, 
 		   double* sew, double * sns, double* stb, double* mol_visc,
 		   double* cf, double* fac_msh, double* filterl);
 
@@ -968,6 +969,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.45  2000/10/12 00:03:18  rawat
+// running for more than one timestep.
+//
 // Revision 1.44  2000/10/11 16:37:29  rawat
 // modified calpbc for ghost cells
 //

@@ -131,7 +131,7 @@ Properties::sched_reComputeProps(const LevelP& level,
       // requires scalars
       tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->computes(old_dw, d_lab->d_refDensity_label);
+      tsk->computes(new_dw, d_lab->d_refDensity_label);
       tsk->computes(new_dw, d_lab->d_densityCPLabel, matlIndex, patch);
       sched->addTask(tsk);
     }
@@ -295,10 +295,10 @@ Properties::reComputeProps(const ProcessorGroup*,
   if (patch->containsCell(d_denRef)) {
     double den_ref = density[d_denRef];
     cerr << "density_ref " << den_ref << endl;
-    old_dw->put(sum_vartype(den_ref),d_lab->d_refDensity_label);
+    new_dw->put(sum_vartype(den_ref),d_lab->d_refDensity_label);
   }
   else
-    old_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
+    new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
 
   new_dw->put(density, d_lab->d_densityCPLabel, matlIndex, patch);
 }
@@ -322,6 +322,9 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.31  2000/10/12 00:03:18  rawat
+// running for more than one timestep.
+//
 // Revision 1.30  2000/09/29 20:32:36  rawat
 // added underrelax to pressure solver
 //

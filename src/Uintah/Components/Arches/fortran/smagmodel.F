@@ -9,6 +9,7 @@ c*********************************************************************
      &     domLoW, domHiW, WW,
      &     domLoDen, domHiDen, DEN,
      &     domLoVis, domHiVis, indexLoVis, indexHiVis, VIS,
+     $     domLo, domHi,
      &     SEW, SNS, STB, VISCOS,
      &     CF, FAC_MESH, FILTERL,
      &     ierr)
@@ -35,6 +36,8 @@ c*********************************************************************
       integer domHiDen(3)
       integer domLoVis(3)
       integer domHiVis(3)
+      integer domLo(3)
+      integer domHi(3)
       integer indexLoVis(3)
       integer indexHiVis(3)
       double precision UU(domLoU(1):domHiU(1), 
@@ -48,9 +51,9 @@ c*********************************************************************
       double precision VIS(domLoVis(1):domHiVis(1), 
      &     domLoVis(2):domHiVis(2),domLoVis(3):domHiVis(3))
       double precision VISCOS
-      double precision SEW(domLoVis(1):domHiVis(1))
-      double precision SNS(domLoVis(2):domHiVis(2))
-      double precision STB(domLoVis(3):domHiVis(3))
+      double precision SEW(domLo(1):domHi(1))
+      double precision SNS(domLo(2):domHi(2))
+      double precision STB(domLo(3):domHi(3))
       double precision CF, FAC_MESH, FILTERL
       integer ierr
 
@@ -173,6 +176,9 @@ c              END IF
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/10/12 00:03:24  rawat
+c running for more than one timestep.
+c
 c Revision 1.3  2000/07/01 05:21:01  bbanerje
 c Changed CellInformation calcs for Turbulence model requirements ..
 c CellInformation still needs work.
