@@ -39,7 +39,7 @@ class Grid2 : public Object {
 public:
   Grid2(Object* obj, int nside);
   virtual ~Grid2();
-  virtual void io(SCIRun::Piostream &stream) 
+  virtual void io(SCIRun::Piostream &/*stream*/) 
   { ASSERTFAIL("Pio not supported"); }
   virtual void intersect(Ray& ray,
 			 HitInfo& hit, DepthStats* st,
