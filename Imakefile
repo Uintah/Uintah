@@ -1,7 +1,8 @@
 
 #include <config/sci.cf>
 
-SUBDIRS = Classlib Geometry Malloc Math Multitask
+SUBDIRS = Classlib Dataflow Devices Geometry Malloc Math Multitask \
+	TCL tcl
 
 SCISubdirs($(SUBDIRS))
 
@@ -10,11 +11,17 @@ SR_TARGET = sr
 SR_SRCS = scirun.cc
 SR_OBJS = scirun.o
 SR_LIBS = \
+	TCL/libTCL.a \
+	Dataflow/libDataflow.a \
+	Devices/libDevices.a \
 	Geometry/libGeometry.a \
 	Math/libMath.a \
 	Classlib/libClasslib.a \
 	Multitask/libMultitask.a \
-	Malloc/libMalloc.a 
+	Malloc/libMalloc.a \
+	tcl/sci/libscitk.a \
+	tcl/tk3.6/libtk.a \
+	tcl/tcl7.3/libtcl.a
 SR_LDFLAGS = SCI_LAUDIO SCI_LM SCI_LTHREAD SCI_LGL SCI_LX11
 SCIProgramTarget($(SR_TARGET), $(SR_OBJS), $(SR_LIBS), $(SR_LDFLAGS))
 
