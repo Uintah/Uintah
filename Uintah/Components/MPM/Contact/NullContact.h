@@ -4,9 +4,13 @@
 #define __NULL_CONTACT_H__
 
 #include "Contact.h"
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Grid/SimulationState.h>
+#include <Uintah/Grid/SimulationStateP.h>
 
 namespace Uintah {
-   namespace MPM {
+  namespace MPM {
 
 /**************************************
 
@@ -37,36 +41,41 @@ WARNING
   
 ****************************************/
 
-      class NullContact : public Contact {
-      private:
-	 
-	 // Prevent copying of this class
-	 // copy constructor
-	 NullContact(const NullContact &con);
-	 NullContact& operator=(const NullContact &con);
-	 
-      public:
-	 // Constructor
-	 NullContact();
-	 
-	 // Destructor
-	 virtual ~NullContact();
-	 
-	 // Basic contact methods
-	 virtual void exMomInterpolated(const Region* region,
-					const DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw);
-	 
-	 virtual void exMomIntegrated(const Region* region,
-				      const DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw);
-	 
-      };
+    class NullContact : public Contact {
+    private:
       
-   } // end namespace MPM
+      // Prevent copying of this class
+      // copy constructor
+      NullContact(const NullContact &con);
+      NullContact& operator=(const NullContact &con);
+      
+    public:
+      // Constructor
+      NullContact(ProblemSpecP& ps,SimulationStateP& ss);
+      
+      // Destructor
+      virtual ~NullContact();
+      
+      // Basic contact methods
+      virtual void exMomInterpolated(const ProcessorContext*,
+				     const Region* region,
+				     const DataWarehouseP& old_dw,
+				     DataWarehouseP& new_dw);
+      
+      virtual void exMomIntegrated(const ProcessorContext*,
+				   const Region* region,
+				   const DataWarehouseP& old_dw,
+				   DataWarehouseP& new_dw);
+      
+    };
+    
+  } // end namespace MPM
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.5  2000/04/27 21:28:58  jas
+// Contact is now created using a factory.
+//
 // Revision 1.4  2000/04/26 06:48:20  sparker
 // Streamlined namespaces
 //

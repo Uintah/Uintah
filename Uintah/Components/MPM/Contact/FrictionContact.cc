@@ -6,6 +6,7 @@ static char *id="@(#) $Id$";
 
 #include "FrictionContact.h"
 #include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/IntVector.h>
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
@@ -20,12 +21,20 @@ static char *id="@(#) $Id$";
 #include <vector>
 using namespace Uintah::MPM;
 using SCICore::Geometry::Vector;
+using SCICore::Geometry::IntVector;
 using std::vector;
+using std::string;
 
 
-FrictionContact::FrictionContact(const SimulationStateP& d_sS)
+FrictionContact::FrictionContact(ProblemSpecP& ps,
+				 SimulationStateP& d_sS)
 {
   // Constructor
+  IntVector v_f;
+  double mu;
+
+  ps->require("vel_fields",v_f);
+  ps->require("mu",mu);
 
   d_sharedState = d_sS;
 }
@@ -147,6 +156,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.2  2000/04/27 21:28:57  jas
+// Contact is now created using a factory.
+//
 // Revision 1.1  2000/04/27 20:00:26  guilkey
 // Finished implementing the SingleVelContact class.  Also created
 // FrictionContact class which Scott will be filling in to perform

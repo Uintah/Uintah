@@ -8,6 +8,7 @@
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/MPMInterface.h>
 #include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
 
@@ -59,7 +60,7 @@ WARNING
 	 
       public:
 	 // Constructor
-	 FrictionContact(const SimulationStateP& d_sS);
+	 FrictionContact(ProblemSpecP& ps, SimulationStateP& d_sS);
 	 
 	 // Destructor
 	 virtual ~FrictionContact();
@@ -83,6 +84,9 @@ WARNING
 #endif /* __FRICTION_H__ */
 
 // $Log$
+// Revision 1.2  2000/04/27 21:28:58  jas
+// Contact is now created using a factory.
+//
 // Revision 1.1  2000/04/27 20:00:26  guilkey
 // Finished implementing the SingleVelContact class.  Also created
 // FrictionContact class which Scott will be filling in to perform
