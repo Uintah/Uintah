@@ -284,11 +284,6 @@ main(int argc, char** argv)
 	}
     }
 
-#ifndef HAVE_MPICH
-    // If regular MPI, then initialize after parsing the args...
-    Uintah::Parallel::initializeManager( argc, argv, scheduler );
-#endif
-
     if(filename == ""){
       usage("No input file specified", "", argv[0]);
     }
@@ -371,6 +366,13 @@ main(int argc, char** argv)
 	} else {
 	  usage("You need to specify a simulation, -arches, -ice, -mpm, -impm -mpmice, -mpmarches, or -poisson1, or -poisson2", "", argv[0]);
 	}
+
+#ifndef HAVE_MPICH
+	// If regular MPI, then initialize after parsing the args...
+	// ...and after all "usages" may have been called.
+	Uintah::Parallel::initializeManager( argc, argv, scheduler );
+#endif
+
 	ctl->attachPort("sim", sim);
 
 	if(world->myrank() == 0){
