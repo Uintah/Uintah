@@ -18,15 +18,6 @@ SRCS     += $(SRCDIR)/MPMaterial.cc $(SRCDIR)/MPRead.cc \
 ifeq ($(BUILD_PARALLEL),yes)
 SRCS += $(SRCDIR)/Particles_sidl.cc $(SRCDIR)/PIDLObject.cc \
 	$(SRCDIR)/PIDLObjectPort.cc
-
-$(SRCDIR)/Particles_sidl.o: $(SRCDIR)/Particles_sidl.cc $(SRCDIR)/Particles_sidl.h
-
-$(SRCDIR)/Particles_sidl.cc: $(SRCDIR)/Particles.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -o $@ $<
-
-$(SRCDIR)/Particles_sidl.h: $(SRCDIR)/Particles.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -h -o $@ $<
-
 endif
 
 PSELIBS := PSECore/Dataflow SCICore/Persistent SCICore/Exceptions \
@@ -42,6 +33,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/21 06:13:33  sparker
+# Added pattern rule for .sidl files
+# Compile component testprograms
+#
 # Revision 1.2  2000/03/20 19:38:31  sparker
 # Added VPATH support
 #
