@@ -387,6 +387,7 @@ inline void isect_bbox(const Point& orig, const Vector& idir,
 void BV1::intersect(Ray& ray, HitInfo& hit,
 		    DepthStats* st, PerProcessorContext* ppc)
 {
+#if 0
   if (ray.already_tested[0] == this ||
       ray.already_tested[1] == this ||
       ray.already_tested[2] == this ||
@@ -398,6 +399,7 @@ void BV1::intersect(Ray& ray, HitInfo& hit,
     ray.already_tested[1] = ray.already_tested[0];
     ray.already_tested[0] = this;
   }
+#endif
     int idx=0;
     int sp=0;
     double* slabs=normal_tree->slabs;

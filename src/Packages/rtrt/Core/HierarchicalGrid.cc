@@ -294,7 +294,8 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
 
     if (_level == 1) {
       work = new WorkQueue("HGrid");
-      work->refill(ngrid, 4, 5);
+      work->refill(ngrid, 1, 5);
+      
 //      work->refill(ngrid, np, 5);
       pdata.dx = dx;
       pdata.dy = dy;
