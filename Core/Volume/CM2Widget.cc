@@ -138,6 +138,7 @@ TriangleCM2Widget::io(Piostream &stream)
   Pio(stream, shadeType_);
   Pio(stream, onState_);
   Pio(stream, color_);
+  Pio(stream, alpha_);
   stream.end_class();
 }
 
@@ -569,6 +570,7 @@ RectangleCM2Widget::io(Piostream &stream)
   Pio(stream, shadeType_);
   Pio(stream, onState_);
   Pio(stream, color_);
+  Pio(stream, alpha_);
   stream.end_class();
 }
 
