@@ -54,6 +54,8 @@ void BoundCondFactory::create(const ProblemSpecP& ps,BCData& objs)
      
      else if (bc_attr["label"] == "Velocity" && 
              (bc_attr["var"]   == "Neumann"  ||
+              bc_attr["var"]   == "NegInterior"  ||
+              bc_attr["var"]   == "Neumann_CkValve"  ||
               bc_attr["var"]   == "Dirichlet") ) {
        BoundCondBase* bc = scinew VelocityBoundCond(child,bc_attr["var"]);
        objs.setBCValues(mat_id,bc);
