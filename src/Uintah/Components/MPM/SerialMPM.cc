@@ -8,6 +8,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/MPM/Contact/ContactFactory.h>
 #include <Uintah/Components/MPM/Fracture/FractureFactory.h>
 #include <Uintah/Components/MPM/Fracture/Fracture.h>
+#include <Uintah/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
@@ -73,6 +74,11 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
    d_fractureModel = FractureFactory::create(prob_spec,sharedState);
 
+
+   if (d_heatConductionInvolved) {
+     d_thermalContactModel = new ThermalContact;
+   }
+  
    cerr << "SerialMPM::problemSetup not done\n";
 }
 
@@ -1357,6 +1363,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.76  2000/05/31 18:30:21  tan
+// Create linkage to ThermalContact model.
+//
 // Revision 1.75  2000/05/31 17:40:57  tan
 // Particle temperature gradient computations included in
 // interpolateToParticlesAndUpdate().
