@@ -46,15 +46,17 @@ NrrdTextureBuilderAlgo::NrrdTextureBuilderAlgo()
 NrrdTextureBuilderAlgo::~NrrdTextureBuilderAlgo() 
 {}
 
-void
-NrrdTextureBuilderAlgo::build(TextureHandle texture,
-                              NrrdDataHandle nvn, NrrdDataHandle gmn,
+bool
+NrrdTextureBuilderAlgo::build(ProgressReporter *report,
+			      TextureHandle texture,
+                              const NrrdDataHandle &nvn,
+			      const NrrdDataHandle &gmn,
                               int card_mem)
 {
   Nrrd* nv_nrrd = nvn->nrrd;
   if (nv_nrrd->dim != 3 && nv_nrrd->dim != 4) {
-    cerr << "Invalid dimension for input value nrrd" << endl;
-    return;
+    report->error("Invalid dimension for input value nrrd.");
+    return false;
   }
 
   Nrrd* gm_nrrd = 0;
@@ -64,13 +66,13 @@ NrrdTextureBuilderAlgo::build(TextureHandle texture,
     gm_nrrd = gmn->nrrd;
     if(gm_nrrd) {
       if (gm_nrrd->dim != 3 && gm_nrrd->dim != 4) {
-        cerr << "Invalid dimension for input gradient magnitude nrrd" << endl;
-        return;
+        report->error("Invalid dimension for input gradient magnitude nrrd.");
+        return false;
       }
       nrrdAxisInfoGet_nva(gm_nrrd, nrrdAxisInfoSize, axis_size);
       if(gm_nrrd->dim > 3 && axis_size[0] != 1) {
-        cerr << "Invalid size for gradient magnitude nrrd" << endl;
-        return;
+        report->error("Invalid size for gradient magnitude nrrd.");
+        return false;
       }
       nc = 2;
     } else {
@@ -103,6 +105,7 @@ NrrdTextureBuilderAlgo::build(TextureHandle texture,
   //
   texture->lock_bricks();
   vector<TextureBrick*>& bricks = texture->bricks();
+  // TODO: Fail to check bbox, a transform will push us off.  Check generation?
   if(nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
      || nc != texture->nc() || card_mem != texture->card_mem()) {
     build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
@@ -116,11 +119,14 @@ NrrdTextureBuilderAlgo::build(TextureHandle texture,
     bricks[i]->set_dirty(true);
   }
   texture->unlock_bricks();
+  return true;
 }
 
+
 void
-NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrick*>& bricks, int nx, int ny,
-                                     int nz, int nc, int* nb,
+NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrick*>& bricks,
+				     int nx, int ny, int nz,
+				     int nc, int* nb,
                                      const BBox& bbox, int card_mem)
 {
   int brick_mem = card_mem*1024*1024/2;
@@ -273,7 +279,8 @@ NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrick*>& bricks, int nx, int 
 }
 
 void
-NrrdTextureBuilderAlgo::fill_brick(TextureBrick* brick, Nrrd* nv_nrrd, Nrrd* gm_nrrd,
+NrrdTextureBuilderAlgo::fill_brick(TextureBrick* brick,
+				   Nrrd* nv_nrrd, Nrrd* gm_nrrd,
                                    int ni, int nj, int nk)
 {
   TextureBrickT<unsigned char>* br =

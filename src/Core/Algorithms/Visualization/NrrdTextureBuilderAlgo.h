@@ -47,8 +47,10 @@ public:
   NrrdTextureBuilderAlgo();
   ~NrrdTextureBuilderAlgo();
 
-  void build(TextureHandle texture,
-             NrrdDataHandle vnrrd, NrrdDataHandle gnrrd,
+  bool build(ProgressReporter *report,
+	     TextureHandle texture,
+             const NrrdDataHandle &vnrrd,
+	     const NrrdDataHandle &gnrrd,
              int card_mem);
 
 protected:
