@@ -17,7 +17,6 @@
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
-#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
@@ -86,7 +85,7 @@ SerialMPM::~SerialMPM()
   MPMPhysicalBCFactory::clean();
 }
 
-void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP&,
+void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,GridP&,
                              SimulationStateP& sharedState)
 {
   d_sharedState = sharedState;
@@ -120,14 +119,17 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP&,
     if (flags->d_integrator_type == "explicit") {
       d_integrator = Explicit;
     }
+    if (flags->d_integrator_type == "fracture")
+      flags->d_fracture = true;
   }
-   
+
+  //  cout << "d_fracture = " << flags->d_fracture << endl;
+
   MPMPhysicalBCFactory::create(prob_spec);
 
-  contactModel = ContactFactory::create(prob_spec,sharedState, lb, 
-                                        flags->d_8or27);
+  contactModel = ContactFactory::create(prob_spec,sharedState,lb,flags);
   thermalContactModel =
-    ThermalContactFactory::create(prob_spec, sharedState, lb);
+    ThermalContactFactory::create(prob_spec, sharedState, lb,flags);
 
   ProblemSpecP p = prob_spec->findBlock("DataArchiver");
   if(!p->get("outputInterval", d_outputInterval))
@@ -305,6 +307,8 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   //scheduleAddNewParticles(                sched, patches, matls);
   scheduleConvertLocalizedParticles(      sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+
+  
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
                                     lb->d_particleState_preReloc,
@@ -868,50 +872,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   }
   
   sched->addTask(t, patches, matls);
-}
-
-void SerialMPM::scheduleRefine(const LevelP& fineLevel, 
-                               SchedulerP& scheduler)
-{
-  // do nothing for now
-}
-
-void SerialMPM::scheduleRefineInterface(const LevelP& fineLevel, 
-                                        SchedulerP& scheduler,
-                                        int step, int nsteps)
-{
-  // do nothing for now
-}
-
-void SerialMPM::scheduleCoarsen(const LevelP& coarseLevel, 
-                                SchedulerP& scheduler)
-{
-  // do nothing for now...
-}
-
-/// Schedule to mark flags for AMR regridding
-void SerialMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
-                                      SchedulerP& sched)
-{
-  cout_doing << "SerialMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
-  // Estimate error - this should probably be in it's own schedule,
-  // and the simulation controller should not schedule it every time step
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  Task* task = scinew Task("errorEstimate", this, &SerialMPM::errorEstimate);
-  task->requires(Task::NewDW, lb->pXLabel,     gac, 0);
-
-  
-  task->modifies(d_sharedState->get_refineFlag_label());
-  task->computes(d_sharedState->get_refinePatchFlag_label());
-  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
-
-}
-
-/// Schedule to mark initial flags for AMR regridding
-void SerialMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
-                                             SchedulerP& sched)
-{
-  scheduleErrorEstimate(coarseLevel, sched);
 }
 
 void SerialMPM::printParticleCount(const ProcessorGroup* pg,
@@ -2829,42 +2789,44 @@ void SerialMPM::printParticleLabels(vector<const VarLabel*> labels,
   }
 }
 
-void SerialMPM::errorEstimate(const ProcessorGroup*,
-				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
-				 DataWarehouse*,
-				 DataWarehouse* new_dw)
+
+void SerialMPM::scheduleParticleVelocityField(SchedulerP&,  const PatchSet*,
+					      const MaterialSet*)
 {
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    
-    cout_doing << "Doing errorEstimate on patch "<< patch->getID()<<" \t\t\t AMRSimpleCFD" << '\n';
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
+}
 
-      CCVariable<int> refineFlag;
-      PerPatch<int> refinePatchFlag(0);
-      new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
-			    0, patch);
-   
+void SerialMPM::scheduleAdjustCrackContactInterpolated(SchedulerP&, 
+						       const PatchSet*,
+						       const MaterialSet*)
+{
+}
 
-      // Get the particle data
-      constParticleVariable<Point> px;
-      ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
-      new_dw->get(px, lb->pXLabel, pset);
-
-      // Loop over particles
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        refineFlag[patch->getLevel()->getCellIndex(px[*iter])] = true;
-        refinePatchFlag.setData(true);
-      }
+void SerialMPM::scheduleAdjustCrackContactIntegrated(SchedulerP&, 
+						     const PatchSet*,
+						     const MaterialSet*)
+{
+}
 
 
-      new_dw->put(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
-                  dwi, patch);
-      
-    }
-  }
+void SerialMPM::scheduleCalculateFractureParameters(SchedulerP&, 
+						    const PatchSet*,
+						    const MaterialSet*)
+{
+}
+
+void SerialMPM::scheduleDoCrackPropagation(SchedulerP& sched, 
+					 const PatchSet* patches, 
+					 const MaterialSet* matls)
+{
+}
+
+void SerialMPM::scheduleMoveCracks(SchedulerP& sched,const PatchSet* patches,
+				   const MaterialSet* matls)
+{
+}
+
+void SerialMPM::scheduleUpdateCrackFront(SchedulerP& sched,
+					 const PatchSet* patches,
+					 const MaterialSet* matls)
+{
 }
