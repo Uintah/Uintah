@@ -138,6 +138,7 @@ public:
 
   virtual string GetStateString();
   virtual int SetStateString(const string &str);
+  string name() { return name_; }
 
 protected:
   Module*       module_;
