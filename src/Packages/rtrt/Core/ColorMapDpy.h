@@ -41,7 +41,9 @@ class ColorMapDpy : public DpyBase {
   int select_point(int x, int y);
   
   void write_data_file(char *out_file=0);
-
+  int xstart, xend, width, ystart, yend, height;
+  void set_viewport_params();
+  
   // Display variables
   int selected_point;
 public:
@@ -56,12 +58,18 @@ public:
     color_trans_out = &color_transform;
     alpha_trans_out = &alpha_transform;
   }
+  ScalarTransform1D<float, Color>* get_color_transfer_pointer() {
+    return &color_transform;
+  }
+  ScalarTransform1D<float, float>* get_alpha_transfer_pointer() {
+    return &alpha_transform;
+  }
   
   // event functions
   virtual void init();
   virtual void display();
-#if 0
   virtual void resize(const int width, const int height);
+#if 0
   virtual void key_pressed(unsigned long key);
   virtual void button_pressed(MouseButton button, const int x, const int y);
   virtual void button_released(MouseButton button, const int x, const int y);
