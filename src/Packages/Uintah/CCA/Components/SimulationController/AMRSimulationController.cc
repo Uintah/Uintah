@@ -342,13 +342,17 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
   GridP oldGrid = currentGrid;       
   currentGrid = d_regridder->regrid(oldGrid.get_rep(), d_scheduler, d_ups);
   if (d_myworld->myrank() == 0) {
-    cout << "  DOING ANOTHER INITIALIZATION REGRID!!!!\n";
-    cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
-    cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
+    //    cout << "  DOING ANOTHER INITIALIZATION REGRID!!!!\n";
+    //    cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
+    //    cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
   }
   if (currentGrid == oldGrid)
     return false;
   
+  if (d_myworld->myrank() == 0) {
+    cout << "  ADDING ANOTHER LEVEL TO THE GRID\n";
+  }
+
   // reset the d_scheduler here - it doesn't hurt anything here
   // as we're going to have to recompile the TG anyway.
   d_scheduler->initialize(1, 1);
@@ -366,8 +370,6 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
   d_scheduler->compile();
   
   double dt=Time::currentSeconds() - getStartTime();
-  if(d_myworld->myrank() == 0)
-    cout << "done taskgraph compile (" << dt << " seconds)\n";
   // No scrubbing for initial step
   d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
   d_scheduler->execute();
@@ -378,15 +380,14 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
 void AMRSimulationController::doRegridding(GridP& currentGrid)
 {
   if (d_myworld->myrank() == 0)
-    cout << "REGRIDDING!!!!!\n";
+    cout << "  REGRIDDING!!!!!\n";
   
   GridP oldGrid = currentGrid;
   currentGrid = d_regridder->regrid(oldGrid.get_rep(), d_scheduler, d_ups);
   if (currentGrid != oldGrid) {
     if (d_myworld->myrank() == 0) {
-      cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
-      cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
-      
+      //cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
+      cout << "---------- NEW GRID ----------" << endl; // << *(currentGrid.get_rep());
       cout << "---------- ABOUT TO COPY GRIDS ----------" << endl;
     }
          
