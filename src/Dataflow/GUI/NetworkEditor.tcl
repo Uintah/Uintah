@@ -1740,9 +1740,9 @@ proc maybeWrite_init_DATADIR_and_DATASET { out } {
     if { ![envBool SCIRUN_NET_SUBSTITUTE_DATADIR] } return
     foreach module [array names ModuleSubstitutedVars] {
 	foreach var $ModuleSubstitutedVars($module) {
-	    upvar $module-$var val
+	    upvar \#0 $module-$var val
 	    if { [info exists val] && \
-		![string equal $val [subDATADIRandDATASET $module $var]] } {
+		     ![string equal $val [subDATADIRandDATASET $val]] } {
 		puts $out "# Ask SCIRun to tell us where the data is"
 		puts $out "init_DATADIR_and_DATASET\n"
 		return
