@@ -13,7 +13,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Fusion/Dataflow/Modules/Fields
 
 SRCS     += \
-	$(SRCDIR)/EditFusionField.cc\
 	$(SRCDIR)/FusionSlicePlot.cc\
 	$(SRCDIR)/RadialGridDifferent.cc\
 #[INSERT NEW CODE FILE HERE]
