@@ -302,6 +302,8 @@ main(int argc, char *argv[] )
     gui->eval("wm deiconify .", result);
     gui->eval("tkwait visibility .top.globalViewFrame.canvas",result);
   } else {
+    // set that we are loading an app
+    packageDB->setLoadingApp(true);
     // determine which standalone and set splash
     if(strstr(argv[startnetno], "BioTensor")) {
       packageDB->setSplashPath("Packages/Teem/Dataflow/GUI/splash-tensor.ppm");
