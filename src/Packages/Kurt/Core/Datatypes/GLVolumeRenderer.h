@@ -53,11 +53,12 @@ private:
   GLVolRenState* _state;
   // GLVolRenStates in lieu of static variables in the state object
   // this allows multiple volume renders to work..
-  TexPlanes* _tp;
+
   ROI* _roi;
   FullRes* _fr;
-  LOS* _los;
-  
+  LOS* _los; 
+  TexPlanes* _tp;
+ 
   GLTexRenState* _gl_state;
  
   // GLTexRenStates done for the same reasons as above.
@@ -89,10 +90,10 @@ public:
 /*   void DrawLOS(){ _state = LOS::Instance(this);} */
 /*   void DrawROI(){ _state = ROI::Instance(this);} */
 /*   void DrawPlanes(){ _state = TexPlanes::Instance(this); } */
-  void DrawFullRes(){ _state = state(_fr);}
-  void DrawLOS(){ _state = state(_los);}
-  void DrawROI(){ _state = state(_roi);}
-  void DrawPlanes(){ _state = state(_tp);}
+  void DrawFullRes(){ _state = state(_fr, 0);}
+  void DrawLOS(){ _state = state(_los, 0);}
+  void DrawROI(){ _state = state(_roi, 0);}
+  void DrawPlanes(){ _state = state(_tp, 1);}
 
   void SetX(bool b){ if(b){drawView = false;} drawX = b; }
   void SetY(bool b){ if(b){drawView = false;} drawY = b; }
@@ -103,10 +104,10 @@ public:
 /*   void GLMIP(){ _gl_state = GLMIP::Instance( this ); } */
 /*   void GLAttenuate(){ _gl_state = GLAttenuate::Instance( this ); } */
 /*   void GLPlanes(){ _gl_state = GLPlanes::Instance(this);} */
-  void GLOverOp(){ _gl_state = state(_oo);}
-  void GLMIP(){ _gl_state = state(_mip); }
-  void GLAttenuate(){ _gl_state = state(_atten ); }
-  void GLPlanes(){ _gl_state = state(_planes);}
+  void GLOverOp(){ _gl_state = state(_oo, 0);}
+  void GLMIP(){ _gl_state = state(_mip, 0); }
+  void GLAttenuate(){ _gl_state = state(_atten, 0 ); }
+  void GLPlanes(){ _gl_state = state(_planes, 1);}
 
   void SetInterp( bool i) { _interp = i; }
 
@@ -152,11 +153,11 @@ private:
 
   // Sets the state function without having to write a bunch of code
   template <class T>
-    T* state( T* st){ if(st == 0) st = new T(this); return st;}
+    T* state( T* st, int l){ if(st == 0) st = new T(this); _lighting = l; return st;}
 
 
   bool _interp;
-  
+  int _lighting;
   static double swapMatrix[16];
   
 };
