@@ -27,6 +27,7 @@ namespace SCICore {
 namespace Geometry {
 
 #define Abs(x) ((x>0)?x:-x)
+#define MSG(m) cout << m << endl;
 
 //****************************************************************************************
 // construction/destruction
@@ -158,9 +159,9 @@ bool Quaternion::operator==(const Quaternion& q){
   return (Abs(this->a- q.a)<10e-7  && this->v == q.v);
 }
 
-  /*
 #define VIEW_VERSION 1
 
+  /* To be implemented
 void Pio(Piostream& stream, Quaternion& q){
   using SCICore::PersistentSpace::Pio;
   using SCICore::Geometry::Pio;
@@ -171,6 +172,7 @@ void Pio(Piostream& stream, Quaternion& q){
   stream.end_class();
 }
  */
+
 Quaternion pow(const Quaternion& q, double p){  
   if (q.v.length()> NUM_ZERO){
     double theta=p*acos(q.a);
@@ -188,6 +190,163 @@ std::ostream& operator<<(std::ostream& out , const Quaternion& q){
   out << "a=" << q.a << std::endl;
   out << "v=" << q.v << std::endl;
   return out;
+}
+
+
+void test_quat(){
+
+  MSG("Quaternion tests:-----------------------");
+  // ****************** TEST 1 ***************************
+  MSG("Test#1: creating quaternions");
+  
+  Quaternion q1;
+  MSG("Default Construction:");
+  MSG(q1);
+
+  Quaternion q2(Vector(1, 0, 0), Vector(0, 1, 0));
+  Quaternion q3(Vector(1, 1, 1), Vector(0, 1, 0));
+  MSG("Quaternion q2(Vector(1, 0, 0), Vector(0, 1, 0));");
+  MSG(q2);
+  MSG("Quaternion q3(Vector(1, 1, 1), Vector(0, 1, 0));");
+  MSG(q3);
+
+  Quaternion q4(Vector(2, 2, 2));
+  MSG("Quaternion q4(Vector(2, 2, 2))");
+  MSG(q4);
+
+  MSG("Norms of the created quaternions:");
+  MSG("q1:");
+  MSG(q1.norm());
+  MSG("q2:");
+  MSG(q2.norm());
+  MSG("q3:");
+  MSG(q3.norm());
+  MSG("q4:");
+  MSG(q4.norm());
+  MSG(" ");
+
+  // ****************** TEST 2 ***************************
+  MSG("Test#2: transforms from and to rotational matrix");
+  
+  MSG(" From and back to q2:");
+  MSG(q2);
+  Transform rot1;
+  q2.to_matrix(rot1);
+
+  MSG("  Created rotational matrix:");
+  rot1.print();
+  
+   Quaternion q2b;
+  q2b.from_matrix(rot1);
+  MSG("  q2b restored from the matrix:");
+  MSG(q2b);
+  
+  MSG(" Testing construction from prebuilt rotational matrix:");
+  MSG("  Corresponding to rotation around OX on -90");
+  Transform rot2(Point(0, 0, 0), Vector(1, 0, 0), Vector(0, 0, -1), Vector(0, 1, 0));
+  rot2.print();
+  Quaternion q5(rot2);
+  MSG(" Quaternion q5 from the matrix is: " );
+  MSG(q5);
+  MSG(" Back to the matrix:");
+  q5.to_matrix(rot1);
+  rot1.print();
+  MSG(" ");
+
+   // ****************** TEST 3 ***************************
+  MSG("Test#3: operations on quaternions");
+  MSG(" Rotating by q5:");
+  MSG("  of Vector(1, 1, 1):");
+  MSG(q5.rotate(Vector(1, 1, 1)));
+  MSG("  of Vector(1, 0, 0):");
+  MSG(q5.rotate(Vector(1, 0, 0)));
+  MSG("  of Vector(0, 0, 1):");
+  MSG(q5.rotate(Vector(0, 0, 1)));
+  
+  q5=Quaternion();
+  MSG(" Rotating of Vector(0, 0, 1) by q equal:");
+  MSG(q5);
+  MSG(q5.rotate(Vector(0, 0, 1)));
+
+  MSG(" ");
+  MSG(" Operator ==:");
+  MSG(" q3:"); MSG(q3);
+  MSG(" q4:"); MSG(q4);
+  MSG(" q3==q4"); MSG((q3==q4));
+  MSG(" q3==q3"); MSG((q3==q3));
+  MSG(" ");
+  MSG(" Quaternion conjugate to q3:");
+  MSG(q3.get_inv());
+  MSG(" Inversion of q3 itself:");
+  q3.inverse();
+  MSG(q3);
+  MSG(" ");
+  MSG(" Sum of quaternions q1 and q5:");
+  MSG(" q1:"); MSG(q1);
+  MSG(" q5:"); MSG(q5);
+  MSG(" Sum Q1+Q5:"); MSG(q1+q5);
+  MSG(" ");
+  MSG(" Testing get_frame():");
+  MSG(" Rot matrix:");
+  rot2.print();
+  Quaternion q6(rot2);
+  MSG( " q6 from the matrix:");
+  MSG(q6);
+  Vector i, j, k;
+  q6.get_frame(i, j, k);
+  MSG(" Vectors got from q6:");
+  MSG(" i="); MSG(i);
+  MSG(" j="); MSG(j);
+  MSG(" k="); MSG(k);
+
+  MSG(" ");
+  MSG(" Quaternion multiplication:");
+  MSG(" Rot matrices of two consequentive rotaitions:");
+  rot1.print();
+  rot2.print();
+  q1.from_matrix(rot1);
+  q2.from_matrix(rot2);
+
+  MSG(" Product of the q1 and q2:");
+  Quaternion q12=q1*q2;
+  MSG(q12);
+  
+  MSG(" Matrix from the product:");
+  Transform rot12;
+  q12.to_matrix(rot12);
+  rot12.print();
+ 
+ 
+  
+  // ****************** TEST 4 ***************************
+  MSG("Test#4: testing Slerp");
+  q1=Quaternion(Vector(1, 0, 0), Vector(0, -1, 0));
+  MSG(" q1=");
+  MSG(q1);
+  q2=Quaternion(Vector(0, 0, 1), Vector(0, -1, 0));
+  MSG(" q=");
+  MSG(q2);
+  q3=Slerp(q1, q2, 0);
+  MSG(" Slerp(q1, q2, 0):");
+  MSG(q3);
+  q3=Slerp(q1, q2, 1);
+  MSG(" Slerp(q1, q2, 1):");
+  MSG(q3);
+  q3=Slerp(q1, q2, 0.5);
+  MSG(" Slerp(q1, q2, 0.5):");
+  MSG(q3);
+  
+  double ang=Abs(Dot(q2, q1)), w;
+  MSG("Angle between q2 and q1 is:");
+  MSG(ang);
+  for (int i=0; i<=10; i++){ 
+    w=(double)i/(double)10;
+    MSG("w=:");
+    MSG(w);
+    q3=Slerp(q1, q2, w);
+    MSG(" q3=");
+    MSG(q3);  
+  }
 }
 
 } // Geometry
