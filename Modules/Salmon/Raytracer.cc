@@ -116,7 +116,10 @@ void Raytracer::redraw(Salmon* _salmon, Roe* _roe)
 
     topmatl=salmon->default_matl;
     Color* scanline=new Color[xres];
+
+    // Preprocess the scene
     topobj=&group;
+    topobj->preprocess();
     for(int yc=0;yc<yres;yc++){
 	while(salmon->process_event(0)) { /* Nothing... */ }
 	if(roe->need_redraw)break;
