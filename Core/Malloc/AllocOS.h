@@ -45,6 +45,7 @@ struct OSHunk {
     size_t spaceleft;
     void* curr;
     size_t len;
+    size_t alloc_len;
     bool returnable;
 };
 

@@ -35,14 +35,13 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sci_config.h>
+#define ALIGN 16
 
 #if defined(sun) || defined(__linux)
 #define MMAP_TYPE char
 #else
 #define MMAP_TYPE void
 #endif
-
-#define ALIGN 16
 
 namespace SCIRun {
 
@@ -55,6 +54,8 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable)
     if(offset != 0)
       offset = ALIGN-offset;
     size_t asize=size+sizeof(OSHunk)+offset;
+  if(returnable && asize%4096 != 0)
+    fprintf(stderr, "OOPS: asize=%d\n", asize);
     void* ptr;
     if(returnable){
        if(devzero_fd == -1){
@@ -101,7 +102,8 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable)
     }
     hunk->next=0;
     hunk->ninuse=0;
-    hunk->len=size;
+    hunk->len=size-offset;
+    hunk->alloc_len=asize;
     hunk->returnable=returnable;
     return hunk;
 }
@@ -112,7 +114,10 @@ void OSHunk::free(OSHunk* hunk)
       fprintf(stderr, "Attempt to return a non-returnable memory hunk!\n");
       abort();
    }
-    size_t len=hunk->len;
+    size_t len=hunk->alloc_len;
+    if(len%4096 != 0)
+      fprintf(stderr, "OOPS2: len=%d\n", len);
+
     if(munmap((MMAP_TYPE*)hunk, len) == -1){
 	int i;
         for(i=0;i<10;i++){

@@ -131,6 +131,8 @@ struct Allocator {
     size_t highwater_mmap;
 
     size_t mysize;
+
+  size_t pagesize;
 };
 
 void AllocError(char*);
