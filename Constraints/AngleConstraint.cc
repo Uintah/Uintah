@@ -24,7 +24,7 @@ AngleConstraint::AngleConstraint( const clString& name,
 				  Variable* center, Variable* end1,
 				  Variable* end2, Variable* p,
 				  Variable* angleInX )
-:BaseConstraint(name, numSchemes, 4)
+:BaseConstraint(name, numSchemes, 5)
 {
    vars[0] = center;
    vars[1] = end1;
@@ -85,7 +85,7 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme )
       Real x(Dot(v1.Get() - v0.Get(),v));
       Real y(Dot(v2.Get() - v0.Get(),v));
       
-      if ((abs(x) > v4.GetEpsilon()) || (abs(y) > v4.GetEpsilon()))
+      if ((fabs(x) > v4.GetEpsilon()) || (fabs(y) > v4.GetEpsilon()))
 	 v4.Assign(Point(atan2(y,x), 0, 0), scheme);
       break;
    default:

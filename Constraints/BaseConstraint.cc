@@ -70,18 +70,26 @@ Variable::Resolve()
 
 
 void
-Variable::Set( const Point& newValue )
+Variable::Set( const Point& newValue, const Scheme s )
 {
-   level = levellevel = 0;
-   Assign(newValue, scheme);
+   recursion = 0;
+
+   if (s == DefaultScheme)
+      Assign(newValue, scheme);
+   else
+      Assign(newValue, s);
 }
 
 
 void
-Variable::SetDelta( const Vector& deltaValue )
+Variable::SetDelta( const Vector& deltaValue, const Scheme s )
 {
    recursion = 0;
-   Assign(value + deltaValue, scheme);
+
+   if (s == DefaultScheme)
+      Assign(value + deltaValue, scheme);
+   else
+      Assign(value + deltaValue, s);
 }
 
 
@@ -95,10 +103,12 @@ epsilonequal( const Real Epsilon, const Point& p1, const Point& p2 )
 
 
 const Index MaxDepth = 25;
+const int ABORT = -1234;
+
 void
 Variable::Assign( const Point& newValue, const Scheme scheme )
 {
-   if (level <= -1234) return; // Backing out
+   if (level <= ABORT) return; // Backing out
    
    Index index, index2;
    int reallynew = !(epsilonequal(Epsilon, value, newValue));
@@ -128,6 +138,7 @@ Variable::Assign( const Point& newValue, const Scheme scheme )
 	    index2 = index % numconstraints;
 	    constraints[constraint_order[index2]]
 	       ->Satisfy(constraint_indexs[constraint_order[index2]], scheme);
+	    if (level <= ABORT) return; // Backing out
 	 }
       }
       else {
@@ -140,7 +151,7 @@ Variable::Assign( const Point& newValue, const Scheme scheme )
 	    cout << "Recursion level = " << --recursion << endl;
 	 }
 
-	 levellevel = level = -1234;
+	 levellevel = level = ABORT;
 
 	 cerr << "Maximum level reached for all constraints!" << endl;
 	 cout << "Accepting current approximation." << endl;
@@ -150,9 +161,12 @@ Variable::Assign( const Point& newValue, const Scheme scheme )
       }
    }
    else if (reallynew)
-      for (index = 0; index < numconstraints; index++)
+      for (index = 0; index < numconstraints; index++) {
 	 constraints[constraint_order[index]]
 	    ->Satisfy(constraint_indexs[constraint_order[index]], scheme);
+	 if (level <= ABORT) return; // Backing out
+      }
+   
    if (level == 0) {
       level = MaxDepth-1;
       levellevel--;
@@ -261,14 +275,6 @@ BaseConstraint::Satisfy( const Index, const Scheme )
    Error("BaseConstraint: Can't satisfy!");
 }
 
-Index
-BaseConstraint::ChooseChange( const Index index, const Scheme scheme )
-{
-   callingMethod = index;
-   
-   return whichMethod = var_choices(scheme, index);
-}
-
 void
 BaseConstraint::print( ostream& os )
 {
@@ -285,8 +291,12 @@ BaseConstraint::print( ostream& os )
 	  }
        }
        os << "\t-> ";
-       vars[whichMethod]->printc(os, var_indexs[whichMethod]);
-       os << " (->" << var_choices(j, whichMethod) << ")";
+       if (whichMethod < varCount) {
+	  vars[whichMethod]->printc(os, var_indexs[whichMethod]);
+	  os << " (->" << var_choices(j, whichMethod) << ")";
+       } else {
+	  os << "(Special option.";
+       }
        os << ")" << endl;
     }
 }

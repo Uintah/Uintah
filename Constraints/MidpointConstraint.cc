@@ -18,9 +18,9 @@
 static DebugSwitch mc_debug("BaseConstraint", "Midpoint");
 
 MidpointConstraint::MidpointConstraint( const clString& name,
-					    const Index numSchemes,
-					    Variable* end1, Variable* end2,
-					    Variable* p )
+					const Index numSchemes,
+					Variable* end1, Variable* end2,
+					Variable* p )
 :BaseConstraint(name, numSchemes, 3)
 {
    vars[0] = end1;

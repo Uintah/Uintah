@@ -28,7 +28,7 @@ enum VPriority { P_Constant = 0, P_Lowest, P_LowMedium,
 		 P_Default, P_HighMedium, P_Highest };
 
 enum Scheme { Scheme1 = 0, Scheme2, Scheme3, Scheme4,
-	      Scheme5, Scheme6, Scheme7, Scheme8 };
+	      Scheme5, Scheme6, Scheme7, Scheme8, DefaultScheme };
 
 
 class BaseConstraint;
@@ -42,9 +42,11 @@ public:
    void Order(); // Use to let the Variable order its constraints.
    void Resolve(); // Use to initially fulfill constraints.
 
+   inline void Reset();
+
    // Widgets use these instead of Assign!
-   void Set( const Point& newValue );
-   void SetDelta( const Vector& deltaValue );
+   void Set( const Point& newValue, const Scheme s = DefaultScheme );
+   void SetDelta( const Vector& deltaValue, const Scheme s = DefaultScheme );
    // Widgets use these to move whole widget.
    // i.e. don't change constraints!!
    inline void Move( const Point& newValue );
@@ -81,6 +83,13 @@ private:
    void printc( ostream& os, const Index c );
 };
 inline ostream& operator<<( ostream& os, Variable& v );
+
+
+inline void
+Variable::Reset()
+{
+   levellevel = level = 0;
+}
 
 
 class BaseConstraint {
@@ -126,7 +135,7 @@ protected:
    Index whichMethod, callingMethod;
 
    void Register();
-   virtual Index ChooseChange( const Index index, const Scheme scheme );
+   virtual inline Index ChooseChange( const Index index, const Scheme scheme );
    virtual void Satisfy( const Index index, const Scheme scheme );
    inline const Point& operator[]( const Index i ) const;
 };
@@ -217,6 +226,15 @@ inline Point*
 Variable::GetRef()
 {
    return &value;
+}
+
+
+inline Index
+BaseConstraint::ChooseChange( const Index index, const Scheme scheme )
+{
+   callingMethod = index;
+   
+   return whichMethod = var_choices(scheme, index);
 }
 
 
