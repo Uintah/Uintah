@@ -87,6 +87,7 @@ struct Allocator {
     void initlock();
     inline void lock();
     inline void unlock();
+  void noninline_unlock();
 
 #ifdef SCI_PTHREAD
     inline void rlock();
@@ -151,6 +152,7 @@ struct Allocator {
     size_t mysize;
 
   size_t pagesize;
+  bool dieing;
 };
 
 void AllocError(char*);

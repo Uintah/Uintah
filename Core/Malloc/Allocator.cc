@@ -420,7 +420,7 @@ Allocator* MakeAllocator()
     int nmedium=NMEDIUM_BINS;
     size+=nmedium*sizeof(AllocBin);
 
-    OSHunk* alloc_hunk=OSHunk::alloc(size, false);
+    OSHunk* alloc_hunk=OSHunk::alloc(size, false, 0);
     Allocator* a=(Allocator*)alloc_hunk->data;
     alloc_hunk->spaceleft=0;
     alloc_hunk->next=0;
@@ -527,6 +527,7 @@ Allocator* MakeAllocator()
 	a->stats_out=0;
     }
 
+    a->dieing = false;
     return a;
 }
 
@@ -655,7 +656,7 @@ void* Allocator::alloc_big(size_t size, const char* tag)
 	if(offset != 0)
 	  offset = ALIGN-offset;
 	tsize -= offset;
-	OSHunk* hunk=OSHunk::alloc(tsize, true);
+	OSHunk* hunk=OSHunk::alloc(tsize, true, this);
 	nmmap++;
 	sizemmap+=tsize+sizeof(OSHunk);
 	size_t diffmmap=sizemmap-sizemunmap;
@@ -1105,7 +1106,7 @@ void Allocator::get_hunk(size_t reqsize, OSHunk*& ret_hunk, void*& ret_p)
     if(!hunk){
 	// Always request big chunks
 	size_t s=reqsize>NORMAL_OS_ALLOC_SIZE?reqsize:NORMAL_OS_ALLOC_SIZE;
-	hunk=OSHunk::alloc(s, false);
+	hunk=OSHunk::alloc(s, false, this);
 	hunk->next=hunks;
 	hunks=hunk;
 	hunk->spaceleft=s;
@@ -1342,6 +1343,11 @@ void DumpAllocator(Allocator* a, const char* filename)
     dump_bin(a, &a->big_bin, fp);
     a->unlock();
     fclose(fp);
+}
+
+void Allocator::noninline_unlock()
+{
+  unlock();
 }
 
 } // End namespace SCIRun

@@ -34,9 +34,9 @@
 #include <stdlib.h>
 
 namespace SCIRun {
-
+  class Allocator;
 struct OSHunk {
-    static OSHunk* alloc(size_t size, bool returnable);
+    static OSHunk* alloc(size_t size, bool returnable, Allocator* allocator);
     static void free(OSHunk*);
     void* data;
     OSHunk* next;

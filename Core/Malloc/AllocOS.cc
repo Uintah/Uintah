@@ -28,6 +28,7 @@
  */
 
 #include <Core/Malloc/AllocOS.h>
+#include <Core/Malloc/AllocPriv.h>
 #ifdef __APPLE__
 #include <sys/types.h>
 #endif
@@ -51,7 +52,7 @@ namespace SCIRun {
 static int devzero_fd=-1;
 
 
-OSHunk* OSHunk::alloc(size_t size, bool returnable)
+OSHunk* OSHunk::alloc(size_t size, bool returnable, Allocator* allocator)
 {
     unsigned long offset = sizeof(OSHunk)%ALIGN;
     if(offset != 0)
@@ -94,6 +95,18 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable)
 #else
        fprintf(stderr, "Error allocating memory (%d bytes requested)\nmmap: errno=%d\n", asize, errno);
 #endif
+       
+       if(allocator){
+	 // If the allocator is already dieing, we will just quit to try
+	 // to avoid going into an infinite loop
+	 if(allocator->dieing)
+	   exit(1);
+
+	 // Mark the allocator as dieing and unlock it so that allocations
+	 // might succeed as we are shutting down
+	 allocator->dieing = true;
+	 allocator->noninline_unlock();
+       }
        abort();
     }
     hunk->data=(void*)(hunk+1);
