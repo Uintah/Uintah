@@ -6,6 +6,9 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Vector.h>
 
+#include <iostream>
+
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
@@ -69,13 +72,13 @@ ConeGeometryPiece::inside(const Point &pt) const
 {
   // Find the position vector of top wrt bottom
   Vector axis = d_top-d_bottom;  
-  double height = axis.length();
+  double height2 = axis.length2();
 
   // Find the position vector of point wrt bottom
   Vector pbot = pt-d_bottom;
 
   // Project point on axis and find parametric location
-  double tt = Dot(axis, pbot)/height;
+  double tt = Dot(axis, pbot)/height2;
 
   // Above or below cone
   if (tt < 0.0 || tt > 1.0) return false;
@@ -88,6 +91,10 @@ ConeGeometryPiece::inside(const Point &pt) const
   Vector projOnAxis = d_bottom*(1.0-tt) + d_top*tt;
   Vector normal = pt.asVector() - projOnAxis;
   double dist = normal.length();
+
+  //cout << "Bottom = " << d_bottom << " Top = " << d_top << " Point = " << pt << endl;
+  //cout << "tt = " << tt 
+  //     << " Cur. Rad = " << rad << " Rad. Dist = " << dist << endl;
 
   // If dist < rad the point is inside
   if (dist > rad) return false;
