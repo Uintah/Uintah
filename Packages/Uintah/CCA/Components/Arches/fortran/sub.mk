@@ -55,6 +55,7 @@ SRCS += \
 	$(SRCDIR)/mmenthalpywallbc.F \
 	$(SRCDIR)/mmcelltypeinit.F \
 	$(SRCDIR)/mmmomsrc.F \
+	$(SRCDIR)/mmscalarwallbc.F \
 	$(SRCDIR)/mmwallbc.F \
 	$(SRCDIR)/mmwallbc_trans.F \
 	$(SRCDIR)/normpress.F \
@@ -142,6 +143,7 @@ $(SRCDIR)/mmbcvelocity.o: $(SRCDIR)/mmbcvelocity_fort.h
 $(SRCDIR)/mmcelltypeinit.o: $(SRCDIR)/mmcelltypeinit_fort.h
 $(SRCDIR)/mmenthalpywallbc.o: $(SRCDIR)/mmenthalpywallbc_fort.h
 $(SRCDIR)/mmmomsrc.o: $(SRCDIR)/mmmomsrc_fort.h
+$(SRCDIR)/mmscalarwallbc.o: $(SRCDIR)/mmscalarwallbc_fort.h
 $(SRCDIR)/mmwallbc.o: $(SRCDIR)/mmwallbc_fort.h
 $(SRCDIR)/mmwallbc_trans.o: $(SRCDIR)/mmwallbc_trans_fort.h
 $(SRCDIR)/normpress.o: $(SRCDIR)/normpress_fort.h
