@@ -6,6 +6,7 @@
 
 namespace Uintah {
   typedef Handle<MaterialSet> MaterialSetP;
+  typedef Handle<MaterialSubset> MaterialSubsetP;
 }
 
 #endif
