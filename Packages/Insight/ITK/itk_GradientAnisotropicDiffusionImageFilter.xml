@@ -6,6 +6,10 @@
     <base>itk::Object</base>
     <template>InputImageType</template>
     <template>OutputImageType</template>
+    <defaults>
+      <default>itk::Image&lt;float, 2&gt;</default>
+      <default>itk::Image&lt;float, 2&gt;</default>
+    </defaults>
   </templated>
 
   <inputs>

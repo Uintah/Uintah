@@ -5,6 +5,9 @@ This filter implements the first step in the N-d watershed segmentation algorith
   <templated>
     <base>itk::Object</base>
     <template>InputImageType</template>
+    <defaults>
+      <default>itk::Image&lt;float, 2&gt;</default>
+    </defaults>
   </templated>
 
   <inputs>
