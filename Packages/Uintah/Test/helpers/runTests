@@ -20,6 +20,10 @@ opt_failed=0
 use_html=0
 do_dbg=1
 
+
+#remove files from previous tests if necessary
+rm -f "$BUILDROOT"/dbg/log "$BUILDROOT"/opt/log "$BUILDROOT"/dbg/summary_log "$BUILDROOT"/opt/summary_log 
+
 #if VERBOSE is on, then have all output go to sdtout instead of log
 
 #if weekly tests are active, don't do debug tests
