@@ -464,26 +464,26 @@ bool LevelField<Data>::interpolate(Data &g, const Point &p) const {
     Data y1=Interpolate(x01, x11, fy);
     g=Interpolate(y0, y1, fz);
   } else if( data_at() == Field::CELL) {
-    //typename mesh_type::Cell::index_type ci;
-    //if( mesh->locate(ci, p) ) {
-    //  g = value( ci );
-    //} else {
-    //  return false;
-    //}
-    nx=mesh->get_nx()-1;
-    ny=mesh->get_ny()-1;
-    nz=mesh->get_nz()-1;
-    x=pn.x()*(nx-1)/diagonal.x();
-    y=pn.y()*(ny-1)/diagonal.y();
-    z=pn.z()*(nz-1)/diagonal.z();
-    int ix0=(int)(x);
-    int iy0=(int)(y);
-    int iz0=(int)(z);
-    if(ix0<0 || ix0>=nx-1)return false;
-    if(iy0<0 || iy0>=ny-1)return false;
-    if(iz0<0 || iz0>=nz-1)return false;
+    typename mesh_type::Cell::index_type ci;
+    if( mesh->locate(ci, p) ) {
+      g = value( ci );
+    } else {
+      return false;
+    }
+/*     nx=mesh->get_nx()-1; */
+/*     ny=mesh->get_ny()-1; */
+/*     nz=mesh->get_nz()-1; */
+/*     x=pn.x()*(nx-1)/diagonal.x(); */
+/*     y=pn.y()*(ny-1)/diagonal.y(); */
+/*     z=pn.z()*(nz-1)/diagonal.z(); */
+/*     int ix0=(int)(x); */
+/*     int iy0=(int)(y); */
+/*     int iz0=(int)(z); */
+/*     if(ix0<0 || ix0>=nx-1)return false; */
+/*     if(iy0<0 || iy0>=ny-1)return false; */
+/*     if(iz0<0 || iz0>=nz-1)return false; */
     
-    g = value(mesh->cell(ix0,iy0,iz0));
+/*     g = value(mesh->cell(ix0,iy0,iz0)); */
     
   } else {
     return false;
