@@ -72,9 +72,7 @@ public:
     virtual void emit_vars(std::ostream& out, string& midx);
     static void initialize();
     static void execute(const string&);
-    // static void execute(char*);
     static int eval(const string&, string& result);
-    // static int eval(char*, string& result);
     static void source_once(const string&);
     static void add_command(const string&, TCL*, void*);
     static void delete_command( const string& command );
