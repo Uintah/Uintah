@@ -130,35 +130,18 @@ SampleLattice::execute()
     return;
   }
 
-  if (datatype == VECTOR || true)
+  if (datatype == SCALAR)
   {
-    LatVolField<Vector> *lvf = scinew LatVolField<Vector>(mesh, data_at);
-    LatVolMesh::Node::iterator bi, ei;
-    mesh->begin(bi); mesh->end(ei);
-    Vector v(0.0, 0.0, 1.0);
-    while (bi != ei)
-    {
-      Point p;
-      mesh->get_center(p, *bi);
-      p.z(0.0);
-      Vector v2 = Cross(p.asVector(), v);
-      if (v2.safe_normalize() < 1.0e-3)
-      {
-	v2 = v;
-      }
-      lvf->set_value(v2, *bi);
-      ++bi;
-    }
-    ofh = lvf;
+    ofh = scinew LatVolField<double>(mesh, data_at);
+  } 
+  else if (datatype == VECTOR)
+  {
+    ofh = scinew LatVolField<Vector>(mesh, data_at);
   }				    
-  else if (datatype == TENSOR)	    
+  else // if (datatype == TENSOR)	    
   {				    
     ofh = scinew LatVolField<Tensor>(mesh, data_at);
   }				    
-  else				    
-  {				    
-    ofh = scinew LatVolField<double>(mesh, data_at);
-  }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Sample Field");
   if (!ofp) {
