@@ -272,8 +272,11 @@ c-----calculate source terms--------------------------------------------
                smp = cn*vn-cs*vs+ce*ue-cw*uw+ct*wt-cb*wb - apo
 c    $              -sign*spm(i,j,k)
 
-               if ((i.eq.1).and.(j.eq.2).and.(k.eq.2)) then
+#ifdef ARCHES_PRES_DEBUG
+               if ((i.eq.0).and.(j.eq.2).and.(k.eq.2)) then
                   print*,'TESTING PRESSURE SOURCE'
+                  print*,'den(i,j,k)=',den(i,j,k)
+                  print*,'den(i-1,j,k)=',den(i-1,j,k)
                   print*,'smp = ', smp
                   print*,'ue = ',ue
                   print*,'uw = ',uw
@@ -295,6 +298,7 @@ c    $              -sign*spm(i,j,k)
                   print*,'awpp =',awp(i,j,k)
                   print*,'awpt =',awp(i,j,k+1)
                endif
+#endif
 
                if (ltest) then
                   sp(i,j,k) = zero
@@ -318,6 +322,10 @@ c        convs = convs/((KEND-KST+1)*(JEND-JST+1)*(IEND-IST+1))
          end
 c
 c $Log$
+c Revision 1.9  2000/10/12 20:07:41  sparker
+c Commented out debug print statements
+c Fixed bug in profscalar
+c
 c Revision 1.8  2000/10/07 23:53:03  rawat
 c modified bc subroutines
 c

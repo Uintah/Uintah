@@ -104,12 +104,14 @@ c*********************************************************************
       IEND = idxHi(1)
       JEND = idxHi(2)
       KEND = idxHi(3)
+#ifdef ARCHES_BC_DEBUG
       print*,'ist',ist
       print*,'jst',jst
       print*,'kst',kst
       print*,'iend',iend
       print*,'jend',jend
       print*,'kend',kend
+#endif
       FACK = 1.0
       URFBC = 0.5
       LNORM = .FALSE.
@@ -359,6 +361,10 @@ C
 c*********************************************************************
 c
 c $Log$
+c Revision 1.6  2000/10/12 20:07:41  sparker
+c Commented out debug print statements
+c Fixed bug in profscalar
+c
 c Revision 1.5  2000/10/11 16:37:31  rawat
 c modified calpbc for ghost cells
 c
