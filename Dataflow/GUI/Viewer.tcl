@@ -631,14 +631,18 @@ itcl_class ViewWindow {
 # 		$m.eframe.cull $m.eframe.dl $m.eframe.movie $m.eframe.mf \
 #	         $m.eframe.mn -in $m.eframe -side top -anchor w
 	
+	pack $m.eframe -anchor w -padx 2 -side left
+	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
+	    $m.eframe.cull $m.eframe.dl -in $m.eframe -side top -anchor w
+	  
+	frame $m.eframe.separator -relief sunken -borderwidth 4 -height 2
 	radiobutton $m.eframe.wire -text Wire -value Wire -variable $this-global-type -command "$this-c redraw"
 	radiobutton $m.eframe.flat -text Flat -value Flat -variable $this-global-type -command "$this-c redraw"
 	radiobutton $m.eframe.gouraud -text Gouraud -value Gouraud -variable $this-global-type -command "$this-c redraw"
 
-	pack $m.eframe -anchor w -padx 2 -side left
-	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
-	    $m.eframe.cull $m.eframe.dl \
-	    $m.eframe.wire $m.eframe.flat $m.eframe.gouraud \
+	pack $m.eframe.separator -in $m.eframe \
+	    -side top -anchor w -expand y -fill x
+	pack $m.eframe.wire $m.eframe.flat $m.eframe.gouraud \
 	    -in $m.eframe -side top -anchor w
 	    
 	    #make_labeled_radio $m.shade "Shading:" $r top $this-global-type {Wire Flat Gouraud}
