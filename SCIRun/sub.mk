@@ -41,4 +41,5 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 $(SRCDIR)/BuilderService.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/SCIRunFramework.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/Services.o: Core/CCA/ccaspec/cca_sidl.h
+$(SRCDIR)/Services.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/ComponentInstance.o: Core/CCA/spec/cca_sidl.h
