@@ -95,6 +95,11 @@ set slice_frame(axial) ""
 set slice_frame(coronal) ""
 set slice_frame(sagittal) ""
 set slice_frame(volume) ""
+set slice_frame(axial_color) \#1A66FF ;#blue
+set slice_frame(coronal_color) \#7FFF1A ;#green
+set slice_frame(sagittal_color)  \#CC3366 ;#red
+
+
 
 
 
@@ -410,17 +415,17 @@ class BioImageApp {
 		$mods(ViewSlices)-c setclut
 
 		global slice_frame
-                $mods(ViewSlices)-c rebind $slice_frame(axial).axial
-                $mods(ViewSlices)-c rebind $slice_frame(sagittal).sagittal
-                $mods(ViewSlices)-c rebind $slice_frame(coronal).coronal
+                $mods(ViewSlices)-c rebind $slice_frame(axial).bd.axial
+                $mods(ViewSlices)-c rebind $slice_frame(sagittal).bd.sagittal
+                $mods(ViewSlices)-c rebind $slice_frame(coronal).bd.coronal
 
 
 		# rebind 2D windows to call the ViewSlices callback and then BioImage's so we
 		# can catch the release
 	        
-		bind  $slice_frame(axial).axial <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y;" ;#$this update_ViewSlices_button_release %b"
-		bind   $slice_frame(sagittal).sagittal <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y" ;# $this update_ViewSlices_button_release %b"
-		bind  $slice_frame(coronal).coronal <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y";# $this update_ViewSlices_button_release %b"
+		bind  $slice_frame(axial).bd.axial <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y;" ;#$this update_ViewSlices_button_release %b"
+		bind   $slice_frame(sagittal).bd.sagittal <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y" ;# $this update_ViewSlices_button_release %b"
+		bind  $slice_frame(coronal).bd.coronal <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y";# $this update_ViewSlices_button_release %b"
 
 		global vol_width vol_level
 		set vol_width $ww
@@ -866,8 +871,12 @@ class BioImageApp {
 	foreach axis "sagittal coronal axial" {
 	    global $mods(ViewSlices)-$axis-viewport0-mode
 	    create_2d_frame $slice_frame($axis) $axis
-	    $viewimage gl_frame $slice_frame($axis).$axis
-	    pack $slice_frame($axis).$axis -expand 1 -fill both \
+	    frame $slice_frame($axis).bd -bd 1 \
+		-background $slice_frame(${axis}_color)
+	    pack $slice_frame($axis).bd -expand 1 -fill both \
+		-side top -padx 0 -ipadx 0 -pady 0 -ipady 0
+	    $viewimage gl_frame $slice_frame($axis).bd.$axis
+	    pack $slice_frame($axis).bd.$axis -expand 1 -fill both \
 		-side top -padx 0 -ipadx 0 -pady 0 -ipady 0
 	}
 
@@ -922,14 +931,14 @@ class BioImageApp {
 	    -from 0 -to 20 -width 15 \
 	    -showvalue false \
 	    -orient horizontal \
-	    -command "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis; \
+	    -command "$mods(ViewSlices)-c rebind $slice_frame($axis).bd.$axis; \
                       $mods(ViewSlices)-c redrawall"
 
 	# slice value label
 	entry $window.modes.slider.slice.l \
 	    -textvariable $mods(ViewSlices)-$axis-viewport0-slice \
 	    -justify left -width 3
-	bind $window.modes.slider.slice.l <Return>  "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis; $mods(ViewSlices)-c redrawall"
+	bind $window.modes.slider.slice.l <Return>  "$mods(ViewSlices)-c rebind $slice_frame($axis).bd.$axis; $mods(ViewSlices)-c redrawall"
 
 	
 	pack $window.modes.slider.slice.l -anchor e -side right \
@@ -945,21 +954,21 @@ class BioImageApp {
 	entry $window.modes.slider.slab.min \
 	    -textvariable $mods(ViewSlices)-$axis-viewport0-slab_min \
 	    -justify right -width 3 
-	bind $window.modes.slider.slab.min <Return> "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis; $mods(ViewSlices)-c redrawall" 
+	bind $window.modes.slider.slab.min <Return> "$mods(ViewSlices)-c rebind $slice_frame($axis).bd.$axis; $mods(ViewSlices)-c redrawall" 
 	# MIP slab range widget
 	range $window.modes.slider.slab.s -from 0 -to 20 \
 	    -orient horizontal -showvalue false \
 	    -rangecolor "#830101" -width 15 \
 	    -varmin $mods(ViewSlices)-$axis-viewport0-slab_min \
 	    -varmax $mods(ViewSlices)-$axis-viewport0-slab_max \
-	    -command "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis; \
+	    -command "$mods(ViewSlices)-c rebind $slice_frame($axis).bd.$axis; \
                       $mods(ViewSlices)-c redrawall"
 	Tooltip $window.modes.slider.slab.s "Click and drag the\nmin or max sliders\nto change the extent\nof the slab. Click\nand drage the red\nrange bar to change the\ncenter poisition of\nthe slab range"
 	# max range value label
 	entry $window.modes.slider.slab.max \
 	    -textvariable $mods(ViewSlices)-$axis-viewport0-slab_max \
 	    -justify left -width 3
-	bind $window.modes.slider.slab.max <Return> "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis; $mods(ViewSlices)-c redrawall" 
+	bind $window.modes.slider.slab.max <Return> "$mods(ViewSlices)-c rebind $slice_frame($axis).bd.$axis; $mods(ViewSlices)-c redrawall" 
 	
 	pack $window.modes.slider.slab.min -anchor w -side left \
 	    -padx 0 -pady 0 -expand 0 
@@ -4850,9 +4859,9 @@ class BioImageApp {
        upvar \#0 $mods(ViewSlices)-texture_filter filter
        set filter $filter2Dtextures
 
-       $mods(ViewSlices)-c texture_rebind $slice_frame(axial).axial
-       $mods(ViewSlices)-c texture_rebind $slice_frame(sagittal).sagittal
-       $mods(ViewSlices)-c texture_rebind $slice_frame(coronal).coronal
+       $mods(ViewSlices)-c texture_rebind $slice_frame(axial).bd.axial
+       $mods(ViewSlices)-c texture_rebind $slice_frame(sagittal).bd.sagittal
+       $mods(ViewSlices)-c texture_rebind $slice_frame(coronal).bd.coronal
 
 
    }
@@ -4942,7 +4951,7 @@ class BioImageApp {
             pack forget $w.modes.slider.slice
   	    pack forget $w.modes.slider.slab
 	}
-        $mods(ViewSlices)-c rebind $slice_frame($axis).$axis
+        $mods(ViewSlices)-c rebind $slice_frame($axis).bd.$axis
         $mods(ViewSlices)-c redrawall
     }
 
