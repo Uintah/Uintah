@@ -563,7 +563,7 @@ ShowField::execute()
     color_map_changed = true;
     color_map_generation_ = color_map_.get_rep()?color_map_->generation:-1;
     // Colormap was added or went away.
-    if (vectors_on_.get() || tensors_on_.get()) { data_dirty_ = true; }
+    if (tensors_on_.get()) { data_dirty_ = true; }
   }
 
   if (gui_node_resolution_.get() != node_resolution_) {
