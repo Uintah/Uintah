@@ -46,18 +46,14 @@ public:
   //! Storage types for the arguments passed to the 
   //  get_*() functions.  For rg meshes, these all have
   //  known maximum sizes, so we use them.
-  typedef node_index[8]   rg_node_array;
-  typedef edge_index[12]  rg_edge_array;
-  typedef face_index[6]   rg_face_array;
-  typedef cell_index[8]   rg_cell_array;
+  typedef node_index[8]   node_array;
+  typedef edge_index[12]  edge_array;
+  typedef face_index[6]   face_array;
+  typedef cell_index[8]   cell_array;
 
   MeshRG(int x, int y, int z, Point &min, Point &max);
   MeshRG(const MeshRG &);
-  virtual ~MeshRG();
-
-
-  virtual BBox get_bounding_box() const;
-
+  virtual ~MeshRG(){};
 
   node_iterator node_begin() const;
   node_iterator node_end() const;
@@ -67,6 +63,14 @@ public:
   face_iterator face_end() const;
   cell_iterator cell_begin() const;
   cell_iterator cell_end() const;
+
+  //! get the mesh statistics
+  int get_nx() { return nx_; }
+  int get_ny() { return ny_; }
+  int get_nz() { return nz_; }
+  Point get_min() { return min_; }
+  Point get_max() { return max_; }
+  virtual BBox get_bounding_box() const;
 
   //! get the child elements of the given index
   void get_nodes(rg_node_array &array, edge_index idx) const;

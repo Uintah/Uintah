@@ -130,17 +130,17 @@ MeshRG::cell_end() const
 }
 
 inline void
-MeshRG::get_nodes(rg_node_array &, edge_index) const
+MeshRG::get_nodes(node_array &, edge_index) const
 {
 }
 
 inline void 
-MeshRG::get_nodes(rg_node_array &, face_index) const
+MeshRG::get_nodes(node_array &, face_index) const
 {
 }
 
 inline void 
-MeshRG::get_nodes(rg_node_array &array, cell_index idx) const
+MeshRG::get_nodes(node_array &array, cell_index idx) const
 {
   // NOTE: this code assumes that index_type is actually unsigned
 
@@ -177,47 +177,47 @@ MeshRG::get_nodes(rg_node_array &array, cell_index idx) const
 }
 
 inline void 
-MeshRG::get_edges(rg_edge_array &, face_index) const
+MeshRG::get_edges(edge_array &, face_index) const
 {
 }
 
 inline void 
-MeshRG::get_edges(rg_edge_array &, cell_index) const
+MeshRG::get_edges(edge_array &, cell_index) const
 {
 }
 
 inline void 
-MeshRG::get_faces(rg_face_array &, cell_index) const
+MeshRG::get_faces(face_array &, cell_index) const
 {
 }
 
 inline int 
-MeshRG::get_edges(rg_edge_array &, node_index) const
+MeshRG::get_edges(edge_array &, node_index) const
 {
 }
 
 inline int 
-MeshRG::get_faces(rg_face_array &, node_index) const
+MeshRG::get_faces(face_array &, node_index) const
 {
 }
 
 inline int 
-MeshRG::get_faces(rg_face_array &, edge_index) const
+MeshRG::get_faces(face_array &, edge_index) const
 {
 }
 
 inline int 
-MeshRG::get_cells(rg_cell_array &, node_index) const
+MeshRG::get_cells(cell_array &, node_index) const
 {
 }
 
 inline int 
-MeshRG::get_cells(rg_cell_array &, edge_index) const
+MeshRG::get_cells(cell_array &, edge_index) const
 {
 }
 
 inline int 
-MeshRG::get_cells(rg_cell_array &, face_index) const
+MeshRG::get_cells(cell_array &, face_index) const
 {
 }
 
@@ -267,7 +267,7 @@ MeshRG::get_center(Point &, face_index) const
 inline void 
 MeshRG::get_center(Point &result, cell_index idx) const
 {
-  rg_node_array nodes;
+  node_array nodes;
   Point min,max;
 
   // get the node_indeces inside of this cell
@@ -287,7 +287,7 @@ inline void
 MeshRG::locate_node(node_index &node, const Point &p) const
 {
   double w[8];          // storage for weights
-  rg_node_array nodes;  // storage for node_indeces
+  node_array nodes;     // storage for node_indeces
   cell_index cell;
   double max;
   int loop;

@@ -19,12 +19,15 @@ public:
   typedef vector<Data>    fdata_type;
 
 
-  LatticeVol();
-  LatticeVol(data_location data_at);
-  virtual ~LatticeVol();
+  LatticeVol():location_(Field::NODE){};
+  LatticeVol(data_location data_at):location_(data_at){};
+  virtual ~LatticeVol(){};
 
   //! Required virtual functions from field base.
   virtual MeshBaseHandle get_mesh() { return (MeshBaseHandle)mesh_; } const;
+
+  //! get size of field (number of elements that have data)
+  int get_size(data_location data_at) const;
 
   //! Required interfaces from field base.
   virtual InterpolateToScalar* query_interpolate_to_scalar() const;
@@ -34,15 +37,13 @@ public:
   //! Required interface to support Field Concept.
   value_type operator[] (int);
   
-  /* this should go in the field base class
   template <class Functor>
   void interpolate(const Point &p, Functor &f);
-  */
   
   MeshRGHandle get_rg_mesh() { return mesh_; }
 
   //! attempt to set data, succeeds if sizes match.
-  bool set_fdata(fdata_type *fdata) { fdata_ = fdata; }
+  bool set_fdata(fdata_type *fdata);
 
 
 
@@ -51,13 +52,52 @@ public:
   static  PersistentTypeID type_id;
   static  const string type_name(int);
   virtual const string get_type_name(int n) const;
+
 private:
+  //! where the data lives (nodes?, cells?, etc)
+  data_location               location_;
   //! A Lattice Mesh.
   MeshRGHandle                mesh_;
   //! Data container.
-  fdata_type                  fdata_;
-  
+  fdata_type                  *fdata_;  
 };
+
+template<class Data> int
+LatticeVol::get_size(FIELD::data_location data_at) const
+{
+  int nx = mesh_.get_nx();
+  int ny = mesh_.get_ny();
+  int nz = mesh_.get_nz();
+
+  switch(data_at) {
+  case FIELD::NODE :
+    return nx*ny*nz;
+  case FIELD::EDGE :
+    return 0; // don't know this yet
+  case FIELD::FACE :
+    return 0; // don't know this yet
+  case FIELD::CELL :
+    return (nx-1)*(ny-1)*(nz-1);
+  default :
+    // unknown location
+    return 0;
+  }
+}
+
+template<class Data> bool
+LatticeVol<Data>::set_fdata(fdata_type *fdata) {
+  if (get_size(location_)==fdata.size()) {
+    fdata_ = fdata;
+    return true;
+  }
+  
+  return false;
+}
+
+template <class Data> value_type
+LatticeVol<Data>::operator[](int index) {
+  return fdata_[index];
+}
 
 const double LATTICE_VOL_VERSION = 1.0;
 
@@ -85,7 +125,7 @@ LatticeVol<Data>::interpolate(const Point &p, Functor &f) {
     {
       int i = 0;
       MeshRG::node_array nodes;
-      get_nodes_from_cell(nodes, ci);
+      get_nodes(nodes, ci);
       MeshRG::node_array::iterator iter = nodes.begin();
       while (iter != nodes.end()) {
 	f(*data_, *iter);
