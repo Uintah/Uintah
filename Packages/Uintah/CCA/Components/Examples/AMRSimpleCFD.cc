@@ -215,6 +215,8 @@ void refineFaces(const Patch* patch,
 	else
 	  coarseLow -= IntVector(0,0,1);
 	break;
+      default:
+	break;
       }  // switch face
       
       
@@ -260,6 +262,8 @@ void refineFaces(const Patch* patch,
 	    break;
 	  case Patch::zplus:
 	    w.z(1);
+	    break;
+	  default:
 	    break;
 	  }
 	  double x0 = xvel0[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())
@@ -312,6 +316,8 @@ void refineFaces(const Patch* patch,
 	    break;
 	  case Patch::zplus:
 	    w.z(1);
+	    break;
+	  default:
 	    break;
 	  }
 	  double x1 = xvel1[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())
@@ -367,6 +373,8 @@ void refineFaces(const Patch* patch,
 	    break;
 	  case Patch::zplus:
 	    w.z(1);
+	    break;
+	  default:
 	    break;
 	  }
 	  double x0 = xvel0[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())	    
