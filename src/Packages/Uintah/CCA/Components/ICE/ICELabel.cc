@@ -13,6 +13,8 @@ ICELabel::ICELabel()
   delTLabel = 0; // Placed in later, in problemSetup
   doMechLabel
     = VarLabel::create("doMech",    delt_vartype::getTypeDescription());
+  //__________________________________
+  // Cell Centered variables
   press_CCLabel     =
     VarLabel::create("press_CC",    CCVariable<double>::getTypeDescription());
   matl_press_CCLabel     =
@@ -74,8 +76,13 @@ ICELabel::ICELabel()
   viscosityLabel =
     VarLabel::create("viscosity",    CCVariable<double>::getTypeDescription());
   thermalCondLabel =
-    VarLabel::create("thermalCond", CCVariable<double>::getTypeDescription()); 
+    VarLabel::create("thermalCond",  CCVariable<double>::getTypeDescription());
+  gammaLabel =
+    VarLabel::create("gamma",        CCVariable<double>::getTypeDescription());
+  specific_heatLabel =
+    VarLabel::create("specific_heat",CCVariable<double>::getTypeDescription());
  
+  //__________________________________
   // Implicit Labels
   matrixLabel = 
     VarLabel::create("matrix",      CCVariable<Stencil7>::getTypeDescription());      
@@ -100,7 +107,7 @@ ICELabel::ICELabel()
   vol_fracZ_FCLabel  = 
     VarLabel::create("vol_fracZ_FC",SFCZVariable<double>::getTypeDescription() );  
     
-  
+  //__________________________________
   // Face centered variables
   uvel_FCLabel       = 
     VarLabel::create("uvel_FC",   SFCXVariable<double>::getTypeDescription() );
@@ -132,8 +139,8 @@ ICELabel::ICELabel()
                                   SFCYVariable<double>::getTypeDescription() );
   press_diffZ_FCLabel = VarLabel::create("press_diffZ_FC",
                                   SFCZVariable<double>::getTypeDescription() );  
-    
-    // Misc labels
+  //__________________________________  
+  // Misc labels
   machLabel     =
     VarLabel::create("mach",     CCVariable<double>::getTypeDescription() ); 
   scratchLabel     =
@@ -150,6 +157,7 @@ ICELabel::ICELabel()
   IveBeenHereLabel     =
     VarLabel::create("IveBeenHere",CCVariable<int>::getTypeDescription() );
      
+ //__________________________________
  //Reduction labels (The names must be identical to those in MPMLabel.cc)
   KineticEnergyLabel = 
     VarLabel::create( "KineticEnergy", sum_vartype::getTypeDescription() );
@@ -167,7 +175,7 @@ ICELabel::ICELabel()
   mom_exch_errorLabel = 
     VarLabel::create( "mom_exch_error",
                                       sumvec_vartype::getTypeDescription() );
-
+  //__________________________________
   // Model variables
   modelMass_srcLabel =
     VarLabel::create( "modelMass_src",
@@ -217,7 +225,9 @@ ICELabel::~ICELabel()
     VarLabel::destroy(Tdot_CCLabel);
     VarLabel::destroy(turb_viscosity_CCLabel);
     VarLabel::destroy(viscosityLabel);
-    VarLabel::destroy(thermalCondLabel);    
+    VarLabel::destroy(thermalCondLabel);
+    VarLabel::destroy(gammaLabel);
+    VarLabel::destroy(specific_heatLabel);      
     
     // Implicit Labels
     VarLabel::destroy(matrixLabel);
