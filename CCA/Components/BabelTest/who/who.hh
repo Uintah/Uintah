@@ -3,15 +3,15 @@
 // Symbol:        who-v1.0
 // Symbol Type:   package
 // Babel Version: 0.7.4
-// SIDL Created:  20021110 23:39:30 MST
-// Generated:     20021110 23:39:33 MST
+// SIDL Created:  20030305 18:50:49 MST
+// Generated:     20030305 18:50:56 MST
 // Description:   Client-side glue code for who
 // 
 // WARNING: Automatically generated; changes will be lost
 // 
 // babel-version = 0.7.4
 // source-line   = 5
-// source-url    = file:/home/sparker/SCIRun/src/Babel/Components/who/who.sidl
+// source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/who/who.sidl
 // 
 
 #ifndef included_who_hh

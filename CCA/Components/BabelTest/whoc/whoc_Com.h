@@ -3,15 +3,15 @@
  * Symbol:        whoc.Com-v1.0
  * Symbol Type:   class
  * Babel Version: 0.7.4
- * SIDL Created:  20021110 23:39:24 MST
- * Generated:     20021110 23:39:25 MST
+ * SIDL Created:  20030305 18:50:12 MST
+ * Generated:     20030305 18:50:20 MST
  * Description:   Client-side glue code for whoc.Com
  * 
  * WARNING: Automatically generated; changes will be lost
  * 
  * babel-version = 0.7.4
  * source-line   = 13
- * source-url    = file:/home/sparker/SCIRun/src/Babel/Components/whoc/whoc.sidl
+ * source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/whoc/whoc.sidl
  */
 
 #ifndef included_whoc_Com_h

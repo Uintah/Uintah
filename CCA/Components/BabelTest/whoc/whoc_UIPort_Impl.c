@@ -3,15 +3,15 @@
  * Symbol:        whoc.UIPort-v1.0
  * Symbol Type:   class
  * Babel Version: 0.7.4
- * SIDL Created:  20021110 23:39:23 MST
- * Generated:     20021110 23:39:25 MST
+ * SIDL Created:  20030305 18:50:11 MST
+ * Generated:     20030305 18:50:23 MST
  * Description:   Server-side implementation for whoc.UIPort
  * 
  * WARNING: Automatically generated; only changes within splicers preserved
  * 
  * babel-version = 0.7.4
  * source-line   = 10
- * source-url    = file:/home/sparker/SCIRun/src/Babel/Components/whoc/whoc.sidl
+ * source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/whoc/whoc.sidl
  */
 
 /*

@@ -3,15 +3,15 @@
 // Symbol:        hello.GoPort-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20021110 23:39:36 MST
-// Generated:     20021110 23:39:39 MST
+// SIDL Created:  20030305 18:51:16 MST
+// Generated:     20030305 18:51:24 MST
 // Description:   Server-side implementation for hello.GoPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 7
-// source-url    = file:/home/sparker/SCIRun/src/Babel/Components/hello/hello.sidl
+// source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/hello/hello.sidl
 // 
 #include "hello_GoPort_Impl.hh"
 
