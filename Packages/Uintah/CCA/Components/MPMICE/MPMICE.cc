@@ -356,7 +356,14 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_mpm->scheduleConvertLocalizedParticles(       sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, mpm_matls);
   //d_mpm->scheduleApplyExternalLoads(              sched, patches, mpm_matls);
-  d_ice->scheduleAdvectAndAdvanceInTime(          sched, patches, ice_matls_sub,
+  
+  
+  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);                                                       
+  d_ice->scheduleMaxMach_on_Lodi_BC_Faces(        sched, level,   ice_matls, 
+                                                                  maxMach_PSS);
+                                   
+  d_ice->scheduleAdvectAndAdvanceInTime(          sched, patches, maxMach_PSS,
+                                                                  ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   press_matl,
                                                                   ice_matls);
@@ -371,12 +378,21 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                 Mlb->pXLabel, Mlb->d_particleState,
                                 Mlb->pParticleIDLabel, mpm_matls);
 
-   // whatever tasks use press_matl will have their own reference to it.
-  if (press_matl->removeReference())
+  //__________________________________
+  // clean up memory
+  if (press_matl->removeReference()){
     delete press_matl; 
-  // whatever tasks use one_matl will have their own reference to it.
-  if (one_matl->removeReference())
+  }
+  if (one_matl->removeReference()){
     delete one_matl;
+  }
+  if(d_ice->d_usingLODI){
+    for(int f=0;f<Patch::numFaces;f++){
+      if(maxMach_PSS[f]->removeReference()){
+        delete maxMach_PSS[f];
+      }
+    }
+  }
 } // end scheduleTimeAdvance()
 
 
