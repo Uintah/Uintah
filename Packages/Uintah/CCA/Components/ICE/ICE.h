@@ -148,10 +148,6 @@ namespace Uintah {
                                           const MaterialSubset*,
                                           const MaterialSubset*,
                                           const MaterialSet*); 
-
-      void scheduleMassExchange(SchedulerP&, 
-				const PatchSet*,
-                                const MaterialSet*);
                              
       void schedulePrintConservedQuantities(SchedulerP&, const PatchSet*,
                                        const MaterialSubset*,
@@ -205,15 +201,12 @@ namespace Uintah {
                                          const MaterialSet* all_matls);  
                                    
       // Model support
-      void scheduleModelMassExchange(SchedulerP& sched,
-				     const LevelP& level,
-				     const MaterialSet* matls);
-      void scheduleModelMomentumAndEnergyExchange(SchedulerP& sched,
-						  const LevelP& level,
-						  const MaterialSet* matls);
+      void scheduleComputeModelSources(SchedulerP& sched,
+                                       const LevelP& level,
+                                       const MaterialSet* matls);
       void scheduleUpdateVolumeFraction(SchedulerP& sched,
-				     const LevelP& level,
-				     const MaterialSet* matls);
+				            const LevelP& level,
+				            const MaterialSet* matls);
 
 
       void setICELabel(ICELabel* Ilb) {
