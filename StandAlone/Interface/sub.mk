@@ -10,15 +10,18 @@ SRCDIR   := Uintah/Interface
 SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataWarehouse.cc \
 	$(SRCDIR)/MPMInterface.cc $(SRCDIR)/Output.cc \
 	$(SRCDIR)/ProblemSpec.cc $(SRCDIR)/ProblemSpecInterface.cc \
-	$(SRCDIR)/Scheduler.cc
+	$(SRCDIR)/Scheduler.cc $(SRCDIR)/DWMpiHandler.cc
 
-PSELIBS := Uintah/Parallel Uintah/Grid Uintah/Exceptions
-LIBS := $(XML_LIBRARY)
+PSELIBS := Uintah/Parallel Uintah/Grid Uintah/Exceptions SCICore/Thread
+LIBS := $(XML_LIBRARY) -lmpi
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/05/11 20:10:23  dav
+# adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+#
 # Revision 1.6  2000/04/12 23:01:55  sparker
 # Implemented more of problem spec - added Point and IntVector readers
 #

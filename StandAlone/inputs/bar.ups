@@ -67,10 +67,10 @@
 	      <vel_fields>[1,2,3]</vel_fields>
 	    </contact>
 	    
-	    <fracture>
+	    <fracture_not> <!-- fracture breaking now, so commenting it out -->
 	      <average_microcrack_length>0.000001</average_microcrack_length>
 	      <material_toughness>500000.0</material_toughness>
-	    </fracture>
+	    </fracture_not>
 	</MPM>
 
     </MaterialProperties>
