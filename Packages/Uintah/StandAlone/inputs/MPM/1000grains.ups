@@ -37,9 +37,7 @@
     <MaterialProperties>
 	<MPM>
             <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.9e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -480,9 +478,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.901e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -923,10 +919,8 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
-                <density>1.902e6</density>
+		<burn type = "null" />
+	        <density>1.902e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
                     <shear_modulus>7.2e4</shear_modulus>
@@ -1311,9 +1305,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.903e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -1694,9 +1686,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.904e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -2087,9 +2077,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />                
                 <density>1.905e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -2460,9 +2448,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.906e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -2823,9 +2809,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.907e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -3166,9 +3150,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.908e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -3529,9 +3511,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.909e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -3892,9 +3872,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.91e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -4255,9 +4233,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.911e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -4558,9 +4534,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.912e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -4851,9 +4825,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.913e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -5179,9 +5151,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.914e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -5507,9 +5477,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.915e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -5780,9 +5748,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.916e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -6003,9 +5969,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.917e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -6211,9 +6175,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.918e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -6384,9 +6346,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.919e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -6587,9 +6547,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.92e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -6730,9 +6688,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.921e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -6867,9 +6823,7 @@
 		<velocity_field>21</velocity_field>
 	    </material>
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.922e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -6949,9 +6903,7 @@
 		<velocity_field>22</velocity_field>
 	    </material>
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.923e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -7017,9 +6969,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.924e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -7070,9 +7020,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.925e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -7138,9 +7086,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.926e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -7181,9 +7127,7 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.927e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -7234,9 +7178,7 @@
 	    </material>
 
             <material name = "Piston" >
-                <burn>
-                 <type>null</type>
-                </burn>
+                <burn type = "null" />
                 <density>1.9e8</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e6</bulk_modulus>

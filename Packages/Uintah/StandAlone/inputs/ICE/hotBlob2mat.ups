@@ -183,6 +183,7 @@
     <MaterialProperties>
 	<ICE>
 	  <material>
+            <burn type = "null" />
 	    <ideal_gas>
 	    <gas_constant>       188.92                  </gas_constant>
 	    </ideal_gas>
@@ -212,6 +213,7 @@
 	  </material>
          
 	  <material>
+            <burn type = "null" />
 	    <ideal_gas>
 	    <gas_constant>       188.92                  </gas_constant>
 	    </ideal_gas>

@@ -7,7 +7,8 @@ SRCDIR   := Packages/Uintah/CCA/Components/HETransformation
 SRCS     += $(SRCDIR)/NullBurn.cc $(SRCDIR)/SimpleBurn.cc \
 	$(SRCDIR)/BurnFactory.cc  $(SRCDIR)/Burn.cc
 
-PSELIBS	:= Packages/Uintah/Core/ProblemSpec 
+PSELIBS	:= Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core/Exceptions
 
 LIBS := $(XML_LIBRARY) -lm
 

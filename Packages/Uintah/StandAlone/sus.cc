@@ -359,7 +359,7 @@ int main(int argc, char** argv)
     }
 
     // Shutdown XML crap
-    XMLPlatformUtils::Terminate();
+    //    XMLPlatformUtils::Terminate();
 
     /*
      * Finalize MPI
