@@ -65,9 +65,10 @@ public:
   // GROUP: Constructors:
   //////////
   // Constructor
-  BrickNode( Brick* brick,
-             BrickWindow* bw,
-             int index);
+  BrickNode(Brick* brick,
+            BrickWindow* bw,
+            int index,
+            int axis);
   // GROUP: Destructors
   //////////
   // Destructor
@@ -79,12 +80,14 @@ public:
   Brick* brick() const { return brick_; }
   BrickWindow* brickWindow() const {return brick_window_;}
   int index() const { return idx_; }
+  int axis() const { return axis_; }
+  
 protected:
   BrickNode(){};
   Brick *brick_;
   BrickWindow *brick_window_;
   int idx_;
-
+  int axis_;
 };
 
 } // End namespace Volume

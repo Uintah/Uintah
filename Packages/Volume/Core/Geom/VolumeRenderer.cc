@@ -27,12 +27,22 @@ TEX c, c0.w, texture[1], 1D; \n\
 MOV_SAT result.color, c; \n\
 END";
 
+static const char* MipShaderString1 =
+"!!ARBfp1.0 \n\
+TEMP v, c; \n\
+ATTRIB t = fragment.texcoord[0]; \n\
+TEX v, t, texture[0], 3D; \n\
+TEX c, v, texture[1], 1D; \n\
+MOV result.color, c; \n\
+END";
+
 static const char* MipShaderString4 =
 "!!ARBfp1.0 \n\
-TEMP c; \n\
-ATTRIB tf = fragment.texcoord[0]; \n\
-TEX c, tf, texture[0], 3D; \n\
-MOV result.color, c.w; \n\
+TEMP v, c; \n\
+ATTRIB t = fragment.texcoord[0]; \n\
+TEX v, t, texture[0], 3D; \n\
+TEX c, v.w, texture[1], 1D; \n\
+MOV result.color, c; \n\
 END";
 
 //fogParam = {density, start, end, 1/(end-start) 
@@ -133,6 +143,7 @@ VolumeRenderer::VolumeRenderer() :
   FogVolShader4 = new FragmentProgramARB( FogShaderString4, false );
   LitVolShader = new FragmentProgramARB(LitVolShaderString, false);
   LitFogVolShader = new FragmentProgramARB(LitFogVolShaderString, false);
+  MipShader1 = new FragmentProgramARB(MipShaderString1, false);
   MipShader4 = new FragmentProgramARB(MipShaderString4, false);
 }
 
@@ -148,6 +159,7 @@ VolumeRenderer::VolumeRenderer(TextureHandle tex, ColorMapHandle cmap):
   FogVolShader4 = new FragmentProgramARB( FogShaderString4, false );
   LitVolShader = new FragmentProgramARB(LitVolShaderString, false);
   LitFogVolShader = new FragmentProgramARB(LitFogVolShaderString, false);
+  MipShader1 = new FragmentProgramARB(MipShaderString1, false);
   MipShader4 = new FragmentProgramARB(MipShaderString4, false);
 }
 
@@ -163,6 +175,7 @@ VolumeRenderer::VolumeRenderer( const VolumeRenderer& copy):
   FogVolShader4 = copy.FogVolShader4;
   LitVolShader = copy.LitVolShader;
   LitFogVolShader = copy.LitFogVolShader;
+  MipShader1 = copy.MipShader1;
   MipShader4 = copy.MipShader4;
 }
 
@@ -212,11 +225,7 @@ VolumeRenderer::setup()
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
   glActiveTextureARB(GL_TEXTURE1_ARB);
-  if(mode_ == OVEROP) {
-    glEnable(GL_TEXTURE_1D);
-  } else {
-    glDisable(GL_TEXTURE_1D);
-  }
+  glEnable(GL_TEXTURE_1D);
   glActiveTextureARB(GL_TEXTURE0_ARB);
 
   glColor4f(1.0, 1.0, 1.0, 1.0);
@@ -362,6 +371,11 @@ VolumeRenderer::draw()
         MipShader4->create();
       }
       MipShader4->bind();
+    } else {
+      if (!MipShader1->valid()) {
+        MipShader1->create();
+      }
+      MipShader1->bind();
     }
   }
   
@@ -419,6 +433,8 @@ VolumeRenderer::draw()
     int nb = (*bricks.begin())->data()->nb(0);
     if(nb == 4) {
       MipShader4->release();
+    } else {
+      MipShader1->release();
     }
   }
   
@@ -546,12 +562,15 @@ VolumeRenderer::BuildTransferFunction()
     
     const double alpha1 = pow(alpha, bp);
     const double alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);
-    transfer_function_[4*j + 0] = (unsigned char)(c.r()*alpha2*255);
-    transfer_function_[4*j + 1] = (unsigned char)(c.g()*alpha2*255);
-    transfer_function_[4*j + 2] = (unsigned char)(c.b()*alpha2*255);
     if( mode_ != MIP ) {
+      transfer_function_[4*j + 0] = (unsigned char)(c.r()*alpha2*255);
+      transfer_function_[4*j + 1] = (unsigned char)(c.g()*alpha2*255);
+      transfer_function_[4*j + 2] = (unsigned char)(c.b()*alpha2*255);
       transfer_function_[4*j + 3] = (unsigned char)(alpha2*255);
     } else {
+      transfer_function_[4*j + 0] = (unsigned char)(c.r()*alpha*255);
+      transfer_function_[4*j + 1] = (unsigned char)(c.g()*alpha*255);
+      transfer_function_[4*j + 2] = (unsigned char)(c.b()*alpha*255);
       transfer_function_[4*j + 3] = (unsigned char)(alpha*255);
     }
   }

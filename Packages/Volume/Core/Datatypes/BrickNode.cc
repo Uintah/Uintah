@@ -22,8 +22,9 @@ namespace Volume {
 
 BrickNode::BrickNode(Brick* brick,
                      BrickWindow* bw,
-                     int index) :
-  brick_(brick), brick_window_(bw), idx_(index)
+                     int index,
+                     int axis) :
+  brick_(brick), brick_window_(bw), idx_(index), axis_(axis)
 {}
 
 }// End namespace Volume

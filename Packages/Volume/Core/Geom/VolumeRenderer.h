@@ -90,6 +90,7 @@ protected:
   FragmentProgramARB* FogVolShader4;
   FragmentProgramARB* LitVolShader;
   FragmentProgramARB* LitFogVolShader;
+  FragmentProgramARB* MipShader1;
   FragmentProgramARB* MipShader4;
 };
 

@@ -167,7 +167,7 @@ TextureBuilderAlgoBase::buildBricks(BinaryTree<BrickNode*>*& tree,
     //bricks_.clear();
     int brickIndex = 0;
     nx = ni_, ny = nj_, nz = nk_;
-    vi_ = u; //vj_ - v; vk_ + w;
+    vi_ = u; vj_ = v; vk_ = w;
     int mx = 0, mvx = 0, my = 0, mvy = 0, mz = 0, mvz = 0;
     //int bx = 0, bvx = 0, by = 0, bvy = 0, bz = 0, bvz = 0;
     
@@ -276,7 +276,7 @@ TextureBuilderAlgoBase::buildTree(int& mi, int& mj, int& mk,
     TypedBrickData<unsigned char> *bd =
       new TypedBrickData<unsigned char>(ti, tj, tk, nc, nb);
     Brick *b = new Brick(bd, ti - ni, tj - nj, tk - nk, &bb, &tb);
-    BrickNode *bn = new BrickNode(b, bw, index++);
+    BrickNode *bn = new BrickNode(b, bw, index++, axis);
     tree = new BinaryTree<BrickNode *>( bn, BinaryTree<BrickNode *>::LEAF);
   } else {
     int child_axis;
@@ -347,7 +347,7 @@ TextureBuilderAlgoBase::buildTree(int& mi, int& mj, int& mk,
 
     child1 = buildTree(mi, mj, mk, _ni, _nj, _nk, nc, nb, bbox,
                        mvi, mvj, mvk, _vi, _vj, _vk, vbox,
-                       di, dj, dk, max_tex, axis, index );
+                       di, dj, dk, max_tex, child_axis, index );
 
 
     BBox vb;
@@ -406,7 +406,7 @@ TextureBuilderAlgoBase::buildTree(int& mi, int& mj, int& mk,
 //     sprintf(str,"%d, %d, %d\n", ni, nj, nk);
 //     dbg<< str;
 
-    BrickNode *bn = new BrickNode( 0, bw, -1);
+    BrickNode *bn = new BrickNode(0, bw, -1, child_axis);
     tree = new BinaryTree<BrickNode *>(bn, BinaryTree<BrickNode*>::PARENT);
     tree->AddChild( child0, 0 );
     tree->AddChild( child1, 1 );
