@@ -52,6 +52,8 @@ public:
   string get_name(string type_sep_start = "<", 
 		  string type_sep_end = "> ") const;
 
+  string get_filename() const;
+
   string get_h_file_path() const { return h_file_path_; }
   string get_namespace() const { return namespace_; }
 
