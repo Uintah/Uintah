@@ -16,7 +16,12 @@ namespace Uintah {
     if(dwid != -1)
       out << ":" << dwid;
     char tab = '\t';
-    out << tab << name << tab << type << tab << patch->getID() << tab << material << tab << nelems << tab << size << tab << ptr << '\n';
+    out << tab << name << tab << type << tab;
+    if(patch)
+      out << patch->getID();
+    else
+      out << "-";
+    out << tab << material << tab << nelems << tab << size << tab << ptr << '\n';
     total += size;
   }
 }
