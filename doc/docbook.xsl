@@ -340,6 +340,7 @@
 
   <p class="head">
     <xsl:value-of select="$chapnum"/>
+    <xsl:value-of select="concat(' ',' ')"/>
     <a>
       <xsl:attribute name="href">
         <xsl:value-of select="concat($source,'?dir=2&amp;cont=',$chapnum)"/>
@@ -406,7 +407,9 @@
   <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
 
   <p class="phead">
-    <xsl:value-of select="$chapnum"/> <xsl:value-of select="./title" />
+    <xsl:value-of select="$chapnum"/> 
+    <xsl:value-of select="concat(' ',' ')"/>
+    <xsl:value-of select="./title" />
   </p>
 
   <p class="pfirstpara">
