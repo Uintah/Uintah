@@ -20,13 +20,6 @@
 # Print to stdout a list of files to be included in the tar archive.
 # This script is used as a filter by doc/Makefile.
 #
-# Why you may ask don't I just put this stuff in the Makefile?  Because if
-# I include a (future) path that does not yet exist then gnutar will freak
-# out.  Below I'm able to include paths that do not yet exist and they get
-# filtered out by the time the path list gets to tar.  A feeble reason I know
-# but sometimes its convenient to plan for the future.  This
-# separation also reduces clutter in Makefile.
-#
 
 Dir.chdir("..")
 root=File.basename(Dir.pwd())
@@ -39,6 +32,8 @@ $stdout.print("#{root}/doc/index.html
 #{root}/doc/Documentum/documentum.html
 #{root}/doc/Documentum/module-latex.ps.gz
 #{root}/doc/Documentum/module-latex
+#{root}/doc/Documentum/module-desc-template.tex
+#{root}/doc/Documentum/latex-article-template.tex
 #{root}/doc/Documentum/module-xml.ps.gz
 #{root}/doc/Documentum/module-xml
 #{root}/doc/Installation/index.html
@@ -48,14 +43,18 @@ $stdout.print("#{root}/doc/index.html
 #{root}/doc/User/Tutorial
 #{root}/doc/User/Guide/usersguide.ps.gz
 #{root}/doc/Developer/index.html
-#{root}/doc/Developer/Guide/dev/Figures 
+#{root}/doc/Developer/Guide/dev/Figures
 #{root}/doc/Developer/CodeViews/html
 #{root}/doc/Utilities/Figures
+#{root}/doc/Utilities/TeX/scirun-doc.sty
+#{root}/doc/Utilities/TeX/scirun-doc.tex
 ")
 
 # Now do wildcards
 $stdout.print(Dir["
 #{root}/doc/User/FAQ/*.gif
+#{root}/doc/Documentum/docbook_*_template.xml
+#{root}/doc/Documentum/*_template.html
 #{root}/doc/Installation/Guide/*.html
 #{root}/doc/Developer/Guide/*.html
 #{root}/doc/Developer/Modules/*.html
