@@ -141,7 +141,9 @@ clString GuiVar::format_varname()
 clString GuiVar::format_varname() {
   int state=0;
   int end_of_modulename = -1;
+  int space = 0;
   for (int i=0; i<varname.len(); i++) {
+    if (varname(i) == ' ') return clString("unused");
     if (state == 0 && varname(i) == '_') state=1;
     else if (state == 1 && varname.is_digit(i)) state = 2;
     else if (state == 2 && varname.is_digit(i)) state = 2;
