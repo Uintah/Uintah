@@ -208,10 +208,12 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   south_tube->add(new Cylinder(black, Point(-10, -3.9, 1), Point(-10, -4, 1), 1.9));
   south_tube->add(new Cylinder(black, Point(-10, -3.9, 1), Point(-10, -4, 1), 2.2));
   // east seal
-  south_tube->add(new Ring(black, Point(-10, 4, 1), Vector(0, 1, 0), 1.9, .3));
+  // I tweaked these values: 4 -> 3.99 fixes Z fighting at wall/tube interface
+  //  - Chris Moulding
+  south_tube->add(new Ring(black, Point(-10, 3.99, 1), Vector(0, 1, 0), 1.9, .3));
   south_tube->add(new Ring(black, Point(-10, 3.9, 1), Vector(0, 1, 0), 1.9, .3));
-  south_tube->add(new Cylinder(black, Point(-10, 3.9, 1), Point(-10, 4, 1), 1.9));
-  south_tube->add(new Cylinder(black, Point(-10, 3.9, 1), Point(-10, 4, 1), 2.2)); 
+  south_tube->add(new Cylinder(black, Point(-10, 3.9, 1), Point(-10, 3.99, 1), 1.9));
+  south_tube->add(new Cylinder(black, Point(-10, 3.9, 1), Point(-10, 3.99, 1), 2.2)); 
  
   all_tubes->add(west_tube);
 
