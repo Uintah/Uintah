@@ -55,7 +55,7 @@
 
 // CollabVis code begin
 #ifdef HAVE_COLLAB_VIS
-#include <Core/Datatypes/Image.h>
+#  include <Core/Datatypes/Image.h>
 #endif
 // CollabVis code end
 
@@ -112,9 +112,7 @@ OpenGL::OpenGL(GuiInterface* gui) :
   gui(gui),
   helper(0),
   tkwin(0),
-#if defined(HAVE_PBUFFER)
   have_pbuffer_(false),
-#endif
   do_hi_res(false),
   encoding_mpeg_(false),
 
@@ -747,7 +745,7 @@ OpenGL::redraw_frame()
 #if defined(HAVE_PBUFFER)
   int screen = Tk_ScreenNumber(tkwin);
   if( xres != pbuffer.width() || yres != pbuffer.height() ){
-//     cerr<<"creating new pbuffer: width = "<<xres<<", height == "<<yres<<"\n";
+    //    cerr<<"creating new pbuffer: width = "<<xres<<", height == "<<yres<<"\n";
     pbuffer.destroy();
     if( !pbuffer.create( dpy, screen, xres, yres, 8, 8 ) ) {
       printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
@@ -762,7 +760,6 @@ OpenGL::redraw_frame()
   } else if( have_pbuffer_ && pbuffer.is_current() ) {
     glXMakeCurrent(dpy, win, cx);
   }
-
 #endif
 
   // Clear the screen...
@@ -893,7 +890,7 @@ OpenGL::redraw_frame()
 	  if(have_pbuffer_){
 	    if(!viewwindow->doingMovie && !viewwindow->doingImage){
 	      if( pbuffer.is_current() )
-		cerr<<"pbuffer is current while not doing Movie\n";
+                cerr<<"pbuffer is current while not doing Movie\n";
 #endif
 	    glDrawBuffer(GL_BACK);
 #if defined(HAVE_PBUFFER)
@@ -1378,15 +1375,23 @@ OpenGL::redraw_frame()
 	AddMpegFrame();
       } else {
 
-	string fname = viewwindow->curName + string(".mpg");
+	string fname = viewwindow->curName;
 
+	// only add extension if not allready there
+	if(!(fname.find(".mpg") != std::string::npos ||
+	     fname.find(".MPG") != std::string::npos ||
+	     fname.find(".mpeg") != std::string::npos ||
+	     fname.find(".MPEG") != std::string::npos)) {
+	  fname = fname + string(".mpg");
+	}
+	
 	// Dump the mpeg in the local dir ... ignoring any path since mpeg
 	// can not handle it.
 	std::string::size_type pos = fname.find_last_of("/");
-	if( pos != std::string::npos ) {
-	  cerr << "Removing the mpeg path." << std::endl;
-	  fname = fname.erase(0, pos+1);
-	}
+	//if( pos != std::string::npos ) {
+        //cerr << "Removing the mpeg path." << std::endl;
+        //fname = fname.erase(0, pos+1);
+        //}
 
 	if( fname.find("%") != std::string::npos ) {
 	  cerr << "Remove the C Style format for the frames." << std::endl;
