@@ -2,11 +2,6 @@
 <!DOCTYPE filter-gui SYSTEM "gui_filter.dtd">
 <filter-gui name="Darby-ThresholdSegmentationLevelSetImageFilterGui">
   <parameters>
-    <param name="iterations">
-      <gui>text-entry</gui>
-      <default>10</default>
-    </param>
-
     <param name="lower_threshold">
       <gui>text-entry</gui>
       <default>210</default>
@@ -18,7 +13,7 @@
     <param name="curvature">
       <gui>scrollbar</gui>
       <min>0</min>
-      <max>1</max>
+      <max>10</max>
       <default>1</default>
     </param>
     <param name="max_iterations">

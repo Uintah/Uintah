@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE filter SYSTEM "sci_filter.dtd">
+<filter name="BinaryThresholdImageFilter">
+   <include href="ITK/itk_BinaryThresholdImageFilter.xml"/>
+   <include href="Dataflow/Modules/Filters/XML/gui_BinaryThresholdImageFilter.xml"/>
+   <filter-sci name="BinaryThresholdImageFilter">
+      <package>Insight</package>
+      <category>Filters</category>
+      <instantiations use-defaults="yes"/>
+     <includes>
+        <file>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</file>
+     </includes>
+  </filter-sci>
+</filter>
