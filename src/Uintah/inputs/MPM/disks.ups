@@ -29,6 +29,8 @@
 	<save label="p.stress"/>
 	<save label="g.mass"/>
 	<save label="g.stressFS"/>
+
+	<checkpoint interval="0.01" cycle="2"/>
    </DataArchiver>
 
     <MPM>
