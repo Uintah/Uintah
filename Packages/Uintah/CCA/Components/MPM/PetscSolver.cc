@@ -128,6 +128,10 @@ void MPMPetscSolver::solve()
 #ifdef HAVE_PETSC
   PC          pc;           
   KSP         ksp;
+#if 0
+  PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_MATLAB);
+  MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
+#endif
   SLESCreate(PETSC_COMM_WORLD,&sles);
   SLESSetOperators(sles,d_A,d_A,DIFFERENT_NONZERO_PATTERN);
   SLESGetKSP(sles,&ksp);
@@ -236,8 +240,11 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
 void MPMPetscSolver::fillMatrix(int i,int j,double value)
 {
 #ifdef HAVE_PETSC
-  PetscScalar v = value;
-  MatSetValues(d_A,1,&i,1,&j,&v,ADD_VALUES);
+  set<int>::iterator find_itr_j = d_DOF.find(j);
+  if (find_itr_j == d_DOF.end() ) {
+    PetscScalar v = value;
+    MatSetValues(d_A,1,&i,1,&j,&v,ADD_VALUES);
+  }
 #endif
 }
 
@@ -285,16 +292,22 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
     PetscScalar v = 0.;
     const int index = *iter;
     VecSetValues(d_B,1,&index,&v,INSERT_VALUES);
-  }    
+    MatSetValue(d_A,index,index,1.,INSERT_VALUES);
+  }
+
+  MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
 
   ISCreateGeneral(PETSC_COMM_SELF,d_DOF.size(),indices,&is);
   PetscFree(indices);
-  
+
   PetscScalar one = 1.0;
   MatZeroRows(d_A,is,&one);
+#if 0
   MatTranspose(d_A,PETSC_NULL);
   MatZeroRows(d_A,is,&one);
   MatTranspose(d_A,PETSC_NULL);
+#endif
 
   // Make sure the nodes that are outside of the material have values 
   // assigned and solved for.  The solutions will be 0.
