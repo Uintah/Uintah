@@ -12,7 +12,6 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
  */
 
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/LatticeGeom.h>
 #include <Core/Datatypes/ScalarField.h>
 
 using namespace SCIRun;
