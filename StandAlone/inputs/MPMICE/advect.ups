@@ -183,6 +183,7 @@
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
 	<gravity>[0,0,0]</gravity>
+	<reference_pressure>101325.0</reference_pressure>
     </PhysicalConstants>
 
 
