@@ -88,6 +88,15 @@ MPMLabel::MPMLabel()
   pSizeLabel_preReloc = VarLabel::create( "p.size+",
 			ParticleVariable<Vector>::getTypeDescription());
   
+  pDeformRatePlasticLabel = VarLabel::create("p.deformRatePlastic",
+			ParticleVariable<Matrix3>::getTypeDescription());
+  pDeformRatePlasticLabel_preReloc = VarLabel::create("p.deformRatePlastic+",
+			ParticleVariable<Matrix3>::getTypeDescription());
+  pPlasticStrainLabel = VarLabel::create("p.plasticStrain",
+			ParticleVariable<double>::getTypeDescription());
+  pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
+			ParticleVariable<double>::getTypeDescription());
+
   // Particle Variables 
   pDeformationMeasureLabel_preReloc = VarLabel::create("p.deformationMeasure+",
 			ParticleVariable<Matrix3>::getTypeDescription());
