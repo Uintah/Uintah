@@ -24,6 +24,7 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+#include <Core/Containers/Handle.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Dataflow/Network/Module.h>
 
@@ -186,20 +187,9 @@ FieldBoundaryAlgoT<Msh>::execute(Module *mod, const MeshHandle mesh,
   {
     const TypeDescription *mtd = get_type_description((Msh *)0);
     CompileInfo *ci = FieldBoundaryAlgoAux::get_compile_info(mtd);
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+    Handle<FieldBoundaryAlgoAux> algo;
+    if (!mod->module_dynamic_compile(*ci, algo))
     {
-      mod->error("Could not compile algorithm.");
-      return;
-    }
-    
-    // No dynamic cast to satisfy dynamic_cast bug on SGI. 
-    // If we get this far we really have the right algorithm...
-    FieldBoundaryAlgoAux *algo =(FieldBoundaryAlgoAux *)algo_handle.get_rep();
-
-    if (algo == 0)
-    {
-      mod->error("Could not get algorithm.");
       return;
     }
     algo->execute(mesh, boundary, interp);

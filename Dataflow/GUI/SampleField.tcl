@@ -43,7 +43,7 @@ itcl_class SCIRun_Fields_SampleField {
 	set $this-rnginc 1
 	set $this-whichtab Widget
         set $this-clamp 0
-        set $this-autoexecute 0
+        set $this-autoexecute 1
     }
 
     method ui {} {

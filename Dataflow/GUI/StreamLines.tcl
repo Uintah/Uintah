@@ -25,7 +25,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	global $this-maxsteps
 	global $this-direction
 	global $this-color
-	global $this-colinear
+	global $this-remove-colinear
 
         set_defaults
     }
@@ -36,7 +36,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	set $this-maxsteps 2000
 	set $this-direction 1
 	set $this-color 1
-	set $this-colinear 0
+	set $this-remove-colinear 1
     }
 
     method ui {} {

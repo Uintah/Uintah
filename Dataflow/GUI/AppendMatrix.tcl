@@ -68,7 +68,7 @@ itcl_class SCIRun_Math_AppendMatrix {
                 {"Postpend" 0}}
 	pack $w.f.r $w.f.a $w.f.f -side left -expand 1 -fill x
 
-	button $w.clear -text "Clear Output"
+	button $w.clear -text "Clear Output" -command "$this-c clear"
 
 	pack $w.f $w.clear -expand 1 -fill x
     }
