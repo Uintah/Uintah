@@ -49,6 +49,7 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <math.h>
+#include <stdlib.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -69,29 +70,39 @@ CM2Widget::io(Piostream &stream)
 #endif
 
 CM2Widget::CM2Widget()
-  : line_color_(0.75, 0.75, 0.75),
+  : name_("default"),  
+    line_color_(0.75, 0.75, 0.75),
     line_alpha_(1.0),
     selected_color_(1.0, 0.0, 0.0),
     selected_alpha_(1.0),
     thin_line_width_(0.75),
     thick_line_width_(2.0),
     point_size_(7.0),
-    color_(0.5, 0.5, 1.0),
+    color_(1.0, 1.0, 1.0),
     alpha_(0.7),
     selected_(0),
     shadeType_(CM2_SHADE_REGULAR),
     onState_(1),
     value_min_(0.0),
-    value_scale_(1.0),
-    pan_x_(0.0),
-    pan_y_(000)
-{}
+    value_scale_(1.0)
+{
+
+  // Generates a bright random color
+  while (fabs(color_[0] - color_[1]) + 
+	 fabs(color_[0] - color_[2]) + 
+	 fabs(color_[1] - color_[2]) < 1.0) {
+    color_[0] = 1.0 - sqrt(1.0 - drand48());
+    color_[1] = 1.0 - sqrt(1.0 - drand48());
+    color_[2] = 1.0 - sqrt(1.0 - drand48());
+  }
+}
 
 CM2Widget::~CM2Widget()
 {}
 
 CM2Widget::CM2Widget(CM2Widget& copy)
-  : line_color_(copy.line_color_),
+  : name_(copy.name_),
+    line_color_(copy.line_color_),
     line_alpha_(copy.line_alpha_),
     selected_color_(copy.selected_color_),
     selected_alpha_(copy.selected_alpha_),
@@ -105,7 +116,6 @@ CM2Widget::CM2Widget(CM2Widget& copy)
     onState_(copy.onState_),
     value_min_(copy.value_min_),
     value_scale_(copy.value_scale_)
-
 {}
 
 void
@@ -143,8 +153,6 @@ void
 TriangleCM2Widget::set_value_range(double min, double scale)
 {
   const double offset = min - value_min_;
-  //  const double rescale = scale / value_scale_;
-
   base_ = (base_ * value_scale_ - offset) / scale;
   top_x_ = (top_x_ * value_scale_) / scale;
   width_ = width_ * value_scale_ / scale;
@@ -178,6 +186,7 @@ TriangleCM2Widget::io(Piostream &stream)
   Pio(stream, color_);
   Pio(stream, alpha_);
   if (version == 2) {
+    Pio(stream, name_);
     Pio(stream, value_min_);
     Pio(stream, value_scale_);
   }
@@ -186,20 +195,25 @@ TriangleCM2Widget::io(Piostream &stream)
 }
 
 TriangleCM2Widget::TriangleCM2Widget() : 
+  CM2Widget(),
   base_(0.5), 
   top_x_(0.15), 
   top_y_(0.5), 
   width_(0.25), 
   bottom_(0.5)
 {
-  color_.r(1.0);
-  color_.g(1.0);
-  color_.b(1.0);
+  base_ = 0.1+drand48()*0.8;
+  top_x_ = -0.1 + drand48()*0.2;
+  top_y_ = 0.2 + drand48()*0.8;
+  width_ = 0.1 + drand48()*0.4;
+  bottom_ = drand48()*0.4+0.2;
+  name_ = "Triangle";
   alpha_ = 1.0;
 }
 
 TriangleCM2Widget::TriangleCM2Widget(float base, float top_x, float top_y,
                                      float width, float bottom) : 
+  CM2Widget(),
   base_(base), 
   top_x_(top_x), 
   top_y_(top_y), 
@@ -398,9 +412,108 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
 }
 
 void
+CM2Widget::draw_thick_gl_line(double x1, double y1, double x2, double y2,
+			      double r, double g, double b)
+{
+  glEnable(GL_LINE_SMOOTH);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+#if 1
+  glLineWidth(5.0);
+  glColor4d(0.0, 0.0, 0.0, 1.0);
+  glBegin(GL_LINES);
+  glVertex2d(x1,y1);
+  glVertex2d(x2,y2);
+  glEnd();
+#endif
+
+  glLineWidth(3.0);
+  glColor4d(r,g,b,1.0);
+  glBegin(GL_LINES);
+  glVertex2d(x1,y1);
+  glVertex2d(x2,y2);
+  glEnd();
+
+  glLineWidth(1.0);
+  glColor4d(1.0, 1.0, 1.0, 1.0);
+  glBegin(GL_LINES);
+  glVertex2d(x1,y1);
+  glVertex2d(x2,y2);
+  glEnd();
+
+  glDisable(GL_BLEND);
+  glDisable(GL_LINE_SMOOTH);
+}
+
+
+void
+CM2Widget::draw_thick_gl_point(double x1, double y1,
+			       double r, double g, double b)
+{
+  glEnable(GL_POINT_SMOOTH);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  glEnable(GL_POINT_SMOOTH);
+
+#if 1
+  glPointSize(7.0);
+  glColor4d(0.0, 0.0, 0.0, 1.0);
+  glBegin(GL_POINTS);
+    glVertex2f(x1, y1);
+  glEnd();
+#endif
+
+  glPointSize(5.0);
+  glColor4d(r,g,b,1.0);
+  glBegin(GL_POINTS);
+    glVertex2f(x1, y1);
+  glEnd();
+
+  glPointSize(3.0);
+  glColor4d(1.0, 1.0, 1.0, 1.0);
+  glBegin(GL_POINTS);
+    glVertex2f(x1, y1);
+  glEnd();
+
+  glDisable(GL_BLEND);
+  glDisable(GL_POINT_SMOOTH);
+}
+  
+
+
+
+void
 TriangleCM2Widget::draw()
 {
   if(!onState_) return;
+
+  const float b_x = bottom_*top_x_ + base_;
+  const float b_y = bottom_*top_y_;
+  const float w = bottom_*width_;
+
+  double r = 0.5, g = 0.5, b = 0.5;
+  if (selected_) {
+    r = 0.8; g = 0.7; b = 0.1;
+  }
+  draw_thick_gl_line(b_x-w/2, b_y, b_x+w/2, b_y, r,g,b);
+  draw_thick_gl_line(base_+top_x_-width_/2, top_y_,
+		     base_+top_x_+width_/2, top_y_,  r, g, b);
+  draw_thick_gl_line(base_, 0.0, base_+top_x_-width_/2, top_y_, r,g,b);
+  draw_thick_gl_line(base_, 0.0, base_+top_x_+width_/2, top_y_, r,g,b);
+
+  if (selected_) {
+    r = 0.9; g = 0.6; b = 0.4;
+  }
+
+  draw_thick_gl_point(base_, 0.0, r,g,b);
+  draw_thick_gl_point(b_x-w/2, b_y,r,g,b);
+  draw_thick_gl_point(b_x+w/2, b_y,r,g,b);
+  draw_thick_gl_point(base_+top_x_-width_/2, top_y_,r,g,b);
+  draw_thick_gl_point(base_+top_x_+width_/2, top_y_,r,g,b);
+
+  return;
 
   GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
   GLdouble green[4] = { 0.5, 1.0, 0.1, 0.7 };
@@ -411,10 +524,10 @@ TriangleCM2Widget::draw()
   GLdouble black[4] = { 0.0, 0.0, 0.0, 1.0 }; 
   GLdouble yellow[4] = { 1.0, 0.76, 0.1, 1.0 };
 
-
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+		      
   glEnable(GL_LINE_SMOOTH);
   glLineWidth(thin_line_width_);
   glBegin(GL_LINES);
@@ -427,9 +540,6 @@ TriangleCM2Widget::draw()
   }
   glEnd();
 
-  const float b_x = bottom_*top_x_ + base_;
-  const float b_y = bottom_*top_y_;
-  const float w = bottom_*width_;
   glLineWidth(5.0);
   glColor4dv(black);
   glBegin(GL_LINES);
@@ -504,6 +614,12 @@ TriangleCM2Widget::draw()
 int
 TriangleCM2Widget::pick1 (int ix, int iy, int sw, int sh)
 {
+  last_x_ = top_x_;
+  last_y_ = top_y_;
+  pick_ix_ = ix;
+  pick_iy_ = iy;
+  last_width_ = width_;
+
   const double x = ix / (double)sw;
   const double y = iy / (double)sh;
   const double xeps = point_size_ / sw * 0.5;
@@ -514,34 +630,40 @@ TriangleCM2Widget::pick1 (int ix, int iy, int sw, int sh)
   const float b_y = bottom_*top_y_;
   const float w = bottom_*width_;
 
-  const double cp1x = base_ + top_x_ + width_/2;
-  const double cp1y = top_y_;
-  if (fabs(x - cp1x) < xeps &&
-      fabs(y - cp1y) < yeps)
+  const double top_right_x = base_ + top_x_ + width_/2;
+  const double top_left_x = base_ + top_x_ - width_/2;
+
+  // upper right corner
+  if (fabs(x - top_right_x) < xeps && fabs(y - top_y_) < yeps)
+    return 2; 
+
+  // upper left corner
+  if (fabs(x - top_left_x) < xeps && fabs(y - top_y_) < yeps)
   {
-    return 2;
+    return 6; 
   }
 
-  const double cp2x = b_x - w/2;
-  const double cp2y = b_y;
-  if (fabs(x - cp2x) < xeps &&
-      fabs(y - cp2y) < yeps)
-  {
+  // middle left corner
+  const double bot_left_x = b_x - w/2;
+  const double bot_right_x = b_x + w/2;
+  if (fabs(x - bot_left_x) < xeps && fabs(y - b_y) < yeps)
     return 3;
-  }
 
-  const double cp1x2 = base_ + top_x_ - width_/2;
+  // middle right corner
+  if (fabs(x - bot_right_x) < xeps && fabs(y - b_y) < yeps)
+    return 8; 
+
+
+  // top bar
   if (fabs(y - top_y_) < yleps &&
-      x > Min(cp1x, cp1x2) && x < Max(cp1x, cp1x2))
-  {
-    last_x_ = top_x_;
-    last_y_ = top_y_;
-    pick_ix_ = ix;
-    pick_iy_ = iy;
-    last_width_ = width_;
-    return 4;
-  }
+      x > Min(top_right_x, top_left_x) && x < Max(top_right_x, top_left_x))
+    return 4; 
 
+  // bottom bar
+  if (fabs(y - b_y) < yleps &&
+      x > Min(bot_left_x, bot_right_x) && x < Max(bot_left_x, bot_right_x))
+    return 7;
+  
   return 0;
 }
 
@@ -570,8 +692,29 @@ TriangleCM2Widget::pick2 (int ix, int iy, int sw, int sh, int m)
 }
 
 
+string
+TriangleCM2Widget::tk_cursorname(int obj)
+{
+  switch (obj) {
+  case 0: return string("left_ptr"); break;
+  case 1: return string("sb_h_double_arrow"); break;
+  case 2: return string("fleur"); break;
+  case 3: return string("sb_v_double_arrow"); break;
+  case 4: return string("fleur"); break;
+  case 5: return string("left_ptr"); break;
+  case 6: return string("fleur"); break;
+  case 7: return string("sb_v_double_arrow"); break;
+  case 8: return string("sb_v_double_arrow"); break;
+  default: break;
+  }
+  return string("left_ptr");
+}
+    
+    
+
+
 void
-TriangleCM2Widget::move (int /*obj*/, int ix, int iy, int w, int h)
+TriangleCM2Widget::move (int ix, int iy, int w, int h)
 {
   const double x = ix / (double)w;
   const double y = iy / (double)h;
@@ -584,6 +727,7 @@ TriangleCM2Widget::move (int /*obj*/, int ix, int iy, int w, int h)
 
   case 2:
     width_ = (x - top_x_ - base_) * 2.0;
+    top_y_ = last_y_ + y - pick_iy_ / (double)h;
     break;
 
   case 3:
@@ -612,12 +756,27 @@ TriangleCM2Widget::move (int /*obj*/, int ix, int iy, int w, int h)
       color_ = Color(hsv);
     }
     break;
+  case 6:
+    width_ = (x - top_x_ - base_) * 2.0;
+    top_y_ = last_y_ + y - pick_iy_ / (double)h;
+    break;
+
+  case 7:
+    bottom_ = Clamp(y / top_y_, 0.0, 1.0);
+    break;
+
+  case 8:
+    bottom_ = Clamp(y / top_y_, 0.0, 1.0);
+    break;
+
+  default:
+    break;
   }
 }
 
 
 void
-TriangleCM2Widget::release (int /*obj*/, int /*x*/, int /*y*/, 
+TriangleCM2Widget::release (int /*x*/, int /*y*/, 
                             int /*w*/, int /*h*/)
 {
   // Don't need to do anything here.
@@ -659,12 +818,13 @@ static Persistent* RectangleCM2Widget_maker()
 PersistentTypeID RectangleCM2Widget::type_id("RectangleCM2Widget", "CM2Widget",
 					     RectangleCM2Widget_maker);
 
-#define RECTANGLECM2WIDGET_VERSION 1
+#define RECTANGLECM2WIDGET_VERSION 2
 
 void
 RectangleCM2Widget::io(Piostream &stream)
 {
-  stream.begin_class("RectangleCM2Widget", RECTANGLECM2WIDGET_VERSION);
+  const int version = 
+    stream.begin_class("RectangleCM2Widget", RECTANGLECM2WIDGET_VERSION);
 
   // Originally used "Pio(stream, (int)type_);", but this did not
   // compile on the SGI, so needed to do it this way.
@@ -684,10 +844,17 @@ RectangleCM2Widget::io(Piostream &stream)
   Pio(stream, onState_);
   Pio(stream, color_);
   Pio(stream, alpha_);
+  if (version == 2) {
+    Pio(stream, name_);
+    Pio(stream, value_min_);
+    Pio(stream, value_scale_);
+  }
+
   stream.end_class();
 }
 
 RectangleCM2Widget::RectangleCM2Widget() : 
+  CM2Widget(),
   type_(CM2_RECTANGLE_1D), 
   left_x_(0.25), 
   left_y_(0.5),
@@ -695,22 +862,28 @@ RectangleCM2Widget::RectangleCM2Widget() :
   height_(0.25),
   offset_(0.25)
 {
-  color_.r(1.0);
-  color_.g(1.0);
-  color_.b(0.7);
+  left_x_ = drand48()*0.9;
+  left_y_ = drand48()*0.9;
+  width_ = Clamp(0.1+(0.9-left_x_)*drand48(), 0.1, 0.5);
+  height_ = Clamp(0.1+(0.9-left_y_)*drand48(), 0.5*width_, 1.5*width_);
+  offset_ = 0.25+0.5*drand48();
+  name_ = "Rectangle";
   alpha_ = 1.0;
 }
 
 RectangleCM2Widget::RectangleCM2Widget(CM2RectangleType type, float left_x, 
 				       float left_y, float width, float height,
 				       float offset) : 
+  CM2Widget(),
   type_(type), 
   left_x_(left_x), 
   left_y_(left_y), 
   width_(width), 
   height_(height),
   offset_(offset)
-{}
+{
+  name_ = "Rectangle";
+}
 
 RectangleCM2Widget::~RectangleCM2Widget()
 {}
@@ -945,10 +1118,34 @@ CM2Widget::selectcolor(int obj)
 void
 RectangleCM2Widget::draw()
 {
-  if(!onState_)
-    return;
+  if(!onState_) return;
 
-  glEnable(GL_BLEND);
+  double r = 0.5, g = 0.5, b = 0.5;
+  if (selected_) {
+    r = 0.9; g = 0.8; b = 0.1;
+  }
+  draw_thick_gl_line(left_x_, left_y_, left_x_+width_, left_y_, r,g,b);
+  draw_thick_gl_line(left_x_, left_y_+height_, left_x_+width_, left_y_+height_,
+		     r,g,b);
+
+  draw_thick_gl_line(left_x_, left_y_, left_x_, left_y_+height_, r,g,b);
+  draw_thick_gl_line(left_x_+width_, left_y_, left_x_+width_, left_y_+height_, 
+		     r,g,b);
+
+  if (selected_) {
+    r = 0.9; g = 0.6; b = 0.4;
+  }
+
+  draw_thick_gl_point(left_x_, left_y_,r,g,b);
+  draw_thick_gl_point(left_x_+width_, left_y_,r,g,b);
+  draw_thick_gl_point(left_x_, left_y_+height_,r,g,b);
+  draw_thick_gl_point(left_x_+width_, left_y_+height_,r,g,b);
+  draw_thick_gl_point(left_x_+offset_*width_, left_y_+height_*0.5,r,g,b);
+
+  return;
+
+
+ glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
   selectcolor(1);
@@ -990,43 +1187,63 @@ RectangleCM2Widget::draw()
 }
 
 
+
+string
+RectangleCM2Widget::tk_cursorname(int obj)
+{
+  switch (obj) {
+  case 0: return string("left_ptr"); break;
+  case 1: return string("fleur"); break;
+  case 2: return string("bottom_left_corner"); break;
+  case 3: return string("bottom_right_corner"); break;
+  case 4: return string("top_right_corner"); break;
+  case 5: return string("top_left_corner"); break;
+  case 6: return string("sb_h_double_arrow"); break;
+  case 7: return string("fleur"); break;
+  case 8: return string("sb_h_double_arrow"); break;
+  case 9: return string("sb_h_double_arrow"); break;
+  case 10: return string("sb_v_double_arrow"); break;
+  case 11: return string("sb_v_double_arrow"); break;
+  default: break;
+  }
+  return string("left_ptr");
+}
+
+
 int
 RectangleCM2Widget::pick1 (int ix, int iy, int w, int h)
 {
+  last_x_ = left_x_;
+  last_y_ = left_y_;
+  pick_ix_ = ix;
+  pick_iy_ = iy;
+
   const double x = ix / (double)w;
   const double y = iy / (double)h;
   const double xeps = point_size_ / w * 0.5;
   const double yeps = point_size_ / h * 0.5;
 
-  if (fabs(x - left_x_) < xeps &&
-      fabs(y - left_y_) < yeps)
-  {
-    return 2;
-  }
+  double left = fabs(x - left_x_);
+  double right = fabs(x - left_x_ - width_);
+  double bottom = fabs(y - left_y_);
+  double top = fabs(y - left_y_ - height_);
 
-  if (fabs(x - left_x_ - width_) < xeps &&
-      fabs(y - left_y_) < yeps)
-  {
-    return 3;
-  }
+  if (left < xeps && bottom < yeps) return 2;
 
-  if (fabs(x - left_x_ - width_) < xeps &&
-      fabs(y - left_y_ - height_) < yeps)
-  {
-    return 4;
-  }
+  if (right < xeps && bottom < yeps) return 3;
 
-  if (fabs(x - left_x_) < xeps &&
-      fabs(y - left_y_ - height_) < yeps)
-  {
-    return 5;
-  }
+  if (right < xeps && top < yeps) return 4;
+
+  if (left < xeps && top < yeps) return 5;
 
   if (fabs(x - left_x_ - offset_ * width_) < xeps &&
       fabs(y - left_y_ - height_ * 0.5) < yeps)
-  {
     return 6;
-  }
+
+  if (left < xeps && y > left_y_ && y < (left_y_+height_)) return 8;
+  if (right < xeps && y > left_y_ && y < (left_y_+height_)) return 9;
+  if (x > left_x_ && x < (left_x_+width_) && bottom < yeps) return 10;
+  if (x > left_x_ && x < (left_x_+width_) && top < yeps) return 11;
 
   return 0;
 }
@@ -1056,7 +1273,7 @@ RectangleCM2Widget::pick2 (int ix, int iy, int w, int h, int m)
 
 
 void
-RectangleCM2Widget::move (int /*obj*/, int ix, int iy, int w, int h)
+RectangleCM2Widget::move (int ix, int iy, int w, int h)
 {
   const double x = ix / (double)w;
   const double y = iy / (double)h;
@@ -1112,12 +1329,34 @@ RectangleCM2Widget::move (int /*obj*/, int ix, int iy, int w, int h)
       color_ = Color(hsv);
     }
     break;
+
+  case 8:
+    width_ = width_ + left_x_ - x;
+    left_x_ = x;
+    break;
+
+  case 9:
+    width_ = x - left_x_;
+    break;
+
+  case 10:
+    height_ = height_ + left_y_ - y;
+    left_y_ = y;
+    break;
+
+  case 11:
+    height_ = y - left_y_;
+    break;
+
+
+
+
   }
 }
 
 
 void
-RectangleCM2Widget::release (int /*obj*/, int /*x*/, int /*y*/,
+RectangleCM2Widget::release (int /*x*/, int /*y*/,
                              int /*w*/, int /*h*/)
 {
   // Don't need to do anything here.
@@ -1366,10 +1605,6 @@ ImageCM2Widget::draw()
 
 
 
-
-
-
-
 #define PAINTCM2WIDGET_VERSION 1
 
 static Persistent* PaintCM2Widget_maker()
@@ -1388,16 +1623,18 @@ PaintCM2Widget::io(Piostream &stream)
   stream.begin_class("PaintCM2Widget", PAINTCM2WIDGET_VERSION);
   
   Pio(stream, segments_);
-  Pio(stream, pixels_);
+  Pio(stream, name_);
   dirty_ = true;
   stream.end_class();
 }
 
 PaintCM2Widget::PaintCM2Widget() : 
+  CM2Widget(),
   segments_(0),
   pixels_(256, 256, 4),
   dirty_(false)
 {
+  name_ = "Paint";
   pixels_.initialize(0.0);
 }
 
@@ -1467,7 +1704,10 @@ PaintCM2Widget::splat(Array3<float> &data, int x0, int y0) {
 	  data(x, y, 0) = color_.r();
 	  data(x, y, 1) = color_.g();
 	  data(x, y, 2) = color_.b();
-	  data(x, y, 3) = Max(data(x, y, 3),float(alpha_*((3.0-sqrt(double((x-x0)*(x-x0)+(y-y0)*(y-y0))))/3.0)));
+	  if (shadeType_ == CM2_SHADE_FLAT)
+	    data(x, y, 3) = 1.0;
+	  else 
+	    data(x, y, 3) = Max(data(x, y, 3),float(alpha_*((3.0-sqrt(double((x-x0)*(x-x0)+(y-y0)*(y-y0))))/3.0)));
 	}
 }
 
@@ -1482,8 +1722,9 @@ PaintCM2Widget::line(Array3<float> &data, int x0, int y0, int x1, int y1)
       y1 < 0 || y1 >= data.dim2()) return;
   int dy = y1 - y0;
   int dx = x1 - x0;
-  int stepx, stepy;
-  
+  int stepx;
+  int stepy;
+
   if (dy < 0) { 
     dy = -dy;
     stepy = -1; 
@@ -1500,7 +1741,6 @@ PaintCM2Widget::line(Array3<float> &data, int x0, int y0, int x1, int y1)
   dx <<= 1;
 
   splat(data, x0, y0);
-
   if (dx > dy) {
     int fraction = dy - (dx >> 1);
     while (x0 != x1) {
@@ -1540,10 +1780,10 @@ PaintCM2Widget::rasterize(Array3<float>& array, bool /*faux*/)
     Coordinate &p1 = seg.first;
     Coordinate &p2 = seg.second;
     line(array,
-	 Round(p1.second*array.dim1()), 
-	 Round(p1.first*array.dim2()),
-	 Round(p2.second*array.dim1()),
-	 Round(p2.first*array.dim2()));
+	 Floor(p1.second*array.dim1()), 
+	 Floor(p1.first*array.dim2()),
+	 Floor(p2.second*array.dim1()),
+	 Floor(p2.first*array.dim2()));
   }
 }
 
