@@ -37,7 +37,7 @@
 #include <Core/Volume/SliceRenderer.h>
 #include <Core/Volume/VolShader.h>
 #include <Core/Volume/TextureBrick.h>
-#include <Core/Volume/ShaderProgramARB.h>
+#include <Core/Geom/ShaderProgramARB.h>
 
 #include <iostream>
 

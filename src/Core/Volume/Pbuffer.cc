@@ -30,7 +30,7 @@
 //    Date   : Sun Jun 27 17:49:45 2004
 
 #include <Core/Volume/Pbuffer.h>
-#include <Core/Volume/ShaderProgramARB.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Util/Environment.h>
 #include <iostream>
 

@@ -31,7 +31,7 @@
 
 
 #include <Core/Volume/CM2Widget.h>
-#include <Core/Volume/ShaderProgramARB.h>
+#include <Core/Geom/ShaderProgramARB.h>
 //#include <Core/Volume/CM2Shader.h>
 #include <Core/Volume/Pbuffer.h>
 #include <Core/Volume/Utils.h>
