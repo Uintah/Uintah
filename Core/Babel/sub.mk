@@ -17,8 +17,6 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/babel_defs.mk
-
 Core/Babel/timestamp: $(CCASIDL)
 	$(BABEL) -x -o$(BABEL_REPOSITORY) $< && touch $@
 
