@@ -44,6 +44,7 @@ TetVolMesh::~TetVolMesh()
 BBox
 TetVolMesh::get_bounding_box() const
 {
+#if 0 // compare for iterators (==,!=) isn't compiling under linux
 #if 0
   BBox result;
 
@@ -65,6 +66,7 @@ TetVolMesh::get_bounding_box() const
     ++ni;
   }
   return result;
+#endif
 #endif
 }
 
@@ -285,6 +287,7 @@ distance2(const Point &p0, const Point &p1)
 void
 TetVolMesh::locate(node_iterator &loc, const Point &p)
 {
+#if 0 // compare for iterators (==,!=) isn't compiling under linux
   node_iterator ni = node_begin();
   loc = ni;
   if (ni == node_end())
@@ -305,6 +308,7 @@ TetVolMesh::locate(node_iterator &loc, const Point &p)
     }
     ++ni;
   }
+#endif
 }
 
 
@@ -325,6 +329,7 @@ TetVolMesh::locate(face_iterator &face, const Point & /* p */)
 void
 TetVolMesh::locate(cell_iterator &cell, const Point &p)
 {
+#if 0 // compare for iterators (==,!=) isn't compiling under linux
   cell_iterator ci = cell_begin();
   while (ci != cell_end())
   {
@@ -334,6 +339,7 @@ TetVolMesh::locate(cell_iterator &cell, const Point &p)
     }
   }
   cell = ci;
+#endif
 }
 
 

@@ -21,9 +21,6 @@ SRCS += $(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/PropertyManager.cc	    \
         $(SRCDIR)/ScalarField.cc	    \
         $(SRCDIR)/ScalarFieldHUG.cc	    \
-        $(SRCDIR)/ScalarFieldRG.cc          \
-        $(SRCDIR)/ScalarFieldRGBase.cc      \
-        $(SRCDIR)/ScalarFieldRGCC.cc        \
         $(SRCDIR)/ScalarFieldUG.cc	    \
         $(SRCDIR)/ScalarFieldZone.cc	    \
         $(SRCDIR)/SparseRowMatrix.cc	    \
@@ -34,8 +31,6 @@ SRCS += $(SRCDIR)/Brick.cc		    \
 	$(SRCDIR)/TypeName.cc		    \
         $(SRCDIR)/VectorField.cc	    \
         $(SRCDIR)/VectorFieldHUG.cc	    \
-        $(SRCDIR)/VectorFieldRG.cc	    \
-        $(SRCDIR)/VectorFieldRGCC.cc	    \
         $(SRCDIR)/VectorFieldUG.cc	    \
         $(SRCDIR)/VectorFieldZone.cc	    \
         $(SRCDIR)/VoidStar.cc		    \
@@ -61,6 +56,11 @@ SRCS += $(SRCDIR)/Brick.cc		    \
 	$(SRCDIR)/VolumeUtils.cc \
 
 #        $(SRCDIR)/MeshRG.cc		    \
+#        $(SRCDIR)/ScalarFieldRG.cc          \
+#        $(SRCDIR)/ScalarFieldRGBase.cc      \
+#        $(SRCDIR)/ScalarFieldRGCC.cc        \
+#        $(SRCDIR)/VectorFieldRG.cc	    \
+#        $(SRCDIR)/VectorFieldRGCC.cc	    \
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \

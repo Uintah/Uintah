@@ -4,7 +4,7 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array3.h>
-#include <Core/Datatypes/ScalarFieldRGBase.h>
+//#include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Datatypes/Octree.h>
@@ -58,7 +58,7 @@ public:
   // GROUP: Constructors:
   //////////
   // Constructor
-  GLTexture3D(ScalarFieldRGBase *tex);
+  GLTexture3D(void /*ScalarFieldRGBase*/ *tex);
   //////////
   // Constructor
   GLTexture3D();
@@ -70,7 +70,7 @@ public:
   // GROUP: Modify
   //////////  
   // Set a new scalarField
-  void SetField( ScalarFieldRGBase *tex);
+  void SetField(void /*ScalarFieldRGBase*/ *tex);
   //////////
   // Change the BrickSize
   bool SetBrickSize( int brickSize );
@@ -94,7 +94,7 @@ public:
   int getBrickSize(){ return xmax; }
   /////////
   // Get field size
-  ScalarFieldRGBase* getField(){ return _tex; }
+  void /*ScalarFieldRGBase*/ *getField(){ return _tex; }
 
   // GROUP: io
   /////////
@@ -109,7 +109,7 @@ private:
 
 
   Octree<Brick*>* bontree;
-  ScalarFieldRGBase *_tex;
+  void /*ScalarFieldRGBase*/ *_tex;
   int levels;
   Point minP;
   Point maxP;

@@ -12,7 +12,7 @@
 #include <Core/Datatypes/ColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
-#include <Core/Datatypes/ScalarFieldRGBase.h>
+//#include <Core/Datatypes/ScalarFieldRGBase.h>
 
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/View.h>
@@ -117,6 +117,7 @@ void TexCuttingPlanes::widget_moved(int)
 
 void TexCuttingPlanes::execute(void)
 {
+#if 0
   //AuditAllocator(default_allocator);
   static GLTexture3DHandle oldtex = 0;
   if (!intexture->get(tex)) {
@@ -138,6 +139,7 @@ void TexCuttingPlanes::execute(void)
     Point Smin(tex->min());
     Point Smax(tex->max());
     Vector dv(Smax - Smin);
+
     ScalarFieldRGBase *sf = tex->getField();
     ddv.x(dv.x()/(sf->nx - 1));
     ddv.y(dv.y()/(sf->ny - 1));
@@ -205,6 +207,7 @@ void TexCuttingPlanes::execute(void)
 
   ogeom->flushViews();				  
   //AuditAllocator(default_allocator);
+#endif
 }
 
 } // End namespace SCIRun

@@ -12,7 +12,7 @@
  */
 
 #include <Core/Datatypes/ScalarField.h>
-#include <Core/Datatypes/ScalarFieldRGBase.h>
+//#include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Containers/String.h>
 #include <iostream>
 using std::cerr;
@@ -30,6 +30,7 @@ ScalarField::~ScalarField()
 {
 }
 
+#if 0
 ScalarFieldRG* ScalarField::getRG()
 {
     if(rep==RegularGrid)
@@ -40,7 +41,7 @@ ScalarFieldRG* ScalarField::getRG()
     } else
 	return 0;
 }
-
+#endif
 ScalarFieldUG* ScalarField::getUG()
 {
     if(rep==UnstructuredGrid)
@@ -57,6 +58,7 @@ ScalarFieldHUG* ScalarField::getHUG()
 	return 0;
 }
 
+#if 0
 ScalarFieldRGBase* ScalarField::getRGBase()
 {
 cerr << "rep="<<rep<<"\n";
@@ -65,6 +67,7 @@ cerr << "rep="<<rep<<"\n";
     else
 	return 0;
 }
+#endif
 
 void ScalarField::set_minmax(double min, double max)
 {

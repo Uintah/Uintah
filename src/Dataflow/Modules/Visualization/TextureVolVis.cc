@@ -13,7 +13,7 @@
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Core/Datatypes/ScalarFieldRG.h>
+//#include <Core/Datatypes/ScalarFieldRG.h>
 
 #include <Core/Geom/GeomTriangles.h>
 
@@ -84,8 +84,9 @@ void TextureVolVis::widget_moved(int)
 }
 
 
-void TextureVolVis::SwapXZ( ScalarFieldHandle sfh )
+void TextureVolVis::SwapXZ( /*ScalarFieldHandle sfh*/ )
 {
+#if 0
   ScalarFieldRGuchar *ifu, *ofu;
   ifu = sfh->getRGBase()->getRGUchar();
   int nx=ifu->nx;
@@ -103,12 +104,12 @@ void TextureVolVis::SwapXZ( ScalarFieldHandle sfh )
 	ofu->grid(k,j,i)=ifu->grid(ii,jj,kk);
 
   sfh = ScalarFieldHandle( ofu );
-
+#endif
 }
   
 void TextureVolVis::execute(void)
 {
-
+#if 0
   if (!intexture->get(tex)) {
     return;
   }
@@ -193,6 +194,7 @@ void TextureVolVis::execute(void)
   //AuditAllocator(default_allocator);
   ogeom->flushViews();				  
   //AuditAllocator(default_allocator);
+#endif
 }
 
 } // End namespace SCIRun

@@ -2,7 +2,7 @@
 #define SFRGFILE_H
 
 #include <Core/Datatypes/ScalarField.h>
-#include <Core/Datatypes/ScalarFieldRGBase.h>
+//#include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Containers/Array2.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/Point.h>
@@ -45,6 +45,7 @@ protected:
   bool newBB;
   bool PCGVHeader;
 
+#if 0
   ScalarFieldRGdouble *ifd;
   ScalarFieldRGfloat *iff;
   ScalarFieldRGint *ifi;
@@ -52,9 +53,10 @@ protected:
   ScalarFieldRGushort *ifus;
   ScalarFieldRGchar *ifc;
   ScalarFieldRGuchar *ifuc;
+#endif
     
   ScalarFieldHandle ifh;
-  ScalarFieldRGBase *isf;
+  //  ScalarFieldRGBase *isf;
   ScalarFieldHandle ofh;
 
   GuiInt haveMinMaxTCL;
