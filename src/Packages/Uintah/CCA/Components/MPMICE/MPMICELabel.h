@@ -40,6 +40,9 @@ namespace Uintah {
       const VarLabel* uvel_FCMELabel;
       const VarLabel* vvel_FCMELabel;
       const VarLabel* wvel_FCMELabel;
+
+      const VarLabel* velInc_CCLabel;
+      const VarLabel* velInc_NCLabel;
     };
 
 } // end namespace Uintah
