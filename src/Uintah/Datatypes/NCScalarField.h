@@ -179,7 +179,7 @@ ScalarField*  NCScalarField<T>::clone()
 template<class T>
 void NCScalarField<T>::compute_minmax()
 {
-  T min = 1e30, max = -1e30;
+  T min = T(MAXSHORT), max = T(-MAXSHORT);
   int i = 0;
   for(Level::const_patchIterator r = _level->patchesBegin();
 	      r != _level->patchesEnd(); r++, i++ ){
@@ -251,7 +251,7 @@ int NCScalarField<T>::interpolate(const Point& p, double& value, int&,
 }
 
 template <class T>
-int NCScalarField<T>::interpolate(const Point& p, double& value, double eps,
+int NCScalarField<T>::interpolate(const Point& p, double& value, double,
                                    double)
 {
   static const Patch* patch = 0;

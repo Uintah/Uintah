@@ -172,7 +172,7 @@ ScalarField*  CCScalarField<T>::clone()
 template<class T>
 void CCScalarField<T>::compute_minmax()
 {
-  T min = 1e30, max = -1e30;
+  T min = T(MAXSHORT), max = T(-MAXSHORT);
   int i = 0;
   for(Level::const_patchIterator r = _level->patchesBegin();
 	      r != _level->patchesEnd(); r++, i++ ){
@@ -243,7 +243,7 @@ int CCScalarField<T>::interpolate(const Point& p, double& value, int&,
 }
 
 template <class T>
-int CCScalarField<T>::interpolate(const Point& p, double& value, double eps,
+int CCScalarField<T>::interpolate(const Point& p, double& value, double,
                                    double)
 {
   using SCICore::Math::Interpolate;
@@ -298,7 +298,7 @@ Vector CCScalarField<T>::gradient(const Point& p)
   IntVector lower = (*r)->getCellLowIndex();
   
   Vector diag = b.upper() - b.lower();
-  Vector pn = p - b.lower();
+  //Vector pn = p - b.lower();
   int nx = upper.x() - lower.x();
   int ny = upper.y() - lower.y();
   int nz = upper.z() - lower.z();
