@@ -132,7 +132,7 @@ bool Generator::generate( void )
     cerr << "XML File not set\n";
     return false;
   }
-  cout << this->get_xml_file() << endl;
+  cout << "XML FILE: " << this->get_xml_file() << endl;
   // parse file for includes and imports
   DOMNode* node = this->parser_->read_input_file(this->get_xml_file());
 

@@ -22,10 +22,12 @@ SRCDIR   := Packages/Insight/Core/CodeGenerator
 SRCS := $(SRCDIR)/main.cc \
 	$(SRCDIR)/Generator.cc \
 	$(SRCDIR)/Parser.cc \
-	$(SRCDIR)/Translator.cc
+	$(SRCDIR)/Translator.cc \
 
-LIBS := $(XML_LIBRARY) $(XALAN_LIBRARY)
-INCLUDES += $(XALAN_INCLUDE)
+PSELIBS := Dataflow/XMLUtil
+
+LIBS := $(XML_LIBRARY) $(XALAN_LIBRARY) 
+INCLUDES += $(XALAN_INCLUDE) 
 PROGRAM := Packages/Insight/Core/CodeGenerator/generate
 
 include $(SCIRUN_SCRIPTS)/program.mk

@@ -10,6 +10,7 @@
 
 #include "Parser.h"
 
+
 ///////////////////////////////
 // Constructors and Destructors
 ///////////////////////////////
@@ -30,13 +31,24 @@ Parser::~Parser() {
 ///////////////////////////////  
 DOMNode* Parser::read_input_file(string filename)
 {
+  //std::cerr << "READ_INPUT_FILE\n";
   DOMNode* node;
   try {
     XMLPlatformUtils::Initialize();
     XercesDOMParser* parser = new XercesDOMParser;
     parser->setDoValidation(true);
-    // Parse the input file
+
+    SCIRun::SimpleErrorHandler handler;
+    parser->setErrorHandler(&handler);
+
     parser->parse(filename.c_str());
+
+    //std::cerr << parser->getErrorCount() << std::endl;
+
+    if(handler.foundError){
+      std::cerr << "Handler Error\n";
+    }
+
     DOMDocument* doc = parser->adoptDocument();
     
     if( !doc ) {
@@ -53,6 +65,7 @@ DOMNode* Parser::read_input_file(string filename)
     delete [] ch;
     return 0;
   }
+
   this->resolve_includes(node);
   this->resolve_imports(node);
 
@@ -64,6 +77,9 @@ DOMNode* Parser::read_input_file(string filename)
 //////////////////////////////
 void Parser::resolve_includes(DOMNode* root)
 {
+  //std::cout << "RESOLVE_INCLUES\n";
+  //if(root == NULL)
+  //std::cout << "*** Root is NULL ***\n";
   DOMNodeList* children = root->getChildNodes();
 
   for(int i=0; i<children->getLength(); i++) {
@@ -71,6 +87,7 @@ void Parser::resolve_includes(DOMNode* root)
     if(child->getNodeType() == DOMNode::ELEMENT_NODE) {
       char* name = XMLString::transcode(child->getNodeName());
       if(strcmp(name,"include")==0) {
+	//std::cout << "\tinclude tag found\n";
 	// get external file
 	DOMNamedNodeMap* attr = child->getAttributes();
 	unsigned long num_attr = attr->getLength();
@@ -80,7 +97,7 @@ void Parser::resolve_includes(DOMNode* root)
 	  if(strcmp(attrName,"href")==0) {
 	    string file = this->get_path_to_insight_package();
 	    file += attrValue;
-	    std::cout << "HREF= " << file << std::endl;
+	    //std::cout << "HREF= " << file << std::endl;
 	    // open the file, read it, and replace the index node
 	    DOMNode* include = this->read_input_file( file.c_str() );
 	    DOMNode* to_insert = child->getOwnerDocument()->importNode(include, true);
