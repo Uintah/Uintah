@@ -19,7 +19,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
@@ -29,7 +29,7 @@
 #include <Packages/Uintah/Core/Grid/NodeIterator.h> // Includ after Patch.h
 #include <Packages/Uintah/Core/Grid/CellIterator.h> // Includ after Patch.h
 //#include <Packages/Uintah/Core/Grid/FaceIterator.h> // Includ after Patch.h
-#include <Packages/Uintah/Core/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <vector>
 #include <sstream>
 #include <iostream>
