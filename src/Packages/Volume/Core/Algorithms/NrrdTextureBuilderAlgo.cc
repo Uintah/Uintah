@@ -19,7 +19,7 @@
 
 #include <Packages/Volume/Core/Datatypes/BrickWindow.h>
 #include <Packages/Volume/Core/Datatypes/TypedBrickData.h>
-#include <Packages/Volume/Core/Algorithms/TextureBuilderAlgo.h>
+#include <Packages/Volume/Core/Algorithms/NrrdTextureBuilderAlgo.h>
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
@@ -30,70 +30,183 @@ using namespace SCIRun;
 
 using namespace std;
 
+static DebugStream dbg("NrrdTextureBuilderAlgo", false);
 
-static DebugStream dbg("TextureBuilderAlgo", false);
 
-
-TextureBuilderAlgoBase::TextureBuilderAlgoBase()
+NrrdTextureBuilderAlgo::NrrdTextureBuilderAlgo()
 {}
 
-TextureBuilderAlgoBase::~TextureBuilderAlgoBase() 
+NrrdTextureBuilderAlgo::~NrrdTextureBuilderAlgo() 
 {}
 
-const string& 
-TextureBuilderAlgoBase::get_h_file_path() 
+Texture*
+NrrdTextureBuilderAlgo::build(NrrdDataHandle nvn, NrrdDataHandle gmn, int card_mem)
 {
-  static const string path(TypeDescription::cc_to_h(__FILE__));
-  return path;
-}
+  Texture* myTexture = 0;
 
-CompileInfoHandle
-TextureBuilderAlgoBase::get_compile_info(const TypeDescription* td)
-{
-  string subname;
-  string subinc;
-  string sname = td->get_name("", "");
-
-  //Test for LatVolField inheritance...
-  if (sname.find("LatVol") != string::npos ) {
-    // we are dealing with a lattice vol or inherited version
-    //subname.append("TextureBuilderAlgo<" + td->get_name() + "> ");
-    subname.append(td->get_name());
-    subinc.append(get_h_file_path());
-  } else {
-    cerr << "Unsupported Geometry, needs to be of Lattice type." << endl;
-    subname.append("Cannot compile this unsupported type");
+  Nrrd* nv_nrrd = nvn->nrrd;
+  if (nv_nrrd->dim != 3 && nv_nrrd->dim != 4) {
+    cerr << "Invalid dimension for input nrrds" << endl;
+    return 0;
   }
 
-  string fname("TextureBuilderAlgo." + td->get_filename() + ".");
-  CompileInfo *rval = scinew CompileInfo(fname, "TextureBuilderAlgoBase", 
-					 "TextureBuilderAlgo",
-					 subname);
-  rval->add_include(get_h_file_path());
-  rval->add_include(subinc);
-  rval->add_namespace("Volume");
-  td->fill_compile_info(rval);
-  return rval;
+  Nrrd* gm_nrrd = 0;
+  int axis_size[4];
+
+  if(gmn.get_rep()) {
+    gm_nrrd = gmn->nrrd;
+    if(gm_nrrd) {
+      if (gm_nrrd->dim != 3 && gm_nrrd->dim != 4) {
+        cerr << "Invalid dimension for input nrrds" << endl;
+        return 0;
+      }
+      nrrdAxisInfoGet_nva(gm_nrrd, nrrdAxisInfoSize, axis_size);
+      if(gm_nrrd->dim > 3 && axis_size[0] != 1) {
+        cerr << "Invalid size for gm nrrd" << endl;
+        return 0;
+      }
+      nc_ = 2;
+    } else {
+      nc_ = 1;
+    }
+  } else {
+    nc_ = 1;
+  }
+
+  nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoSize, axis_size);
+  double axis_min[4];
+  nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoMin, axis_min);
+  double axis_max[4];
+  nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoMax, axis_max);
+
+  ni_ = axis_size[nv_nrrd->dim-3];
+  nj_ = axis_size[nv_nrrd->dim-2];
+  nk_ = axis_size[nv_nrrd->dim-1];
+  nb_[0] = nv_nrrd->dim > 3 ? axis_size[0] : 1;
+  nb_[1] = gm_nrrd ? 1 : 0;
+  
+  bbox_.reset();
+  bbox_.extend(Point(axis_min[nv_nrrd->dim-3],
+                     axis_min[nv_nrrd->dim-2],
+                     axis_min[nv_nrrd->dim-1]));
+  bbox_.extend(Point(axis_max[nv_nrrd->dim-3],
+                     axis_max[nv_nrrd->dim-2],
+                     axis_max[nv_nrrd->dim-1]));
+
+  // compute subdivision
+  int brick_mem = card_mem*1024*1024/2;
+  int sx = 0, sy = 0, sz = 0;
+  computeDivisions(ni_, nj_, nk_, nb_[0], brick_mem, sx, sy, sz);
+
+  // build brick tree
+  BinaryTree<BrickNode *> *root = 0; 
+  buildBricks(root, nvn, gmn, brick_mem, sx, sy, sz, nc_, nb_);
+
+  //
+  transform_.load_identity();
+  myTexture = new Texture(root, bbox_.min(), bbox_.max(), transform_,
+                          0.0, 255.0, 0.0, 255.0);
+  return myTexture;
+}
+
+void
+NrrdTextureBuilderAlgo::fillTree(BinaryTree< BrickNode *> *tree,
+                                 NrrdDataHandle vfield,
+                                 NrrdDataHandle gfield)
+{
+  if( tree->type() == BinaryTree<BrickNode*>::PARENT ){
+    fillTree(tree->child(0), vfield, gfield);
+    fillTree(tree->child(1), vfield, gfield);
+  } else {
+    BrickNode* bn = tree->stored();
+    BrickWindow* bw = bn->brickWindow();
+    BrickData* bd = bn->brick()->data();
+    filldata(bd, bw, vfield, gfield);
+  }
+}
+
+void 
+NrrdTextureBuilderAlgo::filldata(BrickData* bdata,
+                                 BrickWindow* bw,
+                                 NrrdDataHandle nvfield,
+                                 NrrdDataHandle gmfield)
+{
+  Nrrd* nvnrrd = nvfield->nrrd;
+  Nrrd* gmnrrd = gmfield.get_rep() ? gmfield->nrrd : 0;
+  
+  TypedBrickData<unsigned char>* tbd =
+    dynamic_cast<TypedBrickData<unsigned char>*>(bdata);
+  if(!tbd) {
+    cerr << "Some sort of error in TextureBuilderAlgo<TexField>::filldata() \n";
+    return;
+  }
+  
+  int nc = bdata->nc();
+  
+  if (nvnrrd && ((gmnrrd && nc == 2) || nc == 1)) {
+   
+    int x0, y0, z0, x1, y1, z1;
+    bw->getBoundingIndices(x0, y0, z0, x1, y1, z1);
+    
+    if (!gmnrrd) {
+      unsigned char*** tex = tbd->data(0);
+      unsigned char* data = (unsigned char*)nvnrrd->data;
+
+      for(int k=0, kk=z0; kk<=z1; kk++,k++) {
+        for(int j=0, jj=y0; jj<=y1; jj++,j++) {
+          for(int i=0, ii=x0; ii<=x1; ii++, i++) {
+            for(int b=0; b<nb_[0]; b++) {
+              tex[k][j][i*nb_[0]+b] =
+                data[kk*(ni_*nj_*nb_[0])+jj*ni_*nb_[0]+ii*nb_[0]+b];
+            }
+          }
+        }
+      }
+    } else {
+      unsigned char*** tex0 = tbd->data(0);
+      unsigned char*** tex1 = tbd->data(1);
+      unsigned char* data0 = (unsigned char*)nvnrrd->data;
+      unsigned char* data1 = (unsigned char*)gmnrrd->data;
+        
+      for(int k=0, kk=z0; kk<=z1; kk++,k++) {
+        for(int j=0, jj=y0; jj<=y1; jj++,j++) {
+          for(int i=0, ii=x0; ii<=x1; ii++, i++) {
+            for(int b=0; b<nb_[0]; b++) {
+              tex0[k][j][i*nb_[0]+b] =
+                data0[kk*(ni_*nj_*nb_[0])+jj*ni_*nb_[0]+ii*nb_[0]+b];
+            }
+            for(int b=0; b<nb_[1]; b++) {
+              tex1[k][j][i*nb_[1]+b] =
+                data1[kk*(ni_*nj_*nb_[1])+jj*ni_*nb_[1]+ii*nb_[1]+b];
+            }
+          }
+        }
+      }
+      
+    }
+  } else {
+    cerr<<"Not a Lattice type---should not be here\n";
+  }
 }
 
 // Compute the divisions needed along each axis
 void
-TextureBuilderAlgoBase::computeDivisions(int nx, int ny, int nz, 
-					 int nb, int& max_tex,
-					 int& sx, int& sy, int& sz)
+NrrdTextureBuilderAlgo::computeDivisions(int nx, int ny, int nz, 
+                                         int nb, int& max_tex,
+                                         int& sx, int& sy, int& sz)
 {
   //int width, height, depth;
   int u,v,w;
-  if(isPowerOf2(nx)) u = nx; else u = nextPowerOf2(nx);
-  if(isPowerOf2(ny)) v = ny; else v = nextPowerOf2(ny);
-  if(isPowerOf2(nz)) w = nz; else w = nextPowerOf2(nz);
+  if( isPowerOf2( nx ) ) u = nx; else u = nextPowerOf2( nx );
+  if( isPowerOf2( ny ) ) v = ny; else v = nextPowerOf2( ny );
+  if( isPowerOf2( nz ) ) w = nz; else w = nextPowerOf2( nz );
 
   //char str[400];
 //   sprintf( str, "u, v, w = %d, %d, %d;  nx, ny, nx = %d, %d, %d\n",
 // 	   u, v, w, nx, ny, nz);
 //   dbg<<str;
 
-  if(u * v * w * nb < max_tex) {
+  if( u * v * w * nb < max_tex ){
     return;
   } else {
     int padx, pady, padz;
@@ -120,19 +233,19 @@ TextureBuilderAlgoBase::computeDivisions(int nx, int ny, int nz,
       nz = w = w/2;
       sz++;
     }
-    computeDivisions(nx, ny, nz, nb, max_tex, sx, sy, sz);
+    computeDivisions( nx, ny, nz, nb, max_tex, sx, sy, sz );
   }
 }
 
 
 void
-TextureBuilderAlgoBase::buildBricks(BinaryTree<BrickNode*>*& tree,
-                                    FieldHandle vfield,
-                                    FieldHandle gfield,
+NrrdTextureBuilderAlgo::buildBricks(BinaryTree<BrickNode *>*& tree,
+                                    NrrdDataHandle vfield,
+                                    NrrdDataHandle gfield,
                                     int max_tex, int sx, int sy, int sz,
                                     int nc, int* nb)
 {
-  char str[400];  
+  char str[400];
 
   sprintf(str, " division size is %dx%dx%d\n", sx, sy, sz );
   dbg<<str;
@@ -167,7 +280,7 @@ TextureBuilderAlgoBase::buildBricks(BinaryTree<BrickNode*>*& tree,
     //bricks_.clear();
     int brickIndex = 0;
     nx = ni_, ny = nj_, nz = nk_;
-    vi_ = u; //vj_ - v; vk_ + w;
+    vi_ = u; vj_ = v; vk_ = w;
     int mx = 0, mvx = 0, my = 0, mvy = 0, mz = 0, mvz = 0;
     //int bx = 0, bvx = 0, by = 0, bvy = 0, bz = 0, bvz = 0;
     
@@ -177,9 +290,9 @@ TextureBuilderAlgoBase::buildBricks(BinaryTree<BrickNode*>*& tree,
     
     sprintf(str, "\n #:    size     |  tex_size   |   min idx   |   max idx   |              bbmin             ->             bbmax               |           tmin            ->           tmax\n");
     dbg<<str;
-    tree = buildTree(mx, my, mz, nx, ny, nz, nc, nb, bbox_,
-                     mvx, mvy, mvz, u, v, w, vbox,
-                     dx, dy, dz, max_tex, 0, brickIndex);
+    tree = buildTree(mx, my, mz, nx, ny, nz, nc_, nb_, bbox_,
+		     mvx, mvy, mvz, u, v, w, vbox,
+		     dx, dy, dz, max_tex, 0, brickIndex );
   }
   
   dbg<<"Fill the tree with data ... ";
@@ -189,15 +302,15 @@ TextureBuilderAlgoBase::buildBricks(BinaryTree<BrickNode*>*& tree,
   dbg<<"Tree filled\n";
   
 }
+
 /// Helper Functions for BuildTree
 static Point cc_point_min( Point min, double dx, double dy, double dz,
-                           int i, int j, int k, int nx, int ny, int nz)
+                int i, int j, int k, int nx, int ny, int nz)
 {
   return min + Vector( dx * (i == 0 ? 0 : (i + 0.5)),
                        dy * (j == 0 ? 0 : (j + 0.5)),
                        dz * (k == 0 ? 0 : (k + 0.5)));
 }
-
 static Point cc_point_max( Point min, double dx, double dy, double dz,
 		    int i, int j, int k, int nx, int ny, int nz)
 {
@@ -231,15 +344,15 @@ static Point t_max_point( Point min, double dx, double dy, double dz,
 // }
 
 BinaryTree<BrickNode *>*
-TextureBuilderAlgoBase::buildTree(int& mi, int& mj, int& mk,
-				  int& ni, int& nj, int& nk, int nc, int* nb, BBox bbox,
-				  int& mvi, int &mvj, int& mvk,
-				  int& vi, int& vj, int& vk, BBox vbox,
+NrrdTextureBuilderAlgo::buildTree(int& mi, int& mj, int& mk,
+                                  int& ni, int& nj, int& nk, int nc, int* nb, BBox bbox,
+                                  int& mvi, int &mvj, int& mvk,
+                                  int& vi, int& vj, int& vk, BBox vbox,
                                   const double& di, const double& dj, const double& dk,
                                   const int& max_tex, int axis, int& index)
 {
   char str[400];
-  BinaryTree<BrickNode *> *tree;
+  BinaryTree<BrickNode*>* tree;
   int ti, tj, tk;
   if( isPowerOf2( ni )) ti = ni; else ti = nextPowerOf2(ni); 
   if( isPowerOf2( nj )) tj = nj; else tj = nextPowerOf2(nj);  

@@ -4,6 +4,7 @@ SRCDIR := Packages/Volume/Dataflow/GUI
 
 SRCS := \
         $(SRCDIR)/TextureBuilder.tcl \
+        $(SRCDIR)/NrrdTextureBuilder.tcl \
         $(SRCDIR)/VolumeSlicer.tcl \
         $(SRCDIR)/VolumeVisualizer.tcl \
 #[INSERT NEW TCL FILE HERE]

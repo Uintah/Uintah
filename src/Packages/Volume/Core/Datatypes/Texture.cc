@@ -56,10 +56,11 @@ Texture::Texture()
 
 Texture::Texture(BinaryTree<BrickNode*> *tree,
 		 const Point& minP, const Point& maxP,
-		 const Transform& trans, double min, double max) :
+		 const Transform& trans, double vmin, double vmax,
+                 double gmin, double gmax) :
   minP_(minP),  maxP_(maxP),
   transform_(trans),
-  min_(min), max_(max),
+  vmin_(vmin), vmax_(vmax), gmin_(gmin), gmax_(gmax),
   tree_(tree)
 {
 }
@@ -108,7 +109,7 @@ void
 Texture::sortBricks( BinaryTree< BrickNode *> *tree,
                     vector<Brick *>& bricks, const Ray& vr)
 {
-  char str[80];
+  //char str[80];
 //   cerr<<"tree pointer ="<<tree<<"\n";
   if( tree->type() == BinaryTree<BrickNode*>::PARENT ){
     BBox vbox0 = tree->child(0)->stored()->brickWindow()->vbox();
@@ -125,7 +126,7 @@ Texture::sortBricks( BinaryTree< BrickNode *> *tree,
 //     cerr<< "\n";
   } else {
     BBox vbox = tree->stored()->brickWindow()->vbox();
-    double d = (vr.origin() - vbox.center()).length();
+    //double d = (vr.origin() - vbox.center()).length();
     Brick *brick = tree->stored()->brick();
     bricks.push_back( brick );
 //     sprintf(str,"dist to brick%d is %f, ",

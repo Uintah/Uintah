@@ -26,13 +26,6 @@
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomObj.h>
 
-// #if defined( HAVE_GLEW )
-// #include <GL/glew.h>
-// #else
-// #include <GL/gl.h>
-// #include <sci_glu.h>
-// #endif
-
 #include <Core/Containers/BinaryTree.h>
 
 #include <Packages/Volume/Core/Datatypes/Brick.h>
@@ -44,7 +37,7 @@ namespace Volume {
 using SCIRun::GeomObj;
 using SCIRun::DrawInfoOpenGL;
 
-#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
+#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
 class FragmentProgramARB;
 #endif
 class SliceRenderer : public TextureRenderer
@@ -116,7 +109,7 @@ protected:
   bool                  draw_cyl_;
   unsigned char     transfer_function_[1024];
 
-#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
+#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
   FragmentProgramARB *VolShader;
 #endif
 

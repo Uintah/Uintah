@@ -56,11 +56,10 @@ WARNING
 class BrickData 
 {
 public:
-  
   // GROUP: Constructors:
   //////////
   // Constructor
-  BrickData( int nx, int ny, int nz, int nbytes );
+  BrickData(int nx, int ny, int nz, int nc, int* nb);
   
   BrickData();
   // GROUP: Destructors
@@ -70,20 +69,17 @@ public:
   
   // GROUP: Access and Info
   //////////
-  void setSize(int nx, int ny, int nz) { nx_ = nx; ny_ = ny; nz_ = nz;}
-  void setBytes( int nbytes ){ nbytes_ = nbytes; }
-  
   int nx() const { return nx_; }
   int ny() const { return ny_; }
   int nz() const { return nz_; }
-  int nbytes() const { return nbytes_; }
+  int nc() const { return nc_; }
+  int nb(int c) const { return nb_[c]; }
 
 protected:
   int nx_, ny_, nz_;
-  int nbytes_;
-
+  int nc_;
+  int* nb_;
 };
-
 
 } // End namespace Volume
 

@@ -234,7 +234,6 @@ Brick::ComputePolys(Ray r, double tmin, double tmax,
   // ts is a list of parameters that correspond the the planes defined
   // by -r.direction and the corners of the texture cube.
   // ts are used for optimization.
-  //cerr<<"tmin, tmax, dt = "<<tmin<<", "<<tmax<<", "<<dt<<endl;
 
   double t = tmax; 
   double t0, t1;

@@ -20,6 +20,7 @@
 
 
 #include <Volume/Core/Datatypes/BrickData.h>
+
 namespace Volume {
 
 
@@ -61,11 +62,10 @@ template <class T>
 class TypedBrickData : public BrickData
 {
 public:
-
   // GROUP: Constructors:
   //////////
   // Constructor
-  TypedBrickData( int nx, int ny, int nz, int nbytes );
+  TypedBrickData(int nx, int ny, int nz, int nc, int* nb);
 
   TypedBrickData();
   // GROUP: Destructors
@@ -75,29 +75,30 @@ public:
 
   // GROUP: Access and Info
   ////////// texture is used for loading a texture...
-  T* texture() { return &(data_[0][0][0]); }
-  T*** data() { return data_; }
+  T* texture(int i) { return &(data_[i][0][0][0]); }
+  T*** data(int i) { return data_[i]; }
 
 private:
-  T*** data_;
-  
+  T**** data_;
 };
 
 template <class T>
-TypedBrickData<T>::TypedBrickData( int nx, int ny, int nz, int nbytes ) :
-  BrickData( nx, ny, nz, nbytes), data_(0)
+TypedBrickData<T>::TypedBrickData(int nx, int ny, int nz, int nc, int* nb) :
+  BrickData(nx, ny, nz, nc, nb), data_(0)
 {
-  int j,k;
-  data_ = new T**[nz];
-  T **p = new T*[nz * ny];
-  T *pp = new T[nz * ny * nx];
-  for(k = 0; k < nz * ny * nx; k++) pp[k] = 0;
-  for(k = 0; k < nz; k++) {
-    data_[k] = p;
-    p += ny;
-    for(j = 0; j < ny; j++) {
-      data_[k][j] = pp;
-      pp += nx;
+  data_ = new T***[nc_];
+  for (int c=0; c<nc_; c++) {
+    data_[c] = new T**[nz_];
+    T **p = new T*[nz_ * ny_];
+    T *pp = new T[nz_ * ny_ * nx_ * nb_[c]];
+    for(int k = 0; k < nz_ * ny_ * nx_ * nb_[c]; k++) pp[k] = 0;
+    for(int k = 0; k < nz_; k++) {
+      data_[c][k] = p;
+      p += ny_;
+      for(int j = 0; j < ny_; j++) {
+        data_[c][k][j] = pp;
+        pp += nx_ * nb_[c];
+      }
     }
   }
 }
@@ -110,9 +111,12 @@ TypedBrickData<T>::TypedBrickData() : data_(0)
 template <class T>
 TypedBrickData<T>::~TypedBrickData()
 {
-  if ( data_ ){
-    delete [] data_[0][0];
-    delete [] data_[0];
+  if (data_) {
+    for (int c=0; c<nc_; c++) {
+      delete [] data_[c][0][0];
+      delete [] data_[c][0];
+      delete [] data_[c];
+    }
     delete [] data_;
   }
 }

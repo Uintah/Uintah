@@ -26,13 +26,6 @@
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomObj.h>
 
-// #if defined( HAVE_GLEW )
-// #include <GL/glew.h>
-// #else
-// #include <GL/gl.h>
-// #include <sci_glu.h>
-// #endif
-
 #include <Core/Containers/BinaryTree.h>
 
 #include <Packages/Volume/Core/Datatypes/Brick.h>
@@ -61,7 +54,7 @@ public:
   }
 
   void SetColorMap( ColorMapHandle cmap){
-    mutex_.lock(); cmap_ = cmap; BuildTransferFunction(); 
+    mutex_.lock(); cmap_ = cmap; //BuildTransferFunction(); 
     cmap_has_changed_ = true; mutex_.unlock();
   }
   void SetInterp( bool i) { interp_ = i;}

@@ -88,7 +88,8 @@ public:
   // Constructor
   Texture(BinaryTree<BrickNode*> *tree,
 	  const Point& minP, const Point& maxP,
-	  const Transform& trans, double min, double max);
+	  const Transform& trans, double vmin, double vmax,
+          double gmin, double gmax);
   //////////
   // Constructor
   Texture();
@@ -128,7 +129,8 @@ public:
   void get_sorted_bricks( vector<Brick*>& bricks, const Ray& viewray);
   /////////
   // return the min and max data value
-  void get_min_max( double& min, double& max){ min = min_; max = max_;}
+  void get_min_max(double& vmin, double& vmax, double& gmin, double& gmax)
+  { vmin = vmin_; vmax = vmax_; gmin = gmin_; gmax = gmax_; }
   /////////
   // return the field_transform
   Transform  get_field_transform(){ return transform_;}
@@ -140,10 +142,9 @@ public:
 
 protected:
 
-  Transform transform_;
-
   Point minP_, maxP_;
-  double min_, max_;
+  Transform transform_;
+  double vmin_, vmax_, gmin_, gmax_;
   
   BinaryTree<BrickNode*> *tree_;  
 // #ifdef use_alg
