@@ -17,10 +17,10 @@ namespace rtrt {
 
 class MetalMaterial : public Material {
   Color specular_reflectance;
-  double phong_exponent;
+  int phong_exponent;
 public:
   MetalMaterial(const Color& specular_reflectance);
-  MetalMaterial(const Color& specular_reflectance, double phong_exponent);
+  MetalMaterial(const Color& specular_reflectance, int phong_exponent);
   virtual ~MetalMaterial();
     
   MetalMaterial() : Material() {} // for Pio.

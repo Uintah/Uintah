@@ -11,7 +11,7 @@
 
 using namespace rtrt;
 
-CoupledMaterial::CoupledMaterial(const Color& Rd, double R0, double phong_exponent)
+CoupledMaterial::CoupledMaterial(const Color& Rd, double R0,int phong_exponent)
     : Rd(Rd), R0(R0), phong_exponent(phong_exponent)
 {
 }
