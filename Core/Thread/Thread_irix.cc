@@ -903,7 +903,8 @@ Barrier::Barrier(const char* name)
 Barrier::~Barrier()
 {
     if(use_fetchop){
-	atomic_free_variable(reservoir, d_priv->pvar);
+	fprintf(stderr, "***Alloc free: %p\n", d_priv->pvar);
+//	atomic_free_variable(reservoir, d_priv->pvar);
     } else {
 	free_barrier(d_priv->barrier);
     }
@@ -973,6 +974,7 @@ AtomicCounter::AtomicCounter(const char* name)
     }
     if(use_fetchop){
 	d_priv=(AtomicCounter_private*)atomic_alloc_variable(reservoir, 0);
+ 	fprintf(stderr, "***Alloc atomcounter: %p\n", d_priv);
 	if(!d_priv)
 	    throw ThreadError(std::string("fetchop_alloc failed")
 					  +strerror(errno));
@@ -989,6 +991,7 @@ AtomicCounter::AtomicCounter(const char* name, int value)
     }
     if(use_fetchop){
 	d_priv=(AtomicCounter_private*)atomic_alloc_variable(reservoir, 0);
+ 	fprintf(stderr, "***Alloc atomcounter: %p\n", d_priv);
 	if(!d_priv)
 	    throw ThreadError(std::string("fetchop_alloc failed")
 					  +strerror(errno));
@@ -1002,7 +1005,8 @@ AtomicCounter::AtomicCounter(const char* name, int value)
 AtomicCounter::~AtomicCounter()
 {
     if(use_fetchop){
-	atomic_free_variable(reservoir, (atomic_var_t*)d_priv);
+ 	fprintf(stderr, "***Alloc free: %p\n", d_priv);
+//	atomic_free_variable(reservoir, (atomic_var_t*)d_priv);
     } else {
 	delete d_priv;
     }
@@ -1298,6 +1302,9 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 }
 //
 // $Log$
+// Revision 1.12  1999/09/29 06:05:46  dmw
+// commented out atomic_free_variable lines - SGI bug
+//
 // Revision 1.11  1999/09/22 19:10:29  sparker
 // Implemented timedWait method for ConditionVariable.  A default
 // implementation of CV is no longer possible, so the code is moved
