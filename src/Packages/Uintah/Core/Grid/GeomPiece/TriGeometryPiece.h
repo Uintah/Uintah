@@ -86,6 +86,37 @@ WARNING
 	 vector<Box> d_boxes;
 	 
       };
+#if 0
+      class Tri {
+	Tri(Point& p1, Point& p2, Point& p3) {
+	  d_points[0] = p1;
+	  d_points[1] = p2;
+	  d_points[2] = p3;
+	}
+	~Tri();
+	void split();
+	bool inside(const Point& p);
+      private:
+	Point[3] d_points;
+      };
+
+
+      class BSPTree {
+
+      public:
+	BSPTree();
+	~BSPTree();
+	void buildBSPTree();
+
+      private:
+	Plane d_partition;
+	list<Tri> d_tris;
+	BSPTree *front, *back;
+
+
+      };
+#endif
+
 } // End namespace Uintah
 
 #endif // __TRI_GEOMETRY_PIECE_H__

@@ -5,7 +5,6 @@
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 #include <Packages/Uintah/Core/Math/Primes.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/BoundCondData.h>
 #include <Packages/Uintah/Core/Grid/BCData.h>
 #include <Packages/Uintah/Core/Grid/BCDataArray.h>
 #include <Packages/Uintah/Core/Grid/BoundCond.h>
@@ -63,8 +62,6 @@ Patch::Patch(const Level* level,
       ids->set(d_id+1);
    }
 
-  d_bcs.resize(numFaces);
-
   d_nodeHighIndex = d_highIndex+
     IntVector(getBCType(xplus) == Neighbor?0:1,
 	      getBCType(yplus) == Neighbor?0:1,
@@ -79,7 +76,6 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
       d_inLowIndex(realPatch->d_inLowIndex + virtualOffset),
       d_inHighIndex(realPatch->d_inHighIndex + virtualOffset),
       d_nodeHighIndex(realPatch->d_nodeHighIndex + virtualOffset),
-      d_bcs(realPatch->d_bcs),
       array_bcs(realPatch->array_bcs),
       have_layout(realPatch->have_layout),
       layouthint(realPatch->layouthint)
@@ -976,17 +972,6 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
 }
 
 void 
-Patch::setBCValues(Patch::FaceType face, BoundCondData& bc)
-{
-  d_bcs[face] = bc;
-  d_nodeHighIndex = d_highIndex+
-    IntVector(getBCType(xplus) == Neighbor?0:1,
-	      getBCType(yplus) == Neighbor?0:1,
-	      getBCType(zplus) == Neighbor?0:1);
-}
-
-
-void 
 Patch::setArrayBCValues(Patch::FaceType face, BCDataArray* bc)
 {
   // At this point need to set up the iterators for each BCData type:
@@ -999,13 +984,6 @@ Patch::setArrayBCValues(Patch::FaceType face, BCDataArray* bc)
   array_bcs[face] = bc->clone();
 }  
  
-
-const BoundCondBase*
-Patch::getBCValues(int mat_id,string type,Patch::FaceType face) const
-{
-  return d_bcs[face].getBCValues(mat_id,type);
-}
-
 const BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
 {
   map<Patch::FaceType,BCDataArray*>::const_iterator itr = array_bcs.find(face);
