@@ -128,7 +128,10 @@ NIMRODConverter::execute(){
       unsigned int tuples = nHandle->get_tuple_axis_size();
 
       // Store only single nrrds
-      if( tuples == 1 ) {
+      if( tuples == 0 ) {
+	error("Zero tuples???");
+	return;
+      } else if( tuples == 1 ) {
 	nHandles.push_back( nHandle );
       } else {
 
@@ -307,6 +310,10 @@ NIMRODConverter::execute(){
 	    error_ = true;
 	    return;
 	  }
+	} else {
+	  error( dataset[0] + property + "is an unsupported topology." );
+	  error_ = true;
+	  return;
 	}
       } else if( nHandle->get_property( "DataSpace", property ) ) {
 
@@ -405,13 +412,13 @@ NIMRODConverter::execute(){
     i++;
   
   if( conversion_ & MESH ) {
-    if( mesh_[0] == -1 || mesh_[1] == -1 || mesh_[2] == -1 ) {
+    if( mesh_[R] == -1 || mesh_[Z] == -1 || mesh_[PHI] == -1 ) {
       error( "Not enough mesh data for the mesh conversion." );
       error_ = true;
       return;
     }
   } else if ( conversion_ & REALSPACE ) {
-    if( mesh_[2] == -1 || i != data_.size() ) {
+    if( mesh_[PHI] == -1 || i != data_.size() ) {
       error( "Not enough data for the realspace conversion." );
       error_ = true;
       return;

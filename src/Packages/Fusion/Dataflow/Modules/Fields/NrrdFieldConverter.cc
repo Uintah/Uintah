@@ -131,7 +131,10 @@ NrrdFieldConverter::execute(){
       unsigned int tuples = nHandle->get_tuple_axis_size();
 
       // Store only single nrrds
-      if( tuples == 1 ) {
+      if( tuples == 0 ) {
+	error("Zero tuples???");
+	return;
+      } else if( tuples == 1 ) {
 	nHandles.push_back( nHandle );
       } else {
 
@@ -266,8 +269,13 @@ NrrdFieldConverter::execute(){
 	      geometry_ = REGULAR;
 	    else if( property.find( "Irregular" ) != string::npos )
 	      geometry_ = IRREGULAR;
+	    else {
+	      error( dataset[0] + " - Unknown geometry in mesh data found." );
+	      error_ = true;
+	      return;
+	    }
 	  } else {
-	    error( dataset[0] + " - Unknown geometry in mesh data found." );
+	    error( dataset[0] + " - No geometry property mesh data found." );
 	    error_ = true;
 	    return;
 	  }
@@ -451,8 +459,6 @@ NrrdFieldConverter::execute(){
 	if( mesh_coor_rank < 1 || 3 < mesh_coor_rank ) {
 	  error( dataset[0] +
 		 " Mesh dataset does not contain 1D, 2D or 3D points." );
-	  cerr << mesh_coor_rank << endl;
-
 	  error_ = true;
 	  return;
 	}
@@ -644,7 +650,6 @@ NrrdFieldConverter::execute(){
 	if( mesh_coor_rank < 1 || 3 < mesh_coor_rank ) {
 	  error( dataset[0] +
 		 " Mesh dataset does not contain 1D, 2D or 3D points." );
-	  cerr << mesh_coor_rank << endl;
 	  error_ = true;
 	  return;
 	}
@@ -834,7 +839,7 @@ NrrdFieldConverter::execute(){
 	
 	// Get the tuple axis name - there is only one.
 	vector< string > dataset;
-	pHandle->get_tuple_indecies(dataset);
+	cHandle->get_tuple_indecies(dataset);
 
 	if( !(cHandle->nrrd->dim == 2 &&
 	      (dataset[0].find( ":Vector" ) != string::npos ||
