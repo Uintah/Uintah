@@ -122,7 +122,14 @@ OpenGLWindow::post( bool swap)
 void
 OpenGLWindow::set_cursor( const string& c )
 {
-  tcl_ << "set_cursor " << c;
+  tcl_ << "set-cursor " << c;
+  tcl_exec();
+}
+
+void
+OpenGLWindow::set_cursor_file( const string& c )
+{
+  tcl_ << "set-cursor \"@../pixmaps/" << c << ".xbm black\"";
   tcl_exec();
 }
 
@@ -132,6 +139,7 @@ OpenGLWindow::set_binds( const string& obj )
   tcl_ << "setobj " << obj;
   tcl_exec();
 }
+
 
 void 
 OpenGLWindow::make_raster_font()

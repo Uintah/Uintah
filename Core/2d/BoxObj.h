@@ -48,14 +48,14 @@ public:
   BoxObj( const string &name="box" );
   virtual ~BoxObj();
 
-  void recompute();
+  void recompute( bool = false );
   virtual void select( double x, double y, int b );
   virtual void move( double x, double y, int b );
   virtual void release( double x, double y, int b );
 
   // For OpenGL
 #ifdef SCI_OPENGL
-  virtual void draw();
+  virtual void draw( bool = false );
 #endif
   static PersistentTypeID type_id;
   

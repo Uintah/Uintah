@@ -38,26 +38,10 @@ namespace SCIRun {
 
 class GraphHelper;
 
-struct ObjInfo {
-  string name_;
-  DrawGui *obj_;
-  bool mapped_;
-
-  ObjInfo( const string &name, DrawGui *d);
-  ~ObjInfo() { if (obj_) delete obj_; }
-
-  void draw() { obj_->draw(); }
-  void set_window( const string &);
-  void set_id( const string & );
-};
-
-class Graph : public TclObj, public DrawObj {
+class Graph : public DrawGui {
   friend GraphHelper;
 private:
-  ObjInfo *obj_;
-  OpenGLWindow *ogl_;
-  GuiString gl_window;
-
+  DrawGui *obj_;
   GraphHelper *helper_;
   ConditionVariable has_work_;
 
@@ -75,7 +59,7 @@ public:
 
   virtual void need_redraw();
   virtual void get_bounds( BBox2d &) {}
-  virtual void draw() {}
+  virtual void draw( bool = false ) {}
   virtual void io(Piostream& stream);
 
 };

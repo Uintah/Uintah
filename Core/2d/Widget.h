@@ -51,7 +51,7 @@ public:
   
   // For OpenGL
 #ifdef SCI_OPENGL
-  virtual void draw() {}
+  virtual void draw( bool = false) {}
 #endif
   static PersistentTypeID type_id;
   

@@ -64,6 +64,7 @@ Hairline::~Hairline()
 void
 Hairline::select( double x, double y, int b )
 {
+  cerr << "Hairline select\n";
   HairObj::select( x, y, b );
   //  update();
 }
@@ -115,6 +116,7 @@ Hairline::update()
   for (int i=0; i<poly_.size(); i++) 
     tcl_ << " { " << poly_[index[i]]->tcl_color()
 	 << " " << value[i] << " } ";
+
   tcl_exec();
 }
 

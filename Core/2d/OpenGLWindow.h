@@ -58,11 +58,15 @@ public:
   virtual void post( bool = true );
 
   void set_cursor( const string &);
+  void set_cursor_file( const string &);
   void set_binds( const string &);
   void print_string( char *);
 
   OpenGLWindow *sub_window( int l, int r, int t, int b );
   void resize( int, int );
+  int xres() { return xres_; }
+  int yres() { return yres_; }
+
 protected:
   virtual void report_init() {}
   void make_raster_font();

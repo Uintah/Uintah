@@ -44,7 +44,7 @@ DrawGui::DrawGui( const string &name, const string& script)
 
 void 
 DrawGui::set_windows( const string &menu, const string &tb,
-		      const string &ui )
+		      const string &ui, const string &ogl )
 {
   menu_ = menu;
   tb_ = tb;
@@ -52,7 +52,7 @@ DrawGui::set_windows( const string &menu, const string &tb,
   
   string space(" ");
   TclObj::set_window( name(), 
-		      menu+space+tb+space+ui );
+		      menu+" "+tb+" "+ui+" "+ogl );
 }
 
 DrawGui::~DrawGui()
