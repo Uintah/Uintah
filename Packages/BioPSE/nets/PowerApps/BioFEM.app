@@ -759,6 +759,8 @@ class BioFEMApp {
 
     method load_session_data {} {
 	
+	wm title .standalone "BioFEM - [getFileName $saveFile]"
+
 	# Reset application 
 	reset_app
 	
@@ -877,6 +879,7 @@ class BioFEMApp {
 	global mods
 	global $mods(ShowField-StreamLines)-edges-on
 	if { [set $mods(ShowField-StreamLines)-edges-on] } {
+	    disableModule $mods(StreamLines) 0
 	    disableModule $mods(StreamLines-rake) 0
 	    disableModule $mods(StreamLines-Gradient) 0
 	    set "$eviewer-StreamLines rake (5)" 1
@@ -900,6 +903,7 @@ class BioFEMApp {
 	    bind $streamlines_tab2.isoval.val <Return> \
 		"$mods(StreamLines-rake)-c needexecute"
 	} else {
+	    disableModule $mods(StreamLines) 1
 	    disableModule $mods(StreamLines-rake) 1
 	    disableModule $mods(StreamLines-Gradient) 1
 	    set "$eviewer-StreamLines rake (5)" 0
