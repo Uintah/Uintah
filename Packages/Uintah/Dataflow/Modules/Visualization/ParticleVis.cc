@@ -367,6 +367,9 @@ void ParticleVis::execute()
 		Vector v2(M(1,2),M(2,2),M(3,2));
 		Vector v3(M(1,3),M(2,3),M(3,3));
 		double norm = 1/Max(v1.length(), v2.length(), v3.length());
+		if (M.Determinant() < 0) {
+		  norm *= -1;
+		}
 		matrix[3] = matrix[7] = matrix[11] = matrix[12] =
 		  matrix[13] = matrix[14] = 0;
 		matrix[15] = 1;
