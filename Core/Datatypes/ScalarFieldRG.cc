@@ -20,49 +20,49 @@ using namespace SCIRun;
 
 template <>
 ScalarFieldRGT<double>::ScalarFieldRGT(int x, int y, int z)
-  : ScalarFieldRGBase("double", x, y, z),
+  : ScalarFieldRGBase(Double, x, y, z),
     grid(x, y, z)
 {
 }
 
 template <>
 ScalarFieldRGT<float>::ScalarFieldRGT(int x, int y, int z)
-  : ScalarFieldRGBase("float", x, y, z),
+  : ScalarFieldRGBase(Float, x, y, z),
     grid(x, y, z)
 {
 }
 
 template <>
 ScalarFieldRGT<int>::ScalarFieldRGT(int x, int y, int z)
-  : ScalarFieldRGBase("int", x, y, z),
+  : ScalarFieldRGBase(Int, x, y, z),
     grid(x, y, z)
 {
 }
 
 template <>
 ScalarFieldRGT<short>::ScalarFieldRGT(int x, int y, int z)
-  : ScalarFieldRGBase("short", x, y, z),
+  : ScalarFieldRGBase(Short, x, y, z),
     grid(x, y, z)
 {
 }
 
 template <>
 ScalarFieldRGT<unsigned short>::ScalarFieldRGT(int x, int y, int z)
-  : ScalarFieldRGBase("ushort", x, y, z),
+  : ScalarFieldRGBase(Ushort, x, y, z),
     grid(x, y, z)
 {
 }
 
 template <>
 ScalarFieldRGT<char>::ScalarFieldRGT(int x, int y, int z)
-  : ScalarFieldRGBase("char", x, y, z),
+  : ScalarFieldRGBase(Char, x, y, z),
     grid(x, y, z)
 {
 }
 
 template <>
 ScalarFieldRGT<unsigned char>::ScalarFieldRGT(int x, int y, int z)
-  : ScalarFieldRGBase("uchar", x, y, z),
+  : ScalarFieldRGBase(Uchar, x, y, z),
     grid(x, y, z)
 {
 }
