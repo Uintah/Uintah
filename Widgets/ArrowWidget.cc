@@ -13,8 +13,6 @@
 
 
 #include <Widgets/ArrowWidget.h>
-#include <Constraints/DistanceConstraint.h>
-#include <Constraints/HypotenousConstraint.h>
 #include <Geom/Cone.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Group.h>
