@@ -297,11 +297,12 @@ private:
       // physcial constatns
       PhysicalConstants* d_physicalConsts;
 
-    std::vector<TimeIntegratorLabel* > d_timeIntegratorLabels;
-    TimeIntegratorLabel* nosolve_timelabels;
-    int numTimeIntegratorLevels;
-    bool nosolve_timelabels_allocated;
-    bool d_pressure_correction;
+      std::vector<TimeIntegratorLabel* > d_timeIntegratorLabels;
+      TimeIntegratorLabel* nosolve_timelabels;
+      int numTimeIntegratorLevels;
+      bool nosolve_timelabels_allocated;
+      bool d_pressure_correction;
+      const PatchSet* d_perproc_patches;
 
 }; // End class PicardNonlinearSolver
 } // End namespace Uintah
