@@ -749,7 +749,7 @@ void GeomPick::pick()
 {
     if(mailbox){
 	// Send a message...
-	mailbox->send(new GeomPickMessage(module, cbdata));
+        mailbox->send(new GeomPickMessage(module, cbdata));
     } else {
 	// Do it directly..
 	module->geom_pick(cbdata);
@@ -760,7 +760,7 @@ void GeomPick::release()
 {
     if(mailbox){
 	// Send a message...
-	mailbox->send(new GeomPickMessage(module, cbdata, 0));
+        mailbox->send(new GeomPickMessage(module, cbdata, 0));
     } else {
 	// Do it directly..
 	module->geom_release(cbdata);
@@ -771,8 +771,7 @@ void GeomPick::moved(int axis, double distance, const Vector& delta)
 {
     if(mailbox){
 	// Send a message...
-	mailbox->send(new GeomPickMessage(module,
-					  axis, distance, delta, cbdata));
+        mailbox->send(new GeomPickMessage(module, axis, distance, delta, cbdata));
     } else {
 	cerr << "Calling moved...\n";
 	module->geom_moved(axis, distance, delta, cbdata);
