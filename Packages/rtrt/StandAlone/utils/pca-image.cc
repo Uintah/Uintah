@@ -369,7 +369,7 @@ int main(int argc, char *argv[]) {
       recovered_var+=eval[i];
     }
     
-    cout <<"Recovered "<<recovered_var<<" of the total "
+    cout <<"Recovered "<<recovered_var<<" units of the total "
 	 <<"variance with "<<num_bases<<" basis textures"<<endl;
   }
   
