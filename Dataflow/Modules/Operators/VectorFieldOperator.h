@@ -86,8 +86,7 @@ void VectorFieldOperator::initField(VectorField* vectorField,
   fmh->set_nx(vmh->get_nx());
   fmh->set_ny(vmh->get_ny());
   fmh->set_nz(vmh->get_nz());
-  fmh->set_min( box.min() );
-  fmh->set_max( box.max() );
+  fmh->set_transform(vmh->get_transform());
   //resize the data storage
   field->resize_fdata();
 
