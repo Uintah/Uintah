@@ -4446,15 +4446,14 @@ cat >> $CONFIG_STATUS <<EOF
 
 EOF
 cat >> $CONFIG_STATUS <<\EOF
-echo timestamp > stamp-h
+echo timestamp > stamp-h; \
+	        chmod 755 Packages/Uintah/tools/fspec.pl 
 exit 0
 EOF
 chmod +x $CONFIG_STATUS
 rm -fr confdefs* $ac_clean_files
 test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
-
-chmod 755 Packages/Uintah/tools/fspec.pl
 
 if cmp -s sci_defs.h sci_testdefs.h 2>/dev/null; then
   echo "sci_defs.h is unchanged"
