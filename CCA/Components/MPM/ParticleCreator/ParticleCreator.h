@@ -21,7 +21,10 @@ namespace Uintah {
   class ParticleCreator {
   public:
     
-    ParticleCreator(MPMMaterial* matl, MPMLabel* lb,int n8or27);
+    ParticleCreator(MPMMaterial* matl, 
+                    MPMLabel* lb,
+                    int n8or27,
+                    bool haveLoadCurve);
     virtual ~ParticleCreator();
 
     virtual ParticleSubset* createParticles(MPMMaterial* matl,
@@ -68,6 +71,7 @@ namespace Uintah {
     ParticleVariable<int> pLoadCurveID;
 
     int d_8or27;
+    bool d_useLoadCurves;
 
     vector<const VarLabel* > particle_state, particle_state_preReloc;
   };

@@ -13,9 +13,11 @@
 using namespace Uintah;
 
 
-DefaultParticleCreator::DefaultParticleCreator(MPMMaterial* matl, MPMLabel* lb,
-					       int n8or27) 
-  : ParticleCreator(matl,lb,n8or27)
+DefaultParticleCreator::DefaultParticleCreator(MPMMaterial* matl, 
+                                               MPMLabel* lb,
+                                               int n8or27,
+                                               bool haveLoadCurve) 
+  :  ParticleCreator(matl,lb,n8or27,haveLoadCurve)
 {
   
   // Transfer to the lb's permanent particle state array of vectors

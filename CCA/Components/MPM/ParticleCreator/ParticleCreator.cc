@@ -21,8 +21,11 @@ using std::vector;
 using std::cerr;
 
 
-ParticleCreator::ParticleCreator(MPMMaterial* matl, MPMLabel* lb,int n8or27) 
-  : d_8or27(n8or27)
+ParticleCreator::ParticleCreator(MPMMaterial* matl, 
+                                 MPMLabel* lb,
+                                 int n8or27, 
+                                 bool haveLoadCurve) 
+  : d_8or27(n8or27), d_useLoadCurves(haveLoadCurve)
 {
   registerPermanentParticleState(matl,lb);
 }
@@ -147,10 +150,12 @@ ParticleCreator::createParticles(MPMMaterial* matl,
                 // If the particle is on the surface and if there is
                 // a physical BC attached to it then mark with the 
                 // physical BC pointer
-		if (checkForSurface(piece,p,dxpp)) {
-                  pLoadCurveID[pidx] = getLoadCurveID(p, dxpp);
-                } else {
-                  pLoadCurveID[pidx] = 0;
+                if (d_useLoadCurves) {
+		  if (checkForSurface(piece,p,dxpp)) {
+		    pLoadCurveID[pidx] = getLoadCurveID(p, dxpp);
+		  } else {
+		    pLoadCurveID[pidx] = 0;
+		  }
                 }
 
 		// Apply the force BC if applicable
@@ -257,7 +262,9 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(pparticleID,    lb->pParticleIDLabel,    subset);
   new_dw->allocateAndPut(psize,          lb->pSizeLabel,          subset);
   new_dw->allocateAndPut(psp_vol,        lb->pSp_volLabel,        subset); 
-  new_dw->allocateAndPut(pLoadCurveID,   lb->pLoadCurveIDLabel,   subset); 
+  if (d_useLoadCurves) {
+    new_dw->allocateAndPut(pLoadCurveID,   lb->pLoadCurveIDLabel,   subset); 
+  }
 
   return subset;
 
@@ -359,8 +366,10 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
     particle_state_preReloc.push_back(lb->pSizeLabel_preReloc);
   }
 
-  particle_state.push_back(lb->pLoadCurveIDLabel);
-  particle_state_preReloc.push_back(lb->pLoadCurveIDLabel_preReloc);
+  if (d_useLoadCurves) {
+    particle_state.push_back(lb->pLoadCurveIDLabel);
+    particle_state_preReloc.push_back(lb->pLoadCurveIDLabel_preReloc);
+  }
 
   matl->getConstitutiveModel()->addParticleState(particle_state,
 						 particle_state_preReloc);

@@ -60,7 +60,8 @@ WARNING
 
       class MPMMaterial : public Material {
       public:
-	 MPMMaterial(ProblemSpecP&, MPMLabel* lb, int n8or27,string integrat);
+	 MPMMaterial(ProblemSpecP&, MPMLabel* lb, int n8or27,string integrat,
+                     bool haveLoadCurve);
 	 
 	 ~MPMMaterial();
 	 

@@ -40,7 +40,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
-			 string integrator)
+			 string integrator, bool haveLoadCurve)
   : Material(ps), lb(lb), d_cm(0), d_burn(0), d_eos(0), d_particle_creator(0)
 {
    // Constructor
@@ -70,11 +70,11 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
 
    // Check to see which ParticleCreator object we need
    if (integrator == "implicit") 
-     d_particle_creator = scinew ImplicitParticleCreator(this,lb,n8or27);
+     d_particle_creator = scinew ImplicitParticleCreator(this,lb,n8or27,haveLoadCurve);
    else if (dynamic_cast<Membrane*>(d_cm) != 0)
-     d_particle_creator = scinew MembraneParticleCreator(this,lb,n8or27);
+     d_particle_creator = scinew MembraneParticleCreator(this,lb,n8or27,haveLoadCurve);
    else
-     d_particle_creator = scinew DefaultParticleCreator(this,lb,n8or27);
+     d_particle_creator = scinew DefaultParticleCreator(this,lb,n8or27,haveLoadCurve);
 	
 //   d_eos = EquationOfStateFactory::create(ps);
 

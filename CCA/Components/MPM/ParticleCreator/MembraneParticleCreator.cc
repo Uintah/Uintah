@@ -15,8 +15,10 @@
 using namespace Uintah;
 
 MembraneParticleCreator::MembraneParticleCreator(MPMMaterial* matl,
-						 MPMLabel* lb,int n8or27) 
-  :  ParticleCreator(matl,lb,n8or27)
+						 MPMLabel* lb,
+                                                 int n8or27,
+                                                 bool haveLoadCurve) 
+  :  ParticleCreator(matl,lb,n8or27,haveLoadCurve)
 {
   registerPermanentParticleState(matl,lb);
 

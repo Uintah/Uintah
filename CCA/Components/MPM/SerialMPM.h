@@ -328,6 +328,8 @@ private:
   int              NGN;      // Number of ghost nodes     needed.
 
   double           d_artificialDampCoeff; // Artificial damping coefficient
+  bool             d_accStrainEnergy; // Flag for accumulating strain energy
+  bool             d_useLoadCurves; // Flag for using load curves
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
