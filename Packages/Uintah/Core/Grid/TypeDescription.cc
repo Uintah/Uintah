@@ -5,19 +5,63 @@
 #include <Core/Util/Assert.h>
 #include <sci_defs.h>
 #include <map>
+#include <vector>
 #include <iostream>
 
 using namespace Uintah;
 using namespace std;
 using namespace SCIRun;
 
+struct KillMap {
+  KillMap();
+  ~KillMap();
+};
+
+KillMap::KillMap()
+{
+}
+
 static map<string, const TypeDescription*>* types = 0;
+static vector<const TypeDescription*>* typelist=0;
+static bool killed=false;
+
+KillMap::~KillMap()
+{
+  if(!types){
+    ASSERT(!killed);
+    ASSERT(!typelist);
+    return;
+  }
+  killed=true;
+  vector<const TypeDescription*>::iterator iter = typelist->begin();
+  for(;iter != typelist->end();iter++)
+    delete *iter;
+  delete types;
+  delete typelist;
+}
+
+KillMap killit;
+
+void TypeDescription::register_type()
+{
+  if(!types){
+    ASSERT(!killed);
+    ASSERT(!typelist)
+    types=scinew map<string, const TypeDescription*>;
+    typelist=new vector<const TypeDescription*>;
+  }
+  map<string, const TypeDescription*>::iterator iter = types->find(getName());
+  if(iter == types->end())
+    (*types)[getName()]=this;
+  typelist->push_back(this);
+}
 
 TypeDescription::TypeDescription(Type type, const std::string& name,
 				 bool isFlat, MPI_Datatype (*mpitypemaker)())
    : d_type(type), d_subtype(0), d_name(name), d_isFlat(isFlat),
      d_mpitype(-1), d_mpitypemaker(mpitypemaker), d_maker(0)
 {
+  register_type();
 }
 
 TypeDescription::TypeDescription(Type type, const std::string& name,
@@ -25,6 +69,7 @@ TypeDescription::TypeDescription(Type type, const std::string& name,
    : d_type(type), d_subtype(0), d_name(name), d_isFlat(isFlat),
      d_mpitype(mpitype), d_mpitypemaker(0), d_maker(0)
 {
+  register_type();
 }
 
 TypeDescription::TypeDescription(Type type, const std::string& name,
@@ -32,6 +77,11 @@ TypeDescription::TypeDescription(Type type, const std::string& name,
 				 const TypeDescription* subtype)
    : d_type(type), d_subtype(subtype), d_name(name), d_isFlat(false),
      d_mpitype(-2), d_mpitypemaker(0), d_maker(maker)
+{
+  register_type();
+}
+
+TypeDescription::~TypeDescription()
 {
 }
 
@@ -57,10 +107,7 @@ const TypeDescription* TypeDescription::lookupType(const std::string& t)
 
 TypeDescription::Register::Register(const TypeDescription* td)
 {
-  //  cerr << "Register: td=" << td << ", name=" << td->getName() << '\n';
-  if(!types)
-    types=scinew map<string, const TypeDescription*>;
-  (*types)[td->getName()]=td;
+  // Registration happens in CTOR
 }
 
 TypeDescription::Register::~Register()
