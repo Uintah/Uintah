@@ -182,6 +182,10 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
 
   scheduleInterpolateParticlesToGrid(     sched, d_perproc_patches,matls);
 
+  if(d_rigid_body){
+    scheduleRigidBody(                    sched, d_perproc_patches,matls);
+  }
+
   scheduleDestroyMatrix(                  sched, d_perproc_patches,matls,false);
 
   scheduleCreateMatrix(                   sched, d_perproc_patches,matls,false);
@@ -241,8 +245,6 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,            Ghost::AroundNodes,1);
   t->requires(Task::OldDW, lb->pExternalForceLabel,Ghost::AroundNodes,1);
 
-
-
   t->computes(lb->gMassLabel);
   t->computes(lb->gMassLabel,d_sharedState->getAllInOneMatl(),
 	      Task::OutOfDomain);
@@ -257,6 +259,22 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gStressForSavingLabel);
   t->computes(lb->TotalMassLabel);
   
+  sched->addTask(t, patches, matls);
+}
+
+void ImpMPM::scheduleRigidBody(SchedulerP& sched,
+                               const PatchSet* patches,
+                               const MaterialSet* matls)
+{
+  Task* t = scinew Task("ImpMPM::rigidBody",
+			this,&ImpMPM::rigidBody);
+
+  t->requires(Task::NewDW, lb->gMassLabel,         Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityLabel,     Ghost::None);
+  t->requires(Task::OldDW, d_sharedState->get_delt_label());
+
+  t->modifies(lb->dispNewLabel);
+
   sched->addTask(t, patches, matls);
 }
 
@@ -998,14 +1016,55 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
   }  // End loop over patches
 }
 
+void ImpMPM::rigidBody(const ProcessorGroup*,
+                       const PatchSubset* patches,
+                       const MaterialSubset* ,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing <<"Doing rigidBody on patch " << patch->getID()
+               <<"\t\t IMPM"<< "\n" << "\n";
+
+    // The purpose of this task is to set the known new displacements
+    // based on the rigid body velocity so that the stresses are
+    // computed correctly in the first pass through computeStressTensor
+    // This is not necessary, but not doing it wastes an iteration each
+    // timestep.
+
+    // Get rigid body data
+    constNCVariable<Vector> velocity_rigid;                     
+    constNCVariable<double> mass_rigid;                     
+    new_dw->get(velocity_rigid, lb->gVelocityLabel,1,patch, Ghost::None,0);
+    new_dw->get(mass_rigid,     lb->gMassLabel,    1,patch, Ghost::None,0);
+
+    // Get matl 0 (non-rigid) data
+    NCVariable<Vector> dispNew;                     
+    new_dw->getModifiable(dispNew,lb->dispNewLabel,0, patch);
+
+    delt_vartype dt;
+    old_dw->get(dt, d_sharedState->get_delt_label() );
+
+    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      IntVector n = *iter;
+      if(!compare(mass_rigid[n],0.0)){
+        //Y_ONLY
+//        dispNew[n] = Vector(dispNew[n].x(),velocity_rigid[n].y()*dt,
+//                            dispNew[n].z());
+        //ALL
+        dispNew[n] = velocity_rigid[n]*dt;
+      }
+    }
+  }
+}
+
 void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 				     const PatchSubset* patches,
 				     const MaterialSubset* ,
 				     DataWarehouse* /*old_dw*/,
 				     DataWarehouse* new_dw)
 {
-  // NOT DONE
-
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     cout_doing <<"Doing applyBoundaryConditions " <<"\t\t\t\t IMPM"
@@ -1275,8 +1334,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
       	old_dw->get(dt, d_sharedState->get_delt_label() );
       }
      
-      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); 
-	   iter++) {
+      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
 	IntVector n = *iter;
 	int dof[3];
 	int l2g_node_num = l2g[n];
@@ -1360,7 +1418,6 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
       Vector d_S[8];
       double S[8];
       Matrix3 stressmass;
-      Matrix3 stresspress;
 
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
@@ -1437,8 +1494,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
     }
     double fodts = 4./(dt*dt);
     double fodt = 4./dt;
-    
-    
+
     for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
       IntVector n = *iter;
       int dof[3];
@@ -1476,8 +1532,6 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
 				 DataWarehouse* new_dw,
 				 const bool recursion)
 {
-  // NOT DONE
-  
   int num_nodes = 0;
   int rig_index = 1;
   for(int p=0;p<patches->size();p++){
@@ -1970,7 +2024,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         newpvolumeold[idx]   = pvolumeold[idx];
         pTemp[idx]           = pTempOld[idx];
 
-        if(pmassNew[idx] <= 3.e-15){
+        if(pmassNew[idx] <= 0.0){
           delete_particles->addParticle(idx);
           pvelocitynew[idx] = Vector(0.,0.,0);
           pxnew[idx] = px[idx];
