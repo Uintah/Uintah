@@ -2213,21 +2213,15 @@ void ViewWindow::force_redraw()
 
 void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
 {
-  cout << "    VW 1\n";
 				// Do internal objects first...
   int i;
-  //  viewwindow_objs_draw[0]=caxes.get();
-  //  cerr << "caxes = "<<(int)viewwindow_objs_draw[0]<<"\n";
+//  viewwindow_objs_draw[0]=caxes.get();
+//  cerr << "caxes = "<<(int)viewwindow_objs_draw[0]<<"\n";
   for (i = 0; i < viewwindow_objs.size(); i++){
     if(viewwindow_objs_draw[i] == 1) {
-      cout << "     VW 1 1 : " << r << ":" << pmf << "\n";
-
       (r->*pmf)(manager, this, viewwindow_objs[i]);
-      cout << "     VW 1 2\n";
     }
   }
-
-  cout << "    VW 2\n";
 
   Array1<GeomViewerItem*> transp_objs; // transparent objects - drawn last
 
@@ -2235,14 +2229,11 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
   
   for ( ; iter.first != iter.second; iter.first++) {
       
-    cout << "    VW 3\n";
-
     GeomIndexedGroup::IterIntGeomObj serIter = 
       ((GeomViewerPort*)((*iter.first).second))->getIter();
     
     for ( ; serIter.first != serIter.second; serIter.first++) {
 	    
-      cout << "    VW 4\n";
       GeomViewerItem *si =
 	(GeomViewerItem*)((*serIter.first).second);
       
@@ -2259,9 +2250,7 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
 	  else {
 	    if(si->lock)
 	      si->lock->readLock();
-	    cout << "    VW 5 : " << pmf << "\n";
 	    (r->*pmf)(manager, this, si);
-	    cout << "    VW 6\n";
 	    if(si->lock)
 	      si->lock->readUnlock();
 	  }
@@ -2273,7 +2262,6 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
     }
   }
 
-  cout << "    VW 9\n";
   // now run through the transparent objects...
 
   for(i=0;i<transp_objs.size();i++) {
@@ -2286,7 +2274,7 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
       si->lock->readUnlock();
   }
 
-  // now you are done.
+  // now you are done...
 
 }
 
