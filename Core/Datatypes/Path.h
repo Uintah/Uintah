@@ -50,7 +50,6 @@ POSSIBLE REVISIONS
 #define SCI_Core_Datatypes_Path_h 1
 
 #include <Core/share/share.h>
-#include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/LockingHandle.h>
@@ -120,7 +119,6 @@ class SCICORESHARE Path : public Datatype {
   Array1<double> sint;
   int count;
   double sin_series;
-  MatrixHandle timing_vector;
   
   int calc_view(double, View&);    // return number of current interval and hence number of current view
   bool resample_path();
@@ -129,6 +127,7 @@ class SCICORESHARE Path : public Datatype {
   // syncronization between arc-length parameter and initial parametrization
   inline void set_param();
   inline void set_arc_param();
+
 public:
    
     void   reset();
@@ -149,7 +148,6 @@ public:
     bool     set_path_t(int t);
     int      get_path_t() const;
   
-    void set_timing_vector(MatrixHandle timing_vector);
     bool build_path();
     
     inline bool is_looped() const;
@@ -177,10 +175,6 @@ public:
 
 inline bool Path::is_looped() const{
   return is_loop;
-}
-
-inline void Path::set_timing_vector(MatrixHandle cmH) {
-  timing_vector=cmH;
 }
 
 inline bool Path::is_backed() const{
