@@ -1207,7 +1207,9 @@ historyg);
   l = new Light(Point(-12, -26, 4), Color(.402,.4,.4), 0);
   l->name_ = "History Hall A";
   scene->add_light(l);
-  scene->add_light(new Light(Point(-6, -10, 4), Color(.403,.4,.4), 0));
+  l = new Light(Point(-6, -10, 4), Color(.403,.4,.4), 0);
+  l->name_ = "History Hall B";
+  scene->add_light(l);
 
   //  g->add(new Sphere(flat_yellow,Point(-6,-16,5),0.5));
   //  g->add(new Sphere(flat_yellow,Point(-12,-26,5),0.5));
@@ -1550,39 +1552,55 @@ void build_david_room (Group* main_group, Scene *scene) {
   scene->add_light(new Light(Point(-14, -18, 7.9), Color(.403,.4,.4), 0));
   scene->add_light(new Light(Point(-14, -22, 7.9), Color(.404,.4,.4), 0));
   */
-  scene->add_light(new Light(Point(-14, -10, 7), Color(.405,.4,.4), 0));
-  scene->add_light(new Light(Point(-11.3, -18.05, 4), Color(.406,.4,.4), 0));
-  scene->add_light(new Light(Point(-17, -22, 1.4), Color(.407,.4,.4), 0));
-
   Light *l;
+  l = new Light(Point(-14, -10, 7), Color(.405,.4,.4), 0);
+  l->name_ = "David A";
+  scene->add_light(l);
+  l = new Light(Point(-11.3, -18.05, 4), Color(.406,.4,.4), 0);
+  l->name_ = "David B";
+  scene->add_light(l);
+  l = new Light(Point(-17, -22, 1.4), Color(.407,.4,.4), 0);
+  l->name_ = "David C";
+  scene->add_light(l);
+
   l = (new Light(Point(-11,-22.25,7.9),Color (.4,.401,.4), 0));
+  l->name_ = "per David A";
   scene->add_per_matl_light (l);
   david_white->my_lights.add (l);
   l = (new Light(Point(-17,-22.25,7.9),Color (.4,.402,.4), 0));
+  l->name_ = "per David B";
   scene->add_per_matl_light (l);
   david_white->my_lights.add (l);
   l = (new Light(Point(-14.75,-20.75,1),Color (.4,.403,.4), 0));
+  l->name_ = "per David C";
   scene->add_per_matl_light (l);
   david_white->my_lights.add (l);
   l = (new Light(Point(-17,-17.75,7.9),Color (.4,.404,.4), 0));
+  l->name_ = "per David D";
   scene->add_per_matl_light (l);
   david_white->my_lights.add (l);
   l = (new Light(Point(-14,-16.15,1), Color (.4,.405,.4), 0));
+  l->name_ = "per David E";
   scene->add_per_matl_light (l);
   david_white->my_lights.add (l);
   l = new Light(Point(-14,-23.85,7.9),Color (.4,.406,.4), 0);
+  l->name_ = "per David F";
   scene->add_per_matl_light (l);
   david_white->my_lights.add (l);
   l = (new Light(Point(-11,-17.75,7.9),	Color (.4,.407,.4), 0));
+  l->name_ = "per David G";
   scene->add_per_matl_light (l);
   david_white->my_lights.add (l);
   l = (new Light(Point(-11.25,-20.75,3.5),Color (.4,.408,.4), 0)); 
+  l->name_ = "per David H";
   scene->add_per_matl_light (l);
   david_white->my_lights.add (l);
   l = (new Light(Point(-15.2,-21,5),Color (.4,.409,.4), 0)); 
+  l->name_ = "per David I";
   scene->add_per_matl_light (l);
   david_white->my_lights.add (l);
   l = (new Light(Point(-13.8,-17.8,6),Color (.4,.41,.4), 0)); 
+  l->name_ = "per David J";
   scene->add_per_matl_light (l);
   david_white->my_lights.add (l);
   /*
@@ -1923,7 +1941,11 @@ void build_modern_room (Group *main_group, Scene *scene) {
   main_group->add(moderng);
 
   /* modern room lights */
-  scene->add_light(new Light(Point(-17, -7, 4), Color(.404,.4,.4), 0));
+  Light *l;
+  l = new Light(Point(-17, -7, 4), Color(.404,.4,.4), 0);
+  l->name_ = "Modern Room A";
+  scene->add_light(l);
+  
   //  scene->add_light(new Light(Point(-6, -16, 5), Color(.401,.4,.4), 0));
   //  scene->add_light(new Light(Point(-12, -26, 5), Color(.402,.4,.4), 0));
 
