@@ -454,7 +454,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
   static int timestep = 0;
  // double vol = dx.x()*dx.y()*dx.z();    MIGHT BE EXTRA
   double d_SMALL_NUM = 1.e-100;       // TEMPORARY THIS SHOULD BE PRIVATE DATA
-  cout << "\n_________________________________________________"<< endl;  
+//  cout << "\n_________________________________________________"<< endl;  
 //  cout << "Doing interpolateNCToCC_0 \t\t\t MPMICE" << endl;
 
   for(int m = 0; m < numMatls; m++){
@@ -465,7 +465,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
      NCVariable<double > gmass, gvolume;
      NCVariable<Vector > gvelocity;
      CCVariable<double > cmass, cvolume;
-// EXTRA  CCVariable<double > rho_CC;
      CCVariable<double > Temp_CC;
      CCVariable<double > cv_CC;
      CCVariable<double > int_eng_L_CC;
@@ -473,7 +472,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 
      new_dw->allocate(cmass,     MIlb->cMassLabel,         matlindex, patch);
      new_dw->allocate(cvolume,   MIlb->cVolumeLabel,       matlindex, patch);
-  // new_dw->allocate(rho_CC,    MIlb->rho_CCLabel,        matlindex, patch); EXTRA
      new_dw->allocate(vel_CC,    MIlb->vel_CCLabel,        matlindex, patch);
      new_dw->allocate(Temp_CC,   MIlb->temp_CCLabel,       matlindex, patch);
      new_dw->allocate(cv_CC,     MIlb->cv_CCLabel,         matlindex, patch);
@@ -482,10 +480,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       
      cmass.initialize(0.);
      cvolume.initialize(0.);
-/*`========TESTING==========*/ 
-     vel_CC.initialize(zero);     // carry the velocity forward in cells where there are no
-                                    // mpm matls
- /*==========TESTING==========`*/
+     vel_CC.initialize(zero); 
 
      new_dw->get(gmass,     Mlb->gMassLabel,           matlindex, patch, 
                                                  Ghost::AroundCells, 1);
@@ -496,6 +491,9 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 
      IntVector nodeIdx[8];
 
+     double initialCv_CC   = mpm_matl->getSpecificHeat();
+     cv_CC.initialize(initialCv_CC);
+
      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
        patch->findNodesFromCell(*iter,nodeIdx);
        for (int in=0;in<8;in++){
@@ -504,11 +502,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 	 vel_CC[*iter]   +=      gvelocity[nodeIdx[in]]*.125*gmass[nodeIdx[in]];
        }
        
-      // rho_CC[*iter]       =  cmass[*iter]/vol + d_SMALL_NUM; Throwaway
        vel_CC[*iter]      /= (cmass[*iter]     + d_SMALL_NUM);
        Temp_CC[*iter]      =  300.0;           // H A R D W I R E D 
-       cv_CC[*iter]        =  716;             // H A R D W I R E D 
-                                               // need to carry forward
        // int_eng_L_CC[*iter] = Temp_CC[*iter] * cv_CC[*iter] * cmass[*iter]; EXTRA
        
      }
@@ -522,20 +517,16 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
     cout<<"I've hardwired the initial CC Vars for mpm matl"<<endl;
 
       double initialTemp_CC = 300.0;
-      double initialCv_CC   = 716.0;
       Temp_CC.initialize(initialTemp_CC);
-      cv_CC.initialize(initialCv_CC);
     }
      timestep++;
 
   //  Set BC's and put into new_dw
-  //   d_ice->setBC(rho_CC,  "Density",    patch);    EXTRA
      d_ice->setBC(vel_CC,  "Velocity",   patch);
      d_ice->setBC(Temp_CC, "Temperature",patch);
      
      new_dw->put(cmass,     MIlb->cMassLabel,         matlindex, patch);
      new_dw->put(cvolume,   MIlb->cVolumeLabel,       matlindex, patch);
-    // new_dw->put(rho_CC,    MIlb->rho_CCLabel,        matlindex, patch);   EXTRA  
      new_dw->put(vel_CC,    MIlb->vel_CCLabel,        matlindex, patch);
      new_dw->put(Temp_CC,   MIlb->temp_CCLabel,       matlindex, patch);
      new_dw->put(cv_CC,     MIlb->cv_CCLabel,         matlindex, patch);
