@@ -49,9 +49,9 @@ namespace SCIRun {
   // (Yes, this is a hack.  Perhaps this problem will go away in later
   // OSX releases, but probably not as it has something to do with the
   // Mac philosophy on when to load dynamic libraries.)
-  extern Mutex fieldIOPluginMutex;
+  extern Mutex fieldIEPluginMutex;
 #else
-  Mutex fieldIOPluginMutex("FieldIE Plugin Table Lock");  
+  Mutex fieldIEPluginMutex("FieldIE Plugin Table Lock");  
 #endif
 
 
@@ -69,7 +69,7 @@ FieldIEPlugin::FieldIEPlugin(const string& pname,
     filewriter(fwriter)
 {
 
-  fieldIOPluginMutex.lock();
+  fieldIEPluginMutex.lock();
   if (!table)
   {
     table = scinew map<string, FieldIEPlugin *>();
@@ -98,7 +98,7 @@ FieldIEPlugin::FieldIEPlugin(const string& pname,
     counter++;
   }
 
-  fieldIOPluginMutex.unlock();
+  fieldIEPluginMutex.unlock();
 }
 
 
@@ -112,7 +112,7 @@ FieldIEPlugin::~FieldIEPlugin()
     return;
   }
 
-  fieldIOPluginMutex.lock();
+  fieldIEPluginMutex.lock();
 
   map<string, FieldIEPlugin *>::iterator iter = table->find(pluginname);
   if (iter == table->end())
@@ -131,7 +131,7 @@ FieldIEPlugin::~FieldIEPlugin()
     table = 0;
   }
 
-  fieldIOPluginMutex.unlock();
+  fieldIEPluginMutex.unlock();
 }
 
 
