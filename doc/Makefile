@@ -15,7 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-.PHONY: tar tarball
+.PHONY: default tar tarball products clean veryclean
 
 root := ${shell cd ..; basename `pwd` }
 tarfile := ${notdir ${shell cd ..; pwd}}.tar
@@ -30,8 +30,7 @@ default : index.html products
 
 # Build all docs and put them in  a tarball.
 tarball : tar
-	echo "Making a tarball"
-	-rm -f ${tarball}
+	@echo "Compressing the tar archive"
 	gzip ${tarfile}
 
 # Construct list of files to be included in the tar archive.  Edit
@@ -41,7 +40,7 @@ tarlist = ${shell ruby tarlist}
 # Build all docs and put them in a tar archive.
 tar: index.html products
 	@echo "Making a tar archive"
-	-rm -f ${tarfile}
+	-rm -f ${tarfile} ${tarball}
 	cd ../..; ${tarcmd} ${tarlist}
 
 index.html: index.rhtml edition.xml
