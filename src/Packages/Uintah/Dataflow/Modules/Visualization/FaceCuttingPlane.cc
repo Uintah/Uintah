@@ -1,5 +1,3 @@
-//static char *id="@(#) $Id$";
-
 /*
  *  FaceCuttingPlane.cc:  
  *
@@ -391,7 +389,7 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
 
   double sval;
   MaterialHandle matl;
-  LatVolMesh::NodeIndex node;
+  typename MyField::mesh_type::Node::index_type node;
   int i, j, u_, v_;
   u_ = u_num; v_ = v_num;
 

@@ -86,7 +86,7 @@ public:
   ITKIterator(const ImageType* ptr, const region_type &region) : 
     ITKConstIterator<Data>(ptr, region) { }
   virtual ~ITKIterator() {}
-  Data &operator*() { return Value();}
+  Data &operator*() { return this->Value();}
 };
 
 #define ITKFData3d_VERSION 1
@@ -439,7 +439,7 @@ public:
   // LatVolField Specific methods.
   bool get_gradient(SCIRun::Vector &, const Point &);
 
-  itk::Object* get_image() { return fdata().get_image(); }
+  itk::Object* get_image() { return this->fdata().get_image(); }
 
 private:
   bool image_set_;
@@ -487,7 +487,7 @@ template <class Data>
 void ITKLatVolField<Data>::SetImage(itk::Object* img)
 {
   if(dynamic_cast<itk::Image<Data, 3>* >(img)) {
-    fdata().set_image(dynamic_cast<itk::Image<Data, 3>* >(img));
+    this->fdata().set_image(dynamic_cast<itk::Image<Data, 3>* >(img));
     image_set_ = true;
   }
   else {
@@ -587,7 +587,7 @@ ITKLatVolField<Data>::io(Piostream &stream)
       
       // set spacing
       typedef typename itk::Image<Data, 3> ImageType;
-      const BBox bbox = mesh()->get_bounding_box();
+      const BBox bbox = this->mesh()->get_bounding_box();
       Point mesh_center;
       Vector mesh_size;
       if(bbox.valid()) {
@@ -605,14 +605,14 @@ ITKLatVolField<Data>::io(Piostream &stream)
       origin[1] = mesh_center.y();
       origin[2] = mesh_center.z();
       
-      fdata().set_image_origin( origin );
+      this->fdata().set_image_origin( origin );
       
       double spacing[ ImageType::ImageDimension ];
-      spacing[0] = mesh_size.x()/fdata().dim1();
-      spacing[1] = mesh_size.y()/fdata().dim2();
-      spacing[2] = mesh_size.z()/fdata().dim3();
+      spacing[0] = mesh_size.x()/this->fdata().dim1();
+      spacing[1] = mesh_size.y()/this->fdata().dim2();
+      spacing[2] = mesh_size.z()/this->fdata().dim3();
       
-      fdata().set_image_spacing( spacing );
+      this->fdata().set_image_spacing( spacing );
       
       return;
     } else {
@@ -635,11 +635,11 @@ bool ITKLatVolField<Data>::get_gradient(Vector &g, const Point &p)
 {
   if( image_set_ ) {
     // for now we only know how to do this for fields with scalars at the nodes
-    if (query_scalar_interface().get_rep())
+    if (this->query_scalar_interface().get_rep())
     {
-      if( basis_order() == 1)
+      if( this->basis_order() == 1)
       {
-	mesh_handle_type mesh = get_typed_mesh();
+	mesh_handle_type mesh = this->get_typed_mesh();
 	const Point r = mesh->get_transform().unproject(p);
 	double x = r.x();
 	double y = r.y();
@@ -675,14 +675,14 @@ bool ITKLatVolField<Data>::get_gradient(Vector &g, const Point &p)
 	double fy = y-iy0;
 	double fz = z-iz0;
 	LatVolMesh *mp = mesh.get_rep();
-	double d000 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz0));
-	double d100 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz0));
-	double d010 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz0));
-	double d110 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz0));
-	double d001 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz1));
-	double d101 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz1));
-	double d011 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz1));
-	double d111 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz1));
+	double d000 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz0));
+	double d100 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz0));
+	double d010 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz0));
+	double d110 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz0));
+	double d001 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz1));
+	double d101 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz1));
+	double d011 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz1));
+	double d111 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz1));
 	double z00 = Interpolate(d000, d001, fz);
 	double z01 = Interpolate(d010, d011, fz);
 	double z10 = Interpolate(d100, d101, fz);

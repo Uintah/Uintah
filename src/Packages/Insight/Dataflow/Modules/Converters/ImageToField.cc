@@ -670,8 +670,10 @@ void ImageToField::execute(){
     error("Unable to initialize oport 'OutputImage'.");
     return;
   }
+
+  inport1_->get(inhandle1_);
   
-  if(!inport1_->get(inhandle1_))
+  if(!inhandle1_.get_rep())
     return;
   
   // get input
