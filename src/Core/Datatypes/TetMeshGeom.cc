@@ -50,6 +50,12 @@ TetMeshGeom::TetMeshGeom(const vector<NodeSimp>& inodes, const vector<TetSimp>& 
 TetMeshGeom::~TetMeshGeom(){
 }
 
+string
+TetMeshGeom::get_info(){
+  return string();
+}
+
+
 void TetMeshGeom::set_tets(const vector<TetSimp>& itets){
   d_tets.clear();
   d_tets = itets;
