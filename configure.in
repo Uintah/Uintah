@@ -917,7 +917,7 @@ if (test $XML_LIB_DIR &&
   XML_INCLUDE_DIR="$XML_LIB_DIR/../include/xercesc"
 else
   AC_MSG_RESULT(no)
-  AC_MSG_ERROR(Found the library, but couldn't find the headers.  exiting.)
+  AC_MSG_ERROR(Found the library but not the headers (wrong version?).  exiting.)
 fi
 
 XML_LIB_FLAG="`ls -1 $XML_LIB_DIR/libxerces-c1_?.so |\
