@@ -2,16 +2,17 @@
 #define IHaveSubdirs
 #include <config/sci.cf>
 
-SUBDIRS = FieldReader IsoSurface MeshView Salmon \
+SUBDIRS = IsoSurface MeshView Readers Salmon \
 	SoundInput SoundFilter SoundMixer SoundOutput SoundReader
 
 SCISubdirs($(SUBDIRS))
 
 all:: modules.o
 
-MODULES = FieldReader/FieldReader.o \
+MODULES = \
 	IsoSurface/IsoSurface.o \
 	MeshView/MeshView.o \
+	Readers/ScalarFieldReader.o \
 	Salmon/Salmon.o \
 	Salmon/Roe.o \
 	SoundInput/SoundInput.o \
