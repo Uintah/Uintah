@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
@@ -638,4 +639,26 @@ void DependencyBatch::received()
     cv_->conditionBroadcast();
     lock_->unlock();
   }
+}
+
+void DetailedTasks::logMemoryUse(ostream& out, unsigned long& total,
+				 const std::string& tag)
+{
+  ostringstream elems1;
+  elems1 << tasks.size();
+  logMemory(out, total, tag, "tasks", "DetailedTask", 0, -1,
+	    elems1.str(), tasks.size()*sizeof(DetailedTask), 0);
+  ostringstream elems2;
+  elems2 << batches.size();
+  logMemory(out, total, tag, "batches", "DependencyBatch", 0, -1,
+	    elems2.str(), batches.size()*sizeof(DependencyBatch), 0);
+  int ndeps=0;
+  for(int i=0;i<(int)batches.size();i++){
+    for(DetailedDep* p=batches[i]->head; p != 0; p = p->next)
+      ndeps++;
+  }
+  ostringstream elems3;
+  elems3 << ndeps;
+  logMemory(out, total, tag, "deps", "DetailedDep", 0, -1,
+	    elems3.str(), ndeps*sizeof(DetailedDep), 0);
 }

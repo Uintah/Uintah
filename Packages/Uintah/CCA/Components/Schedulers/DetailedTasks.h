@@ -216,9 +216,8 @@ namespace Uintah {
 
     DetailedTask* getOldDWSendTask(int proc);
 
-#if 0
-    vector<DetailedReq*>& getInitialRequires();
-#endif
+    void logMemoryUse(ostream& out, unsigned long& total,
+		      const std::string& tag);
 
     void initTimestep();
     

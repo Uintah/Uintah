@@ -276,10 +276,14 @@ SchedulerCommon::logMemoryUse()
     }
   }
   *memlogfile << '\n';
+  unsigned long total = 0;
   if( dws_[ Task::OldDW ] )
-    dws_[ Task::OldDW ]->logMemoryUse(*memlogfile, "OldDW");
+    dws_[ Task::OldDW ]->logMemoryUse(*memlogfile, total, "OldDW");
   if( dws_[ Task::NewDW ] )
-    dws_[ Task::NewDW ]->logMemoryUse(*memlogfile, "NewDW");
+    dws_[ Task::NewDW ]->logMemoryUse(*memlogfile, total, "NewDW");
+  if(dts_)
+    dts_->logMemoryUse(*memlogfile, total, "Taskgraph");
+  *memlogfile << "Total: " << total << '\n';
   memlogfile->flush();
 }
 
