@@ -1,20 +1,28 @@
+
 #include <Packages/Uintah/CCA/Components/ICE/SmagorinskyModel.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Util/DebugStream.h>
 
 using namespace Uintah;
+static DebugStream cout_doing("ICE_DOING_COUT", false);
 
-Smagorinsky_Model::Smagorinsky_Model(ProblemSpecP& ps)
+Smagorinsky_Model::Smagorinsky_Model(ProblemSpecP& ps,
+                                     SimulationStateP& sharedState)
+  : Turbulence(ps, sharedState)
 {
   //__________________________________
   //typically filter_width=grid spacing(uniform) for implicit filter.
   ps->require("model_constant",d_model_constant);
   ps->require("filter_width",d_filter_width);
-//  ps->require("turb_Pr",d_turbPr);  
 
+  //  ps->require("turb_Pr",d_turbPr);  
+  
 }
 
 Smagorinsky_Model::Smagorinsky_Model()
@@ -130,3 +138,59 @@ void Smagorinsky_Model::computeStrainRate(const Patch* patch,
 }
   
 
+void Smagorinsky_Model::scheduleTurbulence1(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls)
+{
+  if(filterScalars.size() > 0){
+    for(int i=0;i<static_cast<int>(filterScalars.size());i++){
+      FilterScalar* s = filterScalars[i];
+      Task* task = scinew Task("Smagorinsky_Model::computeVariance",
+                               this, &Smagorinsky_Model::computeVariance, s);
+      task->requires(Task::OldDW, s->scalar, Ghost::AroundCells, 1);
+      task->computes(s->scalarVariance);
+      sched->addTask(task, patches, s->matl_set);
+    }
+  }
+}
+
+void Smagorinsky_Model::computeVariance(const ProcessorGroup*, 
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* matls,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw,
+                                        FilterScalar* s)
+{
+  cout_doing << "Doing computeVariance "<< "\t\t\t Smagorinsky_Model" << endl;
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    for(int m=0;m<matls->size();m++){
+      int matl = matls->get(m);
+      constCCVariable<double> f;
+      old_dw->get(f, s->scalar, matl, patch, Ghost::AroundCells, 1);
+      CCVariable<double> fvar;
+      new_dw->allocateAndPut(fvar, s->scalarVariance, matl, patch);
+      Vector dx = patch->dCell();
+      Vector inv_dx(1./dx.x(), 1./dx.y(), 1./dx.z());
+      double mixing_length = cbrt(dx.x()*dx.y()*dx.z());
+      double scale = mixing_length*mixing_length;
+
+      for(CellIterator iter = patch->getCellIterator();
+          !iter.done(); iter++){
+        const IntVector& c = *iter;
+        // Compute the difference of the face centered overages,
+        //   0.5*(f[c+IntVector(1,0,0)]+f[c]) 
+        //  -0.5*(f[c]-f[c-IntVector(1,0,0)])
+        // which is
+        //   0.5*(f[c+IntVector(1,0,0)]-f[c-IntVector(1,0,0)])
+        // do the same for x,y,z
+        Vector df(0.5*(f[c+IntVector(1,0,0)]-f[c-IntVector(1,0,0)]),
+                  0.5*(f[c+IntVector(0,1,0)]-f[c-IntVector(0,1,0)]),
+                  0.5*(f[c+IntVector(0,0,1)]-f[c-IntVector(0,0,1)]));
+        df *= inv_dx;
+        fvar[c] = scale * df.length2();
+      }
+      setBC(fvar,s->scalarVariance->getName(),patch, d_sharedState, matl, new_dw);
+    }
+  }
+}

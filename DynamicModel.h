@@ -14,7 +14,7 @@ namespace Uintah {
   public:
   
     // ------ constructors
-    DynamicModel(ProblemSpecP& ps);
+    DynamicModel(ProblemSpecP& ps, SimulationStateP& sharedState);
     
     // ------ destructor
     virtual ~DynamicModel();
@@ -30,6 +30,9 @@ namespace Uintah {
                                             SimulationStateP&  d_sharedState,
                                             CCVariable<double>& turb_viscosity);
              
+    virtual void scheduleTurbulence1(SchedulerP& sched, const PatchSet* patches,
+                                     const MaterialSet* matls);
+
   private:
     
     void computeSmagCoeff(DataWarehouse* new_dw,
@@ -56,8 +59,15 @@ namespace Uintah {
     
     double filter_width;
     double d_test_filter_width;
+    double d_model_constant;
 //    double d_turbPr; // turbulent prandtl number   
 
+    void computeVariance(const ProcessorGroup*, 
+                         const PatchSubset* patch,  
+                         const MaterialSubset* matls,
+                         DataWarehouse*, 
+                         DataWarehouse*,
+                         FilterScalar*);
     
     };// End class
 

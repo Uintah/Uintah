@@ -33,6 +33,7 @@ namespace Uintah {
   using namespace SCIRun;
   class ModelInfo; 
   class ModelInterface; 
+  class Turbulence;
     
     class ICE : public UintahParallelComponent, public SimulationInterface {
     public:
@@ -608,7 +609,6 @@ namespace Uintah {
       bool d_RateForm;
       bool d_EqForm;
       bool d_impICE;
-      bool d_Turb;
       
       int d_max_iter_equilibration;
       int d_max_iter_implicit;

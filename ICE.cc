@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/AdvectionFactory.h>
 #include <Packages/Uintah/CCA/Components/ICE/TurbulenceFactory.h>
+#include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -98,7 +99,6 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_EqForm            = false; 
   d_add_heat          = false;
   d_impICE            = false;
-  d_Turb              = false;
   d_delT_knob         = 1.0;
   d_delT_scheme       = "aggressive";
   d_surroundingMatl_indx = -9;
@@ -120,9 +120,9 @@ ICE::~ICE()
   delete lb;
   delete MIlb;
   delete d_advector;
-  if(d_Turb){
+  if(d_turbulence)
     delete d_turbulence;
-  }
+
   cout_doing << "Doing: destorying Model Machinery " << endl;
   // delete transported Lagrangian variables
   vector<TransportedVariable*>::iterator t_iter;
@@ -191,7 +191,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   
   cfd_ice_ps->require("max_iteration_equilibration",d_max_iter_equilibration);
   d_advector = AdvectionFactory::create(cfd_ice_ps, d_advect_type);
-  d_turbulence = TurbulenceFactory::create(cfd_ice_ps, d_Turb);
   
   // Grab the solution technique
   ProblemSpecP child = cfd_ice_ps->findBlock("solution");
@@ -314,6 +313,10 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     }
   }
   cout_norm << "Pulled out exchange coefficients of the input file" << endl;
+
+  //__________________________________
+  // Set up turbulence models - needs to be done after materials are initialized
+  d_turbulence = TurbulenceFactory::create(cfd_ice_ps, sharedState);
 
   //__________________________________
   // WARNINGS
@@ -543,6 +546,12 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
   
+  if(d_turbulence){
+    // The turblence model is also called directly from
+    // accumlateMomentumSourceSinks.  This method just allows other
+    // quantities (such as variance) to be computed
+    d_turbulence->scheduleTurbulence1(sched, patches, ice_matls);
+  }
   vector<PatchSubset*> maxMach_PSS(Patch::numFaces);                                                       
   scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls, 
                                                           maxMach_PSS);
@@ -606,7 +615,6 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                           ice_matls_sub,
                                                           mpm_matls_sub,
                                                           all_matls);
-
   scheduleAccumulateEnergySourceSinks(    sched, patches, ice_matls_sub,
                                                           mpm_matls_sub,
                                                           press_matl,
@@ -988,7 +996,7 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
     t->requires(Task::NewDW,lb->press_diffZ_FCLabel, gac, 1);
   }
 
-  if(d_Turb){
+  if(d_turbulence){
     t->requires(Task::NewDW,lb->uvel_FCMELabel,   ice_matls_sub, gac, 3);
     t->requires(Task::NewDW,lb->vvel_FCMELabel,   ice_matls_sub, gac, 3);
     t->requires(Task::NewDW,lb->wvel_FCMELabel,   ice_matls_sub, gac, 3);
@@ -2163,7 +2171,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 // float.   Backing out rho_micro at the new pressure will eventually
 // cause vol_frac to != 1.0.
 // 
-#if 0
+#if 1
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       
       // only hit boundary faces  
@@ -3247,18 +3255,16 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           new_dw->allocateTemporary(viscosity, patch, gac, 2);
           viscosity.copyData(viscosity_org);
         
-          if(d_Turb){ 
-            TurbulenceFactory*  turbulence_factory = scinew TurbulenceFactory();
-            turbulence_factory->callTurb(new_dw,patch,vel_CC,rho_CC,indx,lb,
-                                         d_sharedState,d_turbulence, viscosity);
-            delete turbulence_factory;
+          if(d_turbulence){ 
+            d_turbulence->callTurb(new_dw,patch,vel_CC,rho_CC,indx,lb,
+                                   d_sharedState, viscosity);
           }//turb
            
           computeTauX(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_X_FC);
           computeTauY(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_Y_FC);
           computeTauZ(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_Z_FC); 
         }
-        if(viscosity_test == 0.0 && d_Turb){
+        if(viscosity_test == 0.0 && d_turbulence){
           string warn="ERROR:\n input :viscosity can't be zero when calculate turbulence";
           throw ProblemSetupException(warn);
         }
