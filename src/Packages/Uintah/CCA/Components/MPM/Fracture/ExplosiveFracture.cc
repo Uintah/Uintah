@@ -42,7 +42,7 @@ void ExplosiveFracture::computeNodeVisibility(
   ParticleSubset* insidePset = old_dw->getParticleSubset(matlindex, patch);
 
   ParticleVariable<int>    pVisibility;
-  new_dw->allocate(pVisibility, lb->pVisibilityLabel, insidePset);
+  new_dw->allocateAndPut(pVisibility, lb->pVisibilityLabel, insidePset);
 
   for(ParticleSubset::iterator iter = insidePset->begin();
           iter != insidePset->end(); iter++)
@@ -52,7 +52,8 @@ void ExplosiveFracture::computeNodeVisibility(
     pVisibility[pIdx] = vis.flag();
   }
   
-  new_dw->put(pVisibility, lb->pVisibilityLabel);
+  // allocateAndPut instead:
+  /* new_dw->put(pVisibility, lb->pVisibilityLabel); */;
 }
 
 void
@@ -72,9 +73,8 @@ crackGrow(const Patch* patch,
 
    old_dw->get(pTensileStrength, lb->pTensileStrengthLabel, pset);
    new_dw->get(pStress, lb->pStressAfterStrainRateLabel, pset);   
-   new_dw->allocate(pIsNewlyBroken, lb->pIsNewlyBrokenLabel, pset);
-   new_dw->allocate(pNewlyBrokenSurfaceNormal, 
-     lb->pNewlyBrokenSurfaceNormalLabel, pset);
+   new_dw->allocateAndPut(pIsNewlyBroken, lb->pIsNewlyBrokenLabel, pset);
+   new_dw->allocateAndPut(pNewlyBrokenSurfaceNormal, lb->pNewlyBrokenSurfaceNormalLabel, pset);
 
    for(ParticleSubset::iterator iter = pset->begin(); 
        iter != pset->end(); iter++)
@@ -133,8 +133,10 @@ crackGrow(const Patch* patch,
      cout<<"Crack nucleated."<<endl;
    }
       
-   new_dw->put(pIsNewlyBroken, lb->pIsNewlyBrokenLabel);
-   new_dw->put(pNewlyBrokenSurfaceNormal, lb->pNewlyBrokenSurfaceNormalLabel);
+   // allocateAndPut instead:
+   /* new_dw->put(pIsNewlyBroken, lb->pIsNewlyBrokenLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pNewlyBrokenSurfaceNormal, lb->pNewlyBrokenSurfaceNormalLabel); */;
    new_dw->put(pTensileStrength, lb->pTensileStrengthLabel_preReloc);
 }
 
@@ -178,7 +180,7 @@ stressRelease(const Patch* patch,
   old_dw->get(pImageVelocity, lb->pImageVelocityLabel, insidePset);
 
   ParticleVariable<int> pStressReleased;
-  new_dw->allocate(pStressReleased, lb->pStressReleasedLabel, insidePset);
+  new_dw->allocateTemporary(pStressReleased,  insidePset);
 
   double delTAfterFracture = 1.e12;
 

@@ -123,7 +123,7 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
 			    patch);
       new_dw->getModifiable(gacceleration[m],  lb->gAccelerationLabel, dwindex,
 			    patch);
-      new_dw->allocate(frictionalWork[m], lb->frictionalWorkLabel,
+      new_dw->allocateAndPut(frictionalWork[m], lb->frictionalWorkLabel,
                                                             dwindex, patch);
       frictionalWork[m].initialize(0.);
     }
@@ -162,7 +162,8 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
 
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
-      new_dw->put(frictionalWork[m],   lb->frictionalWorkLabel,dwi,patch);
+      // allocateAndPut instead:
+      /* new_dw->put(frictionalWork[m],   lb->frictionalWorkLabel,dwi,patch); */;
     }
   }
 }

@@ -85,11 +85,11 @@ void ViscoScram::initializeCMData(const Patch* patch,
    ParticleVariable<Matrix3> deformationGradient, pstress;
    ParticleVariable<double> pCrackRadius;
    ParticleVariable<double> pRand;
-   new_dw->allocate(statedata,           p_statedata_label,            pset);
-   new_dw->allocate(deformationGradient, lb->pDeformationMeasureLabel, pset);
-   new_dw->allocate(pstress,             lb->pStressLabel,             pset);
-   new_dw->allocate(pCrackRadius,        lb->pCrackRadiusLabel,        pset);
-   new_dw->allocate(pRand,               pRandLabel,                   pset);
+   new_dw->allocateAndPut(statedata, p_statedata_label,            pset);
+   new_dw->allocateAndPut(deformationGradient, lb->pDeformationMeasureLabel, pset);
+   new_dw->allocateAndPut(pstress, lb->pStressLabel,             pset);
+   new_dw->allocateAndPut(pCrackRadius, lb->pCrackRadiusLabel,        pset);
+   new_dw->allocateAndPut(pRand, pRandLabel,                   pset);
 
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
@@ -107,11 +107,16 @@ void ViscoScram::initializeCMData(const Patch* patch,
 //      pRand[*iter] = drand48();
       pRand[*iter] = .5;
    }
-   new_dw->put(statedata,           p_statedata_label);
-   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel);
-   new_dw->put(pstress,             lb->pStressLabel);
-   new_dw->put(pCrackRadius,        lb->pCrackRadiusLabel);
-   new_dw->put(pRand,               pRandLabel);
+   // allocateAndPut instead:
+   /* new_dw->put(statedata,           p_statedata_label); */;
+   // allocateAndPut instead:
+   /* new_dw->put(deformationGradient, lb->pDeformationMeasureLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pstress,             lb->pStressLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pCrackRadius,        lb->pCrackRadiusLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pRand,               pRandLabel); */;
 
    computeStableTimestep(patch, matl, new_dw);
 }
@@ -220,14 +225,13 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
-    new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
-    new_dw->allocate(deformationGradient_new,
-		     lb->pDeformationMeasureLabel_preReloc,         pset);
-    new_dw->allocate(pstressnew,     lb->pStressLabel_preReloc,     pset);
-    new_dw->allocate(pCrackRadius,   lb->pCrackRadiusLabel_preReloc,pset);
-    new_dw->allocate(statedata, p_statedata_label_preReloc,         pset);
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
+    new_dw->allocateAndPut(deformationGradient_new, lb->pDeformationMeasureLabel_preReloc,         pset);
+    new_dw->allocateAndPut(pstressnew, lb->pStressLabel_preReloc,     pset);
+    new_dw->allocateAndPut(pCrackRadius, lb->pCrackRadiusLabel_preReloc,pset);
+    new_dw->allocateAndPut(statedata, p_statedata_label_preReloc,         pset);
     old_dw->copyOut(statedata, p_statedata_label,                   pset);    
-    new_dw->allocate(pRand, pRandLabel_preReloc,                    pset);
+    new_dw->allocateAndPut(pRand, pRandLabel_preReloc,                    pset);
     old_dw->copyOut(pRand, pRandLabel,                              pset);    
 
     ASSERTEQ(pset, statedata.getParticleSubset());
@@ -584,13 +588,19 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
 	delT_new = 100.0;
     }
     new_dw->put(delt_vartype(delT_new),lb->delTLabel);
-    new_dw->put(pstressnew,            lb->pStressLabel_preReloc);
-    new_dw->put(pCrackRadius,          lb->pCrackRadiusLabel_preReloc);
-    new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
+    // allocateAndPut instead:
+    /* new_dw->put(pstressnew,            lb->pStressLabel_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pCrackRadius,          lb->pCrackRadiusLabel_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc); */;
     new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
-    new_dw->put(statedata,             p_statedata_label_preReloc);
-    new_dw->put(pRand,                 pRandLabel_preReloc);
-    new_dw->put(pvolume_deformed,      lb->pVolumeDeformedLabel);
+    // allocateAndPut instead:
+    /* new_dw->put(statedata,             p_statedata_label_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pRand,                 pRandLabel_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pvolume_deformed,      lb->pVolumeDeformedLabel); */;
   }
 }
 

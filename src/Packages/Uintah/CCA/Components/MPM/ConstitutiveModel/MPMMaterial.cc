@@ -154,33 +154,33 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    ParticleSubset* subset = new_dw->createParticleSubset(numParticles,
 							 getDWIndex(), patch);
    ParticleVariable<Point> position;
-   new_dw->allocate(position, lb->pXLabel, subset);
+   new_dw->allocateAndPut(position, lb->pXLabel, subset);
    ParticleVariable<Vector> pvelocity;
-   new_dw->allocate(pvelocity, lb->pVelocityLabel, subset);
+   new_dw->allocateAndPut(pvelocity, lb->pVelocityLabel, subset);
 #ifdef IMPLICIT
    ParticleVariable<Vector> pacceleration;
-   new_dw->allocate(pacceleration, lb->pAccelerationLabel, subset);
+   new_dw->allocateAndPut(pacceleration, lb->pAccelerationLabel, subset);
    ParticleVariable<Matrix3> bElBar;
-   new_dw->allocate(bElBar, lb->bElBarLabel, subset);
+   new_dw->allocateTemporary(bElBar,  subset);
 #endif
    ParticleVariable<Vector> pexternalforce;
-   new_dw->allocate(pexternalforce, lb->pExternalForceLabel, subset);
+   new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, subset);
    ParticleVariable<double> pmass;
-   new_dw->allocate(pmass, lb->pMassLabel, subset);
+   new_dw->allocateAndPut(pmass, lb->pMassLabel, subset);
    ParticleVariable<double> pvolume;
-   new_dw->allocate(pvolume, lb->pVolumeLabel, subset);
+   new_dw->allocateAndPut(pvolume, lb->pVolumeLabel, subset);
    ParticleVariable<double> ptemperature;
-   new_dw->allocate(ptemperature, lb->pTemperatureLabel, subset);
+   new_dw->allocateAndPut(ptemperature, lb->pTemperatureLabel, subset);
    ParticleVariable<long64> pparticleID;
-   new_dw->allocate(pparticleID, lb->pParticleIDLabel, subset);
+   new_dw->allocateAndPut(pparticleID, lb->pParticleIDLabel, subset);
    ParticleVariable<Vector> psize;
-   new_dw->allocate(psize, lb->pSizeLabel, subset);
+   new_dw->allocateAndPut(psize, lb->pSizeLabel, subset);
 
    ParticleVariable<Vector> pTang1, pTang2, pNorm;
    if(d_membrane){
-     new_dw->allocate(pTang1, lb->pTang1Label, subset);
-     new_dw->allocate(pTang2, lb->pTang2Label, subset);
-     new_dw->allocate(pNorm,  lb->pNormLabel,  subset);
+     new_dw->allocateAndPut(pTang1, lb->pTang1Label, subset);
+     new_dw->allocateAndPut(pTang2, lb->pTang2Label, subset);
+     new_dw->allocateAndPut(pNorm, lb->pNormLabel,  subset);
    }
 
    ParticleVariable<int> pIsBroken;
@@ -240,23 +240,35 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      }
    }
 
-   new_dw->put(position,             lb->pXLabel);
-   new_dw->put(pvelocity,            lb->pVelocityLabel);
+   // allocateAndPut instead:
+   /* new_dw->put(position,             lb->pXLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pvelocity,            lb->pVelocityLabel); */;
 #ifdef IMPLICIT
-   new_dw->put(pacceleration,        lb->pAccelerationLabel);
+   // allocateAndPut instead:
+   /* new_dw->put(pacceleration,        lb->pAccelerationLabel); */;
    //   new_dw->put(bElBar,               lb->bElBarLabel);
 #endif
-   new_dw->put(pexternalforce,       lb->pExternalForceLabel);
-   new_dw->put(pmass,                lb->pMassLabel);
-   new_dw->put(pvolume,              lb->pVolumeLabel);
-   new_dw->put(ptemperature,         lb->pTemperatureLabel);
-   new_dw->put(pparticleID,          lb->pParticleIDLabel);
-   new_dw->put(psize,                lb->pSizeLabel);
+   // allocateAndPut instead:
+   /* new_dw->put(pexternalforce,       lb->pExternalForceLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pmass,                lb->pMassLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pvolume,              lb->pVolumeLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(ptemperature,         lb->pTemperatureLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pparticleID,          lb->pParticleIDLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(psize,                lb->pSizeLabel); */;
    
    if(d_membrane){
-     new_dw->put(pTang1, lb->pTang1Label);
-     new_dw->put(pTang2, lb->pTang2Label);
-     new_dw->put(pNorm,  lb->pNormLabel);
+     // allocateAndPut instead:
+     /* new_dw->put(pTang1, lb->pTang1Label); */;
+     // allocateAndPut instead:
+     /* new_dw->put(pTang2, lb->pTang2Label); */;
+     // allocateAndPut instead:
+     /* new_dw->put(pNorm,  lb->pNormLabel); */;
    }
 }
 

@@ -52,16 +52,18 @@ void CompMooneyRivlin::initializeCMData(const Patch* patch,
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
    ParticleVariable<Matrix3> deformationGradient, pstress;
 
-   new_dw->allocate(deformationGradient, lb->pDeformationMeasureLabel, pset);
-   new_dw->allocate(pstress,             lb->pStressLabel,             pset);
+   new_dw->allocateAndPut(deformationGradient, lb->pDeformationMeasureLabel, pset);
+   new_dw->allocateAndPut(pstress, lb->pStressLabel,             pset);
 
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
          deformationGradient[*iter] = Identity;
          pstress[*iter] = zero;
    }
-   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel);
-   new_dw->put(pstress,             lb->pStressLabel);
+   // allocateAndPut instead:
+   /* new_dw->put(deformationGradient, lb->pDeformationMeasureLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pstress,             lb->pStressLabel); */;
 
    computeStableTimestep(patch, matl, new_dw);
 }
@@ -145,10 +147,9 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    new_dw->allocate(pstress,        lb->pStressLabel_preReloc,    pset);
-    new_dw->allocate(pvolume_deform, lb->pVolumeDeformedLabel,     pset);
-    new_dw->allocate(deformationGradient_new,
-				lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(pstress, lb->pStressLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pvolume_deform, lb->pVolumeDeformedLabel,     pset);
+    new_dw->allocateAndPut(deformationGradient_new, lb->pDeformationMeasureLabel_preReloc, pset);
 
     new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch,
 		Ghost::AroundCells, 1);
@@ -250,10 +251,13 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     
     if(delT_new < 1.e-12) delT_new = MAXDOUBLE;
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);    
-    new_dw->put(pstress,                lb->pStressLabel_preReloc);
-    new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
+    // allocateAndPut instead:
+    /* new_dw->put(pstress,                lb->pStressLabel_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc); */;
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
-    new_dw->put(pvolume_deform,         lb->pVolumeDeformedLabel);
+    // allocateAndPut instead:
+    /* new_dw->put(pvolume_deform,         lb->pVolumeDeformedLabel); */;
 
   }
 }

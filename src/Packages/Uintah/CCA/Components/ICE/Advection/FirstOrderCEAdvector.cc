@@ -26,8 +26,8 @@ FirstOrderCEAdvector::FirstOrderCEAdvector(DataWarehouse* new_dw,
                              CCVariable<eflux>::getTypeDescription());
   OFC_CCLabel = VarLabel::create("OFC_CC",
                              CCVariable<cflux>::getTypeDescription());
-  new_dw->allocate(d_OFE, OFE_CCLabel,0, patch, Ghost::AroundCells,1);
-  new_dw->allocate(d_OFC, OFC_CCLabel,0, patch, Ghost::AroundCells,1);
+  new_dw->allocateTemporary(d_OFE,  patch, Ghost::AroundCells,1);
+  new_dw->allocateTemporary(d_OFC,  patch, Ghost::AroundCells,1);
 }
 
 

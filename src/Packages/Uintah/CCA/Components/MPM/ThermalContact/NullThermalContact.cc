@@ -37,13 +37,13 @@ void NullThermalContact::computeHeatExchange(const ProcessorGroup*,
       int dwindex = mpm_matl->getDWIndex();
 
       NCVariable<double> thermalContactHeatExchangeRate;
-      new_dw->allocate(thermalContactHeatExchangeRate,
-           lb->gThermalContactHeatExchangeRateLabel, dwindex, patch);
+      new_dw->allocateAndPut(thermalContactHeatExchangeRate, lb->gThermalContactHeatExchangeRateLabel, dwindex, patch);
 
       thermalContactHeatExchangeRate.initialize(0);
 
-      new_dw->put(thermalContactHeatExchangeRate, 
-        lb->gThermalContactHeatExchangeRateLabel, dwindex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(thermalContactHeatExchangeRate, 
+        lb->gThermalContactHeatExchangeRateLabel, dwindex, patch); */;
     }
   }
 }

@@ -46,8 +46,7 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
       new_dw->get(gmass[dwindex], lb->gMassLabel,dwindex, patch, Ghost::None,0);
       new_dw->get(gTemperature[dwindex], lb->gTemperatureLabel, dwindex, patch,
          Ghost::None, 0);
-      new_dw->allocate(thermalContactHeatExchangeRate[dwindex],
-           lb->gThermalContactHeatExchangeRateLabel, dwindex, patch);
+      new_dw->allocateTemporary(thermalContactHeatExchangeRate[dwindex],  patch);
       thermalContactHeatExchangeRate[dwindex].initialize(0);
     }
 

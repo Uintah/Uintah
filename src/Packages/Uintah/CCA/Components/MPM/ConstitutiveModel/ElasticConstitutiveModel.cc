@@ -290,11 +290,12 @@ void ElasticConstitutiveModel::initializeCMData(const Patch* patch,
   //   const MPMLabel* lb = MPMLabel::getLabels();
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
    ParticleVariable<CMData> cmdata;
-   new_dw->allocate(cmdata, p_cmdata_label, pset);
+   new_dw->allocateAndPut(cmdata, p_cmdata_label, pset);
    for(ParticleSubset::iterator iter = pset->begin();
        iter != pset->end(); iter++)
       cmdata[*iter] = d_initialData;
-   new_dw->put(cmdata, p_cmdata_label);
+   // allocateAndPut instead:
+   /* new_dw->put(cmdata, p_cmdata_label); */;
 }
 
 #ifdef WONT_COMPILE_YET

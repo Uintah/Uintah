@@ -416,41 +416,41 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> viscosity;
     CCVariable<double> pPlusHydro;
     std::cerr << "Material Index: " << matlIndex << endl;
-    new_dw->allocate(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
-    new_dw->allocate(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
-    new_dw->allocate(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
+    new_dw->allocateAndPut(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
+    new_dw->allocateAndPut(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
+    new_dw->allocateAndPut(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
     uVelocityCC.initialize(0.0);
     vVelocityCC.initialize(0.0);
     wVelocityCC.initialize(0.0);
-    new_dw->allocate(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch);
-    new_dw->allocate(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
-    new_dw->allocate(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
-    new_dw->allocate(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
+    new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch);
+    new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
+    new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
+    new_dw->allocateAndPut(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
     if (d_MAlab) {
-      new_dw->allocate(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
+      new_dw->allocateAndPut(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
       pPlusHydro.initialize(0.0);
     }
     // will only work for one scalar
     for (int ii = 0; ii < d_nofScalars; ii++) {
-      new_dw->allocate(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch);
     }
     for (int ii = 0; ii < d_nofScalarStats; ii++) {
-      new_dw->allocate(scalarVar[ii], d_lab->d_scalarVarINLabel, matlIndex, patch);
-      new_dw->allocate(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
+      new_dw->allocateAndPut(scalarVar[ii], d_lab->d_scalarVarINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
     }
     CCVariable<double> reactscalar;
     if (d_calcReactingScalar) {
-      new_dw->allocate(reactscalar, d_lab->d_reactscalarINLabel,
+      new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarINLabel,
 		       matlIndex, patch);
       reactscalar.initialize(0.0);
     }
 
     if (d_calcEnthalpy) {
-      new_dw->allocate(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
       enthalpy.initialize(0.0);
     }
-    new_dw->allocate(density, d_lab->d_densityINLabel, matlIndex, patch);
-    new_dw->allocate(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
+    new_dw->allocateAndPut(density, d_lab->d_densityINLabel, matlIndex, patch);
+    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
 
   // ** WARNING **  this needs to be changed soon (6/9/2000)
     IntVector domLoU = uVelocity.getFortLowIndex();
@@ -488,29 +488,44 @@ Arches::paramInit(const ProcessorGroup* ,
       fort_initscal(idxLo, idxHi, scalarVar_new[ii], scalVal);
     }
 
-    new_dw->put(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
-    new_dw->put(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
-    new_dw->put(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch); */;
 
-    new_dw->put(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch);
-    new_dw->put(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
-    new_dw->put(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
-    new_dw->put(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressure, d_lab->d_pressureINLabel, matlIndex, patch); */;
     for (int ii = 0; ii < d_nofScalars; ii++) {
-      new_dw->put(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch); */;
     }
     for (int ii = 0; ii < d_nofScalarStats; ii++) {
-      new_dw->put(scalarVar[ii], d_lab->d_scalarVarINLabel, matlIndex, patch);
-      new_dw->put(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(scalarVar[ii], d_lab->d_scalarVarINLabel, matlIndex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch); */;
     }
     if (d_calcReactingScalar)
-      new_dw->put(reactscalar, d_lab->d_reactscalarINLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(reactscalar, d_lab->d_reactscalarINLabel, matlIndex, patch); */;
     if (d_calcEnthalpy)
-      new_dw->put(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
-    new_dw->put(density, d_lab->d_densityINLabel, matlIndex, patch);
-    new_dw->put(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(density, d_lab->d_densityINLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch); */;
     if (d_MAlab)
-      new_dw->put(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch); */;
 
   }
 }

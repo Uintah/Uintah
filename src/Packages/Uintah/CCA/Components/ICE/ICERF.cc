@@ -92,7 +92,7 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
     CCVariable<double> press_new; 
 
     old_dw->get(press,         lb->press_CCLabel, 0,patch,Ghost::None, 0); 
-    new_dw->allocate(press_new,lb->press_equil_CCLabel, 0,patch);
+    new_dw->allocateAndPut(press_new, lb->press_equil_CCLabel, 0,patch);
     
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* matl = d_sharedState->getICEMaterial(m);
@@ -101,13 +101,13 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
       old_dw->get(rho_CC[m], lb->rho_CCLabel,   indx,patch,Ghost::None,0);
       old_dw->get(sp_vol_CC[m],
                              lb->sp_vol_CCLabel,indx,patch,Ghost::None,0);
-      new_dw->allocate(sp_vol_new[m],lb->sp_vol_CCLabel,    indx, patch); 
-      new_dw->allocate(rho_CC_new[m],lb->rho_CCLabel,       indx, patch);
-      new_dw->allocate(vol_frac[m],  lb->vol_frac_CCLabel,  indx, patch);
-      new_dw->allocate(f_theta[m],   lb->f_theta_CCLabel,   indx, patch);
-      new_dw->allocate(matl_press[m],lb->matl_press_CCLabel,indx, patch);
-      new_dw->allocate(rho_micro[m], lb->rho_micro_CCLabel, indx, patch);
-      new_dw->allocate(speedSound_new[m],lb->speedSound_CCLabel,indx,patch);
+      new_dw->allocateAndPut(sp_vol_new[m], lb->sp_vol_CCLabel,    indx, patch); 
+      new_dw->allocateAndPut(rho_CC_new[m], lb->rho_CCLabel,       indx, patch);
+      new_dw->allocateAndPut(vol_frac[m], lb->vol_frac_CCLabel,  indx, patch);
+      new_dw->allocateAndPut(f_theta[m], lb->f_theta_CCLabel,   indx, patch);
+      new_dw->allocateAndPut(matl_press[m], lb->matl_press_CCLabel,indx, patch);
+      new_dw->allocateTemporary(rho_micro[m],  patch);
+      new_dw->allocateAndPut(speedSound_new[m], lb->speedSound_CCLabel,indx,patch);
       speedSound_new[m].initialize(0.0);
       cv[m] = matl->getSpecificHeat();
       gamma[m] = matl->getGamma();
@@ -175,14 +175,21 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
       int indx = matl->getDWIndex();
       rho_CC_new[m].copyData(rho_CC[m]);
       sp_vol_new[m].copyData(sp_vol_CC[m]);
-      new_dw->put( sp_vol_new[m],    lb->sp_vol_CCLabel,     indx, patch); 
-      new_dw->put( vol_frac[m],      lb->vol_frac_CCLabel,   indx, patch);
-      new_dw->put( f_theta[m],       lb->f_theta_CCLabel,    indx, patch);
-      new_dw->put( matl_press[m],    lb->matl_press_CCLabel, indx, patch);
-      new_dw->put( speedSound_new[m],lb->speedSound_CCLabel, indx, patch);
-      new_dw->put( rho_CC_new[m],    lb->rho_CCLabel,        indx, patch);
+      // allocateAndPut instead:
+      /* new_dw->put( sp_vol_new[m],    lb->sp_vol_CCLabel,     indx, patch);  */;
+      // allocateAndPut instead:
+      /* new_dw->put( vol_frac[m],      lb->vol_frac_CCLabel,   indx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put( f_theta[m],       lb->f_theta_CCLabel,    indx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put( matl_press[m],    lb->matl_press_CCLabel, indx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put( speedSound_new[m],lb->speedSound_CCLabel, indx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put( rho_CC_new[m],    lb->rho_CCLabel,        indx, patch); */;
     }
-    new_dw->put(press_new,lb->press_equil_CCLabel,0,patch);
+    // allocateAndPut instead:
+    /* new_dw->put(press_new,lb->press_equil_CCLabel,0,patch); */;
     
    //---- P R I N T   D A T A ------   
     if (switchDebug_EQ_RF_press) {
@@ -257,9 +264,9 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
       if(mpm_matl){
         new_dw->get(vel_CC[m],lb->vel_CCLabel,indx,patch,gac,1);      
       }
-      new_dw->allocate(press_diffX_FC[m],lb->press_diffX_FCLabel, indx, patch);
-      new_dw->allocate(press_diffY_FC[m],lb->press_diffY_FCLabel, indx, patch);
-      new_dw->allocate(press_diffZ_FC[m],lb->press_diffZ_FCLabel, indx, patch);
+      new_dw->allocateAndPut(press_diffX_FC[m], lb->press_diffX_FCLabel, indx, patch);
+      new_dw->allocateAndPut(press_diffY_FC[m], lb->press_diffY_FCLabel, indx, patch);
+      new_dw->allocateAndPut(press_diffZ_FC[m], lb->press_diffZ_FCLabel, indx, patch);
       press_diffX_FC[m].initialize(0.0);
       press_diffY_FC[m].initialize(0.0);
       press_diffZ_FC[m].initialize(0.0);
@@ -270,7 +277,7 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
     adj_offset[2] = IntVector(0,  0, -1);   // Z faces
     
     for(int dir=0; dir < 3; dir ++) {
-      new_dw->allocate(scratch[dir], lb->scratchLabel, 0, patch); 
+      new_dw->allocateTemporary(scratch[dir],  patch); 
     } 
    //---- P R I N T   D A T A ------    
     if (switchDebug_PressDiffRF ) {
@@ -344,9 +351,12 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      new_dw->put(press_diffX_FC[m],lb->press_diffX_FCLabel, indx, patch);
-      new_dw->put(press_diffY_FC[m],lb->press_diffY_FCLabel, indx, patch);
-      new_dw->put(press_diffZ_FC[m],lb->press_diffZ_FCLabel, indx, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(press_diffX_FC[m],lb->press_diffX_FCLabel, indx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(press_diffY_FC[m],lb->press_diffY_FCLabel, indx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(press_diffZ_FC[m],lb->press_diffZ_FCLabel, indx, patch); */;
     }
     //---- P R I N T   D A T A ------ 
     if (switchDebug_PressDiffRF ) {
@@ -476,9 +486,9 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       SFCXVariable<double> uvel_FC;
       SFCYVariable<double> vvel_FC;
       SFCZVariable<double> wvel_FC;
-      new_dw->allocate(uvel_FC, lb->uvel_FCLabel, indx, patch);
-      new_dw->allocate(vvel_FC, lb->vvel_FCLabel, indx, patch);
-      new_dw->allocate(wvel_FC, lb->wvel_FCLabel, indx, patch);
+      new_dw->allocateAndPut(uvel_FC, lb->uvel_FCLabel, indx, patch);
+      new_dw->allocateAndPut(vvel_FC, lb->vvel_FCLabel, indx, patch);
+      new_dw->allocateAndPut(wvel_FC, lb->wvel_FCLabel, indx, patch);
       IntVector lowIndex(patch->getSFCXLowIndex());
       uvel_FC.initialize(0.0, lowIndex,patch->getSFCXHighIndex());
       vvel_FC.initialize(0.0, lowIndex,patch->getSFCYHighIndex());
@@ -515,9 +525,12 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       //__________________________________
       // (*)vel_FC BC are updated in 
       // ICE::addExchangeContributionToFCVel()
-      new_dw->put(uvel_FC, lb->uvel_FCLabel, indx, patch);
-      new_dw->put(vvel_FC, lb->vvel_FCLabel, indx, patch);
-      new_dw->put(wvel_FC, lb->wvel_FCLabel, indx, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(uvel_FC, lb->uvel_FCLabel, indx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(vvel_FC, lb->vvel_FCLabel, indx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(wvel_FC, lb->wvel_FCLabel, indx, patch); */;
 
       //---- P R I N T   D A T A ------ 
       if (switchDebug_vel_FC ) {
@@ -631,15 +644,15 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       if_mpm_matl_ignore[m] = 1.0;
       if(mpm_matl){                 // M P M
         new_dw->get(old_temp[m],     lb->temp_CCLabel,     indx, patch,gn,0);
-        new_dw->allocate(vel_CC[m],  MIlb->vel_CC_scratchLabel, indx, patch);
-        new_dw->allocate(Temp_CC[m], MIlb->temp_CC_scratchLabel,indx, patch);
+        new_dw->allocateTemporary(vel_CC[m],  patch);
+        new_dw->allocateTemporary(Temp_CC[m],  patch);
         cv[m] = mpm_matl->getSpecificHeat();
         if_mpm_matl_ignore[m] = 0.0;
       }
       if(ice_matl){                 // I C E
         old_dw->get(old_temp[m],    lb->temp_CCLabel,    indx, patch,gn,0);
-        new_dw->allocate(vel_CC[m], lb->vel_CCLabel,     indx, patch);
-        new_dw->allocate(Temp_CC[m],lb->temp_CCLabel,    indx, patch); 
+        new_dw->allocateTemporary(vel_CC[m],  patch);
+        new_dw->allocateTemporary(Temp_CC[m],  patch); 
         cv[m] = ice_matl->getSpecificHeat();
       }                             // A L L  M A T L S
       new_dw->get(mass_L[m],        lb->mass_L_CCLabel,    indx, patch,gn, 0); 
@@ -652,9 +665,9 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       new_dw->get(rho_CC[m],        lb->rho_CCLabel,       indx, patch,gn, 0);
       new_dw->get(int_eng_source[m],lb->int_eng_source_CCLabel,    
                                                            indx, patch,gn, 0);  
-      new_dw->allocate( Tdot[m],    lb->Tdot_CCLabel,      indx, patch);        
-      new_dw->allocate(mom_L_ME[m], lb->mom_L_ME_CCLabel,  indx, patch);       
-      new_dw->allocate(int_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,indx,patch);
+      new_dw->allocateAndPut(Tdot[m], lb->Tdot_CCLabel,      indx, patch);        
+      new_dw->allocateAndPut(mom_L_ME[m], lb->mom_L_ME_CCLabel,  indx, patch);       
+      new_dw->allocateAndPut(int_eng_L_ME[m], lb->int_eng_L_ME_CCLabel,indx,patch);
       e_prime_v[m] = Joule_coeff * cv[m];
       Tdot[m].initialize(0.0);
     }
@@ -811,9 +824,12 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      new_dw->put(mom_L_ME[m],        lb->mom_L_ME_CCLabel,       indx,patch);
-      new_dw->put(int_eng_L_ME[m],    lb->int_eng_L_ME_CCLabel,   indx,patch);   
-      new_dw->put(Tdot[m],            lb->Tdot_CCLabel,           indx,patch);
+      // allocateAndPut instead:
+      /* new_dw->put(mom_L_ME[m],        lb->mom_L_ME_CCLabel,       indx,patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(int_eng_L_ME[m],    lb->int_eng_L_ME_CCLabel,   indx,patch);    */;
+      // allocateAndPut instead:
+      /* new_dw->put(Tdot[m],            lb->Tdot_CCLabel,           indx,patch); */;
     }  
   } //patches
 }
@@ -850,7 +866,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
 
     new_dw->get(press_CC,        lb->press_CCLabel,      0,patch,Ghost::None,0);
     new_dw->get(delP_Dilatate,   lb->delP_DilatateLabel, 0,patch,Ghost::None,0);
-    new_dw->allocate(sum_therm_exp,lb->SumThermExpLabel, 0,patch);
+    new_dw->allocateTemporary(sum_therm_exp, patch);
 
     sum_therm_exp.initialize(0.);
     //__________________________________
@@ -885,8 +901,8 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       CCVariable<double> spec_vol_L, spec_vol_source;
-      new_dw->allocate(spec_vol_L,     lb->spec_vol_L_CCLabel,     indx,patch);
-      new_dw->allocate(spec_vol_source,lb->spec_vol_source_CCLabel,indx,patch);
+      new_dw->allocateAndPut(spec_vol_L, lb->spec_vol_L_CCLabel,     indx,patch);
+      new_dw->allocateAndPut(spec_vol_source, lb->spec_vol_source_CCLabel,indx,patch);
 
       new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,    indx,patch,Ghost::None, 0);
       spec_vol_source.initialize(0.);
@@ -943,8 +959,10 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
             << " cell " <<neg_cell << " spec_vol_L is negative\n";
         throw InvalidValue(warn.str());
      }  
-     new_dw->put(spec_vol_L,     lb->spec_vol_L_CCLabel,     indx,patch);
-     new_dw->put(spec_vol_source,lb->spec_vol_source_CCLabel,indx,patch);
+     // allocateAndPut instead:
+     /* new_dw->put(spec_vol_L,     lb->spec_vol_L_CCLabel,     indx,patch); */;
+     // allocateAndPut instead:
+     /* new_dw->put(spec_vol_source,lb->spec_vol_source_CCLabel,indx,patch); */;
     }  // end numALLMatl loop
   }  // patch loop
 }
