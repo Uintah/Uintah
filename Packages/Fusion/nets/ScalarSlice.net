@@ -103,11 +103,11 @@ set $m6-notes {}
 set $m6-show_status {1}
 set $m6-axis {2}
 set $m6-dims {3}
-set $m6-idim {78}
-set $m6-jdim {40}
-set $m6-kdim {11}
-set $m6-iindex {0}
-set $m6-jindex {0}
-set $m6-kindex {2}
+set $m6-i-dim {40}
+set $m6-j-dim {40}
+set $m6-k-dim {11}
+set $m6-i-index {0}
+set $m6-j-index {0}
+set $m6-k-index {5}
 
 ::netedit scheduleok
