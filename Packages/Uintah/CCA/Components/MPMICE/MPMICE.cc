@@ -264,6 +264,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
  // Scheduling
   d_ice->scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
    
+  d_mpm->scheduleApplyExternalLoads(              sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateParticlesToGrid(      sched, patches, mpm_matls);
 
   d_mpm->scheduleComputeHeatExchange(             sched, patches, mpm_matls);
@@ -370,7 +371,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_mpm->scheduleCalculateDampingRate(            sched, patches, mpm_matls);
   d_mpm->scheduleConvertLocalizedParticles(       sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, mpm_matls);
-  d_mpm->scheduleApplyExternalLoads(              sched, patches, mpm_matls);
+  //d_mpm->scheduleApplyExternalLoads(              sched, patches, mpm_matls);
   d_ice->scheduleAdvectAndAdvanceInTime(          sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   press_matl,
