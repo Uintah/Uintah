@@ -68,6 +68,10 @@ SamplerGui::tcl_command( TCLArgs &args, void *data)
     string_to_int(args[2],i);
     num_iter(i);
   }
+  else if ( args[1] == "sub" ) {
+    string_to_int(args[2],i);
+    subsample(i);
+  }
   else if ( args[1] == "run" ) {
     go( 1 );
   }

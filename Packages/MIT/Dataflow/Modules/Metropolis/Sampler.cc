@@ -257,16 +257,19 @@ void Sampler::metropolis()
       post_ = new_post;
       lpr_ = new_lpr;
     }
-    
-    results->k_.add(k) ;
-    
-    vector<double> v(nparms);
-    for (int i=0; i<nparms; i++) {
-      results->data_[i].add(theta[old][i]);
-      v[i]=theta[old][i];
+
+    if ( k % interface_->subsample() == 0 ) {
+      results->k_.add(k) ;
+      
+      vector<double> v(nparms);
+      for (int i=0; i<nparms; i++) {
+	results->data_[i].add(theta[old][i]);
+	v[i]=theta[old][i];
+      }
+      if ( graph_ ) 
+	graph_->add_values(v);
     }
-    if ( graph_ ) 
-      graph_->add_values(v);
+
     interface_->current_iter( k );
   }
 
@@ -298,6 +301,7 @@ Sampler::tcl_command( TCLArgs &args, void *data)
     gui->set_window( args[2] );
 
     connect( gui->num_iter, interface_, &SamplerInterface::num_iterations );
+    connect( gui->subsample, interface_, &SamplerInterface::subsample );
     connect( gui->go, interface_, &SamplerInterface::go);
     connect( interface_->current_iter_changed, gui, &SamplerGui::set_iter );
     connect( interface_->has_child, (PartGui* )gui, &PartGui::add_child );
