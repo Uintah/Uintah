@@ -8,12 +8,15 @@ itcl_class SolveMatrix {
     method set_defaults {} {
 	global $this-target_error $this-method $this-orig_error
 	global $this-current_error $this-flops $this-floprate $this-iteration
+	global $this-memrefs $this-memrate
 	set $this-target_error 1.e-4
 	set $this-method conjugate_gradient
 	set $this-orig_error 9.99999e99
 	set $this-current_error 9.99999e99
 	set $this-flops 0
 	set $this-floprate 0
+	set $this-memrefs 0
+	set $this-memrate 0
 	set $this-iteration 0
     }
     method ui {} {
@@ -27,7 +30,10 @@ itcl_class SolveMatrix {
 	wm minsize $w 300 20
 	set n "$this-c needexecute "
 
-	make_labeled_radio $w.method "Solution Method" $n \
+	button $w.execute -text "Execute" -command $n
+	pack $w.execute -side top -fill x -pady 2 -padx 2
+
+	make_labeled_radio $w.method "Solution Method" "" \
 		top $this-method \
 		{{"Jacobi" jacobi} \
 		{"Conjugate Gradient" conjugate_gradient}}
@@ -35,7 +41,7 @@ itcl_class SolveMatrix {
 	pack $w.method -side top -fill x -pady 2
 
 	expscale $w.target_error -orient horizontal -label "Target error:" \
-		-variable $this-target_error -command $n
+		-variable $this-target_error -command ""
 	pack $w.target_error -side top -fill x -pady 2
 
 
@@ -77,21 +83,72 @@ itcl_class SolveMatrix {
 	label $w.converg.floprate.val -textvariable $this-floprate
 	pack $w.converg.floprate.val -side right
 
+	frame $w.converg.memcount
+	pack $w.converg.memcount -side top -fill x
+	label $w.converg.memcount.lab -text "Memory bytes accessed: "
+	pack $w.converg.memcount.lab -side left
+	label $w.converg.memcount.val -textvariable $this-memrefs
+	pack $w.converg.memcount.val -side right
+
+	frame $w.converg.memrate
+	pack $w.converg.memrate -side top -fill x
+	label $w.converg.memrate.lab -text "Memory bandwidth (MB/sec):"
+	pack $w.converg.memrate.lab -side left
+	label $w.converg.memrate.val -textvariable $this-memrate
+	pack $w.converg.memrate.val -side right
+
 	global $this-target_error
 	set err [set $this-target_error]
 
 	blt_graph $w.graph -title "Convergence" -height 250 \
-		-plotbackground gray50
+		-plotbackground gray70
 	$w.graph yaxis configure -logscale true -title "error (RMS)"
 	$w.graph xaxis configure -title "Iteration" \
 		-loose true
 
+	bind $w.graph <ButtonPress-1> "$this select_error %x %y"
+	bind $w.graph <Button1-Motion> "$this move_error %x %y"
+	bind $w.graph <ButtonRelease-1> "$this deselect_error %x %y"
+
 	set iter 1
-	$w.graph element create "Target Error" -linewidth 1
-	$w.graph element configure "Target Error" -data "0 $err $iter $err"
+	$w.graph element create "Current Target" -linewidth 1
+	$w.graph element configure "Current Target" -data "0 $err" \
+		-symbol diamond
 
 	pack $w.graph -fill x
     }
+    protected error_selected false
+    protected tmp_error
+    method select_error {wx wy} {
+	global $this-target_error $this-iteration
+	set w .ui$this
+	set err [set $this-target_error]
+	set iter [set $this-iteration]
+	set errpos [$w.graph transform $iter $err]
+	set erry [lindex $errpos 1]
+	set errx [lindex $errpos 0]
+	if {abs($wy-$erry)+abs($wx-$errx) < 5} {
+	    $w.graph element configure "Current Target" -foreground yellow
+	    set error_selected true
+	}
+    }
+    method move_error {wx wy} {
+	set w .ui$this
+	set newerror [lindex [$w.graph invtransform $wx $wy] 1]
+	
+	$w.graph element configure "Current Target" -ydata $newerror
+    }
+    method deselect_error {wx wy} {
+	set w .ui$this
+
+	$w.graph element configure "Current Target" -foreground blue
+	set error_selected false
+
+	set newerror [lindex [$w.graph invtransform $wx $wy] 1]
+	global $this-target_error
+	set $this-target_error $newerror
+    }
+    protected min_error
     method reset_graph {} {
 	set w .ui$this
 	if {![winfo exists $w]} {
@@ -100,14 +157,15 @@ itcl_class SolveMatrix {
 	catch "$w.graph element delete {Target Error}"
 	catch "$w.graph element delete {Current Error}"
 	$w.graph element create "Target Error" -linewidth 0 -foreground blue
-	$w.graph element create "Current Error" -linewidth 0 -foreground red
+	$w.graph element create "Current Error" -linewidth 0 -foreground red 
 	global $this-target_error
 	set err [set $this-target_error]
 	set iter 1
 	$w.graph element configure "Target Error" -data "0 $err $iter $err"
+	set min_error $err
     }
 
-    method append_graph {iter values} {
+    method append_graph {iter values errvalues} {
 	set w .ui$this
 	if {![winfo exists $w]} {
 	    return
@@ -115,10 +173,16 @@ itcl_class SolveMatrix {
 	if {$values != ""} {
 	    $w.graph element append "Current Error" "$values"
 	}
+	if {$errvalues != ""} {
+	    $w.graph element append "Target Error" "$errvalues"
+	}
 	global $this-target_error
 	set err [set $this-target_error]
-	$w.graph yaxis configure -min [expr $err/10]
-	$w.graph element configure "Target Error" -data "0 $err $iter $err"
+	if {$err < $min_error} {
+	    set min_error $err
+	}
+	$w.graph yaxis configure -min [expr $min_error/10]
+	$w.graph element configure "Current Target" -xdata $iter
     }
 
     method finish_graph {} {
