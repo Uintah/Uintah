@@ -52,7 +52,7 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 	global $this-pvVar;
 	global $this-ptVar;
 	global $this-pNMaterials;
-	set $this-pvVar ""
+	set $this-psVar ""
 	set $this-pvVar ""
 	set $this-ptVar ""
 	set $this-pName ""
@@ -114,8 +114,6 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
     }
 
     method makeFrames { parent } {
-	global $this-pvVar;
-	global $this-pvVar;
 	frame $parent.f0 -relief groove -borderwidth 2 
 	label $parent.f0.label -text Particles
 	pack $parent.f0 -side left -expand yes -fill both -padx 2
