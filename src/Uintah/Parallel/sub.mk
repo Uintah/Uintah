@@ -11,12 +11,15 @@ SRCS     += $(SRCDIR)/Parallel.cc $(SRCDIR)/ProcessorContext.cc \
 	$(SRCDIR)/UintahParallelComponent.cc $(SRCDIR)/UintahParallelPort.cc
 
 PSELIBS := Uintah/Grid SCICore/Thread SCICore/Exceptions
-LIBS :=
+LIBS := -lmpi
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/04/19 21:20:05  dav
+# more MPI stuff
+#
 # Revision 1.2  2000/03/20 19:38:48  sparker
 # Added VPATH support
 #

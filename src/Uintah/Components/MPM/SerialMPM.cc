@@ -69,22 +69,30 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid)
 	const Region* region=*iter;
 	ParticleSet* pset = new ParticleSet();
 	ParticleSubset* psubset = new ParticleSubset(pset);
-	ParticleVariable<Vector> px(psubset);
-	dw->put(px, "p.x", region, 0);
-	ParticleVariable<double> pvolume(psubset);
-	dw->put(pvolume, "p.volume", region, 0);
-	ParticleVariable<double> pmass(psubset);
-	dw->put(pmass, "p.mass", region, 0);
-	ParticleVariable<Vector> pvel(psubset);
-	dw->put(pvel, "p.velocity", region, 0);
+
+	ParticleVariable<Vector>  px(psubset);
+	ParticleVariable<double>  pvolume(psubset);
+	ParticleVariable<double>  pmass(psubset);
+	ParticleVariable<Vector>  pvel(psubset);
 	ParticleVariable<Matrix3> pstress(psubset);
-	dw->put(pstress, "p.stress", region, 0);
 	ParticleVariable<Matrix3> pdeformationMeasure(psubset);
+	ParticleVariable<Vector>  pexternalforce(psubset);
+
+	dw->put(px,      	     "p.x", 		region, 0);
+	dw->put(pvolume, 	     "p.volume", 	region, 0);
+	dw->put(pmass,   	     "p.mass", 		region, 0);
+	dw->put(pvel,    	     "p.velocity", 	region, 0);
+	dw->put(pstress,	     "p.stress", 	region, 0);
 	dw->put(pdeformationMeasure, "p.deformationMeasure", region, 0);
-	ParticleVariable<Vector> pexternalforce(psubset);
-	dw->put(pexternalforce, "p.externalforce", region, 0);
+	dw->put(pexternalforce,      "p.externalforce", region, 0);
+
 	cerr << "Creating particles for region\n";
+<<<<<<< SerialMPM.cc
+
+	Enigma.createParticles(region, dw);
+=======
 	prob_description.createParticles(region, dw);
+>>>>>>> 1.16
     }
 #endif
     cerr << "SerialMPM::problemSetup not done\n";
@@ -367,20 +375,22 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       int vfindex = matl->getVFIndex();
       // Create arrays for the particle data
       ParticleVariable<Vector> px;
-      old_dw->get(px, "p.x", matlindex, region, 0);
       ParticleVariable<double> pmass;
-      old_dw->get(pmass, "p.mass", matlindex, region, 0);
       ParticleVariable<Vector> pvelocity;
-      old_dw->get(pvelocity, "p.velocity", matlindex, region, 0);
       ParticleVariable<Vector> pexternalforce;
+
+      old_dw->get(px,             "p.x", matlindex, region, 0);
+      old_dw->get(pmass,          "p.mass", matlindex, region, 0);
+      old_dw->get(pvelocity,      "p.velocity", matlindex, region, 0);
       old_dw->get(pexternalforce, "p.externalforce", matlindex, region, 0);
 
       // Create arrays for the grid data
       NCVariable<double> gmass;
-      new_dw->allocate(gmass, "g.mass", vfindex, region, 0);
       NCVariable<Vector> gvelocity;
-      new_dw->allocate(gvelocity, "g.velocity", vfindex, region, 0);
       NCVariable<Vector> externalforce;
+
+      new_dw->allocate(gmass, "g.mass", vfindex, region, 0);
+      new_dw->allocate(gvelocity, "g.velocity", vfindex, region, 0);
       new_dw->allocate(externalforce, "g.externalforce", vfindex, region, 0);
 
       ParticleSubset* pset = px.getParticleSubset(matlindex);
@@ -692,6 +702,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.18  2000/04/19 21:20:01  dav
+// more MPI stuff
+//
 // Revision 1.17  2000/04/19 05:26:01  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

@@ -62,7 +62,7 @@ WARNING
 
 class BrainDamagedScheduler : public UintahParallelComponent, public Scheduler {
 public:
-    BrainDamagedScheduler();
+    BrainDamagedScheduler( int MpiRank, int MpiProcesses );
     virtual ~BrainDamagedScheduler();
 
     //////////
@@ -129,6 +129,9 @@ private:
 
 //
 // $Log$
+// Revision 1.5  2000/04/19 21:20:02  dav
+// more MPI stuff
+//
 // Revision 1.4  2000/04/19 05:26:10  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

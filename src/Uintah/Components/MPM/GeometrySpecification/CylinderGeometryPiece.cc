@@ -1,5 +1,7 @@
 #include "CylinderGeometryPiece.h"
 
+#include <math.h>
+
 CylinderGeometryPiece::CylinderGeometryPiece() {}
 
 CylinderGeometryPiece::CylinderGeometryPiece(AXIS a, Point o,
@@ -390,6 +392,9 @@ void CylinderGeometryPiece::computeNorm(Vector &norm, Point part_pos,
 }
 
 // $Log$
+// Revision 1.3  2000/04/19 21:20:02  dav
+// more MPI stuff
+//
 // Revision 1.2  2000/04/14 03:29:13  jas
 // Fixed routines to use SCICore's point and vector stuff.
 //
