@@ -237,6 +237,11 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
   except Exception:
     output_to_browser=0
 
+  # set the command name for mpirun - differs on different platforms
+  MPICMD="mpirun -np"
+  if environ['OS'] == "OSF":
+    MPICMD="prun -n"
+
   # set where to view the log files
   logpath = environ['WEBLOG']
 # set the command for sus, based on # of processors
@@ -246,7 +251,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
   else:
     #if environ['OS'] == "Linux":
       #system("/usr/local/lam-mpi/bin/lamboot > /dev/null")
-    command = "mpirun -np %s %s/sus -mpi -%s %s" % (int(np), susdir, algo, extra_flags)
+    command = "%s %s %s/sus -mpi -%s %s" % (MPICMD, int(np), susdir, algo, extra_flags)
     mpimsg = " (mpi %s proc)" % (int(np))
 
   if do_restart == "yes":
