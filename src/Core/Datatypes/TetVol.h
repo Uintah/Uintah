@@ -26,14 +26,11 @@ template <class T>
 class TetVol : public GenericField<TetVolMesh, vector<T> > {
 public:
   TetVol() : 
-    GenericField<TetVolMesh, vector<T> >() {};
+    GenericField<TetVolMesh, vector<T> >() {}
   TetVol(Field::data_location data_at) : 
-    GenericField<TetVolMesh, vector<T> >(data_at) {};
+    GenericField<TetVolMesh, vector<T> >(data_at) {}
   TetVol(TetVolMeshHandle mesh, Field::data_location data_at) : 
-    GenericField<TetVolMesh, vector<T> >(mesh, data_at) 
-  {
-    resize_fdata();
-  };
+    GenericField<TetVolMesh, vector<T> >(mesh, data_at) {}
 
   virtual ~TetVol() {};
 
@@ -45,18 +42,6 @@ public:
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
 
-  void resize_fdata() {
-    if (data_at() == NODE)
-      fdata().resize(get_typed_mesh()->nodes_size());
-    else if (data_at() == EDGE)
-      fdata().resize(get_typed_mesh()->edges_size());
-    else if (data_at() == FACE)
-      ASSERTFAIL("tetvol can't have data at faces (yet)")
-    else if (data_at() == CELL)
-      fdata().resize(get_typed_mesh()->cells_size());
-    else
-      ASSERTFAIL("data at unrecognized location")
-  }
 
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }

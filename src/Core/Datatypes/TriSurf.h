@@ -27,30 +27,16 @@ template <class T>
 class TriSurf : public GenericField<TriSurfMesh, vector<T> > {
 public:
   TriSurf() : 
-    GenericField<TriSurfMesh, vector<T> >() {};
+    GenericField<TriSurfMesh, vector<T> >() {}
   TriSurf(Field::data_location data_at) : 
-    GenericField<TriSurfMesh, vector<T> >(data_at) {};
+    GenericField<TriSurfMesh, vector<T> >(data_at) {}
   TriSurf(TriSurfMeshHandle mesh, Field::data_location data_at) : 
-    GenericField<TriSurfMesh, vector<T> >(mesh, data_at) 
-  {
-    resize_fdata();
-  };
+    GenericField<TriSurfMesh, vector<T> >(mesh, data_at) {} 
   
   virtual ~TriSurf() {};
   
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
-
-  void resize_fdata() {
-    if (data_at() == NODE)
-      fdata().resize(get_typed_mesh()->nodes_size());
-    else if (data_at() == EDGE)
-      fdata().resize(get_typed_mesh()->edges_size());
-    else if (data_at() == FACE)
-      fdata().resize(get_typed_mesh()->faces_size());
-    else
-      ASSERTFAIL("data at unrecognized location")
-  }
 
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }

@@ -33,15 +33,24 @@ public:
 
   value_type &operator[](typename LatVolMesh::cell_index idx)
     { return operator()(idx.i_,idx.j_,idx.k_); } 
-  value_type operator[](typename LatVolMesh::face_index)
-    { return (Data)0; }
-  value_type operator[](typename LatVolMesh::edge_index)
-    { return (Data)0; }
+  value_type &operator[](typename LatVolMesh::face_index idx)
+    { return operator()(idx, 1, 1); }
+  value_type &operator[](typename LatVolMesh::edge_index idx)
+    { return operator()(idx, 1, 1); }
   value_type &operator[](typename LatVolMesh::node_index idx)
     { return operator()(idx.i_,idx.j_,idx.k_); }
 
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
+
+  void resize(const LatVolMesh::node_index &size)
+  { newsize(size.i_, size.j_, size.k_); }
+  void resize(LatVolMesh::edge_index size)
+  { newsize(size, 1, 1); }
+  void resize(LatVolMesh::face_index size)
+  { newsize(size, 1, 1); }
+  void resize(const LatVolMesh::cell_index &size)
+  { newsize(size.i_, size.j_, size.k_); }
 };
 
 template <class Data>
@@ -74,33 +83,13 @@ public:
   LatticeVol(Field::data_location data_at) :
     GenericField<LatVolMesh, FData3d<Data> >(data_at) {}
   LatticeVol(LatVolMeshHandle mesh, Field::data_location data_at) : 
-    GenericField<LatVolMesh, FData3d<Data> >(mesh, data_at) 
-  {
-    resize_fdata();
-  };
+    GenericField<LatVolMesh, FData3d<Data> >(mesh, data_at) {}
   
   virtual ~LatticeVol(){}
 
   virtual LatticeVol<Data> *clone() const 
     { return new LatticeVol<Data>(*this); }
  
-  void resize_fdata() {
-    if (data_at() == NODE)
-      fdata().newsize(get_typed_mesh()->nodes_size().i_, 
-		      get_typed_mesh()->nodes_size().j_,
-		      get_typed_mesh()->nodes_size().k_);
-    else if (data_at() == EDGE) 
-      ASSERTFAIL("latticevol can't have data at edges (yet)")
-    else if (data_at() == FACE)
-      ASSERTFAIL("latticevol can't have data at faces (yet)")
-    else if (data_at() == CELL)
-      fdata().newsize(get_typed_mesh()->cells_size().i_, 
-		      get_typed_mesh()->cells_size().j_,
-		      get_typed_mesh()->cells_size().k_);      
-    else
-      ASSERTFAIL("data at unrecognized location")
-  }
-
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
   static PersistentTypeID type_id;

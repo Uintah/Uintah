@@ -79,6 +79,11 @@ public:
   cell_iterator cell_begin() const;
   cell_iterator cell_end() const;
 
+  node_index nodes_size() { return *node_end(); }
+  edge_index edges_size() { return *edge_end(); }
+  face_index faces_size() { return *face_end(); }
+  cell_index cells_size() { return *cell_end(); }
+
   void get_nodes(node_array &array, edge_index idx) const;
   void get_nodes(node_array &array, face_index idx) const;
   void get_nodes(node_array &array, cell_index idx) const;
