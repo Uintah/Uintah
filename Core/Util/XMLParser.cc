@@ -1,10 +1,22 @@
 
 
 #include <Core/Util/XMLParser.h>
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 3303
+#pragma set woff 3201
+#pragma set woff 1209
+#pragma set woff 1110
+#endif
 #include <sax/SAXException.hpp>
 #include <sax/SAXParseException.hpp>
 #include <sax2/SAX2XMLReader.hpp>
 #include <sax2/XMLReaderFactory.hpp>
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 3303
+#pragma reset woff 3201
+#pragma reset woff 1209
+#pragma reset woff 1110
+#endif
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -59,10 +71,10 @@ XMLParser::parse( const string &file )
 }
 
 void
-XMLParser:: startElement(const XMLCh * const uri,
-			 const XMLCh * const localname,
-			 const XMLCh * const qname,
-			 const Attributes&   attrs ) 
+XMLParser:: startElement(const XMLCh * const /*uri*/,
+			 const XMLCh * const /*localname*/,
+			 const XMLCh * const /*qname*/,
+			 const Attributes&   /*attrs*/ ) 
 {
   data_ = "";
 }

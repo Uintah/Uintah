@@ -624,7 +624,7 @@ bool disconnect( Signal4<Arg1, Arg2, Arg3, Arg4> &s,
   return s.rem( StaticSlot4<Arg1, Arg2, Arg3, Arg4>( fun ) );
 }
 
-}; // namespace SCIRun
+} // namespace SCIRun
 
 #endif // Signals_h
 

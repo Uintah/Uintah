@@ -103,10 +103,9 @@ void DebugStream::checkenv(string iname)
   if(!var.empty()){
     string name, file;
     
-    int commapos, colonpos, oldcomma;
-    commapos = colonpos = oldcomma = 0;
-    commapos = var.find(',', 0);
-    colonpos = var.find(':', 0);
+    unsigned long oldcomma = 0;
+    unsigned long commapos = var.find(',', 0);
+    unsigned long colonpos = var.find(':', 0);
     if(commapos == (int)string::npos){
       commapos = var.size();
     }

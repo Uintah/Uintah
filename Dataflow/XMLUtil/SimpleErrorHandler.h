@@ -18,19 +18,18 @@
 #ifndef UINTAH_HOMEBREW_SimpleErrorHandler_H
 #define UINTAH_HOMEBREW_SimpleErrorHandler_H
 
-#ifdef __sgi
-#define IRIX
-#endif
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX
 #pragma set woff 1375
+#pragma set woff 3303
 #endif
 #include <util/PlatformUtils.hpp>
 #include <parsers/DOMParser.hpp>
 #include <dom/DOM_Node.hpp>
 #include <dom/DOM_NamedNodeMap.hpp>
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
+#pragma reset woff 3303
 #endif
 #include <sax/ErrorHandler.hpp>
 #include <sax/SAXException.hpp>

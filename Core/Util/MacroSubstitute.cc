@@ -67,7 +67,7 @@ char* MacroSubstitute(char* var_val, env_map& env)
 
   newstring += var_val[cur]; // don't forget the last character!
 
-  int newlength = strlen(newstring.c_str());
+  unsigned long newlength = strlen(newstring.c_str());
   char* retval = new char[newlength+1];
   sprintf(retval,"%s",newstring.c_str());
   
