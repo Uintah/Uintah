@@ -38,6 +38,7 @@ SRCS     += \
         $(SRCDIR)/MatrixSelectVector.cc\
         $(SRCDIR)/MinNormLeastSq.cc\
 	$(SRCDIR)/SolveMatrix.cc\
+	$(SRCDIR)/Submatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 #        $(SRCDIR)/ManipMatrix.cc\
 
