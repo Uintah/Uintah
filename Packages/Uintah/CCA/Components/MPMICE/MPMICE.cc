@@ -58,17 +58,8 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   d_ice->setICELabel(Ilb);
   d_ice->problemSetup(prob_spec, grid, d_sharedState);
   
-  ProblemSpecP mat_ps       =  prob_spec->findBlock("MaterialProperties");
-  ProblemSpecP mpm_ice_ps   =  mat_ps->findBlock("MPMICE");
-  ProblemSpecP exch_ps = mpm_ice_ps->findBlock("exchange_coefficients");
-  exch_ps->require("momentum",d_K_mom);
-  exch_ps->require("heat",d_K_heat);
-  cerr << "Pulled out exchange coefficients of the input file \t\t MPMICE" 
-       << endl;
-  
-
-   cerr << "Done with problemSetup \t\t\t MPMICE" <<endl;
-   cerr << "--------------------------------\n"<<endl;
+  cerr << "Done with problemSetup \t\t\t MPMICE" <<endl;
+  cerr << "--------------------------------\n"<<endl;
 }
 //______________________________________________________________________
 //
@@ -837,8 +828,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     a.zero();
 
     for (int i = 0; i < numALLMatls; i++ ) {
-        K[numALLMatls-1-i][i] =d_K_mom[i];
-        H[numALLMatls-1-i][i] =d_K_heat[i];
+        K[numALLMatls-1-i][i] =d_ice->d_K_mom[i];
+        H[numALLMatls-1-i][i] =d_ice->d_K_heat[i];
     }
 
     for (int m = 0; m < numALLMatls; m++) {

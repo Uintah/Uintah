@@ -19,13 +19,16 @@
 #include <Core/Util/NotFinished.h>
 
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <vector>
 #include <Core/Geometry/Vector.h>
+#include <sstream>
 
 using std::vector;
 using std::max;
+using std::istringstream;
  
 using namespace SCIRun;
 using namespace Uintah;
@@ -83,7 +86,8 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebug_advance_advect      = false;
   switchDebug_advectQFirst        = false;
   switchTestConservation          = false;
-  switchMassExchange              = false;
+
+  d_massExchange = false;
   
 }
 
@@ -145,8 +149,6 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
 	switchDebug_advectQFirst         = true;
       else if (debug_attr["label"] == "switchTestConservation")
 	switchTestConservation           = true;
-      else if (debug_attr["label"] == "switchMassExchange")
-	switchMassExchange               = true;
     }
   }
   cerr << "Pulled out the debugging switches from input file" << endl;
@@ -179,29 +181,38 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
   }     
   cerr << "Pulled out InitialConditions block of the input file" << endl;
 
-
-  int numICEMatls = d_sharedState->getNumICEMatls();
-  int numALLMatls = d_sharedState->getNumMatls();  
   // Pull out the exchange coefficients
-  if (numICEMatls == numALLMatls)  {
-    ProblemSpecP exch_ps = ice_mat_ps->findBlock("exchange_coefficients");
-    exch_ps->require("momentum",d_K_mom);
-    exch_ps->require("heat",d_K_heat);
-    
-    for (int i = 0; i<(int)d_K_mom.size(); i++)
-      cout << "K_mom = " << d_K_mom[i] << endl;
-    for (int i = 0; i<(int)d_K_heat.size(); i++)
-      cout << "K_heat = " << d_K_heat[i] << endl;
-    cerr << "Pulled out exchange coefficients of the input file" << endl;
-  }
-  else {
-    ProblemSpecP mpm_ice_ps   =  mat_ps->findBlock("MPMICE");
-    ProblemSpecP exch_ps = mpm_ice_ps->findBlock("exchange_coefficients");
-    exch_ps->require("momentum",d_K_mom);
-    exch_ps->require("heat",d_K_heat);
-    cerr << "Pulled out exchange coefficients of the input file \t\t MPMICE" <<
-endl;
-  }
+  ProblemSpecP exch_ps = mat_ps->findBlock("exchange_properties");
+  if (!exch_ps)
+    throw ProblemSetupException("Cannot find exchange_properties tag");
+  
+  ProblemSpecP exch_co_ps = exch_ps->findBlock("exchange_coefficients");
+  exch_co_ps->require("momentum",d_K_mom);
+  exch_co_ps->require("heat",d_K_heat);
+
+  for (int i = 0; i<(int)d_K_mom.size(); i++)
+    cout << "K_mom = " << d_K_mom[i] << endl;
+  for (int i = 0; i<(int)d_K_heat.size(); i++)
+    cout << "K_heat = " << d_K_heat[i] << endl;
+  cerr << "Pulled out exchange coefficients of the input file" << endl;
+
+  string mass_exch_in;
+  ProblemSpecP mass_exch_ps = exch_ps->get("mass_exchange",mass_exch_in);
+
+  if (mass_exch_ps) {
+    istringstream in(mass_exch_in);
+    string mass_exch_out;
+    in >> mass_exch_out;
+    if (mass_exch_out == "true" || mass_exch_out == "TRUE" || 
+	mass_exch_out == "1") {
+      d_massExchange = true;
+    } else 
+      d_massExchange = false;
+  } else
+    d_massExchange = false;
+
+  cerr << "Mass exchange = " << d_massExchange << endl;
+
   //__________________________________
   //  Print out what I've found
   cout << "Number of ICE materials: " 
@@ -1875,7 +1886,7 @@ void ICE::massExchange(const ProcessorGroup*,
     //__________________________________
     // Do the exchange if there is HMX
     // and the switch is on.
-    if(switchMassExchange){        
+    if(d_massExchange){        
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
 
         double mass_hmx = rho_CC[HMX][*iter] * vol;
@@ -2193,8 +2204,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       double cv = ice_matl->getSpecificHeat();
       //__________________________________
       //  NO mass exchange
-      if(!switchMassExchange)
-      {
+      if(d_massExchange == false) {
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
 	    iter++) {
 
@@ -2212,8 +2222,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       // eliminate all the mass, momentum and internal E
       // If it does then we'll get erroneous vel, and temps
       // after advection.  Thus there is always a mininum amount
-      if(switchMassExchange)
-      {
+      if(d_massExchange)  {
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
 	    iter++) {
            //  must have a minimum mass

@@ -147,7 +147,6 @@
    </DataArchiver>
    
    <Debug>
-    <debug label = "switchMassExchange"/>
     <debug label = "switchTestConservation"/>
  <!--<debug label = "switchDebugInitialize"/>       -->
     <debug label = "switchDebug_equilibration_press"/>         
@@ -221,7 +220,7 @@
 	    <gas_constant>       188.92                  </gas_constant>
 	    </EOS>
 	    <viscosity>          0.0                     </viscosity>
-	    <thermal_conductivity>0.0                    </thermal_conductivity>
+	    <thermal_conductivity>0.0                   </thermal_conductivity>
 	    <specific_heat>      652.9                   </specific_heat>
 	    <speed_of_sound>     270.28699999999998      </speed_of_sound>
 	    <gamma>              1.289                   </gamma>
@@ -238,12 +237,18 @@
 	        <temperature>    300.0                   </temperature>
 	    </geom_object>
 	  </material>
-         
-	  <exchange_coefficients>
-	     <momentum>          [1.0e10, 1.0e10]              </momentum>
-	     <heat>              [1.0e10, 1.0e10]          </heat>
-	 </exchange_coefficients>
 	</ICE>	
+
+	<exchange_properties>	
+	  <exchange_coefficients>
+	     <momentum>          [1.0e10, 1.0e10]          </momentum>
+	     <heat>              [1.0e10, 1.0e10]          </heat>
+	  </exchange_coefficients>
+	  <mass_exchange> true </mass_exchange>
+	</exchange_properties>
+
     </MaterialProperties>           
 	
 </Uintah_specification>
+
+

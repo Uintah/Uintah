@@ -260,13 +260,12 @@
 	  </material>
 	</ICE>	
        
-      
-       <MPMICE>
+    	<exchange_properties>  
          <exchange_coefficients>
 	       <momentum>	        [1e15, 1e15]         </momentum>
 	       <heat>                  [1e1, 1e1]           </heat>
-	   </exchange_coefficients>
-       </MPMICE>
+	 </exchange_coefficients>
+    	</exchange_properties>  
     </MaterialProperties>
             
 
