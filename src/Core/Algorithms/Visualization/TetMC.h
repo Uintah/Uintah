@@ -84,7 +84,7 @@ void TetMC<Field>::reset( int n, bool build_trisurf )
   build_trisurf_ = build_trisurf;
 
   triangles_ = new GeomTrianglesP;
-  triangles_->reserve_clear( 1.3*n );
+  triangles_->reserve_clear((int)(1.3*n));
 
   vertex_map_.clear();
   nnodes_ = mesh_->nodes_size();
