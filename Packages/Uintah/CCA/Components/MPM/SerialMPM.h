@@ -475,6 +475,8 @@ protected:
                                DataWarehouse*,
                                DataWarehouse*);
 
+      virtual bool needRecompile(double time, double dt,
+                                 const GridP& grid);
 
   SimulationStateP d_sharedState;
   MPMLabel* lb;
@@ -495,6 +497,7 @@ protected:
   bool             d_fracture;
   bool             d_with_ice;
   bool             d_with_arches;
+  bool             d_recompile;
   IntegratorType d_integrator;
 
 private:
