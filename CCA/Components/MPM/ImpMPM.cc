@@ -634,6 +634,7 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
   t->requires(Task::NewDW,lb->gMassLabel,           Ghost::None);
 
   t->computes(lb->gStressForSavingLabel);
+  t->computes(lb->NTractionZMinusLabel);
   sched->addTask(t, patches, matls);
 }
 
@@ -678,6 +679,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
   int count = 0;
   bool dispInc = false;
   bool dispIncQ = false;
+  bool haveanan = false;
   sum_vartype dispIncQNorm,dispIncNorm,dispIncQNorm0,dispIncNormMax;
 
   // Get all of the required particle data that is in the old_dw and put it 
@@ -722,9 +724,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
   subsched->get_dw(3)->finalize();
   subsched->advanceDataWarehouse(grid);
 
-//  double change_dt = .02;
-//  old_dw->override(delt_vartype(change_dt),d_sharedState->get_delt_label());
-
+//  while(!(dispInc && dispIncQ) && !haveanan) {
   while(!(dispInc && dispIncQ)) {
     if(d_myworld->myrank() == 0){
      cerr << "Beginning Iteration = " << count++ << "\n";
@@ -748,13 +748,21 @@ void ImpMPM::iterate(const ProcessorGroup*,
       dispInc = true;
     if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy)
       dispIncQ = true;
+    // Check to see if the residual is likely a nan, if so, we'll restart.
+    if(!((dispIncQNorm/(dispIncQNorm0 + 1e-100) > d_SMALL_NUM_MPM) &&
+         (dispIncQNorm/(dispIncQNorm0 + 1e-100) < 1./d_SMALL_NUM_MPM)) ||
+       !((dispIncNorm/(dispIncNormMax + 1e-100) > d_SMALL_NUM_MPM) &&
+         (dispIncNorm/(dispIncNormMax + 1e-100) < 1./d_SMALL_NUM_MPM))){
+      haveanan=true;
+    }
+    if(haveanan){
+      new_dw->abortTimestep();
+      new_dw->restartTimestep();
+      return;
+    }
     subsched->advanceDataWarehouse(grid);
   }
   d_numIterations = count;
-  if(d_numIterations > 7){
-    new_dw->abortTimestep();
-    new_dw->restartTimestep();
-  }
 
   // Move the particle data from subscheduler to scheduler.
   for (int p = 0; p < patches->size();p++) {
@@ -1956,6 +1964,9 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     // This task is done for visualization only
 
     int numMatls = d_sharedState->getNumMPMMatls();
+    double integralTraction = 0.;
+    double integralArea = 0.;
+    Vector dx = patch->dCell();
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -1999,7 +2010,39 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
         IntVector c = *iter;
         gstress[c] /= (gmass[c]+1.e-200);
       }
+      IntVector low = patch-> getInteriorNodeLowIndex();
+      IntVector hi  = patch-> getInteriorNodeHighIndex();
+      for(Patch::FaceType face = Patch::startFace;
+        face <= Patch::endFace; face=Patch::nextFace(face)){
+
+        // I assume we have the patch variable
+        // Check if the face is on the boundary
+        Patch::BCType bc_type = patch->getBCType(face);
+        if (bc_type == Patch::None) {
+          // We are on the boundary, i.e. not on an interior patch
+          // boundary, so do the traction accumulation . . .
+          if(face==Patch::yminus){
+            int J=low.y();
+            for (int i = low.x(); i<hi.x(); i++) {
+              for (int k = low.z(); k<hi.z(); k++) {
+                integralTraction +=
+                  gstress[IntVector(i,J,k)](2,2)*dx.x()*dx.z();
+                if(fabs(gstress[IntVector(i,J,k)](2,2)) > 1.e-12){
+                  integralArea+=dx.x()*dx.z();
+                }
+              }
+            }
+          }  // if the yminus face
+        } // end of if (bc_type == Patch::None)
+      } // Loop over faces
+    }  // Loop over matls
+    if(integralArea > 0.){
+      integralTraction=integralTraction/integralArea;
     }
+    else{
+      integralTraction=0.;
+    }
+    new_dw->put(sum_vartype(integralTraction), lb->NTractionZMinusLabel);
   }
 }
 
