@@ -11,9 +11,9 @@ SRCDIR := Packages/DaveW/Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/Contours\
-	$(SRCDIR)/Readers\
-	$(SRCDIR)/SurfTree\
-	$(SRCDIR)/Writers\
+#	$(SRCDIR)/Readers\
+#	$(SRCDIR)/SurfTree\
+#	$(SRCDIR)/Writers\
 #	$(SRCDIR)/CS684\
 #	$(SRCDIR)/SiRe\
 #	$(SRCDIR)/Tensor\
