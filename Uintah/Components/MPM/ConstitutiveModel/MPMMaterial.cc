@@ -184,6 +184,17 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 //   new_dw->put(pissurf, lb->pSurfLabel);
    new_dw->put(ptemperature, lb->pTemperatureLabel);
    new_dw->put(pparticleID, lb->pParticleIDLabel);
+   
+   if(MPMPhysicalModules::fractureModel) {
+     ParticleVariable<Vector> pCrackSurfaceNormal;
+     new_dw->allocate(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, subset);
+
+     for(particleIndex pIdx=0;pIdx<partclesNum;++pIdx) {
+       pCrackSurfaceNormal[pIdx] = Vector(0.,0.,0.);
+     }
+
+     new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel);
+   }
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,
@@ -333,6 +344,10 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.43  2000/08/08 04:43:13  tan
+// For the default initial state, we set particle crack surface normal
+// to be zero.
+//
 // Revision 1.42  2000/08/04 16:51:36  tan
 // The "if(MPMPhysicalModules::heatConductionModel)" is removed.  Simulations
 // are thermal-mechanical.
