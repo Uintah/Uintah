@@ -27,6 +27,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/MixedScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/NullScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorLoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/NirvanaLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/RoundRobinLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
@@ -129,6 +130,7 @@ main(int argc, char** argv)
     string filename;
     string scheduler;
     string loadbalancer;
+    IntVector layout(1,1,1);
 
     /*
      * Parse arguments
@@ -184,8 +186,15 @@ main(int argc, char** argv)
 	} else if(s == "-t") {
            if (i < argc-1)
 	      restartTimestep = atoi(argv[++i]);
-	}
-	else {
+	} else if(s == "-layout") {
+	  if(++i == argc)
+	    usage("You must provide a vector arg for -layout",
+		  s, argv[0]);
+	  int ii,jj,kk;
+	  if(sscanf(argv[i], "%dx%dx%d", &ii, &jj, &kk) != 3)
+	    usage("Error parsing -layout", argv[i], argv[0]);
+	  layout = IntVector(ii,jj,kk);
+	} else {
 	    if(filename!="")
 		usage("", s, argv[0]);
 	    else
@@ -294,6 +303,8 @@ main(int argc, char** argv)
 	   bal = scinew RoundRobinLoadBalancer(world);
 	} else if(loadbalancer == "SimpleLoadBalancer") {
 	   bal = scinew SimpleLoadBalancer(world);
+	} else if(loadbalancer == "NirvanaLoadBalancer") {
+	   bal = scinew NirvanaLoadBalancer(world, layout);
 	} else {
 	   bal = 0;
 	   quit( "Unknown load balancer: " + loadbalancer );
