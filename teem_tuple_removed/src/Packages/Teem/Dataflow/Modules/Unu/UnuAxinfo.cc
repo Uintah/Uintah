@@ -55,6 +55,7 @@ public:
   GuiInt              dimension_;
   GuiString           type_;
   GuiString           label0_;
+  GuiInt              gui_initialized_;
   vector<GuiString*>  label_;
   vector<GuiString*>  kind_;
   vector<GuiString*>  center_;
@@ -75,6 +76,7 @@ UnuAxinfo::UnuAxinfo(GuiContext* ctx)
     dimension_(ctx->subVar("dimension")),
     type_(ctx->subVar("type")),
     label0_(ctx->subVar("label0")),
+    gui_initialized_(ctx->subVar("initialized")),
     generation_(-1),
     max_vectors_(0)
 {
@@ -109,7 +111,7 @@ void UnuAxinfo::load_gui() {
       max_.push_back(new GuiDouble(ctx->subVar(max.str())));
       spac << "spacing" << a;
       spacing_.push_back(new GuiDouble(ctx->subVar(spac.str())));
-
+      
       max_vectors_++;
     }
   }
@@ -151,171 +153,169 @@ void UnuAxinfo::execute()
 
   dimension_.reset();
   bool do_clear = false;
+  bool sizes_same = true;
+
+  load_gui();
+  // don't clear/reset if sizes that are saved are the same as nrrd's
+  if(dimension_.get() == nh->nrrd->dim) {
+    for(int a = 0; a < dimension_.get(); a++) {
+      if(size_[a]->get() != nh->nrrd->axis[a].size) {
+	sizes_same = false;
+	break;
+      }
+    }
+  } else {
+    sizes_same = false;
+  }
   
-  if (generation_ != nh.get_rep()->generation) 
+  if (generation_ != nh.get_rep()->generation && !sizes_same) 
   {
     do_clear = true;
     generation_ = nh->generation;
-    load_gui();
-
-    // if the dimension, and sizes
-    // don't clear
-
-    if(dimension_.get() == nh->nrrd->dim) {
-      for(int a = 0; a < dimension_.get(); a++) {
-	if(size_[a]->get() != nh->nrrd->axis[a].size) {
-	  do_clear = true;
-	  break;
-	}
-      }
-    } else {
-      do_clear = true;
-    }
-       
-    if (do_clear) {
-      // delete the guivars  in the vectors and then clear
-      // all of them
-      vector<GuiString*>::iterator iter1 = label_.begin();
-      while(iter1 != label_.end()) {
-	delete *iter1;
-	++iter1;
-      }
-      label_.clear();
-      iter1 = kind_.begin();
-      while(iter1 != kind_.end()) {
-	delete *iter1;
-	++iter1;
-      }
-      kind_.clear();
-
-      iter1 = center_.begin();
-      while(iter1 != center_.end()) {
-	delete *iter1;
-	++iter1;
-      }
-      center_.clear();
-      vector<GuiDouble*>::iterator iter2 = size_.begin();
-      while(iter2 != size_.end()) {
-	delete *iter2;
-	++iter2;
-      } 
-      size_.clear();
-      iter2 = min_.begin();
-      while(iter2 != min_.end()) {
-	delete *iter2;
-	++iter2;
-      } 
-      min_.clear();
-      iter2 = max_.begin();
-      while(iter2 != max_.end()) {
-	delete *iter2;
-	++iter2;
-      } 
-      max_.clear();
-      iter2 = spacing_.begin();
-      while(iter2 != spacing_.end()) {
-	delete *iter2;
-	++iter2;
-      } 
-      spacing_.clear();
-      max_vectors_ = 0;
-
-      gui->execute(id.c_str() + string(" clear_axes"));
-
-      dimension_.set(nh->nrrd->dim);
-      dimension_.reset();
-
-      load_gui();
-
-      
-      // Tuple Axis information 
-      // label0_.set(nh->nrrd->axis[0].label);
-
-      gui->execute(id.c_str() + string(" init_axes"));
-
-      // set nrrd info to be like the nh->nrrd's
-      // because this is new input
-      switch (nh->nrrd->type) {
-      case nrrdTypeChar :  
-	type_.set("char");
-	break;
-      case nrrdTypeUChar : 
-	type_.set("unsigned char");
-	break;
-      case nrrdTypeShort : 
-	type_.set("short");
-	break;
-      case nrrdTypeUShort :
-	type_.set("unsigned short");
-	break;
-      case nrrdTypeInt : 
-	type_.set("int");
-	break;
-      case nrrdTypeUInt :  
-	type_.set("unsigned int");
-	break;
-      case nrrdTypeLLong : 
-	type_.set("long long");
-	break;
-      case nrrdTypeULLong :
-	type_.set("unsigned long long");
-	break;
-      case nrrdTypeFloat :
-	type_.set("float");
-	break;
-      case nrrdTypeDouble :
-	type_.set("double");
-	break;
-      }
-      for(int a = 0; a < dimension_.get(); a++) {
-	if (nh->nrrd->axis[a].label == NULL || string(nh->nrrd->axis[a].label).length() == 0) {
-	  label_[a]->set("---");
-	  nh->nrrd->axis[a].label = "";
-	} else {
-	  label_[a]->set(nh->nrrd->axis[a].label);
-	}
-	switch(nh->nrrd->axis[a].kind) {
-	case nrrdKindDomain:
-	  kind_[a]->set("nrrdKindDomain");
-	  break;
-	case nrrdKindScalar:
-	  kind_[a]->set("nrrdKindScalar");
-	  break;
-	case nrrdKind3DSymTensor:
-	  kind_[a]->set("nrrdKind3DSymTensor");
-	  break;
-	case nrrdKind3DMaskedSymTensor:
-	  kind_[a]->set("nrrdKind3DMaskedSymTensor");
-	  break;
-	case nrrdKind3DTensor:
-	  kind_[a]->set("nrrdKind3DTensor");
-	  break;
-	default:
-	  kind_[a]->set("nrrdKindUnknown");
-	  break;
-	}
-
-	switch (nh->nrrd->axis[a].center) {
-	case nrrdCenterUnknown :
-	  center_[a]->set("Unknown");
-	  break;
-	case nrrdCenterNode :
-	  center_[a]->set("Node");
-	  break;
-	case nrrdCenterCell :
-	  center_[a]->set("Cell");
-	  break;
-	}
-	size_[a]->set(nh->nrrd->axis[a].size);
-	spacing_[a]->set(nh->nrrd->axis[a].spacing);
-	min_[a]->set(nh->nrrd->axis[a].min);
-	max_[a]->set(nh->nrrd->axis[a].max);
-      }
-    }
   }
   
-  if (dimension_.get() == 0) { return; }
+  if (do_clear) {
+    // delete the guivars  in the vectors and then clear
+    // all of them
+    vector<GuiString*>::iterator iter1 = label_.begin();
+    while(iter1 != label_.end()) {
+      delete *iter1;
+      ++iter1;
+    }
+    label_.clear();
+    iter1 = kind_.begin();
+    while(iter1 != kind_.end()) {
+      delete *iter1;
+      ++iter1;
+    }
+    kind_.clear();
+    
+    iter1 = center_.begin();
+    while(iter1 != center_.end()) {
+      delete *iter1;
+      ++iter1;
+    }
+    center_.clear();
+    vector<GuiDouble*>::iterator iter2 = size_.begin();
+    while(iter2 != size_.end()) {
+      delete *iter2;
+      ++iter2;
+    } 
+    size_.clear();
+    iter2 = min_.begin();
+    while(iter2 != min_.end()) {
+      delete *iter2;
+      ++iter2;
+    } 
+    min_.clear();
+    iter2 = max_.begin();
+    while(iter2 != max_.end()) {
+      delete *iter2;
+      ++iter2;
+    } 
+    max_.clear();
+    iter2 = spacing_.begin();
+    while(iter2 != spacing_.end()) {
+      delete *iter2;
+      ++iter2;
+    } 
+    spacing_.clear();
+    max_vectors_ = 0;
+    
+    gui->execute(id.c_str() + string(" clear_axes"));
+    
+    dimension_.set(nh->nrrd->dim);
+    dimension_.reset();
+    
+    load_gui();
+    
+    gui->execute(id.c_str() + string(" init_axes"));
 
+    gui_initialized_.set(1);
+    
+    // set nrrd info to be like the nh->nrrd's
+    // because this is new input
+    switch (nh->nrrd->type) {
+    case nrrdTypeChar :  
+      type_.set("char");
+      break;
+    case nrrdTypeUChar : 
+      type_.set("unsigned char");
+      break;
+    case nrrdTypeShort : 
+      type_.set("short");
+      break;
+    case nrrdTypeUShort :
+      type_.set("unsigned short");
+      break;
+    case nrrdTypeInt : 
+      type_.set("int");
+      break;
+    case nrrdTypeUInt :  
+      type_.set("unsigned int");
+      break;
+    case nrrdTypeLLong : 
+      type_.set("long long");
+      break;
+    case nrrdTypeULLong :
+      type_.set("unsigned long long");
+      break;
+    case nrrdTypeFloat :
+      type_.set("float");
+      break;
+    case nrrdTypeDouble :
+      type_.set("double");
+      break;
+    }
+    for(int a = 0; a < dimension_.get(); a++) {
+      if (nh->nrrd->axis[a].label == NULL || string(nh->nrrd->axis[a].label).length() == 0) {
+	label_[a]->set("---");
+	nh->nrrd->axis[a].label = "";
+      } else {
+	label_[a]->set(nh->nrrd->axis[a].label);
+      }
+      switch(nh->nrrd->axis[a].kind) {
+      case nrrdKindDomain:
+	kind_[a]->set("nrrdKindDomain");
+	break;
+      case nrrdKindScalar:
+	kind_[a]->set("nrrdKindScalar");
+	break;
+      case nrrdKind3DSymTensor:
+	kind_[a]->set("nrrdKind3DSymTensor");
+	break;
+      case nrrdKind3DMaskedSymTensor:
+	kind_[a]->set("nrrdKind3DMaskedSymTensor");
+	break;
+      case nrrdKind3DTensor:
+	kind_[a]->set("nrrdKind3DTensor");
+	break;
+      default:
+	kind_[a]->set("nrrdKindUnknown");
+	break;
+      }
+      
+      switch (nh->nrrd->axis[a].center) {
+      case nrrdCenterUnknown :
+	center_[a]->set("Unknown");
+	break;
+      case nrrdCenterNode :
+	center_[a]->set("Node");
+	break;
+      case nrrdCenterCell :
+	center_[a]->set("Cell");
+	break;
+      }
+      size_[a]->set(nh->nrrd->axis[a].size);
+      spacing_[a]->set(nh->nrrd->axis[a].spacing);
+      min_[a]->set(nh->nrrd->axis[a].min);
+      max_[a]->set(nh->nrrd->axis[a].max);
+    }
+  } 
+
+  
+  if (dimension_.get() == 0) { return; }
+  
   // sync with gui
   type_.reset();
   label0_.reset();
