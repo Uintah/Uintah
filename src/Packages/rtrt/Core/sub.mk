@@ -105,7 +105,6 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Context.cc  \
 	$(SRCDIR)/UVMapping.cc \
 	$(SRCDIR)/PPMImage.cc \
-	$(SRCDIR)/PNGImage.cc \
 	$(SRCDIR)/UVPlane.cc \
 	$(SRCDIR)/ImageMaterial.cc \
 	$(SRCDIR)/TileImageMaterial.cc \
@@ -189,6 +188,6 @@ include $(SRCTOP)/scripts/recurse.mk
 PSELIBS :=  \
 	Core/Thread Core/Exceptions Core/Persistent Core/Geometry Packages/rtrt/visinfo 
 
-LIBS := $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY) -lpng -lz
+LIBS := $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
