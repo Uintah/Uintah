@@ -53,7 +53,7 @@
 #endif
 
 
-#ifdef BUILD_tk || defined BUILD_SCICORE
+#if defined(BUILD_tk) || defined(BUILD_SCICORE)
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLEXPORT
 #endif
