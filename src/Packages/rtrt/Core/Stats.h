@@ -2,7 +2,7 @@
 #ifndef STATS_H
 #define STATS_H 1
 
-#include "params.h"
+#include <Packages/rtrt/Core/params.h>
 
 namespace rtrt {
   

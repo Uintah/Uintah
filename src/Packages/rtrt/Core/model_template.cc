@@ -1,7 +1,7 @@
 
 
-#include "Camera.h"
-#include "Scene.h"
+#include <Packages/rtrt/Core/Camera.h>
+#include <Packages/rtrt/Core/Scene.h>
 #include <iostream>
 #include <math.h>
 #include <string.h>

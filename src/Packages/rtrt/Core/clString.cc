@@ -1,6 +1,6 @@
 
-#include "clString.h"
-#include "NotFinished.h"
+#include <Packages/rtrt/Core/clString.h>
+#include <Packages/rtrt/Core/NotFinished.h>
 #include <iostream>
 #include <string.h>
 #include <stdio.h>

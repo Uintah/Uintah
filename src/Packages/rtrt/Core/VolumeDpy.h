@@ -4,7 +4,7 @@
 
 #include <Core/Thread/Runnable.h>
 #include <X11/Xlib.h>
-#include "Array1.h"
+#include <Packages/rtrt/Core/Array1.h>
 
 namespace rtrt {
 

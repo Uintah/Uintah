@@ -1,10 +1,10 @@
 
-#include "VolumeBrick16.h"
-#include "BBox.h"
-#include "HitInfo.h"
-#include "Ray.h"
-#include "Color.h"
-#include "VolumeDpy.h"
+#include <Packages/rtrt/Core/VolumeBrick16.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/VolumeDpy.h>
 #include <stdio.h>
 #include <fstream>
 #include <sys/types.h>

@@ -1,4 +1,4 @@
-#include "Phong.h"
+#include <Packages/rtrt/Core/Phong.h>
 
 using namespace rtrt;
 
