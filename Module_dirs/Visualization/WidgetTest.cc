@@ -21,7 +21,7 @@
 #include <Widgets/ArrowWidget.h>
 #include <Widgets/CriticalPointWidget.h>
 #include <Widgets/CrosshairWidget.h>
-#include <Widgets/GuageWidget.h>
+#include <Widgets/GaugeWidget.h>
 #include <Widgets/RingWidget.h>
 #include <Widgets/FrameWidget.h>
 #include <Widgets/ScaledFrameWidget.h>
@@ -32,7 +32,7 @@
 
 #include <iostream.h>
 
-enum WidgetTypes { WT_Point, WT_Arrow, WT_Crit, WT_Cross, WT_Guage, WT_Ring,
+enum WidgetTypes { WT_Point, WT_Arrow, WT_Crit, WT_Cross, WT_Gauge, WT_Ring,
 		   WT_Frame, WT_SFrame, WT_Box, WT_SBox, WT_View, WT_Path,
 		   NumWidgetTypes };
 
@@ -82,7 +82,7 @@ WidgetTest::WidgetTest(const clString& id)
    widgets[WT_Arrow] = new ArrowWidget(this, &widget_lock, .1);
    widgets[WT_Crit] = new CriticalPointWidget(this, &widget_lock, .1);
    widgets[WT_Cross] = new CrosshairWidget(this, &widget_lock, .1);
-   widgets[WT_Guage] = new GuageWidget(this, &widget_lock, .1);
+   widgets[WT_Gauge] = new GaugeWidget(this, &widget_lock, .1);
    widgets[WT_Ring] = new RingWidget(this, &widget_lock, .1);
    widgets[WT_Frame] = new FrameWidget(this, &widget_lock, .1);
    widgets[WT_SFrame] = new ScaledFrameWidget(this, &widget_lock, .1);
@@ -135,7 +135,7 @@ void WidgetTest::geom_moved(int, double, const Vector&, void*)
     widgets[widget_type.get()]->execute();
 
     widget_lock.read_lock();
-    cout << "Gauge ratio " << ((GuageWidget*)widgets[WT_Guage])->GetRatio() << endl;
+    cout << "Gauge ratio " << ((GaugeWidget*)widgets[WT_Gauge])->GetRatio() << endl;
     cout << "Ring angle " << ((RingWidget*)widgets[WT_Ring])->GetRatio() << endl;
     cout << "FOV " << ((ViewWidget*)widgets[WT_View])->GetFOV() << endl;
     widget_lock.read_unlock();
@@ -177,7 +177,8 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
 //       widget_lock.write_lock();
        widgets[widget_type.get()]->SetScale(widget_scale.get());
 //       widget_lock.write_unlock();
-   } else {
+       ogeom->flushViews();
+    } else {
       Module::tcl_command(args, userdata);
    }
 }

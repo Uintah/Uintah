@@ -34,7 +34,7 @@ itcl_class WidgetTest {
 		top $this-widget_type \
 		{{PointWidget 0} {ArrowWidget 1} \
 		{CriticalPointWidget 2} \
-		{CrossHairWidget 3} {GuageWidget 4} \
+		{CrossHairWidget 3} {GaugeWidget 4} \
 		{RingWidget 5} {FrameWidget 6} \
 		{ScaledFrameWidget 7} {BoxWidget 8} \
 		{ScaledBoxWidget 9} {ViewWidget 10} \

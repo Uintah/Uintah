@@ -58,7 +58,7 @@ hook up user interface buttons
 #include <Geom/Switch.h>
 #include <Geom/Tube.h>
 #include <Geometry/Point.h>
-#include <Widgets/GuageWidget.h>
+#include <Widgets/GaugeWidget.h>
 #include <Widgets/PointWidget.h>
 #include <Widgets/RingWidget.h>
 #include <Widgets/ScaledFrameWidget.h>
@@ -122,7 +122,7 @@ public:
 };
 
 struct SLLineSource : public SLSource {
-    GuageWidget* gw;
+    GaugeWidget* gw;
 public:
     SLLineSource(Streamline* sl);
     virtual ~SLLineSource();
@@ -1007,7 +1007,7 @@ Vector SLPointSource::ribbon_direction(double, double,
 SLLineSource::SLLineSource(Streamline* sl)
 : SLSource(sl, "Line")
 {
-    widget=gw=new GuageWidget(sl, &sl->widget_lock, 1);
+    widget=gw=new GaugeWidget(sl, &sl->widget_lock, 1);
 }
 
 SLLineSource::~SLLineSource()
