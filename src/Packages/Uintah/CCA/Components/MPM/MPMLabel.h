@@ -98,8 +98,9 @@ using std::vector;
       const VarLabel* gSurfNormLabel;
       const VarLabel* gStressLabel;
       const VarLabel* gStressForSavingLabel;
-      const VarLabel* gVolumeLabel; //for heat conduction
+      const VarLabel* gVolumeLabel;
       const VarLabel* gWeightLabel; //for who knows what?
+      const VarLabel* gradPressNCLabel;
       
       const VarLabel* cBurnedMassLabel; //for burn models
 

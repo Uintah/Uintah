@@ -238,6 +238,9 @@ MPMLabel::MPMLabel()
   gWeightLabel = scinew VarLabel("g.weight",
 			NCVariable<double>::getTypeDescription());
 
+  gradPressNCLabel = scinew VarLabel("gradPressNC",
+			NCVariable<Vector>::getTypeDescription());
+
   // Cell centered variables
   cBurnedMassLabel = scinew VarLabel( "c.burnedMass",
 			CCVariable<double>::getTypeDescription() );
@@ -342,6 +345,8 @@ MPMLabel::~MPMLabel()
   delete gExternalHeatRateLabel;
   delete gThermalContactHeatExchangeRateLabel;
   delete cBurnedMassLabel;
+  delete gWeightLabel;
+  delete gradPressNCLabel;
 
   delete delTLabel;
 
