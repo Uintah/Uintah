@@ -43,11 +43,55 @@ PathTraceContext::PathTraceContext(const Color &color,
     this->num_samples = new_num_samples;
   }
 
+  useColormap=false;
+  
   // Determine the scratch size needed
   float bvscale=0.3;
   pp_size=0;
   pp_scratchsize=0;
   geometry->preprocess(bvscale, pp_size, pp_scratchsize);
+}
+
+void PathTraceContext::addColormap(Array1<unsigned char>& value, Array1<Color>& map) {
+  if (value.size()<=0) {
+    cerr<<"PathTraceContext::addColormap - Invalid value array"<<endl;
+    return;
+  }
+
+  if (map.size()!=256) {
+    cerr<<"PathTraceContext::addColormap - Color map is not of size 256"<<endl;
+    return;
+  }
+
+  this->value=value;
+  this->map=map;
+
+  useColormap=true;
+}
+
+Color PathTraceContext::lookupColor(HitInfo& hit) {
+  if (!useColormap)
+    return color;
+
+  // Assumes that number of values in TextureGridSpheres is 3
+  int cell=*(int*)hit.scratchpad;
+  int sphere_index = cell/3;
+  if (sphere_index<value.size()) {
+    return map[value[sphere_index]];
+  } else {
+    return Color(1,0,1);
+  }
+}
+
+Color PathTraceContext::lookupColor(int sphere_index) {
+  if (!useColormap)
+    return color;
+
+  if (sphere_index<value.size()) {
+    return map[value[sphere_index]];
+  } else {
+    return Color(1,0,1);
+  }
 }
 
 PathTraceWorker::PathTraceWorker(Group *group, PathTraceContext *ptc,
@@ -145,6 +189,7 @@ void PathTraceWorker::run() {
 
 	  Color result(0,0,0);
 	  PathTraceLight* light=&(ptc->light);
+	  Color surface_color=ptc->lookupColor(offset+sindex);
 	  for (int depth=0;depth<=ptc->max_depth;depth++) {
 	    // Compute direct illumination (assumes one light source)
             Vector random_dir=light->random_vector(rng(),rng(),rng());
@@ -178,7 +223,7 @@ void PathTraceWorker::run() {
 					     depth_stats, ppc);
 	      if (!s_hit.was_hit)
 		result +=
-		  ptc->color *
+		  surface_color *
 		  //		  reflected_surface_dot *
 		  light->color *
 		  (light_norm_dot_sr *
@@ -221,6 +266,7 @@ void PathTraceWorker::run() {
 	      origin = ray.origin()+global_hit.min_t*ray.direction();
 	      normal = global_hit.hit_obj->normal(origin, global_hit);
 	      reflected_surface_dot = SCIRun::Dot(normal, -ray.direction());
+	      
  	      if (reflected_surface_dot < 0) {
 		// This could be due to two reasons.
 		//
@@ -236,12 +282,14 @@ void PathTraceWorker::run() {
 		sphere->inside(u,v) += 1;
 		break;
 	      }
+
+	      surface_color=ptc->lookupColor(global_hit);
 	    }
 	    else {
 	      // Accumulate bg color?
 	      Color bgcolor;
 	      ptc->background->color_in_direction(ray.direction(), bgcolor);
-	      result += bgcolor*ptc->color;
+	      result += bgcolor*surface_color;
 	      break;
 	    }
 	  } // end depth
@@ -295,8 +343,6 @@ void PathTraceWorker::run() {
       return;
     }
 
-    cout << "Writing combined texture to "<<buf<<"\n";
-
     fprintf(out, "NRRD0001\n");
     fprintf(out, "type: float\n");
     fprintf(out, "dimension: 4\n");
@@ -325,6 +371,8 @@ void PathTraceWorker::run() {
     }
     
     fclose(out);
+
+    cout << "Wrote combined texture to "<<buf<<"\n";
   } else {
     // This really shouldn't happen now
     cerr << "Textures do not all have the same size.  You will now get individual textures.\n";
@@ -351,9 +399,9 @@ TextureSphere::TextureSphere(const Point &cen, double radius, int tex_res):
 }
 
 void TextureSphere::dilateTexture(size_t index, PathTraceContext* ptc) {
-  cout<<"Dilating texture "<<index<<" ("<<"s="<<ptc->support
-      <<", uwa="<<ptc->use_weighted_ave<<", t="<<ptc->threshold<<")"
-      <<endl;
+  //  cout<<"Dilating texture "<<index<<" ("<<"s="<<ptc->support
+  //      <<", uwa="<<ptc->use_weighted_ave<<", t="<<ptc->threshold<<")"
+  //      <<endl;
   
   // Compute the min and max of inside texture
   int width = inside.dim1();
