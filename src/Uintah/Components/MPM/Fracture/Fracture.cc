@@ -212,6 +212,43 @@ labelSelfContactNodes(
   }
 }
 
+void
+Fracture::
+labelSelfContactCells(
+           int matlindex,
+           int vfindex,
+           const Patch* patch,
+           DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw)
+{
+  const MPMLabel* lb = MPMLabel::getLabels();
+
+  NCVariable<bool> gSelfContact;
+  new_dw->get(gSelfContact, lb->gSelfContactLabel, matlindex, patch,
+		  Ghost::AroundNodes, 1);
+		  
+  CCVariable<bool> cSelfContact;
+  new_dw->allocate(cSelfContact, lb->cSelfContactLabel, vfindex, patch);
+      
+  for(CellIterator iter = patch->getCellIterator(patch->getBox()); 
+    !iter.done(); iter++)
+  {
+    IntVector nodeIdx[8];
+    patch->findNodesFromCell( *iter,nodeIdx );
+    
+    cSelfContact[*iter] = false;
+    for(int k = 0; k < 8; k++) {
+      if(cSelfContact[nodeIdx[k]]) {
+        cSelfContact[*iter] = true;
+        break;
+      }
+    }
+  }
+
+  new_dw->put(cSelfContact, lb->cSelfContactLabel, vfindex, patch);
+}
+
+
 bool
 Fracture::
 isSelfContactNode(const IntVector& nodeIndex,const Patch* patch,
@@ -323,6 +360,10 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.19  2000/06/04 23:55:39  tan
+// Added labelSelfContactCells(...) to label the self-contact cells
+// according to the nodes self-contact information.
+//
 // Revision 1.18  2000/06/03 05:25:47  sparker
 // Added a new for pSurfLabel (was uninitialized)
 // Uncommented pleaseSaveIntegrated

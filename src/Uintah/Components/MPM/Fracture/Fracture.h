@@ -80,6 +80,13 @@ private:
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
+  void   labelSelfContactCells(
+           int matlindex,
+           int vfindex,
+           const Patch* patch,
+           DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw);
+
   static bool isSelfContactNode(const IntVector& nodeIndex,const Patch* patch,
     const CCVariable<Vector>& cSurfaceNormal);
 
@@ -104,6 +111,10 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.15  2000/06/04 23:55:29  tan
+// Added labelSelfContactCells(...) to label the self-contact cells
+// according to the nodes self-contact information.
+//
 // Revision 1.14  2000/06/02 21:54:12  tan
 // Finished function labelSelfContactNodes(...) to label the gSalfContact
 // according to the cSurfaceNormal information.
