@@ -50,7 +50,7 @@
     </outputs>
   </io>
   <gui>
-    <img>../Modules/Math/BuildTransformUI.jpg</img>
+    <img>../Modules/Math/doc/BuildTransformUI.jpg</img>
   </gui>
   <testing>
   </testing>
