@@ -34,7 +34,7 @@ double JWLC::computeRhoMicro(double press, double,
   //press - (A*exp(-R1*rho0/rhoM) +
   //         B*exp(-R2*rho0/rhoM) + C*pow((rhoM/rho0),1+om)) = 0
 
-  double rhoM = rho_guess;
+  double rhoM = min(rho_guess,rho0);
 
   double epsilon = 1.e-15;
   double delta = 1.;
