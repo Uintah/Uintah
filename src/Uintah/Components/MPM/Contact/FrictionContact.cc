@@ -330,6 +330,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
     }
   }
 
+#if 0
   new_dw->get(gsurfnorm[0], gSurfNormLabel, 0, region, Ghost::None, 0);
   IntVector lowi(gsurfnorm[0].getLowIndex());
   IntVector highi(gsurfnorm[0].getHighIndex());
@@ -407,6 +408,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
     }
   }
   tfile << endl;
+#endif
  
   // Next, interpolate the stress to the grid
   for(int m = 0; m < numMatls; m++){
@@ -558,6 +560,10 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.18  2000/05/18 23:00:27  guilkey
+// Commented out some stupid code that was printing out a big tecplot
+// file for every time step.
+//
 // Revision 1.17  2000/05/11 20:10:16  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //
