@@ -75,7 +75,6 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebug_advance_advect      = false;
   switchTestConservation          = false;
 
-  d_massExchange      = false;    // MODEL REMOVE
   d_RateForm          = false;
   d_EqForm            = false; 
   d_add_heat          = false;
@@ -352,24 +351,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   cout_norm << "Pulled out exchange coefficients of the input file" << endl;
 
   //__________________________________
-  //  pull out mass exchange
-  string mass_exch_in;
-  ProblemSpecP mass_exch_ps = exch_ps->get("mass_exchange",mass_exch_in);
-  d_massExchange = false;
-  if (mass_exch_ps) {
-    if (mass_exch_in == "true" || mass_exch_in == "TRUE" || 
-        mass_exch_in == "1") {
-      d_massExchange = true;
-      if (d_RateForm) {
-        string warn="ERROR\n RateForm doesn't work with a reaction\n";
-        throw ProblemSetupException(warn);
-      }
-    }
-  }
-
-  cout_norm << "Mass exchange = " << d_massExchange << endl;
-  
-  //__________________________________
   // WARNINGS
   SimulationTime timeinfo(prob_spec); 
   if ( d_impICE && 
@@ -556,7 +537,6 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
                                                            mpm_matls_sub,         
                                                            all_matls);    
                                                                  
-  scheduleMassExchange(                    sched, patches, all_matls);                                                           
   scheduleModelMassExchange(               sched, level,   all_matls);
 
   if(d_impICE) {        //  I M P L I C I T                                           
@@ -766,27 +746,6 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleMassExchange--
- MODEL REMOVE -- entire task
-_____________________________________________________________________*/
-void ICE::scheduleMassExchange(SchedulerP& sched,
-                            const PatchSet* patches,
-                            const MaterialSet* matls)
-{
-  cout_doing << "ICE::scheduleMassExchange" << endl;
-  Task* task = scinew Task("ICE::massExchange",
-                     this, &ICE::massExchange);
-  task->requires(Task::NewDW, lb->rho_CCLabel,  Ghost::None);
-  task->requires(Task::OldDW, lb->vel_CCLabel,  Ghost::None); 
-  task->requires(Task::OldDW, lb->temp_CCLabel, Ghost::None);
-  task->computes(lb->burnedMass_CCLabel);
-  task->computes(lb->int_eng_comb_CCLabel);
-  task->computes(lb->mom_comb_CCLabel);
-  task->computes(lb->created_vol_CCLabel);
-  sched->addTask(task, patches, matls);
-}
-
-/* ---------------------------------------------------------------------
  Function~  ICE::scheduleModelMassExchange--
 _____________________________________________________________________*/
 void ICE::scheduleModelMassExchange(SchedulerP& sched, const LevelP& level,
@@ -800,8 +759,9 @@ void ICE::scheduleModelMassExchange(SchedulerP& sched, const LevelP& level,
     task->computes(lb->modelMom_srcLabel);
     task->computes(lb->modelEng_srcLabel);
     task->computes(lb->modelVol_srcLabel);
-    for(vector<TransportedVariable*>::iterator iter = d_modelSetup->tvars.begin();
-	iter != d_modelSetup->tvars.end(); iter++){
+    for(vector<TransportedVariable*>::iterator
+                                    iter =  d_modelSetup->tvars.begin();
+                                    iter != d_modelSetup->tvars.end(); iter++){
       TransportedVariable* tvar = *iter;
       if(tvar->src)
 	task->computes(tvar->src, tvar->matls);
@@ -841,11 +801,6 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->requires( Task::NewDW, lb->sp_vol_CCLabel,     gn);
   task->requires( Task::NewDW, lb->rho_CCLabel,        gn);    
   task->requires( Task::NewDW, lb->speedSound_CCLabel, gn);
-//__________________________________
-  if(d_models.size() == 0){  //MODEL REMOVE
-    task->requires( Task::NewDW, lb->burnedMass_CCLabel, gn);
-    task->requires( Task::NewDW, lb->created_vol_CCLabel,gn); //MODEL REMOVE
-  }
 //__________________________________
   if(d_models.size() > 0){
     task->requires(Task::NewDW, lb->modelVol_srcLabel,  gn);
@@ -1016,13 +971,7 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
   t->requires(Task::OldDW,lb->temp_CCLabel,            gn);
   t->requires(Task::NewDW,lb->mom_source_CCLabel,      gn);
   t->requires(Task::NewDW,lb->int_eng_source_CCLabel,  gn);
-//__________________________________  
-  if(d_models.size() == 0){  //MODEL REMOVE
-    t->requires(Task::NewDW,lb->int_eng_comb_CCLabel,  gn);  
-    t->requires(Task::NewDW,lb->mom_comb_CCLabel,      gn);  
-    t->requires(Task::NewDW,lb->burnedMass_CCLabel,    gn);  
-  }
-//__________________________________  
+
   if(d_models.size() > 0){
     t->requires(Task::NewDW, lb->modelMass_srcLabel,   gn);
     t->requires(Task::NewDW, lb->modelMom_srcLabel,    gn);
@@ -1079,11 +1028,7 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   }
   t->requires(Task::OldDW, lb->temp_CCLabel,   ice_matls,   gn);   
   t->requires(Task::NewDW, lb->temp_CCLabel,   mpm_matls,   gn);   
-//__________________________________          
-  if(d_models.size() == 0){
-    t->requires(Task::NewDW, lb->created_vol_CCLabel, gn);     //MODEL REMOVE
-  }
-//__________________________________
+
   if(d_models.size() > 0){
     t->requires(Task::NewDW, lb->modelVol_srcLabel,    gn);
   }
@@ -1272,13 +1217,12 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
       Material* matl = d_sharedState->getICEMaterial(m);
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      int indx= matl->getDWIndex(); 
+      int indx = matl->getDWIndex(); 
       new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, 1);
       new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, 1);
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn,  0);
 
-     if (d_delT_scheme == "aggressive") {     //      A G G R E S S I V E
+      if (d_delT_scheme == "aggressive") {     //      A G G R E S S I V E
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
           double speed_Sound = d_delT_knob * speedSound[c];
@@ -1319,17 +1263,11 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
                                  
         double thermalCond, cv, gamma;
         double viscosity = 0.0;
-        if (ice_matl){                         
-          thermalCond = ice_matl->getThermalConductivity();
-          viscosity   = ice_matl->getViscosity();
-          cv          = ice_matl->getSpecificHeat();
-          gamma       = ice_matl->getGamma();
-        }else{
-          thermalCond = mpm_matl->getThermalConductivity();
-          cv          = mpm_matl->getSpecificHeat();
-          gamma       = mpm_matl->getGamma();
-        }
-                                     
+        thermalCond = ice_matl->getThermalConductivity();
+        viscosity   = ice_matl->getViscosity();
+        cv          = ice_matl->getSpecificHeat();
+        gamma       = ice_matl->getGamma();
+
         double cp    = cv * gamma;       
         double dx_length   = dx.length();
         
@@ -1383,25 +1321,22 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 //      cout << " Conservative delT based on swept volumes "<< delt_CFL<<endl;
       }  
 
-      
       //__________________________________
       // stability constraint due to heat conduction
       //  I C E  O N L Y
-      if (ice_matl) {
-        double thermalCond = ice_matl->getThermalConductivity();
-        if (thermalCond !=0) {
-          double cv    = ice_matl->getSpecificHeat();
-          double gamma = ice_matl->getGamma();
-          double cp = cv * gamma;
+      double thermalCond = ice_matl->getThermalConductivity();
+      if (thermalCond !=0) {
+        double cv    = ice_matl->getSpecificHeat();
+        double gamma = ice_matl->getGamma();
+        double cp = cv * gamma;
 
-          for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-            IntVector c = *iter;
-            double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond);
-            double A =  d_CFL * 0.5 * inv_sum_invDelx_sqr * inv_thermalDiffusivity;
-            delt_cond = std::min(A, delt_cond);
-          }
-        }  //
-      }  // ice_matl
+        for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+          IntVector c = *iter;
+          double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond);
+          double A = d_CFL * 0.5 * inv_sum_invDelx_sqr * inv_thermalDiffusivity;
+          delt_cond = std::min(A, delt_cond);
+        }
+      }  //
     }  // matl loop   
 //    cout << "delT based on conduction "<< delt_cond<<endl;
 
@@ -2011,7 +1946,7 @@ void ICE::computeTempFC(const ProcessorGroup*,
       //__________________________________
       //  Compute the temperature on each face     
       //  Currently on used by HEChemistry 
-      if ( d_massExchange == true || d_models.size() > 0) {        
+      if (d_models.size() > 0) {        
         computeTempFace<SFCXVariable<double> >(patch->getSFCXIterator(offset),
                                      adj_offset[0], rho_CC,Temp_CC, TempX_FC);
 
@@ -2496,17 +2431,10 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       //__________________________________
       //   NO Models   MODEL REMOVE
       if(d_models.size() == 0){
-        constCCVariable<double> created_vol; 
-        constCCVariable<double> burnedMass;
-        new_dw->get(burnedMass,  lb->burnedMass_CCLabel, indx,patch,gn,0);
-        new_dw->get(created_vol, lb->created_vol_CCLabel,indx,patch,gn,0); 
-                
         for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
           IntVector c = *iter;
-          term1[c] += burnedMass[c] * (sp_vol_CC[m][c]/vol);
-           
-          term3[c] += (vol_frac[c] + created_vol[c]/vol)*sp_vol_CC[m][c]/
-                                                 (speedSound[c]*speedSound[c]);
+          term1[c] = 0.;
+          term3[c] += vol_frac[c]*sp_vol_CC[m][c]/(speedSound[c]*speedSound[c]);
         }  //iter loop 
       }  // models
       
@@ -2539,8 +2467,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       IntVector c = *iter;
       delP_MassX[c]    =  term1[c]/term3[c];
       delP_Dilatate[c] = -term2[c]/term3[c];
-      press_CC[c]      = pressure[c] + delP_MassX[c] 
-                       + delP_Dilatate[c];
+      press_CC[c]      = pressure[c] + delP_MassX[c] + delP_Dilatate[c];
     }
     //____ B U L L E T   P R O O F I N G----
     // This was done to help robustify the equilibration
@@ -2685,124 +2612,6 @@ void ICE::computePressFC(const ProcessorGroup*,
   }  // patch loop
 }
 
-
-/* ---------------------------------------------------------------------
- Function~  ICE::massExchange--
- // MODEL REMOVE --entire task
- ---------------------------------------------------------------------  */
-void ICE::massExchange(const ProcessorGroup*,  
-                     const PatchSubset* patches,
-                     const MaterialSubset* /*matls*/,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    cout_doing << "Doing massExchange on patch " <<
-      patch->getID() << "\t\t\t\t ICE" << endl;
-
-
-   Vector dx        = patch->dCell();
-   double vol       = dx.x()*dx.y()*dx.z();
-
-   int numMatls   =d_sharedState->getNumMatls();
-   int numICEMatls=d_sharedState->getNumICEMatls();
-   StaticArray<constCCVariable<Vector> > vel_CC(numMatls);
-   StaticArray<constCCVariable<double> > rho_CC(numMatls);
-   StaticArray<constCCVariable<double> > Temp_CC(numMatls);
-   StaticArray<CCVariable<double> > created_vol(numMatls);
-   StaticArray<CCVariable<double> > burnedMass(numMatls);
-   StaticArray<CCVariable<double> > int_eng_comb(numMatls);
-   StaticArray<CCVariable<Vector> > mom_comb(numMatls);
-   StaticArray<double> cv(numMatls);
-   
-   int react = -1;
-
-    for(int m = 0; m < numMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-
-      // Look for the reactant material
-      if (matl->getRxProduct() == Material::reactant)
-       react = matl->getDWIndex();
-
-      int indx = matl->getDWIndex();
-      old_dw->get(vel_CC[m], lb->vel_CCLabel, indx,patch,Ghost::None, 0);
-      new_dw->get(rho_CC[m], lb->rho_CCLabel, indx,patch,Ghost::None, 0);
-      old_dw->get(Temp_CC[m],lb->temp_CCLabel,indx,patch,Ghost::None, 0);
-      new_dw->allocateAndPut(burnedMass[m],  lb->burnedMass_CCLabel,  
-                                                              indx,patch);
-      new_dw->allocateAndPut(int_eng_comb[m],lb->int_eng_comb_CCLabel,
-                                                              indx,patch);
-      new_dw->allocateAndPut(created_vol[m], lb->created_vol_CCLabel, 
-                                                              indx,patch);
-      new_dw->allocateAndPut(mom_comb[m],    lb->mom_comb_CCLabel,    
-                                                              indx,patch);
-      burnedMass[m].initialize(0.0);
-      int_eng_comb[m].initialize(0.0); 
-      created_vol[m].initialize(0.0);
-      mom_comb[m].initialize(Vector(0.0));
-      cv[m] = ice_matl->getSpecificHeat();
-    }
-    //__________________________________
-    // Do the exchange if there is a reactant (react >= 0)
-    // and the switch is on.
-    if(d_massExchange && (react >= 0)){       
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        double mass_hmx = rho_CC[react][c] * vol;
-        if (mass_hmx > d_TINY_RHO)  {
-          double burnedMass_tmp  = (rho_CC[react][c] * vol/2.0); 
-          burnedMass[react][c]   = -burnedMass_tmp;
-          int_eng_comb[react][c] = -burnedMass_tmp
-                                   * cv[react]               
-                                   * Temp_CC[react][c];    
-          mom_comb[react][c]     = -vel_CC[react][c] * burnedMass_tmp;
-          // Commented out for now as I'm not sure that this is appropriate
-          // for regular ICE - Jim 7/30/01
-//          created_vol[react][c]  =
-//                          -burnedMass_tmp/rho_micro_CC[react][c];
-        }
-      }
-      //__________________________________
-      // Find the ICE matl which is the products of reaction
-      // dump all the mass into that matl.
-      // Make this faster
-      for(int prods = 0; prods < numICEMatls; prods++) {
-        ICEMaterial* ice_matl = d_sharedState->getICEMaterial(prods);
-        if (ice_matl->getRxProduct() == Material::product) {
-          for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-            IntVector c = *iter;
-            burnedMass[prods][c]  = -burnedMass[react][c];
-            int_eng_comb[prods][c]= -int_eng_comb[react][c];
-            mom_comb[prods][c]    = -mom_comb[react][c];
-           // Commented out for now as I'm not sure that this is appropriate
-          // for regular ICE - Jim 7/30/01
-//             created_vol[prods][c]  -= created_vol[m][c];
-         }
-       }
-      }    
-    }
-
-#if 0    // turn off for quality control tests
-    //---- P R I N T   D A T A ------ 
-    for(int m = 0; m < numMatls; m++) {
-      if (switchDebugSource_Sink) {
-        Material* matl = d_sharedState->getMaterial( m );
-        int indx = matl->getDWIndex();
-        ostringstream desc;
-        desc << "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
-        printData(indx, patch, 0, desc.str(),"burnedMass",   burnedMass[m]);
-        printData(indx, patch, 0, desc.str(),"int_eng_comb", int_eng_comb[m]);
-        printData(indx, patch, 0, desc.str(),"mom_comb",   mom_comb[m]);
-      }
-
-    }
-#endif
-  }   // patch loop
-}
-
 /* ---------------------------------------------------------------------
  Function~  ICE::zeroModelMassExchange
  Purpose~   This function initializes the mass exchange quantities to
@@ -2831,8 +2640,9 @@ void ICE::zeroModelSources(const ProcessorGroup*,
       mass_src.initialize(0.0);
       vol_src.initialize(0.0);
       mom_src.initialize(Vector(0.0, 0.0, 0.0));
-      for(vector<TransportedVariable*>::iterator iter = d_modelSetup->tvars.begin();
-	  iter != d_modelSetup->tvars.end(); iter++){
+      for(vector<TransportedVariable*>::iterator
+                                    iter = d_modelSetup->tvars.begin();
+                                    iter != d_modelSetup->tvars.end(); iter++){
 	TransportedVariable* tvar = *iter;
 	if(tvar->src){
 	  CCVariable<double> model_src;
@@ -3212,92 +3022,19 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       double cv = ice_matl->getSpecificHeat();
       //__________________________________
       //  NO mass exchange
-      if(d_massExchange == false && d_models.size() == 0) {
+      if(d_models.size() == 0) {
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
            iter++) {
          IntVector c = *iter;
           double mass = rho_CC[c] * vol;
           mass_L[c] = mass;
-
           mom_L[c] = vel_CC[c] * mass + mom_source[c];
-
           int_eng_L[c] = mass*cv * temp_CC[c] + int_eng_source[c];
         }
       }
 
-//__________________________________
-//   T H R O W   A W A Y   W H E N   M O D E L S   A R E   W O R K I N G
-
       //__________________________________
-      //  WITH mass exchange
-      // Note that the mass exchange can't completely
-      // eliminate all the mass, momentum and internal E
-      // If it does then we'll get erroneous vel, and temps
-      // after advection.  Thus there is always a mininum amount
-      if(d_massExchange && d_models.size() == 0)  {
-       constCCVariable<double> burnedMass;
-       new_dw->get(burnedMass,   lb->burnedMass_CCLabel,    indx,patch,gn,0);
-       constCCVariable<Vector> mom_comb;
-       new_dw->get(mom_comb,     lb->mom_comb_CCLabel,      indx,patch,gn,0);
-       constCCVariable<double> int_eng_comb;
-       new_dw->get(int_eng_comb, lb->int_eng_comb_CCLabel,  indx,patch,gn,0);
-        double massGain = 0.;
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-         IntVector c = *iter;
-         massGain += burnedMass[c];
-        }
-        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
-           iter++) {
-         IntVector c = *iter;
-           //  must have a minimum mass
-          double mass = rho_CC[c] * vol;
-          double min_mass = d_TINY_RHO * vol;
-
-          mass_L[c] = std::max( (mass + burnedMass[c] ), min_mass);
-
-          //  must have a minimum momentum   
-          for (int dir = 0; dir <3; dir++) {  //loop over all three directons
-            double min_mom_L = vel_CC[c][dir] * min_mass;
-            double mom_L_tmp = vel_CC[c][dir] * mass + mom_comb[c][dir];
-  
-             // Preserve the original sign on momemtum     
-             // Use d_SMALL_NUMs to avoid nans when mom_L_temp = 0.0
-            double plus_minus_one = (mom_L_tmp + d_SMALL_NUM)/
-                                    (fabs(mom_L_tmp + d_SMALL_NUM));
-            
-            mom_L[c][dir] = mom_source[c][dir] +
-                  plus_minus_one * std::max( fabs(mom_L_tmp), min_mom_L );
-          }
-
-          // must have a minimum int_eng   
-          double min_int_eng = min_mass * cv * temp_CC[c];
-          double int_eng_tmp = mass * cv * temp_CC[c];
-
-          //  Glossary:
-          //  int_eng_tmp    = the amount of internal energy for this
-          //                   matl in this cell coming into this task
-          //  int_eng_source = thermodynamic work = f(delP_Dilatation)
-          //  int_eng_comb   = enthalpy of reaction gained by the
-          //                   product gas, PLUS (OR, MINUS) the
-          //                   internal energy of the reactant
-          //                   material that was liberated in the
-          //                   reaction
-          // min_int_eng     = a small amount of internal energy to keep
-          //                   the equilibration pressure from going nuts
-
-          int_eng_L[c] = int_eng_tmp +
-                             int_eng_source[c] +
-                             int_eng_comb[c];
-
-          int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
-         }
-         if(massGain > 0.0){
-           cout << "Mass gained timestep = " << massGain << endl;
-         }
-       }  //  if (mass exchange)
-
-      //__________________________________
-      //      M O D E L - B A S E D   E X C H A N G E
+      //      MODEL - B A S E D   E X C H A N G E
       //  WITH "model-based" mass exchange
       // Note that the mass exchange can't completely
       // eliminate all the mass, momentum and internal E
@@ -3359,6 +3096,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
                              modelEng_src[c];
 
           int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
+          
          }
          if(massGain > 0.0){
           cout << "Mass gained by the models this timestep = " 
@@ -3491,16 +3229,6 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         IntVector c = *iter;
         spec_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[c];
       }
-      //__________________________________
-      //  MODELS REMOVE
-      if(d_models.size() == 0){
-        constCCVariable<double> sp_vol_comb;   //MODELS .....REMOVE
-        new_dw->get(sp_vol_comb,lb->created_vol_CCLabel,indx,patch,gn, 0); //MODEL REMOVE
-        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
-         IntVector c = *iter;
-         spec_vol_L[c] += sp_vol_comb[c];
-        }
-      }      
       //__________________________________
       //   Contributions from models
       if(d_models.size() > 0){

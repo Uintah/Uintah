@@ -21,8 +21,6 @@ namespace SCIRun {
 namespace Uintah {
 using namespace SCIRun;
  
- class Burn;
-     
 /**************************************
      
 CLASS
@@ -61,7 +59,6 @@ WARNING
    //////////
    // Return correct EOS model pointer for this material
    EquationOfState* getEOS() const;
-   Burn* getBurnModel();
    
    //for HeatConductionModel
    double getThermalConductivity() const;
@@ -84,8 +81,6 @@ WARNING
    
    // Specific constitutive model associated with this material
    EquationOfState *d_eos;
-   Burn* d_burn;
-   
    double d_thermalConductivity;
    double d_specificHeat;
    double d_heatTransferCoefficient;

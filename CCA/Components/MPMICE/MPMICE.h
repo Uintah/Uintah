@@ -127,13 +127,6 @@ public:
                                     const MaterialSubset*,
                                     const MaterialSet*);
 
-  void scheduleHEChemistry(SchedulerP&, 
-                           const PatchSet*,
-                           const MaterialSubset*,
-                           const MaterialSubset*,
-                           const MaterialSubset*,
-                           const MaterialSet*);
-  
   void scheduleInterpolateMassBurnFractionToNC( SchedulerP&, 
                                                 const PatchSet*,
                                                 const MaterialSet*);            

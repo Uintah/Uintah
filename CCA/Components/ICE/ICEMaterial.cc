@@ -14,8 +14,6 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <iostream>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
-#include <Packages/Uintah/CCA/Components/HETransformation/BurnFactory.h>
-#include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
 #include <Core/Util/NotFinished.h>
 
 #define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc 
@@ -41,9 +39,6 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
    if(!d_eos)
       throw ParameterNotFound("No EOS");
    
-   d_burn = BurnFactory::create(ps);
-
-
    // Step 2 -- get the general material properties
    ps->require("thermal_conductivity",d_thermalConductivity);
    ps->require("specific_heat",d_specificHeat);
@@ -81,7 +76,6 @@ ICEMaterial::~ICEMaterial()
   // Destructor
 
   delete d_eos;
-  delete d_burn;
   delete lb;
   for (int i = 0; i< (int)d_geom_objs.size(); i++) {
        delete d_geom_objs[i];
@@ -94,14 +88,6 @@ EquationOfState * ICEMaterial::getEOS() const
   // with this material
 
   return d_eos;
-}
-
-Burn* ICEMaterial::getBurnModel()
-{
-  // Return the pointer to the burn model associated
-  // with this material
-
-  return d_burn;
 }
 
 double ICEMaterial::getThermalConductivity() const

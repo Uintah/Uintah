@@ -18,7 +18,6 @@ SUBDIRS := \
 	$(SRCDIR)/Arches/Radiation \
 	$(SRCDIR)/Arches/Radiation/fortran \
 	$(SRCDIR)/ProblemSpecification \
-	$(SRCDIR)/HETransformation \
 	$(SRCDIR)/PatchCombiner \
 	$(SRCDIR)/Solvers
 

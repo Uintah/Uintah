@@ -163,10 +163,6 @@
     <MaterialProperties>
        <MPM>
          <material name = "Steel Ring">
-                <burn type = "null"/>
-               <EOS type = "ideal_gas">
-                  <gas_constant>      287               </gas_constant>
-               </EOS>
                <gamma>                  1.4            </gamma>           
        
   <density>7830.0</density>
@@ -251,17 +247,7 @@
                  <temperature>         600             </temperature>
                 </geom_object>
          </material>
-         <material Rx = "reactant" name = "HMX">
-                <burn type = "simple">
-                  <ThresholdTemp>       450.0           </ThresholdTemp>
-                  <ThresholdPressure>   50000           </ThresholdPressure>
-                  <Enthalpy>            2000000.0       </Enthalpy>
-                  <BurnCoeff>           75.3            </BurnCoeff>
-                  <refPressure>         101325.         </refPressure>
-                </burn>
-               <EOS type = "ideal_gas">
-                  <gas_constant>      287               </gas_constant>
-               </EOS>
+         <material name = "reactant">
                 <density>   1840.0   </density>
                 <constitutive_model type = "visco_scram">
                     <useModifiedEOS>     true             </useModifiedEOS>
@@ -311,10 +297,8 @@
       </MPM>
 
        <ICE>
-         <material Rx = "product" name = "gas">
-           <burn type = "null"/>
+         <material name = "product">
            <EOS type = "ideal_gas">
-              <gas_constant>            287           </gas_constant>
            </EOS>
            <viscosity>                  0.0            </viscosity>
            <thermal_conductivity>       0.0            </thermal_conductivity>
@@ -335,9 +319,7 @@
          </material>
 
          <material>
-           <burn type = "null"/>
            <EOS type = "ideal_gas">
-              <gas_constant>            287           </gas_constant>
            </EOS>
            <viscosity>                  0.0            </viscosity>
            <thermal_conductivity>       0.0            </thermal_conductivity>
@@ -370,10 +352,20 @@
               <momentum>  [0, 1e15, 1e15, 1e15, 1e15, 1e15]     </momentum>
               <heat>      [0, 1e10, 1e10, 1e10, 1e10, 1e10]     </heat>
         </exchange_coefficients>
-        <mass_exchange>           true                </mass_exchange>
       </exchange_properties> 
     </MaterialProperties>
 
+    <Models>
+      <Model type="Simple_Burn">
+        <fromMaterial> reactant     </fromMaterial>
+        <toMaterial>  product       </toMaterial>
+        <ThresholdTemp>       450.0 </ThresholdTemp>
+        <ThresholdPressure> 50000.0 </ThresholdPressure>
+        <Enthalpy>        2000000.0 </Enthalpy>
+        <BurnCoeff>            75.3 </BurnCoeff>
+        <refPressure>      101325.0 </refPressure>
+      </Model>
+    </Models>
 
     <PhysicalBC>
        <MPM>
