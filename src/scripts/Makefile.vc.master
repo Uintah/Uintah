@@ -114,7 +114,7 @@ SCI_FLAGS        = -DTEMPLATE_TAG="" -DTEMPLATE_BOX="" -DSCI_NOMMAP_IO
 # Concatenate all current flags with flags that will build .exe binaries
 #
 
-EXE_CFLAGS       = -c -nologo -D_MT -D_WIN32 $(WARNING) $(ARCHFLAGS) $(VERSION_CFLAGS) $(SCI_FLAGS) $(3RDPARTYFLAGS)
+EXE_CFLAGS       = -c -nologo -D_MT -D_WIN32 -GX $(WARNING) $(ARCHFLAGS) $(VERSION_CFLAGS) $(SCI_FLAGS) $(3RDPARTYFLAGS)
 EXE_LFLAGS       = -nologo $(MACHINE) $(VERSION_LFLAGS)  
 
 
@@ -160,7 +160,7 @@ ALL = \
 
 ########################################################################################
 #
-# Set the library path to be the SCI defaults plus the paths indicated in Makefile.vc.config
+# Set the library path to be the SCI defaults plus the 3rdParty paths indicated in Makefile.vc.config
 #
 
 SCILIBPATH = -LIBPATH:$(TOP)\src\SCICore\
