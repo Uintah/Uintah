@@ -38,27 +38,27 @@ if {[llength [array get env SCIRUN_DATA]] == 0} {
    return
 }
 
-set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 60 6]
-set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 265 6]
-set m2 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 78 91]
-set m3 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 247 88]
-set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 78 169]
-set m5 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 456 88]
-set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 60 241]
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 262 324]
-set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 6 322]
-set m9 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 35 400]
-set m10 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 6 480]
-set m11 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 184 561]
-set m12 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 220 230]
-set m13 [addModuleAtPosition "SCIRun" "Render" "Viewer" 335 681]
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 6 4]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 371 5]
+set m2 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 24 154]
+set m3 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 181 149]
+set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 24 228]
+set m5 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 371 70]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 6 296]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 238 375]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 6 373]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 24 453]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 6 519]
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 175 601]
+set m12 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 193 283]
+set m13 [addModuleAtPosition "SCIRun" "Render" "Viewer" 335 690]
 
 addConnection $m0 0 $m3 0
-addConnection $m1 0 $m3 1
 addConnection $m0 0 $m2 0
 addConnection $m2 0 $m4 0
-addConnection $m3 0 $m4 1
+addConnection $m5 0 $m3 1
 addConnection $m1 0 $m5 0
+addConnection $m3 0 $m4 1
 addConnection $m4 0 $m6 1
 addConnection $m0 0 $m6 0
 addConnection $m6 0 $m7 0
@@ -72,7 +72,7 @@ addConnection $m12 0 $m11 1
 addConnection $m11 0 $m13 0
 addConnection $m9 1 $m13 1
 addConnection $m7 0 $m13 2
-addConnection $m5 0 $m13 3
+addConnection $m5 1 $m13 3
 
 set $m0-notes {}
 set $m0-show_status 1
@@ -103,10 +103,10 @@ set $m4-use_previous_soln 1
 set $m4-emit_partial 1
 set $m4-status {}
 set $m4-np 4
-set $m5-notes {}
-set $m5-show_status 1
-set $m5-node_display_type {Spheres}
-set $m5-scale 0.03
+set $m5-widgetSizeGui_ {0.05}
+set $m5-scaleModeGui_ {scale}
+set $m5-showLastVecGui_ 1
+set $m5-showLinesGui_ 0
 set $m6-notes {}
 set $m6-show_status 1
 set $m7-notes {}
