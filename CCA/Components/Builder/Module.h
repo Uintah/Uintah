@@ -45,8 +45,9 @@ public:
 		   std::string &portname);
 
 public slots:
-  void execute();
+  void go();
   void stop();
+  void destroy();
   void ui();
 
 protected:
@@ -62,6 +63,8 @@ private:
   int pd; //distance between two ports
   int pw; //port width
   int ph; //prot height
+  bool hasGoPort;
+  bool hasUIPort;
 public:
   gov::cca::ComponentID::pointer cid;
 };
