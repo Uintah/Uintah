@@ -458,15 +458,6 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 	archive.query(pvi, particleIDs, matl, *r, time);
       }
 
-      switch (scalar_type) {
-      case TypeDescription::double_type:
-	source_subset = pvs.getParticleSubset();
-	break;
-      case TypeDescription::int_type:
-	source_subset = pvint.getParticleSubset();
-	break;
-      }
-      
       if( !have_subset )
 	return;
       particleIndex dest = dest_subset->addParticles(source_subset->numParticles());
@@ -488,15 +479,13 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 	    break;
 	  case TypeDescription::int_type:
 	    scalars[dest]=pvint[*iter];
-	    //if (scalars[dest] == 1) {
-	    //cerr << "scalars[" << dest << "] = " << scalars[dest] << endl;
-	    //}
 	    break;
 	  }
 	else
 	  scalars[dest]=0;
-	if(have_tp)
+	if(have_tp){
 	  tensors[dest]=pvt[*iter];
+	}
 	else
 	  tensors[dest]=Matrix3(0.0);
 	if(have_ids)
@@ -506,8 +495,6 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 	
 	positions[dest]=pvp[*iter];
       }
-      if(dest != 0 )
-	cerr<<"position["<<dest-1<<"] = "<<positions[dest-1]<<endl;
     }
     pset->AddParticles( positions, ids, *r);
     
