@@ -44,7 +44,8 @@ class EinthovenLeadsAlgo : public DynamicAlgoBase
 {
 public:
   virtual bool get_values(FieldHandle field, unsigned I, unsigned II, 
-			  unsigned III, vector<double> &values) = 0;
+			  unsigned III, vector<double> &values,
+			  vector<Point> &pos) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftype);
@@ -56,7 +57,7 @@ class EinthovenLeadsAlgoT : public EinthovenLeadsAlgo
 {
 public:
   bool get_values(FieldHandle field, unsigned I, unsigned II, unsigned III,
-		  vector<double> &values);
+		  vector<double> &values, vector<Point> &pos);
 };
 
 template <class T>
@@ -80,22 +81,30 @@ template <class FIELD>
 bool
 EinthovenLeadsAlgoT<FIELD>::get_values(FieldHandle field, unsigned I, 
 				       unsigned II, unsigned III, 
-				       vector<double> &values)
+				       vector<double> &values,
+				       vector<Point> &pos)
 {
   
   FIELD *torso = dynamic_cast<FIELD*>(field.get_rep());
+  typedef typename FIELD::mesh_type mesh_t;
+  typedef typename FIELD::mesh_handle_type mesh_ht;
+  mesh_ht mesh = torso->get_typed_mesh();
 
   bool rval = true;
   typename FIELD::value_type val;
-  typedef typename FIELD::mesh_type::Node::index_type node_idx_t;
+  typedef typename mesh_t::Node::index_type node_idx_t;
   rval = rval && torso->value(val, (node_idx_t)I);
   rval = rval && to_double(val, values[0]); 
+  mesh->get_center(pos[0], (node_idx_t)I);
 
   rval = rval && torso->value(val, (node_idx_t)II);
   rval = rval && to_double(val, values[1]); 
+  mesh->get_center(pos[1], (node_idx_t)II);
 
   rval = rval && torso->value(val, (node_idx_t)III);
   rval = rval && to_double(val, values[2]); 
+  mesh->get_center(pos[2], (node_idx_t)III);
+
   return rval;
 }
 
