@@ -794,6 +794,7 @@ extern "C"
     //
     void
     FORT_SCALARCOEFF(const int* domLo, const int* domHi,
+		     const int* domLong, const int* domHing,
 		     const int* idxLo, const int* idxHi,
 		     const double* density,
 		     const double* viscosity,
@@ -832,6 +833,7 @@ extern "C"
     //
     void
     FORT_SCALARSOURCE(const int* domLo, const int* domHi,
+		      const int* domLong, const int* domHing,
 		      const int* idxLo, const int* idxHi,
 		      double* scalarLinSrc,
 		      double* scalarNonLinSrc,
@@ -845,6 +847,7 @@ extern "C"
     //
     void
     FORT_SCALARBC(const int* domLo, const int* domHi,
+		  const int* domLong, const int* domHing,
 		  const int* idxLo, const int* idxHi,
 		  double* scalar,
 		  double* scalarCoeffAE,
@@ -868,7 +871,9 @@ extern "C"
 		  int* wall_celltypeval, int* symmetry_celltypeval,
 		  int* flow_celltypeval, int* press_celltypeval, 
 		  const int* ffield, const int* sfield,
-		  const int* outletfield);
+		  const int* outletfield,
+		  int* xminus, int* xplus, int* yminus, int* yplus,
+		  int* zminus, int* zplus);
 
     ////////////////////////////////////////////////////////////////////////
     //
@@ -956,6 +961,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.43  2000/10/10 19:30:57  rawat
+// added scalarsolver
+//
 // Revision 1.42  2000/10/09 17:06:24  rawat
 // modified momentum solver for multi-patch
 //

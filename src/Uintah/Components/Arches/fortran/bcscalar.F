@@ -1,7 +1,8 @@
 c
 c $Id$
 c
-      subroutine bcscalar(domLo, domHi, idxLo, idxHi, f,
+      subroutine bcscalar(domLo, domHi,domLong, domHing, 
+     $     idxLo, idxHi, f,
      &     ae,aw,an,as,at,ab,
      &     su,sp,
      &     den, fmixin,
@@ -11,7 +12,8 @@ c
 c    &     uinlt,vinlt,winlt,
      $     sew,sns,stb,
      &     pcell, wall, symtry, pfield, presstype, ffield, sfield,
-     $     outletfield)
+     $     outletfield,
+     $     xminus, xplus, yminus, yplus, zminus, zplus)
 c    &     r,rv,ra,
 c    $     idxLo_ext, idxHi_ext, 
 c    $     ltest,lwrap,lsymb,loutsf,
@@ -25,26 +27,27 @@ C-----------------------------------------------------------------------
 *
 *     declare passed variables
 *
-      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
+      integer domLo(3), domHi(3), domLong(3), domHing(3),
+     $     idxLo(3), idxHi(3)
 c     integer idxLo_ext(3), idxHi_ext(3)
-      double precision f(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision ae(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision aw(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision an(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision as(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision at(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision ab(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision su(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision sp(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+      double precision f(domLong(1):domHing(1), domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
+      double precision ae(domLong(1):domHing(1), domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
+      double precision aw(domLong(1):domHing(1), domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
+      double precision an(domLong(1):domHing(1), domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
+      double precision as(domLong(1):domHing(1), domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
+      double precision at(domLong(1):domHing(1), domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
+      double precision ab(domLong(1):domHing(1), domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
+      double precision su(domLong(1):domHing(1), domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
+      double precision sp(domLong(1):domHing(1), domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
       double precision den(domLo(1):domHi(1), domLo(2):domHi(2),
      $     domLo(3):domHi(3))
       double precision fmixin
@@ -74,6 +77,7 @@ c     double precision ra(domLo(2):domHi(2))
      $     domLo(3):domHi(3))
       integer wall, symtry, pfield, presstype, 
      $        ffield, sfield, outletfield
+      integer xminus, xplus, yminus, yplus, zminus, zplus
 *
 *     declare local variables
 *
@@ -123,7 +127,7 @@ c---------------------------------------------------------------------
      $     pcell, symtry, lprdjk, lprdkk)
 
 C  WARNING - should be domLong, domHing - Steve
-      call wallbc(domLo, domHi, domLo, domHi, idxLo, idxHi, 
+      call wallbc(domLo, domHi, domLong, domHing, idxLo, idxHi, 
      $     ae,aw,an,as,at,ab,
      $     pcell, wall,
      $     xminus, xplus, yminus, yplus, zminus, zplus)
@@ -214,93 +218,116 @@ c----------------------------------------------------------------------
 c     outlet boundary conditions 
 c       east and/or west walls
 c----------------------------------------------------------------------
-      do 610 k = idxLo(3),idxHi(3)
-         do 600 j = idxLo(2),idxHi(2)
-          if ((pcell(idxHi(1)+1,j,k).eq.outletfield).or.
-     $          ((pcell(idxHi(1)+1,j,k).eq.presstype).and.
-     $           (uu(idxHi(1)+2,j,k).gt.0.0))) then
-             if ((loutsf).or.(pcell(idxHi(1)+1,j,k).eq.presstype)) then
-                f(idxHi(1)+1,j,k) = f(idxHi(1),j,k)
-                ae(idxHi(1),j,k) = two*tiny
-             else
-                f(idxHi(1)+1,j,k) = fmixin
-             end if
-          end if
-          if ((pcell(idxLo(1)-1,j,k).eq.outletfield).or.
-     $          ((pcell(idxLo(1)-1,j,k).eq.presstype).and.
-     $           (uu(idxLo(1)-1,j,k).lt.0.0))) then
-             if ((loutsf).or.(pcell(idxLo(1)-1,j,k).eq.presstype)) then
-                f(idxLo(1)-1,j,k) = f(idxLo(1),j,k)
-                aw(idxLo(1),j,k) = two*tiny
-             else
-                f(idxLo(1)-1,j,k) = fmixin
-             end if
-          end if
-  600   continue
-  610 continue
+      if (xplus.or.xminus) then
+         do 610 k = idxLo(3),idxHi(3)
+            do 600 j = idxLo(2),idxHi(2)
+               if (xplus) then
+                  if ((pcell(idxHi(1)+1,j,k).eq.outletfield).or.
+     $                 ((pcell(idxHi(1)+1,j,k).eq.presstype).and.
+     $                 (uu(idxHi(1)+2,j,k).gt.0.0))) then
+                     if ((loutsf).or.
+     $                    (pcell(idxHi(1)+1,j,k).eq.presstype)) then
+                        f(idxHi(1)+1,j,k) = f(idxHi(1),j,k)
+                        ae(idxHi(1),j,k) = two*tiny
+                     else
+                        f(idxHi(1)+1,j,k) = fmixin
+                     end if
+                  end if
+               endif
+               if (xminus) then
+                  if ((pcell(idxLo(1)-1,j,k).eq.outletfield).or.
+     $                 ((pcell(idxLo(1)-1,j,k).eq.presstype).and.
+     $                 (uu(idxLo(1)-1,j,k).lt.0.0))) then
+                     if ((loutsf).or.
+     $                    (pcell(idxLo(1)-1,j,k).eq.presstype)) then
+                        f(idxLo(1)-1,j,k) = f(idxLo(1),j,k)
+                        aw(idxLo(1),j,k) = two*tiny
+                     else
+                        f(idxLo(1)-1,j,k) = fmixin
+                     end if
+                  end if
+               endif
+ 600        continue
+ 610     continue
+      endif
 c--------------------------------------------------------------------
 c     north and/or south walls
 c--------------------------------------------------------------------
-      do 710 k = idxLo(3),idxHi(3)
-         do 700 i = idxLo(1),idxHi(1)
-            if ((pcell(i,idxHi(2)+1,k).eq.outletfield).or.
-     $          ((pcell(i,idxHi(2)+1,k).eq.presstype).and.
-     $           (vv(i,idxHi(2)+2,k).gt.0.0))) then
-               if ((loutsf).or.(pcell(i, idxHi(2)+1, k).eq.
-     $              presstype)) then
-                  f(i,idxHi(2)+1,k) = f(i,idxHi(2),k)
-                  an(i,idxHi(2),k) = two*tiny
-               else
-                  f(i,idxHi(2)+1,k) = fmixin
-               end if
-            end if
-          if ((pcell(i,idxLo(2)-1,k).eq.outletfield).or.
-     $          ((pcell(i,idxLo(2)-1,k).eq.presstype).and.
-     $           (vv(i,idxLo(2)-1,k).lt.0.0))) then
-               if ((loutsf).or.(pcell(i, idxLo(2)-1, k).eq.
-     $              presstype)) then
-                f(i,idxLo(2)-1,k) = f(i,idxLo(2),k)
-                as(i,idxLo(2),k) = two*tiny
-             else
-                f(i,idxLo(2)-1,k) = fmixin
-             end if
-          end if
-  700   continue
-  710 continue
+      if (yminus.or.yplus) then
+         do 710 k = idxLo(3),idxHi(3)
+            do 700 i = idxLo(1),idxHi(1)
+               if (yplus) then
+                  if ((pcell(i,idxHi(2)+1,k).eq.outletfield).or.
+     $                 ((pcell(i,idxHi(2)+1,k).eq.presstype).and.
+     $                 (vv(i,idxHi(2)+2,k).gt.0.0))) then
+                     if ((loutsf).or.
+     $                    (pcell(i, idxHi(2)+1, k).eq.presstype)) then
+                        f(i,idxHi(2)+1,k) = f(i,idxHi(2),k)
+                        an(i,idxHi(2),k) = two*tiny
+                     else
+                        f(i,idxHi(2)+1,k) = fmixin
+                     end if
+                  end if
+               endif
+               if (yminus) then
+                  if ((pcell(i,idxLo(2)-1,k).eq.outletfield).or.
+     $                 ((pcell(i,idxLo(2)-1,k).eq.presstype).and.
+     $                 (vv(i,idxLo(2)-1,k).lt.0.0))) then
+                     if ((loutsf).or.(pcell(i, idxLo(2)-1, k).eq.
+     $                    presstype)) then
+                        f(i,idxLo(2)-1,k) = f(i,idxLo(2),k)
+                        as(i,idxLo(2),k) = two*tiny
+                     else
+                        f(i,idxLo(2)-1,k) = fmixin
+                     end if
+                  end if
+               endif
+ 700        continue
+ 710     continue
+      endif
 c--------------------------------------------------------------------
 c     top and/or bottom walls
 c--------------------------------------------------------------------
-      do 810 j = idxLo(2),idxHi(2)
-        do 800 i = idxLo(1),idxHi(1)
-          if ((pcell(i,j,idxHi(3)+1).eq.outletfield).or.
-     $          ((pcell(i,j,idxHi(3)+1).eq.presstype).and.
-     $           (ww(i,j,idxHi(3)+2).gt.0.0))) then
-               if ((loutsf).or.(pcell(i, j, idxHi(3)+1).eq.
-     $              presstype)) then
-                  f(i,j,idxHi(3)+1) = f(i,j,idxHi(3))
-                  at(i,j,idxHi(3)) = two*tiny
-               else
-                  f(i,j,idxHi(3)+1) = fmixin
-               end if
-            end if
-          if ((pcell(i,j,idxLo(3)-1).eq.outletfield).or.
-     $          ((pcell(i,j,idxLo(3)-1).eq.presstype).and.
-     $           (ww(i,j,idxLo(3)-1).lt.0.0))) then
-               if ((loutsf).or.(pcell(i, j, idxLo(3)-1).eq.
-     $              presstype)) then
-                  f(i,j,idxLo(3)-1) = f(i,j,idxLo(3))
-                  ab(i,j,idxLo(3)) = two*tiny
-               else
-                  f(i,j,idxLo(3)-1) = fmixin
-               end if
-            end if
- 800     continue
- 810  continue
+      if (zminus.or.zplus) then
+         do 810 j = idxLo(2),idxHi(2)
+            do 800 i = idxLo(1),idxHi(1)
+               if (zplus) then
+                  if ((pcell(i,j,idxHi(3)+1).eq.outletfield).or.
+     $                 ((pcell(i,j,idxHi(3)+1).eq.presstype).and.
+     $                 (ww(i,j,idxHi(3)+2).gt.0.0))) then
+                     if ((loutsf).or.(pcell(i, j, idxHi(3)+1).eq.
+     $                    presstype)) then
+                        f(i,j,idxHi(3)+1) = f(i,j,idxHi(3))
+                        at(i,j,idxHi(3)) = two*tiny
+                     else
+                        f(i,j,idxHi(3)+1) = fmixin
+                     end if
+                  end if
+               endif
+               if (zminus) then
+                  if ((pcell(i,j,idxLo(3)-1).eq.outletfield).or.
+     $                 ((pcell(i,j,idxLo(3)-1).eq.presstype).and.
+     $                 (ww(i,j,idxLo(3)-1).lt.0.0))) then
+                     if ((loutsf).or.(pcell(i, j, idxLo(3)-1).eq.
+     $                    presstype)) then
+                        f(i,j,idxLo(3)-1) = f(i,j,idxLo(3))
+                        ab(i,j,idxLo(3)) = two*tiny
+                     else
+                        f(i,j,idxLo(3)-1) = fmixin
+                     end if
+                  end if
+               endif
+ 800        continue
+ 810     continue
+      endif
       return
       end
 
 c
 c $Log$
+c Revision 1.7  2000/10/10 19:31:03  rawat
+c added scalarsolver
+c
 c Revision 1.6  2000/10/06 23:07:53  rawat
 c fixed some more bc routines for mulit-patch
 c

@@ -95,9 +95,9 @@ c*********************************************************************
       iBegGhost = domLoU(1)
       jBegGhost = domLoV(2)
       kBegGhost = domLoW(3)
-      NI = domHiU(1) - 1
-      NJ = domHiV(2) - 1
-      NK = domHiW(3) - 1
+      NI = domHi(1)
+      NJ = domHi(2)
+      NK = domHi(3)
 
       IST = idxLo(1)
       JST = idxLo(2)
@@ -105,7 +105,15 @@ c*********************************************************************
       IEND = idxHi(1)
       JEND = idxHi(2)
       KEND = idxHi(3)
-      
+      print*,'ist',ist
+      print*,'jst',jst
+      print*,'kst',kst
+      print*,'iend',iend
+      print*,'jend',jend
+      print*,'kend',kend
+      print*,'NI',ni
+      print*,'NJ',nj
+      print*,'NK',nk
       FACK = 1.0
       URFBC = 0.5
       LNORM = .FALSE.
@@ -342,6 +350,9 @@ C
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/10/10 19:31:03  rawat
+c added scalarsolver
+c
 c Revision 1.3  2000/08/10 00:56:38  rawat
 c added pressure bc for scalar and changed discretization option for velocity
 c

@@ -640,8 +640,9 @@ BoundaryCondition::sched_recomputePressureBC(const LevelP& level,
 
       int numGhostCells = 0;
       int matlIndex = 0;
-
-      // This task requires new density, pressure and velocity
+      tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch,
+		    Ghost::None, numGhostCells);
+      // This task requires celltype, new density, pressure and velocity
       tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_lab->d_pressurePSLabel, matlIndex, patch, Ghost::None,
@@ -1546,8 +1547,10 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
 			    ArchesVariables* vars)
 {
   // Get the low and high index for the patch
-  IntVector domLo = vars->scalar.getFortLowIndex();
-  IntVector domHi = vars->scalar.getFortHighIndex();
+  IntVector domLo = vars->density.getFortLowIndex();
+  IntVector domHi = vars->density.getFortHighIndex();
+  IntVector domLong = vars->scalar.getFortLowIndex();
+  IntVector domHing = vars->scalar.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   IntVector domLoU = vars->uVelocity.getFortLowIndex();
@@ -1567,9 +1570,16 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
   int outletfield = -5;
   int ffield = -1;
   double fmixin = 0.0;
+  int xminus = patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1;
+  int xplus =  patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1;
+  int yminus = patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1;
+  int yplus =  patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1;
+  int zminus = patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1;
+  int zplus =  patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1;
 
   //fortran call
   FORT_SCALARBC(domLo.get_pointer(), domHi.get_pointer(),
+		domLong.get_pointer(), domHing.get_pointer(),
 		idxLo.get_pointer(), idxHi.get_pointer(),
 		vars->scalar.getPointer(), 
 		vars->scalarCoeff[Arches::AE].getPointer(),
@@ -1593,7 +1603,9 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
 		vars->cellType.getPointer(),
 		&wall_celltypeval, &symmetry_celltypeval,
 		&d_flowInlets[0].d_cellTypeID, &press_celltypeval,
-		&ffield, &sfield, &outletfield);
+		&ffield, &sfield, &outletfield,
+		&xminus, &xplus, &yminus, &yplus,
+		&zminus, &zplus);
 
 #ifdef ARCHES_BC_DEBUG
   cerr << "AFTER FORT_SCALARBC" << endl;
@@ -1865,6 +1877,17 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
   IntVector domHiV = vVelocity.getFortHighIndex();
   IntVector domLoW = wVelocity.getFortLowIndex();
   IntVector domHiW = wVelocity.getFortHighIndex();
+  cerr << "idxLo" << idxLo << " idxHi" << idxHi << endl;
+  cerr << "domLo" << domLoScalar << " domHi" << domHiScalar << endl;
+  cerr << "domLoU" << domLoU << " domHiU" << domHiU << endl;
+  cerr << "domLoV" << domLoV << " domHiV" << domHiV << endl;
+  cerr << "domLoW" << domLoW << " domHiW" << domHiW << endl;
+  cerr << "pressID" << d_pressureBdry->d_cellTypeID << endl;
+  for(CellIterator iter = patch->getCellIterator();
+      !iter.done(); iter++){
+    cerr.width(10);
+    cerr << "PPP"<<*iter << ": " << pressure[*iter] << "\n" ; 
+  }
 
   FORT_CALPBC(domLoU.get_pointer(), domHiU.get_pointer(), 
 	      uVelocity.getPointer(),
@@ -1888,6 +1911,18 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 		    &(d_pressureBdry->d_cellTypeID));
   }
       
+  cerr << "After recomputecalpbc" << endl;
+  uVelocity.print(cerr);
+  cerr << "print vvelocity" << endl;
+  vVelocity.print(cerr);
+  pressure.print(cerr);
+  cerr << "print pcell" << endl;
+  cellType.print(cerr);
+  for(CellIterator iter = patch->getCellIterator();
+      !iter.done(); iter++){
+    cerr.width(10);
+    cerr << "RHO"<<*iter << ": " << density[*iter] << "\n" ; 
+  }
 
   // Put the calculated data into the new DW
   new_dw->put(uVelocity, d_lab->d_uVelocityCPBCLabel, matlIndex, patch);
@@ -2279,6 +2314,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.64  2000/10/10 19:30:57  rawat
+// added scalarsolver
+//
 // Revision 1.63  2000/10/07 21:40:49  rawat
 // fixed pressure norm
 //

@@ -2,7 +2,7 @@ c
 c $Id$
 c
 
-      SUBROUTINE scalcoef(domLo, domHi, idxLo, idxHi,
+      SUBROUTINE scalcoef(domLo, domHi,domLong, domHing, idxLo, idxHi,
      $     den,vis,
      &     ae,aw,an,as,at,ab,
      $     cesav,cwsav,cnsav,cssav,ctsav,cbsav,
@@ -90,7 +90,8 @@ C-----------------------------------------------------------------------
 *-----------------------------------------------------------------------
 *     passed variables
 *
-      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
+      integer domLo(3), domHi(3), domLong(3), domHing(3),
+     $        idxLo(3), idxHi(3)
 
       double precision den(
      $     domLo(1):domHi(1),
@@ -103,64 +104,64 @@ C-----------------------------------------------------------------------
      $     domLo(3):domHi(3))
 
       double precision ae(
-     $     domLo(1):domHi(1),
-     $     domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+     $     domLong(1):domHing(1),
+     $     domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
 
       double precision aw(
-     $     domLo(1):domHi(1),
-     $     domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+     $     domLong(1):domHing(1),
+     $     domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
 
       double precision an(
-     $     domLo(1):domHi(1),
-     $     domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+     $     domLong(1):domHing(1),
+     $     domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
 
       double precision as(
-     $     domLo(1):domHi(1),
-     $     domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+     $     domLong(1):domHing(1),
+     $     domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
 
       double precision at(
-     $     domLo(1):domHi(1),
-     $     domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+     $     domLong(1):domHing(1),
+     $     domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
 
       double precision ab(
-     $     domLo(1):domHi(1),
-     $     domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+     $     domLong(1):domHing(1),
+     $     domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
 
       double precision cesav(
-     $     domLo(1):domHi(1),
-     $     domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+     $     domLong(1):domHing(1),
+     $     domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
 
       double precision cwsav(
-     $     domLo(1):domHi(1),
-     $     domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+     $     domLong(1):domHing(1),
+     $     domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
 
       double precision cnsav(
-     $     domLo(1):domHi(1),
-     $     domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+     $     domLong(1):domHing(1),
+     $     domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
 
       double precision cssav(
-     $     domLo(1):domHi(1),
-     $     domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+     $     domLong(1):domHing(1),
+     $     domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
 
       double precision ctsav(
-     $     domLo(1):domHi(1),
-     $     domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+     $     domLong(1):domHing(1),
+     $     domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
 
       double precision cbsav(
-     $     domLo(1):domHi(1),
-     $     domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+     $     domLong(1):domHing(1),
+     $     domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
 
       integer domLoU(3), domHiU(3)
       double precision uu(
@@ -438,6 +439,9 @@ c                  AC(I,J,K) = 0.0
 
 c
 c $Log$
+c Revision 1.6  2000/10/10 19:31:03  rawat
+c added scalarsolver
+c
 c Revision 1.5  2000/09/28 22:16:47  bigler
 c Changed certain functions to explicity be double precision functions.
 c

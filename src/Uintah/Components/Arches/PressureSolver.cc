@@ -519,54 +519,6 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				       Arches::PRESSURE, &pressureVars);
     std::cerr << "Done building matrix for press coeff" << endl;
 
-    if (index == 2) {
-    cerr << "After vel voef for v" << endl;
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-      cerr.width(10);
-      cerr << "uAE"<<*iter << ": " << pressureVars.vVelocityCoeff[Arches::AE][*iter] << "\n" ; 
-    }
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-      cerr.width(10);
-      cerr << "uAW"<<*iter << ": " << pressureVars.vVelocityCoeff[Arches::AW][*iter] << "\n" ; 
-    }
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-      cerr.width(10);
-      cerr << "uAN"<<*iter << ": " << pressureVars.vVelocityCoeff[Arches::AN][*iter] << "\n" ; 
-    }
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-      cerr.width(10);
-      cerr << "uAS"<<*iter << ": " << pressureVars.vVelocityCoeff[Arches::AS][*iter] << "\n" ; 
-    }
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-      cerr.width(10);
-      cerr << "uAT"<<*iter << ": " << pressureVars.vVelocityCoeff[Arches::AT][*iter] << "\n" ; 
-    }
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-      cerr.width(10);
-      cerr << "uAB"<<*iter << ": " << pressureVars.vVelocityCoeff[Arches::AB][*iter] << "\n" ; 
-    }
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-      cerr.width(10);
-      cerr << "vAP"<<*iter << ": " << pressureVars.vVelocityCoeff[Arches::AP][*iter] << "\n" ; 
-    }
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-      cerr.width(10);
-      cerr << "uSU"<<*iter << ": " << pressureVars.vVelNonlinearSrc[*iter] << "\n" ; 
-    }
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-      cerr.width(10);
-      cerr << "uSP"<<*iter << ": " << pressureVars.vVelLinearSrc[*iter] << "\n" ; 
-    }
-  }
   }
   // put required vars
   for (int ii = 0; ii < nofStencils; ii++) {
@@ -890,6 +842,9 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.61  2000/10/10 19:30:57  rawat
+// added scalarsolver
+//
 // Revision 1.60  2000/10/09 17:06:25  rawat
 // modified momentum solver for multi-patch
 //
