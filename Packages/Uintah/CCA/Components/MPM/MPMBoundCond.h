@@ -19,27 +19,13 @@ using namespace SCIRun;
     void setBoundaryCondition(const Patch* patch,int dwi, const string& type,
 			      NCVariable<Vector>& variable);
 
-    void setBoundaryConditionJohn(const Patch* patch,int dwi, 
-				  const string& type,
-				  NCVariable<Vector>& variable);
-
     void setBoundaryCondition(const Patch* patch,int dwi, const string& type,
 			      NCVariable<double>& variable);
-
-    void setBoundaryConditionJohn(const Patch* patch,int dwi, 
-				  const string& type,
-				  NCVariable<double>& variable);
-
 
     void setBoundaryCondition(const Patch* patch,int dwi, const string& type,
 			      NCVariable<double>& variable,
 			      constNCVariable<double>& gvolume);
 
-    void setBoundaryConditionJohn(const Patch* patch,int dwi, 
-				  const string& type,
-				  NCVariable<double>& variable,
-				  constNCVariable<double>& gvolume);
-    
   private:
 
   };
