@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
-<!-- @version: Updated 1/23/2004-->
+<!-- @version: Updated 3/29/2004-->
 <Uintah_specification>
 
    <Meta>
@@ -11,7 +11,7 @@
 	<maxTime>0.8</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
-	<delt_max>0.001</delt_max>
+	<delt_max>0.02</delt_max>
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
@@ -28,6 +28,7 @@
         <save label = "p.particleID"/>
 	<save label = "g.mass"/>
 	<save label = "g.stressFS"/>
+        <save_crack_geometry>true</save_crack_geometry>
 
 	<checkpoint cycle = "2" interval = "0.2"/>
    </DataArchiver>
@@ -37,7 +38,7 @@
 	<nodes8or27>8</nodes8or27>
         <artificial_damping_coeff>0.005</artificial_damping_coeff>
         <calculate_fracture_parameters>every_time_step</calculate_fracture_parameters>
-        <useVolumeIntegral>false</useVolumeIntegral>
+        <use_volume_integral>false</use_volume_integral>
         <J_radius>0.005</J_radius>
         <do_crack_propagation>false</do_crack_propagation>
     </MPM>
@@ -94,6 +95,14 @@
     </MaterialProperties>
 	
     <Grid>
+        <Level>
+            <Box label = "1">
+                <lower>[0.0, -0.018, -0.0015]</lower>
+                <upper>[0.11, 0.018, 0.0015]</upper>
+                <resolution>[55,18,3]</resolution>
+                <patches>[1,1,1]</patches>
+            </Box>
+        </Level>
         <BoundaryConditions>
            <Face side = "x-">
                   <BCType id = "all" var = "Dirichlet" label = "Velocity">
@@ -122,14 +131,6 @@
              <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
            </Face>
         </BoundaryConditions>
-	<Level>
-	    <Box label = "1">
-		<lower>[0.0, -0.018, -0.0015]</lower>
-		<upper>[0.11, 0.018, 0.0015]</upper>
-	        <resolution>[55,18,3]</resolution>
-		<patches>[1,1,1]</patches>
-	    </Box>
-	</Level>
     </Grid>
 
     <PhysicalBC>

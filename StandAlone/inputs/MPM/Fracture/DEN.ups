@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
-<!-- @version: Updated 1/23/2004-->
+<!-- @version: Updated 3/29/2004-->
 <Uintah_specification>
 
    <Meta>
-	<title>J & K calculation for double-edge-notched specimen under compression</title>
+	<title>SIF calculation for double-edge-notched specimen under compression</title>
    </Meta>
 
    <Time>
@@ -28,8 +28,9 @@
         <save label = "p.particleID"/>
 	<save label = "g.mass"/>
 	<save label = "g.stressFS"/>
+        <save_crack_geometry>true</save_crack_geometry>
 
-	<checkpoint cycle = "2" interval = "25e-6"/>
+	<checkpoint cycle = "2" interval = "5e-6"/>
    </DataArchiver>
 
     <MPM>
@@ -37,7 +38,7 @@
 	<nodes8or27>8</nodes8or27>
         <calculate_fracture_parameters>every_time_step</calculate_fracture_parameters>
         <J_radius>24.0e-3</J_radius>  <!-- 12X12 cells --> 
-        <useVolumeIntegral>true</useVolumeIntegral> <!-- plus volume-integral in J -->
+        <use_volume_integral>true</use_volume_integral> <!-- use it in J-->
         <do_crack_propagation>false</do_crack_propagation>
     </MPM>
 
@@ -94,6 +95,14 @@
     </MaterialProperties>
 	
     <Grid>
+        <Level>
+            <Box label = "1">
+                <lower>[-10.0e-3,      0.0, -3.0e-3]</lower>
+                <upper>[110.0e-3, 120.0e-3,  3.0e-3]</upper>
+                <resolution>[60,60,3]</resolution>
+                <patches>[4,4,1]</patches>
+            </Box>
+        </Level>
         <BoundaryConditions>
            <Face side = "x-">
                   <BCType id = "all" var = "Dirichlet" label = "Velocity">
@@ -124,14 +133,6 @@
                   </BCType>
            </Face>
         </BoundaryConditions>
-	<Level>
-	    <Box label = "1">
-		<lower>[-10.0e-3,      0.0, -3.0e-3]</lower>
-		<upper>[110.0e-3, 120.0e-3,  3.0e-3]</upper>
-	        <resolution>[60,60,3]</resolution>
-		<patches>[4,4,1]</patches>
-	    </Box>
-	</Level>
     </Grid>
 
     <PhysicalBC>

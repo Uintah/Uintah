@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
-<!-- @version: Updated 1/23/2004-->
+<!-- @version: Updated 3/29/2004-->
 <Uintah_specification>
 
    <Meta>
@@ -27,6 +27,7 @@
 	<save label = "p.stress"/>
 	<save label = "g.mass"/>
 	<save label = "g.stressFS"/>
+        <save_crack_geometry>true</save_crack_geometry>
 
 	<checkpoint cycle = "2" interval = "30.0e-6"/>
    </DataArchiver>
@@ -35,7 +36,7 @@
 	<time_integrator>fracture</time_integrator>
 	<nodes8or27>8</nodes8or27>
         <calculate_fracture_parameters>every_time_step</calculate_fracture_parameters>
-        <useVolumeIntegral>false</useVolumeIntegral>
+        <use_volume_integral>false</use_volume_integral>
         <do_crack_propagation>false</do_crack_propagation>
     </MPM>
 
@@ -75,7 +76,6 @@
                         <point_axis2>[0.,   0.0, -0.035] </point_axis2>
                         <extent>quarter</extent>
                         <resolution_circumference>32</resolution_circumference>
-                        <crack_front_segment_ID>1</crack_front_segment_ID>
                       </partial_ellipse>
                    </crack_segments>
                 </crack>
@@ -90,6 +90,14 @@
     </MaterialProperties>
 	
     <Grid>
+        <Level>
+            <Box label = "1">
+                <lower>[-0.156, -0.066, -0.096]</lower>
+                <upper>[ 0.156,    0.0,    0.0]</upper>
+                <resolution>[104,22,32]</resolution>
+                <patches>[8,2,4]</patches>
+            </Box>
+        </Level>
         <BoundaryConditions>
            <Face side = "x-">
                   <BCType id = "all" var = "Dirichlet" label = "Velocity">
@@ -118,14 +126,6 @@
              <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
            </Face>
         </BoundaryConditions>
-	<Level>
-	    <Box label = "1">
-		<lower>[-0.156, -0.066, -0.096]</lower>
-		<upper>[ 0.156,    0.0,    0.0]</upper>
-	        <resolution>[104,22,32]</resolution>
-		<patches>[8,2,4]</patches>
-	    </Box>
-	</Level>
     </Grid>
 
     <PhysicalBC>
