@@ -47,7 +47,7 @@ WARNING
       
       virtual ~SoleVariableBase();
       
-      virtual void copyPointer(const SoleVariableBase&) = 0;
+      virtual void copyPointer(Variable&) = 0;
       virtual SoleVariableBase* clone() const = 0;
       virtual void print(ostream&) = 0;
       virtual void getMPIInfo(int& count, MPI_Datatype& datatype) = 0;
@@ -55,8 +55,8 @@ WARNING
       virtual void putMPIData(vector<char>& buf, int& index) = 0;
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
       virtual RefCounted* getRefCounted();
-      virtual void getSizeInfo(string& elems, unsigned long& totsize) 
-	const = 0;
+      virtual void getSizeInfo(string& elems,unsigned long& totsize,
+                               void*& ptr) const = 0;
    protected:
       SoleVariableBase(const SoleVariableBase&);
       SoleVariableBase();
