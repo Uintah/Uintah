@@ -116,7 +116,7 @@ packmaker: $(SRCTOP)/scripts/packmaker.in $(OBJTOP)/Makefile
 	-@chmod a+x packmaker
 
 ontheflylibs:
-	@echo compiling on-the-fly-libs directory
+	@echo Compiling on-the-fly-libs directory:
 	@mkdir -p on-the-fly-libs
 	@(cd on-the-fly-libs;$(MAKE))
 
