@@ -77,6 +77,7 @@
                    <tolerance>1.0e-10</tolerance>
                    <include href="../MaterialData/IsotropicElastic4340Steel.xml"/>
           <include href="../MaterialData/VonMisesYield.xml"/>
+          <include href="../MaterialData/NoStabilityCheck.xml"/>
                    <include href="../MaterialData/MTSPlastic4340Steel.xml"/>
                    <include href="../MaterialData/JohnsonCookDamage4340Steel.xml"/>
                    <include href="../MaterialData/MieGruneisenEOS4340Steel.xml"/>
