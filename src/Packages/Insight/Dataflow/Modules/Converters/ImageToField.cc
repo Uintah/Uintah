@@ -29,7 +29,7 @@
 
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/ImageField.h>
+#include <Packages/Insight/Core/Datatypes/ITKImageField.h>
 #include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
 
 #include <Core/Datatypes/ImageMesh.h>
@@ -42,11 +42,11 @@ using namespace SCIRun;
 
 class InsightSHARE ImageToField : public Module {  
 public:
-  ITKDatatypeIPort* inrrd;
-  ITKDatatypeHandle ninH;
+  ITKDatatypeIPort* inport1_;
+  ITKDatatypeHandle inhandle1_;
 
-  FieldOPort* ofield;
-  FieldHandle ofield_handle;
+  FieldOPort* ofield_;
+  FieldHandle ofield_handle_;
 
 public:
   ImageToField(GuiContext*);
@@ -85,7 +85,7 @@ ImageToField::~ImageToField(){
 template<class InputImageType>
 FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
 
-  typedef ImageField<typename InputImageType::PixelType> ImageFieldType;
+  typedef ITKImageField<typename InputImageType::PixelType> ITKImageFieldType;
   InputImageType *n = dynamic_cast< InputImageType * >( nrd.get_rep()->data_.GetPointer() );
 
   double spc[2];
@@ -97,7 +97,6 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
   Point min(0., 0., 0.);
   Point max(size_x, size_y, 0.);
 
-  //ImageMesh* m = new ImageMesh(size_x+1, size_y+1, min, max);
   ImageMesh* m = new ImageMesh(size_x, size_y, min, max);
 
   ImageMeshHandle mh(m);
@@ -105,40 +104,14 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
   FieldHandle fh;
   int mn_idx, mx_idx;
   
-  // assume data type is unsigned char
-  fh = new ImageFieldType(mh, Field::NODE); 
-  ImageMesh::Node::iterator iter, end;
-  mh->begin(iter);
-  mh->end(end);
-
-  // fill data
-  typename InputImageType::IndexType pixelIndex;
-  typedef typename ImageFieldType::value_type val_t;
-  val_t tmp;
-  ImageFieldType* fld = (ImageFieldType* )fh.get_rep();
-
-  
-  for(int row=0; row < size_y; row++) {
-    for(int col=0; col < size_x; col++) {
-      if(iter == end) {
-	return fh;
-      }
-      pixelIndex[0] = col;
-      pixelIndex[1] = row;
-
-      tmp = n->GetPixel(pixelIndex);
-      fld->set_value(tmp, *iter);
-      ++iter;
-    }
-  }
-
+  fh = new ITKImageFieldType(mh, Field::NODE, n); 
   return fh;
 }
 
 template<class InputImageType>
 FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &nrd) {
  
-  typedef ITKLatVolField<typename InputImageType::PixelType> LatVolFieldType;
+  typedef ITKLatVolField<typename InputImageType::PixelType> ITKLatVolFieldType;
   InputImageType *n = dynamic_cast< InputImageType * >( nrd.get_rep()->data_.GetPointer() );
 
   double spc[2];
@@ -158,9 +131,7 @@ FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &nrd) {
   FieldHandle fh;
   int mn_idx, mx_idx;
   
-  fh = new LatVolFieldType(mh, Field::NODE, n); 
-  // LatVolFieldType* fld = (LatVolFieldType* )fh.get_rep();
-
+  fh = new ITKLatVolFieldType(mh, Field::NODE, n); 
   return fh;
 }
 
@@ -181,11 +152,11 @@ bool ImageToField::run( itk::Object* obj1)
     switch(dim) {
       
     case 2:
-      ofield_handle = create_image_field<InputImageType>(ninH);
+      ofield_handle_ = create_image_field<InputImageType>(inhandle1_);
       break;
       
     case 3:
-      ofield_handle = create_latvol_field<InputImageType>(ninH);
+      ofield_handle_ = create_latvol_field<InputImageType>(inhandle1_);
       break;
     default:
       error("Cannot convert data that is not 2D or 3D to a SCIRun Field.");
@@ -196,23 +167,23 @@ bool ImageToField::run( itk::Object* obj1)
 }
 
 void ImageToField::execute(){
-  inrrd = (ITKDatatypeIPort *)get_iport("InputImage");
-  ofield = (FieldOPort *)get_oport("OutputImage");
+  inport1_ = (ITKDatatypeIPort *)get_iport("InputImage");
+  ofield_ = (FieldOPort *)get_oport("OutputImage");
 
-  if (!inrrd) {
+  if (!inport1_) {
     error("Unable to initialize iport 'InputImage'.");
     return;
   }
-  if (!ofield) {
+  if (!ofield_) {
     error("Unable to initialize oport 'OutputImage'.");
     return;
   }
 
-  if(!inrrd->get(ninH))
+  if(!inport1_->get(inhandle1_))
     return;
 
   // get input
-  itk::Object *n = ninH.get_rep()->data_.GetPointer();
+  itk::Object *n = inhandle1_.get_rep()->data_.GetPointer();
 
   // can we operate on it?
   if(0) { }
@@ -225,7 +196,7 @@ void ImageToField::execute(){
     error("Incorrect input type");
     return;
   }
-  ofield->send(ofield_handle);
+  ofield_->send(ofield_handle_);
 }
 
 void ImageToField::tcl_command(GuiArgs& args, void* userdata)
