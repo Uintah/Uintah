@@ -504,7 +504,7 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gInternalHeatRateLabel, Ghost::None);
   t->requires(Task::NewDW, lb->gExternalHeatRateLabel, Ghost::None);
 
-    t->requires(Task::NewDW, lb->gThermalContactHeatExchangeRateLabel,
+  t->requires(Task::NewDW, lb->gThermalContactHeatExchangeRateLabel,
 						       Ghost::None);
 		
   t->computes(lb->gTemperatureRateLabel);
@@ -527,7 +527,7 @@ void SerialMPM::scheduleIntegrateAcceleration(SchedulerP& sched,
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   t->requires(Task::NewDW, lb->gAccelerationLabel,    Ghost::None);
-  t->requires(Task::NewDW, lb->gMomExedVelocityLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityLabel, Ghost::None);
 
   t->computes(lb->gVelocityStarLabel);
 
@@ -1595,9 +1595,9 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
       NCVariable<Vector>        velocity;
       delt_vartype delT;
 
-      new_dw->get(acceleration, lb->gAccelerationLabel,    dwindex, patch,
+      new_dw->get(acceleration, lb->gAccelerationLabel,  dwindex, patch,
 		  Ghost::None, 0);
-      new_dw->get(velocity,     lb->gMomExedVelocityLabel, dwindex, patch,
+      new_dw->get(velocity,     lb->gVelocityLabel,      dwindex, patch,
 		  Ghost::None, 0);
 
       old_dw->get(delT, d_sharedState->get_delt_label() );
