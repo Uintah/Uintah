@@ -3,7 +3,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/dynamic_3loop_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/inc_dynamic_3loop_fort.h>
 
 c*********************************************************************
 c     Local Variables :
