@@ -132,6 +132,9 @@ void getIteratorBCValueBCKind( const Patch* patch,
   if (sym_bc != 0) {       // symmetric
     bc_kind = "symmetric";
   }
+  if (desc == "zeroNeumann" ){
+    bc_kind = "zeroNeumann";
+  }
   delete bc;
   delete sym_bc;
 }

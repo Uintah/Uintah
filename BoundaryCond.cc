@@ -333,22 +333,9 @@ void setBC(CCVariable<double>& var_CC,
         if (desc == "set_if_sym_BC" && bc_kind == "symmetric"){
           bc_kind = "zeroNeumann";
         }
-        if (desc == "zeroNeumann" || bc_kind == "symmetric"){
+        if ( bc_kind == "symmetric"){
           bc_kind = "zeroNeumann";
         }
-
-        // mass Fraction/scalar have a zeroNeumann default BC
-        bool defaultZeroNeumann = false;
-        string::size_type pos1 = desc.find ("massFraction");
-        string::size_type pos2 = desc.find ("scalar");
-        string::size_type pos3 = desc.find ("mixtureFraction");
-        string::size_type found = std::string::npos;
-        if ( pos1 != found || pos2 !=  found || pos3 != found){
-          defaultZeroNeumann = true;
-        }
-        if (defaultZeroNeumann || bc_kind == "NotSet") {
-          bc_kind == "zeroNeumann";
-        }      
 
         //__________________________________
         // Apply the boundary condition
