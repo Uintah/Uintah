@@ -33,20 +33,71 @@
 
 
 #include <vector>
+#include <Core/Thread/Mutex.h>
 
 namespace SCIRun {
 
 /*
- * SlotBase
+ * SlotBase & SignalBase
  */
 
 class SlotBase {
+private:
+  int priority_;
+
 public:
+  SlotBase( int priority=0) : priority_(priority) {}
   virtual ~SlotBase() {}
 
+  int priority() {return priority_;}
   virtual void send() {}
 };
 
+
+class SignalBase {
+ protected:
+  Mutex lock_;
+  vector<SlotBase *> slot_;
+  
+ protected: //you can not allocated a SignalBase
+  SignalBase() : lock_("signal lock") {} 
+  
+ public:
+  void add( SlotBase *s )
+    { 
+      lock_.lock(); 
+      // using insert sort
+      slot_.push_back(s); 
+      int priority = s->priority();
+      int i=slot_.size();
+      for (i--; i>0; i--) {
+	if ( slot_[i-1]->priority() < priority )
+	  slot_[i] = slot_[i-1];
+	else
+	  break;
+      }
+      slot_[i] = s;
+
+      lock_.unlock();
+    }
+    
+  template<class Slot>
+  bool rem( const Slot &r) 
+    { 
+      lock_.lock();
+      for (unsigned i=0; i<slot_.size(); i++) {
+	Slot *s = dynamic_cast<Slot *>(slot_[i]);
+	if ( s && (*s) == r ) {
+	  delete slot_[i];
+	  slot_.erase( slot_.begin()+i);
+	  lock_.unlock();
+	  return true;
+	}
+      }
+      lock_.unlock();
+      return false;
+    }
+};
 
 //
 // ************** no args
@@ -60,7 +111,7 @@ class StaticSlot : public SlotBase {
 private:
   void (*fun)();
 public:
-  StaticSlot( void (*fun)() ) : fun(fun) {}
+  StaticSlot( void (*fun)(), int priority=0 ) : SlotBase(priority), fun(fun) {}
   
   virtual void send() { (*fun)(); }
   bool operator==(const StaticSlot &s) { return fun == s.fun;}
@@ -73,13 +124,17 @@ public:
 template<class Caller>
 class Slot : public SlotBase {
 private:
-  Caller *caller;
-  void (Caller::*pmf)();
+  Caller *caller_;
+  void (Caller::*pmf_)();
 
 public:
-  Slot( Caller *caller, void (Caller::*pmf)() ) : caller(caller), pmf(pmf) {}
+  Slot( Caller *caller, void (Caller::*pmf)(), int priority=0 ) 
+    : SlotBase(priority), caller_(caller), pmf_(pmf) {}
   virtual void send() { (caller->*pmf)(); }
-  bool operator==(const Slot &s) { return caller == s.caller && pmf == s.pmf; }
+  bool operator==(const Slot &s) 
+    { 
+      return caller_ == s.caller_ && pmf_ == s.pmf_; 
+    }
 };
 
 
@@ -87,43 +142,28 @@ public:
  * Signal(void)
  */
 
-class Signal {
-private:
-  vector<SlotBase *> slot;
+class Signal : public SignalBase {
 public:
-  void add( SlotBase *s) { slot.push_back(s); }
-
-  void operator()() { for (unsigned i=0; i<slot.size(); i++) slot[i]->send(); }
-
-  template<class Slot>
-  bool rem( const Slot &r) { 
-    for (unsigned i=0; i<slot.size(); i++) {
-      Slot *s = dynamic_cast<Slot *>(slot[i]);
-      if ( s && (*s) == r ) {
-	delete slot[i];
-	slot.erase( slot.begin()+i);
-	return true;
-      }
+  void operator()() 
+    { lock_.lock();
+    for (unsigned i=0; i<slot_.size(); i++) slot_[i]->send();
+    lock_.unlock();
     }
-    return false;
-  }
 };
 
 /*
  * Connect(void)
  */
 template<class T>
-void connect( Signal &s, T &t, void (T::*fun)())
+void connect( Signal &s, T &t, void (T::*fun)(), int priority=0)
 {
-  Slot<T> *slot = new Slot<T>(&t, fun);
-  s.add( slot);
+  s.add( new Slot<T>(&t, fun, priority) );
 }
 
 inline
-void connect( Signal &s, void (*fun)() )
+void connect( Signal &s, void (*fun)(), int priority=0 )
 {
-  StaticSlot *slot = new StaticSlot( fun );
-  s.add( slot );
+  s.add ( new StaticSlot( fun, priority ) );
 }
 
 /*
@@ -151,22 +191,23 @@ bool disconnect( Signal &s, void (*fun)() )
  */
 
 template<class Arg1>
-class SlotBase1  {
+class SlotBase1 : public SlotBase  {
 public:
+  SlotBase1(int priority=0) : SlotBase(priority) {}
   virtual void send(Arg1) {}
 };
 
 template<class Caller, class Arg1>
 class Slot1 : public SlotBase1<Arg1> {
 private:
-  Caller *caller;
-  void (Caller::*pmf)(Arg1);
+  Caller *caller_;
+  void (Caller::*pmf_)(Arg1);
 public:
-  Slot1( Caller *caller, void (Caller::*pmf)(Arg1) )
-    : caller(caller), pmf(pmf) {}
-  void send(Arg1 arg) { (caller->*pmf)(arg); }
+  Slot1( Caller *caller, void (Caller::*pmf)(Arg1), int priority=0 )
+    : SlotBase1<Arg1>(priority), caller_(caller), pmf_(pmf) {}
+  void send(Arg1 arg) { (caller_->*pmf_)(arg); }
   bool operator==(const Slot1<Caller,Arg1> &s) 
-    { return caller == s.caller && pmf == s.pmf; }
+    { return caller_ == s.caller_ && pmf_ == s.pmf_; }
 };
 
 /*
@@ -176,12 +217,13 @@ public:
 template<class Arg1>
 class StaticSlot1 : public SlotBase1<Arg1> {
 private:
-  void (*fun)(Arg1);
+  void (*fun_)(Arg1);
 public:
-  StaticSlot1( void (*fun)(Arg1) ) : fun(fun) {}
+  StaticSlot1( void (*fun)(Arg1), int priority=0 ) 
+    : SlotBase1<Arg1>(priority), fun_(fun) {}
   
-  virtual void send(Arg1 a) { (*fun)(a); }
-  bool operator==(const StaticSlot1<Arg1> &s) { return fun == s.fun;}
+  virtual void send(Arg1 a) { (*fun_)(a); }
+  bool operator==(const StaticSlot1<Arg1> &s) { return fun_ == s.fun_;}
 };
 
 /*
@@ -189,25 +231,16 @@ public:
  */
 
 template<class Arg>
-class Signal1  {
-private:
-  vector<SlotBase1<Arg> *> slot;
+class Signal1  : public SignalBase {
 public:
-  void add( SlotBase1<Arg> *s) { slot.push_back(s); }
-  void operator()( Arg a) 
-    { for (unsigned i=0; i<slot.size(); i++) slot[i]->send(a);}
-  template<class Slot>
-  bool rem( const Slot &r) { 
-    for (int i=0; i<slot.size(); i++) {
-      Slot *s = dynamic_cast<Slot *>(slot[i]);
-      if ( s && (*s) == r ) {
-	delete slot[i];
-	slot.erase( slot.begin()+i);
-	return true;
-      }
+  void add( SlotBase1<Arg> *s) { SignalBase::add( s ); }
+  void operator()(Arg a)
+    {
+      lock_.lock();
+      for (unsigned i=0; i<slot_.size(); i++)
+	static_cast<SlotBase1<Arg>*>(slot_[i])->send(a);
+      lock_.unlock();
     }
-    return false;
-  }
 };
 
 /*
@@ -215,18 +248,16 @@ public:
  */
 
 template<class T, class Arg>
-void connect( Signal1<Arg> &s, T &t, void (T::*fun)(Arg))
+void connect( Signal1<Arg> &s, T &t, void (T::*fun)(Arg), int priority=0)
 {
-  SlotBase1<Arg> *slot = new Slot1<T,Arg>(&t, fun);
-  s.add( slot);
+  s.add( new Slot1<T,Arg>(&t, fun, priority) );
 }
 
 
 template<class Arg1>
-void connect( Signal &s, void (*fun)(Arg1) )
+void connect( Signal &s, void (*fun)(Arg1), int priority=0 )
 {
-  StaticSlot1<Arg1> *slot = new StaticSlot1<Arg1>( fun );
-  s.add( slot );
+  s.add( new StaticSlot1<Arg1>( fun, priority ));
 }
 
 /*
@@ -254,7 +285,7 @@ bool disconnect( Signal1<Arg> &s, void (*fun)(Arg) )
  */
 
 template<class Arg1,class Arg2>
-class SlotBase2  {
+class SlotBase2 :  public SlotBase {
 public:
   virtual void send(Arg1,Arg2) {}
 };
@@ -262,12 +293,12 @@ public:
 template<class Caller, class Arg1, class Arg2>
 class Slot2 : public SlotBase2<Arg1,Arg2> {
 private:
-  Caller *caller;
-  void (Caller::*pmf)(Arg1,Arg2);
+  Caller *caller_;
+  void (Caller::*pmf_)(Arg1,Arg2);
 public:
-  Slot2( Caller *caller, void (Caller::*pmf)(Arg1,Arg2) )
-    : caller(caller), pmf(pmf) {}
-  void send(Arg1 a, Arg2 b) { (caller->*pmf)(a,b); }
+  Slot2( Caller *caller, void (Caller::*pmf)(Arg1,Arg2),int priority=0 )
+    : SlotBase2<Arg1,Arg2>(priority), caller_(caller), pmf_(pmf) {}
+  void send(Arg1 a, Arg2 b) { (caller_->*pmf_)(a,b); }
 };
 
 /*
@@ -277,11 +308,12 @@ public:
 template<class Arg1, class Arg2>
 class StaticSlot2 : public SlotBase2<Arg1,Arg2> {
 private:
-  void (*fun)(Arg1,Arg2);
+  void (*fun_)(Arg1,Arg2);
 public:
-  StaticSlot2( void (*fun)(Arg1,Arg2) ) : fun(fun) {}
+  StaticSlot2( void (*fun)(Arg1,Arg2), int priority ) 
+    : SlotBase2<Arg1,Arg2>(priority), fun_(fun) {}
   
-  virtual void send(Arg1 a, Arg2 b) { (*fun)(a,b); }
+  virtual void send(Arg1 a, Arg2 b) { (*fun_)(a,b); }
 };
 
 
@@ -290,13 +322,18 @@ public:
  */
 
 template<class Arg1,class Arg2>
-class Signal2  {
+class Signal2 : public SignalBase {
 private:
-  vector<SlotBase2<Arg1,Arg2> *> slot;
+  vector<SlotBase2<Arg1,Arg2> *> slot_;
 public:
-  void add( SlotBase2<Arg1,Arg2> *s) { slot.push_back(s); }
-  void operator()( Arg1 a, Arg2 b) 
-    { for (int i=0; i<slot.size(); i++) slot[i]->send(a,b); }
+  void add( SlotBase2<Arg1,Arg2> *s) { SignalBase::add( s ); }
+  void operator()(Arg1 a, Arg2 b )
+    {
+      lock_.lock();
+      for (unsigned i=0; i<slot_.size(); i++)
+	static_cast<SlotBase2<Arg1,Arg2>*>(s)->send(a,b);
+      lock_.unlock();
+    }
 };
 
 /*
@@ -304,17 +341,16 @@ public:
  */
 
 template<class T, class Arg1, class Arg2>
-void connect( Signal2<Arg1,Arg2> &s, T &t, void (T::*fun)(Arg1,Arg2))
+void connect( Signal2<Arg1,Arg2> &s, T &t, void (T::*fun)(Arg1,Arg2), 
+	      int priority=0)
 {
-  SlotBase2<Arg1,Arg2> *slot = new Slot2<T,Arg1,Arg2>(&t, fun);
-  s.add( slot);
+  s.add( new Slot2<T,Arg1,Arg2>(&t, fun, priority) );
 }
 
 template<class Arg1, class Arg2>
-void connect( Signal &s, void (*fun)(Arg1,Arg2) )
+void connect( Signal &s, void (*fun)(Arg1,Arg2), int priority=0 )
 {
-  StaticSlot2<Arg1,Arg2> *slot = new StaticSlot2<Arg1,Arg2>( fun );
-  s.add( slot );
+  s.add( new StaticSlot2<Arg1,Arg2>( fun, priority ) );
 }
 
 /*
