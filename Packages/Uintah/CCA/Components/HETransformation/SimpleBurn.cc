@@ -16,6 +16,7 @@ SimpleBurn::SimpleBurn(ProblemSpecP& ps)
   ps->require("ThresholdPressure",thresholdPressure);
   ps->require("Enthalpy",Enthalpy);
   ps->require("BurnCoeff",BurnCoeff);
+  ps->require("refPressure",refPressure);
 
   d_burnable = true;  
 
@@ -37,10 +38,10 @@ void SimpleBurn::computeBurn(double gasTemperature,
 			     double &surfaceArea)
 {
   if ((gasTemperature > thresholdTemp) && (gasPressure > thresholdPressure)) {
-      burnedMass = surfaceArea * BurnCoeff * pow(gasPressure,0.778);
+    burnedMass = surfaceArea * BurnCoeff * pow((gasPressure/refPressure),0.778);
   }
   else {
-      burnedMass = 0;
+    burnedMass = 0;
   }
 
   burnedMass *= delT;
