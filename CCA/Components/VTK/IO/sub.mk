@@ -23,8 +23,7 @@ SRCDIR   := CCA/Components/VTK/IO
 
 SRCS     += $(SRCDIR)/ImageReader.cc \
 	    $(SRCDIR)/StructuredPointsReader.cc \
-	    $(SRCDIR)/JPEGReader.cc  \
-	    $(SRCDIR)/ImageWriter.cc 
+	    $(SRCDIR)/JPEGReader.cc  
 
 PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
