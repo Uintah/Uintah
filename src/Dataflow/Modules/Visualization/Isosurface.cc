@@ -249,7 +249,13 @@ Isosurface::execute()
 
     if (gui_active_isoval_selection_tab_.get() == "0") { // slider / typed
       const double val = gui_iso_value_.get();
-
+      const double valTyped = gui_iso_value_typed_.get();
+      if (val != valTyped) {
+	char s[1000];
+	sprintf(s, "Typed isovalue: %g was out of range.  Using isovalue: %g instead.", valTyped, val);
+	warning(s);
+	gui_iso_value_typed_.set(val);
+      }
       if ( qmin <= val && val <= qmax )
 	isovals.push_back(val);
       else {

@@ -199,7 +199,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	scaleEntry2 $sel.isoval \
 	    [set $this-isoval-min] [set $this-isoval-max] \
-	     4c $this-isoval $this-var2
+	     4c $this-isoval $this-isoval-typed
 
 	pack $sel.isoval  -fill x
 
