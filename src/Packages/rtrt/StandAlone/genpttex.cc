@@ -171,7 +171,7 @@ Object *make_geometry_fromfile(char *filename, bool timevary)
 					     numvars,
 					     gridcellsize, griddepth,
 					     radius*radius_factor,
-					     0, 0, 0);
+					     0, 0);
   // We need a GridSphereDpy as GridSphere needs one to compute intersections
   GridSpheresDpy *griddpy = new GridSpheresDpy(0);
   griddpy->attach(gridspheres);
