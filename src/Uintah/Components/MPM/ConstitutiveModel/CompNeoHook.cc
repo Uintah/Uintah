@@ -119,7 +119,7 @@ void CompNeoHook::computeStableTimestep(const Patch* patch,
     double WaveSpeed = sqrt(Max(c_rot,c_dil));
     // Fudge factor of .8 added, just in case
     double delT_new = .8*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
-    new_dw->put(delt_vartype(delT_new), lb->deltLabel);
+    new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 
 }
 
@@ -168,7 +168,7 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
               Ghost::None, 0);
   delt_vartype delT;
-  old_dw->get(delT, lb->deltLabel);
+  old_dw->get(delT, lb->delTLabel);
 
   ParticleSubset* pset = px.getParticleSubset();
   ASSERT(pset == pstress.getParticleSubset());
@@ -239,7 +239,7 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   WaveSpeed = sqrt(Max(c_rot,c_dil));
   // Fudge factor of .8 added, just in case
   double delT_new = .8*Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
-  new_dw->put(delt_vartype(delT_new), lb->deltLabel);
+  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
   new_dw->put(pstress, lb->pStressLabel, matlindex, patch);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel,
                 matlindex, patch);
@@ -315,9 +315,9 @@ void CompNeoHook::addComputesAndRequires(Task* task,
                   Ghost::AroundCells, 1);
    task->requires(old_dw, bElBarLabel, matl->getDWIndex(), patch,
                   Ghost::None);
-   task->requires(old_dw, lb->deltLabel);
+   task->requires(old_dw, lb->delTLabel);
 
-   task->computes(new_dw, lb->deltLabel);
+   task->computes(new_dw, lb->delTLabel);
    task->computes(new_dw, lb->pStressLabel, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch);
    task->computes(new_dw, bElBarLabel, matl->getDWIndex(),  patch);
@@ -344,6 +344,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.13  2000/05/30 21:07:02  dav
+// delt to delT
+//
 // Revision 1.12  2000/05/30 20:19:02  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

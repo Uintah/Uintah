@@ -235,7 +235,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP&,
 	t->requires(dw, "vel_CC", patch, 0, 
 		    CCVariable<Vector>::getTypeDescription());
 	t->requires(dw, "params", ProblemSpec::getTypeDescription());
-	t->computes(dw, "delt", SoleVariable<double>::getTypeDescription());
+	t->computes(dw, "delT", SoleVariable<double>::getTypeDescription());
 	t->usesMPI(false);
 	t->usesThreads(false);
 	//t->whatis the cost model?();
@@ -259,20 +259,20 @@ void ICE::actuallyComputeStableTimestep(const ProcessorContext*,
      *   Find the new time step based on the
      *   Courant condition
      *___________________________________*/
-    double delt;
+    double delT;
     find_delta_time(
 		    xLoLimit,        yLoLimit,      zLoLimit,
 		    xHiLimit,        yHiLimit,      zHiLimit,
-		    &delt,           delt_limits,
+		    &delT,           delt_limits,
 		    delX,            delY,          delZ,
 		    uvel_CC,         vvel_CC,       wvel_CC,
 		    nMaterials );
 
-    //toDW->put("delt", delt);
+    //toDW->put("delT", delT);
 #endif
 }
 
-void ICE::scheduleTimeAdvance(double t, double delt,
+void ICE::scheduleTimeAdvance(double t, double delT,
 			      const LevelP&, SchedulerP&,
 			      const DataWarehouseP&, DataWarehouseP&)
 {
@@ -293,7 +293,7 @@ void ICE::scheduleTimeAdvance(double t, double delt,
 	sched->addTask(t);
     }
     this->cheat_t=t;
-    this->cheat_delt=delt;
+    this->cheat_delt=delT;
 #endif
 }
 
@@ -304,7 +304,7 @@ void ICE::actuallyTimeStep(const ProcessorContext*,
 {
 #if 0
     double t = this->cheat_t;
-    double delt = this->cheat_delt;
+    double delT = this->cheat_delt;
     int should_I_write_output = Is_it_time_to_write_output( t, t_output_vars  );
     /*______________________________________________________________________
      *                        MAIN ADVANCE LOOP

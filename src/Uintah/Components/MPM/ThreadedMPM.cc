@@ -114,7 +114,7 @@ void ThreadedMPM::computeStableTimestep(const LevelP& level,
 	t->requires(dw, "velocity", patch, 0,
 		    ParticleVariable<Vector>::getTypeDescription());
 	t->requires(dw, "params", ProblemSpec::getTypeDescription());
-	t->computes(dw, "delt", SoleVariable<double>::getTypeDescription());
+	t->computes(dw, "delT", SoleVariable<double>::getTypeDescription());
 	t->usesThreads(true);
 	sched->addTask(t);
     }
@@ -188,7 +188,7 @@ void ThreadedMPM::timeStep(double t, double dt,
 			NCVariable<Vector>::getTypeDescription());
 	    t->requires(old_dw, "p.conmod", patch, 0,
 			ParticleVariable<CompMooneyRivlin>::getTypeDescription());
-	    t->requires(old_dw, "delt",
+	    t->requires(old_dw, "delT",
 			SoleVariable<double>::getTypeDescription());
 	    t->computes(new_dw, "p.conmod", patch, 0,
 			ParticleVariable<CompMooneyRivlin>::getTypeDescription());
@@ -254,7 +254,7 @@ void ThreadedMPM::timeStep(double t, double dt,
 			NCVariable<Vector>::getTypeDescription());
 	    t->requires(new_dw, "g.velocity", patch, 0,
 			NCVariable<Vector>::getTypeDescription());
-	    t->requires(old_dw, "delt",
+	    t->requires(old_dw, "delT",
 			SoleVariable<double>::getTypeDescription());
 	    t->computes(new_dw, "g.velocity_star", patch, 0,
 			NCVariable<Vector>::getTypeDescription());
@@ -280,7 +280,7 @@ void ThreadedMPM::timeStep(double t, double dt,
 			NCVariable<Vector>::getTypeDescription());
 	    t->requires(old_dw, "p.x", patch, 0,
 			ParticleVariable<Point>::getTypeDescription());
-	    t->requires(old_dw, "delt",
+	    t->requires(old_dw, "delT",
 			SoleVariable<double>::getTypeDescription());
 	    t->computes(new_dw, "p.velocity", patch, 0,
 			ParticleVariable<Vector>::getTypeDescription());
@@ -331,7 +331,7 @@ static string s_ginternalforce("g.internalforce");
 static string s_gacceleration("g.acceleration");
 static string s_gvelocity_star("g.velocity_star");
 static string s_pconmod("p.conmod");
-static string s_delt("delt");
+static string s_delT("delT");
 
 void ThreadedMPM::actuallyComputeStableTimestep(const ProcessorContext* pc,
 					      const Patch* patch,
@@ -388,11 +388,11 @@ void ThreadedMPM::actuallyComputeStableTimestep(const ProcessorContext* pc,
     double c = Max(c_rot, c_dil);
     Vector dCell = patch->dCell();
     double width = Max(dCell.x(), dCell.y(), dCell.z());
-    double delt = 0.5*width/c;
+    double delT = 0.5*width/c;
 
-    delt = pc->reduce_min(delt);
+    delT = pc->reduce_min(delT);
     if(pc->threadNumber() == 0)
-	new_dw->put(SoleVariable<double>(delt), s_delt);
+	new_dw->put(SoleVariable<double>(delT), s_delT);
 }
 
 struct OwnerInfo {
@@ -768,8 +768,8 @@ void ThreadedMPM::computeStressTensor(const ProcessorContext* pc,
 
     NCVariable<Vector> gvelocity;
     new_dw->get(gvelocity, s_gvelocity, patch, 0);
-    SoleVariable<double> delt;
-    old_dw->get(delt, s_delt);
+    SoleVariable<double> delT;
+    old_dw->get(delT, s_delT);
 
     ParticleSubset* pset = px.getParticleSubset();
     ASSERT(pset == px.getParticleSubset());
@@ -812,7 +812,7 @@ void ThreadedMPM::computeStressTensor(const ProcessorContext* pc,
         }
 
 	// Compute the stress tensor at each particle location.
-        pconmod[idx].computeStressTensor(velGrad,delt);
+        pconmod[idx].computeStressTensor(velGrad,delT);
 #if 0
 	n++;
 #endif
@@ -944,11 +944,13 @@ void ThreadedMPM::integrateAcceleration(const ProcessorContext* pc,
 {
     // Get required variables for this patch
     NCVariable<Vector> acceleration;
-    new_dw->get(acceleration, s_gacceleration, patch, 0);
     NCVariable<Vector> velocity;
+
+    new_dw->get(acceleration, s_gacceleration, patch, 0);
     new_dw->get(velocity, s_gvelocity, patch, 0);
-    SoleVariable<double> delt;
-    old_dw->get(delt, s_delt);
+
+    SoleVariable<double> delT;
+    old_dw->get(delT, s_delT);
 
     // Create variables for the results
     NCVariable<Vector> velocity_star;
@@ -959,7 +961,7 @@ void ThreadedMPM::integrateAcceleration(const ProcessorContext* pc,
     patch->subpatchIteratorPair(pc->threadNumber(), pc->numThreads(),
 				  iter, end);
     for(; iter != end; iter++)
-	velocity_star[*iter] = velocity[*iter] + acceleration[*iter] * delt;
+	velocity_star[*iter] = velocity[*iter] + acceleration[*iter] * delT;
 
     // Put the result in the datawarehouse
     pc->barrier_wait();
@@ -984,11 +986,13 @@ void ThreadedMPM::interpolateToParticlesAndUpdate(const ProcessorContext* pc,
 
     // Get the arrays of grid data on which the new particle values depend
     NCVariable<Vector> gvelocity_star;
-    new_dw->get(gvelocity_star, s_gvelocity_star, patch, 0);
     NCVariable<Vector> gacceleration;
+
+    new_dw->get(gvelocity_star, s_gvelocity_star, patch, 0);
     new_dw->get(gacceleration, s_gacceleration, patch, 0);
-    SoleVariable<double> delt;
-    old_dw->get(delt, s_delt);
+
+    SoleVariable<double> delT;
+    old_dw->get(delT, s_delT);
 
     ParticleSubset* pset = px.getParticleSubset();
     ASSERT(pset == pvelocity.getParticleSubset());
@@ -1019,8 +1023,8 @@ void ThreadedMPM::interpolateToParticlesAndUpdate(const ProcessorContext* pc,
       }
 
       // Update the particle's position and velocity
-      px[idx]        += vel * delt;
-      pvelocity[idx] += acc * delt;
+      px[idx]        += vel * delT;
+      pvelocity[idx] += acc * delT;
       ke += pvelocity[idx].length2();
 
      // If we were storing particles in cellwise lists, this
