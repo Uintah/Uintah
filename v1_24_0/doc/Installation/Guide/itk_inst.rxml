@@ -111,12 +111,12 @@ setenv PATH $JAVA_HOME/bin:$PATH
       url="http://www.itk.org"><acronym>ITK</acronym> web
       site</ulink>.  A brief set of ITK installation instructions are
       given <link linkend="sec.cmake">below</link>.  SCIRun supports
-      <acronym>ITK</acronym> versions 1.6, 1.8, and 2.0.
+      <acronym>ITK</acronym> versions 1.8, and 2.0.
     </para>
 
     <note os="linux;osx">
       <para>
-	<acronym>ITK</acronym> versions 1.6 and 1.8 are not compatible
+	<acronym>ITK</acronym> version 1.8 is not compatible
 	with GCC 3.4.  Use <acronym>ITK</acronym> 2.0 if compiling
 	with GCC 3.4.
       </para>
@@ -156,8 +156,8 @@ setenv PATH $JAVA_HOME/bin:$PATH
       <command>make</command> must be invoked to build ITK.
     </para>
     <para>
-      To build ITK, first unpack its tarball.  The following command
-      creates directory
+      To build ITK, first unpack its source code tarball.  The
+      following command creates directory
       <filename>InsightToolkit-<replaceable>x.x.x</replaceable></filename>:
       <literallayout class="monospaced">
 gunzip -c InsightToolkit-<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
@@ -183,8 +183,8 @@ cmake <replaceable>path-to-itk-source-directory</replaceable> \
       </literallayout>
       Above, replace
       <replaceable>path-to-itk-source-directory</replaceable> with the
-      path to the ITK source code directory (
-      <filename>InsightToolkit-<replaceable>x.x.x</replaceable></filename>).
+      path to the ITK source code directory (e.g.
+      <filename>../InsightToolkit-<replaceable>x.x.x</replaceable></filename>).
       Replace <replaceable>path-to-png-lib</replaceable>
       with the path to the PNG library, typically
       <filename os="osx">/sw/lib/libpng.a</filename><filename
@@ -200,44 +200,59 @@ cmake <replaceable>path-to-itk-source-directory</replaceable> \
       <literallayout class="monospaced">
 make  
       </literallayout>
-      to build ITK.
+      to build ITK.  This builds ITK libraries in the ITK binary
+      directory.  SCIRun will use the ITK libraries in the ITK binary
+      directory by providing SCIRun's configure command with option
+      <option>--with-insight=<replaceable>path-to-itk-binary-directory</replaceable></option>.
+    </para>
+    <para>
+      Alternatively, ITK can be installed in
+      <filename>/usr/local/</filename> by typing:
+      <literallayout class="monospaced">
+make install  
+      </literallayout>
+      This installs ITK libraries in
+      <filename>/usr/local/lib/InsightToolkit</filename>.  SCIRun will
+      use these libraries by providing SCIRun's configure command with
+      option
+      <option>--with-insight=/usr/local/lib/InsightToolkit</option>.
     </para>
   </section>
 
   <section id="sec.itk_configsr">
     <title id="sec.title.itk_configsr">SCIRun Insight Configure Options</title>
 
-    <para>The configure options below add support for Insight
-    in SCIRun.  Include these options in the SCIRun
-    <command>configure</command> command (see <xref linkend="sec.build-sr"
-    />).
-    <variablelist>
-      <varlistentry>
-	<term><option>--with-insight=<replaceable>path-to-insight-libs</replaceable></option></term>
-	<listitem>
-	  <para>Specifies the directory containing the <acronym>ITK</acronym>
-	  libraries.  The
-	  ITK Software Guide refers to this directory as
-	  ITK_BINARY_DIR.  The <acronym>ITK</acronym> library (or binary)
-	  directory is commonly
-	  <filename>/usr/local/lib/InsightToolkit</filename>.  The directory
-	  will contain file <filename>ITKConfig.cmake</filename>.
-	  </para>
-	</listitem>
-      </varlistentry>
-    </variablelist>
+    <para>
+      The configure options below add support for Insight
+      in SCIRun.  Include these options in the SCIRun
+      <command>configure</command> command (see <xref linkend="sec.build-sr"
+      />).
+      <variablelist>
+	<varlistentry>
+	  <term><option>--with-insight=<replaceable>path-to-insight-bin-directory</replaceable></option></term>
+	  <listitem>
+	    <para>
+	      Specifies the ITK binary directory created previously
+	      (e.g. InsightToolkit-<replaceable>x.x.x</replaceable>-bin)
+	      or the ITK installation directory
+	      (e.g. <filename>/usr/local/lib/InsightToolkit</filename>).
+	    </para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
     </para>
-    <para>Here is an example SCIRun <command>configure</command> command:
-    <literallayout class="monospaced">
-../src/configure \
-<phrase os="linux">--with-thirdparty=/usr/local/Thirdparty/1.8.0/Linux/gcc-3.2-32bit \</phrase><phrase os="osx">--with-thirdparty=/usr/local/Thirdparty_osx \</phrase>
---enable-package="BioPSE Teem Insight" \
---with-insight=/usr/local/lib/InsightToolkit
-.
-.
-.
-    </literallayout>
-    Note that package Teem must be enabled.
+    <para>
+      Here is an example SCIRun <command>configure</command> command:
+      <literallayout class="monospaced">
+	../src/configure \
+	<phrase os="linux">--with-thirdparty=/usr/local/Thirdparty/1.8.0/Linux/gcc-3.2-32bit \</phrase><phrase os="osx">--with-thirdparty=/usr/local/Thirdparty_osx \</phrase>
+	--enable-package="BioPSE Teem Insight" \
+	--with-insight=/usr/local/lib/InsightToolkit \
+	.
+	.
+	.
+      </literallayout>
+      Note that package Teem must be enabled.
     </para>
 
   </section>
