@@ -69,7 +69,6 @@ protected:
 			vector< const TypeDescription *>&); 
 private:
 
-  std::string positionName;
 
 }; //class 
 } // End namespace Uintah
