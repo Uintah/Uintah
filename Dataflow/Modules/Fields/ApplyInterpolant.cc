@@ -1,6 +1,6 @@
 
 /*
- *  LocatePoints.cc:  Rescale a surface
+ *  ApplyInterpolant.cc:  Rescale a surface
  *
  *  Written by:
  *   David Weinstein
@@ -24,10 +24,10 @@ using std::cerr;
 namespace SCIRun {
 
 
-class LocatePoints : public Module {
+class ApplyInterpolant : public Module {
 public:
-  LocatePoints(const clString& id);
-  virtual ~LocatePoints();
+  ApplyInterpolant(const clString& id);
+  virtual ~ApplyInterpolant();
   virtual void execute();
 private:
   FieldIPort*      imesh_;
@@ -38,13 +38,13 @@ private:
   int              surf_gen_;
 };
 
-extern "C" Module* make_LocatePoints(const clString& id)
+extern "C" Module* make_ApplyInterpolant(const clString& id)
 {
-  return new LocatePoints(id);
+  return new ApplyInterpolant(id);
 }
 
-LocatePoints::LocatePoints(const clString& id)
-  : Module("LocatePoints", id, Filter)
+ApplyInterpolant::ApplyInterpolant(const clString& id)
+  : Module("ApplyInterpolant", id, Filter)
 {
   imesh_=scinew FieldIPort(this, "Mesh", FieldIPort::Atomic);
   add_iport(imesh_);
@@ -57,7 +57,7 @@ LocatePoints::LocatePoints(const clString& id)
   surf_gen_=-1;
 }
 
-LocatePoints::~LocatePoints()
+ApplyInterpolant::~ApplyInterpolant()
 {
 }
 
@@ -75,7 +75,7 @@ void sortpts(double *dist, int *idx) {
   }
 }
 
-void LocatePoints::execute()
+void ApplyInterpolant::execute()
 {
   FieldHandle meshH;
   if(!imesh_->get(meshH))

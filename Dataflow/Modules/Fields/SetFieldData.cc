@@ -1,6 +1,6 @@
 
 /*
- *  AddAttribute: Add an attribute to a surface
+ *  SetFieldData: Add an attribute to a surface
  *
  *  Written by:
  *   David Weinstein
@@ -31,7 +31,7 @@ using std::cerr;
 namespace SCIRun {
 
 
-class AddAttribute : public Module
+class SetFieldData : public Module
 {
   FieldIPort         *isurf_;
   MatrixIPort *imat_;
@@ -40,19 +40,19 @@ class AddAttribute : public Module
   FieldOPort      *osurf_;
 
 public:
-  AddAttribute(const clString& id);
-  virtual ~AddAttribute();
+  SetFieldData(const clString& id);
+  virtual ~SetFieldData();
   virtual void execute();
 };
 
 
-extern "C" Module* make_AddAttribute(const clString& id)
+extern "C" Module* make_SetFieldData(const clString& id)
 {
-  return new AddAttribute(id);
+  return new SetFieldData(id);
 }
 
-AddAttribute::AddAttribute(const clString& id)
-  : Module("AddAttribute", id, Filter), surfid_("surfid", id, this)
+SetFieldData::SetFieldData(const clString& id)
+  : Module("SetFieldData", id, Filter), surfid_("surfid", id, this)
 {
   isurf_ = new FieldIPort(this, "SurfIn", FieldIPort::Atomic);
   add_iport(isurf_);
@@ -64,12 +64,12 @@ AddAttribute::AddAttribute(const clString& id)
   add_oport(osurf_);
 }
 
-AddAttribute::~AddAttribute()
+SetFieldData::~SetFieldData()
 {
 }
 
 void
-AddAttribute::execute()
+SetFieldData::execute()
 {
   update_state(NeedData);
 

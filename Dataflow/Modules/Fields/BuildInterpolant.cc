@@ -1,6 +1,6 @@
 
 /*
- *  LocateNbrhd.cc:  Rescale a surface
+ *  BuildInterpolant.cc:  Rescale a surface
  *
  *  Written by:
  *   David Weinstein
@@ -24,12 +24,12 @@ using std::cerr;
 namespace SCIRun {
 
 
-class LocateNbrhd : public Module
+class BuildInterpolant : public Module
 {
 public:
 
-  LocateNbrhd(const clString& id);
-  virtual ~LocateNbrhd();
+  BuildInterpolant(const clString& id);
+  virtual ~BuildInterpolant();
   virtual void execute();
 
 private:
@@ -56,14 +56,14 @@ private:
 };
 
 
-extern "C" Module* make_LocateNbrhd(const clString& id)
+extern "C" Module* make_BuildInterpolant(const clString& id)
 {
-  return new LocateNbrhd(id);
+  return new BuildInterpolant(id);
 }
 
 
-LocateNbrhd::LocateNbrhd(const clString& id) : 
-  Module("LocateNbrhd", id, Filter),
+BuildInterpolant::BuildInterpolant(const clString& id) : 
+  Module("BuildInterpolant", id, Filter),
   method_("method", id, this),
   zeroTCL_("zeroTCL", id, this),
   potMatTCL_("potMatTCL", id, this)
@@ -89,13 +89,13 @@ LocateNbrhd::LocateNbrhd(const clString& id) :
 }
 
 
-LocateNbrhd::~LocateNbrhd()
+BuildInterpolant::~BuildInterpolant()
 {
 }
 
 
 void
-LocateNbrhd::execute()
+BuildInterpolant::execute()
 {
   FieldHandle meshH;
   if (!imesh_->get(meshH))
