@@ -1,5 +1,4 @@
-<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
-<!--% doc = Doc.create(Doc::DocBook) %-->
+<?xml version="1.0" encoding="utf-8"?>
 
 <!--
     For more information, please see: http://software.sci.utah.edu
@@ -29,11 +28,14 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
 <section id="sec.help">
   <title id="title.help">Getting Help</title>
 
   <para>
-    Subscribe to the &sr; users list.  Use it to get answers to 
+    Subscribe to the SCIRun users list.  Use it to get answers to 
     installation and use questions.  To subscribe send email to:
     <email>majordomo@sci.utah.edu</email> with the following in the body
     of the message (no subject):
@@ -49,7 +51,7 @@ subscribe scirun-users
     Include a verbatim (cut and paste) copy of errors
     displayed.  Also include a short paragraph describing the context of
     the error (creating a module, running a network, etc.) and the
-    version of &sr; used.
+    version of SCIRun used.
   </para>
 
   <para>
