@@ -39,6 +39,7 @@
 #include <Core/Datatypes/ContourField.h>
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/Dispatch2.h>
+#include <Dataflow/Modules/Fields/InterpolantTypes.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -47,215 +48,6 @@ namespace SCIRun {
 using std::cerr;
 using std::vector;
 using std::pair;
-
-
-template <> const string find_type_name(vector<pair<TetVolMesh::node_index, double> > *);
-template <> const string find_type_name(vector<pair<TetVolMesh::edge_index, double> > *);
-template <> const string find_type_name(vector<pair<TetVolMesh::face_index, double> > *);
-template <> const string find_type_name(vector<pair<TetVolMesh::cell_index, double> > *);
-template <> const string find_type_name(vector<pair<LatVolMesh::node_index, double> > *);
-template <> const string find_type_name(vector<pair<LatVolMesh::edge_index, double> > *);
-template <> const string find_type_name(vector<pair<LatVolMesh::face_index, double> > *);
-template <> const string find_type_name(vector<pair<LatVolMesh::cell_index, double> > *);
-
-void Pio(Piostream &, TetVolMesh::node_index &);
-void Pio(Piostream &, TetVolMesh::edge_index &);
-void Pio(Piostream &, TetVolMesh::face_index &);
-void Pio(Piostream &, TetVolMesh::cell_index &);
-
-void Pio(Piostream &, LatVolMesh::node_index &);
-void Pio(Piostream &, LatVolMesh::edge_index &);
-void Pio(Piostream &, LatVolMesh::face_index &);
-void Pio(Piostream &, LatVolMesh::cell_index &);
-
-// TetVol
-// TetVol
-
-template <>
-GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
-GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
-GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
-GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
-GenericField<TetVolMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
-GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
-GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
-GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
-GenericField<TetVolMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const;
-
-// LatVol
-
-template <>
-GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
-GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
-GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
-GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
-GenericField<LatVolMesh, FData3d<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
-GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
-GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
-GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
-GenericField<LatVolMesh, FData3d<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const;
-
-// TriSurf
-
-template <>
-GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
-GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
-GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
-GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
-GenericField<TriSurfMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
-GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
-GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
-GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
-GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const;
-
-// ContourField
-
-template <>
-GenericField<ContourMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
-GenericField<ContourMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<ContourMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
-GenericField<ContourMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<ContourMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
-GenericField<ContourMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<ContourMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
-GenericField<ContourMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<ContourMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
-GenericField<ContourMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<ContourMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
-GenericField<ContourMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<ContourMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
-GenericField<ContourMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<ContourMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
-GenericField<ContourMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const;
-
-// PointCloud
-
-template <>
-GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
-GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
-GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
-GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
-GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
-GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
-GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
-GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const;
-
-template <>
-GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
-GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const;
-
-template <> Vector TetVol<vector<pair<TetVolMesh::node_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-template <> Vector TetVol<vector<pair<TetVolMesh::edge_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-template <> Vector TetVol<vector<pair<TetVolMesh::face_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-template <> Vector TetVol<vector<pair<TetVolMesh::cell_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-template <> Vector TetVol<vector<pair<LatVolMesh::node_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-template <> Vector TetVol<vector<pair<LatVolMesh::edge_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-template <> Vector TetVol<vector<pair<LatVolMesh::face_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-template <> Vector TetVol<vector<pair<LatVolMesh::cell_index, double> > >::cell_gradient(TetVolMesh::cell_index);
-
-template <> bool LatticeVol<vector<pair<TetVolMesh::node_index, double> > >::get_gradient(Vector &, Point &);
-template <> bool LatticeVol<vector<pair<TetVolMesh::edge_index, double> > >::get_gradient(Vector &, Point &);
-template <> bool LatticeVol<vector<pair<TetVolMesh::face_index, double> > >::get_gradient(Vector &, Point &);
-template <> bool LatticeVol<vector<pair<TetVolMesh::cell_index, double> > >::get_gradient(Vector &, Point &);
-template <> bool LatticeVol<vector<pair<LatVolMesh::node_index, double> > >::get_gradient(Vector &, Point &);
-template <> bool LatticeVol<vector<pair<LatVolMesh::edge_index, double> > >::get_gradient(Vector &, Point &);
-template <> bool LatticeVol<vector<pair<LatVolMesh::face_index, double> > >::get_gradient(Vector &, Point &);
-template <> bool LatticeVol<vector<pair<LatVolMesh::cell_index, double> > >::get_gradient(Vector &, Point &);
 
 
 class ApplyInterpolant : public Module {
@@ -511,6 +303,7 @@ ApplyInterpolant::execute()
 
   if (src_geom_name == "TetVol")
   {
+#if 0
     if (itp_geom_name == "TetVol")
     {
       if (src_data_name == "Vector")
@@ -596,7 +389,9 @@ ApplyInterpolant::execute()
       {
 	cout << "Non-interpable source field type\n";
       }
-    } else if (itp_geom_name == "TriSurf")
+    }
+#endif
+    if (itp_geom_name == "TriSurf")
     {
       if (src_data_name == "Vector")
       {
@@ -730,6 +525,7 @@ ApplyInterpolant::execute()
       cout << "bad interp field type";
     }
   }
+#if 0
   else if (src_geom_name == "LatticeVol")
   {
     if (itp_geom_name == "TetVol")
@@ -952,6 +748,7 @@ ApplyInterpolant::execute()
       cout << "bad interp field type";
     }
   }
+#endif
   else
   {
     cout << "bad source field type";
