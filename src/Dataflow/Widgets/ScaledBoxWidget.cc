@@ -571,33 +571,33 @@ ScaledBoxWidget::geom_pick( GeomPick *p, ViewWindow *w,
  */
 void
 ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
-			     const Vector& delta, int pick, const BState& )
+			     const Vector &delta, int pick, const BState&,
+			     const Vector &pick_offset)
 {
-  Transform trans;
-  Vector rot_curr_ray_norm;
-  double dot;
-  Vector rot_axis;
-  Point c(variables[CenterVar]->point());
   switch(pick)
   {
   case PickSphU: case PickSphD: 
   case PickSphL: case PickSphR: 
   case PickSphI: case PickSphO:
-    if (is_aligned_) break;
-    rot_curr_ray_ += delta;
-    rot_curr_ray_norm=rot_curr_ray_;
-    rot_curr_ray_norm.normalize();
-    rot_axis=Cross(rot_start_ray_norm_, rot_curr_ray_norm);
-    if (rot_axis.length2()<1.e-16) rot_axis=Vector(1,0,0);
-    else rot_axis.normalize();
-    dot=Dot(rot_start_ray_norm_, rot_curr_ray_norm);
+    {
+      if (is_aligned_) break;
+      rot_curr_ray_ += delta;
+      Vector rot_curr_ray_norm(rot_curr_ray_);
+      rot_curr_ray_norm.normalize();
+      Vector rot_axis(Cross(rot_start_ray_norm_, rot_curr_ray_norm));
+      if (rot_axis.length2()<1.e-16) { rot_axis=Vector(1,0,0); }
+      else { rot_axis.normalize(); }
+      const double dot = Dot(rot_start_ray_norm_, rot_curr_ray_norm);
 
-    trans.post_translate(c.vector());
-    trans.post_rotate(acos(dot), rot_axis);
-    trans.post_translate(-c.vector());
-    variables[PointDVar]->Move(trans.project(rot_start_d_));
-    variables[PointRVar]->Move(trans.project(rot_start_r_));
-    variables[PointIVar]->Move(trans.project(rot_start_i_));
+      const Point &c = variables[CenterVar]->point();
+      Transform trans;
+      trans.post_translate(c.vector());
+      trans.post_rotate(acos(dot), rot_axis);
+      trans.post_translate(-c.vector());
+      variables[PointDVar]->Move(trans.project(rot_start_d_));
+      variables[PointRVar]->Move(trans.project(rot_start_r_));
+      variables[PointIVar]->Move(trans.project(rot_start_i_));
+    }
     break;
 
   case PickResizeU:

@@ -99,13 +99,13 @@ ViewWindow::ViewWindow(Viewer* s, const string& id)
     view("view", id, this),
     homeview(Point(2.1, 1.6, 11.5), Point(.0, .0, .0), Vector(0,1,0), 20),
     bgcolor("bgcolor", id, this), 
+    shading("shading", id, this),
+    do_stereo("do_stereo", id, this), 
     ambient_scale("ambient-scale", id, this),
     diffuse_scale("diffuse-scale", id, this),
     specular_scale("specular-scale", id, this),
     emission_scale("emission-scale", id, this),
     shininess_scale("shininess-scale", id, this),
-    shading("shading", id, this),
-    do_stereo("do_stereo", id, this), 
     sbase("sbase", id, this),
     sr("sr", id, this),
     // --  BAWGL -- 
@@ -1508,7 +1508,9 @@ void ViewWindow::bawgl_pick(int action, int iv[3], GLfloat fv[3])
 	if (Abs(total_y) < .0001) total_y=0;
 	if (Abs(total_z) < .0001) total_z=0;
 	update_mode_string(pick_obj);
-	pick_pick->moved(prin_dir, dist, mtn, bs);
+	// TODO: Verify that this is the correct pick offset.
+	Vector pick_offset(total_x, total_y, total_z);
+	pick_pick->moved(prin_dir, dist, mtn, bs, pick_offset);
       } else {
 	update_mode_string("pick: Bad direction...");
       }
@@ -1547,6 +1549,8 @@ void ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
       total_z=0;
       last_x=x;
       last_y=current_renderer->yres-y;
+      pick_x = last_x;
+      pick_y = last_y;
       current_renderer->get_pick(manager, this, x, y,
 				 pick_obj, pick_pick, pick_n);
 
@@ -1578,11 +1582,13 @@ void ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
       int yres=current_renderer->yres;
       double aspect=double(xres)/double(yres);
       tmpview.get_viewplane(aspect, depth, u, v);
-      int dx=x-last_x;
-      int dy=y-last_y;
-      double ndx=(2*dx/(double(xres)-1));
-      double ndy=(2*dy/(double(yres)-1));
+      const double ndx = 2.0 * (x - last_x) / (xres - 1.0);
+      const double ndy = 2.0 * (y - last_y) / (yres - 1.0);
       Vector motionv(u*ndx+v*ndy);
+
+      const double pdx = (x - pick_x) / (xres - 1.0);
+      const double pdy = (y - pick_y) / (yres - 1.0);
+      Vector pmotionv(u*pdx + v*pdy);
 
       double maxdot=0;
       int prin_dir=-1;
@@ -1605,7 +1611,7 @@ void ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
 	if (Abs(total_z) < .0001) total_z=0;
 	need_redraw=1;
 	update_mode_string(pick_obj);
-	pick_pick->moved(prin_dir, dist, mtn, bs);
+	pick_pick->moved(prin_dir, dist, mtn, bs, pmotionv);
 	need_redraw=1;
       } else {
 	update_mode_string("pick: Bad direction...");

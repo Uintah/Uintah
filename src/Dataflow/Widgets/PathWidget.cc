@@ -414,7 +414,8 @@ PathWidget::GenerateSpline()
  */
 void
 PathWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
-			const Vector& delta, int pick, const BState& state )
+			const Vector& delta, int pick, const BState& state,
+			const Vector &pick_offset)
 {
   if (pick == -1) // Spline pick.
   {

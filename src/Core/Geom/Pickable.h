@@ -41,6 +41,7 @@ class ViewWindow;
 class GeomPick;
 class GeomObj;
 
+
 struct BState {
    unsigned int control:1;
    unsigned int alt:1;
@@ -48,14 +49,17 @@ struct BState {
    unsigned int btn:2;
 };
 
+
 class SCICORESHARE WidgetPickable {
 
 public:
   virtual ~WidgetPickable();
 
-  virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs); 
+  virtual void geom_pick(GeomPick*, ViewWindow*, int widget_data, 
+			 const BState& bs);
   virtual void geom_release(GeomPick*, int, const BState& bs);
-  virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
+  virtual void geom_moved(GeomPick*, int, double, const Vector&, int,
+			  const BState&, const Vector &pick_offset);
 };
 
 

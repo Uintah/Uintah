@@ -35,11 +35,6 @@
 #include <Dataflow/Widgets/BaseWidget.h>
 #include <Core/Geom/Material.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn off warnings about partially overridden virtual functions
-#pragma set woff 1682
-#endif
-
 namespace SCIRun {
 
 class PointWidget : public BaseWidget {
@@ -49,7 +44,9 @@ public:
   virtual ~PointWidget();
 
   virtual void redraw();
-  virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
+  virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
+  virtual void geom_moved(GeomPick*, int, double, const Vector&,
+			  int, const BState&, const Vector &pick_offset);
 
   virtual void MoveDelta( const Vector& delta );
   virtual Point ReferencePoint() const;
@@ -67,13 +64,11 @@ public:
    
 protected:
   virtual string GetMaterialName( const Index mindex ) const;   
+
+  Point pick_position_;
 };
 
 
 } // End namespace SCIRun
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1682
-#endif
 
 #endif

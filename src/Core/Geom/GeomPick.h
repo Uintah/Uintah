@@ -82,7 +82,8 @@ public:
   
   void set_picked_obj(GeomObj *);
   void pick(ViewWindow* viewwindow, const BState& bs);
-  void moved(int axis, double distance, const Vector& delta, const BState& bs);
+  void moved(int axis, double distance, const Vector& delta, const BState& bs,
+	     const Vector &pick_offset);
   void release(const BState& bs);
   
   void ignore_until_release();

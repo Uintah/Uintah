@@ -34,10 +34,6 @@
 
 #include <Dataflow/Widgets/BaseWidget.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn off warnings about partially overridden virtual functions
-#pragma set woff 1682
-#endif
 
 namespace SCIRun {
 
@@ -48,7 +44,8 @@ public:
   virtual ~CrosshairWidget();
 
   virtual void redraw();
-  virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
+  virtual void geom_moved(GeomPick*, int, double, const Vector&, int,
+			  const BState&, const Vector &pick_offset);
 
   virtual void MoveDelta( const Vector& delta );
   virtual Point ReferencePoint() const;
@@ -77,9 +74,5 @@ private:
 
 
 } // End namespace SCIRun
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1682
-#endif
 
 #endif

@@ -362,7 +362,8 @@ CriticalPointWidget::redraw()
  */
 void
 CriticalPointWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
-				 const Vector& delta, int pick, const BState& )
+				 const Vector& delta, int pick, const BState&,
+				 const Vector &pick_offset)
 {
   switch(pick)
   {

@@ -235,12 +235,13 @@ GeomPick::release(const BState& bs)
 
 void
 GeomPick::moved(int axis, double distance, const Vector& delta,
-		const BState& bs)
+		const BState& bs, const Vector &pick_offset)
 {
   if(ignore_) { return; }
   if(widget_)
   {
-    widget_->geom_moved(this, axis, distance, delta, widget_data_, bs);
+    widget_->geom_moved(this, axis, distance, delta,
+			widget_data_, bs, pick_offset);
   }
   if(module_)
   {
