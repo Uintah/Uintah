@@ -32,6 +32,17 @@ namespace Uintah {
     const VarLabel* cv_CCLabel;
     const VarLabel* div_velfc_CCLabel;
     const VarLabel* vol_frac_CCLabel;
+    const VarLabel* viscosity_CCLabel;
+    const VarLabel* xmom_source_CCLabel;
+    const VarLabel* ymom_source_CCLabel;
+    const VarLabel* zmom_source_CCLabel;
+    const VarLabel* int_eng_source_CCLabel;
+    const VarLabel* xmom_L_CCLabel;
+    const VarLabel* ymom_L_CCLabel;
+    const VarLabel* zmom_L_CCLabel;
+    const VarLabel* int_eng_L_CCLabel;
+    const VarLabel* mass_L_CCLabel;
+    const VarLabel* rho_L_CCLabel;
    
     // Face centered variables
     const VarLabel* uvel_FCLabel;
@@ -41,7 +52,9 @@ namespace Uintah {
     const VarLabel* vvel_FCMELabel;
     const VarLabel* wvel_FCMELabel;
     const VarLabel* press_FCLabel;
-    const VarLabel* tau_FCLabel;
+    const VarLabel* tau_X_FCLabel;
+    const VarLabel* tau_Y_FCLabel;
+    const VarLabel* tau_Z_FCLabel;
       
     };
   } // end namepsace ICE
@@ -49,6 +62,9 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.8  2000/10/18 21:02:17  guilkey
+// Added code for steps 4 and 5.
+//
 // Revision 1.7  2000/10/17 04:13:25  jas
 // Implement hydrostatic pressure adjustment as part of step 1b.  Still need
 // to implement update bcs.
