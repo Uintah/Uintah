@@ -1,16 +1,10 @@
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
-// SingleVel.cc
+// Friction.cc
 //
-// One of the derived Contact classes.  This particular
-// class contains methods for recapturing single velocity
-// field behavior from objects belonging to multiple velocity
-// fields.  The main purpose of this type of contact is to
-// ensure that one can get the same answer using prescribed
-// contact as can be gotten using "automatic" contact.
 
-#include "SingleVelContact.h"
+#include "FrictionContact.h"
 #include <SCICore/Geometry/Vector.h>
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
@@ -29,20 +23,20 @@ using SCICore::Geometry::Vector;
 using std::vector;
 
 
-SingleVelContact::SingleVelContact(const SimulationStateP& d_sS)
+FrictionContact::FrictionContact(const SimulationStateP& d_sS)
 {
   // Constructor
 
   d_sharedState = d_sS;
 }
 
-SingleVelContact::~SingleVelContact()
+FrictionContact::~FrictionContact()
 {
   // Destructor
 
 }
 
-void SingleVelContact::exMomInterpolated(const ProcessorContext*,
+void FrictionContact::exMomInterpolated(const ProcessorContext*,
 				    const Region* region,
 				    const DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
@@ -92,7 +86,7 @@ void SingleVelContact::exMomInterpolated(const ProcessorContext*,
   }
 }
 
-void SingleVelContact::exMomIntegrated(const ProcessorContext*,
+void FrictionContact::exMomIntegrated(const ProcessorContext*,
 				  const Region* region,
 				  const DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw)
@@ -153,32 +147,8 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
-// Revision 1.6  2000/04/27 20:00:26  guilkey
+// Revision 1.1  2000/04/27 20:00:26  guilkey
 // Finished implementing the SingleVelContact class.  Also created
 // FrictionContact class which Scott will be filling in to perform
 // frictional type contact.
-//
-// Revision 1.5  2000/04/26 06:48:21  sparker
-// Streamlined namespaces
-//
-// Revision 1.4  2000/04/25 22:57:30  guilkey
-// Fixed Contact stuff to include VarLabels, SimulationState, etc, and
-// made more of it compile.
-//
-// Revision 1.3  2000/04/20 23:21:02  dav
-// updated to match Contact.h
-//
-// Revision 1.2  2000/03/21 01:29:41  dav
-// working to make MPM stuff compile successfully
-//
-// Revision 1.1  2000/03/20 23:50:44  dav
-// renames SingleVel to SingleVelContact
-//
-// Revision 1.2  2000/03/20 17:17:12  sparker
-// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
-//
-// Revision 1.1  2000/03/16 01:05:13  guilkey
-// Initial commit for Contact base class, as well as a NullContact
-// class and SingleVel, a class which reclaims the single velocity
-// field result from a multiple velocity field problem.
 //

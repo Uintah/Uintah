@@ -5,10 +5,16 @@
 
 SRCDIR   := Uintah/Components/MPM/Contact
 
-SRCS     += $(SRCDIR)/NullContact.cc $(SRCDIR)/SingleVelContact.cc
+SRCS     += $(SRCDIR)/NullContact.cc $(SRCDIR)/SingleVelContact.cc \
+            $(SRCDIR)/FrictionContact.cc
 
 #
 # $Log$
+# Revision 1.3  2000/04/27 20:00:26  guilkey
+# Finished implementing the SingleVelContact class.  Also created
+# FrictionContact class which Scott will be filling in to perform
+# frictional type contact.
+#
 # Revision 1.2  2000/03/21 02:14:48  dav
 # updated SingleVel to SingleVelContact
 #

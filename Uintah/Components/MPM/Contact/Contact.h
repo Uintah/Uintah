@@ -2,13 +2,20 @@
 #define __CONTACT_H__
 
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Grid/NCVariable.h>
+#include <Uintah/Grid/ReductionVariable.h>
+#include <SCICore/Geometry/Vector.h>
 
 #include <math.h>
+
+using SCICore::Geometry::Vector;
 
 class SimulationStateP;
 namespace Uintah {
    class ProcessorContext;
    class Region;
+   class VarLabel;
    namespace MPM {
 
 /**************************************
@@ -42,6 +49,21 @@ WARNING
 
       class Contact {
       public:
+         // Constructor
+	 Contact(){
+	 gMassLabel         = new VarLabel( "g.mass", 
+			      NCVariable<double>::getTypeDescription() );
+	 gVelocityLabel     = new VarLabel( "g.velocity",
+                              NCVariable<Vector>::getTypeDescription() );
+	 gVelocityStarLabel = new VarLabel( "g.velocity_star",
+                              NCVariable<Vector>::getTypeDescription() );
+	 gAccelerationLabel = new VarLabel( "g.acceleration",
+                              NCVariable<Vector>::getTypeDescription() );
+	 deltLabel          = new VarLabel( "delt",
+			      ReductionVariable<double>::getTypeDescription() );
+
+	 };
+
 	 // Basic contact methods
 	 virtual void exMomInterpolated(const ProcessorContext*,
 					const Region* region,
@@ -68,6 +90,13 @@ WARNING
 	    // classes will define these functions when needed.
 	    return;
 	 };
+
+         // VarLabels common to all contact models go here
+         const VarLabel* deltLabel;
+         const VarLabel* gMassLabel;
+         const VarLabel* gAccelerationLabel;
+         const VarLabel* gVelocityLabel;
+         const VarLabel* gVelocityStarLabel;
       };
       
       inline bool compare(double num1, double num2)
@@ -82,6 +111,11 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.8  2000/04/27 20:00:25  guilkey
+// Finished implementing the SingleVelContact class.  Also created
+// FrictionContact class which Scott will be filling in to perform
+// frictional type contact.
+//
 // Revision 1.7  2000/04/26 06:48:20  sparker
 // Streamlined namespaces
 //
