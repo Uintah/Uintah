@@ -757,7 +757,7 @@ TetVolMesh::get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
   ASSERT(idx/4 == from);
   Face::index_type neigh;
   bool ret_val = get_neighbor(neigh, idx);
-  neighbor.index_ = neigh.index_;
+  neighbor.index_ = neigh.index_ / 4;
   return ret_val;
 }
 
