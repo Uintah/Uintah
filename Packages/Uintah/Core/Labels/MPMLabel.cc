@@ -74,6 +74,9 @@ MPMLabel::MPMLabel()
   pSp_volLabel      = VarLabel::create( "p.sp_vol",
 			ParticleVariable<double>::getTypeDescription() ); 
   
+  pInternalHeatRateLabel = VarLabel::create( "p.internalHeatRate",
+			ParticleVariable<double>::getTypeDescription() );
+  
   pExternalHeatRateLabel = VarLabel::create( "p.externalHeatRate",
 			ParticleVariable<double>::getTypeDescription() );
   
@@ -164,6 +167,9 @@ MPMLabel::MPMLabel()
   pSp_volLabel_preReloc = VarLabel::create( "p.Sp_vol+",
 			ParticleVariable<double>::getTypeDescription() );  
                      
+  pInternalHeatRateLabel_preReloc = VarLabel::create( "p.internalHeatRate+",
+			ParticleVariable<double>::getTypeDescription() );
+
   pExternalHeatRateLabel_preReloc = VarLabel::create( "p.externalHeatRate+",
 			ParticleVariable<double>::getTypeDescription() );
   
@@ -576,6 +582,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pTemperatureLabel_preReloc);
   VarLabel::destroy(pSp_volLabel); 
   VarLabel::destroy(pSp_volLabel_preReloc); 
+  VarLabel::destroy(pInternalHeatRateLabel);
+  VarLabel::destroy(pInternalHeatRateLabel_preReloc);
   VarLabel::destroy(pExternalHeatRateLabel);
   VarLabel::destroy(pExternalHeatRateLabel_preReloc);
   VarLabel::destroy(pSurfLabel);
