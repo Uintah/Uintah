@@ -63,12 +63,24 @@ void CutPlane::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
     double t=-plane/dt;
     HitInfo newhit;
     if(plane > 0){
-      child->intersect(ray, newhit, st, ppc);
       // On near side of plane...so try to intersect the object first.
       // Only record a hit if the object's intersection point was before
       // the plane.
-      if (newhit.was_hit && ( t<0 || ((newhit.min_t < t) && (newhit.min_t < hit.min_t)))) {
-	//	if(t < 0 || (newhit.was_hit && newhit.min_t < t)){
+
+      // If we set min_t to be the point of intersection of the plane
+      // we can let the child's intersect take care of the fact that
+      // its intersection is before the plane.
+#if 1
+      newhit.min_t = hit.min_t;
+      if (t >= 0 && t < hit.min_t)
+	  newhit.min_t = t;
+#else
+      if (t >= 0)
+	newhit.min_t = t;
+#endif
+      child->intersect(ray, newhit, st, ppc);
+      
+      if (newhit.was_hit && ( t<0 || (newhit.min_t < t && newhit.min_t < hit.min_t))) {
 	hit=newhit;
       } else if (use_material && (get_matl() != 0)) {
 	// the plane has a material, so use it :)
@@ -152,13 +164,15 @@ void CutPlane::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
     HitInfo newhit;
     Color newatten(atten);
     if(plane > 0){
-      newhit.min_t = hit.min_t;
-      child->light_intersect(ray, newhit, newatten, st, ppc);
       // On near side of plane...so try to intersect the object first.
       // Only record a hit if the object's intersection point was before
       // the plane.
+
+      newhit.min_t = hit.min_t;
+      if (t >= 0 && t < hit.min_t)
+	  newhit.min_t = t;
+      child->light_intersect(ray, newhit, newatten, st, ppc);
       if (newhit.was_hit && ( t<0 || ((newhit.min_t < t) && (newhit.min_t < hit.min_t)))) {
-	//	if(t<0 || (newhit.was_hit && newhit.min_t < t)){
 	hit=newhit;
 	atten=newatten;
       } else if (use_material && (get_matl() != 0)) {
