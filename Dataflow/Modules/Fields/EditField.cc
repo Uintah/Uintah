@@ -22,6 +22,7 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/ScaledBoxWidget.h>
+#include <Dataflow/Network/NetworkEditor.h>
 #include <map>
 
 namespace SCIRun {
@@ -261,8 +262,8 @@ bool EditField::check_types(Field *f)
   string fldtype = typename_.get();
   fldtype = fldtype.substr(0,fldtype.find('<'));
   if (fldtype!=f->get_type_name(0)) {
-    std::cerr << "Type mismatch: " << fldtype << ", " << f->get_type_name(0)
-	      << std::endl;
+    postMessage(string("EditField: type mismatch ")+fldtype+", "+
+		f->get_type_name(0));
     return false;
   } 
 
@@ -274,8 +275,8 @@ bool EditField::check_types(Field *f)
   
   if ( (f->get_type_name(1) == "Vector" && fldtype != "Vector") ||
        (f->get_type_name(1) == "Tensor" && fldtype != "Tensor") ) {
-    std::cerr << "Type mismatch: " << fldtype << ", " << f->get_type_name(1)
-	      << std::endl;
+    postMessage(string("EditField: type mismatch ")+fldtype+", "+
+		f->get_type_name(1));
     return false;
   }
 
@@ -1190,9 +1191,22 @@ void EditField::tcl_command(TCLArgs& args, void* userdata)
     want_to_execute();
   } else if (args[1] == "update_widget") {
     Point center, right, down, in;
+    minx_.reset(); miny_.reset(); minz_.reset();
+    maxx_.reset(); maxy_.reset(); maxz_.reset();
     Point min(minx_.get(),miny_.get(),minz_.get());
     Point max(maxx_.get(),maxy_.get(),maxz_.get());
-    
+    if (max.x()<=min.x() ||
+	max.y()<=min.y() ||
+	max.z()<=min.z()) {
+      postMessage("EditField: Degenerate BBox requested!");
+      return;                    // degenerate 
+    }
+    center = min+((max-min)/2.);
+    right = Point(max.x(),center.y(),center.z());
+    down = Point(center.x(),max.y(),center.z());
+    in = Point(center.x(),center.y(),max.z());
+    box_->SetPosition(center,right,down,in);
+    want_to_execute();
   } else {
     Module::tcl_command(args, userdata);
   }
@@ -1202,6 +1216,8 @@ void EditField::widget_moved(int i)
 {
   if (i==1) {
     Point center, right, down, in;
+    minx_.reset(); miny_.reset(); minz_.reset();
+    maxx_.reset(); maxy_.reset(); maxz_.reset();
     box_->GetPosition(center,right,down,in);
     minx_.set((center-(right-center)).x());
     miny_.set((center-(down-center)).y());
