@@ -59,7 +59,7 @@ PBuffer::create(Display* dpy, int screen,
   int minor = 0 , major = 0;
   glXQueryVersion(dpy, &major, &minor);
   if( major >= 1 || (major == 1 &&  minor >1)) { // we can have a pbuffer
-    cerr<<"We can have a pbuffer!\n";
+    //    cerr<<"We can have a pbuffer!\n";
     int attrib[32];
     int i = 0;
     attrib[i++] = GLX_RED_SIZE; attrib[i++] = colorBits;
@@ -73,7 +73,7 @@ PBuffer::create(Display* dpy, int screen,
     int nelements;
     fbc_ = glXChooseFBConfig( dpy, screen, attrib, &nelements );
     if( fbc_ == 0 ){
-      cerr<<"Can not configure for Pbuffer\n";
+      //      cerr<<"Can not configure for Pbuffer\n";
       return;
     }
 
@@ -83,19 +83,19 @@ PBuffer::create(Display* dpy, int screen,
     attrib[i] = None;
     pbuffer_ = glXCreatePbuffer( dpy, *fbc_, attrib );
     if( pbuffer_ == 0 ) {
-      cerr<<"Cannot create Pbuffer\n";
+      //      cerr<<"Cannot create Pbuffer\n";
       return;
     }
 
     cx_ = glXCreateNewContext( dpy, *fbc_, GLX_RGBA_TYPE, NULL, True);
     if( !cx_ ){
-      cerr<<"Cannot create Pbuffer context\n";
+      //      cerr<<"Cannot create Pbuffer context\n";
       return;
     }
-    else cerr<<"Pbuffer successfully created\n";
+    //    else cerr<<"Pbuffer successfully created\n";
     valid_ = true;
   } else {
-    cerr<<"GLXVersion = "<<major<<"."<<minor<<"\n";
+    //    cerr<<"GLXVersion = "<<major<<"."<<minor<<"\n";
     cx_ = 0;
   }
 

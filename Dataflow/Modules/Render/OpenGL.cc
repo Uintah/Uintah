@@ -712,7 +712,7 @@ OpenGL::redraw_frame()
 #if defined(USE_PBUFFER)
   int screen = Tk_ScreenNumber(tkwin);
   if( xres != pbuffer.width() || yres != pbuffer.height() ){
-    cerr<<"width = "<<xres<<", height == "<<yres<<"\n";
+    //    cerr<<"width = "<<xres<<", height == "<<yres<<"\n";
     pbuffer.destroy();
     pbuffer.create( dpy, screen, xres, yres, 8, 8 );
   }
