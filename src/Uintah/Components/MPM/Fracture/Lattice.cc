@@ -6,10 +6,10 @@
 namespace Uintah {
 namespace MPM {
 
-#if 0
 Lattice::
 Lattice(const Patch* patch,const ParticleVariable<Point>& pX)
-: //Array3<Cell>(patch->getLowGhostCellIndex(),patch->getHighGhostCellIndex()),
+: Array3<Cell>( patch->getCellLowIndex()-IntVector(1,1,1),
+                patch->getCellHighIndex()+IntVector(1,1,1) ),
   d_patch(patch), d_pX(pX)
 {
   ParticleSubset* pset = pX.getParticleSubset();
@@ -17,7 +17,7 @@ Lattice(const Patch* patch,const ParticleVariable<Point>& pX)
   for(ParticleSubset::iterator part_iter = pset->begin();
       part_iter != pset->end(); part_iter++)
   {
-    (*this)[ patch->findCell(pX[*part_iter]) ].insert(*part_iter);
+    (*this)[ patch->getLevel()->getCellIndex(pX[*part_iter]) ].insert(*part_iter);
   }
 }
 
@@ -41,12 +41,14 @@ const ParticleVariable<Point>& Lattice::getParticlesPosition() const
 {
   return d_pX;
 }
-#endif
   
 } //namespace MPM
 } //namespace Uintah
 
 // $Log$
+// Revision 1.8  2000/06/20 02:29:22  tan
+// Modification to make getCellIndex work.
+//
 // Revision 1.7  2000/06/15 21:57:09  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data
