@@ -17,7 +17,7 @@
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
-        <filebase>disks2mat.uda</filebase>
+        <filebase>disks2mat4patch.uda</filebase>
 	<outputInterval>.01</outputInterval>
    </DataArchiver>
 
@@ -125,7 +125,7 @@
 		<lower>[0,0,0]</lower>
 		<upper>[1.0,1.0,.15]</upper>
 	        <resolution>[20,20,3]</resolution>
-		<patches>[1,1,1]</patches>
+		<patches>[2,2,1]</patches>
 	    </Box>
 	</Level>
     </Grid>
