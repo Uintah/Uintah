@@ -302,5 +302,19 @@ c     debug, sk, April 14, 2001
  410     continue
  420  continue
 
+c     debug: set pressure forces to zero
+
+      call arrass(
+     $     pressforcex_fcx, zero,
+     $     dim_lo_fcx, dim_hi_fcx, valid_lo, valid_hi)
+
+      call arrass(
+     $     pressforcey_fcy, zero,
+     $     dim_lo_fcy, dim_hi_fcy, valid_lo, valid_hi)
+
+      call arrass(
+     $     pressforcez_fcz, zero,
+     $     dim_lo_fcz, dim_hi_fcz, valid_lo, valid_hi)
+
       return
       end
