@@ -74,10 +74,12 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 	  if (volumes->empty())
 	    pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
 	  else
-	    pvolume[start+count] = (*volumes)[i];
-	  pvelocity[start+count]=(*obj)->getInitialVelocity();
+	  pvolume[start+count]     = (*volumes)[i];
+	  pvelocity[start+count]   =(*obj)->getInitialVelocity();
 	  ptemperature[start+count]=(*obj)->getInitialTemperature();
+         psp_vol[start+count]     =1.0/matl->getInitialDensity(); 
 	  pmass[start+count]=matl->getInitialDensity()*pvolume[start+count];
+         
 	  // Apply the force BC if applicable
 	  Vector pExtForce(0,0,0);
 	  applyForceBC(dxpp, *itr, pmass[start+count], pExtForce);
