@@ -23,6 +23,7 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	global $this-length       # One of three lengths to use.
 	global $this-side         # Which side to put the map on.
 	global $this-numlabels    # How many labels to use on the map.
+	global $this-text_color
 
         set_defaults
     }
@@ -31,6 +32,7 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	set $this-length half2
 	set $this-side left
 	set $this-numlabels 5
+	set $this-text_color 1
     }
 
     method ui {} {
@@ -62,6 +64,13 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	pack $w.length.label -side top -expand yes -fill both
 	pack $w.length.full $w.length.half1 $w.length.half2 -side top -anchor w
 
+	frame $w.cf -relief groove -borderwidth 2
+	label $w.cf.tcolor -text "Text color"
+	radiobutton $w.cf.white -text white -variable $this-text_color \
+	    -value 1 -command "$this-c needexecute"
+	radiobutton $w.cf.black -text black -variable $this-text_color \
+	    -value 0 -command "$this-c needexecute"
+	pack $w.cf.tcolor $w.cf.white $w.cf.black -side top -anchor w
 
 	label $w.nlabs.label -text "Labels"
 	entry $w.nlabs.entry -width 5 -textvariable $this-numlabels
@@ -69,7 +78,11 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 
 	pack $w.nlabs.label $w.nlabs.entry -side left -anchor n
 
-	pack $w.side $w.length $w.nlabs -side top -e y -f both -padx 5 -pady 5
+	pack $w.side $w.length $w.cf $w.nlabs -side top -e y \
+	    -f both -padx 5 -pady 5
+
+
+	
     }
 }
 
