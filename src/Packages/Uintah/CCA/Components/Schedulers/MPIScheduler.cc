@@ -136,9 +136,9 @@ MPIScheduler::actuallyCompile()
   if(dts_->numTasks() == 0)
     cerr << "WARNING: Scheduler executed, but no tasks\n";
   
-  lb->assignResources(*dts_, d_myworld);
+  lb->assignResources(*dts_);
   graph.createDetailedDependencies(dts_, lb);
-  releasePort("load balancer");
+  //releasePort("load balancer");
 
   dts_->assignMessageTags(d_myworld->myrank());
 

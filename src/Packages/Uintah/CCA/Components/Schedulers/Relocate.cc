@@ -29,7 +29,6 @@ using namespace Uintah;
 // multiple threads at the same time)  From sus.cc:
 extern Mutex cerrLock;
 extern DebugStream mixedDebug;
-extern SCIRun::DebugStream brydbg;
 
 Relocate::Relocate()
 {
@@ -851,7 +850,6 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     // Send (isend) the message
     MPI_Request rid;
     int to=iter->first;
-    brydbg << Parallel::getMPIRank() << " Sending RELOCATE message number " << RELOCATE_TAG << ", to " << to << ", length: " << sendsize << "\n"; cerrLock.unlock();
     MPI_Isend(buf, sendsize, MPI_PACKED, to, RELOCATE_TAG,
 	      pg->getComm(), &rid);
     sendbuffers.push_back(buf);
@@ -882,7 +880,6 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     
     char* buf = scinew char[size];
     recvbuffers[idx]=buf;
-    brydbg << Parallel::getMPIRank() << " Posting RELOCATE receive for message number " << RELOCATE_TAG << " from " << iter->first << ", length=" << size << "\n";      
     MPI_Recv(recvbuffers[idx], size, MPI_PACKED, iter->first,
 	     RELOCATE_TAG, pg->getComm(), &status);
 

@@ -5,7 +5,7 @@
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/PSPatchMatlGhost.h>
+//#include <Packages/Uintah/Core/Grid/PSPatchMatlGhost.h>
 #include <Packages/Uintah/Core/Grid/VarLabelMatlPatchDW.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
