@@ -18,7 +18,6 @@
 #include <fstream>
 #include <iostream>
 
-using namespace SCIRun;
 using namespace rtrt;
 using namespace std;
 
@@ -130,9 +129,312 @@ bool get_materials(ifstream &infile) {
   return true;
 }
 
-Object *get_object(ifstream &infile) {
+Group *Split_Data(Group* g)
+{
+    // Eqn of a line = n dot x + b = 0
+    // Therefore if p is one of the pts on my split grid
+    // b = -n dot p
+    // Therefore the eqn is
+    // n dot x -n dot p = 0 = n dot (x-p) = 0
+
+    double xmin = -2430;
+    double ymin = -1174;
+    double xmax = 2430;
+    double ymax = 1174;
+
+    
+    Group *regions[3][3];
+
+    Group* result = new Group();
+
+    for (int i=0; i<3; i++)
+	for (int j=0; j<3; j++)
+		regions[i][j] = new Group();
+
+    for (int i=0; i<g->numObjects(); i++)
+	{
+	    Object* obj = g->objs[i];
+	    Tri *tri;
+
+	    if (tri = dynamic_cast<Tri*>(obj))
+		{
+		    int x_index;
+		    int y_index;
+
+		    Point centroid = tri->centroid();
+		    
+		    if (centroid.x() < xmin)
+			x_index = 0;
+		    else if (centroid.x() > xmax)
+			x_index = 2;
+		    else 
+			x_index = 1;
+
+		    if (centroid.y() < ymin)
+			y_index = 0;
+		    else if (centroid.y() > ymax)
+			y_index = 2;
+		    else 
+			y_index = 1;
+		    (regions[x_index][y_index])->add(tri);
+		}
+	}
+
+    for (int i=0; i<3; i++)
+	for (int j=0; j<3; j++)
+	    {
+		int num_objs = regions[i][j]->numObjects();
+
+//  		if (num_objs > 0 && (i%2!=0 || j%2!=0))
+		if (num_objs > 0)
+		    {
+			int nside = ceil(pow(num_objs, 1./3.));
+			result->add(new Grid(regions[i][j],nside));
+//  			result->add(new BV1(regions[i][j]));
+		    }
+	    }	
+    return result;
+}
+
+void SplitTrisX(Group* g, double xval, double tol)
+{
+    int n_items = g->numObjects();
+    enum {left, middle, right};
+
+    for (int i=0; i<n_items; i++)
+	{
+	    Object* obj = g->objs[i];
+	    Tri *t;
+
+	    bool lt[3]={false,false,false};
+	    int side[3] = {0,0,0};
+
+	    if (t = dynamic_cast<Tri*>(obj))
+		{
+		    if (t->isbad())
+			continue;
+		    Point P0 = t->pt(0);
+		    Point P1 = t->pt(1);
+		    Point P2 = t->pt(2);
+
+		    Tri *tri0, *tri1, *tri2;
+
+		    for (int j=0; j<3; j++) {
+			if (t->pt(j).x() < xval)
+			    lt[j] = true;
+			if (t->pt(j).x() < xval-tol)
+			    side[j] = left;
+			else if (t->pt(j).x() > xval+tol)
+			    side[j] = right;
+			else
+			    side[j] = middle;
+		    }
+		    if (lt[0] == lt[1] &&
+			lt[1] != lt[2] &&
+			side[2] != middle &&
+			(side[0] != middle || side[1] != middle))
+			{
+			    // break edges 02 and 12
+
+			    double t0 = (xval-P0.x())/(P2.x()-P0.x());
+			    double t1 = (xval-P1.x())/(P2.x()-P1.x());
+
+			    Point P02 = AffineCombination(P0,(1-t0),
+							  P2,t0);
+			    Point P12 = AffineCombination(P1,(1-t1),
+							  P2,t1);
+
+			    tri0 = new Tri(t->get_matl(),
+					   P12, P2, P02);
+			    tri1 = new Tri(t->get_matl(),
+					   P1, P12, P02);
+			    tri2 = new Tri(t->get_matl(),
+					   P0, P1, P02);
+
+			}
+		    else if (lt[0] != lt[1] &&
+			     lt[1] == lt[2] &&
+			     side[0] != middle &&
+			     (side[1] != middle || side[2] != middle))
+			{
+			    // break edges 01 and 02
+			    double t0 = (xval-P0.x())/(P1.x()-P0.x());
+			    double t1 = (xval-P0.x())/(P2.x()-P0.x());
+
+			    Point P01 = AffineCombination(P0,(1-t0),
+							  P1,t0);
+			    Point P02 = AffineCombination(P0,(1-t1),
+							  P2,t1);
+
+			    tri0 = new Tri(t->get_matl(),
+					   P0, P01, P02);
+			    tri1 = new Tri(t->get_matl(),
+					   P1, P2, P01);
+			    tri2 = new Tri(t->get_matl(),
+					   P01, P2, P02);
+			}
+		    else if (lt[0] == lt[2] &&
+			     lt[1] != lt[2] &&
+			     side[1] != middle &&
+			     (side[0] != middle || side[2] != middle))
+			{
+			    // break edges 01 and 12
+			    double t0 = (xval-P0.x())/(P1.x()-P0.x());
+			    double t1 = (xval-P1.x())/(P2.x()-P1.x());
+
+			    Point P01 = AffineCombination(P0,(1-t0),
+							  P1,t0);
+			    Point P12 = AffineCombination(P1,(1-t1),
+							  P2,t1);
+
+			    tri0 = new Tri(t->get_matl(),
+					   P01, P1, P12);
+			    tri1 = new Tri(t->get_matl(),
+					   P0, P01, P2);
+			    tri2 = new Tri(t->get_matl(),
+					   P01, P12, P2);
+			}
+		    else
+			continue;
+		    g->objs[i] = tri0;
+		    g->add(tri1);
+		    g->add(tri2);
+		}
+	}
+}    
+
+void SplitTrisY(Group* g, double yval, double tol)
+{
+    int n_items = g->numObjects();
+
+    enum {left, middle, right};
+
+    for (int i=0; i<n_items; i++)
+	{
+	    Object* obj = g->objs[i];
+	    Tri *t;
+
+	    bool lt[3]={false,false,false};
+	    int side[3] = {0,0,0};
+
+	    if (t = dynamic_cast<Tri*>(obj))
+		{
+		    if (t->isbad())
+			continue;
+		    Point P0 = t->pt(0);
+		    Point P1 = t->pt(1);
+		    Point P2 = t->pt(2);
+
+		    Tri *tri0, *tri1, *tri2;
+
+		    for (int j=0; j<3; j++) {
+			if (t->pt(j).y() < yval)
+			    lt[j] = true;
+			// UGH -- hard coded for now
+			if (t->pt(j).y() < yval-tol)
+			    side[j] = left;
+			else if (t->pt(j).y() > yval+tol)
+			    side[j] = right;
+			else
+			    side[j] = middle;
+		    }
+		    if (lt[0] == lt[1] &&
+			lt[1] != lt[2] &&
+			side[2] != middle &&
+			(side[0] != middle || side[1] != middle))
+			{
+			    // break edges 02 and 12
+
+			    double t0 = (yval-P0.y())/(P2.y()-P0.y());
+			    double t1 = (yval-P1.y())/(P2.y()-P1.y());
+
+			    Point P02 = AffineCombination(P0,(1-t0),
+							  P2,t0);
+			    Point P12 = AffineCombination(P1,(1-t1),
+							  P2,t1);
+
+			    tri0 = new Tri(t->get_matl(),
+					   P12, P2, P02);
+			    tri1 = new Tri(t->get_matl(),
+					   P1, P12, P02);
+			    tri2 = new Tri(t->get_matl(),
+					   P0, P1, P02);
+
+			}
+		    else if (lt[0] != lt[1] &&
+			     lt[1] == lt[2] &&
+			     side[0] != middle &&
+			     (side[1] != middle || side[2] != middle))
+			{
+			    // break edges 01 and 02
+			    double t0 = (yval-P0.y())/(P1.y()-P0.y());
+			    double t1 = (yval-P0.y())/(P2.y()-P0.y());
+
+			    Point P01 = AffineCombination(P0,(1-t0),
+							  P1,t0);
+			    Point P02 = AffineCombination(P0,(1-t1),
+							  P2,t1);
+
+			    tri0 = new Tri(t->get_matl(),
+					   P0, P01, P02);
+			    tri1 = new Tri(t->get_matl(),
+					   P1, P2, P01);
+			    tri2 = new Tri(t->get_matl(),
+					   P01, P2, P02);
+			}
+		    else if (lt[0] == lt[2] &&
+			     lt[1] != lt[2] &&
+			     side[1] != middle &&
+			     (side[0] != middle || side[2] != middle))
+			{
+			    // break edges 01 and 12
+			    double t0 = (yval-P0.y())/(P1.y()-P0.y());
+			    double t1 = (yval-P1.y())/(P2.y()-P1.y());
+
+			    Point P01 = AffineCombination(P0,(1-t0),
+							  P1,t0);
+			    Point P12 = AffineCombination(P1,(1-t1),
+							  P2,t1);
+
+			    tri0 = new Tri(t->get_matl(),
+					   P01, P1, P12);
+			    tri1 = new Tri(t->get_matl(),
+					   P0, P01, P2);
+			    tri2 = new Tri(t->get_matl(),
+					   P01, P12, P2);
+			}
+		    else
+			continue;
+		    g->objs[i] = tri0;
+		    g->add(tri1);
+		    g->add(tri2);
+		}
+	}
+}    
+		    
+Group *Split_Data2(Group* g)
+{
+    printf("IN SPLIT DATA2****************************************\n");
+
+    double xmin = -2430;
+    double ymin = -1174;
+    double xmax = 2430;
+    double ymax = 1174;
+
+    double ytol = (ymax-ymin)*.001;
+    double xtol = (xmax-xmin)*.001;
+
+    SplitTrisX(g,xmin,xtol);
+    SplitTrisX(g,xmax,xtol);
+    SplitTrisY(g,ymin,ytol);
+    SplitTrisY(g,ymax,ytol);
+
+    return Split_Data(g);
+}
+
+Group *get_object(ifstream &infile) {
+  Group *result = 0;
   int parsing_roof=0;
-  Object *result = 0;
   string token("");
   int curley = 0;
   // eat the top curley brace and increment the curley brace counter
@@ -269,7 +571,7 @@ Object *get_object(ifstream &infile) {
     }
   }
   // Now lets set the materials and add them to a group
-  result = (Object*) new Group();
+  result = new Group();
   if (parsing_roof) {
     CycleMaterial *cm = dynamic_cast<CycleMaterial*>(ase_matls[ase_matls.size()-1]);
     if (cm->members.size() == 0) {
@@ -282,17 +584,22 @@ Object *get_object(ifstream &infile) {
   for(unsigned int i = 0; i < faces.size(); i++) {
     Object *face = faces[i];
     face->set_matl(ase_matls[matl_index]);
-    ((Group*)result)->add(face);
+    result->add(face);
   }
   //  cerr << "ase_load::get_objects::No objects found.\n";
 #if 0
-  if(((Group*)result)->numObjects() > 20)
+  if(result->numObjects() > 20)
     result = new Grid(result, 30);
-  else if(((Group*)result)->numObjects()>2)
+  else if (result->numObjects()>2)
     result = new BV1(result);
 #endif
-  if (obj_too_small) { delete result; result = 0; }
+
+  if (obj_too_small) { delete result; return 0; }
+
+//    return Split_Data2(result);
+
   return result;
+
 }
 
 Object *get_ase(char *file_name) {
@@ -393,6 +700,9 @@ Scene* make_scene(int argc, char* argv[], int) {
   } else {
     cerr << " not a cycle material.\n";
   }
+
+  printf("LEAVING MAKE SCENE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
   return scene;
 }
 

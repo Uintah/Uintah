@@ -11,7 +11,7 @@
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/Checker.h>
 #include <Packages/rtrt/Core/Sphere.h>
-#include <Packages/rtrt/Core/MiscMath.h>
+#include <Core/Math/MiscMath.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>

@@ -27,7 +27,8 @@
 using namespace rtrt;
 using namespace std;
 //using SCIRun::Time;
-using namespace SCIRun;
+
+using SCIRun::Thread;
 
 //#define NDATA 3
 

@@ -48,10 +48,12 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
 {
   token_list *children1, *children2, *children3;
   Point p0,p1,p2;
+  Vector vn0,vn1,vn2;
   vector<double>    *v1=0;
   vector<double>    *v3=0;
-  vector<unsigned> *v2=0;
-  vector<unsigned> *v4=0;
+  vector<unsigned>  *v2=0;
+  vector<unsigned>  *v4=0;
+  vector<double>    *v5=0;
   unsigned loop1, length1;
   unsigned loop2, length2;
   unsigned loop3, length3;
@@ -90,7 +92,12 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
                        "*MESH_TFACELIST") {
               v4 = ((MeshTFaceListToken*)
                     ((*children3)[loop3]))->GetTFaces();
-            }
+            } else if ((*children3)[loop3]->GetMoniker() ==
+		       "*MESH_NORMALS") {
+	      v5 = ((MeshNormalsToken*)
+		    ((*children3)[loop3]))->GetVertexNormals();
+
+	    }
 	  }
 	  if (v1 && v1->size() && v2 && v2->size()) {
 	    Group *group = new Group();
@@ -103,44 +110,69 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
 	      findex2 = (*v2)[index++]*3;
 	      findex3 = (*v2)[index]*3;
 	      
-              if (v3 && v3->size() && v4 && v4->size() &&
-                  ((ImageMaterial*)ase_matls[matl_index])->valid()) {
-                p0 = Point((*v1)[findex1],(*v1)[findex1+1],(*v1)[findex1+2]);
-                p1 = Point((*v1)[findex2],(*v1)[findex2+1],(*v1)[findex2+2]);
-                p2 = Point((*v1)[findex3],(*v1)[findex3+1],(*v1)[findex3+2]);
-
-                if (!degenerate(p0,p1,p2)) {
-
-                  TexturedTri *tri = new TexturedTri( ase_matls[matl_index],
-                                                      p0,p1,p2);
- 
-                  group->add(tri);
-                  
-                  p0 = Point((*v3)[findex1],(*v3)[findex1+1],(*v3)[findex1+2]);
-                  p1 = Point((*v3)[findex2],(*v3)[findex2+1],(*v3)[findex2+2]);
-                  p2 = Point((*v3)[findex3],(*v3)[findex3+1],(*v3)[findex3+2]);
-                  
-                  tri->set_texcoords( p0, p1, p2 );
-                }
-              } else {
-                p0 = Point((*v1)[findex1],(*v1)[findex1+1],(*v1)[findex1+2]);
-                p1 = Point((*v1)[findex2],(*v1)[findex2+1],(*v1)[findex2+2]);
-                p2 = Point((*v1)[findex3],(*v1)[findex3+1],(*v1)[findex3+2]);
-
-                if (!degenerate(p0,p1,p2)) {
-
-                  Tri *tri = new Tri( ase_matls[matl_index], p0, p1, p2);
-
-                  group->add(tri);
-                }
-              }
+	      if (v3 && v3->size() && v4 && v4->size() &&
+		  ((ImageMaterial*)ase_matls[matl_index])->valid()) {
+		p0 = Point((*v1)[findex1],(*v1)[findex1+1],(*v1)[findex1+2]);
+		p1 = Point((*v1)[findex2],(*v1)[findex2+1],(*v1)[findex2+2]);
+		p2 = Point((*v1)[findex3],(*v1)[findex3+1],(*v1)[findex3+2]);
+		
+		if (!degenerate(p0,p1,p2)) {
+		  TexturedTri* tri;
+		  
+		  if (v5 && v5->size()) {
+		    fprintf(stderr,"<<<<<<<<<<<<<<<<<<<Reading Normal!\n");
+		    
+		    vn0 = Vector((*v5)[loop4*9],(*v5)[loop4*9+1],(*v5)[loop4*9+2]);
+		    vn1 = Vector((*v5)[loop4*9+3],(*v5)[loop4*9+4],(*v5)[loop4*9+5]);
+		    vn2 = Vector((*v5)[loop4*9+6],(*v5)[loop4*9+7],(*v5)[loop4*9+8]);
+		    
+		    tri = new TexturedTri( ase_matls[matl_index],
+					   p0,p1,p2,vn0,vn1,vn2);
+		  } else {
+		    tri = new TexturedTri( ase_matls[matl_index],
+					   p0,p1,p2);
+		  }
+		  
+		  group->add(tri);
+		  
+		  p0 = Point((*v3)[findex1],(*v3)[findex1+1],(*v3)[findex1+2]);
+		  p1 = Point((*v3)[findex2],(*v3)[findex2+1],(*v3)[findex2+2]);
+		  p2 = Point((*v3)[findex3],(*v3)[findex3+1],(*v3)[findex3+2]);
+		  
+		  tri->set_texcoords( p0, p1, p2 );
+		}
+	      } else {
+		p0 = Point((*v1)[findex1],(*v1)[findex1+1],(*v1)[findex1+2]);
+		p1 = Point((*v1)[findex2],(*v1)[findex2+1],(*v1)[findex2+2]);
+		p2 = Point((*v1)[findex3],(*v1)[findex3+1],(*v1)[findex3+2]);
+		
+		if (!degenerate(p0,p1,p2)) {
+		  
+		  Tri *tri; 
+		  
+		  if (v5 && v5->size()) {
+		    
+		    fprintf(stderr,"<<<<<<<<<<<<<<<<<<<Reading Normal!\n");
+		    
+		    vn0 = Vector((*v5)[loop4*9],(*v5)[loop4*9+1],(*v5)[loop4*9+2]);
+		    vn1 = Vector((*v5)[loop4*9+3],(*v5)[loop4*9+4],(*v5)[loop4*9+5]);
+		    vn2 = Vector((*v5)[loop4*9+6],(*v5)[loop4*9+7],(*v5)[loop4*9+8]);
+		    
+		    tri = new Tri( ase_matls[matl_index],
+				   p0,p1,p2,vn0,vn1,vn2);
+		  } else {
+		    tri = new Tri( ase_matls[matl_index], p0, p1, p2);
+		  }
+		  group->add(tri);
+		}
+	      }	
 	    }
 	    scene->add(group);
 	  }
 	  v1 = 0;
-          v2 = 0;
-          v3 = 0;
-          v4 = 0;
+	  v2 = 0;
+	  v3 = 0;
+	  v4 = 0;
 	}
       }
     } else if ((*children1)[loop1]->GetMoniker() == "*MATERIAL_LIST") {

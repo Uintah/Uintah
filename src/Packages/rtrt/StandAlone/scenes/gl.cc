@@ -4,6 +4,7 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/Core/Plane.h>
 #include <iostream>
 #include <math.h>
 #include <string.h>
@@ -37,7 +38,7 @@ Scene* make_scene(int /*argc*/, char* /*argv[]*/, int /*nworkers*/)
     Color bgcolor(.5,0,.5);
 
     Group* empty=new Group();
-    Plane groundplane ( Point(0, 0, 0), Vector(1, 0, 0) );
+    rtrt::Plane groundplane ( Point(0, 0, 0), Vector(1, 0, 0) );
     Scene* scene=new Scene(empty, cam,
 			   bgcolor, groundcolor*averagelight, bgcolor, groundplane, 
 			   ambient_scale);

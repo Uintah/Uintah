@@ -23,7 +23,7 @@
 #include <Packages/rtrt/Core/MetalMaterial.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/Sphere.h>
-#include <Packages/rtrt/Core/MinMax.h>
+#include <Core/Math/MinMax.h>
 #include <Packages/rtrt/Core/Tri.h>
 #include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/ImageMaterial.h>
