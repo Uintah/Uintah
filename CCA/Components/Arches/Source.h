@@ -126,6 +126,20 @@ public:
 			     int index,
 			     CellInformation* cellinfo,
 			     ArchesVariables* vars);
+      // add transient term in momentum source term
+      void addTransMomSource(const ProcessorGroup* ,
+			     const Patch* patch ,
+			     double delta_t,
+			     int index,
+			     CellInformation* cellinfo,			  
+			     ArchesVariables* vars);
+
+      void computePressureSource(const ProcessorGroup* ,
+				 const Patch* patch ,
+				 int index,
+				 CellInformation* cellinfo,			  
+				 ArchesVariables* vars);
+
       ////////////////////////////////////////////////////////////////////////
       // Add multimaterial source term
       void computemmMomentumSource(const ProcessorGroup* pc,

@@ -2031,14 +2031,253 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
   }
 }
 
+//****************************************************************************
+// Documentation here
+//****************************************************************************
+void 
+BoundaryCondition::addPressureGrad(const ProcessorGroup* ,
+				   const Patch* patch ,
+				   int index,
+				   CellInformation* cellinfo,			  
+				   ArchesVariables* vars)
+{
+  // Get the patch and variable indices
+  IntVector domLoU, domHiU;
+  IntVector domLoUng, domHiUng;
+  IntVector idxLoU, idxHiU;
+  IntVector domLo = vars->cellType.getFortLowIndex();
+  IntVector domHi = vars->cellType.getFortHighIndex();
+  int ioff, joff, koff;
+  switch(index) {
+  case Arches::XDIR:
+    domLoU = vars->pressGradUSu.getFortLowIndex();
+    domHiU = vars->pressGradUSu.getFortHighIndex();
+    domLoUng = vars->uVelNonlinearSrc.getFortLowIndex();
+    domHiUng = vars->uVelNonlinearSrc.getFortHighIndex();
+    idxLoU = patch->getSFCXFORTLowIndex();
+    idxHiU = patch->getSFCXFORTHighIndex();
+
+    ioff = 1;
+    joff = 0;
+    koff = 0;
+    if (d_MAlab) {
+      for (int colZ = idxLoU.z(); colZ < idxHiU.z(); colZ ++) {
+	for (int colY = idxLoU.y(); colY < idxHiU.y(); colY ++) {
+	  for (int colX = idxLoU.x(); colX < idxHiU.x(); colX ++) {
+	  // Store current cell
+	    IntVector currCell(colX, colY, colZ);
+	    vars->pressGradUSu[currCell] *= vars->voidFraction[currCell];
+	  }
+	}
+      }
+    }
+    FORT_ADDPRESSUREGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+			 domLoUng.get_pointer(), domHiUng.get_pointer(),
+			 idxLoU.get_pointer(), idxHiU.get_pointer(),
+			 vars->pressGradUSu.getPointer(),
+			 vars->uVelNonlinearSrc.getPointer(), 
+			 domLo.get_pointer(), domHi.get_pointer(),
+			 vars->cellType.getPointer(), &d_mmWallID,
+			 &ioff, &joff, &koff);
+    break;
+  case Arches::YDIR:
+    domLoU = vars->pressGradVSu.getFortLowIndex();
+    domHiU = vars->pressGradVSu.getFortHighIndex();
+    domLoUng = vars->vVelNonlinearSrc.getFortLowIndex();
+    domHiUng = vars->vVelNonlinearSrc.getFortHighIndex();
+    idxLoU = patch->getSFCYFORTLowIndex();
+    idxHiU = patch->getSFCYFORTHighIndex();
+
+    ioff = 0;
+    joff = 1;
+    koff = 0;
+    if (d_MAlab) {
+      for (int colZ = idxLoU.z(); colZ < idxHiU.z(); colZ ++) {
+	for (int colY = idxLoU.y(); colY < idxHiU.y(); colY ++) {
+	  for (int colX = idxLoU.x(); colX < idxHiU.x(); colX ++) {
+	  // Store current cell
+	    IntVector currCell(colX, colY, colZ);
+	    vars->pressGradVSu[currCell] *= vars->voidFraction[currCell];
+	  }
+	}
+      }
+    }
+    FORT_ADDPRESSUREGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+			 domLoUng.get_pointer(), domHiUng.get_pointer(),
+			 idxLoU.get_pointer(), idxHiU.get_pointer(),
+			 vars->pressGradVSu.getPointer(),
+			 vars->vVelNonlinearSrc.getPointer(), 
+			 domLo.get_pointer(), domHi.get_pointer(),
+			 vars->cellType.getPointer(), &d_mmWallID,
+			 &ioff, &joff, &koff);
+    break;
+  case Arches::ZDIR:
+    domLoU = vars->pressGradWSu.getFortLowIndex();
+    domHiU = vars->pressGradWSu.getFortHighIndex();
+    domLoUng = vars->wVelNonlinearSrc.getFortLowIndex();
+    domHiUng = vars->wVelNonlinearSrc.getFortHighIndex();
+    idxLoU = patch->getSFCZFORTLowIndex();
+    idxHiU = patch->getSFCZFORTHighIndex();
+
+    ioff = 0;
+    joff = 0;
+    koff = 1;
+    if (d_MAlab) {
+      for (int colZ = idxLoU.z(); colZ < idxHiU.z(); colZ ++) {
+	for (int colY = idxLoU.y(); colY < idxHiU.y(); colY ++) {
+	  for (int colX = idxLoU.x(); colX < idxHiU.x(); colX ++) {
+	  // Store current cell
+	    IntVector currCell(colX, colY, colZ);
+	    vars->pressGradWSu[currCell] *= vars->voidFraction[currCell];
+	  }
+	}
+      }
+    }
+    FORT_ADDPRESSUREGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+			 domLoUng.get_pointer(), domHiUng.get_pointer(),
+			 idxLoU.get_pointer(), idxHiU.get_pointer(),
+			 vars->pressGradWSu.getPointer(),
+			 vars->wVelNonlinearSrc.getPointer(), 
+			 domLo.get_pointer(), domHi.get_pointer(),
+			 vars->cellType.getPointer(), &d_mmWallID,
+			 &ioff, &joff, &koff);
+    break;
+  default:
+    throw InvalidValue("Invalid index in BoundaryCondition::addPressGrad");
+  }
+}
 
       // compute multimaterial wall bc
 void 
 BoundaryCondition::mmvelocityBC(const ProcessorGroup*,
 				const Patch* patch,
 				int index, CellInformation* cellinfo,
-				ArchesVariables* vars) {
+				ArchesVariables* vars) 
+{
+    // Call the fortran routines
+  switch(index) {
+  case 1:
+    mmuVelocityBC(patch,
+		  vars);
+    break;
+  case 2:
+    mmvVelocityBC(patch,
+		  vars);
+    break;
+  case 3:
+    mmwVelocityBC(patch,
+		  vars);
+    break;
+  default:
+    cerr << "Invalid Index value" << endl;
+    break;
+
   // add kumar's mmvelbc
+  }
+}
+
+void 
+BoundaryCondition::mmuVelocityBC(const Patch* patch,
+				 ArchesVariables* vars)
+{
+  // Get the low and high index for the patch and the variables
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  //***warning need two layers of ghost cells
+  IntVector domLo = vars->cellType.getFortLowIndex();
+  IntVector domHi = vars->cellType.getFortHighIndex();
+  // for no ghost cells
+  IntVector domLoUng = vars->uVelLinearSrc.getFortLowIndex();
+  IntVector domHiUng = vars->uVelLinearSrc.getFortHighIndex();
+  
+  int ioff = 1;
+  int joff = 0;
+  int koff = 0;
+
+  FORT_MMBCVELOCITY(domLoUng.get_pointer(), domHiUng.get_pointer(), 
+		    idxLoU.get_pointer(), idxHiU.get_pointer(),
+		    vars->uVelocityCoeff[Arches::AE].getPointer(), 
+		    vars->uVelocityCoeff[Arches::AW].getPointer(), 
+		    vars->uVelocityCoeff[Arches::AN].getPointer(), 
+		    vars->uVelocityCoeff[Arches::AS].getPointer(), 
+		    vars->uVelocityCoeff[Arches::AT].getPointer(), 
+		    vars->uVelocityCoeff[Arches::AB].getPointer(), 
+		    vars->uVelNonlinearSrc.getPointer(), 
+		    vars->uVelLinearSrc.getPointer(),
+		    domLo.get_pointer(), domHi.get_pointer(),
+		    vars->cellType.getPointer(),
+		    &d_mmWallID,
+		    &ioff, &joff, &koff);
+
+}
+
+void 
+BoundaryCondition::mmvVelocityBC(const Patch* patch,
+				 ArchesVariables* vars)
+{
+  // Get the low and high index for the patch and the variables
+  IntVector idxLoU = patch->getSFCYFORTLowIndex();
+  IntVector idxHiU = patch->getSFCYFORTHighIndex();
+  //***warning need two layers of ghost cells
+  IntVector domLo = vars->cellType.getFortLowIndex();
+  IntVector domHi = vars->cellType.getFortHighIndex();
+  // for no ghost cells
+  IntVector domLoUng = vars->vVelLinearSrc.getFortLowIndex();
+  IntVector domHiUng = vars->vVelLinearSrc.getFortHighIndex();
+  
+  int ioff = 0;
+  int joff = 1;
+  int koff = 0;
+
+  FORT_MMBCVELOCITY(domLoUng.get_pointer(), domHiUng.get_pointer(), 
+		    idxLoU.get_pointer(), idxHiU.get_pointer(),
+		    vars->vVelocityCoeff[Arches::AN].getPointer(), 
+		    vars->vVelocityCoeff[Arches::AS].getPointer(), 
+		    vars->vVelocityCoeff[Arches::AT].getPointer(), 
+		    vars->vVelocityCoeff[Arches::AB].getPointer(), 
+		    vars->vVelocityCoeff[Arches::AE].getPointer(), 
+		    vars->vVelocityCoeff[Arches::AW].getPointer(), 
+		    vars->vVelNonlinearSrc.getPointer(), 
+		    vars->vVelLinearSrc.getPointer(),
+		    domLo.get_pointer(), domHi.get_pointer(),
+		    vars->cellType.getPointer(),
+		    &d_mmWallID,
+		    &ioff, &joff, &koff);
+
+}
+
+void 
+BoundaryCondition::mmwVelocityBC( const Patch* patch,
+				  ArchesVariables* vars) {
+  // Get the low and high index for the patch and the variables
+  IntVector idxLoU = patch->getSFCZFORTLowIndex();
+  IntVector idxHiU = patch->getSFCZFORTHighIndex();
+  //***warning need two layers of ghost cells
+  IntVector domLo = vars->cellType.getFortLowIndex();
+  IntVector domHi = vars->cellType.getFortHighIndex();
+  // for no ghost cells
+  IntVector domLoUng = vars->wVelLinearSrc.getFortLowIndex();
+  IntVector domHiUng = vars->wVelLinearSrc.getFortHighIndex();
+  
+  int ioff = 0;
+  int joff = 0;
+  int koff = 1;
+
+  FORT_MMBCVELOCITY(domLoUng.get_pointer(), domHiUng.get_pointer(), 
+		    idxLoU.get_pointer(), idxHiU.get_pointer(),
+		    vars->wVelocityCoeff[Arches::AT].getPointer(), 
+		    vars->wVelocityCoeff[Arches::AB].getPointer(), 
+		    vars->wVelocityCoeff[Arches::AE].getPointer(), 
+		    vars->wVelocityCoeff[Arches::AW].getPointer(), 
+		    vars->wVelocityCoeff[Arches::AN].getPointer(), 
+		    vars->wVelocityCoeff[Arches::AS].getPointer(), 
+		    vars->wVelNonlinearSrc.getPointer(), 
+		    vars->wVelLinearSrc.getPointer(),
+		    domLo.get_pointer(), domHi.get_pointer(),
+		    vars->cellType.getPointer(),
+		    &d_mmWallID,
+		    &ioff, &joff, &koff);
+
 }
 
 void 
@@ -2046,15 +2285,65 @@ BoundaryCondition::mmpressureBC(const ProcessorGroup*,
 				const Patch* patch,
 				CellInformation* cellinfo,
 				ArchesVariables* vars) {
-  // similar to mmwallbc replace it
+  // Get the low and high index for the patch
+  IntVector domLo = vars->cellType.getFortLowIndex();
+  IntVector domHi = vars->cellType.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLong = vars->pressLinearSrc.getFortLowIndex();
+  IntVector domHing = vars->pressLinearSrc.getFortHighIndex();
+  for(int i=0;i<7;i++){
+     ASSERTEQ(domLong,
+	      vars->pressCoeff[i].getWindow()->getLowIndex());
+     ASSERTEQ(domHing+IntVector(1,1,1),
+	      vars->pressCoeff[i].getWindow()->getHighIndex());
+  }
+  ASSERTEQ(domLong, vars->pressNonlinearSrc.getWindow()->getLowIndex());
+  ASSERTEQ(domHing+IntVector(1,1,1), vars->pressNonlinearSrc.getWindow()->getHighIndex());
+
+  //fortran call
+  FORT_MMWALLBC(domLo.get_pointer(), domHi.get_pointer(),
+		domLong.get_pointer(), domHing.get_pointer(),
+		idxLo.get_pointer(), idxHi.get_pointer(),
+		vars->pressCoeff[Arches::AE].getPointer(),
+		vars->pressCoeff[Arches::AW].getPointer(),
+		vars->pressCoeff[Arches::AN].getPointer(),
+		vars->pressCoeff[Arches::AS].getPointer(),
+		vars->pressCoeff[Arches::AT].getPointer(),
+		vars->pressCoeff[Arches::AB].getPointer(),
+		vars->pressNonlinearSrc.getPointer(),
+		vars->pressLinearSrc.getPointer(),
+		vars->cellType.getPointer(),
+		&d_mmWallID);
 }
 // applies multimaterial bc's for scalars and pressure
 void
-BoundaryCondition::mmwallBC( const ProcessorGroup*,
-			     const Patch* patch,
-			     CellInformation* cellinfo,
-			     ArchesVariables* vars) {
-  // similar to wallbc in phil's code
+BoundaryCondition::mmscalarWallBC( const ProcessorGroup*,
+				   const Patch* patch,
+				   CellInformation* cellinfo,
+				   ArchesVariables* vars) {
+  // Get the low and high index for the patch
+  IntVector domLo = vars->cellType.getFortLowIndex();
+  IntVector domHi = vars->cellType.getFortHighIndex();
+  IntVector domLong = vars->scalarCoeff[Arches::AB].getFortLowIndex();
+  IntVector domHing = vars->scalarCoeff[Arches::AB].getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  //fortran call
+  FORT_MMWALLBC(domLo.get_pointer(), domHi.get_pointer(),
+		domLong.get_pointer(), domHing.get_pointer(),
+		idxLo.get_pointer(), idxHi.get_pointer(),
+		vars->scalarCoeff[Arches::AE].getPointer(),
+		vars->scalarCoeff[Arches::AW].getPointer(),
+		vars->scalarCoeff[Arches::AN].getPointer(),
+		vars->scalarCoeff[Arches::AS].getPointer(),
+		vars->scalarCoeff[Arches::AT].getPointer(),
+		vars->scalarCoeff[Arches::AB].getPointer(),
+		vars->scalarNonlinearSrc.getPointer(),
+		vars->scalarLinearSrc.getPointer(),
+		vars->cellType.getPointer(),
+		&d_mmWallID);
+
 }
 
 

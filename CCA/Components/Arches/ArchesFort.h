@@ -64,6 +64,9 @@ WARNING
 #define FORT_PRESSOURCE pressrc_
 #define FORT_PRESSBC bcpress_
 #define FORT_ADDPRESSGRAD addpressgrad_
+#define FORT_CALCPRESSGRAD calcpressgrad_
+#define FORT_ADDPRESSUREGRAD addpressuregrad_
+#define FORT_ADDTRANSSRC addtranssrc_
 #define FORT_SCALARCOEFF scalcoef_
 #define FORT_SCALARSOURCE scalsrc_
 #define FORT_SCALARBC bcscalar_
@@ -78,6 +81,9 @@ WARNING
 #define FORT_NORMPRESS normpress_
 #define FORT_EXPLICIT explicit_
 // for multimaterial
+#define FORT_MMMOMSRC mmmomsrc_
+#define FORT_MMBCVELOCITY mmbcvelocity_
+#define FORT_MMWALLBC mmwallbc_
 #define FORT_MMCELLTYPEINIT mmcelltypeinit_
 // GROUP: Function Declarations:
 ////////////////////////////////////////////////////////////////////////
@@ -755,6 +761,53 @@ extern "C"
 		      const double* dxpw);
 
 
+    ////////////////////////////////////////////////////////////////////////
+    // Calculate the pressure grad for [u,v,w] source
+    void
+    FORT_ADDPRESSUREGRAD(const int* domLoU, const int* domHiU,
+			 const int* domLoUng, const int* domHiUng,
+			 const int* idxLo, const int* idxHiU,
+			 const double* pressgrad,
+			 double* nlsource, 
+			 const int* domLo, const int* domHi,
+			 const int* celltype, const int* mmwallid,
+			 const int* ioff, const int* joff,
+			 const int* koff);
+
+
+    ////////////////////////////////////////////////////////////////////////
+    // Calculate the pressure grad for [u,v,w] source
+    void
+    FORT_ADDTRANSSRC(const int* domLoU, const int* domHiU,
+		     const int* domLoUng, const int* domHiUng,
+		     const int* idxLo, const int* idxHiU,
+		     const double* uVelocity,
+		     double* nlsource, double* velcoeff_AP,
+		     const int* domLo, const int* domHi,
+		     const int* domLong, const int* domHing,
+		     const double* old_density,
+		     const double* delta_t,
+		     const double* sew, const double* sns, const double* stbw);
+
+
+
+    ////////////////////////////////////////////////////////////////////////
+    // Calculate the pressure grad for [u,v,w] source
+    void
+    FORT_CALCPRESSGRAD(const int* domLoU, const int* domHiU,
+		       const int* domLoUng, const int* domHiUng,
+		       const int* idxLo, const int* idxHiU,
+		       const double* uVelocity,
+		       double* pressgradu,
+		       const int* domLo, const int* domHi,
+		       const double* pressure,
+		       const int* ioff, const int* joff,
+		       const int* koff,
+		       const double* sew, const double* sns, const double* stbw,
+		       const double* dxpw);
+
+
+
 
     ////////////////////////////////////////////////////////////////////////
     // Calculate the Mixing Scalar coeffs and convection terms
@@ -858,8 +911,8 @@ extern "C"
 
     ////////////////////////////////////////////////////////////////////////
     // underrelaxation of the eqn
-    void
-    FORT_UNDERELAX(const int* domLo, const int* domHi,
+  void
+  FORT_UNDERELAX(const int* domLo, const int* domHi,
 		   const int* domLong, const int* domHing,
 		    const int* idxLo, const int* idxHi,
 		    double* variable,
@@ -913,19 +966,56 @@ extern "C"
 		double* old_density,
 		double* sew, double* sns, double* stb,
 		double* delta_t);
+  
+  // multimaterial functions
+  ////////////////////////////////////////////////////////////////////////
+  // Initialize mmwall celltype variables :
+  void
+  FORT_MMCELLTYPEINIT(const int* domainLow, const int* domainHigh, 
+		      const int* indexLow, const int* indexHigh,
+		      double* voidFrac, int* celltype, 
+		      const int* mmwallid, const int* mmflowid, 
+		      const double* cutoff);
 
-
-
-// multimaterial functions
-////////////////////////////////////////////////////////////////////////
-// Initialize mmwall celltype variables :
-void
-FORT_MMCELLTYPEINIT(const int* domainLow, const int* domainHigh, 
-		    const int* indexLow, const int* indexHigh,
-		    double* voidFrac, int* celltype, 
-		    const int* mmwallid, const int* mmflowid, 
-		    const double* cutoff);
-
+  void
+  FORT_MMMOMSRC(const int* domLoUng, const int* domHiUng,
+		const int* idxLoU, const int* idxHiU,
+		double* nlsource, double* linsource,
+		const int* domLo, const int* domHi,
+		double* mmnlsource, double* mmlinsource);
+  
+  ////////////////////////////////////////////////////////////////////////
+  // Calculate the multimaterial velocity bc
+  void
+  FORT_MMBCVELOCITY(const int* domLoUng, const int* domHiUng,
+		    const int* idxLoU, const int* idxHiU,
+		    double* uVelocityCoeff_AE,
+		    double* uVelocityCoeff_AW,
+		    double* uVelocityCoeff_AN,
+		    double* uVelocityCoeff_AS,
+		    double* uVelocityCoeff_AT,
+		    double* uVelocityCoeff_AB,
+		    double* nlsource, double* linsource,
+		    const int* domLo, const int* domHi,
+		    const int* pcell,
+		    const int* mmwallid, 
+		    const int* ioff, const int* joff, const int* koff);
+  
+  ////////////////////////////////////////////////////////////////////////
+  // Calculate the multimaterial scalar bc
+  void
+  FORT_MMWALLBC(const int* domLo, const int* domHi,
+		const int* domLong, const int* domHing,
+		const int* idxLo, const int* idxHi,
+		double* uVelocityCoeff_AE,
+		double* uVelocityCoeff_AW,
+		double* uVelocityCoeff_AN,
+		double* uVelocityCoeff_AS,
+		double* uVelocityCoeff_AT,
+		double* uVelocityCoeff_AB,
+		double* nlsource, double* linsource,
+		const int* pcell,
+		const int* mmwallid);
 }
 
 #endif

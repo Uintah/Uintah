@@ -373,6 +373,10 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_boundaryCondition->scalarBC(pc, patch,  index, cellinfo, 
 				  &scalarVars);
+  // apply multimaterial intrusion wallbc
+    if (d_MAlab)
+      d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
+					  &scalarVars);
 
     // similar to mascal
     // inputs :
