@@ -22,16 +22,17 @@ using namespace SCIRun;
 // template<class T>
 void
 Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
+  // declare/initialize histogram array
+  GLfloat hist[textureHeight][textureWidth];
+  for( int y = 0; y < textureHeight; y++ )
+    for( int x = 0; x < textureWidth; x++ )
+      hist[y][x] = 0.0f;
+    
+  float data_max = 0;  // used to scale histogram to be more readable
+
   // creates volume-data scatter plot
   for( int n = 0; n < volumes.size(); n++ ) {
 
-    // declare/initialize histogram array
-    GLfloat hist[textureHeight*2][textureWidth*2];
-    for( int y = 0; y < textureHeight; y++ )
-      for( int x = 0; x < textureWidth; x++ )
-	hist[y][x] = 0.0f;
-    
-    float data_max = 0;  // used to scale histogram to be more readable
     // precomputed values to speed up histogram creation
     float g_textureFactor = textureHeight/(gmax-gmin);
     float v_textureFactor = textureWidth/(vmax-vmin);
@@ -55,24 +56,25 @@ Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
 	  hist[y_index][x_index] += 0.1f;
 	  data_max = max( data_max, hist[y_index][x_index] );
 	} // for(x)
+  } // for( number of volumes )
 
-    // applies white histogram to background texture
-    float logmax = 1/log10f(data_max+1);
-    float c;
-    for( int i = 0; i < textureHeight; i++ )
-      for( int j = 0; j < textureWidth; j++ ) {
-	// rescale value to make more readable and clamp large values
-	c = log10f( 1.0f + hist[i][j])*logmax;
-	transTexture2->textArray[i][j][0] = c;
-	bgTextImage->textArray[i][j][0] = c;
-	transTexture2->textArray[i][j][1] = c;
-	bgTextImage->textArray[i][j][1] = c;
-	transTexture2->textArray[i][j][2] = c;
-	bgTextImage->textArray[i][j][2] = c;
-	transTexture2->textArray[i][j][3] = 0.0f;
-	bgTextImage->textArray[i][j][3] = 1.0f;
-      } // for(j)
-  } // for(number of volumes)
+  // applies white histogram to background texture
+  float logmax = 1/log10f(data_max+1);
+  float c;
+  for( int i = 0; i < textureHeight; i++ )
+    for( int j = 0; j < textureWidth; j++ ) {
+      // rescale value to make more readable and clamp large values
+      c = log10f( 1.0f + hist[i][j])*logmax;
+      transTexture2->textArray[i][j][0] = c;
+      bgTextImage->textArray[i][j][0] = c;
+      transTexture2->textArray[i][j][1] = c;
+      bgTextImage->textArray[i][j][1] = c;
+      transTexture2->textArray[i][j][2] = c;
+      bgTextImage->textArray[i][j][2] = c;
+      transTexture2->textArray[i][j][3] = 0.0f;
+      bgTextImage->textArray[i][j][3] = 1.0f;
+    } // for(j)
+
   hist_changed = true;
 } // createBGText()
 
@@ -83,6 +85,38 @@ Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
 // template<class T>
 void
 Volvis2DDpy::loadCleanTexture( void ) {
+  if( widgetsMaintained ) {
+    for( int i = 0; i < textureHeight; i++ )
+      for( int j = 0; j < textureWidth; j++ ) {
+	transTexture2->textArray[i][j][3] =
+	  transTexture3->textArray[i][j][3];
+	transTexture2->textArray[i][j][0] =
+	  transTexture3->textArray[i][j][0];
+	transTexture2->textArray[i][j][1] =
+	  transTexture3->textArray[i][j][1];
+	transTexture2->textArray[i][j][2] =
+	  transTexture3->textArray[i][j][2];
+      } // for(j)
+    widgets[pickedIndex]->paintTransFunc( transTexture2->textArray,
+					  master_opacity );
+    for( int i = 0; i < textureHeight; i++ )
+      for( int j = 0; j < textureWidth; j++ ) {
+	if( transTexture2->textArray[i][j][3] == 0.0f )
+	  transTexture1->textArray[i][j][3] = 0.0f;
+	else {
+	  transTexture1->textArray[i][j][3] =
+	    transTexture2->textArray[i][j][3];
+	  transTexture1->textArray[i][j][0] =
+	    transTexture2->textArray[i][j][0];
+	  transTexture1->textArray[i][j][1] =
+	    transTexture2->textArray[i][j][1];
+	  transTexture1->textArray[i][j][2] =
+	    transTexture2->textArray[i][j][2];
+	}
+      } // for(j)
+    return;
+  } // if(widgetsMaintained)
+
   // wipe out invisible texture's information
   for( int i = 0; i < textureHeight; i++ ) {
     for( int j = 0; j < textureWidth; j++ ) {
@@ -102,10 +136,10 @@ Volvis2DDpy::loadCleanTexture( void ) {
       if( transTexture2->textArray[i][j][3] == 0.0f )
 	transTexture1->textArray[i][j][3] = 0.0f;
       else {
+  	transTexture1->textArray[i][j][3] = transTexture2->textArray[i][j][3];
   	transTexture1->textArray[i][j][0] = transTexture2->textArray[i][j][0];
   	transTexture1->textArray[i][j][1] = transTexture2->textArray[i][j][1];
   	transTexture1->textArray[i][j][2] = transTexture2->textArray[i][j][2];
-  	transTexture1->textArray[i][j][3] = transTexture2->textArray[i][j][3];
       }
     }
 
@@ -328,8 +362,8 @@ Volvis2DDpy::processHits( GLint hits, GLuint buffer[] ) {
 // template<class T>
 void
 Volvis2DDpy::pickShape( int x, int y ) {
-  old_x = x;   // updates old_x
-  old_y = y;   // updates old_y
+//    old_x = x;   // updates old_x
+//    old_y = y;   // updates old_y
 
   GLuint selectBuf[BUFSIZE];
   GLint hits;
@@ -627,10 +661,16 @@ Volvis2DDpy::key_pressed(unsigned long key) {
     render_mode = CLEAN;
     break;
 
-    // volume rendering hack to improve performance (>2x)
+    // volume rendering hack to improve performance (>1.5x)
   case XK_f:
   case XK_F:
     render_mode = FAST;
+    cerr << "rendering hack is now " << render_mode << ".\n";
+    break;
+
+    // information display
+  case XK_i:
+  case XK_I:
     break;
   } // switch()
 } // key_pressed()
@@ -676,9 +716,9 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y) {
     return;
   }
 
-  // update old_x and old_y
-  old_x = x;
-  old_y = y;
+//    // update old_x and old_y
+//    old_x = x;
+//    old_y = y;
 
   switch( button ) {
   case MouseButton1:	// update focus onto selected widget
@@ -700,6 +740,7 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y) {
 	widgets[pickedIndex-1]->changeColor( 0.85, 0.6, 0.6 );
       // set drawFlag for manipulate() to adjust texture color
       widgets[pickedIndex]->drawFlag = 6;
+      widgets[pickedIndex]->transText->store_position( x, y );
       redraw = true;
     } // else if
     break;    // case MouseButton1
@@ -795,6 +836,7 @@ Volvis2DDpy::button_released(MouseButton /*button*/, const int x, const int y){
   cp_opacity_adjusting = false;
   cp_gs_adjusting = false;
   pickedIndex = -1;
+  widgetsMaintained = false;
 //    fflush( stdout );
 } // button_released()
 
@@ -825,10 +867,23 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
   if( button == MouseButton1 ) {
     // if the user has selected a widget by its frame
     if( pickedIndex >= 0 && widgets[pickedIndex]->drawFlag != 6 ) {
-      widgets[pickedIndex]->manipulate(x/pixel_width,
-				       (x-old_x)/pixel_width,
-				       330.0-y/pixel_height,
-				       (old_y-y)/pixel_height);
+      widgets[pickedIndex]->manipulate( x/pixel_width, 330.0-y/pixel_height );
+				       
+      if( !widgetsMaintained ) {
+	// store away all unchanging widgets' textures to speed up performance
+	for( int i = 0; i < textureHeight; i++ )
+	  for( int j = 0; j < textureWidth; j++ ) {
+	    transTexture3->textArray[i][j][0] = 0;
+	    transTexture3->textArray[i][j][1] = 0;
+	    transTexture3->textArray[i][j][2] = 0;
+	    transTexture3->textArray[i][j][3] = 0;
+	  }
+	for( int i = 0; i < widgets.size()-1; i++ )
+	  widgets[i]->paintTransFunc( transTexture3->textArray,
+				      master_opacity );
+      }
+      widgetsMaintained = true;
+
       transFunc_changed = true;
       redraw = true;
     }
@@ -839,7 +894,7 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
       if( widgets[pickedIndex]->type == 3 )
 	return;
       // adjust widget texture's color
-      widgets[pickedIndex]->transText->colormap( x-old_x, old_y-y );
+      widgets[pickedIndex]->transText->colormap( x, y );
       if( widgets[pickedIndex]->type != 0 )
 	// invert the widget frame's color to make it visible with texture
 	widgets[pickedIndex]->invertColor();
@@ -876,8 +931,8 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
     else
       return;
       
-    old_x = x;       // updates old_x
-    old_y = y;       // updates old_y
+//      old_x = x;       // updates old_x
+//      old_y = y;       // updates old_y
   } // if(mousebutton1)
 } // button_motion
 
@@ -1423,6 +1478,7 @@ Volvis2DDpy::Volvis2DDpy( float t_inc, bool cut ):DpyBase("Volvis2DDpy"),
   bgTextImage = new Texture<GLfloat>();
   transTexture1 = new Texture<GLfloat>();
   transTexture2 = new Texture<GLfloat>();
+  transTexture3 = new Texture<GLfloat>();
   set_resolution( init_width, init_height );
   UIwind->border = 5;
   UIwind->menu_height = 80;
