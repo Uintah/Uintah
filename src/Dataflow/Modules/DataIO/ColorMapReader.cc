@@ -18,14 +18,14 @@
 namespace SCIRun {
 
 class ColorMapReader : public Module {
-    ColorMapOPort* outport_;
-    GuiString filename_;
-    ColorMapHandle handle_;
-    clString old_filename_;
+  ColorMapOPort* outport_;
+  GuiString filename_;
+  ColorMapHandle handle_;
+  clString old_filename_;
 public:
-    ColorMapReader(const clString& id);
-    virtual ~ColorMapReader();
-    virtual void execute();
+  ColorMapReader(const clString& id);
+  virtual ~ColorMapReader();
+  virtual void execute();
 };
 
 extern "C" Module* make_ColorMapReader(const clString& id) {
@@ -33,11 +33,11 @@ extern "C" Module* make_ColorMapReader(const clString& id) {
 }
 
 ColorMapReader::ColorMapReader(const clString& id)
-: Module("ColorMapReader", id, Source), filename_("filename", id, this)
+  : Module("ColorMapReader", id, Source), filename_("filename", id, this)
 {
-    // Create the output port
-    outport_=scinew ColorMapOPort(this, "Output Data", ColorMapIPort::Atomic);
-    add_oport(outport_);
+  // Create the output port
+  outport_=scinew ColorMapOPort(this, "Output Data", ColorMapIPort::Atomic);
+  add_oport(outport_);
 }
 
 ColorMapReader::~ColorMapReader()
@@ -46,30 +46,30 @@ ColorMapReader::~ColorMapReader()
 
 void ColorMapReader::execute()
 {
-    clString fn(filename_.get());
-
-    // If we haven't read yet, or if it's a new filename, then read
-    if(!handle_.get_rep() || fn != old_filename_){
-	old_filename_=fn;
-	Piostream* stream=auto_istream(fn);
-	if(!stream){
-	    error(clString("Error reading file: ")+filename_.get());
-	    return;
-	}
-
-	// Read the file
-	Pio(*stream, handle_);
-	if(!handle_.get_rep() || stream->error()){
-	    error(clString("Error reading ColorMap from file: ")+
-		  filename_.get());
-	    delete stream;
-	    return;
-	}
-	delete stream;
+  clString fn(filename_.get());
+  
+  // If we haven't read yet, or if it's a new filename, then read
+  if(!handle_.get_rep() || fn != old_filename_){
+    old_filename_=fn;
+    Piostream* stream=auto_istream(fn);
+    if(!stream){
+      error(clString("Error reading file: ")+filename_.get());
+      return;
     }
-
-    // Send the data downstream
-    outport_->send(handle_);
+    
+    // Read the file
+    Pio(*stream, handle_);
+    if(!handle_.get_rep() || stream->error()){
+      error(clString("Error reading ColorMap from file: ")+
+	    filename_.get());
+      delete stream;
+      return;
+    }
+    delete stream;
+  }
+  
+  // Send the data downstream
+  outport_->send(handle_);
 }
 
 } // End namespace SCIRun
