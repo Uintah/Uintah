@@ -34,7 +34,9 @@ subset of <acronym>ITK</acronym> filters.</para>
 <acronym>XSLT</acronym> processor generates code for &sr; modules from
 the <acronym>XML</acronym> descriptions and <acronym>XSL</acronym>
 stylesheets.  Users may encapsulate additional filters by writing
-<acronym>XML</acronym> descriptions of them.</para>
+<acronym>XML</acronym> descriptions of them.  See the <ulink
+url="../../User/Guide/usersguide/srug8.html">&sr; Users Guide</ulink>
+for more information.</para>
 
 <note>
 <para>The &sr; <acronym>RPM</acronym> distribution does
