@@ -257,6 +257,11 @@ public:
 			   int index,
 			   CellInformation* cellinfo,			  
 			   ArchesVariables* vars);
+
+      void newrecomputePressureBC(const ProcessorGroup* /*pc*/,
+				  const Patch* patch,
+				  CellInformation* cellinfo,
+				  ArchesVariables* vars);
 			
 private:
 
