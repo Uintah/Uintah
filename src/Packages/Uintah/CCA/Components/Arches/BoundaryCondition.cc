@@ -535,12 +535,12 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 	     << "]" << endl;
 	cerr << "Cell ID = " << cellid << endl;
 #endif
-	bool xminus = (patch->getBCType(Patch::xminus) == Patch::Neighbor)?0:1;
-	bool xplus =  (patch->getBCType(Patch::xplus) == Patch::Neighbor)?0:1;
-	bool yminus = (patch->getBCType(Patch::yminus) == Patch::Neighbor)?0:1;
-	bool yplus =  (patch->getBCType(Patch::yplus) == Patch::Neighbor)?0:1;
-	bool zminus = (patch->getBCType(Patch::zminus) == Patch::Neighbor)?0:1;
-	bool zplus =  (patch->getBCType(Patch::zplus) == Patch::Neighbor)?0:1;
+	bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+	bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+	bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+	bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+	bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+	bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
 	fort_areain(domLo, domHi, idxLo, idxHi, cellInfo->sew, cellInfo->sns,
 		    cellInfo->stb, inlet_area, cellType, cellid,
@@ -634,12 +634,12 @@ BoundaryCondition::calcPressureBC(const ProcessorGroup* ,
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
     
-    bool xminus = (patch->getBCType(Patch::xminus) == Patch::Neighbor)?0:1;
-    bool xplus =  (patch->getBCType(Patch::xplus) == Patch::Neighbor)?0:1;
-    bool yminus = (patch->getBCType(Patch::yminus) == Patch::Neighbor)?0:1;
-    bool yplus =  (patch->getBCType(Patch::yplus) == Patch::Neighbor)?0:1;
-    bool zminus = (patch->getBCType(Patch::zminus) == Patch::Neighbor)?0:1;
-    bool zplus =  (patch->getBCType(Patch::zplus) == Patch::Neighbor)?0:1;
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     
     fort_calpbc(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
 		pressure, density, cellType, d_pressureBdry->d_cellTypeID,
@@ -827,12 +827,12 @@ BoundaryCondition::computeFlowINOUT(const ProcessorGroup*,
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
 
-    bool xminus = (patch->getBCType(Patch::xminus) == Patch::Neighbor)?0:1;
-    bool xplus =  (patch->getBCType(Patch::xplus) == Patch::Neighbor)?0:1;
-    bool yminus = (patch->getBCType(Patch::yminus) == Patch::Neighbor)?0:1;
-    bool yplus =  (patch->getBCType(Patch::yplus) == Patch::Neighbor)?0:1;
-    bool zminus = (patch->getBCType(Patch::zminus) == Patch::Neighbor)?0:1;
-    bool zplus =  (patch->getBCType(Patch::zplus) == Patch::Neighbor)?0:1;
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     double flowIN = 0.0;
     double flowOUT = 0.0;
     double flowOUT_outbc = 0.0;
@@ -1070,12 +1070,12 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
 
-    bool xminus = (patch->getBCType(Patch::xminus) == Patch::Neighbor)?0:1;
-    bool xplus =  (patch->getBCType(Patch::xplus) == Patch::Neighbor)?0:1;
-    bool yminus = (patch->getBCType(Patch::yminus) == Patch::Neighbor)?0:1;
-    bool yplus =  (patch->getBCType(Patch::yplus) == Patch::Neighbor)?0:1;
-    bool zminus = (patch->getBCType(Patch::zminus) == Patch::Neighbor)?0:1;
-    bool zplus =  (patch->getBCType(Patch::zplus) == Patch::Neighbor)?0:1;
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
     if (d_outletBoundary) {
 
@@ -1323,12 +1323,12 @@ BoundaryCondition::uVelocityBC(const Patch* patch,
   //IntVector idxLoU = vars->cellType.getFortLowIndex();
   //IntVector idxHiU = vars->cellType.getFortHighIndex();
   // computes momentum source term due to wall
-  bool xminus = (patch->getBCType(Patch::xminus) == Patch::Neighbor)?0:1;
-  bool xplus =  (patch->getBCType(Patch::xplus) == Patch::Neighbor)?0:1;
-  bool yminus = (patch->getBCType(Patch::yminus) == Patch::Neighbor)?0:1;
-  bool yplus =  (patch->getBCType(Patch::yplus) == Patch::Neighbor)?0:1;
-  bool zminus = (patch->getBCType(Patch::zminus) == Patch::Neighbor)?0:1;
-  bool zplus =  (patch->getBCType(Patch::zplus) == Patch::Neighbor)?0:1;
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
   fort_bcuvel(vars->uVelocity, vars->uVelocityCoeff[Arches::AP],
 	      vars->uVelocityCoeff[Arches::AE],
@@ -1389,12 +1389,12 @@ BoundaryCondition::vVelocityBC(const Patch* patch,
   //IntVector idxLoV = vars->cellType.getFortLowIndex();
   //IntVector idxHiV = vars->cellType.getFortHighIndex();
   // computes momentum source term due to wall
-  bool xminus = (patch->getBCType(Patch::xminus) == Patch::Neighbor)?0:1;
-  bool xplus =  (patch->getBCType(Patch::xplus) == Patch::Neighbor)?0:1;
-  bool yminus = (patch->getBCType(Patch::yminus) == Patch::Neighbor)?0:1;
-  bool yplus =  (patch->getBCType(Patch::yplus) == Patch::Neighbor)?0:1;
-  bool zminus = (patch->getBCType(Patch::zminus) == Patch::Neighbor)?0:1;
-  bool zplus =  (patch->getBCType(Patch::zplus) == Patch::Neighbor)?0:1;
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
   // computes remianing diffusion term and also computes source due to gravity
   fort_bcvvel(vars->vVelocity, vars->vVelocityCoeff[Arches::AP],
@@ -1453,12 +1453,12 @@ BoundaryCondition::wVelocityBC(const Patch* patch,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   // for no ghost cells
-  bool xminus = (patch->getBCType(Patch::xminus) == Patch::Neighbor)?0:1;
-  bool xplus =  (patch->getBCType(Patch::xplus) == Patch::Neighbor)?0:1;
-  bool yminus = (patch->getBCType(Patch::yminus) == Patch::Neighbor)?0:1;
-  bool yplus =  (patch->getBCType(Patch::yplus) == Patch::Neighbor)?0:1;
-  bool zminus = (patch->getBCType(Patch::zminus) == Patch::Neighbor)?0:1;
-  bool zplus =  (patch->getBCType(Patch::zplus) == Patch::Neighbor)?0:1;
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
   // for a single patch should be equal to 1 and nx
   //IntVector idxLoW = vars->cellType.getFortLowIndex();
   //IntVector idxHiW = vars->cellType.getFortHighIndex();
@@ -1536,12 +1536,12 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   // ** WARNING ** Symmetry is hardcoded to -3
   int symmetry_celltypeval = -3;
 
-  bool xminus = (patch->getBCType(Patch::xminus) == Patch::Neighbor)?0:1;
-  bool xplus =  (patch->getBCType(Patch::xplus) == Patch::Neighbor)?0:1;
-  bool yminus = (patch->getBCType(Patch::yminus) == Patch::Neighbor)?0:1;
-  bool yplus =  (patch->getBCType(Patch::yplus) == Patch::Neighbor)?0:1;
-  bool zminus = (patch->getBCType(Patch::zminus) == Patch::Neighbor)?0:1;
-  bool zplus =  (patch->getBCType(Patch::zplus) == Patch::Neighbor)?0:1;
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
   //fortran call
   fort_bcpress(domLo, domHi, idxLo, idxHi, vars->pressure,
@@ -1603,12 +1603,12 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
   int outletfield = -5;
   int ffield = -1;
   double fmixin = 0.0;
-  bool xminus = (patch->getBCType(Patch::xminus) == Patch::Neighbor)?0:1;
-  bool xplus =  (patch->getBCType(Patch::xplus) == Patch::Neighbor)?0:1;
-  bool yminus = (patch->getBCType(Patch::yminus) == Patch::Neighbor)?0:1;
-  bool yplus =  (patch->getBCType(Patch::yplus) == Patch::Neighbor)?0:1;
-  bool zminus = (patch->getBCType(Patch::zminus) == Patch::Neighbor)?0:1;
-  bool zplus =  (patch->getBCType(Patch::zplus) == Patch::Neighbor)?0:1;
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
   //fortran call
   fort_bcscalar(domLo, domHi, idxLo, idxHi, vars->scalar,
@@ -1657,12 +1657,12 @@ BoundaryCondition::enthalpyBC(const ProcessorGroup*,
   int sfield = -4;
   int outletfield = -5;
   int ffield = -1;
-  bool xminus = (patch->getBCType(Patch::xminus) == Patch::Neighbor)?0:1;
-  bool xplus =  (patch->getBCType(Patch::xplus) == Patch::Neighbor)?0:1;
-  bool yminus = (patch->getBCType(Patch::yminus) == Patch::Neighbor)?0:1;
-  bool yplus =  (patch->getBCType(Patch::yplus) == Patch::Neighbor)?0:1;
-  bool zminus = (patch->getBCType(Patch::zminus) == Patch::Neighbor)?0:1;
-  bool zplus =  (patch->getBCType(Patch::zplus) == Patch::Neighbor)?0:1;
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
   //fortran call
   fort_bcenthalpy(domLo, domHi, idxLo, idxHi, vars->enthalpy,
@@ -1702,12 +1702,12 @@ BoundaryCondition::enthalpyRadWallBC(const ProcessorGroup*,
 
   // Get the wall boundary and flow field codes
   int wall_celltypeval = d_wallBdry->d_cellTypeID;
-  bool xminus = (patch->getBCType(Patch::xminus) == Patch::Neighbor)?0:1;
-  bool xplus =  (patch->getBCType(Patch::xplus) == Patch::Neighbor)?0:1;
-  bool yminus = (patch->getBCType(Patch::yminus) == Patch::Neighbor)?0:1;
-  bool yplus =  (patch->getBCType(Patch::yplus) == Patch::Neighbor)?0:1;
-  bool zminus = (patch->getBCType(Patch::zminus) == Patch::Neighbor)?0:1;
-  bool zplus =  (patch->getBCType(Patch::zplus) == Patch::Neighbor)?0:1;
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
   //fortran call
   fort_enthalpyradwallbc(idxLo, idxHi, vars->qfluxe, vars->qfluxw,
@@ -1763,12 +1763,12 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
       
       // assign flowType the value that corresponds to flow
       //CellTypeInfo flowType = FLOW;
-      bool xminus = (patch->getBCType(Patch::xminus) == Patch::Neighbor)?0:1;
-      bool xplus =  (patch->getBCType(Patch::xplus) == Patch::Neighbor)?0:1;
-      bool yminus = (patch->getBCType(Patch::yminus) == Patch::Neighbor)?0:1;
-      bool yplus =  (patch->getBCType(Patch::yplus) == Patch::Neighbor)?0:1;
-      bool zminus = (patch->getBCType(Patch::zminus) == Patch::Neighbor)?0:1;
-      bool zplus =  (patch->getBCType(Patch::zplus) == Patch::Neighbor)?0:1;
+      bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+      bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+      bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+      bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+      bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+      bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
       fort_inlbcs(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
 		  density, cellType, fi.d_cellTypeID, time,
 		  xminus, xplus, yminus, yplus, zminus, zplus);
@@ -1888,12 +1888,12 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
       cerr << "PPP"<<*iter << ": " << pressure[*iter] << "\n" ; 
     }
 #endif
-    bool xminus = (patch->getBCType(Patch::xminus) == Patch::Neighbor)?0:1;
-    bool xplus =  (patch->getBCType(Patch::xplus) == Patch::Neighbor)?0:1;
-    bool yminus = (patch->getBCType(Patch::yminus) == Patch::Neighbor)?0:1;
-    bool yplus =  (patch->getBCType(Patch::yplus) == Patch::Neighbor)?0:1;
-    bool zminus = (patch->getBCType(Patch::zminus) == Patch::Neighbor)?0:1;
-    bool zplus =  (patch->getBCType(Patch::zplus) == Patch::Neighbor)?0:1;
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
     fort_calpbc(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
 		pressure, density, cellType, d_pressureBdry->d_cellTypeID,
@@ -2006,12 +2006,12 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     }
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
-    bool xminus = (patch->getBCType(Patch::xminus) == Patch::Neighbor)?0:1;
-    bool xplus =  (patch->getBCType(Patch::xplus) == Patch::Neighbor)?0:1;
-    bool yminus = (patch->getBCType(Patch::yminus) == Patch::Neighbor)?0:1;
-    bool yplus =  (patch->getBCType(Patch::yplus) == Patch::Neighbor)?0:1;
-    bool zminus = (patch->getBCType(Patch::zminus) == Patch::Neighbor)?0:1;
-    bool zplus =  (patch->getBCType(Patch::zplus) == Patch::Neighbor)?0:1;
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     
     // loop thru the flow inlets to set all the components of velocity and density
     for (int indx = 0; indx < d_numInlets; indx++) {
