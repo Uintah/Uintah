@@ -61,9 +61,12 @@ itcl_class ConfigBase {
 	set cv [open config.values w]
 	set ch [open config.h.tmp w]
 	set cm [open config_imake.h.tmp w]
+	puts $ch "#ifndef SCI_CONFIG_H"
+	puts $ch "#define SCI_CONFIG_H 1"
 	foreach t $instances {
 	    $t do_apply $cv $ch $cm
 	}
+	puts $ch "#endif"
 	close $cv
 	close $ch
 	close $cm
