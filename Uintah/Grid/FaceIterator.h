@@ -47,11 +47,11 @@ WARNING
       inline FaceIterator operator++(int) {
 	 FaceIterator old(*this);
 	 
-	 if(++d_iz >= d_ez){
-	    d_iz = d_sz;
+	 if(++d_ix >= d_ex){
+	    d_ix = d_sx;
 	    if(++d_iy >= d_ey){
 	       d_iy = d_sy;
-	       ++d_ix;
+	       ++d_iz;
 	    }
 	 }
 	 return old;
@@ -107,6 +107,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::FaceIterator& b);
 
 //
 // $Log$
+// Revision 1.2  2000/06/16 05:19:21  sparker
+// Changed arrays to fortran order
+//
 // Revision 1.1  2000/06/14 21:59:35  jas
 // Copied CCVariable stuff to make FCVariables.  Implementation is not
 // correct for the actual data storage and iteration scheme.

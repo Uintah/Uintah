@@ -1,4 +1,3 @@
-remove fudge from cmr, etc.
 Classes:
  - DataWarehouse/scheduler in detail
  - Peformance analysis
@@ -14,30 +13,16 @@ Optimize!
 Compare gets/puts with task data
 Nix DataItem?
 Particle IDs
-ParticleSet associated with Region/Patch
-Region -> Patch
 semi-consistent struct printou
 
-Region contains point
 Pass const Matrix3& in const. models.
 Time with normal malloc vs. my malloc
 Malloc: return large chunks under memory pressure
 large pages
 
-change nx in Region to numCellsX or something
 Wrong ProcessorContext sent into serial codes - should be nthreads=1
-
-
-Convert ICE to use scheduler
-What aboute face centered variables - ask Todd.
 constHandle?
 
 
 7. PSE integration
   - sort out handles/RefCounted
-
-cfd/mpm interface
-ICE
-MPM
-Parallelism (threads)
-MPI
