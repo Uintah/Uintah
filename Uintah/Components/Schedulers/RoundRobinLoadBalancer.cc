@@ -34,8 +34,12 @@ void RoundRobinLoadBalancer::assignResources(TaskGraph& graph,
    for(int i=0;i<nTasks;i++){
       Task* task = graph.getTask(i);
       if(task->getPatch()){
-	 task->assignResource(task->getPatch()->getID() / maxThreads
-			                                      % numProcs);
+	 // If there are less patches than threads, "divBy" will distribute
+	 // the work to both processors.
+	 int divBy = min( maxThreads, numProcs - 1 );
+	 // If there is only one processor, we need divBy to be 1.
+	 divBy = max( divBy, 1 );
+	 task->assignResource( (task->getPatch()->getID() / divBy) % numProcs);
       } else {
 	if( Parallel::usingMPI() && task->isReductionTask() ){
 	  task->assignResource( Parallel::getRootProcessorGroup()->myrank() );
@@ -57,6 +61,9 @@ int RoundRobinLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
 
 //
 // $Log$
+// Revision 1.5  2000/09/28 22:18:35  dav
+// assignResource updates
+//
 // Revision 1.4  2000/09/27 02:12:57  dav
 // Mixed Model Changes.
 //
