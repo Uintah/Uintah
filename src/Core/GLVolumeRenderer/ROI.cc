@@ -99,25 +99,23 @@ ROI::draw()
     loadTexture( b );
     //    setAlpha( b );
     enableBlend();
+    makeTextureMatrix( b );
+    enableTexCoords();
 #if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
     if( !VolShader->created() ){
       cerr<<"creating Volume Shader\n";
       VolShader->create();
     }
     VolShader->bind();
-#else
-    makeTextureMatrix( b );
-    enableTexCoords();
 #endif
     drawPolys( polys );
 #if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
      VolShader->release();
-#else
-     disableTexCoords();
 #endif
+     disableTexCoords();
      disableBlend();
   }
-  
+  reload_ = false;
 }
 
 void 

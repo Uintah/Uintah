@@ -68,10 +68,12 @@ public:
   void SetVol( GLTexture3DHandle tex ){ 
     mutex_.lock(); tex_ = tex; state_->NewBricks(); mutex_.unlock();}
   void SetColorMap( ColorMapHandle cmap){
-    mutex_.lock(); cmap_ = cmap; BuildTransferFunctions();
+    mutex_.lock(); cmap_ = cmap; 
+    BuildTransferFunctions();
     state_->NewColorMap();
     state_->Reload();
     cmap_has_changed_ = true; mutex_.unlock(); }
+
   void SetControlPoint( const Point& point){ control_point_ = point; }
 
   void Reload() { state_->Reload(); }
@@ -99,15 +101,19 @@ public:
     switch (mode) {
     case TRS_GLOverOp:
       tex_ren_state_ = state(oo_, 0);
+      alphamult_ = true;
       break;
     case TRS_GLMIP:
       tex_ren_state_ = state(mip_, 0);
+      alphamult_ = false;
       break;
     case TRS_GLAttenuate:
       tex_ren_state_ = state(atten_, 0);
+      alphamult_ = true;
       break;
     case TRS_GLPlanes:
       tex_ren_state_ = state(planes_, 1);
+      alphamult_ = false;
       break;
     default:
       ASSERTFAIL("invalid tex_ren_state");
@@ -211,6 +217,7 @@ private:
   static double         swap_matrix_[16];
   static int            r_count_;
   unsigned char         transfer_functions_[8][1024];
+  bool                  alphamult_;
 };
 
 template <class T> 

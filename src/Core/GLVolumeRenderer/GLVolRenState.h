@@ -31,9 +31,11 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <iostream>
 
 namespace SCIRun {
 
+using std::cerr;
 class Polygon;
 class Brick; 
 using std::vector;
@@ -90,7 +92,8 @@ public:
   // draw Wireframe
   virtual void drawWireFrame() = 0;
   
-  void Reload(){reload_ = true;}
+  void Reload(){ reload_ = true;}
+
   void NewBricks(){ newbricks_ = true; }
   void NewColorMap(){ newcmap_ = true; }
 
@@ -119,8 +122,9 @@ protected:
   BBox bounding_box_;
 
 #if defined(GL_ARB_fragment_program) && defined(__APPLE__)
-  FragmentProgramARB *VolShader;
+  static FragmentProgramARB *VolShader;
 #endif
+  GLuint cmap_texture_;
 
 };
 
