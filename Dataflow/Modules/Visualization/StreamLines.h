@@ -41,23 +41,18 @@ public:
 			      int maxsteps,
 			      int direction,
 			      int color,
-			      bool remove_colinear_p) = 0;
+			      bool remove_colinear_p,
+			      int method) = 0;
 
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *smesh,
 				       const TypeDescription *sloc);
 protected:
-  //bool interpolate(VectorFieldInterface *vfi, const Point &p, Vector &v);
 
   //! This particular implementation uses Runge-Kutta-Fehlberg.
-  void FindStreamLineNodes(vector<Point>&, Point, double, double, int, 
-  			   VectorFieldInterface *, bool remove_colinear_p);
-
-  //! Compute the inner terms of the RKF formula.
-  //bool ComputeRKFTerms(vector<Vector> &, const Point&, double,
-  //		       VectorFieldInterface *);
-
+  void FindNodes(vector<Point>&, Point, double, double, int, 
+		 VectorFieldInterface *, bool remove_colinear_p, int method);
 };
 
 
@@ -73,7 +68,8 @@ public:
 			      int maxsteps,
 			      int direction,
 			      int color,
-			      bool remove_colinear_p);
+			      bool remove_colinear_p,
+			      int method);
 };
 
 
@@ -87,7 +83,8 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
 				       int maxsteps,
 				       int direction,
 				       int color,
-				       bool rcp)
+				       bool rcp,
+				       int met)
 {
   SMESH *smesh = dynamic_cast<SMESH *>(seed_mesh_h.get_rep());
 
@@ -124,10 +121,11 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
     int cc = 0;
 
     // Find the negative streamlines.
-    if( direction <= 1 ) {
-      FindStreamLineNodes(nodes, seed, tolerance2, -stepsize,
-			  maxsteps, vfi, rcp);
-      if( direction == 1 ) {
+    if( direction <= 1 )
+    {
+      FindNodes(nodes, seed, tolerance2, -stepsize, maxsteps, vfi, rcp, met);
+      if ( direction == 1 )
+      {
 	std::reverse(nodes.begin(), nodes.end());
 	cc = nodes.size();
 	cc = -(cc - 1);
@@ -135,8 +133,9 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
     }
     // Append the positive streamlines.
     if( direction >= 1 )
-      FindStreamLineNodes(nodes, seed, tolerance2, stepsize,
-			  maxsteps, vfi, rcp);
+    {
+      FindNodes(nodes, seed, tolerance2, stepsize, maxsteps, vfi, rcp, met);
+    }
 
     node_iter = nodes.begin();
 
