@@ -241,7 +241,8 @@ Parallel::finalizeManager(Circumstances circumstances)
       if(getenv("LAMWORLD") || getenv("LAMRANK")){
         errorcode = (errorcode << 16) + 1; // see LAM man MPI_Abort
       }
-      cout << "An exception was thrown... Goodbye.\n";
+      if (Parallel::getMPIRank() == 0)
+        cout << "An exception was thrown... Goodbye.\n";
       cerr.flush();
       cout.flush();
       sleep(1);
