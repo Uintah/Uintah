@@ -2828,6 +2828,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         Vector vel(0.0,0.0,0.0);
         Vector acc(0.0,0.0,0.0);
+        double fricTempRate = 0.0;
         double tempRate = 0.0;
         double burnFraction = 0.0;
 
@@ -2837,8 +2838,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           S[k] *= pErosion[idx];
           vel      += gvelocity_star[node]  * S[k];
           acc      += gacceleration[node]   * S[k];
+
+          fricTempRate = frictionTempRate[node]*flags->d_addFrictionWork;
           tempRate += (gTemperatureRate[node] + dTdt[node] +
-                       frictionTempRate[node])   * S[k];
+                       fricTempRate)   * S[k];
           burnFraction += massBurnFrac[node]     * S[k];
         }
 
