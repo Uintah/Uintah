@@ -178,7 +178,7 @@ TextureBuilder::execute()
     }
   }
 
-  if(   MRLatVolField<double>* vmrfield =
+  if( MRLatVolField<double>* vmrfield =
       dynamic_cast< MRLatVolField< double >* > (vfield.get_rep()) ) {
 
     for(int i = 0 ; i < vmrfield->nlevels(); i++ ){
@@ -186,7 +186,6 @@ TextureBuilder::execute()
       for(unsigned int j = 0; j < lev->patches.size(); j++ ){
 	LatVolField<double>* vmr = lev->patches[j].get_rep(); 
 	LatVolMeshHandle mesh = vmr->get_typed_mesh();
-//  	cerr<<"Mesh "<<j<<" grabbed at level "<<i<<" with value = "<<mesh.get_rep()<<"\n";
       }
     }
   }
