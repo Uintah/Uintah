@@ -61,8 +61,9 @@ public:
 
     // For OpenGL
 #ifdef SCI_OPENGL
-    void pre_draw(DrawInfoOpenGL*, Material*, int lit);
+    int pre_draw(DrawInfoOpenGL*, Material*, int lit);
     virtual void draw(DrawInfoOpenGL*, Material*, double time)=0;
+    int post_draw(DrawInfoOpenGL*);
 #endif
     static PersistentTypeID type_id;
 
@@ -77,6 +78,11 @@ void Pio(Piostream&, GeomObj*&);
 
 //
 // $Log$
+// Revision 1.7  1999/10/16 20:51:00  jmk
+// forgive me if I break something -- this fixes picking and sets up sci
+// bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology
+// gota getup to get down.
+//
 // Revision 1.6  1999/10/07 02:07:42  sparker
 // use standard iostreams and complex type
 //
