@@ -30,7 +30,6 @@
 #define SCIRun_Framework_FEM_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-//#include "Matrix.h"
 
 #define myUIPort FEMUIPort
 #define myGoPort FEMGoPort
