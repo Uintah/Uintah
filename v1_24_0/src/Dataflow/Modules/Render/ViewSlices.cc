@@ -255,7 +255,6 @@ class ViewSlices : public Module
   ColorMapHandle	colormap_;
   int			colormap_generation_;
 
-  WindowLayout *	current_layout_;
   SliceWindow *		zooming_;
   SliceWindow *		panning_;
   double		original_zoom_;
@@ -456,6 +455,7 @@ public:
   virtual void		tcl_command(GuiArgs& args, void*);
   void			real_draw_all();
   double		fps_;
+  WindowLayout *	current_layout_;
 };
 
 
@@ -502,7 +502,7 @@ RealDrawer::run()
   double time_since_frame_count_start;
   int frames = -1;
   while (!dead_) {
-    //    throttle_.wait_for_time(t);
+    if (!module_->current_layout_) throttle_.wait_for_time(t);
     if (dead_) continue;
     module_->real_draw_all();
     t2 = throttle_.time();
@@ -690,7 +690,6 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   cm2_buffer_over_(256, 256, 4),
   colormap_(0),
   colormap_generation_(-1),
-  current_layout_(0),
   zooming_(0),
   panning_(0),
   cursor_(0.0, 0.0, 0.0),
@@ -742,7 +741,8 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   font_size_(ctx->subVar("font_size"),15.0),
   runner_(0),
   runner_thread_(0),
-  fps_(0.0)
+  fps_(0.0),
+  current_layout_(0)
 {
   nrrd_generations_.resize(2);
   nrrd_generations_[0] = -1;
@@ -784,10 +784,10 @@ ViewSlices::render_window(SliceWindow &window) {
   }
   
   for_each(window, &ViewSlices::draw_slice);
+
   //  draw_dark_slice_regions(window);
   draw_slice_lines(window);
   //  draw_slice_arrows(window);
-
   draw_guide_lines(window, cursor_.x(), cursor_.y(), cursor_.z());
   
   if (crop_) {
@@ -798,7 +798,6 @@ ViewSlices::render_window(SliceWindow &window) {
   } else {
     set_window_cursor(window, 0);
   }
-  
   draw_all_labels(window);
   window.viewport_->release();
   GL_ERROR();
@@ -1665,8 +1664,8 @@ ViewSlices::draw_label(SliceWindow &window, string text, int x, int y,
     fttext.get_bounds(bbox);
   }
 
-  unsigned int wid = Pow2(Round(bbox.max().x()));
-  unsigned int hei = Pow2(Round(bbox.max().y()));
+  unsigned int wid = Pow2(Ceil(bbox.max().x()));
+  unsigned int hei = Pow2(Ceil(bbox.max().y()));
   GLubyte *buf = scinew GLubyte[wid*hei];
   memset(buf, 0, wid*hei);
   fttext.render(wid, hei, buf);
@@ -1712,21 +1711,23 @@ ViewSlices::draw_label(SliceWindow &window, string text, int x, int y,
   const double dy = 1.0/window.viewport_->height();
   
   glBegin(GL_QUADS);
-
+  
   glTexCoord2f(0.0, 0.0);
   glVertex3f(px*dx, py*dy, 0.0);
-
+  
   glTexCoord2f(1.0, 0.0);
   glVertex3f(dx*(px+wid), py*dy, 0.0);
-
+  
   glTexCoord2f(1.0, 1.0);
   glVertex3f(dx*(px+wid), dy*(py+hei) , 0.0);
-
+  
   glTexCoord2f(0.0, 1.0);
   glVertex3f(px*dx, dy*(py+hei), 0.0);
-
+  
   glEnd();
   glDeleteTextures(1, &tex_id);
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glDisable(GL_TEXTURE_2D);
 }  
 
 
