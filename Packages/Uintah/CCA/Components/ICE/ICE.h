@@ -378,9 +378,14 @@ using namespace SCIRun;
       bool d_massExchange;
       bool d_RateForm;
       bool d_EqForm;
+      bool d_add_delP_Dilatate; 
       int d_dbgVar1;
       int d_dbgVar2;
       int d_max_iter_equilibration;
+      vector<int>    d_add_heat_matls;
+      vector<double> d_add_heat_coeff;
+      double         d_add_heat_iters;
+      bool           d_add_heat;
      
     private:
       friend class MPMICE;
