@@ -59,7 +59,7 @@ int main(int argc, char** argv)
     // task, and the Task* will be deleted by the task manager
 
     // if slave, then create daemon, not scheduler
-    if (strcmp (argv[1], "-slave") == 0) {
+    if (argc > 1 && strcmp (argv[1], "-slave") == 0) {
 	global_remote = true;
 	SlaveController* remote_task = new SlaveController(net,argv[2],argv[3]);
 	remote_task->activate(0);  
