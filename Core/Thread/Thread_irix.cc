@@ -897,7 +897,7 @@ Barrier_private::Barrier_private()
 	if(use_fetchop){
 	    flag=0;
 	    pvar=atomic_alloc_variable(reservoir, 0);
-	    fprintf(stderr, "***Alloc: %p\n", pvar);
+	    //	    fprintf(stderr, "***Alloc: %p\n", pvar);
 	    if(!pvar)
 		throw ThreadError(std::string("fetchop_alloc failed")
 				  +strerror(errno));
@@ -923,7 +923,7 @@ Barrier::~Barrier()
 {
     if (nprocessors > 1) {
     	if(use_fetchop){
-	    fprintf(stderr, "***Alloc free: %p\n", d_priv->pvar);
+	    //	    fprintf(stderr, "***Alloc free: %p\n", d_priv->pvar);
 //	    atomic_free_variable(reservoir, d_priv->pvar);
         } else {
 	    free_barrier(d_priv->barrier);
@@ -995,7 +995,7 @@ AtomicCounter::AtomicCounter(const char* name)
     }
     if(use_fetchop){
 	d_priv=(AtomicCounter_private*)atomic_alloc_variable(reservoir, 0);
- 	fprintf(stderr, "***Alloc atomcounter: %p\n", d_priv);
+	// 	fprintf(stderr, "***Alloc atomcounter: %p\n", d_priv);
 	if(!d_priv)
 	    throw ThreadError(std::string("fetchop_alloc failed")
 					  +strerror(errno));
@@ -1012,7 +1012,7 @@ AtomicCounter::AtomicCounter(const char* name, int value)
     }
     if(use_fetchop){
 	d_priv=(AtomicCounter_private*)atomic_alloc_variable(reservoir, 0);
- 	fprintf(stderr, "***Alloc atomcounter: %p\n", d_priv);
+	// 	fprintf(stderr, "***Alloc atomcounter: %p\n", d_priv);
 	if(!d_priv)
 	    throw ThreadError(std::string("fetchop_alloc failed")
 					  +strerror(errno));
@@ -1026,7 +1026,7 @@ AtomicCounter::AtomicCounter(const char* name, int value)
 AtomicCounter::~AtomicCounter()
 {
     if(use_fetchop){
- 	fprintf(stderr, "***Alloc free: %p\n", d_priv);
+	// 	fprintf(stderr, "***Alloc free: %p\n", d_priv);
 //	atomic_free_variable(reservoir, (atomic_var_t*)d_priv);
     } else {
 	delete d_priv;
@@ -1324,6 +1324,9 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.22  2000/04/11 06:47:44  sparker
+// Commented out print statement for fetchop_alloc calls
+//
 // Revision 1.21  2000/03/23 10:21:27  sparker
 // Use libexc to print out stack straces on the SGI
 // Added "name" method to ThreadError to match exception base class
