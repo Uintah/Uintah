@@ -15,6 +15,10 @@
 # The Original Source Code was developed by the University of Utah.
 # Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 # University of Utah. All Rights Reserved.
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
 global notes
 set notes ""
 
@@ -57,7 +61,7 @@ set c9 [addConnection $m1 1 $m7 2]
 # Setup GUI for the SCIRun->FieldsCreate->FieldBoundary Module
 
 # Setup GUI for the SCIRun->DataIO->FieldReader Module
-setGlobal $m2-filename {/scratch/callahan/SCIRunData/sphere/sphere-voltage.tvd.fld}
+setGlobal $m2-filename "$DATADIR/$DATASET/$DATASET-voltage.tvd.fld"
 
 # Setup GUI for the SCIRun->Visualization->ShowField Module
 setGlobal $m3-use-transparency {1}
@@ -167,9 +171,6 @@ setGlobal $m6-ViewWindow_0-clip-normal-x-6 {}
 setGlobal $m6-ViewWindow_0-clip-normal-y-6 {}
 setGlobal $m6-ViewWindow_0-clip-normal-z-6 {}
 setGlobal $m6-ViewWindow_0-clip-normal-d-6 {}
-setGlobal $m6-ViewWindow_0-unused {1}
-setGlobal $m6-ViewWindow_0-unused {1}
-setGlobal $m6-ViewWindow_0-unused {1}
 
 # Setup GUI for the SCIRun->FieldsData->ApplyInterpMatrix Module
 
