@@ -550,7 +550,7 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
 {
   // static double FPS = 15;
 
-  // DpyPrivate * priv = activeGui->priv;
+  DpyPrivate * priv = activeGui->priv;
 
   // int     & maxdepth       = priv->maxdepth;
   // bool    & stereo         = priv->stereo;  
@@ -558,7 +558,7 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   // double  & FrameRate      = priv->FrameRate;
   // bool    & draw_pstats    = priv->draw_pstats;
   // bool    & draw_rstats    = priv->draw_rstats;
-  // int     & showing_scene  = priv->showing_scene;
+  int     & showing_scene  = priv->showing_scene;
 
   // int     & left           = priv->left;
   // int     & up             = priv->up;
@@ -769,10 +769,6 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   case 27: // Escape key... need to find a symbolic name for this...
     activeGui->quit();
     break;
-  default:
-    printf("unknown regular key %d\n", key);
-    break;
-
 #if 0
     // below is for blending "pixels" in
     // frameless rendering...
@@ -799,11 +795,18 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     FrameRate = 1.0/FPS;
     cerr << FPS << endl;
     break;
-  case 'w':
-    cerr << "Saving file\n";
-    scene->get_image(showing_scene)->save("images/image.raw");
-    break;
 #endif
+  case 'W':
+    cerr << "Saving raw image file\n";
+    activeGui->dpy_->scene->get_image(showing_scene)->save("images/image.raw");
+    break;
+  case 'w':
+    cerr << "Saving ppm image file\n";
+    activeGui->dpy_->scene->get_image(showing_scene)->save_ppm("images/image.ppm");
+    break;
+  default:
+    printf("unknown regular key %d\n", key);
+    break;
   }
 } // end handleKeyPress();
 
