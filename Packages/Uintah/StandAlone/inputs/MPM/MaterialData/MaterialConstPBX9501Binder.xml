@@ -1,7 +1,4 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
-
-<!-- Annealed Copper -->
-
 <Uintah_Include>
   <density>1900.0</density>
   <toughness>10.e6</toughness>
