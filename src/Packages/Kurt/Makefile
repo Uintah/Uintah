@@ -20,11 +20,11 @@ GLOBUS_LIB_DIR =
 GLOBUSLIBS = -L$(GLOBUS_LIB_DIR) -lglobus_nexus -lglobus_io
 endif
 
-SOLIBRARIES = -L$(OBJTOP)/PSECore -lPSECore \
+SOLIBRARIES = -lGLU -lGL \
+              -L$(OBJTOP)/PSECore -lPSECore \
 	      $(COMPONENTLIBS) \
               -L$(OBJTOP)/SCICore -lSCICore \
 	      $(GLOBUSLIBS) \
-	      -lGLU -lGL \
               -L$(ITCL_LIB_DIR) $(ITCL_LIB_FLAG) \
               -L$(TK_LIB_DIR) $(TK_LIB_FLAG) \
               -L$(TCL_LIB_DIR) $(TCL_LIB_FLAG) \

@@ -6,14 +6,10 @@ namespace Kurt{
 
 template<class T>
 VolumeOctree<T>::VolumeOctree(const Point min, const Point max, 
-			  const T stored, 
-			  nodeType t)
+			      const T stored, int nodeId,
+			      nodeType t):
+  min(min), max(max), t(t), stored(stored), id(nodeId)
 {
-  this->min = min;
-  this->max = max;
-  this->t = t;
-  this->stored = stored;
-
   if( t == LEAF ){
     children = NULL;
   } else {
