@@ -309,13 +309,19 @@ public:
     Point p0 = grid->get_point(i, j, k);
     Point p1 = p0 + x;
     Point p2 = p0 - x;
-    g->add(new GeomLine(p1, p2));
+    GeomLine *l = new GeomLine(p1, p2);
+    l->setLineWidth(3.0);
+    g->add(l);
     p1 = p0 + y;
     p2 = p0 - y;
-    g->add(new GeomLine(p1, p2));
+    l = new GeomLine(p1, p2);
+    l->setLineWidth(3.0);
+    g->add(l);
     p1 = p0 + z;
     p2 = p0 - z;
-    g->add(new GeomLine(p1, p2));
+    l = new GeomLine(p1, p2);
+    l->setLineWidth(3.0);
+    g->add(l);
   }
 
   //////////
