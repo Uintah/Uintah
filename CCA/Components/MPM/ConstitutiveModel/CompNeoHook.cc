@@ -294,7 +294,8 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(bElBar_old, lb->bElBarLabel, pset);
     if (recursion)
-      old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
+      new_dw->get(dispNew,lb->dispNewLabel,matlindex,patch,
+		  Ghost::AroundCells,1);
     else
       new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
     
@@ -752,7 +753,7 @@ void CompNeoHook::addComputesAndRequiresImplicit(Task* task,
   
   task->requires(Task::OldDW,lb->bElBarLabel,matlset,Ghost::None);
   if (recursion)
-    task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
+    task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
   else
     task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
   
