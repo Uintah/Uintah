@@ -83,9 +83,9 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 void 
 MomentumSolver::solve(const LevelP& level,
 		      SchedulerP& sched,
-		      DataWarehouseP& old_dw,
+		      DataWarehouseP& /*old_dw*/,
 		      DataWarehouseP& new_dw,
-		      double time, double delta_t, int index)
+		      double /*time*/, double delta_t, int index)
 {
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
@@ -607,13 +607,15 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   d_linearSolver->computeVelUnderrelax(pc, patch, new_dw, matrix_dw, index, 
 				     d_velocityVars);
   // initial guess for explicit calculation
+#if 0
   new_dw->get(d_velocityVars->old_uVelocity, d_lab->d_uVelocityCPBCLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
   new_dw->get(d_velocityVars->old_vVelocity, d_lab->d_vVelocityCPBCLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
   new_dw->get(d_velocityVars->old_wVelocity, d_lab->d_wVelocityCPBCLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
-#ifdef 0
+#endif
+
   new_dw->allocate(d_velocityVars->old_uVelocity, d_lab->d_old_uVelocityGuess,
 			  matlIndex, patch);
   new_dw->allocate(d_velocityVars->old_vVelocity, d_lab->d_old_vVelocityGuess,
@@ -621,10 +623,10 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   new_dw->allocate(d_velocityVars->old_wVelocity, d_lab->d_old_wVelocityGuess,
 			  matlIndex, patch);
 
-  d_velocityVars->old_uVelocity = d_velocityVars->uVelocity;
-  d_velocityVars->old_vVelocity = d_velocityVars->vVelocity;
-  d_velocityVars->old_wVelocity = d_velocityVars->wVelocity;  
-#endif
+  d_velocityVars->old_uVelocity.copy(d_velocityVars->uVelocity);
+  d_velocityVars->old_vVelocity.copy(d_velocityVars->vVelocity);
+  d_velocityVars->old_wVelocity.copy(d_velocityVars->wVelocity);
+
   // make it a separate task later
   d_linearSolver->velocityLisolve(pc, patch, new_dw, matrix_dw, index, delta_t, 
 				  d_velocityVars, cellinfo, d_lab);
@@ -652,6 +654,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.30  2000/09/20 18:05:33  sparker
+// Adding support for Petsc and per-processor tasks
+//
 // Revision 1.29  2000/09/20 16:56:16  rawat
 // added some petsc parallel stuff and fixed some bugs
 //

@@ -71,7 +71,8 @@ public:
       PressureSolver(const ArchesLabel* label,
 		     TurbulenceModel* turb_model, 
 		     BoundaryCondition* bndry_cond,
-		     PhysicalConstants* physConst);
+		     PhysicalConstants* physConst,
+		     const ProcessorGroup* myworld);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -122,7 +123,7 @@ private:
       //
       // Default : Construct an empty instance of the Pressure solver.
       //
-      PressureSolver();
+      PressureSolver(const ProcessorGroup* myworld);
 
       // GROUP: Action Methods (private) :
       ///////////////////////////////////////////////////////////////////////
@@ -137,6 +138,11 @@ private:
 			     DataWarehouseP& matrix_dw,
 			     double delta_t);
 
+      void pressureLinearSolve_all(const ProcessorGroup* pc,
+				   const Patch* patch,
+				   DataWarehouseP& new_dw,
+				   DataWarehouseP& matrix_dw,
+				   LevelP level, SchedulerP sched);
       void pressureLinearSolve(const ProcessorGroup* pc,
 			       const Patch* patch,
 			       DataWarehouseP& new_dw,
@@ -155,6 +161,7 @@ private:
   
 
  private:
+
       // stores the variables used by different functions
       ArchesVariables* d_pressureVars;
       
@@ -181,6 +188,7 @@ private:
       // const VarLabel* (required)
       const ArchesLabel* d_lab;
 
+   const ProcessorGroup* d_myworld;
 }; // End class PressureSolver
 
 }  // End namespace ArchesSpace
@@ -190,6 +198,9 @@ private:
 
 //
 // $Log$
+// Revision 1.28  2000/09/20 18:05:34  sparker
+// Adding support for Petsc and per-processor tasks
+//
 // Revision 1.27  2000/08/11 21:26:36  rawat
 // added linear solver for pressure eqn
 //

@@ -48,7 +48,7 @@ public:
       //
       // Blank constructor for NonlinearSolver.
       //
-      NonlinearSolver();
+      NonlinearSolver(const ProcessorGroup* myworld);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -80,6 +80,8 @@ public:
 				 DataWarehouseP& new_dw,
 				 double time, double deltat) = 0;
   
+protected:
+   const ProcessorGroup* d_myworld;
 private:
 
 }; // End class NonlinearSolver
@@ -90,6 +92,9 @@ private:
 
 //
 // $Log$
+// Revision 1.10  2000/09/20 18:05:33  sparker
+// Adding support for Petsc and per-processor tasks
+//
 // Revision 1.9  2000/06/04 23:57:46  bbanerje
 // Updated Arches to do ScheduleTimeAdvance.
 //

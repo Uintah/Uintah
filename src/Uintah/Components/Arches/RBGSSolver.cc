@@ -1070,8 +1070,16 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
    
 }
 
+void 
+RBGSSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
+{
+}
+
 //
 // $Log$
+// Revision 1.24  2000/09/20 18:05:34  sparker
+// Adding support for Petsc and per-processor tasks
+//
 // Revision 1.23  2000/09/20 16:56:16  rawat
 // added some petsc parallel stuff and fixed some bugs
 //

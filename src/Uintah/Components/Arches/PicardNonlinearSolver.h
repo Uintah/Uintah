@@ -63,7 +63,8 @@ public:
 			    Properties* props, 
 			    BoundaryCondition* bc,
 			    TurbulenceModel* turbModel, 
-			    PhysicalConstants* physConst);
+			    PhysicalConstants* physConst,
+			    const ProcessorGroup* myworld);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -199,6 +200,9 @@ private:
 
 //
 // $Log$
+// Revision 1.20  2000/09/20 18:05:33  sparker
+// Adding support for Petsc and per-processor tasks
+//
 // Revision 1.19  2000/08/18 05:06:57  bbanerje
 // Added interpolation from FC Var to CC Var for velocity viz in
 // Picard.

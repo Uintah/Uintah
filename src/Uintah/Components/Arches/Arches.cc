@@ -102,7 +102,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->require("nonlinear_solver", nlSolver);
   if(nlSolver == "picard") {
     d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_props, d_boundaryCondition,
-					   d_turbModel, d_physicalConsts);
+					      d_turbModel, d_physicalConsts,
+					      d_myworld);
   }
   else
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver);
@@ -213,7 +214,7 @@ Arches::scheduleTimeAdvance(double time, double dt,
   //           pressureIN. scalarIN
   // compute : densityRCP, viscosityRCTS, [u,v,w]VelocityMS,
   //           pressurePS, scalarSS 
-  int error_code = d_nlSolver->nonlinearSolve(level, sched, old_dw, new_dw,
+  /*int error_code = */d_nlSolver->nonlinearSolve(level, sched, old_dw, new_dw,
 					      time, dt);
   //  if (!error_code) {
   //    old_dw = new_dw;
@@ -311,6 +312,9 @@ Arches::paramInit(const ProcessorGroup* ,
   
 //
 // $Log$
+// Revision 1.57  2000/09/20 18:05:33  sparker
+// Adding support for Petsc and per-processor tasks
+//
 // Revision 1.56  2000/08/19 05:53:43  bbanerje
 // Changed code so that output looks more like fortran output.
 //
