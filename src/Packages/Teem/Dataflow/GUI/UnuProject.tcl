@@ -38,8 +38,7 @@ itcl_class Teem_Unu_UnuProject {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -70,8 +69,9 @@ itcl_class Teem_Unu_UnuProject {
 		 
         pack $w.f.options.measure -side top -expand yes -fill x
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
+	makeSciButtonPanel $w.f $w $this
+	moveToCursor $w
+
 	pack $w.f -expand 1 -fill x
     }
 }

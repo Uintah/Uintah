@@ -86,30 +86,15 @@ UnuProject::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-//  cerr << "axis_="<<axis_.get()<<"  measure_="<<measure_.get()<<"\n";
-
   if (nrrdProject(nout, nin, axis_.get(), measure_.get(), nrrdTypeDefault)) {
     char *err = biffGetDone(NRRD);
     error(string("Error Projecting nrrd: ") + err);
     free(err);
   }
 
-  if (axis_.get() == 0) {  // fix tuple axis
-    Nrrd *ntmp = nrrdNew();
-    if (nrrdAxesInsert(ntmp, nout, 0)) {
-      char *err = biffGetDone(NRRD);
-      error(string("Error Inserting tuple axis: ") + err);
-      free(err);
-    }
-    nrrdNuke(nout);
-    nout = ntmp;
-    delete nout->axis[0].label;
-    nout->axis[0].label = strdup("Variance:Scalar");
-  }
-  
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-  nrrd->copy_sci_data(*nrrd_handle.get_rep());
+  //nrrd->copy_sci_data(*nrrd_handle.get_rep());
 
   onrrd_->send(NrrdDataHandle(nrrd));
 }

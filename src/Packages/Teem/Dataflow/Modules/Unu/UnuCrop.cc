@@ -137,22 +137,14 @@ UnuCrop::execute()
     // if the dim and sizes are the same don't clear.
     if ((num_axes_.get() == nrrdH->nrrd->dim)) {
       for (int a = 0; a < num_axes_.get(); a++) {
-	if (a == 0) {
-	  if (absmaxs_[a]->get() != nrrdH->get_tuple_axis_size() - 1) {
-	    do_clear = true;
-	    break;
-	  }
-	} else {
-	  if (absmaxs_[a]->get() != nrrdH->nrrd->axis[a].size - 1) {
-	    do_clear = true;
-	    break;
-	  }
+	if (absmaxs_[a]->get() != nrrdH->nrrd->axis[a].size - 1) {
+	  do_clear = true;
+	  break;
 	}
       }
     } else {
       do_clear = true;
     }
-
 
     if (do_clear) {
 
@@ -185,15 +177,8 @@ UnuCrop::execute()
       gui->execute(id.c_str() + string(" init_axes"));
 
       for (int a = 0; a < num_axes_.get(); a++) {
-	maxs_[a]->reset();
-      }
-      for (int a = 0; a < num_axes_.get(); a++) {
 	mins_[a]->set(0);
-	if (a == 0) {
-	  absmaxs_[a]->set(nrrdH->get_tuple_axis_size() - 1);
-	} else {
-	  absmaxs_[a]->set(nrrdH->nrrd->axis[a].size - 1);
-	}
+	absmaxs_[a]->set(nrrdH->nrrd->axis[a].size - 1);
 	maxs_[a]->reset();
 	absmaxs_[a]->reset();
       }
@@ -236,33 +221,14 @@ UnuCrop::execute()
   Nrrd *nin = nrrdH->nrrd;
   Nrrd *nout = nrrdNew();
 
-  // translate the tuple index into the real offsets for a tuple axis.
-  int tmin, tmax;
-  if (! nrrdH->get_tuple_index_info(mins_[0]->get(), maxs_[0]->get(), 
-				    tmin, tmax)) {
-    error("Tuple index out of range");
-    return;
-  }
-  vector<string> elems;
-  nrrdH->get_tuple_indecies(elems);
-  string olabel;
-  for (int i = mins_[0]->get(); i <= maxs_[0]->get(); i++) {
-    if (i == mins_[0]->get()) { // first one;
-      olabel = elems[i];
-    } else {
-      olabel = olabel + "," + elems[i];
-    }
-  }
 
   int *min = scinew int[num_axes_.get()];
   int *max = scinew int[num_axes_.get()];
 
-  for(int i = 1; i <  num_axes_.get(); i++) {
+  for(int i = 0; i <  num_axes_.get(); i++) {
     min[i] = mins_[i]->get();
     max[i] = maxs_[i]->get();
   }
-  min[0] = tmin;
-  max[0] = tmax;
 
   if (nrrdCrop(nout, nin, min, max)) {
     char *err = biffGetDone(NRRD);
@@ -273,8 +239,7 @@ UnuCrop::execute()
 
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-  nout->axis[0].label = strdup(olabel.c_str());
-  nrrd->copy_sci_data(*nrrdH.get_rep());
+  //nrrd->copy_sci_data(*nrrdH.get_rep());
   last_nrrdH_ = nrrd;
   onrrd_->send(last_nrrdH_);
 

@@ -33,10 +33,6 @@ itcl_class Teem_Unu_UnuMake {
 	global $this-filename
 	global $this-header_filename
 	global $this-header_filetype
-	global $this-label
-	global $this-type
-	global $this-axis
-	global $this-sel
 	global $this-write_header
 	global $this-data_type
 	global $this-samples
@@ -57,10 +53,6 @@ itcl_class Teem_Unu_UnuMake {
 	set $this-filename ""
 	set $this-header_filename ""
 	set $this-header_filetype ASCII
-	set $this-label unknown
-	set $this-type Scalar
-	set $this-axis ""
-	set $this-sel ""
 	set $this-write_header 0
 	set $this-data_type "unsigned char"
 	set $this-samples ""
@@ -90,12 +82,12 @@ itcl_class Teem_Unu_UnuMake {
 	set w [format "%s-fb" .ui[modname]]
 
 	if {[winfo exists $w]} {
-	    if { [winfo ismapped $w] == 1} {
-		raise $w
-	    } else {
-		wm deiconify $w
-	    }
-	    return $w
+ 	    if { [winfo ismapped $w] == 1} {
+ 		raise $w
+ 	    } else {
+ 		wm deiconify $w
+ 	    }
+ 	    return $w
 	}
 
 	toplevel $w -class TkFDialog
@@ -132,7 +124,7 @@ itcl_class Teem_Unu_UnuMake {
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-filename \
-	    -command "set $this-axis \"\"; wm withdraw $w" \
+	    -command "wm withdraw $w" \
 	    -cancel "wm withdraw $w" \
 	    -title $title \
 	    -filetypes $types \
@@ -155,12 +147,12 @@ itcl_class Teem_Unu_UnuMake {
 	set w [format "%s-hfb" .ui[modname]]
 	
 	if {[winfo exists $w]} {
-	    if { [winfo ismapped $w] == 1} {
-		raise $w
-	    } else {
-		wm deiconify $w
-	    }
-	    return $w
+ 	    if { [winfo ismapped $w] == 1} {
+ 		raise $w
+ 	    } else {
+ 		wm deiconify $w
+ 	    }
+ 	    return $w
 	}
 	toplevel $w -class TkFDialog
 	set initdir ""
@@ -212,12 +204,6 @@ itcl_class Teem_Unu_UnuMake {
 	return $w
     }
 
-    # Method called to update type
-    method update_type {om} {
-	global $this-type
-	set $this-type [$om get]
-    }
-    
     # Method called when encoding changed
     method update_encoding {om} {
  	global $this-encoding
@@ -236,34 +222,6 @@ itcl_class Teem_Unu_UnuMake {
 	}
     }
 
-
-    # Set the axis variable
-    method set_axis {w} {
-	if {[get_selection $w] != ""} {
-	    set $this-axis [get_selection $w]
-	}
-    }
-
-    method clear_axis_info {} {
-	set w .ui[modname]
-	if {[winfo exists $w]} {
-	    delete_all_axes $w.rb
-	}
-    }
-
-    method add_axis_info {id label center size spacing min max} {
-	set w .ui[modname]
-	if {[winfo exists $w]} {
-	    add_axis $w.rb "axis$id" "Axis $id\nLabel: $label\nCenter: $center\nSize $size\nSpacing: $spacing\nMin: $min\nMax: $max"
-	}
-	# set the saved axis...
-	if {[set $this-axis] == "axis$id"} {
-	    if {[winfo exists $w.rb]} {
-		select_axis $w.rb "axis$id"
-	    }
-	    set $this-axis "axis$id"
-	}
-    }
 
     # Method called when optionmenu for data
     # type changes
@@ -388,7 +346,7 @@ itcl_class Teem_Unu_UnuMake {
 
 	Tooltip $kv "Key/Value string pairs to be stored\nin the nrrd. Each key must be a\nsingle string and separate more than\none value by spaces."
 
-	pack $inf.e.keys -side left -anchor nw
+	pack $inf.e.keys -side top -anchor n
 
 	label $kv.keys -text "Key:" 
 	label $kv.vals -text "Values:"
@@ -411,14 +369,6 @@ itcl_class Teem_Unu_UnuMake {
 	grid $kv.key3 -row 3 -col 0
 	grid $kv.val3 -row 3 -col 1
 	
-	
-	
-
-	button $inf.e.read -text " Generate " -command "$this-c generate_nrrd"
-	pack $inf.e.read -side right -anchor se -padx 3 -pady 3 -expand 1 -fill x
-
-	Tooltip $inf.e.read "Press to read in the data file\nand build a nrrd with the\nattributes given in the UI."
-
 	pack $w -fill x -expand yes -side top
     }
 
@@ -428,10 +378,6 @@ itcl_class Teem_Unu_UnuMake {
 	set w .ui[modname]
 
 	if {[winfo exists $w]} {
-	    set child [lindex [winfo children $w] 0]
-
-	    # $w withdrawn by $child's procedures
-	    raise $child
 	    return
 	}
 
@@ -454,28 +400,6 @@ itcl_class Teem_Unu_UnuMake {
 	
 	# header information
 	make_data_info_box $w.inf
-
-	# axis info and selection
-	make_axis_info_sel_box $w.rb "$this set_axis $w.rb"
-
-
-	# set axis label and type
-	iwidgets::labeledframe $w.f1 \
-		-labelpos nw -labeltext "Set Tuple Axis Info"
-
-	set f1 [$w.f1 childsite]
-
-	iwidgets::entryfield $f1.lab -labeltext "Label:" \
-	    -textvariable $this-label
-
-	iwidgets::optionmenu $f1.type -labeltext "Type:" \
-		-labelpos w -command "$this update_type $f1.type"
-	$f1.type insert end Scalar Vector Tensor
-	$f1.type select [set $this-type]
-
-	pack $f1.lab $f1.type -fill x -expand yes -side top -padx 4 -pady 2
-
-	pack $w.f1 -fill x -expand yes -side top
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w

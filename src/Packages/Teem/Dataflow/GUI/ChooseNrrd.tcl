@@ -32,8 +32,6 @@ itcl_class Teem_NrrdData_ChooseNrrd {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-	    wm deiconify $w
-            raise $w
             return
         }
         toplevel $w

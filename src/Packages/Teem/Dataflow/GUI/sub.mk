@@ -29,7 +29,6 @@ SRCS := \
 	$(SRCDIR)/axis_info_sel_box.tcl\
 	$(SRCDIR)/ChooseNrrd.tcl\
 	$(SRCDIR)/DicomToNrrd.tcl\
-	$(SRCDIR)/EditTupleAxis.tcl\
 	$(SRCDIR)/FieldToNrrd.tcl\
 	$(SRCDIR)/MRITissueClassifier.tcl\
 	$(SRCDIR)/NrrdInfo.tcl\

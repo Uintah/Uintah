@@ -54,7 +54,6 @@ itcl_class Teem_NrrdData_NrrdSetProperty {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
 
@@ -89,12 +88,8 @@ itcl_class Teem_NrrdData_NrrdSetProperty {
 
 	pack $w.controls -side top -fill both -expand yes -pady 10
 
-	frame $w.misc
-	button $w.misc.dismiss -text Dismiss -command "destroy $w"
-	button $w.misc.execute -text "Execute" -command "$this-c needexecute"
-
-	pack $w.misc.execute $w.misc.dismiss -side left -padx 10
-	pack $w.misc -pady 10
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
      }
 
     method create_entries {} {

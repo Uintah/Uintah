@@ -109,8 +109,7 @@ itcl_class Teem_Unu_UnuCrop {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -122,14 +121,15 @@ itcl_class Teem_Unu_UnuCrop {
 	pack $w.f.mmf -padx 2 -pady 2 -side top -expand yes
 	
 	if {[set $this-num-axes] == 0} {
-	    label $w.f.mmf.t -text "Need Execute to know the number of Axes."
+	    label $w.f.mmf.t -text "Need to Execute to know the number of Axes."
 	    pack $w.f.mmf.t
 	} else {
 	    init_axes 
 	}
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
+        makeSciButtonPanel $w $w $this
+	moveToCursor $w
+
 	pack $w.f -expand 1 -fill x
     }
 }

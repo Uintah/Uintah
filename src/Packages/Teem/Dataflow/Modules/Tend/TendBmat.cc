@@ -127,12 +127,15 @@ TendBmat::execute()
     return;
   }
   
-  Nrrd *ntup = nrrdNew();
-  nrrdAxesInsert(ntup, nout, 0);
-  ntup->axis[0].label = strdup("BMat:Scalar");
-  ntup->axis[1].label = strdup("tensor components");
-  ntup->axis[2].label = strdup("n");
-  nrrdNuke(nout);
+  //Nrrd *ntup = nrrdNew();
+  //nrrdAxesInsert(ntup, nout, 0);
+  //ntup->axis[0].label = strdup("BMat:Scalar");
+  //ntup->axis[1].label = strdup("tensor components");
+  //ntup->axis[2].label = strdup("n");
+  //nrrdNuke(nout);
+
+  nout->axis[0].label = strdup("tensor components");
+  nout->axis[1].label = strdup("n");
 
   if (we_own_the_data) {
     nrrdNix(nin);
@@ -140,7 +143,7 @@ TendBmat::execute()
   }
 
   NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = ntup;
+  nrrd->nrrd = nout;
   onrrd_->send(NrrdDataHandle(nrrd));
 }
 

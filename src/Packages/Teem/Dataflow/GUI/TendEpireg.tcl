@@ -135,8 +135,9 @@ itcl_class Teem_Tend_TendEpireg {
 	    -textvariable $this-extent
         pack $w.f.options.extent -side top -expand yes -fill x
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
+
 	pack $w.f -expand 1 -fill x
     }
 }

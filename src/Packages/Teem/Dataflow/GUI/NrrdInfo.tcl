@@ -31,141 +31,196 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	global $this-dimension
 	global $this-active_tab
 	global $this-label0
-
+	global $this-center0
+	global $this-size0
+	global $this-spacing0
+	global $this-min0
+	global $this-max0
+	global $this-initialized
+		    
 	# these won't be saved 
 	set $this-firstwidth 12
 	set $this-type "---"
 	set $this-dimension 0
-	set $this-active_tab "Tuple Axis"
+	set $this-active_tab "Axis 0"
 	set $this-label0 "---"
+	set $this-center0 "---"
+	set $this-size0 "---"
+	set $this-spacing0 "---"
+	set $this-min0 "---"
+	set $this-max0 "---"
+	set $this-initialized 0
     }
 
     method set_active_tab {act} {
 	global $this-active_tab
-	#puts stdout $act
+	# puts stdout $act
 	set $this-active_tab $act
     }
 
     method switch_to_active_tab {name1 name2 op} {
-	#puts stdout "switching"
+	# puts stdout "switching"
 	set window .ui[modname]
-	if {[winfo exists $window]} {
+	if {[winfo exists $window.att.axis_info]} {
 	    set axis_frame [$w.att.axis_info childsite]
 	    $axis_frame.tabs view [set $this-active_tab]
 	}
     }
 
-    method fill_tuple_tab {} {
-        set w .ui[modname]
+#     method fill_tuple_tab {} {
+#         set w .ui[modname]
 
-	if {![winfo exists $w]} {
-            return
-        }
-	set att [$w.att childsite]
-	# tuple tab is always first
-	set tuple [$att.tabs childsite 0]
-	#parse the label axis string to gather all the info out of it.
-	set l [regexp -inline -all -- {([\w-]+):(\w+),?} [set $this-label0]]
+# 	if {![winfo exists $w]} {
+#             return
+#         }
+# 	set att [$w.att childsite]
+# 	# tuple tab is always first
+# 	set tuple [$att.tabs childsite 0]
+# 	#parse the label axis string to gather all the info out of it.
+# 	set l [regexp -inline -all -- {([\w-]+):(\w+),?} [set $this-label0]]
 
-	set last [$tuple.listbox index end]
-	$tuple.listbox delete 0 $last
-	$tuple.listbox insert 0 "Name (Type)"
+# 	set last [$tuple.listbox index end]
+# 	$tuple.listbox delete 0 $last
+# 	$tuple.listbox insert 0 "Name (Type)"
 	
-	if {[llength $l]} {
-	    set ind 1
-	    foreach {match axname type} $l {
-		$tuple.listbox insert $ind "$axname ($type)"
-		incr ind
-	    }
-	} else {
-	    $tuple.listbox insert 1 "unknown tuple axis label format"
-	    $tuple.listbox insert 2 [set $this-label0]
-	}
-    }
+# 	if {[llength $l]} {
+# 	    set ind 1
+# 	    foreach {match axname type} $l {
+# 		$tuple.listbox insert $ind "$axname ($type)"
+# 		incr ind
+# 	    }
+# 	} else {
+# 	    $tuple.listbox insert 1 "unknown tuple axis label format"
+# 	    $tuple.listbox insert 2 [set $this-label0]
+# 	}
+#     }
 
     method delete_tabs {} {
 	set w .ui[modname]
-        if {[winfo exists $w.att]} {
+	
+	if {[winfo exists $w.att]} {
 	    set af [$w.att childsite]
 	    set l [$af.tabs childsite]
 	    if { [llength $l] > 1 } { 
 		$af.tabs delete 1 end
 	    }
-	    set_active_tab "Tuple Axis"
+	    set_active_tab "Axis 0"
 	    $af.tabs view [set $this-active_tab]
+
+	    # Clear Axis 0 and dimension
+	    set $this-dimension 0
+	    set $this-label0 "---"
+	    set $this-center0 "---"
+	    set $this-size0 "---"
+	    set $this-spacing0 "---"
+	    set $this-min0 "---"
+	    set $this-max0 "---"
 	}
     }
-
+    
     method add_tabs {} {
 	set w .ui[modname]
         if {[winfo exists $w]} {
-	    set af [$w.att childsite]
 
-	    for {set i 1} {$i < [set $this-dimension]} {incr i} {
-		set t [$af.tabs add -label "Axis $i" \
-			     -command "$this set_active_tab \"Axis $i\""]
-		
-		labelpair $t.l "Label" $this-label$i
-		labelpair $t.c "Center" $this-center$i
-		labelpair $t.sz "Size" $this-size$i
-		labelpair $t.sp "Spacing" $this-spacing$i
-		labelpair $t.mn "Min" $this-min$i
-		labelpair $t.mx "Max" $this-max$i
+	    set af [$w.att childsite]
+	    
+	    if {[set $this-dimension] != 0} {
+		# CHANGED FROM {set i 1}
+		if {[set $this-initialized] == 0} {
+		    set t [$af.tabs add -label "Axis 0" \
+			       -command "$this set_active_tab \"Axis 0\""]
+		    
+		    labelpair $t.l "Label" $this-label0
+		    labelpair $t.c "Center" $this-center0
+		    labelpair $t.sz "Size" $this-size0
+		    labelpair $t.sp "Spacing" $this-spacing0
+		    labelpair $t.mn "Min" $this-min0
+		    labelpair $t.mx "Max" $this-max0
+		    
+		    pack $t.l $t.c $t.sz  $t.sp $t.mn $t.mx  -side top
+		    pack $t -side top -fill both -expand 1	
+		    set $this-initialized 1
+		}
+
+		for {set i 1} {$i < [set $this-dimension]} {incr i} {
+		    set t [$af.tabs add -label "Axis $i" \
+			       -command "$this set_active_tab \"Axis $i\""]
+		    
+		    labelpair $t.l "Label" $this-label$i
+		    labelpair $t.c "Center" $this-center$i
+		    labelpair $t.sz "Size" $this-size$i
+		    labelpair $t.sp "Spacing" $this-spacing$i
+		    labelpair $t.mn "Min" $this-min$i
+		    labelpair $t.mx "Max" $this-max$i
+		    
+		    pack $t.l $t.c $t.sz  $t.sp $t.mn $t.mx  -side top
+		    pack $t -side top -fill both -expand 1
+		} 
+	    } else {
+		# Build Axis 0 tab as empty
+		set t [$af.tabs add -label "Axis 0" \
+			   -command "$this set_active_tab \"Axis 0\""]
+		    
+		labelpair $t.l "Label" $this-label0
+		labelpair $t.c "Center" $this-center0
+		labelpair $t.sz "Size" $this-size0
+		labelpair $t.sp "Spacing" $this-spacing0
+		labelpair $t.mn "Min" $this-min0
+		labelpair $t.mx "Max" $this-max0
 		
 		pack $t.l $t.c $t.sz  $t.sp $t.mn $t.mx  -side top
-		pack $t -side top -fill both -expand 1
+		pack $t -side top -fill both -expand 1	
+		set $this-initialized 1
 	    }
 	}
     }
-
-    method add_tuple_tab {af} {
-
-	set tuple [$af.tabs add -label "Tuple Axis" \
-		       -command "$this set_active_tab \"Tuple Axis\""]
-
-	iwidgets::scrolledlistbox $tuple.listbox -vscrollmode static \
-	    -hscrollmode dynamic -scrollmargin 3 -height 60
-
-	fill_tuple_tab
-	pack $tuple.listbox -side top -fill both -expand 1
-    }
-
+    
+    #     method add_tuple_tab {af} {
+    
+    # 	set tuple [$af.tabs add -label "Tuple Axis" \
+    # 		       -command "$this set_active_tab \"Tuple Axis\""]
+    
+    # 	iwidgets::scrolledlistbox $tuple.listbox -vscrollmode static \
+    # 	    -hscrollmode dynamic -scrollmargin 3 -height 60
+    
+    # 	fill_tuple_tab
+    # 	pack $tuple.listbox -side top -fill both -expand 1
+    #     }
+    
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
-
+	
 	# notebook for the axis specific info.
 	iwidgets::labeledframe $w.att -labelpos nw \
 	    -labeltext "Nrrd Attributes" 
-			       
+	
 	pack $w.att -expand y -fill both
 	set att [$w.att childsite]
 	
 	labelpair $att.type "C Type" $this-type
 	labelpair $att.dim "Dimension" $this-dimension
-
+	
 	# notebook for the axis specific info.
 	iwidgets::tabnotebook  $att.tabs -height 350 -width 325 \
 	    -raiseselect true 
-
-	add_tuple_tab $att
+	
+	# add_tuple_tab $att
 	add_tabs
-
+	
 	# view the active tab
 	$att.tabs view [set $this-active_tab]	
 	$att.tabs configure -tabpos "n"
-
+	
 	pack $att.type $att.dim -side top 
 	pack $att.tabs -side top -fill x -expand yes
+	
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
 
-	frame $w.exec
-	pack $w.exec -side bottom -padx 5 -pady 5
-	button $w.exec.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.exec.execute -side top -e n
     }
 
 

@@ -42,7 +42,7 @@ class ConvertToFieldBase : public DynamicAlgoBase
 {
 public:
   virtual bool convert_to_field(SCIRun::FieldHandle, NrrdDataHandle, 
-				SCIRun::FieldHandle &) = 0;
+				SCIRun::FieldHandle &, const int a0_size) = 0;
   virtual ~ConvertToFieldBase();
 
   static const string& get_h_file_path();
@@ -69,7 +69,7 @@ class ConvertToFieldEigenBase : public DynamicAlgoBase
 {
 public:
   virtual bool convert_to_field(SCIRun::FieldHandle, NrrdDataHandle, 
-				SCIRun::FieldHandle &) = 0;
+				SCIRun::FieldHandle &, const int a0_size) = 0;
   virtual ~ConvertToFieldEigenBase();
 
   static const string& get_h_file_path();
@@ -98,7 +98,7 @@ class ConvertToField : public ConvertToFieldBase
 public:
   //! virtual interface.
   virtual bool convert_to_field(SCIRun::FieldHandle, NrrdDataHandle in, 
-				SCIRun::FieldHandle &);
+				SCIRun::FieldHandle &, const int a0_size);
 };
 
 
@@ -108,7 +108,7 @@ class ConvertToFieldEigen : public ConvertToFieldEigenBase
 public:
   //! virtual interface.
   virtual bool convert_to_field(SCIRun::FieldHandle, NrrdDataHandle in, 
-				SCIRun::FieldHandle &);
+				SCIRun::FieldHandle &, const int a0_size);
 };
 
 
@@ -163,21 +163,36 @@ template <class Fld>
 bool
 ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld, 
 				      NrrdDataHandle      in,
-				      SCIRun::FieldHandle &out)
+				      SCIRun::FieldHandle &out,
+				      const int a0_size)
 {
   Nrrd *inrrd = in->nrrd;
+
   vector<unsigned int> dims;
   // The input fld in not neccessarily the exact type Fld, 
   // it will have the exact same mesh type however.
+  //Fld *f = dynamic_cast<Fld*>(fld.get_rep());
+  //ASSERT(f != 0);
+  //typename Fld::mesh_handle_type m = f->get_typed_mesh(); 
+
+  //const string data_name(fld->get_type_description(1)->get_name());
+  //const string vec("Vector");
+  //const string ten("Tensor");
+
+  //if ((data_name == ten || data_name == vec) && a0_size == 1) {
+  // Old field was tensor or vector data but is no longer
+  //return false;
+  //} 
+
   typedef typename Fld::mesh_type Msh;
   Msh *mesh = dynamic_cast<Msh*>(fld->mesh().get_rep());
   ASSERT(mesh != 0);
   int off = 0;
   bool uns = false;
   if (! mesh->get_dim(dims)) {
-    uns = true;
     // Unstructured fields fall into this category, for them we create nrrds
-    // of dimension 1 (2 with the tuple axis).
+    // of dimension 1 (2 if vector or scalar data).
+    uns = true;
     switch (fld->data_at()) {
     case Field::NODE :
       {
@@ -210,28 +225,51 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
     default:
       return false;
     }
+    
+    // if vector/tensor data store 3 or 7 at the end of dims vector
+    if (a0_size > 1) 
+      dims.push_back(a0_size);
   }
   if ((!uns) && fld->data_at() == Field::CELL) {
     off = 1;
   }
-  // All sci nrrds should have a tuple axis, we assume it.
-  // It is axis 0.  Make sure sizes along each dim still match.
 
-  if (inrrd->dim != (int)dims.size() + 1) {
+  // If the data was vector or tensor it will have an extra axis.
+  // It is axis 0.  Make sure sizes along each dim still match.
+  if (inrrd->dim != (int)dims.size()) {
     return false;
   }
-  switch (inrrd->dim -1) {
+
+  // If a0_size equals 3 or 7 then the first axis contains
+  // vector or tensor data and a ND nrrd would convert
+  // to a (N-1)D type field. 
+
+  int field_dim = inrrd->dim;
+  if (a0_size > 1) // tensor or vector data in first dimension
+    field_dim -= 1;
+  switch (field_dim) {
   case 1:
     {
       // make sure size of dimensions match up
-      unsigned int nx = inrrd->axis[1].size + off;
+      unsigned int nx = 0;
+      if (a0_size > 1) {
+	nx = inrrd->axis[1].size + off;
+      } else {
+	nx = inrrd->axis[0].size + off;
+      }
       if (nx != dims[0]) { return false; }
     }
     break;
   case 2:
     {
-      unsigned int nx = inrrd->axis[1].size + off;
-      unsigned int ny = inrrd->axis[2].size + off;
+      unsigned int nx = 0, ny = 0;
+      if (a0_size > 1) {
+	nx = inrrd->axis[1].size + off;
+	ny = inrrd->axis[2].size + off;
+      } else {
+	nx = inrrd->axis[0].size + off;
+	ny = inrrd->axis[1].size + off;
+      }
       if ((nx != dims[0]) || (ny != dims[1])) {
 	return false;
       }
@@ -239,9 +277,16 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
     break;
   case 3:
     {
-      unsigned int nx = inrrd->axis[1].size + off;
-      unsigned int ny = inrrd->axis[2].size + off;
-      unsigned int nz = inrrd->axis[3].size + off;
+      unsigned int nx = 0, ny = 0, nz = 0;
+      if (a0_size > 1) {
+	nx = inrrd->axis[1].size + off;
+	ny = inrrd->axis[2].size + off;
+        nz = inrrd->axis[3].size + off;
+      } else {
+	nx = inrrd->axis[0].size + off;
+	ny = inrrd->axis[1].size + off;
+        nz = inrrd->axis[2].size + off;
+      }
       if ((nx != dims[0]) || (ny != dims[1]) || (nz != dims[2])) {
 	return false;
       }
@@ -250,6 +295,7 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
   default:   // anything else is invalid.
     return false;
   }
+
   // Things match up, create the new output field.
   out = new Fld(typename Fld::mesh_handle_type(mesh), fld->data_at());
   
@@ -301,7 +347,8 @@ template <class Fld>
 bool
 ConvertToFieldEigen<Fld>::convert_to_field(SCIRun::FieldHandle fld, 
 					   NrrdDataHandle      in,
-					   SCIRun::FieldHandle &out)
+					   SCIRun::FieldHandle &out,
+					   const int a0_size)
 {
   Nrrd *inrrd = in->nrrd;
   vector<unsigned int> dims;
@@ -313,9 +360,9 @@ ConvertToFieldEigen<Fld>::convert_to_field(SCIRun::FieldHandle fld,
   int off = 0;
   bool uns = false;
   if (! mesh->get_dim(dims)) {
-    uns = true;
     // Unstructured fields fall into this category, for them we create nrrds
     // of dimension 1 (2 with the tuple axis).
+    uns = true;
     switch (fld->data_at()) {
     case Field::NODE :
       {
@@ -348,17 +395,28 @@ ConvertToFieldEigen<Fld>::convert_to_field(SCIRun::FieldHandle fld,
     default:
       return false;
     }
+    // if vector/tensor data store 3 or 7 at the end of dims vector
+    if (a0_size > 1) 
+      dims.push_back(a0_size);
   }
   if ((!uns) && fld->data_at() == Field::CELL) {
     off = 1;
   }
-  // All sci nrrds should have a tuple axis, we assume it.
-  // It is axis 0.  Make sure sizes along each dim still match.
 
-  if (inrrd->dim != (int)dims.size() + 1) {
+  // If the data was vector or tensor it will have an extra axis.
+  // It is axis 0.  Make sure sizes along each dim still match.
+  if (inrrd->dim != (int)dims.size()) {
     return false;
   }
-  switch (inrrd->dim -1) {
+
+  // If a0_size equals 3 or 7 then the first axis contains
+  // vector or tensor data and a ND nrrd would convert
+  // to a (N-1)D type field. 
+
+  int field_dim = inrrd->dim;
+  if (a0_size > 1) // tensor or vector data in first dimension
+    field_dim -= 1;
+  switch (field_dim) {
   case 1:
     {
       // make sure size of dimensions match up
@@ -368,8 +426,8 @@ ConvertToFieldEigen<Fld>::convert_to_field(SCIRun::FieldHandle fld,
     break;
   case 2:
     {
-      unsigned int nx = inrrd->axis[1].size + off;
-      unsigned int ny = inrrd->axis[2].size + off;
+      unsigned int nx = inrrd->axis[0].size + off;
+      unsigned int ny = inrrd->axis[1].size + off;
       if ((nx != dims[0]) || (ny != dims[1])) {
 	return false;
       }
@@ -377,9 +435,9 @@ ConvertToFieldEigen<Fld>::convert_to_field(SCIRun::FieldHandle fld,
     break;
   case 3:
     {
-      unsigned int nx = inrrd->axis[1].size + off;
-      unsigned int ny = inrrd->axis[2].size + off;
-      unsigned int nz = inrrd->axis[3].size + off;
+      unsigned int nx = inrrd->axis[0].size + off;
+      unsigned int ny = inrrd->axis[1].size + off;
+      unsigned int nz = inrrd->axis[2].size + off;
       if ((nx != dims[0]) || (ny != dims[1]) || (nz != dims[2])) {
 	return false;
       }
@@ -388,6 +446,7 @@ ConvertToFieldEigen<Fld>::convert_to_field(SCIRun::FieldHandle fld,
   default:   // anything else is invalid.
     return false;
   }
+
   // Things match up, create the new output field.
   out = new Fld(typename Fld::mesh_handle_type(mesh), fld->data_at());
   

@@ -51,6 +51,7 @@ private:
   GuiDouble       weight_;
   GuiInt          bins_;
   GuiInt          pad_;
+  GuiInt          non_scalar_data_;
 };
 
 DECLARE_MAKER(UnuCmedian)
@@ -61,7 +62,8 @@ UnuCmedian::UnuCmedian(SCIRun::GuiContext *ctx) :
   radius_(ctx->subVar("radius")),
   weight_(ctx->subVar("weight")),
   bins_(ctx->subVar("bins")),
-  pad_(ctx->subVar("pad"))
+  pad_(ctx->subVar("pad")),
+  non_scalar_data_(ctx->subVar("non-scalar-data"))
 {
 }
 
@@ -145,12 +147,12 @@ UnuCmedian::execute()
 
   // loop over the tuple axis, and do the median filtering for 
   // each scalar set independently, copy non scalar sets unchanged.
-  vector<string> elems;
-  nrrd_handle->get_tuple_indecies(elems);
+  //vector<string> elems;
+  //nrrd_handle->get_tuple_indecies(elems);
 
 
   int min[NRRD_DIM_MAX], max[NRRD_DIM_MAX];
-  for (int i = 1; i < nrrd_handle->nrrd->dim; i++)
+  for (int i = 0; i < nrrd_handle->nrrd->dim; i++)
   {
     min[i] = 0;
     max[i] = nrrd_handle->nrrd->axis[i].size - 1;
@@ -160,37 +162,50 @@ UnuCmedian::execute()
   //! Slice a scalar out of the tuple axis and filter it. So for Vectors
   //! and Tensors, a component wise filtering occurs.
 
-  vector<Nrrd*> out;
-  for (int i = 0; i < nrrd_handle->nrrd->axis[0].size; i++) 
-  { 
-    Nrrd *sliced = nrrdNew();
-    if (nrrdSlice(sliced, nin, 0, i)) {
-      char *err = biffGetDone(NRRD);
-      error(string("Trouble with slice: ") + err);
-      free(err);
+  if(non_scalar_data_.get()) {
+    vector<Nrrd*> out;
+    for (int i = 0; i < nrrd_handle->nrrd->axis[0].size; i++) 
+    { 
+      Nrrd *sliced = nrrdNew();
+      if (nrrdSlice(sliced, nin, 0, i)) {
+	char *err = biffGetDone(NRRD);
+	error(string("Trouble with slice: ") + err);
+	free(err);
+      }
+      
+      Nrrd *nout_filtered;
+      nout_filtered = do_filter(sliced);
+      if (!nout_filtered) {
+	error("Error filtering, returning");
+	return;
+      }
+      out.push_back(nout_filtered);
     }
+    // Join the filtered nrrds along the first axis
+    NrrdData *nrrd_joined = scinew NrrdData;
+    nrrd_joined->nrrd = nrrdNew();
     
+    if (nrrdJoin(nrrd_joined->nrrd, &out[0], out.size(), 0, 1)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Join Error: ") +  err);
+      free(err);
+      return;
+    }
+    //nrrd_joined->nrrd->axis[0].label = strdup(nin->axis[0].label);
+    //nrrd_joined->copy_sci_data(*nrrd_handle.get_rep());
+    onrrd_->send(NrrdDataHandle(nrrd_joined));
+  } else {
     Nrrd *nout_filtered;
-    nout_filtered = do_filter(sliced);
+    nout_filtered = do_filter(nrrd_handle->nrrd);
     if (!nout_filtered) {
       error("Error filtering, returning");
       return;
     }
-    out.push_back(nout_filtered);
+    NrrdData *nrrd_out = scinew NrrdData;
+    nrrd_out->nrrd = nout_filtered;
+    //nrrd_out->copy_sci_data(*nrrd_handle.get_rep());
+    onrrd_->send(NrrdDataHandle(nrrd_out));
   }
-  // Join the filtered nrrs along the tuple axis.
-  NrrdData *nrrd_joined = scinew NrrdData;
-  nrrd_joined->nrrd = nrrdNew();
-
-  if (nrrdJoin(nrrd_joined->nrrd, &out[0], out.size(), 0, 1)) {
-    char *err = biffGetDone(NRRD);
-    error(string("Join Error: ") +  err);
-    free(err);
-    return;
-  }
-  nrrd_joined->nrrd->axis[0].label = strdup(nin->axis[0].label);
-  nrrd_joined->copy_sci_data(*nrrd_handle.get_rep());
-  onrrd_->send(NrrdDataHandle(nrrd_joined));
 }
 
 } // End namespace SCITeem
