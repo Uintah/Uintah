@@ -3,7 +3,7 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Vector.h>
 
 using namespace Uintah;
@@ -18,6 +18,19 @@ CylinderGeometryPiece::CylinderGeometryPiece(ProblemSpecP& ps) {
   ps->require("top",top);
   ps->require("radius",rad);
   
+  double near_zero = 1e-100;
+  double xdiff =  top.x() - bottom.x();
+  double ydiff =  top.y() - bottom.y();
+  double zdiff =  top.z() - bottom.z();
+  
+  if ( xdiff < near_zero   &&
+       ydiff < near_zero   &&
+       zdiff < near_zero ) {
+    throw ProblemSetupException("Input File Error: Cylinder max <= min coordinates");
+  }
+  if ( rad <= 0.0) {
+    throw ProblemSetupException("Input File Error: Cylinder radius must be > 0.0");
+  }
   d_bottom = bottom;
   d_top = top;
   d_radius = rad;
