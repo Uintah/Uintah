@@ -59,6 +59,7 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
      SFCYVariable(const SFCYVariable<T>&);
      virtual ~SFCYVariable();
      
+     virtual void rewindow(const IntVector& low, const IntVector& high);
      //////////
      // Insert Documentation Here:
      static const TypeDescription* getTypeDescription();
@@ -284,6 +285,15 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 	 resize(lowIndex, highIndex);
       }
    template<class T>
+      void SFCYVariable<T>::rewindow(const IntVector& low,
+				   const IntVector& high) {
+      Array3<T> newdata;
+      newdata.resize(low, high);
+      newdata.copy(*this, low, high);
+      resize(low, high);
+      Array3<T>::operator=(newdata);
+   }
+   template<class T>
       void
       SFCYVariable<T>::copyPatch(SFCYVariableBase* srcptr,
 				const IntVector& lowIndex,
@@ -373,6 +383,11 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 
 //
 // $Log$
+// Revision 1.8  2000/10/12 20:05:37  sparker
+// Removed print statement from FCVariable
+// Added rewindow to SFC{X,Y,Z}Variables
+// Uncommented assertion in CCVariable
+//
 // Revision 1.7  2000/09/25 20:37:43  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
