@@ -251,6 +251,9 @@ MPMLabel::MPMLabel()
   cBurnedMassLabel = scinew VarLabel( "c.burnedMass",
 			CCVariable<double>::getTypeDescription() );
 
+  mom_L_ME_CCLabel =
+     scinew VarLabel("mom_L_ME_CC",CCVariable<Vector>::getTypeDescription());
+
   // Reduction variables
   delTLabel = scinew VarLabel( "delT", delt_vartype::getTypeDescription() );
 
@@ -386,6 +389,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.46  2001/01/15 15:54:41  guilkey
+// Added mom_L_ME var labels.
+//
 // Revision 1.45  2001/01/05 23:04:09  guilkey
 // Using the code that Wayne just commited which allows the delT variable to
 // be "computed" multiple times per timestep, I removed the multiple derivatives

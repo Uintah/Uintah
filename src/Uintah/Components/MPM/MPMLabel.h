@@ -104,6 +104,7 @@ namespace Uintah {
       const VarLabel* gWeightLabel; //for who knows what?
       
       const VarLabel* cBurnedMassLabel; //for burn models
+      const VarLabel* mom_L_ME_CCLabel;
 
       const VarLabel* fVelocityLabel; //for interaction with ICE
       const VarLabel* fMassLabel; //for interaction with ICE
@@ -124,6 +125,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.40  2001/01/15 15:54:41  guilkey
+// Added mom_L_ME var labels.
+//
 // Revision 1.39  2001/01/05 23:04:09  guilkey
 // Using the code that Wayne just commited which allows the delT variable to
 // be "computed" multiple times per timestep, I removed the multiple derivatives
