@@ -6,7 +6,7 @@ COMPARE_ROOT=$3
 ERRORS_TO=$4
 
 cd $TEST_ROOT/$TEST
-UDADIR=`ls -d *.uda.000`
+UDADIR=`ls -d *.uda`
 
 TEST_UDADIR=$TEST_ROOT/$TEST/$UDADIR
 COMPARE_UDADIR=$COMPARE_ROOT/$TEST/$UDADIR
@@ -52,7 +52,7 @@ if [ -d "$TEST_UDADIR" ]; then
     echo
     if [ $retval != "0" ]; then
 	# $TEST_UDADIR has no dat files
-	ls -1 $TEST_UDADIR/*.dat
+	ls -1 $COMPARE_UDADIR/*.dat
 	retval=$?
 	echo
 	if [ $retval != "0" ]; then
