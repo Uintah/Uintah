@@ -228,12 +228,12 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
            (matl_press[m][c] * (sp_vol_CC[m][c] * sp_vol_CC[m][c]));            
 
         total_mat_vol += mat_volume[m];
-/*`==========TESTING==========*/
-        speedSound_new[m][c] = sqrt(tmp)/gamma[m];  // Isothermal speed of sound
+
+//      speedSound_new[m][c] = sqrt(tmp)/gamma[m];  // Isothermal speed of sound
         speedSound_new[m][c] = sqrt(tmp);           // Isentropic speed of sound
         compressibility[m] = sp_vol_CC[m][c]/ 
                             (speedSound_new[m][c] * speedSound_new[m][c]); 
-/*==========TESTING==========`*/
+
        } 
       //__________________________________
       // Compute 1/f_theta
@@ -1114,6 +1114,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > vol_frac(numALLMatls);
     StaticArray<constCCVariable<double> > Temp_CC(numALLMatls);
     constCCVariable<double> rho_CC, rho_micro, f_theta,sp_vol_CC;
+    constCCVariable<double> sp_vol_comb;
     CCVariable<double> sum_therm_exp;
     vector<double> if_mpm_matl_ignore(numALLMatls);
 
@@ -1169,9 +1170,10 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
                                                             indx,patch);
       spec_vol_source.initialize(0.);
       
-      new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,    indx,patch,gn, 0);
-      new_dw->get(rho_CC,    lb->rho_CCLabel,       indx,patch,gn, 0);
-      new_dw->get(f_theta,   lb->f_theta_CCLabel,   indx,patch,gn, 0);
+      new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn, 0); 
+      new_dw->get(rho_CC,     lb->rho_CCLabel,        indx,patch,gn, 0); 
+      new_dw->get(f_theta,    lb->f_theta_CCLabel,    indx,patch,gn, 0); 
+      new_dw->get(sp_vol_comb,lb->created_vol_CCLabel,indx,patch,gn, 0); 
 
       //__________________________________
       //  compute spec_vol_L * mass
@@ -1229,7 +1231,12 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
                                    
         // This is actually mass * sp_vol
         spec_vol_source[c] = term1 + if_mpm_matl_ignore[m] * term2;
-        spec_vol_L[c] += spec_vol_source[c]; 
+        spec_vol_L[c] += spec_vol_source[c] + sp_vol_comb[c]; 
+        
+/*`==========TESTING==========*/
+//    do we really want this?  -Todd        
+        spec_vol_L[c] = max(spec_vol_L[c], d_TINY_RHO * vol * sp_vol_CC[c]);
+/*==========TESTING==========`*/ 
      }
 
       //  Set Neumann = 0 if symmetric Boundary conditions
@@ -1255,6 +1262,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
         cout << "matl            "<< indx << endl;
         cout << "sum_thermal_exp "<< sum_therm_exp[neg_cell] << endl;
         cout << "spec_vol_source "<< spec_vol_source[neg_cell] << endl;
+        cout << "sp_vol_comb     "<< sp_vol_comb[neg_cell] << endl;
         cout << "mass sp_vol_L    "<< spec_vol_L[neg_cell] << endl;
         cout << "mass sp_vol_L_old"
              << (rho_CC[neg_cell]*vol*sp_vol_CC[neg_cell]) << endl;
