@@ -49,12 +49,16 @@ set timefmt "%s"
 set grid xtics ytics
 
 set y2tics
+set ylabel 'Physical Time'
+set y2label 'Mean Time/timestep'
 
 plot '.data' using 1:3           t 'Physical Time' with lines,\
      '.data' using 1:2 axes x1y2 t 'meanTime/timestep' with lines
     #----------second plot-------------
 set size 1.0,0.33       
 set origin 0.0,0.66
+set ylabel
+set y2label
 
 plot '.data' using 1:4 t 'Delt' with lines
 
