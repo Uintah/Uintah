@@ -83,7 +83,7 @@ TendAnscale::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-  if (tenAnisoScale(nout, nin, scale_.get())) {
+  if (tenAnisoScale(nout, nin, scale_.get(), true, true)) {
     char *err = biffGetDone(TEN);
     error(string("Error making tendAnscale volume: ") + err);
     free(err);

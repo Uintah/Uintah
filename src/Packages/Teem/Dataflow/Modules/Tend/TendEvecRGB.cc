@@ -143,24 +143,18 @@ TendEvecRGB::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-#if 0
-  if (tenEvecrgb(nout, nin, evec_.get(), get_method(aniso_metric_.get()), 
-		 background_.get(), gray_.get(), gamma_.get())) {
+  if (tenEvecRGB(nout, nin, evec_.get(), get_method(aniso_metric_.get()), 
+		 gamma_.get(), background_.get(), gray_.get())) {
     char *err = biffGetDone(TEN);
     error(string("Error making tendEvecRGB volume: ") + err);
     free(err);
     return;
   }
-#endif
 
+  nout->axis[0].label = strdup("RGB:Vector");
   NrrdData *nrrd = scinew NrrdData;
-
-  Nrrd *ntup = nrrdNew();
-  nrrdAxesInsert(ntup, nout, 0);
-  ntup->axis[0].label = strdup("RGB:Vector");
+  nrrd->nrrd = nout;
   nrrd->copy_sci_data(*nrrd_handle.get_rep());
-  nrrdNuke(nout);
-  nrrd->nrrd = ntup;
   onrrd_->send(NrrdDataHandle(nrrd));
 }
 

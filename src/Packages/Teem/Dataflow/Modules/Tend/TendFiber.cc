@@ -42,9 +42,9 @@ public:
   virtual void execute();
 
 private:
-  unsigned get_aniso(const string &s) const;
-  unsigned get_fibertype(const string &s) const;
-  unsigned get_integration(const string &s) const;
+  unsigned get_aniso(const string &s);
+  unsigned get_fibertype(const string &s);
+  unsigned get_integration(const string &s);
 
   NrrdIPort*      inrrd_;
   FieldIPort*     iseeds_;
@@ -65,6 +65,10 @@ private:
   GuiInt       use_conf_;
   GuiDouble    conf_thresh_;
   GuiString    kernel_;
+
+  tenFiberContext *tfx;
+  Nrrd *tfx_nrrd;
+  
 };
 
 DECLARE_MAKER(TendFiber)
@@ -85,15 +89,19 @@ TendFiber::TendFiber(SCIRun::GuiContext *ctx) :
   steps_(ctx->subVar("steps")),
   use_conf_(ctx->subVar("use-conf")),
   conf_thresh_(ctx->subVar("conf-thresh")),
-  kernel_(ctx->subVar("kernel"))
+  kernel_(ctx->subVar("kernel")),
+  tfx(0),
+  tfx_nrrd(0)
 {
 }
 
 TendFiber::~TendFiber() {
+  if (tfx)
+    tenFiberContextNix(tfx);
 }
 
 unsigned 
-TendFiber::get_aniso(const string &s) const
+TendFiber::get_aniso(const string &s)
 {
   if (s == "tenAniso_Cl1") { /* Westin's linear (first version) */
     return tenAniso_Cl1;
@@ -158,7 +166,7 @@ TendFiber::get_aniso(const string &s) const
 }
 
 unsigned
-TendFiber::get_integration(const string &s) const
+TendFiber::get_integration(const string &s)
 {
   if (s == "Euler") {
     return tenFiberIntgEuler;
@@ -171,7 +179,7 @@ TendFiber::get_integration(const string &s) const
 }
 
 unsigned 
-TendFiber::get_fibertype(const string &s) const
+TendFiber::get_fibertype(const string &s)
 {
   if (s == "evec1") {
     return tenFiberTypeEvec1;
@@ -231,7 +239,7 @@ TendFiber::execute()
 
   unsigned fibertype = get_fibertype(fibertype_.get());
   double puncture = puncture_.get();
-  double neighborhood = neighborhood_.get();
+//  double neighborhood = neighborhood_.get();
   double stepsize = stepsize_.get();
   int integration = get_integration(integration_.get());
   bool use_aniso = use_aniso_.get();
@@ -270,9 +278,20 @@ TendFiber::execute()
     p[1] = 0.0834; 
   }
 
-  tenFiberContext *tfx;
+  if (!tfx || nin != tfx_nrrd) {
+    if (tfx)
+      tenFiberContextNix(tfx);
+    tfx = tenFiberContextNew(nin);
+  }
+  if (!tfx) {
+    char *err = biffGetDone(TEN);
+    error(string("Failed to create the fiber context: ") + err);
+    free(err);
+    return;
+  }
+
   double start[3];
-  int si, stopLen, E;
+  int E;
 
   E = 0;
   if (use_aniso && !E) 
@@ -296,7 +315,8 @@ TendFiber::execute()
   }
 
   tenFiberParmSet(tfx, tenFiberParmStepSize, stepsize);
-  tenFiberParmSet(tfx, tenFiberParmWPunct, stepsize);
+  tenFiberParmSet(tfx, tenFiberParmWPunct, puncture);
+  tenFiberParmSet(tfx, tenFiberParmUseIndexSpace, AIR_TRUE);
 
   Nrrd *nout = nrrdNew();
 
@@ -306,28 +326,36 @@ TendFiber::execute()
 
   Array1<Array1<Point> > fibers;
 
-  int npts=0;
-
+  Vector min(nin->axis[1].min, nin->axis[2].min, nin->axis[3].min);
+  Vector spacing(nin->axis[1].spacing, nin->axis[2].spacing, nin->axis[3].spacing);
   int fiberIdx=0;
   while (ib != ie) {
     Point p;
-    double pp[3];
     pcm->get_center(p, *ib);
-    pp[0]=p.x();
-    pp[1]=p.y();
-    pp[2]=p.z();
-    if (tenFiberTrace(tfx, nout, pp)) {
+    p-=min;
+    start[0]=p.x()/spacing.x();
+    start[1]=p.y()/spacing.y();
+    start[2]=p.z()/spacing.z();
+
+    bool failed;
+    if (failed = tenFiberTrace(tfx, nout, start)) {
       char *err = biffGetDone(TEN);
-      error(string("Error tracing fiber: ") + err);
+//      error(string("Error tracing fiber: ") + err);
       free(err);
-      return;
+//      return;
     }
+//    cerr << "nout->axis[0].size="<<nout->axis[0].size<<"\n";
+//    cerr << "nout->axis[1].size="<<nout->axis[1].size<<"\n";
+
     fibers.resize(fiberIdx+1);
-    fibers[fiberIdx].resize(nout->axis[0].size);
-    double *data = (double *)(nout->data);
-    for (int i=0; i<nout->axis[0].size; i+=3)
-      fibers[fiberIdx][i] = 
-	Point(data[i], data[i+1], data[i+2]);
+    if (!failed) {
+      fibers[fiberIdx].resize(nout->axis[1].size);
+      double *data = (double *)(nout->data);
+      for (int i=0; i<nout->axis[1].size * 3; i+=3)
+	fibers[fiberIdx][i/3] = Point(data[i]*spacing.x(),
+				      data[i+1]*spacing.y(),
+				      data[i+2]*spacing.z())+min;
+    }
     ++fiberIdx;
     ++ib;
   }
@@ -335,21 +363,24 @@ TendFiber::execute()
   nrrdNuke(nout);
 
   CurveMesh *cm = scinew CurveMesh;
-  CurveMesh::Node::index_type curr, prev;
   CurveMesh::Node::array_type a;
   a.resize(2);
+//  cerr << "got "<<fibers.size()<<" fibers.\n";
   for (int i=0; i<fibers.size(); i++) {
     if (fibers[i].size()) {
       a[1] = cm->add_point(fibers[i][0]);
+//      cerr << "   fiber["<<i<<"] has "<<fibers[i].size()<<" nodes.\n";
+//      cerr << "     adding point: "<<fibers[i][0]<<"\n";
       for (int j=1; j<fibers[i].size(); j++) {
 	a[0] = a[1];
 	a[1] = cm->add_point(fibers[i][j]);
+//	cerr << "     adding point: "<<fibers[i][j]<<"\n";
 	cm->add_elem(a);
       }
     }
   }
   
-  CurveField<double> *cf = scinew CurveField<double>(cm, Field::NONE);
+  CurveField<double> *cf = scinew CurveField<double>(cm, Field::NODE);
   ofibers_->send(cf);
 }
 
