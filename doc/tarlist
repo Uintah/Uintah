@@ -30,11 +30,9 @@ Dir.chdir("..")
 root=File.basename(Dir.pwd())
 Dir.chdir("..")
 
-# First do individula files and directories (non-wildcards)
+# First do individual files and directories (non-wildcards)
 $stdout.print("#{root}/doc/index.html
 #{root}/doc/.htaccess
-#{root}/doc/Documentum/module-latex
-#{root}/doc/Documentum/module-xml
 #{root}/doc/Documentum/templates
 #{root}/doc/Installation/index.html
 #{root}/doc/Installation/Guide/srig.pdf
