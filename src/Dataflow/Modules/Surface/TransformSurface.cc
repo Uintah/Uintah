@@ -25,6 +25,7 @@ using std::cerr;
 #include <stdlib.h>
 #include <stdio.h>
 
+#if 0
 namespace SCIRun {
 
 
@@ -81,14 +82,11 @@ void TransformSurface::execute()
     Transform t;
     MatToTransform(mIH, t);
 
-    Array1<NodeHandle> nodes;
-
     SurfaceHandle sss=sIH;
 
     sIH.detach();
-    sIH->get_surfnodes(nodes);
     for (int i=0; i<nodes.size(); i++) {
-	nodes[i]->p = t.project(nodes[i]->p);
+        sIH->node(i).p = t.project(nodes[i]->p);
     }
     sIH->set_surfnodes(nodes);
 
@@ -96,3 +94,5 @@ void TransformSurface::execute()
 }
 
 } // End namespace SCIRun
+
+#endif

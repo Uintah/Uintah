@@ -231,7 +231,7 @@ ScalarField* BoxClipSField::UGtoUG(const Point &minPt, const Point &maxPt,
     for (i=0; i<in_nodes.size(); i++) {
 	if (in_nodes[i] == -1) {
 	    in_nodes[i] = nnodes;
-	    sf->mesh->nodes.add(new Node(m->point(i)));
+	    sf->mesh->nodes.add(Node(m->point(i)));
 	    sf->data.add(sfug->data[i]);
 	    nnodes++;
 	}

@@ -108,9 +108,8 @@ void SFRGtoSFUG::genPtsAndTets(ScalarFieldRGBase *sf, ScalarFieldUG *sfug,
 	for (j=0; j<ny+1; j++) {
 	    for (k=0; k<nz+1; k++) {
 		nodes(i,j,k)=currIdx++;
-		mesh->nodes.add(NodeHandle(new Node(min+Vector(d.x()*i, 
-							       d.y()*j, 
-							       d.z()*k))));
+		const Point p = min + Vector(d.x() * i, d.y() * j, d.z() * k);
+		mesh->nodes.add(Node(p));
 	    }
 	}
     }

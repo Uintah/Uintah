@@ -32,6 +32,7 @@
 #include <iostream>
 using std::cerr;
 
+#if 0
 namespace DaveW {
 using namespace SCIRun;
 
@@ -218,6 +219,6 @@ void SelectSurfNodes::tcl_command(TCLArgs& args, void* userdata)
     }
 }
 } // End namespace DaveW
-
+#endif
 
 

@@ -43,6 +43,7 @@ using std::cerr;
 using std::endl;
 #include <stdio.h>
 
+#if 0
 namespace DaveW {
 using namespace DaveW;
 using namespace SCIRun;
@@ -227,7 +228,7 @@ void BldEEGMesh::genPtsAndTets(SegFldHandle sf, SurfTree *st, int num,
 	    curr.z(min.z());
 	    for (int k=0; k<knum; k++, curr.z(curr.z()+dz)) {
 		nodes(i,j,k)=currIdx++;
-		mesh->nodes.add(NodeHandle(new Node(curr)));
+		mesh->nodes.add(new Node(curr));
 	    }
 	}
     }
@@ -380,12 +381,13 @@ void BldEEGMesh::classifyElements(SegFldHandle sf, Mesh *m, SurfTree* st,
     int nnodes=m->nodes.size();
     int idx=0;
     Array1<int> map(nnodes);
-    for(i=0;i<nnodes;i++){
-	NodeHandle& n=m->nodes[i];
-	if(n.get_rep() && n->elems.size()){
-	    map[i]=idx;
+    for(i=0;i<nnodes;i++)
+    {
+      const Node &n = m->nodes[i];
+	if (n.elems.size()) {
+	    map[i] = idx;
 	    scalp2.add(scalp[i]);
-	    m->nodes[idx++]=n;
+	    m->nodes[idx++] = new Node(n);
 	} else {
 	    map[i]=-1234;
 	}
@@ -472,11 +474,10 @@ void BldEEGMesh::removeAirAndGreyMatlElems(Mesh *m, Array1<int>& cortexBCMeshNod
     int idx=0;
     Array1<int> map(nnodes);
     for(i=0;i<nnodes;i++){
-	NodeHandle& n=m->nodes[i];
-//	if(n.get_rep()) {
-	if(n.get_rep() && n->elems.size()){
+      const Node &n = m->node(i);
+	if(n.elems.size()){
 	    map[i]=idx;
-	    m->nodes[idx]=n;
+	    m->nodes[idx] = new Node(n);
 
 	    // here's the extra code to track the cortex node numbers...
 
@@ -787,5 +788,5 @@ void BldEEGMesh::execute()
 }
 } // End namespace DaveW
 
-
+#endif
 

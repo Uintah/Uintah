@@ -84,13 +84,15 @@ static Persistent* make_Mesh()
   return scinew Mesh;
 }
 
+#if 0
 static Persistent* make_Node()
 {
   return new Node(Point(0,0,0));
 }
+#endif
 
 PersistentTypeID Mesh::type_id("Mesh", "Datatype", make_Mesh);
-PersistentTypeID Node::type_id("Node", "0", make_Node);
+//PersistentTypeID Node::type_id("Node", "0", make_Node);
 
 Mesh::Mesh()
   : have_all_neighbors(0),
@@ -140,7 +142,7 @@ Mesh::Mesh(const Mesh& copy)
   // detach() doesn't really work, since the nodes are still "attached"
   int i;
   for (i=0; i<copy.nodes.size(); i++) {
-    nodes[i] = new Node(copy.point(i));
+    nodes[i] = Node(copy.point(i));
   }
 //  octree=0;
   grid.nx=grid.ny=grid.nz=0;
@@ -182,9 +184,11 @@ void Mesh::io(Piostream& stream)
     Pio(stream, tmpnodes);
     nodes.resize(tmpnodes.size());
     for (int i=0;i<tmpnodes.size();i++)
-      nodes[i]=new Node(tmpnodes[i].p);
+      nodes[i] = Node(tmpnodes[i].p);
   } else {
+#if 0    
     Pio(stream, nodes);
+#endif
   }
 
   if (version < 3) {	// didn't used to have conductivities...
@@ -224,9 +228,9 @@ void Mesh::io(Piostream& stream)
 
 #define NODE_VERSION 5
 
+#if 0
 void Node::io(Piostream& stream)
 {
-
   int version=stream.begin_class("Node", NODE_VERSION);
   Pio(stream, p);
   if(version >= 3) {
@@ -262,6 +266,7 @@ void Node::io(Piostream& stream)
   }
   stream.end_class();
 }
+#endif
 
 Node::~Node()
 {
@@ -357,14 +362,19 @@ Element::Element(const Element& copy, Mesh* mesh)
 #endif
 }
 
+Node::Node()
+  : p(Point(0, 0, 0)), elems(0, 4), bc(0), fluxBC(0), pdBC(0)
+{
+}
+
 Node::Node(const Point& p)
-  : p(p), elems(0, 4), bc(0), fluxBC(0), ref_cnt(0), pdBC(0)
+  : p(p), elems(0, 4), bc(0), fluxBC(0), pdBC(0)
 {
 }
 
 Node::Node(const Node& copy)
   : p(copy.p), elems(copy.elems), bc(copy.bc?new DirichletBC(*copy.bc):0),
-    fluxBC(0), ref_cnt(0), pdBC(copy.pdBC?new PotentialDifferenceBC(*copy.pdBC):0)
+    fluxBC(0), pdBC(copy.pdBC?new PotentialDifferenceBC(*copy.pdBC):0)
 {
 }
 
@@ -468,9 +478,6 @@ Point Element::centroid()
 
 void Mesh::detach_nodes()
 {
-  for (int i=0;i<nodes.size();i++)
-    if(nodes[i].get_rep())
-      nodes[i].detach();
 }
 
 void Mesh::get_elem_nbrhd(int eidx, Array1<int> &nbrs, int dupsOk) {
@@ -478,17 +485,17 @@ void Mesh::get_elem_nbrhd(int eidx, Array1<int> &nbrs, int dupsOk) {
   Element *e=elems[eidx];
   if (dupsOk) {
     for (int i=0; i<4; i++) {
-      NodeHandle n=nodes[e->n[i]];
-      for (int j=0; j<n->elems.size(); j++) {
-	int new_eidx = n->elems[j];
+      const Node &n = node(e->n[i]);
+      for (int j=0; j < n.elems.size(); j++) {
+	int new_eidx = n.elems[j];
 	if (new_eidx!=eidx) nbrs.add(new_eidx);
       }
     }
   } else {
     for (int i=0; i<4; i++) {
-      NodeHandle n=nodes[e->n[i]];
-      for (int j=0; j<n->elems.size(); j++) {
-	int new_eidx = n->elems[j];
+      const Node &n = node(e->n[i]);
+      for (int j=0; j<n.elems.size(); j++) {
+	int new_eidx = n.elems[j];
 	if (new_eidx==eidx) continue;
 	int k;
 	for (k=0; k<nbrs.size(); k++)
@@ -501,18 +508,18 @@ void Mesh::get_elem_nbrhd(int eidx, Array1<int> &nbrs, int dupsOk) {
 
 void Mesh::get_node_nbrhd(int nidx, Array1<int> &nbrs, int dupsOk) {
   if (!have_all_neighbors) {compute_neighbors(); compute_face_neighbors();}
-  NodeHandle n=nodes[nidx];
+  const Node &n = node(nidx);
   if (dupsOk) {
-    for (int i=0; i<n->elems.size(); i++) {
-      Element *e=elems[n->elems[i]];
+    for (int i=0; i<n.elems.size(); i++) {
+      Element *e=elems[n.elems[i]];
       for (int j=0; j<4; j++) {
 	int new_nidx = e->n[j];
 	if (new_nidx!=nidx) nbrs.add(new_nidx);
       }
     }
   } else {
-    for (int i=0; i<n->elems.size(); i++) {
-      Element *e=elems[n->elems[i]];
+    for (int i=0; i<n.elems.size(); i++) {
+      Element *e=elems[n.elems[i]];
       for (int j=0; j<4; j++) {
 	int new_nidx = e->n[j];
 	if (new_nidx==nidx) continue;
@@ -530,20 +537,17 @@ void Mesh::compute_neighbors()
   // Clear old neighbors...
   int i;
   for (i=0;i<nodes.size();i++)
-    if(nodes[i].get_rep())
-      nodes[i]->elems.remove_all();
+  {
+    nodes[i].elems.remove_all();
+  }
   // Compute element info for nodes
   for (i=0;i<elems.size();i++) {
     Element* elem=elems[i];
     if(elem) {
-      if(nodes[elem->n[0]].get_rep())
-	nodes[elem->n[0]]->elems.add(i);
-      if(nodes[elem->n[1]].get_rep())
-	nodes[elem->n[1]]->elems.add(i);
-      if(nodes[elem->n[2]].get_rep())
-	nodes[elem->n[2]]->elems.add(i);
-      if(nodes[elem->n[3]].get_rep())
-	nodes[elem->n[3]]->elems.add(i);
+      nodes[elem->n[0]].elems.add(i);
+      nodes[elem->n[1]].elems.add(i);
+      nodes[elem->n[2]].elems.add(i);
+      nodes[elem->n[3]].elems.add(i);
     }
   }
   // Reset face neighbors
@@ -1146,6 +1150,7 @@ void Element::operator delete(void* rp, size_t)
   Element_alloc.free(rp);
 }
 
+#if 0
 void *Node::operator new(size_t)
 {
   return Node_alloc.alloc();
@@ -1155,6 +1160,7 @@ void Node::operator delete(void* rp, size_t)
 {
   Node_alloc.free(rp);
 }
+#endif
 
 int Element::orient()
 {
@@ -1333,7 +1339,7 @@ bool
 Mesh::insert_delaunay( const Point& p )
 {
   int idx=nodes.size();
-  nodes.add(new Node(p));
+  nodes.add(Node(p));
   return insert_delaunay( idx );
 }
 
@@ -1679,21 +1685,19 @@ void Mesh::pack_elems()
   elems.resize(idx);
   int nnodes=nodes.size();
   for (i=0;i<nnodes;i++) {
-    NodeHandle &n = nodes[i];
-    if(n.get_rep()) {
-      int ne=n->elems.size();
-      for (int j=0;j<ne;j++) {
-	int elem=n->elems[j];
-	int new_elem=map[elem];
-	if(new_elem == -1234)
-	  cerr << "Warning: pointing to old element: " << elem << endl;
-	n->elems[j]=new_elem;
-      }
+    Node &n = nodes[i];
+    int ne = n.elems.size();
+    for (int j=0; j < ne; j++) {
+      int elem = n.elems[j];
+      int new_elem = map[elem];
+      if(new_elem == -1234)
+	cerr << "Warning: pointing to old element: " << elem << endl;
+      n.elems[j] = new_elem;
     }
   }
-  for (i=0;i<elems.size();i++) {
-    Element* e=elems[i];
-    for (int j=0;j<4;j++) {
+  for (i=0; i < elems.size(); i++) {
+    Element* e = elems[i];
+    for (int j=0; j<4; j++) {
       int face=e->faces[j];
       if(face>=0) {
 	if(map[face] == -1234)
@@ -1706,18 +1710,19 @@ void Mesh::pack_elems()
 
 void Mesh::pack_nodes()
 {
+#if 0
   // Pack the elements...
   int nnodes=nodes.size();
   int idx=0;
   Array1<int> map(nnodes);
   int i;
   for (i=0;i<nnodes;i++) {
-    NodeHandle& n=nodes[i];
-    if(n.get_rep()) {
-      map[i]=idx;
-      nodes[idx++]=n;
+    Node *n = nodes[i];
+    if (n) {
+      map[i] = idx;
+      nodes[idx++] = n;
     } else {
-      map[i]=-1234;
+      map[i] = -1234;
     }
   }
   nodes.resize(idx);
@@ -1732,6 +1737,7 @@ void Mesh::pack_nodes()
       }
     }
   }
+#endif
 }
 
 void Mesh::pack_all()
@@ -1789,21 +1795,21 @@ static void heapify(int* data, int n, int i)
   }
 }
 
-void Mesh::add_node_neighbors(int node, Array1<int>& idx, int apBC)
+void Mesh::add_node_neighbors(int nodei, Array1<int>& idx, int apBC)
 {
-  NodeHandle& n=nodes[node];
-  int ne=n->elems.size();
+  const Node &n = node(nodei);
+  int ne=n.elems.size();
   Array1<int> neighbor_nodes(4*ne+1);
   int nodesi=0;
   // Gather all of the nodes
   int i;
   for (i=0;i<ne;i++) {
-    int ei=n->elems[i];
+    int ei=n.elems[i];
     Element* e=elems[ei];
     for (int j=0;j<4;j++) {
-      int n=e->n[j];
-      if(!nodes[n]->bc || !apBC)
-	neighbor_nodes[nodesi++]=n;
+      int ni = e->n[j];
+      if(!nodes[ni].bc || !apBC)
+	neighbor_nodes[nodesi++] = ni;
     }
   }
   // Sort it...
@@ -1848,14 +1854,14 @@ void Mesh::get_boundary_nodes(Array1<int> &pts)
 #endif
   for (int i=0;i<nodes.size();i++) {
     
-    for (int j=0;j<nodes[i]->elems.size();j++) {
-      Element *e = elems[nodes[i]->elems[j]];
+    for (int j=0;j<nodes[i].elems.size();j++) {
+      Element *e = elems[nodes[i].elems[j]];
       for (int k=0;k<4;k++) {
 	if (e->n[k] != i) { // node i has to be on the face
 	  if (e->face(k) == -1) {
 	    pts.add(i);
 	    k = 5;
-	    j = nodes[i]->elems.size();
+	    j = nodes[i].elems.size();
 	  }
 	}
       }

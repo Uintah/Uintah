@@ -1038,6 +1038,7 @@ void TriSurface::construct_grid()
     construct_grid(nx, ny, nz, bbox.min(), spacing);
 }
 
+#if 0
 void TriSurface::get_surfnodes(Array1<NodeHandle> &n)
 {
     for (int i=0; i<points.size(); i++) {
@@ -1054,6 +1055,7 @@ void TriSurface::set_surfnodes(const Array1<NodeHandle> &n)
     for (int i=0; i<points.size(); i++)
 	points[i]=n[i]->p;
 }
+#endif
 
 GeomObj* TriSurface::get_obj(const ColorMapHandle&)
 {

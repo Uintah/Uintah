@@ -37,7 +37,7 @@ class PointsSurface;
 class SurfTree;
 
 typedef LockingHandle<Surface> SurfaceHandle;
-typedef Handle<Node> NodeHandle;
+//typedef Handle<Node> NodeHandle;
 
 class SCICORESHARE Surface : public Datatype {
 public:
@@ -93,8 +93,8 @@ public:
   virtual void construct_grid()=0;
   virtual void destroy_grid();
   virtual void destroy_hash();
-  virtual void get_surfnodes(Array1<NodeHandle>&)=0;
-  virtual void set_surfnodes(const Array1<NodeHandle>&)=0;
+  //virtual void get_surfnodes(Array1<NodeHandle>&)=0;
+  //virtual void set_surfnodes(const Array1<NodeHandle>&)=0;
   virtual GeomObj* get_obj(const ColorMapHandle&)=0;
 
   // Persistent representation...

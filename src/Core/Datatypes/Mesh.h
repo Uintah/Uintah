@@ -33,8 +33,8 @@
 namespace SCIRun {
 
 class GeomGroup;
-struct Node;
-typedef Handle<Node> NodeHandle;
+//struct Node;
+//typedef Handle<Node> NodeHandle;
 
 //#define STORE_ELEMENT_BASIS
 
@@ -88,13 +88,14 @@ struct PotentialDifferenceBC {
 };
 
 
+#if 0
 struct Node : public Persistent {
   Point p;
 
   int ref_cnt;
 
   Array1<int> elems;
-
+  
   DirichletBC* bc;
   int fluxBC;
   PotentialDifferenceBC* pdBC;
@@ -110,7 +111,23 @@ struct Node : public Persistent {
   void *operator new(size_t);
   void operator delete(void*, size_t);
 };
+#else
+struct Node {
+  Point p;
 
+  Array1<int> elems;
+  
+  DirichletBC* bc;
+  int fluxBC;
+  PotentialDifferenceBC* pdBC;
+
+  Node();
+  Node(const Point &p);
+  Node(const Node &n);
+  Node *clone();
+  ~Node();
+};
+#endif
 
 struct NodeVersion1 {
   Point p;
@@ -189,13 +206,13 @@ protected:
 //  int current_generation;
 
 public:
-  Array1<NodeHandle> nodes;
+  Array1<Node> nodes;
   Array1<Element *> elems;
   Array1<Array1<double> > cond_tensors;
   int have_all_neighbors;
 
-  const Node &node(int i) const { return *(nodes[i].get_rep()); }
-  const Point &point(int i) const { return nodes[i].get_rep()->p; }
+  const Node &node(int i) const { return nodes[i]; }
+  const Point &point(int i) const { return nodes[i].p; }
   Element *element(int i) const { return elems[i]; }
   int nodesize() const { return nodes.size(); }
   int elemsize() const { return elems.size(); }
@@ -284,7 +301,7 @@ inline int Element::face(int i)
 
 
 void Pio(Piostream&, Element*&);
-void Pio(Piostream& stream, NodeVersion1& node);
+//void Pio(Piostream& stream, NodeVersion1& node);
 void Pio(Piostream& stream, ElementVersion1& node);
 
 } // End namespace SCIRun

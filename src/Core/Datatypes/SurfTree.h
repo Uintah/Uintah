@@ -108,8 +108,8 @@ public:
 
   virtual void construct_grid(int, int, int, const Point &, double);
   virtual void construct_grid();
-  virtual void get_surfnodes(Array1<NodeHandle>&);
-  virtual void set_surfnodes(const Array1<NodeHandle>&);
+  //virtual void get_surfnodes(Array1<NodeHandle>&);
+  //virtual void set_surfnodes(const Array1<NodeHandle>&);
   virtual int inside(const Point& p);
   virtual void construct_hash(int, int, const Point &, double);
 
@@ -124,8 +124,8 @@ protected:
 		int &compBest, int &faceBest, int comp);
   int inside(const Point &p, int &component);
 
-  void get_surfnodes(Array1<NodeHandle>&, clString name);
-  void set_surfnodes(const Array1<NodeHandle>&, clString name);
+  //void get_surfnodes(Array1<NodeHandle>&, clString name);
+  //void set_surfnodes(const Array1<NodeHandle>&, clString name);
   void printNbrInfo();
 
 };

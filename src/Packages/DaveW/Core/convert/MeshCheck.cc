@@ -55,8 +55,8 @@ int main(int argc, char **argv) {
     visited[0]=1;
     while (!q.is_empty()) {
 	int n=q.pop();
-	for (j=0; j<mesh->nodes[n]->elems.size(); j++) {
-	    Element *e=mesh->elems[mesh->nodes[n]->elems[j]];
+	for (j=0; j<mesh->node(n).elems.size(); j++) {
+	    Element *e=mesh->elems[mesh->node(n).elems[j]];
 	    for (k=0; k<4; k++) {
 		int nn=e->n[k];
 		if (!visited[nn]) {
@@ -72,7 +72,6 @@ int main(int argc, char **argv) {
     int count=0;
     for (i=0; i<visited.size(); i++) {
 	count+=visited[i];
-	if (!visited[i]) mesh->nodes[i]=0;
     }
     cerr << "Visited "<<count<<" out of "<<visited.size()<<" nodes.\n";
 
