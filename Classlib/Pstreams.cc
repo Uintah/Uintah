@@ -850,7 +850,7 @@ GzipPiostream::GzipPiostream(const clString& filename, Direction dir)
     } else {
 	gzfile=gzopen(filename(), "w");
 	char str[100];
-	sprintf(str, "SCI\nGZ\n1\n");
+	sprintf(str, "SCI\nBIN\n1\n");
 	gzwrite(gzfile, str, strlen(str));
 	version=1;
     }
@@ -860,11 +860,11 @@ GzipPiostream::GzipPiostream(char* name, int version)
 : Piostream(Read, version), have_peekname(0)
 {
     gzfile=gzopen(name, "r");
-    char str[9];
-    gzread(gzfile, str, 9);
-    char hdr[12];
-    sprintf(hdr, "SCI\nGZ\n%d\n", 1);
-    if (strncmp(str, hdr, 9)) {
+    char str[10];
+    gzread(gzfile, str, 10);
+    char hdr[13];
+    sprintf(hdr, "SCI\nBIN\n%d\n", 1);
+    if (strncmp(str, hdr, 10)) {
 	gzclose(gzfile);
 	gzfile=0;
 	return;
