@@ -11,7 +11,9 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Plane.h>
 #include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/CycleMaterial.h>
 #include <Packages/rtrt/Core/DielectricMaterial.h>
+#include <Packages/rtrt/Core/InvisibleMaterial.h>
 #include <fstream>
 #include <iostream>
 
@@ -121,10 +123,14 @@ bool get_materials(ifstream &infile) {
       }
     }
   }
+  int nm=ase_matls.size();
+  ase_matls.resize(nm+1);
+  ase_matls[nm] = new CycleMaterial;
   return true;
 }
 
 Object *get_object(ifstream &infile) {
+  int parsing_roof=0;
   Object *result = 0;
   string token("");
   int curley = 0;
@@ -145,6 +151,10 @@ Object *get_object(ifstream &infile) {
     } else if (token == "*NODE_NAME") {
       infile >> token;
       cout << "Parsing node named "<< token<<endl;
+      string subtoken = token.substr(1, 10);
+      if (subtoken == "ROOF_SHELL") {
+	parsing_roof=1;
+      } else parsing_roof=0;
     } else if (token == "*NODE_TM") {
       cout << "Found *NODE_TM.\n";
       // eat the open curley brace
@@ -259,6 +269,15 @@ Object *get_object(ifstream &infile) {
   }
   // Now lets set the materials and add them to a group
   result = (Object*) new Group();
+  if (parsing_roof) {
+    CycleMaterial *cm = dynamic_cast<CycleMaterial*>(ase_matls[ase_matls.size()-1]);
+    if (cm->members.size() == 0) {
+      cm->members.add(ase_matls[matl_index]);
+      cm->members.add(new InvisibleMaterial);
+      cm->members.add(new DielectricMaterial(1.0, 1.0, 0.3, 400.0, Color(1,1,1), Color(1,1,1), false));
+    }
+    matl_index=ase_matls.size()-1;
+  }
   for(unsigned int i = 0; i < faces.size(); i++) {
     Object *face = faces[i];
     face->set_matl(ase_matls[matl_index]);
@@ -364,5 +383,13 @@ Scene* make_scene(int argc, char* argv[], int) {
 			 ambient_scale);
   scene->add_light(new Light(Point(500,-300,300), Color(.8,.8,.8), 0));
   scene->shadow_mode=1;
+  scene->set_materials(ase_matls);
+  cerr << "num materials="<<ase_matls.size()<<"\n";
+  CycleMaterial *cm;
+  if (cm = dynamic_cast<CycleMaterial*>(scene->get_material(ase_matls.size()-1))) {
+    cerr << " CYCLE! -- nmembers="<<cm->members.size()<<"\n";
+  } else {
+    cerr << " not a cycle material.\n";
+  }
   return scene;
 }

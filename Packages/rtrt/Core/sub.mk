@@ -18,6 +18,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Background.cc \
 	$(SRCDIR)/Object.cc \
 	$(SRCDIR)/Phong.cc \
+	$(SRCDIR)/InvisibleMaterial.cc \
+	$(SRCDIR)/CycleMaterial.cc \
 	$(SRCDIR)/MetalMaterial.cc \
 	$(SRCDIR)/PhongMaterial.cc \
 	$(SRCDIR)/Material.cc \

@@ -9,6 +9,7 @@
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Plane.h>
 #include <Packages/rtrt/Core/Background.h>
+#include <Packages/rtrt/Core/Material.h>
 #include <stdio.h>
 
 namespace rtrt {
@@ -41,6 +42,7 @@ class Scene {
   
   double ambientscale;
   bool hotspots;
+  Array1<Material*> materials;
   friend class Dpy;
 public:
   Scene(Object*, const Camera&, Image*, Image*, const Color& bgcolor,
@@ -65,6 +67,18 @@ public:
     return which==0?camera0:camera1;
   }
   
+  inline Material* get_material(int which) {
+    return materials[which];
+  }
+
+  inline int nmaterials() {
+    return materials.size();
+  }
+
+  inline void set_materials(const Array1<Material*> &copy) {
+    materials=copy;
+  }
+
   void copy_camera(int which);
   
   inline Object* get_object() const {
