@@ -27,11 +27,15 @@ using namespace rtrt;
 using namespace SCIRun;
 
 class UVSphere : public Object, UVMapping {
-  Point cen; 
+  Point cen;
+  Point ref;
   double radius;
+  Transform xform;
+  Transform ixform;
  public:
-  UVSphere(Material *m, Point c, double r);
+  UVSphere(Material *m, Point c, double r, const Point &ref=Point(0,0,1));
   virtual ~UVSphere();
+  virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
   virtual void uv(UV& uv, const Point&, const HitInfo& hit);
   virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);

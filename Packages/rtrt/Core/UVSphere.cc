@@ -17,8 +17,8 @@ the change in mappying to a UVSphere map.
 using namespace rtrt;
 using namespace SCIRun;
 
-UVSphere::UVSphere(Material *matl, Point c, double r) 
-  : Object(matl,this), radius(r), cen(c)
+UVSphere::UVSphere(Material *matl, Point c, double r, const Point& ref) 
+    : Object(matl,this), radius(r), cen(c), ref(ref)
 {
 }
 
@@ -26,13 +26,34 @@ UVSphere::~UVSphere()
 {
 }
 
+void UVSphere::preprocess(double, int&, int&)
+{
+    Vector axis=ref-cen;
+    axis.normalize();
+    // Set up unit transformation
+    xform.load_identity();
+    xform.pre_translate(-cen.asVector());
+    xform.rotate(axis, Vector(0,0,1));
+    xform.pre_scale(Vector(1./radius, 1./radius, 1./radius));
+    print(cerr);
+    xform.print();
+    ixform.load_identity();
+    ixform.pre_scale(Vector(radius, radius, radius));
+    ixform.rotate(Vector(0,0,1), axis);
+    ixform.pre_translate(cen.asVector());
+    ixform.print();
+}
+
 void UVSphere::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
                          PerProcessorContext*)
 {
-  Vector OC=cen-ray.origin();
-  double tca=Dot(OC, ray.direction());
-  double l2oc=OC.length2();
-  double rad2=radius*radius;
+  Vector v=xform.project(ray.direction());
+  double dist_scale=v.normalize();
+  Ray xray(xform.project(ray.origin()), v);
+  Vector xOC=-xform.project(ray.origin()).asVector();
+  double tca=Dot(xOC, xray.direction());
+  double l2oc=xOC.length2();
+  double rad2=1;
   st->sphere_isect++;
   if(l2oc <= rad2){
     // Inside the sphere
@@ -53,8 +74,8 @@ void UVSphere::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
         return;
       } else {
         double thc=sqrt(t2hc);
-        hit.hit(this, tca-thc);
-        hit.hit(this, tca+thc);
+        hit.hit(this, (tca-thc)/dist_scale);
+        hit.hit(this, (tca+thc)/dist_scale);
         st->sphere_hit++;
         return;
       }
@@ -64,9 +85,10 @@ void UVSphere::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 
 Vector UVSphere::normal(const Point& hitpos, const HitInfo&)
 {
-  Vector n=hitpos-cen;
-  n*=1./radius;
-  return n;
+  Vector n=xform.project(hitpos).asVector();
+  Vector xn=ixform.project(n);
+  xn.normalize();
+  return xn;
 }
 
 void UVSphere::compute_bounds(BBox& bbox, double offset)
@@ -78,9 +100,9 @@ void UVSphere::compute_bounds(BBox& bbox, double offset)
 //uu = acos(m.x() / (radius * sin (M_PI*vv)))* over2pi;
 void UVSphere::uv(UV& uv, const Point& hitpos, const HitInfo&)  
 {
-  Vector m(hitpos-cen);  
+  Vector m(xform.project(hitpos).asVector());
   double uu,vv,theta,phi;  
-  theta = acos(m.z()/radius);
+  theta = acos(m.z());
   phi = atan2(m.y(), m.x());
   if(phi < 0) phi += 6.28318530718;
   uu = phi * .159154943092; // 1_pi
