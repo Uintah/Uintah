@@ -1737,12 +1737,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         f_theta[m][c] = vol_frac[m][c]*kappa[m]/sumVolFrac_kappa;
       }
     }
+    
 
-  //---- P R I N T   D A T A ------
-    if(d_ice -> switchDebug_EQ_RF_press)  { 
-      ostringstream desc1;
-      desc1<< "BOT_equilibration_patch_"<<patch->getID();
-#if 0
+#if 0 //__________________________________
       // BEGIN Debug Oren & Randy 2-Aug-04
       double diff = 0.0;
       int count = 0;
@@ -1754,6 +1751,12 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
       fprintf(stderr,"|New-Old|_L1 = %le\n",diff/count);
       // END   Debug Oren & Randy 2-Aug-04
+#endif
+
+  //---- P R I N T   D A T A ------
+    if(d_ice -> switchDebug_EQ_RF_press)  { 
+      ostringstream desc1;
+      desc1<< "BOT_equilibration_patch_"<<patch->getID();
 
       d_ice->printData( 0, patch, 1, desc1.str(),"Press_CC_equil",press_new);
       d_ice->printData( 0, patch, 1, desc1.str(),"delPress",      delPress_tmp);
@@ -1766,7 +1769,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          d_ice->printData(indx,patch,1,desc.str(),"rho_micro_CC",rho_micro[m]);
          d_ice->printData(indx,patch,1,desc.str(),"vol_frac_CC", vol_frac[m]);
       }
-#endif
+
     }
   }  //patches
 }
