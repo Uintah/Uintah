@@ -24,6 +24,9 @@ namespace Components {
   using Uintah::Parallel::ProcessorContext;
 
 class NonlinearSolver;
+class Properties;
+class TurbulenceModel;
+class BoundaryCondition;
 
 class Arches : public UintahParallelComponent, public CFDInterface {
 public:
@@ -64,6 +67,9 @@ private:
 
 //
 // $Log$
+// Revision 1.10  2000/04/07 23:02:16  sparker
+// Fixed arches compile
+//
 // Revision 1.9  2000/04/07 18:30:12  rawat
 // Added problem initialization function in Arches.cc
 //
