@@ -250,6 +250,8 @@ WARNING
       // value
       bool get(int &value);
       bool get(long &value);
+      bool get(double &value);
+      bool get(string &value);
       bool get(Vector &value);
 
       //////////
