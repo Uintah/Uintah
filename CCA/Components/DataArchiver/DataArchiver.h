@@ -238,12 +238,19 @@ using std::pair;
       double d_checkpointInterval;
       int d_checkpointTimestepInterval;
 
+      // how much real time to pass (in seconds) to wait for checkpoint
+      // can be used with or without one of the above two
+      // walltimeStart cannot be used without walltimeInterval
+      int d_checkpointWalltimeStart;     //how long to wait before first 
+      int d_checkpointWalltimeInterval;
+      
       int d_checkpointCycle;
 
       Dir d_checkpointsDir;
       list<string> d_checkpointTimestepDirs;
       double d_nextCheckpointTime; // used when d_checkpointInterval != 0
       int d_nextCheckpointTimestep; // used when d_checkpointTimestepInterval != 0
+      int d_nextCheckpointWalltime; // used when d_checkpointWalltimeInterval != 0
       Mutex d_outputLock;
 
       DataArchiver(const DataArchiver&);
