@@ -51,9 +51,9 @@ AssertionFailed::AssertionFailed(const char* message,
 				 const char* file,
 				 int lineno)
 {
-    size_t len = strlen(message)+strlen(file)+100;
+    size_t len = strlen(message)+strlen(file)+strlen(message_)+100;
     message_ = (char*)malloc(len);
-    sprintf(message_, "%s (file: %s, line: %d)", message, file, lineno);
+    sprintf(message_, "%s (file: %s, line: %d)\n%s", message, file, lineno, stacktrace_);
 }
 
 AssertionFailed::AssertionFailed(const AssertionFailed& copy)
