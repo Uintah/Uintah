@@ -819,10 +819,10 @@ bool Module::haveUI()
     error("Could not run UI tcl function.");
     return false;
   }
-  return flag == 1;
+  return (flag > 1);
 }
 
 void Module::popupUI()
 {
-  gui->execute(id+" popup_ui");
+  gui->execute(id+" initialize_ui");
 }
