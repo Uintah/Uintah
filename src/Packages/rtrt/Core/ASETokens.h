@@ -127,7 +127,7 @@ class MaterialToken : public Token
     AddChildMoniker("*MAP_BUMP");
     AddChildMoniker("*MAP_OPACITY");
     AddChildMoniker("*MAP_SELFILLUM");
-    AddChildMoniker("*SUBMATERIAL");
+    //AddChildMoniker("*SUBMATERIAL");
   }
   virtual ~MaterialToken() {}
 
