@@ -55,6 +55,7 @@ WARNING
       //////////
       // Insert Documentation Here:
      virtual void execute( const ProcessorGroup * pc );
+     virtual SchedulerP createSubScheduler();
       
       //////////
       // Insert Documentation Here:

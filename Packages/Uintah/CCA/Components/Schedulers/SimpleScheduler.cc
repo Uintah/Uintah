@@ -28,6 +28,15 @@ SimpleScheduler::~SimpleScheduler()
 {
 }
 
+SchedulerP
+SimpleScheduler::createSubScheduler()
+{
+  SimpleScheduler* newsched = new SimpleScheduler(d_myworld, m_outPort);
+  UintahParallelPort* lbp = getPort("load balancer");
+  newsched->attachPort("load balancer", lbp);
+  return newsched;
+}
+
 void
 SimpleScheduler::verifyChecksum()
 {

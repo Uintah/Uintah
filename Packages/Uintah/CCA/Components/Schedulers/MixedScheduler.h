@@ -59,6 +59,7 @@ public:
       
   virtual void problemSetup(const ProblemSpecP& prob_spec);
       
+  virtual SchedulerP createSubScheduler();
 private:
 
   MessageLog log;
