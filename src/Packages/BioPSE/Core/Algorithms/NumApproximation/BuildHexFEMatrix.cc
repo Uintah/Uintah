@@ -133,28 +133,30 @@ double BuildHexFEMatrix::getLocalMatrixEntry(HexVolMesh::Cell::index_type ci, in
   hMesh_->get_point(p, cell_nodes[6]);
   xb = p.x(); yb = p.y(); zb = p.z();
 
+  typedef double onerow[3]; // This 'hack' is necessary to compile under IRIX CC
+  onerow *conductivity;
+
   // get conductivity tensor for this cell
-  double (*conductivity)[3][3];
-  if (index_based_) conductivity = &(tens_[hFieldInt_->value(ci)].second.mat_);
-  else conductivity = &(hFieldTensor_->value(ci).mat_);
+  if (index_based_) conductivity = tens_[hFieldInt_->value(ci)].second.mat_;
+  else conductivity = hFieldTensor_->value(ci).mat_;
 
   for(w = 0; w < rE_->numQuadPoints; w++) { // loop over quadrature points
 	value += 
 	  rE_->qW[w] *
 	  ((rE_->dphidx(i, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2])/rE_->dpsi1dx(xa,xb)) *
-	   ((*conductivity)[0][0]*unitsScale_/*xx*/ * rE_->dphidx(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi1dx(xa,xb) + 
-		(*conductivity)[0][1]*unitsScale_/*xy*/ * rE_->dphidy(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi2dy(ya,yb) + 
-		(*conductivity)[0][2]*unitsScale_/*xz*/ * rE_->dphidz(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi3dz(za,zb))+
+	   (conductivity[0][0]*unitsScale_/*xx*/ * rE_->dphidx(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi1dx(xa,xb) + 
+		conductivity[0][1]*unitsScale_/*xy*/ * rE_->dphidy(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi2dy(ya,yb) + 
+		conductivity[0][2]*unitsScale_/*xz*/ * rE_->dphidz(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi3dz(za,zb))+
 	   
 	   (rE_->dphidy(i, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2])/rE_->dpsi2dy(ya,yb)) *
-	   ((*conductivity)[0][1]*unitsScale_/*xy*/ * rE_->dphidx(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi1dx(xa,xb) + 
-		(*conductivity)[1][1]*unitsScale_/*yy*/ * rE_->dphidy(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi2dy(ya,yb) +
-		(*conductivity)[1][2]*unitsScale_/*yz*/ * rE_->dphidz(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi3dz(za,zb))+
+	   (conductivity[0][1]*unitsScale_/*xy*/ * rE_->dphidx(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi1dx(xa,xb) + 
+		conductivity[1][1]*unitsScale_/*yy*/ * rE_->dphidy(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi2dy(ya,yb) +
+		conductivity[1][2]*unitsScale_/*yz*/ * rE_->dphidz(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi3dz(za,zb))+
 	   
 	   (rE_->dphidz(i, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2])/rE_->dpsi3dz(za,zb)) * 
-	   ((*conductivity)[0][2]*unitsScale_/*xz*/ * rE_->dphidx(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi1dx(xa,xb) +
-		(*conductivity)[1][2]*unitsScale_/*yz*/ * rE_->dphidy(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi2dy(ya,yb) +
-		(*conductivity)[2][2]*unitsScale_/*zz*/ * rE_->dphidz(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi3dz(za,zb)));
+	   (conductivity[0][2]*unitsScale_/*xz*/ * rE_->dphidx(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi1dx(xa,xb) +
+		conductivity[1][2]*unitsScale_/*yz*/ * rE_->dphidy(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi2dy(ya,yb) +
+		conductivity[2][2]*unitsScale_/*zz*/ * rE_->dphidz(j, rE_->qP[w][0], rE_->qP[w][1], rE_->qP[w][2]) / rE_->dpsi3dz(za,zb)));
   }
 
   value *= rE_->getAbsDetJacobian(xa, xb, ya, yb, za, zb);
