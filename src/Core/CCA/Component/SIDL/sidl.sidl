@@ -43,8 +43,8 @@ package SIDL {
 
 
   interface Interface {
-      void addReference();
-      void deleteReference();
+      collective void addReference();
+      collective void deleteReference();
       /*Class getClass();*/
       bool isSame(in Interface object);
       /*bool isInstanceOf(in Class type);*/
@@ -99,8 +99,8 @@ package SIDL {
   }
 
     class Object implements Interface {
-      final void addReference();
-      final void deleteReference();
+      final collective void addReference();
+      final collective void deleteReference();
       /*final Class getClass();*/
       final bool isSame(in Interface object);
      /* final bool isInstanceOf(in Class type);
