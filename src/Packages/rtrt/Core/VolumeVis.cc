@@ -11,6 +11,7 @@
 #include <Packages/rtrt/Core/Context.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
+#include <Packages/rtrt/Core/Array1.h>
 #include <float.h>
 #include <iostream>
 
@@ -19,8 +20,8 @@ using namespace rtrt;
 
 VolumeVis::VolumeVis(BrickArray3<float>& _data, float data_min, float data_max,
 		     int nx, int ny, int nz,
-		     Point min, Point max, Material** matls, int nmatls,
-		     float *alphas, int nalphas):
+		     Point min, Point max, const Array1<Material*> &matls,
+		     int nmatls, const Array1<float> &alphas, int nalphas):
   Object(this), diag(max - min),
   data_min(data_min), data_max(data_max),
   data_diff_inv(1/(data_max - data_min)),

@@ -22,7 +22,7 @@ using namespace rtrt;
 using SCIRun::Thread;
 
 void get_material(Array1<Material*> &matls, Array1<float> &alphas,
-		  bool do_phong) {
+		  bool do_phong, int ncolors) {
   CatmullRomSpline<Color> spline(0);
 #if 1
   spline.add(Color(0,0,1));
@@ -88,7 +88,6 @@ void get_material(Array1<Material*> &matls, Array1<float> &alphas,
 #endif
   //  alpha_spline.add(0.1);
 #endif
-  int ncolors=5000;
   matls.resize(ncolors);
   alphas.resize(ncolors);
   if (do_phong) {
@@ -125,6 +124,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   char *nrrd_file = 0;
   bool cut=false;
   bool do_phong = true;
+  int ncolors=5000;
+
   for(int i=1;i<argc;i++){
     if(strcmp(argv[i], "-dim")==0){
       i++;
@@ -147,6 +148,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       cut=true;
     } else if(strcmp(argv[i], "-lam")==0){
       do_phong = false;
+    } else if(strcmp(argv[i], "-ncolors")==0){
+      i++;
+      ncolors = atoi(argv[i]);
     } else {
       cerr << "Unknown option: " << argv[i] << '\n';
       cerr << "Valid options for scene: " << argv[0] << '\n';
@@ -173,7 +177,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group* all = new Group();
   Array1<Material*> matls;
   Array1<float> alphas;
-  get_material(matls,alphas,do_phong);
+  get_material(matls,alphas,do_phong,ncolors);
   BrickArray3<float> data;
   float data_min, data_max;
   Point minP, maxP;
@@ -305,8 +309,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Object* obj = (Object*) new VolumeVis(data, data_min, data_max,
 					nx, ny, nz,
 					minP, maxP,
-					&matls[0], matls.size(),
-					&alphas[0], alphas.size());
+					matls, matls.size(),
+					alphas, alphas.size());
   
   if(cut){
     PlaneDpy* pd=new PlaneDpy(Vector(0,0,1), Point(0,0,0));
