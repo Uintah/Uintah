@@ -77,14 +77,7 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
   m[0] = matl->getDWIndex();
   mymatls = new MaterialSet();
   mymatls->addAll(m);
-  mymatls->addReference();
-
-  // determine the specific heat of that matl.
-  Material* matl = sharedState->getMaterial( m[0] );
-  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-  if (ice_matl){
-    d_cv = ice_matl->getSpecificHeat();
-  }   
+  mymatls->addReference();   
 
   // Parse the Cantera XML file
   string fname;
@@ -312,6 +305,9 @@ void Mixing2::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
   t->requires(Task::OldDW, mi->density_CCLabel, Ghost::None);
   t->requires(Task::OldDW, mi->pressure_CCLabel, Ghost::None);
   t->requires(Task::OldDW, mi->temperature_CCLabel, Ghost::None);
+  t->requires(Task::NewDW, mi->specific_heatLabel, Ghost::None);
+  t->requires(Task::NewDW, mi->gammaLabel, Ghost::None);
+    
   t->requires(Task::OldDW, mi->delT_Label);
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
@@ -341,7 +337,11 @@ void Mixing2::react(const ProcessorGroup*,
       old_dw->get(pressure, mi->pressure_CCLabel, matl, patch, Ghost::None, 0);
       constCCVariable<double> temperature;
       old_dw->get(temperature, mi->temperature_CCLabel, matl, patch, Ghost::None, 0);
-
+      constCCVariable<double> gamma;
+      old_dw->get(gamma, mi->gammaLabel, matl, patch, Ghost::None, 0);      
+      constCCVariable<double> cv;
+      old_dw->get(cv, mi->specific_heatLabel, matl, patch, Ghost::None, 0);
+        
       CCVariable<double> energySource;
       new_dw->getModifiable(energySource,   mi->energy_source_CCLabel,
 			    matl, patch);
@@ -410,7 +410,7 @@ void Mixing2::react(const ProcessorGroup*,
 	r.initialize();
 	r.advance(dt);
 	double dtemp = gas->temperature()-temp;
-	double energyx = dtemp*d_cv*mass;
+	double energyx = dtemp*cv[*iter]*mass;
 	energySource[idx] += energyx;
 	gas->getMassFractions(new_mf);
 	for(int i = 0; i< numSpecies; i++)
