@@ -221,8 +221,6 @@ private:
       ScalarSolver* d_scalarSolver;
       // reacting scalar solver
       ReactiveScalarSolver* d_reactingScalarSolver;
-      // enthalpy solver
-      EnthalpySolver* d_enthalpySolver;
       // physcial constatns
       PhysicalConstants* d_physicalConsts;
 

@@ -65,6 +65,9 @@ c      logical plusX, plusY, plusZ
       areatb(ii) = sew(ii) * sns(jj)
       if (pcell(ii,jj,kk).ne.ffield) then
 c  call fixval assume abskg to be one but change it in props calculation
+         print*,'Printing value of temperature in non-ffield cell'
+         print*,'At location ',ii,jj,kk
+         print*,'Temperature = ',tg(ii,jj,kk)
          val = SIG*PI1*tg(ii,jj,kk)**4
          factor = 1.d0
          call fixradval(val,aw(ii,jj,kk),as(ii,jj,kk),ab(ii,jj,kk),
