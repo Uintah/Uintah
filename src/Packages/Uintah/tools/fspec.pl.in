@@ -10,16 +10,20 @@ open(FILE, "<$source") or die "cannot open $source for reading: $!";
 
 open(OUT, ">$output");
 
-while($line = <FILE>){
+LINE: while(<FILE>){
  # Scan for the return type.  Must be a simple type, or void
-    chomp($line);
-    while(!($line =~ /;/)){
-	$line.=<FILE>;
-	chomp($line);
+    chomp;
+    unless(/;/){
+	$_ .= <FILE>;
+	redo unless eof;
     }
+    if(/^\s*$/ && eof){
+	last LINE;
+    }
+    $line = $_;
     ($ret, $fn, $arg) = ($line =~ /(\w*)\s+(\w*)\s*\((.*)\)\s*\;/);
     if($ret eq "" || $fn eq ""){
-	print "line=$line";
+	unlink $output;
 	die "Cannot parse function and return type";
     }
     @args = split /,/,$arg;
@@ -30,6 +34,7 @@ while($line = <FILE>){
 	} elsif(&knownarraytype($type) && &simpletype($tmpltype)){
 	} elsif(&othertype($type)){
 	} else {
+	    unlink $output;
 	    die "Cannot understand type: $a";
 	}
     }
@@ -38,7 +43,7 @@ while($line = <FILE>){
     print OUT "#define fspec_$fn\n\n";
     print OUT "#ifdef __cplusplus\n\n";
     print OUT "extern \"C\" ";
-    print OUT "$ret $fn\_(";
+    print OUT "$ret ".&cname($fn)."(";
     $sep="";
     foreach $a (@args) {
 	print OUT $sep;
@@ -57,7 +62,12 @@ while($line = <FILE>){
 	    }
 	    print OUT "$tmpltype\* $name\_ptr";
 	} elsif(&knownarraytype($type) && &simpletype($tmpltype)){
-	    print OUT "int* $name\_size, ";
+	    if($type eq "OffsetArray1"){
+		print OUT "int* $name\_low, ";
+		print OUT "int* $name\_high, ";
+	    } else {
+		print OUT "int* $name\_size$type, ";
+	    }
 	    print OUT "$tmpltype\* $name\_ptr";
 	} elsif(&othertype($type)){
 	    if($type == "IntVector"){
@@ -92,14 +102,19 @@ while($line = <FILE>){
 		}
 	    }
 	} elsif(&knownarraytype($type)){
-	    print OUT "  int $name\_size = $name.size();\n";
+	    if($type eq "OffsetArray1"){
+		print OUT "  int $name\_low = $name.low();\n";
+		print OUT "  int $name\_high = $name.high();\n";
+	    } else {
+		print OUT "  int $name\_size = $name.size();\n";
+	    }
 	}
     }
     print OUT "  ";
     if($ret != "void"){
 	print OUT "return ";
     }
-    print OUT "$fn\_(";
+    print OUT &cname($fn)."(";
     $sep="";
     foreach $a (@args) {
 	($type, $tmpltype, $name) = &parsearg($a);
@@ -118,7 +133,12 @@ while($line = <FILE>){
 	    }
 	    print OUT "$name.getPointer()";
 	} elsif(&knownarraytype($type)){
-	    print OUT "&$name\_size, ";
+	    if($type eq "OffsetArray1"){
+		print OUT "&$name\_low, ";
+		print OUT "&$name\_high, ";
+	    } else {
+		print OUT "&$name\_size, ";
+	    }
 	    print OUT "$name\.get_objs()";
 	} elsif(&othertype($type)){
 	    print OUT "$name.get_pointer()";
@@ -150,7 +170,12 @@ while($line = <FILE>){
 	    }
 	    $s.="$name";
 	} elsif(&knownarraytype($type) && &simpletype($tmpltype)){
-	    $s.="$name\_size, ";
+	    if($type eq "OffsetArray1"){
+		$s.="$name\_low, ";
+		$s.="$name\_high, ";
+	    } else {
+		$s.="$name\_size, ";
+	    }
 	    $s.="$name";
 	} elsif(&othertype($type)){
 	    if($type == "IntVector"){
@@ -202,9 +227,15 @@ while($line = <FILE>){
 	    $s.=")";
 	    print OUT &formatf($s)."\n";
 	} elsif(&knownarraytype($type) && &simpletype($tmpltype)){
-	    print OUT "      integer $name\_size\n";
 	    $ftype=&ftype($tmpltype);
-	    print OUT "      $ftype $name($name\_size)\n";
+	    if($type eq "OffsetArray1"){
+		print OUT "      integer $name\_low\n";
+		print OUT "      integer $name\_high\n";
+		print OUT "      $ftype $name($name\_low:$name\_high)\n";
+	    } else {
+		print OUT "      integer $name\_size\n";
+		print OUT "      $ftype $name($name\_size)\n";
+	    }
 	} elsif(&othertype($type)){
 	    if($type == "IntVector"){
 		print OUT "      integer $name(3)\n";
@@ -215,9 +246,6 @@ while($line = <FILE>){
     print OUT "\n#endif /* fspec_$fn */\n\n";
 }
 
-close FILE;
-close OUT;
-
 sub usage {
     print<<EOM;
 Usage:
@@ -227,6 +255,9 @@ EOM
 }
 
 sub parsearg {
+    my($type);
+    my($tmpltype);
+    my($name);
     ($type, $tmpltype, $name) = ($_[0] =~ /\s*(\w+)\s*\<\s*(\w+)\s*>\s*(\w+)\s*/);
     if(!$type){
 	($type, $name) = ($_[0] =~ /\s*(\w+)\s+(\w+)\s*/);
@@ -235,8 +266,9 @@ sub parsearg {
 }
 
 sub simpletype {
+    my($type);
     $type = $_[0];
-    if($type eq "double" || $type eq "int"){
+    if($type eq "double" || $type eq "int" || $type eq "bool"){
 	1;
     } else {
 	0;
@@ -244,8 +276,9 @@ sub simpletype {
 }
 
 sub knownvartype {
+    my($type);
     $type = $_[0];
-    if($type eq "CCVariable" || $type eq "NCVariable" || $type eq "SFCXVariable" || $type eq "SFCYVariable" || $type eq "SFCZVariable") {
+    if($type eq "CCVariable" || $type eq "NCVariable" || $type eq "SFCXVariable" || $type eq "SFCYVariable" || $type eq "SFCZVariable" || $type eq "Array3") {
 	1;
     } else {
 	0;
@@ -253,8 +286,9 @@ sub knownvartype {
 }
 
 sub knownarraytype {
+    my($type);
     $type = $_[0];
-    if($type eq "Array1") {
+    if($type eq "Array1" || $type eq "OffsetArray1") {
 	1;
     } else {
 	0;
@@ -262,6 +296,7 @@ sub knownarraytype {
 }
 
 sub othertype {
+    my($type);
     $type = $_[0];
     if($type eq "IntVector") {
 	1;
@@ -274,17 +309,24 @@ sub formatf {
     $f=$_[0];
     $s="";
     $cur="      ";
+    $count=10000;
     while($f ne ""){
 	($first, $rest) = ($f =~ /^([,\(\)\:]|\w+|\s+)(.*)/);
 	if($first eq ""){
+	    unlink $output;
 	    die "re broke\n";
 	}
 	if(length($cur.$first) >= 72){
 	    $s.=$cur."\n";
 	    $cur="     & ";
 	    if(length($cur.$first) >= 72){
+		unlink $output;
 		die "token more than 66 chars, cannot format line!";
 	    }
+	}
+	if(--$count == 0){
+	    unlink $output;
+	    die "infinite recursion in formatf: f=".$f."\n";
 	}
 	$cur.=$first;
 	$f=$rest;
@@ -293,12 +335,49 @@ sub formatf {
 }
 
 sub ftype {
+    my($type);
     $type =$_[0];
     if($type eq "double") {
 	"double precision";
     } elsif($type eq "int") {
 	"integer";
+    } elsif($type eq "bool") {
+	"logical*1"
     } else {
 	"unknown ftype";
     }
 }
+
+sub cname {
+    my($name);
+    $name =$_[0];
+    if($g77 && $name =~ /_/){
+	$name.="_";
+    }
+    $name.="_";
+}
+
+print OUT "#ifndef PASS1\n";
+print OUT "#define PASS1(x) x/**/_low, x/**/_high, x\n";
+print OUT "#endif\n";
+print OUT "#ifndef PASS3\n";
+if($g77){
+    print OUT "#define PASS3A(x) ";
+    foreach $v ("low_x", "low_y", "low_z"){
+	print OUT "x/**/_$v, ";
+    }
+    print OUT "\n";
+    print OUT "#define PASS3B(x) ";
+    foreach $v ("high_x", "high_y", "high_z"){
+	print OUT "x/**/_$v, ";
+    }
+    print OUT "x\n";
+} else {
+    print OUT "#define PASS3A(x) x/**/_low, x/**/_high, x\n";
+    print OUT "#define PASS3B(x) \n";
+}
+print OUT "#endif\n";
+
+close FILE;
+close OUT;
+
