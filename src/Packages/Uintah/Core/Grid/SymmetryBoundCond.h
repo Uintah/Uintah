@@ -34,19 +34,18 @@ WARNING
   
 ****************************************/
 
-   class SymmetryBoundCond : public BoundCondBase  {
-   public:
-      SymmetryBoundCond():BoundCondBase("Symmetry") {};
-      SymmetryBoundCond(ProblemSpecP&) {d_type = "Symmetric";};
-      virtual ~SymmetryBoundCond() {};
-      virtual SymmetryBoundCond* clone() {return new SymmetryBoundCond(*this);};
-         
-   private:
+  class SymmetryBoundCond : public BoundCondBase  {
+  public:
+    SymmetryBoundCond():BoundCondBase("Symmetry") {};
+    SymmetryBoundCond(ProblemSpecP&) {d_type = "Symmetric";};
+    virtual ~SymmetryBoundCond() {};
+    virtual SymmetryBoundCond* clone() {return new SymmetryBoundCond(*this);};
+    virtual string getKind() const {return "";};
+  private:
 #if 0
-      SymmetryBoundCond(const SymmetryBoundCond&);
-      SymmetryBoundCond& operator=(const SymmetryBoundCond&);
+    SymmetryBoundCond(const SymmetryBoundCond&);
+    SymmetryBoundCond& operator=(const SymmetryBoundCond&);
 #endif
-      
      
    };
 } // End namespace Uintah

@@ -53,6 +53,7 @@ WARNING
     const BoundCondBase* getBCValues(const string& type) const;
     void print() const;
     bool find(const string& type) const;
+    bool find(const string& bc_type,const string& bc_variable) const;
     
    private:
       // The map is for the name of the

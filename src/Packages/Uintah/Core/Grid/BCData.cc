@@ -108,7 +108,7 @@ BCData::getBCValues(const string& type) const
 
 bool BCData::find(const string& type) const
 {
-  bcDataType:: const_iterator itr;
+  bcDataType::const_iterator itr;
 
   itr = d_BCData.find(type);
   if (itr != d_BCData.end())
@@ -116,6 +116,23 @@ bool BCData::find(const string& type) const
   else
     return false;
 }
+
+bool BCData::find(const string& bc_type,const string& bc_variable) const
+{
+  bcDataType::const_iterator itr;
+
+  itr = d_BCData.find(bc_variable);
+  if (itr != d_BCData.end()) {
+    //cerr << "getType = " << itr->second->getKind() << endl;
+    if (itr->second->getKind() == bc_type)
+      return true;
+    else
+      return false;
+  }
+  return false;
+    
+}
+
 
 
 void BCData::print() const
