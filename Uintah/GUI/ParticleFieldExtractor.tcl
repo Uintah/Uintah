@@ -181,13 +181,17 @@ itcl_class Uintah_Visualization_ParticleFieldExtractor {
 	pack $parent.m -side top
 	label $parent.m.l -text Material
 	pack $parent.m.l -side top
+	frame $parent.m.m -relief flat 
+	pack $parent.m.m  -side top -expand yes -fill both
 	for {set i 0} { $i < $ns} {incr i} {
-	    $buttontype $parent.m.p$i -text $i \
+	    $buttontype $parent.m.m.p$i -text $i \
 		-offvalue 0 -onvalue 1 -command $c \
 		-variable $this-p$i
-	    pack $parent.m.p$i -side top
-	   $parent.m.p$i select
-	    puts [$parent.m.p$i configure -variable]
+	    pack $parent.m.m.p$i -side left
+	    if { $i == 0 } {
+		$parent.m.m.p$i select
+	    }
+	    #puts [$parent.m.p$i configure -variable]
 	}
     }
 
