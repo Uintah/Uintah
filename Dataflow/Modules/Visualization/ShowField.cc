@@ -36,8 +36,6 @@
 #include <Core/Datatypes/ScanlineField.h>
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/FieldAlgo.h>
-#include <Core/Datatypes/Dispatch1.h>
-#include <Core/Datatypes/DispatchMesh1.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/Switch.h>
@@ -235,9 +233,6 @@ ShowField::execute()
       (!faces_dirty_) && (!data_dirty_))  { return; }
 
   use_def_color_ = false; //! fld_handle->is_scalar();
-
-  //dispatch1(fld_handle, render);
-  //  if (disp_error) return; // dispatch already printed an error message. 
 
   node_display_type_.reset();
   string ndt = node_display_type_.get();
