@@ -50,12 +50,6 @@ GeomDL::GeomDL(GeomObj* obj)
 }
 
 
-GeomDL::~GeomDL()
-{
-  if(child)
-    delete child;
-}
-
 void GeomDL::get_triangles( Array1<float> &v)
 {
     if ( child )
