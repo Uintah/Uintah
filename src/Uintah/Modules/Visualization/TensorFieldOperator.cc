@@ -98,7 +98,7 @@ void TensorFieldOperator::performOperation(TensorField* tensorField,
     if (tclEigen2DCalcType.get() == 0) {
       // e1 - e2
       int plane = tclPlaneSelect.get();
-      if (plane == 0)
+      if (plane == 2)
 	computeScalars(tensorField, scalarField, Eigen2DXYOp());
       else if (plane == 1)
 	computeScalars(tensorField, scalarField, Eigen2DXZOp());
@@ -109,7 +109,7 @@ void TensorFieldOperator::performOperation(TensorField* tensorField,
       // sin(e1 - e2) / delta
       int plane = tclPlaneSelect.get();
       double delta = tclDelta.get();
-      if (plane == 0)
+      if (plane == 2)
 	computeScalars(tensorField, scalarField, Eigen2DXYSinOp(delta));
       else if (plane == 1)
 	computeScalars(tensorField, scalarField, Eigen2DXZSinOp(delta));

@@ -67,7 +67,7 @@ void TensorParticlesOperator::execute(void) {
     if (tclEigen2DCalcType.get() == 0) {
       // e1 - e2
       int plane = tclPlaneSelect.get();
-      if (plane == 0)
+      if (plane == 2)
 	computeScalars(pTP, pSP, Eigen2DXYOp());
       else if (plane == 1)
 	computeScalars(pTP, pSP, Eigen2DXZOp());
@@ -78,7 +78,7 @@ void TensorParticlesOperator::execute(void) {
       // sin(e1 - e2) / delta
       int plane = tclPlaneSelect.get();
       double delta = tclDelta.get();
-      if (plane == 0)
+      if (plane == 2)
 	computeScalars(pTP, pSP, Eigen2DXYSinOp(delta));
       else if (plane == 1)
 	computeScalars(pTP, pSP, Eigen2DXZSinOp(delta));
