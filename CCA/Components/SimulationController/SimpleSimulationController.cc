@@ -395,13 +395,13 @@ SimpleSimulationController::run()
 	}
 	cout << endl;
 
-	if (n > 1) // ignore first set of elapsed times
+	if (n > 2) // ignore times 0,1,2
 	{
 	  //wallTimes.push_back(wallTime - prevWallTime);
 	  sum_of_walltime += (wallTime - prevWallTime);
 	  sum_of_walltime_squares += pow(wallTime - prevWallTime,2);
 	}
-	if (n > 2) {
+	if (n > 3) {
 	  double stdDev, mean;
 
 	  // divide by n-1 and not n, because we wait till n>1 to keep track
