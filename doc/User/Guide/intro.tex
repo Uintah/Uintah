@@ -23,12 +23,13 @@
 \label{sec:intro}
 
 
-This is the \etitle{\srug}.  It describes the purpose and use, of the \sr{}
-problem solving environment.  It is for those users who will be building
-and executing \dfn{networks} within the \sr{} environment.
+This is the \etitle{\srug}.  It describes the purpose and use, of the
+\sr{} problem solving environment (\pse).  It is for those users who
+will be building and executing \dfn{networks} within the \sr{}
+environment.
 
 Those who will be installing \sr{} should read the
-\htmladdnormallinkfoot{\srig{}}{\installguideurl}.
+\htmladdnormallinkfoot{\srig}{\htmlurl{\latexhtml{\scisoftware/doc}{../../..}/Installation/Guide/ch.inst.html}}.
 
 
 %\subsection{Conventions}
@@ -42,7 +43,7 @@ Those who will be installing \sr{} should read the
 This document is organized into the following main sections:
 
 \begin{description}
-  \item \secref{Introduction}{sec:intro} is what you are reading now.
+  \item \secref{Introduction}{sec:intro} is this introduction.
   \item \secref{Concepts}{sec:concepts} introduces the concept of an
         integrated problem solving environment  and describes how \SR{}
         embodies some of these ideas.
@@ -52,10 +53,9 @@ This document is organized into the following main sections:
         involved in building, editing, and executing networks.
   \item \secref{Visualization with the \viewer{}}{sec:viewer} describes the
         purpose and use of a visualization module called the \viewer{}.  The
-        \viewer{} is probably \sr{}'s most commonly used module.
-  \item \secref{Packages}{sec:packages} offers an overview of the content
-        of the \sr{} and \pse{} packages (which provide nearly all of
-        \sr{}'s computational services).
+        \viewer{} is \sr{}'s most commonly used module.
+  \item \secref{Packages}{sec:packages} is an overview of the 
+        of the \sr{} and \biopse{} packages.
   \item \secref{Importing data into \sr{}}{sec:import} summarize ways to
         get data in your local format into and out of \SR{}.
 \end{description}
@@ -63,35 +63,56 @@ This document is organized into the following main sections:
 \subsection{Getting Help}
 \label{sec:help}
 
-Help is available from several sources.
+Help is available from the following sources.
 
-\subsubsection{In the Distribution}
+\subsubsection{In the Documentation Distribution}
 
-This document and others related to \sr{} can be found in your \sr{}
-distribution.  Point your browser at \filename{index.html} which is in your
-distribution's top level \directory{doc} directory (\ie{} \ab{top of
-distribution}/doc/index.html).  Latex and postscript versions of some
-documents are also in the distribution's \directory{doc} directory.
+\sr{} documentation is distributed separately from its source code.
+\sr{}'s documentation distribution can be download from
+\htmladdnormallinkfoot{\sr{}'s software download
+  page}{\scisoftwarearchiveurl}.  See the \sr{}
+\htmladdnormallinkfoot{\srig}{\htmlurl{\latexhtml{\scisoftware/doc}{../../..}/Installation/Guide/ch.inst.html}} for
+instructions on downloading and installing the documentation
+distribution.
+
+After installing the documentation point your browser at the
+\filename{index.html} file which is located in the distribution's top
+level \directory{doc} directory (\ie{} \ab{top of documentation
+  distribution}/doc/index.html).
 
 \subsubsection{On the Web}
 
-This and other documents related to \sr{} can be found in the
-\htmladdnormallinkfoot{document}{\scidocurl{}} section of the
-\htmladdnormallinkfoot{\sci{}}{\sciurl{}} web site.
+This and other documents related to \sr{} can be found 
+\htmladdnormallinkfoot{online}{\scidocurl{}}.
 
-Be sure to visit the main \sci{} web site for lots of other
+Be sure to visit the \sci{} web site for lots of other
 information related to \sr{} and the \scii{}.
 
 \subsubsection{From the Mailing Lists}
 
-The \sr{} users mail list is a forum for discussing \sr{} related issues.
-To subscribe send mail to:
+The \sr{} \emph{users} mail list is a forum for discussing \sr{}
+related issues.  To subscribe send mail to:
 
 \mailto{Majordomo@sci.utah.edu}
 
 with the following command in the body of your message:
 
 \keyboard{subscribe scirun-users}
+
+After subscribing you may send questions to
+\mailto{scirun-users@sci.utah.edu}.
+
+The \sr{} \emph{developers} list is a forum for network and module
+developers.  To subscribe send mail to:
+
+\mailto{Majordomo@sci.utah.edu}
+
+with the following command in the body of your message:
+
+\keyboard{subscribe scirun-develop}
+
+After subscribing you may send questions to
+\mailto{scirun-develop@sci.utah.edu}.
 
 \subsection{Reporting Bugs}
 \label{sec:bugs}
@@ -101,8 +122,6 @@ Please report bugs!  To report a bug visit \sr{}'s
 
 Reporting bugs this way (rather than by way of the mailing list) ensures
 that they will be fixed in timely manner.
-
-
 
 %%% Local Variables: 
 %%% mode: latex
