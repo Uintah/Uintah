@@ -69,7 +69,7 @@ public:
   TetVolMesh();
   TetVolMesh(const TetVolMesh &copy);
   //TetVolMesh(const MeshRG &lattice);
-  virtual MeshBase *clone() { return new TetVolMesh(*this); }
+  virtual TetVolMesh *clone() { return new TetVolMesh(*this); }
   virtual ~TetVolMesh();
 
   virtual BBox get_bounding_box() const;

@@ -107,13 +107,10 @@ public:
     GenericField<LatVolMesh, FData3d<Data> >(data_at) {}
   LatticeVol(LatVolMeshHandle mesh, Field::data_location data_at) : 
     GenericField<LatVolMesh, FData3d<Data> >(mesh, data_at) {}
-  virtual Field *clone() { return new LatticeVol(*this); }
+  virtual LatticeVol<Data> *clone() { return new LatticeVol(*this); }
   
   virtual ~LatticeVol(){}
 
-  virtual LatticeVol<Data> *clone() const 
-    { return new LatticeVol<Data>(*this); }
- 
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
   static PersistentTypeID type_id;
