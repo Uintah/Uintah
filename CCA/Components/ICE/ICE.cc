@@ -823,9 +823,11 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->modifies(lb->sp_vol_CCLabel);
   task->computes(lb->temp_CCLabel, ice_matls);
   task->computes(lb->vel_CCLabel,  ice_matls);
-                            
-  task->modifies(lb->temp_CCLabel, mpm_matls);
-  task->modifies(lb->vel_CCLabel,  mpm_matls);
+  
+  if (mpm_matls->size() > 0){                             
+    task->modifies(lb->temp_CCLabel, mpm_matls);
+    task->modifies(lb->vel_CCLabel,  mpm_matls);
+  } 
   sched->addTask(task, patches, matls);
 }
 /* ---------------------------------------------------------------------
