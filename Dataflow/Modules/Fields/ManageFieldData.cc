@@ -42,6 +42,7 @@ namespace SCIRun {
 
 class ManageFieldData : public Module
 {
+  GuiInt gui_preserve_scalar_type_;
 public:
   ManageFieldData(GuiContext* ctx);
   virtual ~ManageFieldData();
@@ -52,7 +53,8 @@ public:
 
 DECLARE_MAKER(ManageFieldData)
 ManageFieldData::ManageFieldData(GuiContext* ctx)
-  : Module("ManageFieldData", ctx, Filter, "FieldsData", "SCIRun")
+  : Module("ManageFieldData", ctx, Filter, "FieldsData", "SCIRun"),
+    gui_preserve_scalar_type_(ctx->subVar("preserve-scalar-type"))
 {
 }
 
@@ -188,7 +190,8 @@ ManageFieldData::execute()
     CompileInfoHandle ci_mesh =
       ManageFieldDataAlgoMesh::
       get_compile_info(ifieldhandle->get_type_description(),
-		       matrix_svt_flag, svt_flag);
+		       matrix_svt_flag,
+		       gui_preserve_scalar_type_.get()?svt_flag:-1);
     Handle<ManageFieldDataAlgoMesh> algo_mesh;
     if (!module_dynamic_compile(ci_mesh, algo_mesh)) return;
 

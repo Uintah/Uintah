@@ -78,6 +78,7 @@ SRCS := \
 	$(SRCDIR)/LinAlgBinary.tcl \
 	$(SRCDIR)/LinAlgUnary.tcl \
 	$(SRCDIR)/LinearAlgebra.tcl \
+	$(SRCDIR)/ManageFieldData.tcl \
 	$(SRCDIR)/MapDataToMeshCoord.tcl \
 	$(SRCDIR)/MaskLattice.tcl \
 	$(SRCDIR)/MatrixReader.tcl \
