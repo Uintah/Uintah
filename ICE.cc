@@ -160,24 +160,18 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
   if (debug_ps) {
-    d_dbgGnuPlot   = false;
-    d_dbgStartTime = 0.;
-    d_dbgStopTime  = 1.;
-    d_dbgOutputInterval = 0.0;
-    d_dbgBeginIndx = IntVector(0,0,0);
-    d_dbgEndIndx   = IntVector(0,0,0);
-    d_dbgSigFigs   = 5;
-
-    debug_ps->get("dbg_GnuPlot",       d_dbgGnuPlot);
-    debug_ps->get("dbg_var1",          d_dbgVar1);   
-    debug_ps->get("dbg_var2",          d_dbgVar2);  
-    debug_ps->get("dbg_timeStart",     d_dbgStartTime);
-    debug_ps->get("dbg_timeStop",      d_dbgStopTime);
-    debug_ps->get("dbg_outputInterval",d_dbgOutputInterval);
-    debug_ps->get("dbg_BeginIndex",    d_dbgBeginIndx);
-    debug_ps->get("dbg_EndIndex",      d_dbgEndIndx );
-    debug_ps->get("dbg_SigFigs",       d_dbgSigFigs );
-    debug_ps->get("dbg_Matls",         d_dbgMatls);
+    IntVector orig(0,0,0);
+    debug_ps->getWithDefault("dbg_GnuPlot",       d_dbgGnuPlot, false);
+    debug_ps->getWithDefault("dbg_var1",          d_dbgVar1, 0);   
+    debug_ps->getWithDefault("dbg_var2",          d_dbgVar2, 0);  
+    debug_ps->getWithDefault("dbg_timeStart",     d_dbgStartTime,0);
+    debug_ps->getWithDefault("dbg_timeStop",      d_dbgStopTime, 1);
+    debug_ps->getWithDefault("dbg_outputInterval",d_dbgOutputInterval,0.0);
+    debug_ps->getWithDefault("dbg_BeginIndex",    d_dbgBeginIndx,orig);
+    debug_ps->getWithDefault("dbg_EndIndex",      d_dbgEndIndx,  orig);
+    debug_ps->getWithDefault("dbg_SigFigs",       d_dbgSigFigs, 5 );
+    debug_ps->getWithDefault("dbg_Level",         d_dbgLevel,   0);
+    debug_ps->get("dbg_Matls",                    d_dbgMatls);
     
     d_dbgOldTime      = -d_dbgOutputInterval;
     d_dbgNextDumpTime = 0.0;
@@ -1835,7 +1829,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     if (switchDebug_EQ_RF_press) {
     
       new_dw->allocateTemporary(n_iters_equil_press,  patch);
-#if 1
       ostringstream desc,desc1;
       desc1 << "TOP_equilibration_patch_" << patch->getID();
       printData( 0, patch, 1, desc1.str(), "Press_CC_top", press);
@@ -1849,7 +1842,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        printData(indx, patch, 1, desc.str(), "Temp_CC",      Temp[m]);       
        printData(indx, patch, 1, desc.str(), "vol_frac_CC",  vol_frac[m]);   
       }
-#endif
     }
   //______________________________________________________________________
   // Done with preliminary calcs, now loop over every cell
@@ -2183,6 +2175,8 @@ void ICE::computeVel_FC(const ProcessorGroup*,
                              DataWarehouse* new_dw,
                              bool recursion)                     
 {
+  const Level* level = getLevel(patches);
+  
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
     
@@ -2212,7 +2206,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
     }
      
     delt_vartype delT;
-    pOldDW->get(delT, d_sharedState->get_delt_label());   
+    pOldDW->get(delT, d_sharedState->get_delt_label(),level);   
      
     // Compute the face centered velocities
     for(int m = 0; m < numMatls; m++) {
@@ -2406,6 +2400,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
                                          DataWarehouse* new_dw,
                                          const bool recursion)
 {
+  const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing Add_exchange_contribution_to_FC_vel on patch " <<
@@ -2425,7 +2420,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMatls();
     delt_vartype delT;
-    pOldDW->get(delT, d_sharedState->get_delt_label());
+    pOldDW->get(delT, d_sharedState->get_delt_label(),level);
 
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
     StaticArray<constCCVariable<double> > vol_frac_CC(numMatls);
@@ -2542,6 +2537,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                           DataWarehouse* old_dw, 
                                           DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     cout_doing << "Doing explicit delPress on patch " << patch->getID() 
@@ -2549,7 +2545,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
     int numMatls  = d_sharedState->getNumMatls();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
     Vector dx     = patch->dCell();
 
     double vol    = dx.x()*dx.y()*dx.z();    
@@ -2666,13 +2662,14 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       } 
     }  //matl loop
     delete advector;
-    press_CC.initialize(0.);
+    
+    press_CC.copyData(pressure);
 
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
       delP_MassX[c]    =  term1[c]/term3[c];
       delP_Dilatate[c] = -term2[c]/term3[c];
-      press_CC[c]      = pressure[c] + delP_MassX[c] + delP_Dilatate[c];
+      press_CC[c]     +=  delP_MassX[c] + delP_Dilatate[c];
     }
     //____ B U L L E T   P R O O F I N G----
     // This was done to help robustify the equilibration
@@ -2842,6 +2839,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                                         DataWarehouse* old_dw, 
                                         DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -2858,7 +2856,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     double include_term;
 
     delt_vartype delT; 
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
  
     dx      = patch->dCell();
     gravity = d_sharedState->getGravity();
@@ -3059,7 +3057,8 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
                                   DataWarehouse* old_dw, 
                                   DataWarehouse* new_dw)
 {
-
+  const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing accumulate_energy_source_sinks on patch " 
@@ -3068,7 +3067,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMatls();
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
     Vector dx = patch->dCell();
     double A, B, vol=dx.x()*dx.y()*dx.z();
     
@@ -3320,6 +3319,8 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -3327,7 +3328,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       patch->getID() << "\t\t\t ICE" << endl;
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
 
     int numALLMatls = d_sharedState->getNumMatls();
     Vector  dx = patch->dCell();
@@ -3507,6 +3508,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing doCCMomExchange on patch "<< patch->getID()
@@ -3517,7 +3520,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     int numALLMatls = numMPMMatls + numICEMatls;
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
     //Vector zero(0.,0.,0.);
 
     // Create arrays for the grid data
@@ -3912,6 +3915,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
  
@@ -3919,7 +3923,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
       patch->getID() << "\t\t ICE" << endl;
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
 
     Vector dx = patch->dCell();
     double vol = dx.x()*dx.y()*dx.z();
