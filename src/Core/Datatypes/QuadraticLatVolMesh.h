@@ -221,13 +221,13 @@ public:
 
   void get_center(Point &result, const Node::index_type &index) const;
 
-  void get_weights(const Point& p, Node::array_type &l, vector<double> &w);
-  void get_weights(const Point &, Edge::array_type &, vector<double> &) 
+  int get_weights(const Point &p, Node::array_type &l, double *w);
+  int get_weights(const Point & , Edge::array_type & , double *w)
   { ASSERTFAIL("QuadraticLatVolMesh::get_weights for edges isn't supported"); }
-  void get_weights(const Point &, Face::array_type &, vector<double> &) 
+  int get_weights(const Point & , Face::array_type & , double *w)
   { ASSERTFAIL("QuadraticLatVolMesh::get_weights for faces isn't supported"); }
-  void get_weights(const Point &p, Cell::array_type &l, vector<double> &w)
-  { LatVolMesh::get_weights(p, l, w); }
+  int get_weights(const Point &p, Cell::array_type &l, double *w)
+  { return LatVolMesh::get_weights(p, l, w); }
 
 #if 0
   //! get gradient relative to point p

@@ -179,12 +179,13 @@ public:
   bool locate(Face::index_type &loc, const Point &p) const;
   bool locate(Cell::index_type &loc, const Point &p) const;
 
-  void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
-  void get_weights(const Point &, Edge::array_type &, vector<double> &) 
-    {ASSERTFAIL("TriSurfMesh::get_weights for edges isn't supported");}
-  void get_weights(const Point &p, Face::array_type &l, vector<double> &w);
-  void get_weights(const Point &, Cell::array_type &, vector<double> &) 
-    {ASSERTFAIL("TriSurfMesh::get_weights for cells isn't supported");}
+  int get_weights(const Point &p, Node::array_type &l, double *w);
+  int get_weights(const Point & , Edge::array_type & , double *w)
+  {ASSERTFAIL("TriSurfMesh::get_weights(Edges) not supported."); return 0;}
+  int get_weights(const Point &p, Face::array_type &l, double *w);
+  int get_weights(const Point & , Cell::array_type & , double *w)
+  {ASSERTFAIL("TriSurfMesh::get_weights(Cells) not supported."); return 0;}
+
 
   void get_point(Point &result, Node::index_type index) const
     { result = points_[index]; }

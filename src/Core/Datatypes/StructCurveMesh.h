@@ -131,12 +131,12 @@ public:
   bool locate(Face::index_type &, const Point &) const { return false; }
   bool locate(Cell::index_type &, const Point &) const { return false; }
 
-  void get_weights(const Point &, Node::array_type &, vector<double> &);
-  void get_weights(const Point &, Edge::array_type &, vector<double> &);
-  void get_weights(const Point &, Face::array_type &, vector<double> &)
-  {ASSERTFAIL("StructCurveMesh::get_weights for faces isn't supported");}
-  void get_weights(const Point &, Cell::array_type &, vector<double> &)
-  {ASSERTFAIL("StructCurveMesh::get_weights for cells isn't supported");}
+  int get_weights(const Point &, Node::array_type &, double *w);
+  int get_weights(const Point &, Edge::array_type &, double *w);
+  int get_weights(const Point &, Face::array_type &, double *w)
+  {ASSERTFAIL("StructCurveMesh::get_weights for faces isn't supported"); return 0;}
+  int get_weights(const Point &, Cell::array_type &, double * )
+  {ASSERTFAIL("StructCurveMesh::get_weights for cells isn't supported"); return 0;}
 
   void get_point(Point &p, Node::index_type i) const { get_center(p,i); }
   void set_point(const Point &p, Node::index_type i) { points_[i] = p; }

@@ -254,20 +254,19 @@ QuadraticTetVolMesh::get_point(Point &result, Node::index_type index) const
   }
 }
 
-void
+int
 QuadraticTetVolMesh::get_weights(const Point& p, Node::array_type &l,
-		   vector<double> &w)
+				 double *w)
 {
   Cell::index_type idx;
   if (locate(idx, p))
   {
-    Node::array_type ra(10);
-    get_nodes(ra,idx);
+    get_nodes(l, idx);
     Point p1, p2, p3, p4;
-    TetVolMesh::get_point(p1, ra[0]);
-    TetVolMesh::get_point(p2, ra[1]);
-    TetVolMesh::get_point(p3, ra[2]);
-    TetVolMesh::get_point(p4, ra[3]);
+    TetVolMesh::get_point(p1, l[0]);
+    TetVolMesh::get_point(p2, l[1]);
+    TetVolMesh::get_point(p3, l[2]);
+    TetVolMesh::get_point(p4, l[3]);
     double x1=p1.x();
     double y1=p1.y();
     double z1=p1.z();
@@ -299,33 +298,24 @@ QuadraticTetVolMesh::get_weights(const Point& p, Node::array_type &l,
     double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
     double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
 
-    //map real to parent nodes
+    // Map real to parent nodes.
     double xi = iV6*(a2+b2*p.x()+c2*p.y()+d2*p.z());
     double nu = iV6*(a3+b3*p.x()+c3*p.y()+d3*p.z());
     double gam = iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
 
-    l.push_back(ra[0]);
-    l.push_back(ra[1]);
-    l.push_back(ra[2]);
-    l.push_back(ra[3]);
-    l.push_back(ra[4]);
-    l.push_back(ra[5]);
-    l.push_back(ra[6]);
-    l.push_back(ra[7]);
-    l.push_back(ra[8]);
-    l.push_back(ra[9]);
-
-    w.push_back(-1*(1-xi-nu-gam)*(1-2*(1-xi-nu-gam)));
-    w.push_back(-1*xi*(1-2*xi));
-    w.push_back(-1*nu*(1-2*nu));
-    w.push_back(-1*gam*(1-2*gam));
-    w.push_back(4*xi*(1-xi-nu-gam));
-    w.push_back(4*nu*(1-xi-nu-gam));
-    w.push_back(4*gam*(1-xi-nu-gam));
-    w.push_back(4*xi*nu);
-    w.push_back(4*nu*gam);
-    w.push_back(4*xi*gam);
+    w[0] = -1*(1-xi-nu-gam)*(1-2*(1-xi-nu-gam));
+    w[1] = -1*xi*(1-2*xi);
+    w[2] = -1*nu*(1-2*nu);
+    w[3] = -1*gam*(1-2*gam);
+    w[4] = 4*xi*(1-xi-nu-gam);
+    w[5] = 4*nu*(1-xi-nu-gam);
+    w[6] = 4*gam*(1-xi-nu-gam);
+    w[7] = 4*xi*nu;
+    w[8] = 4*nu*gam;
+    w[9] = 4*xi*gam;
+    return 10;
   }
+  return 0;
 }
 
   // get grad relative to point p

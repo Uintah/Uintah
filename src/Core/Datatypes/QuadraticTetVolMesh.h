@@ -57,13 +57,19 @@ public:
 
   void get_point(Point &result, Node::index_type index) const;
 
-  void get_weights(const Point& p, Node::array_type &l, vector<double> &w);
-  void get_weights(const Point &, Edge::array_type &, vector<double> &) 
-  { ASSERTFAIL("QuadraticTetVolMesh::get_weights for edges isn't supported"); }
-  void get_weights(const Point &, Face::array_type &, vector<double> &) 
-  { ASSERTFAIL("QuadraticTetVolMesh::get_weights for faces isn't supported"); }
-  void get_weights(const Point &p, Cell::array_type &l, vector<double> &w)
-  { TetVolMesh::get_weights(p, l, w); }
+  int get_weights(const Point& p, Node::array_type &l, double *w);
+  int get_weights(const Point & , Edge::array_type & , double * )
+  {
+    ASSERTFAIL("QuadraticTetVolMesh::get_weights for edges isn't supported");
+    return 0;
+  }
+  int get_weights(const Point & , Face::array_type & , double * )
+  {
+    ASSERTFAIL("QuadraticTetVolMesh::get_weights for faces isn't supported");
+    return 0;
+  }
+  int get_weights(const Point &p, Cell::array_type &l, double *w)
+  { return TetVolMesh::get_weights(p, l, w); }
 
   //! get gradient relative to point p
   void get_gradient_basis(Cell::index_type ci, const Point& p,

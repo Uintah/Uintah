@@ -219,38 +219,44 @@ StructCurveMesh::locate(Edge::index_type &idx, const Point &p) const
   return true;
 }
 
-void
-StructCurveMesh::get_weights(const Point &p,
-			     Node::array_type &l, vector<double> &w)
+
+int
+StructCurveMesh::get_weights(const Point &p, Node::array_type &l, double *w)
 {
   Edge::index_type idx;
-  if (locate(idx, p)) {
-    Node::array_type ra(2);
-    get_nodes(ra,idx);
-    Point p0,p1;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    double dist0, dist1, dist_sum;
-    dist0 = (p0-p).length();
-    dist1 = (p1-p).length();
-    dist_sum = dist0 + dist1;
-    l.push_back(ra[0]);
-    l.push_back(ra[1]);
-    w.push_back(dist0/dist_sum);
-    w.push_back(dist1/dist_sum);
+  if (locate(idx, p))
+  {
+    get_nodes(l,idx);
+    Point p0, p1;
+    get_point(p0, l[0]);
+    get_point(p1, l[1]);
+
+    const double dist0 = (p0-p).length();
+    const double dist1 = (p1-p).length();
+    const double dist_sum = dist0 + dist1;
+
+    w[0] = dist0 / dist_sum;
+    w[1] = dist1 / dist_sum;
+    return 2;
   }
+  return 0;
 }
 
-void
-StructCurveMesh::get_weights(const Point &p,
-			     Edge::array_type &l, vector<double> &w)
+
+int
+StructCurveMesh::get_weights(const Point &p, Edge::array_type &l, double *w)
 {
   Edge::index_type idx;
-  if (locate(idx, p)) {
-    l.push_back(idx);
-    w.push_back(1.0);
+  if (locate(idx, p))
+  {
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
   }
+  return 0;
 }
+
 
 #define STRUCT_CURVE_MESH_VERSION 1
 

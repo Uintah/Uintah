@@ -99,12 +99,18 @@ public:
   bool locate(Face::index_type &, const Point &) const { return false; }
   bool locate(Cell::index_type &, const Point &);
 
-  void get_weights(const Point &, Node::array_type &, vector<double> &);
-  void get_weights(const Point &, Edge::array_type &, vector<double> &)
-  {ASSERTFAIL("StructHexVolMesh::get_weights for edges isn't supported");}
-  void get_weights(const Point &, Face::array_type &, vector<double> &)
-  {ASSERTFAIL("StructHexVolMesh::get_weights for faces isn't supported");}
-  void get_weights(const Point &, Cell::array_type &, vector<double> &);
+  int get_weights(const Point &, Node::array_type &, double *);
+  int get_weights(const Point &, Edge::array_type &, double *)
+  {
+    ASSERTFAIL("StructHexVolMesh::get_weights for edges isn't supported");
+    return 0;
+  }
+  int get_weights(const Point &, Face::array_type &, double *)
+  {
+    ASSERTFAIL("StructHexVolMesh::get_weights for faces isn't supported");
+    return 0;
+  }
+  int get_weights(const Point &, Cell::array_type &, double *);
 
   void get_point(Point &point, const Node::index_type &index) const
   { get_center(point, index); }
@@ -131,7 +137,7 @@ private:
   double inside8_p(Cell::index_type i, const Point &p) const;
   double polygon_area(const Node::array_type &, const Vector) const;
   double pyramid_volume(const Node::array_type &, const Point &) const;
-  void get_face_weights(vector<double> &w, const Node::array_type &nodes,
+  void get_face_weights(double *w, const Node::array_type &nodes,
 			const Point &p, int i0, int i1, int i2, int i3);
   const Point &point(const Node::index_type &i) const 
   { return points_(i.i_, i.j_, i.k_); }

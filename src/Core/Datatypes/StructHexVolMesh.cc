@@ -338,16 +338,19 @@ StructHexVolMesh::locate(Node::index_type &node, const Point &p)
 }
 
 
-void
+int
 StructHexVolMesh::get_weights(const Point &p,
-			      Cell::array_type &l, vector<double> &w)
+			      Cell::array_type &l, double *w)
 {
   Cell::index_type idx;
   if (locate(idx, p))
   {
-    l.push_back(idx);
-    w.push_back(1.0);
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
   }
+  return 0;
 }
 
 
@@ -484,7 +487,7 @@ tri_area(const Point &a, const Point &b, const Point &c)
 
 
 void
-StructHexVolMesh::get_face_weights(vector<double> &w,
+StructHexVolMesh::get_face_weights(double *w,
 				   const Node::array_type &nodes,
 				   const Point &p,
 				   int i0, int i1, int i2, int i3)
@@ -549,9 +552,9 @@ StructHexVolMesh::get_face_weights(vector<double> &w,
 }
   
 
-void
+int
 StructHexVolMesh::get_weights(const Point &p,
-			      Node::array_type &nodes, vector<double> &w)
+			      Node::array_type &nodes, double *w)
 {
   synchronize (Mesh::FACES_E);
   Cell::index_type cell;
@@ -560,7 +563,6 @@ StructHexVolMesh::get_weights(const Point &p,
     get_nodes(nodes,cell);
     const unsigned int nnodes = nodes.size();
     ASSERT(nnodes == 8);
-    w.resize(nnodes);
       
     double sum = 0.0;
     unsigned int i;
@@ -573,7 +575,7 @@ StructHexVolMesh::get_weights(const Point &p,
       {
 	get_face_weights(w, nodes, p, i, wtable[i][0],
 			 wtable[i][3], wtable[i][1]);
-	return;
+	return 8;
       }
       const double a1 =
 	tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][1]]),
@@ -582,7 +584,7 @@ StructHexVolMesh::get_weights(const Point &p,
       {
 	get_face_weights(w, nodes, p, i, wtable[i][1],
 			 wtable[i][4], wtable[i][2]);
-	return;
+	return 8;
       }
       const double a2 =
 	tet_vol6(p, point(nodes[i]), point(nodes[wtable[i][2]]),
@@ -591,7 +593,7 @@ StructHexVolMesh::get_weights(const Point &p,
       {
 	get_face_weights(w, nodes, p, i, wtable[i][2],
 			 wtable[i][5], wtable[i][0]);
-	return;
+	return 8;
       }
       w[i] = tet_vol6(point(nodes[i]), point(nodes[wtable[i][0]]),
 		      point(nodes[wtable[i][1]]), point(nodes[wtable[i][2]]))
@@ -603,7 +605,9 @@ StructHexVolMesh::get_weights(const Point &p,
     {
       w[i] *= suminv;
     }
+    return 8;
   }
+  return 0;
 }
 
 

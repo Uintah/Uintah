@@ -1058,15 +1058,18 @@ PrismVolMesh::locate(Cell::index_type &cell, const Point &p)
 }
 
 
-void
-PrismVolMesh::get_weights(const Point &p,
-			  Cell::array_type &l, vector<double> &w)
+int
+PrismVolMesh::get_weights(const Point &p, Cell::array_type &l, double *w)
 {
   Cell::index_type idx;
-  if (locate(idx, p)) {
-    l.push_back(idx);
-    w.push_back(1.0);
+  if (locate(idx, p))
+  {
+    l.resize(1);
+    l[0] = idx;
+    w[0] = 1.0;
+    return 1;
   }
+  return 0;
 }
 
 
@@ -1156,9 +1159,8 @@ prism_area2(const Point &p1, const Point &p2, const Point &p3)
    Generalized barycentric coordinates on irregular polygons.
    Journal of graphics tools, 7(1):13-22, 2002
 */
-void
-PrismVolMesh::get_weights(const Point &pt,
-			  Node::array_type &nodes, vector<double> &w)
+int
+PrismVolMesh::get_weights(const Point &pt, Node::array_type &nodes, double *w)
 {
   Cell::index_type cell;
 
@@ -1167,14 +1169,12 @@ PrismVolMesh::get_weights(const Point &pt,
     unsigned int f,i,j,k;
     double total = 0.0;
 
-    w.resize(PRISM_NNODES);
-
     get_nodes(nodes,cell);
 
     vector<Point> p(PRISM_NNODES);
 
     for( i=0; i<PRISM_NNODES; i++ ) {
-      w[i] = 0;      
+      w[i] = 0.0;
       p[i] = point(nodes[i]);
     }
 
@@ -1273,7 +1273,7 @@ PrismVolMesh::get_weights(const Point &pt,
 	  w[fTable[j%QUAD_NNODES]] = 1.0 - w[fTable[i]];
 
 	  // Since it is bilinear no further calculations are needed.
-	  return;
+	  return PRISM_NNODES;
 	}	
       } 
     }
@@ -1282,7 +1282,9 @@ PrismVolMesh::get_weights(const Point &pt,
 
     for( i=0; i<PRISM_NNODES; i++ )
       w[i] *= total;
+    return PRISM_NNODES;
   }
+  return 0;
 }
 
 
