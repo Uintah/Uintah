@@ -1556,12 +1556,21 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
   int matlIndex = delset->getMatlIndex();
   Patch* patch = (Patch*) delset->getPatch();
   psetDBType::key_type key(matlIndex, patch);
-  if(d_delsetDB.find(key) != d_delsetDB.end())
-    SCI_THROW(InternalError("deleteParticles called twice for patch"));
-
-  d_delsetDB[key]=delset;
-  delset->addReference();
- d_lock.writeUnlock();
+  psetDBType::iterator iter = d_delsetDB.find(key);
+  ParticleSubset* currentDelset;
+  if(iter != d_delsetDB.end()) {
+    //    SCI_THROW(InternalError("deleteParticles called twice for patch"));
+    // Concatenate the delsets into the delset that already exists in the DB.
+    currentDelset = iter->second;
+    for (ParticleSubset::iterator d=delset->begin(); d != delset->end(); d++)
+      currentDelset->addParticle(*d);
+    d_delsetDB[key]=currentDelset;
+    //currentDelset->addReference();
+  } else {
+    d_delsetDB[key]=delset;
+    delset->addReference();
+  }
+  d_lock.writeUnlock();
 }
 
 
