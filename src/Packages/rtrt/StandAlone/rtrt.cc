@@ -124,6 +124,9 @@ int main(int argc, char* argv[])
   bool do_frameless=false;
   bool logframes=false;
   bool display_frames=true;
+  bool followpath=false;
+
+  FILE *path_fp=0;
   
   Camera usercamera(Point(1,0,0), Point(0,0,0), Vector(0,0,1), 60);
   bool use_usercamera;
@@ -264,6 +267,10 @@ int main(int argc, char* argv[])
       double fov=atof(argv[i]);
       usercamera.set_fov(fov);
       use_usercamera=true;
+    } else if(strcmp(argv[i], "-camerapath") == 0) {
+	i++;	
+	followpath = true;
+	path_fp = fopen(argv[i],"r");
     } else if (strcmp(argv[i], "-worker_gltest") == 0) {
       rtrt_engine->worker_run_gl_test = true;
     } else if (strcmp(argv[i], "-display_gltest") == 0) {
@@ -366,6 +373,8 @@ int main(int argc, char* argv[])
   }
   
   scene->logframes=logframes;
+  scene->followpath = followpath;
+  scene->path_fp = path_fp;  
 
   //  ThreadGroup *group = new ThreadGroup("rtrt group");
 
