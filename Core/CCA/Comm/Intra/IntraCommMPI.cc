@@ -85,3 +85,21 @@ int IntraCommMPI::async_receive(int rank, char* bytestream, int length)
   return flag; 
 }
 
+void IntraCommMPI::barrier()
+{
+  MPI_Barrier(MPI_COMM_WORLD);
+}
+
+int IntraCommMPI::get_rank()
+{
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+  return rank;
+}
+
+int IntraCommMPI::get_size()
+{
+  int size;
+  MPI_Comm_size(MPI_COMM_WORLD,&size);
+  return size;
+}

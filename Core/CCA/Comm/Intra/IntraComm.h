@@ -35,6 +35,14 @@ namespace SCIRun {
   class IntraComm {
   public:
 
+    ////////////////
+    // Retrieved this process' rank
+    virtual int get_rank() = 0;
+
+    ////////////////
+    // Retrieved this process' size    
+    virtual int get_size() = 0;
+
     /////////////////
     // Send a message to a parallel process
     // specified by rank number. Returns success or failure.
@@ -59,7 +67,10 @@ namespace SCIRun {
     // Receive an asynchronous message from a parallel process
     // specified by rank number. Returns success or failure..
     virtual int async_receive(int rank, char* bytestream, int length) = 0;
-    
+   
+    ////////////////
+    // A barrier primitive 
+    virtual void barrier() = 0;
   };
 }
 
