@@ -34,8 +34,8 @@ SRCS     += \
 	$(SRCDIR)/Float2DToUChar2D.cc\
 	$(SRCDIR)/UChar2DToFloat2D.cc\
 	$(SRCDIR)/UShort2DToUChar2D.cc\
-	$(SRCDIR)/ImageToField.cc\
 	$(SRCDIR)/FieldToImage.cc\
+	$(SRCDIR)/ImageToField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes \

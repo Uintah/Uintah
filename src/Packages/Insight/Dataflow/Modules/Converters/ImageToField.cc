@@ -294,9 +294,14 @@ void ImageToField::execute(){
   if(0) { }
   else if(run< itk::Image<float, 2> >(n)) { }
   else if(run< itk::Image<float, 3> >(n)) { }
+  else if(run< itk::Image<double, 2> >(n)) { }
   else if(run< itk::Image<double, 3> >(n)) { }
   else if(run< itk::Image<unsigned char, 2> >(n)) { }
+  else if(run< itk::Image<unsigned char, 3> >(n)) { }
   else if(run< itk::Image<unsigned short, 2> >(n)) { }
+  else if(run< itk::Image<unsigned short, 3> >(n)) { }
+  else if(run< itk::Image<unsigned long, 2> >(n)) { }
+  else if(run< itk::Image<unsigned long, 3> >(n)) { }
   //else if(run< itk::Image<itk::RGBPixel<unsigned char>, 2> >(n)) { }
   else {
     // error
