@@ -144,6 +144,11 @@
 # SCIRUN_ON_THE_FLY_LIBS_DIR = $HOME/SCIRun/on-the-fly-libs
 
 
+### SCIRUN_FONT_PATH = [path]
+#   The directory in which scirun.ttf (default font) resides.
+SCIRUN_FONT_PATH = $SCIRUN_SRCDIR/pixmaps
+
+
 ### SCIRUN_TMP_DIR = [path]
 #   Directory for writting temporary files - must be world read/writeable
 SCIRUN_TMP_DIR = /tmp
@@ -183,6 +188,7 @@ SCIRUN_TMP_DIR = /tmp
 ### SCIRUN_NOSPLASH = [boolean]
 #   If true, SCIRun will not display the splash screen at startup.
 # SCIRUN_NOSPLASH = false
+
 
 ### SCIRUN_HIDE_PROGRESS = [boolean]
 #   If true, SCIRun will not display progress bars during startup and loading
