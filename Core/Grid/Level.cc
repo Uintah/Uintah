@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/FancyAssert.h>
 #include <iostream>
@@ -439,7 +440,7 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
   ProblemSpecP bc_ps = grid_ps->findBlock("BoundaryConditions");
   if (bc_ps == 0)
     return;
-  
+  int nFaces = 0;  // counter for bulletproofing
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");
        face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
     map<string,string> values;
@@ -447,18 +448,30 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
     Patch::FaceType face_side = Patch::invalidFace;
     std::string fc = values["side"];
-    if (fc == "x-")
+    if (fc == "x-") {
       face_side = Patch::xminus;
-    else if (fc ==  "x+")
+      nFaces +=1;
+    }
+    else if (fc ==  "x+") {
       face_side = Patch::xplus;
-    else if (fc ==  "y-")
+      nFaces +=2;
+    }
+    else if (fc ==  "y-") {
       face_side = Patch::yminus;
-    else if (fc ==  "y+")
+      nFaces +=3;
+    }
+    else if (fc ==  "y+") {
       face_side = Patch::yplus;
-    else if (fc ==  "z-")
+      nFaces +=4;
+    }
+    else if (fc ==  "z-") {
       face_side = Patch::zminus;
-    else if (fc == "z+")
+      nFaces +=5;
+    }
+    else if (fc == "z+") {
       face_side = Patch::zplus;
+      nFaces +=6;
+    }
 
     BCData bc_data;
     BoundCondFactory::create(face_ps,bc_data);
@@ -483,7 +496,12 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 #endif
     }  // end of patch iterator
   } // end of face_ps
-
+  
+  //Should this be an exception? -todd
+  if (nFaces != 21) { 
+    cerr << "WARNING: Boundary conditions are not specified on all the faces"<< endl;
+    exit(1);
+  }
 }
 
 Box Level::getBox(const IntVector& l, const IntVector& h) const
