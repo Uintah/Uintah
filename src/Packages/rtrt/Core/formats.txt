@@ -34,4 +34,18 @@ max_x max_y max_z [double]
 data_v_min data_v_max data_g_min data_g_max [double]
 
 ------------------------------------------------------------
+	GridSphere
+
+There is a header file with the extension [raw data file].meta.
+The data is arranged by particle in raw floats without spaces
+inbetween:
+  part01.x part01.y part01.z part01.var1 part01.var2 ...
+  part02.x part02.y part02.z part02.var1 part02.var2 ...
+
+The header is formated like this.  No comments are supported.
+num spheres [int]
+radius [double]
+-- for each var including x,y,z --
+  min max [double]
+------------------------------------------------------------
 
