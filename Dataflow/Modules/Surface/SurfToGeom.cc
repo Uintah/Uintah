@@ -47,6 +47,7 @@
 #include <iostream>
 using std::cerr;
 
+#if 0
 namespace SCIRun {
 
 
@@ -698,4 +699,5 @@ void SurfToGeom::execute()
 }
 
 } // End namespace SCIRun
+#endif
 

@@ -32,7 +32,6 @@ int main(int argc, char **argv)
 {
 	Mesh* mesh = new Mesh();
 
-	NodeHandle node=0;
 	Element* e=0;
 	double x,y,z;          // coordinates for 3D points
 	int v1,v2,v3,v4;       // vertices of the tetras
@@ -58,8 +57,7 @@ int main(int argc, char **argv)
 	   cerr << n << "\n";
 	   n++;
 	   
-	   node = new Node(p);
-	   mesh->nodes.add(node);  // ERROR here!! - if remove line -> no problem
+	   mesh->nodes.add(Node(p));
 	}
 	cerr << "HERE\n";
 

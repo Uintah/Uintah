@@ -85,7 +85,7 @@ void genPtsAndTets(int nr, int nz, Point min, Vector diag, Mesh* mesh){
 	for (j=0; j<nr; j++)
 	    for (i=0; i<nr; i++) {
 		nodes(i,j,k)=currIdx++;
-		mesh->nodes.add(new Node(nodePos(i,j,k)));
+		mesh->nodes.add(Node(nodePos(i,j,k)));
 	    }
 
     Array1<Element *> e(5);
@@ -209,8 +209,8 @@ int main(int argc, char *argv[]) {
     for (j=negBdryR; j<=posBdryR; j++)
 	for (i=negBdryR; i<=posBdryR; i++) {
 	    int idx=nr*nr*midz+nr*j+i;
-		Point p(mesh->nodes[idx]->p);
-	    mesh->nodes[idx]->pdBC = new 
+	    const Point &p = mesh->point(idx);
+	    mesh->nodes[idx].pdBC = new 
 		PotentialDifferenceBC(idx-nr*nr, p.x()/(INNER_CIRCLE_DIAM/2.));
 //	    mesh->nodes[i]->bc = new 
 //		DirichletBC(0, p.x()/(INNER_CIRCLE_DIAM/2.));
@@ -227,10 +227,10 @@ int main(int argc, char *argv[]) {
     map.initialize(-1);
     for (j=0; j<nr; j++)
 	for (i=0; i<nr; i++) {
-	    if (!mesh->nodes[nr*nr*midz+nr*j+i]->pdBC) {
+	    if (!mesh->nodes[nr*nr*midz+nr*j+i].pdBC) {
 //	    if (!mesh->nodes[nr*nr*midz+nr*j+i]->bc) {
 		map[nr*nr*midz+nr*j+i]=mesh->nodes.size();
-		mesh->nodes.add(new Node(nodePos2(i,j)));
+		mesh->nodes.add(Node(nodePos2(i,j)));
 		nocount++;
 	    }
 	}
@@ -249,11 +249,6 @@ int main(int argc, char *argv[]) {
     // clean up mesh (remove nodes with no elements)
     mesh->pack_all();
     mesh->compute_neighbors();
-    for (i=0; i<mesh->nodes.size(); i++) 
-	if (!mesh->nodes[i]->elems.size())
-	    mesh->nodes[i]=0;
-    mesh->pack_all();
-    mesh->compute_neighbors();
     cerr <<"Mesh has "<<mesh->nodes.size()<<" nodes with "<<count<<" pairs, and we fixed "<<links<<" links and had "<<nocount<<" insulation nodes.\n";
 
     clString fname(clString("/local/sci/raid0/dmw/cube/cube.")+
@@ -267,7 +262,7 @@ int main(int argc, char *argv[]) {
 		    clString(".thick.mesh"));
     Piostream* stream2 = scinew TextPiostream(fname2, Piostream::Write);
     for (i=0; i<mesh->nodes.size(); i++) 
-	mesh->nodes[i]->p.z(mesh->nodes[i]->p.z()*50);
+	mesh->nodes[i].p.z(mesh->nodes[i].p.z()*50);
     Pio(*stream2, mH);
     delete(stream);
     delete(stream2);

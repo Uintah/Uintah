@@ -85,27 +85,20 @@ MeshToGeom::execute()
   for (i=0; i<mesh->elemsize(); i++) {
     if (i%500 == 0) update_progress(i, mesh->elemsize());
     if (mesh->element(i)) {
-      if ((mesh->nodes[mesh->element(i)->n[0]].get_rep() == 0) ||
-	  (mesh->nodes[mesh->element(i)->n[1]].get_rep() == 0) ||
-	  (mesh->nodes[mesh->element(i)->n[2]].get_rep() == 0) ||
-	  (mesh->nodes[mesh->element(i)->n[3]].get_rep() == 0)) {
-	cerr << "Element shouldn't refer to empty node!\n";
-      } else {
-	int cond = mesh->element(i)->cond;
-	have_tris[cond%MAX_CLASS]=true;
-	groups[cond%MAX_CLASS]->add(mesh->point(mesh->element(i)->n[0]),
-				    mesh->point(mesh->element(i)->n[1]),
-				    mesh->point(mesh->element(i)->n[2]));
-	groups[cond%MAX_CLASS]->add(mesh->point(mesh->element(i)->n[1]),
-				    mesh->point(mesh->element(i)->n[2]),
-				    mesh->point(mesh->element(i)->n[3]));
-	groups[cond%MAX_CLASS]->add(mesh->point(mesh->element(i)->n[0]),
-				    mesh->point(mesh->element(i)->n[1]),
-				    mesh->point(mesh->element(i)->n[3]));
-	groups[cond%MAX_CLASS]->add(mesh->point(mesh->element(i)->n[0]),
-				    mesh->point(mesh->element(i)->n[2]),
-				    mesh->point(mesh->element(i)->n[3]));
-      }
+      int cond = mesh->element(i)->cond;
+      have_tris[cond%MAX_CLASS]=true;
+      groups[cond%MAX_CLASS]->add(mesh->point(mesh->element(i)->n[0]),
+				  mesh->point(mesh->element(i)->n[1]),
+				  mesh->point(mesh->element(i)->n[2]));
+      groups[cond%MAX_CLASS]->add(mesh->point(mesh->element(i)->n[1]),
+				  mesh->point(mesh->element(i)->n[2]),
+				  mesh->point(mesh->element(i)->n[3]));
+      groups[cond%MAX_CLASS]->add(mesh->point(mesh->element(i)->n[0]),
+				  mesh->point(mesh->element(i)->n[1]),
+				  mesh->point(mesh->element(i)->n[3]));
+      groups[cond%MAX_CLASS]->add(mesh->point(mesh->element(i)->n[0]),
+				  mesh->point(mesh->element(i)->n[2]),
+				  mesh->point(mesh->element(i)->n[3]));
     } else {
       cerr << "Elements should have been packed!\n";
     }

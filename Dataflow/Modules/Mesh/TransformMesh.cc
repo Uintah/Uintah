@@ -85,7 +85,7 @@ void TransformMesh::execute()
     meshIH.detach();
     for (int i=0; i<meshIH->nodesize(); i++)
     {
-      meshIH->nodes[i]->p = t.project(meshIH->point(i));
+      meshIH->nodes[i].p = t.project(meshIH->point(i));
     }
     oport->send(meshIH);
 }

@@ -99,11 +99,11 @@ void genPtsAndTets(int nr, int nz, Mesh* mesh){
     parity =0;
     currIdx =0;
     for (z=0; z<nz; z++) {
-        mesh-> nodes.add(new Node(Point(0,0,zPos[z])));  // make center point
+        mesh-> nodes.add(Node(Point(0,0,zPos[z])));  // make center point
         nodes(0,0,z) = currIdx++;
         for (r2=1; r2<nr; r2++)
             for (angleOuter=0; angleOuter<r2*6; angleOuter++) {
-                mesh->nodes.add(new Node(Point(rPos[r2]*cos(angleOuter * PI/3 /
+                mesh->nodes.add(Node(Point(rPos[r2]*cos(angleOuter * PI/3 /
 r2),rPos[r2]*sin(angleOuter * PI/3 / r2),zPos[z]))); // create radial points
                 nodes(r2,angleOuter,z) = currIdx++;
             }
@@ -187,11 +187,6 @@ int main(int argc, char *argv[]) {
 
 
     // clean up mesh (remove nodes with no elements)
-    mesh->pack_all();
-    mesh->compute_neighbors();
-    for (i=0; i<mesh->nodes.size(); i++) 
-        if (!mesh->nodes[i]->elems.size())
-            mesh->nodes[i]=0;
     mesh->pack_all();
     mesh->compute_neighbors();
     clString fname(clString("/tmp/cyl.mesh"));

@@ -31,6 +31,7 @@ using std::cerr;
 using std::endl;
 #include <stdio.h>
 
+#if 0
 namespace SCIRun {
 
 static Persistent* make_CylinderSurface()
@@ -182,6 +183,7 @@ void CylinderSurface::get_surfnodes(Array1<NodeHandle>& nodes)
     TCL::execute(clString("rename ")+id+" \"\"");
 }
 
+
 #define CYLINDERSURFACE_VERSION 1
 
 void CylinderSurface::io(Piostream& stream)
@@ -331,6 +333,7 @@ int SphereSurface::inside(const Point& p)
 	return 0;
     return 1;
 }
+
 
 void SphereSurface::add_node(Array1<NodeHandle>& nodes,
 			     char* id, const Point& p, double r,
@@ -722,3 +725,4 @@ void PointsSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
 
 } // End namespace SCIRun
 
+#endif

@@ -79,8 +79,8 @@ private:
   int directed;	// are the triangle all ordered clockwise?
   double distance(const Point &p, int i, int *type, Point *pp=0);
   int find_or_add(const Point &p);
-  void add_node(Array1<NodeHandle>& nodes,
-		char* id, const Point& p, int n);
+  //void add_node(Array1<NodeHandle>& nodes,
+  //		char* id, const Point& p, int n);
 public:
   TriSurface(Representation r=TriSurf);
   TriSurface(const TriSurface& copy, Representation r=TriSurf);
@@ -102,8 +102,8 @@ public:
 
   virtual void construct_grid(int, int, int, const Point &, double);
   virtual void construct_grid();
-  virtual void get_surfnodes(Array1<NodeHandle>&);
-  virtual void set_surfnodes(const Array1<NodeHandle>&);
+  //virtual void get_surfnodes(Array1<NodeHandle>&);
+  //virtual void set_surfnodes(const Array1<NodeHandle>&);
   virtual int inside(const Point& p);
   virtual void construct_hash(int, int, const Point &, double);
 

@@ -91,9 +91,9 @@ void FieldCurl::execute() {
 	     curls[e->n[j]]+=curl;
 	}
        }
-      for(i=0;i<nnodes;i++){
-	NodeHandle& n=mesh->nodes[i];
-        curls[i]*=1./(n->elems.size());
+      for(i=0;i<nnodes;i++) {
+	const Node &n = mesh->node(i);
+        curls[i] *= 1.0 / (n.elems.size());
       }
     } else {
       vfug2=new VectorFieldUG(VectorFieldUG::ElementValues);
@@ -231,11 +231,11 @@ Vector FieldCurl::get_curl(Mesh *mesh, Element *elem, Vector &v1, Vector &v2, Ve
     double x4=p4.x();
     double y4=p4.y();
     double z4=p4.z();
-    double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
-    double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
-    double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
-    double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
-    double iV6=1./(a1+a2+a3+a4);
+    //double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+    //double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+    //double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+    //double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+    //double iV6=1./(a1+a2+a3+a4);
 
     double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
     double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);

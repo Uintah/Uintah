@@ -105,7 +105,7 @@ int main(int argc, char **argv)
     cerr << "File has "<<npts<<" points and "<<ntets<<" tets.\n";
 
     Array1<Node*> allNodes(npts*3);
-    for (i=0; i<npts*3; i++) allNodes[i]=new Node(Point(0,0,0));
+    for (i=0; i<npts*3; i++) allNodes[i] = new Node(Point(0,0,0));
 
     // etype edegree
     readLine(&f, buf);
@@ -119,9 +119,11 @@ int main(int argc, char **argv)
 	readLine(&f, buf);
 	sscanf(buf, "%d %lf %lf %lf", &dum1, &x, &y, &z);
 	while (dum1-1 != mesh->nodes.size())
-	    mesh->nodes.add(NodeHandle(0));
+	{
+	  mesh->nodes.add(Node());
+	}
 	allNodes[cnt]->p = Point(x,y,z);
-	mesh->nodes.add(NodeHandle(allNodes[cnt++]));
+	mesh->nodes.add(*(allNodes[cnt++]));
     }
 
     // ! tets

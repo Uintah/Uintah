@@ -71,9 +71,9 @@ main(int argc, char **argv) {
 	sfOut=scinew ScalarFieldUG(sfIn->mesh, ScalarFieldUG::NodalValues);
 	for (i=0; i<sfOut->data.size(); i++) {
 	    sfOut->data[i]=0;
-	    NodeHandle n(sfIn->mesh->nodes[i]);
-	    for (j=0; j<n->elems.size(); j++) 
-		sfOut->data[i] += sfIn->data[n->elems[j]] / n->elems.size();
+	    const Node &n = sfIn->mesh->node(i);
+	    for (j=0; j<n.elems.size(); j++) 
+		sfOut->data[i] += sfIn->data[n.elems[j]] / n.elems.size();
 	}
     }
 

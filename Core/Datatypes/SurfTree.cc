@@ -467,6 +467,7 @@ Surface* SurfTree::clone()
   return scinew SurfTree(*this);
 }
 
+#if 0
 void SurfTree::get_surfnodes(Array1<NodeHandle> &n)
 {
   for (int i=0; i<nodes.size(); i++) {
@@ -516,6 +517,7 @@ void SurfTree::set_surfnodes(const Array1<NodeHandle>&/*n*/, clString /*name*/)
 {
   NOT_FINISHED("SurfTree::set_surfnodes");
 }
+#endif
 
 GeomObj* SurfTree::get_obj(const ColorMapHandle&)
 {

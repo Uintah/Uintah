@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 	double x,y,z;
 	ptsfile >> x >> y >> z;
 	if(ptsfile){
-	    mesh->nodes.add(NodeHandle(new Node(Point(x,y,z))));
+	    mesh->nodes.add(Node(Point(x,y,z)));
 	}
     }
     cerr << "nnodes in mesh=" << mesh->nodes.size() << endl;

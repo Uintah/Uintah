@@ -32,6 +32,7 @@
 #include <iostream>
 using std::cerr;
 
+#if 0
 namespace DaveW {
 using namespace DaveW;
 using namespace SCIRun;
@@ -348,4 +349,4 @@ void BuildFDMatrix::add_lcl_gbl(Matrix& gbl_a,
 }
 } // End namespace DaveW
 
-
+#endif

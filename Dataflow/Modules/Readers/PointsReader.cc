@@ -98,7 +98,7 @@ void PointsReader::execute()
 	    ptsfile >> x >> y >> z;
 	    if (ptsfile)
 	    {
-		mesh->nodes.add(NodeHandle(new Node(Point(x, y, z))));
+		mesh->nodes.add(Node(Point(x, y, z)));
 	    }
 	}
 	cerr << "nnodes=" << mesh->nodesize() << endl;
