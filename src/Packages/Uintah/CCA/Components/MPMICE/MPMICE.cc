@@ -32,7 +32,12 @@ using namespace std;
 //#undef IDEAL_GAS
 //#define BURN_DEBUG
 #undef BURN_DEBUG
-
+/*`==========TESTING==========*/ 
+// KEEP THIS AROUND UNTIL
+// I'M SURE OF THE NEW STYLE OF SETBC -Todd
+#define oldStyle_setBC 1
+#define newStyle_setBC 0
+ /*==========TESTING==========`*/
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
@@ -142,7 +147,8 @@ void MPMICE::scheduleTimeAdvance(double, double,
                                                                   all_matls);
                                                                   
   d_ice->scheduleComputeDelPressAndUpdatePressCC( sched, patches, press_matl,
-                                                                  ice_matls_sub,
+                                                                  ice_matls_sub, 
+                                                                  mpm_matls_sub,
                                                                   all_matls);
 
   // scheduleInterpolateVelIncFCToNC(sched, patches, matls);
@@ -406,9 +412,11 @@ void MPMICE::scheduleComputeEquilibrationPressure(SchedulerP& sched,
   t->requires(Task::OldDW,Ilb->temp_CCLabel,  ice_matls,  Ghost::None);
   t->requires(Task::OldDW,Ilb->mass_CCLabel,  ice_matls,  Ghost::None);
   t->requires(Task::OldDW,Ilb->sp_vol_CCLabel,ice_matls,  Ghost::None);
+  t->requires(Task::OldDW,Ilb->vel_CCLabel,   ice_matls,  Ghost::None);
                 // M P M
   t->requires(Task::NewDW,MIlb->temp_CCLabel, mpm_matls, Ghost::None);
   t->requires(Task::NewDW,MIlb->cVolumeLabel, mpm_matls, Ghost::None);
+  t->requires(Task::NewDW,MIlb->vel_CCLabel,  mpm_matls,  Ghost::None);
 
                 //  A L L _ M A T L S
   t->computes(Ilb->speedSound_CCLabel);
@@ -1068,7 +1076,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
         Material* matl = d_sharedState->getMaterial( m );
         int dwindex = matl->getDWIndex();
         char description[50];;
-        sprintf(description, "MPMICE_momExchange_CC_%d ",dwindex);
+        sprintf(description, "MPMICE_momExchange_CC_%d_patch_%d ", 
+                dwindex, patch->getID());
         d_ice->printVector(patch,1, description, "xmom_L_ME", 0, mom_L_ME[m]);
         d_ice->printVector(patch,1, description, "ymom_L_ME", 1, mom_L_ME[m]);
         d_ice->printVector(patch,1, description, "zmom_L_ME", 2, mom_L_ME[m]);
@@ -1269,7 +1278,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<CCVariable<double> > sp_vol_CC(numALLMatls);
     StaticArray<CCVariable<double> > mat_vol(numALLMatls);
     StaticArray<CCVariable<double> > mass_CC(numALLMatls);
-    CCVariable<double> press, press_new;
+    CCVariable<double> press, press_new; 
+    StaticArray<CCVariable<Vector> > vel_CC(numALLMatls);
+
 /**/  CCVariable<double> delPress_tmp;
 /**/  new_dw->allocate(delPress_tmp,
                                Ilb->press_CCLabel, 0,patch); 
@@ -1283,16 +1294,18 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       if(ice_matl){                    // I C E
-        old_dw->get(Temp[m],Ilb->temp_CCLabel,dwindex, patch, Ghost::None,0);
-        old_dw->get(mass_CC[m],Ilb->mass_CCLabel,dwindex, patch, Ghost::None,0);
-        old_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,dwindex,patch,
-		    Ghost::None,0);
+        old_dw->get(Temp[m],  Ilb->temp_CCLabel, dwindex, patch,Ghost::None,0);
+        old_dw->get(mass_CC[m],Ilb->mass_CCLabel,dwindex, patch,Ghost::None,0);
+        old_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,dwindex, patch, 
+                                                                Ghost::None,0);
+        old_dw->get(vel_CC[m],Ilb->vel_CCLabel,  dwindex, patch,Ghost::None,0);
         cv[m] = ice_matl->getSpecificHeat();
       }
       if(mpm_matl){                    // M P M    
         new_dw->get(Temp[m],   MIlb->temp_CCLabel,dwindex, patch,Ghost::None,0);
         new_dw->get(mat_vol[m],MIlb->cVolumeLabel,dwindex, patch,Ghost::None,0);
         new_dw->get(mass_CC[m],MIlb->cMassLabel,  dwindex, patch,Ghost::None,0);
+        new_dw->get(vel_CC[m], MIlb->vel_CCLabel, dwindex, patch,Ghost::None,0);
         cv[m] = mpm_matl->getSpecificHeat();
       }
       new_dw->allocate(rho_CC[m],    Ilb->rho_CCLabel,       dwindex, patch);
@@ -1314,7 +1327,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
         char description[50];
-        sprintf(description, "TOPTOP_equilibration_Mat_%d ",dwindex);
+        sprintf(description, "TOPTOP_equilibration_Mat_%d_patch_%d ",
+                dwindex, patch->getID());
         d_ice->printData( patch,1,description, "mass_CC", mass_CC[m]);
         if (ice_matl) {
 	  d_ice->printData( patch,1,description, "sp_vol_CC", sp_vol_CC[m]);
@@ -1427,7 +1441,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          Material* matl = d_sharedState->getMaterial( m );
          int dwindex = matl->getDWIndex();
          char description[50];
-         sprintf(description, "TOP_equilibration_Mat_%d ",dwindex);
+         sprintf(description, "TOP_equilibration_Mat_%d_patch_%d ", 
+                  dwindex, patch->getID());
          d_ice->printData( patch,1,description, "rho_CC",     rho_CC[m]);
          d_ice->printData( patch,1,description, "rho_micro",  rho_micro[m]);
          d_ice->printData( patch,0,description, "speedSound",speedSound_new[m]);
@@ -1658,11 +1673,19 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        }  
     }  
 
-    d_ice->setBC(press_new, rho_micro[SURROUND_MAT], "Pressure",patch, 0);
     //__________________________________
     //  press_CC boundary conditions are updated in
     //  ICE::ComputeDelPressAndUpdateCC()
-
+/*`==========TESTING==========*/ 
+  #if oldStyle_setBC
+    d_ice->setBC(press_new, rho_micro[SURROUND_MAT], "Pressure",patch,0);
+  #endif
+  #if newStyle_setBC
+    d_ice->setBC(press_new,     rho_micro,   rho_CC,
+          vol_frac,     vel_CC,         old_dw,
+          "Pressure",   patch,0);
+    #endif
+ /*==========TESTING==========`*/  
     //__________________________________
     //    Put all matls into new dw
     for (int m = 0; m < numALLMatls; m++)   {
@@ -1685,7 +1708,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          Material* matl = d_sharedState->getMaterial( m );
          int dwindex = matl->getDWIndex(); 
          char description[50];
-         sprintf(description, "BOT_equilibration_Mat_%d ",dwindex);
+         sprintf(description, "BOT_equilibration_Mat_%d_patch_%d ", 
+                  dwindex,patch->getID());
          d_ice->printData( patch,1,description, "rho_CC",      rho_CC[m]);
          d_ice->printData( patch,1,description, "rho_micro_CC",rho_micro[m]);
          d_ice->printData( patch,1,description, "vol_frac_CC", vol_frac[m]);
