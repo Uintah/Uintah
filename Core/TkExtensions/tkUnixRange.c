@@ -189,8 +189,8 @@ DisplayVerticalRange(rangePtr, drawable, drawnAreaPtr)
     width = rangePtr->width;
     height = rangePtr->sliderLength/2;
     x = rangePtr->vertTroughX + rangePtr->borderWidth;
-    y1 = TkpValueToPixel(rangePtr, rangePtr->min_value) - height;
-    y2 = TkpValueToPixel(rangePtr, rangePtr->max_value);
+    y1 = TkpRangeValueToPixel(rangePtr, rangePtr->min_value) - height;
+    y2 = TkpRangeValueToPixel(rangePtr, rangePtr->max_value);
     shadowWidth = rangePtr->borderWidth/2;
     if (shadowWidth == 0) {
 	shadowWidth = 1;
@@ -270,7 +270,7 @@ DisplayVerticalValue(rangePtr, drawable, value, rightEdge)
     Tk_FontMetrics fm;
 
     Tk_GetFontMetrics(rangePtr->tkfont, &fm);
-    y = TkpValueToPixel(rangePtr, value) + fm.ascent/2;
+    y = TkpRangeValueToPixel(rangePtr, value) + fm.ascent/2;
     sprintf(valueString, rangePtr->format, value);
     length = strlen(valueString);
     width = Tk_TextWidth(rangePtr->tkfont, valueString, length);
@@ -404,8 +404,8 @@ DisplayHorizontalRange(rangePtr, drawable, drawnAreaPtr)
     }
     width = rangePtr->sliderLength/2;
     height = rangePtr->width;
-    x1 = TkpValueToPixel(rangePtr, rangePtr->min_value) - width;
-    x2 = TkpValueToPixel(rangePtr, rangePtr->max_value);
+    x1 = TkpRangeValueToPixel(rangePtr, rangePtr->min_value) - width;
+    x2 = TkpRangeValueToPixel(rangePtr, rangePtr->max_value);
     y += rangePtr->borderWidth;
     shadowWidth = rangePtr->borderWidth/2;
     if (shadowWidth == 0) {
@@ -483,7 +483,7 @@ DisplayHorizontalValue(rangePtr, drawable, value, top)
     char valueString[PRINT_CHARS];
     Tk_FontMetrics fm;
 
-    x = TkpValueToPixel(rangePtr, value);
+    x = TkpRangeValueToPixel(rangePtr, value);
     Tk_GetFontMetrics(rangePtr->tkfont, &fm);
     y = top + fm.ascent;
     sprintf(valueString, rangePtr->format, value);
@@ -671,9 +671,9 @@ TkpRangeElement(rangePtr, x, y)
 		|| (y >= (Tk_Height(rangePtr->tkwin) - rangePtr->inset))) {
 	    return OTHER;
 	}
-	sliderMin = TkpValueToPixel(rangePtr, rangePtr->min_value)
+	sliderMin = TkpRangeValueToPixel(rangePtr, rangePtr->min_value)
 		- rangePtr->sliderLength/2;
-	sliderMax = TkpValueToPixel(rangePtr, rangePtr->max_value)
+	sliderMax = TkpRangeValueToPixel(rangePtr, rangePtr->max_value)
 		- rangePtr->sliderLength/2;
 	if (y < sliderMin) {
 	    return TROUGH1;
@@ -701,9 +701,9 @@ TkpRangeElement(rangePtr, x, y)
 	    || (x >= (Tk_Width(rangePtr->tkwin) - rangePtr->inset))) {
 	return OTHER;
     }
-    sliderMin = TkpValueToPixel(rangePtr, rangePtr->min_value)-
+    sliderMin = TkpRangeValueToPixel(rangePtr, rangePtr->min_value)-
 	rangePtr->sliderLength/2;
-    sliderMax = TkpValueToPixel(rangePtr, rangePtr->max_value)+
+    sliderMax = TkpRangeValueToPixel(rangePtr, rangePtr->max_value)+
 	rangePtr->sliderLength/2;
     if (x < sliderMin) {
 	return TROUGH1;
@@ -844,7 +844,7 @@ TkpSetRangeMaxValue(rangePtr, value, setVar, invokeCommand)
 /*
  *----------------------------------------------------------------------
  *
- * TkpPixelToValue --
+ * TkRangePixelToValue --
  *
  *	Given a pixel within a range window, return the range
  *	reading corresponding to that pixel.
@@ -861,9 +861,8 @@ TkpSetRangeMaxValue(rangePtr, value, setVar, invokeCommand)
  */
 
 /* Dd: Does this really need to be static? */
-static 
 double
-TkpPixelToValue(rangePtr, x, y)
+TkRangePixelToValue(rangePtr, x, y)
     register TkRange *rangePtr;		/* Information about widget. */
     int x, y;				/* Coordinates of point within
 					 * window. */
@@ -905,7 +904,7 @@ TkpPixelToValue(rangePtr, x, y)
 /*
  *----------------------------------------------------------------------
  *
- * TkpValueToPixel --
+ * TkpRangeValueToPixel --
  *
  *	Given a reading of the range, return the x-coordinate or
  *	y-coordinate corresponding to that reading, depending on
@@ -922,10 +921,8 @@ TkpPixelToValue(rangePtr, x, y)
  *----------------------------------------------------------------------
  */
 
-/* Dd: Does this really need to be static? */
-static
 int
-TkpValueToPixel(rangePtr, value)
+TkpRangeValueToPixel(rangePtr, value)
     register TkRange *rangePtr;		/* Information about widget. */
     double value;			/* Reading of the widget. */
 {

@@ -316,9 +316,9 @@ void Point::test_rigorous(RigorousTest* __test)
 		//Point-Point=Vector Tests
 		
 		v3=p2-p1;
-		X=p2.x()-p1.x();
-		Y=p2.y()-p1.y();
-		Z=p2.z()-p1.z();
+		X=(int)(p2.x()-p1.x());
+		Y=(int)(p2.y()-p1.y());
+		Z=(int)(p2.z()-p1.z());
 
 		TEST(v3.x()==X);
 		TEST(v3.y()==Y);
@@ -327,9 +327,9 @@ void Point::test_rigorous(RigorousTest* __test)
 		//Point+Vector=Point Tests
 		
 		p2=p1+v1;
-		X=p1.x()+v1.x();
-		Y=p1.y()+v1.y();
-		Z=p1.z()+v1.z();
+		X=(int)(p1.x()+v1.x());
+		Y=(int)(p1.y()+v1.y());
+		Z=(int)(p1.z()+v1.z());
 
 		TEST(p2.x()==X);
 		TEST(p2.y()==Y);
@@ -344,9 +344,9 @@ void Point::test_rigorous(RigorousTest* __test)
 		v1.y(x);
 		v1.z(y);
 		TEST((v1.x()==z)&&(v1.y()==x)&&(v1.z()==y));
-		X = p1.x()+v1.x();
-		Y = p1.y()+v1.y();
-		Z = p1.z()+v1.z();
+		X = (int)(p1.x()+v1.x());
+		Y = (int)(p1.y()+v1.y());
+		Z = (int)(p1.z()+v1.z());
 
 		p1+=v1;
 		TEST(p1.x()==X);
@@ -365,9 +365,9 @@ void Point::test_rigorous(RigorousTest* __test)
 		v1.z(y);
 		TEST((v1.x()==z)&&(v1.y()==x)&&(v1.z()==y));
 		
-		X=p1.x()-v1.x();
-		Y=p1.y()-v1.y();
-		Z=p1.z()-v1.z();
+		X=(int)(p1.x()-v1.x());
+		Y=(int)(p1.y()-v1.y());
+		Z=(int)(p1.z()-v1.z());
 	  
 		
 		p3=p1-v1;
@@ -376,9 +376,9 @@ void Point::test_rigorous(RigorousTest* __test)
 		TEST(p3.z()==Z);
 
 		//Point-=Vector Tests
-		X = p1.x()-v1.x();
-		Y = p1.y()-v1.y();
-		Z = p1.z()-v1.z();
+		X = (int)(p1.x()-v1.x());
+		Y = (int)(p1.y()-v1.y());
+		Z = (int)(p1.z()-v1.z());
 		
 		p1-=v1;
 		
@@ -488,6 +488,11 @@ void Pio(Piostream& stream, Point& p)
 
 //
 // $Log$
+// Revision 1.3  1999/08/23 06:30:37  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.2  1999/08/17 06:39:28  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

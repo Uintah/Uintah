@@ -28,7 +28,7 @@
   #include <string.h>
   #define bcopy(src,dest,n) memcpy(dest,src,n)
 #else
-  #ifndef LINUX
+  #ifndef __linux
     #include <bstring.h>
   #endif
 #endif
@@ -1027,6 +1027,11 @@ void DumpAllocator(Allocator* a)
 
 //
 // $Log$
+// Revision 1.4  1999/08/23 06:30:37  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.3  1999/08/19 05:30:56  sparker
 // Configuration updates:
 //  - renamed config.h to sci_config.h

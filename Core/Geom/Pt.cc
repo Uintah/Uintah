@@ -94,7 +94,7 @@ void GeomPts::DoSort()
   float mapz = BIGNUM/(maxz-minz);
 
   for(i=0;i<remaped.size();i++) {
-    remaped[i] = (pts[i*3 + 0]-minx)*mapx;
+    remaped[i] = (unsigned int)((pts[i*3 + 0]-minx)*mapx);
   }
   
   cerr << "Did first remap...\n";
@@ -105,13 +105,13 @@ void GeomPts::DoSort()
   cerr << "Done!\n";
 
   for(i=0;i<remaped.size();i++) {
-    remaped[i] = (pts[i*3 + 1]-miny)*mapy;
+    remaped[i] = (unsigned int)((pts[i*3 + 1]-miny)*mapy);
   }
   sorty.setsize(remaped.size());
   sorter.DoRadixSort(remaped,sorty);
 
   for(i=0;i<remaped.size();i++) {
-    remaped[i] = (pts[i*3 + 2]-minz)*mapz;
+    remaped[i] = (unsigned int)((pts[i*3 + 2]-minz)*mapz);
   }
   sortz.setsize(remaped.size());
   sorter.DoRadixSort(remaped,sortz);
@@ -224,7 +224,7 @@ GeomTimedParticles::GeomTimedParticles(char *fname)
       while(!done && fgets(buf,4096,f)) {
 	if (4 == sscanf(buf,"%f %f %f %f",&curp.t,&curp.x,&curp.y,&curp.z)) {
 	  ps.add(curp);
-	  int hval = curp.t*HSIZE;
+	  int hval = (int)(curp.t*HSIZE);
 	  if (hval >= HSIZE) hval = HSIZE-1;
 	  TimeHist[hval]++;
 	} else {
@@ -341,6 +341,11 @@ void GeomTimedParticles::draw(DrawInfoOpenGL*, Material*, double)
 
 //
 // $Log$
+// Revision 1.4  1999/08/23 06:30:36  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.3  1999/08/17 23:50:32  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

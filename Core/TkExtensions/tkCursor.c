@@ -1,4 +1,5 @@
 #include "tk.h"
+#include <string.h>
 
 int
 Tk_CursorCmd(clientData, interp, argc, argv)

@@ -152,19 +152,19 @@ void ColorMap::Build1d(const int size)
     for(i=0;i<TEX1D_SIZE;i++) {
       Color c = FindColor(rawRampColor,rawRampColorT,i*mul);
       double al = FindAlpha(rawRampAlpha,rawRampAlphaT,i*mul);
-      raw1d[i*4 + 0] = c.r()*al*255;
-      raw1d[i*4 + 1] = c.g()*al*255;
-      raw1d[i*4 + 2] = c.b()*al*255;
-      raw1d[i*4 + 3] = al*255;
+      raw1d[i*4 + 0] = (unsigned char)(c.r()*al*255);
+      raw1d[i*4 + 1] = (unsigned char)(c.g()*al*255);
+      raw1d[i*4 + 2] = (unsigned char)(c.b()*al*255);
+      raw1d[i*4 + 3] = (unsigned char)(al*255);
     }  
   } else { // don't pre-multiply the alpha value...
     for(i=0;i<TEX1D_SIZE;i++) {
       Color c = FindColor(rawRampColor,rawRampColorT,i*mul);
       double al = FindAlpha(rawRampAlpha,rawRampAlphaT,i*mul);
-      raw1d[i*4 + 0] = c.r()*255;
-      raw1d[i*4 + 1] = c.g()*255;
-      raw1d[i*4 + 2] = c.b()*255;
-      raw1d[i*4 + 3] = al*255;
+      raw1d[i*4 + 0] = (unsigned char)(c.r()*255);
+      raw1d[i*4 + 1] = (unsigned char)(c.g()*255);
+      raw1d[i*4 + 2] = (unsigned char)(c.b()*255);
+      raw1d[i*4 + 3] = (unsigned char)(al*255);
     }  
   }
 }
@@ -272,6 +272,11 @@ double ColorMap::getMax()
 
 //
 // $Log$
+// Revision 1.3  1999/08/23 06:30:34  sparker
+// Linux port
+// Added X11 configuration options
+// Removed many warnings
+//
 // Revision 1.2  1999/08/17 06:38:43  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
