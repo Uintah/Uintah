@@ -71,6 +71,7 @@ public:
    void logMemoryUse(ostream& out, unsigned long& total,
 		     const std::string& tag, int dwid);
 private:
+
    typedef vector<VarType*> dataDBtype;
 
    struct PatchRecord {
@@ -209,6 +210,8 @@ template<class VarType>
 bool DWDatabase<VarType>::exists(const VarLabel* label, int matlIndex,
 				 const Patch* patch) const
 {
+   if (patch && patch->isVirtual())
+     patch = patch->getRealPatch();
    if (matlIndex < 0)
       return (patch == NULL) && (globals.find(label) != globals.end());
   
@@ -231,6 +234,8 @@ bool DWDatabase<VarType>::exists(const VarLabel* label, int matlIndex,
 template<class VarType>
 bool DWDatabase<VarType>::exists(const VarLabel* label, const Patch* patch) const
 {
+   if (patch && patch->isVirtual())
+     patch = patch->getRealPatch();
    nameDBtype::const_iterator nameiter = names.find(label);
    if(nameiter != names.end()) {
       NameRecord* nr = nameiter->second;
@@ -257,6 +262,7 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
 			      VarType* var,
 			      bool replace)
 {
+   ASSERT(patch == 0 || !patch->isVirtual());
    if(matlIndex < 0) {
       if (patch == NULL) {
          // add to globals
@@ -313,6 +319,7 @@ template<class VarType>
 VarType* DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
 				  const Patch* patch) const
 {
+   ASSERT(patch == 0 || !patch->isVirtual());
    if(matlIndex < 0) {
       if (patch == NULL) {
          // get from globals
@@ -357,8 +364,15 @@ void DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
 			      const Patch* patch,
 			      VarType& var) const
 {
-   VarType* tmp = get(label, matlIndex, patch);
-   var.copyPointer(*tmp);
+   if (patch && patch->isVirtual()) {
+     VarType* tmp = get(label, matlIndex, patch->getRealPatch());
+     var.copyPointer(*tmp);
+     var.offsetGrid(patch->getVirtualOffset());
+   }
+   else {
+     VarType* tmp = get(label, matlIndex, patch);
+     var.copyPointer(*tmp);
+   }
 }
 
 template<class VarType>
@@ -366,6 +380,8 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 				  const VarLabel* label,
 				  const Patch* patch)
 {
+   ASSERT(patch == 0 || !patch->isVirtual());
+  
    nameDBtype::const_iterator nameiter = from.names.find(label);
    if(nameiter == from.names.end())
       return;

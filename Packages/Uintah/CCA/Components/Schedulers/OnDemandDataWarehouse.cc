@@ -604,6 +604,8 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
   cerr << "createParticleSubset: MI: " << matlIndex << " P: " << *patch<<"\n";
 #endif
 
+  ASSERT(!patch->isVirtual());
+
    ParticleSet* pset = scinew ParticleSet(numParticles);
    ParticleSubset* psubset = 
                        scinew ParticleSubset(pset, true, matlIndex, patch);
@@ -625,6 +627,7 @@ OnDemandDataWarehouse::saveParticleSubset(int matlIndex, const Patch* patch,
 {
   ASSERTEQ(psubset->getPatch(), patch);
   ASSERTEQ(psubset->getMatlIndex(), matlIndex);
+  ASSERT(!patch->isVirtual());  
   d_lock.writeLock();
   
   psetDBType::key_type key(matlIndex, patch);
@@ -641,11 +644,12 @@ ParticleSubset*
 OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch)
 {
   d_lock.readLock();
-   psetDBType::key_type key(matlIndex, patch);
+  const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
+   psetDBType::key_type key(matlIndex, realPatch);
    psetDBType::iterator iter = d_psetDB.find(key);
    if(iter == d_psetDB.end()){
   d_lock.readUnlock();
-      throw UnknownVariable("ParticleSet", patch, matlIndex,
+      throw UnknownVariable("ParticleSet", realPatch, matlIndex,
 			    "Cannot find particle set on patch");
    }
   d_lock.readUnlock();
@@ -668,49 +672,73 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
 					 int numGhostCells,
 					 const VarLabel* pos_var)
 {
-   if(gtype == Ghost::None){
-      if(numGhostCells != 0)
-	 throw InternalError("Ghost cells specified with task type none!\n");
-      return getParticleSubset(matlIndex, patch);
-   }
-   Level::selectType neighbors;
-   IntVector lowIndex, highIndex;
-   patch->computeVariableExtents(Patch::CellBased, gtype, numGhostCells,
-				 neighbors, lowIndex, highIndex);
-   Box box = patch->getLevel()->getBox(lowIndex, highIndex);
-
-   particleIndex totalParticles = 0;
-   vector<ParticleVariableBase*> neighborvars;
-   vector<ParticleSubset*> subsets;
-
-   for(int i=0;i<(int)neighbors.size();i++){
-      const Patch* neighbor = neighbors[i];
-      if(neighbor){
-	 ParticleSubset* pset = getParticleSubset(matlIndex, neighbor);
-	 constParticleVariable<Point> pos;
-	 get(pos, pos_var, pset);
-
-	 ParticleSubset* subset = 
-	    scinew ParticleSubset(pset->getParticleSet(), false, -1, 0);
-	 for(ParticleSubset::iterator iter = pset->begin();
-	     iter != pset->end(); iter++){
-	    particleIndex idx = *iter;
-	    if(box.contains(pos[idx]))
-	       subset->addParticle(idx);
-	 }
-	 totalParticles+=subset->numParticles();
-	 subsets.push_back(subset);
+  if(gtype == Ghost::None){
+    if(numGhostCells != 0)
+      throw InternalError("Ghost cells specified with task type none!\n");
+    return getParticleSubset(matlIndex, patch);
+  }
+  Level::selectType neighbors;
+  IntVector lowIndex, highIndex;
+  patch->computeVariableExtents(Patch::CellBased, gtype, numGhostCells,
+				neighbors, lowIndex, highIndex);
+  Box box = patch->getLevel()->getBox(lowIndex, highIndex);
+  
+  particleIndex totalParticles = 0;
+  vector<ParticleVariableBase*> neighborvars;
+  vector<ParticleSubset*> subsets;
+  
+  for(int i=0;i<(int)neighbors.size();i++){
+    const Patch* neighbor = neighbors[i];
+    if(neighbor){
+      Box adjustedBox = box;
+      if (neighbor->isVirtual()) {
+	// rather than offsetting each point of pos_var's data,
+	// just adjust the box to compare it with.
+	Vector offset = neighbor->getVirtualOffsetVector();
+	adjustedBox = Box(box.lower() - offset,
+			  box.upper() - offset);
       }
-   }
-   ParticleSet* newset = scinew ParticleSet(totalParticles);
-   vector<const Patch*> vneighbors(neighbors.size());
-   for(int i=0;i<neighbors.size();i++)
-      vneighbors[i]=neighbors[i];
-   ParticleSubset* newsubset = scinew ParticleSubset(newset, true,
-						     matlIndex, patch,
-						     gtype, numGhostCells,
-						     vneighbors, subsets);
-   return newsubset;
+      ParticleSubset* pset = getParticleSubset(matlIndex, neighbor);
+      constParticleVariable<Point> pos;
+      get(pos, pos_var, pset);
+      
+      ParticleSubset* subset = 
+	scinew ParticleSubset(pset->getParticleSet(), false, -1, 0);
+      for(ParticleSubset::iterator iter = pset->begin();
+	  iter != pset->end(); iter++){
+	particleIndex idx = *iter;
+	if(adjustedBox.contains(pos[idx]))
+	  subset->addParticle(idx);
+      }
+      totalParticles+=subset->numParticles();
+      subsets.push_back(subset);
+    }
+  }
+  ParticleSet* newset = scinew ParticleSet(totalParticles);
+  vector<const Patch*> vneighbors(neighbors.size());
+  for(int i=0;i<neighbors.size();i++)
+    vneighbors[i]=neighbors[i];
+  ParticleSubset* newsubset = scinew ParticleSubset(newset, true,
+						    matlIndex, patch,
+						    gtype, numGhostCells,
+						    vneighbors, subsets);
+  return newsubset;
+}
+
+void
+OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
+			   const VarLabel* label, int matlIndex,
+			   const Patch* patch)
+{
+  d_lock.readLock();
+
+   checkGetAccess(label, matlIndex, patch);
+   
+   if(!d_particleDB.exists(label, matlIndex, patch))
+     throw UnknownVariable(label->getName(), patch, matlIndex);
+   constVar = *d_particleDB.get(label, matlIndex, patch);
+   
+  d_lock.readUnlock();
 }
 
 void
@@ -718,10 +746,42 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
 			   const VarLabel* label,
 			   ParticleSubset* pset)
 {
-  ParticleVariableBase* var = constVar.cloneType();
-  getModifiable(*var, label, pset);
-  constVar = *var;
-  delete var;
+  int matlIndex = pset->getMatlIndex();
+  const Patch* patch = pset->getPatch();
+  
+  if(pset->getGhostType() == Ghost::None){
+    get(constVar, label, matlIndex, patch);
+  }
+  else {
+   d_lock.readLock();
+    checkGetAccess(label, matlIndex, patch);
+    ParticleVariableBase* var = constVar.cloneType();
+
+    const vector<const Patch*>& neighbors = pset->getNeighbors();
+    const vector<ParticleSubset*>& neighbor_subsets = pset->getNeighborSubsets();
+    vector<ParticleVariableBase*> neighborvars(neighbors.size());
+    for(int i=0;i<(int)neighbors.size();i++){
+      const Patch* neighbor=neighbors[i];
+      if(!d_particleDB.exists(label, matlIndex, neighbors[i]))
+	throw UnknownVariable(label->getName(), neighbor, matlIndex,
+			      neighbor == patch?"on patch":"on neighbor");
+      neighborvars[i] = var->cloneType();
+      d_particleDB.get(label, matlIndex, neighbors[i], *neighborvars[i]);
+    }
+
+    // Note that when the neighbors are virtual patches (i.e. periodic
+    // boundaries), then if var is a ParticleVariable<Point>, the points
+    // of neighbors will be translated by its virtualOffset.
+    var->gather(pset, neighbor_subsets, neighborvars, neighbors);
+    
+    constVar = *var;
+    
+    for (int i=0;i<(int)neighbors.size();i++)
+      delete neighborvars[i];
+    delete var;
+    
+   d_lock.readUnlock();    
+  }
 }
 
 void
@@ -732,24 +792,14 @@ OnDemandDataWarehouse::getModifiable(ParticleVariableBase& var,
   d_lock.readLock();
    int matlIndex = pset->getMatlIndex();
    const Patch* patch = pset->getPatch();
-   checkGetAccess(label, matlIndex, patch);
+   checkModifyAccess(label, matlIndex, patch);
    
    if(pset->getGhostType() == Ghost::None){
       if(!d_particleDB.exists(label, matlIndex, patch))
 	 throw UnknownVariable(label->getName(), patch, matlIndex);
       d_particleDB.get(label, matlIndex, patch, var);
    } else {
-      const vector<const Patch*>& neighbors = pset->getNeighbors();
-      const vector<ParticleSubset*>& neighbor_subsets = pset->getNeighborSubsets();
-      vector<ParticleVariableBase*> neighborvars(neighbors.size());
-      for(int i=0;i<(int)neighbors.size();i++){
-	 const Patch* neighbor=neighbors[i];
-	 if(!d_particleDB.exists(label, matlIndex, neighbors[i]))
-	    throw UnknownVariable(label->getName(), neighbor, matlIndex,
-				  neighbor == patch?"on patch":"on neighbor");
-	 neighborvars[i] = d_particleDB.get(label, matlIndex, neighbors[i]);
-      }
-      var.gather(pset, neighbor_subsets, neighborvars);
+      throw InternalError("getParticleVariable should not be used with ghost cells");
    }
   d_lock.readUnlock();
 }
@@ -762,12 +812,31 @@ OnDemandDataWarehouse::getParticleVariable(const VarLabel* label,
    const Patch* patch = pset->getPatch();
 
    if(pset->getGhostType() == Ghost::None){
-      if(!d_particleDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable(label->getName(), patch, matlIndex);
-      return d_particleDB.get(label, matlIndex, patch);
+     return getParticleVariable(label, matlIndex, patch);
    } else {
       throw InternalError("getParticleVariable should not be used with ghost cells");
    }
+}
+
+ParticleVariableBase*
+OnDemandDataWarehouse::getParticleVariable(const VarLabel* label,
+					   int matlIndex, const Patch* patch)
+{
+   ParticleVariableBase* var = 0;  
+
+   // in case the it's a virtual patch -- only deal with real patches
+   if (patch != 0) patch = patch->getRealPatch();
+   
+  d_lock.readLock();
+  
+   checkModifyAccess(label, matlIndex, patch);
+   
+   if(!d_particleDB.exists(label, matlIndex, patch))
+     throw UnknownVariable(label->getName(), patch, matlIndex);
+   var = d_particleDB.get(label, matlIndex, patch);
+
+  d_lock.readUnlock();
+   return var;
 }
 
 void
@@ -1354,7 +1423,8 @@ getGridVar(VariableBase& var, DWDatabase& db,
 	 if(!db.exists(label, matlIndex, neighbor))
 	   throw UnknownVariable(label->getName(), neighbor, matlIndex,
 				 neighbor == patch?"on patch":"on neighbor");
-	 VariableBase* srcvar = db.get(label, matlIndex, neighbor);
+	 VariableBase* srcvar = var.cloneType();
+	 db.get(label, matlIndex, neighbor, *srcvar);
 	 
 	 low = Max(lowIndex, neighbor->getLowIndex(basis));
 	 high= Min(highIndex, neighbor->getHighIndex(basis));
@@ -1367,6 +1437,7 @@ getGridVar(VariableBase& var, DWDatabase& db,
 
 	 dn = high-low;
 	 total+=dn.x()*dn.y()*dn.z();
+	 delete srcvar;
        }
      }
 

@@ -96,12 +96,16 @@ public:
 			 ParticleSubset*);
    virtual void get(constParticleVariableBase&, const VarLabel*,
 		    ParticleSubset*);
+   virtual void get(constParticleVariableBase&, const VarLabel*,
+		    int matlIndex, const Patch* patch);
    virtual void getModifiable(ParticleVariableBase&, const VarLabel*,
 		    ParticleSubset*);
    virtual void put(ParticleVariableBase&, const VarLabel*,
 		    bool replace = false);
    virtual ParticleVariableBase* getParticleVariable(const VarLabel*,
 						     ParticleSubset*);
+   virtual ParticleVariableBase*
+   getParticleVariable(const VarLabel*, int matlIndex, const Patch* patch);  
 
    // NCVariables Variables
    virtual void allocate(NCVariableBase&, const VarLabel*,
