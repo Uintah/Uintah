@@ -43,6 +43,9 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc);
+
+protected:
+  static int permute_table[15][4];
 };
 
 
@@ -54,7 +57,6 @@ public:
   virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh,
 			      double isoval, bool lte);
 };
-
 
 template <class FIELD>
 FieldHandle
@@ -129,30 +131,34 @@ IsoClipAlgoT<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
 
       clipped->add_elem(nnodes);
     }
-    else if (inside == 0x7)
+    else if (inside == 0x7 || inside == 0xb || inside == 0xd || inside == 0xe)
     {
+      const int *perm = permute_table[inside];
       // Add this element to the new mesh.
       typename FIELD::mesh_type::Node::array_type nnodes(onodes.size());
 
       typename FIELD::mesh_type::Node::index_type inodes[9];
       for (unsigned int i = 1; i<onodes.size(); i++)
       {
-	if (nodemap.find((unsigned int)onodes[i]) == nodemap.end())
+	if (nodemap.find((unsigned int)onodes[perm[i]]) == nodemap.end())
 	{
 	  const typename FIELD::mesh_type::Node::index_type nodeindex =
-	    clipped->add_point(p[i]);
-	  nodemap[(unsigned int)onodes[i]] = nodeindex;
+	    clipped->add_point(p[perm[i]]);
+	  nodemap[(unsigned int)onodes[perm[i]]] = nodeindex;
 	  inodes[i-1] = nodeindex;
 	}
 	else
 	{
-	  inodes[i-1] = nodemap[(unsigned int)onodes[i]];
+	  inodes[i-1] = nodemap[(unsigned int)onodes[perm[i]]];
 	}
       }
-
-      const Point l1 = Interpolate(p[0], p[1], (isoval - v[0])/(v[1] - v[0]));
-      const Point l2 = Interpolate(p[0], p[2], (isoval - v[0])/(v[2] - v[0]));
-      const Point l3 = Interpolate(p[0], p[3], (isoval - v[0])/(v[3] - v[0]));
+      const double imv = isoval - v[perm[0]];
+      const Point l1 = Interpolate(p[perm[0]], p[perm[1]],
+				   imv / (v[perm[1]] - v[perm[0]]));
+      const Point l2 = Interpolate(p[perm[0]], p[perm[2]],
+				   imv / (v[perm[2]] - v[perm[0]]));
+      const Point l3 = Interpolate(p[perm[0]], p[perm[3]],
+				   imv / (v[perm[3]] - v[perm[0]]));
 
       inodes[3] = clipped->add_point(l1);
       inodes[4] = clipped->add_point(l2);
