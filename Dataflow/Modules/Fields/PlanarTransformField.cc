@@ -89,7 +89,7 @@ PlanarTransformField::PlanarTransformField(GuiContext* context)
     axis_(2),
     tx_(0),
     ty_(0),
-    field_generation_(0)
+    field_generation_(-1)
 {
 }
 
@@ -113,13 +113,36 @@ PlanarTransformField::execute()
   }
 
   if (!(ifp->get(fieldin) && fieldin.get_rep())) {
-    error( "No handle or representation." );
+    error( "No field handle or representation." );
     return;
   }
 
-  int axis = Axis_.get();
-  int tx = TransX_.get();
-  int ty = TransY_.get();
+  // Get a handle to the index matrix port.
+  MatrixIPort *imp = (MatrixIPort *)get_iport("Index Matrix");
+
+  MatrixHandle matrixin;
+
+  if (!imp) {
+    error("Unable to initialize iport 'Index Matrix'.");
+    return;
+  }
+
+  int axis, tx=0, ty=0;
+
+  if (imp->get(matrixin) ) {
+    if( !matrixin.get_rep()) {
+      error( "No index matrix representation." );
+      return;
+    } else {
+      tx = (int) matrixin->get(0, 0);
+      ty = (int) matrixin->get(1, 0);
+    }
+  } else {
+    tx   = TransX_.get();
+    ty   = TransY_.get();
+  }
+
+  axis = Axis_.get();
 
   if (field_generation_ != fieldin->generation ||
       axis_ != axis ||
