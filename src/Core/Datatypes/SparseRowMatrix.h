@@ -126,6 +126,7 @@ public:
 			      int end=-1, int spVec=0) const;
 
   void sparse_mult(const DenseMatrix& x, DenseMatrix& b) const;
+  MatrixHandle sparse_sparse_mult(const SparseRowMatrix &x) const;
 
   virtual void print() const;
   virtual void print(std::ostream&) const;

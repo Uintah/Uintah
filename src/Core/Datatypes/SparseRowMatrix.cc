@@ -434,6 +434,51 @@ SparseRowMatrix::sparse_mult(const DenseMatrix& x, DenseMatrix& b) const
 }
 
 
+MatrixHandle
+SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
+{
+  // Compute A*B=C
+  ASSERT(b.nrows() == nncols);
+
+  int i, j, k;
+
+  int *crow = scinew int[nnrows+1];
+  vector<int> ccolv;
+  vector<double> cdatav;
+
+  crow[0] = 0;
+  for (i = 0; i < nnrows; i++)
+  {
+    crow[i+1] = crow[i];
+    for (j = 0; j < b.ncols(); j++)
+    {
+      double sum = 0.0;
+      for (k = rows[i]; k < rows[i+1]; k++)
+      {
+        sum += a[k] * b.get(columns[k], j);
+      }
+      if (sum != 0.0)
+      {
+        ccolv.push_back(j);
+        cdatav.push_back(sum);
+        crow[i+1]++;
+      }
+    }
+  }
+
+  int *ccol = scinew int[ccolv.size()];
+  double *cdata = scinew double[cdatav.size()];
+  for (i=0; i < (int)ccolv.size(); i++)
+  {
+    ccol[i] = ccolv[i];
+    cdata[i] = cdatav[i];
+  }
+
+  return scinew SparseRowMatrix(nnrows, b.ncols(), crow, ccol,
+                                cdatav.size(), cdata);
+}
+
+
 void
 SparseRowMatrix::print() const
 {
