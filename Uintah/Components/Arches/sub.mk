@@ -26,13 +26,16 @@ include $(SRCTOP)/scripts/recurse.mk
 PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions \
 	   SCICore/Exceptions
 LIBS := $(XML_LIBRARY) -lftn -lm
-CFLAGS += -DARCHES_DEBUG -g
+#CFLAGS += -DARCHES_DEBUG -g
 #LIBS += -lblas
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.23  2000/08/15 05:10:15  bbanerje
+# Added pleaseSave after each solve.
+#
 # Revision 1.22  2000/08/08 23:34:18  rawat
 # fixed some bugs in profv.F and Properties.cc
 #
