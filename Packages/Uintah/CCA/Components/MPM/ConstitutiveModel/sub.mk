@@ -13,6 +13,7 @@ SRCS     += \
 	$(SRCDIR)/CompNeoHookImplicit.cc 	\
 	$(SRCDIR)/TransIsoHyper.cc              \
 	$(SRCDIR)/TransIsoHyperImplicit.cc 	\
+	$(SRCDIR)/ViscoTransIsoHyper.cc              \
 	$(SRCDIR)/CompNeoHookPlas.cc          	\
 	$(SRCDIR)/ViscoScram.cc               	\
 	$(SRCDIR)/HypoElastic.cc              	\
