@@ -202,13 +202,13 @@ void BrickGrid::init( LatVolField<Data>& tex )
   max_ = bb.max();
   
   if( tex.data_at() == Field::CELL ){
-    nx = m->get_nx()-1;
-    ny = m->get_ny()-1;
-    nz = m->get_nz()-1;
+    nx = m->get_ni()-1;
+    ny = m->get_nj()-1;
+    nz = m->get_nk()-1;
   } else {
-    nx = m->get_nx();
-    ny = m->get_ny();
-    nz = m->get_nz();
+    nx = m->get_ni();
+    ny = m->get_nj();
+    nz = m->get_nk();
   }
   tex_x_ = nx; tex_y_ = ny; tex_z_ = nz;
 

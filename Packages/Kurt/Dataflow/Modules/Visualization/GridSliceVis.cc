@@ -196,9 +196,9 @@ void GridSliceVis::execute(void)
       BBox bb = mesh->get_bounding_box();
       Smin = bb.min();
       Smax = bb.max();
-      nx = mesh->get_nx();
-      ny = mesh->get_ny();
-      nz = mesh->get_nz();
+      nx = mesh->get_ni();
+      ny = mesh->get_nj();
+      nz = mesh->get_nk();
     } else {
       std::cerr<<"Unknown Field type\n";
       return;
@@ -263,9 +263,9 @@ void GridSliceVis::execute(void)
       BBox bb = mesh->get_bounding_box();
       Smin = bb.min();
       Smax = bb.max();
-      nx = mesh->get_nx();
-      ny = mesh->get_ny();
-      nz = mesh->get_nz();
+      nx = mesh->get_ni();
+      ny = mesh->get_nj();
+      nz = mesh->get_nk();
     } else {
       std::cerr<<"Unknown Field type\n";
       return;
