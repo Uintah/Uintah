@@ -53,7 +53,7 @@ namespace SCIRun {
     string getUrl(); 
     Message* getMessage();
     void allocateHandlerTable(int size);
-    void registerHandler(int num, void* handle);
+    void registerHandler(void* handle);
     int approve(globus_nexus_startpoint_t* sp, Object* obj);
     void bind(SpChannel* spchan);
 
@@ -62,6 +62,7 @@ namespace SCIRun {
     // used to relay a message to them 
     HPF* handler_table;
     int table_size;
+    int table_ctr;
 
     /////////////
     // Buffer in which we store the message we recieve

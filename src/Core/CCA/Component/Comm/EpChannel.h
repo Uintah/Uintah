@@ -67,7 +67,7 @@ namespace SCIRun {
     //////////////
     // Functions used to establish the handler functions
     virtual void allocateHandlerTable(int size)=0;
-    virtual void registerHandler(int num, void* handle)=0;
+    virtual void registerHandler(void* handle)=0;
   
     //////////
     // A pointer to the type information.

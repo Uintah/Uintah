@@ -76,7 +76,7 @@ DESCRIPTION
     //////////
     // A pointer to the most derived type.  This is used only by
     // sidl generated code.
-    void* d_ptr;
+    Object* d_ptr;
 
     //////////
     // A flag, true if the endpoint has been created for this

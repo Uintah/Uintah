@@ -497,7 +497,7 @@ Thread::exitAll(int code)
 	}
       }
       // Wait for all threads to be in the signal handler
-      int numtries=1000000;
+      int numtries=100000;
       bool done=false;
       while(--numtries && !done){
 	done=true;
@@ -509,13 +509,16 @@ Thread::exitAll(int code)
 	  }
 	}
 	sched_yield();
+        //sleep(1);
       }
       if(!numtries){
 	for(int i=0;i<numActive;i++){
 	  Thread_private* t = active[i];
-	  if(t->thread != me && !t->is_blocked)
+	  if(t->thread != me && !t->is_blocked) {
 	    fprintf(stderr, "Thread: %s is slow to stop, giving up\n", 
 		    t->thread->getThreadName());
+            //sleep(1000);
+	  }
 	}
       }
       if(SEM_DESTROY(&main_sema) != 0)

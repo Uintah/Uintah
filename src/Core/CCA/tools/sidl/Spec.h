@@ -125,7 +125,7 @@ protected:
   void emit_proxyclass(EmitState& e);
   void emit_handlers(EmitState& e);
   void emit_handler_table(EmitState& e);
-  void emit_handler_table_body(EmitState& e, int&, bool top);
+  void emit_handler_table_body(EmitState& k, EmitState& e, int&, bool top);
   void emit_interface(EmitState& e);
   void emit_proxy(EmitState& e);
   void emit_header(EmitState& e);

@@ -35,7 +35,7 @@ namespace SCIRun {
     string getUrl(); 
     Message* getMessage();
     void allocateHandlerTable(int size);
-    void registerHandler(int num, void* handle);
+    void registerHandler(void* handle);
     void bind(SpChannel* spchan);
 
   private:

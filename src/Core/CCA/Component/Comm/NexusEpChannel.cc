@@ -182,10 +182,12 @@ void NexusEpChannel::allocateHandlerTable(int size) {
   if (kDEBUG) printDebug("NexusEpChannel::allocateHandlerTable()");
   handler_table = new HPF[size];
   table_size = size;
+  table_ctr = 0;
 }
 
-void NexusEpChannel::registerHandler(int num, void* handle){
-  handler_table[num-1] = (HPF) handle;
+void NexusEpChannel::registerHandler(void* handle){
+  handler_table[table_ctr] = (HPF) handle;
+  table_ctr++;
 }
 
 void NexusEpChannel::bind(SpChannel* spchan) {

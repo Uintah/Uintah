@@ -40,7 +40,7 @@ Object::Object()
 }
 
 void
-Object::initializeServer(const TypeInfo* typeinfo, void* ptr, EpChannel* epc)
+Object::initializeServer(const TypeInfo* typeinfo, Object* ptr, EpChannel* epc)
 {
   if(!d_serverContext){
     d_serverContext=new ServerContext;
@@ -48,6 +48,7 @@ Object::initializeServer(const TypeInfo* typeinfo, void* ptr, EpChannel* epc)
     d_serverContext->d_objptr=this;
     d_serverContext->d_objid=-1;
     d_serverContext->d_sched = 0;
+    d_serverContext->storage = 0;
   } else if(d_serverContext->d_endpoint_active){
     throw InternalError("Server reinitialized while endpoint already active?");
   } else if(d_serverContext->d_objptr != this){
