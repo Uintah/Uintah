@@ -3,6 +3,8 @@
 
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+
 
 namespace Uintah {
   class Burn;
@@ -42,6 +44,9 @@ WARNING
 
    class Material {
    public:
+     enum RX_Prod {reactant,product,none};
+
+     Material(ProblemSpecP& ps);
      Material();
       
      virtual ~Material();
@@ -60,6 +65,7 @@ WARNING
 
       void setDWIndex(int);
       void setVFIndex(int);
+      RX_Prod getRxProduct();
 
      const MaterialSubset* thisMaterial() const {
        return thismatl;
@@ -72,6 +78,8 @@ WARNING
       // Index associated with this material's velocity field
       int d_vfindex;
      MaterialSubset* thismatl;
+
+     RX_Prod d_rx_prod;
    private:
       
       Material(const Material &mat);
