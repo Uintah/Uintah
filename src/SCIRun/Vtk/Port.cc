@@ -16,7 +16,7 @@
 */
 
 /*
- *  Port.h: 
+ *  Port.cc: 
  *
  *  Written by:
  *   Keming Zhang
@@ -26,36 +26,31 @@
  *
  */
 
-#ifndef SCIRun_Vtk_Port_h
-#define SCIRun_Vtk_Port_h
-#include <string>
-class vtkObject;
+#include <SCIRun/Vtk/Port.h>
 
-namespace SCIRun {
-  namespace vtk {
-    class Component;
-    class Port{
-    public:
-      //constructor
-      Port();
+using namespace SCIRun;
+using namespace vtk;
+using namespace std;
 
-      //destructor
-      ~Port();
+Port::Port(){
+}
+      
+Port::~Port(){
+};
 
-      //set the name for the port
-      void setName(const std::string &name);
-
-      //get the name of the port
-      std::string getName();
-
-      //check if this port is an input port
-      bool isInput();
-
-    protected:
-      std::string name;
-      bool is_input;
-    };
-  }
+void
+Port::setName(const string &name){
+  this->name=name;
 }
 
-#endif
+string 
+Port::getName(){
+  return name;
+}
+
+bool
+Port::isInput(){
+  return is_input;
+}
+
+
