@@ -53,6 +53,7 @@ itcl_class Teem_UnuAtoM_UnuCrop {
 	global $this-absmaxAxis1
 	global $this-absmaxAxis2
 	global $this-absmaxAxis3
+	global $this-reset_data
 
 
 	set $this-num-axes 0
@@ -62,39 +63,22 @@ itcl_class Teem_UnuAtoM_UnuCrop {
 	set $this-minAxis1 0
 	set $this-minAxis2 0
 	set $this-minAxis3 0
-	set $this-maxAxis0 1023
-	set $this-maxAxis1 1023
-	set $this-maxAxis2 1023
-	set $this-maxAxis3 1023
-	set $this-absmaxAxis0 1023
-	set $this-absmaxAxis1 1023
-	set $this-absmaxAxis2 1023
-	set $this-absmaxAxis3 1023
-
+	set $this-maxAxis0 M
+	set $this-maxAxis1 M
+	set $this-maxAxis2 M
+	set $this-maxAxis3 M
+	set $this-absmaxAxis0 0
+	set $this-absmaxAxis1 0
+	set $this-absmaxAxis2 0
+	set $this-absmaxAxis3 0
+	set $this-reset_data 1
     }
 
-    method set_max_vals {} {
+    method reset_vals {} {
 	set w .ui[modname]
-
-	if {[winfo exists $w]} {
-	    for {set i 0} {$i < [set $this-num-axes]} {incr i} {
-
-		set ax $this-absmaxAxis$i
-		set_scale_max_value $w.f.mmf.a$i [set $ax]
-		set $this-maxAxis$i [set $this-absmaxAxis$i]
-		#if {[set $this-maxAxis$i] == 0 || [set $this-reset]} {
-		 #   set $this-maxAxis$i [set $this-absmaxAxis$i]
-		#}
-	    }
-	    set $this-reset 0
-	} else {
-	    for {set i 0} {$i < [set $this-num-axes]} {incr i} {
-
-		#if {[set $this-maxAxis$i] == 0 || [set $this-reset]} {
-		 #   set $this-maxAxis$i [set $this-absmaxAxis$i]
-		#}
-	    }
-	    set $this-reset 0
+	for {set i 0} {$i < [set $this-num-axes]} {incr i} {
+	    set $this-minAxis$i 0
+	    set $this-maxAxis$i M
 	}
     }
 
@@ -109,11 +93,24 @@ itcl_class Teem_UnuAtoM_UnuCrop {
 	    if {! [winfo exists $w.f.mmf.a$i]} {
 		if {![info exists $this-absmaxAxis$i]} {
 		    set $this-minAxis$i 0
-		    set $this-maxAxis$i 1023
-		    set $this-absmaxAxis$i 1023
+		    set $this-maxAxis$i M
+		    set $this-absmaxAxis$i 0
 		}
-		min_max_widget $w.f.mmf.a$i "Axis $i" \
-		    $this-minAxis$i $this-maxAxis$i $this-absmaxAxis$i 
+		iwidgets::labeledframe $w.f.mmf.a$i -labeltext "Axis $i" \
+		    -labelpos nw
+		pack $w.f.mmf.a$i -side top -anchor nw -padx 3
+
+		set fr [$w.f.mmf.a$i childsite]
+		iwidgets::entryfield $fr.min -labeltext "Min:" \
+		    -labelpos w -textvariable $this-minAxis$i
+		Tooltip $fr.min "Lower corner of the bounding box.\nValue can either be an integer\nor in the form M, M+<int>, or M-<int>\nwhere M is equal to the number of\nsamples minus 1 for Axis $i."
+
+		iwidgets::entryfield $fr.max -labeltext "Max:" \
+		    -labelpos w -textvariable $this-maxAxis$i
+		Tooltip $fr.max "Higher corner of the bounding box.\nValue can either be an integer\nor in the form M, M+<int>, M-<int>,\n or m+<int> where M is equal to the\nnumber of samples minus 1 for Axis $i\nand m+<int> specifies an index relative\nto the minimum."
+
+		pack $fr.min $fr.max -side left
+		
 	    }
 	}
     }
@@ -130,7 +127,23 @@ itcl_class Teem_UnuAtoM_UnuCrop {
 	    unset $this-minAxis$i
 	    unset $this-maxAxis$i
 	    unset $this-absmaxAxis$i
+
 	    set $this-reset 1
+	}
+    }
+
+    method update_sizes {} {
+	set w .ui[modname]
+
+	if {[winfo exists $w]} {
+	    set sizes ""
+	    for {set i 0} {$i < [expr [set $this-uis] - 1]} {incr i} {
+		set sizes [concat $sizes [set $this-absmaxAxis$i] ", "]
+	    }
+
+	    set last [expr [set $this-uis] - 1]
+	    set sizes [concat $sizes [set $this-absmaxAxis$last]]
+	    $w.f.sizes configure -text "Samples: $sizes"
 	}
     }
 
@@ -145,6 +158,13 @@ itcl_class Teem_UnuAtoM_UnuCrop {
         frame $w.f
 	pack $w.f -padx 2 -pady 2 -side top -expand yes
 	
+
+	# Indicate number of samples
+	label $w.f.sizes -text "Samples: "
+	pack $w.f.sizes -side top -anchor nw
+	$this update_sizes
+
+
 	frame $w.f.mmf
 	pack $w.f.mmf -padx 2 -pady 2 -side top -expand yes
 	
@@ -161,6 +181,10 @@ itcl_class Teem_UnuAtoM_UnuCrop {
 	button $w.f.buttons.remove -text "Remove Crop Axis" -command "$this-c remove_axis"
 
 	pack $w.f.buttons.add $w.f.buttons.remove -side left -anchor nw -padx 5 -pady 4
+
+	checkbutton $w.f.reset -text "Reset min and max for new data" \
+	    -variable $this-reset_data
+	pack $w.f.reset -side top -anchor n
 
         makeSciButtonPanel $w $w $this
 	moveToCursor $w
