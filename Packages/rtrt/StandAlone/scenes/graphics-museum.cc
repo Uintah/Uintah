@@ -983,16 +983,21 @@ historyg);
   //  pawnt.pre_scale(Vector(3,3,3));
   t.load_identity();
   
+  Group *pawn_g = new Group();
+
   for (int i = 0; i<4; i++) 
-  for (int j = 0; j<6; j++) { 
+    for (int j = 0; j<6; j++) { 
     t = pawnt;
     t.pre_translate(NewellPt.vector()+Vector(i*ped_size/8.-ped_size/16.,j*ped_size/8.-5*ped_size/16.,0.));
     if (!readObjFile("/usr/sci/data/Geometry/models/museum/pawn.obj",
 		     "/usr/sci/data/Geometry/models/museum/pawn2.mtl",
-		     t, historyg)) {
+		     t, pawn_g)) {
       exit(0);
     }  
   }
+  
+  historyg->add(new HierarchicalGrid(pawn_g,5,5,5,4,16,4));
+
 
   /* **************** Kajiya's Chess Scene **************** */
   Material* kaj_white = new Phong(Color(.95,.95,.85),Color(.2,.2,.2),40);
@@ -1001,34 +1006,38 @@ historyg);
 					  Color(.80, .93 , .87), 
 					      Color(1,1,1), true, .01);
 
-  historyg->add (new Box(kaj_white,ChessPt+Vector(-0.26,0.08,0),ChessPt+Vector(-0.10,0.24,0.03)));
-  historyg->add (new Box(kaj_white,ChessPt+Vector(-0.22,0.12,0.03),ChessPt+Vector(-0.14,0.20,0.20)));
-  historyg->add (new Sphere(kaj_glass, ChessPt+Vector(-0.18,0.16,0.23),0.03));
+  Group* kajiya_g = new Group();
 
-  historyg->add (new Box(kaj_white,ChessPt+Vector(-0.32,-0.30,0),ChessPt+Vector(-0.16,-0.14,0.03)));
-  historyg->add (new Box(kaj_white,ChessPt+Vector(-0.28,-0.26,0.03),ChessPt+Vector(-0.20,-0.18,0.20)));
-  historyg->add (new Sphere(kaj_glass, ChessPt+Vector(-0.24,-0.22,0.23),0.03));
+  kajiya_g->add (new Box(kaj_white,ChessPt+Vector(-0.26,0.08,0),ChessPt+Vector(-0.10,0.24,0.03)));
+  kajiya_g->add (new Box(kaj_white,ChessPt+Vector(-0.22,0.12,0.03),ChessPt+Vector(-0.14,0.20,0.20)));
+  kajiya_g->add (new Sphere(kaj_glass, ChessPt+Vector(-0.18,0.16,0.23),0.03));
 
-  historyg->add (new Box(kaj_white,ChessPt+Vector(0.07,0.08,0),ChessPt+Vector(0.23,0.24,0.03)));
-  historyg->add (new Box(kaj_white,ChessPt+Vector(0.11,0.12,0.03),ChessPt+Vector(0.19,0.20,0.20)));
-  historyg->add (new Sphere(kaj_glass, ChessPt+Vector(0.15,0.16,0.23),0.03));
+  kajiya_g->add (new Box(kaj_white,ChessPt+Vector(-0.32,-0.30,0),ChessPt+Vector(-0.16,-0.14,0.03)));
+  kajiya_g->add (new Box(kaj_white,ChessPt+Vector(-0.28,-0.26,0.03),ChessPt+Vector(-0.20,-0.18,0.20)));
+  kajiya_g->add (new Sphere(kaj_glass, ChessPt+Vector(-0.24,-0.22,0.23),0.03));
 
-  historyg->add (new Sphere(kaj_glass, ChessPt+Vector(-0.04,0.01,0.03),0.03));
-  historyg->add (new Sphere(kaj_glass, ChessPt+Vector(-0.07,-0.02,0.03),0.03));
-  historyg->add (new Sphere(kaj_glass, ChessPt+Vector(-0.1,-0.05,0.03),0.03));
-  historyg->add (new Sphere(kaj_glass, ChessPt+Vector(-0.07,-0.08,0.03),0.03));
-  historyg->add (new Sphere(kaj_glass, ChessPt+Vector(-0.04,-0.11,0.03),0.03));
-  historyg->add (new Sphere(kaj_glass, ChessPt+Vector(-0.04,-0.05,0.03),0.03));
+  kajiya_g->add (new Box(kaj_white,ChessPt+Vector(0.07,0.08,0),ChessPt+Vector(0.23,0.24,0.03)));
+  kajiya_g->add (new Box(kaj_white,ChessPt+Vector(0.11,0.12,0.03),ChessPt+Vector(0.19,0.20,0.20)));
+  kajiya_g->add (new Sphere(kaj_glass, ChessPt+Vector(0.15,0.16,0.23),0.03));
 
-  historyg->add (new Sphere(kaj_glass, ChessPt+Vector(-0.055,-0.02,0.08),0.03));
-  historyg->add (new Sphere(kaj_glass, ChessPt+Vector(-0.085,-0.05,0.08),0.03));
-  historyg->add (new Sphere(kaj_glass, ChessPt+Vector(-0.055,-0.08,0.08),0.03));
+  kajiya_g->add (new Sphere(kaj_glass, ChessPt+Vector(-0.04,0.01,0.03),0.03));
+  kajiya_g->add (new Sphere(kaj_glass, ChessPt+Vector(-0.07,-0.02,0.03),0.03));
+  kajiya_g->add (new Sphere(kaj_glass, ChessPt+Vector(-0.1,-0.05,0.03),0.03));
+  kajiya_g->add (new Sphere(kaj_glass, ChessPt+Vector(-0.07,-0.08,0.03),0.03));
+  kajiya_g->add (new Sphere(kaj_glass, ChessPt+Vector(-0.04,-0.11,0.03),0.03));
+  kajiya_g->add (new Sphere(kaj_glass, ChessPt+Vector(-0.04,-0.05,0.03),0.03));
 
-  historyg->add (new Sphere(kaj_glass, ChessPt+Vector(-0.07,-0.05,0.13),0.03));
+  kajiya_g->add (new Sphere(kaj_glass, ChessPt+Vector(-0.055,-0.02,0.08),0.03));
+  kajiya_g->add (new Sphere(kaj_glass, ChessPt+Vector(-0.085,-0.05,0.08),0.03));
+  kajiya_g->add (new Sphere(kaj_glass, ChessPt+Vector(-0.055,-0.08,0.08),0.03));
 
-  historyg->add (new Parallelogram(pink,
+  kajiya_g->add (new Sphere(kaj_glass, ChessPt+Vector(-0.07,-0.05,0.13),0.03));
+
+  kajiya_g->add (new Parallelogram(pink,
 				   ChessPt+Vector(ped_size/2.,ped_size/2.,0.001),
 				   Vector(0,-ped_size,0),Vector(-ped_size,0,0)));
+
+  historyg->add(new Grid(kajiya_g,7));
 
   /* **************** Phong Glass Scene **************** */
 
@@ -1046,11 +1055,15 @@ historyg);
 				   Vector(0,-ped_size,0),Vector(-ped_size,0,0)));
   t=phong_glass;
   t.pre_translate(PhongPt.vector());
+
+  Group *phong_g = new Group();
   if (!readObjFile("/usr/sci/data/Geometry/models/museum/phong-glass.obj",
 		   "/usr/sci/data/Geometry/models/museum/phong-clear.mtl",
-		   t, historyg)) {
+		   t, phong_g)) {
     exit(0);
   }  
+
+  historyg->add(new Grid(phong_g,15));
 
   /* **************** Perlin vase **************** */
   historyg->add (new Parallelogram(black,
@@ -1062,11 +1075,15 @@ historyg);
   perlint.pre_scale(Vector(5,5,5));
   t=perlint;
   t.pre_translate(PerlinPt.vector());
+
+  Group *perlin_g = new Group();
   if (!readObjFile("/usr/sci/data/Geometry/models/museum/vase.obj",
 		   "/usr/sci/data/Geometry/models/museum/vase.mtl",
-		   t, historyg)) {
+		   t, perlin_g)) {
     exit(0);
   }  
+
+  historyg->add(new HierarchicalGrid(perlin_g,10,10,10,8,32,4));
 
   /* **************** morphine  **************** */
   historyg->add (new Parallelogram(yellow,
@@ -1647,7 +1664,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
 			   buddha_scale));
   buddhaT.pre_translate(buddha_ped_top.asVector());
 
-  buddhag->transform(buddhaT);
+  buddha_tm->transform(buddhaT);
 
   buddha_bbox.reset();
   buddhag->compute_bounds(buddha_bbox,0);
@@ -1770,7 +1787,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
   venusT.pre_scale(Vector(ven_scale,ven_scale,ven_scale)); // make units meters
   venusT.pre_translate(venus_ped_top.asVector());
 
-  venusg->transform(venusT);
+  venus_tm->transform(venusT);
 
   venus_bbox.reset();
   venusg->compute_bounds(venus_bbox,0)
