@@ -25,7 +25,7 @@ ifeq ($(HAVE_QT),yes)
 SUBDIRS := $(SRCDIR)/Builder $(SRCDIR)/TxtBuilder $(SRCDIR)/Hello  $(SRCDIR)/ListPlotter \
 	$(SRCDIR)/ZList $(SRCDIR)/Viewer $(SRCDIR)/LinSolver \
 	$(SRCDIR)/FileReader $(SRCDIR)/FEM $(SRCDIR)/Tri $(SRCDIR)/TableTennis \
-	$(SRCDIR)/TTClient $(SRCDIR)/World
+	$(SRCDIR)/TTClient $(SRCDIR)/World $(SRCDIR)/PLinSolver
 
 ifeq ($(HAVE_BABEL),yes)
   SUBDIRS += $(SRCDIR)/HelloWorldBridge
@@ -38,13 +38,15 @@ endif
 
 
 ifeq ($(HAVE_MPI),yes)
-SUBDIRS := $(SUBDIRS) $(SRCDIR)/PWorld $(SRCDIR)/PHello $(SRCDIR)/PLinSolver
+SUBDIRS := $(SUBDIRS) $(SRCDIR)/PWorld $(SRCDIR)/PHello
 endif
 
 ifeq ($(HAVE_BABEL),yes)
 SUBDIRS+= $(SRCDIR)/BabelTest
 endif
 
+ifeq ($(HAVE_VTK),yes)
 SUBDIRS+= $(SRCDIR)/VtkTest
+endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
