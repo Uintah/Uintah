@@ -44,6 +44,7 @@ using namespace std;
   // declared here because it is not initializing properly when declared
   // in Persistent.cc.
   Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");
+  Mutex fieldIEPluginMutex("FieldIE Plugin Table Lock");
   const string ext("dylib");
 #else
   const string ext("so");
