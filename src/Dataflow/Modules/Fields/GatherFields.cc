@@ -138,6 +138,12 @@ GatherFields::execute()
     }
   }
 
+  if (nFields == 0)
+  {
+    remark("No non-empty input fields.");
+    return;
+  }
+
   while( fGeneration_.size() > nFields )
   {
     update = true;
