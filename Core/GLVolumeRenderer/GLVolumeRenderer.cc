@@ -237,46 +237,7 @@ GLVolumeRenderer::saveobj(std::ostream&, const string&, GeomSave*)
   NOT_FINISHED("GLVolumeRenderer::saveobj");
   return false;
 }
-inline Color FindColor(const Array1<Color>& c,const Array1<float>& s,float t)
-{
-  int j=0;
 
-  if (t<=s[0])
-    return c[0];
-  if (t>= s[s.size()-1])
-    return c[c.size()-1];
-
-  // t is within the interval...
-
-  while((j < c.size()) && (t > s[j])) {
-    j++;
-  }
-
-  double slop = (s[j] - t)/(s[j]-s[j-1]);
-
-  return c[j-1]*slop + c[j]*(1.0-slop);
-  
-}
-
-inline double FindAlpha(const Array1<float>& c,const Array1<float>& s,float t)
-{
-  int j=0;
-
-  if (t<=s[0])
-    return c[0];
-  if (t>= s[s.size()-1])
-    return c[c.size()-1];
-
-  // t is within the interval...
-
-  while((j < c.size()) && (t > s[j])) {
-    j++;
-  }
-
-  float slop = (s[j] - t)/(s[j]-s[j-1]);
-
-  return c[j-1]*slop + c[j]*(1.0-slop);
-}
 
 void
 GLVolumeRenderer::BuildTransferFunctions( )
@@ -292,21 +253,17 @@ GLVolumeRenderer::BuildTransferFunctions( )
   }
 
   double bp = tan( 1.570796327*(0.5 - slice_alpha_*0.49999));
-  for(int i = 0; i < tex_->depth() + 1; i++){
-    double sliceRatio = defaultSamples/(double(slices_)/
-					pow(2.0, tex_->depth() - i));
-
-    double alpha, alpha1, alpha2;
-    for( int j = 0; j < tSize; j++ )
+  for (int i = 0; i < tex_->depth() + 1; i++)
+  {
+    double sliceRatio =
+      defaultSamples/(double(slices_)/pow(2.0, tex_->depth() - i));
+    for ( int j = 0; j < tSize; j++ )
     {
-      Color c = FindColor(cmap_->rawRampColor,
-			  cmap_->rawRampColorT, j*mul);
-      alpha = FindAlpha(cmap_->rawRampAlpha,
-			cmap_->rawRampAlphaT, j*mul);
+      const Color c = cmap_->FindColor(j*mul);
+      const double alpha = cmap_->FindAlpha(j*mul);
 
-
-      alpha1 = pow(alpha, bp);
-      alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);
+      const double alpha1 = pow(alpha, bp);
+      const double alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);
 
       //	  if( j == 128 ) cerr <<" alpha = "<< alpha<<std::endl;
       //	  if( j == 128 ) cerr <<" alpha1 = "<< alpha1<<std::endl;

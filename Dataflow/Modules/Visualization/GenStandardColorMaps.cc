@@ -75,16 +75,12 @@ GenStandardColorMaps::genMap(const string& s)
   istringstream is(s.c_str());
   // got to check that library function...
   if( is.good() ){
-    Array1< Color > rgbs;
-    Array1< float > rgbT;
-    Array1< float > alphas;
-    Array1< float > alphaT;
-    rgbs.setsize(m);
-    rgbT.setsize(m);
-    alphas.setsize(m);
-    alphaT.setsize(m);
+    vector< Color > rgbs(m);
+    vector< float > rgbT(m);
+    vector< float > alphas(m);
+    vector< float > alphaT(m);
 
-    for(int i = 0; i < m; i++){
+    for(int i = 0; i < m; i++) {
       is >> r >> g >> b >> a;
       rgbs[i] = Color(r/255.0, g/255.0, b/255.0);
       rgbT[i] = i/float(m-1);

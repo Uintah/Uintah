@@ -75,8 +75,8 @@ class GenTransferFunc : public Module {
 
   Array1< ColorPoint > points;   // actual line(s)
 
-  Array1< float >	alphas;   // alpha polyline
-  Array1< float >       aTimes;   // alpha times
+  vector< float >	alphas;   // alpha polyline
+  vector< float >       aTimes;   // alpha times
 
   Array1< Point >       otherGraph; // xyz to RGB or HSV
 
@@ -164,16 +164,16 @@ GenTransferFunc::GenTransferFunc( GuiContext* ctx)
 
   points.add(p);
 
-  alphas.add(0);
-  alphas.add(0);
-  alphas.add(.5);
-  alphas.add(.8);
-  alphas.add(.8);
-  aTimes.add(0);
-  aTimes.add(.25);
-  aTimes.add(.5);
-  aTimes.add(.75);
-  aTimes.add(1);
+  alphas.push_back(0);
+  alphas.push_back(0);
+  alphas.push_back(.5);
+  alphas.push_back(.8);
+  alphas.push_back(.8);
+  aTimes.push_back(0);
+  aTimes.push_back(.25);
+  aTimes.push_back(.5);
+  aTimes.push_back(.75);
+  aTimes.push_back(1);
 
   ctxs[0] = ctxs[1] = ctxs[2] = 0;
 }
@@ -381,8 +381,8 @@ void GenTransferFunc::DrawGraphs( int flush)
   // here you update this ColorMap thing...
   
   if (cmap.get_rep()) {
-    Array1<Color> ncolors(points.size());
-    Array1<float> times(points.size());
+    vector<Color> ncolors(points.size());
+    vector<float> times(points.size());
 
     for(int i=0;i<points.size();i++) {
       ncolors[i] = points[i]._rgb;
@@ -674,8 +674,8 @@ void GenTransferFunc::DoDown(int win, int x, int y, int button)
 	}
       }
   
-      alphas.insert(cpoint,val);
-      aTimes.insert(cpoint,time);
+      alphas.insert(alphas.begin() + cpoint, val);
+      aTimes.insert(aTimes.begin() + cpoint, time);
     }
 
   }
@@ -703,8 +703,8 @@ void GenTransferFunc::DoRelease(int win, int x, int y, int button)
   case 3:
     if (activeLine == 7) {
       if (selNode && (selNode != alphas.size()-1)) {
-	alphas.remove(selNode);
-	aTimes.remove(selNode);
+	alphas.erase(alphas.begin() + selNode);
+	aTimes.erase(alphas.begin() + selNode);
       }
 
     }  else {
@@ -772,8 +772,8 @@ GenTransferFunc::execute(void)
   }
   else
   {
-    Array1<Color> ncolors(points.size());
-    Array1<float> times(points.size());
+    vector<Color> ncolors(points.size());
+    vector<float> times(points.size());
     
     for(int i=0;i<points.size();i++)
     {
