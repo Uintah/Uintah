@@ -22,24 +22,23 @@
 # if you want to edit this file by hand, see the "Create A New Core/CCA/Component"
 # documentation on how to do it correctly.
 
-SRCDIR := Packages/Teem/Dataflow/GUI
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
+SRCDIR   := Packages/Teem/Dataflow/Modules/NrrdData
 
-$(SRCDIR)/tclIndex: \
-	$(SRCDIR)/FieldToNrrd.tcl\
-	$(SRCDIR)/NrrdConvert.tcl\
-	$(SRCDIR)/NrrdCrop.tcl\
-	$(SRCDIR)/NrrdInfo.tcl\
-	$(SRCDIR)/NrrdJoin.tcl\
-	$(SRCDIR)/NrrdPad.tcl\
-	$(SRCDIR)/NrrdPermute.tcl\
-	$(SRCDIR)/NrrdQuantize.tcl\
-	$(SRCDIR)/NrrdReader.tcl\
-	$(SRCDIR)/NrrdResample.tcl\
-	$(SRCDIR)/NrrdWriter.tcl\
-#[INSERT NEW TCL FILE HERE]
 
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Teem/Dataflow/GUI
+SRCS     += \
+	$(SRCDIR)/NrrdInfo.cc\
+#[INSERT NEW CODE FILE HERE]
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+PSELIBS := Packages/Teem/Core/Datatypes Core/Datatypes \
+	Dataflow/Network Dataflow/Ports \
+        Core/Persistent Core/Containers Core/Util \
+        Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Geom Core/Datatypes Core/Geometry \
+        Core/TkExtensions Packages/Teem/Core/Datatypes \
+	Packages/Teem/Dataflow/Ports
+
+LIBS := $(TEEM_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
