@@ -1029,6 +1029,7 @@ PressureSolver::normPressure(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   double pressref = vars->press_ref;
+  pressref = 0.0;
   fort_normpress(idxLo, idxHi, vars->pressure, pressref);
 
 #ifdef ARCHES_PRES_DEBUG
@@ -1545,7 +1546,7 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     
     }
     d_boundaryCondition->newrecomputePressureBC(pc, patch,
-						cellinfo, &pressureVars); 
+   						cellinfo, &pressureVars); 
 
   // put required vars
 
@@ -1716,6 +1717,8 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
     // Calculate Pressure BC
     //  inputs : pressureIN, presCoefPBLM
     //  outputs: presCoefPBLM
+    d_discretize->calculatePressDiagonal(pc, patch, old_dw, new_dw, 
+					 &pressureVars);
 
     d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw, 
 				    cellinfo, &pressureVars);
@@ -1728,8 +1731,6 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
     //  inputs : presCoefPBLM, presLinSrcPBLM
     //  outputs: presCoefPBLM 
 
-    d_discretize->calculatePressDiagonal(pc, patch, old_dw, new_dw, 
-					 &pressureVars);
   
     // put required vars
 
