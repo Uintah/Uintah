@@ -32,6 +32,7 @@
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/MaskedLatVolField.h>
+#include <Core/Datatypes/ScanlineField.h>
 #include <Core/Malloc/Allocator.h>
 #include <Teem/Dataflow/Modules/DataIO/ConvertToField.h>
 #include <Core/Util/TypeDescription.h>
@@ -64,119 +65,177 @@ NrrdToField::~NrrdToField()
 {
 }
 
-#define COPY_INTO_FIELD_FROM_NRRD(type, dataat) \
-    LatVolField<type> *f = \
-      scinew LatVolField<type>(lvm, dataat); \
-    type *p=(type *)n->data; \
-    for (k=0; k<nz; k++) \
-      for (j=0; j<ny; j++) \
-	for(i=0; i<nx; i++) \
-	  f->fdata()(k,j,i) = *p++; \
-    fieldH = f
+FieldHandle create_scanline_field(NrrdDataHandle &nrd) {
+  Nrrd *n = nrd->nrrd;
+  Point min(n->axis[1].min, .0, .0);
+  Point max(n->axis[1].max, .0, .0);
+  ScanlineMesh *m = new ScanlineMesh(n->axis[1].size, min, max);
+  ScanlineMeshHandle mh(m);
+  ScanlineMesh::Node::iterator iter, end;
+  mh->begin(iter);
+  mh->end(end);
+  FieldHandle fh;
 
-
-bool convert_to_field(Mesh*, Nrrd*, FieldHandle) {
-  return false;
-}
-
-FieldHandle create_scanline_field(NrrdDataHandle) {
-  return FieldHandle(0);
-}
-
-FieldHandle create_image_field(NrrdDataHandle) {
-  return FieldHandle(0);
-}
-
-FieldHandle create_latvol_field(NrrdDataHandle) {
-#if 0
-
-  //FIX_ME get vector tensor from the sink label name
-  if (n->dim == 4) {  // vector or tensor data
-    if (n->type != nrrdTypeFloat) {
-      error("Tensor nrrd's must be floats.");
-      return;
-    }
-    // matrix, x, y, z
-    if (n->axis[0].size == 7) {
-      if (n->type != nrrdTypeFloat) {
-	error("Can only convert float data for tensors.");
-	return;
-      }
-      // the Nrrd assumed samples at nodes and gave min/max accordingly
-      // but we want to think of those samples as centers of cells, so
-      // we need a different mesh
-      Point minP(0,0,0);
-      Point maxP((n->axis[1].size+1)*n->axis[1].spacing, 
-		 (n->axis[2].size+1)*n->axis[2].spacing,
-		 (n->axis[3].size+1)*n->axis[3].spacing);
-      int nx = n->axis[1].size;
-      int ny = n->axis[2].size;
-      int nz = n->axis[3].size;
-      LatVolMesh *lvm = scinew LatVolMesh(nx+1, ny+1, nz+1, minP, maxP);
-      MaskedLatVolField<Tensor> *f =
-	scinew MaskedLatVolField<Tensor>(lvm, Field::CELL);
-      float *p=(float *)n->data;
-      vector<double> tens(6);
-      for (k=0; k<nz; k++)
-	for (j=0; j<ny; j++)
-	  for (i=0; i<nx; i++) {
-	    if (*p++ > .5) f->mask()(k,j,i)=1;
-	    else f->mask()(k,j,i)=0;
-	    for (int ch=0; ch<6; ch++) tens[ch]=*p++;
-	    f->fdata()(k,j,i)=Tensor(tens);
-	  }
-      fieldH = f;      
-      ofield->send(fieldH);
-    } else {
-      error("4D nrrd must have 7 entries per channel (1st dim).");
-    }
-    return;
+  switch (n->type) {
+  case nrrdTypeChar :  
+    fh = new ScanlineField<char>(mh, Field::NODE);
+    fill_data((ScanlineField<char>*)fh.get_rep(), n, iter, end);
+  break;
+  case nrrdTypeUChar : 
+    fh = new ScanlineField<unsigned char>(mh, Field::NODE);
+    fill_data((ScanlineField<unsigned char>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeShort : 
+    fh = new ScanlineField<short>(mh, Field::NODE);
+    fill_data((ScanlineField<short>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeUShort :
+    fh = new ScanlineField<unsigned short>(mh, Field::NODE);
+    fill_data((ScanlineField<unsigned short>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeInt : 
+    fh = new ScanlineField<int>(mh, Field::NODE);
+    fill_data((ScanlineField<int>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeUInt :  
+    fh = new ScanlineField<unsigned int>(mh, Field::NODE);
+    fill_data((ScanlineField<unsigned int>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeLLong : 
+    //fh = new ScanlineField<long long>(mh, Field::NODE);
+    //fill_data((ScanlineField<long long>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeULLong :
+    //fh = new ScanlineField<unsigned long long>(mh, Field::NODE);
+    //fill_data((ScanlineField<unsigned long long>*)fh.get_rep(), n,iter, end);
+    break;
+  case nrrdTypeFloat :
+    fh = new ScanlineField<float>(mh, Field::NODE);
+    fill_data((ScanlineField<float>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeDouble :
+    fh = new ScanlineField<double>(mh, Field::NODE);
+    fill_data((ScanlineField<double>*)fh.get_rep(), n, iter, end);
+    break;
   }
 
-  if (n->dim != 3) {
-    msgStream_ << "NrrdToField error: nrrd->dim="<<n->dim<<"\n";
-    error("Can only deal with 3-dimensional scalar fields.");
-    return;
+  return fh;
+}
+
+FieldHandle create_image_field(NrrdDataHandle &nrd) {
+  Nrrd *n = nrd->nrrd;
+  Point min(n->axis[1].min, n->axis[2].min, .0);
+  Point max(n->axis[1].max, n->axis[2].max, .0);
+  ImageMesh *m = new ImageMesh(n->axis[1].size, n->axis[2].size,
+				     min, max);
+  ImageMeshHandle mh(m);
+  ImageMesh::Node::iterator iter, end;
+  mh->begin(iter);
+  mh->end(end);
+  FieldHandle fh;
+
+  switch (n->type) {
+  case nrrdTypeChar :  
+    fh = new ImageField<char>(mh, Field::NODE);
+    fill_data((ImageField<char>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeUChar : 
+    fh = new ImageField<unsigned char>(mh, Field::NODE);
+    fill_data((ImageField<unsigned char>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeShort : 
+    fh = new ImageField<short>(mh, Field::NODE);
+    fill_data((ImageField<short>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeUShort :
+    fh = new ImageField<unsigned short>(mh, Field::NODE);
+    fill_data((ImageField<unsigned short>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeInt : 
+    fh = new ImageField<int>(mh, Field::NODE);
+    fill_data((ImageField<int>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeUInt :  
+    fh = new ImageField<unsigned int>(mh, Field::NODE);
+    fill_data((ImageField<unsigned int>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeLLong : 
+    //fh = new ImageField<long long>(mh, Field::NODE);
+    //fill_data((ImageField<long long>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeULLong :
+    //fh = new ImageField<unsigned long long>(mh, Field::NODE);
+    //fill_data((ImageField<unsigned long long>*)fh.get_rep(), n,iter, end);
+    break;
+  case nrrdTypeFloat :
+    fh = new ImageField<float>(mh, Field::NODE);
+    fill_data((ImageField<float>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeDouble :
+    fh = new ImageField<double>(mh, Field::NODE);
+    fill_data((ImageField<double>*)fh.get_rep(), n, iter, end);
+    break;
   }
-  int nx = n->axis[0].size;
-  int ny = n->axis[1].size;
-  int nz = n->axis[2].size;
-  
-  for (i=0; i<3; i++)
-    if (!(AIR_EXISTS(n->axis[i].min) && AIR_EXISTS(n->axis[i].max)))
-      nrrdAxisMinMaxSet(n, i);
 
-  Point minP(n->axis[0].min, n->axis[1].min, n->axis[2].min);
-  Point maxP(n->axis[0].max, n->axis[1].max, n->axis[2].max);
+  return fh;
+}
 
-  LatVolMesh *lvm = scinew LatVolMesh(nx, ny, nz, minP, maxP);
-  LatVolMeshHandle lvmH(lvm);
-  SCIRun::Field::data_location dataat = Field::NODE;
-  if (n->axis[0].center == nrrdCenterCell) dataat = Field::CELL;
+FieldHandle create_latvol_field(NrrdDataHandle &nrd) {
+  Nrrd *n = nrd->nrrd;
+  Point min(n->axis[1].min, n->axis[2].min, n->axis[3].min);
+  Point max(n->axis[1].max, n->axis[2].max, n->axis[3].max);
+  LatVolMesh *m = new LatVolMesh(n->axis[1].size, n->axis[2].size, 
+				 n->axis[3].size, min, max);
+  LatVolMeshHandle mh(m);
+  LatVolMesh::Node::iterator iter, end;
+  mh->begin(iter);
+  mh->end(end);
+  FieldHandle fh;
 
-  if (n->type == nrrdTypeChar) {
-    COPY_INTO_FIELD_FROM_NRRD(char, dataat);
-  } else if (n->type == nrrdTypeUChar) {
-    COPY_INTO_FIELD_FROM_NRRD(unsigned char, dataat);
-  } else if (n->type == nrrdTypeShort) {
-    COPY_INTO_FIELD_FROM_NRRD(short, dataat);
-  } else if (n->type == nrrdTypeUShort) {
-    COPY_INTO_FIELD_FROM_NRRD(unsigned short, dataat);
-  } else if (n->type == nrrdTypeInt) {
-    COPY_INTO_FIELD_FROM_NRRD(int, dataat);
-  } else if (n->type == nrrdTypeUInt) {
-    COPY_INTO_FIELD_FROM_NRRD(unsigned int, dataat);
-  } else if (n->type == nrrdTypeFloat) {
-    COPY_INTO_FIELD_FROM_NRRD(float, dataat);
-  } else if (n->type == nrrdTypeDouble) {
-    COPY_INTO_FIELD_FROM_NRRD(double, dataat);
-  } else {
-    error("Unrecognized nrrd type.");
-    return;
+  switch (n->type) {
+  case nrrdTypeChar :  
+    fh = new LatVolField<char>(mh, Field::NODE);
+    fill_data((LatVolField<char>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeUChar : 
+    fh = new LatVolField<unsigned char>(mh, Field::NODE);
+    fill_data((LatVolField<unsigned char>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeShort : 
+    fh = new LatVolField<short>(mh, Field::NODE);
+    fill_data((LatVolField<short>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeUShort :
+    fh = new LatVolField<unsigned short>(mh, Field::NODE);
+    fill_data((LatVolField<unsigned short>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeInt : 
+    fh = new LatVolField<int>(mh, Field::NODE);
+    fill_data((LatVolField<int>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeUInt :  
+    fh = new LatVolField<unsigned int>(mh, Field::NODE);
+    fill_data((LatVolField<unsigned int>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeLLong : 
+    //fh = new LatVolField<long long>(mh, Field::NODE);
+    //fill_data((LatVolField<long long>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeULLong :
+    //fh = new LatVolField<unsigned long long>(mh, Field::NODE);
+    //fill_data((LatVolField<unsigned long long>*)fh.get_rep(), n,iter, end);
+    break;
+  case nrrdTypeFloat :
+    fh = new LatVolField<float>(mh, Field::NODE);
+    fill_data((LatVolField<float>*)fh.get_rep(), n, iter, end);
+    break;
+  case nrrdTypeDouble :
+    fh = new LatVolField<double>(mh, Field::NODE);
+    fill_data((LatVolField<double>*)fh.get_rep(), n, iter, end);
+    break;
   }
 
-#endif
-  return FieldHandle(0);
+  return fh;
 }
 
 const TypeDescription *
