@@ -124,11 +124,13 @@ void ViscoScram::addParticleState(std::vector<const VarLabel*>& from,
    from.push_back(pRandLabel);
    from.push_back(lb->pDeformationMeasureLabel);
    from.push_back(lb->pStressLabel);
+   from.push_back(lb->pCrackRadiusLabel);
 
    to.push_back(p_statedata_label_preReloc);
    to.push_back(pRandLabel_preReloc);
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
    to.push_back(lb->pStressLabel_preReloc);
+   to.push_back(lb->pCrackRadiusLabel_preReloc);
 }
 
 void ViscoScram::computeStableTimestep(const Patch* patch,
@@ -218,7 +220,7 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pRand,               pRandLabel,                   pset);
 
     new_dw->allocate(pstressnew,     lb->pStressLabel_afterStrainRate,  pset);
-    new_dw->allocate(pCrackRadius,   lb->pCrackRadiusLabel,             pset);
+    new_dw->allocate(pCrackRadius,   lb->pCrackRadiusLabel_preReloc,    pset);
     ASSERTEQ(pset, statedata.getParticleSubset());
 
     NCVariable<Vector> gvelocity;
@@ -556,7 +558,7 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new),lb->delTLabel);
     new_dw->put(pstressnew,            lb->pStressLabel_afterStrainRate);
-    new_dw->put(pCrackRadius,          lb->pCrackRadiusLabel);
+    new_dw->put(pCrackRadius,          lb->pCrackRadiusLabel_preReloc);
     new_dw->put(deformationGradient,   lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(sum_vartype(d_se),     lb->StrainEnergyLabel);
     new_dw->put(statedata,             p_statedata_label_preReloc);
@@ -585,7 +587,7 @@ void ViscoScram::addComputesAndRequires(Task* task,
                   Ghost::AroundCells, 1);
 
   task->computes(lb->pStressLabel_afterStrainRate,        matlset);
-  task->computes(lb->pCrackRadiusLabel,                   matlset);
+  task->computes(lb->pCrackRadiusLabel_preReloc,          matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc,   matlset);
   task->computes(pRandLabel_preReloc,                     matlset);
   task->computes(p_statedata_label_preReloc,              matlset);
