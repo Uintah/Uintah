@@ -18,8 +18,11 @@ University of Utah. All Rights Reserved.
 -->
 
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-<xsl:param name="dir"/>
+<xsl:param name="treetop"/>
 <xsl:param name="cont"/>
+
+<xsl:include href="top_banner.xsl"/>
+<xsl:include href="bottom_banner.xsl"/>
 
 <!-- ************************************************************ -->
 <!-- ***************** web displayable templates **************** -->
@@ -356,22 +359,13 @@ University of Utah. All Rights Reserved.
 <xsl:template match="/book">
 <xsl:processing-instruction name="cocoon-format">type="text/html"</xsl:processing-instruction>
 
-<xsl:variable name="swidk">
-<xsl:choose>
-<xsl:when test="$dir=4">../../../..</xsl:when>
-<xsl:when test="$dir=3">../../..</xsl:when>
-<xsl:when test="$dir=2">../..</xsl:when>
-<xsl:when test="$dir=1">..</xsl:when>
-<xsl:when test="$dir=0">.</xsl:when>
-</xsl:choose>
-</xsl:variable>
 <html>
 
 <head>
 <title><xsl:value-of select="./bookinfo/title" /></title>
 <link rel="stylesheet" type="text/css">
 <xsl:attribute name="href">
-  <xsl:value-of select="concat($swidk,'/Utilities/HTML/doc_styles.css')" />
+  <xsl:value-of select="concat($treetop,'/doc/Utilities/HTML/doc_styles.css')" />
 </xsl:attribute>
 </link>
 </head>
@@ -383,51 +377,7 @@ University of Utah. All Rights Reserved.
 <!-- *************************************************************** -->
 
 <xsl:if test="$cont!='printable'">
-<div class="top-banner-margins">
-<table border="0" cellspacing="0" cellpadding="0" width="100%" height="91">
-<tr>
-<td align="center" width="%100">
-<xsl:attribute name="background">
-  <xsl:value-of select="concat($swidk, '/Utilities/Figures/banner_top_fill.jpg')"/>
-</xsl:attribute>
-<img width="744" height="91" border="0" usemap="#banner">
-<xsl:attribute name="src">
-<xsl:value-of select="concat($swidk, '/Utilities/Figures/banner_top.jpg')"/>
-</xsl:attribute>
-</img>
-</td>
-<map name="banner">
-<area href="http://www.sci.utah.edu" alt="Home" coords="92,62,186,83" />
-<area href="http://software.sci.utah.edu" alt="Software" coords="193,61,289,83" />
-
-<area coords="296,62,437,83">
-<xsl:attribute name="href">
-  <xsl:value-of select="concat($swidk,'/index.html')" />
-</xsl:attribute>
-</area>
-
-<area coords="449,62,544,83">
-<xsl:attribute name="href">
-  <xsl:value-of select="concat($swidk,'/User/Guide/usersguide/index.html')" />
-</xsl:attribute>
-</area>
-
-<area coords="550,62,692,83">
-<xsl:attribute name="href">
-  <xsl:value-of select="concat($swidk,'/Developer/Guide/TOC.html')" />
-</xsl:attribute>
-</area>
-
-<area coords="550,62,692,83">
-<xsl:attribute name="href">
-  <xsl:value-of select="concat($swidk,'/Installation/Guide/TOC.html')" />
-</xsl:attribute>
-</area>
-
-</map>
-</tr>
-</table>
-</div>
+<xsl:call-template name="top_banner"/>
 </xsl:if>
 
 <!-- *************************************************************** -->
@@ -625,7 +575,7 @@ NEXT
 </p>
 
 <center>
-<img src="../images/SCI_logo.jpg" vspace="50"/>
+<img src="../../Utilities/Figures/SCI_logo.jpg" vspace="50"/>
 </center>
 
 <p class="psubtitle">
@@ -724,27 +674,7 @@ NEXT
 <!-- ******************************************************************* -->
 
 <xsl:if test="$cont!='printable'">
-<div class="bottom-banner-margins">
-<table border="0" cellspacing="0" cellpadding="0" height="32" width="100%">
-<tr>
-<td align="left" width="%100">
-  <xsl:attribute name="background">
-    <xsl:value-of select="concat($swidk, '/Utilities/Figures/banner_bottom_fill.jpg')"/>
-  </xsl:attribute>
-<img width="444" height="32" border="0">
-  <xsl:attribute name="src">
-    <xsl:value-of select="concat($swidk, '/Utilities/Figures/banner_bottom.jpg')"/>
-  </xsl:attribute>
-</img>
-</td>
-</tr>
-</table>
-</div>
-<center><font size="-2" face="arial, helvetica, sans-serif">Scientific
-Computing and Imaging Institute &#149; 50 S. Central Campus Dr. Rm
-3490 &#149; Salt Lake City, UT 84112<br />
-
-(801) 585-1867 &#149; fax: (801) 585-6513 &#149; <a href="http://www.utah.edu/disclaimer/disclaimer_home.html">Disclaimer</a></font></center>
+<xsl:call-template name="bottom_banner"/>
 </xsl:if>
 
 <!-- ********************* END STANDARD SCI FOOTER ********************* -->
