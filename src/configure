@@ -3102,7 +3102,6 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
     fi
 
     NUM_CPUS="`TERM=dumb top -n 1 | fgrep CPUs | cut -d' ' -f1`"
-    WOFF_NUMBERS="$WOFF_NUMBERS 3625 3649"
     ;;
   *linux*)
 
@@ -4482,7 +4481,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4485:" \
+echo "$as_me:4484:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4932,6 +4931,72 @@ fi
 case $host in
   *-irix*)
     ac_objext=o
+
+    # Check for the use of the 7.4 compiler (so that we can turn off
+    # some extra warnings.)
+
+    ##  SCI_CHECK_VERSION
+    _SCI_CORRECT_='echo $echo_n "$echo_c"'
+    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_VER_1_="0"
+    _SCI_VER_2_="7.4"
+    _CUR_1_=""
+    _CUR_2_=""
+
+    echo "$as_me:$LINENO: checking for \`basename $CXX\` version 7.4" >&5
+echo $ECHO_N "checking for \`basename $CXX\` version 7.4... $ECHO_C" >&6
+
+    if test "USING_74=yes"; then
+      _SCI_CORRECT_='USING_74=yes'
+    fi
+
+    if test ""; then
+      _SCI_NOTCORRECT_=''
+    fi
+
+    if test ""; then
+      _SCI_COMP_=""
+    else
+      _SCI_COMP_="-gt"
+    fi
+
+    eval "$CXX -version 2> conftest.out >> conftest.out"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\. ]*%%g;s%^ *%%' | cut -f1 -d' ' `"
+    _SCI_VER_1_="$_SCI_REPORT_"
+
+    _SCI_BIGGER_=yes
+    _SCI_LAST_=""
+    while test "$_SCI_VER_2_"; do
+      if test "$_SCI_LAST_" = "$_SCI_VER_2_"; then
+        break
+      fi
+      _SCI_LAST_="$_SCI_VER_2_"
+      _CUR_1_=`echo $_SCI_VER_1_ | sed 's%\.[0-9]*[a-z]*%%g'`
+      _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
+      _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
+      _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
+      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+        _SCI_BIGGER_=no
+        break
+      elif test $_CUR_1_ -gt $_CUR_2_; then
+        break
+      fi
+    done
+
+    if test "$_SCI_BIGGER_" = "yes"; then
+      echo "$as_me:$LINENO: result: yes ($_SCI_REPORT_)" >&5
+echo "${ECHO_T}yes ($_SCI_REPORT_)" >&6
+      eval $_SCI_CORRECT_
+    else
+      echo "$as_me:$LINENO: result: no ($_SCI_REPORT_)" >&5
+echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
+      eval $_SCI_NOTCORRECT_
+    fi
+
+    if test "$USING_74" = "yes"; then
+      WOFF_NUMBERS="$WOFF_NUMBERS 3625 3649"
+    fi
+
 
     ##  SCI_CHECK_VERSION
     _SCI_CORRECT_='echo $echo_n "$echo_c"'
