@@ -1643,7 +1643,7 @@ PicardNonlinearSolver::saveTempCopies(const ProcessorGroup*,
 			   const MaterialSubset*,
 			   DataWarehouse*,
 			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel* timelabels)
+			   const TimeIntegratorLabel*)
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -1731,7 +1731,7 @@ PicardNonlinearSolver::underrelaxation(const ProcessorGroup*,
 			   const MaterialSubset*,
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel* timelabels)
+			   const TimeIntegratorLabel*)
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -2213,9 +2213,9 @@ void
 PicardNonlinearSolver::updateDensityGuess(const ProcessorGroup*,
 			   const PatchSubset* patches,
 			   const MaterialSubset*,
-			   DataWarehouse* old_dw,
+			   DataWarehouse*,
 			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel* timelabels)
+			   const TimeIntegratorLabel*)
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -2267,9 +2267,9 @@ void
 PicardNonlinearSolver::syncRhoF(const ProcessorGroup*,
 			   const PatchSubset* patches,
 			   const MaterialSubset*,
-			   DataWarehouse* old_dw,
+			   DataWarehouse*,
 			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel* timelabels)
+			   const TimeIntegratorLabel*)
 {
   for (int p = 0; p < patches->size(); p++) {
 

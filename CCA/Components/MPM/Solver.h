@@ -3,9 +3,11 @@
 
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
+#include <sgi_stl_warnings_off.h>
 #include <set>
 #include <vector>
 #include <map>
+#include <sgi_stl_warnings_on.h>
 
 using std::set;
 using std::vector;

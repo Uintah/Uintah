@@ -13,15 +13,16 @@
 #include <Core/Util/Assert.h>
 #include <Core/Util/Endian.h>
 
+#include <stdlib.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <fstream>
+#include <sgi_stl_warnings_on.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1209
 #endif
-
-#include <stdlib.h>
-
-#include <iostream>
-#include <fstream>
 
 using namespace Uintah;
 

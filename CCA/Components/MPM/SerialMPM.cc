@@ -90,7 +90,7 @@ SerialMPM::~SerialMPM()
   MPMPhysicalBCFactory::clean();
 }
 
-void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
+void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP&,
 			     SimulationStateP& sharedState)
 {
   d_sharedState = sharedState;
@@ -153,9 +153,9 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 void 
 SerialMPM::materialProblemSetup(const ProblemSpecP& prob_spec, 
 			        SimulationStateP& sharedState,
-                                MPMLabel* lb, int n8or27,
-			        string integrator, bool haveLoadCurve,
-			        bool doErosion)
+                                MPMLabel* lb, int /*n8or27*/,
+			        string integrator, bool /*haveLoadCurve*/,
+			        bool /*doErosion*/)
 {
   //Search for the MaterialProperties block and then get the MPM section
   ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
@@ -1989,7 +1989,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
 
 void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                                    const PatchSubset* patches,
-                                   const MaterialSubset* ms,
+                                   const MaterialSubset*,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {

@@ -494,8 +494,8 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  int nofScalarVars = d_props->getNumMixStatVars();
   /*
+  int nofScalarVars = d_props->getNumMixStatVars();
   if (nofScalarVars > 0) {
     for (int ii = 0; ii < nofScalarVars; ii++) {
       tsk->requires(Task::OldDW, d_lab->d_scalarVarSPLabel, 
@@ -1567,8 +1567,8 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
 
     // gets for old dw variables
 
-    int nofScalarVars = d_props->getNumMixStatVars();
     /*
+    int nofScalarVars = d_props->getNumMixStatVars();
     StaticArray< constCCVariable<double> > scalarVar (nofScalarVars);
     if (nofScalarVars > 0) {
       for (int ii = 0; ii < nofScalarVars; ii++) {
@@ -1793,7 +1793,7 @@ ExplicitSolver::saveTempCopies(const ProcessorGroup*,
 			   const MaterialSubset*,
 			   DataWarehouse*,
 			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel* timelabels)
+			   const TimeIntegratorLabel*)
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -1951,7 +1951,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
       cellInfoP.setData(scinew CellInformation(patch));
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
+    //CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     DataWarehouse* old_values_dw;
     if (timelabels->use_old_values)
@@ -1981,12 +1981,13 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     new_dw->get(cellType, d_lab->d_cellTypeLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
+    /*
     double factor_old, factor_new, factor_divide;
     factor_old = timelabels->factor_old;
     factor_new = timelabels->factor_new;
     factor_divide = timelabels->factor_divide;
 
-/*    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -2230,9 +2231,9 @@ void
 ExplicitSolver::updateDensityGuess(const ProcessorGroup*,
 			   const PatchSubset* patches,
 			   const MaterialSubset*,
-			   DataWarehouse* old_dw,
+			   DataWarehouse*,
 			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel* timelabels)
+			   const TimeIntegratorLabel*)
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -2284,9 +2285,9 @@ void
 ExplicitSolver::syncRhoF(const ProcessorGroup*,
 			   const PatchSubset* patches,
 			   const MaterialSubset*,
-			   DataWarehouse* old_dw,
+			   DataWarehouse*,
 			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel* timelabels)
+			   const TimeIntegratorLabel*)
 {
   for (int p = 0; p < patches->size(); p++) {
 

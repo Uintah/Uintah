@@ -10,8 +10,10 @@
 #include <Core/share/share.h>
 
 #include <math.h>
+#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
   class TypeDescription;
@@ -63,7 +65,9 @@ inline short &Short27::operator [] (int i)
 
 // Added for compatibility with core types
 #include <Core/Datatypes/TypeName.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 namespace SCIRun {
   using namespace Uintah;
 void swapbytes( Uintah::Short27& s );

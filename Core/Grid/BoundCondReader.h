@@ -1,9 +1,11 @@
 #ifndef UINTAH_GRID_BoundCondReader_H
 #define UINTAH_GRID_BoundCondReader_H
 
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/BoundCondData.h>
 #include <Packages/Uintah/Core/Grid/BCDataBase.h>

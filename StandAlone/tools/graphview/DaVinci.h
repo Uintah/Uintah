@@ -1,9 +1,11 @@
 #ifndef DAVINCI_H
 #define DAVINCI_H
 
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <vector>
 #include <list>
+#include <sgi_stl_warnings_on.h>
 #include <unistd.h>
 
 class GV_TaskGraph;

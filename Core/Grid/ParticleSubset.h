@@ -5,7 +5,9 @@
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
   class Patch;

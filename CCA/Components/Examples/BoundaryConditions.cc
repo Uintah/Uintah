@@ -6,7 +6,9 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Math/MiscMath.h>
-#include <iomanip>
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace SCIRun;
 using namespace Uintah;

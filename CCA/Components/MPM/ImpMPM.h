@@ -11,9 +11,10 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
-#include <valarray>
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 using namespace std;
 

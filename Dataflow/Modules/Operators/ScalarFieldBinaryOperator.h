@@ -47,8 +47,10 @@ WARNING
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 using std::string;

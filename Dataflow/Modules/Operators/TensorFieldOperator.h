@@ -11,8 +11,10 @@
 #include <Core/Thread/Semaphore.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 
 /*************************************************************

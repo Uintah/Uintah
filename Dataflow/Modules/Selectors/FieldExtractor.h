@@ -43,8 +43,10 @@ LOG
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Geometry/IntVector.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 
 namespace Uintah {

@@ -2,7 +2,9 @@
 #define __CONSTITUTIVE_MODEL_H__
 
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Containers/StaticArray.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>

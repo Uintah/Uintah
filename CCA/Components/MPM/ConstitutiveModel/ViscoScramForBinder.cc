@@ -413,8 +413,8 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
 	double xmup   = (1 + compflag)*
                         sqrt(45.0/(2.0*(3.0 - 2.0*mu_s*mu_s)))*mu_s;
 	double a      = xmup*p*sqrt(pCrackRadius[idx]);
-	double b      = 1.0 + a/K0;
-	double termm  = sqrt(1.0 + (M_PI*a*b)/K0);
+//	double b      = 1.0 + a/K0;
+//	double termm  = sqrt(1.0 + (M_PI*a*b)/K0);
 
         // Calculate crack growth rate and new crack radius
         // using fourth-order Runge-Kutta

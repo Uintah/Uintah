@@ -4,10 +4,12 @@
 #include <Packages/Uintah/Core/Grid/TaskProduct.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <list>
 #include <map>
 #include <set>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

@@ -40,7 +40,9 @@ WARNING
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 using namespace std;

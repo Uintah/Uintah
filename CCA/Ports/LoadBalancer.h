@@ -53,13 +53,13 @@ WARNING
 				 const ProcessorGroup* resources) = 0;
     virtual int getPatchwiseProcessorAssignment(const Patch* patch,
 						const ProcessorGroup* pg) = 0;
-    virtual int getOldProcessorAssignment(const VarLabel* var,
-					  const Patch* patch, const int matl, 
+    virtual int getOldProcessorAssignment(const VarLabel*,
+					  const Patch* patch, const int, 
 					  const ProcessorGroup* pg) 
       { return getPatchwiseProcessorAssignment(patch, pg); }
-    virtual bool needRecompile(double time, double delt, const GridP& grid) 
+    virtual bool needRecompile(double, double, const GridP&)
       { return false; }
-    virtual void problemSetup(ProblemSpecP& pspec) {};
+    virtual void problemSetup(ProblemSpecP&) {};
     virtual void createNeighborhood(const GridP& grid, const ProcessorGroup*,
 				    const Scheduler* sc) = 0;
     virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*) = 0;

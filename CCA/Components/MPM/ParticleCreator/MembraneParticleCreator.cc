@@ -10,7 +10,9 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/SphereMembraneGeometryPiece.h>
-
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 
@@ -181,7 +183,7 @@ particleIndex MembraneParticleCreator::countParticles(GeometryObject* obj,
 
 
 void 
-MembraneParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
+MembraneParticleCreator::registerPermanentParticleState(MPMMaterial*,
 							MPMLabel* lb)
 
 {

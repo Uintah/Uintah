@@ -2,11 +2,10 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DefaultHypoElasticEOS.h>
 #include <math.h>
 
-using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-DefaultHypoElasticEOS::DefaultHypoElasticEOS(ProblemSpecP& ps)
+DefaultHypoElasticEOS::DefaultHypoElasticEOS(ProblemSpecP&)
 {
 } 
 	 

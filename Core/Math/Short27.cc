@@ -10,20 +10,13 @@
 #include <Core/Util/Endian.h>
 
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1209
-#endif
-
 #include <stdlib.h>
 
-#include <iostream>
-#include <fstream>
+//#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+//#pragma set woff 1209
+//#endif
 
 using namespace Uintah;
-
-using std::cout;
-using std::endl;
-using std::ostream;
 
 const string& 
 Short27::get_h_file_path() {

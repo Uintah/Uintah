@@ -5,10 +5,12 @@
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
 #include <map>
 #include <ostream>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
   class IntVector;

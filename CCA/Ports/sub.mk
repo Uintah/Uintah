@@ -19,6 +19,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/Core/ProblemSpec \
 	Core/Thread                      \
 	Core/Exceptions                  \
 	Core/Geometry                    \

@@ -17,8 +17,10 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/DebugStream.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sstream>
+#include <sgi_stl_warnings_on.h>
 #include <stdio.h>
 
 using std::cerr;

@@ -1,7 +1,9 @@
 #ifndef EVENT_H
 #define EVENT_H
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 class Event {
 public:

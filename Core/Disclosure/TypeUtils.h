@@ -43,7 +43,10 @@ const TypeDescription* fun_getTypeDescription(Short27*);
 } // End namespace UintahStencil7
    
 #include <Core/Datatypes/TypeName.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
+
 namespace SCIRun {
  using std::string;
  using Uintah::long64;

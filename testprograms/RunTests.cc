@@ -19,6 +19,9 @@
 #include "TestBoxGrouper/TestBoxGrouper.h"
 #include <stdlib.h>
 #include <unistd.h>
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 
