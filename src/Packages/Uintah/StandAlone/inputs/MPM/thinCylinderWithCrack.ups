@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
-<!-- @version: Updated 8/1/2003-->
+<!-- @version: Updated 8/5/2003-->
 <Uintah_specification>
 
    <Meta>
@@ -8,22 +8,22 @@
    </Meta>
 
    <Time>
-	<maxTime>150.0e-6</maxTime>
+	<maxTime>90.0e-6</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.0</delt_min>
-	<delt_max>3e-6</delt_max>
+	<delt_max>2e-6</delt_max>
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>thinCylinderWithCrack.uda</filebase>
-	<outputInterval>3e-6</outputInterval>
+	<outputInterval>2e-6</outputInterval>
         <save label = "p.x"/>
         <save label = "p.volume"/>
         <save label = "p.stress"/>
         <save label = "p.deformationMeasure"/>
         <save label = "p.velocity"/>
         <save label = "p.externalforce"/>
-	<checkpoint cycle = "2" interval = "30e-6"/>
+	<checkpoint cycle = "2" interval = "20e-6"/>
    </DataArchiver>
 
     <MPM>
