@@ -19,9 +19,13 @@ namespace Uintah {
       const VarLabel* vel_CCLabel;
       const VarLabel* velstar_CCLabel;
       const VarLabel* mom_L_CCLabel;
+      const VarLabel* mom_L_ME_CCLabel;
+      const VarLabel* int_eng_L_CCLabel;
+      const VarLabel* int_eng_L_ME_CCLabel;
       const VarLabel* dvdt_CCLabel;
       const VarLabel* cv_CCLabel;
       const VarLabel* temp_CCLabel;
+      const VarLabel* temp_CC_scratchLabel;  // needed in doCCMomExchange()
       const VarLabel* speedSound_CCLabel;
       const VarLabel* rho_CCLabel;
       const VarLabel* rho_micro_CCLabel;
