@@ -252,14 +252,14 @@ itcl_class Module {
 	global Subnet Color Disabled
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	set m $canvas.module[modname]
-	if ![llength $color] {
+	if ![string length $color] {
 	    set color $Color(Basecolor)
 	    if { [$this is_selected] } { set color $Color(Selected) }
 	    setIfExists disabled Disabled([modname]) 0
 	    if { $disabled } { set color [blend $color $Color(Disabled)] }
 	}
 	if { $compiling_p } { set color $Color(Compiling) }
-	if { ![llength $args] && ![string first SubnetIcon [modname]] } {
+	if { ![llength $args] && [isaSubnetIcon [modname]] } {
 	    set args $Subnet(Subnet$Subnet([modname]_num)_Name)
 	}
 	$m configure -background $color
@@ -269,9 +269,7 @@ itcl_class Module {
 	if {$make_time} { $m.ff.time configure -background $color }
 	if {$isSubnetModule} { $m.ff.subnet configure -background $color }
 	if {![llength $args]} { set args $name }
-	if {![llength $args]} { set args $name }
 	$m.ff.title configure -text "$args" -justify left
-#	update idletasks
     }
        
     method addSelected {} {
@@ -291,10 +289,8 @@ itcl_class Module {
 	}
     }
     
-    method toggleSelected { option } {
-	if { $option == 0 } { unselectAll }
-	if [is_selected] { removeSelected
-	} else { addSelected }
+    method toggleSelected {} {
+	if [is_selected] removeSelected else addSelected
     }
     
     method update_progress {} {
@@ -453,42 +449,29 @@ itcl_class Module {
     }
 
 
-    method resize {} {
-	set iports [expr [llength [getModulePortinfo [modname] i]]]
-	set oports [expr [llength [getModulePortinfo [modname] o]]]
-	set ports [expr $oports>$iports?$oports:$iports]
+    method resize_icon {} {
+	set iports [portCount "[modname] 0 i"]
+	set oports [portCount "[modname] 0 o"]
+	set nports [expr $oports>$iports?$oports:$iports]
 	if {[set $this-done_bld_icon]} {
 	    global Subnet port_spacing
 	    set canvas $Subnet(Subnet$Subnet([modname])_canvas)
-	    set width [expr 8+$ports*$port_spacing] 
+	    set width [expr 8+$nports*$port_spacing] 
 	    set width [expr ($width < $initial_width)?$initial_width:$width]
 	    $canvas itemconfigure [modname] -width $width
 	}
     }
 
-    method module_grow { args } {
-	$this resize
-    }
-    
-    method module_shrink {} {
-	$this resize
-    }
-
     method setDone {} {
 	#module actually mapped to the canvas
-	if {[set $this-done_bld_icon] == 0 } {
+	if ![set $this-done_bld_icon] {
 	    set $this-done_bld_icon 1	
 	    global Subnet
 	    set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	    set initial_width [winfo width $canvas.module[modname]]
-	    module_grow
+	    resize_icon
+	    drawConnections [portConnections "[modname] all o"]
 	}
-    }
-    method lightOPort { which color } {
-	lightPort [list [modname] $which o] $color
-    }
-    method lightIPort { which color } {
-	lightPort [list [modname] $which i] $color
     }
 
     method execute {} {
@@ -526,8 +509,6 @@ proc fadeinIcon { modid { seconds 0.333 } } {
     after [expr int($t)] "$modid setColorAndTitle"
 }
 	
-
-
 proc moduleMenu {x y modid} {
     global Subnet mouseX mouseY
     set mouseX $x
@@ -543,7 +524,7 @@ proc regenModuleMenu {modid menu_id} {
     for {set c 0} {$c <= 10 } {incr c } {
 	$menu_id delete $c
     }
-    global Subnet Disabled mouseX mouseY
+    global Subnet Disabled
     set name [$modid name]
     $menu_id add command -label "$modid" -state disabled
     $menu_id add separator
@@ -672,10 +653,10 @@ proc okNotesWindow {id {done  ""}} {
 }
 
 proc disableModule { module state } {
-    global Disabled CurrentlySelectedModules
+    global Disabled CurrentlySelectedModules Subnet
     set mods [expr [$module is_selected]?"$CurrentlySelectedModules":"$module"]
     foreach modid $mods { ;# Iterate through the modules
-	foreach conn [getModuleConnections $modid] { ;# all module connections
+	foreach conn $Subnet(${modid}_connections) { ;# all module connections
 	    setIfExists disabled Disabled([makeConnID $conn]) 0
 	    if { $disabled != $state } {
 		disableConnection $conn
@@ -718,20 +699,19 @@ proc drawConnections { connlist } {
     foreach conn $connlist {
 	set id [makeConnID $conn]
 	set path [routeConnection $conn]
-	set subnet $Subnet([oMod conn])
-	set canvas $Subnet(Subnet${subnet}_canvas)
-	set minicanvas $Subnet(Subnet${subnet}_minicanvas)
+	set canvas $Subnet(Subnet$Subnet([oMod conn])_canvas)
+	set minicanvas $Subnet(Subnet$Subnet([oMod conn])_minicanvas)
 	setIfExists disabled Disabled($id) 0
 	setIfExists color Color($id) red
 	set color [expr $disabled?"$Color(ConnDisabled)":"$color"]
-	if {$color == ""} { set color red }
 	set flags "-width [expr $disabled?3:7] -fill \"$color\" -tags $id"
 	set miniflags "-width 1 -fill \"$color\" -tags $id"
 	if { ![canvasExists $canvas $id] } {
 	    eval $canvas create bline $path $flags
 	    eval $minicanvas create line [scalePath $path] $miniflags
 	    $canvas bind $id <1> "$canvas raise $id;traceConnection {$conn}"
-	    $canvas bind $id <Control-Button-1> "$canvas raise $id;traceConnection {$conn} 1"
+	    $canvas bind $id <Control-Button-1> "$canvas raise $id
+						 traceConnection {$conn} 1"
 	    $canvas bind $id <Control-Button-2> "destroyConnection {$conn}"
 	    $canvas bind $id <3> "connectionMenu %X %Y {$conn}"
 	    $canvas bind $id <ButtonRelease> "+deleteTraces"
@@ -747,10 +727,9 @@ proc drawConnections { connlist } {
     }
 }
 
-
 # Deletes red connections on canvas and turns port lights black
 proc deleteTraces {} {
-    global Subnet Color LitPorts TracedSubnets
+    global Subnet Color TracedSubnets
     if [info exists TracedSubnets] {
 	foreach subnet [lsort -integer -unique $TracedSubnets] {
 	    if {!$subnet || [winfo exists .subnet${subnet}]} {
@@ -760,28 +739,18 @@ proc deleteTraces {} {
 		    -fill $Color(Basecolor)
 	    }
 	}
-	set TracedSubnets ""
+	unset TracedSubnets
     }
-    if [info exists LitPorts] {
-	foreach port $LitPorts { lightPort $port black }
-	set LitPorts ""
-    }
+    lightPort
 }
 
-
 proc tracePort { port { traverse 0 }} {
-    global LitPorts Color
-    foreach conn [getModuleConnections [pMod port]] {
-	if { [string equal [pMod port] [[pType port]Mod conn]] && \
-	     [pNum port] == [[pType port]Num conn] } {
-	    lappend LitPorts [oPort conn] [iPort conn]
-	    lightPort [oPort conn] $Color(Trace)
-	    lightPort [iPort conn] $Color(Trace)
-	    drawConnectionTrace $conn
-	    if { $traverse } { 
-		tracePortsBackwards [list [[invType port]Port conn]]
-	    }
-	}
+    global Color
+    lightPort $port $Color(Trace)
+    foreach conn [portConnections $port] {
+	lightPort [[invType port]Port conn] $Color(Trace)
+	drawConnectionTrace $conn
+	if $traverse { tracePortsBackwards [list [[invType port]Port conn]] }
     }
 }
 
@@ -794,39 +763,25 @@ proc tracePortsBackwards { ports } {
 	if { [lsearch $backwardTracedPorts $port] != -1 } { continue }
 	lappend backwardTracedPorts $port
 	if [isaSubnetIcon [pMod port]] {
-	    foreach conn $Subnet(Subnet$Subnet([pMod port]_num)_connections) {
-		if { [[invType port]Num conn] == [pNum port] && \
-			 [isaSubnetEditor [[invType port]Mod conn]] } {
-		    drawConnectionTrace $conn
-		    lappend ports [[pType port]Port conn]
-		}
-	    }
+	    set do "Subnet$Subnet([pMod port]_num) [pNum port] [invType port]"
 	} elseif [isaSubnetEditor [pMod port]] {
-	    foreach conn $Subnet(SubnetIcon$Subnet([pMod port])_connections) {
-		if { [[invType port]Num conn] == [pNum port] && \
-			 [isaSubnetIcon [[invType port]Mod conn]] } {
-		    drawConnectionTrace $conn
-		    lappend ports [[pType port]Port conn]
-		}
-	    }
+	    set do "SubnetIcon$Subnet([pMod port]) [pNum port] [invType port]"
 	} else {
-	    foreach conn $Subnet([pMod port]_connections) {
-		if { [string equal [[invType port]Mod conn] [pMod port]] } {
-		    drawConnectionTrace $conn
-		    lappend ports [[pType port]Port conn]
-		}
-	    }
+	    set do "[pMod port] all [invType port]"
+	}
+	foreach conn [portConnections $do] { 
+	    drawConnectionTrace $conn
+	    lappend ports [[pType port]Port conn]
 	}
     }
 }
 
 proc traceConnection { conn { traverse 0 } } {
-    global LitPorts Color
-    lappend LitPorts [oPort conn] [iPort conn]
+    global Color
     lightPort [oPort conn] $Color(Trace)
     lightPort [iPort conn] $Color(Trace)
     drawConnectionTrace $conn
-    if { $traverse } { tracePortsBackwards [list [oPort conn] [iPort conn]]}
+    if { $traverse } { tracePortsBackwards [list [oPort conn] [iPort conn]] }
 }
 
 proc canvasExists { canvas arg } {
@@ -836,19 +791,18 @@ proc canvasExists { canvas arg } {
 proc disableConnection { conn } {
     global Disabled
     set connid [makeConnID $conn]
-    set realConn [findRealConnection $conn]
     setIfExists disabled Disabled($connid) 0
     if {!$disabled} {
 	set Disabled($connid) 1
-	if { ![isaSubnet [oMod realConn]] && ![isaSubnet [iMod realConn]] } {
-	    netedit blockconnection [makeConnID $realConn]
-	}
+	set command blockconnection
     } else {
 	set Disabled($connid) 0
-	if { ![isaSubnet [oMod realConn]] && ![isaSubnet [iMod realConn]] } {
-	    netedit unblockconnection [makeConnID $realConn]
-	}
+	set command unblockconnection
     }
+    foreach conn [findRealConnections $conn] {
+	netedit $command [makeConnID $conn]
+    }
+
 }
 
 proc drawConnectionTrace { conn } {
@@ -877,10 +831,9 @@ proc addConnection { omodid owhich imodid iwhich } {
 proc createConnection { conn { undo 0 } { tell_SCIRun 1 } } {
     global Subnet Notes Disabled Color
     if {![string length [iMod conn]] || ![string length [oMod conn]]} {return}
-    
-    if { ![info exists Subnet([oMod conn])] || \
-	     ![info exists Subnet([iMod conn])] || \
-	     $Subnet([oMod conn]) != $Subnet([iMod conn]) } {
+    if { ![info exists Subnet([oMod conn])] ||
+	 ![info exists Subnet([iMod conn])] ||
+	 $Subnet([oMod conn]) != $Subnet([iMod conn]) } {
 	puts "Not creating connection $conn: Subnet levels dont match"
 	return
     }
@@ -895,28 +848,20 @@ proc createConnection { conn { undo 0 } { tell_SCIRun 1 } } {
     networkHasChanged
 
     if { $tell_SCIRun} {
-	# Traverse the subnet levels to find the real connecting ports
-	set realConn [findRealConnection $conn]
-	if { ![isaSubnet [oMod realConn]] && ![isaSubnet [iMod realConn]] } {
-	    # if the modules at both ends are not subnet ports
-	    # tell SCIRun to create this connection
+	foreach realConn [findRealConnections $conn] {
 	    if {[eval netedit addconnection $realConn] == ""} {
 		tk_messageBox -type ok -parent . -icon warning -message \
-		    "Cannot create connection:\n addConnection $conn." 
-		return
+		    "Cannot create connection:\n createConnection $realConn." 
 	    }	    
 	}
     }
     
-
     lappend Subnet([oMod conn]_connections) $conn
     lappend Subnet([iMod conn]_connections) $conn
-    set connid [makeConnID $conn]
 
-    setIfExists Disabled($connid) Disabled($connid) 0
-    set pinfo [getModulePortinfo [oMod conn] o]
-    setIfExists Color($connid) Color($connid) \
-	[lindex [lindex $pinfo [oNum conn]] 0]
+    set connid [makeConnID $conn]
+    unsetIfExists Disabled($connid)
+    set Color($connid) [portColor [oPort conn]]
     if ![string length $Color($connid)] { set $Color($connid) red }
 
     drawConnections [list $conn]
@@ -946,7 +891,6 @@ proc destroyConnection { conn { undo 0 } { tell_SCIRun 1 } } {
     $canvas delete $connid $connid-notes $connid-notes-shadow
     $minicanvas delete $connid $connid-notes $connid-notes-shadow
 
-    set realConn [findRealConnection $conn]
     listFindAndRemove Subnet([oMod conn]_connections) $conn
     listFindAndRemove Subnet([iMod conn]_connections) $conn
 
@@ -956,39 +900,30 @@ proc destroyConnection { conn { undo 0 } { tell_SCIRun 1 } } {
     array unset Notes $connid-Position
     array unset Notes $connid-Color
 
-    if { [isaSubnetEditor [oMod conn]] } {
-	foreach econn $Subnet(SubnetIcon${subnet}_connections) {
-	    if { [iNum econn] == [oNum conn] &&
-		 [string equal SubnetIcon$subnet [iMod econn]] } {
-		destroyConnection $econn
-	    }
-	}
-	if { [canvasExists $canvas SubnetIcon$subnet] } {
-	    removePort [oPort conn]
-	}
-    }
-    
-    if { [isaSubnetEditor [iMod conn]] } {
-	foreach econn $Subnet(SubnetIcon${subnet}_connections) {
-	    if { [oNum econn] == [iNum conn] &&
-		 [string equal SubnetIcon$subnet [oMod econn]] } {
-		destroyConnection $econn
-	    }
-	}
-	if { [canvasExists $canvas SubnetIcon$subnet] } {
-	    removePort [iPort conn]
-	}
-    }
-
     if { $tell_SCIRun } {
-	# Traverse the subnet levels to find the real connecting ports
-	if { ![isaSubnet [oMod realConn]] && ![isaSubnet [iMod realConn]]} {
-	    # if the modules at both ends are not subnet ports
-	    # tell SCIRun to delete this connection
+	foreach realConn [findRealConnections $conn] {
 	    netedit deleteconnection [makeConnID $realConn]
 	}
     }
 
+    if { [isaSubnetEditor [oMod conn]] } {
+	foreach econn [portConnections "SubnetIcon${subnet} [oNum conn] i"] {
+	    destroyConnection $econn
+	}
+	if { [canvasExists $canvas SubnetIcon${subnet}] } {
+	    removePort [oPort conn]
+	}
+    }
+
+    if { [isaSubnetEditor [iMod conn]] } {
+	foreach econn [portConnections "SubnetIcon${subnet} [iNum conn] o"] {
+	    destroyConnection $econn
+	}
+	if { [canvasExists $canvas SubnetIcon${subnet}] } {
+	    removePort [iPort conn]
+	}
+    }
+    
     drawPorts [oMod conn] o
     drawPorts [iMod conn] i
 
@@ -1006,15 +941,12 @@ proc shadow { pos } {
 }
 
 proc scalePath { path } {
-    set minipath ""
+    set opath ""
     global SCALEX SCALEY
-    set doingX 1
-    foreach point $path {
-	if $doingX { lappend minipath [expr round($point/$SCALEX)] 
-	} else { lappend minipath [expr round($point/$SCALEY)] }
-	set doingX [expr !$doingX]
+    foreach pt $path {
+	lappend opath [expr round($pt/(([llength $opath]%2)?$SCALEY:$SCALEX))]
     }
-    return $minipath
+    return $opath
 }
     
 proc getConnectionNotesOptions { id } {
@@ -1073,92 +1005,75 @@ proc getModuleNotesOptions { module } {
     }
 }
 
-proc startPortConnection { port portname} {
-    global Subnet modname_font new_conn_ports potential_connection drawXtraPort
-    if [info exists drawXtraPort] { unset drawXtraPort}
-    set potential_connection ""
+proc startPortConnection { port } {
+    global Subnet modname_font possiblePorts
+    unsetIfExists possibleConnection ;# global even though not declared as such
     set subnet $Subnet([pMod port])
     set canvas $Subnet(Subnet${subnet}_canvas)
-    set isoport [string equal [pType port] o]
-    $canvas create text [computePortCoords $port] \
-	-text "$portname" -font $modname_font -tags temp \
-	-fill white -anchor [expr $isoport?"nw":"sw"]
-    set new_conn_ports ""
-    foreach newport [findPorts $port] {
-	set newport [findPortTermination "$newport [invType port]"]
-	if { $Subnet([pMod newport]) == $subnet } {
-	    lappend new_conn_ports $newport
-	}
-    }
+    $canvas create text [portCoords $port] \
+	-text [portName $port] -font $modname_font -tags temp \
+	-fill white -anchor [expr [string equal [pType port] o]?"nw":"sw"]
+    # if the port is an already connected input port, then stop now
+    if { [string equal i [pType port]] && [portIsConnected $port] } { return }
+
+    set possiblePorts [connectablePorts $port]
+
     # if the subnet is not level 0 (meaning the main network editor)
     # create a subnet input or output port for the module
-    # and the port is an output port or input port that is not used
-    if { $subnet && ($isoport || [llength $new_conn_ports]) } {
+    if { $subnet } {
 	set addSubnetPort 1
-	foreach conn $Subnet([pMod port]_connections) {
-	    if { [pNum port] == [[pType port]Num conn] && \
-		     [string equal Subnet$subnet [[invType port]Mod conn]]} {
+	foreach conn [portConnections $port] {
+	    if [string equal Subnet$subnet [[invType port]Mod conn]]  {
 		set addSubnetPort 0
 		break
 	    }
-	}
+	}	
 	if {$addSubnetPort} {
-	    lappend new_conn_ports \
-		[list Subnet$subnet [numPorts $subnet [invType port]]]
-	    set drawXtraPort $port
-	    drawPorts Subnet$subnet [invType port]
+	    set num [portCount "Subnet$subnet 0 [invType port]"]
+	    set temp "Subnet$subnet $num [invType port]"
+	    lappend possiblePorts $temp
 	}
     }
 
-    foreach i $new_conn_ports {
-	if $isoport { set path [routeConnection "[pMod port] [pNum port] $i"]
-	} else { set path [routeConnection "$i [pMod port] [pNum port]"] }
+    foreach poss $possiblePorts {
+	set path [routeConnection [makeConn $port $poss]]
 	eval $canvas create line $path -width 2 \
-	    -tags \"temp tempconnections [join "temp $i" ""]\"
+	    -tags \"temp tempconnections [join $poss ""]\"
     }
 }
 
 proc trackPortConnection { port x y } {
-    global new_conn_ports potential_connection Color Subnet
-    if ![llength $new_conn_ports] return
+    global possiblePorts possibleConnection Color Subnet
+    if ![llength $possiblePorts] return
     set canvas $Subnet(Subnet$Subnet([pMod port])_canvas)
-    set isoport [string equal [pType port] o]
-    set ox1 [winfo x $canvas.module[pMod port].port[pType port][pNum port]]
-    set ox2 [lindex [$canvas coords [pMod port]] 0]
-    set x [expr $x+$ox1+$ox2]
-    set oy1 [winfo y $canvas.module[pMod port].port[pType port][pNum port]]
-    set oy2 [lindex [$canvas coords [pMod port]] 1]
-    set y [expr $y+$oy1+$oy2]
-    set c [computePortCoords $port]
-    set mindist [eval computeDist $x $y $c]
-    set minport ""
-    foreach i $new_conn_ports {
-	set c [computePortCoords "$i [invType port]"]
-	set dist [eval computeDist $x $y $c]
+    set portWin $canvas.module[pMod port].port[pType port][pNum port]
+    set x [expr $x+[winfo x $portWin]+[lindex [$canvas coords [pMod port]] 0]]
+    set y [expr $y+[winfo y $portWin]+[lindex [$canvas coords [pMod port]] 1]]
+    set mindist [eval computeDist $x $y [portCoords $port]]
+    foreach poss $possiblePorts {
+	set dist [eval computeDist $x $y [portCoords $poss]]
 	if {$dist < $mindist} {
 	    set mindist $dist
-	    set minport $i
+	    set possPort $poss
 	}
     }
     $canvas itemconfigure tempconnections -fill black
-    set potential_connection ""
-    if {$minport != ""} {
-	$canvas raise [join "temp $minport" ""]
-	$canvas itemconfigure [join "temp $minport" ""] -fill $Color(Trace)
-	if {$isoport} { set potential_connection "[pMod port] [pNum port] $minport"
-	} else { set potential_connection "$minport [pMod port] [pNum port]" }
+    unsetIfExists possibleConnection ;# global even though not declared as such
+    if [info exists possPort] {
+	$canvas raise [join $possPort ""]
+	$canvas itemconfigure [join $possPort ""] -fill $Color(Trace)
+	set possibleConnection [makeConn $possPort $port]
     } 
 }
 
 proc endPortConnection { subnet } {
-    global Subnet potential_connection drawXtraPort
+    global Subnet possibleConnection
     $Subnet(Subnet${subnet}_canvas) delete temp
-    if [info exists drawXtraPort] { 
-	unset drawXtraPort 
-	drawPorts Subnet$subnet
+    if [info exists possibleConnection] {
+	createConnection $possibleConnection 1
+	unset possibleConnection
     }
-    if { $potential_connection == "" } {  return }
-    createConnection $potential_connection 1
+    if $subnet { drawPorts Subnet$subnet }
 }
 
 proc parseConnectionID {conn} {
@@ -1212,8 +1127,8 @@ proc redo {} {
 }
 
 proc routeConnection { conn } {
-    set outpos [computePortCoords [oPort conn]]
-    set inpos [computePortCoords [iPort conn]]
+    set outpos [portCoords [oPort conn]]
+    set inpos [portCoords [iPort conn]]
     set ox [expr int([lindex $outpos 0])]
     set oy [expr int([lindex $outpos 1])]
     set ix [expr int([lindex $inpos 0])]
@@ -1230,25 +1145,17 @@ proc routeConnection { conn } {
     }
 }
 
-proc computePortCoords { port } {
+proc portCoords { port } {
     global Subnet port_spacing port_width
     set canvas $Subnet(Subnet$Subnet([pMod port])_canvas)
     set isoport [string equal o [pType port]]
-    if { [string first "Subnet" [pMod port]] == 0 &&
-	 [string first "SubnetIcon" [pMod port]] != 0} {
-	if { !$isoport } { 
-	    set at [list [$canvas canvasx 0] \
-			[$canvas canvasy [winfo height $canvas]]]
-	} else {
-	    set at [list [$canvas canvasx 0] \
-			[$canvas canvasy 0]]
-	}
+    if { [isaSubnetEditor [pMod port]] } {
+	set border [expr $isoport?0:[winfo height $canvas]]
+	set at [list [$canvas canvasx 0] [$canvas canvasy $border]]
 	set h 0
     } elseif { [lsearch $Subnet(Subnet$Subnet([pMod port])_Modules) [pMod port]]!= -1} {
 	set at [$canvas coords [pMod port]]
 	set h [winfo height $canvas.module[pMod port]]
-	# this is to get rid of a bug for modules not mapped to the canvas
-	set h [expr $h>1?$h:57]
     } else {
 	return [list 0 0]
     }
@@ -1257,6 +1164,7 @@ proc computePortCoords { port } {
     set y [expr ($isoport?$h:0) + [lindex $at 1]]
     return [list $x $y]
 }
+
 
 proc computeDist {x1 y1 x2 y2} {
     set dx [expr $x2-$x1]
@@ -1271,7 +1179,7 @@ proc moduleStartDrag {modid x y toggleOnly} {
     global ignoreModuleMove CurrentlySelectedModules redrawConnectionList
     set ignoreModuleMove 0
     if $toggleOnly {
-	$modid toggleSelected 1
+	$modid toggleSelected
 	set ignoreModuleMove 1
 	return
     }
@@ -1289,12 +1197,15 @@ proc moduleStartDrag {modid x y toggleOnly} {
     set startY $y
        
     #if clicked module isnt selected, unselect all and select this
-    if { ![$modid is_selected] } { $modid toggleSelected 0 }
+    if { ![$modid is_selected] } { 
+	unselectAll
+	$modid addSelected
+    }
 
     #build a connection list of all selected modules to draw conns when moving
     set redrawConnectionList ""
     foreach csm $CurrentlySelectedModules {
-	eval lappend redrawConnectionList [getModuleConnections $csm]
+	eval lappend redrawConnectionList $Subnet(${csm}_connections)
     }
     set redrawConnectionList [lsort -unique $redrawConnectionList]
     
@@ -1588,10 +1499,9 @@ proc moduleDestroy {modid} {
     }
 
     # Deleting the module connections backwards works for dynamic modules
-    set modList [getModuleConnections $modid]
-    set size [expr [llength $modList]-1]
-    for {set j $size} {$j >= 0} {incr j -1} {
-	destroyConnection [lindex $modList $j]
+    set connections $Subnet({$modid}_connections)
+    for {set j [expr [llength $connections]-1]} {$j >= 0} {incr j -1} {
+	destroyConnection [lindex $connections $j]
     }
 
     # Delete Icon from canvases
@@ -1643,7 +1553,7 @@ proc startBox {canvas X Y keepselected} {
 }
 
 proc makeBox {canvas X Y} {    
-    global Box CurrentlySelectedModules
+   global Box CurrentlySelectedModules
     #Canvas Relative current X and Y positions
     set x1 [expr $X - [winfo rootx $canvas] + [$canvas canvasx 0]]
     set y1 [expr $Y - [winfo rooty $canvas] + [$canvas canvasy 0]]
@@ -1699,16 +1609,6 @@ proc blend { c1 c2 { alpha 0.5 } } {
     return [format "\#%02x%02x%02x" $r $g $b]
  } 
 
-proc getCanvasModules { canvas } {
-    set retval ""
-    foreach tagid [$canvas find withtag "module"] {
-	set tags [$canvas gettags $tagid]
-	set pos  [lsearch -exact $tags "module"]
-	lappend retval [lreplace $tags $pos $pos]
-    }
-    return [lsort -unique $retval]
-}
-
 
 # Returns all connections including subnet connections
 proc getModuleConnections { module } {
@@ -1716,136 +1616,63 @@ proc getModuleConnections { module } {
     return $Subnet(${module}_connections)
 }
 
-proc getModulePortinfo { modid porttype } {
-    global Subnet drawXtraPort
-    if {![isaSubnet $modid]} {
-	set retval [$modid-c ${porttype}portinfo] 
-    } else {
-	set retval ""
-	set tocheck ""
-	if { [isaSubnetIcon $modid]} {
-	    set subnet $Subnet(${modid}_num)
-	} else {
-	    set subnet $Subnet($modid)
-	    set porttype [expr [string equal o $porttype]?"i":"o"]
-	}
-	set invport [expr [string equal o $porttype]?"i":"o"]
-	set connections $Subnet(Subnet${subnet}_connections)
-	foreach conn $connections {
-	    if { [string equal Subnet${subnet} [${invport}Mod conn]] } {
-		lappend tocheck \
-		    [list [${invport}Num conn] [${porttype}Port conn]]
-	    }	    
-	}
-	set i 0
-	foreach check [lsort -integer -index 0 $tocheck] {
-	    while { $i < [lindex $check 0] } {
-		lappend retval [list red 0 Bad Port]
-		incr i
-	    }
-	    set mod [lindex [lindex $check 1] 0]
-	    set num [lindex [lindex $check 1] 1]
-	    set pinfo [getModulePortinfo $mod $porttype]
-	    set lastnum [expr [llength $pinfo]-1]
-	    if { $num > $lastnum } {set num $lastnum }
-	    lappend retval [lindex $pinfo $num]
-	    incr i
-	}
-	if [info exists drawXtraPort] {
-	    if [string equal [pType drawXtraPort] $porttype] {
-		lappend retval \
-		    [lindex [getModulePortinfo  [pMod drawXtraPort] \
-				 [pType drawXtraPort]] [pNum drawXtraPort]]
-	    }
-	}
-    }
-
-    set connectedPortNumbers ""
-    if {[info exists Subnet(${modid}_connections)]} {
-	foreach conn $Subnet(${modid}_connections) {
-	    if { [string equal [${porttype}Mod conn] $modid] } {
-		lappend connectedPortNumbers [${porttype}Num conn]
-	    }
-	}
-    }
-    set realRetVal ""
-    set i 0
-    foreach portinfo $retval {	
-	if { [lsearch $connectedPortNumbers $i] == -1 } {
-	    lappend realRetVal [lreplace $portinfo 1 1 0]
-	} else {
-	    lappend realRetVal [lreplace $portinfo 1 1 1]
-	}
-	incr i
-    }
-    return $realRetVal
-}
-
-
-proc findPorts { port } { 
-    set newport [findPortOrigin $port]
-    if {![string first Subnet [pMod newport]]} {
-	return ""
-    }
-    set ports [netedit find[invType port]ports [pMod newport] [pNum newport]]
-    return $ports
-}
-
-proc findPortOrigin { port } {
+proc connectablePorts { port } { 
+    if { [string equal i [pType port]] && [portIsConnected $port] } { return }
     global Subnet
-    set modified 1
-    while { $modified && ![string first Subnet [pMod port]] } {
-	set modified 0	
-	if { ![string first SubnetIcon [pMod port]] } {
-	    # loop through encapsulated Subnet Editors' i/o connections
-	    set searchname Subnet$Subnet([pMod port]_num)
-	} else { ;# else module is a Subnet Editor Port
-	    # loop through the encompasing Subnet Icons' i/o connections
-	    set searchname SubnetIcon$Subnet([pMod port])
-	}	    
-	foreach c $Subnet(${searchname}_connections) {
-	    # if connection ends at the right subnet editor output port
-	    if {[pNum port] == [[invType port]Num c] && \
-		    [string equal $searchname [[invType port]Mod c]] } {
-		set port "[[pType port]Mod c] [[pType port]Num c] [pType port]"
-		set modified 1
-		break
-	    }
-	}
-    }
-    return [lrange $port 0 1]
-}
-
-proc findPortTermination { port } {
-    global Subnet
-    set modified 1
-    while { $modified } {
-	set modified 0	
-	foreach c $Subnet([pMod port]_connections) {
-	    # if connection ends at the right subnet editor output port
-	    if {[pNum port] == [[pType port]Num c] && \
-		    [string equal [pMod port] [[pType port]Mod c]]} {
-		if {[string first SubnetIcon [[invType port]Mod c]] != 0 && \
-			[string first Subnet [[invType port]Mod c]] == 0} {
-		    set module SubnetIcon$Subnet([[invType port]Mod c])
-		    set port "$module [[invType port]Num c] [pType port]"
-		    set modified 1
-		    break
+    set ports ""
+    set thisDataType [lindex [portName $port] 0]
+    foreach modid $Subnet(Subnet$Subnet([pMod port])_Modules) {
+	set nPorts [portCount "$modid 0 [invType port]"]
+	for {set i 0} {$i < $nPorts} {incr i} {
+	    set theirPort "$modid $i [invType port]"
+	    if [string equal $thisDataType [lindex [portName $theirPort] 0]] {
+		if { [string equal o [pType theirPort]] ||
+		     ![portIsConnected $theirPort] } {
+		    lappend ports $theirPort
 		}
 	    }
 	}
     }
-    return [lrange $port 0 1]
+    return $ports
+}
+
+proc findPortOrigins { port } {
+    global Subnet
+    set ports ""
+    lappend portsTodo $port
+    while { [llength $portsTodo] } {
+	set port [lindex $portsTodo end]
+	set portsTodo [lrange $portsTodo 0 end-1]
+	if ![isaSubnet [pMod port]] {
+	    lappend ports $port
+	} else {
+	    if { [isaSubnetIcon [pMod port]] } {
+		set mod Subnet$Subnet([pMod port]_num)
+	    } else {
+		set mod SubnetIcon$Subnet([pMod port])
+	    }
+	    foreach conn [portConnections "$mod [pNum port] [invType port]"] {
+		lappend portsTodo [[pType port]Port conn]
+	    }
+	}
+    }
+    return $ports
 }
 
 
-
-proc findRealConnection { conn } {
-    return "[findPortOrigin [oPort conn]] [findPortOrigin [iPort conn]]"
+proc findRealConnections { conn } {
+    set connections ""
+    foreach iport [findPortOrigins [iPort conn]] {
+	foreach oport [findPortOrigins [oPort conn]] {
+	    lappend connections [makeConn $oport $iport]
+	}
+    }
+    return $connections
 }
 
 proc drawPorts { modid { porttypes "i o" } } {
-    global Subnet port_spacing port_width port_height port_light_height ToolTipText
+    global Subnet ToolTipText
+    global port_spacing port_width port_height port_light_height
     if { ![info exists Subnet($modid)] } { return }
     set subnet $Subnet($modid)
     set isSubnetEditor [isaSubnetEditor $modid]
@@ -1854,7 +1681,7 @@ proc drawPorts { modid { porttypes "i o" } } {
 	set modframe .subnet${subnet}.can
     } else {
 	set modframe $Subnet(Subnet${subnet}_canvas).module$modid
-	$modid resize
+	$modid resize_icon
     }
 
     foreach porttype $porttypes {
@@ -1866,19 +1693,17 @@ proc drawPorts { modid { porttypes "i o" } } {
 	    destroy $modframe.portlight$porttype$i
 	    incr i
 	}
-	set portinfo [getModulePortinfo $modid $porttype]
-	set i 0
-	foreach t $portinfo {
-	    set portcolor [lindex $t 0]
-	    set portname [join [lrange $t 2 3] ":"]
+	set num [portCount "$modid 0 $porttype"]
+	for {set i 0 } {$i < $num} {incr i} {
+	    set port [list $modid $i $porttype]
 	    set x [expr $i*$port_spacing+6]
-	    if { $isSubnetEditor } { set x [expr $x+3 ]}
+	    if $isSubnetEditor { set x [expr $x+3] }
 	    set e [expr $isoport?"bottom":"top"]
-	    if { $isSubnetEditor || [lindex $t 1]} { set e out$e }
+	    if [portIsConnected $port] { set e out$e }
 	    set portbevel $modframe.port$porttype$i
 	    set portlight $modframe.portlight$porttype$i
 	    bevel $portbevel -width $port_width -height $port_height \
-		-borderwidth 3 -edge $e -background $portcolor \
+		-borderwidth 3 -edge $e -background [portColor $port] \
 		-pto 2 -pwidth 7 -pborder 2
 	    frame $portlight -width $port_width -height 4 \
 		-relief raised -background black -borderwidth 0
@@ -1906,22 +1731,31 @@ proc drawPorts { modid { porttypes "i o" } } {
 		    place $portlight -in $portbevel -x 0 -rely 1.0 -anchor nw
 		}
 	    }
-	    set port [list $modid $i $porttype]
 	    foreach p [list $portbevel $portlight] {
-		bind $p <2> "startPortConnection {$port} {$portname}"
+		bind $p <2> "startPortConnection {$port}"
 		bind $p <B2-Motion> "trackPortConnection {$port} %x %y"
 		bind $p <ButtonRelease-2> "endPortConnection $subnet"
 		bind $p <ButtonPress-1> "tracePort {$port}"
 		bind $p <Control-Button-1> "tracePort {$port} 1"
 		bind $p <ButtonRelease-1> "deleteTraces"
 	    }
-	    incr i
 	} 
     }
 }
 
-proc lightPort { port color } {
-    global Subnet
+
+
+proc lightPort { { port "" } { color "black" } } {
+    global Subnet LitPorts
+
+    if { ![string length $port] && [info exists LitPorts] } {
+	foreach port [lsort -unique $LitPorts] {
+	    lightPort $port black
+	}
+	return
+    }
+		
+    lappend LitPorts $port
     set canvas $Subnet(Subnet$Subnet([pMod port])_canvas)
     set p $canvas.module[pMod port].portlight[pType port][pNum port]
     if {[winfo exists $p]} {
@@ -1932,8 +1766,8 @@ proc lightPort { port color } {
 #todo Undo stuff
 proc removePort { port } {
     global Subnet Color Disabled Notes
-    set portinfo [getModulePortinfo [pMod port] [pType port]]
-    for {set i [expr [pNum port]+1]} {$i < [llength $portinfo]} {incr i} {
+    set numPorts [portCount $port]
+    for {set i [expr [pNum port]+1]} {$i < $numPorts} {incr i} {
 	if [isaSubnetEditor [pMod port]] {
 	    set icon SubnetIcon$Subnet([pMod port])
 	    foreach conn $Subnet(${icon}_connections) {
@@ -1949,7 +1783,7 @@ proc removePort { port } {
 		    set num [expr $i-1]
 		    set thisport [list $icon $num [invType port]]
 		    set otherport [[pType port]Port conn]
-		    set newconn [makeConn otherport thisport]
+		    set newconn [makeConn $otherport $thisport]
 		    lappend Subnet([oMod newconn]_connections) $newconn
 		    lappend Subnet([iMod newconn]_connections) $newconn
 		    set newconnid [makeConnID $newconn]
@@ -1977,7 +1811,7 @@ proc removePort { port } {
 		set num [expr [[pType port]Num conn]-1]
 		set thisport [list [pMod port] $num [pType port]]
 		set otherport [[invType port]Port conn]
-		set newconn [makeConn otherport thisport]
+		set newconn [makeConn $otherport $thisport]
 		lappend Subnet([oMod newconn]_connections) $newconn
 		lappend Subnet([iMod newconn]_connections) $newconn
 		set newconnid [makeConnID $newconn]
@@ -2125,6 +1959,13 @@ proc renameGlobal { Newname OldName } {
     }
 }
 
+# This proc will unset a global variable without compaining if it doesnt exist
+proc unsetIfExists { Varname } {
+    upvar $Varname var
+    if [info exists var] {
+	unset var
+    }
+}
 
 
 proc notesTrace { ArrayName Index mode } {
@@ -2157,6 +1998,82 @@ proc disabledTrace { ArrayName Index mode } {
 }
 
 
+proc portColor { port } {
+    global Subnet
+    if { [isaSubnetEditor [pMod port]] } {
+	set port "SubnetIcon$Subnet([pMod port]) [pNum port] [invType port]"
+    }
+    set port [lindex [findPortOrigins $port] 0]
+    return [[pMod port]-c [pType port]portcolor [pNum port]]
+}
+
+
+proc portName { port } {
+    if { [isaSubnetEditor [pMod port]] } {
+	global Subnet
+	set port "SubnetIcon$Subnet([pMod port]) [pNum port] [invType port]"
+    }
+
+    set port [lindex [findPortOrigins $port] 0]
+    return [[pMod port]-c [pType port]portname [pNum port]]
+}
+
+proc portIsConnected { port } {
+    global Subnet
+    if [info exists Subnet([pMod port]_connections)] {
+	foreach conn $Subnet([pMod port]_connections) {
+	    if { [pNum port] == [[pType port]Num conn] &&
+		 [string equal [[pType port]Mod conn] [pMod port]] } {
+		return 1
+	    }
+	}
+    }
+    return 0
+}
+
+# returns the # of ports of the same type (input or output) on the module
+# note: the port # (second item in list) is not used in this procedure
+proc portCount { port } {    
+    global Subnet
+    if [isaSubnetIcon [pMod port]] {
+	set port "Subnet$Subnet([pMod port]_num) 0 [invType port]"
+    }
+
+    if [isaSubnetEditor [pMod port]] {
+	return [llength [portConnections "[pMod port] all [pType port]"]]
+    } else {
+	return [[pMod port]-c [pType port]portcount]
+    }
+}
+
+
+proc portConnections { port } {
+    global Subnet
+    set connections ""
+    if [string equal all [pNum port]] { set all 1 } else { set all 0 }
+    if [info exists Subnet([pMod port]_connections)] {
+	foreach conn $Subnet([pMod port]_connections) {
+	    if { ($all || [pNum port] == [[pType port]Num conn]) &&
+		 [string equal [pMod port] [[pType port]Mod conn]] } {
+		lappend connections $conn
+	    }
+	}
+    }
+    return $connections
+}
+
+
+#creates a connection from two ports
+proc makeConn { port1 port2 } {
+    if [string equal [pType port1] [pType port2]] { return "" }
+    if [string equal [pType port1] o] {
+	return "[pMod port1] [pNum port1] [pMod port2] [pNum port2]"
+    }
+    return "[pMod port2] [pNum port2] [pMod port1] [pNum port1]"
+}
+
+
+
 # NOTE: The following functions use upvar!
 # This means you call them without expanding the variable beforehand
 # Examples:
@@ -2165,18 +2082,6 @@ proc disabledTrace { ArrayName Index mode } {
 #    set outputModule [oMod $connection]    <- INCORRECT
 #    set connname connection
 #    set outputModule [oMod $connname]	    <- CORRECT 
-
-
-#creates a connection from two ports
-proc makeConn { port1_varname port2_varname } {
-    upvar $port1_varname port1
-    upvar $port2_varname port2
-    if [string equal [pType port1] [pType port2]] { return "" }
-    if [string equal [pType port1] o] {
-	return "[pMod port1] [pNum port1] [pMod port2] [pNum port2]"
-    }
-    return "[pMod port2] [pNum port2] [pMod port1] [pNum port1]"
-}
 
 
 # Returns the Module ID of the port
