@@ -46,7 +46,6 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
 
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -74,9 +73,7 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
         pack $sd.selected -side top -fill x -expand yes
 
 	makeSciButtonPanel $w $w $this
-	# Commented this out because the ui
-	# would no longer popup in BioTensor
-	# moveToCursor $w
+	moveToCursor $w
 
 	sync_filenames
     }
