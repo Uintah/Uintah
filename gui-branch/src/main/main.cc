@@ -31,21 +31,6 @@
  *  Copyright (C) 1999 U of U
  */
 
-#include <Dataflow/Network/Network.h>
-#include <Dataflow/Network/NetworkEditor.h>
-#include <Dataflow/Network/PackageDB.h>
-#include <Core/GuiInterface/GuiServer.h>
-#include <Core/GuiInterface/GuiManager.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/TCL.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Util/sci_system.h>
-#include <Core/Util/RCParse.h>
-
-#ifdef SCI_PARALLEL
-#include <Core/CCA/Component/PIDL/PIDL.h>
-#endif
-
 #include <iostream>
 using std::cerr;
 using std::cout;
@@ -57,42 +42,27 @@ using std::endl;
 #include <afxwin.h>
 #endif
 
+#include <Core/Thread/Thread.h>
+#include <Core/Util/sci_system.h>
+
+#include <Dataflow/Network/Network.h>
+#include <Dataflow/Network/Scheduler.h>
+#include <Dataflow/Resources/Resources.h>
+
+#include <UI/tcltk/GuiInterface/NetworkEditor.h>
+#include <UI/tcltk/GuiInterface/GuiManager.h>
+
+#ifdef SCI_PARALLEL
+#include <Core/CCA/Component/PIDL/PIDL.h>
+#endif
+
 #define VERSION "1.3.1" // this needs to be synced with the contents of
                         // SCIRun/doc/edition.xml
 
 using namespace SCIRun;
 
-namespace SCIRun {
-extern bool global_remote;
-void set_guiManager( GuiManager * );
-}
-
 int global_argc;
 char** global_argv;
-
-namespace SCIRun {
-extern env_map scirunrc;             // contents of .scirunrc
-// these symbols live in Dataflow/Network/PackageDB.cc
-extern string SCIRUN_SRCTOP;         // = INSTALL_DIR/SCIRun/src
-extern string SCIRUN_OBJTOP;         // = BUILD_DIR
-extern string DEFAULT_LOAD_PACKAGE;  // configured packages
-}
-
-#ifndef PSECORETCL
-#error You must set PSECORETCL to the Dataflow/Tcl path
-#endif
-
-#ifndef SCICORETCL
-#error You must set SCICORETCL to the Core/Tcl path
-#endif
-
-#ifndef DEF_LOAD_PACK
-#error You must set a DEFAULT_PACKAGE_PATH or life is pretty dull
-#endif
-
-#ifndef ITCL_WIDGETS
-#error You must set ITCL_WIDGETS to the iwidgets/scripts path
-#endif
 
 void
 usage()
@@ -111,41 +81,37 @@ void
 parse_args( int argc, char *argv[] )
 {
   for( int cnt = 0; cnt < argc; cnt++ )
-    {
-      string arg( argv[ cnt ] );
-      if( ( arg == "--version" ) || ( arg == "-version" )
-	  || ( arg == "-v" ) || ( arg == "--v" ) ){
-	cout << "Version: " << VERSION << "\n";
+  {
+    string arg( argv[ cnt ] );
+    if( ( arg == "--version" ) || ( arg == "-version" )
+	|| ( arg == "-v" ) || ( arg == "--v" ) ){
+      cout << "Version: " << VERSION << "\n";
 	exit( 0 );
       } else if ( ( arg == "--help" ) || ( arg == "-help" ) ||
 		  ( arg == "-h" ) ||  ( arg == "--h" ) ) {
 	usage();
       } else {
-	  struct stat buf;
-	  if (stat(arg.c_str(),&buf) < 0) {
-	      cerr << "Couldn't find net file " << arg
-		   << ".\nNo such file or directory.  Exiting." << endl;
-	      exit(0);
-	  }
+	struct stat buf;
+	if (stat(arg.c_str(),&buf) < 0) {
+	  cerr << "Couldn't find net file " << arg
+	       << ".\nNo such file or directory.  Exiting." << endl;
+	  exit(0);
+	}
       }
-    }
+  }
 }
 
 int
 main(int argc, char *argv[] )
 {
   parse_args( argc, argv );
-
+  
   global_argc=argc;
   global_argv=argv;
-
-  // these symbols live in Dataflow/Network/PackageDB.cc but are reset here
-  SCIRUN_SRCTOP = SRCTOP;
-  SCIRUN_OBJTOP = OBJTOP;
-  DEFAULT_LOAD_PACKAGE = DEF_LOAD_PACK;
-
-#if 0
- ifdef SCI_PARALLEL
+  
+  resources.read("../src/scirun.xml");
+  
+#ifdef SCI_PARALLEL
   try {
     PIDL::PIDL::initialize(argc, argv);
   } catch(const Exception& e) {
@@ -157,88 +123,21 @@ main(int argc, char *argv[] )
     abort();
   } 
 #endif
+  
 
-  // Start up TCL...
-  TCLTask* tcl_task = new TCLTask(argc, argv);
-  Thread* t=new Thread(tcl_task, "TCL main event loop");
-  t->detach();
-  tcl_task->mainloop_waitstart();
-
-  // Set up the TCL environment to find core components
-  string result;
-  TCL::eval("global PSECoreTCL CoreTCL",result);
-  TCL::eval("set DataflowTCL "PSECORETCL,result);
-  TCL::eval("set CoreTCL "SCICORETCL,result);
-  TCL::eval("lappend auto_path "SCICORETCL,result);
-  TCL::eval("lappend auto_path "PSECORETCL,result);
-  TCL::eval("lappend auto_path "ITCL_WIDGETS,result);
-
-  // Create initial network
-  // We build the Network with a 1, indicating that this is the
-  // first instantiation of the network class, and this network
-  // should read the command line specified files (if any)
+  gm = new TcltkManager;
   Network* net=new Network(1);
+  Scheduler *scheduler = new Scheduler(net);
+  
+  NetworkEditor *gui = new NetworkEditor(net, scheduler,argc, argv);
 
-  // Fork off task for the network editor.  It is a detached
-  // task, and the Task* will be deleted by the task manager
-  NetworkEditor* gui_task=new NetworkEditor(net);
-
-  // Activate the network editor and scheduler.  Arguments and return
-  // values are meaningless
-  Thread* t2=new Thread(gui_task, "Scheduler");
+  Thread* t2=new Thread(scheduler, "Scheduler");
   t2->setDaemon(true);
   t2->detach();
 
-  bool foundrc=false;
-  cout << "Parsing .scirunrc... ";
-  
-  // check the local directory
-  foundrc = RCParse(".scirunrc",SCIRun::scirunrc);
-  if (foundrc)
-    cout << "./.scirunrc" << endl;
+  gui->start();
 
-  // check the BUILD_DIR
-  if (!foundrc) {
-    foundrc = RCParse((SCIRUN_OBJTOP + "/.scirunrc").c_str(),
-                      SCIRun::scirunrc);
-    if (foundrc)
-      cout << SCIRUN_OBJTOP + "/.scirunrc" << endl;
-  }
-
-  // check the user's home directory
-  if (!foundrc) {
-    char* HOME = getenv("HOME");
-  
-    if (HOME) {
-      string home(HOME);
-      home += "/.scirunrc";
-      foundrc = RCParse(home.c_str(),SCIRun::scirunrc);
-      if (foundrc)
-        cout << home << endl;
-    }
-  }
-
-  // check the INSTALL_DIR
-  if (!foundrc) {
-    foundrc = RCParse((SCIRUN_SRCTOP + "/.scirunrc").c_str(),
-                      SCIRun::scirunrc);
-    if (foundrc)
-      cout << SCIRUN_SRCTOP + "/.scirunrc" << endl;
-  }
-
-  if (!foundrc)
-    cout << "not found" << endl;
-
-  // wait for the main window to display before continuing the startup.
-  TCL::eval("tkwait visibility .top.globalViewFrame.canvas",result);
-
-
-  // load the packages
-  packageDB.loadPackage();
-    
-
-  // Now activate the TCL event loop
-  tcl_task->release_mainloop();
+  // exit
 
 #ifdef _WIN32
   // windows has a semantic problem with atexit(), so we wait here instead.
