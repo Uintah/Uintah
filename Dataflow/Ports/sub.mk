@@ -30,3 +30,8 @@ LIBS := $(XML_LIBRARY)
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 
+ifeq ($(LARGESOS),no)
+UINTAH_SCIRUN := $(UINTAH_SCIRUN) $(LIBNAME)
+endif
+
+

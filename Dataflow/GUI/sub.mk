@@ -38,4 +38,4 @@ SRCS := \
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
-
+UINTAH_SCIRUN := $(UINTAH_SCIRUN) $(TCLINDEX)
