@@ -2,7 +2,7 @@
 #ifndef SCI_DEFS_H
 #define SCI_DEFS_H
 
-#define SCI_ASSERTION_LEVEL_@ASSERTION_LEVEL@
+#define SCI_ASSERTION_LEVEL @ASSERTION_LEVEL@
 #define SCI_OPENGL
 #define SCI_NORM_OGL
 #define TEMPLATE_TAG @TEMPLATE_TAG@
@@ -10,5 +10,9 @@
 #define SCI_@NBITS@BITS
 @PARALLEL_DEFINE@
 @THREAD_DEFINE@
+
+/* Someday, we should make this a config variable - it might help the
+   optimizer, at the cost of more difficult debugging */
+#define USE_SCI_THROW 1
 
 #endif
