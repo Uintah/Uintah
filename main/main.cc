@@ -217,7 +217,6 @@ main(int argc, char *argv[] )
 
 #ifndef __sgi
   Semaphore wait("main wait", 0);
-  cerr << "Main waiting on eop semaphore\n";
   wait.down();
 #endif
 	
