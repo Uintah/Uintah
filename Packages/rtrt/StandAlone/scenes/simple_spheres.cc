@@ -25,7 +25,7 @@
 using namespace rtrt;
 
 extern "C" 
-Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
+Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 {
   Camera cam( Point(10,-10,0), Point( 10,0,0 ), Vector(0,0,1), 45.0 );
 
