@@ -16,8 +16,18 @@
 
 #include <Classlib/Array1.h>
 #include <Geometry/Point.h>
+#include <Color.h>
 
-class MaterialProp;
+class MaterialProp {
+public:
+    Color ambient;
+    Color diffuse;
+    Color specular;
+    double shininess;
+    Color emission;
+    MaterialProp(const Color&, const Color&, const Color&, double);
+    void set();
+};
 
 class GeomObj {
     MaterialProp* matl;
@@ -25,6 +35,8 @@ public:
     GeomObj();
     virtual ~GeomObj();
     virtual void draw() = 0;
+
+    void set_matl(MaterialProp*);
 };
 
 class ObjGroup : public GeomObj {

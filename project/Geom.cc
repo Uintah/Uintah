@@ -26,10 +26,8 @@ GeomObj::GeomObj()
 
 GeomObj::~GeomObj()
 {
-#if 0
     if(matl)
 	delete matl;
-#endif
 }
 
 ObjGroup::ObjGroup()
@@ -53,8 +51,15 @@ int ObjGroup::size()
 
 void ObjGroup::draw()
 {
-    for (int i=0; i<objs.size(); i++)
-	objs[i]->draw();
+    if(matl){
+	for (int i=0; i<objs.size(); i++){
+	    matl->set_matl();
+	    objs[i]->draw();
+	}
+    } else {
+	for (int i=0; i<objs.size(); i++)
+	    objs[i]->draw();
+    }
 }
 
 Triangle::Triangle(const Point& p1, const Point& p2, const Point& p3)
@@ -67,8 +72,12 @@ Triangle::~Triangle()
 }
 
 void Triangle::draw() {
-    glColor3f(0, 1, 0);
+    if(matl)matl->set_matl();
     glBegin(GL_TRIANGLES);
+    Vector e1(p3-p1);
+    Vector e2(p2-p1);
+    Vector n(Cross(e1, e2));
+    glNormal3d(n.x(), n.y(), n.z());
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());
     glVertex3d(p3.x(), p3.y(), p3.z());
@@ -85,7 +94,7 @@ Tetra::~Tetra()
 }
 
 void Tetra::draw() {
-    glColor3f(1, 0, 0);
+    if(matl)matl->set_matl();
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());
@@ -109,7 +118,7 @@ GeomSphere::~GeomSphere()
 
 void GeomSphere::draw()
 {
-    glColor3f(.7, .7, .7);
+    if(matl)matl->set_matl();
     SinCosTable u(nu, 0, 2.*Pi);
     SinCosTable v(nv, -Pi/2., Pi/2., rad);
     for(int i=0;i<nu-1;i++){
@@ -141,9 +150,22 @@ GeomPt::~GeomPt() {
 }
 
 void GeomPt::draw() {
-    glColor3f(0, 0, 1);
+    if(matl)matl->set_matl();
     glBegin(GL_POINTS);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glEnd();
 }
 
+void MaterialProp::set()
+{
+    float color[3];
+    ambient.get_color(color);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
+    diffuse.get_color(color);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, color);
+    specular.get_color(color);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
+    emission.get_color(color);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
+}
