@@ -607,10 +607,11 @@ void DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
 	 if (hrefNode == "")
 	    throw InternalError("global variable href attribute not found");
 	 const char* href = hrefNode.c_str();
-	 
-	 // copy up to maxTimestep lines of the old dat file to the copy
+
 	 ifstream datFile((fromDir.getName()+"/"+href).c_str());
 	 ofstream copyDatFile((toDir.getName()+"/"+href).c_str(), ios::app);
+
+	 // copy up to maxTimestep lines of the old dat file to the copy
 	 int timestep = startTimestep;
 	 while (datFile.getline(buffer, 1000) &&
 		(timestep < maxTimestep || maxTimestep < 0)) {
@@ -667,10 +668,6 @@ void DataArchiver::finalizeTimestep(double time, double delt,
          because it needs all computes to be set
          to find the save labels */
     
-    // This assumes that the TaskGraph doesn't change after the second
-    // timestep and will need to change if the TaskGraph becomes dynamic. 
-    wereSavesAndCheckpointsInitialized = true;
-    
     if (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) {
       initSaveLabels(sched);
      
@@ -678,7 +675,11 @@ void DataArchiver::finalizeTimestep(double time, double delt,
         indexAddGlobals(); /* add saved global (reduction)
                               variables to index.xml */
     }
-
+    
+    // This assumes that the TaskGraph doesn't change after the second
+    // timestep and will need to change if the TaskGraph becomes dynamic. 
+    wereSavesAndCheckpointsInitialized = true;
+    
     if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0 || 
 	d_checkpointWalltimeInterval != 0)
       initCheckpoints(sched);
