@@ -82,22 +82,26 @@ GLTexture3D::GLTexture3D() :
 
 
 GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max, 
-			 bool use_minmax) :  
+			 bool use_minmax, int bricksize) :  
   tg(0),
   texfld_(texfld),
-  X_(0), 
-  Y_(0), 
+  X_(0),
+  Y_(0),
   Z_(0),
-  xmax_(0), 
-  ymax_(0), 
-  zmax_(0),
+  xmax_(bricksize), 
+  ymax_(bricksize), 
+  zmax_(bricksize),
   isCC_(false),
   reuse_bricks(false)
 {
+  cerr<<"trying init\n";
   if (!init(min, max, use_minmax)) { return; }
   set_bounds();
-  compute_tree_depth(); 
+  cerr<<"set_bounds\n";
+  compute_tree_depth();
+  cerr<<"computed tree depth\n";
   build_texture();
+  cerr<<"built_texture\n";
 }
 
 GLTexture3D::~GLTexture3D()
