@@ -131,6 +131,11 @@ itcl_class SCIRun_Fields_EditField {
 	pack $edit.l1 $edit.l2 $edit.l5 \
 	     $edit.l9 -side top 
 
+
+	frame $w.exec
+	pack $w.exec -side bottom -padx 5 -pady 5
+	button $w.exec.execute -text "Execute" -command "$this-c needexecute"
+	pack $w.exec.execute -side top -e n
     }
 
     method update_multifields {} {
