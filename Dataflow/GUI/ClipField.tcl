@@ -99,7 +99,8 @@ itcl_class SCIRun_FieldsCreate_ClipField {
 	button $w.executes.invert -text "Invert" -command "$this invert"
 	button $w.executes.undo -text "Undo" -command "$this undo"
 	button $w.executes.reset -text "Reset" -command "$this reset"
-	pack $w.executes.execute $w.executes.invert $w.executes.undo $w.executes.reset -side left -e y -f both -padx 5 -pady 5
+
+	pack   $w.executes.invert $w.executes.undo $w.executes.reset -side left -e y -f both -padx 5 -pady 5
 
 	pack $w.location $w.execmode $w.whenexecute $w.executes -side top -e y -f both -padx 5 -pady 5
 
@@ -107,9 +108,6 @@ itcl_class SCIRun_FieldsCreate_ClipField {
 	# with the specific execrunmode command.
 	makeSciButtonPanel $w $w $this -no_execute "\"Execute\" \"$this execrunmode\" \"\""
 	moveToCursor $w
-	
-	#button $w.executes.execute -text "Execute" -command "$this execrunmode"
-	
     }
 }
 
