@@ -38,13 +38,13 @@ ContourMesh::get_bounding_box() const
 }
 
 bool
-ContourMesh::locate(node_index &node, const Point &p) const
+ContourMesh::locate(node_index &, const Point &) const
 {
   return false;
 }
 
 bool
-ContourMesh::locate(edge_index &node, const Point &p) const
+ContourMesh::locate(edge_index &, const Point &) const
 {
   return false;
 }
