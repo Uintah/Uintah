@@ -69,42 +69,42 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
   if (type == "double") {
     LevelField<double> *fld =
       dynamic_cast<LevelField<double>*>(texfld_.get_rep());
-    field_minmax(*fld, minmax);
+    if( !use_minmax ) fld->minmax(minmax);
     mesh_ = fld->get_typed_mesh();
   } else if (type == "float") {
     LevelField<float> *fld =
       dynamic_cast<LevelField<float>*>(texfld_.get_rep());
-    field_minmax(*fld, minmax);
+    if( !use_minmax ) fld->minmax(minmax);
     mesh_ = fld->get_typed_mesh();
   } else if (type == "unsigned int") {
     LevelField<unsigned int> *fld =
       dynamic_cast<LevelField<unsigned int>*>(texfld_.get_rep());
-    field_minmax(*fld, minmax);
+    if( !use_minmax ) fld->minmax(minmax);
     mesh_ = fld->get_typed_mesh();
   } else if (type == "int") {
     LevelField<int> *fld =
       dynamic_cast<LevelField<int>*>(texfld_.get_rep());
-    field_minmax(*fld, minmax);
+    if( !use_minmax ) fld->minmax(minmax);
     mesh_ = fld->get_typed_mesh();
   } else if (type == "unsigned short") {
     LevelField<unsigned short> *fld =
       dynamic_cast<LevelField<unsigned short>*>(texfld_.get_rep());
-    field_minmax(*fld, minmax);
+    if( !use_minmax ) fld->minmax(minmax);
     mesh_ = fld->get_typed_mesh();
   } else if (type == "short") {
     LevelField<short> *fld =
       dynamic_cast<LevelField<short>*>(texfld_.get_rep());
-    field_minmax(*fld, minmax);
+    if( !use_minmax ) fld->minmax(minmax);
     mesh_ = fld->get_typed_mesh();
   } else if (type == "unsigned char") {
     LevelField<unsigned char> *fld =
       dynamic_cast<LevelField<unsigned char>*>(texfld_.get_rep());
-    field_minmax(*fld, minmax);
+    if( !use_minmax ) fld->minmax(minmax);
     mesh_ = fld->get_typed_mesh();
   } else if (type == "char") {
     LevelField<char> *fld =
       dynamic_cast<LevelField<char>*>(texfld_.get_rep());
-    field_minmax(*fld, minmax);
+    if( !use_minmax ) fld->minmax(minmax);
     mesh_ = fld->get_typed_mesh();
   } else {
     cerr << "GLTexture3D constructor error - unknown LevelField type: " << type << endl;
