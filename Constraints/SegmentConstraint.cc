@@ -59,15 +59,19 @@ SegmentConstraint::Satisfy( const Index index, const Scheme scheme )
       break;
    case 2:
       Vector norm(v1.Get() - v0.Get());
-      Real length = norm.normalize();
-      Real t = Dot(v2.Get() - v0.Get(), norm);
-      // Check if new point is outside segment.
-      if(t < 0)
-         t = 0;
-      else if (t > length)
-	 t = length;
-      Point p = v0.Get() + (norm * t);
-      v2.Assign(p, scheme);
+      if (norm.length2() == 0.0) {
+	 v2.Assign(v1.Get(), scheme);
+      } else {
+	 Real length = norm.normalize();
+	 Real t = Dot(v2.Get() - v0.Get(), norm);
+	 // Check if new point is outside segment.
+	 if (t < 0)
+	    t = 0;
+	 else if (t > length)
+	    t = length;
+	 Point p = v0.Get() + (norm * t);
+	 v2.Assign(p, scheme);
+      }
       break;
    default:
       cerr << "Unknown variable in Segment Constraint!" << endl;

@@ -55,7 +55,7 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme )
    switch (ChooseChange(index, scheme)) {
    case 0:
       v = (v0.Get() - v1.Get());
-      if (v.length() == 0.0)
+      if (v.length2() == 0.0)
 	 v = guess;
       else
 	 v.normalize();
@@ -64,7 +64,7 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme )
       break;
    case 1:
       v = (v1.Get() - v0.Get());
-      if (v.length() == 0.0)
+      if (v.length2() == 0.0)
 	 v = guess;
       else
 	 v.normalize();

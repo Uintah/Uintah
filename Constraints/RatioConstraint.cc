@@ -57,7 +57,7 @@ RatioConstraint::Satisfy( const Index index, const Scheme scheme )
       break;
    case 1:
       if (v2.Get().x() == 0.0)
-	 temp.x(v0.Get().x());
+	 temp.x(v1.Get().x()); // Don't change v1 since 0/any == 0
       else
 	 temp.x(v0.Get().x() / v2.Get().x());
       v1.Assign(temp, scheme);

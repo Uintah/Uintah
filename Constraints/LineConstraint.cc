@@ -58,9 +58,15 @@ LineConstraint::Satisfy( const Index index, const Scheme scheme )
       NOT_FINISHED("Line Constraint:  line_p2");
       break;
    case 2:
-      Vector norm((v1.Get() - v0.Get()).normal());
-      Real t = Dot(v2.Get(), norm) - Dot(v0.Get(), norm);
-      v2.Assign(v0.Get() + (norm * t), scheme);
+      Vector norm(v1.Get() - v0.Get());
+      if (norm.length2() == 0.0) {
+	 v2.Assign(v1.Get(), scheme);
+      } else {
+	 norm.normalize();
+	 Real t = Dot(v2.Get() - v0.Get(), norm);
+	 Point p = v0.Get() + (norm * t);
+	 v2.Assign(p, scheme);
+      }
       break;
    default:
       cerr << "Unknown variable in Line Constraint!" << endl;
