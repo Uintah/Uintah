@@ -1,5 +1,6 @@
 
 #include <Packages/rtrt/Sound/Sound.h>
+#include <Packages/rtrt/Sound/SoundThread.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,7 +37,7 @@ Sound::getFrames( int numFramesRequested, int & actualNumframes )
       actualNumframes = numFramesRequested;
     }
 
-  float * loc = &(soundBuffer_[ bufferLocation_ ]);
+  float * loc = &(soundBuffer_[ bufferLocation_*SoundThread::numChannels_ ]);
 
   if( actualNumframes < numFramesRequested ) // reset to beginning
     {
@@ -79,15 +80,18 @@ Sound::activate()
 {
   AFfilehandle file = afOpenFile(filename_.c_str(),"r",0);
 
+  // Make sure these match the ones in SoundThread.cc
   afSetVirtualSampleFormat(file, AF_DEFAULT_TRACK, AF_SAMPFMT_FLOAT, 32);
-  afSetVirtualRate(file, AF_DEFAULT_TRACK, 44100.0 );
+  afSetVirtualRate(file, AF_DEFAULT_TRACK, AL_RATE_32000 );
+  afSetVirtualChannels(file, AF_DEFAULT_TRACK, SoundThread::numChannels_ );
 
-  int numChannels = afGetChannels( file, AF_DEFAULT_TRACK );
+  // We don't use this...
+  int fileChannels = afGetChannels( file, AF_DEFAULT_TRACK );
+  cout << "file has num channels: " << fileChannels << "\n";
+
   numFrames_ = afGetFrameCount( file, AF_DEFAULT_TRACK );
-
-  cout << "num channels: " << numChannels << "\n";
-
-  soundBuffer_ = new float[ numFrames_ ];
+                                                 
+  soundBuffer_ = new float[ numFrames_*SoundThread::numChannels_ ];
 
   int frames = afReadFrames( file,AF_DEFAULT_TRACK, soundBuffer_, 
 			     numFrames_ );
