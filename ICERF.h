@@ -50,7 +50,20 @@ using namespace SCIRun;
                                               const PatchSet*,
                                               const MaterialSubset*,
 						    const MaterialSet*);
-      
+                                              
+     void scheduleComputeNonEquilibrationPressure(SchedulerP&, 
+                                               const PatchSet*,
+                                               const MaterialSubset*,
+                                               const MaterialSubset*,
+					            const MaterialSet*);                                              
+
+     void scheduleComputeFCPressDiff( SchedulerP&,
+                                      const PatchSet*,
+                                      const MaterialSubset*,
+                                      const MaterialSubset*,
+                                      const MaterialSubset*,
+					   const MaterialSet*);
+                                                                               
       void scheduleComputeFaceCenteredVelocities(SchedulerP&, 
                                                 const PatchSet*,
                                                 const MaterialSubset*,
@@ -72,7 +85,7 @@ using namespace SCIRun;
       void scheduleComputePressFC(SchedulerP&, 
                                   const PatchSet*,
                                   const MaterialSubset*,
-				  const MaterialSet*);
+				      const MaterialSet*);
       
       void scheduleAccumulateMomentumSourceSinks(SchedulerP&, 
                                             const PatchSet*,
@@ -129,7 +142,19 @@ using namespace SCIRun;
                                           const MaterialSubset* matls,
                                           DataWarehouse*, 
                                           DataWarehouse*);
-      
+                                          
+     void computeNonEquilibrationPressure(const ProcessorGroup*,
+				       const PatchSubset* patch,
+				       const MaterialSubset* matls,
+				       DataWarehouse*, 
+				       DataWarehouse*);
+                                   
+     void computeFCPressDiff(const ProcessorGroup*,
+				 const PatchSubset* patch,
+				 const MaterialSubset* matls,
+				 DataWarehouse*,
+				 DataWarehouse*);
+                             
       void computeFaceCenteredVelocities(const ProcessorGroup*, 
                                          const PatchSubset* patch,
                                          const MaterialSubset* matls,
