@@ -27,7 +27,6 @@ set minicanvas ".top.globalViewFrame.canvas"
 global loading
 set loading 0
 
-
 proc resource {} {
 }
 
@@ -140,7 +139,6 @@ proc makeNetworkEditor {} {
 	    -yscrollcommand ".top.errorFrame.s set" -height 10 -width 180 
     .top.errorFrame.text insert end "Messages:\n"
     .top.errorFrame.text insert end "--------------------------\n\n"
-    .top.errorFrame.text insert end "Loading packages, please wait...\n"
     .top.errorFrame.text tag configure errtag -foreground red
 
 # Why on earth was this here?
