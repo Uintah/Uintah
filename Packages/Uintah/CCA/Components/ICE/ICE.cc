@@ -27,7 +27,6 @@
 #include <iostream>
 #include <Core/Util/DebugStream.h>
 
-
 //#define JOHN_BCS
 #undef JOHN_BCS
 
@@ -422,7 +421,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
                                       SchedulerP& sched)
 {
   Task* t;
-
+  t = t;   // quite the compiler
   if (d_EqForm) {             // EQ 
     cout_doing << "ICE::scheduleComputeStableTimestep " << endl;
     t = scinew Task("ICE::actuallyComputeStableTimestep",
@@ -538,7 +537,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
                                                           mpm_matls_sub,
                                                           all_matls);
   if(switchTestConservation) {
-    schedulePrintConservedQuantities(     sched, patches, press_matl,
+    schedulePrintConservedQuantities(     sched, patches, ice_matls_sub,
                                                           all_matls); 
   }
 
@@ -1013,22 +1012,30 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::schedulePrintConservedQuantities(SchedulerP& sched,
                                       const PatchSet* patches,
-                                      const MaterialSubset* press_matl,
-                                      const MaterialSet* matls)
+                                      const MaterialSubset* ice_matls,
+                                      const MaterialSet* all_matls)
 {
   cout_doing << "ICE::schedulePrintConservedQuantities" << endl;
-  Task* task = scinew Task("ICE::printConservedQuantities",
-                     this, &ICE::printConservedQuantities);
-
-  task->requires(Task::NewDW,lb->delP_DilatateLabel, press_matl,Ghost::None);
-  task->requires(Task::NewDW,lb->rho_CCLabel, Ghost::None);
-  task->requires(Task::NewDW,lb->vel_CCLabel, Ghost::None);
-  task->requires(Task::NewDW,lb->temp_CCLabel,Ghost::None);
-  task->computes(lb->TotalMassLabel);
-  task->computes(lb->KineticEnergyLabel);
-  task->computes(lb->TotalIntEngLabel);
-  task->computes(lb->CenterOfMassVelocityLabel); //momentum
-  sched->addTask(task, patches, matls);
+  Task* t= scinew Task("ICE::printConservedQuantities",
+                 this, &ICE::printConservedQuantities);
+  
+  Ghost::GhostType  gn  = Ghost::None;                    
+  t->requires(Task::NewDW,lb->rho_CCLabel,  ice_matls, gn);
+  t->requires(Task::NewDW,lb->vel_CCLabel,  ice_matls, gn);
+  t->requires(Task::NewDW,lb->temp_CCLabel, ice_matls, gn);
+                               // A L L  M A T L S         
+  t->requires(Task::NewDW,lb->mom_L_CCLabel,           gn);         
+  t->requires(Task::NewDW,lb->int_eng_L_CCLabel,       gn);    
+  t->requires(Task::NewDW,lb->mom_L_ME_CCLabel,        gn);         
+  t->requires(Task::NewDW,lb->eng_L_ME_CCLabel,        gn); 
+  
+  t->computes(lb->mom_exch_errorLabel);
+  t->computes(lb->eng_exch_errorLabel);
+  t->computes(lb->TotalMassLabel);
+  t->computes(lb->KineticEnergyLabel);
+  t->computes(lb->TotalIntEngLabel);
+  t->computes(lb->CenterOfMassVelocityLabel); //momentum
+  sched->addTask(t, patches, all_matls);
 }
 
 /* ---------------------------------------------------------------------
@@ -1302,8 +1309,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 #else
       setBC(vel_CC[m],        "Velocity",     patch, indx); 
 #endif
-      cout << "Works after setBCJohn Velocity" << endl;
-      
       for (CellIterator iter = patch->getExtraCellIterator();
                                                         !iter.done();iter++){
         IntVector c = *iter;
