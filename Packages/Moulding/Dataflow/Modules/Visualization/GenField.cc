@@ -67,7 +67,7 @@ void GenField::execute()
   for (;ni!=mesh->node_end();++ni) {
     i = *ni;
     mesh->get_point(p,i);
-    fdata[i] = Vector(1.0,4*sin(p.x()),0);
+    fdata[i] = Vector(0.05,0.05*sin(.5*p.x()),0);
   }
 
   oport->send(vf);
