@@ -254,9 +254,6 @@ class Matlab : public Module, public ServiceBase
 	GuiString		matlab_add_output_;
 	GuiString		matlab_update_status_;
     
-    GuiString       matlab_old_code_;
-    GuiString       matlab_old_address_;
-	
 	ServiceClientHandle				matlab_engine_;
     FileTransferClientHandle        file_transfer_;
 	MatlabEngineThreadInfoHandle	thread_info_;
@@ -429,8 +426,6 @@ Matlab::Matlab(GuiContext *context) :
   matlab_add_output_(context->subVar("matlab-add-output")),
   matlab_update_status_(context->subVar("matlab-update-status")),
   matlab_var_(context->subVar("matlab-var")),
-  matlab_old_code_(context->subVar("cmdTCL")),
-  matlab_old_address_(context->subVar("hpTCL")),
   matlab_code_file_(context->subVar("matlab-code-file")),
   need_file_transfer_(false)
 {

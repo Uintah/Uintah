@@ -151,21 +151,19 @@ itcl_class MatlabInterface_DataIO_Matlab {
 
        		global $this-cmdTCL
         	global $this-hpTCL
-        
-        	set $this-cmdTCL ""
-        	set $this-hpTCL ""
-
+		trace variable $this-cmdTCL w "$this backcompat_cmdTCL"
+		trace variable $this-hpTCL w "$this backcompat_hpTCL"
 	}
 
+    method backcompat_cmdTCL {a b c} {
+	set $this-matlab-code [set $this-cmdTCL]
+    }
+
+    method backcompat_hpTCL {a b c} {
+	# do something based upon the hpTCL variable.
+    }
 
     method ui {} {
-       
-        	if {[string equal [set $this-cmdTCL] ""]} {
-       		  set $this-matlab-code [set $this-cmdTCL]
-         	  set $this-cmdTCL ""
-        	}   
-        
-
 		set w .ui[modname]
 		if {[winfo exists $w]} {
 			raise $w
