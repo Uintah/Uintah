@@ -1,3 +1,8 @@
+//----- TurbulenceModel.h --------------------------------------------------
+
+#ifndef Uintah_Component_Arches_TurbulenceModel_h
+#define Uintah_Component_Arches_TurbulenceModel_h
+
 /**************************************
 CLASS
    TurbulenceModel
@@ -29,52 +34,86 @@ WARNING
    none
 ****************************************/
 
-#ifndef Uintah_Component_Arches_TurbulenceModel_h
-#define Uintah_Component_Arches_TurbulenceModel_h
-
 #include <Uintah/Components/Arches/Arches.h>
 
 namespace Uintah {
-  namespace ArchesSpace {
+namespace ArchesSpace {
 
 class TurbulenceModel
 {
 public:
 
-  // GROUP: Constructors:
-  ////////////////////////////////////////////////////////////////////////
-  //
-  // Blank constructor for TurbulenceModel.
-  TurbulenceModel();
+      // GROUP: Constructors:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Blank constructor for TurbulenceModel.
+      //
+      TurbulenceModel();
 
-  // GROUP: Destructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Virtual destructor for TurbulenceModel.
-  virtual ~TurbulenceModel();
+      // GROUP: Destructors:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Virtual destructor for TurbulenceModel.
+      //
+      virtual ~TurbulenceModel();
 
 
-  ////////////////////////////////////////////////////////////////////////
-  //    [in] data User data needed for solve 
-  virtual void sched_computeTurbSubmodel(const LevelP&, SchedulerP& sched,
-					 const DataWarehouseP& old_dw,
-					 DataWarehouseP& new_dw) = 0;
-  virtual void calcVelocityWallBC(const ProcessorContext*,
-				  const Patch* patch,
-				  const DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw, int index) = 0;
-  virtual void calcVelocitySource(const ProcessorContext*,
-				  const Patch* patch,
-				  const DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw, int index) = 0;
-  virtual void problemSetup(const ProblemSpecP& db) = 0;
+      // GROUP: Problem Setup :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Interface for Set up the problem specification database
+      //
+      virtual void problemSetup(const ProblemSpecP& db) = 0;
+
+      // GROUP: Schedule Action :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Interface for Schedule the computation of Turbulence Model data
+      //    [in] 
+      //        data User data needed for solve 
+      //
+      virtual void sched_computeTurbSubmodel(const LevelP&, 
+					     SchedulerP& sched,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) = 0;
+
+      // GROUP: Action Computations :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Interface for Calculate the wall velocity boundary conditions
+      //    [in] 
+      //        index = documentation here
+      //
+      virtual void calcVelocityWallBC(const ProcessorContext*,
+				      const Patch* patch,
+				      const DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw, 
+				      int index) = 0;
+
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Interface for Calculate the velocity source terms
+      //    [in] 
+      //        index = documentation here
+      //
+      virtual void calcVelocitySource(const ProcessorContext*,
+				      const Patch* patch,
+				      const DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw, 
+				      int index) = 0;
 
 private:
 
-};
+}; // End class TurbulenceModel
   
-  } 
+} // End namespace Archesspace
   
-}
+} // End namespace Uintah
 
 #endif
+
+//
+// $Log :$
+//
+
 

@@ -125,6 +125,8 @@ Arches::scheduleInitialize(const LevelP& level,
   // Parameter initialization
   cerr << "Schedule parameter initialization\n" ;
   sched_paramInit(level, sched, dw);
+  d_props->sched_computeProps(level, sched, dw, dw);
+  d_turbModel->sched_computeTurbSubmodel(level, sched, dw, dw);
   cerr << "SerialArches::scheduleInitialize not completely done\n";
 }
 
@@ -227,6 +229,10 @@ Arches::paramInit(const ProcessorContext* ,
 
 //
 // $Log$
+// Revision 1.30  2000/05/31 20:11:29  bbanerje
+// Cocoon stuff, tasks added to SmagorinskyModel, TurbulenceModel.
+// Added schedule compute of properties and TurbModel to Arches.
+//
 // Revision 1.29  2000/05/30 20:18:45  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

@@ -82,10 +82,11 @@ Properties::sched_computeProps(const LevelP& level,
 //****************************************************************************
 // Actually compute the properties here
 //****************************************************************************
-void Properties::computeProps(const ProcessorContext*,
-			      const Patch* patch,
-			      DataWarehouseP& old_dw,
-			      DataWarehouseP& new_dw)
+void 
+Properties::computeProps(const ProcessorContext*,
+			 const Patch* patch,
+			 DataWarehouseP& old_dw,
+			 DataWarehouseP& new_dw)
 {
   // Get the CCVariable (density) from the old datawarehouse
   CCVariable<Vector> density;
@@ -124,7 +125,8 @@ Properties::Stream::Stream()
 //****************************************************************************
 // Problem Setup for Properties::Stream
 //****************************************************************************
-void Properties::Stream::problemSetup(ProblemSpecP& params)
+void 
+Properties::Stream::problemSetup(ProblemSpecP& params)
 {
   params->require("density", d_density);
   params->require("temperature", d_temperature);
@@ -132,6 +134,10 @@ void Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.9  2000/05/31 20:11:30  bbanerje
+// Cocoon stuff, tasks added to SmagorinskyModel, TurbulenceModel.
+// Added schedule compute of properties and TurbModel to Arches.
+//
 // Revision 1.8  2000/05/31 08:12:45  bbanerje
 // Added Cocoon stuff to Properties, added VarLabels, changed task, requires,
 // computes, get etc.in Properties, changed fixed size Mixing Var array to
