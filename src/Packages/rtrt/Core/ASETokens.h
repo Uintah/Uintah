@@ -30,7 +30,7 @@ class SceneToken : public Token
   }
   virtual ~SceneToken() {}
     
-  Token *MakeToken() { return new SceneToken(); }
+  virtual Token *MakeToken() { return new SceneToken(); }
 };
 
 
@@ -45,7 +45,7 @@ class SceneEnvMapToken : public Token
   }
   virtual ~SceneEnvMapToken() {}
 
-  Token *MakeToken() { return new SceneEnvMapToken(); }
+  virtual Token *MakeToken() { return new SceneEnvMapToken(); }
 };
 
 
@@ -58,7 +58,7 @@ class SceneAmbientStaticToken : public Token
   SceneAmbientStaticToken() : Token("*SCENE_AMBIENT_STATIC") { nargs_ = 3; }
   virtual ~SceneAmbientStaticToken() {}
 
-  Token *MakeToken() { return new SceneAmbientStaticToken(); }
+  virtual Token *MakeToken() { return new SceneAmbientStaticToken(); }
 };
 
 
@@ -73,7 +73,7 @@ class MaterialListToken : public Token
   }
   virtual ~MaterialListToken() {}
 
-  Token *MakeToken() { return new MaterialListToken(); }
+  virtual Token *MakeToken() { return new MaterialListToken(); }
 };
 
 
@@ -91,39 +91,81 @@ class BitmapToken : public Token
     str << moniker_ << " \"" << args_[0] << "\"" << endl;
   }
 
-  Token *MakeToken() { return new BitmapToken(); }
+  virtual Token *MakeToken() { return new BitmapToken(); }
 };
 
 
 
-class MaterialToken : public Token
+class MaterialNameToken : public Token
+{
+
+ public:
+
+  MaterialNameToken() : Token("*MATERIAL_NAME") {
+    nargs_ = 1;
+  }
+  ~MaterialNameToken() {}
+
+  string GetName() { return args_[0]; }
+
+  virtual Token *MakeToken() { return new MaterialNameToken(); }
+};
+
+
+
+class MapGenericToken : public Token
+{
+
+ public:
+
+  MapGenericToken() : Token("*MAP_GENERIC") {
+    AddChildMoniker("*BITMAP");    
+  }
+  ~MapGenericToken() {}
+
+  virtual Token *MakeToken() { return new MapGenericToken(); }
+};
+
+
+
+class SubMaterialToken : public Token
 {
 
  protected:
 
+  string   name_;
   unsigned index_;
-  double ambient_[3];
-  double diffuse_[3];
-  double specular_[3];
-  double shine_;
-  double transparency_;
-  string tmap_filename_;
+  double   ambient_[3];
+  double   diffuse_[3];
+  double   specular_[3];
+  double   shine_;
+  double   transparency_;
+  string   tmap_filename_;
+  string   bmap_filename_;
+  string   omap_filename_;
+  string   imap_filename_;
 
  public:
 
-  MaterialToken() : Token("*MATERIAL") {
+  SubMaterialToken() : Token("*SUBMATERIAL") {
     nargs_ = 1;
     tmap_filename_="";
   }
-  virtual ~MaterialToken() {}
+  virtual ~SubMaterialToken() {}
   
   virtual bool Parse(ifstream &str) {
     string curstring;
     str >> index_;
     str >> curstring; // delimiter
+    DELIMITER delimiter = (DELIMITER)curstring[0];
     str >> curstring;
     while (1) {
-      if (curstring == "*MATERIAL_AMBIENT") {
+      if (curstring == "*MATERIAL_NAME") {
+        MaterialNameToken t;
+        t.ParseArgs(str);
+        name_ = t.GetName();
+        str >> curstring; // get next token
+      } else if (curstring == "*MATERIAL_AMBIENT") {
         str >> ambient_[0] >> ambient_[1] >> ambient_[2];
         str >> curstring; // get next token
       } else if (curstring == "*MATERIAL_DIFFUSE") {
@@ -140,30 +182,181 @@ class MaterialToken : public Token
         str >> curstring; // get next token
       } else if (curstring == "*MAP_DIFFUSE") {
         str >> curstring; // delimiter
-        str >> curstring; // *BITMAP
-        if (curstring == "*BITMAP") {
-          BitmapToken map;
-          if (!map.Parse(str))
-            return false;
-          tmap_filename_ = (*(map.GetArgs()))[0];
-          str >> curstring; // get closing delimiter
-          str >> curstring; // get next token
+        DELIMITER delimiter = (DELIMITER)curstring[0];
+        str >> curstring;
+        while (1) {
+          if (curstring == "*BITMAP") {
+            BitmapToken map;
+            if (!map.Parse(str))
+              return false;
+            tmap_filename_ = (*(map.GetArgs()))[0];
+            
+            str >> curstring; // get next token
+          } else {
+            if (match(delimiter,(DELIMITER)curstring[0]))
+              break;
+            else
+              str >> curstring;
+          }
         }
-      } else 
-        break;
+        str >> curstring; // get next token
+      } else if (curstring == "*MAP_BUMP") {
+        str >> curstring; // delimiter
+        DELIMITER delimiter = (DELIMITER)curstring[0];
+        str >> curstring;
+        while (1) {
+          if (curstring == "*BITMAP") {
+            BitmapToken map;
+            if (!map.Parse(str))
+              return false;
+            tmap_filename_ = (*(map.GetArgs()))[0];
+            
+            str >> curstring; // get next token
+          } else {
+            if (match(delimiter,(DELIMITER)curstring[0]))
+              break;
+            else
+              str >> curstring;
+          }
+        }
+        str >> curstring; // get next token
+      } else if (curstring == "*MAP_FILTERCOLOR") {
+        str >> curstring; // delimiter
+        DELIMITER delimiter = (DELIMITER)curstring[0];
+        str >> curstring;
+        while (1) {
+          if (curstring == "*BITMAP") {
+            BitmapToken map;
+            if (!map.Parse(str))
+              return false;
+            //tmap_filename_ = (*(map.GetArgs()))[0];
+            
+            str >> curstring; // get next token
+          } else {
+            if (match(delimiter,(DELIMITER)curstring[0]))
+              break;
+            else
+              str >> curstring;
+          }
+        }
+        str >> curstring; // get next token
+      } else if (curstring == "*MAP_OPACITY") {
+        str >> curstring; // delimiter
+        DELIMITER delimiter = (DELIMITER)curstring[0];
+        str >> curstring;
+        while (1) {
+          if (curstring == "*BITMAP") {
+            BitmapToken map;
+            if (!map.Parse(str))
+              return false;
+            omap_filename_ = (*(map.GetArgs()))[0];
+            
+            str >> curstring; // get next token
+          } else {
+            if (match(delimiter,(DELIMITER)curstring[0]))
+              break;
+            else
+              str >> curstring;
+          }
+        }
+        str >> curstring; // get next token
+      } else if (curstring == "*MAP_SELFILLUM") {
+        str >> curstring; // delimiter
+        DELIMITER delimiter = (DELIMITER)curstring[0];
+        str >> curstring;
+        while (1) {
+          if (curstring == "*BITMAP") {
+            BitmapToken map;
+            if (!map.Parse(str))
+              return false;
+            imap_filename_ = (*(map.GetArgs()))[0];
+            
+            str >> curstring; // get next token
+          } else {
+            if (match(delimiter,(DELIMITER)curstring[0]))
+              break;
+            else
+              str >> curstring;
+          }
+        }
+        str >> curstring; // get next token
+      } else if (curstring == "*MAP_GENERIC") {
+        MapGenericToken t;
+        t.Parse(str);
+        str >> curstring; // get next token
+      } else {
+        if (!match(delimiter,(DELIMITER)curstring[0])) {
+          str >> curstring;
+          continue;
+        } else
+          break;
+      }
     }
 
-#if DEBUG
-    cout << "Material " << index_ << ": " << tmap_filename_ << endl
+    cout << "SubMaterial " << index_ << ": " << tmap_filename_ << endl
+         << name_ << endl
          << ambient_[0] << ", " << ambient_[1] << ", " << ambient_[2] << endl
          << diffuse_[0] << ", " << diffuse_[1] << ", " << diffuse_[2] << endl
          << specular_[0] << ", " << specular_[1] << ", " << specular_[2] 
          << endl
          << shine_ << endl
          << transparency_ << endl << endl;
-#endif
 
     return true;
+  }
+
+  virtual void Write(ofstream &str) {
+    Indent(str);
+
+    str << moniker_ << " " << index_ << " {" << endl;
+
+    ++indent_;
+
+    Indent(str);
+    str << "*MATERIAL_NAME "
+        << "\"" << name_ << "\"" << endl;
+
+    Indent(str);
+    str << "*MATERIAL_AMBIENT " 
+        << ambient_[0] << " "
+        << ambient_[1] << " "
+        << ambient_[2] << endl;
+
+    Indent(str);
+    str << "*MATERIAL_DIFFUSE " 
+        << diffuse_[0] << " "
+        << diffuse_[1] << " "
+        << diffuse_[2] << endl;
+
+    Indent(str);
+    str << "*MATERIAL_SPECULAR " 
+        << specular_[0] << " "
+        << specular_[1] << " "
+        << specular_[2] << endl;
+
+    Indent(str);
+    str << "*MATERIAL_SHINE " << shine_ << endl;
+
+    Indent(str);
+    str << "*MATERIAL_TRANSPARENCY " << transparency_ << endl;
+
+    if (tmap_filename_!="") {
+      Indent(str);
+      str << "*MAP_DIFFUSE {" << endl;
+      
+      ++indent_;
+
+      Indent(str);
+      str << "*BITMAP \"" << tmap_filename_ << "\"" << endl; 
+      
+      --indent_;
+      Indent(str);
+      str << "}" << endl;
+    }
+
+    --indent_;
+    Indent(str);
+    str << "}" << endl;
   }
 
   unsigned GetIndex() { return index_; }
@@ -192,7 +385,273 @@ class MaterialToken : public Token
 
   string GetTMapFilename() { return tmap_filename_; }
 
-  Token *MakeToken() { return new MaterialToken(); }
+  virtual Token *MakeToken() { return new SubMaterialToken(); }
+};
+
+
+
+class MaterialToken : public Token
+{
+
+ protected:
+
+  string   name_;
+  unsigned index_;
+  double   ambient_[3];
+  double   diffuse_[3];
+  double   specular_[3];
+  double   shine_;
+  double   transparency_;
+  string   tmap_filename_;
+  string   bmap_filename_;
+  string   omap_filename_;
+  string   imap_filename_;
+
+ public:
+
+  MaterialToken() : Token("*MATERIAL") {
+    nargs_ = 1;
+    tmap_filename_="";
+  }
+  virtual ~MaterialToken() {}
+  
+  virtual bool Parse(ifstream &str) {
+    string curstring;
+    str >> index_;
+    str >> curstring; // delimiter
+    DELIMITER delimiter = (DELIMITER)curstring[0];
+    str >> curstring;
+    while (1) {
+      if (curstring == "*MATERIAL_NAME") {
+        MaterialNameToken t;
+        t.ParseArgs(str);
+        name_ = t.GetName();
+        str >> curstring; // get next token
+      } else if (curstring == "*MATERIAL_AMBIENT") {
+        str >> ambient_[0] >> ambient_[1] >> ambient_[2];
+        str >> curstring; // get next token
+      } else if (curstring == "*MATERIAL_DIFFUSE") {
+        str >> diffuse_[0] >> diffuse_[1] >> diffuse_[2];
+        str >> curstring; // get next token
+      } else if (curstring == "*MATERIAL_SPECULAR") {
+        str >> specular_[0] >> specular_[1] >> specular_[2];
+        str >> curstring; // get next token
+      } else if (curstring == "*MATERIAL_SHINE") {
+        str >> shine_;
+        str >> curstring; // get next token
+      } else if (curstring == "*MATERIAL_TRANSPARENCY") {
+        str >> transparency_;
+        str >> curstring; // get next token
+      } else if (curstring == "*MAP_DIFFUSE") {
+        str >> curstring; // delimiter
+        DELIMITER delimiter = (DELIMITER)curstring[0];
+        str >> curstring;
+        while (1) {
+          if (curstring == "*BITMAP") {
+            BitmapToken map;
+            if (!map.Parse(str))
+              return false;
+            tmap_filename_ = (*(map.GetArgs()))[0];
+            
+            str >> curstring; // get next token
+          } else {
+            if (match(delimiter,(DELIMITER)curstring[0]))
+              break;
+            else
+              str >> curstring;
+          }
+        }
+        str >> curstring; // get next token
+      } else if (curstring == "*MAP_BUMP") {
+        str >> curstring; // delimiter
+        DELIMITER delimiter = (DELIMITER)curstring[0];
+        str >> curstring;
+        while (1) {
+          if (curstring == "*BITMAP") {
+            BitmapToken map;
+            if (!map.Parse(str))
+              return false;
+            tmap_filename_ = (*(map.GetArgs()))[0];
+            
+            str >> curstring; // get next token
+          } else {
+            if (match(delimiter,(DELIMITER)curstring[0]))
+              break;
+            else
+              str >> curstring;
+          }
+        }
+        str >> curstring; // get next token
+      } else if (curstring == "*MAP_FILTERCOLOR") {
+        str >> curstring; // delimiter
+        DELIMITER delimiter = (DELIMITER)curstring[0];
+        str >> curstring;
+        while (1) {
+          if (curstring == "*BITMAP") {
+            BitmapToken map;
+            if (!map.Parse(str))
+              return false;
+            //tmap_filename_ = (*(map.GetArgs()))[0];
+            
+            str >> curstring; // get next token
+          } else {
+            if (match(delimiter,(DELIMITER)curstring[0]))
+              break;
+            else
+              str >> curstring;
+          }
+        }
+        str >> curstring; // get next token
+      } else if (curstring == "*MAP_OPACITY") {
+        str >> curstring; // delimiter
+        DELIMITER delimiter = (DELIMITER)curstring[0];
+        str >> curstring;
+        while (1) {
+          if (curstring == "*BITMAP") {
+            BitmapToken map;
+            if (!map.Parse(str))
+              return false;
+            omap_filename_ = (*(map.GetArgs()))[0];
+            
+            str >> curstring; // get next token
+          } else {
+            if (match(delimiter,(DELIMITER)curstring[0]))
+              break;
+            else
+              str >> curstring;
+          }
+        }
+        str >> curstring; // get next token
+      } else if (curstring == "*MAP_SELFILLUM") {
+        str >> curstring; // delimiter
+        DELIMITER delimiter = (DELIMITER)curstring[0];
+        str >> curstring;
+        while (1) {
+          if (curstring == "*BITMAP") {
+            BitmapToken map;
+            if (!map.Parse(str))
+              return false;
+            imap_filename_ = (*(map.GetArgs()))[0];
+            
+            str >> curstring; // get next token
+          } else {
+            if (match(delimiter,(DELIMITER)curstring[0]))
+              break;
+            else
+              str >> curstring;
+          }
+        }
+        str >> curstring; // get next token
+      } else if (curstring == "*MAP_GENERIC") {
+        MapGenericToken t;
+        t.Parse(str);
+        str >> curstring; // get next token
+      } else if (curstring == "*SUBMATERIAL") {
+        SubMaterialToken t;
+        t.Parse(str);
+        str >> curstring; // get next token
+      } else {
+        if (!match(delimiter,(DELIMITER)curstring[0])) {
+          str >> curstring;
+          continue;
+        } else
+          break;
+      }
+    }
+
+    cout << "Material " << index_ << ": " << tmap_filename_ << endl
+         << name_ << endl
+         << ambient_[0] << ", " << ambient_[1] << ", " << ambient_[2] << endl
+         << diffuse_[0] << ", " << diffuse_[1] << ", " << diffuse_[2] << endl
+         << specular_[0] << ", " << specular_[1] << ", " << specular_[2] 
+         << endl
+         << shine_ << endl
+         << transparency_ << endl << endl;
+
+    return true;
+  }
+
+  virtual void Write(ofstream &str) {
+    Indent(str);
+
+    str << moniker_ << " " << index_ << " {" << endl;
+
+    ++indent_;
+
+    Indent(str);
+    str << "*MATERIAL_NAME "
+        << "\"" << name_ << "\"" << endl;
+
+    Indent(str);
+    str << "*MATERIAL_AMBIENT " 
+        << ambient_[0] << " "
+        << ambient_[1] << " "
+        << ambient_[2] << endl;
+
+    Indent(str);
+    str << "*MATERIAL_DIFFUSE " 
+        << diffuse_[0] << " "
+        << diffuse_[1] << " "
+        << diffuse_[2] << endl;
+
+    Indent(str);
+    str << "*MATERIAL_SPECULAR " 
+        << specular_[0] << " "
+        << specular_[1] << " "
+        << specular_[2] << endl;
+
+    Indent(str);
+    str << "*MATERIAL_SHINE " << shine_ << endl;
+
+    Indent(str);
+    str << "*MATERIAL_TRANSPARENCY " << transparency_ << endl;
+
+    if (tmap_filename_!="") {
+      Indent(str);
+      str << "*MAP_DIFFUSE {" << endl;
+      
+      ++indent_;
+
+      Indent(str);
+      str << "*BITMAP \"" << tmap_filename_ << "\"" << endl; 
+      
+      --indent_;
+      Indent(str);
+      str << "}" << endl;
+    }
+
+    --indent_;
+    Indent(str);
+    str << "}" << endl;
+  }
+
+  unsigned GetIndex() { return index_; }
+
+  void GetAmbient(double c[3]) { 
+    c[0] = ambient_[0];
+    c[1] = ambient_[1];
+    c[2] = ambient_[2];
+  } 
+
+  void GetDiffuse(double c[3]) { 
+    c[0] = diffuse_[0];
+    c[1] = diffuse_[1];
+    c[2] = diffuse_[2];
+  } 
+
+  void GetSpecular(double c[3]) { 
+    c[0] = specular_[0];
+    c[1] = specular_[1];
+    c[2] = specular_[2];
+  } 
+
+  double GetShine() { return shine_; } 
+
+  double GetTransparency() { return transparency_; }
+
+  string GetTMapFilename() { return tmap_filename_; }
+
+  virtual Token *MakeToken() { return new MaterialToken(); }
 };
 
 
@@ -233,7 +692,7 @@ class GeomObjectToken : public Token
   }
   unsigned GetMaterialIndex() { return material_index_; }
 
-  Token *MakeToken() { return new GeomObjectToken(); }
+  virtual Token *MakeToken() { return new GeomObjectToken(); }
 };
 
 
@@ -263,7 +722,7 @@ class NodeNameToken : public Token
     str << moniker_ << " \"" << args_[0] << "\"" << endl;
   }
 
-  Token *MakeToken() { return new NodeNameToken(); }
+  virtual Token *MakeToken() { return new NodeNameToken(); }
 };
 
 
@@ -277,9 +736,18 @@ class MeshToken : public Token
   unsigned numtvertices_;
   unsigned numtfaces_;
 
+  vector<double>   *vertices_;
+  vector<double>   *tvertices_;
+  vector<unsigned> *faces_;
+  vector<unsigned> *tfaces_;
+  vector<double>   *face_normals_;
+  vector<double>   *vertex_normals_;
+
  public:
 
-  MeshToken() : Token("*MESH"), numvertices_(0), numfaces_(0) {
+  MeshToken() : Token("*MESH"), numvertices_(0), numfaces_(0),
+    vertices_(0), tvertices_(0), faces_(0), tfaces_(0), 
+    face_normals_(0), vertex_normals_(0) {
     AddChildMoniker("*MESH_NUMVERTEX");
     AddChildMoniker("*MESH_NUMFACES");
     AddChildMoniker("*MESH_VERTEX_LIST");
@@ -308,8 +776,26 @@ class MeshToken : public Token
 
   unsigned GetNumTFaces() { return numtfaces_; }
   void SetNumTFaces(unsigned n) { numtfaces_ = n; }
+
+  vector<double> *GetVertices() { return vertices_; }
+  void SetVertices(vector<double> *v) { vertices_ = v; }
   
-  Token *MakeToken() { return new MeshToken(); }
+  vector<unsigned> *GetFaces() { return faces_; }
+  void SetFaces(vector<unsigned> *v) { faces_ = v; }
+  
+  vector<double> *GetTVertices() { return tvertices_; }
+  void SetTVertices(vector<double> *v) { tvertices_ = v; }
+  
+  vector<unsigned> *GetTFaces() { return tfaces_; }
+  void SetTFaces(vector<unsigned> *v) { tfaces_ = v; }
+  
+  vector<double> *GetFaceNormals() { return face_normals_; }
+  void SetFaceNormals(vector<double> *v) { face_normals_ = v; }
+  
+  vector<double> *GetVertexNormals() { return vertex_normals_; }
+  void SetVertexNormals(vector<double> *v) { vertex_normals_ = v; }
+  
+  virtual Token *MakeToken() { return new MeshToken(); }
 };
 
 
@@ -335,7 +821,7 @@ class MeshNumVertexToken : public Token
 	<< endl;
   }
 
-  Token *MakeToken() { return new MeshNumVertexToken(); }
+  virtual Token *MakeToken() { return new MeshNumVertexToken(); }
 };
 
 
@@ -361,7 +847,7 @@ class MeshNumTVertexToken : public Token
 	<< endl;
   }
 
-  Token *MakeToken() { return new MeshNumTVertexToken(); }
+  virtual Token *MakeToken() { return new MeshNumTVertexToken(); }
 };
 
 
@@ -387,7 +873,7 @@ class MeshNumFacesToken : public Token
 	<< endl;
   }
 
-  Token *MakeToken() { return new MeshNumFacesToken(); }
+  virtual Token *MakeToken() { return new MeshNumFacesToken(); }
 };
 
 
@@ -413,7 +899,7 @@ class MeshNumTVFacesToken : public Token
 	<< endl;
   }
 
-  Token *MakeToken() { return new MeshNumTVFacesToken(); }
+  virtual Token *MakeToken() { return new MeshNumTVFacesToken(); }
 };
 
 
@@ -423,7 +909,7 @@ class MeshVertexListToken : public Token
 
  protected:
 
-  vector<float> vertices_;
+  vector<double> vertices_;
 
  public:
 
@@ -436,6 +922,7 @@ class MeshVertexListToken : public Token
     vertices_.resize(numvertices*3);
     string curstring;
     str >> curstring; // opening delimiter
+    DELIMITER delimiter = (DELIMITER)curstring[0];
     str >> curstring;
     while(1) {
       if (curstring == "*MESH_VERTEX") {
@@ -444,9 +931,15 @@ class MeshVertexListToken : public Token
 	str >> vertices_[index*3+1]; // Y
 	str >> vertices_[index*3+2]; // Z
 	str >> curstring; // get next token (maybe closing delimiter)
-      } else 
-	break;
+      } else {
+        if (match(delimiter,(DELIMITER)curstring[0]))
+          break;
+        else
+          str >> curstring;
+      }
     }
+
+    ((MeshToken*)parent_)->SetVertices(&vertices_);
     
     return true;
   }
@@ -472,9 +965,9 @@ class MeshVertexListToken : public Token
     str << "}" << endl;
   }
 
-  vector<float> *GetVertices() { return &vertices_; }
+  vector<double> *GetVertices() { return &vertices_; }
 
-  Token *MakeToken() { return new MeshVertexListToken(); }
+  virtual Token *MakeToken() { return new MeshVertexListToken(); }
 };
 
 
@@ -482,7 +975,7 @@ class MeshVertexListToken : public Token
 class MeshTVertListToken : public Token
 {
 
-  vector<float> tvertices_;
+  vector<double> tvertices_;
 
  public:
 
@@ -495,6 +988,7 @@ class MeshTVertListToken : public Token
     unsigned index;
     string curstring;
     str >> curstring; // opening delimiter
+    DELIMITER delimiter = (DELIMITER)curstring[0];
     str >> curstring;
     while(1) {
       if (curstring == "*MESH_TVERT") {
@@ -503,9 +997,15 @@ class MeshTVertListToken : public Token
 	str >> tvertices_[index*3+1]; // Y
 	str >> tvertices_[index*3+2]; // Z
 	str >> curstring; // get next token (maybe closing delimiter)
-      } else 
-	break;
+      } else {
+        if (match(delimiter,(DELIMITER)curstring[0]))
+          break;
+        else
+          str >> curstring;
+      }
     }
+
+    ((MeshToken*)parent_)->SetTVertices(&tvertices_);    
     
     return true;
   }
@@ -531,9 +1031,9 @@ class MeshTVertListToken : public Token
     str << "}" << endl;
   }
 
-  vector<float> *GetTVertices() { return &tvertices_; }
+  vector<double> *GetTVertices() { return &tvertices_; }
 
-  Token *MakeToken() { return new MeshTVertListToken(); }
+  virtual Token *MakeToken() { return new MeshTVertListToken(); }
 };
 
 
@@ -556,6 +1056,7 @@ class MeshFaceListToken : public Token
     string curstring;
     unsigned index;
     str >> curstring; // opening delimiter
+    DELIMITER delimiter = (DELIMITER)curstring[0];
     str >> curstring;
     while(1) {
       if (curstring == "*MESH_FACE") {
@@ -579,13 +1080,19 @@ class MeshFaceListToken : public Token
 	  str >> curstring; // *MESH_MTLID
 	str >> curstring; // material ID
 	str >> curstring; // get next token (maybe closing delimiter)
-      } else 
-	break;
+      } else {
+        if (match(delimiter,(DELIMITER)curstring[0]))
+          break;
+        else
+          str >> curstring;
+      }
     }
     
 #if DEBUG
     cerr << "Token: finished parsing mesh faces" << endl;
 #endif
+    
+    ((MeshToken*)parent_)->SetFaces(&faces_);
     
     return true;
   }
@@ -635,21 +1142,28 @@ class MeshTFaceListToken : public Token
     string curstring;
     unsigned index;
     str >> curstring; // opening delimiter
+    DELIMITER delimiter = (DELIMITER)curstring[0];
     str >> curstring;
     while(1) {
-      if (curstring == "*MESH_FACE") {
+      if (curstring == "*MESH_TFACE") {
 	str >> index; // face index
 	str >> tfaces_[index*3]; // A
 	str >> tfaces_[index*3+1]; // B
 	str >> tfaces_[index*3+2]; // C
 	str >> curstring; // get next token (maybe closing delimiter)
-      } else 
-	break;
+      } else {
+        if (match(delimiter,(DELIMITER)curstring[0]))
+          break;
+        else 
+          str >> curstring;
+      }
     }
 
 #if DEBUG
     cerr << "Token: finished parsing mesh tfaces." << endl;
 #endif
+    
+    ((MeshToken*)parent_)->SetTFaces(&tfaces_);
     
     return true;
   }
@@ -664,7 +1178,7 @@ class MeshTFaceListToken : public Token
     length = tfaces_.size();
     for (loop=0; loop<length; loop+=3) {
       Indent(str);
-      str << "*MESH_FACE " << loop/3 << " "
+      str << "*MESH_TFACE " << loop/3 << " "
 	  << tfaces_[loop] << " " 
 	  << tfaces_[loop+1] << " " 
 	  << tfaces_[loop+2] << endl;
@@ -682,65 +1196,11 @@ class MeshTFaceListToken : public Token
 
 
 
-#if 0
-class MeshVertexToken : public Token
-{
-
- public:
-
-  MeshVertexToken() : Token("*MESH_VERTEX") { nargs_ = 4; }
-  virtual ~MeshVertexToken() {}
-
-  virtual Token *MakeToken() { return new MeshVertexToken(); }
-};
-
-
-
-class MeshTVertToken : public Token
-{
-
- public:
-
-  MeshTVertToken() : Token("*MESH_TVERT") { nargs_ = 4; }
-  virtual ~MeshTVertToken() {}
-
-  virtual Token *MakeToken() { return new MeshTVertToken(); }
-};
-
-
-
-class MeshFaceToken : public Token
-{
-
- public:
-
-  MeshFaceToken() : Token("*MESH_FACE") { nargs_ = 17; }
-  virtual ~MeshFaceToken() {}
-
-  virtual Token *MakeToken() { return new MeshFaceToken(); }
-};
-
-
-
-class MeshTFaceToken : public Token
-{
- 
- public:
-
-  MeshTFaceToken() : Token("*MESH_TFACE") { nargs_ = 4; }
-  virtual ~MeshTFaceToken() {}
-
-  virtual Token *MakeToken() { return new MeshTFaceToken(); }
-};
-#endif
-
-
-
 class MeshNormalsToken : public Token
 {
 
-  vector<float> face_normals_;
-  vector<float> vertex_normals_;
+  vector<double> face_normals_;
+  vector<double> vertex_normals_;
 
  public:
 
@@ -757,6 +1217,7 @@ class MeshNormalsToken : public Token
     vertex_normals_.resize(numfaces*9);
     string curstring;
     str >> curstring; // opening delimiter
+    DELIMITER delimiter = (DELIMITER)curstring[0];
     str >> curstring;
     while(1) {
       if (curstring == "*MESH_FACENORMAL") {
@@ -780,14 +1241,21 @@ class MeshNormalsToken : public Token
 	str >> vertex_normals_[faceindex*9+7]; // Y3
 	str >> vertex_normals_[faceindex*9+8]; // Z3
         str >> curstring; // next token (maybe closing delimiter)
-      } else 
-	break;
+      } else {
+        if (match(delimiter,(DELIMITER)curstring[0]))
+          break;
+        else
+          str >> curstring;
+      }
     }
     
 #if DEBUG
     cerr << "Token: finished parsing mesh normals." << endl;
 #endif
     
+    ((MeshToken*)parent_)->SetFaceNormals(&face_normals_);
+    ((MeshToken*)parent_)->SetVertexNormals(&vertex_normals_);
+        
     return true;
   }
 
@@ -834,34 +1302,6 @@ class MeshNormalsToken : public Token
 
 
 
-#if 0
-class MeshFaceNormalToken : public Token
-{
-
- public:
-
-  MeshFaceNormalToken() : Token("*MESH_FACENORMAL") { nargs_ = 4; }
-  virtual ~MeshFaceNormalToken() {}
-
-  virtual Token *MakeToken() { return new MeshFaceNormalToken(); }
-};
-
-
-
-class MeshVertexNormal : public Token
-{
-
- public:
-
-  MeshVertexNormal() : Token("*MESH_VERTEXNORMAL") { nargs_ = 4; }
-  virtual ~MeshVertexNormal() {}
-
-  virtual Token *MakeToken() { return new MeshVertexNormal(); }
-};
-#endif
-
-
-
 class MaterialRefToken : public Token
 {
   
@@ -879,6 +1319,11 @@ class MaterialRefToken : public Token
 
     ((GeomObjectToken*)parent_)->SetMaterialIndex(index_);
     return true;
+  }
+
+  virtual void Write(ofstream &str) {
+    Indent(str);
+    str << "*MATERIAL_REF " << index_ << endl;
   }
 
   virtual Token *MakeToken() { return new MaterialRefToken(); }
@@ -923,14 +1368,8 @@ class ASEFile : public Token
   SceneAmbientStaticToken C;
   MaterialListToken D;
   MaterialToken E;
-#if 0
-  MaterialAmbientToken F;
-  MaterialDiffuseToken G;
-  MaterialSpecularToken H;
-  MaterialShineToken I;
-  MaterialTransparencyToken J;
-  MapDiffuseToken K;
-#endif
+  SubMaterialToken F;
+  MapGenericToken G;
   BitmapToken L;
   GeomObjectToken M;
   NodeNameToken N;
@@ -944,14 +1383,6 @@ class ASEFile : public Token
   MeshFaceListToken X;
   MeshTFaceListToken Y;
   MeshNormalsToken BB;
-#if 0
-  MeshVertexToken V;
-  MeshTVertToken W;
-  MeshFaceToken Z;
-  MeshTFaceToken AA;
-  MeshFaceNormalToken CC;
-  MeshVertexNormal DD;
-#endif
   MaterialRefToken EE;
   GroupToken FF;
 
@@ -1063,7 +1494,7 @@ class ASEFile : public Token
 	if (((GeomObjectToken*)children_[loop])->Empty())
 	  continue;
 	geomcount++;
-	sprintf(geomcountbuf,"%02d",geomcount);
+	sprintf(geomcountbuf,"%03d",geomcount);
 	string nodename = ((GeomObjectToken*)children_[loop])->GetNodeName();
 	filename = dirname + "/" + geomcountbuf + "-" + nodename + ".ase";
 	ofstream geomfile(filename.c_str());
@@ -1090,7 +1521,7 @@ class ASEFile : public Token
 	  if (((GeomObjectToken*)(*children)[loop2])->Empty())
 	    continue;
 	  geomcount++;
-	  sprintf(geomcountbuf,"%02d",geomcount);
+	  sprintf(geomcountbuf,"%03d",geomcount);
 	  string nodename = 
 	    ((GeomObjectToken*)(*children)[loop2])->GetNodeName();
 	  filename = dirname + "/" + geomcountbuf + "-" + nodename + ".ase";
