@@ -19,6 +19,8 @@
 #include <fstream>
 #include <iostream>
 
+#include <Packages/Uintah/CCA/Components/MPM/Fracture/Connectivity.h>
+
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
@@ -155,6 +157,15 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
     old_dw->get(delT, lb->delTLabel);
 
+    ParticleVariable<int> pConnectivity;
+    ParticleVariable<Vector> pRotationRate;
+    ParticleVariable<double> pStrainEnergy;
+    if(matl->getFractureModel()) {
+      new_dw->get(pConnectivity, lb->pConnectivityLabel, pset);
+      new_dw->allocate(pRotationRate, lb->pRotationRateLabel, pset);
+      new_dw->allocate(pStrainEnergy, lb->pStrainEnergyLabel, pset);
+    }
+
     double G = d_initialData.G;
     double bulk = d_initialData.K;
 
@@ -168,11 +179,44 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       Vector d_S[8];
       patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
-      for(int k = 0; k < 8; k++) {
-	Vector& gvel = gvelocity[ni[k]];
-	for (int j = 0; j<3; j++){
-	  for (int i = 0; i<3; i++) {
-	    velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
+      if(matl->getFractureModel()) {
+	//ratation rate: (omega1,omega2,omega3)
+	double omega1 = 0;
+	double omega2 = 0;
+	double omega3 = 0;
+
+	Connectivity connectivity(pConnectivity[idx]);
+	int conn[8];
+	connectivity.getInfo(conn);
+	connectivity.modifyShapeDerivatives(conn,d_S,Connectivity::connect);
+	
+	for(int k = 0; k < 8; k++) {
+	  if( conn[k] ) {
+	    const Vector& gvel = gvelocity[ni[k]];
+	    for (int j = 0; j<3; j++){
+	      for (int i = 0; i<3; i++) {
+	        velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];
+              }
+	    }
+	    //rotation rate computation, required for fracture
+	    //NOTE!!! gvel(0) = gvel.x() !!!
+	    omega1 += -gvel(2) * d_S[k](1) * oodx[1] +
+	              gvel(1) * d_S[k](2) * oodx[2];
+	    omega2 += -gvel(0) * d_S[k](2) * oodx[2] +
+	              gvel(2) * d_S[k](0) * oodx[0];
+            omega3 += -gvel(1) * d_S[k](0) * oodx[0] +
+	              gvel(0) * d_S[k](1) * oodx[1];
+	  }
+	}
+	pRotationRate[idx] = Vector(omega1/2,omega2/2,omega3/2);
+      }
+      else {
+        for(int k = 0; k < 8; k++) {
+	  Vector& gvel = gvelocity[ni[k]];
+	  for (int j = 0; j<3; j++){
+	    for (int i = 0; i<3; i++) {
+	      velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
+	    }
 	  }
 	}
       }
@@ -206,12 +250,17 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
       // Compute the strain energy for all the particles
       OldStress = (pstress[idx] + OldStress)*.5;
-      d_se += (D(1,1)*OldStress(1,1) +
-	       D(2,2)*OldStress(2,2) +
-	       D(3,3)*OldStress(3,3) +
+
+      double e = (D(1,1)*OldStress(1,1) +
+	          D(2,2)*OldStress(2,2) +
+	          D(3,3)*OldStress(3,3) +
 	       2.*(D(1,2)*OldStress(1,2) +
 		   D(1,3)*OldStress(1,3) +
 		   D(2,3)*OldStress(2,3))) * pvolume[idx]*delT;
+
+      if(matl->getFractureModel()) pStrainEnergy[idx] = e;
+      		   
+      d_se += e;		   
 
       // Compute wave speed at each particle, store the maximum
 
@@ -234,6 +283,11 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     new_dw->put(deformationGradient,   lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(sum_vartype(d_se),     lb->StrainEnergyLabel);
     new_dw->put(pvolume,               lb->pVolumeDeformedLabel);
+
+    if( matl->getFractureModel() ) {
+      new_dw->put(pRotationRate, lb->pRotationRateLabel);
+      new_dw->put(pStrainEnergy, lb->pStrainEnergyLabel);
+    }
   }
 }
 
@@ -255,6 +309,12 @@ void HypoElastic::addComputesAndRequires(Task* task,
   task->computes(lb->pStressLabel_afterStrainRate,      matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
+
+  if(matl->getFractureModel()) {
+    task->requires(Task::NewDW, lb->pConnectivityLabel,  matlset,Ghost::None);
+    task->computes(lb->pRotationRateLabel, matlset);
+    task->computes(lb->pStrainEnergyLabel, matlset);
+  }
 }
 
 double HypoElastic::computeRhoMicroCM(double pressure,
