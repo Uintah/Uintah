@@ -13,11 +13,11 @@
 using namespace rtrt;
 
 TimeCycleMaterial::TimeCycleMaterial( void )
-    : CycleMaterial()
+    : CycleMaterial(),
+      _curTime( 0.0 )
 {
     _timeArray.initialize( 0.0 );
     _time = SCIRun::Time::currentSeconds();
-    _curTime = 0;
 }
 
 TimeCycleMaterial::~TimeCycleMaterial( void )
@@ -42,8 +42,9 @@ TimeCycleMaterial::shade( Color& result, const Ray& ray,
     
     if( etime > _curTime ) {
 	next();
+	_time += _curTime;
 	_curTime = _timeArray[current];
     }
     members[current]->shade(result, ray, hit, depth, atten, accumcolor, cx);
-    _time = etime;
 }
+

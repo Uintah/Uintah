@@ -97,7 +97,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/SHLambertianMaterial.cc \
 	$(SRCDIR)/prefilter.cc \
 	$(SRCDIR)/Token.cc  \
-	$(SRCDIR)/HierarchicalGrid.cc 	
+	$(SRCDIR)/HierarchicalGrid.cc \
+	$(SRCDIR)/TimeCycleMaterial.cc 
 
 PSELIBS :=  \
 	Core/Thread Core/Exceptions Core/Geometry Packages/rtrt/visinfo 
