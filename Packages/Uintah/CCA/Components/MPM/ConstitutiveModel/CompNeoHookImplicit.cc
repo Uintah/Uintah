@@ -70,7 +70,6 @@ void CompNeoHookImplicit::initializeCMData(const Patch* patch,
 	  bElBar[*iter] = Identity;
    }
 
-//   computeStableTimestep(patch, matl, new_dw);
 }
 
 void CompNeoHookImplicit::addParticleState(std::vector<const VarLabel*>& from,
@@ -85,40 +84,11 @@ void CompNeoHookImplicit::addParticleState(std::vector<const VarLabel*>& from,
    to.push_back(lb->bElBarLabel_preReloc);
 }
 
-void CompNeoHookImplicit::computeStableTimestep(const Patch* patch,
-                                           const MPMMaterial* matl,
-                                           DataWarehouse* new_dw)
+void CompNeoHookImplicit::computeStableTimestep(const Patch*,
+                                           const MPMMaterial*,
+                                           DataWarehouse*)
 {
-  // This is only called for the initial timestep - all other timesteps
-  // are computed as a side-effect of cSTensor
-  Vector dx = patch->dCell();
-  int dwi = matl->getDWIndex();
-  // Retrieve the array of constitutive parameters
-  ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
-  constParticleVariable<double> pmass, pvolume;
-  constParticleVariable<Vector> pvelocity;
-
-  new_dw->get(pmass,     lb->pMassLabel, pset);
-  new_dw->get(pvolume,   lb->pVolumeLabel, pset);
-  new_dw->get(pvelocity, lb->pVelocityLabel, pset);
-
-  double c_dil = 0.0;
-  Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-
-  double mu = d_initialData.Shear;
-  double bulk = d_initialData.Bulk;
-  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
-     particleIndex idx = *iter;
-
-     // Compute wave speed at each particle, store the maximum
-     c_dil = sqrt((bulk + 4.*mu/3.)*pvolume[idx]/pmass[idx]);
-     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
-  }
-  WaveSpeed = dx/WaveSpeed;
-  double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+  // Not used for the implicit models.
 }
 
 void 
@@ -502,7 +472,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         pvolume_deformed[idx] = pvolumeold[idx]*J;
       }
      }
-    new_dw->put(delt_vartype(delT),lb->delTLabel);
    }
 }
 
@@ -551,7 +520,6 @@ void CompNeoHookImplicit::addComputesAndRequires(Task* task,
   task->computes(lb->bElBarLabel_preReloc,              matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
   task->computes(lb->pStressLabel_preReloc,             matlset);
-  task->computes(lb->delTLabel);
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
