@@ -214,10 +214,10 @@
  <!-- -->
            <Box label="2D">
               <lower>        [0.0,-0.1,0.0]     </lower>
-              <upper>        [0.1, 0.2,0.00125] </upper>
+              <upper>        [0.1, 0.3,0.00125] </upper>
               <extraCells>   [1,1,1]            </extraCells>
-              <patches>      [3,4,1]            </patches>
-              <resolution>   [80,240,1]         </resolution>
+              <patches>      [4,8,1]            </patches>
+              <resolution>   [80,320,1]         </resolution>
            </Box>
 
 <!--      UNCOMMENT THIS FOR 3D AND COMMENT OUT THE ABOVE
@@ -528,7 +528,7 @@
 <!-- 
       <Model type="Simple_Burn">
         <fromMaterial> reactant     </fromMaterial>
-        <toMaterial>  product       </toMaterial>
+        <toMaterial>  PBXproductGases </toMaterial>
         <ThresholdTemp>       450.0 </ThresholdTemp>
         <ThresholdPressure> 50000.0 </ThresholdPressure>
         <Enthalpy>        2000000.0 </Enthalpy>
