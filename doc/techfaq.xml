@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "faq.dtd">
+<!-- <!DOCTYPE component SYSTEM "faq.dtd"> -->
 <?xml-stylesheet href="faq.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
@@ -35,8 +35,7 @@
       <p>
         Using an SGI machine I successfully built all the required thirdparty
         software by hand and successfully built SCIRun, but when I run SCIRun
-        it immediately signals an abort and displays the following error
-        message:
+        it immediately signals an abort:
       </p>
       <pre>
         Thread "main"(pid 251775) caught signal SIGABRT (Abort)
@@ -71,7 +70,8 @@
         threads instead of pthreads.  It is illegal to use both sproc and 
         pthreads in a single process.  When two binaries are linked together
         into a single process at runtime (e.g. scirun and libxerces-c1_4.so)
-        a segmentation fault is signalled and the process is shutdown.
+        a segmentation fault is signalled and the process is
+        shutdown.
       </p>
       <p>
         The solution is to rebuild the offending libraries, configuring them
@@ -90,7 +90,7 @@
     <keywords>Compile, Red Hat, Mandrake, GCC 2.96, GCC 2.97</keywords> 
     <question>
       <p>
-        I'm trying to build SCIRun on Red Hat 7.0+ or Mandrake 8.0+ linux
+        I'm trying to build SCIRun using a Red Hat or Mandrake 8.0+ linux
 	machine but the compile fails.  What's wrong?
       </p>
     </question>
@@ -99,8 +99,8 @@
         Some linux distributions are shipped with a version of the GCC
         compiler (e.g. 2.96, 2.97) that doesn't work for building SCIRun. 
         For more information, please visit 
-        <a href="www.gnu.org/software/gcc/gcc-2.96.html">this GCC site</a> 
-	regarding this issue.
+        <a href="http://www.gnu.org/software/gcc/gcc-2.96.html">the
+        GCC site</a> that addresses this problem.
       </p>
       <p>
         The solution to this problem is to update your compiler to version
@@ -174,4 +174,6 @@
       <img>images/research_menuheader.gif</img>
     </answer>
   </entry>
+</faq>
+ntry>
 </faq>

@@ -18,15 +18,16 @@
 
 <!-- FAQ specification -->
 
-<!ELEMENT p (#PCDATA)>
-<!ELEMENT pre (#PCDATA)>
-<!ELEMENT img (#PCDATA)>
+<!ELEMENT p (#CDATA)>
+<!ELEMENT pre (#CDATA)>
+<!ELEMENT img (#CDATA)>
 
 <!ELEMENT faq (entry+)>
 <!ATTLIST faq name CDATA #REQUIRED>
 
 <!ELEMENT entry (keywords, question, answer)>
 
-<!ELEMENT keywords (#PCDATA)>
-<!ELEMENT question (p|pre|img)+>
-<!ELEMENT answer (p|pre|img)+>
+<!ELEMENT keywords (#CDATA)>
+<!ELEMENT question (p|pre)+>
+<!ELEMENT answer (p|pre)+>
+|pre|img)+>

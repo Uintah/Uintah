@@ -3,6 +3,13 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:param name="dir"/>
 
+<xsl:template match="@*|node()">
+  <xsl:copy>
+    <xsl:apply-templates select="@*"/>
+    <xsl:apply-templates />
+  </xsl:copy>
+</xsl:template>
+
 <xsl:template match="/faq">
 <xsl:processing-instruction name="cocoon-format">type="text/html"</xsl:processing-instruction>
 <html>
@@ -79,14 +86,26 @@
 <xsl:for-each select="/faq/entry">
   <xsl:variable name="num"><xsl:number/></xsl:variable>
   <xsl:for-each select="./question">
+    <p><b><xsl:value-of select="$num"/></b>
     <xsl:for-each select="./p">
-      <p class="firstclass"><b><i><xsl:value-of select="."/></i></b></p>
+      <a><xsl:attribute name="href">
+         <xsl:value-of select="concat('techfaq.xml?dir=1','#',$num)"/></xsl:attribute>
+      <xsl:apply-templates/></a>
+    </xsl:for-each>
+    </p>
+  </xsl:for-each>
+</xsl:for-each>
+
+<xsl:for-each select="/faq/entry">
+  <xsl:variable name="num"><xsl:number/></xsl:variable>
+  <xsl:for-each select="./question">
+    <xsl:for-each select="./p">
+      <a><xsl:attribute name="name">
+         <xsl:value-of select="$num"/></xsl:attribute>
+      <b><i><xsl:apply-templates/></i></b></a>
     </xsl:for-each>
     <xsl:for-each select="./pre">
-      <pre class="example"><b><i><xsl:value-of select="."/></i></b></pre>
-    </xsl:for-each>
-    <xsl:for-each select="./img">
-      <img><xsl:value-of select="@src"/></img>
+      <pre class="example"><b><i><xsl:apply-templates/></i></b></pre>
     </xsl:for-each>
   </xsl:for-each>
   <xsl:for-each select="./answer">
@@ -96,24 +115,8 @@
     <xsl:for-each select="./pre">
       <pre class="example"><xsl:value-of select="."/></pre>
     </xsl:for-each>
-    <xsl:for-each select="./img">
-      <p class="firstpara"><center><img>
-        <xsl:attribute name="src">
-        <xsl:value-of select="."/>
-        </xsl:attribute>
-      </img></center></p>
-    </xsl:for-each>
   </xsl:for-each>
 </xsl:for-each>
-
-<!--
-
-<xsl:for-each select="/faq/entry">
-  <p class="firstpara"><xsl:value-of select="./question" /></p>
-  <p class="firstpara"><xsl:value-of select="./answer" /></p> 
-</xsl:for-each>
-
--->
 
 <!-- ******************************************************************* -->
 <!-- *********************** STANDARD SCI FOOTER *********************** -->
@@ -129,4 +132,5 @@
 </body>
 </html>
 </xsl:template>
+
 </xsl:stylesheet>
