@@ -618,20 +618,50 @@ TetVolMesh::locate(Node::index_type &loc, const Point &p)
 
 
 bool
-TetVolMesh::locate(Edge::index_type &/*edge*/, const Point & /* p */)
+TetVolMesh::locate(Edge::index_type &edge, const Point &p)
 {
-  //FIX_ME
-  ASSERTFAIL("TetVolMesh::locate(Edge::index_type &) not implemented!");
-  //return false;
+  bool found_p = false;
+  double mindist = 1.0e6;
+  Edge::iterator bi; begin(bi);
+  Edge::iterator ei; end(ei);
+  while (bi != ei)
+  {
+    Point c;
+    get_center(c, *bi);
+    const double dist = (p - c).length2();
+    if (dist < mindist)
+    {
+      mindist = dist;
+      edge = *bi;
+      found_p = true;
+    }
+    ++bi;
+  }
+  return found_p;
 }
 
 
 bool
-TetVolMesh::locate(Face::index_type &/*face*/, const Point & /* p */)
+TetVolMesh::locate(Face::index_type &face, const Point &p)
 {
-  //FIX_ME
-  ASSERTFAIL("TetVolMesh::locate(Face::index_type&) not implemented!");
-  //return false;
+  bool found_p = false;
+  double mindist = 1.0e6;
+  Face::iterator bi; begin(bi);
+  Face::iterator ei; end(ei);
+  while (bi != ei)
+  {
+    Point c;
+    get_center(c, *bi);
+    const double dist = (p - c).length2();
+    if (dist < mindist)
+    {
+      mindist = dist;
+      face = *bi;
+      found_p = true;
+    }
+    ++bi;
+  }
+  return found_p;
 }
 
 
