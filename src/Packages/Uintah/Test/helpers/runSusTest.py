@@ -42,17 +42,17 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
 	print "\t*** Make sure the problem makes checkpoints before finishing"
     return 1
   else:
-    print "\tComparing dat files"
+    print "\tComparing udas"
     errors_to = environ['ERRORS_TO']
     if environ['ERRORMAIL'] != "yes":
 	errors_to = ""
-    rc = system("dat_test %s %s/%s-%s %s/Uintah_testdata/%s/%s-%s '%s' > dat_test.log 2>&1" % (testname, environ['BUILDROOT'], ALGO, mode, environ['BUILDROOT'], environ['OS'], ALGO, datmode, errors_to))
+    rc = system("compare_sus_runs %s %s/%s-%s %s/Uintah_testdata/%s/%s-%s %s '%s' > compare_sus_runs.log 2>&1" % (testname, environ['BUILDROOT'], ALGO, mode, environ['BUILDROOT'], environ['OS'], ALGO, datmode, susdir, errors_to))
     if rc != 0:
 	if rc != 65280:
-    	    print "\t*** Warning, test %s failed dat comparision with error code %s" % (testname, rc)
+    	    print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, rc)
 	    return 1
 	else:
-	    print "\tNo dat files to compare."
+	    print "\tComparison tests passed.  (Note: No dat files to compare.)"
     else:
 	print "\tComparison tests passed."
 
