@@ -6,36 +6,6 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-template <class BoxPIterator>
-BoxRangeQuerier::BoxRangeQuerier(BoxPIterator begin, BoxPIterator end)
-  :  d_maxBoxDimensions(0, 0, 0)
-{
-  list<BoxPoint*> pointList;
-  IntVector dimensions;
-  BoxPIterator iter;
-  
-  int n = 0;
-  for (iter = begin; iter != end; iter++) n++;
-
-  d_boxPoints.resize(n);
-  int i = 0;
-  for (iter = begin; iter != end; iter++, i++) {
-    const Box* box = *iter;
-    d_boxPoints[i].setBox(box);
-    pointList.push_back(&d_boxPoints[i]);
-    
-    dimensions = box->getHigh() - box->getLow();
-
-    for (int j = 0; j < 3; j++) {
-      if (dimensions[j] > d_maxBoxDimensions[j]) {
-	d_maxBoxDimensions[j] = dimensions[j];
-      }
-    }
-  }
-
-  d_rangeTree = scinew RangeTree<BoxPoint, int>(pointList, 3 /*dimensions*/);
-}
-
 BoxRangeQuerier::~BoxRangeQuerier()
 {
   delete d_rangeTree;
