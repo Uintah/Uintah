@@ -41,6 +41,9 @@ namespace rtrt {
     // Writes the image to a file after the image is rendered
     int dumpFrame;
 
+    // These are for frameless rendering
+    bool last_changed;
+    int accum_count;
   };
 
 } // end namespace rtrt
