@@ -59,6 +59,7 @@ class SampleField : public Module
 
   bool           firsttime_;
   int            widgetid_;
+  int            wtype_;   // 0 none, 1 rake, 2 ring, 3 frame
   Point          endpoint0_;
   Point          endpoint1_;
 
@@ -110,6 +111,7 @@ SampleField::SampleField(GuiContext* ctx)
     
     firsttime_(true),
     widgetid_(0),
+    wtype_(0),
     gui_wtype_(ctx->subVar("wtype")),
     endpoints_ (ctx->subVar("endpoints")),
     endpoint0x_(ctx->subVar("endpoint0x")),
@@ -219,33 +221,14 @@ SampleField::execute_rake()
     
     if (force_rake_reset_.get())
     {
-      if (widgetid_)
+      if (rake_)
       {
-	ogport_->delObj(widgetid_);
-	ogport_->flushViews();
+	rake_->SetEndpoints(endpoint0_,endpoint1_);
+	rake_->SetScale(widgetscale_.get());
+	if (wtype_ == 1) { ogport_->flushViews(); }
       }
-      widgetid_ = 0;
-      if (rake_) { delete rake_; rake_ = 0; }
       force_rake_reset_.set(0);
     }
-  }
-
-  if (ring_ && widgetid_)
-  {
-    ogport_->delObj(widgetid_);
-    ogport_->flushViews();
-    widgetid_ = 0;
-    delete ring_;
-    ring_ = 0;
-  }
-
-  if (frame_ && widgetid_)
-  {
-    ogport_->delObj(widgetid_);
-    ogport_->flushViews();
-    widgetid_ = 0;
-    delete frame_;
-    frame_ = 0;
   }
 
   if (!rake_)
@@ -253,10 +236,15 @@ SampleField::execute_rake()
     rake_ = scinew GaugeWidget(this, &widget_lock_, widgetscale_.get(), false);
     rake_->Connect(ogport_);
     rake_->SetEndpoints(endpoint0_,endpoint1_);
-    GeomGroup *widget_group = scinew GeomGroup;
-    widget_group->add(rake_->GetWidget());
-    widgetid_ = ogport_->addObj(widget_group,"StreamLines rake",&widget_lock_);
+  }
+
+  if (wtype_ != 1)
+  {
+    if (widgetid_)  { ogport_->delObj(widgetid_); }
+    GeomHandle widget = rake_->GetWidget();
+    widgetid_ = ogport_->addObj(widget, "SampleField Rake", &widget_lock_);
     ogport_->flushViews();
+    wtype_ = 1;
   }
 
   Point min, max;
@@ -303,24 +291,6 @@ SampleField::execute_ring()
 {
   warning("Ring not yet supported.\n");
 
-  if (rake_ && widgetid_)
-  {
-    ogport_->delObj(widgetid_);
-    ogport_->flushViews();
-    widgetid_ = 0;
-    delete rake_;
-    rake_ = 0;
-  }
-
-  if (frame_ && widgetid_)
-  {
-    ogport_->delObj(widgetid_);
-    ogport_->flushViews();
-    widgetid_ = 0;
-    delete frame_;
-    frame_ = 0;
-  }
-
   if (!ring_)
   {
     Vector xaxis0(0.0, 0.0, 0.2);
@@ -331,9 +301,15 @@ SampleField::execute_ring()
     ring_ = scinew RingWidget(this, &widget_lock_, widgetscale_.get());
     ring_->Connect(ogport_);
     ring_->SetPosition(center0, normal0, radius0);
+  }
+
+  if (wtype_ != 2)
+  {
+    if (widgetid_)  { ogport_->delObj(widgetid_); }
     GeomHandle widget = ring_->GetWidget();
-    widgetid_ = ogport_->addObj(widget, "StreamLines ring", &widget_lock_);
+    widgetid_ = ogport_->addObj(widget, "SampleField Ring", &widget_lock_);
     ogport_->flushViews();
+    wtype_ = 2;
   }
 
   int num_seeds = Max(0, maxSeeds_.get());
@@ -378,24 +354,6 @@ SampleField::execute_frame()
 {
   warning("Frame not yet supported.\n");
 
-  if (rake_ && widgetid_)
-  {
-    ogport_->delObj(widgetid_);
-    ogport_->flushViews();
-    widgetid_ = 0;
-    delete rake_;
-    rake_ = 0;
-  }
-
-  if (ring_ && widgetid_)
-  {
-    ogport_->delObj(widgetid_);
-    ogport_->flushViews();
-    widgetid_ = 0;
-    delete ring_;
-    ring_ = 0;
-  }
-
   if (!frame_)
   {
     Vector xaxis0(0.0, 0.0, 0.2);
@@ -404,9 +362,15 @@ SampleField::execute_frame()
     frame_ = scinew FrameWidget(this, &widget_lock_, widgetscale_.get());
     frame_->Connect(ogport_);
     frame_->SetPosition(center0, center0 + xaxis0, center0 + yaxis0);
+  }
+
+  if (wtype_ != 3)
+  {
+    if (widgetid_) { ogport_->delObj(widgetid_); }
     GeomHandle widget = frame_->GetWidget();
-    widgetid_ = ogport_->addObj(widget, "StreamLines frame", &widget_lock_);
+    widgetid_ = ogport_->addObj(widget, "SampleField Frame", &widget_lock_);
     ogport_->flushViews();
+    wtype_ = 3;
   }
 
   int num_seeds = Max(0, maxSeeds_.get());
@@ -476,11 +440,9 @@ SampleField::execute_random()
   {
     ogport_->delObj(widgetid_);
     ogport_->flushViews();
+    widgetid_ = 0;
+    wtype_ = 0;
   }
-  widgetid_ = 0;
-  if (rake_) { delete rake_; rake_ = 0; }
-  if (ring_) { delete ring_; ring_ = 0; }
-  if (frame_) { delete frame_; frame_ = 0; }
 
   ofport_->send(seedhandle);
 
