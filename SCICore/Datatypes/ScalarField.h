@@ -15,6 +15,7 @@
 #define SCI_project_ScalarField_h 1
 
 #include <SCICore/Datatypes/Datatype.h>
+#include <SCICore/Containers/String.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Geometry/Vector.h>
@@ -72,6 +73,10 @@ protected:
     double data_min;
     double data_max;
     virtual void compute_minmax()=0;
+
+    int separate_raw;
+    clString raw_filename;
+
 protected:
     enum Representation {
 	RegularGridBase,
@@ -137,6 +142,12 @@ public:
     virtual void hist_grad_augment(double vol_wt, double grad_wt,
 				   const int HSIZE=4096); //size of histogram
 
+    // separate raw files
+    void set_raw(int v) { separate_raw = v; }
+    int get_raw() { return separate_raw; }
+    void set_raw_filename( clString &f ) { raw_filename = f; }
+    clString &get_raw_filename() { return raw_filename; }
+
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
@@ -147,6 +158,18 @@ public:
 
 //
 // $Log$
+// Revision 1.5  2000/02/04 00:19:32  yarden
+// enable to store the grid part of a ScalarField in a seperate file.
+// a flag (sererate_raw) signal if this ScalarField was read from a split
+// input file or should be writen as two. raw_filename specify the secondary
+// file name. if no filename is given during writing, the output routines
+// will try to extract the name from the output stream and attach a '.raw'
+// extension to the binary portion.
+//
+// replaced ScalarFieldRGxxx with ScalarFieldRGTYPE. it also replaces
+// the ScalarFieldRG files (i.e. the old RG with no type specification
+// which defaults to 'double'
+//
 // Revision 1.4  1999/08/29 00:46:52  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

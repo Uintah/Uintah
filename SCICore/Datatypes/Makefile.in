@@ -2,12 +2,14 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../..
 
-SRCS     = TriSurface.cc BasicSurfaces.cc Boolean.cc \
+GENSRCS = ScalarFieldRG.cc  ScalarFieldRGchar.cc ScalarFieldRGuchar.cc \
+	  ScalarFieldRGshort.cc ScalarFieldRGint.cc \
+	  ScalarFieldRGfloat.cc  ScalarFieldRGdouble.cc
+
+SRCS     = $(GENSRCS) TriSurface.cc BasicSurfaces.cc Boolean.cc \
            ColorMap.cc ColumnMatrix.cc Datatype.cc DenseMatrix.cc HexMesh.cc \
            Image.cc Interval.cc Matrix.cc Mesh.cc ScalarField.cc \
-           ScalarFieldHUG.cc ScalarFieldRG.cc ScalarFieldRGBase.cc \
-           ScalarFieldRGchar.cc ScalarFieldRGdouble.cc ScalarFieldRGfloat.cc \
-           ScalarFieldRGint.cc ScalarFieldRGshort.cc ScalarFieldRGuchar.cc \
+           ScalarFieldHUG.cc  ScalarFieldRGBase.cc \
            ScalarFieldUG.cc ScalarFieldZone.cc SparseRowMatrix.cc Surface.cc \
            SymSparseRowMatrix.cc TriDiagonalMatrix.cc VectorField.cc \
            VectorFieldHUG.cc VectorFieldOcean.cc VectorFieldRG.cc \
@@ -18,3 +20,52 @@ SRCS     = TriSurface.cc BasicSurfaces.cc Boolean.cc \
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk
+
+$(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
+	sed 's/<TYPE>/<double>/g' < $(SRCDIR)/ScalarFieldRGTYPE.h | sed 's/TYPE//g' > $(SRCDIR)/ScalarFieldRG.h
+
+$(SRCDIR)/ScalarFieldRGchar.h: $(SRCDIR)/ScalarFieldRGTYPE.h
+	sed 's/TYPE/char/g' < $(SRCDIR)/ScalarFieldRGTYPE.h > $(SRCDIR)/ScalarFieldRGchar.h
+
+$(SRCDIR)/ScalarFieldRGuchar.h: $(SRCDIR)/ScalarFieldRGTYPE.h
+	sed 's/TYPE/uchar/g' < $(SRCDIR)/ScalarFieldRGTYPE.h > $(SRCDIR)/ScalarFieldRGuchar.h
+
+$(SRCDIR)/ScalarFieldRGshort.h: $(SRCDIR)/ScalarFieldRGTYPE.h
+	sed 's/TYPE/short/g' < $(SRCDIR)/ScalarFieldRGTYPE.h > $(SRCDIR)/ScalarFieldRGshort.h
+
+
+$(SRCDIR)/ScalarFieldRGint.h: $(SRCDIR)/ScalarFieldRGTYPE.h
+	sed 's/TYPE/int/g' < $(SRCDIR)/ScalarFieldRGTYPE.h > $(SRCDIR)/ScalarFieldRGint.h
+
+$(SRCDIR)/ScalarFieldRGfloat.h: $(SRCDIR)/ScalarFieldRGTYPE.h
+	sed 's/TYPE/float/g' < $(SRCDIR)/ScalarFieldRGTYPE.h > $(SRCDIR)/ScalarFieldRGfloat.h
+
+$(SRCDIR)/ScalarFieldRGdouble.h: $(SRCDIR)/ScalarFieldRGTYPE.h
+	sed 's/TYPE/double/g' < $(SRCDIR)/ScalarFieldRGTYPE.h > $(SRCDIR)/ScalarFieldRGdouble.h
+
+
+# .CC
+
+$(SRCDIR)/ScalarFieldRG.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGchar.h
+	sed 's/<TYPE>/<double>/g' < $(SRCDIR)/ScalarFieldRGTYPE.cc |  sed 's/TYPE//g' > $(SRCDIR)/ScalarFieldRG.cc 
+
+$(SRCDIR)/ScalarFieldRGchar.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGchar.h
+	sed 's/TYPE/char/g' < $(SRCDIR)/ScalarFieldRGTYPE.cc > $(SRCDIR)/ScalarFieldRGchar.cc 
+
+$(SRCDIR)/ScalarFieldRGuchar.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGuchar.h
+	sed 's/TYPE/uchar/g' < $(SRCDIR)/ScalarFieldRGTYPE.cc >$(SRCDIR)/ScalarFieldRGuchar.cc 
+
+$(SRCDIR)/ScalarFieldRGshort.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGshort.h
+	sed 's/TYPE/short/g' < $(SRCDIR)/ScalarFieldRGTYPE.cc > $(SRCDIR)/ScalarFieldRGshort.cc 
+
+$(SRCDIR)/ScalarFieldRGint.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGint.h
+	sed 's/TYPE/int/g' < $(SRCDIR)/ScalarFieldRGTYPE.cc > $(SRCDIR)/ScalarFieldRGint.cc 
+
+$(SRCDIR)/ScalarFieldRGfloat.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGfloat.h
+	sed 's/TYPE/float/g' < $(SRCDIR)/ScalarFieldRGTYPE.cc >$(SRCDIR)/ScalarFieldRGfloat.cc 
+
+$(SRCDIR)/ScalarFieldRGdouble.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGdouble.h
+	sed 's/TYPE/double/g' < $(SRCDIR)/ScalarFieldRGTYPE.cc > $(SRCDIR)/ScalarFieldRGdouble.cc 
+
+$(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGdouble.h
+
