@@ -29,6 +29,14 @@ using namespace SCIRun;
 //****************************************************************************
 PDFMixingModel::PDFMixingModel():MixingModel(), DynamicTable()
 {
+	d_calcthermalNOx=false;
+}
+//****************************************************************************
+// Constructor for PDFMixingModel with thermal NOx
+//****************************************************************************
+PDFMixingModel::PDFMixingModel(bool d_thermalNOx):MixingModel(), DynamicTable()
+{
+	d_calcthermalNOx=d_thermalNOx;
 }
 
 //****************************************************************************
@@ -69,7 +77,7 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
   string rxnModel;
   db->require("reaction_model",rxnModel);
   if (rxnModel == "EquilibriumReactionModel")
-    d_rxnModel = new StanjanEquilibriumReactionModel(d_adiabatic);
+    d_rxnModel = new StanjanEquilibriumReactionModel(d_adiabatic, d_calcthermalNOx);
   else if (rxnModel == "ILDMReactionModel")
     d_rxnModel = new ILDMReactionModel(d_adiabatic);
   else {
@@ -363,6 +371,7 @@ PDFMixingModel::computeProps(const InletStream& inStream,
   getProps(mixRxnVar, outStream); //function in DynamicTable
   outStream.d_co2 = outStream.d_speciesConcn[d_CO2index]; //Needed for radiation model
   outStream.d_h2o = outStream.d_speciesConcn[d_H2Oindex]; //Needed for radiation model
+  outStream.d_noxrxnRate = outStream.d_speciesConcn[6]; //NOx source term
   //cout << "Here are the results" << endl; 
   // outStream.print(cout);
 #if 0

@@ -59,6 +59,9 @@ public:
       // Constructs an instance of SteadyFlamletsTable
       //
       SteadyFlameletsTable();
+      // Constructor with thermal NOx flag
+      SteadyFlameletsTable(bool d_thermalNOx);
+      
 
       // GROUP: Destructors :
       ///////////////////////////////////////////////////////////////////////
@@ -170,10 +173,11 @@ private:
       // For chi table
       int dc_mixfraccount, dc_mixvarcount;
       double mixfrac_Div,mixvar_Div;
-      int co2_index, h2o_index, c2h2_index;
+      int co2_index, h2o_index, c2h2_index, NO_index;
       std::vector<double> meanMix;
       std::vector<double> scalarDisp;
       std::vector<std::string> variables_list;
+      bool d_calcthermalNOx; // Flag for the thermal NOx
 }; // end class SteadyFlameletsTable
 
 } // end namespace Uintah

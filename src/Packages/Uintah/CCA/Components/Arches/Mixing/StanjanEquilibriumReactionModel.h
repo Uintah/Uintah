@@ -104,6 +104,9 @@ namespace Uintah {
     //   [in] adiabatic If =1, system is adiabatic; otherwise, its nonadiabatic.
     StanjanEquilibriumReactionModel(bool adiabatic);
 
+    // Constructor with thermal NOx
+    StanjanEquilibriumReactionModel(bool adiabatici, bool d_thermalNOx);
+
     // GROUP: Destructor:
     /////////////////////////////////////////////////////////////////////////
     //
@@ -167,6 +170,7 @@ namespace Uintah {
     ChemkinInterface* d_reactionData;
     MixingModel* d_mixModel;
     bool d_adiabatic;
+    bool d_calcthermalNOx;
     int d_rxnTableDimension;
     int d_depStateSpaceVars;
     bool d_lsoot;

@@ -150,6 +150,9 @@ namespace Uintah {
       inline double getRxnSource() const {
 	return d_rxnVarRates[0];
       }
+      inline double getnoxRxnSource() const {
+        return d_noxrxnRate;
+      }
       inline double getdrhodf() const {
         return d_drhodf;
       }
@@ -192,6 +195,7 @@ namespace Uintah {
                       //Value changed in ***MixingModel::computeProps
       int d_H2Oindex; //Set to 0 in constructor.
                       //Value changed in ***MixingModel::computeProps     
+      double d_noxrxnRate;
     private:
       // includes all the vars except vectors...
       // increase the value if want to increase number of variables
