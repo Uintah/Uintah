@@ -163,6 +163,7 @@ private:
       PhysicalConstants* d_physicalConsts;
 
       // const VarLabel*
+      const VarLabel* d_cellTypeLabel ;
       const VarLabel* d_cellInfoLabel ;
 
       // inputs for CalculateVelocitySource 
@@ -227,6 +228,9 @@ private:
   
 //
 // $Log$
+// Revision 1.20  2000/07/12 23:23:23  bbanerje
+// Added pressure source .. modified Kumar's version a bit.
+//
 // Revision 1.19  2000/07/12 07:35:47  bbanerje
 // Added stuff for mascal : Rawat: Labels and dataWarehouse in velsrc need to be corrected.
 //
