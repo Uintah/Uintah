@@ -55,21 +55,20 @@ extern "C" Module* make_GLTextureBuilder( const clString& id) {
 
 GLTextureBuilder::GLTextureBuilder(const clString& id)
   : Module("GLTextureBuilder", id, Filter, "Visualization", "SCIRun"), 
-    tex(0),
-    max_brick_dim("max_brick_dim", id, this),
-//    isFixed("isFixed", id, this),
-    min("min", id, this),
-    max("max", id, this)
+    tex_(0),
+    max_brick_dim_("max_brick_dim", id, this),
+    min_("min", id, this),
+    max_("max", id, this),
+    old_brick_size_(0)
 {
   // Create the input ports
-  infield = scinew FieldIPort( this, " Field",
-					   FieldIPort::Atomic);
-  add_iport(infield);
+  infield_ = scinew FieldIPort( this, " Field", FieldIPort::Atomic);
+  add_iport(infield_);
 
   // Create the output port
-  otexture = scinew GLTexture3DOPort(this, "GL Texture", 
-				     GLTexture3DIPort::Atomic);
-  add_oport(otexture);
+  otexture_ = scinew GLTexture3DOPort(this, "GL Texture", 
+				      GLTexture3DIPort::Atomic);
+  add_oport(otexture_);
 
 }
 
@@ -122,39 +121,54 @@ GLTextureBuilder::DestroyContext(Display *dpy, GLXContext& cx)
 */
 void GLTextureBuilder::execute(void)
 {
-  //  Display *dpy;
-  // GLXContext cx;
-  //static bool init = false;
   FieldHandle sfield;
-  static int oldBrickSize = 0;
-  if (!infield->get(sfield)) {
+  if (!infield_->get(sfield))
+  {
     return;
-  } else if (sfield->get_type_name(0) != "LatticeVol") {
+  }
+  else if (!sfield.get_rep() || sfield->get_type_name(0) != "LatticeVol")
+  {
     return;
   }
 
-  double minV, maxV;
-  if( sfield.get_rep() != sfrg.get_rep()  && !tex.get_rep() ){
-    sfrg = sfield;
-    tex = scinew GLTexture3D(sfield);
-    TCL::execute(id + " SetDims " + to_string( tex->get_brick_size()));
-    max_brick_dim.set( tex->get_brick_size() );
-    oldBrickSize = tex->get_brick_size();
-    tex->getminmax(minV, maxV);
-    min.set(minV); max.set(maxV);
-  } else if( sfield.get_rep() != sfrg.get_rep()){
-    sfrg = sfield;
-    tex = scinew GLTexture3D(sfield);
-    tex->set_brick_size( max_brick_dim.get() );
-    tex->getminmax(minV, maxV);
-    min.set(minV); max.set(maxV);
-  } else if (oldBrickSize != max_brick_dim.get()){
-    tex->set_brick_size( max_brick_dim.get() );
-    oldBrickSize = max_brick_dim.get();
+  cout << "LOCATION 1\n";
+  if (sfield.get_rep() != sfrg_.get_rep()  && !tex_.get_rep())
+  {
+    cout << "LOCATION 5\n";
+    sfrg_ = sfield;
+    tex_ = scinew GLTexture3D(sfield);
+    TCL::execute(id + " SetDims " + to_string( tex_->get_brick_size()));
+    max_brick_dim_.set(tex_->get_brick_size());
+    old_brick_size_ = tex_->get_brick_size();
+    double minV, maxV;
+    tex_->getminmax(minV, maxV);
+    min_.set(minV);
+    max_.set(maxV);
+  }
+  else if (sfield.get_rep() != sfrg_.get_rep())
+  {
+    cout << "LOCATION 4\n";
+    sfrg_ = sfield;
+    tex_ = scinew GLTexture3D(sfield);
+    tex_->set_brick_size(max_brick_dim_.get());
+    double minV, maxV;
+    tex_->getminmax(minV, maxV);
+    min_.set(minV);
+    max_.set(maxV);
+  }
+  else if (old_brick_size_ != max_brick_dim_.get())
+  {
+    cout << "LOCATION 3\n";
+    tex_->set_brick_size(max_brick_dim_.get());
+    old_brick_size_ = max_brick_dim_.get();
   }
   
-  if( tex.get_rep() )
-    otexture->send( tex );
+  if (tex_.get_rep())
+  {
+    otexture_->send(tex_);
+  }
+
+  cout << "LOCATION 2\n";
 }
 
 } // End namespace SCIRun
