@@ -190,7 +190,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 #ifdef HAVE_PETSC
   PetscTruth exists;
   PetscObjectExists((PetscObject)d_A,&exists);
-  if (exists == PETSC_FALSE) {
+  //if (exists == PETSC_FALSE) {
 #if 0
     MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 		    globalcolumns, PETSC_DEFAULT, PETSC_NULL, PETSC_DEFAULT,
@@ -209,7 +209,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_B);
     VecDuplicate(d_B,&d_diagonal);
     VecDuplicate(d_B,&d_x);
-  }
+  //}
 #endif
 
   delete[] diag;
