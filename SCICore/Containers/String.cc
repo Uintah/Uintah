@@ -201,7 +201,7 @@ std::istream& operator>>(std::istream& s, clString& str)
   return s;
 }
 
-#ifndef _KCC
+#if defined(__sgi) && !defined(__GNUC__)
 } // End namespace Containers
 } // End namespace SCICore
 
@@ -504,6 +504,9 @@ void clString::test_performance(PerfTest* __pt) {
 
 //
 // $Log$
+// Revision 1.6  1999/10/13 15:30:04  sparker
+// Fixed ifdef for redefining operator<<
+//
 // Revision 1.5  1999/10/07 02:07:28  sparker
 // use standard iostreams and complex type
 //
