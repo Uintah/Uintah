@@ -40,7 +40,6 @@
 
 #include <iostream>
 using std::cerr;
-using std::endl;
 
 #include <Dataflow/Modules/Render/SCIBaWGL.h>
 
@@ -221,7 +220,7 @@ void SCIBaWGLTimer::pick( void )
 
 	  bawgl->getScreenCoordinates(&surfacePinchMatrix[12], screenPos, BAWGL_SURFACE_SPACE);
 
-	  cerr << "screen coords are "<< screenPos[0] <<" and " << screenPos[1]<< endl;
+	  cerr << "screen coords are "<< screenPos[0] <<" and " << screenPos[1]<< "\n";
 				 
 	  viewwindow->bawgl_pick(BAWGL_PICK_START, screenPos, &surfacePinchMatrix[12]);
 	  
@@ -336,7 +335,7 @@ void SCIBaWGLTimer::run( void )
         }
     }
 
-  cerr << "Bench event manager quit" << endl;
+  cerr << "Bench event manager quit" << "\n";
 
   return;
 }

@@ -62,7 +62,6 @@
 #include "OpenGL.h"
 #include <iostream>
 using std::cerr;
-using std::endl;
 #include <stdio.h>
 #include <string.h>
 #include <sstream>
@@ -192,7 +191,7 @@ void ViewWindow::itemDeleted(GeomViewerItem *si)
     
   viter = visible.find(si->name);
   if (viter == visible.end()) { // if not found
-    cerr << "Where did that object go???" << endl;
+    cerr << "Where did that object go???" << "\n";
   }
   else {
     vis = (*viter).second;
@@ -270,7 +269,7 @@ void ViewWindow::get_bounds(BBox& bbox)
   }
 
   // XXX - START - ASF ADDED FOR UNICAM
-  //   cerr << "viewwindow_objs.size() = " << viewwindow_objs.size() << endl;
+  //   cerr << "viewwindow_objs.size() = " << viewwindow_objs.size() << "\n";
   //int objs_size = viewwindow_objs.size();
   int draw_size = viewwindow_objs_draw.size();
   for(int i=0;i<viewwindow_objs.size();i++) {
@@ -681,13 +680,13 @@ void ViewWindow::unicam_choose(int X, int Y)
   //                  Vector(0,1,0),
   //                  1 * M_PI/180.0);
 
-  //   cerr << CameraToWorld(Vector(1,0,0)) << endl;
-  //   cerr << CameraToWorld(Vector(0,1,0)) << endl;
-  //   cerr << CameraToWorld(Vector(0,0,1)) << endl;
+  //   cerr << CameraToWorld(Vector(1,0,0)) << "\n";
+  //   cerr << CameraToWorld(Vector(0,1,0)) << "\n";
+  //   cerr << CameraToWorld(Vector(0,0,1)) << "\n";
 
   //   float nx, ny;
   //   NormalizeMouseXY(x, y, &nx, &ny);
-  //   cerr << nx << "\t" << ny << endl;
+  //   cerr << nx << "\t" << ny << "\n";
 
   int   te[2];  // pixel location
   te[0] = X;
@@ -734,7 +733,7 @@ void ViewWindow::unicam_choose(int X, int Y)
 void ViewWindow::unicam_rot(int x, int y)
 {
   //  float myTEST = X;
-  //  cerr << "myTEST = " << myTEST << "\t" << "X = " << X << endl;
+  //  cerr << "myTEST = " << myTEST << "\t" << "X = " << X << "\n";
   Point center = focus_sphere->cen;
 
   //   this->ComputeWorldToDisplay(center[0], center[1], center[2], cpt);
@@ -1016,8 +1015,8 @@ void ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
       current_renderer->pick_scene(x, y, &_down_pt);
       _down_x = x;
       _down_y = y;
-      //             cerr << "_down_x = " << _down_x << endl;
-      //             cerr << "_down_y = " << _down_y << endl;
+      //             cerr << "_down_x = " << _down_x << "\n";
+      //             cerr << "_down_y = " << _down_y << "\n";
             
       // if someone has already clicked to make a dot and
       // they're not clicking on it now, OR if the user is
@@ -1102,7 +1101,7 @@ void ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
       if(!current_renderer->compute_depth(this, tmpview, znear, zfar))
 	return; // No objects...
       double zmid=(znear+zfar)/2.;
-      //             cerr << "zmid = " << zmid << endl;
+      //             cerr << "zmid = " << zmid << "\n";
 
       Point ep(0, 0, zmid);
       rot_point=tmpview.eyespace_to_objspace(ep, aspect);
@@ -1261,7 +1260,7 @@ void ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
 	ball->qNorm.y *= c;
 	ball->qNorm.z *= c;
 	angular_v = 2*acos(ball->qNow.w)*1000.0/dt;
-//	cerr << dt << endl;
+//	cerr << dt << "\n";
       }
     } else {
       inertia_mode=0;
@@ -1443,7 +1442,7 @@ void ViewWindow::mouse_rotate_eyep(int action, int x, int y, int, int, int time)
 	ball->qNorm.y *= c;
 	ball->qNorm.z *= c;
 	angular_v = 2*acos(ball->qNow.w)*1000.0/dt;
-//	cerr << dt << endl;
+//	cerr << dt << "\n";
       }
     } else {
       inertia_mode=0;
@@ -1766,7 +1765,7 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     
     // determine closest eyep position
     Vector lookdir(sv.eyep() - sv.lookat());
-    cerr << "lookdir = " << lookdir << endl;
+    cerr << "lookdir = " << lookdir << "\n";
     double distance = lookdir.length();
     
     double x = lookdir.x();
@@ -1840,7 +1839,7 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
       }
     }
     Vector lookdir2(sv.eyep() - sv.lookat());
-    cerr << "lookdir = " << lookdir2 << endl;
+    cerr << "lookdir = " << lookdir2 << "\n";
     sv.up(v);   // set the up vector
     animate_to_view(sv, 2.0); 
   } else if(args[1] == "Views") {
@@ -2306,9 +2305,9 @@ void ViewWindow::dump_objects(const string& filename, const string& format)
 		    &manager->ports);
     Pio(*stream, scene);
     if(stream->error()){
-      cerr << "Error writing geom file: " << filename << endl;
+      cerr << "Error writing geom file: " << filename << "\n";
     } else {
-      cerr << "Done writing geom file: " << filename << endl;
+      cerr << "Done writing geom file: " << filename << "\n";
     }
     delete stream;
     manager->geomlock.readUnlock();
