@@ -69,13 +69,14 @@ private:
   TriSurfMesh::Node::index_type find_or_add_edgepoint(node_index_type, node_index_type, const Point &p);
   TriSurfMesh::Node::index_type find_or_add_nodepoint(node_index_type &);
 
+  void extract_c( const cell_index_type &, double);
+  void extract_n( const cell_index_type &, double);
+
 public:
   UHexMC( Field *field ) : field_(field), mesh_(field->get_typed_mesh()) {}
   virtual ~UHexMC();
 	
   void extract( const cell_index_type &, double);
-  void extract_c( const cell_index_type &, double);
-  void extract_n( const cell_index_type &, double);
   void reset( int, bool build_trisurf=false );
   GeomObj *get_geom() { return triangles_; };
   FieldHandle get_field(double val);
