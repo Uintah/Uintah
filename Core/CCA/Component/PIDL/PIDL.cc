@@ -59,7 +59,14 @@ PIDL::initialize(int, char*[])
 {
   //Default for communication purposes 
   setCommunication(COMM_NEXUS);
-  CommNexus::initialize();
+
+  switch (comm_type) {
+  case COMM_SOCKET:
+    break;
+  case COMM_NEXUS:
+    CommNexus::initialize();
+    break;
+  }
 
   setIntraCommunication(INTRA_COMM_MPI);
 
@@ -88,7 +95,7 @@ PIDL::getSpChannel() {
   case COMM_NEXUS:
     return (new NexusSpChannel());
   default:
-    return (new SocketSpChannel());    
+    return NULL;
   }
 }
 
