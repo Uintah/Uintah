@@ -1,3 +1,20 @@
+#
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#  
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#  
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#  
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+#  University of Utah. All Rights Reserved.
+#
+
 puts "\nLoading BioTensor...\n"
 
 # COLOR SCHEME
@@ -1591,7 +1608,7 @@ set mods(ShowField-Reg) $m9
 set mods(UnuSlice2) $m5
 set mods(UnuJoin) $m47
 set mods(TendEpireg) $m2
-set mods(ChooseNrrd2) $m49
+set mods(ChooseNrrd-BMatrix) $m49
 set mods(ChooseNrrd-ToReg) $m105
 set mods(ChooseNrrd-ToSmooth) $m104
 
@@ -2159,8 +2176,8 @@ class BioTensorApp {
 	    $m.main_menu.file.menu add command -label "Save Session... Ctr+S" \
 		-underline 0 -command "$this save_session" -state active
 
-	    $m.main_menu.file.menu add command -label "Save Image..." \
-		-underline 0 -command "$mods(Viewer)-ViewWindow_0 makeSaveImagePopup" -state active
+#	    $m.main_menu.file.menu add command -label "Save Image..." \
+#		-underline 0 -command "$mods(Viewer)-ViewWindow_0 makeSaveImagePopup" -state active
 	    
 	    $m.main_menu.file.menu add command -label "Quit        Ctr+Q" \
 		-underline 0 -command "$this exit_app" -state active
@@ -2267,8 +2284,7 @@ class BioTensorApp {
                 -width 12
             pack $page.load -side top -anchor n -padx 3 -pady 6
 	    
-            label $page.space -text "    "
-            pack $page.space -side top -anchor n -padx 3 -pady 0
+
             global $mods(NrrdReader-T2)-filename
             label $page.t2l -text "T2 Reference Image:"
             pack $page.t2l -side top -anchor nw -padx 3 -pady 3
@@ -2636,30 +2652,30 @@ class BioTensorApp {
 		-state disabled \
 		-variable xy_radius \
 		-orient horizontal \
-		-length 100  -width 15 \
+		-length 70  -width 15 \
 		-sliderlength 15 \
 		-showvalue false \
 		-command "$this change_xy_smooth"
             label $blur.rad1.v -textvariable xy_radius -state disabled
             pack $blur.rad1.l $blur.rad1.s $blur.rad1.v -side left -anchor nw \
-		-padx 3 -pady 0
+		-padx 1 -pady 0
 	    
             frame $blur.rad2
             pack $blur.rad2 -side top -anchor n -padx 3 -pady 0
 	    
-            label $blur.rad2.l -text "Radius in Z:         " -state disabled
+            label $blur.rad2.l -text "Radius in Z:          " -state disabled
             scale $blur.rad2.s -from 0.0 -to 5.0 \
 		-resolution 0.01 \
 		-state disabled \
 		-variable z_radius \
 		-orient horizontal \
-		-length 100  -width 15 \
+		-length 70  -width 15 \
 		-sliderlength 15 \
 		-showvalue false \
 		-command "$this change_z_smooth"
             label $blur.rad2.v -textvariable z_radius -state disabled
             pack $blur.rad2.l $blur.rad2.s $blur.rad2.v -side left -anchor nw \
-		-padx 3 -pady 0
+		-padx 1 -pady 0
 	    
 
 	    # Masking Threshold
@@ -4521,6 +4537,8 @@ class BioTensorApp {
 
     method toggle_b_matrix {} {
 	global bmatrix
+	global mods
+	global $mods(ChooseNrrd-BMatrix)-port-index
 	
 	if {$bmatrix == "compute"} {
             $dt_tab1.bm.childsite.load.e configure -state disabled \
@@ -4530,6 +4548,9 @@ class BioTensorApp {
             $dt_tab2.bm.childsite.load.e configure -state disabled \
                 -foreground grey64
             $dt_tab2.bm.childsite.browse configure -state disabled
+
+	    set $mods(ChooseNrrd-BMatrix)-port-index 0
+	    disableModule $mods(NrrdReader-BMatrix) 1
 	} else {
             $dt_tab1.bm.childsite.load.e configure -state normal \
                 -foreground black
@@ -4538,6 +4559,9 @@ class BioTensorApp {
             $dt_tab2.bm.childsite.load.e configure -state normal \
                 -foreground black
             $dt_tab2.bm.childsite.browse configure -state normal
+
+	    set $mods(ChooseNrrd-BMatrix)-port-index 1
+	    disableModule $mods(NrrdReader-BMatrix) 0
 	}
     }
 
@@ -5473,6 +5497,8 @@ class BioTensorApp {
 	  set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
          
 
+	  $mods(ClipByFunction-Seeds)-c needexecute
+	  
           $mods(SamplePlane-X)-c needexecute
           $mods(Viewer)-ViewWindow_0-c redraw
        }
@@ -5504,6 +5530,7 @@ class BioTensorApp {
 	  
 	  set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
           
+	  $mods(ClipByFunction-Seeds)-c needexecute
 
           $mods(SamplePlane-Y)-c needexecute
           $mods(Viewer)-ViewWindow_0-c redraw
@@ -5535,6 +5562,8 @@ class BioTensorApp {
           global $mods(ClipByFunction-Seeds)-clipfunction
 
 	set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
+
+	  $mods(ClipByFunction-Seeds)-c needexecute
 
           $mods(SamplePlane-Z)-c needexecute
           $mods(Viewer)-ViewWindow_0-c redraw
@@ -6105,6 +6134,58 @@ class BioTensorApp {
 		-command "$this toggle_show_glyphs" -state disabled
 	    
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3	
+
+	    global scale_glyph
+	    global $mods(TendNorm-Glyphs)-target
+	    global $mods(ShowField-Glyphs)-tensors_scale
+	    
+	    frame $f.scale 
+	    pack $f.scale -side top -anchor n -padx 3 -pady 0
+	    
+	    checkbutton $f.scale.b -text "Glyph Size:            " \
+		-variable scale_glyph \
+		-state disabled \
+		-command "$this toggle_scale_glyph"
+	    
+	    scale $f.scale.s -from 0.2 -to 5.0 \
+                -resolution 0.01 \
+  		-length 100  -width 15 \
+		-sliderlength 15 \
+                -orient horizontal \
+   	        -state disabled \
+		-showvalue false \
+   	        -foreground grey64 \
+	        -variable $mods(ShowField-Glyphs)-tensors_scale
+	    label $f.scale.l -textvariable $mods(ShowField-Glyphs)-tensors_scale -state disabled
+	    bind $f.scale.s <ButtonRelease> {app change_glyph_scale}
+	    
+	    pack $f.scale.b $f.scale.s $f.scale.l -side left -anchor nw -padx 1 -pady 0
+	    
+	    global exag_glyph
+	    global $mods(TendAnscale-Glyphs)-scale
+	    
+	    frame $f.exag 
+	    pack $f.exag -side top -anchor n -padx 3 -pady 0
+	    
+	    checkbutton $f.exag.b -text "Shape Exaggerate:" \
+		-variable exag_glyph \
+		-state disabled \
+		-command "$this toggle_exag_glyph"
+	    
+	    scale $f.exag.s -from 0.2 -to 5.0 \
+                -resolution 0.01 \
+  		-length 100  -width 15 \
+		-sliderlength 15 \
+                -orient horizontal \
+   	        -state disabled \
+		-showvalue false \
+   	        -foreground grey64 \
+	        -variable $mods(TendAnscale-Glyphs)-scale
+	    label $f.exag.l -textvariable $mods(TendAnscale-Glyphs)-scale -state disabled
+	    bind $f.exag.s <ButtonRelease> {app change_glyph_exag}
+	    
+	    pack $f.exag.b $f.exag.s $f.exag.l -side left -anchor nw -padx 1 -pady 0
+
 	    
 	    # Seed at
 	    iwidgets::labeledframe $f.seed \
@@ -6316,57 +6397,7 @@ class BioTensorApp {
 	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
 	    pack $maps.bpseismic.f.canvas -anchor e
 	    
-	    draw_colormap "Red-to-Blue" $maps.bpseismic.f.canvas
-	    
-	    
-	    global scale_glyph
-	    global $mods(TendNorm-Glyphs)-target
-	    global $mods(ShowField-Glyphs)-tensors_scale
-	    
-	    frame $f.scale 
-	    pack $f.scale -side top -anchor nw -padx 3 -pady 0
-	    
-	    checkbutton $f.scale.b -text "Glyph Size:          " \
-		-variable scale_glyph \
-		-state disabled \
-		-command "$this toggle_scale_glyph"
-	    
-	    scale $f.scale.s -from 0.2 -to 5.0 \
-                -resolution 0.01 \
-  		-length 80  -width 15 \
-		-sliderlength 15 \
-                -orient horizontal \
-   	        -state disabled \
-   	        -foreground grey64 \
-	        -variable $mods(ShowField-Glyphs)-tensors_scale
-	    bind $f.scale.s <ButtonRelease> {app change_glyph_scale}
-	    
-	    pack $f.scale.b -side left -anchor w -padx 3 -pady 0
-	    pack  $f.scale.s -side left -anchor ne -padx 3 -pady 0
-	    
-	    global exag_glyph
-	    global $mods(TendAnscale-Glyphs)-scale
-	    
-	    frame $f.exag 
-	    pack $f.exag -side top -anchor nw -padx 3 -pady 0
-	    
-	    checkbutton $f.exag.b -text "Shape Exaggerate:" \
-		-variable exag_glyph \
-		-state disabled \
-		-command "$this toggle_exag_glyph"
-	    
-	    scale $f.exag.s -from 0.2 -to 5.0 \
-                -resolution 0.01 \
-  		-length 80  -width 15 \
-		-sliderlength 15 \
-                -orient horizontal \
-   	        -state disabled \
-   	        -foreground grey64 \
-	        -variable $mods(TendAnscale-Glyphs)-scale
-	    bind $f.exag.s <ButtonRelease> {app change_glyph_exag}
-	    
-	    pack $f.exag.b -side left -anchor w -padx 3 -pady 0
-	    pack  $f.exag.s -side left -anchor ne -padx 3 -pady 0
+	    draw_colormap "Red-to-Blue" $maps.bpseismic.f.canvas	         
 	    
 	} 
     }
@@ -6656,6 +6687,7 @@ class BioTensorApp {
 
         if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 0} {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 1
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
         } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 1
@@ -6896,6 +6928,8 @@ class BioTensorApp {
 	    label $stop.aniso1.l -textvariable $mods(TendFiber)-aniso-thresh -state disabled
 	    pack $stop.aniso1.check $stop.aniso1.val $stop.aniso1.l -side left \
 		-anchor nw -padx 3 -pady 0
+
+	    bind $stop.aniso1.val <ButtonRelease> "$this change_fibers_aniso"
 	    
 	    frame $stop.aniso2
 	    pack $stop.aniso2 -side top -anchor e
@@ -7174,7 +7208,9 @@ class BioTensorApp {
 
     
     method change_fibers_fiber_length {} {
-	if {$vis_activated} {
+	global mods
+	global $mods(TendFiber)-use-length
+	if {$vis_activated && [set $mods(TendFiber)-use-length]} {
 	    global mods
 	    global $mods(TendFiber)-length
 	    global fibers_length
@@ -7208,7 +7244,9 @@ class BioTensorApp {
 
 
     method change_fibers_steps {} {
-	if {$vis_activated} {
+	global mods
+	global $mods(TendFiber)-use-steps
+	if {$vis_activated && [set $mods(TendFiber)-use-steps]} {
 	    global mods
 	    global $mods(TendFiber)-steps
 	    global fibers_steps
@@ -7271,6 +7309,15 @@ class BioTensorApp {
 
 	    $fibers_tab1.stop.childsite.aniso2.fa configure -state normal
 	    $fibers_tab2.stop.childsite.aniso2.fa configure -state normal
+	}
+    }
+
+    method change_fibers_aniso {} {
+	global mods
+	global $mods(TendFiber)-use-aniso
+
+	if {$vis_activated && [set $mods(TendFiber)-use-aniso]} {
+	    $mods(TendFiber)-c needexecute
 	}
     }
 
@@ -7357,6 +7404,7 @@ class BioTensorApp {
         }
 	
         $mods(ChooseField-FiberSeeds)-c needexecute
+	$mods(Viewer)-ViewWindow_0-c redraw
 	
 	after 100 "$mods(Viewer)-ViewWindow_0-c redraw"
     }
