@@ -146,6 +146,7 @@ private:
    typedef std::map<const VarLabel*, variableListType*, VarLabel::Compare> dataLocationDBtype;
 
    DWDatabase<NCVariableBase>       d_ncDB;
+   DWDatabase<CCVariableBase>       d_ccDB;
    DWDatabase<ParticleVariableBase> d_particleDB;
    reductionDBtype                  d_reductionDB;
 
@@ -174,6 +175,9 @@ private:
 
 //
 // $Log$
+// Revision 1.21  2000/05/30 17:09:38  dav
+// MPI stuff
+//
 // Revision 1.20  2000/05/15 20:04:36  dav
 // Mpi Stuff
 //
