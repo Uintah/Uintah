@@ -75,6 +75,8 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   NGN     = 1;
 
   d_artificialDampCoeff = 0.0;
+  d_artificialViscCoeff1 = 0.2;
+  d_artificialViscCoeff2 = 2.0;
   d_accStrainEnergy = false; // Flag for accumulating strain energy
   d_useLoadCurves = false; // Flag for using load curves
   d_doErosion = false; // Default is no erosion
@@ -108,6 +110,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP&,
     mpm_soln_ps->get("maximum_particle_velocity",d_max_vel);
     mpm_soln_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
     mpm_soln_ps->get("artificial_viscosity",     d_artificial_viscosity);
+    mpm_soln_ps->get("artificial_viscosity_coeff1", d_artificialViscCoeff1);
+    mpm_soln_ps->get("artificial_viscosity_coeff2", d_artificialViscCoeff2);
     mpm_soln_ps->get("accumulate_strain_energy", d_accStrainEnergy);
     mpm_soln_ps->get("use_load_curves", d_useLoadCurves);
     bool adiabaticHeatingOn = true;
@@ -1336,8 +1340,8 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
 	p_q[idx] = 0.0;
 	if(DTrace<0.){
 	  c_dil = sqrt(K*pvol_def[idx]/pmass[idx]);
-	  p_q[idx] = (.2*fabs(c_dil*DTrace*dx_ave) +
-                      2.*(DTrace*DTrace*dx_ave*dx_ave))*
+	  p_q[idx] = (d_artificialViscCoeff1*fabs(c_dil*DTrace*dx_ave) +
+                      d_artificialViscCoeff2*(DTrace*DTrace*dx_ave*dx_ave))*
 	    (pmass[idx]/pvol_def[idx]);
 	}
 
