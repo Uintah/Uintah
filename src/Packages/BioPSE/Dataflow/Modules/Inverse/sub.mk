@@ -30,6 +30,7 @@ SRCS     += \
 	$(SRCDIR)/AttributeTrf.cc\
 	$(SRCDIR)/ConductivitySearch.cc\
 	$(SRCDIR)/DipoleSearch.cc\
+        $(SRCDIR)/TSVD.cc\
 	$(SRCDIR)/Tikhonov.cc\
         $(SRCDIR)/TikhonovSVD.cc\
 #[INSERT NEW CODE FILE HERE]

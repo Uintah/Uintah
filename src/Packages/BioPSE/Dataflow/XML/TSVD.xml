@@ -3,13 +3,13 @@
 <?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
-<component name="TikhonovSVD" category="Inverse">
+<component name="TSVD" category="Inverse">
   <overview>
     <authors>
-      <author>Alireza Ghodrati</author>
+      <author>Alireza Ghodrtai</author>
     </authors>
     <summary>
-      Solve inverse problem using Tikhonov regularization by using SVD.
+      Solve inverse problem using Truncated SVD.
     </summary>
   </overview>
   <implementation>
@@ -28,11 +28,6 @@
         <name>V</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
-      <port>
-        <name>X</name>
-        <datatype>SCIRun::Matrix</datatype>
-      </port>
- 
       <port>
         <name>MeasuredPots</name>
         <datatype>SCIRun::Matrix</datatype>

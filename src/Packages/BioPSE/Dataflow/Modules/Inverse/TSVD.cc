@@ -13,10 +13,10 @@
 //  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 //  University of Utah. All Rights Reserved.
 //  
-//    File       : TikhonovSVD.cc
+//    File       : TSVD.cc
 //    Author     : Yesim Serinagaoglu & Alireza Ghodrati
 //    Date       : 07 Aug. 2001
-//    Last update: Nov. 2002
+//    Last update: Feb. 2002
 
 
 #include <Dataflow/Network/Module.h>
@@ -46,64 +46,62 @@ namespace BioPSE
 
   using namespace SCIRun;
 
-  class BioPSESHARE TikhonovSVD : public Module 
+  class BioPSESHARE TSVD : public Module 
   {
-    	GuiDouble 	lambda_fix_;
+    	GuiInt	 	lambda_fix_;
     	GuiDouble 	lambda_sld_;
     	GuiInt    	haveUI_;
     	GuiString 	reg_method_;
-    	GuiDouble	lambda_min_;
-    	GuiDouble	lambda_max_;
-    	GuiInt		lambda_num_;
-    	GuiDouble 	tex_var_;	
+    	GuiInt		lambda_max_;
+	
+    		
 
   	public:
    	 	// CONSTRUCTOR
-   	 	TikhonovSVD(GuiContext *context);
+   	 	TSVD(GuiContext *context);
 
 	    	// DESTRUCTOR
- 	   	virtual ~TikhonovSVD();
+ 	   	virtual ~TSVD();
 
   	  	virtual void execute();
 
   
 		double Inner_Product(DenseMatrix& A, int col_num, ColumnMatrix& w);
-		void	tikhonov_fun(ColumnMatrix& X_reg, DenseMatrix& InvMat, DenseMatrix& U, ColumnMatrix& Uy,DenseMatrix& S, DenseMatrix& V, DenseMatrix& X, double lam);
-		void	prep_lcurve_data(double *rho, double *eta, ColumnMatrix& Uy, DenseMatrix& U, DenseMatrix& S, DenseMatrix& V, DenseMatrix& X, ColumnMatrix& y, double lam);
+		void	find_solution(ColumnMatrix& X_reg, DenseMatrix& InvMat, DenseMatrix& U, ColumnMatrix& Uy, DenseMatrix& S, DenseMatrix& V, DenseMatrix& X, int lam);
+		void	prep_lcurve_data(Array1<double>  &rho, Array1<double>  &eta, ColumnMatrix& Uy, DenseMatrix& U, 
+						 DenseMatrix& S, DenseMatrix& V, DenseMatrix& X, ColumnMatrix& y);
 		DenseMatrix *make_dense(MatrixHandle A);
     		ColumnMatrix *make_column(MatrixHandle A);
-    		double FindCorner(Array1<double>  &rho, Array1<double>  &eta, Array1<double>  &lambdaArray, 
-					ColumnMatrix *kapa, int *lambda_index, int nLambda);
-
+		void TSVD::Conv(Array1<double> &sp, ColumnMatrix& coef, Array1<double> &basis, int nLambda);  
+  		void FindCorner(Array1<double>  &rho, Array1<double>  &eta, ColumnMatrix *kapa, int *lambda_index, int nLambda);
+		
   };
 	
   // MODULE MAKER
-  DECLARE_MAKER(TikhonovSVD)
+  DECLARE_MAKER(TSVD)
 
 
   // CONSTRUCTOR
-  TikhonovSVD::TikhonovSVD(GuiContext *context)
-	: Module("TikhonovSVD", context, Source, "Inverse", "BioPSE"),
+  TSVD::TSVD(GuiContext *context)
+	: Module("TSVD", context, Source, "Inverse", "BioPSE"),
       	lambda_fix_(context->subVar("lambda_fix")),
       	lambda_sld_(context->subVar("lambda_sld")),
       	haveUI_(context->subVar("haveUI")),
       	reg_method_(context->subVar("reg_method")),
-	lambda_min_(context->subVar("lambda_min")),
-	lambda_max_(context->subVar("lambda_max")),
-	lambda_num_(context->subVar("lambda_num")),
-	tex_var_(context->subVar("tex_var"))
+	lambda_max_(context->subVar("lambda_max"))
+	
 	
   {
   }
 
   // DESTRUCTOR
-  TikhonovSVD::~TikhonovSVD()
+  TSVD::~TSVD()
   {
   }
   //////////////////////////////////////////////////////////////////////////////////////////
   // THIS FUNCTION returns the inner product of one column of matrix A and w , B=A(:,i)'*w
   //////////////////////////////////////////////////////////////////////////////////////////
-  double TikhonovSVD::Inner_Product(DenseMatrix& A, int col_num, ColumnMatrix& w)
+  double TSVD::Inner_Product(DenseMatrix& A, int col_num, ColumnMatrix& w)
   {
 	int i;
 	int nRows=A.nrows();
@@ -115,54 +113,54 @@ namespace BioPSE
   //////////////////////////////////////////////////////////////////////
   // THIS FUNCTION returns regularized solution by tikhonov method
   //////////////////////////////////////////////////////////////////////
-  void TikhonovSVD::tikhonov_fun(ColumnMatrix& X_reg, DenseMatrix& InvMat, DenseMatrix& U, ColumnMatrix& Uy,DenseMatrix& S, 				DenseMatrix& V, DenseMatrix& X, double lam)
+  void TSVD::find_solution(ColumnMatrix& X_reg, DenseMatrix& InvMat, DenseMatrix& U, ColumnMatrix& Uy, 
+					DenseMatrix& S, DenseMatrix& V, DenseMatrix& X, int lam)
   {
 	int i,j;
-	int rank=S.nrows();
+	int rank=S.nrows();	
 	double temp;
-	DenseMatrix  *Mat_temp;
+	DenseMatrix  *Mat_temp;	
 	if(S.ncols() == 1)
 	{
-		temp = S[0][0]/(lam*lam + S[0][0] * S[0][0]) * Uy[0];
+
+		temp =  Uy[0]/S[0][0];
 		for(j=0;j<V.nrows();j++)
 		{
 			X_reg[j]=temp*V[j][0];
 		}
-		for(i=1; i < rank; i++)
+	
+		for(i=1; i < lam; i++)
 		{
-			temp = S[i][0] / (lam*lam + S[i][0] * S[i][0]) * Uy[i];
+			temp = Uy[i]/S[i][0];
 			for(j=0;j<V.nrows();j++)
 			{
                                 X_reg[j] = X_reg[j] + temp * V[j][i];
-				
 			}
 		}
-		
-		//Finding Regularized Inverse Matrix
 
+		//Finding Regularized Inverse Matrix
 		Mat_temp = scinew  DenseMatrix(V.nrows(),V.ncols());
-		for(i=0; i < rank; i++)
+		for(i=0; i < lam; i++)
 		{
-			temp = S[i][0] / (lam*lam + S[i][0] * S[i][0]);
 			for(j=0;j<V.nrows();j++)
 			{
-                                 (*Mat_temp)[j][i]=temp * V[j][i];
+                                (*Mat_temp)[j][i] = V[j][i]/S[i][0];
 			}
 		}
-		Mult(InvMat,(*Mat_temp),*(U.transpose()));
+		Mult(InvMat,V,*(U.transpose()));
+
 
 	}
 	else
 	{
-
-		temp = S[0][0]/(lam*lam*S[0][1] * S[0][1] + S[0][0] * S[0][0]) * Uy[0];
+		temp =  Uy[rank-1]/S[rank-1][0];
 		for(j=0;j<X.nrows();j++)
 		{
-			X_reg[j]=temp*X[j][0];
+			X_reg[j]=temp*X[j][rank-1];
 		}
-		for(i=1; i < rank; i++)
+		for(i=rank-2; i > rank-lam-1; i--)
 		{
-			temp = S[i][0] / (lam*lam*S[i][1] * S[i][1] + S[i][0] * S[i][0]) * Uy[i];
+			temp = Uy[i]/S[i][0];
 			for(j=0;j<X.nrows();j++)
 			{
 				X_reg[j]+= temp * X[j][i];
@@ -174,136 +172,116 @@ namespace BioPSE
 			{
                                 X_reg[j] += Uy[i] * X[j][i];
 			}
-		}
-		
-		//Finding Regularized Inverse Matrix
+		}	
 
+		//Finding Regularized Inverse Matrix
+ 
 		Mat_temp = scinew  DenseMatrix(X.nrows(),X.ncols());
-		(*Mat_temp)=X;
-		for(i=0; i < rank; i++)
+		(*Mat_temp)=X; 
+
+		for(i=rank-1; i > rank-lam-1; i--)
 		{
-			temp = S[i][0] / (lam*lam*S[i][1] * S[i][1] + S[i][0] * S[i][0]);
 			for(j=0;j<X.nrows();j++)
 			{
-				(*Mat_temp)[j][i] = temp * X[j][i];
+				(*Mat_temp)[j][i]= X[j][i]/S[i][0];
 			}
 		}
-		Mult(InvMat,*Mat_temp,*(U.transpose()));
-
+		Mult(InvMat,X,*(U.transpose()));
 	}
   }
   /////////////////////////////////////////////////////////////	
   // THIS FUNCTION Calculate ro and eta for lcurve
   /////////////////////////////////////////////////////////////
-  void	TikhonovSVD::prep_lcurve_data(double *rho, double *eta, ColumnMatrix& Uy, DenseMatrix& U, 
-				DenseMatrix& S, DenseMatrix& V, DenseMatrix& X, ColumnMatrix& y, double lam)
+  void	TSVD::prep_lcurve_data(Array1<double> &rho, Array1<double> &eta, ColumnMatrix& Uy, DenseMatrix& U, 
+				DenseMatrix& S, DenseMatrix& V, DenseMatrix& X, ColumnMatrix& y)
   {
 	int i,j;
 	ColumnMatrix *AX_reg = scinew ColumnMatrix(U.nrows());
+	ColumnMatrix *Residual = scinew ColumnMatrix(U.nrows());
     	ColumnMatrix *RX_reg = scinew ColumnMatrix(V.nrows());
 	ColumnMatrix *X_reg; 
 	int rank=S.nrows();
 	double temp, temp1;
 	if(S.ncols() == 1)
 	{
+
+		for(i=0;i<S.nrows();i++)
+			if(S[i][0]<1e-10)
+				break;
+		if(i<S.nrows())
+			rank=i;
+
 		X_reg = scinew ColumnMatrix(V.nrows());		
-		temp = S[0][0]/(lam*lam + S[0][0] * S[0][0]) * Uy[0];
+		temp =  Uy[0]/S[0][0];
 		for(j=0;j<V.nrows();j++)
 		{
 			(*X_reg)[j]=temp*V[j][0];
 		}
 		for(j=0;j<U.nrows();j++)
 		{
-			(*AX_reg)[j]=temp*S[0][0]*U[j][0];
+			(*AX_reg)[j]=Uy[0]*U[j][0];
 		}
+		Sub(*Residual,*AX_reg,y);
+		rho[0]=Residual->vector_norm();
+		eta[0]=X_reg->vector_norm();
+		
 		for(i=1; i < rank; i++)
 		{
-			temp = S[i][0] / (lam*lam + S[i][0] * S[i][0]) * Uy[i];
+			temp = Uy[i]/S[i][0];
 			for(j=0;j<V.nrows();j++)
 			{
                                 (*X_reg)[j] = (*X_reg)[j] + temp * V[j][i];
 			}
-			temp *=S[i][0];
 			for(j=0;j<U.nrows();j++)
 			{
-				(*AX_reg)[j]+= temp*U[j][i];
+				(*AX_reg)[j]+= Uy[i]*U[j][i];
 			}
+			Sub(*Residual,*AX_reg,y);
+			rho[i]=Residual->vector_norm();
+			eta[i]=X_reg->vector_norm();
 		}
-				// Calculate the norm of Ax-b and Rx  
-  		*rho=0;
-    		*eta=0;
-		for(i=0; i<U.nrows(); i++)
-      		{
-			(*AX_reg)[i] -= y[i];
-			*rho += (*AX_reg)[i]*(*AX_reg)[i];
-      		}
-    		for(i=0; i<V.nrows(); i++)
-      		{
-
-			*eta += (*X_reg)[i]*(*X_reg)[i];
-      		}
-    		*rho = sqrt(*rho);
-    		*eta = sqrt(*eta);
-
 	}
 	else
 	{
 		X_reg = scinew ColumnMatrix(X.nrows());
-		temp = S[0][0]/(lam*lam*S[0][1] * S[0][1] + S[0][0] * S[0][0]) * Uy[0];
-
-		for(j=0;j<U.nrows();j++)
-		{
-			(*AX_reg)[j]=temp*S[0][0]*U[j][0];
-		}
-		for(j=0;j<V.nrows();j++)
-		{
-			(*RX_reg)[j]=temp*S[0][1]*V[j][0];
-		}
-		for(i=1; i < rank; i++)
-		{
-			temp = S[i][0] / (lam*lam*S[i][1] * S[i][1] + S[i][0] * S[i][0]) * Uy[i];
-			temp1 =temp * S[i][0];
-			for(j=0;j<U.nrows();j++)
-			{
-				(*AX_reg)[j]+= temp1 * U[j][i];
-			}
-			temp1 =temp *S[i][1];
-			for(j=0;j<V.nrows();j++)
-			{
-				(*RX_reg)[j]+= temp1 * V[j][i];
-			}
-		}
-		for(i=rank; i < X.ncols(); i++)
+		AX_reg->zero();
+		RX_reg->zero();
+		for(i=S.nrows()-1;i>=0;i--)
+			if(S[i][0]<1e-10)
+				break;
+		if(i>=0)
+			rank=S.nrows()-i;
+		
+		for(i=S.nrows(); i < X.ncols(); i++)
 		{
 			for(j=0;j<U.nrows();j++)
 			{
 				(*AX_reg)[j]+= Uy[i] * U[j][i];
 			}
-		}		
-
-				// Calculate the norm of Ax-b and Rx  
-  		*rho=0;
-    		*eta=0;
-		for(i=0; i<U.nrows(); i++)
-      		{
-			(*AX_reg)[i] -= y[i];
-			*rho += (*AX_reg)[i]*(*AX_reg)[i];
-      		}
-    		for(i=0; i<V.nrows(); i++)
-      		{
-
-			*eta += (*RX_reg)[i]*(*RX_reg)[i];
-      		}
-    		*rho = sqrt(*rho);
-    		*eta = sqrt(*eta);
-
+		}
+		for(i=S.nrows()-1; i >= (S.nrows()-rank); i--)
+		{
+			temp = Uy[i];
+			for(j=0;j<U.nrows();j++)
+			{
+				(*AX_reg)[j]+= temp * U[j][i];
+			}
+			temp1 =temp *S[i][1]/S[i][0];
+			for(j=0;j<V.nrows();j++)
+			{
+				(*RX_reg)[j]+= temp1 * V[j][i];
+			}
+			Sub(*Residual,*AX_reg,y);
+			rho[S.nrows()-i-1]=Residual->vector_norm();
+			eta[S.nrows()-i-1]=RX_reg->vector_norm();
+		}
 	}
   }
 
   /////////////////////////////////////////////////////////////	
   // THIS FUNCTION MAKES SURE THAT THE MATRIX IS A DENSE MATRIX
   /////////////////////////////////////////////////////////////
-  DenseMatrix *TikhonovSVD::make_dense(MatrixHandle A) 
+  DenseMatrix *TSVD::make_dense(MatrixHandle A) 
   {
     	DenseMatrix *Adense = dynamic_cast<DenseMatrix *>(A.get_rep());
     	if (Adense) 
@@ -327,7 +305,7 @@ namespace BioPSE
   ////////////////////////////////////////////////////////////////
   // THIS FUNCTION MAKES SURE THAT THE MATRIX IS A COLUMN MATRIX
   ////////////////////////////////////////////////////////////////
-  ColumnMatrix *TikhonovSVD::make_column(MatrixHandle A) 
+  ColumnMatrix *TSVD::make_column(MatrixHandle A) 
   {
     	ColumnMatrix *Acol = dynamic_cast<ColumnMatrix *>(A.get_rep());
     	if (Acol) 
@@ -349,46 +327,131 @@ namespace BioPSE
       	}
   }
   ////////////////////////////////////////////
-  // FIND CORNER
+  //          getting curve from coeficient and basis
+  // This is like convolving basis function with the coeficients 
+  // after inserting 3 zeros in between any two consecutive coefficients 
   ////////////////////////////////////////////
-  double TikhonovSVD::FindCorner(Array1<double> &rho, Array1<double> &eta, Array1<double> &lambdaArray, ColumnMatrix *kapa, int *lambda_index, int nLambda)
+  void TSVD::Conv(Array1<double> &sp, ColumnMatrix& coef, Array1<double> &basis, int nLambda)
+  {
+	int i, j;
+	for(i=0;i<4*nLambda;i++)
+	{
+		sp[i]=0;
+		for(j=0;j<15;j++)
+		{
+			if(j-7+i>= 0 && j-7+i < nLambda*4 )
+			{
+				if((i+j-7)%4 == 0)
+				{
+					sp[i]+=basis[j]*coef[(i+j-7)/4];
+					
+				}	
+			}
+		}
+	}
+  }
+  ////////////////////////////////////////////
+  // find corner of the L-curve
+  ////////////////////////////////////////////
+  void TSVD::FindCorner(Array1<double> &rho, Array1<double> &eta, ColumnMatrix *kapa, int *lambda_index, int nLambda)
   {
     	Array1<double> deta, ddeta, drho, ddrho, lrho, leta;
-
-    	leta.setsize(nLambda); 
-    	deta.setsize(nLambda); 
-    	ddeta.setsize(nLambda);
-    	lrho.setsize(nLambda);   
-    	drho.setsize(nLambda);   
-    	ddrho.setsize(nLambda);   
-
     	double  maxKapa=-1e10;
     	int	i;
+	Array1<double> basis;
+	basis.setsize(15);
+	leta.setsize(4*nLambda); 
+    	deta.setsize(4*nLambda); 
+    	ddeta.setsize(4*nLambda);
+    	lrho.setsize(4*nLambda);   
+    	drho.setsize(4*nLambda);   
+    	ddrho.setsize(4*nLambda);   
+	
+	
+	// Finding the coefficient of Bsplines that reconstruct the curve
+	// The number of knots are the same as the number of curve points
 
-    	for(i=0; i<nLambda; i++)
-      	{
-		lrho[i] = log(rho[i])/log(10.0);
-		leta[i] = log(eta[i])/log(10.0);	
-		if(i>0)
-	  	{
-	    		deta[i] = (leta[i]-leta[i-1])/(lambdaArray[i]-lambdaArray[i-1]);
-	    		drho[i] = (lrho[i]-lrho[i-1])/(lambdaArray[i]-lambdaArray[i-1]);
-	  	}
-		if(i>1)
-	  	{
-	 	   	ddeta[i] = (deta[i]-deta[i-1])/(lambdaArray[i]-lambdaArray[i-1]);
-	  	  	ddrho[i] = (drho[i]-drho[i-1])/(lambdaArray[i]-lambdaArray[i-1]);
-	  	}
-      	}
-    	drho[0] = drho[1];
-    	deta[0] = deta[1];
-    	ddrho[0] = ddrho[2];
-    	ddrho[1] = ddrho[2];
-    	ddeta[0] = ddeta[2];
-    	ddeta[1] = ddeta[2];	
+	DenseMatrix  *Bspline_Bases = scinew DenseMatrix(nLambda,nLambda);
+	ColumnMatrix  *rho_coef = scinew ColumnMatrix(nLambda);
+	ColumnMatrix  *eta_coef = scinew ColumnMatrix(nLambda);
+		
+	Bspline_Bases->zero();
+	(*Bspline_Bases)[0][0]=2/3;
+	(*Bspline_Bases)[1][0]=1/6;
+	for(int col=1;col<nLambda-1;col++)
+	{
+		(*Bspline_Bases)[col-1][col]=1/6;
+		(*Bspline_Bases)[col][col]=2/3;
+		(*Bspline_Bases)[col+1][col]=1/6;
+	}
+	(*Bspline_Bases)[nLambda-2][nLambda-1]=1/6;
+	(*Bspline_Bases)[nLambda-1][nLambda-1]=2/3;
+	for(i=0;i<nLambda;i++)
+	{
+		(*rho_coef)[i]=log10(rho[i]);	
+		(*eta_coef)[i]=log10(eta[i]);	
+	}
+	Bspline_Bases->solve(*rho_coef);
+	Bspline_Bases->solve(*eta_coef);
+		
+	
+	//Interpolation to have 4 times higher resolution
 
-    	*lambda_index=0;
-    	for(i=0; i<nLambda; i++)
+	//bspline basis 
+	
+	basis[0]=0.0026;
+	basis[1]=0.0208;
+	basis[2]=0.0703;
+	basis[3]=0.1667;
+	basis[4]=0.3151;
+	basis[5]=0.4792;
+	basis[6]=0.6120;
+	basis[7]=0.6667;
+	for(i=14;i>7;i--)
+		basis[i]=basis[14-i];
+
+
+	Conv(lrho, *rho_coef, basis,nLambda);
+	Conv(leta, *eta_coef, basis,nLambda);
+
+	// First derivative of Bspline basis
+	
+	basis[0]=0.0312;
+	basis[1]=0.1250;
+	basis[2]=0.2812;
+	basis[3]=0.5000;
+	basis[4]=0.6562;
+	basis[5]=0.6250;
+	basis[6]=0.4062;
+	basis[7]=0;
+	for(i=14;i>7;i--)
+		basis[i]=-basis[14-i];
+	
+	Conv(drho, *rho_coef, basis,nLambda);
+	Conv(deta, *eta_coef, basis,nLambda);
+
+	// Second derivative of Bspline basis
+	basis[0]=0.2500;
+	basis[1]=0.5000;
+	basis[2]=0.7500;
+	basis[3]=1.0000;
+	basis[4]=0.2500;
+	basis[5]=-0.5000;
+	basis[6]=-1.2500;
+	basis[7]=-2.0000;
+	for(i=14;i>7;i--)
+		basis[i]=basis[14-i];
+	
+	Conv(ddrho, *rho_coef, basis,nLambda);
+	Conv(ddeta, *eta_coef, basis,nLambda);
+
+  
+  	*lambda_index=0;
+ 
+	// finding the maximum curvature
+		
+
+	for(i=0; i<4*nLambda; i++)
       	{
 		(*kapa)[i] = 2*(drho[i]*ddeta[i] - ddrho[i]*deta[i])/sqrt(pow((deta[i]*deta[i]+drho[i]*drho[i]),3));  
 		if((*kapa)[i]>maxKapa)
@@ -396,24 +459,24 @@ namespace BioPSE
 	    		maxKapa = (*kapa)[i];
 	    		*lambda_index = i;
 	  	}
+
       	}
-    	double lambda_cor = lambdaArray[*lambda_index];
-	return lambda_cor;
+	(*lambda_index)/=4;
   }
   /////////////////////////////////////////
   // MODULE EXECUTION
   /////////////////////////////////////////
-  void TikhonovSVD::execute()
+  void TSVD::execute()
   {
      	MatrixIPort *iportMeasDat = (MatrixIPort *)get_iport("MeasuredPots");
 	
 	MatrixIPort *iportU = (MatrixIPort *)get_iport("U");
 	MatrixIPort *iportS = (MatrixIPort *)get_iport("S");
 	MatrixIPort *iportV = (MatrixIPort *)get_iport("V");
-	MatrixIPort *iportX = (MatrixIPort *)get_iport("X");
+	//MatrixIPort *iportX = (MatrixIPort *)get_iport("X");
 
     	MatrixOPort *oportInvSol = (MatrixOPort *)get_oport("InverseSoln");
-	MatrixOPort *oportRegParam = (MatrixOPort *)get_oport("RegParam");
+  	MatrixOPort *oportRegParam = (MatrixOPort *)get_oport("RegParam");
     	MatrixOPort *oportRegInvMat = (MatrixOPort *)get_oport("RegInverseMat");
 
 
@@ -439,11 +502,11 @@ namespace BioPSE
     		error("Unable to initialize iport 'V'.");
 		return;
       	}
-	if (!iportX) 
+/*	if (!iportX) 
      	{
   		error("Unable to initialize iport 'X'.");
 		return;
-     	 	}
+     	}*/
 	if (!oportInvSol) 
       	{
     		error("Unable to initialize oport 'InverseSoln'.");
@@ -455,9 +518,9 @@ namespace BioPSE
 		return;
       	}
     	
-    	// DEFINE MATRIX HANDLES FOR INPUT/OUTPUT PORTS
+    	//DEFINE MATRIX HANDLES FOR INPUT/OUTPUT PORTS
     	
-	MatrixHandle hMatrixMeasDat, hMatrixU, hMatrixS, hMatrixV ,hMatrixX;
+	MatrixHandle hMatrixMeasDat, hMatrixU, hMatrixS, hMatrixV, hMatrixX;
     	    
     	
      	if( (!iportU->get(hMatrixU)) || (!iportS->get(hMatrixS)) || (!iportV->get(hMatrixV)) )
@@ -482,25 +545,39 @@ namespace BioPSE
    	DenseMatrix *matrixV = make_dense(hMatrixV);
 	DenseMatrix *matrixX;
 	
+
+	
 	int	Method;
-	int M, N, i, j;
-	double lambda, lambda2;
-    	int	lambda_index;
+	int M, N, i;
+	int	lambda;
+	int rank = matrixS->nrows();
 
 	if(matrixS->ncols()==1)
+	{	
 		Method=SVD_method;
+		for(i=0;i<matrixS->nrows();i++)
+			if((*matrixS)[i][0]<1e-10)
+				break;
+		if(i<matrixS->nrows())
+			rank=i;
+	}
 	else
 	if(matrixS->ncols()==2)
 	{
 		Method=GSVD_method;
 		
-		if(!iportX->get(hMatrixX)) 
+		/*if(!iportX->get(hMatrixX)) 
 	      	{ 
  	   		error("Couldn't get handle X input.");
 			return;
-   	   	}
-
+   	   	}*/
 		matrixX = make_dense(hMatrixX);
+		
+		for(i=matrixS->nrows()-1;i>=0;i--)
+			if((*matrixS)[i][0]<1e-10)
+				break;
+		if(i>=0)
+			rank=matrixS->nrows()-i;
 
 	}
 	else
@@ -508,6 +585,7 @@ namespace BioPSE
 		error("S matrix dimensions incorrect.");
 		return;	
 	}
+	lambda_max_.set(rank);
 	
 	M=matrixU->nrows();
 	if(Method == SVD_method)
@@ -516,9 +594,8 @@ namespace BioPSE
 		N=matrixX->nrows();
 
 	ColumnMatrix *Uy=scinew ColumnMatrix(matrixU->ncols());
-    	DenseMatrix  *InverseMat = scinew DenseMatrix(N, M);
     	ColumnMatrix *solution = scinew ColumnMatrix(N);
-	
+    	DenseMatrix  *InverseMat = scinew DenseMatrix(N, M);
 	
 	for(i=0;i<matrixU->ncols();i++)
 		(*Uy)[i]=Inner_Product(*matrixU, i, *matrixMeasDatD);
@@ -536,9 +613,10 @@ namespace BioPSE
 		else if (reg_method_.get() == "slider")
 		{
 			// Use single fixed lambda value, select via slider
-			lambda = tex_var_.get(); //lambda_sld_.get();
+			lambda = floor(lambda_sld_.get()/10*rank);
 	 		msgStream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
 		}
+		
 	}
 	else if (reg_method_.get() == "lcurve")
  	{
@@ -546,35 +624,18 @@ namespace BioPSE
 		msgStream_ << "method = " << reg_method_.get() << "\n";//DISCARD
 
 		int nLambda;
-		Array1<double> lambdaArray, rho, eta;
-		double rhotemp, etatemp;
+		Array1<double> rho, eta, lambdaArray;
 		double lower_y;
-		double	lam_step;
-		
+		nLambda=rank;
 
-		nLambda=lambda_num_.get();
-		ColumnMatrix *kapa = scinew ColumnMatrix(nLambda);
-		lambdaArray.setsize(nLambda); 
-		rho.setsize(nLambda);
-		eta.setsize(nLambda);   
+		ColumnMatrix *kapa = scinew ColumnMatrix(4*nLambda); 
+		rho.setsize(rank);
+		eta.setsize(rank);
+		lambdaArray.setsize(rank);   
+		prep_lcurve_data(rho, eta, *Uy, *matrixU, *matrixS, *matrixV, *matrixX, *matrixMeasDatD);
+		FindCorner(rho, eta, kapa, &lambda, rank);
 		
-		lambdaArray[0]=lambda_min_.get();
-		lam_step=pow(10,log10(lambda_max_.get()/lambda_min_.get())/(nLambda-1));
-	
-		
-		for(j=0; j<nLambda; j++)
-	  	{
-	   		if(j) 
-	      			lambdaArray[j] = lambdaArray[j-1]*lam_step;
-			prep_lcurve_data(&rhotemp, &etatemp, *Uy, *matrixU, *matrixS, *matrixV, *matrixX, 
-								*matrixMeasDatD, lambdaArray[j]);
-			rho[j]=rhotemp;
-	    		eta[j]=etatemp;
-	  	}
-
-		lambda = FindCorner(rho, eta, lambdaArray, kapa, &lambda_index, nLambda);
-
-		lower_y = eta[0]/10.;
+		lower_y = eta[0];
 		if (eta[nLambda-1] < lower_y)  
 			lower_y = eta[nLambda-1];
 
@@ -584,19 +645,21 @@ namespace BioPSE
 	  		str << id << " plot_graph \" ";
 	  		for (i=0; i<nLambda; i++)
 	      			str << rho[i] << " " << eta[i] << " ";
-	  			str << "\" \" " << rho[0]/10 << " " << eta[lambda_index] << " ";
-	  			str << rho[lambda_index] << " " << eta[lambda_index] << " ";
-	  			str << rho[lambda_index] << " " << lower_y << " \" ";
-	  			str << lambda << " ; update idletasks";
-	  			gui->execute(str.str().c_str());
+  			str << "\" \" " << rho[nLambda-1]/10 << " " << eta[lambda] << " ";
+  			str << rho[lambda] << " " << eta[lambda] << " ";
+  			str << rho[lambda] << " " << lower_y/10 << " \" ";
+  			str << lambda << " ; update idletasks";
+  			gui->execute(str.str().c_str());
 		}
+	
 
-	} // END  else if (reg_method_.get() == "lcurve")
-	lambda2 = lambda*lambda;
+		
+	} 
+	
 	ColumnMatrix  *RegParameter =scinew ColumnMatrix(1);
   	(*RegParameter)[0]=lambda;
 
-	tikhonov_fun(*solution, *InverseMat, *matrixU, *Uy, *matrixS, *matrixV, *matrixX, lambda);
+	find_solution(*solution,*InverseMat, *matrixU, *Uy, *matrixS, *matrixV, *matrixX, lambda);
 
 	
 	//...........................................................
@@ -604,7 +667,7 @@ namespace BioPSE
     	oportInvSol->send(MatrixHandle(solution));
 	oportRegParam->send(MatrixHandle(RegParameter));
     	oportRegInvMat->send(MatrixHandle(InverseMat));
-    	
+	    	
 
 
   }
