@@ -18,9 +18,7 @@
  *    	flagged to change
  */
 
-#include <SCICore/Containers/Array2.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include "SFRGfile.h"
 #include <PSECore/Datatypes/ScalarFieldPort.h>
 #include <SCICore/Datatypes/ScalarField.h>
 #include <SCICore/Datatypes/ScalarFieldRGBase.h>
@@ -28,6 +26,7 @@
 #include <SCICore/Datatypes/ScalarFieldRGdouble.h>
 #include <SCICore/Datatypes/ScalarFieldRGfloat.h>
 #include <SCICore/Datatypes/ScalarFieldRGint.h>
+#include <SCICore/Datatypes/ScalarFieldRGushort.h>
 #include <SCICore/Datatypes/ScalarFieldRGshort.h>
 #include <SCICore/Datatypes/ScalarFieldRGchar.h>
 #include <SCICore/Datatypes/ScalarFieldRGuchar.h>
@@ -40,8 +39,6 @@
 #include <iostream>
 using std::cerr;
 
-typedef enum {DOUBLE, FLOAT, INT, USHORT, UCHAR, CHAR} VTYPE; // voxel type
-
 namespace PSECommon {
 namespace Modules {
 
@@ -53,65 +50,6 @@ using namespace SCICore::Containers;
 using namespace SCICore::Geometry;
 using namespace SCICore::Math;
 
-class SFRGfile : public Module {
-    ScalarFieldIPort* iField;
-    ScalarFieldOPort* oField;
-
-    VTYPE inVoxel;
-    VTYPE outVoxel;
-
-    char *inName;
-    char *outName;
-    int haveMinMax;
-    int haveOutVoxel;
-    int haveBBox;
-
-    int nx, ny, nz;
-    Point minIn, minOut, maxIn, maxOut;
-    double Omin, Omax, Ospan, Nmin, Nmax, Nspan;
-    double Cmin, Cmax;
-    bool newBB;
-    bool PCGVHeader;
-
-    ScalarFieldRGdouble *ifd;
-    ScalarFieldRGfloat *iff;
-    ScalarFieldRGint *ifi;
-    ScalarFieldRGshort *ifs;
-    ScalarFieldRGchar *ifc;
-    ScalarFieldRGuchar *ifu;
-    
-    ScalarFieldHandle ifh;
-    ScalarFieldRGBase *isf;
-    ScalarFieldHandle ofh;
-
-    TCLint haveMinMaxTCL;
-    TCLint haveOutVoxelTCL;
-    TCLint haveBBoxTCL;
-    TCLint outVoxelTCL;
-    TCLstring NminTCL;
-    TCLstring NmaxTCL;
-    TCLstring CminTCL;
-    TCLstring CmaxTCL;
-    TCLstring minOutTCLX;
-    TCLstring minOutTCLY;
-    TCLstring minOutTCLZ;
-    TCLstring maxOutTCLX;
-    TCLstring maxOutTCLY;
-    TCLstring maxOutTCLZ;
-
-    void checkInterface();
-    void printInputStats();
-    void printOutputStats();
-    void setInputFieldVars();
-    void setBounds();
-    inline double SETVAL(double val);
-    void revoxelize();
-    void setOutputFieldHandle();
-public:
-    SFRGfile(const clString& id);
-    virtual ~SFRGfile();
-    virtual void execute();
-};
 
 extern "C" Module* make_SFRGfile(const clString& id)
 {
@@ -203,6 +141,7 @@ void SFRGfile::printInputStats() {
     else if (inVoxel == FLOAT) cerr << "floats ";
     else if (inVoxel == INT) cerr << "ints ";
     else if (inVoxel == USHORT) cerr << "unsigned shorts ";
+    else if (inVoxel == SHORT) cerr << "shorts ";
     else if (inVoxel == CHAR) cerr << "chars ";
     else cerr << "unsigned chars ";
     cerr << "with dimensions ["<<nx<<", "<<ny<< ", "<<nz<<"] ";
@@ -216,6 +155,7 @@ void SFRGfile::printOutputStats() {
     else if (outVoxel == FLOAT) cerr << "floats ";
     else if (outVoxel == INT) cerr << "ints ";
     else if (outVoxel == USHORT) cerr << "unsigned shorts ";
+    else if (outVoxel == SHORT) cerr << "shorts ";
     else if (outVoxel == CHAR) cerr << "char ";
     else cerr << "unsigned chars ";
     if (haveMinMax) cerr << "\n    with minVal="<<Max(Nmin,Cmin)<<", maxVal="<<Min(Nmax,Cmax);
@@ -240,25 +180,29 @@ void SFRGfile::setInputFieldVars() {
     iff=isf->getRGFloat();
     ifi=isf->getRGInt();
     ifs=isf->getRGShort();
-    ifu=isf->getRGUchar();
+    ifus=isf->getRGUshort();
+    ifuc=isf->getRGUchar();
     ifc=isf->getRGChar();
 
     if (ifd) inVoxel = DOUBLE;
     if (iff) inVoxel = FLOAT;
     if (ifi) inVoxel = INT;
-    if (ifs) inVoxel = USHORT;
-    if (ifu) inVoxel = UCHAR;
+    if (ifs) inVoxel = SHORT;
+    if (ifus) inVoxel = USHORT;
+    if (ifuc) inVoxel = UCHAR;
     if (ifc) inVoxel = CHAR;
 }
 
 
 void SFRGfile::setBounds() {
     if (outVoxel == UCHAR) {
-	ifu->set_bounds(minOut, maxOut);
+	ifuc->set_bounds(minOut, maxOut);
     } else if (outVoxel == CHAR) {
 	ifc->set_bounds(minOut, maxOut);
-    } else if (outVoxel == USHORT) {
+    } else if (outVoxel == SHORT) {
 	ifs->set_bounds(minOut, maxOut);
+    } else if (outVoxel == USHORT) {
+	ifus->set_bounds(minOut, maxOut);
     } else if (outVoxel == INT) {
 	ifi->set_bounds(minOut, maxOut);
     } else if (outVoxel == FLOAT) {
@@ -268,21 +212,15 @@ void SFRGfile::setBounds() {
     }
 }
 
-inline double SFRGfile::SETVAL(double val) {
-    double v;
-    if (!haveMinMax) return val;
-    else v=(val-Omin)*Nspan/Ospan+Nmin;
-    if (v<Cmin) return Cmin; else if (v>Cmax) return Cmax; else return v;
-}
-
 void SFRGfile::revoxelize() {
     if (inVoxel == outVoxel && !haveMinMax) return;
 
     int i,j,k;
     if (haveMinMax) {
-	if (inVoxel == UCHAR) ifu->get_minmax(Omin, Omax);
+	if (inVoxel == UCHAR) ifuc->get_minmax(Omin, Omax);
 	else if (inVoxel == CHAR) ifc->get_minmax(Omin, Omax);
-	else if (inVoxel == USHORT) ifs->get_minmax(Omin, Omax);
+	else if (inVoxel == SHORT) ifs->get_minmax(Omin, Omax);
+	else if (inVoxel == USHORT) ifus->get_minmax(Omin, Omax);
 	else if (inVoxel == INT) ifi->get_minmax(Omin, Omax);
 	else if (inVoxel == FLOAT) iff->get_minmax(Omin, Omax);
 	else ifd->get_minmax(Omin, Omax);
@@ -293,22 +231,26 @@ void SFRGfile::revoxelize() {
     cerr << "Omin="<<Omin<<"  Ospan="<<Ospan<<"\n";
     cerr << "Nmin="<<Nmin<<"  Nspan="<<Nspan<<"\n";
 
-    ScalarFieldRGuchar *ifuo=ifu;
+    ScalarFieldRGuchar *ifuco=ifuc;
     ScalarFieldRGchar *ifco=ifc;
     ScalarFieldRGshort *ifso=ifs;
+    ScalarFieldRGushort *ifuso=ifus;
     ScalarFieldRGint *ifio=ifi;
     ScalarFieldRGfloat *iffo=iff;
     ScalarFieldRGdouble *ifdo=ifd;
 
     if (outVoxel == UCHAR) {
-	ifu = new ScalarFieldRGuchar;
-	ifu->resize(nx,ny,nz);
+	ifuc = new ScalarFieldRGuchar;
+	ifuc->resize(nx,ny,nz);
     } else if (outVoxel == CHAR) {
 	ifc = new ScalarFieldRGchar;
 	ifc->resize(nx,ny,nz);
-    } else if (outVoxel == USHORT) {
+    } else if (outVoxel == SHORT) {
 	ifs = new ScalarFieldRGshort;
 	ifs->resize(nx,ny,nz);
+    } else if (outVoxel == USHORT) {
+	ifus = new ScalarFieldRGushort;
+	ifus->resize(nx,ny,nz);
     } else if (outVoxel == INT) {
 	ifi = new ScalarFieldRGint;
 	ifi->resize(nx,ny,nz);
@@ -325,7 +267,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifu->grid(i,j,k) = SETVAL(ifuo->grid(i,j,k));
+			ifuc->grid(i,j,k) = SETVAL(ifuco->grid(i,j,k));
 		    }
 		}
 	    }
@@ -333,7 +275,15 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifc->grid(i,j,k) = SETVAL(ifuo->grid(i,j,k));
+			ifc->grid(i,j,k) = SETVAL(ifuco->grid(i,j,k));
+		    }
+		}
+	    }
+	} else if (outVoxel == SHORT) {
+	    for (i=0; i<nx; i++) {
+		for (j=0; j<ny; j++) {
+		    for (k=0; k<nz; k++) {
+			ifs->grid(i,j,k) = SETVAL(ifuco->grid(i,j,k));
 		    }
 		}
 	    }
@@ -341,7 +291,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifs->grid(i,j,k) = SETVAL(ifuo->grid(i,j,k));
+			ifus->grid(i,j,k) = SETVAL(ifuco->grid(i,j,k));
 		    }
 		}
 	    }
@@ -349,7 +299,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifi->grid(i,j,k) = SETVAL(ifuo->grid(i,j,k));
+			ifi->grid(i,j,k) = SETVAL(ifuco->grid(i,j,k));
 		    }
 		}
 	    }
@@ -357,7 +307,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			iff->grid(i,j,k) = SETVAL(ifuo->grid(i,j,k));
+			iff->grid(i,j,k) = SETVAL(ifuco->grid(i,j,k));
 		    }
 		}
 	    }
@@ -365,7 +315,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifd->grid(i,j,k) = SETVAL(ifuo->grid(i,j,k));
+			ifd->grid(i,j,k) = SETVAL(ifuco->grid(i,j,k));
 		    }
 		}
 	    }
@@ -375,7 +325,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifu->grid(i,j,k) = SETVAL(ifco->grid(i,j,k));
+			ifuc->grid(i,j,k) = SETVAL(ifco->grid(i,j,k));
 		    }
 		}
 	    }
@@ -387,11 +337,19 @@ void SFRGfile::revoxelize() {
 		    }
 		}
 	    }
-	} else if (outVoxel == USHORT) {
+	} else if (outVoxel == SHORT) {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
 			ifs->grid(i,j,k) = SETVAL(ifco->grid(i,j,k));
+		    }
+		}
+	    }
+	} else if (outVoxel == USHORT) {
+	    for (i=0; i<nx; i++) {
+		for (j=0; j<ny; j++) {
+		    for (k=0; k<nz; k++) {
+			ifus->grid(i,j,k) = SETVAL(ifco->grid(i,j,k));
 		    }
 		}
 	    }
@@ -420,12 +378,12 @@ void SFRGfile::revoxelize() {
 		}
 	    }
 	}
-    } else if (inVoxel == USHORT) {
+    } else if (inVoxel == SHORT) {
 	if (outVoxel == UCHAR) {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifu->grid(i,j,k) = SETVAL(ifso->grid(i,j,k));
+			ifuc->grid(i,j,k) = SETVAL(ifso->grid(i,j,k));
 		    }
 		}
 	    }
@@ -437,11 +395,19 @@ void SFRGfile::revoxelize() {
 		    }
 		}
 	    }
-	} else if (outVoxel == USHORT) {
+	} else if (outVoxel == SHORT) {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
 			ifs->grid(i,j,k) = SETVAL(ifso->grid(i,j,k));
+		    }
+		}
+	    }
+	} else if (outVoxel == USHORT) {
+	    for (i=0; i<nx; i++) {
+		for (j=0; j<ny; j++) {
+		    for (k=0; k<nz; k++) {
+			ifus->grid(i,j,k) = SETVAL(ifso->grid(i,j,k));
 		    }
 		}
 	    }
@@ -470,12 +436,70 @@ void SFRGfile::revoxelize() {
 		}
 	    }
 	}
+    } else if (inVoxel == USHORT) {
+	if (outVoxel == UCHAR) {
+	    for (i=0; i<nx; i++) {
+		for (j=0; j<ny; j++) {
+		    for (k=0; k<nz; k++) {
+			ifuc->grid(i,j,k) = SETVAL(ifuso->grid(i,j,k));
+		    }
+		}
+	    }
+	} else if (outVoxel == CHAR) {
+	    for (i=0; i<nx; i++) {
+		for (j=0; j<ny; j++) {
+		    for (k=0; k<nz; k++) {
+			ifc->grid(i,j,k) = SETVAL(ifuso->grid(i,j,k));
+		    }
+		}
+	    }
+	} else if (outVoxel == SHORT) {
+	    for (i=0; i<nx; i++) {
+		for (j=0; j<ny; j++) {
+		    for (k=0; k<nz; k++) {
+			ifs->grid(i,j,k) = SETVAL(ifuso->grid(i,j,k));
+		    }
+		}
+	    }
+	} else if (outVoxel == USHORT) {
+	    for (i=0; i<nx; i++) {
+		for (j=0; j<ny; j++) {
+		    for (k=0; k<nz; k++) {
+			ifus->grid(i,j,k) = SETVAL(ifuso->grid(i,j,k));
+		    }
+		}
+	    }
+	} else if (outVoxel == INT) {
+	    for (i=0; i<nx; i++) {
+		for (j=0; j<ny; j++) {
+		    for (k=0; k<nz; k++) {
+			ifi->grid(i,j,k) = SETVAL(ifuso->grid(i,j,k));
+		    }
+		}
+	    }
+	} else if (outVoxel == FLOAT) {
+	    for (i=0; i<nx; i++) {
+		for (j=0; j<ny; j++) {
+		    for (k=0; k<nz; k++) {
+			iff->grid(i,j,k) = SETVAL(ifuso->grid(i,j,k));
+		    }
+		}
+	    }
+	} else if (outVoxel == DOUBLE) {
+	    for (i=0; i<nx; i++) {
+		for (j=0; j<ny; j++) {
+		    for (k=0; k<nz; k++) {
+			ifd->grid(i,j,k) = SETVAL(ifuso->grid(i,j,k));
+		    }
+		}
+	    }
+	}
     } else if (inVoxel == INT) {
 	if (outVoxel == UCHAR) {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifu->grid(i,j,k) = SETVAL(ifio->grid(i,j,k));
+			ifuc->grid(i,j,k) = SETVAL(ifio->grid(i,j,k));
 		    }
 		}
 	    }
@@ -487,11 +511,19 @@ void SFRGfile::revoxelize() {
 		    }
 		}
 	    }
-	} else if (outVoxel == USHORT) {
+	} else if (outVoxel == SHORT) {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
 			ifs->grid(i,j,k) = SETVAL(ifio->grid(i,j,k));
+		    }
+		}
+	    }
+	} else if (outVoxel == USHORT) {
+	    for (i=0; i<nx; i++) {
+		for (j=0; j<ny; j++) {
+		    for (k=0; k<nz; k++) {
+			ifus->grid(i,j,k) = SETVAL(ifio->grid(i,j,k));
 		    }
 		}
 	    }
@@ -525,7 +557,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifu->grid(i,j,k) = SETVAL(iffo->grid(i,j,k));
+			ifuc->grid(i,j,k) = SETVAL(iffo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -537,11 +569,19 @@ void SFRGfile::revoxelize() {
 		    }
 		}
 	    }
-	} else if (outVoxel == USHORT) {
+	} else if (outVoxel == SHORT) {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
 			ifs->grid(i,j,k) = SETVAL(iffo->grid(i,j,k));
+		    }
+		}
+	    }
+	} else if (outVoxel == USHORT) {
+	    for (i=0; i<nx; i++) {
+		for (j=0; j<ny; j++) {
+		    for (k=0; k<nz; k++) {
+			ifus->grid(i,j,k) = SETVAL(iffo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -575,7 +615,7 @@ void SFRGfile::revoxelize() {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
-			ifu->grid(i,j,k) = SETVAL(ifdo->grid(i,j,k));
+			ifuc->grid(i,j,k) = SETVAL(ifdo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -587,11 +627,19 @@ void SFRGfile::revoxelize() {
 		    }
 		}
 	    }
-	} else if (outVoxel == USHORT) {
+	} else if (outVoxel == SHORT) {
 	    for (i=0; i<nx; i++) {
 		for (j=0; j<ny; j++) {
 		    for (k=0; k<nz; k++) {
 			ifs->grid(i,j,k) = SETVAL(ifdo->grid(i,j,k));
+		    }
+		}
+	    }
+	} else if (outVoxel == USHORT) {
+	    for (i=0; i<nx; i++) {
+		for (j=0; j<ny; j++) {
+		    for (k=0; k<nz; k++) {
+			ifus->grid(i,j,k) = SETVAL(ifdo->grid(i,j,k));
 		    }
 		}
 	    }
@@ -624,9 +672,10 @@ void SFRGfile::revoxelize() {
 }
 
 void SFRGfile::setOutputFieldHandle() {
-    if (outVoxel == UCHAR) ofh=ifu;    
+    if (outVoxel == UCHAR) ofh=ifuc;    
     else if (outVoxel == CHAR) ofh=ifc;
-    else if (outVoxel == USHORT) ofh=ifs;
+    else if (outVoxel == SHORT) ofh=ifs;
+    else if (outVoxel == USHORT) ofh=ifus;
     else if (outVoxel == INT) ofh=ifi;
     else if (outVoxel == FLOAT) ofh=iff;
     else if (outVoxel == DOUBLE) ofh=ifd;
