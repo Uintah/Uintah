@@ -66,7 +66,9 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 
   //  double den_ref = vars->density[IntVector(3,3,3)]; // change it!!! use ipref, jpref and kpref
   //  double den_ref = 1.184344; // change it!!! use ipref, jpref and kpref
+#ifdef ARCHES_MOM_DEBUG
   cerr << " ref_ density" << den_ref << endl;
+#endif
   // Get the patch and variable indices
   IntVector domLoU = vars->uVelocity.getFortLowIndex();
   IntVector domHiU = vars->uVelocity.getFortHighIndex();
@@ -95,10 +97,12 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   IntVector domLong = vars->old_density.getFortLowIndex();
   IntVector domHing = vars->old_density.getFortHighIndex();
 
+#ifdef ARCHES_MOM_DEBUG
   for (int iii = 0; iii < (domHi.z()-domLo.z()); iii++)
     std::cerr << cellinfo->ktsdw[iii] << " " << cellinfo->kbsdw[iii] << endl;
   for (int iii = 0; iii < (domHi.y()-domLo.y()); iii++)
     std::cerr << cellinfo->jnsdv[iii] << " " << cellinfo->jssdv[iii] << endl;
+#endif
   
   switch(index) {
   case Arches::XDIR:
@@ -762,10 +766,12 @@ Source::addPressureSource(const ProcessorGroup* ,
   IntVector domHi = vars->pressure.getFortHighIndex();
   IntVector domLong = vars->old_density.getFortLowIndex();
   IntVector domHing = vars->old_density.getFortHighIndex();
+#ifdef ARCHES_SOURCE_DEBUG
   if (patch->containsCell(IntVector(2,3,3))) {
     cerr << "[2,3,3] press" << vars->pressure[IntVector(2,3,3)] << " " <<
       vars->pressure[IntVector(1,3,3)] << endl;
   }
+#endif
   int ioff, joff, koff;
   switch(index) {
   case Arches::XDIR:
@@ -859,6 +865,10 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.49  2000/10/12 20:08:33  sparker
+//Made multipatch work for several timesteps
+//Cleaned up print statements
+//
 //Revision 1.48  2000/10/12 00:03:18  rawat
 //running for more than one timestep.
 //

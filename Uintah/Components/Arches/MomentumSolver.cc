@@ -340,7 +340,9 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   sum_vartype den_ref_var;
   old_dw->get(den_ref_var, d_lab->d_refDensity_label);
   velocityVars.den_Ref = den_ref_var;
+#ifdef ARCHES_MOM_DEBUG
   cerr << "getdensity_ref in momentum" << velocityVars.den_Ref << endl;
+#endif
   old_dw->get(velocityVars.old_density, d_lab->d_densityCPLabel, 
 	      matlIndex, patch, Ghost::None, zeroGhostCells);
   old_dw->get(velocityVars.cellType, d_lab->d_cellTypeLabel, 
@@ -357,7 +359,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     old_dw->get(velocityVars.old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-    cerr << "in moment solve just before allocate" << index << endl;
+    //cerr << "in moment solve just before allocate" << index << endl;
     //    new_dw->allocate(velocityVars.variableCalledDU, d_lab->d_DUMBLMLabel,
     //			matlIndex, patch);
 
@@ -371,7 +373,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 			d_lab->d_uVelLinSrcMBLMLabel, matlIndex, patch);
     new_dw->allocate(velocityVars.uVelNonlinearSrc, 
 			d_lab->d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
-    cerr << "in moment solve just after allocate" << index << endl;
+    //cerr << "in moment solve just after allocate" << index << endl;
     break;
   case Arches::YDIR:
     // getting new value of u velocity
@@ -383,7 +385,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     old_dw->get(velocityVars.old_vVelocity, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-    cerr << "in moment solve just before allocate" << index << endl;
+    //cerr << "in moment solve just before allocate" << index << endl;
     //    new_dw->allocate(velocityVars.variableCalledDV, d_lab->d_DVMBLMLabel,
     //			matlIndex, patch);
     for (int ii = 0; ii < nofStencils; ii++) {
@@ -425,12 +427,14 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   default:
     throw InvalidValue("Invalid index in MomentumSolver");
   }
+#ifdef ARCHES_MOM_DEBUG
   cerr << "momentum solver: pressure=\n";
   velocityVars.pressure.print(cerr);
   if (patch->containsCell(IntVector(2,3,3))) {
     cerr << "[2,3,3] press[2,3,3]" << velocityVars.pressure[IntVector(2,3,3)] 
 	 << " " << velocityVars.pressure[IntVector(1,3,3)] << endl;
   }
+#endif
 
   // compute ith componenet of velocity stencil coefficients
   // inputs : [u,v,w]VelocityCPBC, densityIN, viscosityIN
@@ -483,8 +487,9 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
   d_source->addPressureSource(pc, patch, old_dw, new_dw, delta_t, index,
 			      cellinfo, &velocityVars);
+#ifdef ARCHES_MOM_DEBUG
   if (index == 1) {
-    cerr << "After vel voef for u" << endl;
+     cerr << "After vel voef for u" << endl;
     for(CellIterator iter = patch->getCellIterator();
 	!iter.done(); iter++){
       cerr.width(10);
@@ -531,8 +536,9 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
       cerr << "uSP"<<*iter << ": " << velocityVars.uVelLinearSrc[*iter] << "\n" ; 
     }
   }
+#endif
 
-  cerr << "in moment solve just before build matrix" << index << endl;
+  //cerr << "in moment solve just before build matrix" << index << endl;
     // put required vars
   switch (index) {
   case Arches::XDIR:
@@ -722,6 +728,10 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.36  2000/10/12 20:08:33  sparker
+// Made multipatch work for several timesteps
+// Cleaned up print statements
+//
 // Revision 1.35  2000/10/11 17:40:28  sparker
 // Added rewindow hack to trim ghost cells from variables
 // fixed compiler warnings

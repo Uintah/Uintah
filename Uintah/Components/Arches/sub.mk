@@ -35,7 +35,7 @@ LIBS := $(LIBS) $(PETSC_LIBS) -lpetscsles -lpetscdm -lpetscmat -lpetscvec -lpets
 endif
 #CFLAGS += -g -DARCHES_VEL_DEBUG
 #CFLAGS += -g -DARCHES_DEBUG -DARCHES_GEOM_DEBUG -DARCHES_BC_DEBUG -DARCHES_COEF_DEBUG 
-CFLAGS += -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
+CFLAGS +=
 #CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
 ifneq ($(PETSC_DIR),)
 CFLAGS +=	-DHAVE_PETSC
@@ -46,6 +46,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.37  2000/10/12 20:08:33  sparker
+# Made multipatch work for several timesteps
+# Cleaned up print statements
+#
 # Revision 1.36  2000/09/26 04:35:28  rawat
 # added some more multi-patch support
 #
