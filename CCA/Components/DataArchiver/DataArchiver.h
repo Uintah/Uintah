@@ -171,6 +171,7 @@ using std::pair;
 	string labelName;
 	string compressionMode;
 	ConsecutiveRangeSet matls;
+        ConsecutiveRangeSet levels;
       };
 
       class SaveItem {
@@ -183,6 +184,9 @@ using std::pair;
 	{ return matlSet_.get_rep(); }
 	  
 	const VarLabel* label_;
+
+        // store as CRS as the grid can change
+        ConsecutiveRangeSet levels;
       private:
 	MaterialSetP matlSet_;
       };

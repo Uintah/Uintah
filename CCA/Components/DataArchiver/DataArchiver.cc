@@ -114,7 +114,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params,
       saveItem.labelName = attributes["label"];
       saveItem.compressionMode = attributes["compression"];
       try {
-         saveItem.matls = ConsecutiveRangeSet(attributes["material"]);
+        saveItem.matls = ConsecutiveRangeSet(attributes["material"]);
       }
       catch (ConsecutiveRangeSetException) {
 	throw ProblemSetupException("'" + attributes["material"] + "'" +
@@ -126,19 +126,38 @@ void DataArchiver::problemSetup(const ProblemSpecP& params,
 	// if materials aren't specified, all valid materials will be saved
 	saveItem.matls = ConsecutiveRangeSet::all;
       
-       //__________________________________
-       //  bullet proofing: must save p.x 
-       //  in addition to other particle variables "p.*"
-       if (saveItem.labelName == "p.x") {
+      try {
+        // level values are normal for exact level values (i.e.,
+        //   0, 2-4 will save those levels.
+        //   Leave blank for all levels
+        //   Also handle negative values to be relative to the finest levels
+        //   I.e., -3--1 would be the top three levels.
+        saveItem.levels = ConsecutiveRangeSet(attributes["levels"]);
+      }
+      catch (ConsecutiveRangeSetException) {
+	throw ProblemSetupException("'" + attributes["levels"] + "'" +
+	       " cannot be parsed as a set of levels" +
+	       " for saving '" + saveItem.labelName + "'");
+      }
+
+      if (saveItem.levels.size() == 0)
+	// if materials aren't specified, all valid materials will be saved
+	saveItem.levels = ConsecutiveRangeSet::all;
+      
+      //__________________________________
+      //  bullet proofing: must save p.x 
+      //  in addition to other particle variables "p.*"
+      if (saveItem.labelName == "p.x") {
          d_saveP_x = true;
-       }
+      }
 
-       string::size_type pos = saveItem.labelName.find("p.");
-       if ( pos != string::npos &&  saveItem.labelName != "p.x") {
-         d_saveParticleVariables = true;
-       }
-
+      string::size_type pos = saveItem.labelName.find("p.");
+      if ( pos != string::npos &&  saveItem.labelName != "p.x") {
+        d_saveParticleVariables = true;
+      }
+      
       d_saveLabelNames.push_back(saveItem);
+      
       save = save->findNextBlock("save");
    }
    if(d_saveP_x == false && d_saveParticleVariables == true) {
@@ -1092,7 +1111,9 @@ void DataArchiver::executedTimestep(double delt)
 #else
       ProblemSpecP indexDoc = loadDocument(iname);
 #endif
-
+      
+      if (indexDoc == 0)
+        continue; // output timestep but no variables scheduled to be saved.
       ASSERT(indexDoc != 0);
       ProblemSpecP ts = indexDoc->findBlock("timesteps");
       if(ts == 0){
@@ -1271,13 +1292,20 @@ DataArchiver::scheduleOutputTimestep(Dir& baseDir,
     for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end();
 	saveIter++) {
       const MaterialSet* matls = (*saveIter).getMaterialSet();
-      Task* t = scinew Task("DataArchiver::output", 
-			    this, &DataArchiver::output,
-			    &baseDir, (*saveIter).label_, isThisCheckpoint);
-      t->requires(Task::NewDW, (*saveIter).label_, Ghost::None);
-      t->setType(Task::Output);
-      sched->addTask(t, patches, matls);
-      n++;
+      ConsecutiveRangeSet* range = &saveIter->levels;
+
+      // check to see if the input file requested to save on this level.
+      // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
+      if (range->find(level->getIndex()) != range->end() ||
+          range->find(level->getIndex() - level->getGrid()->numLevels()) != range->end()) {
+        Task* t = scinew Task("DataArchiver::output", 
+                              this, &DataArchiver::output,
+                              &baseDir, (*saveIter).label_, isThisCheckpoint);
+        t->requires(Task::NewDW, (*saveIter).label_, Ghost::None);
+        t->setType(Task::Output);
+        sched->addTask(t, patches, matls);
+        n++;
+      }
     }
   }
   dbg << "Created " << n << " output tasks\n";
@@ -1417,9 +1445,10 @@ void DataArchiver::output(const ProcessorGroup*,
 {
   // return if not an outpoint/checkpoint timestep
   if ((!d_wasOutputTimestep && !isThisCheckpoint) || 
-      (!d_wasCheckpointTimestep && isThisCheckpoint))
-    return;
+      (!d_wasCheckpointTimestep && isThisCheckpoint)) {
 
+    return;
+  }
   bool isReduction = var->typeDescription()->isReductionVariable();
 
   dbg << "output called ";
@@ -1893,6 +1922,7 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
       throw ProblemSetupException((*it).labelName +
 				  " variable not computed for all materials specified to save.");
     }
+    saveItem.levels = (*it).levels;
       
     if (saveItem.label_->typeDescription()->isReductionVariable()) {
       d_saveReductionLabels.push_back(saveItem);
@@ -1944,6 +1974,7 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
 
       saveItem.label_ = var;
       saveItem.setMaterials((*mapIter).second, prevMatls_, prevMatlSet_);
+      saveItem.levels = ConsecutiveRangeSet::all;
 
       if (string(var->getName()) == "delT") {
 	hasDelT = true;
@@ -1982,8 +2013,9 @@ void DataArchiver::SaveItem::setMaterials(const ConsecutiveRangeSet& matls,
     vector<int> matlVec;
     matlVec.reserve(matls.size());
     for (ConsecutiveRangeSet::iterator iter = matls.begin();
-	 iter != matls.end(); iter++)
+	 iter != matls.end(); iter++) {
       matlVec.push_back(*iter);
+    }
     matlSet_->addAll(matlVec);
     prevMatlSet = matlSet_;
     prevMatls = matls;
