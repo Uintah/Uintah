@@ -44,7 +44,7 @@ public:
 
   LatticeVol() :
     GenericField<LatVolMesh, FData3d<Data> >() {};
-  LatticeVol(data_location data_at) :
+  LatticeVol(Field::data_location data_at) :
     GenericField<LatVolMesh, FData3d<Data> >(data_at) {};
   virtual ~LatticeVol(){};
 
