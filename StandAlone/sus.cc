@@ -466,7 +466,7 @@ main( int argc, char** argv )
           RigidMPM* rmpm = scinew RigidMPM(world);
 	  sim = rmpm;
 	  comp = rmpm;
-	} else if(do_smpm){
+	} else if(do_smpm && !do_ice){
           ShellMPM* smpm = scinew ShellMPM(world);
 	  sim = smpm;
 	  comp = smpm;
