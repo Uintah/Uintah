@@ -39,6 +39,7 @@ public:
 	// TEK 
 	sci::cca::ConnectionID::pointer connID;
 	// TEK
+        virtual std::string getConnectionType();
 protected:
 	void drawShape ( QPainter & );
 	QCanvasView *cv;

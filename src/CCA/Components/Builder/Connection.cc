@@ -160,5 +160,10 @@ std::string Connection::getProvidesPortName()
   return portname2;
 }
 
+std::string Connection::getConnectionType()
+{
+  return "Connection";
+}
+
 
 

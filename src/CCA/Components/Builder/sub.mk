@@ -25,7 +25,7 @@ SRCS     += \
 	$(SRCDIR)/Builder.cc $(SRCDIR)/BuilderWindow.cc \
 	$(SRCDIR)/QtUtils.cc $(SRCDIR)/NetworkCanvasView.cc \
 	$(SRCDIR)/Module.cc \
-	$(SRCDIR)/Connection.cc\
+	$(SRCDIR)/Connection.cc $(SRCDIR)/BridgeConnection.cc\
 	$(SRCDIR)/moc_Module.cc\
 	$(SRCDIR)/moc_BuilderWindow.cc $(SRCDIR)/moc_NetworkCanvasView.cc
 

@@ -123,16 +123,25 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
 
 void NetworkCanvasView::contentsMouseReleaseEvent(QMouseEvent* /*e*/)
 {
-        //IMPORTANT NOTES: e->pos() returns the mouse point in the canvas coordinates
-        //cerr<<"MousePress e->pos()="<<e->pos().x()<<endl;
-   if(connecting && highlightedConnection!=0){
- 
-      if(porttype==Module::USES)
-	addConnection(connecting, portname, highlightedConnection->getProvidesModule(),
+  //IMPORTANT NOTES: e->pos() returns the mouse point in the canvas coordinates
+  //cerr<<"MousePress e->pos()="<<e->pos().x()<<endl;
+  if(connecting && highlightedConnection!=0){
+      if(highlightedConnection->getConnectionType() == "BridgeConnection") {
+        /*Create an automatic bridge*/
+        if(porttype==Module::USES)
+      	  addBridgeConnection(connecting, portname, highlightedConnection->getProvidesModule(),
+	                    highlightedConnection->getProvidesPortName());  
+        else
+          addBridgeConnection(highlightedConnection->getUsesModule(),
+		            highlightedConnection->getUsesPortName(), connecting, portname);
+      } else {	        
+        if(porttype==Module::USES)
+	  addConnection(connecting, portname, highlightedConnection->getProvidesModule(),
 		    highlightedConnection->getProvidesPortName());
-      else
-	addConnection(highlightedConnection->getUsesModule(),
+        else
+	  addConnection(highlightedConnection->getUsesModule(),
 		      highlightedConnection->getUsesPortName(), connecting, portname); 
+      }
   }
   clearPossibleConnections();
   connecting=0;
@@ -272,7 +281,7 @@ void NetworkCanvasView::addChild( Module* mod2add, int x , int y, bool repositio
 }
 
 
-void NetworkCanvasView::addModule( const string& name, int x, int y,
+Module* NetworkCanvasView::addModule( const string& name, int x, int y,
 				  SSIDL::array1<std::string> & up,
 				  SSIDL::array1<std::string> &pp ,
 				  const sci::cca::ComponentID::pointer &cid,
@@ -289,7 +298,7 @@ void NetworkCanvasView::addModule( const string& name, int x, int y,
   module->show();		
   // have to updateMiniView() after added to canvas
   p2BuilderWindow->updateMiniView();
-
+  return module;
 }
 
 void NetworkCanvasView::removeModule(Module * module)
@@ -312,6 +321,7 @@ void NetworkCanvasView::addConnection(Module *m1,const std::string &portname1,  
   sci::cca::ports::BuilderService::pointer bs = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(bs.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
+    return;
   }
   sci::cca::ConnectionID::pointer connID=bs->connect(m1->cid, portname1, m2->cid, portname2);
 
@@ -319,12 +329,49 @@ void NetworkCanvasView::addConnection(Module *m1,const std::string &portname1,  
   
   Connection *con=new Connection(m1,portname1, m2,portname2, connID,this);
 
-  string instanceName = m1->cid->getInstanceName();
+  //string instanceName = m1->cid->getInstanceName();
 
   con->show();
   connections.push_back(con);
   canvas()->update();
 
+}
+
+void NetworkCanvasView::addBridgeConnection(Module *m1,const std::string &portname1,  Module *m2, const std::string &portname2)
+{
+  sci::cca::ports::BuilderService::pointer bs = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+  if(bs.isNull()){
+    cerr << "Fatal Error: Cannot find builder service\n";
+    return;
+  }
+
+  //Instantiate bridge component
+  std::string instanceT = bs->generateBridge(m1->cid->getInstanceName(),m2->cid->getInstanceName());
+  if(instanceT==""){
+    cerr << "Error: could not properly generate bridge... aborting connection...\n";
+    return;
+  } 
+  string classT = "bridge:Bridge."+instanceT;
+  Module* bm = p2BuilderWindow->instantiateComponent(instanceT,classT,instanceT);
+
+  //Logically connect to and from bridge	
+  SSIDL::array1<std::string> usesPorts=bs->getUsedPortNames(bm->cid);
+  SSIDL::array1<std::string> providesPorts=bs->getProvidedPortNames(bm->cid);
+  cerr<<"connect "<<m1->cid->getInstanceName()<<"->"<<portname1<<" to "<<bm->cid->getInstanceName()<<"->"<<providesPorts[0]<<"\n";
+  sci::cca::ConnectionID::pointer connID1 = bs->connect(m1->cid, portname1, bm->cid, providesPorts[0]);
+  cerr<<"connect "<<bm->cid->getInstanceName()<<"->"<<usesPorts[0]<<" to "<<m2->cid->getInstanceName()<<"->"<<portname2<<"\n";
+  sci::cca::ConnectionID::pointer connID2 = bs->connect(bm->cid, usesPorts[0], m2->cid, portname2);
+
+  //Graphically connect to and from bridge
+  Connection *con1=new Connection(m1,portname1, bm,"pport", connID1,this);
+  con1->show();
+  connections.push_back(con1);
+  Connection *con2=new Connection(bm,"uport", m2,portname2, connID2,this);
+  con2->show();
+  connections.push_back(con2);
+  canvas()->update();
+
+  services->releasePort("cca.BuilderService");
 }
 
 void NetworkCanvasView::removeConnection(QCanvasItem *c)
@@ -402,6 +449,26 @@ void NetworkCanvasView::showPossibleConnections(Module *m, const std::string &po
 	//cerr<<portList[j]<<endl;
       }
   }    
+
+  //Show Bridgeable Ports
+  for(unsigned int i=0; i<modules.size(); i++){
+    SSIDL::array1<std::string> portList=bs->getBridgablePortList(m->cid,portname,modules[i]->cid );
+    for(unsigned int j=0; j<portList.size(); j++){
+      Connection *con;
+      if(porttype==Module::USES)
+	con=new BridgeConnection(m,portname, modules[i],portList[j],
+			   sci::cca::ConnectionID::pointer(0),this);
+      else
+	con=new BridgeConnection(modules[i],portList[j], m, portname,
+			   sci::cca::ConnectionID::pointer(0),this);
+      con->show();
+      possibleConns.push_back(con);
+      canvas()->update();
+      //cerr<<portList[j]<<endl;
+    }
+  }
+
+
   services->releasePort("cca.BuilderService");		
 }
 

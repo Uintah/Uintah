@@ -589,12 +589,12 @@ void BuilderWindow::about()
   (new QMessageBox())->about(this, "About", "CCA Builder (SCIRun Implementation)");
 }
 
-void BuilderWindow::instantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd)
+Module* BuilderWindow::instantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd)
 {
   sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(builder.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
-    return;
+    return NULL;
   }
 
   TypeMap *tm=new TypeMap;
@@ -602,7 +602,7 @@ void BuilderWindow::instantiateComponent(const sci::cca::ComponentClassDescripti
   sci::cca::ComponentID::pointer cid=builder->createInstance(cd->getComponentClassName(), cd->getComponentClassName(), sci::cca::TypeMap::pointer(tm));
   if(cid.isNull()){
     cerr << "instantiateFailed...\n";
-    return;
+    return NULL;
   }
   SSIDL::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
   SSIDL::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
@@ -613,8 +613,38 @@ void BuilderWindow::instantiateComponent(const sci::cca::ComponentClassDescripti
     int x = 20;
     int y = 20;
     
-    big_canvas_view->addModule(cd->getComponentClassName(), x, y, usesPorts, providesPorts, cid, true); //reposition module
+    return (big_canvas_view->addModule(cd->getComponentClassName(), x, y, usesPorts, providesPorts, cid, true)); //reposition module
   }
+  return NULL;
+}
+
+Module* BuilderWindow::instantiateComponent(const std::string& className, const std::string& type, const std::string& loaderName)
+{
+  sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+  if(builder.isNull()){
+    cerr << "Fatal Error: Cannot find builder service\n";
+    return NULL;
+  }
+
+  TypeMap *tm=new TypeMap;
+  tm->putString("LOADER NAME", loaderName);
+  sci::cca::ComponentID::pointer cid=builder->createInstance(className, type, sci::cca::TypeMap::pointer(tm));
+  if(cid.isNull()){
+    cerr << "instantiateFailed...\n";
+    return NULL;
+  }
+  SSIDL::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
+  SSIDL::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
+
+  services->releasePort("cca.BuilderService");
+  if(className!="SCIRun.Builder"){
+
+    int x = 20;
+    int y = 20;
+
+    return (big_canvas_view->addModule(className, x, y, usesPorts, providesPorts, cid, true)); //reposition module
+  }
+  return NULL;
 }
 
 void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::pointer& e)

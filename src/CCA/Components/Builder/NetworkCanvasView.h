@@ -37,6 +37,7 @@
 #include <qcanvas.h>
 #include "Module.h"
 #include "Connection.h"
+#include "BridgeConnection.h"
 #include "Core/CCA/PIDL/PIDL.h"
 #include "Core/CCA/spec/cca_sidl.h"
 
@@ -52,8 +53,12 @@ public:
   NetworkCanvasView(BuilderWindow* p2BuilderWindow, QCanvas* canvas, QWidget* parent=0);
   void setServices(const sci::cca::Services::pointer &services);
   virtual ~NetworkCanvasView();
-  void addModule(const std::string& name, int x, int y, SSIDL::array1<std::string> & up, SSIDL::array1<std::string> &pp, const sci::cca::ComponentID::pointer &cid, bool reposition);
+  Module* addModule(const std::string& name, int x, int y, SSIDL::array1<std::string> & up, SSIDL::array1<std::string> &pp, const sci::cca::ComponentID::pointer &cid, bool reposition);
   void addConnection(Module *m1, const std::string & portname1, Module *m2, const std::string & portname2);	
+
+  //Bridge:
+  void addBridgeConnection(Module *m1, const std::string& portname1, Module *m2, const std::string& portname2);
+
   void removeConnection(QCanvasItem *c);
   void highlightConnection(QCanvasItem *c);
   void showPossibleConnections(Module *m, 
