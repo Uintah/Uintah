@@ -2,6 +2,9 @@
 
 ::netedit dontschedule
 
+global notes
+set notes ""
+
 set m0 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 226 114]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 208 386]
 set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 19 679]
@@ -23,13 +26,11 @@ set m17 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 725 474]
 set m18 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 725 156]
 set m19 [addModuleAtPosition "SCIRun" "Fields" "VectorMagnitude" 805 217]
 set m20 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 787 300]
-set m21 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1253 55]
-set m22 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 987 133]
-set m23 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 987 333]
-set m24 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 987 553]
-set m25 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 1017 228]
-set m26 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1058 467]
-set m27 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 1244 458]
+set m21 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 987 133]
+set m22 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 987 333]
+set m23 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 969 555]
+set m24 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 1017 228]
+set m25 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 969 429]
 
 addConnection $m0 0 $m1 1
 addConnection $m0 0 $m3 1
@@ -62,20 +63,18 @@ addConnection $m17 0 $m2 4
 addConnection $m19 0 $m20 1
 addConnection $m4 0 $m20 0
 addConnection $m20 0 $m17 1
-addConnection $m25 0 $m23 1
-addConnection $m21 0 $m26 0
-addConnection $m22 0 $m23 0
-addConnection $m22 0 $m25 0
-addConnection $m12 2 $m22 0
-addConnection $m25 1 $m2 5
-addConnection $m24 0 $m2 6
-addConnection $m23 0 $m27 1
-addConnection $m27 0 $m24 0
-addConnection $m12 0 $m27 0
-addConnection $m23 0 $m26 1
-addConnection $m0 0 $m24 1
+addConnection $m24 0 $m22 1
+addConnection $m21 0 $m22 0
+addConnection $m21 0 $m24 0
+addConnection $m12 2 $m21 0
+addConnection $m24 1 $m2 5
+addConnection $m23 0 $m2 6
+addConnection $m22 0 $m25 1
+addConnection $m25 0 $m23 0
+addConnection $m12 0 $m25 0
 addConnection $m12 3 $m18 0
 addConnection $m12 3 $m19 0
+addConnection $m0 0 $m23 1
 
 set $m0-notes {}
 set $m0-show_status {1}
@@ -88,9 +87,9 @@ set $m1-show_status {1}
 set $m1-nodes-on {1}
 set $m1-nodes-as-disks {0}
 set $m1-edges-on {0}
+set $m1-faces-on {0}
 set $m1-use-normals {0}
 set $m1-use-transparency {0}
-set $m1-faces-on {0}
 set $m1-vectors-on {0}
 set $m1-normalize-vectors {0}
 set $m1-has_vec_data {0}
@@ -102,7 +101,7 @@ set $m1-def-color-b {0.5}
 set $m1-def-color-a {0.5}
 set $m1-node_display_type {Points}
 set $m1-edge_display_type {Lines}
-set $m1-active_tab {Edges}
+set $m1-active_tab {Nodes}
 set $m1-node_scale {0.03}
 set $m1-edge_scale {0.03}
 set $m1-vectors_scale {0.03}
@@ -115,15 +114,15 @@ $m2 ui
 set $m2-ViewWindow_0-pos {}
 set $m2-ViewWindow_0-caxes {0}
 set $m2-ViewWindow_0-iaxes {}
-set $m2-ViewWindow_0-view-eyep-x {         -4.65802}
-set $m2-ViewWindow_0-view-eyep-y {          19.4856}
-set $m2-ViewWindow_0-view-eyep-z {         0.245618}
+set $m2-ViewWindow_0-view-eyep-x {          2.41057}
+set $m2-ViewWindow_0-view-eyep-y {           19.883}
+set $m2-ViewWindow_0-view-eyep-z {         0.550569}
 set $m2-ViewWindow_0-view-lookat-x {     -1.29594e-07}
 set $m2-ViewWindow_0-view-lookat-y {      7.31482e-12}
 set $m2-ViewWindow_0-view-lookat-z {                0}
-set $m2-ViewWindow_0-view-up-x {        -0.105598}
-set $m2-ViewWindow_0-view-up-y {       -0.0377687}
-set $m2-ViewWindow_0-view-up-z {         0.993691}
+set $m2-ViewWindow_0-view-up-x {       -0.0268494}
+set $m2-ViewWindow_0-view-up-y {        -0.024417}
+set $m2-ViewWindow_0-view-up-z {         0.999341}
 set $m2-ViewWindow_0-view-fov {          16.2164}
 set $m2-ViewWindow_0-view-eyep_offset-x {}
 set $m2-ViewWindow_0-view-eyep_offset-y {}
@@ -147,17 +146,16 @@ set $m2-ViewWindow_0-resx {}
 set $m2-ViewWindow_0-resy {}
 set $m2-ViewWindow_0-aspect {}
 set $m2-ViewWindow_0-aspect_ratio {}
+set $m2-ViewWindow_0-unused {1}
+set $m2-ViewWindow_0-unused {1}
+set $m2-ViewWindow_0-unused {1}
 set $m2-ViewWindow_0-unused {0}
 set $m2-ViewWindow_0-unused {0}
 set $m2-ViewWindow_0-unused {1}
 set $m2-ViewWindow_0-unused {1}
-set $m2-ViewWindow_0-unused {0}
-set $m2-ViewWindow_0-unused {1}
-set $m2-ViewWindow_0-unused {0}
-set $m2-ViewWindow_0-unused {0}
 set $m3-notes {}
 set $m3-show_status {1}
-set $m3-isoval {0.517}
+set $m3-isoval {0.269}
 set $m3-isoval-min {-0.0181344}
 set $m3-isoval-max {0.726126}
 set $m3-isoval-typed {0}
@@ -254,7 +252,7 @@ set $m11-max {         0.263653}
 set $m11-makeSymmetric {0}
 set $m12-notes {}
 set $m12-show_status {1}
-set $m12-filename {/scratch-linux/SCIRunData/fusion/NIMROD_10107_02.mds}
+set $m12-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10107_02.mds}
 set $m13-notes {}
 set $m13-show_status {1}
 set $m14-notes {}
@@ -262,9 +260,9 @@ set $m14-show_status {1}
 set $m14-nodes-on {0}
 set $m14-nodes-as-disks {0}
 set $m14-edges-on {0}
+set $m14-faces-on {1}
 set $m14-use-normals {0}
 set $m14-use-transparency {1}
-set $m14-faces-on {1}
 set $m14-vectors-on {0}
 set $m14-normalize-vectors {}
 set $m14-has_vec_data {0}
@@ -307,9 +305,9 @@ set $m17-show_status {1}
 set $m17-nodes-on {0}
 set $m17-nodes-as-disks {1}
 set $m17-edges-on {0}
+set $m17-faces-on {0}
 set $m17-use-normals {0}
 set $m17-use-transparency {0}
-set $m17-faces-on {0}
 set $m17-vectors-on {1}
 set $m17-normalize-vectors {0}
 set $m17-has_vec_data {1}
@@ -352,94 +350,76 @@ set $m20-max {          2680.16}
 set $m20-makeSymmetric {0}
 set $m21-notes {}
 set $m21-show_status {1}
-set $m21-tcl_status {Calling GenStandardColorMaps!}
-set $m21-positionList {}
-set $m21-nodeList {}
-set $m21-width {389}
-set $m21-height {40}
-set $m21-mapType {3}
-set $m21-minRes {12}
-set $m21-resolution {255}
-set $m21-realres {255}
-set $m21-gamma {0.00}
+set $m21-idim {145}
+set $m21-jdim {84}
+set $m21-kdim {40}
+set $m21-istart {0}
+set $m21-jstart {0}
+set $m21-kstart {0}
+set $m21-idelta {144}
+set $m21-jdelta {84}
+set $m21-kdelta {40}
+set $m21-iskip {10}
+set $m21-jskip {5}
+set $m21-kskip {1}
 set $m22-notes {}
 set $m22-show_status {1}
-set $m22-idim {145}
-set $m22-jdim {84}
-set $m22-kdim {40}
-set $m22-istart {0}
-set $m22-jstart {0}
-set $m22-kstart {0}
-set $m22-idelta {144}
-set $m22-jdelta {84}
-set $m22-kdelta {40}
-set $m22-iskip {10}
-set $m22-jskip {5}
-set $m22-kskip {1}
+set $m22-stepsize {0.05}
+set $m22-tolerance {0.0001}
+set $m22-maxsteps {25000}
+set $m22-direction {0}
+set $m22-color {1}
+set $m22-remove-colinear {1}
+set $m22-method {4}
 set $m23-notes {}
 set $m23-show_status {1}
-set $m23-stepsize {0.05}
-set $m23-tolerance {0.0001}
-set $m23-maxsteps {25000}
-set $m23-direction {0}
-set $m23-color {1}
-set $m23-remove-colinear {1}
-set $m23-method {4}
+set $m23-nodes-on {0}
+set $m23-nodes-as-disks {0}
+set $m23-edges-on {1}
+set $m23-faces-on {0}
+set $m23-use-normals {0}
+set $m23-use-transparency {0}
+set $m23-vectors-on {0}
+set $m23-normalize-vectors {25277570}
+set $m23-has_vec_data {0}
+set $m23-bidirectional {0}
+set $m23-arrow-heads-on {1}
+set $m23-def-color-r {0.5}
+set $m23-def-color-g {0.5}
+set $m23-def-color-b {0.5}
+set $m23-def-color-a {0.5}
+set $m23-node_display_type {Spheres}
+set $m23-edge_display_type {Cylinders}
+set $m23-active_tab {Edges}
+set $m23-node_scale {0.04}
+set $m23-edge_scale {0.02}
+set $m23-vectors_scale {0.3}
+set $m23-show_progress {39848618}
+set $m23-interactive_mode {Interactive}
+set $m23-resolution {4}
 set $m24-notes {}
 set $m24-show_status {1}
-set $m24-nodes-on {0}
-set $m24-nodes-as-disks {0}
-set $m24-edges-on {1}
-set $m24-use-normals {0}
-set $m24-use-transparency {0}
-set $m24-faces-on {0}
-set $m24-vectors-on {0}
-set $m24-normalize-vectors {25277570}
-set $m24-has_vec_data {0}
-set $m24-bidirectional {0}
-set $m24-arrow-heads-on {1}
-set $m24-def-color-r {0.5}
-set $m24-def-color-g {0.5}
-set $m24-def-color-b {0.5}
-set $m24-def-color-a {0.5}
-set $m24-node_display_type {Spheres}
-set $m24-edge_display_type {Cylinders}
-set $m24-active_tab {Edges}
-set $m24-node_scale {0.04}
-set $m24-edge_scale {0.02}
-set $m24-vectors_scale {0.3}
-set $m24-show_progress {39848618}
-set $m24-interactive_mode {Interactive}
-set $m24-resolution {4}
+set $m24-endpoints {1}
+set $m24-endpoint0x {          2.00018}
+set $m24-endpoint0y {         0.402312}
+set $m24-endpoint0z {       -0.0502489}
+set $m24-endpoint1x {          2.00109}
+set $m24-endpoint1y {          0.42013}
+set $m24-endpoint1z {        -0.036502}
+set $m24-widgetscale {0.103313}
+set $m24-maxseeds {1}
+set $m24-numseeds {10}
+set $m24-rngseed {1}
+set $m24-rnginc {1}
+set $m24-clamp {0}
+set $m24-autoexecute {0}
+set $m24-type {}
+set $m24-dist {impuni}
+set $m24-whichtab {Widget}
 set $m25-notes {}
 set $m25-show_status {1}
-set $m25-endpoints {1}
-set $m25-endpoint0x {          2.00018}
-set $m25-endpoint0y {         0.402312}
-set $m25-endpoint0z {       -0.0502489}
-set $m25-endpoint1x {          2.00109}
-set $m25-endpoint1y {          0.42013}
-set $m25-endpoint1z {        -0.036502}
-set $m25-widgetscale {0.103313}
-set $m25-maxseeds {1}
-set $m25-numseeds {10}
-set $m25-rngseed {1}
-set $m25-rnginc {1}
-set $m25-clamp {0}
-set $m25-autoexecute {0}
-set $m25-type {}
-set $m25-dist {impuni}
-set $m25-whichtab {Widget}
-set $m26-notes {}
-set $m26-show_status {1}
-set $m26-isFixed {0}
-set $m26-min {                0}
-set $m26-max {             7352}
-set $m26-makeSymmetric {0}
-set $m27-notes {}
-set $m27-show_status {1}
-set $m27-use_interp {1}
-set $m27-use_closest {1}
-set $m27-closeness_distance {1.0e15}
+set $m25-use_interp {1}
+set $m25-use_closest {1}
+set $m25-closeness_distance {1.0e15}
 
 ::netedit scheduleok
