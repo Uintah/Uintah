@@ -25,58 +25,54 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
 #
+
+
 catch {rename EditTransferFunc2 ""}
 
 itcl_class SCIRun_Visualization_EditTransferFunc2 {
     inherit Module
     constructor {config} {
-        set name EditTransferFunc2
-        set_defaults
+	set name EditTransferFunc2
+	set_defaults
     }
     
     method set_defaults {} {
-        global $this-faux
-        set $this-faux 0
-        global $this-histo
-        set $this-histo 0.5
+	global $this-faux
+	set $this-faux 0
+	global $this-histo
+	set $this-histo 0.5
 
-        global $this-num-entries
-        set $this-num-entries 2
-        
-        global $this-marker
-        trace variable $this-marker w "$this unpickle"
+	global $this-num-entries
+	set $this-num-entries 2
+	
+	global $this-marker
+	trace variable $this-marker w "$this unpickle"
 
         global $this-filename
         set $this-filename "MyTransferFunction"
-        
+	
         global $this-filetype
         set $this-filetype Binary
-
-        global $this-row
-        set $this-row 0
-        
-        global $this-col
-        set $this-col 0
     }
     
     method unpickle {a b c} {
-        global $this-marker
-        $this-c unpickle
-        trace vdelete $this-marker w "$this unpickle"
+	global $this-marker
+	$this-c unpickle
+	trace vdelete $this-marker w "$this unpickle"
     }
     
     method raise_color {col color colMsg} {
-        global $color
-        set window .ui[modname]
-        if {[winfo exists $window.color]} {
-            SciRaise $window.color
-            return
-        } else {
-            # makeColorPicker now creates the $window.color toplevel.
-            makeColorPicker $window.color $color \
-                "$this set_color $col $color $colMsg" \
-                "destroy $window.color"
-        }
+	global $color
+	set window .ui[modname]
+	if {[winfo exists $window.color]} {
+	    SciRaise $window.color
+	    return
+	} else {
+	    # makeColorPicker now creates the $window.color toplevel.
+	    makeColorPicker $window.color $color \
+		"$this set_color $col $color $colMsg" \
+		"destroy $window.color"
+	}
     }
     
     method set_color {col color colMsg} {
@@ -89,44 +85,46 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
 	set ib [expr int([set $color-b] * 65535)]
 
 	set window .ui[modname]
-	$col config -background [format \#%04x%04x%04x $ir $ig $ib]  \
-		    -activebackground [format \#%04x%04x%04x $ir $ig $ib]
+	$col config -background [format #%04x%04x%04x $ir $ig $ib]  \
+		    -activebackground [format #%04x%04x%04x $ir $ig $ib]
 					
-	$this-c $colMsg
+	 puts "$ir $ig $ib"
+				      
+	 $this-c $colMsg
     }
 
     method create_entries {} {
-        set w .ui[modname]
-        if {[winfo exists $w]} {
+	set w .ui[modname]
+	if {[winfo exists $w]} {
 
-            set widgets [$w.widgets childsite]
+	    set widgets [$w.widgets childsite]
 
-            # Create the new variables and entries if needed.
-            for {set i 0} {$i < [set $this-num-entries]} {incr i} {
-                
-                if { [catch { set t [set $this-names-$i] } ] } {
-                    set $this-name-$i default-$i
-                }
-                if { [catch { set t [set $this-$i-color-r]}] } {
-                    set $this-$i-color-r 0.5
-                }
-                if { [catch { set t [set $this-$i-color-g]}] } {
-                    set $this-$i-color-g 0.5
-                }
-                if { [catch { set t [set $this-$i-color-b]}] } {
-                    set $this-$i-color-b 1.0
-                }
-                if { [catch { set t [set $this-$i-color-a]}] } {
-                    set $this-$i-color-a 0.7
-                }
+	    # Create the new variables and entries if needed.
+	    for {set i 0} {$i < [set $this-num-entries]} {incr i} {
+		
+		if { [catch { set t [set $this-names-$i] } ] } {
+		    set $this-name-$i default-$i
+		}
+		if { [catch { set t [set $this-$i-color-r]}] } {
+		    set $this-$i-color-r 0.5
+		}
+		if { [catch { set t [set $this-$i-color-g]}] } {
+		    set $this-$i-color-g 0.5
+		}
+		if { [catch { set t [set $this-$i-color-b]}] } {
+		    set $this-$i-color-b 1.0
+		}
+		if { [catch { set t [set $this-$i-color-a]}] } {
+		    set $this-$i-color-a 0.7
+		}
 
-                if {![winfo exists $widgets.e-$i]} {
-                    frame $widgets.e-$i
-                    entry $widgets.e-$i.name \
-                        -textvariable $this-name-$i -width 16
-                    set cmmd "$this raise_color $widgets.e-$i.color $this-$i-color color_change-$i"
-                    button $widgets.e-$i.color -width 8 \
-                        -command $cmmd
+		if {![winfo exists $widgets.e-$i]} {
+		    frame $widgets.e-$i
+		    entry $widgets.e-$i.name \
+			-textvariable $this-name-$i -width 16
+		    set cmmd "$this raise_color $widgets.e-$i.color $this-$i-color color_change-$i"
+		    button $widgets.e-$i.color -width 8 \
+			-command $cmmd
                     checkbutton $widgets.e-$i.shade -text "" -padx 26 -justify center \
                         -relief flat -variable $this-shadeType-$i -onvalue 1 -offvalue 0 \
                         -anchor w -command "$this-c shadewidget-$i"
@@ -134,29 +132,29 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
                         -relief flat -variable $this-on-$i -onvalue 1 -offvalue 0 \
                         -anchor w -command "$this-c toggleon-$i"
                     $widgets.e-$i.on select;   # set it to on.
-                    pack $widgets.e-$i.name $widgets.e-$i.color $widgets.e-$i.shade \
-                        $widgets.e-$i.on -side left
-                    pack $widgets.e-$i 
-                }
+		    pack $widgets.e-$i.name $widgets.e-$i.color $widgets.e-$i.shade \
+			$widgets.e-$i.on -side left
+		    pack $widgets.e-$i 
+		}
 
-                set ir [expr int([set $this-$i-color-r] * 65535)]
-                set ig [expr int([set $this-$i-color-g] * 65535)]
-                set ib [expr int([set $this-$i-color-b] * 65535)]
+		set ir [expr int([set $this-$i-color-r] * 65535)]
+		set ig [expr int([set $this-$i-color-g] * 65535)]
+		set ib [expr int([set $this-$i-color-b] * 65535)]
                 $widgets.e-$i.color configure \
-                        -background [format #%04x%04x%04x $ir $ig $ib] \
-                        -activebackground [format #%04x%04x%04x $ir $ig $ib]
-            }
+			-background [format #%04x%04x%04x $ir $ig $ib] \
+                    	-activebackground [format #%04x%04x%04x $ir $ig $ib]
+	    }
 
-            # Destroy all the left over entries from prior runs.
-            while {[winfo exists $widgets.e-$i]} {
-                destroy $widgets.e-$i
-                incr i
-            }
-        }
+	    # Destroy all the left over entries from prior runs.
+	    while {[winfo exists $widgets.e-$i]} {
+		destroy $widgets.e-$i
+		incr i
+	    }
+	}
     }
 
     method file_save {} {
-        global $this-filename
+	global $this-filename
         set ws [format "%s-fbs" .ui[modname]]
 
         if {[winfo exists $ws]} { 
@@ -247,248 +245,101 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
                 -defaultextension $defext
     }
 
-    method create_swatches {} {
-        global $this-filename
-        global env
-
-        set path $env(HOME)
-        set path "$path/.scirun"
-        set curdir [pwd]
-        cd $path
-        set res [glob -nocomplain  *.gif]
-        cd $curdir
-        set w .ui[modname]
-        
-        # use globals to keep track of where you are
-        # when adding new buttons
-        set row [set $this-row]
-        set col [set $this-col]
-        if {[winfo exists $w.swatchpicker]} {
-          set f [$w.swatchpicker childsite]
-
-            # Create row 0
-            frame $f.swatchFrame$row
-            pack $f.swatchFrame$row
-
-            foreach r $res {
-                # Every 5 buttons, create new row and reset col
-                if {$col == 5} {
-                    incr row
-                    frame $f.swatchFrame$row
-                    pack $f.swatchFrame$row -side top -anchor nw
-                    set col 0
-                }
-                
-                set num [lindex [split $r "."] 0]
-                image create photo img-$r -format "gif" -file $path/$num.gif
-                #Load in the image to diplay on the button and do that.
-                button $f.swatchFrame$row.swatch$num -image img-$r -command "set $this-filename $path/$num.ppm.xff; $this swatch_load $num"
-                grid configure $f.swatchFrame$row.swatch$num -row $row -col $col -sticky "nw"
-                incr col
-          }
-        }
-        set $this-row $row
-        set $this-col $col
-    }
-
-    method update_swatches {file} {
-        global env
-        set row [set $this-row]
-        set col [set $this-col]
- 
-        set path $env(HOME)
-        set w .ui[modname]
-        if {[winfo exists $w.swatchpicker]} {
-            set f [$w.swatchpicker childsite]
-
-            if {$col == 5} {
-                incr row
-                frame $f.swatchFrame$row
-                pack $f.swatchFrame$row -side top -anchor nw
-                set col 0
-            }
-
-            set r [lindex [file split $file] end]
-            set num [lindex [split $r "."] 0]
-            image create photo img-$r -format "gif" -file $file
-            #Load in the image to diplay on the button and do that.
-            
-            button $f.swatchFrame$row.swatch$num -image img-$r -command "set $this-filename $path/.scirun/$num.ppm.xff; $this swatch_load $num"
-            grid configure $f.swatchFrame$row.swatch$num -row $row -col $col -sticky "nw"
-            
-            incr col
-        }
-        set $this-row $row
-        set $this-col $col
-    }
-
-    method swatch_delete {} {
-        # The global $this-filename should be loaded with a xff now.  We want to recover the base
-        # filename, essentially the timestamp.  Then we can safely delete it.  This assumes the
-        # natural behavior that a swatch will be loaded and immediately deleted.
-        global env  
-        global deleteSwatch 
-        global $this-row
-        global $this-col
-         
-        # Note:  The following line MAY break in windows due to path declaration differences 
-        # (/ vs. \)
-        set basename [split $deleteSwatch "/"] 
-        set basename [lindex $basename end]
-        set basename [lindex [split $basename "."] 0]
-        set path "$env(HOME)/.scirun"
-        file delete "$path/$basename.gif"
-        file delete "$path/$basename.ppm.xff"
-
-        set w .ui[modname]
-        if {[winfo exists $w.swatchpicker]} {
-            set f [$w.swatchpicker childsite]
-            foreach element [winfo children $f] {
-              destroy $element
-            }
-            set $this-row 0
-            set $this-col 0
-            create_swatches
-        }
-    }
-
-    method swatch_load {swatchNum} {
-        #  Note:  This is the method in which we must prepare the global filename for 
-        #  swatch_delete to work on.  
-        global deleteSwatch
-        global env
-
-        set path "$env(HOME)/.scirun"
-        set deleteSwatch "$path/$swatchNum.ppm.xff"
-        $this-c load
-    }
-
-    method swatch_save {} {
-        global $this-filename
-        global env
-        set curdir [pwd]
-        set path $env(HOME)
-        set numPPM 0
-       
-        set names [array names env] 
-        cd "$path/.scirun"
-        set files [glob -nocomplain "*.ppm"]
-        cd $curdir
-
-        set numPPM [clock format [clock seconds] -format {%Y%m%d_%H%M%S}]
-        
-        set $this-filename "$path/.scirun/$numPPM.ppm"
-        $this-c "saveppm"
-
-        exec convert $path/.scirun/$numPPM.ppm -resize 100x50 $path/.scirun/$numPPM.gif
-        file delete $path/.scirun/$numPPM.ppm
-        update_swatches $path/.scirun/$numPPM.gif
-    }
-
     method ui {} {
         global $this-filename
-        global $this-num-entries
-        trace vdelete $this-num-entries w "$this unpickle"
+	global $this-num-entries
+	trace vdelete $this-num-entries w "$this unpickle"
 
-        set w .ui[modname]
-        if {[winfo exists $w]} {
-            create_gl
-            return
-        }
-        toplevel $w
-        frame $w.f
-        pack $w.f -padx 2 -pady 2
+	set w .ui[modname]
+	if {[winfo exists $w]} {
+	    create_gl
+	    return
+	}
+	toplevel $w
+	frame $w.f
+	pack $w.f -padx 2 -pady 2
         create_gl
 
-        iwidgets::scrolledframe $w.widgets -hscrollmode none -vscrollmode dynamic
-        iwidgets::scrolledframe $w.swatchpicker -hscrollmode none -vscrollmode dynamic
+	iwidgets::scrolledframe $w.widgets -hscrollmode none -vscrollmode dynamic
 
-        frame $w.title
-        label $w.title.name -text "Widget Name" \
-            -width 16 -relief groove
-        label $w.title.color -text "Color" -width 8 -relief groove
-        label $w.title.shade -text "Flat Shaded" -width 10 -relief groove
+	frame $w.title
+	label $w.title.name -text "Widget Name" \
+	    -width 16 -relief groove
+	label $w.title.color -text "Color" -width 8 -relief groove
+	label $w.title.shade -text "Flat Shaded" -width 10 -relief groove
         label $w.title.onoff -text "On" -width 4 -relief groove
-        label $w.title.empty -text "" -width 3
-        pack $w.title.name $w.title.color $w.title.shade $w.title.onoff $w.title.empty \
-            -side left 
+	label $w.title.empty -text "" -width 3
+	pack $w.title.name $w.title.color $w.title.shade $w.title.onoff $w.title.empty \
+	    -side left 
 
-        frame $w.controls
-        button $w.controls.addtriangle -text "Add Triangle" \
-            -command "$this-c addtriangle" -width 11
-        button $w.controls.addrectangle -text "Add Rectangle" \
-            -command "$this-c addrectangle" -width 11
-        button $w.controls.delete -text "Delete" \
-            -command "$this-c deletewidget" -width 11
-        button $w.controls.undo -text "Undo" \
-            -command "$this-c undowidget" -width 11
+	frame $w.controls
+	button $w.controls.addtriangle -text "Add Triangle" \
+	    -command "$this-c addtriangle" -width 11
+	button $w.controls.addrectangle -text "Add Rectangle" \
+	    -command "$this-c addrectangle" -width 11
+	button $w.controls.delete -text "Delete" \
+	    -command "$this-c deletewidget" -width 11
+	button $w.controls.undo -text "Undo" \
+	    -command "$this-c undowidget" -width 11
         button $w.controls.load -text "Load" \
             -command "$this file_load" -width 11
         button $w.controls.save -text "Save" \
             -command "$this file_save" -width 11
-        pack $w.controls.addtriangle $w.controls.addrectangle \
-            $w.controls.delete $w.controls.undo $w.controls.load $w.controls.save\
-            -padx 8 -pady 4 -fill x -expand yes -side left
+	button $w.controls.saveppm -text "Save PPM" \
+	    -command "$this-c saveppm" -width 11
+	pack $w.controls.addtriangle $w.controls.addrectangle \
+	    $w.controls.saveppm $w.controls.delete $w.controls.undo $w.controls.load $w.controls.save\
+	    -padx 8 -pady 4 -fill x -expand yes -side left
 
-        frame $w.swatchcontrol
-        button $w.swatchcontrol.saveButton -text "QuickSave" \
-               -command "$this swatch_save" -width 20
-        button $w.swatchcontrol.delButton -text "Delete Swatch" \
-               -command "$this swatch_delete" -width 20
-        pack $w.swatchcontrol.saveButton $w.swatchcontrol.delButton
+	pack $w.title  -fill x -padx 2 -pady 2
+	pack $w.widgets -side top -fill both -expand yes -padx 2
+	pack $w.controls -fill x 
 
-        pack $w.title  -fill x -padx 2 -pady 2
-        pack $w.widgets -side top -fill both -expand yes -padx 2
-        pack $w.controls -fill x 
-        pack $w.swatchcontrol -side top -fill x
-        pack $w.swatchpicker -side top -fill both -expand yes -padx 2
-        
-        create_entries
-        create_swatches
+	create_entries
 
-        makeSciButtonPanel $w $w $this "\"Reset\" \"$this-c reset_gui\" \"\""
-        moveToCursor $w
+	makeSciButtonPanel $w $w $this "\"Reset\" \"$this-c reset_gui\" \"\""
+	moveToCursor $w
     }
-            
+	    
     method bind_events {w} {
-        # every time the OpenGL widget is displayed, redraw it
-        bind $w <Expose> "$this-c expose"
-        bind $w <ButtonPress-1> "$this-c mouse push %x %y %b 0"
-        bind $w <ButtonPress-2> "$this-c mouse push %x %y %b 0"
-        bind $w <ButtonPress-3> "$this-c mouse push %x %y %b 1"
-        bind $w <Button1-Motion> "$this-c mouse motion %x %y"
-        bind $w <Button2-Motion> "$this-c mouse motion %x %y"
-        bind $w <Button3-Motion> "$this-c mouse motion %x %y"
-        bind $w <ButtonRelease-1> "$this-c mouse release %x %y %b"
-        bind $w <ButtonRelease-2> "$this-c mouse release %x %y %b"
-        bind $w <ButtonRelease-3> "$this-c mouse release %x %y %b"
+	# every time the OpenGL widget is displayed, redraw it
+	bind $w <Expose> "$this-c expose"
+	bind $w <ButtonPress-1> "$this-c mouse push %x %y %b 0"
+	bind $w <ButtonPress-2> "$this-c mouse push %x %y %b 0"
+	bind $w <ButtonPress-3> "$this-c mouse push %x %y %b 1"
+	bind $w <Button1-Motion> "$this-c mouse motion %x %y"
+	bind $w <Button2-Motion> "$this-c mouse motion %x %y"
+	bind $w <Button3-Motion> "$this-c mouse motion %x %y"
+	bind $w <ButtonRelease-1> "$this-c mouse release %x %y %b"
+	bind $w <ButtonRelease-2> "$this-c mouse release %x %y %b"
+	bind $w <ButtonRelease-3> "$this-c mouse release %x %y %b"
 
-        # controls for pan and zoom and reset
-        bind $w <Shift-ButtonPress-1> "$this-c mouse translate start %x %y"
-        bind $w <Shift-Button1-Motion> "$this-c mouse translate move %x %y"
-        bind $w <Shift-ButtonRelease-1> "$this-c mouse translate end %x %y"
-        bind $w <Shift-ButtonPress-2> "$this-c mouse reset %x %y 1"
-        bind $w <Shift-Button2-Motion> "$this-c mouse reset %x %y 1"
-        bind $w <Shift-ButtonRelease-2> "$this-c mouse reset %x %y 1"
-        bind $w <Shift-ButtonPress-3> "$this-c mouse scale start %x %y"
-        bind $w <Shift-Button3-Motion> "$this-c mouse scale move %x %y"
-        bind $w <Shift-ButtonRelease-3> "$this-c mouse scale end %x %y"
+	# controls for pan and zoom and reset
+	bind $w <Shift-ButtonPress-1> "$this-c mouse translate start %x %y"
+	bind $w <Shift-Button1-Motion> "$this-c mouse translate move %x %y"
+	bind $w <Shift-ButtonRelease-1> "$this-c mouse translate end %x %y"
+	bind $w <Shift-ButtonPress-2> "$this-c mouse reset %x %y 1"
+	bind $w <Shift-Button2-Motion> "$this-c mouse reset %x %y 1"
+	bind $w <Shift-ButtonRelease-2> "$this-c mouse reset %x %y 1"
+	bind $w <Shift-ButtonPress-3> "$this-c mouse scale start %x %y"
+	bind $w <Shift-Button3-Motion> "$this-c mouse scale move %x %y"
+	bind $w <Shift-ButtonRelease-3> "$this-c mouse scale end %x %y"
 
-        bind $w <Destroy> "$this-c destroygl"           
+	bind $w <Destroy> "$this-c destroygl"		
     }
-            
+	    
     method create_gl {} {
         set w .ui[modname]
         if {[winfo exists $w.f.gl]} {
             raise $w
         } else {
             set n "$this-c needexecute"
-            
+	    
             frame $w.f.gl -relief groove -borderwidth 2
             pack $w.f.gl -padx 2 -pady 2
             # create an OpenGL widget
-            $this-c setgl $w.f.gl.gl
-            bind_events $w.f.gl.gl
+	    $this-c setgl $w.f.gl.gl
+	    bind_events $w.f.gl.gl
             # place the widget on the screen
             pack $w.f.gl.gl -fill both -expand 1
             # histogram opacity
@@ -507,4 +358,3 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
         }
     }
 }
-
