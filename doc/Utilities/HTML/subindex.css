@@ -44,7 +44,8 @@ list-style-type: none}
 th { 
 font-size: large;
 background-color:#003333;
-color:#FFCC33}
+color:#FFCC33;
+width:100%}
 
 p {
 font-size: small}
