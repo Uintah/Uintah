@@ -44,6 +44,24 @@ public:
   virtual void send() {}
 };
 
+
+//
+// ************** no args
+//
+
+/*
+ * Static Slot(void)
+ */
+
+class StaticSlot : public SlotBase {
+private:
+  void (*fun)();
+public:
+  StaticSlot( void (*fun)() ) : fun(fun) {}
+  
+  virtual void send() { (*fun)(); }
+};
+
 /*
  * Slot(void)
  */
@@ -59,6 +77,38 @@ public:
   virtual void send() { (caller->*pmf)(); }
 };
 
+
+/*
+ * Signal(void)
+ */
+
+class Signal {
+private:
+  vector<SlotBase *> slot;
+public:
+  void add( SlotBase *s) { slot.push_back(s); }
+  void operator()() { for (int i=0; i<slot.size(); i++) slot[i]->send(); }
+};
+
+/*
+ * Connect(void)
+ */
+template<class T>
+void connect( Signal &s, T &t, void (T::*fun)())
+{
+  Slot<T> *slot = new Slot<T>(&t, fun);
+  s.add( slot);
+}
+
+void connect( Signal &s, void (*fun)() )
+{
+  StaticSlot *slot = new StaticSlot( fun );
+  s.add( slot );
+}
+
+//
+// ****************** single arg
+//
 
 /*
  * Slot(arg)
@@ -82,6 +132,56 @@ public:
 };
 
 /*
+ * Static Slot(arg)
+ */
+
+template<class Arg1>
+class StaticSlot1 : public SlotBase1<Arg1> {
+private:
+  void (*fun)(Arg1);
+public:
+  StaticSlot1( void (*fun)(Arg1) ) : fun(fun) {}
+  
+  virtual void send(Arg1 a) { (*fun)(a); }
+};
+
+/*
+ * Signal(arg)
+ */
+
+template<class Arg>
+class Signal1  {
+private:
+  vector<SlotBase1<Arg> *> slot;
+public:
+  void add( SlotBase1<Arg> *s) { slot.push_back(s); }
+  void operator()( Arg a) {for (int i=0; i<slot.size(); i++) slot[i]->send(a);}
+};
+
+/*
+ * Connect (arg)
+ */
+
+template<class T, class Arg>
+void connect( Signal1<Arg> &s, T &t, void (T::*fun)(Arg))
+{
+  SlotBase1<Arg> *slot = new Slot1<T,Arg>(&t, fun);
+  s.add( slot);
+}
+
+
+template<class Arg1>
+void connect( Signal &s, void (*fun)(Arg1) )
+{
+  StaticSlot1<Arg1> *slot = new StaticSlot1<Arg1>( fun );
+  s.add( slot );
+}
+
+//
+// ***************** two args
+//
+
+/*
  * Slot(arg,arg)
  */
 
@@ -102,34 +202,23 @@ public:
   void send(Arg1 a, Arg2 b) { (caller->*pmf)(a,b); }
 };
 
-
 /*
- * Signal(void)
+ * Static Slot(arg)
  */
 
-class Signal {
+template<class Arg1, class Arg2>
+class StaticSlot2 : public SlotBase2<Arg1,Arg2> {
 private:
-  vector<SlotBase *> slot;
+  void (*fun)(Arg1,Arg2);
 public:
-  void add( SlotBase *s) { slot.push_back(s); }
-  void send() { for (int i=0; i<slot.size(); i++) slot[i]->send(); }
+  StaticSlot2( void (*fun)(Arg1,Arg2) ) : fun(fun) {}
+  
+  virtual void send(Arg1 a, Arg2 b) { (*fun)(a,b); }
 };
 
-/*
- * Signal(arg)
- */
-
-template<class Arg>
-class Signal1  {
-private:
-  vector<SlotBase1<Arg> *> slot;
-public:
-  void add( SlotBase1<Arg> *s) { slot.push_back(s); }
-  void send( Arg a) { for (int i=0; i<slot.size(); i++) slot[i]->send(a); }
-};
 
 /*
- * Signal(arg,arg)
+ * Signal2(arg,arg)
  */
 
 template<class Arg1,class Arg2>
@@ -138,7 +227,7 @@ private:
   vector<SlotBase2<Arg1,Arg2> *> slot;
 public:
   void add( SlotBase2<Arg1,Arg2> *s) { slot.push_back(s); }
-  void send( Arg1 a, Arg2 b) 
+  void operator()( Arg1 a, Arg2 b) 
     { for (int i=0; i<slot.size(); i++) slot[i]->send(a,b); }
 };
 
@@ -153,26 +242,11 @@ void connect( Signal2<Arg1,Arg2> &s, T &t, void (T::*fun)(Arg1,Arg2))
   s.add( slot);
 }
 
-/*
- * Connect (arg)
- */
-
-template<class T, class Arg>
-void connect( Signal1<Arg> &s, T &t, void (T::*fun)(Arg))
+template<class Arg1, class Arg2>
+void connect( Signal &s, void (*fun)(Arg1,Arg2) )
 {
-  SlotBase1<Arg> *slot = new Slot1<T,Arg>(&t, fun);
-  s.add( slot);
+  StaticSlot2<Arg1,Arg2> *slot = new StaticSlot2<Arg1,Arg2>( fun );
+  s.add( slot );
 }
-
-/*
- * Connect(void)
- */
-template<class T>
-void connect( Signal &s, T &t, void (T::*fun)())
-{
-  Slot<T> *slot = new Slot<T>(&t, fun);
-  s.add( slot);
-}
-
 
 #endif // Signals_h
