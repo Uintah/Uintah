@@ -35,7 +35,9 @@ public:
     virtual GeomObj* clone();
     virtual void get_bounds(BBox&);
 
+#ifdef SCI_OPENGL
     virtual void objdraw(DrawInfoOpenGL*);
+#endif
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);
 };

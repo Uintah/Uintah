@@ -47,3 +47,26 @@ void Color::get_color(float color[4])
     color[2]=_b;
     color[3]=1.0;
 }
+
+Color Color::operator*(const Color& c) const
+{
+    return Color(_r*c._r, _g*c._g, _b*c._b);
+}
+
+Color Color::operator*(double w) const
+{
+    return Color(_r*w, _g*w, _b*w);
+}
+
+Color Color::operator+(const Color& c) const
+{
+    return Color(_r+c._r, _g+c._g, _b+c._b);
+}
+
+Color& Color::operator+=(const Color& c)
+{
+    _r+=c._r;
+    _g+=c._g;
+    _b+=c._b;
+    return *this;
+}

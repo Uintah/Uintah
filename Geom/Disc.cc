@@ -92,9 +92,11 @@ void GeomDisc::make_prims(Array1<GeomObj*>& free,
 	    Vector rv2(rv2a+rv2b);
 	    Point p2(cen+rv2);
 	    if(j>0){
-		GeomTri* t1=new GeomTri(l1, l2, p1);
-		t1->set_matl(matl);
-		free.add(t1);
+		if(i>0){
+		    GeomTri* t1=new GeomTri(l1, l2, p1);
+		    t1->set_matl(matl);
+		    free.add(t1);
+		}
 		GeomTri* t2=new GeomTri(l2, p1, p2);
 		t2->set_matl(matl);
 		free.add(t2);

@@ -18,6 +18,7 @@
 GeomTri::GeomTri(const Point& p1, const Point& p2, const Point& p3)
 : GeomObj(1), p1(p1), p2(p2), p3(p3), n(Cross(p3-p1, p2-p1))
 {
+    n.normalize();
 }
 
 GeomTri::GeomTri(const GeomTri &copy)

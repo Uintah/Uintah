@@ -16,12 +16,15 @@
 
 #include <Classlib/Array1.h>
 #include <Classlib/Handle.h>
+#include <variant.h>
 #include <Geom/Color.h>
 
 class BBox;
 class DrawInfoOpenGL;
 class DrawInfoX11;
 class GeomPick;
+class Vector;
+class Point;
 
 class Material {
 protected:
@@ -56,13 +59,16 @@ public:
     GeomPick* get_pick();
 
     // For OpenGL
+#ifdef SCI_OPENGL
     void draw(DrawInfoOpenGL*);
     virtual void objdraw(DrawInfoOpenGL*)=0;
+#endif
 
     // For X11
     void draw(DrawInfoX11*);
     virtual void objdraw(DrawInfoX11*);
     virtual double depth(DrawInfoX11*);
+    virtual void get_hit(Vector&, Point&);
 
     // For all Painter's algorithm based renderers
     virtual void make_prims(Array1<GeomObj*>& free,

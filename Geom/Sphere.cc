@@ -69,27 +69,31 @@ void GeomSphere::make_prims(Array1<GeomObj*>& free,
     double cx=cen.x();
     double cy=cen.y();
     double cz=cen.z();
-    for(int i=0;i<nu-1;i++){
-	double x0=u.sin(i);
-	double y0=u.cos(i);
-	double x1=u.sin(i+1);
-	double y1=u.cos(i+1);
-	Point l1, l2;
-	for(int j=0;j<nv-1;j++){
-	    double r0=v.sin(j);
-	    double z0=v.cos(j);
+
+    for(int j=0;j<nv-1;j++){
+	double r0=v.sin(j);
+	double z0=v.cos(j);
+	double r1=v.sin(j+1);
+	double z1=v.cos(j+1);
+	for(int i=0;i<nu-1;i++){
+	    double x0=u.sin(i);
+	    double y0=u.cos(i);
+	    double x1=u.sin(i+1);
+	    double y1=u.cos(i+1);
 	    Point p1(x0*r0+cx, y0*r0+cy, z0+cz);
 	    Point p2(x1*r0+cx, y1*r0+cy, z0+cz);
-	    if(j>0){
-		GeomTri* t1=new GeomTri(l1, l2, p1);
+	    Point p3(x0*r1+cx, y0*r1+cy, z1+cz);
+	    Point p4(x1*r1+cx, y1*r1+cy, z1+cz);
+	    if(j<nv-2){
+		GeomTri* t1=new GeomTri(p1, p3, p4);
 		t1->set_matl(matl);
 		free.add(t1);
-		GeomTri* t2=new GeomTri(l2, p1, p2);
+	    }
+	    if(j>0){
+		GeomTri* t2=new GeomTri(p1, p4, p2);
 		t2->set_matl(matl);
 		free.add(t2);
 	    }
-	    l1=p1;
-	    l2=p2;
 	}
     }
 }
