@@ -49,19 +49,6 @@ Focusing::Focusing(const string& id)
     fcsdgGUI("fcsdgGUI", id, this)
   //  : Module("Focusing", id, Source, "Math", "MatlabInterface")
 {
-  /*
-    iport1=scinew MatrixIPort(this, "Lead Field", MatrixIPort::Atomic);
-    add_iport(iport1);
-
-    iport2=scinew MatrixIPort(this, "RHS (data)", MatrixIPort::Atomic);
-    add_iport(iport2);
-
-    oport1=scinew MatrixOPort(this, "Sources", MatrixIPort::Atomic);
-    add_oport(oport1);
-
-    oport2=scinew MatrixOPort(this, "Residual", MatrixIPort::Atomic);
-    add_oport(oport2);
-  */
 }
 
 Focusing::~Focusing(){}
@@ -82,6 +69,24 @@ void Focusing::execute()
   iport2 = (MatrixIPort *)get_iport("RHS (data)");
   oport1 = (MatrixOPort *)get_oport("Sources");
   oport2 = (MatrixOPort *)get_oport("Residual");
+
+  if (!iport1) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!iport2) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!oport1) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!oport2) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  
   DenseMatrix  *inp1;   // Sensitivity matrix
   ColumnMatrix *inp2;   // data (right-hand side)
   ColumnMatrix *otp1;   // model

@@ -137,6 +137,15 @@ NrrdSubvolume::execute()
   update_state(NeedData);
   inrrd_ = (NrrdIPort *)get_iport("Nrrd");
   onrrd_ = (NrrdOPort *)get_oport("Nrrd");
+
+  if (!inrrd_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!onrrd_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   if (!inrrd_->get(nrrdH))
     return;
   if (!nrrdH.get_rep()) {

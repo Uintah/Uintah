@@ -114,17 +114,7 @@ BuildTransform::BuildTransform(const string& id)
     ignoring_widget_changes_(1),
     have_been_initialized_(0)
 {
-  /*
-  // Create the input port
-  imatrix_=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
-  add_iport(imatrix_);
   
-  // Create the output ports
-  omatrix_=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
-  add_oport(omatrix_);
-  ogeom_=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
-  add_oport(ogeom_);
-  */
   box_widget_=scinew ScaledBoxWidget(this, &widget_lock_, 0.2);
   widget_switch_=box_widget_->GetWidget();
 }
@@ -140,6 +130,18 @@ void BuildTransform::execute()
   ogeom_ = (GeometryOPort *)get_oport("Geometry");
   string which_transform=which_transform_gui_.get();
 
+  if (!imatrix_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!omatrix_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!ogeom_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   // create the widget
   if (!have_been_initialized_) {
     Point C, R, D, I;

@@ -732,6 +732,20 @@ GenTransferFunc::execute(void)
   outport = (ColorMapOPort *)get_oport("ColorMap");
   ogeom = (GeometryOPort *)get_oport("Geometry");
   ColorMapHandle newcmap;
+
+  if (!inport) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!outport) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!ogeom) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  
   int c = inport->get(newcmap);
 
   if ( c && newcmap->generation != cmap_generation )

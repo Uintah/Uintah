@@ -80,6 +80,15 @@ void FDMtoFEM::execute() {
   ifdm_ = (FieldIPort *)get_iport("FDM (LVT, cell sigmas)");
   ofem_ = (FieldOPort *)get_oport("FEM (TVT, cell sigmas)");
   FieldHandle ifdmH;
+
+  if (!ifdm_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!ofem_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   
   if (!ifdm_->get(ifdmH)) {
     msgStream_ << "Can't get input finite difference field" << endl;

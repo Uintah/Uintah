@@ -125,7 +125,19 @@ void ErrorMetric::execute()
      ivec1P_ = (MatrixIPort *)get_iport("Vec1");
      ivec2P_ = (MatrixIPort *)get_iport("Vec2");
      errorP_ = (MatrixOPort *)get_oport("Error out");
-  
+
+     if (!ivec1P_) {
+       postMessage("Unable to initialize "+name+"'s iport\n");
+       return;
+     }
+     if (!ivec2P_) {
+       postMessage("Unable to initialize "+name+"'s iport\n");
+       return;
+     }
+     if (!errorP_) {
+       postMessage("Unable to initialize "+name+"'s oport\n");
+       return;
+     }
      MatrixHandle ivec1H;
      ColumnMatrix* ivec1;
      if (!ivec1P_->get(ivec1H) || !(ivec1=dynamic_cast<ColumnMatrix*>(ivec1H.get_rep()))) return;

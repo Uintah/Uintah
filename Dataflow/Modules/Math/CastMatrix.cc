@@ -51,6 +51,15 @@ CastMatrix::~CastMatrix()
 void CastMatrix::execute() {
   imat_ = (MatrixIPort *)get_iport("Input");
   omat_ = (MatrixOPort *)get_oport("Output");
+
+  if (!imat_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!omat_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   
   update_state(NeedData);
   MatrixHandle imH;

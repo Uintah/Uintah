@@ -70,6 +70,16 @@ void FieldToNrrd::execute()
 {
   ifield = (FieldIPort *)get_iport("Field");
   onrrd = (NrrdOPort *)get_oport("Nrrd");
+
+  if (!ifield) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!onrrd) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+
   FieldHandle fieldH;
   if (!ifield->get(fieldH))
     return;

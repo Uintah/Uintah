@@ -37,6 +37,7 @@
 
 #include <Dataflow/share/share.h>
 #include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/NetworkEditor.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Util/Timer.h>
 #include <Core/GuiInterface/TCL.h>
@@ -54,7 +55,6 @@ class GeomPick;
 class GeomObj;
 class Connection;
 class Network;
-class NetworkEditor;
 class MessageBase;
 class AI;
 class ViewWindow;
@@ -268,6 +268,8 @@ void PortManager<T>::remove(int item) {
 
 template<class T>
 const T& PortManager<T>::operator[](int item) {
+  if(size()<=item) return 0;
+
   return ports[item];
 }
 

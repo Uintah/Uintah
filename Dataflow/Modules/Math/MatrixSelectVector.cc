@@ -63,6 +63,19 @@ void MatrixSelectVector::execute() {
   imat_ = (MatrixIPort *)get_iport("Matrix");
   ivec_ = (MatrixIPort *)get_iport("Weight Vector");
   ovec_ = (MatrixOPort *)get_oport("Vector");
+
+  if (!imat_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!ivec_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!ovec_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   
   stop_=0;
   update_state(NeedData);

@@ -109,6 +109,10 @@ TransformField::callback(Field *ifield, M *)
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
+  if (!ofp) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   FieldHandle fh(ofield);
   ofp->send(fh);
 }
@@ -121,6 +125,10 @@ TransformField::execute()
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifield_handle;
   Field *ifield;
+  if (!ifp) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
   if (!(ifp->get(ifield_handle) && (ifield = ifield_handle.get_rep())))
   {
     return;
@@ -128,6 +136,10 @@ TransformField::execute()
 
   MatrixIPort *imp = (MatrixIPort *)get_iport("Transform Matrix");
   MatrixHandle imatrix_handle;
+  if (!imp) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
   if (!(imp->get(imatrix_handle)))
   {
     return;
@@ -140,6 +152,10 @@ TransformField::execute()
   ofield->mesh()->transform(trans_);
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
+  if (!ofp) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   FieldHandle fh(ofield);
   ofp->send(fh);
 }

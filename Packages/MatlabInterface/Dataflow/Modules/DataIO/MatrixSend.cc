@@ -75,9 +75,22 @@ MatrixSend::~MatrixSend(){}
 void MatrixSend::execute()
 {
 
-  imat1 = (MatrixIPort *)get_iport("Matrix");
-  imat2 = (MatrixIPort *)get_iport("Matrix");
+  imat1 = (MatrixIPort *)get_iport("Matrix1");
+  imat2 = (MatrixIPort *)get_iport("Matrix2");
   omat = (MatrixOPort *)get_oport("Matrix");
+
+  if (!imat1) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!imat2) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!omat) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
 
   /* OBTAIN HOST:PORT INFORMATION */
 

@@ -64,15 +64,6 @@ extern "C" Module* make_AssignLeadFieldSources(const string& id)
 AssignLeadFieldSources::AssignLeadFieldSources(const string& id)
   : Module("AssignLeadFieldSources", id, Filter, "LeadField", "BioPSE")
 {
-  ifp = new FieldIPort(this, "Mesh", FieldIPort::Atomic);
-  add_iport(ifp);
-  imp = new MatrixIPort(this, "Data", MatrixIPort::Atomic);
-  add_iport(imp);
-
-  ofp = new FieldOPort(this, "VectorField", FieldIPort::Atomic);
-  add_oport(ofp);
-  ofp2 = new FieldOPort(this, "Field<double>", FieldIPort::Atomic);
-  add_oport(ofp2);
 }
 
 AssignLeadFieldSources::~AssignLeadFieldSources()
@@ -82,6 +73,30 @@ AssignLeadFieldSources::~AssignLeadFieldSources()
 void
 AssignLeadFieldSources::execute()
 {
+
+  ifp = (FieldIPort*)get_iport("Mesh");
+  imp = (MatrixIPort*)get_iport("Data");
+
+  ofp = (FieldOPort*)get_oport("VectorField");
+  ofp2 = (FieldOPort*)get_oport("Field(double)");
+
+  if (!ifp) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!imp) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!ofp) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!ofp2) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  
   // Get input field.
   FieldHandle ifield;
   if (!(ifp->get(ifield)) || !(ifield.get_rep())) {

@@ -484,6 +484,35 @@ void DipoleSearch::execute() {
   // point cloud of one vector, just the test dipole (for vis)
   dipole_oport_ = (FieldOPort *)get_oport("TestDipole");
 
+  if (!seeds_iport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!mesh_iport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!misfit_iport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!dir_iport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!leadfield_select_oport_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!simplex_oport_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!dipole_oport_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+
   read_field_ports(valid_data, new_data);
   if (!valid_data) return;
   if (!new_data) {

@@ -95,6 +95,31 @@ void BuildMisfitField::execute() {
   mesh_oport_ = (FieldOPort *)get_oport("Misfit Field");
   basis_oport_ = (MatrixOPort *)get_oport("Basis");
 
+  if (!mesh_iport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!leadfield_iport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!measurements_iport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!misfit_iport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!mesh_oport_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!basis_oport_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+
   FieldHandle mesh_in;
   if (!mesh_iport_->get(mesh_in)) {
     cerr << "BuildMisfitField -- couldn't get mesh.  Returning.\n";

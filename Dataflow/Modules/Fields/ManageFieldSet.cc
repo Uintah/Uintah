@@ -148,7 +148,10 @@ ManageFieldSet::update_hiertable()
   while (pi != range.second)
   {
     FieldSetIPort *port = (FieldSetIPort *)get_iport(pi->second);
-
+    if (!port) {
+      postMessage("Unable to initialize "+name+"'s iport\n");
+      return;
+    }
     // Do something with port.
     FieldSetHandle h;
     if (port->get(h))
@@ -164,7 +167,10 @@ ManageFieldSet::update_hiertable()
   while (pi != range.second)
   {
     FieldIPort *port = (FieldIPort *)get_iport(pi->second);
-
+    if (!port) {
+      postMessage("Unable to initialize "+name+"'s iport\n");
+      return;
+    }
     // Do something with port.
     FieldHandle h;
     if (port->get(h))
@@ -299,6 +305,10 @@ ManageFieldSet::execute()
       ofs->store("name", string("glomfield"));
       FieldSetHandle ofsh(ofs);
       FieldSetOPort *ofsp = (FieldSetOPort *)get_oport("Output FieldSet");
+      if (!ofsp) {
+	postMessage("Unable to initialize "+name+"'s oport\n");
+	return;
+      }
       ofsp->send(ofsh);
     }
   }

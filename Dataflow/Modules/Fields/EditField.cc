@@ -280,7 +280,11 @@ void EditField::build_widget(FieldHandle f)
   widget_group->add(box_->GetWidget());
 
   GeometryOPort *ogport=0;
-  ogport = (GeometryOPort*)get_oport(1);
+  ogport = (GeometryOPort*)get_oport("Transformation Widget");
+  if (!ogport) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   widgetid_ = ogport->addObj(widget_group,"EditField Transform widget",
 			     &widget_lock_);
   ogport->flushViews();
@@ -289,18 +293,23 @@ void EditField::build_widget(FieldHandle f)
 
 void EditField::execute()
 {
-  FieldIPort *iport=0; 
+  FieldIPort *iport=(FieldIPort*)get_iport("Input Field"); 
   FieldHandle fh;
   //Field *f=0;
-  FieldOPort *oport=0;
+  FieldOPort *oport=(FieldOPort*)get_oport("Output Field");
+
+  if (!iport) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
   
   // the output port is required
-  if (!(oport=(FieldOPort*)get_oport(0)))
+  if (!oport) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
     return;
-
+  }
   // the input port (with data) is required
-  if (!(iport=(FieldIPort*)get_iport(0)) || 
-      !iport->get(fh) || 
+  if (!iport->get(fh) || 
       !(fh.get_rep()))
   {
     clear_vals();

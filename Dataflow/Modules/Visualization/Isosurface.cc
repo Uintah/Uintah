@@ -90,6 +90,24 @@ void Isosurface::execute()
   osurf = (FieldOPort *)get_oport("Surface");
   ogeom = (GeometryOPort *)get_oport("Geometry");
   FieldHandle field;
+
+  if (!infield) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!inColorMap) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!osurf) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!ogeom) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  
   infield->get(field);
   if(!field.get_rep()){
     return;

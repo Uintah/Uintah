@@ -130,7 +130,10 @@ GenStandardColorMaps::~GenStandardColorMaps(){}
 void GenStandardColorMaps::execute() 
 {
    outport = (ColorMapOPort *)get_oport("ColorMap");
-  
+   if (!outport) {
+     postMessage("Unable to initialize "+name+"'s oport\n");
+     return;
+   }
    static int res = -1;
    tcl_status.set("Calling GenStandardColorMaps!"); 
 

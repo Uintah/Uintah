@@ -109,6 +109,10 @@ Gradient::dispatch_latticevol(F *f)
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Gradient");
+  if (!ofp) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   FieldHandle fh(result);
   ofp->send(fh);
 }
@@ -120,12 +124,20 @@ Gradient::execute()
   ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle fieldhandle;
   Field *field;
+  if (!ifp) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
   if (!(ifp->get(fieldhandle) && (field = fieldhandle.get_rep())))
   {
     return;
   }
 
   ofp = (FieldOPort *)get_oport("Output Gradient");
+  if (!ofp) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
 
   const TypeDescription *ftd = fieldhandle->get_type_description();
 

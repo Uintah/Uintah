@@ -74,6 +74,10 @@ void
 GenericWriter<HType>::execute()
 {
   SimpleIPort<HType> *inport = (SimpleIPort<HType> *)get_iport(0);
+  if (!inport) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
 
   // Read data from the input port
   HType handle;

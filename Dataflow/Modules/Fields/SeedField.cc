@@ -204,7 +204,19 @@ SeedField::execute()
   ifport_ = (FieldIPort *)get_iport("Field to Seed");
   ofport_ = (FieldOPort *)get_oport("Seeds");
   ogport_ = (GeometryOPort *)get_oport("Seeding Widget");
-  
+
+  if (!ifport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!ofport_)  {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!ogport_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   // The field input is required.
   if (!ifport_->get(vfhandle_) || !(vf_ = vfhandle_.get_rep()))
   {

@@ -99,6 +99,28 @@ void BuildElemLeadField::execute() {
   rhs_oport_ = (MatrixOPort *)get_oport("RHS Vector");
   leadfield_oport_ = (MatrixOPort *)get_oport("Leadfield (nelecs x nelemsx3)");
 
+  if (!mesh_iport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!interp_iport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!sol_iport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!rhs_oport_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!leadfield_oport_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  
+
   FieldHandle mesh_in;
   if (!mesh_iport_->get(mesh_in)) {
     cerr << "BuildElemLeadField -- couldn't get mesh.  Returning.\n";

@@ -69,6 +69,16 @@ void NrrdToField::execute()
   NrrdDataHandle ninH;
   inrrd = (NrrdIPort *)get_iport("Nrrd");
   ofield = (FieldOPort *)get_oport("Field");
+
+  if (!inrrd) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!ofield) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+
   if(!inrrd->get(ninH))
     return;
 

@@ -99,12 +99,37 @@ void ApplyFEMCurrentSource::execute()
   iportInterp_ = (FieldIPort *)get_iport("Interpolant");
   oportRhs_ = (MatrixOPort *)get_oport("Output RHS");
   oportWeights_ = (MatrixOPort *)get_oport("Output Weights");
+
+  if (!iportField_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!iportSource_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!iportRhs_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!iportInterp_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!oportRhs_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!oportWeights_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   
   //! Obtaining handles to computation objects
   FieldHandle hField;
   
   if (!iportField_->get(hField) || !hField.get_rep()) {
-    msgStream_ << "Cann't get handle to mesh. Returning..." << endl;
+    msgStream_ << "Can't get handle to mesh. Returning..." << endl;
     return;
   }
 

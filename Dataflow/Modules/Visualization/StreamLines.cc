@@ -331,18 +331,29 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 
 void StreamLines::execute()
 {
-  // must find vector field input port
-  if (!(vfport_=(FieldIPort*)get_iport(0)))
+  vfport_ = (FieldIPort*)get_iport("Flow field");
+  sfport_ = (FieldIPort*)get_iport("Seeds");
+  oport_=(FieldOPort*)get_oport("Streamlines");
+  
+  //must find vector field input port
+  if (!vfport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
     return;
+  }
+   
 
   // must find seed field input port
-  if (!(sfport_=(FieldIPort*)get_iport(1)))
+  if (!sfport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
     return;
+  }
 
   // must find output port
-  if (!(oport_=(FieldOPort*)get_oport(0)))
+  if (!oport_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
     return;
-
+  }
+  
   // the vector field input is required
   if (!vfport_->get(vfhandle_) || !(vf_ = vfhandle_.get_rep())) {
     return;
@@ -350,7 +361,7 @@ void StreamLines::execute()
     vfinterface_ = vf_->query_vector_interface();
     ASSERT(vfinterface_);
   }
-
+  
   // the seed field input is required
   if (!sfport_->get(sfhandle_) || !(sf_ = sfhandle_.get_rep()))
     return;
