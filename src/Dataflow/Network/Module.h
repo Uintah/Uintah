@@ -222,7 +222,7 @@ public:
   // CollabVis code end
   
   template<class DC>
-  bool Module::module_dynamic_compile( CompileInfoHandle ci, DC &result )
+  bool module_dynamic_compile( CompileInfoHandle ci, DC &result )
   {
     return DynamicCompilation::compile( ci, result, this );
   }
