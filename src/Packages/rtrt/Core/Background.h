@@ -3,7 +3,6 @@
 
 #include <Packages/rtrt/Core/Color.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Plane.h>
 #include <Packages/rtrt/Core/Array2.h>
 #include <Packages/rtrt/Core/ppm.h>
 
