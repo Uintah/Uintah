@@ -30,8 +30,11 @@ INCLUDES += $(INSIGHT_INCLUDE)
 SRCDIR   := Packages/Insight/Core/Datatypes
 
 SRCS     += $(SRCDIR)/ITKDatatype.cc \
-	$(SRCDIR)ITKLatVolField.h \
-	$(SRCDIR)ITKImageField.h \
+	$(SRCDIR)/ITKLatVolField.h \
+	$(SRCDIR)/ITKImageField.h \
+	$(SRCDIR)/cd_templates.cc \
+	$(SRCDIR)/cd_templates_fields_0.cc \
+	$(SRCDIR)/cd_templates_fields_1.cc \
 
 #[INSERT NEW CODE FILE HERE]
 
