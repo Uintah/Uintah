@@ -92,6 +92,7 @@ using std::vector;
       const VarLabel* gInternalForceLabel;
       const VarLabel* gTemperatureRateLabel; //for heat conduction
       const VarLabel* gTemperatureLabel; //for heat conduction
+      const VarLabel* gTemperatureNoBCLabel; //for heat conduction
       const VarLabel* gTemperatureStarLabel; //for heat conduction
       const VarLabel* gInternalHeatRateLabel;
       const VarLabel* gExternalHeatRateLabel;
