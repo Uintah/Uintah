@@ -413,18 +413,25 @@ if test -z "$DIRNAME_IS" -o -z "$BASENAME_IS"; then
 fi
 
 if test "$CC" = ""; then
+  # Apparently AC_PROG_CC will set CFLAGS to "-O2 -g" if you don't specify
+  # its value first, so...
+  CFLAGS=""
   AC_PROG_CC()
   AC_MSG_WARN(C compiler not specified with 'CC' environment variable.\
 	    Using default... $CC)
-  
 fi
+
 if test "$CXX" = ""; then
+  # Apparently AC_PROG_CXX will set CXXFLAGS to "-O2 -g" if you don't specify
+  # its value first, so...
+  CXXFLAGS=""
   AC_PROG_CXX(CC g++ c++)
   AC_MSG_WARN(C++ compiler not specified with 'CXX' environment variable.\
 	    Using default... $CXX)
 fi
 
 if test $sci_check_fortran = "yes"; then
+
   if test "$F77" = ""; then
     AC_PROG_F77()
     AC_MSG_WARN(Fortran compiler not specified with 'F77' environment \
@@ -765,8 +772,10 @@ case $host in
 
     ;;
   *-darwin*)
+    ac_objext=o
     LDRUN_PREFIX="-L"
-    CFLAGS="$CFLAGS -fno-common -dynamic -fcoalesce-templates -Wno-long-double -I/sw/include -L/sw/lib"
+    CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -fcoalesce-templates -Wno-long-double -I/sw/include -L/sw/lib"
+    CXXFLAGS="$CXXFLAGS $CFLAGS"
     SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev \${LIBDIR}/../osx/osx_init.o  ${SOFLAGS}"
     ;;
 
@@ -808,7 +817,7 @@ case $host in
          ;;
     esac
 
-    CXXFLAGS="$extra_cflags"
+    CXXFLAGS="$CXXFLAGS $extra_cflags"
     SOFLAGS="-shared ${SOFLAGS}"
     NEED_SONAME=yes
     ;;
@@ -1336,7 +1345,7 @@ SCI_TRY_LINK(GL,OpenGL libraries and headers,[
 #include<GL/glu.h>
 #include<GL/glx.h>
 
-],$_sci_inc,GL GLU,$_sci_lib $GLU_OTHERS,,,not-optional)
+],$_sci_inc,GLU GL,$_sci_lib $GLU_OTHERS,,,not-optional)
 
 AC_SUBST(GL_LIB_FLAG)
 AC_SUBST(GL_LIB_DIR_FLAG)
@@ -1509,7 +1518,7 @@ SCI_TRY_LINK(TK,required tk library and headers,[
 #include <tk.h> 
 #include <tk3d.h>
 #include <tkPort.h>
-],$_sci_tk_inc,tk,$_sci_lib,$TK_DEFS $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,not-optional)
+],$_x_inc_dir $_sci_tk_inc,tk,$_sci_lib,$TK_DEFS $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,not-optional)
 
 AC_SUBST(TK_LIB_FLAG)
 AC_SUBST(TK_LIB_DIR_FLAG)
@@ -1528,7 +1537,7 @@ AC_SUBST(INC_ITCL_H)
 # -- itk --
 SCI_TRY_LINK(ITK,required itk library and headers,[
 #include <itk.h> 
-],$_sci_inc,itk,$_sci_lib,$ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,not-optional)
+],$_x_inc_dir $_sci_inc,itk,$_sci_lib,$ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,not-optional)
 
 AC_SUBST(ITK_LIB_FLAG)
 AC_SUBST(ITK_LIB_DIR_FLAG)
