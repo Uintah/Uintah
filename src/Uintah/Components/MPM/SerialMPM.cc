@@ -27,14 +27,6 @@ static char *id="@(#) $Id$";
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Math/MinMax.h>
 
-//Physical Models Interested:
-#include <Uintah/Components/MPM/Contact/ContactFactory.h>
-#include <Uintah/Components/MPM/HeatConduction/HeatConductionFactory.h>
-#include <Uintah/Components/MPM/HeatConduction/HeatConduction.h>
-#include <Uintah/Components/MPM/Fracture/FractureFactory.h>
-#include <Uintah/Components/MPM/Fracture/Fracture.h>
-#include <Uintah/Components/MPM/ThermalContact/ThermalContactFactory.h>
-#include <Uintah/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Uintah/Components/MPM/Burn/HEBurn.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 
@@ -43,6 +35,13 @@ static char *id="@(#) $Id$";
 
 #include "GeometrySpecification/Problem.h"
 #include <Uintah/Components/MPM/MPMLabel.h>
+
+#include <Uintah/Components/MPM/MPMPhysicalModules.h>
+#include <Uintah/Components/MPM/Contact/Contact.h>
+#include <Uintah/Components/MPM/HeatConduction/HeatConduction.h>
+#include <Uintah/Components/MPM/Fracture/Fracture.h>
+#include <Uintah/Components/MPM/ThermalContact/ThermalContact.h>
+
 
 using namespace Uintah;
 using namespace Uintah::MPM;
@@ -77,21 +76,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    /*
     * Physical Models:
     */
-
-   //solid mechanical contact
-   d_contactModel = ContactFactory::create(prob_spec,sharedState);
-   if (!d_contactModel)
-     throw ParameterNotFound("No contact model");
-
-   //solid heat conduction
-   d_heatConductionModel = HeatConductionFactory::create(prob_spec,sharedState);
-
-   //solid fracture
-   d_fractureModel = FractureFactory::create(prob_spec,sharedState);
-
-   //solid thermal contact
-   d_thermalContactModel = ThermalContactFactory::create(prob_spec,
-     sharedState);
+    
+   MPMPhysicalModules::build(prob_spec,d_sharedState);
   
    cerr << "SerialMPM::problemSetup passed.\n";
 }
@@ -139,7 +125,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
       const Patch* patch=*iter;
 
-      if(d_fractureModel) {
+      if(MPMPhysicalModules::fractureModel) {
 	 /*
 	  * labelSelfContactNodesAndCells
 	  *   in(C.SURFACENORMAL,P.SURFACENORMAL)
@@ -148,7 +134,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	  */
 	 Task* t = scinew Task("Fracture::labelSelfContactNodesAndCells",
 			    patch, old_dw, new_dw,
-			    d_fractureModel,
+			    MPMPhysicalModules::fractureModel,
 			    &Fracture::labelSelfContactNodesAndCells);
 
 	 for(int m = 0; m < numMatls; m++){
@@ -196,7 +182,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->computes(new_dw, lb->gVelocityLabel, idx, patch );
 	    t->computes(new_dw, lb->gExternalForceLabel, idx, patch );
 
-            if (d_heatConductionModel) {
+            if (MPMPhysicalModules::heatConductionModel) {
               t->requires(old_dw, lb->pTemperatureLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
               t->computes(new_dw, lb->gTemperatureLabel, idx, patch );
@@ -207,7 +193,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask(t);
       }
 
-      if (d_thermalContactModel) {
+      if (MPMPhysicalModules::thermalContactModel) {
 	 /* computeHeatExchange
 	  *   in(G.MASS, G.TEMPERATURE, G.EXTERNAL_HEAT_RATE)
 	  *   operation(peform heat exchange which will cause each of
@@ -218,14 +204,14 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
 	 Task* t = scinew Task("ThermalContact::computeHeatExchange",
 			    patch, old_dw, new_dw,
-			    d_thermalContactModel,
+			    MPMPhysicalModules::thermalContactModel,
 			    &ThermalContact::computeHeatExchange);
 
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 	    if(mpm_matl){
-               d_thermalContactModel->addComputesAndRequires(
+               MPMPhysicalModules::thermalContactModel->addComputesAndRequires(
 		 t, mpm_matl, patch, old_dw, new_dw);
 	    }
 
@@ -245,14 +231,14 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
 	 Task* t = scinew Task("Contact::exMomInterpolated",
 			    patch, old_dw, new_dw,
-			    d_contactModel,
+			    MPMPhysicalModules::contactModel,
 			    &Contact::exMomInterpolated);
 
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 	    if(mpm_matl){
-               d_contactModel->addComputesAndRequiresInterpolated(
+               MPMPhysicalModules::contactModel->addComputesAndRequiresInterpolated(
 					t, mpm_matl, patch, old_dw, new_dw);
 	    }
 
@@ -290,7 +276,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask(t);
       }
 
-      if(d_fractureModel) {
+      if(MPMPhysicalModules::fractureModel) {
 	 /*
 	  * updateSurfaceNormalOfBoundaryParticle
 	  *   in(P.DEFORMATIONMEASURE)
@@ -299,7 +285,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	  */
 	 Task* t = scinew Task("Fracture::updateSurfaceNormalOfBoundaryParticle",
 			    patch, old_dw, new_dw,
-			    d_fractureModel,
+			    MPMPhysicalModules::fractureModel,
 			    &Fracture::updateSurfaceNormalOfBoundaryParticle);
 
 	 for(int m = 0; m < numMatls; m++){
@@ -342,7 +328,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask( t );
       }
       
-      if (d_heatConductionModel) {
+      if (MPMPhysicalModules::heatConductionModel) {
 	 /*
 	  * computeInternalHeatRate
 	  *   in(P.X, P.VOLUME, P.TEMPERATUREGRADIENT)
@@ -399,7 +385,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask(t);
       }
 
-      if (d_heatConductionModel) {
+      if (MPMPhysicalModules::heatConductionModel) {
 	 /*
 	  * solveHeatEquations
 	  *   in(G.MASS, G.INTERNALHEATRATE, G.EXTERNALHEATRATE)
@@ -462,18 +448,18 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
 	Task* t = scinew Task("Contact::exMomIntegrated",
 			   patch, old_dw, new_dw,
-			   d_contactModel, &Contact::exMomIntegrated);
+			   MPMPhysicalModules::contactModel, &Contact::exMomIntegrated);
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-            d_contactModel->addComputesAndRequiresIntegrated(
+            MPMPhysicalModules::contactModel->addComputesAndRequiresIntegrated(
 				t, mpm_matl, patch, old_dw, new_dw);
 	}
 
 	sched->addTask(t);
       }
 
-      if(d_fractureModel) {
+      if(MPMPhysicalModules::fractureModel) {
 	 /*
 	  * updateNodeInformationInContactCells
 	  *   in(C.SELFCONTACT,G.VELOCITY,G.ACCELERATION)
@@ -483,7 +469,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	  */
 	 Task* t = scinew Task("Fracture::updateNodeInformationInContactCells",
 			    patch, old_dw, new_dw,
-			    d_fractureModel,
+			    MPMPhysicalModules::fractureModel,
 			    &Fracture::updateNodeInformationInContactCells);
 
 	 for(int m = 0; m < numMatls; m++){
@@ -541,7 +527,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->requires(old_dw, lb->pParticleIDLabel, idx, patch, Ghost::None);
 	    t->computes(new_dw, lb->pParticleIDLabel_preReloc, idx, patch);
 
-	    if(d_heatConductionModel) {
+	    if(MPMPhysicalModules::heatConductionModel) {
 	      t->requires(new_dw, lb->gTemperatureLabel, idx, patch,
 			Ghost::None);
               t->computes(new_dw, lb->pTemperatureRateLabel_preReloc, idx, patch);
@@ -605,7 +591,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
       }
 
-      if(d_fractureModel) {
+      if(MPMPhysicalModules::fractureModel) {
 	 /*
 	  * updateParticleInformationInContactCells
 	  *   in(P.DEFORMATIONMEASURE)
@@ -614,7 +600,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	  */
 	 Task* t = scinew Task("Fracture::updateParticleInformationInContactCells",
 			    patch, old_dw, new_dw,
-			    d_fractureModel,
+			    MPMPhysicalModules::fractureModel,
 			    &Fracture::updateParticleInformationInContactCells);
 
 	 for(int m = 0; m < numMatls; m++){
@@ -647,7 +633,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask(t);
       }
 
-      if(d_fractureModel) {
+      if(MPMPhysicalModules::fractureModel) {
 	 /*
 	  * crackGrow
 	  *   in(P.STRESS)
@@ -658,7 +644,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	  */
 	 Task* t = scinew Task("Fracture::crackGrow",
 			    patch, old_dw, new_dw,
-			    d_fractureModel,
+			    MPMPhysicalModules::fractureModel,
 			    &Fracture::crackGrow);
 
 	 for(int m = 0; m < numMatls; m++){
@@ -690,11 +676,11 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
       plabels.push_back(lb->pSurfLabel);
       plabels.push_back(lb->pIsIgnitedLabel); //for burn models
    }
-   if(d_fractureModel){
+   if(MPMPhysicalModules::fractureModel){
       plabels.push_back(lb->pSurfaceNormalLabel); //for fracture
       plabels.push_back(lb->pAverageMicrocrackLength); //for fracture
    }
-   if(d_heatConductionModel){
+   if(MPMPhysicalModules::heatConductionModel){
       plabels.push_back(lb->pTemperatureLabel); //for heat conduction
       plabels.push_back(lb->pTemperatureGradientLabel); //for heat conduction
       plabels.push_back(lb->pTemperatureRateLabel); //for heat conduction
@@ -715,12 +701,12 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
      plabels_preReloc.push_back(lb->pSurfLabel_preReloc);
      plabels_preReloc.push_back(lb->pIsIgnitedLabel_preReloc); //for burn models
    }
-   if(d_fractureModel){
+   if(MPMPhysicalModules::fractureModel){
      plabels_preReloc.push_back(lb->pSurfaceNormalLabel_preReloc); // fracture
      plabels_preReloc.push_back(lb->pAverageMicrocrackLength_preReloc); //frac.
    }
 
-   if(d_heatConductionModel){
+   if(MPMPhysicalModules::heatConductionModel){
       plabels_preReloc.push_back(lb->pTemperatureLabel_preReloc); //for heat 
       plabels_preReloc.push_back(lb->pTemperatureGradientLabel_preReloc); //heat
       plabels_preReloc.push_back(lb->pTemperatureRateLabel_preReloc); //heat
@@ -741,7 +727,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    new_dw->scheduleParticleRelocation(level, sched, old_dw,
 				      lb->pXLabel_preReloc, plabels_preReloc,
 				      lb->pXLabel, plabels, numMatls);
-   if(d_fractureModel) {
+   if(MPMPhysicalModules::fractureModel) {
       new_dw->pleaseSave(lb->pDeformationMeasureLabel, numMatls);
    }
 
@@ -802,10 +788,10 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 						mpm_matl, new_dw);
        int vfindex = matl->getVFIndex();
 
-       d_contactModel->initializeContact(patch,vfindex,new_dw);
+       MPMPhysicalModules::contactModel->initializeContact(patch,vfindex,new_dw);
        
-       if(d_fractureModel) {
-	 d_fractureModel->initializeFracture( patch, new_dw );
+       if(MPMPhysicalModules::fractureModel) {
+	 MPMPhysicalModules::fractureModel->initializeFracture( patch, new_dw );
        }
     }
   }
@@ -864,7 +850,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocate(gvelocity,     lb->gVelocityLabel, vfindex, patch);
       new_dw->allocate(externalforce, lb->gExternalForceLabel, vfindex, patch);
 
-      if (d_heatConductionModel) {
+      if (MPMPhysicalModules::heatConductionModel) {
         ParticleVariable<double> pTemperature;
         NCVariable<double> gTemperature;
         old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
@@ -905,7 +891,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	       externalforce[ni[k]] += pexternalforce[idx] * S[k];
 	       totalmass += pmass[idx] * S[k];
 	       
-  	       if (d_heatConductionModel) {
+  	       if (MPMPhysicalModules::heatConductionModel) {
     	         gTemperature[ni[k]] += pTemperature[idx] * pmass[idx] * S[k];
   	       }
 	    }
@@ -916,7 +902,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 //	 if(gmass[*iter] != 0.0){
 	 if(gmass[*iter] >= 1.e-10){
 	    gvelocity[*iter] *= 1./gmass[*iter];
-	    if (d_heatConductionModel) {
+	    if (MPMPhysicalModules::heatConductionModel) {
     	      gTemperature[*iter] /= gmass[*iter];
 	    }
 	 }
@@ -950,7 +936,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->put(gmass,         lb->gMassLabel, vfindex, patch);
       new_dw->put(gvelocity,     lb->gVelocityLabel, vfindex, patch);
       new_dw->put(externalforce, lb->gExternalForceLabel, vfindex, patch);
-      if (d_heatConductionModel) {
+      if (MPMPhysicalModules::heatConductionModel) {
         new_dw->put(gTemperature, lb->gTemperatureLabel, vfindex, patch);
       }
     }
@@ -1361,7 +1347,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gacceleration, lb->gMomExedAccelerationLabel, vfindex, patch,
 		  Ghost::AroundCells, 1);
 		  
-      if(d_heatConductionModel) {
+      if(MPMPhysicalModules::heatConductionModel) {
         old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
         new_dw->allocate(pTemperatureRate,lb->pTemperatureRateLabel, pset);
         new_dw->allocate(pTemperatureGradient, lb->pTemperatureGradientLabel,
@@ -1422,7 +1408,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         vel = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
 
-        if(d_heatConductionModel) {
+        if(MPMPhysicalModules::heatConductionModel) {
           pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
           tempRate = 0;
         }
@@ -1432,7 +1418,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	   vel += gvelocity_star[ni[k]]  * S[k];
 	   acc += gacceleration[ni[k]]   * S[k];
 	   
-	   if(d_heatConductionModel) {
+	   if(MPMPhysicalModules::heatConductionModel) {
 	      tempRate = gTemperatureRate[ni[k]] * S[k];
 	      for (int j = 0; j<3; j++){
 		 pTemperatureGradient[idx](j+1) += 
@@ -1444,7 +1430,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         // Update the particle's position and velocity
         px[idx]        += vel * delT;
         pvelocity[idx] += acc * delT;
-        if(d_heatConductionModel) {
+        if(MPMPhysicalModules::heatConductionModel) {
           pTemperatureRate[idx] = tempRate;
           pTemperature[idx] += tempRate * delT;
         }
@@ -1467,7 +1453,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       new_dw->put(sum_vartype(ke), lb->KineticEnergyLabel);
 
-      if(d_heatConductionModel) {
+      if(MPMPhysicalModules::heatConductionModel) {
         new_dw->put(pTemperatureRate, lb->pTemperatureRateLabel_preReloc);
         new_dw->put(pTemperature, lb->pTemperatureLabel_preReloc);
         new_dw->put(pTemperatureGradient, lb->pTemperatureGradientLabel_preReloc);
@@ -1535,6 +1521,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.91  2000/06/22 21:22:36  tan
+// MPMPhysicalModules class is created to handle all the physical modules
+// in MPM, currently those physical submodules include HeatConduction,
+// Fracture, Contact, and ThermalContact.
+//
 // Revision 1.90  2000/06/20 18:24:06  tan
 // Arranged the physical models implemented in MPM.
 //

@@ -186,13 +186,7 @@ private:
   SerialMPM& operator=(const SerialMPM&);
 	 
   SimulationStateP d_sharedState;
-
-  //Physical Models:
-  HeatConduction*  d_heatConductionModel;
-  Fracture*        d_fractureModel;
-  Contact*         d_contactModel;
-  ThermalContact*  d_thermalContactModel;
-
+  
   bool             d_burns;
 };
       
@@ -201,6 +195,11 @@ private:
    
 //
 // $Log$
+// Revision 1.45  2000/06/22 21:22:24  tan
+// MPMPhysicalModules class is created to handle all the physical modules
+// in MPM, currently those physical submodules include HeatConduction,
+// Fracture, Contact, and ThermalContact.
+//
 // Revision 1.44  2000/06/20 18:23:54  tan
 // Arranged the physical models implemented in MPM.
 //
