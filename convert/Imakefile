@@ -6,7 +6,7 @@ all:
 #define all convertall
 #include <config/sci.cf>
 
-SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lMath \
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lGeometry -lMath \
 	-lClasslib -lMultitask -lMalloc -lm
 
 #define ConvertProgram(name) @@\
