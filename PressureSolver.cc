@@ -1595,19 +1595,12 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_viscosityIntermLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #else
-#ifdef Runge_Kutta_2nd
-  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  // the following is for old_old_density (2nd order time differencing)
-  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-#else
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   // the following is for old_old_density (2nd order time differencing)
   tsk->requires(Task::OldDW, d_lab->d_densityINLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-#endif
+
   // from new_dw
   tsk->requires(Task::NewDW, d_lab->d_pressurePredLabel,
 		Ghost::AroundCells, Arches::ZEROGHOSTCELLS);
@@ -1708,17 +1701,10 @@ PressureSolver::buildLinearMatrixPressCorr(const ProcessorGroup* pc,
     old_dw->getCopy(pressureVars.old_old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   #else
-  #ifdef Runge_Kutta_2nd
-    new_dw->getCopy(pressureVars.old_density, d_lab->d_densityPredLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(pressureVars.old_old_density, d_lab->d_densityINLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-  #else
     new_dw->getCopy(pressureVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     old_dw->getCopy(pressureVars.old_old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-  #endif
   #endif
     //new_dw->getCopy(pressureVars.pred_density, d_lab->d_densityCPLabel, 
     //		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1735,6 +1721,10 @@ PressureSolver::buildLinearMatrixPressCorr(const ProcessorGroup* pc,
     new_dw->getCopy(pressureVars.divergence, d_lab->d_divConstraintLabel,
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 #endif
+  #ifdef Runge_Kutta_2nd
+    d_boundaryCondition->newrecomputePressureBC(pc, patch, cellinfo,
+						&pressureVars);
+  #endif
     
     // Calculate Pressure Coeffs
     //  inputs : densityIN, pressureIN, [u,v,w]VelCoefPBLM[Arches::AP]

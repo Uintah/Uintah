@@ -145,7 +145,9 @@ public:
       // Schedule the build of the linearized eqn
       void sched_buildLinearMatrixVelHatCorr(SchedulerP&, const PatchSet* patches,
 					     const MaterialSet* matls);
- 
+      void sched_averageRKHatVelocities(SchedulerP& sched,
+					 const PatchSet* patches,
+				 	 const MaterialSet* matls);
 
 
 protected: 
@@ -209,6 +211,11 @@ private:
 				       DataWarehouse*);
 
 
+      void averageRKHatVelocities(const ProcessorGroup*,
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw);
 
    
 private:

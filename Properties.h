@@ -112,6 +112,10 @@ public:
 
       void sched_computeDenRefArrayInterm(SchedulerP&, const PatchSet* patches,
 				    const MaterialSet* matls);
+      void sched_averageRKProps(SchedulerP&, const PatchSet* patches,
+				const MaterialSet* matls);
+      void sched_reComputeRKProps(SchedulerP&, const PatchSet* patches,
+				const MaterialSet* matls);
 
 
       // GROUP: Get Methods :
@@ -202,6 +206,18 @@ private:
 			      const MaterialSubset* matls,
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw);
+
+      void averageRKProps(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw);
+
+      void reComputeRKProps(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw);
 
       // GROUP: Constructors Not Instantiated:
       ///////////////////////////////////////////////////////////////////////

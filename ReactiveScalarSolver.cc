@@ -867,12 +867,6 @@ ReactiveScalarSolver::sched_reactscalarLinearSolveCorr(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_reactscalNonLinSrcCorrLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  #ifdef Runge_Kutta_2nd
-  tsk->requires(Task::NewDW, d_lab->d_reactscalarOUTBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  #endif
   #ifdef Runge_Kutta_3d_ssp
   tsk->requires(Task::NewDW, d_lab->d_reactscalarOUTBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -999,39 +993,6 @@ ReactiveScalarSolver::reactscalarLinearSolveCorr(const ProcessorGroup* pc,
       }
     }
   #endif
-  #endif
-  #ifdef Runge_Kutta_2nd
-    constCCVariable<double> old_reactscalar;
-    constCCVariable<double> old_density;
-    constCCVariable<double> new_density;
-
-    new_dw->get(old_reactscalar, d_lab->d_reactscalarOUTBCLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(old_density, d_lab->d_densityINLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(new_density, d_lab->d_densityPredLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
-    
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-
-            IntVector currCell(colX, colY, colZ);
-
-            reactscalarVars.scalar[currCell] = 
-	    (reactscalarVars.scalar[currCell]+
-            old_density[currCell]/new_density[currCell]*
-	    old_reactscalar[currCell])/2.0;
-            if (reactscalarVars.scalar[currCell] > 1.0) 
-		reactscalarVars.scalar[currCell] = 1.0;
-            else if (reactscalarVars.scalar[currCell] < 0.0)
-            	reactscalarVars.scalar[currCell] = 0.0;
-        }
-      }
-    }
   #endif
   #ifdef Runge_Kutta_3d_ssp
     constCCVariable<double> old_reactscalar;
