@@ -58,6 +58,8 @@ MeanMixingModel::problemSetup(const ProblemSpecP& params)
   ChemkinInterface* chemInterf = d_rxnModel->getChemkinInterface();
   int nofSpecies = chemInterf->getNumSpecies();
   int nofElements = chemInterf->getNumElements();
+  d_CO2index = chemInterf->getSpeciesIndex("CO2");
+  d_H2Oindex = chemInterf->getSpeciesIndex("H2O");
   // Read the mixing variable streams, total is nofstreams
   int nofstrm = 0;
   string speciesName;
@@ -284,6 +286,8 @@ MeanMixingModel::computeProps(const InletStream& inStream,
   cout << endl;
 #endif
   getProps(mixRxnVar, outStream); //function in DynamicTable
+  outStream.d_CO2index = d_CO2index; //Needed for radiation model
+  outStream.d_H2Oindex = d_H2Oindex; //Needed for radiation model
   //outStream.print(cout);
  
  

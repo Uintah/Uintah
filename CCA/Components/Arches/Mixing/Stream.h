@@ -100,7 +100,10 @@ namespace Uintah {
 	return d_mole;
       }
       inline double getCO2() const {
-	return d_speciesConcn[3];
+	return d_speciesConcn[d_CO2index];
+      }
+      inline double getH2O() const {
+	return d_speciesConcn[d_H2Oindex];
       }
       inline bool getSootBool() const {
         return d_lsoot;
@@ -139,7 +142,10 @@ namespace Uintah {
       int d_numMixVars;
       int d_numRxnVars;
       bool d_lsoot;
-
+      int d_CO2index; //Set to 0 in constructor.
+                      //Value changed in ***MixingModel::computeProps
+      int d_H2Oindex; //Set to 0 in constructor.
+                      //Value changed in ***MixingModel::computeProps
     private:
       // includes all the vars except vectors...
       // increase the value if want to increase number of variables
