@@ -418,7 +418,12 @@ RectangleCM2Widget::rasterize(CM2ShaderFactory& factory)
   shader->bind();
   shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
   shader->setLocalParam(1, left_x_, left_y_, width_, height_);
-  shader->setLocalParam(2, offset_, 1/offset_, 1/(1-offset_), 0.0);
+  if(offset_ < std::numeric_limits<float>::epsilon())
+    shader->setLocalParam(2, offset_, 0.0, 1.0, 0.0);
+  else if((1.0-offset_) < std::numeric_limits<float>::epsilon())
+    shader->setLocalParam(2, offset_, 1.0, 0.0, 0.0);
+  else
+    shader->setLocalParam(2, offset_, 1/offset_, 1/(1-offset_), 0.0);
 
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT, vp);

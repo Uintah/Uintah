@@ -53,7 +53,7 @@ void Colormap2::io(Piostream&)
 
 Colormap2::Colormap2()
   : dirty_(false), updating_(false),
-    array_lock_("Colormap2 array lock"), widget_lock_("Colormap2 widget lock")
+    widget_lock_("Colormap2 widget lock")
 {}
 
 Colormap2::~Colormap2()

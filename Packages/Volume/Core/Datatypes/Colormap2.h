@@ -49,10 +49,6 @@ public:
   Colormap2();
   virtual ~Colormap2();
 
-  inline SCIRun::Array3<float>& array() { return array_; }
-  inline void lock_array() { array_lock_.lock(); }
-  inline void unlock_array() { array_lock_.unlock(); }
-
   inline vector<CM2Widget *> &widgets() { return widget_; }
   inline void lock_widgets() { widget_lock_.lock(); }
   inline void unlock_widgets() { widget_lock_.unlock(); }
@@ -68,9 +64,7 @@ public:
 protected:
   bool dirty_;
   bool updating_;
-  SCIRun::Array3<float> array_;
   vector<CM2Widget *> widget_;
-  SCIRun::Mutex array_lock_;
   SCIRun::Mutex widget_lock_;
 };
 
