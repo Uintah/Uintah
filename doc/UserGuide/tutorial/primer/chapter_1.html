@@ -41,7 +41,7 @@
 <tr>
 <td>
  <center>
-<p><br>
+<p><br><A name="section 11"></A>
 <font size="4"
 face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" 
 color="maroon">
@@ -64,8 +64,8 @@ color="maroon">
     
     <p><b>Chapter Overview</b><br>
     
-    <p>In this first chapter, we will construct a SCIRun network
-    <a NAME="sec:startingup" HREF="node3.html">User's Guide 3.0, Starting SCIRun</a> to perform a visualization task:
+    <p>In this first chapter, we will construct a SCIRun network(see the 
+    <a NAME="sec:startingup" HREF="node3.html">User's Guide 3.0, Starting SCIRun</a>) to perform a visualization task:
     rendering of a
     tetrahedral mesh.  Our &quot;net,&quot will consist of three
     modules: data reader, geometry converter, and renderer.<br> 
@@ -88,17 +88,17 @@ color="maroon">
     <b>Figure 1.1</b></p>
     </center>
     <div align="left">
-    <p><br>
+    <p>
     
-    <p><b><H4><A name="#section 1">FieldReader User Interface</A></b></H4><br>
+    <p><b><H4><A name="#section 1">FieldReader User Interface</A></b></H4>
     
     <p>You should set two environment variables in your shell
-     before starting SCIRun <a NAME="sec:scrundata" HREF="node3.html">User's Guide 3.4, SCIRun _DATA</a>.  
+     before starting SCIRun. For more information about environment variables, you may consult the <a NAME="sec:scrundata" HREF="node3.html">User's Guide 3.4, SCIRun _DATA</a>.  
 <ol>
   <li value="1.">The SCIRUN_DATA variable points to the location 
   of the SCIRunData directory on your system.  
   <li value="2.0">The SCIRUN_DATASET variable indicates which dataset to load
-  [since many of our example networks run with a variety of inputs|<clarify>].
+  since many of our example networks run with a variety of inputs.
 </ol> 
 
 <p>For example, we will construct a network that loads a geometric mesh
@@ -150,7 +150,7 @@ interest.<br>
     
     <p>We will first create a FieldReader module,from the
     SCIRun menu, select DataIO/FieldReader, as shown in
-    <b>Figure 1.3.1.</b> <a NAME="sec:workingwithnets" HREF="node5.html">User's Guide 4.0, Working with Networks</a>
+    <b>Figure 1.3.1.</b> To find out more about using nets, see the <a NAME="sec:workingwithnets" HREF="node5.html">User's Guide 4.0, Working with Networks.</a>
     
     </div>
     <center>
@@ -209,55 +209,56 @@ interest.<br>
     <p>SCIRun has eight different geometric meshes
     available for Fields:
     
-    <left>
-	<p><img height="100" width="100" src="images/figures/pointcloud.gif"                	   align="absmiddle">
-         <b>PointCloudMesh:</b> unconnected points.
-      </left>
+ 
+	<p><img height="100" width="100" src="images/figures/pointcloud.gif" align="left" valign="top">
+         <b>PointCloudMesh:</b> unconnected points.<br clear="all">
+      
 
-	<left>
-	<p><img height="60" width="100" src="images/figures/ScanlineField.gif"                	   align="absmiddle">
-         <b>ScanlineMesh:</b> a regularly segmented straight line.  (a regular 1D 		      grid).
-	</left>
+	
+	<p><img height="60" width="100" src="images/figures/ScanlineField.gif" align="left" valign="top">
+        <b>ScanlineMesh:</b>a regularly segmented straight line 
+	(a regular 1D grid).<br clear="all">
+	
 
-	<left>
-	<p><img height="60" width="100" src="images/figures/ContourField.gif"                	   align="absmiddle">
-	   <b>CurveMesh:</b> a segmented curve.
-	</left>
+	
+	<p><img height="60" width="100" src="images/figures/ContourField.gif" align="left" valign="top">
+	   <b>CurveMesh:</b> a segmented curve.<br clear="all">
+	
 
-	<left>
-	<p><img height="100" width="100" src="images/figures/ImageField.gif"                	   align="absmiddle">        
-         <b>ImageMesh:</b> a regular 2D grid.
-	</left>
+	
+	<p><img height="100" width="100" src="images/figures/ImageField.gif" align="left" valign="top">        
+         <b>ImageMesh:</b> a regular 2D grid.<br clear="all">
+	
 
-      <left>
-	<p><img height="65" width="100" src="images/figures/trisurf.gif" 	   align="absmiddle">
-         <b>TriSurfMesh:</b> a surface made of connected triangles.
-      </left>
+      
+	<p><img height="65" width="100" src="images/figures/trisurf.gif" align="left" valign="top">
+         <b>TriSurfMesh:</b> a surface made of connected triangles.<br clear="all">
+      
 
-	<left>
-	<p><img height="83" width="100" src="images/figures/quadsurf.gif" 	   align="absmiddle">
-         <b>QuadSurfMesh:</b> a surface make of connected quadrilaterals.
-	</left
+	
+	<p><img height="83" width="100" src="images/figures/quadsurf.gif" align="left" valign="top">
+         <b>QuadSurfMesh:</b> a surface make of connected quadrilaterals.<br clear="all">
+	
 
-	<left>
-	<p><img height="87" width="100" src="images/figures/latticevol.gif" 	   align="absmiddle">
-         <b>LatVolMesh:</b> a regular 3D grid.
-	</left>
+	
+	<p><img height="87" width="100" src="images/figures/latticevol.gif" align="left" valign="top">
+         <b>LatVolMesh:</b> a regular 3D grid.<br clear="all">
+	
 
-      <left>
-	<p><img height="60" width="100" src="images/figures/tetvol.gif" 	   align="absmiddle">
-         <b>TetVolMesh:</b> a subdivision of space into tetrahedral elements.
-      </left>
+      
+	<p><img height="60" width="100" src="images/figures/tetvol.gif" align="left" valign="top">
+         <b>TetVolMesh:</b> a subdivision of space into tetrahedral elements.<br clear="all">
+     
 
-	<left>
-	<p><img height="84" width="100" src="images/figures/hexvol.gif" 	   align="absmiddle">
-         <b>HexVolMesh:</b> a subdivision of space into hexagonal elements.
-	</left>
+	
+	<p><img height="84" width="100" src="images/figures/hexvol.gif" align="left" valign="top">
+         <b>HexVolMesh:</b> a subdivision of space into hexagonal elements.<br clear="all">
+	
 
         <br>
         <br>
     
-    <p>In a field, there are, at most, four different places in which
+    <p>In a Field, there are, at most, four different places in which
     data can be stored: nodes, edges, faces, and cells.  The
     dimensionality of the mesh type limits
     the available storage locations. For instance, a TriSurf has nodes,
@@ -265,7 +266,7 @@ interest.<br>
     three-dimensional elements.  As a result, a TriSurf cannot store any
     data in cells--but it can store data in edges or faces.
     
-    <p>The following data types can be stored in a field:<br>
+    <p>The following data types can be stored in a Field:<br>
     </p>
     <ul>
       <li>Tensor
@@ -286,9 +287,9 @@ interest.<br>
     <p>We will now add a second module to our network.  
 
     Select ShowField from the SCIRun/Visualization menu. 
-    (Use this module to visualize various field types).
+    (Use this module to visualize various Field types).
 
-<!-- [|<Here we need an image, number 1.6, of the network with the two -->
+<!-- <Here we need an image, number 1.6, of the network with the two -->
 <!-- modules in the network editor, but not connected. -->
 
 
@@ -342,7 +343,7 @@ interest.<br>
     <p><b><A name="#section 3">Setting the ShowField User Interface</b><br></A>
 
     
-    <p>ShowField has a User Interface (UI) option for rendering a field's
+    <p>ShowField has a User Interface (UI) option for rendering a Field's
     geometer, and special options for rendering vector data.
     ShowField can use color to represent data within
     the geometry, if desired.  For now, we will 
@@ -351,8 +352,8 @@ interest.<br>
       module(<b>Figure 1.8</b>).
     </ol>
 
-    <!-- [|<We need to make a new figure 1.8 with the connection in place, -->
-    <!-- or perhaps better, just add the connection to the image>] -->
+    <!-- <We need to make a new figure 1.8 with the connection in place, -->
+    <!-- or perhaps better, just add the connection to the image> -->
     
     </div>
     <center>
@@ -384,8 +385,8 @@ interest.<br>
 	  spheres. 
       <li> Next, press the "Execute" button on the ShowField UI
       that forces the module to execute its algorithm.
-    </ol><br>
-    <p><a NAME="sec:executenet" HREF="node5.html">User's Guide 4.5, Executing a Network</a>
+    </ol>
+    <p>Consult the <a NAME="sec:executenet" HREF="node5.html">User's Guide 4.5, Executing a Network</a> for more details.
     <p>ShowField works with any of the SCIRun Field data types.
     However, you will notice a delay when ShowField is asked to
     visualize a Field data type for the first time--this is because
@@ -394,30 +395,21 @@ interest.<br>
     href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
     Compilation</a> for more information.
 
-    <!--
-    <p>Since we have compiled only algorithms with an
-    exact field type, this information becomes known only after a module
-    receives its input data. We accomplish this by using <a
-    href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
-    Compilation</a>. <br>
-    
-    <p>You will notice a delay when ShowField executes for the first time. 
+    <!--<p>You will notice a delay when ShowField executes for the first time. 
     This happens when the module compiles the algorithm specific to the
     field type, and loads it
     into SCIRun.  We cache away this compiled algorithm in a
     shared library, loading it without delay the next time you run
-    SCIRun.
+    SCIRun.-->
 
     <p>ShowField will then execute the newly loaded algorithm
     passing its results to downstream modules.
-
-    [|<I think this is redundant and too deep the tutorial, Rob>]--->
 
 
     <p><b><A name="#section 5">Viewer module</b><br></A>
     
     <p>The Viewer module is the last that we will add to our
-    network. <a NAME="sec:viewer" HREF="node6.html">User's Guide 5.0, Visualization with the Viewer</a>.
+    network. You may find more information about the Viewer in the <a NAME="sec:viewer" HREF="node6.html">User's Guide 5.0, Visualization with the Viewer</a>.
     <ol>
       <li>Locate the Viewer under the SCIRun/Render
 	  menu.  
@@ -430,7 +422,7 @@ interest.<br>
 	  arrows.  Now look for the button near the bottom called
 	  Autoview; press that and you should see the points of the
 	  geometry, something like in <b>Figure 1.10</b>  
-      <LI> Things may not look quite like should, so see the next section
+      <LI> Things may not look quite like they should, so continue with the next section
 	  for directions on manipulating the Viewer.
     </ol> 
 		
@@ -445,18 +437,17 @@ interest.<br>
        <p><b><A name="#section 6">Navigating the Viewer Window</b><br></A>
     
     <p>Since the Viewer is one of the most important modules of SCIRun,
-    you may want to know more about its functionality.  The User's Guide 
-    <a NAME="sec:view-anatomy" HREF="node6.html">User's Guide 5.1, Anatomy of the Viewer Window</a> provides a full description of the Viewer.  
+    you may want to know more about its functionality.  The <a NAME="sec:view-anatomy" HREF="node6.html">User's Guide 5.1, Anatomy of the Viewer Window</a> provides a full description of the Viewer.  
     
     <p> <b>Figure 1.10</b> shows the Viewer window from the
     network you have built earlier in this chapter. In the lower right
     corner of the Viewer's window you will 
-    find buttons for controlling the display.  However, the controls you will 
+    find buttons for controlling the display. However, the controls you will 
     use most frequently are not visible.
     
     <p><b><A name="section 7">Mouse controls</b><br></A>
     
-    <p>The mouse has functionality that works with the Viewer. The <a NAME="sec:view-mouse" HREF="node6.html">User's Guide 5.2, Mouse Control in the Viewer</a>.
+    <p>The mouse has functionality that works with the Viewer. The <a NAME="sec:view-mouse" HREF="node6.html">User's Guide 5.2, Mouse Control in the Viewer</a>
 	provides more complete information.
     <p>To get a feel for this functionality:
     <ol>
@@ -498,8 +489,8 @@ interest.<br>
 
     <p>Clicking and dragging the right mouse button 
     causes the contents of the Viewer window to get larger and
-    smaller.  The creates the impression of moving closer in or
-    farther away from the contents of the window <b>(Figure 1.10.1)</b>. 
+    smaller.  This creates the impression of moving closer in or
+    further away from the contents of the window <b>(Figure 1.10.1)</b>. 
     
     </div>
     <center>
@@ -531,7 +522,7 @@ interest.<br>
       <li>Autoview: restores the display back to its default
 	  condition; very useful when first viewing an object or when some
 	  combination of settings results in objects disappearing from the
-	  view window.  
+	  View window.  
       <li>Set Home View: captures the setting of the current view so you
 	  can return to it later by clicking the ``Go home'' 
 	  button.
@@ -549,8 +540,8 @@ interest.<br>
 	  options <b>(Figure 1.10.3)</b>. 
 	  
       <li>Select features for all objects or for specific objects 
-	  in the display through the Extended Control Window <a NAME="sec:view-control" 
-	HREF="node6.html">User's Guide 5.3, Extended Control Window</a>
+	  in the display through the Extended Control Window, detailed in the<a NAME="sec:view-control" 
+	HREF="node6.html">User's Guide 5.3, Extended Control Window</a>.
     </ul> 
 
     </div>
@@ -561,7 +552,7 @@ interest.<br>
     <div align="left">
     <p><br>
     
-    <p>Each object has its own list entry in the extended control window.  
+    <p>Each object has its own list entry in the Extended Control Window.  
     Settings that determine the rendering of each associated object are
     located in the object list. These settings  
     may even turn the entire object on or off,(<i>i.e.</i>, make it appear
@@ -569,8 +560,8 @@ interest.<br>
     
     <p>Default settings apply to all objects that contain the
     "default" selection.  We suggest that you manipulate all of these
-    settings to see their possible effects, and consult the
-    User's Guide for a more complete description.
+    settings to see their possible effects, and consult the <a NAME="usersguide.html" HREF="node1.html"> User's Guide</a>
+    for a more complete description.
     
  
     <p>Learn more about the Viewer's components in the <a NAME="sec:viewer" HREF="node6.html">User's Guide 5.0, 
@@ -633,7 +624,8 @@ interest.<br>
     </ul>
     
     <p>For more information on the File menu options (such as Insert and
-    Clear), please refer to <a NAME="sec:workwithnets" HREF="node5.html">User's Guide 4.0, Working with Networks</a>.
+    Clear), please refer to <a NAME="sec:workwithnets" HREF="node5.html">User's Guide 4.0, 
+    Working with Networks</a>.
     
     <p><b><H4>Summary</b></H4>
     
@@ -646,7 +638,7 @@ interest.<br>
     <p>The next chapter features additional tools to examine data values, 
     and instructions for varying colors over the geometry. 
     <br>
-    <br>
+	<p><A HREF="#section 11">Back to Top</A>
     <br>
 </td>
 </tr>
