@@ -73,13 +73,11 @@ itcl_class Teem_Unu_UnuQuantize {
 			{{8 8} \
 			{16 16} \
 			{32 32}}
-	makeSciButtonPanel $w $w $this
-	moveToCursor $w
-
 	pack $w.f.min $w.f.max $w.f.nbits -side top -expand 1 -fill x
-	pack $w.f -expand 1 -fill x
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
+
+	pack $w.f -expand 1 -fill x
     }
 }
