@@ -34,7 +34,7 @@ PSELIBS := \
         Packages/Uintah/Core/Exceptions  
 
 
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(GL_LIBS) -lm 
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) -lm 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

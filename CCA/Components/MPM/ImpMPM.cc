@@ -11,6 +11,8 @@
 	 - Steve
 */
 
+#include <sci_defs.h>
+
 #include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h> // 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
@@ -47,7 +49,6 @@
 #include <set>
 #include <iostream>
 #include <fstream>
-
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -2596,6 +2597,7 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
       dof[2] = l2g_node_num+2;
       dispInc[n] = Vector(xPetsc[dof[0]],xPetsc[dof[1]],xPetsc[dof[2]]);
 #else
+#ifdef OLD_SPARSE
 //      int node_num = n.x() + (nodes.x())*(n.y()) + (nodes.y())*
 //	(nodes.x())*(n.z());
       int node_num = n.x() + (n.x())*(n.y()) + (n.y())*
@@ -2604,6 +2606,7 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
       dof[1] = 3*node_num+1;
       dof[2] = 3*node_num+2;
       dispInc[n] = Vector(x[dof[0]],x[dof[1]],x[dof[2]]);
+#endif
 #endif
     }
   }

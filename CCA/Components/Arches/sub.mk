@@ -29,7 +29,7 @@ SRCS     += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/Source.cc \
 	$(SRCDIR)/TurbulenceModel.cc
 
-ifneq ($(PETSC_DIR),)
+ifneq ($(HAVE_PETSC),)
 SRCS +=	$(SRCDIR)/PetscSolver.cc \
 	$(SRCDIR)/Filter.cc
 else
@@ -48,7 +48,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/CCA/Components/Arches/fortran \
 	Packages/Uintah/CCA/Components/Arches/Mixing \
-	Packages/Uintah/CCA/Components/Arches/Radiation \
+        Packages/Uintah/CCA/Components/Arches/Radiation \
 	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/Core/Parallel \
         Core/Util \
@@ -57,19 +57,16 @@ PSELIBS := \
 	Core/Geometry
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) -lm
-ifneq ($(PETSC_DIR),)
-LIBS := $(LIBS) $(PETSC_LIBS) 
+
+ifneq ($(HAVE_PETSC),)
+LIBS := $(LIBS) $(PETSC_LIBRARY) 
 endif
-ifneq ($(HYPRE_DIR),)
+
+ifneq ($(HAVE_HYPRE),)
 LIBS := $(LIBS) $(HYPRE_LIB) 
 endif
-LIBS := $(LIBS) $(FLIBS) 
-ifneq ($(PETSC_DIR),)
-CFLAGS +=	-DHAVE_PETSC
-endif
-ifneq ($(HYPRE_DIR),)
-CFLAGS +=	-DHAVE_HYPRE
-endif
+
+LIBS := $(LIBS) $(F_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
