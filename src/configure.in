@@ -1363,11 +1363,18 @@ else
    pkg_uintah=no
 fi
 
-need_rtrt=`echo $package | sed 's/.*rtrt.*/rtrt/'`
-if test "$need_rtrt" = "rtrt" ; then
+u=`echo $package | sed 's/.*rtrt.*/rtrt/'`
+if test "$u" = "rtrt" ; then
    pkg_rtrt="yes"
 else
    pkg_rtrt="no"
+fi
+
+u=`echo $package | sed 's/.*Teem.*/Teem/'`
+if test "$u" = "Teem" ; then
+   pkg_teem="yes"
+else
+   pkg_teem="no"
 fi
 
 u=`echo $package | sed 's/.*VDT.*/VDT/'`
@@ -1876,7 +1883,6 @@ if test -z "$thirdparty"; then
 
   if test -e $TP_PATH; then
     SCI_LAB_TP_DEFAULT="$SCI_LAB_TP_DEFAULT $TP_PATH"
-    AC_MSG_RESULT(Using default thirdparty directory $TP_PATH)
   else
     AC_MSG_WARN(Default thirdparty directory $TP_PATH does not exists!)
   fi
@@ -1887,7 +1893,7 @@ if test -z "$thirdparty"; then
   UINTAHTP_VERSION=1.0.0
   UINTAHTP_PATH=$TP_BASE/Uintah/Thirdparty/$UINTAHTP_VERSION/$TP_SUBDIR
 
-  if test "$pkg_uintah"="yes"; then
+  if test "$pkg_uintah" = "yes"; then
     if test -e $CCATP_PATH && test -e $UINTAHTP_PATH; then
       SCI_LAB_TP_DEFAULT="$SCI_LAB_TP_DEFAULT $CCATP_PATH $UINTAHTP_PATH"
     else
@@ -1898,13 +1904,15 @@ if test -z "$thirdparty"; then
   RTRTTP_VERSION=1.0.0
   RTRTTP_PATH=$TP_BASE/rtrt/Thirdparty/$RTRTTP_VERSION/$TP_SUBDIR
 
-  if test "$pkg_rtrt"="yes"; then
-    if test -e $TP_PATH; then
+  if test "$pkg_rtrt" = "yes"; then
+    if test -e $RTRTTP_PATH; then
       SCI_LAB_TP_DEFAULT="$SCI_LAB_TP_DEFAULT $RTRTTP_PATH"
     else
       AC_MSG_WARN(Default RTRT thirdparty directory $RTRTTP_PATH does not exists!)
     fi
   fi
+
+  AC_MSG_RESULT(Using default thirdparty directory $SCI_LAB_TP_DEFAULT)
 fi
 
 for i in $SCI_LAB_TP_DEFAULT; do
@@ -2677,20 +2685,20 @@ fi
 
 SCI_CHECK_LIB($dirs,air,main,,,optional)
 SCI_CHECK_LIB($LIB_DIR_AIR,biff,main,$AIR_LIB_DIR_FLAG $AIR_LIB_FLAG,,optional)
-SCI_CHECK_LIB($LIB_DIR_AIR,nrrd,main,$AIR_LIB_DIR_FLAG $BIFF_LIB_FLAG $AIR_LIB_FLAG,,optional)
-SCI_CHECK_LIB($LIB_DIR_AIR,ell,main,$AIR_LIB_DIR_FLAG $NRRD_LIB_FLAG $BIFF_LIB_FLAG $AIR_LIB_FLAG,,optional)
+SCI_CHECK_LIB($LIB_DIR_AIR,ell, main,$AIR_LIB_DIR_FLAG $AIR_LIB_FLAG,,optional)
+SCI_CHECK_LIB($LIB_DIR_AIR,nrrd,main,$BIFF_LIB_DIR_FLAG $BIFF_LIB_FLAG $AIR_LIB_FLAG,,optional)
 SCI_CHECK_HEADERS($LIB_DIR_NRRD/../include,nrrd.h,,,optional)
 
-TEEM_LIB_FLAG="$ELL_LIB_FLAG $NRRD_LIB_FLAG $BIFF_LIB_FLAG $AIR_LIB_FLAG"
-TEEM_LIB_DIR_FLAG="$AIR_LIB_DIR_FLAG"
+TEEM_LIB_FLAG="$NRRD_LIB_FLAG $ELL_LIB_FLAG $BIFF_LIB_FLAG $AIR_LIB_FLAG"
+TEEM_LIB_DIR_FLAG="$NRRD_LIB_DIR_FLAG"
 
-if test "$HAVE_LIB_AIR" && test "$HAVE_LIB_BIFF" && test "$HAVE_LIB_NRRD" &&
+if test "$HAVE_LIB_NRRD" && test "$HAVE_LIB_AIR" && test "$HAVE_LIB_BIFF" &&
    test "$HAVE_LIB_ELL" && test "$HAVE_NRRD_H"; then
    INC_TEEM_H="$INC_NRRD_H"
    DEF_TEEM="#define HAVE_TEEM 1"
 fi
 
-if test "$with_teem" && test ! "$DEF_TEEM"; then
+if (test "$pkg_teem" = "yes" || "$with_teem" ) && test ! "$DEF_TEEM"; then
   echo
   AC_MSG_ERROR(One or more of the TEEM components is missing.)
   echo
