@@ -33,9 +33,7 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
-#if defined(__sgi) || defined(__linux)
 #include <unistd.h>
-#endif
 #include <sci_config.h>
 
 #if defined(sun) || defined(__linux)
@@ -64,8 +62,13 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable)
 	  }
        }
 #ifdef SCI_64BITS
+#ifdef __sgi
        ptr=mmap64(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
 		  devzero_fd, 0);
+#else
+       ptr=mmap(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
+		devzero_fd, 0);
+#endif
 #else
        ptr=mmap(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
 		devzero_fd, 0);

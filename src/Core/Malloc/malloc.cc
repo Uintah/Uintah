@@ -34,13 +34,12 @@
 // irix64 KCC stuff
 #include <strings.h>
 
-#ifdef __sun
-  #include <string.h>
-  #define bzero(p,sz)  memset(p,0, sz);
+#if defined(__sun)
+#include <string.h>
+#define bzero(p,sz)  memset(p,0, sz);
+#elif defined(__linux) || defined(__sgi) || defined(__digital__)
 #else
-  #ifndef __linux
-    #include <bstring.h>
-  #endif
+#error "Need bcopy define for this architecture"
 #endif
 
 #ifdef __GNUG__
