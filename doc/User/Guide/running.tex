@@ -169,21 +169,45 @@ remote connections.
         variables.  Some of the demonstration nets do require setting
         \envvar{SCIRUN\_DATASET} so see the documentation on those.
 
-  \item[\envvar{DISPLAY}: ]\mbox{}
-        As with other programs that require a second window, \sr{} uses the
-        \envvar{DISPLAY} environment variable to determine where output
-        goes.  While you may have your \envvar{DISPLAY} variable set
-        automatically when using ssh (secure shell) to log into another
-        computers, the encryption on this communication pathway makes for
-        very slow response from \sr{}.  To greatly accelerate display, set
-        the \envvar{DISPLAY} variable to your local computer.  Note that at
-        this point, communication between the host computer and your own
-        will not be encrypted and thus is insecure; unless you are entering
-        a password, however, this is not usually a problem.  Also not that
-        for this to work, your local computer has to be willing to host the
-        \sr{} window; this may require the use of the \command{xhost}
-        command so see appropriate documentation for X11 or speak to your
-        local system administrator.
+      \item[\envvar{DISPLAY}: ]\mbox{}
+        
+        If \sr is executed remotely then the value of the \envvar{DISPLAY}
+        variable (as set on the remote machine) must be set correctly and
+        the remote machine must be allowed to talk to the local X11 server.
+        
+        For telnet-like (unencrypted) connections to a remote machine you
+        may set \envvar{DISPLAY} as follows:
+
+\begin{verbatim}
+  export DISPLAY=local-ip-addres:0.0
+\end{verbatim}
+        
+        for an sh-style shell. And like this:
+
+\begin{verbatim}
+setenv DISPLAY local-ip-addres:0.0
+\end{verbatim}
+
+        for a csh-style shell.
+
+        When connecting to a remote machine using ssh, \envvar{DISPLAY} is
+        normally set automatically (depending on how ssh has been
+        configured).  This results in poor display performance however
+        because of encryption activity on the connection.  To increase
+        performance you may override the value of \envvar{DISPLAY} provided
+        by ssh.  Simply set \envvar{DISPLAY} as
+        shown above.  Note that this technique defeats the encryption
+        protection on the X11 connection.
+
+        You will need to grant the remote machine permission to display on
+        your local machine if you are using a telnet-like connection or if
+        you are overriding the value of \envvar{DISPLAY} provided by ssh.
+        Use the \command{xhost} command on the local machine to do this:
+
+\begin{verbatim}
+xhost +remote-machine-name
+\end{verbatim}
+
 \end{description}
 
 
