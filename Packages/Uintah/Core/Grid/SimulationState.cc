@@ -15,6 +15,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
     ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
    nonconstDelt->allowMultipleComputes();
    delt_label = nonconstDelt;
+   d_mpm_cfd = false;
 
   // Get the physical constants that are shared between codes.
   // For now it is just gravity.
