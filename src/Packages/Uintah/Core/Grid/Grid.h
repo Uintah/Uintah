@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/Handle.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -17,6 +18,8 @@ namespace SCIRun {
 }
 
 namespace Uintah {
+
+  class ProcessorGroup;
 
 using namespace SCIRun;
 
@@ -69,11 +72,16 @@ WARNING
     
     void performConsistencyCheck() const;
     void printStatistics() const;
-    
+
     //////////
     // Computes the physical boundaries for the grid
     void getSpatialRange(BBox& b) const;
     
+    //////////
+    // Problem setup functions called from simulation controller
+    void problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg); 
+    void problemSetupAMR(const ProblemSpecP& params, const ProcessorGroup *pg);
+
   private:
     std::vector<LevelP> d_levels;
     
