@@ -56,6 +56,8 @@
  * a large number of class definitions......
  */
  
+#define HAVE_BUNDLE 1
+ 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
@@ -95,7 +97,7 @@
 #include <Dataflow/Ports/NrrdPort.h>
 
 #ifdef HAVE_BUNDLE
-#include <Packages/CardioWave/Core/Bundle.h>
+#include <Core/Bundle/Bundle.h>
 #endif
  
 
@@ -191,6 +193,8 @@
    void setdisabletranspose(bool dt);
    void converttonumericmatrix();
    void converttostructmatrix();
+   void prefernrrds();
+   void prefermatrices();
 
    // SCIRun MATRICES
    long sciMatrixCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::Module *module);
@@ -205,8 +209,8 @@
 #ifdef HAVE_BUNDLE
    // SCIRun Bundles (Currently contained in the CardioWave Package)
    long sciBundleCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::Module *module);
-   void mlArrayTOsciBundle(matlabarray &mlmat,CardioWave::BundleHandle &scibundle, SCIRun::Module *module);
-   void sciBundleTOmlArray(CardioWave::BundleHandle &scibundle, matlabarray &mlmat,SCIRun::Module *module);
+   void mlArrayTOsciBundle(matlabarray &mlmat, SCIRun::BundleHandle &scibundle, SCIRun::Module *module);
+   void sciBundleTOmlArray(SCIRun::BundleHandle &scibundle, matlabarray &mlmat,SCIRun::Module *module);
 #endif
 
    // The reference status of the reader/compatible modules has been changed.
@@ -314,6 +318,8 @@
    // Disable transposing matrices from Fortran format to C++ format
    bool disable_transpose_;
 	
+   bool prefer_nrrds;
+    
    // FUNCTIONS FOR CONVERTING FIELDS:
 	
    // analyse a matlab matrix and sort out all the different fieldname
