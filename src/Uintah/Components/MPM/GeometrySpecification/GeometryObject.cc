@@ -12,10 +12,8 @@ GeometryObject::GeometryObject(GeometryPiece* piece,
 {
    ps->require("res", d_resolution);
    ps->require("velocity", d_initialVel);
+   ps->require("temperature", d_initialTemperature);
    
-   if(MPMPhysicalModules::heatConductionModel) {
-     ps->require("temperature", d_initialTemperature);
-   }
 }
 
 GeometryObject::~GeometryObject()
@@ -28,6 +26,12 @@ IntVector GeometryObject::getNumParticlesPerCell()
 }
 
 // $Log$
+// Revision 1.17  2000/06/24 17:30:14  guilkey
+// Took out conditional on MPMPysicalModule::HeatConduction, because
+// this condition was apparently not known in this class.  Now the
+// GeometryObject constructor requires a temperature from the problem
+// spec always.
+//
 // Revision 1.16  2000/06/23 02:51:48  tan
 // temperature is required when MPMPhysicalModules::heatConductionModel
 // considered.
