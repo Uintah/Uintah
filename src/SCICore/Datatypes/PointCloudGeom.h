@@ -50,28 +50,22 @@ public:
   PointCloudGeom(const vector<NodeSimp>&);
   ~PointCloudGeom();
 
-  virtual string getInfo();
-  
   //////////
-  // Interpolate
-  template <class A>
-  int slinterpolate(A* att, elem_t, const Point& p, double& outval,
-		    double eps=1.0e-6);
-
-  //////////
-  // set nodes and tets vectors
+  // Set nodes and tets vectors.
   // Deletes these pointers if they are already set.
   void setNodes(const vector<NodeSimp>&);
 
   ///////////
-  // Persistent representation...
+  // Persistent representation.
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+
+  virtual string getInfo();
+
 
 protected:
 
   virtual bool computeBoundingBox();
-
 
   vector<NodeSimp> d_node;
 
@@ -79,13 +73,6 @@ private:
   static DebugStream dbg;
 };
 
-
-template <class A>
-int PointCloudGeom::slinterpolate(A* att, elem_t elem_type,
-				  const Point& p, double& outval,
-				  double eps)
-{
-}
 
 } // end Datatypes
 } // end SCICore

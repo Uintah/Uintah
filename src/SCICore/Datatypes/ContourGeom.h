@@ -70,8 +70,6 @@ public:
 
 protected:
 
-  bool d_has_neighbors;
- 
   vector<EdgeSimp> d_edge;
 
 private:
