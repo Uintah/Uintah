@@ -35,6 +35,7 @@
 #include <Core/Containers/Handle.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Persistent/Persistent.h>
+#include <Core/Datatypes/PropertyManager.h>
 #include <sci_config.h>
 
 #include <iosfwd>
@@ -76,10 +77,13 @@ public:
   // we want to return false if value is the default value
   virtual bool getId( int& ) { return false; }
   virtual bool getId( IntVector& ){ return false; }
+
+  PropertyManager& properties() { return _properties; }
 protected:
 
   int id;
   IntVector _id;
+  PropertyManager _properties;
 };
 
 void Pio(Piostream&, GeomObj*&);
