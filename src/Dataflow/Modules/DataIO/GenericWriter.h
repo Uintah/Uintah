@@ -92,19 +92,21 @@ GenericWriter<HType>::~GenericWriter()
 {
 }
 
+
 template <class HType>
 bool
 GenericWriter<HType>::overwrite()
 {
   std::string result;
   gui->lock();
-  gui->eval(id+" overwrite",result);
+  gui->eval(id + " overwrite", result);
   gui->unlock();
-  if (result == std::string("0")) {
+  if (result == std::string("0"))
+  {
     warning("User chose to not save.");
-    return 0;
+    return false;
   }
-  return 1;
+  return true;
 }
   
 
