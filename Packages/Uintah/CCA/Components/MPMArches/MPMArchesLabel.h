@@ -42,6 +42,8 @@ using std::vector;
       const VarLabel* tempSolid_FCYLabel;
       const VarLabel* tempSolid_FCZLabel;
 
+      const VarLabel* integTemp_CCLabel;
+
       // reqd by MPM
 
       const VarLabel* DragForceX_CCLabel;
