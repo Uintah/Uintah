@@ -3,7 +3,7 @@
 rtrt -np 8 -eye -18.9261 -22.7011 52.5255 -lookat -7.20746 -8.61347 -16.643 -up 0.490986 -0.866164 -0.0932288 -fov 40 -scene scenes/graphics-museum 
 
 look from hallway:
-rtrt -np 8 -eye -5.85 -6.2 2 -lookat -8.16796 -16.517 2 -up 0 0 1 -fov 60 -scene scenes/graphics-museum 
+./rtrt -np 15 -bv 4 -hgridcellsize 8 8 8 -eye -5.85 -6.2 2 -lookat -8.16796 -16.517 2 -up 0 0 1 -fov 60 -scene scenes/graphics-museum 
 
 looking at David:
 ./rtrt -np 40 -eye -11.6982 -16.4997 1.42867 -lookat -12.18 -21.0565 1.42867 -up 0 0 1 -fov 66.9403 -scene scenes/graphics-museum
@@ -66,8 +66,10 @@ rtrt -np 14 -eye -10.2111 -16.2099 1.630637 -lookat -11.7826 -20.5142 0.630637 -
 #include <Packages/rtrt/Core/UVCylinderArc.h>
 #include <Packages/rtrt/Core/Cylinder.h>
 #include <Packages/rtrt/Core/ply.h>
+#include <Packages/rtrt/Core/BBox.h>
 
 using namespace rtrt;
+using namespace SCIRun;
 
 #define MAXBUFSIZE 256
 #define IMG_EPS 0.01
@@ -272,10 +274,9 @@ read_ply(char *fname, Material* matl)
 
 }
 
-void add_poster_on_wall (char *image_name, const Point &top_left, 
+void add_image_on_wall (char *image_name, const Point &top_left, 
 			 const Vector &right, const Vector &down,
 			 Group* wall_group) {
-
   Material* image_mat = 
     new ImageMaterial(image_name,ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0); 
@@ -283,6 +284,56 @@ void add_poster_on_wall (char *image_name, const Point &top_left,
     new Parallelogram(image_mat, top_left, right, down);
 
   wall_group->add(image_obj);
+}
+
+void add_poster_on_wall (char *image_name, const Point &top_left, 
+			 const Vector &right, const Vector &down,
+			 Group* wall_group) {
+
+  add_image_on_wall(image_name, top_left, right, down, wall_group);
+
+  /* add glass frame */
+  Material* glass= new DielectricMaterial(1.5, 1.0, 0.1, 400.0, 
+					  Color(.80, .93 , .87), 
+					  Color(1,1,1), false);
+  Vector in = Cross (right,down);
+  Vector out = Cross (down, right);
+  in.normalize();
+  out.normalize();
+  in *= 0.01;
+  out *= 0.05;
+
+  BBox glass_bbox;
+  glass_bbox.extend (top_left + in);
+  glass_bbox.extend (top_left + out + right + down);
+  
+  wall_group->add(new Box (glass, glass_bbox.min(), glass_bbox.max()));
+
+  /* add cylinders */
+  Material* grey = new PhongMaterial(Color(.5,.5,.5),1,0.3,100,true);
+  wall_group->add(new Cylinder (grey, top_left+in+right*0.05+down*0.05,
+				top_left+out*1.1+right*0.05+down*0.05, 0.01));
+  wall_group->add(new Disc (grey, top_left+out*1.1+right*0.05+down*0.05, 
+			    out, 0.01));
+
+  wall_group->add(new Cylinder (grey, top_left+in+right*0.95+down*0.05,
+				top_left+out*1.1+right*0.95+down*0.05, 0.01));
+  wall_group->add(new Disc (grey, top_left+out*1.1+right*0.95+down*0.05, 
+			    out, 0.01));
+
+  wall_group->add(new Cylinder (grey, top_left+in+right*0.05+down*0.95,
+				top_left+out*1.1+right*0.05+down*0.95, 0.01));
+  wall_group->add(new Disc (grey, top_left+out*1.1+right*0.05+down*0.95, 
+			    out, 0.01));
+
+  wall_group->add(new Cylinder (grey, top_left+in+right*0.95+down*0.95,
+				top_left+out*1.1+right*0.95+down*0.95, 0.01));
+  wall_group->add(new Disc (grey, top_left+out*1.1+right*0.95+down*0.95, 
+			    out, 0.01));
+}
+
+void add_glass_box (Group* obj_group, Point CornerA, Point CornerB,
+		    Vector Right) {
 
 }
 
@@ -561,6 +612,11 @@ void build_history_hall (Group* main_group, Scene *scene) {
 
   //  cerr << "West Wall:  " << WestPoint << endl;
 
+  WestPoint = Point (-20+IMG_EPS, -27, img_ht+.4);
+  add_image_on_wall ("/usr/sci/data/Geometry/textures/museum/tmp/museum-7.ppm",
+		      WestPoint, Vector(0,2,0), Vector(0,0,-2),
+		      historyg);
+
   /* **************** image on South wall in history hall **************** */
   img_div = .07;
   Vector SouthRight (-img_size, 0, 0);
@@ -727,13 +783,13 @@ historyg);
   /* **************** Saturn scene **************** */
   historyg->add (new Sphere(flat_yellow, RingsPoint+Vector(0,0,0.3),0.15));
   historyg->add (new Ring(flat_grey, RingsPoint+Vector(0,0,0.3),
-			  Vector(-.2,-.2,1),0.18,0.03));  
+			  Vector(-.2,-.25,1),0.18,0.03));  
   historyg->add (new Ring(flat_white, RingsPoint+Vector(0,0,0.3),
-			  Vector(-.2,-.2,1),0.2105,0.07));  
+			  Vector(-.2,-.25,1),0.2105,0.07));  
   historyg->add (new Ring(flat_grey, RingsPoint+Vector(0,0,0.3),
-			  Vector(-.2,-.2,1),0.281,0.01));  
+			  Vector(-.2,-.25,1),0.281,0.01));  
   historyg->add (new Ring(flat_white, RingsPoint+Vector(0,0,0.3),
-			  Vector(-.2,-.2,1),0.2915,0.04));  
+			  Vector(-.2,-.25,1),0.2915,0.04));  
 
   /* **************** Tron Light Cycle **************** */
   Transform tron_trans;
@@ -794,7 +850,7 @@ void build_david_room (Group* main_group, Scene *scene) {
 
   /* **************** David **************** */
 
-#if 1
+#if 0
   Transform bender_trans;
   Point bender_center (-12.5,-20,0);
 
