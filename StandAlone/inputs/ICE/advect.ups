@@ -143,19 +143,28 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
 	<filebase>advect.uda</filebase>
-	<outputInterval>0.00</outputInterval>
+	<outputInterval>0.005</outputInterval>
         <save label="vel_CC"/>
         <save label="press_CC"/>
         <save label="rho_CC"/>
+
+	<!-- needed for regression tester dat comparisons -->	
+	<save label="KineticEnergy"/>
+	<save label="TotalIntEng"/>
+
+	<!-- need checkpointing for regression tester -->
+	<checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
 
   <Debug>
       <dbg_timeStart>       0.00   </dbg_timeStart>
       <dbg_timeStop>        0.01   </dbg_timeStop>
       <dbg_outputInterval>  1e-9   </dbg_outputInterval>
+      
+      <!-- need this one for regression tester dat comparisons -->	
+      <debug label = "switchTestConservation"/> 
       <!--
       <debug label = "switchDebug_equilibration_press"/>
-       <debug label = "switchTestConservation"/> 
        <debug label = "switchDebug_equilibration_press"/>
        <debug label = "switchDebug_vel_FC"/>            
        <debug label = "switchDebug_explicit_press"/>   
