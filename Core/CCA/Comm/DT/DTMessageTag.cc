@@ -71,7 +71,8 @@ using namespace SCIRun;
 using namespace std;
 
 DTMessageTag::DTMessageTag(){
-  hi=lo=0;
+  hi=0;
+  lo=1;
 }
 
 DTMessageTag::DTMessageTag(unsigned int hi, unsigned int lo){
@@ -98,6 +99,14 @@ DTMessageTag:: nextTag(){
   if(++lo==0) hi++;
   DTMessageTag newTag=*this;
   counter_mutex.unlock();
+  return newTag;
+}
+
+
+DTMessageTag
+DTMessageTag:: defaultTag(){
+  DTMessageTag newTag;
+  newTag.hi=newTag.lo=0;
   return newTag;
 }
 

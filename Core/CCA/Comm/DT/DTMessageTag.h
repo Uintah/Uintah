@@ -79,6 +79,8 @@ namespace SCIRun {
     bool operator<(const DTMessageTag &tag) const;
     bool operator==(const DTMessageTag &tag) const;
 
+    DTMessageTag defaultTag();
+
     ////////////////////////////////////////
     // this method increment the current tag
     // and return a copy of itself. This is

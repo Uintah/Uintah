@@ -76,6 +76,11 @@ namespace SCIRun {
     // a message tag is generated and returned.
     DTMessageTag putMessage(DTMessage *msg);
 
+    ///////////////////////////////////////////////////////
+    // This is for sending general message with no tag,
+    // for backward compatibility
+    void putMsg(DTMessage *msg);
+
     ////////////////////////////////////////////
     // This is for reply message (callee message)
     void putReplyMessage(DTMessage *msg);
@@ -85,6 +90,11 @@ namespace SCIRun {
     // This method fetch a message with the given
     // message tag. 
     DTMessage *getMessage(const DTMessageTag &tag);
+
+    /////////////////////////////////////////////
+    // This method fetch a message with no tag for
+    // backward compatibility
+    DTMessage *getMsg();
 
 
     //deprecated!
@@ -125,6 +135,8 @@ namespace SCIRun {
     SemaphoreMap semamap;
 
     typedef std::map<DTAddress, int> SocketMap;
+
+    Semaphore *defaultSema; //used for default message passing between any two DTs using default message Tag
 
     SocketMap send_sockmap;
     SocketMap recv_sockmap;
