@@ -25,6 +25,10 @@ ifneq ($(TAU_MAKEFILE),)
   include $(TAU_MAKEFILE)
 endif
 
+# 'a' if archives, 'so' if shared libs.
+# eventually to be: @ SO_OR_ARCHIVE_EXTENSION @
+SO_OR_A_FILE := so
+
 # Blow away a bunch of makes internal rules to improve the performance
 # of make
 .SUFFIXES:
@@ -315,7 +319,9 @@ LOBS_LIB_PATH:= @LOBS_LIB@
 CKIT_LIB_PATH:= @CKIT_LIB@
 G3D_LIB_PATH:= @G3D_LIB@
 VDT_LIB_FLAG:= @VDT_LINK@
-VDT_LIBS    := $(LDRUN_PREFIX)$(VDT_LIB_PATH) -L$(VDT_LIB_PATH) $(LDRUN_PREFIX)$(ELIXIR_LIB_PATH) -L$(ELIXIR_LIB_PATH) $(LDRUN_PREFIX)$(LP_SOLVE_LIB_PATH) -L$(LP_SOLVE_LIB_PATH) $(LDRUN_PREFIX)$(MESCHACH_LIB_PATH) -L$(MESCHACH_LIB_PATH) $(LDRUN_PREFIX)$(PIRAT_LIB_PATH) -L$(PIRAT_LIB_PATH) $(LDRUN_PREFIX)$(LOBS_LIB_PATH) -L$(LOBS_LIB_PATH) $(LDRUN_PREFIX)$(CKIT_LIB_PATH) -L$(CKIT_LIB_PATH) $(LDRUN_PREFIX)$(G3D_LIB_PATH) -L$(G3D_LIB_PATH) $(VDT_LIB_FLAG)
+ifneq (@VDT_LIB@,)
+  VDT_LIBS    := $(LDRUN_PREFIX)$(VDT_LIB_PATH) -L$(VDT_LIB_PATH) $(LDRUN_PREFIX)$(ELIXIR_LIB_PATH) -L$(ELIXIR_LIB_PATH) $(LDRUN_PREFIX)$(LP_SOLVE_LIB_PATH) -L$(LP_SOLVE_LIB_PATH) $(LDRUN_PREFIX)$(MESCHACH_LIB_PATH) -L$(MESCHACH_LIB_PATH) $(LDRUN_PREFIX)$(PIRAT_LIB_PATH) -L$(PIRAT_LIB_PATH) $(LDRUN_PREFIX)$(LOBS_LIB_PATH) -L$(LOBS_LIB_PATH) $(LDRUN_PREFIX)$(CKIT_LIB_PATH) -L$(CKIT_LIB_PATH) $(LDRUN_PREFIX)$(G3D_LIB_PATH) -L$(G3D_LIB_PATH) $(VDT_LIB_FLAG)
+endif
 
 ifneq (@MAGICK_INCLUDE@,)
   MAGICK_INCLUDE := -I@MAGICK_INCLUDE@
@@ -324,7 +330,9 @@ else
 endif
 MAGICK_LIB_PATH:= @MAGICK_LIB@
 MAGICK_LIB_FLAG:= @MAGICK_LINK@
-MAGICK_LIBS:= $(LDRUN_PREFIX)$(MAGICK_LIB_PATH) -L$(MAGICK_LIB_PATH) $(MAGICK_LIB_FLAG)
+ifneq (@MAGICK_LIB@,)
+  MAGICK_LIBS:= $(LDRUN_PREFIX)$(MAGICK_LIB_PATH) -L$(MAGICK_LIB_PATH) $(MAGICK_LIB_FLAG)
+endif
 MAGICK_DEF_FLAG:= @MAGICK_DEF_FLAG@
 
 TLINK := $(BLT_TLINK) $(GLOBUS_TLINK) $(XML_TLINK)
@@ -362,35 +370,71 @@ CFLAGS          := @CFLAGS@ $(CFLAGS) $(QT_DEFS)
 SOFLAGS         := @SOFLAGS@ -L$(LIBDIR) $(CFLAGS)
 LDFLAGS         := @LDFLAGS@ -L$(LIBDIR) $(CFLAGS)
 ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
-CC_DEPEND_REGEN = @CC_DEPEND_REGEN@
-CC_DEPEND_REGEN_MOVE = @CC_DEPEND_REGEN_MOVE@
-NEED_SONAME	:= @NEED_SONAME@
 F77		:= @F77@
 FFLAGS		:= @FFLAGS@ $(FFLAGS)
 FLIBS		:= @FLIBS@
-F77_DEPEND_REGEN = @F77_DEPEND_REGEN@
+
+################################################################
+# Auto dependency generation flags
+#
+#    WARNING: This has not been implemented yet.  Currently there is
+#    some kludgy, hard to understand logic.  We need to set the
+#    CC_DEPEND_SINGLE_STEP during the configure and then just use it.
+#
+# CC_DEPEND_SINGLE_STEP is "no" if the compiler is stupid (eg: KCC)
+#    and requires a dependency creation "compile" and then an actual
+#    compilation (instead of just outputing the dependency info at
+#    the same time as the compile).
+#
+
+CC_DEPEND_REGEN      = @CC_DEPEND_REGEN@
+CC_DEPEND_REGEN_MOVE = @CC_DEPEND_REGEN_MOVE@
+CC_DEPEND_EXT        = d # with new configure, it will be: @CC_DEPEND_EXT@
+F77_DEPEND_REGEN     = @F77_DEPEND_REGEN@
+
+NEED_SONAME	:= @NEED_SONAME@
+
 ifeq ($(NEED_SONAME),yes)
-SONAMEFLAG = -Wl,-soname,$(notdir $@)
+  SONAMEFLAG = -Wl,-soname,$(notdir $@)
 else
-SONAMEFLAG = 
+  SONAMEFLAG = 
 endif
 
-.SUFFIXES: .cc .c .o .d .s .F .cpp
+.SUFFIXES: .cc .c .o .$(CC_DEPEND_EXT) .s .F .cpp
 
 .cc.o: $<
 ifeq ($(CC_DEPEND_REGEN),-MD)
 	$(CXX) $(CFLAGS) $(INCLUDES) -MD -c $< -o $@
   ifeq ($(CC_DEPEND_REGEN_MOVE),y)
-	echo -n "$(dir $@)" > $(basename $@).d
-	cat $(basename $(notdir $@)).d >> $(basename $@).d
-	rm $(basename $(notdir $@)).d 
+	echo @ECHO_N@ "$(dir $@)@ECHO_C@" > $(basename $@).$(CC_DEPEND_EXT)
+	cat $(basename $(notdir $@)).$(CC_DEPEND_EXT) >> $(basename $@).$(CC_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
   endif
 else
   ifeq ($(CC_DEPEND_REGEN),-M)
-	$(CXX) $(CFLAGS) $(INCLUDES) -M > $(basename $@).d
-	awk '{ print "$(basename $@)"".o: " $$2 }' $(basename $@).d > $(basename $@).temp.d
-	mv $(basename $@).temp.d $(basename $@).d
+     ifeq ($(CC_DEPEND_EXT),d)
+        #
+        # .d - most likely gcc... have to explicitly put it in a .d file.
+        #
+        # -M outputs to stdout(err?) dependency info.  Redirect this output
+        # to a temp file.  Awk that file to replace filename.o with:
+        # <path_to_file>/filename.o.  Then remove the temp file.
+        #
+	@rm -f $(basename $@).depend
+	@echo "CREATING DEPENDENCY INFORMATION:"
+	$(CXX) $(CFLAGS) $(INCLUDES) -M -c $< > $(basename $@).depend
+	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+	@awk '{ print "$(basename $@)"".o: " $$2 }' \
+	  $(basename $@).depend > $(basename $@).$(CC_DEPEND_EXT)
+	@rm -f $(basename $@).depend
+
+        # Now do the actual compile!
+	@echo "ACTUALLY COMPILING:"
 	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
+     else
+        # .u - probably xlc (aix) and .u file is automatically created.
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+     endif
   else
 	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
   endif
@@ -400,15 +444,15 @@ endif
 ifeq ($(CC_DEPEND_REGEN),-MD)
 	$(CXX) $(CFLAGS) $(INCLUDES) -MD -c $< -o $@
   ifeq ($(CC_DEPEND_REGEN_MOVE),y)
-	echo -n "$(dir $@)" > $(basename $@).d
-	cat $(basename $(notdir $@)).d >> $(basename $@).d
-	rm $(basename $(notdir $@)).d 
+	echo @ECHO_N@ "$(dir $@)@ECHO_C@" > $(basename $@).$(CC_DEPEND_EXT)
+	cat $(basename $(notdir $@)).$(CC_DEPEND_EXT) >> $(basename $@).$(CC_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT) 
   endif
 else
   ifeq ($(CC_DEPEND_REGEN),-M)
-	$(CXX) $(CFLAGS) $(INCLUDES) -M > $(basename $@).d
-	awk '{ print "$(basename $@)"".o: " $$2 }' $(basename $@).d > $(basename $@).temp.d
-	mv $(basename $@).temp.d $(basename $@).d
+	$(CXX) $(CFLAGS) $(INCLUDES) -M > $(basename $@).$(CC_DEPEND_EXT)
+	awk '{ print "$(basename $@)"".o: " $$2 }' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).temp.$(CC_DEPEND_EXT)
+	mv $(basename $@).temp.$(CC_DEPEND_EXT) $(basename $@).$(CC_DEPEND_EXT)
 	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -o $@
   else
 	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
@@ -420,9 +464,9 @@ endif
 	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
 ifeq ($(CC_DEPEND_REGEN),-MD)
   ifeq ($(CC_DEPEND_REGEN_MOVE),y)
-	echo -n "$(dir $@)" > $(basename $@).d
-	cat $(basename $(notdir $@)).d >> $(basename $@).d
-	rm $(basename $(notdir $@)).d 
+	echo @ECHO_N@ "$(dir $@)@ECHO_C@" > $(basename $@).$(CC_DEPEND_EXT)
+	cat $(basename $(notdir $@)).$(CC_DEPEND_EXT) >> $(basename $@).$(CC_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT) 
   endif
 endif
 
@@ -431,16 +475,22 @@ endif
 ifeq ($(CC_DEPEND_REGEN),-MD)
 	$(CC) $(CFLAGS) $(INCLUDES) -MD -c $< -o $@
   ifeq ($(CC_DEPEND_REGEN_MOVE),y)
-	echo -n "$(dir $@)" > $(basename $@).d
-	cat $(basename $(notdir $@)).d >> $(basename $@).d
-	rm $(basename $(notdir $@)).d 
+	echo @ECHO_N@ "$(dir $@)@ECHO_C@" > $(basename $@).$(CC_DEPEND_EXT)
+	cat $(basename $(notdir $@)).$(CC_DEPEND_EXT) >> $(basename $@).$(CC_DEPEND_EXT)
+	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT) 
   endif
 else
   ifeq ($(CC_DEPEND_REGEN),-M)
-	$(CC) $(CFLAGS) $(INCLUDES) -M > $(basename $@).d
-	awk '{ print "$(basename $@)"".o: " $$2 }' $(basename $@).d > $(basename $@).temp.d
-	mv $(basename $@).temp.d $(basename $@).d
+     ifeq ($(CC_DEPEND_EXT),d)
+        # .d - most likely gcc... have to explicitly put it in a .d file.
+	$(CC) $(CFLAGS) $(INCLUDES) -M > $(basename $@).$(CC_DEPEND_EXT)
+	awk '{ print "$(basename $@)"".o: " $$2 }' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).temp.$(CC_DEPEND_EXT)
+	mv $(basename $@).temp.$(CC_DEPEND_EXT) $(basename $@).$(CC_DEPEND_EXT)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+     else
+        # .u - probably xlc (aix) and .u file is automatically created.
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+     endif
   else
 	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
   endif
