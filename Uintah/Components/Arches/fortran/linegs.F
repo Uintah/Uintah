@@ -65,8 +65,6 @@ c*********************************************************************
       integer idxHi(3)
       double precision PHI(domLo(1):domHi(1), 
      &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision RES(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
       double precision AP(domLo(1):domHi(1), 
      &     domLo(2):domHi(2), domLo(3):domHi(3))
       double precision AE(domLo(1):domHi(1), 
@@ -262,6 +260,9 @@ c
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/08/15 00:23:38  rawat
+c added explicit solve for momentum and scalar eqns
+c
 c Revision 1.2  2000/08/11 21:26:41  rawat
 c added linear solver for pressure eqn
 c

@@ -74,6 +74,7 @@ WARNING
 #define FORT_BCWTURB bcwt_
 #define FORT_LINEGS linegs_
 #define FORT_NORMPRESS normpress_
+#define FORT_EXPLICIT explicit_
 
 // GROUP: Function Declarations:
 ////////////////////////////////////////////////////////////////////////
@@ -821,12 +822,33 @@ extern "C"
 		 double* pressure,
 		 double* refPress);
 
+  // explicit solver
+  void 
+  FORT_EXPLICIT(const int* domLo, const int* domHi,
+		const int* idxLo, const int* idxHi,
+		double* variable, double* old_variable,
+		double* coeffEast,
+		double* coeffWest,
+		double* coeffNorth,
+		double* coeffSouth,
+		double* coeffTop,
+		double* coeffBottom,
+		double* coeffDiagonal,
+		double* nonlinearSrc,
+		const int* domLoDen, const int* domHiDen,
+		double* old_density,
+		double* sew, double* sns, double* stb,
+		double* delta_t);
+
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.32  2000/08/15 00:23:32  rawat
+// added explicit solve for momentum and scalar eqns
+//
 // Revision 1.31  2000/08/12 23:53:18  bbanerje
 // Added Linegs part to the solver.
 //

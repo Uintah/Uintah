@@ -51,8 +51,9 @@ c*********************************************************************
       integer i, j, k, idf
 
       double precision VOL, APO
-      logical ltim
+      logical ltim, lexpl
       ltim = .true.
+      lexpl = .true.
       do 120 k =idxLoU(3), idxHiU(3)
          do 110 j = idxLoU(2), idxLoU(2)
             do 100 i = idxLoU(1), idxLoU(1)
@@ -63,7 +64,7 @@ c*********************************************************************
                if (ltim) then
                   APO =  old_den(I,J,K)*VOL/deltat
                   SU(I,J,K) = SU(I,J,K) + APO*UU(I,J,K)
-                  AP(I,J,K) = AP(I,J,K) + APO
+                  if (.not.lexpl) AP(I,J,K) = AP(I,J,K) + APO
                end if
  100        continue
  110     continue
@@ -74,6 +75,9 @@ c*********************************************************************
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/08/15 00:23:38  rawat
+c added explicit solve for momentum and scalar eqns
+c
 c Revision 1.2  2000/07/28 02:31:04  rawat
 c moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 c coeffecients

@@ -106,7 +106,7 @@ MomentumSolver::solve(const LevelP& level,
   //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
   //           [u,v,w]VelocityMS
   //  d_linearSolver->sched_velSolve(level, sched, new_dw, matrix_dw, index);
-  sched_velocityLinearSolve(level, sched, new_dw, matrix_dw, index);
+  sched_velocityLinearSolve(level, sched, new_dw, matrix_dw, delta_t, index);
     
 }
 
@@ -235,7 +235,7 @@ MomentumSolver::sched_velocityLinearSolve(const LevelP& level,
 					  SchedulerP& sched,
 					  DataWarehouseP& new_dw,
 					  DataWarehouseP& matrix_dw,
-					  int index)
+					  double delta_t, int index)
 {
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -243,11 +243,20 @@ MomentumSolver::sched_velocityLinearSolve(const LevelP& level,
     {
       Task* tsk = scinew Task("MomentumSolver::VelLinearSolve",
 			   patch, new_dw, matrix_dw, this,
-			   &MomentumSolver::velocityLinearSolve, index);
+			   &MomentumSolver::velocityLinearSolve, delta_t, index);
 
       int numGhostCells = 0;
       int matlIndex = 0;
       int nofStencils = 7;
+      DataWarehouseP old_dw = new_dw->getTop();
+      tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
       switch(index) {
       case Arches::XDIR:
 	// coefficient for the variable for which solve is invoked
@@ -328,6 +337,8 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 	      matlIndex, patch, Ghost::None, numGhostCells);
   old_dw->get(d_velocityVars->cellType, d_lab->d_cellTypeLabel, 
 	      matlIndex, patch, Ghost::None, numGhostCells);
+  // for explicit coeffs will be computed using the old u, v, and w
+  // change it for implicit solve
   switch (index) {
   case Arches::XDIR:
     new_dw->get(d_velocityVars->uVelocity, d_lab->d_uVelocityCPBCLabel, 
@@ -356,7 +367,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     break;
   case Arches::YDIR:
     // getting new value of u velocity
-    new_dw->get(d_velocityVars->uVelocity, d_lab->d_uVelocitySPBCLabel, 
+    new_dw->get(d_velocityVars->uVelocity, d_lab->d_uVelocityCPBCLabel, 
 		matlIndex, patch, Ghost::None, numGhostCells);
     new_dw->get(d_velocityVars->vVelocity, d_lab->d_vVelocityCPBCLabel, 
 		matlIndex, patch, Ghost::None, numGhostCells);
@@ -381,9 +392,9 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     break;
   case Arches::ZDIR:
     // getting new value of u velocity
-    new_dw->get(d_velocityVars->uVelocity, d_lab->d_uVelocitySPBCLabel, 
+    new_dw->get(d_velocityVars->uVelocity, d_lab->d_uVelocityCPBCLabel, 
 		matlIndex, patch, Ghost::None, numGhostCells);
-    new_dw->get(d_velocityVars->vVelocity, d_lab->d_vVelocitySPBCLabel, 
+    new_dw->get(d_velocityVars->vVelocity, d_lab->d_vVelocityCPBCLabel, 
 		matlIndex, patch, Ghost::None, numGhostCells);
     new_dw->get(d_velocityVars->wVelocity, d_lab->d_wVelocityCPBCLabel, 
 		matlIndex, patch, Ghost::None, numGhostCells);
@@ -501,14 +512,31 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
 				    const Patch* patch,
 				    DataWarehouseP& new_dw,
 				    DataWarehouseP& matrix_dw,
-				    int index)
+				    double delta_t, int index)
 {
   int matlIndex = 0;
   int numGhostCells = 0;
   int nofStencils = 7;
+  DataWarehouseP old_dw = new_dw->getTop();
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  // get old_dw from getTop function
+  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellinfo = cellInfoP;
+  old_dw->get(d_velocityVars->old_density, d_lab->d_densityCPLabel, 
+	      matlIndex, patch, Ghost::None, numGhostCells);
   switch (index) {
   case Arches::XDIR:
     new_dw->get(d_velocityVars->uVelocity, d_lab->d_uVelocityCPBCLabel, 
+		matlIndex, patch, Ghost::None, numGhostCells);
+    old_dw->get(d_velocityVars->old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, numGhostCells);
     for (int ii = 0; ii < nofStencils; ii++)
       matrix_dw->get(d_velocityVars->uVelocityCoeff[ii], 
@@ -524,6 +552,10 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   case Arches::YDIR:
     new_dw->get(d_velocityVars->vVelocity, d_lab->d_vVelocityCPBCLabel, 
 		matlIndex, patch, Ghost::None, numGhostCells);
+    // initial guess for explicit calculations
+    old_dw->get(d_velocityVars->old_vVelocity, d_lab->d_vVelocitySPBCLabel, 
+    		matlIndex, patch, Ghost::None, numGhostCells);
+
     for (int ii = 0; ii < nofStencils; ii++)
       matrix_dw->get(d_velocityVars->vVelocityCoeff[ii], 
 		     d_lab->d_vVelCoefMBLMLabel, 
@@ -537,6 +569,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   case Arches::ZDIR:
     new_dw->get(d_velocityVars->wVelocity, d_lab->d_wVelocityCPBCLabel, 
 		matlIndex, patch, Ghost::None, numGhostCells);
+    old_dw->get(d_velocityVars->old_wVelocity, d_lab->d_wVelocitySPBCLabel, 
+    		matlIndex, patch, Ghost::None, numGhostCells);
+
     for (int ii = 0; ii < nofStencils; ii++)
       matrix_dw->get(d_velocityVars->wVelocityCoeff[ii], 
 		     d_lab->d_wVelCoefMBLMLabel, 
@@ -575,9 +610,13 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   // apply underelax to eqn
   d_linearSolver->computeVelUnderrelax(pc, patch, new_dw, matrix_dw, index, 
 				     d_velocityVars);
+  // initial guess for explicit calculation
+  d_velocityVars->old_uVelocity = d_velocityVars->uVelocity;
+  d_velocityVars->old_vVelocity = d_velocityVars->vVelocity;
+  d_velocityVars->old_wVelocity = d_velocityVars->wVelocity;  
   // make it a separate task later
-  d_linearSolver->velocityLisolve(pc, patch, new_dw, matrix_dw, index, 
-				     d_velocityVars, d_lab);
+  d_linearSolver->velocityLisolve(pc, patch, new_dw, matrix_dw, index, delta_t, 
+				  d_velocityVars, cellinfo, d_lab);
   // put back the results
   switch (index) {
   case Arches::XDIR:
@@ -602,6 +641,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.26  2000/08/15 00:23:32  rawat
+// added explicit solve for momentum and scalar eqns
+//
 // Revision 1.25  2000/08/14 02:34:57  bbanerje
 // Removed a small buf in sum_vars for residual in MomentumSolver and ScalarSolver
 //

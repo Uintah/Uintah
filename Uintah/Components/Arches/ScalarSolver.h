@@ -116,7 +116,7 @@ public:
       void sched_scalarLinearSolve(const LevelP& level,
 				   SchedulerP& sched,
 				   DataWarehouseP& new_dw,
-				   DataWarehouseP& matrix_dw,
+				   DataWarehouseP& matrix_dw, double delta_t,
 				   int index);
 protected:
 
@@ -151,7 +151,7 @@ private:
       void scalarLinearSolve(const ProcessorGroup* pc,
 			     const Patch* patch,
 			     DataWarehouseP& new_dw,
-			     DataWarehouseP& matrix_dw,
+			     DataWarehouseP& matrix_dw, double delta_t,
 			     int index);
 
 private:
@@ -182,6 +182,9 @@ private:
 
 //
 // $Log$
+// Revision 1.15  2000/08/15 00:23:33  rawat
+// added explicit solve for momentum and scalar eqns
+//
 // Revision 1.14  2000/08/01 06:18:38  bbanerje
 // Made ScalarSolver similar to PressureSolver and MomentumSolver.
 //
