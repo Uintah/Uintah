@@ -236,6 +236,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
+  double rho_orig = matl->getInitialDensity();
   for(int p=0;p<patches->size();p++){
     double se = 0.0;
     const Patch* patch = patches->get(p);
@@ -252,6 +253,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     int dwi = matl->getDWIndex();
     // Create array for the particle position
@@ -351,11 +353,6 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       Matrix3 D = (velGrad + velGrad.Transpose())*.5;
       Matrix3 DPrime = D - Identity*onethird*D.Trace();
 
-      // This is the (updated) Cauchy stress
-
-      pstress_new[idx] = pstress[idx] + 
-                                   (DPrime*2.*G + Identity*bulk*D.Trace())*delT;
-
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
       // F_n^np1 = dudx * dt + Identity
@@ -368,10 +365,26 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
                              deformationGradient[idx];
 
       // get the volumetric part of the deformation
-      // unused variable - Steve
-      // double J = deformationGradient[idx].Determinant();
-
+      double J = deformationGradient[idx].Determinant();
       pvolume_deformed[idx]=Jinc*pvolume[idx];
+
+      // Compute the local sound speed
+      double rho_cur = rho_orig/J;
+      c_dil = sqrt((bulk + 4.*G/3.)/rho_cur);
+
+      // This is the (updated) Cauchy stress
+      pstress_new[idx] = pstress[idx] + 
+                         (DPrime*2.*G + Identity*bulk*D.Trace())*delT;
+
+      // Add bulk viscosity
+      /*
+      if (flag->d_artificial_viscosity) {
+        double Dkk = D.Trace();
+        double c_bulk = sqrt(bulk/rho_cur);
+        double q = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
+        pstress_new[idx] -= Identity*q;
+      }
+      */
 
       // Compute the strain energy for all the particles
       Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
@@ -395,7 +408,6 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
       // Compute wave speed at each particle, store the maximum
       Vector pvelocity_idx = pvelocity[idx];
-      c_dil = sqrt((bulk + 4.*G/3.)*pvolume_deformed[idx]/pmass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
 		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
 		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));

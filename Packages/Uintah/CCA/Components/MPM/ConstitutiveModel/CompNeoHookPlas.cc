@@ -255,6 +255,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     int matlindex = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
@@ -372,8 +373,24 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       // get the volumetric part of the deformation
       J = deformationGradient_new[idx].Determinant();
 
+      // Compute the deformed volume and the local sound speed
+      double rho_cur = rho_orig/J;
+      pvolume_deformed[idx]=pmass[idx]/rho_cur;
+      c_dil = sqrt((bulk + 4.*shear/3.)/rho_cur);
+
       // get the hydrostatic part of the stress
       p = 0.5*bulk*(J - 1.0/J);
+
+      // compute bulk viscosity
+      /*
+      if (flag->d_artificial_viscosity) {
+        Matrix3 tensorD = (velGrad + velGrad.Transpose())*0.5;
+        double Dkk = tensorD.Trace();
+        double c_bulk = sqrt(bulk/rho_cur);
+        double q = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
+        p -= q;
+      }
+      */
 
       // Compute ||shearTrial||
       sTnorm = shearTrial.Norm();
@@ -410,17 +427,12 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       // Compute the strain energy for all the particles
       U = .5*bulk*(.5*(J*J - 1.0) - log(J));
       W = .5*shear*(bElBar_new[idx].Trace() - 3.0);
-
-      pvolume_deformed[idx]=(pmass[idx]/rho_orig)*J;
-
       double e = (U + W)*pvolume_deformed[idx]/J;
-      
       se += e;
 
       // Compute wave speed at each particle, store the maximum
 
       Vector pvelocity_idx = pvelocity[idx];
-      c_dil = sqrt((bulk + 4.*shear/3.)*pvolume_deformed[idx]/pmass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
 		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
 		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
