@@ -220,8 +220,11 @@ void ParticleVis::execute()
 	  if( hasScale ) {
 	    double smin = 0, smax = 0;
 	    scaleSet->get_minmax(smin,smax);
- 	    double scalefactor = 0;
-            if (smax-smin > 1e-10)
+
+	    double scalefactor = 1;   // If smin = smax
+                                     // then set scale = 1 -Todd
+                                     // This was originally set to 0
+           if (smax-smin > 1e-10)
               scalefactor = ((*scale_it)[*iter] - smin)/(smax - smin);
 	    if( scalefactor >= 1e-6 ){
 	      if(!hasTensors){
