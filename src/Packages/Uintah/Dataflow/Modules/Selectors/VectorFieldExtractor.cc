@@ -170,10 +170,10 @@ void VectorFieldExtractor::execute()
 	  LevelField<Vector> *vfd =
 	    scinew LevelField<Vector>( mesh, Field::NODE );
 	  // set the generation and timestep in the field
-	  vfd->store("varname",string(var), true);
-	  vfd->store("generation",generation, true);
-	  vfd->store("timestep",timestep, true);
-	  vfd->store("delta_t",dt, true);
+	  vfd->set_property("varname",string(var), true);
+	  vfd->set_property("generation",generation, true);
+	  vfd->set_property("timestep",timestep, true);
+	  vfd->set_property("delta_t",dt, true);
 	  build_field( archive, level, var, mat, time, gridVar, vfd);
 	  // send the field out to the port
 	  vfout->send(vfd);
@@ -199,10 +199,10 @@ void VectorFieldExtractor::execute()
 	  LatVolField<Vector> *vfd =
 	    scinew LatVolField<Vector>( lvm, Field::CELL );
 	  // set the generation and timestep in the field
-	  vfd->store("varname",string(var), true);
-	  vfd->store("generation",generation, true);
-	  vfd->store("timestep",timestep, true);
-	  vfd->store("delta_t",dt, true);
+	  vfd->set_property("varname",string(var), true);
+	  vfd->set_property("generation",generation, true);
+	  vfd->set_property("timestep",timestep, true);
+	  vfd->set_property("delta_t",dt, true);
 //  	  build_field(archive, level, var, mat, time, gridVar, vfd);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
 			vfd, need_byte_swap);
