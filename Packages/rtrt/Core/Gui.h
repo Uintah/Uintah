@@ -25,6 +25,7 @@ class  Dpy;
 struct DpyPrivate;
 class  Stealth;
 class  Camera;
+class  Color;
 
 class Light;
 
@@ -241,6 +242,10 @@ private:
   void cycleShadowMode();
   void cycleAmbientMode();
   void quit();
+
+  void displayText(void * font, double x, double y, char *s, const Color& c);
+  void displayShadowText(void * font,
+			 double x, double y, char *s, const Color& c);
 
   ////////////////////////////////////////////////////////////////
 
