@@ -872,7 +872,8 @@ BoundaryCondition::uVelocityBC(const Patch* patch,
 	      vars->uVelocityConvectCoeff[Arches::AB],
 	      constvars->vVelocity, constvars->wVelocity,
 	      idxLo, idxHi, constvars->cellType,
-	      wall_celltypeval, outlet_celltypeval, press_celltypeval, VISCOS,
+	      wall_celltypeval, outlet_celltypeval, press_celltypeval,
+	      constvars->viscosity,
 	      cellinfo->sewu, cellinfo->sns, cellinfo->stb,
 	      cellinfo->yy, cellinfo->yv, cellinfo->zz, cellinfo->zw,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
@@ -925,7 +926,8 @@ BoundaryCondition::vVelocityBC(const Patch* patch,
 	      vars->vVelocityConvectCoeff[Arches::AB],
 	      constvars->uVelocity, constvars->wVelocity,
 	      idxLo, idxHi, constvars->cellType,
-	      wall_celltypeval, outlet_celltypeval, press_celltypeval, VISCOS,
+	      wall_celltypeval, outlet_celltypeval, press_celltypeval,
+	      constvars->viscosity,
 	      cellinfo->sew, cellinfo->snsv, cellinfo->stb,
 	      cellinfo->xx, cellinfo->xu, cellinfo->zz, cellinfo->zw,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
@@ -977,7 +979,8 @@ BoundaryCondition::wVelocityBC(const Patch* patch,
 	      vars->wVelocityConvectCoeff[Arches::AB],
 	      constvars->uVelocity, constvars->vVelocity,
 	      idxLo, idxHi, constvars->cellType,
-	      wall_celltypeval, outlet_celltypeval, press_celltypeval, VISCOS,
+	      wall_celltypeval, outlet_celltypeval, press_celltypeval,
+	      constvars->viscosity,
 	      cellinfo->sew, cellinfo->sns, cellinfo->stbw,
 	      cellinfo->xx, cellinfo->xu, cellinfo->yy, cellinfo->yv,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
@@ -2812,9 +2815,9 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
         if (constvars->cellType[xminusCell] == press_celltypeval)
-//	  if (constvars->uVelocity[currCell] <= 0.0)
+	  if (constvars->uVelocity[currCell] <= 0.0)
                         vars->scalar[xminusCell] = vars->scalar[currCell];
-//	  else vars->scalar[xminusCell] = 0.0;
+	  else vars->scalar[xminusCell] = 0.0;
       }
     }
   }
@@ -2825,9 +2828,9 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xplusCell] == press_celltypeval)
-//	  if (constvars->uVelocity[xplusCell] >= 0.0)
+	  if (constvars->uVelocity[xplusCell] >= 0.0)
                         vars->scalar[xplusCell] = vars->scalar[currCell];
-//	  else vars->scalar[xplusCell] = 0.0;
+	  else vars->scalar[xplusCell] = 0.0;
       }
     }
   }
@@ -2838,9 +2841,9 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
         if (constvars->cellType[yminusCell] == press_celltypeval)
-//	  if (constvars->vVelocity[currCell] <= 0.0)
+	  if (constvars->vVelocity[currCell] <= 0.0)
                         vars->scalar[yminusCell] = vars->scalar[currCell];
-//	  else vars->scalar[yminusCell] = 0.0;
+	  else vars->scalar[yminusCell] = 0.0;
       }
     }
   }
@@ -2851,9 +2854,9 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yplusCell] == press_celltypeval)
-//	  if (constvars->vVelocity[yplusCell] >= 0.0)
+	  if (constvars->vVelocity[yplusCell] >= 0.0)
                         vars->scalar[yplusCell] = vars->scalar[currCell];
-//	  else vars->scalar[yplusCell] = 0.0;
+	  else vars->scalar[yplusCell] = 0.0;
       }
     }
   }
@@ -2864,9 +2867,9 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
         if (constvars->cellType[zminusCell] == press_celltypeval)
-//	  if (constvars->wVelocity[currCell] <= 0.0)
+	  if (constvars->wVelocity[currCell] <= 0.0)
                         vars->scalar[zminusCell] = vars->scalar[currCell];
-//	  else vars->scalar[zminusCell] = 0.0;
+	  else vars->scalar[zminusCell] = 0.0;
       }
     }
   }
@@ -2877,9 +2880,9 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zplusCell] == press_celltypeval)
-//	  if (constvars->wVelocity[zplusCell] >= 0.0)
+	  if (constvars->wVelocity[zplusCell] >= 0.0)
                         vars->scalar[zplusCell] = vars->scalar[currCell];
-//	  else vars->scalar[zplusCell] = 0.0;
+	  else vars->scalar[zplusCell] = 0.0;
       }
     }
   }
@@ -3015,22 +3018,16 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector xminusCell(colX-1, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xminusCell] == out_celltypeval) {
-//	  if (constvars->uVelocity[currCell] <= 0.0) {
-           vars->scalar[xminusCell]= (- delta_t * maxAbsU *
+           vars->scalar[xminusCell]= (delta_t * maxAbsU *
                (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
                 constvars->old_density[xminusCell]*constvars->old_scalar[xminusCell]) /
 	       cellinfo->dxep[colX-1] + 
 	       constvars->old_old_density[xminusCell]*constvars->old_old_scalar[xminusCell])/
-	      constvars->old_density[xminusCell];
+	      constvars->density_guess[xminusCell];
            if (vars->scalar[xminusCell] > 1.0)
                vars->scalar[xminusCell] = 1.0;
-           else if (vars->scalar[xminusCell] < 0.0)
+           else if (vars->scalar[xminusCell] < 1.0e-7)
                vars->scalar[xminusCell] = 0.0;
-//	   double prev_scalar = vars->scalar[currCell];
-//	   if (vars->scalar[xminusCell] > prev_scalar)
-//	       vars->scalar[xminusCell] = prev_scalar;
-//	  }
-//	  else vars->scalar[xminusCell] = 0.0;
         } 
       }
     }
@@ -3042,22 +3039,16 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xplusCell] == out_celltypeval) {
-//	  if (constvars->uVelocity[xplusCell] >= 0.0) {
            vars->scalar[xplusCell]= (- delta_t * maxAbsU *
                (constvars->old_density[xplusCell]*constvars->old_scalar[xplusCell] -
                 constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
 	       cellinfo->dxpw[colX+1] +
 	       constvars->old_old_density[xplusCell]*constvars->old_old_scalar[xplusCell])/
-	      constvars->old_density[xplusCell];
+	      constvars->density_guess[xplusCell];
            if (vars->scalar[xplusCell] > 1.0)
                vars->scalar[xplusCell] = 1.0;
-           else if (vars->scalar[xplusCell] < 0.0)
+           else if (vars->scalar[xplusCell] < 1.0e-7)
                vars->scalar[xplusCell] = 0.0;
-//	   double prev_scalar = vars->scalar[currCell];
-//	   if (vars->scalar[xplusCell] > prev_scalar)
-//	       vars->scalar[xplusCell] = prev_scalar;
-//	  }
-//	  else vars->scalar[xplusCell] = 0.0;
         } 
       }
     }
@@ -3070,22 +3061,16 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector yminusCell(colX, colY-1, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yminusCell] == out_celltypeval) {
-//	  if (constvars->vVelocity[currCell] <= 0.0) {
-           vars->scalar[yminusCell]= (- delta_t * maxAbsV *
+           vars->scalar[yminusCell]= (delta_t * maxAbsV *
                (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
                 constvars->old_density[yminusCell]*constvars->old_scalar[yminusCell]) /
 	       cellinfo->dynp[colY-1] +
 	       constvars->old_old_density[yminusCell]*constvars->old_old_scalar[yminusCell])/
-	      constvars->old_density[yminusCell];
+	      constvars->density_guess[yminusCell];
            if (vars->scalar[yminusCell] > 1.0)
                vars->scalar[yminusCell] = 1.0;
-           else if (vars->scalar[yminusCell] < 0.0)
+           else if (vars->scalar[yminusCell] < 1.0e-7)
                vars->scalar[yminusCell] = 0.0;
-//	   double prev_scalar = vars->scalar[currCell];
-//	   if (vars->scalar[yminusCell] > prev_scalar)
-//	       vars->scalar[yminusCell] = prev_scalar;
-//	  }
-//	  else vars->scalar[yminusCell] = 0.0;
         } 
       }
     }
@@ -3097,22 +3082,16 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yplusCell] == out_celltypeval) {
-//	  if (constvars->vVelocity[yplusCell] >= 0.0) {
            vars->scalar[yplusCell]= (- delta_t * maxAbsV *
                (constvars->old_density[yplusCell]*constvars->old_scalar[yplusCell] -
                 constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
 	       cellinfo->dyps[colY+1] +
 	       constvars->old_old_density[yplusCell]*constvars->old_old_scalar[yplusCell])/
-	      constvars->old_density[yplusCell];
+	      constvars->density_guess[yplusCell];
            if (vars->scalar[yplusCell] > 1.0)
                vars->scalar[yplusCell] = 1.0;
-           else if (vars->scalar[yplusCell] < 0.0)
+           else if (vars->scalar[yplusCell] < 1.0e-7)
                vars->scalar[yplusCell] = 0.0;
-//	   double prev_scalar = vars->scalar[currCell];
-//	   if (vars->scalar[yplusCell] > prev_scalar)
-//	       vars->scalar[yplusCell] = prev_scalar;
-//	  }
-//	  else vars->scalar[yplusCell] = 0.0;
         } 
       }
     }
@@ -3125,22 +3104,16 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector zminusCell(colX, colY, colZ-1);
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zminusCell] == out_celltypeval) {
-//	  if (constvars->wVelocity[currCell] <= 0.0) {
-           vars->scalar[zminusCell]= (- delta_t * maxAbsW *
+           vars->scalar[zminusCell]= (delta_t * maxAbsW *
                (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
                 constvars->old_density[zminusCell]*constvars->old_scalar[zminusCell]) /
 	       cellinfo->dztp[colZ-1] +
 	       constvars->old_old_density[zminusCell]*constvars->old_old_scalar[zminusCell])/
-	      constvars->old_density[zminusCell];
+	      constvars->density_guess[zminusCell];
            if (vars->scalar[zminusCell] > 1.0)
                vars->scalar[zminusCell] = 1.0;
-           else if (vars->scalar[zminusCell] < 0.0)
+           else if (vars->scalar[zminusCell] < 1.0e-7)
                vars->scalar[zminusCell] = 0.0;
-//	   double prev_scalar = vars->scalar[currCell];
-//	   if (vars->scalar[zminusCell] > prev_scalar)
-//	       vars->scalar[zminusCell] = prev_scalar;
-//	  }
-//	  else vars->scalar[zminusCell] = 0.0;
         } 
       }
     }
@@ -3152,22 +3125,16 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zplusCell] == out_celltypeval) {
-//	  if (constvars->wVelocity[zplusCell] >= 0.0) {
            vars->scalar[zplusCell]= (- delta_t * maxAbsW *
                (constvars->old_density[zplusCell]*constvars->old_scalar[zplusCell] -
                 constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
 	       cellinfo->dzpb[colZ+1] +
 	       constvars->old_old_density[zplusCell]*constvars->old_old_scalar[zplusCell])/
-	      constvars->old_density[zplusCell];
+	      constvars->density_guess[zplusCell];
            if (vars->scalar[zplusCell] > 1.0)
                vars->scalar[zplusCell] = 1.0;
-           else if (vars->scalar[zplusCell] < 0.0)
+           else if (vars->scalar[zplusCell] < 1.0e-7)
                vars->scalar[zplusCell] = 0.0;
-//	   double prev_scalar = vars->scalar[currCell];
-//	   if (vars->scalar[zplusCell] > prev_scalar)
-//	       vars->scalar[zplusCell] = prev_scalar;
-//	  }
-//	  else vars->scalar[zplusCell] = 0.0;
         } 
       }
     }
@@ -3213,12 +3180,12 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
         IntVector xminusCell(colX-1, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xminusCell] == out_celltypeval)
-           vars->enthalpy[xminusCell]= (- delta_t * maxAbsU *
+           vars->enthalpy[xminusCell]= (delta_t * maxAbsU *
                (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
                 constvars->old_density[xminusCell]*constvars->old_enthalpy[xminusCell]) /
 	       cellinfo->dxep[colX-1] +
 	       constvars->old_old_density[xminusCell]*constvars->old_old_enthalpy[xminusCell])/
-	      constvars->old_density[xminusCell];
+	      constvars->density_guess[xminusCell];
       }
     }
   }
@@ -3234,7 +3201,7 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
                 constvars->old_density[currCell]*constvars->old_enthalpy[currCell]) /
 	       cellinfo->dxpw[colX+1] +
 	       constvars->old_old_density[xplusCell]*constvars->old_old_enthalpy[xplusCell])/
-	      constvars->old_density[xplusCell];
+	      constvars->density_guess[xplusCell];
       }
     }
   }
@@ -3246,12 +3213,12 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
         IntVector yminusCell(colX, colY-1, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yminusCell] == out_celltypeval)
-           vars->enthalpy[yminusCell]= (- delta_t * maxAbsV *
+           vars->enthalpy[yminusCell]= (delta_t * maxAbsV *
                (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
                 constvars->old_density[yminusCell]*constvars->old_enthalpy[yminusCell]) /
 	       cellinfo->dynp[colY-1] +
 	       constvars->old_old_density[yminusCell]*constvars->old_old_enthalpy[yminusCell])/
-	      constvars->old_density[yminusCell];
+	      constvars->density_guess[yminusCell];
       }
     }
   }
@@ -3267,7 +3234,7 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
                 constvars->old_density[currCell]*constvars->old_enthalpy[currCell]) /
 	       cellinfo->dyps[colY+1] +
 	       constvars->old_old_density[yplusCell]*constvars->old_old_enthalpy[yplusCell])/
-	      constvars->old_density[yplusCell];
+	      constvars->density_guess[yplusCell];
       }
     }
   }
@@ -3279,12 +3246,12 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
         IntVector zminusCell(colX, colY, colZ-1);
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zminusCell] == out_celltypeval)
-           vars->enthalpy[zminusCell]= (- delta_t * maxAbsW *
+           vars->enthalpy[zminusCell]= (delta_t * maxAbsW *
                (constvars->old_density[currCell]*constvars->old_enthalpy[currCell] -
                 constvars->old_density[zminusCell]*constvars->old_enthalpy[zminusCell]) /
 	       cellinfo->dztp[colZ-1] +
 	       constvars->old_old_density[zminusCell]*constvars->old_old_enthalpy[zminusCell])/
-	      constvars->old_density[zminusCell];
+	      constvars->density_guess[zminusCell];
       }
     }
   }
@@ -3300,7 +3267,7 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
                 constvars->old_density[currCell]*constvars->old_enthalpy[currCell]) /
 	       cellinfo->dzpb[colZ+1] +
 	       constvars->old_old_density[zplusCell]*constvars->old_old_enthalpy[zplusCell])/
-	      constvars->old_density[zplusCell];
+	      constvars->density_guess[zplusCell];
       }
     }
   }
@@ -3527,7 +3494,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 			                constvars->new_density[xminusCell]);
 	   //double out_vel = constvars->uVelocity[xplusCell];
 
-           vars->uVelRhoHat[currCell] = (- delta_t * (maxAbsU *
+           vars->uVelRhoHat[currCell] = (delta_t * (maxAbsU *
             (avden*constvars->uVelocity[xplusCell] -
              avdenlow*constvars->uVelocity[currCell]) / cellinfo->dxepu[colX-1] +
 	     (avdenlow - ref_avdenlow) * gravity) +
@@ -3547,7 +3514,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 	   //out_vel = 0.5 * (constvars->uVelocity[xplusCell] +
 	//		    constvars->uVelocity[xplusyminusCell]);
 
-           vars->vVelRhoHat[xminusCell] = (- delta_t * maxAbsU *
+           vars->vVelRhoHat[xminusCell] = (delta_t * maxAbsU *
             (avden*constvars->vVelocity[currCell] - 
 	     avdenlow*constvars->vVelocity[xminusCell]) /cellinfo->dxep[colX-1]+
 	    old_avdenlow*constvars->old_vVelocity[xminusCell]) / new_avdenlow;
@@ -3564,7 +3531,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 	   //out_vel = 0.5 * (constvars->uVelocity[xplusCell] +
 	//		    constvars->uVelocity[xpluszminusCell]);
 
-           vars->wVelRhoHat[xminusCell] = (- delta_t * maxAbsU *
+           vars->wVelRhoHat[xminusCell] = (delta_t * maxAbsU *
             (avden*constvars->wVelocity[currCell] - 
 	     avdenlow*constvars->wVelocity[xminusCell]) /cellinfo->dxep[colX-1]+
 	    old_avdenlow*constvars->old_wVelocity[xminusCell]) / new_avdenlow;
@@ -3673,7 +3640,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 			                constvars->new_density[yminusCell]);
 	   //double out_vel = constvars->vVelocity[yplusCell];
 
-           vars->vVelRhoHat[currCell] = (- delta_t * (maxAbsV *
+           vars->vVelRhoHat[currCell] = (delta_t * (maxAbsV *
             (avden*constvars->vVelocity[yplusCell] -
              avdenlow*constvars->vVelocity[currCell]) / cellinfo->dynpv[colY-1] +
 	     (avdenlow - ref_avdenlow) * gravity) +
@@ -3693,7 +3660,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 	   //out_vel = 0.5 * (constvars->vVelocity[yplusCell] +
 	//		    constvars->vVelocity[yplusxminusCell]);
 
-           vars->uVelRhoHat[yminusCell] = (- delta_t * maxAbsV *
+           vars->uVelRhoHat[yminusCell] = (delta_t * maxAbsV *
             (avden*constvars->uVelocity[currCell] - 
 	     avdenlow*constvars->uVelocity[yminusCell]) /cellinfo->dynp[colY-1]+
 	    old_avdenlow*constvars->old_uVelocity[yminusCell]) / new_avdenlow;
@@ -3710,7 +3677,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 	   //out_vel = 0.5 * (constvars->vVelocity[yplusCell] +
 	//		    constvars->vVelocity[ypluszminusCell]);
 
-           vars->wVelRhoHat[yminusCell] = (- delta_t * maxAbsV *
+           vars->wVelRhoHat[yminusCell] = (delta_t * maxAbsV *
             (avden*constvars->wVelocity[currCell] - 
 	     avdenlow*constvars->wVelocity[yminusCell]) /cellinfo->dynp[colY-1]+
 	    old_avdenlow*constvars->old_wVelocity[yminusCell]) / new_avdenlow;
@@ -3819,7 +3786,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 			                constvars->new_density[zminusCell]);
 	   //double out_vel = constvars->wVelocity[zplusCell];
 
-           vars->wVelRhoHat[currCell] = (- delta_t * (maxAbsW *
+           vars->wVelRhoHat[currCell] = (delta_t * (maxAbsW *
             (avden*constvars->wVelocity[zplusCell] -
              avdenlow*constvars->wVelocity[currCell]) / cellinfo->dztpw[colZ-1] +
 	     (avdenlow - ref_avdenlow) * gravity) +
@@ -3839,7 +3806,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 	   //out_vel = 0.5 * (constvars->wVelocity[zplusCell] +
 	//		    constvars->wVelocity[zplusxminusCell]);
 
-           vars->uVelRhoHat[zminusCell] = (- delta_t * maxAbsW *
+           vars->uVelRhoHat[zminusCell] = (delta_t * maxAbsW *
             (avden*constvars->uVelocity[currCell] - 
 	     avdenlow*constvars->uVelocity[zminusCell]) /cellinfo->dztp[colZ-1]+
 	    old_avdenlow*constvars->old_uVelocity[zminusCell]) / new_avdenlow;
@@ -3856,7 +3823,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 	   //out_vel = 0.5 * (constvars->wVelocity[zplusCell] +
 	//		    constvars->wVelocity[zplusyminusCell]);
 
-           vars->vVelRhoHat[zminusCell] = (- delta_t * maxAbsW *
+           vars->vVelRhoHat[zminusCell] = (delta_t * maxAbsW *
             (avden*constvars->vVelocity[currCell] - 
 	     avdenlow*constvars->vVelocity[zminusCell]) /cellinfo->dztp[colZ-1]+
 	    old_avdenlow*constvars->old_vVelocity[zminusCell]) / new_avdenlow;
@@ -4625,7 +4592,8 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
 	cerr << "Overall Mass Balance " << log10(d_overallMB/1.e-7) << endl;
       cerr << "Total flow in " << totalFlowIN << endl;
       cerr << "Total flow out " << totalFlowOUT << endl;
-      cerr << "Total flow out BC: " << netFlowOUT_outbc << endl;
+      cerr << "Density accumulation " << denAccum << endl;
+      cerr << "Total flow out BC " << netFlowOUT_outbc << endl;
       cerr << "Overall velocity correction " << uvwcorr << endl;
       cerr << "Total Area out " << totalAreaOUT << endl;
     }

@@ -1375,6 +1375,7 @@ Properties::sched_averageRKProps(SchedulerP& sched, const PatchSet* patches,
     tsk->modifies(d_lab->d_reactscalarSPLabel);
   if (!(d_mixingModel->isAdiabatic()))
     tsk->modifies(d_lab->d_enthalpySPLabel);
+  tsk->modifies(d_lab->d_densityGuessLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -1405,6 +1406,7 @@ Properties::averageRKProps(const ProcessorGroup*,
     StaticArray<CCVariable<double> > new_reactScalar(d_mixingModel->getNumRxnVars());
     constCCVariable<double> old_enthalpy;
     CCVariable<double> new_enthalpy;
+    CCVariable<double> density_guess;
 
     old_dw->get(old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -1439,6 +1441,9 @@ Properties::averageRKProps(const ProcessorGroup*,
       new_dw->getModifiable(new_enthalpy, d_lab->d_enthalpySPLabel, 
 			    matlIndex, patch);
 
+    new_dw->getModifiable(density_guess, d_lab->d_densityGuessLabel, 
+			  matlIndex, patch);
+
     double factor_old, factor_new, factor_divide;
     factor_old = timelabels->factor_old;
     factor_new = timelabels->factor_new;
@@ -1462,13 +1467,15 @@ Properties::averageRKProps(const ProcessorGroup*,
 	  else
 	    predicted_density = new_density[currCell];
 
+	  density_guess[currCell] = predicted_density;
+
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
 	    (new_scalar[ii])[currCell] = (factor_old*old_density[currCell]*
 		(old_scalar[ii])[currCell] + factor_new*rho1_density[currCell]*
 		(new_scalar[ii])[currCell])/(factor_divide*predicted_density);
             if ((new_scalar[ii])[currCell] > 1.0) 
 		(new_scalar[ii])[currCell] = 1.0;
-            else if ((new_scalar[ii])[currCell] < 0.0)
+            else if ((new_scalar[ii])[currCell] < 1.0e-7)
             	(new_scalar[ii])[currCell] = 0.0;
           }
 
@@ -1481,7 +1488,7 @@ Properties::averageRKProps(const ProcessorGroup*,
 		(factor_divide*predicted_density);
             if ((new_reactScalar[ii])[currCell] > 1.0) 
 		(new_reactScalar[ii])[currCell] = 1.0;
-            else if ((new_reactScalar[ii])[currCell] < 0.0)
+            else if ((new_reactScalar[ii])[currCell] < 1.0e-7)
             	(new_reactScalar[ii])[currCell] = 0.0;
             }
 	  }
@@ -1683,6 +1690,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
         for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
           for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
 	    IntVector currcell(ii,jj,kk);
+	    IntVector xminus(ii-1,jj,kk);
 
 	    double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
 	    drhodt[currcell] = (new_factor*new_density[currcell] -
