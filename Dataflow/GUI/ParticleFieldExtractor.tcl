@@ -88,32 +88,32 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
         set w .ui[modname] 
 
         if {[winfo exists $w]} { 
-	    wm deiconify $w
-            raise $w 
-        } else { 
-	    $this buildTopLevel
-	    wm deiconify $w
-            raise $w 
-	}
+            return
+        }   
+        
+        $this buildTopLevel
+#         wm deiconify $w
+#         raise $w 
+	
     }
 
     method buildTopLevel {} {
         set w .ui[modname] 
 
         if {[winfo exists $w]} { 
-            return;
+            return
         } 
 	
         toplevel $w 
-	wm withdraw $w
+#	wm withdraw $w
 	
 	set n "$this-c needexecute"
 	frame $w.f -relief flat
  	pack $w.f -side top -expand yes -fill both
 
+	makeFrames $w.f
         makeSciButtonPanel $w $w $this
         moveToCursor $w
-	makeFrames $w.f
     }
 
 
