@@ -302,7 +302,7 @@ NIMRODConverter::execute(){
 	    data_.resize(1);
 	    data_[0] = ic;
 	  } else {
-	    error( nrrdName + " is unknown NIMROD node data." );
+	    error( nrrdName + " is unknown NIMROD REALSPACE node data." );
 	    error_ = true;
 	    return;
 	  }
@@ -323,6 +323,11 @@ NIMRODConverter::execute(){
 		offset = 0;
 	      else if ( property.find( "IMAGINARY" ) != string::npos )
 		offset = 1;
+	      else {
+		error( nrrdName + property + " Unsupported Data Subspace." );
+		error_ = true;
+		return;
+	      }
 	      
 	      int index = 0;
 	      if( nrrdName.find( "R:Scalar" ) != string::npos &&
@@ -335,12 +340,26 @@ NIMRODConverter::execute(){
 		index = 1 + 3 * offset;
 	      } else if( nrrdName.find( "PHI:Scalar" ) != string::npos && 
 			 nHandle->nrrd->dim == 3 ) {
+		conversion_ = PERTURBED;
 		index = 2 + 3 * offset;
+	      } else if( (nrrdName.find( "R-Z-PHI:Vector" ) != string::npos || 
+			  nrrdName.find( "PHI-R-Z:Vector" ) != string::npos ) && 
+			 nHandle->nrrd->dim == 4 ) {
 		conversion_ = PERTURBED;
-	      } else { // Scalar data
 		data_.resize(2);
-		conversion_ = PERTURBED;
 		index = 0 + 1 * offset;
+	      } else if( nrrdName.find( ":Scalar" ) != string::npos && 
+			 nHandle->nrrd->dim == 3 ){ // Scalar data
+		conversion_ = PERTURBED;
+		data_.resize(2);
+		index = 0 + 1 * offset;
+	      } else {
+		if( offset == 0 )
+		  error( nrrdName + " is unknown NIMROD PERTURBED REAL node data." );
+		else if( offset == 1 )
+		  error( nrrdName + " is unknown NIMROD PERTURBED IMAGINARY node data." );
+		error_ = true;
+		return;
 	      }
 
 	      data_[index] = ic;
