@@ -26,6 +26,8 @@
 
 #include <Packages/RobV/share/share.h>
 
+#define PINVAL 0
+
 namespace RobV {
 
 using namespace SCIRun;
@@ -67,15 +69,16 @@ private:
   int gen;
   string lastBCFlag;
   int refnode;
+  QuadraticTetVolField<int>* qtv;
+  Array1<int> bcArray;
+  vector<pair<int, double> > dirichlet;
 
   Mutex mutex;
 
   void parallel(int);
-  void build_local_matrix(Element, double lcl[10][10]);
+  void build_local_matrix(Element, double lcl[10][10], TetVolMesh::Cell::index_type);
   void add_lcl_gbl(Matrix&, double lcl[10][10],
-		   ColumnMatrix&, int);
-  void add_lcl_gbl(Matrix&, double lcl[10][10],
-		   ColumnMatrix&, int, int s, int e);
+		   ColumnMatrix&, TetVolMesh::Cell::index_type, int s, int e);
 };
 
 extern "C" RobVSHARE Module* make_BuildFEMatrixQuadratic(const string& id) {
@@ -126,17 +129,25 @@ void BuildFEMatrixQuadratic::execute()
   UseCond=UseCondGui.get();
 
   // keep a handle on the field.
-  QuadraticTetVolField<double>* qtv;
-  qtv = dynamic_cast<QuadraticTetVolField<double>*>(mesh.get_rep());
+  qtv = dynamic_cast<QuadraticTetVolField<int>*>(mesh.get_rep());
   if (!qtv) {
-    error("failed dynamic cast to QuadraticTetVolField<double>*");
+    error("failed dynamic cast to QuadraticTetVolField<int>*");
     return;
   }
   QuadraticTetVolMeshHandle mesh_handle;
   qtvm_ = qtv->get_typed_mesh();
 
   QuadraticTetVolMesh::Node::size_type nnodes;
-  qtvm_->size(nnodes); 
+  qtvm_->size(nnodes);
+
+  qtvm_->get_property("dirichlet", dirichlet);
+
+  bcArray.resize(nnodes);
+  bcArray.initialize(0);
+  for(int aa=0; aa=dirichlet.size();aa++) {
+    bcArray[dirichlet[aa].first]= 1;
+  }
+
   rows=scinew int[nnodes+1];  
   np=Thread::numProcessors();
   if (np>10) np/=2;
@@ -185,8 +196,9 @@ void BuildFEMatrixQuadratic::execute()
 
 void BuildFEMatrixQuadratic::parallel(int proc)
 {
-#if 0
-  int nnodes=qtvm_->nodes.size();
+
+  QuadraticTetVolMesh::Node::size_type nnodes;
+  qtvm_->size(nnodes);
   int start_node=nnodes*proc/np; 
   int end_node=nnodes*(proc+1)/np; 
   int ndof=end_node-start_node;
@@ -196,12 +208,12 @@ void BuildFEMatrixQuadratic::parallel(int proc)
   Array1<int> mycols(0, 15*ndof);
   for(i=start_node;i<end_node;i++){
     rows[r++]=mycols.size();
-    if((qtvm_->nodes[i]->bc && DirSub) || (i==refnode && PinZero)) {
+    if((bcArray[i] && DirSub) || (i==refnode && PinZero)) {
       mycols.add(i); // Just a diagonal term
     } else if (i==refnode && AverageGround) { // 1's all across
-      for (int ii=0; ii<qtvm_->nodes.size(); ii++) 
+      for (int ii=0; ii<nnodes; ii++) 
 	mycols.add(ii);
-    } else if (qtvm_->nodes[i]->pdBC && DirSub) {
+    } /*else if (qtvm_->nodes[i]->pdBC && DirSub) {
       int nd=qtvm_->nodes[i]->pdBC->diffNode;
       if (nd > i) {
 	mycols.add(i);
@@ -210,8 +222,8 @@ void BuildFEMatrixQuadratic::parallel(int proc)
 	mycols.add(nd);
 	mycols.add(i);
       }
-    } else {
-      qtvm_->add_node_neighborsQuad(i, mycols, DirSub);
+      }*/ else {
+      qtvm_->add_neighbors(mycols, i, DirSub);
     }
   }
 
@@ -265,10 +277,22 @@ void BuildFEMatrixQuadratic::parallel(int proc)
   }
   double lcl_matrix[10][10];
 
-  int nelems=qtvm_->elems.size();
-  for (i=0; i<nelems; i++){
-    Element e=qtvm_->elems[i];
-    if((e->n[0] >= start_node && e->n[0] < end_node)
+  QuadraticTetVolMesh::Cell::size_type nelems;
+  qtvm_->size(nelems);
+
+  TetVolMesh::Cell::iterator ii, iie;
+
+  TetVolMesh::Node::array_type cell_nodes(10);
+  qtvm_->begin(ii); qtvm_->end(iie);
+  for (; ii != iie; ++ii){
+    if (qtvm_->test_nodes_range(*ii, start_node, end_node)){ 
+      build_local_matrix(*ii,lcl_matrix,i);
+      add_lcl_gbl(*gbl_matrix,lcl_matrix,*rhs,*ii,start_node, end_node);
+    }
+  }
+      /*  for (i=0; i<nelems; i++){
+        Element e=qtvm_->elems[i];
+      if((e->n[0] >= start_node && e->n[0] < end_node)
        || (e->n[1] >= start_node && e->n[1] < end_node)
        || (e->n[2] >= start_node && e->n[2] < end_node)
        || (e->n[3] >= start_node && e->n[3] < end_node)
@@ -278,14 +302,14 @@ void BuildFEMatrixQuadratic::parallel(int proc)
        || (e->xtrpts[3] >= start_node && e->xtrpts[3] < end_node)
        || (e->xtrpts[4] >= start_node && e->xtrpts[4] < end_node)
        || (e->xtrpts[5] >= start_node && e->xtrpts[5] < end_node)){
-      //	  mutex.lock();
-      build_local_matrix(qtvm_->elems[i],lcl_matrix);
-      add_lcl_gbl(*gbl_matrix,lcl_matrix,*rhs,i,qtvm_, start_node, end_node);
+       //	  mutex.lock();
+      build_local_matrix(qtvm_->elems[i],lcl_matrix,i);
+      add_lcl_gbl(*gbl_matrix,lcl_matrix,*rhs,i,start_node, end_node);
       //	    mutex.unlock();
-    }
-  }
+      }
+      }*/
   for(i=start_node;i<end_node;i++){
-    if((qtvm_->nodes[i]->bc && DirSub) || (PinZero && i==refnode)){
+    if((bcArray[i] && DirSub) || (PinZero && i==refnode)){
       // This is just a dummy entry...
       //	    (*gbl_matrix)[i][i]=1;
       int id=rows[i];
@@ -293,8 +317,8 @@ void BuildFEMatrixQuadratic::parallel(int proc)
       if (i==refnode && PinZero)
 	(*rhs)[i]=PINVAL;
       else
-	(*rhs)[i]=qtvm_->nodes[i]->bc->value;
-    } else if (qtvm_->nodes[i]->pdBC && DirSub) {
+	(*rhs)[i]=dirichlet[i].second; //?? dirichlet[i]??
+    } /*else if (qtvm_->nodes[i]->pdBC && DirSub) {
       int nd=qtvm_->nodes[i]->pdBC->diffNode;
       int id=rows[i];
       if (nd > i) {
@@ -305,17 +329,18 @@ void BuildFEMatrixQuadratic::parallel(int proc)
 	a[id+1]=1;
       }
       (*rhs)[i]=qtvm_->nodes[i]->pdBC->diffVal;
-    } else if (AverageGround && i==refnode) {
-      for (int ii=rows[i]; ii<rows[i]+qtvm_->nodes.size(); ii++)
+      } */else if (AverageGround && i==refnode) {
+      for (int ii=rows[i]; ii<rows[i]+nnodes; ii++)
 	a[ii]=1;
     }
   }
-#endif
+
 }
 
 void BuildFEMatrixQuadratic::build_local_matrix(Element elem, 
-						double lcl_a[10][10])
+						double lcl_a[10][10], TetVolMesh::Cell::index_type c_ind)
 {
+
   Point pt;
   Vector grad1,grad2,grad3,grad4,grad5,grad6,grad7,grad8,grad9,grad10;
   double vol;
@@ -409,18 +434,23 @@ void BuildFEMatrixQuadratic::build_local_matrix(Element elem,
   // the value is refering to. i.e. 0=x, 1=y, and 2=z
   // so el_cond[1][2] is the same as sigma yz
 
-  if (UseCond) { // properties?
-    el_cond[0][0] = qtvm_->cond_tensors[elem->cond][0];
-    el_cond[0][1] = qtvm_->cond_tensors[elem->cond][1];
-    el_cond[1][0] = qtvm_->cond_tensors[elem->cond][1];
-    el_cond[0][2] = qtvm_->cond_tensors[elem->cond][2];
-    el_cond[2][0] = qtvm_->cond_tensors[elem->cond][2];
-    el_cond[1][1] = qtvm_->cond_tensors[elem->cond][3];
-    el_cond[1][2] = qtvm_->cond_tensors[elem->cond][4];
-    el_cond[2][1] = qtvm_->cond_tensors[elem->cond][4];
-    el_cond[2][2] = qtvm_->cond_tensors[elem->cond][5];
-  }
+  vector<pair<string, Tensor> > tens;
+  qtv->get_property("conductivity_table", tens);
 
+  int  ind = qtv->value(c_ind);
+
+  if (UseCond) {
+    el_cond[0][0] = tens[ind].second.mat_[0][0];
+    el_cond[0][1] = tens[ind].second.mat_[0][1];
+    el_cond[1][0] = tens[ind].second.mat_[1][0];
+    el_cond[0][2] = tens[ind].second.mat_[0][2];
+    el_cond[2][0] = tens[ind].second.mat_[2][0];
+    el_cond[1][1] = tens[ind].second.mat_[1][1];
+    el_cond[1][2] = tens[ind].second.mat_[1][2];
+    el_cond[2][1] = tens[ind].second.mat_[2][1];
+    el_cond[2][2] = tens[ind].second.mat_[2][2];
+  }
+   
   // build the local matrix
   for(int i=0; i< 10; i++) {
     for(int j=i; j< 10; j++) {
@@ -448,76 +478,30 @@ void BuildFEMatrixQuadratic::build_local_matrix(Element elem,
   }
 }
 
-
-void BuildFEMatrixQuadratic::add_lcl_gbl(Matrix& gbl_a, double lcl_a[10][10],
-					 ColumnMatrix& rhs, int el)
-{
-#if 0
-  //    if (mesh->elems[el]->n[0] < 32 ||
-  //	mesh->elems[el]->n[1] < 32 ||
-  //	mesh->elems[el]->n[2] < 32 ||
-  //	mesh->elems[el]->n[3] < 32) { 
-  //	cerr << "\n\n\nn[0]="<<mesh->elems[el]->n[0]<<" n[1]="<<mesh->elems[el]->n[1]<<" n[2]="<<mesh->elems[el]->n[2]<<" n3="<<mesh->elems[el]->n[3]<<"\n";
-  //   }
-  for (int i=0; i<10; i++) // this four should eventually be a
-    // variable ascociated with each element that indicates 
-    // how many nodes are on that element. it will change with 
-    // higher order elements
-  {	  
-    int ii;
-    if (i <4 ) ii = qtvm_->elems[el]->n[i];
-    else ii = qtvm_->elems[el]->xtrpts[i-4];
-	
-    NodeHandle& n1=qtvm_->nodes[ii];
-	  
-    if (!((n1->bc && DirSub) || (ii==refnode && PinZero) || 
-	  (ii==refnode && AverageGround))) {
-      for (int j=0; j<10; j++) {
-	int jj;
-	if (j <4 ) jj = qtvm_->elems[el]->n[j];
-	else jj = qtvm_->elems[el]->xtrpts[j-4];
-
-	NodeHandle& n2=qtvm_->nodes[jj];
-	if (n2->bc && DirSub){
-	  rhs[ii] -= n2->bc->value*lcl_a[i][j];
-	} else if (jj==refnode && PinZero){
-	  rhs[ii] -= PINVAL*lcl_a[i][j];
-	} else {
-	  gbl_a[ii][jj] += lcl_a[i][j];
-	}
-      }
-    }
-  }
-#endif
-}
-
 void BuildFEMatrixQuadratic::add_lcl_gbl(Matrix& gbl_a, double lcl_a[10][10],
 					 ColumnMatrix& rhs,
-					 int el, int s, int e)
+					 TetVolMesh::Cell::index_type c_ind, int s, int e)
 {
-#if 0
+
   for (int i=0; i<10; i++) // this four should eventually be a
     // variable ascociated with each element that indicates 
     // how many nodes are on that element. it will change with 
     // higher order elements
   {	  
+    TetVolMesh::Node::array_type cell_nodes(10);
+    qtvm_->get_nodes(cell_nodes, c_ind);
 
-    int ii;
-    if (i <4 ) ii = qtvm_->elems[el]->n[i];
-    else ii = qtvm_->elems[el]->xtrpts[i-4];
+    int ii = cell_nodes[i];
 
     if(ii >= s && ii < e){
-      NodeHandle& n1=qtvm_->nodes[ii];
-      if (!((n1->bc && DirSub) || (ii==refnode && PinZero) ||
+      if (!((bcArray[ii] && DirSub) || (ii==refnode && PinZero) ||
 	    (ii==refnode && AverageGround))) {
 	for (int j=0; j<10; j++) {
-	  int jj=0;
-	  if (j <4 ) jj = qtvm_->elems[el]->n[j];
-	  else jj = qtvm_->elems[el]->xtrpts[j-4];
 
-	  NodeHandle& n2=qtvm_->nodes[jj];
-	  if (n2->bc && DirSub){
-	    rhs[ii] -= n2->bc->value*lcl_a[i][j];
+	  int jj = cell_nodes[j];
+
+	  if (bcArray[jj] && DirSub){
+	    rhs[ii] -= dirichlet[c_ind].second*lcl_a[i][j];
 	  } else if (jj==refnode && PinZero){
 	    rhs[ii] -= PINVAL*lcl_a[i][j];
 	  } else {
@@ -527,7 +511,7 @@ void BuildFEMatrixQuadratic::add_lcl_gbl(Matrix& gbl_a, double lcl_a[10][10],
       }
     }
   }
-#endif
+
 }
 
 
