@@ -40,7 +40,7 @@ using std::cerr;
 
 namespace SCIRun {
 
-PBuffer::PBuffer( int doubleBuffer ):
+PBuffer::PBuffer( int doubleBuffer /* = GL_FALSE */ ):
   width_(0), height_(0), colorBits_(8),
   doubleBuffer_(doubleBuffer),
   depthBits_(8),
@@ -50,7 +50,7 @@ PBuffer::PBuffer( int doubleBuffer ):
   pbuffer_(0)
 {}
 
-void
+bool
 PBuffer::create(Display* dpy, int screen,
 		int width, int height, int colorBits, int depthBits)
 {
@@ -82,8 +82,8 @@ PBuffer::create(Display* dpy, int screen,
     fbc_ = glXChooseFBConfig( dpy, screen, attrib, &nelements );
 #endif
     if( fbc_ == 0 ){
-      //      cerr<<"Can not configure for Pbuffer\n";
-      return;
+      //cerr<<"Can not configure for Pbuffer\n";
+      return false;
     }
 
     int match = 0, a[8];
@@ -128,25 +128,26 @@ PBuffer::create(Display* dpy, int screen,
     pbuffer_ = glXCreatePbuffer( dpy, fbc_[match], attrib );
 #endif
     if( pbuffer_ == 0 ) {
-      //      cerr<<"Cannot create Pbuffer\n";
-      return;
+      //cerr<<"Cannot create Pbuffer\n";
+      return false;
     }
 
 #ifndef HAVE_CHROMIUM
     cx_ = glXCreateNewContext( dpy, *fbc_, GLX_RGBA_TYPE, NULL, True);
 #endif
     if( !cx_ ){
-//      cerr<<"Cannot create Pbuffer context\n";
-      return;
+      //cerr<<"Cannot create Pbuffer context\n";
+      return false;
     }
-//    else cerr<<"Pbuffer successfully created\n";
+// else cerr<<"Pbuffer successfully created\n";
     valid_ = true;
   } else {
-//    cerr<<"GLXVersion = "<<major<<"."<<minor<<"\n";
+    //cerr<<"GLXVersion = "<<major<<"."<<minor<<"\n";
     cx_ = 0;
+    return false;
   }
 
-}
+} // end create()
 
 void
 PBuffer::destroy()
