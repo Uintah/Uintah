@@ -257,7 +257,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
    /* Do 'save's in the DataArchiver section of the problem specification now
 
    new_dw->pleaseSave(lb->pXLabel, numMatls);
-//   new_dw->pleaseSave(lb->pVelocityLabel, numMatls);
+   new_dw->pleaseSave(lb->pVelocityLabel, numMatls);
    new_dw->pleaseSave(lb->pVolumeLabel, numMatls);
 //   new_dw->pleaseSave(lb->pMassLabel, numMatls);
    new_dw->pleaseSave(lb->pStressLabel, numMatls);
@@ -267,7 +267,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
    new_dw->pleaseSave(lb->gMassLabel, numMatls);
 //   new_dw->pleaseSave(lb->gVelocityLabel, numMatls);
 
-//   new_dw->pleaseSave(lb->pTemperatureLabel, numMatls);
+   new_dw->pleaseSave(lb->pTemperatureLabel, numMatls);
 //   new_dw->pleaseSave(lb->pTemperatureGradientLabel, numMatls);
 
 //   new_dw->pleaseSave(lb->gTemperatureLabel, numMatls);
@@ -1162,10 +1162,12 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	     gvelocity.fillFaceNormal(face);
 	  }
 	  if (bcs_type == "Temperature") {
-	    // TemperatureBoundCond* bc = 
-	    //  dynamic_cast<TemperatureBoundCond*>(bcs[i]);
-	    // if (bc->getKind() == "Dirichlet")
-	    //cout << "bc value = " << bc->getValue() << endl;
+	     TemperatureBoundCond* bc = 
+	      dynamic_cast<TemperatureBoundCond*>(bcs[i]);
+	     if (bc->getKind() == "Dirichlet"){
+	       gTemperature.fillFace(face,bc->getValue());
+	       //cout << "bc value = " << bc->getValue() << endl;
+             }
 	    // if (bc->getKind() == "Neumann")
 	  }
 	}
@@ -2074,6 +2076,9 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.173  2000/12/08 00:27:58  guilkey
+// Uncommented some BC stuff for the Temperature.
+//
 // Revision 1.172  2000/12/07 01:23:59  witzel
 // Commented out pleaseSave stuff (now done via the problem specification).
 //
