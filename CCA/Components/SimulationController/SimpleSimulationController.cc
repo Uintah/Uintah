@@ -373,7 +373,7 @@ SimpleSimulationController::run()
 	DumpAllocator(DefaultAllocator(), filename.c_str());
       }
 
-      if(sharedState->needAddMaterial()){
+      if(sharedState->needAddMaterial()!=0){
         sim->addMaterial(ups, grid, sharedState);
         sharedState->finalizeMaterials();
         scheduler->initialize();
@@ -411,7 +411,7 @@ SimpleSimulationController::run()
         if(d_myworld->myrank() == 0)
           cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
 
-        sharedState->setNeedAddMaterial(false);
+        sharedState->setNeedAddMaterial(0);
       }
       else {
         if (output)
