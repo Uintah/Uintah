@@ -47,7 +47,7 @@ color="maroon">
 </center>
 <div align="left">
 <p><b><H4><A href="#section-1">FieldReader user interface</H4></b></A>
-<p><b><H4><A href="#section-2">Overview of field types</H4></b></A>
+<p><b><H4><A href="#section-2">Overview of Field types</H4></b></A>
 <p><b><H4><A href="#section-4">Hooking modules together</H4></b></A>
 <p><b><H4><A href="#section-5">Viewer module</H4></b></A>
 <p><b><H4><A href="#section-6">Navigating the ViewWindow</H4></b></A>
@@ -89,7 +89,7 @@ color="maroon">
      before starting SCIRun. For more information about environment
      variables, you may consult the <a
      HREF="../Guide/usersguide/srug3.html#sec:scirundata">User's Guide 3.4,
-     SCIRun_DATA</a>.  This process assumes that you have downloaded the SCIRunData directory, a separate download from the SCIRun build.  
+     SCIRUN_DATA</a>.  This process assumes that you have downloaded the SCIRunData directory, a separate download from the SCIRun build.  
     <ol>
       <p><li value="1.">The SCIRUN_DATA variable points to the location 
       of the SCIRunData directory on your system.</p>  
@@ -100,7 +100,7 @@ color="maroon">
 <p>To begin, we will construct a network that loads a geometric mesh from disk and renders it to the screen.  In your Unix shell window:</p>
 <ol>
   <p><li value="1.">Set your SCIRUN_DATA variable, pointing to the
-  location of SCIRun Data.</p>  
+  location of SCIRunData.</p>  
   <p><li value="2.">Set your SCIRUN_DATASET variable to utahtorso-lowres
   (as shown in <b>Figure 1.2</b>).</p></ol>
   
@@ -124,13 +124,13 @@ color="maroon">
   <p>Having set these environment variables, you are now ready to
   start SCIRun.   
   <ol>
-    <p><li value="1.">Change into your SCIRun/src/ directory, and
+    <p><li value="1.">Change into your SCIRun/linux/ directory, and
     enter the command &quot;./scirun&quot;.  SCIRun cannot be run as a background application.  
     <p><li value="2.">The SCIRun NetworkEditor window appears on your
     screen, as shown in 
     <b>Figure 1.3</b>.</p></ol>
 	<p> The NetworkEditor screen consists of three frames: the GlobalView frame in the left uppermost corner; the Error frame in the right uppermost corner, and the NetEdit frame. The NetEdit frame is a large area in which you will construct your networks of modules.</p>
-<p> Since the NetEdit frame is so extensive, the Global View frame shows you which part of the NetEdit frame you are currently viewing. The Error frame will show errors that appear in red during startup, or during the execution of a net.  
+<p> Since the NetEdit frame is so extensive, the GlobalView frame shows you which part of the NetEdit frame you are currently viewing. The Error frame will show errors that appear in red during startup, or during the execution of a net.  
     
     </div>
     <center>
@@ -142,14 +142,13 @@ color="maroon">
    <p> A module is a single-purpose unit that functions within a dataflow environment. Modules will always have at least one input port for receiving data, located at the top of the module, or one output port for sending data, located at the bottom.</p> 
 <p>For a more complete description of modules, you may consult the <a
     HREF="../Guide/usersguide/srug2.html#sec:modulesandnetworks">User's Guide, Section 2.3 Modules and Networks</a>.</p>
-<p> Each datatype in SCIRun has a unique color such as yellow, purple, or pink.  You may connect ports of the same color. These colors are described in more detail in the <a
+<p> Each dataflow datatype in SCIRun has a unique color such as yellow, purple, or pink.  You may connect ports of the same color with a datatype. These colors are described in more detail in the <a
     HREF="../Guide/usersguide/srug4.html#sec:anatomyofamodule">User's Guide, Section 4.2, Anatomy of a Module</a>.</p> 
-<p>By joining the modules together, data passes from one module to another; two or more connected modules form a SCIRun network, or <i>net</i>.</p>
+<p>By joining the modules together, data passes through the pipe from one module to another; two or more connected modules form a SCIRun network, or <i>net</i>.</p>
 
-<p>The indicator tells the user wether any messages exist in a module's                  
-log.  The different colors represent different types of messages.  Blue represents            
-a Remark (as the SampleField module indicates the number of seed points), yellow for Warning, and red for Error, which causes the            
-indicator to blink.                                                              
+<p>All modules have an indicator tells the user wether any messages exist in a module's                  log.  The different colors represent different types of messages.  Blue represents            a Remark (as the SampleField module indicates the number of seed points), yellow for Warning, and red for Error, which causes the            
+indicator to blink.</p>
+                                                              
                                                                                       
     <p>We will first create a FieldReader module that loads a SCIRun Field.</p>
 	<p><ul><li>From the
@@ -212,7 +211,7 @@ indicator to blink.
     of geometric meshes, data values, and mappings that SCIRun
     supports.</p><br>
     
-    <p><A name="section-2"><b>Overview of field types</A></b><br>
+    <p><A name="section-2"><b>Overview of Field types</A></b><br>
     
     <p>SCIRun has eight different geometric meshes
     available for Fields:
@@ -283,7 +282,7 @@ indicator to blink.
     
     <p><b><A name="section-4">Hooking modules together</b><br></A>
     
-    <p>We will now add a second module to our network to visualize various field types.  You will connect the two modules in your canvas so that data can 
+    <p>We will now add a second module to our network to visualize various Field types.  You will connect the two modules in your canvas so that data can 
     flow between them.</p>  
    
        
@@ -292,7 +291,7 @@ indicator to blink.
       mouse pointer over the yellow output port on
       the FieldReader. Now press and hold
       the mouse middle button. You will see the name of
-      the port and a line that indicates a possible connection.
+      the port and a line that indicates a possible data pipe connection.
     </p>
     </div>
     <center>
@@ -324,7 +323,7 @@ indicator to blink.
     <p><b>Setting the ShowField User Interface</b></p>
 
     
-    <p>The ShowField module has options for changing the visual representations of a field's geometry.  For example, in the dataset we have just loaded (using the FieldReader module), you will change the color of the nodes to blue spheres.</p>
+    <p>The ShowField module has options for changing the visual representations of a Field's geometry.  For example, in the dataset we have just loaded (using the FieldReader module), you will change the color of the nodes to blue spheres.</p>
  
         
     <p><ol>
@@ -348,16 +347,18 @@ indicator to blink.
 <p><li>Set the Cylinder and Sphere Resolution
 	  to 5.</p> 
       <li><p>Go to the Edges tab and turn off the display of edges by deselecting the Show Edges check box.</p>  
-      <li><p>Go the the Faces tab and repeat the same action.</p>
+      <li><p>Go to the Faces tab and repeat the same action.</p>
       <li><p>Close the ShowField GUI by pressing the Dismiss button.</p></ol>
       <p>The ShowField module is now ready to render the nodes as blue
-	  spheres. The module will Interactively Update, by default, to execute after every change.  Or, you may select Execute Button Only that holds all changes until you press the Execute button. Consult the <a HREF="../Guide/usersguide/srug4.html#sec:executenet">
+	  spheres. The module will Interactively Update, by default, to execute after every change.  Or, you may select the Execute Button Only box to contain all changes until you press the Execute button. Consult the <a HREF="../Guide/usersguide/srug4.html#sec:executenet">
     User's Guide 4.5,
     Executing a Network</a>, for more details.</p> 
-    <p>ShowField works with any of the SCIRun Field data types. These data types must be first compiled into a shared library as needed where they are saved for future use.  This process is called &quot;Dynamic Compilation.&quot;</p>
+    <p>ShowField works with any of the SCIRun Field data types. These data types must be first compiled into a shared library, as needed, where they are saved for future use.  This process is called &quot;Dynamic Compilation.&quot;</p>
 <p>As a result, Dynamic Compilation causes a delay when the module executes for the first time. For more detail about this process, refer to the PDF document <a
     href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
     Compilation</a>.
+
+<p>In addition, the module will turn a color while it compiles and all output will go to the module's log as a remark.</p>
 
     <p><b><A name="section-5">Viewer module</b><br></A>
     
@@ -403,7 +404,7 @@ indicator to blink.
       <p><li> Click and hold the left mouse button.</p> 
       <p><li> Move the mouse in order to move the image.</p>  
       <p><li>Release the button and the image will stay where you have placed it within the ViewWindow.</p></ol><br>
-<p><b>Rotating the image</b>.</p>
+<p><b>Rotating the image</b></p>
       <ol><p><li> Click and hold the middle mouse button.</p> 
 	<p><li>Move the mouse in order to rotate the image.</p>
 <p><li>Release the mouse button.</p>
@@ -461,13 +462,13 @@ indicator to blink.
            
     <p>To access even more display options:
     <ul>
-      <p><li>Locate the + button in the lower right corner of the ViewerWindow in order to access the Extended Control Window which contains additional Viewer settings<b>(Figure 1.8.3)</b>, as described in the <a
+      <p><li>Locate the + button in the lower right corner of the ViewerWindow in order to access the Extended Control Window which contains additional Viewer settings <b>(Figure 1.8.3)</b>, as described in the <a
 	  HREF="../Guide/usersguide/srug5.html#sec:view-control">User's Guide
 	  5.3, Extended Control Window</a>.</p> 
     </ul> 
 <center>
     <p><img height="273" width="500" src="images/figures/1_10_3.gif"><br>
-    <b>Figure 1.8.3, Extended Control Window</b></p>
+    <b>Figure 1.8.3, extended control window</b></p>
     </center>
     <div align="left">
     <p><br>
@@ -476,7 +477,7 @@ indicator to blink.
      
     <p><b><A name="section-10">Saving and reloading networks</b><br></A> 
 
-    <p>Since you have created a three-module network, you
+    <p>Having created a three-module network, you
     can now save the net to disk. This net may be reloaded in a future SCIRun
     session. 
 
