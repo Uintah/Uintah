@@ -34,17 +34,8 @@
 using namespace SCIRun;   
 
 MxNScheduleEntry::MxNScheduleEntry(std::string n, sched_t st)
-  : name(n), scht(st), recv_sema("getCompleteArray Wait", 0), 
-    arr_wait_sema("getArrayWait Semaphore", 0), meta_sema("allMetadataReceived Wait", 0), 
-    arr_mutex("Distribution Array Pointer lock"), recv_mutex("Receieved Flag lock"),
-    allowArraySet(true), madeSched(false)
-
+  : name(n), scht(st), madeSched(false), meta_sema("allMetadataReceived Wait", 0)
 {
-#ifdef DEBUG_THE_SEMAS
-  recv_sema_count=0;
-  arr_wait_sema_count=0;
-  meta_sema_count=0;
-#endif
 }
 
 MxNScheduleEntry::~MxNScheduleEntry()
@@ -128,144 +119,8 @@ descriptorList MxNScheduleEntry::makeSchedule()
   return sched;
 }	
 
-void* MxNScheduleEntry::getArray()
-{
-  //If it is okay to set this array, we return NULL
-  //to indicate that we want the array to be set
-  if (allowArraySet) 
-    return NULL;
-  else
-    return arr_ptr;
-}
-
-void* MxNScheduleEntry::getArrayWait()
-{
-#ifdef DEBUG_THE_SEMAS
-  arr_wait_sema_count--;
-#endif
-  arr_wait_sema.down();
-  allowArraySet = true;
-  return arr_ptr;
-}
-
-void MxNScheduleEntry::setArray(void** a_ptr)
-{
-  assert(scht == callee);
-
-  //Make sure all the meta data arrived
-  meta_sema.down();
-  //set array
-  arr_mutex.lock();
-  if (allowArraySet) {
-    arr_ptr = (*a_ptr);
-    allowArraySet = false;
-    //Raise getArrayWait's semaphore 
-#ifdef DEBUG_THE_SEMAS
-    arr_wait_sema_count+= caller_rep.size();
-#endif
-    arr_wait_sema.up((int) caller_rep.size());
-#ifdef DEBUG_THE_SEMAS
-    printSemaCounts();
-    assert(arr_wait_sema_count >= 0);
-#endif
-  }
-  else { 
-    (*a_ptr) = arr_ptr;
-  }
-  arr_mutex.unlock();
-}
-
-void MxNScheduleEntry::setNewArray(void** a_ptr)
-{
-  assert(scht == callee);
-
-  //Make sure all the meta data arrived
-  meta_sema.down();
-  //set array
-  arr_mutex.lock();
-  if (allowArraySet) {
-    arr_ptr = (*a_ptr);
-    allowArraySet = false;
-  }
-  else { 
-    (*a_ptr) = arr_ptr;
-  }
-  arr_mutex.unlock();
-}
-
-void* MxNScheduleEntry::waitCompleteArray()
-{
-  descriptorList rl;
- 
-  assert(scht == callee); 
-
-  //Wait for all meta data communications to finish
-  meta_sema.down();
-  
-  //Determine which redistribution requests we are waiting for
-  for(unsigned int i=0; i < caller_rep.size(); i++) {
-    if (callee_rep[0]->isIntersect(caller_rep[i]))
-      rl.push_back(caller_rep[i]);
-  }
-  //Return NULL if there is no redistribution
-  if (rl.size() == 0) {
-    int** temp_ptr = new int*;
-    (*temp_ptr) = NULL;
-    arr_ptr = (void*) temp_ptr; 
-    //Reset variables  
-#ifdef DEBUG_THE_SEMAS
-    arr_wait_sema_count=0;
-#endif
-    while (arr_wait_sema.tryDown());
-    allowArraySet = true;
-    meta_sema.up((int) (2*caller_rep.size()));
-    //**************
-    return arr_ptr;
-  }
-  
-  //Wait until all of those requests are received
-  descriptorList::iterator iter;
-  for(int i=0; i < (int)rl.size(); iter++, i++) {
-    if(i == 0) iter = rl.begin();
-    recv_mutex.lock();
-    bool recv_flag = (*iter)->received;
-    recv_mutex.unlock();
-    if (recv_flag == false) {
-      //::std::cout << "rank=" << i << " of " << rl.size() << " is not here yet\n";
-#ifdef DEBUG_THE_SEMAS
-      recv_sema_count--;
-#endif
-      recv_sema.down();
-      i=-1; //Next loop iteration will increment it to 0
-    }
-    else {
-	//::std::cout <<  "rank=" << i << " of " << rl.size() << " is here\n";
-    }
-  } 
-  //::std::cout << "All redistribution have arrived...\n";
-  //Mark all of them as not received to get ready for next time
-  iter = rl.begin();
-  for(unsigned int i=0; i < rl.size(); iter++, i++) {
-    recv_mutex.lock();
-    (*iter)->received = false;
-    recv_mutex.unlock();
-  }
- 
-  //Reset variables  
-#ifdef DEBUG_THE_SEMAS
-  arr_wait_sema_count=0;
-#endif
-  while (arr_wait_sema.tryDown());
-  allowArraySet = true;
-  meta_sema.up((int) (2*caller_rep.size()));
-
-  return arr_ptr;
-}
-
 void MxNScheduleEntry::reportMetaRecvDone(int size)
 {
-  assert(scht == callee);
-
   //::std::cout << "Meta " << caller_rep.size() << " of " << size << "\n"; 
   if (size == static_cast<int>(caller_rep.size())) { 
     //One the metadata is here, we don't want anyone
@@ -275,45 +130,6 @@ void MxNScheduleEntry::reportMetaRecvDone(int size)
     //::std::cout << "UP Meta semaphore\n";
   }
 }
-
-void MxNScheduleEntry::doReceive(int rank)
-{
-  assert(scht == callee); 
-
-  //Find the proper arr. representation and mark it is received
-  for(unsigned int i=0; i < caller_rep.size(); i++) {
-    if (caller_rep[i]->getRank() == rank) {
-      //::std::cout << "received dist rank=" << i << "\n";
-      //If we have already received this, something is happening
-      //out of order, so we yield until things sort out.
-      while(caller_rep[i]->received) {
-#ifdef DEBUG_THE_SEMA
-	recv_sema_count++; 
-#endif
-	recv_sema.up();
-	//Thread::yield();
-      }
-      recv_mutex.lock();
-      caller_rep[i]->received = true;
-      recv_mutex.unlock();
-#ifdef DEBUG_THE_SEMA
-      recv_sema_count++;
-#endif
-      recv_sema.up();
-    }
-  }    
-}
-
-#ifdef DEBUG_THE_SEMAS
-void MxNScheduleEntry::printSemaCounts()
-{
-  ::std::cout << "__________________________________________________\n";
-  ::std::cout << "recv_sema_count = " << recv_sema_count << "\n";
-  ::std::cout << "arr_wait_sema_count = " << arr_wait_sema_count << "\n";
-  ::std::cout << "meta_sema_count = " << meta_sema_count << "\n";
-  ::std::cout << "__________________________________________________\n";
-}
-#endif
 
 void MxNScheduleEntry::print(std::ostream& dbg)
 {

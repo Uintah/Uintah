@@ -41,7 +41,7 @@ namespace SCIRun {
   class IntraCommMPI : public IntraComm {
   public:
     IntraCommMPI();
-    ~IntraCommMPI();
+    virtual ~IntraCommMPI();
     int send(int rank, char* bytestream, int length);
     int receive(int rank, char* bytestream, int length);
     int broadcast(int root, char* bytestream, int length);

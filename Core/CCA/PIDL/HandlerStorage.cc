@@ -31,6 +31,7 @@
 
 #include "HandlerStorage.h"
 #include <iostream>
+#include <sstream>
 using namespace SCIRun;
 
 HandlerStorage::HandlerStorage()
@@ -43,39 +44,31 @@ HandlerStorage::~HandlerStorage()
   this->clear();
 }
 
-void HandlerStorage::clear(int handler_num)
+void HandlerStorage::clear()
 {
-  if (handler_num == 0) {
-    /*CLEAR ALL*/
-    d_data_mutex.lock();
-    d_data.clear();
-    d_data_mutex.unlock(); 
-  }
-  else {
-    dataList::iterator diter;
-
-    d_data_mutex.lock();
-    diter = d_data.find(handler_num);
-    if (diter == d_data.end()) {
-      d_data_mutex.unlock(); 
-      return;
-    }
-    else {
-      d_data.erase(diter);
-
-    }
-    d_data_mutex.unlock();    
-  }
+  /*CLEAR ALL*/
+  d_data_mutex.lock();
+  d_data.clear();
+  d_data_mutex.unlock(); 
 }
 
-void HandlerStorage::add(int handler_num, int queue_num, void* data)
+void HandlerStorage::add(int handler_num, int queue_num, void* data, std::string uuid, int callID, int numCalls)
 {
+  ::std::ostringstream index;
+  index << uuid << callID << handler_num;
+  /*Move everyone one space forward, to leave spc#0 for numCalls*/
+  int qnum = queue_num + 1;
+  
   /*Insert data into queue:*/
   d_data_mutex.lock();
-  if ((unsigned int)queue_num > d_data[handler_num].size())
-    d_data[handler_num].resize(queue_num);
-  voidvec::iterator viter = (d_data[handler_num]).begin() + queue_num;
-  (*(d_data.find(handler_num))).second.insert(viter,data);
+  if ((unsigned int)qnum > d_data[index.str()].size())
+    d_data[index.str()].resize(qnum);
+  dataList::iterator diter = d_data.find(index.str());
+  (*diter).second[qnum] = data;
+  /*Insert numcalls in space zero:*/
+  int* ncalls = (int *) malloc(sizeof(int));
+  (*ncalls) = numCalls; 
+  (*diter).second[0] = ncalls;
   d_data_mutex.unlock();
  
   /*Release all (up to M-1) threads that could be stuck:*/ 
@@ -86,17 +79,21 @@ void HandlerStorage::add(int handler_num, int queue_num, void* data)
   threadcount=0;
 }
 
-void* HandlerStorage::get(int handler_num, int queue_num)
+void* HandlerStorage::get(int handler_num, int queue_num, std::string uuid, int callID)
 {
   void* getData;
+  ::std::ostringstream index;
+  index << uuid << callID << handler_num;
+  /*Queue is misaligned by 1, see add()*/
+  int qnum = queue_num + 1;
 
   /*Retreive data*/
   threadcount++;
   d_data_mutex.lock();
-  if (d_data.find(handler_num) == d_data.end())
+  if(d_data.find(index.str()) == d_data.end())
     getData = NULL;
   else
-    getData = (d_data[handler_num])[queue_num];
+    getData = (d_data[index.str()])[qnum];
   d_data_mutex.unlock();
   
   while (getData == NULL) {
@@ -106,14 +103,26 @@ void* HandlerStorage::get(int handler_num, int queue_num)
 
     /*Check if the package we were waiting on arrived:*/ 
     d_data_mutex.lock();
-    if (d_data.find(handler_num) == d_data.end()) {
+    if(d_data.find(index.str()) == d_data.end()) {
       getData = NULL;
     }
     else {
-      getData = (d_data[handler_num])[queue_num];
+      getData = (d_data[index.str()])[qnum];
     }
     d_data_mutex.unlock();
   }
+
+  /*see if needs deallocation*/ 
+  d_data_mutex.lock();
+  dataList::iterator diter;
+  int* ncalls;
+  diter = d_data.find(index.str());
+  ncalls = (int*) *((*diter).second.begin());
+  (*ncalls)--;
+  if((*ncalls)==0) d_data.erase(diter);   
+  d_data_mutex.unlock();
+
+
   return getData;
 }
 

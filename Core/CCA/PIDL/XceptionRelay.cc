@@ -21,7 +21,6 @@ XceptionRelay::~XceptionRelay()
 
 void XceptionRelay::relayException(int* x_id, Message** message) 
 { 
-::std::cerr << "relayException START\n";
   IntraComm* icomm = mypb->rm.intracomm; 
   int xlineID;
 
@@ -58,7 +57,6 @@ void XceptionRelay::relayException(int* x_id, Message** message)
 
   //Throw
   if(*x_id == realxID) {
-::std::cerr << "0relayException THROW " << *x_id << "\n";
     xdb.clear();
     return;
   }
@@ -70,7 +68,6 @@ void XceptionRelay::relayException(int* x_id, Message** message)
       if(((*xiter).second.xID) == realxID) {
 	(*message) = (*xiter).second.xMsg;
 	(*x_id) = realxID;
-::std::cerr << "1relayException THROW " << *x_id << "\n";
         xdb.clear();
 	return;
       }
@@ -80,7 +77,6 @@ void XceptionRelay::relayException(int* x_id, Message** message)
     //Now read for the real exception
     while(realxID != readException(message,&xlineID)) sleep(1);
     (*x_id) = realxID;   
-::std::cerr << "2relayException THROW " << *x_id << "\n";
     xdb.clear();
     return;
   }
@@ -90,12 +86,14 @@ void XceptionRelay::relayException(int* x_id, Message** message)
 
 int XceptionRelay::checkException(Message** _xMsg) 
 { 
-::std::cerr << "checkException START\n";
   int xlineID=1;
   int xID;
 
   //Increment lineID
   lineID++;
+
+  //Exit if proxy not parallel
+  if(mypb->rm.getSize() == 1) return 0;
 
   //Check XDB for exceptions'need throwin'
   XDB::iterator xiter;
@@ -120,7 +118,6 @@ int XceptionRelay::checkException(Message** _xMsg)
 
       //Throw
       if(xID == realxID) {
-::std::cerr << "0checkException THROW " << xID << "\n";
         return (xID);
       }
       else {
@@ -130,7 +127,6 @@ int XceptionRelay::checkException(Message** _xMsg)
 	while(xiter != xdb.end()) {
 	  if(((*xiter).second.xID) == realxID) {
 	    (*_xMsg) = (*xiter).second.xMsg;
-::std::cerr << "1checkException THROW " << realxID << "\n";
 	    return realxID;
 	  }
 	  xiter++;
@@ -138,7 +134,6 @@ int XceptionRelay::checkException(Message** _xMsg)
 	
 	//Now read for the real exception
 	while(realxID != readException(_xMsg,&xlineID)) sleep(1);
-::std::cerr << "2checkException THROW " << realxID << "\n";
 	return (realxID);
       }
     } else {
