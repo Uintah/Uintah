@@ -45,7 +45,6 @@ SRCS     += $(SRCDIR)/AnisoSphereModel.cc\
 	    $(SRCDIR)/IntegrateCurrent.cc\
 	    $(SRCDIR)/SetupBEMatrix.cc\
 	    $(SRCDIR)/SetupFEMatrix.cc\
-	    $(SRCDIR)/SphereModel.cc\
 	    $(SRCDIR)/TensorsToIndices.cc\
             $(SRCDIR)/ElectrodeManager.cc\
             $(SRCDIR)/EITAnalyticSolution.cc\
