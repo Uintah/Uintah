@@ -23,6 +23,13 @@ LevelMesh:: LevelMesh( LevelMesh* mh, int mx, int my, int mz,
   max_(mh->grid_->getLevel( mh->level_ )->
        getNodePosition( idxLow_ + IntVector(x,y,z)))
 {
+  transform_.pre_scale(Vector( 1.0 / (nx_-1.0),
+			       1.0 / (ny_-1.0),
+			       1.0 / (nz_-1.0)));
+  transform_.pre_scale(max_ - min_);
+  transform_.pre_translate(Vector(min_));
+  transform_.compute_imat();
+
   cerr<<"in LevelMesh constructor \n";
   cerr<<"level = "<<level_<<",\nidxLow = "<<idxLow_<<","
       <<"nx,ny,nz = "<<nx_<<","<<ny_<<","<<nz_<<endl;
@@ -46,6 +53,14 @@ LevelMesh::init()
 
   min_ = bb.min();
   max_ = bb.max();
+  
+  transform_.pre_scale(Vector(1.0 / (nx_-1.0),
+			      1.0 / (ny_-1.0),
+			      1.0 / (nz_-1.0)));
+  transform_.pre_scale(max_ - min_);
+  transform_.pre_translate(Vector(min_));
+  transform_.compute_imat();
+
 
   cerr<<"in LevelMesh constructor \n";
   cerr<<"level = "<<level_<<",\nidxLow = "<<idxLow_<<","
@@ -74,19 +89,32 @@ LevelMesh::CellIndex::CellIndex(const LevelMesh *m, int i,
 
 BBox LevelMesh::get_bounding_box() const
 {
-  BBox b;
-  b.extend( min_);
-  b.extend( max_);
-  return b;
+  Point p0(0.0,   0.0,   0.0);
+  Point p1(nx_-1, 0.0,   0.0);
+  Point p2(nx_-1, ny_-1, 0.0);
+  Point p3(0.0,   ny_-1, 0.0);
+  Point p4(0.0,   0.0,   nz_-1);
+  Point p5(nx_-1, 0.0,   nz_-1);
+  Point p6(nx_-1, ny_-1, nz_-1);
+  Point p7(0.0,   ny_-1, nz_-1);
+  
+  BBox result;
+  result.extend(transform_.project(p0));
+  result.extend(transform_.project(p1));
+  result.extend(transform_.project(p2));
+  result.extend(transform_.project(p3));
+  result.extend(transform_.project(p4));
+  result.extend(transform_.project(p5));
+  result.extend(transform_.project(p6));
+  result.extend(transform_.project(p7));
+  return result;
 }
-
 
 void
-LevelMesh::transform(Transform &)
+LevelMesh::transform(Transform &t)
 {
-  ASSERTFAIL("Not Transformable mesh");
+  transform_.pre_trans(t);
 }
-
 
 void 
 LevelMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
