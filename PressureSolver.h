@@ -107,7 +107,8 @@ public:
 
       void sched_addHydrostaticTermtoPressure(SchedulerP& sched,
 					      const PatchSet* patches,
-					      const MaterialSet* matls);
+					      const MaterialSet* matls,
+					      const TimeIntegratorLabel* timelabels);
 
       inline void setPressureCorrectionFlag(bool pressure_correction) {
 	d_pressure_correction = pressure_correction;
@@ -155,7 +156,8 @@ private:
 					const PatchSubset* patches,
 					const MaterialSubset* matls,
 					DataWarehouse* old_dw,
-					DataWarehouse* new_dw);
+					DataWarehouse* new_dw,
+					const TimeIntegratorLabel* timelabels);
       
       ///////////////////////////////////////////////////////////////////////
       // Actually do normPressure

@@ -294,7 +294,8 @@ public:
 			       const Patch* patch,
 			       constCCVariable<int>& cellType,
 			       constCCVariable<double> solidTemp,
-			       CCVariable<double>& temperature);
+			       CCVariable<double>& temperature,
+			       bool d_energyEx);
 
       void calculateIntrusionVel(const ProcessorGroup*,
 				 const Patch* patch,
