@@ -224,8 +224,8 @@ PrismVolMesh::compute_faces()
   face_lock_.lock();
   faces_.clear();
   all_faces_.clear();
-  unsigned int num_cells = (cells_.size()) /  PRISM_NNODES *  PRISM_NFACES;
-  for (unsigned int i = 0; i < num_cells; i++) {
+  unsigned int num_faces = (cells_.size()) /  PRISM_NNODES * PRISM_NFACES;
+  for (unsigned int i = 0; i < num_faces; i++) {
     faces_.insert(i);
     all_faces_.insert(i);
   }
@@ -242,8 +242,8 @@ PrismVolMesh::compute_edges()
   edge_lock_.lock();
   edges_.clear();
   all_edges_.clear();
-  unsigned int num_cells = (cells_.size()) /  PRISM_NNODES *  PRISM_NEDGES;
-  for (unsigned int i = 0; i < num_cells; i++) {
+  unsigned int num_edges = (cells_.size()) /  PRISM_NNODES *  PRISM_NEDGES;
+  for (unsigned int i = 0; i < num_edges; i++) {
     edges_.insert(i);
     all_edges_.insert(i);
   }
@@ -1140,7 +1140,6 @@ void
 PrismVolMesh::get_weights(const Point &pt,
 			  Node::array_type &nodes, vector<double> &w)
 {
-  synchronize (Mesh::FACES_E);
   Cell::index_type cell;
 
   if (locate(cell, pt))
@@ -1176,6 +1175,7 @@ PrismVolMesh::get_weights(const Point &pt,
 
     // Determine volume of the tets.
     if( f == PRISM_NFACES ) {
+
       for( i=0; i<PRISM_NNODES; i++ ) {
 	const unsigned int *nTable = PrismNodeNeighborTable[i];
 
@@ -1202,6 +1202,7 @@ PrismVolMesh::get_weights(const Point &pt,
 
       // Special case point is on a face.
       if( isTRI( f ) ) {
+
 	// On a triangular face.
 
 	// Fast calculation of barycentric coordinates which does not
@@ -1260,7 +1261,7 @@ PrismVolMesh::get_weights(const Point &pt,
     total = 1.0 / total;
 
     for( i=0; i<PRISM_NNODES; i++ )
-      w[i] *= total; 
+      w[i] *= total;
   }
 }
 
@@ -1298,6 +1299,8 @@ PrismVolMesh::compute_grid()
     box.extend(points_[nodes[1]]);
     box.extend(points_[nodes[2]]);
     box.extend(points_[nodes[3]]);
+    box.extend(points_[nodes[4]]);
+    box.extend(points_[nodes[5]]);
     const Point padmin(box.min() - cell_epsilon);
     const Point padmax(box.max() + cell_epsilon);
     box.extend(padmin);
@@ -1376,8 +1379,10 @@ PrismVolMesh::inside(Cell::index_type idx, const Point &p)
     // Account for round off - the point may be on the plane!!
     if( fabs( dotprod ) < 1.0e-8 )
       continue;
-
+    /*
     if( Dot(off1, normal) < 0.0) {
+      cerr << "Warning cell " << idx << " face " << i;
+      cerr << " is malformed " << endl;
       cerr << "Negative Face Normal " << i << endl;
       cerr << center << endl;
       cerr << p  << endl;
@@ -1386,7 +1391,7 @@ PrismVolMesh::inside(Cell::index_type idx, const Point &p)
       cerr << p2 << endl;
       cerr << normal << endl;
     }
-
+    */
     // If orientated correctly the second dot product is not needed.
     // Only need to check to see if the sign is negitive.
     if (dotprod * Dot(off1, normal) < 0.0)
