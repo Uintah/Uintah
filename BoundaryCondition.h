@@ -159,6 +159,9 @@ public:
       void sched_recomputePressureBC(SchedulerP&, const PatchSet* patches,
 				     const MaterialSet* matls);
 
+      void sched_lastcomputePressureBC(SchedulerP&, const PatchSet* patches,
+				     const MaterialSet* matls);
+
       ////////////////////////////////////////////////////////////////////////
       // Schedule Set Profile BCS
       // initializes velocities, scalars and properties at the bndry
@@ -367,6 +370,13 @@ private:
       ////////////////////////////////////////////////////////////////////////
       // Actually calculate pressure bcs
       void recomputePressureBC(const ProcessorGroup* pc,
+			       const PatchSubset* patches,
+			       const MaterialSubset* matls,
+			       DataWarehouse* old_dw,
+			       DataWarehouse* new_dw);
+
+
+      void lastcomputePressureBC(const ProcessorGroup* pc,
 			       const PatchSubset* patches,
 			       const MaterialSubset* matls,
 			       DataWarehouse* old_dw,

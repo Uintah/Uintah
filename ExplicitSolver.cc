@@ -199,8 +199,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   #ifdef correctorstep
     d_props->sched_computePropsPred(sched, patches, matls);
+    d_props->sched_computeDenRefArray(sched, patches, matls);
   #else
     d_props->sched_reComputeProps(sched, patches, matls);
+    d_props->sched_computeDenRefArray(sched, patches, matls);
   #endif
 
   // linearizes and solves pressure eqn
@@ -212,7 +214,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
   //           pressurePS (new_dw)
   // first computes, hatted velocities and then computes the pressure poisson equation
-  d_props->sched_computeDenRefArray(sched, patches, matls);
   d_pressSolver->solvePred(level, sched);
   // Momentum solver
   // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
@@ -232,6 +233,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   #ifdef correctorstep
     d_turbModel->sched_computeTurbSubmodelPred(sched, patches, matls);
   #else
+    d_boundaryCondition->sched_lastcomputePressureBC(sched, patches, matls);
     d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls);
   #endif
 
@@ -302,6 +304,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // Underrelaxation for density is done with initial density, not with
     // density from the previous substep
     d_props->sched_reComputeProps(sched, patches, matls);
+    //    d_props->sched_computeDenRefArray(sched, patches, matls);
     // linearizes and solves pressure eqn
     // require : pressureIN, densityIN, viscosityIN,
     //           [u,v,w]VelocitySIVBC (new_dw)

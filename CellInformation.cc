@@ -42,7 +42,7 @@ CellInformation::CellInformation(const Patch* patch)
     yy[ii] = level->getCellPosition(IntVector(domLo.x(), ii, domLo.z())).y();
   for (int ii = domLo.z(); ii < domHi.z(); ii++)
     zz[ii] = level->getCellPosition(IntVector(domLo.x(), domLo.y(), ii)).z();
-//   #define ARCHES_GEOM_DEBUG 1 
+  // #define ARCHES_GEOM_DEBUG
 #ifdef ARCHES_GEOM_DEBUG
 /*  cerr << "Lower x = " << patch->getBox().lower().x() << endl;
   cerr << "xx = [" ;
@@ -163,6 +163,24 @@ CellInformation::CellInformation(const Patch* patch)
 
 #ifdef ARCHES_GEOM_DEBUG
   cerr << " After CELLG : " << endl;
+  cerr << " xx = " ;
+  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    cerr.width(10);
+    cerr << xx[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " yy = " ;
+  for (int ii = domLo.y(); ii <= domHi.y(); ii++) {
+    cerr.width(10);
+    cerr << yy[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " zz = " ;
+  for (int ii = domLo.z(); ii <= domHi.z(); ii++) {
+    cerr.width(10);
+    cerr << zz[ii] << " " ; 
+  }
+  cerr << endl;
   cerr << " dxep = " ;
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr.width(10);
