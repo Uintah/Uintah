@@ -35,11 +35,17 @@ itcl_class PSECommon_Fields_GenField {
 	global $this-fval
 
 	toplevel $w
-	wm minsize $w 200 150
+	wm minsize $w 300 250
 	frame $w.f -width 400 -height 500
 	pack $w.f -padx 2 -pady 2 -side top -fill x -expand yes
 	set n "$this-c needexecute "
 	frame $w.f.r
+	frame $w.f.r.buttons
+	radiobutton $w.f.r.buttons.structured -text Structured -variable $this-geomtype -value 1
+	radiobutton $w.f.r.buttons.unstructured -text Unstructured -variable $this-geomtype -value 2
+	pack $w.f.r.buttons.structured -side left
+	pack $w.f.r.buttons.unstructured -side right
+	pack $w.f.r.buttons -side top -fill x
 	make_entry $w.f.r.nx "x:" $this-nx "$this-c needexecute"
 	make_entry $w.f.r.ny "y:" $this-ny "$this-c needexecute "
 	make_entry $w.f.r.nz "z:" $this-nz "$this-c needexecute "
