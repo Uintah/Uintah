@@ -44,8 +44,8 @@
         <p>&nbsp; </p>
         </center>
         <div align="left">  
-	<p><b><H4><A href="#section-1">Putting the nets together</H4></b></A>
-	<p><b><H4><A href="#section-2">Isosurface</p></b></H4></A>
+	<p><b><H4><A href="#section-1">Isosurface</H4></b></A>
+	<p><b><H4><A href="#section-2">Putting the nets together</p></b></H4></A>
 	<p><b>Chapter Overview</b><br>
         <p>In the previous chapter, we constructed three networks to
 	    visualize the utahtorso-lowres-voltage  
@@ -54,48 +54,65 @@
 	that performs all visualizations concurrently. For details, see the
 	    <a HREF="../Guide/usersguide/srug4.html#sec:navnetwork">User's
 	    Guide 4.15, 
-	    Navigating a Network</a>.   
-	We will also add a fourth visualization
-	    tool--isosurface extraction. 
-	
-        <p><b><A name="section-1">Putting the nets together</b></A>
+	    Navigating a Network</a>.  We will also add a fourth visualization
+	    tool--isosurface extraction.</p>
+ 
+	<p> First, add the following to your canvas:</p>
 
-        <p>Now we will perform all of the 3A, 3B, and 3C work in a single
-        network. This procedure involves sharing the FieldReader and
-        Viewer modules across the A, B, and C networks that we created in the
-        last chapter. 
+	<p><ul><li>A FieldReader module loading the utahtorso-lowres-voltage.tvd.fld file.</p>
+<p><li>Add an Isosurface module from the SCIRun/Visualization menu and connect with the FieldReader.</p>
+<p><li>Add a Viewer module and connect to the Isosurface.</p></ul>
+<p><b><a name="section-1">Isosurface</b></A>
+
+	<p>The Isosurface takes a volume field as input and outputs a surface field or scene graph data (visualized with or without a color map).
+
+        <p><b>Figure 4.1</b> also shows the Isosurface module UI.  The
+	Iso Value slider widget determines the surface value in the
+	  incoming volume field. Upon releasing the slider, the module executes.
+
+
+	</div>
+	<center>
+	<p><img height="496" width="332" src="images/figures/4_3.gif"><br>
+	<b>Figure 4.1</b></p>
+	</center>
+	<div align="left">
+	<p><br>
+	
+      
+	<p>If a color map is not connected to the Isosurface input port, the module uses the Default Color. By default, the module extracts a surface using the Marching Cubes
+	algorithm, and choose the number of threads (processors) 
+	the algorithm will use. Or, you may use the NOISE algorithm.</p>
+
+        <p><b><A name="section-2">Putting the nets together</b></A>
+
+        <p>Now we will add the visualization techniques from Chapter 3, a procedure that involves sharing the FieldReader and Viewer modules across the 3A, 3B, and 3C networks.  You may choose from the following two options for rebuilding the nets you saved in Chapter 3.
 	<ul>
-	<li>Repeat all of the steps for creating <b><A href="chapter_3.html#section-1">3A</b></A> in Chapter 3 .
-	<li>Do the same for <b><A href="chapter_3.html#section-2">3B</b></A> and <b><A href="chapter_3.html#section-3">3C</b></A>, but use the FieldReader and
+	<p><li>First, repeat all of the steps for creating <b><A href="chapter_3.html#section-1">3A</b></A> in Chapter 3.</p>
+	<p><li>Do the same for <b><A href="chapter_3.html#section-2">3B</b></A> and <b><A href="chapter_3.html#section-3">3C</b></A>, but use the FieldReader and
 	  Viewer from 
-       3A.</ul>
+       3A.</ul></p>
                   
-        <p>You can use the complete, color-coded network in <b>Figure 4.1</b> that shows the  
+        <p>You can use the complete, color-coded network in <b>Figure 4.2</b> that shows the  
 	previous chapter's networks. Yellow corresponds to 3A, green to 3B,
 	and red to 3C. As soon as the 
-	Isosurface module executes, you will see this surface appear in the ViewWindow.</p>
+	Isosurface module executes, this surface will appear in the ViewWindow.</p>
 
-<p>Or, you may use the File/Insert command to insert all of the nets you saved in Chapter 3, along with their settings.  You will need to destroy all but one Viewer module by right-clicking on the module and selecting the Destroy option.  To destroy a connection between two modules, right-click on the pipe connecting those modules. In addition to the Viewer, these nets will also share the FieldReader module (in the left uppermost corner of <b>Figure 4.1</b>), which loads the utahtorso-lowres-electrodes.pcd.fld file.
+<p>Or, as the second option, you may use the File/Insert command to insert all of the nets you saved in Chapter 3, along with their settings.  You will need to destroy all but one Viewer module by right-clicking on the module and selecting the Destroy option.  To destroy a connection between two modules, right-click on the pipe connecting those modules. In addition to the Viewer, these nets will also share the FieldReader module (in the left uppermost corner of <b>Figure 4.2</b>), which loads the utahtorso-lowres-voltage.tvd.fld file.</p>
 
+<p>You can move module groupings by holding the middle-mouse button and drawing a box that contains the modules you wish to relocate. The selected modules will turn a darker gray.  You can then left-click the mouse in order to move the entire group to a new location in the ViewWindow.</p>
 
-	<ol><li value="1.">Create an Isosurface module---select
-	  Visualization/Isosurface from the SCIRun menu. 
-	<li value="2.">Connect the FieldReader module's output port to the
-	Isosurface module's (yellow) input port.
-	<li value="3.">Connect the Isosurface module's (pink) output port
-	  to the 
-	  Viewer's input port.</ol>
-
+	
 	<p>The complete network appears in
-	  <b>Figure 4.1</b>. The network is color coded to show the 
+	  <b>Figure 4.2</b>. The network is color coded to show the 
 	networks from previous chapters, 3A, 3B, and 3C. Yellow corresponds
 	to 3A, green to 3B, and red to 3C. After Isosurface executes, the
-	  surface shown in <b>Figure 4.2</b>. <A NAME=figure-4.1>
+	  surface shown in <b>Figure 4.3</b>. <A NAME=figure-4.1>
 
       </div>
 	<center>
 	<p><img height="461" width="500" src="images/figures/4_1.gif"><br>
-	<b>Figure 4.1</b></p>
+	<b>Figure 4.2 showing merged, color-coded net</b></p>
 	</center>
 	<div align="left">
 	<p><br>
@@ -103,50 +120,16 @@
       </div>
 	<center>
 	<p><img height="451" width="450" src="images/figures/4_2.gif"><br>
-	<b>Figure 4.2</b></p>
+	<b>Figure 4.3 ViewWindow for completed net</b></p>
 	</center>
 	<div align="left">
 	<p><br>
 	
-        <p><b><a name="section-2">Isosurface</b></A>
-
-	<p>The Isosurface module's input is a volume field and its
-	output is a surface field or scene graph data (visualized
-        with or without a color map).
-
-        <p>The Isosurface's UI is shown in Figure <b>Figure 4.3</b>.  The
-	"iso-value" "slider" determines the location of the surface in the
-	  volume. 
-
-	<p>The
-	  module will render the surface when you:
-	
-	<ol><li value="1.">Release the mouse button after dragging the
-	  slider or; 
-	<li value="2.">Press the extract button.</ol>
-
-	</div>
-	<center>
-	<p><img height="496" width="332" src="images/figures/4_3.gif"><br>
-	<b>Figure 4.3</b></p>
-	</center>
-	<div align="left">
-	<p><br>
-	
-      
-	<p>If you input a color map then it will be used to visualize the
-	surface, otherwise the 
-	"Default Color" will appear.<br>
-
-	<p>By default the surface is extracted using the the Marching Cubes
-	algorithm 
-	but you may instead use the NOISE algorithm.  You may also choose
-	the number of threads (processors) 
-	the algorithm will use.<br>
+        
 	
 	<p><b>Summary</b><br>
 	<p>Now that you can perform concurrent visualizations, in Chapter 5 we
-	will begin  
+	begin  
 	to use modules from the bioelectric problem solving environment
 	(BioPSE) package.  
 
