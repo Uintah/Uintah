@@ -2528,7 +2528,7 @@ void ICE::massExchange(const ProcessorGroup*,
       burnedMass[m].initialize(0.0);
       int_eng_comb[m].initialize(0.0); 
       created_vol[m].initialize(0.0);
-      mom_comb[m].initialize(0.0);
+      mom_comb[m].initialize(Vector(0.0));
       cv[m] = ice_matl->getSpecificHeat();
     }
     //__________________________________
