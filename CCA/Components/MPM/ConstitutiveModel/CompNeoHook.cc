@@ -430,7 +430,8 @@ double CompNeoHook::computeRhoMicroCM(double pressure,
     double n = p_ref/bulk;
     rho_cur = rho_orig*pow(pressure/A,n);
   } else {                      // STANDARD EOS
-    rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
+    double p_g_over_bulk = p_gauge/bulk;
+    rho_cur=rho_orig*(p_g_over_bulk + sqrt(p_g_over_bulk*p_g_over_bulk +1.));
   }
   return rho_cur;
 }
@@ -446,8 +447,9 @@ void CompNeoHook::computePressEOSCM(const double rho_cur,double& pressure,
   if(d_useModifiedEOS && rho_cur < rho_orig){
     double A = p_ref;           // MODIFIED EOS
     double n = bulk/p_ref;
-    pressure = A*pow(rho_cur/rho_orig,n);
-    dp_drho  = (bulk/rho_orig)*pow(rho_cur/rho_orig,n-1);
+    double rho_rat_to_the_n = pow(rho_cur/rho_orig,n);
+    pressure = A*rho_rat_to_the_n;
+    dp_drho  = (bulk/rho_cur)*rho_rat_to_the_n;
     tmp      = dp_drho;         // speed of sound squared
   } else {                      // STANDARD EOS            
     double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
