@@ -845,7 +845,7 @@ proc createConnection { conn { undo 0 } { tell_SCIRun 1 } } {
 	puts "Not creating connection $conn: Subnet levels dont match"
 	return
     }
-    
+
     # Trying to create subnet connections on the main network editor window
     # most likely the user is loading a subnet into the main window
     if {($Subnet([oMod conn]) == 0 && [isaSubnetEditor [oMod conn]]) || \
@@ -1029,6 +1029,15 @@ proc startPortConnection { port } {
     # if the subnet is not level 0 (meaning the main network editor)
     # create a subnet input or output port for the module
     if { $subnet } {
+	if [string equal i [pType port]] {
+	    set dataType [lindex [portName $port] 0]
+	    foreach iConn [portConnections "Subnet$subnet all o"] {
+		if [string equal $dataType [lindex [portName [iPort iConn]] 0]] {
+		    lappend possiblePorts [oPort iConn]
+		}
+	    }
+	}
+		
 	set addSubnetPort 1
 	foreach conn [portConnections $port] {
 	    if [string equal Subnet$subnet [[invType port]Mod conn]]  {
@@ -2049,7 +2058,11 @@ proc portCount { port } {
     }
 
     if [isaSubnetEditor [pMod port]] {
-	return [llength [portConnections "[pMod port] all [pType port]"]]
+	set idx [expr [string equal o [pType port]]?1:3]
+	set conns [portConnections "[pMod port] all [pType port]"]
+	set conns [lsort -integer -decreasing -index $idx $conns]
+	if ![llength $conns] { return 0 }
+	return [expr [lindex [lindex $conns 0] $idx]+1]
     } else {
 	return [[pMod port]-c [pType port]portcount]
     }
