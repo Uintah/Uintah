@@ -78,7 +78,7 @@ public:
   table_entry& operator[](unsigned idx)
   { return table_[idx]; }
 
-  double size() { return table_.size(); }
+  int size() { return table_.size(); }
   void clear() { table_.clear(); }
 
   bool search(table_entry&, long double);
@@ -242,8 +242,9 @@ SeedField::build_weight_table(Field *field, DistTable<Field> &table)
 
   mesh_type* mesh = field->get_typed_mesh().get_rep();
 
-  elem_iterator ei = mesh->elem_begin();
-  if (ei==mesh->elem_end()) // empty mesh
+  elem_iterator ei = mesh->tbegin((elem_iterator *)0);
+  elem_iterator endi = mesh->tend((elem_iterator *)0);
+  if (ei==endi) // empty mesh
     return false;
 
   // the tables are to be filled with increasing values.
@@ -262,7 +263,7 @@ SeedField::build_weight_table(Field *field, DistTable<Field> &table)
     }
     table.push_back(mesh->get_element_size(*ei)*fdata_mag(val),*ei);
     ++ei;
-    while (ei != mesh->elem_end()) {
+    while (ei != endi) {
       mesh->get_center(p,*ei);
       if (!interp(val,p,field)) continue;
       if ( mesh->get_element_size(*ei)>0 && fdata_mag(val)>0) {
@@ -282,7 +283,7 @@ SeedField::build_weight_table(Field *field, DistTable<Field> &table)
     }
     table.push_back(size*fdata_mag(val),*ei);
     ++ei;
-    while (ei != mesh->elem_end()) {
+    while (ei != endi) {
       mesh->get_center(p,*ei);
       if (!interp(val,p,field)) continue;
       if ( fdata_mag(val)>0) {
@@ -298,7 +299,7 @@ SeedField::build_weight_table(Field *field, DistTable<Field> &table)
     }
     table.push_back(mesh->get_element_size(*ei),*ei);
     ++ei;
-    while (ei != mesh->elem_end()) {
+    while (ei != endi) {
       if (mesh->get_element_size(*ei)>0)
 	table.push_back(mesh->get_element_size(*ei)+
 			table[table.size()-1].first,*ei);
@@ -307,7 +308,7 @@ SeedField::build_weight_table(Field *field, DistTable<Field> &table)
   } else if (dist=="uniscat") { // standard size only
     table.push_back(size,*ei);
     ++ei;
-    while (ei != mesh->elem_end()) {
+    while (ei != endi) {
       table.push_back(size+table[table.size()-1].first,*ei);
       ++ei;
     }    
@@ -450,16 +451,16 @@ SeedField::execute()
   if (tab=="Random") {
     if (vf_->get_type_name(-1)=="LatticeVol<double>") {
       generate_random_seeds((LatticeVol<double>*)vf_);
-    } else if (vf_->get_type_name(-1)=="TetVol<double>") {
-      generate_random_seeds((TetVol<double>*)vf_);
-    } else if (vf_->get_type_name(-1)=="TriSurf<double>") {
-      generate_random_seeds((TriSurf<double>*)vf_);
-    } else if (vf_->get_type_name(-1)=="LatticeVol<Vector>") {
-      generate_random_seeds((LatticeVol<Vector>*)vf_);
-    } else if (vf_->get_type_name(-1)=="TetVol<Vector>") {
-      generate_random_seeds((TetVol<Vector>*)vf_);
-    } else if (vf_->get_type_name(-1)=="TriSurf<Vector>") {
-      generate_random_seeds((TriSurf<Vector>*)vf_);
+     } else if (vf_->get_type_name(-1)=="TetVol<double>") {
+       generate_random_seeds((TetVol<double>*)vf_);
+     } else if (vf_->get_type_name(-1)=="TriSurf<double>") {
+       generate_random_seeds((TriSurf<double>*)vf_);
+     } else if (vf_->get_type_name(-1)=="LatticeVol<Vector>") {
+       generate_random_seeds((LatticeVol<Vector>*)vf_);
+     } else if (vf_->get_type_name(-1)=="TetVol<Vector>") {
+       generate_random_seeds((TetVol<Vector>*)vf_);
+     } else if (vf_->get_type_name(-1)=="TriSurf<Vector>") {
+       generate_random_seeds((TriSurf<Vector>*)vf_);
     } else {
       // can't do this kind of field
       return;

@@ -2,16 +2,16 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 */
 
@@ -42,7 +42,7 @@ namespace SCIRun {
 
 using std::string;
 using std::vector;
- 
+
 class SCICORESHARE PointCloudMesh : public MeshBase
 {
 public:
@@ -50,56 +50,62 @@ public:
 
   //! Index and Iterator types required for Mesh Concept.
   struct Node {
-  typedef NodeIndex<under_type>       index_type;
-  typedef NodeIterator<under_type>    iterator;
-  typedef NodeIndex<under_type>       size_type;
-  typedef vector<index_type>          array_type;
+    typedef NodeIndex<under_type>       index_type;
+    typedef NodeIterator<under_type>    iterator;
+    typedef NodeIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
   };
 
   struct Edge {
-  typedef EdgeIndex<under_type>       index_type;
-  typedef EdgeIterator<under_type>    iterator;
-  typedef EdgeIndex<under_type>       size_type;
-  typedef vector<index_type>          array_type;
+    typedef EdgeIndex<under_type>       index_type;
+    typedef EdgeIterator<under_type>    iterator;
+    typedef EdgeIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
   };
 
   struct Face {
-  typedef FaceIndex<under_type>       index_type;
-  typedef FaceIterator<under_type>    iterator;
-  typedef FaceIndex<under_type>       size_type;
-  typedef vector<index_type>          array_type;
+    typedef FaceIndex<under_type>       index_type;
+    typedef FaceIterator<under_type>    iterator;
+    typedef FaceIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
   };
 
   struct Cell {
-  typedef CellIndex<under_type>       index_type;
-  typedef CellIterator<under_type>    iterator;
-  typedef CellIndex<under_type>       size_type;
-  typedef vector<index_type>          array_type;
+    typedef CellIndex<under_type>       index_type;
+    typedef CellIterator<under_type>    iterator;
+    typedef CellIndex<under_type>       size_type;
+    typedef vector<index_type>          array_type;
   };
+
+  typedef Node Elem;
 
   // storage types for get_* functions
   typedef vector<double>      weight_array;
 
   PointCloudMesh() {}
-  PointCloudMesh(const PointCloudMesh &copy) 
+  PointCloudMesh(const PointCloudMesh &copy)
     : points_(copy.points_) {}
   virtual PointCloudMesh *clone() { return new PointCloudMesh(*this); }
   virtual ~PointCloudMesh() {}
 
-  Node::iterator node_begin() const { return 0; }
-  Node::iterator node_end() const { return (unsigned)points_.size(); }
-  Edge::iterator edge_begin() const { return 0; }
-  Edge::iterator edge_end() const { return 0; }
-  Face::iterator face_begin() const { return 0; }
-  Face::iterator face_end() const { return 0; }
-  Cell::iterator cell_begin() const { return 0; }
-  Cell::iterator cell_end() const { return 0; }
+  template <class I> I tbegin(I*) const;
+  template <class I> I tend(I*) const;
+  template <class S> S tsize(S*) const;
+
+  Node::iterator node_begin() const;
+  Node::iterator node_end() const;
+  Edge::iterator edge_begin() const;
+  Edge::iterator edge_end() const;
+  Face::iterator face_begin() const;
+  Face::iterator face_end() const;
+  Cell::iterator cell_begin() const;
+  Cell::iterator cell_end() const;
 
   //! get the mesh statistics
-  Node::size_type nodes_size() const { return (unsigned)points_.size(); }
-  Edge::size_type edges_size() const { return 0; }
-  Face::size_type faces_size() const { return 0; }
-  Cell::size_type cells_size() const { return 0; }
+  Node::size_type nodes_size() const;
+  Edge::size_type edges_size() const;
+  Face::size_type faces_size() const;
+  Cell::size_type cells_size() const;
   virtual BBox get_bounding_box() const;
 
   //! set the mesh statistics
@@ -147,7 +153,7 @@ public:
   { points_[index] = point; }
 
   //! use these to build up a new PointCloud mesh
-  Node::index_type add_node(Point p) 
+  Node::index_type add_node(Point p)
   { points_.push_back(p); return points_.size()-1; }
 
   virtual void io(Piostream&);
@@ -167,7 +173,20 @@ private:
 
 typedef LockingHandle<PointCloudMesh> PointCloudMeshHandle;
 
-
+template <> PointCloudMesh::Node::size_type PointCloudMesh::tsize(PointCloudMesh::Node::size_type *) const;
+template <> PointCloudMesh::Edge::size_type PointCloudMesh::tsize(PointCloudMesh::Edge::size_type *) const;
+template <> PointCloudMesh::Face::size_type PointCloudMesh::tsize(PointCloudMesh::Face::size_type *) const;
+template <> PointCloudMesh::Cell::size_type PointCloudMesh::tsize(PointCloudMesh::Cell::size_type *) const;
+				
+template <> PointCloudMesh::Node::iterator PointCloudMesh::tbegin(PointCloudMesh::Node::iterator *) const;
+template <> PointCloudMesh::Edge::iterator PointCloudMesh::tbegin(PointCloudMesh::Edge::iterator *) const;
+template <> PointCloudMesh::Face::iterator PointCloudMesh::tbegin(PointCloudMesh::Face::iterator *) const;
+template <> PointCloudMesh::Cell::iterator PointCloudMesh::tbegin(PointCloudMesh::Cell::iterator *) const;
+				
+template <> PointCloudMesh::Node::iterator PointCloudMesh::tend(PointCloudMesh::Node::iterator *) const;
+template <> PointCloudMesh::Edge::iterator PointCloudMesh::tend(PointCloudMesh::Edge::iterator *) const;
+template <> PointCloudMesh::Face::iterator PointCloudMesh::tend(PointCloudMesh::Face::iterator *) const;
+template <> PointCloudMesh::Cell::iterator PointCloudMesh::tend(PointCloudMesh::Cell::iterator *) const;
 
 } // namespace SCIRun
 

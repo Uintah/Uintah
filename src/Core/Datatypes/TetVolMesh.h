@@ -2,16 +2,16 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 */
 
@@ -80,9 +80,6 @@ public:
 
   typedef Cell Elem;
 
-  //typedef Cell::index_type                  elem_index;
-  //typedef Cell::iterator               elem_iterator;
-
   typedef vector<double>     weight_array;
 
   TetVolMesh();
@@ -93,21 +90,22 @@ public:
 
   virtual BBox get_bounding_box() const;
 
+  template <class I> I tbegin(I*) const;
+  template <class I> I tend(I*) const;
+  template <class S> S tsize(S*) const;
+
   Node::iterator  node_begin() const;
   Node::iterator  node_end() const;
-  Node::size_type nodes_size() const { return points_.size(); }
+  Node::size_type nodes_size() const;
   Edge::iterator  edge_begin() const;
   Edge::iterator  edge_end() const;
-  Edge::size_type edges_size() const { return edges_.size(); }
+  Edge::size_type edges_size() const;
   Face::iterator  face_begin() const;
   Face::iterator  face_end() const;
-  Face::size_type faces_size() const { return faces_.size(); }
+  Face::size_type faces_size() const;
   Cell::iterator  cell_begin() const;
   Cell::iterator  cell_end() const;
-  Cell::size_type cells_size() const { return cells_.size() >> 2; }
-  Elem::iterator elem_begin() const { return cell_begin(); }
-  Elem::iterator elem_end() const {return cell_end(); }
-  under_type    elems_size() const { return cells_size(); }
+  Cell::size_type cells_size() const;
 
   void get_nodes(Node::array_type &array, Edge::index_type idx) const;
   void get_nodes(Node::array_type &array, Face::index_type idx) const;
@@ -115,7 +113,7 @@ public:
   void get_edges(Edge::array_type &array, Face::index_type idx) const;
   void get_edges(Edge::array_type &array, Cell::index_type idx) const;
   void get_faces(Face::array_type &array, Cell::index_type idx) const;
-  bool get_neighbor(Cell::index_type &neighbor, Cell::index_type from, 
+  bool get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
 		   Face::index_type idx) const;
   void get_neighbors(Cell::array_type &array, Cell::index_type idx) const;
   //! must call compute_node_neighbors before calling get_neighbors.
@@ -140,7 +138,7 @@ public:
   { points_[index] = point; }
 
   double get_volume(const Cell::index_type &ci) {
-    Node::array_type ra; 
+    Node::array_type ra;
     get_nodes(ra,ci);
     Point p0,p1,p2,p3;
     get_point(p0,ra[0]);
@@ -151,13 +149,13 @@ public:
       0.1666666666666666;
   }
   double get_area(const Face::index_type &) { return 0; }
-  double get_element_size(const Cell::index_type &ci) 
+  double get_element_size(const Cell::index_type &ci)
   { return get_volume(ci); }
-  
+
   void get_random_point(Point &p, const Cell::index_type &ei) const;
 
   //! the double return val is the volume of the tet.
-  double get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1, 
+  double get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1,
 			    Vector& g2, Vector& g3);
 
   //! function to test if at least one of cell's nodes are in supplied range
@@ -178,7 +176,7 @@ public:
   void fill_neighbors(Iter begin, Iter end, Functor fill_ftor);
   template <class Iter, class Functor>
   void fill_data(Iter begin, Iter end, Functor fill_ftor);
-  
+
   //! (re)create the edge and faces data based on cells.
   virtual void finish_mesh();
   void compute_edges();
@@ -188,7 +186,7 @@ public:
 
   //! Persistent IO
   virtual void io(Piostream&);
-  static PersistentTypeID type_id; 
+  static PersistentTypeID type_id;
 
   //! Convenience function to query types. Returns "TetVolMesh" always.
   static  const string type_name(int n = -1);
@@ -198,7 +196,7 @@ public:
 
   Node::index_type add_find_point(const Point &p, double err = 1.0e-3);
   void add_tet(Node::index_type a, Node::index_type b, Node::index_type c, Node::index_type d);
-  void add_tet(const Point &p0, const Point &p1, const Point &p2, 
+  void add_tet(const Point &p0, const Point &p1, const Point &p2,
 	       const Point &p3);
 
   // Must call connect after adding tets this way.
@@ -232,7 +230,7 @@ private:
   struct PFace {
     Node::index_type         nodes_[3];   //! 3 nodes makes a face.
     Cell::index_type         cells_[2];   //! 2 cells may have this face is in.
-    
+
     PFace() {
       nodes_[0] = -1;
       nodes_[1] = -1;
@@ -247,38 +245,38 @@ private:
       if ((n1 < n2) && (n1 < n3)) {
 	nodes_[0] = n1;
 	if (n2 < n3) {
-	  nodes_[1] = n2; 
+	  nodes_[1] = n2;
 	  nodes_[2] = n3;
 	} else {
 	  nodes_[1] = n3;
 	  nodes_[2] = n2;
-	} 
+	}
       } else if ((n2 < n1) && (n2 < n3)) {
 	nodes_[0] = n2;
 	if (n1 < n3) {
-	  nodes_[1] = n1; 
+	  nodes_[1] = n1;
 	  nodes_[2] = n3;
 	} else {
 	  nodes_[1] = n3;
 	  nodes_[2] = n1;
-	} 
+	}
       } else {
 	nodes_[0] = n3;
 	if (n1 < n2) {
-	  nodes_[1] = n1; 
+	  nodes_[1] = n1;
 	  nodes_[2] = n2;
 	} else {
 	  nodes_[1] = n2;
 	  nodes_[2] = n1;
-	} 
+	}
       }
     }
 
     bool shared() const { return ((cells_[0] != -1) && (cells_[1] != -1)); }
-    
+
     //! true if both have the same nodes (order does not matter)
     bool operator==(const PFace &f) const {
-      return ((nodes_[0] == f.nodes_[0]) && (nodes_[1] == f.nodes_[1]) && 
+      return ((nodes_[0] == f.nodes_[0]) && (nodes_[1] == f.nodes_[1]) &&
 	      (nodes_[2] == f.nodes_[2]));
     }
   };
@@ -288,7 +286,7 @@ private:
   struct PEdge {
     Node::index_type         nodes_[2];   //! 2 nodes makes an edge.
     vector<Cell::index_type> cells_;      //! list of all the cells this edge is in.
-    
+
     PEdge() : cells_(0) {
       nodes_[0] = -1;
       nodes_[1] = -1;
@@ -297,22 +295,22 @@ private:
     PEdge(Node::index_type n1, Node::index_type n2) : cells_(0) {
       if (n1 < n2) {
 	nodes_[0] = n1;
-	nodes_[1] = n2; 
+	nodes_[1] = n2;
       } else {
 	nodes_[0] = n2;
 	nodes_[1] = n1;
-      } 
+      }
     }
 
     bool shared() const { return cells_.size() > 1; }
-    
+
     //! true if both have the same nodes (order does not matter)
     bool operator==(const PEdge &e) const {
       return ((nodes_[0] == e.nodes_[0]) && (nodes_[1] == e.nodes_[1]));
     }
   };
 
-  /*! hash the egde's node_indecies such that edges with the same nodes 
+  /*! hash the egde's node_indecies such that edges with the same nodes
    *  hash to the same value. nodes are sorted on edge construction. */
   static const int sz_int = sizeof(int) * 8; // in bits
   struct FaceHash {
@@ -322,13 +320,13 @@ private:
     static const int low3_mask = ~(up3_mask | mid3_mask);
 
     size_t operator()(const PFace &f) const {
-      return ((f.nodes_[0] << sz_third_int << sz_third_int) | 
-	      (mid3_mask & (f.nodes_[1] << sz_third_int)) | 
+      return ((f.nodes_[0] << sz_third_int << sz_third_int) |
+	      (mid3_mask & (f.nodes_[1] << sz_third_int)) |
 	      (low3_mask & f.nodes_[2]));
     }
   };
 
-  /*! hash the egde's node_indecies such that edges with the same nodes 
+  /*! hash the egde's node_indecies such that edges with the same nodes
    *  hash to the same value. nodes are sorted on edge construction. */
   struct EdgeHash {
     static const int sz_int = sizeof(int) * 8; // in bits
@@ -344,21 +342,21 @@ private:
   typedef hash_map<PFace, Face::index_type, FaceHash> face_ht;
   typedef hash_map<PEdge, Edge::index_type, EdgeHash> edge_ht;
 
-  /*! container for face storage. Must be computed each time 
+  /*! container for face storage. Must be computed each time
     nodes or cells change. */
   vector<PFace>             faces_;
   face_ht                  face_table_;
   Mutex                    face_table_lock_;
-  /*! container for edge storage. Must be computed each time 
+  /*! container for edge storage. Must be computed each time
     nodes or cells change. */
-  vector<PEdge>             edges_; 
+  vector<PEdge>             edges_;
   edge_ht                  edge_table_;
   Mutex                    edge_table_lock_;
 
 
 
   inline
-  void hash_edge(Node::index_type n1, Node::index_type n2, 
+  void hash_edge(Node::index_type n1, Node::index_type n2,
 		 Cell::index_type ci, edge_ht &table) const;
 
   inline
@@ -371,22 +369,22 @@ private:
       nbor_vec_(n),
       mesh_(m)
     {}
-    
+
     void operator()(Edge::index_type e) {
       nodes_.clear();
       mesh_.get_nodes(nodes_, e);
       nbor_vec_[nodes_[0]].push_back(nodes_[1]);
       nbor_vec_[nodes_[1]].push_back(nodes_[0]);
     }
-   
+
     vector<vector<Node::index_type> > &nbor_vec_;
     const TetVolMesh            &mesh_;
     Node::array_type                   nodes_;
   };
 
-  vector<vector<Node::index_type> > node_neighbors_;  
+  vector<vector<Node::index_type> > node_neighbors_;
   Mutex                       node_nbor_lock_;
-  
+
   typedef LockingHandle<LatticeVol<vector<Cell::index_type> > > grid_handle;
   grid_handle                 grid_;
   Mutex                       grid_lock_; // Bad traffic!
@@ -407,7 +405,7 @@ TetVolMesh::fill_points(Iter begin, Iter end, Functor fill_ftor) {
   while (iter != end) {
     *piter = fill_ftor(*iter);
     ++piter; ++iter;
-  } 
+  }
   points_lock_.unlock();
 }
 
@@ -428,7 +426,7 @@ TetVolMesh::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
     ++citer;
     *citer = nodes[3];
     ++citer; ++iter;
-  } 
+  }
   cells_lock_.unlock();
 }
 
@@ -449,9 +447,24 @@ TetVolMesh::fill_neighbors(Iter begin, Iter end, Functor fill_ftor) {
     ++citer;
     *citer = face_nbors[3];
     ++citer; ++iter;
-  } 
+  }
   nbors_lock_.unlock();
 }
+
+template <> TetVolMesh::Node::size_type TetVolMesh::tsize(TetVolMesh::Node::size_type *) const;
+template <> TetVolMesh::Edge::size_type TetVolMesh::tsize(TetVolMesh::Edge::size_type *) const;
+template <> TetVolMesh::Face::size_type TetVolMesh::tsize(TetVolMesh::Face::size_type *) const;
+template <> TetVolMesh::Cell::size_type TetVolMesh::tsize(TetVolMesh::Cell::size_type *) const;
+				
+template <> TetVolMesh::Node::iterator TetVolMesh::tbegin(TetVolMesh::Node::iterator *) const;
+template <> TetVolMesh::Edge::iterator TetVolMesh::tbegin(TetVolMesh::Edge::iterator *) const;
+template <> TetVolMesh::Face::iterator TetVolMesh::tbegin(TetVolMesh::Face::iterator *) const;
+template <> TetVolMesh::Cell::iterator TetVolMesh::tbegin(TetVolMesh::Cell::iterator *) const;
+				
+template <> TetVolMesh::Node::iterator TetVolMesh::tend(TetVolMesh::Node::iterator *) const;
+template <> TetVolMesh::Edge::iterator TetVolMesh::tend(TetVolMesh::Edge::iterator *) const;
+template <> TetVolMesh::Face::iterator TetVolMesh::tend(TetVolMesh::Face::iterator *) const;
+template <> TetVolMesh::Cell::iterator TetVolMesh::tend(TetVolMesh::Cell::iterator *) const;
 
 } // namespace SCIRun
 

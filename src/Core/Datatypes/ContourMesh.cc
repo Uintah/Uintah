@@ -2,16 +2,16 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 */
 
@@ -43,14 +43,14 @@ using namespace std;
 
 PersistentTypeID ContourMesh::type_id("ContourMesh", "MeshBase", maker);
 
-BBox 
+BBox
 ContourMesh::get_bounding_box() const
 {
   BBox result;
 
   for (Node::iterator i = node_begin();
        i!=node_end();
-       ++i) 
+       ++i)
     result.extend(nodes_[*i]);
 
   return result;
@@ -89,7 +89,7 @@ ContourMesh::locate(Edge::index_type &idx, const Point &p) const
 
   if (ei==edge_end())
     return false;
-  
+
   for (ei = edge_begin(); ei != edge_end(); ++ei) {
     get_nodes(nra,*ei);
 
@@ -137,7 +137,7 @@ ContourMesh::io(Piostream& stream)
   stream.end_class();
 }
 
-const string 
+const string
 ContourMesh::type_name(int n)
 {
   ASSERT(n >= -1 && n <= 0);
@@ -145,5 +145,117 @@ ContourMesh::type_name(int n)
   return name;
 }
 
+template<>
+ContourMesh::Node::iterator
+ContourMesh::tbegin(ContourMesh::Node::iterator *) const
+{
+  return 0;
+}
+
+template<>
+ContourMesh::Node::iterator
+ContourMesh::tend(ContourMesh::Node::iterator *) const
+{
+  return (unsigned)nodes_.size();
+}
+
+template<>
+ContourMesh::Edge::iterator
+ContourMesh::tbegin(ContourMesh::Edge::iterator *) const
+{
+  return 0;
+}
+
+
+template<>
+ContourMesh::Edge::iterator
+ContourMesh::tend(ContourMesh::Edge::iterator *) const
+{
+  return (unsigned)edges_.size();
+}
+
+template<>
+ContourMesh::Face::iterator
+ContourMesh::tbegin(ContourMesh::Face::iterator *) const
+{
+  return 0;
+}
+
+template<>
+ContourMesh::Face::iterator
+ContourMesh::tend(ContourMesh::Face::iterator *) const
+{
+  return 0;
+}
+
+template<>
+ContourMesh::Cell::iterator
+ContourMesh::tbegin(ContourMesh::Cell::iterator *) const
+{
+  return 0;
+}
+
+template<>
+ContourMesh::Cell::iterator
+ContourMesh::tend(ContourMesh::Cell::iterator *) const
+{
+  return 0;
+}
+
+template<>
+ContourMesh::Node::size_type
+ContourMesh::tsize(ContourMesh::Node::size_type *) const
+{
+  return (unsigned)nodes_.size();
+}
+
+template<>
+ContourMesh::Edge::size_type
+ContourMesh::tsize(ContourMesh::Edge::size_type *) const
+{
+  return (unsigned)edges_.size();
+}
+
+template<>
+ContourMesh::Face::size_type
+ContourMesh::tsize(ContourMesh::Face::size_type *) const
+{
+  return 0;
+}
+
+template<>
+ContourMesh::Cell::size_type
+ContourMesh::tsize(ContourMesh::Cell::size_type *) const
+{
+  return 0;
+}
+
+
+ContourMesh::Node::iterator ContourMesh::node_begin() const
+{ return tbegin((Node::iterator *)0); }
+ContourMesh::Edge::iterator ContourMesh::edge_begin() const
+{ return tbegin((Edge::iterator *)0); }
+ContourMesh::Face::iterator ContourMesh::face_begin() const
+{ return tbegin((Face::iterator *)0); }
+ContourMesh::Cell::iterator ContourMesh::cell_begin() const
+{ return tbegin((Cell::iterator *)0); }
+
+ContourMesh::Node::iterator ContourMesh::node_end() const
+{ return tend((Node::iterator *)0); }
+ContourMesh::Edge::iterator ContourMesh::edge_end() const
+{ return tend((Edge::iterator *)0); }
+ContourMesh::Face::iterator ContourMesh::face_end() const
+{ return tend((Face::iterator *)0); }
+ContourMesh::Cell::iterator ContourMesh::cell_end() const
+{ return tend((Cell::iterator *)0); }
+
+ContourMesh::Node::size_type ContourMesh::nodes_size() const
+{ return tsize((Node::size_type *)0); }
+ContourMesh::Edge::size_type ContourMesh::edges_size() const
+{ return tsize((Edge::size_type *)0); }
+ContourMesh::Face::size_type ContourMesh::faces_size() const
+{ return tsize((Face::size_type *)0); }
+ContourMesh::Cell::size_type ContourMesh::cells_size() const
+{ return tsize((Cell::size_type *)0); }
 
 } // namespace SCIRun

@@ -2,16 +2,16 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 */
 
@@ -42,7 +42,7 @@ TriSurfMesh::type_name(int n)
 {
   ASSERT(n >= -1 && n <= 0);
   static const string name = "TriSurfMesh";
-  return name; 
+  return name;
 }
 
 
@@ -63,7 +63,7 @@ TriSurfMesh::~TriSurfMesh()
 }
 
 
-void TriSurfMesh::get_random_point(Point &p, const Face::index_type &ei) const 
+void TriSurfMesh::get_random_point(Point &p, const Face::index_type &ei) const
 {
   static MusilRNG rng(1249);
   Node::array_type ra;
@@ -97,64 +97,60 @@ TriSurfMesh::get_bounding_box() const
 }
 
 
+template <>
 TriSurfMesh::Node::iterator
-TriSurfMesh::node_begin() const
+TriSurfMesh::tbegin(TriSurfMesh::Node::iterator *) const
 {
   return 0;
 }
 
+template <>
 TriSurfMesh::Node::iterator
-TriSurfMesh::node_end() const
+TriSurfMesh::tend(TriSurfMesh::Node::iterator *) const
 {
   return points_.size();
 }
 
+template <>
 TriSurfMesh::Edge::iterator
-TriSurfMesh::edge_begin() const
+TriSurfMesh::tbegin(TriSurfMesh::Edge::iterator *) const
 {
   return 0;
 }
 
+template <>
 TriSurfMesh::Edge::iterator
-TriSurfMesh::edge_end() const
+TriSurfMesh::tend(TriSurfMesh::Edge::iterator *) const
 {
   return faces_.size();
 }
 
+template <>
 TriSurfMesh::Face::iterator
-TriSurfMesh::face_begin() const
+TriSurfMesh::tbegin(TriSurfMesh::Face::iterator *) const
 {
   return 0;
 }
 
+template <>
 TriSurfMesh::Face::iterator
-TriSurfMesh::face_end() const
+TriSurfMesh::tend(TriSurfMesh::Face::iterator *) const
 {
   return faces_.size() / 3;
 }
 
+template<>
 TriSurfMesh::Cell::iterator
-TriSurfMesh::cell_begin() const
+TriSurfMesh::tbegin(TriSurfMesh::Cell::iterator *) const
 {
   return 0;
 }
 
+template <>
 TriSurfMesh::Cell::iterator
-TriSurfMesh::cell_end() const
+TriSurfMesh::tend(TriSurfMesh::Cell::iterator *) const
 {
   return 0;
-}
-
-TriSurfMesh::Elem::iterator
-TriSurfMesh::elem_begin() const
-{
-  return face_begin();
-}
-
-TriSurfMesh::Elem::iterator
-TriSurfMesh::elem_end() const
-{
-  return face_end();
 }
 
 
@@ -225,9 +221,9 @@ distance2(const Point &p0, const Point &p1)
 bool
 TriSurfMesh::locate(Node::index_type &loc, const Point &p) const
 {
-  Node::iterator ni = node_begin();
+  Node::iterator ni = tbegin((Node::iterator *)0);
   loc = *ni;
-  if (ni == node_end())
+  if (ni == tend((Node::iterator *)0))
   {
     return false;
   }
@@ -236,7 +232,7 @@ TriSurfMesh::locate(Node::index_type &loc, const Point &p) const
   loc = *ni;
   ++ni;
 
-  while (ni != node_end())
+  while (ni != tend((Node::iterator*)0))
   {
     const double dist = distance2(p, points_[*ni]);
     if (dist < min_dist)
@@ -374,26 +370,26 @@ TriSurfMesh::inside4_p(int i, const Point &p)
   return true;
 }
 
-void 
-TriSurfMesh::finish_mesh() 
+void
+TriSurfMesh::finish_mesh()
 {
   compute_normals();
 }
 
-void 
-TriSurfMesh::compute_normals() 
+void
+TriSurfMesh::compute_normals()
 {
   if (normals_.size() > 0) { return; }
   normals_.resize(points_.size()); // 1 per node
 
   // build table of faces that touch each node
-  vector<vector<Face::index_type> > node_in_faces(points_.size());  
+  vector<vector<Face::index_type> > node_in_faces(points_.size());
   //! face normals (not normalized) so that magnitude is also the area.
   vector<Vector> face_normals(faces_.size());
   // Computing normal per face.
   Node::array_type nodes(3);
-  Face::iterator iter = face_begin();
-  while (iter != face_end()) {
+  Face::iterator iter = tbegin((Face::iterator *)0);
+  while (iter != tend((Face::iterator *)0)) {
     get_nodes(nodes, *iter);
 
     Point p1, p2, p3;
@@ -404,14 +400,14 @@ TriSurfMesh::compute_normals()
     node_in_faces[nodes[0]].push_back(*iter);
     node_in_faces[nodes[1]].push_back(*iter);
     node_in_faces[nodes[2]].push_back(*iter);
-    
+
     Vector v0 = p2 - p1;
     Vector v1 = p3 - p2;
     Vector n = Cross(v0, v1);
     face_normals[*iter] = n;
 //    cerr << "normal mag: " << n.length() << endl;
     ++iter;
-  }  
+  }
   //Averaging the normals.
   vector<vector<Face::index_type> >::iterator nif_iter = node_in_faces.begin();
   int i = 0;
@@ -461,7 +457,7 @@ TriSurfMesh::connect(double err)
   // TODO: average in stead of first found for new point?
   vector<Point> points(points_);
   vector<int> mapping(points_.size());
-  vector<Point>::size_type i; 
+  vector<Point>::size_type i;
   points_.clear();
   for (i = 0; i < points.size(); i++)
   {
@@ -473,7 +469,7 @@ TriSurfMesh::connect(double err)
   {
     faces_[i] = mapping[i];
   }
-  
+
   // TODO: Remove all degenerate faces here.
 
   // TODO: fix forward/backward facing problems.
@@ -513,7 +509,7 @@ TriSurfMesh::connect(double err)
   // Reuse mapping array, edgemap array.
   vector<Point> dups(points_);
   points_.clear();
-  
+
   for (i=0; i<dups.size(); i++)
   {
     if(edgemap[i].begin() != edgemap[i].end())
@@ -573,5 +569,60 @@ TriSurfMesh::io(Piostream &stream)
 }
 
 
+template <>
+TriSurfMesh::Node::size_type
+TriSurfMesh::tsize(TriSurfMesh::Node::size_type *) const
+{
+  return *tend((Node::iterator *)0);
+}
+
+template <>
+TriSurfMesh::Edge::size_type
+TriSurfMesh::tsize(TriSurfMesh::Edge::size_type *) const
+{
+  return *tend((Edge::iterator *)0);
+}
+
+template <>
+TriSurfMesh::Face::size_type
+TriSurfMesh::tsize(TriSurfMesh::Face::size_type *) const
+{
+  return *tend((Face::iterator *)0);
+}
+
+template <>
+TriSurfMesh::Cell::size_type
+TriSurfMesh::tsize(TriSurfMesh::Cell::size_type *) const
+{
+  return *tend((Cell::iterator *)0);
+}
+
+
+TriSurfMesh::Node::iterator TriSurfMesh::node_begin() const
+{ return tbegin((Node::iterator *)0); }
+TriSurfMesh::Edge::iterator TriSurfMesh::edge_begin() const
+{ return tbegin((Edge::iterator *)0); }
+TriSurfMesh::Face::iterator TriSurfMesh::face_begin() const
+{ return tbegin((Face::iterator *)0); }
+TriSurfMesh::Cell::iterator TriSurfMesh::cell_begin() const
+{ return tbegin((Cell::iterator *)0); }
+
+TriSurfMesh::Node::iterator TriSurfMesh::node_end() const
+{ return tend((Node::iterator *)0); }
+TriSurfMesh::Edge::iterator TriSurfMesh::edge_end() const
+{ return tend((Edge::iterator *)0); }
+TriSurfMesh::Face::iterator TriSurfMesh::face_end() const
+{ return tend((Face::iterator *)0); }
+TriSurfMesh::Cell::iterator TriSurfMesh::cell_end() const
+{ return tend((Cell::iterator *)0); }
+
+TriSurfMesh::Node::size_type TriSurfMesh::nodes_size() const
+{ return tsize((Node::size_type *)0); }
+TriSurfMesh::Edge::size_type TriSurfMesh::edges_size() const
+{ return tsize((Edge::size_type *)0); }
+TriSurfMesh::Face::size_type TriSurfMesh::faces_size() const
+{ return tsize((Face::size_type *)0); }
+TriSurfMesh::Cell::size_type TriSurfMesh::cells_size() const
+{ return tsize((Cell::size_type *)0); }
 
 } // namespace SCIRun

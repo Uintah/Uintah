@@ -2,16 +2,16 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 */
 
@@ -42,7 +42,7 @@ using namespace std;
 PersistentTypeID ImageMesh::type_id("ImageMesh", "MeshBase", maker);
 
 
-BBox 
+BBox
 ImageMesh::get_bounding_box() const
 {
   BBox result;
@@ -51,18 +51,18 @@ ImageMesh::get_bounding_box() const
   return result;
 }
 
-void 
+void
 ImageMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
   array.resize(4);
-  array[0].i_ = idx.i_;   array[0].j_ = idx.j_;   
-  array[1].i_ = idx.i_+1; array[1].j_ = idx.j_;   
-  array[2].i_ = idx.i_+1; array[2].j_ = idx.j_+1; 
-  array[3].i_ = idx.i_;   array[3].j_ = idx.j_+1; 
+  array[0].i_ = idx.i_;   array[0].j_ = idx.j_;
+  array[1].i_ = idx.i_+1; array[1].j_ = idx.j_;
+  array[2].i_ = idx.i_+1; array[2].j_ = idx.j_+1;
+  array[3].i_ = idx.i_;   array[3].j_ = idx.j_+1;
 }
 
 //! return all face_indecies that overlap the BBox in arr.
-void 
+void
 ImageMesh::get_faces(Face::array_type &arr, const BBox &bbox) const
 {
   arr.clear();
@@ -70,7 +70,7 @@ ImageMesh::get_faces(Face::array_type &arr, const BBox &bbox) const
   locate(min, bbox.min());
   Face::index_type max;
   locate(max, bbox.max());
-  
+
   if (max.i_ >= nx_ - 1) max.i_ = nx_ - 2;
   if (max.j_ >= ny_ - 1) max.j_ = ny_ - 2;
 
@@ -82,11 +82,11 @@ ImageMesh::get_faces(Face::array_type &arr, const BBox &bbox) const
 }
 
 
-void 
+void
 ImageMesh::get_center(Point &result, Node::index_type idx) const
 {
-  const double sx = (max_.x() - min_.x()) / (nx_ - 1); 
-  const double sy = (max_.y() - min_.y()) / (ny_ - 1); 
+  const double sx = (max_.x() - min_.x()) / (nx_ - 1);
+  const double sy = (max_.y() - min_.y()) / (ny_ - 1);
 
   result.x(idx.i_ * sx + min_.x());
   result.y(idx.j_ * sy + min_.y());
@@ -94,11 +94,11 @@ ImageMesh::get_center(Point &result, Node::index_type idx) const
 }
 
 
-void 
+void
 ImageMesh::get_center(Point &result, Face::index_type idx) const
 {
-  const double sx = (max_.x() - min_.x()) / (nx_ - 1); 
-  const double sy = (max_.y() - min_.y()) / (ny_ - 1); 
+  const double sx = (max_.x() - min_.x()) / (nx_ - 1);
+  const double sy = (max_.y() - min_.y()) / (ny_ - 1);
 
   result.x((idx.i_ + 0.5) * sx + min_.x());
   result.y((idx.j_ + 0.5) * sy + min_.y());
@@ -172,7 +172,7 @@ ImageMesh::io(Piostream& stream)
   stream.end_class();
 }
 
-const string 
+const string
 ImageMesh::type_name(int n)
 {
   ASSERT(n >= -1 && n <= 0);
@@ -180,5 +180,118 @@ ImageMesh::type_name(int n)
   return name;
 }
 
+template<>
+ImageMesh::Node::iterator
+ImageMesh::tbegin(ImageMesh::Node::iterator *) const
+{
+  return Node::iterator(this, min_x_, min_y_);
+}
+
+template<>
+ImageMesh::Node::iterator
+ImageMesh::tend(ImageMesh::Node::iterator *) const
+{
+  return Node::iterator(this, min_x_ + nx_, min_y_ + ny_);
+}
+
+template<>
+ImageMesh::Node::size_type
+ImageMesh::tsize(ImageMesh::Node::size_type *) const
+{
+  return Node::size_type(nx_, ny_);
+}
+
+
+template<>
+ImageMesh::Edge::iterator
+ImageMesh::tbegin(ImageMesh::Edge::iterator *) const
+{
+  return Edge::iterator(this, 0);
+}
+
+template<>
+ImageMesh::Edge::iterator
+ImageMesh::tend(ImageMesh::Edge::iterator *) const
+{
+  return Edge::iterator(this, 0);
+}
+
+template<>
+ImageMesh::Edge::size_type
+ImageMesh::tsize(ImageMesh::Edge::size_type *) const
+{
+  return Edge::size_type(0);
+}
+
+template<>
+ImageMesh::Face::iterator
+ImageMesh::tbegin(ImageMesh::Face::iterator *) const
+{
+  return Face::iterator(this,  min_x_, min_y_);
+}
+
+template<>
+ImageMesh::Face::iterator
+ImageMesh::tend(ImageMesh::Face::iterator *) const
+{
+  return Face::iterator(this, min_x_ + nx_ - 1, min_y_ + ny_ - 1);
+}
+
+template<>
+ImageMesh::Face::size_type
+ImageMesh::tsize(ImageMesh::Face::size_type *) const
+{
+  return Face::size_type(nx_-1, ny_-1);
+}
+
+
+template<>
+ImageMesh::Cell::iterator
+ImageMesh::tbegin(ImageMesh::Cell::iterator *) const
+{
+  return Cell::iterator(this, 0);
+}
+
+template<>
+ImageMesh::Cell::iterator
+ImageMesh::tend(ImageMesh::Cell::iterator *) const
+{
+  return Cell::iterator(this, 0);
+}
+
+template<>
+ImageMesh::Cell::size_type
+ImageMesh::tsize(ImageMesh::Cell::size_type *) const
+{
+  return Cell::size_type(0);
+}
+
+
+ImageMesh::Node::iterator ImageMesh::node_begin() const
+{ return tbegin((Node::iterator *)0); }
+ImageMesh::Edge::iterator ImageMesh::edge_begin() const
+{ return tbegin((Edge::iterator *)0); }
+ImageMesh::Face::iterator ImageMesh::face_begin() const
+{ return tbegin((Face::iterator *)0); }
+ImageMesh::Cell::iterator ImageMesh::cell_begin() const
+{ return tbegin((Cell::iterator *)0); }
+
+ImageMesh::Node::iterator ImageMesh::node_end() const
+{ return tend((Node::iterator *)0); }
+ImageMesh::Edge::iterator ImageMesh::edge_end() const
+{ return tend((Edge::iterator *)0); }
+ImageMesh::Face::iterator ImageMesh::face_end() const
+{ return tend((Face::iterator *)0); }
+ImageMesh::Cell::iterator ImageMesh::cell_end() const
+{ return tend((Cell::iterator *)0); }
+
+ImageMesh::Node::size_type ImageMesh::nodes_size() const
+{ return tsize((Node::size_type *)0); }
+ImageMesh::Edge::size_type ImageMesh::edges_size() const
+{ return tsize((Edge::size_type *)0); }
+ImageMesh::Face::size_type ImageMesh::faces_size() const
+{ return tsize((Face::size_type *)0); }
+ImageMesh::Cell::size_type ImageMesh::cells_size() const
+{ return tsize((Cell::size_type *)0); }
 
 } // namespace SCIRun
