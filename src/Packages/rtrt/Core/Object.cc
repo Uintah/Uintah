@@ -9,6 +9,8 @@
 
 using namespace rtrt;
 using namespace SCIRun;
+using std::cerr;
+using std::endl;
 
 static UVPlane default_mapping(Point(0,0,0), Vector(1,0,0), Vector(0,1,0));
 // initialize the static member type_id
@@ -76,6 +78,40 @@ void Object::multi_light_intersect(Light*, const Point& orig,
       attens[i]=atten;
     }
   }
+}
+
+void Object::remove(Object*, const BBox&)
+{
+    cerr << "Object::remove should never be called!" << number << "\n";
+}
+
+void Object::insert(Object*, const BBox&)
+{
+    cerr << "Object::insert should never be called!\n";
+}
+
+void Object::allow_animation ()
+{
+}
+
+void Object::disallow_animation ()
+{
+}
+
+void Object::rebuild ()
+{
+}
+
+void Object::recompute_bbox ()
+{
+}
+
+void Object::set_scene (Object *)
+{
+}
+
+void Object::update(const Vector&)
+{
 }
 
 const int OBJECT_VERSION = 1;

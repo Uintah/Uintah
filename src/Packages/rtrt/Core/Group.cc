@@ -5,6 +5,7 @@
 #include <values.h>
 
 using namespace rtrt;
+using namespace std;
 
 SCIRun::Persistent* group_maker() {
   return new Group();
@@ -24,7 +25,7 @@ Group::~Group()
 {
 }
 
-void Group::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+void Group::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		      PerProcessorContext* ppc)
 {
   for(int i=0;i<objs.size();i++){
@@ -32,7 +33,7 @@ void Group::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
   }
 }
 
-void Group::light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+void Group::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 			    DepthStats* st, PerProcessorContext* ppc)
 {
   for(int i=0;i<objs.size();i++){
@@ -42,7 +43,7 @@ void Group::light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
   }
 }
 
-void Group::softshadow_intersect(Light* light, const Ray& ray, HitInfo& hit,
+void Group::softshadow_intersect(Light* light, Ray& ray, HitInfo& hit,
 				 double dist, Color& atten, DepthStats* st,
 				 PerProcessorContext* ppc)
 {
