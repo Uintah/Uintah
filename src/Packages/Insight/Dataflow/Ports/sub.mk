@@ -21,7 +21,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Insight/Dataflow/Ports
 
-SRCS     += $(SRCDIR)/ITKImagePort.cc \
+SRCS     += $(SRCDIR)/ITKDatatypePort.cc \
 
 
 PSELIBS := Dataflow/Network Dataflow/Comm Core/Containers \
