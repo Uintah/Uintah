@@ -72,8 +72,6 @@ void DebugSettings::tcl_command(TCLArgs& args, void*)
 
 	// Put this in the array
 	debuglist[i]=mlist;
-	cout << i << " " << iter.get_key() << endl;
-
     }
 
     args.result(args.make_list(debuglist));

@@ -38,7 +38,6 @@ proc showDebugSettings {} {
 		set item [lindex $items $j]
 		checkbutton .dsw.canvas.frame.r.$i.$j -text $item -variable $module,$item \
 			-relief groove
-		puts "varname is $dbg,$item"
 		pack .dsw.canvas.frame.r.$i.$j -side left -padx 2 -pady 2 -anchor w
 	    }
 	    pack .dsw.canvas.frame.l.$i -anchor w
