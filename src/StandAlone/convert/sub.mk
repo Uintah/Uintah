@@ -22,7 +22,7 @@ SRCDIR := StandAlone/convert
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent \
+PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent Core/Util \
            Core/Exceptions Core/Thread Core/Geometry Core/Math Core/Geom
 endif
 LIBS := $(PLPLOT_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY)
