@@ -14,7 +14,7 @@ cd "${BUILDROOT}/${mode}/build"
 
 echo ""
 echo "TIME STAMP: STARTING CONFIGURE AT:"
-/sbin/date
+date
 echo "...this is for the ${mode} build using these arguments:"
 echo "  $CONFIGURE_ARGS"
 echo "#!/bin/tcsh" > configure_command
@@ -42,7 +42,7 @@ if [ -d "${BUILD_DIR}/configure-${mode}.lock" ]; then
 fi
 
 echo "TIME STAMP: DONE CONFIGURE AND STARTING BUILD AT:"
-/sbin/date
+date
 
 cd "${BUILDROOT}/${mode}/build"
     
@@ -124,7 +124,7 @@ if [ $retval != "0" ]; then
 fi
 
 echo "TIME STAMP: DONE BUILD AT:"
-/sbin/date
+date
 
 if [ -d "${BUILD_DIR}/make-${mode}.lock" ]; then
     # built successfully - remove old make lock 
