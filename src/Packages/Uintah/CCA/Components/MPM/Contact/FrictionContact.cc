@@ -29,7 +29,7 @@ using std::string;
 using namespace std;
 
 FrictionContact::FrictionContact(ProblemSpecP& ps,
-				 SimulationStateP& d_sS)
+				 SimulationStateP& d_sS, MPMLabel* Mlb)
 {
   // Constructor
   IntVector v_f;
@@ -38,6 +38,7 @@ FrictionContact::FrictionContact(ProblemSpecP& ps,
   ps->require("mu",d_mu);
 
   d_sharedState = d_sS;
+  lb = Mlb;
 }
 
 FrictionContact::~FrictionContact()

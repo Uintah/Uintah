@@ -59,7 +59,7 @@ WARNING
 
       public:
 	 // Constructor
-	 FrictionContact(ProblemSpecP& ps, SimulationStateP& d_sS);
+	 FrictionContact(ProblemSpecP& ps, SimulationStateP& d_sS,MPMLabel* lb);
 	 
 	 // Destructor
 	 virtual ~FrictionContact();

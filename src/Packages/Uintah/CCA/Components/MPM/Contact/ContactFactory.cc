@@ -4,6 +4,7 @@
 #include "FrictionContact.h"
 #include "RigidBodyContact.h"
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <string>
@@ -12,7 +13,8 @@ using std::cerr;
 
 using namespace Uintah;
 
-Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss)
+Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss,
+								MPMLabel* lb)
 {
 
    ProblemSpecP mpm_ps = ps->findBlock("MaterialProperties")->findBlock("MPM");
@@ -23,16 +25,16 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss)
       child->require("type",con_type);
     
       if (con_type == "null")
-	 return(scinew NullContact(child,ss));
+	 return(scinew NullContact(child,ss,lb));
       
       else if (con_type == "single_velocity")
-	 return(scinew SingleVelContact(child,ss));
+	 return(scinew SingleVelContact(child,ss,lb));
 
       else if (con_type == "friction")
-	 return(scinew FrictionContact(child,ss));
+	 return(scinew FrictionContact(child,ss,lb));
     
       else if (con_type == "rigid")
-	 return(scinew RigidBodyContact(child,ss));
+	 return(scinew RigidBodyContact(child,ss,lb));
     
       else {
 	 cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;
