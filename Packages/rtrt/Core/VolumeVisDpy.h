@@ -2,16 +2,15 @@
 #ifndef __VOLUMEVISDPY_H__
 #define __VOLUMEVISDPY_H__
 
-#include <GL/glx.h>
-#include <GL/glu.h>
+//#include <GL/glx.h>
+//#include <GL/glu.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
+#include <Packages/rtrt/Core/DpyBase.h>
 #include <Core/Thread/Runnable.h>
 
 namespace rtrt {
-
-using SCIRun::Runnable;
 
 class VolumeVis;
 
@@ -24,11 +23,10 @@ class VolumeVis;
     float val; // between 0 and 1
   };
   
-class VolumeVisDpy : public Runnable {
+class VolumeVisDpy : public DpyBase {
   
   int* hist;
   int histmax;
-  int xres, yres;
   friend class VolumeVis;
   Array1<VolumeVis*> volumes;
   char* in_file;
