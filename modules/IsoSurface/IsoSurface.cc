@@ -39,6 +39,9 @@ static Module* make_IsoSurface()
 static RegisterModule db1("Fields", "IsoSurface", make_IsoSurface);
 static RegisterModule db2("Visualization", "IsoSurface", make_IsoSurface);
 
+static clString widget_name("IsoSurface Widget");
+static clString surface_name("IsoSurface");
+
 IsoSurface::IsoSurface()
 : UserModule("IsoSurface", Filter)
 {
@@ -149,7 +152,7 @@ void IsoSurface::execute()
 	    GeomPick* pick=new GeomPick(this, grad);
 	    pick->set_highlight(widget_highlight_matl);
 	    widget->set_pick(pick);
-	    widget_id=ogeom->addObj(widget);
+	    widget_id=ogeom->addObj(widget, widget_name);
 	}
 	widget_sphere->cen=seed_point;
 	widget_sphere->rad=1*widget_scale;
@@ -206,7 +209,7 @@ void IsoSurface::execute()
 	delete group;
 	isosurface_id=0;
     } else {
-	isosurface_id=ogeom->addObj(group);
+	isosurface_id=ogeom->addObj(group, surface_name);
     }
 }
 
@@ -483,7 +486,7 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 	if (counter%400 == 0) {
 	    if (groupid)
 		ogeom->delObj(groupid);
-	    groupid=ogeom->addObj(group->clone());
+	    groupid=ogeom->addObj(group->clone(), surface_name);
 	    ogeom->flushViews();
 	}
 	if(abort_flag){
