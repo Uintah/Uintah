@@ -30,6 +30,7 @@ SRCDIR   := Dataflow/Modules/Fields
 
 SRCS     += \
 	$(SRCDIR)/ApplyInterpolant.cc\
+	$(SRCDIR)/AttractNormals.cc\
 	$(SRCDIR)/BuildInterpolant.cc\
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
