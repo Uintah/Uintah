@@ -41,7 +41,7 @@ using SCICore::Math::Max;
 using std::ostringstream;
 using SCICore::Util::DebugStream;
 
-template <class T> class BrickAttrib : public DiscreteAttrib<T> 
+template <class T> class BrickAttrib : public FlatAttrib<T> 
 {
 public:
   
@@ -69,15 +69,12 @@ public:
 
   //////////
   // return the value at the given position
-  T &fget1(int);
   T &fget2(int, int);
   T &fget3(int, int, int);
 
-  virtual void set1(int x, const T &val);
   virtual void set2(int x, int y, const T &val);
   virtual void set3(int x, int y, int z, const T &val);
 
-  void fset1(int x, const T &val);
   void fset2(int x, int y, const T &val);
   void fset3(int x, int y, int z, const T &val);
 
@@ -101,24 +98,18 @@ public:
   static PersistentTypeID type_id;
 
 protected:
-  vector<T> data;
-
-  static const int XBRICKSIZE = 256;
-  static const int YBRICKSIZE = 512;
-  static const int ZBRICKSIZE = 1024;
+  static const int XBRICKSIZE = 4;
+  static const int YBRICKSIZE = 2;
+  static const int ZBRICKSIZE = 2;
   int xbrickcount, ybrickcount, zbrickcount;
 
   void update_brick_counts();
 
   unsigned int linearize(int x, int y);
   unsigned int linearize(int x, int y, int z);
-
-  static DebugStream dbg;
 };
 
 
-
-template <class T> DebugStream BrickAttrib<T>::dbg("BrickAttrib", true);
 
 template <class T> PersistentTypeID BrickAttrib<T>::type_id("BrickAttrib", "Datatype", 0);
 
@@ -139,35 +130,35 @@ BrickAttrib<T>::update_brick_counts()
 
 template <class T>
 BrickAttrib<T>::BrickAttrib() :
-  DiscreteAttrib<T>()
+  FlatAttrib<T>()
 {
   update_brick_counts();
 }
 
 template <class T>
 BrickAttrib<T>::BrickAttrib(int ix) :
-  DiscreteAttrib<T>(ix), data(ix)
+  FlatAttrib<T>(ix)
 {
   update_brick_counts();
 }
 
 template <class T>
 BrickAttrib<T>::BrickAttrib(int ix, int iy) :
-  DiscreteAttrib<T>(ix, iy), data(ix * iy)
+  FlatAttrib<T>(ix, iy)
 {
   update_brick_counts();
 }
 
 template <class T>
 BrickAttrib<T>::BrickAttrib(int ix, int iy, int iz) :
-  DiscreteAttrib<T>(ix, iy, iz), data(ix * iy * iz)
+  FlatAttrib<T>(ix, iy, iz)
 {
   update_brick_counts();
 }
 
 template <class T>
 BrickAttrib<T>::BrickAttrib(const BrickAttrib& copy) :
-  DiscreteAttrib<T>(copy), data(copy.data)
+  FlatAttrib<T>(copy)
 {
   update_brick_counts();
 }
@@ -214,20 +205,6 @@ BrickAttrib<T>::linearize(int x, int y, int z)
 
 
 template <class T> T &
-BrickAttrib<T>::fget1(int ix)
-{
-#ifdef MIKE_DEBUG
-  if (dim != 1) {
-    throw DimensionMismatch(1, dim);
-  }
-  if (ix >= nx) {
-    throw ArrayIndexOutOfBounds(ix, 0, nx);
-  }
-#endif
-  return data[ix];  
-}
-
-template <class T> T &
 BrickAttrib<T>::fget2(int ix, int iy)
 {
 #ifdef MIKE_DEBUG
@@ -265,13 +242,6 @@ BrickAttrib<T>::fget3(int ix, int iy, int iz)
 }
 
 
-// Copy wrappers, no allocation of result.
-template <class T> void
-BrickAttrib<T>::get1(T &result, int ix)
-{
-  result = fget1(ix);
-}
-
 template <class T> void
 BrickAttrib<T>::get2(T &result, int ix, int iy)
 {
@@ -287,12 +257,6 @@ BrickAttrib<T>::get3(T &result, int ix, int iy, int iz)
 
 // Virtual wrappers for inline functions.
 template <class T> T &
-BrickAttrib<T>::get1(int ix)
-{
-  return fget1(ix);
-}
-
-template <class T> T &
 BrickAttrib<T>::get2(int ix, int iy)
 {
   return fget2(ix, iy);
@@ -304,21 +268,6 @@ BrickAttrib<T>::get3(int ix, int iy, int iz)
   return fget3(ix, iy, iz);
 }
 
-
-
-template <class T> void
-BrickAttrib<T>::fset1(int ix, const T& val)
-{
-#ifdef MIKE_DEBUG
-  if (dim != 1) {
-    throw DimensionMismatch(1, dim);
-  }
-  if (ix >= nx) {
-    throw ArrayIndexOutOfBounds(ix, 0, nx);
-  }
-#endif
-  data[ix] = val;
-}
 
 
 template <class T> void
@@ -360,13 +309,7 @@ BrickAttrib<T>::fset3(int ix, int iy, int iz, const T& val)
 }
 
 
-// Generic setters for Discrete type
-template <class T> void
-BrickAttrib<T>::set1(int x, const T &val)
-{
-  fset1(x, val);
-}
-
+// Generic setters for Flat type
 template <class T> void
 BrickAttrib<T>::set2(int x, int y, const T &val)
 {
@@ -403,8 +346,7 @@ BrickAttrib<T>::set3(int x, int y, int z, const T &val)
 template <class T> void
 BrickAttrib<T>::resize(int x, int y, int z)
 {
-  DiscreteAttrib<T>::resize(x, y, z);
-  data.resize(x*y*z);
+  FlatAttrib<T>::resize(x, y, z);
   update_brick_counts();
 }
 
@@ -412,8 +354,7 @@ BrickAttrib<T>::resize(int x, int y, int z)
 template <class T> void
 BrickAttrib<T>::resize(int x, int y)
 {
-  DiscreteAttrib<T>::resize(x, y);
-  data.resize(x*y);
+  FlatAttrib<T>::resize(x, y);
   update_brick_counts();
 }
 
@@ -421,8 +362,7 @@ BrickAttrib<T>::resize(int x, int y)
 template <class T> void
 BrickAttrib<T>::resize(int x)
 {
-  DiscreteAttrib<T>::resize(x);
-  data.resize(x);
+  FlatAttrib<T>::resize(x);
   update_brick_counts();
 }
 
