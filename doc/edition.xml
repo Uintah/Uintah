@@ -2,6 +2,9 @@
 
   SCIRun version number
 
+  This needs to be synced with the line containing '#define VERSION' in:
+  SCIRun/src/main/main.cc
+
 -->
 
 <edition>1.22.0</edition>
