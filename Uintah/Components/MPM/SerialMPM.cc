@@ -547,6 +547,8 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 }
 
 	 t->computes(new_dw, lb->KineticEnergyLabel);
+	 t->computes(new_dw, lb->CenterOfMassPositionLabel);
+	 t->computes(new_dw, lb->CenterOfMassVelocityLabel);
 	 sched->addTask(t);
       }
 
@@ -765,6 +767,8 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    new_dw->pleaseSaveIntegrated(lb->StrainEnergyLabel);
    new_dw->pleaseSaveIntegrated(lb->KineticEnergyLabel);
    new_dw->pleaseSaveIntegrated(lb->TotalMassLabel);
+   new_dw->pleaseSaveIntegrated(lb->CenterOfMassPositionLabel);
+   new_dw->pleaseSaveIntegrated(lb->CenterOfMassVelocityLabel);
 
 //   pleaseSaveParticlesToGrid(lb->pVelocityLabel,lb->pMassLabel,numMatls,new_dw);
 }
@@ -1329,6 +1333,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   double tempRate = 0; /* tan: tempRate stands for "temperature variation
                                time rate", used for heat conduction.  */
   double ke=0;
+  Vector CMX(0.0,0.0,0.0);
+  Vector CMV(0.0,0.0,0.0);
   int numPTotal = 0;
 
   // This needs the datawarehouse to allow indexing by material
@@ -1461,6 +1467,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
         
         ke += .5*pmass[idx]*pvelocity[idx].length2();
+	CMX = CMX + (px[idx]*pmass[idx]).asVector();
+	CMV += pvelocity[idx]*pmass[idx];
       }
 
       // Store the new result
@@ -1477,6 +1485,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(pids, lb->pParticleIDLabel_preReloc);
 
       new_dw->put(sum_vartype(ke), lb->KineticEnergyLabel);
+      new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
+      new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
 
       if(MPMPhysicalModules::heatConductionModel) {
         new_dw->put(pTemperatureRate, lb->pTemperatureRateLabel_preReloc);
@@ -1546,6 +1556,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.95  2000/06/27 21:50:57  guilkey
+// Added saving of more "meta data."  Namely, center of mass position and
+// velocity.  These are both actually mass weighted, so should be divided
+// by total mass which is being saved in TotalMass.dat.
+//
 // Revision 1.94  2000/06/26 18:47:13  tan
 // Different heat_conduction properties for different materials are allowed
 // in the MPM simulation.

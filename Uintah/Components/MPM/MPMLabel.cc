@@ -193,6 +193,12 @@ MPMLabel::MPMLabel()
   TotalMassLabel = new VarLabel( "TotalMass",
 				 sum_vartype::getTypeDescription() );
 
+  CenterOfMassPositionLabel = new VarLabel( "CenterOfMassPosition",
+				 sumvec_vartype::getTypeDescription() );
+
+  CenterOfMassVelocityLabel = new VarLabel( "CenterOfMassVelocity",
+				 sumvec_vartype::getTypeDescription() );
+
   // PerPatch variables
 
   ppNAPIDLabel = new VarLabel("NAPID",PerPatch<long>::getTypeDescription() );
@@ -208,6 +214,11 @@ const MPMLabel* MPMLabel::getLabels()
 }
 
 // $Log$
+// Revision 1.15  2000/06/27 21:50:57  guilkey
+// Added saving of more "meta data."  Namely, center of mass position and
+// velocity.  These are both actually mass weighted, so should be divided
+// by total mass which is being saved in TotalMass.dat.
+//
 // Revision 1.14  2000/06/23 21:18:34  tan
 // Added pExternalHeatRateLabel for heat conduction.
 //
