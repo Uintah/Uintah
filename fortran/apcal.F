@@ -51,6 +51,34 @@ c-----------------------------------------------------------------------
      $              +at(i,j,k)+ab(i,j,k)
      $              -sp(i,j,k)
 
+#if 0
+               if (ap(i,j,k).lt.0.00000000001) then
+                  print*, 'zero ap in ',i,j,k
+               endif
+
+               if (isnan_fort(ae(i,j,k))) then
+                  print*, 'AE IS NAN AT ',i,j,k
+               endif
+               if (isnan_fort(aw(i,j,k))) then
+                  print*, 'AW IS NAN AT ',i,j,k
+               endif
+               if (isnan_fort(an(i,j,k))) then
+                  print*, 'AN IS NAN AT ',i,j,k
+               endif
+               if (isnan_fort(as(i,j,k))) then
+                  print*, 'AS IS NAN AT ',i,j,k
+               endif
+               if (isnan_fort(at(i,j,k))) then
+                  print*, 'AT IS NAN AT ',i,j,k
+               endif
+               if (isnan_fort(ab(i,j,k))) then
+                  print*, 'AB IS NAN AT ',i,j,k
+               endif
+               if (isnan_fort(ap(i,j,k))) then
+                  print*, 'AP IS NAN AT ',i,j,k
+               endif
+#endif
+
  100        continue
  200     continue
  300  continue

@@ -48,7 +48,8 @@ c------------------------------------------------------------------
      $                 as(i,j,k),at(i,j,k),ab(i,j,k),
      $                 su(i,j,k),sp(i,j,k),const)
                else
-                  if (pcell(i-2*ioff,j-2*joff,k-2*koff).eq.mmwallid) 
+                  if (pcell(i-2*ioff,j-2*joff,k-2*koff).eq.
+     $                 mmwallid) 
      $                 aw(i,j,k) = 0.0D0
                   if (pcell(i+ioff,j+joff,k+koff).eq.mmwallid)
      $                 ae(i,j,k) = 0.0D0

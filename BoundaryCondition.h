@@ -118,6 +118,20 @@ public:
 	return d_wallBdry->d_cellTypeID; 
       }
 
+      ////////////////////////////////////////////////////////////////////////
+      // sets boolean for energy exchange between solid and fluid
+      void setIfCalcEnergyExchange(bool calcEnergyExchange)
+	{
+	  d_calcEnergyExchange = calcEnergyExchange;
+	}
+
+      ////////////////////////////////////////////////////////////////////////
+      // Access function for calcEnergyExchange (multimaterial)
+
+      inline bool getIfCalcEnergyExchange() const{
+	return d_calcEnergyExchange;
+      }      
+
       // GROUP:  Schedule tasks :
       ////////////////////////////////////////////////////////////////////////
       // Initialize cell types
@@ -270,13 +284,22 @@ public:
 			const Patch* patch,
 			CellInformation* cellinfo,
 			ArchesVariables* vars);
+
       // applies multimaterial bc's for scalars and pressure
       void mmscalarWallBC( const ProcessorGroup*,
 			   const Patch* patch,
 			   CellInformation* cellinfo,
 			   ArchesVariables* vars);
       
-      // adds pressure gradient to momentume nonlinear source term
+      ////////////////////////////////////////////////////////////////////////
+      // Calculate uhat for multimaterial case (only for nonintrusion cells)
+      void calculateVelRhoHat_mm(const ProcessorGroup* /*pc*/,
+				 const Patch* patch,
+				 int index, double delta_t,
+				 CellInformation* cellinfo,
+				 ArchesVariables* vars);
+
+      // adds pressure gradient to momentum nonlinear source term
       void addPressureGrad(const ProcessorGroup* ,
 			   const Patch* patch ,
 			   int index,
@@ -300,6 +323,19 @@ public:
 		      int index,
 		      ArchesVariables* vars);
 			
+      void scalarLisolve_mm(const ProcessorGroup*,
+			    const Patch*,
+			    double delta_t,
+			    ArchesVariables* vars,
+			    CellInformation* cellinfo,
+			    const ArchesLabel*);
+			
+      void enthalpyLisolve_mm(const ProcessorGroup*,
+			      const Patch*,
+			      double delta_t,
+			      ArchesVariables* vars,
+			      CellInformation* cellinfo,
+			      const ArchesLabel*);
 private:
 
       // GROUP:  Actual Computations (Private)  :
@@ -488,6 +524,7 @@ private:
       int d_mmWallID;
       // cutoff for void fraction rqd to determine multimaterial wall
       double MM_CUTOFF_VOID_FRAC;
+      bool d_calcEnergyExchange;
 
       // used for calculating wall boundary conditions
       PhysicalConstants* d_physicalConsts;

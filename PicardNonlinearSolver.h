@@ -91,11 +91,22 @@ public:
 
   
       ///////////////////////////////////////////////////////////////////////
+      // dummy Solve for proper initialization of MPMArches problem
+      virtual int noSolve(const LevelP& level,
+			  SchedulerP& sched);
+  
+      ///////////////////////////////////////////////////////////////////////
       // Schedule the Initialization of non linear solver
       //    [in] 
       //        data User data needed for solve 
       void sched_setInitialGuess(SchedulerP&, const PatchSet* patches,
 				 const MaterialSet* matls);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule the dummy solve
+      void sched_dummySolve(SchedulerP& sched,
+			    const PatchSet* patches,
+			    const MaterialSet* matls);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule the interpolation of velocities from Face Centered Variables
@@ -136,6 +147,14 @@ private:
 			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Actual dummy solve
+      void dummySolve(const ProcessorGroup* pc,
+		      const PatchSubset* patches,
+		      const MaterialSubset*,
+		      DataWarehouse* old_dw,
+		      DataWarehouse* new_dw);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Interpolate from SFCX, SFCY, SFCZ to CC<Vector>

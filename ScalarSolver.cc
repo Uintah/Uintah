@@ -187,6 +187,12 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched, const PatchSet* patches
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalNonLinSrcSBLMLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->computes(d_lab->d_scalarSPLabel);  
+
+  if (d_MAlab)
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
   tsk->computes(d_lab->d_scalarSPLabel);
   
   sched->addTask(tsk, patches, matls);
@@ -366,8 +372,20 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
 					    &scalarVars);
     // make it a separate task later
-    d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
-				  &scalarVars, cellinfo, d_lab);
+
+    if (d_MAlab) {
+
+      new_dw->getCopy(scalarVars.cellType, d_lab->d_cellTypeLabel,
+		      matlIndex, patch, 
+		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      
+      d_boundaryCondition->scalarLisolve_mm(pc, patch, delta_t, 
+				       &scalarVars, cellinfo, d_lab);
+    }
+    else
+      d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
+				    &scalarVars, cellinfo, d_lab);
+
   // put back the results
     // allocateAndPut instead:
     /* new_dw->put(scalarVars.scalar, d_lab->d_scalarSPLabel, 
@@ -696,6 +714,14 @@ ScalarSolver::sched_scalarLinearSolvePred(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalNonLinSrcPredLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  if (d_MAlab) {
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  }    
+
 #ifdef correctorstep
   tsk->computes(d_lab->d_scalarPredLabel);
 #else
@@ -788,12 +814,28 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateTemporary(scalarVars.residualScalar,  patch);
 
+    if (d_MAlab) {
+      new_dw->getCopy(scalarVars.cellType, d_lab->d_cellTypeLabel,
+		      matlIndex, patch, 
+		      Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->getCopy(scalarVars.voidFraction, d_lab->d_mmgasVolFracLabel,
+		      matlIndex, patch, 
+		      Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+
   // apply underelax to eqn
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
 					    &scalarVars);
     // make it a separate task later
-    d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
-    &scalarVars, cellinfo, d_lab);
+
+    if (d_MAlab)
+      d_boundaryCondition->scalarLisolve_mm(pc, patch, delta_t, 
+					    &scalarVars,
+					    cellinfo, d_lab);
+    else
+      d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
+				    &scalarVars, cellinfo, d_lab);
+
 				  // put back the results
 #if 0
     cerr << "print scalar solve after predict" << endl;

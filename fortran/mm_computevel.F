@@ -35,12 +35,17 @@ c*********************************************************************
      $                 old_den(i,j,k))
                   old_uu = uu(i,j,k)
 
-                  theta = pt5*(epsg(i-ioff,j-joff,k-koff)+epsg(i,j,k))
+                  theta = pt5*(epsg(i-ioff,j-joff,k-koff)+
+     $                 epsg(i,j,k))
                   
                   uu(i,j,k) = (deltat*theta*
      $                 (press(i-ioff,j-joff,k-koff)-
      $                 press(i,j,k))/dxpw(idf) +
      $                 old_uu*old_dene)/old_dene
+
+               else
+
+                  uu(i,j,k) = zero
 
                endif
 

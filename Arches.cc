@@ -92,6 +92,7 @@ Arches::~Arches()
   delete d_boundaryCondition;
   delete d_nlSolver;
   delete d_physicalConsts;
+  nofTimeSteps = 0;
 #ifdef multimaterialform
   delete d_mmInterface;
 #endif
@@ -224,12 +225,15 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : densitySP, [u,v,w]VelocitySP, scalarSP
   d_boundaryCondition->sched_setProfile(sched, patches, matls);
 
-  // if multimaterial, update celltype for mm intrusions
+  // if multimaterial, update celltype for mm intrusions for exact
+  // initialization.
   // require: voidFrac_CC, cellType
   // compute: mmcellType, mmgasVolFrac
-  // temporarily commenting stuff right below for debug, sk, 01/22/02
-  //  if (d_MAlab)
-  //    d_boundaryCondition->sched_mmWallCellTypeInit_first(sched, patches, matls);
+
+#ifdef ExactMPMArchesInitialize
+  if (d_MAlab)
+    d_boundaryCondition->sched_mmWallCellTypeInit_first(sched, patches, matls);
+#endif
 
   // Compute props (output Varlabel have CP appended to them)
   // require : densitySP
@@ -410,9 +414,22 @@ void
 Arches::scheduleTimeAdvance(const LevelP& level, 
 			    SchedulerP& sched)
 {
+#ifndef ExactMPMArchesInitialize
+  if (d_MAlab) {
+    cout << "Number of time steps = " << nofTimeSteps << endl;
+    if (!nofTimeSteps) {
+      nofTimeSteps = 1;
+      d_nlSolver->noSolve(level, sched);
+    }
+    else
+      d_nlSolver->nonlinearSolve(level, sched);
+  }
+  else
+    d_nlSolver->nonlinearSolve(level, sched);
+#else
   d_nlSolver->nonlinearSolve(level, sched);
+#endif
 }
-
 
 // ****************************************************************************
 // Actual initialization

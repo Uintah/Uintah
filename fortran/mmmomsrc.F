@@ -31,8 +31,21 @@ c mm momentum sources
       do 120 k = KSTU,KENDU
          do 110 j = JSTU,JENDU
             do 100 i = ISTU,IENDU
+
+#if 0
+               if (abs(mmsu(i,j,k)).gt.0.0) then
+                  print*, 'printing nonzero mmsu value ',i,j,k,
+     $                 mmsu(i,j,k)
+               endif
+               if (abs(mmsp(i,j,k)).gt.0.0) then
+                  print*, 'printing nonzero mmsp value ',i,j,k,
+     $                 mmsp(i,j,k)
+               endif
+#endif
+
                SU(I,J,K) = SU(I,J,K)+ mmSU(i,j,k)
                SP(i,j,k) = SP(i,j,k)+ mmSP(i,j,k)
+
  100        continue
  110     continue
  120  continue

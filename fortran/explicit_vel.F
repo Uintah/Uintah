@@ -55,8 +55,8 @@ c*********************************************************************
      &              su(i,j,k) -ap(i,j,k)*old_phi(i,j,k)
                phi(i,j,k) = rhs/apo
  180        continue
- 190        continue
- 200        continue
+ 190     continue
+ 200  continue
       return
       end
 

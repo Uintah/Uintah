@@ -43,6 +43,12 @@ c-----------------------------------------------------------------------
  250     continue
  350  continue
 
+#if 0
+      print*, 'starting index 1 = ',valid_lo(1)
+      print*, 'starting index 2 = ',valid_lo(2)
+      print*, 'starting index 3 = ',valid_lo(3)
+#endif
+
       do 300 k = valid_lo(3), valid_hi(3)
          do 200 j = valid_lo(2), valid_hi(2)
             do 100 i = valid_lo(1), valid_hi(1)
@@ -51,6 +57,20 @@ c-----------------------------------------------------------------------
      $              +an(i,j,k)+as(i,j,k)
      $              +at(i,j,k)+ab(i,j,k)
      $              -sp(i,j,k)
+
+#if 0
+               if (i.eq.3 .and. j.eq.9 .and. k.eq.9) then
+                  print*, 'Debug values at 3,9,9 for momentum'
+                  print*, 'ae = ',ae(3,9,9)
+                  print*, 'aw = ',aw(3,9,9)
+                  print*, 'an = ',an(3,9,9)
+                  print*, 'as = ',as(3,9,9)
+                  print*, 'at = ',at(3,9,9)
+                  print*, 'ab = ',ab(3,9,9)
+                  print*, 'sp = ',sp(3,9,9)
+                  print*, 'ap = ',ap(3,9,9)
+               endif
+#endif
 
  100        continue
  200     continue
