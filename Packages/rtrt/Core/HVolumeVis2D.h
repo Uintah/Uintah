@@ -357,9 +357,24 @@ public:
   }
 };
 
-template<class DataT, class MetaCT4>
+template<class DataT, class MetaCT>
 class HVolumeVis2D: public VolumeVis2D {
 protected:
+  class HVIsectContext {
+  public:
+    // These parameters could be modified and hold accumulating state
+    Color total;
+    float opacity;
+    // These parameters should not change
+    int dix_dx, diy_dy, diz_dz;
+    MetaCT transfunct;
+    double t_inc;
+    double t_min;
+    double t_max;
+    double t_inc_inv;
+    Ray ray;
+    Context *cx;
+  };
 public:
   Vector datadiag;
   Vector sdiag;
@@ -372,22 +387,18 @@ public:
   double* ixsize;
   double* iysize;
   double* izsize;
-  BrickArray3<MetaCT4>* macrocells;
+  BrickArray3<MetaCT>* macrocells;
   WorkQueue* work;
 
   void parallel_calc_mcell(int);
-  void calc_mcell(int depth, int ix, int iy, int iz, MetaCT4& mcell);
-  void isect(int depth, MetaCT4 &transfunct, double t,
+  void calc_mcell(int depth, int ix, int iy, int iz, MetaCT& mcell);
+  void isect(int depth, double t_sample,
 	     double dtdx, double dtdy, double dtdz,
 	     double next_x, double next_y, double next_z,
 	     int ix, int iy, int iz,
-	     int dix_dx, int diy_dy, int diz_dz,
 	     int startx, int starty, int startz,
-	     Color &total, float &opacity,
-	     const double t_inc, const double t_min, const double t_max,
 	     const Vector& cellcorner, const Vector& celldir,
-	     const Ray& ray, const HitInfo& hit,
-	     Context *cx);
+	     HVIsectContext &isctx);
   HVolumeVis2D(BrickArray3<Voxel2D<float> >& data,
 	       Voxel2D<float> data_min, Voxel2D<float> data_max,
 	       int depth, Point min, Point max, Volvis2DDpy *dpy,
@@ -418,8 +429,8 @@ public:
 
 extern Mutex io_lock_;
   
-template<class DataT, class MetaCT4>
-HVolumeVis2D<DataT,MetaCT4>::HVolumeVis2D(BrickArray3<Voxel2D<float> >& data,
+template<class DataT, class MetaCT>
+HVolumeVis2D<DataT,MetaCT>::HVolumeVis2D(BrickArray3<Voxel2D<float> >& data,
 					 Voxel2D<float> data_min,
 					 Voxel2D<float> data_max,
 					 int depth, Point min, Point max,
@@ -504,7 +515,7 @@ HVolumeVis2D<DataT,MetaCT4>::HVolumeVis2D(BrickArray3<Voxel2D<float> >& data,
   if(depth==1){
     macrocells=0;
   } else {
-    macrocells=new BrickArray3<MetaCT4>[depth+1];
+    macrocells=new BrickArray3<MetaCT>[depth+1];
     int xs=1;
     int ys=1;
     int zs=1;
@@ -517,7 +528,7 @@ HVolumeVis2D<DataT,MetaCT4>::HVolumeVis2D(BrickArray3<Voxel2D<float> >& data,
     }
     cerr << "Building hierarchy\n";
 #if 0
-    MetaCT4 top;
+    MetaCT top;
     calc_mcell(depth-1, 0, 0, 0, top);
     cerr << "Min: " << top.min << ", Max: " << top.max << '\n';
 #else
@@ -527,7 +538,7 @@ HVolumeVis2D<DataT,MetaCT4>::HVolumeVis2D(BrickArray3<Voxel2D<float> >& data,
     int totaltop=nx*ny*nz;
     work=new WorkQueue("Building hierarchy");
     work->refill(totaltop, np, 5);
-    SCIRun::Parallel<HVolumeVis2D<DataT,MetaCT4> > phelper(this, &HVolumeVis2D<DataT,MetaCT4>::parallel_calc_mcell);
+    SCIRun::Parallel<HVolumeVis2D<DataT,MetaCT> > phelper(this, &HVolumeVis2D<DataT,MetaCT>::parallel_calc_mcell);
     SCIRun::Thread::parallel(phelper, np, true);
     delete work;
 #endif
@@ -538,14 +549,14 @@ HVolumeVis2D<DataT,MetaCT4>::HVolumeVis2D(BrickArray3<Voxel2D<float> >& data,
   cerr << "**************************************************\n";
 }
 
-template<class DataT, class MetaCT4>
-HVolumeVis2D<DataT,MetaCT4>::~HVolumeVis2D()
+template<class DataT, class MetaCT>
+HVolumeVis2D<DataT,MetaCT>::~HVolumeVis2D()
 {
 }
 
-template<class DataT, class MetaCT4>
-void HVolumeVis2D<DataT,MetaCT4>::calc_mcell(int depth, int startx, int starty,
-					  int startz, MetaCT4& mcell)
+template<class DataT, class MetaCT>
+void HVolumeVis2D<DataT,MetaCT>::calc_mcell(int depth, int startx, int starty,
+					  int startz, MetaCT& mcell)
 {
   int endx=startx+xsize[depth];
   int endy=starty+ysize[depth];
@@ -599,12 +610,12 @@ void HVolumeVis2D<DataT,MetaCT4>::calc_mcell(int depth, int startx, int starty,
     int nx=xsize[depth-1];
     int ny=ysize[depth-1];
     int nz=zsize[depth-1];
-    BrickArray3<MetaCT4>& mcells=macrocells[depth];
+    BrickArray3<MetaCT>& mcells=macrocells[depth];
     for(int x=startx;x<endx;x++){
       for(int y=starty;y<endy;y++){
 	for(int z=startz;z<endz;z++){
 	  // Compute the mcell for this block and store it in tmp
-	  MetaCT4 tmp;
+	  MetaCT tmp;
 	  calc_mcell(depth-1, x*nx, y*ny, z*nz, tmp);
 	  // Stash it away
 	  mcells(x,y,z)=tmp;
@@ -620,22 +631,22 @@ void HVolumeVis2D<DataT,MetaCT4>::calc_mcell(int depth, int startx, int starty,
 }
 
 // This function should not be called if depth is less than 2.
-template<class DataT, class MetaCT4>
-void HVolumeVis2D<DataT,MetaCT4>::parallel_calc_mcell(int)
+template<class DataT, class MetaCT>
+void HVolumeVis2D<DataT,MetaCT>::parallel_calc_mcell(int)
 {
   int ny=ysize[depth-1];
   int nz=zsize[depth-1];
   int nnx=xsize[depth-2];
   int nny=ysize[depth-2];
   int nnz=zsize[depth-2];
-  BrickArray3<MetaCT4>& mcells=macrocells[depth-1];
+  BrickArray3<MetaCT>& mcells=macrocells[depth-1];
   int s, e;
   while(work->nextAssignment(s, e)){
     for(int block=s;block<e;block++){
       int z=block%nz;
       int y=(block%(nz*ny))/nz;
       int x=(block/(ny*nz));
-      MetaCT4 tmp;
+      MetaCT tmp;
       calc_mcell(depth-2, x*nnx, y*nny, z*nnz, tmp);
       mcells(x,y,z)=tmp;
     }
@@ -644,36 +655,31 @@ void HVolumeVis2D<DataT,MetaCT4>::parallel_calc_mcell(int)
 
 //#define BIGLER_DEBUG
 
-template<class DataT, class MetaCT4>
-void HVolumeVis2D<DataT,MetaCT4>::isect(int depth, MetaCT4 &transfunct, double t,
+template<class DataT, class MetaCT>
+void HVolumeVis2D<DataT,MetaCT>::isect(int depth, double t_sample,
 				     double dtdx, double dtdy, double dtdz,
 				  double next_x, double next_y, double next_z,
 				     int ix, int iy, int iz,
-				     int dix_dx, int diy_dy, int diz_dz,
 				     int startx, int starty, int startz,
-				     Color &total, float &opacity,
-				     const double t_inc, const double t_min,
-				     const double t_max,
 				     const Vector& cellcorner,
 				     const Vector& celldir,
-				     const Ray& ray, const HitInfo& hit,
-				     Context *ctx)
+				     HVIsectContext &isctx)
 {
 #ifdef BIGLER_DEBUG
   cerr << "**************************  start depth: " << depth << "\n";
   cerr << "startx = " << startx << "\tix = " << ix << endl;
   cerr << "starty = " << starty << "\tiy = " << iy << endl;
   cerr << "startz = " << startz << "\tiz = " << iz << endl<<endl<<endl;
+  cerr << "celldir = "<<celldir<<", cellcorner = "<<cellcorner<<endl;
   flush(cerr);
 #endif
   int cx=xsize[depth];
   int cy=ysize[depth];
   int cz=zsize[depth];
-  if(depth==0){
-    bool step = true;
 #ifdef BIGLER_DEBUG
-    cerr << "x/y/z frac = ("<<x_frac<<", "<<y_frac<<", "<<z_frac<<")\n";
+  cerr << "cxyz = ("<<cx<<", "<<cy<<", "<<cz<<")\n";
 #endif
+  if(depth==0){
     for(;;){
       int gx=startx+ix;
       int gy=starty+iy;
@@ -681,244 +687,143 @@ void HVolumeVis2D<DataT,MetaCT4>::isect(int depth, MetaCT4 &transfunct, double t
 #ifdef BIGLER_DEBUG
       cerr << "starting for loop, gx,gy,gz = ("<<gx<<", "<<gy<<", "<<gz<<")\n";
 #endif
-      // Need to figure out where the next sample point is along the ray
-      double t_sample;
-      if (step) {
-	double t_norm = (t - t_min)/t_inc;
-	double frac_part = t_norm - (int)t_norm;
-	double t_offset;
-	if (frac_part > 0)
-	  t_offset = (1-frac_part) * t_inc;
-	else
-	  t_offset = 0;
-	t_sample = t + t_offset;
-      } else {
-	t_sample = t;
-      }
-
-      step = true;
+      // t is our t_sample
 #ifdef BIGLER_DEBUG
-      cerr << "t = "<<t<<", t_sample = "<<t_sample<<endl;
+      cerr << "t_sample = "<<t_sample<<endl;
       cerr <<"next_x/y/z = ("<<next_x<<", "<<next_y<<", "<<next_z<<")\n";
       Point p0(this->min+sdiag*Vector(gx,gy,gz));
       Point p1(p0+sdiag);
       cerr << "p0 = "<<p0<<", p1 = "<<p1<<endl;
 #endif
-      if (t_sample < next_x && t_sample < next_y && t_sample < next_z && t_sample < t_max) {
-	// If we have valid samples
-	if(gx<nx-1 && gy<ny-1 && gz<nz-1){
+      // If we have valid samples
+      if(gx<nx-1 && gy<ny-1 && gz<nz-1){
 #ifdef BIGLER_DEBUG
- 	  cerr << "Doing cell: " << gx << ", " << gy << ", " << gz
- 	  << " (" << startx << "+" << ix << ", " << starty << "+" << iy << ", " << startz << "+" << iz << ")\n";
+	cerr << "Doing cell: " << gx << ", " << gy << ", " << gz
+	     << " (" << startx << "+" << ix << ", " << starty << "+" << iy << ", " << startz << "+" << iz << ")\n";
 #endif
-	  Voxel2D<float> rhos[8];
-	  rhos[0]=data(gx, gy, gz);
-	  rhos[1]=data(gx, gy, gz+1);
-	  rhos[2]=data(gx, gy+1, gz);
-	  rhos[3]=data(gx, gy+1, gz+1);
-	  rhos[4]=data(gx+1, gy, gz);
-	  rhos[5]=data(gx+1, gy, gz+1);
-	  rhos[6]=data(gx+1, gy+1, gz);
-	  rhos[7]=data(gx+1, gy+1, gz+1);
-#if 0
-	  float vmin=rhos[0].v();
-	  float vmax=rhos[0].v();
-	  float gmin=rhos[0].g();
-	  float gmax=rhos[0].g();
-	  for(int i=1;i<8;i++){
-	    if(rhos[i].v()<vmin)
-	      vmin=rhos[i].v();
-	    else if(rhos[i].v()>vmax)
-	      vmax=rhos[i].v();
-	    if(rhos[i].g()<gmin)
-	      gmin=rhos[i].g();
-	    else if(rhos[i].g()>gmax)
-	      gmax=rhos[i].g();
-	  }
-	  MetaCT4 mcell;
-	  mcell.turn_on_bits(vmin, vmax, gmin, gmax, data_min, data_max);
-	  // If what we are looking for is inside this cell
-	  if(mcell & transfunct)
-#endif
-	    {
-	    step = false;
+	Voxel2D<float> rhos[8];
+	rhos[0]=data(gx, gy, gz);
+	rhos[1]=data(gx, gy, gz+1);
+	rhos[2]=data(gx, gy+1, gz);
+	rhos[3]=data(gx, gy+1, gz+1);
+	rhos[4]=data(gx+1, gy, gz);
+	rhos[5]=data(gx+1, gy, gz+1);
+	rhos[6]=data(gx+1, gy+1, gz);
+	rhos[7]=data(gx+1, gy+1, gz+1);
+
+	////////////////////////////////////////////////////////////
+	// get the weights
 	
-	    // get the point to interpolate
-	    Point current_p = ray.origin() + ray.direction()*t_sample - min.vector();
-	    ////////////////////////////////////////////////////////////
-	    // interpolate the point
-	    
-	    Point p0(this->min+sdiag*Vector(gx,gy,gz));
-	    Vector weights((current_p-p0)*Vector(nx-1, ny-1, nz -1));
-	    float x_weight_high = weights.x();
-	    float y_weight_high = weights.y();
-	    float z_weight_high = weights.z();
-
-	    Voxel2D<float> lz1, lz2, lz3, lz4, ly1, ly2, value;
-	    lz1 = rhos[0] * (1 - z_weight_high) + rhos[1] * z_weight_high;
-	    lz2 = rhos[2] * (1 - z_weight_high) + rhos[3] * z_weight_high;
-	    lz3 = rhos[4] * (1 - z_weight_high) + rhos[5] * z_weight_high;
-	    lz4 = rhos[6] * (1 - z_weight_high) + rhos[7] * z_weight_high;
-	    
-	    ly1 = lz1 * (1 - y_weight_high) + lz2 * y_weight_high;
-	    ly2 = lz3 * (1 - y_weight_high) + lz4 * y_weight_high;
-	    
-	    value = ly1 * (1 - x_weight_high) + ly2 * x_weight_high;
-
-	    float opacity_factor;
-	    Color value_color;
-	    dpy->voxel_lookup(value, value_color, opacity_factor);
-	    opacity_factor *= 1-opacity;
+	Vector weights = cellcorner+celldir*t_sample;
+	float x_weight_high = weights.x()-ix;
+	float y_weight_high = weights.y()-iy;
+	float z_weight_high = weights.z()-iz;
 #ifdef BIGLER_DEBUG
-	    cerr << "current_p = "<<current_p<<endl;
-	    cerr << "x/y/z_wh = ("<<x_weight_high<<", "<<y_weight_high<<", "<<z_weight_high<<")\n";
-	    cerr << "value = "<<value<<", opacity_factor = "<<opacity_factor<<endl;
-
+	cerr << "weights = ("<<x_weight_high<<", "<<y_weight_high<<", "<<z_weight_high<<")\n";
 #endif
-	    if (opacity_factor > 0.001) {
-	      //      if (true) {
-	      // the point is contributing, so compute the color
+	
+	Voxel2D<float> lz1, lz2, lz3, lz4, ly1, ly2, value;
+	lz1 = rhos[0] * (1 - z_weight_high) + rhos[1] * z_weight_high;
+	lz2 = rhos[2] * (1 - z_weight_high) + rhos[3] * z_weight_high;
+	lz3 = rhos[4] * (1 - z_weight_high) + rhos[5] * z_weight_high;
+	lz4 = rhos[6] * (1 - z_weight_high) + rhos[7] * z_weight_high;
+	
+	ly1 = lz1 * (1 - y_weight_high) + lz2 * y_weight_high;
+	ly2 = lz3 * (1 - y_weight_high) + lz4 * y_weight_high;
+	
+	value = ly1 * (1 - x_weight_high) + ly2 * x_weight_high;
+	
+	float opacity_factor;
+	Color value_color;
+	dpy->voxel_lookup(value, value_color, opacity_factor);
+	opacity_factor *= 1-isctx.opacity;
+
+	if (opacity_factor > 0.001) {
+	  // the point is contributing, so compute the color
+	  
+	  // compute the gradient
+	  float dx = ly2.v() - ly1.v();
 	      
-	      // compute the gradient
-	      Vector gradient;
-	      float dx = ly2.v() - ly1.v();
-	      
-	      float dy, dy1, dy2;
-	      dy1 = lz2.v() - lz1.v();
-	      dy2 = lz4.v() - lz3.v();
-	      dy = dy1 * (1 - x_weight_high) + dy2 * x_weight_high;
-	      
-	      float dz, dz1, dz2, dz3, dz4, dzly1, dzly2;
-	      dz1 = rhos[1].v() - rhos[0].v();
-	      dz2 = rhos[3].v() - rhos[2].v();
-	      dz3 = rhos[5].v() - rhos[4].v();
-	      dz4 = rhos[7].v() - rhos[6].v();
-	      dzly1 = dz1 * (1 - y_weight_high) + dz2 * y_weight_high;
-	      dzly2 = dz3 * (1 - y_weight_high) + dz4 * y_weight_high;
-	      dz = dzly1 * (1 - x_weight_high) + dzly2 * x_weight_high;
-	      if (dx || dy || dz){
-		double length2 = dx*dx+dy*dy+dz*dz;
-		// this lets the compiler use a special 1/sqrt() operation
-		double ilength2 = 1/sqrt(length2);
-		gradient = Vector(dx*ilength2, dy*ilength2,dz*ilength2);
-	      } else {
-		gradient = Vector(0,0,0);
-	      }
-	      
-	      Light* light=ctx->scene->light(0);
-	      Vector light_dir;
-	      light_dir = light->get_pos()-current_p;
-	      
-	      Color temp = color(gradient, ray.direction(),
-				 light_dir.normal(), 
-				 value_color,
-				 light->get_color());
-	      total += temp * opacity_factor;
-	      opacity += opacity_factor;
-	    }
-	    
+	  float dy, dy1, dy2;
+	  dy1 = lz2.v() - lz1.v();
+	  dy2 = lz4.v() - lz3.v();
+	  dy = dy1 * (1 - x_weight_high) + dy2 * x_weight_high;
+	  
+	  float dz, dz1, dz2, dz3, dz4, dzly1, dzly2;
+	  dz1 = rhos[1].v() - rhos[0].v();
+	  dz2 = rhos[3].v() - rhos[2].v();
+	  dz3 = rhos[5].v() - rhos[4].v();
+	  dz4 = rhos[7].v() - rhos[6].v();
+	  dzly1 = dz1 * (1 - y_weight_high) + dz2 * y_weight_high;
+	  dzly2 = dz3 * (1 - y_weight_high) + dz4 * y_weight_high;
+	  dz = dzly1 * (1 - x_weight_high) + dzly2 * x_weight_high;
+	  float length2 = dx*dx+dy*dy+dz*dz;
+
+	  Vector gradient;
+	  if (length2){
+	    // this lets the compiler use a special 1/sqrt() operation
+	    float ilength2 = 1/sqrtf(length2);
+	    gradient = Vector(dx*ilength2, dy*ilength2,dz*ilength2);
+	  } else {
+	    gradient = Vector(0,0,0);
 	  }
 	  
+	  Light* light=isctx.cx->scene->light(0);
+	  Vector light_dir;
+	  Point current_p = isctx.ray.origin() + isctx.ray.direction()*t_sample - min.vector();
+	  light_dir = light->get_pos()-current_p;
+	      
+	  Color temp = color(gradient, isctx.ray.direction(),
+			     light_dir.normal(), 
+			     value_color,
+			     light->get_color());
+	  isctx.total += temp * opacity_factor;
+	  isctx.opacity += opacity_factor;
+	}
+	
+      }
+
+      // Update the new position
+      t_sample += isctx.t_inc;
+      bool break_forloop = false;
+      while (t_sample > next_x) {
+	// Step in x...
+	next_x+=dtdx;
+	ix+=isctx.dix_dx;
+	if(ix<0 || ix>=cx) {
+	  break_forloop = true;
+	  break;
+	}
+      }
+      while (t_sample > next_y) {
+	next_y+=dtdy;
+	iy+=isctx.diy_dy;
+	if(iy<0 || iy>=cy) {
+	  break_forloop = true;
+	  break;
+	}
+      }
+      while (t_sample > next_z) {
+	next_z+=dtdz;
+	iz+=isctx.diz_dz;
+	if(iz<0 || iz>=cz) {
+	  break_forloop = true;
+	  break;
 	}
       }
 #ifdef BIGLER_DEBUG
-      if (step)
-	cerr << "\t\tstep is true\n";
-      else
-	cerr << "\t\tstep is true\n";
+      cerr << "t_sample now "<<t_sample<<", ixyz = ("<<ix<<", "<<iy<<", "<<iz<<")\n";
 #endif
-      if(step) {
-	if (next_x < next_y && next_x < next_z){
-	  // Step in x...
-	  t=next_x;
-	  next_x+=dtdx;
-	  ix+=dix_dx;
-	  if(ix<0 || ix>=cx)
-	    break;
-	} else if(next_y < next_z){
-	  t=next_y;
-	  next_y+=dtdy;
-	  iy+=diy_dy;
-	  if(iy<0 || iy>=cy)
-	    break;
-	} else {
-	  t=next_z;
-	  next_z+=dtdz;
-	  iz+=diz_dz;
-	  if(iz<0 || iz>=cz)
-	    break;
-	}
-      } else {
-	// Update the new position
-	t = t_sample + t_inc;
-	bool break_forloop = false;
-#if 0
-	while (t > next_x) {
-	  // Step in x...
-	  next_x+=dtdx;
-	  ix+=dix_dx;
-	  if(ix<0 || ix>=cx) {
-	    break_forloop = true;
-	    break;
-	  }
-	}
-	if (break_forloop)
-	  break;
-	while (t > next_y) {
-	  next_y+=dtdy;
-	  iy+=diy_dy;
-	  if(iy<0 || iy>=cy) {
-	    break_forloop = true;
-	    break;
-	  }
-	}
-	if (break_forloop)
-	  break;
-	while (t > next_z) {
-	  next_z+=dtdz;
-	  iz+=diz_dz;
-	  if(iz<0 || iz>=cz) {
-	    break_forloop = true;
-	    break;
-	  }
-	}
-	if (break_forloop)
-	  break;
-#else
-	while (t > next_x || t > next_y || t > next_z) {
-	  if (next_x < next_y && next_x < next_z){
-	    // Step in x...
-	    next_x+=dtdx;
-	    ix+=dix_dx;
-	    if(ix<0 || ix>=cx) {
-	      break_forloop = true;
-	      break;
-	    }
-	  } else if(next_y < next_z){
-	    next_y+=dtdy;
-	    iy+=diy_dy;
-	    if(iy<0 || iy>=cy) {
-	      break_forloop = true;
-	      break;
-	    }
-	  } else {
-	    next_z+=dtdz;
-	    iz+=diz_dz;
-	    if(iz<0 || iz>=cz) {
-	      break_forloop = true;
-	      break;
-	    }
-	  }
-	} // end while
-	if (break_forloop)
-	  break;
-#endif
-      }
-      if (opacity >= RAY_TERMINATION_THRESHOLD)
+      if (break_forloop)
+	break;
+
+      // This does early ray termination when we don't have anymore
+      // color to collect.
+      if (isctx.opacity >= RAY_TERMINATION_THRESHOLD)
 	break;
     }
   } else {
-    BrickArray3<MetaCT4>& mcells=macrocells[depth];
+    BrickArray3<MetaCT>& mcells=macrocells[depth];
     for(;;){
       int gx=startx+ix;
       int gy=starty+iy;
@@ -930,22 +835,14 @@ void HVolumeVis2D<DataT,MetaCT4>::isect(int depth, MetaCT4 &transfunct, double t
       cerr << "doing macrocell: " << gx << ", " << gy << ", " << gz << ": "<<endl;
       flush(cerr);
 #endif
-      MetaCT4& mcell=mcells(gx,gy,gz);
-//        mcell.printblock();
-//        MetaCT4 temp;
-//        temp.course_hash1 = mcell.course_hash1 & transfunct.course_hash1;
-//        temp.course_hash2 = mcell.course_hash2 & transfunct.course_hash2;
-//        temp.course_hash3 = mcell.course_hash3 & transfunct.course_hash3;
-//        temp.course_hash4 = mcell.course_hash4 & transfunct.course_hash4;
-//        temp.printblock();
-      if(mcell & transfunct){
+      if(mcells(gx,gy,gz) & isctx.transfunct){
 	// Do this cell...
 	int new_cx=xsize[depth-1];
 	int new_cy=ysize[depth-1];
 	int new_cz=zsize[depth-1];
-	int new_ix=(int)((cellcorner.x()+t*celldir.x()-ix)*new_cx);
-	int new_iy=(int)((cellcorner.y()+t*celldir.y()-iy)*new_cy);
-	int new_iz=(int)((cellcorner.z()+t*celldir.z()-iz)*new_cz);
+	int new_ix=(int)((cellcorner.x()+t_sample*celldir.x()-ix)*new_cx);
+	int new_iy=(int)((cellcorner.y()+t_sample*celldir.y()-iy)*new_cy);
+	int new_iz=(int)((cellcorner.z()+t_sample*celldir.z()-iz)*new_cz);
 // 	cerr << "new: " << (cellcorner.x()+t*celldir.x()-ix)*new_cx
 // 	<< " " << (cellcorner.y()+t*celldir.y()-iy)*new_cy
 // 	<< " " << (cellcorner.z()+t*celldir.z()-iz)*new_cz
@@ -966,7 +863,7 @@ void HVolumeVis2D<DataT,MetaCT4>::isect(int depth, MetaCT4 &transfunct, double t
 	double new_dtdx=dtdx*ixsize[depth-1];
 	double new_dtdy=dtdy*iysize[depth-1];
 	double new_dtdz=dtdz*izsize[depth-1];
-	const Vector dir(ray.direction());
+	const Vector dir(isctx.ray.direction());
 	double new_next_x;
 	if(dir.x() > 0){
 	  new_next_x=next_x-dtdx+new_dtdx*(new_ix+1);
@@ -992,43 +889,78 @@ void HVolumeVis2D<DataT,MetaCT4>::isect(int depth, MetaCT4 &transfunct, double t
 // 	cerr << "iz=" << iz << '\n';
 // 	cerr << "new_cz=" << new_cz << '\n';
 	Vector cellsize(new_cx, new_cy, new_cz);
-	isect(depth-1, transfunct, t,
+	isect(depth-1, t_sample,
 	      new_dtdx, new_dtdy, new_dtdz,
 	      new_next_x, new_next_y, new_next_z,
 	      new_ix, new_iy, new_iz,
-	      dix_dx, diy_dy, diz_dz,
 	      new_startx, new_starty, new_startz,
-	      total, opacity, t_inc, t_min, t_max,
 	      (cellcorner-Vector(ix, iy, iz))*cellsize, celldir*cellsize,
-	      ray, hit, ctx);
+	      isctx);
       }
+
+      // We need to determine where the next sample is.  We do this
+      // using the closest crossing in x/y/z.  This will be the next
+      // sample point.
+      double closest;
       if(next_x < next_y && next_x < next_z){
-	// Step in x...
-	t=next_x;
-	next_x+=dtdx;
-	ix+=dix_dx;
-	if(ix<0 || ix>=cx)
-	  break;
+	// next_x is the closest
+	closest = next_x;
       } else if(next_y < next_z){
-	t=next_y;
-	next_y+=dtdy;
-	iy+=diy_dy;
-	if(iy<0 || iy>=cy)
-	  break;
+	closest = next_y;
       } else {
-	t=next_z;
-	next_z+=dtdz;
-	iz+=diz_dz;
-	if(iz<0 || iz>=cz)
-	  break;
+	closest = next_z;
       }
-#ifdef BIGLER_DEBUG
-      cerr <<"t = "<<t<<endl;
-      cerr <<"next_x/y/z = ("<<next_x<<", "<<next_y<<", "<<next_z<<")\n";
-#endif
-      if (opacity >= RAY_TERMINATION_THRESHOLD)
+	
+      double step = ceil((closest - t_sample)*isctx.t_inc_inv);
+      t_sample += isctx.t_inc * step;
+
+      // Now that we have the next sample point, we need to determine
+      // which cell it ended up in.  There are cases (grazing corners
+      // for example) which will make the next sample not be in the
+      // next cell.  Because this case can happen, this code will try
+      // to determine which cell the sample will live.
+      //
+      // Perhaps there is a way to use cellcorner and cellsize to get
+      // ix/y/z.  The result would have to be cast to an int, and then
+      // next_x/y/z would have to be updated as needed. (next_x +=
+      // dtdx * (newix - ix).  The advantage of something like this
+      // would be the lack of branches, but it does use casts.
+      bool break_forloop = false;
+      while (t_sample > next_x) {
+	// Step in x...
+	next_x+=dtdx;
+	ix+=isctx.dix_dx;
+	if(ix<0 || ix>=cx) {
+	  break_forloop = true;
+	  break;
+	}
+      }
+      while (t_sample > next_y) {
+	next_y+=dtdy;
+	iy+=isctx.diy_dy;
+	if(iy<0 || iy>=cy) {
+	  break_forloop = true;
+	  break;
+	}
+      }
+      while (t_sample > next_z) {
+	next_z+=dtdz;
+	iz+=isctx.diz_dz;
+	if(iz<0 || iz>=cz) {
+	  break_forloop = true;
+	  break;
+	}
+      }
+      if (break_forloop)
 	break;
-      if(t >= t_max)
+#ifdef BIGLER_DEBUG
+      cerr <<"t_sample = "<<t_sample<<endl;
+      cerr <<"next_x/y/z = ("<<next_x<<", "<<next_y<<", "<<next_z<<")\n";
+      cerr <<"ixyz = ("<<ix<<", "<<iy<<", "<<iz<<")\n";
+#endif
+      if (isctx.opacity >= RAY_TERMINATION_THRESHOLD)
+	break;
+      if(t_sample >= isctx.t_max)
 	break;
     }
   }
@@ -1037,8 +969,8 @@ void HVolumeVis2D<DataT,MetaCT4>::isect(int depth, MetaCT4 &transfunct, double t
 #endif
 }
 
-template<class DataT, class MetaCT4>
-void HVolumeVis2D<DataT,MetaCT4>::shade(Color& result, const Ray& ray,
+template<class DataT, class MetaCT>
+void HVolumeVis2D<DataT,MetaCT>::shade(Color& result, const Ray& ray,
 					const HitInfo& hit, int ray_depth,
 					double atten, const Color& accumcolor,
 					Context* ctx)
@@ -1050,22 +982,19 @@ void HVolumeVis2D<DataT,MetaCT4>::shade(Color& result, const Ray& ray,
   float opacity = 0;
   Color total(0,0,0);
 
-  float opacity_factor;
-  Color value_color;
-
   VolumeVis2D_scratchpad* vsp;
   float t_min = hit.min_t;
-  float* t_maxp = (float*)hit.scratchpad;
-  float t_max = *t_maxp;
+  float t_max;
   if(cutplane_active) {
     vsp = (VolumeVis2D_scratchpad*)hit.scratchpad;
     t_max = vsp->tmax;
   } else {
-    t_maxp = (float*)hit.scratchpad;
+    float* t_maxp = (float*)hit.scratchpad;
     t_max = *t_maxp;
   }
 
   Color plane_color(1,0,1);
+  // Add cutting plane color if need be
   if(cutplane_active) {
     if(vsp->coe == OverwroteTMin) {
       Point p = ray.origin() + ray.direction() * t_min - min.vector();
@@ -1083,7 +1012,6 @@ void HVolumeVis2D<DataT,MetaCT4>::shade(Color& result, const Ray& ray,
     }
   } // if cutplane is active
 
-  // Add cutting plane color if need be
 #ifdef BIGLER_DEBUG
   cerr << "\t\tt_min = "<<t_min<<", t_max = "<<t_max<<endl;
   cerr << "ray.origin = "<<ray.origin()<<", dir = "<<ray.direction()<<endl;
@@ -1171,27 +1099,49 @@ void HVolumeVis2D<DataT,MetaCT4>::shade(Color& result, const Ray& ray,
   dtdz=diz_dz*hierdiag.z()*icz*zinv_dir;
   
   Vector cellsize(cx,cy,cz);
+  // cellcorner and celldir can be used to get the location in terms
+  // of the metacell in index space.
+  //
+  // For example if you wanted to get the location at time t (world
+  // space units) in terms of indexspace you would do the following
+  // computation:
+  //
+  // Vector pos = cellcorner + celldir * t + Vector(startx, starty, startz);
+  //
+  // If you wanted to get how far you are inside a given cell you
+  // could use the following code:
+  //
+  // Vector weights = cellcorner + celldir * t - Vector(ix, iy, iz);
   Vector cellcorner((orig-min)*ihierdiag*cellsize);
   Vector celldir(dir*ihierdiag*cellsize);
-
-  MetaCT4 transfunct;
-  transfunct.course_hash1 = dpy->UIgrid1;
-  transfunct.course_hash2 = dpy->UIgrid2;
-  transfunct.course_hash3 = dpy->UIgrid3;
-  transfunct.course_hash4 = dpy->UIgrid4;
   
-  isect(depth-1, transfunct, t_min, dtdx, dtdy, dtdz, next_x, next_y, next_z,
-	ix, iy, iz, dix_dx, diy_dy, diz_dz,
-	0, 0, 0,
-	total, opacity, dpy->t_inc, t_min, t_max,
+  HVIsectContext isctx;
+  isctx.total = total;
+  isctx.opacity = opacity;
+  isctx.dix_dx = dix_dx;
+  isctx.diy_dy = diy_dy;
+  isctx.diz_dz = diz_dz;
+  isctx.transfunct.course_hash1 = dpy->UIgrid1;
+  isctx.transfunct.course_hash2 = dpy->UIgrid2;
+  isctx.transfunct.course_hash3 = dpy->UIgrid3;
+  isctx.transfunct.course_hash4 = dpy->UIgrid4;
+  //  isctx.transfunct.print();
+  isctx.t_inc = dpy->t_inc;
+  isctx.t_min = t_min;
+  isctx.t_max = t_max;
+  isctx.t_inc_inv = 1/isctx.t_inc;
+  isctx.ray = ray;
+  isctx.cx = ctx;
+  
+  isect(depth-1, t_min, dtdx, dtdy, dtdz, next_x, next_y, next_z,
+	ix, iy, iz, 0, 0, 0,
 	cellcorner, celldir,
-	ray, hit, ctx);
+	isctx);
+  
+  opacity = isctx.opacity;
+  total = isctx.total;
 
   } else {
-    // This is precomputed stuff for the fast rendering mode
-    double x_weight_high, y_weight_high, z_weight_high;
-    int x_low, y_low, z_low;
-    
     float t_inc = dpy->t_inc;
     
     for(float t = t_min; t < t_max; t += t_inc) {
@@ -1206,18 +1156,18 @@ void HVolumeVis2D<DataT,MetaCT4>::shade(Color& result, const Ray& ray,
 	// get the indices and weights for the indicies
 	double norm = current_p.x() * inv_diag.x();
 	double step = norm * (nx - 1);
-	x_low = bound((int)step, 0, data.dim1()-2);
-	x_weight_high = step - x_low;
+	int x_low = bound((int)step, 0, data.dim1()-2);
+	float x_weight_high = step - x_low;
 	
 	norm = current_p.y() * inv_diag.y();
 	step = norm * (ny - 1);
-	y_low = bound((int)step, 0, data.dim2()-2);
-	y_weight_high = step - y_low;
+	int y_low = bound((int)step, 0, data.dim2()-2);
+	float y_weight_high = step - y_low;
 	
 	norm = current_p.z() * inv_diag.z();
 	step = norm * (nz - 1);
-	z_low = bound((int)step, 0, data.dim3()-2);
-	z_weight_high = step - z_low;
+	int z_low = bound((int)step, 0, data.dim3()-2);
+	float z_weight_high = step - z_low;
 
 	////////////////////////////////////////////////////////////
 	// do the interpolation
@@ -1245,6 +1195,8 @@ void HVolumeVis2D<DataT,MetaCT4>::shade(Color& result, const Ray& ray,
 	
 	//cout << "value = " << value << endl;
 
+	float opacity_factor;
+	Color value_color;
 	dpy->voxel_lookup(value, value_color, opacity_factor);
 	opacity_factor *= 1-opacity;
 	if (opacity_factor > 0.001) {
@@ -1268,8 +1220,8 @@ void HVolumeVis2D<DataT,MetaCT4>::shade(Color& result, const Ray& ray,
 	  dzly2 = dz3 * (1-y_weight_high) + dz4 * y_weight_high;
 	  dz = dzly1 * (1-x_weight_high) + dzly2 * x_weight_high;
 
-	  if(dx || dy || dz){
-	    float length2 = dx*dx+dy*dy+dz*dz;
+	  float length2 = dx*dx+dy*dy+dz*dz;
+	  if(length2){
 	    // this lets the compiler use a special 1/sqrt() operation
 	    float ilength2 = 1/sqrtf(length2);
 	    gradient = Vector(dx*ilength2, dy*ilength2, dz*ilength2);
@@ -1321,8 +1273,8 @@ void HVolumeVis2D<DataT,MetaCT4>::shade(Color& result, const Ray& ray,
   result = total;
 }
 
-template<class DataT, class MetaCT4>
-void HVolumeVis2D<DataT,MetaCT4>::print(ostream& out) {
+template<class DataT, class MetaCT>
+void HVolumeVis2D<DataT,MetaCT>::print(ostream& out) {
   //  out << "name_ = "<<get_name()<<endl;
   out << "min = "<<min<<", max = "<<max<<endl;
   out << "datadiag = "<<datadiag<<", hierdiag = "<<hierdiag<<", ihierdiag = "<<ihierdiag<<", sdiag = "<<sdiag<<endl;
