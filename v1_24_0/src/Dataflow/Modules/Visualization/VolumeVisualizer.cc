@@ -168,11 +168,15 @@ VolumeVisualizer::execute()
   }
   
   if (!intexture->get(tex)) {
+    warning("No texture, nothing done.");
     return;
   }
   else if (!tex.get_rep()) {
+    warning("No texture, nothing done.");
     return;
   }
+
+  gui->execute(id + " change_shading_state " + ((tex->nb(0) == 1)?"0":"1"));
   
   ColorMapHandle cmap1;
   ColorMap2Handle cmap2;

@@ -82,6 +82,9 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	global $this-draw_mode
 	global $this-num_slices
 	set $this-num_slices -1
+
+        global $this-shading-button-state
+        set $this-shading-button-state 1
     }
 
 #      method ui {} {
@@ -347,6 +350,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
         bind $tab.f1.specular <ButtonRelease> $n
         bind $tab.f1.shine <ButtonRelease> $n
 
+        change_shading_state [set $this-shading-button-state]
     }
 
 
@@ -465,4 +469,22 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	return [set $this-$sval]
     }
 
+    method change_shading_state { val } {
+        set $this-shading-button-state $val
+
+        set w .ui[modname] 
+
+        if {![winfo exists $w]} { 
+            return
+        }
+        
+	set dof [$w.main.options.disp.frame_title childsite]
+        set tab [$dof.tabs childsite "Shading"]
+        
+        if { $val } {
+            $tab.shading configure -fg "black"
+        } else {
+            $tab.shading configure -fg "darkgrey"
+        }
+    }
 }
