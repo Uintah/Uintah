@@ -371,6 +371,11 @@ WARNING
     //////////
     // Insert Documentation Here:
     void subpatchCapable(bool state=true);
+
+    enum DomainSpec {
+      NormalDomain,
+      OutOfDomain
+    };
     
     //////////
     // Insert Documentation Here:
@@ -389,6 +394,13 @@ WARNING
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
+		  const PatchSubset* patches, DomainSpec patches_dom,
+		  const MaterialSubset* matls, DomainSpec matls_dom,
+		  Ghost::GhostType gtype, int numGhostCells = 0);
+    
+    //////////
+    // Insert Documentation Here:
+    void requires(WhichDW, const VarLabel*,
 		  const PatchSubset* patches, const MaterialSubset* matls,
 		  Ghost::GhostType gtype, int numGhostCells = 0);
     
@@ -401,8 +413,26 @@ WARNING
     //////////
     // Insert Documentation Here:
     void requires(WhichDW, const VarLabel*,
+		  const PatchSubset* patches, DomainSpec patches_dom,
+		  Ghost::GhostType gtype, int numGhostCells = 0);
+    
+    //////////
+    // Insert Documentation Here:
+    void requires(WhichDW, const VarLabel*,
+		  const MaterialSubset* matls, DomainSpec matls_dom,
+		  Ghost::GhostType gtype, int numGhostCells = 0);
+    
+    //////////
+    // Insert Documentation Here:
+    void requires(WhichDW, const VarLabel*,
 		  const MaterialSubset* matls,
 		  Ghost::GhostType gtype, int numGhostCells = 0);
+    
+    //////////
+    // Insert Documentation Here:
+    void computes(const VarLabel*,
+		  const PatchSubset* patches, DomainSpec patches_domain, 
+		  const MaterialSubset* matls, DomainSpec matls_domain);
     
     //////////
     // Insert Documentation Here:
@@ -412,6 +442,11 @@ WARNING
     //////////
     // Insert Documentation Here:
     void computes(const VarLabel*, const MaterialSubset* matls);
+    
+    //////////
+    // Insert Documentation Here:
+    void computes(const VarLabel*, const MaterialSubset* matls,
+		  DomainSpec matls_domain);
     
     //////////
     // Tells the task to actually execute the function assigned to it.
@@ -442,15 +477,17 @@ WARNING
       Edge* req_tail;
       Edge* comp_head;
       Edge* comp_tail;
+      DomainSpec patches_dom;
+      DomainSpec matls_dom;
       Ghost::GhostType gtype;
       WhichDW dw;
       int numGhostCells;
       
-      Dependency(Task* task,
-		 WhichDW dw,
-		 const VarLabel* var,
+      Dependency(Task* task, WhichDW dw, const VarLabel* var,
 		 const PatchSubset* patches,
 		 const MaterialSubset* matls,
+		 DomainSpec patches_dom = NormalDomain,
+		 DomainSpec matls_dom = NormalDomain,
 		 Ghost::GhostType gtype = Ghost::None,
 		 int numGhostCells = 0);
       ~Dependency();
@@ -474,7 +511,7 @@ WARNING
       {
       }
     };
-    
+
     const Dependency* getComputes() const {
       return comp_head;
     }

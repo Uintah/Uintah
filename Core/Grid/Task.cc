@@ -76,11 +76,12 @@ Task::subpatchCapable(bool state)
 
 void
 Task::requires(WhichDW dw, const VarLabel* var,
-	       const PatchSubset* patches, const MaterialSubset* matls,
+	       const PatchSubset* patches, DomainSpec patches_dom,
+	       const MaterialSubset* matls, DomainSpec matls_dom,
 	       Ghost::GhostType gtype, int numGhostCells)
 {
   Dependency* dep = scinew Dependency(this, dw, var, patches, matls,
-				   gtype, numGhostCells);
+				      patches_dom, matls_dom,  gtype, numGhostCells);
   dep->next=0;
   if(req_tail)
     req_tail->next=dep;
@@ -92,9 +93,19 @@ Task::requires(WhichDW dw, const VarLabel* var,
 
 void
 Task::requires(WhichDW dw, const VarLabel* var,
+	       const PatchSubset* patches, const MaterialSubset* matls,
 	       Ghost::GhostType gtype, int numGhostCells)
 {
-  requires(dw, var, 0, 0, gtype, numGhostCells);
+  requires(dw, var, patches, NormalDomain, matls, NormalDomain,
+	   gtype, numGhostCells);
+}
+
+
+void
+Task::requires(WhichDW dw, const VarLabel* var,
+	       Ghost::GhostType gtype, int numGhostCells)
+{
+  requires(dw, var, 0, NormalDomain, 0, NormalDomain, gtype, numGhostCells);
 }
 
 void
@@ -102,7 +113,15 @@ Task::requires(WhichDW dw, const VarLabel* var,
 	       const MaterialSubset* matls,
 	       Ghost::GhostType gtype, int numGhostCells)
 {
-  requires(dw, var, 0, matls, gtype, numGhostCells);
+  requires(dw, var, 0, NormalDomain, matls, NormalDomain, gtype, numGhostCells);
+}
+
+void
+Task::requires(WhichDW dw, const VarLabel* var,
+	       const MaterialSubset* matls, DomainSpec matls_dom,
+	       Ghost::GhostType gtype, int numGhostCells)
+{
+  requires(dw, var, 0, NormalDomain, matls, matls_dom, gtype, numGhostCells);
 }
 
 void
@@ -110,7 +129,7 @@ Task::requires(WhichDW dw, const VarLabel* var,
 	       const PatchSubset* patches,
 	       Ghost::GhostType gtype, int numGhostCells)
 {
-  requires(dw, var, patches, 0, gtype, numGhostCells);
+  requires(dw, var, patches, NormalDomain, 0, NormalDomain, gtype, numGhostCells);
 }
 
 void
@@ -121,7 +140,7 @@ Task::requires(WhichDW dw, const VarLabel* var, const PatchSubset* patches,
   if(!(vartype == TypeDescription::PerPatch
        || vartype == TypeDescription::ReductionVariable))
     throw InternalError("Requires should specify ghost type for this variable");
-  requires(dw, var, patches, matls, Ghost::None, 0);
+  requires(dw, var, patches, NormalDomain, matls, NormalDomain, Ghost::None, 0);
 }
 
 void
@@ -132,14 +151,16 @@ Task::requires(WhichDW dw, const VarLabel* var,
   if(!(vartype == TypeDescription::PerPatch
        || vartype == TypeDescription::ReductionVariable))
     throw InternalError("Requires should specify ghost type for this variable");
-  requires(dw, var, 0, matls, Ghost::None, 0);
+  requires(dw, var, 0, NormalDomain, matls, NormalDomain, Ghost::None, 0);
 }
 
 void
-Task::computes(const VarLabel* var, const PatchSubset* patches,
-               const MaterialSubset* matls)
+Task::computes(const VarLabel* var,
+	       const PatchSubset* patches, DomainSpec patches_dom,
+	       const MaterialSubset* matls, DomainSpec matls_dom)
 {
-  Dependency* dep = scinew Dependency(this, NewDW, var, patches, matls);
+  Dependency* dep = scinew Dependency(this, NewDW, var, patches, matls,
+				      patches_dom, matls_dom);
   dep->next=0;
   if(comp_tail)
     comp_tail->next=dep;
@@ -149,17 +170,34 @@ Task::computes(const VarLabel* var, const PatchSubset* patches,
 }
 
 void
+Task::computes(const VarLabel* var, const PatchSubset* patches,
+               const MaterialSubset* matls)
+{
+  computes(var, patches, NormalDomain, matls, NormalDomain);
+}
+
+void
 Task::computes(const VarLabel* var, const MaterialSubset* matls)
 {
-  computes(var, 0, matls);
+  computes(var, 0, NormalDomain, matls, NormalDomain);
+}
+
+void
+Task::computes(const VarLabel* var, const MaterialSubset* matls,
+	       DomainSpec matls_dom)
+{
+  computes(var, 0, NormalDomain, matls, matls_dom);
 }
 
 Task::Dependency::Dependency(Task* task, WhichDW dw, const VarLabel* var,
 			     const PatchSubset* patches,
 			     const MaterialSubset* matls,
+			     DomainSpec patches_dom,
+			     DomainSpec matls_dom,
 			     Ghost::GhostType gtype,
 			     int numGhostCells)
 : task(task), var(var), patches(patches), matls(matls),
+  patches_dom(patches_dom), matls_dom(matls_dom),
   gtype(gtype), dw(dw), numGhostCells(numGhostCells)
 {
   req_head=req_tail=comp_head=comp_tail=0;
