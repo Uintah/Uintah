@@ -75,7 +75,7 @@ class ConductivitySearch : public Module {
   int counter;
   clString state;
   double* y; //holds initial errors for p configuration
-  TCLint seedTCL;
+  TCLstring seedTCL;
 public:
   MeshHandle mesh;
   MusilRNG* mr;
@@ -309,13 +309,16 @@ void ConductivitySearch::execute() {
   pinzero = pinzeroTCL.get();
   cerr << "pinzero="<<pinzero<<"  refnode="<<refnode<<"\n";
   int i, j;
-  if (AH->generation != AHgen || seed != seedTCL.get()) {
+  int newSeed;
+  seedTCL.get().get_int(newSeed);
+  if (AH->generation != AHgen || seed != newSeed) {
     SparseRowMatrix *AHp=dynamic_cast<SparseRowMatrix*>(AH.get_rep());
     if (!AHp) {
       cerr << "Error - A matrix wasn't a SparseRowMatrix!\n";
       return;
     }
-    seed=seedTCL.get();
+    seed=newSeed;
+    seedTCL.set(to_string(seed+1));
     mr = new MusilRNG(seed);
     (*mr)();        // first number isn't random
     AHgen=AH->generation;
@@ -498,7 +501,7 @@ void ConductivitySearch::helper(int /*proc*/){
     _CS_helper_sem->down();
 	
     cerr <<"Calling amoeba()"<<endl;
-    FTOL = 1.0e-7;
+    FTOL = 1.0e-10;
     nfunc=200;
 	
     int i;
@@ -609,6 +612,9 @@ void ConductivitySearch::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.4  2000/12/13 20:55:12  dmw
+// Fixed seed variable bug
+//
 // Revision 1.3  2000/11/16 07:33:57  dmw
 // Added random seeding
 //
