@@ -336,16 +336,10 @@ class PowerAppBase {
     ### save_class_variables
     #########################
     # Save out all of the class variables 
+    # Must be implemented by child class so that
+    # child class variables get written out too
     method save_class_variables { fileid } {
-	puts $fileid "\n# Class Variables\n"
-	
-	foreach v [info variable] {
-	    set var [get_class_variable_name $v]
-	    if {$var != "this" } {
-		puts $fileid "set $var \{[set $var]\}"
-	    }
-	}
-	puts $fileid "set loading 1"
+	puts "Define save_class_variables for [appname] app"
     }
 
     
