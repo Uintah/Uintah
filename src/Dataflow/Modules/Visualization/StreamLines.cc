@@ -375,6 +375,15 @@ StreamLinesAlgo::FindNodes(vector<Point> &v, // storage for points
 }
 
 
+static inline int
+CLAMP(int a, int lower, int upper)
+{
+  if (a < lower) return lower;
+  else if (a > upper) return upper;
+  return a;
+}
+
+
 
 void
 StreamLines::execute()
@@ -439,7 +448,7 @@ StreamLines::execute()
   oport_->send(algo->execute(sf_->mesh(), vfi,
 			     tolerance, stepsize, maxsteps, direction, color,
 			     remove_colinear_.get(),
-			     method_.get(), np_.get()));
+			     method_.get(), CLAMP(np_.get(), 1, 256)));
 }
 
 
