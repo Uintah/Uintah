@@ -1008,6 +1008,13 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
       face_id_ = 0;
     }
     maybe_execute(FACE);
+  } else if (args[1] == "rerender_all"){
+    nodes_dirty_ = true; 
+    edges_dirty_ = true; 
+    faces_dirty_ = true; 
+    data_dirty_ = true;
+    text_dirty_ = true;
+    want_to_execute();
   } else if (args[1] == "toggle_display_faces"){
     // Toggle the GeomSwitch.
     faces_on_.reset();
