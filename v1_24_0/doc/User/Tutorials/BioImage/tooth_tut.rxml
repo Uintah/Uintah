@@ -368,22 +368,9 @@ DEALINGS IN THE SOFTWARE.
 	    "window width" and "level" may allow us to view certain features of the dataset, like
 	    bone for example.
 	  </para>
-	  <figure id="fig.windowWidthLevelControlsDefault"><title>Window Width and Level controls</title>
-	  <mediaobject>
-	    <textobject>
-	      <phrase>Window Width and Level controls.</phrase>
-	    </textobject>
-	    <imageobject>
-	      <imagedata fileref="Figures/window_level_sliders.eps" align="center" format="EPS"/>
-	    </imageobject>
-	    <imageobject>
-	      <imagedata fileref="Figures/window_level_sliders.jpg" align="center" format="JPG"/>
-	    </imageobject>
-	  </mediaobject>
-	  </figure>	
 	  <para>
-	    The easiest way to change the "window width" and "level" is using the slider 
-	    <xref linkend="fig.windowWidthLevelControlsDefault"/> in the Planes tab.
+	    The easiest way to change the "window width" and "level" is using the slider  
+	    shown in label 4 of <xref linkend="fig.planesTab"/> in the Planes tab.
 	    There are two sliders which can be used to set the window width and level. It is also possible to type
 	    in a numerical value for the window with and level by clicking on the digit displayed next to the 
 	    slider and typing in a value.
