@@ -4,6 +4,7 @@
 LOCALINCLUDES = -I. -I../modules -I../../wrapper -I../../wrapper/Mt -I../../wrapper/libMInT
 OBJS = CallbackCloners.o \
 	Color.o ColorManager.o  Connection.o  \
+	DBContext.o  Dialbox.o  \
 	Field3D.o  Field3DPort.o  Geom.o  GeometryPort.o  \
 	HelpUI.o  MemStats.o  MessageBase.o  MenuBar.o  ModuleHelper.o  \
 	Module.o  ModuleList.o  MotifCallbackBase.o  \
@@ -15,6 +16,7 @@ OBJS = CallbackCloners.o \
 	main.o
 SRCS = CallbackCloners.cc \
 	Color.cc ColorManager.cc Connection.cc \
+	DBContext.cc Dialbox.cc \
 	Field3D.cc Field3DPort.cc Geom.cc GeometryPort.cc \
 	HelpUI.cc MemStats.cc MessageBase.cc MenuBar.cc ModuleHelper.cc \
 	Module.cc ModuleList.cc MotifCallbackBase.cc \

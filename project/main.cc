@@ -14,6 +14,7 @@
 #include <Classlib/ArgProcessor.h>
 #include <Multitask/Task.h>
 #include <ColorManager.h>
+#include <Dialbox.h>
 #include <ModuleList.h>
 #include <MtXEventLoop.h>
 #include <Network.h>
@@ -60,6 +61,10 @@ int main(int argc, char** argv)
     // Activate the network editor and scheduler.  Arguments and return
     // values are meaningless
     gui_task->activate(0);
+
+    // Fork the dial box manager
+    Dialbox* dialtask=new Dialbox(color_manager);
+    dialtask->activate(0);
 
     // This will wait until all tasks have completed before exiting
     TaskManager::main_exit();

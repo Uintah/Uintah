@@ -103,7 +103,7 @@ int NetworkEditor::body(int)
 					  &NetworkEditor::quit,
 					  0, 0);
     MenuC* stats=menubar.AddMenu("Statistics");
-    PushButtonC* membutton=stats->AddButton("Memory");
+    PushButtonC* membutton=stats->AddButton("Memory...");
     new MotifCallback<NetworkEditor>FIXCB(membutton, XmNactivateCallback,
 					  &mailbox, this,
 					  &NetworkEditor::popup_memstats,
