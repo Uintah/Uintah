@@ -50,8 +50,14 @@ bool RegridderCommon::needRecompile(double time, double delt, const GridP& grid)
 
 bool RegridderCommon::needsToReGrid()
 {
-  // TODO - do some logic with last timestep and dilation layers
-  return d_isAdaptive;
+  if (!d_isAdaptive)
+    return false;
+  if (d_lastRegridTimestep + d_maxTimestepsBetweenRegrids 
+      <= d_sharedState->getCurrentTopLevelTimeStep()) {
+    d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+    return true;
+  }
+  return false;
 }
 
 bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& sched)
@@ -108,7 +114,6 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   }
 
   d_isAdaptive = true;
-
   // get max num levels
   regrid_spec->require("max_levels", d_maxLevels);
 
@@ -157,10 +162,20 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   d_cellCreationDilation = IntVector(1,1,1);
   d_cellDeletionDilation = IntVector(1,1,1);
   d_minBoundaryCells = IntVector(1,1,1);
+  d_maxTimestepsBetweenRegrids = 1;
 
   regrid_spec->get("cell_creation_dilation", d_cellCreationDilation);
   regrid_spec->get("cell_deletion_dilation", d_cellDeletionDilation);
   regrid_spec->get("min_boundary_cells", d_minBoundaryCells);
+  regrid_spec->get("max_timestep_interval", d_maxTimestepsBetweenRegrids);
+
+  if (d_maxTimestepsBetweenRegrids > d_cellCreationDilation.x()+1 || 
+      d_maxTimestepsBetweenRegrids > d_cellCreationDilation.y()+1 || 
+      d_maxTimestepsBetweenRegrids > d_cellCreationDilation.z()+1) {
+    throw ProblemSetupException("max_timestep_interval can be at most 1 greater than any component of \ncell_creation_dilation");
+  }
+    
+
 
   const LevelP level0 = oldGrid->getLevel(0);
   d_cellNum.resize(d_maxLevels);
