@@ -27,6 +27,7 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_label8
     global $this-gui_label9
     global $this-FME_on
+    global $this-Files_on
     global $this-enableDraw
     global $this-currentselection
     # values: "fromHotBoxUI" or "fromProbe"
@@ -38,6 +39,7 @@ itcl_class VS_DataFlow_HotBox {
     global $this-anatomydatasource
     global $this-adjacencydatasource
     global $this-boundingboxdatasource
+    global $this-injurylistdatasource
     global $this-querytype
 
     set $this-gui_label1 "label1"
@@ -50,6 +52,7 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_label8 "label8"
     set $this-gui_label9 "label9"
     set $this-FME_on "no"
+    set $this-Files_on "no"
     set $this-enableDraw "no"
     set $this-currentselection ""
     set $this-datafile ""
@@ -57,6 +60,7 @@ itcl_class VS_DataFlow_HotBox {
     set $this-anatomydatasource ""
     set $this-adjacencydatasource ""
     set $this-boundingboxdatasource ""
+    set $this-injurylistdatasource ""
     set $this-querytype "1"
   }
   # end method set_defaults
@@ -81,38 +85,54 @@ itcl_class VS_DataFlow_HotBox {
     # file types to appers in filter box
     set types {
         {{Field File}     {.csv}      }
+        {{Field File}     {.xml}      }
         {{All Files} {.*}   }
     }
                                                                                 
     ######################################################
+    # Create a new top-level window for the file browser
                                                                                 
     if {$whichdatasource == "anatomy"} {
     set title "Open LabelMap file"
-    makeOpenFilebox \
-        -filevar $this-anatomydatasource \
-        -command "$this-c needexecute" \
+    set $this-anatomydatasource [ tk_getOpenFile \
         -title $title \
         -filetypes $types \
         -initialdir $initdir \
-        -defaultextension $defext
-  } elseif {$whichdatasource == "adjacency"} {
+        -defaultextension $defext ]
+    if { [set $this-anatomydatasource] != "" } {
+         $this-c needexecute
+       }
+    } elseif {$whichdatasource == "adjacency"} {
     set title "Open Adjacency Map file"
-    makeOpenFilebox \
-        -filevar $this-adjacencydatasource \
-        -command "$this-c needexecute" \
+    set $this-adjacencydatasource [ tk_getOpenFile \
         -title $title \
         -filetypes $types \
         -initialdir $initdir \
-        -defaultextension $defext
-  } elseif {$whichdatasource == "boundingbox"} {
+        -defaultextension $defext ]
+    if { [set $this-adjacencydatasource ] != "" } {
+         $this-c needexecute
+       }
+    } elseif {$whichdatasource == "boundingbox"} {
     set title "Open Bounding Box file"
-    makeOpenFilebox \
-        -filevar $this-boundingboxdatasource \
-        -command "$this-c needexecute" \
+    set $this-boundingboxdatasource [ tk_getOpenFile \
         -title $title \
         -filetypes $types \
         -initialdir $initdir \
-        -defaultextension $defext
+        -defaultextension $defext ]
+    if { [set $this-boundingboxdatasource ] != "" } {
+         $this-c needexecute
+       }
+    } elseif {$whichdatasource == "injurylist"} {
+    set title "Open Injury List file"
+    set defext ".xml"
+    set $this-injurylistdatasource [ tk_getOpenFile \
+        -title $title \
+        -filetypes $types \
+        -initialdir $initdir \
+        -defaultextension $defext ]
+    if { [set  $this-injurylistdatasource] != "" } {
+         $this-c needexecute
+       }
     }
   }
   # end method launch_filebrowser
@@ -124,6 +144,15 @@ itcl_class VS_DataFlow_HotBox {
     } else {set $this-FME_on "yes"}
   }
   # end method toggle_FME_on
+
+  method toggle_Files_on {} {
+    if {[set $this-Files_on] == "yes"} {
+      # toggle Files control off
+      set $this-Files_on "no"
+    } else {set $this-Files_on "yes"}
+    $this-c needexecute
+  }
+  # end method toggle_Files_on
 
   method toggle_enableDraw {} {
     if {[set $this-enableDraw] == "yes"} {
@@ -208,6 +237,8 @@ itcl_class VS_DataFlow_HotBox {
     }
 
     toplevel $w
+    checkbutton $w.togFilesUI -text "Data Sources" -command "$this toggle_Files_on"
+    if { [set $this-Files_on] == "yes" } {
     frame $w.files
     frame $w.files.row1
     label $w.files.row1.anatomylabel -text "Anatomy Data Source: "
@@ -223,7 +254,13 @@ itcl_class VS_DataFlow_HotBox {
     label $w.files.row3.boundingboxlabel -text "Bounding Box Data Source: "
     entry $w.files.row3.filenamentry -textvar $this-boundingboxdatasource -width 50
     button  $w.files.row3.browsebutton -text "Browse..." -command "$this launch_filebrowser boundingbox"
-    pack $w.files.row1 $w.files.row2 $w.files.row3 -side top -anchor w
+
+    frame $w.files.row4
+    label $w.files.row4.injurylistlabel -text "Injury List Data Source: "
+    entry $w.files.row4.filenamentry -textvar $this-injurylistdatasource -width 50
+    button  $w.files.row4.browsebutton -text "Browse..." -command "$this launch_filebrowser injurylist"
+
+    pack $w.files.row1 $w.files.row2 $w.files.row3 $w.files.row4 -side top -anchor w
     pack $w.files.row1.anatomylabel $w.files.row1.filenamentry\
 	$w.files.row1.browsebutton\
         -side left -anchor n -expand yes -fill x
@@ -233,6 +270,11 @@ itcl_class VS_DataFlow_HotBox {
     pack $w.files.row3.boundingboxlabel $w.files.row3.filenamentry\
 	$w.files.row3.browsebutton\
         -side left -anchor n -expand yes -fill x
+    pack $w.files.row4.injurylistlabel $w.files.row4.filenamentry\
+	$w.files.row4.browsebutton\
+        -side left -anchor n -expand yes -fill x
+    }
+    # end if { [set $this-Files_on] == "yes" }
 
     frame $w.f
     # the UI buttons for selecting anatomical names (adjacencies)
@@ -242,7 +284,7 @@ itcl_class VS_DataFlow_HotBox {
     button $w.f.row1.ne  -textvariable $this-gui_label3 -command "$this set_selection 3"
     frame $w.f.row2
     button $w.f.row2.west -textvariable $this-gui_label4 -command "$this set_selection 4"
-    button $w.f.row2.c    -textvariable $this-gui_label5 -command "$this set_selection 5"
+    button $w.f.row2.c  -background yellow  -textvariable $this-gui_label5 -command "$this set_selection 5"
     button $w.f.row2.e   -textvariable $this-gui_label6 -command "$this set_selection 6"
     frame $w.f.row3
     button $w.f.row3.sw  -textvariable $this-gui_label7 -command "$this set_selection 7"
@@ -277,7 +319,12 @@ itcl_class VS_DataFlow_HotBox {
     radiobutton $w.controls2.partsbutton -value 3 -text "Parts" -variable querytype -command "$this set_querytype 3"
     radiobutton $w.controls2.partcontainsbutton -value 4 -text "Part Contains" -variable querytype -command "$this set_querytype 4"
     pack $w.controls2.querytypelabel $w.controls2.adjacenttobutton $w.controls2.containsbutton $w.controls2.partsbutton $w.controls2.partcontainsbutton -side left -expand yes -fill x
-    pack $w.files $w.f $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+
+    if { [set $this-Files_on] == "yes" } {
+    pack $w.togFilesUI $w.files $w.f $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+    } else {
+    pack $w.togFilesUI $w.f $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+    }
 # pack $w.title -side top
   }
 # end method ui
