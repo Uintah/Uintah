@@ -36,6 +36,7 @@ public:
     GeomSphere(int nu, int nv, IntVector id);
     GeomSphere(int nu=20, int nv=10, int id = 0x1234567);
     GeomSphere(const Point&, double, int nu=20, int nv=10, int id = 0x1234567);
+    GeomSphere(const Point&, double, int nu, int nv, IntVector id);
     GeomSphere(const GeomSphere&);
     virtual ~GeomSphere();
 
@@ -60,6 +61,9 @@ public:
 
 //
 // $Log$
+// Revision 1.7  2000/08/11 15:38:35  bigler
+// Added another constructor that took an IntVector index.
+//
 // Revision 1.6  2000/08/09 18:21:15  kuzimmer
 // Added IntVector indexing to GeomObj & GeomSphere
 //

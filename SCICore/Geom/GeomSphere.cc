@@ -50,6 +50,12 @@ GeomSphere::GeomSphere(const Point& cen, double rad, int nu, int nv, int id)
     adjust();
 }
 
+GeomSphere::GeomSphere(const Point& cen, double rad, int nu, int nv, IntVector id)
+: GeomObj( id ), cen(cen), rad(rad), nu(nu), nv(nv)
+{
+    adjust();
+}
+
 void GeomSphere::move(const Point& _cen, double _rad, int _nu, int _nv)
 {
     cen=_cen;
@@ -92,6 +98,7 @@ GeomSphere::getId( int& id )
 bool
 GeomSphere::getId( IntVector& id )
 {
+  cerr << "id = " << id << "  _id = " << this->_id << "\n";
   if ( _id == IntVector(0x1234567,0x1234567,0x1234567) )
     return false;
   else {
@@ -151,6 +158,9 @@ bool GeomSphere::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.9  2000/08/11 15:38:35  bigler
+// Added another constructor that took an IntVector index.
+//
 // Revision 1.8  2000/08/09 18:21:14  kuzimmer
 // Added IntVector indexing to GeomObj & GeomSphere
 //
