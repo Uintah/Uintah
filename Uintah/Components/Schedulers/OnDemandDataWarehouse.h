@@ -105,6 +105,27 @@ public:
 		    int matlIndex, const Patch*);
 
 
+   // SFC[X-Z]Variables Variables
+   virtual void allocate(SFCXVariableBase&, const VarLabel*,
+			 int matlIndex, const Patch*);
+   virtual void get(SFCXVariableBase&, const VarLabel*, int matlIndex,
+		    const Patch*, Ghost::GhostType, int numGhostCells);
+   virtual void put(const SFCXVariableBase&, const VarLabel*,
+		    int matlIndex, const Patch*);
+
+   virtual void allocate(SFCYVariableBase&, const VarLabel*,
+			 int matlIndex, const Patch*);
+   virtual void get(SFCYVariableBase&, const VarLabel*, int matlIndex,
+		    const Patch*, Ghost::GhostType, int numGhostCells);
+   virtual void put(const SFCYVariableBase&, const VarLabel*,
+		    int matlIndex, const Patch*);
+
+   virtual void allocate(SFCZVariableBase&, const VarLabel*,
+			 int matlIndex, const Patch*);
+   virtual void get(SFCZVariableBase&, const VarLabel*, int matlIndex,
+		    const Patch*, Ghost::GhostType, int numGhostCells);
+   virtual void put(const SFCZVariableBase&, const VarLabel*,
+		    int matlIndex, const Patch*);
    // PerPatch Variables
    virtual void get(PerPatchBase&, const VarLabel*, int matIndex, const Patch*);
    virtual void put(const PerPatchBase&, const VarLabel*,
@@ -196,6 +217,9 @@ private:
    DWDatabase<NCVariableBase>       d_ncDB;
    DWDatabase<CCVariableBase>       d_ccDB;
    DWDatabase<FCVariableBase>       d_fcDB;
+   DWDatabase<SFCXVariableBase>     d_sfcxDB;
+   DWDatabase<SFCYVariableBase>     d_sfcyDB;
+   DWDatabase<SFCZVariableBase>     d_sfczDB;
    DWDatabase<ParticleVariableBase> d_particleDB;
    reductionDBtype                  d_reductionDB;
    DWDatabase<PerPatchBase>         d_perpatchDB;
@@ -234,6 +258,10 @@ private:
 
 //
 // $Log$
+// Revision 1.32  2000/06/27 23:20:03  rawat
+// added functions to deal with staggered cell variables. Also modified get function
+// for CCVariables.
+//
 // Revision 1.31  2000/06/21 20:50:03  guilkey
 // Added deleteParticles, a currently empty function that will remove
 // particles that are no longer relevant to the simulation.

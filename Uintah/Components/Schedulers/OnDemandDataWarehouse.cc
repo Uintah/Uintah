@@ -103,6 +103,12 @@ OnDemandDataWarehouse::exists(const VarLabel* label, int matlIndex,
 	return true;
   if(d_ccDB.exists(label,matlIndex,patch))
 	return true;
+  if(d_sfcxDB.exists(label,matlIndex,patch))
+	return true;
+  if(d_sfcyDB.exists(label,matlIndex,patch))
+	return true;
+  if(d_sfczDB.exists(label,matlIndex,patch))
+	return true;
 
   return false;
 
@@ -554,10 +560,8 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
 	 if(numGhostCells == 0)
 	    throw InternalError("No ghost cells specified with Task::AroundCells");
 	 // all 6 faces
-	 l=-1;
-	 h=1;
-	 lowIndex = patch->getCellLowIndex()-gc;
-         highIndex = patch->getCellHighIndex()+gc;
+	 lowIndex = patch->getGhostCellLowIndex(numGhostCells);
+         highIndex = patch->getGhostCellHighIndex(numGhostCells);
 	 break;
       default:
 	 throw InternalError("Illegal ghost type");
@@ -566,8 +570,8 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
       long totalCells=0;
       const Level* level = patch->getLevel();
       std::vector<const Patch*> neighbors;
-      IntVector low(patch->getCellLowIndex()+IntVector(l,l,l));
-      IntVector high(patch->getCellHighIndex()+IntVector(h,h,h));
+      IntVector low = lowIndex;
+      IntVector high = highIndex;
       level->selectPatches(low, high, neighbors);
       for(int i=0;i<neighbors.size();i++){
 	 const Patch* neighbor = neighbors[i];
@@ -726,6 +730,310 @@ OnDemandDataWarehouse::put(const FCVariableBase& var, const VarLabel* label,
 }
 
 
+void
+OnDemandDataWarehouse::get(SFCXVariableBase& var, const VarLabel* label,
+			   int matlIndex, const Patch* patch,
+			   Ghost::GhostType gtype,
+			   int numGhostCells)
+{
+#if 1
+   if(gtype == Ghost::None) {
+      if(numGhostCells != 0)
+	 throw InternalError("Ghost cells specified with task type none!\n");
+#endif
+      if(!d_sfcxDB.exists(label, matlIndex, patch))
+	 throw UnknownVariable(label->getName(), patch->getID(),
+			       patch->toString(), matlIndex);
+      d_sfcxDB.get(label, matlIndex, patch, var);
+#if 1
+   } else {
+      int l,h;
+      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
+      IntVector lowIndex;
+      IntVector highIndex;
+      switch(gtype){
+      case Ghost::AroundNodes:
+	throw InternalError("Ghost::AroundNodes: illegal ghost type for SFCX Variable");
+      case Ghost::AroundCells:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundCells");
+	 // Upper neighbors
+	 lowIndex = patch->getGhostSFCXLowIndex(numGhostCells);
+         highIndex = patch->getGhostSFCXHighIndex(numGhostCells);
+	 break;
+      default:
+	 throw InternalError("Illegal ghost type");
+      }
+      var.allocate(lowIndex, highIndex);
+      long totalCells=0;
+      const Level* level = patch->getLevel();
+      std::vector<const Patch*> neighbors;
+      IntVector low = patch->getGhostCellLowIndex(numGhostCells);
+      IntVector high = patch->getGhostCellHighIndex(numGhostCells);
+      level->selectPatches(low, high, neighbors);
+      // modify it to only ignore corner nodes
+      for(int i=0;i<neighbors.size();i++){
+	 const Patch* neighbor = neighbors[i];
+	 if(neighbor){
+	    if(!d_sfcxDB.exists(label, matlIndex, neighbor))
+	       throw InternalError("position variable does not exist: "+ 
+				   label->getName());
+	    SFCXVariableBase* srcvar = 
+	       d_sfcxDB.get(label, matlIndex, neighbor);
+
+	    using SCICore::Geometry::Max;
+	    using SCICore::Geometry::Min;
+
+	    IntVector low = Max(lowIndex, neighbor->getSFCXLowIndex());
+	    IntVector high= Min(highIndex, neighbor->getSFCXHighIndex());
+
+	    if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+		|| ( high.z() < low.z() ) )
+	       throw InternalError("Patch doesn't overlap?");
+	    
+	    var.copyPatch(srcvar, low, high);
+	    IntVector dcells = high-low;
+	    totalCells+=dcells.x()*dcells.y()*dcells.z();
+	 }
+      }
+      IntVector dn = highIndex-lowIndex;
+      long wantcells = dn.x()*dn.y()*dn.z();
+      ASSERTEQ(wantcells, totalCells);
+   }
+#endif
+}
+
+void
+OnDemandDataWarehouse::allocate(SFCXVariableBase& var,
+				const VarLabel* label,
+				int matlIndex,
+				const Patch* patch)
+{
+   // Error checking
+   if(d_sfcxDB.exists(label, matlIndex, patch))
+      throw InternalError("SFCX variable already exists: "+label->getName());
+
+   // Allocate the variable
+   var.allocate(patch->getSFCXLowIndex(), patch->getSFCXHighIndex());
+}
+
+void
+OnDemandDataWarehouse::put(const SFCXVariableBase& var,
+			   const VarLabel* label,
+			   int matlIndex, const Patch* patch)
+{
+   ASSERT(!d_finalized);
+
+   // Error checking
+   if(d_sfcxDB.exists(label, matlIndex, patch))
+      throw InternalError("SFCX variable already exists: "+label->getName());
+
+   // Put it in the database
+   d_sfcxDB.put(label, matlIndex, patch, var.clone(), true);
+}
+
+void
+OnDemandDataWarehouse::get(SFCYVariableBase& var, const VarLabel* label,
+			   int matlIndex, const Patch* patch,
+			   Ghost::GhostType gtype,
+			   int numGhostCells)
+{
+#if 1
+   if(gtype == Ghost::None) {
+      if(numGhostCells != 0)
+	 throw InternalError("Ghost cells specified with task type none!\n");
+#endif
+      if(!d_sfcyDB.exists(label, matlIndex, patch))
+	 throw UnknownVariable(label->getName(), patch->getID(),
+			       patch->toString(), matlIndex);
+      d_sfcyDB.get(label, matlIndex, patch, var);
+#if 1
+   } else {
+      int l,h;
+      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
+      IntVector lowIndex;
+      IntVector highIndex;
+      switch(gtype){
+      case Ghost::AroundNodes:
+	throw InternalError("Ghost::AroundNodes: illegal ghost type for SFCY Variable");
+      case Ghost::AroundCells:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundCells");
+	 // Upper neighbors
+	 lowIndex = patch->getGhostSFCYLowIndex(numGhostCells);
+         highIndex = patch->getGhostSFCYHighIndex(numGhostCells);
+	 break;
+      default:
+	 throw InternalError("Illegal ghost type");
+      }
+      var.allocate(lowIndex, highIndex);
+      long totalCells=0;
+      const Level* level = patch->getLevel();
+      std::vector<const Patch*> neighbors;
+      IntVector low = patch->getGhostCellLowIndex(numGhostCells);
+      IntVector high = patch->getGhostCellHighIndex(numGhostCells);
+      level->selectPatches(low, high, neighbors);
+      for(int i=0;i<neighbors.size();i++){
+	 const Patch* neighbor = neighbors[i];
+	 if(neighbor){
+	    if(!d_sfcyDB.exists(label, matlIndex, neighbor))
+	       throw InternalError("position variable does not exist: "+ 
+				   label->getName());
+	    SFCYVariableBase* srcvar = 
+	       d_sfcyDB.get(label, matlIndex, neighbor);
+
+	    using SCICore::Geometry::Max;
+	    using SCICore::Geometry::Min;
+
+	    IntVector low = Max(lowIndex, neighbor->getSFCYLowIndex());
+	    IntVector high= Min(highIndex, neighbor->getSFCYHighIndex());
+
+	    if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+		|| ( high.z() < low.z() ) )
+	       throw InternalError("Patch doesn't overlap?");
+	    
+	    var.copyPatch(srcvar, low, high);
+	    IntVector dcells = high-low;
+	    totalCells+=dcells.x()*dcells.y()*dcells.z();
+	 }
+      }
+      IntVector dn = highIndex-lowIndex;
+      long wantcells = dn.x()*dn.y()*dn.z();
+      ASSERTEQ(wantcells, totalCells);
+   }
+#endif
+}
+
+void
+OnDemandDataWarehouse::allocate(SFCYVariableBase& var,
+				const VarLabel* label,
+				int matlIndex,
+				const Patch* patch)
+{
+   // Error checking
+   if(d_sfcyDB.exists(label, matlIndex, patch))
+      throw InternalError("SFCY variable already exists: "+label->getName());
+
+   // Allocate the variable
+   var.allocate(patch->getSFCYLowIndex(), patch->getSFCYHighIndex());
+}
+
+void
+OnDemandDataWarehouse::put(const SFCYVariableBase& var,
+			   const VarLabel* label,
+			   int matlIndex, const Patch* patch)
+{
+   ASSERT(!d_finalized);
+
+   // Error checking
+   if(d_sfcyDB.exists(label, matlIndex, patch))
+      throw InternalError("SFCY variable already exists: "+label->getName());
+
+   // Put it in the database
+   d_sfcyDB.put(label, matlIndex, patch, var.clone(), true);
+}
+
+void
+OnDemandDataWarehouse::get(SFCZVariableBase& var, const VarLabel* label,
+			   int matlIndex, const Patch* patch,
+			   Ghost::GhostType gtype,
+			   int numGhostCells)
+{
+#if 1
+   if(gtype == Ghost::None) {
+      if(numGhostCells != 0)
+	 throw InternalError("Ghost cells specified with task type none!\n");
+#endif
+      if(!d_sfczDB.exists(label, matlIndex, patch))
+	 throw UnknownVariable(label->getName(), patch->getID(),
+			       patch->toString(), matlIndex);
+      d_sfczDB.get(label, matlIndex, patch, var);
+#if 1
+   } else {
+      int l,h;
+      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
+      IntVector lowIndex;
+      IntVector highIndex;
+      switch(gtype){
+      case Ghost::AroundNodes:
+	throw InternalError("Ghost::AroundNodes: illegal ghost type for SFCZ Variable");
+      case Ghost::AroundCells:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundCells");
+	 // Upper neighbors
+	 lowIndex = patch->getGhostSFCZLowIndex(numGhostCells);
+         highIndex = patch->getGhostSFCZHighIndex(numGhostCells);
+	 break;
+      default:
+	 throw InternalError("Illegal ghost type");
+      }
+      var.allocate(lowIndex, highIndex);
+      long totalCells=0;
+      const Level* level = patch->getLevel();
+      std::vector<const Patch*> neighbors;
+      IntVector low = patch->getGhostCellLowIndex(numGhostCells);
+      IntVector high=patch->getGhostCellHighIndex(numGhostCells);
+      level->selectPatches(low, high, neighbors);
+      for(int i=0;i<neighbors.size();i++){
+	 const Patch* neighbor = neighbors[i];
+	 if(neighbor){
+	    if(!d_sfczDB.exists(label, matlIndex, neighbor))
+	       throw InternalError("position variable does not exist: "+ 
+				   label->getName());
+	    SFCZVariableBase* srcvar = 
+	       d_sfczDB.get(label, matlIndex, neighbor);
+
+	    using SCICore::Geometry::Max;
+	    using SCICore::Geometry::Min;
+
+	    IntVector low = Max(lowIndex, neighbor->getSFCZLowIndex());
+	    IntVector high= Min(highIndex, neighbor->getSFCZHighIndex());
+
+	    if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+		|| ( high.z() < low.z() ) )
+	       throw InternalError("Patch doesn't overlap?");
+	    
+	    var.copyPatch(srcvar, low, high);
+	    IntVector dcells = high-low;
+	    totalCells+=dcells.x()*dcells.y()*dcells.z();
+	 }
+      }
+      IntVector dn = highIndex-lowIndex;
+      long wantcells = dn.x()*dn.y()*dn.z();
+      ASSERTEQ(wantcells, totalCells);
+   }
+#endif
+}
+
+void
+OnDemandDataWarehouse::allocate(SFCZVariableBase& var,
+				const VarLabel* label,
+				int matlIndex,
+				const Patch* patch)
+{
+   // Error checking
+   if(d_sfczDB.exists(label, matlIndex, patch))
+      throw InternalError("SFCZ variable already exists: "+label->getName());
+
+   // Allocate the variable
+   var.allocate(patch->getSFCZLowIndex(), patch->getSFCZHighIndex());
+}
+
+void
+OnDemandDataWarehouse::put(const SFCZVariableBase& var,
+			   const VarLabel* label,
+			   int matlIndex, const Patch* patch)
+{
+   ASSERT(!d_finalized);
+
+   // Error checking
+   if(d_sfczDB.exists(label, matlIndex, patch))
+      throw InternalError("SFCZ variable already exists: "+label->getName());
+
+   // Put it in the database
+   d_sfczDB.put(label, matlIndex, patch, var.clone(), true);
+}
+
 int
 OnDemandDataWarehouse::findMpiNode( const VarLabel * label,
 				    const Patch   * patch )
@@ -830,6 +1138,12 @@ OnDemandDataWarehouse::exists(const VarLabel* label, const Patch* patch) const
 	 return true;
       if(d_ccDB.exists(label, patch))
 	 return true;
+      if(d_sfcxDB.exists(label, patch))
+	 return true;
+      if(d_sfcyDB.exists(label, patch))
+	 return true;
+      if(d_sfczDB.exists(label, patch))
+	 return true;
       if(d_fcDB.exists(label, patch))
 	 return true;
       if(d_particleDB.exists(label, patch))
@@ -856,6 +1170,21 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
      CCVariableBase* var = d_ccDB.get(label, matlIndex, patch);
      var->emit(oc);
      return;
+   }
+   if(d_sfcxDB.exists(label, matlIndex, patch)) {
+      SFCXVariableBase* var = d_sfcxDB.get(label, matlIndex, patch);
+      var->emit(oc);
+      return;
+   }
+   if(d_sfcyDB.exists(label, matlIndex, patch)) {
+      SFCYVariableBase* var = d_sfcyDB.get(label, matlIndex, patch);
+      var->emit(oc);
+      return;
+   }
+   if(d_sfczDB.exists(label, matlIndex, patch)) {
+      SFCZVariableBase* var = d_sfczDB.get(label, matlIndex, patch);
+      var->emit(oc);
+      return;
    }
    if(d_fcDB.exists(label, matlIndex, patch)) {
      FCVariableBase* var = d_fcDB.get(label, matlIndex, patch);
@@ -1134,6 +1463,10 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.40  2000/06/27 23:20:03  rawat
+// added functions to deal with staggered cell variables. Also modified get function
+// for CCVariables.
+//
 // Revision 1.39  2000/06/21 20:50:03  guilkey
 // Added deleteParticles, a currently empty function that will remove
 // particles that are no longer relevant to the simulation.
