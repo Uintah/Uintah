@@ -33,6 +33,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <iostream>
+#include "vtkObject.h"
 
 namespace SCIRun {
   namespace vtk {
@@ -43,6 +45,15 @@ namespace SCIRun {
       }
       virtual std::string getName(){
 	return "";
+      }
+      virtual bool accept(Port* port){
+	return false;
+      }
+      virtual vtkObject* getObj(){
+	return 0;
+      }
+      virtual void connect(Port* port){
+	
       }
     };
   }

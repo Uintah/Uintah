@@ -61,6 +61,7 @@ namespace SCIRun {
     VtkComponentInstance* ci;
     vtk::Port* port;
     PortType porttype;
+    int nConnections;
   };
 }
 
