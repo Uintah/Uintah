@@ -193,7 +193,7 @@ void MatlabMatricesWriter::execute()
 	
 	// Check the validity of the matrixnames
 
-	for (long p=0;p<matrixname.size();p++)
+	for (long p=0;p<static_cast<long>(matrixname.size());p++)
 	{
 		if (porthasdata[p] == false) continue; // Do not check not used ports
 		if (!translate_.isvalidmatrixname(matrixname[p]))
@@ -294,7 +294,7 @@ void MatlabMatricesWriter::execute()
 
 matlabarray::mitype MatlabMatricesWriter::convertdataformat(std::string dataformat)
 {
-	matlabarray::mitype type;
+	matlabarray::mitype type = matlabarray::miUNKNOWN;
 	if (dataformat == "same as data")  { type = matlabarray::miSAMEASDATA; }
 	else if (dataformat == "double")   { type = matlabarray::miDOUBLE; }
 	else if (dataformat == "single")   { type = matlabarray::miSINGLE; }
