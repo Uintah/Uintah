@@ -62,26 +62,26 @@
     <para>
       <orderedlist>
         <listitem>
-          <para>
+          <para><emphasis>
             Obtain the source trees for SCIRun and any desired
             packages.
-          </para>
+          </emphasis></para>
         </listitem>
         <listitem>
-          <para>
+          <para><emphasis>
             Unzip the SCIRun source tree into a directory of your
             choosing.
-          </para>
+          </emphasis></para>
           <para>
             The chosen directory will be referred to as 
             <term>INSTALL_DIR</term> from now on.
           </para>
         </listitem>
         <listitem>
-          <para>
+          <para><emphasis>
             Unzip the packages (if any) into 
             <term>INSTALL_DIR</term>/SCIRun/src/Packages.
-          </para>
+          </emphasis></para>
         </listitem>
       </orderedlist>
     </para>          

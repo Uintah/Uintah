@@ -32,7 +32,7 @@
 
 <book>
   <title>SCIRun Installation Guide</title>
-  <subtitle>(UNIX version - Updated July 7, 2001)</subtitle>
+  <subtitle>UNIX version - Updated July 7, 2001</subtitle>
 
   <bookinfo>
     <title>installguide.xml</title>
@@ -47,8 +47,8 @@
       <surname></surname>
     </editor>
     <copyright>
-      <holder>SCI Institute, University of Utah</holder>
       <year>2001</year>
+      <holder>SCI Institute, University of Utah</holder>
     </copyright>
   </bookinfo>
 
@@ -63,13 +63,10 @@
     </para>
   </preface>
 
-  <beginpage/>
   &chapter1;
 
-  <beginpage/>
   &chapter2;
 
-  <beginpage/>
   &chapter3;
 
 </book>
