@@ -1,0 +1,81 @@
+*******************************************************************************
+
+README
+------
+
+CollabVis Package
+
+README written by Jenny Simpson on 2/21/2003
+
+*******************************************************************************
+
+DESCRIPTION
+-----------
+
+
+NOTES
+-----
+
+
+ORGANIZATION
+------------
+
+
+KNOWN BUGS/PROBLEMS
+-------------------
+
+RUNNING ENVIRONMENT
+-------------------
+
+USAGE
+-----
+
+ASSUMPTIONS
+-----------
+
+ALGORITHM
+---------
+
+FUTURE IMPROVEMENTS
+-------------------
+
+ADDITIONAL DOCUMENTATION
+------------------------
+
+Additional documentation can be found here:
+
+
+*** Compression ***
+Documentation done. JPG, LZO work, RLE does not. 
+
+*** Exceptions ***
+Pulled from SCIRun. Everything seems to work.
+
+*** Logging ***
+Documentation done. Everything seems to work.
+
+*** Properties *** 
+Documentation done. Everything seems to work.
+
+*** Thread ***
+Pulled from SCIRun. Everything seems to work.
+
+*** XML ***
+Documentation done. Everything seems to work.
+
+*** Rendering ***
+Documentation done. Everything seems to work.
+
+==================================================================
+
+*** Network ***
+Documentation not done. Not sure if anything works. We still need
+low-level socket code.
+
+================================================================
+
+Image Rendering - we need to overcome the different ways that opengl
+	implementations handle polygons w/respect to mouse clicks. IOW,
+ 	a click on one screen might be on a poly, but due to opengl diff,
+	it might not be on another. Use some sort of blurring algorithm?
+	From gk.
