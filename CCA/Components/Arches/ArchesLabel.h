@@ -254,6 +254,10 @@ namespace Uintah {
       const VarLabel* d_newCCVVelocityLabel;
       const VarLabel* d_newCCWVelocityLabel;
 
+      // for multimaterial
+      const VarLabel* d_mmcellTypeLabel;
+      const VarLabel* d_mmgasVolFracLabel;
+
     }; // End class ArchesLabel
 } // End namespace Uintah
 

@@ -34,6 +34,7 @@ POSSIBLE REVISIONS
 ***************************************************************************/
 
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/CFDInterface.h>
@@ -53,7 +54,7 @@ public:
       ///////////////////////////////////////////////////////////////////////
       // Constructor taking
       //   [in] 
-      Properties(const ArchesLabel* label);
+      Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb);
 
       // GROUP: Destructors :
       ///////////////////////////////////////////////////////////////////////
@@ -143,6 +144,7 @@ private:
 
       // Variable labels used by simulation controller
       const ArchesLabel* d_lab;
+      const MPMArchesLabel* d_MAlab;
 }; // end class Properties
 } // End namespace Uintah
 

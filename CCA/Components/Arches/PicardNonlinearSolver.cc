@@ -30,12 +30,13 @@ using namespace Uintah;
 // ****************************************************************************
 PicardNonlinearSolver::
 PicardNonlinearSolver(const ArchesLabel* label, 
+		      const MPMArchesLabel* MAlb,
 		      Properties* props, 
 		      BoundaryCondition* bc,
 		      TurbulenceModel* turbModel,
 		      PhysicalConstants* physConst,
 		      const ProcessorGroup* myworld): NonlinearSolver(myworld),
-		       d_lab(label), d_props(props), 
+		       d_lab(label), d_MAlab(MAlb), d_props(props), 
 		       d_boundaryCondition(bc), d_turbModel(turbModel),
 		       d_physicalConsts(physConst)
 {
@@ -74,7 +75,7 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   bool calPress;
   db->require("cal_pressure", calPress);
   if (calPress) {
-    d_pressSolver = scinew PressureSolver(d_lab,
+    d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
 					  d_turbModel, d_boundaryCondition,
 					  d_physicalConsts, d_myworld);
     d_pressSolver->problemSetup(db); // d_mmInterface
@@ -82,15 +83,17 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   bool calMom;
   db->require("cal_momentum", calMom);
   if (calMom) {
-    d_momSolver = scinew MomentumSolver(d_lab, d_turbModel, d_boundaryCondition,
-				     d_physicalConsts);
+    d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
+					d_turbModel, d_boundaryCondition,
+					d_physicalConsts);
     d_momSolver->problemSetup(db); // d_mmInterface
   }
   bool calScalar;
   db->require("cal_mixturescalar", calScalar);
   if (calScalar) {
-    d_scalarSolver = scinew ScalarSolver(d_lab, d_turbModel, d_boundaryCondition,
-				      d_physicalConsts);
+    d_scalarSolver = scinew ScalarSolver(d_lab, d_MAlab,
+					 d_turbModel, d_boundaryCondition,
+					 d_physicalConsts);
     d_scalarSolver->problemSetup(db); // d_mmInterface
   }
 }
@@ -104,6 +107,10 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 					  DataWarehouseP& new_dw,
 					  double time, double delta_t)
 {
+  
+  // for multimaterial, reset wall cell type
+  if (d_MAlab)
+    d_boundaryCondition->sched_mmWallCellTypeInit(level, sched, old_dw, new_dw);
   //initializes and allocates vars for new_dw
   // set initial guess
   // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP, densityCP,
@@ -200,35 +207,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   if (d_probe_data)
     sched_probeData(level, sched, old_dw, new_dw);
 
-  /* Do 'save's in the DataArchiver section of the problem specification now
-
-  // Save the old data (previous time step)
-#if 0
-  new_dw->pleaseSave(d_lab->d_pressureINLabel, 1);
-  new_dw->pleaseSave(d_lab->d_uVelocityINLabel, 1);
-  new_dw->pleaseSave(d_lab->d_vVelocityINLabel, 1);
-  new_dw->pleaseSave(d_lab->d_wVelocityINLabel, 1);
-  new_dw->pleaseSave(d_lab->d_scalarINLabel, nofScalars);
-  new_dw->pleaseSave(d_lab->d_densityINLabel, 1);
-  new_dw->pleaseSave(d_lab->d_viscosityINLabel, 1);
-#endif
-
-  // Save the old velocity as a CC<Vector> Variable
-  new_dw->pleaseSave(d_lab->d_oldCCVelocityLabel, 1);
-
-  // Save the new data (this time step)
-  new_dw->pleaseSave(d_lab->d_pressurePSLabel, 1);
-  new_dw->pleaseSave(d_lab->d_uVelocitySPBCLabel, 1);
-  new_dw->pleaseSave(d_lab->d_vVelocitySPBCLabel, 1);
-  new_dw->pleaseSave(d_lab->d_wVelocitySPBCLabel, 1);
-  new_dw->pleaseSave(d_lab->d_scalarSPLabel, nofScalars);
-  new_dw->pleaseSave(d_lab->d_densityCPLabel, 1);
-  new_dw->pleaseSave(d_lab->d_viscosityCTSLabel, 1);
-
-  // Save the new velocity as a CC<Vector> Variable
-  new_dw->pleaseSave(d_lab->d_newCCVelocityLabel, 1);
-  */
-  
   return(0);
 }
 
@@ -252,8 +230,12 @@ PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
 			   &PicardNonlinearSolver::setInitialGuess);
       int numGhostCells = 0;
       int matlIndex = 0;
-      tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+      if (d_MAlab) 
+	tsk->requires(new_dw, d_lab->d_mmcellTypeLabel, matlIndex, patch,
+		      Ghost::None, numGhostCells);
+      else
+	tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, 
+		      Ghost::None, numGhostCells);
       tsk->requires(old_dw, d_lab->d_pressureSPBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
       tsk->requires(old_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
@@ -262,7 +244,7 @@ PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
 		    Ghost::None, numGhostCells);
       tsk->requires(old_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-
+      
       int nofScalars = d_props->getNumMixVars();
       for (int ii = 0; ii < nofScalars; ii++) {
 	tsk->requires(old_dw, d_lab->d_scalarSPLabel, ii, patch, 
@@ -380,8 +362,12 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
   int matlIndex = 0;
   int nofGhostCells = 0;
   CCVariable<int> cellType;
-  old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-	      Ghost::None, nofGhostCells);
+  if (d_MAlab)
+    new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch,
+		Ghost::None, nofGhostCells);
+  else
+    old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
+		Ghost::None, nofGhostCells);
   CCVariable<double> pressure;
   old_dw->get(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch, 
 	      Ghost::None, nofGhostCells);
@@ -479,7 +465,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 void 
 PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 					     const Patch* patch,
-					     DataWarehouseP& /*old_dw*/,
+					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw)
 {
   int matlIndex = 0;
@@ -623,10 +609,10 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
 // compute the residual
 // ****************************************************************************
 double 
-PicardNonlinearSolver::computeResidual(const LevelP& /*level*/,
-				       SchedulerP& /*sched*/,
-				       DataWarehouseP& /*old_dw*/,
-				       DataWarehouseP& /*new_dw*/)
+PicardNonlinearSolver::computeResidual(const LevelP& level,
+				       SchedulerP& sched,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw)
 {
   double nlresidual = 0.0;
 #if 0

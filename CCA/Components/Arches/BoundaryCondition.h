@@ -3,6 +3,7 @@
 #define Uintah_Components_Arches_BoundaryCondition_h
 
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
@@ -77,7 +78,7 @@ public:
 
       ////////////////////////////////////////////////////////////////////////
       // BoundaryCondition constructor used in  PSE
-      BoundaryCondition(const ArchesLabel* label,
+      BoundaryCondition(const ArchesLabel* label, const MPMArchesLabel* MAlb,
 			TurbulenceModel* turb_model, Properties* props);
 
       // GROUP: Destructors:
@@ -161,6 +162,13 @@ public:
 			    DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw);
 
+      ////////////////////////////////////////////////////////////////////////
+      // Initialize multimaterial wall cell types
+      void sched_mmWallCellTypeInit(const LevelP& level,
+				    SchedulerP& sched,
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw);
+
       // GROUP:  Actual Computations :
       ////////////////////////////////////////////////////////////////////////
       // Initialize celltyping
@@ -207,6 +215,31 @@ public:
 		    CellInformation* cellinfo,
 		    ArchesVariables* vars);
 
+      ////////////////////////////////////////////////////////////////////////
+      // Initialize multi-material wall celltyping
+      // Details here
+      void mmWallCellTypeInit(const ProcessorGroup*,
+			      const Patch* patch,
+			      DataWarehouseP& old_dw,  
+			      DataWarehouseP& new_dw);
+
+
+      // compute multimaterial wall bc
+      void mmvelocityBC(const ProcessorGroup*,
+			const Patch* patch,
+			int index, CellInformation* cellinfo,
+			ArchesVariables* vars);
+
+      void mmpressureBC(const ProcessorGroup*,
+			const Patch* patch,
+			CellInformation* cellinfo,
+			ArchesVariables* vars);
+      // applies multimaterial bc's for scalars and pressure
+      void mmwallBC( const ProcessorGroup*,
+		     const Patch* patch,
+		     CellInformation* cellinfo,
+		     ArchesVariables* vars);
+			
 private:
 
       // GROUP:  Actual Computations (Private)  :
@@ -346,6 +379,11 @@ private:
 
       // const VarLabel* inputs
       const ArchesLabel* d_lab;
+      // for multimaterial
+      const MPMArchesLabel* d_MAlab;
+      int d_mmWallID;
+      // cutoff for void fraction rqd to determine multimaterial wall
+      double MM_CUTOFF_VOID_FRAC;
 
 }; // End of class BoundaryCondition
 } // End namespace Uintah

@@ -22,7 +22,8 @@ using namespace Uintah;
 //****************************************************************************
 // Default constructor for Properties
 //****************************************************************************
-Properties::Properties(const ArchesLabel* label):d_lab(label)
+Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb):
+  d_lab(label), d_MAlab(MAlb)
 {
   d_bc = 0;
 }
@@ -124,6 +125,9 @@ Properties::sched_reComputeProps(const LevelP& level,
       tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
 		    Ghost::AroundCells,
 		    numGhostCells+2);
+      if (d_MAlab)
+	tsk->requires(new_dw, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
+		      Ghost::None, numGhostCells);
       for (int ii = 0; ii < d_numMixingVars; ii++) 
 	tsk->requires(new_dw, d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
 			 numGhostCells);
@@ -248,12 +252,15 @@ Properties::reComputeProps(const ProcessorGroup*,
   // Get the CCVariable (density) from the old datawarehouse
   // just write one function for computing properties
   CCVariable<double> density;
+  CCVariable<double> voidFraction;
   std::vector<CCVariable<double> > scalar(d_numMixingVars);
   int matlIndex = 0;
   int nofGhostCells = 0;
   new_dw->get(density, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-
+  if (d_MAlab)
+    new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, 
+		Ghost::None, nofGhostCells);
   for (int ii = 0; ii < d_numMixingVars; ii++)
     new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
 		nofGhostCells);
@@ -294,6 +301,8 @@ Properties::reComputeProps(const ProcessorGroup*,
 	if (d_mmInterface) 
 	  local_den *= mmVars->voidFraction[currCell];
 #endif
+	if (d_MAlab)
+	  local_den *= voidFraction[currCell];
 	
 	density[IntVector(colX, colY, colZ)] = d_denUnderrelax*local_den +
                  	  (1.0-d_denUnderrelax)*density[IntVector(colX, colY, colZ)];
@@ -306,16 +315,7 @@ Properties::reComputeProps(const ProcessorGroup*,
   cerr << " AFTER COMPUTE PROPERTIES " << endl;
   IntVector domLo = density.getFortLowIndex();
   IntVector domHi = density.getFortHighIndex();
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-    cerr << "Density for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
-	cerr << density[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
+  density.print(cerr);
 #endif
   if (patch->containsCell(d_denRef)) {
     double den_ref = density[d_denRef];

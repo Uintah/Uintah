@@ -6,7 +6,8 @@ SRCDIR   := Packages/Uintah/CCA/Components/Arches/fortran
 
 SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/cellg.F $(SRCDIR)/areain.F $(SRCDIR)/profv.F \
-	$(SRCDIR)/profscalar.F  $(SRCDIR)/smagmodel.F $(SRCDIR)/calpbc.F \
+	$(SRCDIR)/profscalar.F  $(SRCDIR)/smagmodel.F $(SRCDIR)/scalarvarmodel.F \
+	$(SRCDIR)/calpbc.F \
 	$(SRCDIR)/inlbcs.F $(SRCDIR)/uvelcoef.F $(SRCDIR)/vvelcoef.F \
 	$(SRCDIR)/wvelcoef.F $(SRCDIR)/uvelsrc.F $(SRCDIR)/vvelsrc.F \
 	$(SRCDIR)/wvelsrc.F $(SRCDIR)/arrass.F $(SRCDIR)/mascal.F \
@@ -23,7 +24,8 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/scalsrc.F \
 	$(SRCDIR)/rescal.F \
 	$(SRCDIR)/arrl1.F $(SRCDIR)/underelax.F $(SRCDIR)/linegs.F \
-	$(SRCDIR)/normpress.F $(SRCDIR)/explicit.F
+	$(SRCDIR)/normpress.F $(SRCDIR)/explicit.F \
+	$(SRCDIR)/mmcelltypeinit.F
 
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \

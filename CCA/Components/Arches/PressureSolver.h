@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 
 namespace Uintah {
 
@@ -69,6 +70,7 @@ public:
       // POSTCONDITIONS
       //   A linear level solver is partially constructed.  
       PressureSolver(const ArchesLabel* label,
+		     const MPMArchesLabel* MAlb,
 		     TurbulenceModel* turb_model, 
 		     BoundaryCondition* bndry_cond,
 		     PhysicalConstants* physConst,
@@ -176,8 +178,10 @@ private:
 
       // const VarLabel* (required)
       const ArchesLabel* d_lab;
-
+      
       const ProcessorGroup* d_myworld;
+      // for multimaterial
+      const MPMArchesLabel* d_MAlab;
 #ifdef multimaterialform
       // set the values in problem setup
       MultiMaterialInterface* d_mmInterface;
