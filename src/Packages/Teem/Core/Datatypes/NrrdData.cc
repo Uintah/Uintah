@@ -63,7 +63,6 @@ NrrdData::NrrdData(const NrrdData &copy) :
 }
 
 NrrdData::~NrrdData() {
-  cout << "deleting nrrd" << endl;
   if(data_owned_) {
     nrrdNuke(nrrd);
   } else {

@@ -97,14 +97,12 @@ fill_data(Fld *fld, Nrrd *inrrd, Iter &iter, Iter &end)
 {
   typedef typename Fld::value_type val_t;
   void *p = inrrd->data;
-  int i = 0;
   while (iter != end) {
     val_t tmp;
     get_val_and_inc_nrrdptr(tmp, p);
     fld->set_value(tmp, *iter);
-    ++iter; ++i;
+    ++iter;
   }
-  cout << "set " << i << " values" << endl;
 }
 
 template <class Fld>
@@ -210,7 +208,6 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
       typename Fld::mesh_type::Node::iterator iter, end;
       mesh->begin(iter);
       mesh->end(end);
-      cout << "end - iter : " << *end - *iter << endl;
       fill_data((Fld*)out.get_rep(), inrrd, iter, end);
     }
   break;

@@ -188,28 +188,6 @@ NrrdReader::read_nrrd()
       handle_ = n;
 
     }
-
-      cout << "handle->nrrd " << handle_->nrrd << endl;
-      cout << "handle->nrrd->data " << handle_->nrrd->data << endl;
-      
-      for (int d = 0; d < handle_->nrrd->dim; d++) {
-	cout << "handle->nrrd->axis[" << d << "] " 
-	     << handle_->nrrd->axis[d].size << endl;
-      }
-#if 0
-
-      
-      double**** arr = (double****)handle_->nrrd->data;
-      for(int i=0; i < 10; i++ ) {
-	for(int j=0; j < 192; j++ ) {
-	  for(int k=0; k < 385; k++ ) {
-	    
-	    cout << "pressure: " << arr[i][j][k][6] << endl;
-	  }
-	}
-      }	
-#endif
-
   }
 }
 
