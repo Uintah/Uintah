@@ -25,9 +25,9 @@
 #include <string>
 
 
-using namespace std;
-
 namespace SCIRun {
+
+using std::string;
 
 class CompileInfo;
 
