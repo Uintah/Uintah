@@ -1,11 +1,28 @@
 <?xml version="1.0"?>
 <!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
 <filter-itk name="itk::watershed::Segmenter">
   <description>
 This filter implements the first step in the N-d watershed segmentation algorithm. It produces a segmented, labeled image from a scalar-valued image input. This filter is used in conjunction with WatershedSegmentTreeGenerator and WatershedRelabeler to produce a final segmented image volume. See itk::WatershedImageFilter for an overview of the entire algorithm and notes on the terminology used in describing it.
   </description>
   <templated>
-    <base>itk::Object</base>
     <template>InputImageType</template>
     <defaults>
       <default>itk::Image&lt;float, 2&gt;</default>
@@ -13,27 +30,23 @@ This filter implements the first step in the N-d watershed segmentation algorith
   </templated>
 
   <inputs>
-    <input num="1">
-      <value>InputImageType</value>
+    <input name="Scalar_Image">
+      <type>InputImageType</type>
       <call>SetInputImage</call>
-      <name>Scalar_Image</name>
     </input>  
   </inputs>
   <outputs>
-    <output num="1">
-      <value>LabeledImageType</value>
+    <output name="Labeled_Image">
+      <type>LabeledImageType</type>
       <call>GetOutputImage</call>
-      <name>Labeled_Image</name>
     </output>
-    <output num="2">
-      <value>SegmentTableType</value>
+    <output name="Segment_Table">
+      <type>SegmentTableType</type>
       <call>GetSegmentTable</call>
-      <name>Segment_Table</name>
     </output>
-    <output num="3">
-      <value>BoundaryType</value>
+    <output name="Boundary">
+      <type>BoundaryType</type>
       <call>GetBoundary</call>
-      <name>Boundary</name>
     </output>
   </outputs>
 

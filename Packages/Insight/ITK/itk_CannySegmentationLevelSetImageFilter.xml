@@ -1,11 +1,28 @@
 <?xml version="1.0"?>
 <!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
 <filter-itk name="itk::CannySegmentationLevelSetImageFilter">
   <description>
   Segments structures in images based on image features derived from pseudo-canny-edges.
   </description>
   <templated>
-    <base>itk::Object</base>
     <template>SeedImageType</template>
     <template>FeatureImageType</template>
     <template>OutputPixelType</template>
@@ -17,27 +34,23 @@
   </templated>
 
   <inputs>
-    <input num="1">
-      <value>SeedImageType</value>
+    <input name="SeedImage">
+      <type>SeedImageType</type>
       <call>SetInput</call>
-      <name>SeedImage</name>
     </input>  
-    <input num="2">
-      <value>FeatureImageType</value>
+    <input name="FeatureImage">
+      <type>FeatureImageType</type>
       <call>SetFeatureImage</call>
-      <name>FeatureImage</name>
     </input>  
   </inputs>
   <outputs>
-    <output num="1">
-      <value>FeatureImageType</value>
+    <output name="OutputImage">
+      <type>FeatureImageType</type>
       <call>GetOutput</call>
-      <name>OutputImage</name>
     </output>
-    <output num="2">
-      <value>FeatureImageType</value>
+    <output name="SpeedImage">
+      <type>FeatureImageType</type>
       <call const="yes">GetSpeedImage</call>
-      <name>SpeedImage</name>
     </output>
   </outputs>
 
@@ -48,9 +61,10 @@
       <call>SetMaximumIterations</call>
     </param>
     <param>
-      <name>negative_features</name>
+      <name>reverse_expansion_direction</name>
       <type>bool</type>
-      <call>SetUseNegativeFeatures</call>
+      <call value="on">ReverseExpansionDirectionOn</call>
+      <call value="off">ReverseExpansionDirectionOff</call>
     </param>
     <param>
       <name>max_rms_change</name>
