@@ -45,7 +45,6 @@
 
 #include <Core/Math/PiecewiseInterp.h>
 
-#include <Core/share/share.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
 
@@ -58,7 +57,7 @@ typedef struct Pair{
 } PAIR;
 
 
-class SCICORESHARE LinearPWI: public PiecewiseInterp<double> {
+class LinearPWI: public PiecewiseInterp<double> {
 public:
 	LinearPWI();
 	LinearPWI(const Array1<double>&, const Array1<double>&);
@@ -80,7 +79,7 @@ inline bool LinearPWI::get_value(double w, double& res){
     return false;
 }
 
-template <class T> class SCICORESHARE Linear3DPWI: public PiecewiseInterp<T> {
+template <class T> class Linear3DPWI: public PiecewiseInterp<T> {
 public:
   Linear3DPWI() {};
   Linear3DPWI(const Array1<double>&, const Array1<T>&);

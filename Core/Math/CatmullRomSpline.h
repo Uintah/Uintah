@@ -43,14 +43,13 @@
 #ifndef SCI_Math_CatmullRomSpline_h
 #define SCI_Math_CatmullRomSpline_h
 
-#include <Core/share/share.h>
 #include <Core/Containers/Array1.h>
 
 namespace SCIRun {
 
 
 template<class T>
-class SCICORESHARE CatmullRomSpline {
+class CatmullRomSpline {
    Array1<T> d;
    int nintervals;
    int nset;

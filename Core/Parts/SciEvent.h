@@ -47,7 +47,7 @@
 
 namespace SCIRun {
   
-class SCICORESHARE SciEvent : public Persistent {
+class SciEvent : public Persistent {
 public:
   SciEvent();
   virtual ~SciEvent();

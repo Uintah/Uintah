@@ -53,7 +53,7 @@ namespace SCIRun {
 
 
 #ifdef __sgi
-SCICORESHARE double MakeReal(double value)
+double MakeReal(double value)
 {
   if (!finite(value))
   {
@@ -74,7 +74,7 @@ SCICORESHARE double MakeReal(double value)
   return value;
 }
 #else
-SCICORESHARE double MakeReal(double value)
+double MakeReal(double value)
 {
   if (!finite(value))
   {

@@ -52,7 +52,7 @@
 
 namespace SCIRun {
   
-class SCICORESHARE PartManager : public Part, public PartInterface  {
+class PartManager : public Part, public PartInterface  {
 private:
   vector< Part *> parts_;
   Part *current_;
