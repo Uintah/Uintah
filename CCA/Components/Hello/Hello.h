@@ -36,7 +36,7 @@
 class myUIPort : public virtual gov::cca::ports::UIPort {
 public:
    virtual ~myUIPort(){}
-   virtual void ui();
+   virtual int ui();
 };
 
 class myGoPort : public virtual gov::cca::ports::GoPort {

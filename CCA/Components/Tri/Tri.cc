@@ -49,6 +49,7 @@ Tri::Tri()
 {
   uiPort.setParent(this);
   goPort.setParent(this);
+  meshPort.setParent(this);
   mesh=0;
 }
 
@@ -76,10 +77,11 @@ void Tri::setServices(const gov::cca::Services::pointer& svc)
   // Actually - the ref counting will take care of that automatically - Steve
 }
 
-void myUIPort::ui() 
+int myUIPort::ui() 
 {
-  if(com->mesh==0) return;
-  (new MeshWindow(0, com->mesh ))->show();  
+  if(com->mesh==0) return 1;
+  (new MeshWindow(0, com->mesh ))->show();
+  return 0;
 }
 
 
@@ -95,6 +97,8 @@ int myGoPort::go()
   CIA::array1<double> nodes1d=pdePort->getNodes();
   CIA::array1<int> boundaries1d=pdePort->getBoundaries();
 
+  com->getServices()->releasePort("pde");
+
   if(com->mesh!=0) delete com->mesh;
 
   com->mesh=new Delaunay(nodes1d, boundaries1d);
@@ -106,13 +110,34 @@ int myGoPort::go()
 
 CIA::array1<int> myMeshPort::getTriangles()
 {
-  std::vector<Triangle> tri=com->mesh->getTriangles();
   CIA::array1<int> vindex;
-  for(unsigned int i=0; i<tri.size();i++){
-    vindex.push_back(tri[i].index[0]);
-    vindex.push_back(tri[i].index[1]);
-    vindex.push_back(tri[i].index[2]);
+  if(com->mesh!=0){
+    std::vector<Triangle> tri=com->mesh->getTriangles();
+
+    for(unsigned int i=0; i<tri.size();i++){
+      vindex.push_back(tri[i].index[0]-4);
+      vindex.push_back(tri[i].index[1]-4);
+      vindex.push_back(tri[i].index[2]-4);
+    }
   }
   return vindex;
 }
+
+CIA::array1<double> myMeshPort::getNodes()
+{
+  gov::cca::Port::pointer pp=com->getServices()->getPort("pde");	
+  if(pp.isNull()){
+    QMessageBox::warning(0, "Tri", "Port pde is not available!");
+    return 1;
+  }  
+  gov::cca::ports::PDEDescriptionPort::pointer pdePort=
+    pidl_cast<gov::cca::ports::PDEDescriptionPort::pointer>(pp);
+  CIA::array1<double> nodes1d=pdePort->getNodes();
+
+  com->getServices()->releasePort("pde");	
+  
+  return nodes1d;
+}
  
+
+

@@ -61,11 +61,11 @@ void ZList::setServices(const gov::cca::Services::pointer& svc)
   svc->addProvidesPort(zlp,"listport","ZListPort", props);
 }
 
-void ImUIPort1::ui()
+int ImUIPort1::ui()
 {
- // QMessageBox::warning(0, "ZList", "This is ZList!");
   ListForm *w = new ListForm(com);
   w->show();
+  return 0;
 }
 
 CIA::array1<double> ImZListPort::getList()

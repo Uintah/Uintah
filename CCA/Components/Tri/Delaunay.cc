@@ -56,7 +56,7 @@ Delaunay::Delaunay(const CIA::array1<double> &nodes1d,
     }
     else
       pts.push_back(index);
-    cerr<<index<<endl;
+    //cerr<<index<<endl;
   }
 
   double inf=1e300;
@@ -78,7 +78,7 @@ Delaunay::Delaunay(const CIA::array1<double> &nodes1d,
     if(v.y < ymin) ymin=v.y;
     if(v.y > ymax) ymax=v.y;
   }
-  cerr<<"#of nodes="<<nodes.size()<<endl;
+  //cerr<<"#of nodes="<<nodes.size()<<endl;
   double dx=xmax-xmin;
   double dy=ymax-ymin;
   nodes[0]=vector2d(xmin-dx, ymin-dy);
@@ -112,7 +112,7 @@ void Delaunay::readNodes(istream &is)
     if(v.y < ymin) ymin=v.y;
     if(v.y > ymax) ymax=v.y;
   }
-  cerr<<"#of nodes="<<nodes.size()<<endl;
+  //cerr<<"#of nodes="<<nodes.size()<<endl;
   double dx=xmax-xmin;
   double dy=ymax-ymin;
   nodes[0]=vector2d(xmin-dx, ymin-dy);
@@ -194,17 +194,17 @@ bool Delaunay::triangulation()
     for(int je=0; je<3; je++)
       checkBoundary(C,T,je,false);
     
-        cerr<<"C.size :"<<C.size()<< " ->";
+        //cerr<<"C.size :"<<C.size()<< " ->";
     
     for(int i=C.size()-1; i>=0; i--){
       if(C[i]==-1){
-	cerr<<"erased triangle="<<triangles[Cb[i]].index[0]-4<<" "<<
-	  triangles[Cb[i]].index[1]-4<<" "<<triangles[Cb[i]].index[2]-4<<endl;
+	//cerr<<"erased triangle="<<triangles[Cb[i]].index[0]-4<<" "<<
+	//  triangles[Cb[i]].index[1]-4<<" "<<triangles[Cb[i]].index[2]-4<<endl;
 	C.erase(C.begin()+i);
 	
       }
       }
-    cerr<<C.size()<<endl;
+    //cerr<<C.size()<<endl;
      */
       
 
@@ -281,9 +281,9 @@ bool Delaunay::triangulation()
     }
   }
 
-  cerr<<"missed boundary edges are:"<<endl;
+  //cerr<<"missed boundary edges are:"<<endl;
   for(unsigned int i=0; i<miss.size();i++)
-    cerr<<miss[i].index[0]-4<<"--"<<miss[i].index[1]-4<<endl;
+    //cerr<<miss[i].index[0]-4<<"--"<<miss[i].index[1]-4<<endl;
 
   for(unsigned int mi=0; mi<miss.size(); mi++){
 
@@ -308,23 +308,21 @@ bool Delaunay::triangulation()
 
   std::vector<Edge> intEdges;
   std::vector<double> dist;
-  cerr<<"all non-boundary edges are:"<<endl;
-  for(unsigned int i=0; i<allEdges.size();i++)
-    cerr<<allEdges[i].index[0]-4<<"--"<<allEdges[i].index[1]-4<<endl;
+  //cerr<<"all non-boundary edges are:"<<endl;
+  //for(unsigned int i=0; i<allEdges.size();i++)
+  //  cerr<<allEdges[i].index[0]-4<<"--"<<allEdges[i].index[1]-4<<endl;
   
-  cerr<<"all intersected edges are:"<<endl;
+ 
   for(int i=allEdges.size()-1; i>=0;i--){
-    
-    
-    double r=intersected(miss[mi],allEdges[i]);
+     double r=intersected(miss[mi],allEdges[i]);
     if(r>0){
       intEdges.push_back(allEdges[i]);
       dist.push_back(r);
     }
   }
-
-  for(unsigned int i=0; i<intEdges.size();i++)
-    cerr<<intEdges[i].index[0]-4<<"--"<<intEdges[i].index[1]-4<<endl;
+  //cerr<<"all intersected edges are:"<<endl;
+  // for(unsigned int i=0; i<intEdges.size();i++)
+  //  cerr<<intEdges[i].index[0]-4<<"--"<<intEdges[i].index[1]-4<<endl;
 
   double min=1e300;
   int id=0;
@@ -361,8 +359,8 @@ bool Delaunay::triangulation()
 	}
       }
     }
-    cerr<<"vt[]="<<vt[0]-4<<" "<<vt[1]-4<<endl;
-    cerr<<"diag="<<diag.index[0]-4<<" "<<diag.index[1]-4<<endl;
+    //cerr<<"vt[]="<<vt[0]-4<<" "<<vt[1]-4<<endl;
+    //cerr<<"diag="<<diag.index[0]-4<<" "<<diag.index[1]-4<<endl;
 
     triangles[tri[0]]=Triangle(vt[0], diag.index[0], vt[1]);
     triangles[tri[1]]=Triangle(vt[1], diag.index[1], vt[1]);
@@ -370,18 +368,27 @@ bool Delaunay::triangulation()
 
   } //mi
 
-  triangles[0].type==0;
+  triangles[0].type=0;
   setColor(0); //setColor for all triangles;
+  //erase triangles with zero area or with  color=0
   for(int i=triangles.size()-1; i>=0; i--){
-    cerr<<"i="<<i<<endl;
-    if(triangles[i].type==0){
-      cerr<<"erased"<<endl;
+    double x[3];
+    double y[3];
+    for(int k=0;k<3;k++){
+      x[k]=nodes[triangles[i].index[k] ].x;
+      y[k]=nodes[triangles[i].index[k] ].y;
+    }
+    double A2=(x[1]*y[2]-x[2]*y[1])-(x[0]*y[2]-x[2]*y[0])+(x[0]*y[1]-x[1]*y[0]);
+
+    //cerr<<"i="<<i<<endl;
+    if(triangles[i].type==0 || fabs(A2)<1e-10 ){
+      //cerr<<"erased"<<" A2="<<fabs(A2)<<endl;
       triangles.erase(triangles.begin()+i);
       circles.erase(circles.begin()+i);
     }
   }
 
-  	
+  
   return true;
 }
 
@@ -509,7 +516,7 @@ double Delaunay::intersected(Edge e1, Edge e2)
   double r1= (a1*c2-a2*c1)/d;
   double r2= (c1*b2-c2*b1)/d;
 
-  cerr<<"r1 r2="<<r1<<" "<<r2<<endl;
+  //cerr<<"r1 r2="<<r1<<" "<<r2<<endl;
 
   if(r1 < 1-eps && r1>eps && 
      r2 < 1-eps && r2>eps) return r1;

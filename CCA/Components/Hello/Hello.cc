@@ -70,9 +70,10 @@ void Hello::setServices(const gov::cca::Services::pointer& svc)
   // Actually - the ref counting will take care of that automatically - Steve
 }
 
-void myUIPort::ui() 
+int myUIPort::ui() 
 {
   QMessageBox::warning(0, "Hello", "You have clicked the UI button!");
+  return 0;
 }
 
 
@@ -81,3 +82,4 @@ int myGoPort::go()
   QMessageBox::warning(0, "Hello", "Go ...");
   return 0;
 }
+ 

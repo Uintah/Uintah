@@ -67,17 +67,19 @@ void ImUIPort::setServices(const gov::cca::Services::pointer& svc)
 	services=svc;
 }
 
-void ImUIPort::ui()
+int ImUIPort::ui()
 {
   
   ListPlotterForm *w = new ListPlotterForm; 
   gov::cca::Port::pointer pp=services->getPort("listport");	
   if(pp.isNull()){
     QMessageBox::warning(0, "ListPlotter", "listport is not available!");
-    return;
+    return 1;
   }  
   gov::cca::ports::ZListPort::pointer lport=pidl_cast<gov::cca::ports::ZListPort::pointer>(pp);
   CIA::array1<double> data=lport->getList();	
+
+  services->releasePort("listport");
 
   int size=data.size();
   double *val=new double[size]; 	
@@ -87,5 +89,6 @@ void ImUIPort::ui()
   w->setData(val, size);
   w->show();
   delete val;
+  return 0;
 }
 

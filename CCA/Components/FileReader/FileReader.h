@@ -40,7 +40,7 @@ class FileReader;
 class myUIPort : public virtual gov::cca::ports::UIPort {
 public:
    virtual ~myUIPort(){}
-   virtual void ui();
+   virtual int ui();
    void setParent(FileReader *com){this->com=com;}
    FileReader *com;
 };
@@ -50,6 +50,8 @@ public:
    virtual ~myPDEDescriptionPort(){}
    virtual CIA::array1<double> getNodes();
    virtual CIA::array1<int> getBoundaries();
+   virtual CIA::array1<int> getDirichletNodes();
+   virtual CIA::array1<double> getDirichletValues();
    void setParent(FileReader *com){this->com=com;}
    FileReader *com;
 };
@@ -65,6 +67,8 @@ class FileReader : public gov::cca::Component{
     
     CIA::array1<double> nodes;
     CIA::array1<int> boundaries;
+    CIA::array1<int> dirichletNodes;
+    CIA::array1<double> dirichletValues;
   private:
 
     FileReader(const FileReader&);
