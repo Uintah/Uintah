@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <lineal.h>
+#include <ell.h>
 
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Geometry/Tensor.h>
@@ -69,9 +69,9 @@ main(int argc, char **argv) {
   }
   cerr << "Number of conductivities: "<<conds->size()<<"\n";
 
-  float m[9];
-  float eval[3];
-  float evec[3][3];
+  double m[9];
+  double eval[3];
+  double evec[9];
   int neg_vals=0;
   int small_vals=0;
   for (int i=0; i<conds->size(); i++) {
@@ -80,7 +80,7 @@ main(int argc, char **argv) {
       m[j*3+k]=(*conds)[i].mat_[j][k];
       (*conds)[i].mat_[j][k]=0;
     }
-    lineal3Eigensolve(m, eval, evec);
+    ell3mEigensolve(eval, evec, m, 0);
     double cbrt_vol = cbrt(eval[0]*eval[1]*eval[2]);
     if (cbrt_vol<0) { neg_vals++; cbrt_vol=0.1; }
     if (cbrt_vol<0.1) {small_vals++; cbrt_vol=0.1; }

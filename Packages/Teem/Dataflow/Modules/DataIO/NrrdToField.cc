@@ -83,7 +83,7 @@ void NrrdToField::execute()
       return;
     }
     // matrix, x, y, z
-    if (n->size[0] == 7) {
+    if (n->axis[0].size == 7) {
       if (n->type != nrrdTypeFloat) {
 	cerr << "Error - NrrdToField can only convert float data for tensors.\n";
 	return;
@@ -92,11 +92,12 @@ void NrrdToField::execute()
       // but we want to think of those samples as centers of cells, so
       // we need a different mesh
       Point minP(0,0,0);
-      Point maxP((n->size[1]+1)*n->spacing[1], (n->size[2]+1)*n->spacing[2],
-		 (n->size[3]+1)*n->spacing[3]);
-      int nx = n->size[1];
-      int ny = n->size[2];
-      int nz = n->size[3];
+      Point maxP((n->axis[1].size+1)*n->axis[1].spacing, 
+		 (n->axis[2].size+1)*n->axis[2].spacing,
+		 (n->axis[3].size+1)*n->axis[3].spacing);
+      int nx = n->axis[1].size;
+      int ny = n->axis[2].size;
+      int nz = n->axis[3].size;
       LatVolMesh *lvm = scinew LatVolMesh(nx+1, ny+1, nz+1, minP, maxP);
       MaskedLatticeVol<Tensor> *f =
 	scinew MaskedLatticeVol<Tensor>(lvm, Field::CELL);
@@ -122,13 +123,13 @@ void NrrdToField::execute()
     cerr << "Can only deal with 3-dimensional scalar fields... sorry.\n";
     return;
   }
-  int nx = n->size[0];
-  int ny = n->size[1];
-  int nz = n->size[2];
+  int nx = n->axis[0].size;
+  int ny = n->axis[1].size;
+  int nz = n->axis[2].size;
   
-  Point minP(0,0,0), maxP((nx-1)*n->spacing[0],
-			  (ny-1)*n->spacing[1],
-			  (nz-1)*n->spacing[2]);	  
+  Point minP(0,0,0), maxP((nx-1)*n->axis[0].spacing,
+			  (ny-1)*n->axis[1].spacing,
+			  (nz-1)*n->axis[2].spacing);
   LatVolMesh *lvm = scinew LatVolMesh(nx, ny, nz, minP, maxP);
   LatVolMeshHandle lvmH(lvm);
  

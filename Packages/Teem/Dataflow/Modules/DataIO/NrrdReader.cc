@@ -91,22 +91,17 @@ void NrrdReader::execute()
     old_filemodification_ = new_filemodification;
     old_filename_=fn;
 
-    FILE *f;
-    if (!(f = fopen(fn.c_str(), "rt"))) {
-      cerr << "Error opening file "<<fn<<"\n";
-      return;
-    }
-
     NrrdData *n = scinew NrrdData;
-    if (!(n->nrrd=nrrdNewRead(f))) {
+    char name[200];
+    strcpy(name, fn.c_str());
+    n->nrrd = nrrdNew();
+    if (!(nrrdLoad(n->nrrd, name))) {
       char *err = biffGet(NRRD);
       cerr << "Error reading nrrd "<<fn<<": "<<err<<"\n";
       free(err);
       biffDone(NRRD);
-      fclose(f);
       return;
     }
-    fclose(f);
     handle_ = n;
   }
 

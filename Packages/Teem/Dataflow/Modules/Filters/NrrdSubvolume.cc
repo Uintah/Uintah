@@ -122,7 +122,7 @@ int NrrdSubvolume::valid_data(string *minS, string *maxS,
   for (int a=0; a<3; a++) {
     const char *mins = minS[a].c_str();
     const char *maxs = maxS[a].c_str();
-    min[a]=max[a]=nrrd->size[a]-1;
+    min[a]=max[a]=nrrd->axis[a].size-1;
     if (getint(mins, &(min[a]))) { cerr << errstr; return 0; }
     if (getint(maxs, &(max[a]))) { cerr << errstr; return 0; }
     if (min[a] >= max[a]) { cerr << errstr; return 0; }
