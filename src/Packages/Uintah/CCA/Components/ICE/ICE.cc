@@ -115,7 +115,7 @@ ICE::~ICE()
 
   for(vector<ModelInterface*>::iterator iter = d_models.begin();
       iter != d_models.end(); iter++) {
-    delete *iter;
+    delete *iter; 
   }
   if(d_modelInfo){
     delete d_modelInfo;
@@ -1731,19 +1731,24 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
       gamma.initialize  (     ice_matl->getGamma());
       cv.initialize(          ice_matl->getSpecificHeat());
     }
-  }
-  //__________________________________
-  // Is it time to dump printData ?
-  // You need this in the first task
-  d_dbgTime_to_printData = false;       
-  double time= dataArchiver->getCurrentTime() + d_SMALL_NUM;
-  if (time >= d_dbgStartTime && 
-      time <= d_dbgStopTime  &&
-      time >= d_dbgNextDumpTime) {
-    d_dbgTime_to_printData  = true;
-    
-    d_dbgNextDumpTime = d_dbgOutputInterval 
-                      * ceil(time/d_dbgOutputInterval + d_SMALL_NUM); 
+
+    //__________________________________
+    // Is it time to dump printData ?
+    // You need to do this in the first task
+    // and only on the first patch
+    if (patch->getID() == 0) {
+      d_dbgTime_to_printData = false;
+      double time= dataArchiver->getCurrentTime() + d_SMALL_NUM;
+      
+      if (time >= d_dbgStartTime && 
+          time <= d_dbgStopTime  &&
+          time >= d_dbgNextDumpTime) {
+        d_dbgTime_to_printData  = true;
+
+        d_dbgNextDumpTime = d_dbgOutputInterval 
+                          * ceil(time/d_dbgOutputInterval + d_SMALL_NUM); 
+      }
+    }
   }
 }
 /* --------------------------------------------------------------------- 
@@ -4177,11 +4182,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
 
 /*`==========TESTING==========*/
  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
- if (timestep == 1 ) {
+ if (timestep == 1 && patch->getID() == 0 ) {
    if(oldStyleAdvect.active()){
-    cout << " OLD update eq. processor group "<<  pg->myrank() << endl;
+    cout << " ICE:Advection: using conservative style update eq. "<< endl;
    } else{
-    cout << " BAK update eq. processor group "<<  pg->myrank() << endl;
+    cout << " ICE:Advection: using BAK update eq.  "<< endl;
    }
  }
 /*==========TESTING==========`*/
