@@ -44,7 +44,7 @@ using namespace SCIRun;
 
 Dir Dir::create(const string& name)
 {
-   int code = mkdir(name.c_str(), 0777);
+   int code = MKDIR(name.c_str(), 0777);
    if(code != 0)
       throw ErrnoException("Dir::create (mkdir call)", errno);
    return Dir(name);
@@ -177,7 +177,7 @@ void Dir::getFilenamesBySuffix(const std::string& suffix,
 bool Dir::exists()
 {
   struct stat buf;
-  if(lstat(name_.c_str(),&buf) != 0)
+  if(LSTAT(name_.c_str(),&buf) != 0)
     return false;
   if (S_ISDIR(buf.st_mode))
     return true;
