@@ -797,14 +797,13 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     subNewDW->get(max_RHS,   lb->max_RHSLabel);
     counter ++;
     
-/*`==========TESTING==========*/
-#if 0
-    if (counter > 3) {
+    // restart timestep if working too hard
+    if (counter > d_iters_before_timestep_restart) {
       ParentNewDW->abortTimestep();
       ParentNewDW->restartTimestep();
-    } 
-#endif
-/*==========TESTING==========`*/
+      return;
+    }
+    
     if(pg->myrank() == 0) {
       cout << "Outer iteration " << counter<< " max_rhs "<< max_RHS<< endl;
 
