@@ -34,11 +34,10 @@ static bool computeDt = false;
 
 /*`==========TESTING==========  HACK: so we can get mass exchange off the ground*/
 #define HMX 1
-#define GAS 0
  /*==========TESTING==========`*/
  
-#define DOING
-//#undef DOING
+//#define DOING
+#undef DOING
 
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
@@ -270,16 +269,9 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
     Task* task = scinew Task("ICE::actuallyComputeStableTimestep",
 			  this, &ICE::actuallyComputeStableTimestep);
     if(computeDt) {      
-      task->requires(Task::OldDW,lb->vel_CCLabel,        Ghost::None);
-      task->requires(Task::OldDW,lb->speedSound_CCLabel, Ghost::None);
+      task->requires(Task::NewDW,lb->vel_CCLabel,        Ghost::None);
+      task->requires(Task::NewDW,lb->speedSound_CCLabel, Ghost::None);
     }
-    
-/*`==========TESTING==========*/ 
-    // The above requires should be based on NewDW
-    // currently there is a bug in the scheduler
-    // that only allows us to use the OldDW
- /*==========TESTING==========`*/
-    
     task->computes(d_sharedState->get_delt_label());
     sched->addTask(task,level->eachPatch(), d_sharedState->allICEMaterials());
   }
@@ -384,13 +376,7 @@ void ICE::scheduleComputeFaceCenteredVelocities(SchedulerP& sched,
   task->requires(Task::NewDW,lb->rho_micro_CCLabel, /*all_matls*/Ghost::AroundCells,1);
   task->requires(Task::NewDW,lb->rho_CCLabel,       /*all_matls*/Ghost::AroundCells,1);
   task->requires(Task::OldDW,lb->vel_CCLabel,         ice_matls, Ghost::AroundCells,1);
-/*`==========TESTING==========*/ 
-// This is a workaround for a bug that is currently
-// in the scheduler
-  if(mpm_matls->size() != 0 ) {     
-  // task->requires(Task::NewDW,lb->vel_CCLabel, mpm_matls,Ghost::AroundCells,1);
-  }
- /*==========TESTING==========`*/
+  task->requires(Task::NewDW,lb->vel_CCLabel,         mpm_matls, Ghost::AroundCells,1);
 
   task->computes(lb->uvel_FCLabel);
   task->computes(lb->vvel_FCLabel);
@@ -697,14 +683,10 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
         int dwindex = ice_matl->getDWIndex();
 
-        old_dw->get(speedSound, lb->speedSound_CCLabel,
+        new_dw->get(speedSound, lb->speedSound_CCLabel,
  		                            dwindex,patch,Ghost::None, 0);
-        old_dw->get(vel, lb->vel_CCLabel, dwindex,patch,Ghost::None, 0);
-/*`==========TESTING==========*/ 
-    // The above should be based on NewDW
-    // currently there is a bug in the scheduler
-    // that only allows you to use the OldDW
- /*==========TESTING==========`*/
+        new_dw->get(vel, lb->vel_CCLabel, dwindex,patch,Ghost::None, 0);
+
         for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){   
 	  double A = fudge_factor*CFL*dx.x()/(speedSound[*iter] + 
 					      fabs(vel[*iter].x())+ d_SMALL_NUM);
