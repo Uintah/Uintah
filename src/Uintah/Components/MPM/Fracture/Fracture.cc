@@ -204,7 +204,7 @@ crackGrow(const Patch* patch,
 	//compare with the tensile strength
 	if(maxStress > pTensileStrength[idx]) {
           vector<Vector> eigenVectors = pStress[idx].getEigenVectors(maxStress,
-								    maxStress);
+							      fabs(maxStress));
 	  for(int i=0;i<eigenVectors.size();++i) {
             eigenVectors[i].normalize();
 	  }
@@ -292,6 +292,10 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.49  2000/09/20 18:28:36  witzel
+// Oops.  Needed to take fabs for Matrix3::getEigenVectors relative_scale
+// parameter.
+//
 // Revision 1.48  2000/09/20 18:10:09  witzel
 // Eigen-value indices were changed such that sig[0] is the largest
 // (because the order was changed in Matrix3::getEigenValues).  Also,
