@@ -214,6 +214,7 @@ class SystemCall : public SystemCallBase {
 	void	dolock();		// This will lock the object
 	void	unlock();
 
+    void    use_stdout_timeout(bool use_timeout);
   ///////////////////////
   // The next set of functions is used by the thread to insert
   // data into the SystemCall object.
@@ -236,7 +237,7 @@ class SystemCall : public SystemCallBase {
 	int		get_stderr();
 	int		get_exit();
 
-
+    
   ///////////////////////
   // Public objects needed by the LockingHandle
   // Do not modify these:
@@ -275,7 +276,17 @@ class SystemCall : public SystemCallBase {
 	std::list<std::string> stderrbuffer_;
 	int					stdoutbuffersize_;
 	int					stderrbuffersize_;
+        
+    bool                use_timeout_;
+    
 };
+
+// If there is a long inactivity, pending data will be forwarded
+// And line buffering will be overruled
+inline void SystemCall::use_stdout_timeout(bool use_timeout)
+{
+    use_timeout_ = use_timeout;
+}
 
 inline void SystemCall::dolock()
 {
