@@ -192,52 +192,62 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
   }             
 }
 
-#if 0
+
 /*___________________________________________________________________
- Function~  AMRICE::interpolationWrapper--
- Purpose:    depending on which 
+ Function~  AMRICE::interpolationTest--
 _____________________________________________________________________*/
 template<class T>
-  void interpolationWrapper(CCVariable<T>& q_CL,// course level
-                             const Level* coarseLevel,
-                             const Level* fineLevel,
-                             const IntVector& refineRatio,
-                             const IntVector& fl,
-                             const IntVector& fh,
-                             CCVariable<T>& q_FineLevel,
-                             T& error)
+  void interpolationTest(const Level* fineLevel,
+                         const IntVector& f_cell,
+                         int& ncell,
+                         T& error,
+                         T& q_FineLevel)
 {
-  linearInterpolation<varType>(test, coarseLevel, fineLevel,
-                                     refineRatio, fl,fh, Q, error); 
-                                     
-  quadraticInterpolation<varType>(test, coarseLevel, fineLevel,
-                                     refineRatio, fl,fh, Q, error); 
+                      
+  Vector f_dx = fineLevel->dCell();
+  double X = ((f_cell.x() * f_dx.x()) + f_dx.x()/2);
+  double Y = ((f_cell.y() * f_dx.y()) + f_dx.y()/2);
+  double Z = ((f_cell.z() * f_dx.z()) + f_dx.z()/2);
 
-}
+  //T exact(5.0);
+  //T exact( X );
+  //T exact( Y );
+  //T exact( Z );
+  T exact( X * Y* Z  );
+  //T exact( X * X * Y * Y * Z * Z);
+  //T exact( X * X * X * Y* Y * Y  * Z * Z *Z );
+
+  error = error + (q_FineLevel - exact) * (q_FineLevel - exact);
+  ncell += 1;
+
+#if 0  
+  cout  << "f_cell \t" << f_cell 
+        << " q_FineLevel[f_cell] " << q_FineLevel
+        <<  " error " << error <<  endl;
 #endif
+}
+
 /*___________________________________________________________________
  Function~  AMRICE::linearInterpolation--
 _____________________________________________________________________*/
 template<class T>
-  void linearInterpolation(CCVariable<T>& q_CL,// course level
-                             const Level* coarseLevel,
-                             const Level* fineLevel,
-                             const IntVector& /*refineRatio*/,
-                             const IntVector& fl,
-                             const IntVector& fh,
-                             CCVariable<T>& q_FineLevel,
-                             T& error)
+  void linearInterpolation(constCCVariable<T>& q_CL,// course level
+                           const Level* coarseLevel,
+                           const Level* fineLevel,
+                           const IntVector& refineRatio,
+                           const IntVector& fl,
+                           const IntVector& fh,
+                           CCVariable<T>& q_FineLevel)
 {
-/*`==========TESTING==========*/
-  int ncell = 0;
-/*===========TESTING==========`*/  
+  //int ncell = 0;  // needed by interpolation test
+  //T error(0);
+  
   Vector c_dx = coarseLevel->dCell();
   Vector inv_c_dx = Vector(1.0)/c_dx;
   
   for(CellIterator iter(fl,fh); !iter.done(); iter++){
     IntVector f_cell = *iter;
     IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
-    
     //__________________________________
     // Offset for coarse level surrounding cells:
     //  -find the normalized distance between the coarse and fine level cell centers  
@@ -251,17 +261,13 @@ template<class T>
     int k = Sign(dist.z());
     
     dist = Abs(dist);  
-/*`==========TESTING==========*/
-//cout << "dist " << dist << " i " << i << " j " << j << " k " << k << endl;   
-/*===========TESTING==========`*/
     //__________________________________
     //  Find the weights      
     double w0 = (1. - dist.x()) * (1. - dist.y());
     double w1 = dist.x() * (1. - dist.y());
     double w2 = dist.y() * (1. - dist.x());
     double w3 = dist.x() * dist.y(); 
-     
-            
+      
     T q_XY_Plane_1   // X-Y plane closest to the fine level cell 
         = w0 * q_CL[c_cell] 
         + w1 * q_CL[c_cell + IntVector( i, 0, 0)] 
@@ -276,48 +282,32 @@ template<class T>
 
     // interpolate the two X-Y planes in the k direction
     q_FineLevel[f_cell] = (1.0 - dist.z()) * q_XY_Plane_1 
-                       + dist.z() * q_XY_Plane_2;
+                        + dist.z() * q_XY_Plane_2;
     
-/*`==========TESTING==========*/
-    Vector f_dx = fineLevel->dCell();
-    double X = ((f_cell.x() * f_dx.x()) + f_dx.x()/2.0);
-    double Y = ((f_cell.y() * f_dx.y()) + f_dx.y()/2.0);
-    double Z = ((f_cell.z() * f_dx.z()) + f_dx.z()/2.0);
-    
-   T exact( X * X * X * Y* Y * Y  * Z * Z *Z );
-  // T exact(5.0);
-           
-    error = error + (q_FineLevel[f_cell] - exact) * (q_FineLevel[f_cell] - exact);
-    ncell += 1; 
-    
-#if 0
-    cout  << "f_cell \t" << f_cell << " c_cell "<< c_cell
-          << " plane 1 " << q_XY_Plane_1 << " plane2 " << q_XY_Plane_2
-          << " q_FineLevel[f_cell] " << q_FineLevel[f_cell]
-          <<  " error " << error << " exact " << exact << endl;
-#endif
-/*===========TESTING==========`*/
+    //interpolationTest(fineLevel,f_cell, ncell, error, q_FineLevel[f_cell]);    
+    //cout << " plane 1 " << q_XY_Plane_1 << " plane2 " << q_XY_Plane_2 << endl;
   }
-  error = error/(double)ncell;
-  cout << " error/ncell " << error << endl;
+  
+  //interpolation test
+  //error = error/(double)ncell;
+  //cout << "Linear interpolation    error^2/ncell " << error << " Ncells " << ncell<< endl;
 }
 
 /*___________________________________________________________________
  Function~  AMRICE::QuadraticInterpolation--
 _____________________________________________________________________*/
 template<class T>
-  void quadraticInterpolation(CCVariable<T>& q_CL,// course level
+  void quadraticInterpolation(constCCVariable<T>& q_CL,// course level
                              const Level* coarseLevel,
                              const Level* fineLevel,
                              const IntVector& refineRatio,
                              const IntVector& fl,
                              const IntVector& fh,
-                             CCVariable<T>& q_FineLevel,
-                             T& error)
+                             CCVariable<T>& q_FineLevel)
 {
-/*`==========TESTING==========*/
-  int ncell = 0;
-/*===========TESTING==========`*/
+  //int ncell = 0;  // needed by interpolation test
+  //T error(0);
+  
   Vector c_dx = coarseLevel->dCell();
   Vector inv_c_dx = Vector(1.0)/c_dx;
   
@@ -358,6 +348,22 @@ template<class T>
     w(0,2) = w0_x * w2_y; w(1,2) = w1_x * w2_y; w(2,2) = w2_x * w2_y;  
     //  Q_CL(-1, 1,k)      Q_CL(0, 1,k)          Q_CL(1, 1,k)      
     
+    
+#if 0    
+    // Maybe use this when the patch is on the fine level.
+  bool onBoundary = true;
+    int x_m = onBoundary?Sign(dist.x()):-1;
+    int y_m = onBoundary?Sign(dist.y()):-1;
+    int z_m = onBoundary?Sign(dist.z()):-1;
+    int x_p = onBoundary?2*Sign(dist.x()):1;
+    int y_p = onBoundary?2*Sign(dist.y()):1;
+    int z_p = onBoundary?2*Sign(dist.z()):1;
+    
+    cout << f_cell << endl;
+    cout << " x_p " << x_p << " y_p " << y_p << " z_p " << z_p<< endl; 
+    cout << " x_m " << x_m << " y_m " << y_m << " z_m " << z_m<< endl;    
+#endif    
+    
     vector<T> q_XY_Plane(3);
      
     int k = -2; 
@@ -381,31 +387,66 @@ template<class T>
     q_FineLevel[f_cell] = w0_z * q_XY_Plane[0] 
                         + w1_z * q_XY_Plane[1] 
                         + w2_z * q_XY_Plane[2];
-/*`==========TESTING==========*/
-    Vector f_dx = fineLevel->dCell();
-    
-    double X = ((f_cell.x() * f_dx.x()) + f_dx.x()/2.0);
-    double Y = ((f_cell.y() * f_dx.y()) + f_dx.y()/2.0);
-    double Z = ((f_cell.z() * f_dx.z()) + f_dx.z()/2.0);
-    
-    T exact( X * X * X * Y* Y * Y  * Z * Z *Z );
-    //T exact(5.0);
-           
-    error = error +  (q_FineLevel[f_cell] - exact) * (q_FineLevel[f_cell] - exact);
-    ncell += 1; 
-#if 0
-    cout  << "f_cell \t" << f_cell << " c_cell "<< c_cell
-          << " plane 1 " << q_XY_Plane[0] << " plane2 " << q_XY_Plane[1] << " plane3 "<< q_XY_Plane[3]
-          << " q_FineLevel[f_cell] " << q_FineLevel[f_cell]
-          <<  " error " << error << " exact " << exact << endl;    
-#endif
-    
-//    cout  << "f_cell \t" << f_cell << " c_cell "<< c_cell<< " q_FineLevel[f_cell] " << q_FineLevel[f_cell]
-//          <<  " error " << error << " exact " << exact << endl;
-/*===========TESTING==========`*/                        
+
+   //interpolationTest(fineLevel,f_cell, ncell, error, q_FineLevel[f_cell]); 
+   // cout  << " plane 1 " << q_XY_Plane[0] << " plane2 " << q_XY_Plane[1] << " plane3 "<< q_XY_Plane[3]<< endl;
   } 
-  error = error/(double)ncell;
-  cout << " error/ncell " << error << endl;
+  
+  // interpolation test
+  //error = error/(double)ncell;
+  //cout << "Quadratic interpolation error^2/ncell " << error << " ncells " << ncell<< endl;
+}
+/*___________________________________________________________________
+ Function~  AMRICE::interpolationInterface--
+ Purpose:    depending on which 
+_____________________________________________________________________*/
+template<class T>
+  void interpolationInterface(constCCVariable<T>& q_CL,// course level
+                              DataWarehouse* coarse_new_dw,
+                              const Level* coarseLevel,
+                              const Level* fineLevel,
+                              const IntVector& refineRatio,
+                              const IntVector& fl,
+                              const IntVector& fh,
+                              CCVariable<T>& q_FineLevel)
+{
+
+#if 1
+  //__________________________________
+  //  Initialize test data
+  cout.setf(ios::scientific,ios::floatfield);
+  cout.precision(16);
+
+  CCVariable<T> tmp;
+  constCCVariable<T> testData;
+  
+  Vector c_dx = coarseLevel->dCell();
+  for(Level::const_patchIterator iter = coarseLevel->patchesBegin();
+                                iter != coarseLevel->patchesEnd(); iter++){
+    const Patch* patch2 = *iter;
+    coarse_new_dw->allocateTemporary(tmp,patch2);
+    for(CellIterator iter = patch2->getExtraCellIterator(); !iter.done();iter++){
+      IntVector c = *iter; 
+      double X = ((c.x() * c_dx.x()) + c_dx.x()/2);
+      double Y = ((c.y() * c_dx.y()) + c_dx.y()/2);
+      double Z = ((c.z() * c_dx.z()) + c_dx.z()/2);
+      //tmp[c] = varType(5.0);
+      //tmp[c] = varType( X );
+      //tmp[c] = varType( Y );
+      //tmp[c] = varType( Z );
+      tmp[c] = T( X * Y* Z  );
+      //tmp[c] = varType( X * X * Y * Y * Z * Z);
+      //tmp[c] = varType( X * X * X * Y* Y * Y  * Z * Z *Z );
+    }
+    testData = test;
+  }
+#endif
+  
+  linearInterpolation<T>(testData, coarseLevel, fineLevel,
+                          refineRatio, fl,fh, q_FineLevel); 
+                                     
+  quadraticInterpolation<T>(testData, coarseLevel, fineLevel,
+                            refineRatio, fl,fh, q_FineLevel);
 }
 
 /*___________________________________________________________________
@@ -425,17 +466,10 @@ void refine_CF_interfaceOperator(const Patch* patch,
 {
   cout_dbg << *patch << endl;
   
-/*`==========TESTING==========*/
-    varType error1(0.0);
-    varType error2(0.0); 
-    varType error(0.0);
-/*===========TESTING==========`*/
-  
-  
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
 
-   if(patch->getBCType(face) == Patch::Coarse) {
+   if(patch->getBCType(face) != Patch::Neighbor) {
      //__________________________________
      // fine level hi & lo cell iter limits
      // coarselevel hi and low index
@@ -444,15 +478,8 @@ void refine_CF_interfaceOperator(const Patch* patch,
       IntVector fh = iter_tmp.end(); 
       IntVector refineRatio = fineLevel->getRefinementRatio();
       IntVector coarseLow  = fineLevel->mapCellToCoarser(fl);
-      //IntVector coarseHigh = fineLevel->mapCellToCoarser(fh+refineRatio-IntVector(1,1,1));
-      IntVector coarseHigh = fineLevel->mapCellToCoarser(fh);
-
-/*`==========TESTING==========*/
- refineRatio = IntVector(4,4,4);
-       cout << " refineRatio "<< refineRatio << " fl " << fl << " fh " << fh
-          << " coarseHigh " << coarseHigh << " coarseLow " << coarseLow << endl;
-/*===========TESTING==========`*/
-      
+      IntVector coarseHigh = fineLevel->mapCellToCoarser(fh+refineRatio-IntVector(1,1,1));
+      //IntVector coarseHigh = fineLevel->mapCellToCoarser(fh);
 
       //__________________________________
       // enlarge the coarselevel foot print by oneCell
@@ -467,43 +494,9 @@ void refine_CF_interfaceOperator(const Patch* patch,
                                || face == Patch::zplus) {
         coarseLow -= oneCell;
       }
-      cout_dbg << " face " << face 
-               << " FineLevel iterator" << iter_tmp.begin() << " " << iter_tmp.end() 
+      cout<< " face " << face << " refineRatio "<< refineRatio
+               << " FineLevel iterator" << fl << " " << fh 
                << " \t coarseLevel iterator " << coarseLow << " " << coarseHigh<<endl;
-      
-/*`==========TESTING==========*/
-        cout.setf(ios::scientific,ios::floatfield);
-        cout.precision(16);
-
-    CCVariable<varType> test;
-
-    Vector c_dx = coarseLevel->dCell();
-    for(Level::const_patchIterator iter = coarseLevel->patchesBegin();
-                                  iter != coarseLevel->patchesEnd(); iter++){
-      const Patch* patch2 = *iter;
-      coarse_new_dw->allocateTemporary(test,patch2);
-      for(CellIterator iter = patch2->getCellIterator(); !iter.done();iter++){
-        IntVector c = *iter; 
-        double X = ((c.x() * c_dx.x()) + c_dx.x()/2.0);
-        double Y = ((c.y() * c_dx.y()) + c_dx.y()/2.0);
-        double Z = ((c.z() * c_dx.z()) + c_dx.z()/2.0);
-        
-        //test[c] = varType( X * X * X * Y* Y * Y  * Z * Z *Z );
-        test[c] = varType(5.0);
-      }
-      
-      cout << " linearInterpolation:  face " << face;
-      linearInterpolation<varType>(test, coarseLevel, fineLevel,
-                                     refineRatio, fl,fh, Q, error); 
-      error1 = error1 + error;
-      error = varType(0.0);
-
-      cout << " quadraticInterpolation: face " << face;                             
-      quadraticInterpolation(test, coarseLevel, fineLevel,
-                             refineRatio, fl,fh, Q, error);
-      error2 = error2 + error;                            
-    }
-/*===========TESTING==========`*/
       
       //__________________________________
       //   subCycleProgress_var  = 0
@@ -513,10 +506,12 @@ void refine_CF_interfaceOperator(const Patch* patch,
        coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel,
                                 coarseLow, coarseHigh);
 
-#if 0
        linearInterpolation<varType>(q_OldDW, coarseLevel, fineLevel,
-                                      refineRatio, fl,fh, Q);
-#endif
+                                    refineRatio, fl,fh, Q);      
+                                    
+                                    
+     //  interpolationInterface<varType>(q_OldDW,coarse_new_dw, coarseLevel, fineLevel,
+     //                                  refineRatio, fl,fh, Q);                                                                   
       } 
        
        //__________________________________
@@ -526,11 +521,9 @@ void refine_CF_interfaceOperator(const Patch* patch,
        constCCVariable<varType> q_NewDW;
        coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
                              coarseLow, coarseHigh);
-#if 0                               
+
        linearInterpolation<varType>(q_NewDW, coarseLevel, fineLevel,
-                                      refineRatio, fl,fh, Q); 
- 
-#endif
+                                    refineRatio, fl,fh, Q); 
       } else {    
                       
       //__________________________________
@@ -546,16 +539,14 @@ void refine_CF_interfaceOperator(const Patch* patch,
         fine_new_dw->allocateTemporary(Q_old, patch);
         fine_new_dw->allocateTemporary(Q_new, patch);
         
-        Q_old.initialize(varType(0));
-        Q_new.initialize(varType(0));
+        Q_old.initialize(varType(-9));
+        Q_new.initialize(varType(-9));
                              
-#if 0                              
         linearInterpolation<varType>(q_OldDW, coarseLevel, fineLevel,
-                                       refineRatio, fl,fh, Q_old);
+                                     refineRatio, fl,fh, Q_old);
                                       
         linearInterpolation<varType>(q_NewDW, coarseLevel, fineLevel,
-                                       refineRatio, fl,fh, Q_New);
-#endif
+                                     refineRatio, fl,fh, Q_new);
         // Linear interpolation in time
         for(CellIterator iter(fl,fh); !iter.done(); iter++){
           IntVector f_cell = *iter;
@@ -564,11 +555,7 @@ void refine_CF_interfaceOperator(const Patch* patch,
         }
       }
     }
-  }  // face 
-  cout << "Sum over all faces " << endl;
-  cout << "linearInterpolator  error: " << error1 << endl;
-  cout << "QuadraticInterpolator error: " << error2 << endl;
-  
+  }  // face   
   cout_dbg.setActive(false);// turn off the switch for cout_dbg
 }
 
@@ -814,14 +801,23 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
     
     cout_dbg << " coarseToFineOperator: coarsePatch " << *coarsePatch
              << " finePatch " << *finePatch << endl;
-    //IntVector refinementRatio = coarseLevel->getRefinementRatio();
+    IntVector refineRatio = coarseLevel->getRefinementRatio();
     
+    
+/*`==========TESTING==========*/
+    linearInterpolation<T>(coarse_q_CC, coarseLevel, fineLevel,
+                                  refineRatio, fl,fh, q_CC); 
+/*===========TESTING==========`*/
+
+#if 0
     // iterate over fine level cells
     for(CellIterator iter(fl, fh); !iter.done(); iter++){
       IntVector c = *iter;
       IntVector coarseCell = fineLevel->mapCellToCoarser(c);
       q_CC[c] = coarse_q_CC[coarseCell];
     }
+#endif    
+    
   }
 }
 
