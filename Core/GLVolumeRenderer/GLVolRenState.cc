@@ -31,9 +31,11 @@ using namespace std;
 static const char* ShaderString =
 "!!ARBfp1.0 \n\
 TEMP c0, c; \n\
+ATTRIB fc = fragment.color; \n\
 ATTRIB tf = fragment.texcoord[0]; \n\
 TEX c0, tf, texture[0], 3D; \n\
 TEX c, c0, texture[1], 1D; \n\
+MUL c, c, fc; \n\
 MOV_SAT result.color, c; \n\
 END";
 
@@ -66,9 +68,6 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-#if defined(GL_ARB_fragment_program) && defined(__APPLE__)
-FragmentProgramARB *GLVolRenState::VolShader = new FragmentProgramARB( ShaderString, false );
-#endif
 
 GLVolRenState::GLVolRenState(const GLVolumeRenderer* glvr)
   : volren( glvr ), texName(0), reload_(true), 
@@ -76,6 +75,9 @@ GLVolRenState::GLVolRenState(const GLVolumeRenderer* glvr)
 {
   // Base Class, holds pointer to VolumeRenderer and 
   // common computation
+#if defined(GL_ARB_fragment_program) && defined(__APPLE__)
+  VolShader = new FragmentProgramARB( ShaderString, false );
+#endif
 
 }
 

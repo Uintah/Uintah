@@ -122,7 +122,7 @@ protected:
   BBox bounding_box_;
 
 #if defined(GL_ARB_fragment_program) && defined(__APPLE__)
-  static FragmentProgramARB *VolShader;
+  FragmentProgramARB *VolShader;
 #endif
   GLuint cmap_texture_;
 
