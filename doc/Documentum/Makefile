@@ -64,17 +64,15 @@ all: \
   documentum-html \
   documentum-print \
   mod-spec-ref-html \
-  doc_inventory-html
-#  doc_inventory-print
+  doc_inventory-html \
+  doc_inventory-print
 #  mod-spec-ref-print
 
 # Rule for building index.html
-
 index.html: index.rhtml ${edition}
 	eruby --delimiters html $< >$@
 
 # Rules for building documentum.
-
 documentum : documentum-html documentum-print
 
 documentum-html : documentum.html
@@ -96,7 +94,6 @@ documentum.pdf : documentum.rxml ${edition}
 	dvipdfm -p letter documentum.dvi
 
 # Rules for building component reference.
-
 mod-spec-ref : mod-spec-ref-html mod-spec-ref-print
 
 mod-spec-ref-html : mod-spec-ref.html
@@ -147,7 +144,7 @@ doc_inventory.pdf : doc_inventory.rxml ${edition}
 
 clean:
 	-${rmfiles} *.aux *.dvi *.lot *.toc *.log *~
-	-${rmfiles} *.[ph]xml documentum.tex *.out
+	-${rmfiles} *.[ph]xml documentum.tex mod-spec-ref.tex doc_inventory.tex *.out
 
 veryclean: clean
 	-${rmfiles} *.html *.pdf
