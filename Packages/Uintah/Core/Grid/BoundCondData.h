@@ -4,6 +4,8 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <Packages/Uintah/Core/ProblemSpec/Handle.h>
+
 using std::vector;
 using std::map;
 using std::string;
@@ -50,7 +52,7 @@ WARNING
     // The vector is for the material id, the map is for the name of the
     // bc type and then the actual bc data, i.e. 
     // "Velocity", VelocityBoundCond
-    vector<map<string,BoundCondBase*> > d_data;
+    vector<map<string,Handle<BoundCondBase> > > d_data;
     
   };
 } // End namespace Uintah

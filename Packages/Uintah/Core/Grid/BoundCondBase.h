@@ -1,6 +1,7 @@
 #ifndef UINTAH_GRID_BoundCondBase_H
 #define UINTAH_GRID_BoundCondBase_H
 
+#include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <string>
 using std::string;
 
@@ -34,7 +35,7 @@ WARNING
   
 ****************************************/
 
-  class BoundCondBase  {
+  class BoundCondBase : public RefCounted  {
   public:
     BoundCondBase() {};
     BoundCondBase(const string type) : d_type(type) {};
