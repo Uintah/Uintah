@@ -57,6 +57,8 @@ CODEGEN := -classpath $(PATH_TO_SCIRUN)/tools/CodeGenerator/java:$(XALAN_PATH) S
 
 SRCS += ${SRC_GEN} \
 	${SRCDIR}/ExtractImageFilter.cc \
+	${SRCDIR}/PasteImageFilter.cc \
+	$(SRCDIR)/ThresholdSegmentationLevelSetImageFilter.cc \
 #[INSERT NEW CODE FILE HERE]
 
 $(SRCDIR)/%.cc : $(SRCDIR)/XML/sci_%.xml
