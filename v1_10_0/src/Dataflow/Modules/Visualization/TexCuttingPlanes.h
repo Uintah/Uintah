@@ -53,6 +53,10 @@ private:
   CrowdMonitor            control_lock_; 
   PointWidget            *control_widget_;
   GeomID                  control_id_;
+  GuiInt                  control_pos_saved_;
+  GuiDouble               control_x_;
+  GuiDouble               control_y_;
+  GuiDouble               control_z_;
   GuiInt                  drawX_;
   GuiInt                  drawY_;
   GuiInt                  drawZ_;

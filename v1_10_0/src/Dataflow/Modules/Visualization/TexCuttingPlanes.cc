@@ -55,6 +55,10 @@ TexCuttingPlanes::TexCuttingPlanes(GuiContext* ctx) :
   control_lock_("TexCuttingPlanes resolution lock"),
   control_widget_(0),
   control_id_(-1),
+  control_pos_saved_(ctx->subVar("control_pos_saved")),
+  control_x_(ctx->subVar("control_x")),
+  control_y_(ctx->subVar("control_y")),
+  control_z_(ctx->subVar("control_z")),
   drawX_(ctx->subVar("drawX")),
   drawY_(ctx->subVar("drawY")),
   drawZ_(ctx->subVar("drawZ")),
@@ -99,6 +103,10 @@ TexCuttingPlanes::tcl_command( GuiArgs& args, void* userdata)
       }
       control_widget_->SetPosition(w);
       widget_moved(true);
+      control_x_.set( w.x() );
+      control_y_.set( w.y() );
+      control_z_.set( w.z() );
+      control_pos_saved_.set( 1 );
       ogeom_->flushViews();				  
   } else {
     Module::tcl_command(args, userdata);
@@ -110,6 +118,11 @@ void TexCuttingPlanes::widget_moved(bool)
   if( volren_ ){
       volren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
     }
+  Point w(control_widget_->ReferencePoint());
+  control_x_.set( w.x() );
+  control_y_.set( w.y() );
+  control_z_.set( w.z() );
+  control_pos_saved_.set( 1 );
 }
 
 
@@ -155,32 +168,38 @@ void TexCuttingPlanes::execute(void)
     BBox b;
     tex_->get_bounds(b);
     Vector dv(b.diagonal());
-    int nx, ny, nz;
-    Transform t(tex_->get_field_transform());
-    dmin_=t.project(Point(0,0,0));
-    ddx_=t.project(Point(1,0,0))-dmin_;
-    ddy_=t.project(Point(0,1,0))-dmin_;
-    ddz_=t.project(Point(0,0,1))-dmin_;
-    tex_->get_dimensions(nx,ny,nz);
-    ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
-    control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5));
-    control_widget_->SetScale(dv.length()/80.0);
+    if( control_pos_saved_.get() ) {
+      control_widget_->SetPosition(Point(control_x_.get(),
+					 control_y_.get(),
+					 control_z_.get()));
+      control_widget_->SetScale(dv.length()/80.0);
+    } else {
+      int nx, ny, nz;
+      Transform t(tex_->get_field_transform());
+      dmin_=t.project(Point(0,0,0));
+      ddx_=t.project(Point(1,0,0))-dmin_;
+      ddy_=t.project(Point(0,1,0))-dmin_;
+      ddz_=t.project(Point(0,0,1))-dmin_;
+      tex_->get_dimensions(nx,ny,nz);
+      ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
+      control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5));
+      control_widget_->SetScale(dv.length()/80.0);
+    }
   }
-
-
-  //AuditAllocator(default_allocator);
+    
+    //AuditAllocator(default_allocator);
   if( !volren_ ){
     volren_ = scinew GLVolumeRenderer(tex_, cmap);
 
     volren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
     volren_->SetInterp( bool(interp_mode_.get()));
-
-    if(tex_->CC()){
-      volren_->SetInterp(false);
-      interp_mode_.set(0);
-    } else {
+    
+//     if(tex_->CC()){
+//       volren_->SetInterp(false);
+//       interp_mode_.set(0);
+//     } else {
       volren_->SetInterp(interp_mode_.get());
-    }
+//     }
 
     ogeom_->addObj( volren_, "Volume Slicer");
     volren_->set_tex_ren_state(GLVolumeRenderer::TRS_GLPlanes);
