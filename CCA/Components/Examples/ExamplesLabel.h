@@ -10,11 +10,12 @@ namespace Uintah {
     const VarLabel* phi;
     const VarLabel* residual;
 
-    // For Smoke
-    const VarLabel* uvel;
-    const VarLabel* vvel;
-    const VarLabel* wvel;
-    const VarLabel* pressure;
+    // For SimpleCFD
+    const VarLabel* bctype;
+    const VarLabel* xvelocity;
+    const VarLabel* yvelocity;
+    const VarLabel* zvelocity;
+    const VarLabel* density;
 
     // For Burger
     const VarLabel* u;

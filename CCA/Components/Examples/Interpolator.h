@@ -68,7 +68,10 @@ public:
     int getYSupportRefine() { return refine_support_[1]; }
     int getZSupportRefine() { return refine_support_[2]; }
     int getMaxSupportRefine() { return max_refine_support_; }
-    double refine(const NCVariable<double>& variable, IntVector index, Interpolator::PointType type);
+    double refine(constNCVariable<double>& variable, IntVector index, Interpolator::PointType type);
+    double refine(constNCVariable<double>& variable1, double weight1,
+		  constNCVariable<double>& variable2, double weight2,
+		  IntVector index, Interpolator::PointType type);
 
     IntVector getSupportCoarsen() { return coarsen_support_; }
     int getXSupportCoarsen() { return coarsen_support_[0]; }

@@ -58,29 +58,27 @@ WARNING
     virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
 
     // New functions
-    virtual void scheduleRefine(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP& sched);
+    virtual void scheduleRefine(LevelP& fineLevel, SchedulerP& sched);
     void refine(const ProcessorGroup* pg,
                 const PatchSubset* finePatches, 
 		const MaterialSubset* matls,
-                DataWarehouse* coarseDW, 
-                DataWarehouse* fineDW,
-                LevelP coarseLevel);
+                DataWarehouse*, 
+                DataWarehouse* newDW);
 
-    virtual void scheduleRefineInterface(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP& scheduler);
+    virtual void scheduleRefineInterface(LevelP& fineLevel, SchedulerP& scheduler, int step, int nsteps);
     void refineInterface(const ProcessorGroup*,
 			 const PatchSubset* finePatches, 
 			 const MaterialSubset* matls,
 			 DataWarehouse* fineDW, 
 			 DataWarehouse* coarseDW,
-			 LevelP coarseLevel);
+			 int step, int nsteps);
 
-    virtual void scheduleCoarsen(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP& sched);
+    virtual void scheduleCoarsen(LevelP& coarseLevel, SchedulerP& sched);
     void coarsen(const ProcessorGroup* pg,
 	         const PatchSubset* finePatches, 
 		 const MaterialSubset* matls,
                  DataWarehouse* coarseDW, 
-                 DataWarehouse* fineDW,
-                 LevelP coarseLevel);
+                 DataWarehouse* fineDW);
 
   private:
     void initialize(const ProcessorGroup*,
@@ -93,7 +91,8 @@ WARNING
     void timeAdvance(const ProcessorGroup*,
 		     const PatchSubset* patches,
 		     const MaterialSubset* matls,
-		     DataWarehouse* old_dw, DataWarehouse* new_dw);
+		     DataWarehouse* old_dw, DataWarehouse* new_dw,
+		     bool modify);
     ExamplesLabel* lb_;
     SimulationStateP sharedState_;
     double delt_;
