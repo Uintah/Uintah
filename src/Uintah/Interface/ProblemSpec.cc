@@ -18,8 +18,6 @@ using namespace std;
 using namespace SCICore::Geometry;
 using namespace PSECore::XMLUtil;
 
-#define cerr if (d_write) cerr 
-
 ProblemSpec::ProblemSpec(const DOM_Node& node)
   : d_node(node), d_write(true)
 {
@@ -50,8 +48,10 @@ ProblemSpecP ProblemSpec::findBlock(const std::string& name) const
    DOM_Node found_node = findNode(name,d_node);
 
   if (found_node.isNull()) {
-    cerr << "Didn't find the tag . . " << name << endl;
-    cerr << "Setting to Null . . " << endl;
+    if (d_write) {
+      cerr << "Didn't find the tag . . " << name << endl;
+      cerr << "Setting to Null . . " << endl;
+    }
     return 0;
   }
   else {
@@ -453,6 +453,9 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.23  2000/09/26 21:34:07  witzel
+// minor revision of the change I submitted before
+//
 // Revision 1.22  2000/09/26 21:24:27  witzel
 // Added d_write flag and corresponding writeMessages(bool) method to
 // control whether or not to output error and warning messages.
