@@ -79,8 +79,8 @@ int NrrdPermute::valid_data(int* axes) {
   int exists[3];
   exists[0]=exists[1]=exists[2]=0;
   for (int a=0; a<3; a++) {
-    if (axes[a]>=0 && axes[a]<=2 && !exists[a])
-      exists[a]=1;
+    if (axes[a]>=0 && axes[a]<=2 && !exists[axes[a]])
+      exists[axes[a]]=1;
     else {
       error("Bad axis assignments!");
       return 0;

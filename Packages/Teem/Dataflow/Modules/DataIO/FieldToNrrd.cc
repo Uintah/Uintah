@@ -201,19 +201,10 @@ void FieldToNrrd::execute()
       warning("Input Field must contain a strictly scale/translate matrix.");
     }
   }
-#if 0
+
   BBox bbox = lvm->get_bounding_box();
   Point minP = bbox.min();
   Point maxP = bbox.max();
-
-  ScalarFieldInterface *sfi = field->query_scalar_interface();
-  if (sfi)
-  {
-    double minv, maxv;
-    sfi->compute_min_max(minv, maxv);
-    nout->nrrd->min = minv;
-    nout->nrrd->max = maxv;
-  }
   Vector v(maxP-minP);
   v.x(v.x()/(nx-1));
   v.y(v.y()/(ny-1));
@@ -237,7 +228,6 @@ void FieldToNrrd::execute()
   } else if (data == "Tensor") {
     nout->nrrd->axis[0].label = strdup("t");
   }
-#endif
   NrrdDataHandle noutH(nout);
   onrrd->send(noutH);
 }
