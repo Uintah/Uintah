@@ -244,7 +244,7 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 //
 particleIndex 
 ShellParticleCreator::countParticles(const Patch* patch,
-				     vector<GeometryObject*>& d_geom_objs) const
+				     vector<GeometryObject*>& d_geom_objs) 
 {
   return ParticleCreator::countParticles(patch,d_geom_objs);
 }
@@ -254,14 +254,14 @@ ShellParticleCreator::countParticles(const Patch* patch,
 // Return number of particles
 //
 particleIndex 
-ShellParticleCreator::countParticles(GeometryObject* obj,
-				     const Patch* patch) const
+ShellParticleCreator::countAndCreateParticles(const Patch* patch,
+					      GeometryObject* obj) 
 {
 
   GeometryPiece* piece = obj->getPiece();
   ShellGeometryPiece* shell = dynamic_cast<ShellGeometryPiece*>(piece);
   if (shell) return shell->returnParticleCount(patch);
-  return ParticleCreator::countParticles(obj,patch); 
+  return ParticleCreator::countAndCreateParticles(patch,obj); 
 }
 
 /////////////////////////////////////////////////////////////////////////

@@ -45,13 +45,10 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
 {
   int dwi = matl->getDWIndex();
 
-  ParticleSubset* subset =  ParticleCreator::allocateVariables(numParticles,
-							       dwi,lb,patch,
-							       new_dw);
-  ParticleVariable<Vector> pTang1,pTang2,pNorm;
-  new_dw->allocateAndPut(pTang1, lb->pTang1Label, subset);
-  new_dw->allocateAndPut(pTang2, lb->pTang2Label, subset);
-  new_dw->allocateAndPut(pNorm, lb->pNormLabel,  subset);
+  ParticleSubset* subset =  allocateVariables(numParticles,
+					      dwi,lb,patch,
+					      new_dw);
+
   
   particleIndex start = 0;
 
@@ -159,13 +156,14 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
 }
 
 particleIndex MembraneParticleCreator::countParticles(const Patch* patch,
-						      vector<GeometryObject*>& d_geom_objs) const
+						      vector<GeometryObject*>& d_geom_objs) 
 {
   return ParticleCreator::countParticles(patch,d_geom_objs);
 }
 
-particleIndex MembraneParticleCreator::countParticles(GeometryObject* obj,
-						      const Patch* patch) const
+particleIndex 
+MembraneParticleCreator::countAndCreateParticles(const Patch* patch,
+						 GeometryObject* obj) 
 {
 
   GeometryPiece* piece = obj->getPiece();
@@ -176,9 +174,29 @@ particleIndex MembraneParticleCreator::countParticles(GeometryObject* obj,
   if(SMGP){
     return SMGP->returnParticleCount(patch);
   } else {
-    return ParticleCreator::countParticles(obj,patch); 
+    return ParticleCreator::countAndCreateParticles(patch,obj); 
   }
   
+}
+
+
+ParticleSubset* 
+MembraneParticleCreator::allocateVariables(particleIndex numParticles, 
+					   int dwi,MPMLabel* lb, 
+					   const Patch* patch,
+					   DataWarehouse* new_dw)
+{
+
+  ParticleSubset* subset = ParticleCreator::allocateVariables(numParticles,
+							      dwi,lb,patch,
+							      new_dw);
+
+  new_dw->allocateAndPut(pTang1, lb->pTang1Label, subset);
+  new_dw->allocateAndPut(pTang2, lb->pTang2Label, subset);
+  new_dw->allocateAndPut(pNorm, lb->pNormLabel,  subset);
+
+  return subset;
+
 }
 
 

@@ -24,12 +24,22 @@ namespace Uintah {
 					    vector<GeometryObject*>&);
 
     virtual particleIndex countParticles(const Patch*,
-					 std::vector<GeometryObject*>&) const;
-    virtual particleIndex countParticles(GeometryObject* obj,
-					 const Patch*) const;
+					 std::vector<GeometryObject*>&) ;
+    virtual particleIndex countAndCreateParticles(const Patch*,
+						  GeometryObject* obj) ;
 
     virtual void registerPermanentParticleState(MPMMaterial* matl,
 						MPMLabel* lb);
+
+  protected:
+    virtual ParticleSubset* allocateVariables(particleIndex numParticles,
+					      int dwi, MPMLabel* lb, 
+					      const Patch* patch,
+					      DataWarehouse* new_dw);
+    
+
+    ParticleVariable<Vector> pTang1, pTang2, pNorm;
+
 
         
   };
