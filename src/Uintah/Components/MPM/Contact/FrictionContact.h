@@ -12,7 +12,6 @@
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
 
-class SimulationStateP;
 
 namespace Uintah {
    class VarLabel;
@@ -110,6 +109,9 @@ WARNING
 #endif /* __FRICTION_H__ */
 
 // $Log$
+// Revision 1.8  2000/05/26 21:37:35  jas
+// Labels are now created and accessed using Singleton class MPMLabel.
+//
 // Revision 1.7  2000/05/25 23:05:09  guilkey
 // Created addComputesAndRequiresInterpolated and addComputesAndRequiresIntegrated
 // for each of the three derived Contact classes.  Also, got the NullContact

@@ -2,6 +2,8 @@
 #define __CONTACT_H__
 
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/SimulationState.h>
+#include <Uintah/Grid/SimulationStateP.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/ReductionVariable.h>
@@ -10,7 +12,9 @@
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Math/MinMax.h>
 
+
 #include <math.h>
+
 
 namespace Uintah {
    using SCICore::Geometry::Vector;
@@ -56,7 +60,7 @@ WARNING
       public:
          // Constructor
 	 Contact(){
-	 gMassLabel         = new VarLabel( "g.mass", 
+	   /*	 gMassLabel         = new VarLabel( "g.mass", 
 			      NCVariable<double>::getTypeDescription() );
 	 gVelocityLabel     = new VarLabel( "g.velocity",
                               NCVariable<Vector>::getTypeDescription() );
@@ -72,6 +76,7 @@ WARNING
                               NCVariable<Vector>::getTypeDescription() );
 	 deltLabel          = new VarLabel( "delt",
 				    delt_vartype::getTypeDescription() );
+	   */
 
 	 };
 
@@ -104,6 +109,7 @@ WARNING
 
 
          // VarLabels common to all contact models go here
+	 /*
          const VarLabel* deltLabel;
          const VarLabel* gMassLabel;
          const VarLabel* gAccelerationLabel;
@@ -112,6 +118,7 @@ WARNING
          const VarLabel* gMomExedVelocityLabel;
          const VarLabel* gVelocityStarLabel;
          const VarLabel* gMomExedVelocityStarLabel;
+	 */
       };
       
       inline bool compare(double num1, double num2)
@@ -126,6 +133,9 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.16  2000/05/26 21:37:34  jas
+// Labels are now created and accessed using Singleton class MPMLabel.
+//
 // Revision 1.15  2000/05/25 23:05:06  guilkey
 // Created addComputesAndRequiresInterpolated and addComputesAndRequiresIntegrated
 // for each of the three derived Contact classes.  Also, got the NullContact

@@ -71,7 +71,7 @@ WARNING
 					     const Region* region,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const = 0;
-
+	 /*
          const VarLabel* deltLabel;
 
          const VarLabel* pDeformationMeasureLabel;
@@ -81,13 +81,16 @@ WARNING
          const VarLabel* pXLabel;
 
          const VarLabel* gMomExedVelocityLabel;
-	 
+	 */
       };
       
    } // end namespace MPM
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.15  2000/05/26 21:37:34  jas
+// Labels are now created and accessed using Singleton class MPMLabel.
+//
 // Revision 1.14  2000/05/11 20:10:14  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

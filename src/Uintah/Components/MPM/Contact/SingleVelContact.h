@@ -13,7 +13,7 @@
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Task.h>
 
-class SimulationStateP;
+
 
 namespace Uintah {
    class VarLabel;
@@ -104,6 +104,9 @@ WARNING
 #endif /* __SINGLE_VEL_H__ */
 
 // $Log$
+// Revision 1.10  2000/05/26 21:37:35  jas
+// Labels are now created and accessed using Singleton class MPMLabel.
+//
 // Revision 1.9  2000/05/25 23:05:11  guilkey
 // Created addComputesAndRequiresInterpolated and addComputesAndRequiresIntegrated
 // for each of the three derived Contact classes.  Also, got the NullContact

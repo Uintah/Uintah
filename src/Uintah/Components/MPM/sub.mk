@@ -8,7 +8,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Uintah/Components/MPM
 
 SRCS     += $(SRCDIR)/SerialMPM.cc \
-	$(SRCDIR)/BoundCond.cc
+	$(SRCDIR)/BoundCond.cc $(SRCDIR)/MPMLabel.cc
 
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/Fracture \
@@ -25,6 +25,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.8  2000/05/26 21:37:30  jas
+# Labels are now created and accessed using Singleton class MPMLabel.
+#
 # Revision 1.7  2000/05/21 08:19:06  sparker
 # Implement NCVariable read
 # Do not fail if variable type is not known
