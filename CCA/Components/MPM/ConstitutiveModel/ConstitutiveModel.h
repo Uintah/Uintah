@@ -86,11 +86,22 @@ WARNING
 					     const Patch* patch,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const = 0;
-
+/*`==========TESTING==========*/ 
+#if 0
          double computeRhoMicro(double pressure);
 
          void computePressEOS(double rho_m, double& press_eos,
                               double& dp_drho, double& ss_new);
+                        
+#endif
+	 double computeRhoMicro(double& press,double& gamma,
+				        double& cv, double& Temp);
+	 
+	 void computePressEOS(double& rhoM, double& gamma,
+				      double& cv, double& Temp,
+				      double& press, double& dp_drho,
+				      double& dp_de);
+ /*==========TESTING==========`*/
 
         protected:
 
