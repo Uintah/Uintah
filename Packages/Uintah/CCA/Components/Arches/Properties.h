@@ -44,6 +44,7 @@ POSSIBLE REVISIONS
 #include <vector>
 
 namespace Uintah {
+class MixingModel;
 class Properties {
 
 public:
@@ -67,8 +68,8 @@ public:
       // GROUP: Compute properties 
       ///////////////////////////////////////////////////////////////////////
       // Compute properties for inlet/outlet streams
-      double computeInletProperties(const std::vector<double>&
-				    mixfractionStream);
+      void computeInletProperties(const InletStream& inStream,
+				  Stream& outStream);
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
@@ -137,13 +138,7 @@ private:
       int d_numMixingVars;
       double d_denUnderrelax;
       IntVector d_denRef;
-      struct Stream {
-	double d_density;
-	double d_temperature;
-	Stream();
-	void problemSetup(ProblemSpecP&);
-      };
-      std::vector<Stream> d_streams; 
+      MixingModel* d_mixingModel;
       const BoundaryCondition* d_bc;
 
       // Variable labels used by simulation controller
