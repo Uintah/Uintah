@@ -1320,7 +1320,20 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 	   }
         } // end of if (bc_type == Patch::None)
     }
-
+    //__________________________________
+    // Set internal force = 0 on symmetric boundaries
+    for(Patch::FaceType face = Patch::startFace;
+	  face <= Patch::endFace; face=Patch::nextFace(face)){
+      BoundCondBase *sym_bcs;
+      if (patch->getBCType(face) == Patch::None) {
+        sym_bcs  = patch->getBCValues(matlindex,"Symmetric",face);
+      } else
+        continue;
+      if (sym_bcs != 0) {
+        IntVector offset(0,0,0);
+        internalforce.fillFaceNormal(patch, face,offset);
+      }
+    }
     new_dw->put(internalforce, lb->gInternalForceLabel,   matlindex, patch);
     new_dw->put(gstress,       lb->gStressForSavingLabel, matlindex, patch);
   }
@@ -1649,6 +1662,7 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
       // Create variables for the results
       NCVariable<Vector> velocity_star;
       new_dw->allocate(velocity_star, lb->gVelocityStarLabel, dwindex, patch);
+      velocity_star.initialize(0.0);
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
 	velocity_star[*iter] = velocity[*iter] + acceleration[*iter] * delT;
@@ -1689,6 +1703,7 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
 
       NCVariable<double> temperatureStar;
       new_dw->allocate(temperatureStar,lb->gTemperatureStarLabel,dwindex,patch);
+      temperatureStar.initialize(0.0);
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         temperatureStar[*iter] = temperature[*iter] +
