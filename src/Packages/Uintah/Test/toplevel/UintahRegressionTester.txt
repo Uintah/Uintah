@@ -38,6 +38,7 @@ Other Items
   compare_uda
   setupTests
   Adding tests: (MPM,ARCHES,etc.)
+  SSH authentication
 
 ****************************************************************************
 Introduction
@@ -86,7 +87,13 @@ Overview
   startTester is the main script to run the Uintah regression tester.  It will 
 set all necessary environment variables.  It tests the ability to compile the
 Uintah code, the ability to run certain tests, and compares those tests to
-expected results.
+expected results.  
+
+Important note:
+In order for startTester to check out a new tree from the CVS root, it will 
+need password-less access to csf.cs.utah.edu.  This will normally require
+an ssh authentication agent.  See section on SSH authentication for more
+details.
 
 Usage:
 
@@ -922,5 +929,58 @@ You'll need the from helpers/modUPS import modUPS line.  See modUPS docs.
 
 Then add that file to the cvs repository and commit it, and the regression
 tester will see it and take care of the rest!
+
+------------------
+SSH authentication
+------------------
+
+In order to check out a build from csf.cs.utah.edu from the tester, you
+will need ssh public-key/private-key authentication.  This needs to be done
+in several steps.
+
+1) Create a public/private key pair on the computer that you want to run 
+   ssh from.  Type ssh-keygen -t [type], where type is 
+   the type of key you want.  To get to csf.cs, you'll need rsa1.  It will then
+   ask you where you want the key saved.  Accept the default, and then it will
+   ask you to enter a passphrase.
+
+2) Copy the public key to the server where you want to ssh to.  The public key
+   is the file that ssh-keygen asked you to create appended with a .pub.
+   Append this file to your .ssh/authorized_keys file (or copy it there if
+   it does not exist).  Make sure your .ssh directory has 700 permisions.
+
+3) Run ssh-agent.  If it outputs some setenv lines, then you will need to
+   execute the lines that it outputs, or do 
+     eval `ssh-agent` (with the back-quotes)
+   then run ssh-add.  It will prompt you for the same passphrase.
+
+4) To run startTester from a cron, batch, or non-interactive job, you will
+   need to set up your account to automatically load up an ssh-agent. To do 
+   this, I added two lines to my .aliases file:
+
+alias agent 'rm -f "$HOME"/.ssh/`hostname`.agent ; ssh-agent > "$HOME"/.ssh/`hostname`.agent ; source "$HOME"/.ssh/`hostname`.agent ; ssh-add'
+
+alias sshagent 'if (-e "$HOME"/.ssh/`hostname`.agent) source "$HOME"/.ssh/`hostname`.agent ; endif'
+
+   The first (agent), when ran, will create a `hostname`.agent (where hostname
+   is the machine you are running on) file in the .ssh dir.  It will also load
+   the ssh-agent, add the keys, and prompt you for a password.  When run, this
+   agent will remain active until the computer is restarted or the process is
+   killed (it will persist even after logging out).  So if you log out and log
+   back in again, you don't need to do ssh-agent or ssh-add again, you just
+   need to tell the shell which pid and socket the ssh-agent is using, which 
+   is the same information that ssh-agent outputs.
+
+   The second (sshagent), when ran, will look for the file 
+   .ssh/`hostname`.agent.  If it exists, it will source it.  This will tell 
+   the shell how to use the ssh-agent.
+
+   Add these lines to load up at login time (I have them in my .aliases
+   file, and my .cshrc file sources the .aliases file), and then add
+     sshagent
+   to load up at login time (I have this in my .cshrc file after it sources
+   the .aliases file).  Run the agent alias once on a machine, and then every
+   subsequent loging to that machine, it will automatically load up the same
+   ssh-agent, which is convenient for much more than just using cvs.
 
 *****************************************************************************
