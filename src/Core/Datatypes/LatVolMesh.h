@@ -34,7 +34,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
-#include <Core/Datatypes/FieldIndex.h>
+#include <Core/Datatypes/FieldIterator.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/share/share.h>
 #include <Core/Math/MusilRNG.h>
@@ -50,95 +50,6 @@ using std::endl;
 class SCICORESHARE LatVolMesh : public Mesh
 {
 public:
-
-  struct UnfinishedIndex
-  {
-  public:
-    UnfinishedIndex() : i_(0) {}
-    UnfinishedIndex(unsigned i) : i_(i) {}
-
-    operator unsigned() const { return i_; }
-
-    unsigned i_;
-  };
-
-  struct EdgeIndex : public UnfinishedIndex
-  {
-    EdgeIndex() : UnfinishedIndex() {}
-    EdgeIndex(unsigned i) : UnfinishedIndex(i) {}
-    friend void Pio(Piostream&, EdgeIndex&);
-    friend const TypeDescription* get_type_description(EdgeIndex *);
-    friend const string find_type_name(EdgeIndex *);
-  };
-
-  struct FaceIndex : public UnfinishedIndex
-  {
-    FaceIndex() : UnfinishedIndex() {}
-    FaceIndex(unsigned i) : UnfinishedIndex(i) {}
-    friend void Pio(Piostream&, FaceIndex&);
-    friend const TypeDescription* get_type_description(FaceIndex *);
-    friend const string find_type_name(FaceIndex *);
-  };
-
-  struct UnfinishedIter : public UnfinishedIndex
-  {
-    UnfinishedIter(const LatVolMesh *m, unsigned i)
-      : UnfinishedIndex(i), mesh_(m) {}
-
-    const UnfinishedIndex &operator *() { return *this; }
-
-    bool operator ==(const UnfinishedIter &a) const
-    {
-      return i_ == a.i_ && mesh_ == a.mesh_;
-    }
-
-    bool operator !=(const UnfinishedIter &a) const
-    {
-      return !(*this == a);
-    }
-
-    const LatVolMesh *mesh_;
-  };
-
-  struct EdgeIter : public UnfinishedIter
-  {
-    EdgeIter() : UnfinishedIter(0, 0) {}
-    EdgeIter(const LatVolMesh *m, unsigned i)
-      : UnfinishedIter(m, i) {}
-
-    const EdgeIndex &operator *() const { return (const EdgeIndex&)(*this); }
-
-    EdgeIter &operator++() { return *this; }
-
-  private:
-
-    EdgeIter operator++(int)
-    {
-      EdgeIter result(*this);
-      operator++();
-      return result;
-    }
-  };
-
-  struct FaceIter : public UnfinishedIter
-  {
-    FaceIter() : UnfinishedIter(0, 0) {}
-    FaceIter(const LatVolMesh *m, unsigned i)
-      : UnfinishedIter(m, i) {}
-
-    const FaceIndex &operator *() const { return (const FaceIndex&)(*this); }
-
-    FaceIter &operator++() { return *this; }
-
-  private:
-
-    FaceIter operator++(int)
-    {
-      FaceIter result(*this);
-      operator++();
-      return result;
-    }
-  };
 
   struct LatIndex
   {
@@ -411,16 +322,16 @@ public:
   };			
   			
   struct Edge {		
-    typedef EdgeIndex          index_type;
-    typedef EdgeIter           iterator;
-    typedef EdgeIndex          size_type;
+    typedef EdgeIndex<unsigned int>          index_type;
+    typedef EdgeIterator<unsigned int>       iterator;
+    typedef EdgeIndex<unsigned int>          size_type;
     typedef vector<index_type> array_type;
   };			
 			
   struct Face {		
-    typedef FaceIndex          index_type;
-    typedef FaceIter           iterator;
-    typedef FaceIndex          size_type;
+    typedef FaceIndex<unsigned int>          index_type;
+    typedef FaceIterator<unsigned int>       iterator;
+    typedef FaceIndex<unsigned int>          size_type;
     typedef vector<index_type> array_type;
   };			
 			
