@@ -28,7 +28,7 @@ ImageMaterial::ImageMaterial(int, const string &texfile,
 			     ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
-			     double refl, bool /*flipped = false*/) :
+			     double refl, bool /*flipped*/) :
   umode(umode), vmode(vmode), Kd(Kd), specular(specular),
   specpow(specpow), refl(refl),  transp(0), valid_(false)
 {
@@ -39,17 +39,17 @@ ImageMaterial::ImageMaterial(int, const string &texfile,
 ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
-			     double refl, bool flipped/*=false*/) :
+			     double refl, bool flipped) :
   umode(umode), vmode(vmode), Kd(Kd), specular(specular),
   specpow(specpow), refl(refl),  transp(0), valid_(false)
 {
   filename_ = texfile;  // Save filename, mostly for debugging.
 
-  PPMImage ppm(texfile);
+  PPMImage ppm(texfile,flipped);
   if (ppm.valid())  {
       valid_=true;
       int nu, nv;
-      ppm.get_dimensions_and_data(image, nu, nv, flipped);
+      ppm.get_dimensions_and_data(image, nu, nv);
   }
   outcolor=Color(0,0,0);
 }
@@ -58,15 +58,15 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
 			     double refl,  double transp, 
-			     bool flipped/*=false*/) :
+			     bool flipped) :
   umode(umode), vmode(vmode), Kd(Kd), specular(specular),
   specpow(specpow), refl(refl),  transp(transp), valid_(false)
 {
-  PPMImage ppm(texfile);
+  PPMImage ppm(texfile,flipped);
   if (ppm.valid()) {
       valid_=true;
       int nu, nv;
-      ppm.get_dimensions_and_data(image, nu, nv, flipped);
+      ppm.get_dimensions_and_data(image, nu, nv);
   }
   outcolor=Color(0,0,0);
 }
