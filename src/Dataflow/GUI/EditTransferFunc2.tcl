@@ -80,21 +80,19 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
     }
     
     method set_color {col color colMsg} {
-        global $color
-        global $color-r
-        global $color-g
-        global $color-b
-        set ir [expr int([set $color-r] * 65535)]
-        set ig [expr int([set $color-g] * 65535)]
-        set ib [expr int([set $color-b] * 65535)]
+	global $color
+	global $color-r
+	global $color-g
+	global $color-b
+	set ir [expr int([set $color-r] * 65535)]
+	set ig [expr int([set $color-g] * 65535)]
+	set ib [expr int([set $color-b] * 65535)]
 
-        set window .ui[modname]
-        $col config -background [format #%04x%04x%04x $ir $ig $ib]  \
-                    -activebackground [format #%04x%04x%04x $ir $ig $ib]
-                                        
-         puts "$ir $ig $ib"
-                                      
-         $this-c $colMsg
+	set window .ui[modname]
+	$col config -background [format \#%04x%04x%04x $ir $ig $ib]  \
+		    -activebackground [format \#%04x%04x%04x $ir $ig $ib]
+					
+	$this-c $colMsg
     }
 
     method create_entries {} {
