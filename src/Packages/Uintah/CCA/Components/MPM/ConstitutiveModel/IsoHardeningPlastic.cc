@@ -18,18 +18,12 @@ IsoHardeningPlastic::IsoHardeningPlastic(ProblemSpecP& ps)
 	ParticleVariable<double>::getTypeDescription());
   pAlphaLabel_preReloc = VarLabel::create("p.alpha+",
 	ParticleVariable<double>::getTypeDescription());
-  pPlasticStrainLabel = VarLabel::create("p.plasticStrain",
-			ParticleVariable<double>::getTypeDescription());
-  pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
-			ParticleVariable<double>::getTypeDescription());
 }
 	 
 IsoHardeningPlastic::~IsoHardeningPlastic()
 {
   VarLabel::destroy(pAlphaLabel);
   VarLabel::destroy(pAlphaLabel_preReloc);
-  VarLabel::destroy(pPlasticStrainLabel);
-  VarLabel::destroy(pPlasticStrainLabel_preReloc);
 }
 	 
 void 
@@ -39,7 +33,6 @@ IsoHardeningPlastic::addInitialComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(pAlphaLabel, matlset);
-  task->computes(pPlasticStrainLabel, matlset);
 }
 
 void 
@@ -50,8 +43,6 @@ IsoHardeningPlastic::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, pAlphaLabel, matlset,Ghost::None);
   task->computes(pAlphaLabel_preReloc, matlset);
-  task->requires(Task::OldDW, pPlasticStrainLabel, matlset,Ghost::None);
-  task->computes(pPlasticStrainLabel_preReloc, matlset);
 }
 
 void 
@@ -60,8 +51,6 @@ IsoHardeningPlastic::addParticleState(std::vector<const VarLabel*>& from,
 {
   from.push_back(pAlphaLabel);
   to.push_back(pAlphaLabel_preReloc);
-  from.push_back(pPlasticStrainLabel);
-  to.push_back(pPlasticStrainLabel_preReloc);
 }
 
 void 
@@ -70,8 +59,7 @@ IsoHardeningPlastic::allocateCMDataAddRequires(Task* task,
 					       const PatchSet* patch,
 					       MPMLabel* lb) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,pPlasticStrainLabel, Ghost::None);
+  //const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,pAlphaLabel, Ghost::None);
 }
 
@@ -84,22 +72,18 @@ void IsoHardeningPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
  
-  ParticleVariable<double> plasticStrain,pAlpha;
-  constParticleVariable<double> o_plasticStrain,o_Alpha;
+  ParticleVariable<double> pAlpha;
+  constParticleVariable<double> o_Alpha;
 
-  new_dw->allocateTemporary(plasticStrain,addset);
   new_dw->allocateTemporary(pAlpha,addset);
 
-  old_dw->get(o_plasticStrain,pPlasticStrainLabel,delset);
   old_dw->get(o_Alpha,pAlphaLabel,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for(o = delset->begin(); o != delset->end(); o++, n++) {
-    plasticStrain[*n] = o_plasticStrain[*o];
     pAlpha[*n] = o_Alpha[*o];
   }
 
-  (*newState)[pPlasticStrainLabel]=plasticStrain.clone();
   (*newState)[pAlphaLabel]=pAlpha.clone();
 
 }
@@ -111,11 +95,9 @@ IsoHardeningPlastic::initializeInternalVars(ParticleSubset* pset,
 					    DataWarehouse* new_dw)
 {
   new_dw->allocateAndPut(pAlpha_new, pAlphaLabel, pset);
-  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel, pset);
   ParticleSubset::iterator iter = pset->begin();
   for(;iter != pset->end(); iter++) {
     pAlpha_new[*iter] = 0.0;
-    pPlasticStrain_new[*iter] = 0.0;
   }
 }
 
@@ -124,7 +106,6 @@ IsoHardeningPlastic::getInternalVars(ParticleSubset* pset,
 				     DataWarehouse* old_dw) 
 {
   old_dw->get(pAlpha, pAlphaLabel, pset);
-  old_dw->get(pPlasticStrain, pPlasticStrainLabel, pset);
 }
 
 void 
@@ -132,7 +113,6 @@ IsoHardeningPlastic::allocateAndPutInternalVars(ParticleSubset* pset,
 						DataWarehouse* new_dw) 
 {
   new_dw->allocateAndPut(pAlpha_new, pAlphaLabel_preReloc, pset);
-  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc,pset);
 }
 
 void
@@ -140,11 +120,9 @@ IsoHardeningPlastic::allocateAndPutRigid(ParticleSubset* pset,
                                          DataWarehouse* new_dw)
 {
   new_dw->allocateAndPut(pAlpha_new, pAlphaLabel_preReloc, pset);
-  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc,pset);
   // Initializing to zero for the sake of RigidMPM's carryForward
   ParticleSubset::iterator iter = pset->begin();
   for(;iter != pset->end(); iter++){
-     pPlasticStrain_new[*iter] = 0.0;
      pAlpha_new[*iter] = 0.0;
   }
 }
@@ -153,7 +131,6 @@ void
 IsoHardeningPlastic::updateElastic(const particleIndex idx)
 {
   pAlpha_new[idx] = pAlpha[idx];
-  pPlasticStrain_new[idx] = pPlasticStrain[idx];
 }
 
 void
@@ -161,38 +138,25 @@ IsoHardeningPlastic::updatePlastic(const particleIndex idx,
                                    const double& delGamma)
 {
   pAlpha_new[idx] = pAlpha[idx] + sqrt(2.0/3.0)*delGamma;
-  pPlasticStrain_new[idx] = pPlasticStrain_new[idx];
-}
-
-double
-IsoHardeningPlastic::getUpdatedPlasticStrain(const particleIndex idx)
-{
-  return pPlasticStrain_new[idx];
 }
 
 double 
-IsoHardeningPlastic::computeFlowStress(const Matrix3& rateOfDeformation ,
+IsoHardeningPlastic::computeFlowStress(const double& ,
 				       const double& ,
-				       const double& delT,
+				       const double& ,
+				       const double& ,
 				       const double& ,
 				       const MPMMaterial* ,
 				       const particleIndex idx)
 {
-  // Calculate strain rate and incremental strain
-  double edot = sqrt(rateOfDeformation.NormSquared()/1.5);
-  if (edot < 0.00001) {
-    pPlasticStrain_new[idx] = pPlasticStrain[idx];
-  } else {
-    pPlasticStrain_new[idx] = pPlasticStrain[idx] + edot*delT;
-  }
-
   double flowStress = d_CM.sigma_0 + d_CM.K*pAlpha[idx];
   return flowStress;
 }
 
 void 
 IsoHardeningPlastic::computeTangentModulus(const Matrix3& stress,
-					   const Matrix3& , 
+					   const double& , 
+					   const double& , 
 					   double ,
 					   double ,
                                            const particleIndex ,
@@ -231,28 +195,28 @@ IsoHardeningPlastic::computeTangentModulus(const Matrix3& stress,
 }
 
 double
-IsoHardeningPlastic::evalDerivativeWRTTemperature(double , double,
+IsoHardeningPlastic::evalDerivativeWRTTemperature(double , double, double,
                                                   const particleIndex )
 {
   return 0.0;
 }
 
 double
-IsoHardeningPlastic::evalDerivativeWRTStrainRate(double , double,
+IsoHardeningPlastic::evalDerivativeWRTStrainRate(double , double, double,
 						 const particleIndex )
 {
   return 0.0;
 }
 
 double
-IsoHardeningPlastic::evalDerivativeWRTAlpha(double , double,
+IsoHardeningPlastic::evalDerivativeWRTAlpha(double , double, double,
 					    const particleIndex )
 {
   return d_CM.K;
 }
 
 double
-IsoHardeningPlastic::evalDerivativeWRTPlasticStrain(double , double,
+IsoHardeningPlastic::evalDerivativeWRTPlasticStrain(double , double, double,
 						    const particleIndex )
 {
   ostringstream desc;
@@ -265,11 +229,12 @@ IsoHardeningPlastic::evalDerivativeWRTPlasticStrain(double , double,
 
 void
 IsoHardeningPlastic::evalDerivativeWRTScalarVars(double epdot,
+						 double ep,
 						 double T,
 						 const particleIndex idx,
 						 Vector& derivs)
 {
-  derivs[0] = evalDerivativeWRTStrainRate(epdot, T, idx);
-  derivs[1] = evalDerivativeWRTTemperature(epdot, T, idx);
-  derivs[2] = evalDerivativeWRTPlasticStrain(epdot, T, idx);
+  derivs[0] = evalDerivativeWRTStrainRate(epdot, ep, T, idx);
+  derivs[1] = evalDerivativeWRTTemperature(epdot, ep, T, idx);
+  derivs[2] = evalDerivativeWRTPlasticStrain(epdot, ep, T, idx);
 }

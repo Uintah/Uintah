@@ -30,7 +30,7 @@ HancockMacKenzieDamage::hasFailed(double damage)
 }
     
 double 
-HancockMacKenzieDamage::computeScalarDamage(const Matrix3& rateOfDeformation,
+HancockMacKenzieDamage::computeScalarDamage(const double& plasticStrainRate,
 					    const Matrix3& stress,
 					    const double& temperature,
 					    const double& delT,
@@ -38,8 +38,7 @@ HancockMacKenzieDamage::computeScalarDamage(const Matrix3& rateOfDeformation,
 					    const double& tolerance,
 					    const double& D_old)
 {
-  // Calculate plastic strain rate
-  double plasticStrainRate = sqrt(rateOfDeformation.NormSquared()*2.0/3.0);
+  // Calculate plastic strain increment
   double epsInc = plasticStrainRate*delT;
 
   // Compute hydrostatic stress and equivalent stress

@@ -42,18 +42,12 @@ MTSPlastic::MTSPlastic(ProblemSpecP& ps)
 	ParticleVariable<double>::getTypeDescription());
   pMTSLabel_preReloc = VarLabel::create("p.mtStress+",
 	ParticleVariable<double>::getTypeDescription());
-  pPlasticStrainLabel = VarLabel::create("p.plasticStrain",
-	ParticleVariable<double>::getTypeDescription());
-  pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
-	ParticleVariable<double>::getTypeDescription());
 }
 	 
 MTSPlastic::~MTSPlastic()
 {
   VarLabel::destroy(pMTSLabel);
   VarLabel::destroy(pMTSLabel_preReloc);
-  VarLabel::destroy(pPlasticStrainLabel);
-  VarLabel::destroy(pPlasticStrainLabel_preReloc);
 }
 	 
 void 
@@ -63,7 +57,6 @@ MTSPlastic::addInitialComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(pMTSLabel, matlset);
-  task->computes(pPlasticStrainLabel, matlset);
 }
 
 void 
@@ -74,8 +67,6 @@ MTSPlastic::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, pMTSLabel, matlset,Ghost::None);
   task->computes(pMTSLabel_preReloc, matlset);
-  task->requires(Task::OldDW, pPlasticStrainLabel, matlset,Ghost::None);
-  task->computes(pPlasticStrainLabel_preReloc, matlset);
 }
 
 void 
@@ -84,8 +75,6 @@ MTSPlastic::addParticleState(std::vector<const VarLabel*>& from,
 {
   from.push_back(pMTSLabel);
   to.push_back(pMTSLabel_preReloc);
-  from.push_back(pPlasticStrainLabel);
-  to.push_back(pPlasticStrainLabel_preReloc);
 }
 
 void 
@@ -95,36 +84,32 @@ MTSPlastic::allocateCMDataAddRequires(Task* task,
 				      MPMLabel* lb) const
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,pPlasticStrainLabel, Ghost::None);
   task->requires(Task::OldDW,pMTSLabel, Ghost::None);
 }
 
 void 
 MTSPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
 			      ParticleSubset* addset,
-			      map<const VarLabel*, ParticleVariableBase*>* newState,
+			      map<const VarLabel*, 
+                                ParticleVariableBase*>* newState,
 			      ParticleSubset* delset,
 			      DataWarehouse* old_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
  
-  ParticleVariable<double> plasticStrain,pMTS;
-  constParticleVariable<double> o_plasticStrain,o_MTS;
+  ParticleVariable<double> pMTS;
+  constParticleVariable<double> o_MTS;
 
-  new_dw->allocateTemporary(plasticStrain,addset);
   new_dw->allocateTemporary(pMTS,addset);
 
-  old_dw->get(o_plasticStrain,pPlasticStrainLabel,delset);
   old_dw->get(o_MTS,pMTSLabel,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for(o = delset->begin(); o != delset->end(); o++, n++) {
-    plasticStrain[*n] = o_plasticStrain[*o];
     pMTS[*n] = o_MTS[*o];
   }
 
-  (*newState)[pPlasticStrainLabel]=plasticStrain.clone();
   (*newState)[pMTSLabel]=pMTS.clone();
 
 }
@@ -136,11 +121,9 @@ MTSPlastic::initializeInternalVars(ParticleSubset* pset,
 				   DataWarehouse* new_dw)
 {
   new_dw->allocateAndPut(pMTS_new, pMTSLabel, pset);
-  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel, pset);
   ParticleSubset::iterator iter = pset->begin();
   for(;iter != pset->end(); iter++) {
     pMTS_new[*iter] = 0.0;
-    pPlasticStrain_new[*iter] = 0.0;
   }
 }
 
@@ -149,7 +132,6 @@ MTSPlastic::getInternalVars(ParticleSubset* pset,
 			    DataWarehouse* old_dw) 
 {
   old_dw->get(pMTS, pMTSLabel, pset);
-  old_dw->get(pPlasticStrain, pPlasticStrainLabel, pset);
 }
 
 void 
@@ -157,7 +139,6 @@ MTSPlastic::allocateAndPutInternalVars(ParticleSubset* pset,
 				       DataWarehouse* new_dw) 
 {
   new_dw->allocateAndPut(pMTS_new, pMTSLabel_preReloc, pset);
-  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc,pset);
 }
 
 void
@@ -165,10 +146,8 @@ MTSPlastic::allocateAndPutRigid(ParticleSubset* pset,
                                 DataWarehouse* new_dw)
 {
   new_dw->allocateAndPut(pMTS_new, pMTSLabel_preReloc, pset);
-  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc,pset);
   ParticleSubset::iterator iter = pset->begin();
   for(;iter != pset->end(); iter++){
-     pPlasticStrain_new[*iter] = 0.0;
      pMTS_new[*iter] = 0.0;
   }
 }
@@ -177,24 +156,17 @@ void
 MTSPlastic::updateElastic(const particleIndex idx)
 {
   pMTS_new[idx] = pMTS[idx];
-  pPlasticStrain_new[idx] = pPlasticStrain[idx];
 }
 
 void
 MTSPlastic::updatePlastic(const particleIndex idx, const double& )
 {
   pMTS_new[idx] = pMTS_new[idx];
-  pPlasticStrain_new[idx] = pPlasticStrain_new[idx];
-}
-
-double
-MTSPlastic::getUpdatedPlasticStrain(const particleIndex idx)
-{
-  return pPlasticStrain_new[idx];
 }
 
 double 
-MTSPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
+MTSPlastic::computeFlowStress(const double& plasticStrainRate,
+                              const double& ,
                               const double& T,
                               const double& delT,
                               const double& ,
@@ -202,10 +174,8 @@ MTSPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
                               const particleIndex idx)
 {
   // Calculate strain rate and incremental strain
-  double edot = sqrt(rateOfDeformation.NormSquared()/1.5);
-  if (edot < 1.0e-10) edot = 1.0e-10;
+  double edot = plasticStrainRate;
   double delEps = edot*delT;
-  pPlasticStrain_new[idx] = pPlasticStrain[idx] + delEps;
 
   // Check if temperature is correct
   if (T <= 0.0) {
@@ -315,7 +285,8 @@ MTSPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
 */
 void 
 MTSPlastic::computeTangentModulus(const Matrix3& sig,
-				  const Matrix3& D, 
+				  const double& plasticStrainRate, 
+				  const double& , 
 				  double T,
 				  double ,
 				  const particleIndex idx,
@@ -329,7 +300,7 @@ MTSPlastic::computeTangentModulus(const Matrix3& sig,
 
   // Calculate the equivalent stress and strain rate
   double sigeqv = sqrt(sigdev.NormSquared()); 
-  double edot = sqrt(D.NormSquared()/1.5);
+  double edot = plasticStrainRate;
 
   // Calculate the direction of plastic loading (r)
   Matrix3 rr = sigdev*(1.5/sigeqv);
@@ -399,6 +370,7 @@ MTSPlastic::computeTangentModulus(const Matrix3& sig,
 
 double
 MTSPlastic::evalDerivativeWRTTemperature(double edot,
+                                         double ,
                                          double T,
 					 const particleIndex idx)
 {
@@ -490,6 +462,7 @@ MTSPlastic::evalDerivativeWRTTemperature(double edot,
 
 double
 MTSPlastic::evalDerivativeWRTStrainRate(double edot,
+                                        double ,
                                         double T,
                                         const particleIndex idx)
 {
@@ -558,11 +531,12 @@ MTSPlastic::evalDerivativeWRTStrainRate(double edot,
 
 double
 MTSPlastic::evalDerivativeWRTPlasticStrain(double edot,
+                                           double ep,
                                            double T,
 					   const particleIndex idx)
 {
   //double sigma_e = pMTS_new[idx];
-  double dsigY_dsig_e = evalDerivativeWRTSigmaE(edot, T, idx);
+  double dsigY_dsig_e = evalDerivativeWRTSigmaE(edot, ep, T, idx);
 
   // Calculate theta_0
   double theta_0 = d_CM.a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
@@ -594,6 +568,7 @@ MTSPlastic::evalDerivativeWRTPlasticStrain(double edot,
 
 double
 MTSPlastic::evalDerivativeWRTSigmaE(double edot,
+                                    double ,
                                     double T,
 				    const particleIndex )
 {
@@ -620,11 +595,12 @@ MTSPlastic::evalDerivativeWRTSigmaE(double edot,
 
 void
 MTSPlastic::evalDerivativeWRTScalarVars(double edot,
+                                        double ep,
                                         double T,
                                         const particleIndex idx,
                                         Vector& derivs)
 {
-  derivs[0] = evalDerivativeWRTStrainRate(edot, T, idx);
-  derivs[1] = evalDerivativeWRTTemperature(edot, T, idx);
-  derivs[2] = evalDerivativeWRTPlasticStrain(edot, T, idx);
+  derivs[0] = evalDerivativeWRTStrainRate(edot, ep, T, idx);
+  derivs[1] = evalDerivativeWRTTemperature(edot, ep, T, idx);
+  derivs[2] = evalDerivativeWRTPlasticStrain(edot, ep, T, idx);
 }
