@@ -61,6 +61,10 @@ public:
   const string getName() const { return name_; }
 
 private:
+  // loaded_ is used so that when a sound is pio'ed back in, when the
+  // SoundThread calls activate, the sound will not load itself again.
+  bool          loaded_;
+
   short       * soundBuffer_;
   int           numFrames_;
 

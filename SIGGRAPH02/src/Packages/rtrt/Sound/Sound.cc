@@ -18,7 +18,7 @@ Sound::Sound( const string        & filename,
 	            double          constantVol /* = -1 */ ) :
   filename_(filename), name_(name), continuous_(repeat), locations_(locations),
   distance2_(distance*distance), bufferLocation_(0), numFrames_(0),
-  constantVol_(constantVol)
+  constantVol_(constantVol), loaded_(false)
 {
   if( constantVol_ > 1.0 )
     constantVol_ = 1.0;
@@ -95,6 +95,9 @@ Sound::volume( const Point & location )
 void
 Sound::activate()
 {
+  if( loaded_ ) return;
+  loaded_ = true;
+
   AFfilehandle file = afOpenFile(filename_.c_str(),"r",0);
 
   cout << "Loading sound file: " << filename_ << "\n";
