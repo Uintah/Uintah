@@ -16,7 +16,7 @@
 */
 
 /*
- *  BuildLeadField.cc: Build the lead field matrix through reciprocity
+ *  BuildElemLeadField.cc: Build the lead field matrix through reciprocity
  *
  *  Written by:
  *   David Weinstein
@@ -42,13 +42,13 @@
 namespace SCIRun {
 vector<pair<TetVolMesh::Node::index_type, double> > 
 operator*(const vector<pair<TetVolMesh::Node::index_type, double> >&r, double &) {
-  ASSERTFAIL("BuildLeadField.cc Bogus operator");
+  ASSERTFAIL("BuildElemLeadField.cc Bogus operator");
   return r;
 }
 vector<pair<TetVolMesh::Node::index_type, double> > 
 operator+=(const vector<pair<TetVolMesh::Node::index_type, double> >&r, 
 	   const vector<pair<TetVolMesh::Node::index_type, double> >&) {
-  ASSERTFAIL("BuildLeadField.cc Bogus operator");
+  ASSERTFAIL("BuildElemLeadField.cc Bogus operator");
   return r;
 }
 }
@@ -62,7 +62,7 @@ using std::pair;
 using namespace SCIRun;
 
 
-class BuildLeadField : public Module {    
+class BuildElemLeadField : public Module {    
   FieldIPort* mesh_iport_;
   FieldIPort* interp_iport_;
   MatrixIPort* sol_iport_;
@@ -73,26 +73,26 @@ class BuildLeadField : public Module {
   int last_mesh_generation_;
   int last_interp_generation_;
 public:
-  BuildLeadField(const string& id);
-  virtual ~BuildLeadField();
+  BuildElemLeadField(const string& id);
+  virtual ~BuildElemLeadField();
   virtual void execute();
 };
 
 
-extern "C" Module* make_BuildLeadField(const string& id) {
-  return new BuildLeadField(id);
+extern "C" Module* make_BuildElemLeadField(const string& id) {
+  return new BuildElemLeadField(id);
 }
 
 //---------------------------------------------------------------
-BuildLeadField::BuildLeadField(const string& id)
-  : Module("BuildLeadField", id, Filter, "LeadField", "BioPSE"), leadfield_(0),
+BuildElemLeadField::BuildElemLeadField(const string& id)
+  : Module("BuildElemLeadField", id, Filter, "LeadField", "BioPSE"), leadfield_(0),
     last_mesh_generation_(-1), last_interp_generation_(-1)
 {
 }
 
-BuildLeadField::~BuildLeadField(){}
+BuildElemLeadField::~BuildElemLeadField(){}
 
-void BuildLeadField::execute() {
+void BuildElemLeadField::execute() {
   mesh_iport_ = (FieldIPort *)get_iport("Domain Mesh");
   interp_iport_ = (FieldIPort *)get_iport("Electrode Interpolant");
   sol_iport_ = (MatrixIPort *)get_iport("Solution Vectors");
@@ -101,11 +101,11 @@ void BuildLeadField::execute() {
 
   FieldHandle mesh_in;
   if (!mesh_iport_->get(mesh_in)) {
-    cerr << "BuildLeadField -- couldn't get mesh.  Returning.\n";
+    cerr << "BuildElemLeadField -- couldn't get mesh.  Returning.\n";
     return;
   }
   if (!mesh_in.get_rep() || mesh_in->get_type_name(0)!="TetVol") {
-    cerr << "Error - BuildLeadField didn't get a TetVol for the mesh" << "\n";
+    cerr << "Error - BuildElemLeadField didn't get a TetVol for the mesh" << "\n";
     return;
   }
   TetVolMesh* mesh = 
@@ -113,11 +113,11 @@ void BuildLeadField::execute() {
 
   FieldHandle interp_in;
   if (!interp_iport_->get(interp_in)) {
-    cerr << "BuildLeadField -- couldn't get interp.  Returning.\n";
+    cerr << "BuildElemLeadField -- couldn't get interp.  Returning.\n";
     return;
   }
   if (!interp_in.get_rep() || interp_in->get_type_name(0)!="PointCloud") {
-    cerr << "Error - BuildLeadField didn't get a PointCloud for interp" << "\n";
+    cerr << "Error - BuildElemLeadField didn't get a PointCloud for interp" << "\n";
     return;
   }
   PointCloudMesh* interp_mesh = 
@@ -173,14 +173,14 @@ void BuildLeadField::execute() {
     // read sol'n
     MatrixHandle sol_in;
     if (!sol_iport_->get(sol_in)) {
-      cerr <<"BuildLeadField -- couldn't get solution vector.  Returning.\n";
+      cerr <<"BuildElemLeadField -- couldn't get solution vector.  Returning.\n";
       return;
     }
     for (i=0; i<nelems; i++)
       for (int j=0; j<3; j++) {
 	(*leadfield_mat)[counter+1][i*3+j]=-(*sol_in.get_rep())[i][j];
       }
-    cerr << "BuildLeadField: "<<counter<<"/"<<nelecs-1<<"\n";
+    cerr << "BuildElemLeadField: "<<counter<<"/"<<nelecs-1<<"\n";
     counter++;
     
   }
