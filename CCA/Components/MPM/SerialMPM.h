@@ -60,7 +60,7 @@ public:
 	 
   //////////
   // Insert Documentation Here:
-  virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
+  virtual void problemSetup(const ProblemSpecP& params, GridP&,
 			    SimulationStateP&);
 	 
   virtual void scheduleInitialize(const LevelP& level,
@@ -68,24 +68,6 @@ public:
 	 
   void schedulePrintParticleCount(const LevelP& level, 
                                   SchedulerP& sched);
-
-  // AMR tasks
-  virtual void scheduleRefine(const LevelP& fineLevel, 
-                              SchedulerP& scheduler);
-  virtual void scheduleRefineInterface(const LevelP& fineLevel, 
-                                       SchedulerP& scheduler,
-                                       int step, int nsteps);
-  virtual void scheduleCoarsen(const LevelP& coarseLevel, 
-                               SchedulerP& scheduler);
-  
-  /// Schedule to mark flags for AMR regridding
-  virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                     SchedulerP& sched);
-  
-  /// Schedule to mark initial flags for AMR regridding
-  virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
-                                            SchedulerP& sched);
-  
   //////////
   // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level,
@@ -126,7 +108,8 @@ public:
 
   enum IntegratorType {
     Explicit,
-    Implicit
+    Implicit,
+    Fracture
   };
 
 protected:
@@ -339,12 +322,6 @@ protected:
 				       DataWarehouse* new_dw);
 
 
-  void errorEstimate(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse*,
-                     DataWarehouse* new_dw);
-
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
 
@@ -390,7 +367,7 @@ protected:
   void scheduleSetGridBoundaryConditions(         SchedulerP&, const PatchSet*,
                                                   const MaterialSet* matls);
                                                  
-  void scheduleApplyExternalLoads(                SchedulerP&, const PatchSet*,
+  void scheduleApplyExternalLoads(              SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
 
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
@@ -400,10 +377,37 @@ protected:
   void scheduleAddNewParticles( SchedulerP&, const PatchSet*,
 				const MaterialSet*);
 
-  void scheduleConvertLocalizedParticles(         SchedulerP&, const PatchSet*,
-				                  const MaterialSet*);
-  void scheduleCalculateDampingRate(              SchedulerP&, const PatchSet*,
-                                                  const MaterialSet*);
+  void scheduleConvertLocalizedParticles(SchedulerP&, const PatchSet*,
+					 const MaterialSet*);
+  void scheduleCalculateDampingRate(SchedulerP&, const PatchSet*,
+				    const MaterialSet*);
+
+  virtual void scheduleParticleVelocityField(SchedulerP&, const PatchSet*,
+					     const MaterialSet*);
+
+  virtual void scheduleAdjustCrackContactInterpolated(SchedulerP&, 
+						      const PatchSet*,
+						      const MaterialSet*);
+
+  virtual void scheduleAdjustCrackContactIntegrated(SchedulerP&, 
+						    const PatchSet*,
+						    const MaterialSet*);
+
+  virtual void scheduleCalculateFractureParameters(SchedulerP&,const PatchSet*,
+						   const MaterialSet*);
+
+  virtual void scheduleDoCrackPropagation(SchedulerP& sched, 
+					  const PatchSet* patches,
+					  const MaterialSet* matls);
+
+  virtual void scheduleMoveCracks(SchedulerP& sched,const PatchSet* patches,
+				  const MaterialSet* matls);
+
+  void scheduleUpdateCrackFront(SchedulerP& sched,const PatchSet* patches,
+				const MaterialSet* matls);
+
+
+
   SimulationStateP d_sharedState;
   MPMLabel* lb;
   MPMFlags* flags;
