@@ -32,7 +32,7 @@ int BoxGeometryPiece::checkShapesPositive(Point check_point,
       (check_point.z()-zlow>=0.0) && (zhigh-check_point.z()>=0.0) ){
     pp = 1;
     //	  pp = 3; 
-    inPiece=piece_num;
+    d_in_piece=piece_num;
   } 
   else if(xlow-check_point.x() <= particle_spacing.x() && 
 	  xlow-check_point.x() > 0.0){
@@ -139,7 +139,7 @@ void BoxGeometryPiece::computeNorm(Vector &norm,Point part_pos,
 {
 
   Vector dir(0.0,0.0,0.0);
-  norm.set(0.0,0.0,0.0);
+  norm = Vector(0.0,0.0,0.0);
   int small = 1;
 
   for(int i=1;i<=6;i++) {
@@ -156,27 +156,27 @@ void BoxGeometryPiece::computeNorm(Vector &norm,Point part_pos,
 		
   for(int i=1;i<=6;i++){
     if(sf[i]==(-1)){		// low x
-      dir.set(-1.0,0.0,0.0);
+      dir = Vector(-1.0,0.0,0.0);
       norm+=dir;
     }
     else if(sf[i]==(-2)){		// high x
-      dir.set(1.0,0.0,0.0);
+      dir = Vector(1.0,0.0,0.0);
       norm+=dir;
     }
     else if(sf[i]==(-3)){		// low y
-      dir.set(0.0,-1.0,0.0);
+      dir = Vector(0.0,-1.0,0.0);
       norm+=dir;
     }
     else if(sf[i]==(-4)){		// high y
-      dir.set(0.0,1.0,0.0);
+      dir = Vector(0.0,1.0,0.0);
       norm+=dir;
     }
     else if(sf[i]==(-5)){		// low z
-      dir.set(0.0,0.0,-1.0);
+      dir = Vector(0.0,0.0,-1.0);
       norm+=dir;
     }
     else if(sf[i]==(-6)){		// high z
-      dir.set(0.0,0.0,1.0);
+      dir = Vector(0.0,0.0,1.0);
       norm+=dir;
     }
   }
@@ -184,27 +184,27 @@ void BoxGeometryPiece::computeNorm(Vector &norm,Point part_pos,
   if (small < -10) {
     for(int i=1;i<=6;i++){
       if(sf[i]==(-11)){			// low x
-	dir.set(1.0,0.0,0.0);
+	dir = Vector(1.0,0.0,0.0);
 	norm+=dir;
       }
       else if(sf[i]==(-21)){		// high x
-	dir.set(-1.0,0.0,0.0);
+	dir = Vector(-1.0,0.0,0.0);
 	norm+=dir;
       }
       else if(sf[i]==(-31)){		// low y
-	dir.set(0.0,1.0,0.0);
+	dir = Vector(0.0,1.0,0.0);
 	norm+=dir;
       }
       else if(sf[i]==(-41)){		// high y
-	dir.set(0.0,-1.0,0.0);
+	dir = Vector(0.0,-1.0,0.0);
 	norm+=dir;
       }
       else if(sf[i]==(-51)){		// low z
-	dir.set(0.0,0.0,1.0);
+	dir = Vector(0.0,0.0,1.0);
 	norm+=dir;
       }
       else if(sf[i]==(-61)){		// high z
-	dir.set(0.0,0.0,-1.0);
+	dir = Vector(0.0,0.0,-1.0);
 	norm+=dir;
       }
     }
@@ -216,6 +216,9 @@ void BoxGeometryPiece::computeNorm(Vector &norm,Point part_pos,
 }
 
 // $Log$
+// Revision 1.2  2000/04/14 03:29:13  jas
+// Fixed routines to use SCICore's point and vector stuff.
+//
 // Revision 1.1  2000/04/14 02:05:45  jas
 // Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
 // Tri.  This made the GeometryObject class simpler since many of the

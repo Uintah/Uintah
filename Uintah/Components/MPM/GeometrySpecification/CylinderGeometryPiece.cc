@@ -39,8 +39,8 @@ int CylinderGeometryPiece::checkShapesPositive(Point check_point, int &np,
   double rsqr = d_radius * d_radius;
   double rdpsqr= (d_radius+dlpp) * (d_radius+dlpp);
 
-  Point tmp_point = check_point - d_origin;
-  Vector test_point(tmp_point.x(),tmp_point.y(),tmp_point.z());
+  Point tmp_point = Point(check_point - d_origin);
+    Vector test_point(tmp_point.x(),tmp_point.y(),tmp_point.z());
   double len;
   // Check for each d_axis aligned case
   switch(d_axis) {
@@ -51,7 +51,7 @@ int CylinderGeometryPiece::checkShapesPositive(Point check_point, int &np,
        && (d_origin.x()+ d_length +
 	  particle_spacing.x()-check_point.x()>=0.0)){
       pp = 2;
-      inPiece=piece_num;
+      d_in_piece=piece_num;
       if((test_point.x() <= particle_spacing.x()) &&
 	 (test_point.x() < 0.0)){
 	pp = -7;
@@ -79,7 +79,7 @@ int CylinderGeometryPiece::checkShapesPositive(Point check_point, int &np,
        &&(d_origin.y()+d_length+particle_spacing.y()-
 	  check_point.y()>=0.0)){
       pp = 2;
-      inPiece=piece_num;
+      d_in_piece=piece_num;
       if((d_origin.y()-check_point.y() <= particle_spacing.y())
 	 &&(d_origin.y()-check_point.y()>0.0)){
 	pp = -7;
@@ -107,7 +107,7 @@ int CylinderGeometryPiece::checkShapesPositive(Point check_point, int &np,
        &&(d_origin.z()+d_length+particle_spacing.z()-
 	  check_point.z()>=0.0)){
       pp = 2;
-      inPiece=piece_num;
+      d_in_piece=piece_num;
       if((d_origin.z()-check_point.z() <= particle_spacing.z())
 	 &&(d_origin.z()-check_point.z()>0.0)){
 	pp = -7;
@@ -231,7 +231,7 @@ void CylinderGeometryPiece::computeNorm(Vector &norm, Point part_pos,
 {
 
   Vector dir(0.0,0.0,0.0);
-  norm.set(0.0,0.0,0.0);
+  norm = Vector(0.0,0.0,0.0);
   int small = 1;
 
   for(int i=1;i<=6;i++) {
@@ -251,18 +251,18 @@ void CylinderGeometryPiece::computeNorm(Vector &norm, Point part_pos,
     for(int i=1;i<=6;i++){
       if(sf[i]==(-7)){	
 	// low x
-	dir.set(-1.0,0.0,0.0);
+	dir = Vector(-1.0,0.0,0.0);
 	norm+=dir;
       }
       if(sf[i]==(-8)){		
 	// high x
-	dir.set(1.0,0.0,0.0);
+	dir = Vector(1.0,0.0,0.0);
 	norm+=dir;
       }
       if(sf[i]==(-9)){		
 	// curved surface
-	Point tmp = (part_pos - d_origin)*2.0;
-	dir.set(0.0,tmp.y(),tmp.z());
+	Point tmp = Point((part_pos - d_origin)*2.0);
+	dir = Vector(0.0,tmp.y(),tmp.z());
 	dir.normalize();
 	norm+=dir;
       }
@@ -273,18 +273,18 @@ void CylinderGeometryPiece::computeNorm(Vector &norm, Point part_pos,
     for(int i=1;i<=6;i++){
       if(sf[i]==(-7)){		
 	// low y
-	dir.set(0.0,-1.0,0.0);
+	dir = Vector(0.0,-1.0,0.0);
 	norm+=dir;
       }
       if(sf[i]==(-8)){		
 	// high y
-	dir.set(0.0,1.0,0.0);
+	dir = Vector(0.0,1.0,0.0);
 	norm+=dir;
       }
       if(sf[i]==(-9)){		
 	// curved surface
-	Point tmp = (part_pos - d_origin)*2.0;
-	dir.set(tmp.x(),0.0,tmp.z());
+	Point tmp = Point((part_pos - d_origin)*2.0);
+	dir = Vector(tmp.x(),0.0,tmp.z());
 	dir.normalize();
 	norm+=dir;
       }
@@ -295,18 +295,18 @@ void CylinderGeometryPiece::computeNorm(Vector &norm, Point part_pos,
     for(int i=1;i<=6;i++){
       if(sf[i]==(-7)){		
 	// low z
-	dir.set(0.0,0.0,-1.0);
+	dir = Vector(0.0,0.0,-1.0);
 	norm+=dir;
       }
       if(sf[i]==(-8)){		
 	// high z
-	dir.set(0.0,0.0,1.0);
+	dir = Vector(0.0,0.0,1.0);
 	norm+=dir;
       }
       if(sf[i]==(-9)){		
 	// curved surface
-	Point tmp = (part_pos - d_origin)*2.0;
-	dir.set(tmp.x(),tmp.y(),0.0);
+	Point tmp = Point((part_pos - d_origin)*2.0);
+	dir = Vector(tmp.x(),tmp.y(),0.0);
 	dir.normalize();
 	norm+=dir;
       }
@@ -324,18 +324,18 @@ void CylinderGeometryPiece::computeNorm(Vector &norm, Point part_pos,
 	for(int i=1;i<=6;i++){
           if(sf[i]==(-71)){	
 	    // low x
-	    dir.set(1.0,0.0,0.0);
+	    dir = Vector(1.0,0.0,0.0);
 	    norm+=dir;
           }
           if(sf[i]==(-81)){		
 	    // high x
-	    dir.set(-1.0,0.0,0.0);
+	    dir = Vector(-1.0,0.0,0.0);
 	    norm+=dir;
           }
           if(sf[i]==(-91)){
 	    // curved surface
-	    Point tmp = (part_pos - d_origin)*(-2.0);
-	    dir.set(0.0,tmp.y(),tmp.z());
+	    Point tmp = Point((part_pos - d_origin)*(-2.0));
+	    dir = Vector(0.0,tmp.y(),tmp.z());
 	    dir.normalize();
 	    norm+=dir;
           }
@@ -345,18 +345,18 @@ void CylinderGeometryPiece::computeNorm(Vector &norm, Point part_pos,
       for(int i=1;i<=6;i++){
 	if(sf[i]==(-71)){	
 	  // low y
-	  dir.set(0.0,1.0,0.0);
+	  dir = Vector(0.0,1.0,0.0);
 	  norm+=dir;
 	}
 	if(sf[i]==(-81)){		
 	  // high y
-	  dir.set(0.0,-1.0,0.0);
+	  dir = Vector(0.0,-1.0,0.0);
 	  norm+=dir;
 	}
 	if(sf[i]==(-91)){		
 	  // curved surface
-	  Point tmp = (part_pos - d_origin)*(-2.0);
-	  dir.set(tmp.x(),0.0,tmp.z());
+	  Point tmp = Point((part_pos - d_origin)*(-2.0));
+	  dir = Vector(tmp.x(),0.0,tmp.z());
 	  dir.normalize();
 	  norm+=dir;
 	}
@@ -366,18 +366,18 @@ void CylinderGeometryPiece::computeNorm(Vector &norm, Point part_pos,
       for(int i=1;i<=6;i++){
 	if(sf[i]==(-71)){	
 	  // low z
-	  dir.set(0.0,0.0,1.0);
+	  dir = Vector(0.0,0.0,1.0);
 	  norm+=dir;
 	}
 	if(sf[i]==(-81)){	
 	  // high z
-	  dir.set(0.0,0.0,-1.0);
+	  dir = Vector(0.0,0.0,-1.0);
 	  norm+=dir;
 	}
 	if(sf[i]==(-91)){		
 	  // curved surface
-	  Point tmp = (part_pos - d_origin)*(-2.0);
-	  dir.set(tmp.x(),tmp.y(),tmp.z());
+	  Point tmp = Point((part_pos - d_origin)*(-2.0));
+	  dir = Vector(tmp.x(),tmp.y(),tmp.z());
 	  dir.normalize();
 	  norm+=dir;
 	}
@@ -390,6 +390,9 @@ void CylinderGeometryPiece::computeNorm(Vector &norm, Point part_pos,
 }
 
 // $Log$
+// Revision 1.2  2000/04/14 03:29:13  jas
+// Fixed routines to use SCICore's point and vector stuff.
+//
 // Revision 1.1  2000/04/14 02:05:45  jas
 // Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
 // Tri.  This made the GeometryObject class simpler since many of the
