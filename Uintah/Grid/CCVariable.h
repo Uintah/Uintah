@@ -1,7 +1,7 @@
 #ifndef UINTAH_HOMEBREW_CCVARIABLE_H
 #define UINTAH_HOMEBREW_CCVARIABLE_H
 
-#include <Uintah/Grid/DataItem.h>
+#include <Uintah/Grid/CCVariableBase.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <iostream> // TEMPORARY
 
@@ -38,7 +38,7 @@ WARNING
   
 ****************************************/
 
-   template<class T> class CCVariable : public DataItem {
+   template<class T> class CCVariable : public CCVariableBase {
    public:
       CCVariable();
       CCVariable(const CCVariable<T>&);
@@ -50,15 +50,12 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      virtual void get(DataItem&) const;
-      
-      //////////
-      // Insert Documentation Here:
       virtual CCVariable<T>* clone() const;
       
       //////////
       // Insert Documentation Here:
-      virtual void allocate(const Region*);
+      virtual void allocate(const IntVector& lowIndex,
+			    const IntVector& highIndex);
       
       //////////
       // Insert Documentation Here:
@@ -79,16 +76,6 @@ WARNING
    template<class T>
       CCVariable<T>::~CCVariable()
       {
-      }
-   
-   template<class T>
-      void
-      CCVariable<T>::get(DataItem& copy) const
-      {
-	 CCVariable<T>* ref=dynamic_cast<CCVariable<T>*>(&copy);
-	 if(!ref)
-	    throw TypeMismatchException("CCVariable<T>");
-	 *ref = *this;
       }
    
    template<class T>
@@ -121,7 +108,8 @@ WARNING
       }
    
    template<class T>
-      void CCVariable<T>::allocate(const Region*)
+      void CCVariable<T>::allocate(const IntVector& lowIndex,
+				   const IntVector& highIndex)
       {
 	 std::cerr << "CCVariable::allocate not done!\n";
       }
@@ -135,6 +123,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.6  2000/05/11 20:10:21  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.5  2000/05/10 20:31:14  tan
 // Added initialize member function. Currently nothing in the function,
 // just to make the complilation work.

@@ -16,36 +16,6 @@ class DataItem;
 class TypeDescription;
 class Region;
 
-using SCICore::Thread::Thread;
-using SCICore::Thread::Runnable;
-
-class DataWarehouseMpiHandler : public Runnable {
-
-public:
-  DataWarehouseMpiHandler( DataWarehouse * dw );
-
-  void run();
-
-private:
-
-  enum DataType { ReductionVar, GridVar, Quit };
-
-  struct MpiDataRequest {
-    int fromMpiRank; // Rank of process that wants to send info to this DW.
-    int toMpiRank;   // Rank of the process being sent the data.
-    int tag;         // Tag to use in the actual send.
-    DataType type;// Type of data that will be sent
-    char     varName[ 50 ];
-    int      region;
-  };
-
-  static const int  MAX_BUFFER_SIZE;
-  static const int  MPI_DATA_REQUEST_TAG;
-
-  DataWarehouse * d_dw; // The DataWarehouse that this MpiHandler 
-                        // is associated with.
-};
-
 /**************************************
 
   CLASS
@@ -77,29 +47,40 @@ private:
 
 class OnDemandDataWarehouse : public DataWarehouse {
 public:
-   OnDemandDataWarehouse( int MpiRank, int MpiProcesses );
+   OnDemandDataWarehouse( int MpiRank, int MpiProcesses, int generation );
    virtual ~OnDemandDataWarehouse();
    
    virtual void setGrid(const GridP&);
-   
+
+   // Reduction Variables
    virtual void allocate(ReductionVariableBase&, const VarLabel*);
-   virtual void get(ReductionVariableBase&, const VarLabel*) const;
+   virtual void get(ReductionVariableBase&, const VarLabel*);
    virtual void put(const ReductionVariableBase&, const VarLabel*);
+
+   // Particle Variables
    virtual void allocate(int numParticles, ParticleVariableBase&,
 			 const VarLabel*, int matlIndex, const Region*);
    virtual void allocate(ParticleVariableBase&, const VarLabel*,
 			 int matlIndex, const Region*);
-   virtual void get(ParticleVariableBase&, const VarLabel*,
-		    int matlIndex, const Region*,
-		    Ghost::GhostType, int numGhostCells = 0) const;
+   virtual void get(ParticleVariableBase&, const VarLabel*, int matlIndex,
+		    const Region*, Ghost::GhostType, int numGhostCells);
    virtual void put(const ParticleVariableBase&, const VarLabel*,
 		    int matlIndex, const Region*);
+
+   // NCVariables Variables
    virtual void allocate(NCVariableBase&, const VarLabel*,
 			 int matlIndex, const Region*);
-   virtual void get(NCVariableBase&, const VarLabel*,
-		    int matlIndex, const Region*,
-		    Ghost::GhostType, int numGhostCells = 0) const;
+   virtual void get(NCVariableBase&, const VarLabel*, int matlIndex,
+		    const Region*, Ghost::GhostType, int numGhostCells);
    virtual void put(const NCVariableBase&, const VarLabel*,
+		    int matlIndex, const Region*);
+
+   // CCVariables Variables -- fron Tan... need to be fixed...
+   virtual void allocate(CCVariableBase&, const VarLabel*,
+			 int matlIndex, const Region*);
+   virtual void get(CCVariableBase&, const VarLabel*, int matlIndex,
+		    const Region*, Ghost::GhostType, int numGhostCells);
+   virtual void put(const CCVariableBase&, const VarLabel*,
 		    int matlIndex, const Region*);
 
    //////////
@@ -132,6 +113,8 @@ public:
    }
 private:
 
+   void sendMpiDataRequest();
+
    struct dataLocation {
       const Region   * region;
             int        mpiNode;
@@ -156,17 +139,20 @@ private:
    mutable SCICore::Thread::CrowdMonitor  d_lock;
    bool                                   d_finalized;
    GridP                                  d_grid;
-   
-   const VarLabel           * d_positionLabel;
 
-   Thread                   * d_thread;
-   DataWarehouseMpiHandler  * d_worker;
+   // Incremented for each MPI Data Request sent.
+   int d_responseTag; 
+   
+   const VarLabel * d_positionLabel;
 };
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.18  2000/05/11 20:10:19  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.17  2000/05/10 20:02:53  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

@@ -41,7 +41,9 @@ using SCICore::Containers::Array3;
 SimulationController::SimulationController( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
-   restarting=false;
+   d_restarting = false;
+   d_generation = 0;
+   d_dwMpiHandler = new DWMpiHandler();
 }
 
 SimulationController::~SimulationController()
@@ -92,11 +94,25 @@ void SimulationController::run()
    
    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
    SchedulerP scheduler(sched);
-   DataWarehouseP old_ds = scheduler->createDataWarehouse();
+
+   DataWarehouseP old_ds = scheduler->createDataWarehouse( d_generation );
+   d_generation++;
+
+   d_dwMpiHandler->registerDW( old_ds );
+   // Should I check to see if MpiProcesses is > 1 before making this
+   // thread?  If not, the thread will just die when it realizes
+   // that there are only one MpiProcesses.  Should I have if tests
+   // around all the d_dwMpiHandler calls to test for this, or just
+   // let it do the single assignment operation that will actually
+   // have no effect?
+   if( d_MpiProcesses > 1 ) {
+     d_MpiThread = new Thread( d_dwMpiHandler, "DWMpiHandler" );
+   }
+
    old_ds->setGrid(grid);
    
    scheduler->initialize();
-   if(restarting){
+   if(d_restarting){
       cerr << "Restart not finised!\n";
    } else {
       // Initialize the CFD and/or MPM data
@@ -125,7 +141,8 @@ void SimulationController::run()
    
    Output* output = dynamic_cast<Output*>(getPort("output"));
    
-   while(t < timeinfo.maxTime) {
+   while(t < 0) {
+//   while(t < timeinfo.maxTime) {
       double wallTime = Time::currentSeconds() - start_time;
 
       delt_vartype delt_var;
@@ -148,7 +165,12 @@ void SimulationController::run()
 	   << ", elapsed time = " << wallTime << '\n';
 
       scheduler->initialize();
-      DataWarehouseP new_ds = scheduler->createDataWarehouse();
+
+      DataWarehouseP new_ds = scheduler->createDataWarehouse( d_generation );
+      d_generation++;
+
+      d_dwMpiHandler->registerDW( new_ds );
+
       new_ds->carryForward(old_ds);
       scheduleTimeAdvance(t, delt, level, scheduler, old_ds, new_ds,
 			  cfd, mpm);
@@ -162,6 +184,10 @@ void SimulationController::run()
       scheduler->execute(pc, new_ds);
       
       old_ds = new_ds;
+   }
+
+   if( d_MpiRank == 0 && d_MpiProcesses > 1 ) {
+     d_dwMpiHandler->shutdown( d_MpiProcesses );
    }
 }
 
@@ -264,10 +290,12 @@ void SimulationController::scheduleInitialize(LevelP& level,
 					      CFDInterface* cfd,
 					      MPMInterface* mpm)
 {
-   if(cfd)
-      cfd->scheduleInitialize(level, sched, new_ds);
-   if(mpm)
-      mpm->scheduleInitialize(level, sched, new_ds);
+  if(cfd) {
+    cfd->scheduleInitialize(level, sched, new_ds);
+  }
+  if(mpm) {
+    mpm->scheduleInitialize(level, sched, new_ds);
+  }
 }
 
 void SimulationController::scheduleComputeStableTimestep(LevelP& level,
@@ -285,7 +313,7 @@ void SimulationController::scheduleComputeStableTimestep(LevelP& level,
 void SimulationController::scheduleTimeAdvance(double t, double delt,
 					       LevelP& level,
 					       SchedulerP& sched,
-					       const DataWarehouseP& old_ds,
+					       DataWarehouseP& old_ds,
 					       DataWarehouseP& new_ds,
 					       CFDInterface* cfd,
 					       MPMInterface* mpm)
@@ -394,6 +422,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.18  2000/05/11 20:10:20  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.17  2000/05/10 20:02:55  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

@@ -6,6 +6,7 @@ static char *id="@(#) $Id$";
 #include <SCICore/Thread/Guard.h>
 #include <SCICore/Geometry/Point.h>
 
+#include <Uintah/Interface/DWMpiHandler.h>
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <Uintah/Exceptions/UnknownVariable.h>
@@ -18,34 +19,29 @@ static char *id="@(#) $Id$";
 #include <string>
 #include <mpi.h>
 
-using SCICore::Exceptions::InternalError;
-using SCICore::Thread::Guard;
-using SCICore::Geometry::Point;
 using std::cerr;
 using std::string;
 using std::vector;
+
+using SCICore::Exceptions::InternalError;
+using SCICore::Thread::Guard;
+using SCICore::Geometry::Point;
 using SCICore::Geometry::Min;
 using SCICore::Geometry::Max;
-using namespace Uintah;
 
-OnDemandDataWarehouse::OnDemandDataWarehouse( int MpiRank, int MpiProcesses )
-  : d_lock("DataWarehouse lock"), DataWarehouse( MpiRank, MpiProcesses )
+namespace Uintah {
+
+OnDemandDataWarehouse::OnDemandDataWarehouse( int MpiRank, 
+					      int MpiProcesses,
+					      int generation ) :
+  d_lock("DataWarehouse lock"),
+  DataWarehouse( MpiRank, MpiProcesses, generation ),
+  d_responseTag( 0 )
 {
   d_finalized = false;
   d_positionLabel = new VarLabel("__internal datawarehouse position variable",
 				ParticleVariable<Point>::getTypeDescription(),
 				VarLabel::Internal);
-
-  if( MpiProcesses != 1 ) {
-    d_worker = new DataWarehouseMpiHandler( this );
-    d_thread = new Thread( d_worker, "DataWarehouseMpiHandler" );
-  } else {
-    // If there is only one MPI process, then their is only one
-    // DataWarehouse, so we don't need to use MPI to transfer any
-    // data.
-    d_worker = 0;
-    d_thread = 0;
-  }
 }
 
 void
@@ -60,7 +56,7 @@ OnDemandDataWarehouse::~OnDemandDataWarehouse()
 
 void
 OnDemandDataWarehouse::get(ReductionVariableBase& var,
-			   const VarLabel* label) const
+			   const VarLabel* label)
 {
    reductionDBtype::const_iterator iter = d_reductionDB.find(label);
    if(iter == d_reductionDB.end())
@@ -91,12 +87,80 @@ OnDemandDataWarehouse::put(const ReductionVariableBase& var,
 }
 
 void
+OnDemandDataWarehouse::sendMpiDataRequest()
+{
+  if( d_MpiProcesses == 1 ) {
+      throw InternalError( "sendMpiDataRequest should not be called if"
+			   " there is only one process" );
+  }
+
+  // Must send a reqest to 26 neighbors:
+  // 0-8 are above, 8-17 are on the same level (this node is 13), 
+  // 18-26 are below.
+  //
+  //                                                      0  1  2
+  //                                 /  /  /              /\  \  \
+  //                                9 10 11                 3  4  5
+  //          /  /  /              / \  \  \                 \  \  \
+  //         18 19 20                12 13 14                 6  7  8
+  //          \  \  \                  \  \  \/               /  /  /
+  //          21 22 23                 15 16 17
+  //            \  \  \/               /  /  /
+  //            24 25 26
+  //
+  //  8 is directly above 17 which is directly above 26
+
+
+  int                           currentTag;
+  DWMpiHandler::MpiDataRequest  request;
+
+  request.fromMpiRank = d_MpiRank;
+  request.toMpiRank = !d_MpiRank; // Just a testing hack...
+
+  d_lock.writeLock();
+  request.tag = d_responseTag;
+  currentTag = d_responseTag;
+  d_responseTag++;
+  d_lock.writeUnlock();
+
+  request.type = DWMpiHandler::GridVar;
+  sprintf( request.varName, "varA" );
+  request.region = 0;
+  request.generation = d_generation;
+
+  cerr << "OnDemandDataWarehouse " << d_MpiRank << ": sending data request\n";
+
+  MPI_Bsend( (void*)&request, sizeof( request ), MPI_BYTE, request.toMpiRank,
+	     DWMpiHandler::DATA_REQUEST_TAG, MPI_COMM_WORLD );
+
+  cerr << "                       Data request sent\n";
+
+  char       * buffer = new char[ DWMpiHandler::MAX_BUFFER_SIZE ];
+  MPI_Status   status;
+
+  cerr << "OnDemandDataWarehouse: waiting for data response from "
+       << request.toMpiRank << "\n";
+
+  MPI_Recv( buffer, 100, MPI_BYTE, request.toMpiRank, 
+	    currentTag, MPI_COMM_WORLD, &status );
+
+    cerr << "STATUS IS:\n";
+    cerr << "SOURCE: " << status.MPI_SOURCE << "\n";
+    cerr << "TAG:    " << status.MPI_TAG << "\n";
+    cerr << "ERROR:  " << status.MPI_ERROR << "\n";
+    cerr << "SIZE:   " << status.size << "\n";
+
+  cerr << "Received this message: [" << buffer << "]\n";
+  free( buffer );
+}
+
+void
 OnDemandDataWarehouse::get(ParticleVariableBase& var,
 			   const VarLabel* label,
 			   int matlIndex,
 			   const Region* region,
 			   Ghost::GhostType gtype,
-			   int numGhostCells) const
+			   int numGhostCells)
 {
    if(!d_particleDB.exists(label, matlIndex, region))
       throw UnknownVariable(label->getName());
@@ -227,7 +291,7 @@ void
 OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 			   int matlIndex, const Region* region,
 			   Ghost::GhostType gtype,
-			   int numGhostCells) const
+			   int numGhostCells)
 {
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
@@ -316,6 +380,29 @@ OnDemandDataWarehouse::put(const NCVariableBase& var,
 
    // Put it in the database
    d_ncDB.put(label, matlIndex, region, var, true);
+}
+
+void
+OnDemandDataWarehouse::allocate(CCVariableBase& var,
+				const VarLabel* label,
+				int matlIndex,
+				const Region* region)
+{
+  throw InternalError( "CC Var allocate not implemented yet!" );  
+}
+
+void
+OnDemandDataWarehouse::get(CCVariableBase&, const VarLabel*, int matlIndex,
+			   const Region*, Ghost::GhostType, int numGhostCells)
+{
+  throw InternalError( "CC Var get not implemented yet!" );    
+}
+
+void
+OnDemandDataWarehouse::put(const CCVariableBase&, const VarLabel*,
+			   int matlIndex, const Region*)
+{
+  throw InternalError( "CC Var put not implemented yet!" );    
 }
 
 int
@@ -414,72 +501,13 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 {
 }
 
-///////////////////////////////////////////////////////////////
-// DataWarehouseMpiHandler Routines:
-
-const int DataWarehouseMpiHandler::MAX_BUFFER_SIZE = 1024;
-const int DataWarehouseMpiHandler::MPI_DATA_REQUEST_TAG = 123321;
-
-DataWarehouseMpiHandler::DataWarehouseMpiHandler( DataWarehouse * dw ) :
-  d_dw( dw )
-{
-}
-
-void
-DataWarehouseMpiHandler::run()
-{
-  if( d_dw->d_MpiProcesses == 1 ) {
-    throw InternalError( "DataWarehouseMpiHandler should not be running "
-			 "if there is only one MPI process." );
-  }
-
-  MPI_Status status;
-  char       buffer[ MAX_BUFFER_SIZE ];
-  bool       done = false;
-
-  while( !done ) {
-
-    MPI_Recv( buffer, sizeof( MpiDataRequest ), MPI_BYTE, MPI_ANY_SOURCE,
-	      MPI_DATA_REQUEST_TAG, MPI_COMM_WORLD, &status );
-
-    MpiDataRequest * request = (MpiDataRequest *) buffer;
-
-    cerr << "OnDemandDataWarehouse " << d_dw->d_MpiRank << " received a " 
-	 << "request that " << status.MPI_SOURCE << " wants me to "
-	 << "send it information of type: " << request->type << "\n";
-    cerr << "   It wants data for variable: " << request->varName 
-	 << " in retion of " << request->region << "\n";
-
-    if( d_dw->d_MpiRank != request->toMpiRank || 
-	status.MPI_SOURCE != request->fromMpiRank ) {
-      throw InternalError( "Data Notification Message was corrupt" );
-    }
-
-    if( request->type == ReductionVar ) {
-      cerr << "Received a reduction var... need to get it from my "
-	   << "database\n";
-    } else if( request->type == GridVar ) {
-      cerr << "Received a grid var... need to get it from my "
-	   << "database\n";
-    } else {
-      throw InternalError( "Do not know how to handle this type of data" );
-    }
-
-    // Look up the varName in the DW.  ??What to do if it is not there??
-
-    // Pull data out of DataWarehouse and pack in into "buffer"
-
-    // figure out how big the data is...
-    int size = 1;
-
-    MPI_Send( buffer, size, MPI_BYTE, status.MPI_SOURCE, request->tag,
-	      MPI_COMM_WORLD );
-
-  } // end while
-}
+} // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.21  2000/05/11 20:10:19  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.20  2000/05/10 20:02:53  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

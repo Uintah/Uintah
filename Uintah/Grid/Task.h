@@ -54,7 +54,7 @@ WARNING
 	 virtual ~ActionBase();
 	 virtual void doit(const ProcessorContext* pc,
 			   const Region* region,
-			   const DataWarehouseP& fromDW,
+			   DataWarehouseP& fromDW,
 			   DataWarehouseP& toDW) = 0;
       };
       
@@ -64,13 +64,13 @@ WARNING
 	 T* ptr;
 	 void (T::*pmf)(const ProcessorContext*,
 			const Region*,
-			const DataWarehouseP&,
+			DataWarehouseP&,
 			DataWarehouseP&);
       public:
 	 Action( T* ptr,
 		 void (T::*pmf)(const ProcessorContext*, 
 				const Region*, 
-				const DataWarehouseP&,
+				DataWarehouseP&,
 				DataWarehouseP&) )
 	    : ptr(ptr), pmf(pmf) {}
 	 virtual ~Action() {}
@@ -79,7 +79,7 @@ WARNING
 	 // Insert Documentation Here:
 	 virtual void doit(const ProcessorContext* pc,
 			   const Region* region,
-			   const DataWarehouseP& fromDW,
+			   DataWarehouseP& fromDW,
 			   DataWarehouseP& toDW) {
 	    (ptr->*pmf)(pc, region, fromDW, toDW);
 	 }
@@ -89,12 +89,12 @@ WARNING
       template<class T>
       Task(const string&         taskName,
 	   const Region*         region,
-	   const DataWarehouseP& fromDW,
+	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
-	   T*                     ptr,
+	   T*                    ptr,
 	   void (T::*pmf)(const ProcessorContext*,
 			  const Region*,
-			  const DataWarehouseP&,
+			  DataWarehouseP&,
 			  DataWarehouseP&) )
 	 : d_taskName( taskName ), 
 	   d_region( region ),
@@ -110,12 +110,12 @@ WARNING
       
       template<class T>
       Task(const string&         taskName,
-	   const DataWarehouseP& fromDW,
+	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
-	   T*                     ptr,
+	   T*                    ptr,
 	   void (T::*pmf)(const ProcessorContext*,
 			  const Region*,
-			  const DataWarehouseP&,
+			  DataWarehouseP&,
 			  DataWarehouseP&) )
 	 : d_taskName( taskName ), 
 	   d_region( 0 ),
@@ -132,12 +132,12 @@ WARNING
       template<class T, class Arg1>
       Task(const string&         taskName,
 	   const Region*         region,
-	   const DataWarehouseP& fromDW,
+	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
-	   T*                     ptr,
+	   T*                    ptr,
 	   void (T::*pmf)(const ProcessorContext*,
 			  const Region*,
-			  const DataWarehouseP&,
+			  DataWarehouseP&,
 			  DataWarehouseP&,
 			  Arg1),
 	   Arg1)
@@ -217,6 +217,10 @@ WARNING
       
       //////////
       // Insert Documentation Here:
+      void addComps(vector<Dependency*>&) const;
+
+      //////////
+      // Returns the list of variables that this Task computes.
       const vector<Dependency*>& getComputes() const;
       
       //////////
@@ -247,6 +251,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.12  2000/05/11 20:10:21  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.11  2000/05/10 20:03:03  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

@@ -25,7 +25,7 @@ Fracture::
 updateSurfaceNormalOfBoundaryParticle(
            const ProcessorContext*,
            const Region* region,
-           const DataWarehouseP& old_dw,
+           DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
 }
@@ -35,7 +35,7 @@ Fracture::
 labelSelfContactCells (
            const ProcessorContext*,
            const Region* region,
-           const DataWarehouseP& old_dw,
+           DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
 }
@@ -45,7 +45,7 @@ Fracture::
 updateParticleInformationInContactCells (
            const ProcessorContext*,
            const Region* region,
-           const DataWarehouseP& old_dw,
+           DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
 }
@@ -55,7 +55,7 @@ Fracture::
 updateNodeInformationInContactCells (
            const ProcessorContext*,
            const Region* region,
-           const DataWarehouseP& old_dw,
+           DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
 }
@@ -66,7 +66,7 @@ Fracture::
 crackGrow(
            const ProcessorContext*,
            const Region* region,
-           const DataWarehouseP& old_dw,
+           DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
 }
@@ -104,6 +104,9 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.5  2000/05/11 20:10:18  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.4  2000/05/10 18:32:11  tan
 // Added member funtion to label self-contact cells.
 //

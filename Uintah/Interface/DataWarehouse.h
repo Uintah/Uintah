@@ -4,8 +4,7 @@
 
 #include <Uintah/Grid/Handle.h>
 #include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/DataItem.h>
+#include <Uintah/Grid/CCVariableBase.h>
 #include <Uintah/Grid/Ghost.h>
 #include <Uintah/Grid/RefCounted.h>
 #include <Uintah/Grid/ParticleVariableBase.h>
@@ -54,7 +53,7 @@ WARNING
       
    class DataWarehouse : public RefCounted {
 
-     friend class DataWarehouseMpiHandler;
+     friend class DWMpiHandler;
      
    public:
       virtual ~DataWarehouse();
@@ -63,40 +62,35 @@ WARNING
       
       virtual void setGrid(const GridP&)=0;
       
+      // Reduction Variables
       virtual void allocate(ReductionVariableBase&, const VarLabel*) = 0;
-      virtual void get(ReductionVariableBase&, const VarLabel*) const = 0;
+      virtual void get(ReductionVariableBase&, const VarLabel*) = 0;
       virtual void put(const ReductionVariableBase&, const VarLabel*) = 0;
       
+      // Particle Variables
       virtual void allocate(int numParticles, ParticleVariableBase&,
-			    const VarLabel*, int matlIndex,
-			    const Region*) = 0;
-      virtual void allocate(ParticleVariableBase&, const VarLabel*,	int matlIndex,
-			    const Region*) = 0;
-      virtual void get(ParticleVariableBase&, const VarLabel*,
-		       int matlIndex, const Region*,
-		       Ghost::GhostType, int numGhostCells = 0) const = 0;
+			    const VarLabel*, int matlIndex, const Region*) = 0;
+      virtual void allocate(ParticleVariableBase&, const VarLabel*, 
+			    int matlIndex, const Region*) = 0;
+      virtual void get(ParticleVariableBase&, const VarLabel*, int matlIndex,
+		       const Region*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void put(const ParticleVariableBase&, const VarLabel*,
 		       int matlIndex, const Region*) = 0;
       
+      // Node Centered (NC) Variables
       virtual void allocate(NCVariableBase&, const VarLabel*,
 			    int matlIndex, const Region*) = 0;
-      virtual void get(NCVariableBase&, const VarLabel*,
-		       int matlIndex, const Region*,
-		       Ghost::GhostType, int numGhostCells = 0) const = 0;
+      virtual void get(NCVariableBase&, const VarLabel*, int matlIndex,
+		       const Region*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void put(const NCVariableBase&, const VarLabel*,
 		       int matlIndex, const Region*) = 0;
       
-      //tan 2000/5/10:
-      //  CCVariable is needed for DataWarehouse allocate(). I put the base 
-      //  class of CCVariable, DataItem
-      //  here, the code can be compiled, but need fit in for virtual functions
-      //  here.
-      //
-      virtual void allocate(DataItem&, const VarLabel*,
+      // Cell Centered (CC) Variables
+      virtual void allocate(CCVariableBase&, const VarLabel*,
 			    int matlIndex, const Region*) = 0;
-      virtual void get(DataItem&, const VarLabel*,
-		       int matlIndex, const Region*, int numGhostCells) const = 0;
-      virtual void put(const DataItem&, const VarLabel*,
+      virtual void get(CCVariableBase&, const VarLabel*, int matlIndex,
+		       const Region*, Ghost::GhostType, int numGhostCells) = 0;
+      virtual void put(const CCVariableBase&, const VarLabel*,
 		       int matlIndex, const Region*) = 0;
      
       //////////
@@ -120,8 +114,9 @@ WARNING
 			       const Region   * region ) = 0;
        
    protected:
-      DataWarehouse( int MpiRank, int MpiProcesses );
+      DataWarehouse( int MpiRank, int MpiProcesses, int generation );
       int d_MpiRank, d_MpiProcesses;
+      int d_generation;
       
    private:
       
@@ -133,6 +128,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.21  2000/05/11 20:10:23  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.20  2000/05/10 20:28:55  tan
 // CCVariable is needed.  Virtual functions allocate, get and put are
 // set here to make the compilation work.

@@ -64,7 +64,7 @@ void CompMooneyRivlin::initializeCMData(const Region* region,
 
 void CompMooneyRivlin::computeStableTimestep(const Region* region,
 					     const MPMMaterial* matl,
-//					     const DataWarehouseP& old_dw,
+//					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw)
 {
    // This is only called for the initial timestep - all other timesteps
@@ -74,11 +74,11 @@ void CompMooneyRivlin::computeStableTimestep(const Region* region,
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None);
+  new_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
   ParticleVariable<double> pmass;
-  new_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None);
+  new_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None, 0);
   ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None);
+  new_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None, 0);
 
   ParticleSubset* pset = pmass.getParticleSubset();
   ASSERT(pset == pvolume.getParticleSubset());
@@ -107,7 +107,7 @@ void CompMooneyRivlin::computeStableTimestep(const Region* region,
 
 void CompMooneyRivlin::computeStressTensor(const Region* region,
                                            const MPMMaterial* matl,
-                                           const DataWarehouseP& old_dw,
+                                           DataWarehouseP& old_dw,
                                            DataWarehouseP& new_dw)
 {
   Matrix3 Identity,deformationGradientInc,B,velGrad;
@@ -122,11 +122,11 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
 
   // Create array for the particle position
   ParticleVariable<Point> px;
-  old_dw->get(px, pXLabel, matlindex, region, Ghost::None);
+  old_dw->get(px, pXLabel, matlindex, region, Ghost::None, 0);
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
   old_dw->get(deformationGradient, pDeformationMeasureLabel, matlindex,
-	      region, Ghost::None);
+	      region, Ghost::None, 0);
 
   // Create array for the particle stress
   ParticleVariable<Matrix3> pstress;
@@ -134,11 +134,11 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  old_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None);
+  old_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
   ParticleVariable<double> pmass;
-  old_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None);
+  old_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None, 0);
   ParticleVariable<double> pvolume;
-  old_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None);
+  old_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None, 0);
 
   NCVariable<Vector> gvelocity;
 
@@ -232,7 +232,7 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
 void CompMooneyRivlin::addComputesAndRequires(Task* task,
 					      const MPMMaterial* matl,
 					      const Region* region,
-					      const DataWarehouseP& old_dw,
+					      DataWarehouseP& old_dw,
 					      DataWarehouseP& new_dw) const
 {
    task->requires(old_dw, pXLabel, matl->getDWIndex(), region,
@@ -257,7 +257,7 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 
 double CompMooneyRivlin::computeStrainEnergy(const Region* /*region*/,
                                              const MPMMaterial* /*matl*/,
-                                             const DataWarehouseP& /*new_dw*/)
+                                             DataWarehouseP& /*new_dw*/)
 {
 #ifdef WONT_COMPILE_YET
   double invar1,invar2,invar3,J,se=0.0;
@@ -347,6 +347,9 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.26  2000/05/11 20:10:13  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.25  2000/05/10 20:02:45  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

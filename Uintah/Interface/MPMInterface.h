@@ -67,7 +67,8 @@ WARNING
       // Insert Documentation Here:
       virtual void scheduleTimeAdvance(double t, double dt,
 				       const LevelP& level, SchedulerP&,
-				       const DataWarehouseP&, DataWarehouseP&) = 0;
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw) = 0;
    private:
       MPMInterface(const MPMInterface&);
       MPMInterface& operator=(const MPMInterface&);
@@ -77,6 +78,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.13  2000/05/11 20:10:23  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.12  2000/04/26 06:49:11  sparker
 // Streamlined namespaces
 //

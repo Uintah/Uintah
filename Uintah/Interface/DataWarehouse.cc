@@ -9,8 +9,10 @@ using namespace Uintah;
 using std::cerr;
 using SCICore::Geometry::Vector;
 
-DataWarehouse::DataWarehouse( int MpiRank, int MpiProcesses ) :
-  d_MpiRank( MpiRank ), d_MpiProcesses( MpiProcesses )
+DataWarehouse::DataWarehouse( int MpiRank, int MpiProcesses, int generation ) :
+  d_MpiRank( MpiRank ), 
+  d_MpiProcesses( MpiProcesses ), 
+  d_generation( generation )
 {
 }
 
@@ -36,6 +38,9 @@ DataWarehouse::get(CCVariable<Vector>&, const std::string& name,
 
 //
 // $Log$
+// Revision 1.5  2000/05/11 20:10:22  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.4  2000/04/26 06:49:10  sparker
 // Streamlined namespaces
 //

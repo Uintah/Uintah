@@ -100,14 +100,14 @@ namespace Uintah {
 	 // Basic constitutive model calculations
 	 virtual void computeStressTensor(const Region* region,
 					  const MPMMaterial* matl,
-					  const DataWarehouseP& new_dw,
+					  DataWarehouseP& new_dw,
 					  DataWarehouseP& old_dw);
 	 
 	 //////////
 	 // Computation of strain energy.  Useful for tracking energy balance.
 	 virtual double computeStrainEnergy(const Region* region,
 					    const MPMMaterial* matl,
-					    const DataWarehouseP& new_dw);
+					    DataWarehouseP& new_dw);
 	 
 	 // initialize  each particle's constitutive model data
 	 virtual void initializeCMData(const Region* region,
@@ -117,7 +117,7 @@ namespace Uintah {
 	 virtual void addComputesAndRequires(Task* task,
 					     const MPMMaterial* matl,
 					     const Region* region,
-					     const DataWarehouseP& old_dw,
+					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const;
 
 	 // class function to read correct number of parameters
@@ -174,6 +174,9 @@ namespace Uintah {
 #endif  // __ELASTIC_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.10  2000/05/11 20:10:14  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.9  2000/05/07 06:02:04  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

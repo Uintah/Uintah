@@ -88,11 +88,11 @@ void CompNeoHookPlas::computeStableTimestep(const Region* region,
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None);
+  new_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
   ParticleVariable<double> pmass;
-  new_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None);
+  new_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None, 0);
   ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None);
+  new_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None, 0);
 
   ParticleSubset* pset = pmass.getParticleSubset();
   ASSERT(pset == pvolume.getParticleSubset());
@@ -116,7 +116,7 @@ void CompNeoHookPlas::computeStableTimestep(const Region* region,
 
 void CompNeoHookPlas::computeStressTensor(const Region* region,
 					  const MPMMaterial* matl,
-					  const DataWarehouseP& old_dw,
+					  DataWarehouseP& old_dw,
 					  DataWarehouseP& new_dw)
 {
 
@@ -138,13 +138,13 @@ void CompNeoHookPlas::computeStressTensor(const Region* region,
 
   // Create array for the particle position
   ParticleVariable<Point> px;
-  old_dw->get(px, pXLabel, matlindex, region, Ghost::None);
+  old_dw->get(px, pXLabel, matlindex, region, Ghost::None, 0);
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
   old_dw->get(deformationGradient, pDeformationMeasureLabel, 
-	      matlindex, region, Ghost::None);
+	      matlindex, region, Ghost::None, 0);
   ParticleVariable<Matrix3> bElBar;
-  old_dw->get(bElBar, bElBarLabel, matlindex, region, Ghost::None);
+  old_dw->get(bElBar, bElBarLabel, matlindex, region, Ghost::None, 0);
 
   // Create array for the particle stress
   ParticleVariable<Matrix3> pstress;
@@ -152,16 +152,16 @@ void CompNeoHookPlas::computeStressTensor(const Region* region,
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  old_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None);
+  old_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None, 0);
   ParticleVariable<double> pmass;
-  old_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None);
+  old_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None, 0);
   ParticleVariable<double> pvolume;
-  old_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None);
+  old_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None, 0);
 
   NCVariable<Vector> gvelocity;
 
   new_dw->get(gvelocity, gMomExedVelocityLabel, matlindex,region,
-	      Ghost::None);
+	      Ghost::None, 0);
   delt_vartype delt;
   old_dw->get(delt, deltLabel);
 
@@ -282,7 +282,7 @@ void CompNeoHookPlas::computeStressTensor(const Region* region,
 
 double CompNeoHookPlas::computeStrainEnergy(const Region* region,
 					    const MPMMaterial* matl,
-					    const DataWarehouseP& new_dw)
+					    DataWarehouseP& new_dw)
 {
 #ifdef WONT_COMPILE_YET
   double se,J,U,W;
@@ -301,23 +301,23 @@ double CompNeoHookPlas::computeStrainEnergy(const Region* region,
 void CompNeoHookPlas::addComputesAndRequires(Task* task,
 					     const MPMMaterial* matl,
 					     const Region* region,
-					     const DataWarehouseP& old_dw,
+					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const
 {
    task->requires(old_dw, pXLabel, matl->getDWIndex(), region,
-                  Task::None);
+                  Ghost::None);
    task->requires(old_dw, pDeformationMeasureLabel, matl->getDWIndex(), region,
-                  Task::None);
+                  Ghost::None);
    task->requires(old_dw, p_cmdata_label, matl->getDWIndex(),  region,
-                  Task::None);
+                  Ghost::None);
    task->requires(old_dw, pMassLabel, matl->getDWIndex(),  region,
-                  Task::None);
+                  Ghost::None);
    task->requires(old_dw, pVolumeLabel, matl->getDWIndex(),  region,
-                  Task::None);
+                  Ghost::None);
    task->requires(new_dw, gMomExedVelocityLabel, matl->getDWIndex(), region,
-                  Task::AroundCells, 1);
+                  Ghost::AroundCells, 1);
    task->requires(old_dw, bElBarLabel, matl->getDWIndex(), region,
-                  Task::None);
+                  Ghost::None);
    task->requires(old_dw, deltLabel);
 
    task->computes(new_dw, deltLabel);
@@ -388,6 +388,9 @@ p_array[2],
 #endif
 
 // $Log$
+// Revision 1.11  2000/05/11 20:10:14  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.10  2000/05/10 23:29:34  guilkey
 // Filled in addComputesAndRequires
 //

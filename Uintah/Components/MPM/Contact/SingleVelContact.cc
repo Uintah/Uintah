@@ -62,7 +62,7 @@ void SingleVelContact::initializeContact(const Region* /*region*/,
 
 void SingleVelContact::exMomInterpolated(const ProcessorContext*,
 					 const Region* region,
-					 const DataWarehouseP&,
+					 DataWarehouseP&,
 					 DataWarehouseP& new_dw)
 {
   Vector zero(0.0,0.0,0.0);
@@ -82,9 +82,9 @@ void SingleVelContact::exMomInterpolated(const ProcessorContext*,
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
       new_dw->get(gmass[vfindex], gMassLabel,vfindex , region,
-		  Ghost::None);
+		  Ghost::None, 0);
       new_dw->get(gvelocity[vfindex], gVelocityLabel, vfindex, region,
-		  Ghost::None);
+		  Ghost::None, 0);
     }
   }
 
@@ -113,7 +113,7 @@ void SingleVelContact::exMomInterpolated(const ProcessorContext*,
 
 void SingleVelContact::exMomIntegrated(const ProcessorContext*,
 				  const Region* region,
-				  const DataWarehouseP& old_dw,
+				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw)
 {
   Vector zero(0.0,0.0,0.0);
@@ -134,11 +134,11 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], gMassLabel,vfindex , region, Ghost::None);
+      new_dw->get(gmass[vfindex], gMassLabel,vfindex , region, Ghost::None, 0);
       new_dw->get(gvelocity_star[vfindex], gVelocityStarLabel, vfindex,
-		  region, Ghost::None);
+		  region, Ghost::None, 0);
       new_dw->get(gacceleration[vfindex], gAccelerationLabel, vfindex,
-		  region, Ghost::None);
+		  region, Ghost::None, 0);
     }
   }
   delt_vartype delt;
@@ -172,6 +172,9 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.16  2000/05/11 20:10:17  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.15  2000/05/10 20:02:49  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

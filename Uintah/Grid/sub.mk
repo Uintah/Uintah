@@ -9,7 +9,7 @@ SRCDIR   := Uintah/Grid
 
 SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/CellIterator.cc \
-	$(SRCDIR)/DataItem.cc $(SRCDIR)/Grid.cc \
+	$(SRCDIR)/Grid.cc \
 	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc \
 	$(SRCDIR)/NCVariableBase.cc $(SRCDIR)/ParticleSet.cc \
 	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ParticleVariableBase.cc \
@@ -28,6 +28,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.12  2000/05/11 20:10:22  dav
+# adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+#
 # Revision 1.11  2000/05/07 06:02:14  sparker
 # Added beginnings of multiple patch support and real dependencies
 #  for the scheduler

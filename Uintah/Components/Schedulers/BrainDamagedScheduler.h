@@ -72,7 +72,7 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      virtual DataWarehouseP createDataWarehouse();
+      virtual DataWarehouseP createDataWarehouse( int generation );
       
       //////////
       // Insert Documentation Here:
@@ -119,6 +119,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.10  2000/05/11 20:10:19  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.9  2000/05/07 06:02:07  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler
