@@ -63,6 +63,10 @@ public:
 
   virtual Object *getSphere() const { return sphere_; }
 
+  // This is the directional offset from the eye where
+  bool fixed_to_eye;
+  float light_dist;
+  
 protected:
   //! finish construction.
   void init();
