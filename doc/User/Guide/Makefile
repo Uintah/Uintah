@@ -14,103 +14,359 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #
+# --
+#
+# Make html and ps versions of the Users guide.
+#
+# The env variable SRGROUP is expected to be set to one of scirun, biopse, or
+#  unitah. If its not set or is empty then biopse is assumed.  Note that
+#  uintah is not really supported yet.  This variable selects the set of
+#  packages for which module reference documents should be generated.
 #
 
-# Makefile template for latex docs. Makes dvi, html, 
-# and ps versions of a latex doc.
-#
-# Targets:
-#  all         : Make dvi, html, and ps forms of document.
-#  dvi         : Make a dvi file.
-#  html        : Make html document.
-#  ps          : Make a ps document.
-#  clean       : Remove aux, log, toc, lot, lof files
-#  veryclean   : Remove all of the above plus the html directory,
-#                the dvi file, the ps file and *~ files.
-#  installhtml : Installs html directory somewhere.
-#  installps   : Installs ps file somewhere.
-#
-
-.PHONY: all latex html ps installhtml installps
+# ########## Variables
 
 # Latex command
-LATEX=latex -interaction=nonstopmode
+latex:=latex -interaction=nonstopmode
 
-# Provide name of root doc without its extension.
-BN = usersguide
+# Name of root doc sans extension.
+bn := usersguide
 
-# Provide name of other sources
-# Note: Probably should add figures to this list.
-SRCS = srugmacros.tex title.tex intro.tex concepts.tex \
-running.tex network.tex viewer.tex import.tex
+# User created/edited sources (generated sources come into play further
+# down). 
+srcs:=srugmacros.tex title.tex intro.tex concepts.tex \
+running.tex network.tex viewer.tex import.tex \
+modules.tex
 
 # Latex2html options.  Change as needed.
-LATEX2HTMLOPTIONS = -split 4 -no_white -link 1 -bottom_navigation \
+latex2htmloptions = -split 4 -no_white -link 1 -bottom_navigation \
 -html_version 4.0,math -show_section_numbers -local_icons \
 -long_titles 1 -prefix srug -image_type gif \
 -style ../../../Utilities/HTML/doc_styles.css
 
-# Change to reflect installation locations.
-HTMLINSTDIR = 
-PSINSTDIR = 
+mainfile := ${bn}.tex
+dvifile := ${bn}.dvi
+psfile = ${bn}.ps
+# ${psfile2} is a ps file optimized for use with adobe distiller.
+psfile2 := ${bn}2.ps
+gzpsfile := ${psfile}.gz
+gzpsfile2 := ${psfile2}.gz
+htmldir := ${bn}
+treetop:=../../..
+stylesheet:=${treetop}/doc/Utilities/XML/comp2latex.xsl
+eps:=eps
 
-MAINFILE = ${BN}.tex
-DVIFILE = ${BN}.dvi
-PSFILE = ${BN}.ps
-# ${PSFILE2} is a ps file optimized for use with distiller.
-PSFILE2 = ${BN}2.ps
-GZPSFILE = ${PSFILE}.gz
-GZPSFILE2 = ${PSFILE2}.gz
-HTMLDIR = ${BN}
-HTMLFILE = ${HTMLDIR}/${BN}.html
+# The SRGROUP variable is used to select a group of documentation
+# packages.  See below.
 
-all: dvi html ps bib
+# Check SRGROUP variable...
+ifndef SRGROUP
+SRGROUP := biopse
+endif
+ifeq (${strip ${SRGROUP}},)
+SRGROUP := biopse
+endif
 
-dvi: ${DVIFILE}
+# ...and set list of packages appropriately.
 
-html: ${HTMLFILE}
+ifeq (${SRGROUP},scirun)
+packages := SCIRun
+endif
 
-ps: ${PSFILE}
+ifeq (${SRGROUP},biopse)
+packages := SCIRun BioPSE Teem VDT MatlabInterface Fusion
+endif
 
-bib: ${BN}.bbl
+ifeq (${SRGROUP},uintah)
+packages := SCIRun Uintah
+endif
 
-${DVIFILE}: ${MAINFILE} ${SRCS} ${BN}.bbl
-	${LATEX}  ${BN}
-	${LATEX}  ${BN}
-	makeindex ${BN}.idx
-	${LATEX} ${BN}
+ifndef SRGROUP
+packages :=
+endif
+ifeq (${strip ${SRGROUP}},)
+packages :=
+endif
 
-${BN}.bbl: ${MAINFILE} 
-	if [ ! -r ${BN}.aux ]; \
-	then \
-	${LATEX} ${BN}; \
-	fi; 
-	rm -f ${BN}.bbl
-	bibtex ${BN}
+# ########## Macros (Used with ${call ...} function)
 
-${HTMLFILE}: ${DVIFILE}
-	latex2html ${LATEX2HTMLOPTIONS} ${MAINFILE}
+# Produce list of tex files that correspond to xml files in directory
+#  given by ${1}
+define xmltexfiles
+${patsubst %.xml,%.tex,${wildcard ${1}/*.xml}}
+endef
 
-${PSFILE}: ${DVIFILE}
-	dvips -o ${PSFILE} -Pps ${DVIFILE}
-	cat ${PSFILE} | gzip -c > ${GZPSFILE}
-	dvips -o ${PSFILE2} -Ppdf ${DVIFILE}
-	cat ${PSFILE2} | gzip -c > ${GZPSFILE2}
+# Return path of XML directory for package given by ${1}
+# If ${1} is undefined then return XML directory for SCIRun pseudo 
+# package.
+define xmldir
+${treetop}/src/${if ${1},Packages/${1}/}Dataflow/XML
+endef
 
-clean:
-	-rm -f ${BN}.aux ${BN}.log ${BN}.toc ${BN}.lot \
-	${BN}.lof ${BN}.dvi *.gz
+# Convert xml file given by $< to tex equivalent and save tex file as $@.
+define xmltotex
+-java com.icl.saxon.StyleSheet -w2 $< ${stylesheet} frag=1 relpath=${dir $<} > $@
+endef
 
-veryclean: clean
-	-rm -rf ${HTMLDIR}
-	-rm ${PSFILE} ${PSFILE2}
+# Make "<Package>_modules.tex" file for package given by ${1}. List of tex
+# files is given by ${2}
+define makemodtexfile
+-test -f ${1}_modules.tex && rm ${1}_modules.tex; \
+echo "\section{${1} Modules}" >> ${1}_modules.tex; \
+for f in ${2}; do echo \\input{$$f} >> ${1}_modules.tex; done
+endef
 
-installhtml: ${HTMLFILE}
-	if [ -d ${HTMLINSTDIR} ]; \
-	then \
-	  rm -rf ${HTMLINSTDIR}; \
-	fi; \
-	cp -r ${HTMLDIR} ${HTMLINSTDIR}
+# Return list of eps files that correspond to the image files given by ${1}
+# found in doc directories of the package given by ${2} or the SCIRun
+# pseudo package if ${2} is empty.
+define imageepsfiles
+${patsubst %.${1},%.${eps},${wildcard ${treetop}/src/${if ${2},Packages/${2}/}Dataflow/Modules/*/doc/*.${1}}}
+endef
 
-installps: ${PSFILE}
-	cp ${PSFILE} ${PSINSTDIR}
+# Convert $< to eps
+define imagetoeps
+-convert -geometry '490x634>' $< EPS:$@
+endef
+
+
+# ########## Targets for making various forms of the users guide.
+
+.PHONY: all latex html ps bib
+
+all: dvi ps html  bib
+
+dvi: ${dvifile}
+
+html: ${htmldir}
+
+ps: ${psfile}
+
+bib: ${bn}.bbl
+
+# Note: ${bn}.bbl must be the last dependency!
+${dvifile}: ${mainfile} ${srcs} ${packages} ${bn}.bbl 
+	-${latex}  ${bn}
+	-makeindex ${bn}.idx
+	-${latex} ${bn}
+
+${bn}.bbl: ${mainfile}
+	-${latex} ${bn}
+	-rm -f ${bn}.bbl
+	-bibtex ${bn}
+
+${htmldir}: ${dvifile}
+	-test -d ${htmldir} && rm -rf ${htmldir}; \
+	latex2html ${latex2htmloptions} ${mainfile}
+
+${psfile}: ${dvifile}
+	dvips -t letter -o ${psfile} -Pps ${dvifile}
+	gzip -c <${psfile} >${gzpsfile}
+	dvips -t letter -o ${psfile2} -Ppdf ${dvifile}
+	gzip -c <${psfile2} >${gzpsfile2}
+
+# ########## Targets for making tex version module docs.
+
+.PHONY: SCIRun BioPSE Teem Fusion VDT MatlabInterface clean veryclean
+
+# ########## SCIRun
+SCIRun_xml_dir := ${call xmldir}
+SCIRun_xml_tex_files := ${call xmltexfiles,${SCIRun_xml_dir}}
+SCIRun_jpg_eps_files := ${call imageepsfiles,jpg}
+SCIRun_gif_eps_files := ${call imageepsfiles,gif}
+
+SCIRun : SCIRun_modules.tex
+
+SCIRun_modules.tex : ${SCIRun_jpg_eps_files} ${SCIRun_gif_eps_files} ${SCIRun_xml_tex_files} 
+	${call makemodtexfile,SCIRun,${SCIRun_xml_tex_files}}
+
+${SCIRun_jpg_eps_files}: %.${eps} : %.jpg
+	${call imagetoeps}
+
+${SCIRun_gif_eps_files}: %.${eps} : %.gif
+	${call imagetoeps}
+
+${SCIRun_xml_tex_files}: %.tex : %.xml
+	${call xmltotex}
+
+SCIRun_clean:
+	@echo $@
+
+SCIRun_veryclean_eps_files:
+	-rm  ${SCIRun_jpg_eps_files} ${SCIRun_gif_eps_files}
+
+SCIRun_veryclean_tex_files:
+	-rm ${SCIRun_xml_tex_files} SCIRun_modules.tex
+
+SCIRun_veryclean: clean SCIRun_veryclean_eps_files SCIRun_veryclean_tex_files
+
+# ########## BioPSE
+BioPSE_xml_dir := ${call xmldir,BioPSE}
+BioPSE_xml_tex_files := ${call xmltexfiles,${BioPSE_xml_dir}}
+BioPSE_jpg_eps_files := ${call imageepsfiles,jpg,BioPSE}
+BioPSE_gif_eps_files := ${call imageepsfiles,gif,BioPSE}
+
+BioPSE : BioPSE_modules.tex
+
+BioPSE_modules.tex : ${BioPSE_jpg_eps_files} ${BioPSE_gif_eps_files} ${BioPSE_xml_tex_files}
+	${call makemodtexfile,BioPSE,${BioPSE_xml_tex_files}}
+
+${BioPSE_jpg_eps_files}: %.${eps} : %.jpg
+	${call imagetoeps}
+
+${BioPSE_gif_eps_files}: %.${eps} : %.gif
+	${call imagetoeps}
+
+${BioPSE_xml_tex_files}: %.tex : %.xml
+	${call xmltotex}
+
+BioPSE_clean:
+	@echo $@
+
+BioPSE_veryclean_eps_files:
+	-rm  ${BioPSE_jpg_eps_files} ${BioPSE_gif_eps_files}
+
+BioPSE_veryclean_tex_files:
+	-rm ${BioPSE_xml_tex_files} BioPSE_modules.tex
+
+BioPSE_veryclean: clean BioPSE_veryclean_eps_files BioPSE_veryclean_tex_files
+
+
+# ########## Teem
+Teem_xml_dir := ${call xmldir,Teem}
+Teem_xml_tex_files := ${call xmltexfiles,${Teem_xml_dir}}
+Teem_jpg_eps_files := ${call imageepsfiles,jpg,Teem}
+Teem_gif_eps_files := ${call imageepsfiles,gif,Teem}
+
+Teem : Teem_modules.tex
+
+Teem_modules.tex : ${Teem_jpg_eps_files} ${Teem_gif_eps_files} ${Teem_xml_tex_files}
+	${call makemodtexfile,Teem,${Teem_xml_tex_files}}
+
+${Teem_jpg_eps_files}: %.${eps} : %.jpg
+	${call imagetoeps}
+
+${Teem_gif_eps_files}: %.${eps} : %.gif
+	${call imagetoeps}
+
+${Teem_xml_tex_files}: %.tex : %.xml
+	${call xmltotex}
+
+Teem_clean:
+	@echo $@
+
+Teem_veryclean_eps_files:
+	-rm  ${Teem_jpg_eps_files} ${Teem_gif_eps_files}
+
+Teem_veryclean_tex_files:
+	-rm ${Teem_xml_tex_files} Teem_modules.tex
+
+Teem_veryclean: clean Teem_veryclean_eps_files Teem_veryclean_tex_files
+
+# ########## Fusion
+Fusion_xml_dir := ${call xmldir,Fusion}
+Fusion_xml_tex_files := ${call xmltexfiles,${Fusion_xml_dir}}
+Fusion_jpg_eps_files := ${call imageepsfiles,jpg,Fusion}
+Fusion_gif_eps_files := ${call imageepsfiles,gif,Fusion}
+
+Fusion : Fusion_modules.tex
+
+Fusion_modules.tex : ${Fusion_jpg_eps_files} ${Fusion_gif_eps_files} ${Fusion_xml_tex_files}
+	${call makemodtexfile,Fusion,${Fusion_xml_tex_files}}
+
+${Fusion_jpg_eps_files}: %.${eps} : %.jpg
+	${call imagetoeps}
+
+${Fusion_gif_eps_files}: %.${eps} : %.gif
+	${call imagetoeps}
+
+${Fusion_xml_tex_files}: %.tex : %.xml
+	${call xmltotex}
+
+Fusion_clean:
+	@echo $@
+
+Fusion_veryclean_eps_files:
+	-rm  ${Fusion_jpg_eps_files} ${Fusion_gif_eps_files}
+
+Fusion_veryclean_tex_files:
+	-rm ${Fusion_xml_tex_files} Fusion_modules.tex
+
+Fusion_veryclean: clean Fusion_veryclean_eps_files Fusion_veryclean_tex_files
+
+# ########## MatlabInterface
+MatlabInterface_xml_dir := ${call xmldir,MatlabInterface}
+MatlabInterface_xml_tex_files := ${call xmltexfiles,${MatlabInterface_xml_dir}}
+MatlabInterface_jpg_eps_files := ${call imageepsfiles,jpg,MatlabInterface}
+MatlabInterface_gif_eps_files := ${call imageepsfiles,gif,MatlabInterface}
+
+MatlabInterface : MatlabInterface_modules.tex
+
+MatlabInterface_modules.tex : ${MatlabInterface_jpg_eps_files} ${MatlabInterface_gif_eps_files} ${MatlabInterface_xml_tex_files}
+	${call makemodtexfile,MatlabInterface,${MatlabInterface_xml_tex_files}}
+
+${MatlabInterface_jpg_eps_files}: %.${eps} : %.jpg
+	${call imagetoeps}
+
+${MatlabInterface_gif_eps_files}: %.${eps} : %.gif
+	${call imagetoeps}
+
+${MatlabInterface_xml_tex_files}: %.tex : %.xml
+	${call xmltotex}
+
+MatlabInterface_clean:
+	@echo $@
+
+MatlabInterface_veryclean_eps_files:
+	-rm  ${MatlabInterface_jpg_eps_files} ${MatlabInterface_gif_eps_files}
+
+MatlabInterface_veryclean_tex_files:
+	-rm ${MatlabInterface_xml_tex_files} MatlabInterface_modules.tex
+
+MatlabInterface_veryclean: clean \
+MatlabInterface_veryclean_eps_files MatlabInterface_veryclean_tex_files
+
+# ########## VDT
+VDT_xml_dir := ${call xmldir,VDT}
+VDT_xml_tex_files := ${call xmltexfiles,${VDT_xml_dir}}
+VDT_jpg_eps_files := ${call imageepsfiles,jpg,VDT}
+VDT_gif_eps_files := ${call imageepsfiles,gif,VDT}
+
+VDT : VDT_modules.tex
+
+VDT_modules.tex : ${VDT_jpg_eps_files} ${VDT_gif_eps_files} ${VDT_xml_tex_files}
+	${call makemodtexfile,VDT,${VDT_xml_tex_files}}
+
+${VDT_jpg_eps_files}: %.${eps} : %.jpg
+	${call imagetoeps}
+
+${VDT_gif_eps_files}: %.${eps} : %.gif
+	${call imagetoeps}
+
+${VDT_xml_tex_files}: %.tex : %.xml
+	${call xmltotex}
+
+VDT_clean:
+	@echo $@
+
+VDT_veryclean_eps_files:
+	-rm  ${VDT_jpg_eps_files} ${VDT_gif_eps_files}
+
+VDT_veryclean_tex_files:
+	-rm ${VDT_xml_tex_files} VDT_modules.tex
+
+VDT_veryclean: clean VDT_veryclean_eps_files VDT_veryclean_tex_files
+
+# ########## Cleanage
+clean: ${addsuffix _clean,${packages}}
+	-rm -f ${bn}.aux ${bn}.log ${bn}.toc ${bn}.lot \
+	${bn}.lof ${bn}.dvi 
+
+veryclean_tex_files: ${addsuffix _veryclean_tex_files,${packages}}
+
+veryclean_eps_files: ${addsuffix _veryclean_eps_files,${packages}}
+
+veryclean: clean ${addsuffix _veryclean,${packages}}
+	-rm -rf ${htmldir}
+	-rm ${psfile} ${psfile2} *.gz *.bbl
+
+
