@@ -47,6 +47,7 @@ if [ -d "$TEST_UDADIR" ]; then
 #    find $UDADIR -name "*.xml" | xargs cvs add
 #    cvs commit -R -m "Automated Tester storing dat files" $UDADIR
   else
+    inputs_differ=0
     echo
     echo "Checking input files"
     echo
@@ -54,7 +55,7 @@ if [ -d "$TEST_UDADIR" ]; then
     if [ $? != "0" ]; then
 	echo
 	echo "  Input files differ."
-	exit 5;
+	inputs_differ=1
     else
 	echo "  Input files are the same."
     fi
@@ -69,7 +70,11 @@ if [ -d "$TEST_UDADIR" ]; then
     if [ $compare_dats_retval == "1" ]; then
 	echo 
 	echo "*** dat comparison tests failed ***"
-	exit 1
+	if [ $inputs_differ == "1" ]; then
+	    exit 5;
+	else
+	    exit 1
+        fi
     fi
 
 
@@ -82,7 +87,11 @@ if [ -d "$TEST_UDADIR" ]; then
     if [ $retval != "0" ]; then
 	echo 
 	echo "*** uda comparison tests failed ***"
-	exit 1
+	if [ $inputs_differ == "1" ]; then
+	    exit 5;
+	else
+	    exit 1
+	fi
     fi
 
     echo
@@ -94,11 +103,23 @@ if [ -d "$TEST_UDADIR" ]; then
     if [ $retval != "0" ]; then
 	echo 
 	echo "*** checkpoint comparison tests failed ***"
-	exit 1
+	
+	if [ $inputs_differ == "1" ]; then
+	    exit 5;
+	else
+	    exit 1
+	fi
     fi
 
     if [ $compare_dats_retval == "-1" ]; then
+	if [ $inputs_differ == "1" ]; then
+	    exit 5;
+	fi
 	exit -1
+    fi
+    
+    if [ $inputs_differ == "1" ]; then
+	exit 10;
     fi
   fi
 else
