@@ -105,7 +105,6 @@
       <save label = "p.mass"/>
       <save label = "p.temperature"/>
       <save label = "p.porosity"/>
-      <save label = "p.localized"/>
       <save label = "p.velocity"/>
       <save label = "p.stress"/>
       <save label = "p.damage" material = "0"/>
@@ -115,6 +114,7 @@
       <save label = "delP_Dilatate"/>
       <save label = "delP_MassX"/>
 <!--
+      <save label = "p.localized"/>
 -->
 
       <checkpoint cycle = "2" timestepInterval = "20"/>
