@@ -995,9 +995,9 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     if (switchDebug_equilibration_press) {
     
       new_dw->allocate(n_iters_equil_press, lb->scratchLabel, 0, patch);
+    #if 0
       char description[50];
             
-    #if 0
       sprintf(description, "TOP_equilibration_patch_%d ", patch->getID());
       printData( patch, 1, description, "Press_CC_top", press);
 
