@@ -47,6 +47,7 @@ using namespace SCIRun;
 using namespace std;
 
 #define MAX_BASIS 27
+#undef INTEGRAL_TRACTION
 
 static DebugStream cout_doing("MPM_DOING_COUT", false);
 
@@ -338,7 +339,9 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   }
 
   t->computes(lb->gInternalForceLabel);
+#ifdef INTEGRAL_TRACTION
   t->computes(lb->NTractionZMinusLabel);
+#endif
   t->computes(lb->gStressForSavingLabel);
   t->computes(lb->gStressForSavingLabel, d_sharedState->getAllInOneMatl(),
 	      Task::OutOfDomain);
@@ -846,8 +849,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
 
+#ifdef INTEGRAL_TRACTION
     double integralTraction = 0.;
     double integralArea = 0.;
+#endif
 
     NCVariable<Matrix3>       gstressglobal;
     constNCVariable<double>   gmassglobal;
@@ -938,6 +943,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         gstress[c] /= gmass[c];
     }
 
+#ifdef INTEGRAL_TRACTION
     IntVector low = patch-> getInteriorNodeLowIndex();
     IntVector hi  = patch-> getInteriorNodeHighIndex();
     for(Patch::FaceType face = Patch::startFace;
@@ -963,6 +969,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 	   }
         } // end of if (bc_type == Patch::None)
     }
+#endif
     //__________________________________
     // Set internal force = 0 on symmetric boundaries
     for(Patch::FaceType face = Patch::startFace;
@@ -978,6 +985,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       }
     }
   }
+#ifdef INTEGRAL_TRACTION
   if(integralArea > 0.){
     integralTraction=integralTraction/integralArea;
   }
@@ -985,11 +993,12 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     integralTraction=0.;
   }
   new_dw->put(sum_vartype(integralTraction), lb->NTractionZMinusLabel);
+#endif
 
-  for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
-    IntVector c = *iter;
-    gstressglobal[c] /= gmassglobal[c];
-  }
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      gstressglobal[c] /= gmassglobal[c];
+    }
   }
 }
 
