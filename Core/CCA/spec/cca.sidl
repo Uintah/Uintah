@@ -1357,7 +1357,8 @@ interface GoPort  extends gov.cca.Port
 //abstract interface 
 interface UIPort extends gov.cca.Port
 {
-	void ui();
+	//return 0 for success, -1 for fatal error, other values for others errors
+	int ui();
 }
 
 //abstract interface
@@ -1373,7 +1374,7 @@ interface ZListPort extends gov.cca.Port
 interface Field2DPort extends gov.cca.Port
 {
 	//provides a interface to 
-	Matrix getField();
+	array<double> getField();
 }
 
 //abstract interface 
@@ -1382,6 +1383,8 @@ interface PDEDescriptionPort extends gov.cca.Port
 	//provides a interface to 
 	array<double> getNodes();
 	array<int> getBoundaries();
+	array<int> getDirichletNodes();
+	array<double> getDirichletValues();
 }
 
 //abstract interface 
@@ -1389,6 +1392,7 @@ interface MeshPort extends gov.cca.Port
 {
 	//provides a interface to 
 	array<int> getTriangles();
+	array<double> getNodes();
 }
 
 
