@@ -15,7 +15,7 @@ IdealGas::~IdealGas()
 }
 //__________________________________
 double IdealGas::computeRhoMicro(double press, double gamma,
-                                 double cv, double Temp)
+                                 double cv, double Temp, double)
 {
   // Pointwise computation of microscopic density
   return  press/((gamma - 1.0)*cv*Temp);

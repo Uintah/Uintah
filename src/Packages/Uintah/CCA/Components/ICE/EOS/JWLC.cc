@@ -25,7 +25,7 @@ JWLC::~JWLC()
 }
 //__________________________________
 double JWLC::computeRhoMicro(double press, double,
-                             double cv, double Temp)
+                             double cv, double Temp,double rho_guess)
 {
   // Pointwise computation of microscopic density
   // P=P(rho,T) is not invertable to get rho=rho(P,T)
@@ -34,20 +34,25 @@ double JWLC::computeRhoMicro(double press, double,
   //press - (A*exp(-R1*rho0/rhoM) +
   //         B*exp(-R2*rho0/rhoM) + C*pow((rhoM/rho0),1+om)) = 0
 
-  double rhoM = rho0;
+  double rhoM = rho_guess;
 
   double epsilon = 1.e-15;
   double delta = 1.;
   double f,df_drho,relfac=.9;
   int count = 0;
 
-  while(fabs(delta/rhoM)>epsilon){
-    f = (A*exp(-R1*rho0/rhoM) + B*exp(-R2*rho0/rhoM)
-                              + C*pow((rhoM/rho0),1+om)) - press;
+  double one_plus_omega = 1.+om;
+  double rho_to_the_one_plus_om = pow(rho0,one_plus_omega);
 
-    df_drho = A*(R1*rho0/(rhoM*rhoM))*exp(-R1*rho0/rhoM)
-            + B*(R2*rho0/(rhoM*rhoM))*exp(-R2*rho0/rhoM)
-            + C*((1.+om)/pow(rho0,1.+om))*pow(rhoM,om);
+  while(fabs(delta/rhoM)>epsilon){
+    double e_to_the_R1_rho0_over_rhoM=exp(-R1*rho0/rhoM);
+    double e_to_the_R2_rho0_over_rhoM=exp(-R2*rho0/rhoM);
+    f = (A*e_to_the_R1_rho0_over_rhoM + B*e_to_the_R2_rho0_over_rhoM
+                              + C*pow((rhoM/rho0),one_plus_omega)) - press;
+                                                                                
+    df_drho = A*(R1*rho0/(rhoM*rhoM))*e_to_the_R1_rho0_over_rhoM
+            + B*(R2*rho0/(rhoM*rhoM))*e_to_the_R2_rho0_over_rhoM
+            + C*(one_plus_omega/rho_to_the_one_plus_om)*pow(rhoM,om);
 
     delta = -relfac*(f/df_drho);
     rhoM+=delta;
