@@ -78,6 +78,10 @@ class ArchesMaterial;
 	 return (int)ice_matls.size();
       }
 
+      MaterialSubset* getAllInOneMatl() {
+	 return allInOneMatl;
+      }
+
       Material* getMaterial(int idx) const {
 	 return matls[idx];
       }
@@ -130,6 +134,7 @@ class ArchesMaterial;
       MaterialSet* all_ice_matls;
       MaterialSet* all_arches_matls;
       MaterialSet* all_matls;
+      MaterialSubset* allInOneMatl;
       double d_ref_press;
       double d_elapsed_time;
    };
