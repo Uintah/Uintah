@@ -80,7 +80,7 @@ c  call fixval assume abskg to be one but change it in props calculation
      &              tg(ii-1,jj,kk)**4)
             end if
          else
-            if (pcell(ii+1,j,k).eq.ffield) then
+            if (pcell(ii+1,jj,kk).eq.ffield) then
                aw(ii,jj,kk) = abs(omu(l))*areaew
             else
                aw(ii,jj,kk) = 0.0d0
