@@ -650,8 +650,16 @@ void DataArchiver::createIndexXML(Dir& dir)
 }
 
 void DataArchiver::finalizeTimestep(double time, double delt,
-				    const GridP& grid, SchedulerP& sched)
+				    const GridP& grid, SchedulerP& sched,
+                                    bool recompile /*=false*/)
 {
+  // run this every timestep - we don't want to schedule tasks unless
+  // the taskgraph is recompiled.
+  if (!recompile) {
+    beginOutputTimestep(time, delt, grid);
+    return;
+  }
+    
   static bool wereSavesAndCheckpointsInitialized = false;
   dbg << "DataArchiver finalizeTimestep, delt= " << delt << endl;
   d_currentTime=time+delt;
@@ -676,8 +684,6 @@ void DataArchiver::finalizeTimestep(double time, double delt,
       initCheckpoints(sched);
   }
   
-  bool do_output=false;
-
   if ( (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) && 
        delt != 0 ) {
     // Schedule task to dump out reduction variables at every timestep
@@ -694,13 +700,11 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     sched->addTask(t, 0, 0);
     
     dbg << "Created reduction variable output task" << endl;
-    if (d_wasOutputTimestep){
+    if (delt != 0)
       scheduleOutputTimestep(d_dir, d_saveLabels, grid, sched, false);
-      do_output=true;
-    }
   }
     
-  if (d_wasCheckpointTimestep){
+  if (delt != 0) {
     // output checkpoint timestep
     Task* t = scinew Task("DataArchiver::outputCheckpointReduction",
 			  this, &DataArchiver::outputCheckpointReduction);
@@ -717,10 +721,8 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 
     scheduleOutputTimestep(d_checkpointsDir, d_checkpointLabels,
 			   grid, sched, true);
-    do_output=true;
   }
-  if(do_output && delt == 0)
-    beginOutputTimestep(time, delt, grid);
+  beginOutputTimestep(time, delt, grid);
 }
 
 
@@ -728,7 +730,12 @@ void DataArchiver::beginOutputTimestep( double time, double delt,
 					const GridP& grid )
 {
   d_currentTime=time+delt;
-  dbg << "beginOutputTimestep called at time=" << d_currentTime << '\n';
+  if (delt != 0)
+    d_currentTimestep++;
+
+  dbg << "beginOutputTimestep called at time=" << d_currentTime 
+      << " (" << d_nextOutputTime << "), " << d_outputTimestepInterval 
+      << " (" << d_nextOutputTimestep << ")\n";
   if (d_outputInterval != 0.0 && delt != 0) {
     if(d_currentTime >= d_nextOutputTime) {
       // output timestep
@@ -1222,6 +1229,7 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
 				   DataWarehouse* new_dw)
 {
   // Dump the stuff in the reduction saveset into files in the uda
+  // at every timestep
   dbg << "DataArchiver::outputReduction called\n";
 
   for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
@@ -1256,8 +1264,13 @@ void DataArchiver::outputCheckpointReduction(const ProcessorGroup* world,
 					     DataWarehouse* old_dw,
 					     DataWarehouse* new_dw)
 {
-  dbg << "DataArchiver::outputCheckpointReduction called\n";
   // Dump the stuff in the reduction saveset into files in the uda
+  // only on checkpoint timesteps
+
+  if (!d_wasCheckpointTimestep)
+    return;
+  dbg << "DataArchiver::outputCheckpointReduction called\n";
+
   for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
     SaveItem& saveItem = d_checkpointReductionLabels[i];
     const VarLabel* var = saveItem.label_;
@@ -1278,6 +1291,11 @@ void DataArchiver::output(const ProcessorGroup*,
 			  const VarLabel* var,
 			  bool isThisCheckpoint )
 {
+  // return if not an outpoint/checkpoint timestep
+  if ((!d_wasOutputTimestep && !isThisCheckpoint) || 
+      (!d_wasCheckpointTimestep && isThisCheckpoint))
+    return;
+
   bool isReduction = var->typeDescription()->isReductionVariable();
 
   dbg << "output called ";
@@ -1821,6 +1839,7 @@ void DataArchiver::SaveItem::setMaterials(const ConsecutiveRangeSet& matls,
 bool DataArchiver::needRecompile(double time, double dt,
 				  const GridP& grid)
 {
+  return false;
   LevelP level = grid->getLevel(0);
   d_currentTime=time+dt;
   dbg << "DataArchiver::needRecompile called\n";
