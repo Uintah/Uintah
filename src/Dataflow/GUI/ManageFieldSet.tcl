@@ -5,11 +5,34 @@ itcl_class SCIRun_Fields_ManageFieldSet {
         set_defaults
     }
 
+
     method set_defaults {} {
     }
 
     method execute {} {
+	set $this-state output
 	$this-c needexecute
+    }
+
+    method add_fitem {index name data} {
+	set ht .ui[modname].sel.h
+	
+	set ent [$ht insert -at $index end $name]
+	$ht entry configure $ent -data $data
+	return $ent
+    }
+
+    method add_sitem {index name} {
+	set ht .ui[modname].sel.h
+	
+	set ent [$ht insert -at $index end $name]
+	$ht entry configure $ent -foreground blue4
+	return $ent
+    }
+
+    method clear_all {} {
+	set ht .ui[modname].sel.h
+	$ht delete 0
     }
 
     method ui {} {
@@ -27,11 +50,12 @@ itcl_class SCIRun_Fields_ManageFieldSet {
 		-yscrollcommand "$w.sel.vs set" \
 		-xscrollcommand "$w.sel.hs set" \
 		-selectmode multiple \
+		-allowduplicates yes \
+		-icons "" -activeicons "" \
 		-hideroot yes 
 
-	$w.sel.h column configure treeView -text "View"
-	#$w.sel.h column insert 0 pre
-	#$w.sel.h column insert end post
+	$w.sel.h column configure treeView -text "Field Name"
+	$w.sel.h column insert end Datatype Location
 	$w.sel.h column configure treeView -hide no -edit no
 
 	$w.sel.h text configure -selectborderwidth 0
@@ -48,10 +72,16 @@ itcl_class SCIRun_Fields_ManageFieldSet {
 
 	pack $w.sel -side top
 
-	
-	$w.sel.h configure -icons ""
-	$w.sel.h configure -activeicons ""
-	$w.sel.h insert end a b c "a d" "a e" "b f" "b f g"
+	add_sitem 0 "none"
+	#clear_all
+
+	#add_fitem a { Datatype double Location edge }
+	#add_fitem a { Datatype double Location node }
+	#add_fitem a { Datatype double Location face }
+	#add_fitem b { Datatype int Location node }
+	#add_sitem c
+	#add_fitem "c d" { Datatype unknown Location none }
+	#$w.sel.h insert end a b c "a d" "a e" "b f" "b f g"
 	# $w.sel.h entry configure a -data { pre a-pre post a-post }
 	# $w.sel.h entry configure b -data { pre b-pre post b-post }
 	# $w.sel.h entry configure c -data { pre c-pre post c-post }
