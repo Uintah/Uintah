@@ -23,7 +23,6 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/Clipper.h>
 
 namespace SCIRun {
 
@@ -45,9 +44,8 @@ public:
   //! finish all computed data within the mesh.
   virtual void flush_changes() {}; //Not all meshes need to do this.
   virtual bool has_normals() const { return false; }
+  virtual bool is_editable() const { return false; } // supports add_elem(...)
   // Required interfaces
-
-  virtual MeshHandle clip(ClipperHandle /* c */) { return 0; }
 
   //! Persistent I/O.
   void    io(Piostream &stream);

@@ -25,13 +25,17 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
 #include <Core/Datatypes/BoxClipper.h>
+#include <sci_hash_map.h>
+#include <algorithm>
 
 namespace SCIRun {
+
+using std::hash_map;
 
 class ClipFieldAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(MeshHandle src, Field::data_location at) = 0;
+  virtual FieldHandle execute(FieldHandle fieldh, ClipperHandle clipper) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *fsrc);
@@ -43,17 +47,72 @@ class ClipFieldAlgoT : public ClipFieldAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(MeshHandle src, Field::data_location at);
+  virtual FieldHandle execute(FieldHandle fieldh, ClipperHandle clipper);
 };
 
 
 template <class FIELD>
 FieldHandle
-ClipFieldAlgoT<FIELD>::execute(MeshHandle mesh_h, Field::data_location loc)
+ClipFieldAlgoT<FIELD>::execute(FieldHandle fieldh, ClipperHandle clipper)
 {
-  typename FIELD::mesh_type *msrc =
-    dynamic_cast<typename FIELD::mesh_type *>(mesh_h.get_rep());
-  FieldHandle ofield = scinew FIELD(msrc, loc);
+  typename FIELD::mesh_type *mesh =
+    dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
+  typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
+
+  typedef hash_map<unsigned int, unsigned int, hash<unsigned int>,
+    equal_to<unsigned int> > hash_type;
+
+  hash_type nodemap;
+
+  typename FIELD::mesh_type::Elem::iterator bi, ei;
+  mesh->begin(bi); mesh->end(ei);
+  while (bi != ei)
+  {
+    Point p;
+    mesh->get_center(p, *bi);
+    if (clipper->inside_p(p))
+    {
+      // Add this element to the new mesh.
+      typename FIELD::mesh_type::Node::array_type onodes;
+      mesh->get_nodes(onodes, *bi);
+      typename FIELD::mesh_type::Node::array_type nnodes(onodes.size());
+
+      for (unsigned int i=0; i<onodes.size(); i++)
+      {
+	if (nodemap.find(onodes[i]) == nodemap.end())
+	{
+	  Point np;
+	  mesh->get_center(np, onodes[i]);
+	  nodemap[onodes[i]] = clipped->add_point(np);
+	}
+	nnodes[i] = nodemap[onodes[i]];
+      }
+
+      clipped->add_elem(nnodes);
+    }
+    
+    ++bi;
+  }
+
+  clipped->flush_changes();  // Really should copy normals
+
+  FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
+
+  if (fieldh->data_at() == Field::NODE)
+  {
+    FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
+    hash_type::iterator hitr = nodemap.begin();
+
+    while (hitr != nodemap.end())
+    {
+      typename FIELD::value_type val;
+      field->value(val, (typename FIELD::mesh_type::Node::index_type)((*hitr).first));
+      ofield->set_value(val, (typename FIELD::mesh_type::Node::index_type)((*hitr).second));
+
+      ++hitr;
+    }
+  }
+  
   return ofield;
 }
 

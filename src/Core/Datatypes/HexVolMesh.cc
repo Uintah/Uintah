@@ -844,46 +844,18 @@ HexVolMesh::add_hex_unconnected(const Point &p0,
 }
 
 
-MeshHandle
-HexVolMesh::clip(ClipperHandle clipper)
+HexVolMesh::Elem::index_type
+HexVolMesh::add_elem(Node::array_type a)
 {
-  HexVolMesh *clipped = scinew HexVolMesh();
-
-  hash_map<under_type, under_type, hash<under_type>,
-    equal_to<under_type> > nodemap;
-
-  Elem::iterator bi, ei;
-  begin(bi); end(ei);
-  while (bi != ei)
-  {
-    Point p;
-    get_center(p, *bi);
-    if (clipper->inside_p(p))
-    {
-      // Add this element to the new mesh.
-      Node::array_type onodes;
-      get_nodes(onodes, *bi);
-      Node::array_type nnodes(onodes.size());
-
-      for (unsigned int i=0; i<onodes.size(); i++)
-      {
-	if (nodemap.find(onodes[i]) == nodemap.end())
-	{
-	  Point np;
-	  get_center(np, onodes[i]);
-	  nodemap[onodes[i]] = clipped->add_point(np);
-	}
-	nnodes[i] = nodemap[onodes[i]];
-      }
-
-      clipped->add_elem(nnodes);
-    }
-    
-    ++bi;
-  }
-
-  clipped->flush_changes();  // Really should copy normals
-  return clipped;
+  cells_.push_back(a[0]);
+  cells_.push_back(a[1]);
+  cells_.push_back(a[2]);
+  cells_.push_back(a[3]);
+  cells_.push_back(a[4]);
+  cells_.push_back(a[5]);
+  cells_.push_back(a[6]);
+  cells_.push_back(a[7]);
+  return (cells_.size() - 1) >> 3;
 }
 
 

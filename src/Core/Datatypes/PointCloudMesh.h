@@ -157,7 +157,8 @@ public:
   Node::index_type add_node(const Point &p) { return add_point(p); }
   Node::index_type add_point(const Point &p);
 
-  virtual MeshHandle clip(ClipperHandle c);
+  Elem::index_type add_elem(Node::array_type a) { return a[0]; }
+  virtual bool is_editable() const { return true; }
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

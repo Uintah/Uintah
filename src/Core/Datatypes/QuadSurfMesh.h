@@ -167,7 +167,8 @@ public:
 		Node::index_type c, Node::index_type d);
   void add_quad(const Point &p0, const Point &p1,
 		const Point &p2, const Point &p3);
-  void add_elem(Node::array_type a) { add_quad(a[0], a[1], a[2], a[3]); }
+  Elem::index_type add_elem(Node::array_type a);
+  virtual bool is_editable() const { return true; }
 
   // Must call connect after adding quads this way.
   Node::index_type add_point(const Point &p);
@@ -182,8 +183,6 @@ public:
 
 
   const Point &point(Node::index_type i) { return points_[i]; }
-
-  virtual MeshHandle clip(ClipperHandle clipper);
 
 private:
 

@@ -86,11 +86,16 @@ ClipField::execute()
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
   if (!ifp) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize " +name + "'s iport.");
     return;
   }
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
+    return;
+  }
+  if (!ifieldhandle->mesh()->is_editable())
+  {
+    error("Not an editable mesh type.");
     return;
   }
 
@@ -101,7 +106,7 @@ ClipField::execute()
   // Get input field.
   FieldIPort *cfp = (FieldIPort *)get_iport("Clip Field");
   if (!cfp) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
+    error("Unable to initialize " + name + "'s iport\n");
     return;
   }
   FieldHandle cfieldhandle;
@@ -112,14 +117,14 @@ ClipField::execute()
     DynamicAlgoHandle algo_handle;
     if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
     {
-      cout << "Could not compile algorithm." << std::endl;
+      error("Could not compile algorithm.");
       return;
     }
     ClipFieldMeshAlgo *algo =
       dynamic_cast<ClipFieldMeshAlgo *>(algo_handle.get_rep());
     if (algo == 0)
     {
-      cout << "Could not get algorithm." << std::endl;
+      error("Could not get algorithm.");
       return;
     }
     clipper = algo->execute(cfieldhandle->mesh());
@@ -152,7 +157,7 @@ ClipField::execute()
       GeometryOPort *ogport=0;
       ogport = (GeometryOPort*)get_oport("Selection Widget");
       if (!ogport) {
-	postMessage("Unable to initialize "+name+"'s oport\n");
+	error("Unable to initialize " + name + "'s oport.");
 	return;
       }
       ogport->addObj(widget_group, "ClipField Selection Widget",
@@ -171,33 +176,27 @@ ClipField::execute()
     {
       clipper = box_->get_clipper();
     }
-    MeshHandle nmesh = ifieldhandle->mesh()->clip(clipper);
-    if (nmesh.get_rep() == 0)
-    {
-      error("Input field not clippable.");
-      return;
-    }
 
     const TypeDescription *ftd = ifieldhandle->get_type_description();
     CompileInfo *ci = ClipFieldAlgo::get_compile_info(ftd);
     DynamicAlgoHandle algo_handle;
     if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
     {
-      cout << "Could not compile algorithm." << std::endl;
+      error("Could not compile algorithm.");
       return;
     }
     ClipFieldAlgo *algo =
       dynamic_cast<ClipFieldAlgo *>(algo_handle.get_rep());
     if (algo == 0)
     {
-      cout << "Could not get algorithm." << std::endl;
+      error("Could not get algorithm.");
       return;
     }
-    FieldHandle ofield = algo->execute(nmesh, ifieldhandle->data_at());
+    FieldHandle ofield = algo->execute(ifieldhandle, clipper);
 
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
     if (!ofield_port) {
-      postMessage("Unable to initialize "+name+"'s oport\n");
+      error("Unable to initialize " + name + "'s oport.");
       return;
     }
     
