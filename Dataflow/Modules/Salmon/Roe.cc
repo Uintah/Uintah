@@ -69,7 +69,10 @@ Roe::Roe(Salmon* s, const clString& id)
   view("view", id, this),
   homeview(Point(.55, .5, 0), Point(.0, .0, .0), Vector(0,1,0), 25),
   bgcolor("bgcolor", id, this), shading("shading", id, this),
-  do_stereo("do_stereo", id, this), drawimg("drawimg", id, this),
+// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+  do_stereo("do_stereo", id, this), do_bawgl("do_bawgl", id, this),
+// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+  drawimg("drawimg", id, this),
   saveprefix("saveprefix", id, this),
   id(id),doingMovie(0),curFrame(0),curName("/tmp/movie")
 {
@@ -82,6 +85,9 @@ Roe::Roe(Salmon* s, const clString& id)
     mouse_obj=0;
     ball = new BallData();
     ball->Init();
+// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+    bawgl = new SCIBaWGL("/home/sci/u2/VR/bench.config");
+// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
 }
 
 clString Roe::set_id(const clString& new_id)
@@ -818,8 +824,22 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	return;
       }
       current_renderer->setvisual(args[2], idx, width, height);
+// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+   } else if(args[1] == "startbawgl") {
+        if( bawgl->start(this)  == 0 )
+	  {
+	    bawgl_error = 0;
+	  }
+	else
+	  {
+	    bawgl_error = 1;
+	    args.error("Bummer!\n Check if the device daemons are alive!");
+	  }
+   } else if(args[1] == "stopbawgl"){
+     if( !bawgl_error ) bawgl->stop();
     } else {
-	args.error("Unknown minor command '" + args[1] + "' for Roe");
+// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+      args.error("Unknown minor command '" + args[1] + "' for Roe");
     }
 }
 
@@ -1095,6 +1115,11 @@ void Roe::getData(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.7  1999/10/16 20:50:59  jmk
+// forgive me if I break something -- this fixes picking and sets up sci
+// bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology
+// gota getup to get down.
+//
 // Revision 1.6  1999/10/07 02:06:56  sparker
 // use standard iostreams and complex type
 //
