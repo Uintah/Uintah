@@ -42,18 +42,18 @@ typedef void (Tcl_LockProc)();
 using namespace SCIRun;
 
 #ifdef _WIN32
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
-__declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
-#ifdef __cplusplus
-}
-#endif // __cplusplus
+#  ifdef __cplusplus
+     extern "C" {
+#  endif // __cplusplus
+       __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+       int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
+#  ifdef __cplusplus
+     }
+#  endif // __cplusplus
 
 #else // _WIN32
-extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-extern "C" int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
+  extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+  extern "C" int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
 
 #endif // _WIN32
 
@@ -64,17 +64,22 @@ extern "C" Tcl_Interp* the_interp;
 using namespace std;
 
 void wait(void* p);
-void do_lock2()
+
+void
+do_lock2()
 {
   TCLTask::lock();
 }
 
-void do_unlock2()
+void
+do_unlock2()
 {
   TCLTask::unlock();
 }
 
-static int x_error_handler2(Display* dpy, XErrorEvent* error)
+static
+int
+x_error_handler2(Display* dpy, XErrorEvent* error)
 {
 #ifndef _WIN32
     char msg[200];
@@ -85,11 +90,10 @@ static int x_error_handler2(Display* dpy, XErrorEvent* error)
     return 0; // Never reached...
 }
 
-TCLThread::TCLThread(int argc, char* argv[], Network* net, int startnetno)
-: argc(argc), argv(argv), net(net), startnetno(startnetno),
+TCLThread::TCLThread(int argc, char* argv[], Network* net, int startnetno) :
+  argc(argc), argv(argv), net(net), startnetno(startnetno),
   cont("TCLThread startup continue semaphore", 0),
   start("TCLThread startup semaphore", 0)
-
 {
   // Setup the error handler to catch errors...
   // The default one exits, and makes it very hard to 
@@ -97,11 +101,10 @@ TCLThread::TCLThread(int argc, char* argv[], Network* net, int startnetno)
   XSetErrorHandler(x_error_handler2);
 
   Tcl_SetLock(do_lock2, do_unlock2);
-
 }
 
-
-void TCLThread::run()
+void
+TCLThread::run()
 {
   do_lock2();
   tkMain(1, argv, wait, this);
@@ -128,11 +131,11 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
     string cmd;
     if (gui->eval("validFile "+homerc) == "1") {
       string backuprc = homerc+"."+string(SCIRUN_VERSION)+"."+
-	string(SCIRUN_RCFILE_SUBVERSION);
+        string(SCIRUN_RCFILE_SUBVERSION);
       cmd = string("cp -f ")+homerc+" "+backuprc;
       std::cout << "Backing up " << homerc << " to " << backuprc << std::endl;
       if (sci_system(cmd.c_str())) {
-	std::cerr << "Error executing: " << cmd << std::endl;
+        std::cerr << "Error executing: " << cmd << std::endl;
       }
     }
 
@@ -148,7 +151,8 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
   }
 }
 
-void TCLThread::startNetworkEditor()
+void
+TCLThread::startNetworkEditor()
 {
   gui = new TCLInterface;
   new NetworkEditor(net, gui);
@@ -222,14 +226,17 @@ void TCLThread::startNetworkEditor()
     }
   }
 }
-static int exitproc(ClientData, Tcl_Interp*, int, TCLCONST char* [])
-{
 
+static
+int
+exitproc(ClientData, Tcl_Interp*, int, TCLCONST char* [])
+{
   Thread::exitAll(0);
   return TCL_OK; // not reached
 }
 
-void TCLThread::mainloop_wait()
+void
+TCLThread::mainloop_wait()
 {
   Tcl_CreateCommand(the_interp, "exit", exitproc, 0, 0);
   do_unlock2();
@@ -243,19 +250,22 @@ void TCLThread::mainloop_wait()
   do_lock2();
 }
 
-void TCLThread::mainloop_waitstart()
+void
+TCLThread::mainloop_waitstart()
 {
   start.down();
 
 }
-void TCLThread::release_mainloop()
+
+void
+TCLThread::release_mainloop()
 {
   cont.up();
 }
 
-void wait(void* p)
+void
+wait(void* p)
 {
   TCLThread* thr = (TCLThread*) p;
   thr->startNetworkEditor();
-
 }
