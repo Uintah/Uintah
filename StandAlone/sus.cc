@@ -428,10 +428,6 @@ main( int argc, char** argv )
 	ProblemSpecInterface* reader = scinew ProblemSpecReader(filename);
 	ctl->attachPort("problem spec", reader);
 
-	// Output
-	Output* output = scinew DataArchiver(world);
-	ctl->attachPort("output", output);
-
 	// Solver
 	SolverInterface* solve = 0;
 	if(solver == "CGSolver") {
@@ -545,7 +541,6 @@ main( int argc, char** argv )
 
 	ctl->attachPort("sim", sim);
 	comp->attachPort("solver", solve);
-	comp->attachPort("output", output);
 
 	ModelMaker* modelmaker = scinew ModelFactory(world);
 	comp->attachPort("modelmaker", modelmaker);
@@ -557,25 +552,48 @@ main( int argc, char** argv )
 
 	// Load balancer
 	LoadBalancer* bal;
+        UintahParallelComponent* lb; // to add scheduler as a port
 	if(loadbalancer == "SingleProcessorLoadBalancer"){
-	   bal = scinew SingleProcessorLoadBalancer(world);
+          
+           SingleProcessorLoadBalancer* splb 
+             = scinew SingleProcessorLoadBalancer(world);
+           lb = splb;
+           bal = splb;
 	} else if(loadbalancer == "RoundRobinLoadBalancer" || 
 		  loadbalancer == "RoundRobin" || 
 		  loadbalancer == "roundrobin"){
-	   bal = scinew RoundRobinLoadBalancer(world);
+           RoundRobinLoadBalancer* rrlb 
+	     = scinew RoundRobinLoadBalancer(world);
+           lb = rrlb;
+           bal = rrlb;
 	} else if(loadbalancer == "SimpleLoadBalancer") {
-	   bal = scinew SimpleLoadBalancer(world);
+           SimpleLoadBalancer* slb
+             = scinew SimpleLoadBalancer(world);
+           lb = slb;
+           bal = slb;
 	} else if( (loadbalancer == "NirvanaLoadBalancer") ||
 		   (loadbalancer == "NLB") ) {
-	  bal = scinew NirvanaLoadBalancer(world, layout);
+	   NirvanaLoadBalancer* nlb
+             = scinew NirvanaLoadBalancer(world, layout);
+           lb = nlb;
+           bal = nlb;
 	} else if( (loadbalancer == "ParticleLoadBalancer") ||
 		   (loadbalancer == "PLB") ) {
-	  //bal = 0;
-	  bal = scinew ParticleLoadBalancer(world);
+           ParticleLoadBalancer* plb 
+             = scinew ParticleLoadBalancer(world);
+           lb = plb;
+           bal = plb;
 	} else {
 	   bal = 0;
 	   quit( "Unknown load balancer: " + loadbalancer );
 	}
+
+	// Output
+        DataArchiver* dataarchiver = scinew DataArchiver(world);
+	Output* output = dataarchiver;
+	ctl->attachPort("output", output);
+        dataarchiver->attachPort("load balancer", bal);
+	comp->attachPort("output", output);
 
 	// Scheduler
 	Scheduler * sch = 0;
@@ -621,6 +639,7 @@ main( int argc, char** argv )
 	} else {
 	   quit( "Unknown scheduler: " + scheduler );
 	}
+        lb->attachPort("scheduler", sch);
 
 	sch->addReference();
 	if (emit_graphs) sch->doEmitTaskGraphDocs();
@@ -628,6 +647,7 @@ main( int argc, char** argv )
 	/*
 	 * Start the simulation controller
 	 */
+
 
 	if (restart) {
 	  ctl->doRestart(udaDir, restartTimestep,
