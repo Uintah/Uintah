@@ -264,7 +264,13 @@ void setBC(CCVariable<double>& press_CC,
 
       if (new_bcs->getKind() == "Neumann") 
         fillFaceFlux(press_CC,face,new_bcs->getValue(),dx, 1.0, offset);
-       
+        
+      //__________________________________
+      //  Use zeroNeumann instead of LODI for ICE Initialization
+      if (new_bcs->getKind() == "LODI") {
+        cout << "ICE Initialization:  Press: setting zeroNeumann instead of LODI on face " <<face << endl;
+        fillFaceFlux(press_CC,face,0.0,dx, 1.0, offset);
+      }       
       //__________________________________
       //  When gravity is on 
       if ( fabs(gravity.x()) > 0.0  || 
@@ -345,6 +351,13 @@ void setBC(CCVariable<double>& variable, const string& kind,
         if (new_bcs->getKind() == "Neumann") {
          fillFaceFlux(variable,face,new_bcs->getValue(),dx, 1.0, offset);
         }
+        
+        //__________________________________
+        //  Use zeroNeumann instead of LODI for ICE Initialization
+        if (new_bcs->getKind() == "LODI") {
+          cout << " ICE Initialization:  Density: setting zeroNeumann instead of LODI on face " <<face << endl;
+          fillFaceFlux(variable,face,0.0,dx, 1.0, offset);
+        }
 /*`==========TESTING==========*/
 #ifdef JET_BC
         double hardCodedDensity = 13.937282;
@@ -362,7 +375,12 @@ void setBC(CCVariable<double>& variable, const string& kind,
         if (new_bcs->getKind() == "Dirichlet") { 
            fillFace(variable,face,new_bcs->getValue(), offset);
         }
-           
+        //__________________________________
+        //  Use zeroNeumann instead of LODI for ICE Initialization
+        if (new_bcs->getKind() == "LODI") {
+          cout << "ICE Initialization:   Temperaure: setting zeroNeumann instead of LODI on face " <<face << endl;
+          fillFaceFlux(variable,face,0.0,dx, 1.0, offset);
+        }           
          // Neumann && gravity                 
         if (new_bcs->getKind() == "Neumann" ) {
           fillFaceFlux(variable,face,new_bcs->getValue(),dx,1.0, offset);
@@ -437,6 +455,12 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
         fillFaceFlux(variable,face,new_bcs->getValue(),dx, 1.0, offset);
       }
       
+      //__________________________________
+      //  Use zeroNeumann instead of LODI for ICE Initialization
+      if (new_bcs->getKind() == "LODI") {
+        cout << "ICE Initialization:  Velocity: setting zeroNeumann instead of LODI on face " <<face << endl;
+        fillFaceFlux(variable,face,Vector(0.,0.,0.),dx, 1.0, offset);
+      }
 /*`==========TESTING==========*/
 #ifdef JET_BC
         BC_dbg << "ORG AddSourceBC VelocityBC "<< face <<endl;
