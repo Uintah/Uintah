@@ -540,42 +540,66 @@ LatVolMesh::get_cell_range(Cell::range_iter &iter, Cell::iterator &end_iter,
   min = Min(min, mesh_boundary.max());
   max = Min(max, mesh_boundary.max());
   
-  Cell::index_type min_index, mai_index;
+  Cell::index_type min_index, max_index;
 
   // If one of the locates return true, then we have a valid iteration
   bool min_located = locate(min_index, min);
-  bool mai_located = locate(mai_index, max);
-  if (!min_located && !mai_located) {
-    // If both of these are false then we are outside the boundary.
+  bool max_located = locate(max_index, max);
+  if (!min_located && !max_located) {
+    // first check to see if there is a box overlap
+    BBox box;
+    box.extend(min);
+    box.extend(max);
+    if ( box.Overlaps(mesh_boundary) ){
+      Point r = transform_.unproject(min);
+      double rx = floor(r.x());
+      double ry = floor(r.y());
+      double rz = floor(r.z());
+      min_index.i_ = (unsigned int)Max(rx, 0.0);
+      min_index.j_ = (unsigned int)Max(ry, 0.0);
+      min_index.k_ = (unsigned int)Max(rz, 0.0);
+      r = transform_.unproject(max);
+      rx = floor(r.x());
+      ry = floor(r.y());
+      rz = floor(r.z());
+      max_index.i_ = (unsigned int)Min(rx, (double)(ni_-1));
+      max_index.j_ = (unsigned int)Min(ry, (double)(nj_-1));
+      max_index.k_ = (unsigned int)Min(rz, (double)(nk_-1));
+      iter = Cell::range_iter(this,
+                            min_index.i_, min_index.j_, min_index.k_,
+                            max_index.i_, max_index.j_, max_index.k_);
+    } else {
+    // If both of these are false and there is no overlap
+    // then we are outside the boundary.
     // Set the min and max extents of the range iterator to be the same thing.
     // When they are the same end_iter will be set to the starting state of
     // the range iterator, thereby causing any for loop using these
     // iterators [for(;iter != end_iter; iter++)] to never enter.
-    iter = Cell::range_iter(this, 0, 0, 0, 0, 0, 0);
-  } else {
-    if ( !min_located ) {    
-      const Point r = transform_.unproject(min);
-      const double rx = floor(r.x());
-      const double ry = floor(r.y());
-      const double rz = floor(r.z());
-      min_index.i_ = (unsigned int)Max(rx, 0.0);
-      min_index.j_ = (unsigned int)Max(ry, 0.0);
-      min_index.k_ = (unsigned int)Max(rz, 0.0);
-      				       
-    } else {			       
-      const Point r = transform_.unproject(max);
-      const double rx = floor(r.x());
-      const double ry = floor(r.y());
-      const double rz = floor(r.z());
-      mai_index.i_ = (unsigned int)Min(rx, (double)(ni_-1));
-      mai_index.j_ = (unsigned int)Min(ry, (double)(nj_-1));
-      mai_index.k_ = (unsigned int)Min(rz, (double)(nk_-1));
+      iter = Cell::range_iter(this, 0, 0, 0, 0, 0, 0);
     }
-    // Initialize the range iterator
+  } else if ( !min_located ) {    
+    const Point r = transform_.unproject(min);
+    const double rx = floor(r.x());
+    const double ry = floor(r.y());
+    const double rz = floor(r.z());
+    min_index.i_ = (unsigned int)Max(rx, 0.0);
+    min_index.j_ = (unsigned int)Max(ry, 0.0);
+    min_index.k_ = (unsigned int)Max(rz, 0.0);
     iter = Cell::range_iter(this,
 			    min_index.i_, min_index.j_, min_index.k_,
-			    mai_index.i_, mai_index.j_, mai_index.k_);
+			    max_index.i_, max_index.j_, max_index.k_);
     
+  } else { //  !max_located 		       
+    const Point r = transform_.unproject(max);
+    const double rx = floor(r.x());
+    const double ry = floor(r.y());
+    const double rz = floor(r.z());
+    max_index.i_ = (unsigned int)Min(rx, (double)(ni_-1));
+    max_index.j_ = (unsigned int)Min(ry, (double)(nj_-1));
+    max_index.k_ = (unsigned int)Min(rz, (double)(nk_-1));
+    iter = Cell::range_iter(this,
+			    min_index.i_, min_index.j_, min_index.k_,
+			    max_index.i_, max_index.j_, max_index.k_);
   }
   // initialize the end iterator
   iter.end(end_iter);
@@ -593,39 +617,68 @@ LatVolMesh::get_node_range(Node::range_iter &iter, Node::iterator &end_iter,
   // crop by max boundary
   min = Min(min, mesh_boundary.max());
   max = Min(max, mesh_boundary.max());
-  
-  Node::index_type min_index, mai_index;
+  Node::index_type min_index, max_index;
 
   // If one of the locates return true, then we have a valid iteration
   bool min_located = locate(min_index, min);
-  bool mai_located = locate(mai_index, max);
-  if (!min_located && !mai_located) {
-    // If both of these are false then we are outside the boundary.
+  bool max_located = locate(max_index, max);
+  if (!min_located && !max_located) {
+    // first check to see if there is a box overlap
+    BBox box;
+    box.extend(min);
+    box.extend(max);
+    if ( box.Overlaps(mesh_boundary) ){
+      Point r = transform_.unproject(min);
+      double rx = floor(r.x());
+      double ry = floor(r.y());
+      double rz = floor(r.z());
+      min_index.i_ = (unsigned int)Max(rx, 0.0);
+      min_index.j_ = (unsigned int)Max(ry, 0.0);
+      min_index.k_ = (unsigned int)Max(rz, 0.0);
+      r = transform_.unproject(max);
+      rx = floor(r.x());
+      ry = floor(r.y());
+      rz = floor(r.z());
+      max_index.i_ = (unsigned int)Min(rx, (double)ni_ );
+      max_index.j_ = (unsigned int)Min(ry, (double)nj_ );
+      max_index.k_ = (unsigned int)Min(rz, (double)nk_ );
+      iter = Node::range_iter(this,
+                            min_index.i_, min_index.j_, min_index.k_,
+                            max_index.i_, max_index.j_, max_index.k_);
+    } else {
+    // If both of these are false and there is no overlap
+    // then we are outside the boundary.
     // Set the min and max extents of the range iterator to be the same thing.
     // When they are the same end_iter will be set to the starting state of
     // the range iterator, thereby causing any for loop using these
     // iterators [for(;iter != end_iter; iter++)] to never enter.
-    iter = Node::range_iter(this, 0, 0, 0, 0, 0, 0);
-  } else {
-    // Initialize the range iterator
+      iter = Node::range_iter(this, 0, 0, 0, 0, 0, 0);
+    }
+  } else if ( !min_located ) {    
     const Point r = transform_.unproject(min);
     const double rx = floor(r.x());
     const double ry = floor(r.y());
     const double rz = floor(r.z());
-    if ( !min_located ) {    
-      min_index.i_ = (unsigned int)Max(rx, 0.0);
-      min_index.j_ = (unsigned int)Max(ry, 0.0);
-      min_index.k_ = (unsigned int)Max(rz, 0.0);
-      		     		       
-    } else {	     		       
-      mai_index.i_ = (unsigned int)Min(rx, (double)ni_);
-      mai_index.j_ = (unsigned int)Min(ry, (double)nj_);
-      mai_index.k_ = (unsigned int)Min(rz, (double)nk_);
-    }
+    min_index.i_ = (unsigned int)Max(rx, 0.0);
+    min_index.j_ = (unsigned int)Max(ry, 0.0);
+    min_index.k_ = (unsigned int)Max(rz, 0.0);
     iter = Node::range_iter(this,
 			    min_index.i_, min_index.j_, min_index.k_,
-			    mai_index.i_, mai_index.j_, mai_index.k_);
+			    max_index.i_, max_index.j_, max_index.k_);
+    
+  } else { //  !max_located 		       
+    const Point r = transform_.unproject(max);
+    const double rx = floor(r.x());
+    const double ry = floor(r.y());
+    const double rz = floor(r.z());
+    max_index.i_ = (unsigned int)Min(rx, (double) ni_ );
+    max_index.j_ = (unsigned int)Min(ry, (double) nj_ );
+    max_index.k_ = (unsigned int)Min(rz, (double) nk_ );
+    iter = Node::range_iter(this,
+			    min_index.i_, min_index.j_, min_index.k_,
+			    max_index.i_, max_index.j_, max_index.k_);
   }
+  
   // initialize the end iterator
   iter.end(end_iter);
 }
@@ -767,6 +820,10 @@ LatVolMesh::locate(Cell::index_type &cell, const Point &p)
   if (rx < 0.0      || ry < 0.0      || rz < 0.0    ||
       rx >= (ni_-1) || ry >= (nj_-1) || rz >= (nk_-1))
   {
+    cell.i_ = (unsigned int)Max(Min(rx,(double)(ni_-1)), 0.0);
+    cell.j_ = (unsigned int)Max(Min(ry,(double)(nj_-1)), 0.0);
+    cell.k_ = (unsigned int)Max(Min(rz,(double)(nk_-1)), 0.0);
+    cell.mesh_ = this;
     return false;
   }
 
@@ -793,6 +850,10 @@ LatVolMesh::locate(Node::index_type &node, const Point &p)
   if (rx < 0.0  || ry < 0.0  || rz < 0.0 ||
       rx >= ni_ || ry >= nj_ || rz >= nk_)
   {
+    node.i_ = (unsigned int)Max(Min(rx,(double)(ni_-1)), 0.0);
+    node.j_ = (unsigned int)Max(Min(ry,(double)(nj_-1)), 0.0);
+    node.k_ = (unsigned int)Max(Min(rz,(double)(nk_-1)), 0.0);
+    node.mesh_ = this;
     return false;
   }
 
