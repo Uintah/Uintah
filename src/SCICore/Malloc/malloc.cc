@@ -38,7 +38,7 @@ void* valloc(size_t);
 
 using namespace SCICore::Malloc;
 
-#if 1
+#ifndef DISABLE_SCI_MALLOC
 
 void* malloc(size_t size)
 {
@@ -84,6 +84,9 @@ void* valloc(size_t size)
 
 //
 // $Log$
+// Revision 1.7  2000/09/14 15:34:21  sparker
+// Use --disable-sci-malloc configure flag
+//
 // Revision 1.6  2000/02/24 06:04:55  sparker
 // 0xffff5a5a (NaN) is now the fill pattern
 // Added #if 1 to malloc/new.cc to make it easier to turn them on/off
