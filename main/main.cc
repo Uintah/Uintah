@@ -45,12 +45,13 @@
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/GuiInterface/TCLTask.h>
+#include <Core/TCLThread/TCLThread.h>
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Comm/StringSocket.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Thread/Time.h>
 
 #include <Core/Services/ServiceLog.h>
 #include <Core/Services/ServiceDB.h>
@@ -72,7 +73,7 @@
 using std::cout;
 
 #ifdef _WIN32
-#  include <afxwin.h>
+#  include <windows.h>
 #endif
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -178,7 +179,7 @@ parse_args( int argc, char *argv[] )
       {
 	std::cerr << "Couldn't find net file " << arg
 		  << ".\nNo such file or directory.  Exiting." << std::endl;
-	exit(0);
+	//exit(0);
       }
 
       if (found && !powerapp)
@@ -211,57 +212,13 @@ public:
     if (timeout && string_to_int(timeout, tmp)) {
       seconds = tmp;
     }
-    sleep(seconds);
+    Time::waitFor((double)seconds);
     cout << "\n";
     cout << "main.cc: RegressionKiller: Regression test timed out\n";
     cout << "         after " << seconds << " seconds.  Killing SCIRun.\n\n";
     Thread::exitAll(1);
   }
 };
-
-
-
-// show_licence_and_copy_sciunrc is not in Core/Util/Environment.h because it
-// depends on GuiInterface to present the user with the license dialog.
-void
-show_license_and_copy_scirunrc(GuiInterface *gui) {
-  const string tclresult = gui->eval("licenseDialog 1");
-  if (tclresult == "cancel")
-  {
-    Thread::exitAll(1);
-  }
-  // check to make sure home directory is there
-  const char* HOME = sci_getenv("HOME");
-  const char* srcdir = sci_getenv("SCIRUN_SRCDIR");
-  ASSERT(HOME);
-  ASSERT(srcdir);
-  if (!HOME) return;
-  // If the user accepted the license then create a .scirunrc for them
-  if (tclresult == "accept") {
-    string homerc = string(HOME)+"/.scirunrc";
-    string cmd;
-    if (gui->eval("validFile "+homerc) == "1") {
-      string backuprc = homerc+"."+string(SCIRUN_VERSION)+
-	string(SCIRUN_RCFILE_SUBVERSION);
-      cmd = string("cp -f ")+homerc+" "+backuprc;
-      std::cout << "Backing up " << homerc << " to " << backuprc << std::endl;
-      if (sci_system(cmd.c_str())) {
-	std::cerr << "Error executing: " << cmd << std::endl;
-      }
-    }
-
-    cmd = string("cp -f ")+srcdir+string("/scirunrc ")+homerc;
-    std::cout << "Copying " << srcdir << "/scirunrc to " <<
-      homerc << "...\n";
-    if (sci_system(cmd.c_str())) {
-      std::cerr << "Error executing: " << cmd << std::endl;
-    } else { 
-      // if the scirunrc file was copied, then parse it
-      parse_scirunrc(homerc);
-    }
-  }
-}
-
 
 class TCLSocketRunner : public Runnable
 {
@@ -391,9 +348,9 @@ main(int argc, char *argv[], char **environment) {
       }
   }
   
-  
   // Start up TCL...
-  TCLTask* tcl_task = new TCLTask(1, argv);// Only passes program name to TCL
+  Network* net=new Network();
+  TCLThread* tcl_task = new TCLThread(argc,argv, net, startnetno);// Only passes program name to TCL
   // We need to start the thread in the NotActivated state, so we can
   // change the stack size.  The 0 is a pointer to a ThreadGroup which
   // will default to the global thread group.
@@ -406,7 +363,7 @@ main(int argc, char *argv[], char **environment) {
   tcl_task->mainloop_waitstart();
 
   // Create user interface link
-  TCLInterface *gui = new TCLInterface();
+  TCLInterface *gui = tcl_task->getTclInterface();
 
   // TCL Socket
   int port;
@@ -420,87 +377,15 @@ main(int argc, char *argv[], char **environment) {
   }
 
   // Create initial network
-  packageDB = new PackageDB(gui);
-  Network* net=new Network();
   Scheduler* sched_task=new Scheduler(net);
-  new NetworkEditor(net, gui);
-
-  // If the user doesnt have a .scirunrc file, provide them with a default one
-  if (!find_and_parse_scirunrc()) 
-    show_license_and_copy_scirunrc(gui);
-  else { 
-    const char *rcversion = sci_getenv("SCIRUN_RCFILE_VERSION");
-    const string ver =string(SCIRUN_VERSION)+"."+string(SCIRUN_RCFILE_SUBVERSION);
-    // If the .scirunrc is an old version
-    if (!rcversion || string(rcversion) != ver)
-      // Ask them if they want to copy over a new one
-      if (gui->eval("promptUserToCopySCIRunrc") == "1")
-	show_license_and_copy_scirunrc(gui);
-  }
-
-
-    
 
   // Activate the scheduler.  Arguments and return values are meaningless
   Thread* t2=new Thread(sched_task, "Scheduler");
   t2->setDaemon(true);
   t2->detach();
-
-  // determine if we are loading an app
-  const bool loading_app_p = strstr(argv[startnetno],".app");
-  if (!loading_app_p) {
-    gui->eval("set PowerApp 0");
-    // wait for the main window to display before continuing the startup.
-    gui->eval("wm deiconify .");
-    gui->eval("tkwait visibility $minicanvas");
-    gui->eval("showProgress 1 0 1");
-  } else { // if loading an app, don't wait
-    gui->eval("set PowerApp 1");
-    if (argv[startnetno+1]) {
-      gui->eval("set PowerAppSession {"+string(argv[startnetno+1])+"}");
-    }
-    // determine which standalone and set splash
-    if(strstr(argv[startnetno], "BioTensor")) {
-      gui->eval("set splashImageFile $bioTensorSplashImageFile");
-      gui->eval("showProgress 1 2575 1");
-    } else if(strstr(argv[startnetno], "BioFEM")) {
-      gui->eval("set splashImageFile $bioFEMSplashImageFile");
-      gui->eval("showProgress 1 465 1");
-    } else if(strstr(argv[startnetno], "BioImage")) {
-      // need to make a BioImage splash screen
-      gui->eval("set splashImageFile $bioImageSplashImageFile");
-      gui->eval("showProgress 1 660 1");
-    } else if(strstr(argv[startnetno], "FusionViewer")) {
-      // need to make a FusionViewer splash screen
-      gui->eval("set splashImageFile $fusionViewerSplashImageFile");
-      gui->eval("showProgress 1 310 1");
-    }
-
-  }
-
-
-  packageDB->loadPackage();  // load the packages
-
-  if (!loading_app_p) {
-    gui->eval("hideProgress");
-  }
-  
-  // Check the dynamic compilation directory for validity
-  sci_putenv("SCIRUN_ON_THE_FLY_LIBS_DIR",gui->eval("getOnTheFlyLibsDir"));
-
-  // Activate "File" menu sub-menus once packages are all loaded.
-  gui->eval("activate_file_submenus");
   
   // Determine if SCIRun is in regression testing mode
   const bool doing_regressions = sci_getenv_p("SCI_REGRESSION_TESTING");
-
-  // Load the Network file specified from the command line
-  if (startnetno) {
-    gui->eval("loadnet {"+string(argv[startnetno])+"}");
-    if (sci_getenv_p("SCIRUN_EXECUTE_ON_STARTUP") || doing_regressions) {
-      gui->eval("netedit scheduleall");
-    }
-  }
 
   // When doing regressions, make thread to kill ourselves after timeout
   if (doing_regressions) {
