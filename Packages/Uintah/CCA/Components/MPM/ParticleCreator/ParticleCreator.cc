@@ -74,12 +74,22 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     // Special case exception for SmoothGeomPieces and FileGeometryPieces
     SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece);
     vector<double>* volumes = 0;
+    vector<Vector>* pforces = 0;
     if (sgp) volumes = sgp->getVolume();
+    if (sgp) pforces = sgp->getForces();
 
+    // For getting particle volumes (if they exist)
     vector<double>::const_iterator voliter;
     geomvols::key_type volkey(patch,*obj);
     if (volumes) {
       if (!volumes->empty()) voliter = d_object_vols[volkey].begin();
+    }
+
+    // For getting particle external forces (if they exist)
+    vector<Vector>::const_iterator forceiter;
+    geomvecs::key_type pforcekey(patch,*obj);
+    if (pforces) {
+      if (!pforces->empty()) forceiter = d_object_forces[pforcekey].begin();
     }
 
     vector<Point>::const_iterator itr;
@@ -98,6 +108,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     	  pvolume[pidx] = *voliter;
           pmass[pidx] = matl->getInitialDensity()*pvolume[pidx];
           ++voliter;
+        }
+      }
+
+      if (pforces) {
+        if (!pforces->empty()) {
+    	  pexternalforce[pidx] = *forceiter;
+          ++forceiter;
         }
       }
 
@@ -410,6 +427,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
 {
   geompoints::key_type key(patch,obj);
   geomvols::key_type volkey(patch,obj);
+  geomvecs::key_type forcekey(patch,obj);
   GeometryPiece* piece = obj->getPiece();
   Box b1 = piece->getBoundingBox();
   Box b2 = patch->getBox();
@@ -434,6 +452,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     }
     vector<Point>* points = sgp->getPoints();
     vector<double>* vols = sgp->getVolume();
+    vector<Vector>* pforces = sgp->getForces();
     Point p;
     IntVector cell_idx;
     for (int ii = 0; ii < numPts; ++ii) {
@@ -443,6 +462,10 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
         if (!vols->empty()) {
           double vol = vols->at(ii); 
           d_object_vols[volkey].push_back(vol);
+        }
+        if (!pforces->empty()) {
+          Vector pforce = pforces->at(ii); 
+          d_object_forces[forcekey].push_back(pforce);
         }
       }
     }
