@@ -1228,6 +1228,8 @@ case $host in
     case $CXX in
       *g++*)
          SOFLAGS="-shared ${SOFLAGS}"
+         # bigtoc helps keep gcc from breaking...
+         LDFLAGS="-Wl,-bbigtoc $LDFLAGS"
          ;;
       *)
 #      for these compilers: *xlC*) or *KCC*)
