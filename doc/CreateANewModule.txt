@@ -162,6 +162,17 @@ A) Appendix
    are in different categories.  You may also have categories with the
    same name so long as they are in different packages.
 
+   Once you've created a new module, you will see a dialog that tells
+   you that you must rebuild the PSE before you can use it.  In some
+   cases you must first re-configure and then rebuild.  To rebuild
+   the PSE, you should simply run "gmake" from the PSE/src directory.
+   There is no need to "gmake clean" first.  To re-configure, run:
+
+      configure --enable-package="OLD-PACKAGES NEW-PACKAGE"
+
+   Where OLD-PACKAGES are the packages that you already had enabled,
+   and NEW-PACKAGE is the package you just created.
+
    If you've attempted to create a new module with this facility and
    it returned an error or warning, see the trouble shooting section
    below.
