@@ -70,15 +70,27 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
     adj_offset[1] = IntVector(0, -1, 0);    // Y 
     adj_offset[2] = IntVector(0,  0, -1);   // Z     
     Vector delt;
-    Vector include_delT= Vector(1,1,1);
+    Vector include_delT= Vector(0,0,0);
+    IntVector numCells(patch->getHighIndex() - patch->getLowIndex());
     //__________________________________
     // which dimensions are relevant
-    for (int dir = 0; dir <3; dir++) {
-      IntVector numCells(patch->getHighIndex() - patch->getLowIndex());
-      if (numCells(dir) <= 3 ) {
-        include_delT(dir) = 0.0;  // don't include this delt in calculation
-      }
+    int mat_id = 0;
+    if ( patch->getBCValues(mat_id,"Symmetric",Patch::xminus) || 
+         patch->getBCValues(mat_id,"Symmetric",Patch::xplus)  || 
+         numCells(0) >3 ) {
+     include_delT(0) = 1.0;
     }
+    if ( patch->getBCValues(mat_id,"Symmetric",Patch::yminus) || 
+         patch->getBCValues(mat_id,"Symmetric",Patch::yplus)  || 
+         numCells(1) >3 ) {
+     include_delT(1) = 1.0;
+    }
+    if ( patch->getBCValues(mat_id,"Symmetric",Patch::zminus) || 
+         patch->getBCValues(mat_id,"Symmetric",Patch::zplus)  || 
+         numCells(2) >3 ) {
+     include_delT(2) = 1.0;
+    }   
+    
           
     for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -88,21 +100,22 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gac, 1);
       
       for (int dir = 0; dir <3; dir++) {  //loop over all three directions
-        delt(dir) = 0.0; 
+        delt(dir) = 1000.0;  
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           IntVector R = *iter;
           IntVector L = R + adj_offset[dir];
+          double ave_vel= 0.5 * fabs( vel_CC[R].length() + 
+                                      vel_CC[L].length() );           
 
-          double ave_vel  = 0.5 * fabs( vel_CC[R](dir) + vel_CC[L](dir) );
+          double kappa_R= sp_vol_CC[R]/( speedSound[R] * speedSound[R] );          
+          double kappa_L= sp_vol_CC[L]/( speedSound[L] * speedSound[L] );          
 
-          double kappa_R  = sp_vol_CC[R]/( speedSound[R] * speedSound[R] );
-          double kappa_L  = sp_vol_CC[L]/( speedSound[L] * speedSound[L] );
-
-          double tmp      = (sp_vol_CC[L] + sp_vol_CC[R])/(kappa_L + kappa_R);                  
-          double cstar    = sqrt(tmp) + fabs(vel_CC[R](dir) - vel_CC[L](dir));  
+          double tmp    = (sp_vol_CC[L] + sp_vol_CC[R])/(kappa_L + kappa_R);                    
+          double cstar  = sqrt(tmp) + fabs(vel_CC[R].length() -
+                                           vel_CC[L].length());  
 
           double delt_tmp = d_CFL * dx(dir)/(cstar + ave_vel);
-          delt(dir)       = std::max(delt(dir), delt_tmp);
+          delt(dir)       = std::min(delt(dir), delt_tmp);
         }
       }  //  dir loop
       
@@ -380,8 +393,9 @@ template<class T> void ICE::vel_PressDiff_FC
     double kappa_R  = sp_vol_CC[R]/( speedSound[R] * speedSound[R] );
     double kappa_L  = sp_vol_CC[L]/( speedSound[L] * speedSound[L] );
 
-    double tmp      = (sp_vol_CC[L] + sp_vol_CC[R])/(kappa_L + kappa_R);                   
-    double cstar    = sqrt(tmp) + fabs(vel_CC[R](dir) - vel_CC[L](dir));
+    double tmp      = (sp_vol_CC[L] + sp_vol_CC[R])/(kappa_L + kappa_R);
+    double cstar    = sqrt(tmp) + fabs(vel_CC[R].length() - 
+                                       vel_CC[L].length());
     
     double local_dt = delT + .5*phi*(dx/cstar - delT);
     double dtdx     = local_dt/dx;            //4.10d
@@ -422,9 +436,10 @@ template<class T> void ICE::vel_PressDiff_FC
    
     //__________________________________
     // compute pressDiff  //4.13c
-    delP_FC = rho_brack * phi * cstar * (vel_CC[R](dir) - vel_CC[L](dir) );                
+    delP_FC = rho_brack * phi * cstar * (vel_CC[R].length() -
+                                         vel_CC[L].length() );                
               
-    pressDiff_FC[R] = (stressBar - delP_FC);             
+    pressDiff_FC[R] = (stressBar - delP_FC);        
   }
 } 
 //______________________________________________________________________
@@ -735,11 +750,14 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       //  hack      
 #ifdef ANNULUSICE
       double vol=dx.x()*dx.y()*dx.z();
-      if(n_iter <= 4000){
-        if(m==2){
+      
+      if(n_iter <= d_dbgVar2){
+        if(m==2 || m == d_dbgVar1 ){
           for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){            
             IntVector c = *iter;
-            int_eng_source[c] += 8.e10 * delT * rho_CC[c] * vol;
+            if ( vol_frac[m][c] > 0.001) {
+                int_eng_source[c] += 8.0e10* delT * rho_CC[c] * vol;
+            }
           }
         }
       }
@@ -752,10 +770,11 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         ostringstream desc;
         desc <<  "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
         printData(indx, patch,1,desc.str(),"int_eng_source_RF", int_eng_source);
+#if 0
         printData(indx, patch,1,desc.str(),"term1", term1);
         printData(indx, patch,1,desc.str(),"term2", term2);
         printData(indx, patch,1,desc.str(),"term3", term3);
-#if 0
+
         if (m == 0 ){
           printData_FC( indx, patch,1, desc.str(), "pressX_FC",     pressX_FC);
           printData_FC( indx, patch,1, desc.str(), "pressY_FC",     pressY_FC);
