@@ -15,9 +15,6 @@ puts "*** Using SCIRUN_DATA $DATADIR"
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 156 6]
 set m1 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 19 99]
 set m2 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 376 100]
@@ -26,10 +23,9 @@ set m4 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 171 366]
 set m5 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 183 100]
 set m6 [addModuleAtPosition "Teem" "Filters" "NrrdJoin" 342 367]
 set m7 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 138 195]
-set m8 [addModuleAtPosition "Teem" "DataIO" "NrrdWriter" 473 222]
-set m9 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 342 448]
-set m10 [addModuleAtPosition "Teem" "Filters" "NrrdCrop" 129 465]
-set m11 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 129 538]
+set m8 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 359 470]
+set m9 [addModuleAtPosition "Teem" "Filters" "NrrdCrop" 119 471]
+set m10 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 119 546]
 
 addConnection $m0 0 $m1 0
 addConnection $m0 0 $m2 0
@@ -40,10 +36,9 @@ addConnection $m7 0 $m3 0
 addConnection $m1 0 $m7 0
 addConnection $m0 0 $m7 1
 addConnection $m7 0 $m4 0
-addConnection $m4 0 $m8 0
+addConnection $m6 0 $m8 0
 addConnection $m6 0 $m9 0
-addConnection $m6 0 $m10 0
-addConnection $m10 0 $m11 0
+addConnection $m9 0 $m10 0
 
 set $m0-notes {}
 set $m0-show_status {1}
@@ -62,37 +57,32 @@ set $m5-show_status {1}
 set $m5-label {potentials}
 set $m6-notes {}
 set $m6-show_status {1}
-set $m6-join-axis {sink}
+set $m6-join-axis {0}
 set $m6-incr-dim {0}
+set $m6-dim {2}
 set $m7-notes {}
 set $m7-show_status {1}
-set $m7-use_interp {1}
-set $m7-use_closest {1}
-set $m7-closeness_distance {1.0e15}
+set $m7-interpolation_basis {linear}
+set $m7-map_source_to_single_dest {0}
+set $m7-exhaustive_search {1}
+set $m7-exhaustive_search_max_dist {-1}
+set $m7-np {1}
 set $m8-notes {}
 set $m8-show_status {1}
-set $m8-filename {/tmp/vector.nrrd}
-set $m8-filetype {}
 set $m9-notes {}
 set $m9-show_status {1}
+set $m9-num-axes {2}
+set $m9-minAxis0 {0}
+set $m9-maxAxis0 {0}
+set $m9-absmaxAxis0 {1}
+set $m9-minAxis1 {0}
+set $m9-maxAxis1 {999}
+set $m9-absmaxAxis1 {999}
 set $m10-notes {}
 set $m10-show_status {1}
-set $m10-minAxis0 {1}
-set $m10-maxAxis0 {1}
-set $m10-minAxis1 {0}
-set $m10-maxAxis1 {999}
-set $m10-minAxis2 {0}
-set $m10-maxAxis2 {0}
-set $m10-minAxis3 {0}
-set $m10-maxAxis3 {0}
-set $m10-absmaxAxis0 {1}
-set $m10-absmaxAxis1 {999}
-set $m10-absmaxAxis2 {0}
-set $m10-absmaxAxis3 {0}
-set $m11-notes {}
-set $m11-show_status {1}
+$m6 initialize_ui
+$m8 initialize_ui
 $m9 initialize_ui
 $m10 initialize_ui
-$m11 initialize_ui
 
 ::netedit scheduleok

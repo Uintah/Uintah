@@ -32,15 +32,6 @@ itcl_class Teem_Filters_NrrdCrop {
 	set $this-num-axes 0
 	set $this-reset 0
     }
-    method make_entry {w text v c} {
-        frame $w
-        label $w.l -text "$text"
-        pack $w.l -side left
-        global $v
-        entry $w.e -textvariable $v -width 6
-        bind $w.e <Return> $c
-        pack $w.e -side right
-    }
 
     method set_max_vals {} {
 	set w .ui[modname]
