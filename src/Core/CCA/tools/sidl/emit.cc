@@ -2284,8 +2284,15 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	// *********** OUT arg -- Special Redis ******************************
 	e.out << leader2 << "//Collect redistributions of out arguments:\n";
 	e.out << leader2 << "if (1) { //Hack to prevent variable shadowing of _rl_out and _this_rep\n";
-	e.out << leader2 << "SCIRun::descriptorList _rl_out = d_sched->getRedistributionReps(\"" << distarr->getName() << "\");\n";
+        e.out << leader2 << "SCIRun::descriptorList _rl_out = d_sched->getRedistributionReps(\"" << distarr->getName() << "\");\n";
 	e.out << leader2 << "SCIRun::MxNArrayRep* _this_rep = d_sched->callerGetCallerRep(\"" << distarr->getName() << "\");\n";
+	e.out << leader2 << "//Resize array \n";
+        e.out << leader2 << arg << ".resize(";
+        for(int i=arr_t->dim; i > 0; i--) {
+          e.out << "_this_rep->getSize(" << i << ")";
+          if (i != 1) e.out << ", ";
+        }
+        e.out << ");\n";
 	e.out << leader2 << "for(int i = 0; i < (int)_rl_out.size(); i++) {\n";
 	e.out << leader2 << "  SCIRun::Message* message = _rl_out[i]->getReference()->chan->getMessage();\n";
 	//string dimname=arg+"_mdim";
@@ -2407,8 +2414,9 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
       }
       else if (ctx == ArgOut) {
 	// *********** OUT arg -- No Special Redis ********************************
+        /*
         string Dname = distarr->getName();
-        e.out << leader2 << "//OUT redistribution array detected. Get it afterwards\n";
+	e.out << leader2 << "//OUT redistribution array detected. Get it afterwards\n";
 	e.out << leader2 << "//Resize array \n";
 	e.out << leader2 << "SCIRun::MxNArrayRep* _d_rep_" << Dname << " = d_sched->callerGetCallerRep(\"" 
 	      << Dname << "\");\n";
@@ -2418,7 +2426,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	  if (i != 1) e.out << ", ";
 	}
 	e.out << ");\n";
-
+        */
 	// *********** END OF OUT arg -- No Special Redis ****************************
       }
     }
