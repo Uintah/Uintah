@@ -47,8 +47,8 @@ void EigenEvaluator::execute(void) {
   if( LatVolField<Matrix3> *tensorField =
       dynamic_cast<LatVolField<Matrix3>*>(hTF.get_rep())) {
 
-    eValueField = scinew LatVolField<double>(hTF->data_at());
-    eVectorField = scinew LatVolField<Vector>(hTF->data_at());
+    eValueField = scinew LatVolField<double>(hTF->basis_order());
+    eVectorField = scinew LatVolField<Vector>(hTF->basis_order());
     computeGridEigens(tensorField, eValueField,
 		      eVectorField, guiEigenSelect.get());
   }

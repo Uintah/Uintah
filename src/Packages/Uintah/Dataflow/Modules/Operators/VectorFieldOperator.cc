@@ -40,7 +40,7 @@ void VectorFieldOperator::execute(void)
   if( LatVolField<Vector> *vectorField =
       dynamic_cast<LatVolField<Vector>*>(hTF.get_rep())) {
 
-    scalarField = scinew LatVolField<double>(hTF->data_at());
+    scalarField = scinew LatVolField<double>(hTF->basis_order());
 
     performOperation( vectorField, scalarField );
   }
