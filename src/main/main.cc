@@ -74,10 +74,14 @@ extern env_map scirunrc;             // contents of .scirunrc
 #error You must set ITCL_WIDGETS to the iwidgets/scripts path
 #endif
 
+
+static bool execute_flag = false;
+
 void
 usage()
 {
   cout << "Usage: scirun [args] [net_file]\n";
+  cout << "       [-]-e[xecute] : executes the given network on startup\n";
   cout << "       [-]-v[ersion] : prints out version information\n";
   cout << "       [-]-h[elp]    : prints usage information\n";
   cout << "       net_file      : SCIRun Network Input File\n";
@@ -104,6 +108,11 @@ parse_args( int argc, char *argv[] )
 	      ( arg == "-h" ) ||  ( arg == "--h" ) )
     {
       usage();
+    }
+    else if ( ( arg == "--execute" ) || ( arg == "-execute" ) ||
+	      ( arg == "-e" ) ||  ( arg == "--e" ) )
+    {
+      execute_flag = true;
     }
     else
     {
@@ -221,6 +230,11 @@ main(int argc, char *argv[] )
   {
     string command = string( "loadnet " ) + argv[startnetno];
     gui->eval(command.c_str(), result);
+
+    if (execute_flag)
+    {
+      gui->eval("ExecuteAll", result);
+    }
   }
 
   // Now activate the TCL event loop
