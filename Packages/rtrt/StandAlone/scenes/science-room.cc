@@ -15,6 +15,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Mesh.h>
 #include <Packages/rtrt/Core/ASEReader.h>
+#include <Packages/rtrt/Core/ObjReader.h>
 #include <Packages/rtrt/Core/Bezier.h>
 #include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/Checker.h>
@@ -240,7 +241,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     double rad=(65+35*i)*(M_PI/180.);
     t.pre_rotate(rad, Vector(0,0,1));
     t.pre_translate(center.vector()+Vector(cos(rad),sin(rad),0)*2.9);
-    if (!readASEFile("/usr/sci/data/Geometry/models/corbusier.ASE", t, g, matls, env_map)) {
+
+//    if (!readASEFile("/usr/sci/data/Geometry/models/corbusier.ASE", t, g, matls, env_map)) {
+    if (!readObjFile("/usr/sci/data/Geometry/models/corbu-ch.obj",
+		     "/usr/sci/data/Geometry/models/cc.mtl", t, g)) {
       exit(0);
     }
   }
