@@ -39,6 +39,12 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/FutureValue.h>
 
+#if HAVE_MAGICK
+namespace MAGICK {
+#include <magick/api.h>
+}
+#endif
+
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -136,6 +142,14 @@ Viewer::~Viewer()
 //----------------------------------------------------------------------
 void Viewer::do_execute()
 {
+
+  //simple test of the image magic api.  Should really be used elsewhere
+#if HAVE_MAGICK
+  MAGICK::Image img;
+  MAGICK::InitializeMagick("my magick"); 
+  cout << "have magick" << endl;
+#endif
+
   for(;;){
     if(mailbox.numItems() == 0){
       // See if anything needs to be redrawn...

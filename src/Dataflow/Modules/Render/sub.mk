@@ -54,9 +54,9 @@ PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 
 CFLAGS += $(MPEG_DEF_FLAG)
 
-INCLUDES += $(MPEG_INCLUDE)
+INCLUDES += $(MPEG_INCLUDE) $(MAGICK_INCLUDE)
 
-LIBS := $(TK_LIBRARY) $(GL_LIBS) $(MPEG_LIBRARY) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBS) $(MPEG_LIBRARY) $(MAGICK_LIBS) -lm
 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
