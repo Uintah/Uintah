@@ -96,8 +96,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
       frictionalWork[m].initialize(0.);
 
-      IntVector low(gsurfnorm[m].getLowIndex());
-      IntVector high(gsurfnorm[m].getHighIndex());
+      IntVector low(patch->getInteriorNodeLowIndex());
+      IntVector high(patch->getInteriorNodeHighIndex());
 
       int ILOW,IHIGH,JLOW,JHIGH,KLOW,KHIGH;
       // First, figure out some ranges for for loops
