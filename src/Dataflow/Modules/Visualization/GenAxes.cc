@@ -63,7 +63,10 @@ private:
   GeomFTGLFontRendererHandle    label_font_;
   GeomFTGLFontRendererHandle    value_font_;
 #endif
+  // The bounding box of all the input fields
   BBox				bbox_;
+  
+  // Some basic colors, mainly for debugging
   MaterialHandle		white_;
   MaterialHandle		red_;
   MaterialHandle		green_;
@@ -108,8 +111,8 @@ GenAxes::GenAxes(GuiContext* ctx)
     vars_()
 {
 #ifdef HAVE_FTGL
-  label_font_ = scinew GeomFTGLFontRenderer("/gozer/fonts/scirun.ttf");
-  value_font_ = scinew GeomFTGLFontRenderer("/gozer/fonts/scirun.ttf");
+  label_font_ = scinew GeomFTGLFontRenderer(SCIRUN_SRCDIR+string("/Fonts/scirun.ttf"));
+  value_font_ = scinew GeomFTGLFontRenderer(SCIRUN_SRCDIR+string("/Fonts/scirun.ttf"));
 # endif
   
   add_GuiString("title");
@@ -118,8 +121,8 @@ GenAxes::GenAxes(GuiContext* ctx)
   add_GuiDouble("squash");
   add_GuiString("valuefont");
   add_GuiString("labelfont");
-  add_GuiDouble("valuerez");
-  add_GuiDouble("labelrez");
+  add_GuiInt("valuerez");
+  add_GuiInt("labelrez");
 
   for (int i = 0; i < 3; i++) {
     for (int dir = 0; dir < 2; dir++) {
@@ -162,8 +165,6 @@ GenAxes::GenAxes(GuiContext* ctx)
     add_GuiDouble(base+"valuesize");
     add_GuiDouble(base+"valuesquash");
 
-
-
     }
   }
 }
@@ -183,7 +184,7 @@ GenAxes::get_GuiString(const string &str) {
   if (GuiString *var = dynamic_cast<GuiString *>((*pos).second)) {
     ret = var->get();
   }
-  DEBUGPRINT
+  DEBUGPRINT;
   return ret;
 }
 
@@ -279,7 +280,7 @@ GenAxes::tcl_command(GuiArgs& args, void* userdata) {
     //    double scale = bbox_.diagonal().maxComponent();    
     //label_font_ = 0;
     label_font_ = scinew GeomFTGLFontRenderer(get_GuiString("labelfont"),
-					      get_GuiDouble("labelrez"),72);
+					      get_GuiInt("labelrez")+1,72);
 #endif
     want_to_execute();
   } else 
@@ -287,7 +288,7 @@ GenAxes::tcl_command(GuiArgs& args, void* userdata) {
 #ifdef HAVE_FTGL
     //value_font_ = 0;
     value_font_ = scinew GeomFTGLFontRenderer(get_GuiString("valuefont"),
-					      get_GuiDouble("valuerez"),72);
+					      get_GuiInt("valuerez")+1,72);
 #endif
     want_to_execute();
   } else {
@@ -367,15 +368,19 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     Vector nsecondary = -secondary;
     
     GeomHandle obj;
-    GeomLines *lines;
     
-    double divisions = get_GuiDouble(base+"divisions");
-    double line_width = get_GuiDouble(base+"width");
-    obj = generateLines(origin, delta, secondary, divisions);  
-    lines = dynamic_cast<GeomLines *>
-      (dynamic_cast<GeomMaterial *>(obj.get_rep())->get_child().get_rep());
-    ASSERTMSG(lines,"Cannot cast lines to GeomLines");
+    GeomLines *lines = scinew GeomLines();
+    const double line_width = get_GuiDouble(base+"width");
     lines->setLineWidth(line_width);
+
+    const int num = Round(get_GuiDouble(base+"divisions"));
+    for (int i = 0; i <= num; i++) {
+      const Point pos = origin + delta*i;    
+      lines->add(pos, pos + secondary);
+    }
+    
+    obj = scinew GeomMaterial(lines, white_);
+
 
     int show = get_GuiInt(base+"lines");
     GeomGroup *grid = scinew GeomGroup();
@@ -421,7 +426,7 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     squash[axisleft] = 
       get_GuiDouble(base+"valuesquash")*get_GuiDouble("squash");
     
-    for (int i = 0; i <= Round(divisions); i++) {
+    for (int i = 0; i <= num; i++) {
       GeomTransform *ttick = scinew GeomTransform(tilted_tick);
       ttick->translate(delta*i);
       ticks->add(ttick);
@@ -441,7 +446,8 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
       values->add(value);      
 #endif
     }
-    ticks->add(values);
+    
+    //ticks->add(values);
     
     double angle = radians*get_GuiDouble(base+"tickangle");
     trans.load_identity();
@@ -449,11 +455,14 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     trans.pre_translate((origin+secondary).asVector());
 
     obj = scinew GeomTransform(ticks, trans);
-
-
     show = get_GuiInt(base+"maxticks");
     obj = scinew GeomSwitch(scinew GeomCull(obj, show<2?0:&secondary),show>0);
     grid->add(scinew GeomSwitch(scinew GeomCull(obj, show<2?0:&normal),show>0));
+    obj = scinew GeomTransform(values,trans);
+    show = get_GuiInt(base+"maxvalue");
+    obj = scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&secondary),show>0);
+    grid->add(scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&normal),show>0));
+
 
     
     // Min Ticks
@@ -484,7 +493,7 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     ticks = scinew GeomGroup();    
     values = scinew GeomGroup();
 
-    for (int i = 0; i <= Round(divisions); i++) {
+    for (int i = 0; i <= num; i++) {
       GeomTransform *ttick = scinew GeomTransform(tilted_tick);
       ttick->translate(delta*i);
       ticks->add(ttick);
@@ -503,18 +512,21 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
       values->add(value);      
 #endif
     }
-    ticks->add(values);
-    
+
     angle = radians*get_GuiDouble(base+"tickangle");
     trans.load_identity();
     trans.pre_rotate(-angle,left);
     trans.pre_translate(origin.asVector());
 
     obj = scinew GeomTransform(ticks, trans);
-
     show = get_GuiInt(base+"minticks");
     obj = scinew GeomSwitch(scinew GeomCull(obj, show<2?0:&nsecondary),show>0);
     grid->add(scinew GeomSwitch(scinew GeomCull(obj, show<2?0:&normal),show>0));
+
+    obj = scinew GeomTransform(values, trans);
+    show = get_GuiInt(base+"minvalue");
+    obj = scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&nsecondary),show>0);
+    grid->add(scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&normal),show>0));
 
 
 #if 0
@@ -535,7 +547,7 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     // Create Label
     trans.load_identity();
     trans.pre_rotate(radians*get_GuiDouble(base+"labelangle"),left);
-    trans.project(secondary,textup);
+    trans.project(up,textup);
     textup.normalize();
     textup *= scale*get_GuiDouble(base+"labelheight") / 100.00;
     
