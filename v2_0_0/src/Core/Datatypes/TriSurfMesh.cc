@@ -63,8 +63,8 @@ TriSurfMesh::TriSurfMesh(const TriSurfMesh &copy)
   : points_(copy.points_),
     edges_(copy.edges_),
     faces_(copy.faces_),
-    normals_(copy.normals_),
     edge_neighbors_(copy.edge_neighbors_),
+    normals_(copy.normals_),
     node_neighbors_(copy.node_neighbors_),
     synchronized_(copy.synchronized_)
 {
