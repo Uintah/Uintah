@@ -27,11 +27,12 @@ package require Iwidgets 3.0
 
 class Diagram {
 
-    variable opt
     variable menu
-    variable gl
+    variable tb
+    variable ui
     variable parent
-    variable n
+    variable name
+
     variable initialized
     variable last
     variable w
@@ -46,10 +47,12 @@ class Diagram {
 	delete object  $w.diagram
     }
 
-    method ui { window name } {
-	set opt $window.opt
-	set menu $window.menu
-	set n $name
+    method ui { n m t u } {
+	set menu $m
+	set tb $t
+	set ui $u
+
+	set name $n
 
     }
 
@@ -67,9 +70,9 @@ class Diagram {
 	#
 	# option area
 	#
-	iwidgets::labeledframe $opt.d -labeltext $n -labelpos nw
+	iwidgets::labeledframe $ui.d -labeltext $name -labelpos nw
 
-	set w [$opt.d childsite]
+	set w [$ui.d childsite]
 
 	# list of polys
 	frame $w.poly
@@ -118,10 +121,12 @@ class Diagram {
 
 	pack $w.s -side left -ipadx 5 -anchor n
 
-	pack $opt.d
+	pack $ui.d
 
 	bind DiagramTags <ButtonPress> "$this-c ButtonPress %x %y %b "
-	bind DiagramTags <B1-Motion> "$this-c Motion %x %y %b "
+	bind DiagramTags <B1-Motion> "$this-c Motion %x %y 1 "
+	bind DiagramTags <B2-Motion> "$this-c Motion %x %y 2 "
+	bind DiagramTags <B3-Motion> "$this-c Motion %x %y 3 "
 	bind DiagramTags <ButtonRelease> "$this-c ButtonRelease %x %y %b "
 	
 	set initialized 1
@@ -173,4 +178,5 @@ class Diagram {
 	set last [expr $last + 1]
 	return $win
     }
+	    
 }

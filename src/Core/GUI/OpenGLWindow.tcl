@@ -23,7 +23,6 @@ class OpenGLWindow {
 
 	opengl $w -geometry 500x300 -doublebuffer true \
 	    -direct true -rgba true 
-
 	bind $w <Map> "$this-c map $w"
 	bind $w <Expose> "$parent-c redraw $w"
 	pack $w
@@ -34,6 +33,14 @@ class OpenGLWindow {
 	
     method setobj { obj } {
 	bindtags $w [list [$obj getbinds] $w all]
+    }
+
+    method resize { width height } {
+	$w configure -geometry ${width}x$height
+    }
+
+    method set_cursor { c } {
+	$w configure -cursor $c
     }
 }
 	
