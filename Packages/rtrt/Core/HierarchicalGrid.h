@@ -53,6 +53,8 @@ public:
 
 private:
 
+  int total_;
+
   typedef struct {
     double dx;
     double dy;
