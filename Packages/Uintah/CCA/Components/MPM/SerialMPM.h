@@ -62,19 +62,19 @@ public:
   virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
 			    SimulationStateP&);
 	 
-  void scheduleInitialize(const LevelP& level,
+  virtial void scheduleInitialize(const LevelP& level,
 				  SchedulerP&);
 	 
   void schedulePrintParticleCount(const LevelP& level, 
                                   SchedulerP& sched);
   //////////
   // Insert Documentation Here:
-  void scheduleComputeStableTimestep(const LevelP& level,
+  virtial void scheduleComputeStableTimestep(const LevelP& level,
 					     SchedulerP&);
 	 
   //////////
   // Insert Documentation Here:
-  void scheduleTimeAdvance(const LevelP& level, 
+  virtial void scheduleTimeAdvance(const LevelP& level, 
 				   SchedulerP&, int step, int nsteps );
 
   void setSharedState(SimulationStateP& ssp);
@@ -122,7 +122,7 @@ protected:
 				    string integrator, bool haveLoadCurve,
 				    bool doErosion);
 	 
-  void actuallyInitialize(const ProcessorGroup*,
+  virtual void actuallyInitialize(const ProcessorGroup*,
 				  const PatchSubset* patches,
 				  const MaterialSubset* matls,
 				  DataWarehouse* old_dw,
@@ -307,7 +307,7 @@ protected:
 				       DataWarehouse* new_dw);
 
 
-  void scheduleInterpolateParticlesToGrid(        SchedulerP&, const PatchSet*,
+  virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
 
   void scheduleComputeHeatExchange(               SchedulerP&, const PatchSet*,
@@ -352,7 +352,7 @@ protected:
   void scheduleApplyExternalLoads(                SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
 
-  void scheduleInterpolateToParticlesAndUpdate(   SchedulerP&, 
+  virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
                                                   const PatchSet*,
                                                   const MaterialSet*);
 
