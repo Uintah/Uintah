@@ -192,6 +192,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
   }             
 }
 
+#if 0
 /*___________________________________________________________________
  Function~  AMRICE::interpolationWrapper--
  Purpose:    depending on which 
@@ -213,7 +214,7 @@ template<class T>
                                      refineRatio, fl,fh, Q, error); 
 
 }
-
+#endif
 /*___________________________________________________________________
  Function~  AMRICE::linearInterpolation--
 _____________________________________________________________________*/
