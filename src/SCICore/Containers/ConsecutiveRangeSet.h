@@ -11,6 +11,9 @@
  * 
  */
 
+#ifndef SCI_Containers_ConsecutiveRangeSet_h
+#define SCI_Containers_ConsecutiveRangeSet_h
+
 #include <list>
 #include <vector>
 #include <string>
@@ -218,3 +221,5 @@ void ConsecutiveRangeSet::Range::display(std::ostream& out) const
    else
       out << d_low << " - " << high();
 }
+
+#endif
