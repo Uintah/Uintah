@@ -26,6 +26,16 @@ set MacroedModules ""
 global modules
 set modules ""
 
+global font_pixel_width
+set font_pixel_width 0.0
+
+global extra_ports
+set extra_ports 0
+
+global original_size
+set original_title_size 0
+
+
 itcl_class Module {
    
     method modname {} {
@@ -190,9 +200,9 @@ itcl_class Module {
 	
 	lappend canvases $canvas
 	set modframe $canvas.module[modname]
-	frame $modframe -relief raised -borderwidth 3
+	frame $modframe -relief raised -borderwidth 3 
 	
-	frame $modframe.ff
+	frame $modframe.ff 
 	pack $modframe.ff -side top -expand yes -fill both -padx 5 -pady 6
  
 	set p $modframe.ff
@@ -249,14 +259,13 @@ itcl_class Module {
 
 	# Stick it in the canvas
 	
-	
 	$canvas create window $modx $mody -window $modframe \
 		-tags [modname] -anchor nw 
-
+	
 	# Set up input/output ports
 	$this configureIPorts $canvas
 	$this configureOPorts $canvas
-
+	
 	# Try to find a position for the icon where it doesn't
 	# overlap other icons
 	set done 0	
@@ -375,6 +384,7 @@ itcl_class Module {
 	    bind $p.inset <ButtonRelease-1> "moduleEndDrag $modframe $canvas"
 	    bind $p.inset <3> "popup_menu %X %Y $canvas $minicanvas [modname]"
 	}
+	
     }
     method set_moduleDragged {  ModuleDragged } {
 	set mdragged $ModuleDragged
@@ -388,7 +398,6 @@ itcl_class Module {
     method get_moduleConnected {} {
 	return $mconnected
     }
-    
 
     method configureAllIPorts {} {
 	foreach t $canvases {
@@ -750,8 +759,61 @@ itcl_class Module {
 	# triggering stream flush
 	set $varName
     }
-}
+    method module_grow {ports} {  
+	global maincanvas
+	global font_pixel_width
+	global extra_ports
+	global original_title_size
+	global modname_font
+	global port_spacing
 
+	set temp_spacing [expr $port_spacing+1]
+	set num_ports $ports
+	set mod_width [winfo width $maincanvas.module[modname] ]
+
+	#initialize all values first time through
+	if {$original_title_size == 0} {
+	    set original_title_size [winfo width $maincanvas.module[modname].ff.title]
+	    set font_pixel_width [font measure $modname_font\
+		    "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz"]
+	    set font_pixel_width [expr $font_pixel_width/53.0]
+	}
+	
+	# determine if it needs more room
+	if { [expr $mod_width-[expr $num_ports*$temp_spacing] ] <= $temp_spacing } {
+	    incr extra_ports 1
+	    set title_width [expr $original_title_size+[expr $temp_spacing*$extra_ports]]
+	    set title_width [expr int([expr ceil([expr $title_width/$font_pixel_width])])]
+	    $maincanvas.module[modname].ff.title configure -width $title_width
+	}
+    }
+
+    method module_shrink {ports} {  
+	global maincanvas
+	global font_pixel_width
+	global extra_ports
+	global original_title_size
+	global port_spacing
+
+	set temp_spacing [expr $port_spacing+1]
+	set num_ports $ports
+	set mod_width [winfo width $maincanvas.module[modname] ]
+	set title_width [winfo width $maincanvas.module[modname].ff.title]
+	
+	#make sure it doesn't shrink smaller than original size
+	if { [expr $extra_ports-1] >=0 } {
+	    set extra_ports [expr $extra_ports-1]
+	}
+
+	#determine if you have enough room to take a port size off
+	if { [expr $title_width-$temp_spacing] > $original_title_size } {
+	    set title_width [expr $original_title_size+[expr $extra_ports*$temp_spacing]]
+	    set title_width [expr $title_width/$font_pixel_width]
+	    set title_width [expr int([expr ceil($title_width)])]
+	    $maincanvas.module[modname].ff.title configure -width $title_width
+	}
+    }
+}   
 proc popup_menu {x y canvas minicanvas modid} {
     global CurrentlySelectedModules
     

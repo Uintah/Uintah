@@ -30,6 +30,7 @@
 #include <Core/Util/soloader.h>
 
 
+
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -285,6 +286,9 @@ void Module::update_progress(int n, int max, Timer &t)
 // Port stuff
 void Module::add_iport(IPort* port)
 {
+  if(lastportdynamic && dynamic_port_maker) {
+    TCL::execute(id+" module_grow "+ to_string(iports.size()));
+  }
     port->set_which_port(iports.size());
     iports.add(port);
     reconfigure_iports();
@@ -344,7 +348,7 @@ void Module::remove_iport(int which)
       TCL::execute(command);
     }
   }
-
+  TCL::execute(id+" module_shrink " +to_string(iports.size())); 
   reconfigure_iports();
 }
 
