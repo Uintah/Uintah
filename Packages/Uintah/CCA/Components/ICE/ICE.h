@@ -3,7 +3,7 @@
 #define UINTAH_HOMEBREW_ICE_H
 #include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
-#include <Packages/Uintah/CCA/Ports/CFDInterface.h>
+#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
@@ -21,7 +21,7 @@ namespace Uintah {
 
 using namespace SCIRun;
     
-    class ICE : public UintahParallelComponent, public CFDInterface {
+    class ICE : public UintahParallelComponent, public SimulationInterface {
     public:
       ICE(const ProcessorGroup* myworld);
       virtual ~ICE();
