@@ -26,8 +26,8 @@ protected:
     Array2<Color> image;
     Color outcolor;
     bool valid_;
+    string filename_;
 
-    void read_image(const string &texfile);
     void read_hdr_image(const string &texfile);
 public:
     ImageMaterial(int /* oldstyle */, const string &filename, 
