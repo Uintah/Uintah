@@ -55,6 +55,8 @@ public:
   virtual void execute();
   
   void fill_histogram( vector<int>& hits);
+  void clear_histogram();
+  void local_reset_vars(){ reset_vars(); }
 
   GuiDouble min_;
   GuiDouble max_;
@@ -114,11 +116,7 @@ ScalarFieldStatsAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
   vector<typename FIELD::value_type> values;
 
   double mean = 0;
-  if( sfs->is_fixed_.get() == 1 ) {//&&
-/*       (old_min != sfs->min_.get() || old_max!= sfs->max_.get())){ */
-/*     old_min = sfs->min_.get(); */
-/*     old_max = sfs->max_.get(); */
-/*     old_fixed = ( sfs->is_fixed_.get() == 1); */
+  if( sfs->is_fixed_.get() == 1 ) {
     
     while (itr != eitr)
     {
@@ -157,34 +155,36 @@ ScalarFieldStatsAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
     
     sfs->min_.set( double( min ) );
     sfs->max_.set( double( max ) );
-    if (fabs(sfs->max_.get() - sfs->min_.get()) < 0.000001)
-      {
-	sfs->min_.set(sfs->min_.get() - 1.0);
-	sfs->max_.set(sfs->max_.get() + 1.0);
+  }
+
+  sfs->local_reset_vars();
+  if((sfs->max_.get() - sfs->min_.get()) > 1e-16 && values.size() > 0){
+    int nbuckets = sfs->nbuckets_.get();
+    vector<int> hits(nbuckets, 0);
+    
+    double frac = 1.0;
+    frac = (nbuckets-1)/(sfs->max_.get() - sfs->min_.get());
+
+    double sigma = 0.0;
+    typename vector<typename FIELD::value_type>::iterator vit = values.begin();
+    typename vector<typename FIELD::value_type>::iterator vit_end = values.end();
+    for(; vit != vit_end; ++vit) {
+      if( *vit >= sfs->min_.get() && *vit <= sfs->max_.get()){
+	double value = (*vit - sfs->min_.get())*frac;
+	hits[int(value)]++;
       }
-  }
-  
-  int nbuckets = sfs->nbuckets_.get();
-  vector<int> hits(nbuckets, 0);
-  double frac = (nbuckets-1)/(sfs->max_.get() - sfs->min_.get());
-  
-
-  double sigma = 0.0;
-  typename vector<typename FIELD::value_type>::iterator vit = values.begin();
-  typename vector<typename FIELD::value_type>::iterator vit_end = values.end();
-  for(; vit != vit_end; ++vit) {
-    if( *vit >= sfs->min_.get() && *vit <= sfs->max_.get()){
-      double value = (*vit - sfs->min_.get())*frac;
-      hits[int(value)]++;
+      sigma += (*vit - mean)*(*vit - mean);
     }
-    sigma += (*vit - mean)*(*vit - mean);
+    sfs->sigma_.set( sqrt( sigma / double(values.size()) ));
+    
+    vit = values.begin();
+    sort(vit, vit_end);
+    sfs->median_.set( double ( values[ values.size()/2] ) );
+    sfs->fill_histogram( hits );
+  } else {
+    sfs->warning("min - max < precision or no values in range; clearing histogram");
+    sfs->clear_histogram();
   }
-  sfs->sigma_.set( sqrt( sigma / double(values.size()) ));
-
-  vit = values.begin();
-  sort(vit, vit_end);
-  sfs->median_.set( double ( values[ values.size()/2] ) );
-  sfs->fill_histogram( hits );
 }
 
 

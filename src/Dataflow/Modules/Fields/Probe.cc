@@ -384,7 +384,7 @@ Probe::execute()
   {
     valstr << 0;
     PointCloudField<double> *field =
-      scinew PointCloudField<double>(mesh, 1);
+      scinew PointCloudField<double>(mesh, 0);
     field->set_value(0.0, pcindex);
     ofield = field;
   }
@@ -397,7 +397,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloudField<double> *field = scinew PointCloudField<double>(mesh, 1);
+    PointCloudField<double> *field = scinew PointCloudField<double>(mesh, 0);
     field->set_value(result, pcindex);
     ofield = field;
   }
@@ -410,7 +410,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloudField<Vector> *field = scinew PointCloudField<Vector>(mesh, 1);
+    PointCloudField<Vector> *field = scinew PointCloudField<Vector>(mesh, 0);
     field->set_value(result, pcindex);
     ofield = field;
   }
@@ -423,7 +423,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloudField<Tensor> *field = scinew PointCloudField<Tensor>(mesh, 1);
+    PointCloudField<Tensor> *field = scinew PointCloudField<Tensor>(mesh, 0);
     field->set_value(result, pcindex);
     ofield = field;
   }

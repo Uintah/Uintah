@@ -79,19 +79,14 @@ itcl_class SCIRun_FieldsCreate_SampleStructHex {
 	pack $w.row31.zsize_label $w.row31.zsize -side left
 
 	label $w.which.l -text "Data at Location"
-	radiobutton $w.which.node -text "Nodes" \
+	radiobutton $w.which.node -text "Nodes (linear basis)" \
 		-variable $this-data-at -value Nodes
-	radiobutton $w.which.edge -text "Edges" \
-		-variable $this-data-at -value Edges
-	radiobutton $w.which.face -text "Faces" \
-		-variable $this-data-at -value Faces
-	radiobutton $w.which.cell -text "Cells" \
+	radiobutton $w.which.cell -text "Cells (constant basis)" \
 		-variable $this-data-at -value Cells
 	radiobutton $w.which.none -text "None" \
 		-variable $this-data-at -value None
 	pack $w.which.l -side top
-	pack $w.which.node $w.which.edge $w.which.face $w.which.cell \
-	    $w.which.none -anchor nw
+	pack $w.which.node $w.which.cell $w.which.none -anchor nw
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w

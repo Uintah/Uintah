@@ -44,12 +44,13 @@ SRCS     += \
 	$(SRCDIR)/ApplyInterpMatrix.cc\
 	$(SRCDIR)/ApplyInterpolant.cc\
 	$(SRCDIR)/AttractNormals.cc\
+	$(SRCDIR)/BuildInterpMatrix.cc\
 	$(SRCDIR)/BuildInterpolant.cc\
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/Centroids.cc\
 	$(SRCDIR)/ChangeCoordinates.cc\
-	$(SRCDIR)/ChangeFieldDataAt.cc\
+	$(SRCDIR)/ChangeFieldBasis.cc\
 	$(SRCDIR)/ChangeFieldDataType.cc\
 	$(SRCDIR)/ChangeFieldBounds.cc\
 	$(SRCDIR)/ChooseField.cc\
@@ -98,6 +99,7 @@ SRCS     += \
 	$(SRCDIR)/TransformData.cc\
 	$(SRCDIR)/TransformData2.cc\
 	$(SRCDIR)/TransformData3.cc\
+	$(SRCDIR)/TransformMesh.cc\
 	$(SRCDIR)/Unstructure.cc\
 	$(SRCDIR)/VectorMagnitude.cc\
 #[INSERT NEW CODE FILE HERE]

@@ -35,6 +35,7 @@ SRCDIR := Core
 
 SUBDIRS := \
 	$(SRCDIR)/Algorithms \
+	$(SRCDIR)/Bundle \
 	$(SRCDIR)/Containers \
 	$(SRCDIR)/Datatypes \
 	$(SRCDIR)/Exceptions \
@@ -43,7 +44,6 @@ SUBDIRS := \
 	$(SRCDIR)/Geom \
 	$(SRCDIR)/GeomInterface \
 	$(SRCDIR)/Geometry \
-	$(SRCDIR)/GLVolumeRenderer \
 	$(SRCDIR)/GuiInterface \
 	$(SRCDIR)/ICom \
 	$(SRCDIR)/ImportExport \

@@ -130,7 +130,9 @@ public:
   void			getData(int mask, FutureValue<GeometryData*>* result);
   GeomHandle		createGenAxes();   
 
+  void                  setMovie( int state );
   void                  setMovieFrame( int movieframe );
+  void                  setMessage( string message );
 
   // UNICAM START
   void			unicam_choose(int X, int Y);

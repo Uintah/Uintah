@@ -82,6 +82,9 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	global $this-draw_mode
 	global $this-num_slices
 	set $this-num_slices -1
+
+        global $this-shading-button-state
+        set $this-shading-button-state 1
     }
 
 #      method ui {} {
@@ -230,8 +233,8 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 # 		-showvalue true -resolution 1 \
 # 		-orient horizontal \
 
-	checkbutton $tab.tf.sw -text "Software Rasterization" -relief flat \
-            -variable $this-sw_raster -onvalue 1 -offvalue 0 \
+	checkbutton $tab.tf.sw -text "Software ColorMap2 Rasterization" \
+            -relief flat -variable $this-sw_raster -onvalue 1 -offvalue 0 \
             -anchor w -command "$n"
 
 	pack $tab.tf.l $tab.tf.stransp $tab.tf.sw \
@@ -265,7 +268,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
             -anchor w -command "$s; $n"
 
 	scale $tab.srate_lo -variable $this-sampling_rate_lo \
-            -from 0.1 -to 5.0 -label "Interactive Sampling Rate" \
+            -from 0.1 -to 5.0 -label "Adaptive Sampling Rate" \
             -showvalue true -resolution 0.1 \
             -orient horizontal \
 
@@ -347,6 +350,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
         bind $tab.f1.specular <ButtonRelease> $n
         bind $tab.f1.shine <ButtonRelease> $n
 
+        change_shading_state [set $this-shading-button-state]
     }
 
 
@@ -465,4 +469,22 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	return [set $this-$sval]
     }
 
+    method change_shading_state { val } {
+        set $this-shading-button-state $val
+
+        set w .ui[modname] 
+
+        if {![winfo exists $w]} { 
+            return
+        }
+        
+	set dof [$w.main.options.disp.frame_title childsite]
+        set tab [$dof.tabs childsite "Shading"]
+        
+        if { $val } {
+            $tab.shading configure -fg "black"
+        } else {
+            $tab.shading configure -fg "darkgrey"
+        }
+    }
 }
