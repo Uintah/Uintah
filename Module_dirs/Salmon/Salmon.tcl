@@ -116,16 +116,16 @@ proc makeRoe {salmon rid} {
     label $m.shade.title -text "Shading:" -anchor w -relief flat 
     pack $m.shade.title -fill x -padx 2
     radiobutton $m.shade.wire -text "Wire" -anchor w -relief flat \
-	    -variable shading,$rid -command $r
+	    -variable shading,$rid -command $r -value wire
     pack $m.shade.wire -fill x -padx 2
     radiobutton $m.shade.flat -text "Flat" -anchor w -relief flat \
-	    -variable shading,$rid -command $r
+	    -variable shading,$rid -command $r -value flat
     pack $m.shade.flat -fill x -padx 2
     radiobutton $m.shade.gouraud -text "Gouraud" -anchor w -relief flat \
-	    -padx 2 -variable shading,$rid -command $r
+	    -padx 2 -variable shading,$rid -command $r -value gouraud
     pack $m.shade.gouraud -fill x -padx 2
     radiobutton $m.shade.phong -text "Phong" -anchor w -relief flat \
-	    -variable shading,$rid -command $r
+	    -variable shading,$rid -command $r -value phong
     pack $m.shade.phong -fill x -padx 2
     $m.shade.phong select
 

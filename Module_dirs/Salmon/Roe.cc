@@ -729,23 +729,25 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	// Animate lookat point to center of BBox...
 	BBox bbox;
 	get_bounds(bbox);
-	cv.lookat=bbox.center();
-	animate_to_view(cv, 2.0);
+	if(bb.valid()){
+	    cv.lookat=bbox.center();
+	    animate_to_view(cv, 2.0);
 
-	// Move forward/backwards until entire view is in scene...
-	Vector lookdir(cv.lookat-cv.eyep);
-	double old_dist=lookdir.length();
-	PRINTVAR(autoview_sw, old_dist);
-	double old_w=2*Tan(DtoR(cv.fov/2.))*old_dist;
-	PRINTVAR(autoview_sw, old_w);
-	Vector diag(bbox.diagonal());
-	double w=diag.length();
-	PRINTVAR(autoview_sw, w);
-	double dist=old_dist*w/old_w;
-	PRINTVAR(autoview_sw, dist);
-	cv.eyep=cv.lookat-lookdir*dist/old_dist;
-	PRINTVAR(autoview_sw, cv.eyep);
-	animate_to_view(cv, 2.0);
+	    // Move forward/backwards until entire view is in scene...
+	    Vector lookdir(cv.lookat-cv.eyep);
+	    double old_dist=lookdir.length();
+	    PRINTVAR(autoview_sw, old_dist);
+	    double old_w=2*Tan(DtoR(cv.fov/2.))*old_dist;
+	    PRINTVAR(autoview_sw, old_w);
+	    Vector diag(bbox.diagonal());
+	    double w=diag.length();
+	    PRINTVAR(autoview_sw, w);
+	    double dist=old_dist*w/old_w;
+	    PRINTVAR(autoview_sw, dist);
+	    cv.eyep=cv.lookat-lookdir*dist/old_dist;
+	    PRINTVAR(autoview_sw, cv.eyep);
+	    animate_to_view(cv, 2.0);
+	}
     } else if(args[1] == "dolly"){
 	if(args.count() != 3){
 	    args.error("dolly needs an amount");
