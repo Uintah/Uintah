@@ -48,6 +48,8 @@ namespace Uintah {
 
     virtual int getSolution(vector<double>& xSimple);
 
+    virtual int getRHS(vector<double>& QSimple);
+
     virtual void assembleVector();
   private:
 

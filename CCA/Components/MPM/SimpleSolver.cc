@@ -205,5 +205,13 @@ int SimpleSolver::getSolution(vector<double>& xSimple)
 
   int begin = 0;
   return begin;
+}
 
+int SimpleSolver::getRHS(vector<double>& QSimple)
+{
+  for (int i = 0; i < (int)Q.size(); i++)
+    QSimple.push_back(Q[i]);
+
+  int begin = 0;
+  return begin;
 }

@@ -1677,7 +1677,7 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
       double dispIncNorm = 0.;
       double dispIncQNorm = 0.;
       vector<double> getQ;
-      int begin = d_solver->getSolution(getQ);
+      int begin = d_solver->getRHS(getQ);
       for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++) {
 	IntVector n = *iter;
 	int dof[3];

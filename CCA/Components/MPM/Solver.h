@@ -46,6 +46,8 @@ namespace Uintah {
 
     virtual int getSolution(vector<double>& xPetsc) = 0;
 
+    virtual int getRHS(vector<double>& QPetsc) = 0;
+
     virtual void assembleVector() = 0;
 
     set<int> d_DOF;
