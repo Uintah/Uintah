@@ -66,8 +66,11 @@ public:
 
 } // end namespace SCITeem
 
+
 using namespace SCITeem;
+
 DECLARE_MAKER(NrrdWriter)
+
 
 NrrdWriter::NrrdWriter(GuiContext *ctx)
 : Module("NrrdWriter", ctx, Filter, "DataIO", "Teem"), 
@@ -77,14 +80,16 @@ NrrdWriter::NrrdWriter(GuiContext *ctx)
 {
 }
 
+
 NrrdWriter::~NrrdWriter()
 {
 }
 
-void NrrdWriter::execute()
+
+void
+NrrdWriter::execute()
 {
-  //  static int counter = 1;
-  // Read data from the input port
+  // Read data from the input port.
   NrrdDataHandle handle;
   inport_ = (NrrdIPort *)get_iport("Input Data");
   if(!inport_->get(handle))
@@ -95,20 +100,20 @@ void NrrdWriter::execute()
     return;
   }
 
-  // If no name is provided, return
+  // If no name is provided, return.
   string fn(filename_.get());
   if(fn == "") {
     error("Warning: no filename in NrrdWriter");
     return;
   }
 
-  // get root of filename (no extension)
+  // Get root of filename (no extension).
   string::size_type e = fn.find_last_of(".");
   string root = fn;
   if (e != string::npos) root = fn.substr(0,e);
 
 
-  // determine which case we are writing out based on the
+  // Determine which case we are writing out based on the
   // original filename.  
   bool writing_nrrd = false;
   bool writing_nhdr = false;
@@ -120,30 +125,34 @@ void NrrdWriter::execute()
 
   // If the filename doesn't have an extension
   // use the export type to determine what it should be
-  if (!writing_nrrd && !writing_nhdr && !writing_nd) {
+  if (!writing_nrrd && !writing_nhdr && !writing_nd)
+  {
     string type = exporttype_.get();
     if (type.find(".nrrd",0) != string::npos) writing_nrrd = true;
     else writing_nhdr = true;
   }
 
-  // only write out the .nd extension if that was the filename
+  // Only write out the .nd extension if that was the filename
   // specified or if there are properties.  In the case that it
   // was an .nd filename specified, write out a .nrrd file also.
-  if (handle->nproperties() > 0) {
-    if (!writing_nd) {
+  if (handle->nproperties() > 0)
+  {
+    if (!writing_nd)
+    {
       writing_nd = true;
       if (!writing_nhdr)
 	writing_nrrd = true;
     }
   }
 
-  // writing out NrrdData - use Piostream
-  if (writing_nd) {
+  // Writing out NrrdData - use Piostream.
+  if (writing_nd)
+  {
     string nrrd_data_fn = root + ".nd";
     Piostream* stream;
     string ft(filetype_.get());
 
-    // set NrrdData's write_nrrd variable to indicate
+    // Set NrrdData's write_nrrd variable to indicate
     // whether NrrdData's io method should write out a .nrrd or .nhdr
     if (writing_nhdr) handle.get_rep()->write_nrrd_ = false;
     else handle.get_rep()->write_nrrd_ = true;
@@ -161,11 +170,13 @@ void NrrdWriter::execute()
       error("Could not open file for writing" + nrrd_data_fn);
     } else {
       // Write the file
-      Pio(*stream, handle); // will also write out a separate nrrd.
+      Pio(*stream, handle); // This also writes a separate nrrd.
       delete stream; 
     } 
-  } else {
-    // writing out ordinary .nrrd .nhdr file
+  }
+  else
+  {
+    // Writing out ordinary .nrrd .nhdr file
     string nrrd_fn = root;
     if (writing_nhdr) nrrd_fn += ".nhdr";
     else nrrd_fn += ".nrrd";
@@ -173,23 +184,27 @@ void NrrdWriter::execute()
     Nrrd *nin = handle->nrrd;
     
     NrrdIoState *nio = nrrdIoStateNew();
-    // set encoding to be raw
+    // Set encoding to be raw
     nio->encoding = nrrdEncodingArray[1];
-    // set format to be nrrd
+    // Set format to be nrrd
     nio->format = nrrdFormatArray[1];
-    // set endian to be endian of machine
+    // Set endian to be endian of machine
     nio->endian = airMyEndian;
     
-    if (AIR_ENDIAN != nio->endian) {
+    if (AIR_ENDIAN != nio->endian)
+    {
       nrrdSwapEndian(nin);
     }
-    if (writing_nhdr) {
-      if (nio->format != nrrdFormatNRRD) {
+    if (writing_nhdr)
+    {
+      if (nio->format != nrrdFormatNRRD)
+      {
 	nio->format = nrrdFormatNRRD;
       }
     }
     
-    if (nrrdSave(nrrd_fn.c_str(), nin, nio)) {
+    if (nrrdSave(nrrd_fn.c_str(), nin, nio))
+    {
       char *err = biffGet(NRRD);      
       cerr << "Error writing nrrd " << nrrd_fn << ": "<< err << endl;
       free(err);
