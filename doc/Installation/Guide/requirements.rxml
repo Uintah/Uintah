@@ -34,23 +34,18 @@
 </row>
 <row>
 <entry>SGI</entry>
-<entry><ulink url="http://www.sgi.com/developers/devtools/languages/mipspro.html"> MIPSpro compilers</ulink> </entry>
+<entry><ulink url="http://www.sgi.com/developers/devtools/languages/mipspro.html">MIPSpro compilers</ulink> </entry>
 <entry>7.3.1.1m</entry>              
 </row>
 <row>
 <entry>Linux</entry>
-<entry><ulink url="http://www.kernel.org"> Kernel</ulink> </entry>
-<entry><ulink url="http://www.kernel.org/pub/linux/kernel/v2.2/linux-2.2.17.tar.gz"> 2.2.17</ulink> </entry>
-</row>
-<row>
-<entry>Linux</entry>
-<entry><ulink url="http://www.gnu.org/software/gcc/gcc.html"> GCC</ulink> </entry>
-<entry><ulink url="ftp://gcc.gnu.org/pub/gcc/releases/gcc-2.95.3/gcc-2.95.3.tar.gz">2.95.3</ulink> </entry>              
+<entry><ulink url="http://www.gnu.org/software/gcc/gcc.html">GCC</ulink> </entry>
+<entry>Latest <ulink url="http://gcc.gnu.org">stable GCC</ulink>.</entry>              
 </row>
 <row>
 <entry>All</entry>
-<entry><ulink url="http://www.gnu.org/software/make/make.html"> GNU make</ulink> </entry>
-<entry><ulink url="ftp://ftp.gnu.org/gnu/make/make-3.79.1.tar.gz"> 3.79.1</ulink> </entry>             
+<entry><ulink url="http://www.gnu.org/software/make/make.html">GNU make</ulink> </entry>
+<entry><ulink url="ftp://ftp.gnu.org/gnu/make/make-3.79.1.tar.gz">3.79.1</ulink> </entry>             
 </row>
 </tbody>
 </tgroup>

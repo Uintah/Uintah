@@ -1,0 +1,144 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+  University of Utah. All Rights Reserved.
+-->
+
+<section id="sec.itk_inst">
+<title id="title.itk_inst">Insight Toolkit (<acronym>ITK</acronym>)</title>
+
+<section>
+<title>Introduction</title>
+
+<para>The <ulink url="http://www.itk.org">Insight Toolkit</ulink>
+(<acronym>ITK</acronym>) is an open-source software library for
+performing segmentation and registration.  When the
+<acronym>ITK</acronym> toolkit is present, and &sr; is appropriately
+configured, <acronym>ITK</acronym> filters can be encapsulated in &sr;
+modules for use in &sr; networks.  By default, &sr; encapsulates a
+subset of <acronym>ITK</acronym> filters.</para>
+
+<para>&sr; encapsulates <acronym>ITK</acronym> filters using
+<acronym>XML</acronym>-based filter description files.  The xalan-j
+<acronym>XSLT</acronym> processor generates code for &sr; modules from
+the <acronym>XML</acronym> descriptions.  Users may
+encapsulate additional filters by writing <acronym>XML</acronym>
+descriptions of them.  The process of encapsulating
+<acronym>ITK</acronym> filters in &sr; modules is described in
+???</para>
+
+<note>
+<para>The &sr; <acronym>RPM</acronym> distribution does
+<emphasis>not</emphasis> include support for <acronym>ITK</acronym>.
+<acronym>ITK</acronym> support is available only through the &sr; source
+code distribution.</para>
+</note>
+
+</section>
+
+<section>
+<title>Obtaining <acronym>ITK</acronym></title>
+
+<para>The Insight toolkit must be installed before building &sr;.  The
+Insight toolkit and its installation instructions are available from
+the <ulink url="http://www.itk.org"><acronym>ITK</acronym> web
+site</ulink>.  <acronym>ITK</acronym> installation requires CMAKE, a
+open-source, cross-platform build tool.  CMAKE can be obtained from
+the <ulink url="http://www.cmake.org">CMAKE web site</ulink>.</para>
+
+<note>
+<title>Special Build Instructions</title>
+<para>Before configuring and building ITK the following
+environment variables must be set as shown.  For csh-type shells type:
+<literallayout class="monospaced">
+  setenv BUILD_SHARED_LIBS ON
+  setenv ITK_USE_SYSTEM_PNG ON
+</literallayout>
+For sh-type shells type:
+<literallayout class="monospaced">
+  BUILD_SHARED_LIBS=ON
+  ITK_USE_SYSTEM_PNG=ON
+  export BUILD_SHARED_LIBS ITK_USE_SYSTEM_PNG
+</literallayout>
+</para>
+</note>
+</section>
+
+<section>
+<title>Additional Software</title>
+
+<para>&sr; support for <acronym>ITK</acronym> requires 
+the xalan-j <acronym>XSLT</acronym> processor.  Xalan-j and its
+installation instructions are available from the <ulink
+url="http://xml.apache.org/xalan-j/index.html">xalan
+website</ulink>.</para>
+
+</section>
+
+<section>
+<title>Configuring &sr;</title>
+
+<para>The configure options below add support for Insight
+in &sr;.  Include these options in the &sr;
+<command>configure</command> command (see <citetitle
+pubwork="section"><xref linkend="sec.build-sr"
+endterm="title.build-sr"/></citetitle>).
+<variablelist>
+<varlistentry>
+<term><option>--with-insight=<replaceable>path-to-insight</replaceable></option></term>
+<listitem>
+<para>Specifies the path to the <acronym>ITK</acronym> directory.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><option>--with-xalan=<replaceable>path-to-xalan</replaceable></option></term>
+<listitem>
+<para>Specifies the path to the top-level xalan-j installation directory.
+</para>
+</listitem>
+</varlistentry>
+</variablelist>
+</para>
+<para>Here is an example <command>configure</command> command:
+<literallayout class="monospaced">
+../src/configure \
+  --with-thirdparty=/usr/local/&sr;/Third_Party/1.10.0/Irix/CC-32bit \
+  --enable-package="Insight BioPSE" \
+  --with-insight=/usr/local/Insight \
+  --with-xalan=/usr/local/xalan-j_2_5_1
+</literallayout>
+</para>
+
+</section>
+
+<section>
+<title>Next</title>
+
+<para>Proceed to <citetitle pubwork="section"><xref
+linkend="sec.source_inst" endterm="title.source_inst" /></citetitle>
+after <acronym>ITK</acronym> has been installed.</para>
+
+</section>
+
+</section>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

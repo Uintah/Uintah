@@ -19,29 +19,80 @@
 <title>Introduction</title> 
 
 <para>This guide provides instructions for installing &sr;, its third
-party libraries, the (optional) <acronym>PETSc</acronym> library,
-sample data sets, and &sr; documentation. The <acronym>PETSc</acronym>
-library adds equation solvers to &sr;'s SolveMatrix module (see <citetitle
-pubwork="section"><xref linkend="sec.petsc"
-endterm="title.petsc"/></citetitle>).
+party libraries, the (optional) <acronym>PETSc</acronym> and Insight
+libraries, sample data sets, and &sr; documentation.</para>
+
+<para> The <ulink
+url="http://www-unix.mcs.anl.gov/petsc/petsc-2/"><acronym>PETSc</acronym></ulink>
+library adds equation solvers to &sr;'s SolveMatrix module.  The
+<ulink url="http://www.itk.org">Insight toolkit
+(<acronym>ITK</acronym>)</ulink> provides filters for encapsulation as
+&sr; modules.
 </para>
 
 <para>
-&sr; is compatible with two platforms: SGI and Linux.
-<xref linkend="tbl.min_sys_rec"/> lists the recommended system requirements.
+&sr; has been tested on three platforms: SGI, Linux, and Mac OS X.
+Platform requirement guidelines are listed in <xref
+linkend="tbl.pltfm_req"/>.
+<table id="tbl.pltfm_req">
+<title>Platform Guidelines</title>
+<tgroup cols="3">
+<thead>
+<row>
+<entry>Linux</entry>
+<entry>SGI</entry>
+<entry>Mac OS X</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry>
+<itemizedlist>
+<listitem>
+<simpara>Redhat 8/9 and Mandrake 9</simpara>
+</listitem>
+<listitem>
+<simpara>OpenGL compatible video card and driver</simpara>
+</listitem>
+<listitem>
+<simpara>512 Mb (or more) RAM
+</simpara></listitem>
+</itemizedlist>
+</entry>
+<entry>
+<itemizedlist>
+<listitem>
+<simpara>Irix 6.5</simpara>
+</listitem>
+<listitem>
+<simpara>MIPS R10000 (or better) CPU
+</simpara></listitem>
+<listitem>
+<simpara>512 Mb (or more) RAM
+</simpara></listitem>
+</itemizedlist>
+</entry>
+<entry>
+<itemizedlist>
+<listitem>
+<simpara>Mac OS X 10.2.6
+</simpara></listitem>
+<listitem>
+<simpara>G4 processor
+</simpara></listitem>
+<listitem>
+<simpara>512 Mb (or more) RAM
+</simpara></listitem>
+</itemizedlist>
+</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
 </para>
  
-<para>&recommendations;</para>
-
 <para>
-<xref linkend="tbl.req_os_bld_tools"/> describes the minimum software
-requirements for building &sr;.
-</para>
-
-<para>&requirements;</para>
-
-<para>
-On Linux systems (Mandrake 9 and Red Hat 8), &sr; binaries can be
+On Linux systems (Mandrake 9 and Red Hat 8 and 9), &sr; binaries can be
 <link linkend="sec.rpminst">installed via
 an <acronym>RPM</acronym> package</link> or <link
 linkend="sec.source_inst">from &sr;'s source code distribution</link>.
@@ -63,13 +114,26 @@ installing, but before starting &sr;.
 </para>
 
 <para>
-Start with <citetitle pubwork="section"><xref linkend="sec.petsc"
-endterm="title.petsc"/></citetitle> if installing
-<acronym>PETSc</acronym>.  Otherwise, start with <citetitle
-pubwork="section"><xref linkend="sec.source_inst"
-endterm="title.source_inst" /></citetitle> or <citetitle
+Start with <citetitle
 pubwork="section"><xref linkend="sec.rpminst"
-endterm="title.rpminst"/></citetitle>.
+endterm="title.rpminst"/></citetitle> if installing &sr; from an
+<acronym>RPM</acronym>.  Otherwise proceed as follows:
+<orderedlist>
+<listitem>
+<para>Read <citetitle pubwork="section"><xref linkend="sec.opt_inst"
+endterm="title.opt_inst"/></citetitle> if installing
+<acronym>PETSc</acronym> or Insight toolkit (<acronym>ITK</acronym>)
+support.  Note that support for <acronym>PETSc</acronym> and
+<acronym>ITK</acronym> is not provided by the <acronym>RPM</acronym>
+&sr; distributions.</para>
+</listitem>
+<listitem>
+<para>Proceed to <citetitle
+pubwork="section"><xref linkend="sec.source_inst"
+endterm="title.source_inst"/></citetitle> to install &sr; from its
+source code.</para>
+</listitem>
+</orderedlist>
 </para>
 
 </section>

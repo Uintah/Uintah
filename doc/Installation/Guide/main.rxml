@@ -29,6 +29,8 @@
 <!--%= doc.sysEntity("rpm_inst") %-->
 <!--%= doc.sysEntity("source_inst") %-->
 <!--%= doc.sysEntity("petsc") %-->
+<!--%= doc.sysEntity("itk") %-->
+<!--%= doc.sysEntity("opt_inst") %-->
 <!--%= doc.sysEntity("preparing") %-->
 <!--%= doc.sysEntity("starting") %-->
 <!--%= doc.sysEntity("help") %-->
@@ -39,7 +41,7 @@
 <article id="article.main">
 <title>&sr; Installation Guide (v. <!--%= doc.edition %-->)</title>
 &intro;
-&petsc;
+&opt_inst;
 &rpm_inst;
 &source_inst;
 &preparing;

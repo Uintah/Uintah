@@ -48,12 +48,10 @@ third party software, sample data sets, and documentation.</para>
 </para>
 
 <note>
-<para>If building &sr; for the Itanium architecture the GNU compiler
-collection (gcc) must be used.  Also, before building &sr; and its
-third party libraries, the values of the environment variables
-<envar>CFLAGS</envar> and <envar>CXXFFLAGS</envar> must be set as
-follows:
-</para>
+<para>When building &sr; for the Itanium architecture the GNU compiler
+collection (gcc) must be used and the values of the environment
+variables <envar>CFLAGS</envar> and <envar>CXXFFLAGS</envar> must be
+set as follows:</para>
 <para>
 for csh-type shells
 <programlisting>

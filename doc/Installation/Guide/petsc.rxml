@@ -16,7 +16,7 @@
 -->
 
 <section id="sec.petsc">
-<title id="title.petsc"><acronym>PETSc</acronym> Installation (Optional)</title>
+<title id="title.petsc"><acronym>PETSc</acronym></title>
 
 <section>
 <title>Introduction</title>
@@ -40,8 +40,8 @@ provides built-in solvers if <acronym>PETSc</acronym> is not available.
 <acronym>PETSc</acronym> is built and installed from its source code
 distribution.
 </para>
+<note>
 <para>
-Please note:
 <itemizedlist>
 <listitem>
 <para>
@@ -90,6 +90,8 @@ Start a terminal application before proceeding.  Command line tools
 are used to install <acronym>PETSc</acronym> and
 <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>.
 </para>
+</note>
+
 </section>
 
 <section id="sec.petsc_download">
@@ -356,8 +358,9 @@ make BOPT=O all
 </section>
 
 <section id="sec.petsc_sr_config">
-<title id="title.petsc_sr_config">Configuring <acronym>PETSc</acronym>
-&sr;</title> <para>The configure options below add support for PETSc
+<title id="title.petsc_sr_config">Configuring &sr;</title> 
+
+<para>The configure options below add support for PETSc
 in &sr;.  Include these options in the &sr;
 <command>configure</command> command (see <citetitle
 pubwork="section"><xref linkend="sec.build-sr"
@@ -416,9 +419,12 @@ function. SolveMatrix charts the progress of the solution while
 <section>
 <title>Next</title> 
 
-<para>Proceed to <citetitle pubwork="section"><xref linkend="sec.source_inst"
-endterm="title.source_inst" /></citetitle> after <acronym>PETSc has been
-installed.</acronym></para>
+<para>Proceed to <citetitle pubwork="section"><xref
+linkend="sec.itk_inst" endterm="title.itk_inst"/></citetitle> when
+also adding support for the Insight toolkit.  Otherwise proceed to <citetitle
+pubwork="section"><xref linkend="sec.source_inst"
+endterm="title.source_inst"/></citetitle> after <acronym>PETSc has
+been installed.</acronym></para>
 </section>
 
 </section>
