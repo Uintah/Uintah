@@ -30,7 +30,6 @@ $(SRCDIR)/ScalarFieldRGuchar.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 $(SRCDIR)/ScalarFieldRGshort.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed 's/TYPE/short/g' < $(SRCDIR)/ScalarFieldRGTYPE.h > $(SRCDIR)/ScalarFieldRGshort.h
 
-
 $(SRCDIR)/ScalarFieldRGint.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed 's/TYPE/int/g' < $(SRCDIR)/ScalarFieldRGTYPE.h > $(SRCDIR)/ScalarFieldRGint.h
 
@@ -45,9 +44,6 @@ $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGdouble.h $(SRCDIR)/ScalarField
 
 
 # .CC
-
-$(SRCDIR)/ScalarFieldRG.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGTYPE.h
-	sed 's/"TYPE"/"double"/g' < $(SRCDIR)/ScalarFieldRGTYPE.cc |  sed 's/TYPE//g' > $(SRCDIR)/ScalarFieldRG.cc 
 
 $(SRCDIR)/ScalarFieldRGchar.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGchar.h
 	sed 's/TYPE/char/g' < $(SRCDIR)/ScalarFieldRGTYPE.cc > $(SRCDIR)/ScalarFieldRGchar.cc 
