@@ -34,7 +34,7 @@ void Matrix::is_symmetric(int symm) {
 }
 
 Matrix::Matrix(Sym sym, Representation rep)
-: sym(sym), rep(rep), extremaCurrent(0)
+: sym(sym), rep(rep), extremaCurrent(0), separate_raw(0), raw_filename("")
 {
 }
 
@@ -104,6 +104,9 @@ void Mult(ColumnMatrix& result, const Matrix& mat, const ColumnMatrix& v)
 
 //
 // $Log$
+// Revision 1.5  2000/07/12 15:45:08  dmw
+// Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
+//
 // Revision 1.4  1999/08/25 03:48:34  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

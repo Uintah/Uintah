@@ -57,9 +57,11 @@ public:
     virtual void solve(ColumnMatrix&);
     virtual void zero();
     virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
-		      int& flops, int& memrefs, int beg=-1, int end=-1) const;
+		      int& flops, int& memrefs, int beg=-1, int end=-1,
+		      int spVec=0) const;
     virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
-				int& flops, int& memrefs, int beg=-1, int end=-1);
+				int& flops, int& memrefs, int beg=-1, 
+				int end=-1, int spVec=0);
     virtual void print();
     MatrixRow operator[](int r);
     friend class AddMatrices;
@@ -77,6 +79,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  2000/07/12 15:45:10  dmw
+// Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
+//
 // Revision 1.4  2000/03/04 00:18:30  dmw
 // added new Mesh BC and fixed sparserowmatrix bug
 //

@@ -107,7 +107,7 @@ double TriDiagonalMatrix::maxValue()
 }
 
 void TriDiagonalMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
-			     int& flops, int& memrefs, int, int) const
+			     int& flops, int& memrefs, int, int, int) const
 {
     ASSERTEQ(rows, x.nrows());
     ASSERTEQ(rows, b.nrows());
@@ -121,7 +121,7 @@ void TriDiagonalMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
 }
 
 void TriDiagonalMatrix::mult_transpose(const ColumnMatrix&, ColumnMatrix&,
-				       int&, int&, int, int)
+				       int&, int&, int, int, int)
 {
     NOT_FINISHED("TriDiagonal::mult_transpose");
 }
@@ -169,6 +169,9 @@ void TriDiagonalMatrix::solve(ColumnMatrix& cc)
 
 //
 // $Log$
+// Revision 1.4  2000/07/12 15:45:10  dmw
+// Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
+//
 // Revision 1.3  1999/08/25 03:48:43  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
