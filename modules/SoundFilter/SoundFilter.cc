@@ -12,27 +12,35 @@
  */
 
 #include <SoundFilter/SoundFilter.h>
+// Work around clashes with X.
+#ifdef Complex
+#undef Complex
+#endif
+#include <Math/Complex.h>
+#include <Math/Expon.h>
 #include <Math/MinMax.h>
+#include <Math/MiscMath.h>
 #include <Math/Trig.h>
 #include <MUI.h>
 #include <NotFinished.h>
-#include <Port.h>
+#include <SoundPort.h>
 #include <iostream.h>
 #include <fstream.h>
 
 SoundFilter::SoundFilter()
-: UserModule("SoundFilter")
+: UserModule("SoundFilter", Filter)
 {
     lower_cutoff=2500;
     upper_cutoff=3500;
     // Create the output data handle and port
-    add_oport(&outsound, "Sound", SoundData::Stream|SoundData::Atomic);
+    isound=new SoundIPort(this, "Filter Input",
+			  SoundIPort::Stream|SoundIPort::Atomic);
+    add_iport(isound);
 
     // Create the input port
-    add_iport(&isound, "Sound", SoundData::Stream|SoundData::Atomic);
-
-    // Setup the execute condtion...
-    execute_condition(NewDataOnAllConnectedPorts);
+    osound=new SoundOPort(this, "Filter Output",
+			  SoundIPort::Stream|SoundIPort::Atomic);
+    add_oport(osound);
 }
 
 SoundFilter::SoundFilter(const SoundFilter& copy, int deep)
@@ -57,126 +65,199 @@ Module* SoundFilter::clone(int deep)
 
 void SoundFilter::execute()
 {
-    double rate=isound.sample_rate();
+    double rate=isound->sample_rate();
     int nsamples;
-    if(isound.using_protocol() == SoundData::Atomic){
-	nsamples=isound.nsamples();
+    if(isound->using_protocol() == SoundIPort::Atomic){
+	nsamples=isound->nsamples();
     } else {
 	nsamples=(int)(rate*10);
     }
 
     // Setup the output sampling rate
-    outsound.set_sample_rate(rate);
+    osound->set_sample_rate(rate);
 
-    // Design the filter
-    double wp1=2*PI*lower_cutoff/rate;
-    double wp2=2*PI*upper_cutoff/rate;
-    double cs=Cos((wp2+wp1)/2);
-    double cd=Cos((wp2-wp1)/2);
-    double alpha=cs/cd;
-    double theta_p=0.2*PI;
-    double kappa=Cot((wp2-wp1)/2)*Tan(theta_p);
-    double X=-2*alpha*kappa/(kappa+1);
-    double X_2=X*X;
-    double Y=(kappa-1)/(kappa+1);
-    cerr << "cd=" << cd << ", kappa+1=" << kappa+1 << endl;
-    cerr << "X=" << X << ", Y=" << Y << endl;
-    double Y_2=Y*Y;
-    double A=0.001836;
-    double B=-1.5548;
-    double C=0.6493;
-    double D=-1.4996;
-    double F=0.8482;
-    double bb[3];
-    // Numberator is b
-    // b=(Y*z^2+2*X*z+1+z^2+Y)^4*A;
-    bb[0]=Y+1;
-    bb[1]=2*X;
-    bb[2]=Y+1;
-    double bbb[5];
-    for(int i=0;i<5;i++)
-	bbb[i]=0;
-    // Square bb to get bbb
-    for(i=0;i<3;i++){
-	for(int j=0;j<3;j++){
-	    int k=i+j;
-	    bbb[k]+=bb[i]*bb[j];
-	}
+    // Defaults (put in UI...)
+    double ripple_db=0.15;
+    double atten_db=17;
+    double close=1.2;
+
+    // Figure out the order of the filter.
+    double A2=Exp10(atten_db/10.0);
+    double e=Sqrt(Exp10(ripple_db/10.0)-1);
+    double nr=ACosh(Sqrt(A2-1)/e)/ACosh(close);
+    int N=(int)nr;
+    double rem=nr-N;
+    if(rem > 1.e-4)N++; // Round up...
+    N=1;
+    cerr << "Designing " << N << "th order Chebyshev type I filter\n";
+
+    // Misc calculations...
+    double alpha=1./e+Sqrt(1+1./(e*e));
+    double U=upper_cutoff*(2*PI);
+    double L=lower_cutoff*(2*PI);
+    U=2000;
+    L=1000;
+    double T=1./rate;
+
+    // Find the poles of the Low Pass chebyshev analog filter
+    Complex* root=new Complex[N];
+    double major_axis=0.5*(Pow(alpha, 1./N)-Pow(alpha, -1./N));
+    double minor_axis=0.5*(Pow(alpha, 1./N)+Pow(alpha, -1./N));
+    for(int i=0;i<N;i++){
+	double theta=(i-0.5)*PI/N;
+	root[i]=Complex(minor_axis*Sin(theta), major_axis*Cos(theta));
+	cerr << "root[i]=(" << root[i].re() << "," << root[i].im() << ")" << endl;
     }
 
-    // square again to get b
-    double b[9];
-    for(i=0;i<9;i++)
-	b[i]=0;
-    for(i=0;i<5;i++){
-	for(int j=0;j<5;j++){
-	    int k=i+j;
-	    b[k]+=bbb[i]*bbb[j];
+    // Perform Partial Fraction Expansion
+    Complex* AK=new Complex[N];
+    for(i=0;i<N;i++){
+	Complex A(1.0, 0.0);
+	Complex s(root[i]);
+	for(int j=0;j<N;j++){
+	    if(i != j) A/=s-root[j];
 	}
+	AK[i]=A;
+	cerr << "AK[i]=(" << A.re() << "," << A.im() << ")" << endl;
     }
-    // Multiply by A
-    for(i=0;i<9;i++)
-	b[i]*=A;
 
-    // Compute denominator...
-    double a1[5];
-    a1[0]=D*Y+F*Y_2+1;
-    a1[1]=D*X*Y+2*F*X+2*X*Y+D*X;
-    a1[2]=2*Y+D+2*F*Y+D*X_2+X_2+D*Y_2+F*X_2;
-    a1[3]=D*X*Y+2*F*X+2*X*Y+D*X;
-    a1[4]=F+Y_2+D*Y;
-    double a2[5];
-    a2[0]=B*Y+C*Y_2+1;
-    a2[1]=B*X*Y+2*C*X*Y+2*X+B*X;
-    a2[2]=2*Y+B+2*C*Y+B*X_2+X_2+B*Y_2+C*X_2;
-    a2[3]=B*X*Y+2*C*X+2*X*Y+B*X;
-    a2[4]=C+Y_2+B*Y;
-    double a[9];
-    for(i=0;i<9;i++)
-	a[i]=0;
-    for(i=0;i<5;i++){
-	for(int j=0;j<5;j++){
-	    int k=i+j;
-	    a[k]=a1[i]*a2[j];
+    // Transform to band pass filter, find roots and PFE again...
+    Complex* Q=new Complex[2*N];
+    Complex* BK=new Complex[2*N];
+    for(i=0;i<N;i++){
+	// Find roots of:
+	// s^2 -Rk(U-L)s+UL
+	Complex A(1.0, 0.0);
+	Complex B(-root[i]*(U-L));
+	Complex C(U*L, 0.0);
+	Complex disc(B*B-A*C*4.0);
+	Complex sdisc=Sqrt(disc);
+	Complex r1=(-B+sdisc)/(A*2.0);
+	Complex r2=(-B-sdisc)/(A*2.0);
+	// Now: Ak*(U-L)*s/((s-r1)*(s-r2))
+	Complex w=AK[i]*(U-L);
+	Complex w1=w*r1/(r1-r2);
+	Complex w2=w*r2/(r2-r1);
+	Q[2*i+0]=r1;
+	Q[2*i+1]=r2;
+	BK[2*i+0]=w1;
+	BK[2*i+1]=w2;
+	cerr << "Q[" << 2*i+0 << "]=" << Q[2*i+0] << endl;
+	cerr << "Q[" << 2*i+1 << "]=" << Q[2*i+1] << endl;
+	cerr << "BK[" << 2*i+0 << "]=" << BK[2*i+0] << endl;
+	cerr << "BK[" << 2*i+1 << "]=" << BK[2*i+1] << endl;
+    }
+
+    // Now take Z transform, while expanding...
+    int fsize=2*N+1;
+    Complex* top=new Complex[fsize];
+    Complex* bot=new Complex[fsize];
+    top[0]=Complex(0.0, 0.0);
+    bot[0]=Complex(1.0, 0.0);
+    for(i=1;i<fsize;i++){
+	top[i]=Complex(0.0, 0.0);
+    }
+    for(int ii=0;ii<fsize;ii++)
+	cerr << "b[" << ii << "]=" << top[ii] << ", " << "a[" << ii << "]=" << bot[ii] << endl;
+    for(i=0;i<2*N;i++){
+	// Multiply in Bk/(1-Exp(-Qk*T)*z^-1)
+
+	// Multiply old numerator by 1-Exp(-Qk*T)*z^-1
+	Complex E=Exp(Q[i]*T);
+	cerr << "E[" << i << "]=" << E << endl;
+
+	for(int j=fsize-1;j>=1;j--){
+	    top[j]=top[j]-E*top[j-1];
 	}
+	// Add old denominator*Bk to numerator
+	for(j=fsize-1;j>=0;j--){
+	    top[j]+=bot[j]*BK[i];
+	}
+
+	// Multiply old denominator by 1-Exp(-Qk*T)*z^-1
+	for(j=fsize-1;j>=1;j--){
+	    bot[j]=bot[j]-E*bot[j-1];
+	}
+	for(int ii=0;ii<fsize;ii++)
+	    cerr << "b[" << ii << "]=" << top[ii] << ", " << "a[" << ii << "]=" << bot[ii] << endl;
+
     }
-    for(i=0;i<9;i++){
-	cerr << "a[" << i << "]=" << a[i] << ", b[" << i << "]=" << b[i] << endl;
+
+    // Make the filter...
+    double* b=new double[fsize];
+    double* a=new double[fsize];
+    for(i=0;i<fsize;i++){
+	b[i]=top[i].re();
+	a[i]=bot[i].re();
+	if(Abs(top[i].im()) > 1.e-6
+	   || Abs(bot[i].im()) > 1.e-6){
+	    cerr << "Warning: Filter design failed!\n";
+	}
+	cerr << "b[" << i << "]=" << b[i] << ", " << "a[" << i << "]=" << a[i] << endl;
     }
+    delete[] root;
+    delete[] AK;
+    delete[] Q;
+    delete[] BK;
+    delete[] top;
+    delete[] bot;
+#if 0    
+    double b[10];
+    b[0]=0.0346;
+    b[1]=0.0016;
+    b[2]=-0.0293;
+    b[3]=-0.0362;
+    b[4]=0.0090;
+    b[5]=0.0427;
+    b[6]=0.0177;
+    b[7]=-0.0155;
+    b[8]=-0.0323;
+    b[9]=0.0076;
+    double a[10];
+    a[0]=1.0000;
+    a[1]=-2.2954;
+    a[2]=4.0755;
+    a[3]=-4.9622;
+    a[4]=5.0056;
+    a[5]=-3.8148;
+    a[6]=2.4054;
+    a[7]=-1.1407;
+    a[8]=0.3916;
+    a[9]=-0.0817;
+#endif
 
     int sample=0;
-    double delay[9];
-    for(i=0;i<9;i++)
-	delay[i]=0;
+    double* delay=new double[fsize];
+    for(i=0;i<fsize;i++)
+	delay[fsize]=0;
     int dcount=0;
-    ofstream out("osamp");
-    while(!isound.end_of_stream() || dcount++<9){
+    while(!isound->end_of_stream() || dcount++<10){
 	// Read a sound sample
 	double s;
 	if(dcount==0){
-	    s=isound.next_sample();
+	    s=isound->next_sample();
 	} else {
 	    s=0;
 	}
 
 	// Apply the filter...
-	for(int i=1;i<9;i++)
-	    s+=a[i]*delay[i];
-	s*=a[0];
+	for(int i=1;i<fsize;i++)
+	    s-=b[i]*delay[i];
 	delay[0]=s;
 	s=0;
-	for(i=0;i<9;i++)
-	    s+=b[i]*delay[i];
-	for(i=8;i>0;i--)
+	for(i=0;i<fsize;i++)
+	    s+=a[i]*delay[i];
+	for(i=fsize-1;i>0;i--)
 	    delay[i]=delay[i-1];
 
 	// Output the sound...
-	outsound.put_sample(s);
-	out << s << "\n";
+	osound->put_sample(s);
 
 	// Tell everyone how we are doing...
 	update_progress(sample++, nsamples);
 	if(sample >= nsamples)
 	    sample=0;
     }
+    delete[] a;
+    delete[] b;
 }

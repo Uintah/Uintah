@@ -15,13 +15,13 @@
 #define SCI_project_module_SoundFilter_h
 
 #include <UserModule.h>
-#include <SoundData.h>
 class MUI_slider_real;
+class SoundIPort;
+class SoundOPort;
 
 class SoundFilter : public UserModule {
-    OutSoundData outsound;
-    InSoundData isound;
-
+    SoundIPort* isound;
+    SoundOPort* osound;
     double lower_cutoff;
     double upper_cutoff;
 public:

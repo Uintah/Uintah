@@ -1,7 +1,7 @@
 
 #include <config/sci.cf>
 
-LOCALINCLUDES = -I.. -I../../project
+LOCALINCLUDES = -I.. -I../../project -I../../../audio
 MODULELIST = ../libmodules.a
 
 OBJS = SoundOutput.o

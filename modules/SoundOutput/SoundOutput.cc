@@ -15,19 +15,20 @@
 #include <Math/MinMax.h>
 #include <MUI.h>
 #include <NotFinished.h>
-#include <Port.h>
+#include <SoundPort.h>
 #include <iostream.h>
 #include <fstream.h>
+#include <audio.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 SoundOutput::SoundOutput()
-: UserModule("SoundOutput")
+: UserModule("SoundOutput", Sink)
 {
     // Create the input data handle and port
-    add_iport(&insound, "Input",
-	      SoundData::Atomic|SoundData::Stream);
-
-    // Setup the execute condtion...
-    execute_condition(NewDataOnAllConnectedPorts);
+    isound=new SoundIPort(this, "Input",
+			  SoundIPort::Atomic|SoundIPort::Stream);
+    add_iport(isound);
 }
 
 SoundOutput::SoundOutput(const SoundOutput& copy, int deep)
@@ -52,31 +53,54 @@ Module* SoundOutput::clone(int deep)
 
 void SoundOutput::execute()
 {
-    // Open the sound port...
-    ofstream out("osound");
+    // Setup the sampling rate and other parameters...
+    ALconfig config=ALnewconfig();
+    if(!config){
+	perror("ALnewconfig");
+	exit(-1);
+    }
+    if(ALsetsampfmt(config, AL_SAMPFMT_DOUBLE) == -1){
+	perror("ALsetsampfmt");
+	exit(-1);
+    }
+    if(ALsetfloatmax(config, 1.0) == -1){
+	perror("ALsetfloatmax");
+	exit(-1);
+    }
+    if(ALsetchannels(config, 1L) == -1){
+	perror("ALsetchannels");	
+	exit(-1);
+    }
     
-    // Setup the sampling rate...
-    double rate=insound.sample_rate();
-    NOT_FINISHED("Set sampling rate");
+    double rate=isound->sample_rate();
+    long pvbuf[2];
+    pvbuf[0]=AL_OUTPUT_RATE;
+    pvbuf[1]=(long)rate;
+    ALsetparams(AL_DEFAULT_DEVICE, pvbuf, 2);
 
+    // Open the sound port...
+    ALport port=ALopenport("SoundOutput", "w", config);
+    if(!port){
+	cerr << "Error opening sound port\n";
+	perror("ALopenport");
+	exit(-1);
+    }
+    
     int nsamples=(int)(rate*10);
-    if(insound.using_protocol() == SoundData::Atomic){
-	nsamples=insound.nsamples();
+    if(isound->using_protocol() == SoundIPort::Atomic){
+	nsamples=isound->nsamples();
     }
     int sample=0;
-    while(!insound.end_of_stream()){
+    while(!isound->end_of_stream()){
 	// Read a sound sample
-	double s=insound.next_sample();
-	s=s<-1?-1:s>1?1:s;
-	short sample=(short)(s*32768.0+(s<0?-0.5:0.5));
-	char c1=sample>>8;
-	char c2=sample&0xff;
-	out.put(c1);
-	out.put(c2);
+	double s=isound->next_sample();
+	ALwritesamps(port, (void*)&s, 1);
 
 	// Tell everyone how we are doing...
 	update_progress(sample++, nsamples);
 	if(sample >= nsamples)
 	    sample=0;
     }
+    ALcloseport(port);
+    ALfreeconfig(config);
 }

@@ -15,10 +15,10 @@
 #define SCI_project_module_SoundReader_h
 
 #include <UserModule.h>
-#include <SoundData.h>
+class SoundOPort;
 
 class SoundReader : public UserModule {
-    OutSoundData outsound;
+    SoundOPort* osound;
     int onoff;
     clString filename;
 public:
@@ -27,6 +27,7 @@ public:
     virtual ~SoundReader();
     virtual Module* clone(int deep);
     virtual void execute();
+    virtual int should_execute();
 };
 
 #endif

@@ -15,17 +15,19 @@
 #define SCI_project_module_SoundInput_h
 
 #include <UserModule.h>
-#include <SoundData.h>
+class SoundOPort;
 
 class SoundInput : public UserModule {
-    OutSoundData outsound;
+    SoundOPort* osound;
     int onoff;
+    double rate;
 public:
     SoundInput();
     SoundInput(const SoundInput&, int deep);
     virtual ~SoundInput();
     virtual Module* clone(int deep);
     virtual void execute();
+    virtual int should_execute();
 };
 
 #endif

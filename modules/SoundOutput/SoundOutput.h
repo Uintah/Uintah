@@ -15,10 +15,10 @@
 #define SCI_project_module_SoundOutput_h
 
 #include <UserModule.h>
-#include <SoundData.h>
+class SoundIPort;
 
 class SoundOutput : public UserModule {
-    InSoundData insound;
+    SoundIPort* isound;
 public:
     SoundOutput();
     SoundOutput(const SoundOutput&, int deep);

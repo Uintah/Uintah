@@ -15,11 +15,11 @@
 #include <Math/MinMax.h>
 #include <MUI.h>
 #include <NotFinished.h>
-#include <Port.h>
+#include <SoundPort.h>
 #include <iostream.h>
 
 SoundMixer::SoundMixer()
-: UserModule("SoundMixer")
+: UserModule("SoundMixer", Filter)
 {
     // Create the overall gain slider.
     overall_gain=1.0;
@@ -27,16 +27,17 @@ SoundMixer::SoundMixer()
 						&overall_gain, 1.0);
 
     // Create the output data handle and port
-    add_oport(&outsound, "Sound", SoundData::Stream|SoundData::Atomic);
+    osound=new SoundOPort(this, "Sound Output",
+			  SoundIPort::Stream|SoundIPort::Atomic);
+    add_oport(osound);
 
     // Create the input port
     PortInfo* pi=new PortInfo;
     pi->interface=0;
-    add_iport(&pi->isound, "Sound(0)", SoundData::Stream|SoundData::Atomic);
+    pi->isound=new SoundIPort(this, "Sound(0)",
+			      SoundIPort::Stream|SoundIPort::Atomic);
+    add_iport(pi->isound);
     portinfo.add(pi);
-
-    // Setup the execute condtion...
-    execute_condition(NewDataOnAllConnectedPorts);
 }
 
 SoundMixer::SoundMixer(const SoundMixer& copy, int deep)
@@ -64,9 +65,9 @@ void SoundMixer::execute()
     // If all of the inputs are not the same sampling rate, flag
     // an error...
     int ni=portinfo.size()-1;
-    double rate=portinfo[0]->isound.sample_rate();
+    double rate=portinfo[0]->isound->sample_rate();
     for(int i=1;i<ni;i++){
-	if(portinfo[i]->isound.sample_rate() != rate){
+	if(portinfo[i]->isound->sample_rate() != rate){
 	    error("All inputs must have the same sampling rate");
 	    return;
 	}
@@ -77,16 +78,16 @@ void SoundMixer::execute()
     // a random guess as 10X the sampling rate
     int nsamples=-1;
     for(i=0;i<ni;i++){
-	InSoundData& isound=portinfo[i]->isound;
-	if(isound.using_protocol() == SoundData::Atomic){
-	    nsamples=Max(nsamples, isound.nsamples());
+	SoundIPort* isound=portinfo[i]->isound;
+	if(isound->using_protocol() == SoundIPort::Atomic){
+	    nsamples=Max(nsamples, isound->nsamples());
 	}
     }
     if(nsamples == -1)
 	nsamples=(int)(rate*10);
 
     // Setup the output sampling rate
-    outsound.set_sample_rate(rate);
+    osound->set_sample_rate(rate);
 
     int sample=0;
     int nend=0;
@@ -103,13 +104,13 @@ void SoundMixer::execute()
 	nend=0;
 	for(int i=0;i<ni;i++){
 	    double gain=portinfo[i]->gain;
-	    InSoundData& isound=portinfo[i]->isound;
+	    SoundIPort* isound=portinfo[i]->isound;
 	    double sample;
-	    if(isound.end_of_stream()){
+	    if(isound->end_of_stream()){
 		nend++;
 		sample=0;
 	    } else {
-		sample=isound.next_sample();
+		sample=isound->next_sample();
 	    }
 	    sum+=gain*sample;
 	}
@@ -122,7 +123,7 @@ void SoundMixer::execute()
 
 	if(nend != ni){
 	    sum*=overall_gain;
-	    outsound.put_sample(sum);
+	    osound->put_sample(sum);
 
 	    // Tell everyone how we are doing...
 	    update_progress(sample++, nsamples);
@@ -163,7 +164,9 @@ void SoundMixer::connection(ConnectionMode mode, int which_port,
 	
 	// Add a new port...
 	clString pname(clString("Sound (")+to_string(which_port)+clString(")"));
-	add_iport(&pi->isound, pname, SoundData::Stream|SoundData::Atomic);
+	pi->isound=new SoundIPort(this, pname,
+				  SoundIPort::Stream|SoundIPort::Atomic);
+	add_iport(pi->isound);
 
 	// Add a slider for the one that we just connected;
 	pi=portinfo[which_port];

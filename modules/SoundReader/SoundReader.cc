@@ -1,6 +1,6 @@
 
 /*
- *  SoundInput.cc:
+ *  SoundReader.cc:
  *
  *  Written by:
  *   Steven G. Parker
@@ -11,75 +11,136 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SoundInput/SoundInput.h>
+#include <SoundReader/SoundReader.h>
 #include <Math/MinMax.h>
 #include <MUI.h>
 #include <NotFinished.h>
-#include <Port.h>
+#include <SoundPort.h>
 #include <iostream.h>
+#include <audiofile.h>
+#include <fstream.h>
 
-SoundInput::SoundInput()
-: UserModule("SoundInput")
+SoundReader::SoundReader()
+: UserModule("SoundReader", Source)
 {
     // Create the output data handle and port
-    add_oport("Sound", SoundData::Stream);
+    osound=new SoundOPort(this, "Sound", SoundIPort::Stream);
+    add_oport(osound);
 
     // Set up the interface
     MUI_onoff_switch* oo=new MUI_onoff_switch("Input",
 					      &onoff, 0);
     add_ui(oo);
-
-    // Setup the execute condtion...
-    execute_condition(oo, 1);
+    filename="isound.aifc";
 }
 
-SoundInput::SoundInput(const SoundInput& copy, int deep)
+SoundReader::SoundReader(const SoundReader& copy, int deep)
 : UserModule(copy, deep)
 {
-    NOT_FINISHED("SoundInput::SoundInput");
+    NOT_FINISHED("SoundReader::SoundReader");
 }
 
-SoundInput::~SoundInput()
+SoundReader::~SoundReader()
 {
 }
 
-Module* make_SoundInput()
+Module* make_SoundReader()
 {
-    return new SoundInput;
+    return new SoundReader;
 }
 
-Module* SoundInput::clone(int deep)
+Module* SoundReader::clone(int deep)
 {
-    return new SoundInput(*this, deep);
+    return new SoundReader(*this, deep);
 }
 
-void SoundInput::execute()
+void SoundReader::execute()
 {
     // Open the sound port...
-    NOT_FINISHED("Open sound port");
-    
+#if 0
+    AFfilehandle afile=AFopenfile(filename(), "r", 0);
+    if(!afile){
+	cerr << "Error opening file: " << afile << endl;
+	return;
+    }
+    long nchannels=AFgetchannels(afile, AF_DEFAULT_TRACK);
     // Setup the sampling rate...
-    double rate=10;
-    NOT_FINISHED("Set sampling rate");
+    double rate=AFgetrate(afile, AF_DEFAULT_TRACK);
     outsound.set_sample_rate(rate);
 
+    long nsamples=AFgetframecnt(afile, AF_DEFAULT_TRACK);
+    outsound.set_nsamples((int)nsamples);
+    long sampfmt, sampwidth;
+    AFgetsampfmt(afile, AF_DEFAULT_TRACK, &sampfmt, &sampwidth);
+    double mx=1./double(1<<(sampwidth-1));
+    mx/=double(nchannels);
+    long sampl[4];
+    short samps[4];
+    signed char sampc[4];
+    void* sampp;
+    int which;
+    if(sampwidth <= 8){
+	sampp=(void*)sampc;
+	which=0;
+    } else if(sampwidth <= 16){
+	sampp=(void*)samps;
+	which=1;
+    } else {
+	sampp=(void*)sampl;
+	which=2;
+    }
+#endif
+    double rate=8000;
+    osound->set_sample_rate(rate);
+    ifstream in(filename());
+    int nsamples=int(10*rate);
     int sample=0;
-    int nsamples=(int)(rate*10);
     while(onoff){
 	// Read a sound sample
+#if 0
+	long status=AFreadframes(afile, AF_DEFAULT_TRACK,
+				 sampp, 1);
+	if(status != 1)
+	    break;
 	double s=0;
-	NOT_FINISHED("Read sample");
-
-	outsound.put_sample(s);
+	int i;
+	switch(which){
+	case 0:
+	    for(i=0;i<nchannels;i++)
+		s+=double(sampc[i])*mx;
+	    break;
+	case 1:
+	    for(i=0;i<nchannels;i++)
+		s+=double(samps[i])*mx;
+	    break;
+	case 2:
+	    for(i=0;i<nchannels;i++)
+		s+=double(sampl[i])*mx;
+	    break;
+	}
+#endif
+	char c1, c2;
+	in.get(c1); in.get(c2);
+	if(!in)break;
+	short m=(c1<<8)|c2;
+	double s=m/32768.0;
+	osound->put_sample(s);
 
 	// Tell everyone how we are doing...
-	update_progress(sample++, nsamples);
+	update_progress(sample++, (int)nsamples);
 	if(sample >= nsamples)
 	    sample=0;
     }
+    update_progress(1.0);
 }
 
-void SoundInput::connection(ConnectionMode, int)
+int SoundReader::should_execute()
 {
-    // Nothing to do
+    if(!onoff){
+	if(sched_state == SchedDormant)
+	    return 0;
+	sched_state=SchedDormant;
+	return 1;
+    }
+    return 0;
 }

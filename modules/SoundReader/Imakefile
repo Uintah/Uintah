@@ -1,11 +1,11 @@
 
 #include <config/sci.cf>
 
-LOCALINCLUDES = -I.. -I../../project
+LOCALINCLUDES = -I.. -I../../project -I../../../audio
 MODULELIST = ../libmodules.a
 
-OBJS = SoundInput.o
-SRCS = SoundInput.cc
+OBJS = SoundReader.o
+SRCS = SoundReader.cc
 
 .cc.o:
 	$(CCC) $(CCFLAGS) -c $<

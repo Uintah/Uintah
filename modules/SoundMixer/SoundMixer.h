@@ -15,18 +15,19 @@
 #define SCI_project_module_SoundMixer_h
 
 #include <UserModule.h>
-#include <SoundData.h>
 class MUI_slider_real;
+class SoundIPort;
+class SoundOPort;
 
 class SoundMixer : public UserModule {
     struct PortInfo {
 	double gain;
 	MUI_slider_real* interface;
-	InSoundData isound;
+	SoundIPort* isound;
     };
     Array1<PortInfo*> portinfo;
     double overall_gain;
-    OutSoundData outsound;
+    SoundOPort* osound;
 public:
     SoundMixer();
     SoundMixer(const SoundMixer&, int deep);
