@@ -95,6 +95,7 @@ Object_proxy::Object_proxy(const std::vector<Object::pointer>& pxy, int mysize, 
   std::vector<Object::pointer>::const_iterator iter = pxy.begin();
   for(unsigned int i=0; i < pxy.size(); i++, iter++) {
     ProxyBase* pbase = dynamic_cast<ProxyBase* >((*iter).getPointer());
+    if(!pbase) continue;
     refList* refL = pbase->_proxyGetReferenceMgr()->getAllReferences();
     refList::const_iterator riter = refL->begin();
     for(unsigned int i=0; i < refL->size(); i++, riter++) {
