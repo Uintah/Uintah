@@ -206,7 +206,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
     # creates the material selection menu
     # it generates sub menus for matrix3 and vector types
     method make_mat_menu {w mat_list var_id type} {
-	set fname "$w.mat$var"
+	set fname "$w.mat$var_id"
 	menubutton $fname -text "Material" \
 		-menu $fname.list -relief groove
 	pack $fname -side right -padx 2 -pady 2
