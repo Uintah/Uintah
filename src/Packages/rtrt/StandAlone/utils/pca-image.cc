@@ -1,10 +1,30 @@
 #include <teem/nrrd.h>
 #include <teem/ell.h>
 
+//#define USE_MTL 1
+
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
+#ifdef USE_MTL
+#  include <complex>
+#endif
 #include <sgi_stl_warnings_on.h>
+
+#ifdef USE_MTL
+#  include <mtl/mtl2lapack.h>
+#  include <mtl/dense1D.h>
+#  include <mtl/utils.h>
+using namespace mtl2lapack;
+#endif
+
+extern "C" {
+  void dsyev_(const char& jobz, const char& uplo,
+	      const int& n, double data_array[],
+	      const int& lda, double eigen_val[],
+	      double dwork[], const int& ldwork,
+	      int& info);
+}
 
 using namespace std;
 
@@ -65,12 +85,14 @@ int main(int argc, char *argv[]) {
   }
   
   num_channels = nin->axis[0].size;
-  
+
+#ifndef USE_MTL
   // verify size of axis[0]
   if (num_channels != 3) {
     cerr << me << ":  size of axis[0] is not equal to 3" << endl;
     exit(2);
   }
+#endif
 
   // Determine the number of eigen thingies to use
   if (num_bases < 1)
@@ -209,16 +231,65 @@ int main(int argc, char *argv[]) {
 
   // Compute eigen values/vectors
 
+#ifndef USE_MTL
   // Here's where the general solution diverges to the RGB case.
-  double eval[3], evec[9];
-  int roots = ell_3m_eigensolve_d(eval, evec, (double*)(cov->data), 1);
+  double eval[3];
+  double *evec_data = new double[9];
+  int roots = ell_3m_eigensolve_d(eval, evec_data, (double*)(cov->data), 1);
   if (roots != ell_cubic_root_three) {
     cerr << me << "Something with the eighen solve went haywire.  Did not get three roots but "<<roots<<" roots.\n";
     exit(2);
   }
 
+  delete[] evec_data;
+
   cout << "Eigen values are ["<<eval[0]<<", "<<eval[1]<<", "<<eval[2]<<"]\n";
 
+  double *cov_data = (double*)(cov->data);
+  {
+    const char jobz = 'V';
+    const char uplo = 'U';
+    const int N = num_channels;
+    const int lda = N;
+    const int lwork = 3*N-1;
+    double *work = new double[lwork];
+    int info;
+    dsyev_(jobz, uplo, N, cov_data, lda, eval, work, lwork, info);
+    delete[] work;
+    cout << "info  = "<<info<<"\n";
+  }
+
+  cout << "Eigen values are ["<<eval[0]<<", "<<eval[1]<<", "<<eval[2]<<"]\n";
+
+  evec_data = cov_data;
+  
+#else
+  // ... with MTL
+  double *cov_data=(double*)(cov->data);
+  double *evec_data = new double[2*num_channels * num_channels];
+  const int N=num_channels;
+  lapack_matrix<double,external>::type A(cov_data, N, N);
+  lapack_matrix<double,external>::type evec(evec_data, 2*N, N);
+  lapack_matrix<double,external>::type unused((double*)0, N, N);
+  mtl::dense1D< std::complex<double> > eval_complex(N);
+  mtl::print_all_matrix(A);
+  
+  // Compute the eigenvalues and right eigenvectors of A.
+  int info;
+  info = geev(GEEV_CALC_RIGHT, A, eval_complex, unused, evec);
+  if (info > 0) {
+    cout << "QR failed to converge, INFO = " << info << endl;
+    return 0;
+  }
+  
+  // Print the eigenvalues and eigenvectors.
+  cout << "eigenvalues" << endl;
+  mtl::print_vector(eval_complex);
+  
+  cout << "eigenvectors" << endl;
+  mtl::print_all_matrix(evec);
+  
+#endif
 
   // Cull our eigen vectors
   Nrrd *transform = nrrdNew();
@@ -230,7 +301,7 @@ int main(int argc, char *argv[]) {
 
   {
     float *tdata = (float*)(transform->data);
-    double *edata = evec;
+    double *edata = evec_data;
     for(int channel = 0; channel < num_channels; channel++) {
       for (int basis = 0; basis < num_bases; basis++) {
 	*tdata = *edata;
