@@ -1,5 +1,4 @@
-#!/bin/sh -- 
-#!perl
+#!/usr/local/bin/perl -I/nfs/sci/u2/morgan/lib/perl5/site_perl/5.005/
 
 eval 'exec perl -wS -x $0 ${1+"$@"}'
     if $running_under_some_shell;
