@@ -25,7 +25,7 @@
 #if defined(__sgi) || defined(__APPLE__)
 #define SWAP
 #endif
-#ifdef __i386__
+#if defined(__i386__) || defined(__ia64__)
 #define NOSWAP
 #endif
 
