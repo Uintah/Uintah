@@ -14,6 +14,11 @@ ParticleSubset::~ParticleSubset()
 	delete d_pset;
 }
 
+ParticleSubset::ParticleSubset() :
+  d_pset( new ParticleSet )
+{
+}
+
 ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill)
     : d_pset(pset)
 {
@@ -28,6 +33,9 @@ ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill)
 
 //
 // $Log$
+// Revision 1.5  2000/05/20 02:36:06  kuzimmer
+// Multiple changes for new vis tools and DataArchive
+//
 // Revision 1.4  2000/05/10 20:03:01  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

@@ -39,6 +39,7 @@ WARNING
    class ParticleSubset : public RefCounted {
    public:
       ParticleSubset(ParticleSet* pset, bool fill);
+      ParticleSubset();
       ~ParticleSubset();
       
       //////////
@@ -59,6 +60,18 @@ WARNING
       // Insert Documentation Here:
       void addParticle(particleIndex idx) {
 	 d_particles.push_back(idx);
+      }
+
+      //////////
+      // Insert Documentation Here:
+      particleIndex addParticles(particleIndex count) {
+	particleIndex oldsize = d_pset->addParticles(count);
+	particleIndex newsize = oldsize+count;
+	particleIndex start = d_particles.size();
+	d_particles.resize(d_particles.size()+newsize);
+	for(particleIndex idx = oldsize; idx < newsize; idx++, start++)
+	  d_particles[start] = idx;
+	return oldsize;  // The beginning of the new index range
       }
       
       typedef std::vector<particleIndex>::iterator iterator;
@@ -105,7 +118,6 @@ WARNING
       ParticleSet*               d_pset;
       std::vector<particleIndex> d_particles;
       
-      ParticleSubset();
       ParticleSubset(const ParticleSubset& copy);
       ParticleSubset& operator=(const ParticleSubset&);
    };
@@ -114,6 +126,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.5  2000/05/20 02:36:06  kuzimmer
+// Multiple changes for new vis tools and DataArchive
+//
 // Revision 1.4  2000/05/10 20:03:01  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

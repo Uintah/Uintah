@@ -7,6 +7,7 @@
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Handle.h>
 #include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/BBox.h>
 #include <SCICore/Geometry/IntVector.h>
 #include <string>
 #include <vector>
@@ -65,6 +66,9 @@ WARNING
       
       int numRegions() const;
       long totalCells() const;
+
+      void getIndexRange(SCICore::Geometry::BBox& b);
+      void getSpatialRange(SCICore::Geometry::BBox& b);
       
       void performConsistencyCheck() const;
       GridP getGrid() const;
@@ -80,6 +84,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.11  2000/05/20 02:36:06  kuzimmer
+// Multiple changes for new vis tools and DataArchive
+//
 // Revision 1.10  2000/05/15 19:39:47  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups

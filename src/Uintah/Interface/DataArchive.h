@@ -1,7 +1,17 @@
 #ifndef UINTAH_HOMEBREW_DataArchive_H
 #define UINTAH_HOMEBREW_DataArchive_H
 
+#include <string>
+#include <vector>
+#include <Uintah/Grid/ParticleSet.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/ParticleVariable.h>
+#include <Uintah/Grid/NCVariable.h>
+
+
 namespace Uintah {
+
+class Region;
    
    /**************************************
      
@@ -47,12 +57,15 @@ public:
    // variables. We also need to determine the type of each variable.
    // Get a list of scalar or vector variable names and  
    // a list of corresponding data types
-   void listVariables( std::vector< std::string> names&,
-		       std::vector< const TypeDescription *>&  ) = 0;
-   void listTimesteps( std::vector<int> index&,
-		       std::vector<double> times& );
-   void listRegions( std::vector<const Region*> regions,
-		     double time );
+  void listVariables( std::vector< std::string>& names,
+		      std::vector< const TypeDescription *>& type );
+  void listTimesteps( std::vector<int>& index,
+		      std::vector<double>& times );
+  void listRegions( std::vector<const Region*> regions,
+		    double time );
+
+  GridP getGrid( double time );
+
    
 #if 0
    //////////
@@ -64,7 +77,7 @@ public:
    
    //////////
    // how long does a particle live?  Not variable specific.
-   void lifetime( double& min, double& max, particleId id);
+   void lifetime( double& min, double& max, particleIndex id);
    
    //////////
    // how long does a region live?  Not variable specific
@@ -77,7 +90,7 @@ public:
    // syntax.
    template<class T>
    void list( ParticleVariable< T >, const std::string& name, 
-	      particleId id,
+	      particleIndex idx,
 	      double min, double max);
    
    //////////
@@ -113,7 +126,7 @@ public:
    template<class T>
    void list( std::vector< T >, const std::string& name,  
 	      const Region *,
-	      const cellIndex& i, const time& min, const time& max);
+	      IntVector i, const time& min, const time& max);
    
    //////////
    // In other cases we will have noticed something interesting and we
@@ -122,6 +135,7 @@ public:
    template<class T> void get(T& data, const std::string& name,
 			      const Region* region, cellIndex min, cellIndex max);
 #endif
+
    
    
 protected:
@@ -138,6 +152,9 @@ private:
 
 //
 // $Log$
+// Revision 1.2  2000/05/20 02:34:56  kuzimmer
+// Multiple changes for new vis tools and DataArchive
+//
 // Revision 1.1  2000/05/18 16:01:30  sparker
 // Add data archive interface
 //

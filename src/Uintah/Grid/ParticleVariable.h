@@ -53,7 +53,10 @@ WARNING
       ParticleVariable();
       virtual ~ParticleVariable();
       ParticleVariable(ParticleSubset* pset);
+      ParticleVariable(const ParticleVariable<T>&);
       
+      ParticleVariable<T>& operator=(const ParticleVariable<T>&);
+
       //////////
       // Insert Documentation Here:
       static const TypeDescription* getTypeDescription();
@@ -68,6 +71,11 @@ WARNING
       // Insert Documentation Here:
       ParticleSubset* getParticleSubset() const {
 	 return d_pset;
+      }
+      //////////
+      // Insert Documentation Here:
+     void resync() {
+       d_pdata->resize(getParticleSet()->numParticles());
       }
       
       //////////
@@ -94,8 +102,6 @@ WARNING
       ParticleData<T>* d_pdata;
       ParticleSubset*  d_pset;
       
-      ParticleVariable(const ParticleVariable<T>&);
-      ParticleVariable<T>& operator=(const ParticleVariable<T>&);
    };
    
    template<class T>
@@ -253,6 +259,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.13  2000/05/20 02:36:06  kuzimmer
+// Multiple changes for new vis tools and DataArchive
+//
 // Revision 1.12  2000/05/15 19:39:48  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups
