@@ -1434,7 +1434,7 @@ void OnDemandDataWarehouse::logMemoryUse(ostream& out, const std::string& tag)
   // Log the psets.
   for(psetDBType::iterator iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++){
     ParticleSubset* pset = iter->second;
-    out << dwid << "\t" << tag << "\t" << "ParticleSubset" << "\t-\t" << pset->numParticles() << "\t" << pset->numParticles()*sizeof(particleIndex) << '\n';
+    out << dwid << "\t" << tag << "\t" << "ParticleSubset" << "\t-\t" << pset->getPatch()->getID() << "\t" << pset->getMatlIndex() << "\t" << pset->numParticles() << "\t" << pset->numParticles()*sizeof(particleIndex) << "\t" << pset->getPointer() << '\n';
   }
 }
 
