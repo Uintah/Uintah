@@ -24,7 +24,29 @@ ConstitutiveModel::~ConstitutiveModel()
   delete lb;
 }
 
+//______________________________________________________________________
+//          HARDWIRE FOR AN IDEAL GAS -Todd 
 
+double ConstitutiveModel::computeRhoMicro(double& press, double& gamma,
+				 double& cv, double& Temp)
+{
+  // Pointwise computation of microscopic density
+  return  press/((gamma - 1.0)*cv*Temp);
+}
+
+void ConstitutiveModel::computePressEOS(double& rhoM, double& gamma,
+			       double& cv, double& Temp,
+			       double& press, double& dp_drho, double& dp_de)
+{
+  // Pointwise computation of thermodynamic quantities
+  press   = (gamma - 1.0)*rhoM*cv*Temp;
+  dp_drho = (gamma - 1.0)*cv*Temp;
+  dp_de   = (gamma - 1.0)*rhoM;
+}
+
+//______________________________________________________________________
+//
+#if 0
 //for coupling to ICE
 double ConstitutiveModel::computeRhoMicro(double pressure)
 {
@@ -59,5 +81,10 @@ void ConstitutiveModel::computePressEOS(const double  rho_cur, double& pressure,
 //  cout << "rho_cur = " << rho_cur << " press = " << pressure << " dp_drho = " << dp_drho << endl;
 
 }
+#endif
+
+
+
+
 
 
