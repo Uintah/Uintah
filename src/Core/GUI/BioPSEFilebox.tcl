@@ -58,6 +58,7 @@
 #               -filevar $this-saveFile \
 #               -setcmd "wm withdraw $w" \ 
 #               -command "$this doSaveImage; wm withdraw $w" \
+#               -commandname "Execute" \  
 #               -cancel "wm withdraw $w" \
 #               -title $title \
 #               -filetypes $types \
@@ -789,6 +790,7 @@ proc biopseFDialog_Config {w type argList} {
 	    {-parent "" "" "."}
 	    {-title "" "" ""}
 	    {-command "" "" ""}
+	    {-commandname "" "" ""}
 	    {-filevar "" "" ""}
 	    {-cancel "" "" ""}
 	    {-setcmd "" "" ""}
@@ -806,6 +808,7 @@ proc biopseFDialog_Config {w type argList} {
 	    {-parent "" "" "."}
 	    {-title "" "" ""}
 	    {-command "" "" ""}
+	    {-commandname "" "" ""}
 	    {-filevar "" "" ""}
 	    {-cancel "" "" ""}
 	    {-setcmd "" "" ""}
@@ -966,13 +969,19 @@ static char updir_bits[] = {
 	Tooltip $f7.ok "Set the filename and dimiss\nthe UI without executing"
     }
 
-    set data(executeBtn) [button $f7.execute -text Execute -under 0 -width 10\
+    set buttonName Execute
+    if { [string length $data(-commandname)] } {
+	set buttonName $data(-commandname)
+    }
+    set data(executeBtn) [button $f7.execute -text $buttonName -under 0 -width 10\
 			      -default normal -pady 3]
-    # For the viewer Save Image window, have it say Save instead of Execute
-    if {[string first "ViewWindow" $w] != -1} {
-	$data(executeBtn) config -text "Save"
-    } 
-    Tooltip $f7.execute "Set the filename, execute\nthe module, and dismiss\nthe UI"
+    if { $buttonName == "Save"} {
+	Tooltip $f7.execute "Write the file to disk"
+    } elseif {$buttonName == "Load"} {
+	Tooltip $f7.execute "Load the file from disk"
+    } else {
+	Tooltip $f7.execute "Set the filename, execute\nthe module, and dismiss\nthe UI"
+    }
 
     set data(cancelBtn) [button $f7.cancel -text Cancel -under 0 -width 10\
 				 -default normal -pady 3]
