@@ -79,33 +79,24 @@ IPort::connect(Port* port){
 
 Renderer::Renderer(){
   ren1=vtkRenderer::New();
-
+  ren1->SetBackground(0.1,0.2,0.4);
+  ren1->ResetCameraClippingRange();
   iports.push_back(new IPort(ren1));
   
-  renWin=vtkRenderWindow::New();
-  iren=vtkRenderWindowInteractor::New();
+
 
   //  ren1->GetActiveCamera()->Azimuth(20);
   
   //ren1->GetActiveCamera()->Elevation(30);
 
-  ren1->SetBackground(0.1,0.2,0.4);
+
   
   //ren1->GetActiveCamera()->Zoom(1.4);
 
-  ren1->ResetCameraClippingRange();
-
-  renWin->SetSize( 500, 500);
-
-  renWin->AddRenderer(ren1);
-
-  iren->SetRenderWindow(renWin);
 }
 
 Renderer::~Renderer(){
   ren1->Delete();
-  renWin->Delete();
-  iren->Delete();
 
 }
 
@@ -116,10 +107,20 @@ Renderer::haveUI(){
 
 int
 Renderer::popupUI(){
+  renWin=vtkRenderWindow::New();
+  renWin->SetSize( 500, 500);
+  renWin->AddRenderer(ren1);
+
+  iren=vtkRenderWindowInteractor::New();
+  iren->SetRenderWindow(renWin);
+
   renWin->Render();
 
   iren->Initialize();
 
   iren->Start();  
+
+  renWin->Delete();
+  iren->Delete();
   return 0;
 }
