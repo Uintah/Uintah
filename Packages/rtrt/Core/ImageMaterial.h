@@ -15,6 +15,7 @@ public:
 	None
     };
 private:
+    bool flip_;
     Color ambient;
     double Kd;
     Color specular;
@@ -41,6 +42,7 @@ public:
                        const HitInfo& hit, int depth, 
                        double atten, const Color& accumcolor,
                        Context* cx);
+    void flip() { flip_ = !flip_; }
 };
 
 } // end namespace rtrt
