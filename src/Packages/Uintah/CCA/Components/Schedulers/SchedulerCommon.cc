@@ -455,6 +455,8 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
       continue;
     }
 
+    //    cerr << "RANDY: SchedulerCommon::copyDataToNewGrid() Copying (" << *currentVar.label_;
+    //    cerr << ") on patch(" << currentVar.patch_->getID() << ") on matl(" << currentVar.matlIndex_ << ")" << endl;
     //cout << "  Label(" << setw(15) << currentVar.label_->getName() << "): Patch(" << currentVar.patch_->getID() << "): Material(" << currentVar.matlIndex_ << ")" << endl; 
     const Level* oldLevel = currentVar.patch_->getLevel();
     const Level* newLevel = (newDataWarehouse->getGrid()->getLevel( oldLevel->getIndex() )).get_rep();
