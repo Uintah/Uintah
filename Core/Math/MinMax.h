@@ -31,6 +31,17 @@ inline SCICORESHARE int Max(int d1, int d2)
     return d1>d2?d1:d2;
 }
 
+// 2 Integers
+inline SCICORESHARE long Min(long d1, long d2)
+{
+    return d1<d2?d1:d2;
+}
+
+inline SCICORESHARE long Max(long d1, long d2)
+{
+    return d1>d2?d1:d2;
+}
+
 // 2 doubles
 inline SCICORESHARE double Max(double d1, double d2)
 {
@@ -72,11 +83,29 @@ inline SCICORESHARE int Max(int d1, int d2, int d3)
     return m;
 }
 
+// 3 integers
+inline SCICORESHARE long  Min(long  d1, long  d2, long  d3)
+{
+    long  m=d1<d2?d1:d2;
+    m=m<d3?m:d3;
+    return m;
+}
+
+inline SCICORESHARE long  Max(long  d1, long  d2, long  d3)
+{
+    long  m=d1>d2?d1:d2;
+    m=m>d3?m:d3;
+    return m;
+}
+
 } // End namespace Math
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  2000/07/14 15:36:43  kuzimmer
+// added longs to Min & Max
+//
 // Revision 1.2  1999/08/17 06:39:34  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
