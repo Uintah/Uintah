@@ -49,7 +49,8 @@ public:
   virtual void rasterize(SCIRun::Array3<float>& array) = 0;
 
   // behavior
-  virtual int pick (int x, int y, int w, int h) = 0;
+  virtual int pick1 (int x, int y, int w, int h) = 0;
+  virtual int pick2 (int x, int y, int w, int h) = 0;
   virtual void move (int obj, int x, int y, int w, int h) = 0;
   virtual void release (int obj, int x, int y, int w, int h) = 0;
 
@@ -88,7 +89,8 @@ public:
   void rasterize(SCIRun::Array3<float>& array);
   
   // behavior
-  virtual int pick (int x, int y, int w, int h);
+  virtual int pick1 (int x, int y, int w, int h);
+  virtual int pick2 (int x, int y, int w, int h);
   virtual void move (int obj, int x, int y, int w, int h);
   virtual void release (int obj, int x, int y, int w, int h);
 
@@ -102,7 +104,7 @@ protected:
   float bottom_;
 
   // Used by picking.
-  float last_x_, last_y_;
+  float last_x_, last_y_, last_width_;
   int pick_ix_, pick_iy_;
 
   static FragmentProgramARB* shader_;
@@ -127,7 +129,8 @@ public:
   void rasterize(SCIRun::Array3<float>& array);
   
   // behavior
-  virtual int pick (int x, int y, int w, int h);
+  virtual int pick1 (int x, int y, int w, int h);
+  virtual int pick2 (int x, int y, int w, int h);
   virtual void move (int obj, int x, int y, int w, int h);
   virtual void release (int obj, int x, int y, int w, int h);
 

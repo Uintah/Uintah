@@ -195,13 +195,27 @@ EditTransferFunc2::push(int x, int y, int button)
   pick_object_ = 0;
   for (unsigned int i = 0; i < widget_.size(); i++)
   {
-    const int tmp = widget_[i]->pick(x, 255-y, 512, 256);
+    const int tmp = widget_[i]->pick1(x, 255-y, 512, 256);
     if (tmp)
     {
       pick_widget_ = i;
       pick_object_ = tmp;
       widget_[i]->select(tmp);
       break;
+    }
+  }
+  if (pick_widget_ == -1)
+  {
+    for (unsigned int i = 0; i < widget_.size(); i++)
+    {
+      const int tmp = widget_[i]->pick2(x, 255-y, 512, 256);
+      if (tmp)
+      {
+	pick_widget_ = i;
+	pick_object_ = tmp;
+	widget_[i]->select(tmp);
+	break;
+      }
     }
   }
   update();
@@ -235,7 +249,7 @@ EditTransferFunc2::release(int x, int y, int button)
   if (pick_widget_ != -1)
   {
     widget_[pick_widget_]->release(pick_object_, x, 255-y, 512, 256);
-    cmap_dirty_ = true;
+    //cmap_dirty_ = true;
   }
 
   update();
