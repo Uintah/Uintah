@@ -89,8 +89,6 @@ void FieldToNrrd::execute()
   }
 
   int nx, ny, nz;
-  pair<double,double> minmax;
-
   NrrdData *nout=scinew NrrdData;
   Field *field = fieldH.get_rep();
   const string data = field->get_type_name(1);
@@ -107,7 +105,6 @@ void FieldToNrrd::execute()
     nx = lvm->get_nx();
     ny = lvm->get_ny();
     nz = lvm->get_nz();
-    field_minmax(*f, minmax);
     double *data=new double[nx*ny*nz];
     double *p=&(data[0]);
     for (int k=0; k<nz; k++)
@@ -122,7 +119,6 @@ void FieldToNrrd::execute()
     nx = lvm->get_nx();
     ny = lvm->get_ny();
     nz = lvm->get_nz();
-    field_minmax(*f, minmax);
     float *data=new float[nx*ny*nz];
     float *p=&(data[0]);
     for (int k=0; k<nz; k++)
@@ -138,7 +134,6 @@ void FieldToNrrd::execute()
     nx = lvm->get_nx();
     ny = lvm->get_ny();
     nz = lvm->get_nz();
-    field_minmax(*f, minmax);
     unsigned int *data=new unsigned int[nx*ny*nz];
     unsigned int *p=&(data[0]);
     for (int k=0; k<nz; k++)
@@ -154,7 +149,6 @@ void FieldToNrrd::execute()
     nx = lvm->get_nx();
     ny = lvm->get_ny();
     nz = lvm->get_nz();
-    field_minmax(*f, minmax);
     int *data=new int[nx*ny*nz];
     int *p=&(data[0]);
     for (int k=0; k<nz; k++)
@@ -170,7 +164,6 @@ void FieldToNrrd::execute()
     nx = lvm->get_nx();
     ny = lvm->get_ny();
     nz = lvm->get_nz();
-    field_minmax(*f, minmax);
     unsigned short *data=new unsigned short[nx*ny*nz];
     unsigned short *p=&(data[0]);
     for (int k=0; k<nz; k++)
@@ -186,7 +179,6 @@ void FieldToNrrd::execute()
     nx = lvm->get_nx();
     ny = lvm->get_ny();
     nz = lvm->get_nz();
-    field_minmax(*f, minmax);
     short *data=new short[nx*ny*nz];
     short *p=&(data[0]);
     for (int k=0; k<nz; k++)
@@ -201,7 +193,6 @@ void FieldToNrrd::execute()
     nx = lvm->get_nx();
     ny = lvm->get_ny();
     nz = lvm->get_nz();
-    field_minmax(*f, minmax);
     unsigned char *data=new unsigned char[nx*ny*nz];
     unsigned char *p=&(data[0]);
     for (int k=0; k<nz; k++)
@@ -217,7 +208,6 @@ void FieldToNrrd::execute()
     nx = lvm->get_nx();
     ny = lvm->get_ny();
     nz = lvm->get_nz();
-    field_minmax(*f, minmax);
     char *data=new char[nx*ny*nz];
     char *p=&(data[0]);
     for (int k=0; k<nz; k++)
@@ -272,9 +262,14 @@ void FieldToNrrd::execute()
 
   Point minP = lvm->get_min();
   Point maxP = lvm->get_max();
-  if (data != "Vector" && data != "Tensor") {
-    nout->nrrd->min=minmax.first;
-    nout->nrrd->max=minmax.second;
+
+  ScalarFieldInterface *sfi = field->query_scalar_interface();
+  if (sfi)
+  {
+    double minv, maxv;
+    sfi->compute_min_max(minv, maxv);
+    nout->nrrd->min = minv;
+    nout->nrrd->max = maxv;
   }
   Vector v(maxP-minP);
   nout->nrrd->axis[0].size=nx;
