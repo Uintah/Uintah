@@ -467,7 +467,7 @@ void MatlabDataReader::indexmatlabfile(bool postmsg)
 			{   
 				if (p==0) 
 				{
-					matrixnamelist[p] = newmatrixname;
+          if (newmatrixname == "") matrixnamelist[p] = "<none>"; else matrixnamelist[p] = newmatrixname;
 				}
 				else
 				{
