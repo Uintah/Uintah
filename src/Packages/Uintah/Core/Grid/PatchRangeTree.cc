@@ -10,7 +10,7 @@ PatchRangeTree::PatchRangeTree(const std::vector<Patch*>& patches)
   list<PatchPoint*> pointList;
   IntVector dimensions;
   
-  for (int i = 0; i < patches.size(); i++) {
+  for (int i = 0; i < (int)patches.size(); i++) {
     d_patchPoints[i].setPatch(patches[i]);
     pointList.push_back(&d_patchPoints[i]);
     
