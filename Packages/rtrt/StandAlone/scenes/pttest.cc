@@ -13,6 +13,8 @@
 #include <Packages/rtrt/Core/PCAGridSpheres.h>
 #include <Packages/rtrt/Core/RegularColorMap.h>
 
+#include <Core/Thread/Thread.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
