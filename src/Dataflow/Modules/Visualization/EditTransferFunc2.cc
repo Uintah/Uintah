@@ -82,58 +82,6 @@ struct UndoItem
 
 class EditTransferFunc2 : public Module {
 
-private:
-
-  GLXContext ctx_;
-  Display* dpy_;
-  Window win_;
-  int width_;
-  int height_;
-  bool button_;
-  vector<CM2WidgetHandle> widgets_;
-  stack<UndoItem> undo_stack_;
-  CM2ShaderFactory* shader_factory_;
-  Pbuffer* pbuffer_;
-  Array3<float> array_;
-  bool use_pbuffer_;
-  bool use_back_buffer_;
-  
-  int icmap_gen_;
-
-  Nrrd* histo_;
-  bool histo_dirty_;
-  GLuint histo_tex_;
-
-  bool cmap_dirty_;
-  bool cmap_size_dirty_;
-  GLuint cmap_tex_;
-  
-  int pick_widget_; // Which widget is selected.
-  int pick_object_; // The part of the widget that is selected.
-  bool first_motion_; // Push on undo when motion occurs, not on select.
-
-  bool updating_; // updating the tf or not
-
-  GuiInt gui_faux_;
-  GuiDouble gui_histo_;
-
-
-  GuiInt			gui_num_entries_;
-  vector<GuiString *>		gui_name_;
-  vector<GuiDouble *>		gui_color_r_;
-  vector<GuiDouble *>		gui_color_g_;
-  vector<GuiDouble *>		gui_color_b_;
-  vector<GuiDouble *>		gui_color_a_;
-  vector<GuiString *>           gui_wstate_;
-  vector<GuiInt *>		gui_sstate_;
-  vector<GuiInt *>              gui_onstate_;
-
-  // variables for file loading and saving
-  GuiFilename filename_;
-  string old_filename_;
-  time_t 	old_filemodification_;
-  
-
 public:
   EditTransferFunc2(GuiContext* ctx);
   virtual ~EditTransferFunc2();
@@ -150,11 +98,89 @@ public:
 
   void undo();
 
+  bool make_current();
+  void init_pbuffer();
+  void rasterize_widgets();
+  void draw_colormap();
+  void update_histo();
+  void draw_histo();
   void redraw();
 
   void push(int x, int y, int button, int modifier);
   void motion(int x, int y);
   void release(int x, int y, int button);
+
+private:
+  GLXContext                            ctx_;
+  Display*                              dpy_;
+  Window                                win_;
+  int                                   width_;
+  int                                   height_;
+  bool                                  button_;
+  vector<CM2WidgetHandle>               widgets_;
+  stack<UndoItem>                       undo_stack_;
+  CM2ShaderFactory*                     shader_factory_;
+  Pbuffer*                              pbuffer_;
+  Array3<float>                         array_;
+  bool                                  use_pbuffer_;
+  bool                                  use_back_buffer_;
+  
+  int                                   icmap_gen_;
+
+  Nrrd*                                 histo_;
+  bool                                  histo_dirty_;
+  GLuint                                histo_tex_;
+
+  bool                                  cmap_dirty_;
+  bool                                  cmap_size_dirty_;
+  GLuint                                cmap_tex_;
+  
+  // Which widget is selected.
+  int                                   pick_widget_; 
+  // The part of the widget that is selected.
+  int                                   pick_object_; 
+  // Push on undo when motion occurs, not on select.
+  bool                                  first_motion_; 
+
+
+  //! functions and for panning.
+  void translate_start(int x, int y);
+  void translate_motion(int x, int y);
+  void translate_end(int x, int y);
+
+  //! functions and for zooming.
+  void scale_start(int x, int y);
+  void scale_motion(int x, int y);
+  void scale_end(int x, int y);
+
+  void screen_val(int &x, int &y);
+
+  int                                   mouse_last_x_;
+  int                                   mouse_last_y_;
+  GuiDouble                             pan_x_;
+  GuiDouble                             pan_y_;
+  GuiDouble                             scale_;
+
+  bool                                  updating_; // updating the tf or not
+
+  GuiInt                                gui_faux_;
+  GuiDouble                             gui_histo_;
+
+
+  GuiInt			        gui_num_entries_;
+  vector<GuiString *>		        gui_name_;
+  vector<GuiDouble *>		        gui_color_r_;
+  vector<GuiDouble *>		        gui_color_g_;
+  vector<GuiDouble *>		        gui_color_b_;
+  vector<GuiDouble *>		        gui_color_a_;
+  vector<GuiString *>                   gui_wstate_;
+  vector<GuiInt *>		        gui_sstate_;
+  vector<GuiInt *>                      gui_onstate_;
+
+  // variables for file loading and saving
+  GuiFilename                           filename_;
+  string                                old_filename_;
+  time_t 	                        old_filemodification_;
 };
 
 
@@ -180,6 +206,11 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     pick_widget_(-1), 
     pick_object_(0), 
     first_motion_(true), 
+    mouse_last_x_(0),
+    mouse_last_y_(0),
+    pan_x_(ctx->subVar("panx")),
+    pan_y_(ctx->subVar("pany")),
+    scale_(ctx->subVar("scale_factor")),
     updating_(false),
     gui_faux_(ctx->subVar("faux")),
     gui_histo_(ctx->subVar("histo")),
@@ -187,6 +218,9 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     filename_(ctx->subVar("filename")),
     old_filemodification_(0)
 {
+  pan_x_.set(0.0);
+  pan_y_.set(0.0);
+  scale_.set(1.0);
   widgets_.push_back(scinew TriangleCM2Widget());
   widgets_.push_back(scinew RectangleCM2Widget());
   resize_gui(2);
@@ -202,6 +236,75 @@ EditTransferFunc2::~EditTransferFunc2()
 
 
 void
+EditTransferFunc2::translate_start(int x, int y)
+{
+  mouse_last_x_ = x;
+  mouse_last_y_ = y;
+}
+
+void
+EditTransferFunc2::translate_motion(int x, int y)
+{
+  float xmtn = float(mouse_last_x_ - x) / float(width_);
+  float ymtn = -float(mouse_last_y_ - y) / float(height_);
+  mouse_last_x_ = x;
+  mouse_last_y_ = y;
+
+  pan_x_.set(pan_x_.get() + xmtn / scale_.get());
+  pan_y_.set(pan_y_.get() + ymtn / scale_.get());
+
+  redraw();
+}
+
+void
+EditTransferFunc2::translate_end(int x, int y)
+{
+  redraw();
+}
+
+void
+EditTransferFunc2::scale_start(int x, int y)
+{
+  mouse_last_y_ = y;
+}
+
+void
+EditTransferFunc2::scale_motion(int x, int y)
+{
+  float ymtn = -float(mouse_last_y_ - y) / float(height_);
+  mouse_last_y_ = y;
+  scale_.set(scale_.get() + -ymtn);
+
+  if (scale_.get() < 0.0) scale_.set(0.0);
+
+  redraw();
+}
+
+void
+EditTransferFunc2::scale_end(int x, int y)
+{
+  redraw();
+}
+
+int
+do_round(float d)
+{
+  if (d > 0.0) return (int)(d + 0.5);
+  else return -(int)(-d + 0.5); 
+}
+
+void
+EditTransferFunc2::screen_val(int &x, int &y)
+{
+  const float cx = width_ * 0.5;
+  const float cy = height_ * 0.5;
+  const float sf_inv = 1.0 / scale_.get();
+
+  x = do_round((x - cx) * sf_inv + cx + (pan_x_.get() * width_));
+  y = do_round((y - cy) * sf_inv + cy - (pan_y_.get() * height_));
+}
+
+void
 EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args.count() < 2) {
@@ -214,6 +317,7 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
     int x, y, b, m;
     string_to_int(args[3], x);
     string_to_int(args[4], y);
+    screen_val(x,y);
     if (args[2] == "motion") {
       if (button_ == 0) // not buttons down!
 	return;
@@ -223,8 +327,35 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
       if (args[2] == "push") {
 	string_to_int(args[6], m); // which button it was
 	push(x, y, b, m);
-      } else {
+      } else if (args[2] == "release") {
 	release(x, y, b);
+      } else if (args[2] == "translate") {
+	string_to_int(args[4], x);
+	string_to_int(args[5], y);
+	if (args[3] == "start") {
+	  translate_start(x, y);
+	} else if (args[3] == "move") {
+	  translate_motion(x, y);
+	} else {
+	  // end
+	  translate_end(x, y);
+	}	
+      } else if (args[2] == "reset") {
+	pan_x_.set(0.0);
+	pan_y_.set(0.0);
+	scale_.set(1.0);
+	redraw();
+      } else if (args[2] == "scale") {
+	string_to_int(args[4], x);
+	string_to_int(args[5], y);
+	if (args[3] == "start") {
+	  scale_start(x, y);
+	} else if (args[3] == "move") {
+	  scale_motion(x, y);
+	} else {
+	  // end
+	  scale_end(x, y);
+	}
       }
     }
   } else if (args[1] == "resize") {
@@ -687,8 +818,6 @@ EditTransferFunc2::release(int x, int y, int button)
   }
 }
 
-
-
 void
 EditTransferFunc2::execute()
 {
@@ -696,21 +825,27 @@ EditTransferFunc2::execute()
   if (cmap_iport) {
     ColorMap2Handle icmap_handle;
     cmap_iport->get(icmap_handle);
-    if (icmap_handle.get_rep() && icmap_handle->generation != icmap_gen_) {
 
-      // If the first widget is an empty widget replace it 
-      // with the input widget.
-      if (widgets_[0]->is_empty()) {
-	widgets_.erase(widgets_.begin());
-      }
+    bool no_input = ! icmap_handle.get_rep();
+    bool new_input = ! no_input && icmap_handle->generation != icmap_gen_;
+
+    if ((new_input || no_input) && widgets_[0]->is_empty()) {
+      widgets_.erase(widgets_.begin());
+    }
+    if (icmap_handle.get_rep() && icmap_handle->generation != icmap_gen_) {
       // add the input widgets to our existing set.
       widgets_.insert(widgets_.begin(), icmap_handle->widgets().begin(), 
 		      icmap_handle->widgets().end());
       icmap_gen_ = icmap_handle->generation;
-      update_to_gui();
       cmap_dirty_ = true;
       redraw();
     }
+  }
+
+  gui_num_entries_.reset();
+  if ((unsigned)gui_num_entries_.get() != widgets_.size()) {  
+    resize_gui();
+    update_to_gui();
   }
 
   NrrdIPort* histo_port = (NrrdIPort*)get_iport("Histogram");
@@ -747,11 +882,10 @@ EditTransferFunc2::execute()
   }
 }
 
-void
-EditTransferFunc2::redraw()
-{
-  gui->lock();
 
+bool
+EditTransferFunc2::make_current()
+{
   //----------------------------------------------------------------
   // obtain rendering ctx 
   if(!ctx_) {
@@ -761,7 +895,7 @@ EditTransferFunc2::redraw()
     if(!tkwin) {
       warning("Unable to locate window!");
       gui->unlock();
-      return;
+      return false;
     }
     dpy_ = Tk_Display(tkwin);
     win_ = Tk_WindowId(tkwin);
@@ -772,7 +906,7 @@ EditTransferFunc2::redraw()
     if(!ctx_) {
       error("Unable to obtain OpenGL context!");
       gui->unlock();
-      return;
+      return false;
     }
     glXMakeCurrent(dpy_, win_, ctx_);
 #ifdef HAVE_GLEW
@@ -780,8 +914,13 @@ EditTransferFunc2::redraw()
 #endif
   } else {
     glXMakeCurrent(dpy_, win_, ctx_);
-  }
-  
+  } 
+  return true;
+}
+
+void
+EditTransferFunc2::init_pbuffer() 
+{
   //----------------------------------------------------------------
   // decide what rasterization to use
   if(use_pbuffer_ || use_back_buffer_) {
@@ -799,8 +938,10 @@ EditTransferFunc2::redraw()
     }
   }
 
-  if(use_pbuffer_ && (!pbuffer_ || pbuffer_->width() != width_
-                      || pbuffer_->height() != height_)) {
+  //! init/resize the pbuffer
+  if(use_pbuffer_ && (!pbuffer_ || pbuffer_->width() != width_ || 
+		      pbuffer_->height() != height_)) 
+  {
     if(pbuffer_) {
       pbuffer_->destroy();
       delete pbuffer_;
@@ -818,7 +959,11 @@ EditTransferFunc2::redraw()
       remark("[EditTransferFunction2] Using Pbuffer rasterization.");
     }
   }
+}
 
+void
+EditTransferFunc2::rasterize_widgets()
+{
   //----------------------------------------------------------------
   // update local array
   if(use_pbuffer_) {
@@ -901,48 +1046,37 @@ EditTransferFunc2::redraw()
       cmap_dirty_ = false;
     }
   }
-
-  //----------------------------------------------------------------
-  // update histo tex
-  if(histo_dirty_) {
-    if(glIsTexture(histo_tex_)) {
-      glDeleteTextures(1, &histo_tex_);
-      histo_tex_ = 0;
-    }
-    glGenTextures(1, &histo_tex_);
-    glBindTexture(GL_TEXTURE_2D, histo_tex_);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    int axis_size[3];
-    nrrdAxisInfoGet_nva(histo_, nrrdAxisInfoSize, axis_size);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE8, axis_size[histo_->dim-2],
-                 axis_size[histo_->dim-1], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                 histo_->data);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    histo_dirty_ = false;
+} 
+void
+EditTransferFunc2::draw_histo()
+{
+#ifdef HAVE_AVR_SUPPORT
+  glActiveTexture(GL_TEXTURE0);
+#endif
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, histo_tex_);
+  double alpha = gui_histo_.get();
+  glColor4f(alpha, alpha, alpha, 1.0);
+  glBegin(GL_QUADS);
+  {
+    glTexCoord2f( 0.0,  0.0);
+    glVertex2f( 0.0,  0.0);
+    glTexCoord2f( 1.0,  0.0);
+    glVertex2f( 1.0,  0.0);
+    glTexCoord2f( 1.0,  1.0);
+    glVertex2f( 1.0,  1.0);
+    glTexCoord2f( 0.0,  1.0);
+    glVertex2f( 0.0,  1.0);
   }
-  
-  //----------------------------------------------------------------
-  // draw
-  glDrawBuffer(GL_BACK);
-  glClearColor(0.0, 0.0, 0.0, 0.0);
-  glClear(GL_COLOR_BUFFER_BIT);
-  
-  glViewport(0, 0, width_, height_);
+  glEnd();
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glDisable(GL_TEXTURE_2D);
+}
 
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glTranslatef(-1.0, -1.0, 0.0);
-  glScalef(2.0, 2.0, 2.0);
-
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_LIGHTING);
-  glDisable(GL_CULL_FACE);
-
+void
+EditTransferFunc2::draw_colormap()
+{
   // draw cmap
   if(use_back_buffer_) {
     // rasterize widgets into back buffer
@@ -957,30 +1091,9 @@ EditTransferFunc2::redraw()
     glBlendFunc(GL_ONE, GL_DST_ALPHA);
     // draw histo
     if(histo_) {
-#ifdef HAVE_AVR_SUPPORT
-      glActiveTexture(GL_TEXTURE0);
-#endif
-      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-      glEnable(GL_TEXTURE_2D);
-      glBindTexture(GL_TEXTURE_2D, histo_tex_);
-      double alpha = gui_histo_.get();
-      glColor4f(alpha, alpha, alpha, 1.0);
-      glBegin(GL_QUADS);
-      {
-        glTexCoord2f( 0.0,  0.0);
-        glVertex2f( 0.0,  0.0);
-        glTexCoord2f( 1.0,  0.0);
-        glVertex2f( 1.0,  0.0);
-        glTexCoord2f( 1.0,  1.0);
-        glVertex2f( 1.0,  1.0);
-        glTexCoord2f( 0.0,  1.0);
-        glVertex2f( 0.0,  1.0);
-      }
-      glEnd();
-      glBindTexture(GL_TEXTURE_2D, 0);
-      glDisable(GL_TEXTURE_2D);
+      draw_histo();
     } else {
-      glColor4f(0.0, 0.0, 0.0, 0.0);
+      glColor4f(0.0, 0.0, 0.0, 0.0); 
       glBegin(GL_QUADS);
       {
         glVertex2f( 0.0,  0.0);
@@ -994,28 +1107,7 @@ EditTransferFunc2::redraw()
   } else {
     // draw histo
     if(histo_) {
-#ifdef HAVE_AVR_SUPPORT
-      glActiveTexture(GL_TEXTURE0);
-      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-      glEnable(GL_TEXTURE_2D);
-      glBindTexture(GL_TEXTURE_2D, histo_tex_);
-      double alpha = gui_histo_.get();
-      glColor4f(alpha, alpha, alpha, 1.0);
-      glBegin(GL_QUADS);
-      {
-        glTexCoord2f( 0.0,  0.0);
-        glVertex2f( 0.0,  0.0);
-        glTexCoord2f( 1.0,  0.0);
-        glVertex2f( 1.0,  0.0);
-        glTexCoord2f( 1.0,  1.0);
-        glVertex2f( 1.0,  1.0);
-        glTexCoord2f( 0.0,  1.0);
-        glVertex2f( 0.0,  1.0);
-      }
-      glEnd();
-      glBindTexture(GL_TEXTURE_2D, 0);
-      glDisable(GL_TEXTURE_2D);
-#endif
+      draw_histo();
     }
     // draw textures
     glEnable(GL_BLEND);
@@ -1047,6 +1139,66 @@ EditTransferFunc2::redraw()
     }
     glDisable(GL_BLEND);
   }
+}
+
+void
+EditTransferFunc2::update_histo()
+{
+  //----------------------------------------------------------------
+  // update histo tex
+  if(histo_dirty_) {
+    if(glIsTexture(histo_tex_)) {
+      glDeleteTextures(1, &histo_tex_);
+      histo_tex_ = 0;
+    }
+    glGenTextures(1, &histo_tex_);
+    glBindTexture(GL_TEXTURE_2D, histo_tex_);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    int axis_size[3];
+    nrrdAxisInfoGet_nva(histo_, nrrdAxisInfoSize, axis_size);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE8, axis_size[histo_->dim-2],
+                 axis_size[histo_->dim-1], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                 histo_->data);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    histo_dirty_ = false;
+  }
+}
+
+void
+EditTransferFunc2::redraw()
+{
+  gui->lock();
+
+  if (! make_current()) return;
+  init_pbuffer();
+  rasterize_widgets();
+  update_histo();
+  
+  //----------------------------------------------------------------
+  // draw
+  glDrawBuffer(GL_BACK);
+  glClearColor(0.0, 0.0, 0.0, 0.0);
+  glClear(GL_COLOR_BUFFER_BIT);
+  
+  glViewport(0, 0, width_, height_);
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
+  const float scale_factor = 2.0 * scale_.get();
+  glScalef(scale_factor, scale_factor, scale_factor);
+  glTranslatef(-0.5 - pan_x_.get(), -0.5 - pan_y_.get() , 0.0);
+
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+  glDisable(GL_CULL_FACE);
+
+  draw_colormap();
   
   // draw widgets
   for(unsigned int i=0; i<widgets_.size(); i++) {
@@ -1054,6 +1206,24 @@ EditTransferFunc2::redraw()
       widgets_[i]->draw();
     }
   }
+  
+  // draw outline of the image space.
+  glColor4f(0.25, 0.35, 0.25, 1.0); 
+  glBegin(GL_LINES);
+  {
+    glVertex2f( 0.0,  0.0);
+    glVertex2f( 1.0,  0.0);
+
+    glVertex2f( 1.0,  0.0);
+    glVertex2f( 1.0,  1.0);
+
+    glVertex2f( 1.0,  1.0);
+    glVertex2f( 0.0,  1.0);
+
+    glVertex2f( 0.0,  1.0);
+     glVertex2f( 0.0,  0.0);
+  }
+  glEnd();
   
   glXSwapBuffers(dpy_, win_);
   glXMakeCurrent(dpy_, 0, 0);

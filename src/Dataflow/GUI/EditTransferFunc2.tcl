@@ -35,7 +35,7 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
 	set name EditTransferFunc2
 	set_defaults
     }
-
+    
     method set_defaults {} {
 	global $this-faux
 	set $this-faux 0
@@ -50,43 +50,43 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
 
         global $this-filename
         set $this-filename "MyTransferFunction"
-
+	
         global $this-filetype
         set $this-filetype Binary
     }
-
+    
     method unpickle {a b c} {
 	global $this-marker
 	$this-c unpickle
 	trace vdelete $this-marker w "$this unpickle"
     }
-
+    
     method raise_color {col color colMsg} {
-	 global $color
-	 set window .ui[modname]
-	 if {[winfo exists $window.color]} {
-	     SciRaise $window.color
-	     return
-	 } else {
-	     # makeColorPicker now creates the $window.color toplevel.
-	     makeColorPicker $window.color $color \
-		     "$this set_color $col $color $colMsg" \
-		     "destroy $window.color"
-	 }
+	global $color
+	set window .ui[modname]
+	if {[winfo exists $window.color]} {
+	    SciRaise $window.color
+	    return
+	} else {
+	    # makeColorPicker now creates the $window.color toplevel.
+	    makeColorPicker $window.color $color \
+		"$this set_color $col $color $colMsg" \
+		"destroy $window.color"
+	}
     }
-
+    
     method set_color {col color colMsg} {
-	 global $color
-	 global $color-r
-	 global $color-g
-	 global $color-b
-	 set ir [expr int([set $color-r] * 65535)]
-	 set ig [expr int([set $color-g] * 65535)]
-	 set ib [expr int([set $color-b] * 65535)]
+	global $color
+	global $color-r
+	global $color-g
+	global $color-b
+	set ir [expr int([set $color-r] * 65535)]
+	set ig [expr int([set $color-g] * 65535)]
+	set ib [expr int([set $color-b] * 65535)]
 
-	 set window .ui[modname]
-	 $col config -background [format #%04x%04x%04x $ir $ig $ib]  \
-		     -activebackground [format #%04x%04x%04x $ir $ig $ib]
+	set window .ui[modname]
+	$col config -background [format #%04x%04x%04x $ir $ig $ib]  \
+		    -activebackground [format #%04x%04x%04x $ir $ig $ib]
 					
 	 puts "$ir $ig $ib"
 				      
@@ -298,7 +298,34 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
 	makeSciButtonPanel $w $w $this "\"Reset\" \"$this-c reset_gui\" \"\""
 	moveToCursor $w
     }
+	    
+    method bind_events {w} {
+	# every time the OpenGL widget is displayed, redraw it
+	bind $w <Expose> "$this-c expose"
+	bind $w <Shift-ButtonPress-1> "$this-c mouse push %x %y %b 0"
+	bind $w <Shift-ButtonPress-2> "$this-c mouse push %x %y %b 0"
+	bind $w <Shift-ButtonPress-3> "$this-c mouse push %x %y %b 1"
+	bind $w <Shift-Button1-Motion> "$this-c mouse motion %x %y"
+	bind $w <Shift-Button2-Motion> "$this-c mouse motion %x %y"
+	bind $w <Shift-Button3-Motion> "$this-c mouse motion %x %y"
+	bind $w <Shift-ButtonRelease-1> "$this-c mouse release %x %y %b"
+	bind $w <Shift-ButtonRelease-2> "$this-c mouse release %x %y %b"
+	bind $w <Shift-ButtonRelease-3> "$this-c mouse release %x %y %b"
 
+	# controls for pan and zoom and reset
+	bind $w <ButtonPress-1> "$this-c mouse translate start %x %y"
+	bind $w <Button1-Motion> "$this-c mouse translate move %x %y"
+	bind $w <ButtonRelease-1> "$this-c mouse translate end %x %y"
+	bind $w <ButtonPress-2> "$this-c mouse reset %x %y 1"
+	bind $w <Button2-Motion> "$this-c mouse reset %x %y 1"
+	bind $w <ButtonRelease-2> "$this-c mouse reset %x %y 1"
+	bind $w <ButtonPress-3> "$this-c mouse scale start %x %y"
+	bind $w <Button3-Motion> "$this-c mouse scale move %x %y"
+	bind $w <ButtonRelease-3> "$this-c mouse scale end %x %y"
+
+	bind $w <Destroy> "$this-c closewindow"		
+    }
+	    
     method create_gl {} {
         set w .ui[modname]
         if {[winfo exists $w.f.gl]} {
@@ -311,14 +338,7 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
             # create an OpenGL widget
             opengl $w.f.gl.gl -geometry 512x256 -doublebuffer true -direct true \
                 -rgba true -redsize 1 -greensize 1 -bluesize 1 -depthsize 2
-            # every time the OpenGL widget is displayed, redraw it
-            bind $w.f.gl.gl <Expose> "$this-c expose"
-            #bind $w.f.gl.gl <Configure> "$this-c resize"
-            bind $w.f.gl.gl <Shift-ButtonPress> "$this-c mouse push %x %y %b 1"
-            bind $w.f.gl.gl <ButtonPress> "$this-c mouse push %x %y %b 0"
-            bind $w.f.gl.gl <ButtonRelease> "$this-c mouse release %x %y %b"
-            bind $w.f.gl.gl <Motion> "$this-c mouse motion %x %y"
-            bind $w.f.gl.gl <Destroy> "$this-c closewindow"
+	    bind_events $w.f.gl.gl
             # place the widget on the screen
             pack $w.f.gl.gl -fill both -expand 1
             # histogram opacity
