@@ -627,8 +627,8 @@ void    ICE::readData(const Patch* patch, int include_EC,
  _______________________________________________________________________ */
 void ICE::createDirs( const string& desc, string& path) 
 {
-  int pos  = desc.find ( "Mat" );
-  int pos2 = desc.find ( "patch" );
+  string::size_type pos  = desc.find ( "Mat" );
+  string::size_type pos2 = desc.find ( "patch" );
   string dirName, matDir;
   //__________________________________
   // parse desc into dirName, matl and patch
