@@ -53,6 +53,8 @@ ICELabel::ICELabel()
     VarLabel::create("mom_source_CC",CCVariable<Vector>::getTypeDescription());
   int_eng_source_CCLabel = 
     VarLabel::create("intE_source_CC",CCVariable<double>::getTypeDescription());
+  heatCond_src_CCLabel = 
+    VarLabel::create("heatCond_src_CC",CCVariable<double>::getTypeDescription());
   sp_vol_src_CCLabel = 
    VarLabel::create("sp_vol_src_CC", CCVariable<double>::getTypeDescription());
   mom_L_CCLabel = 
@@ -249,6 +251,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(press_force_CCLabel); 
     VarLabel::destroy(mom_source_CCLabel);
     VarLabel::destroy(int_eng_source_CCLabel);
+    VarLabel::destroy(heatCond_src_CCLabel);
     VarLabel::destroy(sp_vol_src_CCLabel);
     VarLabel::destroy(mom_L_CCLabel);
     VarLabel::destroy(int_eng_L_CCLabel);
