@@ -9,13 +9,11 @@
 #include <Packages/Uintah/Core/ProblemSpec/constHandle.h>
 #include <vector>
 #include <algorithm>
-#include <iostream>
 #include <sstream>
 
 namespace Uintah {
-  using SCIRun::InternalError;
+  using namespace SCIRun;
   using std::vector;
-  using std::cerr;
   using std::ostringstream;
 
   template<class T>

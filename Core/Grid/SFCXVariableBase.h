@@ -56,7 +56,7 @@ WARNING
       virtual void copyPointer(SFCXVariableBase&) = 0;
       
       virtual bool rewindow(const IntVector& low, const IntVector& high) = 0;
-      virtual void offsetGrid(IntVector /*offset*/) = 0;
+      virtual void offsetGrid(const IntVector& /*offset*/) = 0;
      
       //////////
       // Insert Documentation Here:

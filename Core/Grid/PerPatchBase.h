@@ -52,7 +52,7 @@ WARNING
 			       void*& ptr) const = 0;
 
       // Only affects grid variables
-     void offsetGrid(IntVector /*offset*/) {}
+     void offsetGrid(const IntVector& /*offset*/);
    protected:
       PerPatchBase(const PerPatchBase&);
       PerPatchBase();

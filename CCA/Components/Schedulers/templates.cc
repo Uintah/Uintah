@@ -1,4 +1,4 @@
-
+#ifdef __sgi
 #include <vector>
 #include <set>
 #include <map>
@@ -50,3 +50,4 @@ template class vector<int>;
 
 template class CommRecMPI<Sendlist>;
 
+#endif

@@ -18,7 +18,7 @@ PSELIBS := \
 	Core/Geometry \
 	Core/Thread 
 
-LIBS := $(XML_LIBRARY)
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

@@ -12,6 +12,7 @@
  */
 
 #include <Core/Containers/Array1.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>

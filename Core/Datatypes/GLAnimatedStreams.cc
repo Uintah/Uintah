@@ -1,5 +1,6 @@
 #include "GLAnimatedStreams.h"
 #include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Malloc/Allocator.h>

@@ -71,7 +71,7 @@ WARNING
 
     // offset the indexing into the array (useful when getting virtual
     // patch data -- i.e. for periodic boundary conditions)
-    virtual void offsetGrid(IntVector offset)
+    virtual void offsetGrid(const IntVector& offset)
     { Array3<T>::offset(offset); }
 
     //////////
