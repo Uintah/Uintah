@@ -6,6 +6,11 @@
 #define MAX_ITER 50 
 #include <Packages/Uintah/CCA/Components/ICE/NG_NozzleBCs.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Core/Util/DebugStream.h>
+#include <iostream>
+static DebugStream cout_doing("NG_DOING_COUT", false);
+static DebugStream cout_dbg("NG_DBG_COUT", false);
 /*______________________________________________________________________
 Our goal is to come up with reasonable values for the pressure
 temperature, density and velocity in the ghost cell (see fig 1).  The method
@@ -388,6 +393,7 @@ void solveRiemannProblemInterface( const double t_final,
                                    const double u1, const double p1, const double rho1,
                                    const double diaphragm_location,
                                    const int probeCell,
+                                   NG_BC_vars* ng,
                                    double &press,    // at probe location
                                    double &Temp,
                                    double &rho,
@@ -399,10 +405,10 @@ void solveRiemannProblemInterface( const double t_final,
             R, gamma, delQ;
   //__________________________________
   //Parse arguments                
-  cout << " p4 " << p4 << " u4 " << u4 << " rho4 " << rho4
-       << " p1 " << p1 << " u1 " << u1 << " rho1 " << rho1 << endl;
-  cout << " t_final " << t_final<< " length " << Length << " resolution " << ncells
-       << " diaphragm loc: " << diaphragm_location << endl;
+  cout_dbg << " p4 " << p4 << " u4 " << u4 << " rho4 " << rho4
+           << " p1 " << p1 << " u1 " << u1 << " rho1 " << rho1 << endl;
+//  cout_dbg << " t_final " << t_final<< " length " << Length << " resolution " << ncells
+//           << " diaphragm loc: " << diaphragm_location << endl;
   //__________________________________
   //  allocate memory
   Q_MAX_LIM   = 505;
@@ -443,34 +449,45 @@ void solveRiemannProblemInterface( const double t_final,
                           u_Rieman,       a_Rieman,       p_Rieman,
                           rho_Rieman,     T_Rieman,       R);  
 
-   //__________________________________
-   // find values at the probe location
-    press = p_Rieman[probeCell];
-    rho   = rho_Rieman[probeCell];
-    vel   = u_Rieman[probeCell];
-    Temp  = T_Rieman[probeCell];
-   //__________________________________
-   // dump to a file                    
-#if 0
-  double x = 0;
-  FILE *fp = fopen("exactSolution","w");
-  /*fprintf(fp, "#X p_Rieman u_Rieman rho_Rieman a_Rieman T_Rieman sp_vol_Rieman\n");*/
-  for ( i = qLoLimit; i <= qHiLimit; i++){
-    fprintf(fp, "%6.5E %6.5E %6.5E %6.5E %6.5E %6.5E %6.5E\n", 
-            x, p_Rieman[i], u_Rieman[i], rho_Rieman[i], 
-            a_Rieman[i], T_Rieman[i], 1.0/rho_Rieman[i]);
-    x +=delQ;
-  }
-  fclose(fp);
-#endif                     
-   //__________________________________
-   //   free memory
-   //fprintf(stderr,"Now deallocating memory\n"); 
-   free_dvector_nr( u_Rieman,     0, Q_MAX_LIM);
-   free_dvector_nr( a_Rieman,     0, Q_MAX_LIM);
-   free_dvector_nr( p_Rieman,     0, Q_MAX_LIM);
-   free_dvector_nr( rho_Rieman,   0, Q_MAX_LIM); 
-   free_dvector_nr( T_Rieman,     0, Q_MAX_LIM); 
+  //__________________________________
+  // find values at the probe location
+  press = p_Rieman[probeCell];
+  rho   = rho_Rieman[probeCell];
+  vel   = u_Rieman[probeCell];
+  Temp  = T_Rieman[probeCell];
+    
+  //__________________________________
+  // dump to a file when sus dumps and at
+  //  cell index -1, 1, 0             
+  if(ng->dumpNow){
+    if(ng->dataArchiver->wasOutputTimestep() && ng->c == IntVector(-1,1,0)) {
+    
+      string udaDir    = ng->dataArchiver->getOutputLocation();
+      ostringstream dw;
+      dw << ng->dataArchiver->getCurrentTimestep(); 
+      string filename = udaDir + "/exactSolution_" + dw.str();
+      
+      double x = 0;
+      cout << " Dumping file " << filename  << endl;
+       FILE *fp = fopen(filename.c_str(),"w");
+       /*fprintf(fp, "#X p_Rieman u_Rieman rho_Rieman a_Rieman T_Rieman sp_vol_Rieman\n");*/
+       for ( i = qLoLimit; i <= qHiLimit; i++){
+         fprintf(fp, "%6.5E %6.5E %6.5E %6.5E %6.5E %6.5E %6.5E\n", 
+                 x, p_Rieman[i], u_Rieman[i], rho_Rieman[i], 
+                 a_Rieman[i], T_Rieman[i], 1.0/rho_Rieman[i]);
+         x +=delQ;
+       }
+       fclose(fp);
+    }
+  }              
+  //__________________________________
+  //   free memory
+  //fprintf(stderr,"Now deallocating memory\n"); 
+  free_dvector_nr( u_Rieman,     0, Q_MAX_LIM);
+  free_dvector_nr( a_Rieman,     0, Q_MAX_LIM);
+  free_dvector_nr( p_Rieman,     0, Q_MAX_LIM);
+  free_dvector_nr( rho_Rieman,   0, Q_MAX_LIM); 
+  free_dvector_nr( T_Rieman,     0, Q_MAX_LIM); 
 }
 
 
@@ -484,12 +501,15 @@ void setNGCVelocity_BC(const Patch* patch,
                        const string& bc_kind,
 			  const int mat_id,
 			  const int child,
-                       SimulationStateP& sharedState)
+                       SimulationStateP& sharedState,
+                       NG_BC_vars* ng)
 {
   if (var_desc == "Velocity" && bc_kind == "Custom") {
+    cout_doing << "Doing setNGCVelocity_BC " << patch->getID() << endl;
+    
     setNGC_Nozzle_BC<CCVariable<Vector>, Vector>
           (patch, face, q_CC, var_desc,"CC", bound, bc_kind,mat_id, 
-           child, sharedState);
+           child, sharedState, ng);
 
     // set the y and z velocity components to 0
     vector<IntVector>::const_iterator iter;
@@ -500,6 +520,155 @@ void setNGCVelocity_BC(const Patch* patch,
     }
   } 
 }
+
+//______________________________________________________________________
+// add the requires needed by each of the various tasks
+void addRequires_NGNozzle(Task* t, 
+                          const string& where,
+                          ICELabel* lb,
+                          const MaterialSubset* ice_matls)
+{
+  cout_doing<< "Doing addRequires_NGNozzle: \t\t" <<t->getName()<< endl;
+  
+  Ghost::GhostType  gn  = Ghost::None;
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  MaterialSubset* press_matl = scinew MaterialSubset();
+  press_matl->add(0);
+  press_matl->addReference();
+  
+  
+  if(where == "EqPress"){
+    t->requires(Task::OldDW, lb->vel_CCLabel, ice_matls,  gn,0);
+    t->requires(Task::OldDW, lb->rho_CCLabel, ice_matls,  gn,0);
+  }
+  if(where == "velFC_Exchange"){
+    t->requires(Task::NewDW, lb->rho_CCLabel, ice_matls,   gn,0);        
+    t->requires(Task::OldDW, lb->vel_CCLabel, ice_matls,   gn,0);        
+    t->requires(Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gn);
+  }
+  if(where == "update_press_CC"){
+    t->requires(Task::OldDW, lb->vel_CCLabel, ice_matls, gn,0);
+  }
+  if(where == "CC_Exchange"){
+    t->requires(Task::NewDW, lb->rho_CCLabel,   ice_matls,   gn,0);
+    t->requires(Task::NewDW, lb->press_CCLabel, press_matl, oims, gn);
+  }
+  if(where == "Advection"){
+    t->requires(Task::NewDW, lb->press_CCLabel, press_matl, oims, gn);
+  }
+}
+
+//______________________________________________________________________
+// get the necessary data an push it into the NG_vars struct
+void getVars_for_NGNozzle( DataWarehouse* old_dw,
+                            DataWarehouse* new_dw,
+                            ICELabel* lb,
+                            const Patch* patch,
+                            int indx,
+                            const string& where,
+                            NG_BC_vars* ng)
+{
+
+  cout_doing <<  "Doing getVars_for_NGNozzle Patch:" << patch->getID() 
+             << " " << where << endl;
+  Ghost::GhostType  gn  = Ghost::None;
+  //__________________________________
+  //    EqPress
+  if(where == "EqPress"){
+    constCCVariable<Vector> vel;
+    old_dw->get(vel,      lb->vel_CCLabel,    indx,patch,gn,0);
+    
+    new_dw->allocateTemporary(ng->vel_CC,   patch);    
+    ng->vel_CC.copyData(vel);
+  }
+  //__________________________________
+  //    FC exchange
+  if(where == "velFC_Exchange"){
+    constCCVariable<double> rho, press;
+    constCCVariable<Vector> vel;
+    
+    old_dw->get(rho,      lb->rho_CCLabel,    indx,patch,gn,0);
+    old_dw->get(vel,      lb->vel_CCLabel,    indx,patch,gn,0);
+    new_dw->get(press,    lb->press_equil_CCLabel, 0,  patch,gn,0);
+    
+    new_dw->allocateTemporary(ng->rho_CC,   patch);
+    new_dw->allocateTemporary(ng->press_CC, patch);
+    new_dw->allocateTemporary(ng->vel_CC,   patch);
+    
+    ng->rho_CC.copyData(rho);
+    ng->press_CC.copyData(press);
+    ng->vel_CC.copyData(vel);
+  }
+  //__________________________________
+  //    update pressure
+  if(where == "update_press_CC"){
+    constCCVariable<Vector> vel;
+    constCCVariable<double> rho;
+    old_dw->get(vel,      lb->vel_CCLabel, indx,patch,gn,0);
+    old_dw->get(rho,      lb->rho_CCLabel, indx,patch,gn,0);
+    
+    new_dw->allocateTemporary(ng->rho_CC,   patch);
+    new_dw->allocateTemporary(ng->vel_CC,   patch);
+    
+    ng->vel_CC.copyData(vel);
+    ng->rho_CC.copyData(rho);
+  }
+  //__________________________________
+  //    cc_ Exchange
+  if(where == "CC_Exchange"){
+    constCCVariable<double> p, rho;
+    old_dw->get(rho,      lb->rho_CCLabel,    indx,patch,gn,0);
+    new_dw->get(p,        lb->press_CCLabel,  0,   patch,gn,0);
+    
+    new_dw->allocateTemporary(ng->press_CC, patch);
+    new_dw->allocateTemporary(ng->rho_CC,   patch);
+        
+    ng->press_CC.copyData(p);
+    ng->rho_CC.copyData(rho);
+  }
+  //__________________________________
+  //    Advection
+  if(where == "Advection"){
+    constCCVariable<double> p;
+    new_dw->get(p,        lb->press_CCLabel, 0,   patch,gn,0);
+    new_dw->allocateTemporary(ng->press_CC, patch);
+    ng->press_CC.copyData(p);
+  }
+}
+
+/* ---------------------------------------------------------------------
+ Function~  using_NG_hack
+ Purpose~   returns if we are using the Northrup Grumman BC hack on any face,
+ ---------------------------------------------------------------------  */
+bool using_NG_hack(const ProblemSpecP& prob_spec)
+{
+  //__________________________________
+  // search the BoundaryConditions problem spec
+  // determine if custom bcs are specified
+  ProblemSpecP grid_ps= prob_spec->findBlock("Grid");
+  ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions");
+ 
+  bool usingNG = false;
+  
+  for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
+                    face_ps=face_ps->findNextBlock("Face")) {
+    map<string,string> face;
+    face_ps->getAttributes(face);
+        
+    for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
+                     bc_iter = bc_iter->findNextBlock("BCType")){
+      map<string,string> bc_type;
+      bc_iter->getAttributes(bc_type);
+      
+
+      if (bc_type["var"] == "Custom") {
+        usingNG = true;
+      }
+    }
+  }
+  return usingNG;
+}
+
 }
 
 
