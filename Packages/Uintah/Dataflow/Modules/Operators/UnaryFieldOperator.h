@@ -39,9 +39,9 @@ void UnaryFieldOperator::initField(Field* field,
   BBox box;
   box = smh->get_bounding_box();
   //resize the geometry
-  smh->set_nx(mh->get_nx());
-  smh->set_ny(mh->get_ny());
-  smh->set_nz(mh->get_nz());
+  smh->set_ni(mh->get_ni());
+  smh->set_nj(mh->get_nj());
+  smh->set_nk(mh->get_nk());
   smh->set_transform(mh->get_transform());
   //resize the data storage
   scalarField->resize_fdata();
