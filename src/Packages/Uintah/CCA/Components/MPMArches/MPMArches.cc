@@ -11,6 +11,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
+#include <Packages/Uintah/CCA/Components/MPM/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
@@ -18,6 +19,7 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/fillFace.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
@@ -31,7 +33,6 @@
 #include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/VelocityBoundCond.h>
-#include <Packages/Uintah/Core/Grid/fillFace.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -89,6 +90,7 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    d_arches->setMPMArchesLabel(d_MAlb);
    d_Alab = d_arches->getArchesLabel();
    d_arches->problemSetup(prob_spec, grid, d_sharedState);
+   d_arches->getBoundaryCondition()->setIfCalcEnergyExchange(d_calcEnergyExchange);
    
    cerr << "Done with problemSetup \t\t\t MPMArches" <<endl;
    cerr << "--------------------------------\n"<<endl;
@@ -103,14 +105,16 @@ void MPMArches::scheduleInitialize(const LevelP& level,
 {
   d_mpm->scheduleInitialize(      level, sched);
 
-  //const PatchSet* patches = level->eachPatch();
-  //const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
-  //const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
-  //const MaterialSet* all_matls = d_sharedState->allMaterials();
+#ifdef ExactMPMArchesInitialize
+  const PatchSet* patches = level->eachPatch();
+  const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
+  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
+  const MaterialSet* all_matls = d_sharedState->allMaterials();
 
-  //  scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
-  //  scheduleInterpolateNCToCC(sched, patches, mpm_matls);
-  //  scheduleComputeVoidFrac(sched, patches, arches_matls, mpm_matls, all_matls);
+  scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
+  scheduleInterpolateNCToCC(sched, patches, mpm_matls);
+  scheduleComputeVoidFrac(sched, patches, arches_matls, mpm_matls, all_matls);
+#endif
 
   d_arches->scheduleInitialize(      level, sched);
 
@@ -133,24 +137,32 @@ void MPMArches::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 
   Task* t = scinew Task("MPMArches::interpolateParticlesToGrid",
 			this,&MPMArches::interpolateParticlesToGrid);
-  t->requires(Task::NewDW, Mlb->pXLabel,             Ghost::AroundNodes,1);
-  // dbg 1
-  //  t->requires(Task::NewDW, Mlb->pMassLabel,          Ghost::AroundNodes,1);
-  //  t->requires(Task::NewDW, Mlb->pVolumeLabel,        Ghost::AroundNodes,1);
-  //  t->requires(Task::NewDW, Mlb->pVelocityLabel,      Ghost::AroundNodes,1);
-  //  t->requires(Task::NewDW, Mlb->pTemperatureLabel,   Ghost::AroundNodes,1);
+  int numGhostCells = 1;
 
-  // dbg 1
-  //  t->computes(Mlb->gMassLabel);
-  //  t->computes(Mlb->gMassLabel, d_sharedState->getAllInOneMatl(),
-  //	      Task::OutOfDomain);
-  //  t->computes(Mlb->gTemperatureLabel, d_sharedState->getAllInOneMatl(),
-  //	      Task::OutOfDomain);
-  // dbg 1
-  //  t->computes(Mlb->gVolumeLabel);
-  //  t->computes(Mlb->gVelocityLabel);
-  //  t->computes(Mlb->gTemperatureLabel);
-  //  t->computes(Mlb->TotalMassLabel);
+  t->requires(Task::NewDW, Mlb->pXLabel,             
+	      Ghost::AroundNodes, numGhostCells);
+
+#ifdef debugExactInitializeMPMArches
+#else
+  t->requires(Task::NewDW, Mlb->pMassLabel,          
+	      Ghost::AroundNodes, numGhostCells);
+  t->requires(Task::NewDW, Mlb->pVolumeLabel,        
+	      Ghost::AroundNodes, numGhostCells);
+  t->requires(Task::NewDW, Mlb->pVelocityLabel,      
+	      Ghost::AroundNodes, numGhostCells);
+  t->requires(Task::NewDW, Mlb->pTemperatureLabel,   
+	      Ghost::AroundNodes, numGhostCells);
+
+  t->computes(Mlb->gMassLabel);
+  t->computes(Mlb->gMassLabel, d_sharedState->getAllInOneMatl(),
+  	      Task::OutOfDomain);
+  t->computes(Mlb->gTemperatureLabel, d_sharedState->getAllInOneMatl(),
+  	      Task::OutOfDomain);
+  t->computes(Mlb->gVolumeLabel);
+  t->computes(Mlb->gVelocityLabel);
+  t->computes(Mlb->gTemperatureLabel);
+  t->computes(Mlb->TotalMassLabel);
+#endif
 
   sched->addTask(t, patches, matls);
 }
@@ -178,7 +190,6 @@ void MPMArches::scheduleTimeAdvance(const LevelP&   level,
   const MaterialSet* all_matls = d_sharedState->allMaterials();
 
   d_mpm->scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
-
   d_mpm->scheduleComputeHeatExchange(             sched, patches, mpm_matls);
 
   // interpolate mpm properties from node center to cell center
@@ -187,13 +198,11 @@ void MPMArches::scheduleTimeAdvance(const LevelP&   level,
 
   scheduleInterpolateNCToCC(sched, patches, mpm_matls);
   scheduleInterpolateCCToFC(sched, patches, mpm_matls);
-
   scheduleComputeVoidFrac(sched, patches, arches_matls, mpm_matls, all_matls);
 
   // compute celltypeinit
 
-  d_arches->getBoundaryCondition()->sched_mmWallCellTypeInit(sched,
-						     patches, arches_matls);
+  d_arches->getBoundaryCondition()->sched_mmWallCellTypeInit(sched, patches, arches_matls);
 
   // for explicit calculation, exchange will be at the beginning
 
@@ -336,8 +345,10 @@ void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
 
   t->requires(Task::NewDW, d_MAlb->cVolumeLabel,   
 	      mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
+
   t->computes(d_MAlb->solid_fraction_CCLabel, mpm_matls->getUnion());
   t->computes(d_MAlb->void_frac_CCLabel, arches_matls->getUnion());
+
   sched->addTask(t, patches, all_matls);
 }
 
@@ -362,80 +373,32 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
 		      this, &MPMArches::doMomExchange);
   int numGhostCells = 1;
   int zeroGhostCells = 0;
-  // requires, from mpm, solid velocities at cc, fcx, fcy, and fcz
-  t->requires(Task::NewDW, d_MAlb->xvel_CCLabel, mpm_matls->getUnion(),
-	      Ghost::None, zeroGhostCells);
-  t->requires(Task::NewDW, d_MAlb->yvel_CCLabel, mpm_matls->getUnion(),
-	      Ghost::None, zeroGhostCells);
-  t->requires(Task::NewDW, d_MAlb->zvel_CCLabel, mpm_matls->getUnion(),
-	      Ghost::None, zeroGhostCells);
-
-  t->requires(Task::NewDW, d_MAlb->xvel_FCXLabel, mpm_matls->getUnion(),
-	      Ghost::None, zeroGhostCells);
-  t->requires(Task::NewDW, d_MAlb->yvel_FCYLabel, mpm_matls->getUnion(),
-	      Ghost::None, zeroGhostCells);
-  t->requires(Task::NewDW, d_MAlb->zvel_FCZLabel, mpm_matls->getUnion(),
-	      Ghost::None, zeroGhostCells);
-
-  t->requires(Task::NewDW, d_MAlb->xvel_FCYLabel, mpm_matls->getUnion(),
-	      Ghost::None, zeroGhostCells);
-  t->requires(Task::NewDW, d_MAlb->xvel_FCZLabel, mpm_matls->getUnion(),
-	      Ghost::None, zeroGhostCells);
-
-  t->requires(Task::NewDW, d_MAlb->yvel_FCZLabel, mpm_matls->getUnion(),
-	      Ghost::None, zeroGhostCells);
-  t->requires(Task::NewDW, d_MAlb->yvel_FCXLabel, mpm_matls->getUnion(),
-	      Ghost::None, zeroGhostCells);
-
-  t->requires(Task::NewDW, d_MAlb->zvel_FCXLabel, mpm_matls->getUnion(),
-	      Ghost::None, zeroGhostCells);
-  t->requires(Task::NewDW, d_MAlb->zvel_FCYLabel,    mpm_matls->getUnion(),
-	      Ghost::None, zeroGhostCells);
-
-  t->requires(Task::NewDW, d_MAlb->solid_fraction_CCLabel, mpm_matls->getUnion(),
-	      Ghost::None, zeroGhostCells);
-
-  // computes, for mpm, pressure forces and drag forces
-  // at all face centers
-
-  t->computes(d_MAlb->DragForceX_CCLabel, mpm_matls->getUnion());
-  t->computes(d_MAlb->DragForceY_CCLabel, mpm_matls->getUnion());
-  t->computes(d_MAlb->DragForceZ_CCLabel, mpm_matls->getUnion());
-	      
-  t->computes(d_MAlb->DragForceX_FCYLabel, mpm_matls->getUnion());
-  t->computes(d_MAlb->DragForceX_FCZLabel, mpm_matls->getUnion());
-  	      
-  t->computes(d_MAlb->DragForceY_FCZLabel, mpm_matls->getUnion());
-  t->computes(d_MAlb->DragForceY_FCXLabel, mpm_matls->getUnion());
-  	      
-  t->computes(d_MAlb->DragForceZ_FCXLabel, mpm_matls->getUnion());
-  t->computes(d_MAlb->DragForceZ_FCYLabel, mpm_matls->getUnion());
-  	      
-  t->computes(d_MAlb->PressureForce_FCXLabel, mpm_matls->getUnion());
-  t->computes(d_MAlb->PressureForce_FCYLabel, mpm_matls->getUnion());
-  t->computes(d_MAlb->PressureForce_FCZLabel, mpm_matls->getUnion());
-
 
   // requires from Arches: celltype, pressure, velocity at cc.
   // also, from mpmarches, void fraction
   // use old_dw since using at the beginning of the time advance loop
 
   // use modified celltype
-  t->requires(Task::NewDW, d_Alab->d_mmcellTypeLabel,      arches_matls->getUnion(), 
+
+  t->requires(Task::NewDW, d_Alab->d_mmcellTypeLabel, 
+	      arches_matls->getUnion(), 
 	      Ghost::AroundCells, numGhostCells);
-  //  t->requires(Task::OldDW, d_Alab->d_pressureSPBCLabel,  arches_matls->getUnion(), 
-  //      Ghost::AroundCells, numGhostCells);
-  t->requires(Task::OldDW, d_Alab->d_pressPlusHydroLabel,  arches_matls->getUnion(), 
-	      Ghost::AroundCells, numGhostCells);
-  
-  t->requires(Task::OldDW, d_Alab->d_newCCUVelocityLabel, arches_matls->getUnion(),
-	      Ghost::AroundCells, numGhostCells);
-  t->requires(Task::OldDW, d_Alab->d_newCCVVelocityLabel, arches_matls->getUnion(),
-	      Ghost::AroundCells, numGhostCells);
-  t->requires(Task::OldDW, d_Alab->d_newCCWVelocityLabel, arches_matls->getUnion(),
+  t->requires(Task::OldDW, d_Alab->d_pressPlusHydroLabel,  
+	      arches_matls->getUnion(), 
 	      Ghost::AroundCells, numGhostCells);
   
-  t->requires(Task::NewDW,  d_Alab->d_mmgasVolFracLabel,   arches_matls->getUnion(),
+  t->requires(Task::OldDW, d_Alab->d_newCCUVelocityLabel, 
+	      arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  t->requires(Task::OldDW, d_Alab->d_newCCVVelocityLabel, 
+	      arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  t->requires(Task::OldDW, d_Alab->d_newCCWVelocityLabel, 
+	      arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  
+  t->requires(Task::NewDW,  d_Alab->d_mmgasVolFracLabel,   
+	      arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
   
   // computes, for arches, su_drag[x,y,z], sp_drag[x,y,z] at the
@@ -465,6 +428,62 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   t->computes(d_MAlb->d_wVel_mmNonlinSrc_FCXLabel, arches_matls->getUnion());
   t->computes(d_MAlb->d_wVel_mmNonlinSrc_FCYLabel, arches_matls->getUnion());
   
+  // requires, from mpm, solid velocities at cc, fcx, fcy, and fcz
+
+  t->requires(Task::NewDW, d_MAlb->solid_fraction_CCLabel, 
+	      mpm_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+
+  t->requires(Task::NewDW, d_MAlb->xvel_CCLabel, mpm_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->yvel_CCLabel, mpm_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->zvel_CCLabel, mpm_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+
+  t->requires(Task::NewDW, d_MAlb->xvel_FCXLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->yvel_FCYLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->zvel_FCZLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, numGhostCells);
+
+  t->requires(Task::NewDW, d_MAlb->xvel_FCYLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->xvel_FCZLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, numGhostCells);
+
+  t->requires(Task::NewDW, d_MAlb->yvel_FCZLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->yvel_FCXLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, numGhostCells);
+
+  t->requires(Task::NewDW, d_MAlb->zvel_FCXLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->zvel_FCYLabel, mpm_matls->getUnion(),
+	      Ghost::AroundFaces, numGhostCells);
+
+  // computes, for mpm, pressure forces and drag forces
+  // at all face centers
+
+  t->computes(d_MAlb->DragForceX_CCLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->DragForceY_CCLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->DragForceZ_CCLabel, mpm_matls->getUnion());
+	      
+  t->computes(d_MAlb->DragForceX_FCYLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->DragForceX_FCZLabel, mpm_matls->getUnion());
+  	      
+  t->computes(d_MAlb->DragForceY_FCZLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->DragForceY_FCXLabel, mpm_matls->getUnion());
+  	      
+  t->computes(d_MAlb->DragForceZ_FCXLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->DragForceZ_FCYLabel, mpm_matls->getUnion());
+  	      
+  t->computes(d_MAlb->PressureForce_FCXLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->PressureForce_FCYLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->PressureForce_FCZLabel, mpm_matls->getUnion());
+
+
   sched->addTask(t, patches, all_matls);
 
 
@@ -478,41 +497,43 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
 
   t->requires(Task::NewDW, d_MAlb->d_uVel_mmLinSrc_CCLabel, arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->d_vVel_mmLinSrc_CCLabel, arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->d_wVel_mmLinSrc_CCLabel, arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+
+  t->requires(Task::NewDW, d_MAlb->d_uVel_mmNonlinSrc_CCLabel, arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->d_vVel_mmNonlinSrc_CCLabel, arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->d_wVel_mmNonlinSrc_CCLabel, arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+
   t->requires(Task::NewDW, d_MAlb->d_uVel_mmLinSrc_FCYLabel, arches_matls->getUnion(),
 	      Ghost::AroundFaces, numGhostCells);
   t->requires(Task::NewDW, d_MAlb->d_uVel_mmLinSrc_FCZLabel, arches_matls->getUnion(),
 	      Ghost::AroundFaces, numGhostCells);
   
-  t->requires(Task::NewDW, d_MAlb->d_uVel_mmNonlinSrc_CCLabel, arches_matls->getUnion(),
-	      Ghost::AroundCells, numGhostCells);
   t->requires(Task::NewDW, d_MAlb->d_uVel_mmNonlinSrc_FCYLabel, arches_matls->getUnion(),
 	      Ghost::AroundFaces, numGhostCells);
   t->requires(Task::NewDW, d_MAlb->d_uVel_mmNonlinSrc_FCZLabel, arches_matls->getUnion(),
 	      Ghost::AroundFaces, numGhostCells);
   
-  t->requires(Task::NewDW, d_MAlb->d_vVel_mmLinSrc_CCLabel, arches_matls->getUnion(),
-	      Ghost::AroundCells, numGhostCells);
   t->requires(Task::NewDW, d_MAlb->d_vVel_mmLinSrc_FCZLabel, arches_matls->getUnion(),
 	      Ghost::AroundFaces, numGhostCells);
   t->requires(Task::NewDW, d_MAlb->d_vVel_mmLinSrc_FCXLabel, arches_matls->getUnion(),
 	      Ghost::AroundFaces, numGhostCells);
   
-  t->requires(Task::NewDW, d_MAlb->d_vVel_mmNonlinSrc_CCLabel, arches_matls->getUnion(),
-	      Ghost::AroundCells, numGhostCells);
   t->requires(Task::NewDW, d_MAlb->d_vVel_mmNonlinSrc_FCZLabel, arches_matls->getUnion(),
 	      Ghost::AroundFaces, numGhostCells);
   t->requires(Task::NewDW, d_MAlb->d_vVel_mmNonlinSrc_FCXLabel, arches_matls->getUnion(),
 	      Ghost::AroundFaces, numGhostCells);
   
-  t->requires(Task::NewDW, d_MAlb->d_wVel_mmLinSrc_CCLabel, arches_matls->getUnion(),
-	      Ghost::AroundCells, numGhostCells);
   t->requires(Task::NewDW, d_MAlb->d_wVel_mmLinSrc_FCXLabel, arches_matls->getUnion(),
 	      Ghost::AroundFaces, numGhostCells);
   t->requires(Task::NewDW, d_MAlb->d_wVel_mmLinSrc_FCYLabel, arches_matls->getUnion(),
 	      Ghost::AroundFaces, numGhostCells);
   
-  t->requires(Task::NewDW, d_MAlb->d_wVel_mmNonlinSrc_CCLabel, arches_matls->getUnion(),
-	      Ghost::AroundCells, numGhostCells);
   t->requires(Task::NewDW, d_MAlb->d_wVel_mmNonlinSrc_FCXLabel, arches_matls->getUnion(),
 	      Ghost::AroundFaces, numGhostCells);
   t->requires(Task::NewDW, d_MAlb->d_wVel_mmNonlinSrc_FCYLabel, arches_matls->getUnion(),
@@ -546,21 +567,19 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   t->requires(Task::NewDW, d_MAlb->d_uVel_mmLinSrc_CC_CollectLabel, 
 	      arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->d_vVel_mmLinSrc_CC_CollectLabel, 
+	      arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->d_wVel_mmLinSrc_CC_CollectLabel, 
+	      arches_matls->getUnion(),
+	      Ghost::AroundCells, numGhostCells);
 
   t->requires(Task::NewDW, d_MAlb->d_uVel_mmNonlinSrc_CC_CollectLabel, 
 	      arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
-
-  t->requires(Task::NewDW, d_MAlb->d_vVel_mmLinSrc_CC_CollectLabel, arches_matls->getUnion(),
-	      Ghost::AroundCells, numGhostCells);
-
   t->requires(Task::NewDW, d_MAlb->d_vVel_mmNonlinSrc_CC_CollectLabel,
 	      arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
-
-  t->requires(Task::NewDW, d_MAlb->d_wVel_mmLinSrc_CC_CollectLabel, arches_matls->getUnion(),
-	      Ghost::AroundCells, numGhostCells);
-   
   t->requires(Task::NewDW, d_MAlb->d_wVel_mmNonlinSrc_CC_CollectLabel, 
 	      arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
@@ -629,7 +648,6 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
 		      this, &MPMArches::doEnergyExchange);
 
   int numGhostCells = 1;
-  //int zeroGhostCells = 0;
 
   // requires, from mpmarches, solid temperatures at cc, fcx, fcy, and 
   // fcz, solid fraction
@@ -732,32 +750,36 @@ void MPMArches::schedulePutAllForcesOnCC(SchedulerP& sched,
   Task* t=scinew Task("MPMArches::putAllForcesOnCC",
 		      this, &MPMArches::putAllForcesOnCC);
 
-  t->requires(Task::NewDW, d_MAlb->cMassLabel, Ghost::None, 0);
+  int zeroGhostCells = 0;
+  int numGhostCells = 1;
 
-  t->requires(Task::NewDW, d_MAlb->DragForceX_CCLabel, mpm_matls->getUnion(),
-	      Ghost::None, 0);
-  t->requires(Task::NewDW, d_MAlb->DragForceY_CCLabel, mpm_matls->getUnion(),
-	      Ghost::None, 0);
-  t->requires(Task::NewDW, d_MAlb->DragForceZ_CCLabel, mpm_matls->getUnion(),
-	      Ghost::None, 0);
+  t->requires(Task::NewDW, d_MAlb->cMassLabel, Ghost::None, zeroGhostCells);
+
+  t->requires(Task::NewDW, d_MAlb->DragForceX_CCLabel, 
+	      mpm_matls->getUnion(), Ghost::None, zeroGhostCells);  
+  t->requires(Task::NewDW, d_MAlb->DragForceY_CCLabel, 
+	      mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
+  t->requires(Task::NewDW, d_MAlb->DragForceZ_CCLabel, 
+	      mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
 	      
-  t->requires(Task::NewDW, d_MAlb->PressureForce_FCXLabel,mpm_matls->getUnion(),
-	      Ghost::AroundFaces, 1);
-  t->requires(Task::NewDW, d_MAlb->PressureForce_FCYLabel,mpm_matls->getUnion(),
-	      Ghost::AroundFaces, 1);
-  t->requires(Task::NewDW, d_MAlb->PressureForce_FCZLabel,mpm_matls->getUnion(),
-	      Ghost::AroundFaces, 1);
+  t->requires(Task::NewDW, d_MAlb->PressureForce_FCXLabel,
+	      mpm_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->PressureForce_FCYLabel,
+	      mpm_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->PressureForce_FCZLabel,
+	      mpm_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
 
   if (d_calcEnergyExchange) {
 
-    t->requires(Task::NewDW, d_MAlb->heaTranSolid_tmp_CCLabel,mpm_matls->getUnion(),
-		Ghost::AroundCells, 1);
-    t->requires(Task::NewDW, d_MAlb->heaTranSolid_FCXLabel,mpm_matls->getUnion(),
-		Ghost::AroundFaces, 1);
-    t->requires(Task::NewDW, d_MAlb->heaTranSolid_FCYLabel,mpm_matls->getUnion(),
-		Ghost::AroundFaces, 1);  
-    t->requires(Task::NewDW, d_MAlb->heaTranSolid_FCZLabel,mpm_matls->getUnion(),
-		Ghost::AroundFaces, 1);
+    t->requires(Task::NewDW, d_MAlb->heaTranSolid_tmp_CCLabel,
+		mpm_matls->getUnion(), Ghost::AroundCells, numGhostCells);
+
+    t->requires(Task::NewDW, d_MAlb->heaTranSolid_FCXLabel,
+		mpm_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
+    t->requires(Task::NewDW, d_MAlb->heaTranSolid_FCYLabel,
+		mpm_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
+    t->requires(Task::NewDW, d_MAlb->heaTranSolid_FCZLabel,
+		mpm_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
 
     t->computes(d_MAlb->heaTranSolid_CCLabel, mpm_matls->getUnion());
 
@@ -781,16 +803,21 @@ void MPMArches::schedulePutAllForcesOnNC(SchedulerP& sched,
   Task* t=scinew Task("MPMArches::putAllForcesOnNC",
 		      this, &MPMArches::putAllForcesOnNC);
 
+  int numGhostCells = 1;
+
   t->requires(Task::NewDW,d_MAlb->AccArchesCCLabel, mpm_matls->getUnion(),
-					Ghost::AroundCells, 1);
+	      Ghost::AroundCells, numGhostCells);
   t->computes(d_MAlb->AccArchesNCLabel,             mpm_matls->getUnion());
 
   if (d_calcEnergyExchange) {
 
-    t->requires(Task::NewDW,d_MAlb->heaTranSolid_CCLabel, mpm_matls->getUnion(),
-		Ghost::AroundCells, 1);
+    t->requires(Task::NewDW,d_MAlb->heaTranSolid_CCLabel, 
+		mpm_matls->getUnion(), Ghost::AroundCells, numGhostCells);
     t->computes(d_MAlb->heaTranSolid_NCLabel, mpm_matls->getUnion());
   
+  }
+  else {
+    t->computes(d_MAlb->heaTranSolid_NCLabel, mpm_matls->getUnion());
   }
 
   sched->addTask(t, patches, mpm_matls);
@@ -802,68 +829,75 @@ void MPMArches::schedulePutAllForcesOnNC(SchedulerP& sched,
 void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
 					   const PatchSubset* patches,
 					   const MaterialSubset* ,
-					   DataWarehouse* old_dw,
+					   DataWarehouse* ,
 					   DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
-    //const Patch* patch = patches->get(p);
+    const Patch* patch = patches->get(p);
 
     int numMatls = d_sharedState->getNumMPMMatls();
+    int numGhostCells = 1;
 
-    // dbg 1
-    //    NCVariable<double> gmassglobal;
-    //    NCVariable<double> gtempglobal;
-    //    new_dw->allocate(gmassglobal,Mlb->gMassLabel,
-    //		     d_sharedState->getAllInOneMatl()->get(0), patch);
-    //    new_dw->allocate(gtempglobal,Mlb->gTemperatureLabel,
-    //		     d_sharedState->getAllInOneMatl()->get(0), patch);
-    //    gmassglobal.initialize(d_mpm->d_SMALL_NUM_MPM);
-    //    gtempglobal.initialize(0.0);
+#ifdef debugExactInitializeMPMArches
+#else
+    NCVariable<double> gmassglobal;
+    NCVariable<double> gtempglobal;
+    new_dw->allocateAndPut(gmassglobal,Mlb->gMassLabel,
+			   d_sharedState->getAllInOneMatl()->get(0), patch);
+    new_dw->allocateAndPut(gtempglobal,Mlb->gTemperatureLabel,
+			   d_sharedState->getAllInOneMatl()->get(0), patch);
+    gmassglobal.initialize(d_mpm->d_SMALL_NUM_MPM);
+    gtempglobal.initialize(0.0);
+#endif
 
     for(int m = 0; m < numMatls; m++){
 
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      //int matlindex = mpm_matl->getDWIndex();
+      int matlindex = mpm_matl->getDWIndex();
 
-      // Create arrays for the particle data
+      constParticleVariable<Point>  px;
+#ifdef debugExactInitializeMPMArches
+#else
+      constParticleVariable<double> pmass;
+      constParticleVariable<double> pvolume;
+      constParticleVariable<double> pTemperature;
+      constParticleVariable<Vector> pvelocity;
+#endif
 
-      //      constParticleVariable<Point>  px;
-      // dbg 1
-      //      constParticleVariable<double> pmass;
-      //      constParticleVariable<double> pvolume;
-      //      constParticleVariable<double> pTemperature;
-      //      constParticleVariable<Vector> pvelocity;
+      ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch,
+      						       Ghost::AroundNodes, 
+						       numGhostCells, 
+						       Mlb->pXLabel);
+      						       
+      new_dw->get(px,             Mlb->pXLabel,             pset);
 
-      //ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch,
-      //						       Ghost::AroundNodes, 1,
-      //						       Mlb->pXLabel);
-      //      new_dw->get(px,             Mlb->pXLabel,             pset);
-
-      // dbg 1
-      //      new_dw->get(pmass,          Mlb->pMassLabel,          pset);
-      //      new_dw->get(pvolume,        Mlb->pVolumeLabel,        pset);
-      //      new_dw->get(pvelocity,      Mlb->pVelocityLabel,      pset);
-      //      new_dw->get(pTemperature,   Mlb->pTemperatureLabel,   pset);
+#ifdef debugExactInitializeMPMArches
+#else
+      new_dw->get(pmass,          Mlb->pMassLabel,          pset);
+      new_dw->get(pvolume,        Mlb->pVolumeLabel,        pset);
+      new_dw->get(pvelocity,      Mlb->pVelocityLabel,      pset);
+      new_dw->get(pTemperature,   Mlb->pTemperatureLabel,   pset);
 
       // Create arrays for the grid data
 
-      // dbg 1
-      //      NCVariable<double> gmass;
-      //      NCVariable<double> gvolume;
-      //      NCVariable<Vector> gvelocity;
-      //      NCVariable<double> gTemperature;
+      NCVariable<double> gmass;
+      NCVariable<double> gvolume;
+      NCVariable<Vector> gvelocity;
+      NCVariable<double> gTemperature;
 
-      // dbg 1
-      //      new_dw->allocate(gmass,            Mlb->gMassLabel,        matlindex, patch);
-      //      new_dw->allocate(gvolume,          Mlb->gVolumeLabel,      matlindex, patch);
-      //      new_dw->allocate(gvelocity,        Mlb->gVelocityLabel,    matlindex, patch);
-      //      new_dw->allocate(gTemperature,     Mlb->gTemperatureLabel, matlindex, patch);
+      new_dw->allocateAndPut(gmass,            Mlb->gMassLabel,        
+			     matlindex, patch);
+      new_dw->allocateAndPut(gvolume,          Mlb->gVolumeLabel,      
+			     matlindex, patch);
+      new_dw->allocateAndPut(gvelocity,        Mlb->gVelocityLabel,    
+			     matlindex, patch);
+      new_dw->allocateAndPut(gTemperature,     Mlb->gTemperatureLabel, 
+			     matlindex, patch);
 
-      // dbg 1
-      //      gmass.initialize(d_mpm->d_SMALL_NUM_MPM);
-      //      gvolume.initialize(0);
-      //      gvelocity.initialize(Vector(0,0,0));
-      //      gTemperature.initialize(0);
+      gmass.initialize(d_mpm->d_SMALL_NUM_MPM);
+      gvolume.initialize(0);
+      gvelocity.initialize(Vector(0,0,0));
+      gTemperature.initialize(0);
 
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
@@ -871,48 +905,42 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
       // Vector from the individual mass matrix and velocity vector
       // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
 
-      // dbg 1
-      //      double totalmass = 0;
-      //      Vector total_mom(0.0,0.0,0.0);
+      double totalmass = 0;
+      Vector total_mom(0.0,0.0,0.0);
 
       // Here we do interpolation only without fracture.  I've
       // taken the section from Jim's SerialMPM that is in the else
       // part of the if (d_fracture) loop.
 
-      // dbg 1
-      //      for(ParticleSubset::iterator iter = pset->begin();
-      //      	  iter != pset->end(); iter++){
-	//      	particleIndex idx = *iter;
+      for(ParticleSubset::iterator iter = pset->begin();
+	  iter != pset->end(); iter++){
+	particleIndex idx = *iter;
 
 	// Get the node indices that surround the cell
-	//	IntVector ni[8];
-	//	double S[8];
+	IntVector ni[8];
+	double S[8];
 
-	//	patch->findCellAndWeights(px[idx], ni, S);
-	// dbg 1
-	//	total_mom += pvelocity[idx]*pmass[idx];
+	patch->findCellAndWeights(px[idx], ni, S);
+	total_mom += pvelocity[idx]*pmass[idx];
 
 	// Add each particles contribution to the local mass & velocity 
 	// Must use the node indices
 
-	//	for(int k = 0; k < 8; k++) {
+	for(int k = 0; k < 8; k++) {
 
-	    // dbg 1
-	  //	  if(patch->containsNode(ni[k])) {
-	    //	    gmass[ni[k]]          += pmass[idx]                     * S[k];
-	    //	    gmassglobal[ni[k]]    += pmass[idx]                     * S[k];
-	    //	    gvolume[ni[k]]        += pvolume[idx]                   * S[k];
-	    //	    gvelocity[ni[k]]      += pvelocity[idx]    * pmass[idx] * S[k];
-	    //	    gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
-	    //	    gtempglobal[ni[k]]    += pTemperature[idx] * pmass[idx] * S[k];
-	    //	    totalmass             += pmass[idx]                     * S[k];
+	  if(patch->containsNode(ni[k])) {
+	    gmass[ni[k]]          += pmass[idx]                     * S[k];
+	    gmassglobal[ni[k]]    += pmass[idx]                     * S[k];
+	    gvolume[ni[k]]        += pvolume[idx]                   * S[k];
+	    gvelocity[ni[k]]      += pvelocity[idx]    * pmass[idx] * S[k];
+	    gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
+	    gtempglobal[ni[k]]    += pTemperature[idx] * pmass[idx] * S[k];
+	    totalmass             += pmass[idx]                     * S[k];
 
-	  //	  }
-	//        }
-      //      }
+	  }
+	}
+      }
 
-      // dbg1 
-      /*
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
 
 	gvelocity[*iter] /= gmass[*iter];
@@ -921,6 +949,7 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
       }
 
       // Apply grid boundary conditions to the velocity before storing the data
+
       IntVector offset =  IntVector(0,0,0);
 
       //      IntVector offset = 
@@ -973,29 +1002,27 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
 
       }
 
+      /* not needed with allocateAndPut
       new_dw->put(sum_vartype(totalmass), Mlb->TotalMassLabel);
 
+      new_dw->put(gmass,         Mlb->gMassLabel,          matlindex, patch);
+      new_dw->put(gvolume,       Mlb->gVolumeLabel,        matlindex, patch);
+      new_dw->put(gvelocity,     Mlb->gVelocityLabel,      matlindex, patch);
+      new_dw->put(gTemperature,  Mlb->gTemperatureLabel,   matlindex, patch);
       */
-
-      // dbg 1
-      //      new_dw->put(gmass,         Mlb->gMassLabel,          matlindex, patch);
-      //      new_dw->put(gvolume,       Mlb->gVolumeLabel,        matlindex, patch);
-      //      new_dw->put(gvelocity,     Mlb->gVelocityLabel,      matlindex, patch);
-      //      new_dw->put(gTemperature,  Mlb->gTemperatureLabel,   matlindex, patch);
 
     }  // End loop over materials
 
-    // dbg 1
-    /*
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         gtempglobal[*iter] /= gmassglobal[*iter];
     }
+    /* not needed with allocateAndPut
+    new_dw->put(gmassglobal, Mlb->gMassLabel,
+		d_sharedState->getAllInOneMatl()->get(0), patch);
+    new_dw->put(gtempglobal, Mlb->gTemperatureLabel,
+    		d_sharedState->getAllInOneMatl()->get(0), patch);
     */
-    // dbg 1
-    //    new_dw->put(gmassglobal, Mlb->gMassLabel,
-    //			d_sharedState->getAllInOneMatl()->get(0), patch);
-    //    new_dw->put(gtempglobal, Mlb->gTemperatureLabel,
-    //		d_sharedState->getAllInOneMatl()->get(0), patch);
+#endif
 
     // End loop over patches
   }
@@ -1057,7 +1084,7 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
       		    patch, Ghost::AroundNodes, numGhostCells);
       
       IntVector nodeIdx[8];
-      
+
       for (CellIterator iter =patch->getExtraCellIterator();
 	   !iter.done();iter++){
 
@@ -1076,22 +1103,7 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
 	vel_CC[*iter]      /= (cmass[*iter]     + d_SMALL_NUM);
 	if (d_calcEnergyExchange) 
 	  tempSolid_CC[*iter]   /= (cmass[*iter]     + d_SMALL_NUM);
-      }
-      
-      // allocateAndPut instead:
-      /* new_dw->put(cmass,     d_MAlb->cMassLabel,    
-		  matlindex, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(cvolume,   d_MAlb->cVolumeLabel,  
-		  matlindex, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(vel_CC,    d_MAlb->vel_CCLabel,   
-		  matlindex, patch); */;
-      if (d_calcEnergyExchange) 
-      	// allocateAndPut instead:
-      	/* new_dw->put(tempSolid_CC, d_MAlb->tempSolid_CCLabel,   
-      		    matlindex, patch); */;
-
+      }      
     }
   }
 }
@@ -1210,7 +1222,7 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
       }
       
       double mass;
-      
+
       for(CellIterator iter = patch->getExtraCellIterator();
 	  !iter.done(); iter++){
 	
@@ -1372,7 +1384,7 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
     // actual computation
 
     void_frac.initialize(0);
-    
+
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
 
       double total_vol = patch->dCell().x()*patch->dCell().y()*patch->dCell().z();
@@ -1384,23 +1396,10 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
 	
       }
       void_frac[*iter] = 1.0 - solid_frac_sum;
-      //      void_frac[*iter] = 1.0;
+      if (void_frac[*iter] < 0.0)
+	void_frac[*iter] = 0.0;
+
     }
-
-    // Computation done; now put back in dw
-
-    for (int m = 0; m < numMPMMatls; m++) {
-      Material* matl = d_sharedState->getMPMMaterial( m );
-      int dwindex = matl->getDWIndex();
-      
-      // allocateAndPut instead:
-      /* new_dw->put(solid_fraction_cc[m], d_MAlb->solid_fraction_CCLabel,
-		  dwindex, patch); */;
-    }
-    
-    // allocateAndPut instead:
-    /* new_dw->put(void_frac, d_MAlb->void_frac_CCLabel, matlindex, patch); */;
-
   }
 }
   
@@ -1496,7 +1495,8 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     SFCXVariable<double> wVelNonlinearSrc_fcx; 
     SFCYVariable<double> wVelNonlinearSrc_fcy; 
     
-    int numGhostCells = 0;
+    int numGhostCells = 1;
+    int zeroGhostCells = 0;
     
     int numGhostCellsG = 1;
 
@@ -1603,43 +1603,36 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       int idx = matl->getDWIndex();
 
       new_dw->get(solid_fraction_cc[m], d_MAlb->solid_fraction_CCLabel,
-		  idx, patch, Ghost::None, numGhostCells);
+		  idx, patch, Ghost::AroundCells, numGhostCells);
       
       new_dw->get(xvelCC_solid[m], d_MAlb->xvel_CCLabel, 
-		  idx, patch, Ghost::None, numGhostCells);
-      
+		  idx, patch, Ghost::AroundCells, numGhostCells);
       new_dw->get(yvelCC_solid[m], d_MAlb->yvel_CCLabel, 
-		  idx, patch, Ghost::None, numGhostCells);
-      
+		  idx, patch, Ghost::AroundCells, numGhostCells);
       new_dw->get(zvelCC_solid[m], d_MAlb->zvel_CCLabel, 
-		  idx, patch, Ghost::None, numGhostCells);
+		  idx, patch, Ghost::AroundCells, numGhostCells);
       
       new_dw->get(xvelFCX_solid[m], d_MAlb->xvel_FCXLabel, 
-		  idx, patch, Ghost::None, numGhostCells);
-      
-      new_dw->get(yvelFCX_solid[m], d_MAlb->yvel_FCXLabel, 
-		  idx, patch, Ghost::None, numGhostCells);
-      
-      new_dw->get(zvelFCX_solid[m], d_MAlb->zvel_FCXLabel, 
-		  idx, patch, Ghost::None, numGhostCells);
+		  idx, patch, Ghost::AroundFaces, numGhostCells);
+      new_dw->get(yvelFCY_solid[m], d_MAlb->yvel_FCYLabel, 
+		  idx, patch, Ghost::AroundFaces, numGhostCells);
+      new_dw->get(zvelFCZ_solid[m], d_MAlb->zvel_FCZLabel, 
+		  idx, patch, Ghost::AroundFaces, numGhostCells);      
       
       new_dw->get(xvelFCY_solid[m], d_MAlb->xvel_FCYLabel, 
-		  idx, patch, Ghost::None, numGhostCells);
-      
-      new_dw->get(yvelFCY_solid[m], d_MAlb->yvel_FCYLabel, 
-		  idx, patch, Ghost::None, numGhostCells);
-      
-      new_dw->get(zvelFCY_solid[m], d_MAlb->zvel_FCYLabel, 
-		  idx, patch, Ghost::None, numGhostCells);
-      
+		  idx, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->get(xvelFCZ_solid[m], d_MAlb->xvel_FCZLabel, 
-		  idx, patch, Ghost::None, numGhostCells);
-      
+		  idx, patch, Ghost::AroundFaces, numGhostCells);
+            
       new_dw->get(yvelFCZ_solid[m], d_MAlb->yvel_FCZLabel, 
-		  idx, patch, Ghost::None, numGhostCells);
+		  idx, patch, Ghost::AroundFaces, numGhostCells);
+      new_dw->get(yvelFCX_solid[m], d_MAlb->yvel_FCXLabel, 
+		  idx, patch, Ghost::AroundFaces, numGhostCells);
       
-      new_dw->get(zvelFCZ_solid[m], d_MAlb->zvel_FCZLabel, 
-		  idx, patch, Ghost::None, numGhostCells);
+      new_dw->get(zvelFCX_solid[m], d_MAlb->zvel_FCXLabel, 
+		  idx, patch, Ghost::AroundFaces, numGhostCells);
+      new_dw->get(zvelFCY_solid[m], d_MAlb->zvel_FCYLabel, 
+		  idx, patch, Ghost::AroundFaces, numGhostCells);
       
       new_dw->allocateAndPut(dragForceX_cc[m], d_MAlb->DragForceX_CCLabel,
 		       idx, patch);
@@ -1705,8 +1698,8 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     
     for (int m = 0; m < numMPMMatls; m++) {
       
-      valid_lo = patch->getSFCXFORTLowIndex();
-      valid_hi = patch->getSFCXFORTHighIndex();
+      valid_lo = patch->getCellFORTLowIndex();
+      valid_hi = patch->getCellFORTHighIndex();
       
       // code for x-direction momentum exchange
       
@@ -1734,10 +1727,9 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 						gas_fraction_cc,
 						solid_fraction_cc[m],
 						viscos, csmag,
-						cellinfo->sew, cellinfo->sns,
-						cellinfo->stb, cellinfo->yy,
-						cellinfo->zz, cellinfo->yv,
-						cellinfo->zw,
+						cellinfo->sew, cellinfo->sns, cellinfo->stb, 
+						cellinfo->yy, cellinfo->zz, 
+						cellinfo->yv, cellinfo->zw,
 						valid_lo, valid_hi,
 						ioff, joff, koff,
 						indexflo, indext1, indext2,
@@ -1769,10 +1761,9 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 						gas_fraction_cc,
 						solid_fraction_cc[m],
 						viscos, csmag,
-						cellinfo->sew, cellinfo->sns,
-						cellinfo->stb, cellinfo->zz,
-						cellinfo->xx, cellinfo->zw,
-						cellinfo->xu,
+						cellinfo->sns, cellinfo->stb, cellinfo->sew, 
+						cellinfo->zz, cellinfo->xx, 
+						cellinfo->zw, cellinfo->xu,
 						valid_lo, valid_hi,
 						ioff, joff, koff,
 						indexflo, indext1, indext2,
@@ -1804,10 +1795,9 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 						gas_fraction_cc,
 						solid_fraction_cc[m],
 						viscos, csmag,
-						cellinfo->sew, cellinfo->sns,
-						cellinfo->stb, cellinfo->xx,
-						cellinfo->yy, cellinfo->xu,
-						cellinfo->yv,
+						cellinfo->stb, cellinfo->sew, cellinfo->sns, 
+						cellinfo->xx, cellinfo->yy, 
+						cellinfo->xu, cellinfo->yv,
 						valid_lo, valid_hi,
 						ioff, joff, koff,
 						indexflo, indext1, indext2,
@@ -1826,6 +1816,33 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     }
     
     // Calculation done: now put things back in data warehouse
+    
+    // debug, sk, 04/12/02
+    //    uVelLinearSrc_cc.initialize(0.);
+    //    uVelLinearSrc_fcy.initialize(0.);
+    //    uVelLinearSrc_fcz.initialize(0.);
+    
+    //    uVelNonlinearSrc_cc.initialize(0.);
+    //    uVelNonlinearSrc_fcy.initialize(0.);
+    //    uVelNonlinearSrc_fcz.initialize(0.);
+    
+    //    vVelLinearSrc_cc.initialize(0.);
+    //    vVelLinearSrc_fcz.initialize(0.);
+    //    vVelLinearSrc_fcx.initialize(0.);
+    
+    //    vVelNonlinearSrc_cc.initialize(0.);
+    //    vVelNonlinearSrc_fcz.initialize(0.);
+    //    vVelNonlinearSrc_fcx.initialize(0.);
+    
+    //    wVelLinearSrc_cc.initialize(0.);
+    //    wVelLinearSrc_fcx.initialize(0.);
+    //    wVelLinearSrc_fcy.initialize(0.);
+    
+    //    wVelNonlinearSrc_cc.initialize(0.);
+    //    wVelNonlinearSrc_fcx.initialize(0.);
+    //    wVelNonlinearSrc_fcy.initialize(0.);
+
+    // end debug, sk, 04/12/02
     
     // Solid variables
     
@@ -1981,34 +1998,30 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
 
     int numGhostCells = 1;
 
-    new_dw->allocateAndPut(su_dragx_cc, d_MAlb->d_uVel_mmNonlinSrc_CC_CollectLabel,
-		     matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->copyOut(su_dragx_cc, d_MAlb->d_uVel_mmNonlinSrc_CCLabel,
-		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
-
     new_dw->allocateAndPut(sp_dragx_cc, d_MAlb->d_uVel_mmLinSrc_CC_CollectLabel,
 		     matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->copyOut(sp_dragx_cc, d_MAlb->d_uVel_mmLinSrc_CCLabel,
 		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    
-    new_dw->allocateAndPut(su_dragy_cc, d_MAlb->d_vVel_mmNonlinSrc_CC_CollectLabel,
-		     matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->copyOut(su_dragy_cc, d_MAlb->d_vVel_mmNonlinSrc_CCLabel,
-		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
-
     new_dw->allocateAndPut(sp_dragy_cc, d_MAlb->d_vVel_mmLinSrc_CC_CollectLabel,
 		     matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->copyOut(sp_dragy_cc, d_MAlb->d_vVel_mmLinSrc_CCLabel,
 		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    
-    new_dw->allocateAndPut(su_dragz_cc, d_MAlb->d_wVel_mmNonlinSrc_CC_CollectLabel,
-		     matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->copyOut(su_dragz_cc, d_MAlb->d_wVel_mmNonlinSrc_CCLabel,
-		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
-
     new_dw->allocateAndPut(sp_dragz_cc, d_MAlb->d_wVel_mmLinSrc_CC_CollectLabel,
 		     matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->copyOut(sp_dragz_cc, d_MAlb->d_wVel_mmLinSrc_CCLabel,
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
+        
+    new_dw->allocateAndPut(su_dragx_cc, d_MAlb->d_uVel_mmNonlinSrc_CC_CollectLabel,
+		     matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->copyOut(su_dragx_cc, d_MAlb->d_uVel_mmNonlinSrc_CCLabel,
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->allocateAndPut(su_dragy_cc, d_MAlb->d_vVel_mmNonlinSrc_CC_CollectLabel,
+		     matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->copyOut(su_dragy_cc, d_MAlb->d_vVel_mmNonlinSrc_CCLabel,
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->allocateAndPut(su_dragz_cc, d_MAlb->d_wVel_mmNonlinSrc_CC_CollectLabel,
+		     matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->copyOut(su_dragz_cc, d_MAlb->d_wVel_mmNonlinSrc_CCLabel,
 		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     
     new_dw->get(su_dragx_fcy, d_MAlb->d_uVel_mmNonlinSrc_FCYLabel,
@@ -2183,44 +2196,47 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     
     // gets CC variables
 
-    new_dw->get(su_dragx_cc, d_MAlb->d_uVel_mmNonlinSrc_CC_CollectLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    
     new_dw->get(sp_dragx_cc, d_MAlb->d_uVel_mmLinSrc_CC_CollectLabel,
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    
-    new_dw->get(su_dragy_cc, d_MAlb->d_vVel_mmNonlinSrc_CC_CollectLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    
     new_dw->get(sp_dragy_cc, d_MAlb->d_vVel_mmLinSrc_CC_CollectLabel,
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    
-    new_dw->get(su_dragz_cc, d_MAlb->d_wVel_mmNonlinSrc_CC_CollectLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    
     new_dw->get(sp_dragz_cc, d_MAlb->d_wVel_mmLinSrc_CC_CollectLabel,
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    
+    new_dw->get(su_dragx_cc, d_MAlb->d_uVel_mmNonlinSrc_CC_CollectLabel,
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);    
+    new_dw->get(su_dragy_cc, d_MAlb->d_vVel_mmNonlinSrc_CC_CollectLabel,
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);        
+    new_dw->get(su_dragz_cc, d_MAlb->d_wVel_mmNonlinSrc_CC_CollectLabel,
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);    
     
     // computes FC interpolants
     
     new_dw->allocateAndPut(su_dragx_fcx, d_MAlb->d_uVel_mmNonlinSrcLabel,
 		     matlIndex, patch);
-    
     new_dw->allocateAndPut(sp_dragx_fcx, d_MAlb->d_uVel_mmLinSrcLabel,
 		     matlIndex, patch);
     
     new_dw->allocateAndPut(su_dragy_fcy, d_MAlb->d_vVel_mmNonlinSrcLabel,
 		     matlIndex, patch);
-    
     new_dw->allocateAndPut(sp_dragy_fcy, d_MAlb->d_vVel_mmLinSrcLabel,
 		     matlIndex, patch);
     
     new_dw->allocateAndPut(su_dragz_fcz, d_MAlb->d_wVel_mmNonlinSrcLabel,
 		     matlIndex, patch);
-    
     new_dw->allocateAndPut(sp_dragz_fcz, d_MAlb->d_wVel_mmLinSrcLabel,
 		     matlIndex, patch);
     
+    // initialize fc interpolants so that values in non-mpm areas
+    // are zero
+    
+    su_dragx_fcx.initialize(0);
+    sp_dragx_fcx.initialize(0);
+    su_dragy_fcy.initialize(0);
+    sp_dragy_fcy.initialize(0);
+    su_dragz_fcz.initialize(0);
+    sp_dragz_fcz.initialize(0);
+
     IntVector valid_lo;
     IntVector valid_hi;
     
@@ -2298,6 +2314,15 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
 			     valid_lo, valid_hi);
 
     // Calculation done: now put things in DW
+    
+    // debug, April 18, 2002
+    //    su_dragx_fcx.initialize(0);
+    //    sp_dragx_fcx.initialize(0);
+    //    su_dragy_fcy.initialize(0);
+    //    sp_dragy_fcy.initialize(0);
+    //    su_dragz_fcz.initialize(0);
+    //    sp_dragz_fcz.initialize(0);
+    // end debug, sk, April 18, 2002
     
     // allocateAndPut instead:
     /* new_dw->put(su_dragx_fcx, d_MAlb->d_uVel_mmNonlinSrcLabel,
@@ -2521,13 +2546,13 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 		  idx, patch, Ghost::AroundCells, numGhostCells);
 
       new_dw->get(tempSolid_fcx[m], d_MAlb->tempSolid_FCXLabel,
-		  idx, patch, Ghost::AroundCells, numGhostCells);
+		  idx, patch, Ghost::AroundFaces, numGhostCells);
 
       new_dw->get(tempSolid_fcy[m], d_MAlb->tempSolid_FCYLabel,
-		  idx, patch, Ghost::AroundCells, numGhostCells);
+		  idx, patch, Ghost::AroundFaces, numGhostCells);
 
       new_dw->get(tempSolid_fcz[m], d_MAlb->tempSolid_FCZLabel,
-      		  idx, patch, Ghost::AroundCells, numGhostCells);
+      		  idx, patch, Ghost::AroundFaces, numGhostCells);
 
       // allocates
       
@@ -2661,6 +2686,19 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 		  idx, patch); */;
 
     }
+
+    // Gas variables
+
+    // debug, sk, April 16, 2002
+    //    sp_enth_cc.initialize(0.);
+    //    sp_enth_fcx.initialize(0.);
+    //    sp_enth_fcy.initialize(0.);
+    //    sp_enth_fcz.initialize(0.);
+    //    su_enth_cc.initialize(0.);
+    //    su_enth_fcx.initialize(0.);
+    //    su_enth_fcy.initialize(0.);
+    //    su_enth_fcz.initialize(0.);
+    // end debug, sk, April 16, 2002
     
     // Gas variables
 
@@ -2705,7 +2743,7 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 void MPMArches::collectToCCGasEnergyExchSrcs(const ProcessorGroup*,
 					  const PatchSubset* patches,
 					  const MaterialSubset*,
-					  DataWarehouse* old_dw,
+					  DataWarehouse* ,
 					  DataWarehouse* new_dw)
 
 {
@@ -2764,6 +2802,11 @@ void MPMArches::collectToCCGasEnergyExchSrcs(const ProcessorGroup*,
 			       valid_lo, valid_hi);
 
     // Calculation done: now put things in DW
+    
+    // debug, sk, April 17, 2002
+    //    su_enth_cc.initialize(0.0);
+    //    sp_enth_cc.initialize(0.0);
+    // end debug, sk, April 17, 2002
     
     // allocateAndPut instead:
     /* new_dw->put(su_enth_cc, d_MAlb->d_enth_mmNonLinSrc_CCLabel,
@@ -2955,6 +2998,11 @@ void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
 	htrate_nc.initialize(0.0);
 
       }
+      else {
+	new_dw->allocateAndPut(htrate_nc, d_MAlb->heaTranSolid_NCLabel, 
+			 matlindex, patch);
+	htrate_nc.initialize(0.0);
+      }
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
 
@@ -2970,24 +3018,14 @@ void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
 
       }
 
-      // debug for now: set acc_archesNC to zero so that MPM does
-      // not feel anything from the object; do same with heat transfer
+      // debug for now: set acc_archesNC to zero so 
+      // that MPM does not feel anything from the 
+      // object.  We don't need to do the same for
+      // heat transfer because we have a boolean
+      // to decide whether or not the heat transfer
+      // is accounted for.
 
       acc_archesNC.initialize(zero);
-
-      // allocateAndPut instead:
-      /* new_dw->put(acc_archesNC, d_MAlb->AccArchesNCLabel,  matlindex, 
-		  patch); */;
-
-      if (d_calcEnergyExchange) {
-
-	// debug for now
-	htrate_nc.initialize(0.0);
-
-	// allocateAndPut instead:
-	/* new_dw->put(htrate_nc, d_MAlb->heaTranSolid_NCLabel, matlindex, 
-		    patch); */;
-      }
 
     }
   }

@@ -177,40 +177,6 @@ c--------------------------------------------------------------------
      $     PASS3B(pfz_fcz),
      $     zero, valid_lo, valid_hi)
 
-#if 0
-
-c#ifdef __GNUC__
-C The variable names are too long the use the PASS3 macros,
-C so we have to do this - Steve
-      call arrass(pfx_fcx_low_x, pfx_fcx_low_y,
-     $ pfx_fcx_low_z, pfx_fcx_high_x,
-     $ pfx_fcx_high_y, pfx_fcx_high_z,
-     $ pfx_fcx, zero, valid_lo, valid_hi)
-
-      call arrass(pfy_fcy_low_x, pfy_fcy_low_y,
-     $ pfy_fcy_low_z, pfy_fcy_high_x,
-     $ pfy_fcy_high_y, pfy_fcy_high_z,
-     $ pfy_fcy, zero, valid_lo, valid_hi)
-
-      call arrass(pfz_fcz_low_x, pfz_fcz_low_y,
-     $ pfz_fcz_low_z, pfz_fcz_high_x,
-     $ pfz_fcz_high_y, pfz_fcz_high_z,
-     $ pfz_fcz, zero, valid_lo, valid_hi)
-
-c#else
-      call arrass(pfx_fcx_low, pfx_fcx_high,
-     $ pfx_fcx, zero, valid_lo, valid_hi)
-
-      call arrass(pfy_fcy_low, pfy_fcy_high,
-     $ pfy_fcy, zero, valid_lo, valid_hi)
-
-      call arrass(pfz_fcz_low, pfz_fcz_high,
-     $ pfz_fcz, zero, valid_lo, valid_hi)
-
-c#endif
-
-#endif
-
 c     debug, sk, April 14, 2001
 c      print*, 'printing pressure force values'
 
@@ -343,42 +309,6 @@ c     $                    pfx_fcx(i+1,j,k)
  400        continue
  410     continue
  420  continue
-
-c     debug: set pressure forces to zero
-
-#if 0
-
-c#ifdef __GNUC__
-C The variable names are too long the use the PASS3 macros,
-C so we have to do this - Steve
-      call arrass(pfx_fcx_low_x, pfx_fcx_low_y,
-     $ pfx_fcx_low_z, pfx_fcx_high_x,
-     $ pfx_fcx_high_y, pfx_fcx_high_z,
-     $ pfx_fcx, zero, valid_lo, valid_hi)
-
-      call arrass(pfy_fcy_low_x, pfy_fcy_low_y,
-     $ pfy_fcy_low_z, pfy_fcy_high_x,
-     $ pfy_fcy_high_y, pfy_fcy_high_z,
-     $ pfy_fcy, zero, valid_lo, valid_hi)
-
-      call arrass(pfz_fcz_low_x, pfz_fcz_low_y,
-     $ pfz_fcz_low_z, pfz_fcz_high_x,
-     $ pfz_fcz_high_y, pfz_fcz_high_z,
-     $ pfz_fcz, zero, valid_lo, valid_hi)
-
-c#else
-      call arrass(pfx_fcx_low, pfx_fcx_high,
-     $ pfx_fcx, zero, valid_lo, valid_hi)
-
-      call arrass(pfy_fcy_low, pfy_fcy_high,
-     $ pfy_fcy, zero, valid_lo, valid_hi)
-
-      call arrass(pfz_fcz_low, pfz_fcz_high,
-     $ pfz_fcz, zero, valid_lo, valid_hi)
-
-c#endif
-
-#endif
 
       return
       end
