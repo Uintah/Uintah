@@ -3,6 +3,7 @@
 #include "Harlow.h"
 #include "StiffGas.h"
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
@@ -16,21 +17,23 @@ using namespace Uintah;
 
 EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
 {
-   for (ProblemSpecP child = ps->findBlock(); child != 0;
-	child = child->findNextBlock()) {
-      std::string mat_type = child->getNodeName();
-      if (mat_type == "ideal_gas") {
-		 return(scinew IdealGas(child));
-      }
-      if (mat_type == "harlow") {
-		 return(scinew Harlow(child));
-      }
-      if (mat_type == "stiff_gas") {
-		 return(scinew StiffGas(child));
-      } else {
-	 cerr << "Unknown EOS Type R (" << mat_type << ")" << std::endl;
-	 //      exit(1);
-      }
-   }
-   return 0;
+    ProblemSpecP child = ps->findBlock("EOS");
+    if(!child)
+      throw ProblemSetupException("Cannot find EOS tag");
+    std::string mat_type;
+    if(!child->getAttribute("type",mat_type))
+      throw ProblemSetupException("No type for EOS"); 
+    
+    if (mat_type == "ideal_gas") 
+      return(scinew IdealGas(child));
+
+    else if (mat_type == "harlow") 
+      return(scinew Harlow(child));
+    
+    else if (mat_type == "stiff_gas") 
+      return(scinew StiffGas(child));
+    
+    else
+      throw ProblemSetupException("Unknown EOS Type R ("+mat_type+")");
+
 }
