@@ -32,11 +32,11 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/Handle.h>
+#include <Core/Datatypes/StructHexVolField.h>
 
 #include <Dataflow/Ports/FieldPort.h>
 
 #include <Packages/Fusion/Dataflow/Modules/Fields/FusionSlicer.h>
-#include <Packages/Fusion/Core/Datatypes/StructHexVolField.h>
 
 #include <Packages/Fusion/share/share.h>
 

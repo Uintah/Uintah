@@ -24,7 +24,7 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Datatypes/StructQuadSurfField.h>
 
 namespace Fusion {
 
@@ -71,8 +71,6 @@ FusionSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
   FIELD<TYPE> *ifield = (FIELD<TYPE> *) field_h.get_rep();
 
   typename FIELD<TYPE>::mesh_handle_type imesh = ifield->get_typed_mesh();
-  typename QuadSurfField<TYPE>::mesh_type *omesh =
-    scinew typename QuadSurfField<TYPE>::mesh_type;
 
   const unsigned int onx = imesh->get_nx();
   const unsigned int ony = imesh->get_ny();
@@ -93,11 +91,18 @@ FusionSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
     ny = ony;
   }
 
+  typename StructQuadSurfField<TYPE>::mesh_type *omesh =
+    scinew typename StructQuadSurfField<TYPE>::mesh_type(nx,ny);
+
   typename FIELD<TYPE>::mesh_type::Node::index_type node;
+  typename StructQuadSurfField<TYPE>::mesh_type::Node::index_type onode;
   Point p;
 
-  for (unsigned int j = 0; j < ny; j++) {
-    for (unsigned int i = 0; i < nx; i++) {
+  for (unsigned int j=0; j < ny; j++) {
+    onode.j_ = j;
+    for (unsigned int i=0; i < nx; i++) {
+      onode.i_ = i;
+
       if (axis == 0) {
 	node.i_ = index;
 	node.j_ = i;
@@ -115,32 +120,19 @@ FusionSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
       }
 
       imesh->get_center(p, node);
-      omesh->add_point(p);
+      omesh->set_point(onode, p);
     }
   }
 
-  typename QuadSurfField<TYPE>::mesh_type::Node::index_type a, b, c, d;
-
-  for (unsigned int j=1, j0=0, j1=nx; j<ny; j++, j0+=nx, j1+=nx) {
-    for (unsigned int i0=0, i1=1; i1<nx; i0++, i1++) {
-      a = j0 + i0;
-      b = j0 + i1;
-      c = j1 + i1;
-      d = j1 + i0;
-
-      omesh->add_quad(a, b, c, d);
-    }
-  }
-
-  QuadSurfField<TYPE> *ofield = scinew QuadSurfField<TYPE>(omesh, Field::NODE);
+  StructQuadSurfField<TYPE> *ofield = scinew StructQuadSurfField<TYPE>(omesh, Field::NODE);
 
   typename FIELD<TYPE>::value_type v;
 
-  typename QuadSurfField<TYPE>::mesh_type::Node::index_type onode = 0;
-  unsigned int counter = 0;
-  
   for (unsigned int j = 0; j < ny; j++) {
+    onode.j_ = j;
     for (unsigned int i = 0; i < nx; i++) {
+      onode.i_ = i;
+
       if (axis == 0) {
 	node.i_ = index;
 	node.j_ = i;
@@ -159,8 +151,6 @@ FusionSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
 
       ifield->value(v, node);
       ofield->set_value(v, onode);
-
-      onode = ++counter;
     }
   }
 

@@ -32,10 +32,9 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-
+#include <Core/Datatypes/StructHexVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
 
-#include <Packages/Fusion/Core/Datatypes/StructHexVolField.h>
 #include <Packages/Fusion/share/share.h>
 
 #include <Packages/Fusion/Core/ThirdParty/mdsPlusReader.h>
@@ -316,7 +315,8 @@ void MDSPlusFieldReader::execute(){
       error_ = true;
       return;
     }
-    if( retVal < 0 ) {
+
+    else if( retVal < 0 ) {
       ostringstream str;
       str << "Opening " << tree << " tree and shot " << shot;
       error( str.str() );
@@ -345,6 +345,7 @@ void MDSPlusFieldReader::execute(){
 
       dims[0] = dims[1] = dims[2] = 0;
 
+      remark( gridStr[n] );
       grid_data[n] = mds.grid( gridStr[n].c_str(), dims );
 
       if( grid_data[n] ) {
