@@ -38,6 +38,7 @@ SRCS     += \
 	$(SRCDIR)/UnuQuantize.cc\
 	$(SRCDIR)/UnuResample.cc\
 	$(SRCDIR)/UnuSlice.cc\
+	$(SRCDIR)/UnuAxinfo.cc\
 #[INSERT NEW CODE FILE HERE]
 
 # the following are stubs that need implementa
