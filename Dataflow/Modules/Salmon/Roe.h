@@ -257,6 +257,9 @@ public:
   // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
   
   TCLint drawimg;
+
+  TCLstring saveFile;  // image file name
+  TCLstring saveType;  // image file type
   
   TCLstring saveprefix;
   
@@ -293,6 +296,9 @@ public:
 
 //
 // $Log$
+// Revision 1.14  2000/06/07 20:59:27  kuzimmer
+// Modifications to make the image save menu item work on SGIs
+//
 // Revision 1.13  2000/03/17 18:47:03  dahart
 // Included STL map header files where I forgot them, and removed less<>
 // parameter from map declarations
