@@ -16,6 +16,8 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <xercesc/dom/DOMException.hpp> 
+
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -25,8 +27,8 @@
 
 // TODO:
 //  DONE Parse geometry from UPS file and fill in weights array properly
-//  1. Fix uniform division (40/5 = 8)
-//  2. Proper arg parsing (for -div and integer submultiples)
+//  DONE Fix uniform division (40/5 = 8)
+//  DONE Proper arg parsing (for -div and integer submultiples)
 //  DONE Convert patches to world coordinate space and print out
 //  DONE Modify UPS file and write it out
 //  Bounds for pieces (faster)
@@ -35,15 +37,24 @@
 // 3. Test with different problems (disks with different weights)
 // 5. Benchmark on a real problem
 // 4. give to jim
+// these are little things
+// 6. Recover properly if trying to bisect 1 cell.
+// 7. See if ProblemSpec::get should return 'this'.
+// 8. Make work for all boxes on multiple-box runs
+// 9. Make extraCells be a level property instead of a Box property
+// 10. Compensate for jobs with no particles (divide domain evenly)
 // Zoltan
 
 using namespace Uintah;
 using namespace std;
 
-void bisect(const string& div, int num, int factor, Uintah::Primes::FactorType factors,
-            const IntVector& low, const IntVector& high, const Array3<float>& weights,
-            const LevelP& level, ProblemSpecP& level_ups)
+void bisect(const string& div, int num, int factor, 
+            Uintah::Primes::FactorType factors, const IntVector& low, 
+            const IntVector& high, const Array3<float>& weights,
+            const LevelP& level, ProblemSpecP& level_ups, IntVector& extraCells)
 {
+  static int levels_of_recursion = -1;
+
   int index;
   if(div[num] == 'x')
     index=0;
@@ -51,64 +62,101 @@ void bisect(const string& div, int num, int factor, Uintah::Primes::FactorType f
     index=1;
   else if(div[num] == 'z')
     index=2;
-  else
+  else {
     throw InternalError("bad bisection axis: "+div[num]);
+  }
 
   if(factor == -1){
     static int idx = 0;
-    cerr << idx++ << ": patch: " << low << "-" << high << '\n';
     Point low_point = level->getNodePosition(low);
     Point high_point = level->getNodePosition(high);
     IntVector res = high - low;
 
     ProblemSpecP box = level_ups->appendChild("Box");
-    box->appendElement("lower", low_point, false);
-    box->appendElement("upper", high_point, false);
+    box->appendElement("label", idx);
+    box->appendElement("lower", low_point);
+    box->appendElement("upper", high_point);
+    
+    if (extraCells != IntVector(0,0,0))
+      box->appendElement("extraCells", extraCells);
     box->appendElement("resolution", res, true);
+
+    cerr << idx++ << ": patch: " << low << "-" << high << ',' 
+         << low_point << "-" << high_point << '\n';
+
 
 
   } else {
+
+    levels_of_recursion++;
+    for (int qq = 0; qq < levels_of_recursion*2; qq++) {
+      cout << ' ';
+    }
+    cout << "Bisect: dir " << div[num] << " factor: " << factors[factor] << ' ' 
+         << low << '-' << high << endl;
+
     int number = static_cast<int>(factors[factor]);  // quiet the sgi compiler
 
     int l = low[index];
     int h = high[index];
+
+    float total = 0;
 
     vector<float> sums(h-l);
     for(int i = l; i<h; i++){
       IntVector slab_low = low;
       slab_low[index] = i;
       IntVector slab_high = high;
-      slab_high[index] = i+1;
+      slab_high[index] = i;
       double sum = 0;
-      for(CellIterator iter(slab_low, slab_high); !iter.done(); iter++)
+      for(CellIterator iter(slab_low, slab_high); !iter.done(); iter++) {
         sum += weights[*iter];
+        //cout << weights[*iter] << ' ';
+      }
+      total += sum;
+      //cout << sum << ' ' << total << '\n';
       //cerr << "sum[" << i-l << ": " << slab_low << "-" << slab_high << ": " << sum << '\n';
-      sums[i-l] = sum;
-    }
-    float total = 0;
-    for(int i = l; i< h; i++){
-      total += sums[i-l];
       sums[i-l] = total;
     }
+    //total = 0;
+    //for(int i = l; i < h; i++){
+    //total += sums[i-l];
+    //  sums[i-l] = total;
+    //}
     double weight_per = total/number;
 
+    int next_s = -1;
     for(int i = 0 ; i < number; i ++){
       double w1 = weight_per * i;
       double w2 = weight_per * (i+1);
+      //cout << weight_per << ' ' << w1 << ' ' << w2 << '\n';
       int s = 0;
-      while(sums[s] < w1 && s < h-l)
-        s++;
       int e = 0;
-      while(sums[e] < w2 && e < h-l)
-        e++;
 
+      if (next_s == -1) {
+        while(sums[s] < w1 && s < h-l) {
+          s++;
+        }
+      }
+      else
+        s = next_s;
+
+      // find the upper end, compensating for 0's.
+      float high_sum = sums[e];
+      while((sums[e] <= w2 || high_sum >= sums[e]) && e < h-l) {
+        //cout << e << ' ' << high_sum << ' ' << sums[e] << '\n';
+        high_sum = sums[e];
+        e++;
+      }
       IntVector new_low = low;
       new_low[index] = s+l;
       IntVector new_high = high;
       new_high[index] = e+l;
+      next_s = e;
 
-      bisect(div, num+1, factor-1, factors, new_low, new_high, weights, level, level_ups);
+      bisect(div, num+1, factor-1, factors, new_low, new_high, weights, level, level_ups, extraCells);
     }
+    levels_of_recursion--;
   }
 }
 
@@ -124,7 +172,7 @@ parseArgs( int argc, char *argv[],
   }
 
   weight = atof( argv[1] );
-  if( weight < 0.0 || weight > 1.0 ) {
+  if( weight < -1.0 || weight > 1.0 ) {
     cerr << "Weight must be between 0.0 and 1.0\n";
     exit( 1 );
   }
@@ -220,6 +268,23 @@ main(int argc, char *argv[])
     
     // Setup the initial grid
     GridP grid=scinew Grid();
+    IntVector extraCells(0,0,0);
+
+    // save and remove the extra cells before the problem setup
+    ProblemSpecP g = ups->findBlock("Grid");
+    for( ProblemSpecP levelspec = g->findBlock("Level"); levelspec != 0;
+         levelspec = levelspec->findNextBlock("Level")) {
+      for (ProblemSpecP box = levelspec->findBlock("Box"); box != 0 ; 
+           box = box->findNextBlock("Box")) {
+        
+        ProblemSpecP cells = box->findBlock("extraCells");
+        if (cells != 0) {
+          box->get("extraCells", extraCells);
+          box->removeChild(cells);
+        }
+      }
+    }
+      
     grid->problemSetup(ups, world);  
     
     for (int l = 0; l < grid->numLevels(); l++) {
@@ -231,7 +296,7 @@ main(int argc, char *argv[])
       long cells = diff.x()*diff.y()*diff.z();
       if(cells != level->totalCells())
         throw ProblemSetupException("Currently slb can only handle square grids");
-      
+
       Uintah::Primes::FactorType factors;
       int n = Uintah::Primes::factorize(nump, factors);
       cerr << nump << ": ";
@@ -272,20 +337,33 @@ main(int argc, char *argv[])
             if(mainpiece->inside(p))
               weights[*iter] = 1;
           }
-          
           delete mainpiece;
         }
       }
+
+      //      cout << "FIRST OUTPUT OF CELLS" << low << '-' << high << '\n';
+      //      int blah = 0;
+//       for(CellIterator iter(low, high); !iter.done(); iter++){
+//         blah++;
+//         cout << weights[*iter] << ' ';
+//         if (blah % 12 == 0)
+//           cout << '\n';
+//         if (blah % 144 == 0)
+//           cout << '\n';
+//       }
+//       cout << "\n\n";
+      
       int factor = n-1;
       
-      // remove the 'Box' entry from the ups
-      ProblemSpecP g = ups->findBlock("Grid");
+      // remove the 'Box' entry from the ups - note this should try to
+      // remove *all* boxes from the level node
       ProblemSpecP lev = g->findBlock("Level");
       ProblemSpecP box = lev->findBlock("Box");
       
       lev->removeChild(box);
       
-      bisect(div, 0, factor, factors, low, high, weights, level, lev); 
+      bisect(div, 0, factor, factors, low, high, weights, level, lev, 
+             extraCells); 
     }
     
     ofstream out(outfile.c_str());
@@ -294,8 +372,8 @@ main(int argc, char *argv[])
     cerr << "Caught exception: " << e.message() << '\n';
     if(e.stackTrace())
       cerr << "Stack trace: " << e.stackTrace() << '\n';
-  } catch (std::exception e){
-    cerr << "Caught std exception: " << e.what() << '\n';
+  } catch (DOMException& e){
+    cerr << "Caught Xerces DOM exception, code: " << e.code << '\n';
   } catch(...){
     cerr << "Caught unknown exception\n";
   }
