@@ -73,7 +73,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
      d_outputTimestepInterval = 0;
    if(!p->get("outputInterval", d_outputInterval)
       && d_outputTimestepInterval == 0)
-     d_outputInterval = 1.0; // default
+     d_outputInterval = 0.0; // default
 
    if (d_outputInterval != 0.0 && d_outputTimestepInterval != 0)
      throw ProblemSetupException("Use <outputInterval> or <outputTimestepInterval>, not both");
