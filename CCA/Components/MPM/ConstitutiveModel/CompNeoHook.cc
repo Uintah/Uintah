@@ -118,7 +118,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
-    Matrix3 velGrad,Shear,bElBar_new;
+    Matrix3 velGrad,Shear,bElBar_new,deformationGradientInc;
     double J,p,IEl,U,W,se=0.;
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
@@ -136,7 +136,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pmass;
+    constParticleVariable<double> pmass,pvolume;
     ParticleVariable<double> pvolume_deformed;
     constParticleVariable<Vector> pvelocity;
     constNCVariable<Vector> gvelocity;
@@ -165,7 +165,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     }
 
     double shear = d_initialData.Shear;
-    double bulk = d_initialData.Bulk;
+    double bulk  = d_initialData.Bulk;
 
     double rho_orig = matl->getInitialDensity();
 
@@ -224,13 +224,15 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
+      // F_n^np1 = dudx * dt + Identity
+      deformationGradientInc = velGrad * delT + Identity;
 
       // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx]=deformationGradient[idx] +
-                                   velGrad * delT;
+      deformationGradient_new[idx] = deformationGradientInc *
+				     deformationGradient[idx];
 
       // get the volumetric part of the deformation
-      J = deformationGradient_new[idx].Determinant();
+      J    = deformationGradient_new[idx].Determinant();
 
       bElBar_new = deformationGradient_new[idx]
 		 * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
@@ -293,7 +295,6 @@ void CompNeoHook::addComputesAndRequires(Task* task,
    const MaterialSubset* matlset = matl->thisMaterial();
    task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pMassLabel,   matlset, Ghost::None);
-   //   task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
 						 matlset, Ghost::None);
