@@ -42,7 +42,7 @@ or requested modifications should be sent to scirun-exec@cs.utah.edu.
       &quot;Libraryname_Filename_h&quot;.  For example:
       <pre class="example">
       #ifndef Geometry_BBox_h
-      #define Geometry_BBox_h 1 
+      #define Geometry_BBox_h
 
       (code...)
 
@@ -50,11 +50,19 @@ or requested modifications should be sent to scirun-exec@cs.utah.edu.
       </pre>
   </li>
   <li>
-      Definitions of classes that are only accessed via pointers (*) or
-      references (&amp;) shall not be included as include files, but
-      rather a forward declarator should be used such as:
+      Use forward declarations wherever possible as opposed to including
+      full definitions.
+
       <pre class="example">
+      // use a forward declarator:
       class PointToMe;
+
+      // for Arguments 
+      void my_function(PointToMe &p, PointToMe *ptm);
+
+      // and for Data
+      PointToMe *m;
+    
       </pre>
   </li>
   <li>
