@@ -267,7 +267,17 @@ itcl_class SCIRun_Render_Camera {
 	    -variable $this-playmode -value loop
 	radiobutton $playmode.bounce1 -text "Bounce" \
 	    -variable $this-playmode -value bounce
-	iwidgets::spinint $playmode.delay -labeltext {Step Delay (ms)} -range {1 10000} -justify right -width 5 -step 10 -textvariable $this-delay -repeatdelay 300 -repeatinterval 10
+
+	# Save the delay since the iwidget resets it
+	global $this-delay
+	set delay [set $this-delay]
+	iwidgets::spinint $playmode.delay -labeltext {Step Delay (ms)} \
+	    -range {0 86400000} -justify right -width 5 -step 10 \
+	    -textvariable $this-delay -repeatdelay 300 -repeatinterval 10
+	
+	$playmode.delay delete 0 end
+	$playmode.delay insert 0 $delay
+	trace variable $this-delay w "$this maybeRestart;\#"
 
 	pack $playmode.label -side top -expand yes -fill both
 	pack $playmode.once $playmode.loop \
