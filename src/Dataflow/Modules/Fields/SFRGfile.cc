@@ -141,14 +141,13 @@ SFRGfile::~SFRGfile()
 }
 
 void SFRGfile::execute() {
-    if(!iField->get(ifh) || ifh.get_rep())
+    if(!iField->get(ifh) || !ifh.get_rep())
 	return;
     isf=ifh->getRGBase();
     if(!isf){
-	error("SFRGfile can't deal with unstructured grids!");
+	cerr<<"SFRGfile can't deal with unstructured grids!";
 	return;
     }
-
     checkInterface();
     setInputFieldVars();
     printInputStats();
