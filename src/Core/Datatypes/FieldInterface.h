@@ -95,7 +95,8 @@ public:
 				const vector<Point> &pts) const;
 
 private:
-  friend class linear_interp {
+  friend class linear_interp;
+  class linear_interp {
   public:
     typedef typename F::mesh_type Mesh;
     const SFInterface *par_;
