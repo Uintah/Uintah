@@ -2,7 +2,10 @@
 <!DOCTYPE srcs SYSTEM "srcs.dtd">
 
 <srcs>
+  <src name="SliceIntoColumns">
+    <description>Slices the input matrix into column matrices. The number of columns is fixed within the manip. </description>
+  </src>
   <src name="fred">
-    <description></description>
+    <description>(null string)</description>
   </src>
 </srcs>
