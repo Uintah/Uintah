@@ -69,6 +69,8 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
    ps->require("density",d_density);
    ps->require("thermal_conductivity",d_thermalConductivity);
    ps->require("specific_heat",d_specificHeat);
+   ps->require("specific_heat",d_specificHeat);
+   ps->get("gamma",d_gamma);
 
    // Step 3 -- Loop through all of the pieces in this geometry object
 
@@ -485,5 +487,10 @@ double MPMMaterial::getSpecificHeat() const
 double MPMMaterial::getHeatTransferCoefficient() const
 {
   return d_heatTransferCoefficient;
+}
+
+double MPMMaterial::getGamma() const
+{
+  return d_gamma;
 }
 
