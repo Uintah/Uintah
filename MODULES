@@ -9,6 +9,9 @@ Readtec
 PartToGeom
 cfdGridLines
 GatherTimeSteps
+TecplotFileSelector
+ParticleGridVisControl
+
 
 Category: CS684
 BldBRDF
@@ -218,6 +221,7 @@ CuttingPlaneTex
 FieldCage
 GenAxes
 GenColorMap
+GenStandardColorMaps
 GenTransferFunc
 GenFieldEdges
 Hedgehog
@@ -229,6 +233,7 @@ IsoSurfaceDW
 IsoSurfaceSP
 OctIsoSurface
 RescaleColorMap
+RescaleParticleColorMap
 SimpVolVis
 Streamline
 Ted
