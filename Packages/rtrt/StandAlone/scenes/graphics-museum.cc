@@ -303,7 +303,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   /*
   Material* whittedimg = 
-    new ImageMaterial(1, "/usr/sci/projects/rtrt/textures/whitted",
+    new ImageMaterial(1, "/usr/sci/data/Geometry/textures/whitted",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      Color(0,0,0), 1, Color(0,0,0), 0);
   
@@ -312,7 +312,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 		      Vector(0,0,-1), Vector(-1.3,0,0));
 
   Material* bumpimg = 
-    new ImageMaterial(1, "/usr/sci/projects/rtrt/textures/bump",
+    new ImageMaterial(1, "/usr/sci/data/Geometry/textures/bump",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      Color(0,0,0), 1, Color(0,0,0), 0);
 
@@ -388,7 +388,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 		      david_pedT.project(Point(1.033567, 0.596689, 5.240253))));
   // david model or surrogate
 #else 
-  davidg = read_ply("/usr/sci/projects/rtrt/Stanford_Sculptures/david_2mm.ply",flat_white);
+  davidg = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_2mm.ply",flat_white);
 
   BBox david_bbox;
 

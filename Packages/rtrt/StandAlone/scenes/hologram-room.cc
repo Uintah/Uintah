@@ -80,7 +80,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   ceiling_floor->add(check_floor);
 
   Material* whittedimg = 
-    new ImageMaterial(1, "/usr/sci/projects/rtrt/textures/whitted",
+    new ImageMaterial(1, "/usr/sci/data/Geometry/textures/whitted",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      Color(0,0,0), 1, Color(0,0,0), 0);
   
@@ -89,7 +89,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 		      Vector(0,0,-1), Vector(-1.3,0,0));
 
   Material* bumpimg = 
-    new ImageMaterial(1, "/usr/sci/projects/rtrt/textures/bump",
+    new ImageMaterial(1, "/usr/sci/data/Geometry/textures/bump",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      Color(0,0,0), 1, Color(0,0,0), 0);
 
@@ -238,7 +238,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     double rad=(65+35*i)*(M_PI/180.);
     t.pre_rotate(rad, Vector(0,0,1));
     t.pre_translate(center.vector()+Vector(cos(rad),sin(rad),0)*2.9);
-    if (!readASEFile("/usr/sci/projects/rtrt/geometry/lebebe.ASE", t, g, matls, env_map)) {
+    if (!readASEFile("/usr/sci/data/Geometry/models/lebebe.ASE", t, g, matls, env_map)) {
       exit(0);
     }
   }

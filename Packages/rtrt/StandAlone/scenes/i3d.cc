@@ -34,7 +34,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   
   Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
   Material* bookcoverimg = new ImageMaterial(1,
-					     "/usr/sci/projects/rtrt/textures/i3d97.smaller.gamma",
+					     "/usr/sci/data/rtrt/Geometry/textures/i3d97.smaller.gamma",
 					     ImageMaterial::Clamp,
                                              ImageMaterial::Clamp,
 					     Color(0,0,0), 1,
