@@ -171,7 +171,7 @@ void MatlabNrrdsWriter::execute()
 	std::string filename = guifilename_.get();
 	
 	// Make sure we have a .mat extension
-	int filenamesize = filename.size();
+	size_t filenamesize = filename.size();
 	if (filenamesize < 4) 
 	{   
 		filename += ".mat";
