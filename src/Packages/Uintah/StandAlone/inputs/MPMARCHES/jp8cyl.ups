@@ -11,7 +11,7 @@
    </Meta>
 
    <Time>
-	<maxTime>2.5</maxTime>
+	<maxTime>1.25</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.0</delt_min>
 	<delt_max>0.01</delt_max>
@@ -87,8 +87,8 @@
               <specific_heat>         940.36           </specific_heat>
 	      <geom_object>
                  <cylinder label = "mpmcylinder">
-		    <bottom>[1.5,1.2,1.5]</bottom>
-	            <top>[1.5,1.8,1.5]</top>
+		    <bottom>[1.0,1.2,1.5]</bottom>
+	            <top>[1.0,1.8,1.5]</top>
 		    <radius> .4 </radius>
                  </cylinder>
                  <res>               [2,2,2]         </res>
