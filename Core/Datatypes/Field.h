@@ -19,6 +19,7 @@
 #include <Core/Datatypes/Geom.h>
 #include <Core/Datatypes/Attrib.h>
 #include <Core/Containers/Array1.h>
+#include <Core/Datatypes/AttribManager.h>
 
 #include <functional>
 #include <iostream>
@@ -34,10 +35,8 @@ using std::map;
 
 class Field;
 typedef LockingHandle<Field>      FieldHandle;
-typedef map<string, AttribHandle> AttribMap;
-typedef Array1<AttribHandle>      AttribVector;
 
-class SCICORESHARE Field: public Datatype{
+class SCICORESHARE Field: public AttribManager {
 
 public:
 
@@ -58,39 +57,9 @@ public:
   // 
 
   //////////
-  // Total number of registred attributes
-  inline int getNumAttribs() const{
-    return d_attribHandles.size();
-  }
-
-  //////////
-  // Returns handle to the current active attribute
-  virtual const AttribHandle getAttrib() const;
-  
-  //////////
-  // set attribute with the name supplied as active one
-  void setCurrAttrib(string aName);
-  
-  //////////
-  // Return attribute with the name supplied
-  const AttribHandle getAttrib(string aName) const;
-  
-  //////////
-  // Returns non-const handle to share the attribute for writing
-  virtual AttribHandle shareAttrib(string aName);
-
-  //////////
   // Returns handle to the geometry
   virtual const GeomHandle getGeom() const;
 
-  //////////
-  // Adds attribute to the field and sets current attribute name to its name
-  void addAttribute(const AttribHandle&);
-  
-  //////////
-  // Removes attribute with particular order number from the field
-  void removeAttribute(string);
-  
   //////////
   // Adds geometry to the field
   // Returns false if the geometry was not registred
@@ -117,9 +86,7 @@ public:
   }
 
 protected:
-  AttribMap       d_attribHandles;
   GeomHandle      d_geomHandle;
-  string          d_currAttrib;
 };
 
 template <class T> T* Field::query_interface(T *)
