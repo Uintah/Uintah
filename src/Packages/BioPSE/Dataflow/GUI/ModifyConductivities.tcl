@@ -126,13 +126,10 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
         }
         toplevel $w
 
-	wm minsize $w 200 150
+	#canvas $w.tensors -yscrollcommand "$w.vscroll set"
+	canvas $w.tensors
 
-	canvas $w.tensors -yscrollcommand "$w.vscroll set" \
-	    -scrollregion { 0 0 78c 8c }
-	#pack propagate $w.tensors false
-
-	scrollbar $w.vscroll -orient vertical -command "$w.tensors yview"
+	#scrollbar $w.vscroll -orient vertical -command "$w.tensors yview"
 
 	frame $w.title
 	label $w.title.name -text "Material Name" \
@@ -166,8 +163,8 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 	
 	grid $w.title -in $w -padx 1 -pady 1 \
 	    -row 0 -column 0 -rowspan 1 -columnspan 1 -sticky news
-	grid $w.vscroll -in $w -padx 1 -pady 1 \
-	    -row 1 -column 1 -rowspan 1 -columnspan 1 -sticky news
+#	grid $w.vscroll -in $w -padx 1 -pady 1 \
+#	    -row 1 -column 1 -rowspan 1 -columnspan 1 -sticky news
 	grid $w.tensors -in $w -padx 1 -pady 1 \
 	    -row 1 -column 0 -rowspan 1 -columnspan 1 -sticky news
 	grid $w.controls -in $w -padx 1 -pady 1 \
