@@ -1604,9 +1604,18 @@ SCI_TRY_LINK(STD_HDRS,standard headers,[
 ],,,,,,not-optional)
 
 ##  --  optional stat64 headers
+# stat64 is a CC lib so it has to be checked as a CC file not C.
+ext="$ac_ext"
+ac_ext="cc"
+
 SCI_TRY_LINK(STAT64,standard headers,[
-#include <sys/stat64.h> 
-],,,,,,optional)
+#include <sys/stat.h>
+],,,,,[
+  struct stat64 buf;
+],optional)
+
+# Restore the previous settings.
+ac_ext="$ext"
 
 if test "$HAVE_STAT64" = "yes"; then
   DEF_STAT64="#define HAVE_STAT64 1"
