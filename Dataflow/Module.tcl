@@ -22,7 +22,7 @@ proc makeModule {modid name canvas modx mody} {
     label $p.time -text "0.00" -font $time_font
     pack $p.time -side left -padx 2
     frame $p.inset -relief sunken -height 4 -borderwidth 2 \
-	-width 40
+	-width 50
     pack $p.inset -side left -expand yes -fill both -padx 2 -pady 2
     frame $p.inset.graph -relief raised -width 0 -borderwidth 2 \
 	-background red
