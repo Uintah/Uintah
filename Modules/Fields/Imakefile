@@ -7,7 +7,7 @@ SRCS = ClipField.cc FieldFilter.cc Gradient.cc
 LIBNAME = Fields
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lTCL -lClasslib \
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL -lClasslib \
 	-lMultitask -lMalloc
 
 SCIDependTarget($(SRCS))
