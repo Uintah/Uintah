@@ -55,9 +55,6 @@ extern "C" {
 #include <fetchop.h>
 }
 
-// Somebody #defines get_tid in /usr/include/task.h - how rude
-#undef get_tid
-
 /*
  * The irix implementation uses the default version of CrowdMonitor
  * and RecursiveMutex.  It provides native implementations of
@@ -519,7 +516,7 @@ Thread::pop_bstack(Thread_private* p, int oldstate)
 }
 
 int
-Thread::get_tid()
+Thread::get_thread_id()
 {
     return d_priv->pid;
 }
@@ -1302,6 +1299,9 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 }
 //
 // $Log$
+// Revision 1.13  1999/10/15 20:56:52  ikits
+// Fixed conflict w/ get_tid in /usr/include/task.h. Replaced by get_thread_id.
+//
 // Revision 1.12  1999/09/29 06:05:46  dmw
 // commented out atomic_free_variable lines - SGI bug
 //

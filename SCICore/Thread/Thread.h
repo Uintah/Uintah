@@ -219,7 +219,7 @@ DESCRIPTION
 	    static int push_bstack(Thread_private*, ThreadState s,
 				   const char* why);
 	    static void pop_bstack(Thread_private*, int oldstate);
-	    int get_tid();
+	    int get_thread_id();
 	    static void print_threads();
 
 	    // Cannot copy them
@@ -233,6 +233,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.14  1999/10/15 20:56:51  ikits
+// Fixed conflict w/ get_tid in /usr/include/task.h. Replaced by get_thread_id.
+//
 // Revision 1.13  1999/09/24 18:55:08  moulding
 // added SCICORESHARE, for win32, to class declarations
 //
