@@ -15,6 +15,7 @@
 #include <Classlib/NotFinished.h>
 #include <Geom/GeomRaytracer.h>
 #include <Geometry/BBox.h>
+#include <Geometry/BSphere.h>
 #include <Geometry/Ray.h>
 #include <Math/MinMax.h>
 #include <iostream.h>
@@ -50,12 +51,65 @@ void GeomTri::get_bounds(BBox& bb)
     bb.extend(p3);
 }
 
-void GeomTri::get_bounds(BSphere&)
+void GeomTri::get_bounds(BSphere& bs)
 {
-    double e1l2=(p2-p1).length2();
-    double e2l2=(p3-p2).length2();
-    double e3l2=(p1-p3).length2();
-    NOT_FINISHED("GeomTri::get_bounds");
+    Vector e1(p2-p1);
+    Vector e2(p3-p2);
+    Vector e3(p1-p3);
+    double e1l2=e1.length2();
+    double e2l2=e2.length2();
+    double e3l2=e3.length2();
+    Point cen;
+    double rad;
+    int do_circum=0;
+    if(e1l2 > e2l2 && e1l2 > e3l2){
+	cen=Interpolate(p1, p2, 0.5);
+	double rad2=e1l2/4.;
+	double dist2=(p3-cen).length2();
+	if(dist2 > rad2){
+	    do_circum=1;
+	} else {
+	    rad=Sqrt(rad2);
+	}
+    } else if(e2l2 > e1l2 && e2l2 > e3l2){
+	cen=Interpolate(p2, p3, 0.5);
+	double rad2=e2l2/4.;
+	double dist2=(p1-cen).length2();
+	if(dist2 > rad2){
+	    do_circum=1;
+	} else {
+	    rad=Sqrt(rad2);
+	}
+    } else {
+	cen=Interpolate(p3, p1, 0.5);
+	double rad2=e3l2/4.;
+	double dist2=(p2-cen).length2();
+	if(dist2 > rad2){
+	    do_circum=1;
+	} else {
+	    rad=Sqrt(rad2);
+	}
+    }
+    if(do_circum){
+	double d1=-Dot(e3, e1);
+	double d2=-Dot(e2, e1);
+	double d3=-Dot(e3, e2);
+	double c1=d2*d3;
+	double c2=d3*d1;
+	double c3=d1*d2;
+	double c=c1+c2+c3;
+	double r2circ=0.25*(d1+d2)*(d2+d3)*(d3+d1)/c;
+
+	// Use the circumcircle radius...
+	cen=AffineCombination(p1, (c2+c3)/(2*c),
+			      p2, (c3+c1)/(2*c),
+			      p3, (c1+c2)/(2*c));
+	rad=Sqrt(r2circ);
+    }
+    ASSERT((cen-p1).length() <= rad*1.00001);
+    ASSERT((cen-p2).length() <= rad*1.00001);
+    ASSERT((cen-p3).length() <= rad*1.00001);
+    bs.extend(cen, rad);
 }
 
 void GeomTri::make_prims(Array1<GeomObj*>&,

@@ -36,35 +36,40 @@ void BSphere::reset()
 
 double BSphere::volume()
 {
+    ASSERT(have_some);
     return 4./3.*M_PI*rad*rad*rad;
 }
 
 void BSphere::extend(const BSphere& s)
 {
     ASSERT(s.have_some);
-    extend(cen, rad);
+    extend(s.cen, s.rad);
 }
 
 void BSphere::extend(const Point& ncen, double nrad)
 {
-    Vector dv=ncen-cen;
-    double d=dv.length();
     if(!have_some){
 	cen=ncen;
 	rad=nrad;
 	rad2=rad*rad;
-    } else if(rad > d+nrad){
-	// This one is big enough...
-    } else if(nrad > d+rad){
-	// Use s's BV
-	cen=ncen;
-	rad=nrad;
-	rad2=rad*rad;
+	have_some=1;
     } else {
-	// Union
-	cen=cen+dv*0.5;
-	rad=(rad+nrad)*0.5;
-	rad2=rad*rad;
+	Vector dv=ncen-cen;
+	double d=dv.length();
+	if(rad >= d+nrad){
+	    // This one is big enough...
+	} else if(nrad >= d+rad){
+	    // Use s's BV
+	    cen=ncen;
+	    rad=nrad;
+	    rad2=rad*rad;
+	} else {
+	    // Union
+	    double newrad=(d+rad+nrad)/2.;
+	    cen=cen+dv*((newrad-rad)/d);
+	    rad=newrad;
+	    rad2=rad*rad;
+	}
     }
 }
 

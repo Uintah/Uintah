@@ -45,7 +45,7 @@ MaterialHandle Hit::matl() const
 void Hit::hit(double new_t, GeomObj* new_prim, Material* new_matl,
 	      void* new_data)
 {
-    if(new_t > 1.e-6 && (new_t < _t || !_prim)){
+    if(new_t > 1.e-6 && (!_prim || new_t < _t)){
 	_t=new_t;
 	_prim=new_prim;
 	_matl=new_matl;

@@ -249,7 +249,8 @@ void Transform::perspective(const Point& eyep, const Point& lookat,
 
     pre_scale(Vector(1,-1,1)); // X starts at the top...
     pre_translate(Vector(1,1,0));
-    pre_scale(Vector(xres/2., yres/2., 1.0));
+    pre_scale(Vector(xres/2., yres/2., 1.0));	
+    m[3][3]+=1.0; // hack
 }
 
 void Transform::invmat(double m[4][4])
