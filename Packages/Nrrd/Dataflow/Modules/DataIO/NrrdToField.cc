@@ -13,8 +13,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Nrrd/Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Dataflow/Ports/FieldPort.h>
+//#include <Core/Datatypes/LatticeVol.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
@@ -27,7 +27,7 @@ using namespace SCIRun;
 
 class NrrdToField : public Module {
   NrrdIPort* inrrd;
-  ScalarFieldOPort* ofield;
+  FieldOPort* ofield;
 public:
   NrrdToField(const clString& id);
   virtual ~NrrdToField();
@@ -46,7 +46,7 @@ NrrdToField::NrrdToField(const clString& id):Module("NrrdToField", id, Filter)
   add_iport(inrrd);
   
   // Create the output ports
-  ofield = scinew ScalarFieldOPort(this, "Field", ScalarFieldIPort::Atomic);
+  ofield = scinew FieldOPort(this, "Field", FieldIPort::Atomic);
   add_oport(ofield);
 }
 
@@ -70,7 +70,7 @@ void NrrdToField::execute()
   int nz = ninH->nrrd->size[2];
   
   Point minP, maxP;
-  ScalarFieldHandle sfH;
+  FieldHandle sfH;
 
   minP.x(ninH->nrrd->axisMin[0]);
   if ((minP.x()<1 || minP.x()>-1)) {	// !NaN
@@ -83,7 +83,9 @@ void NrrdToField::execute()
     minP=Point(0,0,0);
     maxP=Point(nx-1, ny-1, nz-1);
   }
-  
+ 
+// waiting for Fields... 
+#if 0
   int i, j, k;
   if (ninH->nrrd->type == nrrdTypeChar) {
     ScalarFieldRGchar *ifc = new ScalarFieldRGchar(nx,ny,nz);
@@ -173,6 +175,7 @@ void NrrdToField::execute()
     cerr << "NrrdToField error - Unrecognized nrrd type.\n";
     return;
   }
+#endif
   
   ofield->send(sfH);
 }

@@ -13,8 +13,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Nrrd/Dataflow/Ports/NrrdPort.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Dataflow/Ports/FieldPort.h>
+//#include <Core/Datatypes/LatticeVol.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
@@ -26,7 +26,7 @@ namespace SCINrrd {
 using namespace SCIRun;
 
 class FieldToNrrd : public Module {
-  ScalarFieldIPort* ifield;
+  FieldIPort* ifield;
   NrrdOPort* onrrd;
 public:
   FieldToNrrd(const clString& id);
@@ -42,7 +42,7 @@ extern "C" Module* make_FieldToNrrd(const clString& id) {
 FieldToNrrd::FieldToNrrd(const clString& id):Module("FieldToNrrd", id, Filter)
 {
   // Create the input port
-  ifield = scinew ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
+  ifield = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
   add_iport(ifield);
   
   // Create the output ports
@@ -56,20 +56,24 @@ FieldToNrrd::~FieldToNrrd()
 
 void FieldToNrrd::execute()
 {
-  ScalarFieldHandle sfH;
+  FieldHandle sfH;
   if (!ifield->get(sfH))
     return;
 
   NrrdData* nout=scinew NrrdData;
+  int nx, ny, nz;
+
+// waiting for Fields...
+#if 0
   ScalarFieldRGBase* sfb=sfH->getRGBase();
   if (!sfb) {
     cerr << "FieldToNrrd error - scalarfield wasn't regular.\n";
     return;
   }
 
-  int nx=sfb->nx;
-  int ny=sfb->ny;
-  int nz=sfb->nz;
+  nx=sfb->nx;
+  ny=sfb->ny;
+  nz=sfb->nz;
 
   ScalarFieldRGdouble *ifd=dynamic_cast<ScalarFieldRGdouble*>(sfb);
   ScalarFieldRGfloat *iff=dynamic_cast<ScalarFieldRGfloat*>(sfb);
@@ -139,9 +143,10 @@ void FieldToNrrd::execute()
     cerr << "FieldToNrrd error - unrecognized scalarfieldrgbase type.\n";
     return;
   }
-  
+#endif  
+
   double min, max;
-  sfb->get_minmax(min, max);
+//  sfb->get_minmax(min, max);
   nout->nrrd->min=min;
   nout->nrrd->max=max;
   nout->nrrd->encoding=nrrdEncodingRaw;
@@ -149,7 +154,7 @@ void FieldToNrrd::execute()
   nout->nrrd->size[1]=ny;
   nout->nrrd->size[2]=nz;
   Point minP, maxP;
-  sfb->get_bounds(minP, maxP);
+//  sfb->get_bounds(minP, maxP);
   nout->nrrd->axisMin[0]=minP.x();
   nout->nrrd->axisMin[1]=minP.y();
   nout->nrrd->axisMin[2]=minP.z();
