@@ -1,6 +1,6 @@
 
 /*
- *  MeshView.h: The 
+ *  MeshView.h: An experimental Mesh visualizer
  *
  *  Written by:
  *   Steven G. Parker
@@ -17,11 +17,12 @@
 #include <Dataflow/Module.h>
 #include <Datatypes/MeshPort.h>
 #include <Geometry/Point.h>
+#include <Geom/Geom.h>
 #include "connect.h"
 
 class GeometryOPort;
 class Mesh;
-class ObjGroup;
+class GeomGroup;
 
 class MeshView : public Module {
     MeshIPort* inport;
@@ -36,6 +37,9 @@ class MeshView : public Module {
     int allLevels;
     int numShare, oldShare;
     Array1<int> levels;
+
+    MaterialHandle mat1;
+    MaterialHandle mat2;
 public:
     MeshView(const clString& id);
     MeshView(const MeshView&, int deep);

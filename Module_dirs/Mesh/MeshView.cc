@@ -18,7 +18,8 @@
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/GeometryPort.h>
 #include <Geometry/Point.h>
-#include <Geom/Geom.h>
+#include <Geom/Group.h>
+#include <Geom/Tetra.h>
 #include <fstream.h>
 #include <iostream.h>
 #include <stdio.h>
@@ -95,7 +96,12 @@ MeshView::MeshView(const clString& id)
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 
-}
+    // Set up Material Properties
+    mat1=new Material(Color(.5, .5, .5), Color(.5, .5, .5),
+		      Color(.1, .1, .1), 10);
+    mat2=new Material(Color(1, 0, 0), Color(1, 0, 0),
+		      Color(.1, .1, .1), 10);
+}	
 
 MeshView::MeshView(const MeshView& copy, int deep)
 : Module(copy, deep)
@@ -133,9 +139,9 @@ void MeshView::execute()
     oldClipX = clipX;
     oldClipY = clipY;
     oldClipZ = clipZ;
-    ObjGroup *othGroup = new ObjGroup;
-    ObjGroup *levGroup = new ObjGroup;
-    ObjGroup *group = new ObjGroup;
+    GeomGroup *othGroup = new GeomGroup;
+    GeomGroup *levGroup = new GeomGroup;
+    GeomGroup *group = new GeomGroup;
     int numTetra=mesh->elems.size();
 #ifdef OLDUI
     seedSlide -> set_minmax(0, numTetra - 1);
@@ -155,7 +161,7 @@ void MeshView::execute()
 		 (p4.y() >= clipY)) &&
 		((p1.z() >= clipZ) && (p2.z() >= clipZ) && (p3.z() >= clipZ) &&
 		 (p4.z() >= clipZ))) {
-		Tetra *nTet = new Tetra(p1, p2, p3, p4);
+		GeomTetra *nTet = new GeomTetra(p1, p2, p3, p4);
 		if (levels[i] == numLevels)
 		    levGroup -> add(nTet);
 		else	
@@ -164,16 +170,9 @@ void MeshView::execute()
 	}
     }
 
-    MaterialProp *mtl = new  MaterialProp(Color(.5, .5, .5),
-					  Color(.5, .5, .5),
-					  Color(.1, .1, .1),
-					  10);
-    levGroup -> set_matl(mtl);
+    levGroup -> set_matl(mat1);
+    othGroup -> set_matl(mat2);
 
-    othGroup -> set_matl(new MaterialProp(Color(1, 0, 0),
-					  Color(1, 0, 0),
-					  Color(.1, .1, .1),
-					  10));
     group -> add(othGroup);
     group -> add(levGroup);
     ogeom -> addObj(group, mesh_name);
