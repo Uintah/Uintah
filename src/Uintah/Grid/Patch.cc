@@ -150,9 +150,11 @@ bool Patch::findCellAndShapeDerivatives(const Point& pos,
    return ix>= d_lowIndex.x()-1 && iy>=d_lowIndex.y()-1 && iz>=d_lowIndex.z()-1 && ix<d_highIndex.x() && iy<d_highIndex.y() && iz<d_highIndex.z();
 }
 
-ostream& operator<<(ostream& out, const Patch* r)
+ostream& operator<<(ostream& out, const Patch & r)
 {
-   out << "(Patch " << r->getID() << ": box=" << r->getBox() << ", lowIndex=" << r->getCellLowIndex() << ", highIndex=" << r->getCellHighIndex() << ")";
+  out << "(Patch " << r.getID() << ": box=" << r.getBox()
+      << ", lowIndex=" << r.getCellLowIndex() << ", highIndex=" 
+      << r.getCellHighIndex() << ")";
   return out;
 }
 
@@ -468,6 +470,9 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.19  2000/08/23 22:32:07  dav
+// changed output operator to use a reference, and not a pointer to a patch
+//
 // Revision 1.18  2000/08/02 03:29:33  jas
 // Fixed grid bcs problem.
 //
