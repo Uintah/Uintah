@@ -489,10 +489,11 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->computes(new_dw, lb->pExternalForceLabel, idx, patch);
 
 	    if(d_heatConductionInvolved) {
-	      t->requires(new_dw, lb->gTemperatureRateLabel, idx, patch,
-			Ghost::AroundCells, 1);
+	      t->requires(new_dw, lb->gTemperatureLabel, idx, patch,
+			Ghost::None);
               t->computes(new_dw, lb->pTemperatureRateLabel, idx, patch);
               t->computes(new_dw, lb->pTemperatureLabel, idx, patch);
+              t->computes(new_dw, lb->pTemperatureGradientLabel, idx, patch);
 	    }
 	 }
 
@@ -1090,9 +1091,23 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
   // Performs the interpolation from the cell vertices of the grid
   // acceleration and velocity to the particles to update their
   // velocity and position respectively
+
+  Vector dx = patch->dCell();
+  double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+  /* tan: 
+       oodx used for shape-function-gradient calculation.
+       shape-function-gradient will be used for temperature gradient
+       calculation.
+   */
+
   Vector vel(0.0,0.0,0.0);
   Vector acc(0.0,0.0,0.0);
-  double tempRate = 0; //for heat conduction
+  
+  double tempRate = 0; /* tan: 
+                            tempRate stands for "temperature variation
+                            time rate",
+                            used for heat conduction.
+                        */
   double ke=0,se=0;
   int numPTotal = 0;
 
@@ -1124,9 +1139,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       ParticleVariable<Point> px;
       ParticleVariable<Vector> pvelocity;
       ParticleVariable<double> pmass;
+      
       ParticleVariable<double> pTemperature; //for heat conduction
+      ParticleVariable<Vector> pTemperatureGradient; //for heat conduction
       ParticleVariable<double> pTemperatureRate; //for heat conduction
       NCVariable<double> gTemperatureRate; //for heat conduction
+      NCVariable<double> gTemperature; //for heat conduction
 
       old_dw->get(px,        lb->pXLabel, matlindex, patch, Ghost::None, 0);
       old_dw->get(pvelocity, lb->pVelocityLabel, matlindex, patch, Ghost::None,0);
@@ -1143,7 +1161,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 		  Ghost::AroundCells, 1);
 		  
       if(d_heatConductionInvolved) {
-        old_dw->get(pTemperature, lb->pTemperatureLabel, matlindex, patch, Ghost::None, 0);
+        old_dw->get(pTemperature, lb->pTemperatureLabel, matlindex, patch, 
+                  Ghost::None, 0);
+        new_dw->allocate(pTemperatureRate, lb->pTemperatureRateLabel, vfindex, patch);
+        new_dw->allocate(pTemperatureGradient, lb->pTemperatureGradientLabel, vfindex, patch);
         new_dw->get(gTemperatureRate, lb->gTemperatureRateLabel, vfindex, patch,
 		  Ghost::AroundCells, 1);
       }
@@ -1193,19 +1214,33 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
         // Get the node indices that surround the cell
 	IntVector ni[8];
         double S[8];
+        Vector d_S[8];
+
         if(!patch->findCellAndWeights(px[idx], ni, S))
 	  continue;
+        if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
+          continue;
 
         vel = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
 
-        if(d_heatConductionInvolved) tempRate = 0;
+        if(d_heatConductionInvolved) {
+          pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
+          tempRate = 0;
+        }
 
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < 8; k++) {
 	   vel += gvelocity_star[ni[k]]  * S[k];
 	   acc += gacceleration[ni[k]]   * S[k];
-           if(d_heatConductionInvolved) tempRate = gTemperatureRate[ni[k]] * S[k];
+	   
+           if(d_heatConductionInvolved) {
+             tempRate = gTemperatureRate[ni[k]] * S[k];
+             for (int j = 0; j<3; j++){
+               pTemperatureGradient[idx](j+1) += 
+                 gTemperature[ni[k]] * d_S[k](j) * oodx[j];
+             }
+           }
         }
 
         // Update the particle's position and velocity
@@ -1245,6 +1280,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       if(d_heatConductionInvolved) {
         new_dw->put(pTemperatureRate, lb->pTemperatureRateLabel, matlindex, patch);
         new_dw->put(pTemperature, lb->pTemperatureLabel, matlindex, patch);
+        new_dw->put(pTemperatureGradient, lb->pTemperatureGradientLabel, matlindex, patch);
       }
 
     }
@@ -1321,6 +1357,10 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.75  2000/05/31 17:40:57  tan
+// Particle temperature gradient computations included in
+// interpolateToParticlesAndUpdate().
+//
 // Revision 1.74  2000/05/31 16:10:17  tan
 // Heat conduction computations included in interpolateParticlesToGrid().
 //
