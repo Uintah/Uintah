@@ -22,7 +22,7 @@ Murnahan::~Murnahan()
 }
 //__________________________________
 double Murnahan::computeRhoMicro(double press, double,
-                                 double , double )
+                                 double , double ,double)
 {
   // Pointwise computation of microscopic density
   double rhoM;
