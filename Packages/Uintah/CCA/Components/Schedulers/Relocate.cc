@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Core/Util/ProgressiveWarning.h>
 
 #include <Core/Containers/Array2.h>
 #include <Core/Thread/Mutex.h>
@@ -282,8 +283,10 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	  }
 	  if(i == (int)neighbors.size()){
 	    // Make sure that the particle really left the world
-	    if(level->containsPoint(px[idx]))
-	      SCI_THROW(InternalError("Particle fell through the cracks!"));
+	    if(level->containsPoint(px[idx])){
+              static ProgressiveWarning warn("A particle just travelled from one patch to another non-adjacent patch.  It has been deleted and we're moving on.",10);
+              warn.invoke();
+            }
 	  } else {
 	    // Save this particle set for sending later
 	    const Patch* toPatch=neighbors[i];
@@ -712,8 +715,10 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	  }
 	  if(i == (int)neighbors.size()){
 	    // Make sure that the particle really left the world
-	    if(level->containsPoint(px[idx]))
-	      SCI_THROW(InternalError("Particle fell through the cracks!"));
+	    if(level->containsPoint(px[idx])){
+              static ProgressiveWarning warn("A particle just travelled from one patch to another non-adjacent patch.  It has been deleted and we're moving on.",10);
+              warn.invoke();
+            }
 	  } else {
 	    // Save this particle set for sending later
 	    const Patch* toPatch=neighbors[i];
