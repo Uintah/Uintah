@@ -573,17 +573,13 @@ void
 TetVolMesh::get_center(Point &p, Cell::index_type idx) const
 {
   const double s = .25L;
-  Node::array_type arr(4);
-  get_nodes(arr, idx);
-  Point p1, p2, p3;
-  get_point(p, arr[0]);
-  get_point(p1, arr[1]);
-  get_point(p2, arr[2]);
-  get_point(p3, arr[3]);
+  const Point &p0 = points_[cells_[idx * 4 + 0]];
+  const Point &p1 = points_[cells_[idx * 4 + 1]];
+  const Point &p2 = points_[cells_[idx * 4 + 2]];
+  const Point &p3 = points_[cells_[idx * 4 + 3]];
 
-
-  p = ((Vector(p) + Vector(p1) + Vector(p2) +
-	Vector(p3)) * s).asPoint();
+  p = ((p0.asVector() + p1.asVector() +
+	p2.asVector() + p3.asVector()) * s).asPoint();
 }
 
 static double
@@ -778,7 +774,7 @@ TetVolMesh::compute_grid()
   const double one_third = 1.L/3.L;
   Cell::size_type csize;  size(csize);
   int s = (int)ceil(pow((double)csize , one_third));
-  s = s/10 + 1;
+  s = s/10 + 2;
   const double cell_epsilon = bb.diagonal().length() * 0.1 / s;
 
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
