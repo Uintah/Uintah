@@ -120,7 +120,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	frame $w.cs -relief groove -borderwidth 2
 	addColorSelection $w.cs  $this-def-color \
 		"default_color_change"
-	pack $w.cs -side top -fill x
+	pack $w.cs -side top -anchor w -fill x
 
 	button $w.b -text "Close" -command "wm withdraw $w"
 	pack $w.b -side top -fill x -padx 2 -pady 2
@@ -194,7 +194,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	    -background [format #%04x%04x%04x $ir $ig $ib]
 	set cmmd "$this raiseColor $frame.colorFrame.col $color $colMsg"
         button $frame.colorFrame.set_color \
-            -text "Geom Color" -command $cmmd
+            -text "Display Color in Viewer" -command $cmmd
         #pack the node color frame
 	pack $frame.colorFrame.set_color $frame.colorFrame.col -side left
 	pack $frame.colorFrame -side left
