@@ -1,5 +1,4 @@
 
-
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Scene.h>
@@ -31,7 +30,8 @@ using namespace rtrt;
 #define MAX_LINE_LEN 256
 
 TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
-				    int nsides, int gdepth);
+				    int nsides, int gdepth,
+				    const Color& color);
 
 float radius = 1.0;
 
@@ -75,11 +75,12 @@ Group *make_geometry(char* tex_names[NUM_TEXTURES])
 }
 
 Group *make_geometry_tg(char* tex_names[NUM_TEXTURES], int tex_res,
-			int nsides, int gdepth) {
+			int nsides, int gdepth, const Color& color)
+{
   Group* group = new Group();
   
   float* spheres = new float[NUM_TEXTURES*3];
-  unsigned char *tex_data = new unsigned char[NUM_TEXTURES*3*tex_res*tex_res];
+  unsigned char* tex_data = new unsigned char[NUM_TEXTURES*tex_res*tex_res];
   int nspheres = 0;
   for(int z = -1; z <= 1; z+=2)
     for(int y = -1; y <= 1; y+=2)
@@ -107,14 +108,13 @@ Group *make_geometry_tg(char* tex_names[NUM_TEXTURES], int tex_res,
 	  }
 
 	  // Copy the data over
-	  unsigned char *pixel = tex_data + (nspheres * tex_res * tex_res * 3);
+	  unsigned char* pixel = tex_data + (nspheres * tex_res * tex_res);
 	  for (int j = 0; j < height; j++)
 	    for (int i = 0; i < width; i++) {
 	      Color c = image(i,j) * 255;
-	      pixel[0] = c.red();
-	      pixel[1] = c.green();
-	      pixel[2] = c.blue();
-	      pixel+=3;
+	      // Expecting a gray-scale texture, so just take the first channel
+	      *pixel = (unsigned char) c.red();
+	      pixel++;
 	    }
 	  
           nspheres++;
@@ -124,7 +124,7 @@ Group *make_geometry_tg(char* tex_names[NUM_TEXTURES], int tex_res,
   group->add(new 
 	     TextureGridSpheres(spheres, nspheres, radius, tex_indices,
 				tex_data, nspheres, tex_res,
-				nsides, gdepth));
+				nsides, gdepth, color));
   return group;
 }
 
@@ -137,6 +137,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
   char *infilename=0;
   int nsides = 6;
   int gdepth = 2;
+  Color color(1.0, 1.0, 1.0);
 
   for (int i=1;i<argc;i++)
   {
@@ -154,24 +155,29 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
       nsides=atoi(argv[++i]);
     else if(strcmp(argv[i],"-gdepth")==0)
       gdepth=atoi(argv[++i]);
-    else
+    else if(strcmp(argv[i],"-color")==0) {
+      color=Color(atof(argv[++i]),
+		  atof(argv[++i]),
+		  atof(argv[++i]));
+    } else
     {
       cerr<<"unrecognized option \""<<argv[i]<<"\""<< endl;
       cerr<<"valid options are:"<<endl;
-      cerr<<"  -bg <filename>      environment map image file (envmap.ppm)"<<endl;
-      cerr<<"  -i <filename>       input sphere file name (null)"<<endl;
-      cerr<<"  -tex <filename>     basename of texture files (./sphere)"<<endl;
-      cerr<<"  -tex_res <int>      resolution of the textures (-1)"<<endl;
-      cerr<<"  -radius <float>     sphere radius (1.0)"<<endl;
-      cerr<<"  -nsides <int>       number of sides for grid cells (6)"<<endl;
-      cerr<<"  -gdepth <int>       gdepth of grid cells (2)"<<endl;
+      cerr<<"  -bg <filename>       environment map image file (envmap.ppm)"<<endl;
+      cerr<<"  -i <filename>        input sphere file name (null)"<<endl;
+      cerr<<"  -tex <filename>      basename of gray-scale texture files (./sphere)"<<endl;
+      cerr<<"  -tex_res <int>       resolution of the textures (-1)"<<endl;
+      cerr<<"  -radius <float>      sphere radius (1.0)"<<endl;
+      cerr<<"  -nsides <int>        number of sides for grid cells (6)"<<endl;
+      cerr<<"  -gdepth <int>        gdepth of grid cells (2)"<<endl;
+      cerr<<"  -color <r> <g> <b>   surface color (1.0, 1.0, 1.0)"<<endl;
       exit(1);
     }
   }
 
   Object *group=0;
   if (infilename) {
-    group=texGridFromFile(infilename, tex_res, radius, nsides, gdepth);
+    group=texGridFromFile(infilename, tex_res, radius, nsides, gdepth, color);
   } else {
     char *tex_names[NUM_TEXTURES];
     // Make the tex_names
@@ -182,7 +188,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
     }
   
     if (tex_res > 0)
-      group = make_geometry_tg(tex_names, tex_res, nsides, gdepth);
+      group = make_geometry_tg(tex_names, tex_res, nsides, gdepth, color);
     else
       group = make_geometry(tex_names);
   }
@@ -226,10 +232,12 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
 }
 
 // Parse input file and populate data structues
-// Returns a pointer to a newly allocated TextureGridSpheres
+// Renturns a pointer to a newly allocated TextureGridSpheres
 //   on success, NULL on any failure
 TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
-				    int nsides, int gdepth) {
+				    int nsides, int gdepth,
+				    const Color& color)
+{
   // Declare a few variables
   float* sphere_data=0;
   int* index_data=0;
@@ -374,7 +382,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
 
-      total_ntextures+=(int)(statbuf.st_size/(tex_res*tex_res*3*sizeof(unsigned char)));
+      total_ntextures+=(int)(statbuf.st_size/(tex_res*tex_res*sizeof(unsigned char)));
       
       // Close the texture data file
       close(in_fd);
@@ -553,7 +561,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
     cerr<<"transform_file specified, but no mean_file found"<<endl;
     return 0;
   } else if (m_flag && xform_flag && !bases_minmax_flag) {
-    cerr << "basis_minmax was not found and is needed for PCA stuff.\n";
+    cerr << "bases_minmax was not found and is needed for PCA stuff.\n";
     return 0;
   }
 
@@ -565,7 +573,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   }
   
   // Allocate memory for the necessary data structures
-  cout<<"attempting to read "<<total_nspheres<<" spheres"<<endl;
+  cout<<"Allocating space for "<<total_nspheres<<" spheres"<<endl;
   sphere_data=new float[3*total_nspheres];
   if (!sphere_data) {
     cerr<<"failed to allocate "<<3*sizeof(float)*total_nspheres<<" bytes "
@@ -574,6 +582,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   }
   
   if (idx_flag) {
+    cout<<"Allocating space for  "<<total_nindices<<" indices"<<endl;
     index_data=new int[total_nindices];
     if (!index_data) {
       cerr<<"failed to allocate "<<sizeof(int)*total_nindices<<" bytes "
@@ -582,19 +591,19 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
     }
   }
   
-  cout<<"attempting to read "<<total_ntextures<<" textures"<<endl;
+  cout<<"Allocating space for "<<total_ntextures<<" textures"<<endl;
   if (tex_flag) {
-    tex_data=new unsigned char[3*tex_res*tex_res*total_ntextures];
+    tex_data=new unsigned char[tex_res*tex_res*total_ntextures];
     if (!tex_data) {
-      cerr<<"failed to allocate "<<3*tex_res*tex_res*total_ntextures<<" bytes "
+      cerr<<"failed to allocate "<<tex_res*tex_res*total_ntextures<<" bytes "
 	  <<"for texture data"<<endl;
       return 0;
     }
   }
   
-  cout<<"attempting to read "<<total_nmeans<<" elements of the mean vector"
-      <<endl;
   if (m_flag) {
+    cout<<"Allocating space for "<<total_nmeans<<" elements of the mean vector"
+	<<endl;
     mean_data=new float[total_nmeans];
     if (!mean_data) {
       cerr<<"failed to allocate "<<total_nmeans*sizeof(float)<<" bytes "
@@ -603,9 +612,9 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
     }
   }
   
-  cout<<"attempting to read "<<total_nxforms<<" elements of the transformation "
-      <<"matrix"<<endl;
   if (xform_flag) {
+    cout<<"Allocating space for "<<total_nxforms<<" elements of the transformation "
+	<<"matrix"<<endl;
     xform_data=new float[total_nxforms];
     if (!xform_data) {
       cerr<<"failed to allocate "<<total_nxforms*sizeof(float)<<" bytes "
@@ -614,7 +623,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
     }
   }
   
-  cout << "Done allocating memory\n";
+  cout<<"Done allocating memory"<<endl;
   
   // Second pass:  Populate the data structures
   // XXX - Ugly hack!  For some reason, simply repositioning the stream's get
@@ -748,8 +757,8 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 
       // Slurp the texture data
       unsigned char* data=&(tex_data[tex_index]);
-      int ntextures=(int)(statbuf.st_size/(3*tex_res*tex_res*sizeof(unsigned char)));
-      unsigned long data_size=ntextures*3*tex_res*tex_res*sizeof(unsigned char);
+      int ntextures=(int)(statbuf.st_size/(tex_res*tex_res*sizeof(unsigned char)));
+      unsigned long data_size=ntextures*tex_res*tex_res*sizeof(unsigned char);
 
       cerr<<"slurping texture data ("<<ntextures<<" textures = " <<data_size
 	  <<" bytes) from "<<tex_fname<<endl;
@@ -906,12 +915,12 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 				  tex_data, total_ntextures, tex_res,
 				  xform_data, mean_data, total_nmeans,
 				  tex_min, tex_max,
-				  nsides, gdepth);
+				  nsides, gdepth, color);
   } else {
     tex_grid = new TextureGridSpheres(sphere_data, total_nspheres,
 				      radius, index_data, tex_data,
 				      total_ntextures, tex_res,
-				      nsides, gdepth);
+				      nsides, gdepth, color);
   }
   
   return tex_grid;
