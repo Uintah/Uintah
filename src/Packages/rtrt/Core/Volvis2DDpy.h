@@ -15,7 +15,7 @@ using std::vector;
 namespace rtrt {
   class Volvis2DDpy : public DpyBase {
     // creates the background texture
-    virtual void createBGText();
+    virtual void createBGText( float vmin, float vmax, float gmin, float gmax );
     // restores visible background texture to the clean original
     virtual void loadCleanTexture();
     // draws the background texture
@@ -51,8 +51,8 @@ namespace rtrt {
     // These handle mouse button events.  button indicates which button.
     // x and y are the location measured from the upper left corner of the
     // window.
-    virtual void button_pressed( MouseButton button, const int x, const int y );
-    virtual void button_released( MouseButton button, const int x, const int y );
+    virtual void button_pressed(MouseButton button, const int x, const int y);
+    virtual void button_released(MouseButton button, const int x, const int y);
     virtual void button_motion(MouseButton button, const int x, const int y);
     
   
@@ -67,10 +67,13 @@ namespace rtrt {
 
     float original_t_inc;
     float t_inc;
+    float t_inc_diff;
     bool m_alpha_adjusting;
     float master_alpha;
     GLBar* m_alpha_slider;
     GLBar* m_alpha_bar;
+    float text_x_convert;
+    float text_y_convert;
     vector<Widget*> widgets;           // collection of widgets
     int pickedIndex;                   // index of currently selected widget
     int old_x;                         // saved most recent x-coordinate
@@ -78,6 +81,9 @@ namespace rtrt {
     float x_pixel_width;               // screenspace-to-worldspace x-dim ratio
     float y_pixel_width;               // screenspace-to-worldspace y-dim ratio
     float vmin, vmax, gmin, gmax;      // voxel minima/maxima
+    bool hist_adjust;
+    float current_vmin, current_vmax, current_gmin, current_gmax;
+    float selected_vmin, selected_vmax, selected_gmin, selected_gmax;
     GLuint bgTextName;
     GLuint transFuncTextName;
     Texture <GLfloat> *bgTextImage;    // clean background texture
