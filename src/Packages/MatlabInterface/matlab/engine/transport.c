@@ -110,7 +110,7 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[])
     bring(wordy-2,2,hport,lcb,cb);
     if(bring(wordy-2,flag,hport,nnz*4,(char*)ir)==NULL)
        mexErrMsgTxt("Not enough memory on receiving side");
-    bring(wordy-2,2,(char*)hport,(nr+1)*4,(char*)jc);
+    bring(wordy-2,2,(char*)hport,(nc+1)*4,(char*)jc);
     bring(wordy-2,2,(char*)hport,nnz*8,(char*)db);
 
     return;
@@ -160,13 +160,13 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[])
      jc=(int *)mxGetJc(plhs[0]);
 
      bring(wordy-2,1,(char*)hport,nnz*4,(char*)ir);
-     bring(wordy-2,1,(char*)hport,(nr+1)*4,(char*)jc);
+     bring(wordy-2,1,(char*)hport,(nc+1)*4,(char*)jc);
      bring(wordy-2,1,(char*)hport,nnz*8,(char*)db);
 
      if(endi!=endian())
      {
       endiswap(nnz*8,(char*)db,8);
-      endiswap((nr+1)*4,(char*)ir,4);
+      endiswap((nc+1)*4,(char*)ir,4);
       endiswap(nnz*4,(char*)jc,4);
      }
      return;
