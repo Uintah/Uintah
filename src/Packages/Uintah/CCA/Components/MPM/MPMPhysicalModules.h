@@ -5,13 +5,9 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
-#include <Packages/Uintah/CCA/Components/MPM/HeatConduction/HeatConduction.h>
-#include <Packages/Uintah/CCA/Components/MPM/Fracture/Fracture.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 
 namespace Uintah {
-  class HeatConduction;
-  class Fracture;
   class Contact;
   class ThermalContact;
 
@@ -46,7 +42,6 @@ WARNING
       //Physical Models:
      // I don't like this - Steve
      // They are basically glorified common blocks/global variables
-      static HeatConduction*  heatConductionModel;
       static Contact*         contactModel;
       static ThermalContact*  thermalContactModel;
 
