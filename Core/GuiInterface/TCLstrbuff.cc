@@ -82,19 +82,20 @@ TCLstrbuff& TCLstrbuff::flush(){
 
   const string::size_type n = ostringstream::str().size();
   if (((int)n)>bSize_)
+  {
     buff_ = Tcl_Realloc(buff_, bSize_ = n);
+  }
 
   strcpy(buff_, ostringstream::str().c_str()); 
   string varname = ctx->getfullname();
   Tcl_UpdateLinkedVar(the_interp, ccast_unsafe(varname)); 
+
   ctx->unlock();
   
-  // reinitializing the stream
+  // Reinitializing the stream.
   ostringstream::clear();
-  ostringstream::seekp(0);
-  //#ifdef __sgi
   ostringstream::str("");
-  //#endif
+
   return *this;
 }
 
