@@ -91,9 +91,9 @@ MoveElemToNode::execute()
     const int nj = imesh->get_nj();
     const int nk = imesh->get_nk();
 
-    const double ioff = (1.0 - ((ni-1.0) / ni)) * 0.5;
-    const double joff = (1.0 - ((nj-1.0) / nj)) * 0.5;
-    const double koff = (1.0 - ((nk-1.0) / nk)) * 0.5;
+    const double ioff = (1.0 - ((ni-2.0) / (ni-1.0))) * 0.5;
+    const double joff = (1.0 - ((nj-2.0) / (nj-1.0))) * 0.5;
+    const double koff = (1.0 - ((nk-2.0) / (nk-1.0))) * 0.5;
     cout << "offsets: " << ioff << " " << joff << " " << koff << "\n";
     const Point minp(ioff, joff, koff);
     const Point maxp(1.0-ioff, 1.0-joff, 1.0-koff);
