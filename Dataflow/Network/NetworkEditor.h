@@ -31,33 +31,26 @@
 #ifndef SCI_project_NetworkEditor_h
 #define SCI_project_NetworkEditor_h 1
 
-#include <Dataflow/share/share.h>
-#include <Dataflow/Comm/MessageBase.h>
 #include <Core/GuiInterface/GuiCallback.h>
 #include <string>
 
 namespace SCIRun {
   using std::string;
   class GuiInterface;
-  class MessageBase;
-  class Module;
   class Network;
-  class OPort;
 
-  class PSECORESHARE NetworkEditor : public GuiCallback {
-    Network* net;
-    void multisend(OPort*);
-    void do_scheduling(Module*);
-    int first_schedule;
-    int schedule;
-    void save_network(const string&);
-    GuiInterface* gui;
+  class NetworkEditor : public GuiCallback {
   public:
     NetworkEditor(Network*, GuiInterface* gui);
     ~NetworkEditor();
   private:
-    virtual void tcl_command(GuiArgs&, void*);
-    void init_notes();
+    void		init_notes();
+    void		save_network(const string&);
+    virtual void	tcl_command(GuiArgs&, void*);
+
+    Network *		net;
+    GuiInterface *	gui;
+
   };
 } // End namespace SCIRun
 
