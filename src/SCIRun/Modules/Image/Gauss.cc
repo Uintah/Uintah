@@ -10,6 +10,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
+#ifdef __sgi
+
 #include <SCICore/Containers/Array1.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/GeometryPort.h>
@@ -492,8 +494,13 @@ int Gauss::makeCurrent(void)
 } // End namespace Modules
 } // End namespace SCIRun
 
+#endif /* __sgi */
+
 //
 // $Log$
+// Revision 1.7  2000/02/10 09:22:07  moulding
+// got rid of a loser #if in fftn.cc and commented out all of Gauss.cc for all platforms but sgi
+//
 // Revision 1.6  1999/10/07 02:08:14  sparker
 // use standard iostreams and complex type
 //
