@@ -1251,13 +1251,19 @@ proc getOnTheFlyLibsDir {} {
 	    }
 	}
     }
-    set makefile [file join $SCIRUN_OBJDIR on-the-fly-libs Makefile]
-
-    if { ![validDir $dir] || [catch "file copy -force $makefile $dir"] } {
+    if { ![validDir $dir] } {
 	tk_messageBox -type ok -parent . -icon error -message \
-	    "SCIRun cannot find a directory to store dynamically compiled code.  Please quit and set the environment variable SCIRUN_ON_THE_FLY_LIBS_DIR to a writable directory.  If you continue, networks may not execute correctly."
+	    "SCIRun cannot find a directory to store dynamically compiled code.\n\nPlease quit and set the environment variable SCIRUN_ON_THE_FLY_LIBS_DIR to a readable and writable directory.\n\nDynamic code generation will not work.  If you continue this session, networks may not execute correctly."
 	return $binOTF
     }
+
+    set makefile [file join $SCIRUN_OBJDIR on-the-fly-libs Makefile]
+    if [catch "file copy -force $makefile $dir"] {
+	tk_messageBox -type ok -parent . -icon error -message \
+	    "SCIRun cannot copy $makefile to $dir.\n\nThe Makefile was generated during configure and is necessasary for dynamic compilation to work.  Please reconfigure SCIRun to re-generate this file.\n\nDynamic code generation will not work.  If you continue this session, networks may not execute correctly."
+	return $binOTF
+    }
+	
     return $dir
 }
 
