@@ -193,9 +193,6 @@ void SimulationController::run()
       
       output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
 			   d_restartFromScratch, d_restartRemoveOldDir);
-      // in case restart initialize doesn't put delt
-      delt_vartype delt_var(delt);
-      scheduler->get_new_dw()->put(delt_var, sharedState->get_delt_label());
    } else {
       // Initialize the CFD and/or MPM data
       for(int i=0;i<grid->numLevels();i++){
@@ -247,7 +244,7 @@ void SimulationController::run()
 
       double delt = delt_var;
       delt *= timeinfo.delt_factor;
-
+      
       if(delt < timeinfo.delt_min){
 	 if(d_myworld->myrank() == 0)
 	    cerr << "WARNING: raising delt from " << delt
@@ -262,6 +259,7 @@ void SimulationController::run()
       }
       scheduler->get_new_dw()->override(delt_vartype(delt),
 					sharedState->get_delt_label());
+
 #ifndef DISABLE_SCI_MALLOC
       size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
 	nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
