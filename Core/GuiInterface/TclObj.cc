@@ -64,7 +64,7 @@ TclObj::command( const string &s )
 {
   ostringstream cmd;
   cmd << id_ << " " << s;
-  cerr << "TclObj::exec " << cmd.str() << endl;
+  //cerr << "TclObj::exec " << cmd.str() << endl;
   TCL::execute( cmd.str().c_str() );
 }
 
@@ -73,7 +73,7 @@ TclObj::tcl_eval( const string &s, string &result )
 {
   ostringstream cmd;
   cmd << id_ << " " << s;
-  cerr << "TclObj::eval " << cmd.str() << endl;
+  //cerr << "TclObj::eval " << cmd.str() << endl;
 
   return TCL::eval( cmd.str(), result );
 }
@@ -90,7 +90,11 @@ TclObj::tcl_exec()
 void
 TclObj::set_id( const string & id )
 {
-  id_ = string("::")+id;
+  if ( id[0] == ':' )
+    id_ = id;
+  else
+    id_ = string("::")+id;
+
   TCL::add_command( id_+"-c", this, 0 );
   
   ostringstream cmd;
