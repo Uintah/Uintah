@@ -27,7 +27,8 @@ using namespace SCIRun;
 
 class MatlabInterfaceSHARE Focusing : public Module 
 {
-  GuiString hpTCL;
+  GuiString noiseGUI;
+  GuiString fcsdgGUI;
   MatrixIPort *iport1;
   MatrixIPort *iport2;
   MatrixOPort *oport1;
@@ -37,7 +38,6 @@ public:
   Focusing(const string& id);
   virtual ~Focusing();
   virtual void execute();
-  virtual void tcl_command(TCLArgs&, void*);
 };
 
 extern "C" MatlabInterfaceSHARE Module* make_Focusing(const string& id) {
@@ -45,19 +45,20 @@ extern "C" MatlabInterfaceSHARE Module* make_Focusing(const string& id) {
 }
 
 Focusing::Focusing(const string& id)
-  : Module("Focusing", id, Filter), hpTCL("hpTCL",id,this)
+  : Module("Focusing", id, Filter), noiseGUI("noiseGUI",id,this),
+    fcsdgGUI("fcsdgGUI", id, this)
   //  : Module("Focusing", id, Source, "Math", "MatlabInterface")
 {
-    iport1=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
+    iport1=scinew MatrixIPort(this, "Lead Field", MatrixIPort::Atomic);
     add_iport(iport1);
 
-    iport2=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
+    iport2=scinew MatrixIPort(this, "RHS (data)", MatrixIPort::Atomic);
     add_iport(iport2);
 
-    oport1=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
+    oport1=scinew MatrixOPort(this, "Sources", MatrixIPort::Atomic);
     add_oport(oport1);
 
-    oport2=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
+    oport2=scinew MatrixOPort(this, "Residual", MatrixIPort::Atomic);
     add_oport(oport2);
 }
 
@@ -69,7 +70,8 @@ void Focusing::execute()
 
 // DECLARATIONS
 
-  const char *gui; double noise, fcsdg; float tmp1,tmp2;
+  double noise;
+  int fcsdg; 
   double *F,*d,*m,*r,*w; 
   int    Nd,Nm;
 
@@ -82,10 +84,8 @@ void Focusing::execute()
 
 // OBTAIN SCALAR PARAMETERS FROM GUI
 
-  gui=hpTCL.get().c_str();
-  sscanf(gui,"%g %g",&tmp1,&tmp2);
-  noise=(double)tmp1;
-  fcsdg=(double)tmp2;
+  noise=atof(noiseGUI.get().c_str());
+  fcsdg=atoi(fcsdgGUI.get().c_str());
 
 // OBTAIN F FROM FIRST INPUT PORT
 
@@ -145,12 +145,6 @@ void Focusing::execute()
   oport1->send(mh3);
   oport2->send(mh4);
 }
-
-void Focusing::tcl_command(TCLArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
-
 
 } // End namespace MatlabInterface
 
@@ -1910,7 +1904,7 @@ mlb mx("mx");
 
 /******************************************************************/
 
-disp(f);
+//disp(f);
 
 Nd=size(f,1);
 Nm=size(f,2);
@@ -1927,7 +1921,7 @@ r=-d;
 
 for(it=1;it<=fcsdg;++it){
 
-disp(it);
+//disp(it);
 
 for(;;){
  rnorm=sqrt(trnsp(r)*r);
