@@ -15,7 +15,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -32,6 +32,11 @@
 using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
+
+// Debug: Used to sync cerr so it is readable (when output by
+// multiple threads at the same time)
+// NECESSARY FOR LINKING BUT NOT REALLY USED.
+Mutex cerrLock( "cerr lock" );
 
 typedef struct{
   vector<ParticleVariable<double> > pv_double_list;
