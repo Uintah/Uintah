@@ -26,32 +26,37 @@
         <p>&nbsp; </p>
         </center>
         <div align="left">
-
+	<p><b><H4><A href="#section 1">Colormaps</H4></b></A>
+	<p><b><H4><A href="#section 2">Module user interfaces</H4></b></A>
+	
         <p><b>Chapter Overview</b><br>
 
         <p>In Chapter 1, we constructed a small network to visualize
-        the geometry of a mesh.  In this chapter, we will extend that
+        the geometry of a mesh.  In this chapter we will extend that
         net, adding tools to look at data values on the geometry.
         Specifically, we will visualize a scalar quantity (voltage) on
         a set of points in space (a PointCloud of electrodes).
                   
         <p>From our previous net, we hooked three modules
 	together--FieldReader, ShowField, and Viewer--as shown in
-	Figure 1.1.  On the user interface of the ShowField module, we
+	<b>Figure 1.1.</b> [link to image] On the user interface of the ShowField module, we
 	used the Default Color selector to make all of the geometry
-	render blue.  In this chapter, rather than mapping a single
+	render blue.  
+
+	<p>In this chapter, rather than mapping a single
 	color to all of the geometry, we vary the colors over the
 	geometry based on the scalar values in the Field.  For a more
 	complete description of how Fields map data values to
-	geometry, click here [link].
+	geometry, see the User's Guide [link to UG ?].
                   
-        <p><b>Colormaps</b><br>
+        <p><b><A name="section 1">Colormaps</b><br></A>
 
-        <p>The datavalues are mapped to the geometric mesh, and we
+        <p>The datavalues map to the geometric mesh. We
         also need to map from datavalue to color.  The ColorMap class
-        in SCIRun provides this mapping.  The ColorMap also contains a
-        set of evenly spaced colors (RGBA),a minimum and maximum
-        datavalue range to which each color range corresponds.
+        in SCIRun provides this mapping.  
+
+	<p>The ColorMap also contains a set of evenly spaced colors (RGBA),
+	a minimum and maximum datavalue range to which each color range corresponds.
         Several example colormaps are shown in <b>Figure 2.1</b>.
 
 	</div>
@@ -64,25 +69,29 @@
                   
         <p>The GenStandardColorMaps module generates colormaps in
 	SCIRun. This module contains a selection of default colormaps.
-	For each of the colormaps, the user can control the opacity
-	(also known as alpha) for each datavalue, and can choose the
+	For each of the colormaps, the user controls the opacity
+	(also known as alpha) for each datavalue, and chooses the
 	number of discrete entries in the colormap table.
                   
         <p>The minimum/maximum range of the ColorMap determines what
         values in the data are assigned what colors.  By default the
-        minimum/maximum range is from 0 to 1.  Using the
-        RescaleColorMap module, the user can set the min/max values by
+        minimum/maximum range is from 0 to 1.  
+
+	<P>Using the RescaleColorMap module, the user can set the min/max values by
         hand, or can &quot;auto-scale&quot; them to correspond with
         the min/max datavalue range from a scalar Field.
                   
         <p>Now we can add a GenStandardColorMaps and a RescaleColorMap
-        module to our net from Chapter 1.  Both of these modules are
-        located under the SCIRun/Visualization menu.  Connect the
-        output from GenStandardColorMaps to the input of
-        RescaleColorMap, connect the output from the FieldReader to
-        the other input port of RescaleColorMap.  Finally, connect the
-        output from RescaleColorMap to the input of ShowField.  Your
-        network should now look like <b>Figure 2.2.</b>
+        module to our net from Chapter 1 [link to chapter 1].  Both of these modules are
+        located under the SCIRun/Visualization menu.  
+	<ol>
+	<li value="1.">Connect the output from GenStandardColorMaps to the input of
+        RescaleColorMap.
+	<li value="2.">Connect the output from the FieldReader to
+        the other input port of RescaleColorMap.  
+	<li>Finally, connect the output from RescaleColorMap to the input of ShowField. 
+	</ol>
+	<p>Your network should now look like <b>Figure 2.2.</b>
 
 	</div>
 	<center>
@@ -92,21 +101,22 @@
 	<div align="left">
 	<p><br>
 
-	<p>Note that when the connection was created between
-	FieldReader and ResaleColorMap, the ResaleColorMap module
-	added another input Field port.  This last &quot;dynamic&quot;
-	port is just like the one in the Viewer module.  In this case,
-	if the user connects more than one Field into RescaleColorMap,
-	the min/max range for auto-scaling will correspond to the
+	<p>Note, that after connecting the FieldReader and RescaleColorMap, 
+	the ResaleColorMap module added another input Field port.  This &quot;dynamic&quot;
+	port is the same as the port in the Viewer module [link to chapter 1 viewer module]. 
+	If the user connects more than one Field into RescaleColorMap,
+	the min/max range for auto-scaling corresponds to the
 	min/max range of datavalues from all of the input Fields.
                   
         <p>All that remains for this net to be complete is to read in
-        a Field.  Use the FieldReader User Interface (UI) to read in
-        utahtorso-lowres-electrodes.pcd.fld--a point cloud of
+        a Field.  
+	<ol>
+	<li value="1.">Use the FieldReader User Interface (UI) to read in
+        utahtorso-lowres-electrodes.pcd.fld(a point cloud of
         electrode positions, with voltages measured from a single
-        instant in time.  After reading in the data, you should see an
-        image like <b>Figure 2.3</b> in the ViewWindow.
-
+        instant in time).  
+	<li value="2.">You should see an image like <b>Figure 2.3</b> in the ViewWindow.
+	</ol>
 	</div>
 	<center>
 	<p><img height="451" width="450" src="images/figures/2_3.gif"><br>
@@ -115,11 +125,11 @@
 	<div align="left">
 	<p><br>
                   
-        <p><b>Module user interfaces</b><br>
+        <p><b><A name="section 2">Module user interfaces</b><br></A>
 
-        <p>Now we'll explore the User Interfaces for these two
+        <p>Now we will explore the User Interfaces for these two
         modules.  Opening the UI for GenStandardColorMaps, you will
-        see a window like <b>Figure 2.4.</b>
+        see a window, <b>Figure 2.4.</b>
 
 	</div>
 	<center>
@@ -129,18 +139,22 @@
 	<div align="left">
 	<p><br>
 
-        <p>On the left, we have a collection of standard maps we can
-        choose from.  At the top, we see the selected ColorMaps, and
+        <p><ul>
+	<li>On the left, we have a collection of standard maps from which to choose.
+	<li>At the top, we see the selected ColorMaps, and
         have a clickable interface for changing the opacity of each
-        color swatch in the map.  Under the rendered ColorMap, we have
+        color swatch in the map.  
+	<li>Under the rendered ColorMap, we have
         two more interface features: a gamma value for non-linear
         compression or expandsion of the otherwise-linear color ramp,
-        and a Resolution slider for setting the number of distinct
-        colors that will be stored in the color table.  By choosing a
-        low resolution, we can generate &quot;banded&quot;
-        visualizations; by choosing a higher resolution, we can
+        and;
+	<li>a Resolution slider for setting the number of distinct
+        colors that will be stored in the color table.  
+	<li>By choosing a low resolution, we can generate &quot;banded&quot;
+        visualizations; 
+	<li>by choosing a higher resolution, we can
         generate smoother color transitions.
-                  
+ 	</ul>                 
         <p><b>Figure 2.5</b> shows the UI to the ResaleColorMap module.
 
 	</div>
@@ -157,12 +171,12 @@
         and maximum datavalues from all of the input Fields that
         connect to the module.
                   
-        <p>By changing the ColorMap, in GenStandardColorMaps, from
-        Inverse Rainbow to Inverse Darkhue, we change the image in the
+        <p>In GenStandardColorMaps, by changing 
+	the ColorMap from Inverse Rainbow to Inverse Darkhue, we change the image in the
         ViewWindow from <b>Figure 2.3</b> to <b>Figure 2.6.</b>
-        Changing the ColorMap range to a manual setting of -30 to 30,
-        we are able to &quot;clamp&quot; the range of colors, as seen
-        in <b>Figure 2.7.</b>
+
+        <p>Changing the ColorMap range to a manual setting of -30 to 30,
+        we can &quot;clamp&quot; the range of colors as in <b>Figure 2.7.</b>
 
 	</div>
 	<center>
@@ -180,12 +194,14 @@
 	<p><br>
 
         <p>The second input port on the ShowField module accepts a
-        ColorMap.  If this port is connected when ShowField executes,
+        ColorMap.  If we connect this port when ShowField executes,
         it maps the data values in its input Field to a color in the
         input ColorMap, and renders accordingly.  If a ColorMap is
         present in ShowField the, the module ignores the default
         color, and uses ColorMap value.<br>
 
+	<H4><b>Summary</b></H4>
+	<p> need content
 	<br>
 	<br>
         </div>
