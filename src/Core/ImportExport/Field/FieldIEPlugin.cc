@@ -71,8 +71,15 @@ using namespace SCIRun;
 
 namespace SCIRun {
 
+#ifdef _WIN32
+  #define SHARE __declspec(dllimport)
+#else
+  #define SHARE
+#endif
+
+
 static map<string, FieldIEPlugin *> *field_plugin_table = 0;
-extern Mutex fieldIEPluginMutex; // From Core/Util/DynamicLoader.cc
+extern SHARE Mutex fieldIEPluginMutex; // From Core/Util/DynamicLoader.cc
 
 #ifdef __APPLE__
 void

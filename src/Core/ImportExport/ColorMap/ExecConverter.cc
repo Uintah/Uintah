@@ -53,6 +53,11 @@
 #include <sstream>
 #include <stdlib.h>
 
+#ifdef _WIN32
+#include <process.h>
+#include <io.h>
+#endif
+
 using namespace std;
 using namespace SCIRun;
 
