@@ -43,7 +43,9 @@ proc makeNetworkEditor {} {
     menubutton .main_menu.help -text "Help" -underline 0 \
 	-menu .main_menu.help.menu
     menu .main_menu.help.menu
-    .main_menu.help.menu add command -label "Help..." -underline 0
+    global sci_root
+    .main_menu.help.menu add command -label "Help..." -underline 0 \
+	    -command "helpPage $sci_root/help/scirun.html"
 
     pack .main_menu.file .main_menu.stats -side left
     pack .main_menu.help -side right
@@ -228,6 +230,7 @@ proc itemDrag {c x y} {
     set lastY $y
 }
 
+source $sci_root/TCL/HelpPage.tcl
 source $sci_root/TCL/Filebox.tcl
 source $sci_root/TCL/PointVector.tcl
 source $sci_root/TCL/ColorPicker.tcl
