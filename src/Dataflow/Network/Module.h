@@ -234,8 +234,9 @@ namespace SCIRun {
     };
     void update_state(State);
     CPUTimer timer;
+  public:
     TCLstrbuff msgStream_;
-
+  protected:
     void get_position(int& x, int& y);
     virtual void emit_vars(std::ostream& out, const std::string& modname);
     void setStackSize(unsigned long stackSize);
