@@ -14,7 +14,7 @@
   <io>
     <inputs lastportdynamic="yes">
       <port>
-        <name>Viewer</name>
+        <name>Geometry</name>
 	<datatype>SCIRun::Geometry</datatype>
       </port>
     </inputs>
