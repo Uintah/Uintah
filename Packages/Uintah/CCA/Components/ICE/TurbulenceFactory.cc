@@ -1,3 +1,4 @@
+
 #include <Packages/Uintah/CCA/Components/ICE/TurbulenceFactory.h>
 #include <Packages/Uintah/CCA/Components/ICE/SmagorinskyModel.h>
 #include <Packages/Uintah/CCA/Components/ICE/DynamicModel.h>
@@ -9,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Core/Geometry/IntVector.h>
 #include <fstream>
 #include <iostream>

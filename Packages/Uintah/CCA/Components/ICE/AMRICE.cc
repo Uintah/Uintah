@@ -1,5 +1,5 @@
+
 #include <Packages/Uintah/CCA/Components/ICE/AMRICE.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>

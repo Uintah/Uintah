@@ -8,16 +8,15 @@ SRCS       += \
        $(SRCDIR)/AMRICE.cc \
        $(SRCDIR)/ICERF.cc \
        $(SRCDIR)/ICEDebug.cc \
-       $(SRCDIR)/ICELabel.cc    \
        $(SRCDIR)/ICEMaterial.cc \
        $(SRCDIR)/Diffusion.cc \
        $(SRCDIR)/BoundaryCond.cc \
        $(SRCDIR)/GeometryObject2.cc \
        $(SRCDIR)/LODI.cc \
        $(SRCDIR)/Turbulence.cc \
- 	$(SRCDIR)/SmagorinskyModel.cc \
-	$(SRCDIR)/DynamicModel.cc \
-	$(SRCDIR)/TurbulenceFactory.cc \
+       $(SRCDIR)/SmagorinskyModel.cc \
+       $(SRCDIR)/DynamicModel.cc \
+       $(SRCDIR)/TurbulenceFactory.cc \
        $(SRCDIR)/impICE.cc
 SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection
 
@@ -32,8 +31,9 @@ PSELIBS := \
        Packages/Uintah/Core/Parallel                   \
        Packages/Uintah/Core/Exceptions                 \
        Packages/Uintah/Core/Math                       \
-       Core/Exceptions Core/Thread                     \
-       Core/Util
+       Packages/Uintah/Core/Labels                     \
+       Core/Exceptions Core/Geometry                   \
+       Core/Thread Core/Util
 
 LIBS       := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 

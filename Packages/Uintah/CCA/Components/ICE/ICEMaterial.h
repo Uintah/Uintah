@@ -1,13 +1,13 @@
 #ifndef __ICE_MATERIAL_H__
 #define __ICE_MATERIAL_H__
 
+// Do not EVER put a #include for anything in CCA/Components in here.
+// Ask steve for a better way
+
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
-#include <Packages/Uintah/CCA/Components/ICE/GeometryObject2.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -19,7 +19,10 @@ namespace SCIRun {
 }
 
 namespace Uintah {
-using namespace SCIRun;
+  using namespace SCIRun;
+  class ICELabel;
+  class EquationOfState;
+  class GeometryObject2;
  
 /**************************************
      
