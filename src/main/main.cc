@@ -92,7 +92,7 @@ usage()
   cout << "    [-]-v[ersion]       : prints out version information\n";
   cout << "    [-]-h[elp]          : prints usage information\n";
   cout << "    [-]-p[ort] [PORT]   : start remote services port on port number PORT\n";
-  cout << "    [-]-eai             : enable external applications interface\n";
+  //  cout << "    [-]-eai             : enable external applications interface\n";
   cout << "    [--nosplash]        : disable the splash screen\n";
   cout << "    net_file            : SCIRun Network Input File\n";
   cout << "    session_file        : PowerApp Session File\n";
@@ -288,8 +288,10 @@ main(int argc, char *argv[], char **environment) {
   // Parse the command line arguments to find a network to execute
   const int startnetno = parse_args( argc, argv );
 
-  bool use_eai = false;
-  if (sci_getenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE")) use_eai = true;
+  // Always switch on this option
+  // It is needed for running external applications
+  bool use_eai = true;
+  // if (sci_getenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE")) use_eai = true;
 
   // The environment has been setup
   // Now split of a process for running external processes
