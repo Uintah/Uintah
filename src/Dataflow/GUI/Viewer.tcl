@@ -156,11 +156,18 @@ itcl_class ViewWindow {
 	if {![info exists $this-global-light6]} { set $this-global-light6 0 }
 	global $this-global-light7 
 	if {![info exists $this-global-light7]} { set $this-global-light7 0 }
-	global $this-global-vectors
-	if {![info exists $this-global-vectors]} { 
-	    set $this-global-vectors \
+	global $this-lightVectors
+	if {![info exists $this-lightVectors]} { 
+	    set $this-lightVectors \
 		[list { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } \
 		     { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }]
+	}
+	if {![info exists $this-lightColors]} {
+	    set $this-lightColors \
+		[list {1.0 1.0 1.0} {1.0 1.0 1.0} \
+		     {1.0 1.0 1.0} {1.0 1.0 1.0} \
+		     {1.0 1.0 1.0} {1.0 1.0 1.0} \
+		     {1.0 1.0 1.0} {1.0 1.0 1.0} ]
 	}
 
 	global $this-sbase
@@ -169,6 +176,14 @@ itcl_class ViewWindow {
 	if {![info exists $this-sr]} {set $this-sr 1}
 	global $this-do_stereo
 	if {![info exists $this-do_stereo]} {set $this-do_stereo 0}
+
+	global $this-def-color-r
+	global $this-def-color-g
+	global $this-def-color-b
+	set $this-def-color-r 1.0
+	set $this-def-color-g 1.0
+	set $this-def-color-b 1.0
+
     }
 
     destructor {
@@ -1480,9 +1495,12 @@ itcl_class ViewWindow {
 
 	label $w.l -text \
 	    "Click on number to move light. Note: Headlight will not move."
+	label $w.o -text \
+	    "Click in circle to change light color/brightness"
 
+ 	button $w.breset -text "Reset Lights" -command "$this resetLights $w"
 	button $w.bclose -text Close -command "destroy $w"
-	pack $w.l $w.bclose -side top -expand yes -fill x
+	pack $w.l $w.o $w.breset $w.bclose -side top -expand yes -fill x
     }
 	
     method makeLightControl { w i } {
@@ -1490,21 +1508,96 @@ itcl_class ViewWindow {
 	global $this-global-lights
 	frame $w.f$i -relief flat
 	pack $w.f$i -side left
-	canvas $w.f$i.c -bg black -width 100 -height 100
+	canvas $w.f$i.c -bg "#BDBDBD" -width 100 -height 100
 	pack $w.f$i.c -side top
 	set c $w.f$i.c
 	checkbutton $w.f$i.b$i -text "on/off" \
 	    -variable $this-global-light$i \
 	    -command "$this lightSwitch $i"
 	pack $w.f$i.b$i
-	set news [$c create oval 5 5 95 95 -outline "#999999" \
-		     -fill "#999999" ]
+
+	set ir [expr int([lindex [lindex [set $this-lightColors] $i] 0] * 65535)]
+	set ig [expr int([lindex [lindex [set $this-lightColors] $i] 1] * 65535)]
+	set ib [expr int([lindex [lindex [set $this-lightColors] $i] 2] * 65535)]
+       
+	set window .ui[modname]
+	set color [format "#%04x%04x%04x" $ir $ig $ib]
+	set news [$c create oval 5 5 95 95 -outline "#000000" \
+		     -fill $color -tags lc ]
 	set t  $i
 	if { $t == 0 } { set t "HL" }
-	set newt [$c create text 50 50 -fill white -text $t -tags lname ]
+	set newt [$c create text 50 50 -fill "#555555" -text $t -tags lname ]
 	$c bind lname <B1-Motion> "$this moveLight $c $i %x %y"
+	$c bind lc <ButtonPress-1> "$this lightColor $w $c $i"
     }
 
+    method lightColor { w c i } {
+	global $this-def-color 
+	set color $this-def-color
+	global $color-r
+	global $color-g
+	global $color-b 
+
+ 	set $color-r [lindex [lindex [set $this-lightColors] $i] 0]
+ 	set $color-g [lindex [lindex [set $this-lightColors] $i] 1]
+ 	set $color-b [lindex [lindex [set $this-lightColors] $i] 2]
+
+	if {[winfo exists $w.color]} { destroy $w.color } 
+	toplevel $w.color 
+	makeColorPicker $w.color $color \
+	    "$this setColor $w.color $c $i $color " \
+	    "destroy $w.color"
+    }
+   method setColor { w c  i color} {
+       global $color
+       global $color-r
+       global $color-g
+       global $color-b 
+
+       set lightColor [list [set $color-r] \
+			   [set $color-g] [set $color-b]]
+       set $this-lightColors \
+	   [lreplace [set $this-lightColors] $i $i $lightColor]
+
+       set ir [expr int([set $color-r] * 65535)]
+       set ig [expr int([set $color-g] * 65535)]
+       set ib [expr int([set $color-b] * 65535)]
+       
+       set window .ui[modname]
+       $c itemconfigure lc -fill [format "#%04x%04x%04x" $ir $ig $ib]
+       $this lightSwitch $i
+       destroy $w
+   }
+   method resetLights { w } {
+	for { set i 0 } { $i < 8 } { incr i 1 } {
+	    if { $i == 0 } {
+		set $this-global-light$i 1
+		$this lightSwitch $i
+	    } else {
+		if { $i < 4 } {
+		    set c $w.tf.f$i.c
+		} else {
+		    set c $w.bf.f$i.c
+		}
+		set $this-global-light$i 0
+		set coords [$c coords lname]
+		set curX [lindex $coords 0]
+		set curY [lindex $coords 1]
+		set xn [expr 50 - $curX]
+		set yn [expr 50 - $curY]
+		$c move lname $xn $yn
+		set vec [list 0 0 1 ]
+		set $this-lightVectors \
+		    [lreplace [set $this-lightVectors] $i $i $vec]
+		$c itemconfigure lc -fill \
+		    [format "#%04x%04x%04x" 65535 65535 65535 ]
+		set lightColor [list 1.0 1.0 1.0]
+		set $this-lightColors \
+		    [lreplace [set $this-lightColors] $i $i $lightColor]
+		$this lightSwitch $i
+	    }
+	}
+    }
     method moveLight { c i x y } {
 	if { $i == 0 } return
 	set cw [winfo width $c]
@@ -1534,8 +1627,8 @@ itcl_class ViewWindow {
 	# normalize the vector
 	set len3 [expr sqrt($newx*$newx + $newy*$newy + $newz*$newz)]
 	set vec [list [expr $newx/$len3] [expr -$newy/$len3] [expr $newz/$len3]]
-	set $this-global-vectors \
-	    [lreplace [set $this-global-vectors] $i $i $vec]
+	set $this-lightVectors \
+	    [lreplace [set $this-lightVectors] $i $i $vec]
 	if { [set $this-global-light$i] } {
 	    $this lightSwitch $i
 	}
@@ -1543,9 +1636,11 @@ itcl_class ViewWindow {
 
     method lightSwitch {i} {
 	if { [set $this-global-light$i] == 0 } {
-	    $this-c edit_light $i 0 [lindex [set $this-global-vectors] $i]
+	    $this-c edit_light $i 0 [lindex [set $this-lightVectors] $i] \
+		[lindex [set $this-lightColors] $i]
 	} else {
-	    $this-c edit_light $i 1 [lindex [set $this-global-vectors] $i]
+	    $this-c edit_light $i 1 [lindex [set $this-lightVectors] $i] \
+		[lindex [set $this-lightColors] $i]
 	}
     }
 	

@@ -104,6 +104,8 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     id(ctx->getfullname()),
     view(ctx->subVar("view")),
     homeview(Point(2.1, 1.6, 11.5), Point(.0, .0, .0), Vector(0,1,0), 20),
+    lightColors(ctx->subVar("lightColors")),
+    lightVectors(ctx->subVar("lightVectors")),
     bgcolor(ctx->subVar("bgcolor")), 
     shading(ctx->subVar("shading")),
     do_stereo(ctx->subVar("do_stereo")), 
@@ -1949,7 +1951,7 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
     }
     animate_to_view(df, 2.0);
   } else if (args[1] == "edit_light" ){
-    if (args.count() != 5) {
+    if (args.count() != 6) {
       args.error("ViewWindow::switch_light  needs light num, val and vector");
       return;
     }
@@ -1958,14 +1960,20 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
     bool on;
     int on_int;
     int lightNo;
-    float x = 0,y = 0,z = 0;    
+    float x = 0,y = 0,z = 0; 
+    float r = 0,g = 0,b = 0;
 
     sscanf(args[2].c_str(), "%d", &lightNo);
     sscanf(args[3].c_str(), "%d", &on_int);  on = (bool)on_int;
     sscanf(args[4].c_str(), "%f%f%f", &x, &y, &z);
+    sscanf(args[5].c_str(), "%f%f%f", &r, &g, &b);
+
+//     cerr<<"light vector "<< x <<", "<<y<<", "<<z<<endl;
+//     cerr<<"color  "<< r <<", "<<g<<", "<<b<<endl;
     manager->
       mailbox.send(scinew ViewerMessage(MessageTypes::ViewWindowEditLight,
-					id, lightNo, on, Vector(x,y,z)));
+					id, lightNo, on, Vector(x,y,z),
+					Color(r,g,b)));
 
   } else if (args[1] == "killwindow") {
     current_renderer->kill_helper();
