@@ -52,6 +52,7 @@ namespace Dataflow {
 
 using SCICore::TclInterface::TCL;
 using SCICore::TclInterface::TCLArgs;
+using SCICore::TclInterface::TCLint;
 using SCICore::TclInterface::TCLstring;
 using SCICore::GeomSpace::GeomPick;
 using SCICore::GeomSpace::BState;
@@ -77,7 +78,8 @@ class PSECORESHARE Module : public TCL, public Pickable {
     Module(const Module&);
 
     // Added by Mohamed Dekhil for the CSAFE project
-  TCLstring notes ;
+    TCLstring notes ;
+    TCLint show_status;
 public:
     enum State {
 	NeedData,
@@ -86,7 +88,7 @@ public:
 	Completed
     };
 public:
-    int show_status;
+    int show_stat;
 
     friend class ModuleHelper;
     virtual void do_execute();
@@ -203,6 +205,9 @@ typedef Module* (*ModuleMaker)(const clString& id);
 
 //
 // $Log$
+// Revision 1.10  1999/12/07 02:53:33  dmw
+// made show_status variable persistent with network maps
+//
 // Revision 1.9  1999/11/17 23:14:30  moulding
 // added a warning pragma to quiet the vc++ compiler (debug name truncation)
 //

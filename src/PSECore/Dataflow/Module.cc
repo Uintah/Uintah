@@ -49,7 +49,7 @@ Module::Module(const clString& name, const clString& id,
     mailbox("Module execution FIFO", 100),
   name(name), abort_flag(0), need_execute(0), sched_class(sched_class),
   id(id), progress(0), handle(0), remote(0), skeleton(0),
-  notes("notes", id, this), show_status(1)
+  notes("notes", id, this), show_status("show_status", id, this)
 {
   packageName="error: unset package name";
   categoryName="error: unset category name";
@@ -68,7 +68,7 @@ int Module::clone(int)
 
 void Module::update_state(State st)
 {
-    if (!show_status) return;
+    if (!show_stat) return;
     state=st;
     char* s="unknown";
     switch(st){
@@ -91,7 +91,7 @@ void Module::update_state(State st)
 
 void Module::update_progress(double p)
 {
-    if (!show_status) return;
+    if (!show_stat) return;
     if (state == JustStarted)
 	update_state(Executing);
     int opp=(int)(progress*100);
@@ -105,7 +105,7 @@ void Module::update_progress(double p)
 
 void Module::update_progress(double p, Timer &t)
 {
-    if (!show_status) return;
+    if (!show_stat) return;
     if (state == JustStarted)
 	update_state(Executing);
     int opp=(int)(progress*100);
@@ -392,12 +392,13 @@ void Module::do_execute()
     // Reset all of the ports...
     int i;
 
-    clString result;
-    if (!TCL::eval(id+" get_show_status", result)) {
-	error("Error getting show_status");
-    } else if (!result.get_int(show_status)) {
-	error("Error parsing show_status");
-    }
+//    clString result;
+    show_stat=show_status.get();
+//    if (!TCL::eval(id+" get_show_status", result)) {
+//	error("Error getting show_status");
+//    } else if (!result.get_int(show_status)) {
+//	error("Error parsing show_status");
+//    }
 //    cerr << "show_status = "<<show_status<<"\n";
 
     for(i=0;i<oports.size();i++){
@@ -465,6 +466,9 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.10  1999/12/07 02:53:33  dmw
+// made show_status variable persistent with network maps
+//
 // Revision 1.9  1999/11/12 01:38:30  ikits
 // Added ANL AVTC site visit modifications to make the demos work.
 // Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
