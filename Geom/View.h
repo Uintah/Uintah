@@ -16,8 +16,10 @@
 
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
+#include <Geom/Color.h>
 
 class View {
+protected:
     Point eyep_;
     Point lookat_;
     Vector up_;
@@ -56,6 +58,33 @@ public:
     void fov(double);
 
     friend void Pio(Piostream&, View&);
+};
+
+class ExtendedView : public View
+{
+  int xres_, yres_;
+  Color bg_;
+
+public:
+  ExtendedView();
+  ExtendedView( const View&, int, int, const Color& );
+  ExtendedView( const Point&, const Point&, const Vector&, double,
+	       int, int, const Color& );
+  ExtendedView( const ExtendedView& );
+
+  Color bg() const;
+  void bg(const Color&);
+
+  int xres() const;
+  void xres(int);
+  int yres() const;
+  void yres(int);
+
+  friend
+    void Pio(Piostream&, ExtendedView&);
+  
+  void Print();
+  
 };
 
 #endif /* SCI_Geom_View_h */

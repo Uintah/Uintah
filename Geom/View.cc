@@ -11,6 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <stdio.h>
 #include <Geom/View.h>
 #include <Classlib/Persistent.h>
 #include <Classlib/String.h>
@@ -221,4 +222,88 @@ void Pio(Piostream& stream, View& v)
     Pio(stream, v.up_);
     Pio(stream, v.fov_);
     stream.end_class();
+}
+
+ExtendedView::ExtendedView() : View()
+{
+  xres_ = yres_ = 0;
+}
+
+ExtendedView::ExtendedView( const View& v, int x, int y, const Color& c )
+: View( v )
+{
+  xres_ = x;
+  yres_ = y;
+  bg_   = c;
+}
+
+ExtendedView::ExtendedView( const Point& e, const Point& l, const Vector& u,
+			   double f, int x, int y, const Color& c )
+: View( e, l, u, f )
+{
+  xres_ = x;
+  yres_ = y;
+  bg_   = c;
+}
+
+ExtendedView::ExtendedView( const ExtendedView& copy )
+: View((View)copy), xres_(copy.xres_), yres_(copy.yres_), bg_(copy.bg_)
+{
+}
+
+Color
+ExtendedView::bg() const
+{
+  return bg_;
+}
+
+void
+ExtendedView::bg( const Color& c )
+{
+  bg_ = c;
+}
+
+int
+ExtendedView::xres() const
+{
+  return xres_;
+}
+
+void
+ExtendedView::xres( int x )
+{
+  xres_ = x;
+}
+
+int
+ExtendedView::yres() const
+{
+  return yres_;
+}
+
+void
+ExtendedView::yres( int y )
+{
+  yres_ = y;
+}
+
+
+void Pio(Piostream& stream, ExtendedView& v)
+{
+    stream.begin_class("ExtendedView", VIEW_VERSION);
+    Pio(stream, v.eyep_);
+    Pio(stream, v.lookat_);
+    Pio(stream, v.up_);
+    Pio(stream, v.fov_);
+    Pio(stream, v.xres_);
+    Pio(stream, v.yres_);
+    Pio(stream, v.bg_);
+    stream.end_class();
+}
+
+void
+ExtendedView::Print( )
+{
+  printf("raster: ( %i, %i );;; ( %f, %f, %f )", xres(), yres(), bg().r(),
+	 bg().g(), bg().b() );
 }

@@ -17,6 +17,7 @@
 #define SCI_project_TCLView_h 1
 
 #include <Geom/View.h>
+#include <Geom/TCLGeom.h>
 #include <Classlib/String.h>
 #include <TCL/TCLvar.h>
 
@@ -35,5 +36,26 @@ public:
     void set(const View&);
     virtual void emit(ostream& out);
 };
+
+class TCLExtendedView : public TCLvar {
+    TCLPoint eyep;
+    TCLPoint lookat;
+    TCLVector up;
+    TCLdouble fov;
+    TCLVector eyep_offset;
+
+    TCLint   xres;
+    TCLint   yres;
+
+public:
+    TCLColor bg;
+    TCLExtendedView(const clString& name, const clString& id, TCL* tcl);
+    ~TCLExtendedView();
+    TCLExtendedView(const TCLExtendedView&);
+
+    ExtendedView get();
+    void set(const ExtendedView&);
+    virtual void emit(ostream& out);
+  };
 
 #endif

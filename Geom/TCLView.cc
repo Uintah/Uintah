@@ -64,3 +64,58 @@ TCLView::emit(ostream& out)
     up.emit(out);
     fov.emit(out);
 }
+
+
+
+TCLExtendedView::TCLExtendedView( const clString& name, const clString& id,
+				 TCL* tcl )
+: TCLvar(name, id, tcl), eyep("eyep", str(), tcl),
+  lookat("lookat", str(), tcl), up("up", str(), tcl),
+  fov("fov", str(), tcl), eyep_offset("eyep_offset", str(), tcl),
+  bg("bg", str(), tcl), xres("xres", str(), tcl), yres("yres", str(), tcl)
+{
+}
+
+TCLExtendedView::~TCLExtendedView()
+{
+}
+
+
+ExtendedView
+TCLExtendedView::get()
+{
+    TCLTask::lock();
+    ExtendedView v(eyep.get(), lookat.get(), up.get(), fov.get(), xres.get(),
+		   yres.get(), bg.get()*( 1. / 255 ) );
+    TCLTask::unlock();
+    return v;
+}
+
+void
+TCLExtendedView::set(const ExtendedView& view)
+{
+    TCLTask::lock();
+    eyep.set(view.eyep());
+    lookat.set(view.lookat());
+    up.set(view.up());
+    fov.set(view.fov());
+    xres.set(view.xres());
+    yres.set(view.yres());
+    bg.set( view.bg()*255 );
+    TCLTask::unlock();
+}
+
+
+void
+TCLExtendedView::emit(ostream& out)
+{
+    eyep.emit(out);
+    lookat.emit(out);
+    up.emit(out);
+    fov.emit(out);
+    xres.emit(out);
+    yres.emit(out);
+    bg.emit(out);
+}
+
+
