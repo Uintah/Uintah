@@ -2,7 +2,7 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS     = ColorMapWriter.cc ColumnMatrixWriter.cc ContourSetWriter.cc \
+SRCS     = ColorMapWriter.cc ColumnMatrixWriter.cc \
            GeometryWriter.cc MatrixWriter.cc MeshWriter.cc \
            MultiScalarFieldWriter.cc ScalarFieldWriter.cc SurfaceWriter.cc \
            TetraWriter.cc VectorFieldWriter.cc VoidStarWriter.cc
