@@ -2607,7 +2607,6 @@ ViewSlices::world_to_screen(SliceWindow &window, Point &world)
   return Point(xyz[0], xyz[1], xyz[2]);
 }
   
-
 void
 ViewSlices::execute()
 {
@@ -3293,23 +3292,32 @@ ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
     }
     redraw_window_layout(layout);
   } else if(args[1] == "texture_rebind") {
-    ASSERT(layouts_.find(args[2]) != layouts_.end());
-    WindowLayout &layout = *layouts_[args[2]];
-    for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
-      SliceWindow &window = *layout.windows_[w];
-      unsigned int v, s;
-      int a;      
-      s = 0;
-      for (v = 0; v < volumes_.size(); ++v) {
-	for (a = 0; a < 3; a++) {
-	  window.slices_[s]->do_lock();
-	  window.slices_[s]->tex_dirty_ = true;
-	  window.slices_[s]->do_unlock();	
-	  s++;
+    WindowLayouts::iterator liter = layouts_.begin();
+    WindowLayouts::iterator lend = layouts_.end();
+    while (liter != lend) {
+      if (args.count() == 2 ||
+	  ((args.count() > 2) && liter->first == args[2]))
+      {
+	WindowLayout &layout = *(liter->second);
+	for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
+	  SliceWindow &window = *layout.windows_[w];
+	  unsigned int v, s;
+	  int a;      
+	  s = 0;
+	  for (v = 0; v < volumes_.size(); ++v) {
+	    for (a = 0; a < 3; a++) {
+	      window.slices_[s]->do_lock();
+	      window.slices_[s]->tex_dirty_ = true;
+	      window.slices_[s]->do_unlock();	
+	      s++;
+	    }
+	  }
 	}
+	redraw_window_layout(layout);
       }
+      ++liter;
     }
-    redraw_window_layout(layout);
+
   } else if(args[1] == "startcrop") {
     crop_ = 1;
     if (args.count() == 2) {
