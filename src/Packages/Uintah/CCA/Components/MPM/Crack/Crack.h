@@ -175,7 +175,9 @@ class Crack
     double rJ;                     // NJ = rJ/min_dCell
     int mS;                        // matID of saving J-integral
     double rdadx;                  // Ratio of crack growth to cell-size
-    bool useVolumeIntegral;        // If use the second term to get J-integral
+    bool useVolumeIntegral;        // Flag if use the second term to get J-integral
+    bool doCrackVisualization;     // Flag if output of crack elems, points
+    bool smoothCrackFront;         // Flag if smooth crack-front by cubic-spline
 
     string d_calFractParameters;   // Flag if calculating fracture parameters
     string d_doCrackPropagation;   // Flag if doing crack propagation
@@ -183,7 +185,6 @@ class Crack
     short doCrackPropagation;      // Flag if doing crack propagation at this step
     double calFractParasInterval;  // Interval of calculating fracture parameters
     double crackPropInterval;      // Interval of crack propagation
-    bool doCrackVisualization;     // Flag if output of crack elems, points
 
     // Data members of cracks
     vector<string> crackType;      // Crack contact type
@@ -308,7 +309,10 @@ class Crack
     void OutputInitialCrackMesh(const int&);
 
     // Calculate crack-front normals, tangential normals and bi-normals
-    short CalculateCrackFrontNormals(const int& m);
+    void CalculateCrackFrontNormals(const int& m);
+
+    // Smooth crack-front and then calculate crack-front normals
+    short SmoothCrackFrontAndCalculateNormals(const int& m);
     
     // Output crack elems and crack points for visualization
     void OutputCrackGeometry(const int&, const int&);
