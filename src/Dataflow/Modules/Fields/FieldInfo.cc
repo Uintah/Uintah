@@ -53,6 +53,7 @@ using std::pair;
 class PSECORESHARE FieldInfo : public Module {
 private:
   GuiString gui_fldname_;
+  GuiString gui_generation_;
   GuiString gui_typename_;
   GuiString gui_datamin_;
   GuiString gui_datamax_;
@@ -82,6 +83,7 @@ public:
 FieldInfo::FieldInfo(GuiContext* ctx)
   : Module("FieldInfo", ctx, Sink, "FieldsOther", "SCIRun"),
     gui_fldname_(ctx->subVar("fldname", false)),
+    gui_generation_(ctx->subVar("generation", false)),
     gui_typename_(ctx->subVar("typename", false)),
     gui_datamin_(ctx->subVar("datamin", false)),
     gui_datamax_(ctx->subVar("datamax", false)),
@@ -97,6 +99,7 @@ FieldInfo::FieldInfo(GuiContext* ctx)
     generation_(-1)
 {
   gui_fldname_.set("---");
+  gui_generation_.set("---");
   gui_typename_.set("---");
   gui_datamin_.set("---");
   gui_datamax_.set("---");
@@ -122,6 +125,7 @@ void
 FieldInfo::clear_vals()
 {
   gui_fldname_.set("---");
+  gui_generation_.set("---");
   gui_typename_.set("---");
   gui_datamin_.set("---");
   gui_datamax_.set("---");
@@ -140,10 +144,25 @@ FieldInfo::clear_vals()
 void
 FieldInfo::update_input_attributes(FieldHandle f)
 {
-  const string &tname = f->get_type_description()->get_name();
+  // Name
+  string fldname;
+  if (f->get_property("name",fldname))
+  {
+    gui_fldname_.set(fldname);
+  }
+  else
+  {
+    gui_fldname_.set("--- Name Not Assigned ---");
+  }
 
+  // Generation
+  gui_generation_.set(to_string(f->generation));
+
+  // Typename
+  const string &tname = f->get_type_description()->get_name();
   gui_typename_.set(tname);
 
+  // Basis
   static char *at_table[4] = { "Nodes", "Edges", "Faces", "Cells" };
   switch(f->basis_order())
   {
@@ -161,7 +180,6 @@ FieldInfo::update_input_attributes(FieldHandle f)
 
   Point center;
   Vector size;
-
 
   const BBox bbox = f->mesh()->get_bounding_box();
   if (bbox.valid())
@@ -198,16 +216,6 @@ FieldInfo::update_input_attributes(FieldHandle f)
   {
     gui_datamin_.set("--- N/A ---");
     gui_datamax_.set("--- N/A ---");
-  }
-
-  string fldname;
-  if (f->get_property("name",fldname))
-  {
-    gui_fldname_.set(fldname);
-  }
-  else
-  {
-    gui_fldname_.set("--- Name Not Assigned ---");
   }
 
   // Do this last, sometimes takes a while.
