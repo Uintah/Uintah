@@ -20,12 +20,11 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ParticleFieldExtractor.tcl \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl $(SRCDIR)/ParticleVis.tcl \
 	$(SRCDIR)/NodeHedgehog.tcl $(SRCDIR)/ArchiveReader.tcl \
-	$(SRCDIR)/GridVisualizer.tcl $(SRCDIR)/EigenEvaluator.tcl \
-	$(SRCDIR)/ParticleEigenEvaluator.tcl \
-	$(SRCDIR)/InPlaneEigenEvaluator.tcl \
-	$(SRCDIR)/ParticleInPlaneEigenEvaluator.tcl \
-	$(SRCDIR)/TensorElementExtractor.tcl \
-	$(SRCDIR)/ParticleTensorElementExtractor.tcl\
+	$(SRCDIR)/GridVisualizer.tcl\
+	$(SRCDIR)/EigenEvaluator.tcl\
+	$(SRCDIR)/TensorOperator.tcl\
+	$(SRCDIR)/TensorFieldOperator.tcl\
+	$(SRCDIR)/TensorParticlesOperator.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Uintah/GUI
 
@@ -34,7 +33,16 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.15  2000/11/21 22:01:14  witzel
+# Added TensorFieldOperator and TensorParticlesOperator and removed
+# TensorElementEvaluator, InPlaneEigenEvaluator,
+# ParticleTensorElementExtractor, and ParticleInPlaneEigenEvaluator
+# which are made redundant by TensorFieldOperator and
+# TesnorParticlesOperator.
+#
 # Revision 1.14  2000/10/24 05:57:54  moulding
+#
+#
 # new module maker Phase 2: new module maker goes online
 #
 # These changes clean out the last remnants of the old module maker and
