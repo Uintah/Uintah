@@ -315,6 +315,7 @@ private:
     {}
     
     void operator()(edge_index e) {
+      nodes_.clear();
       mesh_.get_nodes(nodes_, e);
       nbor_vec_[nodes_[0]].push_back(nodes_[1]);
       nbor_vec_[nodes_[1]].push_back(nodes_[0]);
@@ -324,7 +325,9 @@ private:
     const TetVolMesh            &mesh_;
     node_array                   nodes_;
   };
+
   vector<vector<node_index> > node_neighbors_;
+  
   Mutex                       node_nbor_lock_;
 };
 
