@@ -37,7 +37,7 @@ SRCS +=	$(SRCDIR)/ColorMapIEPlugin.cc \
 	$(SRCDIR)/ExecConverter.cc
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
-	Core/Thread Core/Geometry Core/GuiInterface \
+	Core/Thread Core/Geom Core/Geometry Core/GuiInterface \
 	Core/Math Core/Util Core/Datatypes
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY)
 
