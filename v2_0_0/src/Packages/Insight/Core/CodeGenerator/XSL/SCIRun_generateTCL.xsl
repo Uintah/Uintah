@@ -531,9 +531,8 @@
 <xsl:template name="execute_and_close_buttons">
 <xsl:text disable-output-escaping="yes">        
         frame $w.buttons
-        button $w.buttons.execute -text &quot;Execute&quot; -command &quot;$this-c needexecute&quot;
-        button $w.buttons.close -text &quot;Close&quot; -command &quot;destroy $w&quot;
-        pack $w.buttons.execute $w.buttons.close -side left -padx 3 -pady 8
+	makeSciButtonPanel $w.buttons $w $this
+	moveToCursor $w
 	pack $w.buttons -side top 
 </xsl:text>
 </xsl:template>
