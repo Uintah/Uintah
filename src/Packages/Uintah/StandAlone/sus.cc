@@ -54,6 +54,7 @@
 #include <Packages/Uintah/CCA/Components/Solvers/DirectSolve.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
+#include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
 #include <Packages/Uintah/CCA/Components/Regridder/HierarchicalRegridder.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -223,6 +224,7 @@ main( int argc, char** argv )
     bool   emit_graphs=false;
     bool   restart=false;
     bool   combine_patches=false;
+    bool   reduce_uda=false;
     int    restartTimestep = -1;
     int    udaSuffix = -1;
     string udaDir; // for restart or combine_patches
@@ -345,6 +347,8 @@ main( int argc, char** argv )
 	   restart=true;
 	} else if(s == "-combine_patches") {
 	   combine_patches=true;	   
+	} else if(s == "-reduce_uda") {
+	   reduce_uda=true;	   
 	} else if(s == "-uda_suffix") {
            if (i < argc-1)
 	      udaSuffix = atoi(argv[++i]);
@@ -387,7 +391,7 @@ main( int argc, char** argv )
       usage("No input file specified", "", argv[0]);
     }
 
-    if (restart || combine_patches) {
+    if (restart || combine_patches || reduce_uda) {
        udaDir = filename;
        filename = filename + "/input.xml";
     }
@@ -407,7 +411,7 @@ main( int argc, char** argv )
 	 do_smpmice || do_rmpmice || do_fmpmice || do_impmpm || do_burger || do_wave ||
          do_particletest1 ||
 	 do_regriddertest || do_poisson1 || do_poisson2 || do_poisson3 || do_solvertest1 ||
-	 do_simplecfd || combine_patches)){
+	 do_simplecfd || combine_patches || reduce_uda)){
 	usage( "You need to specify -arches, -ice, -mpmf, -rmpm, -smpm or -mpm", "", argv[0]);
     }
 
@@ -586,7 +590,13 @@ main( int argc, char** argv )
 	  PatchCombiner* pc = scinew PatchCombiner(world, udaDir);
 	  sim = pc;
 	  comp = pc;
-	  ctl->doCombinePatches(udaDir);
+	  ctl->doCombinePatches(udaDir, false);
+	} else if (reduce_uda) {
+	  UdaReducer* pc = scinew UdaReducer(world, udaDir);
+	  sim = pc;
+	  comp = pc;
+          // the ctl will do nearly the same thing for combinePatches and reduceUda
+	  ctl->doCombinePatches(udaDir, true);
 	} else {
 	  usage("You need to specify a simulation: -arches, -ice, -mpm, "
 		"-impm, -fmpmice, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, or -poisson3",
