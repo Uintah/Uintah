@@ -34,6 +34,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_fracture = flags->d_fracture;
+  d_ref_temp = flags->d_ref_temp; // for thermal stress 
 
   registerPermanentParticleState(matl,lb);
 }
@@ -238,6 +239,8 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(psp_vol,        lb->pSp_volLabel,        subset); 
   new_dw->allocateAndPut(pfiberdir,      lb->pFiberDirLabel,      subset); 
   new_dw->allocateAndPut(perosion,       lb->pErosionLabel,       subset); 
+  // for thermal stress
+  new_dw->allocateAndPut(ptempPrevious,  lb->pTempPreviousLabel,  subset); 
   if (d_useLoadCurves) {
     new_dw->allocateAndPut(pLoadCurveID,   lb->pLoadCurveIDLabel,   subset); 
   }
@@ -265,6 +268,8 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
   //task->requires(Task::OldDW,lb->pVolumeLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pErosionLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
+  // for thermal stress
+  task->requires(Task::OldDW,lb->pTempPreviousLabel, Ghost::None); 
 
   if (d_useLoadCurves)
     task->requires(Task::OldDW,lb->pLoadCurveIDLabel, Ghost::None);
@@ -292,7 +297,9 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
   constParticleVariable<Vector> o_size;
   constParticleVariable<int> o_loadcurve;
   constParticleVariable<double> o_erosion;
-
+  // for thermal stress
+  constParticleVariable<double> o_tempPrevious; 
+  
   new_dw->allocateTemporary(pdisp,addset);
   new_dw->allocateTemporary(position, addset);
   new_dw->allocateTemporary(pvelocity,addset); 
@@ -305,7 +312,8 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
   new_dw->allocateTemporary(psize,addset);
   new_dw->allocateTemporary(pLoadCurveID,addset); 
   new_dw->allocateTemporary(perosion,addset); 
-
+  // for thermal stress
+  new_dw->allocateTemporary(ptempPrevious,addset); 
 
   old_dw->get(o_disp,lb->pDispLabel,delset);
   old_dw->get(o_position,lb->pXLabel,delset);
@@ -322,6 +330,8 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
   old_dw->get(o_size,lb->pSizeLabel,delset);
   if (d_useLoadCurves) 
     old_dw->get(o_loadcurve,lb->pLoadCurveIDLabel,delset);
+  //for thermal stress
+  old_dw->get(o_tempPrevious,lb->pTempPreviousLabel,delset);   
 
   n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
@@ -338,6 +348,8 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
     psize[*n]=o_size[*o];
     if (d_useLoadCurves) 
       pLoadCurveID[*n]=o_loadcurve[*o];
+    // for thermal stress
+    ptempPrevious[*n]=o_tempPrevious[*o];  
   }
   
   (*newState)[lb->pDispLabel]=pdisp.clone();
@@ -353,6 +365,8 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
   (*newState)[lb->pSizeLabel]=psize.clone();
   if (d_useLoadCurves) 
     (*newState)[lb->pLoadCurveIDLabel]=pLoadCurveID.clone();
+  // for thermal stress
+  (*newState)[lb->pTempPreviousLabel]=ptempPrevious.clone();  
 }
 
 
@@ -407,6 +421,8 @@ ParticleCreator::initializeParticle(const Patch* patch,
   psp_vol[i] = 1./matl->getInitialDensity();
   pmass[i] = matl->getInitialDensity()*pvolume[i];
   pdisp[i] = Vector(0.,0.,0.);
+  // for thermal stress
+  ptempPrevious[i] = d_ref_temp; 
 
   Vector pExtForce(0,0,0);
   ParticleCreator::applyForceBC(dxpp, p, pmass[i], pExtForce);
@@ -526,6 +542,10 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   particle_state.push_back(lb->pTemperatureLabel);
   particle_state_preReloc.push_back(lb->pTemperatureLabel_preReloc);
 
+  // for thermal stress
+  particle_state.push_back(lb->pTempPreviousLabel);
+  particle_state_preReloc.push_back(lb->pTempPreviousLabel_preReloc);
+  
   particle_state.push_back(lb->pSp_volLabel);
   particle_state_preReloc.push_back(lb->pSp_volLabel_preReloc); 
   
