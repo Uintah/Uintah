@@ -27,7 +27,8 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	VoidStar.o  VoidStarPort.o cMatrix.o cSMatrix.o cDMatrix.o \
 	cVector.o cVectorPort.o cMatrixPort.o \
 	ParticleSet.o ParticleSetPort.o \
-	cfdlibParticleSet.o
+	cfdlibParticleSet.o \
+        TensorField.o TensorFieldBase.o TensorFieldPort.o
 
 GENSRCS = ScalarFieldRGchar.cc  ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
 	ScalarFieldRGdouble.cc  ScalarFieldRG.cc ScalarFieldRGshort.cc \
@@ -61,7 +62,8 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	VectorFieldZone.cc \
 	ParticleSetPort.cc ParticleSet.cc \
 	VoidStar.cc VoidStarPort.cc \
-	cfdlibParticleSet.cc SegFld.cc SegFldPort.cc
+	cfdlibParticleSet.cc SegFld.cc SegFldPort.cc \
+        TensorField.cc TensorFieldBase.cc TensorFieldPort.cc
 
 GENH = ScalarFieldRGchar.h  ScalarFieldRGint.h  ScalarFieldRGfloat.h \
 	ScalarFieldRGdouble.h ScalarFieldRG.h ScalarFieldRGshort.h \
@@ -71,7 +73,7 @@ LIBNAME = Datatypes
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDataflow -lGeom -lGeometry -lComm -lMath \
-	-lTCL -lClasslib -lMultitask -lMalloc -lC -lc -lm
+	-lTCL -lClasslib -lMultitask -lTester -lMalloc -lC -lc -lm
 
 depend:: $(GENH) $(GENSRCS)
 

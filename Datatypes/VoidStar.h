@@ -27,9 +27,11 @@
 #include <Datatypes/Pixel.h>
 #include <Datatypes/Spectrum.h>
 #include <Multitask/ITC.h>
-#include "../Modules/MRA/sire_const.h"
-#include "../Modules/MRA/sire_struct.h"
-#include "../Modules/MRA/sire_version.h"
+
+// these are for the SiRe stuff (in Modules/MRA) which most people won't use...
+#include <Datatypes/sire_const.h>
+#include <Datatypes/sire_struct.h>
+#include <Datatypes/sire_version.h>
 
 class PhantomXYZ;
 class PhantomUVW;

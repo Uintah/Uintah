@@ -68,6 +68,13 @@ void Surface::io(Piostream& stream) {
     stream.end_class();
 }
 
+TopoSurfTree* Surface::getTopoSurfTree() {
+    if (rep==TSTree)
+	return (TopoSurfTree*) this;
+    else
+	return 0;
+}
+
 SurfTree* Surface::getSurfTree() {
     if (rep==STree)
 	return (SurfTree*) this;

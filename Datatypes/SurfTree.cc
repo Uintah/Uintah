@@ -33,12 +33,12 @@ static Persistent* make_SurfTree()
 PersistentTypeID SurfTree::type_id("SurfTree", "Surface", make_SurfTree);
 
 SurfTree::SurfTree(Representation r)
-: Surface(r, 0), haveNodeInfo(0), valid_bboxes(0)
+: Surface(r, 0), valid_bboxes(0)
 {
 }
 
 SurfTree::SurfTree(const SurfTree& copy, Representation)
-: Surface(copy), haveNodeInfo(0), valid_bboxes(0)
+: Surface(copy), valid_bboxes(0)
 {
     NOT_FINISHED("SurfTree::SurfTree");
 }
@@ -67,30 +67,15 @@ void SurfTree::construct_hash(int, int, const Point &, double) {
     return;
 }
 
-void order (Array1<int>& a) {
-    int swap=1;
-    int tmp;
-    while (swap) {
-	swap=0;
-	for (int i=0; i<a.size()-1; i++)
-	    if (a[i]>a[i+1]) {
-		tmp=a[i];
-		a[i]=a[i+1];
-		a[i+1]=tmp;
-		swap=1;
-	    }
-    }
-}
-
 void SurfTree::printNbrInfo() {
-    if (!haveNodeInfo) {
+    if (nodeI.size()) {
 	cerr << "No nbr info yet!\n";
 	return;
     }
-    for (int i=0; i<nodeNbrs.size(); i++) {
-	cerr << "("<<i<<") "<< points[i]<<" nbrs:";
-	for (int j=0; j<nodeNbrs[i].size(); j++) {
-	    cerr << " "<<points[nodeNbrs[i][j]];
+    for (int i=0; i<nodeI.size(); i++) {
+	cerr << "("<<i<<") "<< nodes[i]<<" nbrs:";
+	for (int j=0; j<nodeI[i].nbrs.size(); j++) {
+	    cerr << " "<<nodes[nodeI[i].nbrs[j]];
 	}
 	cerr << "\n";
     }
@@ -102,22 +87,22 @@ int SurfTree::extractTriSurface(TriSurface* ts, Array1<int>& map,
 				Array1<int>& imap, int comp) {
     map.resize(0);
     imap.resize(0);
-    if (comp>surfNames.size()) {
+    if (comp>surfI.size()) {
 	cerr << "Error: bad surface idx "<<comp<<"\n";
 	ts=0;
 	return 0;
     }
 
-    map.resize(points.size());
+    map.resize(nodes.size());
     map.initialize(-1);
-    cerr << "Extracting component #"<<comp<<" with "<<surfEls[comp].size()<<" elements...\n";
-    for (int i=0; i<surfEls[comp].size(); i++) {
-	map[elements[surfEls[comp][i]]->i1]=
-	map[elements[surfEls[comp][i]]->i2]=
-	map[elements[surfEls[comp][i]]->i3]=1;
+    cerr << "Extracting component #"<<comp<<" with "<<surfI[comp].faces.size()<<" faces...\n";
+    for (int i=0; i<surfI[comp].faces.size(); i++) {
+	map[faces[surfI[comp].faces[i]]->i1]=
+	map[faces[surfI[comp].faces[i]]->i2]=
+	map[faces[surfI[comp].faces[i]]->i3]=1;
     }
 
-    ts->elements.resize(surfEls[comp].size());
+    ts->elements.resize(surfI[comp].faces.size());
     ts->points.resize(0);
 
     int currIdx=0;
@@ -125,158 +110,177 @@ int SurfTree::extractTriSurface(TriSurface* ts, Array1<int>& map,
 	if (map[i] != -1) {
 	    imap.add(i);
 	    map[i]=currIdx;
-	    ts->points.add(points[i]);
+	    ts->points.add(nodes[i]);
 	    currIdx++;
 	}
     }
 
-    for (i=0; i<surfEls[comp].size(); i++) {
+    for (i=0; i<surfI[comp].faces.size(); i++) {
 //	cerr << "surfOrient["<<comp<<"]["<<i<<"]="<<surfOrient[comp][i]<<"\n";
-	TSElement *e=elements[surfEls[comp][i]];
-	if (surfOrient.size()>comp && surfOrient[comp].size()>i && 
-	    !surfOrient[comp][i])
+	TSElement *e=faces[surfI[comp].faces[i]];
+	if (surfI[comp].faceOrient.size()>i && !surfI[comp].faceOrient[i])
 	    ts->elements[i]=new TSElement(map[e->i1], map[e->i3], map[e->i2]);
 	else
 	    ts->elements[i]=new TSElement(map[e->i1], map[e->i2], map[e->i3]);
     }
 
-    ts->name = surfNames[comp];
-    for (i=0; i<bcIdx.size(); i++) {
-	if (map[bcIdx[i]] != -1) {
-	    ts->bcIdx.add(map[bcIdx[i]]);
-	    ts->bcVal.add(bcVal[i]);
+    ts->name = surfI[comp].name;
+    if (typ == FaceValuesAll || typ == FaceValuesSome) {
+	cerr << "can't map face values of SurfTree to nodes of TriSurface!\n";
+    } else if (typ == NodeValuesAll) {
+	ts->bcVal = data;
+	for (i=0; i<data.size(); i++) ts->bcIdx.add(i);
+    } else {	// typ == NodeValuesSome
+	for (i=0; i<data.size(); i++) {
+	    if (map[idx[i]] != -1) {
+		ts->bcIdx.add(map[idx[i]]);
+		ts->bcVal.add(data[i]);
+	    }
 	}
     }
 
-    cerr << "surface "<<ts->name<<" has "<<ts->points.size()<<" points, "<<ts->elements.size()<<" elements and "<<ts->bcVal.size()<<" known vals.\n";
+    cerr << "surface "<<ts->name<<" has "<<ts->points.size()<<" nodes, "<<ts->elements.size()<<" elements and "<<ts->bcVal.size()<<" known vals.\n";
 
     return 1;
 }
 
 void SurfTree::bldNormals() {
 
-    // go through each surface.  for each one, look at each element.
-    // compute the normal of the element and add it to the normal of each
+    // go through each surface.  for each one, look at each face.
+    // compute the normal of the face and add it to the normal of each
     // of its nodes.
 
-    if (haveNormals) return;
-    if (!haveNodeInfo) bldNodeInfo();
-    nodeNormals.resize(surfEls.size());
+    if (surfI.size() && nodeI.size() && surfI[0].nodeNormals.size()) return;
+    if (nodes.size() && !nodeI.size()) bldNodeInfo();
 
-    for (int i=0; i<surfEls.size(); i++) {
-	nodeNormals[i].resize(points.size());
-	nodeNormals[i].initialize(Vector(0,0,0));
+    for (int i=0; i<surfI.size(); i++) {
+	surfI[i].nodeNormals.resize(nodes.size());
+	surfI[i].nodeNormals.initialize(Vector(0,0,0));
     }
 
-    for (i=0; i<surfEls.size(); i++) {
-	for (int j=0; j<surfEls[i].size(); j++) {
+    for (i=0; i<surfI.size(); i++) {
+	for (int j=0; j<surfI[i].faces.size(); j++) {
 	    int sign=1;
-	    if (surfOrient.size()>i && surfOrient[i].size()>j && 
-		!surfOrient[i][j]) sign=-1;
-	    TSElement *e=elements[surfEls[i][j]];
-	    Vector v(Cross((points[e->i1]-points[e->i2]), 
-			   (points[e->i1]-points[e->i3]))*sign);
-	    nodeNormals[i][e->i1]+=v;
-	    nodeNormals[i][e->i2]+=v;
-	    nodeNormals[i][e->i3]+=v;
+	    if (surfI[i].faceOrient.size()>j &&
+		!surfI[i].faceOrient[j]) sign=-1;
+	    TSElement *e=faces[surfI[i].faces[j]];
+	    Vector v(Cross((nodes[e->i1]-nodes[e->i2]), 
+			   (nodes[e->i1]-nodes[e->i3]))*sign);
+	    surfI[i].nodeNormals[e->i1]+=v;
+	    surfI[i].nodeNormals[e->i2]+=v;
+	    surfI[i].nodeNormals[e->i3]+=v;
 	}
     }
 
     // gotta go through and normalize all the normals
 
-    for (i=0; i<nodeSurfs.size(); i++) {	// for each node
-	for (int j=0; j<nodeSurfs[i].size(); j++) {  // for each surf it's on
-	    if (nodeNormals[j][i].length2())
-		nodeNormals[j][i].normalize();
+    for (i=0; i<surfI.size(); i++) {
+	for (int j=0; j<surfI[i].nodeNormals.size(); j++) {
+	    if (surfI[i].nodeNormals[j].length2())
+		surfI[i].nodeNormals[j].normalize();
 	}
     }
 }
 
-void SurfTree::bldEdgeInfo() {
-    if (haveEdgeInfo) return;
-    if (!haveNodeInfo) bldNodeInfo();
-    haveEdgeInfo=1;
-}
-
 void SurfTree::bldNodeInfo() {
-    if (haveNodeInfo) return;
-    haveNodeInfo=1;
+    if (nodeI.size()) return;
 
-    nodeSurfs.resize(points.size());
-    nodeElems.resize(points.size());
-    nodeNbrs.resize(points.size());
-    nodeEdges.resize(points.size());
+    nodeI.resize(nodes.size());
 
-    for (int i=0; i<points.size(); i++) {
-	nodeSurfs[i].resize(0);
-	nodeElems[i].resize(0);
-	nodeNbrs[i].resize(0);
-	nodeEdges[i].resize(0);
+    for (int i=0; i<nodeI.size(); i++) {
+	nodeI[i].surfs.resize(0);
+	nodeI[i].faces.resize(0);
+	nodeI[i].edges.resize(0);
+	nodeI[i].nbrs.resize(0);
     }
 
     TSElement *e;
     int i1, i2, i3;
 
-    for (i=0; i<surfEls.size(); i++) {
-	for (int j=0; j<surfEls[i].size(); j++) {
-	    int elemIdx=surfEls[i][j];
-	    e=elements[elemIdx];
+    for (i=0; i<surfI.size(); i++) {
+	for (int j=0; j<surfI[i].faces.size(); j++) {
+	    int faceIdx=surfI[i].faces[j];
+	    e=faces[faceIdx];
 	    i1=e->i1;
 	    i2=e->i2;
 	    i3=e->i3;
 	    int found;
 	    int k;
-	    for (found=0, k=0; k<nodeSurfs[i1].size() && !found; k++)
-		if (nodeSurfs[i1][k] == i) found=1;
-	    if (!found) nodeSurfs[i1].add(i);
-	    for (found=0, k=0; k<nodeSurfs[i2].size() && !found; k++)
-		if (nodeSurfs[i2][k] == i) found=1;
-	    if (!found) nodeSurfs[i2].add(i);
-	    for (found=0, k=0; k<nodeSurfs[i3].size() && !found; k++)
-		if (nodeSurfs[i3][k] == i) found=1;
-	    if (!found) nodeSurfs[i3].add(i);
+	    for (found=0, k=0; k<nodeI[i1].surfs.size() && !found; k++)
+		if (nodeI[i1].surfs[k] == i) found=1;
+	    if (!found) nodeI[i1].surfs.add(i);
+	    for (found=0, k=0; k<nodeI[i2].surfs.size() && !found; k++)
+		if (nodeI[i2].surfs[k] == i) found=1;
+	    if (!found) nodeI[i2].surfs.add(i);
+	    for (found=0, k=0; k<nodeI[i3].surfs.size() && !found; k++)
+		if (nodeI[i3].surfs[k] == i) found=1;
+	    if (!found) nodeI[i3].surfs.add(i);
 	    
-	    for (found=0, k=0; k<nodeElems[i1].size() && !found; k++)
-		if (nodeElems[i1][k] == elemIdx) found=1;
-	    if (!found) nodeElems[i1].add(elemIdx);
-	    for (found=0, k=0; k<nodeElems[i2].size() && !found; k++)
-		if (nodeElems[i2][k] == elemIdx) found=1;
-	    if (!found) nodeElems[i2].add(elemIdx);
-	    for (found=0, k=0; k<nodeElems[i3].size() && !found; k++)
-		if (nodeElems[i3][k] == elemIdx) found=1;
-	    if (!found) nodeElems[i3].add(elemIdx);
+	    for (found=0, k=0; k<nodeI[i1].faces.size() && !found; k++)
+		if (nodeI[i1].faces[k] == faceIdx) found=1;
+	    if (!found) nodeI[i1].faces.add(faceIdx);
+	    for (found=0, k=0; k<nodeI[i2].faces.size() && !found; k++)
+		if (nodeI[i2].faces[k] == faceIdx) found=1;
+	    if (!found) nodeI[i2].faces.add(faceIdx);
+	    for (found=0, k=0; k<nodeI[i3].faces.size() && !found; k++)
+		if (nodeI[i3].faces[k] == faceIdx) found=1;
+	    if (!found) nodeI[i3].faces.add(faceIdx);
 
-	    for (found=0, k=0; k<nodeNbrs[i1].size() && !found; k++)
-		if (nodeNbrs[i1][k] == i2) found=1;
+	    for (found=0, k=0; k<nodeI[i1].nbrs.size() && !found; k++)
+		if (nodeI[i1].nbrs[k] == i2) found=1;
 	    if (!found) { 
-		nodeNbrs[i1].add(i2);
-		nodeNbrs[i2].add(i1);
+		nodeI[i1].nbrs.add(i2);
+		nodeI[i2].nbrs.add(i1);
 	    }
-	    for (found=0, k=0; k<nodeNbrs[i2].size() && !found; k++)
-		if (nodeNbrs[i2][k] == i3) found=1;
+	    for (found=0, k=0; k<nodeI[i2].nbrs.size() && !found; k++)
+		if (nodeI[i2].nbrs[k] == i3) found=1;
 	    if (!found) { 
-		nodeNbrs[i2].add(i3);
-		nodeNbrs[i3].add(i2);
+		nodeI[i2].nbrs.add(i3);
+		nodeI[i3].nbrs.add(i2);
 	    }
-	    for (found=0, k=0; k<nodeNbrs[i1].size() && !found; k++)
-		if (nodeNbrs[i1][k] == i3) found=1;
+	    for (found=0, k=0; k<nodeI[i1].nbrs.size() && !found; k++)
+		if (nodeI[i1].nbrs[k] == i3) found=1;
 	    if (!found) { 
-		nodeNbrs[i1].add(i3);
-		nodeNbrs[i3].add(i1);
+		nodeI[i1].nbrs.add(i3);
+		nodeI[i3].nbrs.add(i1);
 	    }
 	}
     }
     int tmp;
-    for (i=0; i<nodeNbrs.size(); i++) {
-	if (nodeNbrs[i].size()) {
+    for (i=0; i<nodeI.size(); i++) {
+	// bubble sort!
+	if (nodeI[i].nbrs.size()) {
 	    int swapped=1;
 	    while (swapped) {
 		swapped=0;
-		for (int j=0; j<nodeNbrs[i].size()-1; j++) {
-		    if (nodeNbrs[i][j]>nodeNbrs[i][j+1]) {
-			tmp=nodeNbrs[i][j];
-			nodeNbrs[i][j]=nodeNbrs[i][j+1];
-			nodeNbrs[i][j+1]=tmp;
+		for (int j=0; j<nodeI[i].nbrs.size()-1; j++) {
+		    if (nodeI[i].nbrs[j]>nodeI[i].nbrs[j+1]) {
+			tmp=nodeI[i].nbrs[j];
+			nodeI[i].nbrs[j]=nodeI[i].nbrs[j+1];
+			nodeI[i].nbrs[j+1]=tmp;
+			swapped=1;
+		    }
+		}
+	    }
+	}
+    }
+    for (i=0; i<edges.size(); i++) {
+	i1=edges[i]->i1;
+	i2=edges[i]->i2;
+	nodeI[i1].edges.add(i);
+	nodeI[i2].edges.add(i);
+    }
+    for (i=0; i<nodeI.size(); i++) {
+	// bubble sort!
+	if (nodeI[i].edges.size()) {
+	    int swapped=1;
+	    while (swapped) {
+		swapped=0;
+		for (int j=0; j<nodeI[i].edges.size()-1; j++) {
+		    if (nodeI[i].edges[j]>nodeI[i].edges[j+1]) {
+			tmp=nodeI[i].edges[j];
+			nodeI[i].edges[j]=nodeI[i].edges[j+1];
+			nodeI[i].edges[j+1]=tmp;
 			swapped=1;
 		    }
 		}
@@ -285,121 +289,12 @@ void SurfTree::bldNodeInfo() {
     }
 }
 
-inline int getIdx(const Array1<int>& a, int size) {
-    int val=0;
-    for (int k=a.size()-1; k>=0; k--)
-	val = val*size + a[k];
-    return val;
-}
-
-void getList(Array1<int>& surfList, int i, int size) {
-    int valid=1;
-//    cerr << "starting list...\n";
-    while (valid) {
-	surfList.add(i%size);
-//	cerr << "just added "<<i%size<<" to the list.\n";
-	if (i >= size) valid=1; else valid=0;
-	i /= size;
-    }
- //   cerr << "done with list.\n";
-}
-
-// call this before outputting persistently.  that way we have the Arrays
-// for VTK Decimage algorithm.
-void SurfTree::SurfsToTypes() {
-    int i,j;
-
-    cerr << "We have "<<elements.size()<<" elements.\n";
-    // make a list of what surfaces each elements is attached to
-    Array1<Array1<int> > elemMembership(elements.size());
-//    cerr << "Membership.size()="<<elemMembership.size()<<"\n";
-    for (i=0; i<surfEls.size(); i++)
-	for (j=0; j<surfEls[i].size(); j++)
-	    elemMembership[surfEls[i][j]].add(i);
-    int maxMembership=1;
-
-    // sort all of the lists from above, and find the maximum number of
-    // surfaces any element belongs to
-    for (i=0; i<elemMembership.size(); i++)
-	if (elemMembership[i].size() > 1) {
-	    if (elemMembership[i].size() > maxMembership)
-		maxMembership=elemMembership[i].size();
-	    order(elemMembership[i]);
-	}
-    int sz=pow(surfEls.size(), maxMembership);
-    cerr << "allocating "<<maxMembership<<" levels with "<< surfEls.size()<< " types (total="<<sz<<").\n";
-
-    // allocate all combinations of the maximum number of surfaces
-    // from the lists of which surfaces each element belong to,
-    // construct a list of elements which belong for each surface
-    // combination
-
-    Array1 <Array1<int> > tmpTypeMembers(pow(surfEls.size(), maxMembership));
-    cerr << "Membership.size()="<<elemMembership.size()<<"\n";
-    for (i=0; i<elemMembership.size(); i++) {
-//	cerr << "  **** LOOKING IT UP!\n";
-	int idx=getIdx(elemMembership[i], surfEls.size());
-//	cerr << "this elements has index: "<<idx<<"\n";
-	tmpTypeMembers[idx].add(i);
-    }
-    typeSurfs.resize(0);
-    typeIds.resize(elements.size());
-    for (i=0; i<tmpTypeMembers.size(); i++) {
-	// if there are any elements of this combination type...
-	if (tmpTypeMembers[i].size()) {
-	    // find out what surfaces there were	
-//	    cerr << "found "<<tmpTypeMembers[i].size()<<" elements of type "<<i<<"\n";
-	    Array1<int> surfList;
-	    getList(surfList, i, surfEls.size());
-	    int currSize=typeSurfs.size();
-	    typeSurfs.resize(currSize+1);
-	    typeSurfs[currSize].resize(0);
-//	    cerr << "here's the array: ";
-	    for (j=0; j<tmpTypeMembers[i].size(); j++) {
-//		cerr << tmpTypeMembers[i][j]<<" ";
-		typeIds[tmpTypeMembers[i][j]]=currSize;
-	    }
-//	    cerr << "\n";
-//	    cerr << "copying array ";
-//	    cerr << "starting to add elements...";
-	    for (j=0; j<surfList.size(); j++) {
-		typeSurfs[currSize].add(surfList[j]);
-//		cerr << ".";
-	    }
-//	    cerr << "   done!\n";
-	}
-    }
-    cerr << "done with SurfsToTypes!!\n";
-}
-
-// call this after VTK Decimate has changed the Elements and points -- need
-// to rebuild typeSurfs information
-void SurfTree::TypesToSurfs() {
-    int i,j;
-//    cerr << "building surfs from types...\n";
-    for (i=0; i<surfEls.size(); i++) {
-	surfEls[i].resize(0);
-	surfOrient[i].resize(0);
-    }
-//    cerr << "typeSurfs.size() = "<<typeSurfs.size()<<"\n";
-//    cerr << "surfEls.size() = "<<surfEls.size()<<"\n";
-    for (i=0; i<typeIds.size(); i++) {
-//	cerr << "working on typeSurfs["<<typeIds[i]<<"\n";
-	for (j=0; j<typeSurfs[typeIds[i]].size(); j++) {
-//	    cerr << "adding "<<i<<" to surfEls["<<typeSurfs[typeIds[i]][j]<<"]\n";
-	    surfEls[typeSurfs[typeIds[i]][j]].add(i);
-	    surfOrient[typeSurfs[typeIds[i]][j]].add(1);
-	}
-    }
-}
-
 void SurfTree::compute_bboxes() {
     valid_bboxes=1;
     bldNodeInfo();
-    bboxes.resize(surfEls.size());
-    for (int i=0; i<nodeSurfs.size(); i++)
-	for (int j=0; j<nodeSurfs[i].size(); j++)
-	    bboxes[nodeSurfs[i][j]].extend(points[i]);
+    for (int i=0; i<nodeI.size(); i++)
+	for (int j=0; j<nodeI[i].surfs.size(); j++)
+	    surfI[nodeI[i].surfs[j]].bbox.extend(nodes[i]);
 }
 
 void orderNormal(int i[], const Vector& v) {
@@ -422,13 +317,13 @@ void orderNormal(int i[], const Vector& v) {
     }
 }       
 
-// go through the elements in component comp and see if any of the triangles
+// go through the faces in component comp and see if any of the triangles
 // are closer then we've seen so far.
 // have_hit indicates if we have a closest point,
-// if so, compBest, elemBest and distBest have the information about that hit
+// if so, compBest, faceBest and distBest have the information about that hit
 
 void SurfTree::distance(const Point &p, int &have_hit, double &distBest, 
-			int &compBest, int &elemBest, int comp) {
+			int &compBest, int &faceBest, int comp) {
     
     double P[3], t, alpha, beta;
     double u0,u1,u2,v0,v1,v2;
@@ -437,15 +332,15 @@ void SurfTree::distance(const Point &p, int &have_hit, double &distBest,
     int inter;
 
     Vector dir(1,0,0);	// might want to randomize this?
-    for (int ii=0; ii<surfEls[comp].size(); ii++) {
-	TSElement* e=elements[surfEls[comp][ii]];
-	Point p1(points[e->i1]);
+    for (int ii=0; ii<surfI[comp].faces.size(); ii++) {
+	TSElement* e=faces[surfI[comp].faces[ii]];
+	Point p1(nodes[e->i1]);
 	Point p2, p3;
 
 	// orient the triangle correctly
 
-	if (surfOrient[comp][ii]) {p2=points[e->i2]; p3=points[e->i3];}
-	else {p2=points[e->i3]; p3=points[e->i2];}
+	if (surfI[comp].faceOrient[ii]) {p2=nodes[e->i2]; p3=nodes[e->i3];}
+	else {p2=nodes[e->i3]; p3=nodes[e->i2];}
 
 	Vector n(Cross(p2-p1, p3-p1));
 	n.normalize();
@@ -495,7 +390,7 @@ void SurfTree::distance(const Point &p, int &have_hit, double &distBest,
 	}
 	if (!inter) continue;
 	if (t>0 && (!have_hit || t<distBest)) {
-	    have_hit=1; compBest=comp; elemBest=ii; distBest=t;
+	    have_hit=1; compBest=comp; faceBest=ii; distBest=t;
 	}
     }
 }
@@ -506,57 +401,84 @@ int SurfTree::inside(const Point &p, int &component) {
 
     Array1<int> candidate;
 
-    for (int i=0; i<bboxes.size(); i++)
-	if (bboxes[i].inside(p)) candidate.add(i);
+    for (int i=0; i<surfI.size(); i++)
+	if (surfI[i].bbox.inside(p)) candidate.add(i);
 
     int have_hit=0;
-    int compBest=0;
-    int elemBest=0;	// we don't use this for inside()
+    int compBest=0;	// should we use component here instead??
+    int faceBest=0;	// we don't use this for inside()
     double distBest;
     for (i=0; i<candidate.size(); i++) {
-	distance(p, have_hit, distBest, compBest, elemBest, candidate[i]);
+	distance(p, have_hit, distBest, compBest, faceBest, candidate[i]);
     }
     return have_hit;
 }
     
-#define SurfTree_VERSION 3
+#define SurfTree_VERSION 4
 
+void Pio(Piostream& stream, SurfInfo& surf)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, surf.name);
+    Pio(stream, surf.faces);
+    Pio(stream, surf.faceOrient);
+    Pio(stream, surf.matl);
+    Pio(stream, surf.outer);
+    Pio(stream, surf.inner);
+    Pio(stream, surf.nodeNormals);
+    Pio(stream, surf.bbox);
+    stream.end_cheap_delim();
+}
+
+void Pio(Piostream& stream, FaceInfo& face)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, face.patchIdx);
+    Pio(stream, face.patchEntry);
+    Pio(stream, face.edges);
+    Pio(stream, face.edgeOrient);
+    stream.end_cheap_delim();
+}
+    
+void Pio(Piostream& stream, EdgeInfo& edge)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, edge.wireIdx);
+    Pio(stream, edge.wireEntry);
+    Pio(stream, edge.faces);
+    stream.end_cheap_delim();
+}
+    
+void Pio(Piostream& stream, NodeInfo& node)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, node.surfs);
+    Pio(stream, node.faces);
+    Pio(stream, node.edges);
+    Pio(stream, node.nbrs);
+    stream.end_cheap_delim();
+}
+    
 void SurfTree::io(Piostream& stream) {
     int version=stream.begin_class("SurfTree", SurfTree_VERSION);
     Surface::io(stream);		    
-    if (version >= 2) {
-	if (stream.writing() && !surfNames.size())
-	    surfNames.resize(surfEls.size());
-	Pio(stream, surfNames);		    
-	Pio(stream, bcIdx);
-	Pio(stream, bcVal);
+    if (version < 4) {
+	cerr << "Error -- SurfTrees aren't backwards compatible...\n";
+	stream.end_class();
+	return;
     }
-    Pio(stream, surfEls);
-    if (version >= 3) {
-	Pio(stream, surfOrient);
-	Pio(stream, haveNodeInfo);
-	if (haveNodeInfo) {
-	    Pio(stream, nodeSurfs);
-	    Pio(stream, nodeElems);
-	    Pio(stream, nodeNbrs);
-	}
-    } else {
-	if (stream.reading()) {
-	    surfOrient.resize(surfEls.size());
-	}
-	for (int i=0; i<surfEls.size(); i++) {
-	    surfOrient[i].resize(surfEls[i].size());
-	    surfOrient[i].initialize(1);
-	}
-	haveNodeInfo=0;
-    }
-    Pio(stream, elements);
-    Pio(stream, points);
-    Pio(stream, matl);
-    Pio(stream, outer);
-    Pio(stream, inner);
-    Pio(stream, typeSurfs);
-    Pio(stream, typeIds);
+    Pio(stream, nodes);
+    Pio(stream, faces);
+    Pio(stream, edges);
+    Pio(stream, surfI);
+    Pio(stream, faceI);
+    Pio(stream, edgeI);
+    Pio(stream, nodeI);
+    int *typp=(int*)&typ;
+    stream.io(*typp);
+    Pio(stream, data);
+    Pio(stream, idx);
+    Pio(stream, valid_bboxes);
     stream.end_class();
 }
 
@@ -567,8 +489,8 @@ Surface* SurfTree::clone()
 
 void SurfTree::get_surfnodes(Array1<NodeHandle> &n)
 {
-    for (int i=0; i<points.size(); i++) {
-	n.add(new Node(points[i]));
+    for (int i=0; i<nodes.size(); i++) {
+	n.add(new Node(nodes[i]));
     }
 }
 
@@ -577,47 +499,42 @@ void SurfTree::set_surfnodes(const Array1<NodeHandle> &n) {
 }
 
 void SurfTree::get_surfnodes(Array1<NodeHandle>&n, clString name) {
-    for (int s=0; s<surfNames.size(); s++)
-	if (surfNames[s] == name) break;
-    if (s == surfNames.size()) {
+    for (int s=0; s<surfI.size(); s++)
+	if (surfI[s].name == name) break;
+    if (s == surfI.size()) {
 	cerr << "ERROR: Coudln't find surface: "<<name()<<"\n";
 	return;
     }
 
     // allocate all of the Nodes -- make the ones from other surfaces void
-    Array1<int> member(points.size());
+    Array1<int> member(nodes.size());
     member.initialize(0);
-    for (int i=0; i<surfEls[s].size(); i++) {
-	TSElement *e = elements[surfEls[s][i]];
+    for (int i=0; i<surfI[s].faces.size(); i++) {
+	TSElement *e = faces[surfI[s].faces[s]];
 	member[e->i1]=1; member[e->i2]=1; member[e->i3]=1;
     }
 
-    for (i=0; i<points.size(); i++) {
-	if (member[i]) n.add(new Node(points[i]));
+    for (i=0; i<nodes.size(); i++) {
+	if (member[i]) n.add(new Node(nodes[i]));
 	else n.add((Node*)0);
     }
 }
 
 TopoSurfTree* SurfTree::toTopoSurfTree() {
     TopoSurfTree* tst=new TopoSurfTree;
-    tst->surfNames=surfNames;
-    tst->surfEls=surfEls;
-    tst->surfOrient=surfOrient;
-    tst->elements=elements;
+    tst->nodes=nodes;
+    tst->faces=faces;
     tst->edges=edges;
-    tst->points=points;
-    tst->bcIdx=bcIdx;
-    tst->bcVal=bcVal;
-    tst->matl=matl;
-    tst->outer=outer;
-    tst->inner=inner;
-    tst->haveNodeInfo=haveNodeInfo;
-    tst->haveNormals=haveNormals;
-    tst->nodeSurfs=nodeSurfs;
-    tst->nodeNbrs=nodeNbrs;
-    tst->nodeNormals=nodeNormals;
-    tst->bboxes=bboxes;
+    tst->edges=edges;
+    tst->surfI=surfI;
+    tst->faceI=faceI;
+    tst->edgeI=edgeI;
+    tst->nodeI=nodeI;
+    tst->typ=typ;
+    tst->data=data;
+    tst->idx=idx;
     tst->valid_bboxes=valid_bboxes;
+    tst->BldTopoInfo();
     return tst;
 }
 
@@ -630,3 +547,29 @@ GeomObj* SurfTree::get_obj(const ColorMapHandle&)
     NOT_FINISHED("SurfTree::get_obj");
     return 0;
 }
+
+#ifdef __sgi
+#if _MIPS_SZPTR == 64
+#include <Classlib/Array1.cc>
+static void _dummy_(Piostream& p1, Array1<SurfInfo*>& p2)
+{
+    Pio(p1, p2);
+}
+
+static void _dummy_(Piostream& p1, Array1<FaceInfo>& p2)
+{
+    Pio(p1, p2);
+}
+
+static void _dummy_(Piostream& p1, Array1<EdgeInfo>& p2)
+{
+    Pio(p1, p2);
+}
+
+static void _dummy_(Piostream& p1, Array1<NodeInfo>& p2)
+{
+    Pio(p1, p2);
+}
+
+#endif
+#endif

@@ -31,6 +31,7 @@ class ScalarTriSurface;
 class TriSurface;
 class PointsSurface;
 class Grid;
+class TopoSurfTree;
 class SurfTree;
 class Surface : public Datatype {
 protected:
@@ -74,6 +75,7 @@ public:
     virtual void construct_grid()=0;
     virtual void destroy_grid();
     virtual void destroy_hash();
+    TopoSurfTree* getTopoSurfTree();
     SurfTree* getSurfTree();
     ScalarTriSurface* getScalarTriSurface();
     TriSurface* getTriSurface();

@@ -18,45 +18,61 @@
 #include <Datatypes/TriSurface.h>
 #include <Classlib/Array1.h>
 #include <Geometry/Point.h>
+#include <Geometry/BBox.h>
 #include <stdlib.h> // For size_t
+
+typedef struct _SurfInfo {
+    clString name;		// names of surfaces
+    Array1<int> faces;		// indices of faces in each surface
+    Array1<int> faceOrient;	// is each face properly oriented
+    int matl;			// segmented material type in each surf
+    int outer;			// idx of surface containing this surf
+    Array1<int> inner;		// indices of surfs withink this surf
+    Array1<Vector> nodeNormals;	// optional info    
+    BBox bbox;
+} SurfInfo;
+
+typedef struct _FaceInfo {
+    int patchIdx;
+    int patchEntry;
+    Array1<int> edges;		// indices of the edges of each face
+    Array1<int> edgeOrient;	// are the edges properly oriented
+} FaceInfo;
+
+typedef struct _EdgeInfo {
+    int wireIdx;
+    int wireEntry;
+    Array1<int> faces;		// which faces is an edge part of
+} EdgeInfo;
+
+typedef struct _NodeInfo {
+    Array1<int> surfs;	// which surfaces is a node part of
+    Array1<int> faces;	// which faces is a node part of
+    Array1<int> edges;	// which edges is a node part of
+    Array1<int> nbrs;	// which nodes are one neighbors
+} NodeInfo;
 
 class TopoSurfTree;
 class SurfTree : public Surface {
 public:
-    Array1<clString> surfNames;		// names of surfaces
-    Array1<Array1<int> > surfEls;	// indices of elements in each surface
-    Array1<Array1<int> > surfOrient;	// is each element properly oriented
-
-    Array1<TSElement*> elements;	// array of all elements
-    Array1<Array1<int> > elemEdges;	// indices of the edges of each elem
-    Array1<Array1<int> > elemOrient;	// are the edges properly oriented
+    Array1<Point> nodes;		// array of all nodes
+    Array1<TSElement*> faces;		// array of all faces/elements
     Array1<TSEdge*> edges;		// array of all edges
-    Array1<Point> points;		// array of all points
-    Array1<int> bcIdx;			// which nodes have boundary conditions
-    Array1<double> bcVal;		// values at those nodes
-    Array1<int> matl;			// segmented material type in each surf
-    Array1<int> outer;			// idx of surface containing this surf
-    Array1<Array1<int> > inner;		// indices of surfs withink this surf
 
-    Array1<Array1<int> > typeSurfs;	// elements can be typed based on 
-                                        //   which surfaces they're part of
-    Array1<int> typeIds;		// type of each element
+    Array1<SurfInfo> surfI;
+    Array1<FaceInfo> faceI;
+    Array1<EdgeInfo> edgeI;
+    Array1<NodeInfo> nodeI;
 
-    int haveNodeInfo;			// has node info (below) been built?
-    int haveNormals;
-    Array1<Array1<int> > nodeSurfs;	// which surfaces is a node part of
-    Array1<Array1<int> > nodeElems;	// which elements is a node part of
-    Array1<Array1<int> > nodeEdges;	// which edges is a node part of
-    Array1<Array1<int> > nodeNbrs;	// which nodes are one neighbors
-    Array1<Array1<Vector> > nodeNormals;
-
-    int haveEdgeInfo;			// has edge info (below) been built?
-    Array1<Array1<int> > edgeSurfs;	// which surfaces is an edge part of
-    Array1<Array1<int> > edgeElems;	// which elements is an edge part of
-    Array1<Array1<int> > edgeNodes;	// which nodes is an edge part of
-    Array1<Array1<int> > edgeNbrs;	// which edges are one neighbors
-
-    Array1<BBox> bboxes;
+    enum Type {
+	NodeValuesAll,			// we have values at all nodes
+	NodeValuesSome,			// we have values at some nodes
+	FaceValuesAll,			// we have values at all faces
+	FaceValuesSome			// we have values at some faces
+    };
+    Type typ;
+    Array1<double> data;		// optional data at nodes/faces
+    Array1<int> idx;			// optional indices - when "some" data
     int valid_bboxes;
 public:
     SurfTree(Representation r=STree);
@@ -66,11 +82,8 @@ public:
 
     void compute_bboxes();
     void distance(const Point &p, int &have_hit, double &distBest, 
-		  int &compBest, int &elemBest, int comp);
+		  int &compBest, int &faceBest, int comp);
     int inside(const Point &p, int &component);
-
-    void SurfsToTypes();
-    void TypesToSurfs();
 
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual void construct_grid();
@@ -80,7 +93,6 @@ public:
     void set_surfnodes(const Array1<sci::NodeHandle>&, clString name);
     void bldNormals();
     void bldNodeInfo();
-    void bldEdgeInfo();
     void printNbrInfo();
     int extractTriSurface(TriSurface*, Array1<int>&, Array1<int>&, int);
 
@@ -94,5 +106,10 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
+
+void Pio(Piostream&, SurfInfo&);
+void Pio(Piostream&, FaceInfo&);
+void Pio(Piostream&, EdgeInfo&);
+void Pio(Piostream&, NodeInfo&);
 
 #endif /* SCI_Datatytpes_SurfTree_h */

@@ -955,13 +955,21 @@ void Pio(Piostream& stream, TSEdge*& data)
 
 SurfTree* TriSurface::toSurfTree() {
     SurfTree* st=new SurfTree;
-    st->elements=elements;
-    st->points=points;
-    st->surfEls.resize(1);
-    for (int i=0; i<elements.size(); i++) st->surfEls[0].add(i);
-    st->inner.resize(1);
-    st->matl.add(0);
-    st->surfNames.add(name);
+
+    st->surfI.resize(1);
+    st->faces=elements;
+    st->nodes=points;
+    for (int i=0; i<elements.size(); i++) {
+	st->surfI[0].faces.add(i);
+	st->surfI[0].faceOrient.add(i);
+    }
+    st->surfI[0].name=name;
+    st->surfI[0].inner.add(0);
+    st->surfI[0].outer=0;
+    st->surfI[0].matl=0;
+    st->typ=SurfTree::NodeValuesSome;
+    st->data=bcVal;
+    st->idx=bcIdx;
     return st;
 }
 
