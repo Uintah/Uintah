@@ -66,8 +66,8 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld)
   d_wasCheckpointTimestep = false;
   d_saveParticleVariables = false;
   d_saveP_x = false;
-  d_currentTime=-1;
-  d_currentTimestep=-1;
+  //d_currentTime=-1;
+  //d_currentTimestep=-1;
 
   d_XMLIndexDoc = NULL;
   d_CheckpointXMLIndexDoc = NULL;
@@ -81,8 +81,10 @@ DataArchiver::~DataArchiver()
 {
 }
 
-void DataArchiver::problemSetup(const ProblemSpecP& params)
+void DataArchiver::problemSetup(const ProblemSpecP& params,
+                                SimulationStateP& state)
 {
+   d_sharedState = state;
    ProblemSpecP p = params->findBlock("DataArchiver");
 
    d_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != 0;
@@ -193,11 +195,11 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    if (d_checkpointWalltimeInterval != 0 && d_checkpointWalltimeStart == 0)
      d_checkpointWalltimeStart = d_checkpointWalltimeInterval;
    
-   d_currentTimestep = 0;
+   //d_currentTimestep = 0;
    
    int startTimestep;
    if (p->get("startTimestep", startTimestep)) {
-     d_currentTimestep = startTimestep - 1;
+     //d_currentTimestep = startTimestep - 1;
    }
   
    d_lastTimestepLocation = "invalid";
@@ -412,18 +414,18 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
    }
    
    // set time and timestep variables appropriately
-   d_currentTimestep = timestep;
+   //d_currentTimestep = timestep;
    
    if (d_outputInterval > 0)
       d_nextOutputTime = d_outputInterval * ceil(time / d_outputInterval);
    else if (d_outputTimestepInterval > 0)
-      d_nextOutputTimestep = d_currentTimestep + d_outputTimestepInterval;
+      d_nextOutputTimestep = timestep + d_outputTimestepInterval;
    
    if (d_checkpointInterval > 0)
       d_nextCheckpointTime = d_checkpointInterval *
 	 ceil(time / d_checkpointInterval);
    else if (d_checkpointTimestepInterval > 0)
-      d_nextCheckpointTimestep = d_currentTimestep + d_checkpointTimestepInterval;
+      d_nextCheckpointTimestep = timestep + d_checkpointTimestepInterval;
    if (d_checkpointWalltimeInterval > 0)
      d_nextCheckpointWalltime = d_checkpointWalltimeInterval + 
        (int)Time::currentSeconds();
@@ -697,9 +699,9 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 
   static bool wereSavesAndCheckpointsInitialized = false;
   dbg << "DataArchiver finalizeTimestep, delt= " << delt << endl;
-  d_currentTime=time+delt;
-  if (delt != 0)
-    d_currentTimestep++;
+  //d_currentTime=time+delt;
+  //if (delt != 0)
+  //d_currentTimestep++;
   beginOutputTimestep(time, delt, grid);
 
   if (delt != 0 && (!wereSavesAndCheckpointsInitialized)) {
@@ -738,6 +740,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
       const VarLabel* var = saveItem.label_;
       const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
       t->requires(Task::NewDW, var, matls);
+      //t->setType(Task::Output);
     }
     
     sched->addTask(t, 0, 0);
@@ -757,6 +760,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
       const VarLabel* var = saveItem.label_;
       const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
       t->requires(Task::NewDW, var, matls);
+      //t->setType(Task::Output);
     }
     sched->addTask(t, 0, 0);
     
@@ -771,40 +775,42 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 void DataArchiver::beginOutputTimestep( double time, double delt,
 					const GridP& grid )
 {
-  dbg << "beginOutputTimestep called at time=" << d_currentTime 
+  // time should be currentTime+delt
+  double currentTime = d_sharedState->getElapsedTime();
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  dbg << "beginOutputTimestep called at time=" << currentTime
       << " (" << d_nextOutputTime << "), " << d_outputTimestepInterval 
       << " (" << d_nextOutputTimestep << ")\n";
+
+  // do *not* update d_nextOutputTime or others here.  We need the original
+  // values to compare if there is a timestep restart.  See 
+  // reEvaluateOutputTimestep
   if (d_outputInterval != 0.0 && delt != 0) {
-    if(d_currentTime >= d_nextOutputTime) {
+    if(time >= d_nextOutputTime) {
       // output timestep
       d_wasOutputTimestep = true;
       outputTimestep(d_dir, d_saveLabels, time, delt, grid,
 		     &d_lastTimestepLocation);
-      while (d_currentTime >= d_nextOutputTime)
-	d_nextOutputTime+=d_outputInterval;
     }
     else {
       d_wasOutputTimestep = false;
     }
   }
   else if (d_outputTimestepInterval != 0 && delt != 0) {
-    if(d_currentTimestep >= d_nextOutputTimestep) {
+    if(timestep >= d_nextOutputTimestep) {
       // output timestep
       d_wasOutputTimestep = true;
       outputTimestep(d_dir, d_saveLabels, time, delt, grid,
 		     &d_lastTimestepLocation);
-      while (d_currentTimestep >= d_nextOutputTimestep) {
-	d_nextOutputTimestep+=d_outputTimestepInterval;
-      }
     }
     else {
       d_wasOutputTimestep = false;
     }
   }
   
-  if ((d_checkpointInterval != 0.0 && d_currentTime >= d_nextCheckpointTime) ||
+  if ((d_checkpointInterval != 0.0 && time >= d_nextCheckpointTime) ||
       (d_checkpointTimestepInterval != 0 &&
-       d_currentTimestep >= d_nextCheckpointTimestep) ||
+       timestep >= d_nextCheckpointTimestep) ||
       (d_checkpointWalltimeInterval != 0 &&
        Time::currentSeconds() >= d_nextCheckpointWalltime)) {
     d_wasCheckpointTimestep=true;
@@ -853,19 +859,6 @@ void DataArchiver::beginOutputTimestep( double time, double delt,
       }
       d_checkpointTimestepDirs.pop_front();
     }
-    if (d_checkpointInterval != 0.0) {
-      while (d_currentTime >= d_nextCheckpointTime)
-	d_nextCheckpointTime += d_checkpointInterval;
-    }
-    else if (d_checkpointTimestepInterval != 0) {
-      while (d_currentTimestep >= d_nextCheckpointTimestep)
-	d_nextCheckpointTimestep += d_checkpointTimestepInterval;
-    }
-    if (d_checkpointWalltimeInterval != 0) {
-      while (Time::currentSeconds() >= d_nextCheckpointWalltime)
-	d_nextCheckpointWalltime += d_checkpointWalltimeInterval;
-    }
-
     if (d_writeMeta)
       index->releaseDocument();
   } else {
@@ -884,7 +877,8 @@ void DataArchiver::outputTimestep(Dir& baseDir,
   dbg << "begin outputTimestep()\n";
 
   int numLevels = grid->numLevels();
-  int timestep = d_currentTimestep;
+  // time should be currentTime+delt
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   
   ostringstream tname;
   tname << "t" << setw(5) << setfill('0') << timestep;
@@ -991,17 +985,71 @@ void DataArchiver::outputTimestep(Dir& baseDir,
     }
   }
 }
-      
-void DataArchiver::executedTimestep()
+
+void DataArchiver::reEvaluateOutputTimestep(double orig_delt, double new_delt)
 {
+  // call this on a timestep restart.  If lowering the delt goes beneath the 
+  // threshold, mark it as not an output timestep
+
+  double time = d_sharedState->getElapsedTime();
+
+  if (d_wasOutputTimestep && d_outputInterval != 0.0 ) {
+    if (time - (orig_delt - new_delt) < d_nextOutputTime)
+      d_wasOutputTimestep = false;
+  }
+  if (d_wasCheckpointTimestep && d_checkpointInterval != 0.0) {
+    if (time - (orig_delt - new_delt) < d_nextCheckpointTime) {
+      d_wasCheckpointTimestep = false;    
+      d_checkpointTimestepDirs.pop_back();
+    }
+  }
+}
+
+      
+void DataArchiver::executedTimestep(double delt)
+{
+  double time = d_sharedState->getElapsedTime();
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  // if this was an output/checkpoint timestep,
+  // determine when the next one will be.
+
+  // don't do this in beginOutputTimestep because the timestep might restart
+  // and we need to have the output happen exactly when we need it.
+  if (d_wasOutputTimestep) {
+    if (d_outputInterval != 0.0) {
+      // output timestep
+      while (time+delt >= d_nextOutputTime)
+	d_nextOutputTime+=d_outputInterval;
+    }
+    else if (d_outputTimestepInterval != 0) {
+      while (timestep >= d_nextOutputTimestep) {
+	d_nextOutputTimestep+=d_outputTimestepInterval;
+      }
+    }
+  }
+
+  if (d_wasCheckpointTimestep) {
+    if (d_checkpointInterval != 0.0) {
+      while (time+delt >= d_nextCheckpointTime)
+	d_nextCheckpointTime += d_checkpointInterval;
+    }
+    else if (d_checkpointTimestepInterval != 0) {
+      while (timestep >= d_nextCheckpointTimestep)
+	d_nextCheckpointTimestep += d_checkpointTimestepInterval;
+    }
+    if (d_checkpointWalltimeInterval != 0) {
+      while (Time::currentSeconds() >= d_nextCheckpointWalltime)
+	d_nextCheckpointWalltime += d_checkpointWalltimeInterval;
+    }
+  }
+
+
   vector<Dir*> baseDirs;
   if (d_wasOutputTimestep)
     baseDirs.push_back(&d_dir);
   if (d_wasCheckpointTimestep)
     baseDirs.push_back(&d_checkpointsDir);
 
-  int timestep = d_currentTimestep;
-    
   ostringstream tname;
   tname << "t" << setw(5) << setfill('0') << timestep;
 
@@ -1214,6 +1262,7 @@ DataArchiver::scheduleOutputTimestep(Dir& baseDir,
 			    this, &DataArchiver::output,
 			    &baseDir, (*saveIter).label_, isThisCheckpoint);
       t->requires(Task::NewDW, (*saveIter).label_, Ghost::None);
+      //t->setType(Task::Output);
       sched->addTask(t, patches, matls);
       n++;
     }
@@ -1313,7 +1362,7 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
 	throw InternalError("DataArchiver::outputReduction(): The file \"" + \
 	      filename.str() + "\" could not be opened for writing!");
       }
-      out << setprecision(17) << d_currentTime << "\t";
+      out << setprecision(17) << d_sharedState->getElapsedTime() << "\t";
       new_dw->print(out, var, 0, matlIndex);
       out << "\n";
     }
@@ -1380,10 +1429,10 @@ void DataArchiver::output(const ProcessorGroup*,
       dbg << ", ";
     dbg << matls->get(m);
   }
-  dbg << " at time: " << d_currentTimestep << "\n";
+  dbg << " at time: " << d_sharedState->getCurrentTopLevelTimeStep() << "\n";
   
   ostringstream tname;
-  tname << "t" << setw(5) << setfill('0') << d_currentTimestep;
+  tname << "t" << setw(5) << setfill('0') << d_sharedState->getCurrentTopLevelTimeStep();
   
   Dir tdir = p_dir->getSubdir(tname.str());
   
