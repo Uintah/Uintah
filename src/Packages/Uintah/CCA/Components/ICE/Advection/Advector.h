@@ -1,5 +1,6 @@
 #ifndef UINTAH_ADVECTOR_H
 #define UINTAH_ADVECTOR_H
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
@@ -27,7 +28,8 @@ namespace Uintah {
                                  const double& delT, 
                                  const Patch* patch,
                                  const int& indx,
-                                 const bool& bulletProofing_test) = 0;
+                                 const bool& bulletProofing_test,
+                                 DataWarehouse* new_dw) = 0;
 
     virtual void  advectQ(const CCVariable<double>& q_CC,
                              const Patch* patch,
@@ -63,8 +65,14 @@ namespace Uintah {
     SFCXVariable<double> d_notUsedX;
     SFCYVariable<double> d_notUsedY; 
     SFCZVariable<double> d_notUsedZ;
-         
   }; 
+  
+  //__________________________________
+  void  warning_restartTimestep( const IntVector c,
+                                 const double total_fluxout,
+                                 const double vol,
+                                 const int indx,
+                                 DataWarehouse* new_dw);
  /*______________________________________________________________________
  *   C O M M O N L Y   U S E D 
  *______________________________________________________________________*/ 
@@ -106,6 +114,7 @@ namespace Uintah {
     }
   };
     
+  //__________________________________
   class saveFaceFluxes {
     public:
     inline double equalZero(double d1, double d2, double d3)
@@ -138,6 +147,8 @@ namespace Uintah {
       q_ZFC[c] = tmp_ZFC;    
     }
   };
+
+  
 
   template <class T> struct facedata {
     T d_data[6];

@@ -72,7 +72,8 @@ void SecondOrderCEAdvector::inFluxOutFluxVolume(
                            const double& delT, 
                            const Patch* patch,
 			      const int& indx,
-                           const bool& bulletProof_test)
+                           const bool& bulletProof_test,
+                           DataWarehouse* new_dw)
 {
   Vector dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z();
@@ -271,7 +272,9 @@ void SecondOrderCEAdvector::inFluxOutFluxVolume(
         total_fluxout  += d_OFC[c].d_cflux[corner];
       }
       if (vol - total_fluxout < 0.0) {
-        throw OutFluxVolume(*iter,total_fluxout, vol, indx);
+        warning_restartTimestep( c, total_fluxout, vol, indx, new_dw);
+        return;
+        //throw OutFluxVolume(*iter,total_fluxout, vol, indx);
       }
     }  // cell iter
   }  // if total_fluxout > vol     

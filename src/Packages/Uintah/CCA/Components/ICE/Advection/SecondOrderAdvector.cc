@@ -64,7 +64,8 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
                                           const double& delT, 
                                           const Patch* patch,
                                           const int& indx,
-                                          const bool& bulletProof_test)
+                                          const bool& bulletProof_test,
+                                          DataWarehouse* new_dw)
 
 {
   Vector dx = patch->dCell();
@@ -156,7 +157,7 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
     ry.d_fflux[BACK] = r_y;
     rz.d_fflux[BACK] = delZ_back/2.0 - delZ/2.0;
   }//cell iterator
-
+  
   //__________________________________
   // if total_fluxout > vol then 
   // find the cell and throw an exception.  
@@ -168,7 +169,9 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
         total_fluxout  += d_OFS[c].d_fflux[face];
       }
       if (vol - total_fluxout < 0.0) {
-        throw OutFluxVolume(*iter,total_fluxout, vol, indx);
+        warning_restartTimestep( c, total_fluxout, vol, indx, new_dw);
+        return;
+        //throw OutFluxVolume(*iter,total_fluxout, vol, indx);
       }
     }  // cell iter
   }  // if total_fluxout > vol  
