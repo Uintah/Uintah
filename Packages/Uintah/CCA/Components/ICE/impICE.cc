@@ -9,9 +9,9 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h> 
-#include <Packages/Uintah/Core/Exceptions/MaxIteration.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Exceptions/InternalError.h>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -313,10 +313,11 @@ void ICE::setupMatrix(const ProcessorGroup*,
     //  Initialize beta and A
     for(CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
       IntVector c = *iter;
-      A[c].p = 0.0; 
-      A[c].n = 0.0;   A[c].s = 0.0;
-      A[c].e = 0.0;   A[c].w = 0.0; 
-      A[c].t = 0.0;   A[c].b = 0.0;
+      Stencil7&  A_tmp=A[c];
+      A_tmp.p = 0.0; 
+      A_tmp.n = 0.0;   A_tmp.s = 0.0;
+      A_tmp.e = 0.0;   A_tmp.w = 0.0; 
+      A_tmp.t = 0.0;   A_tmp.b = 0.0;
     } 
   
     for(int m = 0; m < numMatls; m++) {
@@ -346,19 +347,22 @@ void ICE::setupMatrix(const ProcessorGroup*,
       // Sum (<upwinded volfrac> * sp_vol on faces)
       // +x -x +y -y +z -z
       //  e, w, n, s, t, b
+      
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
         IntVector c = *iter;
+        Stencil7&  A_tmp=A[c];
         right  = c + IntVector(1,0,0);      left   = c;  
         top    = c + IntVector(0,1,0);      bottom = c;  
         front  = c + IntVector(0,0,1);      back   = c;  
 
         //  use the upwinded vol_frac    
-        A[c].e += vol_fracX_FC[right]  * sp_volX_FC[right];               
-        A[c].w += vol_fracX_FC[left]   * sp_volX_FC[left];                   
-        A[c].n += vol_fracY_FC[top]    * sp_volY_FC[top];               
-        A[c].s += vol_fracY_FC[bottom] * sp_volY_FC[bottom];
-        A[c].t += vol_fracZ_FC[front]  * sp_volZ_FC[front];
-        A[c].b += vol_fracZ_FC[back]   * sp_volZ_FC[back]; 
+        A_tmp.e += vol_fracX_FC[right]  * sp_volX_FC[right];               
+        A_tmp.w += vol_fracX_FC[left]   * sp_volX_FC[left];                   
+        A_tmp.n += vol_fracY_FC[top]    * sp_volY_FC[top];               
+        A_tmp.s += vol_fracY_FC[bottom] * sp_volY_FC[bottom];
+        A_tmp.t += vol_fracZ_FC[front]  * sp_volZ_FC[front];
+        A_tmp.b += vol_fracZ_FC[back]   * sp_volZ_FC[back];
+        
       }
 
       //---- P R I N T   D A T A ------ 
@@ -380,14 +384,15 @@ void ICE::setupMatrix(const ProcessorGroup*,
         
    for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){ 
       IntVector c = *iter;
-      A[c].e *= -tmp_e_w;
-      A[c].w *= -tmp_e_w;
+      Stencil7&  A_tmp=A[c];
+      A_tmp.e *= -tmp_e_w;
+      A_tmp.w *= -tmp_e_w;
       
-      A[c].n *= -tmp_n_s;
-      A[c].s *= -tmp_n_s;
+      A_tmp.n *= -tmp_n_s;
+      A_tmp.s *= -tmp_n_s;
 
-      A[c].t *= -tmp_t_b;
-      A[c].b *= -tmp_t_b;
+      A_tmp.t *= -tmp_t_b;
+      A_tmp.b *= -tmp_t_b;
     }  
     //__________________________________
     //  Boundary conditons on A.e, A.w, A.n, A.s, A.t, A.b
@@ -395,8 +400,9 @@ void ICE::setupMatrix(const ProcessorGroup*,
      
     for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){ 
       IntVector c = *iter;
-      A[c].p = beta[c] -
-                (A[c].n + A[c].s + A[c].e + A[c].w + A[c].t + A[c].b);
+      Stencil7&  A_tmp=A[c];
+      A_tmp.p = beta[c] -
+                (A_tmp.n + A_tmp.s + A_tmp.e + A_tmp.w + A_tmp.t + A_tmp.b);
     }        
     //---- P R I N T   D A T A ------   
     if (switchDebug_setupMatrix) {    
@@ -800,7 +806,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
          <<" iterations was reached. \n " 
          << "Try either increasing the max_outer_iterations "
          <<" or decrease outer_iteration_tolerance\n ";
-    throw MaxIteration(c, counter, n_passes ,warn.str());
+    throw InternalError(warn.str());
   }
 
   //__________________________________
@@ -811,11 +817,9 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   ParentNewDW->transferFrom(subNewDW, lb->betaLabel,      patch_sub,one_matl);          
   ParentNewDW->transferFrom(subNewDW, lb->term2Label,     patch_sub,one_matl);
   
-/*`==========TESTING==========*/
-  ParentNewDW->transferFrom(subNewDW, lb->vol_fracX_FCLabel, patch_sub,all_mats);    
-  ParentNewDW->transferFrom(subNewDW, lb->vol_fracY_FCLabel, patch_sub,all_mats);    
-  ParentNewDW->transferFrom(subNewDW, lb->vol_fracZ_FCLabel, patch_sub,all_mats);    
-/*==========TESTING==========`*/
+  ParentNewDW->transferFrom(subNewDW, lb->vol_fracX_FCLabel,patch_sub,all_mats);     
+  ParentNewDW->transferFrom(subNewDW, lb->vol_fracY_FCLabel,patch_sub,all_mats);     
+  ParentNewDW->transferFrom(subNewDW, lb->vol_fracZ_FCLabel,patch_sub,all_mats);
   
  // for modified variables you need to do it manually
   constCCVariable<double> press_CC;
