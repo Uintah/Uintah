@@ -372,26 +372,6 @@ void Module::rename_iport(int, const clString&)
     NOT_FINISHED("Module::rename_iport");
 }
 
-dynamic_port_range* Module::get_iport(char* portname)
-{
-  return iports[portname];
-}
-
-dynamic_port_range* Module::get_oport(char* portname)
-{
-  return oports[portname];
-}
-
-IPort* Module::get_iport(int item)
-{
-  return iports[item];
-}
-
-OPort* Module::get_oport(int item)
-{
-  return oports[item];
-}
-
 void Module::connection(ConnectionMode mode, int which_port, int is_oport)
 {
   if(!is_oport && lastportdynamic && dynamic_port_maker) {
