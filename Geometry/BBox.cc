@@ -66,7 +66,7 @@ void BBox::extend_cyl(const Point& cen, const Vector& normal, double r)
     extend(cen-Vector(x,y,z));
 }
 
-Point BBox::center()
+Point BBox::center() const
 {
     ASSERT(have_some);
     return Interpolate(cmin, cmax, 0.5);
