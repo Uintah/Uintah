@@ -189,12 +189,12 @@ ConstitutiveModel::allocateCMDataAddRequires(Task*, const MPMMaterial*,
 void 
 ConstitutiveModel::addSharedRForConvertExplicit(Task* task,
                                                 const MaterialSubset* mset,
-                                                const PatchSet* ) const
+                                                const PatchSet*) const
 {
   Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::NewDW,lb->pInternalHeatRateLabel_preReloc,   mset,gnone);
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, mset,gnone);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc,             mset,gnone);
+  task->requires(Task::NewDW,lb->pInternalHeatRateLabel_preReloc,  mset,gnone);
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,mset,gnone);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc,            mset,gnone);
 }
 
 void
@@ -227,7 +227,7 @@ ConstitutiveModel::copyDelToAddSetForConvertExplicit(DataWarehouse* new_dw,
     pStress_add[*add]  = pStress_del[*del];
   }
 
-  (*newState)[lb->pInternalHeatRateLabel] = pDefGrad_add.clone();
+  (*newState)[lb->pInternalHeatRateLabel] = pIntHeatRate_add.clone();
   (*newState)[lb->pDeformationMeasureLabel] = pDefGrad_add.clone();
   (*newState)[lb->pStressLabel] = pStress_add.clone();
 }
