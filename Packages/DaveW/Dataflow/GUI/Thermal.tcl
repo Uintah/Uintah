@@ -1,4 +1,6 @@
-itcl_class Thermal {
+catch {rename DaveW_EEG_Thermal ""}
+
+itcl_class DaveW_EEG_Thermal {
     inherit Module
     method modname {} {
 	set n $this

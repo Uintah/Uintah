@@ -10,7 +10,9 @@
 #  Copyright (C) 1995 SCI Group
 #
 
-itcl_class RescaleSegFld {
+catch {rename DaveW_EEG_RescaleSegFld ""}
+
+itcl_class DaveW_EEG_RescaleSegFld {
     inherit Module
     method modname {} {
 	set n $this

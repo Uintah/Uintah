@@ -11,7 +11,8 @@
 #  Copyright (C) 1997 SCI Group
 #
 
-itcl_class Radiosity {
+catch {rename DaveW_CS684_Radiosity}
+itcl_class DaveW_CS684_Radiosity {
     inherit Module
     method modname {} {
 	set n $this

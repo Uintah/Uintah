@@ -11,7 +11,9 @@
 #  Copyright (C) 1997 SCI Group
 #
 
-itcl_class BldScene {
+catch {rename DaveW_CS684_BldScene ""}
+
+itcl_class DaveW_CS684_BldScene {
     inherit Module
     method modname {} {
 	set n $this
