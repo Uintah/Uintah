@@ -57,6 +57,8 @@ namespace Uintah {
     bool        d_canAddMPMMaterial;
     double      d_addFrictionWork;     // 1 == add , 0 == do not add
 
+    int         d_extraSolverFlushes;  // Have PETSc do more flushes to save memory
+
     ParticleInterpolator* d_interpolator;
 
     MPMFlags();

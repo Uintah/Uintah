@@ -38,6 +38,8 @@ MPMFlags::MPMFlags()
   d_canAddMPMMaterial = false;
   d_interpolator = scinew LinearInterpolator(); 
   d_addFrictionWork = 1.0;  // do frictional heating by default
+
+  d_extraSolverFlushes = 0;  // Have PETSc do more flushes to save memory
 }
 
 MPMFlags::~MPMFlags()
@@ -92,6 +94,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     d_interpolator = scinew Node27Interpolator();
   }
 
+  ps->get("extra_solver_flushes", d_extraSolverFlushes);
+
   if (dbg.active()) {
     dbg << "---------------------------------------------------------\n";
     dbg << "MPM Flags " << endl;
@@ -112,7 +116,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " ForceBC increment factor    = " << d_forceIncrementFactor<< endl;
     dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
+    dbg << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
     dbg << "---------------------------------------------------------\n";
   }
 
+  cerr << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
 }
