@@ -65,9 +65,9 @@ MPMArchesLabel::MPMArchesLabel()
   tempSolid_FCXLabel = VarLabel::create("tempSolid_FCX",
 					SFCXVariable<double>::getTypeDescription() );
   tempSolid_FCYLabel = VarLabel::create("tempSolid_FCY",
-					SFCXVariable<double>::getTypeDescription() );
+					SFCYVariable<double>::getTypeDescription() );
   tempSolid_FCZLabel = VarLabel::create("tempSolid_FCZ",
-					SFCXVariable<double>::getTypeDescription() );
+					SFCZVariable<double>::getTypeDescription() );
 
   // Drag Force labels for solid: CC
 

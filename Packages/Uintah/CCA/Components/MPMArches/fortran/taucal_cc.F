@@ -1,9 +1,19 @@
+#if 1
+#include <Packages/Uintah/CCA/Components/MPMArches/fortran/taucal_cc_fort.h>
+#include "../../Arches/fortran/param4.h"
+#else
       subroutine taucal_cc(
-     $     su_drag_fcy, sp_drag_fcy, 
-     $     dragforcex_fcy, 
-     $     ug_cc, up_fcy, eps_Gas, 
-     $     eps_Solid,
-     $     sew, stb, yv, yy,
+     $     su_fcy, 
+     $     sp_fcy, 
+     $     dfx_fcy, 
+     $     ug_cc, 
+     $     up_fcy, 
+     $     epsg, 
+     $     epss,
+     $     sew, 
+     $     stb, 
+     $     yv, 
+     $     yy,
      $     viscos, csmag, sign,
      $     idist, 
      $     idf, idt1, idt2,
@@ -30,7 +40,7 @@ c     Now taucal also calculates the drag force
 c     on the solid intrusions due to the fluid
 c
 c     modified, March 5, 2001
-c     This is a cell-centered version.  Although dragforcex_fcy is
+c     This is a cell-centered version.  Although dfx_fcy is
 c     stored as (iorig,jorig,korig), this must be understood
 c     to mean their face-centered representations.
 c     Further, this version does not have anything for k-epsilon
@@ -68,17 +78,17 @@ C--------------------------------------------------------------------
       integer indext1
       integer indext2
 
-      double precision su_drag_fcy(
+      double precision su_fcy(
      $     dim_lo_su_fcy(1):dim_hi_su_fcy(1),
      $     dim_lo_su_fcy(2):dim_hi_su_fcy(2),
      $     dim_lo_su_fcy(3):dim_hi_su_fcy(3))
 
-      double precision sp_drag_fcy(
+      double precision sp_fcy(
      $     dim_lo_sp_fcy(1):dim_hi_sp_fcy(1),
      $     dim_lo_sp_fcy(2):dim_hi_sp_fcy(2),
      $     dim_lo_sp_fcy(3):dim_hi_sp_fcy(3))
 
-      double precision dragforcex_fcy(
+      double precision dfx_fcy(
      $     dim_lo_dx_fcy(1):dim_hi_dx_fcy(1),
      $     dim_lo_dx_fcy(2):dim_hi_dx_fcy(2),
      $     dim_lo_dx_fcy(3):dim_hi_dx_fcy(3))
@@ -93,12 +103,12 @@ C--------------------------------------------------------------------
      $     dim_lo_upy(2):dim_hi_upy(2),
      $     dim_lo_upy(3):dim_hi_upy(3))
 
-      double precision eps_Gas(
+      double precision epsg(
      $     dim_lo_eps(1):dim_hi_eps(1),
      $     dim_lo_eps(2):dim_hi_eps(2),
      $     dim_lo_eps(3):dim_hi_eps(3))
 
-      double precision eps_Solid(
+      double precision epss(
      $     dim_lo_epss(1):dim_hi_epss(1),
      $     dim_lo_epss(2):dim_hi_epss(2),
      $     dim_lo_epss(3):dim_hi_epss(3))
@@ -136,6 +146,8 @@ C--------------------------------------------------------------------
 
       integer ffield
 
+#endif
+
 *     local variables
       
       double precision yp     
@@ -156,7 +168,7 @@ C--------------------------------------------------------------------
       if (pcell(i,j,k).eq.ffield) then 
 
          yp = sign*(yv(idt1)-yy(idt1-idist))
-         eps = eps_Gas(i,j,k)
+         eps = epsg(i,j,k)
 
          ii = idist*iorig + (1-idist)*i
          jj = idist*jorig + (1-idist)*j
@@ -170,30 +182,31 @@ c     model
 
             tmult = eps*(csmag*yp)**2*abs((up_fcy(ii,jj,kk) - 
      $           ug_cc(i,j,k))/yp)/yp
-            tmult = tmult*eps_Solid(iorig,jorig,korig)
+            tmult = tmult*epss(iorig,jorig,korig)
 
          else
 
 c     laminar flow
 
             tmult = eps*viscos/yp
-            tmult = tmult*eps_Solid(iorig,jorig,korig)
+            tmult = tmult*epss(iorig,jorig,korig)
 
          end if
 
-         su_drag_fcy(ii,jj,kk) = 
-     $        su_drag_fcy(ii,jj,kk) + 
+         su_fcy(ii,jj,kk) = 
+     $        su_fcy(ii,jj,kk) + 
      $        tmult*sew(idf)*stb(idt2)*up_fcy(ii,jj,kk)
 
-         sp_drag_fcy(ii,jj,kk) = 
-     $        sp_drag_fcy(ii,jj,kk) - 
+         sp_fcy(ii,jj,kk) = 
+     $        sp_fcy(ii,jj,kk) - 
      $        tmult*sew(idf)*stb(idt2)
 
-         dragforcex_fcy(ii,jj,kk) = 
-     $        dragforcex_fcy(ii,jj,kk) +
+         dfx_fcy(ii,jj,kk) = 
+     $        dfx_fcy(ii,jj,kk) +
      $        tmult*sew(idf)*stb(idt2)*
      $        (ug_cc(i,j,k) - up_fcy(ii,jj,kk))
 
       end if
+
       return
       end

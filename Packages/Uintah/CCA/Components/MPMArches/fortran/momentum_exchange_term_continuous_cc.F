@@ -3,23 +3,24 @@
 #include "../../Arches/fortran/param4.h"
 #else
       subroutine momentum_exchange_term_continuous_cc(
-     $     su_dragx_fcy, 
-     $     sp_dragx_fcy,
-     $     su_dragx_fcz, 
-     $     sp_dragx_fcz,
-     $     su_dragx_cc, 
-     $     sp_dragx_cc,
-     $     dragforcex_fcy, 
-     $     dragforcex_fcz, 
-     $     dragforcex_cc, 
+     $     sux_fcy, 
+     $     spx_fcy,
+     $     sux_fcz, 
+     $     spx_fcz,
+     $     sux_cc, 
+     $     spx_cc,
+     $     dfx_fcy, 
+     $     dfx_fcz, 
+     $     dfx_cc, 
      $     ug_cc, 
      $     up_cc, 
      $     up_fcy, 
      $     up_fcz, 
-     $     eps_Gas, 
-     $     eps_Solid,
+     $     epsg, 
+     $     epss,
      $     viscos, csmag,
-     $     sew, sns, stb, yy, zz, yv, zw,
+     $     sew, sns, stb, 
+     $     yy, zz, yv, zw,
      $     dim_lo, dim_hi, 
      $     dim_lo_su_fcy, dim_hi_su_fcy, 
      $     dim_lo_sp_fcy, dim_hi_sp_fcy, 
@@ -37,7 +38,8 @@
      $     dim_lo_eps, dim_hi_eps,
      $     dim_lo_epss, dim_hi_epss,
      $     valid_lo, valid_hi,
-     $     ioff, joff, koff, indexflo, indext1, indext2,
+     $     ioff, joff, koff, 
+     $     indexflo, indext1, indext2,
      $     pcell, wall, ffield)
 
 C-----------------------------------------------------------------------
@@ -65,23 +67,23 @@ c     all the needed forces are obtained.
 c
 c     This routine calculates, for the gas phase,
 c
-c     su_dragx_cc: nonlinear source term for the drag, calculated here
-c     at cell centers (used to interpolate to su_dragx_fcx)
+c     sux_cc: nonlinear source term for the drag, calculated here
+c     at cell centers (used to interpolate to sux_fcx)
 c
-c     sp_dragx_cc: linear source term for the drag, calculated here 
-c     at cell centers (used to interpolate to sp_dragx_fcx)
+c     spx_cc: linear source term for the drag, calculated here 
+c     at cell centers (used to interpolate to spx_fcx)
 c
 c     and, for the particle phase,
 c
-c     dragforcex_fcy: drag force in the x-direction for interaction 
+c     dfx_fcy: drag force in the x-direction for interaction 
 c     with solid walls perpendicular to the y-direction, stored at 
 c     y-face centers
 c
-c     dragforcex_fcz: drag force in the x-direction for interaction 
+c     dfx_fcz: drag force in the x-direction for interaction 
 c     with solid walls perpendicular to the z-direction, stored at 
 c     z-face centers
 c
-c     dragforcex_cc: drag force in the x-direction for cells that 
+c     dfx_cc: drag force in the x-direction for cells that 
 c     contain both gas and solid 
 c
 c     The routine requires here, as inputs:
@@ -98,9 +100,9 @@ c
 c     up_fcz: solid velocity in the x-direction, stored at z-face 
 c     centers
 c
-c     eps_Gas: cell-centered volume fraction of gas
+c     epsg: cell-centered volume fraction of gas
 c
-c     eps_Solid: cell-centered volume fraction of solid of current 
+c     epss: cell-centered volume fraction of solid of current 
 c     material index
 c
 c     discrete_fraction: cell-centered discrete fraction of solid
@@ -195,47 +197,47 @@ C-----------------------------------------------------------------------
       integer indext1
       integer indext2
 
-      double precision su_dragx_fcy(
+      double precision sux_fcy(
      $     dim_lo_su_fcy(1):dim_hi_su_fcy(1),
      $     dim_lo_su_fcy(2):dim_hi_su_fcy(2),
      $     dim_lo_su_fcy(3):dim_hi_su_fcy(3))
 
-      double precision sp_dragx_fcy(
+      double precision spx_fcy(
      $     dim_lo_sp_fcy(1):dim_hi_sp_fcy(1),
      $     dim_lo_sp_fcy(2):dim_hi_sp_fcy(2),
      $     dim_lo_sp_fcy(3):dim_hi_sp_fcy(3))
 
-      double precision su_dragx_fcz(
+      double precision sux_fcz(
      $     dim_lo_su_fcz(1):dim_hi_su_fcz(1),
      $     dim_lo_su_fcz(2):dim_hi_su_fcz(2),
      $     dim_lo_su_fcz(3):dim_hi_su_fcz(3))
 
-      double precision sp_dragx_fcz(
+      double precision spx_fcz(
      $     dim_lo_sp_fcz(1):dim_hi_sp_fcz(1),
      $     dim_lo_sp_fcz(2):dim_hi_sp_fcz(2),
      $     dim_lo_sp_fcz(3):dim_hi_sp_fcz(3))
 
-      double precision su_dragx_cc(
+      double precision sux_cc(
      $     dim_lo_su_cc(1):dim_hi_su_cc(1),
      $     dim_lo_su_cc(2):dim_hi_su_cc(2),
      $     dim_lo_su_cc(3):dim_hi_su_cc(3))
 
-      double precision sp_dragx_cc(
+      double precision spx_cc(
      $     dim_lo_sp_cc(1):dim_hi_sp_cc(1),
      $     dim_lo_sp_cc(2):dim_hi_sp_cc(2),
      $     dim_lo_sp_cc(3):dim_hi_sp_cc(3))
 
-      double precision dragforcex_fcy(
+      double precision dfx_fcy(
      $     dim_lo_dx_fcy(1):dim_hi_dx_fcy(1),
      $     dim_lo_dx_fcy(2):dim_hi_dx_fcy(2),
      $     dim_lo_dx_fcy(3):dim_hi_dx_fcy(3))
 
-      double precision dragforcex_fcz(
+      double precision dfx_fcz(
      $     dim_lo_dx_fcz(1):dim_hi_dx_fcz(1),
      $     dim_lo_dx_fcz(2):dim_hi_dx_fcz(2),
      $     dim_lo_dx_fcz(3):dim_hi_dx_fcz(3))
 
-      double precision dragforcex_cc(
+      double precision dfx_cc(
      $     dim_lo_dx_cc(1):dim_hi_dx_cc(1),
      $     dim_lo_dx_cc(2):dim_hi_dx_cc(2),
      $     dim_lo_dx_cc(3):dim_hi_dx_cc(3))
@@ -260,12 +262,12 @@ C-----------------------------------------------------------------------
      $     dim_lo_upz(2):dim_hi_upz(2),
      $     dim_lo_upz(3):dim_hi_upz(3))
 
-      double precision eps_Gas(
+      double precision epsg(
      $     dim_lo_eps(1):dim_hi_eps(1),
      $     dim_lo_eps(2):dim_hi_eps(2),
      $     dim_lo_eps(3):dim_hi_eps(3))
 
-      double precision eps_Solid(
+      double precision epss(
      $     dim_lo_epss(1):dim_hi_epss(1),
      $     dim_lo_epss(2):dim_hi_epss(2),
      $     dim_lo_epss(3):dim_hi_epss(3))
@@ -305,7 +307,7 @@ C-----------------------------------------------------------------------
       integer valid_lo_ext(3)
       integer valid_hi_ext(3)
 
-      double precision eps_Gas_cont
+      double precision epsg_cont
       
       integer idf
       integer idt1
@@ -351,41 +353,57 @@ c     The initializations for the following arrays must be done
 c     at a level above this one, because they are cumulative
 c     over all materials:
 c
-c     su_dragx_fcy
-c     sp_dragx_fcy
-c     su_dragx_fcz
-c     sp_dragx_fcz
-c     su_dragx_cc
-c     sp_dragx_cc
+c     sux_fcy
+c     spx_fcy
+c     sux_fcz
+c     spx_fcz
+c     sux_cc
+c     spx_cc
 c
 
-#ifdef __GNUC__
+c#ifdef __GNUC__
 C The variable names are too long the use the PASS3 macros,
 C so we have to do this - Steve
-      call arrass(dragforcex_fcy_low_x, dragforcex_fcy_low_y,
-     $ dragforcex_fcy_low_z, dragforcex_fcy_high_x,
-     $ dragforcex_fcy_high_y, dragforcex_fcy_high_z,
-     $ dragforcex_fcy, zero, valid_lo, valid_hi)
+c      call arrass(dfx_fcy_low_x, dfx_fcy_low_y,
+c     $ dfx_fcy_low_z, dfx_fcy_high_x,
+c     $ dfx_fcy_high_y, dfx_fcy_high_z,
+c     $ dfx_fcy, zero, valid_lo, valid_hi)
 
-      call arrass(dragforcex_fcz_low_x, dragforcex_fcz_low_y,
-     $ dragforcex_fcz_low_z, dragforcex_fcz_high_x,
-     $ dragforcex_fcz_high_y, dragforcex_fcz_high_z,
-     $ dragforcex_fcz, zero, valid_lo, valid_hi)
+      call arrass(
+     $     PASS3A(dfx_fcy)
+     $     PASS3B(dfx_fcy), 
+     $     zero, valid_lo, valid_hi)
 
-      call arrass(dragforcex_cc_low_x, dragforcex_cc_low_y,
-     $ dragforcex_cc_low_z, dragforcex_cc_high_x,
-     $ dragforcex_cc_high_y, dragforcex_cc_high_z,
-     $ dragforcex_cc, zero, valid_lo, valid_hi)
+c      call arrass(dfx_fcz_low_x, dfx_fcz_low_y,
+c     $ dfx_fcz_low_z, dfx_fcz_high_x,
+c     $ dfx_fcz_high_y, dfx_fcz_high_z,
+c     $ dfx_fcz, zero, valid_lo, valid_hi)
 
-#else
-      call arrass(dragforcex_fcy_low, dragforcex_fcy_high,
-     $ dragforcex_fcy, zero, valid_lo, valid_hi)
+      call arrass(
+     $     PASS3A(dfx_fcz)
+     $     PASS3B(dfx_fcz),
+     $     zero, valid_lo, valid_hi)
 
-      call arrass(dragforcex_fcz_low, dragforcex_fcz_high,
-     $ dragforcex_fcz, zero, valid_lo, valid_hi)
+c      call arrass(dfx_cc_low_x, dfx_cc_low_y,
+c     $ dfx_cc_low_z, dfx_cc_high_x,
+c     $ dfx_cc_high_y, dfx_cc_high_z,
+c     $ dfx_cc, zero, valid_lo, valid_hi)
 
-      call arrass(dragforcex_cc_low, dragforcex_cc_high,
-     $ dragforcex_cc, zero, valid_lo, valid_hi)
+      call arrass(
+     $     PASS3A(dfx_cc)
+     $     PASS3B(dfx_cc),
+     $     zero, valid_lo, valid_hi)
+
+c#else
+#if 0
+      call arrass(dfx_fcy_low, dfx_fcy_high,
+     $ dfx_fcy, zero, valid_lo, valid_hi)
+
+      call arrass(dfx_fcz_low, dfx_fcz_high,
+     $ dfx_fcz, zero, valid_lo, valid_hi)
+
+      call arrass(dfx_cc_low, dfx_cc_high,
+     $ dfx_cc, zero, valid_lo, valid_hi)
 
 #endif
 
@@ -401,7 +419,7 @@ c
 c     debug, sk, April 14, 2001
 
       if (ioff.eq.1) then
-         print*, 'printing drag forces'
+c         print*, 'printing drag forces'
       endif
 
 c     end debug
@@ -410,45 +428,45 @@ c     end debug
          do 110 j = valid_lo(2), valid_hi(2)
             do 100 i = valid_lo(1), valid_hi(1)
 
-c               eps_Gas_cont = (one - discrete_fraction(i,j,k))*
-c     $              eps_Gas(i,j,k)
+c               epsg_cont = (one - discrete_fraction(i,j,k))*
+c     $              epsg(i,j,k)
 c     later we will get discrete fraction from mpm to input here.
 
-               eps_Gas_cont = eps_Gas(i,j,k)
-               if (eps_Gas_cont.lt.(one - small).and. 
+               epsg_cont = epsg(i,j,k)
+               if (epsg_cont.lt.(one - small).and. 
      $              pcell(i,j,k).ne.wall) then
 
                   idf  = ioff*i + joff*j + koff*k
                   idt1 = koff*i + ioff*j + joff*k
                   idt2 = joff*i + koff*j + ioff*k
 
-                  drep = (eps_Gas_cont*
+                  drep = (epsg_cont*
      $                 sew(idf)*sns(idt1)*stb(idt2))**
      $                 (1.0/3.0)
-                  darea = ((one - eps_Gas_cont)*
+                  darea = ((one - epsg_cont)*
      $                 sew(idf)*sns(idt1)*stb(idt2))**
      $                 (1.0/3.0)
                   dist = drep/two
                   area = darea*darea
 
-                  factor = eps_Solid(i,j,k)/(one - eps_Gas(i,j,k))
+                  factor = epss(i,j,k)/(one - epsg(i,j,k))
                   
                   tmult = factor*viscos/dist
                      
-                  su_dragx_cc(i,j,k) = su_dragx_cc(i,j,k) + 
+                  sux_cc(i,j,k) = sux_cc(i,j,k) + 
      $                 tmult*area*up_cc(i,j,k) 
 
-                  sp_dragx_cc(i,j,k) = sp_dragx_cc(i,j,k) -
+                  spx_cc(i,j,k) = spx_cc(i,j,k) -
      $                 tmult*area
                      
-                  dragforcex_cc(i,j,k) = dragforcex_cc(i,j,k) +
+                  dfx_cc(i,j,k) = dfx_cc(i,j,k) +
      $                 tmult*area*
      $                 (ug_cc(i,j,k) - up_cc(i,j,k))
 
 c     debug, sk, April 14, 2001
 
                   if (ioff.eq.1) then
-c                     print*, i,j,k, dragforcex_cc(i,j,k)
+c                     print*, i,j,k, dfx_cc(i,j,k)
                   endif
 
 c     end debug
@@ -478,63 +496,72 @@ c
 c     lower and upper faces of intrusion for transverse 
 c     direction 1 (i.e., south and north faces)
 
-#if 1
-      write(6,*)'walmom_cc broke - Steve'
-      stop
-#else
                   call walmom_cc(
-     $                 su_dragx_fcy, sp_dragx_fcy, 
-     $                 dragforcex_fcy, 
-     $                 ug_cc, up_fcy, eps_Gas, 
-     $                 eps_Solid,
-     $                 sew, stb, yv, yy,
+     $                 PASS3A(sux_fcy)
+     $                 PASS3B(sux_fcy), 
+     $                 PASS3A(spx_fcy)
+     $                 PASS3B(spx_fcy), 
+     $                 PASS3A(dfx_fcy)
+     $                 PASS3B(dfx_fcy), 
+     $                 PASS3A(ug_cc)
+     $                 PASS3B(ug_cc), 
+     $                 PASS3A(up_fcy)
+     $                 PASS3B(up_fcy), 
+     $                 PASS3A(epsg)
+     $                 PASS3B(epsg), 
+     $                 PASS3A(epss)
+     $                 PASS3B(epss),
+     $                 PASS1(sew), 
+     $                 PASS1(stb), 
+     $                 PASS1(yv), 
+     $                 PASS1(yy),
      $                 viscos, csmag,
      $                 idf, idt1, idt2, 
      $                 i, j, k, 
      $                 ioff, joff, koff,
      $                 koff, ioff, joff,
-     $                 dim_lo, dim_hi, 
-     $                 dim_lo_dx_fcy, dim_hi_dx_fcy,
-     $                 dim_lo_su_fcy, dim_hi_su_fcy,
-     $                 dim_lo_sp_fcy, dim_hi_sp_fcy,
-     $                 dim_lo_ugc, dim_hi_ugc, 
-     $                 dim_lo_upy, dim_hi_upy,
-     $                 dim_lo_eps, dim_hi_eps, 
-     $                 dim_lo_epss, dim_hi_epss, 
      $                 indexflo, indext1, indext2,
      $                 valid_lo_ext, valid_hi_ext, 
      $                 valid_lo, valid_hi,
      $                 lmltm,
-     $                 pcell, ffield)
+     $                 PASS3A(pcell)
+     $                 PASS3B(pcell), 
+     $                 ffield)
 
 c     lower and upper faces of intrusion for transverse 
 c     direction 2 (i.e., bottom and top faces)
 
                   call walmom_cc(
-     $                 su_dragx_fcz, sp_dragx_fcz,
-     $                 dragforcex_fcz, 
-     $                 ug_cc, up_fcz, eps_Gas, 
-     $                 eps_Solid,
-     $                 sew, sns, zw, zz,
+     $                 PASS3A(sux_fcz)
+     $                 PASS3B(sux_fcz), 
+     $                 PASS3A(spx_fcz)
+     $                 PASS3B(spx_fcz),
+     $                 PASS3A(dfx_fcz)
+     $                 PASS3B(dfx_fcz), 
+     $                 PASS3A(ug_cc)
+     $                 PASS3B(ug_cc), 
+     $                 PASS3A(up_fcz)
+     $                 PASS3B(up_fcz), 
+     $                 PASS3A(epsg)
+     $                 PASS3B(epsg), 
+     $                 PASS3A(epss)
+     $                 PASS3B(epss),
+     $                 PASS1(sew), 
+     $                 PASS1(sns), 
+     $                 PASS1(zw), 
+     $                 PASS1(zz),
      $                 viscos, csmag,
      $                 idf, idt2, idt1, 
      $                 i, j, k, 
      $                 ioff, joff, koff,
      $                 joff, koff, ioff,
-     $                 dim_lo, dim_hi, 
-     $                 dim_lo_dx_fcz, dim_hi_dx_fcz,
-     $                 dim_lo_su_fcz, dim_hi_su_fcz,
-     $                 dim_lo_sp_fcz, dim_hi_sp_fcz,
-     $                 dim_lo_ugc, dim_hi_ugc, 
-     $                 dim_lo_upz, dim_hi_upz,
-     $                 dim_lo_eps, dim_hi_eps, 
-     $                 dim_lo_epss, dim_hi_epss, 
      $                 indexflo, indext2, indext1,
      $                 valid_lo_ext, valid_hi_ext,
      $                 valid_lo, valid_hi,
      $                 lmltm,
-     $                 pcell, ffield)
-#endif
+     $                 PASS3A(pcell)
+     $                 PASS3B(pcell), 
+     $                 ffield)
 
                endif
 
