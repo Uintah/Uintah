@@ -143,15 +143,18 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
-  //! Friend functions
-  friend void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-  friend void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-  friend void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-  friend void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
-  friend void Add(double, DenseMatrix&, double, const DenseMatrix&);
-  friend void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-  friend void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 };
+
+
+//! Friend functions
+void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
+void Add(double, DenseMatrix&, double, const DenseMatrix&);
+void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+
 
 } // End namespace SCIRun
 
