@@ -49,6 +49,7 @@ MP(MeshInterpVals)
 MP(MeshRender)
 MP(MeshToGeom)
 MP(MeshView)
+MP(TransformMesh)
 
 // Writers
       //MP(TiffWriter)
@@ -105,6 +106,7 @@ void initPackage(const clString& tcl) {
   RMM("MeshRender",	make_MeshRender,	    "");
   RMM("MeshToGeom",	make_MeshToGeom,	    tcl+"/MeshToGeom.tcl");
   RMM("MeshView",	make_MeshView,	    tcl+"/MeshView.tcl");
+  RMM("TransformMesh",	make_TransformMesh,	    "");
 
     // Writers
   //  RM("Writers", "TiffWriter",     make_TiffWriter,	    tcl+"/TiffWriter.tcl");
