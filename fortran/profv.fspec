@@ -1,5 +1,5 @@
 void profv(SFCXVariable<double> uu, SFCYVariable<double> vv,
      SFCZVariable<double> ww, IntVector idxLo, IntVector idxHi,
-     CCVariable<int> pcell,  double areapr, int pfield,
+     constCCVariable<int> pcell,  double areapr, int pfield,
      double flowpr, double denpr, bool xminus, bool xplus,
      bool yminus, bool yplus, bool zminus, bool zplus);
