@@ -5,6 +5,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/Core/Exceptions
 
 SRCS     += \
+	$(SRCDIR)/ConvergenceFailure.cc \
 	$(SRCDIR)/InvalidCompressionMode.cc \
 	$(SRCDIR)/InvalidGrid.cc            \
 	$(SRCDIR)/InvalidValue.cc           \
