@@ -39,7 +39,7 @@ PriorPart::~PriorPart()
   
 
 double
-PriorPart::compute( double theta[] )
+PriorPart::compute( vector<double> &theta )
 {
   double mu = theta[0];
   double eta = theta[1];

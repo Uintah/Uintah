@@ -28,7 +28,7 @@ public:
   PriorPart( PartInterface *parent, const string &name="Prior");
   virtual ~PriorPart();
 
-  double compute( double [] );
+  double compute( vector<double> & );
 };
   
 
