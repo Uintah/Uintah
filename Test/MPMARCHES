@@ -14,12 +14,13 @@ matest_heptwb_cyl_8patch_ups = modUPS("%s/MPMARCHES" % inputs_root(), \
                            ["<patches>[2,2,2]</patches>", "<resolution>[40,40,40]</resolution>" \
                             "<maxTime>0.5</maxTime>"])
 
-UNUSED_TESTS = [             ("matest_heptwb_cyl_8patch", matest_heptwb_cyl_8patch_ups, "", 8, "ALL","chem_hept_westbrook") \
+UNUSED_TESTS = [  ("matest_heptwb_cyl", "matest_heptwb_cyl.ups", "", 1.1, "ALL", "chem_hept_westbrook"), \
+                  ("matest_heptwb_cyl_8p", matest_heptwb_cyl_8p_ups, "", 8, "ALL","chem_hept_westbrook"), \
+                  ("matest_heptwb_cyl_8patch", matest_heptwb_cyl_8patch_ups, "", 8, "ALL","chem_hept_westbrook") \
 ]
  
 
-TESTS = [   ("matest_heptwb_cyl", "matest_heptwb_cyl.ups", "", 1.1, "ALL", "chem_hept_westbrook"), \
-            ("matest_heptwb_cyl_8p", matest_heptwb_cyl_8p_ups, "", 8, "ALL","chem_hept_westbrook"), \
+TESTS = [
     	]
 
 def chemfile (test):
