@@ -173,8 +173,7 @@ void SolverTest1::timeAdvance(const ProcessorGroup* pg,
         A_tmp.e = e;   A_tmp.w = w; 
         A_tmp.t = t;   A_tmp.b = b;
         
-        if (first) {
-          first = false;
+        if (c == IntVector(0,0,0)) {
           rhs[c] = 1.0;
         }
         else
