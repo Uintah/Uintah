@@ -24,8 +24,8 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP sched)
 {
   cout << "HierarchicalRegridder::regrid() BGN" << endl;
 
-  //  DataWarehouse* dw = sched->get_dw(0);
-  DataWarehouse* dw = sched->getLastDW();
+  DataWarehouse* dw = sched->get_dw(0);
+  //  DataWarehouse* dw = sched->getLastDW();
 
   d_flaggedCells.resize(d_maxLevels);
   d_dilatedCellsCreated.resize(d_maxLevels);
