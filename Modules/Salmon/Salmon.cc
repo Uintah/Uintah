@@ -151,7 +151,7 @@ int Salmon::process_event(int block)
 	    for(int i=0;i<roe.size();i++){
 		Roe* r=roe[i];
 		if(r->id == rmsg->rid){
-		    (r->*(rmsg->handler))(rmsg->action, rmsg->x, rmsg->y);
+		    (r->*(rmsg->handler))(rmsg->action, rmsg->x, rmsg->y, rmsg->state, rmsg->btn);
 		    break;
 		}
 	    }

@@ -316,7 +316,7 @@ void Roe::scale(Vector /*v*/, Point /*c*/)
 }
 
 
-void Roe::mouse_translate(int action, int x, int y)
+void Roe::mouse_translate(int action, int x, int y, int, int)
 {
     switch(action){
     case MouseStart:
@@ -372,7 +372,7 @@ void Roe::mouse_translate(int action, int x, int y)
     }
 }
 
-void Roe::mouse_scale(int action, int x, int y)
+void Roe::mouse_scale(int action, int x, int y, int, int)
 {
     switch(action){
     case MouseStart:
@@ -411,7 +411,7 @@ void Roe::mouse_scale(int action, int x, int y)
     }	
 }
 
-void Roe::mouse_rotate(int action, int x, int y)
+void Roe::mouse_rotate(int action, int x, int y, int, int)
 {
     switch(action){
     case MouseStart:
@@ -481,8 +481,13 @@ void Roe::mouse_rotate(int action, int x, int y)
     }
 }
 
-void Roe::mouse_pick(int action, int x, int y)
+void Roe::mouse_pick(int action, int x, int y, int state, int btn)
 {
+    BState bs;
+    bs.shift=1; // Always for widgets...
+    bs.control=(state&4);
+    bs.alt=(state&8);
+    bs.btn=btn;
     switch(action){
     case MouseStart:
 	{
@@ -496,7 +501,7 @@ void Roe::mouse_pick(int action, int x, int y)
 
 	    if (pick_obj){
 		NOT_FINISHED("update mode string for pick");
-		pick_pick->pick();
+		pick_pick->pick(bs);
 		need_redraw=1;
 	    } else {
 		update_mode_string("pick: none");
@@ -546,7 +551,7 @@ void Roe::mouse_pick(int action, int x, int y)
 		if (Abs(total_z) < .0001) total_z=0;
 		need_redraw=1;
 		update_mode_string("picked someting...");
-		pick_pick->moved(prin_dir, dist, mtn);
+		pick_pick->moved(prin_dir, dist, mtn, bs);
 		need_redraw=1;
 	    } else {
 		update_mode_string("Bad direction...");
@@ -557,7 +562,7 @@ void Roe::mouse_pick(int action, int x, int y)
 	break;
     case MouseEnd:
 	if(pick_pick){
-	    pick_pick->release();
+	    pick_pick->release(bs);
 	    need_redraw=1;
 	}
 	pick_pick=0;
@@ -809,7 +814,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
 
 void Roe::do_mouse(MouseHandler handler, TCLArgs& args)
 {
-    if(args.count() != 5){
+    if(args.count() != 5 && args.count() != 7){
 	args.error(args[1]+" needs start/move/end and x y");
 	return;
     }
@@ -833,11 +838,25 @@ void Roe::do_mouse(MouseHandler handler, TCLArgs& args)
 	args.error("error parsing y");
 	return;
     }
+    int state;
+    int btn;
+    if(args.count() == 7){
+       if(!args[5].get_int(state)){
+	  args.error("error parsing state");
+	  return;
+
+       }
+       if(!args[6].get_int(btn)){
+	  args.error("error parsing btn");
+	  return;
+       }
+    }
+
     // We have to send this to the salmon thread...
     if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
 	cerr << "Mouse event dropped, mailbox full!\n";
     } else {
-	manager->mailbox.send(new RoeMouseMessage(id, handler, action, x, y));
+	manager->mailbox.send(new RoeMouseMessage(id, handler, action, x, y, state, btn));
     }
 }
 
@@ -901,9 +920,9 @@ void TCLView::set(const View& view)
 }
 
 RoeMouseMessage::RoeMouseMessage(const clString& rid, MouseHandler handler,
-				 int action, int x, int y)
+				 int action, int x, int y, int state, int btn)
 : MessageBase(MessageTypes::RoeMouse), rid(rid), handler(handler),
-  action(action), x(x), y(y)
+  action(action), x(x), y(y), state(state), btn(btn)
 {
 }
 

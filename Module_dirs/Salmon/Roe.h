@@ -51,7 +51,7 @@ public:
 };
 
 class Roe;
-typedef void (Roe::*MouseHandler)(int, int x, int y);
+typedef void (Roe::*MouseHandler)(int, int x, int y, int state, int btn);
 typedef void (Renderer::*RoeVisPMF)(Salmon*, Roe*, GeomObj*);
 
 class Roe : public TCL {
@@ -105,10 +105,10 @@ public:
     void redraw_if_needed();
     void force_redraw();
 
-    void mouse_translate(int, int, int);
-    void mouse_scale(int, int, int);
-    void mouse_rotate(int, int, int);
-    void mouse_pick(int, int, int);
+    void mouse_translate(int, int, int, int, int);
+    void mouse_scale(int, int, int, int, int);
+    void mouse_rotate(int, int, int, int, int);
+    void mouse_pick(int, int, int, int, int);
 
     void tcl_command(TCLArgs&, void*);
     void get_bounds(BBox&);
@@ -141,8 +141,12 @@ public:
     MouseHandler handler;
     int action;
     int x, y;
+    int state;
+    int btn;
+    
+    
     RoeMouseMessage(const clString& rid, MouseHandler handler,
-		    int action, int x, int y);
+		    int action, int x, int y, int state, int btn);
     virtual ~RoeMouseMessage();
 };
 
