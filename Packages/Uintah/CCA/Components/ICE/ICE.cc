@@ -871,7 +871,13 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       if(doMech >= 0.){
         delt_CFL = .0625;
       }
-
+    //__________________________________
+    //  Bullet proofing
+    if(delt_CFL < 1e-20) {  
+      string warn = " E R R O R -------> ICE::ComputeStableTimestep: delT < 1e-20";
+      throw InvalidValue(warn);
+    }
+    
     new_dw->put(delt_vartype(delt_CFL), lb->delTLabel);
   }  // patch loop
   //  update when you should dump debugging data. 
@@ -1236,7 +1242,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
     }     // end of cell interator
 
-    cerr << "max. iterations in any cell " << test_max_iter << "\t"; 
+    cout_norm << "max. iterations in any cell " << test_max_iter << 
+                 " on patch "<<patch->getID()<<endl; 
 
     //__________________________________
     // update Boundary conditions
@@ -2043,10 +2050,10 @@ void ICE::massExchange(const ProcessorGroup*,
 
       int indx = matl->getDWIndex();
       new_dw->get(rho_CC[m], lb->rho_CCLabel, indx,patch,Ghost::None, 0);
-      old_dw->get(Temp_CC[m],     lb->temp_CCLabel,indx,patch,Ghost::None, 0);
+      old_dw->get(Temp_CC[m],lb->temp_CCLabel,indx,patch,Ghost::None, 0);
       new_dw->allocate(burnedMass[m],  lb->burnedMass_CCLabel,  indx,patch);
       new_dw->allocate(releasedHeat[m],lb->releasedHeat_CCLabel,indx,patch);
-      new_dw->allocate(created_vol[m],   lb->created_vol_CCLabel, indx,patch);
+      new_dw->allocate(created_vol[m], lb->created_vol_CCLabel, indx,patch);
       burnedMass[m].initialize(0.0);
       releasedHeat[m].initialize(0.0); 
       created_vol[m].initialize(0.0);
@@ -2058,17 +2065,15 @@ void ICE::massExchange(const ProcessorGroup*,
     // and the switch is on.
     if(d_massExchange && (reactant_indx >= 0)){       
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-       IntVector c = *iter;
+        IntVector c = *iter;
         double mass_hmx = rho_CC[reactant_indx][c] * vol;
         if (mass_hmx > d_SMALL_NUM)  {
-           double burnedMass_tmp = (rho_CC[reactant_indx][c] * vol);  
-           // hardwired wipes out all the mass in one 
-          // timestep
-           burnedMass[reactant_indx][c] =  -burnedMass_tmp;
+          double burnedMass_tmp = (rho_CC[reactant_indx][c] * vol/100.0); 
+          burnedMass[reactant_indx][c] =  -burnedMass_tmp;
           releasedHeat[reactant_indx][c] = -burnedMass_tmp
                                          *  cv[reactant_indx]
                                          *  Temp_CC[reactant_indx][c];
-           // Commented out for now as I'm not sure that this is appropriate
+          // Commented out for now as I'm not sure that this is appropriate
           // for regular ICE - Jim 7/30/01
 //          created_vol[reactant_indx][c]  =
 //                          -burnedMass_tmp/rho_micro_CC[reactant_indx][c];
@@ -2080,11 +2085,11 @@ void ICE::massExchange(const ProcessorGroup*,
       // Make this faster
       for(int prods = 0; prods < numICEMatls; prods++) {
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(prods);
-       if (ice_matl->getRxProduct() == Material::product) {
-         for(int m = 0; m < numICEMatls; m++) {
-           for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-             IntVector c = *iter;
-             burnedMass[prods][c]  -= burnedMass[m][c];
+        if (ice_matl->getRxProduct() == Material::product) {
+          for(int m = 0; m < numICEMatls; m++) {
+            for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
+              IntVector c = *iter;
+              burnedMass[prods][c]  -= burnedMass[m][c];
               releasedHeat[prods][c] -=
                               burnedMass[m][c]*cv[m]*Temp_CC[m][c];
            // Commented out for now as I'm not sure that this is appropriate
@@ -2122,7 +2127,6 @@ void ICE::massExchange(const ProcessorGroup*,
 #endif
   }   // patch loop
 }
- 
 
 /* ---------------------------------------------------------------------
  Function~  ICE::accumulateMomentumSourceSinks--
