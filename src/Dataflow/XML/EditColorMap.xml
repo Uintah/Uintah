@@ -33,13 +33,14 @@
 
 
 
-<component name="GenTransferFunc" category="Visualization">
+<component name="EditColorMap" category="Visualization">
   <overview>
     <authors>
       <author>Unknown</author>
     </authors>
-    <summary>Modify and create transfer functions.</summary>
+    <summary>Modify and create custom SCIRun ColorMaps.</summary>
     <description>
+      <p>A simple interactive editor for SCIRun ColorMaps.</p>
     </description>
   </overview>
   <io>

@@ -65,7 +65,7 @@ struct ColorPoint {
   Color _rgb;
 };
 
-class GenTransferFunc : public Module
+class EditColorMap : public Module
 {
 private:
 
@@ -105,7 +105,7 @@ private:
   void tcl_unpickle();
 
 public:
-  GenTransferFunc( GuiContext* ctx);
+  EditColorMap( GuiContext* ctx);
 
   void DrawGraphs(int flush=1); // this function just blasts away...
 
@@ -137,7 +137,7 @@ public:
 
   void Resize(int win);
 
-  virtual ~GenTransferFunc();
+  virtual ~EditColorMap();
   virtual void execute();
   void tcl_command( GuiArgs&, void* );
 
@@ -149,10 +149,10 @@ public:
 };
 
 
-DECLARE_MAKER(GenTransferFunc)
+DECLARE_MAKER(EditColorMap)
 
-GenTransferFunc::GenTransferFunc( GuiContext* ctx)
-  : Module("GenTransferFunc",ctx,Source, "Visualization", "SCIRun"),
+EditColorMap::EditColorMap( GuiContext* ctx)
+  : Module("EditColorMap",ctx,Source, "Visualization", "SCIRun"),
     RGBorHSV_(ctx->subVar("rgbhsv")),
     lineVSspline_(ctx->subVar("linespline")),
     rgb_points_pickle_(ctx->subVar("rgb_points_pickle")),
@@ -202,13 +202,13 @@ GenTransferFunc::GenTransferFunc( GuiContext* ctx)
 }
 
 
-GenTransferFunc::~GenTransferFunc()
+EditColorMap::~EditColorMap()
 {
 }
 
 
 void
-GenTransferFunc::loadTs( double Ax, double Ay, double ax, double ay,
+EditColorMap::loadTs( double Ax, double Ay, double ax, double ay,
 			 vector<double>& t)
 {
   double ys[11] = { 0.8333333333, 0.1666666666, 0.249999999,
@@ -236,7 +236,7 @@ GenTransferFunc::loadTs( double Ax, double Ay, double ax, double ay,
 
 
 void
-GenTransferFunc::tcl_pickle()
+EditColorMap::tcl_pickle()
 {
 #if 0
   unsigned int i;
@@ -273,7 +273,7 @@ GenTransferFunc::tcl_pickle()
 
 
 void
-GenTransferFunc::tcl_unpickle()
+EditColorMap::tcl_unpickle()
 {
 #if 0
   rgb_points_.clear();
@@ -339,7 +339,7 @@ drawBox(float x, float y, float dx, float dy)
 
 
 void
-GenTransferFunc::Resize(int win)
+EditColorMap::Resize(int win)
 {
   // Do a make current.  Locks GUI on success
   if (!makeCurrent(win))
@@ -378,7 +378,7 @@ GenTransferFunc::Resize(int win)
 
 
 void
-GenTransferFunc::DrawGraphs( int flush)
+EditColorMap::DrawGraphs( int flush)
 {
   static float colors[] = { 1.,0.,0.,   0.,1.,0.,   0.,0.,1. };
 
@@ -536,10 +536,10 @@ GenTransferFunc::DrawGraphs( int flush)
 
 // This is how the gui talks with this thing.
 void
-GenTransferFunc::tcl_command( GuiArgs& args, void* userdata)
+EditColorMap::tcl_command( GuiArgs& args, void* userdata)
 {
   if (args.count() < 2) {
-    args.error("No command for GenTransferFunc");
+    args.error("No command for EditColorMap");
     return;
   }
 
@@ -598,7 +598,7 @@ GenTransferFunc::tcl_command( GuiArgs& args, void* userdata)
 // with each point in the time interval.
 
 void
-GenTransferFunc::GetClosestPoint(float time, float val,
+EditColorMap::GetClosestPoint(float time, float val,
                                  int& cline, int& cpoint)
 {
   unsigned int i;
@@ -675,7 +675,7 @@ GenTransferFunc::GetClosestPoint(float time, float val,
 // James Bigler
 //
 void
-GenTransferFunc::GetClosestLineSegment(float time, float val,
+EditColorMap::GetClosestLineSegment(float time, float val,
                                        int& cline, int& cpoint)
 {
   unsigned int i;
@@ -811,7 +811,7 @@ GenTransferFunc::GetClosestLineSegment(float time, float val,
 
 // Button must be down.
 void
-GenTransferFunc::DoMotion(int x, int y)
+EditColorMap::DoMotion(int x, int y)
 {
   if ((selNode == -1) || (activeLine == -1))  // this shouldn't happen!
     return;
@@ -873,7 +873,7 @@ GenTransferFunc::DoMotion(int x, int y)
 // Button 1 is modify, 2 is insert, 3 is delete
 
 void
-GenTransferFunc::DoDown(int x, int y, int button)
+EditColorMap::DoDown(int x, int y, int button)
 {
   // You have to find the point to select.
 
@@ -969,7 +969,7 @@ GenTransferFunc::DoDown(int x, int y, int button)
 
 
 void
-GenTransferFunc::DoRelease(int x, int y, int button)
+EditColorMap::DoRelease(int x, int y, int button)
 {
   // Just fake a move for the final position.
 
@@ -1008,7 +1008,7 @@ GenTransferFunc::DoRelease(int x, int y, int button)
 
 
 void
-GenTransferFunc::execute()
+EditColorMap::execute()
 {
   ColorMapIPort *inport = (ColorMapIPort *)get_iport("ColorMap");
   ColorMapOPort *outport = (ColorMapOPort *)get_oport("ColorMap");
@@ -1048,7 +1048,7 @@ GenTransferFunc::execute()
 
 
 int
-GenTransferFunc::makeCurrent(int win)
+EditColorMap::makeCurrent(int win)
 {
   ASSERT(win == 0 || win == 1);
   // lock a mutex
@@ -1096,14 +1096,14 @@ GenTransferFunc::makeCurrent(int win)
 
 
 void
-GenTransferFunc::presave()
+EditColorMap::presave()
 {
   tcl_pickle();
 }
 
 
 void
-GenTransferFunc::toggle_hsv()
+EditColorMap::toggle_hsv()
 {
 #if 0
   if (RGBorHSV_.get() != hsv_mode_)

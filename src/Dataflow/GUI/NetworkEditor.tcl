@@ -563,6 +563,7 @@ proc findMovedModulePath { packvar catvar modvar } {
 {SCIRun Visualization TextureVolVis} {SCIRun Visualization VolumeVisualizer}
 {SCIRun Visualization TexCuttingPlanes} {SCIRun Visualization VolumeSlicer}
 {SCIRun FieldsData ChangeFieldDataAt} {SCIRun FieldsData ChangeFieldBasis}
+{SCIRun Visualization GenTransferFunc} {SCIRun Visualization EditColorMap}
 "
 
     upvar 1 $packvar package $catvar category $modvar module
