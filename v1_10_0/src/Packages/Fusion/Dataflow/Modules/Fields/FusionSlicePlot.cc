@@ -99,7 +99,7 @@ void FusionSlicePlot::execute(){
     return;
   }
 
-  if (fHandle->query_scalar_interface(this) == 0)
+  if (fHandle->query_scalar_interface(this).get_rep() == 0)
   {
     error("This module only works on scalar fields.");
     return;
