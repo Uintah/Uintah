@@ -57,7 +57,7 @@ bool RegridderCommon::needsToReGrid()
     d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
     return true;
   }
-  return false;
+  return true;
 }
 
 bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& sched)
