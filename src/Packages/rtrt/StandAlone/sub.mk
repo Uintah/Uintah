@@ -21,6 +21,11 @@ LIBS := $(GL_LIBS) -lfastm -lm -lelf -lfetchop -lperfex
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+# multi_rtrt
+SRCS := $(SRCDIR)/multi_rtrt.cc
+PROGRAM := Packages/rtrt/StandAlone/mrtrt
+include $(SCIRUN_SCRIPTS)/program.mk
+
 # visinfo
 SRCDIR := Packages/rtrt/visinfo
 
