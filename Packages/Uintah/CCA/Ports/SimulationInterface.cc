@@ -66,3 +66,10 @@ void SimulationInterface::addMaterial(const ProblemSpecP& params, GridP& grid,
 {
   throw InternalError("addMaterial not implemented for this component");
 }
+
+void SimulationInterface::scheduleInitializeAddedMaterial(const LevelP&
+                                                                coarseLevel,
+                                                          SchedulerP& sched)
+{
+  throw InternalError("scheduleInitializeAddedMaterial not implemented for this component");
+}

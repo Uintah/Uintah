@@ -367,6 +367,15 @@ SimpleSimulationController::run()
 	DumpAllocator(DefaultAllocator(), filename.c_str());
       }
 
+      if(sharedState->needAddMaterial()){
+        sim->addMaterial(ups, grid, sharedState);
+        scheduler->initialize();
+        sim->scheduleInitializeAddedMaterial(level, scheduler);
+        scheduler->compile();
+        scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
+        scheduler->execute();
+      }
+
       scheduler->advanceDataWarehouse(grid);
 
       // Put the current time into the shared state so other components
@@ -375,14 +384,13 @@ SimpleSimulationController::run()
       sharedState->setElapsedTime(t);
       sharedState->incrementCurrentTopLevelTimeStep();
 
-      
       if(needRecompile(t, delt, grid, sim, output, lb) || first){
         first=false;
         if(d_myworld->myrank() == 0)
           cout << "COMPILING TASKGRAPH...\n";
         double start = Time::currentSeconds();
         scheduler->initialize();
-        
+
         sim->scheduleTimeAdvance(level, scheduler, 0, 1);
         
         if(output)
