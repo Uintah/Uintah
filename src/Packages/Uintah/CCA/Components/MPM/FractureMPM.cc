@@ -77,7 +77,7 @@ static Vector face_norm(Patch::FaceType f)
 }
 
 FractureMPM::FractureMPM(const ProcessorGroup* myworld) :
-  UintahParallelComponent(myworld)
+  SerialMPM(myworld)
 {
   lb = scinew MPMLabel();
   flags = scinew MPMFlags();

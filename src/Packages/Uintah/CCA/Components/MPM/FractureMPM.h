@@ -16,6 +16,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
+#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
@@ -57,7 +58,7 @@ WARNING
   
 ****************************************/
 
-class FractureMPM : public SimulationInterface, public UintahParallelComponent {
+class FractureMPM : public SerialMPM {
 public:
   FractureMPM(const ProcessorGroup* myworld);
    virtual ~FractureMPM();
