@@ -149,6 +149,9 @@ static int      rendering_scene = 0;
 static MusilRNG rng;
 static Object * obj;
 
+//static float float_identity[4][4] = { {1,0,0,0}, {0,1,0,0},
+//	 			        {0,0,1,0}, {0,0,0,1} };
+
 //////////////////////////////////////////////////////////////////
 
 Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
@@ -162,9 +165,17 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
     showImage_(NULL), doAutoJitter_(false), doJitter_(false),
     showLights_( false ), lightsShowing_( false ),
     turnOffAllLights_( false ), turnOnAllLights_( false ),
-    turnOnLight_( false ), turnOffLight_( false )
+    turnOnLight_( false ), turnOffLight_( false ),
+    attachedObject_(NULL)
 {
   ppc = new PerProcessorContext( pp_size, scratchsize );
+
+  for( int i = 0; i < 4; i++ )
+    for( int j = 0; j < 4; j++ )
+      if( i == j )
+	objectRotationMatrix_[i][j] = 1;
+      else
+	objectRotationMatrix_[i][j] = 0;
 
   //  barrier=new Barrier("Frame end", nworkers+1);
   barrier=new Barrier("Frame end");
@@ -189,15 +200,19 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
   //     hard coding for stadium.
   //BBox bb;
   //scene->get_object()->compute_bounds( bb, 1e-3 );
+
   double translate_scale   = 100.0;
   double rotate_scale      = 4.0;
   double gravity           = 10.0;
-  stealth_ = new Stealth( translate_scale, rotate_scale, gravity );
 
+  stealth_       = new Stealth( translate_scale, rotate_scale, gravity );
+  objectStealth_ = new Stealth( translate_scale, rotate_scale, gravity );
 }
 
 Dpy::~Dpy()
 {
+  delete stealth_;
+  delete objectStealth_;
 }
 
 void Dpy::register_worker(int i, Worker* worker)
@@ -313,6 +328,9 @@ Dpy::renderFrame() {
       obj->animate(SCIRun::Time::currentSeconds(), changed);
   }
 
+  if( attachedObject_ ) {
+    attachedObject_->useNewTransform();
+  }
 
   if(scene->shadow_mode != shadowMode_){
     scene->shadow_mode = shadowMode_;
@@ -393,9 +411,9 @@ Dpy::renderFrame() {
   Image * displayedImage = scene->get_image(showing_scene);
   // Tell Gui thread to display the image showImage_
 
-  if( showImage_ != NULL ){
-    cout << "Warning, gui has not displayed previous frame!\n";
-  }
+  //if( showImage_ != NULL ){
+  //  cout << "Warning, gui has not displayed previous frame!\n";
+  //}
 
   showImage_ = displayedImage;
 
@@ -465,6 +483,12 @@ Dpy::renderFrame() {
     double dt=curtime-scene->lasttime;
 
     scene->lasttime=curtime;
+
+    // If keypad is attached to an object.
+    if( attachedObject_ ) {
+//      attachedObject_->updatePosition( objectStealth_, guiCam_ );
+      attachedObject_->updateNewTransform( objectRotationMatrix_ );
+    }
 
     if (display_frames) {
       if( !priv->followPath ) {
