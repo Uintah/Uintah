@@ -45,7 +45,7 @@ $filename = "$srcroot" . "/src/Packages/Uintah/CCA/Components/sub.mk";
 	..SRCDIR./MPMArches .";
   $replacement_str  = "";
   $search_str2      = "
-	..SRCDIR./Arches .";
+	..SRCDIR./Arches\\S* .";
   $replacement_str2 = "";
   @lines = <IN>;
   $text = join("", @lines);
@@ -53,7 +53,7 @@ $filename = "$srcroot" . "/src/Packages/Uintah/CCA/Components/sub.mk";
   if ($text =~ s/$search_str/$replacement_str/g) {
     $changed = "true";
   }
-  if ($changed == "true" &&$text =~ s/$search_str2/$replacement_str2/g) {
+  while ($changed == "true" && $text =~ s/$search_str2/$replacement_str2/g) {
     $changed = "true";
   }
   close IN;
