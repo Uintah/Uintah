@@ -226,8 +226,7 @@ void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
   rdbg << "HierarchicalRegridder::MarkPatches() END" << endl;
 }
 
-void
-HierarchicalRegridder::ExtendPatches( const GridP& /*oldGrid*/, int levelIdx )
+void HierarchicalRegridder::ExtendPatches( const GridP&, int levelIdx  )
   /*--------------------------------------------------------------------------
     Based on the patches marked at the current-finest level, extend the patches
     of all coarser levels, so that we have at least d_minBoundaryCells coarse
@@ -309,7 +308,7 @@ IntVector HierarchicalRegridder::StartCellToLattice ( IntVector startCell, int l
 void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
                                          const PatchSubset* patches,
                                          const MaterialSubset* ,
-                                         DataWarehouse* /*old_dw*/,
+                                         DataWarehouse*,
                                          DataWarehouse* new_dw)
 {
   rdbg << "MarkPatches2 BGN\n";
@@ -332,19 +331,20 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
     // use pointers here to avoid a lot of const nonsense with the original version of Regridder
     constCCVariable<int> dcc;
     CCVariable<int>* dilatedCellsCreated;
-    //CCVariable<int>* dilatedCellsDeleted;
+    // FIX Deletion - CCVariable<int>* dilatedCellsDeleted;
     new_dw->put(activePatches, d_activePatchesLabel, 0, patch);
     new_dw->get(dcc, d_dilatedCellsCreationLabel, 0, patch, Ghost::None, 0);
     dilatedCellsCreated = dynamic_cast<CCVariable<int>*>(const_cast<CCVariableBase*>(dcc.clone()));
     
     if (d_cellCreationDilation != d_cellDeletionDilation) {
-      constCCVariable<int> dcd;
-      new_dw->get(dcd, d_dilatedCellsDeletionLabel, 0, patch, Ghost::None, 0);
+      //FIX Deletion
+      //constCCVariable<int> dcd;
+      //new_dw->get(dcd, d_dilatedCellsDeletionLabel, 0, patch, Ghost::None, 0);
       //dilatedCellsDeleted = dynamic_cast<CCVariable<int>*>(const_cast<CCVariableBase*>(dcd.clone()));
     }
-    //else
-    //  dilatedCellsDeleted = dilatedCellsCreated;
-
+    else {
+      // Fix Deletion - dilatedCellsDeleted = dilatedCellsCreated;
+    }
 
     for (CellIterator iter(IntVector(0,0,0), numSubPatches); !iter.done(); iter++) {
       IntVector idx(*iter);
@@ -559,7 +559,7 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
         PerPatch<SubPatchFlagP> spf2;
         dw->get(spf2, d_activePatchesLabel, 0, patch);
         for (int idx = 0; idx < nsppp; idx++) {
-//          sendbuf[idx + sendbufindex] = spf2.get()->subpatches[idx];
+          sendbuf[idx + sendbufindex] = spf2.get()->subpatches_[idx];
         }
         sendbufindex += nsppp;
       }
