@@ -174,9 +174,26 @@ bool GenSField<T,G,A>::set_bbox(const Point& p1, const Point& p2)
 
 // TODO: Implement this so it's always valid.
 template <class T, class G, class A >
-bool GenSField<T,G,A>::get_minmax(double& /* imin */, double& /* imax */)
+bool GenSField<T,G,A>::get_minmax(double& imin, double& imax)
 {
-  return false;
+  A* tattrib = attrib.get_rep();
+  if (!tattrib) { return false; }
+
+  A::iterator itr = tattrib->begin();
+  if (itr == tattrib->end()) { return false; }
+
+  T lmin = *itr;
+  T lmax = *itr;
+  itr++;
+  while (itr != tattrib->end())
+    {
+      lmin = Min(lmin, *itr);
+      lmax = Max(lmax, *itr);
+      itr++;
+    }
+  imin = (double)lmin;
+  imax = (double)lmax;
+  return true;
 }
 
 template <class T, class G, class A >
