@@ -29,6 +29,7 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Datatypes/MaskedLatVolMesh.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/MaskedLatVolField.h>
 #include <Core/Datatypes/MRLatVolField.h>
