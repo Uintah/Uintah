@@ -267,7 +267,6 @@ void FractureMPM::scheduleInitializePressureBCs(const LevelP& level,
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
     if (bcs_type == "Pressure") loadCurveIndex->add(nofPressureBCs++);
   }
-  //  cout << "nofPressureBCs: " << nofPressureBCs << "\n"; //for MPI
   if (nofPressureBCs > 0) {
 
     // Create a task that calculates the total number of particles
@@ -276,8 +275,7 @@ void FractureMPM::scheduleInitializePressureBCs(const LevelP& level,
 		  this, &FractureMPM::countMaterialPointsPerLoadCurve);
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
     t->computes(lb->materialPointsPerLoadCurveLabel, loadCurveIndex,
-                                                 Task::OutOfDomain);
-    //t->computes(lb->materialPointsPerLoadCurveLabel);//for MPI
+                Task::OutOfDomain);
     sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
     // Create a task that calculates the force to be associated with
