@@ -76,6 +76,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -as_warnings (treat tolerance errors as warnings and continue)\n";
     cerr << "  -skip_unknown_types (skip variable comparisons" 
 	 << " of unknown types without error)\n";
+    cerr << "  -ignoreVariable [string] (skip this variable)\n";
     cerr << "\nNote: The absolute and relative tolerance tests must both fail\n"
 	 << "      for a comparison to fail.\n\n";
     Thread::exitAll(1);
@@ -1014,6 +1015,7 @@ main(int argc, char** argv)
 {
   double rel_tolerance = 1e-6; // Default 
   double abs_tolerance = 1e-9; //   values...
+  string ignoreVar = "none";
 
   // Parse Args:
   for( int i = 1; i < argc; i++ ) {
@@ -1035,6 +1037,13 @@ main(int argc, char** argv)
     }
     else if(s == "-skip_unknown_types") {
       strict_types = false;
+    }
+    else if(s == "-ignoreVariable") {
+      if (++i == argc){
+        usage("-ignoreVariable, no variable given", argv[0]);
+      }else{
+        ignoreVar = argv[i];
+      }
     }
     else if(s[0] == '-' && s[1] == 'h' ) { // lazy check for -h[elp] option
       usage( "", argv[0] );
@@ -1092,10 +1101,20 @@ main(int argc, char** argv)
 
     vartypes1.resize(vars.size());
     vartypes2.resize(vars.size());
+    int count = 0;
+    //__________________________________
+    //  eliminate the variable to be ignored
     for (unsigned int i = 0; i < vars.size(); i++) {
-      vartypes1[i] = make_pair(vars[i], types[i]);
-      vartypes2[i] = make_pair(vars2[i], types2[i]);      
+      if (vars[i] != ignoreVar){ 
+        vartypes1[count] = make_pair(vars[count], types[count]);
+        vartypes2[count] = make_pair(vars2[count], types2[count]); 
+        count ++;
+      }     
     }
+    vars.resize(count);
+    vartypes1.resize(vars.size());
+    vartypes2.resize(vars.size());    
+    
     // sort vars so uda's can be compared if their index files have
     // different orders of variables.
     // Assuming that there are no duplicates in the var names, these will
@@ -1103,8 +1122,10 @@ main(int argc, char** argv)
     sort(vartypes1.begin(), vartypes1.end());
     sort(vartypes2.begin(), vartypes2.end());    
     for (unsigned int i = 0; i < vars.size(); i++) {
-      vars[i] = vartypes1[i].first; types[i] = vartypes1[i].second;
-      vars2[i] = vartypes2[i].first; types2[i] = vartypes2[i].second;      
+      vars[i]   = vartypes1[i].first; 
+      types[i]  = vartypes1[i].second;
+      vars2[i]  = vartypes2[i].first; 
+      types2[i] = vartypes2[i].second;
     }    
     
     for (unsigned int i = 0; i < vars.size(); i++) {
