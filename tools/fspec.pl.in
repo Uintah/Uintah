@@ -93,8 +93,8 @@ LINE: while(<FILE>){
     foreach $a (@args) {
 	($type, $tmpltype, $name) = &parsearg($a);
 	if(&knownvartype($type)){
-	    print OUT "  IntVector $name\_low = $name.getFortLowIndex();\n";
-	    print OUT "  IntVector $name\_high = $name.getFortHighIndex();\n";
+	    print OUT "  IntVector $name\_low = $name.getWindow()->getOffset();\n";
+	    print OUT "  IntVector $name\_high = $name.getWindow()->getData()->size() + $name\_low;\n";
 	    if($g77){
 		foreach $d ("x", "y", "z") {
 		    print OUT "  int $name\_low_$d = $name\_low.$d();\n";
@@ -131,7 +131,11 @@ LINE: while(<FILE>){
 		print OUT "$name\_low.get_pointer(), ";
 		print OUT "$name\_high.get_pointer(), ";
 	    }
-	    print OUT "$name.getPointer()";
+	    if ($type =~ "^const") { 
+		print OUT "const_cast<$tmpltype\*>($name.getPointer())"
+	    } else {
+	      	print OUT "$name.getPointer()";
+            }
 	} elsif(&knownarraytype($type)){
 	    if($type eq "OffsetArray1"){
 		print OUT "&$name\_low, ";
@@ -258,7 +262,7 @@ sub parsearg {
     my($type);
     my($tmpltype);
     my($name);
-    ($type, $tmpltype, $name) = ($_[0] =~ /\s*(\w+)\s*\<\s*(\w+)\s*>\s*(\w+)\s*/);
+    ($type, $tmpltype, $name) = ($_[0] =~ /\s*(\w+(?: \w+)?)\s*\<\s*(\w+)\s*>\s*(\w+)\s*/);
     if(!$type){
 	($type, $name) = ($_[0] =~ /\s*(\w+)\s+(\w+)\s*/);
     }
@@ -278,7 +282,7 @@ sub simpletype {
 sub knownvartype {
     my($type);
     $type = $_[0];
-    if($type eq "CCVariable" || $type eq "NCVariable" || $type eq "SFCXVariable" || $type eq "SFCYVariable" || $type eq "SFCZVariable" || $type eq "Array3") {
+    if($type eq "CCVariable" || $type eq "NCVariable" || $type eq "SFCXVariable" || $type eq "SFCYVariable" || $type eq "SFCZVariable" || $type eq "constCCVariable" || $type eq "constNCVariable" || $type eq "constSFCXVariable" || $type eq "constSFCYVariable" || $type eq "constSFCZVariable" || $type eq "Array3" || $type eq "const Array3") {
 	1;
     } else {
 	0;
