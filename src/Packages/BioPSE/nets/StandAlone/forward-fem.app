@@ -95,6 +95,7 @@ set m18 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 447 543]
 set m19 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 447 607]
 set m20 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 411 86]
 set m21 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 411 148]
+set m22 [addModuleAtPosition "SCIRun" "Visialization" "ShowField" 0 0]
 
 addConnection $m0 0 $m1 0
 addConnection $m0 0 $m2 0
@@ -105,7 +106,8 @@ addConnection $m0 0 $m4 0
 addConnection $m4 0 $m5 0
 addConnection $m6 0 $m2 1
 addConnection $m8 0 $m9 0
-addConnection $m9 0 $m10 1
+#addConnection $m9 0 $m10 1
+addConnection $m9 0 $m22 1 
 addConnection $m4 0 $m10 0
 addConnection $m11 0 $m12 1
 addConnection $m4 0 $m12 0
@@ -118,7 +120,9 @@ addConnection $m16 0 $m17 1
 addConnection $m4 0 $m17 0
 addConnection $m17 0 $m15 0
 addConnection $m9 0 $m15 1
-addConnection $m10 1 $m7 0
+#addConnection $m10 1 $m7 0
+addConnection $m10 0 $m22 0
+addConnection $m22 0 $m7 0
 addConnection $m13 0 $m7 1
 addConnection $m6 1 $m7 2
 addConnection $m12 0 $m9 1
@@ -213,6 +217,10 @@ set $m20-whichtab {Random}
 set $m21-function {result = Vector(1,0,0);}
 set $m21-outputdatatype {Vector}
 
+set $m22-nodes-on {0}
+set $m22-edges-on {0}
+set $m22-faces-on {1}
+
 ::netedit scheduleok
 
 
@@ -295,38 +303,17 @@ global mods
 # set mods(ShowField-Y) $m86
 # set mods(ShowField-Z) $m87
 # 
-# ### Glyphs
-# set mods(NrrdToField-GlyphSeeds) $m10
-# set mods(Probe-GlyphSeeds) $m94
-# set mods(SampleField-GlyphSeeds) $m92
-# set mods(DirectInterpolate-GlyphSeeds) $m102
-# set mods(ClipByFunction-Seeds) $m89
-# set mods(ShowField-Glyphs) $m95
-# set mods(ChooseField-GlyphSeeds) $m93
-# set mods(ChooseField-Glyphs) $m34
-# set mods(GenStandardColorMaps-Glyphs) $m108
-# set mods(RescaleColorMap-Glyphs) $m109
-# set mods(DirectInterpolate-Glyphs) $m91
-# set mods(TendNorm-Glyphs) $m116
-# set mods(TendAnscale-Glyphs) $m115
-# set mods(ChooseNrrd-Norm) $m117
-# set mods(ChooseNrrd-Exag) $m118
-# 
-# ### Fibers
-# set mods(ChooseField-FiberSeeds) $m120
-# set mods(GenStandardColorMaps-Fibers) $m126
-# set mods(RescaleColorMap-Fibers) $m127
-# set mods(Probe-FiberSeeds) $m130
-# set mods(SampleField-FiberSeeds) $m131
-# set mods(DirectInterpolate-FiberSeeds) $m124
-# set mods(ShowField-Fibers) $m125
-# set mods(ChooseField-Fibers) $m122
-# set mods(DirectInterpolate-Fibers) $m121
-# set mods(TendFiber) $m123
-
 
 ### Viewer
 set mods(Viewer) $m7
+
+set mods(FieldReader1) $m0
+set mods(FieldReader2) $m11
+
+set mods(Isosurface) $m10
+set mods(ShowField-Isosurface) $m22
+set mods(GenStandardColorMaps-Isosurface) $m8
+
 
 global data_mode
 set data_mode "DWI"
@@ -393,46 +380,7 @@ set isosurface_color-g 0.5
 global isosurface_color-b
 set isosurface_color-b 0.5
 
-# glyphs
-global glyph_display_type
-set glyph_display_type boxes
 
-global glyph_color
-set glyph_color ""
-global glyph_color-r
-set glyph_color-r 0.5
-global glyph_color-g
-set glyph_color-g 0.5
-global glyph_color-b
-set glyph_color-b 0.5
-
-global scale_glyph
-set scale_glyph 1
-
-global exag_glyph
-set exag_glyph 0
-
-# fibers
-global fiber_color
-set fiber_color ""
-global fiber_color-r
-set fiber_color-r 0.5
-global fiber_color-g
-set fiber_color-g 0.5
-global fiber_color-b
-set fiber_color-b 0.5
-
-global fibers_stepsize
-set fibers_stepsize 0.5
-
-global fibers_length
-set fibers_length 100
-
-global fibers_steps
-set fibers_steps 200
-
-
-                                                                               
 #######################################################
 # Build up a simplistic standalone application.
 #######################################################
@@ -521,11 +469,8 @@ class ForwardFEMApp {
         set isosurface_tab1 ""
         set isosurface_tab2 ""
 
-        set glyphs_tab1 ""
-        set glyphs_tab2 ""
-
-        set fibers_tab1 ""
-        set fibers_tab2 ""
+        set streamlines_tab1 ""
+        set streamlines_tab2 ""
 
         set nrrd_tab1 ""
         set nrrd_tab2 ""
@@ -551,15 +496,6 @@ class ForwardFEMApp {
         set last_z 6
         set plane_inc "-0.1"
         set plane_type "Principle Eigenvector"
-
-        # glyphs
-        set clip_x "<"
-        set clip_y "<"
-        set clip_z "<"
-        set glyph_type "Principle Eigenvector"
-
-	# fibers
-        set fiber_type "Principle Eigenvector"
 
         # colormaps
         set colormap_width 150
@@ -739,7 +675,6 @@ class ForwardFEMApp {
 	    tk_menuBar $m.main_menu $win.main_menu.file $win.main_menu.help
 	    
 
-
 	    ### Processing Steps
 	    #####################
 	    iwidgets::labeledframe $m.p \
@@ -849,8 +784,7 @@ class ForwardFEMApp {
 	    set page [$vis.tnb add -label "Data Vis" -command "$this change_vis_frame 0"]
 	    
 	    ### Data Vis Tab
-	    # Add tabs for each visualization
-            # Variance, Planes, Isosurface, Glyphs, Fibers
+	    # Add tabs for each visualization Method
 	    iwidgets::tabnotebook $page.vis_tabs \
                 -width $notebook_width \
                 -height $notebook_height \
@@ -876,9 +810,9 @@ class ForwardFEMApp {
 	    ### Streamlines
             set vis_tab [$page.vis_tabs add -label "Streamlines" -command "$this change_vis_tab Streamlines"]
 	    if {$case == 0} {
-		set fibers_tab1 $vis_tab
+		set streamlines_tab1 $vis_tab
 	    } else {
-		set fibers_tab2 $vis_tab
+		set streamlines_tab2 $vis_tab
 	    } 
 	    
 	    
@@ -904,6 +838,9 @@ class ForwardFEMApp {
 		    Tooltip $m.d.cut$i $tips(VAttachedMsg)
 		}
             }
+	    
+	    build_isosurface_tab $isosurface_tab1
+	    build_isosurface_tab $isosurface_tab2
 	}
     }
     
@@ -1138,59 +1075,6 @@ class ForwardFEMApp {
 	}
     }
 
-
-    method load_gradient {} {
-        global mods
-        $mods(NrrdReader-Gradient) make_file_open_box
-	
-        tkwait window .ui$mods(NrrdReader-Gradient)-fb
-	
-        update idletasks
-	
- 	global $mods(NrrdReader-Gradient)-axis
-	set $mods(NrrdReader-Gradient)-axis axis0
-    }
-    
-    method load_nrrd_dwi {} {
-	global mods
-        $mods(NrrdReader1) make_file_open_box
-	
-	tkwait window .ui$mods(NrrdReader1)-fb
-	
-	update idletasks
-
- 	global $mods(NrrdReader1)-axis
-	set $mods(NrrdReader1)-axis axis0
-	
-        #execute_Data
-    }
-    
-    method load_nrrd_t2 {} {
-	global mods
-        $mods(NrrdReader-T2) make_file_open_box
-	
-	tkwait window .ui$mods(NrrdReader-T2)-fb
-
- 	global $mods(NrrdReader-T2)-axis
-	set $mods(NrrdReader-T2)-axis axis0
-	
-	update idletasks
-	
-    } 
-    
-    
-    method load_bmatrix {} {
-	global mods
-        $mods(NrrdReader-BMatrix) make_file_open_box
-	
-	tkwait window .ui$mods(NrrdReader-BMatrix)-fb
-	
-	update idletasks
-	
-        global $mods(NrrdReader-BMatrix)-axis
-        set $mods(NrrdReader-BMatrix)-axis 0
-    } 
-    
     method save_session {} {
 	global mods
 	
@@ -1347,43 +1231,6 @@ class ForwardFEMApp {
 	global isosurface_color-b
 	puts $fileid "set isosurface_color-b $isosurface_color-b"
 	
-	# glyphs
-	global glyph_display_type
-	puts $fileid "set glyph_display_type $glyph_display_type"
-	
-	global glyph_color
-	puts $fileid "set glyph_color $glyph_color"
-	global glyph_color-r
-	puts $fileid "set glyph_color-r $glyph_color-r"
-	global glyph_color-g
-	puts $fileid "set glyph_color-g $glyph_color-g"
-	global glyph_color-b
-	puts $fileid "set glyph_color-b $glyph_color-b"
-	
-	global scale_glyph
-	puts $fileid "set scale_glyph $scale_glyph"
-	
-	global exag_glyph
-	puts $fileid "set exag_glyph $exag_glyph"
-	
-	# fibers
-	global fiber_color
-	puts $fileid "set fiber_color $fiber_color"
-	global fiber_color-r
-	puts $fileid "set fiber_color-r $fiber_color-r"
-	global fiber_color-g
-	puts $fileid "set fiber_color-g $fiber_color-g"
-	global fiber_color-b
-	puts $fileid "set fiber_color-b $fiber_color-b"
-	
-	global fibers_stepsize
-	puts $fileid "set fibers_stepsize $fibers_stepsize"
-	
-	global fibers_length
-	puts $fileid "set fibers_length $fibers_length"
-	
-	global fibers_steps
-	puts $fileid "set fibers_steps $fibers_steps"
     }
     
     
@@ -1482,15 +1329,19 @@ class ForwardFEMApp {
     method update_progress { which state } {
 	global mods
 	global $mods(ShowField-Isosurface)-faces-on
-	global $mods(ShowField-Glyphs)-tensors-on
-	global $mods(ShowField-Fibers)-edges-on
 	global show_plane_x show_plane_y show_plane_z
 	
+	return
 	
-	if {$which == $mods(ChooseNrrd1) && $state == "NeedData"} {
+	if {$which == $mods(FieldReader1) && $state == "NeedData"} {
 	    change_indicator_labels "Data Acquisition..."
 	    change_indicate_val 1
-	} elseif {$which == $mods(ChooseNrrd1) && $state == "Completed"} {
+	} elseif {$which == $mods(FieldReader1) && $state == "Completed"} {
+	    change_indicate_val 2
+	} elseif {$which == $mods(FieldReader2) && $state == "NeedData"} {
+	    change_indicator_labels "Data Acquisition..."
+	    change_indicate_val 1
+	} elseif {$which == $mods(FieldReader2) && $state == "Completed"} {
 	    change_indicate_val 2
 	} elseif {$which == $mods(ShowField-Orig) && $state == "Completed"} {
 	    after 100
@@ -1499,20 +1350,6 @@ class ForwardFEMApp {
 	    global $mods(Viewer)-ViewWindow_0-pos 
 	    set $mods(Viewer)-ViewWindow_0-pos "z1_y0"
 	    $mods(Viewer)-ViewWindow_0-c Views
-	} elseif {$which == $mods(TendEpireg) && $state == "NeedData"} {
-	    change_indicator_labels "Registration..."
-	    change_indicate_val 1
-	} elseif {$which == $mods(TendEpireg) && $state == "Completed"} {
-	    change_indicate_val 2
-	    # activate next button
-	    $reg_tab1.last.ne configure -state normal \
-		-foreground black -background $next_color
-	    $reg_tab2.last.ne configure -state normal \
-		-foreground black -background $next_color
-
-	    if {$reg_completed} {
-		activate_dt
-	    }
 	} elseif {$which == $mods(ShowField-Reg) && $state == "Completed"} {
 	    after 100
 	    # Bring images into view
@@ -1580,25 +1417,7 @@ class ForwardFEMApp {
 	    change_indicate_val 1
 	} elseif {$which == $mods(ShowField-Isosurface) && $state == "Completed" && [set $mods(ShowField-Isosurface)-faces-on] == 1} {
 	    change_indicate_val 0
-	} elseif {$which == $mods(ChooseField-GlyphSeeds) && $state == "NeedData" && [set $mods(ShowField-Glyphs)-tensors-on]} {
-	    change_indicator_labels "Visualization..."
-	    change_indicate_val 1
-	} elseif {$which == $mods(ShowField-Glyphs) && $state == "Completed" && [set $mods(ShowField-Glyphs)-tensors-on]} {
-	    change_indicate_val 0
-	} elseif {$which == $mods(ChooseField-FiberSeeds) && $state == "NeedData" && [set $mods(ShowField-Fibers)-edges-on]} {
-	    change_indicator_labels "Visualization..."
-	    change_indicate_val 1
-	} elseif {$which == $mods(ShowField-Fibers) && $state == "Completed" && [set $mods(ShowField-Fibers)-edges-on]} {
-	    change_indicate_val 0
-	} elseif {$which == $mods(SampleField-GlyphSeeds) && $state == "Completed" && ![set $mods(ShowField-Glyphs)-tensors-on]} {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-	} elseif {$which == $mods(Probe-GlyphSeeds) && $state == "Completed" && ![set $mods(ShowField-Glyphs)-tensors-on]} {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-	} elseif {$which == $mods(SampleField-FiberSeeds) && $state == "Completed" && ![set $mods(ShowField-Fibers)-edges-on]} {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-	} elseif {$which == $mods(Probe-FiberSeeds) && $state == "Completed" && ![set $mods(ShowField-Fibers)-edges-on]} {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-	} 
+	}
     }
 
     
@@ -1680,35 +1499,6 @@ class ForwardFEMApp {
     }
 	
 	
-    method execute_Registration {} {
-	global mods
-	
-	# Check gradient has been loaded
-	global $mods(NrrdReader-Gradient)-filename
-	
-	if {[set $mods(NrrdReader-Gradient)-filename] != ""} {
-	    # unblock modules
-	    disableModule $mods(TendEpireg) 0
-	    disableModule $mods(UnuJoin) 0
-	    disableModule $mods(ChooseNrrd-ToReg) 0
-	    disableModule $mods(RescaleColorMap2) 0
-		
-	    # activate reg variance checkbutton
-	    $variance_tab1.reg configure -state normal
-	    $variance_tab2.reg configure -state normal
-
-	    # execute
-	    $mods(TendEpireg)-c needexecute
-
-	    set reg_completed 1
-	} else {
-	    set answer [tk_messageBox -message \
-			    "Please load a text file containing the gradients by clicking \"Load Gradients\"" -type ok -icon info -parent .standalone]
-	    
-	}
-    }
-    
-
     method toggle_data_mode { } {
 	global data_mode
         global mods
@@ -1925,14 +1715,11 @@ class ForwardFEMApp {
 	global mods 
 	global data_mode
 	
-	if {$data_mode == "tensor"} {
-	    disableModule $mods(ChooseNrrd-DT) 0
-	    disableModule $mods(TendEstim) 1
-	}
-
-	$mods(ChooseNrrd1)-c needexecute
+	
+	$mods(FieldReader1)-c needexecute
+	#$mods(FieldReader2)-c needexecute
 	set data_completed 1	
-	activate_registration
+	#activate_registration
 
 	# enable Next button
 	$data_next_button1 configure -state normal \
@@ -2328,1019 +2115,6 @@ class ForwardFEMApp {
     }
     
     
-    method build_glyphs_tab { f } {
-	global mods
-        global $mods(ShowField-Glyphs)-tensors-on
-	
-	if {![winfo exists $f.show]} {
-	    checkbutton $f.show -text "Show Glyphs" \
-		-variable $mods(ShowField-Glyphs)-tensors-on \
-		-command "$this toggle_show_glyphs"
-	    
-	    pack $f.show -side top -anchor nw -padx 3 -pady 3	
-	    
-	    # Seed at
-	    iwidgets::labeledframe $f.seed \
-		-labeltext "Seed At" \
-		-labelpos nw -foreground grey64
-	    pack $f.seed -side top -anchor nw -padx 3 -pady 0 \
-		-fill x
-	    
-	    set seed [$f.seed childsite]
-	    
-	    global $mods(ChooseField-GlyphSeeds)-port-index
-	    frame $seed.a
-	    pack $seed.a -side left -anchor n -padx 10
-	    radiobutton $seed.a.point -text "Single Point" \
-		-variable $mods(ChooseField-GlyphSeeds)-port-index \
-		-value 0 \
-		-state disabled \
-		-command "$this update_glyph_seed_method"
-	    
-	    radiobutton $seed.a.rake -text "Along Line" \
-		-variable $mods(ChooseField-GlyphSeeds)-port-index \
-		-value 1 \
-		-state disabled \
-		-command "$this update_glyph_seed_method"
-	    
-	    frame $seed.b
-	    pack $seed.b -side right -anchor n -padx 10
-	    radiobutton $seed.b.plane -text "On Planes" \
-		-variable $mods(ChooseField-GlyphSeeds)-port-index \
-		-value 2 \
-		-state disabled \
-		-command "$this update_glyph_seed_method"
-	    
-	    radiobutton $seed.b.grid -text "On Grid" \
-		-variable $mods(ChooseField-GlyphSeeds)-port-index \
-		-value 3 \
-		-state disabled \
-		-command "$this update_glyph_seed_method"
-	    
-	    pack $seed.a.point $seed.a.rake  -side top \
-		-anchor nw -padx 3 -pady 1
-	    
-	    pack $seed.b.plane $seed.b.grid -side top \
-		-anchor nw -padx 3 -pady 1
-	    
-	    iwidgets::labeledframe $f.rep \
-		-labeltext "Representation and Color" \
-		-labelpos nw -foreground grey64
-	    pack $f.rep -side top -anchor nw -padx 3 -pady 0 \
-		-fill x
-	    
-	    set rep [$f.rep childsite]
-	    
-	    global glyph_display_type
-	    frame $rep.f1 
-	    pack $rep.f1 -side top -anchor nw -padx 3 -pady 1
-	    
-	    radiobutton $rep.f1.boxes -text "Boxes     " \
-		-variable glyph_display_type \
-		-value boxes \
-		-state disabled \
-		-command "$this change_glyph_display_type radio $rep"
-	    
-	    iwidgets::optionmenu $rep.f1.type -labeltext "" \
-		-width 180 -state disabled \
-		-command "$this change_glyph_display_type men $rep.f1"
-	    pack $rep.f1.boxes $rep.f1.type -side left -anchor nw -padx 2 -pady 0
-	    
-	    $rep.f1.type insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant" "RGB"
-	    $rep.f1.type select "Principle Eigenvector"
-	    
-	    frame $rep.f2
-	    pack $rep.f2 -side top -anchor nw -padx 3 -pady 1
-	    
-	    radiobutton $rep.f2.ellips -text "Ellipsoids" \
-		-variable glyph_display_type \
-		-value ellipsoids \
-		-state disabled \
-		-command "$this change_glyph_display_type radio $rep"
-	    
-	    iwidgets::optionmenu $rep.f2.type -labeltext "" \
-		-width 180 \
-		-command "$this change_glyph_display_type men $rep.f2" \
-		-state disabled
-	    pack $rep.f2.ellips $rep.f2.type -side left -anchor nw -padx 2 -pady 0
-	    
-	    $rep.f2.type insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant"
-	    
-	    $rep.f2.type select "Principle Eigenvector"
-	    
-	    global glyph_color
-	    frame $rep.select
-	    pack $rep.select -side top -anchor n -padx 3 -pady 3
-	    addColorSelection $rep.select "Color" glyph_color "glyph_color_change"
-	    
-	    iwidgets::labeledframe $rep.maps \
-		-labeltext "Color Maps" \
-		-labelpos nw -foreground grey64
-	    pack $rep.maps -side top -anchor n -padx 3 -pady 3
-	    
-	    set maps [$rep.maps childsite]
-	    global $mods(GenStandardColorMaps-Glyphs)-mapType
-	    
-	    # Gray
-	    frame $maps.gray
-	    pack $maps.gray -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.gray.b -text "Gray" \
-		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
-		-value 0 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
-	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.gray.f -relief sunken -borderwidth 2
-	    pack $maps.gray.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.gray.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.gray.f.canvas -anchor e \
-		-fill both -expand 1
-	    
-	    draw_colormap Gray $maps.gray.f.canvas
-	    
-	    # Rainbow
-	    frame $maps.rainbow
-	    pack $maps.rainbow -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.rainbow.b -text "Rainbow" \
-		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
-		-value 2 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
-	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.rainbow.f -relief sunken -borderwidth 2
-	    pack $maps.rainbow.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.rainbow.f.canvas -anchor e
-	    
-	    draw_colormap Rainbow $maps.rainbow.f.canvas
-	    
-	    # Darkhue
-	    frame $maps.darkhue
-	    pack $maps.darkhue -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.darkhue.b -text "Darkhue" \
-		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
-		-value 5 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
-	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.darkhue.f -relief sunken -borderwidth 2
-	    pack $maps.darkhue.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.darkhue.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.darkhue.f.canvas -anchor e
-	    
-	    draw_colormap Darkhue $maps.darkhue.f.canvas
-	    
-	    
-	    # Blackbody
-	    frame $maps.blackbody
-	    pack $maps.blackbody -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.blackbody.b -text "Blackbody" \
-		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
-		-value 7 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
-	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.blackbody.f -relief sunken -borderwidth 2 
-	    pack $maps.blackbody.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.blackbody.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.blackbody.f.canvas -anchor e
-	    
-	    draw_colormap Blackbody $maps.blackbody.f.canvas
-	    
-	    
-	    # BP Seismic
-	    frame $maps.bpseismic
-	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.bpseismic.b -text "BP Seismic" \
-		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
-		-value 17 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
-	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.bpseismic.f -relief sunken -borderwidth 2
-	    pack $maps.bpseismic.f -padx 2 -pady 0 -side left -anchor e
-	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.bpseismic.f.canvas -anchor e
-	    
-	    draw_colormap "BP Seismic" $maps.bpseismic.f.canvas
-	    
-	    
-	    global scale_glyph
-	    global $mods(TendNorm-Glyphs)-target
-	    
-	    frame $f.scale 
-	    pack $f.scale -side top -anchor nw -padx 3 -pady 0
-	    
-	    checkbutton $f.scale.b -text "Glyph Size:          " \
-		-variable scale_glyph \
-		-state disabled \
-		-command "$this toggle_scale_glyph"
-	    
-	    scale $f.scale.s -from 0.2 -to 5.0 \
-                -resolution 0.01 \
-  		-length 150  -width 15 \
-		-sliderlength 15 \
-                -orient horizontal \
-   	        -state disabled \
-   	        -foreground grey64 \
-	        -variable $mods(TendNorm-Glyphs)-target
-	    bind $f.scale.s <ButtonRelease> {global mods; $mods(TendNorm-Glyphs)-c needexecute}
-	    
-	    pack $f.scale.b -side left -anchor w -padx 3 -pady 0
-	    pack  $f.scale.s -side left -anchor ne -padx 3 -pady 0
-	    
-	    global exag_glyph
-	    global $mods(TendAnscale-Glyphs)-scale
-	    
-	    frame $f.exag 
-	    pack $f.exag -side top -anchor nw -padx 3 -pady 0
-	    
-	    checkbutton $f.exag.b -text "Shape Exaggerate:" \
-		-variable exag_glyph \
-		-state disabled \
-		-command "$this toggle_exag_glyph"
-	    
-	    scale $f.exag.s -from 0.2 -to 5.0 \
-                -resolution 0.01 \
-  		-length 150  -width 15 \
-		-sliderlength 15 \
-                -orient horizontal \
-   	        -state disabled \
-   	        -foreground grey64 \
-	        -variable $mods(TendAnscale-Glyphs)-scale
-	    bind $f.exag.s <ButtonRelease> {global mods; $mods(TendAnscale-Glyphs)-c needexecute}
-	    
-	    pack $f.exag.b -side left -anchor w -padx 3 -pady 0
-	    pack  $f.exag.s -side left -anchor ne -padx 3 -pady 0
-	    
-	    message $f.exagm -text "A value less than 1.0 will make the glyphs more isotropic while a value greater than 1.0 will make them more anisotropic.  Setting the value to 1.0 will not change the glyphs." -width 300 -foreground grey64
-	    
-	    pack $f.exagm -side top -anchor n -padx 3 -pady 0
-	} else {
-	    puts "FIX ME: Configure values for glyphs tab?? (like fill_in_data_pages)"
-	}
-    }
-    
-    
-	method build_fibers_tab { f } {
-	    global mods
-        global $mods(ShowField-Fibers)-edges-on
-
-	if {![winfo exists $f.show]} {
-	    checkbutton $f.show -text "Show Fibers" \
-		-variable $mods(ShowField-Fibers)-edges-on \
-		-command "$this toggle_show_fibers"
-	    
-	    pack $f.show -side top -anchor nw -padx 3 -pady 3
-	    
-	    # Fiber Algorigthm
-	    iwidgets::labeledframe $f.algo \
-		-labeltext "Fiber Algorithm" \
-		-labelpos nw -foreground grey64
-	    
-	    pack $f.algo -side top -anchor nw -padx 3 -pady 0 -fill x
-	    set algo [$f.algo childsite]
-	    
-	    global $mods(TendFiber)-fibertype
-	    frame $algo.f 
-	    pack $algo.f -side top -anchor nw -padx 3 -pady 1
-	    radiobutton $algo.f.evec1 -text "Major Eigenvector" \
-		-variable $mods(TendFiber)-fibertype \
-		-value evec1 \
-		-command "$mods(TendFiber)-c needexecute" \
-		-state disabled
-	    
-	    radiobutton $algo.f.tl -text "Tensorlines (TL)" \
-		-variable $mods(TendFiber)-fibertype \
-		-value tensorline \
-		-command "$mods(TendFiber)-c needexecute" \
-		-state disabled
-	    
-	    pack $algo.f.evec1 $algo.f.tl -side left -anchor nw -padx 5 -pady 1
-	    
-	    global fibers_stepsize
-	    frame $algo.stepsize
-	    pack $algo.stepsize -side top -anchor nw -padx 3 -pady 1
-	    
-	    label $algo.stepsize.l -text "Step Size:" -state disabled
-	    scale $algo.stepsize.step -label "" \
-		-from 0.1 -to 10 \
-		-resolution 0.1 \
-		-length 150  -width 15 \
-		-sliderlength 15 \
-		-orient horizontal \
-		-showvalue false \
-		-variable fibers_stepsize \
-		-state disabled -foreground grey64
-	    label $algo.stepsize.val -textvariable fibers_stepsize -state disabled
-	    pack $algo.stepsize.l $algo.stepsize.step $algo.stepsize.val -side left -anchor nw -padx 3 -pady 1
-	    bind $algo.stepsize.step <ButtonRelease> {app configure_fibers_stepsize}
-	    
-	    frame $algo.method 
-	    pack $algo.method -side top -anchor nw -padx 3 -pady 0
-	    
-	    global $mods(TendFiber)-integration
-	    label $algo.method.l -text "Integration Method: " -state disabled
-	    radiobutton $algo.method.e -text "Euler" \
-		-variable $mods(TendFiber)-integration \
-		-value Euler \
-		-state disabled \
-		-command "$mods(TendFiber)-c needexecute"
-	    radiobutton $algo.method.rk -text "RK4" \
-		-variable $mods(TendFiber)-integration \
-		-value RK4 \
-		-state disabled \
-		-command "$mods(TendFiber)-c needexecute"
-	    
-	    pack $algo.method.l $algo.method.e $algo.method.rk -side left -anchor nw \
-		-padx 3 -pady 0
-	    
-	    # Resampling Filter
-	    iwidgets::labeledframe $f.rs \
-		-labeltext "Sampling Kernel" \
-		-labelpos nw -foreground grey64
-	    
-	    pack $f.rs -side top -anchor nw -padx 3 -pady 0 -fill x
-	    set rs [$f.rs childsite]
-	    global $mods(TendFiber)-kernel
-	    
-	    frame $rs.f
-	    pack $rs.f -side top -anchor n
-	    
-	    radiobutton $rs.f.tent -text "Tent" \
-		-variable $mods(TendFiber)-kernel \
-		-value tent \
-		-state disabled \
-		-command "$mods(TendFiber)-c needexecute"
-	    
-	    radiobutton $rs.f.cat -text "Catmull-Rom" \
-		-variable $mods(TendFiber)-kernel \
-		-value cubicCR \
-		-state disabled \
-		-command "$mods(TendFiber)-c needexecute"
-	    
-	    radiobutton $rs.f.b -text "B-Spline" \
-		-variable $mods(TendFiber)-kernel \
-		-value cubicBS \
-		-state disabled \
-		-command "$mods(TendFiber)-c needexecute"
-	    
-	    pack $rs.f.tent $rs.f.cat $rs.f.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    iwidgets::labeledframe $f.stop \
-		-labeltext "Stopping Criteria" \
-		-labelpos nw -foreground grey64
-	    pack $f.stop -side top -anchor nw -padx 3 -pady 0 -fill x
-	    set stop [$f.stop childsite]
-	    
-	    # Max Fiber Length
-	    global $mods(TendFiber)-use-length
-	    global fibers_length
-	    frame $stop.fiber
-	    pack $stop.fiber -side top -anchor nw
-	    
-	    checkbutton $stop.fiber.check -text "Max Fiber Length:" \
-		-variable $mods(TendFiber)-use-length \
-		-command "$this toggle_fibers_fiber_length; $mods(TendFiber)-c needexecute" \
-		-state disabled -foreground grey64
-	    scale $stop.fiber.val -label "" \
-		-from 1 -to 400 \
-		-resolution 1 \
-		-length 120  -width 15 \
-		-sliderlength 15 \
-		-orient horizontal \
-		-showvalue false \
-		-variable fibers_length \
-		-state disabled -foreground grey64
-	    label $stop.fiber.l -textvariable fibers_length -state disabled
-	    pack $stop.fiber.check $stop.fiber.val $stop.fiber.l -side left \
-		-anchor nw -padx 3 -pady 0
-	    bind $stop.fiber.val <ButtonRelease> {app change_fibers_fiber_length}
-	    
-	    # Number of Steps
-	    global $mods(TendFiber)-use-steps
-	    global fibers_steps
-	    frame $stop.steps
-	    pack $stop.steps -side top -anchor nw
-	    
-	    checkbutton $stop.steps.check -text "Number of Steps:" \
-		-variable $mods(TendFiber)-use-steps \
-		-command "$this toggle_fibers_steps; $mods(TendFiber)-c needexecute" \
-		-state disabled -foreground grey64
-	    scale $stop.steps.val -label "" \
-		-from 10 -to 1000 \
-		-resolution 10 \
-		-length 120  -width 15 \
-		-sliderlength 15 \
-		-orient horizontal \
-		-showvalue false \
-		-variable fibers_steps \
-		-state disabled -foreground grey64
-	    label $stop.steps.l -textvariable fibers_steps -state disabled
-	    pack $stop.steps.check $stop.steps.val $stop.steps.l -side left \
-		-anchor nw -padx 3 -pady 0
-	    bind $stop.steps.val <ButtonRelease> {app change_fibers_steps}
-	    
-	    # Anisotropy
-	    global $mods(TendFiber)-use-aniso
-	    global $mods(TendFiber)-aniso-metric
-	    global $mods(TendFiber)-aniso-thresh
-	    
-	    frame $stop.aniso1
-	    pack $stop.aniso1 -side top -anchor nw
-	    
-	    checkbutton $stop.aniso1.check -text "Anisotropy Threshold:" \
-		-variable $mods(TendFiber)-use-aniso \
-		-command "$this toggle_fibers_aniso; $mods(TendFiber)-c needexecute" \
-		-state disabled -foreground grey64
-	    scale $stop.aniso1.val -label "" \
-		-from 0.0 -to 1.0 \
-		-resolution 0.01 \
-		-length 95  -width 15 \
-		-sliderlength 15 \
-		-orient horizontal \
-		-showvalue false \
-		-variable $mods(TendFiber)-aniso-thresh \
-		-state disabled -foreground grey64
-	    label $stop.aniso1.l -textvariable $mods(TendFiber)-aniso-thresh -state disabled
-	    pack $stop.aniso1.check $stop.aniso1.val $stop.aniso1.l -side left \
-		-anchor nw -padx 3 -pady 0
-	    
-	    frame $stop.aniso2
-	    pack $stop.aniso2 -side top -anchor e
-	    
-	    radiobutton $stop.aniso2.cl -text "Linear Anisotropy" \
-		-variable $mods(TendFiber)-aniso-metric \
-		-value tenAniso_Cl2 \
-		-state disabled \
-		-command "$mods(TendFiber)-c needexecute"
-	    
-	    radiobutton $stop.aniso2.fa -text "Fractional Anisotropy" \
-		-variable $mods(TendFiber)-aniso-metric \
-		-value tenAniso_FA \
-		-state disabled \
-		-command "$mods(TendFiber)-c needexecute"
-	    pack $stop.aniso2.cl $stop.aniso2.fa -side left -anchor nw -padx 3 -pady 0
-	    
-	    
-	    
-	    # Seed at
-	    iwidgets::labeledframe $f.seed \
-		-labeltext "Seed At" \
-		-labelpos nw -foreground grey64
-	    pack $f.seed -side top -anchor nw -padx 3 -pady 0 \
-		-fill x
-	    
-	    set seed [$f.seed childsite]
-	    
-	    global $mods(ChooseField-FiberSeeds)-port-index
-	    
-	    frame $seed.a
-	    pack $seed.a -side left -anchor n -padx 10 
-	    radiobutton $seed.a.point -text "Single Point" \
-		-variable $mods(ChooseField-FiberSeeds)-port-index \
-		-value 0 \
-		-state disabled \
-		-command "$this update_fiber_seed_method"
-	    
-	    radiobutton $seed.a.rake -text "Along Line" \
-	    -variable $mods(ChooseField-FiberSeeds)-port-index \
-		-value 1 \
-		-state disabled \
-		-command "$this update_fiber_seed_method"
-	    
-	    frame $seed.b
-	    pack $seed.b -side right -anchor n -padx 10
-	    radiobutton $seed.b.plane -text "On Planes" \
-		-variable $mods(ChooseField-FiberSeeds)-port-index \
-		-value 2 \
-		-state disabled \
-		-command "$this update_fiber_seed_method"
-	    
-	    radiobutton $seed.b.grid -text "On Grid" \
-		-variable $mods(ChooseField-FiberSeeds)-port-index \
-		-value 3 \
-		-state disabled \
-		-command "$this update_fiber_seed_method"
-	    
-	    pack $seed.a.point $seed.a.rake  -side top \
-		-anchor nw -padx 5 -pady 1
-	    
-	    pack $seed.b.plane $seed.b.grid -side top \
-		-anchor nw -padx 5 -pady 1
-	    
-	    iwidgets::labeledframe $f.rep \
-		-labeltext "Color Fibers Based On" \
-		-labelpos nw -foreground grey64
-	    pack $f.rep -side top -anchor nw -padx 3 -pady 0 \
-		-fill x
-	    
-	    set rep [$f.rep childsite]
-	    
-	    frame $rep.f1 
-	    pack $rep.f1 -side top -anchor nw -padx 3 -pady 1
-	    
-	    iwidgets::optionmenu $rep.f1.type -labeltext "" \
-		-width 180 -state disabled \
-		-command "$this change_fiber_color_by $rep.f1"
-	    pack $rep.f1.type -side left -anchor nw -padx 2 -pady 0
-	    
-	    $rep.f1.type insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant"
-	    
-	    $rep.f1.type select "Principle Eigenvector"
-	    
-	    
-	    global fiber_color
-	    
-	    addColorSelection $rep.f1 "Color" fiber_color "fiber_color_change"
-	    
-	    iwidgets::labeledframe $rep.maps \
-		-labeltext "Color Maps" \
-		-labelpos nw -foreground grey64
-	    pack $rep.maps -side top -anchor n -padx 3 -pady 3
-	    
-	    set maps [$rep.maps childsite]
-	    global $mods(GenStandardColorMaps-Fibers)-mapType
-	    
-	    # Gray
-	    frame $maps.gray
-	    pack $maps.gray -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.gray.b -text "Gray" \
-		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
-		-value 0 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
-	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.gray.f -relief sunken -borderwidth 2
-	    pack $maps.gray.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.gray.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.gray.f.canvas -anchor e \
-		-fill both -expand 1
-	    
-	    draw_colormap Gray $maps.gray.f.canvas
-	    
-	    # Rainbow
-	    frame $maps.rainbow
-	    pack $maps.rainbow -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.rainbow.b -text "Rainbow" \
-		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
-		-value 2 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
-	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.rainbow.f -relief sunken -borderwidth 2
-	    pack $maps.rainbow.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.rainbow.f.canvas -anchor e
-	    
-	    draw_colormap Rainbow $maps.rainbow.f.canvas
-	    
-	    # Darkhue
-	    frame $maps.darkhue
-	    pack $maps.darkhue -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.darkhue.b -text "Darkhue" \
-		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
-		-value 5 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
-	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.darkhue.f -relief sunken -borderwidth 2
-	    pack $maps.darkhue.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.darkhue.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.darkhue.f.canvas -anchor e
-	    
-	    draw_colormap Darkhue $maps.darkhue.f.canvas
-	    
-	    
-	    # Blackbody
-	    frame $maps.blackbody
-	    pack $maps.blackbody -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.blackbody.b -text "Blackbody" \
-		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
-		-value 7 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
-	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.blackbody.f -relief sunken -borderwidth 2 
-	    pack $maps.blackbody.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.blackbody.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.blackbody.f.canvas -anchor e
-	    
-	    draw_colormap Blackbody $maps.blackbody.f.canvas
-	    
-	    
-	    # BP Seismic
-	    frame $maps.bpseismic
-	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.bpseismic.b -text "BP Seismic" \
-		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
-		-value 17 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
-	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.bpseismic.f -relief sunken -borderwidth 2
-	    pack $maps.bpseismic.f -padx 2 -pady 0 -side left -anchor e
-	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.bpseismic.f.canvas -anchor e
-	    
-	    draw_colormap "BP Seismic" $maps.bpseismic.f.canvas
-	} else {
-	    puts "FIX ME: Configure values for fibers tab?? (like fill_in_data_pages)"
-	}
-    }
-    
-    method change_fibers_fiber_length {} {
-	global mods
-	global $mods(TendFiber)-length
-	global fibers_length
-	
-	set $mods(TendFiber)-length [expr $fibers_length/100.0]
-	
-	$mods(TendFiber)-c needexecute
-    }
-    
-    method toggle_fibers_fiber_length {} {
-	global mods
-	global $mods(TendFiber)-use-length
-
-	if {[set $mods(TendFiber)-use-length] == 0} {
-	    # disable scale
-	    $fibers_tab1.stop.childsite.fiber.val configure -state disabled
-	    $fibers_tab2.stop.childsite.fiber.val configure -state disabled
-
-	    $fibers_tab1.stop.childsite.fiber.l configure -state disabled
-	    $fibers_tab2.stop.childsite.fiber.l configure -state disabled
-	} else {
-	    # enable scale
-	    $fibers_tab1.stop.childsite.fiber.val configure -state normal
-	    $fibers_tab2.stop.childsite.fiber.val configure -state normal
-
-	    $fibers_tab1.stop.childsite.fiber.l configure -state normal
-	    $fibers_tab2.stop.childsite.fiber.l configure -state normal
-	}
-    }
-
-
-    method change_fibers_steps {} {
-	global mods
-	global $mods(TendFiber)-steps
-	global fibers_steps
-	
-	set $mods(TendFiber)-steps [expr $fibers_steps/100.0]
-
-	$mods(TendFiber)-c needexecute
-    }
-
-
-    method toggle_fibers_steps {} {
-	global mods
-	global $mods(TendFiber)-use-steps
-
-	if {[set $mods(TendFiber)-use-steps] == 0} {
-	    # disable scale
-	    $fibers_tab1.stop.childsite.steps.val configure -state disabled
-	    $fibers_tab2.stop.childsite.steps.val configure -state disabled
-
-	    $fibers_tab1.stop.childsite.steps.l configure -state disabled
-	    $fibers_tab2.stop.childsite.steps.l configure -state disabled
-	} else {
-	    # enable scale
-	    $fibers_tab1.stop.childsite.steps.val configure -state normal
-	    $fibers_tab2.stop.childsite.steps.val configure -state normal
-
-	    $fibers_tab1.stop.childsite.steps.l configure -state normal
-	    $fibers_tab2.stop.childsite.steps.l configure -state normal
-	}
-    }
-
-    method toggle_fibers_aniso {} {
-	global mods
-	global $mods(TendFiber)-use-aniso
-
-	if {[set $mods(TendFiber)-use-aniso] == 0} {
-	    # disable scale
-	    $fibers_tab1.stop.childsite.aniso1.val configure -state disabled
-	    $fibers_tab2.stop.childsite.aniso1.val configure -state disabled
-
-	    $fibers_tab1.stop.childsite.aniso1.l configure -state disabled
-	    $fibers_tab2.stop.childsite.aniso1.l configure -state disabled
-
-	    $fibers_tab1.stop.childsite.aniso2.cl configure -state disabled
-	    $fibers_tab2.stop.childsite.aniso2.cl configure -state disabled
-
-	    $fibers_tab1.stop.childsite.aniso2.fa configure -state disabled
-	    $fibers_tab2.stop.childsite.aniso2.fa configure -state disabled
-	} else {
-	    # enable scale
-	    $fibers_tab1.stop.childsite.aniso1.val configure -state normal
-	    $fibers_tab2.stop.childsite.aniso1.val configure -state normal
-
-	    $fibers_tab1.stop.childsite.aniso1.l configure -state normal
-	    $fibers_tab2.stop.childsite.aniso1.l configure -state normal
-
-	    $fibers_tab1.stop.childsite.aniso2.cl configure -state normal
-	    $fibers_tab2.stop.childsite.aniso2.cl configure -state normal
-
-	    $fibers_tab1.stop.childsite.aniso2.fa configure -state normal
-	    $fibers_tab2.stop.childsite.aniso2.fa configure -state normal
-	}
-    }
-
-    method toggle_scale_glyph {} {
-	global mods
-        global $mods(ChooseNrrd-Norm)-port-index
-        global scale_glyph
-
-	if {$scale_glyph == 0} {
-	   $glyphs_tab1.scale.s configure -state disabled -foreground grey64
-	   $glyphs_tab2.scale.s configure -state disabled -foreground grey64
-
-	   set $mods(ChooseNrrd-Norm)-port-index 1
-
-           $mods(ChooseNrrd-Norm)-c needexecute
-        } else {
-	   $glyphs_tab1.scale.s configure -state normal -foreground black
-	   $glyphs_tab2.scale.s configure -state normal -foreground black
-
-	   set $mods(ChooseNrrd-Norm)-port-index 0
-
-           $mods(TendNorm-Glyphs)-c needexecute
-        }
-
-    }
-
-    method toggle_exag_glyph {} {
-	global mods
-        global $mods(ChooseNrrd-Exag)-port-index
-        global exag_glyph
-
-	if {$exag_glyph == 0} {
-	   $glyphs_tab1.exag.s configure -state disabled -foreground grey64
-	   $glyphs_tab2.exag.s configure -state disabled -foreground grey64
-
-	   set $mods(ChooseNrrd-Exag)-port-index 1
-           $mods(ChooseNrrd-Exag)-c needexecute
-        } else {
-	   $glyphs_tab1.exag.s configure -state normal -foreground black
-	   $glyphs_tab2.exag.s configure -state normal -foreground black
-
-	   set $mods(ChooseNrrd-Exag)-port-index 0
-           $mods(TendAnscale-Glyphs)-c needexecute
-        }
-    }
-
-    method change_fiber_color_by { f } {
-	global mods
-	global $mods(ChooseField-Fibers)-port-index
-
-	# get selection and change appropriate port
-	set type [$f.type get]
-
-	# configure color
-	if {$type == "Principle Eigenvector"} {
-	    set fiber_type "Principle Eigenvector"
-	    set $mods(ChooseField-Fibers)-port-index 3
-	    disableModule $mods(RescaleColorMap-Fibers) 1
-	} elseif {$type == "Fractional Anisotropy"} {
-	    set fiber_type "Fractional Anisotropy"
-	    set $mods(ChooseField-Fibers)-port-index 0
-	    disableModule $mods(RescaleColorMap-Fibers) 0
-	} elseif {$type == "Linear Anisotropy"} {
-	    set fiber_type "Linear Anisotropy"
-	    set $mods(ChooseField-Fibers)-port-index 1
-	    disableModule $mods(RescaleColorMap-Fibers) 0
-	} elseif {$type == "Planar Anisotropy"} {
-	    set fiber_type "Planar Anisotropy"
-	    set $mods(ChooseField-Fibers)-port-index 2
-	    disableModule $mods(RescaleColorMap-Fibers) 0
-	} elseif {$type == "Constant"} {
-	    set fiber_type "Constant"
-	    disableModule $mods(RescaleColorMap-Fibers) 1
-	}
-	
-	# sync attached/detached optionmenus
-	$fibers_tab1.rep.childsite.f1.type select $type
-	$fibers_tab2.rep.childsite.f1.type select $type
-
-	$mods(ShowField-Fibers)-c data_display_type
-	$mods(ChooseField-Fibers)-c needexecute
-    }
- 
-
-
-    method change_glyph_display_type { change w } {
-	global glyph_display_type
-        global mods
-        global $mods(ShowField-Glyphs)-tensor_display_type
-        global $mods(ChooseField-Glyphs)-port-index
-	
-        set type ""
-	
-        if {$change == "radio"} {
-	    # radio button changed  
-	    if {$glyph_display_type == "boxes"} {
-		set type [$w.f1.type get]
-	    } else {
-		set type [$w.f2.type get]
-	    }       	
-        } else {
-	    # optionmenu changed
-	    set type [$w.type get]
-        }
-	
-        # configure display type
-        if {$glyph_display_type == "ellipsoids"} {
-	    set $mods(ShowField-Glyphs)-tensor_display_type Ellipsoids
-        } else {
-	    # determine if normal boxes or colored boxes
-	    if {$type == "RGB"} {
-                set glyph_type "RGB"
-		set $mods(ShowField-Glyphs)-tensor_display_type "Colored Boxes"
-   	        disableModule $mods(RescaleColorMap-Glyphs) 1
-	    } else {
-		set $mods(ShowField-Glyphs)-tensor_display_type Boxes
-	    }
-	}
-
-	# configure color
-	if {$type == "Principle Eigenvector"} {
-	    set glyph_type "Principle Eigenvector"
-	    set $mods(ChooseField-Glyphs)-port-index 3
-	    disableModule $mods(RescaleColorMap-Glyphs) 1
-	} elseif {$type == "Fractional Anisotropy"} {
-	    set glyph_type "Fractional Anisotropy"
-	    set $mods(ChooseField-Glyphs)-port-index 0
-	    disableModule $mods(RescaleColorMap-Glyphs) 0
-	} elseif {$type == "Linear Anisotropy"} {
-	    set glyph_type "Linear Anisotropy"
-	    set $mods(ChooseField-Glyphs)-port-index 1
-	    disableModule $mods(RescaleColorMap-Glyphs) 0
-	} elseif {$type == "Planar Anisotropy"} {
-	    set glyph_type "Planar Anisotropy"
-	    set $mods(ChooseField-Glyphs)-port-index 2
-	    disableModule $mods(RescaleColorMap-Glyphs) 0
-	} elseif {$type == "Constant"} {
-	    set glyph_type "Constant"
-	    disableModule $mods(RescaleColorMap-Glyphs) 1
-	}
-	
-	# sync attached/detached optionmenus
-	configure_glyphs_tabs
-
-	$mods(ShowField-Glyphs)-c data_display_type
-	$mods(ChooseField-Glyphs)-c needexecute
-    }
-
-
-    method update_fiber_seed_method {} {
-        global mods
-        global $mods(ChooseField-FiberSeeds)-port-index
-
-        if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
-        } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 1
-        } else {
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
-        }
-	
-        $mods(ChooseField-FiberSeeds)-c needexecute
-	
-	after 100 "$mods(Viewer)-ViewWindow_0-c redraw"
-    }
-	
-    
-    method update_glyph_seed_method {} {
-        global mods
-        global $mods(ChooseField-GlyphSeeds)-port-index
-
-        if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 0} {
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 1
-        } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 1
-        } else {
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
-        }
-	
-        $mods(ChooseField-GlyphSeeds)-c needexecute
-	
-	after 100 "$mods(Viewer)-ViewWindow_0-c redraw"
-    }
-    
-    method toggle_show_glyphs {} {
-	global mods
-        global $mods(ShowField-Glyphs)-tensors-on
-	
-        if {[set $mods(ShowField-Glyphs)-tensors-on] == 0} {
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
-
-	    # disable rest of glyphs tab except for checkbutton
-	    foreach w [winfo children $glyphs_tab1] {
-		disable_widget $w
-	    }
-	    foreach w [winfo children $glyphs_tab2] {
-		disable_widget $w
-	    }
-	    $glyphs_tab1.show configure -state normal
-	    $glyphs_tab2.show configure -state normal		
-        } else {
-            global $mods(ChooseField-GlyphSeeds)-port-index
-            if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 0} {
-		# enable Probe Widget
-		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 1
-            } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
-		# enable rake
-		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 1
-            }
-
-	    foreach w [winfo children $glyphs_tab1] {
-		activate_widget $w
-	    }
-	    foreach w [winfo children $glyphs_tab2] {
-		activate_widget $w
-	    }
-
-            configure_glyphs_tabs
-        }
-	
-        $mods(ShowField-Glyphs)-c toggle_display_tensors
-        after 100 "$mods(Viewer)-ViewWindow_0-c redraw"
-    }
-
-
-    method toggle_show_fibers {} {
-	global mods
-        global $mods(ShowField-Fibers)-edges-on
-        global $mods(ShowField-Fibers)-nodes-on
-	
-        if {[set $mods(ShowField-Fibers)-edges-on] == 0} {
-	    # sync nodes
-	    set $mods(ShowField-Fibers)-nodes-on 0 
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
-
-	    # disable rest of fibers tab except for checkbutton
-	    foreach w [winfo children $fibers_tab1] {
-		disable_widget $w
-	    }
-	    foreach w [winfo children $fibers_tab2] {
-		disable_widget $w
-	    }
-	    $fibers_tab1.show configure -state normal
-	    $fibers_tab2.show configure -state normal		
-        } else {
-	    # sync nodes
-	    set $mods(ShowField-Fibers)-nodes-on 1
-            global $mods(ChooseField-FiberSeeds)-port-index
-            if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
-		# enable Probe Widget
-		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
-            } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
-		# enable rake
-		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 1
-            }
-
-	    foreach w [winfo children $fibers_tab1] {
-		activate_widget $w
-	    }
-	    foreach w [winfo children $fibers_tab2] {
-		activate_widget $w
-	    }
-
-            configure_fibers_tabs
-        }
-	
-        $mods(ShowField-Fibers)-c toggle_display_edges
-        $mods(ShowField-Fibers)-c toggle_display_nodes
-        after 100 "$mods(Viewer)-ViewWindow_0-c redraw"
-    }
-    
-
     method update_isovals { val } {
 	# update all of the IsoClip modules
         global mods
@@ -3662,32 +2436,7 @@ class ForwardFEMApp {
             set $mods(ShowField-Isosurface)-def-color-b [set $color-b]
 
             $mods(Isosurface)-c needexecute
-         } elseif {$color == "glyph_color"} {
-             # set the default color for ShowField
-             global mods
-             global $mods(ShowField-Glyphs)-def-color-r
-             global $mods(ShowField-Glyphs)-def-color-g
-             global $mods(ShowField-Glyphs)-def-color-b
-             set $mods(ShowField-Glyphs)-def-color-r [set $color-r]
-             set $mods(ShowField-Glyphs)-def-color-g [set $color-g]
-             set $mods(ShowField-Glyphs)-def-color-b [set $color-b]
- 
-             $mods(DirectInterpolate-Glyphs)-c needexecute
-             puts "FIX ME: Maybe this should be a directinterpolate module??"
-         } elseif {$color == "fiber_color"} {
-             # set the default color for ShowField
-             global mods
-             global $mods(ShowField-Fibers)-def-color-r
-             global $mods(ShowField-Fibers)-def-color-g
-             global $mods(ShowField-Fibers)-def-color-b
-             set $mods(ShowField-Fibers)-def-color-r [set $color-r]
-             set $mods(ShowField-Fibers)-def-color-g [set $color-g]
-             set $mods(ShowField-Fibers)-def-color-b [set $color-b]
- 
-             $mods(DirectInterpolate-Fibers)-c needexecute
-             puts "FIX ME: Maybe this should be a directinterpolate module??"
-         }
-
+	}
     }
 
    
@@ -4474,12 +3223,6 @@ class ForwardFEMApp {
           build_isosurface_tab $isosurface_tab1
           build_isosurface_tab $isosurface_tab2
 
-          build_glyphs_tab $glyphs_tab1
-          build_glyphs_tab $glyphs_tab2
-
-          build_fibers_tab $fibers_tab1
-          build_fibers_tab $fibers_tab2
-
           # turn off variances
           global $mods(ShowField-Orig)-faces-on
           global $mods(ShowField-Reg)-faces-on
@@ -4487,21 +3230,6 @@ class ForwardFEMApp {
           set $mods(ShowField-Reg)-faces-on 0
           $mods(ShowField-Orig)-c toggle_display_faces
  	  $mods(ShowField-Reg)-c toggle_display_faces
-
-          # enable glyph modules but turn off stuff in viewer
-          disableModule $mods(NrrdToField-GlyphSeeds) 0
-          disableModule $mods(Probe-GlyphSeeds) 0
-          disableModule $mods(SampleField-GlyphSeeds) 0
-          disableModule $mods(DirectInterpolate-GlyphSeeds) 0
-   	  disableModule $mods(ChooseField-Glyphs) 0
-          $mods(Probe-GlyphSeeds)-c needexecute
-
-          # enable fiber modules but turn off stuff in viewer
-          disableModule $mods(Probe-FiberSeeds) 0
-          disableModule $mods(SampleField-FiberSeeds) 0
-          disableModule $mods(DirectInterpolate-FiberSeeds) 0
-   	  disableModule $mods(ChooseField-Fibers) 0
-          $mods(Probe-FiberSeeds)-c needexecute
 
           $mods(Viewer)-ViewWindow_0-c autoview
           global $mods(Viewer)-ViewWindow_0-pos
@@ -4630,7 +3358,7 @@ class ForwardFEMApp {
 		$vis_tab1 view "Isosurface"
 		$vis_tab2 view "Isosurface"
 	    } elseif {$which == "Streamlines"} {
-		# Glyphs
+		# Streamlines
 		$vis_tab1 view "Streamlines"
 		$vis_tab2 view "Streamlines"
 	    }
@@ -4738,90 +3466,6 @@ class ForwardFEMApp {
     }
 
  
-    method configure_glyphs_tabs {} {
-        global mods
-	global $mods(ShowField-Glyphs)-tensors-on        
-	global glyph_display_type
-	global scale_glyph exag_glyph
-
-        if {[set $mods(ShowField-Glyphs)-tensors-on] == 1} {
-            # configure boxes/ellipsoids optionmenus
-	    if {$glyph_display_type == "boxes"} {
-		$glyphs_tab1.rep.childsite.f1.type configure -state normal
-		$glyphs_tab2.rep.childsite.f1.type configure -state normal
-		$glyphs_tab1.rep.childsite.f2.type configure -state disabled
-		$glyphs_tab2.rep.childsite.f2.type configure -state disabled
-	    } else {
-		$glyphs_tab1.rep.childsite.f1.type configure -state disabled
-		$glyphs_tab2.rep.childsite.f1.type configure -state disabled
-		$glyphs_tab1.rep.childsite.f2.type configure -state normal
-		$glyphs_tab2.rep.childsite.f2.type configure -state normal
-	    }       
-
-	    if {$scale_glyph == 0} {
-		$glyphs_tab1.scale.s configure -state disabled -foreground grey64
-		$glyphs_tab2.scale.s configure -state disabled -foreground grey64
-	    } else {
-		$glyphs_tab1.scale.s configure -state normal -foreground black
-		$glyphs_tab2.scale.s configure -state normal -foreground black
-	    }
-
-	    if {$exag_glyph == 0} {
-		$glyphs_tab1.exag.s configure -state disabled -foreground grey64
-		$glyphs_tab2.exag.s configure -state disabled -foreground grey64
-	    } else {
-		$glyphs_tab1.exag.s configure -state normal -foreground black
-		$glyphs_tab2.exag.s configure -state normal -foreground black
-	    }	
-        } 
-	
-	# configure color swatch
-        if {$glyph_type == "Constant"} {
-           $glyphs_tab1.rep.childsite.select.colorFrame.set_color configure -state normal
- 	   $glyphs_tab2.rep.childsite.select.colorFrame.set_color configure -state normal
-	} else {
-           $glyphs_tab1.rep.childsite.select.colorFrame.set_color configure -state disabled
- 	   $glyphs_tab2.rep.childsite.select.colorFrame.set_color configure -state disabled
-	}
-    }
-
-    method configure_fibers_tabs {} {
-        global mods
-	global $mods(ShowField-Fibers)-edges-on  
-	
-        if {[set $mods(ShowField-Fibers)-edges-on] == 1} {
-	    # configure checkbutton/radiobutton widgets
-	    puts "FIX ME: Finish configure_fibers_tab"
-
-	    toggle_fibers_fiber_length
-	    toggle_fibers_steps
-	    toggle_fibers_aniso
-
-
-	    # configure color swatch
-	    if {$fiber_type == "Constant"} {
-		$fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state normal
-		$fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state normal
-	    } else {
-		$fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
-		$fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
-	    }
-
-	}
-    }
-
-
-    method configure_fibers_stepsize {} {
-	global mods
-	global $mods(TendFiber)-stepsize
-
-	global fibers_stepsize
-
-	set $mods(TendFiber)-stepsize [expr $fibers_stepsize/100.0]
-
-	$mods(TendFiber)-c needexecute
-    }
-   
     method configure_fitting_label { val } {
 	$reg_tab1.fit.f configure -text "[expr round([expr $val * 100])]"
 	$reg_tab2.fit.f configure -text "[expr round([expr $val * 100])]"
@@ -5297,11 +3941,8 @@ class ForwardFEMApp {
     variable isosurface_tab1
     variable isosurface_tab2
 
-    variable glyphs_tab1
-    variable glyphs_tab2
-
-    variable fibers_tab1
-    variable fibers_tab2
+    variable streamlines_tab1
+    variable streamlines_tab2
 
     # pointers to widgets
     variable ref_image1
@@ -5341,15 +3982,6 @@ class ForwardFEMApp {
     variable last_z
     variable plane_inc
     variable plane_type
-
-    # glyphs
-    variable clip_x
-    variable clip_y
-    variable clip_z
-    variable glyph_type
-
-    # fibers
-    variable fiber_type
 
     # colormaps
     variable colormap_width
