@@ -352,6 +352,8 @@ void MPMICE::scheduleCCMomExchange(SchedulerP& sched,
   t->computes(Ilb->mom_L_ME_CCLabel,     ice_matls);
   t->computes(Ilb->int_eng_L_ME_CCLabel, ice_matls);
 
+  t->requires(Task::NewDW, Ilb->mass_L_CCLabel, ice_matls, Ghost::None);
+
                                  // M P M
   t->computes(MIlb->dTdt_CCLabel, mpm_matls);
   t->computes(MIlb->dvdt_CCLabel, mpm_matls);
@@ -383,8 +385,6 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   t->requires(Task::NewDW, MIlb->dTdt_CCLabel,           Ghost::AroundCells,1);
   t->requires(Task::NewDW, MIlb->dvdt_CCLabel,           Ghost::AroundCells,1);
 
-//  t->computes(Mlb->gMomExedVelocityStarLabel);
-//  t->computes(Mlb->gMomExedAccelerationLabel);
   t->computes(Mlb->dTdt_NCLabel);
 
   sched->addTask(t, patches, mpm_matls);
@@ -872,7 +872,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     Vector zero(0.,0.,0.);
 
     // Create arrays for the grid data
-    StaticArray<CCVariable<double> > rho_CC(numALLMatls);
     StaticArray<CCVariable<double> > Temp_CC(numALLMatls);  
     StaticArray<CCVariable<double> > vol_frac_CC(numALLMatls);
     StaticArray<CCVariable<double> > rho_micro_CC(numALLMatls);
@@ -887,9 +886,9 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     StaticArray<CCVariable<double> > dTdt_CC(numALLMatls);
     StaticArray<NCVariable<double> > dTdt_NC(numALLMatls);
     StaticArray<CCVariable<double> > int_eng_L_ME(numALLMatls);
+    StaticArray<CCVariable<double> > mass_L(numALLMatls);
 
     vector<double> b(numALLMatls);
-    vector<double> mass(numALLMatls);
     vector<double> density(numALLMatls);
     vector<double> cv(numALLMatls);
     DenseMatrix beta(numALLMatls,numALLMatls),acopy(numALLMatls,numALLMatls);
@@ -909,18 +908,20 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       int dwindex = matl->getDWIndex();
       if(mpm_matl){
-        new_dw->allocate(vel_CC[m],  MIlb->velstar_CCLabel, dwindex, patch);
+        new_dw->allocate(vel_CC[m],  MIlb->velstar_CCLabel,     dwindex, patch);
         new_dw->allocate(Temp_CC[m], MIlb->temp_CC_scratchLabel,dwindex, patch);
+        new_dw->get(mass_L[m],        Ilb->rho_CCLabel,         dwindex, patch,
+							        Ghost::None, 0);
         cv[m] = mpm_matl->getSpecificHeat();
       }
       if(ice_matl){
-        new_dw->allocate(vel_CC[m], Ilb->vel_CCLabel,  dwindex,patch);
-        new_dw->allocate(Temp_CC[m],Ilb->temp_CCLabel, dwindex,patch);
+        new_dw->allocate(vel_CC[m], Ilb->vel_CCLabel,     dwindex, patch);
+        new_dw->allocate(Temp_CC[m],Ilb->temp_CCLabel,    dwindex, patch);
+        new_dw->get(mass_L[m],      Ilb->mass_L_CCLabel,  dwindex, patch,
+							  Ghost::None, 0);
         cv[m] = ice_matl->getSpecificHeat();
       }
 
-      new_dw->get(rho_CC[m],        Ilb->rho_CCLabel,       dwindex, patch,
-							  Ghost::None, 0);
       new_dw->get(rho_micro_CC[m],  Ilb->rho_micro_CCLabel, dwindex, patch,
 							  Ghost::None, 0);
       new_dw->get(mom_L[m],         Ilb->mom_L_CCLabel,     dwindex, patch,
@@ -941,29 +942,24 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     double vol = dx.x()*dx.y()*dx.z();
     double tmp;
 
+    for (int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      if(mpm_matl){
+       // Loaded rho_CC into mass_L for solid matl's, converting to mass_L
+       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+	  mass_L[m][*iter] *=vol;
+       }
+      }
+    }
+
     // Convert momenta to velocities.  Slightly different for MPM and ICE.
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
       for (int m = 0; m < numALLMatls; m++) {
-        mass[m]           = rho_CC[m][*iter] * vol;
-        Temp_CC[m][*iter] = int_eng_L[m][*iter]/(mass[m]*cv[m]);
-        vel_CC[m][*iter]  = mom_L[m][*iter]/mass[m];
+        Temp_CC[m][*iter] = int_eng_L[m][*iter]/(mass_L[m][*iter]*cv[m]);
+        vel_CC[m][*iter]  = mom_L[m][*iter]/mass_L[m][*iter];
       }
     }
-
-
-  #if 0
-    cout << "GRID MOMENTUM BEFORE CCMOMENTUM EXCHANGE" << endl;
-    Vector total_mom(0.,0.,0.);
-    for (int m = 0; m < numALLMatls; m++) {
-      Vector matl_mom(0.,0.,0.);
-      for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
-	  matl_mom += mom_L[m][*iter];
-      }
-      cout << "Momentum for material " << m << " = " << matl_mom << endl;
-      total_mom+=matl_mom;
-    }
-    cout << "TOTAL Momentum BEFORE = " << total_mom << endl;
-  #endif
 
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
       //   Form BETA matrix (a), off diagonal terms
@@ -1084,9 +1080,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     // Convert vars. primitive-> flux 
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
       for (int m = 0; m < numALLMatls; m++) {
-          mass[m] = rho_CC[m][*iter] * vol;
-          int_eng_L_ME[m][*iter] = Temp_CC[m][*iter] * cv[m] * mass[m];
-          mom_L_ME[m][*iter]     = vel_CC[m][*iter] * mass[m];
+          int_eng_L_ME[m][*iter] = Temp_CC[m][*iter] * cv[m] * mass_L[m][*iter];
+          mom_L_ME[m][*iter]     = vel_CC[m][*iter]          * mass_L[m][*iter];
       }
     }
     //---- P R I N T   D A T A ------ 
@@ -1867,8 +1862,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 				   gradRhoZ*gradRhoZ );
 
 	  bool doTheBurn = 1;
-	  
-	    
+    
 	  if (gasVolumeFraction[*iter] < 1.e-5 ||
 	      absGradRho < 1.e-5) doTheBurn = 0;
 
