@@ -2,12 +2,12 @@ SRCTOP  = @top_srcdir@
 SRCDIR  = @srcdir@
 OBJTOP  = .
 
-SUBDIRS = SCICore PSECore main PSECommon Uintah
+SUBDIRS = SCICore PSECore main PSECommon @PACKAGE_DIRS@
 
 include $(SRCTOP)/scripts/recurse.mk
 
 _cleanHere::
-	rm -f uintah
+	rm -f uintah scirun davew
 
 _distcleanHere::
 	rm -f config.h so_locations

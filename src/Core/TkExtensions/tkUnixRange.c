@@ -12,7 +12,7 @@
  * RCS: @(#) $Id$
  */
 
-#include <config.h>
+#include <sci_config.h>
 #include "tkRange.h"
 #include "tkInt.h"
 

@@ -18,10 +18,10 @@ SRCTOP_ABS    = $(shell cd $(SRCTOP) ; pwd)
 SRCS      = main.cc
 CFLAGS   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/PSECore/TCL\" \
                       -DSCICORETCL=\"$(SRCTOP_ABS)/SCICore/TCL\" \
-                      -DDEFAULT_PACKAGE_PATH=\"$(OBJTOP_ABS)/PSECommon/libPSECommon.so\($(SRCTOP_ABS)/PSECommon/TCL\):$(OBJTOP_ABS)/Uintah/libUintah.so\($(SRCTOP_ABS)/Uintah/TCL\)\"
+                      -DDEFAULT_PACKAGE_PATH=\"@PACKAGE_PATH@2\"
 INCLUDES  = -I$(OBJTOP)
             
-PROGRAM   = uintah
+PROGRAM   = @EXENAME@
 LIBRARIES = $(LDRUN_PREFIX)$(TCL_LIB_DIR) \
             $(LDRUN_PREFIX)$(TK_LIB_DIR) \
             $(LDRUN_PREFIX)$(ITCL_LIB_DIR) \
@@ -38,10 +38,10 @@ LIBRARIES = $(LDRUN_PREFIX)$(TCL_LIB_DIR) \
 
 include $(SRCTOP)/scripts/program.mk
 
-../uintah:: uintah
-	cp uintah ..
+../@EXENAME@:: @EXENAME@
+	cp @EXENAME@ ..
 
-all:: ../uintah
+all:: ../@EXENAME@
 
 _distcleanHere::
-	rm -f ../uintah
+	rm -f ../@EXENAME@
