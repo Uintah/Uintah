@@ -632,7 +632,7 @@ void BuildBEMatrix::makeGbh(){
     TriSurfMesh::Node::index_type ppi = *ni;
     Point pp = hsurf1->point(ppi);
 
-    hsurf2->begin(fi); hsurf2->begin(fie);
+    hsurf2->begin(fi); hsurf2->end(fie);
     for (; fi != fie; ++fi){ //! find contributions from every triangle
       
       hsurf2->get_nodes(nodes, *fi);
