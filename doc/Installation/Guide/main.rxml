@@ -34,13 +34,13 @@
 
 <!--% doc.insertDocType("article", {"sr"=>"SCIRun","osx"=>"Mac OS X"},
 ["intro", "requirements","recommendations", "rpm_inst","source_inst",
- "petsc", "itk", "opt_inst", "preparing", "starting", "help", "cvs"]) 
+ "third_party_inst", "blas_lapack", "petsc", "itk", "opt_inst", "preparing",
+ "starting", "help", "cvs"])
 %-->
 
 <article id="article.main">
 <title>&sr; Installation Guide (v. <!--%= doc.edition %-->)</title>
 &intro;
-&opt_inst;
 &rpm_inst;
 &source_inst;
 &preparing;
