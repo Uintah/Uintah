@@ -227,6 +227,7 @@ PressureSolver::buildLinearMatrix(const ProcessorContext* pc,
 // Schedule the creation of the .. more documentation here
 //****************************************************************************
 void 
+PressureSolver::
 sched_normPressure(const LevelP& ,
 		   SchedulerP& ,
 		   DataWarehouseP& ,
@@ -238,6 +239,7 @@ sched_normPressure(const LevelP& ,
 // Actually do normPressure
 //****************************************************************************
 void 
+PressureSolver::
 normPressure(const Patch* ,
 	     SchedulerP& ,
 	     const DataWarehouseP& ,
@@ -247,6 +249,10 @@ normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.16  2000/06/05 01:01:57  tan
+// Made PressureSolver::sched_normPressure and
+// PressureSolver::normPressure compilable.
+//
 // Revision 1.15  2000/06/04 23:57:46  bbanerje
 // Updated Arches to do ScheduleTimeAdvance.
 //
