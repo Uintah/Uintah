@@ -3,11 +3,11 @@
 
 #include <Uintah/Grid/Handle.h>
 #include <Uintah/Grid/RefCounted.h>
-#include <Uintah/Grid/ProblemSpecP.h>
+#include <Uintah/Interface/ProblemSpecP.h>
 #include <string>
 
 namespace Uintah {
-namespace Grid {
+namespace Interface {
 
 class TypeDescription;
 
@@ -61,11 +61,15 @@ private:
     ProblemSpec& operator=(const ProblemSpec&);
 };
 
-} // end namespace Grid
+} // end namespace Interface
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.2  2000/03/23 20:00:17  jas
+// Changed the include files, namespace, and using statements to reflect the
+// move of ProblemSpec from Grid/ to Interface/.
+//
 // Revision 1.1  2000/03/23 19:47:55  jas
 // Moved the ProblemSpec stuff from Grid/ to Interface.
 //

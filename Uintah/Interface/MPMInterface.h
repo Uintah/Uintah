@@ -7,14 +7,14 @@
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/Handle.h>
 #include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/ProblemSpecP.h>
+#include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/SchedulerP.h>
 
 namespace Uintah {
 namespace Interface {
 
 using Uintah::Parallel::UintahParallelPort;
-using Uintah::Grid::ProblemSpecP;
+using Uintah::Interface::ProblemSpecP;
 using Uintah::Grid::LevelP;
 using Uintah::Grid::GridP;
 
@@ -77,6 +77,10 @@ private:
 
 //
 // $Log$
+// Revision 1.5  2000/03/23 20:00:17  jas
+// Changed the include files, namespace, and using statements to reflect the
+// move of ProblemSpec from Grid/ to Interface/.
+//
 // Revision 1.4  2000/03/17 09:30:03  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
