@@ -24,8 +24,6 @@
 
 namespace SCIRun {
 
-  typedef vector<bool> bit_vector;
-
 class SCICORESHARE QuadraticTetVolMesh : public TetVolMesh
 {
 public:
@@ -97,7 +95,7 @@ public:
 			    Vector& g8, Vector& g9) const;
 
   void add_node_neighbors(Node::array_type &array, Node::index_type node, 
-			  const bit_vector &bc, bool apBC=true);
+			  const vector<bool> &bc, bool apBC=true);
 
 
   virtual void io(Piostream&);

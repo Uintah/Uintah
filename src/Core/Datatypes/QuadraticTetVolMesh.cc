@@ -670,7 +670,7 @@ QuadraticTetVolMesh::heapify(QuadraticTetVolMesh::Node::array_type &data,
 void
 QuadraticTetVolMesh::add_node_neighbors(Node::array_type &array, 
 					Node::index_type node, 
-					const bit_vector &bc, bool apBC)
+					const vector<bool> &bc, bool apBC)
 {
   if (node >= points_.size()) return;
   Cell::array_type tets;
@@ -725,7 +725,7 @@ QuadraticTetVolMesh::add_node_neighbors(Node::array_type &array,
 void
 QuadraticTetVolMesh::add_node_neighbors(Node::array_type &array, 
 					Node::index_type node, 
-					const bit_vector &bc, bool apBC)
+					const vector<bool> &bc, bool apBC)
 {
   set<int> c2;
   if ((unsigned int)node < points_.size())

@@ -75,7 +75,7 @@ private:
   string lastBCFlag;
   int refnode;
   QuadraticTetVolField<int>* qtv;
-  bit_vector bcArray;
+  vector<bool> bcArray;
   vector<pair<int, double> > dirichlet;
 
   Mutex mutex;
