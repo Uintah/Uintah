@@ -259,7 +259,7 @@ CalcFMField<ElecField, CondField, PointField, MagField>::calc_forward_magnetic_f
   
   typedef typename PointField::value_type val_t;
   typename PointField::mesh_handle_type mesh = detfld->get_typed_mesh();
-  typename PointField::mesh_handle_type dip_mesh = dipfld->get_typed_mesh();
+
   mesh->synchronize(Mesh::NODES_E);
   typename PointField::mesh_type::Node::size_type sz;
   mesh->size(sz);
@@ -329,7 +329,7 @@ CalcFMField<ElecField, CondField, PointField, MagField>::get_parallel_iter(int n
     typename PointField::mesh_type::Node::size_type sz;
     mesh->size(sz);
     if (sz < (unsigned)np) {np_ = sz;}
-    int chunk_sz = (int)ceil((float)sz / (float)np_);
+    int chunk_sz = (int)((float)sz / (float)np_);
     //cout << "chunk_size: " << chunk_sz 
     // << " mesh size: " << sz << endl;
     int i = 0;
@@ -351,6 +351,7 @@ CalcFMField<ElecField, CondField, PointField, MagField>::get_parallel_iter(int n
     }
     // make sure last chunk is end.
     piters_[np_-1].second = end;
+
   }
 }
 
