@@ -24,7 +24,6 @@ void Task::initialize()
   d_usesMPI = false;
   d_subpatchCapable = false;
   d_hasSubScheduler = false;
-  taskNumber=-1;
 }
 
 Task::ActionBase::~ActionBase()
