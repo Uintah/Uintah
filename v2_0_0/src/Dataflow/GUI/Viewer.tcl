@@ -1926,13 +1926,19 @@ itcl_class EmbeddedViewWindow {
 	init_frame
     }
 
-    method setWindow {w} {
+    method setWindow {w width height} {
 	$this-c listvisuals .standalone
 
 	if {[winfo exists $w]} {
 	    destroy $w
 	}
-	$this-c switchvisual $w 0 640 512
+
+	global emb_win
+	set emb_win $w
+
+	#$this-c switchvisual $w 0 640 670
+	$this-c switchvisual $w 0 $width $height
+	
 	if {[winfo exists $w]} {
 	    bindEvents $w
 	}
@@ -2046,12 +2052,12 @@ itcl_class EmbeddedViewWindow {
     method updatePerf {p1 p2 p3} {
     }
 
-    method switchvisual {idx} {
+    method switchvisual {idx width height} {
 	set w .ui[modname]
 	if {[winfo exists $w.wframe.draw]} {
 	    destroy $w.wframe.draw
 	}
-	$this-c switchvisual $w.wframe.draw $idx 640 512
+	$this-c switchvisual $w.wframe.draw $idx $width $height
 	if {[winfo exists $w.wframe.draw]} {
 	    bindEvents $w.wframe.draw
 	    pack $w.wframe.draw -expand yes -fill both
@@ -2262,7 +2268,72 @@ itcl_class EmbeddedViewWindow {
     }
 	
     method makeSaveImagePopup {} {
-	puts makeSaveImagePopup
+	global $this-saveFile
+	global $this-saveType
+	global $this-resx
+	global $this-resy
+	global $this-aspect
+	global env
+	global emb_win
+
+	set $this-resx [winfo width $emb_win]
+	set $this-resy [winfo height $emb_win]
+	
+	set w .ui[modname]-saveImage
+
+	if {[winfo exists $w]} {
+	   raise $w
+           return
+        }
+
+	toplevel $w
+
+	set initdir ""
+
+	# place to put preferred data directory
+	# it's used if $this-filename is empty
+	
+	if {[info exists env(SCIRUN_DATA)]} {
+	    set initdir $env(SCIRUN_DATA)
+	} elseif {[info exists env(SCI_DATA)]} {
+	    set initdir $env(SCI_DATA)
+	} elseif {[info exists env(PSE_DATA)]} {
+	    set initdir $env(PSE_DATA)
+	}
+
+	#######################################################
+	# to be modified for particular reader
+
+	# extansion to append if no extension supplied by user
+	set defext ""
+	
+	# name to appear initially
+	set defname "MyImage.ppm"
+	set title "Save ViewWindow Image"
+
+	# file types to appers in filter box
+	set types {
+	    {{All Files}    {.*}}
+	    {{PPM File}     {.ppm}}
+	    {{Raw File}     {.raw}}
+	}
+	
+	######################################################
+	
+	makeSaveFilebox \
+		-parent $w \
+		-filevar $this-saveFile \
+		-command "$this doSaveImage; destroy $w" \
+		-cancel "destroy $w" \
+		-title $title \
+		-filetypes $types \
+	        -initialfile $defname \
+		-initialdir $initdir \
+		-defaultextension $defext \
+		-formatvar $this-saveType \
+                -formats {ppm raw "by_extension"} \
+	        -imgwidth $this-resx \
+	        -imgheight $this-resy
     }
     
     method changeName { w type} {
@@ -2270,7 +2341,10 @@ itcl_class EmbeddedViewWindow {
     }
 
     method doSaveImage {} {
-	puts doSaveImage
+	global $this-saveFile
+	global $this-saveType
+	$this-c dump_viewwindow [set $this-saveFile] [set $this-saveType] [set $this-resx] [set $this-resy]
+	$this-c redraw
     }
 }
 
