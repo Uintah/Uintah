@@ -47,6 +47,7 @@ public:
 	ReSchedule,
 	MultiSend,
 	Demand,
+	GoAway,
 
 	MUIDispatch,
 
