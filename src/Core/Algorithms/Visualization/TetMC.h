@@ -439,7 +439,6 @@ TetMC<Field>::get_interpolant()
       const int ei = (*eiter).second;
 
       cc[ei * 2 + 0] = (*eiter).first.first;
-      if (cc[ei * 2 + 0] == -1) { cc[ei * 2 + 0] = 0; }
       cc[ei * 2 + 1] = (*eiter).first.second;
       dd[ei * 2 + 0] = 1.0 - (*eiter).first.dfirst;
       dd[ei * 2 + 1] = (*eiter).first.dfirst;
@@ -447,12 +446,27 @@ TetMC<Field>::get_interpolant()
       ++eiter;
     }
 
-    for (int i = 0; i <= nrows; i++)
+    int nnz = 0;
+    int i;
+    for (i = 0; i < nrows; i++)
     {
-      rr[i] = i * 2;
+      rr[i] = nnz;
+      if (cc[i * 2 + 0] > 0)
+      {
+        cc[nnz] = cc[i * 2 + 0];
+        dd[nnz] = dd[i * 2 + 0];
+        nnz++;
+      }
+      if (cc[i * 2 + 1] > 0)
+      {
+        cc[nnz] = cc[i * 2 + 1];
+        dd[nnz] = dd[i * 2 + 1];
+        nnz++;
+      }
     }
+    rr[i] = nnz;
 
-    return scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows*2, dd);
+    return scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, dd);
   }
   else
   {
