@@ -1,6 +1,6 @@
 
 /*
- *  ComputeCurrent: Compute current through a surface
+ *  ComputeCurrent: Compute current through a volume
  *
  *  Written by:
  *   David Weinstein
@@ -23,7 +23,7 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class ComputeCurrent : public Module {
-  GuiDouble current_;
+
 public:
   ComputeCurrent(GuiContext *context);
   virtual ~ComputeCurrent();
@@ -34,8 +34,7 @@ DECLARE_MAKER(ComputeCurrent)
 
 
 ComputeCurrent::ComputeCurrent(GuiContext *context)
-  : Module("ComputeCurrent", context, Filter, "Forward", "BioPSE"),
-    current_(context->subVar("current"))
+  : Module("ComputeCurrent", context, Filter, "Forward", "BioPSE")
 {
 }
 
@@ -48,7 +47,8 @@ ComputeCurrent::execute()
 {
   FieldIPort* efield_port = (FieldIPort *) get_iport("TetMesh EField");
   FieldIPort* sigmas_port = (FieldIPort *) get_iport("TetMesh Sigmas");
-  FieldIPort* trisurf_port = (FieldIPort *) get_iport("TriSurf");
+  FieldOPort* ofield_port = (FieldOPort *) get_oport("Currents");
+
   if (!efield_port) {
     error("Unable to initialize iport 'TetMesh EField'.");
     return;
@@ -57,12 +57,12 @@ ComputeCurrent::execute()
     error("Unable to initialize iport 'TetMesh Sigmas'.");
     return;
   }
-  if (!trisurf_port) {
-    error("Unable to initialize iport 'TriSurf'.");
+  if (!ofield_port) {
+    error("Unable to initialize oport 'Currents'.");
     return;
   }
-  
-  FieldHandle efieldH, sigmasH, trisurfH;
+
+  FieldHandle efieldH, sigmasH;
 
   if (!efield_port->get(efieldH) || !efieldH.get_rep()) {
     error("Empty input E Field.");
@@ -70,10 +70,6 @@ ComputeCurrent::execute()
   }
   if (!sigmas_port->get(sigmasH) || !sigmasH.get_rep()) {
     error("Empty input Sigmas.");
-    return;
-  }
-  if (!trisurf_port->get(trisurfH) || !trisurfH.get_rep()) {
-    error("Empty input trisurf.");
     return;
   }
   if (efieldH->mesh().get_rep() != sigmasH->mesh().get_rep()) {
@@ -93,9 +89,12 @@ ComputeCurrent::execute()
     error("Sigmas isn't a TetVolField<int>.");
     return;
   }
-  TriSurfMesh *tris = dynamic_cast<TriSurfMesh*>(trisurfH->mesh().get_rep());
-  if (!tris) {
-    error("Not a TriSurf.");
+  if (sigmas->data_at() != Field::CELL) {
+    error("Need sigmas at Cells");
+    return;
+  }
+  if (efield->data_at() != Field::CELL) {
+    error("Need efield at Cells");
     return;
   }
 
@@ -107,52 +106,42 @@ ComputeCurrent::execute()
   int have_units = 0;
   string units;
   if (sigmasH->mesh()->get_property("units", units)) have_units=1;
-  
-  // for each face in tris, find its area, centroid, and normal
-  // for that centroid, look up its sigma and efield in the tetvol fields
-  // compute (sigma * efield * area) and dot it with the face normal
-  // sum those up for all tris
 
-  TriSurfMesh::Face::iterator fi, fe;
-  tris->begin(fi);
-  tris->end(fe);
-  double current=0;
-  TriSurfMesh::Node::array_type nodes;
-  double total_area=0;
+  // For each cell in the mesh, find the dot product of the gradient
+  // vector and the conductivity tensor.  The result is a vector field
+  // with data at cells.
+
+  // Create output mesh
+  //  OFIELD *ofield = scinew OFIELD(imesh, Field::CELL);
+  
+  TetVolMeshHandle mesh = efield->get_typed_mesh();
+  TetVolMesh::Cell::iterator fi, fe;
+  mesh->begin(fi);
+  mesh->end(fe);
+
+  TetVolField<Vector> *ofield = new TetVolField<Vector>(mesh, Field::CELL);
+
   while (fi != fe) {
-    Point center;
-    tris->get_center(center, *fi);
-    double area = tris->get_area(*fi);
-    total_area += area;
-    tris->get_nodes(nodes, *fi);
-    Point p0, p1, p2;
-    tris->get_center(p0, nodes[0]);
-    tris->get_center(p1, nodes[1]);
-    tris->get_center(p2, nodes[2]);
-    Vector normal(Cross(p2-p1,p2-p0));
-    normal.normalize();
-    TetVolMesh::Cell::index_type tet;
-    if (!efield->get_typed_mesh()->locate(tet, center)) {
-      error("Trisurf centroid was not located in tetvolmesh.");
-      return;
-    }
-    Vector e = efield->value(tet);
-    int sigma_idx = sigmas->value(tet);
+    Vector vec;
+    Vector e;
+    efield->value(e, *fi);
+    int sigma_idx;
+    sigmas->value(sigma_idx, *fi);
     Tensor s(conds[sigma_idx].second);
-    
-    // compute sigma * e
-    Vector c(s.mat_[0][0]*e.x()+s.mat_[0][1]*e.y()+s.mat_[0][2]*e.z(),
-	     s.mat_[1][0]*e.x()+s.mat_[1][1]*e.y()+s.mat_[1][2]*e.z(),
-	     s.mat_[2][0]*e.x()+s.mat_[2][1]*e.y()+s.mat_[2][2]*e.z());
-    current += fabs(Dot(c,normal)) * area;
+    // - sign added to vector to account for E = - Del V
+    vec = Vector(-(s.mat_[0][0]*e.x()+s.mat_[0][1]*e.y()+s.mat_[0][2]*e.z()),
+		 -(s.mat_[1][0]*e.x()+s.mat_[1][1]*e.y()+s.mat_[1][2]*e.z()),
+		 -(s.mat_[2][0]*e.x()+s.mat_[2][1]*e.y()+s.mat_[2][2]*e.z()));
+
+    if (have_units) {
+      if (units == "mm") vec/=1000;
+      else if (units == "cm") vec/=100;
+      else if (units == "dm") vec/=10;
+      else warning("Unrecognized units '"  + units +"' will be ignored.");
+    }
+    ofield->set_value(vec,*fi);
     ++fi;
   }
-  if (have_units) {
-    if (units == "mm") current/=1000;
-    else if (units == "cm") current/=100;
-    else if (units == "dm") current/=10;
-    else warning("Unrecognized units '"  + units +"' will be ignored.");
-  }
-  current_.set(current);
+  ofield_port->send(ofield);
 }
 } // End namespace BioPSE
