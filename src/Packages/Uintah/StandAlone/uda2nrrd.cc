@@ -84,28 +84,36 @@ public:
 
 void usage(const std::string& badarg, const std::string& progname)
 {
-    if(badarg != "")
-	cerr << "Error parsing argument: " << badarg << endl;
-    cerr << "Usage: " << progname << " [options] "
-	 << "-uda <archive file>\n\n";
-    cerr << "Valid options are:\n";
-    cerr << "  -h,--help\n";
-    cerr << "  -v,--variable <variable name>\n";
-    cerr << "  -m,--material <material number> [defaults to 0]\n";
-    cerr << "  -l,--level <level index> [defaults to 0]\n";
-    cerr << "  -o,--out <outputfilename> [defaults to data]\n";
-    cerr << "  -dh,--detatched-header - writes the data with detached headers.  The default is to not do this.\n";
-    //    cerr << "  -binary (prints out the data in binary)\n";
-    cerr << "  -tlow,--timesteplow [int] (only outputs timestep from int) [defaults to 0]\n";
-    cerr << "  -thigh,--timestephigh [int] (only outputs timesteps up to int) [defaults to last timestep]\n";
-    cerr << "  -tinc [int] (output every n timesteps) [defaults to 1]\n";
-    cerr << "  -tstep,--timestep [int] (only outputs timestep int)\n";
-    cerr << "  -mo <operator> type of operator to apply to matricies.\n";
-    cerr << "                 Options are none, det, norm, and trace\n";
-    cerr << "                 [defaults to none]\n";
-    cerr << "  -vv,--verbose (prints status of output)\n";
-    cerr << "  -q,--quiet (very little output)\n";
-    exit(1);
+  if(badarg != "")
+    cerr << "Error parsing argument: " << badarg << endl;
+  cerr << "Usage: " << progname << " [options] "
+       << "-uda <archive file>\n\n";
+  cerr << "Valid options are:\n";
+  cerr << "  -h,--help  Prints this message out\n";
+  
+  cerr << "\nField Specifier Options\n";
+  cerr << "  -v,--variable <variable name>\n";
+  cerr << "  -m,--material <material number> [defaults to first material found]\n";
+  cerr << "  -l,--level <level index> [defaults to 0]\n";
+  cerr << "  -mo <operator> type of operator to apply to matricies.\n";
+  cerr << "                 Options are none, det, norm, and trace\n";
+  cerr << "                 [defaults to none]\n";
+  
+  cerr << "\nOutput Options\n";
+  cerr << "  -o,--out <outputfilename> [defaults to data]\n";
+  cerr << "  -dh,--detatched-header - writes the data with detached headers.  The default is to not do this.\n";
+  //    cerr << "  -binary (prints out the data in binary)\n";
+  
+  cerr << "\nTimestep Specifier Optoins\n";
+  cerr << "  -tlow,--timesteplow [int] (only outputs timestep from int) [defaults to 0]\n";
+  cerr << "  -thigh,--timestephigh [int] (only outputs timesteps up to int) [defaults to last timestep]\n";
+  cerr << "  -tinc [int] (output every n timesteps) [defaults to 1]\n";
+  cerr << "  -tstep,--timestep [int] (only outputs timestep int)\n";
+  
+  cerr << "\nChatty Options\n";
+  cerr << "  -vv,--verbose (prints status of output)\n";
+  cerr << "  -q,--quiet (very little output)\n";
+  exit(1);
 }
 
 
@@ -175,6 +183,9 @@ unsigned int get_nrrd_type() {
 }
 
 /////////////////////////////////////////////////////////////////////
+//
+// This will gather all the patch data and write it into the single
+// contiguous volume.
 template <class T, class Var>
 void build_field(QueryInfo &qinfo,
 		 IntVector& lo,
@@ -190,11 +201,13 @@ void build_field(QueryInfo &qinfo,
   Semaphore* thread_sema = scinew Semaphore("extractor semaphore",
 					    max_workers);
   Mutex lock("build_field lock");
-  
+
+  // Loop over each patch and get the data from the data archive.
   for( Level::const_patchIterator r = qinfo.level->patchesBegin();
       r != qinfo.level->patchesEnd(); ++r){
     IntVector low, hi;
     Var v;
+    // This gets the data
     qinfo.archive->query( v, qinfo.varname, qinfo.mat, *r, qinfo.time);
     if( sfd->data_at() == Field::CELL){
       low = (*r)->getCellLowIndex();
@@ -437,6 +450,10 @@ void getData(QueryInfo &qinfo, IntVector &low,
     delete fieldstrm;
   }
 #endif
+
+  // Print out the psycal extents
+  BBox bbox = mesh_handle_->get_bounding_box();
+  cout << "Bounding box: min("<<bbox.min()<<"), max("<<bbox.max()<<")\n";
   
   // Convert the field to a nrrd
   if (!quiet) cout << "Converting field to nrrd.\n";
@@ -541,6 +558,7 @@ int main(int argc, char** argv)
 
   string input_uda_name;
   string output_file_name("");
+  bool use_default_file_name = true;
   IntVector var_id(0,0,0);
   string variable_name("");
   // It will use the first material found unless other indicated.
@@ -584,6 +602,7 @@ int main(int argc, char** argv)
       input_uda_name = string(argv[++i]);
     } else if (s == "-o" || s == "--out") {
       output_file_name = string(argv[++i]);
+      use_default_file_name = false;
     } else if(s == "-mo") {
       s = argv[++i];
       if (s == "det")
@@ -652,7 +671,7 @@ int main(int argc, char** argv)
       //      var = vars[0];
     }
 
-    if (output_file_name == "") {
+    if (use_default_file_name) {
       // Then use the variable name for the output name
       output_file_name = variable_name;
       if (!quiet)
@@ -721,6 +740,7 @@ int main(int argc, char** argv)
 	mat_num = *(matls.begin());
       } else {
 	unsigned int mat_index = 0;
+	mat_num = 0;
 	for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
 	     matlIter != matls.end(); matlIter++){
 	  int matl = *matlIter;
@@ -754,7 +774,10 @@ int main(int argc, char** argv)
 
       // Figure out the filename
       char filename_num[200];
-      sprintf(filename_num, "%04lu", time);
+      if (use_default_file_name)
+	sprintf(filename_num, "_M%02d_%04lu", mat_num, time);
+      else
+	sprintf(filename_num, "_%04lu", time);
       string filename(output_file_name + filename_num);
     
       switch (subtype->getType()) {
