@@ -20,7 +20,7 @@ set m5 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 373 323]
 set m6 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 391 256]
 set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 420 403]
 set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 373 88]
-set m9 [addModuleAtPosition "Moulding" "Fields" "TetVolCellToNode" 373 163]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "TetVolCellToNode" 373 163]
 
 addConnection $m3 0 $m2 1
 addConnection $m0 0 $m2 0
@@ -40,7 +40,7 @@ addConnection $m9 0 $m5 0
 
 set $m0-notes {}
 set $m0-show_status 1
-set $m0-filename {/home/moulding/data/sphere.tvd.fld}
+set $m0-filename $env(SCIRUN_DATA)/sphere.tvd.fld
 set $m1-notes {}
 set $m1-show_status 1
 $m1 ui
