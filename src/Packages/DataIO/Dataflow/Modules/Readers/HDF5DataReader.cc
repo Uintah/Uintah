@@ -701,14 +701,6 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& paths,
     }
   }
 
-  for( i=0; i<frame_paths.size(); i++ ) {
-    for( j=0; j<frame_paths[i].size(); j++ )
-      cerr << frame_paths[i][j] << endl;
-
-    cerr << endl;
-  }
-
-
   if( warn ) {
     ostringstream str;
     str << times.size() << " frames found ";
