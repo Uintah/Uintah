@@ -22,6 +22,7 @@ namespace Uintah {
     const VarLabel* delP_MassXLabel;
     const VarLabel* rho_micro_CCLabel;
     const VarLabel* sp_vol_CCLabel;
+    const VarLabel* DLabel;
     const VarLabel* mass_CCLabel;
     const VarLabel* rho_CCLabel;
     const VarLabel* rho_CC_top_cycleLabel;
