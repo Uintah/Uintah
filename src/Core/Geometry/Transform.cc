@@ -577,7 +577,11 @@ void Transform::compute_imat()
     + i*b*g*p - i*b*h*o - i*f*c*p + i*f*d*o + i*n*c*h - i*n*d*g
     - m*b*g*l + m*b*h*k + m*f*c*l - m*f*d*k - m*j*c*h + m*j*d*g;
 
-  if (Abs(q)<0.000000001) {
+
+  // Warning!  This test should be based on the condition number of the
+  // matrix.  Transforms for very small domains can be falsely accused
+  // of being singular!
+  if (Abs(q)<0.000000000001) {
     imat[0][0]=imat[1][1]=imat[2][2]=imat[3][3]=1;
     imat[1][0]=imat[1][2]=imat[1][3]=0;
     imat[2][0]=imat[2][1]=imat[2][3]=0;
