@@ -358,22 +358,22 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
   case 3:
   default:
     {
-      nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
-	       get_nrrd_type<val_t>(), 4, 
-	       sink_size, dims[0], dims[1], dims[2]);
-
       if (f->data_at() == Field::NODE) {
+	nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
+		 get_nrrd_type<val_t>(), 4, 
+		 sink_size, dims[0], dims[1], dims[2]);
 	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
 		    nrrdCenterNode, nrrdCenterNode, 
 		    nrrdCenterNode, nrrdCenterNode);
       } else if (f->data_at() == Field::CELL) {
+	nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
+		 get_nrrd_type<val_t>(), 4, 
+		 sink_size, dims[0] - 1, dims[1] - 1, dims[2] - 1);
 	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
-		    nrrdCenterCell, nrrdCenterCell, 
+		    nrrdCenterNode, nrrdCenterCell, 
 		    nrrdCenterCell, nrrdCenterCell);
       } else  {
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
-		    nrrdCenterUnknown, nrrdCenterUnknown, 
-		    nrrdCenterUnknown, nrrdCenterUnknown);
+	ASSERTFAIL("no support for edge or face centers");
       }
       nout->nrrd->axis[0].label = strdup(sink_label.c_str());
       nout->nrrd->axis[1].label = strdup("x");

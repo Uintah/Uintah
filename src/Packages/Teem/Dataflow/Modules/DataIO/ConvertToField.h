@@ -112,14 +112,15 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
 				      SCIRun::FieldHandle &out)
 {
   vector<unsigned int> dims;
-  cout << "trying to convert to field" << endl;
   // The input fld in not neccessarily the exact type Fld, 
   // it will have the exact same mesh type however.
   typedef typename Fld::mesh_type Msh;
   Msh *mesh = dynamic_cast<Msh*>(fld->mesh().get_rep());
   ASSERT(mesh != 0);
-
+  int off = 0;
+  bool uns = false;
   if (! mesh->get_dim(dims)) {
+    uns = true;
     // Unstructured fields fall into this category, for them we create nrrds
     // of dimension 1 (2 with the tuple axis).
     switch (fld->data_at()) {
@@ -155,23 +156,24 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
       return false;
     }
   }
-
+  if ((!uns) && fld->data_at() == Field::CELL) {
+    off = 1;
+  }
   // All sci nrrds should have a tuple axis, we assume it.
-  // It is axis 0.  Make sure sizs along each dim still match.
+  // It is axis 0.  Make sure sizEs along each dim still match.
   if (inrrd->dim != (int)dims.size() + 1) return false;
-  cout << "passed dim check" << endl;
   switch ((int)dims.size()) {
   case 1:
     {
       // make sure size of dimensions match up
-      unsigned int nx = inrrd->axis[1].size;
+      unsigned int nx = inrrd->axis[1].size + off;
       if (nx != dims[0]) { return false; }
     }
     break;
   case 2:
     {
-      unsigned int nx = inrrd->axis[1].size;
-      unsigned int ny = inrrd->axis[2].size;
+      unsigned int nx = inrrd->axis[1].size + off;
+      unsigned int ny = inrrd->axis[2].size + off;
       if ((nx != dims[0]) || (ny != dims[1])) {
 	return false;
       }
@@ -179,9 +181,9 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
     break;
   case 3:
     {
-      unsigned int nx = inrrd->axis[1].size;
-      unsigned int ny = inrrd->axis[2].size;
-      unsigned int nz = inrrd->axis[3].size;
+      unsigned int nx = inrrd->axis[1].size + off;
+      unsigned int ny = inrrd->axis[2].size + off;
+      unsigned int nz = inrrd->axis[3].size + off;
       if ((nx != dims[0]) || (ny != dims[1]) || (nz != dims[2])) {
 	return false;
       }
@@ -190,7 +192,6 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
   default:   // anything else is invalid.
     return false;
   }
-  cout << "passed dim size check" << endl;
   // Things match up, create the new output field.
   out = new Fld(typename Fld::mesh_handle_type(mesh), fld->data_at());
   

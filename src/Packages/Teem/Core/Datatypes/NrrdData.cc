@@ -144,10 +144,8 @@ NrrdData::get_tuple_index_info(int tmin, int tmax, int &min, int &max) const
 // PIO for NrrdData objects
 void NrrdData::io(Piostream& stream) {
   int version =  stream.begin_class("NrrdData", NRRDDATA_VERSION);
-  cout << "version is: " << version << endl;
   if (stream.reading()) {
     Pio(stream, nrrd_fname_);
-    cerr << "fname is: " << nrrd_fname_ << endl;
     if (nrrdLoad(nrrd = nrrdNew(), strdup(nrrd_fname_.c_str()))) {
       char *err = biffGet(NRRD);
       cerr << "Error reading nrrd " << nrrd_fname_ << ": " << err << endl;
