@@ -112,8 +112,8 @@ void ColorMapKey::execute() {
     
     int i;
 
-    double min = map->min;
-    double max = map->max;
+    double min = map->max;
+    double max = map->min;
 
     // some bases for positioning text
     double xloc = xsize;
@@ -149,6 +149,9 @@ void ColorMapKey::execute() {
 
 //
 // $Log$
+// Revision 1.9  2000/06/01 16:40:25  kuzimmer
+// numbers were backwards on ColorMapKey
+//
 // Revision 1.8  2000/05/31 21:55:08  kuzimmer
 // Modified ColorMapKey, it works!
 //
