@@ -1,10 +1,31 @@
+#
+#  ColorPicker.tcl
+#
+#  Written by:
+#   James Purciful
+#   Department of Computer Science
+#   University of Utah
+#   Mar. 1994
+#
+#  Copyright (C) 1994 SCI Group
+#
+
 proc makeColorPicker {w var command cancel} {
     global $var
 
+    global $var-r $var-g $var-b
+    global $w-r $w-g $w-b
+    set $w-r [set $var-r]
+    set $w-g [set $var-g]
+    set $w-b [set $var-b]
+
     frame $w.c
 
+    set ir [expr int([set $w-r] * 65535)]
+    set ig [expr int([set $w-g] * 65535)]
+    set ib [expr int([set $w-b] * 65535)]
     frame $w.c.col -relief ridge -borderwidth 4 -height 1.5c -width 6c \
-	    -background #000000
+	    -background [format #%04x%04x%04x $ir $ig $ib]
     set col $w.c.col
 
     frame $w.c.picks
@@ -24,6 +45,9 @@ proc makeColorPicker {w var command cancel} {
     pack $rgb.s1 -in $picks.rgb -side top -padx 2 -pady 2 -anchor nw -fill y
     pack $rgb.s2 -in $picks.rgb -side top -padx 2 -pady 2 -anchor nw -fill y
     pack $rgb.s3 -in $picks.rgb -side top -padx 2 -pady 2 -anchor nw -fill y
+    $rgb.s1 set [set $w-r]
+    $rgb.s2 set [set $w-g]
+    $rgb.s3 set [set $w-b]
 
     frame $picks.hsv -relief groove -borderwidth 4 
     set hsv $picks.hsv
@@ -40,17 +64,17 @@ proc makeColorPicker {w var command cancel} {
     pack $hsv.s2 -in $picks.hsv -side top -padx 2 -pady 2 -anchor nw -fill y
     pack $hsv.s3 -in $picks.hsv -side top -padx 2 -pady 2 -anchor nw -fill y
 
-    $rgb.s1 configure -command "cpsetrgb $w $var $col $rgb.s1 $rgb.s2 $rgb.s3 \
+    $rgb.s1 configure -command "cpsetrgb $col $rgb.s1 $rgb.s2 $rgb.s3 \
 	    $hsv.s1 $hsv.s2 $hsv.s3 "
-    $rgb.s2 configure -command "cpsetrgb $w $var $col $rgb.s1 $rgb.s2 $rgb.s3 \
+    $rgb.s2 configure -command "cpsetrgb $col $rgb.s1 $rgb.s2 $rgb.s3 \
 	    $hsv.s1 $hsv.s2 $hsv.s3 "
-    $rgb.s3 configure -command "cpsetrgb $w $var $col $rgb.s1 $rgb.s2 $rgb.s3 \
+    $rgb.s3 configure -command "cpsetrgb $col $rgb.s1 $rgb.s2 $rgb.s3 \
 	    $hsv.s1 $hsv.s2 $hsv.s3 "
-    $hsv.s1 configure -command "cpsethsv $w $var $col $rgb.s1 $rgb.s2 $rgb.s3 \
+    $hsv.s1 configure -command "cpsethsv $col $rgb.s1 $rgb.s2 $rgb.s3 \
 	    $hsv.s1 $hsv.s2 $hsv.s3 "
-    $hsv.s2 configure -command "cpsethsv $w $var $col $rgb.s1 $rgb.s2 $rgb.s3 \
+    $hsv.s2 configure -command "cpsethsv $col $rgb.s1 $rgb.s2 $rgb.s3 \
 	    $hsv.s1 $hsv.s2 $hsv.s3 "
-    $hsv.s3 configure -command "cpsethsv $w $var $col $rgb.s1 $rgb.s2 $rgb.s3 \
+    $hsv.s3 configure -command "cpsethsv $col $rgb.s1 $rgb.s2 $rgb.s3 \
 	    $hsv.s1 $hsv.s2 $hsv.s3 "
 
     frame $w.c.opts
@@ -111,7 +135,7 @@ proc Min {n1 n2 n3} {
     }
 }
 
-proc cpsetrgb {w var col rs gs bs hs ss vs val} {
+proc cpsetrgb {col rs gs bs hs ss vs val} {
     # Do inverse transformation to HSV
     set max [Max [$rs get] [$gs get] [$bs get]]
     set min [Min [$rs get] [$gs get] [$bs get]]
@@ -149,12 +173,12 @@ proc cpsetrgb {w var col rs gs bs hs ss vs val} {
     }
     $vs set $max
 
-    cpsetcol $var $col [$rs get] [$gs get] [$bs get]
+    cpsetcol $col [$rs get] [$gs get] [$bs get]
 
     update idletasks
 }
 
-proc cpsethsv {w var col rs gs bs hs ss vs val} {
+proc cpsethsv {col rs gs bs hs ss vs val} {
     # Convert to RGB...
     while {[$hs get] >= 360.0} {
 	$hs set [expr [$hs get] - 360.0]
@@ -178,12 +202,12 @@ proc cpsethsv {w var col rs gs bs hs ss vs val} {
 	default {$rs set 0 ; $gs set 0 ; $bs set 0}
     }
 
-    cpsetcol $var $col [$rs get] [$gs get] [$bs get]
+    cpsetcol $col [$rs get] [$gs get] [$bs get]
 
     update idletasks
 }
 
-proc cpsetcol {var col r g b} {
+proc cpsetcol {col r g b} {
     set ir [expr int($r * 65535)]
     set ig [expr int($g * 65535)]
     set ib [expr int($b * 65535)]

@@ -1,3 +1,15 @@
+#
+#  Filebox.tcl
+#
+#  Written by:
+#   James Purciful
+#   Department of Computer Science
+#   University of Utah
+#   Mar. 1994
+#
+#  Copyright (C) 1994 SCI Group
+#
+
 proc makeFilebox {w var command cancel} {
     global $w-filter $w-path $w-oldpath $w-oldsel
     global $var

@@ -313,7 +313,9 @@ TCLMaterial::TCLMaterial(const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl), ambient("ambient", str(), tcl),
   diffuse("diffuse", str(), tcl), specular("specular", str(), tcl),
   shininess("shininess", str(), tcl), emission("emission", str(), tcl),
-  reflectivity("reflectivity", str(), tcl)
+  reflectivity("reflectivity", str(), tcl),
+  transparency("transparency", str(), tcl),
+  refraction_index("refraction_index", str(), tcl)
 {
 }
 
@@ -326,6 +328,8 @@ Material TCLMaterial::get()
     Material m(ambient.get(), diffuse.get(), specular.get(), shininess.get());
     m.emission=emission.get();
     m.reflectivity=reflectivity.get();
+    m.transparency=transparency.get();
+    m.refraction_index=refraction_index.get();
     return m;
 }
 
@@ -337,4 +341,6 @@ void TCLMaterial::set(const Material& m)
     shininess.set(m.shininess);
     emission.set(m.emission);
     reflectivity.set(m.reflectivity);
+    transparency.set(m.transparency);
+    refraction_index.set(m.refraction_index);
 }

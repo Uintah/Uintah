@@ -137,8 +137,12 @@ class TCLMaterial : public TCLvar {
     TCLdouble shininess;
     TCLColor emission;
     TCLdouble reflectivity;
+    TCLdouble transparency;
+    TCLdouble refraction_index;
+ public:
     TCLMaterial(const clString& name, const clString& id, TCL* tcl);
     ~TCLMaterial();
+   
     Material get();
     void set(const Material&);
 };
