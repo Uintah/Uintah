@@ -564,8 +564,7 @@ ShowField::execute()
   }
 
   FieldHandle fld_handle;
-  field_iport->get(fld_handle);
-  if(!fld_handle.get_rep())
+  if (!(field_iport->get(fld_handle) && fld_handle.get_rep()))
   {
     warning("No Data in port 1 field.");
     return;
@@ -573,8 +572,7 @@ ShowField::execute()
 
   FieldIPort *vfield_iport = (FieldIPort *)get_iport("Orientation Field");
   FieldHandle vfld_handle;
-  vfield_iport->get(vfld_handle);
-  if (vfld_handle.get_rep())
+  if (vfield_iport->get(vfld_handle) && vfld_handle.get_rep())
   {
     if (vfld_handle->mesh().get_rep() != fld_handle->mesh().get_rep())
     {
