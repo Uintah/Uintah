@@ -559,36 +559,38 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
     Vector  dx = patch->dCell();
     double vol = dx.x()*dx.y()*dx.z();    
 
-    constCCVariable<double> rho_CC, rho_micro, Tdot, sp_vol_CC;
+    StaticArray<constCCVariable<double> > Tdot(numALLMatls);
+    StaticArray<constCCVariable<double> > vol_frac(numALLMatls);
+    StaticArray<constCCVariable<double> > Temp_CC(numALLMatls);
+    constCCVariable<double> rho_CC, rho_micro, f_theta,sp_vol_CC;
     constCCVariable<double> delP_Dilatate, press_CC, speedSound;
-    constCCVariable<double> f_theta,vol_frac, Temp_CC;
     CCVariable<double> sum_therm_exp;
 
     new_dw->get(press_CC,        lb->press_CCLabel,      0,patch,Ghost::None,0);
     new_dw->get(delP_Dilatate,   lb->delP_DilatateLabel, 0,patch,Ghost::None,0);
     new_dw->allocate(sum_therm_exp,lb->SumThermExpLabel, 0,patch);
 
-#if 0
-    double alpha;
+    sum_therm_exp.initialize(0.);
+
     // The following assumes that only the fluids have a thermal
     // expansivity, which is true at this time. (11-08-01)
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       if(ice_matl){
-        int indx = matl->getDWIndex();
-        new_dw->get(Tdot,      lb->Tdot_CCLabel,     indx,patch,Ghost::None, 0);
-        new_dw->get(sp_vol_CC,lb->sp_vol_CCLabel,    indx,patch,Ghost::None, 0);
-        new_dw->get(vol_frac,  lb->vol_frac_CCLabel, indx,patch,Ghost::None, 0);
-        old_dw->get(Temp_CC,   lb->temp_CCLabel,     indx,patch,Ghost::None, 0);
-        for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-          IntVector c = *iter;
-          alpha = 1.0/Temp_CC[c];  // this assumes an ideal gas
-          sum_therm_exp[c] += vol_frac[c]*alpha*Tdot[c];
-        }
+       int indx = matl->getDWIndex();
+       new_dw->get(Tdot[m],     lb->Tdot_CCLabel,    indx,patch,Ghost::None, 0);
+       new_dw->get(vol_frac[m], lb->vol_frac_CCLabel,indx,patch,Ghost::None, 0);
+       old_dw->get(Temp_CC[m],  lb->temp_CCLabel,    indx,patch,Ghost::None, 0);
+       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+         IntVector c = *iter;
+         // the following assumes an ideal gas and is getting alpha from the
+         // average of the old temp and the new temp.
+         double alpha = 1.0/Temp_CC[m][c];
+         sum_therm_exp[c] += vol_frac[m][c]*alpha*Tdot[m][c];
+       }
       }
     }
-#endif
 
     //__________________________________ 
     //  Compute the Lagrangian specific volume
@@ -603,28 +605,44 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
      spec_vol_source.initialize(0.);
      if(ice_matl){
        new_dw->get(rho_CC,    lb->rho_CCLabel,       indx,patch,Ghost::None, 0);
-       new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,    indx,patch,Ghost::None, 0);
-       new_dw->get(speedSound,lb->speedSound_CCLabel,indx,patch,Ghost::None, 0); 
-       new_dw->get(vol_frac,  lb->vol_frac_CCLabel,  indx,patch,Ghost::None, 0);
-       new_dw->get(Tdot,      lb->Tdot_CCLabel,      indx,patch,Ghost::None, 0);
+       new_dw->get(speedSound,lb->speedSound_CCLabel,indx,patch,Ghost::None, 0);
        new_dw->get(f_theta,   lb->f_theta_CCLabel,   indx,patch,Ghost::None, 0);
+       new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,    indx,patch,Ghost::None, 0);
 
        for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         // Note that at this point, spec_vol_L is actually just a
         // volume of material, this is consistent with 4.8c
+
         double kappa = sp_vol_CC[c]/(speedSound[c] * speedSound[c]); 
-        
-        double term1 = -vol * vol_frac[c] * kappa * delP_Dilatate[c];
-#if 0
-        alpha = 1.0/Temp_CC[c];  // this assumes an ideal gas
-        double term2 = delT * vol * (vol_frac[c]*alpha*Tdot[c] -
-                                        vol_frac[c]*sum_therm_exp[c]);
+        // the following assumes an ideal gas and is getting alpha from the
+        // average of the old temp and the new temp.
+        double alpha = 1.0/Temp_CC[m][c];
+
+        double term1 = -vol * vol_frac[m][c] * kappa * delP_Dilatate[c];
+        double term2 = delT * vol * (vol_frac[m][c]*alpha*Tdot[m][c] -
+                                        f_theta[c]*sum_therm_exp[c]);
+
         spec_vol_source[c] = term1 + term2;
-        spec_vol_source[c] = term1;
+        spec_vol_L[c] = (rho_CC[c]*vol*sp_vol_CC[c]) + spec_vol_source[c];
+
+#if 0
+        if(spec_vol_L[c] < 0.){
+          cout << "Cell = " << c << endl;
+          cout << "vol  = " << vol << endl;
+          cout << "sp_vol_CC[c] = " << sp_vol_CC[c] << endl;
+          cout << "(rho_CC[c]*vol*sp_vol_CC[c]) = " << (rho_CC[c]*vol*sp_vol_CC[c]) << endl;
+          cout << "spec_vol_L[c] = " << spec_vol_L[c] << endl;
+          cout << "spec_vol_source[c] = " << spec_vol_source[c] << endl;
+          cout << "vol_frac[m][c] = " << vol_frac[m][c] << endl;
+          cout << "kappa = " << kappa << endl;
+          cout << "delP_Dilatate[c] = " << delP_Dilatate[c] << endl;
+          cout << "rho_CC[c] = " << rho_CC[c] << endl;
+          cout << "Tdot = " << Tdot[m][c] << endl;
+          cout << "f_theta[c] = " << f_theta[c] << endl;
+
+        }
 #endif
-        spec_vol_source[c] = term1;
-        spec_vol_L[c] = (rho_CC[c]*vol*sp_vol_CC[c]) + term1;
        }
      }
      new_dw->put(spec_vol_L,     lb->spec_vol_L_CCLabel,     indx,patch);
