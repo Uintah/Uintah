@@ -207,7 +207,7 @@ EOF
       AC_MSG_RESULT(no)
       eval $_SCI_NOTFOUND_
     fi
-    rm -f conftest* a.out
+#    rm -f conftest* a.out
   ])
 
 ##
@@ -1032,6 +1032,11 @@ if test "$uintah" = "yes" ; then
 else
   AC_CHECK_PROG(PERL, perl, perl)
 fi
+
+if test "$PERL" = "perl"; then
+  PERL=`which perl`
+fi
+
 AC_CHECK_PROG(ETAGS, etags, etags)
 
 ##  Create the Packages/Uintah/tools dir for later use.
@@ -1523,13 +1528,11 @@ for i in $mpeg $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then 
     continue
   fi
-  SCI_CHECK_LIB($i/lib,mpege,main,,continue,)
-  SCI_CHECK_HEADER($i/include,mpege.h,,continue,)
+  SCI_CHECK_LIB($i/lib,mpege,main,break,continue,)
 done
 
-if test -z "$HAVE_LIBMPEGE" ||
-   test -z "$INCMPEGE_H"; then
-  HAVE_LIBMPEGE=''
+if test -z "$HAVE_LIBMPEGE"; then
+  MPEG_DEF_FLAG=""
 else
   MPEG_DEF_FLAG="-DMPEG"
 fi
@@ -1537,7 +1540,6 @@ fi
 AC_SUBST(MPEG_DEF_FLAG)
 AC_SUBST(HAVE_LIBMPEGE)
 AC_SUBST(LIBMPEGE)
-AC_SUBST(INCMPEGE_H)
 
 ##  --  search for libimage  ---------------------------------------------
 
