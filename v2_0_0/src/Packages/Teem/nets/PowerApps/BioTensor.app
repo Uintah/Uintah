@@ -814,50 +814,67 @@ set $m40-notes {}
 # set $m43-color-r {0.4}
 # set $m43-color-g {0.2}
 # set $m43-color-b {0.9}
-set $m44-notes {}
-set $m44-ViewWindow_0-pos {z0_y0}
-set $m44-ViewWindow_0-caxes {0}
-set $m44-ViewWindow_0-raxes {1}
-set $m44-ViewWindow_0-iaxes {}
-set $m44-ViewWindow_0-have_collab_vis {0}
-set $m44-ViewWindow_0-view-eyep-x {-7.6630625798236407}
-set $m44-ViewWindow_0-view-eyep-y {75.028175882540012}
-set $m44-ViewWindow_0-view-eyep-z {1015.1705499788859}
-set $m44-ViewWindow_0-view-lookat-x {-3.0535172036584237}
-set $m44-ViewWindow_0-view-lookat-y {89.966866425184293}
-set $m44-ViewWindow_0-view-lookat-z {35.278357023344782}
-set $m44-ViewWindow_0-view-up-x {-0.0064389303591822541}
-set $m44-ViewWindow_0-view-up-y {-0.99986262175693541}
-set $m44-ViewWindow_0-view-up-z {-0.015273434099017805}
+
+
+ set $m44-notes {}
+# set $m44-ViewWindow_0-pos {z0_y0}
+# set $m44-ViewWindow_0-caxes {0}
+# set $m44-ViewWindow_0-raxes {1}
+# set $m44-ViewWindow_0-iaxes {}
+# set $m44-ViewWindow_0-have_collab_vis {0}
+# set $m44-ViewWindow_0-view-eyep-x {-7.6630625798236407}
+# set $m44-ViewWindow_0-view-eyep-y {75.028175882540012}
+# set $m44-ViewWindow_0-view-eyep-z {1015.1705499788859}
+# set $m44-ViewWindow_0-view-lookat-x {-3.0535172036584237}
+# set $m44-ViewWindow_0-view-lookat-y {89.966866425184293}
+# set $m44-ViewWindow_0-view-lookat-z {35.278357023344782}
+# set $m44-ViewWindow_0-view-up-x {-0.0064389303591822541}
+# set $m44-ViewWindow_0-view-up-y {-0.99986262175693541}
+# set $m44-ViewWindow_0-view-up-z {-0.015273434099017805}
+# set $m44-ViewWindow_0-view-fov {20}
+# set $m44-ViewWindow_0-view-eyep_offset-x {}
+# set $m44-ViewWindow_0-view-eyep_offset-y {}
+# set $m44-ViewWindow_0-view-eyep_offset-z {}
+# set $m44-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+# set $m44-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+# set $m44-ViewWindow_0-bgcolor-r {0}
+# set $m44-ViewWindow_0-bgcolor-g {0}
+# set $m44-ViewWindow_0-bgcolor-b {0}
+# set $m44-ViewWindow_0-shading {}
+# set $m44-ViewWindow_0-do_stereo {0}
+# set $m44-ViewWindow_0-ambient-scale {1.0}
+# set $m44-ViewWindow_0-diffuse-scale {1.0}
+# set $m44-ViewWindow_0-specular-scale {0.4}
+# set $m44-ViewWindow_0-emission-scale {1.0}
+# set $m44-ViewWindow_0-shininess-scale {1.0}
+# set $m44-ViewWindow_0-polygon-offset-factor {1.0}
+# set $m44-ViewWindow_0-polygon-offset-units {0.0}
+# set $m44-ViewWindow_0-point-size {1.0}
+# set $m44-ViewWindow_0-line-width {1.0}
+# set $m44-ViewWindow_0-sbase {0.40}
+# set $m44-ViewWindow_0-sr {1}
+# set $m44-ViewWindow_0-do_bawgl {0}
+# set $m44-ViewWindow_0-drawimg {}
+# set $m44-ViewWindow_0-saveprefix {}
+# set $m44-ViewWindow_0-resx {}
+# set $m44-ViewWindow_0-resy {}
+# set $m44-ViewWindow_0-aspect {}
+# set $m44-ViewWindow_0-aspect_ratio {}
+# set $m44-ViewWindow_0-ortho-view {1}
+# set $m44-ViewWindow_0-unused {1}
+# set $m44-ViewWindow_0-unused {1}
+
+set $m44-ViewWindow_0-view-eyep-x {-95.50000095367432}
+set $m44-ViewWindow_0-view-eyep-y {110.5000021118158}
+set $m44-ViewWindow_0-view-eyep-z {-792.366673105479}
+set $m44-ViewWindow_0-view-lookat-x {-95.50000095367432}
+set $m44-ViewWindow_0-view-lookat-y {110.5000021118158}
+set $m44-ViewWindow_0-view-lookat-z {0}
+set $m44-ViewWindow_0-view-up-x {0}
+set $m44-ViewWindow_0-view-up-y {-1}
+set $m44-ViewWindow_0-view-up-z {0}
 set $m44-ViewWindow_0-view-fov {20}
-set $m44-ViewWindow_0-view-eyep_offset-x {}
-set $m44-ViewWindow_0-view-eyep_offset-y {}
-set $m44-ViewWindow_0-view-eyep_offset-z {}
-set $m44-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
-set $m44-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
-set $m44-ViewWindow_0-bgcolor-r {0}
-set $m44-ViewWindow_0-bgcolor-g {0}
-set $m44-ViewWindow_0-bgcolor-b {0}
-set $m44-ViewWindow_0-shading {}
-set $m44-ViewWindow_0-do_stereo {0}
-set $m44-ViewWindow_0-ambient-scale {1.0}
-set $m44-ViewWindow_0-diffuse-scale {1.0}
 set $m44-ViewWindow_0-specular-scale {0.4}
-set $m44-ViewWindow_0-emission-scale {1.0}
-set $m44-ViewWindow_0-shininess-scale {1.0}
-set $m44-ViewWindow_0-polygon-offset-factor {1.0}
-set $m44-ViewWindow_0-polygon-offset-units {0.0}
-set $m44-ViewWindow_0-point-size {1.0}
-set $m44-ViewWindow_0-line-width {1.0}
-set $m44-ViewWindow_0-sbase {0.40}
-set $m44-ViewWindow_0-sr {1}
-set $m44-ViewWindow_0-do_bawgl {0}
-set $m44-ViewWindow_0-drawimg {}
-set $m44-ViewWindow_0-saveprefix {}
-set $m44-ViewWindow_0-resx {}
-set $m44-ViewWindow_0-resy {}
-set $m44-ViewWindow_0-aspect {}
-set $m44-ViewWindow_0-aspect_ratio {}
 set $m44-ViewWindow_0-global-light {1}
 set $m44-ViewWindow_0-global-fog {0}
 set $m44-ViewWindow_0-global-debug {0}
@@ -865,9 +882,8 @@ set $m44-ViewWindow_0-global-clip {0}
 set $m44-ViewWindow_0-global-cull {1}
 set $m44-ViewWindow_0-global-dl {0}
 set $m44-ViewWindow_0-global-type {Gouraud}
-set $m44-ViewWindow_0-ortho-view {1}
-set $m44-ViewWindow_0-unused {1}
-set $m44-ViewWindow_0-unused {1}
+
+
 set $m45-notes {}
 set $m45-port-index {0}
 set $m46-notes {}
@@ -1796,13 +1812,13 @@ class BioTensorApp {
 	set win .standalone
 
 	# Set window sizes
-	set viewer_width 435
-	set viewer_height 565
+	set viewer_width 436
+	set viewer_height 566
 	
-	set notebook_width 280
+	set notebook_width 281
 	set notebook_height [expr $viewer_height - 50]
 	
-	set process_width 275
+	set process_width 267
 	set process_height $viewer_height
 	
 	set vis_width [expr $notebook_width + 30]
@@ -2130,8 +2146,10 @@ class BioTensorApp {
 	set viewer_border 3
 	set eviewer [$mods(Viewer) ui_embedded]
 
-	frame $win.viewer -relief sunken -borderwidth $viewer_border
-	$eviewer setWindow $win.viewer.v [expr $viewer_width - 2*$viewer_border] [expr $viewer_height - 2*$viewer_border]
+	#frame $win.viewer -relief sunken -borderwidth $viewer_border
+	$eviewer setWindow $win.viewer $viewer_width $viewer_height
+	# $eviewer setWindow $win.viewer.v $viewer_width $viewer_height
+	#$eviewer setWindow $win.viewer.v [expr $viewer_width - 2*$viewer_border] [expr $viewer_height - 2*$viewer_border]
 	
 	
 	### Processing Part
@@ -2198,16 +2216,21 @@ class BioTensorApp {
 
 
 	### pack 3 frames
+	#pack $attachedPFr $win.viewer $attachedVFr -side left \
+	#    -anchor n -fill both -expand 1
 	pack $attachedPFr -side left -anchor n
 
 	pack $win.viewer -side left -anchor n -fill both -expand 1
-	pack $win.viewer.v -side top -anchor n -fill both -expand 1
+	# pack $win.viewer.v -side top -anchor n -fill both -expand 1
 
 	pack $attachedVFr -side left -anchor n 
 
 	set total_width [expr $process_width + $viewer_width + $vis_width]
+	#puts $total_width
+	#puts [winfo width .standalone]
 
 	set total_height $viewer_height
+	#puts $total_height
 
 	set pos_x [expr [expr $screen_width / 2] - [expr $total_width / 2]]
 	set pos_y [expr [expr $screen_height / 2] - [expr $total_height / 2]]
@@ -3404,6 +3427,17 @@ class BioTensorApp {
 	}	
     }
 
+    ##############################
+    ### save_image
+    ##############################
+    # To be filled in by child class. It should save out the
+    # viewer image.
+    method save_image {} {
+	global mods
+	$mods(Viewer)-ViewWindow_0 makeSaveImagePopup
+    }
+
+
 
     ############################
     ### show_help
@@ -3411,37 +3445,21 @@ class BioTensorApp {
     # Show the help menu
     method show_help {} {
 	global SCIRUN_SRCDIR
-	
-	if {[winfo exists .splash]} {
-	    wm deiconify .splash
-	    raise .splash
-	    return;
-	}
-	
-	# CHANGE FILENAME HERE
-	set filename [file join $SCIRUN_SRCDIR Packages Teem Dataflow GUI splash-tensor.ppm]
-	image create photo ::img::splash -file "$filename"
-	toplevel .splash
-	
-	wm protocol .splash WM_DELETE_WINDOW "wm withdraw .splash"
-	
-	wm title .splash {Welcome to SCIRun}
-	label .splash.splash -image ::img::splash
-	pack .splash.splash
+
+	showSplash [file join $SCIRUN_SRCDIR Packages Teem Dataflow GUI splash-tensor.ppm]
 
 	global tutorial_link
 	set tutorial_link "http://software.sci.utah.edu/doc/User/Tutorials/BioTensor"
+	set help_font "-Adobe-Helvetica-normal-R-Normal-*-12-120-75-*"
 
-	wm geometry .splash 504x480+135+170
-	label .splash.m1 -text "Please refer to the online BioTensor Tutorial" 
-	# label .splash.m2 -text "http://software.sci.utah.edu/doc/User/BioTensorTutorial"
+	label .splash.m1 -text "Please refer to the online BioTensor Tutorial" \
+	    -font $help_font
+
 	entry .splash.m2 -relief flat -textvariable tutorial_link \
-	    -state disabled -width 45
-	pack .splash.m1 .splash.m2 -anchor n
+	    -state disabled -width 45 -font $help_font
+	pack .splash.m1 .splash.m2 -before .splash.ok -anchor n \
+	    -pady 2
 
-	button .splash.ok -text " OK " -command "wm withdraw .splash"
-	pack .splash.ok -side bottom -padx 5 -pady 5 -fill none
-	
 	update idletasks
     }
     
