@@ -13,6 +13,9 @@
 #include <stdio.h>
 #include <string>
 #include <X11/keysym.h>
+#ifdef __GNUG__
+#include <values.h>
+#endif
 
 using std::string;
 using namespace rtrt;
