@@ -597,9 +597,9 @@ case $host in
              CXX=/opt/MIPSpro/bin/CC
              AS=/opt/MIPSpro/bin/as
              LD=/opt/MIPSpro/bin/ld
-             CFLAGS="-xansi -LANG:ansi-for-init-scope=ON -n32 ${CFLAGS}"
-             SOFLAGS="-shared -n32 -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(OBJTOP)/so_locations ${SOFLAGS}"
-             LDFLAGS="-n32 -no_unresolved -J\$(MAKE_PARALLELISM)"
+             CFLAGS="-g -xansi -LANG:ansi-for-init-scope=ON -n32 ${CFLAGS}"
+             SOFLAGS="-g -shared -n32 -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(OBJTOP)/so_locations ${SOFLAGS}"
+             LDFLAGS="-g -n32 -no_unresolved -J\$(MAKE_PARALLELISM)"
              LDRUN_PREFIX="-Wl,-rpath -Wl,"
            else
              echo "no"

@@ -423,7 +423,7 @@ proc addModuleAtPosition {package category module xpos ypos} {
         set xpos [expr $xpos+int([expr (([lindex [.bot.neteditFrame.canvas xview] 0]*$mainCanvasWidth))])]
     
     set ypos [expr $ypos+int([expr (([lindex [.bot.neteditFrame.canvas yview] 0]*$mainCanvasHeight))])]
-
+puts "$package $category $module"
     set modid [netedit addmodule "$package" "$category" "$module"]
     # Create the itcl object
     set className [removeSpaces "${package}_${category}_${module}"]

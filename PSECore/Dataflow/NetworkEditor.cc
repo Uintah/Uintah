@@ -388,8 +388,10 @@ void NetworkEditor::save_network(const clString& filename)
         Module* module=net->module(i);
 	int x, y;
 	module->get_position(x,y);
-        out << "set m" << i << " [addModuleAtPosition " << module->name
-	  << " " << x << " " << y << "]\n";
+        out << "set m" << i << " [addModuleAtPosition \""
+	    << module->packageName << "\" \""<< module->categoryName
+	    <<"\" \""<< module->moduleName<<"\" "
+	    << x << " " << y << "]\n";
     }
     out << "\n";
     for(i=0;i<net->nconnections();i++){
@@ -653,6 +655,9 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.2  1999/07/30 17:12:28  kuzimmer
+// Fixed Saving and loading
+//
 // Revision 1.1  1999/07/27 16:55:59  mcq
 // Initial commit
 //

@@ -2,7 +2,7 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../../..
 
-SRCS     = ParticleSetReader.cc
+SRCS     = ParticleSetReader.cc TriangleReader.cc
 
 INCLUDES = -I$(OBJTOP) -I$(SRCTOP)/libs \
            -I$(SRCTOP)/libs/PSECore -I$(SRCTOP)/libs/SCICore \
