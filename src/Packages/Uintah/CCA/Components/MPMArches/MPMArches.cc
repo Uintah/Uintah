@@ -930,7 +930,7 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
       for(Patch::FaceType face = Patch::startFace;
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
 
-        BoundCondBase *vel_bcs, *temp_bcs, *sym_bcs;
+        const BoundCondBase *vel_bcs, *temp_bcs, *sym_bcs;
         if (patch->getBCType(face) == Patch::None) {
 
 	  vel_bcs  = patch->getBCValues(matlindex,"Velocity",face);
@@ -943,8 +943,8 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
 
 	  if (vel_bcs != 0) {
 
-	    VelocityBoundCond* bc = 
-	      dynamic_cast<VelocityBoundCond*>(vel_bcs);
+	    const VelocityBoundCond* bc = 
+	      dynamic_cast<const VelocityBoundCond*>(vel_bcs);
 	    if (bc->getKind() == "Dirichlet") {
 
 	      //cout << "Velocity bc value = " << bc->getValue() << endl;
@@ -961,8 +961,8 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
 
 	  if (temp_bcs != 0) {
 
-	    TemperatureBoundCond* bc =
-	      dynamic_cast<TemperatureBoundCond*>(temp_bcs);
+	    const TemperatureBoundCond* bc =
+	      dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
 	    if (bc->getKind() == "Dirichlet") {
 
 	      fillFace(gTemperature, patch, face, bc->getValue(),offset);

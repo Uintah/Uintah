@@ -803,7 +803,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
       for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
-        BoundCondBase *vel_bcs, *temp_bcs, *sym_bcs;
+        const BoundCondBase *vel_bcs, *temp_bcs, *sym_bcs;
         if (patch->getBCType(face) == Patch::None) {
 	   vel_bcs  = patch->getBCValues(matlindex,"Velocity",face);
 	   temp_bcs = patch->getBCValues(matlindex,"Temperature",face);
@@ -812,7 +812,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           continue;
 
 	  if (vel_bcs != 0) {
-	    VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(vel_bcs);
+	    const VelocityBoundCond* bc =
+	      dynamic_cast<const VelocityBoundCond*>(vel_bcs);
 	    if (bc->getKind() == "Dirichlet") {
 	      //cout << "Velocity bc value = " << bc->getValue() << endl;
 	      fillFace(gvelocity,patch, face,bc->getValue(),offset);
@@ -822,8 +823,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	     fillFaceNormal(gvelocity,patch, face,offset);
 	  }
 	  if (temp_bcs != 0) {
-            TemperatureBoundCond* bc =
-	      dynamic_cast<TemperatureBoundCond*>(temp_bcs);
+            const TemperatureBoundCond* bc =
+	      dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
             if (bc->getKind() == "Dirichlet") {
               fillFace(gTemperature,patch, face,bc->getValue(),offset);
 	    }
@@ -1011,7 +1012,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     // Set internal force = 0 on symmetric boundaries
     for(Patch::FaceType face = Patch::startFace;
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
-      BoundCondBase *sym_bcs;
+      const BoundCondBase *sym_bcs;
       if (patch->getBCType(face) == Patch::None) {
         sym_bcs  = patch->getBCValues(matlindex,"Symmetric",face);
       } else
@@ -1257,15 +1258,15 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       Vector dx = patch->dCell();
       for(Patch::FaceType face = Patch::startFace;
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
-	BoundCondBase* temp_bcs;
+	const BoundCondBase* temp_bcs;
         if (patch->getBCType(face) == Patch::None) {
 	   temp_bcs = patch->getBCValues(dwindex,"Temperature",face);
         } else
           continue;
 
 	if (temp_bcs != 0) {
-            TemperatureBoundCond* bc =
-                       dynamic_cast<TemperatureBoundCond*>(temp_bcs);
+            const TemperatureBoundCond* bc =
+	      dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
             if (bc->getKind() == "Neumann"){
 	      double value = bc->getValue();
 
@@ -1448,7 +1449,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
       IntVector offset(0,0,0);
       for(Patch::FaceType face = Patch::startFace;
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
-        BoundCondBase *vel_bcs, *temp_bcs, *sym_bcs;
+        const BoundCondBase *vel_bcs, *temp_bcs, *sym_bcs;
         if (patch->getBCType(face) == Patch::None) {
 	   vel_bcs  = patch->getBCValues(dwindex,"Velocity",face);
 	   temp_bcs = patch->getBCValues(dwindex,"Temperature",face);
@@ -1458,8 +1459,8 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
          //__________________________________
          // Velocity and Acceleration
 	  if (vel_bcs != 0) {
-	    VelocityBoundCond* bc = 
-	      dynamic_cast<VelocityBoundCond*>(vel_bcs);
+	    const VelocityBoundCond* bc = 
+	      dynamic_cast<const VelocityBoundCond*>(vel_bcs);
 	    //cout << "Velocity bc value = " << bc->getValue() << endl;
 	    if (bc->getKind() == "Dirichlet") {
 	      fillFace(gvelocity_star,patch, face,bc->getValue(),offset);
@@ -1473,8 +1474,8 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
          //__________________________________
          // Temperature BC
 	  if (temp_bcs != 0) {
-	    TemperatureBoundCond* bc = 
-	      dynamic_cast<TemperatureBoundCond*>(temp_bcs);
+	    const TemperatureBoundCond* bc = 
+	      dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
 	    if (bc->getKind() == "Dirichlet") {
 	      //cout << "Temperature bc value = " << bc->getValue() << endl;
               

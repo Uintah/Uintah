@@ -1411,7 +1411,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 
       for(Patch::FaceType face = Patch::startFace;
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
-	BoundCondBase *vel_bcs, *sym_bcs;
+	const BoundCondBase *vel_bcs, *sym_bcs;
 	if (patch->getBCType(face) == Patch::None) {
 	  vel_bcs  = patch->getBCValues(matlindex,"Velocity",face);
 	  sym_bcs  = patch->getBCValues(matlindex,"Symmetric",face);
@@ -1419,7 +1419,8 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 	  continue;
 	
 	if (vel_bcs != 0) {
-	  VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(vel_bcs);
+	  const VelocityBoundCond* bc =
+	    dynamic_cast<const VelocityBoundCond*>(vel_bcs);
 	  if (bc->getKind() == "Dirichlet") {
 	    //cout << "Velocity bc value = " << bc->getValue() << endl;
 	    fillFace(gvelocity,patch, face,bc->getValue(),offset);

@@ -424,12 +424,12 @@ void setBC(CCVariable<double>& press_CC,
   IntVector offset(0,0,0);
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    BoundCondBase *bcs, *sym_bcs;
-    BoundCond<double> *new_bcs;
+    const BoundCondBase *bcs, *sym_bcs;
+    const BoundCond<double> *new_bcs;
     if (patch->getBCType(face) == Patch::None) {
       bcs     = patch->getBCValues(mat_id,kind,face);
       sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
-      new_bcs = dynamic_cast<BoundCond<double> *>(bcs);
+      new_bcs = dynamic_cast<const BoundCond<double> *>(bcs);
     } else
       continue;
  
@@ -485,12 +485,12 @@ void setBC(CCVariable<double>& variable, const string& kind,
   IntVector offset(0,0,0);
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    BoundCondBase *bcs, *sym_bcs;
-    BoundCond<double> *new_bcs;
+    const BoundCondBase *bcs, *sym_bcs;
+    const BoundCond<double> *new_bcs;
     if (patch->getBCType(face) == Patch::None) {
       bcs     = patch->getBCValues(mat_id,kind,face);
       sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
-      new_bcs = dynamic_cast<BoundCond<double> *>(bcs);
+      new_bcs = dynamic_cast<const BoundCond<double> *>(bcs);
     } else
       continue;
  
@@ -558,12 +558,12 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
   IntVector offset(0,0,0);
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
-    BoundCondBase *bcs,*sym_bcs;
-    BoundCond<Vector>* new_bcs;
+    const BoundCondBase *bcs,*sym_bcs;
+    const BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
       bcs     = patch->getBCValues(mat_id,kind,face);
       sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
-      new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
+      new_bcs = dynamic_cast<const BoundCond<Vector> *>(bcs);
     } else
       continue;
     //__________________________________
@@ -726,12 +726,12 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
 {
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
-    BoundCondBase *bcs, *sym_bcs;
-    BoundCond<Vector>* new_bcs;
+    const BoundCondBase *bcs, *sym_bcs;
+    const BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
       bcs     = patch->getBCValues(mat_id,kind,face);
       sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
-      new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
+      new_bcs = dynamic_cast<const BoundCond<Vector> *>(bcs);
     } else
       continue;
 
@@ -781,12 +781,12 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
 {
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
-    BoundCondBase *bcs, *sym_bcs;
-    BoundCond<Vector>* new_bcs;
+    const BoundCondBase *bcs, *sym_bcs;
+    const BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
       bcs     = patch->getBCValues(mat_id,kind,face);
       sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
-      new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
+      new_bcs = dynamic_cast<const BoundCond<Vector> *>(bcs);
     } else
       continue;
 
@@ -837,12 +837,12 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
 {
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
-    BoundCondBase *bcs, *sym_bcs;
-    BoundCond<Vector>* new_bcs;
+    const BoundCondBase *bcs, *sym_bcs;
+    const BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
       bcs     = patch->getBCValues(mat_id,kind,face);
       sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
-      new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
+      new_bcs = dynamic_cast<const BoundCond<Vector> *>(bcs);
     } else
       continue;
 
