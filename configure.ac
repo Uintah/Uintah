@@ -592,6 +592,9 @@ myargs=`echo $args | sed 's%\^% %g'`
 # It thinks we are cross compiling. Don't set it.
 #IFS=' '
 
+## Cut off the /configure from the configure command (eg: ../src/configure)
+path_to_src=`echo $0 | sed 's/\/configure//'`
+
 if test "$package" = "all"; then
   AC_MSG_RESULT(Enabling all the packages in your SCIRun/src/Packages directory.)
   _sci_tmp=`ls $path_to_src/Packages`
