@@ -95,6 +95,12 @@ OnDemandDataWarehouse::~OnDemandDataWarehouse()
      if(iter->second->removeReference())
 	delete iter->second;
   }
+
+  for (psetAddDBType::const_iterator iter = d_addsetDB.begin();
+       iter != d_addsetDB.end(); iter++) {
+    //     if(iter->second->removeReference())  ask Steve about this;
+	delete iter->second;
+  }
 }
 
 bool OnDemandDataWarehouse::isFinalized() const
@@ -706,6 +712,23 @@ OnDemandDataWarehouse::getDeleteSubset(int matlIndex, const Patch* patch)
   d_lock.readUnlock();
    return iter->second;
 }
+
+map<const VarLabel*, ParticleVariableBase*>* 
+OnDemandDataWarehouse::getNewParticleState(int matlIndex, const Patch* patch)
+{
+  d_lock.readLock();
+  const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
+  psetAddDBType::key_type key(matlIndex, realPatch);
+  psetAddDBType::iterator iter = d_addsetDB.find(key);
+  if(iter == d_addsetDB.end()){
+    d_lock.readUnlock();
+    return 0;
+  }
+  d_lock.readUnlock();
+  return iter->second;
+}
+
+
 
 bool
 OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch)
@@ -1538,6 +1561,21 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
   d_delsetDB[key]=delset;
   delset->addReference();
+ d_lock.writeUnlock();
+}
+
+
+void
+OnDemandDataWarehouse::addParticles(const Patch* patch, int matlIndex,
+				    map<const VarLabel*, ParticleVariableBase*>* addedState)
+{
+ d_lock.writeLock();
+  psetDBType::key_type key(matlIndex, patch);
+  if(d_addsetDB.find(key) != d_addsetDB.end())
+    SCI_THROW(InternalError("addParticles called twice for patch"));
+
+  d_addsetDB[key]=addedState;
+  //  addedset->addReference();
  d_lock.writeUnlock();
 }
 

@@ -98,15 +98,15 @@ public:
    virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
 						int matlIndex, const Patch*);
    virtual void saveParticleSubset(int matlIndex, const Patch*,
-	 			   ParticleSubset*);
+				   ParticleSubset*);
    virtual bool haveParticleSubset(int matlIndex, const Patch*);
+   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*);
+   virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*);
+   virtual map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*);
    virtual ParticleSubset* getParticleSubset(int matlIndex,
-					     const Patch*);
-   virtual ParticleSubset* getDeleteSubset(int matlIndex,
-					     const Patch*);
-   virtual ParticleSubset* getParticleSubset(int matlIndex,
-			 const Patch*, Ghost::GhostType, int numGhostCells,
-			 const VarLabel* posvar);
+					     const Patch*, Ghost::GhostType, 
+					     int numGhostCells,
+					     const VarLabel* posvar);
    virtual void allocateTemporary(ParticleVariableBase&, ParticleSubset*);
    virtual void allocateAndPut(ParticleVariableBase&, const VarLabel*,
 			       ParticleSubset*);
@@ -222,6 +222,9 @@ public:
 
    // Remove particles that are no longer relevant
    virtual void deleteParticles(ParticleSubset* delset);
+
+   virtual void addParticles(const Patch* patch, int matlIndex, 
+			     map<const VarLabel*, ParticleVariableBase*>* addedstate);
 
    virtual ScrubMode setScrubbing(ScrubMode);
 
@@ -371,6 +374,7 @@ private:
    typedef std::vector<dataLocation*> variableListType;
    typedef map<const VarLabel*, variableListType*, VarLabel::Compare> dataLocationDBtype;
    typedef map<pair<int, const Patch*>, ParticleSubset*> psetDBType;
+   typedef map<pair<int, const Patch*>, map<const VarLabel*, ParticleVariableBase*>* > psetAddDBType;
 
    DWDatabase<NCVariableBase, Patch>        d_ncDB;
    DWDatabase<CCVariableBase, Patch>        d_ccDB;
@@ -382,6 +386,7 @@ private:
    DWDatabase<PerPatchBase, Patch>          d_perpatchDB;
    psetDBType                        d_psetDB;
    psetDBType                        d_delsetDB;
+   psetAddDBType d_addsetDB;
 
    // Record of which DataWarehouse has the data for each variable...
    //  Allows us to look up the DW to which we will send a data request.
