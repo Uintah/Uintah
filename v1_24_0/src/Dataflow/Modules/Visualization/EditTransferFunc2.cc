@@ -50,7 +50,7 @@
 #include <stack>
 #include <sstream>
 #include <iostream>
-
+#include <fstream>
 #include <string>
 
 // tcl interpreter corresponding to this module
@@ -98,6 +98,9 @@ public:
   void init_pbuffer();
   void rasterize_widgets();
   void draw_colormap();
+  void save_ppm(const char * const filename,
+              int sx, int sy,
+              int bpp, const unsigned char * buf);
   void update_histo();
   void draw_histo();
   void redraw();
@@ -134,7 +137,8 @@ private:
   // The part of the widget that is selected.
   int                                   pick_object_; 
   // Push on undo when motion occurs, not on select.
-  bool                                  first_motion_; 
+  bool                                  first_motion_;
+  bool save_ppm_;
 
 
   //! functions and for panning.
@@ -198,7 +202,8 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     cmap_tex_(0),
     pick_widget_(-1), 
     pick_object_(0), 
-    first_motion_(true), 
+    first_motion_(true),
+    save_ppm_(false),
     mouse_last_x_(0),
     mouse_last_y_(0),
     pan_x_(ctx->subVar("panx")),
@@ -536,7 +541,11 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
       delete stream;
     }
 
-  } else {
+  } else if (args[1] == "saveppm") { 
+    save_ppm_ = true;
+    redraw();
+  }
+  else {
     Module::tcl_command(args, userdata);
   }
 }
@@ -1075,6 +1084,56 @@ EditTransferFunc2::draw_histo()
   glDisable(GL_TEXTURE_2D);
 }
 
+void EditTransferFunc2::save_ppm(const char * const filename,
+              int sx, int sy,
+              int bpp, const unsigned char * buf)
+{
+  int R = 3;
+  int G = 2;
+  int B = 1;
+  int A = 0;
+
+  ofstream output(filename, ios::out);
+  
+  if ( ! output )
+    {
+      cerr << "ERROR: can't open file " << filename <<"\n"; // endl;
+      return;
+    }
+  
+  if ( bpp == 1 || bpp == 2 )
+    output << "P2\n# CREATOR: " << "\n"; // endl;
+  else if ( bpp == 3 || bpp == 4 )
+    output << "P3\n# CREATOR: " << "\n"; // endl;
+  else {
+    cerr << "ERROR: unknown number of bytes per pixel " << bpp << "\n"; // endl;
+    return;
+  }
+  
+  output << sx << " " << sy << "\n"; // endl;
+  output << 255 << "\n"; // endl;
+  
+  for ( int row = sy - 1; row >= 0; --row )
+    {
+      for ( int col = 0; col < sx; ++col )
+	{
+	  int p = bpp * ( row * sx + col );
+	  switch (bpp) {
+	  case 2:
+	  case 1:
+	    output << (int) buf[p] << "\n"; // endl;
+	    break;
+	  default:
+	    output << (int) buf[p + R] << " " << (int) buf[p + G]
+		   << " " << (int) buf[p + B] << "\n"; // endl;
+	    break;
+	  }
+	}
+    }
+  
+  return;
+}
+
 void
 EditTransferFunc2::draw_colormap()
 {
@@ -1088,7 +1147,7 @@ EditTransferFunc2::draw_colormap()
 	widgets_[i]->rasterize(*shader_factory_, gui_faux_.get(), 0);
       }
     }
-
+    
     glBlendFunc(GL_ONE, GL_DST_ALPHA);
     // draw histo
     if(histo_) {
@@ -1133,12 +1192,29 @@ EditTransferFunc2::draw_colormap()
     }
     glEnd();
     if(use_pbuffer_) {
+      if (save_ppm_){
+	unsigned int* FrameBuffer = scinew unsigned int[pbuffer_->width()*pbuffer_->height()];
+	glFlush();
+	glReadBuffer(GL_FRONT);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
+	glReadPixels(0, 0,pbuffer_->width(), pbuffer_->height(),
+		     GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, FrameBuffer);
+	char tmp[256];
+	sprintf(tmp, "/tmp/FrameBuffer%d.ppm", 1);
+	save_ppm(tmp, pbuffer_->width(), pbuffer_->height(),
+		 4, (const unsigned char *)(FrameBuffer));
+	cout<<"Done saving framebuffer..."<<tmp<<"\n"; // endl;
+	delete FrameBuffer;
+	save_ppm_ = false;
+      }
+	
       pbuffer_->release(GL_FRONT);
     } else {
       glBindTexture(GL_TEXTURE_2D, 0);
       glDisable(GL_TEXTURE_2D);
     }
     glDisable(GL_BLEND);
+
   }
 }
 
