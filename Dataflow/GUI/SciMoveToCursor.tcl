@@ -24,8 +24,10 @@ set screenHeight [winfo screenheight .]
 proc moveToCursor { window { leave_up "no" } } {
   global env
 
-  if { [info exists env(SCI_GUI_MoveGuiToMouse)] &&
-       ![boolToInt $env(SCIRUN_GUI_MoveGuiToMouse)] } return
+  if { [info exists env(SCIRUN_GUI_MoveGuiToMouse)] &&
+       ![boolToInt $env(SCIRUN_GUI_MoveGuiToMouse)] } {
+     return
+  }
 
   # If we are currently running a script... ie, we are loading the net
   # from a file, then do not move GUI to the mouse.
