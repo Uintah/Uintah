@@ -10,7 +10,7 @@
 namespace Cantera {
   class IdealGasMix;
   class Reactor;
-};
+}
 
 namespace Uintah {
 
