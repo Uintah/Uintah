@@ -264,11 +264,11 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->requires( Task::NewDW, lb->press_CCLabel,   press_matl, gac,1);  
 
   if(d_usingLODI) {
-    t->requires(Task::ParentNewDW,   lb->gammaLabel,        ice_matls, gn);
-    t->requires(Task::ParentNewDW,   lb->specific_heatLabel,ice_matls, gn);
-    t->requires(Task::OldDW,         lb->temp_CCLabel,      ice_matls, gn);    
-    t->requires(Task::NewDW,       MIlb->temp_CCLabel,      mpm_matls, gn);    
-    t->requires(Task::NewDW,         lb->f_theta_CCLabel,              gn);
+    t->requires(Task::NewDW,   lb->gammaLabel,        ice_matls, gn);
+    t->requires(Task::NewDW,   lb->specific_heatLabel,ice_matls, gn);
+    t->requires(Task::OldDW,   lb->temp_CCLabel,      ice_matls, gn);    
+    t->requires(Task::NewDW, MIlb->temp_CCLabel,      mpm_matls, gn);    
+    t->requires(Task::NewDW,   lb->f_theta_CCLabel,              gn);
   }
   //__________________________________
   // ImplicitVel_FC
