@@ -588,3 +588,38 @@ void RegridderCommon::Dilate2(const ProcessorGroup*,
   }
   rdbg << "RegridderCommon::Dilate2() END" << endl;
 }
+
+void RegridderCommon::scheduleInitializeErrorEstimate(SchedulerP& sched, const LevelP& level)
+{
+  Task* task = scinew Task("initializeErrorEstimate", this,
+                           &RegridderCommon::initializeErrorEstimate);
+ 
+  task->computes(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
+  task->computes(d_sharedState->get_oldRefineFlag_label(), d_sharedState->refineFlagMaterials());
+  task->computes(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
+  
+}
+
+void RegridderCommon::initializeErrorEstimate(const ProcessorGroup*,
+                                              const PatchSubset* patches,
+                                              const MaterialSubset* /*matls*/,
+                                              DataWarehouse*,
+                                              DataWarehouse* new_dw)
+{
+  // only make one refineFlag per patch.  Do not loop over matls!
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    CCVariable<int> refineFlag;
+    new_dw->allocateAndPut(refineFlag, d_sharedState->get_refineFlag_label(),
+                           0, patch);
+    refineFlag.initialize(0);
+    CCVariable<int> oldRefineFlag;
+    new_dw->allocateAndPut(oldRefineFlag, d_sharedState->get_oldRefineFlag_label(),
+                           0, patch);
+    oldRefineFlag.initialize(0);
+    PerPatch<PatchFlagP> refinePatchFlag(new PatchFlag);
+    new_dw->put(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
+                0, patch);
+  }
+}
