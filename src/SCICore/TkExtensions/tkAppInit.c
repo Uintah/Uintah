@@ -84,7 +84,7 @@ int *tclDummyMathPtr = (int *) matherr;
 EXTERN int		Tcltest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 EXTERN int		Tktest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 #endif /* TK_TEST */
-
+
 
 static void (*wait_func)(void*);
 static void* wait_func_data;
@@ -112,7 +112,6 @@ tkMain(argc, argv, nwait_func, nwait_func_data)
     void (*nwait_func)(void*);
     void* nwait_func_data;
 {
-	printf("Starting tkMain { %s } \n",__FILE__);
     wait_func=nwait_func;
     wait_func_data=nwait_func_data;
 #ifdef _WIN32
@@ -128,7 +127,7 @@ tkMain(argc, argv, nwait_func, nwait_func_data)
     Tk_Main(argc, argv, Tcl_AppInit);
     return 0;			/* Needed only to prevent compiler warning. */
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -152,37 +151,7 @@ SHARE int
 Tcl_AppInit(interp)
     Tcl_Interp *interp;		/* Interpreter for application. */
 {
-  /* Dd: Begin */
-#if 0
-    Tk_Window mainwin;
-    Visual* visual;
-    int depth = 32;
-    Colormap colormap;
-#endif
-  /* Dd: End */
-
-  printf("Starting Tcl_AppInit { %s }\n",__FILE__);
-
     the_interp=interp;
-
-  /* Dd: Begin */
-#if 0
-    mainwin = Tk_MainWindow(interp);
-printf("main = %p\n", main);
-
-    /* Use a truecolor visual if one is available */
-    visual = Tk_GetVisual(interp, main, "best", &depth, &colormap);
-
-    printf("depth = %d\n", depth);
-    printf("visual = %p\n", visual);
-    if (visual == NULL) {
-	return TCL_ERROR;
-    }
-    if (!Tk_SetWindowVisual(mainwin, visual, (unsigned) depth, colormap)) {
-	return TCL_ERROR;
-    }
-#endif
-  /* Dd: End */
 
     printf("Initializing the tcl packages: ");
 
@@ -240,7 +209,7 @@ printf("main = %p\n", main);
       printf("Itk_Init() failed\n");
         return TCL_ERROR;
     }
-    printf("blt\n");
+    printf("blt, ");
     if (Blt_Init(interp) == TCL_ERROR) {
       printf("Blt_Init() failed\n");
 	return TCL_ERROR;
@@ -250,7 +219,7 @@ printf("main = %p\n", main);
     Tcl_StaticPackage(interp, "Itk", Itk_Init, (Tcl_PackageInitProc *) NULL);
     Tcl_StaticPackage(interp, "BLT", Blt_Init, Blt_SafeInit);
 
-    printf("Finished initializing tcl packages.\n");
+    printf("Done.\n");
 
     /*
      *  This is itkwish, so import all [incr Tcl] commands by
@@ -276,16 +245,6 @@ printf("main = %p\n", main);
      * they weren't already created by the init procedures called above.
      */
 
-
-#if 0
-    /*
-     * Add the table extensions
-     */
-    if(Table_Init(interp) == TCL_ERROR) {
-       return TCL_ERROR ;
-     }
-#endif
-
     /*
      * Call Tcl_CreateCommand for application-specific commands, if
      * they weren't already created by the init procedures called above.
@@ -297,17 +256,23 @@ printf("main = %p\n", main);
 #define PARAMETERTYPE
 #endif
 
+    printf("Adding SCI extensions to tcl: ");
+
 #ifdef SCI_OPENGL
+    printf("OpenGL widget, ");
     Tcl_CreateCommand(interp, "opengl", OpenGLCmd, (ClientData) Tk_MainWindow(interp),
 		      (void (*)(PARAMETERTYPE)) NULL);
 #endif
-	printf("Adding bevel\n");
+    printf("bevel widget, ");
     Tcl_CreateCommand(interp, "bevel", BevelCmd, (ClientData) Tk_MainWindow(interp),
 		      (void (*)(PARAMETERTYPE)) NULL);
 /*     Tcl_CreateCommand(interp, "range", Tk_RangeCmd, (ClientData) Tk_MainWindow(interp), */
 /*                       (void (*)(PARAMETERTYPE)) NULL); */
+    printf("cursor, ");
     Tcl_CreateCommand(interp, "cursor", Tk_CursorCmd,
 		      (ClientData) Tk_MainWindow(interp), NULL);
+
+    printf("Done.\n");
 
     /*
      * Initialize the BLine Canvas item
