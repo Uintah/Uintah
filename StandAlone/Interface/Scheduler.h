@@ -6,8 +6,12 @@
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <string>
 
+class DOM_Document;
+class DOM_Element;
+
 namespace Uintah {
     class Task;
+    class TaskGraph;
     class VarLabel;
     class ProcessorGroup;
 /**************************************
@@ -61,15 +65,27 @@ WARNING
        // Insert Documentation Here:
        virtual DataWarehouseP createDataWarehouse( int generation ) = 0;
        
+    protected:
+    	void emitEdges(const TaskGraph& graph);
+    	void emitNode(const Task* name, time_t start, double duration);
+    	void finalizeNodes();
+    
     private:
        Scheduler(const Scheduler&);
        Scheduler& operator=(const Scheduler&);
+
+    	DOM_Document* m_graphDoc;
+    	DOM_Element* m_nodes;
+    	unsigned int m_executeCount;
     };
     
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.12  2000/07/19 21:41:52  jehall
+// - Added functions for emitting task graph information to reduce redundancy
+//
 // Revision 1.11  2000/06/17 07:06:47  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
