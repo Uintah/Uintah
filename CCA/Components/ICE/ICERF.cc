@@ -566,26 +566,25 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         double tmp_T = 0.0, tmp_BOT = 0.0;
         double tmp_F = 0.0, tmp_BK  = 0.0;
       
-        for(int m = 0; m < numMatls; m++) {
-        
+        for(int mat = 0; mat < numMatls; mat++) {
           //   O H   T H I S   I S   G O I N G   T O   B E   S L O W   
           //__________________________________
           //  use the upwinded vol_frac
           IntVector upwc;    
-          upwc     = upwindCell_X(c, uvel_FC[m][right],  1.0);
-          tmp_R   += vol_frac[m][upwc] * uvel_FC[m][right];
-          upwc     = upwindCell_X(c, uvel_FC[m][left],   0.0);
-          tmp_L   += vol_frac[m][upwc] * uvel_FC[m][left];
+          upwc     = upwindCell_X(c, uvel_FC[mat][right],  1.0);
+          tmp_R   += vol_frac[mat][upwc] * uvel_FC[mat][right];
+          upwc     = upwindCell_X(c, uvel_FC[mat][left],   0.0);
+          tmp_L   += vol_frac[mat][upwc] * uvel_FC[mat][left];
           
-          upwc     = upwindCell_Y(c, vvel_FC[m][top],    1.0);
-          tmp_T   += vol_frac[m][upwc] * vvel_FC[m][top];
-          upwc     = upwindCell_Y(c, vvel_FC[m][bottom], 0.0);
-          tmp_BOT += vol_frac[m][upwc] * vvel_FC[m][bottom];
+          upwc     = upwindCell_Y(c, vvel_FC[mat][top],    1.0);
+          tmp_T   += vol_frac[mat][upwc] * vvel_FC[mat][top];
+          upwc     = upwindCell_Y(c, vvel_FC[mat][bottom], 0.0);
+          tmp_BOT += vol_frac[mat][upwc] * vvel_FC[mat][bottom];
           
-          upwc     = upwindCell_Z(c, vvel_FC[m][front],  1.0);
-          tmp_F   += vol_frac[m][upwc] * wvel_FC[m][front];
-          upwc     = upwindCell_Z(c, vvel_FC[m][back],   0.0);
-          tmp_BK  += vol_frac[m][upwc] * wvel_FC[m][back];
+          upwc     = upwindCell_Z(c, vvel_FC[mat][front],  1.0);
+          tmp_F   += vol_frac[mat][upwc] * wvel_FC[mat][front];
+          upwc     = upwindCell_Z(c, vvel_FC[mat][back],   0.0);
+          tmp_BK  += vol_frac[mat][upwc] * wvel_FC[mat][back];
         }
 
 
@@ -601,8 +600,8 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         double term2, term2_X, term2_Y, term2_Z;
         Vector U = Vector(0,0,0);
         for (int dir = 0; dir <3; dir++) {  //loop over all three directons
-          for(int m = 0; m < numMatls; m++) {
-            U(dir) = vol_frac_CC * vel_CC[m][c](dir);
+          for(int mat = 0; mat < numMatls; mat++) {
+            U(dir) = vol_frac_CC * vel_CC[mat][c](dir);
           }
         }
 
