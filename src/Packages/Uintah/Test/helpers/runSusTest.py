@@ -1,6 +1,6 @@
 #!/usr/local/bin/python
 
-from os import environ,mkdir,path,system,chdir
+from os import environ,putenv,mkdir,path,system,chdir
 from time import asctime,localtime,time
 from string import upper
 
@@ -17,9 +17,6 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
   datmode = mode
   ALGO = upper(algo)
   testname = path.splitext(input(test))[0];
-
-  if mode in ('dbg', 'dbgmpi'):
-    system("setenv MALLOC_STATS malloc_stats")
 
   if do_restart == "yes":
     print "%s-%s: Running restart test for %s on %s" % (ALGO, mode, testname, date())
@@ -41,6 +38,9 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
     susinput = "%s/inputs/%s/%s" % (susdir, ALGO, input(test))
     log = "sus.log"
 
+  if datmode == "dbg":
+    environ['MALLOC_STATS'] = "malloc_stats"
+
   rc = system("%s %s > %s 2>&1" % (command, susinput, log))
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
@@ -48,7 +48,7 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
 	print "\t*** Make sure the problem makes checkpoints before finishing"
     return 1
   else:
-    print "\tComparing udas"
+    print "\tComparing udas on %s" % (date())
     errors_to = environ['ERRORS_TO']
     if environ['ERRORMAIL'] != "yes":
 	errors_to = ""
@@ -66,6 +66,9 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
 	rc = system("mem_leak_check %s %s %s %s" % (testname, "malloc_stats", ".", errors_to))
         if rc == 0:
 	    print "\tMemory leak test (only tests scinew leaks) passed."
+	elif rc == 5:
+	    print "\t*** Warning, no malloc_stats file created.  Memory leak test failed."
+	    return 1
 	else:
 	    print "\t*** Warning, test %s failed memory leak test" % (testname)
 	    return 1
