@@ -15,6 +15,7 @@
 #include <Packages/rtrt/Core/ObjReader.h>
 #include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/DielectricMaterial.h>
+#include <Packages/rtrt/Core/BumpMaterial.h>
 #include <Packages/rtrt/Core/PhongMaterial.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/CycleMaterial.h>
@@ -29,31 +30,37 @@ using namespace SCIRun;
 using namespace rtrt;
 using namespace std;
 
-inline void Get3d(char *buf,Point &p)
+inline void Get11d(char *buf, double *s)
 {
-  double x,y,z;
-  if (3 != sscanf(buf,"%lf %lf %lf",&x,&y,&z)) {
-    cerr << "Woah - bad point 3d!\n";
+  // For dielectrics:
+  //              n_in n_out R0 K(extinction_in) K(extintion_out) 
+  //                nothing_inside extinction_scale
+  if (11 != sscanf(buf,"%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", 
+		   &(s[0]), &(s[1]), &(s[2]), &(s[3]), &(s[4]), &(s[5]), 
+		   &(s[6]), &(s[7]), &(s[8]), &(s[9]), &(s[10]))) {
+    cerr << "Woah - bad data 10d!\n";
   }
-  p = Point(x,y,z);
 }
 
-inline void Get2d(char *buf,Point &p)
+inline void Get3d(char *buf, double *s)
 {
-  double x,y;
-  if (2 != sscanf(buf,"%lf %lf",&x,&y)) {
-    cerr << "Whoah - bad point 2d!\n";
+  if (3 != sscanf(buf,"%lf %lf %lf",&(s[0]), &(s[1]), &(s[2]))) {
+    cerr << "Woah - bad data 3d!\n";
   }
-  p = Point (x,y,0);
 }
 
-inline void Get1d(char *buf,Point &p)
+inline void Get2d(char *buf, double *s)
 {
-  double x;
-  if (1 != sscanf(buf,"%lff",&x)) {
-    cerr << "Whoah - bad point 1d!\n";
+  if (2 != sscanf(buf,"%lf %lf",&(s[0]), &(s[1]))) {
+    cerr << "Whoah - bad data 2d!\n";
   }
-  p = Point (x,0,0);
+}
+
+inline void Get1d(char *buf, double *s)
+{
+  if (1 != sscanf(buf,"%lf",&(s[0]))) {
+    cerr << "Whoah - bad data 1d!\n";
+  }
 }
 
 char * GetNum(char *str, int &num)
@@ -78,9 +85,7 @@ char * GetNum(char *str, int &num)
 }
 
 void GetFace(char *buf, Array1<Point> &pts, Array1<Vector> &nml, 
-	     Array1<Point> &tex, Group *g, Material *mat, Transform &t,
-	     int has_texture)
-{
+	     Array1<Point> &tex, Group *g, Material *mat, Transform &t) {
   static Array1<int> fis;
   static Array1<int> uvis;
   static Array1<int> nrmis;
@@ -122,7 +127,7 @@ void GetFace(char *buf, Array1<Point> &pts, Array1<Vector> &nml,
     }
   }
 
-  for(int k=0;k<fis.size()-2;k++) {
+  for(int k=0;k<fis.size()-2;k++) { // remove the end-of-line
     int s0=k;
     int s1=k+1;
     int s2=k+2;
@@ -130,7 +135,7 @@ void GetFace(char *buf, Array1<Point> &pts, Array1<Vector> &nml,
     Point p1 = pts[fis[s0]];
     Point p2 = pts[fis[s1]];
     Point p3 = pts[fis[s2]];
-    if (has_texture) {
+    if (uvis.size()) {
       TexturedTri *tri = 
 	new TexturedTri(mat, t.project(p1), t.project(p2), t.project(p3), 
 			t.project_normal(nml[nrmis[s0]]), 
@@ -147,14 +152,56 @@ void GetFace(char *buf, Array1<Point> &pts, Array1<Vector> &nml,
       g->add(tri);
     }
   }
+}
 
+void addObjMaterial(Array1<Material*> &matl,
+		    const Color &Kd, const Color &/*Ks*/, double opacity,
+		    double Ns, const string &name, Array1<string> &names,
+		    const string &tmap_name, const string &bmap_name,
+		    int has_tmap, int has_bmap, 
+		    Array1<int> &matl_has_tmap,
+		    Array1<int> &matl_has_bmap,
+		    bool is_glass, double n_in, double n_out,
+		    double R0, const Color &extinction_in,
+		    const Color &extinction_out, bool nothing_inside,
+		    double extinction_scale) {
+  names.add(name);
+  Material *m=0;
+  if (has_tmap) {
+    ImageMaterial *im = new ImageMaterial(tmap_name, ImageMaterial::Tile,
+					  ImageMaterial::Tile, 1, 
+					  Color(0,0,0), 0);
+    if (!im->valid()) {
+      cerr << "Error - unable to load texture map >>"<<tmap_name<<"<<\n";
+      has_tmap=0;
+    } else m=im;
+  }
+  matl_has_tmap.add(has_tmap);
+  matl_has_bmap.add(has_bmap);
+  if (!m) {
+    if (is_glass)
+      m = new DielectricMaterial(n_in, n_out, R0, Ns, extinction_in, 
+				 extinction_out, nothing_inside, 
+				 extinction_scale);
+    else if (Ns == 0)
+      m = new LambertianMaterial(Kd);
+    else 
+      m = new PhongMaterial(Kd, opacity, R0, Ns, R0==0);
+  }
+  if (has_bmap) {
+    char c[4096];
+    sprintf(c, "%s", bmap_name.c_str());
+    matl.add(new BumpMaterial(m, c, 1));
+  } else
+    matl.add(m);
 }
 
 bool
 rtrt::readObjFile(const string geom_fname, const string matl_fname, 
 		  Transform &t, Group *g) {
-   Array1<int> matl_has_texture;
-   Array1<Material *> mtl;
+   Array1<int> matl_has_tmap;
+   Array1<int> matl_has_bmap;
+   Array1<Material *> matl;
    FILE *f=fopen(matl_fname.c_str(),"r");
    if (!f) {
      cerr << matl_fname << " -- failed to find/read input materials file\n";
@@ -162,98 +209,110 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
    }
 
    char buf[4096];
-   Point scrtchP;
+   double scratch[11];
    Array1<string> names;
-   int have_matl=0;
+   int has_tmap=0;
+   int has_bmap=0;
+   int matl_complete=0;
    Color Ka, Kd, Ks;
    double opacity;
    double Ns;
    string name;
-
+   string tmap_name;
+   string bmap_name;
+   double n_in, n_out, R0, extinction_scale;
+   bool is_glass, nothing_inside;
+   Color extinction_in, extinction_out;
+     
    while(fgets(buf,4096,f)) {
      if (strncmp(&(buf[0]), "newmtl", strlen("newmtl")) == 0) {
-       if (have_matl) {
-	 names.add(name);
-	 matl_has_texture.add(0);
-	 if (opacity < 1)
-	   mtl.add(new DielectricMaterial(1.25, 0.8, 0.04, 400.0, Kd, 
-					  Color(1,1,1), false));
-	 else if (Ks.red() == 1.0 && Ks.green() == 1.0 && Ks.blue() == 1.0)
-	   mtl.add(new PhongMaterial(Kd, 1.0, 0.3, Ns, 1));
-	 else 
-	   mtl.add(new LambertianMaterial(Kd));
-	 have_matl=0;
-	 cerr << "adding material "<<name<<"\n";
-	 cerr << "Ka="<< Ka<<"  Kd="<<Kd<<"  Ks="<<Ks<<"  illum/opacity="<<opacity<<"  Ns="<<Ns<<"\n";
+       if (matl_complete) {
+	 addObjMaterial(matl, Kd, Ks, opacity, Ns, name, names,
+			tmap_name, bmap_name, has_tmap, has_bmap,
+			matl_has_tmap, matl_has_bmap,
+			is_glass, n_in, n_out, R0, extinction_in, 
+			extinction_out, nothing_inside, extinction_scale);
+	 is_glass=0;
+	 has_tmap=0;
+	 has_bmap=0;
+	 matl_complete=0;
        }
-       
        name=string(&buf[7]);
        fgets(buf,4096,f);
-       Get3d(&buf[5], scrtchP);
-       Ka=Color(scrtchP.x(), scrtchP.y(), scrtchP.z());
+       Get3d(&buf[5], scratch);
+       Ka=Color(scratch[0], scratch[1], scratch[2]);
        
        fgets(buf,4096,f);
-       Get3d(&buf[5], scrtchP);
-       Kd=Color(scrtchP.x(), scrtchP.y(), scrtchP.z());
+       Get3d(&buf[5], scratch);
+       Kd=Color(scratch[0], scratch[1], scratch[2]);
        
        fgets(buf,4096,f);
-       Get3d(&buf[5], scrtchP);
-       Ks=Color(scrtchP.x(), scrtchP.y(), scrtchP.z());
+       Get3d(&buf[5], scratch);
+       Ks=Color(scratch[0], scratch[1], scratch[2]);
        
        fgets(buf,4096,f);
-       if (strncmp(&buf[8], "opacity", strlen("opacity"))) {
-	 Get1d(&buf[8], scrtchP);
-	 opacity=scrtchP.x();
+       if (strncmp(&buf[8], "illum", strlen("illum"))) {
+	 opacity=1;
+       } else if (strncmp(&buf[8], "glass", strlen("glass"))) {
+	 Get11d(&buf[8], scratch);
+	 is_glass=1;
+	 n_in = scratch[0];
+	 n_out = scratch[1];
+	 R0 = scratch[2];
+	 extinction_in=Color(scratch[3], scratch[4], scratch[5]);
+	 extinction_out=Color(scratch[6], scratch[7], scratch[8]);
+	 nothing_inside=scratch[9];
+	 extinction_scale=scratch[10];
+       } else if (strncmp(&buf[8], "opacity", strlen("opacity"))) {
+	 Get1d(&buf[8], scratch);
+	 opacity=scratch[0];
 	 if (opacity>1) opacity=1;
        } else opacity=1;
        
        fgets(buf,4096,f);
-       Get1d(&buf[5], scrtchP);
-       Ns=scrtchP.x();
-       have_matl=1;
+       Get1d(&buf[5], scratch);
+       Ns=scratch[0];
+       matl_complete=1;
      } else if (strncmp(&buf[0], "map_Kd", strlen("map_Kd")) == 0) {
-       names.add(name);
-       matl_has_texture.add(1);
-       if (!have_matl) continue;
-       int last = strlen(&buf[7]);
-       buf[7+last-2]='\0';
-       string fname(&buf[7]);
-       cerr << "FNAME=>>"<<fname<<"<<\n";
-
-       LambertianMaterial * lamb = 
-	 new LambertianMaterial( Color(1.0,0.0,1.0) );
-       ImageMaterial * image = 
-	 new ImageMaterial(fname, ImageMaterial::Tile,
-			   ImageMaterial::Tile, 1, Color(0,0,0), 0);
-
-       if( !image->valid() )
-	 {
-	   mtl.add( lamb );
-	 }
-       else
-	 {
-	   mtl.add( image );
-	 }
-       have_matl=0;
+       char *b = &(buf[7]);
+       int last = strlen(b) - 1;
+       while ((b[last] == '\r' || b[last] == '\n') && last>0) last--;
+       b[last+1]='\0';
+       string fname(b);
+       cerr << "Looking for texture map: >>"<<fname<<"<<\n";
+       FILE *f = fopen(fname.c_str(), "r");
+       if (f) {
+	 has_tmap=1;
+	 tmap_name=fname;
+	 fclose(f);
+       } else cerr << "Error - was unable to read texture map!\n";
+     } else if (strncmp(&buf[0], "map_bump", strlen("map_bump")) == 0) {
+       char *b = &(buf[9]);
+       int last = strlen(b) - 1;
+       while ((b[last] == '\r' || b[last] == '\n') && last>0) last--;
+       b[last+1]='\0';
+       string fname(b);
+       cerr << "Looking for bump map: >>"<<fname<<"<<\n";
+       FILE *f = fopen(fname.c_str(), "r");
+       if (f) {
+	 has_bmap=1;
+	 bmap_name=fname;
+	 fclose(f);
+       } else cerr << "Error - was unable to read bump map!\n";
      } else {
-       cerr << "Ignoring mtl line: "<<buf<<"\n";
+       cerr << "Ignoring matl line: "<<buf<<"\n";
      }
    }
 
-   if (have_matl) {
-     names.add(name);
-     matl_has_texture.add(0);
-     if (opacity < 1)
-       mtl.add(new DielectricMaterial(1.25, 0.8, 0.04, 400.0, Kd, 
-				      Color(1,1,1), false));
-     else if (Ks.red() == 1.0 && Ks.green() == 1.0 && Ks.blue() == 1.0)
-       mtl.add(new PhongMaterial(Kd, 1.0, 0.3, Ns, 1));
-     else 
-       mtl.add(new LambertianMaterial(Kd));
-     have_matl=0;
-     cerr << "adding material "<<name<<"\n";
-     cerr << "Ka="<< Ka<<"  Kd="<<Kd<<"  Ks="<<Ks<<"  illum/opacity="<<opacity<<"  Ns="<<Ns<<"\n";
+   // add the last material
+   if (matl_complete) {
+     addObjMaterial(matl, Kd, Ks, opacity, Ns, name, names,
+		    tmap_name, bmap_name, has_tmap, has_bmap,
+		    matl_has_tmap, matl_has_bmap,
+		    is_glass, n_in, n_out, R0, extinction_in, 
+		    extinction_out, nothing_inside, extinction_scale);
    }
+
    fclose(f);
 
    f=fopen(geom_fname.c_str(),"r");
@@ -263,36 +322,35 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
      return false;
    }
    
-   Material *curr_mtl;
+   Material *curr_matl;
    Array1<Point> pts;
    Array1<Vector> nml;
    Array1<Point> tex;
-   int curr_matl_has_texture=0;
    while(fgets(buf,4096,f)) {
      switch(buf[0]) {
      case 'v': // see wich type of vertex...
        {
 	 switch(buf[1]) {
 	 case 't': // texture coordinate...
-	   Get2d(&buf[2],scrtchP);
-	   tex.add(scrtchP);
+	   Get2d(&buf[2],scratch);
+	   tex.add(Point(scratch[0], scratch[1], scratch[2]));
 	   break;
 	 case 'n': // normal
-	   Get3d(&buf[2],scrtchP);
-	   nml.add(scrtchP.vector());
+	   Get3d(&buf[2],scratch);
+	   nml.add(Vector(scratch[0], scratch[1], scratch[2]));
 	   break;
 	 case ' ': // normal vertex...
 	 default:
-	   Get3d(&buf[2],scrtchP);
+	   Get3d(&buf[2],scratch);
 	   // add to points list!
-	   pts.add(scrtchP);
+	   pts.add(Point(scratch[0], scratch[1], scratch[2]));
 	  break;
 	 }
 	 break;
        }
      case 'f': // see which type of face...
        // Add tri to g
-       GetFace(&buf[2], pts, nml, tex, g, curr_mtl, t, curr_matl_has_texture);
+       GetFace(&buf[2], pts, nml, tex, g, curr_matl, t);
        break;
      case 'u': // usemtl
        string matl_str(&buf[7]);
@@ -300,8 +358,7 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
        for (i=0; i<names.size(); i++)
 	 if (names[i] == matl_str) break;
        if (i<names.size()) {
-	 curr_matl_has_texture=matl_has_texture[i];
-	 curr_mtl = mtl[i];
+	 curr_matl = matl[i];
        } else {
 	 cerr << "Error - couldn't find material: "<<matl_str<<"\n";
 	 return false;

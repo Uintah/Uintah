@@ -71,10 +71,11 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 
 			   ambient_scale, Arc_Ambient);
-
+  BBox b;
+  g->compute_bounds(b, 0.001);
   scene->select_shadow_mode( No_Shadows );
   scene->maxdepth = 4;
-  scene->add_light(new Light(Point(-8, 8, 3.9), Color(1.0,1.0,1.0), 0));
+  scene->add_light(new Light(b.max()+b.diagonal(),Color(1.0,1.0,1.0), 0));
   scene->animate=false;
   return scene;
 }
