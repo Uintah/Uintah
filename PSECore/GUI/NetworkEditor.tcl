@@ -523,49 +523,40 @@ proc popupLoadMenu {} {
 }
 
 proc CreateNewModule {} {
-    set w .newmoduledialog
-    if {[winfo exists $w]} {
-	destroy $w
+    set types {
+	{ {Module Specification Files} {.xml} }
+	{ {Other} { * } }
     }
-
-    toplevel $w
-    wm title $w "Create New Module"
-    frame $w.ftop
-    frame $w.ftop.row1
-    frame $w.ftop.row2
-    frame $w.ftop.row3
-    frame $w.fbot
-    label $w.ftop.row1.namelabel -text "New module name:"
-    entry $w.ftop.row1.name -width 30 -background grey90 -relief sunken
-    label $w.ftop.row2.packagelabel -text "Insert into package:"
-    entry $w.ftop.row2.package -width 30 -background grey90 -relief sunken
-    label $w.ftop.row3.categorylabel -text "Insert into category:"
-    entry $w.ftop.row3.category -width 30 -background grey90 -relief sunken
-    button $w.fbot.ok -text "Ok" -command CreateNewModuleOk
-    button $w.fbot.cancel -text "Cancel" -command CreateNewModuleCancel
-    pack $w.ftop $w.ftop.row1 $w.ftop.row2 $w.ftop.row3 $w.fbot
-    pack $w.ftop.row1.namelabel $w.ftop.row1.name -side left -padx 5 -pady 5
-    pack $w.ftop.row2.packagelabel $w.ftop.row2.package \
-         -side left -padx 5 -pady 5
-    pack $w.ftop.row3.categorylabel $w.ftop.row3.category \
-         -side left -padx 5 -pady 5
-    pack $w.fbot.ok $w.fbot.cancel -side left -padx 5 -pady 5
-    bind $w <KeyPress-Return> CreateNewModuleOk
-    focus $w.ftop.row1.name
-    grab set $w
-    tkwait window $w
-}
+    set specfile [tk_getOpenFile -filetypes $types]
+    if { [file exists $specfile] } {
+	netedit load_component_spec $specfile
+	puts "loading component spec file $specfile"
+    }
+}    
 
 proc CreateNewModuleOk {} {
     set w .newmoduledialog
-    set module [$w.ftop.row1.name get]
-    set package [$w.ftop.row2.package get]
-    set category [$w.ftop.row3.category get]
+    set psepath [$w.ftop.row1.psepath get]
+    set module [$w.ftop.row2.name get]
+    set package [$w.ftop.row3.package get]
+    set category [$w.ftop.row4.category get]
 
-    if {$module=="" || $package=="" || $category==""} {
+    if {$psepath=="" || $module=="" || $package=="" || $category==""} {
 	messagedialog "ERROR"\
                       "One or more of the entries was left blank.\
                        All entries must be filled in."
+	return
+    }
+
+    if {![file exists $psepath]} {
+	messagedialog "The path \"$psepath\" does not exist. \
+		       Please choose another path."
+	return
+    }
+
+    if {![file isdirectory $psepath]} {
+	messagedialog "The path \"$psepath\" is already in use\
+		       by a non-directory file"
 	return
     }
 
