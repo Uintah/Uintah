@@ -1,3 +1,6 @@
+//
+// $Id$
+//
 #include <Uintah/Components/Arches/CellInformation.h>
 #include <Uintah/Components/Arches/ArchesFort.h>
 #include <Uintah/Exceptions/InvalidValue.h>
@@ -9,13 +12,11 @@ using namespace Uintah::ArchesSpace;
 
 CellInformation::CellInformation(const Patch* patch)
 {
-  IntVector indexLow = patch->getCellLowIndex();
-  IntVector indexHigh = patch->getCellHighIndex();
-  int xLo = indexLow.x(); int yLo = indexLow.y(); int zLo = indexLow.z();
-  int xHi = indexHigh.x(); int yHi = indexHigh.y(); int zHi = indexHigh.z();
-  IntVector domainLow = indexLow;
-  IntVector domainHigh = indexHigh;
-  IntVector Size = indexHigh - indexLow;
+  IntVector idxLo = patch->getCellLowIndex();
+  IntVector idxHi = patch->getCellHighIndex();
+  IntVector domLo = idxLo;
+  IntVector domHi = idxHi;
+  IntVector Size = idxHi - idxLo;
 
   // cell information
   xx.resize(Size.x()); yy.resize(Size.y()); zz.resize(Size.z());
@@ -29,30 +30,32 @@ CellInformation::CellInformation(const Patch* patch)
   xx[Size.x()-1] = (patch->getBox().upper()).x()-0.5*(patch->dCell()).x();
   yy[0] = (patch->getBox().lower()).y()+0.5*(patch->dCell()).y();
   for (int ii = 1; ii < Size.y()-1; ii++) {
-    yy[ii] = yy[ii-1]+patch->dCell().y();
+    yy[ii] = yy[ii-1]+patch->dCell().y()-0.5*(patch->dCell()).y();
   }
   yy[Size.y()-1] = (patch->getBox().upper()).y()-0.5*(patch->dCell()).y();
   zz[0] = (patch->getBox().lower()).z()+0.5*(patch->dCell()).z();
   for (int ii = 1; ii < Size.z()-1; ii++) {
-    zz[ii] = zz[ii-1]+patch->dCell().z();
+    zz[ii] = zz[ii-1]+patch->dCell().z()-0.5*(patch->dCell()).z();
   }
   zz[Size.z()-1] = (patch->getBox().upper()).z()-0.5*(patch->dCell()).z();
 
-  cout << "Lower x = " << patch->getBox().lower().x() << endl;
-  for (int ii = 0; ii < Size.x(); ii++) {
-    cout << "xx[" << ii <<"] = " << xx[ii] << endl;
-  }
-  cout << "Upper x = " << patch->getBox().upper().x() << endl;
-  cout << "Lower y = " << patch->getBox().lower().y() << endl;
-  for (int ii = 0; ii < Size.y(); ii++) {
-    cout << "yy[" << ii <<"] = " << yy[ii] << endl;
-  }
-  cout << "Upper y = " << patch->getBox().upper().y() << endl;
-  cout << "Lower z = " << patch->getBox().lower().z() << endl;
-  for (int ii = 0; ii < Size.z(); ii++) {
-    cout << "zz[" << ii <<"] = " << zz[ii] << endl;
-  }
-  cout << "Upper z = " << patch->getBox().upper().z() << endl;
+#ifdef ARCHES_DEBUG
+  cerr << "Lower x = " << patch->getBox().lower().x() << endl;
+  cerr << "xx = [" ;
+  for (int ii = 0; ii < Size.x(); ii++) cerr << xx[ii] ;
+  cerr << "]" << endl;
+  cerr << "Upper x = " << patch->getBox().upper().x() << endl;
+  cerr << "Lower y = " << patch->getBox().lower().y() << endl;
+  cerr << "yy = [" ;
+  for (int ii = 0; ii < Size.y(); ii++) cerr << yy[ii] ;
+  cerr << "]" << endl;
+  cerr << "Upper y = " << patch->getBox().upper().y() << endl;
+  cerr << "Lower z = " << patch->getBox().lower().z() << endl;
+  cerr << "zz = [" ;
+  for (int ii = 0; ii < Size.z(); ii++) cerr << zz[ii] ;
+  cerr << "]" << endl;
+  cerr << "Upper z = " << patch->getBox().upper().z() << endl;
+#endif
   
   //  allocate memory for x-dim arrays
   dxep.resize(Size.x());
@@ -121,12 +124,12 @@ CellInformation::CellInformation(const Patch* patch)
   fac4w.resize(Size.z());
   kbsdw.resize(Size.z());
   // for fortran
-  indexHigh = indexHigh - IntVector(1,1,1);
-  domainHigh = domainHigh - IntVector(1,1,1);
+  idxHi = idxHi - IntVector(1,1,1);
+  domHi = domHi - IntVector(1,1,1);
 
   // for computing geometry parameters
-  FORT_CELLG(domainLow.get_pointer(), domainHigh.get_pointer(), 
-	     indexLow.get_pointer(), indexHigh.get_pointer(),
+  FORT_CELLG(domLo.get_pointer(), domHi.get_pointer(), 
+	     idxLo.get_pointer(), idxHi.get_pointer(),
 	     sew.get_objs(), sns.get_objs(), stb.get_objs(),
 	     sewu.get_objs(), snsv.get_objs(), stbw.get_objs(),
 	     dxep.get_objs(), dynp.get_objs(), dztp.get_objs(),
@@ -155,8 +158,397 @@ CellInformation::CellInformation(const Patch* patch)
 	     jnsdv.get_objs(), jssdv.get_objs(), 
 	     ktsdw.get_objs(), kbsdw.get_objs());
 
+#ifdef ARCHES_DEBUG
+  idxHi = idxHi + IntVector(1,1,1);
+  idxLo = idxLo + IntVector(1,1,1);
+  cerr << " After CELLG : " << endl;
+  cerr << " dxep = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << dxep[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " dxpw = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << dxpw[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " sew = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << sew[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " xu = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << xu[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " dxpwu = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << dxpwu[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " dxepu = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << dxepu[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " sewu = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << sewu[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " cee = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << cee[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " cww = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << cww[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " cwe = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << cwe[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " ceeu = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << ceeu[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " cwwu = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << cwwu[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " cweu = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << cweu[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " efac = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << efac[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " wfac = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << wfac[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " fac1u = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << fac1u[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " fac2u = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << fac2u[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " iesdu = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << iesdu[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " fac3u = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << fac3u[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " fac4u = " ;
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+    cerr.width(10);
+    cerr << fac4u[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " iwsdu = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << iwsdu[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " After CELLG : " << endl;
+  cerr << " dynp = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << dynp[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " dyps = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << dyps[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " sns = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << sns[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " yv = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << yv[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " dypsv = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << dypsv[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " dynpv = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << dynpv[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " snsv = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << snsv[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " cnn = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << cnn[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " css = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << css[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " csn = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << csn[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " cnnv = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << cnnv[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " cssv = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << cssv[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " csnv = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << csnv[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " enfac = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << enfac[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " sfac = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << sfac[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " fac1v = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << fac1v[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " fac2v = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << fac2v[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " jnsdv = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << jnsdv[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " fac3v = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << fac3v[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " fac4v = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << fac4v[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " jssdv = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << jssdv[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " After CELLG : " << endl;
+  cerr << " dztp = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << dztp[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " dzpb = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << dzpb[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " stb = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << stb[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " zw = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << zw[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " dzpbw = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << dzpbw[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " dztpw = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << dztpw[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " stbw = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << stbw[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " ctt = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << ctt[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " cbb = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << cbb[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " cbt = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << cbt[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " cttw = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << cttw[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " cbbw = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << cbbw[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " cbtw = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << cbtw[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " tfac = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << tfac[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " bfac = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << bfac[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " fac1w = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << fac1w[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " fac2w = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << fac2w[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " ktsdw = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << ktsdw[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " fac3w = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << fac3w[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " fac4w = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << fac4w[ii] << " " ; 
+  }
+  cerr << endl;
+  cerr << " kbsdw = " ;
+  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+    cerr.width(10);
+    cerr << kbsdw[ii] << " " ; 
+  }
+  cerr << endl;
+#endif
+
 }
 
 CellInformation::~CellInformation()
 {
 }
+//
+// $Log $
+//

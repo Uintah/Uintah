@@ -26,13 +26,16 @@ include $(SRCTOP)/scripts/recurse.mk
 PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions \
 	   SCICore/Exceptions
 LIBS := $(XML_LIBRARY) -lftn -lm
-CFLAGS += -DDEBUG
+CFLAGS += -DARCHES_DEBUG
 #LIBS += -lblas
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.21  2000/08/04 02:14:32  bbanerje
+# Added debug statements.
+#
 # Revision 1.20  2000/08/02 16:27:38  bbanerje
 # Added -DDEBUG to sub.mk and Discretization
 #

@@ -305,24 +305,13 @@ Arches::paramInit(const ProcessorGroup* ,
   old_dw->put(density, d_lab->d_densityINLabel, matlIndex, patch);
   old_dw->put(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
 
-  // Testing if correct values have been put
-  /*
-  cout << " In C++ (Arches.cc) " << endl;
-  for (int kk = indexLow.z(); kk <= indexHigh.z(); kk++) {
-    for (int jj = indexLow.y(); jj <= indexHigh.y(); jj++) {
-      for (int ii = indexLow.x(); ii <= indexHigh.x(); ii++) {
-	cout << "(" << ii << "," << jj << "," << kk << ") : "
-	     << " UU = " << uVelocity[IntVector(ii,jj,kk)]
-	     << " DEN = " << density[IntVector(ii,jj,kk)]
-	     << " VIS = " << viscosity[IntVector(ii,jj,kk)] << endl;
-      }
-    }
-  }
-  */
 }
   
 //
 // $Log$
+// Revision 1.54  2000/08/04 02:14:32  bbanerje
+// Added debug statements.
+//
 // Revision 1.53  2000/07/28 02:30:59  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients

@@ -69,7 +69,6 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     INITIALIZE ALL CARDINAL VARIABLES  
 C-----------------------------------------------------------------------
-      print *, 'In Fortran : celltype val = ',cellval
       DO 300 K = kBeg,kEnd
          DO 200 J = jBeg,jEnd
             DO 100 I = iBeg,iEnd
@@ -78,24 +77,15 @@ C-----------------------------------------------------------------------
  200     CONTINUE
  300  CONTINUE
 
-C-----------------------------------------------------------------------
-C     TESTING
-C-----------------------------------------------------------------------
-      print *, 'In Fortran : '
-      DO 900 K = kBeg,kEnd
-         DO 800 J = jBeg,jEnd
-            DO 700 I = iBeg,iEnd
-               write(*,'(3i4," : PCELL = ",i5)') i, j, k, PCELL(i,j,k)
- 700        CONTINUE
- 800     CONTINUE
- 900  CONTINUE
-
       RETURN
       END
 
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/08/04 02:14:37  bbanerje
+c Added debug statements.
+c
 c Revision 1.2  2000/06/28 08:14:55  bbanerje
 c Changed the init routines a bit.
 c
