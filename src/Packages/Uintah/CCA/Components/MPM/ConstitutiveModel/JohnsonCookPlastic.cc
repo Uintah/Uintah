@@ -67,7 +67,8 @@ JohnsonCookPlastic::allocateCMDataAddRequires(Task* task,
 
 void JohnsonCookPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
 					   ParticleSubset* addset,
-					   map<const VarLabel*, ParticleVariableBase*>* newState,
+					   map<const VarLabel*, 
+                                           ParticleVariableBase*>* newState,
 					   ParticleSubset* delset,
 					   DataWarehouse* old_dw)
 {
