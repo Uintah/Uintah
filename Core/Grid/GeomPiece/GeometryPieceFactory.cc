@@ -33,7 +33,7 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
    for(ProblemSpecP child = ps->findBlock(); child != 0;
        child = child->findNextBlock()){
       std::string go_type = child->getNodeName();
-      
+
       if (go_type == "shell") 
         ShellGeometryFactory::create(child, objs);
       
@@ -77,14 +77,15 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
 	objs.push_back(scinew NullGeometryPiece(child));
 
       else if (go_type == "res" || go_type == "velocity" || 
-               go_type == "temperature") {
-	 // Ignore...
+               go_type == "temperature" || go_type == "#comment")  {
+        // Ignoring. 
+        continue;    // restart loop to avoid accessing name of empty object
       
       } else {
 	if (ps->doWriteMessages())
-	  cerr << "Unknown Geometry Piece Type " << "(" << go_type << ")" 
+	  cerr << "WARNING: Unknown Geometry Piece Type " << "(" << go_type << ")" 
 	       << endl;
-	//	exit(1);
+        continue;    // restart loop to avoid accessing name of empty object
       }
       string name;
       if(child->getAttribute("name", name)){
