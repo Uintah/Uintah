@@ -42,9 +42,10 @@ endif
 
 #___________________________________
 # find all the varLabels
+set labels = ""
 foreach file ( $files[*]:q ) 
   echo "\nI'm examing $file \n "
   set labelFile = $componentDir/$file
-  grep "create.*" $labelFile| cut -d\" -f2 |grep -v destroy
+  grep "create.*" $labelFile| cut -d\" -f2 |grep -v destroy |sort
 end
 exit
