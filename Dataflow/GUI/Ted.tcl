@@ -1,5 +1,5 @@
 puts here
-itcl_class SCIRun_Image_Ted {
+itcl_class SCIRun_SIP_Ted {
     inherit Module
     constructor {config} {
 	set name Ted

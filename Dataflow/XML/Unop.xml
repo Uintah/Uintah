@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../doc/ReferenceGuide/component.dtd">
 
-<component name="Unop" category="Image">
+<component name="Unop" category="SIP">
   <overview>
     <authors>
       <author>Scott Morris</author>

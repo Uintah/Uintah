@@ -7,7 +7,7 @@
  #   February 1999, July 2000
  #  Copyright (C) 1999, 2000  SCI Group
  ##
-itcl_class SCIRun_Salmon_EditPath {
+itcl_class SCIRun_Render_EditPath {
     inherit Module
    
     constructor {config} {

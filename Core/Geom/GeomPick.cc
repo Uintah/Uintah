@@ -123,12 +123,12 @@ void GeomPick::ignore_until_release()
     ignore=1;
 }
 
-void GeomPick::pick(Roe* roe, const BState& bs )
+void GeomPick::pick(ViewWindow* viewwindow, const BState& bs )
 {
   selected=1;
   ignore=0;
   if(widget)
-    widget->geom_pick(this, roe, widget_data, bs);
+    widget->geom_pick(this, viewwindow, widget_data, bs);
   if(module)
     module->geom_pick(this, cbdata, picked_obj);
 }

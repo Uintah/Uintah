@@ -1,5 +1,5 @@
 
-itcl_class SCIRun_Image_Segment {
+itcl_class SCIRun_SIP_Segment {
     inherit Module
     constructor {config} {
 	set name Segment

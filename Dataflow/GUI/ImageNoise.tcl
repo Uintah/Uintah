@@ -1,5 +1,5 @@
 
-itcl_class SCIRun_Image_Noise {
+itcl_class SCIRun_SIP_Noise {
     inherit Module
     constructor {config} {
 	set name Noise

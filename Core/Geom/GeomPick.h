@@ -23,7 +23,7 @@
 namespace SCIRun {
   class BaseWidget;
   class MessageBase;
-  class Roe;
+  class ViewWindow;
 }
 
 namespace SCIRun {
@@ -65,7 +65,7 @@ public:
   void set_widget_data(int);
   
   void set_picked_obj(GeomObj *);
-  void pick(Roe* roe, const BState& bs);
+  void pick(ViewWindow* viewwindow, const BState& bs);
   void moved(int axis, double distance, const Vector& delta, const BState& bs);
   void release(const BState& bs);
   

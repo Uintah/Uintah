@@ -1,7 +1,7 @@
 
 catch {rename MeshWriter ""}
 
-itcl_class SCIRun_Writers_MeshWriter {
+itcl_class SCIRun_DataIO_MeshWriter {
     inherit Module
     constructor {config} {
 	set name MeshWriter

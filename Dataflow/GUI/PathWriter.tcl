@@ -3,9 +3,9 @@
 # October 2000 
 # NOTE: if file to be splitted, uncomment corresponding lines in the file
 
-catch {rename SCIRun_Writers_PathWriter ""}
+catch {rename SCIRun_DataIO_PathWriter ""}
 
-itcl_class SCIRun_Writers_PathWriter {
+itcl_class SCIRun_DataIO_PathWriter {
     inherit Module
     constructor {config} {
 	set name PathWriter

@@ -1,4 +1,4 @@
-itcl_class SCIRun_Surface_SimpSurface {
+itcl_class SCIRun_Fields_SimpSurface {
     inherit Module
     constructor {config} {
         set name SimpSurface

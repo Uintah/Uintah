@@ -868,7 +868,7 @@ void GeomDisc::draw(DrawInfoOpenGL* di, Material* matl, double)
 // this is for alexandras volume render thing
 // this should be changed to use texture objects
 
-// deletes texture map - only works on single Roe!
+// deletes texture map - only works on single ViewWindow!
 
 TexGeomGrid::~TexGeomGrid()
 {
@@ -1778,7 +1778,7 @@ void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   if(!pre_draw(di, matl, 0)) return;  // lighting is turned off here...
   di->polycount+=pts.size()/2;
 
-  static Vector view;  // shared by all of them - should be in Roe!
+  static Vector view;  // shared by all of them - should be in ViewWindow!
 
   // always assume you are not there...
   // can't mix them...

@@ -13,7 +13,6 @@ SRCDIR   := Packages/DaveW/Dataflow/Modules/Readers
 
 SRCS     += \
 	$(SRCDIR)/ContourSetReader.cc\
-	$(SRCDIR)/GenesisMatrixReader.cc\
 	$(SRCDIR)/SegFldReader.cc\
 	$(SRCDIR)/SigmaSetReader.cc\
 #[INSERT NEW CODE FILE HERE]

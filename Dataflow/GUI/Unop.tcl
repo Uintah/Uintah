@@ -1,5 +1,5 @@
 
-itcl_class SCIRun_Image_Unop {
+itcl_class SCIRun_SIP_Unop {
     inherit Module
     constructor {config} {
 	set name Unop

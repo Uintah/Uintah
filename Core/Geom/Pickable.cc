@@ -35,7 +35,7 @@ Pickable::geom_pick( GeomPick *, void * )
 }
 
 void
-Pickable::geom_pick( GeomPick *, Roe *, int, const BState & )
+Pickable::geom_pick( GeomPick *, ViewWindow *, int, const BState & )
 {
   NOT_FINISHED( "This is a virtual function... should've been overloaded" );
 }

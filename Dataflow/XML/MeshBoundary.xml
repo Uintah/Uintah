@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../doc/ReferenceGuide/component.dtd">
 
-<component name="MeshBoundary" category="Mesh">
+<component name="MeshBoundary" category="Fields">
   <overview>
     <authors>
       <author>Peter-Pike Sloan and David Weinstein</author>

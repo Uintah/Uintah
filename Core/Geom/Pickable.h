@@ -20,7 +20,7 @@ namespace SCIRun {
 
 class Vector;
 class Point;
-class Roe;
+class ViewWindow;
 class GeomPick;
 class GeomObj;
 
@@ -36,7 +36,7 @@ class SCICORESHARE Pickable {
 public:
   virtual ~Pickable();
 
-  virtual void geom_pick(GeomPick*, Roe*, int, const BState& bs) = 0;
+  virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs) = 0;
   //virtual void geom_pick(GeomPick*, void*, int) = 0;
   virtual void geom_pick(GeomPick*, void*, GeomObj*) = 0;
   virtual void geom_pick(GeomPick*, void*) = 0;

@@ -1,5 +1,5 @@
 
-itcl_class SCIRun_Image_ImageConvolve {
+itcl_class SCIRun_SIP_ImageConvolve {
     inherit Module
     constructor {config} {
 	set name ImageConvolve

@@ -43,7 +43,7 @@ public:
     GeometryComm(MessageTypes::MessageType, int, int, View);
     GeometryComm(MessageTypes::MessageType, int portid,
 		 FutureValue<GeometryData*>* reply,
-		 int which_roe, int datamask);
+		 int which_viewwindow, int datamask);
     GeometryComm(MessageTypes::MessageType, int portid,
 		 FutureValue<int>* reply);
     virtual ~GeometryComm();
@@ -60,7 +60,7 @@ public:
 
     GeometryComm* next;
 
-    int which_roe;
+    int which_viewwindow;
     int datamask;
     FutureValue<GeometryData*>* datareply;
     FutureValue<int>* nreply;

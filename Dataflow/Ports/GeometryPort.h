@@ -99,9 +99,9 @@ public:
     virtual int have_data();
     virtual void resend(Connection*);
 
-    int getNRoe();
-    GeometryData* getData(int which_roe, int mask);
-    void setView(int which_roe, View view);
+    int getNViewWindows();
+    GeometryData* getData(int which_viewwindow, int mask);
+    void setView(int which_viewwindow, View view);
 };
 
 } // End namespace SCIRun

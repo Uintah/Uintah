@@ -16,15 +16,12 @@ GENHDRS := $(patsubst %.cc,%.h,$(GENSRCS))
 SRCS += $(GENSRCS) \
         $(SRCDIR)/Attrib.cc                 \
         $(SRCDIR)/BasicSurfaces.cc	    \
-        $(SRCDIR)/Boolean.cc		    \
 	$(SRCDIR)/Brick.cc		    \
-        $(SRCDIR)/CameraView.cc		    \
         $(SRCDIR)/ColorMap.cc		    \
         $(SRCDIR)/ColumnMatrix.cc	    \
         $(SRCDIR)/ContourGeom.cc	    \
         $(SRCDIR)/Datatype.cc		    \
         $(SRCDIR)/DenseMatrix.cc	    \
-        $(SRCDIR)/Domain.cc		    \
         $(SRCDIR)/Field.cc		    \
         $(SRCDIR)/FieldWrapper.cc	    \
         $(SRCDIR)/GenFunction.cc	    \
@@ -60,16 +57,11 @@ SRCS += $(GENSRCS) \
         $(SRCDIR)/VField.cc		    \
         $(SRCDIR)/VectorField.cc	    \
         $(SRCDIR)/VectorFieldHUG.cc	    \
-        $(SRCDIR)/VectorFieldOcean.cc	    \
         $(SRCDIR)/VectorFieldRG.cc	    \
         $(SRCDIR)/VectorFieldRGCC.cc	    \
         $(SRCDIR)/VectorFieldUG.cc	    \
         $(SRCDIR)/VectorFieldZone.cc	    \
         $(SRCDIR)/VoidStar.cc		    \
-        $(SRCDIR)/cDMatrix.cc		    \
-        $(SRCDIR)/cMatrix.cc		    \
-        $(SRCDIR)/cSMatrix.cc		    \
-        $(SRCDIR)/cVector.cc		    \
         $(SRCDIR)/templates.cc		    \
 	$(SRCDIR)/GLTexture3D.cc \
 	$(SRCDIR)/GLTextureIterator.cc \
@@ -90,7 +82,6 @@ SRCS += $(GENSRCS) \
 	$(SRCDIR)/Polygon.cc \
 	$(SRCDIR)/SliceTable.cc \
 	$(SRCDIR)/VolumeUtils.cc \
-#        $(SRCDIR)/Interval.cc		    \
 
 
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h

@@ -382,7 +382,7 @@ void Module::want_to_execute()
 }
 
 void
-Module::geom_pick(GeomPick*, Roe*, int, const BState&)
+Module::geom_pick(GeomPick*, ViewWindow*, int, const BState&)
 {
   NOT_FINISHED("Module::geom_pick: This version of geom_pick is only here to stop the compiler from complaining, it should never be used.");
 }

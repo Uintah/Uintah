@@ -10,15 +10,12 @@
 SRCDIR := Packages/DaveW/Dataflow/Modules
 
 SUBDIRS := \
-	$(SRCDIR)/EEG\
-	$(SRCDIR)/EGI\
-	$(SRCDIR)/FDM\
-	$(SRCDIR)/FEM\
-	$(SRCDIR)/ISL\
-	$(SRCDIR)/MEG\
+	$(SRCDIR)/Contours\
 	$(SRCDIR)/Readers\
+	$(SRCDIR)/SurfTree\
 	$(SRCDIR)/Writers\
 #	$(SRCDIR)/CS684\
+#	$(SRCDIR)/SiRe\
 #	$(SRCDIR)/Tensor\
 #[INSERT NEW CATEGORY DIR HERE]
 

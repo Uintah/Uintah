@@ -1,7 +1,7 @@
 
 catch {rename ScalarFieldWriter ""}
 
-itcl_class SCIRun_Writers_ScalarFieldWriter {
+itcl_class SCIRun_DataIO_ScalarFieldWriter {
     inherit Module
     constructor {config} {
 	set name ScalarFieldWriter

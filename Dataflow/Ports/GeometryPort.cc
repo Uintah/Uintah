@@ -233,30 +233,30 @@ void GeometryOPort::resend(Connection*)
     cerr << "GeometryOPort can't resend and shouldn't need to!\n";
 }
 
-int GeometryOPort::getNRoe()
+int GeometryOPort::getNViewWindows()
 {
     if(nconnections() == 0)
 	return 0;
-    FutureValue<int> reply("Geometry getNRoe reply");
-    outbox->send(new GeometryComm(MessageTypes::GeometryGetNRoe, portid, &reply));
+    FutureValue<int> reply("Geometry getNViewWindows reply");
+    outbox->send(new GeometryComm(MessageTypes::GeometryGetNViewWindows, portid, &reply));
     return reply.receive();
 }
 
-GeometryData* GeometryOPort::getData(int which_roe, int datamask)
+GeometryData* GeometryOPort::getData(int which_viewwindow, int datamask)
 {
     if(nconnections() == 0)
 	return 0;
     FutureValue<GeometryData*> reply("Geometry getData reply");
-    outbox->send(new GeometryComm(MessageTypes::GeometryGetData, portid, &reply, which_roe, datamask));
+    outbox->send(new GeometryComm(MessageTypes::GeometryGetData, portid, &reply, which_viewwindow, datamask));
     return reply.receive();
 }
 
-void GeometryOPort::setView(int which_roe, View view)
+void GeometryOPort::setView(int which_viewwindow, View view)
 {
     if(nconnections() == 0)
 	return;
     
-    GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometrySetView, portid, which_roe, view);
+    GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometrySetView, portid, which_viewwindow, view);
 
     if(outbox)
 	outbox->send(msg);
@@ -294,15 +294,16 @@ GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno)
 
 GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
 			   FutureValue<GeometryData*>* datareply,
-			   int which_roe, int datamask)
+			   int which_viewwindow, int datamask)
 : MessageBase(type), portno(portno), datareply(datareply),
-  which_roe(which_roe), datamask(datamask)
+  which_viewwindow(which_viewwindow), datamask(datamask)
 {
 }
 
 GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
-			   int which_roe, View view)
-: MessageBase(type), portno(portno), which_roe(which_roe), view(view)
+			   int which_viewwindow, View view)
+: MessageBase(type), portno(portno), which_viewwindow(which_viewwindow), 
+  view(view)
 {
 }
 

@@ -1,7 +1,7 @@
 
 catch {rename ColumnMatrixWriter ""}
 
-itcl_class SCIRun_Writers_ColumnMatrixWriter {
+itcl_class SCIRun_DataIO_ColumnMatrixWriter {
     inherit Module
     constructor {config} {
 	set name ColumnMatrixWriter

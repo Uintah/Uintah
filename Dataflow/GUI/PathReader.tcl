@@ -3,9 +3,9 @@
 # October 2000
 
 
-catch {rename SCIRun_Readers_PathReader ""}
+catch {rename SCIRun_DataIO_PathReader ""}
 
-itcl_class SCIRun_Readers_PathReader {
+itcl_class SCIRun_DataIO_PathReader {
     inherit Module
     constructor {config} {
 	set name PathReader

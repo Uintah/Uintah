@@ -1,7 +1,7 @@
 
 catch {rename VectorFieldWriter ""}
 
-itcl_class SCIRun_Writers_VectorFieldWriter {
+itcl_class SCIRun_DataIO_VectorFieldWriter {
     inherit Module
     constructor {config} {
 	set name VectorFieldWriter

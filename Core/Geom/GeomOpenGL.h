@@ -30,7 +30,7 @@
 #include <Core/Geometry/Point.h>
 
 namespace SCIRun {
-  class Roe;
+  class ViewWindow;
 }
 
 namespace SCIRun {
@@ -99,7 +99,7 @@ public:
 
     void init_view(double znear, double zfar, Point& eyep, Point& lookat);
 
-    Roe* roe;
+    ViewWindow* viewwindow;
 #ifndef _WIN32
     Display *dpy;
 #endif

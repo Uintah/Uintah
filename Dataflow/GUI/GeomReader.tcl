@@ -1,7 +1,7 @@
 
 catch {rename GeomReader ""}
 
-itcl_class SCIRun_Readers_GeomReader {
+itcl_class SCIRun_DataIO_GeomReader {
     inherit Module
     constructor {config} {
 	set name GeomReader

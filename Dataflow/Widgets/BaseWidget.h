@@ -40,7 +40,7 @@ namespace SCIRun {
   class BaseConstraint;
 }
 namespace SCIRun {
-  class Roe;
+  class ViewWindow;
 }
 
 
@@ -98,7 +98,7 @@ public:
    inline Point GetPointVar( const Index vindex ) const;
    inline Real GetRealVar( const Index vindex ) const;
    
-   virtual void geom_pick(GeomPick*, Roe*, int, const BState& bs);
+   virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
   //   virtual void geom_pick(GeomPick*, void*, int);
    virtual void geom_pick(GeomPick*, void*, GeomObj*);
    virtual void geom_pick(GeomPick*, void*);
