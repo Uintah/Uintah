@@ -12,6 +12,14 @@ Useful configuration flags:
  --enable-exename=NAME  - call the executable NAME instead of the
 	                  default {scirun,uintah,davew}
 
+ --enable-debug         - Turn on debugging.  This adds the -g flag to
+			  compiles.  To use something else besides -g,
+			  use --enable-debug="-myflags"
+
+ --enable-optimize      - Turn on optimization.  This adds the -O2 flag to
+			  compiles.  To use something else besides -O2,
+			  use --enable-optimize="-myflags"
+
  --enable-enterleave	- enable the annoying "Entering directory..."
 			  and "Leaving directory..." messages from
 			  make, which help emacs find the errors from
@@ -38,6 +46,9 @@ Useful configuration flags:
 	                 PSE.  This is very experimental and may break
 			 many things.  It is also a much different
                          world.
+
+ --with-globus=DIR     - Use the globus installation in DIR.  Only
+			 applicatble with the --enable-parallel option.
 
 
 A typical configuration would be:
