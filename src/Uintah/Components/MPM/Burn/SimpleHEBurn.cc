@@ -14,6 +14,8 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/ReductionVariable.h>
+#include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SimulationStateP.h>
 #include <Uintah/Interface/DataWarehouse.h>
@@ -49,6 +51,8 @@ void SimpleHEBurn::initializeBurnModelData(const Patch* patch,
 
    ParticleVariable<int> pIsIgnited;
    new_dw->allocate(pIsIgnited, lb->pIsIgnitedLabel, matl->getDWIndex(), patch);
+   CCVariable<double> burnedMass;
+   new_dw->allocate(burnedMass, lb->cBurnedMassLabel, matl->getDWIndex(),patch);
 
    ParticleSubset* pset = pIsIgnited.getParticleSubset();
    for(ParticleSubset::iterator iter = pset->begin();
@@ -57,7 +61,7 @@ void SimpleHEBurn::initializeBurnModelData(const Patch* patch,
 	pIsIgnited[idx]=0;
    }
    new_dw->put(pIsIgnited, lb->pIsIgnitedLabel, matl->getDWIndex(), patch);
-
+   new_dw->put(burnedMass, lb->cBurnedMassLabel, matl->getDWIndex(), patch);
 }
 
 void SimpleHEBurn::addCheckIfComputesAndRequires(Task* task,
@@ -78,7 +82,12 @@ void SimpleHEBurn::addCheckIfComputesAndRequires(Task* task,
   task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),
 				patch, Ghost::None);
 
+  task->requires(old_dw, lb->cBurnedMassLabel,matl->getDWIndex(), 
+				patch, Ghost::None);
+
   task->computes(new_dw, lb->pIsIgnitedLabel,matl->getDWIndex(),patch);
+
+  task->computes(new_dw, lb->cBurnedMassLabel,matl->getDWIndex(),patch);
 
   task->requires(old_dw, lb->delTLabel);
 
@@ -124,6 +133,12 @@ void SimpleHEBurn::checkIfIgnited(const Patch* patch,
   old_dw->get(pIsIgnited, lb->pIsIgnitedLabel,
                                 matlindex, patch,Ghost::None,0);
 
+
+  ParticleVariable<int> pissurf;
+  old_dw->get(pissurf, lb->pSurfLabel,
+                                matlindex, patch,Ghost::None,0);
+
+
 //  ParticleVariable<double> pTemperatureRate;
 //  new_dw->get(pTemperatureRate, lb->pTemperatureRateLabel,
 //                                matlindex, patch,Ghost::None,0);
@@ -148,12 +163,16 @@ void SimpleHEBurn::checkIfIgnited(const Patch* patch,
 //							*specificHeat;
 
      //Insert some conditional on heatFluxToParticle here
-     pIsIgnited[idx] = 0;
-
+     if(pissurf[idx] == 1){
+	pIsIgnited[idx] = 1;
+     }
+     else {
+	pIsIgnited[idx] = 0;
+     }
   }
 
   new_dw->put(pIsIgnited,lb->pIsIgnitedLabel, matlindex, patch);
-
+  new_dw->put(pissurf,lb->pSurfLabel, matlindex, patch);
 }
  
 void SimpleHEBurn::computeMassRate(const Patch* patch,
@@ -170,30 +189,50 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
   ParticleVariable<double> pvolume;
   new_dw->get(pvolume,lb->pVolumeDeformedLabel, matlindex, patch,Ghost::None,0);
 
+  ParticleVariable<Point> px;
+  old_dw->get(px, lb->pXLabel, matlindex, patch, Ghost::None, 0);
+
   ParticleVariable<int> pIsIgnited;
   new_dw->get(pIsIgnited, lb->pIsIgnitedLabel,
                                 matlindex, patch,Ghost::None,0);
 
+  CCVariable<double> burnedMass;
+  old_dw->get(burnedMass, lb->cBurnedMassLabel,
+			matlindex, patch,Ghost::None,0);
+
+  IntVector ci;
+
   ParticleSubset* pset = pmass.getParticleSubset();
+  ASSERT(pset == pvolume.getParticleSubset());
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
      particleIndex idx = *iter;
 
      if(pIsIgnited[idx]==1){
-	// Monkey with the particle mass and volume
-        // according to some specific rule.
+	pmass[idx]   = pmass[idx] - .5*a;
+	pvolume[idx] = pmass[idx]/1000.0;
+        ci =  patch->findCell(px[idx]);
+	burnedMass[ci] += .5*a;
+	
+	if(pmass[idx]<0.0){
+	  pmass[idx]=0.0;
+	  burnedMass[ci] -= .5*a;
+	}
      }
      else {
 	// Do nothing to the particle mass and volume
      }
-
   }
 
   new_dw->put(pmass,lb->pMassLabel, matlindex, patch);
   new_dw->put(pvolume,lb->pVolumeLabel, matlindex, patch);
+  new_dw->put(burnedMass,lb->cBurnedMassLabel, matlindex, patch);
 }
  
 // $Log$
+// Revision 1.6  2000/06/13 23:05:35  guilkey
+// Added some stuff to SimpleBurn model.
+//
 // Revision 1.5  2000/06/08 17:37:07  guilkey
 // Fixed small error.
 //
