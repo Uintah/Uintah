@@ -498,7 +498,7 @@ EnthalpySolver::sched_buildLinearMatrixPred(const LevelP& level,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   else
   tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
-		Ghost::AroundCells, Arches::ZEROGHOSTCELLS);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
@@ -1108,7 +1108,7 @@ EnthalpySolver::sched_buildLinearMatrixCorr(const LevelP& level,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   else
   tsk->requires(Task::NewDW, d_lab->d_enthalpyIntermLabel,
-		Ghost::AroundCells, Arches::ZEROGHOSTCELLS);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -1132,7 +1132,7 @@ EnthalpySolver::sched_buildLinearMatrixCorr(const LevelP& level,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   else
   tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel,
-		Ghost::AroundCells, Arches::ZEROGHOSTCELLS);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -1742,7 +1742,7 @@ EnthalpySolver::sched_buildLinearMatrixInterm(const LevelP& level, SchedulerP& s
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   else
   tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel,
-		Ghost::AroundCells, Arches::ZEROGHOSTCELLS);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
