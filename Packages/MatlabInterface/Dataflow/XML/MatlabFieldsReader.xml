@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<component name="MatlabFieldsReader" category="DataIO">
+  <overview>
+    <authors>Jeroen Stinstra
+    </authors>
+	    <summary> MatlabFieldsReader allows the user to load a field (mesh+data) from a MATLAB .mat file</summary>
+    <description><p>
+	This module imports fields from MATLAB mat files. Currently only files from matlab version 5 and higher are supported by this module.
+	In order for the module to read the fields the matlab array needs to be of the "struct" class in which various fields represent the
+	mesh and its associated data. The following fields are needed to work with this module: </p>
+	
+	<p> Unstructured meshes </p>
+	<p> <pre>.node</pre> [required] - A [3xM] matrix specifying the position of the nodes in a cartesian coordinate system. 
+	The numbering of the nodes is equal to their column number. </p>
+	<p> <pre>.edge</pre> - This matrix is required for line elements. Depending on the number of nodes that describe one line segment this
+	matrix is of the dimensions [numnodes x numelements]. NOTE: the node numbering starts at one and not at zero! </p>
+	<p> <pre>.face</pre> - This matrix is required for surface elements. Depending on the number of nodes that describe one surface element
+	this matrix is of the dimensions [numnodes x numelements]. NOTE: the node numbering starts at one and not at zero! </p>
+	<p> <pre>.cell</pre> - This matrix is required for volume elements. Depending on the number of nodes that describe one volume element
+	this matrix is of the dimensions [numnodes x numelements]. NOTE: the node numbering startsat one and not at zero!</p>
+	<p> <pre>.scalarfield</pre> - A matrix specifying scalar data to be used as the data of this field. (Can be called .field as well) </p>
+	<p> <pre>.vectorfield</pre> - A matrix specifying vector data [3xN] to be used as the data of this field. </p>
+	<p> <pre>.tensorfield</pre> - A matrix specifying tensor data. For compressed tensors [xx,yy,zz,xy,xz,yz] a [6XN] matrix needs to
+	be specified, for non-compressed tensors [xx,xy,xz,yx,yy,yz,zx,zy,zz] a [9xN] matrix can be specified. The field will only
+	contain the six numbers as the tensor is assumed to be symmetric. Non-symmetric tensors are not supported by SCIRun. </p>
+	<p> <pre>.fieldlocation</pre> - The default field location is assumed to be the nodes, meaning each node has a scalar, vector, or tensor value. 
+	This field is a string with the following options: "node", "edge", "face", and "cell". </p>
+	  
+	<p> Structured meshed </p>  
+	  
+	  
+	  
+    </description>   
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+    </inputs>
+    <outputs>
+      <port>
+        <name>Field1</name>
+		<datatype>SCIRun::Field</datatype>
+      </port>
+	  <port>
+        <name>Field2</name>
+		<datatype>SCIRun::Field</datatype>
+      </port>
+	  <port>
+        <name>Fiekd3</name>
+		<datatype>SCIRun::Field</datatype>
+      </port>
+	  <port>
+        <name>Field4</name>
+		<datatype>SCIRun::Field</datatype>
+      </port>
+	  <port>
+        <name>Field5</name>
+		<datatype>SCIRun::Field</datatype>
+      </port>
+	  <port>
+        <name>Field6</name>
+		<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <parameter>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>
