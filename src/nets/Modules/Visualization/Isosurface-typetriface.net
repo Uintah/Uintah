@@ -74,10 +74,10 @@ set c10 [addConnection $m2 0 $m5 1]
 set c11 [addConnection $m5 0 $m6 2]
 
 # Set GUI Values for the SCIRun->Visualization->Isosurface Module
-setGlobal $m0-isoval {0.51829}
-setGlobal $m0-isoval-min {0.250153893505694}
-setGlobal $m0-isoval-max {0.71552785472453062}
-setGlobal $m0-isoval-list {0.4 0.46 0.51}
+setGlobal $m0-isoval {0.51831}
+setGlobal $m0-isoval-min {0.25138888888888883}
+setGlobal $m0-isoval-max {0.70138888888888895}
+setGlobal $m0-isoval-list {0.3 0.4 0.51}
 setGlobal $m0-active-isoval-selection-tab {2}
 setGlobal $m0-active_tab {}
 
@@ -85,8 +85,8 @@ setGlobal $m0-active_tab {}
 setGlobal $m1-tcl_status {Calling GenStandardColorMaps!}
 
 # Set GUI Values for the SCIRun->Visualization->RescaleColorMap Module
-setGlobal $m2-min {0.250153893505694}
-setGlobal $m2-max {0.71552785472453062}
+setGlobal $m2-min {0.25138888888888883}
+setGlobal $m2-max {0.70138888888888895}
 
 # Set GUI Values for the SCIRun->FieldsData->TransformData Module
 setGlobal $m3-function {x = x - 0.5;
@@ -214,6 +214,8 @@ setGlobal $m6-ViewWindow_0-unused {1}
 setGlobal $m6-ViewWindow_0-unused {1}
 
 # Set GUI Values for the SCIRun->FieldsCreate->SamplePlane Module
+setGlobal $m7-sizex {21}
+setGlobal $m7-sizey {21}
 setGlobal $m7-data-at {Faces}
 
 # Set GUI Values for the SCIRun->FieldsGeometry->QuadToTri Module
