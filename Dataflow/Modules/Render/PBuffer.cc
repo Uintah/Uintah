@@ -41,15 +41,9 @@
  */
 
 #include <sci_defs/chromium_defs.h>
-#include <sci_defs/ogl_defs.h>
 
-#if defined(HAVE_GLEW)
-#include <GL/glew.h>
-#include <GL/glxew.h>
-#else
-#include <GL/gl.h>
-#include <GL/glx.h>
-#endif
+#include <sci_gl.h>
+#include <sci_glx.h>
 
 #include <Dataflow/Modules/Render/PBuffer.h>
 #include <Core/Util/Assert.h>

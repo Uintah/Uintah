@@ -45,9 +45,9 @@
 #include "Ball.h"
 #include "BallMath.h"
 #include <stdio.h>
-#include <GL/gl.h>
+#include <sci_gl.h>
 #include <sci_glu.h>
-#include <GL/glx.h>
+#include <sci_glx.h>
 
 #define LG_NSEGS 4
 #define NSEGS (1<<LG_NSEGS)

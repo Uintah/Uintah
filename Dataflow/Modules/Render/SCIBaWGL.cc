@@ -38,14 +38,8 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <sci_defs/ogl_defs.h>
-
-#if defined( HAVE_GLEW )
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
+#include <sci_gl.h>
 #include <sci_glu.h>
-#endif
 
 #include <Dataflow/Modules/Render/SCIBaWGL.h>
 
