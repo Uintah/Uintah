@@ -72,6 +72,14 @@ ICELabel::ICELabel()
      scinew VarLabel("mass_L_CC",CCVariable<double>::getTypeDescription());
     rho_L_CCLabel = 
      scinew VarLabel("rho_L_CC",CCVariable<double>::getTypeDescription());
+    xmom_L_ME_CCLabel = 
+     scinew VarLabel("xmom_L_ME_CC",CCVariable<double>::getTypeDescription());
+    ymom_L_ME_CCLabel = 
+     scinew VarLabel("ymom_L_ME_CC",CCVariable<double>::getTypeDescription());
+    zmom_L_ME_CCLabel = 
+     scinew VarLabel("zmom_L_ME_CC",CCVariable<double>::getTypeDescription());
+    int_eng_L_ME_CCLabel = 
+     scinew VarLabel("intE_L_ME_CC",CCVariable<double>::getTypeDescription());
 
   // Face centered variables
     uvel_FCLabel       = 
@@ -123,6 +131,11 @@ ICELabel::~ICELabel()
     delete zmom_L_CCLabel;
     delete int_eng_L_CCLabel;
     delete mass_L_CCLabel;
+    delete rho_L_CCLabel;
+    delete xmom_L_ME_CCLabel;
+    delete ymom_L_ME_CCLabel;
+    delete zmom_L_ME_CCLabel;
+    delete int_eng_L_ME_CCLabel;
 
     // Face centered variables
     delete uvel_FCLabel;
@@ -136,6 +149,9 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.10  2000/10/19 02:44:52  guilkey
+// Added code for step5b.
+//
 // Revision 1.9  2000/10/18 21:02:17  guilkey
 // Added code for steps 4 and 5.
 //

@@ -412,6 +412,25 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	  Material* matl = d_sharedState->getMaterial(m);
 	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
 	  if(ice_matl){
+	    t->requires(old_dw,lb->rho_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->xmom_L_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->ymom_L_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->zmom_L_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->int_eng_L_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->vol_frac_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(new_dw,lb->rho_micro_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+	    t->requires(old_dw,lb->cv_CCLabel,
+			matl->getDWIndex(),patch,Ghost::None);
+
+//	    t->computes(new_dw,lb->xmom_L_CCLabel,   matl->getDWIndex(), patch);
+
           }
 	}
 	sched->addTask(t);
@@ -974,11 +993,11 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
   }
 
 
-#if 0
    // This can't be uncommented until ExtraCells are implemented
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     IntVector curcell = *iter;
 
+#if 0
    // Top face
     IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z()); 
 
@@ -1016,8 +1035,8 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
 
    // Front face
     adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1); 
-  }
 #endif
+  }
 
 
   // Apply grid boundary conditions to the velocity
@@ -1406,7 +1425,170 @@ void ICE::actuallyStep5b(const ProcessorGroup*,
   cout << "Doing actually step5b" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
+  int NVFs = d_sharedState->getNumVelFields();
+
+  delt_vartype delT;
+  old_dw->get(delT, d_sharedState->get_delt_label());
   Vector dx = patch->dCell();
+  Vector gravity = d_sharedState->getGravity();
+
+  double temp;
+  int itworked;
+
+  // Create variables for the required values
+  vector<CCVariable<double> > rho_CC(NVFs);
+  vector<CCVariable<double> > xmom_L(NVFs);
+  vector<CCVariable<double> > ymom_L(NVFs);
+  vector<CCVariable<double> > zmom_L(NVFs);
+  vector<CCVariable<double> > int_eng_L(NVFs);
+  vector<CCVariable<double> > vol_frac_CC(NVFs);
+  vector<CCVariable<double> > rho_micro_CC(NVFs);
+  vector<CCVariable<double> > cv_CC(NVFs);
+
+  // Create variables for the results
+  vector<CCVariable<double> > xmom_L_ME(NVFs);
+  vector<CCVariable<double> > ymom_L_ME(NVFs);
+  vector<CCVariable<double> > zmom_L_ME(NVFs);
+  vector<CCVariable<double> > int_eng_L_ME(NVFs);
+
+  vector<double> b(NVFs);
+  vector<double> mass(NVFs);
+  DenseMatrix beta(NVFs,NVFs),a(NVFs,NVFs),acopy(NVFs,NVFs);
+  DenseMatrix K(NVFs,NVFs),H(NVFs,NVFs);
+
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    if(ice_matl){
+      int vfindex = matl->getVFIndex();
+      old_dw->get(rho_CC[vfindex], lb->rho_CCLabel,
+				vfindex, patch, Ghost::None, 0);
+      new_dw->get(xmom_L[vfindex], lb->xmom_L_CCLabel,
+				vfindex, patch, Ghost::None, 0);
+      new_dw->get(ymom_L[vfindex], lb->ymom_L_CCLabel,
+				vfindex, patch, Ghost::None, 0);
+      new_dw->get(zmom_L[vfindex], lb->zmom_L_CCLabel,
+				vfindex, patch, Ghost::None, 0);
+      new_dw->get(int_eng_L[vfindex], lb->int_eng_L_CCLabel,
+				vfindex, patch, Ghost::None, 0);
+      new_dw->get(vol_frac_CC[vfindex], lb->vol_frac_CCLabel,
+				vfindex, patch, Ghost::None, 0);
+      new_dw->get(rho_micro_CC[vfindex], lb->rho_micro_CCLabel,
+				vfindex, patch, Ghost::None, 0);
+      old_dw->get(cv_CC[vfindex], lb->cv_CCLabel,
+				vfindex, patch, Ghost::None, 0);
+
+     new_dw->allocate(xmom_L_ME[vfindex], lb->xmom_L_ME_CCLabel,vfindex, patch);
+     new_dw->allocate(ymom_L_ME[vfindex], lb->ymom_L_ME_CCLabel,vfindex, patch);
+     new_dw->allocate(zmom_L_ME[vfindex], lb->zmom_L_ME_CCLabel,vfindex, patch);
+     new_dw->allocate(int_eng_L_ME[vfindex],lb->int_eng_L_ME_CCLabel,
+								vfindex, patch);
+    }
+  }
+
+  double vol = dx.x()*dx.y()*dx.z();
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    // Do Momentum Exchange here
+    for(int m = 0; m < NVFs; m++){
+      temp = rho_micro_CC[m][*iter];
+      mass[m] = rho_CC[m][*iter] * vol;
+      for(int n = 0; n < NVFs; n++){
+	beta[m][n] = delT * vol_frac_CC[n][*iter] * K[n][m]/temp;
+	a[m][n] = -beta[m][n];
+      }
+    }
+
+    for(int m = 0; m < NVFs; m++){
+      a[m][m] = 1.;
+      for(int n = 0; n < NVFs; n++){
+	a[m][m] +=  beta[m][n];
+      }
+    }
+
+    // x-momentum
+    for(int m = 0; m < NVFs; m++){
+      b[m] = 0.0;
+      for(int n = 0; n < NVFs; n++){
+	b[m] += beta[m][n] *
+		(xmom_L[n][*iter]/mass[n] - xmom_L[m][*iter]/mass[m]);
+      }
+    }
+
+   acopy = a;
+
+   itworked = acopy.solve(b);
+
+    for(int m = 0; m < NVFs; m++){
+      xmom_L_ME[m][*iter] = xmom_L[m][*iter] + b[m]*mass[m];
+    }
+
+    // y-momentum
+    for(int m = 0; m < NVFs; m++){
+      b[m] = 0.0;
+      for(int n = 0; n < NVFs; n++){
+	b[m] += beta[m][n] *
+		(ymom_L[n][*iter]/mass[n] - ymom_L[m][*iter]/mass[m]);
+      }
+    }
+
+   acopy = a;
+
+   itworked = acopy.solve(b);
+
+    for(int m = 0; m < NVFs; m++){
+      ymom_L_ME[m][*iter] = ymom_L[m][*iter] + b[m]*mass[m];
+    }
+
+    // z-momentum
+    for(int m = 0; m < NVFs; m++){
+      b[m] = 0.0;
+      for(int n = 0; n < NVFs; n++){
+	b[m] += beta[m][n] *
+		(zmom_L[n][*iter]/mass[n] - zmom_L[m][*iter]/mass[m]);
+      }
+    }
+
+   acopy = a;
+
+   itworked = acopy.solve(b);
+
+    for(int m = 0; m < NVFs; m++){
+      zmom_L_ME[m][*iter] = zmom_L[m][*iter] + b[m]*mass[m];
+    }
+
+    // Do Energy Exchange here
+    for(int m = 0; m < NVFs; m++){
+      temp = cv_CC[m][*iter]*rho_micro_CC[m][*iter];
+      for(int n = 0; n < NVFs; n++){
+	beta[m][n] = delT * vol_frac_CC[n][*iter] * H[n][m]/temp;
+	a[m][n] = -beta[m][n];
+      }
+    }
+
+    for(int m = 0; m < NVFs; m++){
+      a[m][m] = 1.;
+      for(int n = 0; n < NVFs; n++){
+	a[m][m] +=  beta[m][n];
+      }
+    }
+
+    for(int m = 0; m < NVFs; m++){
+      b[m] = 0.0;
+      for(int n = 0; n < NVFs; n++){
+	b[m] += beta[m][n] *
+		(int_eng_L[n][*iter]/(mass[n]*cv_CC[n][*iter]) -
+		 int_eng_L[m][*iter]/(mass[m]*cv_CC[m][*iter]));
+      }
+    }
+
+   itworked = a.solve(b);
+
+    for(int m = 0; m < NVFs; m++){
+      int_eng_L_ME[m][*iter] =
+		int_eng_L[m][*iter] + b[m]*mass[m]*cv_CC[m][*iter];
+    }
+
+  }
 
 }
 
@@ -1452,6 +1634,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.44  2000/10/19 02:44:52  guilkey
+// Added code for step5b.
+//
 // Revision 1.43  2000/10/18 21:02:17  guilkey
 // Added code for steps 4 and 5.
 //
