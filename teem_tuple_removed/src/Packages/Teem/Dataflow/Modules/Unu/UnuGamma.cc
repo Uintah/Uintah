@@ -13,7 +13,7 @@
 //  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 //  University of Utah. All Rights Reserved.
 //  
-//    File   : UnuHisto.cc
+//    File   : UnuGamma.cc
 //    Author : Martin Cole
 //    Date   : Mon Sep  8 09:46:49 2003
 
@@ -26,41 +26,36 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class UnuHisto : public Module {
+class UnuGamma : public Module {
 public:
-  UnuHisto(SCIRun::GuiContext *ctx);
-  virtual ~UnuHisto();
+  UnuGamma(SCIRun::GuiContext *ctx);
+  virtual ~UnuGamma();
   virtual void execute();
 
 private:
   NrrdIPort*      inrrd_;
-  NrrdIPort*      wnrrd_;
   NrrdOPort*      onrrd_;
 
-  GuiInt       bins_;
+  GuiDouble    gamma_;
   GuiDouble    min_;
   GuiDouble    max_;
-  GuiString    type_;
-  
-  unsigned int get_type(string type);
 };
 
-DECLARE_MAKER(UnuHisto)
+DECLARE_MAKER(UnuGamma)
 
-UnuHisto::UnuHisto(SCIRun::GuiContext *ctx) : 
-  Module("UnuHisto", ctx, Filter, "Unu", "Teem"), 
-  bins_(ctx->subVar("bins")),
+UnuGamma::UnuGamma(SCIRun::GuiContext *ctx) : 
+  Module("UnuGamma", ctx, Filter, "Unu", "Teem"), 
+  gamma_(ctx->subVar("gamma")),
   min_(ctx->subVar("min")),
-  max_(ctx->subVar("max")),
-  type_(ctx->subVar("type"))
+  max_(ctx->subVar("max"))
 {
 }
 
-UnuHisto::~UnuHisto() {
+UnuGamma::~UnuGamma() {
 }
 
 void 
-UnuHisto::execute()
+UnuGamma::execute()
 {
   NrrdDataHandle nrrd_handle;
   NrrdDataHandle weight_handle;
@@ -68,15 +63,10 @@ UnuHisto::execute()
   update_state(NeedData);
 
   inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  wnrrd_ = (NrrdIPort *)get_iport("WeightNrrd");
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
   if (!inrrd_) {
     error("Unable to initialize iport 'InputNrrd'.");
-    return;
-  }
-  if (!wnrrd_) {
-    error("Unable to initialize iport 'WeightNrrd'.");
     return;
   }
   if (!onrrd_) {
@@ -95,20 +85,14 @@ UnuHisto::execute()
   reset_vars();
 
   Nrrd *nin = nrrd_handle->nrrd;
-  Nrrd *weight = 0;
-  if (wnrrd_->get(weight_handle)) {
-    weight = weight_handle->nrrd;    
-  }
   Nrrd *nout = nrrdNew();
 
   NrrdRange *range = nrrdRangeNew(min_.get(), max_.get());
   nrrdRangeSafeSet(range, nin, nrrdBlind8BitRangeState);
 
-  unsigned int type = get_type(type_.get());
-
-  if (nrrdHisto(nout, nin, range, weight, bins_.get(), type)) {
+  if (nrrdArithGamma(nout, nin, range, gamma_.get())) {
     char *err = biffGetDone(NRRD);
-    error(string("Error creating Histogram nrrd: ") + err);
+    error(string("Error creating peforming unu gamma on nrrd: ") + err);
     free(err);
   }
 
@@ -120,26 +104,6 @@ UnuHisto::execute()
   onrrd_->send(out);
 }
 
-unsigned int
-UnuHisto::get_type(string type) {
-  if (type == "nrrdTypeChar") 
-    return nrrdTypeChar;
-  else if (type == "nrrdTypeUChar")  
-    return nrrdTypeUChar;
-  else if (type == "nrrdTypeShort")  
-    return nrrdTypeShort;
-  else if (type == "nrrdTypeUShort") 
-    return nrrdTypeUShort;
-  else if (type == "nrrdTypeInt")  
-    return nrrdTypeInt;
-  else if (type == "nrrdTypeUInt")   
-    return nrrdTypeUInt;
-  else if (type == "nrrdTypeFloat") 
-    return nrrdTypeFloat;
-  else if (type == "nrrdTypeDouble")  
-    return nrrdTypeDouble;
-  else    
-    return nrrdTypeUInt;
-}
 
 } // End namespace SCITeem
+

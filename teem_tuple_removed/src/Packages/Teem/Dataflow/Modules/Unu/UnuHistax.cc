@@ -13,7 +13,7 @@
 //  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 //  University of Utah. All Rights Reserved.
 //  
-//    File   : UnuHisto.cc
+//    File   : UnuHistax.cc
 //    Author : Martin Cole
 //    Date   : Mon Sep  8 09:46:49 2003
 
@@ -26,17 +26,17 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class UnuHisto : public Module {
+class UnuHistax : public Module {
 public:
-  UnuHisto(SCIRun::GuiContext *ctx);
-  virtual ~UnuHisto();
+  UnuHistax(SCIRun::GuiContext *ctx);
+  virtual ~UnuHistax();
   virtual void execute();
 
 private:
   NrrdIPort*      inrrd_;
-  NrrdIPort*      wnrrd_;
   NrrdOPort*      onrrd_;
 
+  GuiInt       axis_;
   GuiInt       bins_;
   GuiDouble    min_;
   GuiDouble    max_;
@@ -45,10 +45,11 @@ private:
   unsigned int get_type(string type);
 };
 
-DECLARE_MAKER(UnuHisto)
+DECLARE_MAKER(UnuHistax)
 
-UnuHisto::UnuHisto(SCIRun::GuiContext *ctx) : 
-  Module("UnuHisto", ctx, Filter, "Unu", "Teem"), 
+UnuHistax::UnuHistax(SCIRun::GuiContext *ctx) : 
+  Module("UnuHistax", ctx, Filter, "Unu", "Teem"),
+  axis_(ctx->subVar("axis")),
   bins_(ctx->subVar("bins")),
   min_(ctx->subVar("min")),
   max_(ctx->subVar("max")),
@@ -56,27 +57,21 @@ UnuHisto::UnuHisto(SCIRun::GuiContext *ctx) :
 {
 }
 
-UnuHisto::~UnuHisto() {
+UnuHistax::~UnuHistax() {
 }
 
 void 
-UnuHisto::execute()
+UnuHistax::execute()
 {
   NrrdDataHandle nrrd_handle;
-  NrrdDataHandle weight_handle;
 
   update_state(NeedData);
 
   inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  wnrrd_ = (NrrdIPort *)get_iport("WeightNrrd");
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
   if (!inrrd_) {
     error("Unable to initialize iport 'InputNrrd'.");
-    return;
-  }
-  if (!wnrrd_) {
-    error("Unable to initialize iport 'WeightNrrd'.");
     return;
   }
   if (!onrrd_) {
@@ -87,18 +82,12 @@ UnuHisto::execute()
     return;
 
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
+  if (!nrrd_handle.get_rep()) 
     return;
-  }
 
   reset_vars();
 
   Nrrd *nin = nrrd_handle->nrrd;
-  Nrrd *weight = 0;
-  if (wnrrd_->get(weight_handle)) {
-    weight = weight_handle->nrrd;    
-  }
   Nrrd *nout = nrrdNew();
 
   NrrdRange *range = nrrdRangeNew(min_.get(), max_.get());
@@ -106,9 +95,9 @@ UnuHisto::execute()
 
   unsigned int type = get_type(type_.get());
 
-  if (nrrdHisto(nout, nin, range, weight, bins_.get(), type)) {
+  if (nrrdHistoAxis(nout, nin, range, axis_.get(), bins_.get(), type)) {
     char *err = biffGetDone(NRRD);
-    error(string("Error creating Histogram nrrd: ") + err);
+    error(string("Error creating Histaxing nrrd: ") + err);
     free(err);
   }
 
@@ -121,7 +110,7 @@ UnuHisto::execute()
 }
 
 unsigned int
-UnuHisto::get_type(string type) {
+UnuHistax::get_type(string type) {
   if (type == "nrrdTypeChar") 
     return nrrdTypeChar;
   else if (type == "nrrdTypeUChar")  
