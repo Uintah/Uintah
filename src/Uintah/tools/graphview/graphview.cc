@@ -8,6 +8,19 @@
 
 using namespace std;
 
+static const char HELP_MSG[] = {
+"Commands\n"
+"--------\n"
+"Help\n"
+"    Display this command summary.\n"
+"Prune <percent>\n"
+"    Hide nodes and edges with costs less than <percent> of the total cost.\n"
+"Quit\n"
+"    Exit the program.\n\n"
+"Each command can be given using its unique shortcut (indicated by the\n"
+"uppercase letter), e.g. \"p 0.5\" is the same as \"prune 0.5\"."
+};
+
 // global variable instatiations
 bool gQuit = false;
 queue<Event> gEventQueue;
@@ -145,7 +158,12 @@ static void handle_console_input()
   string cmd;
   cin >> cmd;
 
-  if ((cmd == "prune") || (cmd == "p") || (cmd == "P")) {
+  switch (tolower(cmd.c_str()[0])) {
+  case 'h':	// help
+    cout << HELP_MSG << endl;
+    break;
+
+  case 'p': { 	// prune
     float percent;
     cin >> percent;
     if (percent < 0) percent = 0;
@@ -155,6 +173,14 @@ static void handle_console_input()
       gGraph->setThresholdPercent(percent);
       gDavinci->setGraph(gGraph); // refresh graph
     }
-  }
+  } break;
 
+  case 'q':
+    gQuit = true;
+    break;
+
+  default:
+    cerr << "Unknown command: " << cmd << endl;
+    break;
+  }
 }
