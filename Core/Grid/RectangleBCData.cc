@@ -12,11 +12,6 @@ RectangleBCData::RectangleBCData()
   
 }
 
-RectangleBCData::RectangleBCData(ProblemSpecP &ps) 
-{
-  
-}
-
 RectangleBCData::RectangleBCData(BCData& bc)
   : d_bc(bc)
 {
@@ -41,61 +36,16 @@ void RectangleBCData::addBCData(BCData& bc)
   d_bc = bc;
 }
 
+
+void RectangleBCData::addBC(BoundCondBase* bc)
+{
+  d_bc.setBCValues(bc);
+}
+
 void RectangleBCData::getBCData(BCData& bc) const
 {
   bc = d_bc;
 }
-
-void RectangleBCData::setBoundaryIterator(vector<IntVector>& b)
-{
-  boundary = b;
-}
-
-void RectangleBCData::setInteriorIterator(vector<IntVector>& i)
-{
-  interior = i;
-}
-
-void RectangleBCData::setSFCXIterator(vector<IntVector>& i)
-{
-  sfcx = i;
-}
-
-void RectangleBCData::setSFCYIterator(vector<IntVector>& i)
-{
-  sfcy = i;
-}
-
-void RectangleBCData::setSFCZIterator(vector<IntVector>& i)
-{
-  sfcz = i;
-}
-
-void RectangleBCData::getBoundaryIterator(vector<IntVector>& b) const
-{
-  b = boundary;
-}
-
-void RectangleBCData::getInteriorIterator(vector<IntVector>& i) const
-{
-  i = interior;
-}
-
-void RectangleBCData::getSFCXIterator(vector<IntVector>& i) const
-{
-  i = sfcx;
-}
-
-void RectangleBCData::getSFCYIterator(vector<IntVector>& i) const
-{
-  i = sfcy;
-}
-
-void RectangleBCData::getSFCZIterator(vector<IntVector>& i) const
-{
-  i = sfcz;
-}
-
 
 bool RectangleBCData::inside(const Point &p) const 
 {

@@ -8,7 +8,8 @@
 #include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/BoundCondData.h>
-#include <Packages/Uintah/Core/Grid/BCDataBase.h>
+#include <Packages/Uintah/Core/Grid/BCData.h>
+#include <Packages/Uintah/Core/Grid/BCGeomBase.h>
 #include <Packages/Uintah/Core/Grid/BCDataArray.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 
@@ -50,13 +51,22 @@ WARNING
     BCReader();
     ~BCReader();
     void read(ProblemSpecP& ps);
-    void getBC(Patch::FaceType& face, BCData& bc);
-    const BCDataArray getBC(Patch::FaceType& face) const;
+    BCGeomBase* createBoundaryConditionFace(ProblemSpecP& ps,
+					    Patch::FaceType& face_side);
+    void getBC(Patch::FaceType& face, BoundCondData& bc);
+    const BCDataArray getBCDataArray(Patch::FaceType& face) const;
     void combineBCS();
-    
+    bool compareBCData(BCGeomBase* b1, BCGeomBase* b2);
+
    private:
-    map<Patch::FaceType,BCDataArray > d_bc;
+    friend class Level;
+    friend class Patch;
+    map<Patch::FaceType,BCDataArray > d_BCReaderData;
+    vector<BoundCondData> d_bcs;
   };
+
+  void print(BCGeomBase* p);
+
 } // End namespace Uintah
 
 #endif

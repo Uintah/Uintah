@@ -37,7 +37,9 @@ SRCS     += \
 	$(SRCDIR)/BoundCondFactory.cc \
 	$(SRCDIR)/BoundCondReader.cc \
 	$(SRCDIR)/BoundCondData.cc \
+	$(SRCDIR)/BCData.cc \
 	$(SRCDIR)/BCDataArray.cc \
+	$(SRCDIR)/BCGeomBase.cc \
 	$(SRCDIR)/UnionBCData.cc \
 	$(SRCDIR)/DifferenceBCData.cc \
 	$(SRCDIR)/SideBCData.cc \

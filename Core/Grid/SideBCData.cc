@@ -11,11 +11,6 @@ SideBCData::SideBCData()
   
 }
 
-SideBCData::SideBCData(ProblemSpecP &ps) 
-{
-  
-}
-
 
 SideBCData::SideBCData(BCData& bc) 
   : d_bc(bc)
@@ -41,6 +36,9 @@ SideBCData::SideBCData(const SideBCData& mybc)
 
 SideBCData& SideBCData::operator=(const SideBCData& rhs)
 {
+  if (this == &rhs)
+    return *this;
+
   d_bc = rhs.d_bc;
   boundary = rhs.boundary;
   interior = rhs.interior;
@@ -62,63 +60,16 @@ void SideBCData::addBCData(BCData& bc)
   d_bc = bc;
 }
 
+void SideBCData::addBC(BoundCondBase* bc)
+{
+  d_bc.setBCValues(bc);
+}
+
+
 void SideBCData::getBCData(BCData& bc) const
 {
   bc = d_bc;
 }
-
-void SideBCData::setBoundaryIterator(vector<IntVector>& b)
-{
-  boundary=b;
-}
-
-void SideBCData::setInteriorIterator(vector<IntVector>& i)
-{
-  interior=i;
-}
-
-void SideBCData::setSFCXIterator(vector<IntVector>& i)
-{
-  sfcx=i;
-}
-
-void SideBCData::setSFCYIterator(vector<IntVector>& i)
-{
-  sfcy=i;
-}
-
-void SideBCData::setSFCZIterator(vector<IntVector>& i)
-{
-  sfcz=i;
-}
-
-
-void SideBCData::getBoundaryIterator(vector<IntVector>& b) const
-{
-  b = boundary;
-}
-
-void SideBCData::getInteriorIterator(vector<IntVector>& i) const
-{
-  i = interior;
-}
-
-void SideBCData::getSFCXIterator(vector<IntVector>& i) const
-{
-  i = sfcx;
-}
-
-void SideBCData::getSFCYIterator(vector<IntVector>& i) const
-{
-  i = sfcy;
-}
-
-void SideBCData::getSFCZIterator(vector<IntVector>& i) const
-{
-  i = sfcz;
-}
-
-
 
 bool SideBCData::inside(const Point &p) const 
 {

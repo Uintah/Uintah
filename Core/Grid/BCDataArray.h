@@ -1,15 +1,19 @@
 #ifndef UINTAH_GRID_BCDataArray_H
 #define UINTAH_GRID_BCDataArray_H
 
+#include <Packages/Uintah/Core/Grid/BCData.h>
 #include <Packages/Uintah/Core/Grid/BoundCondData.h>
-#include <Packages/Uintah/Core/Grid/BCDataBase.h>
+#include <Packages/Uintah/Core/Grid/BCGeomBase.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <map>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
+  using std::vector;
+  using std::map;
 
 /**************************************
 
@@ -42,31 +46,36 @@ WARNING
    class BCDataArray {
    public:
      BCDataArray();
-     BCDataArray(BCData& bc);
-     BCDataArray(const std::string& type);
+     ~BCDataArray();
      BCDataArray(const BCDataArray& bc);
      BCDataArray& operator=(const BCDataArray& bc);
-     BCDataArray(ProblemSpecP& ps);
-     ~BCDataArray();
+
      BCDataArray* clone();
-     void getBCData(BCData& bc, int i) const;
-     void addBCData(BCData& bc);
-     void addBCData(BCDataBase* bc);
-     void setBoundaryIterator(std::vector<IntVector>& b, int i);
-     void setInteriorIterator(std::vector<IntVector>& i, int ii);
-     void setSFCXIterator(std::vector<IntVector>& i, int ii);
-     void setSFCYIterator(std::vector<IntVector>& i, int ii);
-     void setSFCZIterator(std::vector<IntVector>& i, int ii);
-     void getBoundaryIterator(std::vector<IntVector>& b, int i) const;
-     void getInteriorIterator(std::vector<IntVector>& i, int ii) const;
-     void getSFCXIterator(std::vector<IntVector>& i, int ii) const;
-     void getSFCYIterator(std::vector<IntVector>& i, int ii) const;
-     void getSFCZIterator(std::vector<IntVector>& i, int ii) const;
-     int getNumberChildren() const;
-     BCDataBase* getChild(int i) const;
-         
+     const BoundCondBase* getBoundCondData(int mat_id,string type, int i) const;
+     void addBCData(int mat_id,BCGeomBase* bc);
+     void setBoundaryIterator(int mat_id,vector<IntVector>& b, int i);
+     void setNBoundaryIterator(int mat_id,vector<IntVector>& b, int i);
+     void setInteriorIterator(int mat_id,vector<IntVector>& i, int ii);
+     void setSFCXIterator(int mat_id,vector<IntVector>& i, int ii);
+     void setSFCYIterator(int mat_id,vector<IntVector>& i, int ii);
+     void setSFCZIterator(int mat_id,vector<IntVector>& i, int ii);
+     void getBoundaryIterator(int mat_id,vector<IntVector>& b, int i) const;
+     void getNBoundaryIterator(int mat_id,vector<IntVector>& b, int i) const;
+     void getInteriorIterator(int mat_id,vector<IntVector>& i, int ii) const;
+     void getSFCXIterator(int mat_id,vector<IntVector>& i, int ii) const;
+     void getSFCYIterator(int mat_id,vector<IntVector>& i, int ii) const;
+     void getSFCZIterator(int mat_id,vector<IntVector>& i, int ii) const;
+     int getNumberChildren(int mat_id) const;
+     BCGeomBase* getChild(int mat_id,int i) const;
+     void print();
+
+     typedef map<int,vector<BCGeomBase*> > bcDataArrayType;         
    private:
-     std::vector<BCDataBase*> child;
+     // The map is for the mat_id.  -1 is for mat_id = "all", 0, for 
+     // mat_id = "0", etc.
+     bcDataArrayType d_BCDataArray;
+     friend class Patch;
+     friend class BCReader;
    };
 
 } // End namespace Uintah

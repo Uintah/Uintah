@@ -2,12 +2,14 @@
 #define UINTAH_GRID_BoundCond_H
 
 #include <Packages/Uintah/Core/Grid/BoundCondBase.h>
+#include <Core/Geometry/Vector.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 using std::string;
+ using namespace SCIRun;
    
 /**************************************
 
@@ -37,34 +39,30 @@ WARNING
   
 ****************************************/
 
-  template <class T>  class BoundCond : public BoundCondBase {
-   public:
-     BoundCond() {};
-     BoundCond(const string& kind) 
-       {
-	 BoundCondBase();
-	 d_kind=kind;
+ template <class T>  class BoundCond : public BoundCondBase {
+ public:
+   BoundCond() {};
+   BoundCond(const string& kind) : BoundCondBase()
+     {
+       d_kind=kind;
      };
-     virtual ~BoundCond() {};
-     string getKind() const 
-       {
-	 // Tells whether it is Dirichlet or Neumann
-	 return d_kind;
-       };
-     virtual T getValue() const = 0; 
-
-   protected:
-	std::string d_kind;
-         
-   private:
-#if 0
-      BoundCond(const BoundCond<T>&);
-      BoundCond& operator=(const BoundCond<T>&);
-#endif
-      
-     
-   };
-
+   virtual ~BoundCond() {};
+   virtual BoundCond* clone() = 0;
+   string getKind() const 
+     {
+       // Tells whether it is Dirichlet or Neumann
+       return d_kind;
+     };
+   T getValue() const { return d_value;}; 
+   
+ protected:
+   std::string d_kind;
+   T d_value;
+   
+ };
+ 
 } // End namespace Uintah
+
+
 
 #endif

@@ -1,9 +1,9 @@
 #ifndef __BOUND_COND_FACTORY_H__
 #define __BOUND_COND_FACTORY_H__
 
-// add #include for each ConstitutiveModel here
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/BoundCondData.h>
+#include <Packages/Uintah/Core/Grid/BoundCondBase.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -15,7 +15,9 @@ class BoundCondFactory
 {
 public:
   // this function has a switch for all known BC_types
-  static void create(const ProblemSpecP& ps,BCData& bcs);
+  static void create(const ProblemSpecP& ps,BoundCondData& bcs);
+  static void create(ProblemSpecP& ps,BoundCondBase* &bc, 
+		     int& mat_id);
 };
 
 } // End namespace Uintah

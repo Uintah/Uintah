@@ -5,24 +5,17 @@
 
 using namespace SCIRun;
 using namespace Uintah;
+using std::vector;
 
-DifferenceBCData::DifferenceBCData(ProblemSpecP &ps) 
-{
-  //BoundCondFactory::create(ps,child);
-  
-}
-
-DifferenceBCData::DifferenceBCData(BCDataBase* p1,BCDataBase* p2)
-  : left(p1), right(p2)
+DifferenceBCData::DifferenceBCData(BCGeomBase* p1,BCGeomBase* p2)
+  : left(p1->clone()), right(p2->clone())
 {
 }
 
 DifferenceBCData::DifferenceBCData(const DifferenceBCData& rhs)
 {
-  BCDataBase* l = rhs.left->clone();
-  BCDataBase* r = rhs.right->clone();
-  left = l;
-  right = r;
+  left=rhs.left->clone();
+  right=rhs.right->clone();
 
   boundary=rhs.boundary;
   interior=rhs.interior;
@@ -34,11 +27,17 @@ DifferenceBCData::DifferenceBCData(const DifferenceBCData& rhs)
 
 DifferenceBCData& DifferenceBCData::operator=(const DifferenceBCData& rhs)
 {
-  BCDataBase* l = rhs.left->clone();
-  BCDataBase* r = rhs.right->clone();
+  if (this == &rhs)
+    return *this;
 
-  left = l;
-  right = r;
+  // Delete the lhs
+  delete right;
+  delete left;
+
+  // Copy the rhs to the lhs
+
+  left = rhs.left->clone();
+  right = rhs.right->clone();
 
   boundary = rhs.boundary;
   interior = rhs.interior;
@@ -65,62 +64,16 @@ void DifferenceBCData::addBCData(BCData& bc)
 
 }
 
+
+void DifferenceBCData::addBC(BoundCondBase* bc)
+{
+
+}
+
 void DifferenceBCData::getBCData(BCData& bc) const
 {
   left->getBCData(bc);
 }
-
-void DifferenceBCData::setBoundaryIterator(vector<IntVector>& b) 
-{
-  boundary = b;
-}
-
-void DifferenceBCData::setInteriorIterator(vector<IntVector>& i) 
-{
-  interior = i;
-}
-
-void DifferenceBCData::setSFCXIterator(vector<IntVector>& i)
-{
-  sfcx = i;
-}
-
-void DifferenceBCData::setSFCYIterator(vector<IntVector>& i)
-{
-  sfcy = i;
-}
-
-void DifferenceBCData::setSFCZIterator(vector<IntVector>& i)
-{
-  sfcz = i;
-}
-
-void DifferenceBCData::getBoundaryIterator(vector<IntVector>& b) const
-{
-  b = boundary;
-}
-
-void DifferenceBCData::getInteriorIterator(vector<IntVector>& i) const
-{
-  i = interior;
-}
-
-void DifferenceBCData::getSFCXIterator(vector<IntVector>& i) const
-{
-  i = sfcx;
-}
-
-void DifferenceBCData::getSFCYIterator(vector<IntVector>& i) const
-{
-  i = sfcy;
-}
-
-void DifferenceBCData::getSFCZIterator(vector<IntVector>& i) const
-{
-  i = sfcz;
-}
-
-
 
 bool DifferenceBCData::inside(const Point &p) const 
 {

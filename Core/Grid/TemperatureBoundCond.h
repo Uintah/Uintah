@@ -38,15 +38,8 @@ WARNING
    public:
       TemperatureBoundCond(ProblemSpecP& ps,std::string& kind);
       virtual ~TemperatureBoundCond();
-      virtual double getValue() const;
-      
+      virtual TemperatureBoundCond* clone();
    private:
-#if 0
-      TemperatureBoundCond(const TemperatureBoundCond&);
-      TemperatureBoundCond& operator=(const TemperatureBoundCond&);
-#endif
-
-      double d_temp;
    };
 } // End namespace Uintah
 

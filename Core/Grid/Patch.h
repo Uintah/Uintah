@@ -5,6 +5,7 @@
 //#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/BCDataArray.h>
+#include <Packages/Uintah/Core/Grid/BoundCondData.h>
 #include <Packages/Uintah/Core/Grid/fixedvector.h>
 
 #include <Core/Malloc/Allocator.h>
@@ -330,7 +331,7 @@ WARNING
      
      BCType getBCType(FaceType face) const;
      void setBCType(FaceType face, BCType newbc);
-     void setBCValues(FaceType face, BCData& bc);
+     void setBCValues(FaceType face, BoundCondData& bc);
      void setArrayBCValues(FaceType face, BCDataArray& bc);
      const BoundCondBase* getBCValues(int mat_id,string type,
 				      FaceType face) const;
@@ -344,6 +345,7 @@ WARNING
 					   vector<IntVector>& sfx,
 					   vector<IntVector>& sfy,
 					   vector<IntVector>& sfz,
+					   vector<IntVector>& nb,
 					   int child) const;
      
 
@@ -581,7 +583,7 @@ WARNING
      
      // Added an extra vector<> for each material
      BCType d_bctypes[numFaces];  // specifies bc type for each face
-     vector<BCData> d_bcs;
+     vector<BoundCondData> d_bcs;
      map<Patch::FaceType,BCDataArray > array_bcs;
      bool in_database;
      bool have_layout;

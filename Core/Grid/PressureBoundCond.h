@@ -41,15 +41,9 @@ WARNING
    public:
      PressureBoundCond(ProblemSpecP& ps,std::string& kind);
      virtual ~PressureBoundCond();
-     virtual double  getValue() const;
+     virtual PressureBoundCond* clone();
      
    private:
-#if 0
-     PressureBoundCond(const PressureBoundCond&);
-     PressureBoundCond& operator=(const PressureBoundCond&);
-#endif
-     
-     double  d_press;
      
    };
 } // End namespace Uintah
