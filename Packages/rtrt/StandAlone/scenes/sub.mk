@@ -31,12 +31,16 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/vfem.mo \
 	$(SRCDIR)/uintahdata.mo \
 	$(SRCDIR)/uintahisosurface.mo \
+	$(SRCDIR)/uintahparticle2.mo \
 	$(SRCDIR)/uintahparticle.mo
 
 #add the scenes to the targets
 ALLTARGETS := $(ALLTARGETS) $(SCENES)
 
 RTRT_ULIBS = -lPackages_rtrt_Core -lPackages_Uintah_CCA_Components_DataArchiver -lPackages_Uintah_CCA_Components_MPM -lPackages_Uintah_Core_Grid -lCore_Geometry -lCore_Containers -lCore_Exceptions -lDataflow_Comm -lDataflow_XMLUtil $(XML_LIBRARY) $(MPI_LIBRARY) -lCore_Malloc
+
+$(SRCDIR)/uintahparticle2.mo: $(SRCDIR)/uintahparticle2.o
+	$(CXX) -o $@ $(LDFLAGS) -shared -Wl,-no_unresolved $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS)
 
 $(SRCDIR)/uintahparticle.mo: $(SRCDIR)/uintahparticle.o
 	$(CXX) -o $@ $(LDFLAGS) -shared -Wl,-no_unresolved $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS)
