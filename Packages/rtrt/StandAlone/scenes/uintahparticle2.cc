@@ -175,6 +175,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -verbose (prints status of output)\n";
     cerr << "  -timesteplow [int] (only outputs timestep from int)\n";
     cerr << "  -timestephigh [int] (only outputs timesteps upto int)\n";
+    cerr << "  -timestepinc [int] (use only every nth timestep)\n";
     cerr << "  -gridcellsize [int]\n";
     cerr << "  -griddepth [int]\n";
     cerr << "  -colordata [int]\n";
@@ -1030,6 +1031,38 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
                         for(ParticleSubset::iterator iter = pset->begin();
                             iter != pset->end(); iter++) {
                           float temp_value= (float)value[*iter];
+                          *p++ = temp_value;
+                        }
+                        // add the extracted data to the variable
+                        vardata.material_set.push_back(md);
+                      }
+                    } // end material loop
+                    // now this variable for this patch is completely extracted
+                    // put it in patchdata
+                    patchdata.variables.push_back(vardata);
+                  }
+                break;
+                case Uintah::TypeDescription::float_type:
+                  {
+                    if (!do_PTvar_all) break;
+                    VariableData vardata;
+                    vardata.name = var;
+                    for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                        matlIter != matls.end(); matlIter++){
+                      int matl = *matlIter;
+                    
+                      ParticleVariable<float> value;
+                      da->query(value, var, matl, patch, time);
+                      ParticleSubset* pset = value.getParticleSubset();
+                      if (!pset) break;
+                      int numParticles = pset->numParticles();
+                      if (numParticles > 0) {
+                        // extract the data
+                        MaterialData md(matl,numParticles);
+                        float *p = md.data;
+                        for(ParticleSubset::iterator iter = pset->begin();
+                            iter != pset->end(); iter++) {
+                          float temp_value= value[*iter];
                           *p++ = temp_value;
                         }
                         // add the extracted data to the variable
