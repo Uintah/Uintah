@@ -634,7 +634,8 @@ Dpy::renderFrame() {
       else
 	sprintf( buf, "%2.2lf fps - %3.1lf spf", (priv->FrameRate) ,
 		 1.0f/(priv->FrameRate));
-      
+
+      glViewport(0, 0, priv->xres, priv->yres);
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
       gluOrtho2D(0, priv->xres, 0, priv->yres);
