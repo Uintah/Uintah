@@ -3542,14 +3542,15 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       for (int dir = 0; dir <3; dir++) {  //loop over all three directons
         for(int m = 0; m < numALLMatls; m++) {
           b[m] = 0.0;
+	  const Vector& vel_m = vel_CC[m][c];
           for(int n = 0; n < numALLMatls; n++) {
            b[m] += beta(m,n) *
-             (vel_CC[n][c][dir] - vel_CC[m][c][dir]);
+             (vel_CC[n][c][dir] - vel_m[dir]);
           }
         }
         a_inverse.multiply(b,X);
         for(int m = 0; m < numALLMatls; m++) {
-          vel_CC[m][c][dir] =  vel_CC[m][c][dir] + X[m];
+          vel_CC[m][c][dir] += X[m];
         }
       }
 
