@@ -1184,7 +1184,7 @@ GeomCones::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(!pre_draw(di, matl, 1)) return;
 
-    di->polycount+=points_.size() * nu_ * 2;
+    di->polycount += points_.size() * nu_ / 2;
 
     const bool texturing =
       di->using_cmtexture_ && indices_.size() == points_.size() / 2;
