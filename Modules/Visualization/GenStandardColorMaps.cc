@@ -1,58 +1,58 @@
-  
+/************************************** 
+CLASS 
+   GenStandardColorMaps
 
-/**************************************************************** 
- *  GenStandardColormaps:  This module is used to create some   *
- *     "standard" non-editable colormaps in SCIRun/Uintah.      *
- *     Non-editable simply means that the colors cannot be      *
- *     interactively manipulated.  The Module does, allow       *
- *     for the the resolution of the colormaps to be changed.   *
- *                                                              * 
- *  Written by:                                                 * 
- *   Kurt Zimmerman                                             * 
- *   Department of Computer Science                             * 
- *   University of Utah                                         * 
- *   December 1998                                              * 
- *                                                              * 
- *  Copyright (C) 1998 SCI Group/Uintah                         *
- *                                                              * 
- *                                                              * 
- ****************************************************************/ 
+   A module that generates fixed Colormaps for visualation purposes.
+
+GENERAL INFORMATION 
+   GenStandarColorMaps.h
+   Written by: 
+
+     Kurt Zimmerman
+     Department of Computer Science 
+     University of Utah 
+     December 1998
+
+     Copyright (C) 1998 SCI Group
+
+KEYWORDS 
+   Colormap, Transfer Function
+
+DESCRIPTION 
+     This module is used to create some   
+     "standard" non-editable colormaps in SCIRun/Uintah.      
+     Non-editable simply means that the colors cannot be      
+     interactively manipulated.  The Module does, allow       
+     for the the resolution of the colormaps to be changed.
+     This class sets up the data structures for Colormaps and 
+     creates a module from which the user can choose from several
+     popular colormaps.
+
+****************************************/   
+
 
 #include <Classlib/NotFinished.h> 
-#include <Dataflow/Module.h> 
-#include <Datatypes/ColorMap.h>
 #include <Datatypes/ColorMapPort.h>
 #include <Geom/Material.h>
-#include <Geom/Color.h>
-#include <TCL/TCLvar.h> 
 #include <Malloc/Allocator.h>
 #include <math.h>
 #include <iostream.h> 
 #include <strstream.h>
 #include <iomanip.h>
 #include <stdio.h>
+#include <Modules/Visualization/GenStandardColorMaps.h>
 
+namespace SCI {
+namespace Visualization {
 
-// The abstract class for non-editable Colormaps
-class StandardColorMap
-{
- public:
-  
-  StandardColorMap();
-  virtual ~StandardColorMap(){}
-  ColorMapHandle genMap(const int res);
-  const Array1< Color >& getColors() {return colors;}
- protected:
-    Array1< Color > colors;
-};
-
-StandardColorMap::StandardColorMap()
+GenStandardColorMaps::StandardColorMap::StandardColorMap()
 {
   // cerr<<"Error: instanciating the abstract class StandarColorMap\n";
 }
 
-
-ColorMapHandle StandardColorMap::genMap(const int res)
+// ---------------------------------------------------------------------- // 
+ColorMapHandle 
+GenStandardColorMaps::StandardColorMap::genMap(const int res)
 {
   int n = colors.size();
   int m = res;
@@ -93,15 +93,8 @@ ColorMapHandle StandardColorMap::genMap(const int res)
   return scinew ColorMap(rgbs,rgbT,alphas,alphaT,m);
 }
 
-class GrayColorMap : public StandardColorMap
-{
- public:
-  GrayColorMap();
-  virtual ~GrayColorMap(){}
-  
-};
-
-GrayColorMap::GrayColorMap()
+// ---------------------------------------------------------------------- // 
+GenStandardColorMaps::GrayColorMap::GrayColorMap()
 {
   int ncolors =  2;
   colors.setsize(ncolors);
@@ -112,15 +105,8 @@ GrayColorMap::GrayColorMap()
   }
 } 
 // ---------------------------------------------------------------------- // 
-class InverseGrayColorMap : public StandardColorMap
-{
- public:
-  InverseGrayColorMap();
-  virtual ~InverseGrayColorMap(){}
   
-};
-  
-InverseGrayColorMap::InverseGrayColorMap()
+GenStandardColorMaps::InverseGrayColorMap::InverseGrayColorMap()
 {
   int ncolors =   2;
   int i,j;
@@ -132,16 +118,8 @@ InverseGrayColorMap::InverseGrayColorMap()
   }
 }
 // ---------------------------------------------------------------------- // 
-class RainbowColorMap : public StandardColorMap
-{
- public:
-  RainbowColorMap();
-  virtual ~RainbowColorMap(){}
 
-  
-};
-
-RainbowColorMap::RainbowColorMap()
+GenStandardColorMaps::RainbowColorMap::RainbowColorMap()
 {
   int cols[][3] =  {{ 255, 0, 0},
 		   { 255, 102, 0},
@@ -163,15 +141,8 @@ RainbowColorMap::RainbowColorMap()
     colors[i].b(cols[i][2]/255.0);
   }
 }
-
-class InverseRainbow : public StandardColorMap
-{
- public:
-  InverseRainbow();
-  virtual ~InverseRainbow(){}
-};
-
-InverseRainbow::InverseRainbow()
+// ---------------------------------------------------------------------- // 
+GenStandardColorMaps::InverseRainbow::InverseRainbow()
 {
   int cols[][3] =  {{ 0, 0, 255},
 		   { 0, 102, 255},
@@ -196,14 +167,7 @@ InverseRainbow::InverseRainbow()
 
 
 // ---------------------------------------------------------------------- // 
-class DarkHueColorMap : public StandardColorMap
-{
- public:
-  DarkHueColorMap();
-  virtual ~DarkHueColorMap(){}
-};
-
-DarkHueColorMap::DarkHueColorMap()
+GenStandardColorMaps::DarkHueColorMap::DarkHueColorMap()
 {
   int cols[][3] =  {{ 0,  0,  0 },
 		   { 0, 28, 39 },
@@ -235,14 +199,7 @@ DarkHueColorMap::DarkHueColorMap()
 }
 
 // ---------------------------------------------------------------------- // 
-class LightHueColorMap : public StandardColorMap
-{
- public:
-  LightHueColorMap();
-  virtual ~LightHueColorMap(){}
-};
-
-LightHueColorMap::LightHueColorMap()
+GenStandardColorMaps::LightHueColorMap::LightHueColorMap()
 {
   int cols[][3] =  {{ 64,  64,  64 },
 		   { 64, 80, 84 },
@@ -274,14 +231,7 @@ LightHueColorMap::LightHueColorMap()
 }
 
 // ---------------------------------------------------------------------- // 
-class InverseDarkHue : public StandardColorMap
-{
- public:
-  InverseDarkHue();
-  virtual ~InverseDarkHue(){}
-};
-
-InverseDarkHue::InverseDarkHue()
+GenStandardColorMaps::InverseDarkHue::InverseDarkHue()
 {
   int cols[][3] =  {{ 239, 253, 174 },
 		   { 251, 255, 121 },
@@ -313,15 +263,8 @@ InverseDarkHue::InverseDarkHue()
 }
 
 // ---------------------------------------------------------------------- // 
- class BlackBodyColorMap : public StandardColorMap
-{
- public:
-  BlackBodyColorMap();
-  virtual ~BlackBodyColorMap(){}
-  
-};
 
-BlackBodyColorMap::BlackBodyColorMap()
+GenStandardColorMaps::BlackBodyColorMap::BlackBodyColorMap()
 {
   int  cols[][3] = { {0, 0, 0},
 		    {52, 0, 0},
@@ -348,26 +291,6 @@ BlackBodyColorMap::BlackBodyColorMap()
 }
 
 // ---------------------------------------------------------------------- // 
-class GenStandardColorMaps : public Module { 
-  
-public: 
-  
-  TCLstring tcl_status; 
-  GenStandardColorMaps(const clString& id); 
-  GenStandardColorMaps(const GenStandardColorMaps&, int deep); 
-  virtual ~GenStandardColorMaps(); 
-  virtual Module* clone(int deep); 
-  virtual void execute(); 
-  void tcl_command( TCLArgs&, void* );
- private:
-
-  TCLint mapType;
-  TCLint minRes;
-  TCLint resolution;
-  ColorMapOPort  *outport;
-  Array1<StandardColorMap *> mapTypes;
-  
-}; //class 
   
 
 extern "C" { 
@@ -438,7 +361,6 @@ void GenStandardColorMaps::tcl_command( TCLArgs& args, void* userdata)
     }
 
 
-    reset_vars();
     const Array1< Color >& colors = mapTypes[mapType.get()]->getColors();
     int n = colors.size();
     int m = resolution.get();
@@ -498,3 +420,5 @@ void GenStandardColorMaps::execute()
   
 } 
 //--------------------------------------------------------------- 
+} // end namespace Visualization
+} // end namespace SCI

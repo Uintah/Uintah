@@ -1,3 +1,34 @@
+##############################
+#CLASS 
+#   GenStandardColorMaps
+#
+#   A module that generates fixed Colormaps for visualation purposes.
+#
+#GENERAL INFORMATION 
+#   GenStandarColorMaps.h
+#   Written by: 
+#
+#     Kurt Zimmerman
+#     Department of Computer Science 
+#     University of Utah 
+#     December 1998
+#
+#     Copyright (C) 1998 SCI Group
+#
+#KEYWORDS 
+#   Colormap, Transfer Function
+#
+#DESCRIPTION 
+#     This module is used to create some   
+#     "standard" non-editable colormaps in SCIRun/Uintah.      
+#     Non-editable simply means that the colors cannot be      
+#     interactively manipulated.  The Module does, allow       
+#     for the the resolution of the colormaps to be changed.
+#     This class sets up the data structures for Colormaps and 
+#     creates a module from which the user can choose from several
+#     popular colormaps.
+#
+##############################
 itcl_class GenStandardColorMaps { 
 
     inherit Module 
