@@ -46,7 +46,7 @@ inline void* TrivialAllocator::alloc()
 	chunklist=q;
 	q++;
 	p=q;
-	for(int i=1;i<nalloc;i++){
+	for(unsigned int i=1;i<nalloc;i++){
 	    List* n=(List*)(((char*)q)+size);
 	    q->next=n;
 	    q=n;
