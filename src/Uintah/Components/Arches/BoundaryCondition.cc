@@ -27,6 +27,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/UnionGeometryPiece.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/IntVector.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <Uintah/Exceptions/ParameterNotFound.h>
 #include <Uintah/Interface/Scheduler.h>
@@ -54,9 +55,13 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
 				     Properties* props) :
                                      d_turbModel(turb_model), d_props(props)
 {
-  // The input labels first
+  // Number of scalars from numMixingVars
   d_nofScalars = d_props->getNumMixVars();
-  d_cellTypeLabel = scinew VarLabel("CellType", 
+
+  // The input labels first
+  d_cellInfoLabel = scinew VarLabel("cellInformation",
+			    PerPatch<CellInformation*>::getTypeDescription());
+  d_cellTypeLabel = scinew VarLabel("cellType", 
 				    CCVariable<int>::getTypeDescription() );
   d_pressureINLabel = scinew VarLabel("pressureIN", 
 				   CCVariable<double>::getTypeDescription() );
@@ -282,43 +287,9 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     }
   }
 
-  // set boundary type for inlet flow field
+  // Find the geometry of the patch
   Box patchBox = patch->getBox();
   cout << "Patch box = " << patchBox << endl;
-
-  for (int ii = 0; ii < d_numInlets; ii++) {
-    int nofGeomPieces = d_flowInlets[ii].d_geomPiece.size();
-    for (int jj = 0; jj < nofGeomPieces; jj++) {
-      GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece[jj];
-      Box geomBox = piece->getBoundingBox();
-      cout << "Inlet " << ii << " Geometry box = " << geomBox << endl;
-      Box b = geomBox.intersect(patchBox);
-      cout << "Inlet " << ii << " Intersection box = " << b << endl;
-      // check for another geometry
-      if (b.degenerate())
-	continue; // continue the loop for other inlets
-      // iterates thru box b, converts from geometry space to index space
-      // make sure this works
-      CellIterator iter = patch->getCellIterator(b);
-      IntVector idxLo = iter.begin();
-      IntVector idxHi = iter.end() - IntVector(1,1,1);
-      celltypeval = d_flowInlets[ii].d_cellTypeID;
-      cout << "Flow inlet " << ii << " cell type val = " << celltypeval << endl;
-      FORT_CELLTYPEINIT(domLo.get_pointer(), domHi.get_pointer(),
-			idxLo.get_pointer(), idxHi.get_pointer(),
-			cellType.getPointer(), &celltypeval);
-    }
-  }
-  // Testing if correct values have been put
-  cout << " In C++ (BoundaryCondition.cc) after flow inlet init " << endl;
-  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-	cout << "(" << ii << "," << jj << "," << kk << ") : "
-	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
-      }
-    }
-  }
 
   // wall boundary type
   {
@@ -425,6 +396,41 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     }
   }
 
+  // set boundary type for inlet flow field
+  for (int ii = 0; ii < d_numInlets; ii++) {
+    int nofGeomPieces = d_flowInlets[ii].d_geomPiece.size();
+    for (int jj = 0; jj < nofGeomPieces; jj++) {
+      GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece[jj];
+      Box geomBox = piece->getBoundingBox();
+      cout << "Inlet " << ii << " Geometry box = " << geomBox << endl;
+      Box b = geomBox.intersect(patchBox);
+      cout << "Inlet " << ii << " Intersection box = " << b << endl;
+      // check for another geometry
+      if (b.degenerate())
+	continue; // continue the loop for other inlets
+      // iterates thru box b, converts from geometry space to index space
+      // make sure this works
+      CellIterator iter = patch->getCellIterator(b);
+      IntVector idxLo = iter.begin();
+      IntVector idxHi = iter.end() - IntVector(1,1,1);
+      celltypeval = d_flowInlets[ii].d_cellTypeID;
+      cout << "Flow inlet " << ii << " cell type val = " << celltypeval << endl;
+      FORT_CELLTYPEINIT(domLo.get_pointer(), domHi.get_pointer(),
+			idxLo.get_pointer(), idxHi.get_pointer(),
+			cellType.getPointer(), &celltypeval);
+    }
+  }
+  // Testing if correct values have been put
+  cout << " In C++ (BoundaryCondition.cc) after flow inlet init " << endl;
+  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+	cout << "(" << ii << "," << jj << "," << kk << ") : "
+	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
+      }
+    }
+  }
+
   old_dw->put(cellType, d_cellTypeLabel, matlIndex, patch);
 }  
     
@@ -440,19 +446,26 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
   // Create the cellType variable
   CCVariable<int> cellType;
 
+  // Get the cell type data from the old_dw
   // **WARNING** numGhostcells, Ghost::NONE may change in the future
   int matlIndex = 0;
   int numGhostCells = 0;
-
-  // Get the cell type data from the old_dw
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch,
 	      Ghost::None, numGhostCells);
 
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  if (old_dw->exists(d_cellInfoLabel, patch)) 
+    old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  else {
+    cellInfoP.setData(scinew CellInformation(patch));
+    old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  }
+  CellInformation* cellInfo = cellInfoP;
+  
   // Get the low and high index for the variable and the patch
   IntVector domLo = cellType.getFortLowIndex();
   IntVector domHi = cellType.getFortHighIndex();
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
 
   // Get the geometry of the patch
   Box patchBox = patch->getBox();
@@ -475,32 +488,23 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
       // iterates thru box b, converts from geometry space to index space
       // make sure this works
       CellIterator iter = patch->getCellIterator(b);
-      idxLo = iter.begin();
-      idxHi = iter.end() - IntVector(1,1,1);
-
-#ifdef WONT_COMPILE_YET
-      // using chain of responsibility pattern for getting cell information
-      DataWarehouseP top_dw = new_dw->getTop();
-      PerPatch<CellInformation*> cellinfop;
-      if(top_dw->exists("cellinfo", patch)){
-	top_dw->get(cellinfop, "cellinfo", patch);
-      } else {
-	cellinfop.setData(scinew CellInformation(patch));
-	top_dw->put(cellinfop, "cellinfo", patch);
-      } 
-      CellInformation* cellinfo = cellinfop;
-#endif
-
-      // ** WARNING ** the next line is just for compilation purposes
-      CellInformation* cellinfo = scinew CellInformation(patch);
+      IntVector idxLo = iter.begin();
+      IntVector idxHi = iter.end() - IntVector(1,1,1);
 
       // Calculate the inlet area
       double inlet_area;
       int cellid = d_flowInlets[ii].d_cellTypeID;
+      cout << "Domain Lo = [" << domLo.x() << "," <<domLo.y()<< "," <<domLo.z()
+	   << "] Domain hi = [" << domHi.x() << "," <<domHi.y()<< "," <<domHi.z() 
+	   << "]" << endl;
+      cout << "Index Lo = [" << idxLo.x() << "," <<idxLo.y()<< "," <<idxLo.z()
+	   << "] Index hi = [" << idxHi.x() << "," <<idxHi.y()<< "," <<idxHi.z()
+	   << "]" << endl;
+      cout << "Cell ID = " << cellid << endl;
       FORT_AREAIN(domLo.get_pointer(), domHi.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
-		  cellinfo->sew.get_objs(),
-		  cellinfo->sns.get_objs(), cellinfo->stb.get_objs(),
+		  cellInfo->sew.get_objs(),
+		  cellInfo->sns.get_objs(), cellInfo->stb.get_objs(),
 		  &inlet_area, cellType.getPointer(), &cellid);
 
       // Write the inlet area to the old_dw
@@ -1787,6 +1791,10 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.32  2000/06/30 06:29:42  bbanerje
+// Got Inlet Area to be calculated correctly .. but now two CellInformation
+// variables are being created (Rawat ... check that).
+//
 // Revision 1.31  2000/06/30 04:19:16  rawat
 // added turbulence model and compute properties
 //

@@ -59,7 +59,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityINLabel = scinew VarLabel("viscosityIN", 
 				   CCVariable<double>::getTypeDescription() );
-  d_cellTypeLabel = scinew VarLabel("CellType", 
+  d_cellTypeLabel = scinew VarLabel("cellType", 
 				   CCVariable<int>::getTypeDescription() );
 }
 
@@ -335,6 +335,10 @@ Arches::paramInit(const ProcessorGroup* ,
   
 //
 // $Log$
+// Revision 1.49  2000/06/30 06:29:41  bbanerje
+// Got Inlet Area to be calculated correctly .. but now two CellInformation
+// variables are being created (Rawat ... check that).
+//
 // Revision 1.48  2000/06/30 04:19:16  rawat
 // added turbulence model and compute properties
 //

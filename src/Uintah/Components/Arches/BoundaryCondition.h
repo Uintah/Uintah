@@ -416,6 +416,7 @@ private:
       FlowOutlet* d_outletBC;
 
       // const VarLabel* inputs
+      const VarLabel* d_cellInfoLabel;
       const VarLabel* d_cellTypeLabel;
       const VarLabel* d_pressureINLabel;
       const VarLabel* d_densityINLabel;
@@ -477,6 +478,10 @@ private:
   
 //
 // $Log$
+// Revision 1.30  2000/06/30 06:29:42  bbanerje
+// Got Inlet Area to be calculated correctly .. but now two CellInformation
+// variables are being created (Rawat ... check that).
+//
 // Revision 1.29  2000/06/29 06:22:48  bbanerje
 // Updated FCVariable to SFCX, SFCY, SFCZVariables and made corresponding
 // changes to profv.  Code is broken until the changes are reflected

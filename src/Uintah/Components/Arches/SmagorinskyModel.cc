@@ -46,9 +46,9 @@ SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
                                                  d_physicalConsts(phyConsts)
 {
   // Inputs & Outputs (computeTurbSubModel (CTS)
-  d_cellInfoLabel = scinew VarLabel("cellinformation",
+  d_cellInfoLabel = scinew VarLabel("cellInformation",
 				 PerPatch<CellInformation*>::getTypeDescription());
-  d_cellTypeLabel = scinew VarLabel("celltype",
+  d_cellTypeLabel = scinew VarLabel("cellType",
 				   CCVariable<int>::getTypeDescription() );
   d_uVelocitySPLabel = scinew VarLabel("uVelocitySP",
 				    SFCXVariable<double>::getTypeDescription() );
@@ -681,6 +681,10 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.22  2000/06/30 06:29:42  bbanerje
+// Got Inlet Area to be calculated correctly .. but now two CellInformation
+// variables are being created (Rawat ... check that).
+//
 // Revision 1.21  2000/06/30 05:12:16  bbanerje
 // Changed reComputeTurbModel to reflect chnages to computeTurbModel.
 // Changed name Subroutine mixltm to Subroutine smagmodel
