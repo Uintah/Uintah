@@ -1297,7 +1297,7 @@ itcl_class ViewWindow {
 	    -variable $this-global-light$i -command "$this lightSwitch $i"
 	pack $w.f$i.b$i
 
-	upvar $this-lightColors lightColors $this-lightVectors lightVectors
+	upvar \#0 $this-lightColors lightColors $this-lightVectors lightVectors
 	set ir [expr int([lindex [lindex $lightColors $i] 0] * 65535)]
 	set ig [expr int([lindex [lindex $lightColors $i] 1] * 65535)]
 	set ib [expr int([lindex [lindex $lightColors $i] 2] * 65535)]
@@ -1342,7 +1342,7 @@ itcl_class ViewWindow {
     }
     
     method resetLights { w } {
-	upvar $this-lightColors lCol $this-lightVectors lVec
+	upvar \#0 $this-lightColors lCol $this-lightVectors lVec
 	for { set i 0 } { $i < 4 } { incr i 1 } {
 	    if { $i == 0 } {
 		set $this-global-light$i 1
@@ -1374,7 +1374,8 @@ itcl_class ViewWindow {
 
     method moveLight { c i x y } {
 	if { $i == 0 } return
-	upvar $this-global-light$i light lCol $this-lightVectors lVec
+	upvar \#0 $this-global-light$i light 
+	upvar \#0 $this-lightColors lCol $this-lightVectors lVec
 	set cw [winfo width $c]
 	set ch [winfo height $c]
 	set selected [$c find withtag current]
@@ -1399,7 +1400,7 @@ itcl_class ViewWindow {
 	# normalize the vector
 	set len3 [expr sqrt($newx*$newx + $newy*$newy + $newz*$newz)]
 	set vec "[expr $newx/$len3] [expr -$newy/$len3] [expr $newz/$len3]"
-	set lVec [lreplace [set $this-lVec] $i $i $vec]
+	set lVec [lreplace [set $this-lightVectors] $i $i $vec]
 	if { $light } {
 	    $this lightSwitch $i
 	}
