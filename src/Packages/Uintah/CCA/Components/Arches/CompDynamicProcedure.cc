@@ -95,6 +95,7 @@ CompDynamicProcedure::problemSetup(const ProblemSpecP& params)
   db->require("var_const",d_CFVar); // const reqd by variance eqn
   // actually, Shmidt number, not Prandtl number
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
+  d_lower_limit = d_turbPrNo;
   db->getWithDefault("dynamicScalarModel",d_dynScalarModel,false);
   if (d_dynScalarModel)
    d_turbPrNo = 1.0; 
@@ -2508,7 +2509,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               if (d_reactingFlow) {
 	        ShF[currCell] *= Cs[currCell] * Cs[currCell];
 	        ShF[currCell] = Min(ShF[currCell],10.0);
-	        if (ShF[currCell] >= d_turbPrNo)
+	        if (ShF[currCell] >= d_lower_limit)
 	          scalardiff[currCell] = Cs[currCell] * Cs[currCell] *
 	                                 filter * filter *
 	                                 IsI[currCell] * den[currCell] /
@@ -2521,7 +2522,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               if (d_calcEnthalpy) {
 	        ShE[currCell] *= Cs[currCell] * Cs[currCell];
 	        ShE[currCell] = Min(ShE[currCell],10.0);
-	        if (ShE[currCell] >= d_turbPrNo)
+	        if (ShE[currCell] >= d_lower_limit)
 	          enthalpydiff[currCell] = Cs[currCell] * Cs[currCell] *
 	                                   filter * filter *
 	                                   IsI[currCell] * den[currCell] /
@@ -2534,7 +2535,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               if (d_calcReactingScalar) {
 	        ShRF[currCell] *= Cs[currCell] * Cs[currCell];
 	        ShRF[currCell] = Min(ShRF[currCell],10.0);
-	        if (ShRF[currCell] >= d_turbPrNo)
+	        if (ShRF[currCell] >= d_lower_limit)
 	          reactScalardiff[currCell] = Cs[currCell] * Cs[currCell] *
 	                                      filter * filter *
 	                                      IsI[currCell] * den[currCell] /
@@ -2569,7 +2570,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               if (d_reactingFlow) {
 	        ShF[currCell] *= Cs[currCell] * Cs[currCell];
 	        ShF[currCell] = Min(ShF[currCell],10.0);
-	        if (ShF[currCell] >= d_turbPrNo)
+	        if (ShF[currCell] >= d_lower_limit)
 	          scalardiff[currCell] = Cs[currCell] * Cs[currCell] *
 	                                 filter * filter *
 	                                 IsI[currCell] * den[currCell] /
@@ -2580,7 +2581,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               if (d_calcEnthalpy) {
 	        ShE[currCell] *= Cs[currCell] * Cs[currCell];
 	        ShE[currCell] = Min(ShE[currCell],10.0);
-	        if (ShE[currCell] >= d_turbPrNo)
+	        if (ShE[currCell] >= d_lower_limit)
 	          enthalpydiff[currCell] = Cs[currCell] * Cs[currCell] *
 	                                   filter * filter *
 	                                   IsI[currCell] * den[currCell] /
@@ -2591,7 +2592,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               if (d_calcReactingScalar) {
 	        ShRF[currCell] *= Cs[currCell] * Cs[currCell];
 	        ShRF[currCell] = Min(ShRF[currCell],10.0);
-	        if (ShRF[currCell] >= d_turbPrNo)
+	        if (ShRF[currCell] >= d_lower_limit)
 	          reactScalardiff[currCell] = Cs[currCell] * Cs[currCell] *
 	                                      filter * filter *
 	                                      IsI[currCell] * den[currCell] /
