@@ -31,8 +31,7 @@ namespace Uintah {
     virtual void solve();
 
     virtual void createMatrix(const ProcessorGroup* pg,
-			      const vector<int>& diag,
-			      const vector<int>& off);
+			      const map<int,int>& diag);
 
     virtual void destroyMatrix(bool recursion);
 

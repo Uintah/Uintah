@@ -308,7 +308,7 @@ void ImpMPM::scheduleCreateMatrix(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::createMatrix",this,&ImpMPM::createMatrix,
 			recursion);
   if (!recursion)
-    t->requires(Task::OldDW, lb->pXLabel,Ghost::AroundNodes,1);
+    t->requires(Task::OldDW, lb->pXLabel,Ghost::None);
   sched->addTask(t, patches, matls);
 
 }
@@ -1173,36 +1173,39 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
   if (recursion)
     return;
 
-  vector<int> dof_diag,dof_off;
-  for(int pp=0;pp<patches->size();pp++){
-    const Patch* patch = patches->get(pp);
-    cout_doing <<"Doing createMatrix on patch " << patch->getID() 
-	       << "\t\t\t\t IMPM"    << "\n" << "\n";
-    int numMatls = d_sharedState->getNumMPMMatls();
-    for (int m = 0; m < numMatls; m++ ) {
-     d_solver[m]->createLocalToGlobalMapping(d_myworld,
-                                             d_perproc_patches,patches);
-    }
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
-    Array3<int> l2g(lowIndex,highIndex);
-    for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++ ) {
+  int numMatls = d_sharedState->getNumMPMMatls();
+  for (int m = 0; m < numMatls; m++) {
+    map<int,int> dof_diag;
+    for(int pp=0;pp<patches->size();pp++){
+      const Patch* patch = patches->get(pp);
+      cout_doing <<"Doing createMatrix on patch " << patch->getID() 
+		 << "\t\t\t\t IMPM"    << "\n" << "\n";
+      d_solver[m]->createLocalToGlobalMapping(d_myworld,d_perproc_patches,
+						patches);
+      
+      IntVector lowIndex = patch->getNodeLowIndex();
+      IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+      Array3<int> l2g(lowIndex,highIndex);
       d_solver[m]->copyL2G(l2g,patch);
-      dof_diag.resize(l2g[patch->getNodeHighIndex()-IntVector(1,1,1)]+2,1);
-      dof_off.resize(l2g[patch->getNodeHighIndex()-IntVector(1,1,1)]+2,1);
+
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();    
       constParticleVariable<Point> px;
       ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch,
-						       Ghost::AroundNodes,1,
+						       Ghost::None,0,
 						       lb->pXLabel);
       old_dw->get(px,lb->pXLabel,pset);
       
+      CCVariable<int> visited;
+      new_dw->allocateTemporary(visited,patch,Ghost::None,0);
+      visited.initialize(0);
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
 	particleIndex idx = *iter;
 	IntVector cell,ni[8];
-	if (patch->findCell(px[idx],cell)) {
+	bool foundit = patch->findCell(px[idx],cell);
+	if (foundit && visited[cell] == 0 ) {
+	  visited[cell] = 1;
 	  patch->findNodesFromCell(cell,ni);
 	  vector<int> dof(0);
 	  int l2g_node_num;
@@ -1221,10 +1224,17 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 	  }
 	}
       }
-      d_solver[m]->createMatrix(d_myworld,dof_diag,dof_off);
+
+      // d_solver[m]->createMatrix(d_myworld,dof_diag);
     }
+#if 0
+    map<int,int>::const_iterator itr;
+    for (itr=dof_diag.begin(); itr != dof_diag.end(); itr++)
+      cerr << "dof_diag_create[" << itr->first << "]=" << itr->second << endl;
+#endif
+    d_solver[m]->createMatrix(d_myworld,dof_diag);
   }
-  
+
 }
 
 void ImpMPM::destroyMatrix(const ProcessorGroup*,
