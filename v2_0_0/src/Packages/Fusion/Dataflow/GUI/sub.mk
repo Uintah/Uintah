@@ -12,8 +12,6 @@ SRCDIR := Packages/Fusion/Dataflow/GUI
 
 SRCS := \
 	$(SRCDIR)/FusionSlicePlot.tcl\
-	$(SRCDIR)/FusionFieldReader.tcl\
-	$(SRCDIR)/FusionFieldSetReader.tcl\
 	$(SRCDIR)/NIMRODConverter.tcl\
 	$(SRCDIR)/NrrdFieldConverter.tcl\
 	$(SRCDIR)/Plot2DViewer.tcl\
