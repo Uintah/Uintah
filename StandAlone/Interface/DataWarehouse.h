@@ -12,140 +12,146 @@
 #include <string>
 
 namespace SCICore {
-    namespace Geometry {
-	class Vector;
-    }
+  namespace Geometry {
+    class Vector;
+  }
 }
 
 namespace Uintah {
+  
+  namespace Grid {
+    class Region;
+    class TypeDescription;
+  }
+  
+  namespace Interface {
+    
+    using Uintah::Grid::RefCounted;
+    using Uintah::Grid::DataItem;
+    using Uintah::Grid::Region;
+    using Uintah::Grid::TypeDescription;
+    using Uintah::Grid::GridP;
 
-namespace Grid {
-  class Region;
-  class TypeDescription;
-}
+    /**************************************
 
-namespace Interface {
-
-using Uintah::Grid::RefCounted;
-using Uintah::Grid::DataItem;
-using Uintah::Grid::Region;
-using Uintah::Grid::TypeDescription;
-
-/**************************************
-
-CLASS
-   DataWarehouse
+      CLASS
+        DataWarehouse
    
-   Short description...
+	Short description...
 
-GENERAL INFORMATION
+      GENERAL INFORMATION
 
-   DataWarehouse.h
+        DataWarehouse.h
 
-   Steven G. Parker
-   Department of Computer Science
-   University of Utah
+	Steven G. Parker
+	Department of Computer Science
+	University of Utah
 
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+	Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-   Copyright (C) 2000 SCI Group
+	Copyright (C) 2000 SCI Group
 
-KEYWORDS
-   DataWarehouse
+      KEYWORDS
+        DataWarehouse
 
-DESCRIPTION
-   Long description...
+      DESCRIPTION
+        Long description...
   
-WARNING
+      WARNING
   
-****************************************/
+      ****************************************/
 
-class DataWarehouse : public RefCounted {
-public:
-    virtual ~DataWarehouse();
+    class DataWarehouse : public RefCounted {
+    public:
+      virtual ~DataWarehouse();
 
-    DataWarehouseP getTop() const;
+      DataWarehouseP getTop() const;
 
-    // These need to be generalized.  Also do Handle<T>
-    template<class T> void get(T& data, const std::string& name) const {
+      virtual void setGrid(const GridP&)=0;
+
+      // These need to be generalized.  Also do Handle<T>
+      template<class T> void get(T& data, const std::string& name) const {
 	getBroadcastData(data, name, T::getTypeDescription());
-    }
+      }
 
-    template<class T> void get(T& data, const std::string& name,
-			       const Region* region) const {
+      template<class T> void get(T& data, const std::string& name,
+				 const Region* region) const {
 	getRegionData(data, name, T::getTypeDescription(),
 		      region);
-    }
+      }
 
-    template<class T> void get(T& data, const std::string& name,
-			       const Region* region, int numGhostCells) const {
+      template<class T> void get(T& data, const std::string& name,
+				 const Region* region, int numGhostCells) const {
 	getRegionData(data, name, T::getTypeDescription(),
 		      region, numGhostCells);
-    }
+      }
 
-    template<class T> void allocate(T& data, const std::string& name,
-				    const Region* region, int numGhostCells) {
+      template<class T> void allocate(T& data, const std::string& name,
+				      const Region* region, int numGhostCells) {
 	allocateRegionData(data, name, T::getTypeDescription(),
 			   region, numGhostCells);
-    }
+      }
 
-    template<class T> void put(const T& data, const std::string& name,
-			       const Region* region) {
+      template<class T> void put(const T& data, const std::string& name,
+				 const Region* region) {
 	putRegionData(data, name, T::getTypeDescription(),
 		      region);
-    }
+      }
 
-    template<class T> void put(const T& data, const std::string& name,
-			       const Region* region, int numGhostCells) {
+      template<class T> void put(const T& data, const std::string& name,
+				 const Region* region, int numGhostCells) {
 	putRegionData(data, name, T::getTypeDescription(),
 		      region, numGhostCells);
-    }
+      }
 
-    template<class T> void put(const T& data, const std::string& name) {
+      template<class T> void put(const T& data, const std::string& name) {
 	putBroadcastData(data, name, T::getTypeDescription());
-    }
+      }
 
-    bool exists(const std::string&, const Region*, int) {
+      bool exists(const std::string&, const Region*, int) {
 	return true;
-    }
+      }
 
-    bool exists(const std::string&, const Region*) {
+      bool exists(const std::string&, const Region*) {
 	return true;
-    }
+      }
 
-protected:
-    DataWarehouse();
+    protected:
+      DataWarehouse();
 
-private:
+    private:
 
-    virtual void getBroadcastData(DataItem& di, const std::string& name,
-				  const TypeDescription*) const = 0;
-    virtual void getRegionData(DataItem& di, const std::string& name,
-			       const TypeDescription*,
-			       const Region*) const = 0;
-    virtual void getRegionData(DataItem& di, const std::string& name,
-			       const TypeDescription*,
-			       const Region*, int numGhostCells) const = 0;
-    virtual void putRegionData(const DataItem& di, const std::string& name,
-			       const TypeDescription*,
-			       const Region*) = 0;
-    virtual void putRegionData(const DataItem& di, const std::string& name,
-			       const TypeDescription*,
-			       const Region*, int numGhostCells) = 0;
-    virtual void allocateRegionData(DataItem& di, const std::string& name,
-				    const TypeDescription*,
-				    const Region*, int numGhostCells) = 0;
-    virtual void putBroadcastData(const DataItem& di, const std::string& name,
-				  const TypeDescription*) = 0;
-    DataWarehouse(const DataWarehouse&);
-    DataWarehouse& operator=(const DataWarehouse&);
-};
+      virtual void getBroadcastData(DataItem& di, const std::string& name,
+				    const TypeDescription*) const = 0;
+      virtual void getRegionData(DataItem& di, const std::string& name,
+				 const TypeDescription*,
+				 const Region*) const = 0;
+      virtual void getRegionData(DataItem& di, const std::string& name,
+				 const TypeDescription*,
+				 const Region*, int numGhostCells) const = 0;
+      virtual void putRegionData(const DataItem& di, const std::string& name,
+				 const TypeDescription*,
+				 const Region*) = 0;
+      virtual void putRegionData(const DataItem& di, const std::string& name,
+				 const TypeDescription*,
+				 const Region*, int numGhostCells) = 0;
+      virtual void allocateRegionData(DataItem& di, const std::string& name,
+				      const TypeDescription*,
+				      const Region*, int numGhostCells) = 0;
+      virtual void putBroadcastData(const DataItem& di, const std::string& name,
+				    const TypeDescription*) = 0;
+      DataWarehouse(const DataWarehouse&);
+      DataWarehouse& operator=(const DataWarehouse&);
+    };
 
-} // end namespace Interface
+  } // end namespace Interface
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.7  2000/04/13 06:51:05  sparker
+// More implementation to get this to work
+//
 // Revision 1.6  2000/04/11 07:10:53  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

@@ -146,7 +146,7 @@ int main(int argc, char** argv)
 		mpm = 0;
 #endif
 	    }
-	    sim->attachPort("MPM", mpm);
+	    sim->attachPort("mpm", mpm);
 	}
 
 	// Connect a CFD module if applicable
@@ -158,7 +158,7 @@ int main(int argc, char** argv)
 	    cfd = new ICE();
 	}
 	if(cfd)
-	    sim->attachPort("CFD", cfd);
+	    sim->attachPort("cfd", cfd);
 
 	// Output
 
@@ -166,7 +166,7 @@ int main(int argc, char** argv)
 	// Scheduler
 	BrainDamagedScheduler* sched = new BrainDamagedScheduler();
 	sched->setNumThreads(numThreads);
-	sim->attachPort("Scheduler", sched);
+	sim->attachPort("scheduler", sched);
 
 	/*
 	 * Start the simulation controller
@@ -188,6 +188,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.5  2000/04/13 06:50:49  sparker
+// More implementation to get this to work
+//
 // Revision 1.4  2000/04/11 07:10:29  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications
