@@ -34,6 +34,27 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+    
+    double get_value( const Point& ivoxel );
+    double get_value( int x, int y, int z );
+
+    Vector get_normal( const Point& ivoxel );
+    Vector get_normal( int x, int y, int z );
 };
+
+inline
+double
+ScalarFieldRGTYPE::get_value( const Point& ivoxel )
+{
+  return grid( ivoxel.x(), ivoxel.y(), ivoxel.z() );
+}
+
+inline
+double
+ScalarFieldRGTYPE::get_value( int x, int y, int z )
+{
+  return grid( x, y, z );
+}
+
 
 #endif

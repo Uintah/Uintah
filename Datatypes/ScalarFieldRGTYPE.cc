@@ -172,6 +172,44 @@ ScalarField* ScalarFieldRGTYPE::clone()
     return scinew ScalarFieldRGTYPE(*this);
 }
 
+Vector
+ScalarFieldRGTYPE::get_normal( const Point& ivoxel )
+{
+  return get_normal( ivoxel.x(), ivoxel.y(), ivoxel.z() );
+}
+
+Vector
+ScalarFieldRGTYPE::get_normal( int x, int y, int z )
+{
+  Vector normal;
+
+  if ( x == 0 )
+    normal.x( ( get_value( x+1, y, z ) - get_value( x, y, z ) ) / 2 );
+  else if ( x == nx-1 )
+    normal.x( ( get_value( x, y, z ) - get_value( x-1, y, z ) ) / 2 );
+  else
+    normal.x( ( get_value( x-1, y, z ) + get_value( x+1, y, z ) ) / 2 );
+    
+  
+  if ( y == 0 )
+    normal.y( ( get_value( x, y+1, z ) - get_value( x, y, z ) ) / 2 );
+  else if ( y == ny-1 )
+    normal.y( ( get_value( x, y, z ) - get_value( x, y-1, z ) ) / 2 );
+  else
+    normal.y( ( get_value( x, y-1, z ) + get_value( x, y+1, z ) ) / 2 );
+    
+  
+  if ( z == 0 )
+    normal.z( ( get_value( x, y, z+1 ) - get_value( x, y, z ) ) / 2 );
+  else if ( z == nz-1 )
+    normal.z( ( get_value( x, y, z ) - get_value( x, y, z-1 ) ) / 2 );
+  else
+    normal.z( ( get_value( x, y, z-1 ) + get_value( x, y, z+1 ) ) / 2 );
+
+  return normal;
+}
+
+
 #ifdef __GNUG__
 
 #include <Classlib/Array3.cc>
