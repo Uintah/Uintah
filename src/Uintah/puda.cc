@@ -333,8 +333,11 @@ int main(int argc, char** argv)
 		iter != level->patchesEnd(); iter++){
 	      const Patch* patch = *iter;
 	      cout << "\t\tPatch: " << patch->getID() << "\n";
-	      int numMatls = da->queryNumMaterials(var, patch, time);
-	      for(int matl=0;matl<numMatls;matl++){
+	      ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
+	      // loop over materials
+	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+		  matlIter != matls.end(); matlIter++){
+		int matl = *matlIter;
 		cout << "\t\t\tMaterial: " << matl << "\n";
 		switch(td->getType()){
 		case TypeDescription::ParticleVariable:
@@ -662,11 +665,11 @@ int main(int argc, char** argv)
               for(int v=0;v<vars.size();v++){
 	       std::string var = vars[v];
 	       
-	       int numMatls = da->queryNumMaterials(var, patch, time);
-	       
+	       ConsecutiveRangeSet matls= da->queryMaterials(var, patch, time);
 	       // loop over materials
-	       for(int matl=0;matl<numMatls;matl++){
-	       
+	       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+		   matlIter != matls.end(); matlIter++){
+		int matl = *matlIter;
 	        const TypeDescription* td = types[v];
 	        const TypeDescription* subtype = td->getSubType();
 	        switch(td->getType()){
@@ -760,9 +763,11 @@ int main(int argc, char** argv)
 	      for(int v=0;v<vars.size();v++){
 	        std::string var = vars[v];
 		
-		int numMatls = da->queryNumMaterials(var, patch, time);
-	        for(int matl=0;matl<numMatls;matl++){
-		
+		ConsecutiveRangeSet matls=da->queryMaterials(var, patch, time);
+		// loop over materials
+		for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+		    matlIter != matls.end(); matlIter++){
+		int matl = *matlIter;
 	        const TypeDescription* td = types[v];
 	        const TypeDescription* subtype = td->getSubType();
 	        
@@ -976,9 +981,12 @@ int main(int argc, char** argv)
 		  iter != level->patchesEnd(); iter++){
 		const Patch* patch = *iter;
 		cout << "\t\tPatch: " << patch->getID() << "\n";
-		int numMatls = da->queryNumMaterials(var, patch, time);
-		
-		for(int matl=0;matl<numMatls;matl++){
+                ConsecutiveRangeSet matls =
+		   da->queryMaterials(var, patch, time);
+	        // loop over materials
+	        for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+		    matlIter != matls.end(); matlIter++){
+		  int matl = *matlIter;
 		  
 		  // dumps header and variable info to file
 		  char fnum[5], matnum[5];
@@ -1035,7 +1043,7 @@ int main(int argc, char** argv)
 	  t++;   
       }
     }
-    
+
     if (do_rtdata) {
       // Create a directory if it's not already there.
       // The exception occurs when the directory is already there
@@ -1131,10 +1139,12 @@ int main(int argc, char** argv)
 	      variable_file = replaceChar(var,'.','_');
 	      const TypeDescription* td = types[v];
 	      const TypeDescription* subtype = td->getSubType();
-	      int numMatls = da->queryNumMaterials(var, patch, time);
-	      
-	      // for all the materials in the patch
-	      for(int matl=0;matl<numMatls;matl++){
+
+	      ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
+	      // loop over materials
+	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+		  matlIter != matls.end(); matlIter++){
+		int matl = *matlIter;
 		ostringstream tempstr_matl;
 		tempstr_matl << matl;
 		materialType_file = tempstr_matl.str();
@@ -1512,6 +1522,11 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.17  2001/01/24 00:06:11  witzel
+// Changed puda to iterate through material sets instead of assuming that
+// material indices always start at zero for any material.  (Needed to include
+// SCICore/Containers/ in sub.mk PSELIBS to use ConsecutiveRangeSet).
+//
 // Revision 1.16  2001/01/10 19:11:53  campbell
 // added cell_stresses function
 //

@@ -45,7 +45,8 @@ PSELIBS := Uintah
 else
 PSELIBS := Uintah/Exceptions Uintah/Grid Uintah/Interface \
 	PSECore/XMLUtil SCICore/Exceptions SCICore/Geometry \
-	SCICore/Thread SCICore/Util SCICore/OS Uintah/Components/MPM
+	SCICore/Containers SCICore/Thread SCICore/Util SCICore/OS \
+	Uintah/Components/MPM
 endif
 LIBS 	:= $(XML_LIBRARY)
 
@@ -56,6 +57,11 @@ include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.19  2001/01/24 00:06:11  witzel
+# Changed puda to iterate through material sets instead of assuming that
+# material indices always start at zero for any material.  (Needed to include
+# SCICore/Containers/ in sub.mk PSELIBS to use ConsecutiveRangeSet).
+#
 # Revision 1.18  2000/12/10 09:05:59  sparker
 # Merge from csafe_risky1
 #
