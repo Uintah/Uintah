@@ -2,6 +2,7 @@
 #define VOLUME_UTILS_H
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Ray.h>
+#include <SCICore/Geometry/BBox.h>
 
 namespace Kurt {
 namespace GeomSpace {
@@ -17,6 +18,8 @@ int largestPowerOf2( int range );
 double intersectParam(const Vector& N, const Point& P, const Ray& R);
 
 void sortParameters( double *t, int len_t );
+
+bool overlap( const BBox& b1, const BBox& b2 );
 
 } // end GeomSpace
 } // end Kurt

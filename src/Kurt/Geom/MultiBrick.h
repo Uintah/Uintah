@@ -48,7 +48,7 @@ public:
   int getMaxSize(){ return ((X < Y && X < Z)? X:((Y < Z)? Y:Z)); }
   
   void SetResPosition(const Point& p){ resPoint = p; }
-
+  void SetInfluence( double i) {influence = i;}
   MultiBrick(const MultiBrick&);
   ~MultiBrick();
 
@@ -77,6 +77,7 @@ private:
   Point min, max;
   Point widgetPoint;
   Point resPoint;
+  double influence;
   double alpha;
   double dx, dy, dz;
   bool drawWireFrame;

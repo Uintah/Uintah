@@ -92,7 +92,24 @@ sortParameters( double *t, int len_t )
 }
 
 
-
+bool overlap(const BBox& b1, const BBox& b2){
+  if( b1.inside( b2.min()) || b1.inside( b2.max()) )
+    return true;
+  else {
+    Point p1(b2.min().x(), b2.min().y(), b2.max().z());
+    Point p2(b2.min().x(), b2.max().y(), b2.min().z());
+    Point p3(b2.max().x(), b2.min().y(), b2.min().z());
+    Point p4(b2.min().x(), b2.max().y(), b2.max().z());
+    Point p5(b2.max().x(), b2.min().y(), b2.max().z());
+    Point p6(b2.max().x(), b2.max().y(), b2.min().z());
+    
+    if( b1.inside(p1) || b1.inside(p2) || b1.inside(p3) ||
+	b1.inside(p4) || b1.inside(p5) || b1.inside(p6))
+      return true;
+    else
+      return false;
+  }
+}
 
 } // end namespace GeomSpace
 } // end namespace Kurt

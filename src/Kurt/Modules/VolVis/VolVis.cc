@@ -51,7 +51,8 @@ extern "C" Module* make_VolVis( const clString& id) {
 VolVis::VolVis(const clString& id)
   : Module("VolVis", id, Filter), widget_lock("VolVis widget lock"),
     mode(0), draw_mode("draw_mode", id, this), debug("debug", id, this),
-    alpha("alpha", id, this), 
+    alpha("alpha", id, this),
+    influence("influence", id, this),
     num_slices("num_slices", id, this) ,
     avail_tex("avail_tex", id, this),
     max_brick_dim("max_brick_dim", id, this), level("level", id, this),
@@ -134,6 +135,11 @@ void VolVis::tcl_command( TCLArgs& args, void* userdata)
       int n;
       args[3].get_int( n );
       max_brick_dim.set(n);
+    } else if (args[2] == "Influence"){
+      double inf;
+      args[3].get_double(inf);
+      influence.set(inf);
+      cerr<< "Influence = " << inf<<endl;
     }
   } else if (args[1] == "MoveWidget") {
       if (!widget) return;
@@ -163,14 +169,15 @@ void VolVis::tcl_command( TCLArgs& args, void* userdata)
 
 void VolVis::widget_moved(int obj)
 {
-  cerr<<"the widget id is "<<obj<<endl;
-  cerr<<"is brick set? "<< (( brick == 0)? "NO":"YES")<<endl;
-  cerr<<"mode is "<<mode<<endl;
+  //  cerr<<"the widget id is "<<obj<<endl;
+  //  cerr<<"is brick set? "<< (( brick == 0)? "NO":"YES")<<endl;
+  //  cerr<<"mode is "<<mode<<endl;
   if( !mode && brick )
     {
       brick->SetPlaneIntersection(widget->ReferencePoint());
       cerr<<"moving widget to "<<widget->ReferencePoint()<<endl;
     } else {
+      brick->SetResPosition(res->ReferencePoint());
       cerr<<"moving widget to "<<res->ReferencePoint()<<endl;
     }
   
@@ -189,9 +196,8 @@ void VolVis::SwapXZ( ScalarFieldHandle sfh )
   sfh->get_bounds(min, max);
 
   ofu = scinew ScalarFieldRGuchar();
-  ofu->resize(nx,ny,nz);
-  ofu->set_bounds(Point(min.z(), min.y(), min.x()), 
-		  Point(max.z(), max.y(), max.x()));
+  ofu->resize(nz,ny,nx);
+  ofu->set_bounds(min, max);
   for (int i=0, ii=0; i<nx; i++, ii++)
     for (int j=0, jj=0; j<ny; j++, jj++)
       for (int k=0, kk=0; k<nz; k++, kk++)
@@ -230,8 +236,9 @@ void VolVis::execute(void)
     return;
   } else {
     if( field.get_rep() != sfield.get_rep() ){
-      field = sfield;
       SwapXZ( sfield );
+      field = sfield;
+      rgchar = sfield->getRGBase()->getRGUchar();
     }
     int nx, ny, nz;
     int padx = 0, pady = 0, padz = 0;
@@ -250,14 +257,13 @@ void VolVis::execute(void)
 
       Smin=Point(pmin.z(), pmin.y(), pmin.x());
       Smax=Point(pmax.z(), pmax.y(), pmax.x());
-      cerr << "Smin="<<Smin<<"  Smax="<<Smax<<"\n";
+      //      cerr << "Smin="<<Smin<<"  Smax="<<Smax<<"\n";
       widget->SetPosition(Interpolate(Smin,Smax,0.5));
       Vector dv(Smax-Smin);
       ddv.x(dv.x()/(rgchar->nz - 1));
       ddv.y(dv.y()/(rgchar->ny - 1));
       ddv.z(dv.z()/(rgchar->nx - 1));
       widget->SetScale(rgchar->longest_dimension()/80.0);
-
     }
 
     if( !res ){
@@ -280,13 +286,16 @@ void VolVis::execute(void)
 			      rgchar, (unsigned char*)cmap->raw1d);
       brick->SetDrawLevel(level.get());
     
-      if( init )
+      if( widget )
 	brick->SetPlaneIntersection(widget->ReferencePoint());
+      if( res )
+	brick->SetResPosition(res->ReferencePoint());
       int l = brick->getMaxLevel();
       int dim = brick->getMaxSize();
       TCL::execute( id + " SetDims " + to_string( dim ));
       TCL::execute( id + " SetLevels " + to_string( l ));
       ogeom->addObj( brick, "TexBrick" ); 
+
     } else {
       brick->Reload();
       brick->SetMaxBrickSize( max_brick_dim.get(), max_brick_dim.get(),
@@ -295,6 +304,7 @@ void VolVis::execute(void)
       brick->SetDebug( debug.get());
       brick->SetAlpha( alpha.get());
       brick->SetNSlices( num_slices.get());
+      brick->SetInfluence ( influence.get());
       brick->SetVol( rgchar );
       //      brick->SetMode( mode );
       brick->SetDrawLevel(level.get());
