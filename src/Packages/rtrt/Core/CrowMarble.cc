@@ -56,16 +56,18 @@ void CrowMarble::shade(Color& result, const Ray& ray,
     double csp = 0.5*(1+w);
     csp*=csp;
     Color Rd=spline(csp);
-    
     Color difflight(0,0,0);
     Color speclight(0,0,0);
     int nlights=cx->scene->nlights();
     cx->stats->ds[depth].nshadow+=nlights;
     double k1 = (1-cos_prime);
     k1 *= k1*k1*k1*k1;
+    double ray_objnormal_dot(Dot(ray.direction(),normal));
     for(int i=0;i<nlights;i++){
 	Light* light=cx->scene->light(i);
 	Vector light_dir=light->get_pos()-hitpos;
+	if (ray_objnormal_dot*Dot(normal,light_dir)>0) continue;
+//	if (Dot(ray.direction(),light_dir)>0) continue;
 	double dist=light_dir.normalize();
 	Color shadowfactor(1,1,1);
 	if(cx->scene->lit(hitpos, light, light_dir, dist, shadowfactor, depth, cx) ){

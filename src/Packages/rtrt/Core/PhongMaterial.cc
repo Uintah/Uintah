@@ -36,6 +36,7 @@ void PhongMaterial::shade(Color& result, const Ray& ray,
 	cos_prime=-cos_prime;
 	normal=-normal;
     }
+    double ray_objnormal_dot(Dot(ray.direction(),normal));
 
     double opac = opacity + (1-opacity)*(1-cos_prime)*(1-cos_prime);/*+(depth-2)*.1;*/
 #if 0
@@ -53,6 +54,10 @@ void PhongMaterial::shade(Color& result, const Ray& ray,
     for(int i=0;i<nlights;i++){
 	Light* light=cx->scene->light(i);
 	Vector light_dir=light->get_pos()-hitpos;
+	if (ray_objnormal_dot*Dot(normal,light_dir)>0) {
+	  cx->stats->ds[depth].inshadow++;
+	  continue;
+	}
 	double dist=light_dir.normalize();
 	Color shadowfactor(1,1,1);
 	if(cx->scene->lit(hitpos, light, light_dir, dist, shadowfactor, depth, cx) ){
