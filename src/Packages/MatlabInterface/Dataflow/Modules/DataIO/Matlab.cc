@@ -133,9 +133,10 @@ class Matlab : public Module, public ServiceBase
 	// execute():
 	//   Execute the module and put data on the output port
 	
-	void execute();
-	
-    void tcl_command(GuiArgs& args, void* userdata);
+	virtual void execute();
+        virtual void presave();
+  
+        virtual void tcl_command(GuiArgs& args, void* userdata);
 
     
 	static matlabarray::mitype			convertdataformat(std::string dataformat);
@@ -564,6 +565,7 @@ bool Matlab::synchronise_input()
 	str = input_nrrd_array_.get(); input_nrrd_array_list_ = converttcllist(str);
 	str = output_nrrd_name_.get(); output_nrrd_name_list_ = converttcllist(str);
 
+        gui->execute(id + " update_text"); // update matlab_code_ before use.
 	matlab_code_list_ = matlab_code_.get(); 
 	
 	return(true);
@@ -617,6 +619,12 @@ void Matlab::execute()
 		error("Matlab: Could not load matrices that matlab generated");
 		return;
 	}
+}
+
+
+void Matlab::presave()
+{
+  gui->execute(id + " update_text");  // update matlab-code before saving.
 }
 
 bool Matlab::send_matlab_job()

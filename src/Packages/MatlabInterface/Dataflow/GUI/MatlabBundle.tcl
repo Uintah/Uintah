@@ -299,7 +299,6 @@ itcl_class MatlabInterface_DataIO_MatlabBundle {
 		option add *textBackground white	
 		iwidgets::scrolledtext $code.f1.cmd -vscrollmode dynamic \
 			-labeltext "Matlab Commands" -height 150 
-		bind $code.f1.cmd <Leave> "$this update_text"
 		$code.f1.cmd insert end [set $this-matlab-code]
 		pack $code.f1.cmd -fill both -expand yes
 		button $code.f2.clear -text "clear" -command "$this ClearMCode"
@@ -589,9 +588,11 @@ itcl_class MatlabInterface_DataIO_MatlabBundle {
 
     method update_text {} {
 	set w .ui[modname]
-	global $this-matlab-code-menu
-	set code [set $this-matlab-code-menu]
-	set $this-matlab-code [$code.f1.cmd get 1.0 end]
+        if {[winfo exists $w]} {
+            global $this-matlab-code-menu
+            set code [set $this-matlab-code-menu]
+            set $this-matlab-code [$code.f1.cmd get 1.0 end]
+        }
     }
 
 }
