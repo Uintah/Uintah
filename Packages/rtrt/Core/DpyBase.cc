@@ -86,6 +86,7 @@ int DpyBase::open_events_display(Window parent) {
     DPY_NX+=20;
     DPY_NY+=yres;
   }
+  cerr << "Attempting to create window for "<<window_name<<" with resolution ("<<xres<<", "<<yres<<")\n";
   win = XCreateWindow(dpy, parent,
                       xlow, ylow, xres, yres, 0,
                       DefaultDepth(dpy, screen), InputOutput,
@@ -178,6 +179,7 @@ int DpyBase::open_display(Window parent, bool needevents) {
     DPY_NX+=20;
     DPY_NY+=yres;
   }
+  cerr << "Attempting to create window for "<<window_name<<" with resolution ("<<xres<<", "<<yres<<")\n";
   win=XCreateWindow(dpy, parent,
 		    xlow, ylow, xres, yres, 0, vi->depth,
 		    InputOutput, vi->visual, flags, &atts);
@@ -326,9 +328,11 @@ void DpyBase::button_motion(MouseButton /*button*/,
 			    const int /*x*/, const int /*y*/) {
 }
 
-void DpyBase::set_resolution(const int xres_in, const int yres_in) {
-  xres = xres_in;
-  yres = yres_in;
+void DpyBase::set_resolution(const int width, const int height) {
+  if (width > 0 && height > 0) {
+    xres = width;
+    yres = height;
+  }
 }
 
 bool DpyBase::should_close() {
