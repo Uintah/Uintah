@@ -239,6 +239,8 @@ int main(int argc, char* argv[])
 	  ::std::cerr << "INARR FINISHED\n";
           serv->in_arr(c_arr);
 	  ::std::cerr << "INARR FINISHED -- OUTARR\n";
+          serv->in_arr(c_arr);
+	  ::std::cerr << "INARR FINISHED -- ####OUTARR AGAIN ####\n";
 	  serv->out_arr(c_arr);
           ::std::cerr << "INARR FINISHED -- INOUTARR\n";
 	  serv->inout_arr(c_arr);

@@ -39,7 +39,9 @@ SUBDIRS := \
 	$(SRCDIR)/objects	\
 	$(SRCDIR)/pingpong	\
 	$(SRCDIR)/spectest      \
-        $(SRCDIR)/pp            
+        $(SRCDIR)/pp		\
+	$(SRCDIR)/testDT        \
+	$(SRCDIR)/stopserver	
 
 ifeq ($(HAVE_MPI),yes)
 SUBDIRS += \
@@ -54,7 +56,8 @@ SUBDIRS += \
         $(SRCDIR)/exceptiontest
 endif
 
-//SUBDIRS := $(SRCDIR)/pingpongArr $(SRCDIR)/pp0
+SUBDIRS +=$(SRCDIR)/stopserver
+
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
