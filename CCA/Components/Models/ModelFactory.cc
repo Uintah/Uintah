@@ -6,6 +6,7 @@
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Components/Models/test/Mixing.h>
 #include <Packages/Uintah/CCA/Components/Models/test/Mixing2.h>
+#include <Packages/Uintah/CCA/Components/Models/test/AdiabaticTable.h>
 #include <Packages/Uintah/CCA/Components/Models/test/SimpleRxn.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TableTest.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TestModel.h>
@@ -45,6 +46,8 @@ void ModelFactory::makeModels(const ProblemSpecP& params, GridP&,
       models.push_back(scinew SimpleRxn(d_myworld, model));
     else if(type == "TableTest")
       models.push_back(scinew TableTest(d_myworld, model));
+    else if(type == "AdiabaticTable")
+      models.push_back(scinew AdiabaticTable(d_myworld, model));
     else if(type == "Test")
       models.push_back(scinew TestModel(d_myworld, model));
     else if(type == "Mixing")
