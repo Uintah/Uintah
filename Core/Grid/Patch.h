@@ -85,6 +85,10 @@ WARNING
        // This will need to change for stretched grids
        return d_level->dCell();
      }
+
+     //////////
+     // Find the closest node index to a point
+     int findClosestNode(const Point& pos, IntVector& idx) const;
      
      //////////
      // Find the index of a cell contaning the given Point. 
@@ -111,14 +115,14 @@ WARNING
      
      //////////
      // Insert Documentation Here:
-     void findCellAndShapeDerivatives
-     (const Point& pos,
-		         IntVector ni[8],
-			 Vector S[8]) const;
+     void findCellAndShapeDerivatives( const Point& pos,
+				       IntVector ni[8],
+				       Vector S[8]) const;
 
      void findCellAndWeightsAndShapeDerivatives(const Point& pos,
-			     IntVector ni[8], double S[8], Vector d_S[8]) const;
-     
+						IntVector ni[8], 
+						double S[8],
+						Vector d_S[8]) const;
      //////////
      // Insert Documentation Here:
      CellIterator getCellIterator() const;
@@ -161,20 +165,13 @@ WARNING
      IntVector getCellHighIndex() const {
        return d_highIndex;
      }
-
-     IntVector getXFaceLowIndex() const {
-       return d_lowIndex;
+     IntVector getInteriorCellLowIndex() const {
+       return d_inLowIndex;
      }
-     IntVector getYFaceLowIndex() const {
-       return d_lowIndex;
-     }
-     IntVector getZFaceLowIndex() const {
-       return d_lowIndex;
+     IntVector getInteriorCellHighIndex() const {
+       return d_inHighIndex;
      }
 
-     IntVector getXFaceHighIndex() const;
-     IntVector getYFaceHighIndex() const;
-     IntVector getZFaceHighIndex() const;
      // required for fortran interface
      IntVector getSFCXFORTLowIndex() const;
      IntVector getSFCXFORTHighIndex() const;
@@ -203,8 +200,8 @@ WARNING
      }
      
      inline IntVector getNFaces() const {
-       // not correct
-       return getXFaceHighIndex()-getXFaceLowIndex();
+       // NOT CORRECT
+       return IntVector(0,0,0);
      }
      
      inline IntVector getNNodes() const {

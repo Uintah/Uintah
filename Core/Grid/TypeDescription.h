@@ -44,9 +44,6 @@ class Variable;
       enum Type {
 	 CCVariable,
 	 NCVariable,
-	 XFCVariable,
-	 YFCVariable,
-	 ZFCVariable,
 	 SFCXVariable,
 	 SFCYVariable,
 	 SFCZVariable,

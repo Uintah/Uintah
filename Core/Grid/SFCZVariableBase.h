@@ -58,6 +58,7 @@ WARNING
       // Insert Documentation Here:
       virtual SFCZVariableBase* clone() const = 0;
 
+      virtual void allocate(const Patch*) = 0;
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
       virtual void copyPatch(SFCZVariableBase* src,

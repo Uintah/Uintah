@@ -45,6 +45,21 @@ Patch::~Patch()
 {
 }
 
+int Patch::findClosestNode(const Point& pos, IntVector& idx) const
+{
+  int p[3];
+  idx = d_level->getCellIndex(pos);
+  Point cellP = d_level->getCellPosition(idx);
+  for(int i=0;i<3;++i) {
+    if( pos(i)>cellP(i) ) {
+      idx[i]++;
+      p[i] = 1;
+    }
+    else p[i] = 0;
+  }
+  return p[0]+p[1]*2+p[2]*4;
+}
+
 bool Patch::findCell(const Point& pos, IntVector& ci) const
 {
    ci = d_level->getCellIndex(pos);
@@ -362,48 +377,6 @@ Patch::getNodeIterator(const Box& b) const
    low = Max(low, getNodeLowIndex());
    high = Min(high, getNodeHighIndex());
    return NodeIterator(low, high);
-}
-
-IntVector Patch::getXFaceHighIndex() const
-{
-  IntVector nodes(getNNodes());
-  IntVector cells(getCellHighIndex() - getCellLowIndex());
-
-  cout << "Nodes = " << nodes << " Cells = " << cells << endl;
-
-  int face_x = nodes.x()*cells.y()*cells.z();
-  int face_y = nodes.y()*cells.x()*cells.z();
-  int face_z = nodes.z()*cells.x()*cells.y();
-
-  return IntVector(nodes.x(),cells.y(),cells.z());
-}
-  
-IntVector Patch::getYFaceHighIndex() const
-{
-  IntVector nodes(getNNodes());
-  IntVector cells(getCellHighIndex() - getCellLowIndex());
-
-  cout << "Nodes = " << nodes << " Cells = " << cells << endl;
-
-  int face_x = nodes.x()*cells.y()*cells.z();
-  int face_y = nodes.y()*cells.x()*cells.z();
-  int face_z = nodes.z()*cells.x()*cells.y();
-
-  return IntVector(nodes.y(),cells.x(),cells.z());
-}
-
-IntVector Patch::getZFaceHighIndex() const
-{
-  IntVector nodes(getNNodes());
-  IntVector cells(getCellHighIndex() - getCellLowIndex());
-
-  cout << "Nodes = " << nodes << " Cells = " << cells << endl;
-
-  int face_x = nodes.x()*cells.y()*cells.z();
-  int face_y = nodes.y()*cells.x()*cells.z();
-  int face_z = nodes.z()*cells.x()*cells.y();
-
-  return IntVector(nodes.z(),cells.x(),cells.y());
 }
 
 IntVector Patch::getSFCXHighIndex() const
@@ -788,15 +761,6 @@ void Patch::computeVariableExtents(TypeDescription::Type basis,
     case TypeDescription::NCVariable:
          translation=NodeBased;
          break;
-    case TypeDescription::XFCVariable:
-         translation=XFaceBased;
-	 break;
-    case TypeDescription::YFCVariable:
-	translation=YFaceBased;
-	break;
-    case TypeDescription::ZFCVariable:
-	translation=ZFaceBased;
-	break;
     case TypeDescription::SFCXVariable:
 	translation=XFaceBased;
 	break;

@@ -72,6 +72,9 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
      virtual void allocate(const IntVector& lowIndex,
 			   const IntVector& highIndex);
      
+     virtual void allocate(const Patch* patch)
+     { allocate(patch->getSFCYLowIndex(), patch->getSFCYHighIndex()); }
+
      virtual void copyPatch(SFCYVariableBase* src,
 			     const IntVector& lowIndex,
 			     const IntVector& highIndex);
@@ -85,10 +88,12 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 			   IntVector& siz, IntVector& strides) const;
 
      // Replace the values on the indicated face with value
-     void fillFace(Patch::FaceType face, const T& value)
+     void fillFace(Patch::FaceType face, const T& value,
+		    IntVector offset = IntVector(0,0,0))
        { 
-	 IntVector low = getLowIndex();
-	 IntVector hi = getHighIndex();
+	 IntVector low,hi;
+	 low = getLowIndex() + offset;
+	 hi = getHighIndex() - offset;
 	 switch (face) {
 	 case Patch::xplus:
 	   for (int j = low.y(); j<hi.y(); j++) {
@@ -132,21 +137,27 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 	     }
 	   }
 	   break;
+	 case Patch::numFaces:
+	    break;
+	 case Patch::invalidFace:
+	    break;
 	 }
 
        };
      
   // Set the Neumann BC condition using a 1st order approximation
-      void fillFaceFlux(Patch::FaceType face, const T& value, const Vector& dx)
+      void fillFaceFlux(Patch::FaceType face, const T& value, const Vector& dx,
+			IntVector offset = IntVector(0,0,0))
 	{ 
-	  IntVector low = getLowIndex();
-	  IntVector hi = getHighIndex();
+	  IntVector low,hi;
+	  low = getLowIndex() + offset;
+	  hi = getHighIndex() - offset;
 	  switch (face) {
 	  case Patch::xplus:
 	    for (int j = low.y(); j<hi.y(); j++) {
 	      for (int k = low.z(); k<hi.z(); k++) {
 		(*this)[IntVector(hi.x()-1,j,k)] = 
-		   (*this)[IntVector(hi.x()-2,j,k)] - value*dx.x();
+		   (*this)[IntVector(hi.x()-2,j,k)] + value*dx.x();
 	      }
 	    }
 	    break;
@@ -162,7 +173,7 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 	    for (int i = low.x(); i<hi.x(); i++) {
 	      for (int k = low.z(); k<hi.z(); k++) {
 		(*this)[IntVector(i,hi.y()-1,k)] = 
-		  (*this)[IntVector(i,hi.y()-2,k)] - value * dx.y();
+		  (*this)[IntVector(i,hi.y()-2,k)] + value * dx.y();
 	      }
 	    }
 	    break;
@@ -178,7 +189,7 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 	    for (int i = low.x(); i<hi.x(); i++) {
 	      for (int j = low.y(); j<hi.y(); j++) {
 		(*this)[IntVector(i,j,hi.z()-1)] = 
-		  (*this)[IntVector(i,j,hi.z()-2)] - value * dx.z();
+		  (*this)[IntVector(i,j,hi.z()-2)] + value * dx.z();
 	      }
 	    }
 	    break;
@@ -192,6 +203,8 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 	    break;
 	  case Patch::numFaces:
 	    break;
+	 case Patch::invalidFace:
+	    break;
 	  }
 
 	};
@@ -200,10 +213,12 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
      // Use to apply symmetry boundary conditions.  On the
      // indicated face, replace the component of the vector
      // normal to the face with 0.0
-     void fillFaceNormal(Patch::FaceType face)
+     void fillFaceNormal(Patch::FaceType face, 
+			 IntVector offset = IntVector(0,0,0))
        {
-	 IntVector low = getLowIndex();
-	 IntVector hi = getHighIndex();
+	 IntVector low,hi;
+	 low = getLowIndex() + offset;
+	 hi = getHighIndex() - offset;
 	 switch (face) {
 	 case Patch::xplus:
 	   for (int j = low.y(); j<hi.y(); j++) {
@@ -259,6 +274,8 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 	     }
 	   }
 	   break;
+	 case Patch::invalidFace:
+	    break;
          }
       };
      
@@ -450,6 +467,7 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 	 strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
 			     (int)(sizeof(T)*siz.y()*siz.x()));
       }
-} // End namespace Uintah
+
+} // end namespace Uintah
 
 #endif

@@ -11,7 +11,7 @@ using namespace Uintah;
 using namespace std;
 using namespace SCIRun;
 
-static map<string, const TypeDescription*>* types;
+static map<string, const TypeDescription*>* types = 0;
 
 TypeDescription::TypeDescription(Type type, const std::string& name,
 				 bool isFlat, MPI_Datatype (*mpitypemaker)())
@@ -46,7 +46,10 @@ string TypeDescription::getName() const
 
 const TypeDescription* TypeDescription::lookupType(const std::string& t)
 {
-   map<string, const TypeDescription*>::iterator iter = types->find(t);
+  if(!types)
+    types=scinew map<string, const TypeDescription*>;   
+  
+  map<string, const TypeDescription*>::iterator iter = types->find(t);
    if(iter == types->end())
       return 0;
    return iter->second;
@@ -54,10 +57,10 @@ const TypeDescription* TypeDescription::lookupType(const std::string& t)
 
 TypeDescription::Register::Register(const TypeDescription* td)
 {
-   //cerr << "Register: td=" << td << ", name=" << td->getName() << '\n';
-   if(!types)
-     types=scinew map<string, const TypeDescription*>;
-   (*types)[td->getName()]=td;
+  //  cerr << "Register: td=" << td << ", name=" << td->getName() << '\n';
+  if(!types)
+    types=scinew map<string, const TypeDescription*>;
+  (*types)[td->getName()]=td;
 }
 
 TypeDescription::Register::~Register()

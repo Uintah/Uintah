@@ -48,7 +48,8 @@ WARNING
    public:
       inline ReductionVariable() {}
       inline ReductionVariable(T value) : value(value) {}
-      inline ReductionVariable(const ReductionVariable<T, Op>& copy) : value(copy.value) {}
+      inline ReductionVariable(const ReductionVariable<T, Op>& copy) :
+	value(copy.value) {}
       virtual ~ReductionVariable();
       
       static const TypeDescription* getTypeDescription();
@@ -60,10 +61,17 @@ WARNING
       virtual void copyPointer(const ReductionVariableBase&);
       virtual void reduce(const ReductionVariableBase&);
       virtual void emit(ostream&);
+      virtual void allocate(const Patch*)
+      {
+	throw InternalError("Should not call ReductionVariable<T, Op>"
+			    "::allocate(const Patch*)"); 
+      }
+
       virtual const TypeDescription* virtualGetTypeDescription() const;
-      virtual void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype, MPI_Op& op);
+      virtual void getMPIBuffer(void*& buf, int& count,
+				MPI_Datatype& datatype, MPI_Op& op);
    private:
-      ReductionVariable<T, Op>& operator=(const ReductionVariable<T, Op>& copy);
+      ReductionVariable<T, Op>& operator=(const ReductionVariable<T, Op>&copy);
       static Variable* maker();
       T value;
    };
@@ -143,6 +151,27 @@ WARNING
       {
         intout << value;
       }
+
+   template<class T, class Op>
+      void
+      ReductionVariable<T, Op>::emit(OutputContext& oc)
+      {
+	 ssize_t s = write(oc.fd, &value, sizeof(double));
+	 if (s != sizeof(double))
+	    throw ErrnoException("ReductionVariable::emit (write call)", errno);
+	 oc.cur += s;
+      }
+
+   template<class T, class Op>
+      void
+      ReductionVariable<T, Op>::read(InputContext& ic)
+      {
+	 ssize_t s = ::read(ic.fd, &value, sizeof(double));
+	 if (s != sizeof(double))
+	    throw ErrnoException("ReductionVariable::read (read call)", errno);
+	 ic.cur += s;
+      }
+   
 } // End namespace Uintah
 
 #endif

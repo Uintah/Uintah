@@ -11,9 +11,10 @@ using namespace Uintah;
 
 SimulationState::SimulationState(ProblemSpecP &ps)
 {
-   delt_label = scinew VarLabel("delT",
+   VarLabel* nonconstDelt = scinew VarLabel("delT",
     ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
-
+   nonconstDelt->allowMultipleComputes();
+   delt_label = nonconstDelt;
 
   // Get the physical constants that are shared between codes.
   // For now it is just gravity.
@@ -32,11 +33,13 @@ void SimulationState::registerMaterial(Material* matl)
 void SimulationState::registerMPMMaterial(MPMMaterial* matl)
 {
    mpm_matls.push_back(matl);
+   registerMaterial(matl);
 }
 
 void SimulationState::registerICEMaterial(ICEMaterial* matl)
 {
    ice_matls.push_back(matl);
+   registerMaterial(matl);
 }
 
 SimulationState::~SimulationState()

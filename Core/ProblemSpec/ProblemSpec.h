@@ -102,6 +102,7 @@ WARNING
 		       Vector& value);
       ProblemSpecP get(const std::string& name, 
 		       Point& value);
+      ProblemSpecP get(const std::string& name, vector<double>& value);
 
       void getAttributes(std::map<std::string,std::string>& value);
 
