@@ -41,14 +41,6 @@
       } else {\
         disp_error = true; disp_msg = "TetVol<unsigned char>::get_type_name is broken";\
       }\
-    } else if (field1->get_type_name(1) == "bool") {\
-      TetVol<bool> *f1 = 0;\
-      f1 = dynamic_cast<TetVol<bool>*>(field1.get_rep());\
-      if (f1) {\
-        callback(f1);\
-      } else {\
-        disp_error = true; disp_msg = "TetVol<bool>::get_type_name is broken";\
-      }\
     } else if (field1->get_type_name(1) == "Vector") {\
       TetVol<Vector> *f1 = 0;\
       f1 = dynamic_cast<TetVol<Vector>*>(field1.get_rep());\
@@ -98,14 +90,6 @@
         callback(f1);\
       } else {\
         disp_error = true; disp_msg = "LatticeVol<unsigned char>::get_type_name is broken";\
-      }\
-    } else if (field1->get_type_name(1) == "bool") {\
-      LatticeVol<bool> *f1 = 0;\
-      f1 = dynamic_cast<LatticeVol<bool>*>(field1.get_rep());\
-      if (f1) {\
-        callback(f1);\
-      } else {\
-        disp_error = true; disp_msg = "LatticeVol<bool>::get_type_name is broken";\
       }\
     } else if (field1->get_type_name(1) == "Vector") {\
       LatticeVol<Vector> *f1 = 0;\
@@ -157,14 +141,6 @@
       } else {\
         disp_error = true; disp_msg = "ContourField<unsigned char>::get_type_name is broken";\
       }\
-    } else if (field1->get_type_name(1) == "bool") {\
-      ContourField<bool> *f1 = 0;\
-      f1 = dynamic_cast<ContourField<bool>*>(field1.get_rep());\
-      if (f1) {\
-        callback(f1);\
-      } else {\
-        disp_error = true; disp_msg = "ContourField<bool>::get_type_name is broken";\
-      }\
     } else if (field1->get_type_name(1) == "Vector") {\
       ContourField<Vector> *f1 = 0;\
       f1 = dynamic_cast<ContourField<Vector>*>(field1.get_rep());\
@@ -215,14 +191,6 @@
       } else {\
         disp_error = true; disp_msg = "TriSurf<unsigned char>::get_type_name is broken";\
       }\
-    } else if (field1->get_type_name(1) == "bool") {\
-      TriSurf<bool> *f1 = 0;\
-      f1 = dynamic_cast<TriSurf<bool>*>(field1.get_rep());\
-      if (f1) {\
-        callback(f1);\
-      } else {\
-        disp_error = true; disp_msg = "TriSurf<bool>::get_type_name is broken";\
-      }\
     } else if (field1->get_type_name(1) == "Vector") {\
       TriSurf<Vector> *f1 = 0;\
       f1 = dynamic_cast<TriSurf<Vector>*>(field1.get_rep());\
@@ -272,14 +240,6 @@
         callback(f1);\
       } else {\
         disp_error = true; disp_msg = "PointCloud<unsigned char>::get_type_name is broken";\
-      }\
-    } else if (field1->get_type_name(1) == "bool") {\
-      PointCloud<bool> *f1 = 0;\
-      f1 = dynamic_cast<PointCloud<bool>*>(field1.get_rep());\
-      if (f1) {\
-        callback(f1);\
-      } else {\
-        disp_error = true; disp_msg = "PointCloud<bool>::get_type_name is broken";\
       }\
     } else if (field1->get_type_name(1) == "Vector") {\
       PointCloud<Vector> *f1 = 0;\
