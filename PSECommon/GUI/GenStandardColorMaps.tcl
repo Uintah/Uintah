@@ -12,7 +12,7 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
         set name GenStandardColorMaps 
         set_defaults 
 	buildColorMaps
-	SetColorMap
+#	SetColorMap
     } 
     
     method set_defaults {} { 
