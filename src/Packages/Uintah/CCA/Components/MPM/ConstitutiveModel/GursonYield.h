@@ -70,7 +70,7 @@ namespace Uintah {
 
     // Prevent copying of this class
     // copy constructor
-    GursonYield(const GursonYield &);
+    //GursonYield(const GursonYield &);
     GursonYield& operator=(const GursonYield &);
 
   public:
@@ -78,6 +78,7 @@ namespace Uintah {
     /*! Constructor
       Creates a Gurson Yield Function object */
     GursonYield(ProblemSpecP& ps);
+    GursonYield(const GursonYield* cm);
 	 
     //! Destructor 
     virtual ~GursonYield();

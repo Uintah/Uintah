@@ -24,6 +24,7 @@ namespace Uintah {
 
     //! Create a yield condition from the input file problem specification.
     static StabilityCheck* create(ProblemSpecP& ps);
+    static StabilityCheck* createCopy(const StabilityCheck* sc);
   };
 } // End namespace Uintah
       

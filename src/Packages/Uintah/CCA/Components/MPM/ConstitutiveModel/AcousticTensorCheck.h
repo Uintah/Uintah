@@ -34,6 +34,7 @@ namespace Uintah {
 	 
     //! Construct an object that can be used to check stability
     AcousticTensorCheck(ProblemSpecP& ps);
+    AcousticTensorCheck(const AcousticTensorCheck* atc);
 
     //! Destructor of stability check
     ~AcousticTensorCheck();
@@ -81,7 +82,7 @@ namespace Uintah {
                                      const TangentModulusTensor& C);
 
     // Prevent copying of this class and copy constructor
-    AcousticTensorCheck(const AcousticTensorCheck &);
+    //AcousticTensorCheck(const AcousticTensorCheck &);
     AcousticTensorCheck& operator=(const AcousticTensorCheck &);
 
   private:

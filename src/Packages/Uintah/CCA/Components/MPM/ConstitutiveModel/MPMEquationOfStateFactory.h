@@ -15,6 +15,7 @@ namespace Uintah {
   public:
     // this function has a switch for all known mat_types
     static MPMEquationOfState* create(ProblemSpecP& ps);
+    static MPMEquationOfState* createCopy(const MPMEquationOfState* cm);
   };
 } // End namespace Uintah
       

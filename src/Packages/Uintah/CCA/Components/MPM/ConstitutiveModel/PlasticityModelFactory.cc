@@ -37,3 +37,22 @@ PlasticityModel* PlasticityModelFactory::create(ProblemSpecP& ps)
    else 
       throw ProblemSetupException("Unknown Plasticity Model ("+mat_type+")");
 }
+
+PlasticityModel* 
+PlasticityModelFactory::createCopy(const PlasticityModel* pm)
+{
+   if (dynamic_cast<const IsoHardeningPlastic*>(pm))
+      return(scinew IsoHardeningPlastic(dynamic_cast<const IsoHardeningPlastic*>(pm)));
+
+   else if (dynamic_cast<const JohnsonCookPlastic*>(pm))
+      return(scinew JohnsonCookPlastic(dynamic_cast<const JohnsonCookPlastic*>(pm)));
+
+   else if (dynamic_cast<const MTSPlastic*>(pm))
+      return(scinew MTSPlastic(dynamic_cast<const MTSPlastic*>(pm)));
+
+   else if (dynamic_cast<const SCGPlastic*>(pm))
+      return(scinew SCGPlastic(dynamic_cast<const SCGPlastic*>(pm)));
+
+   else 
+      throw ProblemSetupException("Cannot create copy of unknown plasticity model");
+}

@@ -9,10 +9,8 @@ namespace Uintah {
   public:
     
     ImplicitParticleCreator(MPMMaterial* matl, 
-                           MPMLabel* lb,
-                           int n8or27,
-                           bool haveLoadCurve,
-			   bool doErosion);
+                            MPMLabel* lb,
+                            MPMFlags* flags);
     virtual ~ImplicitParticleCreator();
 
     virtual ParticleSubset* createParticles(MPMMaterial* matl, 

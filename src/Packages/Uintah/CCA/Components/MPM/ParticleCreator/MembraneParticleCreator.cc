@@ -1,6 +1,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
@@ -18,10 +19,8 @@ using namespace Uintah;
 
 MembraneParticleCreator::MembraneParticleCreator(MPMMaterial* matl,
 						 MPMLabel* lb,
-                                                 int n8or27,
-                                                 bool haveLoadCurve,
-						 bool doErosion) 
-  :  ParticleCreator(matl,lb,n8or27,haveLoadCurve, doErosion)
+						 MPMFlags* flags)
+  :  ParticleCreator(matl,lb, flags)
 {
   registerPermanentParticleState(matl,lb);
 

@@ -81,6 +81,7 @@ namespace Uintah {
 	 
     //! Construct an object that can be used to check stability
     BeckerCheck(ProblemSpecP& ps);
+    BeckerCheck(const BeckerCheck* bc);
 
     //! Destructor of stability check
     ~BeckerCheck();
@@ -98,7 +99,7 @@ namespace Uintah {
   private:
 
     // Prevent copying of this class and copy constructor
-    BeckerCheck(const BeckerCheck &);
+    //BeckerCheck(const BeckerCheck &);
     BeckerCheck& operator=(const BeckerCheck &);
 
   };

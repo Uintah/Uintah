@@ -22,6 +22,7 @@ namespace Uintah {
 	 
     //! Construct an object that can be used to check stability
     DruckerBeckerCheck(ProblemSpecP& ps);
+    DruckerBeckerCheck(const DruckerBeckerCheck* cm);
 
     //! Destructor of stability check
     ~DruckerBeckerCheck();

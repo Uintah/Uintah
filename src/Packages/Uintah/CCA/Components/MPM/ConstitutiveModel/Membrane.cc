@@ -49,6 +49,23 @@ Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 
 }
 
+Membrane::Membrane(const Membrane* cm)
+{
+  lb = cm->lb;
+  d_8or27 = cm->d_8or27;
+  NGN = cm->NGN;
+
+  d_initialData.Bulk = cm->d_initialData.Bulk;
+  d_initialData.Shear = cm->d_initialData.Shear;
+
+  defGradInPlaneLabel  = VarLabel::create( "p.defgrad_in_plane",
+                        ParticleVariable<Matrix3>::getTypeDescription() );
+
+  defGradInPlaneLabel_preReloc  = VarLabel::create( "p.defgrad_in_plane+",
+                        ParticleVariable<Matrix3>::getTypeDescription() );
+
+}
+
 Membrane::~Membrane()
 {
   // Destructor

@@ -15,6 +15,10 @@ BeckerCheck::BeckerCheck(ProblemSpecP& )
 {
 }
 
+BeckerCheck::BeckerCheck(const BeckerCheck* )
+{
+}
+
 BeckerCheck::~BeckerCheck()
 {
 }

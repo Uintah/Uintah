@@ -35,12 +35,13 @@ namespace Uintah {
 
     // Prevent copying of this class
     // copy constructor
-    DefaultHypoElasticEOS(const DefaultHypoElasticEOS &cm);
+    //DefaultHypoElasticEOS(const DefaultHypoElasticEOS &cm);
     DefaultHypoElasticEOS& operator=(const DefaultHypoElasticEOS &cm);
 
   public:
     // constructors
     DefaultHypoElasticEOS(ProblemSpecP& ps); 
+    DefaultHypoElasticEOS(const DefaultHypoElasticEOS* cm);
 	 
     // destructor 
     virtual ~DefaultHypoElasticEOS();

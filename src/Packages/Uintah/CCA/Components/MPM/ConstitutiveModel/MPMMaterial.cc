@@ -40,43 +40,32 @@ using namespace Uintah;
 using namespace SCIRun;
 
 // Standard Constructor
-MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
-			 string integrator, bool haveLoadCurve,
-			 bool doErosion)
+MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flags)
   : Material(ps), lb(lb), d_cm(0), d_particle_creator(0)
 {
   // The standard set of initializations needed
-  standardInitialization(ps, lb, n8or27, integrator, haveLoadCurve, doErosion);
+  standardInitialization(ps, lb, flags);
 
   // Check to see which ParticleCreator object we need
-  if (integrator == "implicit") 
-    d_particle_creator = scinew ImplicitParticleCreator(this,lb,n8or27,
-							haveLoadCurve,
-							doErosion);
+  if (flags->d_integrator_type == "implicit") 
+    d_particle_creator = scinew ImplicitParticleCreator(this,lb, flags);
 
-  else if (integrator == "fracture") 
-    d_particle_creator = scinew FractureParticleCreator(this,lb,n8or27,
-							haveLoadCurve,
-							doErosion);
+  else if (flags->d_integrator_type == "fracture") 
+    d_particle_creator = scinew FractureParticleCreator(this,lb, flags);
 
   else if (dynamic_cast<Membrane*>(d_cm) != 0)
-    d_particle_creator = scinew MembraneParticleCreator(this,lb,n8or27,
-							haveLoadCurve,
-							doErosion);
+    d_particle_creator = scinew MembraneParticleCreator(this,lb, flags);
+
   else if (dynamic_cast<ShellMaterial*>(d_cm) != 0)
-    d_particle_creator = scinew ShellParticleCreator(this,lb,n8or27,
-		                                     haveLoadCurve,
-						     doErosion);
+    d_particle_creator = scinew ShellParticleCreator(this,lb, flags);
 
   else
-    d_particle_creator = scinew DefaultParticleCreator(this,lb,n8or27,
-						       haveLoadCurve,
-						       doErosion);
+    d_particle_creator = scinew DefaultParticleCreator(this,lb, flags);
 }
 
 void
-MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
-			            string integrator, bool , bool )
+MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb, 
+                                    MPMFlags* flags)
 {
   // Follow the layout of the input file
   // Steps:
@@ -90,7 +79,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
   // 5.  Assign the velocity field.
 
   // Step 1 -- create the constitutive gmodel.
-  d_cm = ConstitutiveModelFactory::create(ps,lb,n8or27,integrator);
+  d_cm = ConstitutiveModelFactory::create(ps,lb,flags);
   if(!d_cm){
     ostringstream desc;
     desc << "An error occured in the ConstitutiveModelFactory that has \n" 
@@ -137,6 +126,11 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
   }
 }
 
+// Default constructor
+MPMMaterial::MPMMaterial() : d_cm(0), d_particle_creator(0)
+{
+}
+
 MPMMaterial::~MPMMaterial()
 {
   // Destructor
@@ -147,6 +141,35 @@ MPMMaterial::~MPMMaterial()
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
     delete d_geom_objs[i];
   }
+}
+
+void
+MPMMaterial::copyWithoutGeom(const MPMMaterial* mat, MPMFlags* flags)
+{
+  lb = mat->lb;
+  d_cm = ConstitutiveModelFactory::createCopy(mat->d_cm);
+  d_density = mat->d_density;
+  d_thermalConductivity = mat->d_thermalConductivity;
+  d_specificHeat = mat->d_specificHeat;
+  d_troom = mat->d_troom;
+  d_tmelt = mat->d_tmelt;
+  d_is_rigid = mat->d_is_rigid;
+
+  // Check to see which ParticleCreator object we need
+  if (dynamic_cast<ImplicitParticleCreator*>(d_cm))
+    d_particle_creator = scinew ImplicitParticleCreator(this,lb, flags);
+
+  else if (dynamic_cast<ImplicitParticleCreator*>(d_cm))
+    d_particle_creator = scinew FractureParticleCreator(this,lb, flags);
+
+  else if (dynamic_cast<Membrane*>(d_cm))
+    d_particle_creator = scinew MembraneParticleCreator(this,lb, flags);
+
+  else if (dynamic_cast<ShellMaterial*>(d_cm))
+    d_particle_creator = scinew ShellParticleCreator(this,lb, flags);
+
+  else
+    d_particle_creator = scinew DefaultParticleCreator(this,lb, flags);
 }
 
 ConstitutiveModel * MPMMaterial::getConstitutiveModel() const
@@ -290,4 +313,18 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
       }    
     }  // Loop over domain
   }  // Loop over geom_objects
+}
+
+void 
+MPMMaterial::initializeDummyCCVariables(CCVariable<double>& rho_micro,
+                                        CCVariable<double>& rho_CC,
+                                        CCVariable<double>& temp,
+                                        CCVariable<Vector>& vel_CC,
+                                        int numMatls,
+                                        const Patch* patch)
+{ 
+  vel_CC.initialize(Vector(0.,0.,0.));
+  rho_micro.initialize(d_density);
+  rho_CC.initialize(d_density+d_TINY_RHO);
+  temp.initialize(d_troom);
 }

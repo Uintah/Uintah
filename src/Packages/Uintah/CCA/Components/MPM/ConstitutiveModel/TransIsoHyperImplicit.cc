@@ -59,6 +59,27 @@ TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, i
 
 }
 
+TransIsoHyperImplicit::TransIsoHyperImplicit(const TransIsoHyperImplicit* cm)
+{
+  lb = cm->lb;
+  d_8or27 = cm->d_8or27;
+  NGN = cm->NGN;
+
+  d_useModifiedEOS = cm->d_useModifiedEOS ;
+
+  d_initialData.Bulk = cm->d_initialData.Bulk;
+  d_initialData.c1 = cm->d_initialData.c1;
+  d_initialData.c2 = cm->d_initialData.c2;
+  d_initialData.c3 = cm->d_initialData.c3;
+  d_initialData.c4 = cm->d_initialData.c4;
+  d_initialData.c5 = cm->d_initialData.c5;
+  d_initialData.lambda_star = cm->d_initialData.lambda_star;
+  d_initialData.a0 = cm->d_initialData.a0;
+
+  pStretchLabel = VarLabel::create("p.stretch",
+        ParticleVariable<double>::getTypeDescription());
+}
+
 TransIsoHyperImplicit::~TransIsoHyperImplicit()
 // _______________________DESTRUCTOR
 {
@@ -91,9 +112,9 @@ void TransIsoHyperImplicit::initializeCMData(const Patch* patch,
 }
 
 void TransIsoHyperImplicit::allocateCMDataAddRequires(Task* task,
-						    const MPMMaterial* matl,
-						    const PatchSet* patch,
-						    MPMLabel* lb) const
+                                                    const MPMMaterial* matl,
+                                                    const PatchSet* patch,
+                                                    MPMLabel* lb) const
 {
 
   //const MaterialSubset* matlset = matl->thisMaterial();
@@ -103,10 +124,10 @@ void TransIsoHyperImplicit::allocateCMDataAddRequires(Task* task,
 
 
 void TransIsoHyperImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
-					    ParticleSubset* addset,
-					    map<const VarLabel*, ParticleVariableBase*>* newState,
-					    ParticleSubset* delset,
-					    DataWarehouse* old_dw)
+                                            ParticleSubset* addset,
+                                            map<const VarLabel*, ParticleVariableBase*>* newState,
+                                            ParticleSubset* delset,
+                                            DataWarehouse* old_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
@@ -134,7 +155,7 @@ void TransIsoHyperImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
 }
 
 void TransIsoHyperImplicit::addParticleState(std::vector<const VarLabel*>& from,
-				   std::vector<const VarLabel*>& to)
+                                   std::vector<const VarLabel*>& to)
 {
    from.push_back(lb->pDeformationMeasureLabel);
    from.push_back(lb->pStressLabel);
@@ -159,15 +180,15 @@ Vector TransIsoHyperImplicit::getInitialFiberDir()
 //
 void
 TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
-					 const MPMMaterial* matl,
-					 DataWarehouse* old_dw,
-					 DataWarehouse* new_dw,
+                                         const MPMMaterial* matl,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw,
 #ifdef HAVE_PETSC
-					 MPMPetscSolver* solver,
+                                         MPMPetscSolver* solver,
 #else
-					 SimpleSolver* solver,
+                                         SimpleSolver* solver,
 #endif
-					 const bool recursion)
+                                         const bool recursion)
 //___________________________________COMPUTES THE STRESS ON ALL THE PARTICLES IN A GIVEN PATCH FOR A GIVEN MATERIAL
 //___________________________________CALLED ONCE PER TIME STEP
 //___________________________________CONTAINS A COPY OF computeStableTimestep
@@ -175,7 +196,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 //    cerr <<"Doing computeStressTensor on " << patch->getID()
-//	 <<"\t\t\t\t IMPM"<< "\n" << "\n";
+//       <<"\t\t\t\t IMPM"<< "\n" << "\n";
 
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
@@ -279,8 +300,8 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
           dof[3*k+2]=l2g_node_num+2;
 
           const Vector& disp = dispNew[ni[k]];
-	
-       	  for (int j = 0; j<3; j++){
+        
+          for (int j = 0; j<3; j++){
             for (int i = 0; i<3; i++) {
               dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
             }
@@ -336,9 +357,9 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         //_______________________UNCOUPLE DEVIATORIC AND DILATIONAL PARTS of DEF GRAD
         //_______________________Ftilde=J^(-1/3)*F and Fvol=J^1/3*Identity
 
-	//_______________________right Cauchy Green (C) tilde and invariants
+        //_______________________right Cauchy Green (C) tilde and invariants
         rightCauchyGreentilde_new = deformationGradient_new[idx].Transpose()
-				* deformationGradient_new[idx]*pow(J,-(2./3.));
+                                * deformationGradient_new[idx]*pow(J,-(2./3.));
         I1tilde = rightCauchyGreentilde_new.Trace();
         I2tilde = .5*(I1tilde*I1tilde -
                 (rightCauchyGreentilde_new*rightCauchyGreentilde_new).Trace());
@@ -346,7 +367,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                    (rightCauchyGreentilde_new*deformed_fiber_vector));
         lambda_tilde = sqrt(I4tilde);
         deformed_fiber_vector = deformationGradient_new[idx]*deformed_fiber_vector
-	                        *(1./lambda_tilde*pow(J,-(1./3.)));
+                                *(1./lambda_tilde*pow(J,-(1./3.)));
         Matrix3 DY(deformed_fiber_vector,deformed_fiber_vector);
 
         //________________________________left Cauchy Green (B) tilde
@@ -359,7 +380,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
          {dWdI4tilde = 0.;
          d2WdI4tilde2 = 0.;
          shear = 2.*c1+c2;
-	 }
+         }
         else
         if (lambda_tilde < lambda_star)
          {
@@ -367,11 +388,11 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                            /(lambda_tilde*lambda_tilde);
           d2WdI4tilde2 = 0.25*c3*(c4*exp(c4*(lambda_tilde-1.))
                         -1./lambda_tilde*(exp(c4*(lambda_tilde-1.))-1.))
-		          /(lambda_tilde*lambda_tilde*lambda_tilde);
+                          /(lambda_tilde*lambda_tilde*lambda_tilde);
 
           shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
                                    -2.*dWdI4tilde*lambda_tilde);
-	  }
+          }
         else
          {
           dWdI4tilde = 0.5*(c5+c6/lambda_tilde)/lambda_tilde;
@@ -385,30 +406,30 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
         pstress[idx] = Identity*p
                      + (leftCauchyGreentilde_new*(c1+c2*I1tilde)
-		     - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
-		     + DY*dWdI4tilde*I4tilde
-		     - Identity*(1./3.)
+                     - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
+                     + DY*dWdI4tilde*I4tilde
+                     - Identity*(1./3.)
                       *(c1*I1tilde+2.*c2*I2tilde+dWdI4tilde*I4tilde))*2./J;
 
-	//________________________________STIFFNESS = vol. term + Mooney-Rivlin term + Fiber contribution term
-	
-	double K = Bulk;
-	double cc1 = d2WdI4tilde2*I4tilde*I4tilde;
-	double cc2MR = (4./3.)*(1./J)*(c1*I1tilde+2.*c2*I2tilde);
-	double cc2FC = (4./3.)*(1./J)*dWdI4tilde*I4tilde;
+        //________________________________STIFFNESS = vol. term + Mooney-Rivlin term + Fiber contribution term
+        
+        double K = Bulk;
+        double cc1 = d2WdI4tilde2*I4tilde*I4tilde;
+        double cc2MR = (4./3.)*(1./J)*(c1*I1tilde+2.*c2*I2tilde);
+        double cc2FC = (4./3.)*(1./J)*dWdI4tilde*I4tilde;
 
-	Matrix3 RB = leftCauchyGreentilde_new;
+        Matrix3 RB = leftCauchyGreentilde_new;
         Matrix3 RB2 = leftCauchyGreentilde_new*leftCauchyGreentilde_new;
-	Matrix3 I = Identity;
-	Matrix3 devsMR = (RB*(c1+c2*I1tilde)+RB2*(-c2)+I*(c1*I1tilde+2*c2*I2tilde))*(2./J)*(-2./3.);
-	Matrix3 devsFC = (DY-I*(1./3.))*dWdI4tilde*I4tilde*(2./J)*(-2./3.);
-	Matrix3 termMR = RB*(1./J)*c2*I1tilde-RB2*(1./J)*c2;
+        Matrix3 I = Identity;
+        Matrix3 devsMR = (RB*(c1+c2*I1tilde)+RB2*(-c2)+I*(c1*I1tilde+2*c2*I2tilde))*(2./J)*(-2./3.);
+        Matrix3 devsFC = (DY-I*(1./3.))*dWdI4tilde*I4tilde*(2./J)*(-2./3.);
+        Matrix3 termMR = RB*(1./J)*c2*I1tilde-RB2*(1./J)*c2;
 
-	//________________________________________________________vol. term 
+        //________________________________________________________vol. term 
 
-	double cvol[6][6];
+        double cvol[6][6];
 
-	cvol[0][0] = K*(1./J)-2*p;
+        cvol[0][0] = K*(1./J)-2*p;
         cvol[0][1] = K*(1./J);
         cvol[0][2] = K*(1./J);
         cvol[1][1] = K*(1./J)-2*p;
@@ -430,94 +451,94 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         cvol[4][5] =  0.;
         cvol[5][5] = -p;
 
-	//________________________________________________________Mooney-Rivlin term
+        //________________________________________________________Mooney-Rivlin term
 
-	double cMR[6][6];
+        double cMR[6][6];
 
-	cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)-(4./J)*c2*(RB(0,0)*RB(0,0)+RB(0,0)*RB(0,0))
-			+(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(0,0)+devsMR(0,0)
-			+(-4./3.)*(termMR(0,0)+termMR(0,0));
-	cMR[0][1] = (4./J)*c2*RB(0,0)*RB(1,1)-(4./J)*c2*(RB(0,1)*RB(0,1)+RB(0,1)*RB(0,1))
-			+(-1./3.)*cc2MR+devsMR(0,0)+devsMR(1,1)
-			+(-4./3.)*(termMR(0,0)+termMR(1,1));
-	cMR[0][2] = (4./J)*c2*RB(0,0)*RB(2,2)-(4./J)*c2*(RB(0,2)*RB(0,2)+RB(0,2)*RB(0,2))
-			+(-1./3.)*cc2MR+devsMR(0,0)+devsMR(2,2)
-			+(-4./3.)*(termMR(0,0)+termMR(2,2));
-	cMR[1][1] = (4./J)*c2*RB(1,1)*RB(1,1)-(4./J)*c2*(RB(1,1)*RB(1,1)+RB(1,1)*RB(1,1))
-			+(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(1,1)+devsMR(1,1)
-			+(-4./3.)*(termMR(1,1)+termMR(1,1));
-	cMR[1][2] = (4./J)*c2*RB(1,1)*RB(2,2)-(4./J)*c2*(RB(1,2)*RB(1,2)+RB(1,2)*RB(1,2))
-			+(-1./3.)*cc2MR+devsMR(1,1)+devsMR(2,2)
-			+(-4./3.)*(termMR(1,1)+termMR(2,2));
-	cMR[2][2] = (4./J)*c2*RB(2,2)*RB(2,2)-(4./J)*c2*(RB(2,2)*RB(2,2)+RB(2,2)*RB(2,2))
-			+(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(2,2)+devsMR(2,2)
-			+(-4./3.)*(termMR(2,2)+termMR(2,2));
-	cMR[0][3] = (4./J)*c2*RB(0,0)*RB(0,1)-(4./J)*c2*(RB(0,0)*RB(0,1)+RB(0,1)*RB(0,0))
-			+devsMR(0,1)+(-4./3.)*termMR(0,1);
-	cMR[0][4] = (4./J)*c2*RB(0,0)*RB(1,2)-(4./J)*c2*(RB(0,1)*RB(0,2)+RB(0,2)*RB(0,1))
-			+devsMR(1,2)+(-4./3.)*termMR(1,2);
-	cMR[0][5] = (4./J)*c2*RB(0,0)*RB(2,0)-(4./J)*c2*(RB(0,2)*RB(0,0)+RB(0,0)*RB(0,2))
-			+devsMR(2,0)+(-4./3.)*termMR(2,0);
-	cMR[1][3] = (4./J)*c2*RB(1,1)*RB(0,1)-(4./J)*c2*(RB(1,0)*RB(1,1)+RB(1,1)*RB(1,0))
-			+devsMR(0,1)+(-4./3.)*termMR(0,1);
-	cMR[1][4] = (4./J)*c2*RB(1,1)*RB(1,2)-(4./J)*c2*(RB(1,1)*RB(1,2)+RB(1,2)*RB(1,1))
-			+devsMR(1,2)+(-4./3.)*termMR(1,2);
-	cMR[1][5] = (4./J)*c2*RB(1,1)*RB(2,0)-(4./J)*c2*(RB(1,2)*RB(1,0)+RB(1,0)*RB(1,2))
-			+devsMR(2,0)+(-4./3.)*termMR(2,0);
-	cMR[2][3] = (4./J)*c2*RB(2,2)*RB(0,1)-(4./J)*c2*(RB(2,0)*RB(2,1)+RB(2,1)*RB(2,0))
-			+devsMR(0,1)+(-4./3.)*termMR(0,1);
-	cMR[2][4] = (4./J)*c2*RB(2,2)*RB(1,2)-(4./J)*c2*(RB(2,1)*RB(2,2)+RB(2,2)*RB(2,1))
-			+devsMR(1,2)+(-4./3.)*termMR(1,2);
-	cMR[2][5] = (4./J)*c2*RB(2,2)*RB(2,0)-(4./J)*c2*(RB(2,2)*RB(2,0)+RB(2,0)*RB(2,2))
-			+devsMR(2,0)+(-4./3.)*termMR(2,0);
-	cMR[3][3] = (4./J)*c2*RB(0,1)*RB(0,1)-(4./J)*c2*(RB(0,0)*RB(1,1)+RB(0,1)*RB(1,0))
-			+(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
-	cMR[3][4] = (4./J)*c2*RB(0,1)*RB(1,2)-(4./J)*c2*(RB(0,1)*RB(1,2)+RB(0,2)*RB(1,1));
-	
-	cMR[3][5] = (4./J)*c2*RB(0,1)*RB(2,0)-(4./J)*c2*(RB(0,2)*RB(1,0)+RB(0,0)*RB(1,2));
+        cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)-(4./J)*c2*(RB(0,0)*RB(0,0)+RB(0,0)*RB(0,0))
+                        +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(0,0)+devsMR(0,0)
+                        +(-4./3.)*(termMR(0,0)+termMR(0,0));
+        cMR[0][1] = (4./J)*c2*RB(0,0)*RB(1,1)-(4./J)*c2*(RB(0,1)*RB(0,1)+RB(0,1)*RB(0,1))
+                        +(-1./3.)*cc2MR+devsMR(0,0)+devsMR(1,1)
+                        +(-4./3.)*(termMR(0,0)+termMR(1,1));
+        cMR[0][2] = (4./J)*c2*RB(0,0)*RB(2,2)-(4./J)*c2*(RB(0,2)*RB(0,2)+RB(0,2)*RB(0,2))
+                        +(-1./3.)*cc2MR+devsMR(0,0)+devsMR(2,2)
+                        +(-4./3.)*(termMR(0,0)+termMR(2,2));
+        cMR[1][1] = (4./J)*c2*RB(1,1)*RB(1,1)-(4./J)*c2*(RB(1,1)*RB(1,1)+RB(1,1)*RB(1,1))
+                        +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(1,1)+devsMR(1,1)
+                        +(-4./3.)*(termMR(1,1)+termMR(1,1));
+        cMR[1][2] = (4./J)*c2*RB(1,1)*RB(2,2)-(4./J)*c2*(RB(1,2)*RB(1,2)+RB(1,2)*RB(1,2))
+                        +(-1./3.)*cc2MR+devsMR(1,1)+devsMR(2,2)
+                        +(-4./3.)*(termMR(1,1)+termMR(2,2));
+        cMR[2][2] = (4./J)*c2*RB(2,2)*RB(2,2)-(4./J)*c2*(RB(2,2)*RB(2,2)+RB(2,2)*RB(2,2))
+                        +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(2,2)+devsMR(2,2)
+                        +(-4./3.)*(termMR(2,2)+termMR(2,2));
+        cMR[0][3] = (4./J)*c2*RB(0,0)*RB(0,1)-(4./J)*c2*(RB(0,0)*RB(0,1)+RB(0,1)*RB(0,0))
+                        +devsMR(0,1)+(-4./3.)*termMR(0,1);
+        cMR[0][4] = (4./J)*c2*RB(0,0)*RB(1,2)-(4./J)*c2*(RB(0,1)*RB(0,2)+RB(0,2)*RB(0,1))
+                        +devsMR(1,2)+(-4./3.)*termMR(1,2);
+        cMR[0][5] = (4./J)*c2*RB(0,0)*RB(2,0)-(4./J)*c2*(RB(0,2)*RB(0,0)+RB(0,0)*RB(0,2))
+                        +devsMR(2,0)+(-4./3.)*termMR(2,0);
+        cMR[1][3] = (4./J)*c2*RB(1,1)*RB(0,1)-(4./J)*c2*(RB(1,0)*RB(1,1)+RB(1,1)*RB(1,0))
+                        +devsMR(0,1)+(-4./3.)*termMR(0,1);
+        cMR[1][4] = (4./J)*c2*RB(1,1)*RB(1,2)-(4./J)*c2*(RB(1,1)*RB(1,2)+RB(1,2)*RB(1,1))
+                        +devsMR(1,2)+(-4./3.)*termMR(1,2);
+        cMR[1][5] = (4./J)*c2*RB(1,1)*RB(2,0)-(4./J)*c2*(RB(1,2)*RB(1,0)+RB(1,0)*RB(1,2))
+                        +devsMR(2,0)+(-4./3.)*termMR(2,0);
+        cMR[2][3] = (4./J)*c2*RB(2,2)*RB(0,1)-(4./J)*c2*(RB(2,0)*RB(2,1)+RB(2,1)*RB(2,0))
+                        +devsMR(0,1)+(-4./3.)*termMR(0,1);
+        cMR[2][4] = (4./J)*c2*RB(2,2)*RB(1,2)-(4./J)*c2*(RB(2,1)*RB(2,2)+RB(2,2)*RB(2,1))
+                        +devsMR(1,2)+(-4./3.)*termMR(1,2);
+        cMR[2][5] = (4./J)*c2*RB(2,2)*RB(2,0)-(4./J)*c2*(RB(2,2)*RB(2,0)+RB(2,0)*RB(2,2))
+                        +devsMR(2,0)+(-4./3.)*termMR(2,0);
+        cMR[3][3] = (4./J)*c2*RB(0,1)*RB(0,1)-(4./J)*c2*(RB(0,0)*RB(1,1)+RB(0,1)*RB(1,0))
+                        +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
+        cMR[3][4] = (4./J)*c2*RB(0,1)*RB(1,2)-(4./J)*c2*(RB(0,1)*RB(1,2)+RB(0,2)*RB(1,1));
+        
+        cMR[3][5] = (4./J)*c2*RB(0,1)*RB(2,0)-(4./J)*c2*(RB(0,2)*RB(1,0)+RB(0,0)*RB(1,2));
 
-	cMR[4][4] = (4./J)*c2*RB(1,2)*RB(1,2)-(4./J)*c2*(RB(1,1)*RB(2,2)+RB(1,2)*RB(2,1))
-			+(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
-	cMR[4][5] = (4./J)*c2*RB(1,2)*RB(2,0)-(4./J)*c2*(RB(1,2)*RB(2,0)+RB(1,0)*RB(2,2));
+        cMR[4][4] = (4./J)*c2*RB(1,2)*RB(1,2)-(4./J)*c2*(RB(1,1)*RB(2,2)+RB(1,2)*RB(2,1))
+                        +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
+        cMR[4][5] = (4./J)*c2*RB(1,2)*RB(2,0)-(4./J)*c2*(RB(1,2)*RB(2,0)+RB(1,0)*RB(2,2));
 
-	cMR[5][5] = (4./J)*c2*RB(2,0)*RB(2,0)-(4./J)*c2*(RB(2,2)*RB(0,0)+RB(2,0)*RB(0,2))
-			+(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
+        cMR[5][5] = (4./J)*c2*RB(2,0)*RB(2,0)-(4./J)*c2*(RB(2,2)*RB(0,0)+RB(2,0)*RB(0,2))
+                        +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
 
-	//________________________________________________________fiber contribution term
+        //________________________________________________________fiber contribution term
 
-	double cFC[6][6];
+        double cFC[6][6];
 
-	cFC[0][0] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(0,0)+devsFC(0,0)
-			+(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(0,0))+(4./J)*cc1*DY(0,0)*DY(0,0);
-	cFC[0][1] = (-1./3.)*cc2FC+devsFC(0,0)+devsFC(1,1)
-			+(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(1,1))+(4./J)*cc1*DY(0,0)*DY(1,1);
-	cFC[0][2] = (-1./3.)*cc2FC+devsFC(0,0)+devsFC(2,2)
-			+(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(2,2))+(4./J)*cc1*DY(0,0)*DY(2,2);
-	cFC[1][1] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(1,1)+devsFC(1,1)
-			+(-4./3.)*(1./J)*cc1*(DY(1,1)+DY(1,1))+(4./J)*cc1*DY(1,1)*DY(1,1);
-	cFC[1][2] = (-1./3.)*cc2FC+devsFC(1,1)+devsFC(2,2)
-			+(-4./3.)*(1./J)*cc1*(DY(1,1)+DY(2,2))+(4./J)*cc1*DY(1,1)*DY(2,2);
-	cFC[2][2] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(2,2)+devsFC(2,2)
-			+(-4./3.)*(1./J)*cc1*(DY(2,2)+DY(2,2))+(4./J)*cc1*DY(2,2)*DY(2,2);
-	cFC[0][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)+(4./J)*cc1*DY(0,0)*DY(0,1);
-	cFC[0][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)+(4./J)*cc1*DY(0,0)*DY(1,2);
-	cFC[0][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)+(4./J)*cc1*DY(0,0)*DY(2,0);
-	cFC[1][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)+(4./J)*cc1*DY(1,1)*DY(0,1);
-	cFC[1][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)+(4./J)*cc1*DY(1,1)*DY(1,2);
-	cFC[1][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)+(4./J)*cc1*DY(1,1)*DY(2,0);
-	cFC[2][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)+(4./J)*cc1*DY(2,2)*DY(0,1);
-	cFC[2][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)+(4./J)*cc1*DY(2,2)*DY(1,2);
-	cFC[2][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)+(4./J)*cc1*DY(2,2)*DY(2,0);
-	cFC[3][3] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(0,1)*DY(0,1);
-	cFC[3][4] = (4./J)*cc1*DY(0,1)*DY(1,2);
-	cFC[3][5] = (4./J)*cc1*DY(0,1)*DY(2,0);
-	cFC[4][4] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(1,2)*DY(1,2);
-	cFC[4][5] = (4./J)*cc1*DY(1,2)*DY(2,0);
-	cFC[5][5] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(2,0)*DY(2,0);
+        cFC[0][0] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(0,0)+devsFC(0,0)
+                        +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(0,0))+(4./J)*cc1*DY(0,0)*DY(0,0);
+        cFC[0][1] = (-1./3.)*cc2FC+devsFC(0,0)+devsFC(1,1)
+                        +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(1,1))+(4./J)*cc1*DY(0,0)*DY(1,1);
+        cFC[0][2] = (-1./3.)*cc2FC+devsFC(0,0)+devsFC(2,2)
+                        +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(2,2))+(4./J)*cc1*DY(0,0)*DY(2,2);
+        cFC[1][1] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(1,1)+devsFC(1,1)
+                        +(-4./3.)*(1./J)*cc1*(DY(1,1)+DY(1,1))+(4./J)*cc1*DY(1,1)*DY(1,1);
+        cFC[1][2] = (-1./3.)*cc2FC+devsFC(1,1)+devsFC(2,2)
+                        +(-4./3.)*(1./J)*cc1*(DY(1,1)+DY(2,2))+(4./J)*cc1*DY(1,1)*DY(2,2);
+        cFC[2][2] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(2,2)+devsFC(2,2)
+                        +(-4./3.)*(1./J)*cc1*(DY(2,2)+DY(2,2))+(4./J)*cc1*DY(2,2)*DY(2,2);
+        cFC[0][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)+(4./J)*cc1*DY(0,0)*DY(0,1);
+        cFC[0][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)+(4./J)*cc1*DY(0,0)*DY(1,2);
+        cFC[0][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)+(4./J)*cc1*DY(0,0)*DY(2,0);
+        cFC[1][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)+(4./J)*cc1*DY(1,1)*DY(0,1);
+        cFC[1][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)+(4./J)*cc1*DY(1,1)*DY(1,2);
+        cFC[1][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)+(4./J)*cc1*DY(1,1)*DY(2,0);
+        cFC[2][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)+(4./J)*cc1*DY(2,2)*DY(0,1);
+        cFC[2][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)+(4./J)*cc1*DY(2,2)*DY(1,2);
+        cFC[2][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)+(4./J)*cc1*DY(2,2)*DY(2,0);
+        cFC[3][3] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(0,1)*DY(0,1);
+        cFC[3][4] = (4./J)*cc1*DY(0,1)*DY(1,2);
+        cFC[3][5] = (4./J)*cc1*DY(0,1)*DY(2,0);
+        cFC[4][4] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(1,2)*DY(1,2);
+        cFC[4][5] = (4./J)*cc1*DY(1,2)*DY(2,0);
+        cFC[5][5] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(2,0)*DY(2,0);
 
-	//________________________________________________________the STIFFNESS
-	
-	double D[6][6];
+        //________________________________________________________the STIFFNESS
+        
+        double D[6][6];
 
         D[0][0] =cvol[0][0]+cMR[0][0]+cFC[0][0];
         D[0][1] =cvol[0][1]+cMR[0][1]+cFC[0][1];
@@ -542,7 +563,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         D[5][5] =cvol[5][5]+cMR[5][5]+cFC[5][5];
 
 
-	// kmat = B.transpose()*D*B*volold
+        // kmat = B.transpose()*D*B*volold
         double kmat[24][24];
         BtDB(B,D,kmat);
         // kgeo = Bnl.transpose*sig*Bnl*volnew;
@@ -563,11 +584,11 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
             kgeo[ii][jj]*=volnew;
           }
         }
-	for (int I = 0; I < 24;I++){
-	  for (int J = 0; J < 24; J++){
-	    v[24*I+J] = kmat[I][J] + kgeo[I][J];
-	  }
-	}
+        for (int I = 0; I < 24;I++){
+          for (int J = 0; J < 24; J++){
+            v[24*I+J] = kmat[I][J] + kgeo[I][J];
+          }
+        }
         solver->fillMatrix(24,dof,24,dof,v);
       }  // end of loop over particles
     }
@@ -577,9 +598,9 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
 void
 TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
-					 const MPMMaterial* matl,
-					 DataWarehouse* old_dw,
-					 DataWarehouse* new_dw)
+                                         const MPMMaterial* matl,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
 {
    for(int pp=0;pp<patches->size();pp++){
      const Patch* patch = patches->get(pp);
@@ -659,12 +680,12 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     else{
      for(ParticleSubset::iterator iter = pset->begin();
                                   iter != pset->end(); iter++){
-	particleIndex idx = *iter;
+        particleIndex idx = *iter;
 
-	dispGrad.set(0.0);
-	// Get the node indices that surround the cell
-	IntVector ni[8];
-	Vector d_S[8];
+        dispGrad.set(0.0);
+        // Get the node indices that surround the cell
+        IntVector ni[8];
+        Vector d_S[8];
 
 #if 0
         if(ptemperature[idx] < 300.0){
@@ -676,18 +697,18 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
            bulk  = d_initialData.Bulk ;
         }
 #endif
-	patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
-	for(int k = 0; k < 8; k++) {
-	  const Vector& disp = dispNew[ni[k]];
-	  for (int j = 0; j<3; j++){
-	    for (int i = 0; i<3; i++) {
-	      dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
-	    }
-	  }
-	}
+        for(int k = 0; k < 8; k++) {
+          const Vector& disp = dispNew[ni[k]];
+          for (int j = 0; j<3; j++){
+            for (int i = 0; i<3; i++) {
+              dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
+            }
+          }
+        }
 
-	// Find the stressTensor using the displacement gradient
+        // Find the stressTensor using the displacement gradient
 
         // Compute the deformation gradient increment using the dispGrad
 
@@ -701,16 +722,16 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         // get the volumetric part of the deformation
         double J = deformationGradient_new[idx].Determinant();
 
-	// carry forward fiber direction
+        // carry forward fiber direction
         pfiberdir_carry[idx] = pfiberdir[idx];
         deformed_fiber_vector =pfiberdir[idx]; // not actually deformed yet
         //_______________________UNCOUPLE DEVIATORIC AND DILATIONAL PARTS
         //_______________________Ftilde=J^(-1/3)*F
         //_______________________Fvol=J^1/3*Identity
 
-	//_______________________right Cauchy Green (C) tilde and invariants
+        //_______________________right Cauchy Green (C) tilde and invariants
         rightCauchyGreentilde_new = deformationGradient_new[idx].Transpose()
-				* deformationGradient_new[idx]*pow(J,-(2./3.));
+                                * deformationGradient_new[idx]*pow(J,-(2./3.));
         I1tilde = rightCauchyGreentilde_new.Trace();
         I2tilde = .5*(I1tilde*I1tilde -
                 (rightCauchyGreentilde_new*rightCauchyGreentilde_new).Trace());
@@ -737,7 +758,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
          {dWdI4tilde = 0.;
          d2WdI4tilde2 = 0.;
          shear = 2.*c1+c2;
-	 }
+         }
         else
         if (lambda_tilde < lambda_star)
          {
@@ -745,11 +766,11 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                            /lambda_tilde/lambda_tilde;
           d2WdI4tilde2 = 0.25*c3*(c4*exp(c4*(lambda_tilde-1.))
                         -1./lambda_tilde*(exp(c4*(lambda_tilde-1.))-1.))
-		          /(lambda_tilde*lambda_tilde*lambda_tilde);
+                          /(lambda_tilde*lambda_tilde*lambda_tilde);
 
           shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
                                    -2.*dWdI4tilde*lambda_tilde);
-	  }
+          }
         else
          {
           dWdI4tilde = 0.5*(c5+c6/lambda_tilde)/lambda_tilde;
@@ -762,9 +783,9 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         //_______________________________ assemble Cauchy stress
         pstress[idx] = Identity*p
                      + (leftCauchyGreentilde_new*(c1+c2*I1tilde)
-		     - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
-		     + DY*dWdI4tilde*I4tilde
-		     - Identity*(1./3.)
+                     - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
+                     + DY*dWdI4tilde*I4tilde
+                     - Identity*(1./3.)
                       *(c1*I1tilde+2.*c2*I2tilde+dWdI4tilde*I4tilde))*2./J;
         //________________________________end stress
 
@@ -775,9 +796,9 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 }
 
 void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
-						 const MPMMaterial* matl,
-						 const PatchSet* patches,
-						 const bool recursion) const
+                                                 const MPMMaterial* matl,
+                                                 const PatchSet* patches,
+                                                 const bool recursion) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -800,8 +821,8 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
 }
 
 void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
-						 const MPMMaterial* matl,
-						 const PatchSet*) const
+                                                 const MPMMaterial* matl,
+                                                 const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
@@ -843,9 +864,9 @@ double TransIsoHyperImplicit::computeRhoMicroCM(double pressure,
 }
 
 void TransIsoHyperImplicit::computePressEOSCM(const double rho_cur,double& pressure, 
-				    const double p_ref,
-				    double& dp_drho, double& tmp,
-				    const MPMMaterial* matl)
+                                    const double p_ref,
+                                    double& dp_drho, double& tmp,
+                                    const MPMMaterial* matl)
 {
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();
@@ -890,8 +911,8 @@ namespace Uintah {
     static TypeDescription* td = 0;
     if(!td){
       td = scinew TypeDescription(TypeDescription::Other,
-				  "TransIsoHyperImplicit::StateData", true,
-				  &makeMPI_CMData);
+                                  "TransIsoHyperImplicit::StateData", true,
+                                  &makeMPI_CMData);
     }
     return td;
   }

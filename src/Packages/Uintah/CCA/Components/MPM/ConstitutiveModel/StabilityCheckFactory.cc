@@ -36,3 +36,22 @@ StabilityCheck* StabilityCheckFactory::create(ProblemSpecP& ps)
    else 
       throw ProblemSetupException("Unknown Stability Check ("+mat_type+")");
 }
+
+StabilityCheck* 
+StabilityCheckFactory::createCopy(const StabilityCheck* sc)
+{
+   if (dynamic_cast<const AcousticTensorCheck*>(sc))
+      return(scinew AcousticTensorCheck(dynamic_cast<const AcousticTensorCheck*>(sc)));
+
+   else if (dynamic_cast<const DruckerCheck*>(sc))
+      return(scinew DruckerCheck(dynamic_cast<const DruckerCheck*>(sc)));
+
+   else if (dynamic_cast<const BeckerCheck*>(sc))
+      return(scinew BeckerCheck(dynamic_cast<const BeckerCheck*>(sc)));
+
+   else if (dynamic_cast<const DruckerBeckerCheck*>(sc))
+      return(scinew DruckerBeckerCheck(dynamic_cast<const DruckerBeckerCheck*>(sc)));
+
+   else 
+      return 0;
+}

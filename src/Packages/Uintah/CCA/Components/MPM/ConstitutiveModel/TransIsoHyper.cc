@@ -60,6 +60,24 @@ TransIsoHyper::TransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 
 }
 
+TransIsoHyper::TransIsoHyper(const TransIsoHyper* cm)
+{
+  lb = cm->lb;
+  d_8or27 = cm->d_8or27;
+  NGN = cm->NGN;
+
+  d_useModifiedEOS = cm->d_useModifiedEOS ;
+
+  d_initialData.Bulk = cm->d_initialData.Bulk;
+  d_initialData.c1 = cm->d_initialData.c1;
+  d_initialData.c2 = cm->d_initialData.c2;
+  d_initialData.c3 = cm->d_initialData.c3;
+  d_initialData.c4 = cm->d_initialData.c4;
+  d_initialData.c5 = cm->d_initialData.c5;
+  d_initialData.lambda_star = cm->d_initialData.lambda_star;
+  d_initialData.a0 = cm->d_initialData.a0;
+}
+
 TransIsoHyper::~TransIsoHyper()
 // _______________________DESTRUCTOR
 {
@@ -80,7 +98,7 @@ void TransIsoHyper::initializeCMData(const Patch* patch,
    ParticleVariable<Matrix3> deformationGradient, pstress;
 
    new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,
-			  pset);
+                          pset);
    new_dw->allocateAndPut(pstress,lb->pStressLabel,pset);
 
    for(ParticleSubset::iterator iter = pset->begin();
@@ -94,9 +112,9 @@ void TransIsoHyper::initializeCMData(const Patch* patch,
 
 
 void TransIsoHyper::allocateCMDataAddRequires(Task* task,
-					    const MPMMaterial* matl,
-					    const PatchSet* patch,
-					    MPMLabel* lb) const
+                                            const MPMMaterial* matl,
+                                            const PatchSet* patch,
+                                            MPMLabel* lb) const
 // _________________________________________STILL EXPERIMENTAL
 {
   task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
@@ -105,10 +123,10 @@ void TransIsoHyper::allocateCMDataAddRequires(Task* task,
 
 
 void TransIsoHyper::allocateCMDataAdd(DataWarehouse* new_dw,
-				    ParticleSubset* addset,
-				    map<const VarLabel*, ParticleVariableBase*>* newState,
-				    ParticleSubset* delset,
-				    DataWarehouse* old_dw)
+                                    ParticleSubset* addset,
+                                    map<const VarLabel*, ParticleVariableBase*>* newState,
+                                    ParticleSubset* delset,
+                                    DataWarehouse* old_dw)
 // _________________________________________STILL EXPERIMENTAL
 {
   // Put stuff in here to initialize each particle's
@@ -133,7 +151,7 @@ void TransIsoHyper::allocateCMDataAdd(DataWarehouse* new_dw,
 }
 
 void TransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
-				   std::vector<const VarLabel*>& to)
+                                   std::vector<const VarLabel*>& to)
 //______________________________KEEPS TRACK OF THE PARTICLES AND THE RELATED VARIABLES
 //______________________________(EACH CM ADD ITS OWN STATE VARS)
 //______________________________AS PARTICLES MOVE FROM PATCH TO PATCH
@@ -148,8 +166,8 @@ void TransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
 }
 
 void TransIsoHyper::computeStableTimestep(const Patch* patch,
-					const MPMMaterial* matl,
-					DataWarehouse* new_dw)
+                                        const MPMMaterial* matl,
+                                        DataWarehouse* new_dw)
 //__________________________TIME STEP DEPENDS ON:
 //__________________________CELL SPACING, VEL OF PARTICLE, MATERIAL WAVE SPEED @ EACH PARTICLE
 //__________________________REDUCTION OVER ALL dT'S FROM EVERY PATCH PERFORMED
@@ -183,8 +201,8 @@ void TransIsoHyper::computeStableTimestep(const Patch* patch,
      c_dil = sqrt((Bulk+2./3.*c1)*pvolume[idx]/pmass[idx]);
 
      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
@@ -197,9 +215,9 @@ Vector TransIsoHyper::getInitialFiberDir()
 }
 
 void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
-				      const MPMMaterial* matl,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw)
+                                      const MPMMaterial* matl,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
 //___________________________________COMPUTES THE STRESS ON ALL THE PARTICLES IN A GIVEN PATCH FOR A GIVEN MATERIAL
 //___________________________________CALLED ONCE PER TIME STEP
 //___________________________________CONTAINS A COPY OF computeStableTimestep
@@ -273,7 +291,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
 
     for(ParticleSubset::iterator iter = pset->begin();
-	iter != pset->end(); iter++){
+        iter != pset->end(); iter++){
       particleIndex idx = *iter;
       
       // Get the node indices that surround the cell
@@ -281,22 +299,22 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
       Vector d_S[MAX_BASIS];
       
       if(d_8or27==8){
-	patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
       }
       else if(d_8or27==27){
-	patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
+        patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
       }
       
       Vector gvel;
       velGrad.set(0.0);
       for(int k = 0; k < d_8or27; k++) {
-	 gvel = gvelocity[ni[k]];
-	 for (int j = 0; j<3; j++){
-	    double d_SXoodx = d_S[k][j] * oodx[j];
-	    for (int i = 0; i<3; i++) {
-	       velGrad(i,j) += gvel[i] * d_SXoodx;
-	    }
-	 }
+         gvel = gvelocity[ni[k]];
+         for (int j = 0; j<3; j++){
+            double d_SXoodx = d_S[k][j] * oodx[j];
+            for (int i = 0; i<3; i++) {
+               velGrad(i,j) += gvel[i] * d_SXoodx;
+            }
+         }
       }
       
       // Compute the deformation gradient increment using the time_step
@@ -306,7 +324,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
-				     deformationGradient[idx];
+                                     deformationGradient[idx];
 
       // get the volumetric part of the deformation
       J = deformationGradient_new[idx].Determinant();
@@ -321,7 +339,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
       //_______________________right Cauchy Green (C) tilde and invariants
       rightCauchyGreentilde_new = deformationGradient_new[idx].Transpose()
-				* deformationGradient_new[idx]*pow(J,-(2./3.));
+                                * deformationGradient_new[idx]*pow(J,-(2./3.));
 
       I1tilde = rightCauchyGreentilde_new.Trace();
       I2tilde = .5*(I1tilde*I1tilde -
@@ -350,7 +368,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
        {dWdI4tilde = 0.;
        d2WdI4tilde2 = 0.;
        shear = 2.*c1+c2;
-	}
+        }
       else
       if (lambda_tilde < lambda_star)
        {
@@ -358,11 +376,11 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
                            /lambda_tilde/lambda_tilde;
        d2WdI4tilde2 = 0.25*c3*(c4*exp(c4*(lambda_tilde-1.))
                      -1./lambda_tilde*(exp(c4*(lambda_tilde-1.))-1.))
-		      /(lambda_tilde*lambda_tilde*lambda_tilde);
+                      /(lambda_tilde*lambda_tilde*lambda_tilde);
 
        shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
                                    -2.*dWdI4tilde*lambda_tilde);
-	}
+        }
       else
        {
        dWdI4tilde = 0.5*(c5+c6/lambda_tilde)/lambda_tilde;
@@ -375,9 +393,9 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
       //_______________________________ assemble Cauchy stress
       pstress[idx] = Identity*p
                    + (leftCauchyGreentilde_new*(c1+c2*I1tilde)
-		   - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
-		   + DY*dWdI4tilde*I4tilde
-		   - Identity*(1./3.)
+                   - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
+                   + DY*dWdI4tilde*I4tilde
+                   - Identity*(1./3.)
                       *(c1*I1tilde+2.*c2*I2tilde+dWdI4tilde*I4tilde))*2./J;
 
       // Compute the strain energy for all the particles
@@ -398,8 +416,8 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
       c_dil = sqrt((Bulk+1./3.*shear)*pvolume_deformed[idx]/pmass[idx]);
 
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-  		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+                       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
     }
 
     WaveSpeed = dx/WaveSpeed;
@@ -450,8 +468,8 @@ void TransIsoHyper::carryForward(const PatchSubset* patches,
 }
 
 void TransIsoHyper::addComputesAndRequires(Task* task,
-					  const MPMMaterial* matl,
-					  const PatchSet*) const
+                                          const MPMMaterial* matl,
+                                          const PatchSet*) const
 //___________TELLS THE SCHEDULER WHAT DATA
 //___________NEEDS TO BE AVAILABLE AT THE TIME computeStressTensor IS CALLED
 {
@@ -462,7 +480,7 @@ void TransIsoHyper::addComputesAndRequires(Task* task,
     task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
     task->requires(Task::OldDW, lb->pFiberDirLabel, matlset, Ghost::None);
     task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
-						    matlset, Ghost::None);
+                                                    matlset, Ghost::None);
     if(d_8or27==27){
       task->requires(Task::OldDW,lb->pSizeLabel,    matlset, Ghost::None);
     }
@@ -478,9 +496,9 @@ void TransIsoHyper::addComputesAndRequires(Task* task,
 }
 
 void TransIsoHyper::addComputesAndRequires(Task* ,
-				   const MPMMaterial* ,
-				   const PatchSet* ,
-				   const bool ) const
+                                   const MPMMaterial* ,
+                                   const PatchSet* ,
+                                   const bool ) const
 //_________________________________________here this one's empty
 {
 }
@@ -508,9 +526,9 @@ double TransIsoHyper::computeRhoMicroCM(double pressure,
 }
 
 void TransIsoHyper::computePressEOSCM(const double rho_cur,double& pressure, 
-				    const double p_ref,
-				    double& dp_drho, double& tmp,
-				    const MPMMaterial* matl)
+                                    const double p_ref,
+                                    double& dp_drho, double& tmp,
+                                    const MPMMaterial* matl)
 {
   double Bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();
@@ -555,7 +573,7 @@ namespace Uintah {
     static TypeDescription* td = 0;
     if(!td){
       td = scinew TypeDescription(TypeDescription::Other,
-				  "TransIsoHyper::StateData", true, &makeMPI_CMData);
+                                  "TransIsoHyper::StateData", true, &makeMPI_CMData);
     }
     return td;
   }

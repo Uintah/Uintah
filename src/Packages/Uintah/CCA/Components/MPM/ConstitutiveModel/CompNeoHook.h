@@ -35,13 +35,14 @@ namespace Uintah {
 
     // Prevent copying of this class
     // copy constructor
-    CompNeoHook(const CompNeoHook &cm);
+    //CompNeoHook(const CompNeoHook &cm);
     CompNeoHook& operator=(const CompNeoHook &cm);
     int d_8or27;
 
   public:
     // constructors
     CompNeoHook(ProblemSpecP& ps,  MPMLabel* lb, int n8or27);
+    CompNeoHook(const CompNeoHook* cm);
        
     // destructor
     virtual ~CompNeoHook();

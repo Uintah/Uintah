@@ -55,12 +55,13 @@ namespace Uintah {
     CMData d_initialData;
     // Prevent copying of this class
     // copy constructor
-    ViscoScram(const ViscoScram &cm);
+    //ViscoScram(const ViscoScram &cm);
     ViscoScram& operator=(const ViscoScram &cm);
 
   public:
     // constructors
     ViscoScram(ProblemSpecP& ps, MPMLabel* lb, int n8or27);
+    ViscoScram(const ViscoScram* cm);
        
     // destructor
     virtual ~ViscoScram();

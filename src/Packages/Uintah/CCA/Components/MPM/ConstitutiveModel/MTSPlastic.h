@@ -145,12 +145,13 @@ namespace Uintah {
 	 
     // Prevent copying of this class
     // copy constructor
-    MTSPlastic(const MTSPlastic &cm);
+    //MTSPlastic(const MTSPlastic &cm);
     MTSPlastic& operator=(const MTSPlastic &cm);
 
   public:
     // constructors
     MTSPlastic(ProblemSpecP& ps);
+    MTSPlastic(const MTSPlastic* cm);
 	 
     // destructor 
     virtual ~MTSPlastic();

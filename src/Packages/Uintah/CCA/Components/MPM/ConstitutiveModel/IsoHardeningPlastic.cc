@@ -20,6 +20,18 @@ IsoHardeningPlastic::IsoHardeningPlastic(ProblemSpecP& ps)
 	ParticleVariable<double>::getTypeDescription());
 }
 	 
+IsoHardeningPlastic::IsoHardeningPlastic(const IsoHardeningPlastic* cm)
+{
+  d_CM.K = cm->d_CM.K;
+  d_CM.sigma_0 = cm->d_CM.sigma_0;
+
+  // Initialize internal variable labels for evolution
+  pAlphaLabel = VarLabel::create("p.alpha",
+	ParticleVariable<double>::getTypeDescription());
+  pAlphaLabel_preReloc = VarLabel::create("p.alpha+",
+	ParticleVariable<double>::getTypeDescription());
+}
+	 
 IsoHardeningPlastic::~IsoHardeningPlastic()
 {
   VarLabel::destroy(pAlphaLabel);
@@ -60,7 +72,8 @@ IsoHardeningPlastic::allocateCMDataAddRequires(Task* task,
 					       MPMLabel* lb) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW,pAlphaLabel_preReloc, matlset,Ghost::None);
+  task->requires(Task::NewDW, pAlphaLabel_preReloc, matlset, Ghost::None);
+  //task->requires(Task::OldDW, pAlphaLabel, matlset, Ghost::None);
 }
 
 void IsoHardeningPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
@@ -78,6 +91,7 @@ void IsoHardeningPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(pAlpha,addset);
 
   new_dw->get(o_Alpha,pAlphaLabel_preReloc,delset);
+  //old_dw->get(o_Alpha,pAlphaLabel,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for(o = delset->begin(); o != delset->end(); o++, n++) {
@@ -200,11 +214,6 @@ IsoHardeningPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState*,
 						    const particleIndex )
 {
   return d_CM.K;
-  ostringstream desc;
-  desc << "IsoHardeningPlastic::evalDerivativeWRTPlasticStrain not yet "
-       << "implemented. " << endl;
-  throw ProblemSetupException(desc.str());
-  //return 0.0;
 }
 
 ///////////////////////////////////////////////////////////////////////////

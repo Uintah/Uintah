@@ -62,12 +62,13 @@ WARNING
 	 
     // Prevent copying of this class
     // copy constructor
-    CompNeoHookPlas(const CompNeoHookPlas &cm);
+    //CompNeoHookPlas(const CompNeoHookPlas &cm);
     CompNeoHookPlas& operator=(const CompNeoHookPlas &cm);
 
   public:
     // constructors
     CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* lb,int n8or27);
+    CompNeoHookPlas(const CompNeoHookPlas* cm);
 	 
     // destructor 
     virtual ~CompNeoHookPlas();

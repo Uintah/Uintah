@@ -34,12 +34,13 @@ namespace Uintah {
 
     // Prevent copying of this class
     // copy constructor
-    IdealGasMP(const IdealGasMP &cm);
+    //IdealGasMP(const IdealGasMP &cm);
     IdealGasMP& operator=(const IdealGasMP &cm);
 
   public:
     // constructors
     IdealGasMP(ProblemSpecP& ps,  MPMLabel* lb, int n8or27);
+    IdealGasMP(const IdealGasMP* cm);
        
     // destructor
     virtual ~IdealGasMP();
