@@ -308,11 +308,11 @@ inline void Matrix3::operator *= (const double value)
 
 inline void Matrix3::operator += (const Matrix3 &m3)
 {
-  // Multiply each component of the Matrix3 by the value
+  // += operator 
 
   for(int i=0;i<3;i++){
     for(int j=0;j<3;j++){
-        mat3[i][j] += m3(i,j);
+        mat3[i][j] += m3(i+1,j+1);
     }
   }
 
@@ -486,6 +486,9 @@ inline SCICore::Geometry::Vector operator*(const SCICore::Geometry::Vector& v, c
 #endif  // __MATRIX3_H__
 
 // $Log$
+// Revision 1.7  2000/08/18 17:06:11  guilkey
+// Fixed the += operator.
+//
 // Revision 1.6  2000/08/15 22:01:59  witzel
 // Sorting eigenvalues e1, e2, e3.
 //
