@@ -1,10 +1,22 @@
 
 #include <Packages/rtrt/Core/Names.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <map>
+#include <sgi_stl_warnings_on.h>
+
 using namespace std;
 using namespace rtrt;
 
 static map<const Object*, const string> names;
+static int unique_name_index = 0;
+
+void Names::nameObjectWithUnique(const Object* ptr) {
+  char buf[20];
+  sprintf(buf, "Object%2d", unique_name_index);
+  unique_name_index++;
+  nameObject(string(buf), ptr);
+}
 
 void Names::nameObject(const string& name, const Object* ptr)
 {
