@@ -2,7 +2,7 @@
 #define __MIE_GRUNEISEN_EOS_MODEL_H__
 
 
-#include "EquationOfState.h"	
+#include "MPMEquationOfState.h"	
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -55,7 +55,7 @@ WARNING
   
 ****************************************/
 
-      class MieGruneisenEOS : public EquationOfState {
+      class MieGruneisenEOS : public MPMEquationOfState {
 
       // Create datatype for storing model parameters
       public:

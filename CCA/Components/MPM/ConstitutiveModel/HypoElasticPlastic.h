@@ -5,7 +5,7 @@
 #include "ConstitutiveModel.h"	
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/EquationOfState.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMEquationOfState.h>
 #include <math.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -75,7 +75,7 @@ WARNING
     double d_tol;
     PlasticityModel* d_plasticity;
     DamageModel* d_damage;
-    EquationOfState* d_eos;
+    MPMEquationOfState* d_eos;
 	 
     // Prevent copying of this class
     // copy constructor
