@@ -67,13 +67,13 @@
                 <burn type = "null" />
 		<density>1.e3</density>
                 <constitutive_model type="trans_iso_hyper">
-                    <bulk_modulus>46700</bulk_modulus>
                     <direction_of_symm>[0,0,1]</direction_of_symm>
-		    <mooney_rivlin_1>1.44</mooney_rivlin_1>
-		    <mooney_rivlin_2>0</mooney_rivlin_2>
-		    <scales_exp_stresses>0.57</scales_exp_stresses>
-		    <controls_uncrimping>48</controls_uncrimping>
-		    <straightened_fibers>467</straightened_fibers>
+                    <bulk_modulus>46700</bulk_modulus>
+		    <c1>1.44</c1>
+		    <c2>0</c2>
+		    <c3>0.57</c3>
+		    <c4>48</c4>
+		    <c5>467</c5>
 		    <fiber_stretch>1.062</fiber_stretch>
                 </constitutive_model>
 		<toughness>10.e6</toughness>
