@@ -139,6 +139,7 @@ donesome( MPI_Comm & comm, int donecount )
   }
   ASSERT(ids.size() - donecount == j);
   ids.resize(j);
+  handlers.resize(j);
 
   return true; // more to test
 }
