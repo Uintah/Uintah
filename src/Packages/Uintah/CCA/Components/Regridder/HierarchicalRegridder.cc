@@ -262,7 +262,7 @@ void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
         IntVector childLatticeStartIdx = latticeStartIdx;
         IntVector childLatticeEndIdx = latticeEndIdx;
         for (int childLevelIdx = levelIdx+1; childLevelIdx < oldGrid->numLevels(); childLevelIdx++) {
-          for (CellIterator inner_iter(childLatticeStartIdx, childLatticeEndIdx); !iter.done(); iter++) {
+          for (CellIterator inner_iter(childLatticeStartIdx, childLatticeEndIdx); !inner_iter.done(); inner_iter++) {
             IntVector inner_idx(*inner_iter);
             rdbg << "Deleting Active [ " << childLevelIdx << " ]: " << inner_idx << endl;
             (*d_patchActive[childLevelIdx])[inner_idx] = 0;
