@@ -51,6 +51,8 @@ namespace Volume {
 using SCIRun::GeomObj;
 using SCIRun::DrawInfoOpenGL;
 
+class VolShaderFactory;
+
 class VolumeRenderer : public TextureRenderer
 {
 public:
@@ -81,19 +83,8 @@ protected:
   double ambient_, diffuse_, specular_, shine_;
   int light_;
   bool adaptive_;
-  
-  FragmentProgramARB* vol_shader1_;
-  FragmentProgramARB* vol_shader4_;
-  FragmentProgramARB* fog_vol_shader1_;
-  FragmentProgramARB* fog_vol_shader4_;
-  FragmentProgramARB* lit_vol_shader_;
-  FragmentProgramARB* lit_fog_vol_shader_;
-  FragmentProgramARB* vol_shader1_2_;
-  FragmentProgramARB* vol_shader4_2_;
-  FragmentProgramARB* fog_vol_shader1_2_;
-  FragmentProgramARB* fog_vol_shader4_2_;
-  FragmentProgramARB* lit_vol_shader_2_;
-  FragmentProgramARB* lit_fog_vol_shader_2_;
+
+  VolShaderFactory* shader_factory_;
 };
 
 } // End namespace SCIRun

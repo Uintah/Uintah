@@ -171,6 +171,7 @@ ShaderProgramARB::create()
   }
 
   if(mSupported) {
+    //cerr << mProgram << endl;
     glGenProgramsARB(1, &mId);
     glBindProgramARB(mType, mId);
     glProgramStringARB(mType, GL_PROGRAM_FORMAT_ASCII_ARB,
