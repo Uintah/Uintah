@@ -39,6 +39,14 @@
 #include <vector>
 #include <set>
 
+// This removes compiler warnings about unreachable statements.
+// Only use BREAK after lines that will kill the program.  Otherwise
+// use break.
+#if defined(__sgi) && !defined(__GNUC__)
+#  define BREAK 
+#else
+#  define BREAK break
+#endif
 
 namespace SCIRun {
 
@@ -136,18 +144,14 @@ public:
 	{
 	case 0: return (i_ + (mesh_->ni_-1)*j_ + 
 			(mesh_->ni_-1)*mesh_->nj_*k_); 
-	  break;
 	case 1: return (j_ + (mesh_->nj_-1)*k_ + 
 			(mesh_->nj_-1)*mesh_->nk_*i_ + 
 			(mesh_->ni_-1)*mesh_->nj_*mesh_->nk_); 
-	  break;
 	case 2: return (k_ + (mesh_->nk_-1)*i_ + 
 			(mesh_->nk_-1)*mesh_->ni_*j_ +
 			(mesh_->ni_-1)*mesh_->nj_*mesh_->nk_ + 
 			mesh_->ni_*(mesh_->nj_-1)*mesh_->nk_); 
-	  break;
 	default: return 0; //ASSERTFAIL("EdgeIndex dir_ off.");
-	  break;
 	}
     }
 
@@ -183,18 +187,14 @@ public:
 	{
 	case 0: return (i_ + (mesh_->ni_-1)*j_ + 
 			(mesh_->ni_-1)*(mesh_->nj_-1)*k_); 
-	  break;
 	case 1: return (j_ + (mesh_->nj_-1)*k_ + 
 			(mesh_->nj_-1)*(mesh_->nk_-1)*i_ + 
 			(mesh_->ni_-1)*(mesh_->nj_-1)*mesh_->nk_);
-	  break;
 	case 2: return (k_ + (mesh_->nk_-1)*i_ + 
 			(mesh_->nk_-1)*(mesh_->ni_-1)*j_ +
 			(mesh_->ni_-1)*(mesh_->nj_-1)*mesh_->nk_ + 
 			mesh_->ni_*(mesh_->nj_-1)*(mesh_->nk_-1));
-	  break;
 	default: return 0; //ASSERTFAIL("FaceIndex dir_ off."); 
-	  break;
 	}
     }
 
@@ -444,7 +444,7 @@ public:
       default:
       case 3:
 	ASSERTFAIL("Iterating beyond MaskedLatVolMesh edge boundaries.");
-	break;
+	BREAK;
       }
     }
 
@@ -522,7 +522,7 @@ public:
 	  break;
 	default:
 	  ASSERTFAIL("Iterating beyond MaskedLatVolMesh edge boundaries.");
-	  break;
+	  BREAK;
 	}
     }
   private:    
@@ -626,7 +626,7 @@ public:
       default:
       case 3:
 	ASSERTFAIL("Iterating beyond MaskedLatVolMesh edge boundaries.");
-	break;
+	BREAK;
       }
     }
 
@@ -704,7 +704,7 @@ public:
 	  break;
 	default:
 	  ASSERTFAIL("Iterating beyond MaskedLatVolMesh face boundaries.");
-	  break;
+	  BREAK;
 	}
     }
 
