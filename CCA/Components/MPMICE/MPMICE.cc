@@ -436,7 +436,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   if (one_matl->removeReference()){
     delete one_matl;
   }
-  if(d_ice->d_usingLODI){
+  if(d_ice->d_customBC_var_basket->usingLodi){
     for(int f=0;f<Patch::numFaces;f++){
       if(maxMach_PSS[f]->removeReference()){
         delete maxMach_PSS[f];
@@ -645,10 +645,10 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
     t->requires(Task::OldDW,Ilb->vel_CCLabel,        ice_matls,  Ghost::None);
     t->requires(Task::NewDW,MIlb->vel_CCLabel,       mpm_matls,  Ghost::None);
   }
-    
-  if(d_ice->d_usingNG_hack){
-    addRequires_NGNozzle(t, "EqPress", Ilb, ice_matls); // NG hack
-  }
+
+  computesRequires_CustomBCs(t, "EqPress", Ilb, ice_matls, 
+                            d_ice->d_customBC_var_basket);
+                              
                               //  A L L _ M A T L S
   if (d_ice->d_RateForm) {   
     t->computes(Ilb->matl_press_CCLabel);
@@ -1754,25 +1754,15 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     //   Don't set Lodi bcs, we already compute Press
     //   in all the extra cells.
     // - make copy of press for implicit calc.
-    Lodi_vars_pressBC lv(0);
-    lv.setLodiBcs = false;
-    
-/*`==========TESTING==========*/
-    NG_BC_vars* ng = new NG_BC_vars;    // NG hack
-    ng->setNGBcs = true;
-    if(d_ice->d_usingNG_hack) {
-      new_dw->allocateTemporary(ng->press_CC, patch);
-      new_dw->allocateTemporary(ng->rho_CC,   patch);
-      ng->press_CC.copyData(press_new);
-      ng->rho_CC.copyData(rho_CC_new[1]);
-      getVars_for_NGNozzle(old_dw, new_dw, Ilb, patch, 1,"EqPress",ng);
-    }
-/*===========TESTING==========`*/
+    preprocess_CustomBCs("EqPressMPMICE",old_dw, new_dw, Ilb, patch, 999,
+                          d_ice->d_customBC_var_basket);
     
     setBC(press_new,   rho_micro, placeHolder,d_ice->d_surroundingMatl_indx,
-          "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, &lv, ng);
+          "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, 
+          d_ice->d_customBC_var_basket);
     
-    delete ng;
+    delete_CustomBCs(d_ice->d_customBC_var_basket);
+    
     // Is this necessary?  - Steve
     press_copy.copyData(press_new);
      
