@@ -86,7 +86,7 @@ itcl_class expscale {
 	}
 
 	frame $w -class $class -borderwidth 2 -relief groove
-
+	pack $w -side top -fill both -expand 1
 	if {[catch {set variable}]} {
 	    set variable $w-variable
 	}
@@ -119,8 +119,7 @@ itcl_class expscale {
 		-insertborderwidth 0
 	pack $w.e.exp
 
-	setscales
-
+	newvalue [set $variable]
     }
 
     destructor {
@@ -138,7 +137,7 @@ itcl_class expscale {
     public variable "" {
 	if {$built} {
 	    $w.scale config -variable ""
-	    setscales
+	    updatevalue [set $variable]
 	    $w.scale config -variable $variable
 	}
     }
@@ -167,8 +166,8 @@ itcl_class expscale {
 	} else {
 	    incr decimalplaces -1
 	}
-	    
-	setscales
+	global $variable
+	updatevalue [set $variable]
     }
 
     method downexp {} {
@@ -181,52 +180,20 @@ itcl_class expscale {
 	} else {
 	    incr decimalplaces
 	}
-	
-	setscales
+	global $variable
+	updatevalue [set $variable]
     }
 
     method chngsign {} {
 	incr sign [expr $sign * -2]
-
 	global $variable
-
-	set value [expr -1 * [set $variable]]
-
-	setscales
-	set $variable $value
-	setscales
+	updatevalue [expr -1 * [set $variable]]
     }
-    method setscales {} {
-	global $variable
-	set value [set $variable]
-	set mag [expr pow(10, $exp)]
-	# Round the value down to get from...
-	set from [expr int($value/$mag)*$mag]
 
-	set to [expr $from+$mag*$sign]
-	set ti [expr $mag/5]
-	
-	set resolution [getResolution ]
+    # don't change the number of decimalplaces or the exponent - just move
+    #   the variable and set the to-from bounds on the scale
 
-	$w.scale configure -from $from -to $to \
-	    -tickinterval $mag -resolution $resolution
-
-	$w.e.exp delete 0 end
-	$w.e.exp insert 0 $exp
-    }
-    method newvalue {value} {
-	global $variable
-	if {$value != 0} {
-	    while {([expr pow(10, [expr $exp-2])] > [expr abs($value)]) && \
-		    ($exp >= -5)} {
-		incr exp -1
-		if { $exp > 2 } {
-		    set decimalplaces 0
-		} else {
-		    incr decimalplaces
-		}
-	    }
-	}
+    method updatevalue {value} {
 	set mag [expr pow(10, $exp)]
 	# Round the value down to get from...
 	if {$value < 0} {
@@ -235,7 +202,55 @@ itcl_class expscale {
 	    set from [expr int($value/$mag)*$mag]
 	}
 
-	set to [expr $from+$mag*$sign]
+	set to [expr $from+$mag]
+	set ti [expr $mag/5]
+	
+	set resolution [getResolution ]
+	$w.scale configure -from $from -to $to \
+	    -tickinterval $mag -resolution $resolution
+
+	global $variable
+	set $variable $value
+	$w.e.exp delete 0 end
+	$w.e.exp insert 0 $exp
+    }
+	
+    # figure out everything - decimalplaces, exponent, and to-from bounds
+
+    method newvalue {value} {
+	global $variable
+	
+	# crop of trailing zeros
+	set value [expr $value * 1]
+	set decimalplaces 2
+	set spl [split $value .]
+	if {[llength $spl] != 1} {
+	    set decimalplaces [string length [lindex $spl end]]
+	}
+	if {$decimalplaces > 8} {
+	    set decimalplaces 8
+	}
+
+	set exp 2
+	if {$value != 0} {
+	    while {([expr pow(10, [expr $exp-1])] > [expr abs($value)]) && \
+		    ($exp >= -5)} {
+		
+		incr exp -1
+	    }
+	}
+	set mag [expr pow(10, $exp)]
+	if {$value < 0} {
+	    set sign -1
+	}
+	# Round the value down to get from...
+	if {$value < 0} {
+	    set from [expr int($value/$mag-1)*$mag]
+	} else {
+	    set from [expr int($value/$mag)*$mag]
+	}
+
+	set to [expr $from+$mag]
 	set ti [expr $mag/5]
 	
 	set resolution [getResolution ]
