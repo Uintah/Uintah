@@ -28,6 +28,7 @@
 #include <Packages/rtrt/Core/CutGroup.h>
 #include <Packages/rtrt/Core/PPMImage.h>
 #include <Packages/rtrt/Core/Trigger.h>
+#include <Packages/rtrt/Core/VolumeVis2D.h>
 #if !defined(linux)
 #  include <Packages/rtrt/Sound/SoundThread.h>
 #  include <Packages/rtrt/Sound/Sound.h>
@@ -55,6 +56,7 @@
 #include <errno.h>
 
 #include <vector>
+#include <Packages/rtrt/Core/MouseCallBack.h>
 
 // From Glyph.cc
 namespace rtrt {
@@ -214,6 +216,7 @@ Gui::~Gui()
 void
 Gui::quit()
 {
+  cerr << "Quitting rtrt.\n";
   // Stop threads...
   activeGui->dpy_->scene->rtrt_engine->exit_clean(1);
   // Stop Glut mainloop.
@@ -932,19 +935,41 @@ static double    eye_dist = 0;
 void
 Gui::handleMousePress(int button, int mouse_x, int mouse_y)
 {
-  double     & last_time = priv->last_time;
-  BallData  *& ball = priv->ball;
-
-  // Record the mouse button so that the mouse motion handler will
-  // know what operation to perform.
-  mouseDown_ = button;
-
   // Figure out if the shift is down at this point because you can't
   // do it in the mouse motion handler.
   int mods   = glutGetModifiers();
   shiftDown_ = mods & GLUT_ACTIVE_SHIFT;
   altDown_   = mods & GLUT_ACTIVE_ALT;
   ctrlDown_  = mods & GLUT_ACTIVE_CTRL;
+
+  static Stats *gui_stats = new Stats(1);
+  static DepthStats *ds = new DepthStats(gui_stats->ds[0]);
+  Object *current_obj;
+  if( shiftDown_ ) {
+    Camera *C = activeGui->dpy_->scene->get_camera( 0 );
+    Ray ray;
+    C->makeRay( ray, mouse_x, activeGui->dpy_->priv->yres-mouse_y, 
+		1.0/activeGui->dpy_->priv->xres,
+		1.0/activeGui->dpy_->priv->yres );
+    HitInfo hit;
+    activeGui->dpy_->scene->get_object()->intersect( ray, hit, ds,
+  						     activeGui->dpy_->ppc );
+    if( hit.was_hit ) {
+      current_obj = hit.hit_obj;
+      cout << "Mouse down on object "<<current_obj->get_name()<<endl;
+      cbFunc mouseCB = MouseCallBack::getCB_MD( current_obj );
+      if(mouseCB)
+	mouseCB( mouse_x, mouse_y, current_obj, ray, hit );
+    }
+    return;
+  }
+
+  double     & last_time = priv->last_time;
+  BallData  *& ball = priv->ball;
+
+  // Record the mouse button so that the mouse motion handler will
+  // know what operation to perform.
+  mouseDown_ = button;
 
   activeGui->last_x_ = mouse_x;
   activeGui->last_y_ = mouse_y;
@@ -988,11 +1013,32 @@ Gui::handleMousePress(int button, int mouse_x, int mouse_y)
 } // end handleMousePress()
 
 void
-Gui::handleMouseRelease(int button, int /*mouse_x*/, int /*mouse_y*/)
+Gui::handleMouseRelease(int button, int mouse_x, int mouse_y)
 {
   DpyPrivate * priv      = activeGui->priv;
   double     & last_time = priv->last_time;
 
+  static Stats *gui_stats = new Stats(1);
+  static DepthStats *ds = new DepthStats(gui_stats->ds[0]);
+  Object *current_obj;
+  if( activeGui->shiftDown_ ) {
+    Camera *C = activeGui->dpy_->scene->get_camera( 0 );
+    Ray ray;
+    C->makeRay( ray, mouse_x, activeGui->dpy_->priv->yres-mouse_y, 
+		1.0/activeGui->dpy_->priv->xres,
+		1.0/activeGui->dpy_->priv->yres );
+    HitInfo hit;
+    activeGui->dpy_->scene->get_object()->intersect( ray, hit, ds,
+  						     activeGui->dpy_->ppc );
+    if( hit.was_hit ) {
+      current_obj = hit.hit_obj;
+      cout << "Mouse up on object "<<current_obj->get_name()<<endl;
+      cbFunc mouseCB = MouseCallBack::getCB_MU( current_obj );
+      if(mouseCB)
+	mouseCB( mouse_x, mouse_y, current_obj, ray, hit );
+    }
+    return;
+  }
   mouseDown_ = 0;
 
   switch(button){
@@ -1079,7 +1125,7 @@ Gui::handleMouseRelease(int button, int /*mouse_x*/, int /*mouse_y*/)
 void
 Gui::handleWindowResizeCB( int width, int height )
 {
-  printf("window resized\n");
+  //  printf("window resized\n");
   // This is an ugly, cheaty way of getting the window id out of glut...
   static bool first=true;
   if(first){
@@ -1149,6 +1195,28 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
   double     & last_time = priv->last_time;
   BallData  *& ball      = priv->ball;
 
+  static Stats *gui_stats = new Stats(1);
+  static DepthStats *ds = new DepthStats(gui_stats->ds[0]);
+  Object *current_obj;
+  if( activeGui->shiftDown_ ) {
+    Camera *C = activeGui->dpy_->scene->get_camera( 0 );
+    Ray ray;
+    C->makeRay( ray, mouse_x, activeGui->dpy_->priv->yres-mouse_y, 
+		1.0/activeGui->dpy_->priv->xres,
+		1.0/activeGui->dpy_->priv->yres );
+    HitInfo hit;
+    activeGui->dpy_->scene->get_object()->intersect( ray, hit, ds,
+  						     activeGui->dpy_->ppc );
+    if( hit.was_hit ) {
+      current_obj = hit.hit_obj;
+      cout << "Mouse moving on object "<<current_obj->get_name()<<endl;
+      cbFunc mouseCB = MouseCallBack::getCB_MM( current_obj );
+      if (mouseCB)
+	mouseCB( mouse_x, mouse_y, current_obj, ray, hit );
+    }
+    return;
+  }
+
   switch( activeGui->mouseDown_ ) {
   case GLUT_RIGHT_BUTTON:
     {
@@ -1159,7 +1227,7 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 	}
       if( activeGui->shiftDown_ )
 	{
-	  // Move towares/away from the lookat point.
+	  // Move towards/away from the lookat point.
 	  double scl;
 	  double xmtn=-(last_x-mouse_x);
 	  double ymtn=-(last_y-mouse_y);
