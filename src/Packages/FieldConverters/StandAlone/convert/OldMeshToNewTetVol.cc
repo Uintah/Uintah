@@ -1,8 +1,8 @@
 /*
- *  OldSFRGtoNewLatticeVol.cc: Converter
+ *  OldMeshtoNewTetVol.cc: Converter
  *
  *  Written by:
- *   David Weinstein
+ *   Martin Cole
  *   Department of Computer Science
  *   University of Utah
  *   February 2001
@@ -10,8 +10,9 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-//#include <Packages/FieldConverters/Datatypes/ScalarFieldRG.h>
-//#include <Core/Datatypes/LatticeVol.h>
+#include <FieldConverters/Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/TetVol.h>
+#include <Core/Persistent/Pstreams.h>
 
 #include <iostream>
 #include <fstream>
@@ -22,41 +23,54 @@ using std::cerr;
 using std::ifstream;
 using std::endl;
 
-//using namespace SCIRun;
-//using namespace FieldConverters;
+using namespace SCIRun;
+using namespace FieldConverters;
 
 main(int argc, char **argv) {
-#if 0
-  ScalarFieldHandle handle;
   
   if (argc !=3) {
-    cerr << "Usage: "<<argv[0]<<" OldSFRG NewLatticeVol\n";
+    cerr << "Usage: " << argv[0] << " OldMesh to NewTetVol"<< endl;
+    cerr << "       " << "argv[1] Input File (Old Mesh)" << endl;
+    cerr << "       " << "argv[2] Output File (TetVol)" << endl;
     exit(0);
   }
-  Piostream* stream=auto_istream(argv[1]);
-  if (!stream) {
-    cerr << "Error - couldn't open file "<<argv[1]<<".  Exiting...\n";
+
+  MeshHandle handle;
+
+  Piostream* instream = auto_istream(argv[1]);
+  if (!instream) {
+    cerr << "Error: couldn't open file " << argv[1] 
+	 << ".  Exiting..." << endl;
     exit(0);
   }
-  Pio(*stream, handle);
+  Pio(*instream, handle);
   if (!handle.get_rep()) {
-    cerr << "Error reading ScalarField from file "<<argv[1]<<".  Exiting...\n";
+    cerr << "Error: reading Mesh from file " << argv[1] 
+	 << ".  Exiting..." << endl;
     exit(0);
   }
   
-  ScalarFieldRGBase *base=dynamic_cast<ScalarFieldRGBase*>(handle.get_rep());
+  Mesh *base = dynamic_cast<Mesh*>(handle.get_rep());
   if (!base) {
-    cerr << "Error - input Field wasn't an SFRG.\n";
+    cerr << "Error: input Field wasn't a Mesh."
+	 << ".  Exiting..." << endl;
     exit(0);
   }
 
-  FieldHandle fH;
+  // A Mesh is Geometry only, so attach no data to the new TetVol.
+  TetVol<double> *field = new TetVol<double>(Field::NODE);
+  FieldHandle fH(field); 
 
+  TetVolMeshHandle tvm = field->get_typed_mesh();
+
+  // Assume that the old Mesh and the new arrange data whe
+
+  
   // TO_DO:
   // make a new Field, set it to fH, and give it a mesh and data like base's
 
-  BinaryPiostream stream(argv[2], Piostream::Write);
-  Pio(stream, fH);
-#endif
+  BinaryPiostream outstream(argv[2], Piostream::Write);
+  Pio(outstream, fH);
+
   return 0;  
 }    
