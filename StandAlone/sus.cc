@@ -132,7 +132,6 @@ usage( const std::string & message,
       cerr << "-copy                : Copy from old uda when restarting\n";
       cerr << "-move                : Move from old uda when restarting\n";
       cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
-      cerr << "-quiet_warnings      : Don't display 'Allocation', 'Task Dependency, or\n\t\t\t'Reallocation' warnings\n"; 
       cerr << "\n\n";
     }
   quit();
@@ -285,8 +284,6 @@ main( int argc, char** argv )
 	  if(sscanf(argv[i], "%dx%dx%d", &ii, &jj, &kk) != 3)
 	    usage("Error parsing -layout", argv[i], argv[0]);
 	  layout = IntVector(ii,jj,kk);
-	} else if (s == "-quiet_warnings") {
-	  DataWarehouse::show_warnings = false;
 	} else {
 	    if(filename!="")
 		usage("", s, argv[0]);

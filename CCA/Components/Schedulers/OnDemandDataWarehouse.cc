@@ -1760,26 +1760,24 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 	find_iter = currentTaskAccesses.find(key);
 	if (find_iter == currentTaskAccesses.end() ||
 	    (*find_iter).second != accessType) {
-	  if (show_warnings) {
-	    string has, needs;
-	    if (accessType == GetAccess) {
-	      has = "task requires";
-	      if (isFinalized())
-		needs = "get from the old datawarehouse";
-	      else
-		needs = "get from the new datawarehouse";
-	    }
-	    else if (accessType == PutAccess) {
-	      has = "task computes";
-	      needs = "datawarehouse put";
-	    }
-	    else {
-	      has = "task modifies";
-	      needs = "datawarehouse modify";
-	    }
-	    throw DependencyException(currentTask, label, matl, patch,
-				      has, needs);
+	  string has, needs;
+	  if (accessType == GetAccess) {
+	    has = "task requires";
+	    if (isFinalized())
+	      needs = "get from the old datawarehouse";
+	    else
+	      needs = "get from the new datawarehouse";
 	  }
+	  else if (accessType == PutAccess) {
+	    has = "task computes";
+	    needs = "datawarehouse put";
+	  }
+	  else {
+	    has = "task modifies";
+	    needs = "datawarehouse modify";
+	  }
+	  throw DependencyException(currentTask, label, matl, patch,
+				    has, needs);
 	}
       }
     }
