@@ -246,7 +246,10 @@ SampleField::execute_rake()
   }
   seeds->freeze();
   ofport_->send(seeds);
+
+  update_state(Completed);
 }
+
 
 
 
@@ -274,6 +277,8 @@ SampleField::execute_random()
   rake_ = 0;
 
   ofport_->send(seedhandle);
+
+  update_state(Completed);
 }
 
 
