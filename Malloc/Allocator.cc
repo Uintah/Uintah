@@ -798,6 +798,14 @@ void GetGlobalStats(Allocator* a,
 		    size_t& bytes_inuse,
 		    size_t& bytes_inhunks)
 {
+    if(!a){
+	nalloc=sizealloc=nfree=sizefree=nfillbin=0;
+	nmmap=sizemmap=nmunmap=sizemunmap=0;
+	highwater_alloc=highwater_mmap=nlonglocks=nnaps=0;
+	bytes_overhead=bytes_free=bytes_fragmented=bytes_inuse=0;
+	bytes_inhunks=0;
+	return;
+    }
     a->lock();
     nalloc=a->nalloc;
     sizealloc=a->sizealloc;
