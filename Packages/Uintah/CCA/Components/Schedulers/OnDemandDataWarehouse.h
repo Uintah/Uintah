@@ -313,11 +313,9 @@ public:
    }
 
    // The following is for support of regriding
-   void getVarLabelMatlPatchTriples(vector<VarLabelMatl<Patch> >& vars ) const;
-   void getVarLabelMatlLevelTriples(vector<VarLabelMatl<Level> >& vars ) const;
+   virtual void getVarLabelMatlLevelTriples( vector<VarLabelMatl<Level> >& vars ) const;
 
    friend class SchedulerCommon;
-   friend class AMRSimulationController;
 
 private:
    enum AccessType {

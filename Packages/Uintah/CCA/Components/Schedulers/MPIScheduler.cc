@@ -40,7 +40,7 @@ extern DebugStream mixedDebug;
 
 static DebugStream dbg("MPIScheduler", false);
 static DebugStream timeout("MPIScheduler.timings", false);
-Mutex sendsLock( "sendsLock" );
+static Mutex sendsLock( "sendsLock" );
 
 static
 void
