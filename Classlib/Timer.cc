@@ -153,6 +153,9 @@ void TimeThrottle::wait_for_time(double endtime)
 #ifdef __sgi
     int nticks=delta*CLOCK_INTERVAL;
     if(nticks<1)return;
+    if(delta > 10){
+	cerr << "WARNING: delta=" << delta << endl;
+    }
     sginap(nticks);
 #else
     NOT_FINISHED("TimeThrottle::wait_for_time");

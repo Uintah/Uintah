@@ -28,6 +28,7 @@ class TrivialAllocator {
     unsigned int alloc_size;
     unsigned int size;
     Mutex lock;
+    int ta_disable;
 public:
     TrivialAllocator(unsigned int size);
     ~TrivialAllocator();
@@ -38,6 +39,9 @@ public:
 
 inline void* TrivialAllocator::alloc()
 {
+    if(ta_disable){
+	return new char[size];
+    }
     lock.lock();
     List* p=freelist;
     if(!p){
@@ -60,6 +64,10 @@ inline void* TrivialAllocator::alloc()
 
 inline void TrivialAllocator::free(void* rp)
 {
+    if(ta_disable){
+	delete[] rp;
+	return;
+    }
     lock.lock();
     List* p=(List*)rp;
     p->next=freelist;

@@ -35,7 +35,7 @@ public:
     ~Array1();
     // Accesses the nth element of the array
     inline T& operator[](int n) const {
-	ASSERTL3(n>=0 && n<_size);
+	ASSERTRANGE(n, 0, _size);
 	return objs[n];
     }
     // Returns the size of the array

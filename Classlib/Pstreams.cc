@@ -22,7 +22,7 @@
 #define PERSISTENT_VERSION 1
 
 TextPiostream::TextPiostream(ifstream* istr, int version)
-: Piostream(Read, version), istr(istr), ostr(0)
+: Piostream(Read, version), istr(istr), ostr(0), have_peekname(0)
 {
     int fd=istr->rdbuf()->fd();
     struct stat buf;

@@ -88,7 +88,7 @@ int Piostream::reading()
 
 int Piostream::writing()
 {
-    return dir=Write;
+    return dir==Write;
 }
 
 int Piostream::error()
@@ -138,12 +138,12 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 	    }
 	    if(!maker){
 		cerr << "Maker not found? (class=" << in_name << ")\n";
+		err=1;
 		return;
 	    }
 
 	    // Make it..
 	    data=(*maker)();
-
 	    // Read it in...
 	    data->io(*this);
 
@@ -158,6 +158,8 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 	    } else {
 		if(!inpointers || !inpointers->lookup(pointer_id, data)){
 		    cerr << "Error - pointer not in file, but should be!\n";
+		    err=1;
+		    return;
 		}
 	    }
 	}

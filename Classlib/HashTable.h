@@ -21,6 +21,8 @@
 #pragma interface
 #endif
 
+class Piostream;
+
 template<class Key, class Data> class HashKey;
 template<class Key, class Data> class HashTableIter;
 
@@ -80,6 +82,9 @@ public:
 
     // Returns how many items are stored in the hash table
     int size() const;
+
+    // Persistent io
+    friend void Pio(Piostream&, HashTable<Key, Data>&);
 };
 
 // Use this class for walking through a hashtable
@@ -116,8 +121,10 @@ template<class Key, class Data> class HashKey {
     Data data;
     HashKey<Key, Data>* next;
     
+    HashKey();
     HashKey(const Key&, const Data&, HashKey<Key, Data>*);
     HashKey(const HashKey<Key, Data>&, int deep=0);
+    friend void Pio(Piostream&, HashTable<Key, Data>&);
 };
 
 #endif
