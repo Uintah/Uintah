@@ -77,8 +77,7 @@ public:
   // Virtual Destructor
    virtual ~RBGSSolver();
 
-   virtual void problemSetup(const ProblemSpecP& params,
-			     DataWarehouseP& dw);
+   virtual void problemSetup(const ProblemSpecP& params);
    // GROUP:  Methods
    ////////////////////////////////////////////////////////////////////////
    // Underrelaxation

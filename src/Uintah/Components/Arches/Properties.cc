@@ -19,8 +19,7 @@ Properties::~Properties()
 {
 }
 
-void Properties::problemSetup(const ProblemSpecP& params,
-			      DataWarehouseP&)
+void Properties::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Properties");
   db->require("denUnderrelax", d_denUnderrelax);

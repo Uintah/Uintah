@@ -29,7 +29,7 @@ public:
     const Vector& getGravity(){
       return d_gravity;
     }
-    const double getGravity(int index){
+    double getGravity(int index){
       if (index == 1) 
 	return d_gravity.x();
       else if (index == 2)

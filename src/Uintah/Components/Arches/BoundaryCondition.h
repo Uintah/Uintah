@@ -74,8 +74,7 @@ public:
   // Destructor
    ~BoundaryCondition();
    
-   void problemSetup(const ProblemSpecP& params,
-		     DataWarehouseP& dw);
+   void problemSetup(const ProblemSpecP& params);
    // GROUP:  Methods
    ////////////////////////////////////////////////////////////////////////
    // Set boundary conditions terms. 
@@ -165,8 +164,7 @@ public:
      double area;
      // need a constructor
      FlowInlet(int numMix);
-     problemSetup(ProblemSpecP& params,
-		  DataWarehouseP& dw);
+     problemSetup(ProblemSpecP& params);
    };
    struct PressureInlet {
      CellTypeInfo pressureType;
@@ -176,8 +174,7 @@ public:
      double density;
      double refPressure;
      PressureInlet(int numMix);
-     problemSetup(ProblemSpecP& params,
-		  DataWarehouseP& dw);
+     problemSetup(ProblemSpecP& params);
    };
    struct FlowOutlet {
      CellTypeInfo outletType;
@@ -187,8 +184,7 @@ public:
      double density;
      double area;
      FlowOutlet(int numMix);
-     problemSetup(ProblemSpecP& params,
-		  DataWarehouseP& dw);
+     problemSetup(ProblemSpecP& params);
    };
 #endif
 };

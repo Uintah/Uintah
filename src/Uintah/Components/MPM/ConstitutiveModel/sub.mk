@@ -7,7 +7,7 @@ SRCDIR   := Uintah/Components/MPM/ConstitutiveModel
 
 SRCS     += $(SRCDIR)/CompMooneyRivlin.cc $(SRCDIR)/CompNeoHook.cc \
 	$(SRCDIR)/CompNeoHookPlas.cc $(SRCDIR)/ConstitutiveModelFactory.cc \
-	$(SRCDIR)/ElasticConstitutiveModel.cc \
+	$(SRCDIR)/ConstitutiveModel.cc $(SRCDIR)/ElasticConstitutiveModel.cc \
 	$(SRCDIR)/HyperElasticDamage.cc $(SRCDIR)/ViscoElasticDamage.cc \
 	$(SRCDIR)/MPMMaterial.cc 
 
@@ -15,6 +15,11 @@ PSELIBS := Uintah/Grid
 
 #
 # $Log$
+# Revision 1.5  2000/04/19 05:26:05  sparker
+# Implemented new problemSetup/initialization phases
+# Simplified DataWarehouse interface (not finished yet)
+# Made MPM get through problemSetup, but still not finished
+#
 # Revision 1.4  2000/03/30 18:31:22  guilkey
 # Moved Material base class to Grid directory.  Modified MPMMaterial
 # and sub.mk to coincide with these changes.

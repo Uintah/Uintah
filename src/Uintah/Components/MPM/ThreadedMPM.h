@@ -51,8 +51,14 @@ public:
 
     virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
 			      DataWarehouseP&);
-    virtual void computeStableTimestep(const LevelP& level,
-				       SchedulerP&, DataWarehouseP&);
+   virtual void scheduleInitialize(const LevelP& level,
+				   SchedulerP&,
+				   DataWarehouseP&);
+	 
+    virtual void scheduleComputeStableTimestep(const LevelP& level,
+					       SchedulerP&,
+					       const VarLabel*,
+					       DataWarehouseP&);
     virtual void timeStep(double t, double dt,
 			  const LevelP& level, SchedulerP&,
 			  const DataWarehouseP&, DataWarehouseP&);
@@ -99,6 +105,11 @@ private:
 
 //
 // $Log$
+// Revision 1.4  2000/04/19 05:26:01  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.3  2000/03/17 21:01:51  dav
 // namespace mods
 //

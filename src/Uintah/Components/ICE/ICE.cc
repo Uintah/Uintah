@@ -96,8 +96,7 @@ ICE::~ICE()
 #endif
 }
 
-void ICE::problemSetup(const ProblemSpecP& params, GridP& grid,
-		       DataWarehouseP& ds)
+void ICE::problemSetup(const ProblemSpecP& params, GridP& grid)
 {
 #if 0
 audit();
@@ -215,8 +214,17 @@ int m=1;
 #endif
 }
 
-void ICE::scheduleStableTimestep(const LevelP& level,
-				 SchedulerP& sched, DataWarehouseP& dw)
+void ICE::scheduleInitialize(const LevelP& level,
+				   SchedulerP& sched,
+				   DataWarehouseP& dw)
+{
+   cerr << "SerialMPM::scheduleInitialize not done\n";
+}
+
+void ICE::scheduleComputeStableTimestep(const LevelP& level,
+					SchedulerP& sched,
+					const VarLabel*,
+					DataWarehouseP& dw)
 {
 #if 0
     for(Level::const_regionIterator iter=level->regionsBegin();

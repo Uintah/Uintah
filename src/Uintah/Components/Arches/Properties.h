@@ -28,8 +28,7 @@ public:
     Properties();
     ~Properties();
 
-    void problemSetup(const ProblemSpecP& params,
-			      DataWarehouseP&);
+    void problemSetup(const ProblemSpecP& params);
     void sched_computeProps(const LevelP& level,
 			    SchedulerP&, DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw);

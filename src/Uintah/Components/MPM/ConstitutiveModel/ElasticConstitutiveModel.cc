@@ -16,14 +16,17 @@
 
 #include "ConstitutiveModelFactory.h"
 #include "ElasticConstitutiveModel.h"
-#ifdef WONT_COMPILE_YET     
 
-#include <Uintah/Component/MPM/Util/Matrix.cc> // for bounded array multiplier	
+#include <Uintah/Components/MPM/Util/Matrix.cc> // for bounded array multiplier	
 #include <fstream>
 using std::endl;
 using std::ifstream;
 using std::ofstream;
 using std::string;
+#include <iostream>
+using std::cerr;
+
+using namespace Uintah::Components;
 
 ElasticConstitutiveModel::ElasticConstitutiveModel()
 {
@@ -147,6 +150,7 @@ Matrix3 ElasticConstitutiveModel::getDeformationMeasure() const
 
 }
 
+#ifdef WONT_COMPILE_YET
 BoundedArray<double> ElasticConstitutiveModel::getMechProps() const
 {
   // Return Young's Mod and Poisson's ratio
@@ -159,7 +163,7 @@ BoundedArray<double> ElasticConstitutiveModel::getMechProps() const
   return props;
 
 }
-
+#endif
 
 Matrix3 ElasticConstitutiveModel::getStrainIncrement() const
 {
@@ -301,6 +305,22 @@ void ElasticConstitutiveModel::computeStressIncrement()
 
 }
 
+void ElasticConstitutiveModel::computeStressTensor(const Region* region,
+						   const MPMMaterial* matl,
+						   const DataWarehouseP& new_dw,
+						   DataWarehouseP& old_dw)
+{
+  cerr << "computeStrainEnergy not finished\n";
+}
+
+double ElasticConstitutiveModel::computeStrainEnergy(const Region* region,
+						     const MPMMaterial* matl,
+						     const DataWarehouseP& new_dw)
+{
+  cerr << "computeStrainEnergy not finished\n";
+}
+
+#ifdef WONT_COMPILE_YET
 double ElasticConstitutiveModel::computeStrainEnergy()
 {
   double se;
@@ -354,6 +374,7 @@ void ElasticConstitutiveModel::computeStressTensor
   stressTensor = stressTensor +  stressIncrement;
 
 }
+#endif
 
 void ElasticConstitutiveModel::readParameters(ProblemSpecP ps, double *p_array)
 {
@@ -403,12 +424,18 @@ ConstitutiveModel* ElasticConstitutiveModel::readRestartParametersAndCreate(
   cm->setStressTensor(st);
   
   return(cm);
+#else
+  return 0;
 #endif
 }
 
 ConstitutiveModel* ElasticConstitutiveModel::create(double *p_array)
 {
+#ifdef WONT_COMPILE_YET
   return(new ElasticConstitutiveModel(p_array[0], p_array[1]));
+#else
+  return 0;
+#endif
 }
 
 int ElasticConstitutiveModel::getType() const
@@ -434,7 +461,11 @@ void ElasticConstitutiveModel::printParameterNames(ofstream& out) const
 
 ConstitutiveModel* ElasticConstitutiveModel::copy() const
 {
+#ifdef WONT_COMPILE_YET
   return( new ElasticConstitutiveModel(*this) );
+#else
+  return 0;
+#endif
 }
 
 ConstitutiveModel &ElasticConstitutiveModel::operator=(const ElasticConstitutiveModel &cm)
@@ -460,9 +491,12 @@ int ElasticConstitutiveModel::getSize() const
   return(s);
 }
 
-#endif
-
 // $Log$
+// Revision 1.5  2000/04/19 05:26:04  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.4  2000/04/14 17:34:42  jas
 // Added ProblemSpecP capabilities.
 //

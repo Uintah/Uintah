@@ -29,6 +29,7 @@ using Uintah::Parallel::ProcessorContext;
 using Uintah::Interface::Scheduler;
 using Uintah::Interface::DataWarehouseP;
 using Uintah::Grid::Task;
+using Uintah::Grid::VarLabel;
 
 /**************************************
 
@@ -74,7 +75,7 @@ public:
 
     //////////
     // Insert Documentation Here:
-    virtual void addTarget(const std::string&);
+    virtual void addTarget(const VarLabel*);
 
     //////////
     // Insert Documentation Here:
@@ -128,6 +129,11 @@ private:
 
 //
 // $Log$
+// Revision 1.4  2000/04/19 05:26:10  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.3  2000/03/17 01:03:16  dav
 // Added some cocoon stuff, fixed some namespace stuff, etc
 //

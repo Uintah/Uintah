@@ -37,8 +37,7 @@ BoundaryCondition::~BoundaryCondition()
 {
 }
 
-void BoundaryCondition::problemSetup(const ProblemSpecP& params,
-				     DataWarehouseP& dw)
+void BoundaryCondition::problemSetup(const ProblemSpecP& params)
 {
 #if 0
   ProblemSpecP db = params->findBlock("Boundary Conditions");

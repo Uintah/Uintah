@@ -10,13 +10,18 @@ SRCDIR   := Uintah/Components/SimulationController
 SRCS     += $(SRCDIR)/SimulationController.cc
 
 PSELIBS := Uintah/Parallel Uintah/Exceptions Uintah/Interface \
-	Uintah/Grid SCICore/Geometry
+	Uintah/Grid SCICore/Geometry SCICore/Thread
 LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/04/19 05:26:13  sparker
+# Implemented new problemSetup/initialization phases
+# Simplified DataWarehouse interface (not finished yet)
+# Made MPM get through problemSetup, but still not finished
+#
 # Revision 1.3  2000/04/12 23:00:10  sparker
 # Start of reading grids
 #

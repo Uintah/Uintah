@@ -20,7 +20,9 @@ namespace Uintah {
     using Uintah::Grid::DataItem;
     using Uintah::Grid::TypeDescription;
     using Uintah::Grid::Region;
+    using Uintah::Grid::ReductionVariableBase;
     using Uintah::Grid::GridP;
+    using Uintah::Grid::VarLabel;
 
     /**************************************
 
@@ -58,6 +60,8 @@ namespace Uintah {
 
       virtual void setGrid(const GridP&);
 
+       virtual void get(ReductionVariableBase&, const VarLabel*) const ;
+#if 0
       //////////
       // Insert Documentation Here:
       virtual void getBroadcastData(DataItem& di, const std::string& name,
@@ -98,6 +102,8 @@ namespace Uintah {
 				      const TypeDescription*,
 				      const Region*, int numGhostCells);
 
+#endif
+
     private:
       struct DataRecord {
 	DataItem* di;
@@ -122,6 +128,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.6  2000/04/19 05:26:11  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.5  2000/04/13 06:50:57  sparker
 // More implementation to get this to work
 //

@@ -24,6 +24,8 @@ namespace SCICore {
 	class Vector;
     }
 }
+namespace Uintah {
+namespace Components {
 class Material;
 class ParticleSet;
 class Region;
@@ -66,9 +68,16 @@ class GeometryObject {
   Vector d_particle_spacing; // distance between particles
 
 };
+} // end namespace Components
+} // end namespace Uintah
 
 #endif // __GEOMETRY_OBJECT_H__
 // $Log$
+// Revision 1.6  2000/04/19 05:26:07  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.5  2000/04/14 02:05:45  jas
 // Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
 // Tri.  This made the GeometryObject class simpler since many of the

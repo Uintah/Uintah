@@ -23,6 +23,9 @@ using std::endl;
 
 using std::string;
 using std::vector;
+using std::cout;
+
+using namespace Uintah::Components;
 
 Problem::Problem()
   : d_num_material(0),
@@ -85,8 +88,10 @@ void Problem::preProcessor(Uintah::Interface::ProblemSpecP prob_spec,
 	 geom_piece_ps != 0; 
 	 geom_piece_ps = geom_piece_ps->findNextBlock("geom_piece") ) {
       piece_num++;
+      cerr << "piece: " << piece_num << '\n';
       IntVector res;
       geom_piece_ps->require("res",res);
+      cerr << piece_num << ": res: " << res << '\n';
       
       GeometryObject geom_obj;
 
@@ -159,6 +164,11 @@ vector<GeometryObject> * Problem::getObjects()
 
 
 // $Log$
+// Revision 1.7  2000/04/19 05:26:08  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.6  2000/04/14 15:51:37  jas
 // Changed a cout to cerr.
 //

@@ -9,19 +9,25 @@ SRCDIR   := Uintah/Grid
 
 SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/DataItem.cc $(SRCDIR)/Grid.cc \
-	$(SRCDIR)/Level.cc $(SRCDIR)/ParticleSet.cc \
-	$(SRCDIR)/ParticleSubset.cc \
+	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc $(SRCDIR)/ParticleSet.cc \
+	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ReductionVariableBase.cc \
 	$(SRCDIR)/RefCounted.cc $(SRCDIR)/Region.cc \
 	$(SRCDIR)/SimulationTime.cc $(SRCDIR)/SubRegion.cc \
-	$(SRCDIR)/Task.cc $(SRCDIR)/Material.cc
+	$(SRCDIR)/Task.cc $(SRCDIR)/VarLabel.cc
 
-PSELIBS := Uintah/Math Uintah/Exceptions SCICore/Thread SCICore/Exceptions
-LIBS :=
+PSELIBS := Uintah/Math Uintah/Exceptions SCICore/Thread SCICore/Exceptions \
+	SCICore/Geometry
+LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/04/19 05:26:15  sparker
+# Implemented new problemSetup/initialization phases
+# Simplified DataWarehouse interface (not finished yet)
+# Made MPM get through problemSetup, but still not finished
+#
 # Revision 1.5  2000/04/13 06:51:03  sparker
 # More implementation to get this to work
 #

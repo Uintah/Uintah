@@ -87,12 +87,27 @@ ProblemSpecP ProblemSpec::findNextBlock(const std::string& name) const
   // Iterate through all of the child nodes that have this name
 
   DOM_Node found_node = start_element.getNextSibling();
- 
+
+  DOMString search_name(name.c_str());
+  while(found_node != 0){
+    DOMString node_name = found_node.getNodeName();
+    char *s = node_name.transcode();
+    std::string c_name(s);
+    delete[] s;
+    if (search_name.equals(node_name) ) {
+      break;
+    }
+    //DOM_Node tmp = findNode(name,child);
+    found_node = found_node.getNextSibling();
+
+  }
+#if 0
   if (!found_node.isNull()) {
     if (found_node.getNodeType() == DOM_Node::TEXT_NODE) {
       found_node = found_node.getNextSibling();
     }
   }
+#endif
    
   if (found_node.isNull()) {
     prob_spec = 0;
@@ -408,6 +423,11 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.12  2000/04/19 05:26:18  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.11  2000/04/13 06:51:05  sparker
 // More implementation to get this to work
 //

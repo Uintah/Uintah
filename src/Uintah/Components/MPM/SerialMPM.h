@@ -27,6 +27,7 @@ using Uintah::Grid::Region;
 using Uintah::Grid::LevelP;
 using Uintah::Interface::ProblemSpecP;
 using Uintah::Grid::GridP;
+using Uintah::Grid::VarLabel;
 
 /**************************************
 
@@ -64,13 +65,18 @@ public:
 
     //////////
     // Insert Documentation Here:
-    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			      DataWarehouseP&);
+    virtual void problemSetup(const ProblemSpecP& params, GridP& grid);
 
+   virtual void scheduleInitialize(const LevelP& level,
+				   SchedulerP&,
+				   DataWarehouseP&);
+	 
     //////////
     // Insert Documentation Here:
-    virtual void scheduleStableTimestep(const LevelP& level,
-				       SchedulerP&, DataWarehouseP&);
+    virtual void scheduleComputeStableTimestep(const LevelP& level,
+					       SchedulerP&,
+					       const VarLabel*,
+					       DataWarehouseP&);
 
     //////////
     // Insert Documentation Here:
@@ -130,6 +136,11 @@ private:
 
 //
 // $Log$
+// Revision 1.9  2000/04/19 05:26:01  sparker
+// Implemented new problemSetup/initialization phases
+// Simplified DataWarehouse interface (not finished yet)
+// Made MPM get through problemSetup, but still not finished
+//
 // Revision 1.8  2000/04/13 06:50:55  sparker
 // More implementation to get this to work
 //
