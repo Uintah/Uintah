@@ -3980,6 +3980,7 @@ class BioTensorApp {
 	    } else {
 		disableModule $mods(ChooseNrrd-B0) 0
 		disableModule $mods(TendEpireg) 1
+		disableModule $mods(UnuCrop-DWI) 1
 		$mods(ChooseNrrd-B0)-c needexecute
 	    }
 	} elseif {$which == $mods(NrrdInfo1) && $state == "JustStarted"} {
