@@ -137,13 +137,14 @@ void TexCuttingPlanes::execute(void)
     Point Smax(tex->max());
     Vector dv(Smax - Smin);
     ScalarFieldRGuchar *sf = tex->getField();
-    ddv.x(dv.x()/(sf->nx - 1));
+    ddv.x(dv.x()/(sf->nz - 1));
     ddv.y(dv.y()/(sf->ny - 1));
-    ddv.z(dv.z()/(sf->nz - 1));
-    ddview = (dv.length()/(std::max(sf->nx, std::max(sf->ny, sf->nz)) -1));
+    ddv.z(dv.z()/(sf->nx - 1));
 
+    double max =  std::max(Smax.x() - Smin.x(), Smax.y() - Smin.y());
+    max = std::max( max, Smax.z() - Smin.z());
     control_widget->SetPosition(Interpolate(Smin,Smax,0.5));
-    control_widget->SetScale(dv.length()/80.0);
+    control_widget->SetScale(max/80.0);
     GeomObj *w=control_widget->GetWidget();
     control_id = ogeom->addObj( w, control_name, &control_lock);
   }
@@ -154,7 +155,7 @@ void TexCuttingPlanes::execute(void)
 				  tex,
 				  cmap);
 
-    ogeom->addObj( volren, "Volume Slicer");
+    ogeom->addObj( volren, "Volume Renderer");
     volren->GLPlanes();
     volren->DrawPlanes();
   } else {
@@ -164,10 +165,9 @@ void TexCuttingPlanes::execute(void)
       Point Smax(tex->max());
       Vector dv(Smax - Smin);
       ScalarFieldRGuchar *sf = tex->getField();
-      ddv.x(dv.x()/(sf->nx - 1));
+      ddv.x(dv.x()/(sf->nz - 1));
       ddv.y(dv.y()/(sf->ny - 1));
-      ddv.z(dv.z()/(sf->nz - 1));
-      ddview = (dv.length()/(std::max(sf->nx, std::max(sf->ny, sf->nz)) -1));
+      ddv.z(dv.z()/(sf->nx - 1));
       volren->SetVol( tex.get_rep() );
     }
     volren->SetColorMap( cmap.get_rep() );
