@@ -179,7 +179,7 @@ itcl_class SCIRun_FieldsCreate_SampleField {
 	set newquantity [expr [set $quantity] + $step]
 
 	if {$newquantity < 1.0} {
-	    set newquantity 0
+	    set newquantity 1
 	}   
 	set $quantity $newquantity
 	$spinner delete 0 end
