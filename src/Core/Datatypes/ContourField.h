@@ -2,16 +2,16 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
   University of Utah. All Rights Reserved.
 */
 
@@ -33,24 +33,19 @@ namespace SCIRun {
 using std::string;
 
 template <class Data>
-class ContourField: public GenericField< ContourMesh, vector<Data> > { 
-
+class ContourField: public GenericField< ContourMesh, vector<Data> >
+{
 public:
 
-  ContourField() :
-    GenericField<ContourMesh, vector<Data> >() {}
-  ContourField(Field::data_location data_at) :
-    GenericField<ContourMesh, vector<Data> >(data_at) {}
-  ContourField(ContourMeshHandle mesh, Field::data_location data_at) : 
-    GenericField<ContourMesh, vector<Data> >(mesh, data_at) {}
-  
-  virtual ~ContourField(){}
+  ContourField();
+  ContourField(Field::data_location data_at);
+  ContourField(ContourMeshHandle mesh, Field::data_location data_at);
+  virtual ~ContourField();
 
-  virtual ContourField<Data> *clone() const 
-    { return new ContourField<Data>(*this); }
- 
+  virtual ContourField<Data> *clone() const;
+
   static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const { return type_name(n); }
+  virtual const string get_type_name(int n = -1) const;
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
 private:
@@ -60,7 +55,7 @@ private:
 #define CONTOURFIELD_VERSION 1
 
 template <class Data>
-Persistent* 
+Persistent*
 ContourField<Data>::maker()
 {
   return scinew ContourField<Data>;
@@ -70,15 +65,15 @@ template <class Data>
 PersistentTypeID
 ContourField<Data>::type_id(type_name(-1),
 		GenericField<ContourMesh, vector<Data> >::type_name(-1),
-                maker); 
+                maker);
 
 template <class Data>
 void
 ContourField<Data>::io(Piostream &stream)
 {
-  stream.begin_class(type_name().c_str(), CONTOURFIELD_VERSION);
+  stream.begin_class(type_name(-1).c_str(), CONTOURFIELD_VERSION);
   GenericField<ContourMesh, vector<Data> >::io(stream);
-  stream.end_class();                                                         
+  stream.end_class();
 }
 
 
@@ -101,7 +96,48 @@ ContourField<Data>::type_name(int n)
   {
     return find_type_name((Data *)0);
   }
-} 
+}
+
+
+template <class Data>
+ContourField<Data>::ContourField()
+  : GenericField<ContourMesh, vector<Data> >()
+{
+}
+
+
+template <class Data>
+ContourField<Data>::ContourField(Field::data_location data_at)
+  : GenericField<ContourMesh, vector<Data> >(data_at)
+{
+}
+
+
+template <class Data>
+ContourField<Data>::ContourField(ContourMeshHandle mesh,
+				 Field::data_location data_at)
+  : GenericField<ContourMesh, vector<Data> >(mesh, data_at)
+{
+}
+
+template <class Data>
+ContourField<Data>::~ContourField()
+{
+}
+
+template <class Data>
+ContourField<Data> *
+ContourField<Data>::clone() const
+{
+  return new ContourField<Data>(*this);
+}
+
+template <class Data>
+const string
+ContourField<Data>::get_type_name(int n = -1) const
+{
+  return type_name(n);
+}
 
 } // end namespace SCIRun
 

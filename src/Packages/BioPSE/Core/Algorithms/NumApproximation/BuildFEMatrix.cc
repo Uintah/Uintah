@@ -69,19 +69,22 @@ bool BuildFEMatrix::build_FEMatrix(TetVolIntHandle hField,
 {
   int np=Thread::numProcessors();
 
-  np /= 2;
-  if (np>10) {
-    np=5;
+  if ( np > 2 ) {
+    np /= 2;
+    if (np>10) {
+      np=5;
+    }
   }
-  //  np = 1;
+
   hA = 0;
   hRhs = 0;
 
   BuildFEMatrixHandle hMaker = new BuildFEMatrix(hField, dirBC, tens, hA, hRhs, np);
   cerr << "SetupFEMatrix: number of threads being used = " << np << endl;
 
-  Thread::parallel(Parallel<BuildFEMatrix>(hMaker.get_rep(), &BuildFEMatrix::parallel),
-		   np, true);
+  Thread::parallel(Parallel<BuildFEMatrix>(hMaker.get_rep(), 
+					   &BuildFEMatrix::parallel),
+ 		   np, true);
   
   // -- refer to the object one more time not to make it die before
   hMaker = 0;

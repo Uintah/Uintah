@@ -65,6 +65,7 @@ public:
 
   //! Required virtual functions from field base.
   virtual MeshBaseHandle mesh() const;
+  virtual void mesh_detach();
 
   //! Required interfaces from field base.
   virtual interp_type* query_interpolate() const;
@@ -174,11 +175,15 @@ GenericField<Mesh, FData>::resize_fdata()
   }
   else if (data_at() == FACE)
   {
-    ASSERTFAIL("tetvol can't have data at faces (yet)");
+    ASSERTFAIL("fields can't have data at faces (yet)");
   }
   else if (data_at() == CELL)
   {
     fdata().resize(get_typed_mesh()->cells_size());
+  }
+  else if (data_at() == NONE)
+  {
+    // do nothing (really, we want to resize to zero)
   }
   else
   {
@@ -270,7 +275,8 @@ GenericField<Mesh, FData>::GenericField(mesh_handle_type mesh, data_location dat
   : Field(data_at),
     mesh_(mesh)
 {
-  resize_fdata();
+  if (data_at != NONE)
+    resize_fdata();
 }
 
 template <class Mesh, class FData>
@@ -290,6 +296,13 @@ MeshBaseHandle
 GenericField<Mesh, FData>::mesh() const
 {
   return MeshBaseHandle(mesh_.get_rep());
+}
+
+template <class Mesh, class FData>
+void
+GenericField<Mesh, FData>::mesh_detach()
+{
+  mesh_.detach();
 }
 
 template <class Mesh, class FData>

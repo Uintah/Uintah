@@ -14,7 +14,7 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
-
+#include <Core/Datatypes/ColumnMatrix.h>
 #include <NetSolve/share/share.h>
 
 #include <stdio.h>
@@ -31,28 +31,26 @@ extern "C" {
 }
 
 class NetSolveSHARE SparseSolve : public Module {
-public:
-  // port stuff
-  MatrixIPort* matrixport;
-  MatrixIPort* rhsport;
-  MatrixOPort* solport;
-  MatrixHandle solution;
 
-  // gui stuff
-  GuiDouble target_error;
-  GuiDouble final_error;
-  GuiInt final_iterations;
-  //GuiInt np;
-  GuiInt maxiter;
-  GuiString method;
-
+  //! Ports
+  MatrixIPort*  matrixport;
+  MatrixIPort*  rhsport;
+  MatrixOPort*  solport;
+  ColumnMatrix* solution;
+  
+  //! GUI variables
+  GuiDouble  target_error;
+  GuiDouble  final_error;
+  GuiInt     final_iterations;
+  GuiInt     maxiter;
+  GuiString  method;
+  
 public:
+  //! Constructor/Destructor
   SparseSolve(const clString& id);
-
   virtual ~SparseSolve();
 
   virtual void execute();
-
   virtual void tcl_command(TCLArgs&, void*);
 };
 
@@ -89,18 +87,17 @@ void SparseSolve::execute(){
   SparseRowMatrix* srm = matrix->getSparseRow(); 
   
   if (!srm) {
-    fprintf(stderr,"The matrix on the input port"
-	    "wasn't a sparse row matrix.\n");
+    msgStream_ << "The supplied matrix is not of type SparseRow" << endl;
     return;
   }
   
-  ColumnMatrixHandle rhs;
+  MatrixHandle rhs;
   if(!rhsport->get(rhs))
     return;
+
   
-  if (!matrix.get_rep() || !rhs.get_rep()) {
-    cerr << "Netsolve_MatrixSolver::execute() input problems\n";
-    solport->send(ColumnMatrixHandle(0));
+  if (!matrix.get_rep() || !rhs.get_rep() || !rhs->getColumn()) {
+    msgStream_ << "Netsolve_MatrixSolver::execute() input problems\n";
     return;
   }
   
@@ -110,12 +107,14 @@ void SparseSolve::execute(){
   
   solution=scinew ColumnMatrix(rhs->nrows());
   solution->zero();
+  ColumnMatrix* pRhs = rhs->getColumn();
   
   netslmajor("Row");
-  
-  fprintf(stderr,"Calling NetSolve for 'petsc', blocking :\n");
-  
-  double* lhs = NULL;
+   
+  double* lhs = NULL; 
+ 
+  msgStream_ << "Calling NetSolve for 'petsc', blocking :" << endl;
+ 
   int status = netsl ("iterative_solve_parallel()",
 		      "PETSC",
 		      srm->nrows(),    	//matrix->nnrows,
@@ -123,28 +122,30 @@ void SparseSolve::execute(){
 		      srm->get_val(),    	//matrix->a
 		      srm->get_col(),	//matrix->columns,
 		      srm->get_row(),	//matrix->rows,
-		      rhs->get_rhs(),
+		      pRhs->get_rhs(),
 		      &tolerance,
 		      &maxit,
 		      lhs,
 		      &iterations);
   
-  
+ 
   if (status < 0) {
     netslerr(status);
-    exit(0);
+    delete solution;
+    return;
+
   }
   else {
-    fprintf (stderr, "NetSolve call succeeded.  Passing solution through \
-		port.\n");
-    
-    char string[1000];
-    sprintf(string,"%s show_results %f %d",id(),tolerance,iterations);
-    cerr << string << endl;
-    TCL::execute(string);
-    
+    msgStream_ << "NetSolve call succeeded.  Passing solution through port" << endl;
     solution->put_lhs(lhs);
-    solport->send(solution);
+    msgStream_ << "Tolerance: " << tolerance << ", iterations = " << iterations << endl;
+    //for (int ii=0; ii<solution->nrows(); ii++){
+    //  msgStream_ << (*solution)[ii] << "\t";
+    //  if (ii%5==0)
+    //	msgStream_ << endl;
+    //}
+    
+    solport->send(MatrixHandle(solution));
   }
 #endif // __sgi
 }

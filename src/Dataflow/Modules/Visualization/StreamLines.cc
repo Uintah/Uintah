@@ -99,6 +99,14 @@ private:
   GuiDouble                     tolerance_;
   GuiInt                        maxsteps_;
 
+  //! interpolate using the generic linear interpolator
+  bool interpolate(const Point &p, Vector &v) {
+    bool b = interp_->interpolate(p,v);
+    if (b)
+      v.normalize(); // try not to skip cells - needs help from stepsize
+    return b;
+  }
+
   //! loop through the nodes in the seed field
   template <class VectorField, class SeedField>
   void TemplatedExecute(VectorField *, SeedField *);
@@ -141,60 +149,37 @@ int
 StreamLines::ComputeRKFTerms(vector<Vector> &v /* storage for terms */,
 			     const Point &p    /* previous point */,
 			     float s           /* current step size */,
-			     VectorField *vf)
+			     VectorField *vf   /* the field */)
 {
   typedef typename VectorField::mesh_type   vf_mesh_type;
   typedef typename vf_mesh_type::cell_index cell_index;
   int check = 0;
   int c;
-  cell_index ci;
-  
-  vf_mesh_type *mesh = 
-    dynamic_cast<vf_mesh_type*>(vf->get_typed_mesh().get_rep());
 
-  if (!mesh) {
-    cerr << "StreamLines: ERROR: unable to get mesh from field.  Exiting."
-	 << endl;
-  }
-
-  if (vf->data_at() == Field::NODE) {
-    check |= c = interp_->interpolate(p,v[0]);
-    if (!c) return 0;
-    check &= c = interp_->interpolate(p+v[0]*d[1][0],v[1]);
-    if (!c) v[1] = v[0];
-    check |= c = interp_->interpolate(p+v[0]*d[2][0]+v[1]*d[2][1],v[2]);
-    if (!c) v[2] = v[1];
-    check |= c = interp_->interpolate(p+v[0]*d[3][0]+v[1]*d[3][1]+v[2]*d[3][2],
-				      v[3]);
-    if (!c) v[3] = v[2];
-    check |= c = interp_->interpolate(p+v[0]*d[4][0]+v[1]*d[4][1]+v[2]*d[4][2]+
-				  v[3]*d[4][3],v[4]);
-    if (!c) v[4] = v[3];
-    check |= c = interp_->interpolate(p+v[0]*d[5][0]+v[1]*d[5][1]+v[2]*d[5][2]+
-				  v[3]*d[5][3]+v[4]*d[5][4],v[5]);
-    if (!c) v[5] = v[4];
-  } else if (vf->data_at() == Field::CELL) {
-    check |= c = mesh->locate(ci,p); 
-    if (c) vf->value(v[0],ci); else return 0;
-    check |= c = mesh->locate(ci,p+v[0]*d[1][0]); 
-    if (c) vf->value(v[1],ci); else v[1] = v[0];
-    check |= c = mesh->locate(ci,p+v[0]*d[2][0]+v[1]*d[2][1]); 
-    if (c) vf->value(v[2],ci); else v[2] = v[1];
-    check |= c = mesh->locate(ci,p+v[0]*d[3][0]+v[1]*d[3][1]+v[2]*d[3][2]);
-    if (c) vf->value(v[3],ci); else v[3] = v[2];
-    check |= c = mesh->locate(ci,p+v[0]*d[4][0]+v[1]*d[4][1]+v[2]*d[4][2]+
-			  v[3]*d[4][3]); 
-    if (c) vf->value(v[4],ci); else v[4] = v[3];
-    check |= c = mesh->locate(ci,p+v[0]*d[5][0]+v[1]*d[5][1]+v[2]*d[5][2]+
-			  v[3]*d[5][3]+v[4]*d[5][4]); 
-    if (c) vf->value(v[5],ci); else v[5] = v[4];
-  }
-
+  check |= c = interpolate(p,v[0]);
+  if (!c) return 0;
   v[0]*=s;
+  
+  check |= c = interpolate(p+v[0]*d[1][0],v[1]);
+  if (!c) return 0;
   v[1]*=s;
+  
+  check |= c = interpolate(p+v[0]*d[2][0]+v[1]*d[2][1],v[2]);
+  if (!c) return 0;
   v[2]*=s;
+  
+  check |= c = interpolate(p+v[0]*d[3][0]+v[1]*d[3][1]+v[2]*d[3][2],v[3]);
+  if (!c) return 0;
   v[3]*=s;
+  
+  check |= c = interpolate(p+v[0]*d[4][0]+v[1]*d[4][1]+v[2]*d[4][2]+
+			   v[3]*d[4][3],v[4]);
+  if (!c) return 0;
   v[4]*=s;
+  
+  check |= c = interpolate(p+v[0]*d[5][0]+v[1]*d[5][1]+v[2]*d[5][2]+
+			   v[3]*d[5][3]+v[4]*d[5][4],v[5]);
+  if (!c) return 0;
   v[5]*=s;
 
   return check;
@@ -207,19 +192,13 @@ StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
 				 float t          /* error tolerance */,
 				 float s          /* initial step size */,
 				 int n            /* max number of steps */,
-				 VectorField *vf)
+				 VectorField *vf  /* the field */)
 {
   int loop;
   vector <Vector> terms;
   Vector error;
   double err;
   Vector xv;
-
-  typedef typename VectorField::mesh_type     mesh_type;
-  typedef typename mesh_type::cell_index      cell_index;
-
-  mesh_type *mesh = 
-    dynamic_cast<mesh_type*>(vf->get_typed_mesh().get_rep());
 
   terms.resize(6,0);
 
@@ -236,13 +215,13 @@ StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
     error = terms[0]*ab[0]+terms[1]*ab[1]+terms[2]*ab[2]+
             terms[3]*ab[3]+terms[4]*ab[4]+terms[5]*ab[5];
     err = sqrt(error(0)*error(0)+error(1)*error(1)+error(2)*error(2));
-
+    
     // is the error tolerable?  Adjust the step size accordingly.
     if (err<t/128.0)
       s*=2;
     else if (err>t) {
       s/=2;
-      loop--;         // re-do this step.
+      //loop--;         // re-do this step.
       continue;
     }
 
@@ -251,18 +230,10 @@ StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
             terms[3]*a[3]+terms[4]*a[4]+terms[5]*a[5];
 
     // if the new point is inside the field, add it.  Otherwise stop.
-    if (vf->data_at() == Field::NODE) {
-      if (interp_->interpolate(x,xv))
-	v.push_back(x);
-      else
-	break;
-    } else if (vf->data_at() == Field::CELL) {
-      cell_index ci;
-      if (mesh->locate(ci,x))
-	v.push_back(x);
-      else
-	break;
-    }
+    if (interpolate(x,xv))
+      v.push_back(x);
+    else
+      break;
   }
 }
 
@@ -286,6 +257,9 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
   double stepsize;
   int maxsteps;
 
+  int count;
+  float loop = 0;
+
   sf_mesh_type *smesh =
     dynamic_cast<sf_mesh_type*>(sf->get_typed_mesh().get_rep());
 
@@ -297,21 +271,17 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
   // try to find the streamline for each seed point
   sf_node_iterator seed_iter = smesh->node_begin();
 
+  count = smesh->nodes_size();
+
+  TCL::execute(id + " set_state Executing 0");
+
   while (seed_iter!=smesh->node_end()) {
 
     smesh->get_point(seed,*seed_iter);
 
     // Is the seed point inside the field?
     if (vf->data_at() == Field::NODE) {
-      if (!interp_->interpolate(seed,test)) {
-	postMessage("StreamLines: WARNING: seed point "
-		    "was not inside the field.");
-	++seed_iter;
-	continue;
-      }
-    } else if (vf->data_at() == Field::CELL) {
-      cell_index ci;
-      if (!vmesh->locate(ci,seed)) {
+      if (!interpolate(seed,test)) {
 	postMessage("StreamLines: WARNING: seed point "
 		    "was not inside the field.");
 	++seed_iter;
@@ -319,15 +289,13 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
       }
     } 
 
-    cerr << "new streamline." << endl;
-
     get_gui_doublevar(id,"tolerance",tolerance);
     get_gui_doublevar(id,"stepsize",stepsize);
     get_gui_intvar(id,"maxsteps",maxsteps);
 
+    // find the positive streamlines
+    nodes.clear();
     FindStreamLineNodes(nodes,seed,tolerance,stepsize,maxsteps,vf);
-
-    cerr << "done finding streamline." << endl;
 
     node_iter = nodes.begin();
     if (node_iter!=nodes.end())
@@ -337,15 +305,30 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
       if (node_iter!=nodes.end()) {
 	n2 = cmesh_->add_node(*node_iter);
 	cmesh_->add_edge(n1,n2);
-	//cerr << "edge = " << n1 << " " << n2 << endl;
 	n1 = n2;
-	//fdata[index] = index++;
       }
     }
 
-    cerr << "done adding streamline to contour field." << endl;
+    // find the negative streamlines
+    nodes.clear();
+    FindStreamLineNodes(nodes,seed,tolerance,-stepsize,maxsteps,vf);
+
+    node_iter = nodes.begin();
+    if (node_iter!=nodes.end())
+      n1 = cmesh_->add_node(*node_iter);
+    while (node_iter!=nodes.end()) {
+      ++node_iter;
+      if (node_iter!=nodes.end()) {
+	n2 = cmesh_->add_node(*node_iter);
+	cmesh_->add_edge(n1,n2);
+	n1 = n2;
+      }
+    }
 
     ++seed_iter;
+    ++loop;
+    
+    TCL::execute(id + " set_progress " + to_string(loop/count) + " 0");
   }
 }
 
@@ -379,7 +362,7 @@ void StreamLines::execute()
   }
 
   // might have to get Field::NODE
-  cf_ = scinew ContourField<double>(Field::NONE);
+  cf_ = scinew ContourField<double>(Field::NODE);
   cmesh_ = dynamic_cast<ContourMesh*>(cf_->get_typed_mesh().get_rep());
 
   interp_ = (GenericInterpolate<Vector>*)vf_->query_interpolate();
@@ -413,9 +396,8 @@ void StreamLines::execute()
       }
     }
   }
-
+  cf_->resize_fdata();
   oport_->send(cf_);
-  cerr << "done with everything." << endl;
 }
 
 void StreamLines::tcl_command(TCLArgs& args, void* userdata)

@@ -33,10 +33,13 @@ SRCS     += \
 	$(SRCDIR)/BuildInterpolant.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/Gradient.cc\
+	$(SRCDIR)/InterpolantTypes.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\
+	$(SRCDIR)/ScaleFieldData.cc\
 	$(SRCDIR)/SeedField.cc\
 	$(SRCDIR)/TransformField.cc\
+	$(SRCDIR)/TetVolCellToNode.cc\
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/CastField.cc\
 #	$(SRCDIR)/ChangeCellType.cc\

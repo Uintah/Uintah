@@ -30,7 +30,7 @@
 #define Datatypes_MaskedLatticeVol_h
 
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/LatVol.h>
+#include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
@@ -49,7 +49,7 @@ public:
     LatticeVol<T>() {};
   MaskedLatticeVol(Field::data_location data_at) : 
     LatticeVol<T>(data_at) {};
-  MaskedLatticeVol(LatticeVolMeshHandle mesh, Field::data_location data_at) : 
+  MaskedLatticeVol(LatVolMeshHandle mesh, Field::data_location data_at) : 
     LatticeVol<T>(mesh, data_at) 
   {
     resize_fdata();
@@ -63,7 +63,7 @@ public:
   { if (!mask_(idx)) return false; val = fdata_[idx]; return true; }
   bool value(T &val, typename LatVolMesh::face_index idx) const
   { if (!mask_(idx)) return false; val = fdata_[idx]; return true; }
-  bool value(T &val, typename LatticeVolMesh::cell_index idx) const
+  bool value(T &val, typename LatVolMesh::cell_index idx) const
   { if (!mask_(idx)) return false; val = fdata_[idx]; return true; }
 
   void    io(Piostream &stream);
@@ -106,8 +106,8 @@ MaskedLatticeVol<T>::maker()
 
 template <class T>
 PersistentTypeID 
-MaskedLatticeVol<T>::type_id(type_name(), 
-			 GenericField<LatticeVolMesh, vector<T> >::type_name(),
+MaskedLatticeVol<T>::type_id(type_name(-1), 
+			 GenericField<LatVolMesh, vector<T> >::type_name(-1),
 			 maker);
 
 
@@ -115,8 +115,8 @@ template <class T>
 void 
 MaskedLatticeVol<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name().c_str(), MASKED_Lattice_VOL_VERSION);
-  GenericField<LatticeVolMesh, FData3d<T> >::io(stream);
+  stream.begin_class(type_name(-1).c_str(), MASKED_LATTICE_VOL_VERSION);
+  GenericField<LatVolMesh, FData3d<T> >::io(stream);
   Pio(stream, mask_);
   stream.end_class();
 }

@@ -300,12 +300,15 @@ GLVolumeRenderer::BuildTransferFunctions( )
 
 
 	  alpha1 = pow(alpha, bp);
-
-	  if( j == 128 ) cerr <<" alpha = "<< alpha<<std::endl;
-	  if( j == 128 ) cerr <<" alpha1 = "<< alpha1<<std::endl;
-
 	  alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);
-	  if( j == 128 ) cerr <<" alpha2 = "<< alpha2<<std::endl;
+
+//	  if( j == 128 ) cerr <<" alpha = "<< alpha<<std::endl;
+//	  if( j == 128 ) cerr <<" alpha1 = "<< alpha1<<std::endl;
+//	  if( j == 128 ) cerr <<" c.r() = "<< c.r()<<std::endl;
+//	  if( j == 128 ) cerr <<" c.g() = "<< c.g()<<std::endl;
+//	  if( j == 128 ) cerr <<" c.b() = "<< c.b()<<std::endl;
+//	  if( j == 128 ) cerr <<" alpha2 = "<< alpha2<<std::endl;
+
 	  TransferFunctions[i][4*j + 0] = (unsigned char)(c.r()*255);
 	  TransferFunctions[i][4*j + 1] = (unsigned char)(c.g()*255);
 	  TransferFunctions[i][4*j + 2] = (unsigned char)(c.b()*255);

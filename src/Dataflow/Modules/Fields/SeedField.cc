@@ -39,13 +39,17 @@
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/TetVol.h>
 #include <math.h>
+#include <set>
 
 #include <iostream>
+
 using std::cerr;
+using std::set;
 
 namespace SCIRun {
 
-class SeedField : public Module {
+class SeedField : public Module
+{
   FieldIPort     *ifport_;
   FieldOPort     *ofport_;  
   GeometryOPort  *ogport_;
@@ -55,9 +59,18 @@ class SeedField : public Module {
 
   char           firsttime_;
 
-  GuiString seedRandTCL_;
-  GuiString numDipolesTCL_;
-  GuiString dipoleMagnitudeTCL_;
+  GuiInt random_seed_GUI_;
+  GuiInt number_dipoles_GUI_;
+
+  int random_seed_;
+  int number_dipoles_;
+  int vf_generation_;
+
+  void execute_rake();
+  void execute_gui();
+
+  template <class M> void dispatch(M *mesh);
+
 public:
   CrowdMonitor widget_lock_;
   GaugeWidget rake_;
@@ -65,22 +78,28 @@ public:
   virtual ~SeedField();
   virtual void execute();
   virtual void tcl_command(TCLArgs&, void*);
+  virtual void widget_moved(int);
 };
+
 
 extern "C" Module* make_SeedField(const clString& id) {
   return new SeedField(id);
 }
 
+
 SeedField::SeedField(const clString& id)
   : Module("SeedField", id, Filter, "Fields", "SCIRun"),
-    seedRandTCL_("seedRandTCL", id, this),
-    numDipolesTCL_("numDipolesTCL", id, this),
-    dipoleMagnitudeTCL_("dipoleMagnitudeTCL", id, this),
+    random_seed_GUI_("random_seed", id, this),
+    number_dipoles_GUI_("number_dipoles", id, this),
+    random_seed_(0),
+    number_dipoles_(0),
+    vf_generation_(0),
+    //dipoleMagnitudeTCL_("dipoleMagnitudeTCL", id, this),
     widget_lock_("StreamLines widget lock"),
     rake_(this,&widget_lock_,1)
 {
   // Create the input port
-  ifport_ = scinew FieldIPort(this, "Field to seed", FieldIPort::Atomic);
+  ifport_ = scinew FieldIPort(this, "Field to Seed", FieldIPort::Atomic);
   add_iport(ifport_);
   
   // Create the output ports
@@ -95,26 +114,124 @@ SeedField::SeedField(const clString& id)
   firsttime_ = 1;
 }
 
+
 SeedField::~SeedField()
 {
 }
 
-void SeedField::execute()
+
+void
+SeedField::widget_moved(int i)
 {
-  Point min,max;
-  BBox bbox;
+  if (i==1) 
+  {
+    want_to_execute();
+  }
+}
+
+
+template <class M>
+void
+SeedField::dispatch(M *mesh)
+{
+  // Get size of mesh.
+  unsigned int mesh_size = 0;
+  typename M::cell_iterator itr = mesh->cell_begin();
+  while (itr != mesh->cell_end())
+  {
+    mesh_size++;
+    ++itr;
+  }
+
+  ASSERT((unsigned int)number_dipoles_ < mesh_size);
+
+  set<unsigned int, less<unsigned int> > picks;
+
+  // Pick a bunch of unique points.
+  int i;
+  srand(random_seed_);
+  for (i=0; i < number_dipoles_; i++)
+  {
+    while (!(picks.insert(rand()%mesh_size).second));
+  }
+
+  PointCloudMesh *cloud_mesh = scinew PointCloudMesh;
+  PointCloud<double> *cloud =
+    scinew PointCloud<double>(cloud_mesh, Field::NODE);
+
+  unsigned int counter = 0;
+  itr = mesh->cell_begin();
+  set<unsigned int, less<unsigned int> >::iterator pitr;
+  for (pitr = picks.begin(); pitr != picks.end(); pitr++)
+  {
+    while (counter < *pitr)
+    {
+      ++counter;
+      ++itr;
+    }
+
+    Point p;
+    mesh->get_center(p, *itr);
+    
+    cloud_mesh->add_node(p);
+  }
+
+  PointCloud<double>::fdata_type &fdata = cloud->fdata();
+  for (unsigned int i = 0; i < fdata.size(); i++)
+  {
+    fdata[i] = 1.0;
+  }
+
+  ofport_->send(cloud);
+}
+      
   
 
-  // the field input is required
-  if (!ifport_->get(vfhandle_) || !(vf_ = vfhandle_.get_rep()))
-    return;
+void
+SeedField::execute_gui()
+{
+  // get gui variables;
+  const int rand_seed = random_seed_GUI_.get();
+  const int num_dipoles = number_dipoles_GUI_.get();
 
-  bbox = vf_->mesh()->get_bounding_box();
-  min = bbox.min();
-  max = bbox.max();
-  
+  //cout << "random_seed_ = " << random_seed_ << " " << rand_seed << endl;
+  //cout << "number_dipoles = " << number_dipoles_ << " " << num_dipoles << endl;
 
-  if (firsttime_) {
+  if (vf_generation_ != vfhandle_->generation ||
+      random_seed_ != rand_seed ||
+      number_dipoles_ != num_dipoles)
+  {
+    vf_generation_ = vfhandle_->generation;
+    random_seed_ = rand_seed;
+    number_dipoles_ = num_dipoles;
+
+    const string geom_name = vf_->get_type_name(0);
+    MeshBase *mesh = vf_->mesh().get_rep();
+    if (geom_name == "TetVol")
+    {
+      dispatch((TetVolMesh *)mesh);
+    }
+    else if (geom_name == "LatticeVol")
+    {
+      dispatch((LatVolMesh *)mesh);
+    }
+    else
+    {
+      cout << "Unsupported input field type, no cells\n";
+      return;
+    }
+  }
+}
+
+void
+SeedField::execute_rake()
+{
+  const BBox bbox = vf_->mesh()->get_bounding_box();
+  Point min = bbox.min();
+  Point max = bbox.max();
+
+  if (firsttime_)
+  {
     firsttime_=0;
     Point center(min.x()+(max.x()-min.x())/2.,
 		 min.y()+(max.y()-min.y())/2.,
@@ -142,19 +259,20 @@ void SeedField::execute()
   
   Vector dir(max-min);
   int num_seeds = (int)(rake_.GetRatio()*15);
-  cerr << "num_seeds = " << num_seeds << endl;
   dir*=1./(num_seeds-1);
 
   PointCloudMesh* mesh = scinew PointCloudMesh;
   int loop;
-  for (loop=0;loop<num_seeds;++loop) {
+  for (int loop=0; loop<num_seeds; ++loop)
+  {
     mesh->add_node(min+dir*loop);
   }
 
   PointCloud<double> *seeds = scinew PointCloud<double>(mesh, Field::NODE);
   PointCloud<double>::fdata_type &fdata = seeds->fdata();
   
-  for (loop=0;loop<num_seeds;++loop) {
+  for (loop=0;loop<num_seeds;++loop)
+  {
     fdata[loop]=1;
   }
   
@@ -162,16 +280,42 @@ void SeedField::execute()
   ogport_->addObj(widget_group,"StreamLines rake",&widget_lock_);
 }
 
-void SeedField::tcl_command(TCLArgs& args, void* userdata)
+
+void
+SeedField::execute()
 {
-  if(args.count() < 2){
+  // The field input is required.
+  if (!ifport_->get(vfhandle_) || !(vf_ = vfhandle_.get_rep()))
+  {
+    return;
+  }
+
+  if (ogport_->nconnections() > 0)
+  {
+    execute_rake();
+  }
+  else
+  {
+    execute_gui();
+  }
+}
+
+
+void
+SeedField::tcl_command(TCLArgs& args, void* userdata)
+{
+  if(args.count() < 2)
+  {
     args.error("StreamLines needs a minor command");
     return;
   }
  
-  if (args[1] == "execute") {
+  if (args[1] == "execute")
+  {
     want_to_execute();
-  } else {
+  }
+  else
+  {
     Module::tcl_command(args, userdata);
   }
 }
