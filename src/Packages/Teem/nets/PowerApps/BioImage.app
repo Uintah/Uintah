@@ -84,9 +84,9 @@ global show_guidelines
 set show_plane_x 1
 set show_plane_y 1
 set show_plane_z 1
-set show_MIP_x 0
-set show_MIP_y 0
-set show_MIP_z 0
+set show_MIP_x 1
+set show_MIP_y 1
+set show_MIP_z 1
 set show_guidelines 1
 global planes_mapType
 set planes_mapType 0
@@ -3653,27 +3653,27 @@ class BioImageApp {
     method toggle_show_MIP_x {} {
 	global mods show_MIP_x
 	if {$show_MIP_x == 1} {
-
+	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
 	} else {
-
+	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	}
     }
 
     method toggle_show_MIP_y {} {
 	global mods show_MIP_y
 	if {$show_MIP_y == 1} {
-
+	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice1 (1)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
 	} else {
-
+	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice1 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	}
     }
 
     method toggle_show_MIP_z {} {
 	global mods show_MIP_z
 	if {$show_MIP_z == 1} {
-
+	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
 	} else {
-
+	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	}
     }
 
