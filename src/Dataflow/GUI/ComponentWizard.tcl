@@ -692,14 +692,16 @@ proc CreateNewModule { packname catname psepath compname } {
     }
 
     if {![file exists $psepath]} {
-	messagedialog "The path \"$psepath\" does not exist. \
+	messagedialog "PATH TO SCIRUN ERROR"\
+	              "The path \"$psepath\" does not exist. \
 		       Please choose another path."
 	return
     }
 
     if {![file isdirectory $psepath]} {
-	messagedialog "The path \"$psepath\" is already in use\
-		       by a non-directory file"
+	messagedialog "PATH TO SCIRUN ERROR"\
+	              "The path \"$psepath\" is already in use\
+		      by a non-directory file"
 	return
     }
 
