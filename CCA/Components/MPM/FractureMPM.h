@@ -334,7 +334,7 @@ private:
   void scheduleCalculateDampingRate(SchedulerP&, const PatchSet*,
 				    const MaterialSet*);
 
-  // for Farcture
+  // for Farcture ----------------------------------
   void scheduleParticleVelocityField(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
@@ -344,9 +344,16 @@ private:
   void scheduleCrackAdjustIntegrated(SchedulerP& sched,    
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
+  void schedulePrepareMovingCrack(SchedulerP& sched,
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls);
   void scheduleMoveCrack(SchedulerP& sched,             
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
+  void scheduleUpdateCrackExtentAndNormals(SchedulerP& sched,
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls);
+  // -----------------------------------------------
 
   FractureMPM(const FractureMPM&);
   FractureMPM& operator=(const FractureMPM&);
