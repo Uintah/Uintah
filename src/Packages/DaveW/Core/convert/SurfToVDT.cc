@@ -1,6 +1,6 @@
 
 /*
- *  SurfToVIN: Read in a surface, and output a .vin file
+ *  SurfToVDT: Read in a surface, and output a .vin file
  *
  *  Written by:
  *   David Weinstein
