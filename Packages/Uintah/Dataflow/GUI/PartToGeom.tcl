@@ -4,6 +4,9 @@ catch {rename PartToGeom ""}
 itcl_class Uintah_MPMViz_PartToGeom {
 
     inherit Module
+    protected t ""
+    protected r ""
+    protected l_s ""
 
     constructor {config} {
 	set name PartToGeom
@@ -14,8 +17,13 @@ itcl_class Uintah_MPMViz_PartToGeom {
 	puts "destructor:  PartToGeom"
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    ::delete class expscale 
-	}
+	    ::delete object $t
+	    ::delete object $r
+	    ::delete object $l_s
+       }
+	set t ""
+	set r ""
+	set l_s ""
 	puts "done"
     }
 
@@ -47,16 +55,16 @@ itcl_class Uintah_MPMViz_PartToGeom {
 	frame $w.f1 -relief groove -borderwidth 2
 	pack $w.f1 -side top -expand yes -fill both
 
-	expscale $w.f1.time -label "Time:" -orient horizontal \
-	  -variable $this-current_time -command $n
+	set t [expscale $w.f1.time -label "Time:" -orient horizontal \
+		  -variable $this-current_time -command $n ]
 	pack $w.f1.time -side top -fill x
 
 	make_labeled_radio $w.f1.geom "Particle Geometry" $n \
 	     top $this-drawspheres { {Points 0} {"Spheres (picking mode)" 1} }
 	pack $w.f1.geom -side top -fill x
 
-	expscale $w.f1.radius -label "Radius:" -orient horizontal \
-		-variable $this-radius -command $n
+	set r [expscale $w.f1.radius -label "Radius:" -orient horizontal \
+		    -variable $this-radius -command $n ]
 	pack $w.f1.radius -side top -fill x
 
 	scale $w.f1.res -label "Polygons:" -orient horizontal \
@@ -81,8 +89,9 @@ itcl_class Uintah_MPMViz_PartToGeom {
 		top $this-drawcylinders { {Lines 0} {Cylinders 1} }
 	pack $w.f2.f.shaft -side left -padx 5 -anchor w
 
-	expscale $w.f2.length_scale -orient horizontal -label "Length scale:" \
-		-variable $this-length_scale -command $n
+	set l_s [expscale $w.f2.length_scale -label "Length scale:" \
+		     -orient horizontal  -variable $this-length_scale \
+		     -command $n ]
 	pack $w.f2.length_scale -side top -fill x
 
 	scale $w.f2.head_length -orient horizontal -label "Head length:" \
@@ -112,7 +121,10 @@ itcl_class Uintah_MPMViz_PartToGeom {
     method close {} {
 	puts "closing PartToGeom Ui"
 	set w .ui[modname]
-	::delete class expscale
+	
+	::delete object $t
+	::delete object $r
+	::delete object $l_s
 	destroy $w
     }
 }
