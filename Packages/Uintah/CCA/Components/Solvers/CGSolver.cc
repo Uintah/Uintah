@@ -449,7 +449,7 @@ public:
 
   void setup(const ProcessorGroup*, const PatchSubset* patches,
 	     const MaterialSubset* matls,
-	     DataWarehouse* old_dw, DataWarehouse* new_dw)
+	     DataWarehouse*, DataWarehouse* new_dw)
   {
     DataWarehouse* parent_new_dw = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
     DataWarehouse* parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -698,7 +698,7 @@ public:
     new_dw->setScrubbing(new_dw_scrubmode);
 
     double dt=Time::currentSeconds()-tstart;
-    double mflops = (flops*1.e-6)/dt;
+    double mflops = (double(flops)*1.e-6)/dt;
     cerr << "Solve of " << X_label->getName();
     if(niter < toomany)
       cerr << " completed in ";
