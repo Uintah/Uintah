@@ -38,6 +38,7 @@ using std::ostringstream;
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/HistObj.h>
+#include <Core/Persistent/PersistentSTL.h>
 
 namespace SCIRun {
 

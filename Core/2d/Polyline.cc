@@ -29,6 +29,7 @@
  */
 
 #include <Core/Malloc/Allocator.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <Core/2d/Polyline.h>
 #include <Core/2d/BBox2d.h>
 #include <iostream>
