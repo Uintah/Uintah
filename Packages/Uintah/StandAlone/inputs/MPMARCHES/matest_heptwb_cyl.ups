@@ -166,7 +166,7 @@
 	        <upper>[3,3,3]</upper>
 	        <resolution>[20,20,20]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-		<patches>[2,2,2]</patches>
+		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>
     </Grid>
