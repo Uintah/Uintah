@@ -790,14 +790,10 @@ void NodeHedgehog::execute()
 
 void NodeHedgehog::widget_moved(bool last)
 {
-#if 0
   if(last && !abort_flag) {
     abort_flag=1;
     want_to_execute();
   }
-#endif
-  cerr << "NodeHedgehog::widget_moved: last = "<<last<<endl;
-  want_to_execute(); 
 }
 
 
