@@ -243,17 +243,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         IntVector ni[8];
         Vector d_S[8];
 
-#if 0
-      if(ptemperature[idx] < 300.0){
-         shear = d_initialData.Shear*2.0;
-         bulk  = d_initialData.Bulk *2.0;
-      }
-      else{
-         shear = d_initialData.Shear;
-         bulk  = d_initialData.Bulk ;
-      }
-#endif
-
         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
         int dof[24];
         int l2g_node_num;
@@ -466,16 +455,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 	IntVector ni[8];
 	Vector d_S[8];
 
-#if 0
-        if(ptemperature[idx] < 300.0){
-          shear = d_initialData.Shear*2.0;
-          bulk  = d_initialData.Bulk *2.0;
-        }
-        else{
-           shear = d_initialData.Shear;
-           bulk  = d_initialData.Bulk ;
-        }
-#endif
 	patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
 	for(int k = 0; k < 8; k++) {
