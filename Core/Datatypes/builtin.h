@@ -49,6 +49,14 @@ typedef ScalarType<int>    Int;
 typedef ScalarType<float>  Float;
 typedef ScalarType<double> Double;
 
+
+template<class T> bool is_scalar() { return false; }
+template<> inline bool is_scalar<char>() { return true; }
+template<> inline bool is_scalar<short>() { return true; }
+template<> inline bool is_scalar<int>() { return true; }
+template<> inline bool is_scalar<float>() { return true; }
+template<> inline bool is_scalar<double>() { return true; }
+
 } // end namespace SCIRun
 
 #endif // builtin_h
