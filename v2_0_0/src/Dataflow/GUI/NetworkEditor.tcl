@@ -88,7 +88,7 @@ proc makeNetworkEditor {} {
     # disabled state.  They will be enabled when all packages are loaded.
     .main_menu.file.menu add command -label "Load..." -underline 0 \
 	-command "popupLoadMenu" -state disabled
-    .main_menu.file.menu add command -label "Insert" -underline 0 \
+    .main_menu.file.menu add command -label "Insert..." -underline 0 \
 	-command "popupInsertMenu" -state disabled
     .main_menu.file.menu add command -label "Save" -underline 0 \
 	-command "popupSaveMenu" -state disabled
@@ -875,6 +875,9 @@ proc loadnet { netedit_loadfile } {
 	return
     }
 
+    global netedit_loadfile_global
+    set netedit_loadfile_global $netedit_loadfile
+
     global netedit_savefile NetworkChanged Subnet inserting
     if { !$inserting || ![string length $netedit_savefile] } {
 	# Cut off the path from the net name and put in on the title bar:
@@ -885,7 +888,7 @@ proc loadnet { netedit_loadfile } {
     }
 
     # The '#' below is not a comment... This souces the network file globally
-    uplevel \#0 {source $netedit_savefile}
+    uplevel \#0 {source $netedit_loadfile_global}
     set Subnet(Subnet$Subnet(Loading)_filename) $netedit_loadfile
     if { !$inserting } { set NetworkChanged 0 }
 }
