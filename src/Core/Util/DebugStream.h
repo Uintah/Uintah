@@ -106,7 +106,7 @@ namespace SCIRun {
             
     public:
       DebugStream();
-      DebugStream(string name, bool defaulton = true);
+      DebugStream(const string& name, bool defaulton = true);
       ~DebugStream();
       bool active() {return isactive;};
       // the ostream that output should be redirected to. cerr by default.
