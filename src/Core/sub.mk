@@ -40,9 +40,9 @@ SUBDIRS := \
 	$(SRCDIR)/Thread \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
-#	$(SRCDIR)/2d \
-#	$(SRCDIR)/Parts \
-#	$(SRCDIR)/PartsGui
+	$(SRCDIR)/2d \
+	$(SRCDIR)/Parts \
+	$(SRCDIR)/PartsGui
 
 ifeq ($(BUILD_PARALLEL),yes)
 SUBDIRS := \

@@ -38,7 +38,7 @@
 #include <Core/Parts/GraphPart.h>
 #include <Core/PartsGui/GraphGui.h>
 
-#include <typeinfo>
+//#include <typeinfo>
 
 namespace SCIRun {
 
@@ -62,9 +62,9 @@ void
 GraphGui::reset( const vector<DrawObj*> &objs)
 {
   for (unsigned loop=0; loop<objs.size(); ++loop) {
-    cerr << "checking DrawObj type: ";
-    const type_info &t=typeid(objs[loop]);
-    cerr << t.name() << endl;
+    //    cerr << "checking DrawObj type: ";
+    //    const type_info &t=typeid(objs[loop]);
+    //    cerr << t.name() << endl;
     if (LockedPolyline *p =  dynamic_cast<LockedPolyline*>(objs[loop])) {
       cerr << "item " << loop << " is type LockedPolyline." << endl;
       p = scinew LockedPolyline( loop );

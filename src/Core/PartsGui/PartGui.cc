@@ -40,7 +40,7 @@
 
 namespace SCIRun {
 using std::cerr;
-
+using std::endl;
 
 map<string,GuiCreatorBase *> PartGui::table;
 
