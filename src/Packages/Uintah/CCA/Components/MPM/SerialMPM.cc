@@ -1811,11 +1811,6 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
 	 }  //if(temp_bc}
       }  // patch face loop
 
-      /* Not necessary when using getModifiable      
-      new_dw->modify(gTemperatureRate, lb->gTemperatureRateLabel, dwindex, patch);
-      new_dw->modify(gvelocity_star,   lb->gVelocityStarLabel,    dwindex, patch);
-      new_dw->modify(gacceleration,    lb->gAccelerationLabel,    dwindex, patch);
-      */
     } // matl loop
   }  // patch loop
 }

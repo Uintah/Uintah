@@ -487,13 +487,15 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   Task* t = scinew Task("MPMICE::HEChemistry",
 		    this, &MPMICE::HEChemistry);
 
+  cerr << "Doing the HEChemistry schedule " << endl;
   if (!d_prod_matls.get_rep()) {
     d_prod_matls = scinew MaterialSubset();
     int numALLMatls=d_sharedState->getNumMatls();
+    cerr << "Number of all materials = " << numALLMatls << endl;
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial(m);
       if  (matl->getRxProduct() == Material::product) {
-	//cerr << "Product Material: " << ice_matls->get(m) << endl;
+	cerr << "Product Material: " << ice_matls->get(m) << endl;
 	d_prod_matls->add(ice_matls->get(m));
       }
     }
@@ -1383,9 +1385,6 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
         printNCVector( patch, 1,description,"gacceleration.Z",2,gacceleration);
       }
 
-      // done implicity by getModifiable and then modifying the data.
-      //new_dw->modify(gvelocity,      Mlb->gVelocityStarLabel, dwindex,patch);
-      //new_dw->modify(gacceleration,  Mlb->gAccelerationLabel, dwindex,patch);
       new_dw->put(dTdt_NC,           Mlb->dTdt_NCLabel,       dwindex,patch);
     }  
   }  //patches
