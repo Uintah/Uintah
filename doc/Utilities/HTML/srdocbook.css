@@ -35,18 +35,18 @@ padding-left: 4px}
 color:#003300}
 
 .screen {
-color:0033FF}
+color:#006633}
 
 .literallayout {
-color:0033FF}
+color:#006633}
 
 .programlisting {
-color:0033FF}
+color:#006633}
 
 /* I wish there were some way to discriminate amongst all the different 
    uses of <tt>. */
 tt {
-color:0033FF}
+color:#006633}
 
 /* things look wierd w/o setting font to Times; we set the font size
    as well, this is what the new browsers will all imply */
