@@ -1,15 +1,10 @@
-body {background-color:#CCCCCC; text-color:#000000; font-family:"times"; margin-left:1em; margin-right:1em; margin-top:1em}
+body {background-color:#CCCCCC; color:#000000; font-family:"times"; margin-left:1em; margin-right:1em; margin-top:1em}
 
 div.top-banner-margins {margin-left:-1em; margin-right:-1em; margin-top:-1em}
 div.bottom-banner-margins {margin-left:-1em; margin-right:-1em}
 
-a:link {color:#AA0000}
-
-a:visited {color:#660000}
-
-a:hover {color:#660066}
-
-a:active {color:#AA00AA}
+a:link {color:#003333}
+a:visited {color:#2f4f4f;}
 
 p {margin-left:90px; margin-right:80px; font-family:"serif";}
 
@@ -19,11 +14,11 @@ br {page-break-after:always}
 
 .subtoc {list-style-type:disc; font-family:"serif"}
 
-.title {font-family: "times"; font-weight:bold; font-size:x-large; color:#660000; margin-bottom:0px; margin-top:0px; text-align:center}
+.title {font-family: "times"; font-weight:bold; font-size:x-large; color:#003333; margin-bottom:0px; margin-top:0px; text-align:center}
 
-.ptitle {font-family: "times"; font-weight:bold; font-size:1.2em; color:#660000; margin-bottom:0px; margin-top:0px; text-align:center}
+.ptitle {font-family: "times"; font-weight:bold; font-size:1.2em; color:#003333; margin-bottom:0px; margin-top:0px; text-align:center}
 
-.subtitle {font-family:times; text-align:center; font-weight:bold}
+.subtitle {font-family:times; text-align:center; font-weight:bold; color:#003333;}
 
 .psubtitle {font-family:times; text-align:center; font-weight:bold; font-size:0.80em}
 
@@ -58,11 +53,11 @@ td {font-family:"arial", "helvetica", "sans-serif"}
 
 .small {font-size:small; font-family:"arial", "helvetica", "sans-serif"}
 
-.dropcap {font-family: "times"; font-size:40px; margin:0; color:#660000}
+.dropcap {font-family: "times"; font-size:40px; margin:0; color:#003333}
 
-.pdropcap {font-family: "times"; font-size:1.2em; margin:0; color:#660000}
+.pdropcap {font-family: "times"; font-size:1.2em; margin:0; color:#003333}
 
-.question {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"; color:#660000}
+.question {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"; color:#003333}
 
 div {page-break-inside:avoid}
 
