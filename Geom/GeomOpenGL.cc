@@ -112,6 +112,7 @@ void DrawInfoOpenGL::reset()
     current_matl=0;
     ignore_matl=0;
     fog=0;
+    check_clip = 0;
 }
 
 DrawInfoOpenGL::~DrawInfoOpenGL()
@@ -165,6 +166,23 @@ void DrawInfoOpenGL::init_lighting(int use_light)
 	glEnable(GL_FOG);
     else
 	glDisable(GL_FOG);
+}
+
+void DrawInfoOpenGL::init_clip(void)
+{
+    int clps=clip_planes;
+    int i=0;
+    
+    while (i < 6) {
+	if (clps&1) {
+	    if (check_clip)
+		glEnable(GL_CLIP_PLANE0+i);
+	    else	
+		glDisable(GL_CLIP_PLANE0+i);
+	}
+	i++;
+	clps >>= 1;
+    }
 }
 
 void DrawInfoOpenGL::set_matl(Material* matl)
@@ -1630,13 +1648,16 @@ void GeomTriStripList::draw(DrawInfoOpenGL* di, Material* matl, double)
     pre_draw(di, matl, 1);
     
     di->polycount += size();
-    cerr << "doing slist...\n";
-    if (di->currently_lit || 1) {
-//	glDisable(GL_NORMALIZE);
+    if (di->currently_lit) {
+#ifdef SCI_NORM_OGL	
 	glEnable(GL_NORMALIZE);
+	cerr << "doing slist...enable norm\n";
+#else
+	glDisable(GL_NORMALIZE);
+	cerr << "doing slist...disable norm\n";
+#endif
 	switch(di->get_drawtype()){
 	case DrawInfoOpenGL::WireFrame:
-	    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 	case DrawInfoOpenGL::Flat:
 	case DrawInfoOpenGL::Gouraud:
 	case DrawInfoOpenGL::Phong:
@@ -1664,10 +1685,31 @@ void GeomTriStripList::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    }
 	    break;
 	}
+#ifndef SCI_NORM_OGL
 	glEnable(GL_NORMALIZE);
-	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+#endif
        
     }
+    else {
+	int nstrips = strips.size();
+	int index=0;
+	float *rpts = &pts[0];
+	for(int ns = 0;ns < nstrips; ns++) {
+	    glBegin(GL_TRIANGLE_STRIP);
+	    glVertex3fv(rpts);
+	    rpts += 3;
+	    glVertex3fv(rpts);
+	    rpts += 3;
+	    index += 6;
+	    while (index < strips[ns]) {
+		index += 3;
+		glVertex3fv(rpts);
+		rpts += 3;
+	    }
+	    glEnd();
+	}
+    }
+    
 }
 
 void GeomVertex::emit_all(DrawInfoOpenGL*)

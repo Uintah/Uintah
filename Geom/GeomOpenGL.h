@@ -18,6 +18,13 @@
 class Material;
 class Roe;
 
+const int CLIP_P0 = 1;
+const int CLIP_P1 = 2;
+const int CLIP_P2 = 4;
+const int CLIP_P3 = 8;
+const int CLIP_P4 = 16;
+const int CLIP_P5 = 32;
+
 struct DrawInfoOpenGL {
     DrawInfoOpenGL();
     ~DrawInfoOpenGL();
@@ -36,10 +43,15 @@ public:
     inline DrawType get_drawtype() {return drawtype;}
 
     void init_lighting(int use_light);
+    void init_clip(void);
     int lighting;
     int currently_lit;
     int pickmode;
     int fog;
+
+    int check_clip; // see if you should ignore clipping planes
+    
+    int clip_planes; // clipping planes that are on
 
     Material* current_matl;
     void set_matl(Material*);
