@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Form interface generated from reading ui file 'ListForm.ui'
 **
-** Created: Wed Apr 10 13:39:54 2002
+** Created: Wed Apr 10 21:23:17 2002
 **      by:  The User Interface Compiler (uic)
 **
 ** WARNING! All changes made in this file will be lost!
