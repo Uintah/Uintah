@@ -22,23 +22,23 @@ if [ -d "$TEST_UDADIR" ]; then
     cd $COMPARE_PARENT_DIR
     COMPARE_DIR=`echo "$COMPARE_ROOT" | sed "s|.*/||"`
     mkdir $COMPARE_DIR
-    cvs add $COMPARE_DIR
+#    cvs add $COMPARE_DIR
   fi
   if [ ! -d "$COMPARE_ROOT/$TEST" ]; then
     echo "Creating $COMPARE_ROOT/$TEST directory"
     cd $COMPARE_ROOT
     mkdir $TEST
-    cvs add $TEST
+#    cvs add $TEST
   fi
   if [ ! -d "$COMPARE_UDADIR" ]; then
     echo "Storing uda directory"
     cp -r $TEST_UDADIR $COMPARE_UDADIR
     cd $COMPARE_ROOT/$TEST
-    find $UDADIR -type d | xargs cvs add
-    find $UDADIR -name "*.dat" | xargs cvs add
-    find $UDADIR -name "*.data" | xargs cvs add
-    find $UDADIR -name "*.xml" | xargs cvs add
-    cvs commit -R -m "Automated Tester storing dat files" $UDADIR
+#    find $UDADIR -type d | xargs cvs add
+#    find $UDADIR -name "*.dat" | xargs cvs add
+#    find $UDADIR -name "*.data" | xargs cvs add
+#    find $UDADIR -name "*.xml" | xargs cvs add
+#    cvs commit -R -m "Automated Tester storing dat files" $UDADIR
   else
     echo
     echo "Comparing dat files"
