@@ -28,6 +28,7 @@ public:
     inline Point(const Point&);
     inline Point();
     int operator==(const Point&) const;
+    int operator!=(const Point&) const;
     Point& operator=(const Point&);
     Vector operator-(const Point&) const;
     Point operator+(const Vector&) const;
