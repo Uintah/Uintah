@@ -226,6 +226,23 @@ SCIRUN_TMP_DIR = /tmp
 #   cross-platform remote display problems.
 # SCIRUN_DRAWARRAYS_DISABLE = false
 
+### SCIRUN_MPEG_LICENSE_ACCEPT
+#   License information describing the mpeg_encode software can be found
+#   in SCIRun's Thirdparty directory, in the mpeg_encode/README file:
+#   This software is freely distributed.  That means, you may use it
+#   for any non-commercial purpose.  However, patents are held by
+#   several companies on various aspects of the MPEG video standard.  
+#   Companies or individuals who want to develop commercial products 
+#   that include this code must acquire licenses from these companies.  
+#   For information on licensing, see Appendix F in the standard.
+#   For more information, please see the mpeg_encode README file.
+#   If you are allowed to use the MPEG functionality based on the above
+#   license, you may
+#   enable MPEG movie recording in SCIRun (accessible via the SCIRun
+#   Viewer's "File->Record Movie" menu) by setting the value of
+#   SCIRUN_MPEG_LICENSE_ACCEPT to "true".
+# SCIRUN_MPEG_LICENSE_ACCEPT = false
+
 
 ############################
 # GUI PREFERENCES SECTION ##

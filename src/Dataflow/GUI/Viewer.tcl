@@ -1913,6 +1913,13 @@ itcl_class ViewWindow {
     method makeSaveMoviePopup {} {
 	set w .ui[modname]-saveMovie
 
+	# check license env var
+	set license [netedit getenv SCIRUN_MPEG_LICENSE_ACCEPT]
+	if {![string equal $license "true"]} {
+	    tk_messageBox -message "License information describing the mpeg_encode software can be found in SCIRun's Thirdparty directory, in the mpeg_encode/README file.\n\nThe MPEG software is freely distributed and may be used for any non-commercial purpose.  However, patents are held by several companies on various aspects of the MPEG video standard. Companies or individuals who want to develop commercial products that include this code must acquire licenses from these companies. For information on licensing, see Appendix F in the standard. For more information, please see the mpeg_encode README file.\n\nIf you are allowed to use the MPEG functionality based on the above license, you may enable MPEG movie recording in SCIRun (accessible via the SCIRun Viewer's \"File->Record Movie\" menu) by setting the value of SCIRUN_MPEG_LICENSE_ACCEPT to \"true\". This can be done by uncommenting the reference to the SCIRUN_MPEG_LICENSE_ACCEPT variable in your scirunrc and changing the value from false to true." -type ok -icon info -parent .ui[modname] -title "MPEG License"
+	    return
+	}
+
 	if {[winfo exists $w]} {
 	   SciRaise $w
            return
