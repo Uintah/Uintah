@@ -46,8 +46,7 @@ void setBC(CCVariable<double>& press_CC,
            SimulationStateP& sharedState, 
            const int mat_id,
            DataWarehouse* new_dw,
-           Lodi_vars_pressBC*,
-           NG_BC_vars*)
+           customBC_var_basket*)
 {
   BC_doing << "setBC (press_CC) "<< kind <<" " << which_Var
            << " mat_id = " << mat_id << endl;
@@ -74,8 +73,7 @@ void setBC(CCVariable<double>& var_CC,
            SimulationStateP& sharedState, 
            const int mat_id,
            DataWarehouse*,
-           Lodi_vars*,
-           NG_BC_vars*)
+           customBC_var_basket*)
 {
   BC_doing << "setBC (double) "<< desc << " mat_id = " << mat_id << endl;
   //__________________________________
@@ -100,8 +98,7 @@ void setBC(CCVariable<Vector>& var_CC,
            SimulationStateP& sharedState, 
            const int mat_id,
            DataWarehouse*,
-           Lodi_vars*,
-           NG_BC_vars*)
+           customBC_var_basket*)
 {
   BC_doing <<"setBC (Vector_CC) "<< desc <<" mat_id = " <<mat_id<< endl;
   
@@ -249,7 +246,7 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
                    const string& which_Var,
                    SimulationStateP& sharedState,
                    DataWarehouse* new_dw,
-                   Lodi_vars_pressBC* lv)
+                   customBC_var_basket* custom_BC_basket)
 {
   BC_doing << "get_rho_micro: Which_var " << which_Var << endl;
   
@@ -260,7 +257,7 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
   Vector gravity = sharedState->getGravity(); 
   int timestep = sharedState->getCurrentTopLevelTimeStep();
   int numMatls  = sharedState->getNumICEMatls();
-  if ( lv->usingLODI && timestep > 0 ) {
+  if ( custom_BC_basket->usingLodi  && timestep > 0 ) {
     numMatls += sharedState->getNumMPMMatls();
   }
       
@@ -326,8 +323,7 @@ void setBC(CCVariable<double>& press_CC,
            SimulationStateP& sharedState, 
            const int mat_id,
            DataWarehouse* new_dw,
-           Lodi_vars_pressBC* lv,
-           NG_BC_vars* NGVars)      // NG hack
+           customBC_var_basket* custom_BC_basket)
 {
   BC_doing << "setBC (press_CC) "<< kind <<" " << which_Var
            << " mat_id = " << mat_id << endl;
@@ -337,8 +333,9 @@ void setBC(CCVariable<double>& press_CC,
   Vector gravity = sharedState->getGravity();
   StaticArray<CCVariable<double> > rho_micro(numMatls);
 
+  
   get_rho_micro(rho_micro, rho_micro_tmp, sp_vol_CC, 
-                patch, which_Var, sharedState,  new_dw, lv);
+                patch, which_Var, sharedState,  new_dw, custom_BC_basket);
                 
   //__________________________________
   //  -Set the LODI BC's first, then let the other BC's wipe out what
@@ -355,10 +352,11 @@ void setBC(CCVariable<double>& press_CC,
     
     bool is_lodi_pressBC = patch->haveBC(face,mat_id,"LODI","Pressure");
     int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
-
+    
     if(kind == "Pressure"      && is_lodi_pressBC 
-       && topLevelTimestep > 0 && lv->setLodiBcs){
-       FacePress_LODI(patch, press_CC, rho_micro, sharedState,face,lv);
+       && topLevelTimestep > 0 && custom_BC_basket->setLodiBcs){
+       FacePress_LODI(patch, press_CC, rho_micro, sharedState,face,
+                      custom_BC_basket->lv);
     }
   }
 
@@ -397,10 +395,10 @@ void setBC(CCVariable<double>& press_CC,
                                           
         //__________________________________
         //  hardwiring for NGC nozzle simulation
-        if (bc_kind == "Custom") {
+        if (bc_kind == "Custom" && custom_BC_basket->setNGBcs) {
           setNGC_Nozzle_BC<CCVariable<double>,double>
           (patch, face, press_CC, "Pressure", "CC",
-           bound, bc_kind,mat_id, child, sharedState,NGVars);
+           bound, bc_kind,mat_id, child, sharedState,custom_BC_basket->ng);
         }                          
                                             
         //__________________________________________________________
@@ -453,9 +451,8 @@ void setBC(CCVariable<double>& var_CC,
            const Patch* patch,
            SimulationStateP& sharedState, 
            const int mat_id,
-           DataWarehouse*  /*new_dw*/,
-           Lodi_vars* lv,
-           NG_BC_vars* NGVars)    // NG hack
+           DataWarehouse*,
+           customBC_var_basket* custom_BC_basket)    // NG hack
 {
   BC_doing << "setBC (double) "<< desc << " mat_id = " << mat_id << endl;
   Vector cell_dx = patch->dCell();
@@ -476,12 +473,13 @@ void setBC(CCVariable<double>& var_CC,
     bool is_tempBC_lodi=  patch->haveBC(face,mat_id,"LODI","Temperature");  
     bool is_rhoBC_lodi =  patch->haveBC(face,mat_id,"LODI","Density");
     
+    Lodi_vars* lv = custom_BC_basket->lv;
     if( desc == "Temperature"  && is_tempBC_lodi 
-        && topLevelTimestep >0 && lv->setLodiBcs ){
+        && topLevelTimestep >0 && custom_BC_basket->setLodiBcs ){
       FaceTemp_LODI(patch, face, var_CC, lv, cell_dx, sharedState);
     }   
     if (desc == "Density"  && is_rhoBC_lodi 
-        && topLevelTimestep >0 && lv->setLodiBcs){
+        && topLevelTimestep >0 && custom_BC_basket->setLodiBcs){
       FaceDensity_LODI(patch, face, var_CC, lv, cell_dx);
     }
   }
@@ -524,12 +522,18 @@ void setBC(CCVariable<double>& var_CC,
         //__________________________________
         //  hardwiring for NGC nozzle simulation   
         if ( (desc == "Temperature" || desc == "Density") && 
-              bc_kind == "Custom") {
+              bc_kind == "Custom" && custom_BC_basket->setLodiBcs) {
           setNGC_Nozzle_BC<CCVariable<double>,double>
                 (patch, face, var_CC, desc,"CC", bound, 
-                 bc_kind,mat_id, child, sharedState, NGVars);
+                 bc_kind,mat_id, child, sharedState, 
+                 custom_BC_basket->ng);
         }
-
+        
+        if ( desc == "Temperature" &&custom_BC_basket->setMicroSlipBcs) {
+          set_MicroSlipTemperature_BC(patch,face,var_CC,
+                              desc, bound, bc_kind, bc_value,
+                              custom_BC_basket->sv);
+        }
         //__________________________________
         // Temperature and Gravity and ICE Matls
         // -Ignore this during intialization phase,
@@ -568,9 +572,8 @@ void setBC(CCVariable<Vector>& var_CC,
            const Patch* patch,
            SimulationStateP& sharedState, 
            const int mat_id,
-           DataWarehouse* /*new_dw*/,
-           Lodi_vars* lv,
-           NG_BC_vars* NGVars)
+           DataWarehouse* ,
+           customBC_var_basket* custom_BC_basket)
 {
   BC_doing <<"setBC (Vector_CC) "<< desc <<" mat_id = " <<mat_id<< endl;
   Vector cell_dx = patch->dCell();
@@ -588,8 +591,10 @@ void setBC(CCVariable<Vector>& var_CC,
     bool is_velBC_lodi   =  patch->haveBC(face,mat_id,"LODI","Velocity");
     int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
     
+    Lodi_vars* lv = custom_BC_basket->lv;
+    
     if( desc == "Velocity"      && is_velBC_lodi 
-        && topLevelTimestep > 0 && lv->setLodiBcs) {
+        && topLevelTimestep > 0 && custom_BC_basket->setLodiBcs) {
       FaceVel_LODI( patch, face, var_CC, lv, cell_dx, sharedState);
     }
   }
@@ -622,8 +627,17 @@ void setBC(CCVariable<Vector>& var_CC,
 						mat_id,child);
         //__________________________________
         //  hardwiring for NGC nozzle simulation
-        setNGCVelocity_BC(patch,face,var_CC,desc,
-                          bound, bc_kind,  mat_id, child, sharedState,NGVars);
+        if ( custom_BC_basket->setLodiBcs) {
+          setNGCVelocity_BC(patch,face,var_CC,desc,
+                            bound, bc_kind,  mat_id, child, sharedState,
+                            custom_BC_basket->ng);
+        }
+        
+        if ( custom_BC_basket->setMicroSlipBcs) {
+          set_MicroSlipVelocity_BC(patch,face,var_CC,desc,
+                            bound, bc_kind, bc_value,
+                            custom_BC_basket->sv);
+        }
          
         //__________________________________
         //  Tangent components Neumann = 0
@@ -703,6 +717,91 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable)
 }
 
 //______________________________________________________________________
+//      CUSTOM BOUNDARY CONDITIONS
+//__________________________________
+// Function~  add the computes and requires for each of the custom BC
+//______________________________________________________________________
+void computesRequires_CustomBCs(Task* t, 
+                                const string& where,
+                                ICELabel* lb,
+                                const MaterialSubset* ice_matls,
+                                customBC_var_basket* C_BC_basket)
+{
+  if(C_BC_basket->usingNG_nozzle){        // NG nozzle 
+    addRequires_NGNozzle(t, where,  lb, ice_matls);
+  }   
+  if(C_BC_basket->usingLodi){             // LODI         
+    addRequires_Lodi( t, where,  lb, ice_matls, C_BC_basket->Lodi_var_basket);
+  }
+  if(C_BC_basket->usingMicroSlipBCs){     // MicroSlip          
+    addRequires_MicroSlip( t, where,  lb, ice_matls, C_BC_basket->Slip_var_basket);
+  }         
+}
+//______________________________________________________________________
+// Function:  preprocess_CustomBCs
+// Purpose:   Get variables and precompute any data before setting the Bcs.
+//______________________________________________________________________
+void preprocess_CustomBCs(const string& where,
+                          DataWarehouse* old_dw, 
+                          DataWarehouse* new_dw,
+                          ICELabel* lb,
+                          const Patch* patch,
+                          const int indx,
+                          customBC_var_basket* C_BC_basket)
+{
+  //__________________________________
+  //    NG_nozzle
+  if(C_BC_basket->usingNG_nozzle){        // NG nozzle 
+    C_BC_basket->ng = new NG_BC_vars;
+    C_BC_basket->ng->dataArchiver = C_BC_basket->dataArchiver;
+    
+    getVars_for_NGNozzle(old_dw, new_dw, lb, patch,where,
+                         C_BC_basket->setNGBcs,
+                         C_BC_basket->ng );
+  }   
+  //__________________________________
+  //   LODI
+  if(C_BC_basket->usingLodi){  
+    C_BC_basket->lv = new Lodi_vars();
+    
+    preprocess_Lodi_BCs( old_dw, new_dw, lb, patch, where,
+                       indx,  
+                       C_BC_basket->sharedState,
+                       C_BC_basket->setLodiBcs,
+                       C_BC_basket->lv, 
+                       C_BC_basket->Lodi_var_basket);        
+  }
+  //__________________________________
+  //  micro slip boundary conditions
+  if(C_BC_basket->usingMicroSlipBCs){  
+    C_BC_basket->sv = new Slip_vars();
+    
+    preprocess_MicroSlip_BCs( old_dw, new_dw, lb, patch, where,
+                              indx,  
+                              C_BC_basket->sharedState,
+                              C_BC_basket->setMicroSlipBcs,
+                              C_BC_basket->sv, 
+                              C_BC_basket->Slip_var_basket);        
+  }         
+}
+
+//______________________________________________________________________
+// Function:   delete_CustomBCs
+//______________________________________________________________________
+void delete_CustomBCs(customBC_var_basket* C_BC_basket)
+{
+  if(C_BC_basket->ng){
+    delete C_BC_basket->ng;
+  }
+  if(C_BC_basket->lv){
+    delete C_BC_basket->lv;
+  }
+  if(C_BC_basket->sv){
+    delete C_BC_basket->sv;
+  }
+}
+
+//______________________________________________________________________
 //______________________________________________________________________
 //      S T U B   F U N C T I O N S
 
@@ -713,21 +812,19 @@ void setBC(CCVariable<double>& var,
           const int mat_id,
           DataWarehouse* new_dw)
 {
-  Lodi_vars* lv = new Lodi_vars();
-  lv->setLodiBcs = false;
+  customBC_var_basket* basket  = scinew customBC_var_basket();
   constCCVariable<double> placeHolder;
   
-  NG_BC_vars* ng = new NG_BC_vars;  // NG hack
-  ng->setNGBcs = false;
-  
+  basket->setLodiBcs      = false;
+  basket->setNGBcs        = false;
+  basket->setMicroSlipBcs = false;
   
   setBC(var, type, placeHolder, placeHolder, patch, sharedState, 
-        mat_id, new_dw,lv,ng);
+        mat_id, new_dw,basket);
   
-  delete lv;
-  delete ng;
+  delete basket;
 } 
-  
+//__________________________________  
 void setBC(CCVariable<double>& press_CC,          
          StaticArray<CCVariable<double> >& rho_micro,
          StaticArray<constCCVariable<double> >& sp_vol,
@@ -738,17 +835,18 @@ void setBC(CCVariable<double>& press_CC,
          SimulationStateP& sharedState,
          const int mat_id, 
          DataWarehouse* new_dw) {
-  Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(0);
-  lv->setLodiBcs = false;
-  NG_BC_vars* ng = new NG_BC_vars;  // NG hack
-  ng->setNGBcs = false;
+         
+  customBC_var_basket* basket  = scinew customBC_var_basket();
+  basket->setLodiBcs      = false;
+  basket->setNGBcs        = false;
+  basket->setMicroSlipBcs = false;
   
   setBC(press_CC, rho_micro, sp_vol, surroundingMatl_indx,
-        whichVar, kind, p, sharedState, mat_id, new_dw, lv, ng); 
-        
-  delete lv;
-  delete ng;           
-}          
+        whichVar, kind, p, sharedState, mat_id, new_dw, basket); 
+
+  delete basket;         
+}   
+//__________________________________       
 void setBC(CCVariable<Vector>& variable,
           const std::string& type,
           const Patch* p,
@@ -756,16 +854,14 @@ void setBC(CCVariable<Vector>& variable,
           const int mat_id,
           DataWarehouse* new_dw)
 { 
-  Lodi_vars* lv = new Lodi_vars();
-  lv->setLodiBcs = false;
-  
-  NG_BC_vars* ng = new NG_BC_vars;  // NG hack
-  ng->setNGBcs = false;
+  customBC_var_basket* basket  = scinew customBC_var_basket();
+  basket->setLodiBcs      = false;
+  basket->setNGBcs        = false;
+  basket->setMicroSlipBcs = false;
    
-  setBC( variable, type, p, sharedState, mat_id, new_dw, lv, ng);
+  setBC( variable, type, p, sharedState, mat_id, new_dw,basket);
   
-  delete lv;
-  delete ng; 
+  delete basket; 
 }
 
 
