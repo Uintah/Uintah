@@ -132,6 +132,32 @@
 		</desclistitem>		
 	</desclist>
 	</section>
+
+	
+	<section>
+	<title>Structured Meshes</title> 
+	  
+	<desclist>
+		<desclistitem>
+			<desclistterm> FIELDNAMES x , y , AND z</desclistterm>
+			<desclistdef> 
+			The fields X, Y, and Z form the description of a structured mesh. These fields are 1D, 2D, or 3D matrices defining
+			the structured line, surface, or volume data. The connectivity of these meshes is defined by the position of the 
+			matrix, neighboring elements are connected. In this definition matrix X defines the x cartesian co-ordinate of each node,
+			matrix Y the y cartesian co-ordinate and matrix Z the z cartesian co-ordinate. This kind of definition is compatible
+			with MATLAB functions such as ndmesh() and sphere(). 
+			</desclistdef> 
+		</desclistitem>
+		<desclistitem>
+			<desclistterm> FIELDNAME xyz </desclistterm>
+			<desclistdef>
+			This field is an alternative for the three fields X, Y, and Z. This fields combines all three matrices in one matrix with
+			the first dimension now being the cartensian co-ordinates (x, y, and z). Hence this matrix has to be 2D, 3D, or 4D, depending
+			on the data contained in the mesh.
+			</desclistdef>
+		</desclistitem>
+	</desclist>
+	</section>  
 	
 	<section>
 	<title>Field Data</title>
@@ -172,35 +198,10 @@
 		</desclistitem>
 	</desclist>
 	</section>
-	
-	<section>
-	<title>Structured Meshes</title> 
-	<p> (WORK IN PROGRESS, NO FIELD DATA FOR THESE MESHES YET) </p>
-	  
-	<desclist>
-		<desclistitem>
-			<desclistterm> FIELDNAMES x , y , AND z</desclistterm>
-			<desclistdef> 
-			The fields X, Y, and Z form the description of a structured mesh. These fields are 1D, 2D, or 3D matrices defining
-			the structured line, surface, or volume data. The connectivity of these meshes is defined by the position of the 
-			matrix, neighboring elements are connected. In this definition matrix X defines the x cartesian co-ordinate of each node,
-			matrix Y the y cartesian co-ordinate and matrix Z the z cartesian co-ordinate. This kind of definition is compatible
-			with MATLAB functions such as ndmesh() and sphere(). 
-			</desclistdef> 
-		</desclistitem>
-		<desclistitem>
-			<desclistterm> FIELDNAME xyz </desclistterm>
-			<desclistdef>
-			This field is an alternative for the three fields X, Y, and Z. This fields combines all three matrices in one matrix with
-			the first dimension now being the cartensian co-ordinates (x, y, and z). Hence this matrix has to be 2D, 3D, or 4D, depending
-			on the data contained in the mesh.
-			</desclistdef>
-		</desclistitem>
-	</desclist>
-	</section>  
+
 		
 	<note>
-	The will try to reconstruct data, for instance if a matrix is transposed, it will detect this and this read the data properly.
+	The module will try to reconstruct data, for instance if a matrix is transposed, it will detect this and read the data properly.
 	Most of the fields mentioned are optional and are not necessary. Only choose those fields from the list that are needed to 
 	describe your data. Currently not every field type supported by SCIRun is implemented in this module. Hopefully future versions
 	will support more data types and have even less restrictive converters.
@@ -227,6 +228,38 @@
 	</note>
 	</section>
 	  
+	<section>
+	<title> Example 2: Creating a structured mesh </title>
+	 
+	<p> The following lines of MATLAB code demonstrate the creation of a matlab file with the matlab logo on a structured mesh: </p>
+	
+	<p> >> [X,Y,DATA] = peaks(100); </p>
+	<p> >> field.x = X; </p>
+	<p> >> field.y = Y; </p>
+	<p> >> field.z = DATA; </p>
+	<p> >> field.scalarfield = DATA; </p>
+	<p> >> save myfield field </p>
+	
+	<p> This will create a surface mesh in the shape of the peaks logo and uses the z value as its data values. Be sure to specify
+	all the three cartensian coordinates, omitting one will result in the module not to recognise the mesh and it will not display
+	the object in its selection box.</p>
+	
+	</section>  
+	
+	<section>
+	<title> Exampe 3: Creating an unstructured mesh </title>
+	
+	<p> The following lines of MATLAB code demonstrate the creation of a matlab fiel with an unstructured tesselated surface: </p>
+	
+	<p> >> [X,Y,Z] = ndmesh(1:10,1:10,0); </p>
+	<p> >> field.node = [X(:)'; Y(:)'; Z(:)']; </p>
+	<p> >> field.face = delauney(X,Y); </p>
+	<p> >> field.scalarfield = X(:).^2; </p>
+	<p> >> save myfield2 field </p> 
+	
+	
+	</section>  
+		  
 	<section>
 	<title>See Also </title>
 	<p>
@@ -343,7 +376,7 @@
    </p>
   
   <figure id="network">
-  <img>../Modules/DataIO/doc/Example_Network.jpg</img>
+  <img>Example_Network.tiff</img>
   <caption>Network for displaying epicardial potentials</caption>
   </figure>
   
@@ -352,12 +385,12 @@
   in the MatrixSelectVector GUI different time instances of a heatbeat can be depicted in the epicardial surface.</p>
   
   <figure id="GUI1">
-  <img>../Modules/DataIO/doc/MatlabFieldsReaderGUI.jpg</img>
+  <img>MatlabFieldsReaderGUI.tiff</img>
   <caption>MatlabFieldsReader GUI showing the selection of the "geometry.mat" file</caption>
   </figure>
 
   <figure id="GUI2">
-  <img>../Modules/DataIO/doc/MatlabMatricesReaderGUI.jpg</img>
+  <img>MatlabMatricesReaderGUI.tiff</img>
   <caption>MatlabMatricesReader GUI showing the selection of the "timeseries.mat" file</caption>
   </figure>
   
