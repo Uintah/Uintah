@@ -92,12 +92,15 @@ public:
     std::string fullsignature() const;
 
     void emit_unmarshal(EmitState& e, const std::string& var,
-			 const std::string& bufname, bool declare) const;
+			const std::string& qty,
+			const std::string& bufname, bool declare) const;
     void emit_marshal(EmitState& e, const std::string& var,
-		       const std::string& bufname) const;
+		      const std::string& qty,
+		      const std::string& bufname, bool top) const;
     void emit_declaration(EmitState& e, const std::string& var) const;
-    void emit_marshalsize(EmitState& e, const std::string& var) const;
-    void emit_presizeof(EmitState& e, const std::string& var) const;
+    void emit_marshalsize(EmitState& e, const std::string& var,
+			  const std::string& sizevar,
+			  const std::string& qty) const;
     void emit_prototype(SState&, SymbolTable* localScope) const;
     void emit_prototype_defin(SState&, const std::string&,
 			      SymbolTable* localScope) const;
@@ -323,25 +326,19 @@ public:
     virtual ~Type();
     virtual void staticCheck(SymbolTable* names) const=0;
     virtual void emit_unmarshal(EmitState& e, const std::string& arg,
-				 const std::string& bufname, bool declare) const=0;
-    virtual void emit_unmarshal_array_subtype(EmitState& e,
-					       const std::string& base,
-					       const std::string& size,
-					       const std::string& bufname) const=0;
+				const std::string& qty,
+				const std::string& bufname, bool declare) const=0;
     virtual void emit_marshal(EmitState& e, const std::string& arg,
-			       const std::string& bufname) const=0;
-    virtual void emit_marshalsize_array_subtype(EmitState& e,
-						const std::string& base,
-						const std::string& size,
-						const std::string& varname) const=0;
-    virtual void emit_marshal_array_subtype(EmitState& e,
-					     const std::string& base,
-					     const std::string& size,
-					     const std::string& bufname) const=0;
+			      const std::string& qty,
+			      const std::string& bufname,
+			      bool top) const=0;
     virtual void emit_declaration(EmitState& e, const std::string& var) const=0;
-    virtual void emit_marshalsize(EmitState& e, const std::string& arg) const=0;
-    virtual void emit_presizeof(EmitState& e, const std::string& arg) const=0;
+    virtual void emit_marshalsize(EmitState& e, const std::string& arg,
+				  const std::string& sizevar,
+				  const std::string& qty) const=0;
     virtual void emit_rettype(EmitState& e, const std::string& name) const=0;
+    virtual bool array_use_pointer() const = 0;
+    virtual bool uniformsize() const=0;
 
     enum ArgContext {
 	ReturnType,
@@ -355,6 +352,7 @@ public:
 
     virtual bool matches(const Type*) const=0;
     virtual std::string fullname() const=0;
+    virtual std::string cppfullname(SymbolTable* localScope) const=0;
 
     virtual bool isvoid() const=0;
 
@@ -377,29 +375,23 @@ class BuiltinType : public Type {
 public:
     virtual void staticCheck(SymbolTable* names) const;
     virtual void emit_unmarshal(EmitState& e, const std::string& arg,
-				   const std::string& bufname, bool declare) const;
-    virtual void emit_unmarshal_array_subtype(EmitState& e,
-					       const std::string& base,
-					       const std::string& size,
-					       const std::string& bufname) const;
-    virtual void emit_marshalsize_array_subtype(EmitState& e,
-						const std::string& base,
-						const std::string& size,
-						const std::string& varname) const;
-    virtual void emit_marshal_array_subtype(EmitState& e,
-					     const std::string& base,
-					     const std::string& size,
-					     const std::string& bufname) const;
+				const std::string& qty,
+				const std::string& bufname, bool declare) const;
     virtual void emit_marshal(EmitState& e, const std::string& arg,
-			       const std::string& bufname) const;
+			      const std::string& qty,
+			      const std::string& bufname, bool top) const;
     virtual void emit_declaration(EmitState& e, const std::string& var) const;
-    virtual void emit_marshalsize(EmitState& e, const std::string& arg) const;
-    virtual void emit_presizeof(EmitState& e, const std::string& arg) const;
+    virtual void emit_marshalsize(EmitState& e, const std::string& arg,
+				  const std::string& sizevar,
+				  const std::string& qty) const;
     virtual void emit_rettype(EmitState& e, const std::string& name) const;
     virtual void emit_prototype(SState& s, ArgContext ctx,
 				SymbolTable* localScope) const;
+    virtual bool array_use_pointer() const ;
+    virtual bool uniformsize() const;
     virtual bool matches(const Type*) const;
     virtual std::string fullname() const;
+    virtual std::string cppfullname(SymbolTable* localScope) const;
     virtual bool isvoid() const;
 protected:
     friend class Type;
@@ -416,29 +408,23 @@ public:
     virtual ~NamedType();
     virtual void staticCheck(SymbolTable* names) const;
     virtual void emit_unmarshal(EmitState& e, const std::string& arg,
-				   const std::string& bufname, bool declare) const;
-    virtual void emit_unmarshal_array_subtype(EmitState& e,
-					       const std::string& base,
-					       const std::string& size,
-					       const std::string& bufname) const;
-    virtual void emit_marshalsize_array_subtype(EmitState& e,
-						const std::string& base,
-						const std::string& size,
-						const std::string& varname) const;
-    virtual void emit_marshal_array_subtype(EmitState& e,
-					     const std::string& base,
-					     const std::string& size,
-					     const std::string& bufname) const;
+				const std::string& qty,
+				const std::string& bufname, bool declare) const;
     virtual void emit_marshal(EmitState& e, const std::string& arg,
-			       const std::string& bufname) const;
+			      const std::string& qty,
+			      const std::string& bufname, bool top) const;
     virtual void emit_declaration(EmitState& e, const std::string& var) const;
-    virtual void emit_marshalsize(EmitState& e, const std::string& arg) const;
-    virtual void emit_presizeof(EmitState& e, const std::string& arg) const;
+    virtual void emit_marshalsize(EmitState& e, const std::string& arg,
+				  const std::string& sizevar,
+				  const std::string& qty) const;
     virtual void emit_rettype(EmitState& e, const std::string& name) const;
     virtual void emit_prototype(SState& s, ArgContext ctx,
 				SymbolTable* localScope) const;
+    virtual bool array_use_pointer() const;
+    virtual bool uniformsize() const;
     virtual bool matches(const Type*) const;
     virtual std::string fullname() const;
+    virtual std::string cppfullname(SymbolTable* localScope) const;
     virtual bool isvoid() const;
 protected:
     friend class Type;
@@ -452,29 +438,23 @@ class ArrayType : public Type {
 public:
     virtual void staticCheck(SymbolTable* names) const;
     virtual void emit_unmarshal(EmitState& e, const std::string& arg,
-				   const std::string& bufname, bool declare) const;
-    virtual void emit_unmarshal_array_subtype(EmitState& e,
-					       const std::string& base,
-					       const std::string& size,
-					       const std::string& bufname) const;
-    virtual void emit_marshalsize_array_subtype(EmitState& e,
-						const std::string& base,
-						const std::string& size,
-						const std::string& varname) const;
-    virtual void emit_marshal_array_subtype(EmitState& e,
-					     const std::string& base,
-					     const std::string& size,
-					     const std::string& bufname) const;
+				const std::string& qty,
+				const std::string& bufname, bool declare) const;
     virtual void emit_marshal(EmitState& e, const std::string& arg,
-			       const std::string& bufname) const;
+			      const std::string& qty,
+			      const std::string& bufname, bool top) const;
     virtual void emit_declaration(EmitState& e, const std::string& var) const;
-    virtual void emit_marshalsize(EmitState& e, const std::string& arg) const;
-    virtual void emit_presizeof(EmitState& e, const std::string& arg) const;
+    virtual void emit_marshalsize(EmitState& e, const std::string& arg,
+				  const std::string& sizevar,
+				  const std::string& qty) const;
     virtual void emit_rettype(EmitState& e, const std::string& name) const;
     virtual void emit_prototype(SState& s, ArgContext ctx,
 				SymbolTable* localScope) const;
+    virtual bool array_use_pointer() const;
+    virtual bool uniformsize() const;
     virtual bool matches(const Type*) const;
     virtual std::string fullname() const;
+    virtual std::string cppfullname(SymbolTable* localScope) const;
     virtual bool isvoid() const;
 protected:
     friend class Type;
@@ -489,6 +469,10 @@ private:
 
 //
 // $Log$
+// Revision 1.8  1999/09/29 07:35:17  sparker
+// Finished marshal/unmarshaling of all different kinds of arrays (1D).
+// Cleaned up marshal/unmarshal code
+//
 // Revision 1.7  1999/09/28 08:21:42  sparker
 // Added support for arrays (incomplete)
 // Added support for strings
