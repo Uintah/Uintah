@@ -113,7 +113,7 @@ StructHexVolMesh::get_center(Point &result, const Cell::index_type &idx) const
 }
 
 
-bool
+double
 StructHexVolMesh::inside8_p(Cell::index_type idx, const Point &p) const
 {
   static const int table[6][3][3] =
@@ -126,16 +126,16 @@ StructHexVolMesh::inside8_p(Cell::index_type idx, const Point &p) const
     {0, 1, 0}},
 
    {{0, 0, 0},
-    {1, 0, 0},
-    {0, 0, 1}},
+    {0, 0, 1},
+    {1, 0, 0}},
+
+   {{1, 1, 1},
+    {1, 1, 0},
+    {1, 0, 1}},
 
    {{1, 1, 1},
     {1, 0, 1},
-    {1, 1, 0}},
-
-   {{1, 1, 1},
-    {0, 1, 1},
-    {1, 0, 1}},
+    {0, 1, 1}},
 
    {{1, 1, 1},
     {0, 1, 1},
@@ -144,6 +144,7 @@ StructHexVolMesh::inside8_p(Cell::index_type idx, const Point &p) const
   Point center;
   get_center(center, idx);
 
+  double minval = 1.0e6;
   for (int i = 0; i < 6; i++)
   {
     Node::index_type n0(idx.i_ + table[i][0][0],
@@ -163,14 +164,19 @@ StructHexVolMesh::inside8_p(Cell::index_type idx, const Point &p) const
 
     const Vector v0(p1 - p0), v1(p2 - p0);
     const Vector normal = Cross(v0, v1);
-    const Vector off0(p - p0);
-    const Vector off1(center - p0);
-    if (Dot(off0, normal) * Dot(off1, normal) < -1.0e-6)
+    const Vector off0(p0 - p);
+    const Vector off1(p0 - center);
+    const double tmp = Dot(normal, off0) * Dot(normal, off1);
+    if (tmp < -1.0e-6)
     {
-      return false;
+      return tmp;
+    }
+    if (tmp < minval)
+    {
+      minval = tmp;
     }
   }
-  return true;
+  return minval;
 }
 
 
@@ -186,15 +192,24 @@ StructHexVolMesh::locate(Cell::index_type &cell, const Point &p)
   if (!mesh->locate(ci, p)) { return false; }
   const vector<Cell::index_type> &v = grid_->value(ci);
   vector<Cell::index_type>::const_iterator iter = v.begin();
+  double mindist = -1.0;
   while (iter != v.end()) {
-    if (inside8_p(*iter, p))
+    const double tmp = inside8_p(*iter, p);
+    if (tmp > mindist)
     {
       cell = *iter;
-      return true;
+      mindist = tmp;
     }
     ++iter;
   }
-  return false;
+  if (mindist > -1.0e-6)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 
@@ -269,7 +284,7 @@ StructHexVolMesh::get_weights(const Point &p,
 
 void
 StructHexVolMesh::get_weights(const Point &p,
-			Node::array_type &nodes, vector<double> &w)
+			      Node::array_type &nodes, vector<double> &w)
 {
   Cell::index_type cell;
   if (locate(cell, p))
