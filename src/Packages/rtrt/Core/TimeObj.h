@@ -12,6 +12,7 @@ protected:
     int cur;
     Array1<Object*> objs;
     double rate;
+    int num_processors;
 public:
     TimeObj(double rate);
     virtual ~TimeObj();
@@ -28,6 +29,7 @@ public:
 				       DepthStats* st, PerProcessorContext* ppc);
     void add(Object* obj);
     virtual void animate(double t, bool& changed);
+    void parallel_preprocess(int proc);
     virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
     virtual void compute_bounds(BBox&, double offset);
     virtual void collect_prims(Array1<Object*>& prims);

@@ -2,7 +2,11 @@
 #include "TimeObj.h"
 #include "Vector.h"
 #include <iostream>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Parallel.h>
 
+using SCIRun::Thread;
+using SCIRun::Parallel;
 using namespace rtrt;
 
 TimeObj::TimeObj(double rate)
@@ -65,12 +69,36 @@ void TimeObj::collect_prims(Array1<Object*>& prims)
     }
 }
 
+void TimeObj::parallel_preprocess(int proc)
+{
+  int start = objs.size()*proc/num_processors;
+  int end = objs.size()*(proc+1)/num_processors;
+  double max_radius=0;
+  int pp_offset=0;
+  int scratchsize=0;
+  for(int i=start;i<end;i++){
+    objs[i]->preprocess(max_radius, pp_offset, scratchsize);
+  }
+}
+
+#if 0
+void TimeObj::preprocess(double maxradius, int& pp_offset, int& scratchsize)
+{
+  //Parallel<TimeObj> phelper(this, &parallel_preprocess);
+  num_processors=objs.size();
+  if(num_processors>8)
+    num_processors=8;
+  Thread::parallel(this, &TimeObj::parallel_preprocess, num_processors, true);
+  //Thread::parallel(phelper, num_processors, true);
+}
+#else
 void TimeObj::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 {
     for(int i=0;i<objs.size();i++){
 	objs[i]->preprocess(maxradius, pp_offset, scratchsize);
     }
 }
+#endif
 
 void TimeObj::compute_bounds(BBox& bbox, double offset)
 {
