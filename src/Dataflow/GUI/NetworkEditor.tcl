@@ -43,6 +43,13 @@ global minicanvs
 set minicanvas ".top.globalViewFrame.canvas"
 global Subnet
 set Subnet(Subnet0_minicanvas) $minicanvas
+set Subnet(num) 0
+set Subnet(Subnet0_canvas) $maincanvas
+set Subnet(Subnet0_Name) "Main"
+set Subnet(Subnet0_Modules) ""
+set Subnet(Subnet0_connections) ""
+set Subnet(Subnet0) 0
+
 
 global inserting
 set inserting 0
@@ -225,7 +232,6 @@ proc makeNetworkEditor {} {
     bind all <Control-z> "undo"
     bind all <Control-y> "redo"
 
-    setupMainSubnet
     wm withdraw .
 }
 
@@ -473,7 +479,7 @@ proc popupSaveMenu {} {
     global netedit_savefile NetworkChanged
     if { $netedit_savefile != "" } {
 	# We know the name of the savefile, dont ask for name, just save it
-	netedit savenetwork $netedit_savefile
+	netedit savenetwork $netedit_savefile 0
 	set NetworkChanged 0
     } else { ;# Otherwise, ask the user for the name to save as
 	popupSaveAsMenu
@@ -491,7 +497,7 @@ proc popupSaveAsMenu {} {
     set netedit_savefile \
 	[tk_getSaveFile -defaultextension {.net} -filetypes $types ]
     if { $netedit_savefile != "" } {
-	netedit savenetwork $netedit_savefile
+	netedit savenetwork $netedit_savefile 0
 	set NetworkChanged 0
 	# Cut off the path from the net name and put in on the title bar:
 	wm title . "SCIRun ([lindex [split "$netedit_savefile" /] end])"
