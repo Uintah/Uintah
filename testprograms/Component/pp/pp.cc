@@ -33,9 +33,12 @@
 #include <string>
 #include <Core/CCA/Component/PIDL/PIDL.h>
 
+#include <Core/CCA/Component/Comm/SocketEpChannel.h>
+
 #include <Core/CCA/Component/PIDL/MalformedURL.h>
 
 #include <testprograms/Component/pp/PingPong_impl.h>
+
 #include <Core/Thread/Time.h>
 
 using namespace std;
@@ -61,6 +64,8 @@ int main(int argc, char* argv[])
 {
     using std::string;
 
+    SocketEpChannel *sep=new SocketEpChannel();
+    cerr<<"Server URL="<<sep->getUrl()<<endl;
     try{
       PIDL::initialize(argc,argv);
       bool client=false;
