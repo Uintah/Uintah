@@ -13,4 +13,5 @@ SRCS	+= \
        $(SRCDIR)/Mixing.cc \
        $(SRCDIR)/SimpleRxn.cc \
        $(SRCDIR)/TestModel.cc \
+       $(SRCDIR)/flameSheet_rxn.cc \
 #       $(SRCDIR)/Mixing2.cc
