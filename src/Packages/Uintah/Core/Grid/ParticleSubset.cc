@@ -121,10 +121,13 @@ ParticleSubset::resize(particleIndex newSize)
 void
 ParticleSubset::expand(particleIndex amount)
 {
-  if(amount < 10000)
-    amount = 10000;
-  d_allocatedSize += amount;
-  if(d_numExpansions++ > 0){
+  particleIndex minAmount = d_numParticles>>2;
+  if(minAmount < 10)
+    minAmount = 10;
+  if(amount < minAmount)
+    amount = minAmount;
+  d_allocatedSize += minAmount;
+  if(d_numExpansions++ > 18){
     static bool warned = false;
     if(!warned){
       cerr << "Performance warning in ParticleSubset: " << d_numExpansions << " expansions occured\n";
