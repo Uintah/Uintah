@@ -13,14 +13,6 @@ PROGRAM := $(SRCDIR)/JAStoMesh
 SRCS := $(SRCDIR)/JAStoMesh.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/JAStoSurf
-SRCS := $(SRCDIR)/JAStoSurf.cc
-include $(SRCTOP)/scripts/program.mk
-
 PROGRAM := $(SRCDIR)/MeshToJAS
 SRCS := $(SRCDIR)/MeshToJAS.cc
-include $(SRCTOP)/scripts/program.mk
-
-PROGRAM := $(SRCDIR)/SurfToJAS
-SRCS := $(SRCDIR)/SurfToJAS.cc
 include $(SRCTOP)/scripts/program.mk
