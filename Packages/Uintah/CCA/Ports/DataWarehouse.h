@@ -69,7 +69,11 @@ class DataWarehouse : public RefCounted {
 public:
   virtual ~DataWarehouse();
       
-  virtual bool exists(const VarLabel*, int matlIndex, const Patch*) const =0;
+  virtual bool exists(const VarLabel*, int matlIndex, const Patch*) const = 0;
+
+  // Returns a (const) pointer to the grid.  This pointer can then be
+  // used to (for example) get the number of levels in the grid.
+  virtual const Grid * getGrid() = 0;
 
   // Generic put and allocate, passing Variable as a pointer rather than
   // by reference to avoid ambiguity with other put overloaded methods.
