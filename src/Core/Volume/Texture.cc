@@ -29,6 +29,8 @@
 //    Author : Milan Ikits
 //    Date   : Thu Jul 15 10:58:23 2004
 
+#include <sci_gl.h>
+
 #include <Core/Volume/Texture.h>
 #include <Core/Volume/Utils.h>
 #include <Core/Malloc/Allocator.h>
