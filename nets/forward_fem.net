@@ -67,9 +67,8 @@ addConnection $m8 0 $m9 0
 addConnection $m9 0 $m10 1
 addConnection $m8 0 $m10 0
 addConnection $m10 0 $m11 0
-addConnection $m6 0 $m11 1
 addConnection $m12 0 $m7 2
-addConnection $m12 0 $m11 2
+addConnection $m12 0 $m11 1
 addConnection $m11 0 $m13 0
 addConnection $m9 1 $m13 1
 addConnection $m7 0 $m13 2
