@@ -20,7 +20,6 @@
 <!DOCTYPE book
   PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
   "../../Utilities/XML/Docbook_dtd/docbookx.dtd" [
-<!ENTITY edition SYSTEM "../../edition.xml">
 <!ENTITY intro SYSTEM "intro.xml">
 <!ENTITY src.core SYSTEM "src/core.xml">
 <!ENTITY src.dataflow SYSTEM "src/dataflow.xml">
@@ -38,7 +37,6 @@
 
 <book id="main">
   <bookinfo>
-    &edition;
   </bookinfo>
   <title>Developers' Guide</title>
 

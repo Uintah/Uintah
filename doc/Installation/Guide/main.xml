@@ -30,7 +30,6 @@
 
 <book id="main">
   <bookinfo>
-    &edition;
   </bookinfo>
   <title>Installation Guide</title>
   &quickstart;
