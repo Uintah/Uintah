@@ -271,8 +271,8 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 	    
 	    
 	    diffuse = Color(0.0,0.0,0.0);
-	    if(depth < cx->scene->maxdepth)
-	    {
+	    //if(depth < cx->scene->maxdepth)
+	    //{
 		
 
 		    double ratten = atten*(1.0-current_alpha); 
@@ -284,7 +284,7 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 
 		    goto skip2;
 		
-	    }
+		    //}
 	  }
       }
     
