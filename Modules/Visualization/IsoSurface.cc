@@ -275,6 +275,7 @@ void IsoSurface::execute()
 	widget_disc->normal=-grad;
 	widget_disc->rad=0.75*widget_scale;
 	widget_disc->adjust();
+	widget->reset_bbox();
     }
     GeomGroup* group=new GeomGroup;
 
