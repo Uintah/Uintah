@@ -9,7 +9,7 @@ class Satellite : public UVSphere
 
  protected:
 
-  Satellite *parent_;
+  Object *parent_;
   string name_;
   double rev_speed_;
   double orb_radius_;
@@ -20,22 +20,25 @@ class Satellite : public UVSphere
 
   Satellite(const string &name, Material *mat, const Point &center, 
             double radius, const Vector &up=Vector(0,0,1), 
-            Satellite *parent=0) 
+            Object *parent=0) 
     : UVSphere(mat,center,radius,up), parent_(parent), 
-    name_(name), rev_speed_(.1), orb_radius_(50), orb_speed_(.00002)
+    name_(name), rev_speed_(.1), orb_radius_(5), orb_speed_(.0001)
   {
     theta_ = sqrt(cen.x()*cen.x()+cen.y()*cen.y());
   }
   virtual ~Satellite() {}
 
-  Satellite *get_parent() { return parent_; }
-  void set_parent(Satellite *p) { parent_ = p; }
+  Object *get_parent() { return parent_; }
+  void set_parent(Object *p) { parent_ = p; }
 
   double get_rev_speed() const { return rev_speed_; }
   void set_rev_speed(double speed) { rev_speed_ = speed; }
 
   double get_orb_speed() const { return orb_speed_; } 
   void set_orb_speed(double speed) { orb_speed_ = speed; }
+
+  double get_orb_radius() const { return orb_radius_; } 
+  void set_orb_radius(double radius) { orb_radius_ = radius; }
 
   double get_radius() const { return radius; }
   void set_radius(double radius) { radius = radius; }
@@ -45,6 +48,11 @@ class Satellite : public UVSphere
 
   string get_name() const { return name_; }
   void set_name(const string &s) { name_ = s; }
+
+  virtual void compute_bounds(BBox& bbox, double offset)
+  {
+    bbox.extend(Point(0,0,0), orb_radius_+radius+offset);
+  }
 
   virtual void animate(double t, bool& changed)
   {
