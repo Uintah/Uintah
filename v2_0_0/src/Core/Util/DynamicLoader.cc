@@ -367,7 +367,7 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
 	 << ") - Could not create file " << full << endl;
     return false;
   }
-  fstr << "// This is an autamatically generated file, do not edit!" << endl;
+  fstr << "// This is an automatically generated file, do not edit!" << endl;
 
   // generate standard includes
   list<string>::const_iterator iter = info.includes_.begin();
@@ -385,9 +385,18 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
   iter = info.includes_.begin();
   while (iter != info.includes_.end()) { 
     const string &s = *iter;
+
     if (!((s.substr(0, 5) == STD_STR) || s == "builtin"))
     {
-      fstr << "#include \"" << s << "\"" << endl;
+      printf("looking for %s in:\n            %s\n", SCIRUN_SRCDIR, s.c_str());
+
+      string::size_type loc = s.find(SCIRUN_SRCDIR);
+      if( loc != string::npos ) {
+	string::size_type endloc = s.find("SCIRun/src") + 11;
+	fstr << "#include <" << s.substr(endloc) << ">\n";
+      } else {
+	fstr << "#include \"" << s << "\"\n";
+      }
     }
     ++iter;
   }
