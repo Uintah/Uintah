@@ -25,11 +25,10 @@
   inside them.
 
 -->
-<faq> </faq> 
-<p><faq></faq></p>
+
 <faq>
 <title>TechnicalFAQ</title>
-</faq><faq> <description> <para> This FAQ includes technical questions of interest 
+  <description> <para> This FAQ includes technical questions of interest 
 to users who install, maintain and develop SCIRun</para> </description> <entry> 
 <keywords>SGI, runtime, pthreads and SIGABRT</keywords>. <question> <para> I successfully 
 installed SCIRun and its required thirdparty software (by hand) onto an SGI target 

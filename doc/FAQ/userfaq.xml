@@ -28,14 +28,22 @@
 
 <faq>
   <title>User FAQ</title>
-<description> <para> The User FAQ addresses questions about the behavior of SCIRun, 
+  <description> 
+    <para> The User FAQ addresses questions about the behavior of SCIRun, 
 modules, messages issued, etc. The FAQ also addresses other high level issues 
-such as: </para> </description> <entry> <keywords><i>unable to load module, can't 
-find symbol</i></keywords> <i><question> <para> When I run SCIRun, one or more 
+such as: </para> 
+  </description> 
+
+  <entry> <keywords>unable to load module, can't find
+ symbol</keywords>
+    <question> 
+      <para> When I run SCIRun, one or more 
 messages appear in the message window indicating a problem with a package and/or 
-module.</para></question></i><question><para> </para> <para> The message(s) is/are 
-similar to the following: </para> 
-<pre>Loading package 'SCIRun'
+module.</para>
+      <para> The message(s) is/are 
+similar to the following: 
+      </para> 
+      <pre>Loading package 'SCIRun'
 Unable to load module 'CastField' :
 - can't find symbol 'make_CastField'
       </pre>
@@ -48,18 +56,28 @@ such file or directory
 - libPackages_Teem_Dataflow_Modules_DataIO.so: cannot open shared
 object file: No such file or directory
       </pre>
-</question> <answer> <para> Each module for a given package has its own .xml file 
+    </question> 
+    <answer> 
+      <para> Each module for a given package has its own .xml file 
 that describes it. When SCIRun starts, it parses all the .xml files in the packages 
 (under Dataflow/XML) and tries to find the matching code within the related .so 
 files. If the .so files cannot be found the message "No such file or directory" 
 is given. If the .so can be found, but the code for a particular module does not 
-exist within the library, then the message "can't find symbol" is given. </para> 
-<para> The message(s) may or may not indicate a problem with SCIRun. For some 
+exist within the library, then the message "can't find symbol" is
+    given. 
+      </para> 
+      <para> The message(s) may or may not indicate a problem with SCIRun. For some 
 modules, the .xml file may be listed but the code has not yet been completed (this 
 may be common for module developers). For others it may mean that the SCIRun installation 
-is some how corrupt (.so files have been deleted, moved, etc.) </para> <para> 
+is some how corrupt (.so files have been deleted, moved, etc.) 
+      </para> 
+      <para> 
 The solution to this problem is to either a) build the libraries that the .xml 
-files need, or b) remove the offending .xml files. </para> </answer> </entry> 
+files need, or b) remove the offending .xml files. 
+      </para> 
+    </answer>
+</entry> 
+
 <entry> <question> <para> What systems are compatible with SCIRun? </para> </question> 
 <answer> <para> SCIRun should be generally compatible with any SGI or Linux machine. 
 </para> <para> SCIRun has been tested on the following Linux distributions: </para> 
@@ -147,7 +165,7 @@ files need, or b) remove the offending .xml files. </para> </answer> </entry>
       support libraries</CAPTION>
       <tr><td><IMG WIDTH="645" ALIGN="TOP"
           SRC="http://ampano.cs.utah.edu/research/images/EAB-BioPSE.gif"
-          ALT="biopsesr"></td>
+          ALT="biopsesr"></IMG></td>
        </tr>
        </table>
        </div>
