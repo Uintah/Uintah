@@ -13,7 +13,9 @@
 
 # source $sci_root/TCL/MaterialEditor.tcl
 
-itcl_class RTrace {
+catch {rename DaveW_CS684_RTrace ""}
+
+itcl_class DaveW_CS684_RTrace {
     inherit Module
     method modname {} {
 	set n $this

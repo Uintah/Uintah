@@ -11,7 +11,9 @@
  #
  ##
 
-itcl_class SiReAll {
+catch {rename DaveW_SiRe_SiReAll ""}
+
+itcl_class DaveW_SiRe_SiReAll {
     inherit Module
     constructor {config} {
         set name SiReAll

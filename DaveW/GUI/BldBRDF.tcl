@@ -11,9 +11,11 @@
 #  Copyright (C) 1997 SCI Group
 #
 
-source $sci_root/TCL/MaterialEditor.tcl
+#source $sci_root/TCL/MaterialEditor.tcl
 
-itcl_class BldBRDF {
+catch {rename DaveW_CS684_BldBRDF ""}
+
+itcl_class DaveW_CS684_BldBRDF {
     inherit Module
     method modname {} {
 	set n $this

@@ -12,6 +12,9 @@
  #  Log Information:
  #
  #  $Log$
+ #  Revision 1.2  1999/08/29 01:02:20  dmw
+ #  updated module names to be consistent with new loading mechanism
+ #
  #  Revision 1.1  1999/08/24 06:22:56  dmw
  #  Added in everything for the DaveW branch
  #
@@ -26,8 +29,9 @@
  #
  #
  ##
+catch {rename DaveW_EEG_STreeExtractSurf ""}
 
-itcl_class STreeExtractSurf {
+itcl_class DaveW_EEG_STreeExtractSurf {
     inherit Module
     method modname {} {
 	set n $this

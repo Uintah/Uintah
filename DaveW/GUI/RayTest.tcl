@@ -10,7 +10,9 @@
 #  Copyright (C) 1997 SCI Group
 #
 
-itcl_class RayTest {
+catch {rename DaveW_CS684_RayTest ""}
+
+itcl_class DaveW_CS684_RayTest {
     inherit Module
     method modname {} {
 	set n $this

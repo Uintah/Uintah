@@ -10,7 +10,9 @@
 #  Copyright (C) 1997 SCI Group
 #
 
-itcl_class RayMatrix {
+catch {rename DaveW_CS684_RayMatrix ""}
+
+itcl_class DaveW_CS684_RayMatrix {
     inherit Module
     method modname {} {
 	set n $this
