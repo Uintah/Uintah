@@ -229,7 +229,8 @@ LinAlgUnaryAlgo::get_compile_info(const string &function,
 
   // Code for the function.
   string class_declaration =
-    string("class " + template_name + " : public LinAlgUnaryAlgo\n") +
+    string("using namespace SCIRun;\n\n") + 
+    "class " + template_name + " : public LinAlgUnaryAlgo\n" +
     "{\n" +
     "  virtual double user_function(double x)\n" +
     "  {\n" +

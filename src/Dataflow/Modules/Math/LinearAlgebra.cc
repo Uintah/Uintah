@@ -229,8 +229,9 @@ LinearAlgebraAlgo::get_compile_info(int argc,
 
   // Code for the function.
   string class_declaration =
-    string("class ") + template_name + " : public LinearAlgebraAlgo\n" +
-"{\n" +
+    string("using namespace SCIRun;\n\n") + 
+    "class " + template_name + " : public LinearAlgebraAlgo\n" +
+    "{\n" +
     "  virtual void user_function(MatrixHandle &o1, MatrixHandle &o2, MatrixHandle &o3, MatrixHandle &o4, MatrixHandle &o5, const MatrixHandle &i1, const MatrixHandle &i2, const MatrixHandle &i3, const MatrixHandle &i4, const MatrixHandle &i5)\n" +
 "  {\n" +
     "    " + function + "\n" +
