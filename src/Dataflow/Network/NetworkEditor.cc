@@ -29,7 +29,8 @@
 #include <PSECore/Dataflow/Network.h>
 #include <PSECore/Dataflow/PackageDB.h>
 #include <PSECore/Dataflow/Port.h>
-#include <PSECore/Dataflow/CreatePacCatMod.h>
+#include <PSECore/Dataflow/ComponentNode.h>
+#include <PSECore/Dataflow/GenFiles.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/Remote.h>
@@ -673,38 +674,52 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    return;
 	}
 	save_network(args[2]);
+    } else if (args[1] == "load_component_spec"){
+      if (args.count()!=3) {
+	args.error("load_component_spec needs 1 argument");
+	return;
+      }
+      component_node* n = CreateComponentNode(1);
+      ReadComponentNodeFromFile(n,args[2]());
+      char string[100]="\0";
+      sprintf(string,"%d",(long)n);
+      TCL::execute(clString("GetPathAndPackage ")+string+" "+
+		   n->name+" "+n->category);
     } else if (args[1] == "create_pac_cat_mod"){
         int check = 1;
-        if (args.count()!=5) {
-          args.error("create_pac_cat_mod needs 3 arguments");
+        if (args.count()!=7) {
+          args.error("create_pac_cat_mod needs 5 arguments");
           return;
         }
-        check &= CreatePac(args[2]());
-	check &= CreateCat(args[2](),args[3]());
-	check &= CreateMod(args[2](),args[3](),args[4]());
+	GenPackage((char*)args[3](),(char*)args[2]());
+	GenCategory((char*)args[4](),(char*)args[3](),(char*)args[2]());
+	GenComponent((component_node*)atol(args[6]()),
+		     (char*)args[3](),(char*)args[2]());
         if (!check) {
           args.error("create_pac_cat_mod failed.");
           return;
         }
     } else if (args[1] == "create_cat_mod"){
         int check = 1;
-        if (args.count()!=5) {
+        if (args.count()!=7) {
           args.error("create_cat_mod needs 3 arguments");
           return;
         }
-	check &= CreateCat(args[2](),args[3]());
-	check &= CreateMod(args[2](),args[3](),args[4]());
+	GenCategory((char*)args[4](),(char*)args[3](),(char*)args[2]());
+	GenComponent((component_node*)atol(args[6]()),
+		     (char*)args[3](),(char*)args[2]());
 	if (!check) {
 	  args.error("create_cat_mod failed.");
 	  return;
 	}
     } else if (args[1] == "create_mod"){
         int check = 1;
-        if (args.count()!=5) {
+        if (args.count()!=7) {
           args.error("create_mod needs 3 arguments");
           return;
         }
-	check &= CreateMod(args[2](),args[3](),args[4]());
+	GenComponent((component_node*)atol(args[6]()),
+		     (char*)args[3](),(char*)args[2]());
 	if (!check) {
 	  args.error("create_mod failed.");
 	  return;
@@ -717,11 +732,19 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	
 	cerr << "group name: args[2]";
 	// group=args[2];
-	    
-
     } else {
 	args.error("Unknown minor command for netedit");
     }
+}
+
+void postMessage(const clString& errmsg, bool err)
+{
+  clString tag;
+  if(err)
+    tag += " errtag";
+  TCL::execute(clString(".top.errorFrame.text insert end \"")+
+	       errmsg+"\\n\""+tag);
+  TCL::execute(".top.errorFrame.text see end");
 }
 
 } // End namespace Dataflow
@@ -729,8 +752,23 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.12.2.2  2000/10/26 10:03:57  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.12.2.1  2000/09/28 03:14:57  mcole
 // merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.18  2000/10/24 05:57:41  moulding
+// new module maker Phase 2: new module maker goes online
+//
+// These changes clean out the last remnants of the old module maker and
+// bring the new module maker online.
+//
+// Revision 1.17  2000/10/23 09:19:47  moulding
+// some changes to the new module maker.
+//
+// Revision 1.16  2000/10/21 18:35:10  moulding
+// more work for new module maker.
 //
 // Revision 1.15  2000/08/31 15:25:47  nbenson
 // modified save_network()

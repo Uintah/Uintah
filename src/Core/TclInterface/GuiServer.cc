@@ -202,6 +202,9 @@ cerr << "GuiServer::getValue(): string = " << msg->un.tstring << endl;
 
 //
 // $Log$
+// Revision 1.6.2.2  2000/10/26 10:04:44  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.6.2.1  2000/09/28 03:11:44  mcole
 // merge trunk into FIELD_REDESIGN branch
 //

@@ -66,6 +66,9 @@ void GeomContainer::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.4.2.2  2000/10/26 10:04:31  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.4.2.1  2000/09/28 03:12:18  mcole
 // merge trunk into FIELD_REDESIGN branch
 //

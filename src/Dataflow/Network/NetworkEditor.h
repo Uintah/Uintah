@@ -74,11 +74,19 @@ public:
     virtual ~Module_Scheduler_Message();
 };
 
+void postMessage(const clString& errmsg, bool err=true);
+
 } // End namespace Dataflow
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.4.2.1  2000/10/26 10:03:58  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.5  2000/10/21 18:35:10  moulding
+// more work for new module maker.
+//
 // Revision 1.4  1999/08/28 17:54:30  sparker
 // Integrated new Thread library
 //

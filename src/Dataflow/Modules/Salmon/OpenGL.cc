@@ -253,8 +253,12 @@ void OpenGL::redraw_loop()
 	    Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
 	    
 	    tmpview.up(y_a.vector());
-	    tmpview.eyep((z_a*(roe->eye_dist)) + tmpview.lookat().vector());
-	    
+
+	    if (roe->inertia_mode==1)
+	      tmpview.eyep((z_a*(roe->eye_dist)) + tmpview.lookat().vector());
+	    else if (roe->inertia_mode==2)
+	      tmpview.lookat(tmpview.eyep()-(z_a*(roe->eye_dist)).vector());
+
 	    roe->view.set(tmpview);	    
 	} else {
 	    for (;;) {
@@ -417,12 +421,13 @@ void OpenGL::redraw_frame()
 	throttle.start();
 	Vector eyesep(0,0,0);
 	if(do_stereo){
-	    double eye_sep_dist=0.025/2;
-	    Vector u, v;
-	    view.get_viewplane(aspect, 1.0, u, v);
-	    u.normalize();
-	    double zmid=(znear+zfar)/2.;
-	    eyesep=u*eye_sep_dist*zmid;
+	  //double eye_sep_dist=0.025/2;
+	  double eye_sep_dist=roe->sbase.get()*(roe->sr.get()?0.048:0.0125);
+	  Vector u, v;
+	  view.get_viewplane(aspect, 1.0, u, v);
+	  u.normalize();
+	  double zmid=(znear+zfar)/2.;
+	  eyesep=u*eye_sep_dist*zmid;
 	}
 	
 	GLfloat realStylusMatrix[16], realPinchMatrix[16];
@@ -506,10 +511,12 @@ void OpenGL::redraw_frame()
 		if(do_stereo){
 		  if(i==0){
 		    eyep-=eyesep;
-		    lookat-=eyesep;
+		    if (!roe->sr.get())
+		      lookat-=eyesep;
 		  } else {
 		    eyep+=eyesep;
-		    lookat+=eyesep;
+		    if(!roe->sr.get())
+		       lookat+=eyesep;
 		  }
 		}
 		Vector up(view.up());
@@ -1800,8 +1807,17 @@ ImgReq::ImgReq(const clString& n, const clString& t)
 
 //
 // $Log$
+// Revision 1.23.2.2  2000/10/26 10:03:40  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.23.2.1  2000/09/28 03:16:06  mcole
 // merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.30  2000/10/08 05:42:38  samsonov
+// Added rotation around eye point and corresponding inertia mode; to use the mode , use ALT key and middle mouse button
+//
+// Revision 1.29  2000/09/29 08:06:59  samsonov
+// Changes in stereo implementation
 //
 // Revision 1.28  2000/08/12 20:41:52  dmw
 // set fog color to be the same as the background color (instead of always being black)

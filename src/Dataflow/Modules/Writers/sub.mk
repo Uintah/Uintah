@@ -30,7 +30,7 @@ SRCS     += \
 	$(SRCDIR)/VectorFieldWriter.cc\
 	$(SRCDIR)/VoidStarWriter.cc\
 	$(SRCDIR)/PathWriter.cc\
-#[INSERT NEW MODULE HERE]
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes SCICore/Persistent \
 	SCICore/Thread SCICore/Exceptions SCICore/TclInterface \
@@ -41,8 +41,17 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2.2.2  2000/10/26 10:03:50  moulding
+# merge HEAD into FIELD_REDESIGN
+#
 # Revision 1.2.2.1  2000/09/28 03:15:34  mcole
 # merge trunk into FIELD_REDESIGN branch
+#
+# Revision 1.6  2000/10/24 05:57:40  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
 #
 # Revision 1.5  2000/07/18 23:14:13  samsonov
 # PathWriter module is transfered from DaveW package

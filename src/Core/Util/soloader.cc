@@ -10,94 +10,89 @@ int numberofopenedhandles = 0;
 
 void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 {
-	void* SymbolAddress = 0;
-	LIBRARY_HANDLE LibraryHandle = 0;
-
+  void* SymbolAddress = 0;
+  LIBRARY_HANDLE LibraryHandle = 0;
+  
 #ifdef _WIN32
-	LibraryHandle = LoadLibrary(libname);
+  LibraryHandle = LoadLibrary(libname);
 #else
-	LibraryHandle = dlopen(libname, RTLD_LAZY);
+  LibraryHandle = dlopen(libname, RTLD_LAZY);
 #endif
-
-	if (LibraryHandle == 0)
-	{
-#ifndef _WIN32
-	  //cerr << "ERROR: The library \"" << libname << "\" could not be found, or is corrupt: " << dlerror() << endl;
-#endif
-		return 0;
-	}
-
+  
+  if (LibraryHandle == 0) 
+    return 0;
+  
 #ifdef _WIN32
-	SymbolAddress = GetProcAddress(LibraryHandle,symbolname);
+  SymbolAddress = GetProcAddress(LibraryHandle,symbolname);
 #else
-	SymbolAddress = dlsym(LibraryHandle,symbolname);
+  SymbolAddress = dlsym(LibraryHandle,symbolname);
 #endif
-
-	if (SymbolAddress == 0)
-	{
-	    //cerr << "ERROR: The symbol \"" << symbolname << "\" could not be found in the library \"" << libname << "\"." << endl;
-		return 0;
-	}
-
-	explicitlyopenedhandles[numberofopenedhandles++]=LibraryHandle;
-
-	return SymbolAddress;
+  
+  if (SymbolAddress == 0)
+    return 0;
+  
+  explicitlyopenedhandles[numberofopenedhandles++]=LibraryHandle;
+  
+  return SymbolAddress;
 }
 
 void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 {
-    void* SymbolAddress = 0;
-     
+  void* SymbolAddress = 0;
+  
 #ifdef _WIN32
-	SymbolAddress = GetProcAddress(handle,symbolname);
+  SymbolAddress = GetProcAddress(handle,symbolname);
 #else
-	SymbolAddress = dlsym(handle,symbolname);
+  SymbolAddress = dlsym(handle,symbolname);
 #endif
-
-	if (SymbolAddress == 0)
-	{
-	    //cerr << "ERROR: The symbol \"" << symbolname << "\" could not be found using the handle \"" << handle << "\"." << endl;
-		return 0;
-	}
-
-	explicitlyopenedhandles[numberofopenedhandles++]=handle;
-
-	return SymbolAddress;
+  
+  if (SymbolAddress == 0)
+    return 0;
+  
+  explicitlyopenedhandles[numberofopenedhandles++]=handle;
+  
+  return SymbolAddress;
 }
 
 LIBRARY_HANDLE GetLibraryHandle(const char* libname)
 {
-	LIBRARY_HANDLE LibraryHandle = 0;
-
+  LIBRARY_HANDLE LibraryHandle = 0;
+  
 #ifdef _WIN32
-	LibraryHandle = LoadLibrary(libname);
+  LibraryHandle = LoadLibrary(libname);
 #else
-	LibraryHandle = dlopen(libname, RTLD_LAZY);
+  LibraryHandle = dlopen(libname, RTLD_LAZY);
 #endif
+  
+  if (LibraryHandle == 0) 
+    return 0;
 
-	if (LibraryHandle == 0)
-	{
-#ifndef _WIN32
-	  // cerr << "ERROR: The library \"" << libname << "\" could not be found, or is corrupt: " << dlerror() << endl;
-#endif
-		return 0;
-	}
-
-   	explicitlyopenedhandles[numberofopenedhandles++]=LibraryHandle;
-
-	return LibraryHandle;
+  explicitlyopenedhandles[numberofopenedhandles++]=LibraryHandle;
+  
+  return LibraryHandle;
 }
 
 void CloseLibraries()
 {
-	for (int i=0; i<numberofopenedhandles; i++)
+  for (int i=0; i<numberofopenedhandles; i++)
 #ifdef _WIN32
-		FreeLibrary(explicitlyopenedhandles[i]);
+    FreeLibrary(explicitlyopenedhandles[i]);
 #else
-		dlclose(explicitlyopenedhandles[i]);
+    dlclose(explicitlyopenedhandles[i]);
 #endif
-	
+  
 }
+
+const char* SOError()
+{
+#ifdef _WIN32
+  return 0;
+#else
+  return dlerror();
+#endif
+}
+
+
 
 
 
