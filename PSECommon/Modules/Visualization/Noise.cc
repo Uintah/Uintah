@@ -32,8 +32,8 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/TclInterface/TCL.h>
 
-#include <iostream.h>
-#include <strstream.h>
+#include <iostream>
+#include <strstream>
 #include <PSECore/Datatypes/SpanTree.h>
 #include <PSECommon/Modules/Visualization/Noise.h>
 //#include <Datatypes/Clock.h>
@@ -41,6 +41,8 @@
 
 namespace PSECommon {
 namespace Modules {
+
+  using std::cerr;
 
 Module* make_Noise(const clString& id)
 {
@@ -132,7 +134,7 @@ Noise::execute()
     if ( triangles )
       delete triangles;
     triangles = scinew GeomTrianglesP*[nt];
-    //printf("Noise: %d trees\n", np );
+    printf("Noise: %d trees\n", np );
     forest_generation = forest->generation;
   }
   else {
@@ -200,7 +202,7 @@ Noise::extract()
   }
 
   TextPiostream stream("tmp.tri", Piostream::Write);
-  //  Pio(stream, sh);
+  //Pio(stream, sh);
 
   for (int i=0; i<n_trees; i++ ) {
     printf("Noise: set[%d] size = %d\n", i, triangles[i]->size());
@@ -241,7 +243,7 @@ Noise::do_search( int proc )
       triangles[tree] = 0; //scinew GeomTranspTrianglesPT( alpha );
     else
       triangles[tree] = scinew GeomTrianglesP;
-    //  printf("Noise %d: size = %d\n",proc, forest->tree[proc].span.size() );
+    printf("Noise %d: size = %d\n",proc, forest->tree[proc].span.size() );
     int n = count( forest->tree[tree] );
     printf("count [%d] [size=%d] = %d\n",tree, forest->tree[tree].span.size(),n);
     triangles[tree]->reserve_clear( 3*n );
