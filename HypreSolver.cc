@@ -103,7 +103,7 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
   if (db->findBlock("res_tol"))
     db->require("res_tol", d_residual);
   else
-    d_underrelax = 1.0e-7;
+    d_residual = 1.0e-7;
   /*
   db->getWithDefault("max_iter", d_maxSweeps, 75);
   db->getWithDefault("ksptype", d_kspType, 11);

@@ -1972,7 +1972,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     if (time < 2.0)
       factor = (time+0.000001)*0.5;
 #endif
-  if (timelabels->integrator_last_step) {
+
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -2012,52 +2012,6 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	}
       }
     }
-  }
-  else {
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  if (MLHatI[currCell] < 0.0) MLHatI[currCell] = 0.0;
-
-	  //     calculate the effective viscosity
-
-	  //     handle the case where we divide by zero
-	  double value;
-	  if (MMHatI[currCell] < 1.0e-20) 
-	    value = 0.0;	  
-	  else
-	    value = factor*factor*MLHatI[currCell]/MMHatI[currCell];
-
-	  if (value > 100.0) value = 100.0;
-	  tempCs[currCell] = sqrt(value);
-	}
-      }
-    }
-#define FILTER_Cs
-#ifdef FILTER_Cs
-#ifdef PetscFilter
-    d_filter->applyFilter(pc, patch, tempCs, Cs);
-#else
-    Cs.copy(tempCs, tempCs.getLowIndex(),
-		      tempCs.getHighIndex());
-#endif
-#else
-    Cs.copy(tempCs, tempCs.getLowIndex(),
-		      tempCs.getHighIndex());
-#endif
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  double delta = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	  double filter = pow(delta, 1.0/3.0);
-	  viscosity[currCell] =  Cs[currCell]* filter * filter *
-				  IsI[currCell] * den[currCell] + viscos;
-	}
-      }
-    }
-  }
 
     // boundary conditions...make a separate function apply Boundary
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;

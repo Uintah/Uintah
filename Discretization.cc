@@ -928,11 +928,12 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
 					const Patch* patch,
 					int,
 					CellInformation* cellinfo,
-					double maxAbsU, double maxAbsV,
-					double maxAbsW,
+					const double maxAbsU,
+					const double maxAbsV,
+					const double maxAbsW,
 					ArchesVariables*  scal_vars,
 					ArchesConstVariables*  constscal_vars,
-					int wall_celltypeval)
+					const int wall_celltypeval)
 {
   // ONLY SECOND ORDER ENO
   // ONLY FOR UNIFORM GRID
@@ -1430,11 +1431,12 @@ Discretization::calculateScalarWENOscheme(const ProcessorGroup*,
 					const Patch* patch,
 					int,
 					CellInformation* cellinfo,
-					double maxAbsU, double maxAbsV,
-					double maxAbsW,
+					const double maxAbsU,
+					const double maxAbsV,
+					const double maxAbsW,
 					ArchesVariables*  scal_vars,
 					ArchesConstVariables*  constscal_vars,
-					int wall_celltypeval)
+					const int wall_celltypeval)
 {
   // ONLY SECOND ORDER WENO
   // ONLY FOR UNIFORM GRID

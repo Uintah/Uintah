@@ -341,6 +341,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw, 
 				    cellinfo, &pressureVars,&constPressureVars);
     // apply underelaxation to eqn
+    if (!(d_pressure_correction))
     d_linearSolver->computePressUnderrelax(pc, patch,
 					   &pressureVars, &constPressureVars);
 
@@ -372,6 +373,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
   // Requires
   // coefficient for the variable for which solve is invoked
 
+  if (!(d_pressure_correction))
   if (timelabels->integrator_last_step)
     tsk->requires(Task::NewDW, timelabels->pressure_guess, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -485,12 +487,15 @@ PressureSolver::pressureLinearSolve(const ProcessorGroup* pc,
   // Get the required data
   new_dw->allocateAndPut(pressureVars.pressure, timelabels->pressure_out,
 			 matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (!(d_pressure_correction))
   if (timelabels->integrator_last_step)
     new_dw->copyOut(pressureVars.pressure, timelabels->pressure_guess, 
 	            matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   else
     old_dw->copyOut(pressureVars.pressure, timelabels->pressure_guess, 
 	            matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+  else
+    pressureVars.pressure.initialize(0.0);
 
   for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) 
     new_dw->get(constPressureVars.pressCoeff[ii], d_lab->d_presCoefPBLMLabel, 
