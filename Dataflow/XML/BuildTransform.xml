@@ -51,7 +51,12 @@
     </outputs>
   </io>
   <gui>
-    <img>../Modules/Math/doc/BuildTransformUI.jpg</img>
+    <img>../Modules/Math/doc/BuildTransform-permute.gif</img>
+    <img>../Modules/Math/doc/BuildTransform-scale.gif</img>
+    <img>../Modules/Math/doc/BuildTransform-shear.gif</img>
+    <img>../Modules/Math/doc/BuildTransform-translate.gif</img>
+    <img>../Modules/Math/doc/BuildTransform-widget-roe.gif</img>
+    <img>../Modules/Math/doc/BuildTransform-widget.gif</img>
   </gui>
   <testing>
   </testing>
