@@ -71,6 +71,8 @@ WARNING
      virtual void scheduleTimeAdvance( const LevelP& level, 
 				       SchedulerP&, int step, int nsteps );
      
+
+     double getMaxTime();
      
    private:
      PatchCombiner(const PatchCombiner&);
