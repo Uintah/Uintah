@@ -53,9 +53,9 @@ ViscoScram::ViscoScram(ProblemSpecP& ps)
   //  ps->require("NumberOfPoints",d_initialData.NumberOfPoints);
 
 
-  p_statedata_label = scinew VarLabel("p.statedata",
+  p_statedata_label = scinew VarLabel("p.statedata_vs",
                                 ParticleVariable<StateData>::getTypeDescription());
-  p_statedata_label_preReloc = scinew VarLabel("p.statedata+",
+  p_statedata_label_preReloc = scinew VarLabel("p.statedata_vs+",
                                 ParticleVariable<StateData>::getTypeDescription());
 }
 
@@ -606,6 +606,9 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.20  2001/01/16 23:56:39  bard
+// Gave statedata variables unique names.
+//
 // Revision 1.19  2001/01/05 23:04:16  guilkey
 // Using the code that Wayne just commited which allows the delT variable to
 // be "computed" multiple times per timestep, I removed the multiple derivatives

@@ -29,9 +29,9 @@ HypoElastic::HypoElastic(ProblemSpecP& ps)
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
 
-  p_statedata_label = scinew VarLabel("p.statedata",
+  p_statedata_label = scinew VarLabel("p.statedata_hypo",
                                 ParticleVariable<StateData>::getTypeDescription());
-  p_statedata_label_preReloc = scinew VarLabel("p.statedata+",
+  p_statedata_label_preReloc = scinew VarLabel("p.statedata_hypo+",
                                 ParticleVariable<StateData>::getTypeDescription());
 }
 

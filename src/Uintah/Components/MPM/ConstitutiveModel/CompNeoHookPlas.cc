@@ -32,9 +32,9 @@ CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps)
   ps->require("hardening_modulus",d_initialData.K);
   ps->require("alpha",d_initialData.Alpha);
 
-  p_statedata_label = scinew VarLabel("p.statedata",
+  p_statedata_label = scinew VarLabel("p.statedata_cnhp",
                              ParticleVariable<StateData>::getTypeDescription());
-  p_statedata_label_preReloc = scinew VarLabel("p.statedata+",
+  p_statedata_label_preReloc = scinew VarLabel("p.statedata_cnhp+",
                              ParticleVariable<StateData>::getTypeDescription());
  
   bElBarLabel = scinew VarLabel("p.bElBar",
@@ -439,6 +439,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::StateData*)
 }
 
 // $Log$
+// Revision 1.55  2001/01/16 23:56:39  bard
+// Gave statedata variables unique names.
+//
 // Revision 1.54  2001/01/05 23:04:15  guilkey
 // Using the code that Wayne just commited which allows the delT variable to
 // be "computed" multiple times per timestep, I removed the multiple derivatives
