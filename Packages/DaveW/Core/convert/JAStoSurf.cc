@@ -22,6 +22,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+using std::cerr;
+using std::ifstream;
+using std::endl;
+
 using namespace SCICore::Containers;
 using namespace SCICore::PersistentSpace;
 using namespace SCICore::Datatypes;
