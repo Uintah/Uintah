@@ -9,8 +9,8 @@ ConfigChoice .variant -choices {Debug Optimized} -text "Variant: " \
 	-name VARIANT
 ConfigChoice .compiler -choices {CFront Delta GNU} -text "Compiler: " \
 	-name COMPILER -file "cm"
-ConfigChoice .assertions -choices {1 2 3 4} -text "Assertion level: " \
-	-name "ASSERTIONLEVEL" -file ch
+ConfigChoice .assertions -choices {0 1 2 3 4} -text "Assertion level: " \
+	-name "ASSERTION_LEVEL" -file ch
 ConfigBool .opengl -text "OpenGL? " -name OPENGL
 
 frame .bottom -borderwidth 10

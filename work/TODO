@@ -1,3 +1,12 @@
+Config:
+    Compile main tree
+    Button for optimized version
+    ifdef's in Imakefiles
+    Conversion directories
+    New tcl/tk
+    itcl
+    Test checkin/checkout
+
 Linux:
     X11
 	Transformations
