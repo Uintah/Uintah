@@ -73,8 +73,9 @@ private:
   ColorMap2IPort* icmap2;
   GeometryOPort* ogeom;
   ColorMapOPort* ocmap;
-  int cmap1_prevgen;
-  int cmap2_prevgen;
+  int cmap1_prevgen_;
+  int cmap2_prevgen_;
+  int tex_prevgen_;
   int card_mem_;
    
   CrowdMonitor control_lock; 
@@ -109,8 +110,9 @@ DECLARE_MAKER(VolumeVisualizer)
 VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
   : Module("VolumeVisualizer", ctx, Source, "Visualization", "SCIRun"),
     tex(0),
-    cmap1_prevgen(0),
-    cmap2_prevgen(0),
+    cmap1_prevgen_(0),
+    cmap2_prevgen_(0),
+    tex_prevgen_(0),
     card_mem_(video_card_memory_size()),
     control_lock("VolumeVisualizer resolution lock"),
     control_widget(0),
@@ -201,15 +203,34 @@ VolumeVisualizer::execute()
   }
 
   bool cmap1_dirty = false;
-  bool cmap2_dirty = false;
-  if(c1 && (cmap1->generation != cmap1_prevgen)) {
+  if(c1 && (cmap1->generation != cmap1_prevgen_)) {
+    cmap1_prevgen_ = cmap1->generation;
     cmap1_dirty = true;
   }
-  if(c2 && (cmap2->generation != cmap2_prevgen)) {
+
+  bool cmap2_dirty = false;
+  if(c2 && (cmap2->generation != cmap2_prevgen_)) {
+    cmap2_prevgen_ = cmap2->generation;
     cmap2_dirty = true;
-  }    
-  if(c1) cmap1_prevgen = cmap1->generation;
-  if(c2) cmap2_prevgen = cmap2->generation;
+  }
+
+  bool tex_dirty = false;
+  if (tex.get_rep() && tex->generation != tex_prevgen_) {
+    tex_prevgen_ = tex->generation;
+    tex_dirty = true;
+  }
+   
+  if (!cmap1_dirty && !cmap2_dirty && !tex_dirty && 
+      !gui_sampling_rate_hi_.changed() && !gui_sampling_rate_lo_.changed() &&
+      !gui_adaptive_.changed() && !gui_cmap_size_.changed() && 
+      !gui_sw_raster_.changed() && !gui_render_style_.changed() &&
+      !gui_alpha_scale_.changed() && !gui_interp_mode_.changed() &&
+      !gui_shading_.changed() && !gui_ambient_.changed() &&
+      !gui_diffuse_.changed() && !gui_specular_.changed() &&
+      !gui_shine_.changed() && !gui_light_.changed() &&
+      !gui_blend_res_.changed() && !gui_multi_level_.changed() &&
+      !gui_use_stencil_.changed() && !gui_invert_opacity_.changed() &&
+      !gui_num_slices_.changed()) return;
 
   string s;
   gui->eval(id + " hasUI", s);

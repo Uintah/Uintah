@@ -119,7 +119,7 @@ ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
     gui_fog_start_(ctx->subVar("fog-start")), 
     gui_fog_end_(ctx->subVar("fog-end")),
     gui_fog_visibleonly_(ctx->subVar("fog-visibleonly")),
-
+    gui_total_frames_(ctx->subVar("total_frames"), 0),
     // Private Variables
     viewer_(viewer),
     renderer_(new OpenGL(gui, viewer, this)),
@@ -1326,8 +1326,8 @@ ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
 void
 ViewWindow::redraw_if_needed()
 {
-  if (need_redraw_) {
-    need_redraw_=0;
+  if( need_redraw_ ){
+    need_redraw_ = false;
     redraw();
   }
 }
@@ -1390,13 +1390,12 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
       }
     }
   } else if (args[1] == "redraw") {
-    // We need to dispatch this one to the  remote thread We use an ID string
-    // instead of a pointer in case this viewwindow gets killed by the time the
-    // redraw message gets dispatched.
 #ifdef __APPLE__
     if (args.count() > 2) renderer_->apple_wait_a_second_=true;
 #endif
-    
+    // We need to dispatch this one to the  remote thread We use an ID string
+    // instead of a pointer in case this viewwindow gets killed by the time the
+    // redraw message gets dispatched.
     ViewerMessage *tmp = scinew ViewerMessage(id_);
     if (!viewer_->mailbox.sendIfNotSentLast(tmp, check_for_redraw_msg))
     {

@@ -145,7 +145,7 @@ proc makeNetworkEditor {} {
 	-menu .main_menu.file.menu
     menu .main_menu.file.menu -tearoff false
     menu .main_menu.file.menu.new -tearoff false
-    .main_menu.file.menu.new add command -label "Module..." \
+    .main_menu.file.menu.new add command -label "Create Module Skeleton..." \
         -underline 0 -command "ComponentWizard"
 
     # Create the "File" Menu sub-menus.  Create (most of) them in the
@@ -175,7 +175,7 @@ proc makeNetworkEditor {} {
 	-command "updateRunDateAndTime 0; netedit scheduleall" -state disabled
 
     .main_menu.file.menu add separator
-    .main_menu.file.menu add cascade -label "New" -underline 0\
+    .main_menu.file.menu add cascade -label "Wizards" -underline 0 \
         -menu .main_menu.file.menu.new -state disabled
     .main_menu.file.menu add separator
 
@@ -571,6 +571,10 @@ proc findMovedModulePath { packvar catvar modvar } {
 {SCIRun FieldsData ApplyInterpMatrix} {SCIRun FieldsData ApplyMappingMatrix}
 {SCIRun FieldsData DirectInterpolate} {SCIRun FieldsData DirectMapping}
 {SCIRun Fields DirectInterpolate} {SCIRun FieldsData DirectMapping}
+{SCIRun FieldsData BuildInterpolant} {SCIRun FieldsData BuildMappingMatrix}
+{SCIRun FieldsData ApplyInterpolant} {SCIRun FieldsData ApplyMappingMatrix}
+{SCIRun Fields BuildInterpolant} {SCIRun FieldsData BuildMappingMatrix}
+{SCIRun Fields ApplyInterpolant} {SCIRun FieldsData ApplyMappingMatrix}
 "
 
     upvar 1 $packvar package $catvar category $modvar module
@@ -1282,38 +1286,6 @@ proc displayErrorWarningOrInfo { msg status } {
 }
 
 
-#centers window w1 over window w2
-proc centerWindow { w1 { w2 "" } } {
-    update
-#    wm overrideredirect $w1 1
-    wm geometry $w1 ""
-    update idletasks
-    if { [winfo exists $w2] } {
-	set w [winfo width $w2]
-	set h [winfo height $w2]
-	set x [winfo x $w2]
-	set y [winfo y $w2]
-    } else {
-	set w 0
-	set h 0
-	set x 0
-	set y 0
-    }
-
-    if {$w < 2} { set w [winfo screenwidth .] }
-    if {$h < 2} { set h [winfo screenheight .] }    
-
-    set x [expr $x+($w - [winfo width $w1])/2]
-    set y [expr $y+($h - [winfo height $w1])/2]
-    wm geometry $w1 +${x}+${y}
-    if { [winfo ismapped $w1] } {
-	raise $w1
-    } else {
-	wm deiconify $w1
-    }
-    grab $w1
-}
-
 proc hideProgress { args } {
     if { ![winfo exists .splash] } return
     update idletasks
@@ -1628,28 +1600,45 @@ proc licenseAccept { } {
 
 
 proc promptUserToCopySCIRunrc {} {
+
     global dontAskAgain copyResult
     set w .copyRCprompt
+
     toplevel $w
     wm withdraw $w
+
     set copyResult 0
     set dontAskAgain 0
-    set version [netedit getenv SCIRUN_VERSION].[netedit getenv SCIRUN_RCFILE_SUBVERSION]
+
+    set version [netedit getenv SCIRUN_RCFILE_VERSION]
+    if { $version == "" } {
+        set version "bak"
+    }
+
     wm title $w "Copy v$version .scirunrc file?"
-    label $w.message -text "A newer version of your ~/.scirunrc file is avaliable with this release.\n\nThis file contains SCIRun environment variables that are\nneccesary for some new features like fonts.\n\nPlease note: If you have made changes to your ~/.scirunrc file\nthey will be undone by this action.  Your existing file will be copied\nto ~/.scirunrc.$version\n\nWould you like SCIRun to copy over the new .scirunrc?\n\n" -justify left
+    label $w.message -text "A newer version of the .scirunrc file is avaliable with this release.\n\nThis file contains SCIRun environment variables that are\nneccesary for some new features like fonts.\n\nPlease note: If you have made changes to your ~/.scirunrc file\nthey will be undone by this action.  Your existing file will be copied\nto ~/.scirunrc.$version\n\nWould you like SCIRun to copy over the new .scirunrc?" -justify left
     frame $w.but
     button $w.but.ok -text Copy -command "set copyResult 1"
     button $w.but.no -text "Don't Copy" -command "set copyResult 0"
-    checkbutton $w.dontAskAgain -text "Dont Ask Me This Question Again" -variable dontAskAgain -offvalue 0 -onvalue 1
+    checkbutton $w.dontAskAgain -text "Don't ask me this question again." -variable dontAskAgain -offvalue 0 -onvalue 1
 #    pack $w.but.dontAskAgain -side topy -pady 5
+
     pack $w.but.ok $w.but.no -side left -padx 5 -ipadx 5
-    pack $w.message $w.dontAskAgain $w.but -side top
-    centerWindow $w
+
+    pack $w.message $w.dontAskAgain $w.but -pady 5 -padx 5
+
+    # Override the destroy window decoration and make it not do anything
+    wm protocol $w WM_DELETE_WINDOW "SciRaise $w"
+
+    moveToCursor $w
+    SciRaise $w
+
     vwait copyResult
     if { $dontAskAgain && !$copyResult } {
 	if [catch { set rcfile [open ~/.scirunrc "WRONLY APPEND"] }] return
 	puts $rcfile "\n\# This section added when the user chose 'Dont Ask This Question Again'"
 	puts $rcfile "\# when prompted about updating the .scirurc file version"
+	set version [netedit getenv SCIRUN_VERSION].[netedit getenv SCIRUN_RCFILE_SUBVERSION]
 	puts $rcfile "SCIRUN_RCFILE_VERSION=${version}"
 	close $rcfile
     }
@@ -1908,3 +1897,34 @@ proc writeNetwork { filename { subnet 0 } } {
     puts $out "\n::netedit scheduleok"    
     close $out
 }
+
+
+# Numerically compares two version strings and returns:
+#  -1 if ver1 < ver2,
+#   0 if ver1 == ver2
+#   1 if ver1 > ver2
+proc compareVersions { ver1 ver2 } {
+    set v1 [split $ver1 .]
+    set v2 [split $ver2 .]
+    set l1 [llength $v1]
+    set l2 [llength $v2]
+    set len [expr ($l1 > $l2) ? $l1 : $l2]
+    for { set i 0 } {$i < $len} {incr i} {
+	set n1 -1
+	set n2 -1
+	if {$i < $l1} {
+	    set n1 [lindex $v1 $i]
+	}
+	if {$i < $l2} {
+	    set n2 [lindex $v2 $i]
+	}
+	if { $n1 < $n2 } {
+	    return -1
+	}
+	if { $n2 < $n1 } {
+	    return 1
+	}
+    }
+    return 0
+}
+    

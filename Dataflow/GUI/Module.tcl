@@ -164,15 +164,6 @@ itcl_class Module {
 
 	    SciRaise $w
 
-	    # Mac Hac to keep GUI windows from "growing..."  Hopefully
-	    # a TCL fix will come out for this soon and we can remove
-	    # the following line: (after 1 "wm geometry $w {}") Note:
-	    # this forces the GUIs to resize themselves to their
-	    # "best" size.  However, if the user has resized the GUI
-	    # for some reason, then this will resize it back to the
-	    # "original" size.  Perhaps not the best behavior. :-(
-	    after 1 "wm geometry $w {}"
-
 	    wm title $w [set_title [modname]]
 	}
     }
@@ -990,7 +981,7 @@ proc notesWindow { id {done ""} } {
 	-command "okNotesWindow $id \"$done\""
     button $w.b.clear -text "Clear" -command "$w.input delete 1.0 end; set Notes($id) {}"
     button $w.b.cancel -text "Cancel" -command \
-	"set Notes($id) \"$cache\"; destroy $w"
+	"set Notes($id) \{$cache\}; destroy $w"
 
     setIfExists rgb Color($id) white
     button $w.b.reset -fg black -text "Reset Color" -command \
@@ -1335,7 +1326,7 @@ proc drawNotes { args } {
 	    if { $isModuleNotes } {
 		Tooltip $canvas.module$id $text
 	    } else {
-		canvasTooltip $canvas $id $text
+		canvasTooltip $canvas $id {$text}
 	    }
 	} else {
 	    if { $isModuleNotes } {
@@ -1614,8 +1605,9 @@ proc moduleDuplicate { module } {
     set bbox [$canvas bbox $module]
     set x [expr [lindex $bbox 0]-$ulx]
     set y [expr 20 + [lindex $bbox 3] - $uly]
-
+    set Subnet(Loading) $Subnet($module)
     set newmodule [eval addModuleAtPosition [modulePath $module] $x $y]
+    set Subnet(Loading) 0
 
     foreach connection $Subnet(${module}_connections) {
 	if { [string equal [iMod connection] $module] } {

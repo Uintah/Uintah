@@ -114,9 +114,9 @@ ShowColorMap::execute()
 
   GeomGroup *all = scinew GeomGroup();
 
-  Point  ref1;
-  Vector out;
-  Vector along;
+  Point  ref1(0.0, 0.0, 0.0);
+  Vector out(0.0, 0.0, 0.0);
+  Vector along(0.0, 0.0, 0.0);
 
   Color text_color;
   if( gui_text_color_.get() == 0 ){

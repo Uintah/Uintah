@@ -108,7 +108,7 @@ BuildMappingMatrix::execute()
   {
     return;
   }
-  if (!fsrc_h->basis_order() == -1)
+  if (fsrc_h->basis_order() == -1)
   {
     warning("No data location in Source field to interpolate from.");
     return;

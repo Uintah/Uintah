@@ -53,13 +53,13 @@ set m1 [addModuleAtPosition "BioPSE" "Inverse" "ConductivitySearch" 65 115]
 set m2 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 287 238]
 set m3 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 460 238]
 set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 287 345]
-set m5 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 343 159]
+set m5 [addModuleAtPosition "SCIRun" "FieldsData" "BuildMappingMatrix" 343 159]
 set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 269 407]
 set m7 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 470 8]
-set m8 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 269 482]
+set m8 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyMappingMatrix" 269 482]
 set m9 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 65 332]
 set m10 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 47 397]
-set m11 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 47 470]
+set m11 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyMappingMatrix" 47 470]
 set m12 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 47 534]
 set m13 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 269 540]
 set m14 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 65 638]
@@ -72,18 +72,18 @@ set m20 [addModuleAtPosition "SCIRun" "Render" "Viewer" 416 741]
 set m21 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 650 118]
 set m22 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldDataAt" 343 86]
 set m23 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 65 251]
-set m24 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 1044 434]
+set m24 [addModuleAtPosition "SCIRun" "FieldsData" "BuildMappingMatrix" 1044 434]
 set m25 [addModuleAtPosition "BioPSE" "Forward" "IndicesToTensors" 852 251]
 set m26 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 852 321]
 set m27 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 870 386]
 set m28 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 852 454]
-set m29 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 852 521]
+set m29 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyMappingMatrix" 852 521]
 set m30 [addModuleAtPosition "BioPSE" "Forward" "IndicesToTensors" 1438 177]
 set m31 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 1438 240]
 set m32 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 1456 304]
 set m33 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 1438 364]
-set m34 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 1437 514]
-set m35 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 1228 435]
+set m34 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyMappingMatrix" 1437 514]
+set m35 [addModuleAtPosition "SCIRun" "FieldsData" "BuildMappingMatrix" 1228 435]
 set m36 [addModuleAtPosition "SCIRun" "Fields" "ClipByFunction" 1246 373]
 set m37 [addModuleAtPosition "SCIRun" "Fields" "ClipByFunction" 1062 372]
 set m38 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 852 658]
@@ -110,12 +110,14 @@ addConnection $m2 0 $m4 0
 addConnection $m4 0 $m6 1
 addConnection $m0 0 $m6 0
 addConnection $m6 0 $m8 0
-addConnection $m5 0 $m8 1
+addConnection $m7 0 $m8 1
+addConnection $m5 0 $m8 2
 addConnection $m3 0 $m9 1
 addConnection $m9 0 $m10 1
 addConnection $m0 0 $m10 0
 addConnection $m10 0 $m11 0
-addConnection $m5 0 $m11 1
+addConnection $m7 0 $m11 1
+addConnection $m5 0 $m11 2
 addConnection $m11 0 $m12 0
 addConnection $m8 0 $m13 0
 addConnection $m12 1 $m14 0
@@ -140,7 +142,8 @@ addConnection $m26 1 $m27 0
 addConnection $m27 0 $m28 1
 addConnection $m26 0 $m28 0
 addConnection $m1 0 $m25 0
-addConnection $m24 0 $m29 1
+addConnection $m37 0 $m29 1
+addConnection $m24 0 $m29 2
 addConnection $m28 0 $m29 0
 addConnection $m0 0 $m30 0
 addConnection $m30 0 $m31 0
@@ -148,7 +151,8 @@ addConnection $m31 1 $m32 0
 addConnection $m32 0 $m33 1
 addConnection $m31 0 $m33 0
 addConnection $m33 0 $m34 0
-addConnection $m35 0 $m34 1
+addConnection $m36 0 $m34 1
+addConnection $m35 0 $m34 2
 addConnection $m36 0 $m35 1
 addConnection $m37 0 $m24 1
 addConnection $m40 0 $m41 0

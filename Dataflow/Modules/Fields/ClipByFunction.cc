@@ -242,6 +242,13 @@ ClipByFunctionAlgo::get_compile_info(const TypeDescription *fsrc,
     string("template <class FIELD>\n") +
     "class " + template_name + " : public ClipByFunctionAlgoT<FIELD>\n" +
     "{\n" +
+    "  using ClipByFunctionAlgoT<FIELD>::u0;\n" +
+    "  using ClipByFunctionAlgoT<FIELD>::u1;\n" +
+    "  using ClipByFunctionAlgoT<FIELD>::u2;\n" +
+    "  using ClipByFunctionAlgoT<FIELD>::u3;\n" +
+    "  using ClipByFunctionAlgoT<FIELD>::u4;\n" +
+    "  using ClipByFunctionAlgoT<FIELD>::u5;\n" +
+    "\n" +
     "  virtual bool vinside_p(double x, double y, double z,\n" +
     "                         typename FIELD::value_type v)\n" +
     "  {\n" +

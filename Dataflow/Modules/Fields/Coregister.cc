@@ -149,7 +149,7 @@ Coregister::execute()
   int allowTranslate = allowTranslate_.get();
   string method = method_.get();
   
-  CoregPts* coreg;
+  CoregPts* coreg = 0;
   if (method == "Analytic") {
     coreg = scinew CoregPtsAnalytic(allowScale, allowRotate, allowTranslate);
   } else if (method == "Procrustes") {
