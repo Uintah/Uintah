@@ -676,12 +676,15 @@ void printParticleVariable(DataArchive* da,
 		  {
 		    ParticleVariable<double> value;
 		    da->query(value, var, matl, patch, time);
+		    ParticleVariable<long64> pid;
+		    da->query(pid, "p.particleID", matl, patch, time);
 		    ParticleSubset* pset = value.getParticleSubset();
 		    if(pset->numParticles() > 0){
 		      ParticleSubset::iterator iter = pset->begin();
 		      for(;iter != pset->end(); iter++){
-                        cout << time << " " << patchIndex << " " << matl ;
-			cout << " " << value[*iter] << endl;
+                        cout << time << " " << patchIndex << " " << matl; 
+			cout << " " << pid[*iter];
+                        cout << " " << value[*iter] << endl;
 		      }
 		    }
 		  }
@@ -690,12 +693,15 @@ void printParticleVariable(DataArchive* da,
 		  {
 		    ParticleVariable<float> value;
 		    da->query(value, var, matl, patch, time);
+		    ParticleVariable<long64> pid;
+		    da->query(pid, "p.particleID", matl, patch, time);
 		    ParticleSubset* pset = value.getParticleSubset();
 		    if(pset->numParticles() > 0){
 		      ParticleSubset::iterator iter = pset->begin();
 		      for(;iter != pset->end(); iter++){
                         cout << time << " " << patchIndex << " " << matl ;
-			cout << " " << value[*iter] << endl;
+			cout << " " << pid[*iter];
+                        cout << " " << value[*iter] << endl;
 		      }
 		    }
 		  }
@@ -705,11 +711,14 @@ void printParticleVariable(DataArchive* da,
 		    ParticleVariable<int> value;
 		    da->query(value, var, matl, patch, time);
 		    ParticleSubset* pset = value.getParticleSubset();
+		    ParticleVariable<long64> pid;
+		    da->query(pid, "p.particleID", matl, patch, time);
 		    if(pset->numParticles() > 0){
 		      ParticleSubset::iterator iter = pset->begin();
 		      for(;iter != pset->end(); iter++){
-                        cout << time << " " << patchIndex << " " << matl ;
-			cout << " " << value[*iter] << endl;
+                        cout << time << " " << patchIndex << " " << matl;
+			cout << " " << pid[*iter];
+                        cout << " " << value[*iter] << endl;
 		      }
 		    }
 		  }
@@ -719,11 +728,14 @@ void printParticleVariable(DataArchive* da,
 		    ParticleVariable<Point> value;
 		    da->query(value, var, matl, patch, time);
 		    ParticleSubset* pset = value.getParticleSubset();
+		    ParticleVariable<long64> pid;
+		    da->query(pid, "p.particleID", matl, patch, time);
 		    if(pset->numParticles() > 0){
 		      ParticleSubset::iterator iter = pset->begin();
 		      for(;iter != pset->end(); iter++){
                         cout << time << " " << patchIndex << " " << matl ;
-			cout << " " << value[*iter](0) 
+			cout << " " << pid[*iter];
+                        cout << " " << value[*iter](0) 
                              << " " << value[*iter](1)
                              << " " << value[*iter](2) << endl;
 		      }
@@ -734,11 +746,14 @@ void printParticleVariable(DataArchive* da,
 		  {
 		    ParticleVariable<Vector> value;
 		    da->query(value, var, matl, patch, time);
+		    ParticleVariable<long64> pid;
+		    da->query(pid, "p.particleID", matl, patch, time);
 		    ParticleSubset* pset = value.getParticleSubset();
 		    if(pset->numParticles() > 0){
 		      ParticleSubset::iterator iter = pset->begin();
 		      for(;iter != pset->end(); iter++){
                         cout << time << " " << patchIndex << " " << matl ;
+			cout << " " << pid[*iter];
 			cout << " " << value[*iter][0] 
                              << " " << value[*iter][1]
                              << " " << value[*iter][2] << endl;
@@ -750,11 +765,14 @@ void printParticleVariable(DataArchive* da,
 		  {
 		    ParticleVariable<Matrix3> value;
 		    da->query(value, var, matl, patch, time);
+		    ParticleVariable<long64> pid;
+		    da->query(pid, "p.particleID", matl, patch, time);
 		    ParticleSubset* pset = value.getParticleSubset();
 		    if(pset->numParticles() > 0){
 		      ParticleSubset::iterator iter = pset->begin();
 		      for(;iter != pset->end(); iter++){
                         cout << time << " " << patchIndex << " " << matl ;
+			cout << " " << pid[*iter];
                         for (int ii = 0; ii < 3; ++ii) {
                           for (int jj = 0; jj < 3; ++jj) {
 			    cout << " " << value[*iter](ii,jj) ;
