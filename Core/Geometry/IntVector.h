@@ -67,6 +67,20 @@ namespace SCICore {
 			     d_value[2]-v.d_value[2]);
 	}
 
+	inline IntVector& operator+=(const IntVector& v) {
+	    d_value[0]+=v.d_value[0];
+	    d_value[1]+=v.d_value[1];
+	    d_value[2]+=v.d_value[2];
+	    return *this;
+	}
+
+	inline IntVector& operator-=(const IntVector& v) {
+	    d_value[0]-=v.d_value[0];
+	    d_value[1]-=v.d_value[1];
+	    d_value[2]-=v.d_value[2];
+	    return *this;
+	}
+
 	// IntVector i(0)=i.x()
 	//           i(1)=i.y()
 	//           i(2)=i.z()
@@ -139,6 +153,9 @@ std::ostream& operator<<(std::ostream&, const SCICore::Geometry::IntVector&);
 
 //
 // $Log$
+// Revision 1.10  2000/09/25 19:47:04  sparker
+// Added += and -= operators
+//
 // Revision 1.9  2000/09/12 15:09:31  sparker
 // Added [] operator
 //
