@@ -1863,6 +1863,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
    int numMPMMatls=d_sharedState->getNumMPMMatls();
    delt_vartype delT;
    old_dw->get(delT, d_sharedState->get_delt_label() );
+   bool combustion_problem=false;
 
    // Artificial Damping 
    double alphaDot = 0.0;
@@ -1938,7 +1939,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(massBurnFraction,lb->massBurnFractionLabel,dwi,patch,gac,NGP);
      }
      else{
-      NCVariable<double> dTdt_create, massBurnFraction_create,gSp_vol_src_create;	
+      NCVariable<double> dTdt_create,massBurnFraction_create,gSp_vol_src_create;
       new_dw->allocateTemporary(dTdt_create,                     patch,gac,NGP);
       new_dw->allocateTemporary(gSp_vol_src_create,              patch,gac,NGP);
       new_dw->allocateTemporary(massBurnFraction_create,         patch,gac,NGP);
@@ -1956,6 +1957,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
      IntVector ni[MAX_BASIS];
      double S[MAX_BASIS];
      Vector d_S[MAX_BASIS];
+
+     double rho_frac_min = 1.;
+     if(mpm_matl->getRxProduct() == Material::reactant){
+      combustion_problem=true;
+      rho_frac_min = .1;
+     }
 
      for(ParticleSubset::iterator iter = pset->begin();
                                                   iter != pset->end(); iter++){
@@ -1993,9 +2000,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pSp_volNew[idx]      = pSp_vol[idx] + sp_vol_dt * delT;
 
           double rho;
-	  if(pvolume[idx] > 0.){
-	    rho = pmass[idx]/pvolume[idx];
-	  }
+          if(pvolume[idx] > 0.){
+             rho = max(pmass[idx]/pvolume[idx],rho_frac_min*rho_init);
+          }
 	  else{
 	    rho = rho_init;
 	  }
@@ -2013,7 +2020,23 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
      new_dw->deleteParticles(delset);      
    }
-   
+
+   if(combustion_problem){
+     if(delT < 5.e-9){
+      if(delT < 1.e-10){
+        d_min_part_mass = min(d_min_part_mass*2.0,5.e-9);
+        cout << "New d_min_part_mass = " << d_min_part_mass << endl;
+      }
+      else{
+        d_min_part_mass = min(d_min_part_mass*2.0,5.e-12);
+        cout << "New d_min_part_mass = " << d_min_part_mass << endl;
+      }
+     }
+     else if(delT > 2.e-8){
+      d_min_part_mass = max(d_min_part_mass/2.0,3.e-15);
+     }
+   }
+
    // DON'T MOVE THESE!!!
    new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
    new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
