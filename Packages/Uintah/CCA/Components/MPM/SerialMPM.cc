@@ -1243,6 +1243,7 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+      cm->setWorld(d_myworld);
       cm->setAdiabaticHeating(d_adiabaticHeating);
       cm->computeStressTensorWithErosion(patches, mpm_matl, old_dw, new_dw);
     }
@@ -1250,6 +1251,7 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+      cm->setWorld(d_myworld);
       cm->setAdiabaticHeating(d_adiabaticHeating);
       cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
     }
