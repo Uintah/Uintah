@@ -29,7 +29,6 @@
 #include <Core/OS/Dir.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
-#include <Core/Thread/Mutex.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
@@ -201,8 +200,6 @@ void build_field(QueryInfo &qinfo,
   if (verbose) cout << "max_workers = "<<max_workers<<"\n";
   Semaphore* thread_sema = scinew Semaphore("extractor semaphore",
 					    max_workers);
-  Mutex lock("build_field lock");
-
   // Loop over each patch and get the data from the data archive.
   for( Level::const_patchIterator r = qinfo.level->patchesBegin();
       r != qinfo.level->patchesEnd(); ++r){
@@ -258,14 +255,14 @@ void build_field(QueryInfo &qinfo,
       thread_sema->down();
       Thread *thrd = scinew Thread( 
         (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
-				      thread_sema, lock)),
+				      thread_sema)),
 	"patch_to_field_worker");
       thrd->detach();
 #else
       if (verbose) { cout << "Creating worker...";cout.flush(); }
       PatchToFieldThread<Var, T> *worker = 
         (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
-					   thread_sema, lock));
+					   thread_sema));
       if (verbose) { cout << "Running worker..."; cout.flush(); }
       worker->run();
       delete worker;
