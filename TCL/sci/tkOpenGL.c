@@ -69,6 +69,7 @@ typedef struct {
     int accumalphasize;
 
     GLXContext cx;
+    XVisualInfo* vi;
 
     /*
      * Information used when displaying widget:
@@ -240,12 +241,16 @@ OpenGLCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
+#if 0
     OpenGLPtr->cx = glXCreateContext(Tk_Display(tkwin),
 				     vi, 0, OpenGLPtr->direct);
     if(!OpenGLPtr->cx){
 	Tcl_AppendResult(interp, "Error making GL context", (char*)NULL);
 	return TCL_ERROR;
     }
+#endif
+    OpenGLPtr->cx=0;
+    OpenGLPtr->vi=vi;
     
     cmap = XCreateColormap(Tk_Display(tkwin),
 			   RootWindow(Tk_Display(tkwin), vi->screen),
@@ -441,6 +446,19 @@ GLXContext OpenGLGetContext(interp, name)
     if(!Tcl_GetCommandInfo(interp, name, &info))
 	return 0;
     OpenGLPtr=(OpenGL*)info.clientData;
+    if(!OpenGLPtr->cx){
+	Tk_Window* tkwin;
+	fprintf(stderr, "O1\n");
+	tkwin=Tk_NameToWindow(interp, name, Tk_MainWindow(interp));
+	fprintf(stderr, "O2\n");
+	OpenGLPtr->cx = glXCreateContext(Tk_Display(tkwin),
+					 OpenGLPtr->vi, 0, OpenGLPtr->direct);
+	fprintf(stderr, "O3\n");
+	if(!OpenGLPtr->cx){
+	    Tcl_AppendResult(interp, "Error making GL context", (char*)NULL);
+	    return TCL_ERROR;
+	}
+    }
     return OpenGLPtr->cx;
 }
 
