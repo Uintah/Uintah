@@ -18,7 +18,7 @@
    </Time>
 
    <DataArchiver>
-        <filebase>arches.uda</filebase>
+        <filebase>tmp.uda</filebase>
 	<outputInterval>5</outputInterval>
    </DataArchiver>
 
@@ -66,6 +66,12 @@
 	            </MixtureFraction>
 		    <TurblengthScale>1</TurblengthScale>
 		    <inletType>primary</inletType>
+		    <geom_object>
+		      <box label="gp1">
+			<min>[-4,0.49,0.49]</min>
+			<max>[0, 0.51, 0.51]</max>
+		      </box>
+		    </geom_object>
 		</FlowInlet>
 		<PressureBC>
 		    <flowRate>0</flowRate>
@@ -74,6 +80,18 @@
 	            </MixtureFraction>
 		    <TurblengthScale>1</TurblengthScale>
 		    <RefPressure>1</RefPressure>
+		    <geom_object>
+		      <box label="gp2">
+			<min>[0,-5,-5]</min>
+			<max>[1,0,0]</max>
+		      </box>
+		    </geom_object>
+		    <geom_object>
+		      <box label="gp2">
+			<min>[0,1,1]</min>
+			<max>[1,5,5]</max>
+		      </box>
+		    </geom_object>
 		</PressureBC>
 		<outletBC>
 		    <flowRate>0</flowRate>
@@ -82,7 +100,21 @@
 	            </MixtureFraction>
 		    <TurblengthScale>1</TurblengthScale>
 		    <outletType>pressure</outletType>
+		    <geom_object>
+		      <box label="gp3">
+			<min>[1,0,0]</min>
+			<max>[5,1,1]</max>
+		      </box>
+		    </geom_object>
 		</outletBC>
+		<WallBC>
+		    <geom_object>
+		      <box label="gp3">
+			<min>[-5,0,0]</min>
+			<max>[0,0,0]</max>
+		      </box>
+		    </geom_object>
+		</WallBC>
 	    </BoundaryConditions>
 
 	    <PhysicalConstants>
@@ -93,7 +125,7 @@
 	    </PhysicalConstants>
 
 	    <PicardSolver>
-		<max_iter>20</max_iter>	
+		<max_iter>0</max_iter>	
 		<res_tol>2.0</res_tol>
 
 		<cal_pressure>true</cal_pressure>
