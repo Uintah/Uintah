@@ -13,6 +13,7 @@
 
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
+#include <Datatypes/BasicSurfaces.h>
 #include <Datatypes/Colormap.h>
 #include <Datatypes/ColormapPort.h>
 #include <Datatypes/GeometryPort.h>
@@ -25,6 +26,7 @@
 #include <Geom/Geom.h>
 #include <Geom/Material.h>
 #include <Geom/Group.h>
+#include <Geom/Sphere.h>
 #include <Geom/Tri.h>
 #include <Geom/Triangles.h>
 #include <Malloc/Allocator.h>
@@ -104,11 +106,12 @@ void SurfToGeom::execute()
 
     int have_sf=ifield->get(sfield);
 //    GeomTriangles* group = scinew GeomTriangles;
+    GeomGroup* spheres = scinew GeomGroup;
     GeomTrianglesPC* PCgroup = scinew GeomTrianglesPC;
     GeomTrianglesP* Pgroup = scinew GeomTrianglesP;
 
     TriSurface* ts=surf->getTriSurface();
-    
+    PointsSurface* ps=surf->getPointsSurface();
     if(ts){
 	int ix=0;;
 	for (int i=0; i< ts->elements.size(); i++) {
@@ -173,18 +176,24 @@ void SurfToGeom::execute()
 		}
 	    }
 	}
-
+    } else if(ps) {
+	Array1<NodeHandle> nodes;
+	ps->get_surfnodes(nodes);
+	for (int ii=0; ii<nodes.size(); ii++) {
+	    spheres->add(scinew GeomSphere(nodes[ii]->p, 5));
+	}
     } else {
 	error("Unknown representation for Surface in SurfToGeom");
     }
 //    GeomObj* topobj=group;
     GeomGroup* ngroup = scinew GeomGroup;
 
-    if (PCgroup->size())
+    if (PCgroup && PCgroup->size())
 	ngroup->add(PCgroup);
-    if (Pgroup->size())
+    if (Pgroup && Pgroup->size())
 	ngroup->add(Pgroup);
-    
+    if (spheres && spheres->size())
+	ngroup->add(spheres);
 #if 0
     // what is this for????
     if (surf->name == "sagital.scalp") {
