@@ -124,7 +124,7 @@ void VectorFieldExtractor::execute()
   
   ArchiveHandle handle;
   if(!in->get(handle)){
-    error("VectorFieldExtractor::execute() Didn't get a handle");
+    warning("VectorFieldExtractor::execute() Didn't get a handle");
     grid = 0;
     return;
   }
@@ -185,7 +185,7 @@ void VectorFieldExtractor::execute()
 	  return;
 	}
       default:
-	error("NCVariable<?>  Unknown vector type.");
+	warning("NCVariable<?>  Unknown vector type.");
 	return;
       }
     case TypeDescription::CCVariable:
@@ -213,7 +213,7 @@ void VectorFieldExtractor::execute()
 	  return;
 	}
       default:
-	error("CCVariable<?> Unknown vector type.");
+	warning("CCVariable<?> Unknown vector type.");
 	return;
       }
     case TypeDescription::SFCXVariable:
@@ -241,7 +241,7 @@ void VectorFieldExtractor::execute()
 	  return;
 	}
       default:
-	error("SFCXVariable<?> Unknown vector type.");
+	warning("SFCXVariable<?> Unknown vector type.");
 	return;
       }
     case TypeDescription::SFCYVariable:
@@ -269,7 +269,7 @@ void VectorFieldExtractor::execute()
 	  return;
 	}
       default:
-	error("SFCYVariable<?> Unknown vector type.");
+	warning("SFCYVariable<?> Unknown vector type.");
 	return;
       }
     case TypeDescription::SFCZVariable:
@@ -297,12 +297,12 @@ void VectorFieldExtractor::execute()
 	  return;
 	}
       default:
-	error("SFCZVariable<?> Unknown vector type.");
+	warning("SFCZVariable<?> Unknown vector type.");
 	return;
       }
 
     default:
-      error("Not a VectorField.");
+      warning("Not a VectorField.");
       return;
     }
   }

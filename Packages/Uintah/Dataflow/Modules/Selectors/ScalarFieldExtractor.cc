@@ -136,7 +136,7 @@ void ScalarFieldExtractor::execute()
   
   ArchiveHandle handle;
   if(!in->get(handle)){
-    error("ScalarFieldExtractor::execute() Didn't get a handle.");
+    warning("ScalarFieldExtractor::execute() Didn't get a handle.");
     grid = 0;
     return;
   }

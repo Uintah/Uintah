@@ -126,7 +126,7 @@ void TensorFieldExtractor::execute()
   
   ArchiveHandle handle;
    if(!in->get(handle)){
-     error("Didn't get a handle.");
+     warning("Didn't get a handle.");
      return;
    }
    
@@ -175,7 +175,7 @@ void TensorFieldExtractor::execute()
 	  return;
 	}
       default:
-	error("NCVariable<?>  Unknown vector type.");
+	warning("NCVariable<?>  Unknown vector type.");
 	return;
       }
     case TypeDescription::CCVariable:
@@ -200,7 +200,7 @@ void TensorFieldExtractor::execute()
 	  return;
 	}
       default:
-	error("CCVariable<?> Unknown vector type.");
+	warning("CCVariable<?> Unknown vector type.");
 	return;
       }
      case TypeDescription::SFCXVariable:
@@ -225,7 +225,7 @@ void TensorFieldExtractor::execute()
 	  return;
 	}
       default:
-	error("SFCXVariable<?> Unknown vector type.");
+	warning("SFCXVariable<?> Unknown vector type.");
 	return;
       }
      case TypeDescription::SFCYVariable:
@@ -250,7 +250,7 @@ void TensorFieldExtractor::execute()
 	  return;
 	}
       default:
-	error("SFCYVariable<?> Unknown vector type.");
+	warning("SFCYVariable<?> Unknown vector type.");
 	return;
       }
      case TypeDescription::SFCZVariable:
@@ -275,11 +275,11 @@ void TensorFieldExtractor::execute()
 	  return;
 	}
       default:
-	error("SFCZVariable<?> Unknown vector type.");
+	warning("SFCZVariable<?> Unknown vector type.");
 	return;
       }
    default:
-      error("Not a TensorField.");
+      warning("Not a TensorField.");
       return;
     }
   }
