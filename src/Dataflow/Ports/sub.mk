@@ -37,7 +37,6 @@ SRCS     += $(SRCDIR)/ColorMapPort.cc             \
 	    $(SRCDIR)/Colormap2Port.cc            \
             $(SRCDIR)/FieldPort.cc                \
             $(SRCDIR)/GeometryPort.cc             \
-	    $(SRCDIR)/GLTexture3DPort.cc          \
 	    $(SRCDIR)/ImagePort.cc		  \
             $(SRCDIR)/MatrixPort.cc               \
             $(SRCDIR)/NrrdPort.cc	          \
@@ -48,7 +47,7 @@ SRCS     += $(SRCDIR)/ColorMapPort.cc             \
 
 PSELIBS := Dataflow/Network Dataflow/Comm Core/Containers \
 	Core/Thread Core/Geom Core/Geometry Core/Exceptions Core/Util \
-	Core/Persistent Core/Datatypes Core/GLVolumeRenderer Core/Volume
+	Core/Persistent Core/Datatypes Core/Volume
 
 LIBS := 
 

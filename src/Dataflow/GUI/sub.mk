@@ -89,7 +89,6 @@ SRCS := \
 	$(SRCDIR)/GenStandardColorMaps.tcl \
 	$(SRCDIR)/GenTitle.tcl \
 	$(SRCDIR)/GenTransferFunc.tcl \
-	$(SRCDIR)/GLTextureBuilder.tcl \
 	$(SRCDIR)/ToolTipText.tcl \
 	$(SRCDIR)/Isosurface.tcl \
 	$(SRCDIR)/IsoClip.tcl \
@@ -138,9 +137,7 @@ SRCS := \
 	$(SRCDIR)/Subnet.tcl \
 	$(SRCDIR)/SynchronizeGeometry.tcl \
 	$(SRCDIR)/SciTclStream.tcl \
-	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/TextureBuilder.tcl \
-	$(SRCDIR)/TextureVolVis.tcl \
 	$(SRCDIR)/Tooltips.tcl \
 	$(SRCDIR)/TransformData.tcl \
 	$(SRCDIR)/TransformData2.tcl \
