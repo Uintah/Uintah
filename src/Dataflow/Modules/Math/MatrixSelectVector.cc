@@ -117,7 +117,7 @@ void MatrixSelectVector::execute() {
       cm->zero();
       double *data=cm->get_data();
       for (int i=0; i<w->nrows()/2; i++) {
-	int idx = (*w)[i*2];
+	const int idx = (int)((*w)[i*2]);
 	double wt = (*w)[i*2+1];
 	for (int j=0; j<mh->ncols(); j++)
 	  data[j]+=mh->get(idx, j)*wt;
@@ -127,7 +127,7 @@ void MatrixSelectVector::execute() {
       cm->zero();
       double *data=cm->get_data();
       for (int i=0; i<w->nrows()/2; i++) {
-	int idx = (*w)[i*2];
+	const int idx = (int)((*w)[i*2]);
 	double wt = (*w)[i*2+1];
 	for (int j=0; j<mh->nrows(); j++)
 	  data[j]+=mh->get(j, idx)*wt;

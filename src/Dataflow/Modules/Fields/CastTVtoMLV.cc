@@ -110,8 +110,7 @@ void CastTVtoMLV::execute()
       vector<double> weights;
       tvm->get_weights(p, nodes, weights);
       Vector f1(0,0,0);
-      int i;
-      for (i=0; i<nodes.size(); i++) {
+      for (unsigned int i=0; i<nodes.size(); i++) {
 	f1+=tv->fdata()[nodes[i]] * weights[i];
       }
       lv->fdata()[*ib]=f1;
