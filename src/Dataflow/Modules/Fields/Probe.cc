@@ -33,7 +33,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
-#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/Clipper.h>
 #include <iostream>
 #include <sstream>
@@ -215,6 +215,18 @@ Probe::execute()
     valstr << result;
   }
   cout << "PROBE VALUE AT " << location << " IS " << valstr.str() << '\n';
+
+
+  PointCloudMesh *mesh = scinew PointCloudMesh();
+  mesh->add_point(location);
+  PointCloud<double> *ofield = scinew PointCloud<double>(mesh, Field::NODE);
+
+  FieldOPort *ofp = (FieldOPort *)get_oport("Probe Point");
+  if (!ofp) {
+    postMessage("Unable to initialize " + name + "'s oport\n");
+    return;
+  }
+  ofp->send(ofield);
 }
 
 

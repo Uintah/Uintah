@@ -42,6 +42,10 @@
 	<name>Probe Widget</name>
 	<datatype>SCIRun::Geometry</datatype>
       </port>
+      <port>
+	<name>Probe Point</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
     </outputs>
   </io>
   <testing>
