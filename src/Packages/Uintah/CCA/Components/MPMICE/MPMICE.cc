@@ -324,6 +324,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                                                   all_matls);
   d_ice->scheduleAccumulateMomentumSourceSinks(   sched, patches, press_matl,
                                                                   ice_matls_sub,
+                                                                  mpm_matls_sub,
                                                                   all_matls);
                                                                   
   d_ice->scheduleAccumulateEnergySourceSinks(     sched, patches, ice_matls_sub,
