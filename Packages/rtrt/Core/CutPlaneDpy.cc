@@ -117,7 +117,8 @@ void CutPlaneDpy::display() {
       case 3: v=n.x(); name="X"; break;
       case 2: v=n.y(); name="Y"; break;
       case 1: v=n.z(); name="Z"; break;
-      case 0: v=d; name="D"; wid=20/dscale; break;
+      /*case 0:*/ 
+      default: v=d; name="D"; wid=20/dscale; break;
       }
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
