@@ -145,10 +145,16 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 					lb->d_particleState_preReloc[m]);
    }
 #ifdef HAVE_PETSC
-   int argc = 1;
+   int argc = 4;
    char** argv;
    argv = new char*[argc];
    argv[0] = "ImpMPM::problemSetup";
+   //argv[1] = "-on_error_attach_debugger";
+   //argv[1] = "-start_in_debugger";
+   argv[1] = "-no_signal_handler";
+   argv[2] = "-log_exclude_actions";
+   argv[3] = "-log_exclude_objects";
+   
    PetscInitialize(&argc,&argv, PETSC_NULL, PETSC_NULL);
 #endif
 }
@@ -204,9 +210,9 @@ void ImpMPM::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 
   scheduleApplyBoundaryConditions(sched,d_perproc_patches,matls);
 
-  scheduleDestroyMatrix(sched, d_perproc_patches, matls);
+  scheduleDestroyMatrix(sched, d_perproc_patches, matls,false);
 
-  scheduleCreateMatrix(sched, d_perproc_patches, matls);
+  scheduleCreateMatrix(sched, d_perproc_patches, matls,false);
 
   scheduleComputeStressTensorI(sched, d_perproc_patches, matls,false);
 
@@ -304,20 +310,24 @@ void ImpMPM::scheduleApplyBoundaryConditions(SchedulerP& sched,
 
 void ImpMPM::scheduleCreateMatrix(SchedulerP& sched,
 				  const PatchSet* patches,
-				  const MaterialSet* matls)
+				  const MaterialSet* matls,
+				  const bool recursion)
 {
 
-  Task* t = scinew Task("ImpMPM::createMatrix",this,&ImpMPM::createMatrix);
+  Task* t = scinew Task("ImpMPM::createMatrix",this,&ImpMPM::createMatrix,
+			recursion);
   sched->addTask(t, patches, matls);
 
 }
 
 void ImpMPM::scheduleDestroyMatrix(SchedulerP& sched,
 				   const PatchSet* patches,
-				   const MaterialSet* matls)
+				   const MaterialSet* matls,
+				   const bool recursion)
 {
 
-  Task* t = scinew Task("ImpMPM::destroyMatrix",this,&ImpMPM::destroyMatrix);
+  Task* t = scinew Task("ImpMPM::destroyMatrix",this,&ImpMPM::destroyMatrix,
+			recursion);
   sched->addTask(t, patches, matls);
 
 }
@@ -577,10 +587,10 @@ void ImpMPM::iterate(const ProcessorGroup*,
   // Create the tasks
 
   scheduleDestroyMatrix(subsched, level->eachPatch(),
-			d_sharedState->allMPMMaterials());
+			d_sharedState->allMPMMaterials(),true);
 
   scheduleCreateMatrix(subsched, level->eachPatch(), 
-		       d_sharedState->allMPMMaterials());
+		       d_sharedState->allMPMMaterials(),true);
   
   scheduleComputeStressTensorR(subsched,level->eachPatch(),
 			      d_sharedState->allMPMMaterials(),
@@ -766,7 +776,8 @@ void ImpMPM::iterate(const ProcessorGroup*,
     subsched->get_dw(3)->get(dispIncQNorm,lb->dispIncQNorm); 
     subsched->get_dw(3)->get(dispIncNormMax,lb->dispIncNormMax);
     subsched->get_dw(3)->get(dispIncQNorm0,lb->dispIncQNorm0);
-    cout << "dispIncNorm/dispIncNormMax = " << dispIncNorm/dispIncNormMax 
+    cerr << "Before dispIncNorm/dispIncNormMax . . . ." << endl;
+    cerr << "dispIncNorm/dispIncNormMax = " << dispIncNorm/dispIncNormMax 
 	 << "\n";
     cerr << "dispIncQNorm/dispIncQNorm0 = " << dispIncQNorm/dispIncQNorm0 
 	 << "\n";
@@ -787,7 +798,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       int matlindex = mpm_matl->getDWIndex();
       ParticleSubset* pset = 
 	subsched->get_dw(2)->getParticleSubset(matlindex, patch);
-      cout << "number of particles = " << pset->numParticles() << "\n";
+      cerr << "number of particles = " << pset->numParticles() << "\n";
 
       // Needed in computeStressTensorOnly
       constParticleVariable<Matrix3> bElbar,deformationGradient;
@@ -1488,9 +1499,12 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* ,
 			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw)
+			  DataWarehouse* new_dw,
+			  const bool recursion)
 
 {
+  if (recursion)
+    return;
   int numProcessors = d_myworld->size();
   vector<int> numNodes(numProcessors, 0);
   vector<int> startIndex(numProcessors);
@@ -1596,23 +1610,31 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
   int numlcolumns = numlrows;
   int globalrows = (int)totalNodes;
   int globalcolumns = (int)totalNodes;
-
+  
 #ifdef PETSC_DEBUG
   cerr << "matrixCreate: local size: " << numlrows << ", " << numlcolumns << ", global size: " << globalrows << ", " << globalcolumns << "\n";
 #endif
 #ifdef HAVE_PETSC
-   MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-		   globalcolumns, PETSC_DEFAULT, PETSC_NULL, PETSC_DEFAULT,
-		   PETSC_NULL, &A);
+  PetscTruth exists;
+  PetscObjectExists((PetscObject)A,&exists);
+  if (exists == PETSC_FALSE) {
+      cerr << "On " << d_myworld->myrank() << " before matrixCreate . . ." << endl;
+    MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
+		    globalcolumns, PETSC_DEFAULT, PETSC_NULL, PETSC_DEFAULT,
+		    PETSC_NULL, &A);
+  }
+  cerr << "On " << d_myworld->myrank() << " after matrixCreate . . ." << endl;
 
    /* 
      Create vectors.  Note that we form 1 vector from scratch and
      then duplicate as needed.
   */
-
-   VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&petscQ);
-   VecDuplicate(petscQ,&diagonal);
-   VecDuplicate(petscQ,&d_x);
+  PetscObjectExists((PetscObject)petscQ,&exists);
+  if (exists == PETSC_FALSE) {
+    VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&petscQ);
+    VecDuplicate(petscQ,&diagonal);
+    VecDuplicate(petscQ,&d_x);
+  }
 #endif
 
 #ifdef OLD_SPARSE
@@ -1621,10 +1643,11 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 }
 
 void ImpMPM::destroyMatrix(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* ,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw)
+			   const PatchSubset* patches,
+			   const MaterialSubset* ,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw,
+			   const bool recursion)
 {
   cout_doing <<"Doing destroyMatrix " <<"\t\t\t\t\t IMPM"
 	       << "\n" << "\n";
@@ -1632,22 +1655,30 @@ void ImpMPM::destroyMatrix(const ProcessorGroup*,
   KK.clear();
 #endif
 #ifdef HAVE_PETSC
-  PetscTruth exists;
-  PetscObjectExists((PetscObject)A,&exists);
-  if (exists == PETSC_TRUE)
-    MatDestroy(A);
-
-  PetscObjectExists((PetscObject)petscQ,&exists);
-  if (exists == PETSC_TRUE)
-    VecDestroy(petscQ);
-  
-  PetscObjectExists((PetscObject)diagonal,&exists);
-  if (exists == PETSC_TRUE)
-    VecDestroy(diagonal);
-
-  PetscObjectExists((PetscObject)d_x,&exists);
-  if (exists == PETSC_TRUE)
-    VecDestroy(d_x);
+  if (recursion) {
+    MatZeroEntries(A);
+    PetscScalar zero = 0.;
+    VecSet(&zero,petscQ);
+    VecSet(&zero,diagonal);
+    VecSet(&zero,d_x);
+  } else {
+    PetscTruth exists;
+    PetscObjectExists((PetscObject)A,&exists);
+    if (exists == PETSC_TRUE)
+      MatDestroy(A);
+    
+    PetscObjectExists((PetscObject)petscQ,&exists);
+    if (exists == PETSC_TRUE)
+      VecDestroy(petscQ);
+    
+    PetscObjectExists((PetscObject)diagonal,&exists);
+    if (exists == PETSC_TRUE)
+      VecDestroy(diagonal);
+    
+    PetscObjectExists((PetscObject)d_x,&exists);
+    if (exists == PETSC_TRUE)
+      VecDestroy(d_x);
+  }
 #endif
 
 }
@@ -1740,9 +1771,9 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
 	dof[1] = 3*node_num+1;
 	dof[2] = 3*node_num+2;
 
-	cout << "gmass[" << *iter << "]= " << gmass[*iter] << "\n";
+	cerr << "gmass[" << *iter << "]= " << gmass[*iter] << "\n";
 #ifdef OLD_SPARSE
-	cout << "KK[" << dof[0] << "][" << dof[0] << "]= " 
+	cerr << "KK[" << dof[0] << "][" << dof[0] << "]= " 
 	     << KK[dof[0]][dof[0]] << "\n";
 	cerr << "KK[" << dof[1] << "][" << dof[1] << "]= " 
 	     << KK[dof[1]][dof[1]] << "\n";
@@ -1881,7 +1912,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
       constParticleVariable<Point>   px;
-      constParticleVariable<double>  pvol, pmass;
+      constParticleVariable<double>  pvol;
       constParticleVariable<Matrix3> pstress;
       NCVariable<Vector>        internalforce;
       
@@ -1991,7 +2022,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
       dof[2] = 3*node_num+2;
 
 #if 0
-      cout << "external force = " << externalForce[n] << " internal force = " 
+      cerr << "external force = " << externalForce[n] << " internal force = " 
 	   << internalForce[n] << "\n";
 #endif
       Q[dof[0]] = externalForce[n].x() + internalForce[n].x();
@@ -2001,13 +2032,13 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 
       // temp2 = M*a^(k-1)(t+dt)
 #if 0
-      cout << "dispNew = " << dispNew[n] << "\n";
-      cout << "velocity = " << velocity[n] << "\n";
-      cout << "accel = " << accel[n] << "\n";
+      cerr << "dispNew = " << dispNew[n] << "\n";
+      cerr << "velocity = " << velocity[n] << "\n";
+      cerr << "accel = " << accel[n] << "\n";
 
-      cout << "dispNew.x*fodts = " << dispNew[n].x() * fodts << "\n";
-      cout << "velocity.x*fodt = " << velocity[n].x() * fodt << "\n";
-      cout << "dispNew - velocity = " << dispNew[n].x() * fodts - 
+      cerr << "dispNew.x*fodts = " << dispNew[n].x() * fodts << "\n";
+      cerr << "velocity.x*fodt = " << velocity[n].x() * fodt << "\n";
+      cerr << "dispNew - velocity = " << dispNew[n].x() * fodts - 
 	velocity[n].x() * fodt << "\n";
 #endif
 
@@ -2019,7 +2050,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 			accel[n].z())*mass[n];
 
 #if 0
-      cout << "temp2 = " << temp2[dof[0]] << " " << temp2[dof[1]] << " " <<
+      cerr << "temp2 = " << temp2[dof[0]] << " " << temp2[dof[1]] << " " <<
 	temp2[dof[2]] << "\n";
 #endif
 
@@ -2556,7 +2587,6 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
   MatDiagonalSet(A,diagonal,INSERT_VALUES);
   MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
-  //VecDestroy(diagonal);
 #endif
 #ifdef OLD_SPARSE
   KK.clear();
@@ -2685,7 +2715,7 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
   x = cgSolve(KK,Q,conflag);
 #if 0
     for (unsigned int i = 0; i < x.size(); i++) {
-      cout << "x[" << i << "]= " << x[i] << "\n";
+      cerr << "x[" << i << "]= " << x[i] << "\n";
     }
 #endif
 #endif
@@ -2729,7 +2759,7 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
   }
 #ifdef HAVE_PETSC
   VecRestoreArray(d_x,&xPetsc);
-  //VecDestroy(d_x);
+
 #endif
 
 }
@@ -2780,12 +2810,12 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
 	for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
 	  dispNew[*iter] = dispNew_old[*iter] + dispInc[*iter];
 #if 0
-	  cout << "velocity_old = " << velocity_old[*iter] << "\n";
+	  cerr << "velocity_old = " << velocity_old[*iter] << "\n";
 #endif
 	  velocity[*iter] = dispNew[*iter]*(2./dt) - velocity_old[*iter];
 #if 0
-	  cout << "dispNew = " << dispNew[*iter] << "\n";
-	  cout << "velocity_new = " << velocity[*iter] << "\n";
+	  cerr << "dispNew = " << dispNew[*iter] << "\n";
+	  cerr << "velocity_new = " << velocity[*iter] << "\n";
 #endif
 	}
       } else {
