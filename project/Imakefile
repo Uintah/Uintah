@@ -5,24 +5,26 @@ LOCALINCLUDES = -I. -I../modules -I../../wrapper -I../../wrapper/Mt -I../../wrap
 OBJS = CallbackCloners.o \
 	Color.o ColorManager.o  Connection.o  \
 	DBContext.o  Dialbox.o  \
-	Field3D.o  Field3DPort.o  Geom.o  GeometryPort.o  \
+	Geom.o  GeometryPort.o  \
 	HelpUI.o  MemStats.o  MessageBase.o  MenuBar.o  ModuleHelper.o  \
 	Module.o  ModuleList.o  MotifCallbackBase.o  \
 	MUI.o  \
 	MtXEventLoop.o \
 	Network.o  NetworkEditor.o  Persistent.o  PopupMenu.o  Port.o  \
+	ScalarField.o  ScalarFieldPort.o  \
 	SoundPort.o \
 	UserModule.o  XFont.o  XQColor.o \
 	main.o  tmpl_hack.o
 SRCS = CallbackCloners.cc \
 	Color.cc ColorManager.cc Connection.cc \
 	DBContext.cc Dialbox.cc \
-	Field3D.cc Field3DPort.cc Geom.cc GeometryPort.cc \
+	Geom.cc GeometryPort.cc \
 	HelpUI.cc MemStats.cc MessageBase.cc MenuBar.cc ModuleHelper.cc \
 	Module.cc ModuleList.cc MotifCallbackBase.cc \
 	MUI.cc \
 	MtXEventLoop.cc \
 	Network.cc NetworkEditor.cc Persistent.cc PopupMenu.cc Port.cc \
+	ScalarField.cc ScalarFieldPort.cc \
 	SoundPort.cc \
 	UserModule.cc XFont.cc XQColor.cc \
 	main.cc tmpl_hack.cc 
