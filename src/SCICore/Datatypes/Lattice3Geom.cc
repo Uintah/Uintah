@@ -82,7 +82,7 @@ Lattice3Geom::transform(const Point &p, Point &r)
 void
 Lattice3Geom::itransform(const Point &p, Point &r)
 {
-  itransform(p, r);
+  fitransform(p, r);
 }
 
 
@@ -160,6 +160,7 @@ Lattice3Geom::set_bbox(BBox &box)
   Vector offset(box.min());
   d_trans.post_translate(offset);
 
+  d_trans.compute_imat();
   compute_bbox();
 }
 
