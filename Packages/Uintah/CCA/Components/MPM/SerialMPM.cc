@@ -1247,12 +1247,14 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+      cm->setAdiabaticHeating(d_adiabaticHeating);
       cm->computeStressTensorWithErosion(patches, mpm_matl, old_dw, new_dw);
     }
   } else {
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+      cm->setAdiabaticHeating(d_adiabaticHeating);
       cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
     }
   }
@@ -2379,12 +2381,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //        if(pvelocitynew[idx].length() > 5000.0){
 //          pvelocitynew[idx] = .5*pvelocitynew[idx];
 //        }
-	pTempNew[idx]        = pTemperature[idx] + tempRate  * delT;
+        // If there is no adiabatic heating, add the plastic temperature
+        // to the particle temperature
+	pTempNew[idx]        = pTemperature[idx] + tempRate  * delT 
+                               + d_adiabaticHeating*pPlasticTempInc[idx];;
 	pSp_volNew[idx]      = pSp_vol[idx]      + sp_vol_dt * delT;
 
-        // If there is no adibatic heating, add the plastic temperature
-        // to the particle temperature
-        pTempNew[idx] = pTempNew[idx] + d_adiabaticHeating*pPlasticTempInc[idx];
 
 	double rho;
 	if(pvolume[idx] > 0.){
