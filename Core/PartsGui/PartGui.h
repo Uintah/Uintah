@@ -49,7 +49,7 @@ public:
 
   string name() { return name_; }
   
-  void add_child( PartInterface *child );
+  virtual void add_child( PartInterface *child );
   virtual void attach( PartInterface *interface ) = 0;
 };
 

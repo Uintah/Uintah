@@ -34,6 +34,8 @@
 #include <Core/PartsGui/PartGui.h>
 
 #include <Core/PartsGui/GraphGui.h>
+#include <Core/PartsGui/PartManagerGui.h>
+#include <Core/PartsGui/NullGui.h>
 
 namespace SCIRun {
 
@@ -43,16 +45,27 @@ PartGui::add_child( PartInterface *child )
   static int n = 0;
 
   string type = child->type();
+  PartGui *gui = 0;
 
   if ( type == "GraphGui" ) {
-    GraphGui *gui = new GraphGui( name_+"-c"+to_string(n++) );
+    gui = new GraphGui( name_+"-c"+to_string(n++) );
+  } else if ( type == "PartManager" ) {
+    gui = new PartManagerGui( name_+"-c"+to_string(n++) );
+  } else
+    gui = new NullGui(  name_+"-c"+to_string(n++) );
+  
+  if ( gui ) {
     string child_window;
-    tcl_eval( "new-child-window", child_window );
+    tcl_eval( "new-child-window "+ child->name(), child_window );
     gui->set_window( child_window ); 
-
     gui->attach( child );
+
+    child->report_children( gui, &PartGui::add_child );
   }
+  else
+    cerr << "unknown gui\n";
 }
 
 } // namespace SCIRun
+
 

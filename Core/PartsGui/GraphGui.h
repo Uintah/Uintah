@@ -28,8 +28,8 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#ifndef SCI_Gui_h
-#define SCI_Gui_h 
+#ifndef SCI_GraphGui_h
+#define SCI_GraphGui_h 
 
 #include <vector>
 
@@ -63,4 +63,6 @@ private:
 
 } // namespace SCIRun
 
-#endif // SCI_Gui_h
+#endif // SCI_GraphGui_h
+
+
