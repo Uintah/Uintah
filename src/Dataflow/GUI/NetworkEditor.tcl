@@ -38,10 +38,6 @@ global maincanvas
 set maincanvas ".bot.neteditFrame.canvas"
 global minicanvs
 set minicanvas ".top.globalViewFrame.canvas"
-global netedit_canvas
-set netedit_canvas $maincanvas
-global netedit_mini_canvas
-set netedit_mini_canvas $minicanvas
 
 global loading
 set loading 0
@@ -63,7 +59,7 @@ global modules
 set modules ""
 
 proc makeNetworkEditor {} {
-    wm protocol . WM_DELETE_WINDOW { puts ""; netedit quit }
+    wm protocol . WM_DELETE_WINDOW { NiceQuit }
     wm minsize . 100 100
     wm geometry . 800x800+0+0
     wm title . "SCIRun"
@@ -91,6 +87,8 @@ proc makeNetworkEditor {} {
 	-command "popupInsertMenu" -state disabled
     .main_menu.file.menu add command -label "Clear" -underline 0 \
 	-command "ClearCanvas" -state disabled
+    .main_menu.file.menu add command -label "Save Postscript..." -underline 0 \
+	-command "global modulesBBox; .bot.neteditFrame.canvas postscript -file /tmp/canvas.ps -x 0 -y 0 -width 4500 -height 4500" -state disabled
     .main_menu.file.menu add command -label "Execute All" -underline 0 \
 	-command "ExecuteAll" -state disabled
     .main_menu.file.menu add cascade -label "New" -underline 0\
@@ -104,16 +102,8 @@ proc makeNetworkEditor {} {
 	    -command "NiceQuit"
 
 
-    menubutton .main_menu.stats -text "Statistics" -underline 0 \
-	-menu .main_menu.stats.menu
-    menu .main_menu.stats.menu
-    .main_menu.stats.menu add command -label "Memory..." -underline 0 \
-	    -command showMemStats
-    .main_menu.stats.menu add command -label "Threads..." -underline 0 \
-	    -command showThreadStats
-
     pack .main_menu.file -side left
-    tk_menuBar .main_menu .main_menu.file .main_menu.stats .main_menu.help
+    tk_menuBar .main_menu .main_menu.file
 
     frame .top -borderwidth 5
     pack  .top -side top -fill x
@@ -137,14 +127,13 @@ proc makeNetworkEditor {} {
     # canvas (such as the lines connection the modules) and the canvas.
 
     set bgRect [$maincanvas create rectangle 0 0 \
-	                         $mainCanvasWidth $mainCanvasWidth -fill #036]
+	        $mainCanvasWidth $mainCanvasWidth -fill "#036"]
 
     
     menu $maincanvas.modulesMenu -tearoff false
 
-    scrollbar .bot.neteditFrame.hscroll -relief sunken \
-	    -orient horizontal \
-	    -command "$maincanvas xview"
+    scrollbar .bot.neteditFrame.hscroll -relief sunken -orient horizontal \
+	-command "$maincanvas xview"
     scrollbar .bot.neteditFrame.vscroll -relief sunken \
 	-command "$maincanvas yview" 
 
@@ -214,6 +203,20 @@ proc makeNetworkEditor {} {
     bind . <KeyPress-Right> { $maincanvas xview moveto [expr [lindex \
 	    [$maincanvas xview] 0] + 0.01 ] }
     bind . <Destroy> {if {"%W"=="."} {exit 1}} 
+
+    # Destroy selected items with a Ctrl-D press
+    bind all <Control-d> "moduleDestroySelected $maincanvas $minicanvas"
+    # Clear the canvas
+    bind all <Control-l> "ClearCanvas"
+
+    bind all <Control-z> "undo"
+    bind all <Control-y> "redo"
+        
+    # Select the item in focus, and unselect all others
+    bind $maincanvas <1> "startBox %X %Y $maincanvas 0"
+    bind $maincanvas <Control-Button-1> "startBox %X %Y $maincanvas 1"
+    bind $maincanvas <B1-Motion> "makeBox %X %Y $maincanvas"
+    bind $maincanvas <ButtonRelease-1> "endBox %X %Y $maincanvas"
 }
 
 proc activate_file_submenus { } {
@@ -225,6 +228,8 @@ proc activate_file_submenus { } {
     .main_menu.file.menu entryconfig 4 -state active
     .main_menu.file.menu entryconfig 5 -state active
     .main_menu.file.menu entryconfig 6 -state active
+    .main_menu.file.menu entryconfig 7 -state active
+
 }
 
 proc handle_bad_startnet { netfile } {
@@ -323,30 +328,12 @@ proc updateCanvases { minicanv maincanv box x y } {
     $maincanvas yview moveto [expr [expr $y - $hei/2] / $miniCanvasHeight ]
 }
 
-# All this while loop does is remove spaces from the string.  There's
-# got to be a better way.  I'm really bad at TCL.
-
-proc removeSpaces { str } {
-  while {[string first " " $str] != -1} {
-    set n [string first " " $str]
-    set before [string range $str 0 [expr $n-1]]
-    set after [string range $str [expr $n+1] \
-              [string length $str] ]
-    set str "${before}$after"
-  }
-  return $str
-}
-
 proc createCategoryMenu {} {
-    
-#  puts "Building Module Menus..."
   global maincanvas minicanvas
   foreach package [netedit packageNames] {
-    set packageToken [removeSpaces "menu_$package"]
-#    puts "  $package -> $packageToken"
+    set packageToken [join "menu_$package" ""]
 
     # Add the cascade button and menu for the package to the menu bar
-
     menubutton .main_menu.$packageToken -text "$package" -underline 0 \
       -menu .main_menu.$packageToken.menu
     menu .main_menu.$packageToken.menu
@@ -354,33 +341,27 @@ proc createCategoryMenu {} {
 
     # Add a separator to the right-button menu for this package if this
     # isn't the first package to go in there
-
     if { [$maincanvas.modulesMenu index end] != "none" } \
       { $maincanvas.modulesMenu add separator }
 
     foreach category [netedit categoryNames $package] {
-      set categoryToken [removeSpaces "menu_${package}_$category"]
-#      puts "    $category -> $categoryToken"
+      set categoryToken [join "menu_${package}_$category" ""]
 
       # Add the category to the menu bar menu
-
       .main_menu.$packageToken.menu add cascade -label "$category" \
         -menu .main_menu.$packageToken.menu.m_$categoryToken
       menu .main_menu.$packageToken.menu.m_$categoryToken -tearoff false
 
       # Add the category to the right-button menu
-
       $maincanvas.modulesMenu add cascade -label "$category" \
         -menu $maincanvas.modulesMenu.m_$categoryToken
       menu $maincanvas.modulesMenu.m_$categoryToken -tearoff false
 
       foreach module [netedit moduleNames $package $category] {
-        set moduleToken [removeSpaces $module]
-#        puts "      $module -> $moduleToken"
+        set moduleToken [join $module ""]
 
         # Add a button for each module to the menu bar category menu and the
         # right-button menu
-
         .main_menu.$packageToken.menu.m_$categoryToken add command \
           -label "$module" \
           -command "addModule \"$package\" \"$category\" \"$module\""
@@ -394,16 +375,13 @@ proc createCategoryMenu {} {
 
 proc createPackageMenu {index} {
     global maincanvas minicanvas
-#  puts "Building Module Menus..."
 
 #  foreach package [netedit packageNames] {
     set packageNames [netedit packageNames]
     set package [lindex $packageNames $index]
-    set packageToken [removeSpaces "menu_$package"]
-#    puts "  $package -> $packageToken"
+    set packageToken [join "menu_$package" ""]
 
     # Add the cascade button and menu for the package to the menu bar
-
     menubutton .main_menu.$packageToken -text "$package" -underline 0 \
       -menu .main_menu.$packageToken.menu
     menu .main_menu.$packageToken.menu
@@ -411,33 +389,26 @@ proc createPackageMenu {index} {
 
     # Add a separator to the right-button menu for this package if this
     # isn't the first package to go in there
-
     if { [$maincanvas.modulesMenu index end] != "none" } \
       { $maincanvas.modulesMenu add separator }
 
     foreach category [netedit categoryNames $package] {
-      set categoryToken [removeSpaces "menu_${package}_$category"]
-#      puts "    $category -> $categoryToken"
+      set categoryToken [join "menu_${package}_$category" ""]
 
       # Add the category to the menu bar menu
-
       .main_menu.$packageToken.menu add cascade -label "$category" \
         -menu .main_menu.$packageToken.menu.m_$categoryToken
       menu .main_menu.$packageToken.menu.m_$categoryToken -tearoff false
 
       # Add the category to the right-button menu
-
       $maincanvas.modulesMenu add cascade -label "$category" \
         -menu $maincanvas.modulesMenu.m_$categoryToken
       menu $maincanvas.modulesMenu.m_$categoryToken -tearoff false
 
       foreach module [netedit moduleNames $package $category] {
-        set moduleToken [removeSpaces $module]
-#        puts "      $module -> $moduleToken"
-
+	  set moduleToken [join $module ""]
         # Add a button for each module to the menu bar category menu and the
         # right-button menu
-
         .main_menu.$packageToken.menu.m_$categoryToken add command \
           -label "$module" \
           -command "addModule \"$package\" \"$category\" \"$module\""
@@ -449,14 +420,12 @@ proc createPackageMenu {index} {
 #  }
 }
 
-##########################
 proc addModule { package category module } {
     return [addModuleAtPosition "$package" "$category" "$module" 10 10]
 }
 
 proc addModuleAtMouse { package category module } {
     global mouseX mouseY
-
     return [ addModuleAtPosition "$package" "$category" "$module" $mouseX \
              $mouseY ]
 }
@@ -470,8 +439,7 @@ proc addModuleAtPosition {package category module xpos ypos} {
     set mainCanvasWidth 4500
     set mainCanvasHeight 4500
     
-    # create the modules at their relative positions only when not loading from a script or inserting.
-    
+    # create the modules at their relative positions only when not loading from a script or inserting.    
     if { $inserting == 1 } {
 	global modulesBbox
 	global insertPosition
@@ -492,7 +460,7 @@ proc addModuleAtPosition {package category module xpos ypos} {
     
     set modid [netedit addmodule "$package" "$category" "$module"]
     # Create the itcl object
-    set className [removeSpaces "${package}_${category}_${module}"]
+    set className [join "${package}_${category}_${module}" ""]
     if {[catch "$className $modid" exception]} {
 	# Use generic module
 	if {$exception != "invalid command name \"$className\""} {
@@ -509,7 +477,7 @@ proc addModuleAtPosition {package category module xpos ypos} {
 }
 
 proc addModule2 {package category module modid} {
-    set className [removeSpaces "${package}_${category}_${module}"]
+    set className [join "${package}_${category}_${module}" ""]
     if {[catch "$className $modid" exception]} {
 	# Use generic module
 	if {$exception != "invalid command name \"$className\""} {
@@ -522,7 +490,6 @@ proc addModule2 {package category module modid} {
 
 
 proc popupSaveMenu {} {
-
     global netedit_savefile
     if { $netedit_savefile != "" } {
 	# If we already know the name of the save file, just save it...
@@ -643,45 +610,27 @@ proc popupInsertMenu {} {
     computeModulesBbox
 }
 
-proc computeModulesBbox {} {
-    global modules
+proc compute_bbox {maincanvas args} {
+    global CurrentlySelectedModules mainCanvasWidth mainCanvasHeight
     set maxx 0
     set maxy 0
-    
-    set minx 4500
-    set miny 4500
-    
-    global modules
-    if { $modules == "" } {
-	set maxx 0
-	set maxy 0
-	set minx 0
-	set miny 0
-    } 
-    global maincanvas minicanvas
-    foreach m $modules {
-	set curr_coords [$maincanvas coords $m]
-	
-	#Find $maxx and $maxy
-	if { [lindex [$maincanvas bbox $m] 2] > $maxx} {
-	    set maxx [lindex [$maincanvas bbox $m] 2]
-	}
-	if { [lindex [$maincanvas bbox $m] 3] > $maxy} {
-	    set maxy [lindex [$maincanvas bbox $m] 3]
-	}
-	
-	#Find $minx and $miny
-	
-	if { [lindex $curr_coords 0] <= $minx} {
-	    set minx [lindex $curr_coords 0]
-	}
-	if { [lindex $curr_coords 1] <= $miny} {
-	    set miny [lindex $curr_coords 1]
-	}
+    set minx $mainCanvasWidth
+    set miny $mainCanvasHeight
+    if ![llength $args] { set args $CurrentlySelectedModules }
+    foreach module $args {
+	set bbox [$maincanvas bbox $module]
+	if { [lindex $bbox 0] <= $minx} { set minx [lindex $bbox 0] }
+	if { [lindex $bbox 1] <= $miny} { set miny [lindex $bbox 1] }
+	if { [lindex $bbox 2] >  $maxx} { set maxx [lindex $bbox 2] }
+	if { [lindex $bbox 3] >  $maxy} { set maxy [lindex $bbox 3] }
     }
-    
-    global modulesBbox
-    set modulesBbox "$minx $miny $maxx $maxy"
+    if ![llength $args] { set minx 0; set miny 0 }
+    return "$minx $miny $maxx $maxy"
+}
+
+proc computeModulesBbox {} {
+    global modulesBbox maincanvas modules 
+    set modulesBbox [compute_bbox $maincanvas $modules]
 }
 
 proc popupLoadMenu {} {
