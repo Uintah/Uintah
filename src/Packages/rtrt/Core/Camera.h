@@ -55,6 +55,7 @@ public:
 
     void updatePosition( Stealth & stealth );
     void followPath( Stealth & stealth );
+    void flatten(); // reset pitch to 0 and roll to 0.(note: no roll currently)
 };
 
 } // end namespace rtrt

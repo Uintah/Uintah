@@ -156,6 +156,14 @@ Camera::followPath( Stealth & stealth )
 }
 
 void
+Camera::flatten() // reset pitch to 0 and roll to 0.(note: no roll currently)
+{
+  lookat.z( eye.z() );   // Clears Pitch
+  up = Vector( 0, 0, 1 ); // Clears Roll
+  setup();
+}
+
+void
 Camera::updatePosition( Stealth & stealth )
 {
   Vector forward( direction );
@@ -202,7 +210,7 @@ Camera::updatePosition( Stealth & stealth )
 	  // this last pitch adjustment.  Tell stealth to stop pitching.
 	  lookat = old_lookat;
 	  setup();
-	  stealth.stopPitching();
+	  stealth.stopPitch();
 	}
     }
 
