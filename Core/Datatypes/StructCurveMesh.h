@@ -44,6 +44,7 @@
 #define SCI_project_StructCurveMesh_h 1
 
 #include <Core/Datatypes/ScanlineMesh.h>
+#include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -153,7 +154,7 @@ public:
 private:
 
   //! the points
-  vector<Point> points_;
+  Array1<Point> points_;
 
   // returns a StructCurveMesh
   static Persistent *maker() { return new StructCurveMesh(); }

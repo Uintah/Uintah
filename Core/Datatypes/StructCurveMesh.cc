@@ -54,8 +54,8 @@ StructCurveMesh::StructCurveMesh(unsigned int n)
 
 StructCurveMesh::StructCurveMesh(const StructCurveMesh &copy)
   : ScanlineMesh(copy)
-    //    points_(copy.points_)
 {
+  points_ = copy.points_;
 }
 
 BBox
