@@ -58,7 +58,6 @@ public:
   void ReadandSendData( string& filename,
 			vector< string >& paths,
 			vector< string >& datasets,
-			bool last,
 			bool cache,
 			int which );
 
@@ -94,16 +93,13 @@ protected:
   GuiInt         range_min_;
   GuiInt         range_max_;
   GuiString      playmode_;
-  GuiString      dependence_;
   GuiInt         current_;
+  GuiString      execmode_;
   GuiInt         delay_;
   GuiInt         inc_amount_;
   int            inc_;
-  string         execmode_;
   int            last_input_;
   NrrdDataHandle last_output_;
-
-
 
   bool is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const;
 
@@ -142,6 +138,7 @@ protected:
 
   NrrdDataHandle nHandles_[MAX_PORTS];
 
+  bool loop_;
   bool error_;
 };
 

@@ -45,7 +45,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
         global $this-range_min
         global $this-range_max
 	global $this-playmode
-	global $this-dependence
 	global $this-current
 	global $this-execmode
 	global $this-delay
@@ -57,7 +56,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
         set $this-range_min          0
         set $this-range_max          0
 	set $this-playmode           once
-	set $this-dependence         independent
 	set $this-current            0
 	set $this-execmode           "init"
 	set $this-delay              0
@@ -158,15 +156,15 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	######################################################
 	
 	makeOpenFilebox \
-		-parent $w \
-		-filevar $this-filename \
-		-setcmd "wm withdraw $w" \
-		-command "$this-c needexecute; wm withdraw $w" \
-		-cancel "wm withdraw $w" \
-		-title $title \
-		-filetypes $types \
-		-initialdir $initdir \
-		-defaultextension $defext
+	    -parent $w \
+	    -filevar $this-filename \
+	    -setcmd "wm withdraw $w" \
+	    -command "$this-c update_file; wm withdraw $w" \
+	    -cancel "wm withdraw $w" \
+	    -title $title \
+	    -filetypes $types \
+	    -initialdir $initdir \
+	    -defaultextension $defext
 
        moveToCursor $w
        wm deiconify $w
@@ -1210,12 +1208,10 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	}
     }
 
-    method execmode { mode } {
-	$this-c $mode
-
-	if { "$mode" != "stop" } {
-	    $this-c needexecute
-	}
+    method maybeRestart { args } {
+	upvar \#0 $this-execmode execmode
+	if ![string equal $execmode play] return
+	$this-c needexecute
     }
 
     method make_animate_box {} {
@@ -1230,40 +1226,72 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	}
 
         toplevel $w
+	
+	frame $w.loc -borderwidth 2
+	frame $w.playmode -relief groove -borderwidth 2
+	frame $w.execmode -relief groove -borderwidth 2
+	frame $w.vcr -relief groove -borderwidth 2
+        set playmode $w.playmode
+	set vcr $w.vcr
+
+
+
+	# load the VCR button bitmaps
+	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
+	set rewind    [image create photo -file ${image_dir}/rewind-icon.ppm]
+	set stepb     [image create photo -file ${image_dir}/step-back-icon.ppm]
+	set pause     [image create photo -file ${image_dir}/pause-icon.ppm]
+	set play      [image create photo -file ${image_dir}/play-icon.ppm]
+	set stepf     [image create photo -file ${image_dir}/step-forward-icon.ppm]
+	set fforward  [image create photo -file ${image_dir}/fast-forward-icon.ppm]
+
+	# Create and pack the VCR buttons frame
+	button $vcr.rewind -image $rewind \
+	    -command "set $this-execmode rewind;   $this-c needexecute"
+	button $vcr.stepb -image $stepb \
+	    -command "set $this-execmode stepb;    $this-c needexecute"
+	button $vcr.pause -image $pause \
+	    -command "set $this-execmode stop;     $this-c needexecute"
+	button $vcr.play  -image $play  \
+	    -command "set $this-execmode play;     $this-c needexecute"
+	button $vcr.stepf -image $stepf \
+	    -command "set $this-execmode step;     $this-c needexecute"
+	button $vcr.fforward -image $fforward \
+	    -command "set $this-execmode fforward; $this-c needexecute"
+
+	pack $vcr.rewind $vcr.stepb $vcr.pause \
+	    $vcr.play $vcr.stepf $vcr.fforward -side left -fill both -expand 1
+	global ToolTipText
+	Tooltip $vcr.rewind   $ToolTipText(VCRrewind)
+	Tooltip $vcr.stepb    $ToolTipText(VCRstepback)
+	Tooltip $vcr.pause    $ToolTipText(VCRpause)
+	Tooltip $vcr.play     $ToolTipText(VCRplay)
+	Tooltip $vcr.stepf    $ToolTipText(VCRstepforward)
+	Tooltip $vcr.fforward $ToolTipText(VCRfastforward)
+
+
+	# Save range, creating the scale resets it to defaults.
+	set rmin [set $this-range_min]
+	set rmax [set $this-range_max]
+
+	# Create the various range sliders
+        scale $w.min -variable $this-range_min \
+	    -showvalue true -orient horizontal -relief groove -length 200
+        scale $w.cur -variable $this-current \
+	    -showvalue true -orient horizontal -relief groove -length 200 \
+	    -command "set $this-execmode current; $this-c needexecute"
+        scale $w.max -variable $this-range_max \
+	    -showvalue true -orient horizontal -relief groove -length 200
+        scale $w.inc -variable $this-inc-amount \
+	    -showvalue true -orient horizontal -relief groove -length 200
+
+	update_range
+
+	# Restore range to pre-loaded value
+	set $this-range_min $rmin
+	set $this-range_max $rmax
 
 	
-	frame $w.loc                       -borderwidth 2
-	frame $w.playmode   -relief groove -borderwidth 2
-	frame $w.dependence -relief groove -borderwidth 2
-	frame $w.execmode   -relief groove -borderwidth 2
-
-        scale $w.loc.min -variable $this-range_min -label "Start " \
-	    -from [set $this-selectable_min] -to [set $this-selectable_max] \
-	    -showvalue true -orient horizontal -relief groove -length 200
-        scale $w.loc.max -variable $this-range_max -label "End " \
-	    -from [set $this-selectable_min] -to [set $this-selectable_max] \
-	    -showvalue true -orient horizontal -relief groove -length 200
-
-	frame $w.loc.e   -relief groove -borderwidth 2
-	frame $w.loc.e.l
-	frame $w.loc.e.r
-
-	label $w.loc.e.l.curlabel -text "Current Value" -just left
-	entry $w.loc.e.r.curentry -width 8 -textvariable $this-current
-
-	label $w.loc.e.l.inclabel -text "Increment" -justify left
-	entry $w.loc.e.r.incentry -width 8 -textvariable $this-inc-amount
-
-	pack $w.loc.e.l.curlabel $w.loc.e.l.inclabel \
-	      -side top -anchor w
-
-	pack $w.loc.e.r.curentry $w.loc.e.r.incentry \
-              -side top -anchor w
-
-	pack $w.loc.e.l $w.loc.e.r -side left -expand yes -fill both
-
-        pack $w.loc.min $w.loc.max $w.loc.e \
-	    -side top -expand yes -fill both -pady 2
 
 
 	label $w.playmode.label -text "Play Mode"
@@ -1271,33 +1299,15 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		-variable $this-playmode -value once
 	radiobutton $w.playmode.loop -text "Loop" \
 		-variable $this-playmode -value loop
-	radiobutton $w.playmode.bounce1 -text "Bounce1" \
+	radiobutton $w.playmode.bounce1 -text "Bounce" \
 		-variable $this-playmode -value bounce1
-	radiobutton $w.playmode.bounce2 -text "Bounce2" \
+	radiobutton $w.playmode.bounce2 -text "Bounce with repeating endpoints" \
 		-variable $this-playmode -value bounce2
-
 
 	radiobutton $w.playmode.inc_w_exec -text "Increment with Execute" \
 	    -variable $this-playmode -value inc_w_exec
 
-	label $w.dependence.label -text "Downstream Dependencies"
-	radiobutton $w.dependence.independent -text \
-	        "Column and Index are Independent" \
-	        -variable $this-dependence -value independent
-	radiobutton $w.dependence.dependent -text \
-	        "Column and Index are Dependent" \
-		-variable $this-dependence -value dependent
-	pack $w.dependence.label -side top -expand yes -fill both
-	pack $w.dependence.independent $w.dependence.dependent \
-	        -side top -anchor w
-
-	frame $w.playmode.delay
-	label $w.playmode.delay.label -text "Delay (ms)" \
-		-width 10 -just left
-	entry $w.playmode.delay.entry -width 10 -textvariable $this-delay
-	pack $w.playmode.delay.label $w.playmode.delay.entry \
-		-side left -anchor n -expand yes -fill x
-
+	iwidgets::spinint $playmode.delay -labeltext {Step Delay (ms)} -range {0 86400000} -justify right -width 5 -step 10 -textvariable $this-delay -repeatdelay 300 -repeatinterval 10
 
 	pack $w.playmode.label -side top -expand yes -fill both
 	pack $w.playmode.once $w.playmode.loop \
@@ -1305,32 +1315,67 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    $w.playmode.delay -side top -anchor w
 
 
-        button $w.execmode.play -text "Play" -command "$this execmode play"
-        button $w.execmode.stop -text "Stop" -command "$this execmode stop"
-        button $w.execmode.step -text "Step" -command "$this execmode step"
-        pack $w.execmode.play $w.execmode.stop $w.execmode.step \
-		-side left -fill both -expand yes
+	# Create the button to show/hide extened options
+	button $w.expanded
+	# Create the sci button panel
+	makeSciButtonPanel $w $w $this "-no_execute"
 
-#        pack $w.loc $w.playmode w.dependence $w.execmode
-        pack $w.loc $w.playmode $w.execmode \
-		-padx 5 -pady 5 -fill both -expand yes
+	# Show the no-frills interface
+	show_small_interface
 
-	update_animate_range [set $this-selectable_min] [set $this-selectable_max]
+	update
     }
 
-    method update_animate_range { min max } {
+    method forget_packing {} {
 	set w [format "%s-animate" .ui[modname]]
-
-	set $this-selectable_min $min
-	set $this-selectable_max $max
-
         if {[winfo exists $w]} {
-            $w.loc.min config -from [set $this-selectable_min]
-            $w.loc.min config -to   [set $this-selectable_max]
-            $w.loc.min config -label "Start"
-            $w.loc.max config -from [set $this-selectable_min]
-            $w.loc.max config -to   [set $this-selectable_max]
-            $w.loc.max config -label "End"
+	    pack forget $w.vcr $w.cur $w.expanded \
+		$w.min $w.max $w.inc $w.playmode $w.buttonPanel
+	}
+    }
+
+    method show_small_interface {} {
+	forget_packing
+	set w [format "%s-animate" .ui[modname]]
+        if {[winfo exists $w]} {
+	    pack $w.vcr $w.cur $w.expanded $w.buttonPanel \
+		-padx 5 -pady 5 -fill x -expand 0
+	    $w.expanded configure -text "Show Extended Options" \
+		-command "$this show_expanded_interface"
+	    wm geometry $w {}
+	}
+    }
+
+    method show_expanded_interface {} {
+	forget_packing
+	set w [format "%s-animate" .ui[modname]]
+        if {[winfo exists $w]} {
+	    pack $w.vcr $w.min $w.cur $w.max $w.inc $w.playmode \
+		$w.expanded $w.buttonPanel \
+		-padx 5 -pady 5 -fill x -expand 0
+	    $w.expanded configure -text "Hide Extended Options" \
+		-command "$this show_small_interface"
+	    wm geometry $w {}
+	}
+    }
+
+    method update_range {} {
+	set w [format "%s-animate" .ui[modname]]
+        if {[winfo exists $w]} {
+	    upvar \#0 $this-selectable_min min $this-selectable_max max 
+
+            $w.min configure -label "Start:" \
+		-from $min -to $max
+
+            $w.cur config -label "Current:" \
+		-from $min -to $max
+
+            $w.max config -label "End:" \
+		-from $min -to $max
+
+            $w.inc config -label "Increment:" \
+		-from 1 -to [expr $max-$min]
+
         }
     }
 }
