@@ -1536,14 +1536,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   // rho_CC = mass_CC/cell_volume  NOT mass/mat_volume 
   for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
      for (int m = 0; m < numALLMatls; m++) {
-       Material* matl = d_sharedState->getMaterial( m );
-       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-
        mat_mass[m] = mass_CC[m][*iter];
           
-       if(mpm_matl){                //  M P M
-       }
-       rho_CC[m][*iter]   = mat_mass[m]/(cell_vol + d_SMALL_NUM);           
+       rho_CC[m][*iter]   = mat_mass[m]/cell_vol + d_SMALL_NUM;           
      }
   }
  /*==========TESTING==========`*/
