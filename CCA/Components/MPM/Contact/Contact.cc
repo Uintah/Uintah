@@ -5,10 +5,8 @@ using namespace Uintah;
 
 Contact::Contact()
 {
-  lb = scinew MPMLabel();
 }
 
 Contact::~Contact()
 {
-  delete lb;
 }

@@ -6,13 +6,15 @@
 
 namespace Uintah {
 
-class ThermalContact;
+  class ThermalContact;
+  class MPMLabel;
 
-class ThermalContactFactory {
-public:
-  static ThermalContact* create(const ProblemSpecP& ps,SimulationStateP& d_sS);
+  class ThermalContactFactory {
+  public:
+   static ThermalContact* create(const ProblemSpecP& ps,SimulationStateP& d_sS,
+								MPMLabel* lb);
 
-};
+  };
 
 } // End namespace Uintah
       

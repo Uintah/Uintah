@@ -28,7 +28,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 RigidBodyContact::RigidBodyContact(ProblemSpecP& ps, 
-				    SimulationStateP& d_sS)
+				    SimulationStateP& d_sS, MPMLabel* Mlb)
 {
   // Constructor
 
@@ -37,6 +37,7 @@ RigidBodyContact::RigidBodyContact(ProblemSpecP& ps,
   ps->get("stop_time",d_stop_time);
   
   d_sharedState = d_sS;
+  lb = Mlb;
 }
 
 RigidBodyContact::~RigidBodyContact()

@@ -74,8 +74,9 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
    MPMPhysicalBCFactory::create(prob_spec);
 
-   contactModel = ContactFactory::create(prob_spec,sharedState);
-   thermalContactModel = ThermalContactFactory::create(prob_spec, sharedState);
+   contactModel = ContactFactory::create(prob_spec,sharedState, lb);
+   thermalContactModel =
+		 ThermalContactFactory::create(prob_spec, sharedState, lb);
 
    ProblemSpecP p = prob_spec->findBlock("DataArchiver");
    if(!p->get("outputInterval", d_outputInterval))
@@ -195,8 +196,8 @@ void SerialMPM::scheduleTimeAdvance(double , double ,
     scheduleComputeBoundaryContact(       sched, patches, matls);
     scheduleComputeConnectivity(          sched, patches, matls);
   }
+
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
-      
   scheduleComputeHeatExchange(            sched, patches, matls);
   scheduleExMomInterpolated(              sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
@@ -552,6 +553,7 @@ void SerialMPM::scheduleExMomIntegrated(SchedulerP& sched,
   Task* t = scinew Task("Contact::exMomIntegrated",
 		   contactModel,
 		   &Contact::exMomIntegrated);
+
   contactModel->addComputesAndRequiresIntegrated(t, patches, matls);
   sched->addTask(t, patches, matls);
 }
