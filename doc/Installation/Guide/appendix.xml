@@ -15,16 +15,7 @@
   University of Utah. All Rights Reserved.
 -->
 
-<chapter id="appendix">
-<title>Appendix</title>
-<abstract>
-<para>
-This appendix holds tables and details pertinent to building and
-installing SCIRun.
-</para>
-</abstract>
-
-<section>
+<appendix id="appendix">
 <title>Configure Options</title>
 <para>
 The following table contains descriptions of the options
@@ -170,8 +161,7 @@ the PETSc solve methods in the UI.</entry>
 </tbody>
 </tgroup>
 </table>
-</section>
-</chapter>
+</appendix>
 
 <!-- Keep this comment at the end of the file
 Local variables:

@@ -26,6 +26,7 @@
 <!ENTITY requirements  SYSTEM "requirements.xml">
 <!ENTITY recommendations SYSTEM "recommendations.xml">
 <!ENTITY appendix SYSTEM "appendix.xml">
+<!ENTITY cvs SYSTEM "cvs.xml">
 <!ENTITY sr  "SCIRun">
 ]>
 
@@ -37,6 +38,7 @@
   &inst;
   &thirdparty;
   &appendix;
+  &cvs;
 </book>
 
 <!-- Keep this comment at the end of the file
