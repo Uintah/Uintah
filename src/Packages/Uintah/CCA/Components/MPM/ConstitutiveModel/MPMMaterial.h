@@ -130,16 +130,17 @@ WARNING
                                     const Patch* patch);
       private:
 
+	 MPMLabel* lb;
 	 // Specific constitutive model associated with this material
 	 ConstitutiveModel *d_cm;
-
-         bool d_membrane;
 
          // Burn model
 	 Burn *d_burn;
 
 	 // EOS model
 	 EquationOfState* d_eos;
+
+         bool d_membrane;
 	 
 	 double d_density;
 
@@ -154,7 +155,7 @@ WARNING
 
 	 std::vector<GeometryObject*> d_geom_objs;
 
-	 MPMLabel* lb;
+
 
 	 // Prevent copying of this class
 	 // copy constructor

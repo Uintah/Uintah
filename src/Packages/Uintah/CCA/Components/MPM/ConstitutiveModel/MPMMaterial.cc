@@ -40,7 +40,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27)
-  : Material(ps), lb(lb), d_cm(0), d_burn(0), d_eos(0)
+  : Material(ps), lb(lb), d_cm(0), d_burn(0), d_eos(0) 
 {
    // Constructor
 

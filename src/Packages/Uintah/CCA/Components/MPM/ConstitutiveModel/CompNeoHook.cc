@@ -410,9 +410,6 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       // compute the total stress (volumetric + deviatoric)
       pstress[idx] = Identity*p + shrTrl/J;
 
-      // Compute the strain energy for all the particles
-      double strainEnergyDensity = .5*(bulk*(pow(log(J),2.)) + 
-				shear*(bElBar_new[idx].Trace() - 3.));
 
       double coef1 = bulk;
       double coef2 = 2.*bulk*log(J);
