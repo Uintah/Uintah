@@ -17,6 +17,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -806,9 +807,20 @@ ExplicitSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
     tsk->requires(Task::NewDW, d_lab->d_tempINLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  if (d_MAlab)
+  if (d_MAlab) {
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_MAlab->totHT_CCLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_MAlab->totHT_FCXLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_MAlab->totHT_FCYLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_MAlab->totHT_FCZLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
 
   sched->addTask(tsk, patches, matls);
   
@@ -829,6 +841,7 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    double time = d_lab->d_sharedState->getElapsedTime();
 
   // Get the new velocity
     constSFCXVariable<double> newUVel;
@@ -872,9 +885,25 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
     }
     
     constCCVariable<double> gasfraction;
-    if (d_MAlab)
+    constCCVariable<double> tempSolid;
+    constCCVariable<double> totalHT;
+    constSFCXVariable<double> totalHT_FCX;
+    constSFCYVariable<double> totalHT_FCY;
+    constSFCZVariable<double> totalHT_FCZ;
+    if (d_MAlab) {
       new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(tempSolid, d_MAlab->integTemp_CCLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(totalHT, d_MAlab->totHT_CCLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(totalHT_FCX, d_MAlab->totHT_FCXLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(totalHT_FCY, d_MAlab->totHT_FCYLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(totalHT_FCZ, d_MAlab->totHT_FCZLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
 
     constCCVariable<double> temperature;
     if (d_enthalpySolve) 
@@ -903,8 +932,15 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
 	if (d_props->getNumMixStatVars() > 0) {
 	  cerr << "MixFracVariance: " << mixFracVariance[*iter] << endl;
 	}
-	if (d_MAlab)
+	if (d_MAlab) {
+	  cerr.precision(16);
 	  cerr << "gas vol fraction: " << gasfraction[*iter] << endl;
+	  cerr << " Solid Temperature at Location " << *iter << " At time " << time << ","<< tempSolid[*iter] << endl;
+	  cerr << " Total Heat Flux at Location " << *iter << " At time " << time << ","<< totalHT[*iter] << endl;
+	  cerr << " Total X-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totalHT_FCX[*iter] << endl;
+	  cerr << " Total Y-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totalHT_FCY[*iter] << endl;
+	  cerr << " Total Z-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totalHT_FCZ[*iter] << endl;
+	}
 
       }
     }
