@@ -51,7 +51,8 @@ the first or second operand can be a float constant, but not both. To perform th
     <p>    comp : -1, 0, or 1 if 1st value is less than, equal to, or
            geater than 2nd value</p>
     <p>    exists : if 1st value exists, use it, else use 2nd value</p>
-     <p>Float Input : This value is used in the operation and can be on the left or right side of the operator depending on which Nrrd port is connected. If both nrrds ports are connected, this value will be ignored.</p>
+    <p>Float Input : This value is used in the operation and can be on the left or right side of the operator depending on which Nrrd port is connected. If both nrrds ports are connected, this value will be ignored.</p>
+    <p>Type : type to convert all input nrrds to prior to doing the operation.  To leave it unchanged, check the 'Same as input type' checkbutton.</p>
     </description>
   </overview>
   <implementation>

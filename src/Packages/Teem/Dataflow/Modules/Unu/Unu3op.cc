@@ -55,11 +55,14 @@ private:
   GuiDouble    float1_;
   GuiDouble    float2_;
   GuiDouble    float3_;
+  GuiString    type_;
+  GuiInt       usetype_;
   bool         first_nrrd_;
   bool         second_nrrd_;
   bool         third_nrrd_;
 
   unsigned int get_op(const string &op);
+  unsigned int get_type(const string &op);
   
 };
 
@@ -71,6 +74,8 @@ Unu3op::Unu3op(SCIRun::GuiContext *ctx) :
   float1_(ctx->subVar("float1")),
   float2_(ctx->subVar("float2")),
   float3_(ctx->subVar("float3")),
+  type_(ctx->subVar("type")),
+  usetype_(ctx->subVar("usetype")),
   first_nrrd_(true), second_nrrd_(true), third_nrrd_(true)
 {
 }
@@ -138,6 +143,9 @@ Unu3op::execute()
   Nrrd *nin2 = 0;
   Nrrd *nin3 = 0;
   Nrrd *nout = nrrdNew();
+  Nrrd *ntmp1 = NULL;
+  Nrrd *ntmp2 = NULL;
+  Nrrd *ntmp3 = NULL;
 
   // can either have two nrrds, first nrrd and float, or second
   // nrrd and float
@@ -146,14 +154,58 @@ Unu3op::execute()
     return;
   }
 
-  if (first_nrrd_)
-    nin1 = nrrd_handle1->nrrd;
-  if (second_nrrd_)
-    nin2 = nrrd_handle2->nrrd;
-  if (third_nrrd_)
-    nin3 = nrrd_handle3->nrrd;
-
   reset_vars();
+
+  // convert nrrds if indicated
+  if (!usetype_.get()) {
+    if (first_nrrd_) {
+      ntmp1 = nrrdNew();
+      if (nrrdConvert(ntmp1, nrrd_handle1->nrrd, get_type(type_.get()))) {
+	char *err = biffGetDone(NRRD);
+	error(string("Error converting nrrd: ") + err);
+	free(err);
+	return;
+      }
+    }
+    if (second_nrrd_) {
+      ntmp2 = nrrdNew();
+      if (nrrdConvert(ntmp2, nrrd_handle2->nrrd, get_type(type_.get()))) {
+	char *err = biffGetDone(NRRD);
+	error(string("Error converting nrrd: ") + err);
+	free(err);
+	return;
+      }
+    }
+    if (third_nrrd_) {
+      ntmp3 = nrrdNew();
+      if (nrrdConvert(ntmp3, nrrd_handle3->nrrd, get_type(type_.get()))) {
+	char *err = biffGetDone(NRRD);
+	error(string("Error converting nrrd: ") + err);
+	free(err);
+	return;
+      }
+    }
+  }
+
+  if (first_nrrd_) {
+    if (!usetype_.get())
+      nin1 = ntmp1;
+    else
+      nin1 = nrrd_handle1->nrrd;
+  }
+  if (second_nrrd_) {
+    if (!usetype_.get())
+      nin2 = ntmp2;
+    else
+      nin2 = nrrd_handle2->nrrd;
+  }
+  if (third_nrrd_) {
+    if (!usetype_.get())
+      nin3 = ntmp3;
+    else
+      nin3 = nrrd_handle3->nrrd;
+  }
+
 
   NrrdIter *in1 = nrrdIterNew();
   NrrdIter *in2 = nrrdIterNew();
@@ -219,6 +271,35 @@ Unu3op::get_op(const string &op) {
     return nrrdTernaryOpAdd;
   }
 }
+
+unsigned int
+Unu3op::get_type(const string &type) {
+  if (type == "nrrdTypeChar")
+    return nrrdTypeChar;
+  else if (type == "nrrdTypeUChar") 
+    return nrrdTypeUChar;
+  else if (type == "nrrdTypeShort")
+    return nrrdTypeShort;
+  else if (type == "nrrdTypeUShort")
+    return nrrdTypeUShort;
+  else if (type == "nrrdTypeInt")
+    return nrrdTypeInt;
+  else if (type == "nrrdTypeUInt")
+    return nrrdTypeUInt;
+  else if (type == "nrrdTypeLLong")
+    return nrrdTypeLLong;
+  else if (type == "nrrdTypeULLong")
+    return nrrdTypeULLong;
+  else if (type == "nrrdTypeFloat")
+    return nrrdTypeFloat;
+  else if (type == "nrrdTypeDouble")
+    return nrrdTypeDouble;
+  else {
+    error("Unknown nrrd type. Defaulting to nrrdTypeFloat");
+    return nrrdTypeFloat;
+  }
+}
+
 
 
 } // End namespace SCITeem

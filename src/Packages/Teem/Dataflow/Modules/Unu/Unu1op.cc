@@ -50,16 +50,20 @@ private:
   NrrdOPort*      onrrd_;
 
   GuiString    operator_;
+  GuiString    type_;
+  GuiInt       usetype_;
 
   unsigned int get_op(const string &op);
-  
+  unsigned int get_type(const string &type);
 };
 
 DECLARE_MAKER(Unu1op)
 
 Unu1op::Unu1op(SCIRun::GuiContext *ctx) : 
   Module("Unu1op", ctx, Filter, "UnuAtoM", "Teem"), 
-  operator_(ctx->subVar("operator"))
+  operator_(ctx->subVar("operator")),
+  type_(ctx->subVar("type")),
+  usetype_(ctx->subVar("usetype"))
 {
 }
 
@@ -97,11 +101,29 @@ Unu1op::execute()
 
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
+  Nrrd *ntmp = NULL;
 
-  if (nrrdArithUnaryOp(nout, get_op(operator_.get()), nin)) {
-    char *err = biffGetDone(NRRD);
-    error(string("Error performing 1op to nrrd: ") + err);
-    free(err);
+  if (!usetype_.get()) {
+    ntmp = nrrdNew();
+    if (nrrdConvert(ntmp, nin, get_type(type_.get()))) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error converting nrrd: ") + err);
+      free(err);
+      return;
+    }
+    if (nrrdArithUnaryOp(nout, get_op(operator_.get()), ntmp)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error performing 1op to nrrd: ") + err);
+      free(err);
+      return;
+    }
+  } else {
+    if (nrrdArithUnaryOp(nout, get_op(operator_.get()), nin)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error performing 1op to nrrd: ") + err);
+      free(err);
+      return;
+    }
   }
 
   NrrdData *nrrd = scinew NrrdData;
@@ -110,6 +132,34 @@ Unu1op::execute()
   NrrdDataHandle out(nrrd);
 
   onrrd_->send(out);
+}
+
+unsigned int
+Unu1op::get_type(const string &type) {
+  if (type == "nrrdTypeChar")
+    return nrrdTypeChar;
+  else if (type == "nrrdTypeUChar") 
+    return nrrdTypeUChar;
+  else if (type == "nrrdTypeShort")
+    return nrrdTypeShort;
+  else if (type == "nrrdTypeUShort")
+    return nrrdTypeUShort;
+  else if (type == "nrrdTypeInt")
+    return nrrdTypeInt;
+  else if (type == "nrrdTypeUInt")
+    return nrrdTypeUInt;
+  else if (type == "nrrdTypeLLong")
+    return nrrdTypeLLong;
+  else if (type == "nrrdTypeULLong")
+    return nrrdTypeULLong;
+  else if (type == "nrrdTypeFloat")
+    return nrrdTypeFloat;
+  else if (type == "nrrdTypeDouble")
+    return nrrdTypeDouble;
+  else {
+    error("Unknown nrrd type. Defaulting to nrrdTypeFloat");
+    return nrrdTypeFloat;
+  }
 }
 
 unsigned int

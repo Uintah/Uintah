@@ -39,7 +39,16 @@ itcl_class Teem_UnuAtoM_Unu1op {
     }
     method set_defaults {} {
         global $this-operator
-        set $this-operator "sqrt"
+        set $this-operator sqrt
+
+	global $this-type
+	set $this-type nrrdTypeFloat
+
+	global $this-usetype
+	set $this-usetype 1
+
+	trace variable $this-operator w "$this set_operator" 
+	trace variable $this-type w "$this set_type" 
     }
 
     method ui {} {
@@ -56,13 +65,60 @@ itcl_class Teem_UnuAtoM_Unu1op {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.operator -labeltext "Operator:" -textvariable $this-operator
-        pack $w.f.options.operator -side top -expand yes -fill x
+	iwidgets::optionmenu $w.f.options.operator -labeltext "Operator:" \
+	    -labelpos w -command "$this update_operator $w.f.options.operator"
+ 	$w.f.options.operator insert end - r sin cos tan \
+ 	    asin acos atan exp log log10 log1p \
+ 	    sqrt cbrt ceil floor erf rup abs \
+ 	    sgn exists rand
+	pack $w.f.options.operator -side top -anchor nw -padx 3 -pady 3
+	$w.f.options.operator select [set $this-operator]
+
+	iwidgets::optionmenu $w.f.options.type -labeltext "Type:" \
+	    -labelpos w -command "$this update_type $w.f.options.type"
+	$w.f.options.type insert end nrrdTypeChar nrrdTypeUChar \
+	    nrrdTypeShort nrrdTypeUShort nrrdTypeInt nrrdTypeUInt \
+	    nrrdTypeLLong nrrdTupeULLong nrrdTypeFloat nrrdTypeDouble
+	pack $w.f.options.type -side top -anchor nw -padx 3 -pady 3
+	$w.f.options.type select [set $this-type]
+
+	checkbutton $w.f.options.usetype -text "Same as input type" \
+	    -variable $this-usetype
+	pack $w.f.options.usetype -side top -anchor nw -padx 3 -pady 3 
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
 
 	pack $w.f -expand 1 -fill x
+    }
+
+
+    method update_operator {menu} {
+	global $this-operator
+	set which [$menu get]
+	set $this-operator $which
+    }
+
+    method set_operator { name1 name2 op } {
+	set w .ui[modname]
+	set menu $w.f.options.operator
+	if {[winfo exists $menu]} {
+	    $menu select [set $this-operator]
+	}
+    }
+
+    method update_type {menu} {
+	global $this-type
+	set which [$menu get]
+	set $this-type $which
+    }
+
+    method set_type { name1 name2 op } {
+	set w .ui[modname]
+	set menu $w.f.options.type
+	if {[winfo exists $menu]} {
+	    $menu select [set $this-type]
+	}
     }
 }
 
