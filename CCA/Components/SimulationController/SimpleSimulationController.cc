@@ -238,6 +238,7 @@ SimpleSimulationController::run()
    
    bool first=true;
    int  iterations = 0;
+   double prev_delt=0;
    while( ( t < timeinfo.maxTime ) && 
 	  ( iterations < timeinfo.num_time_steps ) ) {
       iterations ++;
@@ -257,6 +258,14 @@ SimpleSimulationController::run()
 		 << " to minimum: " << timeinfo.delt_min << '\n';
 	 delt = timeinfo.delt_min;
       }
+      if(iterations > 1 && delt > (1+timeinfo.max_delt_increase)*prev_delt){
+	if(d_myworld->myrank() == 0)
+	  cerr << "WARNING: lowering delt from " << delt 
+	       << " to maxmimum: " << (1+timeinfo.max_delt_increase)*prev_delt
+	       << " (maximum increase of " << timeinfo.max_delt_increase
+	       << ")\n";
+	delt = (1+timeinfo.max_delt_increase)*prev_delt;
+      }
       if(t <= timeinfo.initial_delt_range && delt > timeinfo.max_initial_delt){
 	 if(d_myworld->myrank() == 0)
 	    cerr << "WARNING: lowering delt from " << delt 
@@ -272,6 +281,14 @@ SimpleSimulationController::run()
       }
 	
       newDW->override(delt_vartype(delt), sharedState->get_delt_label());
+      double delt_fine = delt;
+      for(int i=0;i<grid->numLevels();i++){
+	const Level* level = grid->getLevel(i).get_rep();
+	if(i != 0)
+	  delt_fine /= level->timeRefinementRatio();
+	newDW->override(delt_vartype(delt), sharedState->get_delt_label(),
+			level);
+      }
 
 #ifndef DISABLE_SCI_MALLOC
       size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
@@ -365,7 +382,7 @@ SimpleSimulationController::run()
 	double start = Time::currentSeconds();
 	scheduler->initialize();
 
-	sim->scheduleTimeAdvance(level, scheduler);
+	sim->scheduleTimeAdvance(level, scheduler, 0, 1);
 
 	if(output)
 	  output->finalizeTimestep(t, delt, grid, scheduler);
