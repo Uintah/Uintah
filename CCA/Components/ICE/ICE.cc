@@ -327,7 +327,8 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
   scheduleComputePressFC(sched, patches, press_matl,
                                         all_matls);
 
-  scheduleAccumulateMomentumSourceSinks(sched, patches, press_matl,all_matls);
+  scheduleAccumulateMomentumSourceSinks(sched, patches, press_matl,
+                                        ice_matls_sub, all_matls);
 
   scheduleAccumulateEnergySourceSinks(sched, patches, press_matl,
                                                       all_matls);
@@ -513,6 +514,7 @@ _____________________________________________________________________*/
 void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
 						const PatchSet* patches,
                                           const MaterialSubset* press_matl,
+                                          const MaterialSubset* ice_matls_sub,
 						const MaterialSet* matls)
 {
 #ifdef DOING
@@ -529,16 +531,9 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
                                                    Ghost::AroundCells,1);
   task->requires(Task::NewDW,lb->rho_CCLabel,      Ghost::None);
   task->requires(Task::NewDW,lb->vol_frac_CCLabel, Ghost::None);
-// TURN ON WHEN WE HAVE VISCOUS TERMS
-//task->requires(Task::OldDW,  lb->vel_CCLabel,      Ghost::None);
- 
+  task->requires(Task::OldDW,lb->vel_CCLabel,      ice_matls_sub,
+                                                   Ghost::None);
   task->computes(lb->mom_source_CCLabel);
-    
-// TURN ON WHEN WE HAVE VISCOUS TERMS    
-//task->computes(Task::NewDW,  lb->tau_X_FCLabel);
-//task->computes(Task::NewDW,  lb->tau_Y_FCLabel);
-//task->computes(Task::NewDW,  lb->tau_Z_FCLabel);
-  
   sched->addTask(task, patches, matls);
 }
 
@@ -2019,21 +2014,25 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     int numMatls  = d_sharedState->getNumMatls();
 
     IntVector right, left, top, bottom, front, back;
+    int rightFace = 1, topFace = 1, frontFace = 1;
+    int leftFace = 0, bottomFace = 0, backFace = 0;
     delt_vartype delT; 
-    Vector    dx, gravity;
-    double    delX, delY, delZ;
-    double    pressure_source, mass, vol;
-  //  double    viscous_source;
+    Vector dx, gravity;
+    double pressure_source, mass, vol;
+    double viscous_source;
     double viscosity;
 
     old_dw->get(delT, d_sharedState->get_delt_label());
-    dx        = patch->dCell();
-    gravity   = d_sharedState->getGravity();
-    delX      = dx.x();
-    delY      = dx.y();
-    delZ      = dx.z();
-    vol       = delX * delY * delZ;
+    dx      = patch->dCell();
+    double delX = dx.x();
+    double delY = dx.y();
+    double delZ = dx.z();
+    gravity = d_sharedState->getGravity();
+    vol     = delX * delY * delZ;
 
+    StaticArray<double>  tau_XX(2), tau_XY(2), tau_XZ(2);
+    StaticArray<double>  tau_YX(2), tau_YY(2), tau_YZ(2);
+    StaticArray<double>  tau_ZX(2), tau_ZY(2), tau_ZZ(2);
     CCVariable<double>   rho_CC;
     CCVariable<Vector>   vel_CC;
     CCVariable<double>   vol_frac;
@@ -2048,29 +2047,17 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++) {
       Material* matl        = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      if(ice_matl){
-	viscosity = ice_matl->getViscosity();
-      }
-      else{
-	viscosity = 0.;
-      }
       indx = matl->getDWIndex();
+      viscosity = 0.0;
+      if(ice_matl){
+       old_dw->get(vel_CC,  lb->vel_CCLabel,     indx,patch,Ghost::None, 0);
+       viscosity = ice_matl->getViscosity();
+      }
       new_dw->get(rho_CC,  lb->rho_CCLabel,      indx,patch,Ghost::None, 0);
       new_dw->get(vol_frac,lb->vol_frac_CCLabel, indx,patch,Ghost::None, 0);
-  /*`======= Turn on when we have viscous terms ==========*/ 
-  //  old_dw->get(vel_CC,  lb->vel_CCLabel,      indx,patch,Ghost::None, 0);
-   /*==========TESTING==========`*/
-
 
       CCVariable<Vector>   mom_source;
-      SFCXVariable<double> tau_X_FC;
-      SFCYVariable<double> tau_Y_FC;
-      SFCZVariable<double> tau_Z_FC;
       new_dw->allocate(mom_source,  lb->mom_source_CCLabel,  indx, patch);
-      new_dw->allocate(tau_X_FC,    lb->tau_X_FCLabel,       indx, patch);
-      new_dw->allocate(tau_Y_FC,    lb->tau_Y_FCLabel,       indx, patch);
-      new_dw->allocate(tau_Z_FC,    lb->tau_Z_FCLabel,       indx, patch);
-
       mom_source.initialize(Vector(0.,0.,0.));
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
@@ -2083,56 +2070,61 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         back     = *iter + IntVector(0,0,0);
 
         //__________________________________
+        // Compute the shear stresses on cell face
+        // I HATE THIS BUT I DON'T KNOW HOW ELSE TO DO
+        // IT WITHOUT BIG ARRAYS. I'M OPEN TO SUGGESTIONS -todd
+        tau_XX[0] = 0.0; tau_XX[1] = 0.0;   tau_YX[0] = 0.0; tau_YX[1] = 0.0;
+        tau_XY[0] = 0.0; tau_XY[1] = 0.0;   tau_YY[0] = 0.0; tau_YY[1] = 0.0;
+        tau_XZ[0] = 0.0; tau_XZ[1] = 0.0;   tau_YZ[0] = 0.0; tau_YZ[1] = 0.0;
+        
+        tau_ZX[0] = 0.0; tau_ZX[1] = 0.0;
+        tau_ZY[0] = 0.0; tau_ZY[1] = 0.0;
+        tau_ZZ[0] = 0.0; tau_ZZ[1] = 0.0;
+        if(ice_matl && viscosity >0.0){
+            computeTauX_LeftandRightCellFace(vel_CC, *iter, viscosity, dx,
+                                             tau_XX, tau_XY, tau_XZ);
+
+            computeTauY_BottomandTopCellFace(vel_CC, *iter, viscosity, dx,
+                                             tau_YX, tau_YY, tau_YZ);
+
+            computeTauZ_BackandFrontCellFace(vel_CC, *iter, viscosity, dx,
+                                             tau_ZX, tau_ZY, tau_ZZ);
+        }
+        //__________________________________
         //    X - M O M E N T U M 
         pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[*iter];
 
-  #if 0
-        // tau variables are really vector quantities and need to be
-        // stored as SFCXVariable<Vector>.  But for now they are not
-        // being used.
-        viscous_source  = tau_X_FC[*iter+IntVector(1,0,0)] - 
-	  tau_X_FC[*iter+IntVector(0,0,0)] + 
-	  tau_X_FC[*iter+IntVector(0,1,0)]  - 
-	  tau_X_FC[*iter+IntVector(0,0,0)] + 
-	  tau_X_FC[*iter+IntVector(0,0,1)] - 
-	  tau_X_FC[*iter+IntVector(0,0,0)];
-  #endif
+        viscous_source = tau_XX[rightFace] - tau_XX[leftFace]   * delY * delZ + 
+                         tau_YX[topFace]   - tau_YX[bottomFace] * delX * delZ +
+                         tau_ZX[frontFace] - tau_ZX[backFace]   * delX * delY;     
+                                 
         mom_source[*iter].x( (-pressure_source * delY * delZ +
-			      mass * gravity.x()) * delT );
+                               viscous_source +
+			          mass * gravity.x()) * delT );
         //__________________________________
         //    Y - M O M E N T U M
          pressure_source = (pressY_FC[top]-pressY_FC[bottom])* vol_frac[*iter];
-  #if 0
-        // tau variables are really vector quantities and need to be
-        // stored as SFCXVariable<Vector>.  But for now they are not
-        // being used.
-        viscous_source  = tau_X_FC[*iter+IntVector(1,0,0)] - 
-	  tau_X_FC[*iter+IntVector(0,0,0)] + 
-	  tau_X_FC[*iter+IntVector(0,1,0)]  - 
-	  tau_X_FC[*iter+IntVector(0,0,0)] + 
-	  tau_X_FC[*iter+IntVector(0,0,1)] - 
-	  tau_X_FC[*iter+IntVector(0,0,0)];
-  #endif
+
+        viscous_source = tau_XY[rightFace] - tau_XY[leftFace]   * delY * delZ + 
+                         tau_YY[topFace]   - tau_YY[bottomFace] * delX * delZ +
+                         tau_ZY[frontFace] - tau_ZY[backFace]   * delX * delY;
+
         mom_source[*iter].y( (-pressure_source * delX * delZ +
-			         mass * gravity.y()) * delT );
+                               viscous_source +
+			          mass * gravity.y()) * delT );
         //__________________________________
         //    Z - M O M E N T U M
         pressure_source = (pressZ_FC[front]-pressZ_FC[back]) * vol_frac[*iter];
-  #if 0
-        // tau variables are really vector quantities and need to be
-        // stored as SFCXVariable<Vector>.  But for now they are not
-        // being used.
-        viscous_source  = tau_X_FC[*iter+IntVector(1,0,0)] - 
-	  tau_X_FC[*iter+IntVector(0,0,0)] + 
-	  tau_X_FC[*iter+IntVector(0,1,0)]  - 
-	  tau_X_FC[*iter+IntVector(0,0,0)] + 
-	  tau_X_FC[*iter+IntVector(0,0,1)] - 
-	  tau_X_FC[*iter+IntVector(0,0,0)];
-  #endif
-        mom_source[*iter].z( (-pressure_source * delX * delY +
-			         mass * gravity.z()) * delT );
-      }
+        
+        viscous_source = tau_XZ[rightFace] - tau_XZ[leftFace]   * delY * delZ + 
+                         tau_YZ[topFace]   - tau_YZ[bottomFace] * delX * delZ +
+                         tau_ZZ[frontFace] - tau_ZZ[backFace]   * delX * delY;
 
+        mom_source[*iter].z( (-pressure_source * delX * delY +
+			          viscous_source + 
+                               mass * gravity.z()) * delT );
+                               
+      }
       new_dw->put(mom_source, lb->mom_source_CCLabel, indx, patch);
 
       //---- P R I N T   D A T A ------ 
@@ -3872,7 +3864,234 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
  #endif
 }
 
+/*---------------------------------------------------------------------
+ Function~  ICE::computeTauX_LeftandRightCellFace
+ Purpose:   This function computes shear stress tau_xx, ta_xy, tau_xz 
+            for both the left and right cell faces.
+  Note:   - The edge velocities are defined as the average velocity 
+            of the 4 cells surrounding that edge, however we only use 2 cells
+            to compute it.  When you take the difference of the edge velocities 
+            there are two common cells that automatically cancel themselves out.
+          - The viscosity we're using isn't right if it varies spatially.
+            
+  STUPIDNESS:  since the iterator marches in the x dir. we only need 
+            to compute the right face for each cell since the left 
+            face was computed in the previous cell.  
+ ---------------------------------------------------------------------  */
+void ICE::computeTauX_LeftandRightCellFace( const CCVariable<Vector> vel_CC,
+                          const IntVector curcell,
+                          const double viscosity,
+                          const Vector dx,
+                          StaticArray<double>& tau_XX,
+                          StaticArray<double>& tau_XY,
+                          StaticArray<double>& tau_XZ)
+{
+  double term1, term2, grad_1, grad_2;
+  double grad_uvel, grad_vvel, grad_wvel;
+  //__________________________________
+  // loop over the left then right cell face
+  for(int face = 0; face <=1; face++) {   
+      
+    int i = curcell.x() + face;
+    int j = curcell.y();
+    int k = curcell.z();
+    IntVector cell(i,j,k);
+    double delX = dx.x();
+    double delY = dx.y();
+    double delZ = dx.z();
+    IntVector left(i-1, j, k);
+    //__________________________________
+    // - find indices of surrounding cells
+    // - compute velocities at cell face edges see note above.
+    double uvel_EC_top    = (vel_CC[IntVector(i-1,j+1,k  )].x()   + 
+                             vel_CC[IntVector(i  ,j+1,k  )].x() )/4.0;    
+    double uvel_EC_bottom = (vel_CC[IntVector(i-1,j-1,k  )].x()   + 
+                             vel_CC[IntVector(i  ,j-1,k  )].x() )/4.0;
+    double uvel_EC_front  = (vel_CC[IntVector(i-1,j  ,k+1)].x()   + 
+                             vel_CC[IntVector(i  ,j  ,k+1)].x() )/4.0;
+    double uvel_EC_back   = (vel_CC[IntVector(i-1,j  ,k-1)].x()   + 
+                             vel_CC[IntVector(i  ,j  ,k-1)].x() )/4.0;
+    double vvel_EC_top    = (vel_CC[IntVector(i-1,j+1,k  )].y()   + 
+                             vel_CC[IntVector(i  ,j+1,k  )].y() )/4.0;
+    double vvel_EC_bottom = (vel_CC[IntVector(i-1,j-1,k  )].y()   + 
+                             vel_CC[IntVector(i  ,j-1,k  )].y() )/4.0;
+    double wvel_EC_front  = (vel_CC[IntVector(i-1,j-1,k+1)].z()   + 
+                             vel_CC[IntVector(i  ,j  ,k+1)].z() )/4.0;
+    double wvel_EC_back   = (vel_CC[IntVector(i-1,j-1,k-1)].z()   + 
+                             vel_CC[IntVector(i  ,j  ,k-1)].z() )/4.0;
+    //__________________________________
+    //  tau_XX
+    grad_uvel = (vel_CC[cell].x() - vel_CC[left].x())/delX;
+    grad_vvel = (vvel_EC_top      - vvel_EC_bottom)  /delY;
+    grad_wvel = (wvel_EC_front    - wvel_EC_back )   /delZ;
 
+    term1 = 2.0 * viscosity * grad_uvel;
+    term2 = (2.0/3.0) * viscosity * (grad_uvel + grad_vvel + grad_wvel);
+    tau_XX[face] =  term1 - term2;
+    //__________________________________
+    //  tau_XY
+    grad_1 = (uvel_EC_top      - uvel_EC_bottom)  /delY;
+    grad_2 = (vel_CC[cell].y() - vel_CC[left].y())/delX;
+    tau_XY[face] =  viscosity * (grad_1 + grad_2);
+
+    //__________________________________
+    //  tau_XZ
+    grad_1 = (uvel_EC_front    - uvel_EC_back)    /delZ;
+    grad_2 = (vel_CC[cell].z() - vel_CC[left].z())/delX;
+    tau_XZ[face] =  viscosity * (grad_1 + grad_2);
+  }
+}
+
+
+/*---------------------------------------------------------------------
+ Function~  ICE::computeTauY_BottomandTopCellFace
+ Purpose:   This function computes shear stress tau_YY, ta_yx, tau_yz 
+            for both the bottom and top cell faces.
+  Note:   - The edge velocities are defined as the average velocity 
+            of the 4 cells surrounding that edge, however we only use2 cells
+            to compute it.  When you take the difference of the edge velocities 
+            there are two common cells that automatically cancel themselves out.
+          - The viscosity we're using isn't right if it varies spatially.
+ ---------------------------------------------------------------------  */
+void ICE::computeTauY_BottomandTopCellFace( const CCVariable<Vector> vel_CC,
+                          const IntVector curcell,
+                          const double viscosity,
+                          const Vector dx,
+                          StaticArray<double>& tau_YX,
+                          StaticArray<double>& tau_YY,
+                          StaticArray<double>& tau_YZ)
+{
+  double term1, term2, grad_1, grad_2;
+  double grad_uvel, grad_vvel, grad_wvel;
+  //__________________________________
+  // loop over the bottom then top cell face
+  for(int face = 0; face <=1; face++) {   
+      
+    int i = curcell.x();
+    int j = curcell.y() + face;
+    int k = curcell.z();
+    IntVector cell(i,j,k);
+    double delX = dx.x();
+    double delY = dx.y();
+    double delZ = dx.z();
+    IntVector bottom(i,j-1,k);
+    //__________________________________
+    // - find indices of surrounding cells
+    // - compute velocities at cell face edges see note above.
+    double uvel_EC_right = (vel_CC[IntVector(i+1,j,  k  )].x()  + 
+                            vel_CC[IntVector(i+1,j-1,k  )].x() )/4.0;
+    double uvel_EC_left  = (vel_CC[IntVector(i-1,j,  k  )].x()  +
+                            vel_CC[IntVector(i-1,j-1,k  )].x() )/4.0;
+    double vvel_EC_right = (vel_CC[IntVector(i+1,j  ,k  )].y()  + 
+                            vel_CC[IntVector(i+1,j-1,k  )].y() )/4.0;
+    double vvel_EC_left  = (vel_CC[IntVector(i-1,j  ,k  )].y()  + 
+                            vel_CC[IntVector(i-1,j-1,k  )].y() )/4.0; 
+    double vvel_EC_front = (vel_CC[IntVector(i  ,j  ,k+1)].y()  +
+                            vel_CC[IntVector(i  ,j-1,k+1)].y() )/4.0;
+    double vvel_EC_back  = (vel_CC[IntVector(i  ,j  ,k-1)].y()  +
+                            vel_CC[IntVector(i  ,j-1,k-1)].y() )/4.0;
+    double wvel_EC_front = (vel_CC[IntVector(i  ,j  ,k+1)].z()  +
+                            vel_CC[IntVector(i  ,j-1,k+1)].z() )/4.0;
+    double wvel_EC_back  = (vel_CC[IntVector(i  ,j  ,k-1)].z()  +
+                            vel_CC[IntVector(i  ,j-1,k-1)].z() )/4.0;
+    //__________________________________
+    //  tau_YY
+    grad_uvel = (uvel_EC_right    - uvel_EC_left)      /delX;
+    grad_vvel = (vel_CC[cell].y() - vel_CC[bottom].y())/delY;
+    grad_wvel = (wvel_EC_front    - wvel_EC_back )     /delZ;
+    
+    term1 = 2.0 * viscosity * grad_vvel;
+    term2 = (2.0/3.0) * viscosity * (grad_uvel + grad_vvel + grad_wvel);
+    tau_YY[face] =  term1 - term2;
+    //__________________________________
+    //  tau_YX
+    grad_1 = (vel_CC[cell].x() - vel_CC[bottom].x())/delY;
+    grad_2 = (vvel_EC_right    - vvel_EC_left)    /delX;
+
+    tau_YX[face] =  viscosity * (grad_1 + grad_2);
+
+    //__________________________________
+    //  tau_YZ
+    grad_1 = (vvel_EC_front    - vvel_EC_back)    /delZ;
+    grad_2 = (vel_CC[cell].z() - vel_CC[bottom].z())/delY;
+    tau_YZ[face] =  viscosity * (grad_1 + grad_2);
+  }
+}
+
+/*---------------------------------------------------------------------
+ Function~  ICE::omputeTauZ_BackandFrontCellFace
+ Purpose:   This function computes shear stress tau_zx, ta_zy, tau_zz 
+            for both the back and front cell faces.
+  Note:   - The edge velocities are defined as the average velocity 
+            of the 4 cells surrounding that edge, however we only use 2 cells
+            to compute it.  When you take the difference of the edge velocities 
+            there are two common cells that automatically cancel themselves out.
+          - The viscosity we're using isn't right if it varies spatially.
+ ---------------------------------------------------------------------  */
+void ICE::computeTauZ_BackandFrontCellFace( const CCVariable<Vector> vel_CC,
+                          const IntVector curcell,
+                          const double viscosity,
+                          const Vector dx,
+                          StaticArray<double>& tau_ZX,
+                          StaticArray<double>& tau_ZY,
+                          StaticArray<double>& tau_ZZ)
+{
+  double term1, term2, grad_1, grad_2;
+  double grad_uvel, grad_vvel, grad_wvel;
+  //__________________________________
+  // loop over the left then right cell face
+  for(int face = 0; face <=1; face++) {   
+      
+    int i = curcell.x();
+    int j = curcell.y();
+    int k = curcell.z() + face;
+    IntVector cell(i,j,k);
+    double delX = dx.x();
+    double delY = dx.y();
+    double delZ = dx.z();
+    IntVector back(i, j, k-1);
+    //__________________________________
+    // - find indices of surrounding cells
+    // - compute velocities at cell face edges see note above.
+    double uvel_EC_right  = (vel_CC[IntVector(i+1,j,  k  )].x()  + 
+                             vel_CC[IntVector(i+1,j,  k-1)].x() )/4.0;
+    double uvel_EC_left   = (vel_CC[IntVector(i-1,j,  k  )].x()  +
+                             vel_CC[IntVector(i-1,j  ,k-1)].x() )/4.0;
+    double vvel_EC_top    = (vel_CC[IntVector(i  ,j+1,k  )].y()   + 
+                             vel_CC[IntVector(i  ,j+1,k-1)].y() )/4.0;
+    double vvel_EC_bottom = (vel_CC[IntVector(i  ,j-1,k  )].y()   + 
+                             vel_CC[IntVector(i  ,j-1,k-1)].y() )/4.0;
+    double wvel_EC_right  = (vel_CC[IntVector(i+1,j,  k  )].z()  + 
+                             vel_CC[IntVector(i+1,j  ,k-1)].z() )/4.0;
+    double wvel_EC_left   = (vel_CC[IntVector(i-1,j,  k  )].z()  +
+                             vel_CC[IntVector(i-1,j  ,k-1)].z() )/4.0;
+    double wvel_EC_top    = (vel_CC[IntVector(i  ,j+1,k  )].z()   + 
+                             vel_CC[IntVector(i  ,j+1,k-1)].z() )/4.0;
+    double wvel_EC_bottom = (vel_CC[IntVector(i  ,j-1,k  )].z()   + 
+                             vel_CC[IntVector(i  ,j-1,k-1)].z() )/4.0;
+    //__________________________________
+    //  tau_ZX
+    grad_1 = (vel_CC[cell].x() - vel_CC[back].x()) /delZ;
+    grad_2 = (wvel_EC_right    - wvel_EC_left)     /delX;
+    tau_ZX[face] =  viscosity * (grad_1 + grad_2);
+ 
+    //__________________________________
+    //  tau_ZY
+    grad_1 = (vel_CC[cell].y() - vel_CC[back].y()) /delZ;
+    grad_2 = (wvel_EC_top      - wvel_EC_bottom)   /delX;
+    tau_ZY[face] =  viscosity * (grad_1 + grad_2);
+
+    //__________________________________
+    //  tau_ZZ
+    grad_uvel = (uvel_EC_right    - uvel_EC_left)    /delX;
+    grad_vvel = (vvel_EC_top      - vvel_EC_bottom)  /delY;
+    grad_wvel = (vel_CC[cell].z() - vel_CC[back].z())/delZ;
+
+    term1 = 2.0 * viscosity * grad_wvel;
+    term2 = (2.0/3.0) * viscosity * (grad_uvel + grad_vvel + grad_wvel);
+    tau_ZZ[face] =  term1 - term2;
+  }
+}
 /*---------------------------------------------------------------------
  Function~  ICE::getExchangeCoefficients--
  ---------------------------------------------------------------------  */
