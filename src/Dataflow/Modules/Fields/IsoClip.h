@@ -56,7 +56,160 @@ public:
   //! virtual interface. 
   virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh,
 			      double isoval, bool lte);
+private:
+
+  struct upairhash
+  {
+    unsigned int operator()(const pair<unsigned int, unsigned int> &a) const
+    {
+      hash<unsigned int> h;
+      return h(a.first ^ a.second);
+    }
+  };
+
+  struct utripple
+  {
+    unsigned int first, second, third;
+  };
+
+  struct utripplehash
+  {
+    unsigned int operator()(const utripple &a) const
+    {
+      hash<unsigned int> h;
+      return h(a.first ^ a.second ^ a.third);
+    }
+  };
+
+  struct utrippleequal
+  {
+    unsigned int operator()(const utripple &a, const utripple &b) const
+    {
+      return a.first == b.first && a.second == b.second && a.third == b.third;
+    }
+  };
+  
+
+#ifdef HAVE_HASH_MAP
+  typedef hash_map<unsigned int,
+    typename FIELD::mesh_type::Node::index_type,
+    hash<unsigned int>,
+    equal_to<unsigned int> > node_hash_type;
+
+  typedef hash_map<pair<unsigned int, unsigned int>,
+    typename FIELD::mesh_type::Node::index_type,
+    upairhash,
+    equal_to<pair<unsigned int, unsigned int> > > edge_hash_type;
+
+  typedef hash_map<utripple,
+    typename FIELD::mesh_type::Node::index_type,
+    utripplehash,
+    utrippleequal> face_hash_type;
+#else
+  typedef map<unsigned int,
+    typename FIELD::mesh_type::Node::index_type,
+    equal_to<unsigned int> > node_hash_type;
+
+  typedef map<pair<unsigned int, unsigned int>,
+    typename FIELD::mesh_type::Node::index_type,
+    equal_to<pair<unsigned int, unsigned int> > > edge_hash_type;
+
+  typedef map<utripple,
+    typename FIELD::mesh_type::Node::index_type,
+    utrippleequal> face_hash_type;
+#endif
+
+  typename FIELD::mesh_type::Node::index_type
+  edge_lookup(unsigned int u0, unsigned int u1,
+	      const Point &p, edge_hash_type &edgemap,
+	      typename FIELD::mesh_type *clipped) const;
+
+  typename FIELD::mesh_type::Node::index_type
+  face_lookup(unsigned int u0, unsigned int u1, unsigned int u2,
+	      const Point &p, face_hash_type &facemap,
+	      typename FIELD::mesh_type *clipped) const;
 };
+
+
+template <class FIELD>
+typename FIELD::mesh_type::Node::index_type
+IsoClipAlgoT<FIELD>::edge_lookup(unsigned int u0, unsigned int u1,
+				 const Point &p, edge_hash_type &edgemap,
+				 typename FIELD::mesh_type *clipped) const
+{
+  pair<unsigned int, unsigned int> np;
+  if (u0 < u1)  { np.first = u0; np.second = u1; }
+  else { np.first = u1; np.second = u0; }
+  if (edgemap.find(np) == edgemap.end())
+  {
+    const typename FIELD::mesh_type::Node::index_type nodeindex =
+      clipped->add_point(p);
+    edgemap[np] = nodeindex;
+    return nodeindex;
+  }
+  else
+  {
+    return edgemap[np];
+  }
+}
+
+
+template <class FIELD>
+typename FIELD::mesh_type::Node::index_type
+IsoClipAlgoT<FIELD>::face_lookup(unsigned int u0, unsigned int u1,
+				 unsigned int u2, const Point &p,
+				 face_hash_type &facemap,
+				 typename FIELD::mesh_type *clipped) const
+{
+  utripple nt;
+  if (u0 < u1)
+  {
+    if (u2 < u0)
+    {
+      nt.first = u2; nt.second = u0; nt.third = u1;
+    }
+    else if (u2 < u1)
+    {
+      nt.first = u0; nt.second = u2; nt.third = u1;
+    }
+    else
+    {
+      nt.first = u0; nt.second = u1; nt.third = u2;
+    }
+  }
+  else
+  {
+    if (u2 > u0)
+    {
+      nt.first = u1; nt.second = u0; nt.third = u2;
+    }
+    else if (u2 > u1)
+    {
+      nt.first = u1; nt.second = u2; nt.third = u0;
+    }
+    else
+    {
+      nt.first = u2; nt.second = u1; nt.third = u0;
+    }
+  }
+  if (nt.first > nt.second || nt.second > nt.third || nt.first > nt.third)
+  {
+    cout << "Failed to sort, [" << u0 << "," << u1 << "," << u2 << "] => [" <<
+      nt.first << "," << nt.second << "," << nt.third << "]\n";
+  }
+  if (facemap.find(nt) == facemap.end())
+  {
+    const typename FIELD::mesh_type::Node::index_type nodeindex =
+      clipped->add_point(p);
+    facemap[nt] = nodeindex;
+    return nodeindex;
+  }
+  else
+  {
+    return facemap[nt];
+  }
+}
+
 
 template <class FIELD>
 FieldHandle
@@ -69,20 +222,11 @@ IsoClipAlgoT<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
   *(PropertyManager *)clipped = *(PropertyManager *)mesh;
 
-#ifdef HAVE_HASH_MAP
-  typedef hash_map<unsigned int,
-    typename FIELD::mesh_type::Node::index_type,
-    hash<unsigned int>,
-    equal_to<unsigned int> > hash_type;
-#else
-  typedef map<unsigned int,
-    typename FIELD::mesh_type::Node::index_type,
-    equal_to<unsigned int> > hash_type;
-#endif
+  node_hash_type nodemap;
+  edge_hash_type edgemap;
+  face_hash_type facemap;
 
-  hash_type nodemap;
-
-  typename FIELD::mesh_type::Node::array_type onodes;
+  typename FIELD::mesh_type::Node::array_type onodes(4);
   typename FIELD::value_type v[4];
   Point p[4];
 
@@ -158,9 +302,18 @@ IsoClipAlgoT<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       const Point l3 = Interpolate(p[perm[0]], p[perm[3]],
 				   imv / (v[perm[3]] - v[perm[0]]));
 
-      nnodes[1] = clipped->add_point(l1);
-      nnodes[2] = clipped->add_point(l2);
-      nnodes[3] = clipped->add_point(l3);
+      nnodes[1] = edge_lookup((unsigned int)onodes[perm[0]],
+			      (unsigned int)onodes[perm[1]],
+			      l1, edgemap, clipped);
+
+      nnodes[2] = edge_lookup((unsigned int)onodes[perm[0]],
+			      (unsigned int)onodes[perm[2]],
+			      l2, edgemap, clipped);
+
+      nnodes[3] = edge_lookup((unsigned int)onodes[perm[0]],
+			      (unsigned int)onodes[perm[3]],
+			      l3, edgemap, clipped);
+
       clipped->add_elem(nnodes);
     }
     else if (inside == 0x7 || inside == 0xb || inside == 0xd || inside == 0xe)
@@ -185,6 +338,7 @@ IsoClipAlgoT<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
 	  inodes[i-1] = nodemap[(unsigned int)onodes[perm[i]]];
 	}
       }
+
       const double imv = isoval - v[perm[0]];
       const Point l1 = Interpolate(p[perm[0]], p[perm[1]],
 				   imv / (v[perm[1]] - v[perm[0]]));
@@ -193,17 +347,34 @@ IsoClipAlgoT<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       const Point l3 = Interpolate(p[perm[0]], p[perm[3]],
 				   imv / (v[perm[3]] - v[perm[0]]));
 
-      inodes[3] = clipped->add_point(l1);
-      inodes[4] = clipped->add_point(l2);
-      inodes[5] = clipped->add_point(l3);
+      inodes[3] = edge_lookup((unsigned int)onodes[perm[0]],
+			      (unsigned int)onodes[perm[1]],
+			      l1, edgemap, clipped);
+
+      inodes[4] = edge_lookup((unsigned int)onodes[perm[0]],
+			      (unsigned int)onodes[perm[2]],
+			      l2, edgemap, clipped);
+
+      inodes[5] = edge_lookup((unsigned int)onodes[perm[0]],
+			      (unsigned int)onodes[perm[3]],
+			      l3, edgemap, clipped);
 
       const Point c1 = Interpolate(l1, l2, 0.5);
       const Point c2 = Interpolate(l2, l3, 0.5);
       const Point c3 = Interpolate(l3, l1, 0.5);
 
-      inodes[6] = clipped->add_point(c1);
-      inodes[7] = clipped->add_point(c2);
-      inodes[8] = clipped->add_point(c3);
+      inodes[6] = face_lookup((unsigned int)onodes[perm[0]],
+			      (unsigned int)onodes[perm[1]],
+			      (unsigned int)onodes[perm[2]],
+			      c1, facemap, clipped);
+      inodes[7] = face_lookup((unsigned int)onodes[perm[2]],
+			      (unsigned int)onodes[perm[0]],
+			      (unsigned int)onodes[perm[3]],
+			      c2, facemap, clipped);
+      inodes[8] = face_lookup((unsigned int)onodes[perm[3]],
+			      (unsigned int)onodes[perm[0]],
+			      (unsigned int)onodes[perm[1]],
+			      c3, facemap, clipped);
 
       nnodes[0] = inodes[0];
       nnodes[1] = inodes[3];
@@ -282,16 +453,30 @@ IsoClipAlgoT<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       const Point l13 = Interpolate(p[perm[1]], p[perm[3]],
 				    imv1 / (v[perm[3]] - v[perm[1]]));
 
-      inodes[2] = clipped->add_point(l02);
-      inodes[3] = clipped->add_point(l03);
-      inodes[4] = clipped->add_point(l12);
-      inodes[5] = clipped->add_point(l13);
+      inodes[2] = edge_lookup((unsigned int)onodes[perm[0]],
+			      (unsigned int)onodes[perm[2]],
+			      l02, edgemap, clipped);
+      inodes[3] = edge_lookup((unsigned int)onodes[perm[0]],
+			      (unsigned int)onodes[perm[3]],
+			      l03, edgemap, clipped);
+      inodes[4] = edge_lookup((unsigned int)onodes[perm[1]],
+			      (unsigned int)onodes[perm[2]],
+			      l12, edgemap, clipped);
+      inodes[5] = edge_lookup((unsigned int)onodes[perm[1]],
+			      (unsigned int)onodes[perm[3]],
+			      l13, edgemap, clipped);
 
       const Point c1 = Interpolate(l02, l03, 0.5);
       const Point c2 = Interpolate(l12, l13, 0.5);
 
-      inodes[6] = clipped->add_point(c1);
-      inodes[7] = clipped->add_point(c2);
+      inodes[6] = face_lookup((unsigned int)onodes[perm[0]],
+			      (unsigned int)onodes[perm[2]],
+      			      (unsigned int)onodes[perm[3]],
+      			      c1, facemap, clipped);
+      inodes[7] = face_lookup((unsigned int)onodes[perm[1]],
+			      (unsigned int)onodes[perm[2]],
+			      (unsigned int)onodes[perm[3]],
+      			      c2, facemap, clipped);
 
       nnodes[0] = inodes[7];
       nnodes[1] = inodes[2];
@@ -330,23 +515,33 @@ IsoClipAlgoT<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
   *(PropertyManager *)ofield = *(PropertyManager *)(fieldh.get_rep());
 
-  if (fieldh->data_at() == Field::NODE)
+  typename node_hash_type::iterator nmitr = nodemap.begin();
+  while (nmitr != nodemap.end())
   {
-    FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
-    typename hash_type::iterator hitr = nodemap.begin();
+    typedef typename FIELD::mesh_type::Node::index_type index_type;
+    typename FIELD::value_type val;
+    field->value(val, (index_type)((*nmitr).first));
+    ofield->set_value(val, (index_type)((*nmitr).second));
 
-    while (hitr != nodemap.end())
-    {
-      typename FIELD::value_type val;
-      field->value(val, (typename FIELD::mesh_type::Node::index_type)((*hitr).first));
-      ofield->set_value(val, (typename FIELD::mesh_type::Node::index_type)((*hitr).second));
-
-      ++hitr;
-    }
+    ++nmitr;
   }
-  else
+
+  typename edge_hash_type::iterator emitr = edgemap.begin();
+  while (emitr != edgemap.end())
   {
-    mod->warning("Unable to copy data at this field data location.");
+    typedef typename FIELD::mesh_type::Node::index_type index_type;
+    ofield->set_value(isoval, (index_type)((*emitr).second));
+
+    ++emitr;
+  }
+
+  typename face_hash_type::iterator fmitr = facemap.begin();
+  while (fmitr != facemap.end())
+  {
+    typedef typename FIELD::mesh_type::Node::index_type index_type;
+    ofield->set_value(isoval, (index_type)((*fmitr).second));
+
+    ++fmitr;
   }
 
   return ofield;

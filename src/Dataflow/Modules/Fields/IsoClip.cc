@@ -122,7 +122,7 @@ IsoClip::execute()
   }
 
   const bool lte = clipfunction_.get() == "lte";
-  FieldHandle ofield = algo->execute(this, ifieldhandle, 0, lte);
+  FieldHandle ofield = algo->execute(this, ifieldhandle, 0.0, lte);
   
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
   if (!ofield_port)
