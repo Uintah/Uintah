@@ -411,7 +411,7 @@ void ICE::scheduleAddExchangeContributionToFCVel(
   int numMatls=d_sharedState->getNumMatls();
   
   for (int m = 0; m < numMatls; m++) {
-    Material* matl = d_sharedState->getICEMaterial(m);
+    Material* matl = d_sharedState->getMaterial(m);
     int dwindex = matl->getDWIndex();
     task->requires(new_dw,lb->rho_micro_CCLabel,
 		                                  dwindex,patch,Ghost::None);
@@ -502,7 +502,7 @@ void ICE::scheduleAccumulateMomentumSourceSinks(
   task->requires(new_dw,    lb->pressX_FCLabel,     0,  patch,  Ghost::None);
   task->requires(new_dw,    lb->pressY_FCLabel,     0,  patch,  Ghost::None);
   task->requires(new_dw,    lb->pressZ_FCLabel,     0,  patch,  Ghost::None);
-  int numMatls=d_sharedState->getNumICEMatls();
+  int numMatls=d_sharedState->getNumMatls();
   
   for (int m = 0; m < numMatls; m++) {
     Material* matl = d_sharedState->getMaterial(m);
@@ -707,6 +707,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
 {
   cout << "Doing actually Initialize" << endl;
   int numMatls = d_sharedState->getNumICEMatls();
+  int numALLMatls = d_sharedState->getNumMatls();
   CCVariable<double>    press_CC;  
   new_dw->allocate(press_CC,lb->press_CCLabel, 0,patch);
   
@@ -739,7 +740,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     new_dw->allocate(wvel_FC,     lb->wvel_FCLabel,       dwindex,patch);
     
     ice_matl->initializeCells(rho_micro,rho_CC,Temp_CC,cv,speedSound,visc_CC,
-			      vol_frac_CC,vel_CC,press_CC,numMatls,patch,new_dw);
+		        vol_frac_CC,vel_CC,press_CC,numALLMatls,patch,new_dw);
 
     uvel_FC.initialize(0.);
     vvel_FC.initialize(0.);
@@ -1531,7 +1532,7 @@ void ICE::addExchangeContributionToFCVel(
    /*`==========DEBUG============*/ 
   if (switchDebug_Exchange_FC ) {
     for (int m = 0; m < numMatls; m++)  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial( m );
+    Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
     char description[50];
     sprintf(description, "Exchange_FC_before_BC_Mat_%d ",dwindex);
@@ -1542,7 +1543,7 @@ void ICE::addExchangeContributionToFCVel(
   }
   /*==========DEBUG============`*/
   for(int m = 0; m < numMatls; m++) {
-    ICEMaterial* matl = d_sharedState->getICEMaterial( m );
+    Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
     new_dw->put(uvel_FCME[m], lb->uvel_FCMELabel, dwindex, patch);
     new_dw->put(vvel_FCME[m], lb->vvel_FCMELabel, dwindex, patch);
@@ -1812,7 +1813,7 @@ void ICE::accumulateMomentumSourceSinks(
 {
   cout << "Doing actually step4a -- accumulate_momentum_source_sinks_MM" << endl;
   
-  int       numMatls;
+  int numMatls  = d_sharedState->getNumMatls();
   
   IntVector right, left, top, bottom, front, back;
   delt_vartype delT; 
@@ -1827,7 +1828,6 @@ void ICE::accumulateMomentumSourceSinks(
   delY      = dx.y();
   delZ      = dx.z();
   vol       = delX * delY * delZ;
-  numMatls  = d_sharedState->getNumICEMatls();
   
   CCVariable<double>   rho_CC;
   CCVariable<Vector>   vel_CC;
