@@ -120,6 +120,7 @@ public:
   /////////
   // Get field size
   FieldHandle get_field(){ return texfld_; }
+  Transform get_field_transform() { return transform_; }
 
   // GROUP: io
   /////////
@@ -158,6 +159,7 @@ protected:
 				   Semaphore* thread_sema, ThreadGroup* tg);
 private:
 
+  Transform transform_;
 
   double SETVAL(double);
   unsigned char SETVALC(double);

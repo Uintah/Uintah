@@ -71,31 +71,37 @@ GLVolRenState::computeView(Ray& ray)
       
   glGetDoublev( GL_MODELVIEW_MATRIX, mvmat);
   /* remember that the glmatrix is stored as
-       0  4  8 12
-       1  5  9 13
-       2  6 10 14
-       3  7 11 15 */
+     0  4  8 12
+     1  5  9 13
+     2  6 10 14
+     3  7 11 15 */
+  
+//    GLTexture3DHandle tex = volren->get_tex3d_handle();
+//    Transform field_trans = tex->get_field_transform();
+//    mat.set(mvmat);
+//    mat.pre_trans(field_trans);
+//    mat.get(mvmat);
 
-   // this is the world space view direction
-   view = Vector(-mvmat[2], -mvmat[6], -mvmat[10]);
+  // this is the world space view direction
+  view = Vector(-mvmat[2], -mvmat[6], -mvmat[10]);
 
-   // but this is the view space viewPt
-   viewPt = Point(-mvmat[12], -mvmat[13], -mvmat[14]);
+  // but this is the view space viewPt
+  viewPt = Point(-mvmat[12], -mvmat[13], -mvmat[14]);
 
   /* set the translation to zero */
-   mvmat[12]=mvmat[13] = mvmat[14]=0;
+  mvmat[12]=mvmat[13] = mvmat[14]=0;
    
 
   /* The Transform stores it's matrix as
      0  1  2  3
      4  5  6  7
      8  9 10 11
-    12 13 14 15
+     12 13 14 15
 
-    Because of this order, simply setting the tranform with the glmatrix 
-    causes our tranform matrix to be the transpose of the glmatrix
-    ( assuming no scaling ) */
-   mat.set( mvmat );
+     Because of this order, simply setting the tranform with the glmatrix 
+     causes our tranform matrix to be the transpose of the glmatrix
+     ( assuming no scaling ) */
+  mat.set( mvmat );
     
   /* Since mat is the transpose, we then multiply the view space viewPt
      by the mat to get the world or model space viewPt, which we need
