@@ -15,8 +15,7 @@
 #define SCI_Classlib_Array2_h 1
 
 #include <Classlib/Assert.h>
-#include <Tester/RigorousTest.h>
-
+class RigorousTest;
 
 #ifdef __GNUG__
 #pragma interface
@@ -112,17 +111,4 @@ public:
 
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
 

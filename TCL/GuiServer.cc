@@ -24,10 +24,10 @@
 
 #include <sys/types.h>
 #include <tcl/tcl/tcl.h>
+#include <tcl/tk/tk.h>
 
 //#define DEBUG 1
 extern Tcl_Interp* the_interp;
-extern void Tk_BackgroundError (Tcl_Interp *interp);
 extern int acceptConnect (int socket);
 extern int setupConnect (int port);
 
@@ -64,7 +64,10 @@ cerr << "GuiServer::getClients() before execute of select(), readfds = "
 #endif
 
 	// s has number of fds ready to read, readfds contains only ready fds
-	int s = select (maxfd + 1, &readfds, 0, 0, 0);
+#ifdef DEBUG
+	int s = 
+#endif
+	   select (maxfd + 1, &readfds, 0, 0, 0);
 
 #ifdef DEBUG
 cerr << "GuiServer::getClients() select() returned" << s << "sockets ready, ";

@@ -2,13 +2,13 @@
 #include <config/sci.cf>
 
 OBJS = BuildMultiMesh.o  BuildOctree.o  \
-	Delaunay.o  ExtractMeshSF.o  ExtractMesh.o  GenerateMesh.o  \
+	Delaunay.o  ExtractMeshSF.o  GenerateMesh.o  \
 	HexMeshToGeom.o \
 	InsertDelaunay.o  MakeScalarField.o  MeshBoundary.o  \
 	MeshToGeom.o  MeshView.o  \
 	OctreeToGeom.o  SelectMesh.o  MeshRender.o
 SRCS = BuildMultiMesh.cc BuildOctree.cc \
-	Delaunay.cc ExtractMeshSF.cc ExtractMesh.cc GenerateMesh.cc \
+	Delaunay.cc ExtractMeshSF.cc GenerateMesh.cc \
 	HexMeshToGeom.cc \
 	InsertDelaunay.cc MakeScalarField.cc MeshBoundary.cc \
 	MeshToGeom.cc MeshView.cc \

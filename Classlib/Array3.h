@@ -21,6 +21,7 @@
 #endif
 
 class Piostream;
+class RigorousTest;
 
 /**************************************
 
@@ -118,10 +119,3 @@ public:
 
 
 #endif
-
-
-
-
-
-
-

@@ -214,12 +214,3 @@ clString to_string(int);
 clString to_string(double);
 
 #endif
-
-
-
-
-
-
-
-
-

@@ -27,9 +27,9 @@ template<class T> class Ring {
     int _tail;
     int _size;
 public:
-    inline size() {return _size;}
-    inline head() {return _head;}
-    inline tail() {return _tail;}
+    inline int size() {return _size;}
+    inline int head() {return _head;}
+    inline int tail() {return _tail;}
     Ring(int s);
     ~Ring();
     inline T pop() {T item=data[_head]; _head=(_head+1)%_size; return item;}

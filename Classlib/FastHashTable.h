@@ -22,6 +22,7 @@
 #endif
 
 template<class Key> class FastHashTableIter;
+class RigorousTest;
 
 
 /**************************************
@@ -101,7 +102,6 @@ public:
     //////////
     //Rigorous Tests
     static void test_rigorous(RigorousTest* __test);
-
 };
 
 // Use this class for walking through a FastHashtable
@@ -192,11 +192,3 @@ inline int FastHashTable<Key>::remove(const Key* k)
 }
 
 #endif
-
-
-
-
-
-
-
-

@@ -15,10 +15,9 @@
 #define SCI_Classlib_Array1_h 1
 
 #include <Classlib/Assert.h>
-#include <Tester/RigorousTest.h>
-
 
 class Piostream;
+class RigorousTest;
 
 #ifdef __GNUG__
 #pragma interface
@@ -147,32 +146,3 @@ template<class T> void Pio(Piostream&, Array1<T>&);
 template<class T> void Pio(Piostream&, Array1<T>*&);
 
 #endif /* SCI_Classlib_Array1_h */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

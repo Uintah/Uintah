@@ -29,7 +29,7 @@
 #include <unistd.h>                             // defines read() and write()
 
 extern Tcl_Interp* the_interp;
-extern sendRequest (TCLMessage*, int);
+extern int sendRequest (TCLMessage*, int);
 
 struct TCLCommandData {
     TCL* object;
@@ -63,7 +63,7 @@ void TCL::execute(const clString& string)
 {
     if (gm != NULL) {
     	int skt = gm->getConnection();
-printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", string,skt);
+printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", string(),skt);
 
 	// format request - no TCL variable name, just a string to execute
 	TCLMessage msg;
