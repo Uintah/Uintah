@@ -103,11 +103,12 @@ setenv TEEM_ZLIB_IPATH -I/usr/local/include
 } %-->
 
 <section id="sec.third_party_inst">
-  <title id="title.third_party_inst">Building Third Party Software</title>
+  <title id="title.third_party_inst">Building Internal Third Party Software</title>
 
-  <para>Third party software must be built before building &sr;.  This
-  section provides instruction for installing third party
-  software.</para>
+  <para>Internal third party software is distributed with SCIRun and
+  is required by SCIRun to run properly.  It must be built before
+  building &sr;.  This section provides instruction for building
+  internal third party software.</para>
 
   <note os="linux;irix">
     <para><ulink url="http://www.python.org">Python</ulink> (version
@@ -117,7 +118,7 @@ setenv TEEM_ZLIB_IPATH -I/usr/local/include
     installation.</para>
   </note>
 
-  <para>Follow these steps to install the third-party distribution:</para>
+  <para>Follow these steps to build internal third-party distribution:</para>
 
   <orderedlist os="linux;irix">
 

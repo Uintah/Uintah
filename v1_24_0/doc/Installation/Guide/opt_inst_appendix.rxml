@@ -30,7 +30,7 @@
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
 <appendix id="app.opt_inst">
-  <title>Optional Thirdparty Installation Instructions</title>
+  <title>External Thirdparty Installation Instructions</title>
   &blas_lapack_inst;
   &petsc_inst;
   &itk_inst;
