@@ -16,7 +16,7 @@ class BV1 : public Object {
     BV1Tree* light_tree;
 
     BV1Tree* make_tree(double maxradius);
-    void make_tree(int nprims, Object** prims, double* slabs);
+    void make_tree(int nprims, Object** prims, double* slabs, int which=0);
     void finishit(double* slabs, Array1<Object*>& prims, int primStart);
 public:
     BV1(Object* obj);
