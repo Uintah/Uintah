@@ -622,16 +622,20 @@ PackageDB::getCategoryName(const string &packName,
       if (newcatname != catName &&
 	  !(packName == "SCIRun" && catName == "Fields"))
       {
-	cerr << "WARNING: Remapping " <<
+#if SCI_ASSERTION_LEVEL >= 3
+	cerr << "Remark: Remapping " <<
 	  packName << "_" << catName << "_" << modName << " to " <<
 	  packName << "_" << newcatname << "_" << modName << "\n";
+#endif
       }
       else if (newcatname != catName &&
 	  !(packName == "Teem" && catName == "Unu"))
       {
-	cerr << "WARNING: Remapping " <<
+#if SCI_ASSERTION_LEVEL >= 3
+	cerr << "Remark: Remapping " <<
 	  packName << "_" << catName << "_" << modName << " to " <<
 	  packName << "_" << newcatname << "_" << modName << "\n";
+#endif
       }
       return newcatname;
     }
