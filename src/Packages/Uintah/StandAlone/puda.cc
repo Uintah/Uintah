@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <iomanip>
 
 
 using SCICore::Exceptions::Exception;
@@ -33,6 +34,13 @@ using namespace SCICore::OS;
 using namespace std;
 using namespace Uintah;
 using namespace PSECore::XMLUtil;
+
+typedef struct{
+  vector<ParticleVariable<double> > pv_double_list;
+  vector<ParticleVariable<Point> > pv_point_list;
+  vector<ParticleVariable<Vector> > pv_vector_list;
+  ParticleVariable<Point> p_x;
+} MaterialData;
 
 // takes a string and replaces all occurances of old with newch
 string replaceChar(string s, char old, char newch) {
@@ -52,10 +60,10 @@ string replaceChar(string s, char old, char newch) {
 //     the file name
 // out: inialized files for writing
 //      boolean reporting the success of the file creation
-bool setupOutFiles(FILE** data, FILE** header, string name) {
+bool setupOutFiles(FILE** data, FILE** header, string name, string head) {
   FILE* datafile;
   FILE* headerfile;
-  string headername = name + string(".hdr");
+  string headername = name + string(".") + head;
 
   datafile = fopen(name.c_str(),"w");
   if (!datafile) {
@@ -78,11 +86,16 @@ bool setupOutFiles(FILE** data, FILE** header, string name) {
 string makeFileName(string raydatadir, string variable_file, string time_file, 
 		    string patchID_file, string materialType_file) {
 
-  string raydatafile = raydatadir + string("/");
-  raydatafile+= string("VAR_") + variable_file + string(".");
-  raydatafile+= string("TS_") + time_file + string(".");
-  raydatafile+= string("PI_") + patchID_file + string(".");
-  raydatafile+= string("MT_") + materialType_file;
+  string raydatafile;
+  if (raydatadir != "")
+    raydatafile+= raydatadir + string("/");
+  if (variable_file != "")
+    raydatafile+= string("VAR_") + variable_file + string(".");
+  if (materialType_file != "")
+    raydatafile+= string("MT_") + materialType_file + string(".");
+  if (patchID_file != "")
+    raydatafile+= string("PI_") + patchID_file + string(".");
+  raydatafile+= string("TS_") + time_file;
   return raydatafile;
 }
 
@@ -98,7 +111,8 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -listvariables\n";
     cerr << "  -varsummary\n";
     cerr << "  -rtdata [output directory]\n";
-    cerr << "  -PTvar [double or point or vector]\n";
+    cerr << "  -PTvar\n";
+    cerr << "  -ptonly (prints out only the point location\n";
     cerr << "  -NCvar [double or point or vector]\n";
     cerr << "*NOTE* to use -PTvar or -NVvar -rtdata must be used\n\n";
 
@@ -120,9 +134,8 @@ int main(int argc, char** argv)
   bool do_NCvar_double = false;
   bool do_NCvar_point = false;
   bool do_NCvar_vector = false;
-  bool do_PTvar_double = false;
-  bool do_PTvar_point = false;
-  bool do_PTvar_vector = false;
+  bool do_PTvar = false;
+  bool do_PTvar_all = true;
   string filebase;
   string raydatadir;
   /*
@@ -161,19 +174,9 @@ int main(int argc, char** argv)
       else
 	usage("-NCvar", argv[0]);
     } else if(s == "-PTvar") {
-      if (++i < argc) {
-	s = argv[i];
-	if (s == "double")
-	  do_PTvar_double = true;
-	else if (s == "point")
-	  do_PTvar_point = true;
-	else if (s == "vector")
-	  do_PTvar_vector = true;
-	else
-	  usage("-PTvar", argv[0]);
-      }
-      else
-	usage("-PTvar", argv[0]);
+      do_PTvar = true;
+    }else if (s == "-ptonly") {
+      do_PTvar_all = false;
     } else if( (s == "-help") || (s == "-h") ) {
       usage( "", argv[0] );
     } else {
@@ -189,19 +192,6 @@ int main(int argc, char** argv)
     usage("", argv[0]);
   }
 
-  // Create a directory if it's not already there.
-  // The exception occurs when the directory is already there
-  // and the Dir.create fails.  This exception is ignored. 
-  if(raydatadir != "") {
-    Dir rayDir;
-    try {
-      rayDir.create(raydatadir);
-    }
-    catch (Exception& e) {
-      cerr << "Caught exception: " << e.message() << '\n';
-    }
-  }
-  
   try {
     XMLPlatformUtils::Initialize();
   } catch(const XMLException& toCatch) {
@@ -259,22 +249,22 @@ int main(int argc, char** argv)
       
       for(int t=0;t<times.size();t++){
 	double time = times[t];
-	cerr << "time = " << time << "\n";
+	cout << "time = " << time << "\n";
 	GridP grid = da->queryGrid(time);
 	for(int v=0;v<vars.size();v++){
 	  std::string var = vars[v];
 	  const TypeDescription* td = types[v];
 	  const TypeDescription* subtype = td->getSubType();
-	  cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
+	  cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
 	  for(int l=0;l<grid->numLevels();l++){
 	    LevelP level = grid->getLevel(l);
 	    for(Level::const_patchIterator iter = level->patchesBegin();
 		iter != level->patchesEnd(); iter++){
 	      const Patch* patch = *iter;
-	      cerr << "\t\tPatch: " << patch->getID() << "\n";
+	      cout << "\t\tPatch: " << patch->getID() << "\n";
 	      int numMatls = da->queryNumMaterials(var, patch, time);
 	      for(int matl=0;matl<numMatls;matl++){
-		cerr << "\t\t\tMaterial: " << matl << "\n";
+		cout << "\t\t\tMaterial: " << matl << "\n";
 		switch(td->getType()){
 		case TypeDescription::ParticleVariable:
 		  switch(subtype->getType()){
@@ -283,7 +273,7 @@ int main(int argc, char** argv)
 		      ParticleVariable<double> value;
 		      da->query(value, var, matl, patch, time);
 		      ParticleSubset* pset = value.getParticleSubset();
-		      cerr << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
+		      cout << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
 		      if(pset->numParticles() > 0){
 			double min, max;
 			ParticleSubset::iterator iter = pset->begin();
@@ -292,8 +282,8 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter]);
 			  max=Max(max, value[*iter]);
 			}
-			cerr << "\t\t\t\tmin value: " << min << '\n';
-			cerr << "\t\t\t\tmax value: " << max << '\n';
+			cout << "\t\t\t\tmin value: " << min << '\n';
+			cout << "\t\t\t\tmax value: " << max << '\n';
 		      }
 		    }
 		  break;
@@ -302,17 +292,17 @@ int main(int argc, char** argv)
 		      ParticleVariable<Point> value;
 		      da->query(value, var, matl, patch, time);
 		      ParticleSubset* pset = value.getParticleSubset();
-		      cerr << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
+		      cout << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
 		      if(pset->numParticles() > 0){
 			Point min, max;
 			ParticleSubset::iterator iter = pset->begin();
-			min=max=value[*iter++];
+			min=max=value[*iter];
 			for(;iter != pset->end(); iter++){
 			  min=Min(min, value[*iter]);
 			  max=Max(max, value[*iter]);
 			}
-			cerr << "\t\t\t\tmin value: " << min << '\n';
-			cerr << "\t\t\t\tmax value: " << max << '\n';
+			cout << "\t\t\t\tmin value: " << min << '\n';
+			cout << "\t\t\t\tmax value: " << max << '\n';
 		      }
 		    }
 		  break;
@@ -321,7 +311,7 @@ int main(int argc, char** argv)
 		      ParticleVariable<Vector> value;
 		      da->query(value, var, matl, patch, time);
 		      ParticleSubset* pset = value.getParticleSubset();
-		      cerr << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
+		      cout << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
 		      if(pset->numParticles() > 0){
 			double min, max;
 			ParticleSubset::iterator iter = pset->begin();
@@ -330,8 +320,8 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter].length2());
 			  max=Max(max, value[*iter].length2());
 			}
-			cerr << "\t\t\t\tmin magnitude: " << sqrt(min) << '\n';
-			cerr << "\t\t\t\tmax magnitude: " << sqrt(max) << '\n';
+			cout << "\t\t\t\tmin magnitude: " << sqrt(min) << '\n';
+			cout << "\t\t\t\tmax magnitude: " << sqrt(max) << '\n';
 		      }
 		    }
 		  break;
@@ -346,7 +336,7 @@ int main(int argc, char** argv)
 		    {
 		      NCVariable<double> value;
 		      da->query(value, var, matl, patch, time);
-		      cerr << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
@@ -356,8 +346,8 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter]);
 			  max=Max(max, value[*iter]);
 			}
-			cerr << "\t\t\t\tmin value: " << min << '\n';
-			cerr << "\t\t\t\tmax value: " << max << '\n';
+			cout << "\t\t\t\tmin value: " << min << '\n';
+			cout << "\t\t\t\tmax value: " << max << '\n';
 		      }
 		    }
 		  break;
@@ -365,7 +355,7 @@ int main(int argc, char** argv)
 		    {
 		      NCVariable<Point> value;
 		      da->query(value, var, matl, patch, time);
-		      cerr << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			Point min, max;
@@ -375,8 +365,8 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter]);
 			  max=Max(max, value[*iter]);
 			}
-			cerr << "\t\t\t\tmin value: " << min << '\n';
-			cerr << "\t\t\t\tmax value: " << max << '\n';
+			cout << "\t\t\t\tmin value: " << min << '\n';
+			cout << "\t\t\t\tmax value: " << max << '\n';
 		      }
 		    }
 		  break;
@@ -384,7 +374,7 @@ int main(int argc, char** argv)
 		    {
 		      NCVariable<Vector> value;
 		      da->query(value, var, matl, patch, time);
-		      cerr << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
+		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
@@ -394,8 +384,8 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter].length2());
 			  max=Max(max, value[*iter].length2());
 			}
-			cerr << "\t\t\t\tmin magnitude: " << sqrt(min) << '\n';
-			cerr << "\t\t\t\tmax magnitude: " << sqrt(max) << '\n';
+			cout << "\t\t\t\tmin magnitude: " << sqrt(min) << '\n';
+			cout << "\t\t\t\tmax magnitude: " << sqrt(max) << '\n';
 		      }
 		    }
 		  break;
@@ -415,6 +405,28 @@ int main(int argc, char** argv)
       }
     }
     if (do_rtdata) {
+      // Create a directory if it's not already there.
+      // The exception occurs when the directory is already there
+      // and the Dir.create fails.  This exception is ignored. 
+      if(raydatadir != "") {
+	Dir rayDir;
+	try {
+	  rayDir.create(raydatadir);
+	}
+	catch (Exception& e) {
+	  cerr << "Caught exception: " << e.message() << '\n';
+	}
+      }
+
+      // set up the file that contains a list of all the files
+      FILE* filelist;
+      string filelistname = raydatadir + string("/") + string("timelist");
+      filelist = fopen(filelistname.c_str(),"w");
+      if (!filelist) {
+	cerr << "Can't open output file " << filelistname << endl;
+	abort();
+      }
+
       vector<string> vars;
       vector<const TypeDescription*> types;
       da->queryVariables(vars, types);
@@ -427,70 +439,91 @@ int main(int argc, char** argv)
       ASSERTEQ(index.size(), times.size());
       cout << "There are " << index.size() << " timesteps:\n";
 
-
       std::string time_file;
       std::string variable_file;
       std::string patchID_file;
       std::string materialType_file;
       
+      // for all timesteps
       for(int t=0;t<times.size();t++){
 	double time = times[t];
 	ostringstream tempstr_time;
-	tempstr_time << time;
+	tempstr_time << setprecision(17) << time;
 	time_file = replaceChar(string(tempstr_time.str()),'.','_');
 	GridP grid = da->queryGrid(time);
+	fprintf(filelist,"<TIMESTEP>\n");
 	
-	for(int v=0;v<vars.size();v++){
-	  std::string var = vars[v];
-	  variable_file = replaceChar(var,'.','_');
-	  const TypeDescription* td = types[v];
-	  const TypeDescription* subtype = td->getSubType();
+	// for each level in the grid
+	for(int l=0;l<grid->numLevels();l++){
+	  LevelP level = grid->getLevel(l);
 	  
-	  for(int l=0;l<grid->numLevels();l++){
-	    LevelP level = grid->getLevel(l);
-	    
-	    for(Level::const_patchIterator iter = level->patchesBegin();
-		iter != level->patchesEnd(); iter++){
-	      const Patch* patch = *iter;
-	      ostringstream tempstr_patch;
-	      tempstr_patch << patch->getID();
-	      patchID_file = tempstr_patch.str();
+	  // for each patch in the level
+	  for(Level::const_patchIterator iter = level->patchesBegin();
+	      iter != level->patchesEnd(); iter++){
+	    const Patch* patch = *iter;
+	    ostringstream tempstr_patch;
+	    tempstr_patch << patch->getID();
+	    patchID_file = tempstr_patch.str();
+	    fprintf(filelist,"<PATCH>\n");
+
+	    vector<MaterialData> material_data_list; 
+	    	    
+	    // for all vars in one timestep in one patch
+	    for(int v=0;v<vars.size();v++){
+	      std::string var = vars[v];
+	      //cerr << "***********Found variable " << var << "*********\n";
+	      variable_file = replaceChar(var,'.','_');
+	      const TypeDescription* td = types[v];
+	      const TypeDescription* subtype = td->getSubType();
 	      int numMatls = da->queryNumMaterials(var, patch, time);
 	      
+	      // for all the materials in the patch
 	      for(int matl=0;matl<numMatls;matl++){
 		ostringstream tempstr_matl;
 		tempstr_matl << matl;
 		materialType_file = tempstr_matl.str();
 
+		MaterialData material_data;
+
+		if (matl < material_data_list.size())
+		  material_data = material_data_list[matl];
+		
 	        switch(td->getType()){
 	        case TypeDescription::ParticleVariable:
-		  switch(subtype->getType()){
-		  case TypeDescription::double_type:
-		    {
-		      if (do_PTvar_double) {
-			// not implemented at this time
+		  if (do_PTvar) {
+		    switch(subtype->getType()){
+		    case TypeDescription::double_type:
+		      {
+			ParticleVariable<double> value;
+			da->query(value, var, matl, patch, time);
+			material_data.pv_double_list.push_back(value);
 		      }
-		    }
-		  break;
-		  case TypeDescription::Point:
-		    {
-		      if (do_PTvar_point) {
-			// not implemented at this time
+		    break;
+		    case TypeDescription::Point:
+		      {
+			ParticleVariable<Point> value;
+			da->query(value, var, matl, patch, time);
+			
+			if (var == "p.x") {
+			  material_data.p_x = value;
+			} else {
+			  material_data.pv_point_list.push_back(value);
+			}
 		      }
-		    }
-		  break;
-		  case TypeDescription::Vector:
-		    {
-		      if (do_PTvar_vector) {
-			// not implemented at this time
+		    break;
+		    case TypeDescription::Vector:
+		      {
+			ParticleVariable<Vector> value;
+			da->query(value, var, matl, patch, time);
+			material_data.pv_vector_list.push_back(value);
 		      }
+		    break;
+		    default:
+		      cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
+		      break;
 		    }
-		  break;
-		  default:
-		    cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
 		    break;
 		  }
-		  break;
 		case TypeDescription::NCVariable:
 		  switch(subtype->getType()){
 		  case TypeDescription::double_type:
@@ -500,9 +533,11 @@ int main(int argc, char** argv)
 			string raydatafile = makeFileName(raydatadir,variable_file,time_file,patchID_file,materialType_file);			
 			FILE* datafile;
 			FILE* headerfile;
-			if (!setupOutFiles(&datafile,&headerfile,raydatafile))
+			if (!setupOutFiles(&datafile,&headerfile,raydatafile,string("hdr")))
 			  abort();
 
+			// addfile to filelist
+			fprintf(filelist,"%s\n",raydatafile.c_str());
 			// get the data and write it out
 			double min, max;
 			NCVariable<double> value;
@@ -555,13 +590,146 @@ int main(int argc, char** argv)
 		default:
 		  cerr << "Variable of unknown type: " << td->getType() << '\n';
 		  break;
+		} // end switch(td->getType())
+		if (matl < material_data_list.size())
+		  material_data_list[matl] = material_data;
+		else
+		  material_data_list.push_back(material_data);
+	      } // end matl
+	      
+	    } // end vars
+	    // after all the variable data has been collected write it out
+	    if (do_PTvar) {
+	      // setup output files
+	      string raydatafile = makeFileName(raydatadir,string(""),time_file,patchID_file,string(""));
+	      FILE* datafile;
+	      FILE* headerfile;
+	      if (!setupOutFiles(&datafile,&headerfile,raydatafile,string("meta")))
+		abort();
+	      // addfile to filelist
+	      fprintf(filelist,"%s\n",raydatafile.c_str());
+
+	      //--------------------------------------------------
+	      // set up the first min/max
+	      Point min, max;
+	      vector<double> d_min,d_max,v_min,v_max;
+	      bool data_found = false;
+	      int total_particles = 0;
+	      
+	      // loops until a non empty material_data set has been
+	      // found and inialized the mins and maxes
+	      for(int m = 0; m < material_data_list.size(); m++) {
+		// determine the min and max
+		MaterialData md = material_data_list[m];
+		//cerr << "First md = " << m << endl;
+		ParticleSubset* pset = md.p_x.getParticleSubset();
+		if (!pset) {
+		  cerr << "No particle location variable found\n";
+		  abort();
+		}
+		int numParticles = pset->numParticles();
+		if(numParticles > 0){
+		  ParticleSubset::iterator iter = pset->begin();
+
+		  // setup min/max for p.x
+		  min=max=md.p_x[*iter];
+		  // setup min/max for all others
+		  if (do_PTvar_all) {
+		    for(int i = 0; i < md.pv_double_list.size(); i++) {
+		      d_min.push_back(md.pv_double_list[i][*iter]);
+		      d_max.push_back(md.pv_double_list[i][*iter]);
+		    }
+		    for(int i = 0; i < md.pv_vector_list.size(); i++) {
+		      v_min.push_back(md.pv_vector_list[i][*iter].length());
+		      v_max.push_back(md.pv_vector_list[i][*iter].length());
+		    }
+		  }
+		  // initialized mins/maxes
+		  data_found = true;
+		  break;
+		}
+		
+	      }
+
+	      //--------------------------------------------------
+	      // extract data and write it to a file MaterialData at a time
+
+	      cerr << "-------Extracting data and writing it out\n";
+	      for(int m = 0; m < material_data_list.size(); m++) {
+		MaterialData md = material_data_list[m];
+		ParticleSubset* pset = md.p_x.getParticleSubset();
+		// a little redundant, but may not have been cought
+		// by the previous section
+		if (!pset) {
+		  cerr << "No particle location variable found\n";
+		  abort();
+		}
+		
+		int numParticles = pset->numParticles();
+		total_particles+= numParticles;
+		if(numParticles > 0){
+		  ParticleSubset::iterator iter = pset->begin();
+		  for(;iter != pset->end(); iter++){
+		    // p_x
+		    min=Min(min, md.p_x[*iter]);
+		    max=Max(max, md.p_x[*iter]);
+		    float temp_value = (float)(md.p_x[*iter]).x();
+		    fwrite(&temp_value, sizeof(float), 1, datafile);
+		    temp_value = (float)(md.p_x[*iter]).y();
+		    fwrite(&temp_value, sizeof(float), 1, datafile);
+		    temp_value = (float)(md.p_x[*iter]).z();
+		    fwrite(&temp_value, sizeof(float), 1, datafile);
+		    if (do_PTvar_all) {
+		      // double data
+		      for(int i = 0; i < md.pv_double_list.size(); i++) {
+			double value = md.pv_double_list[i][*iter];
+			d_min[i]=Min(d_min[i],value);
+			d_max[i]=Max(d_max[i],value);
+			temp_value = (float)value;
+			fwrite(&temp_value, sizeof(float), 1, datafile);
+		      }
+		      // vector data
+		      for(int i = 0; i < md.pv_vector_list.size(); i++) {
+			double value = md.pv_vector_list[i][*iter].length();
+			v_min[i]=Min(v_min[i],value);
+			v_max[i]=Max(v_max[i],value);
+			temp_value = (float)value;
+			fwrite(&temp_value, sizeof(float), 1, datafile);
+		      }
+		    }
+		  }
 		}
 	      }
+	      
+	      //--------------------------------------------------
+	      // write the header file
+
+	      cerr << "-------Writing header file\n";
+	      if (data_found) {
+		fprintf(headerfile,"%d\n",total_particles);
+		fprintf(headerfile,"%g\n",(max.x()-min.x())/total_particles);
+		fprintf(headerfile,"%g %g\n",min.x(),max.x());
+		fprintf(headerfile,"%g %g\n",min.y(),max.y());
+		fprintf(headerfile,"%g %g\n",min.z(),max.z());
+		if (do_PTvar_all) {
+		  for(int i = 0; i < d_min.size(); i++) {
+		    fprintf(headerfile,"%g %g\n",d_min[i],d_max[i]);
+		  }
+		  for(int i = 0; i < v_min.size(); i++) {
+		    fprintf(headerfile,"%g %g\n",v_min[i],v_max[i]);
+		  }
+		}
+	      }
+	      fclose(datafile);
+	      fclose(headerfile);
 	    }
-	  }
-	}
-      }
-    }
+	    fprintf(filelist,"</PATCH>\n");
+	  } // end patch
+	} // end level
+	fprintf(filelist,"</TIMESTEP>\n");
+      } // end timestep
+      fclose(filelist);
+    } // end do_rtdata
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << '\n';
     abort();
@@ -573,6 +741,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.6  2000/06/15 12:58:51  bigler
+// Added functionality to output particle variable data for the real-time raytracer
+//
 // Revision 1.5  2000/06/08 20:58:42  bigler
 // Added support to ouput data for the reat-time raytracer.
 //
