@@ -32,7 +32,7 @@ namespace Uintah {
   using std::map;
   using namespace SCIRun;
 
-class SCICORESHARE VariableCache: public Datatype {
+class VariableCache: public Datatype {
 protected:
   map< string, string > data_cache;
 public:
