@@ -20,5 +20,6 @@
 SRCDIR := StandAlone
 SUBDIRS := \
 	$(SRCDIR)/convert \
+	$(SRCDIR)/utils \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

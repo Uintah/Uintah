@@ -17,7 +17,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := StandAlone/convert
+SRCDIR := StandAlone/utils
 
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
