@@ -96,9 +96,21 @@ class SimulationState;
     // Get the current time step
     virtual int getCurrentTimestep() = 0;
 
-      //////////
-      // Get the current time step
+    //////////
+    // Get the current time step
     virtual double getCurrentTime() = 0;
+
+    // Get the time the next output will occur
+    virtual double getNextOutputTime() = 0;
+
+    // Get the timestep the next output will occur
+    virtual int getNextOutputTimestep() = 0;
+
+    // Get the time the next checkpoint will occur
+    virtual double getNextCheckpointTime() = 0;
+
+    // Get the timestep the next checkpoint will occur
+    virtual int getNextCheckpointTimestep() = 0;
       
     //////////
     // Returns true if the last timestep was one
