@@ -8,6 +8,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
+#include <Core/Exceptions/InternalError.h>
 
 #include <string>
 #include <iosfwd>
@@ -72,6 +73,18 @@ WARNING
        numFaces, // 6
        invalidFace
      };
+     
+     enum VariableBasis {
+	NodeBased = Ghost::AroundNodes,
+	CellBased = Ghost::AroundCells,
+	XFaceBased = Ghost::AroundXFaces,
+	YFaceBased = Ghost::AroundYFaces,
+	ZFaceBased = Ghost::AroundZFaces,
+	AllFaceBased = Ghost::AroundAllFaces
+     };
+
+     static VariableBasis translateTypeToBasis(TypeDescription::Type type,
+					       bool mustExist);
      
      //////////
      // Insert Documentation Here:
@@ -138,15 +151,27 @@ WARNING
      
      NodeIterator getNodeIterator(const Box& b) const;
 
+     // If 'basis' is a constant (as in OnDemandDataWarehouse::getGridVar())
+     // then these inlined functions will simplfy to one-liners.
+     inline IntVector getLowIndex(VariableBasis basis) const;
+     inline IntVector getHighIndex(VariableBasis basis) const;
+     
+     IntVector getLowIndex() const
+     { return d_lowIndex; }
+     
+     IntVector getHighIndex() const
+     { return d_highIndex; }
+     
      IntVector getNodeLowIndex() const {
        return d_lowIndex;
+     }
+
+     IntVector getNodeHighIndex() const {
+       return d_nodeHighIndex;
      }
  
      IntVector getInteriorNodeLowIndex()const;
      IntVector getInteriorNodeHighIndex()const;     
-     IntVector getNodeHighIndex() const {
-	 return d_nodeHighIndex;
-      }
 
      IntVector getSFCXLowIndex() const {
        return d_lowIndex;
@@ -192,16 +217,44 @@ WARNING
      IntVector getCellFORTHighIndex() const;
 
      // returns ghost cell index
-     IntVector getGhostCellLowIndex(const int numGC) const;
-     IntVector getGhostCellHighIndex(const int numGC) const;
-     IntVector getGhostSFCXLowIndex(const int numGC) const;
-     IntVector getGhostSFCXHighIndex(const int numGC) const;
-     IntVector getGhostSFCYLowIndex(const int numGC) const;
-     IntVector getGhostSFCYHighIndex(const int numGC) const;
-     IntVector getGhostSFCZLowIndex(const int numGC) const;
-     IntVector getGhostSFCZHighIndex(const int numGC) const;
+     IntVector getGhostCellLowIndex(int numGC) const;
+     IntVector getGhostCellHighIndex(int numGC) const;
+     /*
+     IntVector getGhostSFCXLowIndex(const int numGC) const
+     {  return d_lowIndex-getGhostSFCXLowOffset(numGC, d_bctypes); }
+     IntVector getGhostSFCXHighIndex(const int numGC) const
+     {  return d_highIndex+getGhostSFCXHighOffset(numGC, d_bctypes); }
+     IntVector getGhostSFCYLowIndex(const int numGC) const
+     {  return d_lowIndex-getGhostSFCYLowOffset(numGC, d_bctypes); }
+     IntVector getGhostSFCYHighIndex(const int numGC) const
+     {  return d_highIndex+getGhostSFCYHighOffset(numGC, d_bctypes); }
+     IntVector getGhostSFCZLowIndex(const int numGC) const
+     {  return d_lowIndex-getGhostSFCZLowOffset(numGC, d_bctypes); }
+     IntVector getGhostSFCZHighIndex(const int numGC) const
+     {  return d_highIndex+getGhostSFCZHighOffset(numGC, d_bctypes); }
+     */
+     
+     // Passes back the low and high offsets for the given ghost cell
+     // schenario.  Note: you should subtract the lowOffset (the offsets
+     // should be >= 0 in each dimension).
+     static void getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
+				 int numGhostCells,
+				 IntVector& lowOffset, IntVector& highOffset);
+     static void getGhostOffsets(TypeDescription::Type basis,
+				 Ghost::GhostType gtype, int numGhostCells,
+				 IntVector& l, IntVector& h)
+     {
+       bool basisMustExist = (gtype != Ghost::None);
+       getGhostOffsets(translateTypeToBasis(basis, basisMustExist),
+		       gtype, numGhostCells, l, h);
+     }
      
      Box getBox() const;
+     
+     inline IntVector getNFaces() const {
+       // NOT CORRECT
+       return IntVector(0,0,0);
+     }
      
      inline IntVector getNNodes() const {
        return getNodeHighIndex()-getNodeLowIndex();
@@ -263,38 +316,60 @@ WARNING
      }
      void getFace(FaceType face, int offset, IntVector& l, IntVector& h) const;
 
-     enum VariableBasis {
-	CellBased,
-	NodeBased,
-	CellFaceBased,
-	XFaceBased,
-	YFaceBased,
-	ZFaceBased,
-	AllFaceBased
-     };
-
      void computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 				 int numGhostCells,
 				 Level::selectType& neighbors,
 				 IntVector& low, IntVector& high) const;
+     /*
+     void computeVariableExtents2(VariableBasis basis, Ghost::GhostType gtype,
+				 int numGhostCells,
+				 Level::selectType& neighbors,
+				 IntVector& low, IntVector& high) const;
+     */
      void computeVariableExtents(TypeDescription::Type basis,
 				 Ghost::GhostType gtype, int numGhostCells,
 				 Level::selectType& neighbors,
+				 IntVector& low, IntVector& high) const
+     {
+       bool basisMustExist = (gtype != Ghost::None);
+       computeVariableExtents(translateTypeToBasis(basis, basisMustExist),
+			      gtype, numGhostCells, neighbors, low, high);
+
+     }
+
+     void computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
+				 int numGhostCells,
 				 IntVector& low, IntVector& high) const;
+     
+     void computeVariableExtents(TypeDescription::Type basis,
+				 Ghost::GhostType gtype, int numGhostCells,
+				 IntVector& low, IntVector& high) const
+     {
+       bool basisMustExist = (gtype != Ghost::None);
+       computeVariableExtents(translateTypeToBasis(basis, basisMustExist),
+			      gtype, numGhostCells, low, high);
 
-      class Compare {
-      public:
-	 inline bool operator()(const Patch* p1, const Patch* p2) const {
-	    return p1->getID() < p2->getID();
-	 }
-      private:
-      };
+     }
 
-      // get the index into the Level::d_patches array
-      int getLevelIndex() const { return d_level_index; }
+     // helper for computeVariableExtents but also used externally
+     // (in GhostOffsetVarMap)
+     void computeExtents(VariableBasis basis, const IntVector& lowOffset,
+			 const IntVector& highOffset,
+			 IntVector& low, IntVector& high) const;
 
-       void setLayoutHint(const IntVector& pos);
-       bool getLayoutHint(IntVector& pos) const;
+     class Compare {
+     public:
+       inline bool operator()(const Patch* p1, const Patch* p2) const {
+	 return p1->getID() < p2->getID();
+       }
+     private:
+     };
+
+     // get the index into the Level::d_patches array
+     int getLevelIndex() const { return d_level_index; }
+
+     void setLayoutHint(const IntVector& pos);
+     bool getLayoutHint(IntVector& pos) const;
    protected:
      friend class Level;
      
@@ -314,7 +389,7 @@ WARNING
      
      const Level* d_level; // I live in this grid level;
      int d_level_index;  // I'm at this index in the Level vector;
-     
+
      // used only by friend class Level
      inline void setLevelIndex( int idx ){ d_level_index = idx;}
      
@@ -336,6 +411,46 @@ WARNING
        bool have_layout;
        IntVector layouthint;
    };
+
+inline IntVector Patch::getLowIndex(VariableBasis basis) const
+{
+  switch (basis) {
+  case CellBased:
+    return getCellLowIndex();
+  case NodeBased:
+    return getNodeLowIndex();
+  case XFaceBased:
+    return getSFCXLowIndex();
+  case YFaceBased:
+    return getSFCYLowIndex();
+  case ZFaceBased:
+    return getSFCZLowIndex();
+  case AllFaceBased:
+    throw InternalError("AllFaceBased not implemented in Patch::getLowIndex(basis)");
+  default:
+    throw InternalError("Illegal VariableBasis in Patch::getLowIndex(basis)");
+  }
+}
+
+inline IntVector Patch::getHighIndex(VariableBasis basis) const
+{
+  switch (basis) {
+  case CellBased:
+    return getCellHighIndex();
+  case NodeBased:
+    return getNodeHighIndex();
+  case XFaceBased:
+    return getSFCXHighIndex();
+  case YFaceBased:
+    return getSFCYHighIndex();
+  case ZFaceBased:
+    return getSFCZHighIndex();
+  case AllFaceBased:
+    throw InternalError("AllFaceBased not implemented in Patch::getLowIndex(basis)");
+  default:
+    throw InternalError("Illegal VariableBasis in Patch::getLowIndex(basis)");
+  }
+}
 
 } // End namespace Uintah
 
