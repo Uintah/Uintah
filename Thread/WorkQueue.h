@@ -35,6 +35,8 @@ public:
     WorkQueue(const char* name, int totalAssignments, int nthreads,
 	      bool dynamic, int granularity=5)
      ;
+    void refill(int totalAssignments, int nthreads,
+	      bool dynamic, int granularity=5);
     WorkQueue(const WorkQueue& copy) ;
     WorkQueue() ;
     WorkQueue& operator=(const WorkQueue& copy) ;

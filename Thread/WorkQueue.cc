@@ -131,6 +131,21 @@ bool WorkQueue::nextAssignment(int& start, int& end)
     return true;
 }
 
+void WorkQueue::refill(int new_ta, int new_nthreads,
+		       bool new_dynamic, int new_granularity)
+{
+    if(new_ta == totalAssignments && new_nthreads == nthreads
+       && new_dynamic == dynamic && new_granularity == granularity){
+	storeop_store(priv->pvar, 0);
+    } else {
+	totalAssignments=new_ta;
+	nthreads=new_nthreads;
+	dynamic=new_dynamic;
+	granularity=new_granularity;
+	init();
+    }
+}
+
 #if 0
 void WorkQueue::addWork(int nassignments) {
     if(!dynamic){
