@@ -65,7 +65,7 @@ WARNING
       // problemSetup.  
       virtual void combinePatchSetup(Dir& fromDir) = 0;
 
-     virtual bool need_recompile(double time, double delt,
+     virtual bool needRecompile(double time, double delt,
 				 const GridP& grid) = 0;
 
       //////////
