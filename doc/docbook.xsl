@@ -13,7 +13,13 @@
 </xsl:template>
 
 <xsl:template match="sect1/title">
-  <p class="head"><xsl:value-of select="."/></p>
+  <xsl:param name="sectn"/>
+  <a>
+    <xsl:attribute name="name">
+      <xsl:value-of select="$sectn"/>
+    </xsl:attribute>
+    <p class="head"><xsl:value-of select="."/></p>
+  </a>
 </xsl:template>
 
 <xsl:template match="sect2/title">
@@ -166,9 +172,7 @@
 <hr size="1"/>
 
 <xsl:for-each select="./preface">
-  <xsl:for-each select="./para">
-    <p class="firstpara"><xsl:value-of select="." /></p>
-  </xsl:for-each>
+  <xsl:apply-templates/>
 </xsl:for-each>
 
 <hr size="1"/>
@@ -197,7 +201,21 @@
 <xsl:for-each select="./chapter">
   <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
   <xsl:if test="$chapnum=$cont">
-    <xsl:apply-templates/>
+    <p class="title"><xsl:value-of select="./title"/></p>
+  </xsl:if>
+</xsl:for-each>
+
+<xsl:for-each select="./chapter">
+  <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
+  <xsl:if test="$chapnum=$cont">
+    <xsl:for-each select="./sect1">
+      <xsl:variable name="sectnum"><xsl:number/></xsl:variable>
+      <xsl:apply-templates>
+        <xsl:with-param name="sectn">
+          <xsl:value-of select="$sectnum"/>
+        </xsl:with-param>
+      </xsl:apply-templates>
+    </xsl:for-each>
   </xsl:if>
 </xsl:for-each>
 
