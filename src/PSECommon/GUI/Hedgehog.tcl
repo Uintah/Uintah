@@ -28,6 +28,8 @@ itcl_class PSECommon_Visualization_Hedgehog {
 	set $this-type 2D
 	global $this-exhaustive_flag
 	set $this-exhaustive_flag 0
+	global $this-vector_default_color
+	set $this-vector_default_color 0
 	$this-c needexecute
     }
     method ui {} {
@@ -66,6 +68,19 @@ itcl_class PSECommon_Visualization_Hedgehog {
 	checkbutton $w.f.exh -text "Exhaustive search?" -variable \
 		$this-exhaustive_flag
 	pack $w.f.exh -pady 2 -side top -ipadx 3 -anchor e
+	
+	iwidgets::labeledframe $w.lf -labeltext "Vector Color" -labelpos nw
+	pack $w.lf -side top -fill x -expand yes
+	set cs [$w.lf childsite]
+	pack [radiobutton $cs.b0 -text white -value 0 \
+		  -variable $this-vector_default_color  \
+		  -command $n] -side left 
+	pack [radiobutton $cs.b1 -text gray -value 1 \
+		  -variable $this-vector_default_color  \
+		  -command $n] -side left 
+ 	pack [radiobutton $cs.b2 -text black -value 2 \
+		  -variable $this-vector_default_color  \
+		  -command $n] -side left 
 
 
 	frame $w.f2 

@@ -109,9 +109,13 @@ class Hedgehog : public Module {
    TCLdouble head_length;
    TCLstring type;
    TCLint exhaustive_flag;
+   TCLint vector_default_color;
    TCLint drawcylinders;
    TCLdouble shaft_rad;
    MaterialHandle outcolor;
+  MaterialHandle shaft;
+  MaterialHandle head;
+  MaterialHandle back;
    int grid_id;
    int need_find2d;
    int need_find3d;
@@ -163,7 +167,12 @@ Hedgehog::Hedgehog(const clString& id)
   type("type", id, this),
   drawcylinders("drawcylinders", id, this),
   shaft_rad("shaft_rad", id, this),
-  exhaustive_flag("exhaustive_flag", id, this)
+  vector_default_color("vector_default_color", id, this),
+  exhaustive_flag("exhaustive_flag", id, this),
+  shaft(new Material(Color(0,0,0), Color(.6, .6, .6),
+		     Color(.6, .6, .6), 10)),
+  head(new Material(Color(0,0,0), Color(1,1,1), Color(.6, .6, .6), 10)),
+  back(new Material(Color(0,0,0), Color(.6, .6, .6), Color(.6, .6, .6), 10))
 {
     // Create the input ports
     // Need a scalar field and a ColorMap
@@ -207,12 +216,39 @@ void Hedgehog::execute()
     VectorFieldHandle vfield;
     if (!invectorfield->get( vfield ))
 	return;
+
+    
+
+
     ScalarFieldHandle ssfield;
     int have_sfield=inscalarfield->get( ssfield );
     ColorMapHandle cmap;
     int have_cmap=inColorMap->get( cmap );
-    if(!have_cmap)
+    if(!have_cmap){
 	have_sfield=0;
+	if(vector_default_color.get() == 0){
+	  *(shaft.get_rep()) = Material(Color(0,0,0), Color(.8, .8, .8),
+			   Color(.6, .6, .6), 10);
+	  *(head.get_rep()) = Material(Color(0,0,0), Color(1,1,1),
+			  Color(.6, .6, .6), 10);
+	  *(back.get_rep()) = Material(Color(0,0,0), Color(.8, .8, .8),
+			  Color(.6, .6, .6), 10);
+	} else if (vector_default_color.get() == 1) {
+	  *(shaft.get_rep()) = Material(Color(0,0,0), Color(.4, .4, .4),
+			   Color(.6, .6, .6), 10);
+	  *(head.get_rep()) = Material(Color(0,0,0), Color(.4,.4,.4),
+			  Color(.6, .6, .6), 10);
+	  *(back.get_rep()) = Material(Color(0,0,0), Color(.4, .4, .4),
+			  Color(.6, .6, .6), 10);
+	} else {
+	  *(shaft.get_rep()) = Material(Color(0,0,0), Color(.1, .1, .1),
+			   Color(.6, .6, .6), 10);
+	  *(head.get_rep()) = Material(Color(0,0,0), Color(.1,.1,.1),
+			  Color(.6, .6, .6), 10);
+	  *(back.get_rep()) = Material(Color(0,0,0), Color(.1, .1, .1),
+			  Color(.6, .6, .6), 10);
+	}
+    }
 
     if (init == 1) 
     {
@@ -354,7 +390,7 @@ void Hedgehog::execute()
 			      arrows->add(p, vv*lenscale, matl, matl, matl);
 			} else {
 			  if(vv.length2()*lenscale > 1.e-3)
-			    arrows->add(p, vv*lenscale);
+			    arrows->add(p, vv*lenscale, shaft, back, head);
 			  //else
 			  //    cerr << "vv.length2()="<<vv.length2()<<"\n";
 			}
@@ -420,6 +456,9 @@ void Hedgehog::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.9  2001/02/21 16:19:16  kuzimmer
+// Added the ability to set the vector grayscale  when a colormap is not being used.
+//
 // Revision 1.8  2000/03/17 09:27:32  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
