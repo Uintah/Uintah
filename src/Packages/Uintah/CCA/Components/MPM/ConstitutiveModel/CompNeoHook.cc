@@ -616,7 +616,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	  KK[dofi][dofj] = KK[dofi][dofj] + (kmat(I,J) + kgeo(I,J));
 #ifdef HAVE_PETSC
 	  PetscScalar v = kmat(I,J) + kgeo(I,J);
-	  MatSetValues(A,1,&dofi,1,&dofj,&v,INSERT_VALUES);
+	  MatSetValues(A,1,&dofi,1,&dofj,&v,ADD_VALUES);
 #endif
 #if 0
 	  cout << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
