@@ -63,6 +63,12 @@ Module* TYPEWriter::clone(int deep)
     return new TYPEWriter(*this, deep);
 }
 
+static void watcher(double pd, void* cbdata)
+{
+    TYPEWriter* writer=(TYPEWriter*)cbdata;
+    writer->update_progress(pd);
+}
+
 void TYPEWriter::execute()
 {
     TYPEHandle handle;
@@ -73,12 +79,13 @@ void TYPEWriter::execute()
 	return;
     Piostream* stream;
     clString ft(filetype.get());
-    if(ft=="binary"){
+    if(ft=="Binary"){
 	stream=new BinaryPiostream(fn, Piostream::Write);
     } else {
 	stream=new TextPiostream(fn, Piostream::Write);
     }
     // Write the file
+    stream->watch_progress(watcher, (void*)this);
     Pio(*stream, handle);
     delete stream;
 }
