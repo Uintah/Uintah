@@ -15,10 +15,19 @@
 #include <Field3D.h>
 #include <Field3DPort.h>
 #include <GeometryPort.h>
+#include <ModuleList.h>
 #include <MUI.h>
 #include <NotFinished.h>
 #include <iostream.h>
 #include <fstream.h>
+
+static Module* make_IsoSurface()
+{
+    return new IsoSurface;
+}
+
+static RegisterModule db1("Fields", "IsoSurface", make_IsoSurface);
+static RegisterModule db2("Visualization", "IsoSurface", make_IsoSurface);
 
 IsoSurface::IsoSurface()
 : UserModule("IsoSurface", Filter)
@@ -49,11 +58,6 @@ IsoSurface::~IsoSurface()
 {
 }
 
-Module* make_IsoSurface()
-{
-    return new IsoSurface;
-}
-
 Module* IsoSurface::clone(int deep)
 {
     return new IsoSurface(*this, deep);
@@ -64,6 +68,10 @@ void IsoSurface::execute()
     Field3DHandle field;
     if(!infield->get_field(field))
 	return;
+    if(field->get_type() != Field3D::ScalarField){
+	error("Field is not a scalar field!\n");
+	return;
+    }
     switch(field->get_rep()){
     case Field3D::RegularGrid:
 	if(have_seedpoint){
@@ -94,6 +102,7 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, double isoval)
     int ny=field->get_ny();
     int nz=field->get_nz();
     for(int i=0;i<nx-1;i++){
+	update_progress(i, nx);
 	for(int j=0;j<ny-1;j++){
 	    for(int k=0;k<nz-1;k++){
 		iso_cube(i,j,k, isoval);
