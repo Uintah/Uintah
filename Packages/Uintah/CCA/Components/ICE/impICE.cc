@@ -280,7 +280,8 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->computes(lb->term2Label,     one_matl,oims);
 
   // If we are debugging, compute the rhs after the second iteration...
-  t->computes(lb->rhsLabel,       one_matl, oims);
+  if(switchDebugConvergence)
+    t->computes(lb->rhsLabel,       one_matl, oims);
   
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perproc_patches =  
