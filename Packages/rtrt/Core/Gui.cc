@@ -261,6 +261,12 @@ Gui::setActiveGui( Gui * gui )
   activeGui = gui;
 }
 
+Gui*
+Gui::getActiveGui()
+{
+  return activeGui;
+}
+
 void
 Gui::setStealth( Stealth * stealth )
 {

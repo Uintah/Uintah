@@ -56,7 +56,8 @@ public:
   ~Gui();
 
   static void setActiveGui( Gui * gui );
-
+  static Gui* getActiveGui();
+  
   void setDpy( Dpy * dpy );
   void setStealth( Stealth * stealth );
 
