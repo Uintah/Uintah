@@ -69,6 +69,8 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
 ImpMPM::~ImpMPM()
 {
   delete lb;
+  if(d_perproc_patches && d_perproc_patches->removeReference())
+    delete d_perproc_patches;
 
 }
 
@@ -175,6 +177,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
 
   LoadBalancer* loadbal = sched->getLoadBalancer();
   d_perproc_patches = loadbal->createPerProcessorPatchSet(level,d_myworld);
+  d_perproc_patches->addReference();
 
   for (int s = 0; s < d_perproc_patches->size();s++) {
     const PatchSubset* patches = d_perproc_patches->getSubset(s);
@@ -618,38 +621,38 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   // Create the tasks
 
-  scheduleDestroyMatrix(subsched, d_perproc_patches,
+  scheduleDestroyMatrix(subsched, level->eachPatch(),
 			d_sharedState->allMPMMaterials());
 
-  scheduleCreateMatrix(subsched, d_perproc_patches, 
+  scheduleCreateMatrix(subsched, level->eachPatch(), 
 		       d_sharedState->allMPMMaterials());
   
-  scheduleComputeStressTensorR(subsched,d_perproc_patches,
+  scheduleComputeStressTensorR(subsched,level->eachPatch(),
 			      d_sharedState->allMPMMaterials(),
 			      true);
 
-  scheduleFormStiffnessMatrixR(subsched,d_perproc_patches,
+  scheduleFormStiffnessMatrixR(subsched,level->eachPatch(),
 			       d_sharedState->allMPMMaterials(),true);
 
-  scheduleComputeInternalForceR(subsched,d_perproc_patches,
+  scheduleComputeInternalForceR(subsched,level->eachPatch(),
 				d_sharedState->allMPMMaterials(), true);
 
   
-  scheduleFormQR(subsched,d_perproc_patches,d_sharedState->allMPMMaterials(),
+  scheduleFormQR(subsched,level->eachPatch(),d_sharedState->allMPMMaterials(),
 		 true);
 
-  scheduleRemoveFixedDOFR(subsched,d_perproc_patches,
+  scheduleRemoveFixedDOFR(subsched,level->eachPatch(),
 			  d_sharedState->allMPMMaterials(),true);
 
-  scheduleSolveForDuCGR(subsched,d_perproc_patches,
+  scheduleSolveForDuCGR(subsched,level->eachPatch(),
 		       d_sharedState->allMPMMaterials(), true);
-  scheduleUpdateGridKinematicsR(subsched,d_perproc_patches,
+  scheduleUpdateGridKinematicsR(subsched,level->eachPatch(),
 			       d_sharedState->allMPMMaterials(),true);
 
-  scheduleCheckConvergenceR(subsched,level,d_perproc_patches,
+  scheduleCheckConvergenceR(subsched,level,level->eachPatch(),
 			       d_sharedState->allMPMMaterials(), true);
 
-  scheduleMoveData(subsched,level,d_perproc_patches,
+  scheduleMoveData(subsched,level,level->eachPatch(),
 		   d_sharedState->allMPMMaterials());
 
  
@@ -2185,8 +2188,10 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
 	temp2[dof[2]] << "\n";
 
     }
+#ifdef HAVE_PETSC
     cerr << "petscQ = " << endl;
     VecView(petscQ,PETSC_VIEWER_STDOUT_WORLD);
+#endif
   }
 #ifdef HAVE_PETSC
     VecAssemblyBegin(petscQ);
