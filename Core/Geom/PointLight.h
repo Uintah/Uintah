@@ -32,7 +32,7 @@
 #define SCI_Geom_PointLight_h 1
 
 #include <Core/Geom/Light.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geometry/Point.h>
 
 namespace SCIRun {

@@ -23,7 +23,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 
 namespace MIT {
 

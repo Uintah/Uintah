@@ -24,7 +24,7 @@
 #include <Core/Containers/Stack.h>
 #include <Core/Containers/String.h>
 #include <Core/Datatypes/VoidStar.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomCone.h>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/GeomGroup.h>

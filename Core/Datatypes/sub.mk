@@ -22,7 +22,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Datatypes
 
 SRCS +=	$(SRCDIR)/Clipper.cc		    	\
-	$(SRCDIR)/ColorMap.cc		    	\
+	$(SRCDIR)/Color.cc		    	\
 	$(SRCDIR)/ColumnMatrix.cc	    	\
 	$(SRCDIR)/CurveMesh.cc            	\
 	$(SRCDIR)/Datatype.cc		    	\
@@ -36,7 +36,6 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/LatVolMesh.cc 		\
 	$(SRCDIR)/Matrix.cc		    	\
 	$(SRCDIR)/Mesh.cc		    	\
-	$(SRCDIR)/Path.cc		    	\
 	$(SRCDIR)/PointCloudMesh.cc         	\
 	$(SRCDIR)/PropertyManager.cc	    	\
 	$(SRCDIR)/QuadSurfMesh.cc               \
@@ -61,7 +60,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/GuiInterface \
-	Core/Math Core/Geom Core/Util
+	Core/Math Core/Util
 LIBS := $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -19,7 +19,7 @@
 #define TEXCUTTINGPLANES_H
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Malloc/Allocator.h>

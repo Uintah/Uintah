@@ -20,7 +20,7 @@
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Containers/Array1.h>
 #include <GL/gl.h>
 #include <iostream>

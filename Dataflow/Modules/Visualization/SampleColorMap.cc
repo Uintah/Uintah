@@ -29,7 +29,7 @@
 
 #include <Dataflow/Modules/Visualization/SampleColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Containers/StringUtil.h>

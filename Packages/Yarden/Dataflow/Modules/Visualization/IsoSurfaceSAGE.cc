@@ -22,7 +22,7 @@
 
 #include <Core/Thread/Thread.h>
 
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/View.h>

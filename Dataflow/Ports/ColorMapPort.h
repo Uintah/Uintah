@@ -32,7 +32,7 @@
 #define SCI_project_ColorMapPort_h 1
 
 #include <Dataflow/Ports/SimplePort.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 
 namespace SCIRun {
 

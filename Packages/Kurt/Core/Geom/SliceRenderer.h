@@ -21,7 +21,7 @@
 #include <Packages/Kurt/Core/Geom/VolumeRenderer.h>
 
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Core/Geometry/Point.h>
 #include <iostream>
 

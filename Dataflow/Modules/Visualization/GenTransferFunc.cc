@@ -24,7 +24,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Dataflow/Ports/GeometryPort.h>
 
 #include <Core/Math/CatmullRomSpline.h>
@@ -32,7 +32,7 @@
 
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Math/MinMax.h>
 #define Colormap XColormap
 

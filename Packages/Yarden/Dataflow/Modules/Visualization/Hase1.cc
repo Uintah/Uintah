@@ -26,7 +26,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomOpenGL.h>
 
 #include <Core/GuiInterface/TCLTask.h>

@@ -17,7 +17,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/String.h>
 #include <Core/Geom/GeomArrows.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomSphere.h>

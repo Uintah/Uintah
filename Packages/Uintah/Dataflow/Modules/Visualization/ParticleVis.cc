@@ -17,7 +17,7 @@
  */
 #include "ParticleVis.h"
 #include <Core/Geom/GeomArrows.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
@@ -27,7 +27,7 @@
 #include <Core/Geom/GeomEllipsoid.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Dataflow/Modules/Selectors/ParticleFieldExtractor.h>

@@ -34,7 +34,7 @@
 #include <Core/Thread/FutureValue.h>
 #include <Dataflow/Comm/MessageBase.h>
 #include <Core/GuiInterface/GuiCallback.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GuiGeom.h>
 #include <Core/Geom/GuiView.h>

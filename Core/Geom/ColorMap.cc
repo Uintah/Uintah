@@ -28,7 +28,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 #include <algorithm>

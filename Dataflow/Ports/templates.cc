@@ -32,7 +32,7 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 
 #include <Dataflow/Ports/SimplePort.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 
 using namespace SCIRun;
 

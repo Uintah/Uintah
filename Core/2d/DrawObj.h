@@ -31,7 +31,7 @@
 #ifndef SCI_Drawable_h
 #define SCI_Drawable_h 
 
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Containers/Array1.h>
 #include <Core/2d/BBox2d.h>
 #include <Core/Datatypes/Datatype.h>

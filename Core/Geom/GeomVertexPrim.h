@@ -33,7 +33,7 @@
 
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/Material.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
 #include <stdlib.h>

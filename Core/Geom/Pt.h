@@ -32,7 +32,7 @@
 #define SCI_Geom_Point_h 1
 
 #include <Core/Geom/GeomObj.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>

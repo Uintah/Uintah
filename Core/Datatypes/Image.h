@@ -35,7 +35,7 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array2.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 
 namespace SCIRun {
 

@@ -30,7 +30,7 @@
 
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/GeomSave.h>
 #include <Core/Geom/GeomText.h>

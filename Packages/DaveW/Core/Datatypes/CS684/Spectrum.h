@@ -15,7 +15,7 @@
 #define SCI_Packages_DaveW_Datatypes_Spectrum_h 1
 
 #include <Core/Containers/Array1.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Persistent/Persistent.h>
 

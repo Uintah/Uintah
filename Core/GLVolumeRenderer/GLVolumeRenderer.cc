@@ -19,7 +19,7 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <GL/gl.h>
 #include <iostream>
 

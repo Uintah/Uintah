@@ -15,7 +15,7 @@
 #include <Packages/DaveW/Core/Datatypes/CS684/RadPrims.h>
 #include <Packages/DaveW/Core/Datatypes/CS684/Spectrum.h>
 #include <Core/Containers/String.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>

@@ -64,7 +64,7 @@ POSSIBLE REVISIONS
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/HashTable.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/Datatypes/Path.h>
+#include <Core/Geom/Path.h>
 
 #include <Core/Util/Timer.h>
 #include <Core/Thread/Time.h>

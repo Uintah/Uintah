@@ -32,7 +32,7 @@
 #define SCI_Dataflow_Datatypes_PathPort_h 1
 
 #include <Dataflow/Ports/SimplePort.h>
-#include <Core/Datatypes/Path.h>
+#include <Core/Geom/Path.h>
 
 namespace SCIRun {
 

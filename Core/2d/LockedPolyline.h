@@ -31,7 +31,7 @@
 #ifndef SCI_LockedPolyline_h
 #define SCI_LockedPolyline_h 
 
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Containers/Array1.h>
 #include <Core/2d/Polyline.h>
 

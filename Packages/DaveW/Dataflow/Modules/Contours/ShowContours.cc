@@ -15,7 +15,7 @@
 #include <Packages/DaveW/Core/Datatypes/General/ContourSetPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/GeometryPort.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/GeomPolyline.h>

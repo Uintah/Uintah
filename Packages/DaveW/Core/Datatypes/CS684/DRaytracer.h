@@ -22,7 +22,7 @@
 #include <Core/Containers/String.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/VoidStar.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/Material.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/MinMax.h>

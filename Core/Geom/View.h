@@ -35,7 +35,7 @@
   
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 
 namespace SCIRun {
 

@@ -22,7 +22,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Geom
 
 SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
-	$(SRCDIR)/Color.cc		                \
+	$(SRCDIR)/ColorMap.cc		                \
 	$(SRCDIR)/ColorMapTex.cc	                \
 	$(SRCDIR)/GeomArrows.cc		                \
 	$(SRCDIR)/GeomBillboard.cc	                \
@@ -38,6 +38,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/GeomLine.cc		                \
 	$(SRCDIR)/GeomObj.cc                            \
 	$(SRCDIR)/GeomOpenGL.cc		                \
+	$(SRCDIR)/Path.cc		    	        \
 	$(SRCDIR)/GeomPick.cc		                \
 	$(SRCDIR)/GeomPolyline.cc	                \
 	$(SRCDIR)/GeomQMesh.cc		                \
@@ -74,7 +75,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/templates.cc
 
 PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
-	Core/Math Core/Containers Core/Thread \
+	Core/Math Core/Containers Core/Thread Core/Geom \
 	Core/GuiInterface
 
 LIBS := $(GL_LIBRARY) $(M_LIBRARY)
