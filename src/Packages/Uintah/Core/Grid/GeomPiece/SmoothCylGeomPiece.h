@@ -50,7 +50,7 @@ namespace Uintah {
      <top>[0.0,0.0,10.0]</top> 
      <radius>2.0</radius> 
      <thickness>0.1</thickness> 
-     <encap_thickness>1.0</endcap_thickness> 
+     <endcap_thickness>1.0</endcap_thickness> 
      <num_radial>20</num_radial> 
      <num_axial>100</num_axial> 
    </smoothcyl> 
