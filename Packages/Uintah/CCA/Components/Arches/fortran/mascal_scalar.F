@@ -52,10 +52,13 @@ C--------------------------------------------------------------------
 
       tcons = 1.0D0
       ltest = .false.
-c      l2up = .false.
-      l2up = .true.
-c      leno = .true.
+      l2up = .false.
       leno = .false.
+      if (conv_scheme.eq.0) then
+        l2up = .true.
+      else
+        leno = .true.
+      endif
 
 C--------------------------------------------------------------------
       if (.not.ltest) then

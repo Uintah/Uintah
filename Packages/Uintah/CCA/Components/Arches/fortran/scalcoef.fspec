@@ -22,4 +22,4 @@ void scalcoef(IntVector idxLo, IntVector idxHi,
 	OffsetArray1<double> bfac, OffsetArray1<double> dxpw,
 	OffsetArray1<double> dxep, OffsetArray1<double> dyps,
 	OffsetArray1<double> dynp, OffsetArray1<double> dzpb,
-	OffsetArray1<double> dztp);
+	OffsetArray1<double> dztp, int conv_scheme);
