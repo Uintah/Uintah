@@ -68,7 +68,7 @@ endif
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/GuiInterface \
 	Core/Math Core/Util
-LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY)
+LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
