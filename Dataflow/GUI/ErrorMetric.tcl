@@ -45,7 +45,7 @@ itcl_class SCIRun_Math_ErrorMetric {
 	global ITERSGROW
 	set ITERSGROW 50
 	global $this-pTCL
-	set $this-pTCL 1
+	set $this-pTCL 2
 	global $this-rms
 	set $this-rms 0
 	global $this-cc
