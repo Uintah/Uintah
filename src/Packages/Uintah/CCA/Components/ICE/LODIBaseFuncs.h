@@ -172,16 +172,6 @@ void FaceDensityLODI(const Patch* patch,
   //    E D G E S
   for(Patch::FaceType face0 = Patch::startFace; face0 <= Patch::endFace; 
                                                   face0=Patch::nextFace(face0)){
-/*`==========TESTING==========*/
- /*__________________________________
- *CHEEZY BULLET PROOFING UNTIL CELL ITERATOR is FIXED
- *__________________________________*/
-IntVector Tdir0 = patch->faceDirection(face);
-IntVector Tdir1 = patch->faceDirection(face0);
-IntVector test = Abs(Tdir0) - Abs(Tdir1); 
-if (test != IntVector(0,0,0)) {  //  no edge here 
-/*==========TESTING==========`*/
-    
     //__________________________________
     //  Find the offset for the r and l cells
     //  and the Vector components Edir1 and Edir2
@@ -209,7 +199,6 @@ if (test != IntVector(0,0,0)) {  //  no edge here
                                 
       rho_CC[c] = rho_tmp[c] - delT * (d[1][c][P_dir] + d[1][c][Edir1] + conv);
     }
-}  // cheezy bulletproofing
   }
 
   //__________________________________
@@ -306,15 +295,6 @@ void FaceVelLODI(const Patch* patch,
   //    E D G E S
   for(Patch::FaceType face0 = Patch::startFace; face0 <= Patch::endFace; 
                                                   face0=Patch::nextFace(face0)){
-/*`==========TESTING==========*/
- /*__________________________________
- *CHEEZY BULLET PROOFING UNTIL CELL ITERATOR is FIXED
- *__________________________________*/
-IntVector Tdir0 = patch->faceDirection(face);
-IntVector Tdir1 = patch->faceDirection(face0);
-IntVector test = Abs(Tdir0) - Abs(Tdir1); 
-if (test != IntVector(0,0,0)) {  //  no edge here 
-/*==========TESTING==========`*/
     
     //__________________________________
     //  Find the offset for the r and l cells
@@ -370,7 +350,6 @@ if (test != IntVector(0,0,0)) {  //  no edge here
                            +  pressGradient[Edir2] );
     vel_CC[c] /= rho_tmp[c];
     }
-}  // cheezy bulletproofing
   }  
    //________________________________________________________
    // C O R N E R S    
@@ -472,15 +451,6 @@ void FaceTempLODI(const Patch* patch,
   //    E D G E S
   for(Patch::FaceType face0 = Patch::startFace; face0 <= Patch::endFace; 
                                                   face0=Patch::nextFace(face0)){
-
- /*__________________________________
- *CHEEZY BULLET PROOFING UNTIL CELL ITERATOR is FIXED
- *__________________________________*/
-IntVector Tdir0 = patch->faceDirection(face);
-IntVector Tdir1 = patch->faceDirection(face0);
-IntVector test = Abs(Tdir0) - Abs(Tdir1); 
-if (test != IntVector(0,0,0)) {  //  no edge here 
-    
     //__________________________________
     //  Find the offset for the r and l cells
     //  and the Vector components Edir1 and Edir2
@@ -537,7 +507,6 @@ if (test != IntVector(0,0,0)) {  //  no edge here
 
       temp_CC[c] = e_tmp/(rho_CC[c] *cv) - 0.5 * vel_sqr/cv;
     }
-}  // cheezy bulletproofing
   }  
  
   //________________________________________________________
