@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
 #include <Packages/Uintah/CCA/Components/Models/test/PassiveScalar.h>
+#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -10,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
@@ -76,8 +78,8 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
                         ModelSetup* setup)
 {
   cout_doing << "Doing problemSetup \t\t\t\tPASSIVE_SCALAR" << endl;
-  sharedState = in_state;
-  d_matl = sharedState->parseAndLookupMaterial(params, "material");
+  d_sharedState = in_state;
+  d_matl = d_sharedState->parseAndLookupMaterial(params, "material");
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -93,10 +95,16 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   d_scalar->name  = "f";
   
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
+  const TypeDescription* td_CCVector = CCVariable<Vector>::getTypeDescription();
+    
   d_scalar->scalar_CCLabel =     VarLabel::create("scalar-f",       td_CCdouble);
   d_scalar->diffusionCoefLabel = VarLabel::create("scalar-diffCoef",td_CCdouble);
   d_scalar->scalar_source_CCLabel = 
-                                 VarLabel::create("scalar-f_src",  td_CCdouble);
+                                 VarLabel::create("scalar-f_src",   td_CCdouble);
+  d_scalar->scalar_gradLabel = 
+                                 VarLabel::create("scalar-f_grad",  td_CCVector);                                 
+                                 
+                                 
   Slb->lastProbeDumpTimeLabel =  VarLabel::create("lastProbeDumpTime", 
                                             max_vartype::getTypeDescription());
   Slb->sum_scalar_fLabel      =  VarLabel::create("sum_scalar_f", 
@@ -121,10 +129,12 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
      throw ProblemSetupException("PassiveScalar: Couldn't find constants tag");
    }
        
-  const_ps->getWithDefault("initialize_diffusion_knob",       
+   const_ps->getWithDefault("initialize_diffusion_knob",       
                             d_scalar->initialize_diffusion_knob,   0);
                             
    const_ps->getWithDefault("diffusivity",  d_scalar->diff_coeff, 0.0);
+   
+   const_ps->getWithDefault("AMR_Refinement_Criteria", d_scalar->refineCriteria,1e100);
 
   //__________________________________
   //  Read in the geometry objects for the scalar
@@ -217,7 +227,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
         }
       } // Over cells
     } // regions
-    setBC(f,"scalar-f", patch, sharedState,indx, new_dw);
+    setBC(f,"scalar-f", patch, d_sharedState,indx, new_dw);
      
     //__________________________________
     //  Dump out a header for the probe point files
@@ -326,7 +336,7 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing computeModelSources... on patch "<<patch->getID()
-               << "\t\tPassiveScalar" << endl;
+               << "\t\t\t PassiveScalar" << endl;
    
     constCCVariable<double> f_old, diff_coeff;
     CCVariable<double>  f_src;
@@ -405,4 +415,82 @@ void PassiveScalar::scheduleComputeStableTimestep(SchedulerP&,
                                       const ModelInfo*)
 {
   // None necessary...
+}
+//______________________________________________________________________
+//
+void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
+                                          SchedulerP& sched)
+{
+  cout_doing << "PassiveScalar::scheduleErrorEstimate \t\t\tL-" 
+             << coarseLevel->getIndex() << '\n';
+  
+  Task* t = scinew Task("PassiveScalar::errorEstimate", 
+                  this, &PassiveScalar::errorEstimate, false);  
+  
+  Ghost::GhostType  gac  = Ghost::AroundCells; 
+  t->requires(Task::NewDW, d_scalar->scalar_CCLabel,  gac, 1);
+  
+  t->computes(d_scalar->scalar_gradLabel);
+  t->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
+  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  
+  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allMaterials());
+}
+/*_____________________________________________________________________
+ Function~  PassiveScalar::errorEstimate--
+______________________________________________________________________*/
+void PassiveScalar::errorEstimate(const ProcessorGroup*,
+			             const PatchSubset* patches,
+			             const MaterialSubset*,
+			             DataWarehouse*,
+			             DataWarehouse* new_dw,
+                                  bool)
+{
+  cout_doing << "Doing errorEstimate \t\t\t\t\t PassiveScalar"<< endl;
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    
+    Ghost::GhostType  gac  = Ghost::AroundCells;
+    const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
+    const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();
+    
+    CCVariable<int> refineFlag;
+    new_dw->getModifiable(refineFlag, refineFlagLabel, 0, patch);      
+
+    PerPatch<PatchFlagP> refinePatchFlag;
+    new_dw->get(refinePatchFlag, refinePatchLabel, 0, patch);
+
+    int indx = d_matl->getDWIndex();
+    constCCVariable<double> f;
+    CCVariable<Vector> f_grad;
+    
+    new_dw->get(f,                 d_scalar->scalar_CCLabel,  indx ,patch,gac,1);
+    new_dw->allocateAndPut(f_grad, d_scalar->scalar_gradLabel, indx,patch);
+    
+    //__________________________________
+    // compute gradient
+    Vector dx = patch->dCell(); 
+
+    for(int dir = 0; dir <3; dir ++ ) { 
+      double inv_dx = 0.5 /dx[dir];
+      for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+          IntVector c = *iter;
+          IntVector r = c;
+          IntVector l = c;
+          r[dir] += 1;
+          l[dir] -= 1;
+          f_grad[c][dir] = (f[r] - f[l])*inv_dx;
+      }
+    }
+    //__________________________________
+    // set refinement flag
+    PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
+    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      if( f_grad[c].length() > d_scalar->refineCriteria){
+        refineFlag[c] = true;
+        refinePatch->set();
+      }
+    }
+  }  // patches
 }
