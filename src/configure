@@ -1391,7 +1391,8 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-##  require autoconf version 2.53
+##  require autoconf version 2.57 (I think this is the RH9 default.)
+##  type "autoconf --version" to find out what version you have.
 
 
 
@@ -2609,6 +2610,66 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
     NUM_CPUS=4
     ;;
   *-darwin*)
+
+    ##  SCI_CHECK_OS_VERSION
+
+    _SCI_CORRECT_='echo $echo_n "$echo_c"'
+    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_VER_1_="0"
+    _SCI_VER_2_="7.0"
+    _CUR_1_=""
+    _CUR_2_=""
+
+    echo "$as_me:$LINENO: checking for OS version 7.0" >&5
+echo $ECHO_N "checking for OS version 7.0... $ECHO_C" >&6
+
+    if test "NEED_OSX_HACK=no"; then
+      _SCI_CORRECT_='NEED_OSX_HACK=no'
+    fi
+
+    if test "NEED_OSX_HACK=yes"; then
+      _SCI_NOTCORRECT_='NEED_OSX_HACK=yes'
+    fi
+
+    if test ""; then
+      _SCI_COMP_=""
+    else
+      _SCI_COMP_="-gt"
+    fi
+
+    eval "uname -r 2> conftest.out >> conftest.out"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\.]*%%g'`"
+    _SCI_VER_1_="$_SCI_REPORT_"
+
+    _SCI_BIGGER_=yes
+    _SCI_LAST_=""
+    while test "$_SCI_VER_2_"; do
+      if test "$_SCI_LAST_" = "$_SCI_VER_2_"; then
+        break
+      fi
+      _SCI_LAST_="$_SCI_VER_2_"
+      _CUR_1_=`echo $_SCI_VER_1_ | sed 's%\.[0-9]*[a-z]*%%g'`
+      _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
+      _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
+      _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
+      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+        _SCI_BIGGER_=no
+        break
+      elif test $_CUR_1_ -gt $_CUR_2_; then
+        break
+      fi
+    done
+
+    if test "$_SCI_BIGGER_" = "yes"; then
+      echo "$as_me:$LINENO: result: yes ($_SCI_REPORT_)" >&5
+echo "${ECHO_T}yes ($_SCI_REPORT_)" >&6
+      eval $_SCI_CORRECT_
+    else
+      echo "$as_me:$LINENO: result: no ($_SCI_REPORT_)" >&5
+echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
+      eval $_SCI_NOTCORRECT_
+    fi
+
     NUM_CPUS=2
     IS_OSX="yes"
     ;;
@@ -3946,7 +4007,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3949:" \
+echo "$as_me:4010:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4829,71 +4890,10 @@ echo "${ECHO_T}no" >&6
     CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -fcoalesce-templates -Wno-long-double "
     CXXFLAGS="$CXXFLAGS $CFLAGS"
 
-    ##  SCI_CHECK_VERSION
-    _SCI_CORRECT_='echo $echo_n "$echo_c"'
-    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
-    _SCI_VER_1_="0"
-    _SCI_VER_2_="3.3"
-    _CUR_1_=""
-    _CUR_2_=""
-
-    echo "$as_me:$LINENO: checking for \`basename $CC\` version 3.3" >&5
-echo $ECHO_N "checking for \`basename $CC\` version 3.3... $ECHO_C" >&6
-
-    if test "ver33=yes"; then
-      _SCI_CORRECT_='ver33=yes'
-    fi
-
-    if test "ver33=no"; then
-      _SCI_NOTCORRECT_='ver33=no'
-    fi
-
-    if test ""; then
-      _SCI_COMP_=""
-    else
-      _SCI_COMP_="-gt"
-    fi
-
-    eval "$CC --version 2> conftest.out >> conftest.out"
-    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\. ]*%%g;s%^ *%%' | cut -f1 -d' ' `"
-    _SCI_VER_1_="$_SCI_REPORT_"
-
-    _SCI_BIGGER_=yes
-    _SCI_LAST_=""
-    while test "$_SCI_VER_2_"; do
-      if test "$_SCI_LAST_" = "$_SCI_VER_2_"; then
-        break
-      fi
-      _SCI_LAST_="$_SCI_VER_2_"
-      _CUR_1_=`echo $_SCI_VER_1_ | sed 's%\.[0-9]*[a-z]*%%g'`
-      _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
-      _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
-      _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
-        _SCI_BIGGER_=no
-        break
-      elif test $_CUR_1_ -gt $_CUR_2_; then
-        break
-      fi
-    done
-
-    if test "$_SCI_BIGGER_" = "yes"; then
-      echo "$as_me:$LINENO: result: yes ($_SCI_REPORT_)" >&5
-echo "${ECHO_T}yes ($_SCI_REPORT_)" >&6
-      eval $_SCI_CORRECT_
-    else
-      echo "$as_me:$LINENO: result: no ($_SCI_REPORT_)" >&5
-echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
-      eval $_SCI_NOTCORRECT_
-    fi
-
-    if test $ver33 == no; then
+    if test $NEED_OSX_HACK == yes; then
 	SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev \${LIBDIR}/../osx/osx_init.o  ${SOFLAGS}"
-	NEED_OSX_HACK="yes"
     else
 	SOFLAGS="-dynamiclib"
-	NEED_OSX_HACK="no"
-
     fi
 
     ;;
