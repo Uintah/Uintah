@@ -40,14 +40,11 @@ proc uiIsoSurface {modid} {
     makePoint $w.f.seed "Seed Point" seed_point,$modid $n
     pack $w.f.seed -fill x
 
-    button $w.f.emit_surface -text "Emit Surface" -command "emitIsoSurface $modid"
-    pack $w.f.emit_surface
-}
-
-proc emitIsoSurface {modid} {
     global emit_surface,$modid
-    set emit_surface,$modid 1
-    $modid needexecute
+    set emit_surface,$modid 0
+    checkbutton $w.f.emit_surface -text "Emitting Surface" -relief flat \
+	    -variable emit_surface,$modid -command $n
+    pack $w.f.emit_surface
 }
 
 proc IsoSurface_set_minmax {modid min max} {
