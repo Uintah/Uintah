@@ -39,8 +39,9 @@ enum { SFrameW_PointMatl, SFrameW_EdgeMatl, SFrameW_SliderMatl, SFrameW_HighMatl
 enum { SFrameW_PickSphUL, SFrameW_PickSphUR, SFrameW_PickSphDR, SFrameW_PickSphDL, SFrameW_PickCyls,
        SFrameW_PickSlider1, SFrameW_PickSlider2 };
 
-ScaledFrameWidget::ScaledFrameWidget( Module* module, Real widget_scale )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
+ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock,
+				     Real widget_scale )
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
 {
    Real INIT = 1.0*widget_scale;
    variables[SFrameW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
@@ -201,10 +202,10 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, Real widget_scale )
    constraints[SFrameW_ConstDRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[SFrameW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[SFrameW_PointMatl] = new Material(PointWidgetMaterial);
-   materials[SFrameW_EdgeMatl] = new Material(EdgeWidgetMaterial);
-   materials[SFrameW_SliderMatl] = new Material(SliderWidgetMaterial);
-   materials[SFrameW_HighMatl] = new Material(HighlightWidgetMaterial);
+   materials[SFrameW_PointMatl] = PointWidgetMaterial;
+   materials[SFrameW_EdgeMatl] = EdgeWidgetMaterial;
+   materials[SFrameW_SliderMatl] = SliderWidgetMaterial;
+   materials[SFrameW_HighMatl] = HighlightWidgetMaterial;
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
@@ -258,7 +259,7 @@ ScaledFrameWidget::~ScaledFrameWidget()
 
 
 void
-ScaledFrameWidget::execute()
+ScaledFrameWidget::widget_execute()
 {
    ((GeomSphere*)geometries[SFrameW_SphereUL])->move(variables[SFrameW_PointUL]->Get(),
 						    1*widget_scale);

@@ -28,15 +28,17 @@ enum { ArrowW_Sphere, ArrowW_Cylinder, ArrowW_Cone };
 enum { ArrowW_PointMatl, ArrowW_EdgeMatl, ArrowW_HighMatl };
 enum { ArrowW_Pick };
 
-ArrowWidget::ArrowWidget( Module* module, double widget_scale )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale),
+ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock,
+
+			 double widget_scale )
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale),
   direction(0, 0, 1.0)
 {
    variables[ArrowW_Point] = new Variable("Point", Scheme1, Point(0, 0, 0));
 
-   materials[ArrowW_PointMatl] = new Material(PointWidgetMaterial);
-   materials[ArrowW_EdgeMatl] = new Material(EdgeWidgetMaterial);
-   materials[ArrowW_HighMatl] = new Material(HighlightWidgetMaterial);
+   materials[ArrowW_PointMatl] = PointWidgetMaterial;
+   materials[ArrowW_EdgeMatl] = EdgeWidgetMaterial;
+   materials[ArrowW_HighMatl] = HighlightWidgetMaterial;
 
    GeomGroup* arr = new GeomGroup;
    geometries[ArrowW_Sphere] = new GeomSphere;
@@ -62,7 +64,7 @@ ArrowWidget::~ArrowWidget()
 
 
 void
-ArrowWidget::execute()
+ArrowWidget::widget_execute()
 {
    ((GeomSphere*)geometries[ArrowW_Sphere])->move(variables[ArrowW_Point]->Get(),
 						  1*widget_scale);

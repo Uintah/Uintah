@@ -23,11 +23,11 @@ enum { SCubeW_PointIUL, SCubeW_PointIUR, SCubeW_PointIDR, SCubeW_PointIDL,
 
 class ScaledCubeWidget : public BaseWidget {
 public:
-   ScaledCubeWidget( Module* module, double widget_scale );
+   ScaledCubeWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    ScaledCubeWidget( const ScaledCubeWidget& );
    ~ScaledCubeWidget();
 
-   virtual void execute();
+   virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 };
 

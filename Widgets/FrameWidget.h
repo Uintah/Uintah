@@ -22,11 +22,11 @@ enum { FrameW_PointUL, FrameW_PointUR, FrameW_PointDR, FrameW_PointDL,
 
 class FrameWidget : public BaseWidget {
 public:
-   FrameWidget( Module* module, double widget_scale );
+   FrameWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    FrameWidget( const FrameWidget& );
    ~FrameWidget();
 
-   virtual void execute();
+   virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 };
 

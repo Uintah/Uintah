@@ -41,8 +41,8 @@ enum { SBoxW_PickSphIUL, SBoxW_PickSphIUR, SBoxW_PickSphIDR, SBoxW_PickSphIDL,
        SBoxW_PickSphOUL, SBoxW_PickSphOUR, SBoxW_PickSphODR, SBoxW_PickSphODL,
        SBoxW_PickCyls };
 
-ScaledBoxWidget::ScaledBoxWidget( Module* module, double widget_scale )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
+ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
    Real INIT = 1.0*widget_scale;
    variables[SBoxW_PointIUL] = new Variable("PntIUL", Scheme1, Point(0, 0, 0));
@@ -239,10 +239,10 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, double widget_scale )
    constraints[SBoxW_ConstODRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[SBoxW_ConstODRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[SBoxW_PointMatl] = new Material(PointWidgetMaterial);
-   materials[SBoxW_EdgeMatl] = new Material(EdgeWidgetMaterial);
-   materials[SBoxW_SliderMatl] = new Material(SliderWidgetMaterial);
-   materials[SBoxW_HighMatl] = new Material(HighlightWidgetMaterial);
+   materials[SBoxW_PointMatl] = PointWidgetMaterial;
+   materials[SBoxW_EdgeMatl] = EdgeWidgetMaterial;
+   materials[SBoxW_SliderMatl] = SliderWidgetMaterial;
+   materials[SBoxW_HighMatl] = HighlightWidgetMaterial;
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
@@ -282,7 +282,7 @@ ScaledBoxWidget::~ScaledBoxWidget()
 
 
 void
-ScaledBoxWidget::execute()
+ScaledBoxWidget::widget_execute()
 {
    ((GeomSphere*)geometries[SBoxW_SphereIUL])->move(variables[SBoxW_PointIUL]->Get(),
 						    1*widget_scale);

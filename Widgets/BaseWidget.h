@@ -25,11 +25,12 @@
 #include <Geom/Pick.h>
 #include <Geom/Switch.h>
 
+class CrowdMonitor;
 class Module;
 
 class BaseWidget {
 public:
-   BaseWidget( Module* module,
+   BaseWidget( Module* module, CrowdMonitor* lock,
 	       const Index vars, const Index cons,
 	       const Index geoms, const Index mats,
 	       const Index picks,
@@ -46,7 +47,7 @@ public:
    inline int GetState();
    inline void SetState(const int state);
 
-   virtual void execute();
+   void execute();
    const Point& GetVar( const Index vindex ) const;
    
    virtual void geom_pick(void*);
@@ -59,6 +60,7 @@ public:
    void print( ostream& os=cout ) const;
 
 protected:
+   virtual void widget_execute()=0;
    Index NumConstraints;
    Index NumVariables;
    Index NumGeometries;
@@ -75,14 +77,15 @@ protected:
    Real widget_scale;
 
    Module* module;
+   CrowdMonitor* lock;
 
    void FinishWidget(GeomObj* w);
 
 protected:
-   const Material PointWidgetMaterial;
-   const Material EdgeWidgetMaterial;
-   const Material SliderWidgetMaterial;
-   const Material HighlightWidgetMaterial;
+   static MaterialHandle PointWidgetMaterial;
+   static MaterialHandle EdgeWidgetMaterial;
+   static MaterialHandle SliderWidgetMaterial;
+   static MaterialHandle HighlightWidgetMaterial;
 };
 
 inline ostream& operator<<( ostream& os, BaseWidget& w );

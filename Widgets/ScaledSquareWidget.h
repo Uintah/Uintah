@@ -24,11 +24,11 @@ enum { SSquareW_PointUL, SSquareW_PointUR, SSquareW_PointDR, SSquareW_PointDL,
 
 class ScaledSquareWidget : public BaseWidget {
 public:
-   ScaledSquareWidget( Module* module, double widget_scale );
+   ScaledSquareWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    ScaledSquareWidget( const ScaledSquareWidget& );
    ~ScaledSquareWidget();
 
-   virtual void execute();
+   virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
    inline Real GetRatio1() const;

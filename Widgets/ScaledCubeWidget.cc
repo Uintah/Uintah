@@ -41,8 +41,9 @@ enum { SCubeW_PickSphIUL, SCubeW_PickSphIUR, SCubeW_PickSphIDR, SCubeW_PickSphID
        SCubeW_PickSphOUL, SCubeW_PickSphOUR, SCubeW_PickSphODR, SCubeW_PickSphODL,
        SCubeW_PickCyls };
 
-ScaledCubeWidget::ScaledCubeWidget( Module* module, double widget_scale )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
+ScaledCubeWidget::ScaledCubeWidget( Module* module, CrowdMonitor* lock,
+				   double widget_scale )
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
    Real INIT = 1.0*widget_scale;
    variables[SCubeW_PointIUL] = new Variable("PntIUL", Scheme1, Point(0, 0, 0));
@@ -239,10 +240,10 @@ ScaledCubeWidget::ScaledCubeWidget( Module* module, double widget_scale )
    constraints[SCubeW_ConstODRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[SCubeW_ConstODRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[SCubeW_PointMatl] = new Material(PointWidgetMaterial);
-   materials[SCubeW_EdgeMatl] = new Material(EdgeWidgetMaterial);
-   materials[SCubeW_SliderMatl] = new Material(SliderWidgetMaterial);
-   materials[SCubeW_HighMatl] = new Material(HighlightWidgetMaterial);
+   materials[SCubeW_PointMatl] = PointWidgetMaterial;
+   materials[SCubeW_EdgeMatl] = EdgeWidgetMaterial;
+   materials[SCubeW_SliderMatl] = SliderWidgetMaterial;
+   materials[SCubeW_HighMatl] = HighlightWidgetMaterial;
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
@@ -282,7 +283,7 @@ ScaledCubeWidget::~ScaledCubeWidget()
 
 
 void
-ScaledCubeWidget::execute()
+ScaledCubeWidget::widget_execute()
 {
    ((GeomSphere*)geometries[SCubeW_SphereIUL])->move(variables[SCubeW_PointIUL]->Get(),
 						    1*widget_scale);

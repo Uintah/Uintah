@@ -23,11 +23,11 @@ enum { RingW_PointUL, RingW_PointUR, RingW_PointDR, RingW_PointDL,
 
 class RingWidget : public BaseWidget {
 public:
-   RingWidget( Module* module, double widget_scale );
+   RingWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    RingWidget( const RingWidget& );
    ~RingWidget();
 
-   virtual void execute();
+   virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
    inline Real GetRatio() const;

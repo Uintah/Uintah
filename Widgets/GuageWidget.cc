@@ -31,8 +31,8 @@ enum { GuageW_SphereL, GuageW_SphereR, GuageW_Cylinder, GuageW_SliderCyl };
 enum { GuageW_PointMatl, GuageW_EdgeMatl, GuageW_SliderMatl, GuageW_HighMatl };
 enum { GuageW_PickSphL, GuageW_PickSphR, GuageW_PickCyl, GuageW_PickSlider };
 
-GuageWidget::GuageWidget( Module* module, double widget_scale )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
+GuageWidget::GuageWidget( Module* module, CrowdMonitor* lock, double widget_scale )
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
    Real INIT = 1.0*widget_scale;
    variables[GuageW_PointL] = new Variable("PntL", Scheme1, Point(0, 0, 0));
@@ -75,10 +75,10 @@ GuageWidget::GuageWidget( Module* module, double widget_scale )
    constraints[GuageW_ConstRatio]->VarChoices(Scheme2, 2, 2, 2);
    constraints[GuageW_ConstRatio]->Priorities(P_Highest, P_Highest, P_Highest);
 
-   materials[GuageW_PointMatl] = new Material(PointWidgetMaterial);
-   materials[GuageW_EdgeMatl] = new Material(EdgeWidgetMaterial);
-   materials[GuageW_SliderMatl] = new Material(SliderWidgetMaterial);
-   materials[GuageW_HighMatl] = new Material(HighlightWidgetMaterial);
+   materials[GuageW_PointMatl] = PointWidgetMaterial;
+   materials[GuageW_EdgeMatl] = EdgeWidgetMaterial;
+   materials[GuageW_SliderMatl] = SliderWidgetMaterial;
+   materials[GuageW_HighMatl] = HighlightWidgetMaterial;
 
    geometries[GuageW_SphereL] = new GeomSphere;
    picks[GuageW_PickSphL] = new GeomPick(geometries[GuageW_SphereL], module);
@@ -119,7 +119,7 @@ GuageWidget::~GuageWidget()
 
 
 void
-GuageWidget::execute()
+GuageWidget::widget_execute()
 {
    ((GeomSphere*)geometries[GuageW_SphereL])->move(variables[GuageW_PointL]->Get(),
 						   1*widget_scale);

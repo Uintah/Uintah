@@ -22,11 +22,11 @@ enum { SquareW_PointUL, SquareW_PointUR, SquareW_PointDR, SquareW_PointDL,
 
 class SquareWidget : public BaseWidget {
 public:
-   SquareWidget( Module* module, double widget_scale );
+   SquareWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    SquareWidget( const SquareWidget& );
    ~SquareWidget();
 
-   virtual void execute();
+   virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 };
 

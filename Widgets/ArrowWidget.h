@@ -21,11 +21,11 @@ enum { ArrowW_Point };
 
 class ArrowWidget : public BaseWidget {
 public:
-   ArrowWidget( Module* module, double widget_scale );
+   ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    ArrowWidget( const ArrowWidget& );
    ~ArrowWidget();
 
-   virtual void execute();
+   virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
    inline void SetDirect( const Vector& v );

@@ -39,8 +39,9 @@ enum { SSquareW_PointMatl, SSquareW_EdgeMatl, SSquareW_SliderMatl, SSquareW_High
 enum { SSquareW_PickSphUL, SSquareW_PickSphUR, SSquareW_PickSphDR, SSquareW_PickSphDL, SSquareW_PickCyls,
        SSquareW_PickSlider1, SSquareW_PickSlider2 };
 
-ScaledSquareWidget::ScaledSquareWidget( Module* module, Real widget_scale )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
+ScaledSquareWidget::ScaledSquareWidget( Module* module, CrowdMonitor* lock,
+				       Real widget_scale )
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
 {
    Real INIT = 1.0*widget_scale;
    variables[SSquareW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
@@ -199,10 +200,10 @@ ScaledSquareWidget::ScaledSquareWidget( Module* module, Real widget_scale )
    constraints[SSquareW_ConstDRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[SSquareW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[SSquareW_PointMatl] = new Material(PointWidgetMaterial);
-   materials[SSquareW_EdgeMatl] = new Material(EdgeWidgetMaterial);
-   materials[SSquareW_SliderMatl] = new Material(SliderWidgetMaterial);
-   materials[SSquareW_HighMatl] = new Material(HighlightWidgetMaterial);
+   materials[SSquareW_PointMatl] = PointWidgetMaterial;
+   materials[SSquareW_EdgeMatl] = EdgeWidgetMaterial;
+   materials[SSquareW_SliderMatl] = SliderWidgetMaterial;
+   materials[SSquareW_HighMatl] = HighlightWidgetMaterial;
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
@@ -256,7 +257,7 @@ ScaledSquareWidget::~ScaledSquareWidget()
 
 
 void
-ScaledSquareWidget::execute()
+ScaledSquareWidget::widget_execute()
 {
    ((GeomSphere*)geometries[SSquareW_SphereUL])->move(variables[SSquareW_PointUL]->Get(),
 						    1*widget_scale);

@@ -23,11 +23,11 @@ enum { SBoxW_PointIUL, SBoxW_PointIUR, SBoxW_PointIDR, SBoxW_PointIDL,
 
 class ScaledBoxWidget : public BaseWidget {
 public:
-   ScaledBoxWidget( Module* module, double widget_scale );
+   ScaledBoxWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    ScaledBoxWidget( const ScaledBoxWidget& );
    ~ScaledBoxWidget();
 
-   virtual void execute();
+   virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 };
 

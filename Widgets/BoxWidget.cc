@@ -41,8 +41,8 @@ enum { BoxW_PickSphIUL, BoxW_PickSphIUR, BoxW_PickSphIDR, BoxW_PickSphIDL,
        BoxW_PickSphOUL, BoxW_PickSphOUR, BoxW_PickSphODR, BoxW_PickSphODL,
        BoxW_PickCyls };
 
-BoxWidget::BoxWidget( Module* module, double widget_scale )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
+BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
    Real INIT = 1.0*widget_scale;
    variables[BoxW_PointIUL] = new Variable("PntIUL", Scheme1, Point(0, 0, 0));
@@ -239,9 +239,9 @@ BoxWidget::BoxWidget( Module* module, double widget_scale )
    constraints[BoxW_ConstODRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[BoxW_ConstODRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[BoxW_PointMatl] = new Material(PointWidgetMaterial);
-   materials[BoxW_EdgeMatl] = new Material(EdgeWidgetMaterial);
-   materials[BoxW_HighMatl] = new Material(HighlightWidgetMaterial);
+   materials[BoxW_PointMatl] = PointWidgetMaterial;
+   materials[BoxW_EdgeMatl] = EdgeWidgetMaterial;
+   materials[BoxW_HighMatl] = HighlightWidgetMaterial;
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
@@ -281,7 +281,7 @@ BoxWidget::~BoxWidget()
 
 
 void
-BoxWidget::execute()
+BoxWidget::widget_execute()
 {
    ((GeomSphere*)geometries[BoxW_SphereIUL])->move(variables[BoxW_PointIUL]->Get(),
 						    1*widget_scale);

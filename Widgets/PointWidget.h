@@ -21,11 +21,11 @@ enum { PointW_Point };
 
 class PointWidget : public BaseWidget {
 public:
-   PointWidget( Module* module, double widget_scale );
+   PointWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    PointWidget( const PointWidget& );
    ~PointWidget();
 
-   virtual void execute();
+   virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 };
 

@@ -21,11 +21,11 @@ enum { GuageW_PointL, GuageW_PointR, GuageW_Dist, GuageW_Slider, GuageW_SDist, G
 
 class GuageWidget : public BaseWidget {
 public:
-   GuageWidget( Module* module, double widget_scale );
+   GuageWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    GuageWidget( const GuageWidget& );
    ~GuageWidget();
 
-   virtual void execute();
+   virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
    inline Real GetRatio() const;

@@ -23,11 +23,11 @@ enum { BoxW_PointIUL, BoxW_PointIUR, BoxW_PointIDR, BoxW_PointIDL,
 
 class BoxWidget : public BaseWidget {
 public:
-   BoxWidget( Module* module, double widget_scale );
+   BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    BoxWidget( const BoxWidget& );
    ~BoxWidget();
 
-   virtual void execute();
+   virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 };
 

@@ -14,8 +14,12 @@
 
 #include <Widgets/BaseWidget.h>
 
+MaterialHandle BaseWidget::PointWidgetMaterial(new Material(Color(0,0,0), Color(.54,.60,1), Color(.5,.5,.5), 20));
+MaterialHandle BaseWidget::EdgeWidgetMaterial(new Material(Color(0,0,0), Color(.54,.60,.66), Color(.5,.5,.5), 20));
+MaterialHandle BaseWidget::SliderWidgetMaterial(new Material(Color(0,0,0), Color(.66,.60,.40), Color(.5,.5,.5), 20));
+MaterialHandle BaseWidget::HighlightWidgetMaterial(new Material(Color(0,0,0), Color(.7,.7,.7), Color(0,0,.6), 20));
 
-BaseWidget::BaseWidget( Module* module,
+BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
 			const Index NumVariables,
 			const Index NumConstraints,
 			const Index NumGeometries,
@@ -28,11 +32,7 @@ BaseWidget::BaseWidget( Module* module,
   constraints(NumConstraints), variables(NumVariables),
   geometries(NumGeometries), materials(NumMaterials),
   picks(NumPicks),
-  module(module), widget_scale(widget_scale),
-  PointWidgetMaterial(Color(0,0,0), Color(.54,.60,1), Color(.5,.5,.5), 20),
-  EdgeWidgetMaterial(Color(0,0,0), Color(.54,.60,.66), Color(.5,.5,.5), 20),
-  SliderWidgetMaterial(Color(0,0,0), Color(.66,.60,.40), Color(.5,.5,.5), 20),
-  HighlightWidgetMaterial(Color(0,0,0), Color(.7,.7,.7), Color(0,0,.6), 20)  
+  module(module), widget_scale(widget_scale), lock(lock)
 {
 }
 
@@ -54,6 +54,9 @@ BaseWidget::~BaseWidget()
 void
 BaseWidget::execute()
 {
+    lock->write_lock();
+    widget_execute();
+    lock->write_unlock();
 }
 
 

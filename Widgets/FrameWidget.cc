@@ -33,8 +33,8 @@ enum { FrameW_SphereUL, FrameW_SphereUR, FrameW_SphereDR, FrameW_SphereDL,
 enum { FrameW_PointMatl, FrameW_EdgeMatl, FrameW_HighMatl };
 enum { FrameW_PickSphUL, FrameW_PickSphUR, FrameW_PickSphDR, FrameW_PickSphDL, FrameW_PickCyls };
 
-FrameWidget::FrameWidget( Module* module, Real widget_scale )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
+FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
 {
    Real INIT = 1.0*widget_scale;
    variables[FrameW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
@@ -113,9 +113,9 @@ FrameWidget::FrameWidget( Module* module, Real widget_scale )
    constraints[FrameW_ConstDRDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[FrameW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[FrameW_PointMatl] = new Material(PointWidgetMaterial);
-   materials[FrameW_EdgeMatl] = new Material(EdgeWidgetMaterial);
-   materials[FrameW_HighMatl] = new Material(HighlightWidgetMaterial);
+   materials[FrameW_PointMatl] = PointWidgetMaterial;
+   materials[FrameW_EdgeMatl] = EdgeWidgetMaterial;
+   materials[FrameW_HighMatl] = HighlightWidgetMaterial;
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
@@ -155,7 +155,7 @@ FrameWidget::~FrameWidget()
 
 
 void
-FrameWidget::execute()
+FrameWidget::widget_execute()
 {
    ((GeomSphere*)geometries[FrameW_SphereUL])->move(variables[FrameW_PointUL]->Get(),
 						    1*widget_scale);

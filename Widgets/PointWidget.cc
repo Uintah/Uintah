@@ -26,13 +26,13 @@ enum { PointW_Sphere };
 enum { PointW_PointMatl, PointW_HighMatl };
 enum { PointW_Pick };
 
-PointWidget::PointWidget( Module* module, double widget_scale )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
+PointWidget::PointWidget( Module* module, CrowdMonitor* lock, double widget_scale )
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
    variables[PointW_Point] = new Variable("Point", Scheme1, Point(0, 0, 0));
 
-   materials[PointW_PointMatl] = new Material(PointWidgetMaterial);
-   materials[PointW_HighMatl] = new Material(HighlightWidgetMaterial);
+   materials[PointW_PointMatl] = PointWidgetMaterial;
+   materials[PointW_HighMatl] = HighlightWidgetMaterial;
 
    geometries[PointW_Sphere] = new GeomSphere;
    GeomMaterial* sphm = new GeomMaterial(geometries[PointW_Sphere], materials[PointW_PointMatl]);
@@ -50,13 +50,10 @@ PointWidget::~PointWidget()
 
 
 void
-PointWidget::execute()
+PointWidget::widget_execute()
 {
    ((GeomSphere*)geometries[PointW_Sphere])->move(variables[PointW_Point]->Get(),
 						  1*widget_scale);
-   for (Index geom = 0; geom < NumPcks; geom++) {
-      picks[geom]->set_principal(Vector(1,0,0), Vector(0,1,0), Vector(0,0,1));
-   }
 }
 
 void

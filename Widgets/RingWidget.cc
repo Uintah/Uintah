@@ -20,6 +20,8 @@
 #include <Constraints/RatioConstraint.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Sphere.h>
+#include <Geom/Torus.h>
+#include <Geometry/Plane.h>
 
 const Index NumCons = 11;
 const Index NumVars = 9;
@@ -37,8 +39,8 @@ enum { RingW_PointMatl, RingW_EdgeMatl, RingW_SliderMatl, RingW_HighMatl };
 enum { RingW_PickSphUL, RingW_PickSphUR, RingW_PickSphDR, RingW_PickSphDL, RingW_PickCyls,
        RingW_PickSlider };
 
-RingWidget::RingWidget( Module* module, Real widget_scale )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
+RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
 {
    Real INIT = 1.0*widget_scale;
    variables[RingW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
@@ -153,10 +155,10 @@ RingWidget::RingWidget( Module* module, Real widget_scale )
    constraints[RingW_ConstDRDL]->VarChoices(Scheme3, 1, 1, 1);
    constraints[RingW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[RingW_PointMatl] = new Material(PointWidgetMaterial);
-   materials[RingW_EdgeMatl] = new Material(EdgeWidgetMaterial);
-   materials[RingW_SliderMatl] = new Material(SliderWidgetMaterial);
-   materials[RingW_HighMatl] = new Material(HighlightWidgetMaterial);
+   materials[RingW_PointMatl] = PointWidgetMaterial;
+   materials[RingW_EdgeMatl] = EdgeWidgetMaterial;
+   materials[RingW_SliderMatl] = SliderWidgetMaterial;
+   materials[RingW_HighMatl] = HighlightWidgetMaterial;
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
@@ -173,7 +175,7 @@ RingWidget::RingWidget( Module* module, Real widget_scale )
    GeomGroup* cyls = new GeomGroup;
    geometries[RingW_Cylinder] = new GeomCylinder;
    cyls->add(geometries[RingW_Cylinder]);
-   geometries[RingW_Ring] = new GeomCylinder;
+   geometries[RingW_Ring] = new GeomTorus;
    cyls->add(geometries[RingW_Ring]);
    picks[RingW_PickCyls] = new GeomPick(cyls, module);
    picks[RingW_PickCyls]->set_highlight(materials[RingW_HighMatl]);
@@ -203,7 +205,7 @@ RingWidget::~RingWidget()
 
 
 void
-RingWidget::execute()
+RingWidget::widget_execute()
 {
    ((GeomSphere*)geometries[RingW_SphereUL])->move(variables[RingW_PointUL]->Get(),
 						    1*widget_scale);
@@ -216,9 +218,17 @@ RingWidget::execute()
    ((GeomCylinder*)geometries[RingW_Cylinder])->move(variables[RingW_PointUL]->Get(),
 						     variables[RingW_PointDR]->Get(),
 						     0.5*widget_scale);
-   ((GeomCylinder*)geometries[RingW_Ring])->move(variables[RingW_PointUL]->Get(),
-						  variables[RingW_PointUR]->Get(),
-						  0.5*widget_scale);
+   Point cen=AffineCombination(variables[RingW_PointUL]->Get(), 0.25,
+			       variables[RingW_PointUR]->Get(), 0.25,
+			       variables[RingW_PointDL]->Get(), 0.25,
+			       variables[RingW_PointDR]->Get(), 0.25);
+   Vector normal(Plane(variables[RingW_PointUL]->Get(),
+		       variables[RingW_PointUR]->Get(),
+		       variables[RingW_PointDL]->Get()).normal());
+   double rad=(variables[RingW_PointUL]->Get()-variables[RingW_PointDR]->Get()).length()/2.;
+
+   ((GeomTorus*)geometries[RingW_Ring])->move(cen, normal,
+					      rad, 0.5*widget_scale);
    ((GeomCylinder*)geometries[RingW_SliderCyl])->move(variables[RingW_Slider]->Get()
 							- (GetAxis() * 0.3 * widget_scale),
 							variables[RingW_Slider]->Get()

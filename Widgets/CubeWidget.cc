@@ -41,8 +41,8 @@ enum { CubeW_PickSphIUL, CubeW_PickSphIUR, CubeW_PickSphIDR, CubeW_PickSphIDL,
        CubeW_PickSphOUL, CubeW_PickSphOUR, CubeW_PickSphODR, CubeW_PickSphODL,
        CubeW_PickCyls };
 
-CubeWidget::CubeWidget( Module* module, double widget_scale )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
+CubeWidget::CubeWidget( Module* module, CrowdMonitor* lock, double widget_scale )
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
    Real INIT = 1.0*widget_scale;
    variables[CubeW_PointIUL] = new Variable("PntIUL", Scheme1, Point(0, 0, 0));
@@ -239,9 +239,9 @@ CubeWidget::CubeWidget( Module* module, double widget_scale )
    constraints[CubeW_ConstODRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[CubeW_ConstODRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[CubeW_PointMatl] = new Material(PointWidgetMaterial);
-   materials[CubeW_EdgeMatl] = new Material(EdgeWidgetMaterial);
-   materials[CubeW_HighMatl] = new Material(HighlightWidgetMaterial);
+   materials[CubeW_PointMatl] = PointWidgetMaterial;
+   materials[CubeW_EdgeMatl] = EdgeWidgetMaterial;
+   materials[CubeW_HighMatl] = HighlightWidgetMaterial;
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
@@ -281,7 +281,7 @@ CubeWidget::~CubeWidget()
 
 
 void
-CubeWidget::execute()
+CubeWidget::widget_execute()
 {
    ((GeomSphere*)geometries[CubeW_SphereIUL])->move(variables[CubeW_PointIUL]->Get(),
 						    1*widget_scale);
