@@ -95,9 +95,9 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
   print ""
   if solotest == "":
-    print "Performing %s-%s tests." % (algo, mode)
+    print "Performing %s-%s tests." % (ALGO, mode)
   else:
-    print "Performing %s-%s test %s." % (algo, mode, solotest)
+    print "Performing %s-%s test %s." % (ALGO, mode, solotest)
   print "===================================="
   print ""
 
