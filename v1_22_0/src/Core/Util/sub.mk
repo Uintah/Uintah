@@ -49,7 +49,7 @@ SRCS     += \
 	$(SRCDIR)/TypeDescription.cc \
         $(SRCDIR)/XMLParser.cc \
 
-PSELIBS := Core/Containers Core/Exceptions Core/Thread
+PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Math
 LIBS := $(XML_LIBRARY) $(DL_LIBRARY) $(THREAD_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
