@@ -74,7 +74,7 @@
 using std::cout;
 
 #ifdef _WIN32
-#  include <afxwin.h>
+#  include <windows.h>
 #endif
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
