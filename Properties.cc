@@ -487,7 +487,7 @@ Properties::reComputeProps(const ProcessorGroup*,
 
     new_dw->get(density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, nofGhostCells);
-    new_density.copy(density);
+    new_density.copyData(density);
 
     if (d_MAlab){
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
