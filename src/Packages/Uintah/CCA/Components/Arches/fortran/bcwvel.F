@@ -97,7 +97,7 @@ C$DIR SCALAR
 
                IF (PCELL(I,J,K).EQ.WALL) THEN
                   if (.not.(zminus.and.k.eq.kst)) then
-                     WW(I,J,K) = 0.0D0
+c                     WW(I,J,K) = 0.0D0
 C--------------------------------------------------------------------
 C             BOTTOMEAST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------

@@ -5,7 +5,6 @@
 #include <Core/Containers/Array1.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
 #include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
@@ -121,16 +120,17 @@ RBGSSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
 void 
 RBGSSolver::computePressUnderrelax(const ProcessorGroup*,
 				   const Patch* patch,
-				   ArchesVariables* vars)
+				   ArchesVariables* vars,
+				   ArchesConstVariables* constvars)
 {
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-  fort_underelax(idxLo, idxHi, vars->pressure,
-		 vars->pressCoeff[Arches::AP], vars->pressNonlinearSrc,
-		 d_underrelax);
+  fort_underelax(idxLo, idxHi, constvars->pressure,
+		 vars->pressCoeff[Arches::AP],
+		 vars->pressNonlinearSrc, d_underrelax);
 
 #ifdef ARCHES_PRES_DEBUG
   cerr << " After Pressure Underrelax : " << endl;
@@ -406,7 +406,8 @@ RBGSSolver::computeVelOrderOfMagnitude(const ProcessorGroup* ,
 void 
 RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
 				 const Patch* patch,
-				 int index, ArchesVariables* vars)
+				 int index, ArchesVariables* vars,
+				 ArchesConstVariables* constvars)
 {
   // Get the patch bounds and the variable bounds
   IntVector domLo;
@@ -418,13 +419,13 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
 
   switch (index) {
   case Arches::XDIR:
-    domLo = vars->uVelocity.getFortLowIndex();
-    domHi = vars->uVelocity.getFortHighIndex();
+    domLo = constvars->uVelocity.getFortLowIndex();
+    domHi = constvars->uVelocity.getFortHighIndex();
     domLong = vars->uVelocityCoeff[Arches::AP].getFortLowIndex();
     domHing = vars->uVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
-    fort_underelax(idxLo, idxHi, vars->uVelocity,
+    fort_underelax(idxLo, idxHi, constvars->uVelocity,
 		   vars->uVelocityCoeff[Arches::AP], vars->uVelNonlinearSrc,
 		   d_underrelax);
 
@@ -466,13 +467,13 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
 
     break;
     case Arches::YDIR:
-    domLo = vars->vVelocity.getFortLowIndex();
-    domHi = vars->vVelocity.getFortHighIndex();
+    domLo = constvars->vVelocity.getFortLowIndex();
+    domHi = constvars->vVelocity.getFortHighIndex();
     domLong = vars->vVelocityCoeff[Arches::AP].getFortLowIndex();
     domHing = vars->vVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
-    fort_underelax(idxLo, idxHi, vars->vVelocity,
+    fort_underelax(idxLo, idxHi, constvars->vVelocity,
 		   vars->vVelocityCoeff[Arches::AP], vars->vVelNonlinearSrc,
 		   d_underrelax);
 
@@ -514,13 +515,13 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
 
     break;
     case Arches::ZDIR:
-    domLo = vars->wVelocity.getFortLowIndex();
-    domHi = vars->wVelocity.getFortHighIndex();
+    domLo = constvars->wVelocity.getFortLowIndex();
+    domHi = constvars->wVelocity.getFortHighIndex();
     domLong = vars->wVelocityCoeff[Arches::AP].getFortLowIndex();
     domHing = vars->wVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCZFORTLowIndex();
     idxHi = patch->getSFCZFORTHighIndex();
-    fort_underelax(idxLo, idxHi, vars->wVelocity,
+    fort_underelax(idxLo, idxHi, constvars->wVelocity,
 		   vars->wVelocityCoeff[Arches::AP], vars->wVelNonlinearSrc,
 		   d_underrelax);
 
@@ -880,14 +881,15 @@ void
 RBGSSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 				    const Patch* patch,
 				    int,
-				    ArchesVariables* vars)
+				    ArchesVariables* vars,
+				    ArchesConstVariables* constvars)
 {
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-  fort_underelax(idxLo, idxHi, vars->scalar,
+  fort_underelax(idxLo, idxHi, constvars->scalar,
 		 vars->scalarCoeff[Arches::AP], vars->scalarNonlinearSrc,
 		 d_underrelax);
 #ifdef ARCHES_COEF_DEBUG
@@ -903,14 +905,15 @@ RBGSSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 void 
 RBGSSolver::computeEnthalpyUnderrelax(const ProcessorGroup* ,
 				      const Patch* patch,
-				      ArchesVariables* vars)
+				      ArchesVariables* vars,
+				      ArchesConstVariables* constvars)
 {
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-  fort_underelax(idxLo, idxHi, vars->enthalpy,
+  fort_underelax(idxLo, idxHi, constvars->enthalpy,
 		 vars->scalarCoeff[Arches::AP], vars->scalarNonlinearSrc,
 		 d_underrelax);
 #ifdef ARCHES_COEF_DEBUG
@@ -931,6 +934,7 @@ RBGSSolver::scalarLisolve(const ProcessorGroup*,
 			  const Patch* patch,
 			  int, double delta_t,
 			  ArchesVariables* vars,
+			  ArchesConstVariables* constvars,
 			  CellInformation* cellinfo,
 			  const ArchesLabel*)
 {
@@ -985,15 +989,15 @@ RBGSSolver::scalarLisolve(const ProcessorGroup*,
   cerr << "After scalar " << index <<" solve " << scalarIter << " " << scalarResid << endl;
   cerr << "After scalar " << index <<" solve " << nlResid << " " << trunc_conv <<  endl;
 #endif
-    fort_explicit_func(idxLo, idxHi, vars->scalar, vars->old_scalar,
-		  vars->scalarCoeff[Arches::AE], 
-		  vars->scalarCoeff[Arches::AW], 
-		  vars->scalarCoeff[Arches::AN], 
-		  vars->scalarCoeff[Arches::AS], 
-		  vars->scalarCoeff[Arches::AT], 
-		  vars->scalarCoeff[Arches::AB], 
-		  vars->scalarCoeff[Arches::AP], 
-		  vars->scalarNonlinearSrc, vars->old_density,
+    fort_explicit_func(idxLo, idxHi, vars->scalar, constvars->old_scalar,
+		  constvars->scalarCoeff[Arches::AE], 
+		  constvars->scalarCoeff[Arches::AW], 
+		  constvars->scalarCoeff[Arches::AN], 
+		  constvars->scalarCoeff[Arches::AS], 
+		  constvars->scalarCoeff[Arches::AT], 
+		  constvars->scalarCoeff[Arches::AB], 
+		  constvars->scalarCoeff[Arches::AP], 
+		  constvars->scalarNonlinearSrc, constvars->old_density,
 		  cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
 
      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
@@ -1028,6 +1032,7 @@ RBGSSolver::enthalpyLisolve(const ProcessorGroup*,
 			  const Patch* patch,
 			  double delta_t,
 			  ArchesVariables* vars,
+			  ArchesConstVariables* constvars,
 			  CellInformation* cellinfo,
 			  const ArchesLabel*)
 {
@@ -1082,15 +1087,15 @@ RBGSSolver::enthalpyLisolve(const ProcessorGroup*,
   cerr << "After scalar " << index <<" solve " << scalarIter << " " << scalarResid << endl;
   cerr << "After scalar " << index <<" solve " << nlResid << " " << trunc_conv <<  endl;
 #endif
-    fort_explicit_func(idxLo, idxHi, vars->enthalpy, vars->old_enthalpy,
-		  vars->scalarCoeff[Arches::AE], 
-		  vars->scalarCoeff[Arches::AW], 
-		  vars->scalarCoeff[Arches::AN], 
-		  vars->scalarCoeff[Arches::AS], 
-		  vars->scalarCoeff[Arches::AT], 
-		  vars->scalarCoeff[Arches::AB], 
-		  vars->scalarCoeff[Arches::AP], 
-		  vars->scalarNonlinearSrc, vars->old_density,
+    fort_explicit_func(idxLo, idxHi, vars->enthalpy, constvars->old_enthalpy,
+		  constvars->scalarCoeff[Arches::AE], 
+		  constvars->scalarCoeff[Arches::AW], 
+		  constvars->scalarCoeff[Arches::AN], 
+		  constvars->scalarCoeff[Arches::AS], 
+		  constvars->scalarCoeff[Arches::AT], 
+		  constvars->scalarCoeff[Arches::AB], 
+		  constvars->scalarCoeff[Arches::AP], 
+		  constvars->scalarNonlinearSrc, constvars->old_density,
 		  cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
      
 #ifdef ARCHES_DEBUG
@@ -1132,6 +1137,7 @@ void
 RBGSSolver::setPressMatrix(const ProcessorGroup* ,
 			    const Patch*,
 			    ArchesVariables*,
+			    ArchesConstVariables*,
 			    const ArchesLabel*)
 {
 }

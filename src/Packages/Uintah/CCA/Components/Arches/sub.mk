@@ -8,6 +8,7 @@ SRCS     += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/ArchesLabel.cc \
 	$(SRCDIR)/ArchesMaterial.cc \
 	$(SRCDIR)/ArchesVariables.cc \
+	$(SRCDIR)/ArchesConstVariables.cc \
 	$(SRCDIR)/BoundaryCondition.cc \
 	$(SRCDIR)/CellInformation.cc \
 	$(SRCDIR)/Discretization.cc \

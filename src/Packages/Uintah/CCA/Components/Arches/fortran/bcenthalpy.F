@@ -179,7 +179,7 @@ c----------------------------------------------------------------------
                      if ((loutsf).or.
      $                    (pcell(idxHi(1)+1,j,k).eq.presstype).or.
      $                    (pcell(idxHi(1)+1,j,k).eq.outletfield)) then
-                        H(idxHi(1)+1,j,k) = H(idxHi(1),j,k)
+c                        H(idxHi(1)+1,j,k) = H(idxHi(1),j,k)
                         ae(idxHi(1),j,k) = two*tiny
                      end if
                   end if
@@ -190,7 +190,7 @@ c----------------------------------------------------------------------
      $                 (uu(idxLo(1)-1,j,k).lt.0.0D0))) then
                      if ((loutsf).or.
      $                    (pcell(idxLo(1)-1,j,k).eq.presstype)) then
-                        H(idxLo(1)-1,j,k) = H(idxLo(1),j,k)
+c                        H(idxLo(1)-1,j,k) = H(idxLo(1),j,k)
                         aw(idxLo(1),j,k) = two*tiny
                      end if
                   end if
@@ -210,7 +210,7 @@ c--------------------------------------------------------------------
      $                 (vv(i,idxHi(2)+2,k).gt.0.0D0))) then
                      if ((loutsf).or.
      $                    (pcell(i, idxHi(2)+1, k).eq.presstype)) then
-                        H(i,idxHi(2)+1,k) = H(i,idxHi(2),k)
+c                        H(i,idxHi(2)+1,k) = H(i,idxHi(2),k)
                         an(i,idxHi(2),k) = two*tiny
                      end if
                   end if
@@ -221,7 +221,7 @@ c--------------------------------------------------------------------
      $                 (vv(i,idxLo(2)-1,k).lt.0.0D0))) then
                      if ((loutsf).or.(pcell(i, idxLo(2)-1, k).eq.
      $                    presstype)) then
-                        H(i,idxLo(2)-1,k) = H(i,idxLo(2),k)
+c                        H(i,idxLo(2)-1,k) = H(i,idxLo(2),k)
                         as(i,idxLo(2),k) = two*tiny
                      end if
                   end if
@@ -241,7 +241,7 @@ c--------------------------------------------------------------------
      $                 (ww(i,j,idxHi(3)+2).gt.0.0D0))) then
                      if ((loutsf).or.(pcell(i, j, idxHi(3)+1).eq.
      $                    presstype)) then
-                        H(i,j,idxHi(3)+1) = H(i,j,idxHi(3))
+c                        H(i,j,idxHi(3)+1) = H(i,j,idxHi(3))
                         at(i,j,idxHi(3)) = two*tiny
                      end if
                   end if
@@ -252,7 +252,7 @@ c--------------------------------------------------------------------
      $                 (ww(i,j,idxLo(3)-1).lt.0.0D0))) then
                      if ((loutsf).or.(pcell(i, j, idxLo(3)-1).eq.
      $                    presstype)) then
-                        H(i,j,idxLo(3)-1) = H(i,j,idxLo(3))
+c                        H(i,j,idxLo(3)-1) = H(i,j,idxLo(3))
                         ab(i,j,idxLo(3)) = two*tiny
                      end if
                   end if

@@ -201,11 +201,11 @@ c                        ae(idxHi(1),j,k) = two*tiny
                         decoef(idxHi(1),j,k) = 0.0D0
                      else if ((loutsf).or.
      $                    (pcell(idxHi(1)+1,j,k).eq.presstype)) then
-                        f(idxHi(1)+1,j,k) = f(idxHi(1),j,k)
+c                        f(idxHi(1)+1,j,k) = f(idxHi(1),j,k)
 c                        ae(idxHi(1),j,k) = two*tiny
                         decoef(idxHi(1),j,k) = 0.0D0
                      else
-                        f(idxHi(1)+1,j,k) = fmixin
+c                        f(idxHi(1)+1,j,k) = fmixin
                      end if
                   end if
                endif
@@ -216,11 +216,11 @@ c .and.
 c     $                 (uu(idxLo(1)-1,j,k).lt.0.0D0))) then
                      if ((loutsf).or.
      $                    (pcell(idxLo(1)-1,j,k).eq.presstype)) then
-                        f(idxLo(1)-1,j,k) = f(idxLo(1),j,k)
+c                        f(idxLo(1)-1,j,k) = f(idxLo(1),j,k)
                         aw(idxLo(1),j,k) = two*tiny
                         dwcoef(idxLo(1),j,k) = 0.0D0
                      else
-                        f(idxLo(1)-1,j,k) = fmixin
+c                        f(idxLo(1)-1,j,k) = fmixin
                      end if
                   end if
                endif
@@ -240,11 +240,11 @@ c .and.
 c     $                 (vv(i,idxHi(2)+2,k).gt.0.0D0))) then
                      if ((loutsf).or.
      $                    (pcell(i, idxHi(2)+1, k).eq.presstype)) then
-                        f(i,idxHi(2)+1,k) = f(i,idxHi(2),k)
+c                        f(i,idxHi(2)+1,k) = f(i,idxHi(2),k)
                         an(i,idxHi(2),k) = two*tiny
                         dncoef(i,idxHi(2),k) = 0.0D0
                      else
-                        f(i,idxHi(2)+1,k) = fmixin
+c                        f(i,idxHi(2)+1,k) = fmixin
                      end if
                   end if
                endif
@@ -255,11 +255,11 @@ c.and.
 c     $                 (vv(i,idxLo(2)-1,k).lt.0.0D0))) then
                      if ((loutsf).or.(pcell(i, idxLo(2)-1, k).eq.
      $                    presstype)) then
-                        f(i,idxLo(2)-1,k) = f(i,idxLo(2),k)
+c                        f(i,idxLo(2)-1,k) = f(i,idxLo(2),k)
                         as(i,idxLo(2),k) = two*tiny
                         dscoef(i,idxLo(2),k) = 0.0D0
                      else
-                        f(i,idxLo(2)-1,k) = fmixin
+c                        f(i,idxLo(2)-1,k) = fmixin
                      end if
                   end if
                endif
@@ -279,11 +279,11 @@ c .and.
 c     $                 (ww(i,j,idxHi(3)+2).gt.0.0D0))) then
                      if ((loutsf).or.(pcell(i, j, idxHi(3)+1).eq.
      $                    presstype)) then
-                        f(i,j,idxHi(3)+1) = f(i,j,idxHi(3))
+c                        f(i,j,idxHi(3)+1) = f(i,j,idxHi(3))
                         at(i,j,idxHi(3)) = two*tiny
                         dtcoef(i,j,idxHi(3)) = 0.0D0
                      else
-                        f(i,j,idxHi(3)+1) = fmixin
+c                        f(i,j,idxHi(3)+1) = fmixin
                      end if
                   end if
                endif
@@ -294,11 +294,11 @@ c.and.
 c     $                 (ww(i,j,idxLo(3)-1).lt.0.0D0))) then
                      if ((loutsf).or.(pcell(i, j, idxLo(3)-1).eq.
      $                    presstype)) then
-                        f(i,j,idxLo(3)-1) = f(i,j,idxLo(3))
+c                        f(i,j,idxLo(3)-1) = f(i,j,idxLo(3))
                         ab(i,j,idxLo(3)) = two*tiny
                         dbcoef(i,j,idxLo(3)) = 0.0D0
                      else
-                        f(i,j,idxLo(3)-1) = fmixin
+c                        f(i,j,idxLo(3)-1) = fmixin
                      end if
                   end if
                endif

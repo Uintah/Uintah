@@ -19,7 +19,6 @@ c*********************************************************************
 c     Locals :
 c*********************************************************************
       double precision AREAN,AREAS,AREATB,AREAEW,EPSG,VOL 
-      double precision DENE,DENW,DENN,DENS,DENT,DENB
       integer i,j,k
       integer IST, JST, KST, IEND, JEND, KEND
 
@@ -47,35 +46,21 @@ C-----------------------------------------------------------------------
                AREATB = SNS(j)*SEW(i)
                VOL = SNS(j)*SEW(i)*STB(k)
                EPSG = ONE
-c              IF (LCALP .AND. .NOT.LP) THEN
-c                 CALL CALEPS(domLo, domHi, 
-c    &                 DENP,PDEN,I,J,K,EPSG)
-c              ENDIF
 C-----------------------------------------------------------------------
 C     CALCULATE COEFFICIENTS
 C-----------------------------------------------------------------------
-               DENE = PT5*(DEN(i,j,k)+DEN(i+1,j,k))
-               DENW = PT5*(DEN(i,j,k)+DEN(i-1,j,k))
-               DENN = PT5*(DEN(i,j,k)+DEN(i,j+1,k))
-               DENS = PT5*(DEN(i,j,k)+DEN(i,j-1,k))
-               DENT = PT5*(DEN(i,j,k)+DEN(i,j,k+1))
-               DENB = PT5*(DEN(i,j,k)+DEN(i,j,k-1))
 
-               AE(i,j,k) = AREAEW/
-     &              (DXEP(i))*EPSG
+               AE(i,j,k) = AREAEW/DXEP(i)*EPSG
 
-               AW(i,j,k) = AREAEW/
-     &              (DXPW(i))*EPSG
+               AW(i,j,k) = AREAEW/DXPW(i)*EPSG
 
-               AN(i,j,k) = AREAN/(DYNP(j))*EPSG
+               AN(i,j,k) = AREAN/DYNP(j)*EPSG
 
-               AS(i,j,k) = AREAS/(DYPS(j))*EPSG
+               AS(i,j,k) = AREAS/DYPS(j)*EPSG
 
-               AT(i,j,k) = AREATB/
-     &              (DZTP(k))*EPSG
+               AT(i,j,k) = AREATB/DZTP(k)*EPSG
 
-               AB(i,j,k) = AREATB/
-     &              (DZPB(k)) *EPSG
+               AB(i,j,k) = AREATB/DZPB(k)*EPSG
  100        CONTINUE
  110     CONTINUE
  120  CONTINUE
