@@ -55,8 +55,8 @@
 	  <p>
           </p>
 	</description>
-	<datatype>Teem::Nrrd</datatype>
-	<componentname>Nrrd</componentname>
+	<datatype>SCIRun::Nrrd</datatype>
+	<componentname>Nrrd1</componentname>
       </port>
       <port>
 	<name>Nrrd2</name>
@@ -64,8 +64,8 @@
 	  <p>
           </p>
 	</description>
-	<datatype>Teem::Nrrd</datatype>
-	<componentname>Nrrd</componentname>
+	<datatype>SCIRun::Nrrd</datatype>
+	<componentname>Nrrd2</componentname>
       </port>
       <port>
 	<name>ColorMap</name>
