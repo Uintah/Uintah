@@ -22,9 +22,10 @@ namespace Uintah {
 void scalarDiffusionOperator(DataWarehouse* new_dw,
                                   const Patch* patch,
                                   const bool use_vol_frac,
-                                  const CCVariable<double>& rho_CC,     
-                                  const CCVariable<double>& sp_vol_CC,  
-                                  const CCVariable<double>& q_CC,
+                                  const CCVariable<double>& q_CC,  
+                                  const SFCXVariable<double>& vol_fracX_FC,
+                                  const SFCYVariable<double>& vol_fracY_FC,
+                                  const SFCZVariable<double>& vol_fracZ_FC,
                                   CCVariable<double>& q_diffusion_src,
                                   const CCVariable<double>& diff_coeff,
                                   const double delT)
@@ -46,12 +47,11 @@ void scalarDiffusionOperator(DataWarehouse* new_dw,
   double areaY = dx.x() * dx.z();
   double areaZ = dx.x() * dx.y();
 
-  q_flux_allFaces( new_dw, patch, use_vol_frac, 
-                   rho_CC,  sp_vol_CC, q_CC, diff_coeff,
+  q_flux_allFaces( new_dw, patch, use_vol_frac, q_CC, diff_coeff,
+                   vol_fracX_FC, vol_fracY_FC, vol_fracZ_FC,
                    q_X_FC, q_Y_FC, q_Z_FC);
                    
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); 
-                                                            iter++){
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     right  = c + IntVector(1,0,0);    left   = c ;    
     top    = c + IntVector(0,1,0);    bottom = c ;    
@@ -59,7 +59,7 @@ void scalarDiffusionOperator(DataWarehouse* new_dw,
 
     q_diffusion_src[c]=-((q_X_FC[right] - q_X_FC[left])  *areaX + 
                          (q_Y_FC[top]   - q_Y_FC[bottom])*areaY +
-                         (q_Z_FC[front] - q_Z_FC[back])  *areaZ )*delT;
+                         (q_Z_FC[front] - q_Z_FC[back])  *areaZ )*delT;                  
   }
 }
 
@@ -71,14 +71,13 @@ void scalarDiffusionOperator(DataWarehouse* new_dw,
  ---------------------------------------------------------------------  */
 template <class T> 
   void q_flux_FC(CellIterator iter, 
-                         IntVector adj_offset,
-                         const CCVariable<double>& diff_coeff,
-                         const double dx,
-                         const CCVariable<double>& rho_CC,      
-                         const CCVariable<double>& sp_vol_CC,   
-                         const CCVariable<double>& q_CC,
-                         T& q_fluxFC,
-                         const bool use_vol_frac)
+                 IntVector adj_offset,
+                 const CCVariable<double>& diff_coeff,
+                 const double dx,
+                 const T& vol_frac_FC,
+                 const CCVariable<double>& q_CC,
+                 T& q_fluxFC,
+                 const bool use_vol_frac)
 {
   //__________________________________
   //  For variable diff_coeff use
@@ -91,9 +90,8 @@ template <class T>
       
       double diff_coeff_FC = (2.0 * diff_coeff[L] * diff_coeff[R] )/
                                    (diff_coeff[L] + diff_coeff[R] + SMALL_NUM);
-      double rho_brack = (2.0 * rho_CC[R] * rho_CC[L])/(rho_CC[R] + rho_CC[L]);
-      double vol_frac_FC = rho_brack * sp_vol_CC[R];
-      q_fluxFC[R] = -vol_frac_FC * diff_coeff_FC* (q_CC[R] - q_CC[L])/dx;
+
+      q_fluxFC[R] = -vol_frac_FC[R] * diff_coeff_FC* (q_CC[R] - q_CC[L])/dx;
     }
   }else
    for(;!iter.done(); iter++){
@@ -112,15 +110,16 @@ template <class T>
  Purpose~   computes the diffusion flux of q on all faces
  ---------------------------------------------------------------------  */
 void q_flux_allFaces(DataWarehouse* new_dw,
-                          const Patch* patch,
-                          const bool use_vol_frac,
-                          const CCVariable<double>& rho_CC,      
-                          const CCVariable<double>& sp_vol_CC,   
-                          const CCVariable<double>& q_CC,
-                          const CCVariable<double>& diff_coeff,
-                          SFCXVariable<double>& q_X_FC,
-                          SFCYVariable<double>& q_Y_FC,
-                          SFCZVariable<double>& q_Z_FC)
+                     const Patch* patch,
+                     const bool use_vol_frac,   
+                     const CCVariable<double>& q_CC,
+                     const CCVariable<double>& diff_coeff,
+                     const SFCXVariable<double>& vol_fracX_FC,
+                     const SFCYVariable<double>& vol_fracY_FC,
+                     const SFCZVariable<double>& vol_fracZ_FC,
+                     SFCXVariable<double>& q_X_FC,
+                     SFCYVariable<double>& q_Y_FC,
+                     SFCZVariable<double>& q_Z_FC)
 {
   Vector dx = patch->dCell();
   vector<IntVector> adj_offset(3);
@@ -132,9 +131,9 @@ void q_flux_allFaces(DataWarehouse* new_dw,
   new_dw->allocateTemporary(q_Y_FC, patch, Ghost::AroundCells, 1);
   new_dw->allocateTemporary(q_Z_FC, patch, Ghost::AroundCells, 1);
 
-  q_X_FC.initialize(0.0);
-  q_Y_FC.initialize(0.0);
-  q_Z_FC.initialize(0.0);
+  q_X_FC.initialize(-9e30);
+  q_Y_FC.initialize(-9e30);
+  q_Z_FC.initialize(-9e30);
 
   //__________________________________
   // For multipatch problems adjust the iter limits
@@ -142,43 +141,39 @@ void q_flux_allFaces(DataWarehouse* new_dw,
   // include the (right/top/front) faces
   // of the cells at the patch boundary. 
   // We compute q_X[right]-q_X[left] on each patch
-  IntVector low,hi;      
+  IntVector low,hi; 
+  IntVector patchNeighborHigh = patch->neighborsHigh();
+  IntVector offset = IntVector(1,1,1) - patch->neighborsHigh();
+       
   low = patch->getSFCXIterator().begin();    // X Face iterator
   hi  = patch->getSFCXIterator().end();
-  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?1:0,
-                 patch->getBCType(patch->yplus) ==patch->Neighbor?0:0,
-                 patch->getBCType(patch->zplus) ==patch->Neighbor?0:0); 
+  hi[0] += offset[0];
   CellIterator X_FC_iterLimits(low,hi);
          
   low = patch->getSFCYIterator().begin();   // Y Face iterator
   hi  = patch->getSFCYIterator().end();
-  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?0:0,
-                 patch->getBCType(patch->yplus) ==patch->Neighbor?1:0,
-                 patch->getBCType(patch->zplus) ==patch->Neighbor?0:0); 
+  hi[1] += offset[1];
+
   CellIterator Y_FC_iterLimits(low,hi); 
         
   low = patch->getSFCZIterator().begin();   // Z Face iterator
   hi  = patch->getSFCZIterator().end();
-  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?0:0,
-                 patch->getBCType(patch->yplus) ==patch->Neighbor?0:0,
-                 patch->getBCType(patch->zplus) ==patch->Neighbor?1:0); 
+  hi[2] += offset[2];
+  
   CellIterator Z_FC_iterLimits(low,hi);            
   //__________________________________
-  //  For each face compute conduction
+  //  For each face the diffusion flux
   q_flux_FC<SFCXVariable<double> >(X_FC_iterLimits,
                                    adj_offset[0],  diff_coeff, dx.x(),
-                                   rho_CC, sp_vol_CC, q_CC,
-                                   q_X_FC, use_vol_frac);
+                                   vol_fracX_FC, q_CC, q_X_FC, use_vol_frac);
 
   q_flux_FC<SFCYVariable<double> >(Y_FC_iterLimits,
                                    adj_offset[1], diff_coeff, dx.y(),
-                                   rho_CC, sp_vol_CC, q_CC,
-                                   q_Y_FC, use_vol_frac);
+                                   vol_fracY_FC, q_CC, q_Y_FC, use_vol_frac);
   
   q_flux_FC<SFCZVariable<double> >(Z_FC_iterLimits,
                                    adj_offset[2],  diff_coeff, dx.z(),
-                                   rho_CC, sp_vol_CC, q_CC,
-                                   q_Z_FC, use_vol_frac); 
+                                   vol_fracZ_FC, q_CC, q_Z_FC, use_vol_frac); 
 }
 /*---------------------------------------------------------------------
  Function~  ICE::computeTauX_Components
@@ -191,8 +186,7 @@ void q_flux_allFaces(DataWarehouse* new_dw,
           - The viscosity we're using isn't right if it varies spatially.   
  ---------------------------------------------------------------------  */
 void computeTauX( const Patch* patch,
-                  constCCVariable<double>& rho_CC,      
-                  constCCVariable<double>& sp_vol_CC,   
+                  constSFCXVariable<double>& vol_fracX_FC,  
                   constCCVariable<Vector>& vel_CC,      
                   const CCVariable<double>& viscosity,                
                   const Vector dx,                       
@@ -224,23 +218,18 @@ void computeTauX( const Patch* patch,
   CellIterator iterLimits(low,hi); 
   
   for(CellIterator iter = iterLimits;!iter.done();iter++){ 
-    IntVector cell = *iter;
-    int i = cell.x();
-    int j = cell.y();
-    int k = cell.z();
+    IntVector c = *iter;
+    int i = c.x();
+    int j = c.y();
+    int k = c.z();
 
     double delX = dx.x();
     double delY = dx.y();
     double delZ = dx.z();
-    IntVector left(i-1, j, k);
-
-    double rho_brack = (2.0 * rho_CC[left] * rho_CC[cell])/
-                       (rho_CC[left] + rho_CC[cell]);
-                       
-    double vol_frac_FC = rho_brack * sp_vol_CC[cell];  
+    IntVector left(i-1, j, k); 
 
     term1 =  viscosity[left];
-    term2 =  viscosity[cell];
+    term2 =  viscosity[c];
     double vis_FC = (2.0 * term1 * term2)/(term1 + term2); 
 
     //__________________________________
@@ -253,7 +242,7 @@ void computeTauX( const Patch* patch,
                                 
     double uvel_EC_bottom = (vel_CC[IntVector(i-1,j-1,k  )].x()   + 
                              vel_CC[IntVector(i  ,j-1,k  )].x()   +      
-                             vel_CC[IntVector(i,  j  ,k  )].x()   +     
+                             vel_CC[IntVector(i,  j  ,k  )].x()   +
                              vel_CC[IntVector(i-1,j  ,k  )].x() )/4.0; 
                               
     double uvel_EC_front  = (vel_CC[IntVector(i-1,j  ,k+1)].x()   + 
@@ -287,25 +276,25 @@ void computeTauX( const Patch* patch,
                              vel_CC[IntVector(i-1,j  ,k  )].z())/4.0;
     //__________________________________
     //  tau_XX
-    grad_uvel = (vel_CC[cell].x() - vel_CC[left].x())/delX;
+    grad_uvel = (vel_CC[c].x() - vel_CC[left].x())/delX;
     grad_vvel = (vvel_EC_top      - vvel_EC_bottom)  /delY;
     grad_wvel = (wvel_EC_front    - wvel_EC_back )   /delZ;
 
     term1 = 2.0 * vis_FC * grad_uvel;
     term2 = (2.0/3.0) * vis_FC * (grad_uvel + grad_vvel + grad_wvel);
-    tau_X_FC[cell].x( vol_frac_FC * (term1 - term2)); 
+    tau_X_FC[c].x( vol_fracX_FC[c] * (term1 - term2)); 
 
     //__________________________________
     //  tau_XY
     grad_1 = (uvel_EC_top      - uvel_EC_bottom)  /delY;
-    grad_2 = (vel_CC[cell].y() - vel_CC[left].y())/delX;
-    tau_X_FC[cell].y(vol_frac_FC * vis_FC * (grad_1 + grad_2)); 
+    grad_2 = (vel_CC[c].y() - vel_CC[left].y())/delX;
+    tau_X_FC[c].y(vol_fracX_FC[c] * vis_FC * (grad_1 + grad_2)); 
 
     //__________________________________
     //  tau_XZ
     grad_1 = (uvel_EC_front    - uvel_EC_back)    /delZ;
-    grad_2 = (vel_CC[cell].z() - vel_CC[left].z())/delX;
-    tau_X_FC[cell].z(vol_frac_FC * vis_FC * (grad_1 + grad_2)); 
+    grad_2 = (vel_CC[c].z() - vel_CC[left].z())/delX;
+    tau_X_FC[c].z(vol_fracX_FC[c] * vis_FC * (grad_1 + grad_2)); 
 
     
 //     if (i == 0 && k == 0){
@@ -328,8 +317,7 @@ void computeTauX( const Patch* patch,
           - The viscosity we're using isn't right if it varies spatially. 
  ---------------------------------------------------------------------  */
 void computeTauY( const Patch* patch,
-                  constCCVariable<double>& rho_CC,      
-                  constCCVariable<double>& sp_vol_CC,   
+                  constSFCYVariable<double>& vol_fracY_FC,   
                   constCCVariable<Vector>& vel_CC,      
                   const CCVariable<double>& viscosity,                
                   const Vector dx,                       
@@ -361,21 +349,17 @@ void computeTauY( const Patch* patch,
   CellIterator iterLimits(low,hi); 
   
   for(CellIterator iter = iterLimits;!iter.done();iter++){ 
-    IntVector cell = *iter;
-    int i = cell.x();
-    int j = cell.y();
-    int k = cell.z();
+    IntVector c = *iter;
+    int i = c.x();
+    int j = c.y();
+    int k = c.z();
     double delX = dx.x();
     double delY = dx.y();
     double delZ = dx.z();
     IntVector bottom(i,j-1,k);
-    double rho_brack = (2.0 * rho_CC[bottom] * rho_CC[cell])/
-                       (rho_CC[bottom] + rho_CC[cell]);
-                       
-    double vol_frac_FC = rho_brack * sp_vol_CC[cell]; 
     
     term1 =  viscosity[bottom];
-    term2 =  viscosity[cell];
+    term2 =  viscosity[c];
     double vis_FC = (2.0 * term1 * term2)/(term1 + term2); 
 
     //__________________________________
@@ -424,25 +408,25 @@ void computeTauY( const Patch* patch,
     //__________________________________
     //  tau_YY
     grad_uvel = (uvel_EC_right    - uvel_EC_left)      /delX;
-    grad_vvel = (vel_CC[cell].y() - vel_CC[bottom].y())/delY;
+    grad_vvel = (vel_CC[c].y() - vel_CC[bottom].y())/delY;
     grad_wvel = (wvel_EC_front    - wvel_EC_back )     /delZ;
 
     term1 = 2.0 * vis_FC * grad_vvel;
     term2 = (2.0/3.0) * vis_FC * (grad_uvel + grad_vvel + grad_wvel);
-    tau_Y_FC[cell].y(vol_frac_FC * (term1 - term2)); 
+    tau_Y_FC[c].y(vol_fracY_FC[c] * (term1 - term2)); 
     
     //__________________________________
     //  tau_YX
-    grad_1 = (vel_CC[cell].x() - vel_CC[bottom].x())/delY;
+    grad_1 = (vel_CC[c].x() - vel_CC[bottom].x())/delY;
     grad_2 = (vvel_EC_right    - vvel_EC_left)      /delX;
-    tau_Y_FC[cell].x(vol_frac_FC * vis_FC * (grad_1 + grad_2) ); 
+    tau_Y_FC[c].x(vol_fracY_FC[c] * vis_FC * (grad_1 + grad_2) ); 
 
 
     //__________________________________
     //  tau_YZ
     grad_1 = (vvel_EC_front    - vvel_EC_back)      /delZ;
-    grad_2 = (vel_CC[cell].z() - vel_CC[bottom].z())/delY;
-    tau_Y_FC[cell].z(vol_frac_FC * vis_FC * (grad_1 + grad_2)); 
+    grad_2 = (vel_CC[c].z() - vel_CC[bottom].z())/delY;
+    tau_Y_FC[c].z(vol_fracY_FC[c] * vis_FC * (grad_1 + grad_2)); 
     
 //     if (i == 0 && k == 0){    
 //       cout<< cell<< " tau_YX: "<<tau_Y_FC[cell].x()<<
@@ -463,8 +447,7 @@ void computeTauY( const Patch* patch,
           - The viscosity we're using isn't right if it varies spatially.
  ---------------------------------------------------------------------  */
 void computeTauZ( const Patch* patch,
-                  constCCVariable<double>& rho_CC,      
-                  constCCVariable<double>& sp_vol_CC,   
+                  constSFCZVariable<double>& vol_fracZ_FC,   
                   constCCVariable<Vector>& vel_CC,      
                   const CCVariable<double>& viscosity,               
                   const Vector dx,                       
@@ -496,22 +479,17 @@ void computeTauZ( const Patch* patch,
   CellIterator iterLimits(low,hi); 
 
   for(CellIterator iter = iterLimits;!iter.done();iter++){ 
-    IntVector cell = *iter; 
-    int i = cell.x();
-    int j = cell.y();
-    int k = cell.z();
+    IntVector c = *iter; 
+    int i = c.x();
+    int j = c.y();
+    int k = c.z();
     double delX = dx.x();
     double delY = dx.y();
     double delZ = dx.z();
-    IntVector back(i, j, k-1);
-
-    double rho_brack = (2.0 * rho_CC[back] * rho_CC[cell])/
-                       (rho_CC[back] + rho_CC[cell]);
-                       
-    double vol_frac_FC = rho_brack * sp_vol_CC[cell]; 
+    IntVector back(i, j, k-1); 
     
     term1 =  viscosity[back];
-    term2 =  viscosity[cell];
+    term2 =  viscosity[c];
     double vis_FC = (2.0 * term1 * term2)/(term1 + term2); 
 
     //__________________________________
@@ -558,25 +536,25 @@ void computeTauZ( const Patch* patch,
                              vel_CC[IntVector(i  ,j  ,k  )].z())/4.0;
     //__________________________________
     //  tau_ZX
-    grad_1 = (vel_CC[cell].x() - vel_CC[back].x()) /delZ;
+    grad_1 = (vel_CC[c].x() - vel_CC[back].x()) /delZ;
     grad_2 = (wvel_EC_right    - wvel_EC_left)     /delX;
-    tau_Z_FC[cell].x(vol_frac_FC * vis_FC * (grad_1 + grad_2)); 
+    tau_Z_FC[c].x(vol_fracZ_FC[c] * vis_FC * (grad_1 + grad_2)); 
 
     //__________________________________
     //  tau_ZY
-    grad_1 = (vel_CC[cell].y() - vel_CC[back].y()) /delZ;
+    grad_1 = (vel_CC[c].y() - vel_CC[back].y()) /delZ;
     grad_2 = (wvel_EC_top      - wvel_EC_bottom)   /delY;
-    tau_Z_FC[cell].y( vol_frac_FC * vis_FC * (grad_1 + grad_2) ); 
+    tau_Z_FC[c].y( vol_fracZ_FC[c] * vis_FC * (grad_1 + grad_2) ); 
 
     //__________________________________
     //  tau_ZZ
     grad_uvel = (uvel_EC_right    - uvel_EC_left)    /delX;
     grad_vvel = (vvel_EC_top      - vvel_EC_bottom)  /delY;
-    grad_wvel = (vel_CC[cell].z() - vel_CC[back].z())/delZ;
+    grad_wvel = (vel_CC[c].z() - vel_CC[back].z())/delZ;
 
     term1 = 2.0 * vis_FC * grad_wvel;
     term2 = (2.0/3.0) * vis_FC * (grad_uvel + grad_vvel + grad_wvel);
-    tau_Z_FC[cell].z( vol_frac_FC * (term1 - term2)); 
+    tau_Z_FC[c].z( vol_fracZ_FC[c] * (term1 - term2)); 
 
 //  cout<<"tau_ZX: "<<tau_Z_FC[cell].x()<<
 //        " tau_ZY: "<<tau_Z_FC[cell].y()<<
