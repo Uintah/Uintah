@@ -1,5 +1,5 @@
 
-#include <testprograms/Component/framework/Provider.h>
+#include <testprograms/Component/framework/TestComponents/Provider.h>
 
 #include <testprograms/Component/framework/TestPortImpl.h>
 #include <testprograms/Component/framework/PortInfoImpl.h>

@@ -1,9 +1,9 @@
 
-#include <testprograms/Component/framework/Builder.h>
+#include <testprograms/Component/framework/Builders/Builder.h>
 
 #include <testprograms/Component/framework/cca.h>
-#include <testprograms/Component/framework/Sender.h>
-#include <testprograms/Component/framework/Provider.h>
+#include <testprograms/Component/framework/TestComponents/Sender.h>
+#include <testprograms/Component/framework/TestComponents/Provider.h>
 #include <testprograms/Component/framework/REI/scr.h>
 
 #include <sstream>
