@@ -107,11 +107,14 @@ Parallel::initializeManager(int& argc, char**& argv)
    }
 
    ProcessorGroup* world = getRootProcessorGroup();
-   cerr << "Parallel: processor " << world->myrank() + 1 
-	<< " of " << world->size();
-   if(::usingMPI)
-      cerr << " (using MPI)";
-   cerr << '\n';
+   //   cerr << "Parallel: processor " << world->myrank() + 1 
+   //<< " of " << world->size();
+   if(world->myrank() == 0){
+      cerr << "Parallel: " << world->size() << " processors";
+      if(::usingMPI)
+	 cerr << " (using MPI)";
+      cerr << '\n';
+   }
 }
 
 void
@@ -142,6 +145,9 @@ Parallel::getRootProcessorGroup()
 
 //
 // $Log$
+// Revision 1.16  2000/10/13 19:51:08  sparker
+// Changed printout of processor n of m to a single # of processors
+//
 // Revision 1.15  2000/09/29 20:43:42  dav
 // Added setMaxThreads()
 //
