@@ -32,6 +32,7 @@
 #define SCI_Geom_Box_h 1
 
 #include <Core/Geom/GeomObj.h>
+#include <Core/Geom/Material.h>
 #include <Core/Geometry/Point.h>
 
 namespace SCIRun {
@@ -97,6 +98,42 @@ public:
   static PersistentTypeID type_id;
 };
 
+
+class SCICORESHARE GeomBoxes : public GeomObj {
+private:
+  vector<Point> centers_;
+  vector<double> edges_;
+  vector<unsigned char> colors_;
+  vector<float> indices_;
+  int nu_;
+  int nv_;
+  double global_edge_;
+  
+public:
+
+  GeomBoxes(double edge = 1.0, int nu=8, int nv=8);
+  GeomBoxes(const GeomBoxes &copy);
+  virtual ~GeomBoxes();
+  
+  virtual GeomObj* clone();
+  virtual void get_bounds(BBox&);
+  
+  void add(const Point &center);
+  void add(const Point &center, const MaterialHandle &mat);
+  void add(const Point &center, float index);
+
+  // If edge is too small, the box is not added and false is returned.
+  bool add_edge(const Point &cen, double edge);
+  bool add_edge(const Point &cen, double edge, const MaterialHandle &mat);
+  bool add_edge(const Point &cen, double edge, float index);
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+  
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+};
 
 } // End namespace SCIRun
 

@@ -33,6 +33,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <iostream>
 using std::ostream;
 
@@ -182,6 +183,152 @@ GeomCBox::io(Piostream& stream)
     stream.end_class();
 }
 
+
+Persistent* make_GeomBoxes()
+{
+  return scinew GeomBoxes;
+}
+
+
+PersistentTypeID GeomBoxes::type_id("GeomBoxes", "GeomObj", make_GeomBoxes);
+
+
+GeomBoxes::GeomBoxes(double edge, int nu, int nv)
+  : GeomObj(),
+    nu_(nu),
+    nv_(nv),
+    global_edge_(edge)
+{
+}
+
+
+GeomBoxes::GeomBoxes(const GeomBoxes& copy)
+  : GeomObj(copy),
+    centers_(copy.centers_),
+    edges_(copy.edges_),
+    colors_(copy.colors_),
+    indices_(copy.indices_),
+    nu_(copy.nu_),
+    nv_(copy.nv_),
+    global_edge_(copy.global_edge_)
+{
+}
+
+
+GeomBoxes::~GeomBoxes()
+{
+}
+
+
+GeomObj *
+GeomBoxes::clone()
+{
+  return scinew GeomBoxes(*this);
+}
+
+
+void
+GeomBoxes::get_bounds(BBox& bb)
+{
+  const bool ugr = !(edges_.size() == centers_.size());
+  for (unsigned int i=0; i < centers_.size(); i++)
+  {
+    bb.extend(centers_[i], ugr?global_edge_:edges_[i]);
+  }
+}
+
+
+static unsigned char
+COLOR_FTOB(double v)
+{
+  const int inter = (int)(v * 255 + 0.5);
+  if (inter > 255) return 255;
+  if (inter < 0) return 0;
+  return (unsigned char)inter;
+}
+
+
+void
+GeomBoxes::add(const Point &center)
+{
+  centers_.push_back(center);
+}
+
+
+void
+GeomBoxes::add(const Point &center, const MaterialHandle &mat)
+{
+  add(center);
+  const unsigned char r0 = COLOR_FTOB(mat->diffuse.r());
+  const unsigned char g0 = COLOR_FTOB(mat->diffuse.g());
+  const unsigned char b0 = COLOR_FTOB(mat->diffuse.b());
+  const unsigned char a0 = COLOR_FTOB(mat->transparency);
+  colors_.push_back(r0);
+  colors_.push_back(g0);
+  colors_.push_back(b0);
+  colors_.push_back(a0);
+}
+
+
+void
+GeomBoxes::add(const Point &center, float index)
+{
+  add(center);
+  indices_.push_back(index);
+}
+
+
+bool
+GeomBoxes::add_edge(const Point &c, double r)
+{
+  if (r < 1.0e-6) { return false; }
+  centers_.push_back(c);
+  edges_.push_back(r);
+  return true;
+}
+
+bool
+GeomBoxes::add_edge(const Point &c, double r, const MaterialHandle &mat)
+{
+  if (r < 1.0e-6) { return false; }
+  add_edge(c, r);
+  const unsigned char r0 = COLOR_FTOB(mat->diffuse.r());
+  const unsigned char g0 = COLOR_FTOB(mat->diffuse.g());
+  const unsigned char b0 = COLOR_FTOB(mat->diffuse.b());
+  const unsigned char a0 = COLOR_FTOB(mat->transparency);
+  colors_.push_back(r0);
+  colors_.push_back(g0);
+  colors_.push_back(b0);
+  colors_.push_back(a0);
+  return true;
+}
+
+bool
+GeomBoxes::add_edge(const Point &c, double r, float index)
+{
+  if (r < 1.0e-6) { return false; }
+  add_edge(c, r);
+  indices_.push_back(index);
+  return true;
+}
+
+
+
+#define GEOMBOXES_VERSION 1
+
+void
+GeomBoxes::io(Piostream& stream)
+{
+  stream.begin_class("GeomBoxes", GEOMBOXES_VERSION);
+  GeomObj::io(stream);
+  Pio(stream, centers_);
+  Pio(stream, edges_);
+  Pio(stream, colors_);
+  Pio(stream, indices_);
+  Pio(stream, nu_);
+  Pio(stream, nv_);
+  Pio(stream, global_edge_);
+  stream.end_class();
+}
+
 } // End namespace SCIRun
-
-
