@@ -36,6 +36,7 @@
 #include <Core/CCA/Component/Comm/CommNexus.h>
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
+#include <Core/CCA/Component/Comm/SocketMessage.h>
 #include <Core/CCA/Component/Comm/Intra/IntraCommMPI.h>
 #include <Core/Exceptions/InternalError.h> 
 #include <iostream>
@@ -58,11 +59,12 @@ void
 PIDL::initialize(int, char*[])
 {
   //Default for communication purposes 
-  setCommunication(COMM_NEXUS);
-  //setCommunication(COMM_SOCKET);
+  //setCommunication(COMM_NEXUS);
+  setCommunication(COMM_SOCKET);
 
   switch (comm_type) {
   case COMM_SOCKET:
+    SocketMessage::setSiteTag();
     break;
   case COMM_NEXUS:
     CommNexus::initialize();
@@ -155,10 +157,6 @@ PIDL::getIntraComm()
   default:
     return (new IntraCommMPI());
   }
-}
-bool
-PIDL::isNexus(){
-  return comm_type==COMM_NEXUS;
 }
  
 //PRIVATE:
