@@ -7,7 +7,7 @@ proc showThreadStats {} {
 	wm iconname .tsw "ThreadStats"
 	wm minsize .tsw 100 100
 	set threadstats_window .tsw
-	canvas .tsw.canvas -yscroll ".tsw.vscroll set" \
+	canvas .tsw.canvas -yscrollcommand ".tsw.vscroll set" \
 		-scrollregion {0c 0c 8c 50c} \
 		-width 8c -height 8c
 	scrollbar .tsw.vscroll -relief sunken -command ".tsw.canvas yview"

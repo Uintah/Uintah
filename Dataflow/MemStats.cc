@@ -12,31 +12,37 @@
  */
 
 #include <Dataflow/MemStats.h>
-#include <Malloc/New.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 #include <stdio.h>
 
 MemStats::MemStats()
 {
-    MemoryManager::get_global_stats(old_nnew, old_snew, old_nfillbin,
-				    old_ndelete, old_sdelete,
-				    old_nsbrk, old_ssbrk);
-    nbins=MemoryManager::get_nbins();
-    old_ssize=new int[nbins];
-    old_lsize=new int[nbins];
-    old_reqd=new int[nbins];
-    old_deld=new int[nbins];
-    old_inlist=new int[nbins];
+    a=DefaultAllocator();
+    nbins=GetNbins(a);
+
+    GetGlobalStats(a, old_nalloc, old_sizealloc, old_nfree, old_sizefree,
+		   old_nfillbin,
+		   old_nmmap, old_sizemmap, old_nmunmap, old_sizemunmap,
+		   old_highwater_alloc, old_highwater_mmap,
+		   old_nlonglocks, old_nnaps, old_bytes_overhead,
+		   old_bytes_free, old_bytes_fragmented, old_bytes_inuse,
+		   old_bytes_inhunks);
+
+    old_ssize=new size_t[nbins];
+    old_lsize=new size_t[nbins];
+    old_reqd=new size_t[nbins];
+    old_deld=new size_t[nbins];
+    old_inlist=new size_t[nbins];
     lines=new int[nbins];
     nnz=0;
     for(int i=0;i<nbins;i++){
-	MemoryManager::get_binstats(i, old_ssize[i], old_lsize[i],
-				    old_reqd[i], old_deld[i], old_inlist[i]);
+	GetBinStats(a, i, old_ssize[i], old_lsize[i],
+		    old_reqd[i], old_deld[i], old_inlist[i]);
 	if(old_inlist[i] || old_reqd[i] || old_deld[i]){
 	    lines[i]=nnz++;
 	}
     }
-
 }
 
 MemStats::~MemStats()
@@ -60,9 +66,9 @@ void MemStats::tcl_command(TCLArgs& args, void*)
 	    nnz=0;
 	    int changed=0;
 	    for(int i=0;i<nbins;i++){
-		int ssize, lsize, n_reqd, n_deld, n_inlist;
-		MemoryManager::get_binstats(i, ssize, lsize, n_reqd,
-					    n_deld, n_inlist);
+		size_t ssize, lsize, n_reqd, n_deld, n_inlist;
+		GetBinStats(a, i, ssize, lsize, n_reqd,
+			    n_deld, n_inlist);
 		if(n_inlist || n_reqd || n_deld){
 		    if(lines[i] != nnz){
 			lines[i]=nnz;
@@ -104,26 +110,85 @@ void MemStats::tcl_command(TCLArgs& args, void*)
 		old_reqd[bin]-old_deld[bin]);
 	args.result(buf);
     } else if(args[1] == "globalstats"){
-	long nnew, snew, nfillbin, ndelete, sdelete, nsbrk, ssbrk;
-	MemoryManager::get_global_stats(nnew, snew, nfillbin, ndelete, sdelete,
-					nsbrk, ssbrk);
-	if(nnew != old_nnew || ndelete != old_ndelete){
+	size_t nalloc, sizealloc, nfree, sizefree, nmmap, sizemmap;
+	size_t nfillbin;
+	size_t nmunmap, sizemunmap, highwater_alloc, highwater_mmap;
+	size_t nlonglocks, nnaps, bytes_overhead, bytes_free;
+	size_t bytes_fragmented, bytes_inuse, bytes_inhunks;
+	GetGlobalStats(a, nalloc, sizealloc, nfree, sizefree,
+		       nfillbin,
+		       nmmap, sizemmap, nmunmap, sizemunmap,
+		       highwater_alloc, highwater_mmap,
+		       nlonglocks, nnaps, bytes_overhead,
+		       bytes_free, bytes_fragmented, bytes_inuse,
+		       bytes_inhunks);
+	if(nalloc != old_nalloc || nfree != old_nfree){
 	    redraw_globals=1;
-	    old_nnew=nnew;
-	    old_snew=snew;
+	    old_nalloc=nalloc;
+	    old_sizealloc=sizealloc;
+	    old_nfree=nfree;
+	    old_sizefree=sizefree;
 	    old_nfillbin=nfillbin;
-	    old_ndelete=ndelete;
-	    old_sdelete=sdelete;
-	    old_nsbrk=nsbrk;
-	    old_ssbrk=ssbrk;
+	    old_nmmap=nmmap;
+	    old_sizemmap=sizemmap;
+	    old_nmunmap=nmunmap;
+	    old_sizemunmap=sizemunmap;
+	    old_highwater_alloc=highwater_alloc;
+	    old_highwater_mmap=highwater_mmap;
+	    old_nlonglocks=nlonglocks;
+	    old_nnaps=nnaps;
+	    old_bytes_overhead=bytes_overhead;
+	    old_bytes_free=bytes_free;
+	    old_bytes_fragmented=bytes_fragmented;
+	    old_bytes_inuse=bytes_inuse;
+	    old_bytes_inhunks=bytes_inhunks;
 
-	    char buf[500];
-	    sprintf(buf, "Calls to malloc/new: %ld (%ld bytes)\nCalls to free/delete: %ld (%ld bytes)\nCalls to fillbin: %ld (%.2f%%)\nRequests from system: %ld (%ld bytes)\nMissing allocations: %ld (%ld bytes)\n\n  ssize   lsize        reqd     deld  inlist  inuse", old_nnew, old_snew, old_ndelete, old_sdelete, old_nfillbin, 100.*(double)old_nfillbin/(double)old_nnew, old_nsbrk, old_ssbrk, old_nnew-old_ndelete, old_snew-old_sdelete);
+	    size_t ncalls=nalloc+nfree;
+	    size_t total=bytes_overhead+bytes_free+bytes_fragmented+bytes_inuse+bytes_inhunks;
+	    char buf[1000];
+	    sprintf(buf,
+		    "Calls to malloc/new: %ld (%ld bytes)\n"
+		    "Calls to free/delete: %ld (%ld bytes)\n"
+		    "Missing allocations: %ld (%ld bytes)\n"
+		    "Allocation highwater mark: %ld bytes\n"
+		    "Calls to fillbin: %ld (%.2f%%)\n"
+		    "Requests from system: %ld (%ld bytes)\n"
+		    "Returned to system: %ld (%ld bytes)\n"
+		    "System highwater mark: %ld bytes\n"
+		    "Long locks: %ld (%.2f%%)\n"
+		    "Naps: %ld (%.2f%%)\n"
+		    "\nBreakdown:\n"
+		    "Overhead: %d bytes (%.2f%%)\n"
+		    "Inuse: %d bytes (%.2f%%)\n"
+		    "Free: %d bytes (%.2f%%)\n"
+		    "Fragmentation: %d bytes (%.2f%%)\n"
+		    "Left in hunks: %d bytes (%.2f%%)\n"
+		    "Total: %d bytes (%.2f%%)\n"
+		    "\n  ssize   lsize        reqd     deld  inlist  inuse",
+		    nalloc, sizealloc,
+		    nfree, sizefree,
+		    nalloc-nfree, sizealloc-sizefree,
+		    highwater_alloc,
+		    nfillbin, 100.*(double)nfillbin/(double)nalloc,
+		    nmmap, sizemmap,
+		    nmunmap, sizemunmap,
+		    highwater_mmap,
+		    nlonglocks, 100.*(double)nlonglocks/(double)ncalls,
+		    nnaps, 100.*(double)nnaps/(double)ncalls,
+		    bytes_overhead, 100.*(double)bytes_overhead/(double)total,
+		    bytes_free, 100.*(double)bytes_free/(double)total,
+		    bytes_fragmented, 100.*(double)bytes_fragmented/(double)total,
+		    bytes_inuse, 100.*(double)bytes_inuse/(double)total,
+		    bytes_inhunks, 100.*(double)bytes_inhunks/(double)total,
+		    total, 100.);
 	    args.result(buf);
 	} else {
 	    redraw_globals=0;
 	    args.result("");
 	}
+    } else if(args[1] == "audit"){
+	AuditAllocator(a);
+	fprintf(stderr, "Memory audit OK\n");
     } else {
 	args.error("Unknown minor command for memstats");
     }

@@ -15,23 +15,29 @@
 #define SCI_project_MemStats_h 1
 
 #include <TCL/TCL.h>
+struct Allocator;
+#include <unistd.h>
 
 class MemStats : public TCL {
+    Allocator* a;
     int textwidth;
     int graphwidth;
     int width, height;
-    int line_height;
-    int ascent, descent;
     int nbins;
     int nnz;
     int* lines;
-    int* old_reqd;
-    int* old_deld;
-    int* old_inlist;
-    int* old_ssize;
-    int* old_lsize;
-    long old_nnew, old_snew, old_nfillbin, old_ndelete;
-    long old_sdelete, old_nsbrk, old_ssbrk;
+    size_t* old_reqd;
+    size_t* old_deld;
+    size_t* old_inlist;
+    size_t* old_ssize;
+    size_t* old_lsize;
+    size_t old_nalloc, old_sizealloc, old_nfree, old_sizefree;
+    size_t old_nfillbin;
+    size_t old_nmmap, old_sizemmap, old_nmunmap, old_sizemunmap;
+    size_t old_highwater_alloc, old_highwater_mmap;
+    size_t old_nlonglocks, old_nnaps, old_bytes_overhead;
+    size_t old_bytes_free, old_bytes_fragmented, old_bytes_inuse;
+    size_t old_bytes_inhunks;
 
     int redraw_globals;
 public:

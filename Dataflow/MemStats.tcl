@@ -7,7 +7,7 @@ proc showMemStats {} {
 	wm iconname .msw "MemStats"
 	wm minsize .msw 100 100
 	set memstats_window .msw
-	canvas .msw.canvas -yscroll ".msw.vscroll set" \
+	canvas .msw.canvas -yscrollcommand ".msw.vscroll set" \
 		-scrollregion {0c 0c 11c 50c} \
 		-width 11c -height 18c -borderwidth 0
 	scrollbar .msw.vscroll -relief sunken -command ".msw.canvas yview"
@@ -20,7 +20,7 @@ proc showMemStats {} {
 	set bins [memstats nbins]
         set left 4
 	for {set i 0} {$i<$bins} {incr i} {
-	    set top [expr ($i+7)*$lineheight]
+	    set top [expr ($i+19)*$lineheight]
 	    .msw.canvas create text $left [expr $top+1] \
 		    -tag t$i -anchor nw -font $font
 	    .msw.canvas create text $left $top -tag gt$i -anchor nw -font $font
@@ -30,6 +30,9 @@ proc showMemStats {} {
 		    -fill red
 	}
 	.msw.canvas create text $left 4 -tag glob -anchor nw -font $font
+	button .msw.canvas.audit -text "Audit" -command "memstats audit" \
+		-borderwidth 3
+	.msw.canvas create window 9c 1c -window .msw.canvas.audit
 	after 0 updateMemStats $lineheight $gleft $gwidth
     }
 }
@@ -49,7 +52,7 @@ proc updateMemStats {lineheight gleft gwidth } {
 		set diff [lindex $info 2]
 		set text [lindex $info 3]
 		.msw.canvas itemconfigure t$line -text $text
-		set top [expr ($line+7)*$lineheight]
+		set top [expr ($line+19)*$lineheight]
 		set bot [expr $top+$lineheight]
 		set scale 100
 		set total [expr $inlist+$diff]
