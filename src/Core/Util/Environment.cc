@@ -26,12 +26,10 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
 // Core SCIRun Includes
-#include <sci_defs/environment_defs.h>
-
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/RWS.h>
+#include <Core/Util/Assert.h>
 
 // STL Includes
 #include <sgi_stl_warnings_off.h>
@@ -39,6 +37,22 @@
 #include <iostream>
 #include <map>
 #include <sgi_stl_warnings_on.h>
+
+#define SCI_OK_TO_INCLUDE_SCI_ENVIRONMENT_DEFS_H
+#include <sci_defs/environment_defs.h>
+
+#include <unistd.h>
+#include <sys/param.h>
+
+
+#ifndef LOAD_PACKAGE
+#error You must set a LOAD_PACKAGE or life is pretty dull
+#endif
+
+#ifndef ITCL_WIDGETS
+#error You must set ITCL_WIDGETS to the iwidgets/scripts path
+#endif
+
 
 namespace SCIRun {
 
@@ -50,8 +64,9 @@ map<string,string> scirun_env;
 
 // get_existing_env() will fill up the SCIRun::existing_env string set
 // with all the currently set environment variable keys, but not their values
-void create_sci_environment(char **environ)
+void create_sci_environment(char **environ, char *execname)
 {
+  
   char **environment = environ;
   scirun_env.clear();
   while (*environment) {
@@ -60,9 +75,27 @@ void create_sci_environment(char **environ)
     scirun_env[str.substr(0,pos)] = str.substr(pos+1, str.length());
     environment++;
   }
-  sci_putenv("SCIRUN_SRCDIR", SCIRUN_SRCDIR);
-  sci_putenv("SCIRUN_OBJDIR", SCIRUN_OBJDIR);
-  sci_putenv("SCIRUN_LOAD_PACKAGE", LOAD_PACKAGE);
+  if (!sci_getenv("SCIRUN_SRCDIR"))
+      sci_putenv("SCIRUN_SRCDIR", SCIRUN_SRCDIR);
+  if (!sci_getenv("SCIRUN_OBJDIR")) 
+  {
+    ASSERT(execname);
+    string objdir(execname);
+    if (execname[0] != '/') {
+      char cwd[MAXPATHLEN];
+      getcwd(cwd,MAXPATHLEN);
+      objdir = cwd+string("/")+objdir;
+    }
+    int pos = objdir.length()-1;
+    while (pos >= 0 && objdir[pos] != '/') --pos;
+    ASSERT(pos >= 0);
+    objdir.erase(objdir.begin()+pos+1, objdir.end());
+    sci_putenv("SCIRUN_OBJDIR", objdir);
+  }
+  if (!sci_getenv("SCIRUN_LOAD_PACKAGE"))
+    sci_putenv("SCIRUN_LOAD_PACKAGE", LOAD_PACKAGE);
+  if (!sci_getenv("SCIRUN_ITCL_WIDGETS"))
+    sci_putenv("SCIRUN_ITCL_WIDGETS", ITCL_WIDGETS);
 }
 
 
