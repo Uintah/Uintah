@@ -199,7 +199,7 @@ void Pio(Piostream& stream, Array1<T>*& array) {
 
 
 
-void Array1<int>::test_rigorous(RigorousTest* __test)
+void Array1<float>::test_rigorous(RigorousTest* __test)
 {
     Array1<int> my_array;
     TEST(my_array.size()==0);
