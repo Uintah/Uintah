@@ -46,12 +46,12 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     return 0;
   }
 
-  Point Eye(-7.59842, 7.38245, 2.6612);
-  Point Lookat(-11.5014, 12.3235, -5.83386);
-  Vector Up(-0.501733, 0.627447, 0.595461);
 //  Point Eye(-5.85, 6.2, 2.0);
 //  Point Lookat(-13.5, 13.5, 2.0);
 //  Vector Up(0,0,1);
+  Point Eye(-10.9055, -0.629515, 1.56536);
+  Point Lookat(-8.07587, 15.7687, 1.56536);
+  Vector Up(0, 0, 1);
   double fov=60;
 
   Camera cam(Eye,Lookat,Up,fov);
