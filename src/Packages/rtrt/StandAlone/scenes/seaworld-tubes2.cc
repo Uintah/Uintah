@@ -1059,7 +1059,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   scene->addObjectOfInterest(TVI8, true);
   scene->addObjectOfInterest(TVI9, true);
   scene->addObjectOfInterest(TVI10, true);
-
+  scene->addObjectOfInterest(tan, true);
+  scene->addObjectOfInterest(seawhite, true);
+  
   
 
   bubbles->set_name("bubbles");
@@ -1068,7 +1070,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   scene->maxdepth = 8;
   //scene->add_light(new Light(Point(20, 20, 90), Color(.3,.3,.3), 0));
   scene->animate=true;
-  
   
   return scene;
 }
