@@ -19,7 +19,6 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
-#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Containers/StaticArray.h>
 #include <float.h>
