@@ -37267,7 +37267,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
     done
   fi
 
-# For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+# For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
 # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
 
@@ -37307,7 +37307,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
 ## arg 2 : petsc libraries and headers
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc /usr/include/petsc
-## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts petscksp petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG
+## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG
 ## arg 6 : $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG
 ## arg 7 : $INC_MPI_H -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -37390,10 +37390,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "petsc petscvec petscmat petscdm petscsnes petscts petscksp petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG"; then
+if test -n "petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG"; then
 
    found_framework=no
-   for lib in "" petsc petscvec petscmat petscdm petscsnes petscts petscksp petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
+   for lib in "" petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -37716,7 +37716,7 @@ echo "$as_me: error: Specifically requested PETSC include file '$_sci_inc /usr/i
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" petsc petscvec petscmat petscdm petscsnes petscts petscksp petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
+  for i in "" petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
     if test -z "$i"; then
        continue
     fi
@@ -37791,7 +37791,7 @@ _sci_includes=''
 ## arg 2 : petsc libraries and headers (old)
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc /usr/include/petsc
-## arg 5 : petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG
+## arg 5 : petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG
 ## arg 6 : $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG
 ## arg 7 : $INC_MPI_H -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -37874,10 +37874,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG"; then
+if test -n "petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG"; then
 
    found_framework=no
-   for lib in "" petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
+   for lib in "" petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -38200,7 +38200,7 @@ echo "$as_me: error: Specifically requested PETSC include file '$_sci_inc /usr/i
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
+  for i in "" petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
     if test -z "$i"; then
        continue
     fi
@@ -38260,7 +38260,7 @@ echo "$as_me: error: One or more of the PETSc components is missing." >&2;}
       _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
     fi
 
-# For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscfortran petscksp,
+# For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
 # Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
 
 ##
@@ -38299,7 +38299,7 @@ echo "$as_me: error: One or more of the PETSc components is missing." >&2;}
 ## arg 2 : petsc-uni libraries and headers
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc /usr/include/petsc
-## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts petscfortran petscksp
+## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts petscksp
 ## arg 6 : $_sci_lib
 ## arg 7 : $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -38382,10 +38382,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "petsc petscvec petscmat petscdm petscsnes petscts petscfortran petscksp"; then
+if test -n "petsc petscvec petscmat petscdm petscsnes petscts petscksp"; then
 
    found_framework=no
-   for lib in "" petsc petscvec petscmat petscdm petscsnes petscts petscfortran petscksp; do
+   for lib in "" petsc petscvec petscmat petscdm petscsnes petscts petscksp; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -38708,7 +38708,7 @@ echo "$as_me: error: Specifically requested PETSC_UNI include file '$_sci_inc /u
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" petsc petscvec petscmat petscdm petscsnes petscts petscfortran petscksp; do
+  for i in "" petsc petscvec petscmat petscdm petscsnes petscts petscksp; do
     if test -z "$i"; then
        continue
     fi
@@ -38782,7 +38782,7 @@ _sci_includes=''
 ## arg 2 : petsc libraries and headers (old)
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc /usr/include/petsc
-## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts petscfortran
+## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts
 ## arg 6 : $_sci_lib
 ## arg 7 : $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -38865,10 +38865,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "petsc petscvec petscmat petscdm petscsnes petscts petscfortran"; then
+if test -n "petsc petscvec petscmat petscdm petscsnes petscts"; then
 
    found_framework=no
-   for lib in "" petsc petscvec petscmat petscdm petscsnes petscts petscfortran; do
+   for lib in "" petsc petscvec petscmat petscdm petscsnes petscts; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -39191,7 +39191,7 @@ echo "$as_me: error: Specifically requested PETSC-UNI include file '$_sci_inc /u
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" petsc petscvec petscmat petscdm petscsnes petscts petscfortran; do
+  for i in "" petsc petscvec petscmat petscdm petscsnes petscts; do
     if test -z "$i"; then
        continue
     fi
