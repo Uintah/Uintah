@@ -216,13 +216,17 @@ itcl_class SCIRun_FieldsOther_ScalarFieldStats {
 
         set min [set $this-min]
         set max [set $this-max]
+
         set xvector {}
         set yvector {}
         set yvector [concat $yvector $args]
+
         set frac [expr double(1.0/[llength $yvector])]
 
         $w.graph configure -barwidth $frac
-        $w.graph axis configure x -min $min -max $max -subdivisions 4 -loose 1
+        $w.graph axis configure x -min $min -max $max \
+	    -subdivisions 4 -loose 1 \
+	    -stepsize 0
 
         for {set i 0} { $i < [llength $yvector] } {incr i} {
             set val [expr $min + $i*$frac*($max-$min)]
@@ -231,12 +235,12 @@ itcl_class SCIRun_FieldsOther_ScalarFieldStats {
         
 #       lappend yvector [split $args]
 
-        if { [$w.graph element exists "h"] == 1 } {
-            $w.graph element delete "h"
-        }
+         if { [$w.graph element exists data] == 1 } {
+             $w.graph element delete data
+         }
 
-        $w.graph element create "h" -xdata $xvector -ydata $yvector
-            
+	$w.graph element create data -label {} -xdata $xvector -ydata $yvector
+
     }
 }
 

@@ -3118,18 +3118,20 @@ class BioImageApp {
          set frac [expr double(1.0/[llength $yvector])]
 
          $graph configure -barwidth $frac
-         $graph axis configure x -min $min -max $max -subdivisions 4 -loose 1
+         $graph axis configure x -min $min -max $max \
+             -subdivisions 4 -loose 1 \
+             -stepsize 0
 
          for {set i 0} { $i < [llength $yvector] } {incr i} {
              set val [expr $min + $i*$frac*($max-$min)]
              lappend xvector $val
          }
         
-          if { [$graph element exists "h"] == 1 } {
-              $graph element delete "h"
+          if { [$graph element exists data] == 1 } {
+              $graph element delete data
           }
 
-          $graph element create "h" -xdata $xvector -ydata $yvector
+        $graph element create data -label {} -xdata $xvector -ydata $yvector
 
 # 	## other window
   	 set graph $history0.$temp.f$temp.childsite.ui.histo.childsite.graph
