@@ -967,6 +967,9 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
                                    DataWarehouse* /*old_dw*/,
                                    DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+  int levelIndx = level->getIndex();
+      
   for(int p=0; p<patches->size(); p++)  {
     const Patch* patch = patches->get(p);  
     Vector dx       = patch->dCell();
@@ -978,6 +981,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
 
     static double initial_total_eng;
     static Vector initial_total_mom;
+    int timestep = d_sharedState->getCurrentTopLevelTimeStep();
     static int n_passes = 0;
     
     vector<Vector> mat_momentum(numICEmatls);
@@ -1036,13 +1040,12 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
     }
     //__________________________________
     // Dump diagnostics if only one patch
-    const Level* level=patch->getLevel();
     int numPatches = level->numPatches();
     if( numPatches == 1 ){ 
       cout.setf(ios::scientific,ios::floatfield);
       cout.precision(8);
       for (int m = 0; m < numICEmatls; m++ ) {
-        cout << " Mat " << m << endl;
+        cout << " Mat " << m << " L- " << level->getIndex()<< endl;
         cout << " mass        " <<  mat_mass[m] << endl;
         cout << " momentum    " << mat_momentum[m]
              << " length: " << mat_momentum[m].length() << endl;
@@ -1050,13 +1053,11 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
              << ", Kinetic: " << mat_KE[m] 
              << " total: "    << mat_total_eng[m] << endl;
       }
-   
       //__________________________________
       //  set the inital values
-      if ( n_passes == 0) {
+      if ( timestep == 1) {
         initial_total_eng = total_energy;
         initial_total_mom = total_momentum;
-        n_passes ++;
       } 
 
       double change_total_mom =
