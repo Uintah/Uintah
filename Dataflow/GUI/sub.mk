@@ -69,6 +69,7 @@ SRCS := \
 	$(SRCDIR)/GenStandardColorMaps.tcl \
 	$(SRCDIR)/GenTransferFunc.tcl \
 	$(SRCDIR)/GLTextureBuilder.tcl \
+	$(SRCDIR)/GuiPreferences.tcl \
 	$(SRCDIR)/ToolTipText.tcl \
 	$(SRCDIR)/Isosurface.tcl \
 	$(SRCDIR)/IsoClip.tcl \
