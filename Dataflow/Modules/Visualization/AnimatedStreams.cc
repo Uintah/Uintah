@@ -42,6 +42,7 @@ extern "C" Module* make_AnimatedStreams( const string& id) {
 
 AnimatedStreams::AnimatedStreams(const string& id)
   : Module("AnimatedStreams", id, Filter, "Visualization", "Uintah"),
+    generation(-1), timestep(-1),
     pause("pause",id, this),
     normals("normals", id, this),
     stepsize("stepsize", id, this),
@@ -113,10 +114,51 @@ void AnimatedStreams::execute(void)
     vf = field;
     map = cmap;
   } else {
+    // determine if the field has changed
     if( vf.get_rep() != field.get_rep() ){
-      anistreams->SetVectorField( field );
       vf = field;
-    }
+      // We need to figure out why the field has changed. If it changed because
+      // the grid changed we need to call SetVectorField which will resets the
+      // the streams.  If the grid didn't change, but the time step changed
+      // then we can assume the field dimensions are the same and call
+      // ChangeVectorField which doesn't reset the streams.  If we can't tell
+      // what the field generation is, call SetVectorField, because it
+      // probably didn't come from a Uintah::DataArchive.
+      int new_generation = -1;
+      if (vf->get("generation",new_generation)) {
+	// generation property found, check now for timestep property
+	int new_timestep = -1;
+	if (vf->get("timestep",new_timestep)) {
+	  // now check for sameness of generation and timestep
+	  if (new_generation == generation) {
+	    if (new_timestep != timestep) {
+	      // same generation different timestep, swap out the vector field
+	      anistreams->ChangeVectorField( field );
+	      timestep = new_timestep;
+	    } // else do nothing (same generation and timestep)
+	  } else {
+	    // new DataArchive, set the vector field
+	    anistreams->SetVectorField( field );
+	    generation = new_generation;
+	    timestep = new_timestep;
+	  }
+	} else {
+	  // this is weird, the generation PropertyManager was found, but
+	  // not the timestep one.  Set the vector field, and print out
+	  // a warning.
+	  cerr << "WARNING:AnimatedStreams::execute:generation PropertyManager was found, but not the timestep.  Using new vector field.\n";
+	  anistreams->SetVectorField( field );
+	  // make sure these parameters get reset
+	  timestep = -1;
+	}    
+      } else {
+	// generation parameter not found, set the vector field
+	anistreams->SetVectorField( field );
+	// make sure these parameters get reset
+	generation = timestep = -1;
+      }
+    } // else the fields are the same and do nothing
+
     if( cmap.get_rep() != map.get_rep() ){
       anistreams->SetColorMap( cmap );
       map = cmap;
@@ -140,6 +182,20 @@ void AnimatedStreams::execute(void)
   ogeom->flushViews();
   
   mutex.unlock();
+}
+
+void AnimatedStreams::tcl_command( TCLArgs& args, void* userdata) {
+  if(args.count() < 2) {
+    args.error("Streamline needs a minor command");
+    return;
+  }
+  if(args[1] == "reset_streams") {
+    anistreams->ResetStreams();
+    //want_to_execute();
+  }
+  else {
+    Module::tcl_command(args, userdata);
+  }
 }
 
 } // End namespace Uintah
