@@ -15,8 +15,18 @@
 #include <Math/MinMax.h>
 #include <Classlib/Persistent.h>
 
-Color::Color(float _r, float _g, float _b)
+Color::Color()
+: _r(0), _g(0), _b(0)
+{
+}
+
+Color::Color(double _r, double _g, double _b)
 : _r(_r), _g(_g), _b(_b)
+{
+}
+
+Color::Color(const Color& c)
+: _r(c._r), _g(c._g), _b(c._b)
 {
 }
 
@@ -26,6 +36,10 @@ Color& Color::operator=(const Color& c)
     _g=c._g;
     _b=c._b;
     return *this;
+}
+
+Color::~Color()
+{
 }
 
 void Color::get_color(float color[4])
@@ -41,6 +55,16 @@ Color Color::operator*(const Color& c) const
     return Color(_r*c._r, _g*c._g, _b*c._b);
 }
 
+Color Color::operator*(double w) const
+{
+    return Color(_r*w, _g*w, _b*w);
+}
+
+Color Color::operator+(const Color& c) const
+{
+    return Color(_r+c._r, _g+c._g, _b+c._b);
+}
+
 void Pio(Piostream& stream, Color& p)
 {
     stream.begin_cheap_delim();
@@ -50,17 +74,25 @@ void Pio(Piostream& stream, Color& p)
     stream.end_cheap_delim();
 }
 
+Color& Color::operator+=(const Color& c)
+{
+    _r+=c._r;
+    _g+=c._g;
+    _b+=c._b;
+    return *this;
+}
+
 Color::Color(const HSVColor& hsv)
 {
    int hh((int)(hsv._hue/360.0));
-   float hue(hsv._hue-hh*360.0);
+   double hue(hsv._hue-hh*360.0);
    
-   float h6(hue/60.0);
+   double h6(hue/60.0);
    int i((int)h6);
-   float f(h6-i);
-   float p1(hsv._val*(1.0-hsv._sat));
-   float p2(hsv._val*(1.0-(hsv._sat*f)));
-   float p3(hsv._val*(1.0-(hsv._sat*(1-f))));
+   double f(h6-i);
+   double p1(hsv._val*(1.0-hsv._sat));
+   double p2(hsv._val*(1.0-(hsv._sat*f)));
+   double p3(hsv._val*(1.0-(hsv._sat*(1-f))));
    switch(i){
    case 0:
       _r=hsv._val; _g=p3;       _b=p1;   break;
@@ -79,42 +111,11 @@ Color::Color(const HSVColor& hsv)
    }
 }
 
-
-
-int
-Color::Overlap( double a, double b, double e )
-{
-  double hi, lo, h, l;
-  
-  hi = a + e;
-  lo = a - e;
-  h  = b + e;
-  l  = b - e;
-
-  if ( ( hi > l ) && ( lo < h ) )
-    return 1;
-  else
-    return 0;
-}
-  
-int
-Color::InInterval( Color& a, double epsilon )
-{
-  if ( Overlap( _r, a.r(), epsilon ) &&
-      Overlap( _g, a.g(), epsilon )  &&
-      Overlap( _b, a.b(), epsilon ) )
-    return 1;
-  else
-    return 0;
-}
-
-
-
 HSVColor::HSVColor()
 {
 }
 
-HSVColor::HSVColor(float _hue, float _sat, float _val)
+HSVColor::HSVColor(double _hue, double _sat, double _val)
 : _hue(_hue), _sat(_sat), _val(_val)
 {
 }
@@ -130,13 +131,13 @@ HSVColor::HSVColor(const HSVColor& copy)
 
 HSVColor::HSVColor(const Color& rgb)
 {
-   float max(Max(rgb._r,rgb._g,rgb._b));
-   float min(Min(rgb._r,rgb._g,rgb._b));
+   double max(Max(rgb._r,rgb._g,rgb._b));
+   double min(Min(rgb._r,rgb._g,rgb._b));
    _sat = ((max == 0.0) ? 0.0 : ((max-min)/max));
    if (_sat != 0.0) {
-      float rl((max-rgb._r)/(max-min));
-      float gl((max-rgb._g)/(max-min));
-      float bl((max-rgb._b)/(max-min));
+      double rl((max-rgb._r)/(max-min));
+      double gl((max-rgb._g)/(max-min));
+      double bl((max-rgb._b)/(max-min));
       if (max == rgb._r) {
 	 if (min == rgb._g) _hue = 60.0*(5.0+bl);
 	 else _hue = 60.0*(1.0-gl);
@@ -159,7 +160,7 @@ HSVColor& HSVColor::operator=(const HSVColor& copy)
     return *this;
 }
 
-HSVColor HSVColor::operator*(float w)
+HSVColor HSVColor::operator*(double w)
 {
    return HSVColor(_hue*w,_val*w,_sat*w);
 }
@@ -168,7 +169,6 @@ HSVColor HSVColor::operator+(const HSVColor& c)
 {
    return HSVColor(_hue+c._hue, _sat+c._sat, _val+c._val);
 }
-
 
 /***************************************************
 ***************************************************/

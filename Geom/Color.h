@@ -18,18 +18,17 @@ class HSVColor;
 class Piostream;
 
 class Color {
-    float _r, _g, _b;
+    double _r, _g, _b;
 public:
     Color();
-
-    Color(float, float, float);
+    Color(double, double, double);
     Color(const Color&);
     Color& operator=(const Color&);
     Color(const HSVColor&);
     ~Color();
 
     Color operator*(const Color&) const;
-    Color operator*(float) const;
+    Color operator*(double) const;
     Color operator+(const Color&) const;
     Color& operator+=(const Color&);
 
@@ -41,89 +40,64 @@ public:
       return ((_r != c._r)||(_g!=c._g)||(_b!=c._b));
     }
 
-    int InInterval( Color&, double );
-
     void get_color(float color[4]);
-    inline float r() const {return _r;}
-    inline float g() const {return _g;}
-    inline float b() const {return _b;}
+    inline double r() const {return _r;}
+    inline double g() const {return _g;}
+    inline double b() const {return _b;}
 
     inline void r( const float v ) { _r = v; }
     inline void g( const float v ) { _g = v; }
     inline void b( const float v ) { _b = v; }
 
+    inline double& operator[](const int i) {   
+      switch (i) {
+      case 0:
+	return _r;
+      case 1:
+	return _g;
+      default:
+	return _b;
+      }
+    }
+
+
     friend void Pio(Piostream&, Color&);
     friend class HSVColor;
-
-  private:
-    int Overlap( double, double, double );
-
 };
 
-inline
-Color::Color()
-: _r(0), _g(0), _b(0)
-{
-}
-
-inline
-Color::Color(const Color& c)
-: _r(c._r), _g(c._g), _b(c._b)
-{
-}
-
-inline
-Color::~Color()
-{
-}
-
-inline Color
-Color::operator+(const Color& c) const
-{
-    return Color(_r+c._r, _g+c._g, _b+c._b);
-}
-
-inline
-Color
-Color::operator*(float w) const
-{
-    return Color(_r*w, _g*w, _b*w);
-}
-
-inline
-Color&
-Color::operator+=(const Color& c)
-{
-    _r+=c._r;
-    _g+=c._g;
-    _b+=c._b;
-    return *this;
-}
-
-
 class HSVColor {
-    float _hue;
-    float _sat;
-    float _val;
+    double _hue;
+    double _sat;
+    double _val;
 public:
     HSVColor();
-    HSVColor(float hue, float sat, float val);
+    HSVColor(double hue, double sat, double val);
     ~HSVColor();
     HSVColor(const HSVColor&);
     HSVColor(const Color&);
     HSVColor& operator=(const HSVColor&);
 
     // These only affect hue.
-    HSVColor operator*(float);
+    HSVColor operator*(double);
     HSVColor operator+(const HSVColor&);
    
-    inline float hue() const {return _hue;}
-    inline float sat() const {return _sat;}
-    inline float val() const {return _val;}
+    inline double& operator[](const int i) {   
+      switch (i) {
+      case 0:
+	return _hue;
+      case 1:
+	return _sat;
+      default:
+	return _val;
+      }
+    }
+
+    inline double hue() const {return _hue;}
+    inline double sat() const {return _sat;}
+    inline double val() const {return _val;}
 
     friend class Color;
 };
-
 /*********************************************************
   This structure holds a simple RGB color in char format.
 *********************************************************/
