@@ -131,10 +131,16 @@ MPMLabel::MPMLabel()
   pTang2Label  = VarLabel::create( "p.tang2",
                         ParticleVariable<Vector>::getTypeDescription() );
 
+  pNormLabel  = VarLabel::create( "p.norm",
+                        ParticleVariable<Vector>::getTypeDescription() );
+
   pTang1Label_preReloc  = VarLabel::create( "p.tang1+",
                         ParticleVariable<Vector>::getTypeDescription() );
 
   pTang2Label_preReloc  = VarLabel::create( "p.tang2+",
+                        ParticleVariable<Vector>::getTypeDescription() );
+
+  pNormLabel_preReloc  = VarLabel::create( "p.norm+",
                         ParticleVariable<Vector>::getTypeDescription() );
 
   // Particle Variables 
@@ -366,8 +372,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pCrackRadiusLabel);
   VarLabel::destroy(pTang1Label);
   VarLabel::destroy(pTang2Label);
+  VarLabel::destroy(pNormLabel);
   VarLabel::destroy(pTang1Label_preReloc);
   VarLabel::destroy(pTang2Label_preReloc);
+  VarLabel::destroy(pNormLabel_preReloc);
   
   VarLabel::destroy(pDeformationMeasureLabel_preReloc);
   VarLabel::destroy(pStressLabel_preReloc);
