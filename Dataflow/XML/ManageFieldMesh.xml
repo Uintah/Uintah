@@ -26,8 +26,28 @@
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary></summary>
+    <summary>Extract and change the positions of the nodes in a mesh.</summary>
     <description>
+      <p>
+      This module performs two simultanious operations.  First the
+      locations of all the nodes in the "Input Field" are extracted
+      into a matrix and sent to the "Output Matrix" port as an Nx3
+      matrix, where N is the number of nodes in the field.  The
+      positions are sent in xyz order.  This first operation works
+      on any field type because it does not make changes to the field.
+      </p>
+      
+      <p>
+      The second operation is optional.  If an "Input Matrix" is
+      available then a new field is constructed containing a copy of
+      the "Input Field" except that the node locations are replaced by
+      the position data in the "Input Matrix".  The "Input Matrix" is
+      expected to be Nx3, where N is the number of nodes in the field
+      and the three columns represent xyz positions.  This operation
+      requires the "Input Field" to be an editable mesh type.  The
+      Unstructure module can be used to make uneditable meshes
+      editable.
+      </p>
     </description>
   </overview>
   <io>
