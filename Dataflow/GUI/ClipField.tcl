@@ -49,6 +49,10 @@ itcl_class SCIRun_Fields_ClipField {
 	$this-c needexecute
     }
 
+    method locationclip {} {
+	set $this-execmode location
+	$this-c needexecute
+    }
 
     method ui {} {
         set w .ui[modname]
@@ -64,9 +68,9 @@ itcl_class SCIRun_Fields_ClipField {
 	frame $w.executes -relief groove -borderwidth 2
 
 	label $w.location.label -text "Clip Location"
-	radiobutton $w.location.cell -text "Cell Centers" -variable $this-clip-location -value cell
-	radiobutton $w.location.nodeone -text "One Node" -variable $this-clip-location -value nodeone
-	radiobutton $w.location.nodeall -text "All Nodes" -variable $this-clip-location -value nodeall
+	radiobutton $w.location.cell -text "Cell Centers" -variable $this-clip-location -value cell -command "$this locationclip"
+	radiobutton $w.location.nodeone -text "One Node" -variable $this-clip-location -value nodeone -command "$this locationclip"
+	radiobutton $w.location.nodeall -text "All Nodes" -variable $this-clip-location -value nodeall -command "$this locationclip"
 
 	pack $w.location.label -side top -expand yes -fill both
 	pack $w.location.cell $w.location.nodeone $w.location.nodeall -side top -anchor w

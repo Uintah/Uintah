@@ -226,12 +226,10 @@ ClipField::execute()
       do_clip_p = true;
     }
   }
-#if 0
   else if (exec_mode_.get() == "location")
   {
     do_clip_p = true;
   }
-#endif
 
   if (do_clip_p || ifieldhandle->generation != last_input_generation_)
   {
@@ -253,7 +251,19 @@ ClipField::execute()
       error("Could not get algorithm.");
       return;
     }
-    FieldHandle ofield = algo->execute(ifieldhandle, clipper_);
+    FieldHandle ofield = 0;
+    if (clip_location_.get() == "nodeone")
+    {
+      ofield = algo->execute_node(ifieldhandle, clipper_, true);
+    }
+    else if (clip_location_.get() == "nodeall")
+    {
+      ofield = algo->execute_node(ifieldhandle, clipper_, false);
+    }
+    else // 'cell' and default
+    {
+      ofield = algo->execute_cell(ifieldhandle, clipper_);
+    }
 
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
     if (!ofield_port) {
