@@ -1899,7 +1899,6 @@ void Pio(Piostream& stream, Element*& data)
   stream.end_cheap_delim();
 }
 
-#if 0
 void Pio(Piostream& stream, NodeVersion1& node)
 {
 
@@ -1917,7 +1916,6 @@ void Pio(Piostream& stream, ElementVersion1& elem)
   Pio(stream, elem.n3);
   stream.end_cheap_delim();
 }
-#endif
 
 } // End namespace SCIRun
 
