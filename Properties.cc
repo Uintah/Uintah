@@ -222,7 +222,7 @@ Properties::sched_computeDenRefArray(SchedulerP& sched,
 			  this, &Properties::computeDenRefArray);
 
 
-  tsk->requires(Task::OldDW, d_lab->d_refDensity_label);
+  tsk->requires(Task::NewDW, d_lab->d_refDensity_label);
   tsk->computes(d_lab->d_denRefArrayLabel);
 
   if (d_MAlab) {
@@ -697,7 +697,7 @@ void
 Properties::computeDenRefArray(const ProcessorGroup*,
 			       const PatchSubset* patches,
 			       const MaterialSubset*,
-			       DataWarehouse* old_dw,
+			       DataWarehouse*,
 			       DataWarehouse* new_dw)
 
 {
@@ -713,7 +713,7 @@ Properties::computeDenRefArray(const ProcessorGroup*,
 
 
     sum_vartype den_ref_var;
-    old_dw->get(den_ref_var, d_lab->d_refDensity_label);
+    new_dw->get(den_ref_var, d_lab->d_refDensity_label);
 
     double den_Ref = den_ref_var;
 
@@ -785,6 +785,7 @@ Properties::sched_computePropsPred(SchedulerP& sched, const PatchSet* patches,
 		  Arches::ZEROGHOSTCELLS);
 
 
+  tsk->computes(d_lab->d_refDensityPred_label);
   tsk->computes(d_lab->d_densityPredLabel);
   tsk->computes(d_lab->d_drhodfPredLabel);
   if (d_reactingFlow) {
@@ -1001,6 +1002,14 @@ Properties::computePropsPred(const ProcessorGroup*,
     IntVector domHi = density.getFortHighIndex();
     density.print(cerr);
 #endif
+    if (patch->containsCell(d_denRef)) {
+      double den_ref = new_density[d_denRef];
+      cerr << "density_ref " << den_ref << endl;
+      new_dw->put(sum_vartype(den_ref),d_lab->d_refDensityPred_label);
+    }
+    else
+      new_dw->put(sum_vartype(0), d_lab->d_refDensityPred_label);
+
     new_dw->put(new_density, d_lab->d_densityPredLabel, matlIndex, patch);
     new_dw->put(drhodf, d_lab->d_drhodfPredLabel, matlIndex, patch);
     //    if (d_MAlab)
@@ -1057,6 +1066,7 @@ Properties::sched_computePropsInterm(SchedulerP& sched, const PatchSet* patches,
 		  Arches::ZEROGHOSTCELLS);
 
 
+  tsk->computes(d_lab->d_refDensityInterm_label);
   tsk->computes(d_lab->d_densityIntermLabel);
   tsk->computes(d_lab->d_drhodfIntermLabel);
   if (d_reactingFlow) {
@@ -1273,6 +1283,14 @@ Properties::computePropsInterm(const ProcessorGroup*,
     IntVector domHi = density.getFortHighIndex();
     density.print(cerr);
 #endif
+    if (patch->containsCell(d_denRef)) {
+      double den_ref = new_density[d_denRef];
+      cerr << "density_ref " << den_ref << endl;
+      new_dw->put(sum_vartype(den_ref),d_lab->d_refDensityInterm_label);
+    }
+    else
+      new_dw->put(sum_vartype(0), d_lab->d_refDensityInterm_label);
+    
     new_dw->put(new_density, d_lab->d_densityIntermLabel, matlIndex, patch);
     new_dw->put(drhodf, d_lab->d_drhodfIntermLabel, matlIndex, patch);
     if (d_reactingFlow) {
@@ -1289,3 +1307,176 @@ Properties::computePropsInterm(const ProcessorGroup*,
     }
   }
 }
+
+//****************************************************************************
+// Schedule the computation of density reference array here
+//****************************************************************************
+void 
+Properties::sched_computeDenRefArrayPred(SchedulerP& sched,
+				     const PatchSet* patches,
+				     const MaterialSet* matls)
+
+{
+
+  // primitive variable initialization
+
+  Task* tsk = scinew Task("Properties::computeDenRefArrayPred",
+			  this, &Properties::computeDenRefArrayPred);
+
+
+  tsk->requires(Task::NewDW, d_lab->d_refDensityPred_label);
+  tsk->computes(d_lab->d_denRefArrayPredLabel);
+
+  if (d_MAlab) {
+
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
+  sched->addTask(tsk, patches, matls);
+
+}
+  
+//****************************************************************************
+// Actually calculate the density reference array here
+//****************************************************************************
+
+void 
+Properties::computeDenRefArrayPred(const ProcessorGroup*,
+			       const PatchSubset* patches,
+			       const MaterialSubset*,
+			       DataWarehouse*,
+			       DataWarehouse* new_dw)
+
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> denRefArray;
+    constCCVariable<double> voidFraction;
+
+
+    sum_vartype den_ref_var;
+    new_dw->get(den_ref_var, d_lab->d_refDensityPred_label);
+
+    double den_Ref = den_ref_var;
+
+    //cerr << "getdensity_ref " << den_Ref << endl;
+
+    if (d_MAlab) {
+
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    }
+
+    new_dw->allocate(denRefArray, d_lab->d_denRefArrayPredLabel, 
+		     matlIndex, patch);
+		
+    denRefArray.initialize(den_Ref);
+
+    if (d_MAlab) {
+
+      for (CellIterator iter = patch->getCellIterator();
+	   !iter.done();iter++){
+
+	denRefArray[*iter]  *= voidFraction[*iter];
+
+      }
+    }
+
+    new_dw->put(denRefArray, d_lab->d_denRefArrayPredLabel,
+		matlIndex, patch);
+
+  }
+}
+
+//****************************************************************************
+// Schedule the computation of density reference array here
+//****************************************************************************
+void 
+Properties::sched_computeDenRefArrayInterm(SchedulerP& sched,
+				     const PatchSet* patches,
+				     const MaterialSet* matls)
+
+{
+
+  // primitive variable initialization
+
+  Task* tsk = scinew Task("Properties::computeDenRefArrayInterm",
+			  this, &Properties::computeDenRefArrayInterm);
+
+
+  tsk->requires(Task::NewDW, d_lab->d_refDensityInterm_label);
+  tsk->computes(d_lab->d_denRefArrayIntermLabel);
+
+  if (d_MAlab) {
+
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
+  sched->addTask(tsk, patches, matls);
+
+}
+  
+//****************************************************************************
+// Actually calculate the density reference array here
+//****************************************************************************
+
+void 
+Properties::computeDenRefArrayInterm(const ProcessorGroup*,
+			       const PatchSubset* patches,
+			       const MaterialSubset*,
+			       DataWarehouse*,
+			       DataWarehouse* new_dw)
+
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> denRefArray;
+    constCCVariable<double> voidFraction;
+
+
+    sum_vartype den_ref_var;
+    new_dw->get(den_ref_var, d_lab->d_refDensityInterm_label);
+
+    double den_Ref = den_ref_var;
+
+    //cerr << "getdensity_ref " << den_Ref << endl;
+
+    if (d_MAlab) {
+
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    }
+
+    new_dw->allocate(denRefArray, d_lab->d_denRefArrayIntermLabel, 
+		     matlIndex, patch);
+		
+    denRefArray.initialize(den_Ref);
+
+    if (d_MAlab) {
+
+      for (CellIterator iter = patch->getCellIterator();
+	   !iter.done();iter++){
+
+	denRefArray[*iter]  *= voidFraction[*iter];
+
+      }
+    }
+
+    new_dw->put(denRefArray, d_lab->d_denRefArrayIntermLabel,
+		matlIndex, patch);
+
+  }
+}
+

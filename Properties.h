@@ -100,6 +100,12 @@ public:
       void sched_computeDenRefArray(SchedulerP&, const PatchSet* patches,
 				    const MaterialSet* matls);
 
+      void sched_computeDenRefArrayPred(SchedulerP&, const PatchSet* patches,
+				    const MaterialSet* matls);
+
+      void sched_computeDenRefArrayInterm(SchedulerP&, const PatchSet* patches,
+				    const MaterialSet* matls);
+
 
       // GROUP: Get Methods :
       ///////////////////////////////////////////////////////////////////////
@@ -163,6 +169,18 @@ private:
       // Carry out actual computation of density reference array
 
       void computeDenRefArray(const ProcessorGroup*,
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw);
+
+      void computeDenRefArrayPred(const ProcessorGroup*,
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw);
+
+      void computeDenRefArrayInterm(const ProcessorGroup*,
 			      const PatchSubset* patches,
 			      const MaterialSubset* matls,
 			      DataWarehouse* old_dw,
