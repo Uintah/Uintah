@@ -1447,7 +1447,7 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
   vector<SuperBox*>::iterator sb_iter;
 
   vector<BasicBox*> basicBoxes(n);
-#if HAVE_HASH_MAP
+#ifdef HAVE_HASH_MAP
   BoxHashMap boxMap(n);
 #else
   BoxHashMap boxMap;
