@@ -165,8 +165,9 @@ void LinAlgBinary::execute() {
 	LinAlgBinaryAlgo::get_compile_info(func, hoffset);
       if (!DynamicCompilation::compile(ci, algo, false, this))
       {
-	DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
 	error("Your function would not compile.");
+       	gui->eval(id + " compile_error "+ci->filename_);
+	DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
 	return;
       }
       if (algo->identify() == func)
