@@ -146,7 +146,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	# to be modified for particular reader
 
 	# extansion to append if no extension supplied by user
-	set defext ".fld"
+	set defext ".h5"
 	set title "Open HDF5 file"
 	
 	# file types to appers in filter box
@@ -158,14 +158,15 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	######################################################
 	
 	makeOpenFilebox \
-	    -parent $w \
-	    -filevar $this-filename \
-	    -command "$this-c update_file; wm withdraw $w" \
-	    -cancel "wm withdraw $w" \
-	    -title $title \
-	    -filetypes $types \
-	    -initialdir $initdir \
-	    -defaultextension $defext
+		-parent $w \
+		-filevar $this-filename \
+		-command "wm withdraw $w" \
+		-execute "$this-c needexecute; wm withdraw $w" \
+		-cancel "wm withdraw $w" \
+		-title $title \
+		-filetypes $types \
+		-initialdir $initdir \
+		-defaultextension $defext
 
        moveToCursor $w
        wm deiconify $w

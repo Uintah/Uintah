@@ -56,11 +56,12 @@ itcl_class Fusion_DataIO_VULCANDataReader {
 	makeOpenFilebox \
 		-parent $w \
 		-filevar $this-filename \
-		-command "$this-c needexecute; wm withdraw $w" \
+		-command "wm withdraw $w" \
+		-execute "$this-c needexecute; wm withdraw $w" \
 		-cancel "wm withdraw $w" \
 		-title $title \
 		-filetypes $types \
-		-initialdir $initdir
+		-initialdir $initdir 
 
 	moveToCursor $w
     }
