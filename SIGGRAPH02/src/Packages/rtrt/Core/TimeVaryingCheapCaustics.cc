@@ -4,6 +4,7 @@
 #include <iostream>
 
 using namespace rtrt;
+using namespace std;
 using namespace SCIRun;
 
 Persistent* TVCC_maker() {
@@ -144,6 +145,13 @@ Color TimeVaryingCheapCaustics::GetCausticColor( Point atPoint, float currTime )
 
   float pct2 = useTime-timeIdx1;
   float pct1 = 1-pct2;
+
+  if( timeIdx1 == numFiles )
+    {
+      cout << "WARNING: TimeVaryingCheapCaustics WOULD HAVE DIED!";
+      timeIdx1--;
+    }
+
 
   float color = pct1 * (*caustics[timeIdx1])(u,v) + 
     pct2 * (*caustics[timeIdx2])(u,v);
