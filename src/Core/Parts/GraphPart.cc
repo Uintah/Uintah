@@ -57,8 +57,11 @@ GraphPart::set_num_lines( int n )
 {
   cerr << "resizing lines to " << n << endl;
   data_.resize(n);
+  reset(n);
+  
 }
   
+#ifdef CHRIS
 void 
 GraphPart::add_values( unsigned item, const vector<double> &v)
 {
@@ -71,8 +74,11 @@ GraphPart::add_values( unsigned item, const vector<double> &v)
   for (unsigned i=0; i<v.size(); ++i) 
     data_[item].push_back(v[i]);
   new_values(item,v);
-
-#if 0
+}
+#else
+void 
+GraphPart::add_values( const vector<double> &v)
+{
   if (v.size() != data_.size()) {
     cerr << "add_values size " << v.size() << " != data_ size " 
 	 << data_.size() << endl;
@@ -82,8 +88,8 @@ GraphPart::add_values( unsigned item, const vector<double> &v)
   for (unsigned i=0; i<v.size(); i++)
     data_[i].push_back(v[i]);
   new_values( v );
-#endif
 };
+#endif
 
 } // namespace SCIRun
 

@@ -49,10 +49,18 @@ public:
   virtual ~GraphPart();
 
   void set_num_lines( int );
+
+#ifdef CHRIS
   void add_values( unsigned , const vector<double> &);
 
   Signal1< const vector<DrawObj*> & > reset;
   Signal2< unsigned, const vector<double> & > new_values;
+#else
+  void add_values( const vector<double> &);
+
+  Signal1< int > reset;
+  Signal1< const vector<double> & > new_values;
+#endif
 };
 
 } // namespace SCIRun
