@@ -607,7 +607,7 @@ void contribute(const ArrayType& field, constNCVariable<int>& bctype,
 		double weight, double& w,
 		typename ArrayType::value_type& value)
 {
-  if(inside(idx, field.getLowIndex(), field.getHighIndex())){
+  if(::inside(idx, field.getLowIndex(), field.getHighIndex())){
     BCRegion<double>* bc2 = bc->get(bctype[idx]);
     switch(bc2->getType()){
     case BC::FreeFlow:
