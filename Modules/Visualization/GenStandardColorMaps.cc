@@ -28,6 +28,8 @@
 #include <Malloc/Allocator.h>
 #include <math.h>
 #include <iostream.h> 
+#include <strstream.h>
+#include <iomanip.h>
 #include <stdio.h>
 
 
@@ -318,42 +320,50 @@ void GenStandardColorMaps::tcl_command( TCLArgs& args, void* userdata)
 {
 
   int i;
-  if (args[1] == "getcolor") {
-    if (args.count() != 3) {
-      args.error("GenStandardColorMaps needs index");
-      return;
-    }
-    if (!args[2].get_int(i)) {
-      args.error("GenStandardColorMaps can't parse index `"+args[2]+"'");
+  if (args[1] == "getcolors") {
+    if (args.count() != 2) {
+      args.error("GenStandardColorMaps::getcolors wrong number of args.");
       return;
     }
 
-      const Array1< Color >& colors = mapTypes[mapType.get()]->getColors();
-      int n = colors.size();
-      int m = resolution.get();
-      if (m < minRes.get()) return;
-      float frac = (n-1)/float(m-1);
-      double index = 0;
-      double t = modf(i*frac, &index);
-      Color color;
-      if(i == 0) 
-	{ color = colors[0];}
-      else if(i == m-1) 
-	{color = colors[n-1];}
-      else
-	color = 
+
+    reset_vars();
+    const Array1< Color >& colors = mapTypes[mapType.get()]->getColors();
+    int n = colors.size();
+    int m = resolution.get();
+    cerr << "c-resolution = "<< m <<endl;
+    
+    if (m < minRes.get()) return;
+    
+    ostrstream colorOstr;
+    colorOstr.setf(ios::hex, ios::basefield);
+    colorOstr.fill('0');
+    float frac = (n-1)/float(m-1);
+    double index = 0;
+    double t;
+    Color color;
+    
+    for(i = 0; i < m; i ++){
+      if(i == 0) {
+	color = colors[0];
+      } else if ( i == m-1 ) {
+	color = colors[n - 1];
+      } else {
+	t = modf(i*frac, &index);
+	color =
 	  Color(colors[index][0] + t*(colors[index+1][0] - colors[index][0]),
 		colors[index][1] + t*(colors[index+1][1] - colors[index][1]),
 		colors[index][2] + t*(colors[index+1][2] - colors[index][2]));
-
-      char buf[80];
-      sprintf(buf, "#%02x%02x%02x", int(color.r()*255),
-	      int(color.g()*255), int(color.b()*255));
-      clString result(buf);
-      args.result(result);
-    } else {
-	Module::tcl_command(args, userdata);
+      }
+      
+      colorOstr << "#"<< setw(2) << int(color.r()*255) << setw(2) <<
+	int(color.g()*255) << setw(2) << int(color.b()*255) << " ";
     }
+    args.result(colorOstr.str());
+    
+  } else {
+    Module::tcl_command(args, userdata);
+  }
 }
 
 //-------------------------------------------------------------- 
@@ -368,7 +378,7 @@ void GenStandardColorMaps::execute()
    if (mt != mapType.get() || res != resolution.get()){
      mt = mapType.get();
      res = resolution.get();
-     cmap = mapTypes[mapType.get()]->genMap(resolution.get());
+     cmap = mapTypes[mt]->genMap(res);
    }
 
    outport->send(cmap);
