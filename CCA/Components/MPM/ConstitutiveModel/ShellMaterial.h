@@ -15,11 +15,11 @@ namespace Uintah {
 /*! 
    \class ShellMaterial
    \brief Material model for shells (stresses normal to the shell are zero).
-   \warn  Only isotropic hypoelastic shells implemented.
    \author Biswajit Banerjee \n
    C-SAFE and Department of Mechanical Engineering \n
    University of Utah \n
    Copyright (C) 2003 University of Utah \n
+   \warning  Only isotropic hypoelastic shells implemented.
 */
 ////////////////////////////////////////////////////////////////////////////
 

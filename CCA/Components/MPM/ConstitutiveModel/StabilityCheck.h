@@ -7,15 +7,16 @@
 namespace Uintah {
 
   /*! \class StabilityCheck
-   *  \brief  A generic wrapper for various methods of checking the stability of
-   *  \brief  the motion, e.g. loss of hyperbolicity/ellipticity, Drucker 
-   *  \brief  stability criterion, Hill condition etc.
-   *  \brief  Provides an abstract base class for various methods of checking 
-   *  \brief  the stability of motion/bifurcation points
-   *  \author  Biswajit Banerjee, 
-   *  \author  C-SAFE and Department of Mechanical Engineering,
-   *  \author  University of Utah.
-   *  \author  Copyright (C) 2003 Container Dynamics Group
+    \brief  A generic wrapper for various methods of checking stability. 
+   
+    Examples: loss of hyperbolicity/ellipticity, Drucker 
+    stability criterion, Hill condition etc.
+    Provides an abstract base class for various methods of checking 
+    the stability of motion/bifurcation points
+    \author  Biswajit Banerjee, \n
+    C-SAFE and Department of Mechanical Engineering,\n
+    University of Utah.\n
+    Copyright (C) 2003 Container Dynamics Group\n
   */
   class StabilityCheck {
 
