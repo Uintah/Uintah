@@ -119,7 +119,6 @@ class ShowField : public Module
 
   //! Private Methods
   template <class T> bool to_double(const T&, double &) const;
-  template <class Msh> void finish_mesh(Msh* m);
   template <class Fld> void render_nodes(const Fld *sfld);
   template <class Fld> void render_edges(const Fld *sfld);
   template <class Fld> void render_faces(const Fld *sfld);
@@ -143,18 +142,14 @@ public:
   inline void add_face(const Point &p1, const Point &p2, const Point &p3, 
 		       MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
 		       GeomTriangles *g);
+  inline void add_face(const Point &p1, const Point &p2, const Point &p3, 
+		       const Vector &v1, const Vector &v2, const Vector &v3, 
+		       MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
+		       GeomTriangles *g);
 
   virtual void tcl_command(TCLArgs& args, void* userdata);
 
 };
-
-template <class Msh>
-void 
-ShowField::finish_mesh(Msh*) {}
-
-template <>
-void 
-ShowField::finish_mesh(TetVolMesh* tvm) { tvm->finish_mesh(); }
 
 ShowField::ShowField(const string& id) : 
   Module("ShowField", id, Filter, "Visualization", "SCIRun"), 
@@ -217,7 +212,7 @@ ShowField::execute()
     fld_gen_ = fld_handle->generation;  
     nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
     MeshBaseHandle mh = fld_handle->mesh();
-    dispatch_mesh1(mh, finish_mesh);
+    mh->finish_mesh();
   }
 
   color_->get(color_handle_);
@@ -424,21 +419,36 @@ ShowField::render_faces(const Fld *sfld)
 {
   if (faces_dirty_) {
     typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
+    const bool with_normals = mesh->has_normals();
+    cerr << "mesh->has_normals(): " <<  mesh->has_normals() << endl;
+    cerr << "with_normals" <<  with_normals << endl;
+    cerr << mesh->type_name() << endl;
+
     GeomTriangles* faces = scinew GeomTriangles;
     face_switch_ = scinew GeomSwitch(faces);
     // Third pass: over the faces
     typename Fld::mesh_type::face_iterator fiter = mesh->face_begin();  
+    typename Fld::mesh_type::node_array nodes;
+
     while (fiter != mesh->face_end()) {  
       // Use a default color?
       bool def_color = (use_def_color_ || (color_handle_.get_rep() == 0));
 
-      typename Fld::mesh_type::node_array nodes;
-      mesh->get_nodes(nodes, *fiter); ++fiter;
-      
+      mesh->get_nodes(nodes, *fiter); 
+      ++fiter;     
+ 
       Point p1, p2, p3;
       mesh->get_point(p1, nodes[0]);
       mesh->get_point(p2, nodes[1]);
       mesh->get_point(p3, nodes[2]);
+      Vector n1, n2, n3;
+
+      if (with_normals) {
+	mesh->get_normal(n1, nodes[0]);
+	mesh->get_normal(n2, nodes[1]);
+	mesh->get_normal(n3, nodes[2]);
+      }
+
       double val1 = 0.L;
       double val2 = 0.L;
       double val3 = 0.L;
@@ -472,11 +482,19 @@ ShowField::render_faces(const Fld *sfld)
 	def_color = true;
 	break;
       }
-      add_face(p1, p2, p3, 
-	       choose_mat(def_color, val1), 
-	       choose_mat(def_color, val2), 
-	       choose_mat(def_color, val3), 
-	       faces);
+      if (with_normals) {
+	add_face(p1, p2, p3, n1, n2, n3, 
+		 choose_mat(def_color, val1), 
+		 choose_mat(def_color, val2), 
+		 choose_mat(def_color, val3), 
+		 faces);
+      } else {
+	add_face(p1, p2, p3, 
+		 choose_mat(def_color, val1), 
+		 choose_mat(def_color, val2), 
+		 choose_mat(def_color, val3), 
+		 faces);
+      }
     }
   }
 }
@@ -492,6 +510,17 @@ ShowField::render(const F1 *fld)
 
 void 
 ShowField::add_face(const Point &p0, const Point &p1, const Point &p2, 
+		    const Vector &n0, const Vector &n1, const Vector &n2,
+		    MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
+		    GeomTriangles *g) 
+{
+  g->add(p0, n0, m0, 
+	 p1, n1, m1, 
+	 p2, n2, m2);
+}
+
+void 
+ShowField::add_face(const Point &p0, const Point &p1, const Point &p2, 
 		    MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
 		    GeomTriangles *g) 
 {
@@ -499,6 +528,7 @@ ShowField::add_face(const Point &p0, const Point &p1, const Point &p2,
 	 p1, m1, 
 	 p2, m2);
 }
+
 
 void 
 ShowField::add_edge(const Point &p0, const Point &p1,  

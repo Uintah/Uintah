@@ -342,7 +342,62 @@ TriSurfMesh::inside4_p(int i, const Point &p)
   return true;
 }
 
+void 
+TriSurfMesh::finish_mesh() 
+{
+  compute_normals();
+}
 
+void 
+TriSurfMesh::compute_normals() 
+{
+  if (normals_.size() > 0) { return; }
+  normals_.resize(points_.size()); // 1 per node
+
+  // build table of faces that touch each node
+  vector<vector<face_index> > node_in_faces(points_.size());  
+  //! face normals (not normalized) so that magnitude is also the area.
+  vector<Vector> face_normals(faces_.size());
+  // Computing normal per face.
+  node_array nodes(3);
+  face_iterator iter = face_begin();
+  while (iter != face_end()) {
+    get_nodes(nodes, *iter);
+
+    Point p1, p2, p3;
+    get_point(p1, nodes[0]);
+    get_point(p2, nodes[1]);
+    get_point(p3, nodes[2]);
+
+    // build table of faces that touch each node
+    node_in_faces[nodes[0]].push_back(*iter);
+    node_in_faces[nodes[1]].push_back(*iter);
+    node_in_faces[nodes[2]].push_back(*iter);
+    
+    Vector v0 = p2 - p1;
+    Vector v1 = p3 - p2;
+    Vector n = Cross(v0, v1);
+    face_normals[*iter] = n;
+    cerr << "normal mag: " << n.length() << endl;
+    ++iter;
+  }  
+
+  //Averaging the normals.
+  vector<vector<face_index> >::iterator nif_iter = node_in_faces.begin();
+  int i = 0;
+  while (nif_iter != node_in_faces.end()) {
+    const vector<face_index> &v = *nif_iter;
+    vector<face_index>::const_iterator fiter = v.begin();
+    Vector ave;
+    while(fiter != v.end()) {
+      ave += face_normals[*fiter];
+      ++fiter;
+    }
+    ave.normalize();
+    normals_[i] = ave; ++i;
+    ++nif_iter;
+  }
+}
 
 TriSurfMesh::node_index
 TriSurfMesh::add_find_point(const Point &p, double err)
@@ -446,12 +501,14 @@ TriSurfMesh::connect(double err)
 }
 
 
+
 TriSurfMesh::node_index
 TriSurfMesh::add_point(const Point &p)
 {
   points_.push_back(p);
   return points_.size() - 1;
 }
+
 
 
 void

@@ -55,10 +55,9 @@ private:
   
   //! Iterates over mesh, and build TriSurf at the boundary
   template <class Msh> void boundary(const Msh *mesh);
-
-  void add_ordered_tri(const Point &p1, const Point &p2, 
-		       const Point &p3, const Point &inside,
-		       TriSurfMeshHandle tmesh);
+  template <class NIndex>
+  void add_ordered_tri(const Point p[3], NIndex nidx[3],
+		       const Point &inside, TriSurfMeshHandle tmesh);
 
   void add_face(const Point &p0, const Point &p1, const Point &p2, 
 		MaterialHandle m0, MaterialHandle m1, 
@@ -112,21 +111,25 @@ FieldBoundary::~FieldBoundary()
 {
 }
 
+template <class NIndex>
 void 
-FieldBoundary::add_ordered_tri(const Point &p1, const Point &p2, 
-			       const Point &p3, const Point &inside,
-			       TriSurfMeshHandle tmesh)
+FieldBoundary::add_ordered_tri(const Point p[3], NIndex nidx[3], 
+			       const Point &inside, TriSurfMeshHandle tmesh)
 {
-  Vector v1 = p2 - p1;
-  Vector v2 = p3 - p1;
-  Vector norm = Cross(v1, v2);
+  const Vector v1 = p[1] - p[0];
+  const Vector v2 = p[2] - p[1];
+  const Vector norm = Cross(v1, v2);
 
-  Vector tmp = inside - p1;
-  double val = Dot(norm, tmp);
-  if (val > 0) {
-    tmesh->add_triangle_unconnected(p1, p2, p3);
+  const Vector tmp = inside - p[0];
+  const double val = Dot(norm, tmp);
+  if (val > 0.0L) {
+    //cerr << "dot was positive: " << val << endl;
+    // normal points inside, reverse the order.
+    tmesh->add_triangle(nidx[2], nidx[1], nidx[0]);
   } else {
-    tmesh->add_triangle_unconnected(p3, p2, p1);
+    //cerr << "dot was negative: " << val << endl;
+    // normal points outside.
+    tmesh->add_triangle(nidx[0], nidx[1], nidx[2]);
   }
 }
 
@@ -177,39 +180,39 @@ FieldBoundary::boundary(const Msh *mesh)
 	typename Msh::node_array nodes;
 	mesh->get_nodes(nodes, fi);
 	// Creating triangles, so fan if more than 3 nodes.
-	Point p;
+	Point p[3]; // cache points off
 	typename Msh::node_array::iterator niter = nodes.begin();
 
 	for (int i=0; i<3; i++) {
 	  node_iter = vertex_map_.find(*niter);
+	  mesh->get_point(p[i], *niter);
 	  if (node_iter == vertex_map_.end()) {
-	    mesh->get_point(p, *niter);
-	    node_idx[i] = tmesh->add_point(p);
+	    node_idx[i] = tmesh->add_point(p[i]);
 	    vertex_map_[*niter] = node_idx[i];
 	  } else {
 	    node_idx[i] = (*node_iter).second;
 	  }
 	  ++niter;
 	}
-	tmesh->add_triangle(node_idx[0], node_idx[1], node_idx[2]);
+	add_ordered_tri(p, node_idx, center, tmesh);
 
 	while (niter != nodes.end()) {
 	  node_idx[1] = node_idx[2];
+	  p[1] = p[2];
 	  node_iter = vertex_map_.find(*niter);
+	  mesh->get_point(p[2], *niter);
 	  if (node_iter == vertex_map_.end()) {
-	    mesh->get_point(p, *niter);
-	    node_idx[2] = tmesh->add_point(p);
+	    node_idx[2] = tmesh->add_point(p[2]);
 	    vertex_map_[*niter] = node_idx[2];
 	  } else {
 	    node_idx[2] = (*node_iter).second;
 	  }
 	  ++niter;
-	  tmesh->add_triangle(node_idx[0], node_idx[1], node_idx[2]);
+	  add_ordered_tri(p, node_idx, center, tmesh);
 	} 
       }
     }
   }
-
   TriSurf<double> *ts = scinew TriSurf<double>(tmesh, Field::NODE);
 
   if (tris_id_) viewer_->delObj(tris_id_);

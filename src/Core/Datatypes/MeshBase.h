@@ -36,6 +36,7 @@ public:
   //! Optional virtual functions.
   //! finish all computed data within the mesh.
   virtual void finish_mesh() {}; //Not all meshes need to do this.
+  virtual bool has_normals() const { return false; }
   // Required interfaces
 
 

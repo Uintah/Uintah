@@ -133,6 +133,8 @@ public:
 
   void get_point(Point &result, node_index idx) const
   { get_center(result,idx); }
+  void get_normal(Vector &result, node_index index) const
+  { ASSERTFAIL("not implemented") }
   void set_point(const Point &point, node_index index)
   { points_[index] = point; }
 
