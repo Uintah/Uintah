@@ -10,7 +10,7 @@
 
 using namespace Uintah;
 
-HeatConduction::HeatConduction(ProblemSpecP& ps,SimulationStateP& d_sS)
+HeatConduction::HeatConduction(ProblemSpecP&,SimulationStateP& d_sS)
 {
   d_sharedState = d_sS;
 }

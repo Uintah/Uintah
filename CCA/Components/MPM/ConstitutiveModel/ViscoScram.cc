@@ -164,7 +164,8 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     //  FIX  To do:  Obtain and modify particle temperature (deg K)
     //
     Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
-    double J;
+    // Unused variable - Steve
+    // double J;
     double c_dil=0.0,Jinc;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     double onethird = (1.0/3.0);
@@ -418,8 +419,10 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
        // double coa3   = (c*c*c)/(a*a*a);
        // Unused variable - Steve
        // double topc   = 3.*(coa3/c)*cdot;
-       double odt    = 1./delT;
-       Matrix3 SRate = DevStress*odt;
+       // Unused variable - Steve
+       // double odt    = 1./delT;
+       // Unused variable - Steve
+       //Matrix3 SRate = DevStress*odt;
 
        // This is the cracking work rate
        // Unused variable - Steve
@@ -468,7 +471,8 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
                              deformationGradient[idx];
 
        // get the volumetric part of the deformation
-       J = deformationGradient[idx].Determinant();
+       // Unused variable - steve
+       // J = deformationGradient[idx].Determinant();
 
        pvolume[idx]=Jinc*pvolume[idx];
 
@@ -523,7 +527,7 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
 
 void ViscoScram::addComputesAndRequires(Task* task,
 					const MPMMaterial* matl,
-					const PatchSet* patches) const
+					const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->delTLabel);
