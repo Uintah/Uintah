@@ -163,6 +163,9 @@ template <> ScalarFieldInterface *
 LatticeVol<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
+LatticeVol<float>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
 LatticeVol<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
