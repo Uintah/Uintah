@@ -13,152 +13,155 @@
 #include <string>
 
 namespace SCICore {
-  namespace Geometry {
-    class Vector;
-  }
+namespace Geometry {
+  class Vector;
+}
 }
 
 namespace Uintah {
+namespace Grid {
+  class Region;
+  class TypeDescription;
+  class VarLabel;
+}
    
-   namespace Grid {
-      class Region;
-      class TypeDescription;
-      class VarLabel;
-   }
-   
-   namespace Interface {
+namespace Interface {
       
-      using namespace Uintah::Grid;
+using namespace Uintah::Grid;
       
-      /**************************************
+/**************************************
 	
-	CLASS
-          DataWarehouse
+CLASS
+   DataWarehouse
 	
-	  Short description...
+   Short description...
 	
-	GENERAL INFORMATION
+GENERAL INFORMATION
 	
-          DataWarehouse.h
+   DataWarehouse.h
 	
-	  Steven G. Parker
-	  Department of Computer Science
-	  University of Utah
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
 	
-	  Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
 	
-	  Copyright (C) 2000 SCI Group
+   Copyright (C) 2000 SCI Group
 	
-	KEYWORDS
-          DataWarehouse
+KEYWORDS
+   DataWarehouse
 	
-	DESCRIPTION
-          Long description...
+DESCRIPTION
+   Long description...
 	
-	WARNING
+WARNING
 	
-	****************************************/
+****************************************/
       
-      class DataWarehouse : public RefCounted {
-      public:
-	 virtual ~DataWarehouse();
+class DataWarehouse : public RefCounted {
+public:
+  virtual ~DataWarehouse();
 	 
-	 DataWarehouseP getTop() const;
+  DataWarehouseP getTop() const;
 	 
-	 virtual void setGrid(const GridP&)=0;
+  virtual void setGrid(const GridP&)=0;
 	 
-	 virtual void get(ReductionVariableBase&, const VarLabel*) const = 0;
+  virtual void get(ReductionVariableBase&, const VarLabel*) const = 0;
 #if 0
-	 virtual void get(ParticleVariableBase&, const VarLabel*,
-			  const Region* region) const;
-	 // , int ?? around what?? numGhostCells) const;
-	 virtual void get(
+  virtual void get(ParticleVariableBase&, const VarLabel*,
+		   const Region* region) const;
+  // , int ?? around what?? numGhostCells) const;
+  virtual void get();
 #endif
 	 
 #if 0
-	 // These need to be generalized.  Also do Handle<T>
-	 template<class T> void get(T& data, const std::string& name) const {
-	    getBroadcastData(data, name, T::getTypeDescription());
-	 }
+  // These need to be generalized.  Also do Handle<T>
+  template<class T> void get(T& data, const std::string& name) const {
+    getBroadcastData(data, name, T::getTypeDescription());
+  }
 	 
-	 template<class T> void get(T& data, const std::string& name,
-				    const Region* region) const {
-	    getRegionData(data, name, T::getTypeDescription(),
-			  region);
-	 }
+  template<class T> void get(T& data, const std::string& name,
+			     const Region* region) const {
+    getRegionData(data, name, T::getTypeDescription(),
+		  region);
+  }
 	 
-	 template<class T> void get(T& data, const std::string& name,
-				    const Region* region, int numGhostCells) const {
-	    getRegionData(data, name, T::getTypeDescription(),
-			  region, numGhostCells);
-	 }
+  template<class T> void get(T& data, const std::string& name,
+			     const Region* region, int numGhostCells) const {
+    getRegionData(data, name, T::getTypeDescription(),
+		  region, numGhostCells);
+  }
 	 
-	 template<class T> void allocate(T& data, const std::string& name,
-					 const Region* region, int numGhostCells) {
-	    allocateRegionData(data, name, T::getTypeDescription(),
-			       region, numGhostCells);
-	 }
+  template<class T> void allocate(T& data, const std::string& name,
+				  const Region* region, int numGhostCells) {
+    allocateRegionData(data, name, T::getTypeDescription(),
+		       region, numGhostCells);
+  }
 	 
-	 template<class T> void put(const T& data, const std::string& name,
-				    const Region* region) {
-	    putRegionData(data, name, T::getTypeDescription(),
-			  region);
-	 }
+  template<class T> void put(const T& data, const std::string& name,
+			     const Region* region) {
+    putRegionData(data, name, T::getTypeDescription(),
+		  region);
+  }
 	 
-	 template<class T> void put(const T& data, const std::string& name,
-				    const Region* region, int numGhostCells) {
-	    putRegionData(data, name, T::getTypeDescription(),
-			  region, numGhostCells);
-	 }
+  template<class T> void put(const T& data, const std::string& name,
+			     const Region* region, int numGhostCells) {
+    putRegionData(data, name, T::getTypeDescription(),
+		  region, numGhostCells);
+  }
 	 
-	 template<class T> void put(const T& data, const std::string& name) {
-	    putBroadcastData(data, name, T::getTypeDescription());
-	 }
+  template<class T> void put(const T& data, const std::string& name) {
+    putBroadcastData(data, name, T::getTypeDescription());
+  }
 	 
-	 bool exists(const std::string&, const Region*, int) {
-	    return true;
-	 }
+  bool exists(const std::string&, const Region*, int) {
+    return true;
+  }
 	 
-	 bool exists(const std::string&, const Region*) {
-	    return true;
-	 }
+  bool exists(const std::string&, const Region*) {
+    return true;
+  }
 #endif
 	 
-      protected:
-	 DataWarehouse();
+protected:
+  DataWarehouse( int MpiRank, int MpiProcesses );
+  int d_MpiRank, d_MpiProcesses;
 	 
-      private:
-	 
+private:
+
 #if 0
-	 virtual void getBroadcastData(DataItem& di, const std::string& name,
-				       const TypeDescription*) const = 0;
-	 virtual void getRegionData(DataItem& di, const std::string& name,
-				    const TypeDescription*,
-				    const Region*) const = 0;
-	 virtual void getRegionData(DataItem& di, const std::string& name,
-				    const TypeDescription*,
-				    const Region*, int numGhostCells) const = 0;
-	 virtual void putRegionData(const DataItem& di, const std::string& name,
-				    const TypeDescription*,
-				    const Region*) = 0;
-	 virtual void putRegionData(const DataItem& di, const std::string& name,
-				    const TypeDescription*,
-				    const Region*, int numGhostCells) = 0;
-	 virtual void allocateRegionData(DataItem& di, const std::string& name,
-					 const TypeDescription*,
-					 const Region*, int numGhostCells) = 0;
-	 virtual void putBroadcastData(const DataItem& di, const std::string& name,
-				       const TypeDescription*) = 0;
+  virtual void getBroadcastData(DataItem& di, const std::string& name,
+				const TypeDescription*) const = 0;
+  virtual void getRegionData(DataItem& di, const std::string& name,
+			     const TypeDescription*,
+			     const Region*) const = 0;
+  virtual void getRegionData(DataItem& di, const std::string& name,
+			     const TypeDescription*,
+			     const Region*, int numGhostCells) const = 0;
+  virtual void putRegionData(const DataItem& di, const std::string& name,
+			     const TypeDescription*,
+			     const Region*) = 0;
+  virtual void putRegionData(const DataItem& di, const std::string& name,
+			     const TypeDescription*,
+			     const Region*, int numGhostCells) = 0;
+  virtual void allocateRegionData(DataItem& di, const std::string& name,
+				  const TypeDescription*,
+				  const Region*, int numGhostCells) = 0;
+  virtual void putBroadcastData(const DataItem& di, const std::string& name,
+				const TypeDescription*) = 0;
 #endif
-	 DataWarehouse(const DataWarehouse&);
-	 DataWarehouse& operator=(const DataWarehouse&);
-      };
+  DataWarehouse(const DataWarehouse&);
+  DataWarehouse& operator=(const DataWarehouse&);
+};
       
-   } // end namespace Interface
+} // end namespace Interface
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.9  2000/04/19 21:20:04  dav
+// more MPI stuff
+//
 // Revision 1.8  2000/04/19 05:26:17  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)
