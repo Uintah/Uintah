@@ -373,7 +373,7 @@ void FusionFieldReader::execute(){
 	    yVal = data[index+1];
 	    zVal = data[index+2];
 
-	    hvm->set_point(node, Point( xVal, yVal, zVal ) );
+	    hvm->set_point(Point(xVal, yVal, zVal), node);
 	  }
 
 	  else if( readOrder[GRID_R_PHI_Z] > -1 ) {
@@ -389,7 +389,7 @@ void FusionFieldReader::execute(){
 	    yVal = -rad * sin( phi );
 	    zVal =  data[index+2];
 
-	    hvm->set_point(node, Point( xVal, yVal, zVal ) );
+	    hvm->set_point(Point(xVal, yVal, zVal), node);
 	  }
 
 	  else if( readOrder[GRID_R_Z_PHI] > -1 ) {
@@ -405,7 +405,7 @@ void FusionFieldReader::execute(){
 	    yVal = -rad * sin( phi );
 	    zVal =  data[index+1];
 
-	    hvm->set_point(node, Point( xVal, yVal, zVal ) );
+	    hvm->set_point(Point(xVal, yVal, zVal), node);
 	  }
 
 
