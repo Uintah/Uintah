@@ -28,6 +28,10 @@ itcl_class SCIRun_Visualization_TexCuttingPlanes {
 	set_defaults
     }
     method set_defaults {} {
+	global $this-control_pos_saved
+	global $this-control_x
+	global $this-control_y
+	global $this-control_z
 	global $this-drawX
 	global $this-drawY
 	global $this-drawZ
@@ -48,6 +52,7 @@ itcl_class SCIRun_Visualization_TexCuttingPlanes {
 	set $this-interp_mode 1
 	set $this-phi_0 30.0
 	set $this-phi_1 60.0
+	set $this-control_pos_saved 0
     }
 
 
