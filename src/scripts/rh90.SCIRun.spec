@@ -6,6 +6,8 @@
 %define distro  Red Hat 9.0
 %define debug   opt
 %undefine	__check_files
+%define thirdpartydotver 0
+%define thirdpartyversion %{defver}.%{thirdpartydotver}
 
 
 Name:		%{defname}
@@ -39,7 +41,7 @@ ExclusiveOS:	linux
 #BuildRoot:     /usr/local/SCIRun
 
 
-source0:	Thirdparty_install.%{version}.tar.gz
+source0:	Thirdparty_install.%{thirdpartyversion}.tar.gz
 source1:	%{name}.%{version}.tar.gz
 source2:	cmake-1.8.1-x86-linux-files.tar
 source3:	InsightToolkit-1.4.0.tar.gz
@@ -57,7 +59,7 @@ SCIRun is a Problem Solving Environment (PSE), and a computational steering soft
 
 
 %prep
-rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{version}
+rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}
 tar -xvzf %{SOURCE0}
 
 cd /usr/local
@@ -89,8 +91,8 @@ $RPM_BUILD_DIR/cmake/bin/cmake /usr/local/InsightToolkit-1.4.0 -DBUILD_EXAMPLES:
 make
 make install
 
-cd $RPM_BUILD_DIR/Thirdparty_install.%{version}
-python $RPM_BUILD_DIR/Thirdparty_install.%{version}/install /usr/local/SCIRun/Thirdparty 32 1
+cd $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}
+python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}/install /usr/local/SCIRun/Thirdparty 32 1
 
 rm -rf /usr/local/SCIRun/bin
 mkdir -p /usr/local/SCIRun/bin
@@ -109,7 +111,7 @@ chown -R root.root /usr/local/SCIRun
 chmod -R a+r /usr/local/SCIRun
 
 %clean
-rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{version}
+rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}
 
 %files
 /usr/local/SCIRun
