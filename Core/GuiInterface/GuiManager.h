@@ -36,6 +36,7 @@
 #define SCI_project_GuiManager_h 1
 
 #include <Core/Thread/Mutex.h>
+#include <tcl.h>
 #include <string>
 
 using std::string;
@@ -62,6 +63,8 @@ class SCICORESHARE GuiManager {
 
         static void execute(const string& str);
         static int eval(const string& str, string& result);
+	
+	static int do_command(ClientData cd, Tcl_Interp*, int argc, char* argv[]);
 
 	static GuiManager& getGuiManager();
   

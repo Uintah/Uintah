@@ -44,7 +44,6 @@
 #include <stdlib.h>	// needed for atoi
 #include <iostream>
 
-#include <tcl.h>
 #include <tk.h>
 
 using namespace std;
@@ -179,6 +178,19 @@ int GuiManager::eval(const string& str, string& result)
     return code == TCL_OK;
 }
 
+int GuiManager::do_command(ClientData cd, Tcl_Interp*, int argc, char* argv[])
+{
+    TCLCommandData* td=(TCLCommandData*)cd;
+    TCLArgs args(argc, argv);
+    td->object->tcl_command(args, td->userdata);
+    if(args.have_result_)
+    {
+      Tcl_SetResult(the_interp,
+		    strdup(args.string_.c_str()),
+		    (Tcl_FreeProc*)free);
+    }
+    return args.have_error_?TCL_ERROR:TCL_OK;
+}
 
 } // End namespace SCIRun
 
