@@ -36,6 +36,11 @@ public:
 
   virtual ~TetVol() {};
 
+  /*! Ask mesh to compute edges and faces. Does nothing if mesh 
+    is already finished. */
+  void finish_mesh() { get_typed_mesh()->finish(); }
+
+  //! Persistent IO
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
   static const string type_name(int n = -1);

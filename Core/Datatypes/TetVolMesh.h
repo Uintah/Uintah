@@ -99,8 +99,8 @@ public:
   template <class Iter, class Functor>
   void fill_data(Iter begin, Iter end, Functor fill_ftor);
   
-  //! (re)create the edge data based on cells.
-  void compute_edges();
+  //! (re)create the edge and faces data based on cells.
+  void finish();
  
   //! Persistent IO
   virtual void io(Piostream&);
@@ -131,17 +131,22 @@ private:
       nodes_[0] = -1;
       nodes_[1] = -1;
     }
+    // node_[0] must be smaller than node_[1]. See Hash Function below.
     Edge(node_index n1, node_index n2) : cells_(6) {
-      nodes_[0] = n1;
-      nodes_[1] = n2;  
+      if (n1 < n2) {
+	nodes_[0] = n1;
+	nodes_[1] = n2; 
+      } else {
+	nodes_[0] = n2;
+	nodes_[1] = n1;
+      } 
     }
 
     bool shared() const { return cells_.size() > 1; }
     
     //! true if both have the same nodes (order does not matter)
     bool operator==(const Edge &e) const {
-      return (((nodes_[0] == e.nodes_[0]) || (nodes_[0] == e.nodes_[1])) &&
-	      ((nodes_[1] == e.nodes_[0]) || (nodes_[1] == e.nodes_[1])));
+      return ((nodes_[0] == e.nodes_[0]) && (nodes_[1] == e.nodes_[1]));
     }
   };
 
@@ -150,14 +155,15 @@ private:
   vector<Edge>         edges_; 
 
   /*! hash the egde's node_indecies such that edges with the same nodes 
-   *  hash to the same value regardless of the order of nodes in the
-   *  edge. */
+   *  hash to the same value. nodes are sorted on edge construction. */
   struct EdgeHash {
+    static const int sz_int = sizeof(int) * 8; // in bits
+    static const int sz_half_int = sizeof(int) << 2; // in bits
+    static const int up_mask = ((~((int)0)) << sz_half_int);
+    static const int low_mask = (~((int)0) ^ up_mask);
+
     size_t operator()(const Edge &e) const {
-      int n1 = e.nodes_[0];
-      int n2 = e.nodes_[1];
-      int r = n1&n2;
-      return r; //FIX_ME not an optimal hash function.
+      return (e.nodes_[0] << sz_half_int) | (low_mask & e.nodes_[0]);
     }
   };
 

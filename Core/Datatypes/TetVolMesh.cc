@@ -82,7 +82,7 @@ TetVolMesh::hash_edge(node_index n1, node_index n2,
 }
 
 void 
-TetVolMesh::compute_edges()
+TetVolMesh::finish()
 {
   hash_set<Edge, EdgeHash> table;
 
@@ -94,8 +94,8 @@ TetVolMesh::compute_edges()
     hash_edge(arr[0], arr[2], *ci, table);
     hash_edge(arr[0], arr[3], *ci, table);
     hash_edge(arr[1], arr[2], *ci, table);
-    hash_edge(arr[1], arr[2], *ci, table);
     hash_edge(arr[1], arr[3], *ci, table);
+    hash_edge(arr[2], arr[3], *ci, table);
   }
   // dump edges into the edges_ container.
   edges_.resize(table.size());
@@ -141,7 +141,7 @@ TetVolMesh::face_begin() const
 TetVolMesh::face_iterator
 TetVolMesh::face_end() const
 {
-  return cells_.size(); //FIX_ME
+  return 0; //FIX_ME
 }
 
 TetVolMesh::cell_iterator
