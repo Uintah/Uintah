@@ -1997,11 +1997,9 @@ itcl_class EmbeddedViewWindow {
     }
 
     method removeMFrame {w} {
-	puts EVW:removeMFrame
     }
     
     method addMFrame {w} {
-	puts EVW:addMFrame
     }
 
     method init_frame {} {
@@ -2042,11 +2040,9 @@ itcl_class EmbeddedViewWindow {
     }
 
     method resize { } {
-	puts EVW:resize
     }
 
     method switch_frames {} {
-	puts EVW:switch_frames
     }
 
     method updatePerf {p1 p2 p3} {
@@ -2065,19 +2061,15 @@ itcl_class EmbeddedViewWindow {
     }	
 
     method bench {bench} {
-	puts EVW:bench
     }
 
     method makeViewPopup {} {
-	puts EVW:makeViewPopup
     }
 
     method makeSceneMaterialsPopup {} {
-	puts EVW:makeSceneMaterialsPopup
     }
 
     method makeBackgroundPopup {} {
-	puts EVW:makeBackgroundPopup
     }
 
     method updateMode {msg} {
@@ -2104,7 +2096,6 @@ itcl_class EmbeddedViewWindow {
     }
 
     method addObjectToFrame {objid name frame} {
-	puts EVW:addObjectToFrame
     }
 
     method addObject2 {objid} {
@@ -2112,159 +2103,121 @@ itcl_class EmbeddedViewWindow {
     }
     
     method addObjectToFrame_2 {objid frame} {
-	puts EVW:addObjectToFrame_2
     }
     
 
     method removeObject {objid} {
-	puts EVW:removeObject
     }
 
     method removeObjectFromFrame {objid frame} {
-	puts EVW:removeObjectFromFrame
     }
 
     method makeLineWidthPopup {} {
-	puts EVW:makeLineWidthPopup
     }	
 
     method makePolygonOffsetPopup {} {
-	puts EVW:makePolygonOffsetPopup
     }	
 
     method makePointSizePopup {} {
-	puts makePointSizePopup
     }	
 
     method makeClipPopup {} {
-	puts makeClipPopup
     }
 
     method useClip {} {
-	puts useClip
     }
 
     method setClip {} {
-	puts setClip
     }
 
     method invertClip {} {
-	puts invertClip
     }
 
     method makeAnimationPopup {} {
-	puts makeAnimationPopup
     }
 
     method setFrameRate {rate} {
     }
 
     method frametime {} {
-	puts frametime
     }
 
     method rstep {} {
-	puts rstep
     }
 
     method rew {} {
-	puts rew
     }
 
     method rplay {} {
-	puts rplay
     }
 
     method play {} {
-	puts play
     }
 
     method step {} {
-	puts step
     }
 
     method ff {} {
-	puts ff
     }
 
     method crap {} {
-	puts crap
     }
 
     method translate {axis amt} {
-	puts translate
     }
 
     method rotate {axis amt} {
-	puts rotate
     }
 
     method rscale {amt} {
-	puts rscale
     }
 
     method zoom {amt} {
-	puts zoom
     }
 
     method pan {amt} {
-	puts pan
     }
 
     method tilt {amt} {
-	puts tilt
     }
 
     method fov {amt} {
-	puts fov
     }
 
     method makeSaveObjectsPopup {} {
-	puts makeSaveObjectsPopup
     }
 
     method doSaveObjects {} {
-	puts doSaveObjects
     }
 
     method do_validate_x {path} {
-	puts do_validate_x
     }
 
     method do_validate_y {path} {
-	puts do_validate_y
     }
 
     method do_aspect {t} {
-	puts do_aspect
     }
 
     method makeLightSources {} {
-	puts makeLightSources
     }
 	
     method makeLightControl { w i } {
-	puts makeLightControl
     }
 
     method lightColor { w c i } {
-	puts lightColor
     }
 
     method setColor { w c  i color} {
-	puts setColor
     }
 
     method resetLights { w } {
-	puts resetLights
     }
 
     method moveLight { c i x y } {
-	puts moveLight
     }
 
     method lightSwitch {i} {
-	puts lightSwitch
     }
 	
     method makeSaveImagePopup {} {
@@ -2337,7 +2290,6 @@ itcl_class EmbeddedViewWindow {
     }
     
     method changeName { w type} {
-	puts changeName
     }
 
     method doSaveImage {} {
