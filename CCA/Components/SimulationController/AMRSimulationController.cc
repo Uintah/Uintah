@@ -100,7 +100,7 @@ void AMRSimulationController::run()
    SimulationStateP sharedState = scinew SimulationState(ups);
    
    Output* output = dynamic_cast<Output*>(getPort("output"));
-   output->problemSetup(ups, sharedState);
+   output->problemSetup(ups, sharedState.get_rep());
    
    // Setup the initial grid
    GridP grid=scinew Grid();

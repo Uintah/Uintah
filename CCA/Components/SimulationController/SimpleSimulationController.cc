@@ -142,7 +142,7 @@ SimpleSimulationController::run()
      cout << "dynamic_cast of 'output' failed!\n";
      throw InternalError("dynamic_cast of 'output' failed!");
    }
-   output->problemSetup(ups, sharedState);
+   output->problemSetup(ups, sharedState.get_rep());
    
    // Setup the initial grid
    GridP grid=scinew Grid();
