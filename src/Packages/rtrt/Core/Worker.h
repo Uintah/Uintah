@@ -35,6 +35,7 @@ class Counters;
 class Worker : public Runnable {
   Dpy* dpy;
   Barrier* barrier;
+  Barrier* addSubThreads_;
   int num;
   Stats* stats[2];
   Scene* scene;
@@ -42,12 +43,21 @@ class Worker : public Runnable {
   Counters* counters;
   int ncounters;
   int c0, c1;
+
+  bool stop_;
+  bool useAddSubBarrier_;
+  int  oldNumWorkers_;
   
 public:
   Worker(Dpy* dpy, Scene* scene, int num, int pp_size, int scratchsize,
 	 int ncounters, int c0, int c1);
   virtual ~Worker();
+
   virtual void run();
+
+  // If stop is true, this thread will stop running.
+  void syncForNumThreadChange( int oldNumWorkers, bool stop = false );
+
   void traceRay(Color& result, const Ray& ray, int depth,
 		double atten, const Color& accum,
 		Context* cx);
