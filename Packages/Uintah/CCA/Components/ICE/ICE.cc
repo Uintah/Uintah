@@ -3157,7 +3157,9 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 
           int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
          }
-         cout << "Mass gained by the gas this timestep = " << massGain << endl;
+         if(massGain > 0.0){
+           cout << "Mass gained timestep = " << massGain << endl;
+         }
        }  //  if (mass exchange)
 
       //__________________________________
