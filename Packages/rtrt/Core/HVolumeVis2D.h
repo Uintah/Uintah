@@ -1246,7 +1246,7 @@ void HVolumeVis2D<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   
   if (opacity < RAY_TERMINATION_THRESHOLD) {
     // Add the cutting plane color if need be
-    if (vsp->coe == OverwroteTMax ) {
+    if (cutplane_active && vsp->coe == OverwroteTMax ) {
       Point p = ray.origin() + ray.direction()*t_max - min.vector();
       Voxel2D<float> value;
       lookup_value( p, value );
