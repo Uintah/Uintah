@@ -6,6 +6,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Uintah/Core/Datatypes/VectorParticlesPort.h>
 #include <Uintah/Core/Datatypes/ScalarParticlesPort.h>
+#include <Uintah/Core/Grid/ShareAssignParticleVariable.h>
 #include <string>
 
 using std::string;
@@ -41,10 +42,10 @@ void VectorParticlesOperator::computeScalars(VectorParticles* pTP,
 					       converting vectors scalars */ )
 {
   pSP->Set(pTP->getParticleSet());
-  ParticleVariable<double> scalarSet;
+  ShareAssignParticleVariable<double> scalarSet;
  
-  vector< ParticleVariable<Vector> >& vectors = pTP->get();
-  vector< ParticleVariable<Vector> >::const_iterator iter;
+  vector< ShareAssignParticleVariable<Vector> >& vectors = pTP->get();
+  vector< ShareAssignParticleVariable<Vector> >::const_iterator iter;
   for (iter = vectors.begin(); iter != vectors.end(); iter++) {
     ParticleSubset* subset = (*iter).getParticleSubset();
     scalarSet = ParticleVariable<double>(subset);

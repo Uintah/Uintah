@@ -212,14 +212,14 @@ void VectorFieldExtractor::execute()
 	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	LevelField<Vector> *vfd =
 	  scinew LevelField<Vector>( mesh, Field::NODE );
-	vector<Array3<Vector> >& data = vfd->fdata();
+	vector<ShareAssignArray3<Vector> >& data = vfd->fdata();
 	data.resize(level->numPatches());
-	vector<Array3<Vector> >::iterator it = data.begin();
+	vector<ShareAssignArray3<Vector> >::iterator it = data.begin();
 	for(Level::const_patchIterator r = level->patchesBegin();
 	    r != level->patchesEnd(); r++, ++it ){
 	    thread_sema->down();
 	    Thread *thrd =scinew Thread(new PatchDataThread<NCVariable<Vector>,
-			                 vector<Array3<Vector> >::iterator>
+			                 vector<ShareAssignArray3<Vector> >::iterator>
 			  (archive, it, var, mat, *r, time, thread_sema),
 					"patch_data_worker");
 	    thrd->detach();
@@ -242,16 +242,17 @@ void VectorFieldExtractor::execute()
 	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	LevelField<Vector> *vfd =
 	  scinew LevelField<Vector>( mesh, Field::CELL );
-	vector<Array3<Vector> >& data = vfd->fdata();
+	vector<ShareAssignArray3<Vector> >& data = vfd->fdata();
 	data.resize(level->numPatches());
-	vector<Array3<Vector> >::iterator it = data.begin();
+	vector<ShareAssignArray3<Vector> >::iterator it = data.begin();
 	for(Level::const_patchIterator r = level->patchesBegin();
 	    r != level->patchesEnd(); r++, ++it ){
 	    thread_sema->down();
-	    Thread *thrd =scinew Thread(new PatchDataThread<CCVariable<Vector>,
-			                 vector<Array3<Vector> >::iterator>
-			  (archive, it, var, mat, *r, time, thread_sema),
-					"patch_data_worker");
+	    Thread *thrd =
+	      scinew Thread(new PatchDataThread<CCVariable<Vector>,
+			    vector<ShareAssignArray3<Vector> >::iterator>
+			    (archive, it, var, mat, *r, time, thread_sema),
+			    "patch_data_worker");
 	    thrd->detach();
 	}
 	thread_sema->down(max_workers);

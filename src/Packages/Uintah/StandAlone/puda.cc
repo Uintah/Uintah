@@ -16,6 +16,7 @@
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/TypeDescription.h>
@@ -34,11 +35,11 @@ using namespace std;
 using namespace Uintah;
 
 typedef struct{
-  vector<ParticleVariable<double> > pv_double_list;
-  vector<ParticleVariable<Point> > pv_point_list;
-  vector<ParticleVariable<Vector> > pv_vector_list;
-  vector<ParticleVariable<Matrix3> > pv_matrix3_list;
-  ParticleVariable<Point> p_x;
+  vector<ShareAssignParticleVariable<double> > pv_double_list;
+  vector<ShareAssignParticleVariable<Point> > pv_point_list;
+  vector<ShareAssignParticleVariable<Vector> > pv_vector_list;
+  vector<ShareAssignParticleVariable<Matrix3> > pv_matrix3_list;
+  ShareAssignParticleVariable<Point> p_x;
 } MaterialData;
 
 // takes a string and replaces all occurances of old with newch
@@ -1169,7 +1170,7 @@ int main(int argc, char** argv)
 			da->query(value, var, matl, patch, time);
 			
 			if (var == "p.x") {
-			  material_data.p_x = value;
+			  material_data.p_x.copyPointer(value);
 			} else {
 			  material_data.pv_point_list.push_back(value);
 			}

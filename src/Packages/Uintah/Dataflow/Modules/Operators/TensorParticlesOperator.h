@@ -6,6 +6,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Uintah/Core/Datatypes/TensorParticlesPort.h>
 #include <Uintah/Core/Datatypes/ScalarParticlesPort.h>
+#include <Uintah/Core/Grid/ShareAssignParticleVariable.h>
 #include <string>
 
 using std::string;
@@ -55,10 +56,10 @@ void TensorParticlesOperator::computeScalars(TensorParticles* pTP,
 {
   Matrix3 M;
   pSP->Set(pTP->getParticleSet());
-  ParticleVariable<double> scalarSet;
+  ShareAssignParticleVariable<double> scalarSet;
  
-  vector< ParticleVariable<Matrix3> >& tensors = pTP->get();
-  vector< ParticleVariable<Matrix3> >::const_iterator iter;
+  vector< ShareAssignParticleVariable<Matrix3> >& tensors = pTP->get();
+  vector< ShareAssignParticleVariable<Matrix3> >::const_iterator iter;
   for (iter = tensors.begin(); iter != tensors.end(); iter++) {
     ParticleSubset* subset = (*iter).getParticleSubset();
     scalarSet = ParticleVariable<double>(subset);
