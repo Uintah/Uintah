@@ -370,7 +370,8 @@ bool Model::SaveVRML(const char *fname)
   for(int i=0; i<Objs.size(); i++)
     {
       cerr << "Saving Object: " << i << endl;
-      WrObject(Objs[i]).Write(out, 2);
+      WrObject Wo(Objs[i]); 
+      Wo.Write(out, 2);
     }
 
   fprintf(out, "}\n");
