@@ -56,6 +56,12 @@ namespace SCIRun {
 
 class Isosurface : public Module {
 
+public:
+  Isosurface(GuiContext* ctx);
+  virtual ~Isosurface();
+  virtual void execute();
+
+private:
   //! GUI variables
   GuiDouble  gui_iso_value_;
   GuiDouble  gui_iso_value_min_;
@@ -79,17 +85,28 @@ class Isosurface : public Module {
   GuiDouble  gui_color_b_;
 
   //! status variables
-  int        geom_id_;
-  double     prev_min_;
-  double     prev_max_;
-  int        last_generation_;
+  vector< double > isovals_;
 
-  bool new_field(FieldHandle field);
+  double iso_value_min_;
+  double iso_value_max_;
 
-public:
-  Isosurface(GuiContext* ctx);
-  virtual ~Isosurface();
-  virtual void execute();
+  int     use_algorithm_;
+  int     build_field_;
+  int     build_geom_;
+  int     np_;          
+  double  color_r_;
+  double  color_g_;
+  double  color_b_;
+
+  int fGeneration_;
+  int cmGeneration_;
+  int mGeneration_;
+
+  FieldHandle  fHandle_;
+  MatrixHandle mHandle_;
+  int          geomID_;
+
+  bool error_;
 };
 
 } // End namespace SCIRun
