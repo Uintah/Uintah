@@ -119,15 +119,36 @@ RenderFieldBase::add_axis(const Point &p0, double scale,
 
   Point p1 = p0 + x * scale;
   Point p2 = p0 - x * scale;
-  lines->add(p1, mh, p2, mh);
+  if (mh.get_rep())
+  {
+    lines->add(p1, mh, p2, mh);
+  }
+  else
+  {
+    lines->add(p1, p2);
+  }
 
   p1 = p0 + y * scale;
   p2 = p0 - y * scale;
-  lines->add(p1, mh, p2, mh);
+  if (mh.get_rep())
+  {
+    lines->add(p1, mh, p2, mh);
+  }
+  else
+  {
+    lines->add(p1, p2);
+  }
 
   p1 = p0 + z * scale;
   p2 = p0 - z * scale;
-  lines->add(p1, mh, p2, mh);
+  if (mh.get_rep())
+  {
+    lines->add(p1, mh, p2, mh);
+  }
+  else
+  {
+    lines->add(p1, p2);
+  }
 }
 
 
@@ -351,13 +372,53 @@ RenderTensorFieldBase::add_item(GeomHandle glyph,
   }
 }
 
+RenderScalarFieldBase::RenderScalarFieldBase()
+{}
+
+RenderScalarFieldBase::~RenderScalarFieldBase()
+{}
+
+CompileInfoHandle
+RenderScalarFieldBase::get_compile_info(const TypeDescription *vftd,
+					const TypeDescription *cftd,
+					const TypeDescription *ltd)
+{
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("RenderScalarField");
+  static const string base_class_name("RenderScalarFieldBase");
+
+  CompileInfo *rval = scinew CompileInfo(template_class_name + "." +
+					 vftd->get_filename() + "." +
+					 cftd->get_filename() + "." +
+					 ltd->get_filename() + ".",
+					 base_class_name, 
+					 template_class_name, 
+					 vftd->get_name() + ", " +
+					 cftd->get_name() + ", " +
+					 ltd->get_name());
+
+  rval->add_include(include_path);
+  vftd->fill_compile_info(rval);
+  cftd->fill_compile_info(rval);
+  return rval;
+}
+
 void
 RenderScalarFieldBase::add_sphere(const Point &p, double scale, int resolution,
-				  GeomGroup *g, MaterialHandle color)
+				  GeomGroup *g, GeomPoints *points,
+				  MaterialHandle color)
 {
-  GeomSphere *s = scinew GeomSphere(p, scale, resolution, resolution);
-  if (color.get_rep()) { g->add(scinew GeomMaterial(s, color)); }
-  else { g->add(s); }
+  if (scale > 1.0e-12)
+  {
+    GeomSphere *s = scinew GeomSphere(p, scale, resolution, resolution);
+    if (color.get_rep()) { g->add(scinew GeomMaterial(s, color)); }
+    else { g->add(s); }
+  }
+  else if (points)
+  {
+    if (color.get_rep()) { points->add(p, color); }
+    else { points->add(p); }
+  }
 }
 
 } // end namespace SCIRun
