@@ -74,7 +74,7 @@ void NormalMapMaterial::shade(Color& result, const Ray& ray,
     Point hitpos(ray.origin()+ray.direction()*nearest);
     Vector normal(obj->normal(hitpos, hit));
     perturbnormal(normal,ray,hit); 
-    BumpObject n = BumpObject(normal);
+    BumpObject n = BumpObject(normal, obj->get_uvmapping());
     BumpObject *n2 = &n;
     Object *o2 = (Object *)n2;
     //Object *o2 = new BumpObject(normal);
