@@ -87,6 +87,31 @@ parse_lin_vec_data(ifstream &nodal_in, vector<Vector> &data_vals,
   return npts;
 }
 
+
+int
+parse_lin_strain_data25(ifstream &nodal_in, vector<double> &data_vals, 
+			HexVolMesh *hvm) 
+{
+  int npts = 0;
+  while (! nodal_in.eof()) {
+    ++npts;
+
+    double x[24];
+    for (int j=0; j<24; j++) 
+      nodal_in >> x[j];
+
+    if (nodal_in.eof()) break;
+    
+    int node_index;
+    nodal_in >> node_index;
+    //make a scalar field out of this.
+
+    data_vals.push_back(x[0]);
+  }
+  cerr << "done adding " << npts - 1 << " points." << endl;
+  return npts;
+}
+
 int
 parse_lin_strain_data5(ifstream &nodal_in, vector<double> &data_vals, 
 		      HexVolMesh *hvm) 
@@ -94,8 +119,7 @@ parse_lin_strain_data5(ifstream &nodal_in, vector<double> &data_vals,
   int npts = 0;
   while (! nodal_in.eof()) {
     ++npts;
-    int node_index;
-    nodal_in >> node_index;
+
     double x[3];
     for (int j=0; j<3; j++) 
       nodal_in >> x[j];
@@ -105,7 +129,9 @@ parse_lin_strain_data5(ifstream &nodal_in, vector<double> &data_vals,
     double eff;
     nodal_in >> eff;
     
-    //make a scalar field out of this for now.
+    int node_index;
+    nodal_in >> node_index;
+    //make a scalar field out of this.
 
     data_vals.push_back(eff);
     hvm->add_point(Point(x[0],x[1],x[2]));
@@ -210,6 +236,13 @@ main(int argc, char **argv) {
   char *nodal_file = argv[1];
   char *elem_file = argv[2];
   char *out_file = argv[3];
+  char *aux_file = 0;
+  if (argc == 5) {
+    cerr << "5th is: " << argv[4] << endl;
+    aux_file = argv[4];
+  }
+
+  // return 0;
 
   if (nodal_file == 0 || elem_file == 0 || out_file == 0) {
     cerr << "Error: expecting 3 arguments: <nodal data file> "
@@ -223,39 +256,101 @@ main(int argc, char **argv) {
   char c;
   do{
     col_str.get(c);
-    if (c == '\t') { cols++; }
+    if (c == '\t') { 
+      cols++; 
+    }
   } while (c != '\n');
   col_str.close();
 
 
-  vector<string> labels(cols);
-  cout << "Parsing labels:" << endl;
-  ifstream nodal_in(nodal_file);
-  for (int i = 0; i < cols; ++i) {
-    string str;
-    nodal_in >> str;
-    cout << str << ", ";
-    labels[i] = str;
+  ifstream aux_col_str(aux_file);
+  int aux_cols = 1;
+  if (aux_file) {
+    char c;
+    do{
+      aux_col_str.get(c);
+      if (c == '\t') { 
+	aux_cols++; 
+      }
+    } while (c != '\n');
+    aux_col_str.close();
   }
-  cout << endl << "There are " << labels.size() << " columns." << endl;
-  
+
+  ifstream nodal_in(nodal_file);
+  ifstream aux_nodal_in(aux_file);
+
+  bool header = true;
+
+  if (header) {
+    vector<string> labels(cols);
+    cout << "Parsing labels:" << endl;
+    for (int i = 0; i < cols; ++i) {
+      string str;
+      nodal_in >> str;
+      cout << str << ", " << endl;
+      labels[i] = str;
+    }
+    cout << endl << "There are " << labels.size() << " columns." << endl;
+  }
+
+  if (header && aux_file) {
+    vector<string> labels(aux_cols);
+    cout << "Parsing aux labels:" << endl;
+    for (int i = 0; i < aux_cols; ++i) {
+      string str;
+      aux_nodal_in >> str;
+      cout << str << ", " << endl;
+      labels[i] = str;
+    }
+    cout << endl << "There are " << labels.size() << " aux columns." << endl;
+  }
+
   int npts = 0;
   vector<Vector> data_vals;
   vector<double> data_vals_scalar;
+
+  int use_cols = 0;
+  if (aux_file) {
+    use_cols = aux_cols;
+  } else {
+    use_cols = cols;
+  }
+
   if (cols == 8) {
     npts = parse_lin_vec_data(nodal_in, data_vals, hvm);
   } else if (cols == 122) {
     npts = parse_ho_data(nodal_in, data_vals, hvm);
+  } else if (cols == 25) {
+    npts = parse_lin_strain_data25(nodal_in, data_vals_scalar, hvm);
   } else if (cols == 13) {
     npts = parse_lin_strain_data(nodal_in, data_vals_scalar, hvm);
   } else if (cols == 5) {
     npts = parse_lin_strain_data5(nodal_in, data_vals_scalar, hvm);
   } else {
-    cerr << "Dont know what to do with " << cols << " columns of data" << endl;
+    cerr << "Dont know what to do with " << cols 
+	 << " columns of data" << endl;
     return (1 << 1);
   }
   
-
+  if (aux_file) {
+    vector<Vector> aux_data_vals;
+    vector<double> aux_data_vals_scalar;
+    if (aux_cols == 8) {
+      npts = parse_lin_vec_data(aux_nodal_in, aux_data_vals, hvm);
+    } else if (aux_cols == 122) {
+      npts = parse_ho_data(aux_nodal_in, aux_data_vals, hvm);
+    } else if (aux_cols == 25) {
+      npts = parse_lin_strain_data25(aux_nodal_in, aux_data_vals_scalar, hvm);
+    } else if (aux_cols == 13) {
+      npts = parse_lin_strain_data(aux_nodal_in, aux_data_vals_scalar, hvm);
+    } else if (aux_cols == 5) {
+      npts = parse_lin_strain_data5(aux_nodal_in, aux_data_vals_scalar, hvm);
+    } else {
+      cerr << "Dont know what to do with " << aux_cols 
+	   << " columns of data" << endl;
+      return (1 << 1);
+    }
+  }
 
   int nhexes;
   nhexes = getNumNonEmptyLines(elem_file) - 1;
@@ -329,7 +424,7 @@ main(int argc, char **argv) {
   cerr << "done adding elements.\n";
 
   FieldHandle hvH;  
-  if (cols == 13 || cols == 5) { 
+  if (cols == 13 || cols == 5 || cols == 25) { 
     cerr << "loading in strain data" << endl;
     HexVolField<double> *hv = scinew HexVolField<double>(hvm, 1);
     hv->resize_fdata();

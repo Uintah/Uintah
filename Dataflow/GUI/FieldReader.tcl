@@ -1,4 +1,3 @@
-
 #
 #  For more information, please see: http://software.sci.utah.edu
 # 
@@ -36,7 +35,6 @@ catch {rename SCIRun_DataIO_FieldReader ""}
 
 itcl_class SCIRun_DataIO_FieldReader {
     inherit Module
-
     constructor {config} {
 	set name FieldReader
 	set_defaults
@@ -48,7 +46,6 @@ itcl_class SCIRun_DataIO_FieldReader {
     }
 
     method ui {} {
-
 	set w .ui[modname]
 
 	if {[winfo exists $w]} {

@@ -49,6 +49,9 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	setGlobal $this-delay			0
 	setGlobal $this-inc-amount		1
 	setGlobal $this-send-amount		1
+	setGlobal $this-data_series_done        0
+
+	trace variable $this-data_series_done w "$this notify_series_done"
 	trace variable $this-current w "update idletasks;\#"
     }
 
@@ -57,6 +60,18 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	if ![string equal $execmode play] return
 	$this-c restart
 	$this-c needexecute
+    }
+
+    method notify_series_done { a1 a2 a3 } {
+	upvar \#0 $this-data_series_done dsdone
+	puts $dsdone
+	if {$dsdone == 0} return
+	puts " !!!!!!!!!!!!!!!!!!! in notify_series_done"
+	foreach w [winfo children .] { 
+	    if { [string first eader $w] != -1 } { 
+		bfb_do_single_step $w
+	    }
+	}
     }
 
     method ui {} {
@@ -159,6 +174,9 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	radiobutton $playmode.bounce2 -text "Bounce with repeating endpoints" \
 	    -variable $this-playmode -value bounce2 \
 	    -command "$this maybeRestart"
+	radiobutton $playmode.aplay -text "Auto Play" \
+	    -variable $this-playmode -value autoplay \
+	    -command "$this maybeRestart"
 
 	# Save the delay since the iwidget resets it
 	global $this-delay
@@ -173,8 +191,9 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 
 	pack $playmode.label -side top -expand yes -fill both
 	pack $playmode.once $playmode.loop \
-		$playmode.bounce1 $playmode.bounce2 $playmode.delay \
-	        -side top -anchor w
+	    $playmode.bounce1 $playmode.bounce2 \
+	    $playmode.aplay $playmode.delay \
+	    -side top -anchor w
 
 	# Create the button to show/hide extened options
 	button $w.expanded

@@ -66,10 +66,23 @@
 #include <sstream>
 #include <iomanip>
 
-#define X_AXIS_LENGTH 10
-#define Y_AXIS_LENGTH 5
-#define ALARM_THRESHOLD -1
-#define ALARM_OFFSET 5880
+#define X_AXIS_LENGTH (GLdouble)10.0
+#define Y_AXIS_LENGTH (GLdouble)5.0
+//#define ALARM_OFFSET 5880
+
+//#define TIME_IDX 0
+#define LV_INJURY_IDX 1
+#define RV_INJURY_IDX 2
+#define TIME_TO_DEATH_IDX 3
+#define PROB_OF_SURV_IDX 4
+#define LV_POWER_IDX 5
+#define RV_POWER_IDX 6
+#define VECTOR_IDX 7
+#define ALARM_IDX 9
+//#define FIRST_ALARM_IDX 10
+
+#define VM_SLIDING 0
+#define VM_PATH 1
 
 typedef struct {GLdouble x; GLdouble y; GLdouble z;} tuple;
 
@@ -131,50 +144,6 @@ private:
     static const float ROTATE_RIGHT = 270.0;
   };
 
-
-  struct Plot
-  {
-    Plot() :
-      nw_label_(0),
-      sw_label_(0),
-      min_ref_label_(0),
-      max_ref_label_(0),
-      label_(0),
-      aux_data_(0),
-      aux_data_label_(0),
-      previous_(0),
-      index_(-1),
-      snd_(0),
-      lines_(0),
-      draw_aux_data(0),
-      auxindex_(-1),
-      min_(0.0),
-      max_(1.0),
-      r_(1.0),
-      g_(1.0),
-      b_(1.0)
-    {}
-    
-    LabelTex *nw_label_;
-    LabelTex *sw_label_;
-    LabelTex *min_ref_label_;
-    LabelTex *max_ref_label_;
-    LabelTex *label_;
-    LabelTex *aux_data_;
-    LabelTex *aux_data_label_;
-    int       previous_;
-    int       index_;
-    int       snd_;
-    int       lines_;
-    int       draw_aux_data;
-    int       auxindex_;
-    float     min_;
-    float     max_;
-    float     r_;
-    float     g_;
-    float     b_;
-  };
-
   GuiDouble                            gui_time_;	 
   GuiDouble                            gui_sample_rate_; 
   GuiDouble                            gui_sweep_speed_; 
@@ -187,27 +156,22 @@ private:
   GuiDouble                            gui_font_scale_;
   GuiInt                               gui_show_name_;
   GuiInt                               gui_show_vectors_;
+  GuiInt                               gui_horiz_comp_;
+  GuiInt                               gui_both_comp_;
+  GuiInt											gui_vector_mode_;
   GuiInt                               gui_show_cross_;
+  GuiInt											gui_show_trend_;
+  GuiInt											gui_show_threshold_;
   GuiInt                               gui_injury_offset_;
+  GuiInt											gui_geom_;
   GuiString                            *gui_x_axis_label_;
+  GuiString                            *gui_x_trend_h_label_;
+  GuiString                            *gui_x_trend_m_label_;
+  GuiString                            *gui_x_trend_l_label_;
   GuiString                            *gui_y_axis_label_;
-
-  //vector<GuiString*>                   gui_nw_label_;
-  //vector<GuiString*>                   gui_sw_label_;
-  //vector<GuiString*>                   gui_label_;
-  //vector<GuiString*>                   gui_aux_data_label_;
-  //vector<GuiString*>                   gui_min_ref_label_;
-  //vector<GuiString*>                   gui_max_ref_label_;
-  //vector<GuiDouble*>                   gui_min_;
-  //vector<GuiDouble*>                   gui_max_;
-  //vector<GuiInt*>                      gui_idx_;
-  //vector<GuiInt*>                      gui_snd_;
-  //vector<GuiInt*>                      gui_lines_;
-  //vector<GuiInt*>                      gui_draw_aux_data;
-  //vector<GuiInt*>                      gui_auxidx_;
-  //vector<GuiDouble*>                   gui_red_;
-  //vector<GuiDouble*>                   gui_green_;
-  //vector<GuiDouble*>                   gui_blue_;
+  GuiString                            *gui_y_trend_h_label_;
+  GuiString                            *gui_y_trend_m_label_;
+  GuiString                            *gui_y_trend_l_label_;
 
   GLXContext                            ctx_;
   Display*                              dpy_;
@@ -221,7 +185,6 @@ private:
   //! 0-9 digit textures.
   vector<LabelTex>                      digits_;
   bool                                  dig_init_;
-  vector<Plot>                          plots_;
   NrrdDataHandle                        data_;
   NrrdDataHandle                        data2_;
   vector<int>                           markers_;
@@ -242,42 +205,33 @@ private:
   LabelTex 				*status_label3;
   LabelTex				*name_label;
   LabelTex				*x_axis_label;
-  LabelTex				*x_range_g_label;
-  LabelTex				*x_range_b_label;
-  LabelTex				*x_range_l_label;
+  LabelTex				*x_trend_h_label;
+  LabelTex				*x_trend_m_label;
+  LabelTex				*x_trend_l_label;
   LabelTex				*y_axis_label;
-  LabelTex				*y_range_g_label;
-  LabelTex				*y_range_b_label;
-  LabelTex				*y_range_l_label;
+  LabelTex				*y_trend_h_label;
+  LabelTex				*y_trend_m_label;
+  LabelTex				*y_trend_l_label;
   string				name_text;
   LabelTex				*time_label;
   string				time_text;
   //int 					injury_offset_;
-  int 					alarm_offset_;
-  int 					lvp_index_;
-  int 					rvp_index_;
-  int 					ttd_index_;
-  int 					pos_index_;
-  int 					lvs_index_;
-  int 					rvs_index_;
-  int 					alarm_index_;
-  int 					vector_index_;
+  //int 					alarm_offset_;
   bool					alarm_now;
   LabelTex				*alarm_label;
-  GLfloat				*color_dat;
-  tuple					*injury_point;
-  tuple					*alarm_point;
+  //GLfloat				*color_dat;
+  //tuple					*injury_point;
+  //tuple					*alarm_point;
   tuple					*x_axis_point;
-  tuple					*x_range_g_point;
-  tuple					*x_range_b_point;
-  tuple					*x_range_l_point;
+  tuple					*x_trend_h_point;
+  tuple					*x_trend_m_point;
+  tuple					*x_trend_l_point;
   tuple					*y_axis_point;
-  tuple					*y_range_g_point;
-  tuple					*y_range_b_point;
-  tuple					*y_range_l_point;
+  tuple					*y_trend_h_point;
+  tuple					*y_trend_m_point;
+  tuple					*y_trend_l_point;
 
   bool                  make_current();
-  //void                  synch_plot_vars(int s);
   void                  init_plots();
   void                  draw_plots();
   void                  draw_counter(float x, float y);
@@ -287,7 +241,6 @@ private:
   void 			setTimeLabel();
   void 			addMarkersToMenu();
   void 			getNrrd1KeyValues();
-  void 			getNrrd2KeyValues();
   void 			createDecisionSpaceArrays();
   void 			translate_start(int x, int y);
   void 			translate_motion(int x, int y);
@@ -295,7 +248,6 @@ private:
   void 			scale_start(int x, int y);
   void 			scale_motion(int x, int y);
   void 			scale_end(int x, int y);
-  void			screen_val(int &x, int &y);
 };
 
 
@@ -448,10 +400,22 @@ ExecutiveState::ExecutiveState(GuiContext* ctx) :
   gui_font_scale_(ctx->subVar("font_scale")),
   gui_show_name_(ctx->subVar("show_name")),
   gui_show_vectors_(ctx->subVar("show_vectors")),
+  gui_horiz_comp_(ctx->subVar("horiz_comp")),
+  gui_both_comp_(ctx->subVar("both_comp")),
+  gui_vector_mode_(ctx->subVar("vector_mode")),
   gui_show_cross_(ctx->subVar("show_cross")),
+  gui_show_trend_(ctx->subVar("show_trend")),
+  gui_show_threshold_(ctx->subVar("show_threshold")),
   gui_injury_offset_(ctx->subVar("injury_offset")),
+  gui_geom_(ctx->subVar("geom")),
   gui_x_axis_label_(0),
+  gui_x_trend_h_label_(0),
+  gui_x_trend_m_label_(0),
+  gui_x_trend_l_label_(0),
   gui_y_axis_label_(0),
+  gui_y_trend_h_label_(0),
+  gui_y_trend_m_label_(0),
+  gui_y_trend_l_label_(0),
   ctx_(0),
   dpy_(0),
   win_(0),
@@ -461,7 +425,6 @@ ExecutiveState::ExecutiveState(GuiContext* ctx) :
   runner_thread_(0),
   digits_(10),
   dig_init_(false),
-  plots_(0),
   data_(0),
   data2_(0),
   markers_(0),
@@ -481,39 +444,31 @@ ExecutiveState::ExecutiveState(GuiContext* ctx) :
   status_label3(0),
   name_label(0),
   x_axis_label(0),
-  x_range_g_label(0),
-  x_range_b_label(0),
-  x_range_l_label(0),
+  x_trend_h_label(0),
+  x_trend_m_label(0),
+  x_trend_l_label(0),
   y_axis_label(0),
-  y_range_g_label(0),
-  y_range_b_label(0),
-  y_range_l_label(0),
+  y_trend_h_label(0),
+  y_trend_m_label(0),
+  y_trend_l_label(0),
   name_text(" "),
   time_label(0),
   time_text("Time: 00:00:00"),
   //injury_offset_(0),
-  alarm_offset_(ALARM_OFFSET),
-  lvp_index_(0),
-  rvp_index_(0),
-  ttd_index_(0),
-  pos_index_(0),
-  lvs_index_(0),
-  rvs_index_(0),
-  alarm_index_(0),
-  vector_index_(0),
+  //alarm_offset_(ALARM_OFFSET),
   alarm_now(0),
   alarm_label(0),
-  color_dat(0),
-  injury_point(0),
-  alarm_point(0),
+  //color_dat(0),
+  //injury_point(0),
+  //alarm_point(0),
   x_axis_point(0),
-  x_range_g_point(0),
-  x_range_b_point(0),
-  x_range_l_point(0),
+  x_trend_h_point(0),
+  x_trend_m_point(0),
+  x_trend_l_point(0),
   y_axis_point(0),
-  y_range_g_point(0),
-  y_range_b_point(0),
-  y_range_l_point(0)
+  y_trend_h_point(0),
+  y_trend_m_point(0),
+  y_trend_l_point(0)
 {
   try {
     freetype_lib_ = scinew FreeTypeLibrary();
@@ -547,16 +502,16 @@ ExecutiveState::ExecutiveState(GuiContext* ctx) :
     }
   }
 
-  injury_point = new tuple;
-  alarm_point = new tuple;
+  //injury_point = new tuple;
+  //alarm_point = new tuple;
   x_axis_point = new tuple;
-  x_range_g_point = new tuple;
-  x_range_b_point = new tuple;
-  x_range_l_point = new tuple;
+  x_trend_h_point = new tuple;
+  x_trend_m_point = new tuple;
+  x_trend_l_point = new tuple;
   y_axis_point = new tuple;
-  y_range_g_point = new tuple;
-  y_range_b_point = new tuple;
-  y_range_l_point = new tuple;
+  y_trend_h_point = new tuple;
+  y_trend_m_point = new tuple;
+  y_trend_l_point = new tuple;
 
 }
 
@@ -677,53 +632,8 @@ ExecutiveState::draw_counter(float x, float y)
       dt.draw(px, py, sx, sy);
       px += dt.u_ * dt.tex_width_ ;
      }
-
   }
 }
-
-
-
-template <class T> struct del_list : public unary_function<T, void>
-{
-  void operator() (T x) { delete x; }
-};
-
-template <class T>
-void clear_vector(T &vec, int s)
-{
-  for_each(vec.begin(), vec.end(), 
-	   del_list<typename T::value_type>());
-  vec.clear();
-  vec.resize(s);
-}
-
-/*
-void 
-ExecutiveState::synch_plot_vars(int s)
-{
-  plots_.clear();
-  plots_.resize(s);
-  clear_vector(gui_nw_label_, s);
-  clear_vector(gui_sw_label_, s);
-  clear_vector(gui_label_, s);
-  clear_vector(gui_aux_data_label_, s);
-  clear_vector(gui_min_ref_label_, s);
-  clear_vector(gui_max_ref_label_, s);
-  clear_vector(gui_min_, s);
-  clear_vector(gui_max_, s);
-  clear_vector(gui_idx_, s);
-  clear_vector(gui_snd_, s);
-  clear_vector(gui_lines_, s);
-  clear_vector(gui_draw_aux_data, s);
-  clear_vector(gui_auxidx_, s);
-  clear_vector(gui_red_, s);
-  clear_vector(gui_green_, s);
-  clear_vector(gui_blue_, s);
- 
-}
-*/
-
-
 
 void 
 ExecutiveState::init_plots()
@@ -771,178 +681,88 @@ ExecutiveState::init_plots()
   if (!gui_x_axis_label_) {
     gui_x_axis_label_ = scinew GuiString(ctx->subVar("x_axis_label"));
   }
-  if (gui_x_axis_label_->get() != string("")) {
+  //if (gui_x_axis_label_->get() != string("")) {
     if (x_axis_label) delete x_axis_label;
     //x_axis_label = scinew LabelTex("Amplitude, LV Waveform");
-    x_axis_label = scinew LabelTex(gui_x_axis_label_->get());
+    //x_axis_label = scinew LabelTex(gui_x_axis_label_->get());
+    x_axis_label = scinew LabelTex((gui_x_axis_label_->get() != string(""))?gui_x_axis_label_->get():string(" "));
     x_axis_label->bind(font);
+  //}
+
+  if (!gui_x_trend_h_label_) {
+    gui_x_trend_h_label_ = scinew GuiString(ctx->subVar("x_trend_h_label"));
   }
+  //if (gui_x_trend_h_label_->get() != string("")) {
+    if (x_trend_h_label) delete x_trend_h_label;
+    //x_trend_h_label = scinew LabelTex("Baseline");
+    x_trend_h_label = scinew LabelTex((gui_x_trend_h_label_->get() != string(""))?gui_x_trend_h_label_->get():string(" "));
+    x_trend_h_label->bind(font);
+  //}
 
-  if (x_range_g_label) delete x_range_g_label;
-  x_range_g_label = scinew LabelTex("Baseline");
-  x_range_g_label->bind(font);
+  if (!gui_x_trend_m_label_) {
+    gui_x_trend_m_label_ = scinew GuiString(ctx->subVar("x_trend_m_label"));
+  }
+  //if (gui_x_trend_m_label_->get() != string("")) {
+    if (x_trend_m_label) delete x_trend_m_label;
+    //x_trend_m_label = scinew LabelTex("LV");
+    x_trend_m_label = scinew LabelTex((gui_x_trend_m_label_->get() != string(""))?gui_x_trend_m_label_->get():string(" "));
+    x_trend_m_label->bind(font);
+  //}
 
-  if (x_range_b_label) delete x_range_b_label;
-  x_range_b_label = scinew LabelTex("Decline");
-  x_range_b_label->bind(font);
-
-  if (x_range_l_label) delete x_range_l_label;
-  x_range_l_label = scinew LabelTex("LV");
-  x_range_l_label->bind(font);
+  if (!gui_x_trend_l_label_) {
+    gui_x_trend_l_label_ = scinew GuiString(ctx->subVar("x_trend_l_label"));
+  }
+  //if (gui_x_trend_l_label_->get() != string("")) {
+    if (x_trend_l_label) delete x_trend_l_label;
+    //x_trend_l_label = scinew LabelTex("Decline");
+	 x_trend_l_label = scinew LabelTex((gui_x_trend_l_label_->get() != string(""))?gui_x_trend_l_label_->get():string(" "));
+    x_trend_l_label->bind(font);
+  //}
 
   if (!gui_y_axis_label_) {
     gui_y_axis_label_ = scinew GuiString(ctx->subVar("y_axis_label"));
   }
-  if (gui_y_axis_label_->get() != string("")) {
+  //if (gui_y_axis_label_->get() != string("")) {
     if (y_axis_label) delete y_axis_label;
     //y_axis_label = scinew LabelTex("Amplitude, RV Waveform");
-    y_axis_label = scinew LabelTex(gui_y_axis_label_->get());
+    y_axis_label = scinew LabelTex((gui_y_axis_label_->get() != string(""))?gui_y_axis_label_->get():string(" "));
     y_axis_label->bind(font);
+  //}
+
+  if (!gui_y_trend_h_label_) {
+    gui_y_trend_h_label_ = scinew GuiString(ctx->subVar("y_trend_h_label"));
   }
+  //if (gui_y_trend_h_label_->get() != string("")) {
+    if (y_trend_h_label) delete y_trend_h_label;
+    //y_trend_h_label = scinew LabelTex("Baseline");
+    y_trend_h_label = scinew LabelTex((gui_y_trend_h_label_->get() != string(""))?gui_y_trend_h_label_->get():string(" "));
+    y_trend_h_label->bind(font);
+  //}
 
-  if (y_range_g_label) delete y_range_g_label;
-  y_range_g_label = scinew LabelTex("Baseline");
-  y_range_g_label->bind(font);
+  if (!gui_y_trend_m_label_) {
+    gui_y_trend_m_label_ = scinew GuiString(ctx->subVar("y_trend_m_label"));
+  }
+  //if (gui_y_trend_m_label_->get() != string("")) {
+    if (y_trend_m_label) delete y_trend_m_label;
+    //y_trend_m_label = scinew LabelTex("RV");
+    y_trend_m_label = scinew LabelTex((gui_y_trend_m_label_->get() != string(""))?gui_y_trend_m_label_->get():string(" "));
+    y_trend_m_label->bind(font);
+  //}
 
-  if (y_range_b_label) delete y_range_b_label;
-  y_range_b_label = scinew LabelTex("Decline");
-  y_range_b_label->bind(font);
-
-  if (y_range_l_label) delete y_range_l_label;
-  y_range_l_label = scinew LabelTex("RV");
-  y_range_l_label->bind(font);
+  if (!gui_y_trend_l_label_) {
+    gui_y_trend_l_label_ = scinew GuiString(ctx->subVar("y_trend_l_label"));
+  }
+  //if (gui_y_trend_l_label_->get() != string("")) {
+    if (y_trend_l_label) delete y_trend_l_label;
+    //y_trend_l_label = scinew LabelTex("Decline");
+    y_trend_l_label = scinew LabelTex((gui_y_trend_l_label_->get() != string(""))?gui_y_trend_l_label_->get():string(" "));
+    y_trend_l_label->bind(font);
+  //}
 
   font->set_points(36.0 * gui_font_scale_.get());
   if (alarm_label) delete alarm_label;
   alarm_label = scinew LabelTex("Alarm");
   alarm_label->bind(font);
-
-/*
-  reset_vars();
-  synch_plot_vars(gui_plot_count_.get());
-  if (! gui_plot_count_.get()) return;
-
-  //FreeTypeFace *font = fonts_["anatomical"];
-  //if (! font) return;
-
-  //font->set_points(18.0);
-  //status_label = scinew LabelTex("Test Label");
-  //status_label->bind(font);
-
-  int i = 0;
-  vector<Plot>::iterator iter = plots_.begin();
-  while (iter != plots_.end()) {
-    const string num = to_string(i);
-    Plot &g = *iter++;
-
-    font->set_points(36.0 * gui_font_scale_.get());
-    if (g.aux_data_) delete g.aux_data_;
-      g.aux_data_ = scinew LabelTex(" ");
-      g.aux_data_->bind(font);
-
-    font->set_points(12.0 * gui_font_scale_.get());
-    if (! gui_nw_label_[i]) {
-      gui_nw_label_[i] = scinew GuiString(ctx->subVar("nw_label-" + num));
-    }
-    if (gui_nw_label_[i]->get() != string("")) {
-      if (g.nw_label_) delete g.nw_label_;
-      g.nw_label_ = scinew LabelTex(gui_nw_label_[i]->get());
-      g.nw_label_->bind(font);
-    }
-
-    if (! gui_sw_label_[i]) {
-      gui_sw_label_[i] = scinew GuiString(ctx->subVar("sw_label-" + num));
-    }
-    if (gui_sw_label_[i]->get() != string("")) {
-      if (g.sw_label_) delete g.sw_label_;
-      g.sw_label_ = scinew LabelTex(gui_sw_label_[i]->get());
-      g.sw_label_->bind(font);
-    }
-
-    font->set_points(18.0 * gui_font_scale_.get());
-    if (! gui_label_[i]) {
-      gui_label_[i] = scinew GuiString(ctx->subVar("label-" + num));
-    }
-    if (gui_label_[i]->get() != string("")) {
-      if (g.label_) delete g.label_;
-      g.label_ = scinew LabelTex(gui_label_[i]->get());
-      g.label_->bind(font);
-    }
-    if (! gui_aux_data_label_[i]) {
-      gui_aux_data_label_[i] = scinew GuiString(ctx->subVar("aux_data_label-" + num));
-    }
-    if (gui_aux_data_label_[i]->get() != string("")) {
-      if (g.aux_data_label_) delete g.aux_data_label_;
-      g.aux_data_label_ = scinew LabelTex(gui_aux_data_label_[i]->get());
-      g.aux_data_label_->bind(font);
-    }
-
-    font->set_points(14.0 * gui_font_scale_.get());
-    if (! gui_min_ref_label_[i]) {
-      gui_min_ref_label_[i] = scinew GuiString(
-					ctx->subVar("min_ref_label-" + num));
-    }
-    if (gui_min_ref_label_[i]->get() != string("")) {
-      if (g.min_ref_label_) delete g.min_ref_label_;
-      g.min_ref_label_ = scinew LabelTex(gui_min_ref_label_[i]->get());
-      g.min_ref_label_->bind(font);
-    }
-    if (! gui_max_ref_label_[i]) {
-      gui_max_ref_label_[i] = scinew GuiString(
-					 ctx->subVar("max_ref_label-" + num));
-    }
-    if (gui_max_ref_label_[i]->get() != string("")) {
-      if (g.max_ref_label_) delete g.max_ref_label_;
-      g.max_ref_label_ = scinew LabelTex(gui_max_ref_label_[i]->get());
-      g.max_ref_label_->bind(font);
-    }
-      
-    if (! gui_min_[i]) {
-      gui_min_[i] = scinew GuiDouble(ctx->subVar("min-" + num));
-    }
-    g.min_ = gui_min_[i]->get();
-    if (! gui_max_[i]) {
-      gui_max_[i] = scinew GuiDouble(ctx->subVar("max-" + num));
-    }
-    g.max_ = gui_max_[i]->get();
-    if (! gui_idx_[i]) {
-      gui_idx_[i] = scinew GuiInt(ctx->subVar("idx-" + num));
-    }
-    g.index_ = gui_idx_[i]->get();
-    if (! gui_snd_[i]) {
-      gui_snd_[i] = scinew GuiInt(ctx->subVar("snd-" + num));
-    }
-    g.snd_ = gui_snd_[i]->get();
-    if (! gui_lines_[i]) {
-      gui_lines_[i] = scinew GuiInt(ctx->subVar("lines-" + num));
-    }
-    g.lines_ = gui_lines_[i]->get();
-    if (! gui_auxidx_[i]) {
-      gui_auxidx_[i] = scinew GuiInt(ctx->subVar("auxidx-" + num));
-    }
-    g.auxindex_ = gui_auxidx_[i]->get();
-    if (! gui_draw_aux_data[i]) {
-      gui_draw_aux_data[i] = scinew GuiInt(ctx->subVar("draw_aux_data-" + num));
-    }
-    g.draw_aux_data = gui_draw_aux_data[i]->get();
-
-    if (! gui_red_[i]) {
-      gui_red_[i] = scinew GuiDouble(ctx->subVar("plot_color-" + num + "-r"));
-    }
-    g.r_ = gui_red_[i]->get();
-
-    if (! gui_green_[i]) {
-      gui_green_[i]= scinew GuiDouble(ctx->subVar("plot_color-" + num + "-g"));
-    }
-    g.g_ = gui_green_[i]->get();
-
-    if (! gui_blue_[i]) {
-      gui_blue_[i] = scinew GuiDouble(ctx->subVar("plot_color-" + num + "-b"));
-    }
-    g.b_ = gui_blue_[i]->get();
-    ++i;
-  }
-*/
 }
 
 void 
@@ -983,24 +803,30 @@ ExecutiveState::draw_plots()
 
     if (data2_.get_rep()) {
       float *dat2 = (float *)data2_->nrrd->data;
-      int dat2_id = cur_idx_ * data2_->nrrd->axis[0].size + alarm_index_;
+      int dat2_id = cur_idx_ * data2_->nrrd->axis[0].size + ALARM_IDX;
 
       alarm_now = ((int)dat2[dat2_id] == 1);
+
+      //int inj_id = cur_idx_ * data2_->nrrd->axis[0].size + TIME_IDX;
+      //float time_value = dat2[inj_id];
+		//cerr << cur_idx_ << ":" << time_value << endl;
+		//if (time_value == 0)
+		//	cerr << cur_idx_ << ":" << time_value << endl;
     } 
 
     glDisable(GL_TEXTURE_2D);
     glEnable(GL_POINT_SMOOTH);
 
-    // origin, axes, background, alarm flash
+    // axes, ticks, background, alarm flash
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
       glLoadIdentity();
       glMatrixMode(GL_PROJECTION);
       glPushMatrix();
         glLoadIdentity();
-        glLineWidth(6.0);
         glColor4f(1.0, 0.0, 0.0, (alarm_now) ? 0.6 : 0.0);
         glRectf(-1, -1, 1, 1);
+        //glLineWidth(6.0);
         //glBegin(GL_LINE_LOOP);
         //glVertex3i(-1, -1, -1);
         //glVertex3i(1, -1, -1);
@@ -1011,7 +837,7 @@ ExecutiveState::draw_plots()
       glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 
-    glLineWidth(1.0);
+    //glLineWidth(1.0);
     glBegin(GL_LINE_LOOP);
       glColor4f(1.0, 1.0, 0.0, 1.0);
       glVertex3f(0.0, 0.0, 0.0);
@@ -1019,6 +845,23 @@ ExecutiveState::draw_plots()
       glVertex3f(X_AXIS_LENGTH, Y_AXIS_LENGTH, 0.0);
       glVertex3f(0.0, Y_AXIS_LENGTH, 0.0);
     glEnd();
+
+	if (gui_show_trend_.get()) {
+		glShadeModel(GL_SMOOTH);
+		glBegin(GL_LINES);
+			glColor4f(0.0, 1.0, 0.0, 1.0);
+			glVertex3f(X_AXIS_LENGTH, Y_AXIS_LENGTH, 0.0);
+			glColor4f(1.0, 0.0, 0.0, 1.0);
+			glVertex3f(X_AXIS_LENGTH, 0.0, 0.0);
+
+			glColor4f(0.0, 1.0, 0.0, 1.0);
+			glVertex3f(X_AXIS_LENGTH, Y_AXIS_LENGTH, 0.0);
+			glColor4f(1.0, 0.0, 0.0, 1.0);
+			glVertex3f(0.0, Y_AXIS_LENGTH, 0.0);
+		glEnd();
+	}
+
+		glShadeModel(GL_FLAT);
 
     int i(1);
     glBegin(GL_LINES);
@@ -1043,19 +886,19 @@ ExecutiveState::draw_plots()
     //}
     //glEnd();
 
-    if (gui_show_vectors_.get()) {
-      glBegin(GL_LINES);
-        glColor4f(1.0, 0.0, 0.0, 0.6);
-        glVertex3f(-1.0, 0.0, 0.0);
-        glVertex3f(-1.0, Y_AXIS_LENGTH, 0.0);
+    //if (data2_.get_rep() && gui_show_vectors_.get() && gui_horiz_comp_.get() && gui_vector_mode_.get() == VM_SLIDING) {
+     // glBegin(GL_LINES);
+      //  glColor4f(1.0, 0.0, 0.0, 0.6);
+      //  glVertex3f(-1.0, 0.0, 0.0);
+       // glVertex3f(-1.0, Y_AXIS_LENGTH, 0.0);
 
-        glVertex3f(-1.2, Y_AXIS_LENGTH, 0.0);
-        glVertex3f(-0.8, Y_AXIS_LENGTH, 0.0);
+      //  glVertex3f(-1.1, Y_AXIS_LENGTH, 0.0);
+       // glVertex3f(-0.9, Y_AXIS_LENGTH, 0.0);
 
-        glVertex3f(-1.2, 0.0, 0.0);
-        glVertex3f(-0.8, 0.0, 0.0);
-      glEnd();
-    }
+      //  glVertex3f(-1.1, 0.0, 0.0);
+       // glVertex3f(-0.9, 0.0, 0.0);
+      //glEnd();
+    //}
 
     GLint vp[4];
     GLdouble mm[16], pm[16];
@@ -1063,15 +906,23 @@ ExecutiveState::draw_plots()
     glGetDoublev(GL_MODELVIEW_MATRIX, mm);
     glGetDoublev(GL_PROJECTION_MATRIX, pm);
 
-    gluProject((GLdouble)X_AXIS_LENGTH/2, (GLdouble)0.0, (GLdouble)0.0, mm, pm, vp, &x_axis_point->x, &x_axis_point->y, &x_axis_point->z);
-    gluProject((GLdouble)X_AXIS_LENGTH, (GLdouble)Y_AXIS_LENGTH, (GLdouble)0.0, mm, pm, vp, &x_range_g_point->x, &x_range_g_point->y, &x_range_g_point->z);
-    gluProject((GLdouble)0.0, (GLdouble)Y_AXIS_LENGTH, (GLdouble)0.0, mm, pm, vp, &x_range_b_point->x, &x_range_b_point->y, &x_range_b_point->z);
-    gluProject((GLdouble)X_AXIS_LENGTH/2, (GLdouble)Y_AXIS_LENGTH, (GLdouble)0.0, mm, pm, vp, &x_range_l_point->x, &x_range_l_point->y, &x_range_l_point->z);
+    gluProject(X_AXIS_LENGTH/2, (GLdouble)0.0 - 0.1, (GLdouble)0.0, mm, pm, vp,
+	 	&x_axis_point->x, &x_axis_point->y, &x_axis_point->z);
+    gluProject(X_AXIS_LENGTH, Y_AXIS_LENGTH, (GLdouble)0.0, mm, pm, vp,
+		&x_trend_h_point->x, &x_trend_h_point->y, &x_trend_h_point->z);
+    gluProject(X_AXIS_LENGTH/2, Y_AXIS_LENGTH, (GLdouble)0.0, mm, pm, vp,
+	 	&x_trend_m_point->x, &x_trend_m_point->y, &x_trend_m_point->z);
+    gluProject((GLdouble)0.0, Y_AXIS_LENGTH, (GLdouble)0.0, mm, pm, vp,
+		&x_trend_l_point->x, &x_trend_l_point->y, &x_trend_l_point->z);
 
-    gluProject((GLdouble)0.0, (GLdouble)Y_AXIS_LENGTH/2, (GLdouble)0.0, mm, pm, vp, &y_axis_point->x, &y_axis_point->y, &y_axis_point->z);
-    gluProject((GLdouble)X_AXIS_LENGTH, (GLdouble)Y_AXIS_LENGTH, (GLdouble)0.0, mm, pm, vp, &y_range_g_point->x, &y_range_g_point->y, &y_range_g_point->z);
-    gluProject((GLdouble)X_AXIS_LENGTH, (GLdouble)0.0, (GLdouble)0.0, mm, pm, vp, &y_range_b_point->x, &y_range_b_point->y, &y_range_b_point->z);
-    gluProject((GLdouble)X_AXIS_LENGTH, (GLdouble)Y_AXIS_LENGTH/2, (GLdouble)0.0, mm, pm, vp, &y_range_l_point->x, &y_range_l_point->y, &y_range_l_point->z);
+    gluProject((GLdouble)0.0 - 0.1, Y_AXIS_LENGTH/2, (GLdouble)0.0, mm, pm, vp,
+	 	&y_axis_point->x, &y_axis_point->y, &y_axis_point->z);
+    gluProject(X_AXIS_LENGTH, Y_AXIS_LENGTH, (GLdouble)0.0, mm, pm, vp,
+		&y_trend_h_point->x, &y_trend_h_point->y, &y_trend_h_point->z);
+    gluProject(X_AXIS_LENGTH, Y_AXIS_LENGTH/2, (GLdouble)0.0, mm, pm, vp,
+		&y_trend_m_point->x, &y_trend_m_point->y, &y_trend_m_point->z);
+    gluProject(X_AXIS_LENGTH, (GLdouble)0.0, (GLdouble)0.0, mm, pm, vp,
+		&y_trend_l_point->x, &y_trend_l_point->y, &y_trend_l_point->z);
 
     // path, points on path, crosshairs, second difference vector
     if (data_.get_rep()) {
@@ -1095,50 +946,114 @@ ExecutiveState::draw_plots()
           //glDepthMask(GL_TRUE);
 			 //glPopMatrix();
 
-          float x = dat[cur_idx_*3];
-          float y = dat[cur_idx_*3+1];
-          float z = dat[cur_idx_*3+2];
-
-          if (cur_idx_ >= gui_injury_offset_.get() * 100 && cur_idx_ < gui_injury_offset_.get() * 100 + 6000) {
-            injury_point->x = x;
-            injury_point->y = y;
-            injury_point->z = z;
-          }
-
-          if (cur_idx_ >= alarm_offset_ * 100 && cur_idx_ < alarm_offset_ * 100 + 6000) {
-            alarm_point->x = x;
-            alarm_point->y = y;
-            alarm_point->z = z;
-          }
+          float x = dat[cur_idx_*6+3];
+          float y = dat[cur_idx_*6+4];
+          float z = dat[cur_idx_*6+5];
 
           if (data2_.get_rep() && gui_show_vectors_.get()) {
             float *dat2 = (float *)data2_->nrrd->data;
-            int dat2_id = cur_idx_ * data2_->nrrd->axis[0].size + vector_index_;
+            int dat2_id = cur_idx_ * data2_->nrrd->axis[0].size + VECTOR_IDX;
 
             float x2 = dat2[dat2_id];
             float y2 = dat2[dat2_id+1];
             float z2 = 0.0;
 
-				// x and y 2nd difference vector
-            glBegin(GL_LINES);
-              glColor4f(0.0, 1.0, 1.0, 1.0);
-              glVertex3f(x, y, z);
-              glVertex3f(x+x2, y+y2, z+z2);
-            glEnd();
+				// threshold
+				if (gui_show_threshold_.get() && gui_vector_mode_.get() == VM_SLIDING) {
+					glBegin(GL_LINES);
+						glColor4f(1.0, 0.0, 0.0, 0.6);
+						glVertex3f(-10.0, 0.0, 0.0);
+						glVertex3f(-10.0, Y_AXIS_LENGTH * 10, 0.0);
 
-				// x 2nd difference vector translated to y axis
-            glPushMatrix();
-              glTranslatef(-x, 0.0, 0.0);
+						glVertex3f(-11.0, Y_AXIS_LENGTH * 10, 0.0);
+						glVertex3f(-9.0, Y_AXIS_LENGTH * 10, 0.0);
+
+						glVertex3f(-11.0, 0.0, 0.0);
+						glVertex3f(-9.0, 0.0, 0.0);
+					glEnd();
+				}
+
+				// thermometer
+				if (gui_show_threshold_.get() && gui_vector_mode_.get() == VM_PATH) {
               glBegin(GL_LINES);
-                glColor4f(0.0, 1.0, 1.0, 1.0);
+                glColor4f(1.0, 0.0, 0.0, 0.6);
                 glVertex3f(x, y, z);
-                glVertex3f(x+x2, y, z+z2);
+                glVertex3f(x-10, y, z);
+
+                glVertex3f(x-10, y+1, z);
+                glVertex3f(x-10, y-1, z);
               glEnd();
-            glPopMatrix();
-          }
+				}
+
+				if (x2 == x2 && y2 == y2) {
+					// x and y 2nd difference vector
+					if (gui_both_comp_.get()) {
+						glBegin(GL_LINES);
+							glColor4f(0.0, 1.0, 1.0, 1.0);
+							glVertex3f(x, y, z);
+							glVertex3f(x+x2, y+y2, z+z2);
+						glEnd();
+					}
+				  
+					// x 2nd difference vector translated to y axis
+					if (gui_horiz_comp_.get()) {
+						glPushMatrix();
+							if (gui_vector_mode_.get() == VM_SLIDING) {
+								glTranslatef(-x, 0.0, 0.0);
+							}
+							glBegin(GL_LINES);
+								glColor4f(0.0, 1.0, 1.0, 1.0);
+									glVertex3f(x, y, z);
+									glVertex3f(x+x2, y, z+z2);
+							glEnd();
+						glPopMatrix();
+					}
+				}
+			}
+
+    //if (data2_.get_rep()) {
+     // float *dat2 = (float *)data2_->nrrd->data;
+
+      //int inj_id = cur_idx_ * data2_->nrrd->axis[0].size + TIME_IDX;
+      //float time_value = dat2[inj_id];
+
+		//if (time_value == 0) {
+			//cerr << cur_idx_ << ":" << time_value << endl;
+		//		injury_point->x = x;
+		//		injury_point->y = y;
+		//		injury_point->z = z;
+		//}
+	//}
+
+			//if (cur_idx_ >= gui_injury_offset_.get() * 100 && cur_idx_ < gui_injury_offset_.get() * 100 + 6000) {
+			//	injury_point->x = x;
+			//	injury_point->y = y;
+			//	injury_point->z = z;
+			//}
+
+			//if (cur_idx_ >= alarm_offset_ * 100 && cur_idx_ < alarm_offset_ * 100 + 6000) {
+			//	alarm_point->x = x;
+			//	alarm_point->y = y;
+			//	alarm_point->z = z;
+			//}
+
+         glPointSize(6);
+			//if (cur_idx_ >= gui_injury_offset_.get() * 100) {
+			//if (injury_point->x != 0) {
+			//	glBegin(GL_POINTS);
+			//		glColor4f(0.0, 1.0, 0.0, 1.0);
+			//		glVertex3f(injury_point->x, injury_point->y, injury_point->z);
+			//	glEnd();
+			//}
+
+			//if (cur_idx_ >= alarm_offset_ * 100) {
+			//	glBegin(GL_POINTS);
+			//		glColor4f(1.0, 0.0, 0.0, 1.0);
+			//		glVertex3f(alarm_point->x, alarm_point->y, alarm_point->z);
+			//	glEnd();
+			//}
 
 			 // lead point
-          glPointSize(6);
           glBegin(GL_POINTS);
             glColor4f(0.0, 1.0, 1.0, 1.0);
             glVertex3f(x, y, z);
@@ -1154,20 +1069,6 @@ ExecutiveState::draw_plots()
               glVertex3f(x, y-1.5, z);
               glVertex3f(x, y+1.5, z);
             glEnd();
-          }
-
-          if (cur_idx_ >= gui_injury_offset_.get() * 100) {
-          glBegin(GL_POINTS);
-            glColor4f(0.0, 1.0, 0.0, 1.0);
-            glVertex3f(injury_point->x, injury_point->y, injury_point->z);
-          glEnd();
-          }
-
-          if (cur_idx_ >= alarm_offset_ * 100) {
-          glBegin(GL_POINTS);
-            glColor4f(1.0, 0.0, 0.0, 1.0);
-            glVertex3f(alarm_point->x, alarm_point->y, alarm_point->z);
-          glEnd();
           }
         glPopMatrix();
       }
@@ -1223,48 +1124,48 @@ ExecutiveState::draw_plots()
 			sy, LabelTex::ROTATE_LEFT);
     }
 
-    if (x_range_l_label) {
+    if (x_trend_m_label) {
       glColor4f(1.0, 1.0, 0.0, 1.0);
-      float xoff = x_range_l_label->tex_width_ * x_range_l_label->u_;
-      float yoff = x_range_l_label->tex_height_ * x_range_l_label->v_ * 0.5;
-      x_range_l_label->draw(x_range_l_point->x - xoff/2, x_range_l_point->y + yoff, sx, sy);
+      float xoff = x_trend_m_label->tex_width_ * x_trend_m_label->u_;
+      float yoff = x_trend_m_label->tex_height_ * x_trend_m_label->v_ * 0.5;
+      x_trend_m_label->draw(x_trend_m_point->x - xoff/2, x_trend_m_point->y + yoff, sx, sy);
     }
 
-    if (y_range_l_label) {
+    if (y_trend_m_label) {
       glColor4f(1.0, 1.0, 0.0, 1.0);
-      float xoff = y_range_l_label->tex_width_ * y_range_l_label->u_;
-      float yoff = y_range_l_label->tex_height_ * y_range_l_label->v_ * 0.5;
-      //y_range_l_label->draw(y_range_l_point->x, y_range_l_point->y, sx, sy);
-      y_range_l_label->draw(y_range_l_point->x + yoff, y_range_l_point->y + xoff/2, sx, sy, LabelTex::ROTATE_RIGHT);
+      float xoff = y_trend_m_label->tex_width_ * y_trend_m_label->u_;
+      float yoff = y_trend_m_label->tex_height_ * y_trend_m_label->v_ * 0.5;
+      //y_trend_m_label->draw(y_trend_m_point->x, y_trend_m_point->y, sx, sy);
+      y_trend_m_label->draw(y_trend_m_point->x + yoff, y_trend_m_point->y + xoff/2, sx, sy, LabelTex::ROTATE_RIGHT);
     }
 
-    if (x_range_g_label) {
+    if (x_trend_h_label) {
       glColor4f(0.0, 1.0, 0.0, 1.0);
-      float xoff = x_range_g_label->tex_width_ * x_range_g_label->u_;
-      float yoff = x_range_g_label->tex_height_ * x_range_g_label->v_ * 0.5;
-      x_range_g_label->draw(x_range_g_point->x - xoff, x_range_g_point->y + yoff, sx, sy);
+      float xoff = x_trend_h_label->tex_width_ * x_trend_h_label->u_;
+      float yoff = x_trend_h_label->tex_height_ * x_trend_h_label->v_ * 0.5;
+      x_trend_h_label->draw(x_trend_h_point->x - xoff, x_trend_h_point->y + yoff, sx, sy);
     }
 
-    if (y_range_g_label) {
+    if (y_trend_h_label) {
       glColor4f(0.0, 1.0, 0.0, 1.0);
-      //float xoff = y_range_g_label->tex_width_ * y_range_g_label->u_;
-      float yoff = y_range_g_label->tex_height_ * y_range_g_label->v_ * 0.5;
-      //y_range_g_label->draw(y_range_g_point->x, y_range_g_point->y - yoff, sx, sy);
-      y_range_g_label->draw(y_range_g_point->x + yoff, y_range_g_point->y, sx, sy, LabelTex::ROTATE_RIGHT);
+      //float xoff = y_trend_h_label->tex_width_ * y_trend_h_label->u_;
+      float yoff = y_trend_h_label->tex_height_ * y_trend_h_label->v_ * 0.5;
+      //y_trend_h_label->draw(y_trend_h_point->x, y_trend_h_point->y - yoff, sx, sy);
+      y_trend_h_label->draw(y_trend_h_point->x + yoff, y_trend_h_point->y, sx, sy, LabelTex::ROTATE_RIGHT);
     }
 
-    if (x_range_b_label) {
+    if (x_trend_l_label) {
       glColor4f(1.0, 0.0, 0.0, 1.0);
-      //float xoff = x_range_b_label->tex_width_ * x_range_b_label->u_;
-      float yoff = x_range_b_label->tex_height_ * x_range_b_label->v_ * 0.5;
-      x_range_b_label->draw(x_range_b_point->x, x_range_b_point->y + yoff, sx, sy);
+      //float xoff = x_trend_l_label->tex_width_ * x_trend_l_label->u_;
+      float yoff = x_trend_l_label->tex_height_ * x_trend_l_label->v_ * 0.5;
+      x_trend_l_label->draw(x_trend_l_point->x, x_trend_l_point->y + yoff, sx, sy);
     }
 
-    if (y_range_b_label) {
+    if (y_trend_l_label) {
       glColor4f(1.0, 0.0, 0.0, 1.0);
-      float xoff = y_range_b_label->tex_width_ * y_range_b_label->u_;
-      float yoff = y_range_b_label->tex_height_ * y_range_b_label->v_ * 0.5;
-      y_range_b_label->draw(y_range_b_point->x + yoff, y_range_b_point->y + xoff, sx, sy, LabelTex::ROTATE_RIGHT);
+      float xoff = y_trend_l_label->tex_width_ * y_trend_l_label->u_;
+      float yoff = y_trend_l_label->tex_height_ * y_trend_l_label->v_ * 0.5;
+      y_trend_l_label->draw(y_trend_l_point->x + yoff, y_trend_l_point->y + xoff, sx, sy, LabelTex::ROTATE_RIGHT);
     }
 
     if (time_label) {
@@ -1284,17 +1185,18 @@ ExecutiveState::draw_plots()
       float *dat2 = (float *)data2_->nrrd->data;
       float yoff(0.0);
 
-      float lvp = dat2[cur_idx_ * data2_->nrrd->axis[0].size + lvp_index_];
-      float rvp = dat2[cur_idx_ * data2_->nrrd->axis[0].size + rvp_index_];
-      float lvs = dat2[cur_idx_ * data2_->nrrd->axis[0].size + lvs_index_];
-      float rvs = dat2[cur_idx_ * data2_->nrrd->axis[0].size + rvs_index_];
-      float ttd = dat2[cur_idx_ * data2_->nrrd->axis[0].size + ttd_index_];
-      float pos = dat2[cur_idx_ * data2_->nrrd->axis[0].size + pos_index_];
-      lvp *= 100;
-      rvp *= 100;
-      lvs *= 100;
-      rvs *= 100;
+      float lv_inj = dat2[cur_idx_*data2_->nrrd->axis[0].size + LV_INJURY_IDX];
+      float rv_inj = dat2[cur_idx_*data2_->nrrd->axis[0].size + RV_INJURY_IDX];
+      float lv_pwr = dat2[cur_idx_*data2_->nrrd->axis[0].size + LV_POWER_IDX];
+      float rv_pwr = dat2[cur_idx_*data2_->nrrd->axis[0].size + RV_POWER_IDX];
+      float ttd = dat2[cur_idx_*data2_->nrrd->axis[0].size + TIME_TO_DEATH_IDX];
+      float pos = dat2[cur_idx_*data2_->nrrd->axis[0].size + PROB_OF_SURV_IDX];
+      lv_inj *= 100;
+      rv_inj *= 100;
+      lv_pwr *= 100;
+      rv_pwr *= 100;
       pos *= 100;
+      float prob = 100 - pos;
 
       FreeTypeFace *font = fonts_["anatomical"];
       font->set_points(18.0 * gui_font_scale_.get());
@@ -1306,18 +1208,18 @@ ExecutiveState::draw_plots()
 
         stat << "Power Loss: ";
 
-        if (lvp > rvp) {
-          stat << "LV (" << lvs << "%)";
-          stat << ", RV (" << rvs << "%)";
+        if (lv_inj > rv_inj) {
+          stat << "LV (" << lv_pwr << "%)";
+          stat << ", RV (" << rv_pwr << "%)";
         } else {
-          stat << "RV (" << rvs << "%)";
-          stat << ", LV (" << lvs << "%)";
+          stat << "RV (" << rv_pwr << "%)";
+          stat << ", LV (" << lv_pwr << "%)";
         }
 
         status_label3->set(stat.str());
         status_label3->bind(font);
 
-        if (lvs == lvs && rvs == rvs) {
+        if (lv_pwr == lv_pwr && rv_pwr == rv_pwr) {
           glColor4f(1.0, 1.0, 1.0, 1.0);
           //glDisable(GL_BLEND);
           status_label3->draw(x_margin, yoff, sx, sy);
@@ -1330,21 +1232,21 @@ ExecutiveState::draw_plots()
       if (status_label2) {
         ostringstream stat;
 
-        //string hit = (lvp > rvp)?"Left":"Right";
+        //string hit = (lv_inj > rv_inj)?"Left":"Right";
         stat << "Injury: ";
 
-        if (lvp > rvp) {
-          stat << "LV (" << lvp << "% prob.)";
-          stat << ", RV (" << rvp << "% prob.)";
+        if (lv_inj > rv_inj) {
+          stat << "LV (" << lv_inj << "% prob.)";
+          stat << ", RV (" << rv_inj << "% prob.)";
         } else {
-          stat << "RV (" << rvp << "% prob.)";
-          stat << ", LV (" << lvp << "% prob.)";
+          stat << "RV (" << rv_inj << "% prob.)";
+          stat << ", LV (" << lv_inj << "% prob.)";
         }
 
         status_label2->set(stat.str());
         status_label2->bind(font);
 
-        if (lvp == lvp && rvp == rvp) {
+        if (lv_inj == lv_inj && rv_inj == rv_inj) {
           glColor4f(1.0, 1.0, 1.0, 1.0);
           //glDisable(GL_BLEND);
           status_label2->draw(x_margin, yoff, sx, sy);
@@ -1355,7 +1257,7 @@ ExecutiveState::draw_plots()
       }
 
       if (status_label1a && status_label1b && status_label1c && status_label1d) {
-        float prob = 100 - pos;
+        //float prob = 100 - pos;
 
         //ostringstream stata;
         //stata << "Estimated time to death: ";
@@ -1363,7 +1265,10 @@ ExecutiveState::draw_plots()
         //status_label1a->bind(font);
 
         ostringstream statb;
-        statb << " " << ttd << " mins.";
+		  if (prob >= 50) 
+          statb << " " << ttd << " mins.";
+		  else
+          statb << " NA.";
         status_label1b->set(statb.str());
         status_label1b->bind(font);
 
@@ -1384,7 +1289,7 @@ ExecutiveState::draw_plots()
 
           xoff += status_label1a->tex_width_ * status_label1a->u_;
 
-          if (ttd < 20)
+          if (ttd < 20 && prob >= 50)
             glColor4f(1.0, 0.0, 0.0, 1.0);
           else
             glColor4f(1.0, 1.0, 1.0, 1.0);
@@ -1406,25 +1311,6 @@ ExecutiveState::draw_plots()
           status_label1d->draw(xoff, yoff, sx, sy);
         }
       }
-
-      //glPushMatrix();
-      //glRotatef(69, 0.0, 0.0, 1.0);
-
-      //glPopMatrix();
-      //glColor4f(0.6, 0.0, 0.0, 1.0);
-      //float gp = status_label1->tex_height_ * status_label1->v_ * sy * 0.25;
-      //glRectf(x_margin * sx, yoff * sy - gp, (status_label1->tex_width_ * status_label1->u_ * sx) + (x_margin * sx), (status_label1->tex_height_ * status_label1->v_ * sy) + (yoff * sy) + gp);
-
-      //status_label1->draw(x_margin, yoff, sx, sy);
-
-      //glPushMatrix();
-      //glMatrixMode(GL_MODELVIEW);
-      //glLoadIdentity();
-      //glRotatef(45, 0.0, 0.0, 1.0);
-    //glScaled(2.0, 2.0, 2.0);
-    //glTranslated(-.5, -.5, -.5);
-      //status_label1->draw(10, h/2, sx, sy);
-      //glPopMatrix();
     }
   glPopMatrix();
 
@@ -1501,12 +1387,6 @@ ExecutiveState::setup_gl_view()
   glDisable(GL_CULL_FACE);
 
   glShadeModel(GL_FLAT);
-
-  //if (data_.get_rep()) {
-   // float *dat = (float *)data_->nrrd->data;
-    //glEnableClientState(GL_VERTEX_ARRAY);
-    //glVertexPointer(3, GL_FLOAT, 0, dat);
-  //}
 }
 
 void 
@@ -1551,6 +1431,8 @@ ExecutiveState::addMarkersToMenu()
 
   for (unsigned int c = 0; c < data_->nproperties(); c++) {
      string name = data_->get_property_name(c);
+
+	  if (string(name, 0, 4) == "MKR_") {
      //data_->get_property(name, value);
      data_->get_property(name, val);
 
@@ -1558,7 +1440,9 @@ ExecutiveState::addMarkersToMenu()
      ss >> value;
 
      keys.insert(value);
-     tmpmkrs[value] = name;
+     //tmpmkrs[value] = name;
+	  tmpmkrs[value] = string(name, 4, name.size() - 4);
+	  }
   }
 
   markers_.clear();
@@ -1578,97 +1462,16 @@ ExecutiveState::getNrrd1KeyValues()
 
   if (name != NULL) {
     string title(name);
-    gui->execute(id + " setWindowTitle {Executive State: " + name + "}");
+    //gui->execute(id + " setWindowTitle {Decision Space: " + name + "}");
 
     ostringstream titlestr;
     titlestr << "Decision Space: " << title;
 
+    gui->execute(id + " setWindowTitle {" + titlestr.str().c_str() + "}");
+
     name_text.replace(0, name_text.length(), titlestr.str());
                                                                                 
     plots_dirty_ = true;
-  }
-
-  //char *inj = nrrdKeyValueGet(data_->nrrd, "injury");
-  //if (inj != NULL) {
-  //   string injoff(inj);
-
-  //   stringstream ss(injoff);
-  //   ss >> injury_offset_;
-
-  //   injury_offset_ /= gui_sample_rate_.get();
-
-  //   setTimeLabel();
-  //}
-}
-
-void 
-ExecutiveState::getNrrd2KeyValues()
-{
-  if (!data2_.get_rep())
-    return;
-
-  char *alarm = nrrdKeyValueGet(data2_->nrrd, "alarm");
-  if (alarm != NULL) {
-     string alrm(alarm);
-
-     stringstream ss(alrm);
-     ss >> alarm_index_;
-  }
-
-  char *vector = nrrdKeyValueGet(data2_->nrrd, "vector");
-  if (vector != NULL) {
-     string vec(vector);
-
-     stringstream ss(vec);
-     ss >> vector_index_;
-  }
-
-  char *lvp = nrrdKeyValueGet(data2_->nrrd, "lvp");
-  if (lvp != NULL) {
-     string lftvp(lvp);
-
-     stringstream ss(lftvp);
-     ss >> lvp_index_;
-  }
-
-  char *rvp = nrrdKeyValueGet(data2_->nrrd, "rvp");
-  if (rvp != NULL) {
-     string rtvp(rvp);
-
-     stringstream ss(rtvp);
-     ss >> rvp_index_;
-  }
-
-  char *ettd = nrrdKeyValueGet(data2_->nrrd, "ettd");
-  if (ettd != NULL) {
-     string ettds(ettd);
-
-     stringstream ss(ettds);
-     ss >> ttd_index_;
-  }
-
-  char *pos = nrrdKeyValueGet(data2_->nrrd, "pos");
-  if (pos != NULL) {
-     string poss(pos);
-
-     stringstream ss(poss);
-     ss >> pos_index_;
-  }
-
-  char *lvs = nrrdKeyValueGet(data2_->nrrd, "lvs");
-  if (lvs != NULL) {
-     string lftvs(lvs);
-
-     stringstream ss(lftvs);
-     ss >> lvs_index_;
-  }
-
-  char *rvs = nrrdKeyValueGet(data2_->nrrd, "rvs");
-  if (rvs != NULL) {
-     string rtvs(rvs);
-
-     stringstream ss(rtvs);
-     ss >> rvs_index_;
   }
 }
 
@@ -1682,110 +1485,44 @@ ExecutiveState::createDecisionSpaceArrays()
 
   if (data_.get_rep()) {
     float *dat = (float *)data_->nrrd->data;
+
     glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, dat);
+    //glVertexPointer(3, GL_FLOAT, 0, dat);
 
-	 if (color_dat) delete[] color_dat;
-    int size = data_->nrrd->axis[1].size;
-    color_dat = scinew GLfloat[size * 4];
-    int i = 0;
+	 //if (color_dat) delete[] color_dat;
+    //int size = data_->nrrd->axis[1].size;
+    //color_dat = scinew GLfloat[size * 4];
 
-    int inj = gui_injury_offset_.get() * 100 * 4;
-    int falrm = alarm_offset_ * 100 * 4;
-    for (i = 0; i < size * 4; i+=4) {
-       if (i <= inj) {
-         color_dat[i] = 0.0;
-         color_dat[i+1] = 1.0;
-         color_dat[i+2] = 0.0;
-       } else if (i <= falrm) {
-         color_dat[i] = 0.0;
-         color_dat[i+1] = 0.0;
-         color_dat[i+2] = 1.0;
-       } else {
-         color_dat[i] = 1.0;
-         color_dat[i+1] = 0.0;
-         color_dat[i+2] = 0.0;
-       }
-       color_dat[i+3] = 1.0;
-    }
+    //int inj = gui_injury_offset_.get() * 100 * 4;
+    //int falrm = alarm_offset_ * 100 * 4;
+    //for (int i = 0; i < size * 4; i+=4) {
+       //if (i <= inj) {
+       //  color_dat[i] = 0.0;
+       //  color_dat[i+1] = 1.0;
+       //  color_dat[i+2] = 0.0;
+       //} else if (i <= falrm) {
+       //  color_dat[i] = 0.0;
+       //  color_dat[i+1] = 0.0;
+       //  color_dat[i+2] = 1.0;
+       //} else {
+       //  color_dat[i] = 1.0;
+       //  color_dat[i+1] = 0.0;
+       //  color_dat[i+2] = 0.0;
+       //}
+       //color_dat[i+3] = 1.0;
+
+       //color_dat[i]   = 1.0;
+       //color_dat[i+1] = 1.0;
+       //color_dat[i+2] = 1.0;
+       //color_dat[i+3] = 1.0;
+    //}
 
     glEnableClientState(GL_COLOR_ARRAY);
-    glColorPointer(4, GL_FLOAT, 0, color_dat);
+    //glColorPointer(4, GL_FLOAT, 0, color_dat);
+
+	 glInterleavedArrays(GL_C3F_V3F, 0, dat);
   }
 
-/*
-  CONTROL_SPACE_LIST = glGenLists(1);
-                                                                                
-  glNewList(CONTROL_SPACE_LIST, GL_COMPILE);
-    //glTranslatef(-1.5, -2.5, 5.0); // position scene
-    //glTranslatef(-1.5, -2.5, 1.0); // position scene
-                                                                               
-    glPushMatrix();
-      //glTranslatef(1.0, 2.0, 0.0); // position control space
-                                                                                
-      glBegin(GL_TRIANGLES);
-        glColor4f(0.0, 1.0, 0.0, 0.75);
-        glVertex3f(-1.0, -1.0, 0.0);
-        //glVertex3f(-1.0, 2.0, 0.0);
-        //glVertex3f(2.0, 2.0, 0.0);
-        glVertex3f(-1.0, 1.0, 0.0);
-        glVertex3f(1.0, 1.0, 0.0);
-      glEnd();
-
-      glBegin(GL_TRIANGLES);
-        glColor4f(1.0, 0.0, 0.0, 0.75);
-        glVertex3f(-1.0, -1.0, 0.0);
-        //glVertex3f(2.0, 2.0, 0.0);
-        //glVertex3f(2.0, -1.0, 0.0);
-        glVertex3f(1.0, 1.0, 0.0);
-        glVertex3f(1.0, -1.0, 0.0);
-      glEnd();
-
-      glColor4f(0.0, 0.0, 1.0, 1.0);
-      glPushMatrix();
-        glBegin(GL_LINE_STRIP);
-glColor4f(1.0, 1.0, 0.0, 1.0);
-          glVertex3f(-1.0, -1.0, 0.0);
-glColor4f(0.0, 0.0, 1.0, 1.0);
-          glVertex3f(1.0, 1.0, 0.0);
-        glEnd();
-      glPopMatrix();
-                                                                                
-      GLUquadricObj *qobj;
-      qobj = gluNewQuadric();
-      gluQuadricDrawStyle(qobj, GLU_SILHOUETTE);
-      gluQuadricNormals(qobj, GLU_NONE);
-      glColor4f(1.0, 0.0, 0.0, 1.0);
-      glPushMatrix();
-        glTranslatef(1.0, 0.0, 0.0);
-        gluDisk(qobj, 0.0, 0.5, 100, 1);
-                                                                                
-        glPointSize(4);
-        glEnable(GL_POINT_SMOOTH);
-        glBegin(GL_POINTS);
-          glVertex3f(0.0, 0.0, 0.0);
-        glEnd();
-        glDisable(GL_POINT_SMOOTH);
-      glPopMatrix();
-      gluDeleteQuadric(qobj);
-             
-      qobj = gluNewQuadric();
-      gluQuadricDrawStyle(qobj, GLU_SILHOUETTE);
-      gluQuadricNormals(qobj, GLU_NONE);
-      glColor4f(0.0, 1.0, 0.0, 1.0);
-      glPushMatrix();
-        glTranslatef(0.0, 1.0, 0.0);
-        gluDisk(qobj, 0.0, 0.5, 100, 1);
-             
-        glPointSize(4);
-        glEnable(GL_POINT_SMOOTH);
-        glBegin(GL_POINTS);
-          glVertex3f(0.0, 0.0, 0.0);
-        glEnd();
-        glDisable(GL_POINT_SMOOTH);
-      glPopMatrix();
-      gluDeleteQuadric(qobj);
-*/
    glPopMatrix();
    glEndList();
 }
@@ -1852,17 +1589,6 @@ do_round(float d)
 }
 
 void
-ExecutiveState::screen_val(int &x, int &y)
-{
-  const float cx = width_ * 0.5;
-  const float cy = height_ * 0.5;
-  const float sf_inv = 1.0 / scale_;
- 
-  x = do_round((x - cx) * sf_inv + cx + (pan_x_ * width_));
-  y = do_round((y - cy) * sf_inv + cy + (pan_y_ * height_));
-}
-
-void
 ExecutiveState::execute()
 {
   NrrdIPort *nrrd1_port = (NrrdIPort*)get_iport("Nrrd1");
@@ -1907,8 +1633,6 @@ ExecutiveState::execute()
     error ("Axis 1 size for both NRRD files must be identical.");
   } 
   
-  getNrrd2KeyValues();
-
   if (!runner_) {
     runner_ = scinew RTDraw2(this);
     runner_thread_ = scinew Thread(runner_, string(id+" RTDraw2 OpenGL").c_str());
@@ -1927,7 +1651,7 @@ ExecutiveState::tcl_command(GuiArgs& args, void* userdata)
     if (args[2] == "translate") {
       string_to_int(args[4], x);
       string_to_int(args[5], y);
-      //screen_val(x, y);
+
       if (args[3] == "start") {
         translate_start(x, y);
       } else if (args[3] == "move") {
@@ -2018,12 +1742,13 @@ ExecutiveState::tcl_command(GuiArgs& args, void* userdata)
                                       Tk_MainWindow(the_interp));
     if(!tkwin) {
       warning("Unable to locate window!");
-      gui->unlock();
+      //gui->unlock();
     } else {
       width_ = Tk_Width(tkwin);
       height_ = Tk_Height(tkwin);
 
-      setup_gl_view();
+      //setup_gl_view();
+		redraw_all();
     }
 
   } else {

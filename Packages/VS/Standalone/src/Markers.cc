@@ -91,7 +91,7 @@ main(int argc, char **argv) {
   char buf[512];
   vector<string> tokens;
   string key, value;
-  int val;
+  //int val;
   if (mkrstr.is_open()) {
     while (!mkrstr.eof()) {
       mkrstr.getline(buf, 512);
@@ -101,10 +101,11 @@ main(int argc, char **argv) {
         key = tokens[0];
         value = tokens[1];
 
-        stringstream ss(value);
-        ss >> val;
+        //stringstream ss(value);
+        //ss >> val;
 
-        handle->set_property(key, val, false);
+        //handle->set_property(key, val, false);
+        handle->set_property(key, value, false);
       }
       tokens.clear();
     }

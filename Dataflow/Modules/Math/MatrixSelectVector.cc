@@ -43,7 +43,6 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/Thread/Time.h>
 #include <iostream>
 #include <sstream>
 
@@ -64,9 +63,11 @@ class MatrixSelectVector : public Module {
   GuiInt    delay_;
   GuiInt    inc_amount_;
   GuiInt    send_amount_;
+  GuiInt    data_series_done_;
   int       inc_;
   bool      loop_;
   int       use_row_;
+  int       last_gen_;
 
   void send_selection(MatrixHandle mh, int which, int ncopy, bool cache);
   int increment(int which, int lower, int upper);
@@ -97,9 +98,11 @@ MatrixSelectVector::MatrixSelectVector(GuiContext* ctx)
     delay_(ctx->subVar("delay")),
     inc_amount_(ctx->subVar("inc-amount")),
     send_amount_(ctx->subVar("send-amount")),
+    data_series_done_(ctx->subVar("data_series_done")),
     inc_(1),
     loop_(false),
-    use_row_(-1)
+    use_row_(-1),
+    last_gen_(-1)
 {
 }
 
@@ -165,6 +168,10 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which,
 int
 MatrixSelectVector::increment(int which, int lower, int upper)
 {
+  data_series_done_.reset();
+  if (playmode_.get() == "autoplay" && data_series_done_.get()) {
+    return which;
+  }
   // Do nothing if no range.
   if (upper == lower) {
     if (playmode_.get() == "once")
@@ -182,6 +189,9 @@ MatrixSelectVector::increment(int which, int lower, int upper)
     } else if (playmode_.get() == "bounce2") {
       inc_ *= -1;
       return upper;
+    } else if (playmode_.get() == "autoplay") {
+      data_series_done_.set(1);
+      return lower;
     } else {
       if (playmode_.get() == "once")
 	execmode_.set( "stop" );
@@ -218,8 +228,18 @@ MatrixSelectVector::execute()
     error("Empty input matrix.");
     return;
   }
-  
   update_state(JustStarted);
+  if (playmode_.get() == "autoplay") {
+    data_series_done_.reset();
+    while (last_gen_ == mh->generation && data_series_done_.get()) {
+      //cerr << "waiting" << std::endl;
+      //want_to_execute();
+      return;
+    } 
+    last_gen_ = mh->generation;
+    data_series_done_.set(0);
+  }
+
   
   bool changed_p = false;
 
@@ -371,8 +391,10 @@ MatrixSelectVector::execute()
 
 
     // Update the increment.
-    if (changed_p || playmode_.get() == "once" || playmode_.get() == "loop")
+    if (changed_p || playmode_.get() == "once" || 
+	playmode_.get() == "autoplay" || playmode_.get() == "loop") {
       inc_ = (start>end)?-1:1;
+    }
 
     // If the current value is invalid, reset it to the start.
     if (current_.get() < lower || current_.get() > upper) {
@@ -402,7 +424,13 @@ MatrixSelectVector::execute()
       if( !loop_ ) {
 	if (playmode_.get() == "once" && which >= end)
 	  which = start;
-      }
+	if (playmode_.get() == "autoplay" && which >= end)
+	{
+	  which = start;
+	  cerr << "setting to wait" << std::endl;
+	  data_series_done_.set(1);
+	}
+    }
 
       send_selection(mh, which, send_amount, cache);
 
@@ -412,20 +440,18 @@ MatrixSelectVector::execute()
 	const int delay = delay_.get();
       
 	if( delay > 0) {
-	Time::waitFor(delay/1000.0); // use this for cross platform instead of below
-	  //const unsigned int secs = delay / 1000;
-	  //const unsigned int msecs = delay % 1000;
-	  //if (secs)  { sleep(secs); }
-	  //if (msecs) { usleep(msecs * 1000); }
+	  const unsigned int secs = delay / 1000;
+	  const unsigned int msecs = delay % 1000;
+	  if (secs)  { sleep(secs); }
+	  if (msecs) { usleep(msecs * 1000); }
 	}
     
 	int next = increment(which, lower, upper);    
 
 	// Incrementing may cause a stop in the execmode so recheck.
 	execmode_.reset();
-	if( loop_ = (execmode_.get() == "play") ) {
+	if(loop_ = (execmode_.get() == "play")) {
 	  which = next;
-
 	  want_to_execute();
 	}
       }
@@ -453,6 +479,11 @@ MatrixSelectVector::tcl_command(GuiArgs& args, void* userdata)
   if (args.count() < 2) {
     args.error("MatrixSelectVector needs a minor command");
     return;
+
+  }
+
+  if (args[1] == "restart") {
+
   } else Module::tcl_command(args, userdata);
 }
 

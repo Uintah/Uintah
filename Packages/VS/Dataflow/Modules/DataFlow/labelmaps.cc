@@ -116,6 +116,9 @@ splitAtComma(char *srcStr, char **dst0, char **dst1)
 #endif
   // srcPtr points to ','
   *dst1 = ++srcPtr;
+  // remove trailing newline
+  while(*srcPtr != '\0' && *srcPtr != '\n') srcPtr++;
+  if(*srcPtr == '\n') *srcPtr = '\0';
   return(1);
 } /* end splitAtComma() */
 
@@ -707,6 +710,7 @@ VH_HIPvarMap::readFile(char *infilename)
 
   inLine = new char[VH_FILE_MAXLINE];
   int buffsize = VH_FILE_MAXLINE;
+  char *HIPvarFileNamePtr;
 
   activeFile = string(infilename);
   cerr << "VH_HIPvarMap::readFile(" << infilename << ")";
@@ -716,7 +720,8 @@ VH_HIPvarMap::readFile(char *infilename)
     if(strlen(inLine) > 0)
     { // expect lines of the form: AnatomyName,fileName
       if(!splitAtComma((char *)inLine,
-                   &anatomyname[num_names], &HIPvarFileName[num_names])) break;
+                   &anatomyname[num_names], &HIPvarFileNamePtr)) break;
+      HIPvarFileName[num_names] = strdup(HIPvarFileNamePtr);
     } // end if(strlen(inLine) > 0)
     // (else) blank line -- ignore
     // clear input buffer line

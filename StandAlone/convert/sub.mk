@@ -166,10 +166,6 @@ PROGRAM := $(SRCDIR)/TriSurfToVtk
 SRCS := $(SRCDIR)/TriSurfToVtk.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/HexVolToVtk
-SRCS := $(SRCDIR)/HexVolToVtk.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
 PROGRAM := $(SRCDIR)/TriSurfToOBJ
 SRCS := $(SRCDIR)/TriSurfToOBJ.cc
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -180,10 +176,6 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TetgenToTetVol
 SRCS := $(SRCDIR)/TetgenToTetVol.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/UCSDToHexVol
-SRCS := $(SRCDIR)/UCSDToHexVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/vff2nrrd
@@ -198,9 +190,14 @@ PROGRAM := $(SRCDIR)/GeoProbeToNhdr
 SRCS := $(SRCDIR)/GeoProbeToNhdr.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/UCSDToHexVol
+SRCS := $(SRCDIR)/UCSDToHexVol.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/VistaToNrrd
 SRCS := $(SRCDIR)/VistaToNrrd.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
 
 ####################################
 # added by C.Wolters, Nov.18 2004:

@@ -13,8 +13,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/VS/Dataflow/Modules/Render
 
 SRCS     += \
-	$(SRCDIR)/ICUMonitor.cc \
-	$(SRCDIR)/ExecutiveState.cc
+	$(SRCDIR)/EinthovenLeads.cc \
+	$(SRCDIR)/ExecutiveState.cc \
+	$(SRCDIR)/ICUMonitor.cc     \
+
 
 #[INSERT NEW CODE FILE HERE]
 
@@ -23,7 +25,7 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry  Core/GeomInterface \
         Core/TkExtensions
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) 
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -51,14 +51,6 @@ PROGRAM := $(SRCDIR)/SingleTet
 SRCS := $(SRCDIR)/SingleTet.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/FieldTextToBin
-SRCS := $(SRCDIR)/FieldTextToBin.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
-PROGRAM := $(SRCDIR)/GenerateMPMData
-SRCS := $(SRCDIR)/GenerateMPMData.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
 PROGRAM := $(SRCDIR)/SwapFaces
 SRCS := $(SRCDIR)/SwapFaces.cc
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -69,4 +61,12 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RemoveFaces
 SRCS := $(SRCDIR)/RemoveFaces.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/FieldTextToBin
+SRCS := $(SRCDIR)/FieldTextToBin.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/GenerateMPMData
+SRCS := $(SRCDIR)/GenerateMPMData.cc
 include $(SCIRUN_SCRIPTS)/program.mk

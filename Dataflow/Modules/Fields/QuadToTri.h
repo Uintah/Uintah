@@ -110,7 +110,7 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   vector<typename FSRC::mesh_type::Elem::index_type> buffers[2];
   buffers[0].reserve(surfsize);
   buffers[1].reserve(surfsize);
-  bool flipflop = true;
+  bool flipflop = false;
   qsmesh->synchronize(Mesh::EDGES_E);
 
   while (bi != ei)
