@@ -430,18 +430,23 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 			     SchedulerP& sched,
 			     int /*step*/, int /*nsteps*/ ) // AMR Parameters
 {
+  nofTimeSteps++ ;
 #ifndef ExactMPMArchesInitialize
   if (d_MAlab) {
-    cout << "Number of time steps = " << nofTimeSteps << endl;
-    if (!nofTimeSteps) {
-      nofTimeSteps = 1;
+    if (nofTimeSteps < 2) {
+      cout << "Calculating at time step = " << nofTimeSteps << endl;
       d_nlSolver->noSolve(level, sched);
+      d_recompile = true;
     }
-    else
+    else {
       d_nlSolver->nonlinearSolve(level, sched);
+      d_recompile = false;
+    }
   }
-  else
+  else {
     d_nlSolver->nonlinearSolve(level, sched);
+    d_recompile = false;
+  }
 #else
   d_nlSolver->nonlinearSolve(level, sched);
 #endif
@@ -643,4 +648,12 @@ Arches::paramInit(const ProcessorGroup* ,
       /* new_dw->put(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch); */;
 
   }
+}
+
+// ****************************************************************************
+// Function to return boolean for recompiling taskgraph
+// ****************************************************************************
+bool Arches::need_recompile(double time, double dt, 
+			    const GridP& grid) {
+ return d_recompile;
 }
