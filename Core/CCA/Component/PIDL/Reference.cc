@@ -53,7 +53,10 @@ Reference::Reference(const Reference& copy)
     chan = (copy.chan)->SPFactory(false);
 }
 
-Reference::~Reference(){
+Reference::~Reference()
+{
+  if(chan != NULL) 
+    delete chan;
 }
 
 Reference& Reference::operator=(const Reference& copy)
