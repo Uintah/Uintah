@@ -152,6 +152,8 @@ class ShowField : public Module
   LockingHandle<RenderVectorFieldBase>  data_vector_renderer_;
   LockingHandle<RenderTensorFieldBase>  data_tensor_renderer_;
 
+  GeomHandle data_geometry_;
+
   enum toggle_type_e {
     NODE = 0,
     EDGE,
@@ -255,6 +257,7 @@ ShowField::ShowField(GuiContext* ctx) :
   data_scalar_renderer_(0),
   data_vector_renderer_(0),
   data_tensor_renderer_(0),
+  data_geometry_(0),
   render_state_(5)
 {
   def_material_->transparency = 0.5;
@@ -557,7 +560,7 @@ ShowField::execute()
     color_map_generation_ = color_map_.get_rep()?color_map_->generation:-1;
     // Colormap was added or went away.
     text_dirty_ = true;
-    data_dirty_ = true;
+    if (vectors_on_.get() || tensors_on_.get()) { data_dirty_ = true; }
   }
 
   if (gui_node_resolution_.get() != node_resolution_) {
@@ -577,7 +580,8 @@ ShowField::execute()
 
   // check to see if we have something to do.
   if ((!nodes_dirty_) && (!edges_dirty_) && 
-      (!faces_dirty_) && (!data_dirty_))
+      (!faces_dirty_) && (!data_dirty_) &&
+      (!text_dirty_) && (!color_map_changed))
   {
     return; 
   }
@@ -705,7 +709,7 @@ ShowField::execute()
       face_id_ = ogeom_->addObj(geom, fname + name);
     }
   }  
-  if (do_data)
+  if (do_data || color_map_changed)
   {
     data_dirty_ = false;
     if (vfld_handle.get_rep() &&
@@ -744,16 +748,19 @@ ShowField::execute()
     {
       if (data_id_) ogeom_->delObj(data_id_);
       const bool transp = scalars_transparency_.get();
-      GeomHandle data =	data_scalar_renderer_->render_data(vfld_handle,
-							   fld_handle,
-							   color_map_,
-							   def_material_,
-							   sdt, sscale,
-							   data_resolution_,
-							   transp);
+      if (do_data)
+      {
+	data_geometry_ = data_scalar_renderer_->render_data(vfld_handle,
+							    fld_handle,
+							    color_map_,
+							    def_material_,
+							    sdt, sscale,
+							    data_resolution_,
+							    transp);
+      }
 
       GeomHandle gmat =
-	scinew GeomMaterial(data, def_material_);
+	scinew GeomMaterial(data_geometry_, def_material_);
       GeomHandle geom =
 	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
       data_id_ = ogeom_->addObj(geom, fname + (transp?"Transparent Scalars":"Scalars"));
