@@ -260,6 +260,9 @@ int myGoPort::go()
     cerr<<"Jacobi method failed!"<<endl;
     return 1;
   }
+  else{
+    cerr<<"Jacobi method succeeded!"<<endl;
+  }
   return 0;
 }
   
