@@ -129,8 +129,8 @@ GeomObj* GeomCylinder::clone()
 
 void GeomCylinder::get_bounds(BBox& bb)
 {
-    bb.extend_cyl(bottom, axis, rad);
-    bb.extend_cyl(top, axis, rad);
+    bb.extend_cylinder(bottom, axis, rad);
+    bb.extend_cylinder(top, axis, rad);
 }
 
 #define GEOMCYLINDER_VERSION 1
@@ -183,15 +183,21 @@ GeomObj* GeomColoredCylinders::clone()
   return new GeomColoredCylinders(*this);
 }
 
-void GeomColoredCylinders::get_bounds(BBox& bb)
+void
+GeomColoredCylinders::get_bounds(BBox& bb)
 {
-  for(unsigned int i=0;i<points_.size();i++)
-    bb.extend(points_[i]);
+  for (unsigned int i = 0; i < points_.size(); i+=2)
+  {
+    Vector axis(points_[i] - points_[i+1]);
+    bb.extend_cylinder(points_[i], axis, radius_);
+    bb.extend_cylinder(points_[i], axis, radius_);
+  }
 }
 
 #define GEOMLINES_VERSION 1
 
-void GeomColoredCylinders::io(Piostream& stream)
+void
+GeomColoredCylinders::io(Piostream& stream)
 {
 
   stream.begin_class("GeomColoredCylinders", GEOMLINES_VERSION);

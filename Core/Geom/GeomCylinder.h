@@ -95,7 +95,7 @@ public:
 
   void add(const Point &p0, MaterialHandle c0,
 	   const Point &p1, MaterialHandle c1);
-  void set_radius(double val) { radius_ = val; }
+  void set_radius(double val) { radius_ = val; reset_bbox(); }
   void set_nu_nv(int nu, int nv);
 
 #ifdef SCI_OPENGL
