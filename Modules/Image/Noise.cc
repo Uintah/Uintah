@@ -76,6 +76,8 @@ Noise::Noise(const clString& id)
 
     freq = 0;
     mag = 1;
+    min = 0;
+    max = 255;
 }
 
 Noise::Noise(const Noise& copy, int deep)
@@ -95,8 +97,8 @@ Module* Noise::clone(int deep)
 
 void Noise::do_parallel(int proc)
 {
-  int start = (newgrid->grid.dim1()-1)*proc/np;
-  int end   = (proc+1)*(newgrid->grid.dim1()-1)/np;
+  int start = (newgrid->grid.dim1())*proc/np;
+  int end   = (proc+1)*(newgrid->grid.dim1())/np;
 
   for(int x=start; x<end; x++)                
     for(int y=0; y<newgrid->grid.dim2(); y++){

@@ -142,8 +142,8 @@ double Mitchell(double x)
 
 void Subsample::do_mitchell_row(int proc)
 {
-  int start = (rg->grid.dim1()-1)*proc/np;
-  int end   = (proc+1)*(rg->grid.dim1()-1)/np;
+  int start = (rg->grid.dim1())*proc/np;
+  int end   = (proc+1)*(rg->grid.dim1())/np;
 
   double weight;
   
@@ -164,8 +164,8 @@ void Subsample::do_mitchell_row(int proc)
 
 void Subsample::do_mitchell_col(int proc)
 {
-  int start = (newgrid->grid.dim2()-1)*proc/np;
-  int end   = (proc+1)*(newgrid->grid.dim2()-1)/np;
+  int start = (newgrid->grid.dim2())*proc/np;
+  int end   = (proc+1)*(newgrid->grid.dim2())/np;
 
   double weight;
 
@@ -186,8 +186,8 @@ void Subsample::do_mitchell_col(int proc)
 
 void Subsample::do_fast(int proc)    // No filtering, but fast
 {
-  int start = (newgrid->grid.dim2()-1)*proc/np;
-  int end   = (proc+1)*(newgrid->grid.dim2()-1)/np;
+  int start = (newgrid->grid.dim2())*proc/np;
+  int end   = (proc+1)*(newgrid->grid.dim2())/np;
 
   int sy,sx;
   
@@ -364,6 +364,7 @@ void Subsample::execute()
 
     clString ft(funcname.get());
 
+    rg->compute_minmax();
     rg->get_minmax(min,max);
 
     cerr << "min/max : " << min << " " << max << "\n";

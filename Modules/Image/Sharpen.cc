@@ -97,8 +97,8 @@ Module* Sharpen::clone(int deep)
 
 void Sharpen::do_parallel(int proc)
 {
-  int start = (newgrid->grid.dim1()-1)*proc/np;
-  int end   = (proc+1)*(newgrid->grid.dim1()-1)/np;
+  int start = (newgrid->grid.dim1())*proc/np;
+  int end   = (proc+1)*(newgrid->grid.dim1())/np;
 
   for(int x=start; x<end; x++)                
     for(int y=0; y<newgrid->grid.dim2(); y++){
