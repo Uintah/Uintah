@@ -66,6 +66,7 @@ class PowerAppBase {
 
 	# State
 	set initialized 0
+	set allow_execution 0
 	set loading 0
         set saveFile ""
 
@@ -1365,18 +1366,23 @@ class PowerAppBase {
     # get called during initialization.
     variable initialized
 
+    # Flag to indicate whether modules can execute.
+    # This is usefull when loading a session to prevent modules from firing.
+    variable allow_execution
+
     # Flag to indicate when app is loading and executing a saved session.
     variable loading
 
     # The id for the call to change_indicator which controls the progress bar.
     variable indicatorID
     
-    # These point to the indicator canvas and are used to raise different canvases.
-    # One points to the attached frame and the other to the detached
+    # These point to the indicator canvas and are used to raise different
+    # canvases. One points to the attached frame and the other to the detached
     variable indicator0
     variable indicator1
 
-    # These point to the progress indicator labels of the attached and detached frames
+    # These point to the progress indicator labels of the attached and 
+    # detached frames
     variable indicatorL0
     variable indicatorL1
 
@@ -1387,13 +1393,14 @@ class PowerAppBase {
     # 3 = Error state
     variable indicate
 
-    # The progress spinner is just an image shifting upon each executing.  The cyle
-    # variable keeps track of how many shifts the image has made.
+    # The progress spinner is just an image shifting upon each executing.
+    # The cyle variable keeps track of how many shifts the image has made.
     variable cycle
 
-    # A counter of currently executing modules.  If this is positive, then the progress indicator
-    # should be spinning.  Only when all modules are complete (and this variable is equal to 0) will
-    # the "Complete" state be reached.
+    # A counter of currently executing modules.  If this is positive,
+    # then the progress indicator should be spinning.  Only when all
+    # modules are complete (and this variable is equal to 0) will the
+    # "Complete" state be reached.
     variable executing_modules
 
     # Width and height of the indicator
@@ -1423,6 +1430,5 @@ class PowerAppBase {
     # Stores saved session filename. This filename
     # should be displayed along with the title when loaded and
     # should be used when Save Session is selected.
-    variable saveFile
-    
+    variable saveFile    
 }
