@@ -109,8 +109,12 @@ namespace SCIRun {
     void* getArray();
 
     /////////
-    // It sets the array pointer to an array of the appropriate
-    // size and dimension
+    // It sets a new array pointer (for in arguments) to an array 
+    // of the appropriate size and dimension.
+    void setNewArray(void** a_ptr);
+
+    /////////
+    // It sets a pointer (for out arguments) to the recieved array 
     void setArray(void** a_ptr);
 
     //////////

@@ -117,6 +117,14 @@ void MxNScheduler::setArray(std::string distname,void** arr)
   }
 }
 
+void MxNScheduler::setNewArray(std::string distname,void** arr)
+{
+  schedList::iterator iter = entries.find(distname);
+  if (iter != entries.end()) {
+    ((*iter).second)->setNewArray(arr);
+  }
+}
+
 void* MxNScheduler::waitCompleteArray(std::string distname)
 {
   schedList::iterator iter = entries.find(distname);

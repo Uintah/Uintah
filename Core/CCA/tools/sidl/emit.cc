@@ -2228,7 +2228,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	  if (i != 1) e.out << ", ";
 	}
 	e.out << ");\n";
-	e.out << leader2 << "    _sc->d_sched->setArray(\"" << distarr->getName() << "\",(void**)(&_arr_ptr));\n";
+	e.out << leader2 << "    _sc->d_sched->setNewArray(\"" << distarr->getName() << "\",(void**)(&_arr_ptr));\n";
 	e.out << leader2 << "  }\n";
 	e.out << leader2 << "  //Unmarshal distribution metadata\n";
 	e.out << leader2 << "  int _meta_rep_dim[2];\n";

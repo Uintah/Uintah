@@ -100,6 +100,7 @@ namespace SCIRun {
     void* getArray(std::string distname);
     void* getArrayWait(std::string distname);
     void setArray(std::string distname, void** arr);
+    void setNewArray(std::string distname, void** arr);
     
     ////////////
     // (Callee Method)
