@@ -118,8 +118,8 @@ PropertyManager::thaw()
   // Assert that detach has been called on any handles to this PropertyManager.
   ASSERT(ref_cnt <= 1);
   // Clean up properties.
-  clear_transient();
   lock.lock();
+  clear_transient();
   frozen_ = false;
   lock.unlock();
 }
@@ -149,8 +149,6 @@ PropertyManager::remove( const string &name )
 void
 PropertyManager::clear_transient()
 {
-  lock.lock();
-
   map_type::iterator iter = properties_.begin();
   if (iter != properties_.end()) {
     pair<const string, PropertyBase *> p = *iter;
@@ -161,8 +159,6 @@ PropertyManager::clear_transient()
     }
     ++iter;
   }
-
-  lock.unlock();
 }
 
 

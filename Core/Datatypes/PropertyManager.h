@@ -201,8 +201,6 @@ public:
   void remove( const string & );
   int size() { return size_; }
 
-  void clear_transient();
-
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
 
@@ -214,7 +212,10 @@ private:
   int size_;
   map_type properties_;
 
+protected:
   //! A frozen PropertyManager may store transient data.
+  void clear_transient();
+
   bool frozen_;
 };
 
