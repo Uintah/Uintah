@@ -457,19 +457,27 @@ void HypoElastic::carryForward(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
     int dwi = matl->getDWIndex();
     ParticleVariable<Matrix3> pdefm_new,pstress_new;
+    ParticleVariable<double> pvolume_deformed;
+    constParticleVariable<double> pmass;
     constParticleVariable<Matrix3> pdefm,pstress;
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     old_dw->get(pdefm,         lb->pDeformationMeasureLabel,           pset);
+    old_dw->get(pstress,       lb->pStressLabel,                       pset);
+    old_dw->get(pmass,         lb->pMassLabel,                         pset);
+
     new_dw->allocateAndPut(pdefm_new,lb->pDeformationMeasureLabel_preReloc,
                                                                        pset);
-    old_dw->get(pstress,       lb->pStressLabel,                       pset);
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
     new_dw->allocateAndPut(pstress_new,lb->pStressLabel_preReloc,      pset);
+
+    double rho_orig = matl->getInitialDensity();
 
     for(ParticleSubset::iterator iter = pset->begin();
                                  iter != pset->end(); iter++){
       particleIndex idx = *iter;
       pdefm_new[idx] = pdefm[idx];
       pstress_new[idx] = pstress[idx];
+      pvolume_deformed[idx]=(pmass[idx]/rho_orig);
     }
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)), 
                 lb->delTLabel);
