@@ -280,7 +280,8 @@ LinAlgBinaryAlgo::get_compile_info(const string &function,
 
   // Code for the function.
   string class_declaration =
-    string("class " + template_name + " : public LinAlgBinaryAlgo\n") +
+    string("using namespace SCIRun;\n\n") + 
+    "class " + template_name + " : public LinAlgBinaryAlgo\n" +
     "{\n" +
     "  virtual double user_function(double x, double y)\n" +
     "  {\n" +
