@@ -33,7 +33,8 @@ $(FNSRCDIR)/fnscanner.cc: $(FNSRCDIR)/fnscanner.l $(FNSRCDIR)/fnparser.cc;
 
 SRCS     += $(SRCDIR)/Mat.c $(SRCDIR)/MusilRNG.cc $(SRCDIR)/TrigTable.cc \
 	$(SRCDIR)/LinAlg.c $(SRCDIR)/fft.c $(SRCDIR)/hf.c $(SRCDIR)/ssmult.c \
-	$(SRCDIR)/PiecewiseInterp.cc $(SRCDIR)/LinearPWI.cc $(SRCDIR)/CubicPWI.cc \
+	$(SRCDIR)/PiecewiseInterp.cc $(SRCDIR)/LinearPWI.cc \
+	$(SRCDIR)/CubicPWI.cc \
 	$(SRCDIR)/function.cc $(SRCDIR)/fnscanner.cc $(SRCDIR)/fnparser.cc
 
 

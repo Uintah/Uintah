@@ -323,7 +323,6 @@ Isosurface::initialize()
 		      new Minmax<MaskedLatticeVol<int> > );
   minmax_loader.store("MaskedLatticeVol<double>", 
 		      new Minmax<MaskedLatticeVol<double> > );
-
   // MC::TetVol
   loader.store("MC::TetVol<unsigned_char>", 
 	       new MarchingCubes<Module,TetMC<TetVol<unsigned char> > >(this));
@@ -386,6 +385,7 @@ Isosurface::initialize()
 	       new Noise<Module,HexMC<LatticeVol<double> > >(this) );
 
   // Sage::LatticeVol
+#if 0
   loader.store("Sage::LatticeVol<unsigned_char>", 
 	       new Sage<Module,LatticeVol<unsigned char> >(this) );
   loader.store("Sage::LatticeVol<short>", 
@@ -394,7 +394,7 @@ Isosurface::initialize()
 	       new Sage<Module,LatticeVol<int> >(this) );
   loader.store("Sage::LatticeVol<double>", 
 	       new Sage<Module,LatticeVol<double> >(this) );
-
+#endif
 }
 
 } // End namespace SCIRun

@@ -98,8 +98,9 @@ ScalarFieldRGT<T>::maker()
 
 template <class T>
 ScalarFieldRGT<T>::ScalarFieldRGT(const ScalarFieldRGT<T>& copy)
-  : ScalarFieldRGBase(copy), grid(copy.grid)
+  : ScalarFieldRGBase(copy)
 {
+  grid.copy(copy.grid);
 }
 
 template <class T>

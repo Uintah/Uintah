@@ -81,22 +81,24 @@ template<class T> class Array3 {
   int dm2;
   int dm3;
   void allocate();
+
+  // The copy constructor and the assignment operator have been
+  // privatized on purpose -- no one should use these.  Instead,
+  // use the default constructor and the copy method.
+  //////////
+  //Copy Constructor
+  Array3(const Array3&);
+  //////////
+  //Assignment Operator
+  Array3<T>& operator=(const Array3&);
 public:
   //////////
   //Default Constructor
   Array3();
     
   //////////
-  //Copy Constructor
-  Array3(const Array3&);
-
-  //////////
   //Constructor
   Array3(int, int, int);
-    
-  //////////
-  //Assignment Operator
-  Array3<T>& operator=(const Array3&);
     
   //////////
   //Class Destructor
@@ -112,6 +114,10 @@ public:
     return objs[d1][d2][d3];
   }
     
+  //////////
+  //Array2 Copy Method
+  void copy(const Array3&);
+
   //////////
   //Returns the number of spaces in dim1	    
   inline int dim1() const {return dm1;}
@@ -190,13 +196,6 @@ void Array3<T>::newsize(int d1, int d2, int d3)
 }
 
 template<class T>
-Array3<T>::Array3(const Array3<T>& a)
-  : dm1(a.dm1), dm2(a.dm2), dm3(a.dm3)
-{
-  allocate();
-}
-
-template<class T>
 Array3<T>::Array3(int dm1, int dm2, int dm3)
   : dm1(dm1), dm2(dm2),dm3(dm3)
 {
@@ -227,17 +226,13 @@ void Array3<T>::initialize(const T& t)
 }
 
 template<class T>
-Array3<T>& Array3<T>::operator=(const Array3<T> &copy)
+void Array3<T>::copy(const Array3<T> &copy)
 {
-  // ok, i did this, but i'm not quite sure it will work...
-  
   newsize( copy.dim1(), copy.dim2(), copy.dim3() );
-
   for(int i=0;i<dm1;i++)
     for(int j=0;j<dm2;j++)
       for(int k=0;k<dm3;k++)
         objs[i][j][k] = copy.objs[i][j][k];
-  return( *this );
 }
 
 template<class T>
