@@ -44,6 +44,7 @@ class GridSpheres : public Object, public Material {
   friend class GridSpheresDpy;
   GridSpheresDpy* dpy;
   double icellsize;
+  bool preprocessed; // indicates if it has been preprocessed or not
   
   void isect(int depth, double t,
 	     double dtdx, double dtdy, double dtdz,

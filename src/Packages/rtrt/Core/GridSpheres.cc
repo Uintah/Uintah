@@ -44,7 +44,7 @@ GridSpheres::GridSpheres(float* spheres, float* inmin, float* inmax,
   : Object(this),
     spheres(spheres),
     nspheres(nspheres), ndata(ndata), cellsize(cellsize), depth(depth),
-    radius(radius), nmatls(nmatls), var_names(var_names)
+    radius(radius), nmatls(nmatls), var_names(var_names), preprocessed(false)
 {
   counts=0;
   cells=0;
@@ -160,6 +160,8 @@ static void genmap(int depth, int idx, int cs, int*& map){
 
 void GridSpheres::preprocess(double, int&, int&)
 {
+  if (preprocessed) return;
+  preprocessed = true;
   cerr << "Building GridSpheres\n";
   float time=Time::currentSeconds();
   
