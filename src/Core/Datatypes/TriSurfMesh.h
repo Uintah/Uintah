@@ -37,6 +37,7 @@
 #include <Core/Math/MusilRNG.h>
 
 #include <vector>
+#include <set>
 
 namespace SCIRun {
 
@@ -108,6 +109,7 @@ public:
   void get_edges(Edge::array_type &array, Face::index_type idx) const;
 
   void get_neighbor(Face::index_type &neighbor, Edge::index_type idx) const;
+  void get_neighbors(Node::array_type &array, Node::index_type idx);
 
   void get_center(Point &p, Node::index_type i) const { get_point(p, i); }
   void get_center(Point &p, Edge::index_type i) const;
@@ -161,15 +163,12 @@ public:
   // Extra functionality needed by this specific geometry.
 
   Node::index_type add_find_point(const Point &p, double err = 1.0e-3);
-  void add_triangle(Node::index_type a, Node::index_type b, Node::index_type c);
+  void add_triangle(Node::index_type, Node::index_type, Node::index_type);
   void add_triangle(const Point &p0, const Point &p1, const Point &p2);
   Elem::index_type add_elem(Node::array_type a);
   virtual bool is_editable() const { return true; }
 
-  // Must call connect after adding triangles this way.
   Node::index_type add_point(const Point &p);
-  void add_triangle_unconnected(const Point &p0, const Point &p1,
-				const Point &p2);
 
   void connect(double err = 1.0e-8);
 
@@ -181,7 +180,6 @@ public:
   const Point &point(Node::index_type i) { return points_[i]; }
 
 private:
-
   bool inside3_p(int, const Point &p) const;
 
   int next(int i) { return ((i%3)==2) ? (i-2) : (i+1); }
@@ -192,6 +190,11 @@ private:
   vector<int>    neighbors_;
   //! normalized per node normal.
   vector<Vector> normals_;
+
+  void			compute_nodes();  
+  vector<set<int> >	nodes_;
+  bool			nodes_computed_p_;
+
 };
 
 typedef LockingHandle<TriSurfMesh> TriSurfMeshHandle;

@@ -48,13 +48,20 @@ TriSurfMesh::type_name(int n)
 
 
 TriSurfMesh::TriSurfMesh()
+  : points_(0),
+    faces_(0),
+    neighbors_(0),
+    nodes_(0),
+    nodes_computed_p_(false)
 {
 }
 
 TriSurfMesh::TriSurfMesh(const TriSurfMesh &copy)
   : points_(copy.points_),
     faces_(copy.faces_),
-    neighbors_(copy.neighbors_)
+    neighbors_(copy.neighbors_),
+    nodes_(copy.nodes_),
+    nodes_computed_p_(copy.nodes_computed_p_)
 {
 }
 
@@ -223,6 +230,31 @@ TriSurfMesh::get_neighbor(Face::index_type &neighbor, Edge::index_type idx) cons
 {
   neighbor = neighbors_[idx];
 }
+
+
+void
+TriSurfMesh::compute_nodes()
+{
+  if (nodes_computed_p_) return;
+  nodes_computed_p_ = false;
+  nodes_.resize(points_.size(),set<int>());
+  unsigned int nfaces = faces_.size();
+  for (unsigned int f = 0; f < nfaces; ++f)
+  {
+    nodes_[faces_[f]].insert(faces_[next(f)]);
+    nodes_[faces_[f]].insert(faces_[prev(f)]);
+  }
+}
+      
+
+//! Returns all nodes that share an edge with this node 
+void
+TriSurfMesh::get_neighbors(Node::array_type &array, Node::index_type idx)
+{
+  if (!nodes_computed_p_) compute_nodes();
+  copy(nodes_[idx].begin(), nodes_[idx].end(), array.end());
+}
+
 
 
 static double
@@ -483,6 +515,7 @@ TriSurfMesh::add_find_point(const Point &p, double err)
   else
   {
     points_.push_back(p);
+    nodes_.push_back(set<int>());
     return static_cast<Node::index_type>(points_.size() - 1);
   }
 }
@@ -494,6 +527,7 @@ TriSurfMesh::add_triangle(Node::index_type a, Node::index_type b, Node::index_ty
   faces_.push_back(a);
   faces_.push_back(b);
   faces_.push_back(c);
+  nodes_computed_p_ = false;
 }
 
 
@@ -503,6 +537,7 @@ TriSurfMesh::add_elem(Node::array_type a)
   faces_.push_back(a[0]);
   faces_.push_back(a[1]);
   faces_.push_back(a[2]);
+  nodes_computed_p_ = false;
   return static_cast<Elem::index_type>((faces_.size() - 1) / 3);
 }
 
@@ -581,6 +616,7 @@ TriSurfMesh::connect(double err)
   {
     faces_[i] = mapping[i];
   }
+  nodes_computed_p_ = false;
 }
 
 
@@ -598,14 +634,6 @@ void
 TriSurfMesh::add_triangle(const Point &p0, const Point &p1, const Point &p2)
 {
   add_triangle(add_find_point(p0), add_find_point(p1), add_find_point(p2));
-}
-
-void
-TriSurfMesh::add_triangle_unconnected(const Point &p0,
-				      const Point &p1,
-				      const Point &p2)
-{
-  add_triangle(add_point(p0), add_point(p1), add_point(p2));
 }
 
 
