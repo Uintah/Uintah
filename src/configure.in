@@ -900,8 +900,8 @@ args=`echo "$*" | sed 's% %_%g'`
 myargs=`echo $args | sed 's%\^% %g'`
 IFS=' '
 
-DIRNAME_IS=`type -p dirname`
-BASENAME_IS=`type -p dirname`
+DIRNAME_IS=`type dirname | sed 's%^.* %%'`
+BASENAME_IS=`type dirname | sed 's%^.* %%'`
 
 ## We use both of these in a number of spots, so I think this is fair:
 ## (Eventually we could write our own if necessary...
@@ -928,7 +928,7 @@ if test "$F77" = ""; then
 	    variable. Using default... $F77)
 fi
 
-CC_REALLY_IS=`type -p $CC`
+CC_REALLY_IS=`type $CC | sed 's%^.* %%'`
 # Going to look for "as", "ld", etc in this dir:
 COMPILER_DIR=`dirname $CC_REALLY_IS`
 
@@ -1396,13 +1396,13 @@ fi
 # Most fortran compilers need an "_" for C function names.
 FORTRAN_UNDERSCORE=1
 
-if test ! -e "`type -p $CC`"; then
+if test ! -e "`type $CC | sed 's%^.* %%'`"; then
   SCI_MSG_ERROR(Could not find the specified C compiler ($CC))
 fi
-if test ! -e "`type -p $CXX`"; then
+if test ! -e "`type $CXX | sed 's%^.* %%'`"; then
   SCI_MSG_ERROR(Could not find the specified C++ compiler (CC))
 fi
-if test ! -e "`type -p $F77`"; then
+if test ! -e "`type $F77 | sed 's%^.* %%'`"; then
   SCI_MSG_ERROR(Could not find the specified Fortran compiler ($F77))
 fi
 
@@ -1680,7 +1680,7 @@ else
 fi
 
 if test "$PERL" = "perl"; then
-  PERL=`type -p perl`
+  PERL=`type perl | sed 's%^.* %%'`
 fi
 
 AC_CHECK_PROG(ETAGS, etags, etags)
