@@ -91,10 +91,15 @@ private:
   GridP getGrid();
   void setupColors();
   MaterialHandle getColor(clString color, int type);
+  void add_type(string &type_list,const TypeDescription *subtype);
   void setVars(GridP grid);
   void getnunv(int* nu, int* nv);
-  void graph(string varname, vector<string> mat_list, string index);
+  void graph(string varname, vector<string> mat_list,
+	     vector<string> type_list,string index);
   bool is_cached(string name, string& data);
+  void cache_value(string where, vector<double>& values, string &data);
+  void cache_value(string where, vector<Vector>& values);
+  void cache_value(string where, vector<Matrix3>& values);
   string vector_to_string(vector< int > data);
   string vector_to_string(vector< string > data);
   string vector_to_string(vector< double > data);
@@ -300,6 +305,24 @@ MaterialHandle GridVisualizer::getColor(clString color, int type) {
 			   Color(.5,.5,.5), 20);
 }
 
+void GridVisualizer::add_type(string &type_list,const TypeDescription *subtype)
+{
+  switch ( subtype->getType() ) {
+  case TypeDescription::double_type:
+    type_list += " scaler";
+    break;
+  case TypeDescription::Vector:
+    type_list += " vector";
+    break;
+  case TypeDescription::Matrix3:
+    type_list += " matrix3";
+    break;
+  default:
+    cerr<<"Error in GridVisualizer::setVars(): Vartype not implemented.  Aborting process.\n";
+    abort();
+  }
+}  
+
 void GridVisualizer::setVars(GridP grid) {
   names.clear();
   types.clear();
@@ -307,6 +330,7 @@ void GridVisualizer::setVars(GridP grid) {
 
   string varNames("");
   string matls("");
+  string type_list("");
   const Patch* patch = *(grid->getLevel(0)->patchesBegin());
   
   for(int i = 0; i< names.size(); i++) {
@@ -318,6 +342,7 @@ void GridVisualizer::setVars(GridP grid) {
 	ostringstream mat;
 	mat << " " << archive->queryNumMaterials(names[i], patch, time);
 	matls += mat.str();
+	add_type(type_list,types[i]->getSubType());
       }
       break;
     case TypeDescription::CCVariable:
@@ -327,6 +352,7 @@ void GridVisualizer::setVars(GridP grid) {
 	ostringstream mat;
 	mat << " " << archive->queryNumMaterials(names[i], patch, time);
 	matls += mat.str();
+	add_type(type_list,types[i]->getSubType());
       }
       break;
     case TypeDescription::FCVariable:
@@ -336,6 +362,7 @@ void GridVisualizer::setVars(GridP grid) {
 	ostringstream mat;
 	mat << " " << archive->queryNumMaterials(names[i], patch, time);
 	matls += mat.str();
+	add_type(type_list,types[i]->getSubType());
       }
       break;
     }
@@ -344,6 +371,7 @@ void GridVisualizer::setVars(GridP grid) {
   cerr << "varNames = " << varNames << endl;
   TCL::execute(id + " setVar_list " + varNames.c_str());
   TCL::execute(id + " setMat_list " + matls.c_str());  
+  TCL::execute(id + " setType_list " + type_list.c_str());  
 }
 
 void GridVisualizer::getnunv(int* nu, int* nv) {
@@ -616,13 +644,17 @@ void GridVisualizer::tcl_command(TCLArgs& args, void* userdata)
     args[4].get_int(num_mat);
     cerr << "Extracting " << num_mat << " materals:";
     vector< string > mat_list;
-    for (int i = 5; i < 5+num_mat; i++) {
+    vector< string > type_list;
+    for (int i = 5; i < 5+(num_mat*2); i++) {
       string mat(args[i]());
       mat_list.push_back(mat);
+      i++;
+      string type(args[i]());
+      type_list.push_back(type);
     }
     cerr << endl;
     cerr << "Graphing " << varname << " with materials: " << vector_to_string(mat_list) << endl;
-    graph(varname,mat_list,index);
+    graph(varname,mat_list,type_list,index);
   }
   else {
     Module::tcl_command(args, userdata);
@@ -639,6 +671,34 @@ bool GridVisualizer::is_cached(string name, string& data) {
     data = iter->second;
     return true;
   }
+}
+
+void GridVisualizer::cache_value(string where, vector<double>& values,
+				 string &data) {
+  data = vector_to_string(values);
+  material_data_list[where] = data;
+}
+
+void GridVisualizer::cache_value(string where, vector<Vector>& values) {
+  string data = vector_to_string(values,"length");
+  material_data_list[where+" length"] = data;
+  data = vector_to_string(values,"length2");
+  material_data_list[where+" length2"] = data;
+  data = vector_to_string(values,"x");
+  material_data_list[where+" x"] = data;
+  data = vector_to_string(values,"y");
+  material_data_list[where+" y"] = data;
+  data = vector_to_string(values,"z");
+  material_data_list[where+" z"] = data;
+}
+
+void GridVisualizer::cache_value(string where, vector<Matrix3>& values) {
+  string data = vector_to_string(values,"Determinant");
+  material_data_list[where+" Determinant"] = data;
+  data = vector_to_string(values,"Trace");
+  material_data_list[where+" Trace"] = data;
+  data = vector_to_string(values,"Norm");
+  material_data_list[where+" Norm"] = data;
 }
 
 string GridVisualizer::vector_to_string(vector< int > data) {
@@ -720,7 +780,8 @@ string GridVisualizer::currentNode_str() {
   return ostr.str();
 }
 
-void GridVisualizer::graph(string varname, vector <string> mat_list, string index) {
+void GridVisualizer::graph(string varname, vector <string> mat_list,
+			   vector <string> type_list, string index) {
 
   /*
     template<class T>
@@ -737,6 +798,7 @@ void GridVisualizer::graph(string varname, vector <string> mat_list, string inde
     if (names[i] == varname)
       td = types[i];
   
+  string name_list("");
   const TypeDescription* subtype = td->getSubType();
   switch ( subtype->getType() ) {
   case TypeDescription::double_type:
@@ -744,19 +806,18 @@ void GridVisualizer::graph(string varname, vector <string> mat_list, string inde
     // loop over all the materials in the mat_list
     for(int i = 0; i < mat_list.size(); i++) {
       string data;
-      if (!is_cached(varname+mat_list[i]+currentNode_str(),data)) {
+      if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i],data)) {
 	// query the value and then cache it
 	vector< double > values;
 	int matl = atoi(mat_list[i].c_str());
 	archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
 	cerr << "Received data.  Size of data = " << values.size() << endl;
-	data = vector_to_string(values);
-	material_data_list[varname+mat_list[i]+currentNode_str()] = data;
-      }
-      else {
-	// use cached value that was put into data by is_cached
+	cache_value(currentNode_str()+" "+varname+" "+mat_list[i],values,data);
+      } else {
+	cerr << "Cache hit\n";
       }
       TCL::execute(id+" set_var_val "+data.c_str());
+      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
   case TypeDescription::Vector:
@@ -764,19 +825,21 @@ void GridVisualizer::graph(string varname, vector <string> mat_list, string inde
     // loop over all the materials in the mat_list
     for(int i = 0; i < mat_list.size(); i++) {
       string data;
-      if (!is_cached(varname+mat_list[i]+currentNode_str(),data)) {
+      if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i]+" "
+		     +type_list[i],data)) {
 	// query the value and then cache it
 	vector< Vector > values;
 	int matl = atoi(mat_list[i].c_str());
 	archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
 	cerr << "Received data.  Size of data = " << values.size() << endl;
-	data = vector_to_string(values,"length");
-	material_data_list[varname+mat_list[i]+currentNode_str()] = data;
-      }
-      else {
-	// use cached value that was put into data by is_cached
+	// could integrate this in with the cache_value somehow
+	data = vector_to_string(values,type_list[i]);
+	cache_value(currentNode_str()+" "+varname+" "+mat_list[i],values);
+      } else {
+	cerr << "Cache hit\n";
       }
       TCL::execute(id+" set_var_val "+data.c_str());
+      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
   case TypeDescription::Matrix3:
@@ -784,19 +847,23 @@ void GridVisualizer::graph(string varname, vector <string> mat_list, string inde
     // loop over all the materials in the mat_list
     for(int i = 0; i < mat_list.size(); i++) {
       string data;
-      if (!is_cached(varname+mat_list[i]+currentNode_str(),data)) {
+      if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i]+" "
+		     +type_list[i],data)) {
 	// query the value and then cache it
 	vector< Matrix3 > values;
 	int matl = atoi(mat_list[i].c_str());
 	archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
 	cerr << "Received data.  Size of data = " << values.size() << endl;
-	data = vector_to_string(values,"Norm");
-	material_data_list[varname+mat_list[i]+currentNode_str()] = data;
+	// could integrate this in with the cache_value somehow
+	data = vector_to_string(values,type_list[i]);
+	cache_value(currentNode_str()+" "+varname+" "+mat_list[i],values);
       }
       else {
 	// use cached value that was put into data by is_cached
+	cerr << "Cache hit\n";
       }
       TCL::execute(id+" set_var_val "+data.c_str());
+      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
   case TypeDescription::Point:
@@ -806,7 +873,7 @@ void GridVisualizer::graph(string varname, vector <string> mat_list, string inde
     cerr<<"Unknown var type\n";
     }// else { Tensor,Other}
   TCL::execute(id+" graph_data "+index.c_str()+" "+varname.c_str()+" "+
-	       vector_to_string(mat_list).c_str());
+	       name_list.c_str());
   
 }
 
@@ -864,6 +931,9 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
 
 //
 // $Log$
+// Revision 1.7  2000/11/09 00:01:40  bigler
+// Fixed a bug with caching values
+//
 // Revision 1.6  2000/10/20 19:38:37  bigler
 // Fixed a bug that was preventing Matrix3 data from being graphed.
 //
