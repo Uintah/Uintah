@@ -39,7 +39,7 @@ const TypeDescription* TypeDescription::lookupType(const std::string& t)
 
 TypeDescription::Register::Register(const TypeDescription* td)
 {
-   cerr << "Register: td=" << td << ", name=" << td->getName() << '\n';
+   //cerr << "Register: td=" << td << ", name=" << td->getName() << '\n';
    if(!types)
      types=new map<string, const TypeDescription*>;
    (*types)[td->getName()]=td;
@@ -51,6 +51,11 @@ TypeDescription::Register::~Register()
 
 //
 // $Log$
+// Revision 1.5  2000/05/21 08:19:09  sparker
+// Implement NCVariable read
+// Do not fail if variable type is not known
+// Added misc stuff to makefiles to remove warnings
+//
 // Revision 1.4  2000/05/20 23:08:12  guilkey
 // Fixed type database initialization.
 //

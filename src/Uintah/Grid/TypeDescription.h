@@ -47,6 +47,7 @@ namespace Uintah {
 	 double_type,
 	 bool_type,
 	 int_type,
+	 Unknown,
 	 Other
       };
 
@@ -90,6 +91,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.4  2000/05/21 08:19:09  sparker
+// Implement NCVariable read
+// Do not fail if variable type is not known
+// Added misc stuff to makefiles to remove warnings
+//
 // Revision 1.3  2000/05/20 08:09:29  sparker
 // Improved TypeDescription
 // Finished I/O

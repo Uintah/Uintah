@@ -4,6 +4,7 @@
 #include <Uintah/Grid/Array3.h>
 #include <Uintah/Grid/NCVariableBase.h>
 #include <Uintah/Grid/TypeDescription.h>
+#include <Uintah/Interface/InputContext.h>
 #include <Uintah/Interface/OutputContext.h>
 #include <SCICore/Exceptions/ErrnoException.h>
 #include <SCICore/Exceptions/InternalError.h>
@@ -194,6 +195,7 @@ WARNING
       };
      
       virtual void emit(OutputContext&);
+      virtual void read(InputContext&);
       static TypeDescription::Register registerMe;
    private:
    };
@@ -304,10 +306,38 @@ WARNING
 	    throw InternalError("Cannot yet write non-flat objects!\n");
 	 }
       }
+
+   template<class T>
+      void
+      NCVariable<T>::read(InputContext& oc)
+      {
+	 const TypeDescription* td = fun_getTypeDescription((T*)0);
+	 if(td->isFlat()){
+	    // This could be optimized...
+	    IntVector l(getLowIndex());
+	    IntVector h(getHighIndex());
+	    for(int x=l.x();x<h.x();x++){
+	       for(int y=l.y();y<h.y();y++){
+		  size_t size = sizeof(T)*(h.z()-l.z());
+		  ssize_t s=::read(oc.fd, &(*this)[IntVector(x,y,l.z())], size);
+		  if(size != s)
+		     throw ErrnoException("NCVariable::emit (write call)", errno);
+		  oc.cur+=size;
+	       }
+	    }
+	 } else {
+	    throw InternalError("Cannot yet write non-flat objects!\n");
+	 }
+      }
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.22  2000/05/21 08:19:09  sparker
+// Implement NCVariable read
+// Do not fail if variable type is not known
+// Added misc stuff to makefiles to remove warnings
+//
 // Revision 1.21  2000/05/20 08:09:22  sparker
 // Improved TypeDescription
 // Finished I/O
