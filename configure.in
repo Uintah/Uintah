@@ -1293,7 +1293,6 @@ case $host in
     NUM_CPUS=1
     ;;
   *-darwin*)
-    echo "Darwin"
     NUM_CPUS=2
     HAVE_OSX="yes"
     ;;
@@ -2424,10 +2423,10 @@ case $host in
   *-darwin*)
 	;;
   *)
-	SCI_CHECK_HEADERS(,values.h malloc.h,,,non-optional)
+	SCI_CHECK_HEADERS(,values.h malloc.h,,,not-optional)
 	;;
 esac
- 
+
 SCI_CHECK_HEADERS(,inttypes.h stdint.h,,,optional)
 
 ##  --  required STL headers 
