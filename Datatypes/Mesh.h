@@ -32,8 +32,10 @@ struct Element {
     Mesh* mesh;
     Element(Mesh*, int, int, int, int);
     Element(const Element&, Mesh* mesh);
+#if 0
     void* operator new(size_t);
     void operator delete(void*, size_t);
+#endif
     int face(int);
 
     double volume();
@@ -48,9 +50,20 @@ struct Node {
     Point p;
     Node(const Point&);
     Array1<int> elems;
+
+    int ndof;
+    enum NodeType {
+	VSource,
+	ISource,
+	Interior,
+    };
+    NodeType nodetype;
+    double value;
     Node(const Node&);
+#if 0
     void* operator new(size_t);
     void operator delete(void*, size_t);
+#endif
 };
 
 void Pio(Piostream&, Node*&);
@@ -70,8 +83,8 @@ public:
     Array1<Node*> nodes;
     Array1<Element*> elems;
     Array1<Array1<double> > cond_tensors;
-//    int have_all_neighbors;
-//    void compute_face_neighbors();
+    int have_all_neighbors;
+    void compute_face_neighbors();
     Mesh();
     Mesh(const Mesh&);
     Mesh(int nnodes, int nelems);
@@ -91,10 +104,11 @@ public:
 
     int insert_delaunay(int node);
     int insert_delaunay(const Point& p);
-    void remove_delaunay(int node);
+    void remove_delaunay(int node, int fill);
     void pack_nodes();
     void pack_elems();
     int face_idx(int, int);
+    void add_node_neighbors(int node, Array1<int>& idx);
 
     // Persistent representation...
     virtual void io(Piostream&);
