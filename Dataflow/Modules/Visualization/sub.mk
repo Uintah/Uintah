@@ -16,11 +16,11 @@ SRCS     += \
 	$(SRCDIR)/GenStandardColorMaps.cc\
 	$(SRCDIR)/GenTransferFunc.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
-	$(SRCDIR)/ShowField.cc\
 	$(SRCDIR)/Streamline.cc\
 	$(SRCDIR)/TexCuttingPlanes.cc\
 	$(SRCDIR)/TextureVolVis.cc\
 [INSERT NEW CODE FILE HERE]
+#	$(SRCDIR)/ShowField.cc\
 #	$(SRCDIR)/IsoSurface.cc\
 
 
