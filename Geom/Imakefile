@@ -21,7 +21,7 @@ OBJS = Arrows.o  Color.o  Cone.o  Container.o  Cylinder.o  Disc.o  \
 	RenderMode.o  Sphere.o Switch.o  \
 	Tetra.o  Torus.o  Tri.o  Triangles.o  TriStrip.o  Tube.o  \
 	VertexPrim.o  View.o  \
-	$(OPENGLOBJS) $(X11OBJS)
+	TCLGeom.o  $(OPENGLOBJS) $(X11OBJS)
 SRCS = Arrows.cc Color.cc Cone.cc Container.cc Cylinder.cc Disc.cc \
 	Geom.cc GeomRaytracer.cc Grid.cc Group.cc \
 	HeadLight.cc Light.cc Lighting.cc Line.cc Material.cc \
@@ -29,12 +29,19 @@ SRCS = Arrows.cc Color.cc Cone.cc Container.cc Cylinder.cc Disc.cc \
 	RenderMode.cc Sphere.cc Switch.cc \
 	Tetra.cc Torus.cc Tri.cc Triangles.cc TriStrip.cc Tube.cc \
 	VertexPrim.cc View.cc \
-	$(OPENGLSRCS) $(X11SRCS)
+	TCLGeom.cc $(OPENGLSRCS) $(X11SRCS)
+SO_LIBS = ../Geometry/libGeometry.a \
+	../Multitask/libMultitask.a ../Malloc/libMalloc.a \
+	../Math/libMath.a ../TCL/libTCL.a ../Classlib/libClasslib.a \
+	../Dataflow/libDataflow.a ../Classlib/libClasslib.a \
+	../tcl/sci/libscitk.a ../tcl/itcl/src/libitcl.a \
+	../tcl/tcl/libtcl.a ../tcl/tk/libtk.a 
+SO_LDFLAGS = -lGLU -lGL -lX11 -lC -lm -;c
 
 LIBNAME = Geom
 
 SCIDependTarget($(SRCS))
-SCINormalLibraryTarget($(LIBNAME),$(OBJS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS), $(SO_LIBS), $(SO_LDFLAGS))
 
 #else
 all:

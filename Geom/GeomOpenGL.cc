@@ -304,23 +304,37 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    double h=1.0-headlength;
 	    double w2h2=w*w+h*h;
 	    for(int i=0;i<n;i++){
-		glBegin(GL_TRIANGLE_FAN);
-		Vector n(directions[i]*w2h2+v1[i]+v2[i]);
+		glBegin(GL_TRIANGLES);
+		Vector dn(directions[i]*w2h2);
+		Vector n(dn+v1[i]+v2[i]);
 		glNormal3d(n.x(), n.y(), n.z());
 		di->set_matl(back_matls[i].get_rep());
-		Point from(positions[i]+directions[i]);
-		glVertex3d(from.x(), from.y(), from.z());
-		from-=directions[i]*h;
+
+		Point top(positions[i]+directions[i]);
+		Point from=top-directions[i]*h;
 		Point to(from+directions[i]);
 		Point p1(from+v1[i]);
-		glVertex3d(p1.x(), p1.y(), p1.z());
 		Point p2(from+v2[i]);
-		glVertex3d(p2.x(), p2.y(), p2.z());
-		Point p3(from-v1[i]);
-		glVertex3d(p3.x(), p3.y(), p3.z());
-		Point p4(from-v2[i]);
-		glVertex3d(p4.x(), p4.y(), p4.z());
+		glVertex3d(top.x(), top.y(), top.z());
 		glVertex3d(p1.x(), p1.y(), p1.z());
+		glVertex3d(p2.x(), p2.y(), p2.z()); // 1st tri
+		n=dn-v1[i]+v2[i];
+		glNormal3d(n.x(), n.y(), n.z());
+		Point p3(from-v1[i]);
+		glVertex3d(top.x(), top.y(), top.z());
+		glVertex3d(p2.x(), p2.y(), p2.z());
+		glVertex3d(p3.x(), p3.y(), p3.z()); // 2nd tri
+		n=dn-v1[i]-v2[i];
+		glNormal3d(n.x(), n.y(), n.z());
+		Point p4(from-v2[i]);
+		glVertex3d(top.x(), top.y(), top.z());
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		glVertex3d(p4.x(), p4.y(), p4.z()); // 3rd tri
+		n=dn+v1[i]-v2[i];
+		glNormal3d(n.x(), n.y(), n.z());
+		glVertex3d(top.x(), top.y(), top.z());
+		glVertex3d(p4.x(), p4.y(), p4.z());
+		glVertex3d(p1.x(), p1.y(), p1.z()); // 4th tri
 		glEnd();
 	    }
 	} else {
@@ -1245,7 +1259,7 @@ void PointLight::opengl_setup(const View&, DrawInfoOpenGL*, int& idx)
 void HeadLight::opengl_setup(const View& view, DrawInfoOpenGL*, int& idx)
 {
     int i=idx++;
-    Point p(view.eyep);
+    Point p(view.eyep());
     float f[4];
     f[0]=p.x(); f[1]=p.y(); f[2]=p.z(); f[3]=1.0;
     glLightfv(GL_LIGHT0+i, GL_POSITION, f);
