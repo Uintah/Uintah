@@ -7,7 +7,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := PSECommon/Modules/Fields
 
-SRCS     += $(SRCDIR)/ClipField.cc $(SRCDIR)/Downsample.cc \
+SRCS     += $(SRCDIR)/Downsample.cc \
 	$(SRCDIR)/ExtractSurfs.cc $(SRCDIR)/FieldFilter.cc \
 	$(SRCDIR)/FieldGainCorrect.cc $(SRCDIR)/FieldMedianFilter.cc \
 	$(SRCDIR)/FieldRGAug.cc $(SRCDIR)/FieldSeed.cc \
@@ -27,6 +27,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2.2.2  2000/09/11 16:17:49  kuehne
+# updates to field redesign
+#
 # Revision 1.2.2.1  2000/06/07 17:28:46  kuehne
 # Added GenField module.  Creates a scalar field from a specified equation and bounds.
 #
