@@ -1539,7 +1539,7 @@ proc moduleHelp { modid } {
 }
 
 proc moduleDestroy {modid} {
-    global Subnet CurrentlySelectedModules
+    global Subnet CurrentlySelectedModules Disabled Notes
     networkHasChanged
     if [isaSubnetIcon $modid] {
 	foreach submod $Subnet(Subnet$Subnet(${modid}_num)_Modules) {
@@ -1567,7 +1567,8 @@ proc moduleDestroy {modid} {
     array unset Subnet ${modid}_*
 
     array unset Disabled $modid
-    array unset Notes $modid*
+    array unset Notes $modid
+    array unset Notes $modid-*
 
     $modid delete
     if { ![isaSubnetIcon $modid] } {
