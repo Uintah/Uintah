@@ -31,9 +31,11 @@ using namespace SCIRun;
 // Default constructor for SmagorinkyModel
 //****************************************************************************
 SmagorinskyModel::SmagorinskyModel(const ArchesLabel* label, 
+				   const MPMArchesLabel* MAlb,
 				   PhysicalConstants* phyConsts):
                                     TurbulenceModel(), 
-                                    d_lab(label), d_physicalConsts(phyConsts)
+                                    d_lab(label), d_MAlab(MAlb),
+				    d_physicalConsts(phyConsts)
 {
 }
 
@@ -148,6 +150,10 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(const LevelP& level,
       tsk->requires(new_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
 		    Ghost::AroundCells,
 		    numGhostCells);
+      // for multimaterial
+      if (d_MAlab)
+	tsk->requires(new_dw, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
+		      Ghost::None, zeroGhostCells);
 
       // Computes
       tsk->computes(new_dw, d_lab->d_viscosityCTSLabel, matlIndex, patch);
@@ -295,6 +301,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
   SFCZVariable<double> wVelocity;
   CCVariable<double> density;
   CCVariable<double> viscosity;
+  CCVariable<double> voidFraction;
 
   // Get the velocity, density and viscosity from the old data warehouse
   int matlIndex = 0;
@@ -310,7 +317,9 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	      zeroGhostCells);
   new_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch, Ghost::None,
 	      zeroGhostCells);
-
+  if (d_MAlab)
+    new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
+		Ghost::None, zeroGhostCells);
   // Get the PerPatch CellInformation data
   PerPatch<CellInformationP> cellInfoP;
   //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -374,35 +383,24 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		 &d_CF, &d_factorMesh, &d_filterl);
 
 
-#ifdef multimaterialform
-  if (d_mmInterface) {
+  if (d_MAlab) {
     IntVector indexLow = patch->getCellLowIndex();
     IntVector indexHigh = patch->getCellHighIndex();
-    MultiMaterialVars* mmVars = d_mmInterface->getMMVars();
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
 	  // Store current cell
 	  IntVector currCell(colX, colY, colZ);
-	  viscosity[currCell] *=  mmVars->voidFraction[currCell];
+	  viscosity[currCell] *=  voidFraction[currCell];
 	}
       }
     }
-#endif
+  }
 
 #ifdef ARCHES_PRES_DEBUG
   // Testing if correct values have been put
   cerr << " AFTER COMPUTE TURBULENCE SUBMODEL " << endl;
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    cerr << "Viscosity for ii = " << ii << endl;
-    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-      for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-	cerr.width(10);
-	cerr << viscosity[IntVector(ii,jj,kk)] << " " ; 
-      }
-      cerr << endl;
-    }
-  }
+  viscosity.print(cerr);
 #endif
 
   // Put the calculated viscosityvalue into the new data warehouse
@@ -496,6 +494,8 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup* pc,
 		      domLo.get_pointer(), domHi.get_pointer(),
 		      cellinfo->dxpw.get_objs(), cellinfo->dyps.get_objs(), 
 		      cellinfo->dzpb.get_objs(), 
+		      cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+		      cellinfo->stb.get_objs(),
 		      &d_CFVar, &d_factorMesh, &d_filterl);
 
 

@@ -264,6 +264,12 @@ ArchesLabel::ArchesLabel()
   d_newCCWVelocityLabel = scinew VarLabel("newCCWVelocity",
 				CCVariable<double>::getTypeDescription() );
 
+  // multimaterial labels
+  d_mmcellTypeLabel = scinew VarLabel("mmcellType",
+				      CCVariable<int>::getTypeDescription() );
+  d_mmgasVolFracLabel = scinew VarLabel("mmgasVolFrac",
+					CCVariable<double>::getTypeDescription() );
+
 }
 
 //****************************************************************************

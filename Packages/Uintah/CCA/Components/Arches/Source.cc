@@ -916,6 +916,7 @@ Source::addPressureSource(const ProcessorGroup* ,
 	}
       }
     }
+    // set bulkvolume to zero if i,j,k or i-1,j,k equals to multimaterial wall
     FORT_ADDPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
 		      domLoUng.get_pointer(), domHiUng.get_pointer(),
 		      idxLoU.get_pointer(), idxHiU.get_pointer(),
@@ -952,4 +953,16 @@ Source::addPressureSource(const ProcessorGroup* ,
   default:
     throw InvalidValue("Invalid index in Source::calcPressGrad");
   }
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// Add multimaterial source term
+void 
+Source::computemmMomentumSource(const ProcessorGroup* pc,
+				const Patch* patch,
+				int index,
+				CellInformation* cellinfo,
+				ArchesVariables* vars) {
+  // add in su and sp terms from multimaterial based on index
 }
