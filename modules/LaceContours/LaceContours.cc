@@ -120,7 +120,7 @@ void LaceContours::lace_contours(const ContourSetHandle& contour,
 			 contour->contours[i-1][k].x())+
 	             Sqr(contour->contours[i][(j+1)%sz_top].y()-
 			 contour->contours[i-1][k].y());
-	   if (d1<d2 || jdone) { // bottom moves
+	   if ((d1<d2 || jdone) && !kdone) { // bottom moves
 	       surf->add_triangle(row[i]+j,row[i-1]+k,row[i-1]+((k+1)%sz_bot));
 	       k=(k+1)%sz_bot;
 	       if (k==bot) kdone=1;
