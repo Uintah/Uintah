@@ -6,6 +6,7 @@
 #include <PSECore/share/share.h>
 
 #include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/AVLTree.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/Module.h>
 
@@ -14,6 +15,38 @@ namespace PSECore {
 
     using SCICore::Containers::clString;
     using SCICore::Containers::Array1;
+    using SCICore::Containers::AVLTree;
+    using SCICore::Containers::AVLTreeIter;
+
+    typedef struct {
+      clString name;
+      clString datatype;
+      iport_maker maker;
+    } IPortInfo;
+
+    typedef struct {
+      clString name;
+      clString datatype;
+      oport_maker maker;
+    } OPortInfo;
+
+    typedef struct {
+      clString packageName;
+      clString categoryName;
+      clString moduleName;
+      ModuleMaker maker;
+      clString uiFile;
+      std::map<int,IPortInfo*>* iports;
+      std::map<int,OPortInfo*>* oports;
+    } ModuleInfo;
+
+    typedef AVLTree<clString,ModuleInfo*> Category;
+    typedef AVLTree<clString,Category*> Package;
+    typedef AVLTree<clString,Package*> Packages;
+    
+    typedef AVLTreeIter<clString,ModuleInfo*> CategoryIter;
+    typedef AVLTreeIter<clString,Category*> PackageIter;
+    typedef AVLTreeIter<clString,Package*> PackagesIter;
 
     class PSECORESHARE PackageDB {
       public:
@@ -21,13 +54,7 @@ namespace PSECore {
         ~PackageDB(void);
 
         void loadPackage(const clString& packagePath);
-
-        void registerModule(const clString& packageName,
-                            const clString& categoryName,
-                            const clString& moduleName,
-                            ModuleMaker moduleMaker,
-                            const clString& tclUIFile);
-
+        void registerModule(ModuleInfo* info);
 	void createAlias(const clString& fromPackageName,
 			 const clString& fromCategoryName,
 			 const clString& fromModuleName,
@@ -44,8 +71,7 @@ namespace PSECore {
         Array1<clString> categoryNames(const clString& packageName) const;
         Array1<clString> moduleNames(const clString& packageName,
                                      const clString& categoryName) const;
-
-      private:
+      public:
         void *             d_db;
         Array1<clString>   d_packageList;
     };
