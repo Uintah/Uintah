@@ -42,10 +42,40 @@
 
 #include <Core/Math/MiscMath.h>
 #include <math.h>
-
+#ifdef __sgi
+#include <ieeefp.h>
+#endif
 
 namespace SCIRun {
 
+
+#ifdef __sgi
+SCICORESHARE double MakeReal(double value)
+{
+  if (!finite(value))
+  {
+    fpclass_t c = fpclass(value);
+    if (c == FP_PINF)
+    {
+      value = (double)(0x7fefffffffffffffULL);
+    }
+    else if (c == FP_NINF)
+    {
+      value = (double)(0x0010000000000000ULL);
+    }
+    else
+    {
+      value = 0.0;
+    }
+  }      
+    const int is_inf = isinf(value);
+    if (is_inf == 1) 
+    if (is_inf == -1) value = (double)(0x0010000000000000ULL);
+    else value = 0.0; // Assumed NaN
+  }
+  return value;
+}
+#else
 SCICORESHARE double MakeReal(double value)
 {
   if (!finite(value))
@@ -57,5 +87,6 @@ SCICORESHARE double MakeReal(double value)
   }
   return value;
 }
+#endif
 
 } // namespace SCIRun
