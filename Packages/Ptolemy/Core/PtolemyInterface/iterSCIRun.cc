@@ -16,7 +16,9 @@
 
 #include <iostream>
 
+using namespace SCIRun;
 
+typedef string* stringPtr;
 
 JNIEXPORT jint JNICALL
 Java_ptolemy_scirun_IterateSCIRun_getScirun(JNIEnv *env, jobject obj, jstring name, jstring file, jstring reader, jint run)
@@ -37,12 +39,18 @@ Java_ptolemy_scirun_IterateSCIRun_getScirun(JNIEnv *env, jobject obj, jstring na
 	return 1;
 }
 
-JNIEXPORT jobjectArray JNICALL 
-Java_ptolemy_scirun_IterateSCIRun_runOnFiles (JNIEnv *env, jobject obj, jobjectArray inputNames, jint size)
+JNIEXPORT jint JNICALL 
+Java_ptolemy_scirun_IterateSCIRun_runOnFiles
+  (JNIEnv *env, jobject obj, jobjectArray input1Names, jint size1, jobjectArray input2Names, jint size2, jint numParams)
 {
-	jobjectArray result;
+	stringPtr input1;
+	stringPtr input2;
 	jstring tempString;
 	
+	//stuff for a result array that is the strings of the files saved.  This may or may not be necessary?
+	/*
+	
+	jobjectArray result;
 	jclass strArrCls = env->FindClass("Ljava/lang/String;");
 	if(strArrCls == NULL){
 		return NULL;  //return fail value
@@ -52,31 +60,41 @@ Java_ptolemy_scirun_IterateSCIRun_runOnFiles (JNIEnv *env, jobject obj, jobjectA
 		return NULL;  //probably out of memory so fail
 	}
 	
+	if(i==size-1)
+		env->SetObjectArrayElement(result,0,tempString);
+	else
+		env->SetObjectArrayElement(result,i+1,tempString);
+	
+	*/
 	
 	//for each thing in the input work on it
-	for(jint i = 0; i < size; i++){
-		tempString = (jstring)env->GetObjectArrayElement(inputNames, i);
-		
-		std::string temp = JNIUtils::GetStringNativeChars(env, tempString);
-		std::cout << "IN C: " << temp << std::endl;
-		
-		if(i==size-1)
-			env->SetObjectArrayElement(result,0,tempString);
-		else
-			env->SetObjectArrayElement(result,i+1,tempString);
+	input1 = new string[size1];
+	for(jint i = 0; i < size1; i++){
+		tempString = (jstring)env->GetObjectArrayElement(input1Names, i);
+		input1[i] = JNIUtils::GetStringNativeChars(env, tempString);
+
+		//std::cout << "input1: " << input1[i] << std::endl;
+	}
+	input2 = new string[size2];
+	for(jint i = 0; i < size2; i++){
+		tempString = (jstring)env->GetObjectArrayElement(input2Names, i);
+		input2[i] = JNIUtils::GetStringNativeChars(env, tempString);
+
+		//std::cout << "input2: " << input2[i] << std::endl;
 	}
 	
-	//get the first string and send it out
-	tempString = (jstring)env->GetObjectArrayElement(inputNames, 0);
-
- 	//what was here before
-	std::string fileName = JNIUtils::GetStringNativeChars(env, tempString);
-	
-	ChangeFile *cf = new ChangeFile(fileName);
-	Thread *t = new Thread(cf, "change file", 0, Thread::NotActivated);
+	Iterate *iter = new Iterate(input1,size1,input2,size2,numParams);
+	Thread *t = new Thread(iter, "iterate_on_inputs", 0, Thread::NotActivated);
     t->setStackSize(1024*1024);
     t->activate(false);
     t->join();
 	
-	return result;
+	
+	//if the commands succeed.  
+	//TODO need a call back type thing here but i am not sure how this will work yet
+	if(true)
+		return 1;
+	else
+		return 0;
+
 }
