@@ -59,12 +59,6 @@ namespace Kurt {
 namespace Modules {
 
 using SCICore::Containers::to_string;
-using Uintah::DataArchive;
-using Uintah::TypeDescription;
-using Uintah::Level;
-using Uintah::Patch;
-using Uintah::Grid;
-using Uintah::GridP;
 using namespace SCICore::TclInterface;
 using Kurt::Datatypes::VisParticleSet;
 using PSECore::Datatypes::VisParticleSetOPort;
@@ -72,6 +66,7 @@ using PSECore::Datatypes::VisParticleSetIPort;
 using SCICore::Geometry::BBox;
 using SCICore::Datatypes::VectorFieldRG;
 using SCICore::Datatypes::ScalarFieldRGdouble;
+using namespace Uintah;
 
 extern "C" Module* make_VisControl( const clString& id ) {
   return scinew VisControl( id ); 
