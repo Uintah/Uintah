@@ -51,7 +51,6 @@ public:
   void clear_vals();
   void update_input_attributes(FieldHandle);
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
   DECLARE_MAKER(FieldInfo)
@@ -147,16 +146,12 @@ void FieldInfo::update_input_attributes(FieldHandle f)
 
   int num_nodes;
   int num_elems;
-  int dimension;
-  algo->execute(f->mesh(), num_nodes, num_elems, dimension);
+  algo->execute(f->mesh(), num_nodes, num_elems);
 
   gui->execute(string("set ")+id+"-numnodes "+to_string(num_nodes));
   gui->execute(string("set ")+id+"-numelems "+to_string(num_elems));
 
   gui->execute(id+" update_multifields");
-
-  // copy valid settings to the un-checked output field attributes
-  //gui->execute(id+" update idletasks");
 }
 
 
@@ -184,24 +179,7 @@ FieldInfo::execute()
     update_input_attributes(fh);
 
   }
-
 }
-
-    
-void FieldInfo::tcl_command(GuiArgs& args, void* userdata)
-{
-  if(args.count() < 2){
-    args.error("FieldInfo needs a minor command");
-    return;
-  }
- 
-  if (args[1] == "execute" || args[1] == "update_widget") {
-    want_to_execute();
-  } else {
-    Module::tcl_command(args, userdata);
-  }
-}
-
 
 CompileInfo *
 FieldInfoAlgoCount::get_compile_info(const TypeDescription *mesh_td)
