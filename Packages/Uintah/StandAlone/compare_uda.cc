@@ -45,6 +45,25 @@ using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 
+// serr Vector specialization below
+template <class T>
+void print(std::ostream& out, const T& t)
+{
+  out << t;
+}
+
+// must override Vector's output in order to use the ostream's precision
+void print(std::ostream& out, const SCIRun::Vector& t)
+{
+  out << "[" << t.x() << ", " << t.y() << ", " << t.z() << "]";
+}
+
+// must override Vector's output in order to use the ostream's precision
+void print(std::ostream& out, const SCIRun::Point& t)
+{
+  out << "[" << t.x() << ", " << t.y() << ", " << t.z() << "]";
+}
+
 void usage(const std::string& badarg, const std::string& progname)
 {
     if(badarg != "")
@@ -350,7 +369,7 @@ void MaterialParticleData::sort()
   ASSERT(particleIDs_->getParticleVars().size() != 0);
 
   vector< ID_Index > idIndices;
-  int base = 0;
+  particleIndex base = 0;
   
   for (unsigned int i = 0; i < particleIDs_->getParticleVars().size(); i++) {
     ParticleVariable<long64>* pIDs = dynamic_cast<ParticleVariable<long64>*>(particleIDs_->getParticleVars()[i]);
@@ -365,7 +384,7 @@ void MaterialParticleData::sort()
 	 iter != subset->end(); iter++) {
       idIndices.push_back(ID_Index(*(pID++), base + *iter));
     }
-    base = idIndices.size();
+    base = (particleIndex)idIndices.size();
   }
 
   // sort by particle id and find out what happens to the particle indices.
@@ -486,9 +505,9 @@ compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
 	ASSERT(getParticleID(i) == data2.getParticleID(i));
       }
       cerr << "DIFFERENCE on particle id= " << getParticleID(i) << endl;
-      IntVector origin((getParticleID(i) >> 16) & 0xffff,
-		       (getParticleID(i) >> 32) & 0xffff,
-		       (getParticleID(i) >> 48) & 0xffff);
+      IntVector origin((int)(getParticleID(i) >> 16) & 0xffff,
+		       (int)(getParticleID(i) >> 32) & 0xffff,
+		       (int)(getParticleID(i) >> 48) & 0xffff);
       cerr << "(Originating from " << origin << ")\n";
       const Patch* patch1 = getPatch(i);
       const Patch* patch2 = data2.getPatch(i);
@@ -630,8 +649,11 @@ void compareParticles(DataArchive* da1, DataArchive* da2, const string& var,
 		 rel_tolerance)) {
       cerr << "\nValues differ too much.\n";
       displayProblemLocation(var, matl, patch1, time);    
-      cerr << filebase1 << ":\n" << value1[*iter1] << endl;
-      cerr << filebase2 << ":\n" << value2[*iter2] << endl;
+      cerr << filebase1 << ":\n";
+      print(cerr, value1[*iter1]);
+      cerr << endl << filebase2 << ":\n";
+      print(cerr, value2[*iter2]);
+      cerr << endl;
       tolerance_failure();
     }
   }
@@ -888,7 +910,10 @@ compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 	displayProblemLocation(var, matl, patch, patch2, time1);
  
        cerr << filebase1 << " (1)\t\t" << filebase2 << " (2)"<<endl;
-	cerr << field[*iter] << "\t\t" << (*pField2)[*iter] << endl;
+       print(cerr, field[*iter]);
+       cerr << "\t\t";
+       print(cerr, (*pField2)[*iter]);
+       cerr << endl;
 
 	tolerance_failure();
       }
