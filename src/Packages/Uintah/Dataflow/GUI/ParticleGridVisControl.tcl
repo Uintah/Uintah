@@ -35,14 +35,6 @@ itcl_class Uintah_MPMViz_ParticleGridVisControl {
     protected vf ""
     protected pf ""
 
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
-
     constructor {config} { 
         set name ParticleGridVisControl 
         set_defaults
