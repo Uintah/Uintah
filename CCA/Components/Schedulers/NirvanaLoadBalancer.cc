@@ -7,10 +7,14 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <Core/Util/FancyAssert.h>
-#include <Core/Util/NotFinished.h>
 
 using namespace Uintah;
+using namespace std;
 
 NirvanaLoadBalancer::NirvanaLoadBalancer(const ProcessorGroup* myworld,
 					 const IntVector& layout)

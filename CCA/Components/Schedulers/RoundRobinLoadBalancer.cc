@@ -9,7 +9,6 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Util/NotFinished.h>
 
 #include <iostream> // debug only
 

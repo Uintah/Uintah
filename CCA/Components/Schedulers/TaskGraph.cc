@@ -16,7 +16,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Util/NotFinished.h>
 
 #include <sci_algorithm.h>
 #include <fstream>

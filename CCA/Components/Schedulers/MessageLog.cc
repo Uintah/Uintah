@@ -5,7 +5,6 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Thread/Time.h>
-#include <Core/Util/NotFinished.h>
 #include <iomanip>
 #include <iostream>
 #include <sstream>

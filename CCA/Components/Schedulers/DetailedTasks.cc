@@ -6,7 +6,6 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
-#include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <sci_algorithm.h>
