@@ -1,22 +1,25 @@
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>        // Only used for MPI cerr
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>  // process determination
+#include <Packages/Uintah/Core/Parallel/Parallel.h> // Only used for MPI cerr
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h> // process determination
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+
 #include <Dataflow/XMLUtil/SimpleErrorHandler.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
+
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
+
 #include <iostream>
 #include <stdio.h>
+
 using namespace std;
 using namespace Uintah;
-
 using namespace SCIRun;
 
 ProblemSpecReader::ProblemSpecReader(const std::string& filename)
     : filename(filename)
 {
-
 }
 
 ProblemSpecReader::~ProblemSpecReader()
@@ -25,12 +28,12 @@ ProblemSpecReader::~ProblemSpecReader()
 
 ProblemSpecP ProblemSpecReader::readInputFile()
 {
-  
   try {
     XMLPlatformUtils::Initialize();
   }
   catch(const XMLException& toCatch) {
-      throw ProblemSetupException("XML Exception: "+ string(to_char_ptr(toCatch.getMessage())));
+      throw ProblemSetupException("XML Exception: " +
+				  string(to_char_ptr(toCatch.getMessage())));
   }
   
   ProblemSpecP prob_spec;
@@ -52,14 +55,26 @@ ProblemSpecP ProblemSpecReader::readInputFile()
       }
 
       // Add the parser contents to the ProblemSpecP d_doc
+      DOMDocument * temp = parser->getDocument();
+      DOMNode * node = temp->cloneNode(true);
 
-      DOMDocument* doc = dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+#if !defined( _AIX )
+      DOMDocument* doc = dynamic_cast<DOMDocument*>(node);
+#else
+      DOMDocument* doc = static_cast<DOMDocument*>(node);
+#endif
+
+      if( !doc ) {
+	cout << "dynamic_cast to DOMDocument * failed!\n";
+	throw InternalError( "dynamic_cast to DOMDocument * failed!\n" );
+      }
+
       delete parser;
-      prob_spec = scinew ProblemSpec(doc->getDocumentElement());
+      DOMNode * de = doc->getDocumentElement();
+      prob_spec = scinew ProblemSpec( de );
   } catch(const XMLException& ex) {
       throw ProblemSetupException("XML Exception: "+string(to_char_ptr(ex.getMessage())));
   }
-
   return prob_spec;
 }
 
