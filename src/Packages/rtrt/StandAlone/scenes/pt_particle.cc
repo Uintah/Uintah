@@ -44,6 +44,7 @@ void usage(char* me, const char* unknown=0);
 int parseFile(char* fname, GridSpheresDpy* dpy, SelectableGroup* timesteps);
 
 float radius=DEFAULT_RADIUS;
+int radius_index=-1;
 int tex_res=DEFAULT_TEXRES;
 Color color(1.0, 1.0, 1.0);
 int nsides=DEFAULT_NSIDES;
@@ -70,6 +71,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/) {
       in_fname=argv[++i];
     else if (strcmp(argv[i],"-radius")==0)
       radius=atof(argv[++i]);
+    else if (strcmp(argv[i],"-radius_index")==0)
+      radius_index=atoi(argv[++i]);
     else if (strcmp(argv[i],"-tex_res")==0)
       tex_res=atoi(argv[++i]);
     else if (strcmp(argv[i],"-color")==0) {
@@ -154,6 +157,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/) {
   }
 
   if (var_names) dpy->set_var_names(var_names);
+  if (radius_index>=0)
+    dpy->set_radius_index(radius_index);
   
   if (display)
     (new Thread(dpy, "GridSpheres display thread"))->detach();
@@ -207,6 +212,7 @@ void usage(char* me, const char* unknown) {
   cerr<<"usage:  "<<me<<" [options] -i <filename>"<<endl;
   cerr<<"options:"<<endl;
   cerr<<"  -radius <float>         particle radius ("<<DEFAULT_RADIUS<<")"<<endl;
+  cerr<<"  -radius_index <int>     particle radius index (-1)"<<endl;
   cerr<<"  -tex_res <int>          texture resolution ("
       <<DEFAULT_TEXRES<<")"<<endl;
   cerr<<"  -color <r> <g> <b>      surface color (1.0, 1.0, 1.0)"<<endl;
@@ -335,6 +341,20 @@ int parseFile(char* fname, GridSpheresDpy* dpy, SelectableGroup* timesteps) {
 	}
 
 	radius=atof(r);
+      } else if (strcmp(token, "radius_index:")==0) {
+	if (!ts_flag) {
+	  cerr<<me<<":  encountered \"radius_index\" outside of a valid timestep"<<endl;
+	  return 1;
+	}
+
+	// Check for a particle radius index
+	char* r=strtok(0, " ");
+	if (!r) {
+	  cerr<<me<<":  \"radius_index\" requires a particle radius"<<endl;
+	  return 1;
+	}
+
+	radius_index=atoi(r);
       } else if (strcmp(token, "tex_res:")==0) {
 	if (!ts_flag) {
 	  cerr<<me<<":  encountered \"tex_res\" outside of a valid timestep"<<endl;
@@ -603,6 +623,12 @@ int parseFile(char* fname, GridSpheresDpy* dpy, SelectableGroup* timesteps) {
       cerr<<me<<":  warning:  invalid radius ("
 	  <<radius<<"), resetting to "<<DEFAULT_RADIUS<<endl;
       radius=DEFAULT_RADIUS;
+    }
+
+    if (radius_index<0) {
+      cerr<<me<<":  warning:  invalid radius_index("
+          <<radius_index<<"), resetting to -1"<<endl;
+      radius_index=-1;
     }
 
     if (tex_res<=0) {
