@@ -525,35 +525,44 @@ void Allocator::free(void* dobj)
     } else {
 	obj_bin->inuse=obj->next;
     }
-
     obj_bin->ninuse--;
-    // Put it in the free list...
-    obj->next=obj_bin->free;
-    if(obj_bin->free)
+
+    if(obj_bin == &big_bin && obj->reqsize > 10*1024*1024){
+      // Go ahead and unmap this segment...
+      OSHunk* hunk=obj->hunk;
+      nmunmap++;
+      sizemunmap+=hunk->len;
+      OSHunk::free(hunk);
+      big_bin.ntotal--;
+    } else {
+      // Put it in the free list...
+      obj->next=obj_bin->free;
+      if(obj_bin->free)
 	obj_bin->free->prev=obj;
-    obj->prev=0;
-    obj_bin->free=obj;
+      obj->prev=0;
+      obj_bin->free=obj;
 
 
-    // Setup the new sentinels...
-    char* data=(char*)obj;
-    data+=sizeof(Tag);
-    Sentinel* sent1=(Sentinel*)data;
-    data+=sizeof(Sentinel);
-    char* d=(char*)data;
-    data+=obj_maxsize(obj);
-    Sentinel* sent2=(Sentinel*)data;
+      // Setup the new sentinels...
+      char* data=(char*)obj;
+      data+=sizeof(Tag);
+      Sentinel* sent1=(Sentinel*)data;
+      data+=sizeof(Sentinel);
+      char* d=(char*)data;
+      data+=obj_maxsize(obj);
+      Sentinel* sent2=(Sentinel*)data;
 
-    sent1->first_word=sent1->second_word=
+      sent1->first_word=sent1->second_word=
 	sent2->first_word=sent2->second_word=SENT_VAL_FREE;
-
-    if(strict){
+      
+      if(strict){
 	// Fill in the data region with markers.
 	unsigned long* p=(unsigned long*)d;
 	unsigned long* last=(unsigned long*)sent2;
 	unsigned long i=(unsigned long)p;
 	for(;p<last;p++)
-	    *p++=i++;
+	  *p++=i++;
+      }
     }
     unlock();
 }
