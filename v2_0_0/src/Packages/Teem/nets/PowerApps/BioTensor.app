@@ -2248,8 +2248,9 @@ class BioTensorApp {
 	global mods
 	
 	# Embed the Viewer
-	set viewer_border 5
+	set viewer_border 3
 	set eviewer [$mods(Viewer) ui_embedded]
+
 	frame $win.viewer -relief sunken -borderwidth $viewer_border
 	$eviewer setWindow $win.viewer.v [expr $viewer_width - 2*$viewer_border] [expr $viewer_height - 2*$viewer_border]
 	
