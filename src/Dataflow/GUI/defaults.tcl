@@ -15,6 +15,9 @@
 #  University of Utah. All Rights Reserved.
 #
 
+set tcl_prompt1 "puts -nonewline \"scirun> \""
+set tcl_prompt2 "puts -nonewline \"scirun>> \""
+
 global port_spacing
 set port_spacing 18
 
@@ -69,9 +72,4 @@ option add *selectBackground "white"
 option add *selector red
 option add *font "-Adobe-Helvetica-bold-R-Normal--*-120-75-*"
 option add *highlightThickness 0
-
-#set blt_library $env(TOP)/src/3rdParty/tcl/blt2.4h/library
-source $DataflowTCL/platformSpecific.tcl
-
-
 
