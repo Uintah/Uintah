@@ -143,15 +143,13 @@ TendEvecRGB::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-#if 0
-  if (tenEvecrgb(nout, nin, evec_.get(), get_method(aniso_metric_.get()), 
-		 background_.get(), gray_.get(), gamma_.get())) {
+  if (tenEvecRGB(nout, nin, evec_.get(), get_method(aniso_metric_.get()), 
+		 gamma_.get(), background_.get(), gray_.get())) {
     char *err = biffGetDone(TEN);
     error(string("Error making tendEvecRGB volume: ") + err);
     free(err);
     return;
   }
-#endif
 
   NrrdData *nrrd = scinew NrrdData;
 
