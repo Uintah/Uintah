@@ -24,7 +24,7 @@ public:
   SelectableGroup(float secs=1.0);
   virtual ~SelectableGroup();
 
-  virtual void io(SCIRun::Piostream &stream) 
+  virtual void io(SCIRun::Piostream &/*stream*/) 
   { ASSERTFAIL("Pio not supported"); }
 
   virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
@@ -47,8 +47,9 @@ public:
   inline void Child(int i) { if (i<objs.size()) child = i; /*neg means none*/ };
   inline void nextChild() { 
     autoswitch = false; 
-    child = child + 1; 
-    child = child % objs.size();
+    child++;
+    if (child == objs.size())
+      child = 0;
   };
   inline void Autoswitch(bool b) {autoswitch = b;};
   inline int Autoswitch() {if (autoswitch) return 1; else return 0;};
@@ -58,6 +59,8 @@ public:
     if (objs.size() == 0)
       child = -1;
   }
+  virtual bool interior_value( double& value, const Ray &ray, const double t)
+  { return objs[child]->interior_value(value,ray,t); }; 
 
 };
 
