@@ -50,6 +50,7 @@ namespace SCIRun {
     DTAddress to_addr;  //filled by recver, not transmitted.
     
     void display(){
+#define DISPLAY_MSG      
 #ifdef DISPLAY_MSG      
       char *str=new char[length];
       strncpy(str, this->buf+sizeof(int), length-sizeof(int));

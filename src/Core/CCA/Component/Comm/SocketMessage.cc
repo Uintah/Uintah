@@ -133,7 +133,7 @@ SocketMessage::marshalSpChannel(SpChannel* channel){
 
 void 
 SocketMessage::sendMessage(int handler){
-  //cerr<<"SocketMessage::sendMessage handler id="<<handler<<endl;
+  cerr<<"SocketMessage::sendMessage handler id="<<handler<<endl;
   memcpy(msg, &handler, sizeof(int));
   DTMessage *wmsg=new DTMessage;
   wmsg->buf=(char*)msg;
@@ -199,12 +199,15 @@ void
 SocketMessage::unmarshalSpChannel(SpChannel* channel){
   SocketSpChannel * chan = dynamic_cast<SocketSpChannel*>(channel);
 
-  marshalBuf(&(chan->ep_addr), sizeof(DTAddress));
-  marshalBuf(&(chan->ep), sizeof(void *));
-  marshalBuf(&(chan->object), sizeof(void *));
+  unmarshalBuf(&(chan->ep_addr), sizeof(DTAddress));
+  unmarshalBuf(&(chan->ep), sizeof(void *));
+  unmarshalBuf(&(chan->object), sizeof(void *));
 
   if(!PIDL::getDT()->isLocal(chan->ep_addr)){
-    chan->object=NULL;
+    object=NULL;
+  }
+  else{
+    object=chan->object;
   }
 }
 
