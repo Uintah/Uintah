@@ -14,7 +14,6 @@
 #define SCI_project_module_Roe_h
 
 #include <SCICore/Containers/Array1.h>
-#include <map.h>
 #include <PSECore/Comm/MessageBase.h>
 #include <SCICore/Geom/Color.h>
 #include <SCICore/Geom/TCLGeom.h>
@@ -29,6 +28,8 @@
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
 #include <PSECommon/Modules/Salmon/SCIBaWGL.h>
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+
+#include <map.h>
 
 namespace SCICore {
   namespace GeomSpace {
@@ -105,8 +106,8 @@ public:
   // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
   
 public:
-  typedef map< clString, Renderer*, less<clString> > MapClStringRenderer;
-  typedef map< clString, ObjTag*, less<clString> > MapClStringObjTag;
+  typedef map<clString, Renderer*>	MapClStringRenderer;
+  typedef map<clString, ObjTag*>	MapClStringObjTag;
   
 protected:
   friend class Salmon;
@@ -236,8 +237,7 @@ public:
   MapClStringObjTag visible;
 
 				// Which of the lights are on?
-  //ha*hTable<clString, int> light_on;
-  //map< clString, int, clString::operator< > light_on;
+  //map<clString, int> light_on;
     
 				// The Camera
   TCLView view;
@@ -293,6 +293,10 @@ public:
 
 //
 // $Log$
+// Revision 1.13  2000/03/17 18:47:03  dahart
+// Included STL map header files where I forgot them, and removed less<>
+// parameter from map declarations
+//
 // Revision 1.12  2000/03/11 00:39:52  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>
