@@ -153,7 +153,6 @@ template<class T>
 void
 SimpleIPort<T>::finish()
 {
-#if 0
   if (!got_something_ && num_unblocked_connections() > 0)
   {
     if (module->show_stats()) { turn_on(Finishing); }
@@ -161,18 +160,7 @@ SimpleIPort<T>::finish()
     delete msg;
     if (module->show_stats()) { turn_off(); }
   }
-#else
-  if (num_unblocked_connections() > 0)
-  {
-    if (module->show_stats()) { turn_on(Finishing); }
-    SimplePortComm<T>* msg;
-    while (mailbox.tryReceive(msg))
-    {
-      delete msg;
-    }
-    if (module->show_stats()) { turn_off(); }
-  }
-#endif
+  got_something_ = true;
 }
 
 
