@@ -212,19 +212,16 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
   }
 
   // Do the execute.
-#if 1
   if (np==1)
+  {
     parallel_execute(0, &d);
+  }
   else
+  {
     Thread::parallel(this, 
        &BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute,
        np, true, &d);
-#else
-  for (int i = 0; i < np; i++)
-  {
-    parallel_execute(i, &d);
   }
-#endif
 
   // Collect the data back into a sparse row matrix.
   // This is for source_to_single_dest.
