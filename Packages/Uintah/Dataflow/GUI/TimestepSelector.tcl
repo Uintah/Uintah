@@ -42,7 +42,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	global $this-def-color-r
 	global $this-def-color-g
 	global $this-def-color-b
-
+	global $this-font_size
 	set $this-time 0
 	set $this-max_time 100
 	set $this-timeval 0
@@ -51,6 +51,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	set $this-def-color-r 1.0
 	set $this-def-color-g 1.0
 	set $this-def-color-b 1.0
+	set $this-font_size "*"
     } 
     
     method ui {} { 
@@ -120,6 +121,23 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	frame $w.cs -relief groove -borderwidth 2
 	addColorSelection $w.cs  $this-def-color \
 		"default_color_change"
+	frame $w.cs.fs -relief flat
+	pack $w.cs.fs -side top -fill x -expand yes
+	
+	set bf $w.cs.fs
+	label $bf.fs -text "Font Size:"
+	radiobutton $bf.b1 -text "*" -variable $this-font_size -value "*" \
+	    -command $n
+	radiobutton $bf.b2 -text "10" -variable $this-font_size -value "10" \
+	    -command $n
+	radiobutton $bf.b3 -text "11" -variable $this-font_size -value "11" \
+	    -command $n
+	radiobutton $bf.b4 -text "13" -variable $this-font_size -value "13" \
+	    -command $n
+	radiobutton $bf.b5 -text "15" -variable $this-font_size -value "15" \
+	    -command $n
+
+	pack $bf.fs $bf.b1 $bf.b2 $bf.b3 $bf.b4 $bf.b5 -side left
 	pack $w.cs -side top -anchor w -fill x
 
 	button $w.b -text "Close" -command "wm withdraw $w"
