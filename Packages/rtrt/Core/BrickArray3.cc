@@ -12,6 +12,8 @@
 
 #include "BrickArray3.h"
 
+using namespace rtrt;
+
 template<class T>
 BrickArray3<T>::BrickArray3()
 {

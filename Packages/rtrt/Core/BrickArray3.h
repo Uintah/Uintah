@@ -16,7 +16,7 @@
 
 #include <iostream>
 
-//namespace rtrt {
+namespace rtrt {
 
 using namespace std;
 
@@ -63,6 +63,6 @@ public:
 };
 
 
-//} // end namespace rtrt
+} // end namespace rtrt
 
 #endif
