@@ -22,6 +22,8 @@ public:
     }
     inline Color(float r, float g, float b) : r(r), g(g), b(b){
     }
+    inline Color(double c[3]) : r(c[0]), g(c[1]), b(c[2]) {
+    }
     inline ~Color() {
     }
     friend class Pixel;
