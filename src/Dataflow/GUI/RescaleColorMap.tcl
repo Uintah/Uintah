@@ -36,8 +36,8 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
     } 
   
     method set_defaults {} { 
-	global main_frame
-	set main_frame ""
+	global $this-main_frame
+	set $this-main_frame ""
 
 	global $this-isFixed
 	global $this-min
@@ -82,9 +82,9 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
     }
 
     method build_ui { w } {
-	global main_frame
-	set main_frame $w
-	
+	global $this-main_frame
+	set $this-main_frame $w
+
 	global $this-isFixed
 	global $this-min
 	global $this-max
@@ -149,25 +149,29 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 
     method autoScale { } {
 	global $this-isFixed
-	global main_frame
+	global $this-main_frame
 	
+	set w [set $this-main_frame]
+
 	set lightgray "#444444"
 
-	$main_frame.bf.f1.sas    configure -state normal
-	$main_frame.bf.f3.min.l1 configure -foreground $lightgray
-	$main_frame.bf.f3.min.e1 configure -state disabled -foreground $lightgray
-	$main_frame.bf.f3.max.l2 configure -foreground $lightgray
-	$main_frame.bf.f3.max.e2 configure -state disabled -foreground $lightgray
+	$w.bf.f1.sas    configure -state normal
+	$w.bf.f3.min.l1 configure -foreground $lightgray
+	$w.bf.f3.min.e1 configure -state disabled -foreground $lightgray
+	$w.bf.f3.max.l2 configure -foreground $lightgray
+	$w.bf.f3.max.e2 configure -state disabled -foreground $lightgray
     }
 
     method fixedScale { } {
 	global $this-isFixed
-	global main_frame
+	global $this-main_frame
 
-	$main_frame.bf.f1.sas     configure -state disabled
-	$main_frame.bf.f3.min.l1  configure -foreground black
-	$main_frame.bf.f3.min.e1  configure -state normal -foreground black
-	$main_frame.bf.f3.max.l2  configure -foreground black
-	$main_frame.bf.f3.max.e2  configure -state normal -foreground black
+	set w [set $this-main_frame]
+
+	$w.bf.f1.sas     configure -state disabled
+	$w.bf.f3.min.l1  configure -foreground black
+	$w.bf.f3.min.e1  configure -state normal -foreground black
+	$w.bf.f3.max.l2  configure -foreground black
+	$w.bf.f3.max.e2  configure -state normal -foreground black
     }
 }

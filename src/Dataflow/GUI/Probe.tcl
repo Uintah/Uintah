@@ -35,8 +35,8 @@ itcl_class SCIRun_FieldsCreate_Probe {
     }
 
     method set_defaults {} {
-	global main_frame
-	set main_frame ""
+	global $this-main_frame
+	set $this-main_frame ""
 
 	global $this-value
 	global $this-show-value
@@ -157,6 +157,9 @@ itcl_class SCIRun_FieldsCreate_Probe {
     }
 
     method build_ui { w } {
+	global $this- main_frame
+	set $this-main_frame $w
+	
 	frame $w.f
 	frame $w.f.g
 	frame $w.f.g.labels

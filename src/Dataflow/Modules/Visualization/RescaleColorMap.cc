@@ -56,6 +56,7 @@ namespace SCIRun {
 DECLARE_MAKER(RescaleColorMap)
 RescaleColorMap::RescaleColorMap(GuiContext* ctx)
   : Module("RescaleColorMap", ctx, Filter, "Visualization", "SCIRun"),
+    gFrame_(ctx->subVar("main_frame")),
     gIsFixed_(ctx->subVar("isFixed")),
     gMin_(ctx->subVar("min")),
     gMax_(ctx->subVar("max")),
