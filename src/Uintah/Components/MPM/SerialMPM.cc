@@ -520,6 +520,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->computes(new_dw, lb->pXLabel, idx, patch );
 	    t->computes(new_dw, lb->pMassLabel, idx, patch);
 	    t->computes(new_dw, lb->pExternalForceLabel, idx, patch);
+	    t->computes(new_dw, lb->KineticEnergyLabel);
 
 	    if(d_heatConductionInvolved) {
 	      t->requires(new_dw, lb->gTemperatureLabel, idx, patch,
@@ -604,6 +605,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
 	 sched->addTask(t);
       }
+
     }
 
    if(d_fractureModel) {
@@ -613,6 +615,8 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    new_dw->pleaseSave(lb->pExternalForceLabel, numMatls);
    new_dw->pleaseSave(lb->gVelocityLabel, numMatls);
    new_dw->pleaseSave(lb->pXLabel, numMatls);
+//   new_dw->pleaseSaveIntegrated(lb->StrainEnergyLabel);
+//   new_dw->pleaseSaveIntegrated(lb->KineticEnergyLabel);
 }
 
 void SerialMPM::actuallyInitialize(const ProcessorContext*,
@@ -1091,6 +1095,10 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       NCVariable<Vector>        acceleration;
       NCVariable<Vector>        velocity;
       delt_vartype delT;
+      sum_vartype strainEnergy;
+      new_dw->get((ReductionVariableBase&)strainEnergy, lb->StrainEnergyLabel);
+
+      cout << strainEnergy << endl;
 
       new_dw->get(acceleration, lb->gAccelerationLabel, vfindex, patch,
 		  Ghost::None, 0);
@@ -1127,26 +1135,17 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 
   Vector dx = patch->dCell();
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-  /* tan: 
-       oodx used for shape-function-gradient calculation.
-       shape-function-gradient will be used for temperature gradient
-       calculation.
-   */
+  /* tan: oodx used for shape-function-gradient calculation.
+          shape-function-gradient will be used for temperature 
+          gradient calculation.  */
 
   Vector vel(0.0,0.0,0.0);
   Vector acc(0.0,0.0,0.0);
   
-  double tempRate = 0; /* tan: 
-                            tempRate stands for "temperature variation
-                            time rate",
-                            used for heat conduction.
-                        */
-  double ke=0,se=0;
+  double tempRate = 0; /* tan: tempRate stands for "temperature variation
+                               time rate", used for heat conduction.  */
+  double ke=0;
   int numPTotal = 0;
-
-  Vector numerator(0.0,0.0,0.0);
-  double denominator=0.0;
-  Vector xcm;
 
   // This needs the datawarehouse to allow indexing by material
 
@@ -1157,13 +1156,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-
-    // Compute Strain Energy.  This should be moved somewhere
-    // better once things settle down a bit.
-    if(mpm_matl){
-         ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-         se+=cm->computeStrainEnergy(patch, mpm_matl, new_dw);
-    }
 
     if(mpm_matl){
       int matlindex = matl->getDWIndex();
@@ -1285,18 +1277,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
         }
         
         ke += .5*pmass[idx]*pvelocity[idx].length2();
-
-       // If we were storing particles in cellwise lists, this
-       // is where we would update the lists so that each particle
-       // is in the correct cells list
-
-        if(matlindex==0){
-	  numerator = Vector(numerator.x() + px[idx].x()*pmass[idx],
-			     numerator.y() + px[idx].y()*pmass[idx],
-			     numerator.z() + px[idx].z()*pmass[idx]);
-	  denominator+=pmass[idx];
-	}
-
       }
 
       // Store the new result
@@ -1309,6 +1289,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       old_dw->get(pexternalforce, lb->pExternalForceLabel, matlindex, patch,
 		  Ghost::None, 0);
       new_dw->put(pexternalforce, lb->pExternalForceLabel, matlindex, patch);
+
+      new_dw->put(sum_vartype(ke), lb->KineticEnergyLabel);
 
       if(d_heatConductionInvolved) {
         new_dw->put(pTemperatureRate, lb->pTemperatureRateLabel, matlindex, patch);
@@ -1371,14 +1353,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
   }
 #endif
 
-  xcm = numerator/denominator;
-
-  static ofstream xcmout("xcm.out");
-  xcmout << ts << " " << xcm.x() << " " << xcm.y() << " "
-				 << xcm.z() << " " << std::endl;
-
   static ofstream tmpout("tmp.out");
-  tmpout << ts << " " << ke << " " << se << std::endl;
+//  tmpout << ts << " " << ke << " " << se << std::endl;
+  tmpout << ts << " " << ke << std::endl;
   ts++;
 }
 
@@ -1390,6 +1367,10 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.78  2000/06/01 23:12:04  guilkey
+// Code to store integrated quantities in the DW and save them in
+// an archive of sorts.  Also added the "computes" in the right tasks.
+//
 // Revision 1.77  2000/05/31 21:20:50  tan
 // ThermalContact::computeHeatExchange() linked to scheduleTimeAdvance to handle
 // thermal contact.

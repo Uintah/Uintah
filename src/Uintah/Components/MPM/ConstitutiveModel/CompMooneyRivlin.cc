@@ -270,6 +270,7 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch);
    task->computes(new_dw, p_cmdata_label, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pVolumeLabel, matl->getDWIndex(), patch);
+   task->computes(new_dw, lb->StrainEnergyLabel);
 }
 
 double CompMooneyRivlin::computeStrainEnergy(const Patch* patch,
@@ -341,6 +342,10 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.38  2000/06/01 23:12:06  guilkey
+// Code to store integrated quantities in the DW and save them in
+// an archive of sorts.  Also added the "computes" in the right tasks.
+//
 // Revision 1.37  2000/05/31 22:37:09  guilkey
 // Put computation of strain energy inside the computeStressTensor functions,
 // and store it in a reduction variable in the datawarehouse.
