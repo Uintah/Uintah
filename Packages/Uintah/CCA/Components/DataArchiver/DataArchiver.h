@@ -67,6 +67,12 @@ using std::pair;
 				int timestep, double time, bool fromScratch,
 				bool removeOldDir);
 
+      //////////
+      // Call this when doing a combine_patches run after calling
+      // problemSetup.  It will copy the data files over and make it ignore
+      // dumping reduction variables.
+      virtual void combinePatchSetup(Dir& fromDir);
+
       // Copy a section from another uda's index.xml.
       void copySection(Dir& fromDir, Dir& toDir, string section);
       void copySection(Dir& fromDir, string section)
@@ -134,7 +140,8 @@ using std::pair;
       // Get the directory of the current time step for outputting info.
       virtual const string& getLastTimestepOutputLocation() const
       { return d_lastTimestepLocation; }
-   private:
+
+     public:
      
       struct SaveNameItem {
 	string labelName;
@@ -155,6 +162,8 @@ using std::pair;
       private:
 	MaterialSetP matlSet_;
       };
+
+   private:
 
       void initSaveLabels(SchedulerP& sched);
       void initCheckpoints(SchedulerP& sched);
