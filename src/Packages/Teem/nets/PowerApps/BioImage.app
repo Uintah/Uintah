@@ -789,7 +789,7 @@ class BioImageApp {
 	pack $topr.modes.slider.slice -side top -anchor n 
 	scale $topr.modes.slider.slice.s -label "" \
 	    -variable $mods(ViewImage)-axial-viewport0-slice \
-	    -from 0 -to 20 \
+	    -from 0 -to 20 -width 15 \
 	    -length 120 -showvalue false \
 	    -orient horizontal -command "$this update_axial_slice"
 	bind $topr.modes.slider.slice.s <Motion> "app update_axial_slice 1"
@@ -806,7 +806,7 @@ class BioImageApp {
 	    -textvariable axial_min 
 	range $topr.modes.slider.slab.s -from 0 -to 20 \
 	    -orient horizontal -showvalue false \
-	    -length 130 -rangecolor "#830101" \
+	    -length 130 -rangecolor "#830101" -width 15 \
 	    -varmin axial_min -varmax axial_max \
 	    -command "$this update_axial_slab $axial_min $axial_max"
 	bind $topr.modes.slider.slab.s <Motion> "app update_axial_slab 1 1 1"
@@ -856,7 +856,7 @@ class BioImageApp {
 	pack $botl.modes.slider.slice -side top -anchor n 
 	scale $botl.modes.slider.slice.s -label "" \
 	    -variable $mods(ViewImage)-sagittal-viewport0-slice \
-	    -from 0 -to 20 \
+	    -from 0 -to 20 -width 15 \
 	    -length 120 -showvalue false \
 	    -orient horizontal -command "$this update_sagittal_slice"
 	bind $botl.modes.slider.slice.s <Motion> "app update_sagittal_slice 1"
@@ -873,7 +873,7 @@ class BioImageApp {
 	    -textvariable sagittal_min 
 	range $botl.modes.slider.slab.s -from 0 -to 20 \
 	    -orient horizontal -showvalue false \
-	    -length 130 -rangecolor "#830101" \
+	    -length 130 -rangecolor "#830101" -width 15 \
 	    -varmin sagittal_min -varmax sagittal_max \
 	    -command "$this update_sagittal_slab $sagittal_min $sagittal_max"
 	bind $botl.modes.slider.slab.s <Motion> "app update_sagittal_slab 1 1 1"
@@ -921,7 +921,7 @@ class BioImageApp {
 	pack $botr.modes.slider.slice -side top -anchor n 
 	scale $botr.modes.slider.slice.s -label "" \
 	    -variable $mods(ViewImage)-coronal-viewport0-slice \
-	    -from 0 -to 20 \
+	    -from 0 -to 20 -width 15 \
 	    -length 120 -showvalue false \
 	    -orient horizontal -command "$this update_coronal_slice"
 	bind $botr.modes.slider.slice.s <Motion> "app update_coronal_slice 1"
@@ -938,7 +938,7 @@ class BioImageApp {
 	    -textvariable coronal_min 
 	range $botr.modes.slider.slab.s -from 0 -to 20 \
 	    -orient horizontal -showvalue false \
-	    -length 130 -rangecolor "#830101" \
+	    -length 130 -rangecolor "#830101" -width 15 \
 	    -varmin coronal_min -varmax coronal_max \
 	    -command "$this update_coronal_slab $coronal_min $coronal_max"
 	bind $botr.modes.slider.slab.s <Motion> "app update_coronal_slab 1 1 1"
