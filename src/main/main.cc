@@ -80,6 +80,11 @@ using std::cout;
 #pragma set woff 1424
 #endif
 
+
+namespace SCIRun {
+extern void ShaderProgramARB_init_shaders_supported();
+}
+
 using namespace SCIRun;
 
 void
@@ -493,6 +498,9 @@ main(int argc, char *argv[], char **environment) {
   
   // Determine if SCIRun is in regression testing mode
   const bool doing_regressions = sci_getenv_p("SCI_REGRESSION_TESTING");
+
+  // Test for shaders.
+  SCIRun::ShaderProgramARB_init_shaders_supported();
 
   // Load the Network file specified from the command line
   if (startnetno) {
