@@ -313,7 +313,8 @@ void UnuAxinfo::execute()
     int index = i-1;
 
     if (strlen(label_[index]->get().c_str())) {
-      AIR_FREE((void*)nout->axis[i].label);
+      //AIR_FREE((void*)nout->axis[i].label);
+      nout->axis[i].label = (char*)airFree(nout->axis[i].label);
       nout->axis[i].label = airStrdup(const_cast<char*>(label_[index]->get().c_str()));
 
       if (AIR_EXISTS(min_[index]->get())) {
