@@ -11,13 +11,16 @@ SRCS     += $(SRCDIR)/DataWarehouseException.cc \
 	$(SRCDIR)/ParticleException.cc $(SRCDIR)/ProblemSetupException.cc \
 	$(SRCDIR)/SchedulerException.cc $(SRCDIR)/TypeMismatchException.cc
 
-PSELIBS :=
+PSELIBS := SCICore/Exceptions
 LIBS :=
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/23 10:30:30  sparker
+# Update to use new Exception base class
+#
 # Revision 1.2  2000/03/20 19:38:32  sparker
 # Added VPATH support
 #

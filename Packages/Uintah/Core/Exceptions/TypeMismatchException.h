@@ -10,6 +10,7 @@ class TypeMismatchException : public SCICore::Exceptions::Exception {
 public:
     TypeMismatchException(const std::string&);
     const char* message() const;
+    const char* type() const;
 };
 
 #endif
