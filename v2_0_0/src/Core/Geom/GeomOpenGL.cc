@@ -5869,10 +5869,10 @@ void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
   glPushAttrib(GL_LIST_BIT);
   
   double mat[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, mat);
+  const Vector view (mat[2], mat[6], mat[10]);
   for (unsigned int i = 0; i < text_.size(); i++)
   {
-    glGetDoublev(GL_MODELVIEW_MATRIX, mat);
-    const Vector view (mat[2], mat[6], mat[10]);
     if (Dot(view, normal_[i]) > 0)
     {
       if (coloring) { glColor3f(color_[i].r(), color_[i].g(), color_[i].b()); }
