@@ -27,9 +27,10 @@
 #include <netdb.h>
 //#include <sys/wait.h>
 
-#include "SocketEpChannel.h"
+#include <Core/CCA/Component/Comm/SocketEpChannel.h>
 #include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
+#include <Core/CCA/Component/Comm/SocketThreads.h>
 
 
 using namespace std;
@@ -53,29 +54,6 @@ SocketEpChannel::SocketEpChannel(){
   }
 
   handler_table=NULL;
-  sockfd=0;
-  /*  
-  while(1) {  // main accept() loop
-    sin_size = sizeof(struct sockaddr_in);
-    if ((new_fd = accept(sockfd, (struct sockaddr *)&their_addr,
-			 &sin_size)) == -1) {
-      perror("accept");
-      continue;
-    }
-    printf("server: got connection from %s\n",
-                                               inet_ntoa(their_addr.sin_addr));
-    if (!fork()) { // this is the child process
-      close(sockfd); // child doesn't need the listener
-      if (send(new_fd, "Hello, world!\n", 14, 0) == -1)
-	perror("send");
-      close(new_fd);
-      exit(0);
-    }
-    close(new_fd);  // parent doesn't need this
-        }
-  
-  return 0;
-  */
   msg = NULL;
 }
 
@@ -87,8 +65,8 @@ SocketEpChannel::~SocketEpChannel(){
 
 void SocketEpChannel::openConnection() {
   //at most 1024 waiting clients
-  if (listen(sockfd, 1024) == -1){ 
-    throw CommError("socket", errno);
+  if (listen(sockfd, 10) == -1){ 
+    throw CommError("listen", errno);
   }
 }
 
@@ -99,6 +77,7 @@ void SocketEpChannel::closeConnection() {
 
 string SocketEpChannel::getUrl() {
   struct sockaddr_in my_addr;
+  my_addr.sin_port=11111;
   socklen_t namelen=sizeof(struct sockaddr);
   if(getsockname(sockfd, (struct sockaddr*)&my_addr, &namelen )==-1){
     throw CommError("getsockname", errno);
@@ -109,32 +88,14 @@ string SocketEpChannel::getUrl() {
   if(gethostname(hostname, 127)==-1){
     throw CommError("gethostname", errno);
   } 
-  o << "socket://" << hostname << ":" << my_addr.sin_port << "/";
+  o << "socket://" << hostname << ":" << ntohs(my_addr.sin_port) << "/";
   delete []hostname;
   return o.str();
 }
 
 void SocketEpChannel::activateConnection(void* obj){
-  //need create one thread to do this
-  /*
-  while(true) {  // main accept() loop
-    sin_size = sizeof(struct sockaddr_in);
-    if ((new_fd = accept(sockfd, (struct sockaddr *)&their_addr,
-			 &sin_size)) == -1) {
-      perror("accept");
-      continue;
-    }
-    printf("server: got connection from %s\n",
-                                               inet_ntoa(their_addr.sin_addr));
-    if (!fork()) { // this is the child process
-      close(sockfd); // child doesn't need the listener
-      if (send(new_fd, "Hello, world!\n", 14, 0) == -1)
-	perror("send");
-      close(new_fd);
-      exit(0);
-    }
-    close(new_fd);  // parent doesn't need this
-  */
+  Thread* t = new Thread(new SocketAcceptThread(this), "SocketAcceptThread", 0, Thread::Activated);
+  t->detach();
 }
 
 Message* SocketEpChannel::getMessage() {
@@ -150,16 +111,43 @@ void SocketEpChannel::allocateHandlerTable(int size){
   table_size = size;
 }
 
-void SocketEpChannel::registerHandler(int num, void* handle){
+void 
+SocketEpChannel::registerHandler(int num, void* handle){
   handler_table[num-1] = (HPF) handle;
 }
 
-void SocketEpChannel::bind(SpChannel* /*spchan*/){
+void 
+SocketEpChannel::bind(SpChannel* /*spchan*/){
   //does nothing, at this time
 }
 
 
-
+void 
+SocketEpChannel::runAccept(){
+  cerr<<"SocketAcceptThread is running\n";
+  while(sockfd!=0){
+    int new_fd;
+    socklen_t sin_size = sizeof(struct sockaddr_in);
+    sockaddr_in their_addr;
+    cerr<<"Waiting for socket connections...\n";
+    if ((new_fd = accept(sockfd, (struct sockaddr *)&their_addr,
+			 &sin_size)) == -1) {
+      throw CommError("accept", errno);
+    }
+    printf("server: got connection from %s\n",
+	   inet_ntoa(their_addr.sin_addr));
+    /*
+      if (!fork()) { // this is the child process
+      close(sockfd); // child doesn't need the listener
+      if (send(new_fd, "Hello, world!\n", 14, 0) == -1)
+	perror("send");
+      close(new_fd);
+      exit(0);
+    }
+    */
+    close(new_fd);  // parent doesn't need this
+  }  
+}
 
 
 
