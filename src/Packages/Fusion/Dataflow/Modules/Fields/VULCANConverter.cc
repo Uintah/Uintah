@@ -215,7 +215,6 @@ VULCANConverter::execute(){
       datasetsStr.append( "{" + dataset[0] + "} " );
   }      
 
-
   if( datasetsStr != datasetsStr_.get() ) {
     // Update the dataset names and dims in the GUI.
     ostringstream str;
@@ -370,13 +369,18 @@ VULCANConverter::execute(){
       error_ = true;
       return;
     }
-  } else if ( conversion_ & SCALAR || conversion_ & REALSPACE ) {
+  } else if ( conversion_ & REALSPACE ) {
     if( mesh_[PHI] == -1 || data_[ZR] == -1 ) {
 
-      if ( conversion_ & SCALAR )
-	error( "Not enough data for the scalar conversion." );
-      else if ( conversion_ & REALSPACE )
-	error( "Not enough data for the realspace conversion." );
+      error( "Not enough data for the realspace conversion." );
+
+      error_ = true;
+      return;
+    }
+  } else if ( conversion_ & SCALAR ) {
+    if( mesh_[PHI] == -1 || mesh_[ZR] == -1 || mesh_[LIST] == -1 || data_[ZR] == -1 ) {
+
+      error( "Not enough data for the scalar conversion." );
 
       error_ = true;
       return;

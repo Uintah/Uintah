@@ -41,6 +41,7 @@
 #include <Core/Datatypes/StructQuadSurfField.h>
 #include <Core/Datatypes/StructCurveField.h>
 
+#include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
 
@@ -98,7 +99,6 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 
   NTYPE *ptrZR  = (NTYPE *)(nHandles[mesh[ZR]]->nrrd->data);
   NTYPE *ptrPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
-
   
   int nZR  = nHandles[mesh[ZR ]]->nrrd->axis[1].size; // Points
   int nPhi = nHandles[mesh[PHI]]->nrrd->axis[1].size; // Phi
@@ -149,6 +149,8 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 
   nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
 	   ndims+1, sink_size, nPhi*nZR);
+
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, nrrdCenterNode);
 
   nout->nrrd->axis[0].label = strdup("XYZ:Vector");
   nout->nrrd->axis[1].label = strdup("Point List");
@@ -242,6 +244,8 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
   nrrdWrap(nout->nrrd, ndata, nHandles[mesh[LIST]]->nrrd->type,
 	   ndims+2, sink_size, cc, hex);
 
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+
   vector< string > dataset;
 
   nHandles[mesh[LIST]]->get_tuple_indecies(dataset);
@@ -269,7 +273,81 @@ public:
 				 vector< int >& mesh,
 				 vector< int >& data,
 				 vector< int >& modes);
+private:
+  int get_weights(Point &p, Point *pts, double *w);
+
+  inline double tri_area(const Point &a, const Point &b, const Point &c)
+  {
+    return Cross(b-a, c-a).length();
+  }
 };
+
+template< class NTYPE >
+int
+VULCANScalarConverterAlgoT< NTYPE >::get_weights(Point &p, Point *pts, double *w)
+{
+  const Point &p0 = pts[0];
+  const Point &p1 = pts[1];
+  const Point &p2 = pts[2];
+  const Point &p3 = pts[3];
+
+  const double a0 = tri_area(p, p0, p1);
+  if (a0 < 1.0e-6)
+    {
+      const Vector v0 = p0 - p1;
+      const Vector v1 = p - p1;
+      w[0] = Dot(v0, v1) / Dot(v0, v0);
+      w[1] = 1.0 - w[0];
+      w[2] = 0.0;
+      w[3] = 0.0;
+      return 4;
+    }
+    const double a1 = tri_area(p, p1, p2);
+    if (a1 < 1.0e-6)
+    {
+      const Vector v0 = p1 - p2;
+      const Vector v1 = p - p2;
+      w[0] = 0.0;
+      w[1] = Dot(v0, v1) / Dot(v0, v0);
+      w[2] = 1.0 - w[1];
+      w[3] = 0.0;
+      return 4;
+    }
+    const double a2 = tri_area(p, p2, p3);
+    if (a2 < 1.0e-6)
+    {
+      const Vector v0 = p2 - p3;
+      const Vector v1 = p - p3;
+      w[0] = 0.0;
+      w[1] = 0.0;
+      w[2] = Dot(v0, v1) / Dot(v0, v0);
+      w[3] = 1.0 - w[2];
+      return 4;
+    }
+    const double a3 = tri_area(p, p3, p0);
+    if (a3 < 1.0e-6)
+    {
+      const Vector v0 = p3 - p0;
+      const Vector v1 = p - p0;
+      w[1] = 0.0;
+      w[2] = 0.0;
+      w[3] = Dot(v0, v1) / Dot(v0, v0);
+      w[0] = 1.0 - w[3];
+      return 4;
+    }
+
+    w[0] = tri_area(p0, p1, p2) / (a0 * a3);
+    w[1] = tri_area(p1, p2, p0) / (a1 * a0);
+    w[2] = tri_area(p2, p3, p1) / (a2 * a1);
+    w[3] = tri_area(p3, p0, p2) / (a3 * a2);
+
+    const double suminv = 1.0 / (w[0] + w[1] + w[2] + w[3]);
+    w[0] *= suminv;
+    w[1] *= suminv;
+    w[2] *= suminv;
+    w[3] *= suminv;
+    return 4;
+  }
 
 template< class NTYPE >
 NrrdDataHandle
@@ -284,29 +362,82 @@ execute(vector< NrrdDataHandle >& nHandles,
 
   NrrdData *nout = scinew NrrdData(false);
 
-  int nPhi = nHandles[mesh[PHI]]->nrrd->axis[1].size; // Phi
-  int nVal = nHandles[data[0]]->nrrd->axis[1].size;   // Values
+  int nCon = nHandles[mesh[LIST]]->nrrd->axis[1].size; // Connection list
+  int nPhi = nHandles[mesh[PHI ]]->nrrd->axis[1].size; // Phi
+  int nZR  = nHandles[mesh[ZR  ]]->nrrd->axis[1].size; // Points
 
-  NTYPE* ndata = scinew NTYPE[nPhi*nVal-nVal];
+  int nVal = nHandles[data[0]]->nrrd->axis[1].size;    // Values
+
+  NTYPE *ptrZR  = (NTYPE *)(nHandles[mesh[ZR]]->nrrd->data);
+  NTYPE *ptrCon = (NTYPE *)(nHandles[mesh[LIST]]->nrrd->data);
+  NTYPE *ptr    = (NTYPE *)(nHandles[data[0]]->nrrd->data);
+
+  NTYPE* ndata = scinew NTYPE[nPhi*nZR];
+
+  double* wt = scinew double[nZR];
 
   register int i, kj, cc=0;
 
-  //  NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI  ]]->nrrd->data);
-  NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd->data);
-    
-  for( i=0; i<nPhi-1; i++ ) {
-    //    double cosPhi = cos( ptrMeshPhi[i] );
-    //    double sinPhi = sin( ptrMeshPhi[i] );
+  double w[4];
+  Point p, pts[4];
 
-    for( kj=0; kj<nVal; kj++ ) {
+  for( kj=0; kj<nPhi*nZR; kj++ )
+    ndata[kj] = 0;
+
+  for( kj=0; kj<nZR; kj++ )
+    wt[kj] = 0;
+
+  int rank = nHandles[mesh[LIST]]->nrrd->axis[nHandles[mesh[LIST]]->nrrd->dim-1].size;
+
+  for( kj=0; kj<nCon; kj++ ) {
+    int c0 = (int) ptrCon[kj*rank];
+    int c1 = (int) ptrCon[kj*rank+1];
+    int c2 = (int) ptrCon[kj*rank+2];
+    int c3 = (int) ptrCon[kj*rank+3];
+    /*
+    pts[0] = Point( ptrZR[c0+1], 0, ptrZR[c0] );
+    pts[1] = Point( ptrZR[c1+1], 0, ptrZR[c1] );
+    pts[2] = Point( ptrZR[c2+1], 0, ptrZR[c2] );
+    pts[3] = Point( ptrZR[c3+1], 0, ptrZR[c3] );
+
+    p = Point( (ptrZR[c0+1]+ptrZR[c1+1]+ptrZR[c2+1]+ptrZR[c3+1])/4.0,
+	       0,
+	       (ptrZR[c0]+ptrZR[c1]+ptrZR[c2]+ptrZR[c3])/4.0 );
+
+    get_weights( p, pts, w );
+    */
+
+    w[0] = w[1] = w[2] = w[3] = 0.25;
+
+    ndata[ c0 ] += w[0] * ptr[kj];
+    ndata[ c1 ] += w[1] * ptr[kj];
+    ndata[ c2 ] += w[2] * ptr[kj];
+    ndata[ c3 ] += w[3] * ptr[kj];
+
+    wt[ c0 ] += w[0];
+    wt[ c1 ] += w[1];
+    wt[ c2 ] += w[2];
+    wt[ c3 ] += w[3];
+  }
+
+
+  cc = 0;
+  for( i=0; i<nPhi; i++ ) {
+    for( kj=0; kj<nZR; kj++ ) {
       
-      ndata[cc] = ptr[kj];
+      if( i == 0 )
+	ndata[cc] /= wt[kj];
+      else
+	ndata[cc] = ndata[kj];
+
       cc++;
     }
   }
 
   nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	   ndims+1, sink_size, nPhi*nVal-nVal);
+	   ndims+1, sink_size, nPhi*nZR);
+
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, nrrdCenterNode);
 
   vector< string > dataset;
 
@@ -390,6 +521,8 @@ execute(vector< NrrdDataHandle >& nHandles,
 
   nrrdWrap(nout->nrrd, ndata, nHandles[data[ZR]]->nrrd->type,
 	   ndims+1, sink_size, nPhi*nZR);
+
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, nrrdCenterNode);
 
   nout->nrrd->axis[0].label = strdup("XYZ:Vector");
   nout->nrrd->axis[1].label = strdup("Domain");
