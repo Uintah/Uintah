@@ -212,9 +212,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     if (!d_turbModel->getFilter()->isInitialized()) 
       d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
     d_props->setFilter(d_turbModel->getFilter());
-#ifdef divergenceconstraint
+//#ifdef divergenceconstraint
     d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
-#endif
+//#endif
   }
 #endif
 
@@ -281,7 +281,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 //    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
     d_props->sched_computeDenRefArray(sched, patches, matls,
 				      d_timeIntegratorLabels[curr_level]);
-  //  sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
+    // sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
 
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
@@ -306,7 +306,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
       d_props->sched_reComputeProps(sched, patches, matls,
 				    d_timeIntegratorLabels[curr_level], false);
-//      sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
+      //sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
       d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
 					    d_timeIntegratorLabels[curr_level]);
     } 
@@ -586,6 +586,8 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_divConstraintLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
   tsk->computes(d_lab->d_newCCVelocityLabel);
@@ -595,6 +597,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   tsk->computes(d_lab->d_newCCWVelocityLabel);
   tsk->computes(d_lab->d_kineticEnergyLabel);
   tsk->computes(d_lab->d_velocityDivergenceLabel);
+  tsk->computes(d_lab->d_velDivResidualLabel);
   tsk->computes(d_lab->d_continuityResidualLabel);
   }
   else {
@@ -605,6 +608,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   tsk->modifies(d_lab->d_newCCWVelocityLabel);
   tsk->modifies(d_lab->d_kineticEnergyLabel);
   tsk->modifies(d_lab->d_velocityDivergenceLabel);
+  tsk->modifies(d_lab->d_velDivResidualLabel);
   tsk->modifies(d_lab->d_continuityResidualLabel);
   }
   tsk->computes(timelabels->tke_out);
@@ -640,9 +644,11 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     CCVariable<double> vHatVel_CC;
     CCVariable<double> wHatVel_CC;
     CCVariable<double> divergence;
+    CCVariable<double> div_residual;
     CCVariable<double> residual;
     constCCVariable<double> density;
     constCCVariable<double> drhodt;
+    constCCVariable<double> div_constraint;
 
     constSFCXVariable<double> newUVel;
     constSFCYVariable<double> newVVel;
@@ -905,6 +911,8 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(div_constraint, d_lab->d_divConstraintLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
 
@@ -932,6 +940,8 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 			   matlIndex, patch);
     new_dw->allocateAndPut(divergence, d_lab->d_velocityDivergenceLabel,
 			   matlIndex, patch);
+    new_dw->allocateAndPut(div_residual, d_lab->d_velDivResidualLabel,
+			   matlIndex, patch);
     new_dw->allocateAndPut(residual, d_lab->d_continuityResidualLabel,
 			   matlIndex, patch);
     }
@@ -950,6 +960,8 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 			   matlIndex, patch);
     new_dw->getModifiable(divergence, d_lab->d_velocityDivergenceLabel,
 			   matlIndex, patch);
+    new_dw->getModifiable(div_residual, d_lab->d_velDivResidualLabel,
+			   matlIndex, patch);
     new_dw->getModifiable(residual, d_lab->d_continuityResidualLabel,
 			   matlIndex, patch);
     }
@@ -959,6 +971,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     newCCWVel.initialize(0.0);
     kineticEnergy.initialize(0.0);
     divergence.initialize(0.0);
+    div_residual.initialize(0.0);
     residual.initialize(0.0);
 
 
@@ -1159,12 +1172,14 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxxminus(ii-1,jj,kk);
 	  IntVector idxyminus(ii,jj-1,kk);
 	  IntVector idxzminus(ii,jj,kk-1);
+	  double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
 	  
 	  divergence[idx] = (newUVel[idxU]-newUVel[idx])/cellinfo->sew[ii]+
 		            (newVVel[idxV]-newVVel[idx])/cellinfo->sns[jj]+
 			    (newWVel[idxW]-newWVel[idx])/cellinfo->stb[kk];
 
-	  double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
+	  div_residual[idx] = divergence[idx]-div_constraint[idx]/vol;
+
 	  residual[idx] = (0.5*(density[idxU]+density[idx])*newUVel[idxU]-
 			   0.5*(density[idx]+density[idxxminus])*newUVel[idx])/cellinfo->sew[ii]+
 		          (0.5*(density[idxV]+density[idx])*newVVel[idxV]-
@@ -1883,11 +1898,13 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,const PatchSet* patches,
     tsk->requires(Task::OldDW, timelabels->maxabsu_in);
     tsk->requires(Task::OldDW, timelabels->maxabsv_in);
     tsk->requires(Task::OldDW, timelabels->maxabsw_in);
+    tsk->requires(Task::OldDW, timelabels->maxuxplus_in);
   }
   else {
     tsk->requires(Task::NewDW, timelabels->maxabsu_in);
     tsk->requires(Task::NewDW, timelabels->maxabsv_in);
     tsk->requires(Task::NewDW, timelabels->maxabsw_in);
+    tsk->requires(Task::NewDW, timelabels->maxuxplus_in);
   }
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -1920,22 +1937,27 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
   double maxAbsU;
   double maxAbsV;
   double maxAbsW;
+  double maxUxplus;
   max_vartype mxAbsU;
   max_vartype mxAbsV;
   max_vartype mxAbsW;
+  max_vartype mxUxp;
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     old_dw->get(mxAbsU, timelabels->maxabsu_in);
     old_dw->get(mxAbsV, timelabels->maxabsv_in);
     old_dw->get(mxAbsW, timelabels->maxabsw_in);
+    old_dw->get(mxUxp, timelabels->maxuxplus_in);
   }
   else {
     new_dw->get(mxAbsU, timelabels->maxabsu_in);
     new_dw->get(mxAbsV, timelabels->maxabsv_in);
     new_dw->get(mxAbsW, timelabels->maxabsw_in);
+    new_dw->get(mxUxp, timelabels->maxuxplus_in);
   }
   maxAbsU = mxAbsU;
   maxAbsV = mxAbsV;
   maxAbsW = mxAbsW;
+  maxUxplus = mxUxp;
 
   for (int p = 0; p < patches->size(); p++) {
 
@@ -1959,7 +1981,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
       cellInfoP.setData(scinew CellInformation(patch));
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
-    //CellInformation* cellinfo = cellInfoP.get().get_rep();
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     DataWarehouse* old_values_dw;
     if (timelabels->use_old_values)
@@ -1989,12 +2011,12 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     new_dw->get(cellType, d_lab->d_cellTypeLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    /*
-    double factor_old, factor_new, factor_divide;
-    factor_old = timelabels->factor_old;
-    factor_new = timelabels->factor_new;
-    factor_divide = timelabels->factor_divide;
-
+    
+//    double factor_old, factor_new, factor_divide;
+//    factor_old = timelabels->factor_old;
+//    factor_new = timelabels->factor_new;
+//    factor_divide = timelabels->factor_divide;
+/*
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -2019,8 +2041,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 	  ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
 	   (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
 	  cellinfo->stb[colZ]);
-	  densityGuess[currCell] = (factor_old*old_density[currCell]+
-			  factor_new*densityGuess[currCell])/factor_divide;
+//	  densityGuess[currCell] = (factor_old*old_density[currCell]+
+//			  factor_new*densityGuess[currCell])/factor_divide;
         }
       }
     } 
@@ -2043,8 +2065,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
            densityGuess[xminusCell] = delta_t * maxAbsU *
                (density[currCell] - density[xminusCell]) /
 	       cellinfo->dxep[colX-1];
-	   densityGuess[xminusCell] = (factor_old*old_density[xminusCell]+
-			  factor_new*densityGuess[xminusCell])/factor_divide;
+//	   densityGuess[xminusCell] = (factor_old*old_density[xminusCell]+
+//			  factor_new*densityGuess[xminusCell])/factor_divide;
 	}
       }
     }
@@ -2057,11 +2079,11 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         IntVector xplusCell(colX+1, colY, colZ);
 
         if (cellType[xplusCell] == out_celltypeval) {
-           densityGuess[xplusCell] -= delta_t * maxAbsU *
+           densityGuess[xplusCell] -= delta_t * maxUxplus *
                (density[xplusCell] - density[currCell]) /
 	       cellinfo->dxpw[colX+1];
-	   densityGuess[xplusCell] = (factor_old*old_density[xplusCell]+
-			  factor_new*densityGuess[xplusCell])/factor_divide;
+//	   densityGuess[xplusCell] = (factor_old*old_density[xplusCell]+
+//			  factor_new*densityGuess[xplusCell])/factor_divide;
 	}
       }
     }
@@ -2077,8 +2099,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
            densityGuess[yminusCell] = delta_t * maxAbsV *
                (density[currCell] - density[yminusCell]) /
 	       cellinfo->dynp[colY-1];
-	   densityGuess[yminusCell] = (factor_old*old_density[yminusCell]+
-			  factor_new*densityGuess[yminusCell])/factor_divide;
+//	   densityGuess[yminusCell] = (factor_old*old_density[yminusCell]+
+//			  factor_new*densityGuess[yminusCell])/factor_divide;
 	}
       }
     }
@@ -2094,8 +2116,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
            densityGuess[yplusCell] -= delta_t * maxAbsV *
                (density[yplusCell] - density[currCell]) /
 	       cellinfo->dyps[colY+1];
-	   densityGuess[yplusCell] = (factor_old*old_density[yplusCell]+
-			  factor_new*densityGuess[yplusCell])/factor_divide;
+//	   densityGuess[yplusCell] = (factor_old*old_density[yplusCell]+
+//			  factor_new*densityGuess[yplusCell])/factor_divide;
 	}
       }
     }
@@ -2111,8 +2133,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
            densityGuess[zminusCell] = delta_t * maxAbsW *
                (density[currCell] - density[zminusCell]) /
 	       cellinfo->dztp[colZ-1];
-	   densityGuess[zminusCell] = (factor_old*old_density[zminusCell]+
-			  factor_new*densityGuess[zminusCell])/factor_divide;
+//	   densityGuess[zminusCell] = (factor_old*old_density[zminusCell]+
+//			  factor_new*densityGuess[zminusCell])/factor_divide;
 	}
       }
     }
@@ -2128,8 +2150,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
            densityGuess[zplusCell] -= delta_t * maxAbsW *
                (density[zplusCell] - density[currCell]) /
 	       cellinfo->dzpb[colZ+1];
-	   densityGuess[zplusCell] = (factor_old*old_density[zplusCell]+
-			  factor_new*densityGuess[zplusCell])/factor_divide;
+//	   densityGuess[zplusCell] = (factor_old*old_density[zplusCell]+
+//			  factor_new*densityGuess[zplusCell])/factor_divide;
 	}
       }
     }
@@ -2207,8 +2229,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
           densityGuess[zplusCell] = densityGuess[currCell];
       }
     }
-  }*/
-
+  }
+*/
   }
 }
 //****************************************************************************
