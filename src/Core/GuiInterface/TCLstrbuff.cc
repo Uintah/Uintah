@@ -81,7 +81,7 @@ TCLstrbuff& TCLstrbuff::flush(){
   ctx->lock();
 
   const string::size_type n = ostringstream::str().size();
-  if (n>bSize_)
+  if (((int)n)>bSize_)
     buff_ = Tcl_Realloc(buff_, bSize_ = n);
 
   strcpy(buff_, ostringstream::str().c_str()); 
