@@ -53,10 +53,11 @@ const TypeDescription* get_type_description(IntVector*)
   return td;
 }
 
-ostream& operator<<(ostream& out, const IntVector& v)
+
+} //end namespace SCIRun
+
+ostream& operator<<(std::ostream& out, const SCIRun::IntVector& v)
 {
   out << "[int " << v.x() << ", " << v.y() << ", " << v.z() << ']';
   return out;
 }
-
-} //end namespace SCIRun

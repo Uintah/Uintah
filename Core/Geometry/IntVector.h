@@ -214,11 +214,11 @@ inline IntVector Abs(const IntVector& v)
 }
 
 
-SCICORESHARE std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
+//SCICORESHARE std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
 
 } // End namespace SCIRun
 
-
+std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
 
 
 #endif
