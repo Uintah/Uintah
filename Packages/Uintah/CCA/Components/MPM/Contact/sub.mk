@@ -3,7 +3,6 @@
 SRCDIR   := Packages/Uintah/CCA/Components/MPM/Contact
 
 SRCS     += \
-	$(SRCDIR)/RigidBodyContact.cc \
 	$(SRCDIR)/SpecifiedBodyContact.cc \
 	$(SRCDIR)/SingleVelContact.cc \
 	$(SRCDIR)/FrictionContact.cc  \
