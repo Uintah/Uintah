@@ -70,7 +70,7 @@ public:
     void append_port_msg(GeometryComm*);
     void addObj(GeomSalmonPort* port, GeomID serial, GeomObj *obj,
 		const clString&, CrowdMonitor* lock);
-    void delObj(GeomSalmonPort* port, GeomID serial);
+    void delObj(GeomSalmonPort* port, GeomID serial, int del);
     void delAll(GeomSalmonPort* port);
     void flushPort(int portid);
     void flushViews();

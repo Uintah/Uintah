@@ -248,13 +248,13 @@ void Salmon::addObj(GeomSalmonPort* port, int serial, GeomObj *obj,
 	roe[i]->itemAdded(si);
 }
 
-void Salmon::delObj(GeomSalmonPort* port, int serial)
+void Salmon::delObj(GeomSalmonPort* port, int serial, int del)
 {
     GeomSalmonItem* si;
     if(si = ((GeomSalmonItem*)port->getObj(serial))){
 	for (int i=0; i<roe.size(); i++)
 	    roe[i]->itemDeleted(si);
-	port->delObj(serial);
+	port->delObj(serial, del);
     } else {
 	cerr << "Error deleting object, object not in database...(serial=" << serial << ")" << endl;
     }
@@ -414,7 +414,7 @@ void Salmon::flushPort(int portid)
 	    addObj(pi, gmsg->serial, gmsg->obj, gmsg->name, gmsg->lock);
 	    break;
 	case MessageTypes::GeometryDelObj:
-	    delObj(pi, gmsg->serial);
+	    delObj(pi, gmsg->serial, gmsg->del);
 	    break;
 	case MessageTypes::GeometryDelAll:
 	    delAll(pi);

@@ -42,6 +42,11 @@
 const int STRINGSIZE=200;
 class OpenGLHelper;
 
+#define DO_REDRAW 0
+#define DO_PICK 1
+#define REDRAW_DONE 4
+#define PICK_DONE 5
+
 class OpenGL : public Renderer {
     Tk_Window tkwin;
     Window win;
@@ -68,6 +73,7 @@ public:
 				   const clString& height);
     virtual void redraw(Salmon*, Roe*, double tbeg, double tend,
 			int ntimesteps, double frametime);
+    void real_get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&);
     virtual void get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&);
     virtual void hide();
     virtual void dump_image(const clString&);
@@ -75,8 +81,8 @@ public:
 
     clString myname;
     void redraw_loop();
-    Semaphore send_sema;
-    Semaphore recv_sema;
+    Mailbox<int> send_mb;
+    Mailbox<int> recv_mb;
 
     Salmon* salmon;
     Roe* roe;
@@ -85,6 +91,13 @@ public:
     int nframes;
     double framerate;
     void redraw_frame();
+
+    int send_pick_x;
+    int send_pick_y;
+
+    GeomObj* ret_pick_obj;
+    GeomPick* ret_pick_pick;
+    
     // these functions were added to clean things up a bit...
 
 protected:
@@ -117,7 +130,7 @@ static int query_OpenGL()
 RegisterRenderer OpenGL_renderer("OpenGL", &query_OpenGL, &make_OpenGL);
 
 OpenGL::OpenGL()
-: tkwin(0), send_sema(0), recv_sema(0)
+: tkwin(0), send_mb(10), recv_mb(10), helper(0)
 {
     strbuf=scinew char[STRINGSIZE];
     drawinfo=scinew DrawInfoOpenGL;
@@ -188,34 +201,31 @@ void OpenGL::redraw(Salmon* s, Roe* r, double _tbeg, double _tend,
     tend=_tend;
     nframes=_nframes;
     framerate=_framerate;
-    send_sema.up(); // Tell it to redraw...
-    recv_sema.down(); // Wait until it is done...
+    send_mb.send(DO_REDRAW);
+    int rc=recv_mb.receive();
+    if(rc != REDRAW_DONE){
+	cerr << "Wanted redraw_done, but got: " << r << endl;
+    }
 }
 
 
 void OpenGL::redraw_loop()
 {
     // Get window information
-    void* spec;
-    if(salmon->lookup_specific("opengl_context", spec)){
-	cx=(GLXContext)spec;
-	TCLTask::lock(); // Unlock after MakeCurrent
-    } else {
-	TCLTask::lock();
-	tkwin=Tk_NameToWindow(the_interp, myname(), Tk_MainWindow(the_interp));
-	if(!tkwin){
-	    cerr << "Unable to locate window!\n";
-	    TCLTask::unlock();
-	    return;
-	}
-	dpy=Tk_Display(tkwin);
-	win=Tk_WindowId(tkwin);
-	cx=OpenGLGetContext(the_interp, myname());
-	if(!cx){
-	    cerr << "Unable to create OpenGL Context!\n";
-	    TCLTask::unlock();
-	    return;
-	}
+    TCLTask::lock();
+    tkwin=Tk_NameToWindow(the_interp, myname(), Tk_MainWindow(the_interp));
+    if(!tkwin){
+	cerr << "Unable to locate window!\n";
+	TCLTask::unlock();
+	return;
+    }
+    dpy=Tk_Display(tkwin);
+    win=Tk_WindowId(tkwin);
+    cx=OpenGLGetContext(the_interp, myname());
+    if(!cx){
+	cerr << "Unable to create OpenGL Context!\n";
+	TCLTask::unlock();
+	return;
     }
     fprintf(stderr, "dpy=%p, win=%p, cx=%p\n", dpy, win, cx);
     glXMakeCurrent(dpy, win, cx);
@@ -231,6 +241,7 @@ void OpenGL::redraw_loop()
     throttle.start();
     double newtime=0;
     while(1){
+	int nreply=0;
 	if(roe->inertia_mode){
 	    cerr << "Inertia mode...";
 	    cerr << "framerate=" << framerate << endl;
@@ -263,16 +274,37 @@ void OpenGL::redraw_loop()
 	    }
 	    newtime+=frametime;
 	    throttle.wait_for_time(newtime);
-	    while(send_sema.try_down()) { /* Nothing */}
+	    while(1){
+		int r;
+		if(!send_mb.try_receive(r))
+		    break;
+		if(r == DO_PICK){
+		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick);
+		    recv_mb.send(PICK_DONE);
+		} else {
+		    // Gobbly them up...
+		    nreply++;
+		}
+	    }
 	    View view(roe->view.get());
 	    view.eyep(view.eyep()+(view.eyep()-view.lookat())*0.01);
 	    roe->view.set(view);
 	} else {
-	    send_sema.down(); // Wait to be woken up...
+	    while(1){
+		int r=send_mb.receive();
+		if(r == DO_PICK){
+		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick);
+		    recv_mb.send(PICK_DONE);
+		} else {
+		    nreply++;
+		    break;
+		}
+	    }
 	    newtime=throttle.time();
 	}
 	redraw_frame();
-	recv_sema.up();
+	for(int i=0;i<nreply;i++)
+	    recv_mb.send(REDRAW_DONE);
     }
 }
 
@@ -298,6 +330,10 @@ void OpenGL::redraw_frame()
 	TCLTask::unlock();
     }
 
+    // Get a lock on the geometry database...
+    // Do this now to prevent a hold and wait condition with TCLTask
+    salmon->geomlock.read_lock();
+
     TCLTask::lock();
 
     // Clear the screen...
@@ -311,9 +347,6 @@ void OpenGL::redraw_frame()
     double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov()/2.))));
 
     drawinfo->reset();
-
-    // Get a lock on the geometry database...
-    salmon->geomlock.read_lock();
 
     // Compute znear and zfar...
     double znear;
@@ -330,6 +363,7 @@ void OpenGL::redraw_frame()
 	
 	clString globals("global");
 	roe->setState(drawinfo,globals);
+	drawinfo->pickmode=0;
 
 	int errcode;
 	while((errcode=glGetError()) != GL_NO_ERROR){
@@ -491,7 +525,6 @@ void OpenGL::redraw_frame()
 
 	    // Show the pretty picture
 	    glXSwapBuffers(dpy, win);
-	    //	    glXWaitGL();
 	}
 	throttle.stop();
 	double fps=nframes/throttle.time();
@@ -542,8 +575,27 @@ void OpenGL::hide()
 	current_drawer=0;
 }
 
+
 void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 		      GeomObj*& pick_obj, GeomPick*& pick_pick)
+{
+    send_pick_x=x;
+    send_pick_y=y;
+    send_mb.send(DO_PICK);
+    while(1){
+	int r=recv_mb.receive();
+	if(r != PICK_DONE){
+	    cerr << "WANTED A PICK!!! (got back " << r << endl;
+	} else {
+	    pick_obj=ret_pick_obj;
+	    pick_pick=ret_pick_pick;
+	    break;
+	}
+    }
+}
+
+void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
+			   GeomObj*& pick_obj, GeomPick*& pick_pick)
 {
     pick_obj=0;
     pick_pick=0;
@@ -559,7 +611,7 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
     double aspect=double(xres)/double(yres);
     double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov()/2.))));
 
-    //    drawinfo->reset();
+    salmon->geomlock.read_lock();
 
     // Compute znear and zfar...
     double znear;
@@ -567,10 +619,7 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
     if(compute_depth(roe, view, znear, zfar)){
 	// Setup picking...
 	TCLTask::lock();
-	int errcode;
-	while((errcode=glGetError()) != GL_NO_ERROR){
-	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
-	}
+
 	GLuint pick_buffer[pick_buffer_size];
 	glSelectBuffer(pick_buffer_size, pick_buffer);
 	glRenderMode(GL_SELECT);
@@ -582,9 +631,6 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 	glPushName(0);
 #endif
 
-	while((errcode=glGetError()) != GL_NO_ERROR){
-	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
-	}
 	glViewport(0, 0, xres, yres);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -592,18 +638,12 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	gluPickMatrix(x, viewport[3]-y, pick_window, pick_window, viewport);
 	gluPerspective(fovy, aspect, znear, zfar);
-	while((errcode=glGetError()) != GL_NO_ERROR){
-	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
-	}
 	
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	Point eyep(view.eyep());
 	Point lookat(view.lookat());
 	Vector up(view.up());
-	while((errcode=glGetError()) != GL_NO_ERROR){
-	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
-	}
 	gluLookAt(eyep.x(), eyep.y(), eyep.z(),
 		  lookat.x(), lookat.y(), lookat.z(),
 		  up.x(), up.y(), up.z());
@@ -613,10 +653,8 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 	drawinfo->pickmode=1;
 
 	// Draw it all...
-	while((errcode=glGetError()) != GL_NO_ERROR){
-	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
-	}
 	roe->do_for_visible(this, (RoeVisPMF)&OpenGL::pick_draw_obj);
+
 #if (_MIPS_SZPTR == 64)
 	glPopName();
 	glPopName();
@@ -626,6 +664,7 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 
 	glFlush();
 	int hits=glRenderMode(GL_RENDER);
+	int errcode;
 	while((errcode=glGetError()) != GL_NO_ERROR){
 	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
 	}
@@ -642,11 +681,14 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 	if(hits >= 1){
 	    int idx=0;
 	    min_z=0;
+	    int have_one=0;
 	    for (int h=0; h<hits; h++) {
 		int nnames=pick_buffer[idx++];
 		GLuint z=pick_buffer[idx++];
-		if (nnames > 1 && (h==0 || z < min_z)) {
+		cerr << "h=" << h << ", nnames=" << nnames << ", z=" << z << endl;
+		if (nnames > 1 && (!have_one || z < min_z)) {
 		    min_z=z;
+		    have_one=1;
 		    idx++; // Skip Max Z
 #if (_MIPS_SZPTR == 64)
 		    unsigned int ho1=pick_buffer[idx++];
@@ -661,6 +703,7 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 		    idx+=nnames-2; // Skip to the last one...
 		    hit_pick=pick_buffer[idx++];
 #endif
+		    cerr << "new min... (obj=" << hit_obj << ", pick=" << hit_pick << "\n";
 		} else {
 		    idx+=nnames+1;
 		}
@@ -670,6 +713,7 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 	pick_pick=(GeomPick*)hit_pick;
 	cerr << "pick_pick=" << pick_pick << endl;
     }
+    salmon->geomlock.read_unlock();
 }
 
 void OpenGL::dump_image(const clString& name) {
@@ -826,10 +870,8 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 		drawinfo->fog=0;
 	    }
 
-	    //		drawinfo->pickmode=0;            
 	}
     }
-    drawinfo->pickmode=0;
     drawinfo->currently_lit=drawinfo->lighting;
     drawinfo->init_lighting(drawinfo->lighting);
 	
