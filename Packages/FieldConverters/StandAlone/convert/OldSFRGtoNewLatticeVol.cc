@@ -11,7 +11,8 @@
  */
 
 #include <FieldConverters/Core/Datatypes/ScalarFieldRG.h>
-//#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolMesh.h>
 
 #include <iostream>
 #include <fstream>
@@ -24,7 +25,7 @@ using std::endl;
 using namespace SCIRun;
 using namespace FieldConverters;
 
-main(int argc, char **argv) {
+int main(int argc, char **argv) {
   ScalarFieldHandle handle;
   
   if (argc !=3) {
@@ -57,5 +58,19 @@ main(int argc, char **argv) {
   BinaryPiostream stream(argv[2], Piostream::Write);
   Pio(stream, fH);
 #endif
+
+  typedef LockingHandle< LatticeVol<double> > LatticeVolDoubleHandle;
+
+  LatticeVol<double> *lf = new LatticeVol<double>;
+  LatVolMesh *mesh  = 
+    dynamic_cast<LatVolMesh*>(lf->get_typed_mesh().get_rep());
+  FData3d<double> fdata = lf->fdata();
+
+  LatVolMesh::NodeIter iter = mesh->node_begin();
+  while (iter != mesh->node_end()) {
+    fdata[*iter]=9;
+    ++iter;
+  }
+
   return 0;  
 }    
