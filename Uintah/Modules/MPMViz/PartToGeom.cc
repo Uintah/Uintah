@@ -59,6 +59,7 @@ class PartToGeom : public Module {
     TCLdouble head_length;
     TCLdouble width_scale;
     TCLdouble shaft_rad;
+    TCLint show_nth;
     TCLint drawVectors;
     TCLint drawspheres;
     TCLint polygons; // number of polygons used to represent
@@ -88,7 +89,9 @@ PartToGeom::PartToGeom(const clString& id)
     drawVectors("drawVectors",id,this), length_scale("length_scale", id, this),
     head_length("head_length", id, this), width_scale("width_scale",id,this),
     shaft_rad("shaft_rad", id,this), drawcylinders("drawcylinders", id, this),
-    polygons("polygons", id, this), MIN_POLYS(8), MAX_POLYS(400),
+    polygons("polygons", id, this),
+    show_nth("show_nth", id, this),
+    MIN_POLYS(8), MAX_POLYS(400),
     MIN_NU(4), MAX_NU(20), MIN_NV(2), MAX_NV(20)
 {
   // Create the input port
@@ -109,6 +112,7 @@ PartToGeom::PartToGeom(const clString& id)
   width_scale.set(0.1);
   head_length.set(0.3);
   shaft_rad.set(0.1);
+  show_nth.set(1);
   outcolor=new Material(Color(0.3,0.3,0.3), Color(0.3,0.3,0.3),
 			   Color(0.3,0.3,0.3), 0);
     
@@ -219,8 +223,11 @@ void PartToGeom::execute()
     int nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
     int nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
     GeomGroup *obj = new GeomGroup;
+    int count = 0;
     for (int i=0; i<pos.size();i++) {
-      GeomSphere *sp = new GeomSphere(pos[i].asPoint(),radius.get(),
+      count++;
+      if (count == show_nth.get() ){ 
+	GeomSphere *sp = new GeomSphere(pos[i].asPoint(),radius.get(),
 					 nu, nv);
       // Default ColorMap ie. unscaled n autoscale values.
       //      if( cmap->isScaled() ) {
@@ -234,6 +241,8 @@ void PartToGeom::execute()
 //       } else { // ColorMap has been scaled just use it.
 	obj->add( new GeomMaterial( sp,(cmap->lookup(scalars[i])).get_rep()));
 //       }
+	count = 0;
+      }
     }
       
     if( drawVectors.get() == 1 && vectors.size() == pos.size()) {
@@ -257,11 +266,16 @@ void PartToGeom::execute()
     GeomGroup *obj = new GeomGroup;
     GeomPts *pts = new GeomPts(pos.size());
     pts->pickable = 1;
+    int count = 0;
     for(int i=0;i<pos.size();i++) {
-      pts->add(pos[i].asPoint(), (cmap->lookup(scalars[i]))->diffuse);
+      count++;
+      if (count == show_nth.get() ){ 
+	pts->add(pos[i].asPoint(), (cmap->lookup(scalars[i]))->diffuse);
       //pts->add(pos[i].asPoint());
       //Color c = (cmap->lookup(scalars[i]))->diffuse;
       //cerr<< "diffuse component is ("<< c.r()<<", "<<c.g()<<", "<<c.b()<<")\n";
+	count = 0;
+      }
     }
     obj->add( pts );
     if( drawVectors.get() == 1 && vectors.size() == pos.size()) {
@@ -313,6 +327,9 @@ Module* make_PartToGeom( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.7  1999/09/21 21:22:05  kuzimmer
+// added particle density control
+//
 // Revision 1.6  1999/09/21 16:12:24  kuzimmer
 // changes made to support binary/ASCII file IO
 //
