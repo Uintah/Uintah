@@ -8,7 +8,6 @@ CLASS
    Stream
    
    Class Stream creates and stores the mixing variables that are used in Arches
-
 GENERAL INFORMATION
    Stream.h - declaration of the class
    
