@@ -20,19 +20,15 @@
 #include <Classlib/HashTable.h>
 
 class CallbackData;
-class DialogShellC;
-class DrawingAreaC;
-class FormC;
-class FrameC;
 class GeomObj;
 class GeometryIPort;
-class GLwMDrawC;
 class MaterialProp;
+class PopupMenuC;
+class PushButtonC;
 class Roe;
 class XQColor;
 
 class Salmon : public Module {
-    Array1<GeometryIPort*> iports;
     Array1<Roe*> topRoe;
     virtual void do_execute();
     virtual void create_interface();
@@ -41,18 +37,30 @@ class Salmon : public Module {
     virtual void reconfigure_oports();
     DrawingAreaC* drawing_a;
     void redraw_widget(CallbackData*, void*);
+    void widget_button(CallbackData*, void*);
+    void move_widget(CallbackData*, void*);
+    void post_menu(CallbackData*, void*);
+    void destroy(CallbackData*, void*);
+    void popup_help(CallbackData*, void*);
     XQColor* bgcolor;
+    XQColor* fgcolor;
+    XQColor* top_shadow;
+    XQColor* bottom_shadow;
 
     // User Interface stuff...
-    DialogShellC* dialog;
-    FormC* form;
-    FrameC* gr_frame;
-    GLwMDrawC* graphics;
-
+    PushButtonC* btn;
+    GC gc;
+    int widget_ytitle;
+    int last_x, last_y;
+    PopupMenuC* popup_menu;
+    int width, height;
+    int title_width;
+    int compute_width();
+    int title_left;
+    int need_reconfig;
 
     int max_portno;
-    // Per port information
-    
+    virtual void connection(Module::ConnectionMode, int, int);
 
     //gotta store the geometry!
     HashTable<int, HashTable<int, GeomObj*>*> portHash;

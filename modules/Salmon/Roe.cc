@@ -16,7 +16,9 @@
 #include "myStringDefs.h"
 #include "myXmStrDefs.h"
 #include "myShell.h"
+
 #include <Geom.h>
+#include <XQColor.h>
 #include <Salmon/Salmon.h>
 #include <Salmon/Roe.h>
 #include <MotifCallback.h>
@@ -40,9 +42,68 @@
 #include <CallbackCloners.h>
 #include <Math/MiscMath.h>
 #include <Geometry/BBox.h>
+#include <stdio.h>
 #include <string.h>
+#include <X11/keysym.h>
 
 extern MtXEventLoop* evl;
+
+typedef void (Roe::*MouseHandler)(int action, int x, int y,
+				  int x_root, int y_root);
+#define BUTTON_DOWN 0
+#define BUTTON_UP 1
+#define BUTTON_MOTION 2
+#define SHIFT_MASK 1
+#define CONTROL_MASK 2
+#define META_MASK 4
+
+struct MouseHandlerData {
+    MouseHandler handler;
+    clString title;
+    MouseHandlerData(MouseHandler, const clString&);
+    ~MouseHandlerData();
+};
+
+MouseHandlerData::MouseHandlerData(MouseHandler handler, const clString& title)
+: handler(handler), title(title)
+{
+}
+
+MouseHandlerData::~MouseHandlerData()
+{
+}
+
+static MouseHandlerData mode_translate(&Roe::mouse_translate, "translate");
+static MouseHandlerData mode_scale(&Roe::mouse_scale, "scale");
+static MouseHandlerData mode_rotate(&Roe::mouse_rotate, "rotate");
+static MouseHandlerData mode_pick(&Roe::mouse_pick, "pick");
+
+static MouseHandlerData* mouse_handlers[8][3] = {
+    &mode_translate, 	// No modifiers, button 1
+    &mode_scale,       	// No modifiers, button 2
+    &mode_rotate,	// No modifiers, button 3
+    &mode_pick,		// Shift, button 1
+    0,			// Shift, button 2
+    0,			// Shift, button 3
+    0,			// Control, button 1
+    0,			// Control, button 2
+    0,			// Control, button 3
+    0,			// Control+Shift, button 1
+    0,			// Control+Shift, button 2
+    0,			// Control+Shift, button 3
+    0,			// Alt, button 1
+    0,			// Alt, button 2
+    0,			// Alt, button 3
+    0,			// Alt+Shift, button 1
+    0,			// Alt+Shift, button 2
+    0,			// Alt+Shift, button 3
+    0,			// Alt+Control, button 1
+    0,			// Alt+Control, button 2
+    0,			// Alt+Control, button 3
+    0,			// Alt+Control+Shift, button 1
+    0,			// Alt+Control+Shift, button 2
+    0,			// Alt+Control+Shift, button 3
+};
 
 GeomItem::GeomItem() {
 }
@@ -65,9 +126,15 @@ Roe::Roe(Salmon* s) {
 
 void Roe::RoeInit(Salmon* s) {
     evl->lock();
+    modifier_mask=0;
     doneInit=0;
+    old_fh=-1;
+    modefont=0;
+    buttons_exposed=0;
     manager=s;
     drawinfo=new DrawInfo;
+    drawinfo->drawtype=DrawInfo::Gouraud;
+
     firstGen=False;
     dialog=new DialogShellC;
     dialog->SetAllowShellResize(true);
@@ -79,13 +146,9 @@ void Roe::RoeInit(Salmon* s) {
     dialog->SetHeight(400);
     dialog->Create("sci", "sci", evl->get_display());
 
-    gr_frame=new FrameC;
-    gr_frame->SetShadowType(XmSHADOW_IN);
-    gr_frame->Create(*dialog, "frame");
-
     wholeWin=new RowColumnC;
     wholeWin->SetOrientation(XmHORIZONTAL);
-    wholeWin->Create(*gr_frame, "wholeWin");
+    wholeWin->Create(*dialog, "wholeWin");
 
     left=new RowColumnC;
     left->SetOrientation(XmVERTICAL);
@@ -95,11 +158,17 @@ void Roe::RoeInit(Salmon* s) {
     right->SetOrientation(XmVERTICAL);
     right->Create(*wholeWin, "right");
 
+    gr_frame=new FrameC;
+    gr_frame->SetShadowType(XmSHADOW_IN);
+    gr_frame->Create(*left, "frame");
+
     graphics=new GLwMDrawC;
     graphics->SetWidth(400);
     graphics->SetHeight(300);
     graphics->SetRgba(True);
     graphics->SetDoublebuffer(True);
+    graphics->SetNavigationType(XmSTICKY_TAB_GROUP);
+    graphics->SetTraversalOn(True);
     new MotifCallback<Roe>FIXCB(graphics, GLwNexposeCallback,
 				&manager->mailbox, this,
 				&Roe::redrawCB,
@@ -108,44 +177,13 @@ void Roe::RoeInit(Salmon* s) {
 				&manager->mailbox, this,
 				&Roe::initCB,
 				0, 0);
-    graphics->Create(*left, "opengl_viewer");
-
-    new MotifCallback<Roe>FIXCB(graphics, "<Btn1Up>", 
+    new MotifCallback<Roe>FIXCB(graphics, GLwNinputCallback,
 				&manager->mailbox, this,
-				&Roe::btn1upCB, 0, 
-				&CallbackCloners::event_clone);
-    new MotifCallback<Roe>FIXCB(graphics, "<Btn1Down>",
-				&manager->mailbox, this,
-				&Roe::btn1downCB, 0, 
-				&CallbackCloners::event_clone);
-    new MotifCallback<Roe>FIXCB(graphics, "<Btn1Motion>",
-				&manager->mailbox, this,
-				&Roe::btn1motionCB, 0, 
-				&CallbackCloners::event_clone);
-    new MotifCallback<Roe>FIXCB(graphics, "<Btn2Up>",
-				&manager->mailbox, this,
-				&Roe::btn2upCB, 0, 
-				&CallbackCloners::event_clone);
-    new MotifCallback<Roe>FIXCB(graphics, "<Btn2Down>",
-				&manager->mailbox, this,
-				&Roe::btn2downCB, 0, 
-				&CallbackCloners::event_clone);
-    new MotifCallback<Roe>FIXCB(graphics, "<Btn2Motion>",
-				&manager->mailbox, this,
-				&Roe::btn2motionCB, 0, 
-				&CallbackCloners::event_clone);
-    new MotifCallback<Roe>FIXCB(graphics, "<Btn3Up>",
-				&manager->mailbox, this,
-				&Roe::btn3upCB, 0, 
-				&CallbackCloners::event_clone);
-    new MotifCallback<Roe>FIXCB(graphics, "<Btn3Down>",
-				&manager->mailbox, this,
-				&Roe::btn3downCB, 0, 
-				&CallbackCloners::event_clone);
-    new MotifCallback<Roe>FIXCB(graphics, "<Btn3Motion>",
-				&manager->mailbox, this,
-				&Roe::btn3motionCB, 0, 
-				&CallbackCloners::event_clone);
+				&Roe::eventCB,
+				0, &CallbackCloners::gl_clone);
+    graphics->Create(*gr_frame, "opengl_viewer");
+    char* translations="<Enter>: glwInput()";
+    XtAugmentTranslations(*graphics, XtParseTranslationTable(translations));
 
     controls=new RowColumnC;
     controls->SetOrientation(XmHORIZONTAL);
@@ -270,7 +308,21 @@ void Roe::RoeInit(Salmon* s) {
     buttons=new DrawingAreaC;
     buttons->SetWidth(200);
     buttons->SetResizePolicy(XmRESIZE_GROW);
+    new MotifCallback<Roe>FIXCB(buttons, XmNexposeCallback,
+				&manager->mailbox, this,
+				&Roe::redraw_buttons,
+				0, 0);
     buttons->Create(*options, "buttons");
+    gc=XCreateGC(XtDisplay(*buttons), XtWindow(*buttons), 0, 0);
+    ColorManager* cm=manager->netedit->color_manager;
+    mod_colors[0]=new XQColor(cm, "black");
+    mod_colors[1]=new XQColor(cm, "red");
+    mod_colors[2]=new XQColor(cm, "purple");
+    mod_colors[3]=new XQColor(cm, "blue");
+    mod_colors[4]=new XQColor(cm, "green");
+    mod_colors[5]=new XQColor(cm, "orange");
+    mod_colors[6]=new XQColor(cm, "yellow");
+    mod_colors[7]=new XQColor(cm, "white");
     
     spawnRC=new RowColumnC;
     spawnRC->SetOrientation(XmVERTICAL);
@@ -382,6 +434,7 @@ void Roe::redrawAll()
 	glClearColor(0,0,0,1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	drawinfo->push_matl(manager->default_matl);
 	HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
 	for (iter.first(); iter.ok(); ++iter) {
 	    HashTable<int, GeomObj*>* serHash=iter.get_data();
@@ -390,12 +443,11 @@ void Roe::redrawAll()
 		GeomObj *geom=serIter.get_data();
 		for (int i=0; i<geomItemA.size(); i++)
 		    if (geomItemA[i]->geom == geom)
-			if (geomItemA[i]->vis){
-			    manager->default_matl->set(drawinfo);
+			if (geomItemA[i]->vis)
 			    geom->draw(drawinfo);
-			}
 	    }	
 	}
+	drawinfo->pop_matl();
 	GLwDrawingAreaSwapBuffers(*graphics);
 	for (int i=0; i<kids.size(); i++) {
 	    kids[i]->redrawAll();
@@ -551,28 +603,40 @@ void Roe::deleteChild(Roe *r)
 }
 void Roe::wireCB(CallbackData*, void*)
 {
-    NOT_FINISHED("Roe::wireCB");
+    drawinfo->drawtype=DrawInfo::WireFrame;
+    drawinfo->current_matl=0;
+    make_current();
+    glDisable(GL_LIGHTING);
+    redrawAll();
 }
+
 void Roe::flatCB(CallbackData*, void*)
 {
-    if (glIsEnabled(GL_LIGHTING)) {
-	make_current();
-	glDisable(GL_LIGHTING);
-	redrawAll();
-    }
+    drawinfo->drawtype=DrawInfo::Flat;
+    drawinfo->current_matl=0;
+    make_current();
+    glDisable(GL_LIGHTING);
+    redrawAll();
 }
+
 void Roe::gouraudCB(CallbackData*, void*)
 {
-    if (!glIsEnabled(GL_LIGHTING)) {
-	make_current();
-	glEnable(GL_LIGHTING);
-	redrawAll();
-    }
+    drawinfo->drawtype=DrawInfo::Gouraud;
+    drawinfo->current_matl=0;
+    make_current();
+    glEnable(GL_LIGHTING);
+    redrawAll();
 }
+
 void Roe::phongCB(CallbackData*, void*)
 {
-    NOT_FINISHED("Roe::phongCB");
+    drawinfo->drawtype=DrawInfo::Phong;
+    drawinfo->current_matl=0;
+    make_current();
+    glEnable(GL_LIGHTING);
+    redrawAll();
 }
+
 void Roe::ambientCB(CallbackData*, void*)
 {
     NOT_FINISHED("Roe::ambientCB");
@@ -634,6 +698,7 @@ void Roe::setHomeCB(CallbackData*, void*)
     make_current();
     glGetDoublev(GL_MODELVIEW_MATRIX, inheritMat);
 }
+
 Roe::Roe(const Roe& copy)
 {
     NOT_FINISHED("Roe::Roe");
@@ -657,96 +722,349 @@ void Roe::scale(Vector v)
     glScaled(v.x(), v.y(), v.z());
 }
 
-void Roe::btn1upCB(CallbackData* cbdata, void*) {
+void Roe::eventCB(CallbackData* cbdata, void*)
+{
     XEvent* event=cbdata->get_event();
-}
-
-void Roe::btn1downCB(CallbackData* cbdata, void*) {
-    XEvent* event=cbdata->get_event();
-    last_x=event->xbutton.x;
-    last_y=event->xbutton.y;
-}
-
-void Roe::btn1motionCB(CallbackData* cbdata, void*) {
-    XEvent* event=cbdata->get_event();
-    double xmtn=last_x-event->xmotion.x;
-    double ymtn=last_y-event->xmotion.y;
-    xmtn/=10;
-    ymtn/=10;
-    last_x = event->xmotion.x;
-    last_y = event->xmotion.y;
-    make_current();
-    glTranslated(-xmtn, ymtn, 0);
-    for (int i=0; i<kids.size(); i++)
-	kids[i]->translate(Vector(-xmtn, ymtn, 0));
-    redrawAll();
-}
-
-void Roe::btn2upCB(CallbackData* cbdata, void*) {
-    XEvent* event=cbdata->get_event();
-}
-
-void Roe::btn2downCB(CallbackData* cbdata, void*) {
-    XEvent* event=cbdata->get_event();
-    last_x=event->xbutton.x;
-    last_y=event->xbutton.y;
-}
-
-void Roe::btn2motionCB(CallbackData* cbdata, void*) {
-    double scl;
-    XEvent* event=cbdata->get_event();
-    double xmtn=last_x-event->xmotion.x;
-    double ymtn=last_y-event->xmotion.y;
-    xmtn/=30;
-    ymtn/=30;
-    last_x = event->xmotion.x;
-    last_y = event->xmotion.y;
-    make_current();
-    if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
-    glScaled(1+scl, 1+scl, 1+scl);
-    for (int i=0; i<kids.size(); i++)
-	kids[i]->scale(Vector(1+scl, 1+scl, 1+scl));
-    redrawAll();
-}
-
-void Roe::btn3upCB(CallbackData* cbdata, void*) {
-    XEvent* event=cbdata->get_event();
-}
-
-void Roe::btn3downCB(CallbackData* cbdata, void*) {
-    XEvent* event=cbdata->get_event();
-    last_x=event->xbutton.x;
-    last_y=event->xbutton.y;
-    bb.reset();
-    HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
-    for (iter.first(); iter.ok(); ++iter) {
-	HashTable<int, GeomObj*>* serHash=iter.get_data();
-	HashTableIter<int, GeomObj*> serIter(serHash);
-	for (serIter.first(); serIter.ok(); ++serIter) {
-	    GeomObj *geom=serIter.get_data();
-	    for (int i=0; i<geomItemA.size(); i++)
-		if (geomItemA[i]->geom == geom)
-		    if (geomItemA[i]->vis)
-			bb.extend(geom->bbox());
-	}		
-    }	
-}
-
-void Roe::btn3motionCB(CallbackData* cbdata, void*) {
-    XEvent* event=cbdata->get_event();
-    double xmtn=last_x-event->xmotion.x;
-    double ymtn=last_y-event->xmotion.y;
-    last_x = event->xmotion.x;
-    last_y = event->xmotion.y;
-    make_current();
-    Point cntr(bb.center());
-    glTranslated(cntr.x(), cntr.y(), cntr.z());
-    glRotated(xmtn*xmtn+ymtn*ymtn,-ymtn,-xmtn,0);
-    glTranslated(-cntr.x(), -cntr.y(), -cntr.z());
-    for (int i=0; i<kids.size(); i++) {
-	kids[i]->translate(Vector(cntr.x(), cntr.y(), cntr.z()));
-	kids[i]->rotate(xmtn*xmtn+ymtn*ymtn,Vector(-ymtn,-xmtn,0));
-	kids[i]->translate(Vector(-cntr.x(), -cntr.y(), -cntr.z()));
+    switch(event->type){
+    case EnterNotify:
+	evl->lock();
+	XmProcessTraversal(*graphics, XmTRAVERSE_CURRENT);
+	evl->unlock();
+	return;
+    case KeyPress:
+	if(event->xkey.state & (Button1Mask|Button2Mask|Button3Mask)){
+	    // Skip it...
+	} else{
+	    int mask=0;
+	    if(event->xkey.state & ControlMask)
+		mask|=CONTROL_MASK;
+	    if(event->xkey.state & ShiftMask)
+		mask|=SHIFT_MASK;
+	    if(event->xkey.state & (Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
+		mask|=META_MASK;
+	    switch(XLookupKeysym(&event->xkey, 0)){
+	    case XK_Shift_L:
+	    case XK_Shift_R:
+		mask|=SHIFT_MASK;
+		break;
+	    case XK_Control_L:
+	    case XK_Control_R:
+		mask|=CONTROL_MASK;
+		break;
+	    case XK_Meta_L:
+	    case XK_Meta_R:
+	    case XK_Alt_L:
+	    case XK_Alt_R:
+		mask|=META_MASK;
+		break;
+	    }
+	    
+	    if(mask != modifier_mask){
+		modifier_mask=mask;
+		update_modifier_widget();
+	    }
+	}
+	break;
+    case KeyRelease:
+	if(event->xkey.state & (Button1Mask|Button2Mask|Button3Mask)){
+	    // Skip it...
+	} else{
+	    int mask=0;
+	    if(event->xkey.state & ControlMask)
+		mask|=CONTROL_MASK;
+	    if(event->xkey.state & ShiftMask)
+		mask|=SHIFT_MASK;
+	    if(event->xkey.state & (Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
+		mask|=META_MASK;
+	    switch(XLookupKeysym(&event->xkey, 0)){
+	    case XK_Shift_L:
+	    case XK_Shift_R:
+		mask&=~SHIFT_MASK;
+		break;
+	    case XK_Control_L:
+	    case XK_Control_R:
+		mask&=~CONTROL_MASK;
+		break;
+	    case XK_Meta_L:
+	    case XK_Meta_R:
+	    case XK_Alt_L:
+	    case XK_Alt_R:
+		mask&=~META_MASK;
+		break;
+	    }
+	    if(mask != modifier_mask){
+		modifier_mask=mask;
+		update_modifier_widget();
+	    }
+	}
+	break;
+    case ButtonPress:
+	{
+	    switch(event->xbutton.button){
+	    case Button1:
+		last_btn=1;
+		break;
+	    case Button2:
+		last_btn=2;
+		break;
+	    case Button3:
+		last_btn=3;
+		break;
+	    default:
+		last_btn=1;
+		break;
+	    }
+	    int mask=0;
+	    if(event->xbutton.state & ControlMask)
+		mask|=CONTROL_MASK;
+	    if(event->xbutton.state & ShiftMask)
+		mask|=SHIFT_MASK;
+	    if(event->xbutton.state & (Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
+		mask|=META_MASK;
+	    if(mask != modifier_mask){
+		modifier_mask=mask;
+		update_modifier_widget();
+	    }
+	    MouseHandler handler=mouse_handlers[modifier_mask][last_btn-1]->handler;
+	    if(handler){
+		(this->*handler)(BUTTON_DOWN,
+				 event->xbutton.x, event->xbutton.y,
+				 event->xbutton.x_root, event->xbutton.y_root);
+	    }
+	}
+	break;
+    case ButtonRelease:
+	{
+	    switch(event->xbutton.button){
+	    case Button1:
+		last_btn=1;
+		break;
+	    case Button2:
+		last_btn=2;
+		break;
+	    case Button3:
+		last_btn=3;
+		break;
+	    default:
+		last_btn=1;
+		break;
+	    }
+	    MouseHandler handler=mouse_handlers[modifier_mask][last_btn-1]->handler;
+	    if(handler){
+		(this->*handler)(BUTTON_UP,
+				 event->xbutton.x, event->xbutton.y,
+				 event->xbutton.x_root, event->xbutton.y_root);
+	    }
+	    int mask=0;
+	    if(event->xbutton.state & ControlMask)
+		mask|=CONTROL_MASK;
+	    if(event->xbutton.state & ShiftMask)
+		mask|=SHIFT_MASK;
+	    if(event->xbutton.state & (Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
+		mask|=META_MASK;
+	    if(mask != modifier_mask){
+		modifier_mask=mask;
+		update_modifier_widget();
+	    }
+	}
+	break;
+    case MotionNotify:
+	{
+	    MouseHandler handler=mouse_handlers[modifier_mask][last_btn-1]->handler;
+	    if(handler){
+		(this->*handler)(BUTTON_MOTION,
+				 event->xmotion.x, event->xmotion.y,
+				 event->xmotion.x_root, event->xmotion.y_root);
+	    }
+	}
+	break;
+    default:
+	cerr << "Unknown event..\n";
+	break;
     }
-    redrawAll();
 }
+
+void Roe::mouse_translate(int action, int x, int y, int, int)
+{
+    switch(action){
+    case BUTTON_DOWN:
+	last_x=x;
+	last_y=y;
+	update_mode_string("translate: ");
+	break;
+    case BUTTON_MOTION:
+	{
+	    double xmtn=last_x-x;
+	    double ymtn=last_y-y;
+	    xmtn/=10;
+	    ymtn/=10;
+	    last_x = x;
+	    last_y = y;
+	    make_current();
+	    glTranslated(-xmtn, ymtn, 0);
+	    for (int i=0; i<kids.size(); i++)
+		kids[i]->translate(Vector(-xmtn, ymtn, 0));
+	    redrawAll();
+	    update_mode_string(clString("translate: ")+to_string(xmtn)
+			       +", "+to_string(ymtn));
+	}
+	break;
+    case BUTTON_UP:
+	update_mode_string("");
+	break;
+    }
+}
+
+void Roe::mouse_scale(int action, int x, int y, int, int)
+{
+    switch(action){
+    case BUTTON_DOWN:
+	last_x=x;
+	last_y=y;
+	break;
+    case BUTTON_MOTION:
+	{
+	    double scl;
+	    double xmtn=last_x-x;
+	    double ymtn=last_y-y;
+	    xmtn/=30;
+	    ymtn/=30;
+	    last_x = x;
+	    last_y = y;
+	    make_current();
+	    if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
+	    glScaled(1+scl, 1+scl, 1+scl);
+	    for (int i=0; i<kids.size(); i++)
+		kids[i]->scale(Vector(1+scl, 1+scl, 1+scl));
+	    redrawAll();
+	}
+	break;
+    }
+}
+
+void Roe::mouse_rotate(int action, int x, int y, int, int)
+{
+    switch(action){
+    case BUTTON_DOWN:
+	{
+	    last_x=x;
+	    last_y=y;
+	    bb.reset();
+	    HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
+	    for (iter.first(); iter.ok(); ++iter) {
+		HashTable<int, GeomObj*>* serHash=iter.get_data();
+		HashTableIter<int, GeomObj*> serIter(serHash);
+		for (serIter.first(); serIter.ok(); ++serIter) {
+		    GeomObj *geom=serIter.get_data();
+		    for (int i=0; i<geomItemA.size(); i++)
+			if (geomItemA[i]->geom == geom)
+			    if (geomItemA[i]->vis)
+				bb.extend(geom->bbox());
+		}		
+	    }	
+	}
+	break;
+    case BUTTON_MOTION:
+	{
+	    double xmtn=last_x-x;
+	    double ymtn=last_y-y;
+	    last_x = x;
+	    last_y = y;
+	    make_current();
+	    Point cntr(bb.center());
+	    glTranslated(cntr.x(), cntr.y(), cntr.z());
+	    glRotated(xmtn*xmtn+ymtn*ymtn,-ymtn,-xmtn,0);
+	    glTranslated(-cntr.x(), -cntr.y(), -cntr.z());
+	    for (int i=0; i<kids.size(); i++) {
+		kids[i]->translate(Vector(cntr.x(), cntr.y(), cntr.z()));
+		kids[i]->rotate(xmtn*xmtn+ymtn*ymtn,Vector(-ymtn,-xmtn,0));
+		kids[i]->translate(Vector(-cntr.x(), -cntr.y(), -cntr.z()));
+	    }
+	    redrawAll();
+	}
+	break;
+    case BUTTON_UP:
+	break;
+    }
+}
+
+void Roe::mouse_pick(int action, int x, int y, int, int)
+{
+    NOT_FINISHED("mouse_pick");
+}
+
+void Roe::update_mode_string(const clString& ms)
+{
+    mode_string=ms;
+    update_modifier_widget();
+}
+
+void Roe::update_modifier_widget()
+{
+    evl->lock();
+    if(!buttons_exposed)return;
+    Window w=XtWindow(*buttons);
+    Display* dpy=XtDisplay(*buttons);
+    XClearWindow(dpy, w);
+    XSetForeground(dpy, gc, mod_colors[modifier_mask]->pixel());
+    Dimension h;
+    buttons->GetHeight(&h);
+    buttons->GetValues();
+    int fh=h/5;
+    if(fh != old_fh || modefont==0){
+	if(modefont)XUnloadFont(dpy, modefont);
+	old_fh=fh;
+	char pattern[1000];
+	sprintf(pattern, "screen14");
+	int acount;
+	char** fontnames=XListFonts(dpy, pattern, 1, &acount);
+	if(acount==1){
+	    modefont=XLoadFont(dpy, fontnames[0]);
+	    XFreeFontNames(fontnames);
+	    XSetFont(dpy, gc, modefont);
+	}
+    }
+    int fh2=fh/2;
+    int fh4=fh2/2;
+    int wid=fh2+fh4;
+    XFillArc(dpy, w, gc, fh2,       fh2, fh2, fh2, 0, 180*64);
+    XFillArc(dpy, w, gc, fh2+wid,   fh2, fh2, fh2, 0, 180*64);
+    XFillArc(dpy, w, gc, fh2+2*wid, fh2, fh2, fh2, 0, 180*64);
+    XFillArc(dpy, w, gc, fh2,       fh,  fh2, fh2, 180*64, 180*64);
+    XFillArc(dpy, w, gc, fh2+wid,   fh,  fh2, fh2, 180*64, 180*64);
+    XFillArc(dpy, w, gc, fh2+2*wid, fh,  fh2, fh2, 180*64, 180*64);
+    XFillRectangle(dpy, w, gc, fh2,       fh2+fh4, fh2+1, fh2+2);
+    XFillRectangle(dpy, w, gc, fh2+wid,   fh2+fh4, fh2+1, fh2+2);
+    XFillRectangle(dpy, w, gc, fh2+2*wid, fh2+fh4, fh2+1, fh2+2);
+
+    int toff=wid*3+fh;
+    XDrawLine(dpy, w, gc, fh2+fh4, fh+fh4, fh2+fh4, 2*fh);
+    XDrawLine(dpy, w, gc, fh2+fh4, 2*fh  , toff-fh4, 2*fh);
+    XDrawLine(dpy, w, gc, fh2+wid+fh4, fh+fh4, fh2+wid+fh4, 3*fh);
+    XDrawLine(dpy, w, gc, fh2+wid+fh4, 3*fh,   toff-fh4, 3*fh);
+    XDrawLine(dpy, w, gc, fh2+2*wid+fh4, fh+fh4, fh2+2*wid+fh4, 4*fh);
+    XDrawLine(dpy, w, gc, fh2+2*wid+fh4, 4*fh, toff-fh4, 4*fh);
+
+    XSetForeground(dpy, gc, BlackPixelOfScreen(XtScreen(*buttons)));
+    XDrawString(dpy, w, gc, toff, fh+fh2, mode_string(), mode_string.len());
+    clString b1_string(mouse_handlers[modifier_mask][0]?
+		       mouse_handlers[modifier_mask][0]->title
+		       :clString(""));
+    clString b2_string(mouse_handlers[modifier_mask][1]?
+		       mouse_handlers[modifier_mask][1]->title
+		       :clString(""));
+    clString b3_string(mouse_handlers[modifier_mask][2]?
+		       mouse_handlers[modifier_mask][2]->title
+		       :clString(""));
+    XDrawString(dpy, w, gc, toff, 2*fh+fh2, b1_string(), b1_string.len());
+    XDrawString(dpy, w, gc, toff, 3*fh+fh2, b2_string(), b2_string.len());
+    XDrawString(dpy, w, gc, toff, 4*fh+fh2, b3_string(), b3_string.len());
+    evl->unlock();
+}
+
+void Roe::redraw_buttons(CallbackData*, void*)
+{
+    buttons_exposed=1;
+    update_modifier_widget();
+}
+

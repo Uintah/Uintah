@@ -85,15 +85,8 @@ class Roe {
     FrameC* gr_frame;
     Salmon* manager;
     BBox bb;
-    void btn1upCB(CallbackData*, void*);
-    void btn1downCB(CallbackData*, void*);
-    void btn1motionCB(CallbackData*, void*);
-    void btn2upCB(CallbackData*, void*);
-    void btn2downCB(CallbackData*, void*);
-    void btn2motionCB(CallbackData*, void*);
-    void btn3upCB(CallbackData*, void*);
-    void btn3downCB(CallbackData*, void*);
-    void btn3motionCB(CallbackData*, void*);
+    
+    void eventCB(CallbackData*, void*);
     void itemCB(CallbackData*, void*);
     void wireCB(CallbackData*, void*);
     void flatCB(CallbackData*, void*);
@@ -121,6 +114,19 @@ class Roe {
     int last_y;
     int haveInheritMat;
     double inheritMat[16];
+
+    int modifier_mask;
+    int last_btn;
+
+    void update_modifier_widget();
+    int old_fh;
+    GC gc;
+    int buttons_exposed;
+    void redraw_buttons(CallbackData*, void*);
+    XQColor* mod_colors[8];
+    Font modefont;
+    clString mode_string;
+    void update_mode_string(const clString&);
 public:
     Array1<GeomItem *> geomItemA;
     DrawInfo* drawinfo;
@@ -140,6 +146,11 @@ public:
     void SetTop();
     void redrawAll();
     void printLevel(int level, int&flag);
+
+    void mouse_translate(int, int, int, int, int);
+    void mouse_scale(int, int, int, int, int);
+    void mouse_rotate(int, int, int, int, int);
+    void mouse_pick(int, int, int, int, int);
 };
 
 
