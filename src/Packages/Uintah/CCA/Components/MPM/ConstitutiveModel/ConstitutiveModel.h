@@ -72,13 +72,14 @@ WARNING
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to) = 0;
 
+         virtual double computeRhoMicroCM(double pressure,
+					  const MPMMaterial* matl) = 0;
+
+         virtual void computePressEOSCM(double rho_m, double& press_eos,
+                                        double& dp_drho, double& ss_new,
+	        		        const MPMMaterial* matl) = 0;
+
 /*`==========TESTING==========*/ 
-         double computeRhoMicroCM(double pressure, const MPMMaterial* matl);
-
-         void computePressEOSCM(double rho_m, double& press_eos,
-                                double& dp_drho, double& ss_new,
-			        const MPMMaterial* matl);
-
 	 double computeRhoMicro(double& press,double& gamma,
 				        double& cv, double& Temp);
 	 
