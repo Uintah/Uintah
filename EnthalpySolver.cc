@@ -254,15 +254,11 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->allocate(enthalpyVars.scalarCoeff[ii], 
-		       d_lab->d_enthCoefSBLMLabel, ii, patch);
-      new_dw->allocate(enthalpyVars.scalarConvectCoeff[ii],
-		       d_lab->d_enthConvCoefSBLMLabel, ii, patch);
+      new_dw->allocateAndPut(enthalpyVars.scalarCoeff[ii], d_lab->d_enthCoefSBLMLabel, ii, patch);
+      new_dw->allocateTemporary(enthalpyVars.scalarConvectCoeff[ii],  patch);
     }
-    new_dw->allocate(enthalpyVars.scalarLinearSrc, 
-		     d_lab->d_enthLinSrcSBLMLabel, matlIndex, patch);
-    new_dw->allocate(enthalpyVars.scalarNonlinearSrc, 
-		     d_lab->d_enthNonLinSrcSBLMLabel, matlIndex, patch);
+    new_dw->allocateTemporary(enthalpyVars.scalarLinearSrc,  patch);
+    new_dw->allocateAndPut(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcSBLMLabel, matlIndex, patch);
  
     if (d_MAlab) {
 
@@ -317,11 +313,13 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &enthalpyVars);
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(enthalpyVars.scalarCoeff[ii], 
-		  d_lab->d_enthCoefSBLMLabel, ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpyVars.scalarCoeff[ii], 
+		  d_lab->d_enthCoefSBLMLabel, ii, patch); */;
     }
-    new_dw->put(enthalpyVars.scalarNonlinearSrc, 
-		d_lab->d_enthNonLinSrcSBLMLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(enthalpyVars.scalarNonlinearSrc, 
+		d_lab->d_enthNonLinSrcSBLMLabel, matlIndex, patch); */;
 
   }
 }
@@ -363,7 +361,7 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     // for explicit calculation
     {
-    new_dw->allocate(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
+    new_dw->allocateAndPut(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->copyOut(enthalpyVars.enthalpy, d_lab->d_enthalpyOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -377,8 +375,7 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcSBLMLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(enthalpyVars.residualEnthalpy, d_lab->d_enthalpyRes,
-		     matlIndex, patch);
+    new_dw->allocateTemporary(enthalpyVars.residualEnthalpy,  patch);
 
 #if 0  
   // compute eqn residual
@@ -394,8 +391,9 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
     d_linearSolver->enthalpyLisolve(pc, patch, delta_t, 
 				  &enthalpyVars, cellinfo, d_lab);
   // put back the results
-    new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
+		matlIndex, patch); */;
   }
 }
 
@@ -577,17 +575,12 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
     // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->allocate(enthalpyVars.scalarCoeff[ii], 
-		       d_lab->d_enthCoefPredLabel, ii, patch);
-      new_dw->allocate(enthalpyVars.scalarConvectCoeff[ii],
-		       d_lab->d_enthConvCoefPredLabel, ii, patch);
-      new_dw->allocate(enthalpyVars.scalarDiffusionCoeff[ii],
-		       d_lab->d_enthDiffCoefPredLabel, ii, patch);
+      new_dw->allocateAndPut(enthalpyVars.scalarCoeff[ii], d_lab->d_enthCoefPredLabel, ii, patch);
+      new_dw->allocateTemporary(enthalpyVars.scalarConvectCoeff[ii],  patch);
+      new_dw->allocateAndPut(enthalpyVars.scalarDiffusionCoeff[ii], d_lab->d_enthDiffCoefPredLabel, ii, patch);
     }
-    new_dw->allocate(enthalpyVars.scalarLinearSrc, 
-		     d_lab->d_enthLinSrcPredLabel, matlIndex, patch);
-    new_dw->allocate(enthalpyVars.scalarNonlinearSrc, 
-		     d_lab->d_enthNonLinSrcPredLabel, matlIndex, patch);
+    new_dw->allocateTemporary(enthalpyVars.scalarLinearSrc,  patch);
+    new_dw->allocateAndPut(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcPredLabel, matlIndex, patch);
     enthalpyVars.scalarNonlinearSrc.initialize(0.0);
     if (d_radiationCalc) {
       enthalpyVars.qfluxe.allocate(patch->getCellLowIndex(),
@@ -705,13 +698,16 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #endif
 #endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(enthalpyVars.scalarCoeff[ii], 
-		  d_lab->d_enthCoefPredLabel, ii, patch);
-      new_dw->put(enthalpyVars.scalarDiffusionCoeff[ii],
-		  d_lab->d_enthDiffCoefPredLabel, ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpyVars.scalarCoeff[ii], 
+		  d_lab->d_enthCoefPredLabel, ii, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpyVars.scalarDiffusionCoeff[ii],
+		  d_lab->d_enthDiffCoefPredLabel, ii, patch); */;
     }
-    new_dw->put(enthalpyVars.scalarNonlinearSrc, 
-		d_lab->d_enthNonLinSrcPredLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(enthalpyVars.scalarNonlinearSrc, 
+		d_lab->d_enthNonLinSrcPredLabel, matlIndex, patch); */;
 
   }
 }
@@ -811,10 +807,10 @@ EnthalpySolver::enthalpyLinearSolvePred(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     // for explicit calculation
 #ifdef correctorstep  
-    new_dw->allocate(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
+    new_dw->allocateAndPut(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
                 matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #else
-    new_dw->allocate(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
+    new_dw->allocateAndPut(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
                 matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #endif    
     new_dw->copyOut(enthalpyVars.enthalpy, d_lab->d_enthalpyOUTBCLabel, 
@@ -828,8 +824,7 @@ EnthalpySolver::enthalpyLinearSolvePred(const ProcessorGroup* pc,
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcPredLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(enthalpyVars.residualEnthalpy, d_lab->d_enthalpyRes,
-		     matlIndex, patch);
+    new_dw->allocateTemporary(enthalpyVars.residualEnthalpy,  patch);
 
   // apply underelax to eqn
     d_linearSolver->computeEnthalpyUnderrelax(pc, patch,
@@ -850,7 +845,7 @@ EnthalpySolver::enthalpyLinearSolvePred(const ProcessorGroup* pc,
 
     new_dw->get(old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(temp_enthalpy, d_lab->d_enthalpyTempLabel, 
+    new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyTempLabel, 
 		matlIndex, patch);
     temp_enthalpy.initialize(0.0);
     
@@ -869,16 +864,19 @@ EnthalpySolver::enthalpyLinearSolvePred(const ProcessorGroup* pc,
         }
       }
     }
-    new_dw->put(temp_enthalpy, d_lab->d_enthalpyTempLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(temp_enthalpy, d_lab->d_enthalpyTempLabel, matlIndex, patch); */;
 #endif
 #endif
 
 #ifdef correctorstep
-    new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
-                matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
+                matlIndex, patch); */;
 #else
-    new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
-                matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
+                matlIndex, patch); */;
 #endif
 
   }
@@ -1116,18 +1114,13 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->allocate(enthalpyVars.scalarCoeff[ii], 
-		       d_lab->d_enthCoefCorrLabel, ii, patch);
-      new_dw->allocate(enthalpyVars.scalarConvectCoeff[ii],
-		       d_lab->d_enthConvCoefCorrLabel, ii, patch);
-      new_dw->allocate(enthalpyVars.scalarDiffusionCoeff[ii],
-		       d_lab->d_enthDiffCoefCorrLabel, ii, patch);
+      new_dw->allocateAndPut(enthalpyVars.scalarCoeff[ii], d_lab->d_enthCoefCorrLabel, ii, patch);
+      new_dw->allocateTemporary(enthalpyVars.scalarConvectCoeff[ii],  patch);
+      new_dw->allocateAndPut(enthalpyVars.scalarDiffusionCoeff[ii], d_lab->d_enthDiffCoefCorrLabel, ii, patch);
 
     }
-    new_dw->allocate(enthalpyVars.scalarLinearSrc, 
-		     d_lab->d_enthLinSrcCorrLabel, matlIndex, patch);
-    new_dw->allocate(enthalpyVars.scalarNonlinearSrc, 
-		     d_lab->d_enthNonLinSrcCorrLabel, matlIndex, patch);
+    new_dw->allocateTemporary(enthalpyVars.scalarLinearSrc,  patch);
+    new_dw->allocateAndPut(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcCorrLabel, matlIndex, patch);
     enthalpyVars.scalarNonlinearSrc.initialize(0.0);
     if (d_radiationCalc) {
       enthalpyVars.qfluxe.allocate(patch->getCellLowIndex(),
@@ -1223,15 +1216,18 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 #endif
 #endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(enthalpyVars.scalarCoeff[ii], 
-		  d_lab->d_enthCoefCorrLabel, ii, patch);
-      new_dw->put(enthalpyVars.scalarDiffusionCoeff[ii],
-		  d_lab->d_enthDiffCoefCorrLabel, ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpyVars.scalarCoeff[ii], 
+		  d_lab->d_enthCoefCorrLabel, ii, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpyVars.scalarDiffusionCoeff[ii],
+		  d_lab->d_enthDiffCoefCorrLabel, ii, patch); */;
 
 
     }
-    new_dw->put(enthalpyVars.scalarNonlinearSrc, 
-		d_lab->d_enthNonLinSrcCorrLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(enthalpyVars.scalarNonlinearSrc, 
+		d_lab->d_enthNonLinSrcCorrLabel, matlIndex, patch); */;
 
   }
 }
@@ -1341,7 +1337,7 @@ EnthalpySolver::enthalpyLinearSolveCorr(const ProcessorGroup* pc,
   #endif
     // for explicit calculation
     {
-    new_dw->allocate(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
+    new_dw->allocateAndPut(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   #ifdef Runge_Kutta_3d
     new_dw->copyOut(enthalpyVars.enthalpy, d_lab->d_enthalpyIntermLabel, 
@@ -1360,8 +1356,7 @@ EnthalpySolver::enthalpyLinearSolveCorr(const ProcessorGroup* pc,
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcCorrLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(enthalpyVars.residualEnthalpy, d_lab->d_enthalpyRes,
-		     matlIndex, patch);
+    new_dw->allocateTemporary(enthalpyVars.residualEnthalpy,  patch);
 
   // apply underelax to eqn
     d_linearSolver->computeEnthalpyUnderrelax(pc, patch,
@@ -1454,8 +1449,9 @@ EnthalpySolver::enthalpyLinearSolveCorr(const ProcessorGroup* pc,
   #endif
 
   // put back the results
-    new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
+		matlIndex, patch); */;
   }
 }
 
@@ -1616,17 +1612,12 @@ void EnthalpySolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->allocate(enthalpyVars.scalarCoeff[ii], 
-		       d_lab->d_enthCoefIntermLabel, ii, patch);
-      new_dw->allocate(enthalpyVars.scalarConvectCoeff[ii],
-		       d_lab->d_enthConvCoefIntermLabel, ii, patch);
-      new_dw->allocate(enthalpyVars.scalarDiffusionCoeff[ii],
-		       d_lab->d_enthDiffCoefIntermLabel, ii, patch);
+      new_dw->allocateAndPut(enthalpyVars.scalarCoeff[ii], d_lab->d_enthCoefIntermLabel, ii, patch);
+      new_dw->allocateTemporary(enthalpyVars.scalarConvectCoeff[ii],  patch);
+      new_dw->allocateAndPut(enthalpyVars.scalarDiffusionCoeff[ii], d_lab->d_enthDiffCoefIntermLabel, ii, patch);
     }
-    new_dw->allocate(enthalpyVars.scalarLinearSrc, 
-		     d_lab->d_enthLinSrcIntermLabel, matlIndex, patch);
-    new_dw->allocate(enthalpyVars.scalarNonlinearSrc, 
-		     d_lab->d_enthNonLinSrcIntermLabel, matlIndex, patch);
+    new_dw->allocateTemporary(enthalpyVars.scalarLinearSrc,  patch);
+    new_dw->allocateAndPut(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcIntermLabel, matlIndex, patch);
     enthalpyVars.scalarNonlinearSrc.initialize(0.0);
     if (d_radiationCalc) {
       enthalpyVars.qfluxe.allocate(patch->getCellLowIndex(),
@@ -1710,13 +1701,16 @@ void EnthalpySolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 #endif
 #endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(enthalpyVars.scalarCoeff[ii], 
-		  d_lab->d_enthCoefIntermLabel, ii, patch);
-      new_dw->put(enthalpyVars.scalarDiffusionCoeff[ii],
-		  d_lab->d_enthDiffCoefIntermLabel, ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpyVars.scalarCoeff[ii], 
+		  d_lab->d_enthCoefIntermLabel, ii, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpyVars.scalarDiffusionCoeff[ii],
+		  d_lab->d_enthDiffCoefIntermLabel, ii, patch); */;
     }
-    new_dw->put(enthalpyVars.scalarNonlinearSrc, 
-		d_lab->d_enthNonLinSrcIntermLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(enthalpyVars.scalarNonlinearSrc, 
+		d_lab->d_enthNonLinSrcIntermLabel, matlIndex, patch); */;
 
   }
 }
@@ -1805,7 +1799,7 @@ EnthalpySolver::enthalpyLinearSolveInterm(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     // for explicit calculation
     {
-    new_dw->allocate(enthalpyVars.enthalpy, d_lab->d_enthalpyIntermLabel, 
+    new_dw->allocateAndPut(enthalpyVars.enthalpy, d_lab->d_enthalpyIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->copyOut(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1819,8 +1813,7 @@ EnthalpySolver::enthalpyLinearSolveInterm(const ProcessorGroup* pc,
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcIntermLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(enthalpyVars.residualEnthalpy, d_lab->d_enthalpyRes,
-		     matlIndex, patch);
+    new_dw->allocateTemporary(enthalpyVars.residualEnthalpy,  patch);
 
   // apply underelax to eqn
     d_linearSolver->computeEnthalpyUnderrelax(pc, patch,
@@ -1888,7 +1881,8 @@ EnthalpySolver::enthalpyLinearSolveInterm(const ProcessorGroup* pc,
   #endif
   
   // put back the results
-    new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpyIntermLabel, 
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpyIntermLabel, 
+		matlIndex, patch); */;
   }
 }

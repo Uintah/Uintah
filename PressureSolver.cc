@@ -496,22 +496,16 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
 	case Arches::XDIR:
 
-	  new_dw->allocate(pressureVars.uVelocityCoeff[ii], 
-			   d_lab->d_uVelCoefPBLMLabel, ii, patch);
-	  new_dw->allocate(pressureVars.uVelocityConvectCoeff[ii], 
-			   d_lab->d_uVelConvCoefPBLMLabel, ii, patch);
+	  new_dw->allocateAndPut(pressureVars.uVelocityCoeff[ii], d_lab->d_uVelCoefPBLMLabel, ii, patch);
+	  new_dw->allocateTemporary(pressureVars.uVelocityConvectCoeff[ii],  patch);
 	  break;
 	case Arches::YDIR:
-	  new_dw->allocate(pressureVars.vVelocityCoeff[ii], 
-			   d_lab->d_vVelCoefPBLMLabel, ii, patch);
-	  new_dw->allocate(pressureVars.vVelocityConvectCoeff[ii],
-			   d_lab->d_vVelConvCoefPBLMLabel, ii, patch);
+	  new_dw->allocateAndPut(pressureVars.vVelocityCoeff[ii], d_lab->d_vVelCoefPBLMLabel, ii, patch);
+	  new_dw->allocateTemporary(pressureVars.vVelocityConvectCoeff[ii],  patch);
 	  break;
 	case Arches::ZDIR:
-	  new_dw->allocate(pressureVars.wVelocityCoeff[ii], 
-			   d_lab->d_wVelCoefPBLMLabel, ii, patch);
-	  new_dw->allocate(pressureVars.wVelocityConvectCoeff[ii], 
-			   d_lab->d_wVelConvCoefPBLMLabel, ii, patch);
+	  new_dw->allocateAndPut(pressureVars.wVelocityCoeff[ii], d_lab->d_wVelCoefPBLMLabel, ii, patch);
+	  new_dw->allocateTemporary(pressureVars.wVelocityConvectCoeff[ii],  patch);
 	  break;
 	default:
 	  throw InvalidValue("invalid index for velocity in PressureSolver");
@@ -536,27 +530,21 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
       case Arches::XDIR:
 
-	new_dw->allocate(pressureVars.uVelLinearSrc, 
-			 d_lab->d_uVelLinSrcPBLMLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.uVelNonlinearSrc, 
-			 d_lab->d_uVelNonLinSrcPBLMLabel,
+	new_dw->allocateAndPut(pressureVars.uVelLinearSrc, d_lab->d_uVelLinSrcPBLMLabel, matlIndex, patch);
+	new_dw->allocateAndPut(pressureVars.uVelNonlinearSrc, d_lab->d_uVelNonLinSrcPBLMLabel,
 			 matlIndex, patch);
 	break;
 
       case Arches::YDIR:
 
-	new_dw->allocate(pressureVars.vVelLinearSrc, 
-			 d_lab->d_vVelLinSrcPBLMLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.vVelNonlinearSrc, 
-			 d_lab->d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
+	new_dw->allocateAndPut(pressureVars.vVelLinearSrc, d_lab->d_vVelLinSrcPBLMLabel, matlIndex, patch);
+	new_dw->allocateAndPut(pressureVars.vVelNonlinearSrc, d_lab->d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
 	break;
 
       case Arches::ZDIR:
 
-	new_dw->allocate(pressureVars.wVelLinearSrc, 
-			 d_lab->d_wVelLinSrcPBLMLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.wVelNonlinearSrc,
-			 d_lab->d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
+	new_dw->allocateAndPut(pressureVars.wVelLinearSrc, d_lab->d_wVelLinSrcPBLMLabel, matlIndex, patch);
+	new_dw->allocateAndPut(pressureVars.wVelNonlinearSrc, d_lab->d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
 	break;
 
       default:
@@ -614,25 +602,34 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // put required vars
 
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(pressureVars.uVelocityCoeff[ii], d_lab->d_uVelCoefPBLMLabel, 
-		  ii, patch);
-      new_dw->put(pressureVars.vVelocityCoeff[ii], d_lab->d_vVelCoefPBLMLabel, 
-		  ii, patch);
-      new_dw->put(pressureVars.wVelocityCoeff[ii], d_lab->d_wVelCoefPBLMLabel, 
-		  ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(pressureVars.uVelocityCoeff[ii], d_lab->d_uVelCoefPBLMLabel, 
+		  ii, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(pressureVars.vVelocityCoeff[ii], d_lab->d_vVelCoefPBLMLabel, 
+		  ii, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(pressureVars.wVelocityCoeff[ii], d_lab->d_wVelCoefPBLMLabel, 
+		  ii, patch); */;
     }
-    new_dw->put(pressureVars.uVelNonlinearSrc, 
-		d_lab->d_uVelNonLinSrcPBLMLabel, matlIndex, patch);
-    new_dw->put(pressureVars.uVelLinearSrc, 
-		d_lab->d_uVelLinSrcPBLMLabel, matlIndex, patch);
-    new_dw->put(pressureVars.vVelNonlinearSrc, 
-		d_lab->d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
-    new_dw->put(pressureVars.vVelLinearSrc, 
-		d_lab->d_vVelLinSrcPBLMLabel, matlIndex, patch);
-    new_dw->put(pressureVars.wVelNonlinearSrc, 
-		d_lab->d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
-    new_dw->put(pressureVars.wVelLinearSrc, 
-		d_lab->d_wVelLinSrcPBLMLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.uVelNonlinearSrc, 
+		d_lab->d_uVelNonLinSrcPBLMLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.uVelLinearSrc, 
+		d_lab->d_uVelLinSrcPBLMLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.vVelNonlinearSrc, 
+		d_lab->d_vVelNonLinSrcPBLMLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.vVelLinearSrc, 
+		d_lab->d_vVelLinSrcPBLMLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.wVelNonlinearSrc, 
+		d_lab->d_wVelNonLinSrcPBLMLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.wVelLinearSrc, 
+		d_lab->d_wVelLinSrcPBLMLabel, matlIndex, patch); */;
 
 #ifdef ARCHES_PRES_DEBUG
     std::cerr << "Done building matrix for vel coeff for pressure" << endl;
@@ -722,8 +719,7 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
     //  inputs : densityIN, pressureIN, [u,v,w]VelCoefPBLM[Arches::AP]
     //  outputs: presCoefPBLM[Arches::AE..AB] 
     for (int ii = 0; ii < nofStencils; ii++)
-      new_dw->allocate(pressureVars.pressCoeff[ii], 
-		       d_lab->d_presCoefPBLMLabel, ii, patch);
+      new_dw->allocateAndPut(pressureVars.pressCoeff[ii], d_lab->d_presCoefPBLMLabel, ii, patch);
     d_discretize->calculatePressureCoeff(pc, patch, old_dw, new_dw, 
 					 delta_t, cellinfo, &pressureVars);
 
@@ -745,10 +741,8 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
     //  outputs: presLinSrcPBLM, presNonLinSrcPBLM
     // Allocate space
 
-    new_dw->allocate(pressureVars.pressLinearSrc, 
-		     d_lab->d_presLinSrcPBLMLabel, matlIndex, patch);
-    new_dw->allocate(pressureVars.pressNonlinearSrc, 
-		     d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->allocateTemporary(pressureVars.pressLinearSrc,  patch);
+    new_dw->allocateAndPut(pressureVars.pressNonlinearSrc, d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
 
     d_source->calculatePressureSource(pc, patch, delta_t,
 				      cellinfo, &pressureVars);
@@ -774,11 +768,13 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
     // put required vars
 
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(pressureVars.pressCoeff[ii], d_lab->d_presCoefPBLMLabel, 
-		  ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(pressureVars.pressCoeff[ii], d_lab->d_presCoefPBLMLabel, 
+		  ii, patch); */;
     }
-    new_dw->put(pressureVars.pressNonlinearSrc, 
-		d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.pressNonlinearSrc, 
+		d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch); */;
 
 #ifdef ARCHES_PRES_DEBUG
   std::cerr << "Done building matrix for press coeff" << endl;
@@ -850,8 +846,7 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
 {
   // Get the required data
   {
-  new_dw->allocate(pressureVars.pressure, d_lab->d_pressurePredLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  new_dw->allocateTemporary(pressureVars.pressure,  patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   new_dw->copyOut(pressureVars.pressure, d_lab->d_pressurePSLabel, 
 	      matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   }
@@ -860,8 +855,7 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
 		   ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
   {
-  new_dw->allocate(pressureVars.pressNonlinearSrc, 
-		d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+  new_dw->allocateTemporary(pressureVars.pressNonlinearSrc,  patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   new_dw->copyOut(pressureVars.pressNonlinearSrc, 
 		 d_lab->d_presNonLinSrcPBLMLabel, 
 		 matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -973,7 +967,7 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
     new_dw->get(cellType, d_lab->d_mmcellTypeLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    new_dw->allocate(pPlusHydro, d_lab->d_pressPlusHydroLabel,
+    new_dw->allocateAndPut(pPlusHydro, d_lab->d_pressPlusHydroLabel,
 		     matlIndex, patch);
 
     IntVector valid_lo = patch->getCellFORTLowIndex();
@@ -987,8 +981,9 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
 					 valid_lo, valid_hi,
 					 cellType, mmwallid);
 		
-    new_dw->put(pPlusHydro, d_lab->d_pressPlusHydroLabel,
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(pPlusHydro, d_lab->d_pressPlusHydroLabel,
+		matlIndex, patch); */;
 
   }
 }
@@ -1361,7 +1356,7 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       new_dw->getCopy(pressureVars.scalarDiffusionCoeff[ii], 
 		      d_lab->d_scalDiffCoefPredLabel, 
 		      ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(pressureVars.divergence, d_lab->d_divConstraintLabel,
+    new_dw->allocateAndPut(pressureVars.divergence, d_lab->d_divConstraintLabel,
 		     matlIndex, patch);
     pressureVars.divergence.initialize(0.0);
 #endif
@@ -1456,22 +1451,16 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
 	case Arches::XDIR:
 
-	  new_dw->allocate(pressureVars.uVelocityCoeff[ii], 
-			   d_lab->d_uVelCoefPBLMLabel, ii, patch);
-	  new_dw->allocate(pressureVars.uVelocityConvectCoeff[ii], 
-			   d_lab->d_uVelConvCoefPBLMLabel, ii, patch);
+	  new_dw->allocateTemporary(pressureVars.uVelocityCoeff[ii],  patch);
+	  new_dw->allocateTemporary(pressureVars.uVelocityConvectCoeff[ii],  patch);
 	  break;
 	case Arches::YDIR:
-	  new_dw->allocate(pressureVars.vVelocityCoeff[ii], 
-			   d_lab->d_vVelCoefPBLMLabel, ii, patch);
-	  new_dw->allocate(pressureVars.vVelocityConvectCoeff[ii],
-			   d_lab->d_vVelConvCoefPBLMLabel, ii, patch);
+	  new_dw->allocateTemporary(pressureVars.vVelocityCoeff[ii],  patch);
+	  new_dw->allocateTemporary(pressureVars.vVelocityConvectCoeff[ii],  patch);
 	  break;
 	case Arches::ZDIR:
-	  new_dw->allocate(pressureVars.wVelocityCoeff[ii], 
-			   d_lab->d_wVelCoefPBLMLabel, ii, patch);
-	  new_dw->allocate(pressureVars.wVelocityConvectCoeff[ii], 
-			   d_lab->d_wVelConvCoefPBLMLabel, ii, patch);
+	  new_dw->allocateTemporary(pressureVars.wVelocityCoeff[ii],  patch);
+	  new_dw->allocateTemporary(pressureVars.wVelocityConvectCoeff[ii],  patch);
 	  break;
 	default:
 	  throw InvalidValue("invalid index for velocity in PressureSolver");
@@ -1496,13 +1485,9 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
       case Arches::XDIR:
 
-	new_dw->allocate(pressureVars.uVelLinearSrc, 
-			 d_lab->d_uVelLinSrcPBLMLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.uVelNonlinearSrc, 
-			 d_lab->d_uVelNonLinSrcPBLMLabel,
-			 matlIndex, patch);
-	new_dw->allocate(pressureVars.uVelRhoHat, 
-			 d_lab->d_uVelRhoHatLabel,
+	new_dw->allocateTemporary(pressureVars.uVelLinearSrc,  patch);
+	new_dw->allocateTemporary(pressureVars.uVelNonlinearSrc,  patch);
+	new_dw->allocateAndPut(pressureVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 	pressureVars.uVelRhoHat.copy(pressureVars.uVelocity,
 				     pressureVars.uVelRhoHat.getLowIndex(),
@@ -1512,12 +1497,9 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
       case Arches::YDIR:
 
-	new_dw->allocate(pressureVars.vVelLinearSrc, 
-			 d_lab->d_vVelLinSrcPBLMLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.vVelNonlinearSrc, 
-			 d_lab->d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.vVelRhoHat, 
-			 d_lab->d_vVelRhoHatLabel,
+	new_dw->allocateTemporary(pressureVars.vVelLinearSrc,  patch);
+	new_dw->allocateTemporary(pressureVars.vVelNonlinearSrc,  patch);
+	new_dw->allocateAndPut(pressureVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 	pressureVars.vVelRhoHat.copy(pressureVars.vVelocity,
 				     pressureVars.vVelRhoHat.getLowIndex(),
@@ -1527,12 +1509,9 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
       case Arches::ZDIR:
 
-	new_dw->allocate(pressureVars.wVelLinearSrc, 
-			 d_lab->d_wVelLinSrcPBLMLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.wVelNonlinearSrc,
-			 d_lab->d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.wVelRhoHat, 
-			 d_lab->d_wVelRhoHatLabel,
+	new_dw->allocateTemporary(pressureVars.wVelLinearSrc,  patch);
+	new_dw->allocateTemporary(pressureVars.wVelNonlinearSrc,  patch);
+	new_dw->allocateAndPut(pressureVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 	pressureVars.wVelRhoHat.copy(pressureVars.wVelocity,
 				     pressureVars.wVelRhoHat.getLowIndex(),
@@ -1616,7 +1595,7 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
     case Arches::XDIR:
 
-      new_dw->allocate(temp_uVel, d_lab->d_uVelTempLabel, matlIndex, patch);
+      new_dw->allocateAndPut(temp_uVel, d_lab->d_uVelTempLabel, matlIndex, patch);
       temp_uVel.initialize(0.0);
     
       indexLow = patch->getSFCXFORTLowIndex();
@@ -1637,13 +1616,14 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
           }
         }
       }
-      new_dw->put(temp_uVel, d_lab->d_uVelTempLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(temp_uVel, d_lab->d_uVelTempLabel, matlIndex, patch); */;
 
     break;
 
     case Arches::YDIR:
 
-      new_dw->allocate(temp_vVel, d_lab->d_vVelTempLabel, matlIndex, patch);
+      new_dw->allocateAndPut(temp_vVel, d_lab->d_vVelTempLabel, matlIndex, patch);
       temp_vVel.initialize(0.0);
     
       indexLow = patch->getSFCYFORTLowIndex();
@@ -1664,13 +1644,14 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
           }
         }
       }
-      new_dw->put(temp_vVel, d_lab->d_vVelTempLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(temp_vVel, d_lab->d_vVelTempLabel, matlIndex, patch); */;
     
     break;
 
     case Arches::ZDIR:
 
-      new_dw->allocate(temp_wVel, d_lab->d_wVelTempLabel, matlIndex, patch);
+      new_dw->allocateAndPut(temp_wVel, d_lab->d_wVelTempLabel, matlIndex, patch);
       temp_wVel.initialize(0.0);
 
       indexLow = patch->getSFCZFORTLowIndex();
@@ -1691,7 +1672,8 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
           }
         }
       }
-      new_dw->put(temp_wVel, d_lab->d_wVelTempLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(temp_wVel, d_lab->d_wVelTempLabel, matlIndex, patch); */;
 
     break;
 
@@ -1712,17 +1694,21 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #ifdef divergenceconstraint    
     // compute divergence constraint to use in pressure equation
     d_discretize->computeDivergence(pc, patch, &pressureVars);
-    new_dw->put(pressureVars.divergence, d_lab->d_divConstraintLabel,
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.divergence, d_lab->d_divConstraintLabel,
+		matlIndex, patch); */;
 #endif
   // put required vars
 
-    new_dw->put(pressureVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel, 
-		matlIndex, patch);
-    new_dw->put(pressureVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel, 
-		matlIndex, patch);
-    new_dw->put(pressureVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel, 
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel, 
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel, 
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel, 
+		matlIndex, patch); */;
 
 /*  CCVariable<double> divergence;
   divergence.allocate(pressureVars.old_density.getLowIndex(),
@@ -1865,8 +1851,7 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
     //  inputs : densityIN, pressureIN, [u,v,w]VelCoefPBLM[Arches::AP]
     //  outputs: presCoefPBLM[Arches::AE..AB] 
     for (int ii = 0; ii < nofStencils; ii++)
-      new_dw->allocate(pressureVars.pressCoeff[ii], 
-		       d_lab->d_presCoefPBLMLabel, ii, patch);
+      new_dw->allocateAndPut(pressureVars.pressCoeff[ii], d_lab->d_presCoefPBLMLabel, ii, patch);
     d_discretize->calculatePressureCoeff(pc, patch, old_dw, new_dw, 
 					 delta_t, cellinfo, &pressureVars);
 
@@ -1888,11 +1873,9 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
     //  outputs: presLinSrcPBLM, presNonLinSrcPBLM
     // Allocate space
 
-    new_dw->allocate(pressureVars.pressLinearSrc, 
-		     d_lab->d_presLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->allocateTemporary(pressureVars.pressLinearSrc,  patch);
     pressureVars.pressLinearSrc.initialize(0.0);
-    new_dw->allocate(pressureVars.pressNonlinearSrc, 
-		     d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->allocateAndPut(pressureVars.pressNonlinearSrc, d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
     pressureVars.pressNonlinearSrc.initialize(0.0);
     //    d_source->calculatePressureSource(pc, patch, delta_t,
     //				      cellinfo, &pressureVars);
@@ -1925,11 +1908,13 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
     // put required vars
 
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(pressureVars.pressCoeff[ii], d_lab->d_presCoefPBLMLabel, 
-		  ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(pressureVars.pressCoeff[ii], d_lab->d_presCoefPBLMLabel, 
+		  ii, patch); */;
     }
-    new_dw->put(pressureVars.pressNonlinearSrc, 
-		d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.pressNonlinearSrc, 
+		d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch); */;
 
 #ifdef ARCHES_PRES_DEBUG
   std::cerr << "Done building matrix for press coeff" << endl;
@@ -2076,11 +2061,9 @@ PressureSolver::pressureLinearSolvePred (const ProcessorGroup* pc,
   // Get the required data
   {
 #ifdef correctorstep
-  new_dw->allocate(pressureVars.pressure, d_lab->d_pressurePredLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  new_dw->allocateTemporary(pressureVars.pressure,  patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #else
-  new_dw->allocate(pressureVars.pressure, d_lab->d_pressureSPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  new_dw->allocateTemporary(pressureVars.pressure,  patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #endif
   new_dw->copyOut(pressureVars.pressure, d_lab->d_pressurePSLabel, 
 	      matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -2562,22 +2545,16 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 
 	case Arches::XDIR:
 
-	  new_dw->allocate(pressureVars.uVelocityCoeff[ii], 
-			   d_lab->d_uVelCoefPBLMCorrLabel, ii, patch);
-	  new_dw->allocate(pressureVars.uVelocityConvectCoeff[ii], 
-			   d_lab->d_uVelConvCoefPBLMCorrLabel, ii, patch);
+	  new_dw->allocateTemporary(pressureVars.uVelocityCoeff[ii],  patch);
+	  new_dw->allocateTemporary(pressureVars.uVelocityConvectCoeff[ii],  patch);
 	  break;
 	case Arches::YDIR:
-	  new_dw->allocate(pressureVars.vVelocityCoeff[ii], 
-			   d_lab->d_vVelCoefPBLMCorrLabel, ii, patch);
-	  new_dw->allocate(pressureVars.vVelocityConvectCoeff[ii],
-			   d_lab->d_vVelConvCoefPBLMCorrLabel, ii, patch);
+	  new_dw->allocateTemporary(pressureVars.vVelocityCoeff[ii],  patch);
+	  new_dw->allocateTemporary(pressureVars.vVelocityConvectCoeff[ii],  patch);
 	  break;
 	case Arches::ZDIR:
-	  new_dw->allocate(pressureVars.wVelocityCoeff[ii], 
-			   d_lab->d_wVelCoefPBLMCorrLabel, ii, patch);
-	  new_dw->allocate(pressureVars.wVelocityConvectCoeff[ii], 
-			   d_lab->d_wVelConvCoefPBLMCorrLabel, ii, patch);
+	  new_dw->allocateTemporary(pressureVars.wVelocityCoeff[ii],  patch);
+	  new_dw->allocateTemporary(pressureVars.wVelocityConvectCoeff[ii],  patch);
 	  break;
 	default:
 	  throw InvalidValue("invalid index for velocity in PressureSolver");
@@ -2602,13 +2579,9 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 
       case Arches::XDIR:
 
-	new_dw->allocate(pressureVars.uVelLinearSrc, 
-			 d_lab->d_uVelLinSrcPBLMCorrLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.uVelNonlinearSrc, 
-			 d_lab->d_uVelNonLinSrcPBLMCorrLabel,
-			 matlIndex, patch);
-	new_dw->allocate(pressureVars.uVelRhoHat, 
-			 d_lab->d_uVelRhoHatCorrLabel,
+	new_dw->allocateTemporary(pressureVars.uVelLinearSrc,  patch);
+	new_dw->allocateTemporary(pressureVars.uVelNonlinearSrc,  patch);
+	new_dw->allocateAndPut(pressureVars.uVelRhoHat, d_lab->d_uVelRhoHatCorrLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 	pressureVars.uVelRhoHat.copy(pressureVars.uVelocity,
 				     pressureVars.uVelRhoHat.getLowIndex(),
@@ -2618,12 +2591,9 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 
       case Arches::YDIR:
 
-	new_dw->allocate(pressureVars.vVelLinearSrc, 
-			 d_lab->d_vVelLinSrcPBLMCorrLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.vVelNonlinearSrc, 
-			 d_lab->d_vVelNonLinSrcPBLMCorrLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.vVelRhoHat, 
-			 d_lab->d_vVelRhoHatCorrLabel,
+	new_dw->allocateTemporary(pressureVars.vVelLinearSrc,  patch);
+	new_dw->allocateTemporary(pressureVars.vVelNonlinearSrc,  patch);
+	new_dw->allocateAndPut(pressureVars.vVelRhoHat, d_lab->d_vVelRhoHatCorrLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 	pressureVars.vVelRhoHat.copy(pressureVars.vVelocity,
 				     pressureVars.vVelRhoHat.getLowIndex(),
@@ -2633,12 +2603,9 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 
       case Arches::ZDIR:
 
-	new_dw->allocate(pressureVars.wVelLinearSrc, 
-			 d_lab->d_wVelLinSrcPBLMCorrLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.wVelNonlinearSrc,
-			 d_lab->d_wVelNonLinSrcPBLMCorrLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.wVelRhoHat, 
-			 d_lab->d_wVelRhoHatCorrLabel,
+	new_dw->allocateTemporary(pressureVars.wVelLinearSrc,  patch);
+	new_dw->allocateTemporary(pressureVars.wVelNonlinearSrc,  patch);
+	new_dw->allocateAndPut(pressureVars.wVelRhoHat, d_lab->d_wVelRhoHatCorrLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 	pressureVars.wVelRhoHat.copy(pressureVars.wVelocity,
 				     pressureVars.wVelRhoHat.getLowIndex(),
@@ -2807,12 +2774,15 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 
   // put required vars
 
-    new_dw->put(pressureVars.uVelRhoHat, d_lab->d_uVelRhoHatCorrLabel, 
-		matlIndex, patch);
-    new_dw->put(pressureVars.vVelRhoHat, d_lab->d_vVelRhoHatCorrLabel, 
-		matlIndex, patch);
-    new_dw->put(pressureVars.wVelRhoHat, d_lab->d_wVelRhoHatCorrLabel, 
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.uVelRhoHat, d_lab->d_uVelRhoHatCorrLabel, 
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.vVelRhoHat, d_lab->d_vVelRhoHatCorrLabel, 
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.wVelRhoHat, d_lab->d_wVelRhoHatCorrLabel, 
+		matlIndex, patch); */;
 
 #ifdef ARCHES_PRES_DEBUG
     std::cerr << "Done building matrix for vel coeff for pressure" << endl;
@@ -2921,8 +2891,7 @@ PressureSolver::buildLinearMatrixPressCorr(const ProcessorGroup* pc,
     //  inputs : densityIN, pressureIN, [u,v,w]VelCoefPBLM[Arches::AP]
     //  outputs: presCoefPBLM[Arches::AE..AB] 
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->allocate(pressureVars.pressCoeff[ii], 
-		       d_lab->d_presCoefCorrLabel, ii, patch);
+      new_dw->allocateAndPut(pressureVars.pressCoeff[ii], d_lab->d_presCoefCorrLabel, ii, patch);
       pressureVars.pressCoeff[ii].initialize(0.0);
     }
     d_discretize->calculatePressureCoeff(pc, patch, old_dw, new_dw, 
@@ -2946,10 +2915,8 @@ PressureSolver::buildLinearMatrixPressCorr(const ProcessorGroup* pc,
     //  outputs: presLinSrcPBLM, presNonLinSrcPBLM
     // Allocate space
 
-    new_dw->allocate(pressureVars.pressLinearSrc, 
-		     d_lab->d_presLinSrcCorrLabel, matlIndex, patch);
-    new_dw->allocate(pressureVars.pressNonlinearSrc, 
-		     d_lab->d_presNonLinSrcCorrLabel, matlIndex, patch);
+    new_dw->allocateTemporary(pressureVars.pressLinearSrc,  patch);
+    new_dw->allocateAndPut(pressureVars.pressNonlinearSrc, d_lab->d_presNonLinSrcCorrLabel, matlIndex, patch);
     pressureVars.pressLinearSrc.initialize(0.0);
     pressureVars.pressNonlinearSrc.initialize(0.0);
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
@@ -2975,11 +2942,13 @@ PressureSolver::buildLinearMatrixPressCorr(const ProcessorGroup* pc,
     // put required vars
 
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(pressureVars.pressCoeff[ii], d_lab->d_presCoefCorrLabel, 
-		  ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(pressureVars.pressCoeff[ii], d_lab->d_presCoefCorrLabel, 
+		  ii, patch); */;
     }
-    new_dw->put(pressureVars.pressNonlinearSrc, 
-		d_lab->d_presNonLinSrcCorrLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.pressNonlinearSrc, 
+		d_lab->d_presNonLinSrcCorrLabel, matlIndex, patch); */;
 
 #ifdef ARCHES_PRES_DEBUG
   std::cerr << "Done building matrix for press coeff" << endl;
@@ -3116,8 +3085,7 @@ PressureSolver::pressureLinearSolveCorr (const ProcessorGroup* pc,
 					 ArchesVariables& pressureVars)
 {
   // Get the required data
-  new_dw->allocate(pressureVars.pressure, d_lab->d_pressureSPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  new_dw->allocateTemporary(pressureVars.pressure,  patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   #ifdef Runge_Kutta_3d
   new_dw->copyOut(pressureVars.pressure, d_lab->d_pressureIntermLabel, 
 	      matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -3481,22 +3449,16 @@ PressureSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 
 	case Arches::XDIR:
 
-	  new_dw->allocate(pressureVars.uVelocityCoeff[ii], 
-			   d_lab->d_uVelCoefPBLMIntermLabel, ii, patch);
-	  new_dw->allocate(pressureVars.uVelocityConvectCoeff[ii], 
-			   d_lab->d_uVelConvCoefPBLMIntermLabel, ii, patch);
+	  new_dw->allocateTemporary(pressureVars.uVelocityCoeff[ii],  patch);
+	  new_dw->allocateTemporary(pressureVars.uVelocityConvectCoeff[ii],  patch);
 	  break;
 	case Arches::YDIR:
-	  new_dw->allocate(pressureVars.vVelocityCoeff[ii], 
-			   d_lab->d_vVelCoefPBLMIntermLabel, ii, patch);
-	  new_dw->allocate(pressureVars.vVelocityConvectCoeff[ii],
-			   d_lab->d_vVelConvCoefPBLMIntermLabel, ii, patch);
+	  new_dw->allocateTemporary(pressureVars.vVelocityCoeff[ii],  patch);
+	  new_dw->allocateTemporary(pressureVars.vVelocityConvectCoeff[ii],  patch);
 	  break;
 	case Arches::ZDIR:
-	  new_dw->allocate(pressureVars.wVelocityCoeff[ii], 
-			   d_lab->d_wVelCoefPBLMIntermLabel, ii, patch);
-	  new_dw->allocate(pressureVars.wVelocityConvectCoeff[ii], 
-			   d_lab->d_wVelConvCoefPBLMIntermLabel, ii, patch);
+	  new_dw->allocateTemporary(pressureVars.wVelocityCoeff[ii],  patch);
+	  new_dw->allocateTemporary(pressureVars.wVelocityConvectCoeff[ii],  patch);
 	  break;
 	default:
 	  throw InvalidValue("invalid index for velocity in PressureSolver");
@@ -3521,13 +3483,9 @@ PressureSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 
       case Arches::XDIR:
 
-	new_dw->allocate(pressureVars.uVelLinearSrc, 
-			 d_lab->d_uVelLinSrcPBLMIntermLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.uVelNonlinearSrc, 
-			 d_lab->d_uVelNonLinSrcPBLMIntermLabel,
-			 matlIndex, patch);
-	new_dw->allocate(pressureVars.uVelRhoHat, 
-			 d_lab->d_uVelRhoHatIntermLabel,
+	new_dw->allocateTemporary(pressureVars.uVelLinearSrc,  patch);
+	new_dw->allocateTemporary(pressureVars.uVelNonlinearSrc,  patch);
+	new_dw->allocateAndPut(pressureVars.uVelRhoHat, d_lab->d_uVelRhoHatIntermLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 	pressureVars.uVelRhoHat.copy(pressureVars.uVelocity,
 				     pressureVars.uVelRhoHat.getLowIndex(),
@@ -3537,12 +3495,9 @@ PressureSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 
       case Arches::YDIR:
 
-	new_dw->allocate(pressureVars.vVelLinearSrc, 
-			 d_lab->d_vVelLinSrcPBLMIntermLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.vVelNonlinearSrc, 
-			 d_lab->d_vVelNonLinSrcPBLMIntermLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.vVelRhoHat, 
-			 d_lab->d_vVelRhoHatIntermLabel,
+	new_dw->allocateTemporary(pressureVars.vVelLinearSrc,  patch);
+	new_dw->allocateTemporary(pressureVars.vVelNonlinearSrc,  patch);
+	new_dw->allocateAndPut(pressureVars.vVelRhoHat, d_lab->d_vVelRhoHatIntermLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 	pressureVars.vVelRhoHat.copy(pressureVars.vVelocity,
 				     pressureVars.vVelRhoHat.getLowIndex(),
@@ -3552,12 +3507,9 @@ PressureSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 
       case Arches::ZDIR:
 
-	new_dw->allocate(pressureVars.wVelLinearSrc, 
-			 d_lab->d_wVelLinSrcPBLMIntermLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.wVelNonlinearSrc,
-			 d_lab->d_wVelNonLinSrcPBLMIntermLabel, matlIndex, patch);
-	new_dw->allocate(pressureVars.wVelRhoHat, 
-			 d_lab->d_wVelRhoHatIntermLabel,
+	new_dw->allocateTemporary(pressureVars.wVelLinearSrc,  patch);
+	new_dw->allocateTemporary(pressureVars.wVelNonlinearSrc,  patch);
+	new_dw->allocateAndPut(pressureVars.wVelRhoHat, d_lab->d_wVelRhoHatIntermLabel,
 			 matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 	pressureVars.wVelRhoHat.copy(pressureVars.wVelocity,
 				     pressureVars.wVelRhoHat.getLowIndex(),
@@ -3744,12 +3696,15 @@ PressureSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 
   // put required vars
 
-    new_dw->put(pressureVars.uVelRhoHat, d_lab->d_uVelRhoHatIntermLabel, 
-		matlIndex, patch);
-    new_dw->put(pressureVars.vVelRhoHat, d_lab->d_vVelRhoHatIntermLabel, 
-		matlIndex, patch);
-    new_dw->put(pressureVars.wVelRhoHat, d_lab->d_wVelRhoHatIntermLabel, 
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.uVelRhoHat, d_lab->d_uVelRhoHatIntermLabel, 
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.vVelRhoHat, d_lab->d_vVelRhoHatIntermLabel, 
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.wVelRhoHat, d_lab->d_wVelRhoHatIntermLabel, 
+		matlIndex, patch); */;
 
 #ifdef ARCHES_PRES_DEBUG
     std::cerr << "Done building matrix for vel coeff for pressure" << endl;
@@ -3834,8 +3789,7 @@ PressureSolver::buildLinearMatrixPressInterm(const ProcessorGroup* pc,
     //  inputs : densityIN, pressureIN, [u,v,w]VelCoefPBLM[Arches::AP]
     //  outputs: presCoefPBLM[Arches::AE..AB] 
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->allocate(pressureVars.pressCoeff[ii], 
-		       d_lab->d_presCoefIntermLabel, ii, patch);
+      new_dw->allocateAndPut(pressureVars.pressCoeff[ii], d_lab->d_presCoefIntermLabel, ii, patch);
       pressureVars.pressCoeff[ii].initialize(0.0);
     }
     d_discretize->calculatePressureCoeff(pc, patch, old_dw, new_dw, 
@@ -3859,10 +3813,8 @@ PressureSolver::buildLinearMatrixPressInterm(const ProcessorGroup* pc,
     //  outputs: presLinSrcPBLM, presNonLinSrcPBLM
     // Allocate space
 
-    new_dw->allocate(pressureVars.pressLinearSrc, 
-		     d_lab->d_presLinSrcIntermLabel, matlIndex, patch);
-    new_dw->allocate(pressureVars.pressNonlinearSrc, 
-		     d_lab->d_presNonLinSrcIntermLabel, matlIndex, patch);
+    new_dw->allocateTemporary(pressureVars.pressLinearSrc,  patch);
+    new_dw->allocateAndPut(pressureVars.pressNonlinearSrc, d_lab->d_presNonLinSrcIntermLabel, matlIndex, patch);
     pressureVars.pressLinearSrc.initialize(0.0);
     pressureVars.pressNonlinearSrc.initialize(0.0);
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
@@ -3888,11 +3840,13 @@ PressureSolver::buildLinearMatrixPressInterm(const ProcessorGroup* pc,
     // put required vars
 
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(pressureVars.pressCoeff[ii], d_lab->d_presCoefIntermLabel, 
-		  ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(pressureVars.pressCoeff[ii], d_lab->d_presCoefIntermLabel, 
+		  ii, patch); */;
     }
-    new_dw->put(pressureVars.pressNonlinearSrc, 
-		d_lab->d_presNonLinSrcIntermLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(pressureVars.pressNonlinearSrc, 
+		d_lab->d_presNonLinSrcIntermLabel, matlIndex, patch); */;
 
 #ifdef ARCHES_PRES_DEBUG
   std::cerr << "Done building matrix for press coeff" << endl;
@@ -4024,8 +3978,7 @@ PressureSolver::pressureLinearSolveInterm (const ProcessorGroup* pc,
 					 ArchesVariables& pressureVars)
 {
   // Get the required data
-  new_dw->allocate(pressureVars.pressure, d_lab->d_pressureIntermLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  new_dw->allocateTemporary(pressureVars.pressure,  patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   new_dw->copyOut(pressureVars.pressure, d_lab->d_pressurePredLabel, 
 	      matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) 
