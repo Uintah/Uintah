@@ -37,10 +37,6 @@ Image::Image(int xres, int yres, bool stereo)
 {
     image=0;
     resize_image();
-    if (stereo)
-      cerr << "Image created with res ("<<xres<<", "<<yres<<") in stereo\n";
-    else
-      cerr << "Image created with res ("<<xres<<", "<<yres<<") in mono\n";
 }
 
 Image::~Image()
