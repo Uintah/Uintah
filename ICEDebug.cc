@@ -968,7 +968,6 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
                                    DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
-  // Not used: int levelIndx = level->getIndex();
       
   for(int p=0; p<patches->size(); p++)  {
     const Patch* patch = patches->get(p);  
@@ -979,10 +978,11 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
     int numICEmatls = d_sharedState->getNumICEMatls();
     int numALLMatls = d_sharedState->getNumMatls();
 
-    static double initial_total_eng;
-    static Vector initial_total_mom;
+    const int numLevels = new_dw->getGrid()->numLevels();
+    static vector<Vector> initial_total_mom(numLevels);
+    static vector<double> initial_total_eng(numLevels);
+    static vector<double> initial_total_mass(numLevels);
     int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-    // Not used: static int n_passes = 0;
     
     vector<Vector> mat_momentum(numICEmatls);
     vector<double> mat_mass(numICEmatls);
@@ -1041,11 +1041,12 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
     //__________________________________
     // Dump diagnostics if only one patch
     int numPatches = level->numPatches();
+    int L_indx = level->getIndex();
     if( numPatches == 1 ){ 
       cout.setf(ios::scientific,ios::floatfield);
       cout.precision(8);
       for (int m = 0; m < numICEmatls; m++ ) {
-        cout << " Mat " << m << " L- " << level->getIndex()<< endl;
+        cout << " Mat " << m << " L- " << L_indx<< endl;
         cout << " mass        " <<  mat_mass[m] << endl;
         cout << " momentum    " << mat_momentum[m]
              << " length: " << mat_momentum[m].length() << endl;
@@ -1056,21 +1057,29 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
       //__________________________________
       //  set the inital values
       if ( timestep == 1) {
-        initial_total_eng = total_energy;
-        initial_total_mom = total_momentum;
+        initial_total_eng[L_indx]  = total_energy;
+        initial_total_mom[L_indx]  = total_momentum;
+        initial_total_mass[L_indx] = total_mass;
       } 
 
       double change_total_mom =
-                  100.0 * (total_momentum.length() - initial_total_mom.length())/
-                  (initial_total_mom.length() + d_SMALL_NUM);
+      100.0 * (total_momentum.length() - initial_total_mom[L_indx].length())/
+              (initial_total_mom[L_indx].length() + d_SMALL_NUM);
+              
       double change_total_eng =
-                  100.0 * (total_energy - initial_total_eng)/
-                  (initial_total_eng + d_SMALL_NUM);
+      100.0 * (total_energy - initial_total_eng[L_indx])/
+              (initial_total_eng[L_indx] + d_SMALL_NUM);
+              
+      double change_total_mass =
+      100.0 * (total_mass - initial_total_mass[L_indx])/
+              (initial_total_mass[L_indx] + d_SMALL_NUM);              
+              
       cout << "Totals: \t mass " << total_mass 
            << " \t\t momentum " << total_momentum 
            << " \t\t energy   " << total_energy << endl;
       cout << "Percent change in total mom.: " << change_total_mom 
-           << " \t  total eng: " << change_total_eng << endl;
+           << " \t  total eng: " << change_total_eng 
+           << " \t  total mass: " << change_total_mass << endl;
       
     }  // numPatrches==1
 
