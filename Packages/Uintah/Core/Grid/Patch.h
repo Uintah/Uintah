@@ -58,7 +58,6 @@ WARNING
        None,
        Fixed,
        Symmetry,
-       Periodic,
        Neighbor
      };
      
@@ -386,11 +385,11 @@ WARNING
 
      Vector getVirtualOffsetVector() const
      { return cellPosition(d_lowIndex) -
-	 cellPosition(getRealPatch()->d_lowIndex); }     
+       cellPosition(getRealPatch()->d_lowIndex); }     
      
    protected:
      friend class Level;
-     
+     friend class NodeIterator;     
      //////////
      // Insert Documentation Here:
      Patch(const Level*,
@@ -407,6 +406,10 @@ WARNING
      Patch(const Patch&);
      Patch(const Patch* realPatch, const IntVector& virtualOffset);
      Patch& operator=(const Patch&);
+
+     // NULL, unless this patch is a virtual patch (wrap-around
+     // from periodic boundary conditions).
+     const Patch* d_realPatch;     
      
      const Level* d_level; // I live in this grid level;
      int d_level_index;  // I'm at this index in the Level vector;
@@ -424,15 +427,10 @@ WARNING
      IntVector d_nodeHighIndex;
      
      int d_id;
-
-     // NULL, unless this patch is a virtual patch (wrap-around
-     // from periodic boundary conditions).
-     const Patch* d_realPatch;
      
      // Added an extra vector<> for each material
      BCType d_bctypes[numFaces];
      vector<BCData> d_bcs;
-     friend class NodeIterator;
      bool in_database;
      bool have_layout;
      IntVector layouthint;
