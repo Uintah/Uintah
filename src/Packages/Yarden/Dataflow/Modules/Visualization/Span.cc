@@ -25,7 +25,7 @@
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
 
-#include <Dataflow/Ports/SpanSpace.h>
+#include <Packages/Yarden/Core/Datatypes/SpanSpace.h>
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Datatypes/ScalarFieldRGdouble.h> 
 #include <Core/Datatypes/ScalarFieldRGfloat.h> 
@@ -36,7 +36,7 @@
 #include <Core/Datatypes/ScalarFieldRGuchar.h> 
 
 #include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Dataflow/Ports/SpanPort.h>
+#include <Packages/Yarden/Dataflow/Ports/SpanPort.h>
 
 #include <Core/TclInterface/TCLvar.h>
 #include <Core/TclInterface/TCL.h>
@@ -44,8 +44,10 @@
 #include <iostream>
 
 
-namespace SCIRun {
+namespace Yarden {
     
+using namespace SCIRun;
+
     //using namespace Dataflow::Algorithms;
     
     class Span : public Module 

@@ -42,15 +42,14 @@
 
 #include <iostream>
 
-#include <Dataflow/Ports/SpanSpace.h>
-#include <Core/Algorithms/Visualization/MCRGScan.h>
-#include <Core/Algorithms/Visualization/MCUG.h>
-#include <Core/Algorithms/Visualization/Noise.h>
+#include <Packages/Yarden/Core/Datatypes/SpanSpace.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/MCRGScan.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/MCUG.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/Noise.h>
 
-
-
-namespace SCIRun {
+namespace Yarden {
     
+using namespace SCIRun;
     
     class IsoSurfaceNOISE : public Module 
     {

@@ -5,8 +5,10 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR := Packages/Yarden/Core/Datatypes
 
 SRCS     += \
+	$(SRCDIR)/Clock.cc \
+	$(SRCDIR)/SpanSpace.cc \
+	$(SRCDIR)/SpanTree.cc \
 	$(SRCDIR)/TensorField.cc \
-	$(SRCDIR)/TensorFieldPort.cc
 
 PSELIBS :=
 LIBS :=

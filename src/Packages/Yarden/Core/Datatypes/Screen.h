@@ -1,7 +1,8 @@
 #ifndef SCREEN_H
-#define SCEREN_H
+#define SCREEN_H
 
 namespace Yarden {
+
 typedef unsigned long long Word;
 typedef unsigned char Byte;
 typedef Byte Block[8];      // 1 word, 64 bits

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
-#include <Packages/Yarden/Core/Datatypes/General/Clock.h>
+#include <Packages/Yarden/Core/Datatypes/Clock.h>
 #include <values.h>
 
 namespace Yarden {

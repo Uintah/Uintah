@@ -5,7 +5,7 @@
 #include <GL/gl.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/Stack.h>
-#include <Packages/Yarden/Dataflow/Modules/Visualization/Screen.h>
+#include <Packages/Yarden/Core/Datatypes/Screen.h>
 using std::cerr;
 using std::endl;
 

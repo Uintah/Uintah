@@ -5,7 +5,17 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/Yarden/Dataflow/Modules/Visualization
 
 SRCS     += \
+	$(SRCDIR)/Hase.cc\
+	$(SRCDIR)/Hase1.cc\
+	$(SRCDIR)/IsoSurfaceNOISE.cc\
+	$(SRCDIR)/IsoSurfaceSAGE.cc\
+	$(SRCDIR)/Isosurface.cc\
+	$(SRCDIR)/Noise.cc\
+	$(SRCDIR)/Sage.cc\
+	$(SRCDIR)/SearchNOISE.cc\
+	$(SRCDIR)/Span.cc\
 	$(SRCDIR)/ViewTensors.cc\
+#	$(SRCDIR)/SageVFem.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Yarden/Datatypes Core/Datatypes Dataflow/Network \

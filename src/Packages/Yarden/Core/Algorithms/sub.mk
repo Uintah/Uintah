@@ -7,3 +7,8 @@ SUBDIRS := \
 	$(SRCDIR)/Visualization \
 
 include $(OBJTOP_ABS)/scripts/recurse.mk
+
+PSELIBS := 
+LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+
+include $(OBJTOP_ABS)/scripts/largeso_epilogue.mk

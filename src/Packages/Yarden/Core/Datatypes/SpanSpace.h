@@ -22,8 +22,9 @@
 #include <Core/Containers/LockingHandle.h>
 
 
-namespace SCIRun {
+namespace Yarden {
     
+using namespace SCIRun;
     
     // HEADERS
 
@@ -243,7 +244,7 @@ namespace SCIRun {
     
     typedef LockingHandle<SpanUniverse> SpanUniverseHandle; 
   
-} // End namespace SCIRun
+} // End namespace Yarden
 
 
 #endif 

@@ -34,14 +34,15 @@
 
 #include <iostream>
 
-#include <Dataflow/Ports/SpanTree.h>
-#include <Dataflow/Modules/Visualization/Noise.h>
+#include <Packages/Yarden/Core/Datatypes/SpanTree.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/Noise.h>
 //#include <Datatypes/Clock.h>
 
 
-namespace SCIRun {
+namespace Yarden {
 
-  using std::cerr;
+using namespace SCIRun;
+using std::cerr;
 
 extern "C" Module* make_Noise(const clString& id)
 {
@@ -575,4 +576,4 @@ r_interp( ScalarField *, GeomTrianglesP *triangles, int index, double v )
   mcube( triangles, v, index );
 }
 
-} // End namespace SCIRun
+} // End namespace Yarden

@@ -20,8 +20,9 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Geometry/BBox.h>
 
-namespace SCIRun {
+namespace Yarden {
 
+using namespace SCIRun;
 
 //#define FIELD_FLOAT
 

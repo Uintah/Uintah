@@ -1,4 +1,3 @@
-} // End namespace Yarden
 /*
  *  Phase.cc   View Depended Iso Surface Extraction
  *             for Structures Grids (Bricks)
@@ -60,14 +59,12 @@
 #include <sstream>
 #include <values.h>
 
-#include <Packages/Yarden/Dataflow/Modules/Visualization/Screen.h>
-#include <Packages/Yarden/Core/Datatypes/General/Clock.h>
-#include <Packages/Yarden/Dataflow/Modules/Visualization/mcube_scan.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/mcube_scan.h>
+#include <Packages/Yarden/Core/Datatypes/Screen.h>
+#include <Packages/Yarden/Core/Datatypes/Clock.h>
 
 namespace Yarden {
 using namespace SCIRun;
-using namespace Yarden::Datatypes;
-
 
 //#define DOUBLE
 //#define VIS_WOMAN
