@@ -37,7 +37,6 @@
 #define HDF5DataReader_h
 
 #include <Dataflow/Network/Module.h>
-
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
