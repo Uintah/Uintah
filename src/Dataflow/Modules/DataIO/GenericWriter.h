@@ -130,13 +130,16 @@ GenericWriter<HType>::execute()
     stream = scinew TextPiostream(fn, Piostream::Write);
   }
 
-  if (stream->error()) {
+  if (stream->error())
+  {
     error("Could not open file for writing" + fn);
-  } else {
+  }
+  else
+  {
     // Write the file
     Pio(*stream, handle);
-    delete stream;
   } 
+  delete stream;
 }
 
 } // End namespace SCIRun
