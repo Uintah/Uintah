@@ -67,6 +67,7 @@ MUL c, c, fc; \n\
 MOV_SAT result.color, c; \n\
 END";
 
+/*
 // static const char* ShaderString =
 // "!!ARBfp1.0 \n\
 // TEMP c0, c; \n\
@@ -82,7 +83,7 @@ END";
 // MUL c, c, fc; \n\
 // LRP result.color, fogFactor.x, c, fogColor; \n\
 // END";
-
+*/
 
 #if ! defined(__sgi)
 //PFNGLCOLORTABLEEXTPROC glColorTableEXT;

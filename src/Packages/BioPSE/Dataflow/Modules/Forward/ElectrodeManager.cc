@@ -140,7 +140,7 @@ void
   // Current pattern index is 1-based
   ColumnMatrix* currPattIndicies;
   currPattIndicies = scinew ColumnMatrix(numEl-1);
-  for (int i = 0; i < numEl-1; i++)
+  for (unsigned int i = 0; i < numEl-1; i++)
   {
     (*currPattIndicies)[i] = i + 1;
   }
