@@ -24,6 +24,14 @@ MPMBoundCond::~MPMBoundCond()
 
 void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 					const string& type, 
+					NCVariable<Vector>& variable)
+{
+  int n8or27 = 8;
+  setBoundaryCondition(patch, dwi, type, variable, n8or27);
+}
+
+void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
+					const string& type, 
 					NCVariable<Vector>& variable,int n8or27)
 {
   for(Patch::FaceType face = Patch::startFace;
@@ -112,6 +120,14 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 
 void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 					const string& type, 
+					NCVariable<double>& variable)
+{
+  int n8or27 = 8;
+  setBoundaryCondition(patch, dwi, type, variable, n8or27);
+}
+
+void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
+					const string& type, 
 					NCVariable<double>& variable,
                                         int n8or27)
 
@@ -150,6 +166,15 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 					const string& type, 
 					NCVariable<double>& variable,
+					constNCVariable<double>& gvolume)
+{
+  int n8or27 = 8;
+  setBoundaryCondition(patch, dwi, type, variable, gvolume, n8or27);
+}
+
+void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
+					const string& type, 
+					NCVariable<double>& variable,
 					constNCVariable<double>& gvolume,
                                         int n8or27)
 {
@@ -166,7 +191,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	temp_bcs  = patch->getArrayBCValues(face,dwi,"Temperature",bound,
 					    nbound,sfx,sfy,sfz,child);
 	
-	double dx;
+	double dx = 0.0;
 	if (face == Patch::xplus || face == Patch::xminus) dx = deltax.x();
 	if (face == Patch::yplus || face == Patch::yminus) dx = deltax.y();
 	if (face == Patch::zplus || face == Patch::zminus) dx = deltax.z();
