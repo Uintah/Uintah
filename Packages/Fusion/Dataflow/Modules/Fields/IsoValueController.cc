@@ -82,8 +82,8 @@ private:
   MatrixHandle mHandleIndex_;
 
   FieldHandle fHandle_;
-  FieldHandle fHandle_2D_;
-  FieldHandle fHandle_3D_;
+  FieldHandle fHandle_N_1D_;
+  FieldHandle fHandle_ND_;
   GeomHandle  gHandle_;
 
   bool error_;
@@ -117,17 +117,17 @@ void IsoValueController::execute() {
     return;
   }
 
-  // Get a handle to the input 2D field port.
-  FieldIPort *ifield2D_port = (FieldIPort *)get_iport("2D Field");
-  if (!ifield2D_port) {
-    error("Unable to initialize oport '2D Field'.");
+  // Get a handle to the input (N-1)D field port.
+  FieldIPort *ifieldN_1D_port = (FieldIPort *)get_iport("(N-1)D Field");
+  if (!ifieldN_1D_port) {
+    error("Unable to initialize oport '(N-1)D Field'.");
     return;
   }
 
-  // Get a handle to the input 3D field port.
-  FieldIPort *ifield3D_port = (FieldIPort *)get_iport("3D Field");
-  if (!ifield3D_port) {
-    error("Unable to initialize oport '3D Field'.");
+  // Get a handle to the input (N)D field port.
+  FieldIPort *ifieldND_port = (FieldIPort *)get_iport("(N)D Field");
+  if (!ifieldND_port) {
+    error("Unable to initialize oport '(N)D Field'.");
     return;
   }
 
@@ -228,8 +228,8 @@ void IsoValueController::execute() {
       }
   }
 
-  vector< FieldHandle > fHandles_2D;
-  vector< FieldHandle > fHandles_3D;
+  vector< FieldHandle > fHandles_N_1D;
+  vector< FieldHandle > fHandles_ND;
   vector< GeomHandle  > gHandles;
 
   if( update || error_ ) {
@@ -278,19 +278,19 @@ void IsoValueController::execute() {
       // Now get the isosurfaces.
       FieldHandle fHandle;
            
-      if (!(ifield2D_port->get(fHandle) && fHandle.get_rep())) {
-	error( "No 2D field handle or representation." );
+      if (!(ifieldN_1D_port->get(fHandle) && fHandle.get_rep())) {
+	error( "No (N-1)D field handle or representation." );
 	error_ = true;
 	return;
       } else
-	fHandles_2D.push_back( fHandle );
+	fHandles_N_1D.push_back( fHandle );
 
-      if (!(ifield3D_port->get(fHandle) && fHandle.get_rep())) {
-	error( "No 3D field handle or representation." );
+      if (!(ifieldND_port->get(fHandle) && fHandle.get_rep())) {
+	error( "No (N)D field handle or representation." );
 	error_ = true;
 	return;
       } else
-	fHandles_3D.push_back( fHandle );
+	fHandles_ND.push_back( fHandle );
 
       GeomHandle geometryin;
       /*           
@@ -305,17 +305,17 @@ void IsoValueController::execute() {
 
 
   // Output field.
-  if (fHandles_2D.size() && fHandles_2D[0].get_rep()) {
+  if (fHandles_N_1D.size() && fHandles_N_1D[0].get_rep()) {
 
-    FieldOPort *ofield2D_port = (FieldOPort *)get_oport("2D Fields");
-    if (!ofield2D_port) {
-      error("Unable to initialize oport '2D Fields'.");
+    FieldOPort *ofieldN_1D_port = (FieldOPort *)get_oport("(N-1)D Fields");
+    if (!ofieldN_1D_port) {
+      error("Unable to initialize oport '(N-1)D Fields'.");
       return;
     }
 
-    FieldOPort *ofield3D_port = (FieldOPort *)get_oport("3D Fields");
-    if (!ofield3D_port) {
-      error("Unable to initialize oport '3D Fields'.");
+    FieldOPort *ofieldND_port = (FieldOPort *)get_oport("(N)D Fields");
+    if (!ofieldND_port) {
+      error("Unable to initialize oport '(N)D Fields'.");
       return;
     }
 
@@ -330,59 +330,59 @@ void IsoValueController::execute() {
     if (!fHandle_->get_property("name",fldname))
       fldname = string("Isosurface");
 
-    for (unsigned int i=0; i<fHandles_2D.size(); i++) {
-      fHandles_2D[i]->set_property("name",fldname, false);
-      fHandles_3D[i]->set_property("name",fldname, false);
+    for (unsigned int i=0; i<fHandles_N_1D.size(); i++) {
+      fHandles_N_1D[i]->set_property("name",fldname, false);
+      fHandles_ND[i]->set_property("name",fldname, false);
     }
 
     // Single field.
-    if (fHandles_2D.size() == 1) {
-      ofield2D_port->send(fHandles_2D[0]);
-      ofield3D_port->send(fHandles_3D[0]);
+    if (fHandles_N_1D.size() == 1) {
+      ofieldN_1D_port->send(fHandles_N_1D[0]);
+      ofieldND_port->send(fHandles_ND[0]);
 
     // Multiple fields.
     } else {
-      const TypeDescription *mtd = fHandles_2D[0]->get_type_description(0);
+      const TypeDescription *mtd = fHandles_N_1D[0]->get_type_description(0);
       
       if( mtd->get_name() == "TriSurfField" ) {
-	vector<TriSurfField<double> *> tfields_2D(fHandles_2D.size());
-	vector<TriSurfField<double> *> tfields_3D(fHandles_3D.size());
-	for (unsigned int i=0; i<fHandles_2D.size(); i++) {
-	  tfields_2D[i] = (TriSurfField<double> *)(fHandles_2D[i].get_rep());
-	  tfields_3D[i] = (TriSurfField<double> *)(fHandles_3D[i].get_rep());
+	vector<TriSurfField<double> *> tfields_N_1D(fHandles_N_1D.size());
+	vector<TriSurfField<double> *> tfields_ND(fHandles_ND.size());
+	for (unsigned int i=0; i<fHandles_N_1D.size(); i++) {
+	  tfields_N_1D[i] = (TriSurfField<double> *)(fHandles_N_1D[i].get_rep());
+	  tfields_ND[i] = (TriSurfField<double> *)(fHandles_ND[i].get_rep());
 	}
 
-	ofield2D_port->send(append_fields(tfields_2D));
-	ofield3D_port->send(append_fields(tfields_3D));
+	ofieldN_1D_port->send(append_fields(tfields_N_1D));
+	ofieldND_port->send(append_fields(tfields_ND));
 
       } else if( mtd->get_name() == "CurveField" ) {
 
-	vector<CurveField<double> *> cfields_2D(fHandles_2D.size());
-	vector<CurveField<double> *> cfields_3D(fHandles_3D.size());
-	for (unsigned int i=0; i<fHandles_2D.size(); i++) {
-	  cfields_2D[i] = (CurveField<double> *)(fHandles_2D[i].get_rep());
-	  cfields_3D[i] = (CurveField<double> *)(fHandles_3D[i].get_rep());
+	vector<CurveField<double> *> cfields_N_1D(fHandles_N_1D.size());
+	vector<CurveField<double> *> cfields_ND(fHandles_ND.size());
+	for (unsigned int i=0; i<fHandles_N_1D.size(); i++) {
+	  cfields_N_1D[i] = (CurveField<double> *)(fHandles_N_1D[i].get_rep());
+	  cfields_ND[i] = (CurveField<double> *)(fHandles_ND[i].get_rep());
 	}
 
-	ofield2D_port->send(append_fields(cfields_2D));
-	ofield3D_port->send(append_fields(cfields_3D));
+	ofieldN_1D_port->send(append_fields(cfields_N_1D));
+	ofieldND_port->send(append_fields(cfields_ND));
 
       } else if( mtd->get_name() == "QuadSurfField" ) {
 
-	vector<QuadSurfField<double> *> qfields_2D(fHandles_2D.size());
-	vector<QuadSurfField<double> *> qfields_3D(fHandles_3D.size());
-	for (unsigned int i=0; i<fHandles_2D.size(); i++) {
-	  qfields_2D[i] = (QuadSurfField<double> *)(fHandles_2D[i].get_rep());
-	  qfields_3D[i] = (QuadSurfField<double> *)(fHandles_3D[i].get_rep());
+	vector<QuadSurfField<double> *> qfields_N_1D(fHandles_N_1D.size());
+	vector<QuadSurfField<double> *> qfields_ND(fHandles_ND.size());
+	for (unsigned int i=0; i<fHandles_N_1D.size(); i++) {
+	  qfields_N_1D[i] = (QuadSurfField<double> *)(fHandles_N_1D[i].get_rep());
+	  qfields_ND[i] = (QuadSurfField<double> *)(fHandles_ND[i].get_rep());
 	}
 
-	ofield2D_port->send(append_fields(qfields_2D));
-	ofield3D_port->send(append_fields(qfields_3D));
+	ofieldN_1D_port->send(append_fields(qfields_N_1D));
+	ofieldND_port->send(append_fields(qfields_ND));
 
       } else {
 	warning("Unable to append field: " + mtd->get_name() );
-	ofield2D_port->send(fHandles_2D[0]);
-	ofield3D_port->send(fHandles_3D[0]);
+	ofieldN_1D_port->send(fHandles_N_1D[0]);
+	ofieldND_port->send(fHandles_ND[0]);
       }
     }
 
