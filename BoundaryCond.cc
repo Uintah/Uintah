@@ -407,7 +407,7 @@ void setBC(CCVariable<double>& var_CC,
     
     if( desc == "Temperature"  && is_tempBC_lodi 
         && topLevelTimestep >0 && lv->setLodiBcs ){
-      FaceTemp_LODI(patch, face, var_CC, lv, cell_dx);
+      FaceTemp_LODI(patch, face, var_CC, lv, cell_dx, sharedState);
     }   
     if (desc == "Density"  && is_rhoBC_lodi 
         && topLevelTimestep >0 && lv->setLodiBcs){
