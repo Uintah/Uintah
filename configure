@@ -24589,7 +24589,7 @@ LIBS="$_sci_libs  $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __sci_pound_includes=
-for i in ""SIDL.h; do
+for i in ""sidl.h; do
     # Have to have the "" for the SGI sh.
     if test "$i" = ""; then
       continue
@@ -24707,7 +24707,7 @@ rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 if test "optional" = "specific"; then
 #echo specific
   # Make sure the exact includes were found
-  for i in ""SIDL.h; do
+  for i in ""sidl.h; do
 #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
      { { echo "$as_me:$LINENO: error: Specificly requested sidl library and headers include file '$_sci_inc/$i' was not found" >&5
