@@ -50,6 +50,7 @@ const DOMNode* findNode(const std::string &name, const DOMNode *node)
       return child;
     }
     child = child->getNextSibling();
+    delete child_name;
   }
   return 0;
 }
@@ -60,10 +61,12 @@ const DOMNode* findNextNode(const std::string& name, const DOMNode* node)
   DOMNode* found_node = node->getNextSibling();
 
   while(found_node != 0){
-    if (strcmp(name.c_str(), XMLString::transcode(found_node->getNodeName())) == 0 ) {
+    char* found_node_name = XMLString::transcode(found_node->getNodeName());
+    if (strcmp(name.c_str(), found_node_name) == 0 ) {
       break;
     }
     found_node = found_node->getNextSibling();
+    delete found_node_name;
   }
   return found_node;
 }
@@ -114,11 +117,16 @@ ostream& operator<<(ostream& target, const DOMNode* toWrite)
    // Get the name and value out for convenience
    const char *nodeName = XMLString::transcode(toWrite->getNodeName());
    const char *nodeValue = XMLString::transcode(toWrite->getNodeValue());
+
+   // nodeValue will be sometimes be deleted in outputContent, but 
+   // will not always call outputContent
+   bool valueDeleted = false;
    
    switch (toWrite->getNodeType()) {
    case DOMNode::TEXT_NODE:
       {
 	 outputContent(target, nodeValue);
+	 valueDeleted = true;
 	 break;
       }
    
@@ -160,12 +168,13 @@ ostream& operator<<(ostream& target, const DOMNode* toWrite)
 	 int attrCount = attributes->getLength();
 	 for (int i = 0; i < attrCount; i++) {
 	    DOMNode  *attribute = attributes->item(i);
-	    
-	    target  << ' ' << XMLString::transcode(attribute->getNodeName())
+	    char* attrName = XMLString::transcode(attribute->getNodeName());
+	    target  << ' ' << attrName
 		    << " = \"";
 	    //  Note that "<" must be escaped in attribute values.
 	    outputContent(target, XMLString::transcode(attribute->getNodeValue()));
 	    target << '"';
+	    delete attrName;
 	 }
 	 
 	 //  Test for the presence of children, which includes both
@@ -214,6 +223,10 @@ ostream& operator<<(ostream& target, const DOMNode* toWrite)
       cerr << "Unrecognized node type = "
 	   << (long)toWrite->getNodeType() << endl;
    }
+
+   delete nodeName;
+   if (!valueDeleted)
+     delete nodeValue;
    return target;
 }
 
