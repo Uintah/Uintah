@@ -40,13 +40,13 @@ namespace SCIRun {
 template <class T>
 class TriQuadraticLgn : public TriApprox<T> {
 public:
-  typedef T value_type;
-
+  static int GaussianNum;
+  double GaussianPoints[7][2];
+  double GaussianWeights[7];
+   
   TriQuadraticLgn() {}
   virtual ~TriQuadraticLgn() {}
 
-  int polynomial_order() const { return 2; }
- 
   // Value at coord
   template <class ElemData>
   T interpolate(const vector<double> &coords, const ElemData &cd) const
