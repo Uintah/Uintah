@@ -80,6 +80,8 @@ class ShowField : public Module
   inline void reloadConColor();
   inline void reloadNodeColor();
 
+  template <class Field>
+  void render(Field *f);
 
 public:
   ShowField(const clString& id);
@@ -91,10 +93,10 @@ public:
 //  			     LatticeGeomHandle grid, GeomGroup *g);
 //    inline void addSphere(int i, int j, int k, LatticeGeomHandle grid, 
 //  			GeomGroup *g, double size);
-//    inline void addAxis(int i, int j, int k,
-//  		      Vector &x, Vector &y, Vector &z, 
-//  		      LatticeGeomHandle grid, GeomGroup *g);
+
+  inline void addAxis(Point p0, double scale, GeomGroup *g);
   virtual void tcl_command(TCLArgs& args, void* userdata);
+
 //    void setUpDirs(Vector &x, Vector &y, Vector &z, 
 //  		 double &sx, double &sy,  double &sz, 
 //  		 LatticeGeomHandle grid, BBox &bbox);
@@ -186,52 +188,58 @@ ShowField::execute()
     return;
   }
 
-  TetVol<double> tv;
-  // Test the interpolation interface
-  Point p(5.5, 3.4, 6.6);
-  
-  LinearInterp<TetVol<double>, TetVolMesh::node_index> ftor; 
-  interpolate(tv, p, ftor);
+  TetVol<double> *tv = 0;
+  tv = dynamic_cast<TetVol<double>*>(field_handle_.get_rep());
+  if (!tv) {
+    cerr << "Not a Tet Vol input field" << endl;
+    return;
+  } 
 
 
+  render(tv);
+
+  nodeId_ = ogeom_->addObj(nodeSwitch_, "Nodes");
+  conId_ = ogeom_->addObj(conSwitch_, "Connections");
+  ogeom_->flushViews();
 
 
-#if 0 // FIX_ME new fields
-  if (!field_handle_->getAttrib().get_rep())
-    cerr << "NO attribute!!1" << endl;
-  dbg_ << field_handle_->getAttrib()->getInfo();
+}
 
-  Gradient *gradient = field_handle_->query_interface((Gradient *)0);
-  if(!gradient){
-    error("Gradient not supported by input field");
-  }
-
-  SLInterpolate *slinterpolate = 
-    field_handle_->query_interface((SLInterpolate *)0);
-  if(!slinterpolate){
-    error("SLInterpolate not supported by input field");
-  }
-
-  BBox bbox;
-  field_handle_->get_geom()->getBoundingBox(bbox);
-
-  dbg_ << bbox.min().x() << " " << bbox.min().y() << " " 
-       << bbox.min().z() << " " << bbox.max().x() << " " << bbox.max().y() 
-       << " " << bbox.max().z() << endl;
+template <class Field>
+void 
+ShowField::render(Field *f) {
 
   GeomGroup *bb = scinew GeomGroup;
   conSwitch_ = scinew GeomSwitch(bb);
 
   GeomGroup *verts = scinew GeomGroup;
-  GeomHandle geom = field_handle_->get_geom();
+  typename Field::mesh_handle_type mesh = f->get_typed_mesh();
 
-  dbg_ << geom->getInfo();
+  typename Field::mesh_type::node_iterator niter = mesh->node_begin();
+  
+  while (niter != mesh->node_end()) {
+    
+    Point p;
+    mesh->get_point(p, *niter);
+    if (nodeDisplayType_.get() == "Spheres") {
+      verts->add(scinew GeomSphere(p, 0.03, 8, 4));
+    } else {
+      addAxis(p, 0.03, verts);
+    }
+    ++niter;
 
-  LatticeGeomHandle grid = geom->downcast((LatticeGeom*)0);
-  //LatticeGeom *grid = geom->get_latticegeom();
-  TriSurfGeomHandle tsurf = geom->downcast((TriSurfGeom*)0);
+  }
 
-  dbg_ << "Cast to Lattice and TriSurf is done \n" << endl;
+  reloadNodeColor();
+  GeomMaterial *nodeGM = scinew GeomMaterial(verts, nodeMat_);
+  nodeSwitch_ = scinew GeomSwitch(nodeGM);
+
+  reloadConColor();
+  GeomMaterial *conGM = scinew GeomMaterial(bb, conMat_);
+  conSwitch_ = scinew GeomSwitch(conGM);
+  
+
+#if 0 // old code for reference.
   if (grid.get_rep()) {
 
     int nx = grid->getSizeX();
@@ -267,23 +275,8 @@ ShowField::execute()
   } else {
     dbg_ << "Not a LatticGeom!!" << endl;
   }
-
-  reloadNodeColor();
-  GeomMaterial *nodeGM = scinew GeomMaterial(verts, nodeMat_);
-  nodeSwitch_ = scinew GeomSwitch(nodeGM);
-
-  reloadConColor();
-  GeomMaterial *conGM = scinew GeomMaterial(bb, conMat_);
-  conSwitch_ = scinew GeomSwitch(conGM);
-
-#endif  
-  nodeId_ = ogeom_->addObj(nodeSwitch_, "Nodes");
-  conId_ = ogeom_->addObj(conSwitch_, "Connections");
-  ogeom_->flushViews();
-
-
+#endif
 }
-
 
 //  void 
 //  ShowField::displaySurface(TriSurfGeomHandle surf, GeomGroup *g)
@@ -349,28 +342,29 @@ ShowField::execute()
 //    g->add(scinew GeomSphere(p0, size, 8, 4));
 //  }
 
-//  void 
-//  ShowField::addAxis(int i, int j, int k,
-//  		   Vector &x, Vector &y, Vector &z, 
-//  		   LatticeGeomHandle grid, GeomGroup *g) {
-  
-//    Point p0 = grid->getPoint(i, j, k);
-//    Point p1 = p0 + x;
-//    Point p2 = p0 - x;
-//    GeomLine *l = new GeomLine(p1, p2);
-//    l->setLineWidth(3.0);
-//    g->add(l);
-//    p1 = p0 + y;
-//    p2 = p0 - y;
-//    l = new GeomLine(p1, p2);
-//    l->setLineWidth(3.0);
-//    g->add(l);
-//    p1 = p0 + z;
-//    p2 = p0 - z;
-//    l = new GeomLine(p1, p2);
-//    l->setLineWidth(3.0);
-//    g->add(l);
-//  }
+void 
+ShowField::addAxis(Point p0, double scale, GeomGroup *g) 
+{
+  const Vector x(1., 0., 0.);
+  const Vector y(0., 1., 0.);
+  const Vector z(0., 0., 1.);
+
+  Point p1 = p0 + x * scale;
+  Point p2 = p0 - x * scale;
+  GeomLine *l = new GeomLine(p1, p2);
+  l->setLineWidth(3.0);
+  g->add(l);
+  p1 = p0 + y * scale;
+  p2 = p0 - y * scale;
+  l = new GeomLine(p1, p2);
+  l->setLineWidth(3.0);
+  g->add(l);
+  p1 = p0 + z * scale;
+  p2 = p0 - z * scale;
+  l = new GeomLine(p1, p2);
+  l->setLineWidth(3.0);
+  g->add(l);
+}
 
 void 
 ShowField::tcl_command(TCLArgs& args, void* userdata) {
