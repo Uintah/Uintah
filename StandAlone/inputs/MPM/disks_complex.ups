@@ -72,10 +72,10 @@
                   <type>null</type>
                 </burn>
 		<density>1000.0</density>
-		<hypo_elastic> 
+		<constitutive_model type="hypo_elastic">
 		   <G>1.2e6</G>
 		   <K>3.2e6</K>
-	        </hypo_elastic>
+	        </constitutive_model>
 		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
