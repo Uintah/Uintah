@@ -152,7 +152,7 @@ NIMRODNrrdConverter::execute(){
     generation = nHandles.size();
   else {
     // See if any of the input data has changed.
-    for( int ic=0; ic<nHandles.size() && ic<nGenerations_.size(); ic++ ) {
+    for( unsigned int ic=0; ic<nHandles.size() && ic<nGenerations_.size(); ic++ ) {
       if( nGenerations_[ic] != nHandles[ic]->generation )
 	++generation;
     }
@@ -167,7 +167,7 @@ NIMRODNrrdConverter::execute(){
 
     grid_[0] = grid_[1] = grid_[2] = -1;
 
-    for( int ic=0; ic++; ic<nHandles.size() ) {
+    for( unsigned int ic=0; ic++; ic<nHandles.size() ) {
       nGenerations_[ic] = nHandles[ic]->generation;
     }
 
@@ -176,7 +176,7 @@ NIMRODNrrdConverter::execute(){
     vector< string > datasets;
 
     // Get each of the dataset names for the GUI.
-    for( int ic=0; ic<nHandles.size(); ic++ ) {
+    for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
 
       nHandle = nHandles[ic];
 
@@ -275,31 +275,31 @@ NIMRODNrrdConverter::execute(){
 	StructHexVolMesh( kdim+kwrap_, jdim+jwrap_, idim+iwrap_ );
 
       mdims.push_back( idim );
-      mdims.push_back( jdim );
       mdims.push_back( kdim );
+      mdims.push_back( jdim );
 
     } else if( idim >  1 && jdim >  1 && kdim == 1 ) {
       // 2D StructQuadSurf
       mHandle = scinew StructQuadSurfMesh(jdim+jwrap_, idim+iwrap_ );
 
-      mdims.push_back( idim );
       mdims.push_back( jdim );
+      mdims.push_back( idim );
       kwrap_ = 0;
 
     } else if( idim >  1 && jdim == 1 && kdim  > 1 ) {
       // 2D StructQuadSurf
       mHandle = scinew StructQuadSurfMesh(kdim+kwrap_, idim+iwrap_ );
 
-      mdims.push_back( idim );
       mdims.push_back( kdim );
+      mdims.push_back( idim );
       jwrap_ = 0;
 
     } else if( idim == 1 && jdim >  1 && kdim  > 1 ) {
       // 2D StructQuadSurf
       mHandle = scinew StructQuadSurfMesh(kdim+kwrap_, jdim+jwrap_ );
 
-      mdims.push_back( jdim );
       mdims.push_back( kdim );
+      mdims.push_back( jdim );
       iwrap_ = 0;
 
     } else if( idim  > 1 && jdim == 1 && kdim == 1 ) {
@@ -356,7 +356,7 @@ NIMRODNrrdConverter::execute(){
       rank = 1;
     } else if( data_.size() == 1 || data_.size() == 3 || data_.size() == 6 ) {
 
-      for( int ic=0; ic<data_.size(); ic++ ) {
+      for( unsigned int ic=0; ic<data_.size(); ic++ ) {
 	nHandle = nHandles[data_[ic]];
 	
 	int tuples = nHandle->get_tuple_axis_size();
@@ -387,14 +387,14 @@ NIMRODNrrdConverter::execute(){
 	  }
 	}
 	    
-	for( int jc=1; jc<nHandle->nrrd->dim; jc++ )
+	for( int jc=nHandle->nrrd->dim-1; jc>0; jc-- )
 	  if( nHandle->nrrd->axis[jc].size != 1 )
 	    ddims.push_back( nHandle->nrrd->axis[jc].size );
 
 	if( ddims.size() == mdims.size() ||
 	    ddims.size() == mdims.size() + 1 ) {
-	
-	  for( int jc=0; jc<mdims.size(); jc++ ) {
+
+	  for( unsigned int jc=0; jc<mdims.size(); jc++ ) {
 	    if( ddims[jc] != mdims[jc] ) {
 	      error( "Data and grid sizes do not match." );
 	      error_ = true;
@@ -416,7 +416,7 @@ NIMRODNrrdConverter::execute(){
 	    rank = 3;
 	  else if( dataset[0].find( ":Tensor" ) != std::string::npos )
 	    rank = 6;
-	  else {
+ 	  else {
 	    error( "Bad tuple axis - no data type must be scalar, vector, or tensor." );
 	    error( dataset[0] );
 	    error_ = true;
