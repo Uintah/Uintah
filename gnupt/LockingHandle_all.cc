@@ -3,6 +3,7 @@
 
 #include <Classlib/LockingHandle.cc>
 #include <Datatypes/Colormap.h>
+#include <Datatypes/ColumnMatrix.h>
 #include <Datatypes/ContourSet.h>
 #include <Datatypes/Matrix.h>
 #include <Datatypes/Mesh.h>
@@ -19,6 +20,7 @@ typedef LockingHandle<Mesh> _dummy5_;
 typedef LockingHandle<Matrix> _dummy6_;
 typedef LockingHandle<Material> _dummy7_;
 typedef LockingHandle<Colormap> _dummy8_;
+typedef LockingHandle<ColumnMatrix> _dummy9_;
 
 static void _fn1_(Piostream& p1, MeshHandle& p2)
 {
@@ -48,7 +50,11 @@ static void _fn7_(Piostream& p1, MaterialHandle& p2)
 {
     Pio(p1, p2);
 }
-static void _fn8_(Piostream& p1, Colormap& p2)
+static void _fn8_(Piostream& p1, ColormapHandle& p2)
+{
+    Pio(p1, p2);
+}
+static void _fn8_(Piostream& p1, ColumnMatrixHandle& p2)
 {
     Pio(p1, p2);
 }

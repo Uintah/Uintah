@@ -2,6 +2,6 @@
 #pragma implementation "Handle.h"
 
 #include <Classlib/Handle.cc>
-#include <Geom/Geom.h>
+#include <Geom/Material.h>
 
 typedef Handle<Material> _dummy1_;

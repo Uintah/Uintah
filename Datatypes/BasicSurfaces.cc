@@ -102,7 +102,7 @@ void CylinderSurface::get_surfpoints(Array1<Point>& pts)
 
 void CylinderSurface::io(Piostream& stream)
 {
-    int version=stream.begin_class("CylinderSurface", CYLINDERSURFACE_VERSION);
+    /*int version=*/stream.begin_class("CylinderSurface", CYLINDERSURFACE_VERSION);
     Surface::io(stream);
     Pio(stream, p1);
     Pio(stream, p2);
@@ -164,7 +164,7 @@ void PointSurface::get_surfpoints(Array1<Point>& pts)
 
 void PointSurface::io(Piostream& stream)
 {
-    int version=stream.begin_class("PointSurface", POINTSURFACE_VERSION);
+    /*int version=*/stream.begin_class("PointSurface", POINTSURFACE_VERSION);
     Surface::io(stream);
     Pio(stream, pos);
     stream.end_class();

@@ -208,10 +208,11 @@ void Salmon::delObj(PortInfo* port, int serial)
 {
     SceneItem* si;
     if(port->objs->lookup(serial, si)){
+	cerr << "Removing object: " << si->name << endl;
 	port->objs->remove(serial);
 	for (int i=0; i<roe.size(); i++)
 	    roe[i]->itemDeleted(si);
-	cerr << "Deleting object: " << si->name << ", " << serial << endl;
+	cerr << "delete: " << si->obj << endl;
 	delete si->obj;
 	delete si;
     } else {
@@ -226,6 +227,8 @@ void Salmon::delAll(PortInfo* port)
 	SceneItem* si=iter.get_data();
 	for (int i=0; i<roe.size(); i++)
 	    roe[i]->itemDeleted(si);
+	cerr << "Removing object: " << si->name << endl;
+	cerr << "delete: " << si->obj << endl;
 	delete si->obj;
 	delete si;
     }

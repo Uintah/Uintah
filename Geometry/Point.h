@@ -51,11 +51,11 @@ public:
     clString string() const;
     
     friend class Vector;
-    friend double Dot(const Point&, const Point&);
-    friend double Dot(const Vector&, const Point&);
-//    friend double Dot(const Point&, const Vector&);
-    friend Point Min(const Point&, const Point&);
-    friend Point Max(const Point&, const Point&);
+    friend inline double Dot(const Point&, const Point&);
+    friend inline double Dot(const Vector&, const Point&);
+//    friend inline double Dot(const Point&, const Vector&);
+    friend inline Point Min(const Point&, const Point&);
+    friend inline Point Max(const Point&, const Point&);
     friend Point Interpolate(const Point&, const Point&, double);
     friend Point AffineCombination(const Point&, double,
 				   const Point&, double,

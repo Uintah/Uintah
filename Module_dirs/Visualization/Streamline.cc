@@ -326,6 +326,8 @@ Module* Streamline::clone(int deep)
 void Streamline::execute()
 {
     if(streamline_id)
+	cerr << "Deleting streamline: " << streamline_id << endl;
+    if(streamline_id)
 	ogeom->delObj(streamline_id);
     VectorFieldHandle field;
     if(!infield->get(field))
@@ -368,6 +370,8 @@ void Streamline::execute()
     if(widgettype.get() != oldwidgettype){
 	oldwidgettype=widgettype.get();
 	if(widget_id)
+	    cerr << "Deleting widget... (id=" << widget_id << ")" << endl;
+	if(widget_id)
 	    ogeom->delObj(widget_id);
 	widget=new GeomGroup;
 	if(widgettype.get() == "Point"){
@@ -408,19 +412,19 @@ void Streamline::execute()
 	    widget_slider1->add(widget_slider1body);
 	    widget_slider1->add(widget_slider1cap1);
 	    widget_slider1->add(widget_slider1cap2);
-	    pick_slider1=new GeomPick(widget_slider1, this);
-	    pick_slider1->set_highlight(widget_highlight_matl);
-	    pick_slider1->set_cbdata((void*)4);
-	    GeomMaterial* m3=new GeomMaterial(pick_slider1, widget_slider_matl);
-	    widget->add(m1);
-	    widget->add(m2);
-	    widget->add(m3);
+ 	    pick_slider1=new GeomPick(widget_slider1, this);
+ 	    pick_slider1->set_highlight(widget_highlight_matl);
+ 	    pick_slider1->set_cbdata((void*)4);
+ 	    GeomMaterial* m3=new GeomMaterial(pick_slider1, widget_slider_matl);
+ 	    widget->add(m1);
+ 	    widget->add(m2);
+ 	    widget->add(m3);
 	    Vector v1,v2;
 	    spvec.find_orthogonal(v1, v2);
-	    pick_p1->set_principal(spvec, v1, v2);
-	    pick_p2->set_principal(spvec, v1, v2);
-	    pick_edge1->set_principal(spvec, v1, v2);
-	    pick_slider1->set_principal(spvec);
+ 	    pick_p1->set_principal(spvec, v1, v2);
+ 	    pick_p2->set_principal(spvec, v1, v2);
+ 	    pick_edge1->set_principal(spvec, v1, v2);
+ 	    pick_slider1->set_principal(spvec);
 	} else if(widgettype.get() == "Square"){
 	    NOT_FINISHED("Square widget");
 	} else {
@@ -428,6 +432,7 @@ void Streamline::execute()
 	}
 	widget_id=ogeom->addObj(widget, widget_name);
     }
+
     GeomGroup* group=new GeomGroup;
     GeomMaterial* matlobj=new GeomMaterial(group, matl);
 
@@ -469,12 +474,16 @@ void Streamline::execute()
 		if(!ogeom->busy()){
 		    n=0;
 		    if(groupid)
+			cerr << "Deleting group: " << groupid << endl;
+		    if(groupid)
 			ogeom->delObj(groupid);
 		    groupid=ogeom->addObj(matlobj->clone(), streamline_name);
 		    ogeom->flushViews();
 		}
 	    }
 	}
+	if(groupid)
+	    cerr << "Deleting group: " << groupid << endl;
 	if(groupid)
 	    ogeom->delObj(groupid);
 	cerr << "n=" << n << endl;
@@ -523,12 +532,16 @@ void Streamline::execute()
 		if(!ogeom->busy()){
 		    n=0;
 		    if(groupid)
+			cerr << "Deleting group: " << groupid << endl;
+		    if(groupid)
 			ogeom->delObj(groupid);
 		    groupid=ogeom->addObj(matlobj->clone(), streamline_name);
 		    ogeom->flushViews();
 		}
 	    }
 	}
+	if(groupid)
+	    cerr << "Deleting group: " << groupid << endl;
 	if(groupid)
 	    ogeom->delObj(groupid);
     } else {

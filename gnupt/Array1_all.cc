@@ -5,6 +5,7 @@
 #include <Classlib/String.h>
 #include <Constraints/BaseConstraint.h>
 #include <Geom/Geom.h>
+#include <Geom/Material.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 #include <Datatypes/ContourSet.h>
@@ -23,6 +24,7 @@ class Node;
 class OPort;
 class Roe;
 class SLine;
+class SRibbon;
 class SoundMixer_PortInfo;
 class SSLine;
 class SSurf;
@@ -58,6 +60,7 @@ typedef Array1<TCLvarintp*> _dummy28_;
 typedef Array1<Point> _dummy30_;
 typedef Array1<Vector> _dummy31_;
 typedef Array1<Array1<Point> > _dummy32_;
+typedef Array1<SRibbon*> _dummy33_;
 
 static void _dummy33_(Piostream& p1, _dummy32_& p2)
 {

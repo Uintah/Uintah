@@ -15,12 +15,16 @@
 #include <Classlib/NotFinished.h>
 #include <Geometry/BBox.h>
 #include <Math/MinMax.h>
+#include <iostream.h>
 
 GeomTri::GeomTri(const Point& p1, const Point& p2, const Point& p3)
 : GeomObj(1), p1(p1), p2(p2), p3(p3), n(Cross(p3-p1, p2-p1))
 {
-    if(n.length2() > 0)
+    if(n.length2() > 0){
 	n.normalize();
+    } else {
+	cerr << "Degenerate triangle!!!\n" << endl;
+    }
 }
 
 GeomTri::GeomTri(const GeomTri &copy)

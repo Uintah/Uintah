@@ -31,6 +31,7 @@ struct DrawInfoX11 {
     int current_lit;
     unsigned long current_pixel;
 
+    unsigned long get_color(const Color&);
     void set_color(const Color&);
 
     int red_max;

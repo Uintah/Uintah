@@ -26,15 +26,19 @@ DrawInfoX11::DrawInfoX11()
 {
 }
 
-void DrawInfoX11::set_color(const Color& c)
+unsigned long DrawInfoX11::get_color(const Color& c)
 {
     int ri=Clamp(int(c.r()*red_max), 0, red_max);
     int gi=Clamp(int(c.g()*green_max), 0, green_max);
     int bi=Clamp(int(c.b()*blue_max), 0, blue_max);
     int idx=ri*red_mult+gi*green_mult+bi;
-    unsigned long pixel=colors[idx];
-    XSetForeground(dpy, gc, pixel);
-    current_pixel=pixel;
+    return colors[idx];
+}
+
+void DrawInfoX11::set_color(const Color& c)
+{
+    current_pixel=get_color(c);
+    XSetForeground(dpy, gc, current_pixel);
 }
 
 void GeomObj::draw(DrawInfoX11* di, Material* matl)

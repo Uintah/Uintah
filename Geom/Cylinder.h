@@ -35,7 +35,7 @@ public:
     void adjust();
     void move(const Point&, const Point&, double, int nu=20, int nv=4);
 
-    GeomCylinder(int nu=20, int nv=4);
+    GeomCylinder(int nu=20, int nv=10);
     GeomCylinder(const Point&, const Point&, double, int nu=20, int nv=4);
     GeomCylinder(const GeomCylinder&);
     virtual ~GeomCylinder();

@@ -9,6 +9,7 @@
 #include <Geometry/Transform.h>
 #include <Geom/Geom.h>
 #include <Geom/GeomX11.h>
+#include <Malloc/New.h>
 #include <Math/Trig.h>
 #include <TCL/TCLTask.h>
 
@@ -181,6 +182,8 @@ void X11::redraw(Salmon* salmon, Roe* roe)
 	HashTableIter<int, SceneItem*> objiter(portiter.get_data()->objs);
 	for(objiter.first();objiter.ok();++objiter){
 	    SceneItem* si=objiter.get_data();
+	    MemoryManager::audit(si);
+	    MemoryManager::audit(si->obj);
 	    si->obj->make_prims(free, dontfree);
 	}
     }
@@ -257,7 +260,14 @@ void X11::get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&)
     NOT_FINISHED("X11::get_pick");
 }
 
-void X11::put_scanline(int, int, Color*, int)
+void X11::put_scanline(int y, int width, Color* scanline, int repeat)
 {
-    NOT_FINISHED("X11::put_scanline");
+    for(int ii=0;ii<repeat;ii++){
+	int yy=y+ii;
+	for(int i=0;i<width;i++){
+	    drawinfo->set_color(scanline[i]);
+	    XDrawPoint(drawinfo->dpy, drawinfo->win, drawinfo->gc,
+		       i, yres-yy-1);
+	}
+    }
 }
