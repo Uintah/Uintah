@@ -22,7 +22,7 @@ DistanceConstraint::DistanceConstraint( const clString& name,
 					const Index numSchemes,
 					Variable* p1, Variable* p2,
 					Variable* distInX )
-:BaseConstraint(name, numSchemes, 3)
+:BaseConstraint(name, numSchemes, 3), guess(1, 0, 0)
 {
    vars[0] = p1;
    vars[1] = p2;
@@ -56,7 +56,7 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme )
    case 0:
       v = (v0.Get() - v1.Get());
       if (v.length() == 0.0)
-	 v = Vector(1,0,0);
+	 v = guess;
       else
 	 v.normalize();
       v0.Assign(v1.Get() + (v * v2.Get().x()),
@@ -65,7 +65,7 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme )
    case 1:
       v = (v1.Get() - v0.Get());
       if (v.length() == 0.0)
-	 v = Vector(1,0,0);
+	 v = guess;
       else
 	 v.normalize();
       v1.Assign(v0.Get() + (v * v2.Get().x()),

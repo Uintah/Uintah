@@ -24,10 +24,24 @@ public:
 		       const Index numSchemes,
 		       Variable* p1, Variable* p2,
 		       Variable* distInX );
-    virtual ~DistanceConstraint();
+   virtual ~DistanceConstraint();
 
+   // Use this to set the default direction used when p1==p2.
+   // Defaults to (1,0,0).
+   inline void SetDefault(const Vector& v);
+   
 protected:
    virtual void Satisfy( const Index index, const Scheme scheme );
+
+private:
+   Vector guess;
 };
+
+inline void
+DistanceConstraint::SetDefault(const Vector& v)
+{
+   guess = v;
+}
+
 
 #endif

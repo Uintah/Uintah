@@ -72,7 +72,7 @@ Variable::Resolve()
 void
 Variable::Set( const Point& newValue )
 {
-   level=levellevel=0;
+   level = levellevel = 0;
    Assign(newValue, scheme);
 }
 
@@ -98,7 +98,8 @@ const Index MaxDepth = 25;
 void
 Variable::Assign( const Point& newValue, const Scheme scheme )
 {
-   if(level==-1)return; // Backing out
+   if (level <= -1234) return; // Backing out
+   
    Index index, index2;
    int reallynew = !(epsilonequal(Epsilon, value, newValue));
 
@@ -124,16 +125,26 @@ Variable::Assign( const Point& newValue, const Scheme scheme )
       if (++levellevel < numconstraints) {
 	 cerr << "Maximum recursion level reached...\n";
 	 for (index = levellevel; index < numconstraints+levellevel; index++) {
-	    index2 = (index>=numconstraints)?(index-numconstraints):index;
+	    index2 = index % numconstraints;
 	    constraints[constraint_order[index2]]
 	       ->Satisfy(constraint_indexs[constraint_order[index2]], scheme);
 	 }
       }
       else {
-	 levellevel = level = -1;
+	 if (bc_debug) {
+	    cout << name << " E(" << levellevel << ")*";
+	    for (index=0; index<level; index++)
+	       cout << " ";
+	    cout << "*" << endl;
+	    
+	    cout << "Recursion level = " << --recursion << endl;
+	 }
+
+	 levellevel = level = -1234;
 	 cerr << "Maximum level reached for all constraints!" << endl;
 	 cout << "Accepting current approximation." << endl;
-	 cout << "Recursion level = " << --recursion << endl;
+	 cout << "Recursion level = " << recursion << endl;
+
 	 return;
       }
    }
