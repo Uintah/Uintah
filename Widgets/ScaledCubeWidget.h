@@ -17,9 +17,14 @@
 
 #include <Widgets/BaseWidget.h>
 
+
+// Variable indexs
 enum { SCubeW_PointIUL, SCubeW_PointIUR, SCubeW_PointIDR, SCubeW_PointIDL,
        SCubeW_PointOUL, SCubeW_PointOUR, SCubeW_PointODR, SCubeW_PointODL,
        SCubeW_Dist, SCubeW_Hypo, SCubeW_Diag };
+// Material indexs
+enum { SCubeW_PointMatl, SCubeW_EdgeMatl, SCubeW_SliderMatl, SCubeW_HighMatl };
+
 
 class ScaledCubeWidget : public BaseWidget {
 public:

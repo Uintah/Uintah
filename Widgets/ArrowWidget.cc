@@ -25,7 +25,6 @@ const Index NumPcks = 1;
 // const Index NumSchemes = 1;
 
 enum { ArrowW_Sphere, ArrowW_Cylinder, ArrowW_Cone };
-enum { ArrowW_PointMatl, ArrowW_EdgeMatl, ArrowW_HighMatl };
 enum { ArrowW_Pick };
 
 ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock,
@@ -47,7 +46,7 @@ ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock,
    geometries[ArrowW_Cylinder] = new GeomCylinder;
    GeomMaterial* cylm = new GeomMaterial(geometries[ArrowW_Cylinder], materials[ArrowW_EdgeMatl]);
    arr->add(cylm);
-   geometries[ArrowW_Cone] = new GeomCone;
+   geometries[ArrowW_Cone] = new GeomCappedCone;
    GeomMaterial* conem = new GeomMaterial(geometries[ArrowW_Cone], materials[ArrowW_EdgeMatl]);
    arr->add(conem);
    picks[ArrowW_Pick] = new GeomPick(arr, module);
@@ -72,12 +71,12 @@ ArrowWidget::widget_execute()
 						      variables[ArrowW_Point]->Get()
 						      + direction * widget_scale * 3.0,
 						      0.5*widget_scale);
-   ((GeomCone*)geometries[ArrowW_Cone])->move(variables[ArrowW_Point]->Get()
-					      + direction * widget_scale * 3.0,
-					      variables[ArrowW_Point]->Get()
-					      + direction * widget_scale * 5.0,
-					      widget_scale,
-					      0);
+   ((GeomCappedCone*)geometries[ArrowW_Cone])->move(variables[ArrowW_Point]->Get()
+						    + direction * widget_scale * 3.0,
+						    variables[ArrowW_Point]->Get()
+						    + direction * widget_scale * 5.0,
+						    widget_scale,
+						    0);
 
    Vector v1, v2;
    direction.find_orthogonal(v1, v2);

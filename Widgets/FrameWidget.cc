@@ -30,7 +30,6 @@ enum { FrameW_ConstULDR, FrameW_ConstURDL, FrameW_ConstPyth, FrameW_ConstPlane,
        FrameW_ConstULUR, FrameW_ConstULDL, FrameW_ConstDRUR, FrameW_ConstDRDL };
 enum { FrameW_SphereUL, FrameW_SphereUR, FrameW_SphereDR, FrameW_SphereDL,
        FrameW_CylU, FrameW_CylR, FrameW_CylD, FrameW_CylL };
-enum { FrameW_PointMatl, FrameW_EdgeMatl, FrameW_HighMatl };
 enum { FrameW_PickSphUL, FrameW_PickSphUR, FrameW_PickSphDR, FrameW_PickSphDL, FrameW_PickCyls };
 
 FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale )

@@ -17,8 +17,13 @@
 
 #include <Widgets/BaseWidget.h>
 
+
+// Variable indexs
 enum { SquareW_PointUL, SquareW_PointUR, SquareW_PointDR, SquareW_PointDL,
        SquareW_Dist, SquareW_Hypo };
+// Material indexs
+enum { SquareW_PointMatl, SquareW_EdgeMatl, SquareW_HighMatl };
+
 
 class SquareWidget : public BaseWidget {
 public:

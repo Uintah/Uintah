@@ -35,7 +35,6 @@ enum { SSquareW_ConstULDR, SSquareW_ConstURDL, SSquareW_ConstHypo, SSquareW_Cons
 enum { SSquareW_SphereUL, SSquareW_SphereUR, SSquareW_SphereDR, SSquareW_SphereDL,
        SSquareW_CylU, SSquareW_CylR, SSquareW_CylD, SSquareW_CylL,
        SSquareW_SliderCyl1, SSquareW_SliderCyl2 };
-enum { SSquareW_PointMatl, SSquareW_EdgeMatl, SSquareW_SliderMatl, SSquareW_HighMatl };
 enum { SSquareW_PickSphUL, SSquareW_PickSphUR, SSquareW_PickSphDR, SSquareW_PickSphDL, SSquareW_PickCyls,
        SSquareW_PickSlider1, SSquareW_PickSlider2 };
 
@@ -228,12 +227,12 @@ ScaledSquareWidget::ScaledSquareWidget( Module* module, CrowdMonitor* lock,
    GeomMaterial* cylsm = new GeomMaterial(picks[SSquareW_PickCyls], materials[SSquareW_EdgeMatl]);
 
    GeomGroup* sliders = new GeomGroup;
-   geometries[SSquareW_SliderCyl1] = new GeomCylinder;
+   geometries[SSquareW_SliderCyl1] = new GeomCappedCylinder;
    picks[SSquareW_PickSlider1] = new GeomPick(geometries[SSquareW_SliderCyl1], module);
    picks[SSquareW_PickSlider1]->set_highlight(materials[SSquareW_HighMatl]);
    picks[SSquareW_PickSlider1]->set_cbdata((void*)SSquareW_PickSlider1);
    sliders->add(picks[SSquareW_PickSlider1]);
-   geometries[SSquareW_SliderCyl2] = new GeomCylinder;
+   geometries[SSquareW_SliderCyl2] = new GeomCappedCylinder;
    picks[SSquareW_PickSlider2] = new GeomPick(geometries[SSquareW_SliderCyl2], module);
    picks[SSquareW_PickSlider2]->set_highlight(materials[SSquareW_HighMatl]);
    picks[SSquareW_PickSlider2]->set_cbdata((void*)SSquareW_PickSlider2);
@@ -279,16 +278,16 @@ ScaledSquareWidget::widget_execute()
    ((GeomCylinder*)geometries[SSquareW_CylL])->move(variables[SSquareW_PointDL]->Get(),
 						  variables[SSquareW_PointUL]->Get(),
 						  0.5*widget_scale);
-   ((GeomCylinder*)geometries[SSquareW_SliderCyl1])->move(variables[SSquareW_Slider1]->Get()
-							- (GetAxis1() * 0.3 * widget_scale),
-							variables[SSquareW_Slider1]->Get()
-							+ (GetAxis1() * 0.3 * widget_scale),
-							1.1*widget_scale);
-   ((GeomCylinder*)geometries[SSquareW_SliderCyl2])->move(variables[SSquareW_Slider2]->Get()
-							- (GetAxis2() * 0.3 * widget_scale),
-							variables[SSquareW_Slider2]->Get()
-							+ (GetAxis2() * 0.3 * widget_scale),
-							1.1*widget_scale);
+   ((GeomCappedCylinder*)geometries[SSquareW_SliderCyl1])->move(variables[SSquareW_Slider1]->Get()
+								- (GetAxis1() * 0.3 * widget_scale),
+								variables[SSquareW_Slider1]->Get()
+								+ (GetAxis1() * 0.3 * widget_scale),
+								1.1*widget_scale);
+   ((GeomCappedCylinder*)geometries[SSquareW_SliderCyl2])->move(variables[SSquareW_Slider2]->Get()
+								- (GetAxis2() * 0.3 * widget_scale),
+								variables[SSquareW_Slider2]->Get()
+								+ (GetAxis2() * 0.3 * widget_scale),
+								1.1*widget_scale);
 
    SetEpsilon(widget_scale*1e-4);
 

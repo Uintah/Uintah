@@ -36,7 +36,6 @@ enum { CubeW_SphereIUL, CubeW_SphereIUR, CubeW_SphereIDR, CubeW_SphereIDL,
        CubeW_CylIU, CubeW_CylIR, CubeW_CylID, CubeW_CylIL,
        CubeW_CylMU, CubeW_CylMR, CubeW_CylMD, CubeW_CylML,
        CubeW_CylOU, CubeW_CylOR, CubeW_CylOD, CubeW_CylOL };
-enum { CubeW_PointMatl, CubeW_EdgeMatl, CubeW_HighMatl };
 enum { CubeW_PickSphIUL, CubeW_PickSphIUR, CubeW_PickSphIDR, CubeW_PickSphIDL,
        CubeW_PickSphOUL, CubeW_PickSphOUR, CubeW_PickSphODR, CubeW_PickSphODL,
        CubeW_PickCyls };

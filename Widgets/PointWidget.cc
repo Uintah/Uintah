@@ -23,7 +23,6 @@ const Index NumPcks = 1;
 // const Index NumSchemes = 1;
 
 enum { PointW_Sphere };
-enum { PointW_PointMatl, PointW_HighMatl };
 enum { PointW_Pick };
 
 PointWidget::PointWidget( Module* module, CrowdMonitor* lock, double widget_scale )

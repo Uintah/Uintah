@@ -35,7 +35,6 @@ enum { SFrameW_ConstULDR, SFrameW_ConstURDL, SFrameW_ConstPyth, SFrameW_ConstPla
 enum { SFrameW_SphereUL, SFrameW_SphereUR, SFrameW_SphereDR, SFrameW_SphereDL,
        SFrameW_CylU, SFrameW_CylR, SFrameW_CylD, SFrameW_CylL,
        SFrameW_SliderCyl1, SFrameW_SliderCyl2 };
-enum { SFrameW_PointMatl, SFrameW_EdgeMatl, SFrameW_SliderMatl, SFrameW_HighMatl };
 enum { SFrameW_PickSphUL, SFrameW_PickSphUR, SFrameW_PickSphDR, SFrameW_PickSphDL, SFrameW_PickCyls,
        SFrameW_PickSlider1, SFrameW_PickSlider2 };
 
@@ -230,12 +229,12 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock,
    GeomMaterial* cylsm = new GeomMaterial(picks[SFrameW_PickCyls], materials[SFrameW_EdgeMatl]);
 
    GeomGroup* sliders = new GeomGroup;
-   geometries[SFrameW_SliderCyl1] = new GeomCylinder;
+   geometries[SFrameW_SliderCyl1] = new GeomCappedCylinder;
    picks[SFrameW_PickSlider1] = new GeomPick(geometries[SFrameW_SliderCyl1], module);
    picks[SFrameW_PickSlider1]->set_highlight(materials[SFrameW_HighMatl]);
    picks[SFrameW_PickSlider1]->set_cbdata((void*)SFrameW_PickSlider1);
    sliders->add(picks[SFrameW_PickSlider1]);
-   geometries[SFrameW_SliderCyl2] = new GeomCylinder;
+   geometries[SFrameW_SliderCyl2] = new GeomCappedCylinder;
    picks[SFrameW_PickSlider2] = new GeomPick(geometries[SFrameW_SliderCyl2], module);
    picks[SFrameW_PickSlider2]->set_highlight(materials[SFrameW_HighMatl]);
    picks[SFrameW_PickSlider2]->set_cbdata((void*)SFrameW_PickSlider2);
@@ -281,16 +280,16 @@ ScaledFrameWidget::widget_execute()
    ((GeomCylinder*)geometries[SFrameW_CylL])->move(variables[SFrameW_PointDL]->Get(),
 						  variables[SFrameW_PointUL]->Get(),
 						  0.5*widget_scale);
-   ((GeomCylinder*)geometries[SFrameW_SliderCyl1])->move(variables[SFrameW_Slider1]->Get()
-							- (GetAxis1() * 0.3 * widget_scale),
-							variables[SFrameW_Slider1]->Get()
-							+ (GetAxis1() * 0.3 * widget_scale),
-							1.1*widget_scale);
-   ((GeomCylinder*)geometries[SFrameW_SliderCyl2])->move(variables[SFrameW_Slider2]->Get()
-							- (GetAxis2() * 0.3 * widget_scale),
-							variables[SFrameW_Slider2]->Get()
-							+ (GetAxis2() * 0.3 * widget_scale),
-							1.1*widget_scale);
+   ((GeomCappedCylinder*)geometries[SFrameW_SliderCyl1])->move(variables[SFrameW_Slider1]->Get()
+							       - (GetAxis1() * 0.3 * widget_scale),
+							       variables[SFrameW_Slider1]->Get()
+							       + (GetAxis1() * 0.3 * widget_scale),
+							       1.1*widget_scale);
+   ((GeomCappedCylinder*)geometries[SFrameW_SliderCyl2])->move(variables[SFrameW_Slider2]->Get()
+							       - (GetAxis2() * 0.3 * widget_scale),
+							       variables[SFrameW_Slider2]->Get()
+							       + (GetAxis2() * 0.3 * widget_scale),
+							       1.1*widget_scale);
 
    SetEpsilon(widget_scale*1e-4);
 

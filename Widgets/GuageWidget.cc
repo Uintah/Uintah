@@ -28,7 +28,6 @@ const Index NumPcks = 4;
 
 enum { GuageW_ConstLine, GuageW_ConstDist, GuageW_ConstSDist, GuageW_ConstRatio };
 enum { GuageW_SphereL, GuageW_SphereR, GuageW_Cylinder, GuageW_SliderCyl };
-enum { GuageW_PointMatl, GuageW_EdgeMatl, GuageW_SliderMatl, GuageW_HighMatl };
 enum { GuageW_PickSphL, GuageW_PickSphR, GuageW_PickCyl, GuageW_PickSlider };
 
 GuageWidget::GuageWidget( Module* module, CrowdMonitor* lock, double widget_scale )
@@ -95,7 +94,7 @@ GuageWidget::GuageWidget( Module* module, CrowdMonitor* lock, double widget_scal
    picks[GuageW_PickCyl]->set_highlight(materials[GuageW_HighMatl]);
    picks[GuageW_PickCyl]->set_cbdata((void*)GuageW_PickCyl);
    GeomMaterial* cylm = new GeomMaterial(picks[GuageW_PickCyl], materials[GuageW_EdgeMatl]);
-   geometries[GuageW_SliderCyl] = new GeomCylinder;
+   geometries[GuageW_SliderCyl] = new GeomCappedCylinder;
    picks[GuageW_PickSlider] = new GeomPick(geometries[GuageW_SliderCyl], module);
    picks[GuageW_PickSlider]->set_highlight(materials[GuageW_HighMatl]);
    picks[GuageW_PickSlider]->set_cbdata((void*)GuageW_PickSlider);
@@ -128,11 +127,11 @@ GuageWidget::widget_execute()
    ((GeomCylinder*)geometries[GuageW_Cylinder])->move(variables[GuageW_PointL]->Get(),
 						      variables[GuageW_PointR]->Get(),
 						      0.5*widget_scale);
-   ((GeomCylinder*)geometries[GuageW_SliderCyl])->move(variables[GuageW_Slider]->Get()
-						       - (GetAxis() * 0.3 * widget_scale),
-						       variables[GuageW_Slider]->Get()
-						       + (GetAxis() * 0.3 * widget_scale),
-						       1.1*widget_scale);
+   ((GeomCappedCylinder*)geometries[GuageW_SliderCyl])->move(variables[GuageW_Slider]->Get()
+							     - (GetAxis() * 0.3 * widget_scale),
+							     variables[GuageW_Slider]->Get()
+							     + (GetAxis() * 0.3 * widget_scale),
+							     1.1*widget_scale);
 
    Vector v(GetAxis()), v1, v2;
    v.find_orthogonal(v1,v2);

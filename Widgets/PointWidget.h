@@ -17,7 +17,12 @@
 
 #include <Widgets/BaseWidget.h>
 
+
+// Variable indexs
 enum { PointW_Point };
+// Material indexs
+enum { PointW_PointMatl, PointW_HighMatl };
+
 
 class PointWidget : public BaseWidget {
 public:

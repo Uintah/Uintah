@@ -17,9 +17,14 @@
 
 #include <Widgets/BaseWidget.h>
 
+
+// Variable indexs
 enum { BoxW_PointIUL, BoxW_PointIUR, BoxW_PointIDR, BoxW_PointIDL,
        BoxW_PointOUL, BoxW_PointOUR, BoxW_PointODR, BoxW_PointODL,
        BoxW_Dist, BoxW_Hypo, BoxW_Diag };
+// Material indexs
+enum { BoxW_PointMatl, BoxW_EdgeMatl, BoxW_HighMatl };
+
 
 class BoxWidget : public BaseWidget {
 public:

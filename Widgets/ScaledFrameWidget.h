@@ -17,10 +17,15 @@
 
 #include <Widgets/BaseWidget.h>
 
+
+// Variable indexs
 enum { SFrameW_PointUL, SFrameW_PointUR, SFrameW_PointDR, SFrameW_PointDL,
        SFrameW_Dist1, SFrameW_Dist2, SFrameW_Hypo,
        SFrameW_Slider1, SFrameW_SDist1, SFrameW_Ratio1,
        SFrameW_Slider2, SFrameW_SDist2, SFrameW_Ratio2 };
+// Material indexs
+enum { SFrameW_PointMatl, SFrameW_EdgeMatl, SFrameW_SliderMatl, SFrameW_HighMatl };
+
 
 class ScaledFrameWidget : public BaseWidget {
 public:

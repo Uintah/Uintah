@@ -30,7 +30,6 @@ enum { SquareW_ConstULDR, SquareW_ConstURDL, SquareW_ConstHypo, SquareW_ConstPla
        SquareW_ConstULUR, SquareW_ConstULDL, SquareW_ConstDRUR, SquareW_ConstDRDL };
 enum { SquareW_SphereUL, SquareW_SphereUR, SquareW_SphereDR, SquareW_SphereDL,
        SquareW_CylU, SquareW_CylR, SquareW_CylD, SquareW_CylL };
-enum { SquareW_PointMatl, SquareW_EdgeMatl, SquareW_HighMatl };
 enum { SquareW_PickSphUL, SquareW_PickSphUR, SquareW_PickSphDR, SquareW_PickSphDL, SquareW_PickCyls };
 
 SquareWidget::SquareWidget( Module* module, CrowdMonitor* lock,

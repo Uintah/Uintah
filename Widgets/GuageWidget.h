@@ -17,7 +17,12 @@
 
 #include <Widgets/BaseWidget.h>
 
+
+// Variable indexs
 enum { GuageW_PointL, GuageW_PointR, GuageW_Dist, GuageW_Slider, GuageW_SDist, GuageW_Ratio};
+// Material indexs
+enum { GuageW_PointMatl, GuageW_EdgeMatl, GuageW_SliderMatl, GuageW_HighMatl };
+
 
 class GuageWidget : public BaseWidget {
 public:

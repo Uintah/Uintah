@@ -36,7 +36,6 @@ enum { SBoxW_SphereIUL, SBoxW_SphereIUR, SBoxW_SphereIDR, SBoxW_SphereIDL,
        SBoxW_CylIU, SBoxW_CylIR, SBoxW_CylID, SBoxW_CylIL,
        SBoxW_CylMU, SBoxW_CylMR, SBoxW_CylMD, SBoxW_CylML,
        SBoxW_CylOU, SBoxW_CylOR, SBoxW_CylOD, SBoxW_CylOL };
-enum { SBoxW_PointMatl, SBoxW_EdgeMatl, SBoxW_SliderMatl, SBoxW_HighMatl };
 enum { SBoxW_PickSphIUL, SBoxW_PickSphIUR, SBoxW_PickSphIDR, SBoxW_PickSphIDL,
        SBoxW_PickSphOUL, SBoxW_PickSphOUR, SBoxW_PickSphODR, SBoxW_PickSphODL,
        SBoxW_PickCyls };

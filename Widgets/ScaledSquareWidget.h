@@ -17,10 +17,15 @@
 
 #include <Widgets/BaseWidget.h>
 
+
+// Variable indexs
 enum { SSquareW_PointUL, SSquareW_PointUR, SSquareW_PointDR, SSquareW_PointDL,
        SSquareW_Dist, SSquareW_Hypo,
        SSquareW_Slider1, SSquareW_SDist1, SSquareW_Ratio1,
        SSquareW_Slider2, SSquareW_SDist2, SSquareW_Ratio2 };
+// Material indexs
+enum { SSquareW_PointMatl, SSquareW_EdgeMatl, SSquareW_SliderMatl, SSquareW_HighMatl };
+
 
 class ScaledSquareWidget : public BaseWidget {
 public:

@@ -17,7 +17,12 @@
 
 #include <Widgets/BaseWidget.h>
 
+
+// Variable indexs
 enum { ArrowW_Point };
+// Material indexs
+enum { ArrowW_PointMatl, ArrowW_EdgeMatl, ArrowW_HighMatl };
+
 
 class ArrowWidget : public BaseWidget {
 public:

@@ -17,9 +17,14 @@
 
 #include <Widgets/BaseWidget.h>
 
+
+// Variable indexs
 enum { SBoxW_PointIUL, SBoxW_PointIUR, SBoxW_PointIDR, SBoxW_PointIDL,
        SBoxW_PointOUL, SBoxW_PointOUR, SBoxW_PointODR, SBoxW_PointODL,
        SBoxW_Dist, SBoxW_Hypo, SBoxW_Diag };
+// Material indexs
+enum { SBoxW_PointMatl, SBoxW_EdgeMatl, SBoxW_SliderMatl, SBoxW_HighMatl };
+
 
 class ScaledBoxWidget : public BaseWidget {
 public:

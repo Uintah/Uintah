@@ -60,15 +60,6 @@ BaseWidget::execute()
 }
 
 
-const Point&
-BaseWidget::GetVar( const Index vindex ) const
-{
-   ASSERT(vindex<NumVariables);
-
-   return variables[vindex]->Get();
-}
-
-
 void
 BaseWidget::geom_pick( void* /* cbdata */)
 {

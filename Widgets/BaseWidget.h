@@ -44,12 +44,17 @@ public:
    inline void SetEpsilon( const Real Epsilon );
 
    inline GeomSwitch* GetWidget();
-   inline int GetState();
-   inline void SetState(const int state);
-
-   void execute();
-   const Point& GetVar( const Index vindex ) const;
    
+   inline void SetMaterial( const Index mindex, const MaterialHandle m );
+   inline MaterialHandle& GetMaterial( const Index mindex ) const;
+
+   inline int GetState();
+   inline void SetState( const int state );
+
+   inline const Point& GetVar( const Index vindex ) const;
+   
+   void execute();
+
    virtual void geom_pick(void*);
    virtual void geom_release(void*);
    virtual void geom_moved(int, double, const Vector&, void*);
@@ -82,6 +87,12 @@ protected:
    void FinishWidget(GeomObj* w);
 
 protected:
+   // These affect ALL widgets!!!
+   inline void SetPointWidgetMaterial( const MaterialHandle m );
+   inline void SetEdgeWidgetMaterial( const MaterialHandle m );
+   inline void SetSliderWidgetMaterial( const MaterialHandle m );
+   inline void SetHighlightWidgetMaterial( const MaterialHandle m );
+   
    static MaterialHandle PointWidgetMaterial;
    static MaterialHandle EdgeWidgetMaterial;
    static MaterialHandle SliderWidgetMaterial;
@@ -128,17 +139,72 @@ BaseWidget::GetState()
 
    
 inline void
-BaseWidget::SetState(const int state)
+BaseWidget::SetState( const int state )
 {
    widget->set_state(state);
 }
 
    
+inline void
+BaseWidget::SetMaterial( const Index mindex, const MaterialHandle m )
+{
+   ASSERT(mindex<NumMaterials);
+
+   materials[mindex] = m;
+}
+
+
+inline MaterialHandle&
+BaseWidget::GetMaterial( const Index mindex ) const
+{
+   ASSERT(mindex<NumMaterials);
+
+   return materials[mindex];
+}
+
+
 inline ostream&
 operator<<( ostream& os, BaseWidget& w )
 {
    w.print(os);
    return os;
+}
+
+
+inline const Point&
+BaseWidget::GetVar( const Index vindex ) const
+{
+   ASSERT(vindex<NumVariables);
+
+   return variables[vindex]->Get();
+}
+
+
+inline void
+BaseWidget::SetPointWidgetMaterial( const MaterialHandle m )
+{
+   PointWidgetMaterial = m;
+}
+
+
+inline void
+BaseWidget::SetEdgeWidgetMaterial( const MaterialHandle m )
+{
+   EdgeWidgetMaterial = m;
+}
+
+
+inline void
+BaseWidget::SetSliderWidgetMaterial( const MaterialHandle m )
+{
+   SliderWidgetMaterial = m;
+}
+
+
+inline void
+BaseWidget::SetHighlightWidgetMaterial( const MaterialHandle m )
+{
+   HighlightWidgetMaterial = m;
 }
 
 

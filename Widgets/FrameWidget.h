@@ -17,8 +17,13 @@
 
 #include <Widgets/BaseWidget.h>
 
+
+// Variable indexs
 enum { FrameW_PointUL, FrameW_PointUR, FrameW_PointDR, FrameW_PointDL,
        FrameW_Dist1, FrameW_Dist2, FrameW_Hypo };
+// Material indexs
+enum { FrameW_PointMatl, FrameW_EdgeMatl, FrameW_HighMatl };
+
 
 class FrameWidget : public BaseWidget {
 public:

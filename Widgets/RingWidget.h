@@ -17,9 +17,14 @@
 
 #include <Widgets/BaseWidget.h>
 
+
+// Variable indexs
 enum { RingW_PointUL, RingW_PointUR, RingW_PointDR, RingW_PointDL,
-       RingW_Dist, RingW_Hypo,
-       RingW_Slider, RingW_SDist, RingW_Ratio };
+       RingW_Dist, RingW_Hypo, RingW_Center,
+       RingW_Slider, RingW_SDist, RingW_Angle };
+// Material indexs
+enum { RingW_PointMatl, RingW_EdgeMatl, RingW_SliderMatl, RingW_HighMatl };
+
 
 class RingWidget : public BaseWidget {
 public:
@@ -38,7 +43,7 @@ public:
 inline Real
 RingWidget::GetRatio() const
 {
-   return (variables[RingW_Ratio]->Get().x());
+   return (variables[RingW_Angle]->Get().x());
 }
 
 
