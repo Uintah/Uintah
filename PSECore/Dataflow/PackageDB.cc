@@ -1,6 +1,11 @@
 // PackageDB.cc - Interface to module-finding and loading mechanisms
 
-#include <dlfcn.h>
+
+//#include <dlfcn.h>
+#include <SCICore/Util/soloader.h>
+#ifdef ASSERT
+#undef ASSERT
+#endif
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Containers/AVLTree.h>
 #include <SCICore/Containers/String.h>
@@ -88,13 +93,15 @@ cerr << "After '" << packagePath << "'\n";
                 +soName+"' with TCLPath '"+tclPath+"'\\n\"",result);
     }
 
-    void* so=dlopen(soName(),RTLD_NOW);
+    //void* so=dlopen(soName(),RTLD_NOW);
+	LIBRARY_HANDLE so = GetLibraryHandle(soName());
     if(!so) {
-	cerr << dlerror() << '\n';
+	  //cerr << dlerror() << '\n';
       cerr << "ERROR: Can't open package '" << soName << "'\n";
       continue;
     }
-    pkgInitter initFn=(pkgInitter)dlsym(so,"initPackage");
+    //pkgInitter initFn=(pkgInitter)dlsym(so,"initPackage");
+	pkgInitter initFn=(pkgInitter)GetHandleSymbolAddress(so,"initPackage");
     if(!initFn) {
       cerr << "ERROR: Package '" << soName << "' has no initPackage(...)\n";
       continue;
