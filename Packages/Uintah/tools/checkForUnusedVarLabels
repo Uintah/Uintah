@@ -9,6 +9,12 @@
 #  For example to check all ICELabels:
 #  checkForUnusedVarLabels ICE/ICELabel.cc ICE/ICE.cc ICE/impICE.cc ICE/ICERF.cc MPMICE/MPMICE.cc MPMICE/MPMICERF.cc MPM/SerialMPM.cc
 #
+#  To check all MPMLabels:
+#  cd <to components>
+#  set files = ( MPM/SerialMPM.cc MPMICE/MPMICE.cc MPMArches/MPMArches.cc `find . -name "*.cc" | grep Constitutive` )
+#  SCIRun/src/Packages/Uintah/tools/checkForUnusedVarLabels MPM/MPMLabel.cc $files
+#
+#
 #  NOTE: This script need gnu grep to work.  Simply
 #  setenv GNUGREP <path to gnu grep>
 #_____________________________________________________________________.
