@@ -336,7 +336,7 @@ inline void Matrix3::operator = (const Matrix3 &m3)
 
 }
 
-inline void Matrix3::set(const double value)
+inline void Matrix3::set(double value)
 {
   // Assign the Matrix3 the value components
   for(int i=0;i<3;i++){
