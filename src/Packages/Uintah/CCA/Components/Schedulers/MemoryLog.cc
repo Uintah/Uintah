@@ -10,7 +10,7 @@ namespace Uintah {
 		 const std::string& label, const std::string& name,
 		 const std::string& type, const Patch* patch,
 		 int material, const std::string& nelems,
-		 int size, void* ptr, int dwid)
+		 unsigned long size, void* ptr, int dwid)
   {
     out << label;
     if(dwid != -1)

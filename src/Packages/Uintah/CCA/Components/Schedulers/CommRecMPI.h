@@ -73,7 +73,7 @@ typedef CommRecMPI<ReceiveHandler> RecvRecord;
 
 template <class AfterCommunicationHandler>
 bool CommRecMPI<AfterCommunicationHandler>::
-waitsome(MPI_Comm comm, int me)
+waitsome(MPI_Comm comm, int/* me*/)
 {
   if(ids.size() == 0)
     return false; // no more to test

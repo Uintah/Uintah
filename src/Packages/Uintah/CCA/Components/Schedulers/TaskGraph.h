@@ -65,6 +65,7 @@ WARNING
       void topologicalSort(vector<Task*>& tasks);
 
      DetailedTasks* createDetailedTasks( const ProcessorGroup* pg,
+					 LoadBalancer* lb,
 					 bool useInternalDeps );
      void createDetailedDependencies(DetailedTasks*, LoadBalancer* lb,
 				     const ProcessorGroup* pg);
