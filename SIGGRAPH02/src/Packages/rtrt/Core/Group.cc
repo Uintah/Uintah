@@ -77,10 +77,12 @@ Vector Group::normal(const Point&, const HitInfo&)
 void Group::add(Object* obj)
 {
     objs.add(obj);
+    ASSERT(!was_processed);
 }
 
 int Group::add2(Object* obj)
 {
+    ASSERT(!was_processed);
     return objs.add2(obj);
 }
 
@@ -107,9 +109,10 @@ void Group::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 {
   if (!was_processed) {
     all_children_are_groups=1;
+    bbox.reset();
     for(int i=0;i<objs.size();i++) {
       objs[i]->preprocess(maxradius, pp_offset, scratchsize);
-      objs[i]->compute_bounds(bbox, 1E-5);
+      objs[i]->compute_bounds(bbox, 0); // 1E-5);
       if (dynamic_cast<Group *>(objs[i]) == 0) all_children_are_groups=0;
     }
     was_processed = true;
@@ -119,12 +122,12 @@ void Group::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 
 void Group::compute_bounds(BBox& bb, double offset)
 {
-  if (!was_processed)
+  //if (!was_processed)
     for(int i=0;i<objs.size();i++) {
       objs[i]->compute_bounds(bb, offset);
     }
-  else
-    bb.extend(bbox);
+    //else
+    //bb.extend(bbox);
 }
 
 void Group::prime(int n)
@@ -139,7 +142,7 @@ void Group::transform(Transform& T)
   for (int i=0;i<objs.size();i++) {
     objs[i]->transform(T);
   }
-
+  ASSERT(!was_processed);
 }
 
 const int GROUP_VERSION = 1;
