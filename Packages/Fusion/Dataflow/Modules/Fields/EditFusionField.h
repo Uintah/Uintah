@@ -25,7 +25,9 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
 
-namespace SCIRun {
+namespace Fusion {
+
+using namespace SCIRun;
 
 class EditFusionFieldAlgo : public DynamicAlgoBase
 {
