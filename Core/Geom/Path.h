@@ -198,7 +198,7 @@ inline void Path::set_param(){
 }
 
 inline void Path::set_arc_param(){
-  int sz=dist_prm.size();
+  USE_IF_ASSERTS_ON(int sz=dist_prm.size();)
   ASSERT(sz>=ns && ns > 0 && path_prm<=dist_prm[sz-1]);
   int j=1;
   while ((path_prm-dist_prm[j])>10e-13) j++;
