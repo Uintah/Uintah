@@ -171,8 +171,13 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
   this->filebase=strdup(filebase);
   if(depth<=0)
     depth=1;
-  char buf[200];
-  sprintf(buf, "%s.hdr", filebase);
+  // We need to make sure we have enough space for our filename.
+  // .hdr is 4 characters long
+  // .brick is 6 characters long
+  // Just to be sure, we will pad it out a bit.
+  int filebase_size = strlen(filebase) + 20;
+  char *buf = new char[filebase_size];
+  snprintf(buf, filebase_size, "%s.hdr", filebase);
   ifstream in(buf);
   if(!in){
     cerr << "Error opening header: " << buf << '\n';
@@ -196,7 +201,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
   sdiag=datadiag/Vector(nx-1,ny-1,nz-1);
   
   blockdata.resize(nx, ny, nz);
-  sprintf(buf, "%s.brick", filebase);
+  snprintf(buf, filebase_size, "%s.brick", filebase);
   cout << "buf = " << buf << endl;
   //  ifstream bin(buf);
   int bin_fd = open(buf, O_RDONLY);
@@ -403,6 +408,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
 #endif
     cerr << "done\n";
   }
+  delete[] buf;
 }
 
 template<class T, class A, class B>
@@ -1152,9 +1158,17 @@ void HVolume<T,A,B>::compute_hist(int nhist, int* hist,
 				  float datamin, float datamax)
 {
   bool recompute_hist = true;
-  char buf[200];
+  // We need to make sure we have enough space for our filename.
+  // .hist_ is 6 characters long
+  // The number will be 1 to at most 4 (know any displays with 10000
+  //   horizontal pixels.
+  // Just to be sure, we will pad it out a bit.
+  int size = strlen(filebase) + 20;
+  char *buf = new char[size];
   if (filebase != NULL) {
-    sprintf(buf, "%s.hist_%d", filebase, nhist);
+    // Use snprintf to make sure we don't overstep our bounds, even
+    // though we allocated enough memory for it.
+    snprintf(buf, size, "%s.hist_%d", filebase, nhist);
     cerr << "Looking for histogram in " << buf << "\n";
     ifstream in(buf);
     if(in){
@@ -1209,11 +1223,18 @@ void HVolume<T,A,B>::compute_hist(int nhist, int* hist,
     }
     if (filebase != NULL) {
       ofstream out(buf);
-      for(int i=0;i<nhist;i++){
-	out << hist[i] << '\n';
+      if (out) {
+	for(int i=0;i<nhist;i++){
+	  out << hist[i] << '\n';
+	}
+	out.close();
+      } else {
+	cerr << "ERROR (HVolume::compute_hist): cannot save file to "
+	     << buf << "\n";
       }
     }
   }
+  delete[] buf;
   cerr << "Done building histogram\n";
 }    
 
