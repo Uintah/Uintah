@@ -6,6 +6,7 @@ from sys import argv,exit
 from helpers.runSusTest import runSusTest,input,modes,num_processes
 
 TESTS = [   ("advect.ups",		    ["dbg", "opt"]) 	\
+            ("hotBlob2mat.ups",		    ["dbg", "opt"]) 	\
     	]
 
 if len(argv) < 2:
