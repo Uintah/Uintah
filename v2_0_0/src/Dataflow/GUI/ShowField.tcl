@@ -152,8 +152,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	 global $color
 	 set window .ui[modname]
 	 if {[winfo exists $window.color]} {
-	     wm deiconify $window.color
 	     raise $window.color
+	     wm deiconify $window.color
 	     return
 	 } else {
 	     toplevel $window.color
@@ -620,8 +620,6 @@ itcl_class SCIRun_Visualization_ShowField {
     method ui {} {
 	set window .ui[modname]
 	if {[winfo exists $window]} {
-	    wm deiconify $window
-	    raise $window
 	    return
 	}
 	toplevel $window
