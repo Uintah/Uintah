@@ -58,32 +58,50 @@ RadLinearSolver::~RadLinearSolver()
 void 
 RadLinearSolver::problemSetup(const ProblemSpecP& params)
 {
-  ProblemSpecP db = params->findBlock("LinearSolver");
-  if (db->findBlock("underelax"))
-    db->require("underrelax", d_underrelax);
-  else
+  if (params) {
+    ProblemSpecP db = params->findBlock("LinearSolver");
+    if (db) {
+      if (db->findBlock("underelax"))
+	db->require("underrelax", d_underrelax);
+      else
+	d_underrelax = 1.0;
+      
+      if (db->findBlock("max_iter"))
+	db->require("max_iter", d_maxSweeps);
+      else
+	d_maxSweeps = 75;
+      if (db->findBlock("ksptype"))
+	db->require("ksptype",d_kspType);
+      else
+	d_kspType = "gmres";
+      if (db->findBlock("tolerance"))
+	db->require("tolerance",d_tolerance);
+      else
+	d_tolerance = 1.e-06;
+      if (db->findBlock("pctype"))
+	db->require("pctype", d_pcType);
+      else
+	d_pcType = "blockjacobi";
+      if (d_pcType == "asm")
+	db->require("overlap",d_overlap);
+      if (d_pcType == "ilu")
+	db->require("fill",d_fill);
+    }
+    else {
+      d_underrelax = 1.0;
+      d_maxSweeps = 75;
+      d_kspType = "gmres";
+      d_pcType = "blockjacobi";
+      d_tolerance = 1.0e-06;
+    }
+  }
+  else  {
     d_underrelax = 1.0;
-
-  if (db->findBlock("max_iter"))
-    db->require("max_iter", d_maxSweeps);
-  else
     d_maxSweeps = 75;
-  if (db->findBlock("ksptype"))
-    db->require("ksptype",d_kspType);
-  else
     d_kspType = "gmres";
-  if (db->findBlock("tolerance"))
-    db->require("tolerance",d_tolerance);
-  else
-    d_tolerance = 1.e-06;
-  if (db->findBlock("pctype"))
-    db->require("pctype", d_pcType);
-  else
     d_pcType = "blockjacobi";
-  if (d_pcType == "asm")
-    db->require("overlap",d_overlap);
-  if (d_pcType == "ilu")
-    db->require("fill",d_fill);
+    d_tolerance = 1.0e-06;
+  }
   int argc = 4;
   char** argv;
   argv = new char*[argc];
