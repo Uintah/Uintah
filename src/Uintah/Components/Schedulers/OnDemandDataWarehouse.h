@@ -9,6 +9,9 @@
 #include <Uintah/Components/Schedulers/DWDatabase.h>
 
 #include <map>
+#include <string>
+
+using std::string;
 
 namespace Uintah {
 
@@ -125,8 +128,9 @@ public:
 		     int matlIndex, const Region* region) const;
 private:
 
-   void sendMpiDataRequest();
-
+   void sendMpiDataRequest( const string & varName,
+			          Region * region,
+			          int      numGhostCells );
    struct dataLocation {
       const Region   * region;
             int        mpiNode;
@@ -144,6 +148,9 @@ private:
    DWDatabase<NCVariableBase>       d_ncDB;
    DWDatabase<ParticleVariableBase> d_particleDB;
    reductionDBtype                  d_reductionDB;
+
+   // Record of which DataWarehouse has the data for each variable...
+   //  Allows us to look up the DW to which we will send a data request.
    dataLocationDBtype               d_dataLocation;
 
    //////////
@@ -155,6 +162,8 @@ private:
    // Incremented for each MPI Data Request sent.
    int d_responseTag; 
    
+   // Internal VarLabel for the position of this DataWarehouse
+   // ??? with respect to what ???? 
    const VarLabel * d_positionLabel;
 
    std::vector<const VarLabel*> d_saveset;
@@ -165,6 +174,9 @@ private:
 
 //
 // $Log$
+// Revision 1.20  2000/05/15 20:04:36  dav
+// Mpi Stuff
+//
 // Revision 1.19  2000/05/15 19:39:43  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups

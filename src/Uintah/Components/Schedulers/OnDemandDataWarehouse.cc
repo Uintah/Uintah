@@ -5,6 +5,7 @@ static char *id="@(#) $Id$";
 #include <SCICore/Thread/Runnable.h>
 #include <SCICore/Thread/Guard.h>
 #include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/IntVector.h>
 
 #include <Uintah/Interface/DWMpiHandler.h>
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
@@ -26,8 +27,6 @@ using std::vector;
 using SCICore::Exceptions::InternalError;
 using SCICore::Thread::Guard;
 using SCICore::Geometry::Point;
-using SCICore::Geometry::Min;
-using SCICore::Geometry::Max;
 
 namespace Uintah {
 
@@ -89,7 +88,9 @@ OnDemandDataWarehouse::put(const ReductionVariableBase& var,
 }
 
 void
-OnDemandDataWarehouse::sendMpiDataRequest()
+OnDemandDataWarehouse::sendMpiDataRequest( const string & varName,
+					         Region * region,
+					         int      numGhostCells )
 {
   if( d_MpiProcesses == 1 ) {
       throw InternalError( "sendMpiDataRequest should not be called if"
@@ -112,6 +113,9 @@ OnDemandDataWarehouse::sendMpiDataRequest()
   //
   //  8 is directly above 17 which is directly above 26
 
+
+  // Figure out the bottom and top points of the ghost region
+  // immediately above this region.  (Ie: Determine Top (Area 4))
 
   int                           currentTag;
   DWMpiHandler::MpiDataRequest  request;
@@ -341,11 +345,19 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 		  if(!d_ncDB.exists(label, matlIndex, neighbor))
 		     throw InternalError("Position variable does not exist: "+ 
 					 label->getName());
-		  NCVariableBase* srcvar = d_ncDB.get(label, matlIndex, neighbor);
+		  NCVariableBase* srcvar = 
+		    d_ncDB.get(label, matlIndex, neighbor);
+
+		  using SCICore::Geometry::Max;
+		  using SCICore::Geometry::Min;
+
 		  IntVector low = Max(lowIndex, neighbor->getNodeLowIndex());
-		  IntVector high = Min(highIndex, neighbor->getNodeHighIndex());
-		  if(high.x() < low.x() || high.y() < low.y() || high.z() < low.z())
+		  IntVector high= Min(highIndex, neighbor->getNodeHighIndex());
+
+		  if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+		      || ( high.z() < low.z() ) )
 		     throw InternalError("Region doesn't overlap?");
+
 		  var.copyRegion(srcvar, low, high);
 		  IntVector dnodes = high-low;
 		  totalNodes+=dnodes.x()*dnodes.y()*dnodes.z();
@@ -545,6 +557,9 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 
 //
 // $Log$
+// Revision 1.23  2000/05/15 20:04:35  dav
+// Mpi Stuff
+//
 // Revision 1.22  2000/05/15 19:39:43  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups
