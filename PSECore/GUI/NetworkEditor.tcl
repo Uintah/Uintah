@@ -512,8 +512,7 @@ proc popupLoadMenu {} {
     set netedit_loadfile [tk_getOpenFile -filetypes $types ]
     
     if { [file exists $netedit_loadfile] } {
-	source $netedit_loadfile
-	saveMacroModules $netedit_loadfile
+	loadfile $netedit_loadfile
     }
 }
 
@@ -812,7 +811,7 @@ proc createAlias {fromPackage fromCategory fromModule toPackage toCategory toMod
 proc loadfile {netedit_loadfile} {
     # Check to see of the file exists; exit if it doesn't
     if { ! [file exists $netedit_loadfile] } {
-	puts "$netedit_loadfile: no such file"
+	puts "loadfile: no such file"
 	return
     }
     
@@ -837,8 +836,9 @@ proc loadfile {netedit_loadfile} {
 		# Go on to stage 2, not moving on to the next line of the file
 		set stage 2
 		continue
-	    } elseif { [string match $curr_line "return"] || \
-		    [string match "puts*" $curr_line] } {
+	    } elseif { [string match "return" $curr_line] } {
+		# do nothing
+	    } elseif { [string match "puts *" $curr_line] } {
 		# do nothing
 	    } else {
 		# Execute the line (comments and/or blank lines are ignored)
@@ -856,6 +856,8 @@ proc loadfile {netedit_loadfile} {
 		eval $curr_line
 	    } elseif { [string match $curr_line ""] } {
 		# do nothing
+	    } elseif { [string match "addConnection*" $curr_line] } {
+		eval $curr_line
 	    } else {
 		# Move on to the next stage
 		set stage 3
@@ -868,7 +870,7 @@ proc loadfile {netedit_loadfile} {
 	    if { [string match "set ::*" $curr_line] } {
 		set curr_string $curr_line
 		set var [string trimleft $curr_string "set :"]
-		
+
 		set c 0
 		set t 0
 		set pram ""
@@ -918,13 +920,13 @@ proc loadfile {netedit_loadfile} {
 		set mvar "m$counter"
 		set m [expr $$mvar]
 		
-
-
 		set command "set ::$m"
 		append command "$pram $value"
 
 		# Execute the "real" command
+		puts "command: $command"
 		eval $command
+
 	    } elseif { [string match $curr_line ""] } {
 		# do nothing
 	    } else {
@@ -949,39 +951,8 @@ proc loadfile {netedit_loadfile} {
     
     # close the file
     close $fchannel
+
 }
-
-
-
-proc saveMacroModules { netedit_file } {
-    global CurrentMacroModules
-    
-    if { [file exists $netedit_file] } {
-	set fchannel [open $netedit_file]
-    } else {
-	return
-    }
-    
-    # Used in tracking modnames
-    set curr_modname ""
-    
-    set var_list ""
-    
-    # read in the first line of the file
-    set curr_line [gets $fchannel]
-    while { ! [eof $fchannel] } {
-	if { [string match "set m*" $curr_line] } {
-	    set var_list "$var_list [lindex $curr_line 1]"
-	} else {
-	    # do nothing
-	}
-
-	set curr_line [gets $fchannel]
-    }
-}
-
-
-
 
 
 
