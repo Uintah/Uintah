@@ -43,6 +43,7 @@ namespace rtrt {
   };
 } // end namespace rtrt
 
+#define one_over_255 .00392156862745098039
 //#define USE_MINMAX_FOR_RENDERING 1
 
 TextureGridSpheres::TextureGridSpheres(float* spheres, size_t nspheres,
@@ -1270,7 +1271,7 @@ Color TextureGridSpheres::interp_color(unsigned char *image,
   unsigned char *pixel=image + 3*(iv * tex_res + iu);
   Color c(pixel[0], pixel[1], pixel[2]);
 
-  return c*(1.0/255);
+  return c*one_over_255;
 #else
   
   // u & v *= dimensions minus the slop(2) and the zero base difference (1)
@@ -1311,6 +1312,6 @@ Color TextureGridSpheres::interp_color(unsigned char *image,
     c10*(1-u_weight_high)*   v_weight_high +
     c11*   u_weight_high *   v_weight_high;
 
-  return c*(1.0/255);
+  return c*one_over_255;
 #endif
 }
