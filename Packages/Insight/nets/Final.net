@@ -2,21 +2,28 @@
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat3D" 283 52]
-set m1 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat3D" 481 216]
-set m2 [addModuleAtPosition "Insight" "Filters" "GradientAnisotropicDiffusionImageFilter" 481 314]
-set m3 [addModuleAtPosition "Insight" "Filters" "ThresholdSegmentationLevelSetImageFilter" 283 427]
-set m4 [addModuleAtPosition "Insight" "Converters" "ImageToField" 1208 212]
-set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 1190 836]
-set m6 [addModuleAtPosition "Insight" "Converters" "ImageToField" 283 561]
-set m7 [addModuleAtPosition "Insight" "Converters" "ImageToField" 686 428]
-set m8 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 283 677]
-set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 947 687]
-set m10 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 965 582]
-set m11 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 965 442]
-set m12 [addModuleAtPosition "SCIRun" "Fields" "SamplePlane" 686 699]
-set m13 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 722 601]
-set m14 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1208 302]
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat3D" 334 53]
+set m1 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat3D" 532 217]
+set m2 [addModuleAtPosition "Insight" "Filters" "GradientAnisotropicDiffusionImageFilter" 532 315]
+set m3 [addModuleAtPosition "Insight" "Filters" "ThresholdSegmentationLevelSetImageFilter" 334 428]
+set m4 [addModuleAtPosition "Insight" "Converters" "ImageToField" 1259 213]
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 1241 837]
+set m6 [addModuleAtPosition "Insight" "Converters" "ImageToField" 334 562]
+set m7 [addModuleAtPosition "Insight" "Converters" "ImageToField" 737 429]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 334 678]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 998 688]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1016 583]
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1016 443]
+set m12 [addModuleAtPosition "SCIRun" "Fields" "SamplePlane" 737 700]
+set m13 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 773 602]
+set m14 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1259 303]
+set m15 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat3D" 7 40]
+set m16 [addModuleAtPosition "Insight" "Filters" "ThresholdSegmentationLevelSetImageFilter" 7 425]
+set m17 [addModuleAtPosition "Insight" "Converters" "ImageToField" 7 513]
+set m18 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 7 633]
 
 addConnection $m2 0 $m3 1
 addConnection $m6 0 $m8 0
@@ -36,6 +43,11 @@ addConnection $m4 0 $m14 0
 addConnection $m8 1 $m5 0
 addConnection $m9 0 $m5 1
 addConnection $m14 1 $m5 2
+addConnection $m15 0 $m16 0
+addConnection $m16 0 $m17 0
+addConnection $m17 0 $m18 0
+addConnection $m18 1 $m5 3
+addConnection $m2 0 $m16 1
 
 set $m0-notes {}
 set $m0-show_status {1}
@@ -72,15 +84,15 @@ set $m5-ViewWindow_0-caxes {0}
 set $m5-ViewWindow_0-raxes {1}
 set $m5-ViewWindow_0-iaxes {}
 set $m5-ViewWindow_0-have_collab_vis {0}
-set $m5-ViewWindow_0-view-eyep-x {         -310.461}
-set $m5-ViewWindow_0-view-eyep-y {         -125.911}
-set $m5-ViewWindow_0-view-eyep-z {         -489.133}
-set $m5-ViewWindow_0-view-lookat-x {          3.06225}
-set $m5-ViewWindow_0-view-lookat-y {         -7.63894}
-set $m5-ViewWindow_0-view-lookat-z {         -10.6878}
-set $m5-ViewWindow_0-view-up-x {         0.268822}
-set $m5-ViewWindow_0-view-up-y {        -0.961227}
-set $m5-ViewWindow_0-view-up-z {        0.0614584}
+set $m5-ViewWindow_0-view-eyep-x {         -226.497}
+set $m5-ViewWindow_0-view-eyep-y {          -24.855}
+set $m5-ViewWindow_0-view-eyep-z {         -528.488}
+set $m5-ViewWindow_0-view-lookat-x {         -9.88589}
+set $m5-ViewWindow_0-view-lookat-y {         -9.13011}
+set $m5-ViewWindow_0-view-lookat-z {          13.7563}
+set $m5-ViewWindow_0-view-up-x {        0.0889183}
+set $m5-ViewWindow_0-view-up-y {        -0.996017}
+set $m5-ViewWindow_0-view-up-z {      -0.00663612}
 set $m5-ViewWindow_0-view-fov {               20}
 set $m5-ViewWindow_0-view-eyep_offset-x {}
 set $m5-ViewWindow_0-view-eyep_offset-y {}
@@ -121,6 +133,7 @@ set $m5-ViewWindow_0-ortho-view {0}
 set $m5-ViewWindow_0-unused {1}
 set $m5-ViewWindow_0-unused {1}
 set $m5-ViewWindow_0-unused {1}
+set $m5-ViewWindow_0-unused {1}
 set $m6-notes {}
 set $m6-show_status {1}
 set $m7-notes {}
@@ -129,7 +142,7 @@ set $m8-notes {}
 set $m8-show_status {1}
 set $m8-isoval {1.00000000}
 set $m8-isoval-min {               -4}
-set $m8-isoval-max {                1}
+set $m8-isoval-max {                4}
 set $m8-isoval-typed {0}
 set $m8-isoval-quantity {1}
 set $m8-quantity-range {colormap}
@@ -219,7 +232,9 @@ set $m12-sizex {100}
 set $m12-sizey {100}
 set $m12-axis {2}
 set $m12-padpercent {0}
+set $m12-pos {-0.30}
 set $m12-data-at {Nodes}
+set $m12-update_type {Auto}
 set $m13-notes {}
 set $m13-show_status {1}
 set $m13-interpolation_basis {linear}
@@ -248,5 +263,46 @@ set $m14-update_type {on release}
 set $m14-color-r {1.00}
 set $m14-color-g {0.00}
 set $m14-color-b {0.54}
+set $m15-notes {}
+set $m15-show_status {1}
+set $m15-filename {/usr/demos/Insight/data/case1seed2.mhd}
+set $m16-notes {}
+set $m16-show_status {1}
+set $m16-lower_threshold {15000}
+set $m16-upper_threshold {30000}
+set $m16-curvature_scaling {2.0}
+set $m16-propagation_scaling {0.5}
+set $m16-edge_weight {0.0}
+set $m16-max_iterations {100}
+set $m16-max_rms_change {0.02}
+set $m16-reverse_expansion_direction {1}
+set $m16-isovalue {0.5}
+set $m16-smoothing_iterations {0}
+set $m16-smoothing_time_step {0.1}
+set $m16-smoothing_conductance {0.5}
+set $m17-notes {}
+set $m17-show_status {1}
+set $m18-notes {}
+set $m18-show_status {1}
+set $m18-isoval {1.00000000}
+set $m18-isoval-min {               -4}
+set $m18-isoval-max {                4}
+set $m18-isoval-typed {0}
+set $m18-isoval-quantity {1}
+set $m18-quantity-range {colormap}
+set $m18-quantity-min {0}
+set $m18-quantity-max {100}
+set $m18-isoval-list {0.0 1.0 2.0 3.0}
+set $m18-extract-from-new-field {1}
+set $m18-algorithm {1}
+set $m18-build_trisurf {0}
+set $m18-np {1}
+set $m18-active-isoval-selection-tab {0}
+set $m18-active_tab {NOISE}
+set $m18-update_type {on release}
+set $m18-color-r {0.00}
+set $m18-color-g {0.84}
+set $m18-color-b {0.35}
+$m12 initialize_ui
 
 ::netedit scheduleok

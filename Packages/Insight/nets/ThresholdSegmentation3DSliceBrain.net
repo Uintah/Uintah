@@ -2,6 +2,9 @@
 
 ::netedit dontschedule
 
+global notes
+set notes ""
+
 set m0 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat3D" 283 52]
 set m1 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat3D" 481 216]
 set m2 [addModuleAtPosition "Insight" "Filters" "GradientAnisotropicDiffusionImageFilter" 481 314]
@@ -39,7 +42,7 @@ addConnection $m14 1 $m5 2
 
 set $m0-notes {}
 set $m0-show_status {1}
-set $m0-filename {/usr/demos/Insight/data/case1seed.mhd}
+set $m0-filename {/usr/demos/Insight/data/case1seed2.mhd}
 set $m1-notes {}
 set $m1-show_status {1}
 set $m1-filename {/usr/demos/Insight/data/case1cropisosm.mhd}
@@ -50,12 +53,12 @@ set $m2-iterations {6}
 set $m2-conductance_parameter {0.5}
 set $m3-notes {}
 set $m3-show_status {1}
-set $m3-lower_threshold {35000}
-set $m3-upper_threshold {50000}
+set $m3-lower_threshold {15000}
+set $m3-upper_threshold {30000}
 set $m3-curvature_scaling {2.0}
 set $m3-propagation_scaling {0.5}
-set $m3-edge_weight {1.0}
-set $m3-max_iterations {500}
+set $m3-edge_weight {0.0}
+set $m3-max_iterations {100}
 set $m3-max_rms_change {0.02}
 set $m3-reverse_expansion_direction {1}
 set $m3-isovalue {0.5}
@@ -67,20 +70,20 @@ set $m4-show_status {1}
 set $m5-notes {}
 set $m5-show_status {1}
 $m5 ui
-set $m5-ViewWindow_0-pos {z0_y0}
+set $m5-ViewWindow_0-pos {x0_y0}
 set $m5-ViewWindow_0-caxes {0}
 set $m5-ViewWindow_0-raxes {1}
 set $m5-ViewWindow_0-iaxes {}
 set $m5-ViewWindow_0-have_collab_vis {0}
-set $m5-ViewWindow_0-view-eyep-x {         -310.461}
-set $m5-ViewWindow_0-view-eyep-y {         -125.911}
-set $m5-ViewWindow_0-view-eyep-z {         -489.133}
-set $m5-ViewWindow_0-view-lookat-x {          3.06225}
-set $m5-ViewWindow_0-view-lookat-y {         -7.63894}
+set $m5-ViewWindow_0-view-eyep-x {         -168.348}
+set $m5-ViewWindow_0-view-eyep-y {         -48.7854}
+set $m5-ViewWindow_0-view-eyep-z {         -500.584}
+set $m5-ViewWindow_0-view-lookat-x {          3.71825}
+set $m5-ViewWindow_0-view-lookat-y {         -8.95094}
 set $m5-ViewWindow_0-view-lookat-z {         -10.6878}
-set $m5-ViewWindow_0-view-up-x {         0.268822}
-set $m5-ViewWindow_0-view-up-y {        -0.961227}
-set $m5-ViewWindow_0-view-up-z {        0.0614584}
+set $m5-ViewWindow_0-view-up-x {        -0.112211}
+set $m5-ViewWindow_0-view-up-y {        -0.986458}
+set $m5-ViewWindow_0-view-up-z {         0.119623}
 set $m5-ViewWindow_0-view-fov {               20}
 set $m5-ViewWindow_0-view-eyep_offset-x {}
 set $m5-ViewWindow_0-view-eyep_offset-y {}
@@ -127,9 +130,9 @@ set $m7-notes {}
 set $m7-show_status {1}
 set $m8-notes {}
 set $m8-show_status {1}
-set $m8-isoval {1.00000000}
+set $m8-isoval {1.03225806}
 set $m8-isoval-min {               -4}
-set $m8-isoval-max {                1}
+set $m8-isoval-max {                4}
 set $m8-isoval-typed {0}
 set $m8-isoval-quantity {1}
 set $m8-quantity-range {colormap}
