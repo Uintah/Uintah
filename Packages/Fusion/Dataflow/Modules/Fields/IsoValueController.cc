@@ -58,7 +58,7 @@ namespace Fusion {
 
 using namespace SCIRun;
 
-class PSECORESHARE IsoValueController : public Module {
+class IsoValueController : public Module {
 public:
   IsoValueController(GuiContext*);
 
