@@ -565,7 +565,7 @@ Stealth::selectPath( int index )
 void
 Stealth::getRouteStatus( int & pos, int & numPts )
 {
-  if( currentPath_->size() == 0 )
+  if( !currentPath_ || currentPath_->size() == 0 )
     {
       pos = -1; numPts = 0;
     }
