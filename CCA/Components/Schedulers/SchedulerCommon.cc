@@ -482,7 +482,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
     for ( int newPatchIndex = 0; newPatchIndex < neighbors.size(); newPatchIndex++) {
 
       const Patch* newPatch = neighbors[newPatchIndex];
-
+      
       if (!patches->contains(newPatch)) {
 	//cout << "We are skipping patch " << newPatch->getID() << endl;
 	continue;
@@ -663,7 +663,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             newps->add(newPatch);
             MaterialSubset* ms = new MaterialSubset;
             ms->add(currentVar.matlIndex_);
-  	    newDataWarehouse->transferFrom(oldDataWarehouse, currentVar.label_, ps, ms, newps);
+  	    newDataWarehouse->transferFrom(oldDataWarehouse, currentVar.label_, ps, ms, false, newps);
             delete ps;
             delete ms;
             delete newps;
