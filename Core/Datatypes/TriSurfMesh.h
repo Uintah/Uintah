@@ -195,6 +195,20 @@ public:
 
   double get_element_size(const Elem::index_type &fi) { return get_area(fi); }
 
+  //! the double return val is the area of the triangle.
+  double get_gradient_basis(Face::index_type fi, Vector& g0, Vector& g1,
+			    Vector& g2);
+
+  //! function to test if at least one of face's nodes are in supplied range
+  inline bool test_nodes_range(Face::index_type fi, int sn, int en){
+    if (faces_[fi*3]>=sn && faces_[fi*3]<en
+	|| faces_[fi*3+1]>=sn && faces_[fi*3+1]<en
+	|| faces_[fi*3+2]>=sn && faces_[fi*3+2]<en)
+      return true;
+    else
+      return false;
+  }
+
   virtual bool		synchronize(unsigned int);
 
   virtual bool has_normals() const { return true; }
