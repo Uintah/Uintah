@@ -1954,14 +1954,14 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         char desc[50];
         if(ice_matl) {
-          sprintf(desc,"ICEsources/sinks_Mat_%d_patch_%d",indx,patch->getID());
+          sprintf(desc,"ICEsources_sinks_Mat_%d_patch_%d",indx,patch->getID());
           d_ice->printData( patch,0,desc,"SumburnedMass",  sumBurnedMass);      
           d_ice->printData( patch,0,desc,"sumReleasedHeat",sumReleasedHeat);    
           d_ice->printData( patch,0,desc,"sumCreatedVol",  sumCreatedVol);  
           d_ice->printVector( patch,0,desc,"sum_Mom_comb", 0, sumMom_comb);    
         }
         if(mpm_matl) {
-          sprintf(desc,"MPMsources/sinks_Mat_%d_patch_%d",indx,patch->getID());
+          sprintf(desc,"MPMsources_sinks_Mat_%d_patch_%d",indx,patch->getID());
           d_ice->printData( patch, 0, desc,"burnedMass",   burnedMass[m]);
           d_ice->printData( patch, 0, desc,"int_eng_react",int_eng_react[m]);
           d_ice->printData( patch, 0, desc,"createdVol",   createdVol[m]); 
