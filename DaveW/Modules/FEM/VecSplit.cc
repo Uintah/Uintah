@@ -1,5 +1,5 @@
 /*
- *  VecSplit.cc: Compute and visualize error between two vectors
+ *  SplitMatVec.cc: Split an nx3 matrix into 3 nx1 column-matrices
  *
  *  Written by:
  *   David Weinstein
@@ -11,6 +11,7 @@
 
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
+#include <PSECore/Datatypes/MatrixPort.h>
 #include <SCICore/Malloc/Allocator.h>
 
 namespace DaveW {
@@ -20,7 +21,7 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 
 class VecSplit : public Module {
-    ColumnMatrixIPort* ivecP;
+    MatrixIPort* imatP;
     ColumnMatrixOPort* ovec1P;
     ColumnMatrixOPort* ovec2P;
     ColumnMatrixOPort* ovec3P;
@@ -39,8 +40,8 @@ VecSplit::VecSplit(const clString& id)
 : Module("VecSplit", id, Filter)
 {
     // Create the input port
-    ivecP=scinew ColumnMatrixIPort(this, "Input Vector",ColumnMatrixIPort::Atomic);
-    add_iport(ivecP);
+    imatP=scinew MatrixIPort(this, "Input Matrix", MatrixIPort::Atomic);
+    add_iport(imatP);
     ovec1P=scinew ColumnMatrixOPort(this, "Output Vector1",ColumnMatrixIPort::Atomic);
     add_oport(ovec1P);
     ovec2P=scinew ColumnMatrixOPort(this, "Output Vector2",ColumnMatrixIPort::Atomic);
@@ -54,28 +55,24 @@ VecSplit::~VecSplit() {
 
 void VecSplit::execute()
 {
-     ColumnMatrixHandle ivecH;
-     ColumnMatrix* ivec;
-     if (!ivecP->get(ivecH) || !(ivec=ivecH.get_rep())) return;
-
-     ColumnMatrix* ovec1, *ovec2, *ovec3;
-     ovec1=new ColumnMatrix(6);
-     ovec2=new ColumnMatrix(6);
-     ovec3=new ColumnMatrix(6);
-
-     double *o1, *o2, *o3, *i0;
-     o1=ovec1->get_rhs();
-     o2=ovec2->get_rhs();
-     o3=ovec3->get_rhs();
-     i0=ivec->get_rhs();
-
-     for (int i=0; i<3; i++) {
-	 o1[i]=o2[i]=o3[i]=i0[i];
-	 o1[i+3]=o2[i+3]=o3[i+3]=0;
+     MatrixHandle imatH;
+     Matrix* imat;
+     if (!imatP->get(imatH) || !(imat=imatH.get_rep())) return;
+     if (imat->ncols() != 3) {
+	 cerr << "Error - this modules splits an nx3 matrix into 3 nx1 columns -- can't \noperate on a matrix with "<<imat->ncols()<<" columns.\n";
+	 return;
      }
-     o1[3]=1;
-     o2[4]=1;
-     o3[5]=1;
+     int nr=imat->nrows();
+     ColumnMatrix* ovec1, *ovec2, *ovec3;
+     ovec1=new ColumnMatrix(nr);
+     ovec2=new ColumnMatrix(nr);
+     ovec3=new ColumnMatrix(nr);
+
+     for (int i=0; i<nr; i++) {
+	 (*ovec1)[i]=(*imat)[i][0];
+	 (*ovec2)[i]=(*imat)[i][1];
+	 (*ovec3)[i]=(*imat)[i][2];
+     }
 
      ColumnMatrixHandle ov1H(ovec1);
      ColumnMatrixHandle ov2H(ovec2);
@@ -91,6 +88,9 @@ void VecSplit::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/09/05 23:16:19  dmw
+// build scalar field of error values from Basis Matrix
+//
 // Revision 1.1  1999/09/02 04:49:25  dmw
 // more of Dave's modules
 //

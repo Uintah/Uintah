@@ -3,7 +3,7 @@ SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
 SRCS     = DipoleMatToGeom.cc DipoleSourceRHS.cc ErrorMetric.cc \
-	   RecipBasis.cc RemapVector.cc VecSplit.cc
+	   FieldFromBasis.cc RecipBasis.cc RemapVector.cc VecSplit.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
