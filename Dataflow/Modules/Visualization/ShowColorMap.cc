@@ -83,21 +83,21 @@ ShowColorMap::execute()
   if (gui_side_.get() == "left")
   {
     out = Vector(-0.05, 0.0, 0.0);
-    if (gui_length_.get() == "full" || gui_length_.get() == "half1")
+    if (gui_length_.get() == "full" || gui_length_.get() == "half2")
     {
-      ref1 = Point(-1.0, 15.0/16.0, 0.0);
+      ref1 = Point(-1.0, -15.0/16.0, 0.0);
     }
     else
     {
-      ref1 = Point(-1.0, -1.0/16.0, 1.0);
+      ref1 = Point(-1.0, 1.0/16.0, 1.0);
     }
     if (gui_length_.get() == "full")
     {
-      along = Vector(0.0, -30.0/16.0, 0.0);
+      along = Vector(0.0, 30.0/16.0, 0.0);
     }
     else
     {
-      along = Vector(0.0, -14.0/16.0, 0.0);
+      along = Vector(0.0, 14.0/16.0, 0.0);
     }
   }
   else if (gui_side_.get() == "bottom")
