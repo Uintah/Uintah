@@ -7,7 +7,7 @@ SRCS = BaseConstraint.cc  HypotenousConstraint.cc  \
 	DistanceConstraint.cc
 
 
-LIBNAME = constraints
+LIBNAME = Constraints
 
 SCIDependTarget($(SRCS))
 NormalLibraryTarget($(LIBNAME),$(OBJS))
