@@ -963,9 +963,6 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
       CCVariable<int> visited;
       new_dw->allocateTemporary(visited,patch,Ghost::AroundCells,1);
       visited.initialize(0);
-      NCVariable<int> visitedNC;
-      new_dw->allocateTemporary(visitedNC,patch,Ghost::AroundCells,1);
-      visitedNC.initialize(0);
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
 	particleIndex idx = *iter;
@@ -977,8 +974,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 	  vector<int> dof(0);
 	  int l2g_node_num;
 	  for (int k = 0; k < 8; k++) {
-	    if (patch->containsNode(ni[k]) && visitedNC[ni[k]]==0) {
-              visitedNC[ni[k]] = 1;
+	    if (patch->containsNode(ni[k]) ) {
 	      l2g_node_num = l2g[ni[k]] - l2g[lowIndex];
 	      dof.push_back(l2g_node_num);
 	      dof.push_back(l2g_node_num+1);
