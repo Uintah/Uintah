@@ -22,7 +22,6 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <iomanip>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -236,6 +235,9 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
           cmin[m]=Min(cmin[m],cx[m][i]);
           cmax[m]=Max(cmax[m],cx[m][i]);
         }
+
+        // Get crack-front tangential vector
+        GetCrackFrontTangentialVector(m);
 
         // Get the average length of crack front segments 
         cDELT0[m]=0.;
@@ -1460,8 +1462,9 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
       if(d_8or27==27) old_dw->get(psize, lb->pSizeLabel, pset);
 
       // Allocat memory for cfSegJ and cfSegK
-      cfSegJ[m].resize((int)cfSegNodes[m].size());
-      cfSegK[m].resize((int)cfSegNodes[m].size());
+      int cfNodeSize=(int)cfSegNodes[m].size();
+      cfSegJ[m].resize(cfNodeSize);
+      cfSegK[m].resize(cfNodeSize);
       if(calFractParameters || doCrackPropagation) {
         for(int i=0; i<patch_size; i++) {// Loop over all patches
           int num=cfnset[m][i].size(); // number of crack-front nodes in patch i 
@@ -1475,10 +1478,15 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                 int idx=cfnset[m][i][l];     // crack-front node index
                 int node=cfSegNodes[m][idx]; // node
 
-                short operated=NO;
-                if(idx>0 && node==cfSegNodes[m][idx-1]) operated=YES;
+                int pre_idx=-1;
+                for(int ij=0; ij<l; ij++) {
+                  if(node==cfSegNodes[m][cfnset[m][i][ij]]) {
+                    pre_idx=ij;
+                    break;
+                  }
+                }
 
-                if(!operated) { 
+                if(pre_idx<0) { // Not operated
                   /* Step 1: Define crack front segment coordinates
                    v1,v2,v3: direction consies of new axes X',Y' and Z'
                    Origin located at the center of the segment
@@ -1496,11 +1504,11 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   }
                   else { // for edge nodes
                     int nd1=-1,nd2=-1;
-                    if(segs[L]>=0) { // for right-end nodes
+                    if(segs[R]<0) { // for right-edge nodes
                       nd1=cfSegNodes[m][2*segs[L]];
-                      nd2=cfSegNodes[m][2*segs[L]+1]; 
+                      nd2=cfSegNodes[m][2*segs[L]+1];
                     }
-                    else if(segs[R]>=0) {
+                    if(segs[L]<0) { // for left-edge nodes
                       nd1=cfSegNodes[m][2*segs[R]];
                       nd2=cfSegNodes[m][2*segs[R]+1];  
                     }
@@ -1513,20 +1521,16 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   // Direction-cosines of the node
                   Vector v1,v2,v3;
                   Vector v2T=Vector(0.,0.,0.);
-                  Vector v3T=Vector(0.,0.,0.);
                   double l1,m1,n1,l2,m2,n2,l3,m3,n3;
                   for(int j=R; j<=L; j++) {
-                    if(segs[j]>=0) { 
-                      Point pt1=cx[m][cfSegNodes[m][2*segs[j]]];
-                      Point pt2=cx[m][cfSegNodes[m][2*segs[j]+1]];
-                      v2T+=cfSegNorms[m][segs[j]];
-                      v3T+=TwoPtsDirCos(pt2,pt1);
-                    }
+                    if(segs[j]>=0) v2T+=cfSegNorms[m][segs[j]];
                   }
                   v2=v2T/v2T.length();
-                  v3=v3T/v3T.length();
+                  v3=-cfSegV3[m][idx];
                   Vector v23=Cross(v2,v3);
                   v1=v23/v23.length();
+                  Vector v31=Cross(v3,v1);
+                  v2=v31/v31.length();
                   l1=v1.x(); m1=v1.y(); n1=v1.z();
                   l2=v2.x(); m2=v2.y(); n2=v2.z();
                   l3=v3.x(); m3=v3.y(); n3=v3.z();
@@ -1820,8 +1824,8 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   cfK[l]=SIF; 
                 } // End if not operated
                 else { // if operated
-                  cfJ[l]=cfJ[l-1];
-                  cfK[l]=cfK[l-1];
+                  cfJ[l]=cfJ[pre_idx];
+                  cfK[l]=cfK[pre_idx];
                 } 
               } // End of loop over nodes(l) for calculating J & K
             } // End if(pid==i)
@@ -1856,7 +1860,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
 // Output fracture parameters and crack-front position
 void Crack::OutputCrackFrontResults(const int& m)
 { 
-  static double timeforoutputcrack=0.0;
+  //static double timeforoutputcrack=0.0;
 
   double time=d_sharedState->getElapsedTime();
   ofstream outCrkFrt("CrackFrontResults.dat", ios::app);
@@ -2096,7 +2100,7 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
         CheckCrackFrontSegments(m);
 
         // If all crack-front segs dead, the material is broken.
-        if(cnumFrontSegs[m]<=0) {
+        if(cnumFrontSegs[m]<=0 && pid==0) {
          cout << "!!! Material " << m
               << " has broken. Program terminated." << endl;
          exit(1);
@@ -2116,25 +2120,32 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
 
           // Detect if the node has been operated  
           int pre_idx=-1;
-          if(i>0 && node==cfSegNodes[m][i-1]) pre_idx=i-1;
+          for(int ij=0; ij<i; ij++) {
+            if(node==cfSegNodes[m][ij]) {
+              pre_idx=ij;
+              break;
+            }
+          }
+          //if(i>0 && node==cfSegNodes[m][i-1]) pre_idx=i-1;
 
           if(pre_idx<0) { // for the nodes not operated
             // Direction-cosines of the node
             Vector v1,v2,v3;
             Vector v2T=Vector(0.,0.,0.);
-            Vector v3T=Vector(0.,0.,0.);
             for(int j=R; j<=L; j++) {
               if(segs[j]>=0) {
-                Point pt1=cx[m][cfSegNodes[m][2*segs[j]]];
-                Point pt2=cx[m][cfSegNodes[m][2*segs[j]+1]];
+                //Point pt1=cx[m][cfSegNodes[m][2*segs[j]]];
+                //Point pt2=cx[m][cfSegNodes[m][2*segs[j]+1]];
                 v2T+=cfSegNorms[m][segs[j]];    
-                v3T+=TwoPtsDirCos(pt2,pt1);
+                //v3T+=TwoPtsDirCos(pt2,pt1);
               }
             }
             v2=v2T/v2T.length();
-            v3=v3T/v3T.length();
+            v3=-cfSegV3[m][i];
             Vector v23=Cross(v2,v3);
             v1=v23/v23.length(); 
+            Vector v31=Cross(v3,v1);
+            v2=v31/v31.length();            
             // Coordinates transformation matrix from local to global
             Matrix3 T=Matrix3(v1.x(), v2.x(), v3.x(),
                               v1.y(), v2.y(), v3.y(),
@@ -2160,13 +2171,20 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
 
 	// Step 3: Determine the propagation extent for each node
 	int min_idx=0,max_idx=-1;
-        for(int i=0; i<(int)cfSegNodes[m].size(); i++) {
+        int cfNodeSize=cfSegNodes[m].size();
+        for(int i=0; i<cfNodeSize; i++) {
           int node=cfSegNodes[m][i];
           Point pt=cx[m][node];
 
           // Detect if the node has been operated
           int pre_idx=-1;
-          if(i>0 && node==cfSegNodes[m][i-1]) pre_idx=i-1;        
+          for(int ij=0; ij<i; ij++) {
+            if(node==cfSegNodes[m][ij]) {
+              pre_idx=ij;
+              break;
+            }
+          }
+          //if(i>0 && node==cfSegNodes[m][i-1]) pre_idx=i-1;        
   
           if(pre_idx<0) { // not operated
             // Find the segments coonected by the node
@@ -2177,13 +2195,12 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
               int segsT[2];
               min_idx=i;
               segsT[R]=segs[R];
-              while(segsT[R]>=0)
+              while(segsT[R]>=0 && min_idx>0)
                 FindSegsFromNode(m,cfSegNodes[m][--min_idx],segsT);
               max_idx=i;
               segsT[L]=segs[L];
-              while(segsT[L]>=0) {
+              while(segsT[L]>=0 && max_idx<cfNodeSize-1) 
                 FindSegsFromNode(m,cfSegNodes[m][++max_idx],segsT);
-              }
             }
 
             // Count the nodes which propagate among (2ns+1) nodes around pt
@@ -2199,7 +2216,7 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
             // New position of pt after virtual propagation
             double fraction=(double)np/(2*ns+1);
             Point new_pt=pt+fraction*da[i];         
-
+/*
             // Deal with the boundary nodes: extending new_pt the dis of
             // crack incremental (fraction*delta*dx_max)   
             if((segs[R]<0 || segs[L]<0) &&
@@ -2219,7 +2236,7 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
               // Check if it beyond the global gird
               FindIntersectionLineAndGridBoundary(tmp_pt,new_pt);           
             }
-
+*/
             // Push back the new_pt 
             cfSegPts[m].push_back(new_pt);
           } // End if(!operated)
@@ -2768,6 +2785,10 @@ void Crack::UpdateCrackExtentAndNormals(const ProcessorGroup*,
           exit(1);
         }
       } // End of loop over cnumFrontSegs 
+
+      // Update crack-front tangential vectors
+      GetCrackFrontTangentialVector(m);
+
     } // End of loop over matls
   } // End of loop patches
 }
@@ -3512,9 +3533,9 @@ void Crack::OutputInitialCracks(const int& numMatls)
                << " cells on the circumference.\n"
                << "   crack front segment ID: " << ellipseCrkFrtSegID[m][i]
                << endl;
-          cout << "   end point on axis1: " << pellipses[m][i][0] << endl;
-          cout << "   end point on axis2: " << pellipses[m][i][1] << endl;
-          cout << "   another end point on axis1: " << pellipses[m][i][2]
+          cout << "   end point on axis1: " << ellipses[m][i][0] << endl;
+          cout << "   end point on axis2: " << ellipses[m][i][1] << endl;
+          cout << "   another end point on axis1: " << ellipses[m][i][2]
                << endl;
         }
 
@@ -3901,7 +3922,7 @@ void Crack::DiscretizeEllipticCracks(const int& m, int& nstart0)
       }
     }
     nstart0+=ellipseNCells[m][k]+1;
-  } // End of discretizing ellipses
+  } // End ofloop over ellipses
 }
  
 void Crack::DiscretizePartialEllipticCracks(const int& m, int& nstart0)
@@ -3996,12 +4017,11 @@ void Crack::OutputCrackPlaneMesh(const int& m)
 
     cout << "  Crack front line-segments (" << cnumFrontSegs[m]
          << " segments in total)" << endl;
-    for(int i=0; i<cnumFrontSegs[m];i++) {
-      cout << "     Seg " << i << ": " << cfSegNodes[m][i*2]
-           << cx[m][cfSegNodes[m][i*2]] << "-->"
-           << cfSegNodes[m][2*i+1]
-           << cx[m][cfSegNodes[m][2*i+1]]
-           << ", outward normal: " << cfSegNorms[m][i] << endl;
+    for(int i=0; i<(int)cfSegNodes[m].size();i++) {
+      cout << "     Seg " << i/2 << ": "
+           << cfSegNodes[m][i] << cx[m][cfSegNodes[m][i]] 
+           << ", V2: " << cfSegNorms[m][i/2] 
+           << ", V3: " << cfSegV3[m][i] << endl;
     }
 
     cout << "\n  Average length of crack front segs, cDELT0="
@@ -4034,23 +4054,26 @@ void Crack::CheckCrackFrontSegments(const int& m)
   }
 }
 
-short Crack::SmoothCrackFront(const int& mm)
+short Crack::GetCrackFrontTangentialVector(const int& mm)
 { 
   short flag=1;       // Smooth successfully
   double ep=1.e-10;   // Tolerance
-  enum {R=0,L};
+  enum {R=0,L};       // Right and left
 
   int i=-1,l=-1,k=-1;
 
+  int cfNodeSize=(int)cfSegNodes[mm].size();
+  cfSegV3[mm].clear();
+  cfSegV3[mm].resize(cfNodeSize);
+
   // Minimum and maximum index of each sub-crack
-  int min_idx=0,max_idx=-1;
-  // Crack-front points of each sub-crack
-  vector<Point> pts;
-  vector<int>   idx;
-  vector<double> p;
-  vector<double> q;
-  vector<double> r;
-  for(k=0; k<(int)cfSegPts[mm].size();k++) {
+  int min_idx=0,max_idx=-1,numSegs=-1;
+  vector<Point>  pts; // Crack-front point subset of the sub-crack
+  vector<Vector> V3;  // Crack-front point tangential vector
+  vector<double> dis; // Arc length from the starting point 
+  vector<int>    idx;  
+
+  for(k=0; k<cfNodeSize;k++) {
     // Step 1: Collect crack points for current sub-crack
     int node=cfSegNodes[mm][k];
     int segs[2];
@@ -4061,103 +4084,74 @@ short Crack::SmoothCrackFront(const int& mm)
       // The minimum index of the sub-crack
       min_idx=k;
       segsT[R]=segs[R];
-      while(segsT[R]>=0)
+      while(segsT[R]>=0 && min_idx>0)
         FindSegsFromNode(mm,cfSegNodes[mm][--min_idx],segsT);
+
       // The maximum index of the sub-crack
       max_idx=k;
       segsT[L]=segs[L];
-      while(segsT[L]>=0) 
+      while(segsT[L]>=0 && max_idx<cfNodeSize-1) 
         FindSegsFromNode(mm,cfSegNodes[mm][++max_idx],segsT);
+
       // Allocate memory for the sub-crack
-      pts.resize((max_idx-min_idx+3)/2);
-      p.resize((max_idx-min_idx+3)/2);
-      q.resize((max_idx-min_idx+3)/2);
-      r.resize((max_idx-min_idx+3)/2);
+      numSegs=(max_idx-min_idx+1)/2;
+      pts.resize(numSegs+1);
+      V3.resize(numSegs+1);
+      dis.resize(numSegs+1);
       idx.resize(max_idx+1);
     }
 
     if(k>=min_idx && k<=max_idx) { // For the sub-crack
-      if(k==min_idx || 
-         (k>min_idx && cfSegNodes[mm][k]!=cfSegNodes[mm][k-1])) {
-        pts[(k-min_idx+1)/2]=cfSegPts[mm][k];
+      short pre_idx=-1;
+      for(int ij=0; ij<k; ij++) {
+        if(node==cfSegNodes[mm][ij]) {pre_idx=ij; break;}
+      }
+      if(pre_idx<0) { 
+        int ki=(k-min_idx+1)/2;
+        pts[ki]=cx[mm][cfSegNodes[mm][k]];
+        // Arc length
+        if(k==min_idx) dis[ki]=0.;
+        else dis[ki]=dis[ki-1]+(pts[ki]-pts[ki-1]).length();
       }
       idx[k]=(k-min_idx+1)/2;
       if(k<max_idx) continue; // Collect next point 
     } 
 
     // Step 2: Define how to smooth the sub-crack
-    int n=(max_idx-min_idx+3)/2;  // number of points (>=2)
-    int m=(n-2)/3+2;              // number of segs (>=2)  
+    int n=numSegs+1;          // number of points (>=2)
+    int m=(int)(numSegs/2)+2; // number of segs (>=2)     
     int n1=7*m-3;
 
-    int*    g=new int[n+1];
-    int*    j=new int[m+1];
-    double* s=new double[m+1];
-    double* eu=new double[n1+1];
-    double* ev=new double[n1+1];
-
-    // Find out the variable on which smoothing is based
-    double xmin,ymin,zmin,xmax,ymax,zmax;
-    xmin=ymin=zmin=9e99;
-    xmax=ymax=zmax=-9e99;
-    for(i=0; i<n; i++) {
-      if(pts[i].x()<xmin) xmin=pts[i].x();
-      if(pts[i].x()>xmax) xmax=pts[i].x();
-      if(pts[i].y()<ymin) ymin=pts[i].y();
-      if(pts[i].y()>ymax) ymax=pts[i].y();
-      if(pts[i].z()<zmin) zmin=pts[i].z();
-      if(pts[i].z()>zmax) zmax=pts[i].z();
-    }
-    double dx=xmax-xmin;
-    double dy=ymax-ymin;
-    double dz=zmax-zmin;
-
-    short CASE=0;
-    if(dx>=dy && dx>=dz) CASE=1;  // Based on x
-    if(dy>=dx && dy>=dz) CASE=2;  // Based on y
-    if(dz>=dx && dz>=dy) CASE=3;  // Based on z
-
-    double* T=new double[n+1];
-    double* U=new double[n+1];
-    double* V=new double[n+1];
-    double* Tt=new double[n+1];
-    double* Ut=new double[n+1];
-    double* Vt=new double[n+1];
-    switch(CASE) {
-      case 1:
-        for(i=1; i<=n; i++)
-          {Tt[i]=pts[i-1].x(); Ut[i]=pts[i-1].y(); Vt[i]=pts[i-1].z();}
-        break;
-      case 2:
-        for(i=1; i<=n; i++)
-          {Tt[i]=pts[i-1].y(); Ut[i]=pts[i-1].x(); Vt[i]=pts[i-1].z();}
-        break;
-      case 3:
-        for(i=1; i<=n; i++)
-          {Tt[i]=pts[i-1].z(); Ut[i]=pts[i-1].x(); Vt[i]=pts[i-1].y();}
-        break;
-    }
-
-    // Sort T[i], making sure T[n]>T[1] 
+    // Arries starting from 1
+    double* S=new double[n+1]; // arc-length
+    double* X=new double[n+1]; // x
+    double* Y=new double[n+1]; // y
+    double* Z=new double[n+1]; // z
     for(i=1; i<=n; i++) {
-      int ii=i;
-      if(Tt[1]>Tt[n]) ii=n-i+1;
-      T[i]=Tt[ii];
-      U[i]=Ut[ii];
-      V[i]=Vt[ii];
+      S[i]=dis[i-1];
+      X[i]=pts[i-1].x();
+      Y[i]=pts[i-1].y(); 
+      Z[i]=pts[i-1].z();
     }
 
-    // Positins of the segs
-    s[1]=T[1]-(T[2]-T[1])/2.;
-    for(l=2; l<=m; l++) s[l]=s[1]+(T[n]-s[1])/m*(l-1);
+    int*    g=new int[n+1];    // segID
+    int*    j=new int[m+1];    // number of points 
+    double* s=new double[m+1]; //  
+    double* ex=new double[n1+1];
+    double* ey=new double[n1+1];
+    double* ez=new double[n1+1];
+
+    // Positins of the intervals
+    s[1]=S[1]-(S[2]-S[1])/5.;
+    for(l=2; l<=m; l++) s[l]=s[1]+(S[n]-s[1])/m*(l-1);
 
     // Number of points in each seg & the segs to which
     // the points belongs
     for(l=1; l<=m; l++) { // Loop over segs
       j[l]=0; // Number of points in the seg
       for(i=1; i<=n; i++) {
-        if((l<m  && T[i]>s[l] && T[i]<=s[l+1]) ||
-           (l==m && T[i]>s[l] && T[i]<=T[n])) {
+        if((l<m  && S[i]>s[l] && S[i]<=s[l+1]) ||
+           (l==m && S[i]>s[l] && S[i]<=S[n])) {
           j[l]++; // Number of points in seg l
           g[i]=l; // Seg ID of point i
         }
@@ -4165,81 +4159,70 @@ short Crack::SmoothCrackFront(const int& mm)
     }
 
     // Step 3: Smooth the sub-crack points
-    if(CubicSpline(n,m,n1,T,U,s,j,eu,ep) &&
-       CubicSpline(n,m,n1,T,V,s,j,ev,ep)) { // Smooth successfully
+    if(CubicSpline(n,m,n1,S,X,s,j,ex,ep) &&
+       CubicSpline(n,m,n1,S,Y,s,j,ey,ep) &&
+       CubicSpline(n,m,n1,S,Z,s,j,ez,ep)) {// Smooth successfully
       for(i=1; i<=n; i++) {
         l=g[i];
-        double tq=0.,dXdx=0.;
+        double t=0.,dtdS=0.;
         if(l<m)  {
-          tq=2*(T[i]-s[l])/(s[l+1]-s[l])-1.;
-          dXdx=2./(s[l+1]-s[l]);
+          t=2*(S[i]-s[l])/(s[l+1]-s[l])-1.;
+          dtdS=2./(s[l+1]-s[l]);
         }
         if(l==m) {
-          tq=2*(T[i]-s[l])/(T[n]-s[l])-1.;
-          dXdx=2./(T[n]-s[l]);
+          t=2*(S[i]-s[l])/(S[n]-s[l])-1.;
+          dtdS=2./(S[n]-s[l]);
         }
-        double vl1_U=eu[7*l-5];
-        double vl2_U=eu[7*l-4];
-        double vl3_U=eu[7*l-3];
-        double vl1_V=ev[7*l-5];
-        double vl2_V=ev[7*l-4];
-        double vl3_V=ev[7*l-3];
-        int ii=i-1;
-        if(Tt[1]>Tt[n]) ii=n-i;
-        switch(CASE) {
-          case 1:
-              p[ii]=1.;
-              q[ii]=vl1_U*dXdx+vl2_U*4*tq*dXdx+vl3_U*(12*tq*tq-3.)*dXdx;
-              r[ii]=vl1_V*dXdx+vl2_V*4*tq*dXdx+vl3_V*(12*tq*tq-3.)*dXdx;
-//            pts[ii].y(eu[7*l-6]-eu[7*l-4]+(eu[7*l-5]-3.*eu[7*l-3])*tq
-//                      +2.*eu[7*l-4]*tq*tq+4.*eu[7*l-3]*tq*tq*tq);
-//            pts[ii].z(ev[7*l-6]-ev[7*l-4]+(ev[7*l-5]-3.*ev[7*l-3])*tq
-//                      +2.*ev[7*l-4]*tq*tq+4.*ev[7*l-3]*tq*tq*tq);
-            break;
-          case 2:
-              p[ii]=vl1_U*dXdx+vl2_U*4*tq*dXdx+vl3_U*(12*tq*tq-3.)*dXdx;
-              q[ii]=1.;
-              r[ii]=vl1_V*dXdx+vl2_V*4*tq*dXdx+vl3_V*(12*tq*tq-3.)*dXdx;
 
-//            pts[ii].x(eu[7*l-6]-eu[7*l-4]+(eu[7*l-5]-3.*eu[7*l-3])*tq
-//                      +2.*eu[7*l-4]*tq*tq+4.*eu[7*l-3]*tq*tq*tq);
-//            pts[ii].z(ev[7*l-6]-ev[7*l-4]+(ev[7*l-5]-3.*ev[7*l-3])*tq
-//                      +2.*ev[7*l-4]*tq*tq+4.*ev[7*l-3]*tq*tq*tq);
-            break;
-          case 3:
-              p[ii]=vl1_U*dXdx+vl2_U*4*tq*dXdx+vl3_U*(12*tq*tq-3.)*dXdx;
-              q[ii]=vl1_V*dXdx+vl2_V*4*tq*dXdx+vl3_V*(12*tq*tq-3.)*dXdx;
-              r[ii]=1.;
-//            pts[ii].x(eu[7*l-6]-eu[7*l-4]+(eu[7*l-5]-3.*eu[7*l-3])*tq
-//                      +2.*eu[7*l-4]*tq*tq+4.*eu[7*l-3]*tq*tq*tq);
-//            pts[ii].y(ev[7*l-6]-ev[7*l-4]+(ev[7*l-5]-3.*ev[7*l-3])*tq
-//                      +2.*ev[7*l-4]*tq*tq+4.*ev[7*l-3]*tq*tq*tq);
-            break;
-        }
+        double Xv0,Xv1,Xv2,Xv3,Yv0,Yv1,Yv2,Yv3,Zv0,Zv1,Zv2,Zv3;
+        Xv0=ex[7*l-6]; Xv1=ex[7*l-5]; Xv2=ex[7*l-4]; Xv3=ex[7*l-3];
+        Yv0=ey[7*l-6]; Yv1=ey[7*l-5]; Yv2=ey[7*l-4]; Yv3=ey[7*l-3];
+        Zv0=ez[7*l-6]; Zv1=ez[7*l-5]; Zv2=ez[7*l-4]; Zv3=ez[7*l-3];
+
+        double t0,t1,t2,t3,t0p,t1p,t2p,t3p;
+        t0 =1.; t1 =t;    t2 =2*t*t-1.; t3 =4*t*t*t-3*t;
+        t0p=0.; t1p=dtdS; t2p=4*t*dtdS; t3p=(12.*t*t-3.)*dtdS;
+
+        V3[i-1].x(Xv1*t1p+Xv2*t2p+Xv3*t3p);
+        V3[i-1].y(Yv1*t1p+Yv2*t2p+Yv3*t3p);
+        V3[i-1].z(Zv1*t1p+Zv2*t2p+Zv3*t3p);
+        pts[i-1].x(Xv0*t0+Xv1*t1+Xv2*t2+Xv3*t3);
+        pts[i-1].y(Yv0*t0+Yv1*t1+Yv2*t2+Yv3*t3);
+        pts[i-1].z(Zv0*t0+Zv1*t1+Zv2*t2+Zv3*t3);
       }
     }
-    else flag=0;
+    else { // Not smooth successfully
+      flag=0;
+      for(i=0; i<n; i++) {
+        Point pt1=(i==0   ? pts[i]: pts[i-1]);
+        Point pt2=(i==n-1 ? pts[i]: pts[i+1]);
+        V3[i]=TwoPtsDirCos(pt1,pt2);
+      }   
+    }
           
     delete [] g;
     delete [] j;
     delete [] s;
-    delete [] eu;
-    delete [] ev;
-    delete [] T;  delete [] Tt;
-    delete [] U;  delete [] Ut;
-    delete [] V;  delete [] Vt;
+    delete [] ex;
+    delete [] ey;
+    delete [] ez;
+    delete [] S;
+    delete [] X;
+    delete [] Y;
+    delete [] Z;
 
-    // Step 4: Update cfSegPts with smoothed points
-    for(i=min_idx;i<=max_idx;i++) {
-//      cfSegPts[mm][i]=pts[idx[i]];
-      Vector pqr=Vector(p[idx[i]],q[idx[i]],r[idx[i]]);
-      cfSegV3[mm][i]=pqr/pqr.length();
+    // Step 4: Store tangential vectors
+    for(i=min_idx;i<=max_idx;i++) { // Loop over 
+      int ki=idx[i]; 
+      //cfSegPts[mm][i]=pts[ki];
+      int nd=cfSegNodes[mm][i]; 
+      cx[mm][nd]=pts[ki];
+      cfSegV3[mm][i]=V3[ki]/V3[ki].length();
     }
     pts.clear();
     idx.clear();
-    p.clear();
-    q.clear();
-    r.clear();
+    dis.clear();
+    V3.clear();
 
   } // End of loop over cfSegPts[mm].size()
 
