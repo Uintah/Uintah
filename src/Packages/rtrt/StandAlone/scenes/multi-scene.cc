@@ -26,7 +26,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Array1<int> scene_argc(nscenes);
   Array1<int> scene_first_arg(nscenes);
   int curr_arg=2;
-  Group *g = new Group;
   int s;
   for (s=-1; s<nscenes && curr_arg<argc; curr_arg++) {
     if (strcmp(argv[curr_arg], "-scene") == 0) {
@@ -60,6 +59,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     cerr <<"\n";
   }
 
+  Group *g = new Group;
   for (s=0; s<nscenes; s++) {
     char scenefile[MAXPATHLEN];
     sprintf(scenefile, "./%s.mo", argv[scene_first_arg[s]]);
@@ -81,6 +81,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       exit(1);
     }
     g->objs.add(scene[s]->get_object());
+    if (s!=0)
+      for (int l=0; l<scene[s]->nlights(); l++)
+	scene[0]->add_light(scene[s]->light(l));
   }
   scene[0]->set_object(g);
   return scene[0];
