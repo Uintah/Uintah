@@ -32,20 +32,11 @@
 
 #include <Dataflow/Network/Port.h>
 #include <Core/Thread/Mailbox.h>
-#include <Core/Util/Timer.h>    
-#include <Core/Persistent/Pstreams.h>
-#include <Core/Util/Assert.h>
-#include <Dataflow/Comm/MessageTypes.h>
-#include <Dataflow/Comm/MessageBase.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
-#include <iostream>
-#include <unistd.h> // for the call to sleep
 
 namespace SCIRun {
-  using std::cerr;
-  using std::endl;
 
 
 class Module;

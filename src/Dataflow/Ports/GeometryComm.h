@@ -34,13 +34,13 @@
 #include <Dataflow/share/share.h>
 
 #include <Dataflow/Comm/MessageBase.h>
-#include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Geom/View.h>
 #include <Core/Thread/FutureValue.h>
 
 namespace SCIRun {
   class GeomObj;
   class Semaphore;
+  class GeometryData;
 
 
 struct GeomReply {
