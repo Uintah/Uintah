@@ -722,6 +722,7 @@ void Viewer::flushPort(int portid)
 	view_window_[i]->current_renderer->saveImage(name, "ppm", 640, 512);
       }
       geomlock_.writeLock();
+      flushViews();
     }
 
     for (i = 0; i < syncronized_map_.size(); i++)
