@@ -255,13 +255,7 @@ ETAGS_FILES := $(wildcard $(HEADER_FILES) $(C_FILES) $(CPP_FILES) )
 TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
 ETAGS := @ETAGS@
 
-all:: $(MAKEFILEDIRS)
-
-all:: $(CREATETCLINDEX)
-
-all:: $(LIBDIR) $(SUBMAKEFILES)
-
-all:: $(ALLGEN) $(ALLTARGETS)
+all:: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(ALLTARGETS)
 
 $(MAKEFILEDIRS):
 	@echo creating directory $@
@@ -310,14 +304,15 @@ $(SUBMAKEFILES): scripts/Makefile.tmpl
 	@echo creating $@
 	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(strip $(SRCTOP)), -e 's,@HERE_TARGET@,$(strip $(HERE)),' $< > $@
 
+
 clean::
-	$(foreach dir,$(ALLSUBDIRS),$(shell rm -f $(filter $(dir)/%,$(CLEANOBJS))))
+	rm -f $(patsubst %,%/*.o, $(ALLSUBDIRS))
 	rm -f $(patsubst %,%/depend.mk, $(ALLSUBDIRS))
 	rm -f $(patsubst %,%/core, $(ALLSUBDIRS))
-	$(foreach dir,$(ALLSUBDIRS),$(shell rm -f $(dir)/ii_files/*.ii))
-	-rmdir $(patsubst %,%/ii_files, $(ALLSUBDIRS))
+	for fname in $(patsubst %,%/ii_files, $(ALLSUBDIRS)); \
+	  do if test -d $$fname; then rm -rf $$fname; fi; done
 	rm -f $(patsubst %,%/*~, $(ALLSUBDIRS))
-	rm -f $(LIBDIR)so_locations
+	rm -f $(LIBDIR)so_locations ./so_locations
 	rm -f $(CLEANLIBS)
 	rm -f $(CLEANPROGS)
 	rm -f y.output
@@ -326,7 +321,7 @@ clean::
 
 distclean:: clean
 	rm -f config.status config.log config.cache
-	rm -f scripts/createTclIndex
+	rm -f scripts/createTclIndex scripts/CC scripts/cc
 	rm -f $(patsubst %,%/Makefile, $(ALLSUBDIRS))
 	rm -f sci_config.h sci_defs.h stamp-
 
