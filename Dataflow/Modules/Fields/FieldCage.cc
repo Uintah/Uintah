@@ -132,39 +132,92 @@ FieldCage::execute()
   lines->setLineWidth(1.0);
   GeomSwitch *cage_switch = scinew GeomSwitch(scinew GeomDL(lines));
     
-  const double xn = (sizex_.get() > 0 ? sizex_.get() : 1);
-  const double yn = (sizey_.get() > 0 ? sizey_.get() : 1);
-  const double zn = (sizez_.get() > 0 ? sizez_.get() : 1);
+  const int xn = (sizex_.get() > 0 ? sizex_.get() : 2);
+  const int yn = (sizey_.get() > 0 ? sizey_.get() : 2);
+  const int zn = (sizez_.get() > 0 ? sizez_.get() : 2);
   int xi, yi, zi;
-  const double dx = bounding_vector_->x() / xn;
-  const double dy = bounding_vector_->y() / yn;
-  const double dz = bounding_vector_->z() / zn;;
+  const double dx = bounding_vector_->x() / (xn-1);
+  const double dy = bounding_vector_->y() / (yn-1);
+  const double dz = bounding_vector_->z() / (zn-1);
   const Point &min = *bounding_min_;
   MaterialHandle red = scinew Material(Color(1.0, 0.0, 0.0));
   MaterialHandle green = scinew Material(Color(0.0, 1.0, 0.0));
   MaterialHandle blue = scinew Material(Color(0.0, 0.0, 1.0));
-  for (xi = 0; xi <= xn; xi++)
-    for (yi = 0; yi <= yn; yi++)
-      {
-	Point p1(min.x() + dx*xi, min.y() + dy*yi, min.z());
-	Point p2(min.x()+dx*xi, min.y()+dy*yi, min.z()+bounding_vector_->z());
-	lines->add(p1,blue,p2,blue);
-      }
   
-  for (xi = 0; xi <= xn; xi++)
-    for (zi = 0; zi <= zn; zi++)
-      {
-	Point p1(min.x() + dx*xi, min.y(), min.z() + dz*zi);
-	Point p2(min.x()+dx*xi, min.y()+bounding_vector_->y(), min.z()+dz*zi);
-	lines->add(p1,green,p2,green);
-      }
-  for (yi = 0; yi <= yn; yi++)
-    for (zi = 0; zi <= zn; zi++)
-      {
-	Point p1(min.x(), min.y() + dy*yi, min.z() + dz*zi);
-	Point p2(min.x()+bounding_vector_->x(), min.y()+dy*yi, min.z()+dz*zi);
-	lines->add(p1,red,p2,red);
-      }
+  yi=0;
+  for (xi = 0; xi < xn; xi++) {
+    Point p1(min.x() + dx*xi, min.y() + dy*yi, min.z());
+    Point p2(min.x()+dx*xi, min.y()+dy*yi, min.z()+bounding_vector_->z());
+    lines->add(p1,blue,p2,blue);
+  }
+  yi=yn-1;
+  for (xi = 0; xi < xn; xi++) {
+    Point p1(min.x() + dx*xi, min.y() + dy*yi, min.z());
+    Point p2(min.x()+dx*xi, min.y()+dy*yi, min.z()+bounding_vector_->z());
+    lines->add(p1,blue,p2,blue);
+  }
+  xi=0;
+  for (yi = 0; yi < yn; yi++) {
+    Point p1(min.x() + dx*xi, min.y() + dy*yi, min.z());
+    Point p2(min.x()+dx*xi, min.y()+dy*yi, min.z()+bounding_vector_->z());
+    lines->add(p1,blue,p2,blue);
+  }
+  xi=xn-1;
+  for (yi = 0; yi < yn; yi++) {
+    Point p1(min.x() + dx*xi, min.y() + dy*yi, min.z());
+    Point p2(min.x()+dx*xi, min.y()+dy*yi, min.z()+bounding_vector_->z());
+    lines->add(p1,blue,p2,blue);
+  }
+
+  zi=0;
+  for (xi = 0; xi < xn; xi++) {
+    Point p1(min.x() + dx*xi, min.y(), min.z() + dz*zi);
+    Point p2(min.x()+dx*xi, min.y()+bounding_vector_->y(), min.z()+dz*zi);
+    lines->add(p1,green,p2,green);
+  }
+  zi=zn-1;
+  for (xi = 0; xi < xn; xi++) {
+    Point p1(min.x() + dx*xi, min.y(), min.z() + dz*zi);
+    Point p2(min.x()+dx*xi, min.y()+bounding_vector_->y(), min.z()+dz*zi);
+    lines->add(p1,green,p2,green);
+  }
+  xi=0;
+  for (zi = 0; zi < zn; zi++) {
+    Point p1(min.x() + dx*xi, min.y(), min.z() + dz*zi);
+    Point p2(min.x()+dx*xi, min.y()+bounding_vector_->y(), min.z()+dz*zi);
+    lines->add(p1,green,p2,green);
+  }
+  xi=xn-1;
+  for (zi = 0; zi < zn; zi++) {
+    Point p1(min.x() + dx*xi, min.y(), min.z() + dz*zi);
+    Point p2(min.x()+dx*xi, min.y()+bounding_vector_->y(), min.z()+dz*zi);
+    lines->add(p1,green,p2,green);
+  }
+
+  zi=0;
+  for (yi = 0; yi < yn; yi++) {
+    Point p1(min.x(), min.y() + dy*yi, min.z() + dz*zi);
+    Point p2(min.x()+bounding_vector_->x(), min.y()+dy*yi, min.z()+dz*zi);
+    lines->add(p1,red,p2,red);
+  }
+  zi=zn-1;
+  for (yi = 0; yi < yn; yi++) {
+    Point p1(min.x(), min.y() + dy*yi, min.z() + dz*zi);
+    Point p2(min.x()+bounding_vector_->x(), min.y()+dy*yi, min.z()+dz*zi);
+    lines->add(p1,red,p2,red);
+  }
+  yi=0;
+  for (zi = 0; zi < zn; zi++) {
+    Point p1(min.x(), min.y() + dy*yi, min.z() + dz*zi);
+    Point p2(min.x()+bounding_vector_->x(), min.y()+dy*yi, min.z()+dz*zi);
+    lines->add(p1,red,p2,red);
+  }
+  yi=yn-1;
+  for (zi = 0; zi < zn; zi++) {
+    Point p1(min.x(), min.y() + dy*yi, min.z() + dz*zi);
+    Point p2(min.x()+bounding_vector_->x(), min.y()+dy*yi, min.z()+dz*zi);
+    lines->add(p1,red,p2,red);
+  }
 
   const char *name = "Field Cage";
   if (fieldcage_id_) ogeom_->delObj(fieldcage_id_);
