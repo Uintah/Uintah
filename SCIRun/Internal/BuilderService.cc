@@ -37,6 +37,7 @@
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/CCA/ConnectionID.h>
 #include <iostream>
+#include <string>
 using namespace std;
 using namespace SCIRun;
 
@@ -54,10 +55,11 @@ BuilderService::~BuilderService()
 gov::cca::ComponentID::pointer
 BuilderService::createInstance(const std::string& instanceName,
 			       const std::string& className,
-			       const gov::cca::TypeMap::pointer& /*properties*/)
+			       const gov::cca::TypeMap::pointer& /*properties*/,
+			       const std::string &url)
 {
   cerr << "Need to do something with properties...\n";
-  return framework->createComponentInstance(instanceName, className);
+  return framework->createComponentInstance(instanceName, className,url);
 }
 
 gov::cca::ConnectionID::pointer BuilderService::connect(const gov::cca::ComponentID::pointer& c1,
@@ -65,23 +67,27 @@ gov::cca::ConnectionID::pointer BuilderService::connect(const gov::cca::Componen
 					       const gov::cca::ComponentID::pointer& c2,
 					       const string& port2)
 {
-  ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
+ ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
   ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
-  if(!cid1 || !cid2)
+  if(!cid1 || !cid2){
     throw CCAException("Cannot understand this ComponentID");
+  }
   if(cid1->framework != framework || cid2->framework != framework){
     throw CCAException("Cannot connect components from different frameworks");
   }
   ComponentInstance* comp1=framework->lookupComponent(cid1->name);
   ComponentInstance* comp2=framework->lookupComponent(cid2->name);
   PortInstance* pr1=comp1->getPortInstance(port1);
-  if(!pr1)
+  if(!pr1){
     throw CCAException("Unknown port");
+  }
   PortInstance* pr2=comp2->getPortInstance(port2);
-  if(!pr2)
+  if(!pr2){
     throw CCAException("Unknown port");
-  if(!pr1->connect(pr2))
+  }
+  if(!pr1->connect(pr2)){
     throw CCAException("Cannot connect");
+  }
   cerr << "connect should return a connection ID\n";
   return gov::cca::ConnectionID::pointer(new ConnectionID(c1, port1, c2, port2));
 }
@@ -247,7 +253,67 @@ CIA::array1<std::string>  BuilderService::getCompatiblePortList(
   return availablePorts;
 }
 
+void BuilderService::registerFramework(const string &frameworkURL)
+{
+  Object::pointer obj=PIDL::objectFrom(frameworkURL);
+  gov::cca::AbstractFramework::pointer remoteFramework=
+    pidl_cast<gov::cca::AbstractFramework::pointer>(obj);
+  gov::cca::Services::pointer bs = remoteFramework->getServices("external builder", 
+								"builder main", 
+								gov::cca::TypeMap::pointer(0));
+  cerr << "got bs\n";
+  gov::cca::ports::ComponentRepository::pointer reg =
+    pidl_cast<gov::cca::ports::ComponentRepository::pointer>
+    (bs->getPort("cca.ComponentRepository"));
+  if(reg.isNull()){
+    cerr << "Cannot get component registry, not building component menus\n";
+    return;
+  }
+  
+  //traverse Builder Components here...
+
+  for(unsigned int i=0; i<servicesList.size();i++){
+    gov::cca::ports::BuilderService::pointer builder 
+      = pidl_cast<gov::cca::ports::BuilderService::pointer>
+      (servicesList[i]->getPort("cca.BuilderService"));
+
+    if(builder.isNull()){
+      cerr << "Fatal Error: Cannot find builder service\n";
+      return;
+    } 
+    
+    gov::cca::ComponentID::pointer cid=servicesList[i]->getComponentID();
+    cerr<<"try to connect..."<<endl;
+    gov::cca::ConnectionID::pointer connID=builder->connect(cid, "builderPort",
+							    cid, "builder");
+    cerr<<"connection done"<<endl;
+  
+
+    gov::cca::Port::pointer p = servicesList[i]->getPort("builder");
+    gov::cca::ports::BuilderPort::pointer bp = 
+      pidl_cast<gov::cca::ports::BuilderPort::pointer>(p);
+    if(bp.isNull()){
+      cerr << "BuilderPort is not connected!\n";
+    } 
+    else{
+      bp->buildRemotePackageMenus(reg, frameworkURL);
+    }
+    builder->disconnect(connID,0);
+    servicesList[i]->releasePort("cca.BuilderService"); 
+    servicesList[i]->releasePort("builder");
+  }
+  
+}
+
+void BuilderService::registerServices(const gov::cca::Services::pointer &svc)
+{
+  servicesList.push_back(svc);
+}
+
 gov::cca::AbstractFramework::pointer BuilderService::getFramework()
 {
   return gov::cca::AbstractFramework::pointer(framework);
 }
+
+
+

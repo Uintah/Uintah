@@ -36,6 +36,8 @@
 #include <Dataflow/XMLUtil/StrX.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Util/soloader.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <string>
 
 #ifdef __sgi
 #define IRIX
@@ -177,38 +179,64 @@ bool CCAComponentModel::haveComponent(const std::string& type)
 }
 
 ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
-						     const std::string& type)
+						     const std::string& type,
+						     const std::string& url)
 {
-  componentDB_type::iterator iter = components.find(type);
-  if(iter == components.end())
-    return 0;
-  //ComponentDescription* cd = iter->second;
-
-  string lastname=type.substr(type.find('.')+1);  
-  string so_name("lib/libCCA_Components_");
-  so_name=so_name+lastname+".so";
-  cerr<<"type="<<type<<" soname="<<so_name<<endl;
-
-  LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
-  if(!handle){
-    cerr << "#1 Cannot load component " << type << '\n';
-    cerr << SOError() << '\n';
-    return 0;
-  }
-
-  string makername = "make_"+type;
-  for(int i=0;i<(int)makername.size();i++)
-    if(makername[i] == '.')
-      makername[i]='_';
   
-  void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
-  if(!maker_v){
-    cerr << "#2 Cannot load component " << type << '\n';
-    cerr << SOError() << '\n';
-    return 0;
+  gov::cca::Component::pointer component;
+  if(url==""){  //local component 
+    componentDB_type::iterator iter = components.find(type);
+    if(iter == components.end())
+      return 0;
+    //ComponentDescription* cd = iter->second;
+
+    string lastname=type.substr(type.find('.')+1);  
+    string so_name("lib/libCCA_Components_");
+    so_name=so_name+lastname+".so";
+    cerr<<"type="<<type<<" soname="<<so_name<<endl;
+
+    LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
+    if(!handle){
+      cerr << "Cannot load component " << type << '\n';
+      cerr << SOError() << '\n';
+      return 0;
+    }
+
+    string makername = "make_"+type;
+    for(int i=0;i<(int)makername.size();i++)
+      if(makername[i] == '.')
+	makername[i]='_';
+  
+    void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
+    if(!maker_v){
+      cerr <<Cannot load component " << type << '\n';
+      cerr << SOError() << '\n';
+      return 0;
+    }
+    gov::cca::Component::pointer (*maker)() = (gov::cca::Component::pointer (*)())(maker_v);
+    component = (*maker)();
   }
-  gov::cca::Component::pointer (*maker)() = (gov::cca::Component::pointer (*)())(maker_v);
-  gov::cca::Component::pointer component = (*maker)();
+  else{ //remote component: need to be created by framework at url 
+
+    Object::pointer obj=PIDL::objectFrom(url);
+    if(obj.isNull()){
+      cerr<<"got null obj (framework) from "<<url<<endl;
+      return 0;
+    }
+
+    gov::cca::AbstractFramework::pointer remoteFramework=
+      pidl_cast<gov::cca::AbstractFramework::pointer>(obj);
+
+    std::string comURL=remoteFramework->createComponent(name, type);
+    //cerr<<"comURL="<<comURL<<endl;
+    Object::pointer comObj=PIDL::objectFrom(comURL);
+    if(comObj.isNull()){
+      cerr<<"got null obj(Component) from "<<url<<endl;
+      return 0;
+    }
+    component=pidl_cast<gov::cca::Component::pointer>(comObj);
+
+  }
   CCAComponentInstance* ci = new CCAComponentInstance(framework, name, type,
 						      gov::cca::TypeMap::pointer(0),
 						      component);
@@ -237,4 +265,47 @@ void CCAComponentModel::listAllComponentTypes(vector<ComponentDescription*>& lis
       iter != components.end(); iter++){
     list.push_back(iter->second);
   }
+}
+
+
+
+std::string CCAComponentModel::createComponent(const std::string& name,
+						      const std::string& type)
+						     
+{
+  
+  gov::cca::Component::pointer component;
+  componentDB_type::iterator iter = components.find(type);
+  if(iter == components.end())
+    return "";
+    //ComponentDescription* cd = iter->second;
+  
+  string lastname=type.substr(type.find('.')+1);  
+  string so_name("lib/libCCA_Components_");
+  so_name=so_name+lastname+".so";
+  //cerr<<"type="<<type<<" soname="<<so_name<<endl;
+  
+  LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
+  if(!handle){
+    cerr << "Cannot load component " << type << '\n';
+    cerr << SOError() << '\n';
+    return "";
+  }
+
+  string makername = "make_"+type;
+  for(int i=0;i<(int)makername.size();i++)
+    if(makername[i] == '.')
+      makername[i]='_';
+  
+  void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
+  if(!maker_v){
+    cerr << "Cannot load component " << type << '\n';
+    cerr << SOError() << '\n';
+    return "";
+  }
+  gov::cca::Component::pointer (*maker)() = (gov::cca::Component::pointer (*)())(maker_v);
+  component = (*maker)();
+  //need to make sure addReference() will not cause problem
+  component->addReference();
+  return component->getURL().getString();
 }

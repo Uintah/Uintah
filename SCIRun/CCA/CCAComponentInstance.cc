@@ -158,6 +158,12 @@ gov::cca::TypeMap::pointer CCAComponentInstance::getPortProperties(const std::st
 
 gov::cca::ComponentID::pointer CCAComponentInstance::getComponentID()
 {
+  //
+  //if(cid.isNull())
+  //  cid=gov::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
+  //return cid;
+  
+  // I am not sure this is right. 
   return gov::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
 }
 

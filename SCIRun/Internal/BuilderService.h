@@ -45,7 +45,8 @@ namespace SCIRun {
 
     virtual gov::cca::ComponentID::pointer createInstance(const std::string& instanceName,
 						 const std::string& className,
-						 const gov::cca::TypeMap::pointer& properties);
+						 const gov::cca::TypeMap::pointer& properties,
+							  const std::string &url="");
     virtual CIA::array1<gov::cca::ComponentID::pointer> getComponentIDs();
     virtual gov::cca::TypeMap::pointer getComponentProperties(const gov::cca::ComponentID::pointer& cid);
     virtual void setComponentProperties(const gov::cca::ComponentID::pointer& cid,
@@ -81,11 +82,12 @@ namespace SCIRun {
 		const gov::cca::ComponentID::pointer& c2);
 
     virtual gov::cca::AbstractFramework::pointer getFramework();
+    virtual void registerFramework(const std::string &frameworkURL); 
     gov::cca::Port::pointer getService(const std::string&);
-
+    virtual void registerServices(const gov::cca::Services::pointer &svc);
   private:
     BuilderService(SCIRunFramework* fwk, const std::string& name);
-    	
+    std::vector<gov::cca::Services::pointer> servicesList;	
   };
 }
 

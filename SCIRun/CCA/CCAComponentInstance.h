@@ -80,6 +80,7 @@ namespace SCIRun {
     private:
       Iterator(const Iterator&);
       Iterator& operator=(const Iterator&);
+      //gov::cca::ComponentID::pointer cid;
     };
     std::map<std::string, CCAPortInstance*> ports;
     gov::cca::Component::pointer component;
