@@ -20,7 +20,7 @@
 SRCDIR := testprograms/Malloc
 
 PSELIBS :=
-LIBS := $(XML_LIBRARY)
+LIBS := 
 
 PROGRAM := $(SRCDIR)/test1
 SRCS := $(SRCDIR)/test1.cc
