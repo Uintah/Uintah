@@ -40,7 +40,7 @@ VolumeVisDpy::VolumeVisDpy(Array1<Color> &matls, Array1<AlphaPos> &alphas,
 {
   set_resolution(500,500);
   // need to allocate memory for alpha_transform and color_transform
-  Array1<Color*> *c = new Array1<Color*>(ncolors);
+  Array1<Color.h> *c = new Array1<Color.h>(ncolors);
   for(int i = 0; i < ncolors; i++)
     (*c)[i] = new Color();
   color_transform.set_results_ptr(c);
@@ -377,7 +377,7 @@ void VolumeVisDpy::draw_hist(GLuint fid, XFontStruct* font_struct) {
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
     
-  ScalarTransform1D<int,Color*> stripes(color_transform.get_results_ptr());
+  ScalarTransform1D<int,Color.h> stripes(color_transform.get_results_ptr());
   stripes.scale(0,nhist-1);
   glBegin(GL_LINES);
   for(int i=0;i<nhist;i++){
@@ -431,7 +431,7 @@ void VolumeVisDpy::draw_alpha_curve(GLuint /*fid*/, XFontStruct* /*font_struct*/
   // draw the background
   // stripes allows us the oportunity to use an integer index based on the
   // width of the window to grab a color.
-  ScalarTransform1D<int,Color*> stripes(color_transform.get_results_ptr());
+  ScalarTransform1D<int,Color.h> stripes(color_transform.get_results_ptr());
   stripes.scale(0,width-1);
   alpha_stripes.scale(0,width-1);
 

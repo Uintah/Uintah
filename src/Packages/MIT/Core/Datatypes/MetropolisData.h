@@ -78,7 +78,7 @@ class SCICORESHARE Results : public Datatype {
  public:  
   Array1< double > k_;
   Array1< Array1<double> > data_;
-  Array1< Color > color_;
+  Array1< Color.h> color_;
 
   Results() : Datatype() {}
   virtual ~Results() {}

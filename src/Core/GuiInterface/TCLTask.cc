@@ -80,26 +80,21 @@ static void do_lock()
     ASSERT(Thread::self() != 0);
     if(owner == Thread::self()){
       lock_count++;
-      //cerr << "Recursively locked, count=" << lock_count << ", owner=" << owner << " (" << Thread::self()->getThreadName() << "), count=" << lock_count << endl;
-	return;
+      return;
     }
     tlock.lock();
     lock_count=1;
     owner=Thread::self();
-    //cerr << "Locked: owner=" << owner << " (" << Thread::self()->getThreadName() << "), count=" << lock_count << endl;
 }
 
 static void do_unlock()
 {
     ASSERT(lock_count>0);
-    //cerr << "Self=" << Thread::self() << ", owner=" << owner << endl;
     ASSERT(Thread::self() == owner);
     if(--lock_count == 0){
 	owner=0;
-	//cerr << "Unlocked, count=" << lock_count << ", owner=" << owner << ", self=" << Thread::self() << " (" << Thread::self()->getThreadName() << ")" << endl;
 	tlock.unlock();
     } else {
-      //cerr << "Recursively unlocked, count=" << lock_count << ", owner=" << owner << ", (" << owner->getThreadName() << ")" << endl;
     }
 }
 
@@ -205,10 +200,8 @@ int TCLTask::try_lock()
     if(tlock.tryLock()){
 	lock_count=1;
 	owner=Thread::self();
-//	cerr << "Locked (try): owner=" << owner << ", count=" << lock_count << endl;
 	return 1;
     } else {
-	cerr << "Try Lock failed" << endl;
 	return 0;
     }
 }

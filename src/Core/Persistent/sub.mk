@@ -25,7 +25,7 @@ SRCS     += $(SRCDIR)/Persistent.cc     \
 	    $(SRCDIR)/PersistentSTL.cc  \
 	    $(SRCDIR)/Pstreams.cc 
 
-PSELIBS := Core/Containers
+PSELIBS := Core/Containers Core/Exceptions
 LIBS := $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

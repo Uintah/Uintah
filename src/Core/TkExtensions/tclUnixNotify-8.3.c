@@ -221,6 +221,7 @@ static Tcl_ThreadId notifierThread;
  * Static routines defined in this file.
  */
 
+
 #ifdef TCL_THREADS
 static void	NotifierThreadProc _ANSI_ARGS_((ClientData clientData));
 #endif
@@ -710,6 +711,7 @@ Tcl_WaitForEvent(timePtr)
 #else
     int numFound;
 #endif
+    //fprintf(stderr, "****** Tcl wait for event\n");
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
 
     if (tclStubs.tcl_WaitForEvent != Tcl_WaitForEvent) {

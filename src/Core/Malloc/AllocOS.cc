@@ -28,6 +28,9 @@
  */
 
 #include <Core/Malloc/AllocOS.h>
+#ifdef __APPLE__
+#include <sys/types.h>
+#endif
 #include <sys/mman.h>
 #include <stdio.h>
 #include <string.h>

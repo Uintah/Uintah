@@ -81,7 +81,10 @@ void NetworkEditor::init_notes ()
     //strcpy (n, getlogin()) ;
 #ifndef _WIN32
     //strcpy (n, cuserid(NULL)) ;
-    strcpy(n, getenv("LOGNAME"));
+    char *name = getenv("LOGNAME");
+    if ( !name ) name = getenv("USER");
+    if ( !name ) name = "unknown";
+    strcpy(n, name );
     printf ("User Name: %s\n", n) ;
 #endif
 

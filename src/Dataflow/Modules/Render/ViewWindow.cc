@@ -2121,7 +2121,6 @@ void ViewWindow::redraw()
     manager->error("Error reading current_time");
     return;
   }
-
   // Find out whether to draw the axes or not.  Generally, this is handled
   //  in the centerGenAxes case of the tcl_command, but for the first redraw
   //  it's needed here (can't check it in the constructor since the variable

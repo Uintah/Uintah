@@ -28,7 +28,7 @@
 
 %{
 
-#if !defined(_AIX)
+#if !defined(_AIX) && !defined(__APPLE__)
 #  include <alloca.h>
 #endif
 #include <iostream>

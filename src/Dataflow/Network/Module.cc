@@ -52,6 +52,12 @@ using namespace SCIRun;
 typedef std::map<int,IPortInfo*>::iterator iport_iter;
 typedef std::map<int,OPortInfo*>::iterator oport_iter;
 
+#ifdef __APPLE__
+const string ext = ".dylib";
+#else
+const string ext = ".so";
+#endif
+
 static void *FindLibrarySymbol(const string &package, const string &/* type */, 
 			const string &symbol)
 {
@@ -60,21 +66,21 @@ static void *FindLibrarySymbol(const string &package, const string &/* type */,
 
   string pak_bname, cat_bname;
   if (package == "SCIRun") {
-    pak_bname = "libDataflow.so";
-    cat_bname = "libDataflow_Ports.so";
+    pak_bname = "libDataflow" + ext;
+    cat_bname = "libDataflow_Ports" + ext;
   } else {
-    pak_bname = "libPackages_" + package + "_Dataflow.so";
-    cat_bname = "libPackages_" + package + "_Dataflow_Ports.so";
+    pak_bname =  "libPackages_" + package + "_Dataflow" + ext;
+    cat_bname = "libPackages_" + package + "_Dataflow_Ports" + ext;
   }
 
-  // maybe it's in the small version of the .so
+  // maybe it's in the small version of the shared library
   so = GetLibraryHandle(cat_bname.c_str());
   if (so) {
     SymbolAddress = GetHandleSymbolAddress(so, symbol.c_str());
     if (SymbolAddress) goto found;
   }
 
-  // maybe it's in the large version of the .so
+  // maybe it's in the large version of the shared library
   so = GetLibraryHandle(pak_bname.c_str());
   if (so) {
     SymbolAddress = GetHandleSymbolAddress(so, symbol.c_str());

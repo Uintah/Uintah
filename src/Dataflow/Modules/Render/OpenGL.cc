@@ -31,7 +31,12 @@
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/logo.h>
 #include <Core/Containers/StringUtil.h>
+#ifdef __APPLE__
+#include <float.h>
+#define MAXDOUBLE DBL_MAX
+#else
 #include <values.h>
+#endif
 
 #ifdef HAVE_MAGICK
 namespace C_Magick {
@@ -532,7 +537,6 @@ void OpenGL::make_image()
 
 void OpenGL::redraw_frame()
 {
-
   // Get window information
   gui->lock();
   Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname),
