@@ -129,12 +129,12 @@ void TestModel::massExchange(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double volume = dx.x()*dx.y()*dx.z();
     double tm = 0;
+    double trate = rate*dt;
+    if(trate > 1)
+      trate=1;
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
       double mass = density_0[*iter] * volume;
-      double massx = mass*rate*dt;
-      if (massx > mass) {     
-        massx = mass;
-      }
+      double massx = mass*trate;
       mass_source_0[*iter] -= massx;
       mass_source_1[*iter] += massx;
 
