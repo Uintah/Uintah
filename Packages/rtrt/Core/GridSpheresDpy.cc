@@ -37,7 +37,9 @@ namespace rtrt {
 
 GridSpheresDpy::GridSpheresDpy(int colordata, char *in_file) :
   hist(0), xres(500), yres(500), ndata(-1),
-  colordata(colordata),newcolordata(colordata), shade_method(1), new_shade_method(1),
+  colordata(colordata), newcolordata(colordata),
+  shade_method(1), new_shade_method(1),
+  radius_index(-1), new_radius_index(-1),
   in_file(in_file)
 {
 }
@@ -563,7 +565,10 @@ void GridSpheresDpy::draw_hist(GLuint fid, XFontStruct* font_struct,
 #endif
 	glColor3f(0,0,0);
 	glRectf(min[j], textheight-2, max[j], textheight);
-	glColor3f(1,1,1);
+        if (j == colordata)
+          glColor3f(1,1,0);
+        else
+          glColor3f(1,1,1);
 	glRectf(new_color_begin[j], textheight-2, new_color_end[j],textheight);
 	glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
       }
@@ -746,6 +751,21 @@ void GridSpheresDpy::compute_one_hist(int j) {
   histmax[j]=max;
 }
 
+// If ndata is set then we have at least one grid attached
+void GridSpheresDpy::set_radius_index(int new_ri) {
+  // Negative values are no no's.
+  if (new_ri < 0) return;
+
+  // Only check the max if ndata has been set
+  if (ndata > 0) {
+    if (new_ri < ndata)
+      new_radius_index = new_ri;
+  } else {
+    radius_index = new_ri;
+    new_radius_index = new_ri;
+  }
+}
+
 void GridSpheresDpy::animate(bool& changed) {
 
   for(int j=0;j<ndata;j++){
@@ -774,6 +794,10 @@ void GridSpheresDpy::animate(bool& changed) {
     changed=true;
     shade_method = new_shade_method;
   }
+  if (new_radius_index != radius_index) {
+    changed=true;
+    radius_index = new_radius_index;
+  }
 }
 
 void GridSpheresDpy::attach(GridSpheres* g) {
@@ -784,10 +808,12 @@ void GridSpheresDpy::attach(GridSpheres* g) {
       g->dpy = this;
     }
     else {
-      cerr << "Number of data fields does not match. Not adding to display.\n";
+      cerr << "GridSpheresDpy::attach: ERROR! ndata of the new GridSpheres ("<<g->ndata<<") does not equal that of the display's ("<<ndata<<")\n";
+      cerr << "Not adding this GridSpheres\n";
+      g->dpy = 0;
     }
-  }
-  else {
+  } else {
+    // This is the first GridSpheres being added.
     ndata = g->ndata;
     grids.add(g);
     g->dpy = this;
