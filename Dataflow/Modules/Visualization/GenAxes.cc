@@ -341,6 +341,7 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     primary[axisleft] = get_GuiDouble(base+"range-second")-get_GuiDouble(base+"range-first");
     primary[axisup] = 0.0;
     primary[axisnormal] = 0.0;
+    if (primary.length() < 10e-6) return group;
 
     const Vector left = primary * (1.0/primary.length());
 
@@ -357,6 +358,8 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     tertiary[axisup] = 0.0;
         
     Vector normal = tertiary;
+    if (normal.length() < 10e-6)
+      normal = Cross(left,up);
     normal.normalize();
     Vector nnormal = normal;
     nnormal *= -1.0;
