@@ -429,6 +429,7 @@ proc saveSubnet { subnet { name ""} } {
     
 proc showSubnetWindow { subnet { bbox "" } } {
     wm deiconify .subnet${subnet}
+    raise .subnet${subnet}
     global Subnet
     if { $bbox == "" } {
 	if { [info exists Subnet(Subnet${subnet}_Modules) ] } {
