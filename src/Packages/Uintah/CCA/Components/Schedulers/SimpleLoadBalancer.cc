@@ -148,7 +148,7 @@ SimpleLoadBalancer::createNeighborhood(const Level* level,
       patch->computeVariableExtents(Patch::CellBased, Ghost::AroundCells,
 				    maxGhost, n, lowIndex, highIndex);
       for(int i=0;i<(int)n.size();i++){
-	const Patch* neighbor = n[i];
+	const Patch* neighbor = n[i]->getRealPatch();
 	if(neighbors.find(neighbor) == neighbors.end())
 	  neighbors.insert(neighbor);
       }

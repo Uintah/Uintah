@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Mutex.h>
@@ -26,6 +27,11 @@ namespace Uintah {
       : next(next), comp(comp), req(req),                  
         fromPatch(fromPatch), low(low), high(high), matl(matl)
     {
+      ASSERT(Min(high - low, IntVector(1, 1, 1)) == IntVector(1, 1, 1));
+      ASSERT(Min(low, fromPatch->getNodeLowIndex()) ==
+	     fromPatch->getNodeLowIndex());
+      ASSERT(Max(high, fromPatch->getNodeHighIndex()) ==
+	     fromPatch->getNodeHighIndex());      
       toTasks.push_back(toTask);
     }
 

@@ -983,6 +983,13 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	}
 	for(int i=0;i<neighbors.size();i++){
 	  const Patch* neighbor=neighbors[i];
+	  IntVector l = Max(neighbor->getNodeLowIndex(), low);
+	  IntVector h = Min(neighbor->getNodeHighIndex(), high);
+	  if (neighbor->isVirtual()) {
+	    l -= neighbor->getVirtualOffset();
+	    h -= neighbor->getVirtualOffset();	    
+	    neighbor = neighbor->getRealPatch();
+	  }
 	  if(!lb->inNeighborhood(neighbor))
 	    continue;
 	  for(int m=0;m<matls->size();m++){
@@ -1009,8 +1016,6 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 		continue;
 	      }
 	    }
-	    IntVector l = Max(neighbor->getNodeLowIndex(), low);
-	    IntVector h = Min(neighbor->getNodeHighIndex(), high);
 	    dt->possiblyCreateDependency(creator, comp, neighbor,
 					 task, req, patch,
 					 matl, l, h);
