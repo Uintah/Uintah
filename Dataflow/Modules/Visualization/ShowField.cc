@@ -11,13 +11,15 @@
  */
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/FieldAlgo.h>
+
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
+
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/Switch.h>
@@ -42,8 +44,12 @@ class ShowField : public Module
   
   //! Private Data
   DebugStream              dbg_;  
-  FieldIPort*              infield_;
-  FieldHandle              field_handle_;
+
+  //! input ports
+  FieldIPort*              geom_;
+  FieldIPort*              data_;
+  ColorMapIPort*           color_;
+  //! output port
   GeometryOPort           *ogeom_;  
 
   //! Scene graph ID's
@@ -148,8 +154,12 @@ ShowField::ShowField(const clString& id) :
   conChanB_("conChan-b", id, this)
 {
   // Create the input ports
-  infield_ = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
-  add_iport(infield_);
+  geom_ = scinew FieldIPort(this, "Field-Geometry", FieldIPort::Atomic);
+  add_iport(geom_);
+  data_ = scinew FieldIPort(this, "Field-ColorIndex", FieldIPort::Atomic);
+  add_iport(data_);
+  color_ = scinew ColorMapIPort(this, "ColorMap", FieldIPort::Atomic);
+  add_iport(color_);
     
   // Create the output port
   ogeom_ = scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
@@ -183,28 +193,41 @@ ShowField::execute()
   // This is typically salmon, it owns the scene graph memory we create here.
     
   ogeom_->delAll(); 
-  infield_->get(field_handle_);
-  if(!field_handle_.get_rep()){
-    cerr << "No data in input field" << endl;
+  FieldHandle geom_handle;
+  geom_->get(geom_handle);
+  if(!geom_handle.get_rep()){
+    cerr << "No Geometry in port 1 field" << endl;
+    return;
+  }
+  FieldHandle data_handle;
+  data_->get(data_handle);
+  if(!data_handle.get_rep()){
+    cerr << "No Data in port 2 field" << endl;
+    return;
+  }
+  ColorMapHandle color_handle;
+  color_->get(color_handle);
+  if(!color_handle.get_rep()){
+    cerr << "No ColorMap in port 3 ColorMap" << endl;
     return;
   }
 
   bool error = false;
   string msg;
-  string name = field_handle_->get_type_name(0);
+  string name = geom_handle->get_type_name(0);
   if (name == "TetVol") {
-    if (field_handle_->get_type_name(1) == "double") {
+    if (geom_handle->get_type_name(1) == "double") {
       TetVol<double> *tv = 0;
-      tv = dynamic_cast<TetVol<double>*>(field_handle_.get_rep());
+      tv = dynamic_cast<TetVol<double>*>(geom_handle.get_rep());
       if (tv) { render(tv); }
       else { error = true; msg = "Not a valid TetVol."; }
     } else {
       error = true; msg ="TetVol of unknown type.";
     }
   } /*else if (name == "LatticeVol") {
-    if (field_handle_->get_type_name(1) == "double") {
+    if (geom_handle->get_type_name(1) == "double") {
       LatticeVol<double> *lv = 0;
-      lv = dynamic_cast<LatticeVol<double>*>(field_handle_.get_rep());
+      lv = dynamic_cast<LatticeVol<double>*>(geom_handle.get_rep());
       if (lv) { render(lv); }
       else { error = true; msg = "Not a valid LatticeVol."; }
     } else {
