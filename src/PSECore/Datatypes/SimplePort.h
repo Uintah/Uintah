@@ -137,10 +137,10 @@ template<class T>
 void SimpleIPort<T>::finish()
 {
     if(!recvd && nconnections() > 0){
-	turn_on(Finishing);
+	if (module->show_status) turn_on(Finishing);
 	SimplePortComm<T>* msg=mailbox.receive();
 	delete msg;
-	turn_off();
+	if (module->show_status) turn_off();
     }
 }
 
@@ -168,7 +168,7 @@ void SimpleOPort<T>::finish()
 
     if(!sent_something && nconnections() > 0){
 	// Tell them that we didn't send anything...
-	turn_on(Finishing);
+	if (module->show_status) turn_on(Finishing);
 	for(int i=0;i<nconnections();i++){
 #if 0
 	    if(connections[i]->demand){
@@ -184,7 +184,7 @@ void SimpleOPort<T>::finish()
 #ifdef DEBUG
 	cerr << "Exiting SimpleOPort<T>::finish()\n";
 #endif
-	turn_off();
+	if (module->show_status) turn_off();
     }
 }
 
@@ -208,7 +208,7 @@ void SimpleOPort<T>::send(const T& data)
 #endif
 
     // change oport state and colors on screen
-    turn_on();
+    if (module->show_status) turn_on();
 
     for (int i = 0; i < nconnections(); i++) {
 	if (connections[i]->isRemote()) {
@@ -243,7 +243,7 @@ void SimpleOPort<T>::send(const T& data)
     cerr << "Exiting SimpleOPort<T>::send (data)\n";
 #endif
 
-    turn_off();
+    if (module->show_status) turn_off();
 }
 
 template<class T>
@@ -252,13 +252,13 @@ void SimpleOPort<T>::send_intermediate(const T& data)
     handle=data;
     if(nconnections() == 0)
 	return;
-    turn_on();
+    if (module->show_status) turn_on();
     module->multisend(this);
     for(int i=0;i<nconnections();i++){
 	SimplePortComm<T>* msg=new SimplePortComm<T>(data);
 	((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
     }
-    turn_off();
+    if (module->show_status) turn_off();
 }
 
 template<class T>
@@ -272,7 +272,7 @@ int SimpleIPort<T>::get(T& data)
 
     if(nconnections()==0)
 	return 0;
-    turn_on();
+    if (module->show_status) turn_on();
 
 #if 0
     // Send the demand token...
@@ -301,7 +301,7 @@ int SimpleIPort<T>::get(T& data)
 #ifdef DEBUG
  	cerr << "SimpleIPort<T>::get (data) read data from socket\n";
 #endif
-	turn_off();
+	if (module->show_status) turn_off();
 	return 1;
     } else {
 
@@ -314,14 +314,14 @@ int SimpleIPort<T>::get(T& data)
 #ifdef DEBUG
 	    cerr << "SimpleIPort<T>::get (data) has data\n";
 #endif
-            turn_off();
+            if (module->show_status) turn_off();
             return 1;
         } else {
 #ifdef DEBUG
 	    cerr << "SimpleIPort<T>::get (data) mailbox has no data\n";
 #endif
             delete comm;
-            turn_off();
+            if (module->show_status) turn_off();
             return 0;
         }
     }
@@ -337,7 +337,7 @@ int SimpleIPort<T>::special_get(T& data)
 
     if(nconnections()==0)
 	return 0;
-    turn_on();
+    if (module->show_status) turn_on();
 #if 0
     // Send the demand token...
     Connection* conn=connections[0];
@@ -381,11 +381,11 @@ int SimpleIPort<T>::special_get(T& data)
     if(comm->have_data){
        data=comm->data;
        delete comm;
-       turn_off();
+       if (module->show_status) turn_off();
        return 1;
    } else {
        delete comm;
-       turn_off();
+       if (module->show_status) turn_off();
        return 0;
    }
 }
@@ -402,14 +402,14 @@ int SimpleOPort<T>::have_data()
 template<class T>
 void SimpleOPort<T>::resend(Connection* conn)
 {
-    turn_on();
+    if (module->show_status) turn_on();
     for(int i=0;i<nconnections();i++){
 	if(connections[i] == conn){
 	    SimplePortComm<T>* msg=new SimplePortComm<T>(handle);
 	    ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
 	}
     }
-    turn_off();
+    if (module->show_status) turn_off();
 }
 
 template<class T>
@@ -429,6 +429,9 @@ SimplePortComm<T>::SimplePortComm(const T& data)
 
 //
 // $Log$
+// Revision 1.8  1999/11/10 23:24:32  dmw
+// added show_status flag to module interface -- if you turn it off, the timer and port lights won't update
+//
 // Revision 1.7  1999/09/08 02:26:42  sparker
 // Various #include cleanups
 //
