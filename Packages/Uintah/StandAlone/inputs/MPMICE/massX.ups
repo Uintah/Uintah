@@ -268,8 +268,8 @@
       
        <exchange_properties>
          <exchange_coefficients>
-	       <momentum>	          [1e10, 1e10]         </momentum>
-	       <heat>                  [0.0, 0.0]           </heat>
+	       <momentum>	          [1e10]         </momentum>
+	       <heat>                  [0.0]           </heat>
 	 </exchange_coefficients>
          <mass_exchange> true </mass_exchange>
        </exchange_properties>
