@@ -35,15 +35,22 @@ itcl_class Fusion_DataIO_PPPLHDF5FieldReader {
 	global $this-filename
 	set $this-filename ""
 
-	global $this-readall
+	global $this-timestep
+	global $this-timestep2
+	global $this-ntimesteps
+
+	set $this-timestep 0
+	set $this-timestep2 "0"
+	set $this-ntimesteps 1
+
 	global $this-dataset
 	global $this-dataset2
 	global $this-ndatasets
 
-	set $this-readall 0
 	set $this-dataset 0
 	set $this-dataset2 "0"
 	set $this-ndatasets 1
+
 
 	global $this-ndims
 
@@ -152,8 +159,8 @@ itcl_class Fusion_DataIO_PPPLHDF5FieldReader {
 
 	toplevel $w
 
-	# read a hdf5 file
-	iwidgets::labeledframe $w.f -labeltext "Hdf5 Reader Info"
+	# read an HDF5 file
+	iwidgets::labeledframe $w.f -labeltext "HDF5 File Browser"
 	set f [$w.f childsite]
 
 	iwidgets::entryfield $f.fname -labeltext "File:" \
@@ -166,20 +173,34 @@ itcl_class Fusion_DataIO_PPPLHDF5FieldReader {
 	pack $w.f -fill x -expand yes -side top
 
 
-#	iwidgets::labeledframe $w.d -labeltext "File Data Set Info"
-#	set d [$w.d childsite]
+	iwidgets::labeledframe $w.d -labeltext "Data Selection"
+	set d [$w.d childsite]
 
-#	label $d.title1 -text "Read all"  -width 8 -anchor w -just left
-#	pack $d.title1  -side left
-#	checkbutton $d.readall -variable $this-read-all 
-#	pack $d.readall -side left -padx 5
-#	label $d.title2 -text "Single"    -width  6 -anchor w -just left
-#	pack $d.title2  -side left -padx 1
-#	scaleEntry2 $d.dataset 0 [expr [set $this-ndatasets] - 1] 200 \
+	global $this-timestep
+	global $this-timestep2
+	global $this-ntimesteps
+
+	frame $d.ts
+	label $d.ts.label -text "Time Step :" -width 10 -anchor w -just left
+	pack $d.ts.label -side left
+	scaleEntry2 $d.ts.timestep 0 [expr [set $this-ntimesteps] - 1] 200 \
+	    $this-timestep $this-timestep2
+	pack $d.ts.timestep -side left
+
+	global $this-dataset
+	global $this-dataset2
+	global $this-ndatasets
+
+	frame $d.ds
+	label $d.ds.label -text "Data Set :" -width 10 -anchor w -just left
+	pack $d.ds.label -side left
+	scaleEntry2 $d.ds.dataset 0 [expr [set $this-ndatasets] - 1] 200 \
 	    $this-dataset $this-dataset2
-#	pack $d.dataset -side left
+	pack $d.ds.dataset -side left
 
-#	pack $w.d -fill x -expand yes -side top
+	pack $d.ts $d.ds -side left -fill x -expand yes
+
+	pack $w.d -fill x -expand yes -side top
 
 
 	frame $w.l
@@ -337,9 +358,9 @@ itcl_class Fusion_DataIO_PPPLHDF5FieldReader {
 	updateSliderEntry4 $index 0
     }
 
-    method set_size {ndatasets ndims idim jdim kdim} {
+    method set_size {ntimesteps ndatasets ndims idim jdim kdim} {
 
-	global $this-readall
+	global $this-ntimesteps
 	global $this-ndatasets
 	global $this-dataset
 	global $this-dataset2
@@ -349,6 +370,7 @@ itcl_class Fusion_DataIO_PPPLHDF5FieldReader {
 	global $this-j-dim
 	global $this-k-dim
 
+	set $this-ntimesteps $ntimesteps
 	set $this-ndatasets $ndatasets
 	set $this-ndims $ndims
 	set $this-i-dim $idim
@@ -357,8 +379,9 @@ itcl_class Fusion_DataIO_PPPLHDF5FieldReader {
 
 	set w .ui[modname]
 
-#	set d [$w.d childsite]
-#	$d.dataset.s configure -from 0 -to [expr [set $this-ndatasets] - 1]
+	set d [$w.d childsite]
+	$d.ts.timestep.s configure -from 0 -to [expr [set $this-ntimesteps]-1]
+	$d.ds.dataset.s  configure -from 0 -to [expr [set $this-ndatasets ]-1]
 
 	# Update the count values to be at the initials values.
 	set $this-readall 0
@@ -426,5 +449,3 @@ itcl_class Fusion_DataIO_PPPLHDF5FieldReader {
 	}
     }
 }
-
-

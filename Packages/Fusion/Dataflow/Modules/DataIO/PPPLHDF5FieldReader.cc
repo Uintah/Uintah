@@ -36,7 +36,6 @@
 
 #include <sci_defs.h>
 
-
 #include <sys/stat.h>
 
 #ifdef HAVE_HDF5
@@ -52,10 +51,12 @@ DECLARE_MAKER(PPPLHDF5FieldReader)
 PPPLHDF5FieldReader::PPPLHDF5FieldReader(GuiContext *context)
   : Module("PPPLHDF5FieldReader", context, Source, "DataIO", "Fusion"),
     filename_(context->subVar("filename")),
+    dumpname_(context->subVar("dumpname")),
 
+    nTimeSteps_(context->subVar("ntimesteps")),
+    timeStep_  (context->subVar("timestep")),
     nDataSets_(context->subVar("ndatasets")),
     dataSet_  (context->subVar("dataset")),
-    readAll_  (context->subVar("readall")),
 
     nDims_(context->subVar("ndims")),
 
@@ -79,6 +80,8 @@ PPPLHDF5FieldReader::PPPLHDF5FieldReader(GuiContext *context)
     jWrap_(context->subVar("j-wrap")),
     kWrap_(context->subVar("k-wrap")),
 
+    timestep_( -1 ),
+    dataset_( -1 ),
     idim_(0),
     jdim_(0),
     kdim_(0),
@@ -142,7 +145,7 @@ void PPPLHDF5FieldReader::execute() {
     updateFile = true;
   }
 
-  if( readall_ != readAll_.get() ||
+  if( timestep_ != timeStep_.get() ||
       dataset_ != dataSet_.get() ||
       
       istart_ != iStart_.get() ||
@@ -161,7 +164,7 @@ void PPPLHDF5FieldReader::execute() {
       jwrap_ != jWrap_.get() ||
       kwrap_ != kWrap_.get() ) {
 
-    readall_ = readAll_.get();
+    timestep_ = timeStep_.get();
     dataset_ = dataSet_.get();
       
     istart_ = iStart_.get();
@@ -194,9 +197,9 @@ void PPPLHDF5FieldReader::execute() {
     updateFile = true;
    }
 
-  if( istart_ + icount_ * istride_ >= idim_ ||
-      jstart_ + jcount_ * jstride_ >= jdim_ ||
-      kstart_ + kcount_ * kstride_ >= kdim_ ) {
+  if( istart_ + icount_ * istride_ > idim_ ||
+      jstart_ + jcount_ * jstride_ > jdim_ ||
+      kstart_ + kcount_ * kstride_ > kdim_ ) {
     
     error( "Data selection exceeds bounds." );
     error( "Decrease the start or count or increase the stride." );
@@ -347,8 +350,19 @@ float*  PPPLHDF5FieldReader::readGrid( string filename ) {
   hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
   /* Open the grid group in the file. */
-  hid_t g_id = H5Gopen(file_id, "coordinates");
+  hid_t g_id;
 
+  if( nTimeSteps_.get() > 1 ) {
+    char timestep[32];
+
+    sprintf( timestep, "time_coordinates[%d]/coordinates", timestep_ );
+
+    g_id = H5Gopen(file_id, timestep);
+  }
+  else
+    g_id = H5Gopen(file_id, "coordinates");
+
+ 
   /* Open the coordinate dataset in the file. */
   hid_t ds_id = H5Dopen(g_id, "values"  );
 
@@ -451,9 +465,12 @@ float* PPPLHDF5FieldReader::readData( string filename ) {
   /* Open the file using default properties. */
   hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
-  char dataset[16];
+  char dataset[48];
 
-  sprintf( dataset, "node_data[%d]", dataset_ );
+  if( nTimeSteps_.get() > 1 )
+    sprintf( dataset, "time_node_data[%d]/node_data[%d]", timestep_, dataset_ );
+  else
+    sprintf( dataset, "node_data[%d]", dataset_ );
   
   /* Open the node data group in the file. */
   hid_t g_id = H5Gopen(file_id, dataset);
@@ -571,12 +588,17 @@ void PPPLHDF5FieldReader::tcl_command(GuiArgs& args, void* userdata)
     return;
   }
 
-  if (args[1] == "update_file") {
-#ifdef HAVE_HDF5
-    int ndatasets, ndims;
+  if (args[1] == "error") {
 
+    error( string(args[2]) );
+
+  } else if (args[1] == "update_file") {
+#ifdef HAVE_HDF5
+    int ntimesteps, ndatasets, ndims;
+
+    filename_.reset();
     string new_filename(filename_.get());
-  
+
     // Read the status of this file so we can compare modification timestamps
     struct stat buf;
     if (stat(new_filename.c_str(), &buf)) {
@@ -595,7 +617,7 @@ void PPPLHDF5FieldReader::tcl_command(GuiArgs& args, void* userdata)
     if( new_filename         != old_filename_ || 
 	new_filemodification != old_filemodification_) {
 
-      herr_t  status;
+      herr_t status;
 
       /* Open the file using default properties. */
       hid_t file_id = H5Fopen(new_filename.c_str(),
@@ -605,20 +627,31 @@ void PPPLHDF5FieldReader::tcl_command(GuiArgs& args, void* userdata)
       /* Open the top level group in the file. */
       hid_t g_id = H5Gopen(file_id, "//");
 
+      hid_t a_id;
+
+      /* Open the number of time steps in the file. */
+      if( (a_id = H5Aopen_name(g_id, "nsteps") ) > 0 ) {
+	status = H5Aread( a_id, H5T_NATIVE_INT, &ntimesteps );
+	status = H5Aclose(a_id);
+      } else
+	ntimesteps = 1;
+
       /* Open the number of data nodes in the file. */
-      hid_t a_id = H5Aopen_name(g_id, "nnode_data");
+      if( (a_id = H5Aopen_name(g_id, "nnode_data") ) > 0 ) {
+	status = H5Aread( a_id, H5T_NATIVE_INT, &ndatasets );
+	status = H5Aclose(a_id);
+      } else
+	ndatasets = 1;
 
-      status = H5Aread( a_id, H5T_NATIVE_INT, &ndatasets );
-
-      /* Terminate access to the attribute. */ 
-      status = H5Aclose(a_id);
       /* Terminate access to the group. */ 
       status = H5Gclose(g_id);
 
 
-
-      /* Open the grid group in the file. */
-      g_id = H5Gopen(file_id, "coordinates");
+	/* Open the grid group in the file. */
+      if( ntimesteps > 1 )
+	g_id = H5Gopen(file_id, "time_coordinates[0]/coordinates");
+      else
+	g_id = H5Gopen(file_id, "coordinates");
 
       /* Open the coordinate dataset in the file. */
       hid_t ds_id = H5Dopen(g_id, "values"  );
@@ -657,17 +690,17 @@ void PPPLHDF5FieldReader::tcl_command(GuiArgs& args, void* userdata)
     
 	// Update the dims in the GUI.
 	ostringstream str;
-	str << id << " set_size " << ndatasets << " ";
+	str << id << " set_size " << ntimesteps << " " << ndatasets << " ";
 	str << ndims << " " << idim_ << " " << jdim_ << " " << kdim_;
-    
+
 	gui->execute(str.str().c_str());
       }
     }
+
 #else
-
-  error( "No HDF5 availible." );
-
+    error( "No HDF5 availible." );
 #endif
+
   } else {
     Module::tcl_command(args, userdata);
   }

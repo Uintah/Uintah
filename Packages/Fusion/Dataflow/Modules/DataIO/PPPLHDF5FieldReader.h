@@ -56,10 +56,13 @@ public:
 
 private:
   GuiString filename_;
+  GuiString dumpname_;
+
+  GuiInt  nTimeSteps_;
+  GuiInt  timeStep_;
 
   GuiInt  nDataSets_;
   GuiInt  dataSet_;
-  GuiInt  readAll_;
 
   GuiInt nDims_;
 
@@ -86,7 +89,7 @@ private:
   string old_filename_;
   time_t old_filemodification_;
 
-  int readall_;
+  int timestep_;
   int dataset_;
 
   int idim_;
