@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include <Uintah/Parallel/UintahParallelPort.h>
 #include <SCICore/Util/NotFinished.h>
@@ -16,6 +17,9 @@ UintahParallelPort::~UintahParallelPort()
 
 //
 // $Log$
+// Revision 1.5  2000/09/25 20:40:23  sparker
+// Quiet g++ compiler warnings
+//
 // Revision 1.4  2000/04/26 06:49:16  sparker
 // Streamlined namespaces
 //
