@@ -120,7 +120,13 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
      // Compute wave speed at each particle, store the maximum
      double mu = cmdata[idx].Shear;
      double bulk = cmdata[idx].Bulk;
-     c_dil = sqrt((bulk + 4.*mu/3.)*pvolume[idx]/pmass[idx]);
+     if(pmass[idx] > 0){
+       c_dil = sqrt((bulk + 4.*mu/3.)*pvolume[idx]/pmass[idx]);
+     }
+     else{
+       c_dil = 0.0;
+       pvelocity[idx] = Vector(0.0,0.0,0.0);
+     }
      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
 		      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
 		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
@@ -282,7 +288,13 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
 
     // Compute wave speed at each particle, store the maximum
 
-    c_dil = sqrt((bulk + 4.*muBar/3.)*pvolume[idx]/pmass[idx]);
+    if(pmass[idx] > 0){
+      c_dil = sqrt((bulk + 4.*shear/3.)*pvolume[idx]/pmass[idx]);
+    }
+    else{
+      c_dil = 0.0;
+      pvelocity[idx] = Vector(0.0,0.0,0.0);
+    }
     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
 		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
 		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
@@ -302,7 +314,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   // This is just carried forward with the updated alpha
   new_dw->put(cmdata, p_cmdata_label_preReloc);
   // Volume is currently being carried forward, will be updated
-  new_dw->put(pvolumedef,lb->pVolumeDeformedLabel_preReloc);
+  new_dw->put(pvolumedef,lb->pVolumeDeformedLabel);
 
 }
 
@@ -378,7 +390,7 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
    task->computes(new_dw, bElBarLabel_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, p_cmdata_label_preReloc, matl->getDWIndex(),  patch);
-   task->computes(new_dw, lb->pVolumeDeformedLabel_preReloc, matl->getDWIndex(), patch);
+   task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
    task->computes(new_dw, lb->StrainEnergyLabel);
 }
 
@@ -402,6 +414,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.28  2000/06/16 23:23:39  guilkey
+// Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
+// the scheduler was having.
+//
 // Revision 1.27  2000/06/16 05:03:04  sparker
 // Moved timestep multiplier to simulation controller
 // Fixed timestep min/max clamping so that it really works now

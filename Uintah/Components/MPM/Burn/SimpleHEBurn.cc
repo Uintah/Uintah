@@ -81,6 +81,9 @@ void SimpleHEBurn::addCheckIfComputesAndRequires(Task* task,
 //  task->requires(new_dw, lb->pTemperatureRateLabel, matl->getDWIndex(),
 //				patch, Ghost::None);
 
+  task->requires(old_dw, lb->pSurfLabel, matl->getDWIndex(),
+				patch, Ghost::None);
+
   task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),
 				patch, Ghost::None);
 
@@ -90,6 +93,7 @@ void SimpleHEBurn::addCheckIfComputesAndRequires(Task* task,
   task->computes(new_dw, lb->pIsIgnitedLabel_preReloc,matl->getDWIndex(),patch);
 
   task->computes(new_dw, lb->cBurnedMassLabel,matl->getDWIndex(),patch);
+  task->computes(new_dw, lb->pSurfLabel_preReloc,matl->getDWIndex(),patch);
 
   task->requires(old_dw, lb->delTLabel);
 
@@ -106,7 +110,7 @@ void SimpleHEBurn::addMassRateComputesAndRequires(Task* task,
   task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),
 				patch, Ghost::None);
 
-  task->requires(new_dw, lb->pIsIgnitedLabel, matl->getDWIndex(),
+  task->requires(new_dw, lb->pIsIgnitedLabel_preReloc, matl->getDWIndex(),
 				patch, Ghost::None);
 
   task->requires(old_dw, lb->delTLabel);
@@ -167,7 +171,7 @@ void SimpleHEBurn::checkIfIgnited(const Patch* patch,
   }
 
   new_dw->put(pIsIgnited,lb->pIsIgnitedLabel_preReloc);
-  new_dw->put(pissurf,lb->pSurfLabel);
+  new_dw->put(pissurf,lb->pSurfLabel_preReloc);
 }
  
 void SimpleHEBurn::computeMassRate(const Patch* patch,
@@ -188,7 +192,7 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
   old_dw->get(px, lb->pXLabel, pset);
 
   ParticleVariable<int> pIsIgnited;
-  new_dw->get(pIsIgnited, lb->pIsIgnitedLabel, pset);
+  new_dw->get(pIsIgnited, lb->pIsIgnitedLabel_preReloc, pset);
 
   CCVariable<double> burnedMass;
   old_dw->get(burnedMass, lb->cBurnedMassLabel,
@@ -222,6 +226,10 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 }
  
 // $Log$
+// Revision 1.9  2000/06/16 23:23:38  guilkey
+// Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
+// the scheduler was having.
+//
 // Revision 1.8  2000/06/15 21:57:02  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

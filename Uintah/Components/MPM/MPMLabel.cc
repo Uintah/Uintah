@@ -77,9 +77,6 @@ MPMLabel::MPMLabel()
   pVolumeLabel_preReloc = new VarLabel( "p.volume+",
 			ParticleVariable<double>::getTypeDescription());
   
-  pVolumeDeformedLabel_preReloc = new VarLabel( "p.volumedeformed+",
-			ParticleVariable<double>::getTypeDescription());
-  
   pMassLabel_preReloc = new VarLabel( "p.mass+",
 			ParticleVariable<double>::getTypeDescription() );
   
@@ -202,6 +199,10 @@ const MPMLabel* MPMLabel::getLabels()
 }
 
 // $Log$
+// Revision 1.11  2000/06/16 23:23:35  guilkey
+// Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
+// the scheduler was having.
+//
 // Revision 1.10  2000/06/15 21:57:00  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

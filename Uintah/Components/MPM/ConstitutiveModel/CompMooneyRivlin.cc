@@ -246,7 +246,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     // This is just carried forward.
     new_dw->put(cmdata, p_cmdata_label_preReloc);
     // Volume is currently just carried forward, but will be updated.
-    new_dw->put(pvolumedef, lb->pVolumeDeformedLabel_preReloc);
+    new_dw->put(pvolumedef, lb->pVolumeDeformedLabel);
 }
 
 void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
@@ -281,7 +281,7 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pStressLabel_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
    task->computes(new_dw, p_cmdata_label_preReloc, matl->getDWIndex(),  patch);
-   task->computes(new_dw, lb->pVolumeDeformedLabel_preReloc, matl->getDWIndex(), patch);
+   task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
    task->computes(new_dw, lb->StrainEnergyLabel);
 }
 
@@ -353,6 +353,10 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.44  2000/06/16 23:23:39  guilkey
+// Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
+// the scheduler was having.
+//
 // Revision 1.43  2000/06/16 05:03:03  sparker
 // Moved timestep multiplier to simulation controller
 // Fixed timestep min/max clamping so that it really works now
