@@ -1791,3 +1791,461 @@ Properties::computeDenRefArrayInterm(const ProcessorGroup*,
   }
 }
 
+//****************************************************************************
+// Schedule the averaging of properties for Runge-Kutta step
+//****************************************************************************
+void 
+Properties::sched_averageRKProps(SchedulerP& sched, const PatchSet* patches,
+				 const MaterialSet* matls)
+{
+  Task* tsk = scinew Task("Properties::averageRKProps",
+			  this,
+			  &Properties::averageRKProps);
+
+  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->modifies(d_lab->d_scalarSPLabel);
+
+  if (d_mixingModel->getNumRxnVars()) {
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarOUTBCLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->modifies(d_lab->d_reactscalarSPLabel);
+  }
+
+  if (!(d_mixingModel->isAdiabatic())) {
+    tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->modifies(d_lab->d_enthalpySPLabel);
+  }
+
+  sched->addTask(tsk, patches, matls);
+}
+//****************************************************************************
+// Actually average the Runge-Kutta properties here
+//****************************************************************************
+void 
+Properties::averageRKProps(const ProcessorGroup*,
+			   const PatchSubset* patches,
+			   const MaterialSubset*,
+			   DataWarehouse*,
+			   DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->
+		     getArchesMaterial(archIndex)->getDWIndex(); 
+
+    constCCVariable<double> old_density;
+    constCCVariable<double> rho1_density;
+    constCCVariable<double> new_density;
+    StaticArray<constCCVariable<double> > old_scalar(d_numMixingVars);
+    StaticArray<CCVariable<double> > new_scalar(d_numMixingVars);
+    StaticArray<constCCVariable<double> > old_reactScalar(d_mixingModel->getNumRxnVars());
+    StaticArray<CCVariable<double> > new_reactScalar(d_mixingModel->getNumRxnVars());
+    constCCVariable<double> old_enthalpy;
+    CCVariable<double> new_enthalpy;
+
+    new_dw->get(old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(rho1_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(new_density, d_lab->d_densityCPLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    for (int ii = 0; ii < d_numMixingVars; ii++) {
+      new_dw->get(old_scalar[ii], d_lab->d_scalarOUTBCLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->getModifiable(new_scalar[ii], d_lab->d_scalarSPLabel, 
+		            matlIndex, patch);
+    }
+
+    if (d_mixingModel->getNumRxnVars() > 0) {
+      for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++) {
+	new_dw->get(old_reactScalar[ii], d_lab->d_reactscalarOUTBCLabel, 
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+	new_dw->getModifiable(new_reactScalar[ii], d_lab->d_reactscalarSPLabel, 
+		    matlIndex, patch);
+      }
+    }
+
+    if (!(d_mixingModel->isAdiabatic())) {
+      new_dw->get(old_enthalpy, d_lab->d_enthalpyOUTBCLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->getModifiable(new_enthalpy, d_lab->d_enthalpySPLabel, 
+		  matlIndex, patch);
+    }
+
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+          
+          double predicted_density;
+          predicted_density = (old_density[currCell] +
+			       new_density[currCell])/2.0;
+
+	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
+	    (new_scalar[ii])[currCell] = (old_density[currCell]*
+		(old_scalar[ii])[currCell] + rho1_density[currCell]*
+		(new_scalar[ii])[currCell])/(2.0*predicted_density);
+            if ((new_scalar[ii])[currCell] > 1.0) 
+		(new_scalar[ii])[currCell] = 1.0;
+            else if ((new_scalar[ii])[currCell] < 0.0)
+            	(new_scalar[ii])[currCell] = 0.0;
+          }
+
+	  if (d_mixingModel->getNumRxnVars() > 0) {
+	    for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++ ) {
+	      (new_reactScalar[ii])[currCell] = (old_density[currCell]*
+		(old_reactScalar[ii])[currCell] + rho1_density[currCell]*
+		(new_reactScalar[ii])[currCell])/(2.0*predicted_density);
+            if ((new_reactScalar[ii])[currCell] > 1.0) 
+		(new_reactScalar[ii])[currCell] = 1.0;
+            else if ((new_reactScalar[ii])[currCell] < 0.0)
+            	(new_reactScalar[ii])[currCell] = 0.0;
+            }
+	  }
+
+	  if (!d_mixingModel->isAdiabatic())
+	    new_enthalpy[currCell] = (old_density[currCell]*
+		old_enthalpy[currCell] + rho1_density[currCell]*
+		new_enthalpy[currCell])/(2.0*predicted_density);
+
+	}
+      }
+    }
+  }
+}
+
+//****************************************************************************
+// Schedule the recomputation of properties for Runge-Kutta
+//****************************************************************************
+void 
+Properties::sched_reComputeRKProps(SchedulerP& sched, const PatchSet* patches,
+				 const MaterialSet* matls)
+{
+  Task* tsk = scinew Task("Properties::ReComputeRKProps",
+			  this,
+			  &Properties::reComputeRKProps);
+
+  // requires scalars
+  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
+		Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  if (d_MAlab) {
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    //    tsk->requires(Task::NewDW, d_lab->d_densityMicroINLabel, 
+    //		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+
+  if (d_numMixStatVars > 0) {
+    tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  }
+
+  if (d_mixingModel->getNumRxnVars())
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, Ghost::None,
+		  Arches::ZEROGHOSTCELLS);
+
+  if (!(d_mixingModel->isAdiabatic()))
+    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, Ghost::None,
+		  Arches::ZEROGHOSTCELLS);
+
+//  tsk->modifies(d_lab->d_refDensity_label);
+  tsk->modifies(d_lab->d_densityCPLabel);
+// use densityPredLabel to store rho_2 for now
+  tsk->modifies(d_lab->d_densityPredLabel);
+  tsk->modifies(d_lab->d_drhodfCPLabel);
+  if (d_reactingFlow) {
+    tsk->modifies(d_lab->d_tempINLabel);
+    tsk->modifies(d_lab->d_co2INLabel);
+    tsk->modifies(d_lab->d_h2oINLabel);
+    tsk->modifies(d_lab->d_enthalpyRXNLabel);
+    if (d_mixingModel->getNumRxnVars())
+      tsk->modifies(d_lab->d_reactscalarSRCINLabel);
+  }
+  if (d_radiationCalc) {
+    tsk->modifies(d_lab->d_absorpINLabel);
+    tsk->modifies(d_lab->d_sootFVINLabel);
+  }
+  if (d_MAlab) 
+    tsk->modifies(d_lab->d_densityMicroLabel);
+
+#ifdef scalarSolve_debug
+  if (d_MAlab) 
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
+		  numGhostCells);
+#endif
+
+  sched->addTask(tsk, patches, matls);
+}
+//****************************************************************************
+// Actually recompute the Runge-Kutta properties here
+//****************************************************************************
+void 
+Properties::reComputeRKProps(const ProcessorGroup*,
+			   const PatchSubset* patches,
+			   const MaterialSubset*,
+			   DataWarehouse*,
+			   DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->
+		     getArchesMaterial(archIndex)->getDWIndex(); 
+
+    // Get the CCVariable (density) from the old datawarehouse
+    // just write one function for computing properties
+
+    constCCVariable<double> density;
+    constCCVariable<double> voidFraction;
+    CCVariable<double> temperature;
+    CCVariable<double> new_density;
+    CCVariable<double> temp_density;
+    CCVariable<double> co2;
+    CCVariable<double> h2o;
+    CCVariable<double> enthalpy;
+    CCVariable<double> reactscalarSRC;
+    CCVariable<double> drhodf;
+    if (d_reactingFlow) {
+      new_dw->getModifiable(temperature, d_lab->d_tempINLabel, matlIndex, patch);
+      new_dw->getModifiable(co2, d_lab->d_co2INLabel, matlIndex, patch);
+      new_dw->getModifiable(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
+      new_dw->getModifiable(enthalpy, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+      temperature.initialize(0.0);
+      co2.initialize(0.0);
+      h2o.initialize(0.0);
+      enthalpy.initialize(0.0);
+      if (d_mixingModel->getNumRxnVars()) {
+	new_dw->getModifiable(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
+			 matlIndex, patch);
+	reactscalarSRC.initialize(0.0);
+      }
+    }
+    CCVariable<double> absorption;
+    CCVariable<double> sootFV;
+    if (d_radiationCalc) {
+      new_dw->getModifiable(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
+      new_dw->getModifiable(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
+      absorption.initialize(0.0);
+      sootFV.initialize(0.0);
+    }
+    StaticArray<constCCVariable<double> > scalar(d_numMixingVars);
+
+    constCCVariable<double> enthalpy_comp;
+    CCVariable<double> denMicro;
+    //    CCVariable<double> denMicro_old;
+
+    new_dw->getModifiable(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
+    drhodf.initialize(0.0);
+
+    new_dw->getModifiable(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
+    new_dw->getModifiable(temp_density, d_lab->d_densityPredLabel, matlIndex, patch);
+    temp_density.copyData(new_density);
+    new_dw->get(density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_density.copyData(density);
+
+    if (d_MAlab){
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      //new_dw->get(denMicro_old, d_lab->d_densityMicroINLabel, 
+      //	  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->getModifiable(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
+      denMicro.initialize(0.0);
+      //denMicro.copyData(denMicro_old);
+    }
+
+    for (int ii = 0; ii < d_numMixingVars; ii++)
+      new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
+
+    if (d_numMixStatVars > 0) {
+      for (int ii = 0; ii < d_numMixStatVars; ii++)
+	new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+
+    StaticArray<constCCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
+    
+    if (d_mixingModel->getNumRxnVars() > 0) {
+      for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
+	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+
+
+    if (!(d_mixingModel->isAdiabatic()))
+      new_dw->get(enthalpy_comp, d_lab->d_enthalpySPLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    IntVector indexLow = patch->getCellLowIndex();
+    IntVector indexHigh = patch->getCellHighIndex();
+
+#ifdef ARCHES_DEBUG
+    IntVector test(6,9,9);
+    cout << "printing test "<<test<<endl;
+#endif
+
+    for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+
+	  // for combustion calculations mixingmodel will be called
+	  // this is similar to prcf.f
+	  // construct an InletStream for input to the computeProps of mixingModel
+
+	  IntVector currCell(colX, colY, colZ);
+	  InletStream inStream(d_numMixingVars,
+			       d_mixingModel->getNumMixStatVars(),
+			       d_mixingModel->getNumRxnVars());
+
+	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
+
+	    inStream.d_mixVars[ii] = (scalar[ii])[currCell];
+
+#ifdef ARCHES_DEBUG
+	    if ((colX==6) && (colY==9) && (colZ==9))
+	      cerr << "Mixture Vars at test = " << (scalar[ii])[currCell];
+#endif
+
+	  }
+
+	  if (d_numMixStatVars > 0) {
+
+	    for (int ii = 0; ii < d_numMixStatVars; ii++ ) {
+
+	      inStream.d_mixVarVariance[ii] = (scalarVar[ii])[currCell];
+
+	    }
+
+	  }
+
+	  if (d_mixingModel->getNumRxnVars() > 0) {
+	    for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++ ) 
+	      inStream.d_rxnVars[ii] = (reactScalar[ii])[currCell];
+	  }
+
+	  // after computing variance get that too, for the time being setting the 
+	  // value to zero
+	  //	  inStream.d_mixVarVariance[0] = 0.0;
+	  // currently not using any reaction progress variables
+
+	  if (!d_mixingModel->isAdiabatic())
+	    inStream.d_enthalpy = enthalpy_comp[currCell];
+	  Stream outStream;
+	  d_mixingModel->computeProps(inStream, outStream);
+	  double local_den = outStream.getDensity();
+	  drhodf[currCell] = outStream.getdrhodf();
+	  if (d_reactingFlow) {
+	    temperature[currCell] = outStream.getTemperature();
+	    co2[currCell] = outStream.getCO2();
+	    h2o[currCell] = outStream.getH2O();
+	    enthalpy[currCell] = outStream.getEnthalpy();
+	    if (d_mixingModel->getNumRxnVars())
+	      reactscalarSRC[currCell] = outStream.getRxnSource();
+	  }
+	  if (d_radiationCalc) {
+	    // bc is the mass-atoms 0f carbon per mas of reactnat mixture
+	    // taken from radcoef.f
+	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
+	    // optical path length
+	    double opl = 3.0;
+	    if (d_mixingModel->getNumRxnVars()) 
+	      sootFV[currCell] = outStream.getSootFV();
+	    else {
+	      if (temperature[currCell] > 1000) {
+		double bc = inStream.d_mixVars[0]*(84.0/100.0)*local_den;
+		double c3 = 0.1;
+		double rhosoot = 1950.0;
+		double cmw = 12.0;
+
+		double factor = 0.01;
+		if (inStream.d_mixVars[0] > 0.1)
+		  sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
+		else
+		  sootFV[currCell] = 0.0;
+	      }
+	      else 
+		sootFV[currCell] = 0.0;
+	    }
+	    absorption[currCell] = 0.01+ Min(0.5,(4.0/opl)*log(1.0+350.0*
+				   sootFV[currCell]*temperature[currCell]*opl));
+	    }
+	  if (d_MAlab) {
+	    denMicro[IntVector(colX, colY, colZ)] = local_den;
+	    local_den *= voidFraction[currCell];
+
+	  }
+
+	  // no under-relaxation for MPMArches
+	  if (d_MAlab) {
+	    new_density[IntVector(colX, colY, colZ)] = local_den;
+	  }
+	  else {
+	    new_density[IntVector(colX, colY, colZ)] = d_denUnderrelax*local_den +
+	      (1.0-d_denUnderrelax)*density[IntVector(colX, colY, colZ)];
+	  }
+	}
+      }
+    }
+    // Write the computed density to the new data warehouse
+#ifdef ARCHES_PRES_DEBUG
+    // Testing if correct values have been put
+    cerr << " AFTER COMPUTE PROPERTIES " << endl;
+    IntVector domLo = density.getFortLowIndex();
+    IntVector domHi = density.getFortHighIndex();
+    density.print(cerr);
+#endif
+
+#ifdef scalarSolve_debug
+
+    if (d_MAlab) {
+      constCCVariable<int> cellType;
+      new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
+    		  Ghost::None, 0);
+
+      cerr << " NEW DENSITY VALUES " << endl;
+      for (int ii = 5; ii <= 9; ii++) {
+	for (int jj = 7; jj <= 12; jj++) {
+	  for (int kk = 7; kk <= 12; kk++) {
+	    cerr.width(14);
+	    cerr << " point coordinates "<< ii << " " << jj << " " << kk ;
+	    cerr << " new density = " << new_density[IntVector(ii,jj,kk)] ; 
+	    cerr << " cellType = " << cellType[IntVector(ii,jj,kk)] ; 
+	    cerr << " void fraction = " << voidFraction[IntVector(ii,jj,kk)] << endl; 
+	  }
+	}
+      }
+
+    }
+#endif
+
+  /*  if (patch->containsCell(d_denRef)) {
+      double den_ref = new_density[d_denRef];
+      cerr << "density_ref " << den_ref << endl;
+      new_dw->put(sum_vartype(den_ref),d_lab->d_refDensity_label);
+    }
+    else
+      new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
+    */
+  }
+}

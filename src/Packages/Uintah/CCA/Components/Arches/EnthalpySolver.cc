@@ -1299,12 +1299,6 @@ EnthalpySolver::sched_enthalpyLinearSolveCorr(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_enthNonLinSrcCorrLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  #ifdef Runge_Kutta_2nd
-  tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  #endif
   #ifdef Runge_Kutta_3d_ssp
   tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -1424,34 +1418,6 @@ EnthalpySolver::enthalpyLinearSolveCorr(const ProcessorGroup* pc,
       }
     }
   #endif
-  #endif
-  #ifdef Runge_Kutta_2nd
-    constCCVariable<double> old_enthalpy;
-    constCCVariable<double> old_density;
-    constCCVariable<double> new_density;
-
-    new_dw->get(old_enthalpy, d_lab->d_enthalpyOUTBCLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(old_density, d_lab->d_densityINLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(new_density, d_lab->d_densityPredLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
-    
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-
-            IntVector currCell(colX, colY, colZ);
-
-            enthalpyVars.enthalpy[currCell] = (enthalpyVars.enthalpy[currCell]+
-            old_density[currCell]/new_density[currCell]*
-	    old_enthalpy[currCell])/2.0;
-        }
-      }
-    }
   #endif
   #ifdef Runge_Kutta_3d_ssp
     constCCVariable<double> old_enthalpy;
