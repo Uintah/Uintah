@@ -1187,8 +1187,16 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
   CPUTimer timer;
   timer.start();
   int np = tcl_np.get();
-  SparseRowMatrix *trans = scinew SparseRowMatrix;
-  //  trans->transpose( *matrix->getSparseRow() );
+  Matrix *trans;
+  if (matrix->getSymSparseRow()) trans=matrix;
+  else if (matrix->getSparseRow()) {
+      SparseRowMatrix *tr = scinew SparseRowMatrix;
+      trans = tr;
+      tr->transpose( *matrix->getSparseRow() );
+  } else {
+      cerr << "Input matrix isn't sparse of sym-sparse - can't use CG (no transpose)\n";
+      return;
+  }
 
   data=new CGData;
   data->module=this;
@@ -1492,6 +1500,9 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 
 //
 // $Log$
+// Revision 1.14  2000/03/04 00:20:16  dmw
+// new bc in buildfematrix, fixed normals in surftogeom
+//
 // Revision 1.13  2000/01/19 22:33:30  moulding
 // These two had some bug(s) or other that steve fixed (BCFlag and
 // some parrellel stuff?).  Now the TorsoFE demo (from a fresh checkout) works!
