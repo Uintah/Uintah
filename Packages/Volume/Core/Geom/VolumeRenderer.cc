@@ -246,7 +246,6 @@ VolumeRenderer::draw()
 //      disable_tex_coords();
      glDisable(GL_BLEND);
   }
-  reload_ = false;
 }
 
 void

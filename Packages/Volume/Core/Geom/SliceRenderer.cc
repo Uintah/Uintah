@@ -311,7 +311,6 @@ SliceRenderer::draw(Brick& b, Polygon* poly)
   VolShader->release();
 #endif
 //   disable_tex_coords();
-  reload_ = false;
 }
 
 void 

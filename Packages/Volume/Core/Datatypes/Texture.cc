@@ -86,6 +86,24 @@ Texture::get_dimensions( int& ni, int &nj, int &nk )
   nk = bw->max_k() - bw->min_k() + 1;
 }
 
+void 
+Texture::tagBricksForReloading()
+{
+  tagBricksForReloading( tree_ );
+}
+
+void
+Texture::tagBricksForReloading(BinaryTree< BrickNode *> *tree)
+{
+  if( tree->type() == BinaryTree<BrickNode*>::PARENT ){
+    tagBricksForReloading( tree->child(0) );
+    tagBricksForReloading( tree->child(1) );
+  } else {
+    Brick *brick = tree->stored()->brick();
+    brick->setReload( true );
+  }
+}
+
 void
 Texture::sortBricks( BinaryTree< BrickNode *> *tree,
                     vector<Brick *>& bricks, const Ray& vr)

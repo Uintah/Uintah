@@ -123,6 +123,8 @@ public:
   
   inline bool isQuantized() const {return quantized_;}
   inline bool storingAlpha() const {return storingAlpha_;}
+  inline bool needsReload() const {return reload_;}
+  inline void setReload( bool reload ){reload_ = reload;}
 protected:
 
   typedef struct {
@@ -139,13 +141,14 @@ protected:
   unsigned int name_;
   
   BrickData *data_;
-
+  
   void OrderIntersects(Point *p, Point *t,
                        Ray *r, Ray *tx,
                        RayStep *dt, int n) const;
 
   bool quantized_;
   bool storingAlpha_;
+  bool reload_;
 };
 
 } // End namespace Volume
