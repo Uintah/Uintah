@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/RigidMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookImplicit.h>
@@ -49,7 +50,10 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     throw ProblemSetupException(txt);
   }   
    
-  if (mat_type == "comp_mooney_rivlin")
+  if (mat_type == "rigid")
+    return(scinew RigidMaterial(child,lb,flags));
+
+  else if (mat_type == "comp_mooney_rivlin")
     return(scinew CompMooneyRivlin(child,lb,flags));
    
   else if (mat_type ==  "comp_neo_hook") {
@@ -116,7 +120,10 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 ConstitutiveModel* 
 ConstitutiveModelFactory::createCopy(const ConstitutiveModel* cm)
 {
-  if (dynamic_cast<const CompMooneyRivlin*>(cm)) 
+  if (dynamic_cast<const RigidMaterial*>(cm)) 
+    return(scinew RigidMaterial(dynamic_cast<const RigidMaterial*>(cm)));
+   
+  else if (dynamic_cast<const CompMooneyRivlin*>(cm)) 
     return(scinew CompMooneyRivlin(dynamic_cast<const CompMooneyRivlin*>(cm)));
    
   else if (dynamic_cast<const TransIsoHyper*>(cm)) 
@@ -140,8 +147,8 @@ ConstitutiveModelFactory::createCopy(const ConstitutiveModel* cm)
   else if (dynamic_cast<const ViscoScram*>(cm)) 
     return(scinew ViscoScram(dynamic_cast<const ViscoScram*>(cm)));
    
-//  else if (dynamic_cast<const ViscoSCRAM*>(cm)) 
-//    return(scinew ViscoSCRAM(dynamic_cast<const ViscoSCRAM*>(cm)));
+  else if (dynamic_cast<const ViscoSCRAMHotSpot*>(cm)) 
+    return(scinew ViscoSCRAMHotSpot(dynamic_cast<const ViscoSCRAMHotSpot*>(cm)));
    
   else if (dynamic_cast<const HypoElastic*>(cm)) 
     return(scinew HypoElastic(dynamic_cast<const HypoElastic*>(cm)));
