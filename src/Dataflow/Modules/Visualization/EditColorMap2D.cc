@@ -981,6 +981,7 @@ void EditColorMap2D::save_ppm(const string &filename,
   int R = 3;
   int G = 2;
   int B = 1;
+  
 //  int A = 0;
   ofstream output(filename.c_str(), ios::out);
   if (!output) {
@@ -991,14 +992,14 @@ void EditColorMap2D::save_ppm(const string &filename,
   if ( bpp == 1 || bpp == 2 )
     output << "P2 \n# CREATOR: " << "\n"; // endl;
   else if ( bpp == 3 || bpp == 4 )
-    output << "P6 \n# CREATOR: " << "\n"; // endl;
+    output << "P6\n# CREATOR: " << "\n\n"; // endl;
   else {
     error("Error: unknown number of bytes per pixel " + to_string(bpp));
     return;
   }
   
-  output << sx/4 << " " << sy/4 << " \n"; // endl;
-  output << 255 << " \n"; // endl;
+  output << sx/4 << " " << sy/4 << "\n"; // endl;
+  output << 255 << "\n"; // endl;
   
   for (int row = sy - 1; row >= 0; row-=4) {
     for (int col = 0; col < sx; col+=4) {
@@ -1009,12 +1010,13 @@ void EditColorMap2D::save_ppm(const string &filename,
 	output << (int) buf[p] << " \n"; // endl;
 	break;
       default:
-	output <<buf[p + G]<<buf[p + B]
-	       <<buf[p + R];
+	output <<buf[p + R]<<buf[p + G]
+	       <<buf[p + B];
 	break;
       }
     }
   }
+  if (output) output.close();
 }
 
 
