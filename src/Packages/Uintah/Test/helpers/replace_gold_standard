@@ -13,18 +13,18 @@ echo "Are you sure you want to replace the gold standard at $gold_standard_dir/$
 read yesno
 
 if [ $yesno == "y" -o $yesno == "yes" ]; then
-  echo "rm -rf $gold_standard_dir/$testname/"
-  rm -r $gold_standard_dir/$testname/
+  echo "rm -rf $gold_standard_dir/$testname/*.uda*"
+  rm -r $gold_standard_dir/$testname/*.uda*
   if [ $? != "0" ]; then
     echo "failed"
     exit 1
   fi
-  echo "mkdir $gold_standard_dir/$testname/"
-  mkdir $gold_standard_dir/$testname/
-  if [ $? != "0" ]; then
-    echo "failed"
-    exit 1
-  fi
+#  echo "mkdir $gold_standard_dir/$testname/"
+#  mkdir $gold_standard_dir/$testname/
+#  if [ $? != "0" ]; then
+#    echo "failed"
+#    exit 1
+#  fi
   echo "cp -r --dereference $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/."
   # if it has a --dereference option, then use it
   cp -r --dereference $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/.
