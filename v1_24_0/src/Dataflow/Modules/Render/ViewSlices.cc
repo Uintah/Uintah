@@ -303,6 +303,7 @@ class ViewSlices : public Module
 
   UIint			texture_filter_;
   UIint			anatomical_coordinates_;
+  UIint			show_text_;
   UIdouble		font_r_;
   UIdouble		font_g_;
   UIdouble		font_b_;
@@ -721,6 +722,7 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   crop_max_pad_z_(ctx->subVar("crop_maxPadAxis2"),60),
   texture_filter_(ctx->subVar("texture_filter"),1),
   anatomical_coordinates_(ctx->subVar("anatomical_coordinates"), 1),
+  show_text_(ctx->subVar("show_text"), 1),
   font_r_(ctx->subVar("color_font-r"), 1.0),
   font_g_(ctx->subVar("color_font-g"), 1.0),
   font_b_(ctx->subVar("color_font-b"), 1.0),
@@ -2031,6 +2033,7 @@ ViewSlices::draw_slice(NrrdSlice &slice)
 
 void
 ViewSlices::draw_all_labels(SliceWindow &window) {
+  if (!show_text_) return;
   glColor4d(font_r_, font_g_, font_b_, font_a_);
   draw_position_label(window);
   draw_orientation_labels(window);
@@ -3160,6 +3163,7 @@ ViewSlices::initialize_fonts() {
 
 void
 ViewSlices::set_font_sizes(double size) {
+  show_text_();
   font_r_();
   font_g_();
   font_b_();
