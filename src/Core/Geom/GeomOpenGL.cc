@@ -6229,6 +6229,7 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
   if(!bound)
     glGenTextures(1, &texname_);
   glBindTexture(GL_TEXTURE_2D, texname_);
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
   if (!bound && texture) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
     glPixelTransferi(GL_MAP_COLOR,0);
@@ -6236,7 +6237,6 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_, height_, 0,
 		 GL_RGBA, GL_UNSIGNED_BYTE, texture);
   }
