@@ -308,13 +308,10 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
     }
 
 #ifdef FRACTURE
-    // for Fracture -----------------------------------------------------------
     constParticleVariable<Short27> pgCode;
     new_dw->get(pgCode, lb->pgCodeLabel, pset);
-    
     constNCVariable<Vector> Gvelocity;
     new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
-    // ------------------------------------------------------------------------
 #endif
 
     double strainEnergy = 0;
@@ -334,22 +331,13 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
 	patch->findCellAndShapeDerivatives27(pX[idx], ni, d_S, pSize[idx]);
       else
 	patch->findCellAndShapeDerivatives(pX[idx], ni, d_S);
+
       Vector gvel;
       velGrad.set(0.0);
       for(int k = 0; k < d_8or27; k++) {
 #ifdef FRACTURE
-	// for Fracture ------------------------------------------------------
-	if(pgCode[idx][k]==1)
-	  gvel = gVelocity[ni[k]];
-	else if(pgCode[idx][k]==2)
-	  gvel = Gvelocity[ni[k]];
-	else {
-	  cout << "Unknown velocity field in "
-               << "ViscoScramForBinder::computeStressTensor:"
-	       << pgCode[idx][k] << endl;
-	  exit(1);
-	}
-	// -------------------------------------------------------------------
+	if(pgCode[idx][k]==1) gvel = gVelocity[ni[k]];
+	if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
 #else
 	gvel = gVelocity[ni[k]];
 #endif
@@ -679,16 +667,14 @@ ViscoScramForBinder::addComputesAndRequires(Task* task,
   task->requires(Task::NewDW, lb->gVelocityLabel,          matlset, gac, NGN);
 
 #ifdef FRACTURE
-  // for Fracture -------------------------------------------------------------
-  task->requires(Task::NewDW, lb->pgCodeLabel,            matlset,Ghost::None);
-  task->requires(Task::NewDW, lb->GVelocityLabel,         matlset, gac, NGN);
-  // --------------------------------------------------------------------------
+  task->requires(Task::NewDW, lb->pgCodeLabel,             matlset,Ghost::None);
+  task->requires(Task::NewDW, lb->GVelocityLabel,          matlset, gac, NGN);
 #endif
 
-  task->computes(lb->pStressLabel_preReloc,               matlset);
-  task->computes(lb->pDeformationMeasureLabel_preReloc,   matlset);
-  task->computes(pStatedataLabel_preReloc,                matlset);
-  task->computes(lb->pVolumeDeformedLabel,                matlset);
+  task->computes(lb->pStressLabel_preReloc,                matlset);
+  task->computes(lb->pDeformationMeasureLabel_preReloc,    matlset);
+  task->computes(pStatedataLabel_preReloc,                 matlset);
+  task->computes(lb->pVolumeDeformedLabel,                 matlset);
 
   if (d_doCrack) {
     task->requires(Task::OldDW, lb->pCrackRadiusLabel, matlset, Ghost::None);

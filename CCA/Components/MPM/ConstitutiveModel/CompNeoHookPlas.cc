@@ -1,4 +1,3 @@
-
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -210,14 +209,12 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
     new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch, gac, NGN);
     old_dw->get(delT, lb->delTLabel);
+
 #ifdef FRACTURE
-    // for Fracture -----------------------------------------------------------
     constParticleVariable<Short27> pgCode;
     new_dw->get(pgCode, lb->pgCodeLabel, pset);
-    
     constNCVariable<Vector> Gvelocity;
     new_dw->get(Gvelocity,lb->GVelocityLabel, matlindex, patch, gac, NGN);
-    // ------------------------------------------------------------------------
 #endif
 
     constParticleVariable<int> pConnectivity;
@@ -250,18 +247,8 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
        velGrad.set(0.0);
        for(int k = 0; k < d_8or27; k++) {
 #ifdef FRACTURE
-	 // for Fracture ----------------------------------------------------
-	 if(pgCode[idx][k]==1)
-	   gvel = gvelocity[ni[k]]; // const Vector&
-	 else if(pgCode[idx][k]==2)
-	   gvel = Gvelocity[ni[k]];
-	 else {
-	   cout<<"Unknown velocity field in CompNeoHookPlas::computeStressTensor:"
-	       << pgCode[idx][k] << endl;
-	   exit(1);
-	 }
-	 // ------------------------------------------------------------------
-
+	 if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
+	 if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
 #else
 	 gvel = gvelocity[ni[k]];
 #endif
@@ -403,10 +390,8 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->delTLabel);
 
 #ifdef FRACTURE
-  // for Farcture -------------------------------------------------------------
-  task->requires(Task::NewDW, lb->pgCodeLabel, matlset,Ghost::None);
-  task->requires(Task::NewDW, lb->GVelocityLabel,matlset, gac, NGN);
-  // --------------------------------------------------------------------------
+  task->requires(Task::NewDW, lb->pgCodeLabel, matlset, Ghost::None);
+  task->requires(Task::NewDW, lb->GVelocityLabel, matlset, gac, NGN);
 #endif
 
   task->computes(lb->pStressLabel_preReloc,             matlset);

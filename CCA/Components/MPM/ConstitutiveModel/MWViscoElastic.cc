@@ -200,13 +200,10 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(delT, lb->delTLabel);
 
 #ifdef FRACTURE
-    // for Fracture -----------------------------------------------------------
     constParticleVariable<Short27> pgCode;
     new_dw->get(pgCode, lb->pgCodeLabel, pset);
-
     constNCVariable<Vector> Gvelocity;
     new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
-    // ------------------------------------------------------------------------
 #endif
 
     double e_shear = d_initialData.E_Shear;
@@ -222,7 +219,6 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
 					iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
-      velGrad.set(0.0);
       // Get the node indices that surround the cell
       IntVector ni[MAX_BASIS];
       Vector d_S[MAX_BASIS];
@@ -233,28 +229,20 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
           patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
        }
       
-      Vector gvel;
-      for(int k = 0; k < d_8or27; k++) {
+       Vector gvel;
+       velGrad.set(0.0);
+       for(int k = 0; k < d_8or27; k++) {
 #ifdef FRACTURE
-	// for Fracture -----------------------------------------------------
-	if(pgCode[idx][k]==1)
-	  gvel = gvelocity[ni[k]]; // const Vector&
-	else if(pgCode[idx][k]==2)
-	  gvel = Gvelocity[ni[k]];
-	else {
-	  cout << "Unknown velocity field in MWViscoElastic::computeStressTensor:"
-	       << pgCode[idx][k] << endl;
-	  exit(1);
-	}
-	// -------------------------------------------------------------------
+	 if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
+         if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
 #else
-	gvel = gvelocity[ni[k]];
+ 	 gvel = gvelocity[ni[k]];
 #endif
-	  for (int j = 0; j<3; j++){
+	 for (int j = 0; j<3; j++){
 	    for (int i = 0; i<3; i++) {
 	      velGrad(i+1,j+1)+=gvel[i] * d_S[k][j] * oodx[j];
 	    }
-	  }
+	 }
       }
 
       // Calculate rate of deformation D, and deviatoric rate DPrime
@@ -358,12 +346,9 @@ void MWViscoElastic::addComputesAndRequires(Task* task,
     task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
   }
   task->requires(Task::NewDW, lb->gVelocityLabel,          matlset,gac, NGN);
-
 #ifdef FRACTURE
-  // for Farcture ------------------------------------------------------------
   task->requires(Task::NewDW, lb->pgCodeLabel,            matlset,Ghost::None);
   task->requires(Task::NewDW, lb->GVelocityLabel,         matlset, gac, NGN);
-  // -------------------------------------------------------------------------
 #endif
 
   task->computes(lb->pStressLabel_preReloc,             matlset);

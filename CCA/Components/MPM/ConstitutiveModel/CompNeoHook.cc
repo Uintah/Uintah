@@ -171,13 +171,10 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     old_dw->get(delT, lb->delTLabel);
 
 #ifdef FRACTURE
-    // for Fracture -----------------------------------------------------------
     constParticleVariable<Short27> pgCode;
     new_dw->get(pgCode, lb->pgCodeLabel, pset);
-    
     constNCVariable<Vector> Gvelocity; 
     new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
-    // ------------------------------------------------------------------------
 #endif
 
     double shear = d_initialData.Shear;
@@ -189,7 +186,6 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
 	iter != pset->end(); iter++){
       particleIndex idx = *iter;
       
-      velGrad.set(0.0);
       // Get the node indices that surround the cell
       IntVector ni[MAX_BASIS];
       Vector d_S[MAX_BASIS];
@@ -202,28 +198,20 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
       }
       
       Vector gvel;
+      velGrad.set(0.0);
       for(int k = 0; k < d_8or27; k++) {
 #ifdef FRACTURE
-	// for Fracture ------------------------------------------------------
-	if(pgCode[idx][k]==1)
-	  gvel = gvelocity[ni[k]];
-	else if(pgCode[idx][k]==2)
-	  gvel = Gvelocity[ni[k]];
-	else {
-	  cout << "Unknown velocity field in CompNeoHook::computeStressTensor:"
-	       << pgCode[idx][k] << endl;
-	  exit(1);
-	}
-	//-------------------------------------------------------------------
+	 if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
+	 if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]]; 
 #else
-	gvel = gvelocity[ni[k]];
+	 gvel = gvelocity[ni[k]];
 #endif
-	for (int j = 0; j<3; j++){
-	  double d_SXoodx = d_S[k][j] * oodx[j];
-	  for (int i = 0; i<3; i++) {
-	    velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
-	  }
-	}
+	 for (int j = 0; j<3; j++){
+	    double d_SXoodx = d_S[k][j] * oodx[j];
+	    for (int i = 0; i<3; i++) {
+	       velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
+	    }
+	 }
       }
       
       // Compute the deformation gradient increment using the time_step
@@ -317,10 +305,8 @@ void CompNeoHook::addComputesAndRequires(Task* task,
     task->requires(Task::OldDW, lb->delTLabel);
 
 #ifdef FRACTURE
-    // for Fracture -------------------------------------------------------
     task->requires(Task::NewDW,  lb->pgCodeLabel,    matlset, Ghost::None);
     task->requires(Task::NewDW,  lb->GVelocityLabel, matlset, gac, NGN);
-    // --------------------------------------------------------------------
 #endif
 
     task->computes(lb->pStressLabel_preReloc,             matlset);

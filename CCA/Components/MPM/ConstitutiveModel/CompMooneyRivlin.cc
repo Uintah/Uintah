@@ -158,13 +158,10 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
 
 #ifdef FRACTURE
- // for Fracture -----------------------------------------------------------
     constParticleVariable<Short27> pgCode;
     new_dw->get(pgCode, lb->pgCodeLabel, pset);
-
     constNCVariable<Vector> Gvelocity;
     new_dw->get(Gvelocity,lb->GVelocityLabel, matlindex, patch, gac, NGN);
-    // ------------------------------------------------------------------------
 #endif
 
     new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch, gac, NGN);
@@ -195,20 +192,10 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       
       Vector gvel;
       velGrad.set(0.0);
-      
       for(int k = 0; k < d_8or27; k++) {
 #ifdef FRACTURE
-	// for Fracture --------------------------------------------------------
-	if(pgCode[idx][k]==1)
-	  gvel = gvelocity[ni[k]]; // const Vector& 
-	else if(pgCode[idx][k]==2)
-	  gvel = Gvelocity[ni[k]];
-	else {
-	  cout << "Unknown velocity field in CompMooneyRivlin::computeStressTensor:"
-	       << pgCode[idx][k] << endl;
-	  exit(1);
-	}
-	// ----------------------------------------------------------------------
+	if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
+	if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
 #else
 	gvel = gvelocity[ni[k]];
 #endif
@@ -323,10 +310,8 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->delTLabel);
 
 #ifdef FRACTURE
-  // for Fracture ------------------------------------------------------------
-  task->requires(Task::NewDW, lb->pgCodeLabel, matlset,Ghost::None);
+  task->requires(Task::NewDW, lb->pgCodeLabel, matlset, Ghost::None);
   task->requires(Task::NewDW, lb->GVelocityLabel, matlset, gac, NGN);
-  // -------------------------------------------------------------------------
 #endif
 
   task->computes(lb->pStressLabel_preReloc,             matlset);

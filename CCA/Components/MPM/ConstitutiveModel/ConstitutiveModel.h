@@ -142,12 +142,28 @@ WARNING
 				    const Point& px, 
 				    const Vector& psize, 
 				    constNCVariable<Vector>& gVelocity);
-
+    // for dual veocity field
+    Matrix3 computeVelocityGradient(const Patch* patch,
+                                    const double* oodx,
+                                    const Point& px,
+                                    const Vector& psize,
+                                    const short pgFld[], 
+                                    constNCVariable<Vector>& gVelocity,
+                                    constNCVariable<Vector>& GVelocity);
+ 
     // Calculate velocity gradient for 8 noded interpolation
     Matrix3 computeVelocityGradient(const Patch* patch,
 				    const double* oodx, 
 				    const Point& px, 
 				    constNCVariable<Vector>& gVelocity);
+    // for dual velocity field 
+    Matrix3 computeVelocityGradient(const Patch* patch,
+                                    const double* oodx,
+                                    const Point& px,
+                                    const short pgFld[],
+                                    constNCVariable<Vector>& gVelocity,
+                                    constNCVariable<Vector>& GVelocity);
+
 
     MPMLabel* lb;
     int d_8or27;
