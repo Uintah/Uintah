@@ -31,7 +31,7 @@ LOG
 
 #include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
 #include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
 #include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
