@@ -1035,7 +1035,7 @@ else
 fi
 
 if test "$PERL" = "perl"; then
-  PERL=`alias perl 2> /dev/null | sed 's,perl=,,g'`
+  PERL=`alias perl 2> /dev/null | sed -e 's,perl=,,g' -e "s,',,g" -e 's,alias ,,g'`
   if test -z "$PERL"; then
     PERL=`which perl`
   fi
