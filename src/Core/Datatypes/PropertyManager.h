@@ -32,6 +32,7 @@
 #define PropertyManager_h 
 
 #include <map>
+#include <iostream>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/TypeName.h>
