@@ -552,12 +552,12 @@ void SimpleCFD::computeStableTimestep(const ProcessorGroup*,
   if(delt != MAXDOUBLE){
     delt *= delt_multiplier_;
     const Level* level = getLevel(patches);
-    GridP grid = level->getGrid();
-    for(int i=1;i<=level->getIndex();i++) {     // REFINE
-      delt *= grid->getLevel(i)->timeRefinementRatio();
-    }
+    new_dw->setDelT(delt, sharedState_->get_delt_label(), level);
   }
-  new_dw->put(delt_vartype(delt), sharedState_->get_delt_label());
+  else {
+    // don't use setDelT here, as we have MAXDOUBLE value...
+    new_dw->put(delt_vartype(delt), sharedState_->get_delt_label());
+  }
 }
 //______________________________________________________________________
 //           I N I T I A L I Z E
