@@ -83,6 +83,7 @@ protected:
   BrickArray3<Voxel2D<float> > data;
   Voxel2D<float> data_min, data_max;
   int nx, ny, nz;
+  float norm_step_x, norm_step_y, norm_step_z;
   Point min, max;
   double spec_coeff, ambient, diffuse, specular;
   float delta_x2, delta_y2, delta_z2;
@@ -125,6 +126,19 @@ public:
 		     const HitInfo& hit, int depth,
 		     double atten, const Color& accumcolor,
 		     Context* cx);
+  virtual void point2indexspace( Point &p,
+				 int& xl, int& xh, float& xwl,
+				 int& yl, int& yh, float& ywl,
+				 int& zl, int& zh, float& zwl );
+  virtual bool lookup_value( Point &p,
+			     Voxel2D<float> &return_value,
+			     bool exit_early );
+  virtual bool lookup_value( Voxel2D<float> &return_value, bool exit_early,
+			     int xl, int xh, float xwl,
+			     int yl, int yh, float ywl,
+			     int zl, int zh, float zwl );
+  virtual void compute_grad( Ray r, Point p, Vector gradient, float &opacity,
+			     Color value_color, Color &total, Context* cx );
   virtual void animate(double t, bool& changed);
   virtual void cblookup( Object* obj );
   virtual void initialize_cuttingPlane( PlaneDpy *cdpy );
