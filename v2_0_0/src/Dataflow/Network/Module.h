@@ -212,7 +212,7 @@ public:
   virtual void connection(Port::ConnectionState, int, bool);
   virtual void widget_moved(bool last);
 
-  void getPosition(int& x, int& y){ return get_position(x, y); }
+  void getPosition(int& x, int& y){ get_position(x, y); }
   string getID() const { return id; }
   // CollabVis code end
   
