@@ -1,6 +1,10 @@
 #ifndef UINTAH_HOMEBREW_Variable_H
 #define UINTAH_HOMEBREW_Variable_H
 
+#include <Uintah/Interface/InputContext.h>
+#include <Uintah/Interface/OutputContext.h>
+#include <Uintah/Grid/Patch.h>
+
 namespace Uintah {
    class TypeDescription;
 
@@ -40,7 +44,10 @@ namespace Uintah {
       bool isForeign() const {
 	 return foreign;
       }
-
+      
+      virtual void emit(OutputContext&) = 0;
+      virtual void read(InputContext&) = 0;
+      virtual void allocate(const Patch* patch) = 0;
    protected:
       Variable();
       virtual ~Variable();
@@ -54,6 +61,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.3  2000/12/23 00:32:47  witzel
+// Added emit(OutputContext), read(InputContext), and allocate(Patch*) as
+// pure virtual methods to class Variable and did any needed implementations
+// of these in sub-classes.
+//
 // Revision 1.2  2000/10/13 20:46:11  sparker
 // Added the notion of a "foreign" variable, to assist in cleaning
 //  them out of the data warehouse at the end of a timestep

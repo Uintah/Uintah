@@ -95,6 +95,9 @@ WARNING
       
       virtual void copyPointer(const ParticleVariableBase&);
       virtual void allocate(ParticleSubset*);
+      virtual void allocate(const Patch*)
+      { throw InternalError("Should not call ParticleVariable<T>::allocate(const Patch*), use allocate(ParticleSubset*) instead."); }
+      
       virtual void gather(ParticleSubset* dest,
 			  std::vector<ParticleSubset*> subsets,
 			  std::vector<ParticleVariableBase*> srcs,
@@ -394,6 +397,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.23  2000/12/23 00:32:47  witzel
+// Added emit(OutputContext), read(InputContext), and allocate(Patch*) as
+// pure virtual methods to class Variable and did any needed implementations
+// of these in sub-classes.
+//
 // Revision 1.22  2000/11/28 01:15:48  guilkey
 // Inlined the [] operator.
 //
