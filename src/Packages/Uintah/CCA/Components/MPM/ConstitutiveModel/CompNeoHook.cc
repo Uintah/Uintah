@@ -306,11 +306,12 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 #endif
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
-
+#ifdef HAVE_PETSC
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex();
     Array3<int> l2g(lowIndex,highIndex);
     l2g.copy(d_petscLocalToGlobal[patch]);
+#endif
 
     Matrix3 velGrad,Shear,deformationGradientInc,dispGrad,fbar;
     FastMatrix kmat(24,24);
@@ -401,18 +402,19 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       
       for(int k = 0; k < 8; k++) {
 	const Vector& disp = dispNew[ni[k]];
-#if 0		
+#ifndef HAVE_PETSC 		
 	int node_num = ni[k].x() + (nodes.x())*ni[k].y() + (nodes.x())*
 	  (nodes.y())*ni[k].z();
 
 	dof[ii++] = 3*node_num;
 	dof[ii++] = 3*node_num+1;
 	dof[ii++] = 3*node_num+2;
-#endif
+#else
 	int l2g_node_num = l2g[ni[k]];
 	dof[ii++] = l2g_node_num;
 	dof[ii++] = l2g_node_num+1;
 	dof[ii++] = l2g_node_num+2;
+#endif
 	
 	for (int j = 0; j<3; j++){
 	  for (int i = 0; i<3; i++) {
