@@ -61,7 +61,7 @@ private:
 
 
 
-  void SwapXZ( /*ScalarFieldHandle sfh*/ );
+  void SwapXZ( /*FieldHandle sfh*/ );
 };
 
 } // End namespace SCIRun
