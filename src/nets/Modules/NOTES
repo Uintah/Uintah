@@ -620,3 +620,19 @@ Visualization/StreamLines-cellwalk.net
 Test the StreamLine cellwalk code by making a synthetic cell centered
 lattice vortex data set and then computing a set of streamlines
 through that data set.
+
+
+
+
+Visualization/StreamLines-lic.net
+
+Use the StreamLines module to create a Line Interval Convolution like
+visualization of a vector data set.  First the scalar voltages for the
+utahtorso-lowres model are loaded in and then the gradient is taken of
+that data set.  Then 2500 seeds are randomly picked from inside the
+torso.  These are then streamlined and colored according to which seed
+they are.  Since the seeds are randomly distributed this results in
+a random but unique color per streamline.  Finally all of the 2500
+streamlines are displayed as transparent lines along with a reference
+torso boundary and the heart model.  For full 3D effect the model should
+be rotated interactively.
