@@ -1,0 +1,146 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+	<title>Colliding Disks</title>
+   </Meta>
+
+   <Time>
+	<maxTime>0.2</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.00001</delt_min>
+	<delt_max>0.001</delt_max>
+	<timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>disks2mat4patch.uda</filebase>
+	<outputInterval>.01</outputInterval>
+	<save label = "KineticEnergy"/>
+	<save label = "TotalMass"/>
+	<save label = "StrainEnergy"/>
+	<save label = "CenterOfMassPosition"/>
+	<save label = "CenterOfMassVelocity"/>
+	<save label = "p.x"/>
+	<save label = "p.volume"/>
+	<save label = "p.stress"/>
+        <save label = "p.particleID"/>
+	<save label = "g.mass"/>
+	<save label = "g.stressFS"/>
+
+	<checkpoint cycle = "2" interval = "0.01"/>
+   </DataArchiver>
+
+    <MPM>
+	<time_integrator>explicit</time_integrator>
+    </MPM>
+
+    <PhysicalConstants>
+	<gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+	<MPM>
+	    <material>
+                <burn type = "null" />
+		<density>1000.0</density>
+		<constitutive_model type="comp_mooney_rivlin"> 
+		   <he_constant_1>100000.0</he_constant_1>
+		   <he_constant_2>20000.0</he_constant_2>
+		   <he_PR>.49</he_PR>
+	        </constitutive_model>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+		    <cylinder label = "gp1">
+			<bottom>[.25,.25,.05]</bottom>
+			<top>[.25,.25,.1]</top>
+			<radius> .2 </radius>
+		    </cylinder>
+		    <res>[2,2,2]</res>
+		    <velocity>[2.0,2.0,0]</velocity>
+		    <temperature>12</temperature>
+ 		</geom_object>
+		<velocity_field>0</velocity_field>
+	    </material>
+
+	    <material>
+                <burn type = "null" />
+		<density>1000.0</density>
+		<constitutive_model type="comp_mooney_rivlin"> 
+		   <he_constant_1>100000.0</he_constant_1>
+		   <he_constant_2>20000.0</he_constant_2>
+		   <he_PR>.49</he_PR>
+	        </constitutive_model>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+		    <cylinder label="gp2">
+			<bottom>[.75,.75,.05]</bottom>
+			<top>[.75,.75,.1]</top>
+			<radius> .2 </radius>
+		    </cylinder>
+		    <res>[2,2,2]</res>
+		    <velocity>[-2.0,-2.0,0]</velocity>
+		    <temperature>12</temperature>
+ 		</geom_object>
+		<velocity_field>1</velocity_field>
+	    </material>
+
+	    <contact>
+	      <type>single_velocity</type>
+	      <vel_fields>[0,1,0]</vel_fields>
+	    </contact>
+	</MPM>
+
+    </MaterialProperties>
+	
+    <Grid>
+	<BoundaryConditions>
+	  <Face side = "x-">
+             <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                   <value> [0.0,0.0,0.0] </value>
+             </BCType>
+         </Face>
+         <Face side = "x+">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+		   <value> [0.0,0.0,0.0] </value>
+            </BCType>
+         </Face>
+         <Face side = "y-">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                   <value> [0.0,0.0,0.0] </value>
+            </BCType>
+         </Face>                  
+	 <Face side = "y+">
+           <BCType id = "all" var = "Dirichlet" label = "Velocity">  
+                  <value> [0.0,0.0,0.0] </value>
+           </BCType>
+         </Face>
+         <Face side = "z-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>
+          <Face side = "z+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>                          
+	</BoundaryConditions>
+	<Level>
+	    <Box label = "1">
+		<lower>[0,0,0]</lower>
+		<upper>[1.0,1.0,.15]</upper>
+	        <resolution>[20,20,3]</resolution>
+		<patches>[2,2,1]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+    <PhysicalBC>
+	<MPM>
+	</MPM>
+    </PhysicalBC>
+    
+</Uintah_specification>
+

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<component name="NrrdToField" category="Converters">
+  <overview>
+    <author>Darby Van Uitert
+    </author>
+    <summary>Convert a combination of Nrrds to a SCIRun Field. This
+    converter works on regular, unstructured and structured Data. If
+    the module receives just Data, it will most likely be a regular Field
+    (i.e. ScanLine, Image, LatVol).  For structured and unstructured
+    Fields, the data is optional. If Points but no Connections are 
+    given, a structured dataset will most likely be created
+    (i.e. StructQuad, StructHex).  If Points and Connections 
+    are given, an unstructured field will most likely be created
+    (i.e. Curve, TriSurf, QuadSurf, TetVol, HexVol). If a Field is passed
+    in, the module will try to use that Field's mesh.
+    </summary>
+    <description>
+    <p>Convert a combination of Nrrds to a SCIRun Field. This
+    converter works on regular, unstructured and structured Data. If
+    the module receives just Data, it will most likely be a regular Field
+    (i.e. ScanLine, Image, LatVol).  For structured and unstructured
+    Fields, the data is optional. If Points but no Connections are 
+    given, a structured dataset will most likely be created
+    (i.e. StructQuad, StructHex).  If Points and Connections 
+    are given, an unstructured field will most likely be created
+    (i.e. Curve, TriSurf, QuadSurf, TetVol, HexVol). If a Field is passed
+    in, the module will try to use that Field's mesh.</p>
+    <p>The first port is for Points.</p>
+    <p>The second port should contain a Nrrd of connectivity.  This
+    should be in the form P x N where P is the points in a connection
+    and N is the number of connections.  For example, a TriSurf would
+    have a connections nrrd that would be 3 x N.  The Unstructured
+    Field will be determined based on the size of P.  A size of two
+    will convert to a CurveMesh, a size of three will be a TriSurf,
+    etc. In the case of P being equal to size 4, there is an ambiguity
+    whether or not the resulting Field should be a TetVolField or
+    QuadSurfField.  This can be indicated in the NrrdToField UI under
+    the option Unstructured Cell Type when Points per Connection = 4.
+    If Auto is selected, then the module will try to determine the
+    Cell Type based on the Nrrd's Properties.  If it cannot be
+    determined, a Cell Type of TetVolField. If the Points Nrrd happens
+    to be in the form of N x P, the module will try to determine that
+    and handle it accordingly.</p>
+    <p>The third port is the Data port.  For the case of Regular data,
+    this should be the only port connected. If it contains vector or
+    tensor data values, they should be in the first axis and it's kind
+    should be set accordingly.  This can be done with the <modref package="Teem" name="UnuAxinfo"/>
+    module.</p>
+    <p>The last port is the an optional Field input.  If this is
+    connected, the module will attempt to use the Mesh from this Field
+    for the new Field. If the input Field's Mesh does not match the
+    information given in the other ports, it will default to the
+    behavior above an disregard the incoming Field.</p>
+    <p>The UI option Permute Data will permute Fortran data or data in
+    the form (k,j,i).</p>
+    <p>The UI option Build Eigen Decomposition for Tensor Field" will
+    build the decomposition using a call to the Teem library
+    (tenEigenSolve_f).</p>
+    <p>The UI option of Structured/Unstructured Ambiguity is when the
+    Data, or Points has a size of one in the first dimension.  This
+    could be a Point Cloud or Struct Curve. If Auto is selected, the
+    module will try to determine based on the Nrrd Property's Cell
+    Type.  If it cannot be determined, the module will create a Point
+    Cloud.  The UI settings will always over-ride the
+    NrrdProperties.</p>
+    <p>The list of Nrrd Names at the bottom of the UI is for
+    information only.</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Points</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Connections</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Data</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>OriginalField</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>OutputField</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <parameter>
+      <widget>Label</widget>
+      <label>Autogenerated GUI explanation</label>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

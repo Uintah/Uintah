@@ -1,0 +1,58 @@
+Third Party Installation README
+-------------------------------
+
+Python 1.5.2 (or later) and GNU make (3.79 or later) must be present
+before running the third party installation script.
+
+The simplest execution of the script only requires a single argument:
+
+  python install dir
+
+where "dir" is the directory under which the third-party software will be
+installed. See "NOTE" below for an explanation and example of how the
+final path to installed libraries is created.
+
+There are additional optional arguments like so:
+
+  python install dir bits jobs
+
+"bits" must be one of 32 or 64, and refers to the bit size of 
+binaries, and "jobs" is the number of processes that will be used to 
+compile the libraries.
+
+  python install /usr/local/SCIRun/Third_Party 64 2
+
+or 
+
+  python install /usr/local/SCIRun/Third_Party 32 1
+
+When finished, the installation script will display the complete name
+of the third-party software installation directory---make note of this
+value (and see "NOTE" below).
+
+-- Reinstalling all or part of the required Thirdparty software --
+
+You may reinstall part or all of the third-party software by repeating
+your install command line exactly. The script will see that a previous
+installation exists at the specified location, at which point you will 
+be asked to replace all or part of the installation. Just answer 
+'y' or 'n' as the script asks you which tarballs to reinstall. For
+each target that you said 'y' to, the previous installation will be
+deleted, and a fresh one installed.
+
+-- Installation path and its meaning --
+
+NOTE: The name of the third-party installation directory reflects the
+parameters given to the install script. This allows you to maintain
+multiple third-party installations for different operating systems and
+machine architectures. for example on a Mandrake 9.0 linux machine:
+
+  python install /usr/local/SCIRun/Thirdparty
+
+will create the installation under:
+
+  /usr/local/SCIRun/Thirdparty/1.8/Linux/gcc-3.2-32bit
+
+{specified path}/{tp version}/{platform}/{compiler and specified size} 
+
+

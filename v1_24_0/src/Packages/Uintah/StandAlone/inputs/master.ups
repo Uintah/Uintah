@@ -1,0 +1,451 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE Packages/Uintah_specification SYSTEM "input.dtd">
+
+<!-- @version: -->
+
+<Packages/Uintah_specification>
+
+   <Meta>
+	<title>test run</title>
+   </Meta>
+
+   <Time>
+	<maxTime>10.0</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.0</delt_min>
+	<delt_max>1.0</delt_max>
+	<timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+
+   <OutputVars>
+  	<t_initial_output>0.0</t_initial_output>
+	<t_final_output>15.0</t_final_output>
+  	<t_delta_output>0</t_delta_output>
+	<filebasename>run1</filebasename>
+	<file_description>run1</file_description>
+   </OutputVars>
+
+   <CFD>
+  	<cfl>0.5</cfl>
+
+	<!-- ICE specification -->
+
+	<ICE>
+	    <time_integrator>explicit</time_integrator>
+	    <max_iteration>100</max_iteration>
+  	    <rel_tolerance>0.0</rel_tolerance>
+	    <abs_tolerance>1e-100</abs_tolerance>
+	    <div_tolerance>1e-3</div_tolerance>
+	    <compute_delta_velocity>convective</compute_delta_velocity>
+	    <material_properties>
+	        <viscosity>1.0</viscosity>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>1.0</specific_heat>
+		<speed_of_sound>1.0</speed_of_sound>
+	    </material_properties>
+         </ICE>
+
+	 <!-- ARCHES specification -->
+
+	 <ARCHES>
+	     <time_integrator>implicit</time_integrator>
+	     <implicit>
+		<grow_dt>0.01</grow_dt>
+		<non_linear_solver>
+		    <picard_solver>
+			<max_iter>20</max_iter>	
+			<res_tol>2.0</res_tol>
+			<cal_pressure>true</cal_pressure>
+		        <pressure_solver>
+			   <ref_point>[10,10,10]</ref_point>
+			   <underrelax>0.9</underrelax>
+			   <finite_difference>second</finite_difference>
+			   <linear_solver>
+			       <linegs>
+			           <max_iter>50</max_iter>
+				   <res_tol>0.0001</res_tol>
+				</linegs>
+			    </linear_solver>
+			</pressure_solver>
+			<cal_momentum>true</cal_momentum>
+			<momentum_solver>
+			    <underrelax>0.8</underrelax>
+			    <finite_difference>second</finite_difference>
+			    <linear_solver>
+			        <linegs>
+				     <max_iter>5</max_iter>
+				     <res_tol>0.0001</res_tol>
+				</linegs>		       
+			    </linear_solver>
+			</momentum_solver>
+			<turbulence_model>
+			   <smagorinsky>
+			       <cf>0.2</cf>
+			       <fac_mesh>2.0</fac_mesh>
+			       <filterl>0.01</filterl>
+			   </smagorinsky>
+			</turbulence_model>
+			<cal_mixturescalar>true</cal_mixturescalar>
+			<mixture_fraction_solver>
+			    <underrelax>0.9</underrelax>
+			    <finite_difference>second</finite_difference>
+			    <linear_solver>
+				<linegs>
+				    <max_iter>5</max_iter>
+				    <res_tol>0.0001</res_tol>
+				</linegs>
+			     </linear_solver>
+			</mixture_fraction_solver>
+		   </picard_solver>
+		</non_linear_solver>
+	   </implicit>
+        </ARCHES>
+
+    </CFD>
+
+    <MPM>
+	<time_integrator>explicit</time_integrator>
+    </MPM>
+
+
+
+    <PhysicalConstants>
+	<gravity>[0,0,0]</gravity>
+	<ideal_gas_constant>1.0</ideal_gas_constant>
+	<pressure>1.0</pressure>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+	<ICE>
+	    <viscosity>1.0</viscosity>
+	    <thermal_conductivity>1.0</thermal_conductivity>
+	    <specific_heat>1.0</specific_heat>
+	    <speed_of_sound>1.0</speed_of_sound>
+	</ICE>
+
+	<ARCHES>
+	    <viscosity>1.0</viscosity>
+	    <schmidt_no>0.7</schmidt_no>
+	    <mixing_model>delta_pdf</mixing_model>
+	    <reaction_model>non_reacting</reaction_model>
+	    <stream>
+		<density>0.1</density>
+		<temperature>298</temperature>
+		<enthalpy_loss>0</enthalpy_loss>
+	    </stream>
+	    <stream>
+		<density>1.0</density>
+		<temperature>298</temperature>
+		<enthalpy_loss>0</enthalpy_loss>
+	    </stream>
+	<!-- boundary conditions, Not sure how these differ from below -->
+	    <primary_stream>
+	        <flow_rate>1</flow_rate>
+		<mixture_frac>1</mixture_frac>
+		<length_scale>1</length_scale>
+	    </primary_stream>
+	    <secondary_stream>
+		<flow_rate>1</flow_rate>
+		<mixture_frac>1</mixture_frac>
+		<length_scale>1</length_scale>
+	    </secondary_stream>
+	</ARCHES>
+
+	<MPM>
+	    <material>
+		<density>1.0</density>
+		<elastic>
+		    <youngs_modulus>1.e5</youngs_modulus>
+		    <poissons_ratio>0.33</poissons_ratio>
+		</elastic>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+		  <union>
+		    <box label="gp1">
+			<min>[.25,.25,.25]</min>
+			<max>[.75,.75,.75]</max>
+		    </box>
+		    <box label="gp2">
+			<min>[.75,.75,.75]</min>
+			<max>[1.75,1.75,1.75]</max>
+		    </box>
+		   </union>
+		   <res>[2,2,2]</res>
+ 		</geom_object>
+		<temperature>12</temperature>
+		<velocity_field>1</velocity_field>
+	    </material>
+	    <material>
+		<density>1.0</density>
+		<comp_mooney_rivlin>
+		    <he_constant_1>1.e5</he_constant_1>
+		    <he_constant_2>2.e4</he_constant_2>
+		    <he_constant_3>7.e4</he_constant_3>
+		    <he_constant_4>1.32e6</he_constant_4>
+		</comp_mooney_rivlin>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+		  <difference>
+		    <box label="gp1">
+			<min>[.25,.25,.25]</min>
+			<max>[.75,.75,.75]</max>
+		    </box>
+		    <box label="gp1hole">
+		        <min>[.25,.25,.25]</min>
+			<max>[.75,.75,.75]</max>
+	            </box>
+		  </difference>
+		  <res>[2,2,2]</res>
+ 		</geom_object>
+		<temperature>12</temperature>
+		<velocity_field>1</velocity_field>
+	     </material>
+
+	    <material>
+		<density>1.0</density>
+		<comp_neo_hook>
+		    <bulk_modulus>4.e4</bulk_modulus>
+		    <shear_modulus>3.8e3</shear_modulus>
+	   	</comp_neo_hook>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+		    <cylinder label="gp2">
+			<bottom>[.75,.75,.75]</bottom>
+			<top>[2.75,.75,.75]</top>
+			<radius>0.75</radius>
+		    </cylinder>
+		    <res>[2,2,2]</res>
+		</geom_object>
+		<temperature>12</temperature>
+		<velocity_field>2</velocity_field>
+	    </material>
+
+	    <material>
+		<density>1.0</density>
+		<comp_neo_hook_plastic>
+		    <bulk_modulus>4.e4</bulk_modulus>
+		    <shear_modulus>3.8e3</shear_modulus>
+		    <yield_stress>45e4</yield_stress>
+		    <hardening_modulus>129240</hardening_modulus>
+	            <alpha> 0. </alpha>
+		</comp_neo_hook_plastic>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+		    <sphere label="gp3">
+			<origin>[.75,.75,.75]</origin>
+			<radius>0.75</radius>
+		    </sphere>
+                    <res>[2,2,2]</res>
+		</geom_object>
+		<temperature>12</temperature>
+		<velocity_field>3</velocity_field>
+	    </material>
+
+	    <material>
+		<density>1.0</density>
+		<hyper_elastic_damage>
+		    <bulk_modulus>4.e4</bulk_modulus>
+		    <shear_modulus>3.8e3</shear_modulus>
+		    <alpha>0.1</alpha>
+		    <beta>0.3</beta>
+		    <max_equiv_strain>0.001</max_equiv_strain>
+		</hyper_elastic_damage>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+		    <tri label="gp4">
+			<file>crack.dat</file>
+		    </tri>
+	            <res>[2,2,2]</res>
+		</geom_object>
+		<temperature>12</temperature>
+		<velocity_field>4</velocity_field>
+	    </material>
+
+	    <material>
+		<density>1.0</density>
+		<visco_elastic_damage>
+		    <bulk_modulus>4.e4</bulk_modulus>
+		    <shear_modulus>3.8e3</shear_modulus>
+		    <alpha>0.1</alpha>
+		    <beta>0.3</beta>
+		    <tau>0.82</tau>
+		    <gamma>0.75</gamma>
+		    <max_equiv_strain>0.001</max_equiv_strain>
+		</visco_elastic_damage>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+		   <intersection>
+		    <box label="gp1">
+			<min>[.25,.25,.25]</min>
+			<max>[.75,.75,.75]</max>
+		    </box>
+		    <cylinder label="gp2">
+			<bottom>[.75,.75,.75]</bottom>
+			<top>[2.75,.75,.75]</top>
+			<radius>0.75</radius>
+	            </cylinder>
+		  </intersection>
+		  <res>[2,2,2]</res>
+		</geom_object>
+		<temperature>12</temperature>
+		<velocity_field>1</velocity_field>
+	    </material>
+
+	    <contact>
+	       <type>null</type>
+	    </contact>
+
+	    <contact>
+	       <type>single_velocity</type>
+	    </contact>
+
+	    <contact>
+	       <type>friction</type>
+	       <mu>.2</mu>
+	    </contact>
+
+	    <contact>
+	       <type>bonded</type>
+	       <max_normal_traction>.2</max_normal_traction>
+	    </contact>
+	</MPM>
+
+    </MaterialProperties>
+	
+    <Grid>
+	<Level>
+	    <Box label="1">
+	    	<lower>[0,0,0]</lower>
+	    	<upper>[1,1,1]</upper>
+	        <resolution>[20,20,20]</resolution>
+		<patches>[2,2,2]</patches>
+	    </Box>
+	    <Box label="2">
+	    	<lower>[1,1,1]</lower>
+	    	<upper>[2,2,2]</upper>
+	    	<spacing>[.1,.1,.1]</spacing>
+	    </Box>
+	</Level>
+    </Grid>
+
+    <!-- Question - how do we want to attach a bc to a region of the grid? -->
+    <PhysicalBC>
+    
+	<ICE>
+	    <type>no_slip</type>
+	    <velocity>[0,0,0]</velocity>
+
+	    <type>inflow</type>
+	    <velocity>[1,1,1]</velocity>
+	    <temperature>1</temperature>
+	    <density>1</density>
+	    <pressure>1</pressure>
+
+	    <type>outflow</type>
+	    <velocity>[1,1,1]</velocity>
+	    <temperature>1</temperature>
+	    <density>1</density>
+	    <pressure>1</pressure>
+
+	    <type>outflow_v2</type>
+	    <velocity>[1,1,1]</velocity>
+	    <temperature>1</temperature>
+	    <density>1</density>
+	    <pressure>1</pressure>
+
+	    <type>reflective</type>
+	    <velocity>[1,1,1]</velocity>
+	   
+	    <type>neumann</type>
+	    <velocity>[1,1,1]</velocity>
+	    <temperature>1</temperature>
+	    <density>1</density>
+	    <pressure>1</pressure>
+
+	    <type>dirichlet</type>
+	    <velocity>[1,1,1]</velocity>
+	    <temperature>1</temperature>
+	    <density>1</density>
+	    <pressure>1</pressure>
+
+	    <type>periodic</type>
+	    <velocity>[1,1,1]</velocity>
+	    <temperature>1</temperature>
+	    <pressure>1</pressure>
+	    
+	</ICE>
+
+	<ARCHES>
+	    <CellType>
+		<WallType>
+		    <boundary_type>wall</boundary_type>
+		    <!-- What does this mean? -->
+		    <box> [ (0,0,0) , (0,15,40)],
+	                  [ (0,25,0), (0,40,40)]
+		    </box>
+		</WallType>
+		<PrimaryInletType>
+		    <boundary_type>primary_inlet</boundary_type>
+		    <box> [ (0,15,0), (0,25,40)]
+		    </box>
+		    <flow_rate>1</flow_rate>
+		    <mixture_frac>1</mixture_frac>
+		    <length_scale>1</length_scale>
+		</PrimaryInletType>
+		<PressureType>
+		    <boundary_type>pressure</boundary_type>
+		    <box> [ (0,0,0),  (60,0,40)],
+                          [ (0,0,0),  (60,40,0)],
+                          [ (0,40,0), (60,40,40)],
+                          [ (0,0,40), (60,40,40)],
+                          [ (60,0,0), (60,40,40)]
+		    </box>
+		    <flow_rate>1</flow_rate>
+		    <mixture_frac>1</mixture_frac>
+		    <length_scale>1</length_scale>
+		</PressureType>
+	    </CellType>
+
+	</ARCHES>
+
+	<MPM>
+	    <type>force</type>
+	    <force>[1,0,0]</force>
+	
+	    <type>velocity</type>
+	    <velocity>[1,0,0]</velocity>
+	</MPM>
+
+
+    </PhysicalBC>
+    
+    <InitialConditions>
+
+	<ICE>
+	</ICE>
+
+	<ARCHES>
+	    <initial_pressure>1.0</initial_pressure>
+	    <velocity>[1,1,0]</velocity>
+	    <density>1.0</density>
+	    <temperature>1.0</temperature>
+	</ARCHES>
+
+	<MPM>
+	</MPM>
+
+    </InitialConditions>
+
+</Packages/Uintah_specification>

@@ -1,0 +1,11 @@
+#!/usr/local/bin/python
+
+from sys import argv,exit
+from helpers.runSusTests import runSusTests
+
+TESTS = [    ("symAnnulus", "symAnnulus.ups", "",4, "ALL"), \
+             ("symdiw", "symdiw.ups", "",4, "ALL"), \
+             ("pistonValidation", "pistonValidation.ups", "",2, "ALL")
+    	]
+
+exit(runSusTests(argv, TESTS, "mpmice"))

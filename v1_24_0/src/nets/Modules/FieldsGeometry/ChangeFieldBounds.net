@@ -1,0 +1,217 @@
+# SCI Network v1.22
+
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+    ::netedit scheduleok
+    return
+} else {
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+global notes
+set notes ""
+
+global Subnet
+set Subnet(Subnet$Subnet(Loading)_Name) {Main}
+set bbox {45 69 521 447}
+
+# Create a SCIRun->DataIO->FieldReader Module
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 140 69]
+
+# Create a SCIRun->FieldsGeometry->ChangeFieldBounds Module
+set m2 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 282 159]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 45 226]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 356 281]
+
+# Create a SCIRun->Render->Viewer Module
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 153 403]
+
+# Create the Connections between Modules
+set c1 [addConnection $m1 0 $m2 0]
+set c2 [addConnection $m1 0 $m3 0]
+set c3 [addConnection $m2 0 $m4 0]
+set c4 [addConnection $m3 0 $m5 0]
+set c5 [addConnection $m4 0 $m5 1]
+set c6 [addConnection $m2 1 $m5 2]
+
+# Setup GUI for the SCIRun->DataIO->FieldReader Module
+setGlobal $m1-filename "$DATADIR/$DATASET/$DATASET-voltage.tvd.fld"
+
+# Setup GUI for the SCIRun->FieldsGeometry->ChangeFieldBounds Module
+setGlobal $m2-outputcenterx {0.8655488232993986}
+setGlobal $m2-outputcentery {-0.1303803778581298}
+setGlobal $m2-outputcenterz {-0.3424932036610332}
+setGlobal $m2-outputsizex {1.120119516928197}
+setGlobal $m2-outputsizey {1.919221364980405}
+setGlobal $m2-outputsizez {1.729526492501131}
+setGlobal $m2-box-scale {0.05018638938201671}
+setGlobal $m2-box-center-x {0.8655488232993986}
+setGlobal $m2-box-center-y {-0.1303803778581298}
+setGlobal $m2-box-center-z {-0.3424932036610332}
+setGlobal $m2-box-right-x {1.425608581763497}
+setGlobal $m2-box-right-y {-0.2306179160830636}
+setGlobal $m2-box-right-z {-0.0822665374000712}
+setGlobal $m2-box-down-x {1.015655356151996}
+setGlobal $m2-box-down-y {0.8292303046320726}
+setGlobal $m2-box-down-z {-0.2959169472457776}
+setGlobal $m2-box-in-x {0.4673795950514646}
+setGlobal $m2-box-in-y {-0.1100696747775234}
+setGlobal $m2-box-in-z {0.5222700425895321}
+$m2 initialize_ui
+
+# Setup GUI for the SCIRun->Visualization->ShowField Module
+setGlobal $m3-nodes-on {0}
+setGlobal $m3-edges-transparency {1}
+setGlobal $m3-faces-on {0}
+setGlobal $m3-normalize-vectors {}
+setGlobal $m3-has_scalar_data {1}
+setGlobal $m3-def-color-r {0.50}
+setGlobal $m3-def-color-g {0.50}
+setGlobal $m3-def-color-b {0.50}
+setGlobal $m3-def-color-a {0.74}
+setGlobal $m3-active_tab {Edges}
+setGlobal $m3-node_scale {0.0300}
+setGlobal $m3-edge_scale {0.0150}
+setGlobal $m3-scalars_scale {0.300}
+setGlobal $m3-show_progress {}
+setGlobal $m3-field-name {Original Field}
+
+# Setup GUI for the SCIRun->Visualization->ShowField Module
+setGlobal $m4-nodes-on {0}
+setGlobal $m4-edges-on {0}
+setGlobal $m4-normalize-vectors {}
+setGlobal $m4-has_scalar_data {1}
+setGlobal $m4-active_tab {Faces}
+setGlobal $m4-node_scale {0.0300}
+setGlobal $m4-edge_scale {0.0150}
+setGlobal $m4-scalars_scale {0.300}
+setGlobal $m4-show_progress {}
+setGlobal $m4-field-name {Transformed Field}
+
+# Setup GUI for the SCIRun->Render->Viewer Module
+$m5 ui
+setGlobal $m5-ViewWindow_0-pos {}
+setGlobal $m5-ViewWindow_0-caxes {0}
+setGlobal $m5-ViewWindow_0-raxes {1}
+setGlobal $m5-ViewWindow_0-iaxes {}
+setGlobal $m5-ViewWindow_0-have_collab_vis {0}
+setGlobal $m5-ViewWindow_0-view-eyep-x {0.6525340749581632}
+setGlobal $m5-ViewWindow_0-view-eyep-y {1.756879324038727}
+setGlobal $m5-ViewWindow_0-view-eyep-z {11.54983406464109}
+setGlobal $m5-ViewWindow_0-view-lookat-x {0.4716818676465125}
+setGlobal $m5-ViewWindow_0-view-lookat-y {-0.09581710158158288}
+setGlobal $m5-ViewWindow_0-view-lookat-z {-0.1015524808996493}
+setGlobal $m5-ViewWindow_0-view-up-x {0.1114490602772472}
+setGlobal $m5-ViewWindow_0-view-up-y {0.9811702811996658}
+setGlobal $m5-ViewWindow_0-view-up-z {-0.1577465887234577}
+setGlobal $m5-ViewWindow_0-view-fov {20}
+setGlobal $m5-ViewWindow_0-view-eyep_offset-x {}
+setGlobal $m5-ViewWindow_0-view-eyep_offset-y {}
+setGlobal $m5-ViewWindow_0-view-eyep_offset-z {}
+setGlobal $m5-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+setGlobal $m5-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+setGlobal $m5-ViewWindow_0-bgcolor-r {0}
+setGlobal $m5-ViewWindow_0-bgcolor-g {0}
+setGlobal $m5-ViewWindow_0-bgcolor-b {0}
+setGlobal $m5-ViewWindow_0-shading {}
+setGlobal $m5-ViewWindow_0-do_stereo {0}
+setGlobal $m5-ViewWindow_0-ambient-scale {1.0}
+setGlobal $m5-ViewWindow_0-diffuse-scale {1.0}
+setGlobal $m5-ViewWindow_0-specular-scale {0.4}
+setGlobal $m5-ViewWindow_0-emission-scale {1.0}
+setGlobal $m5-ViewWindow_0-shininess-scale {1.0}
+setGlobal $m5-ViewWindow_0-polygon-offset-factor {1.0}
+setGlobal $m5-ViewWindow_0-polygon-offset-units {0.0}
+setGlobal $m5-ViewWindow_0-point-size {1.0}
+setGlobal $m5-ViewWindow_0-line-width {1.0}
+setGlobal $m5-ViewWindow_0-sbase {0.40}
+setGlobal $m5-ViewWindow_0-sr {1}
+setGlobal $m5-ViewWindow_0-do_bawgl {0}
+setGlobal $m5-ViewWindow_0-drawimg {}
+setGlobal $m5-ViewWindow_0-saveprefix {}
+setGlobal $m5-ViewWindow_0-resx {}
+setGlobal $m5-ViewWindow_0-resy {}
+setGlobal $m5-ViewWindow_0-aspect {}
+setGlobal $m5-ViewWindow_0-aspect_ratio {}
+setGlobal $m5-ViewWindow_0-global-light {1}
+setGlobal $m5-ViewWindow_0-global-fog {0}
+setGlobal $m5-ViewWindow_0-global-debug {0}
+setGlobal $m5-ViewWindow_0-global-clip {0}
+setGlobal $m5-ViewWindow_0-global-cull {0}
+setGlobal $m5-ViewWindow_0-global-dl {0}
+setGlobal $m5-ViewWindow_0-global-type {Gouraud}
+setGlobal $m5-ViewWindow_0-ortho-view {0}
+setGlobal $m5-ViewWindow_0-clip-num {}
+setGlobal $m5-ViewWindow_0-clip-visible {}
+setGlobal $m5-ViewWindow_0-clip-selected {}
+setGlobal $m5-ViewWindow_0-clip-visible-1 {}
+setGlobal $m5-ViewWindow_0-clip-normal-x-1 {}
+setGlobal $m5-ViewWindow_0-clip-normal-y-1 {}
+setGlobal $m5-ViewWindow_0-clip-normal-z-1 {}
+setGlobal $m5-ViewWindow_0-clip-normal-d-1 {}
+setGlobal $m5-ViewWindow_0-clip-visible-2 {}
+setGlobal $m5-ViewWindow_0-clip-normal-x-2 {}
+setGlobal $m5-ViewWindow_0-clip-normal-y-2 {}
+setGlobal $m5-ViewWindow_0-clip-normal-z-2 {}
+setGlobal $m5-ViewWindow_0-clip-normal-d-2 {}
+setGlobal $m5-ViewWindow_0-clip-visible-3 {}
+setGlobal $m5-ViewWindow_0-clip-normal-x-3 {}
+setGlobal $m5-ViewWindow_0-clip-normal-y-3 {}
+setGlobal $m5-ViewWindow_0-clip-normal-z-3 {}
+setGlobal $m5-ViewWindow_0-clip-normal-d-3 {}
+setGlobal $m5-ViewWindow_0-clip-visible-4 {}
+setGlobal $m5-ViewWindow_0-clip-normal-x-4 {}
+setGlobal $m5-ViewWindow_0-clip-normal-y-4 {}
+setGlobal $m5-ViewWindow_0-clip-normal-z-4 {}
+setGlobal $m5-ViewWindow_0-clip-normal-d-4 {}
+setGlobal $m5-ViewWindow_0-clip-visible-5 {}
+setGlobal $m5-ViewWindow_0-clip-normal-x-5 {}
+setGlobal $m5-ViewWindow_0-clip-normal-y-5 {}
+setGlobal $m5-ViewWindow_0-clip-normal-z-5 {}
+setGlobal $m5-ViewWindow_0-clip-normal-d-5 {}
+setGlobal $m5-ViewWindow_0-clip-visible-6 {}
+setGlobal $m5-ViewWindow_0-clip-normal-x-6 {}
+setGlobal $m5-ViewWindow_0-clip-normal-y-6 {}
+setGlobal $m5-ViewWindow_0-clip-normal-z-6 {}
+setGlobal $m5-ViewWindow_0-clip-normal-d-6 {}
+setGlobal $m5-ViewWindow_0-unused {1}
+setGlobal $m5-ViewWindow_0-unused {1}
+setGlobal $m5-ViewWindow_0-unused {1}
+
+::netedit scheduleok

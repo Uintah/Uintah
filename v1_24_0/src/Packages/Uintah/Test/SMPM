@@ -1,0 +1,10 @@
+#!/usr/local/bin/python
+
+from sys import argv,exit
+from helpers.runSusTests import runSusTests
+
+TESTS = [   ("test_plane_shell_punch", "test_plane_shell_punch.ups", "", 1, "ALL"), \
+	    ("test_sphere_shell_compress", "test_sphere_shell_compress.ups", "", 1, "ALL"), \
+    	]
+
+exit(runSusTests(argv, TESTS, "smpm"))

@@ -1,0 +1,9 @@
+#!/usr/local/bin/python
+
+from sys import argv,exit
+from helpers.runSusTests import runSusTests
+
+TESTS = [   ("pipeFlow2mat", "pipeFlow2mat.ups", "", 2, "ALL")
+    	]
+
+exit(runSusTests(argv, TESTS, "ice"))

@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+	<title>Colliding Disks</title>
+   </Meta>
+
+   <Time>
+	<maxTime>0.05</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.000000001</delt_min>
+	<delt_max>0.001</delt_max>
+	<timestep_multiplier>0.1</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>sphere_inflate.uda</filebase>
+	<outputInterval>.002</outputInterval>
+	<save label = "KineticEnergy"/>
+	<save label = "TotalMass"/>
+	<save label = "StrainEnergy"/>
+	<save label = "CenterOfMassPosition"/>
+	<save label = "CenterOfMassVelocity"/>
+	<save label = "p.x"/>
+	<save label = "p.volume"/>
+	<save label = "p.stress"/>
+	<save label = "p.tang1"/>
+	<save label = "p.tang2"/>
+	<save label = "p.norm"/>
+	<save label = "p.size"/>
+	<save label = "p.externalforce"/>
+	<save label = "g.mass"/>
+	<save label = "g.stressFS"/>
+	<save label = "g.internalforce"/>
+	<save label = "g.acceleration"/>
+	<save label = "g.velocity"/>
+   </DataArchiver>
+
+    <MPM>
+	<time_integrator>explicit</time_integrator>
+        <nodes8or27>27</nodes8or27>
+    </MPM>
+
+    <PhysicalConstants>
+	<gravity>[0,-0.0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+	<MPM>
+	    <material>
+                <burn type = "null"/>
+		<density>10.0</density>
+                <constitutive_model type = "membrane">
+                    <bulk_modulus>6.e4</bulk_modulus>
+                    <shear_modulus>3.e4</shear_modulus>
+                </constitutive_model>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+                    <sphere_membrane label = "ball">
+                        <origin>[0.0,0.0,0.0]</origin>
+                        <radius> 0.5 </radius>
+                        <thickness> 0.01 </thickness>
+                        <num_lat> 200 </num_lat>
+                        <num_long> 400 </num_long>
+                    </sphere_membrane>
+		    <res>[2,2,2]</res>
+		    <velocity>[0.0,0.0,0.0]</velocity>
+		    <temperature>12</temperature>
+ 		</geom_object>
+	    </material>
+
+	    <contact>
+	      <type>single_velocity</type>
+              <vel_fields>[0,1,0]</vel_fields>
+              <stop_time>999999.9 </stop_time>
+	    </contact>
+	</MPM>
+
+    </MaterialProperties>
+	
+    <Grid>
+	<BoundaryConditions>
+	 <Face side = "x-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+         </Face>
+         <Face side = "x+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+         </Face>
+         <Face side = "y-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+         </Face>                  
+	 <Face side = "y+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+         </Face>
+         <Face side = "z-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>
+          <Face side = "z+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>                           
+	</BoundaryConditions>
+	<Level>
+	    <Box label = "1">
+		<lower>[-0.7,-0.7,-0.7]</lower>
+		<upper>[ 0.7, 0.7, 0.7]</upper>
+	        <resolution>[28,28,28]</resolution>
+		<patches>[1,1,1]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+    <PhysicalBC>
+	<MPM>
+	</MPM>
+    </PhysicalBC>
+    
+</Uintah_specification>
+

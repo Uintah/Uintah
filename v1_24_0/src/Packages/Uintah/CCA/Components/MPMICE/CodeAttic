@@ -1,0 +1,311 @@
+______________________________________________________________________
+This file contains code that currently isn't being used but we want to 
+keep around in case we ever want to dust it off and use it.  Please put 
+a date around the stuff you put in this file so we know how long to keep
+it.
+
+
+______________________________________________________________________
+              InterpolateVelIncFCToNC()
+11/21/01
+
+______________________________________________________________________
+
+#if 0
+// This isn't used
+
+//______________________________________________________________________
+//
+void MPMICE::scheduleInterpolateVelIncFCToNC(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* mpm_matls)
+{
+  cout_doing << "MPMICE::scheduleInterpolateVelIncFCToNC" << endl;
+
+   Task* t=scinew Task("MPMICE::interpolateVelIncFCToNC",
+                 this, &MPMICE::interpolateVelIncFCToNC);
+
+   t->requires(Task::NewDW, Ilb->uvel_FCLabel,   Ghost::None);
+   t->requires(Task::NewDW, Ilb->vvel_FCLabel,   Ghost::None);
+   t->requires(Task::NewDW, Ilb->wvel_FCLabel,   Ghost::None);
+   t->requires(Task::NewDW, Ilb->uvel_FCMELabel, Ghost::None);
+   t->requires(Task::NewDW, Ilb->vvel_FCMELabel, Ghost::None);
+   t->requires(Task::NewDW, Ilb->wvel_FCMELabel, Ghost::None);
+   t->requires(Task::NewDW, Mlb->gVelocityLabel, Ghost::None);
+
+   t->computes(Mlb->gMomExedVelocityLabel);
+
+   sched->addTask(t, patches, mpm_matls);
+}
+
+#endif
+
+#if 0
+// This isn't used
+
+//______________________________________________________________________
+//
+void MPMICE::interpolateVelIncFCToNC(const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                 const MaterialSubset* ,
+                                     DataWarehouse*,
+                                     DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+    Vector zero(0.0,0.0,0.);
+    SFCXVariable<double> uvel_FC, uvel_FCME;
+    SFCYVariable<double> vvel_FC, vvel_FCME;
+    SFCZVariable<double> wvel_FC, wvel_FCME;
+    CCVariable<Vector> velInc_CC;
+    NCVariable<Vector> velInc_NC;
+    NCVariable<Vector> gvelocity;
+
+    for(int m = 0; m < numMatls; m++) {
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwindex = mpm_matl->getDWIndex();
+      new_dw->get(uvel_FC,   Ilb->uvel_FCLabel,   dwindex, patch,Ghost::None,0);
+      new_dw->get(vvel_FC,   Ilb->vvel_FCLabel,   dwindex, patch,Ghost::None,0);
+      new_dw->get(wvel_FC,   Ilb->wvel_FCLabel,   dwindex, patch,Ghost::None,0);
+      new_dw->get(uvel_FCME, Ilb->uvel_FCMELabel, dwindex, patch,Ghost::None,0);
+      new_dw->get(vvel_FCME, Ilb->vvel_FCMELabel, dwindex, patch,Ghost::None,0);
+      new_dw->get(wvel_FCME, Ilb->wvel_FCMELabel, dwindex, patch,Ghost::None,0);
+
+      new_dw->get(gvelocity,Mlb->gVelocityLabel,  dwindex, patch,Ghost::None,0);
+
+      new_dw->allocate(velInc_CC, MIlb->velInc_CCLabel, dwindex, patch);
+      new_dw->allocate(velInc_NC, MIlb->velInc_NCLabel, dwindex, patch);
+      double xcomp,ycomp,zcomp;
+
+      for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
+        IntVector cur = *iter;
+        IntVector adjx(cur.x()+1,cur.y(),  cur.z());
+        IntVector adjy(cur.x(),  cur.y()+1,cur.z());
+        IntVector adjz(cur.x(),  cur.y(),  cur.z()+1);
+        xcomp = ((uvel_FCME[cur]  - uvel_FC[cur]) +
+                (uvel_FCME[adjx] - uvel_FC[adjx]))*0.5;
+        ycomp = ((vvel_FCME[cur]  - vvel_FC[cur]) +
+                (vvel_FCME[adjy] - vvel_FC[adjy]))*0.5;
+        zcomp = ((wvel_FCME[cur]  - wvel_FC[cur]) +
+                (wvel_FCME[adjz] - wvel_FC[adjz]))*0.5;
+
+        velInc_CC[*iter] = Vector(xcomp,ycomp,zcomp);
+      }
+
+      IntVector cIdx[8];
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+        patch->findCellsFromNode(*iter,cIdx);
+        velInc_NC[*iter]  = zero;
+        for (int in=0;in<8;in++){
+         velInc_NC[*iter]     +=  velInc_CC[cIdx[in]]*.125;
+        }
+        gvelocity[*iter] += velInc_NC[*iter];
+      }
+
+      new_dw->put(gvelocity, Mlb->gMomExedVelocityLabel, dwindex, patch);
+
+    }
+  }  //patches
+}
+
+#endif
+
+______________________________________________________________________
+           Inside interpolateNCToCC_0()
+           This tests for nodal momentum conservation        
+  11/21/01
+______________________________________________________________________
+  #if 0
+      Vector nodal_mom(0.,0.,0.);
+      for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+        nodal_mom+=gvelocity[*iter]*gmass[*iter];
+      }
+      cout << "Solid matl nodal momentum = " << nodal_mom << endl;
+      Vector cell_mom(0.,0.,0.);
+      cout << "In NCToCC_0" << endl;
+  #endif
+  
+______________________________________________________________________
+           Inside interpolateNCToCC()
+           This tests for nodal momentum conservation      
+  11/21/01
+______________________________________________________________________
+  #if 0
+       Vector nodal_mom(0.,0.,0.);
+       Vector cell_momnpg(0.,0.,0.);
+       Vector cell_momwpg(0.,0.,0.);
+
+       for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+          nodal_mom+=gvelocity[*iter]*gmass[*iter];
+       }
+       cout << "In NCToCC" << endl;
+       cout << "Solid matl nodal momentum = " << nodal_mom << endl;
+  #endif
+  
+  
+______________________________________________________________________
+           Inside MPMICE::computeEquilibrationPressure()
+  11/21/01
+______________________________________________________________________  
+    //__________________________________
+#if 0
+    // THIS IS A HACK I HAD TO ADD TO GET THE BCS STRAIGHTENED OUT
+    // FOR DOING THE FULL HEATED INFLOW.  I KNOW THERE'S A BETTER WAY,
+    // AND I WILL IMPLEMENT THAT IN TIME, BUT I WANTED TO GET THIS
+    // CODE IN THE REPOSITORY BEFORE I FORGET.  JIM
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      for (int m = 0; m < numALLMatls; m++) {
+        Material* matl = d_sharedState->getMaterial( m );
+        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+        if(ice_matl){                // I C E
+          rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
+        }
+      }
+    }
+      for (int m = 0; m < numALLMatls; m++) {
+        Material* matl = d_sharedState->getMaterial( m );
+        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+        if(ice_matl){                // I C E
+          d_ice->setBC(rho_micro[m],"Density",patch,ice_matl->getDWIndex());
+        }
+      }
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      for (int m = 0; m < numALLMatls; m++) {
+        Material* matl = d_sharedState->getMaterial( m );
+        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+        if(ice_matl){                // I C E
+          sp_vol_CC[m][*iter] = 1.0/rho_micro[m][*iter];
+        }
+      }
+    }
+
+#endif
+
+void MPMICE::HEChemistry(const ProcessorGroup*,
+
+                             const PatchSubset* patches,
+                             const MaterialSubset* ,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw)
+
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    cout_doing << "Doing HEChemistry on patch "<< patch->getID()
+               <<"\t\t\t\t MPMICE" << endl;
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label());
+    int numALLMatls=d_sharedState->getNumMatls();
+    StaticArray<CCVariable<double> > burnedMass(numALLMatls);
+    StaticArray<CCVariable<double> > createdVol(numALLMatls);
+    StaticArray<CCVariable<double> > int_eng_react(numALLMatls); 
+    StaticArray<CCVariable<Vector> > mom_comb(numALLMatls);
+    
+    constCCVariable<double> gasPressure,gasTemperature,gasVolumeFraction;
+    
+    CCVariable<double> sumBurnedMass, sumCreatedVol,sumReleasedHeat;
+    CCVariable<double> onSurface, surfaceTemp;
+    CCVariable<Vector> sumMom_comb;
+    
+    constCCVariable<Vector> vel_CC;
+    constCCVariable<double> solidTemperature,solidMass;
+
+    Vector dx = patch->dCell();
+    double cell_vol = dx.x()*dx.y()*dx.z();
+    int prod_indx = -1;
+    Ghost::GhostType  gn  = Ghost::None;    
+    for(int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      int indx = matl->getDWIndex();
+      //__________________________________
+      //  if no reaction 
+      //  burnedMass, createdVol, int_eng_comb
+      //  must still be allocated and initialized = 0,
+      //  other tasks depend on them.
+      new_dw->allocateAndPut(burnedMass[m],    MIlb->burnedMassCCLabel,  
+                                                                indx,patch);
+      new_dw->allocateAndPut(createdVol[m],    Ilb->created_vol_CCLabel, 
+                                                                indx,patch);
+      new_dw->allocateAndPut(int_eng_react[m], Ilb->int_eng_comb_CCLabel,
+                                                                indx,patch);
+      new_dw->allocateAndPut(mom_comb[m],      Ilb->mom_comb_CCLabel,    
+                                                                indx,patch);
+            
+      burnedMass[m].initialize(0.0);
+      createdVol[m].initialize(0.0);
+      int_eng_react[m].initialize(0.0); 
+      mom_comb[m].initialize(0.0);
+
+      //__________________________________
+      // Product Data, should be only
+      // 1 product matl
+      if (ice_matl && (ice_matl->getRxProduct() == Material::product)){
+        prod_indx = ice_matl->getDWIndex();
+        new_dw->get(gasPressure,      Ilb->press_equil_CCLabel,0,  patch,gn,0);
+        old_dw->get(gasTemperature,   Ilb->temp_CCLabel,prod_indx, patch,gn,0);
+        new_dw->get(gasVolumeFraction,Ilb->vol_frac_CCLabel,
+                                                        prod_indx,patch,gn,0);
+
+        new_dw->allocateAndPut(sumBurnedMass, MIlb->burnedMassCCLabel,  
+                                                               prod_indx,patch);
+        new_dw->allocateAndPut(sumCreatedVol,  Ilb->created_vol_CCLabel,
+                                                               prod_indx,patch);
+        new_dw->allocateAndPut(sumReleasedHeat,Ilb->int_eng_comb_CCLabel,
+                                                               prod_indx,patch);
+        new_dw->allocateAndPut(sumMom_comb,    Ilb->mom_comb_CCLabel,    
+                                                               prod_indx,patch);
+
+//        new_dw->allocateAndPut(onSurface,     MIlb->onSurfaceLabel,   0, patch);
+//        new_dw->allocateAndPut(surfaceTemp,   MIlb->surfaceTempLabel, 0, patch);
+//        onSurface.initialize(0.0);
+        sumMom_comb.initialize(0.0);
+//        surfaceTemp.initialize(0.0);
+        sumBurnedMass.initialize(0.0); 
+        sumCreatedVol.initialize(0.0);
+        sumReleasedHeat.initialize(0.0);
+      }
+    }
+
+   static int tstep = 0;
+   tstep++;
+   if(d_ice->d_massExchange && tstep <= 1500)  {
+    for(int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl); 
+
+
+      if(ice_matl && (ice_matl->getRxProduct() == Material::product))  {
+        for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+          IntVector c = *iter;
+
+	     double mass_source=0.;
+             if(gasVolumeFraction[c]>.99){
+                mass_source = gasVolumeFraction[c]*11.79*cell_vol;
+             }
+             mom_comb[m][c]      =  Vector(0.,0.,0);
+             sumBurnedMass[c]   += mass_source;
+             sumReleasedHeat[c] += mass_source*716.*gasTemperature[c];
+             sumCreatedVol[c]    = 0.0;
+             sumMom_comb[c]     += -mom_comb[m][c];
+        }  // cell iterator  
+      }  // if(ice_matl == product)
+    }  // numALLMatls loop
+   }  // if d_massExchange
+
+    //__________________________________
+    //  set symetric BC
+    for(int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      setBC(burnedMass[m], "set_if_sym_BC",patch, d_sharedState, indx);
+      if (ice_matl && (ice_matl->getRxProduct() == Material::product)) {
+        setBC(sumBurnedMass, "set_if_sym_BC",patch, d_sharedState, indx);
+      }
+    }
+  }  // patches
+}

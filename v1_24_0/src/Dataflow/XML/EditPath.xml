@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="EditPath" category="Render">
+  <overview>
+    <authors>
+      <author>Alexei Samsonov</author>
+    </authors>
+    <summary>Interactive tool  to edit and playback camera path in <modref package="SCIRun" name="Viewer"/>.</summary>
+    <description>
+      <p>EditPath module provides a set of interactive tools for creation and manipulation of
+   camera path in Viewer. The basic features of the modules are as follows:</p>
+    
+   <p>- Interactive adding/inserting/deleting of key frames of current camera position in edited path</p>
+   <p> - Navigation through existing key frames</p>
+   <p>- Three interpolation modes - Linear, Cubic and no interpolation (key frames only playback)</p>
+   <p>- Two acceleration modes - smooth start/end(in interpolated mode) and no acceleration</p>
+   <p>- Path step(smoothness) and sampling rate specification for current path</p>
+   <p>- Automatic generation of circle path based on current camera position and position of reference widget</p>
+   <p>- Looped and reversed path modes</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdyamic="no">
+      <port>
+        <name>Path</name>
+	<datatype>SCIRun::Path</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Path</name>
+	<datatype>SCIRun::Path</datatype>
+      </port>
+      <port>
+        <name>Geometry</name>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
+      <port>
+        <name>Camera View</name>
+	<datatype>SCIRun::Path</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <img>../Modules/Render/doc/EditPathUI.jpg</img>
+  </gui>
+  <testing>
+  </testing>
+</component>
