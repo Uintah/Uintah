@@ -22,8 +22,8 @@ PersistentTypeID Phong::type_id("Phong", "Material", phong_maker);
 
 
 Phong::Phong(const Color& diffuse, const Color& specular,
-	     int specpow, double refl)
-    : diffuse(diffuse), specular(specular), specpow(specpow), refl(refl)
+	     int specpow, double refl) :
+  diffuse(diffuse), specular(specular), refl(refl), specpow(specpow)
 {
 }
 

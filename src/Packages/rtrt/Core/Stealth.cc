@@ -14,14 +14,14 @@ static double rotate_max_count = 8;
 
 Stealth::Stealth( double translate_scale, double rotate_scale, 
 		  double gravity_force ) :
+  baseTranslateScale_( translate_scale ), baseRotateScale_( rotate_scale ),
+  translate_scale_( translate_scale ), rotate_scale_(rotate_scale), 
   speed_( 0 ), horizontal_speed_( 0 ), vertical_speed_( 0 ),
   pitch_speed_( 0 ), rotate_speed_( 0 ),
   accel_cnt_( 0 ), horizontal_accel_cnt_( 0 ),
   vertical_accel_cnt_( 0 ), pitch_accel_cnt_( 0 ), rotate_accel_cnt_( 0 ),
-  translate_scale_( translate_scale ), rotate_scale_(rotate_scale), 
-  baseTranslateScale_( translate_scale ), baseRotateScale_( rotate_scale ),
-  segment_percentage_( 0 ), gravity_force_( gravity_force ), gravity_on_(0),
-  currentPath_( NULL ), currentLookAts_( NULL ), currentRouteName_( NULL )
+  currentPath_( NULL ), currentLookAts_( NULL ), currentRouteName_( NULL ),
+  segment_percentage_( 0 ), gravity_on_(0), gravity_force_( gravity_force )
 {
 }
 
@@ -267,10 +267,10 @@ Stealth::getNextLocation( Point & point, Point & look_at )
       segment_percentage_ = (((int)(currentPath_->size())-1) * 100) - 1;
     }
 
-  int begin_index = segment_percentage_ / 100;
+  int begin_index = (int)( segment_percentage_ / 100.0 );
   int end_index   = begin_index + 1;
 
-  if( end_index == currentPath_->size() )
+  if( end_index == (int)currentPath_->size() )
     {
       cout << "got to the end of the path... restarting\n";
       segment_percentage_ = 1;
@@ -339,7 +339,7 @@ Stealth::addToMiddleOfPath( const Point & eye, const Point & look_at )
 {
   displayCurrentRoute();
 
-  int pos = (int)(segment_percentage_ / 100.0);
+  unsigned int pos = (unsigned int)(segment_percentage_ / 100.0);
 
   if( pos == currentPath_->size() ) // If at last point, add to end.
     {
@@ -469,7 +469,7 @@ Stealth::savePath( const string & filename )
   fprintf( fp, "%s\n", (*currentRouteName_).c_str() );
 
   fprintf( fp, "%d\n", (int)currentPath_->size() );
-  for( int cnt = 0; cnt < currentPath_->size(); cnt++ )
+  for( unsigned int cnt = 0; cnt < currentPath_->size(); cnt++ )
     {
       fprintf( fp, "%2.2lf %2.2lf %2.2lf  %2.2lf %2.2lf %2.2lf\n",
 	       (*currentPath_)[cnt].x(), (*currentPath_)[cnt].y(),
@@ -499,7 +499,7 @@ Stealth::moving()
 int
 Stealth::getNextMarker( Point & point, Point & look_at )
 {
-  int end_index   = segment_percentage_ / 100 + 1;
+  unsigned int end_index  = (int)(segment_percentage_ / 100.0 + 1);
 
   // If no route...
   if( currentPath_->size() == 0 ) { return -1; }
@@ -530,7 +530,7 @@ Stealth::getPrevMarker( Point & point, Point & look_at )
     }
   else
     {
-      begin_index = segment_percentage_ / 100;
+      begin_index = (int)(segment_percentage_ / 100.0);
       // If we are on a marker point, then back up to the previous one.
       if( ((int)segment_percentage_) % 100 == 0 )
 	{
@@ -560,7 +560,7 @@ Stealth::goToBeginning( Point & point, Point & look_at )
 void
 Stealth::selectPath( int index )
 {
-  if( index < paths_.size() && index >= 0 )
+  if( index < (int)paths_.size() && index >= 0 )
     {
       currentPath_      = &paths_[ index ];
       currentLookAts_   = &lookAts_[ index ];
@@ -578,7 +578,7 @@ Stealth::getRouteStatus( int & pos, int & numPts )
     }
   else
     {
-      pos    = segment_percentage_ / 100;
+      pos    = (int)(segment_percentage_ / 100.0);
       numPts = (int)currentPath_->size();
     }
 }
