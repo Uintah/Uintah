@@ -130,17 +130,31 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
      string basename;
      if(d_myworld->myrank() == 0){
        // Create a unique string, using hostname+pid
+       char* base = strdup(d_filebase.c_str());
+       char* p = base+strlen(base);
+       for(;p>=base;p--){
+	 if(*p == '/'){
+	   *p=0;
+	   break;
+	 }
+       }
+       if(*p){
+	 free(base);
+	 base = strdup(".");
+       }
+
        char hostname[MAXHOSTNAMELEN];
        if(gethostname(hostname, MAXHOSTNAMELEN) != 0)
 	 strcpy(hostname, "unknown???");
-       ostringstream test_string;
-       test_string << hostname << "-" << getpid() << '\n';
-       const char* outbuf = test_string.str().c_str();
-       int outlen = strlen(outbuf);
+       ostringstream ts;
+       ts << base << "/" << hostname << "-" << getpid();
+       string test_string = ts.str();
+       const char* outbuf = test_string.c_str();
+       int outlen = (int)strlen(outbuf);
        MPI_Bcast(&outlen, 1, MPI_INT, 0, d_myworld->getComm());
        MPI_Bcast(const_cast<char*>(outbuf), outlen, MPI_CHAR, 0,
 		 d_myworld->getComm());
-       basename = test_string.str();
+       basename = test_string;
      } else {
        int inlen;
        MPI_Bcast(&inlen, 1, MPI_INT, 0, d_myworld->getComm());
