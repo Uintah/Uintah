@@ -573,9 +573,8 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 	       sr[i]->matls[m]->relocset->addParticle(idx);
 	    }
 	 }
-      } else {
-	    delete relocset;
       }
+      delete relocset;
    }
 
    int me = pc->myrank();
@@ -782,6 +781,9 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.14  2000/08/23 21:40:04  sparker
+// Fixed slight memory leak when particles cross patch boundaries
+//
 // Revision 1.13  2000/08/23 21:34:33  jas
 // Removed addReference for particle subsets in scatterParticles.
 //
