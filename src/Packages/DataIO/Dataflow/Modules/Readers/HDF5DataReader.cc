@@ -155,8 +155,13 @@ void HDF5DataReader::execute() {
     return;
 
   // Read the status of this file so we can compare modification timestamps
+#ifdef HAVE_STAT64
   struct stat64 buf;
   if (stat64(new_filename.c_str(), &buf)) {
+#else
+  struct stat buf;
+  if (stat(new_filename.c_str(), &buf)) {
+#endif
     error( string("Execute File not found ") + new_filename );
     return;
   }
@@ -1531,8 +1536,13 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       return;
 
     // Read the status of this file so we can compare modification timestamps
+#ifdef HAVE_STAT64
     struct stat64 buf;
     if (stat64(new_filename.c_str(), &buf)) {
+#else
+    struct stat buf;
+    if (stat(new_filename.c_str(), &buf)) {
+#endif
       error( string("Updating - File not found ") + new_filename );
       return;
     }
@@ -1556,7 +1566,15 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       else
 	last++;
 
-      string tmp_filename( "/tmp/" );
+      char* tmpdir = getenv( "SCIRUN_TMP_DIR" );
+
+      string tmp_filename;
+
+      if( tmpdir )
+	tmp_filename = tmpdir + string( "/" );
+      else
+	tmp_filename = string( "/tmp/" );
+
       tmp_filename.append( new_filename, last, new_filename.length()-last );
       tmp_filename.append( ".dump" );
 
@@ -1575,7 +1593,11 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       sPtr.flush();
       sPtr.close();
 
-      if (stat64(tmp_filename.c_str(), &buf)) {
+#ifdef HAVE_STAT64
+    if (stat64(tmp_filename.c_str(), &buf)) {
+#else
+    if (stat(tmp_filename.c_str(), &buf)) {
+#endif
 	error( string("Temporary dump file not found ") + tmp_filename );
 	return;
       } 
@@ -1604,8 +1626,13 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       return;
 
     // Read the status of this file so we can compare modification timestamps
+#ifdef HAVE_STAT64
     struct stat64 buf;
     if (stat64(new_filename.c_str(), &buf)) {
+#else
+    struct stat buf;
+    if (stat(new_filename.c_str(), &buf)) {
+#endif
       error( string("Selection - File not found ") + new_filename );
       return;
     }
@@ -1809,9 +1836,10 @@ HDF5DataReader::animate_execute( string new_filename,
     if (playmode_.get() == "once" && which >= end)
       which = start;
 
-    const int delay = delay_.get();
     bool stop;
     do {
+      int delay = delay_.get();
+
       int next = increment(which, lower, upper);
       stop = (execmode_ == "stop");
 
