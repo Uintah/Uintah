@@ -18,8 +18,10 @@
 
 
 # args == { connid omodid owhich imodid iwhich }
-proc connectionMenu {x y conn} {
-    global Subnet
+proc connectionMenu {x y conn cx cy} {
+    global Subnet mouseX mouseY
+    set mouseX $cx
+    set mouseY $cy
     set canvas $Subnet(Subnet$Subnet([lindex $conn 0])_canvas)
     set menu_id "$canvas.menu[makeConnID $conn]"
     regenConnectionMenu $menu_id $conn
@@ -39,6 +41,9 @@ proc regenConnectionMenu { menu_id conn } {
     $menu_id add command -label "Connection" -state disabled
     $menu_id add separator
     $menu_id add command -label "Delete" -command "destroyConnection {$conn} 1"
+    if { [insertModuleOnConnectionMenu $conn $menu_id.insertModule] } {
+	$menu_id add cascade -label "Insert Module" -menu $menu_id.insertModule
+    }
     set connid [makeConnID $conn]
     setIfExists disabled Disabled($connid) 0
     set label [expr $disabled?"Enable":"Disable"]
@@ -101,7 +106,7 @@ proc drawConnections { connlist } {
 	    $canvas bind $id <Control-Button-1> "$canvas raise $id
 						 traceConnection {$conn} 1"
 	    $canvas bind $id <Control-Button-2> "destroyConnection {$conn} 1"
-	    $canvas bind $id <3> "connectionMenu %X %Y {$conn}"
+	    $canvas bind $id <3> "connectionMenu %X %Y {$conn} %x %y"
 	    canvasTooltip $canvas $id $ToolTipText(Connection)
 	} else {
 	    eval $canvas coords $id $path
@@ -257,7 +262,7 @@ proc createConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
 		      
 
 
-proc destroyConnection { conn { record_undo 0 } { tell_SCIRun 1 } } { 
+proc destroyConnection { conn { record_undo 0 } { tell_SCIRun 1 } { dont_collapse_dynamic 0 }} { 
     global Subnet Color Disabled Notes undoList redoList
     set connid [makeConnID $conn]
 
@@ -281,7 +286,7 @@ proc destroyConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
 
     if { $tell_SCIRun && !$disabled } {
 	foreach realConn [findRealConnections $conn] {
-	    netedit deleteconnection [makeConnID $realConn]
+	    netedit deleteconnection [makeConnID $realConn] $dont_collapse_dynamic
 	}
     }
 
@@ -511,6 +516,88 @@ proc routeConnection { conn } {
 		    $mx [expr $iy-10] $ix [expr $iy-10] $ix $iy]
     }
 }
+
+proc findModulesToInsertOnConnection { conn } {
+    global Subnet ModuleIPorts ModuleOPorts
+    set origins [findPortOrigins [oPort conn]]
+    if { ![llength $origins] } {
+	set origins [findPortOrigins [iPort conn]]
+	if { ![llength $origins] } return
+    }
+    set port [lindex [lsort -integer -unique -index 1 $origins] 0]
+    set path [modulePath [pMod port]]
+    if { [string equal o [pType port]] } {
+	set datatype [lindex $ModuleOPorts($path) [pNum port]]
+    } else {
+	set datatype [lindex $ModuleIPorts($path) [pNum port]]
+    }
+
+    set modules ""
+    foreach maybe [array names ModuleIPorts] {
+	set onum [lsearch -exact $ModuleOPorts($maybe) $datatype]
+	set inum [lsearch -exact $ModuleIPorts($maybe) $datatype]
+	if { $onum != -1 && $inum != -1 } {
+	    lappend modules "$maybe $onum $inum"
+	}
+    }
+    return [lsort $modules]
+}
+
+
+proc insertModuleOnConnectionMenu { conn menu } {
+    global ModuleMenu
+    # return if there is no information to put in menu
+    if { ![info exists ModuleMenu] } { return 0 }
+    set moduleList [findModulesToInsertOnConnection $conn]
+    if { ![llength $moduleList] } { return 0 }
+    # destroy the old menu
+    if [winfo exists $menu] {
+	return 1
+    }
+
+    # create a new menu
+    menu $menu -tearoff false -disabledforeground black
+
+    set added ""
+    foreach path $moduleList {
+	set last [lindex $added end]
+	lappend added $path
+	if { ![string equal [lindex $path 0] [lindex $last 0]] } {
+	    # Add a menu separator if this package isn't the first one
+	    if { [$menu index end] != "none" } {
+		$menu add separator 
+	    }
+	    # Add a label for the Package name
+	    $menu add command -label [lindex $path 0] -state disabled
+	}
+
+	if { ![string equal [lindex $path 1] [lindex $last 1]] } {
+	    $menu add cascade -label "  [lindex $path 1]" \
+		-menu $menu.menu_[lindex $path 1]
+	    menu $menu.menu_[lindex $path 1] -tearoff false
+	}
+
+	if { ![string equal [lindex $path 2] [lindex $last 2]] } {
+	    $menu.menu_[lindex $path 1] add command -label [lindex $path 2] \
+		-command "insertModuleOnConnection \{$conn\} $path"
+	}
+    }
+    update idletasks
+    return 1
+}
+
+
+proc insertModuleOnConnection { conn package category module onum inum } {
+    global Subnet mouseX mouseY inserting insertOffset
+    set inserting 1
+    set insertOffset "0 0"
+    set modid [addModuleAtPosition $package $category $module $mouseX $mouseY]
+    set inserting 0
+    destroyConnection $conn 1 1 0
+    after 100 createConnection \{[makeConn "$modid $onum o" [iPort conn]]\} 1 1
+    after 100 createConnection \{[makeConn [oPort conn] "$modid $inum i"]\} 1 1
+}
+    
 
 
 
