@@ -41,13 +41,15 @@ SCIRexWindow::SCIRexWindow(char *name, char *dpyname,
 void 
 SCIRexWindow::run()
 {
+  render_data_->mutex_->lock(); 
   init();
-  
+  render_data_->mutex_->unlock();
   do{
+
     while (XPending(dpy)){ 
       handleEvent();
     } 
-//     render_data_->mutex_->lock(); 
+//     render_data_->mutex_->lock();     
 //     cerr<<"check for Exit "<<my_thread_->getThreadName()<<endl;
 //     render_data_->mutex_->unlock();
     render_data_->barrier_->wait(render_data_->waiters_);
@@ -68,7 +70,9 @@ SCIRexWindow::run()
 //     cerr<<"render windows "<<my_thread_->getThreadName()<<endl;
 //     render_data_->mutex_->unlock();
     
+//   render_data_->mutex_->lock(); 
     draw();
+//   render_data_->mutex_->unlock();
 
     render_data_->barrier_->wait( render_data_->waiters_);
 //     render_data_->mutex_->lock(); 
@@ -114,6 +118,13 @@ void SCIRexWindow::init()
 //     }
 //   }
   setup();
+
+//   for(;;){
+//     XEvent e;
+//     XNextEvent(dpy, &e);
+//     if(e.type == MapNotify)
+//       break;
+//   }
 }
 
 void 
@@ -139,7 +150,7 @@ void SCIRexWindow::setup()
    Colormap cmap;
    XSetWindowAttributes swa;
    //   Window win;
-//    XEvent event;
+   XEvent event;
    int nelements;
 
 //    /* GLX 1.3 */
@@ -189,7 +200,7 @@ void SCIRexWindow::setup()
                        vi->visual, CWBorderPixel|CWColormap|CWEventMask, &swa);
    XMapWindow(dpy, win);
    XStoreName(dpy, win, name);
-   //  XIfEvent(dpy, &event, WaitForNotify, (char*)win);
+   XIfEvent(dpy, &event, WaitForNotify, (char*)win);
  
    /* Create a GLX window using the same FBConfig that we used for the */
    /* the GLX context.                                                 */
@@ -226,9 +237,9 @@ void SCIRexWindow::handleEvent()
 {
 
   bool redraw = false;
-  XEvent event;
   
   do{
+    XEvent event;
     XNextEvent(dpy, &event);
     switch(event.type) {
 
@@ -236,11 +247,12 @@ void SCIRexWindow::handleEvent()
       redraw = true;
       break;
     case ConfigureNotify:
-      glViewport(0, 0, event.xconfigure.width, event.xconfigure.height);
+//       glViewport(0, 0, event.xconfigure.width, event.xconfigure.height);
       redraw = true;
       break;
     case ResizeRequest:
-      reshape( event.xresizerequest.width, event.xresizerequest.height);
+      cerr<<"ResizeRequest ";
+//       reshape( event.xresizerequest.width, event.xresizerequest.height);
       redraw = true;
       break;
     default:
@@ -248,8 +260,8 @@ void SCIRexWindow::handleEvent()
     }
   } while (XPending(dpy));
 
-  if(redraw)
-     draw();
+//   if(redraw)
+//      draw();
 }
 
 void SCIRexWindow::update_data()

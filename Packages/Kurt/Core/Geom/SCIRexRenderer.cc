@@ -73,7 +73,7 @@ SCIRexRenderer::SCIRexRenderer(int id)
 }
 
 
-SCIRexRenderer::SCIRexRenderer(int id, vector<const char *>& displays,
+SCIRexRenderer::SCIRexRenderer(int id, vector<char *>& displays,
 			       int ncompositers, FieldHandle tex,
 			       ColorMapHandle map, bool isfixed,
 			       double min, double max,
@@ -173,7 +173,7 @@ void SCIRexRenderer::get_bounds(BBox& bb)
   std::vector<GLTexture3D *>::iterator it = textures.begin();
   for(; it != textures.end(); it++){
     (*it)->get_bounds(b);
-     cerr<<"texture bounding box = "<<b.min()<<", "<<b.max()<<endl;
+//      cerr<<"texture bounding box = "<<b.min()<<", "<<b.max()<<endl;
   }
   bb.extend(b);
 }
@@ -497,7 +497,7 @@ void
 SCIRexRenderer::make_render_windows(FieldHandle tex_, 
 			      double& min_, double& max,
 			      bool is_fixed_, int brick_size_,
-			      vector<const char *>& displays)
+			      vector<char *>& displays)
 {
   GLTexture3D *texture;
   LatVolMesh *mesh = dynamic_cast<LatVolMesh *> (tex_->mesh().get_rep());
@@ -535,64 +535,88 @@ SCIRexRenderer::make_render_windows(FieldHandle tex_,
     // should not be using this code.
     cerr<<"Original brick size is "<<brick_size_<<endl;
     int bsize = brick_size_;
-    do {
+    while( long_dim_size  < (nwindows-1)* bsize ){
       bsize = largestPowerOf2( bsize -1 );
-    }	while( long_dim_size  < (nwindows-1)* bsize );
+    }  
     cerr<<"Using brick size "<< bsize <<endl;
     //    cerr<<"long dim is "<< long_dim <<", long dim size is "<<long_dim_size<<endl;
     // make an array for ordering the composition
     render_data_->comp_order_ = new int[ nwindows ];
 
-    for(i = 0, j = 0; i < nwindows; i++, j+= bsize){
+    for(i = 0, j = 0; i < nwindows; i++, j+= (bsize-1)){
+      
+      //build the rendering windows
+      render_data_->comp_order_[i] = i; // just use default order for setup
+      ostringstream win;
+      win << "Win"<<i;
+      char *w = new char[win.str().length()];
+      strcpy(w, win.str().c_str());
+      cerr<<"i = "<<i<<", ";
+      cerr<<"in SCIRexRenderer using display "<<displays[i]<<endl;
+      windows.push_back( new SCIRexWindow(w,displays[i], render_data_));
+
+
       // edit the mesh so that the texture constructor 
       // iterates over the correct range.
+      if( i == (nwindows - 1) ){
+	if(long_dim == 1){
+	  mesh->set_min_x(min_x + j); 
+	  mesh->set_nx(x_dim - j); 
+	} else if(long_dim == 2){
+	  mesh->set_min_y(min_y + j); 
+	  mesh->set_ny(y_dim - j); 
+	} else {
+	  mesh->set_min_z(min_z + j); 
+	  mesh->set_nz(z_dim - j); 
+	}	  
+      } else {
 	if(long_dim == 1){
 	  mesh->set_min_x(min_x + j);
-	  mesh->set_nx((Min(bsize, x_dim - j)));
-	} else if(long_dim ==2){
-	  mesh->set_min_y(min_y + j);
-	  mesh->set_ny((Min(bsize, y_dim - j)));
+	  mesh->set_nx(bsize); 
+	} else if(long_dim == 2){
+	  mesh->set_min_y(min_y + j); 
+	  mesh->set_ny(bsize); 
 	} else {
 	  mesh->set_min_z(min_z + j);
-	  mesh->set_nz((Min(bsize, z_dim - j)));
+	  mesh->set_nz(bsize);
 	}	  
-	texture = scinew GLTexture3D(tex_, min_, max_, is_fixed_,
-				     bsize);
-	if (!is_fixed_) { // if not fixed, overwrite min/max values on Gui
-	  texture->getminmax(min_, max_);
-	}
-	BBox bb;
-	texture->get_bounds( bb );
-	cerr<<"texture bounding box at construction = "<<
-	  bb.min()<<", "<<bb.max()<<endl;
-    	
-	textures.push_back( texture );
-	// We made the texture now make the window and the renderer.
-	render_data_->comp_order_[i] = i; // just use default order for setup
-	ostringstream win;
-	win << "Win"<<i;
-	char *w = new char[win.str().length()];
-	char *d = new char[strlen(displays[i])];
-	win.str().copy(w, win.str().length());
-	strcpy(d, displays[i]);
-	windows.push_back( new SCIRexWindow(w,d, render_data_));
-	GLVolumeRenderer *vr;
-	vr = new GLVolumeRenderer( 0x12345676, texture, cmap_);
-	vr->DrawFullRes();
-	vr->SetNSlices( slices_ );
-	vr->SetSliceAlpha( slice_alpha_ );
-	windows[i]->addGeom( vr );
-	renderers.push_back(vr);
-    }
+      }
+      
+      //build the texture
+      texture = scinew GLTexture3D(tex_, min_, max_, is_fixed_,
+				   bsize);
 
+      if (!is_fixed_) { // if not fixed, overwrite min/max values on Gui
+	texture->getminmax(min_, max_);
+      }
+      BBox bb0;
+      texture->get_bounds( bb0 );
+      cerr<<"texture bounding box at construction = "<<
+	bb0.min()<<", "<<bb0.max()<<endl;
+
+      texture->set_slice_bounds(Point(min_x, min_y, min_z),
+				Point(min_x + x_dim, min_y + y_dim, 
+				       min_z + z_dim));
+      textures.push_back( texture );
+      // Now build renderer and add it to the windows
+      GLVolumeRenderer *vr;
+      vr = new GLVolumeRenderer( 0x12345676, texture, cmap_);
+      vr->DrawFullRes();
+      vr->SetNSlices( slices_ );
+      vr->SetSliceAlpha( slice_alpha_ );
+      windows[i]->addGeom( vr );
+      renderers.push_back(vr);
+
+    }
+    
     // Now just in case something unseen is using the mesh, set it back to
     // its original form. Probably, unecessary.
-    mesh->set_min_x(min_x);
-    mesh->set_min_y(min_y);
-    mesh->set_min_z(min_z);
-    mesh->set_nx(x_dim);
-    mesh->set_ny(y_dim);
-    mesh->set_nz(z_dim);
+//     mesh->set_min_x(min_x);
+//     mesh->set_min_y(min_y);
+//     mesh->set_min_z(min_z);
+//     mesh->set_nx(x_dim);
+//     mesh->set_ny(y_dim);
+//     mesh->set_nz(z_dim);
   } else {
     cerr<<"dynamic_cast<LatVolMesh *> failed !\n";
     cerr<<"initialization/rebuild failed !\n";

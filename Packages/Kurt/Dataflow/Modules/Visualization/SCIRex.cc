@@ -136,10 +136,17 @@ void SCIRex::execute(void)
 
   istringstream iss(displays_.get());
   string dpy;
-  vector<const char*> dpys; // hard code for now
+  vector<char*> dpys; // hard code for now
   while(iss >> dpy){
-    dpys.push_back( dpy.c_str() );
+    char *ds = new char[dpy.length()];
+    cerr<<"using display "<<dpy<<endl;
+    strcpy(ds, dpy.c_str());
+    dpys.push_back( ds );
   }
+  for(int i = 0; i < dpys.size(); i++){
+    cerr<<"1st try displays["<<i<<"] = "<<dpys[i]<<endl;
+  }
+
   if( dpys.size() < 2 ) return;
 
 //   dpys.push_back(":0.0");
@@ -149,72 +156,71 @@ void SCIRex::execute(void)
   if(geom_id != -1)
     ogeom_->delObj(geom_id, 0);
   
-  if( volren_ )
-    delete volren_;
+  if( !volren_ ){
+    //    delete volren_;
 
-  cerr<<"min = "<<min_.get()<<" max = "<<max_.get()<<endl;
-  volren_ =
-    scinew SCIRexRenderer(0x123456, dpys, compositers_.get(), tex_, cmap,
-			  (is_fixed_.get() == 1),
-			  min_.get(), max_.get());
-  if( tex_->data_at() == Field::CELL ){
-    volren_->SetInterp(false);
-    interp_mode_.set(0);
-  }
-  std::cerr<<"Need to initialize volren\n";
-  old_cmap = cmap;
-  old_tex = tex_;
-  gui->execute(id + " SetDims " + to_string( volren_->getBrickSize()));
-  max_brick_dim_.set(  volren_->getBrickSize() );
-  old_brick_size = max_brick_dim_.get();
-  if( is_fixed_.get() !=1 ){
-    volren_->getRange( old_min, old_max);
-    min_.set(old_min);
-    max_.set(old_max);
-  }
-  old_fixed = ( is_fixed_.get() == 1);
-  ogeom_->delAll();
-  geom_id = ogeom_->addObj( volren_, "SCIRex TransParent");
+    cerr<<"min = "<<min_.get()<<" max = "<<max_.get()<<endl;
+    volren_ =
+      scinew SCIRexRenderer(0x123456, dpys, compositers_.get(), tex_, cmap,
+			    (is_fixed_.get() == 1),
+			    min_.get(), max_.get());
+    //   if( tex_->data_at() == Field::CELL ){
+    //     volren_->SetInterp(false);
+    //     interp_mode_.set(0);
+    //   }
+//     std::cerr<<"Need to initialize volren\n";
+    old_cmap = cmap;
+    old_tex = tex_;
+    gui->execute(id + " SetDims " + to_string( volren_->getBrickSize()));
+    max_brick_dim_.set(  volren_->getBrickSize() );
+    old_brick_size = max_brick_dim_.get();
+    if( is_fixed_.get() !=1 ){
+      volren_->getRange( old_min, old_max);
+      min_.set(old_min);
+      max_.set(old_max);
+    }
+    old_fixed = ( is_fixed_.get() == 1);
+    ogeom_->delAll();
+    geom_id = ogeom_->addObj( volren_, "SCIRex TransParent");
   
-//   } 
-// else {
-//     bool needbuild = false;
-//     if( tex_.get_rep() != old_tex.get_rep() ){
-//       volren_->SetVol( tex_ );
-//       old_tex = tex_;
-//       needbuild = true;
-//     }
-//     if( max_brick_dim_.get() != old_brick_size ){
-//       volren_->SetBrickSize(  max_brick_dim_.get() );
-//       old_brick_size = max_brick_dim_.get();
-//       needbuild = true;
-//     }
-//     if( is_fixed_.get() == 1 &&
-// 	(old_min != min_.get() || old_max!= max_.get()) ){
-//       volren_->SetRange( min_.get(), max_.get() );
-//       volren_->RangeIsFixed( true );
-//       old_min = min_.get();
-//       old_max = max_.get();
-//       old_fixed = ( is_fixed_.get() == 1);
-//       needbuild = true;
-//     }
-//     if( old_fixed == true && is_fixed_.get() == 0 ){
-//       old_fixed = ( is_fixed_.get() == 1);
-//       needbuild = true;
-//     }
-//     if( cmap.get_rep() != old_cmap.get_rep() ){
-//       volren_->SetColorMap( cmap );
-//       old_cmap = cmap;
-//     }
-//     if( needbuild ) {
-//       volren_->Build(dpys, ncomp, tex_, cmap);
-//       volren_->getRange( old_min, old_max);
-//       min_.set(old_min);
-//       max_.set(old_max);
-//     }
+  } else {
+    bool needbuild = false;
+    if( tex_.get_rep() != old_tex.get_rep() ){
+      volren_->SetVol( tex_ );
+      old_tex = tex_;
+      needbuild = true;
+    }
+    if( max_brick_dim_.get() != old_brick_size ){
+      volren_->SetBrickSize(  max_brick_dim_.get() );
+      old_brick_size = max_brick_dim_.get();
+      needbuild = true;
+    }
+    if( is_fixed_.get() == 1 &&
+	(old_min != min_.get() || old_max!= max_.get()) ){
+      volren_->SetRange( min_.get(), max_.get() );
+      volren_->RangeIsFixed( true );
+      old_min = min_.get();
+      old_max = max_.get();
+      old_fixed = ( is_fixed_.get() == 1);
+      needbuild = true;
+    }
+    if( old_fixed == true && is_fixed_.get() == 0 ){
+      old_fixed = ( is_fixed_.get() == 1);
+      needbuild = true;
+    }
+    if( cmap.get_rep() != old_cmap.get_rep() ){
+      volren_->SetColorMap( cmap );
+      old_cmap = cmap;
+    }
+    if( needbuild ) {
+      volren_->Build(); // dpys, ncomp, tex_, cmap);
+      volren_->getRange( old_min, old_max);
+      min_.set(old_min);
+      max_.set(old_max);
+    }
     
-//     std::cerr<<"Initialized\n";
-//   }
+    std::cerr<<"Initialized\n";
+  }
  
   //AuditAllocator(default_allocator);
   volren_->SetInterp( bool(interp_mode_.get()));
