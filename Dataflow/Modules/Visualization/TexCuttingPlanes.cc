@@ -46,8 +46,6 @@
 
 namespace SCIRun {
 
-using std::cerr;
-
 
 static string control_name("Control Widget");
 			 
@@ -120,7 +118,6 @@ TexCuttingPlanes::tcl_command( TCLArgs& args, void* userdata)
       }
       control_widget->SetPosition(w);
       widget_moved(1);
-      cerr<< "MoveWidgit " << w << endl;
   } else {
     Module::tcl_command(args, userdata);
   }
@@ -207,14 +204,11 @@ void TexCuttingPlanes::execute(void)
   //AuditAllocator(default_allocator);
   if(drawX.get() || drawY.get() || drawZ.get()){
     if( control_id == -1 ){
-      cerr<<"setting widget"<<endl;
       GeomObj *w=control_widget->GetWidget();
       control_id = ogeom->addObj( w, control_name, &control_lock);
-      cerr<<"control_id = "<<control_id<<endl;
     }
   } else {
     if( control_id != -1){
-      cerr<<"destroying widget"<<endl;
       ogeom->delObj( control_id, 0);
       control_id = -1;
     }

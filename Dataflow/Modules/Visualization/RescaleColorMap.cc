@@ -40,8 +40,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
-using std::cerr;
-using std::endl;
 
 namespace SCIRun {
 
@@ -119,18 +117,17 @@ RescaleColorMap::execute()
     for(int i=0;i<fieldports.size()-1;i++){
       FieldHandle field;
       if(fieldports[i]->get(field)){
-        string type = field->get_type_name();
-        cerr << "field type = " << type << endl;
+        const string type = field->get_type_name();
 	
         if ( !field->is_scalar() ) {
-          cerr << "rescale colormap: not a scalar field\n";
+          error("Not a scalar input field.");
           return;
         }
 	
 	get_minmax(field);
 	
 	if (!success_) {
-	  cerr << "rescale colormap: can not compute minmax for field\n";
+	  error("Can not compute minmax for input field.");
 	  return;
 	}
 	

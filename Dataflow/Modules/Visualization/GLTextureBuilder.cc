@@ -37,8 +37,6 @@
 #include <Dataflow/Network/Module.h>
 
 #include <iostream>
-using std::cerr;
-using std::endl;
 
 namespace SCIRun {
 
@@ -76,7 +74,8 @@ GLTextureBuilder::~GLTextureBuilder()
 {
 
 }
-/*
+
+#if 0
 bool
 GLTextureBuilder::MakeContext(Display *dpy, GLXContext& cx)
 {
@@ -88,27 +87,20 @@ GLTextureBuilder::MakeContext(Display *dpy, GLXContext& cx)
   char *myn=strdup(".");
   tkwin=Tk_NameToWindow(the_interp, myn, Tk_MainWindow(the_interp));
   if(!tkwin){
-    cerr << "Unable to locate window!\n";
     glXMakeCurrent(dpy, None, NULL);
     TCLTask::unlock();
     return false;
   }
-  std::cerr<<"here0"<<std::endl;
   dpy=Tk_Display(tkwin);
-  std::cerr<<"here1"<<std::endl;
   win=Tk_WindowId(tkwin);
-  std::cerr<<"here2"<<std::endl;
   vi = glXChooseVisual(dpy, DefaultScreen(dpy), attributeList);
 
   cx=glXCreateContext(dpy, vi, 0, GL_TRUE);
-  std::cerr<<"here3"<<std::endl;
   if(!cx){
-    cerr << "Unable to create OpenGL Context!\n";
     glXMakeCurrent(dpy, None, NULL);
     TCLTask::unlock();
     return false;
   }
-  std::cerr<<"here4"<<std::endl;
   TCLTask::unlock();
   return true;
 }
@@ -118,7 +110,8 @@ GLTextureBuilder::DestroyContext(Display *dpy, GLXContext& cx)
 {
   glXDestroyContext(dpy,cx);
 } 
-*/
+#endif
+
 void GLTextureBuilder::execute(void)
 {
   reset_vars();
@@ -137,7 +130,6 @@ void GLTextureBuilder::execute(void)
   double min = min_.get();
   double max = max_.get();
   int is_fixed = is_fixed_.get();
-  cerr << "is_fixed = "<<is_fixed<<"\n";
   if (sfield.get_rep() != sfrg_.get_rep()  && !tex_.get_rep())
   {
     sfrg_ = sfield;
