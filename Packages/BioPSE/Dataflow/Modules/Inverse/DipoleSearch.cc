@@ -404,9 +404,11 @@ void DipoleSearch::simplex_search() {
 	for (i=0; i<NSEEDS_; i++) {
 	  if (i != best) {
 	    int j;
-	    for (j=0; j<NDIM_; j++)
+	    for (j=0; j<NDIM_; j++) {
 	      dipoles_(i,j) = dipoles_(NSEEDS_,j) = 
 		0.5 * (dipoles_(i,j) + dipoles_(best,j));
+	      dipoles_(NSEEDS_,j)=dipoles_(i,j);
+	    }
 	    Vector dir = eval_test_dipole();
 	    misfit_[i] = misfit_[NSEEDS_];
 	    dipoles_(i,3) = dir.x(); 
