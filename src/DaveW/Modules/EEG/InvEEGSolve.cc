@@ -178,7 +178,7 @@ public:
     void jacobi_sci(Matrix*,ColumnMatrix& , ColumnMatrix&);
 };
 
-Module* make_InvEEGSolve(const clString& id)
+extern "C" Module* make_InvEEGSolve(const clString& id)
 {
     return new InvEEGSolve(id);
 }
@@ -956,6 +956,11 @@ void InvEEGSolve::execute() {
 
 //
 // $Log$
+// Revision 1.9  2000/03/17 09:25:33  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.8  1999/11/23 01:39:43  dmw
 // fixed the DaveW ThirdParty stuff - life is swell again
 //

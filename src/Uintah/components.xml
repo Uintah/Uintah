@@ -1,0 +1,268 @@
+<?xml version='1.0' encoding='us-ascii' ?>
+
+<!-- description of the Uintah package -->
+
+<package name="Uintah">
+  <guiPath>GUI</guiPath>
+  <scirun-library category="MPMViz">
+  <soNames>
+    <soName>libUintah_Modules_MPMViz.so</soName>
+    <soName>libUintah.so</soName>
+  </soNames>
+
+  <dataflow-component name="VizControl">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>January 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VizControl</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ParticleDB">
+    <meta>
+      <authors>
+        <author>Steve Parker</author>
+      </authors>
+      <version-date>September 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ParticleDB</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="RescaleParticleColorMap">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date>December 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RescaleParticleColorMap</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="RunSimulation">
+    <meta>
+      <authors>
+        <author>Steve Parker</author>
+      </authors>
+      <version-date>September 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RunSimulation</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TecplotFileSelector">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TecplotFileSelector</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="cfdGridLines">
+    <meta>
+      <authors>
+        <author>Philip Sutton (based on FieldCage.cc by David Weinstein)</author>
+      </authors>
+      <version-date>May 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_cfdGridLines</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="PartToGeom">
+    <meta>
+      <authors>
+        <author>Steve Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_PartToGeom</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="GridLines">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>December 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GridLines</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ParticleGridVisControl">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>January 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ParticleGridVisControl</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ParticleViz">
+    <meta>
+      <authors>
+        <author>Steve Parker</author>
+      </authors>
+      <version-date>September 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ParticleViz</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="Readers">
+  <soNames>
+    <soName>libUintah_Modules_Readers.so</soName>
+    <soName>libUintah.so</soName>
+  </soNames>
+
+  <dataflow-component name="MPReader">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MPReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ParticleSetReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ParticleSetReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TriangleReader">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date>July 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TriangleReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MPReaderMultiFile">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MPReaderMultiFile</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="Writers">
+  <soNames>
+    <soName>libUintah_Modules_Writers.so</soName>
+    <soName>libUintah.so</soName>
+  </soNames>
+
+  <dataflow-component name="MPWriter">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>January 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MPWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+</package>

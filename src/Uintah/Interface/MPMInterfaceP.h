@@ -2,8 +2,14 @@
 #ifndef UINTAH_HOMEBREW_MPMInterfaceP_H
 #define UINTAH_HOMEBREW_MPMInterfaceP_H
 
-template<class T> class Handle;
-class MPMInterface;
-typedef Handle<MPMInterface> MPMInterfaceP;
+namespace Uintah {
+    namespace Grid {
+	template<class T> class Handle;
+    }
+    namespace Interface {
+	class MPMInterface;
+	typedef Uintah::Grid::Handle<MPMInterface> MPMInterfaceP;
+    }
+}
 
 #endif

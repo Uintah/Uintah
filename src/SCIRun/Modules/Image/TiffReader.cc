@@ -46,7 +46,7 @@ public:
     virtual void execute();
 };
 
-Module* make_TiffReader(const clString& id)
+extern "C" Module* make_TiffReader(const clString& id)
 {
     return scinew TiffReader(id);
 }
@@ -144,6 +144,11 @@ void TiffReader::execute()
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 09:29:07  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.5  1999/09/08 02:27:03  sparker
 // Various #include cleanups
 //

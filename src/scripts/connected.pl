@@ -9,8 +9,8 @@
 #  - Go through a list of directories from argv, instead of just .
 #
 
-open(FILES, "find . -name \"*.d\" -print|")
-	or die "Can't find .d files";
+open(FILES, "find . -name depend.mk -print|")
+	or die "Can't find depend.mk files";
 $nfiles=0;
 foreach $file (<FILES>) {
    open(D, $file)

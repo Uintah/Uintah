@@ -51,7 +51,7 @@ public:
 
 };
 
-Module *make_GeometryWriter(const clString& id) {
+extern "C" Module *make_GeometryWriter(const clString& id) {
   return new GeometryWriter(id);
 }
 
@@ -137,6 +137,11 @@ void GeometryWriter::execute() {
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 09:27:41  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.5  1999/10/07 02:07:12  sparker
 // use standard iostreams and complex type
 //

@@ -20,6 +20,8 @@ using Uintah::Interface::MPMInterface;
 using Uintah::Interface::DataWarehouseP;
 using Uintah::Parallel::ProcessorContext;
 using Uintah::Grid::Region;
+using Uintah::Grid::LevelP;
+using Uintah::Grid::SchedulerP;
 
 /**************************************
 
@@ -122,6 +124,11 @@ private:
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.5  2000/03/17 09:29:32  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.4  2000/03/17 02:57:02  dav
 // more namespace, cocoon, etc
 //

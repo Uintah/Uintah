@@ -71,7 +71,7 @@ public:
     virtual void execute();
 };
 
-Module* make_ExtractSurfs(const clString& id) {
+extern "C" Module* make_ExtractSurfs(const clString& id) {
   return new ExtractSurfs(id);
 }
 
@@ -267,6 +267,11 @@ cerr << "Dd: SurfOctree Portion of this code deleted... it is"
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 09:26:57  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.7  2000/03/11 00:39:51  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>

@@ -64,7 +64,7 @@ public:
 };
 
 
-Module* make_MagneticScalarField(const clString& id)
+extern "C" Module* make_MagneticScalarField(const clString& id)
 {
     return new MagneticScalarField(id);
 }
@@ -164,6 +164,11 @@ void MagneticScalarField::execute() {
 
 //
 // $Log$
+// Revision 1.4  2000/03/17 09:25:50  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.3  1999/10/07 02:06:38  sparker
 // use standard iostreams and complex type
 //

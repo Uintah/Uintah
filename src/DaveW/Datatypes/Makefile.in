@@ -1,7 +1,0 @@
-SRCTOP  = @top_srcdir@
-SRCDIR  = @srcdir@
-OBJTOP  = ../..
-
-SUBDIRS = CS684 General
-
-include $(OBJTOP)/scripts/recurse.mk

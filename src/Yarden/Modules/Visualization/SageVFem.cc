@@ -57,8 +57,8 @@
 #include <TCL/TCLvar.h>
 #include <Math/Trig.h>
 #include <math.h>
-#include <iostream.h>
-#include <strstream.h>
+#include <iostream>
+#include <sstream>
 #include <values.h>
 #include <Modules/Visualization/Screen.h>
 #include <Datatypes/Clock.h>
@@ -665,15 +665,13 @@ public:
   int adjust( double, double, int &);
 };
   
-extern "C" {
-Module* make_SageVFem(const clString& id)
+extern "C" Module* make_SageVFem(const clString& id)
 {
   printf("tri_case[136].vertex = {\n");
   for (int i=0; i<16; i++ )
     printf(" %d", tri_case[136].vertex[i] );
   printf("}\n");
   return scinew SageVFem(id);
-}
 }
 
 static clString module_name("SageVFem");

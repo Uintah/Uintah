@@ -50,7 +50,7 @@ private:
 }; // class ViewGrid
 
 // More required stuff...
-Module* make_ViewGrid(const clString& id){
+extern "C" Module* make_ViewGrid(const clString& id){
   return new ViewGrid(id);
 }
 
@@ -248,6 +248,11 @@ ViewGrid::execute() {
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:28:12  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  2000/02/04 22:16:48  psutton
 // fixed ID problem
 //

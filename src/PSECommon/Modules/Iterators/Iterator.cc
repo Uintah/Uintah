@@ -38,7 +38,7 @@ public:
     int first;
 };
 
-Module* make_TYPEIterator(const clString& id) {
+extern "C" Module* make_TYPEIterator(const clString& id) {
   return new TYPEIterator(id);
 }
 

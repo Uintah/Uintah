@@ -68,6 +68,8 @@ using std::cerr;
 
 extern "C" void audit();
 
+using Uintah::Components::ICE;
+
 ICE::ICE()
 {
 #if 0

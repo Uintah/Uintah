@@ -43,7 +43,7 @@ public:
     virtual void execute();
 };
 
-Module* make_ExtractMesh(const clString& id)
+extern "C" Module* make_ExtractMesh(const clString& id)
 {
     return scinew ExtractMesh(id);
 }
@@ -127,6 +127,11 @@ void ExtractMesh::execute()
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:29:11  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  1999/09/05 23:15:32  dmw
 // output values through a second/third port when extracting mesh from a field
 //

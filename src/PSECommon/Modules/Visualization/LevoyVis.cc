@@ -361,7 +361,6 @@ void
 Levoy::CalculateRayIncrements ( ExtendedView myview,
 			       Vector& rayIncrementU, Vector& rayIncrementV )
 {
-<<<<<<< LevoyVis.cc
 
   // as the ray passes through the volume, the voxel's
   // color contribution decreases
@@ -437,9 +436,9 @@ Levoy::CalculateRayIncrements ( ExtendedView myview,
 	  contribution = contribution * ( 1.0 - opacity );
 	}
     }
-=======
+
   myview.get_normalized_viewplane( rayIncrementU, rayIncrementV );
->>>>>>> 1.16
+
 
   double aspect = double( myview.xres() ) / double( myview.yres() );
   double fovy=RtoD(2*Atan(aspect*Tan(DtoR(myview.fov()/2.))));

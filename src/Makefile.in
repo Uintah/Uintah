@@ -1,43 +1,214 @@
-SRCTOP  = @top_srcdir@
-SRCDIR  = @srcdir@
-OBJTOP  = .
+#
+# If you change this file, you must re-run configure before the changes
+# will be effective
+#
+# $Id$
+#
+# This makefile was inspired by:
+# http://www.canb.auug.org.au/~millerp/rmch/recu-make-cons-harm.html
+# 
 
-ifeq (@BUILD_PARALLEL@,yes)
-COMPONENT_DIRS = tools/sidl Component
+#
+# Default target
+#
+default: all
+
+#
+# Directory variables
+#
+SRCTOP  := @top_srcdir@
+SRCDIR  := @srcdir@
+OBJTOP  := .
+OBJTOP_ABS    := $(shell cd $(OBJTOP) ; pwd)
+SRCTOP_ABS    := $(shell cd $(SRCTOP) ; pwd)
+ifeq ($(OBJTOP),.)
+LIBDIR := lib/
+else
+LIBDIR := $(OBJTOP_ABS)/lib/
+endif
+LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR); cd $(LIBDIR) ; pwd)
+
+#
+# Optional pieces
+#
+
+PACKAGE_DIRS := @PACKAGE_DIRS@
+PACKAGE_PATH := @PACKAGE_PATH@
+BUILD_PARALLEL := @BUILD_PARALLEL@
+ifeq ($(BUILD_PARALLEL),yes)
+COMPONENT_DIRS := tools/sidl Component
 endif
 
-SUBDIRS = SCICore $(COMPONENT_DIRS) PSECore main PSECommon \
-	  testprograms @PACKAGE_DIRS@
+# These cannot be :=
+THREAD_IMPL = $(SRCDIR)/@THREAD_IMPL@
+TIME_IMPL = $(SRCDIR)/@TIME_IMPL@
+LOCK_IMPL = $(SRCDIR)/@LOCK_IMPL@
 
-all:: sci_config.h
+#
+# Subdirectories
+# 
+SUBDIRS := SCICore PSECore $(COMPONENT_DIRS) main PSECommon \
+	testprograms $(PACKAGE_DIRS)
 
-include $(OBJTOP)/scripts/recurse.mk
+#
+# Libraries and other flags
+#
 
-_cleanHere::
-	rm -f @EXENAME@
+TCL_LIB_DIR   := @TCL_LIB_DIR@
+TCL_LIB_FLAG  := @TCL_LIB_FLAG@
+TK_LIB_DIR    := @TK_LIB_DIR@
+TK_LIB_FLAG   := @TK_LIB_FLAG@
+ITCL_LIB_DIR  := @ITCL_LIB_DIR@
+ITCL_LIB_FLAG := @ITCL_LIB_FLAG@
+BLT_LIB_DIR  := @BLT_LIB_DIR@
+BLT_LIB_FLAG := @BLT_LIB_FLAG@
+BLT_TLINK := -L$(BLT_LIB_DIR)
+ITCL_WIDGETS  := @ITCL_WIDGETS@
 
-_distcleanHere::
-	rm -f config.h so_locations
-	rm -f scripts/cc scripts/CC
-	rm -f scripts/compile.mk scripts/targets.mk
-	rm -f config.cache config.log config.status
+LDRUN_PREFIX  := @LDRUN_PREFIX@
 
-ifeq (,$(findstring reportObjs,$(MAKECMDGOALS)))
-ifeq (,$(findstring clean,$(MAKECMDGOALS)))
-${SRCDIR}/configure: ${SRCDIR}/configure.in ${SRCDIR}/scripts/aclocal.m4
-	cd ${SRCDIR} && autoconf
+X_LIBS := @X_LIBS@
+X_PRE_LIBS := @X_PRE_LIBS@
+X_EXTRA_LIBS := @X_EXTRA_LIBS@
+THREAD_LIBS := @THREAD_LIBS@
+PLATFORM_LDFLAGS := @PLATFORM_LDFLAGS@
+GL_LIBS := $(X_LIBS) $(X_PRE_LIBS) -lGLU -lGL -lXext -lX11 $(X_EXTRA_LIBS)
+X11_LIBS := $(X_LIBS) $(X_PRE_LIBS) -lXext -lX11 $(X_EXTRA_LIBS)
+
+PROGRAM_PSE   := @EXENAME@
+
+LEX := @LEX@
+YACC := @YACC@ -d -v
+
+MAKE_PARALLELISM := @MAKE_PARALLELISM@
+
+LARGESOS := @LARGESOS@
+
+ifeq ($(LARGESOS),yes)
+MALLOCLIB := SCICore
+else
+MALLOCLIB := SCICore/Malloc
 endif
+
+#
+# Convenience variables - compounded from above definitions
+#
+BLT_LIBRARY := $(LDRUN_PREFIX)$(BLT_LIB_DIR) -L$(BLT_LIB_DIR) $(BLT_LIB_FLAG)
+TCL_LIBRARY := $(LDRUN_PREFIX)$(TCL_LIB_DIR) -L$(TCL_LIB_DIR) $(TCL_LIB_FLAG)
+TK_LIBRARY := $(LDRUN_PREFIX)$(TK_LIB_DIR) -L$(TK_LIB_DIR) $(TK_LIB_FLAG)
+ITCL_LIBRARY := $(LDRUN_PREFIX)$(ITCL_LIB_DIR) -L$(ITCL_LIB_DIR) $(ITCL_LIB_FLAG)
+
+XML_LIB_DIR := @XML_LIB_DIR@
+XML_LIB_FLAG := @XML_LIB_FLAG@
+XML_LIBRARY := $(LDRUN_PREFIX)$(XML_LIB_DIR) -L$(XML_LIB_DIR) $(XML_LIB_FLAG)
+XML_INCLUDE := -I@XML_INCLUDE_DIR@
+XML_TLINK := -L$(XML_LIB_DIR)
+
+ifeq ($(BUILD_PARALLEL),yes)
+GLOBUS_LIB_DIR := /tmp/opt/globus64-1.1b16u/lib
+GLOBUS_LIBS := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR)
+GLOBUS_COMMON := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_common
+GLOBUS_TLINK := -L$(GLOBUS_LIB_DIR)
 endif
+
+TLINK := $(BLT_TLINK) $(GLOBUS_TLINK) $(XML_TLINK)
+
+
+INCLUDES += -Iinclude -I. -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE)
+
+INCLUDES := $(sort $(INCLUDES))
+
+#
+# Rules for autoconf
+# 
+${SRCTOP}/configure: ${SRCTOP}/configure.in ${SRCDIR}/scripts/aclocal.m4
+	cd ${SRCTOP} && autoconf
 
 sci_config.h: stamp-h
 stamp-h: ${SRCTOP}/sci_config.h.in ${SRCTOP}/sci_defs.h.in \
-		${OBJTOP}/config.status \
-		${SRCTOP}/scripts/cc.in \
-		${SRCTOP}/scripts/compile.mk.in \
-		${SRCTOP}/scripts/recurse.mk.in \
-		${SRCTOP}/scripts/targets.mk.in
+		${OBJTOP}/config.status
 	./config.status
      
-config.status: ${SRCDIR}/configure
+config.status: ${SRCTOP}/configure
 	./config.status --recheck
 	./config.status
+
+Makefile: ${SRCTOP}/Makefile.in ${OBJTOP}/config.status
+	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed -e "s!^$${Top}/!!" -e "s!^$${Top}!.!"`/Makefile" CONFIG_HEADERS="" ./config.status ) 1>&2
+
+# variables and suffix rules for module transformation
+#------------------------------------------------------------------------------
+
+CC              := @CC@
+CXX             := @CXX@
+AS              := @AS@
+LD              := @LD@
+CFLAGS          := @CFLAGS@ $(CFLAGS)
+SOFLAGS         := @SOFLAGS@ -L$(LIBDIR)
+LDFLAGS         := @LDFLAGS@ -L$(LIBDIR)
+ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
+CC_DEPEND_REGEN = @CC_DEPEND_REGEN@
+
+.SUFFIXES: .cc .c .o .d .s
+
+.cc.o: $<
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+
+.c.o: $<
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+
+.s.o: $<
+	$(AS) $(ASFLAGS) -o $@ $< -o $@
+
+#
+# Actually include the module makefile fragments
+#
+ALLSUBDIRS := . 
+include $(OBJTOP_ABS)/scripts/recurse.mk
+
+MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
+MAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
+
+all: $(LIBDIR) $(MAKEFILES) $(ALLGEN) $(ALLTARGETS)
+
+$(LIBDIR):
+	mkdir -p $(LIBDIR)
+
+$(ALLOBJS): $(ALLGEN)
+
+#
+# The sophsticated looking $(...) mess below is just to convert a
+# subdirectory of the form a/b/c into ../../..
+#
+$(MAKEFILES): scripts/Makefile.tmpl
+	@echo creating $@
+	@sed s,@TOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $@)),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), $< > $@
+
+clean::
+	rm -f $(CLEANOBJS)
+	rm -f $(patsubst %,%/depend.mk, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/core, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/*.ii, $(ALLSUBDIRS))
+	-rmdir $(patsubst %,%/ii_files, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/*~, $(ALLSUBDIRS))
+	rm -f $(LIBDIR)so_locations
+	rm -f $(CLEANLIBS)
+	rm -f $(CLEANPROGS)
+	rm -f y.output
+	rmdir $(LIBDIR)
+
+distclean:: clean
+	rm -f config.status config.log config.cache
+	rm -f $(patsubst %,%/Makefile, $(ALLSUBDIRS))
+	rm -f sci_config.h sci_defs.h stamp-h
+
+-include $(patsubst %,%/depend.mk, $(ALLSUBDIRS))
+
+#
+# $Log$
+# Revision 1.10  2000/03/17 09:25:07  sparker
+# New makefile scheme: sub.mk instead of Makefile.in
+# Use XML-based files for module repository
+# Plus many other changes to make these two things work
+#
+# 

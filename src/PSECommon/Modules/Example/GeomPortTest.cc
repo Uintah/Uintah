@@ -1,5 +1,6 @@
 /*
- *  GeomPortTest.cc:  Unfinished modules
+ *  GeomPortTest.cc:  Testing advanced Geometry port operations
+ *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -10,12 +11,24 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECommon/Dataflow/Module.h>
-#include <SCICore/Geom/Sphere.h>
-#include <SCICore/Geom/Group.h>
-#include <PSECommon/Datatypes/GeometryPort.h>
-#include <PSECommon/Datatypes/GeometryComm.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/GeometryComm.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
+
+namespace PSECommon {
+namespace Modules {
+
+using namespace PSECore::Dataflow;
+using namespace PSECore::Datatypes;
+using namespace SCICore::Geometry;
+using namespace SCICore::TclInterface;
+using namespace SCICore::GeomSpace;
 
 class GeomPortTest : public Module {
     virtual void do_execute();
@@ -29,11 +42,9 @@ public:
     virtual void execute();
 };
 
-extern "C" {
-Module* make_GeomPortTest(const clString& id)
+extern "C" Module* make_GeomPortTest(const clString& id)
 {
     return new GeomPortTest(id);
-}
 }
 
 GeomPortTest::GeomPortTest(const clString& id)
@@ -45,11 +56,6 @@ GeomPortTest::GeomPortTest(const clString& id)
 
     have_own_dispatch=1;
     busy=0;
-}
-
-GeomPortTest::GeomPortTest(const GeomPortTest& copy, int deep)
-: Module(copy, deep)
-{
 }
 
 GeomPortTest::~GeomPortTest()
@@ -113,3 +119,14 @@ void GeomPortTest::execute()
     // Never gets called...
 }
 
+} // End namespace Modules
+} // End namespace PSECommon
+
+//
+// $Log$
+// Revision 1.6  2000/03/17 09:26:48  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
+//

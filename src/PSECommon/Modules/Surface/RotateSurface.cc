@@ -96,7 +96,7 @@ public:
     virtual void execute();
 };
 
-Module* make_RotateSurface(const clString& id) {
+extern "C" Module* make_RotateSurface(const clString& id) {
   return new RotateSurface(id);
 }
 
@@ -213,6 +213,11 @@ void RotateSurface::execute()
 
 //
 // $Log$
+// Revision 1.5  2000/03/17 09:27:21  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.4  1999/08/25 03:48:00  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

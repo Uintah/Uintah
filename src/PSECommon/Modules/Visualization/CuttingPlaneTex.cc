@@ -77,7 +77,7 @@ public:
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-Module* make_CuttingPlaneTex(const clString& id) {
+extern "C" Module* make_CuttingPlaneTex(const clString& id) {
   return new CuttingPlaneTex(id);
 }
 
@@ -327,6 +327,11 @@ void CuttingPlaneTex::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 09:27:30  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.7  1999/10/07 02:07:05  sparker
 // use standard iostreams and complex type
 //

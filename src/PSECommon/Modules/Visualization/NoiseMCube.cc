@@ -8,8 +8,7 @@
 #include <SCICore/Containers/Array3.h>
 #include <PSECommon/Modules/Visualization/table.h>
 #include <PSECore/Datatypes/SpanTree.h>
-#include <SCICore/Containers/Array3.h>
-
+using std::cerr;
 
 namespace PSECommon {
 namespace Modules {

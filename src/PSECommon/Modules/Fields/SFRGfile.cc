@@ -113,7 +113,7 @@ public:
     virtual void execute();
 };
 
-Module* make_SFRGfile(const clString& id)
+extern "C" Module* make_SFRGfile(const clString& id)
 {
     return new SFRGfile(id);
 }

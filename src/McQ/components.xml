@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='us-ascii' ?>
+
+<!-- description of the McQ package -->
+
+<package name="McQ">
+  <guiPath>GUI</guiPath>
+  <scirun-library category="Euler.cc">
+  <soNames>
+    <soName>libMcQ.so</soName>
+  </soNames>
+
+  <dataflow-component name="Euler">
+    <meta>
+      <authors>
+        <author>John McCorquodale</author>
+      </authors>
+      <version-date>October 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Euler</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+</package>

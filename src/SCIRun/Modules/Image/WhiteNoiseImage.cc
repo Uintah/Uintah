@@ -38,7 +38,7 @@ public:
     virtual void execute();
 };
 
-Module* make_WhiteNoiseImage(const clString& id)
+extern "C" Module* make_WhiteNoiseImage(const clString& id)
 {
     return scinew WhiteNoiseImage(id);
 }
@@ -77,6 +77,11 @@ void WhiteNoiseImage::execute()
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 09:29:08  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.5  1999/09/08 02:27:04  sparker
 // Various #include cleanups
 //

@@ -48,7 +48,7 @@ private:
 };
 
 
-Module* make_MakeCurrentDensityField(const clString& id)
+extern "C" Module* make_MakeCurrentDensityField(const clString& id)
 {
     return new MakeCurrentDensityField(id);
 }
@@ -143,6 +143,11 @@ Vector MakeCurrentDensityField::mult(Array1<double> matrix, Vector elemField) {
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:25:51  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  1999/09/08 02:26:29  sparker
 // Various #include cleanups
 //

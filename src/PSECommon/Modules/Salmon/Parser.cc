@@ -20,6 +20,8 @@ using std::endl;
 #include <fstream>
 using namespace std;
 
+#include <stdio.h>
+
 #include <string.h>
 #include <PSECommon/Modules/Salmon/BaWGL.h>
 

@@ -45,7 +45,7 @@ public:
 };
 
 
-Module* make_FieldFromBasis(const clString& id) {
+extern "C" Module* make_FieldFromBasis(const clString& id) {
     return new FieldFromBasis(id);
 }
 
@@ -157,6 +157,11 @@ void FieldFromBasis::execute() {
 
 //
 // $Log$
+// Revision 1.5  2000/03/17 09:25:44  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.4  1999/12/10 07:00:08  dmw
 // build field from either reciprocity or RA-1 basis
 //

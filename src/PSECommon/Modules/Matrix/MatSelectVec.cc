@@ -44,7 +44,7 @@ public:
 
 };
 
-Module* make_MatSelectVec(const clString& id)
+extern "C" Module* make_MatSelectVec(const clString& id)
 {
     return new MatSelectVec(id);
 }
@@ -170,6 +170,11 @@ void MatSelectVec::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.5  2000/03/17 09:27:07  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.4  1999/10/07 02:06:52  sparker
 // use standard iostreams and complex type
 //

@@ -4,6 +4,8 @@
 namespace Uintah {
 namespace Components {
 
+    // THIS DOES NOT GO HERE - steve
+class MPMMaterial;
 
 /**************************************
 
@@ -62,6 +64,11 @@ public:
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.5  2000/03/17 09:29:34  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.4  2000/03/17 02:57:02  dav
 // more namespace, cocoon, etc
 //

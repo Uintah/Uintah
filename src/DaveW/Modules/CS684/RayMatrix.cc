@@ -101,7 +101,7 @@ public:
 
 static RayMatrix* current_drawer=0;
 
-Module* make_RayMatrix(const clString& id)
+extern "C" Module* make_RayMatrix(const clString& id)
 {
     return scinew RayMatrix(id);
 }

@@ -50,7 +50,7 @@ public:
     virtual void execute();
 };
 
-Module* make_LabelSurface(const clString& id) {
+extern "C" Module* make_LabelSurface(const clString& id) {
   return new LabelSurface(id);
 }
 
@@ -107,6 +107,11 @@ void LabelSurface::execute()
 
 //
 // $Log$
+// Revision 1.9  2000/03/17 09:27:20  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.8  1999/10/07 02:07:00  sparker
 // use standard iostreams and complex type
 //

@@ -100,7 +100,7 @@ private:
 }; // class BonoP
 
 // More required stuff...
-Module* make_BonoP(const clString& id){
+extern "C" Module* make_BonoP(const clString& id){
   return new BonoP(id);
 }
 
@@ -474,6 +474,11 @@ BonoP::parallel( int rank ) {
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:28:10  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  2000/02/04 22:07:18  psutton
 // fixed ID problem
 //

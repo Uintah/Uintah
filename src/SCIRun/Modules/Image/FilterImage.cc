@@ -34,7 +34,7 @@ public:
     virtual void execute();
 };
 
-Module* make_FilterImage(const clString& id)
+extern "C" Module* make_FilterImage(const clString& id)
 {
     return scinew FilterImage(id);
 }
@@ -90,6 +90,11 @@ void FilterImage::execute()
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 09:29:02  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.5  1999/09/08 02:26:58  sparker
 // Various #include cleanups
 //
