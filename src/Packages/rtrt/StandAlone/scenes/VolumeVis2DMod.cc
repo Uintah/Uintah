@@ -146,11 +146,11 @@ VolumeVis2D *create_volume_from_nrrd2( char *filename1, char *filename2,
        << " x "<<n1->axis[z].spacing<< endl;
   // Don't need to check the spacing of dimension 0 because it is the voxel.
   for (int i = x; i <= z; i++) {
-    if (!(AIR_EXISTS(n1->axis[i].spacing))) {
+    if (!(AIR_EXISTS_D(n1->axis[i].spacing))) {
       cout <<"spacing for axis "<<i<<" does not exist.  Setting to 1.\n";
       n1->axis[i].spacing = 1;
     } // if()
-    if (!(AIR_EXISTS(n2->axis[i].spacing))) {
+    if (!(AIR_EXISTS_D(n2->axis[i].spacing))) {
       cout <<"spacing for axis "<<i<<" does not exist.  Setting to 1.\n";
       n2->axis[i].spacing = 1;
     } // if()
@@ -315,7 +315,7 @@ VolumeVis2D *create_volume_from_nrrd(char *filename,
   cout << "spacing = " << n->axis[x].spacing << " x "<<n->axis[y].spacing<< " x "<<n->axis[z].spacing<< endl;
   // Don't need to check the spacing of dimension 0 because it is the voxel.
   for (int i = x; i <= z; i++)
-    if (!(AIR_EXISTS(n->axis[i].spacing))) {
+    if (!(AIR_EXISTS_D(n->axis[i].spacing))) {
       cout <<"spacing for axis "<<i<<" does not exist.  Setting to 1.\n";
       n->axis[i].spacing = 1;
     }
