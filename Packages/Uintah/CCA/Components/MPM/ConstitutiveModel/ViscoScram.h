@@ -47,6 +47,12 @@ namespace Uintah {
       int LoadCurveNumber, NumberOfPoints;
     };
 
+    struct TimeTemperatureData {
+      double T0_WLF;
+      double C1_WLF;
+      double C2_WLF;
+    };
+
     struct StateData {
       Matrix3 DevStress[5];
     };
@@ -75,9 +81,11 @@ namespace Uintah {
     // Create datatype for storing model parameters
     bool d_useModifiedEOS;
     bool d_random;
+    bool d_doTimeTemperature;
     double d_bulk;
 
     CMData d_initialData;
+    TimeTemperatureData d_tt;
 
   private:
 
