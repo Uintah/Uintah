@@ -67,6 +67,10 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	set $this-radius 0.01
 	global $this-polygons
 	set $this-polygons 8
+
+	#selected node stuff
+	global $this-show_selected_node
+	set $this-show_selected_node 1
     }
     method make_color_menu {w v n} {
 	$w add radiobutton \
@@ -172,13 +176,22 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	frame $w.grid.select
 	pack $w.grid.select -side left -fill x -padx 2 -pady 2
 	
-	checkbutton $w.grid.select.plane_on -text "Selection plane" -variable \
-		$this-plane_on -command $n
+	checkbutton $w.grid.select.plane_on -text "Selection plane" \
+		-variable $this-plane_on -command $n
 	pack $w.grid.select.plane_on -side top -anchor w -pady 2 -ipadx 3
 
-	checkbutton $w.grid.select.nselect_on -text "Node Select" -variable \
-		$this-node_select_on -command $n
+	checkbutton $w.grid.select.nselect_on -text "Node Select" \
+		-variable $this-node_select_on -command $n
 	pack $w.grid.select.nselect_on -side top -anchor w -pady 2 -ipadx 3
+
+	checkbutton $w.grid.select.show_select_n -text "Show Selected Node" \
+		-variable $this-show_selected_node \
+		-command "$this-c update_sn"
+	pack $w.grid.select.show_select_n -side top -anchor w -pady 2 -ipadx 3
+
+	button $w.grid.select.update_sn -text "Update Selected Node Position" \
+		-command "$this-c update_sn"
+	pack $w.grid.select.update_sn -pady 2 -side top -ipadx 3 -anchor w
 
 	button $w.grid.select.findxy -text "Find XY" -command "$this-c findxy"
 	pack $w.grid.select.findxy -pady 2 -side top -ipadx 3 -anchor w

@@ -86,6 +86,9 @@ protected:
   void setup_widget();
   void update_widget();
   Box get_widget_boundary();
+  // Gets a physical point for the location of currentNode
+  int get_current_node_position(Point &location);
+  int update_selected_node();
 
 
   GeometryOPort* ogeom;
@@ -118,6 +121,11 @@ protected:
   int need_2d;
   vector<int> old_id_list;
   vector<int> id_list;
+
+  // These are variables used to show the location of the selected node
+  int selected_sphere_geom_id;
+  GuiInt show_selected_node;
+  MaterialHandle selected_sphere_color;  
 };
 
 static string widget_name("GridVisualizer Widget");
@@ -146,10 +154,16 @@ GridVisualizer::GridVisualizer(GuiContext* ctx):
   radius(ctx->subVar("radius")),
   polygons(ctx->subVar("polygons")),
   widget_lock("GridVusualizer widget lock"),
-  init(1)
+  init(1),
+  selected_sphere_geom_id(0),
+  show_selected_node(ctx->subVar("show_selected_node"))
 {
   float INIT(0.1);
   widget2d = scinew FrameWidget(this, &widget_lock, INIT, false);
+
+  selected_sphere_color = new Material(Color(0,0,0), Color(1,0.6,0.3),
+				       Color(.5,.5,.5), 20);
+  
 }
 
 void GridVisualizer::initialize_ports() {
@@ -242,6 +256,80 @@ Box GridVisualizer::get_widget_boundary() {
     return Box(gridBB.min(),gridBB.max());
   }
 }
+
+// Returns 0 for success, 1 otherwise
+int GridVisualizer::get_current_node_position(Point &location) {
+  // This call makes sure that currentNode is updated.
+  pick();
+  
+  // We need to make sure that the grid pointer is valid.
+  if (grid.get_rep() == NULL)
+    return 1;
+  // Now we need to get the level that corresponds to currentNode.
+  if (grid->numLevels() <= currentNode.level) {
+    error("GridVisualizer::get_current_node_position: "
+	  "currentNode.level exceeds number of levels for the grid.");
+    return 1;
+  }
+  LevelP level = grid->getLevel(currentNode.level);
+  // From here we can query the location of the index from the level.
+  switch (var_orientation.get()) {
+  case NC_VAR:
+    location = level->getNodePosition(currentNode.id);
+    break;
+  case CC_VAR:
+    location = level->getCellPosition(currentNode.id);
+    break;
+  default:
+    error("GridVisualizer::get_current_node_position: "
+	  "unknown variable orientation");
+  }
+  return 0;
+}
+
+int GridVisualizer::update_selected_node() {
+  // Since this function could be called from anywhere we need to make sure
+  // that our ports are valid and that we have a grid.
+  //  initialize_ports();
+  
+  // We need to determine if we should get rid of the last selected node.
+  // By default we should get rid of it if is exists always.
+
+  // These geom ids start at 1, so 0 is an unintialized value
+  if (selected_sphere_geom_id != 0) {
+    ogeom->delObj(selected_sphere_geom_id);
+    selected_sphere_geom_id = 0;
+  }
+
+  // Now we can try using the grid after we have removed the geometry.
+  //  if (initialize_grid() == 2)
+  //    return 1;
+
+  // Now add the node back if we are supposed to.
+  reset_vars();
+  if (show_selected_node.get() != 0) {
+    int nu,nv;
+    double rad;
+    Point location;
+
+    GeomSphere::getnunv(polygons.get(), nu, nv);
+    rad = radius.get();
+
+    if (!get_current_node_position(location)) {
+      // add the sphere to the data
+      selected_sphere_geom_id =
+	ogeom->addObj(scinew GeomMaterial(scinew GeomSphere(location,
+							    rad*1.5,nu,nv),
+					  selected_sphere_color),
+		      "Current Node");
+    } else {
+      // there was a problem, so don't add the sphere
+      error("Can't add selected node.");
+    }
+  }
+  ogeom->flush();
+  return 0;
+}
   
 void GridVisualizer::execute()
 {
@@ -274,7 +362,7 @@ void GridVisualizer::execute()
     rad = radius.get();
     widget_box = get_widget_boundary();
   }
-  
+
   //-----------------------------------------
   // for each level in the grid
   for(int l = 0;l<numLevels;l++){
@@ -359,6 +447,9 @@ void GridVisualizer::execute()
     GeomPick* pick = scinew GeomPick(pick_nodes,this);
     id_list.push_back(ogeom->addObj(pick,"Selectable Nodes"));
   }
+
+  update_selected_node();
+  
   cerr << "GridVisualizer::execute:end\n";
 }
 
@@ -388,6 +479,10 @@ void GridVisualizer::tcl_command(GuiArgs& args, void* userdata)
     need_2d=3;
     want_to_execute();
   }
+  else if(args[1] == "update_sn") {
+    // we need to update the location of the selected node
+    update_selected_node();
+  }
   else {
     VariablePlotter::tcl_command(args, userdata);
   }
@@ -410,31 +505,8 @@ void GridVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/,
     index_x.set(currentNode.id.x());
     index_y.set(currentNode.id.y());
     index_z.set(currentNode.id.z());
-#if 0  // may implement this some day
-    // add the selected sphere to the geometry
-    Point p;
-    int nu,nv;
-    double rad = radius.get() * 1.5;
-    getnunv(&nu,&nv);
-    switch (var_orientation.get()) {
-    case NC_VAR:
-      //p = patch->nodePosition(currentNode);
-      break;
-    case CC_VAR:
-      //p = patch->cellPosition(currentNode);
-      break;
-    }
-    if (!node_selected) {
-      selected_sphere = scinew GeomSphere(p,rad,nu,nv,
-					  currentNode.level,currentNode.id);
-      GeomPick* pick = scinew GeomPick(scinew GeomMaterial(selected_sphere, getColor("green",GRID_COLOR)),this);
-      ogeom->addObj(pick,"Selected Node");
-      node_selected = true;
-    }
-    else {
-      //seleted_sphere->move(p);
-    }
-#endif
+
+    update_selected_node();
   }
   else
     cerr<<"Not getting the correct data\n";
