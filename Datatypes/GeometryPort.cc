@@ -110,7 +110,7 @@ void GeometryOPort::forward(GeometryComm* msg)
 {
     /*turn_on();*/
     if(outbox){
-	msg->portid=portid;
+	msg->portno=portid;
 	outbox->send(msg);
     } else {
 	save_msg(msg);
@@ -197,7 +197,7 @@ void GeometryOPort::attach(Connection* c)
 	p=next;
     }
     save_msgs=0;
-    turn_of();
+    turn_off();
 }
 
 int GeometryOPort::have_data()
