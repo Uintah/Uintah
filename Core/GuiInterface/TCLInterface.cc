@@ -153,7 +153,7 @@ void TCLInterface::postMessage(const string& errmsg, bool err)
   // Replace any double quotes (") with single quote (') as they break the
   // tcl parser.
   string fixed_errmsg = errmsg;
-  for( int cnt = 0; cnt < fixed_errmsg.size(); cnt++ )
+  for( unsigned int cnt = 0; cnt < fixed_errmsg.size(); cnt++ )
     {
       char ch = errmsg[cnt];
       if( ch == '"' )
