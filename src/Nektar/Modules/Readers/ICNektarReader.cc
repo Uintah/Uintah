@@ -11,8 +11,8 @@
  */
 
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarField.h>
+#include <Nektar/Datatypes/NektarScalarFieldPort.h>
+#include <Nektar/Datatypes/NektarVectorFieldPort.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCLvar.h>
@@ -20,14 +20,14 @@
 namespace Nektar {
   namespace Modules {
     
+    using namespace Nektar::Datatypes;
     using namespace PSECore::Dataflow;
-    using namespace PSECore::Datatypes;
     using namespace SCICore::TclInterface;
     using namespace SCICore::PersistentSpace;
 
     class ICNektarReader : public Module {
-      NektarScalarFieldOPort* osfield;
-      NektarVectorFieldOPort* ovfield;
+      NektarScalarFieldOPort* osport;
+      NektarVectorFieldOPort* ovport;
       TCLstring filename;
       NektarScalarFieldHandle scalar_handle;
       NektarVectorFieldHandle vector_handle;
@@ -47,12 +47,14 @@ namespace Nektar {
       filename("filename", id, this)
     {
       // Create the output data handle and port
-      osfield =scinew ICNektarOPort(this, 
-				    "ScalarFiled", 
-				    ICNektarIPort::Atomic);
+      osport =scinew NektarScalarFieldOPort(this, 
+				    "NektarScalarField", 
+				    NektarScalarFieldIPort::Atomic);
       add_oport(osport);
 
-      ovport=scinew ICNektarOPort(this, "VectorField", ICNektarIPort::Atomic);
+      ovport=scinew NektarVectorFieldOPort(this, 
+					    "NektarVectorField", 
+					    NektarVectorFieldIPort::Atomic);
       add_oport(ovport);
     }
     
