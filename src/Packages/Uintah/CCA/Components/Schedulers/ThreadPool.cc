@@ -24,7 +24,7 @@ Mutex cerrLock( "cerr lock" );
 /////////////// Worker //////////////////
 
 Worker::Worker( ThreadPool * parent, int id, Mutex * ready ) : 
-  d_task( 0 ), d_pg( 0 ), d_id( id ),  d_parent( parent ), d_ready( ready )
+  d_ready( ready ), d_id( id ), d_parent( parent ), d_task( 0 ), d_pg( 0 )
 {}
 
 void
