@@ -878,10 +878,12 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	  dbg << d_myworld->myrank() << "      Creating dependency on " << neighbors.size() << " neighbors\n";
 	  dbg << d_myworld->myrank() << "        Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
 	}
+        
 	Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(),
 								 false);
 	for(int i=0;i<neighbors.size();i++){
 	  const Patch* neighbor=neighbors[i];
+          Patch::selectType fromNeighbors;
 	  IntVector l = Max(neighbor->getLowIndex(basis, req->var->getBoundaryLayer()), low);
 	  IntVector h = Min(neighbor->getHighIndex(basis, req->var->getBoundaryLayer()), high);
 	  if (neighbor->isVirtual()) {
@@ -889,70 +891,90 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	    h -= neighbor->getVirtualOffset();	    
 	    neighbor = neighbor->getRealPatch();
 	  }
-	  if(!lb->inNeighborhood(neighbor))
-	    continue;
-	  for(int m=0;m<matls->size();m++){
-	    if(sc->isOldDW(req->mapDataWarehouse()) && !sc->isNewDW(req->mapDataWarehouse()+1))
-	      continue;
-	    int matl = matls->get(m);
+          if (req->patches_dom == Task::OtherGridDomain) {
+            // this is when we are copying data between two grids (currently between timesteps)
+            // the grid assigned to the old dw should be the old grid.
+            // This should really only impact things required from the OldDW.
+            LevelP fromLevel = sc->get_dw(0)->getGrid()->getLevel(patch->getLevel()->getIndex());
+            fromLevel->selectPatches(Max(neighbor->getLowIndex(basis, req->var->getBoundaryLayer()), l),
+                                     Min(neighbor->getHighIndex(basis, req->var->getBoundaryLayer()), h),
+                                     fromNeighbors);
+          }
+          else
+            fromNeighbors.push_back(neighbor);
 
-	    // creator is the task that performs the original compute.
-	    // If the require is for the OldDW, then it will be a send old
-	    // data task
-	    DetailedTask* creator;
-	    Task::Dependency* comp = 0;
-	    if(sc->isOldDW(req->mapDataWarehouse())){
-	      ASSERT(!modifies);
-	      int proc = findVariableLocation(lb, req, neighbor, matl);
-	      creator = dt->getOldDWSendTask(proc);
-	      comp=0;
-	    } else {
-	      if (!ct.findcomp(req, neighbor, matl, creator, comp, d_myworld)){
-		cerr << "Failure finding " << *req << " for " << *task
-		     << "\n";
-		cerr << "creator=" << *creator << '\n';
-		cerr << "neighbor=" << *neighbor << '\n';
-		cerr << "me=" << me << '\n';
-		SCI_THROW(InternalError("Failed to find comp for dep!"));
+          for (int j = 0; j < fromNeighbors.size(); j++) {
+            const Patch* fromNeighbor = fromNeighbors[j];
+
+            IntVector from_l = Max(fromNeighbor->getLowIndex(basis, req->var->getBoundaryLayer()), l);
+            IntVector from_h = Min(fromNeighbor->getHighIndex(basis, req->var->getBoundaryLayer()), h);
+            
+
+	    if(!(lb->inNeighborhood(neighbor) || lb->inNeighborhood(fromNeighbor)))
+              continue;
+	    for(int m=0;m<matls->size();m++){
+	      if(sc->isOldDW(req->mapDataWarehouse()) && !sc->isNewDW(req->mapDataWarehouse()+1))
+	        continue;
+	      int matl = matls->get(m);
+
+	      // creator is the task that performs the original compute.
+	      // If the require is for the OldDW, then it will be a send old
+	      // data task
+	      DetailedTask* creator;
+	      Task::Dependency* comp = 0;
+	      if(sc->isOldDW(req->mapDataWarehouse())){
+	        ASSERT(!modifies);
+	        int proc = findVariableLocation(lb, req, fromNeighbor, matl);
+	        creator = dt->getOldDWSendTask(proc);
+	        comp=0;
+	      } else {
+	        if (!ct.findcomp(req, neighbor, matl, creator, comp, d_myworld)){
+		  cerr << "Failure finding " << *req << " for " << *task
+		      << "\n";
+		  cerr << "creator=" << *creator << '\n';
+		  cerr << "neighbor=" << *neighbor << '\n';
+		  cerr << "me=" << me << '\n';
+		  SCI_THROW(InternalError("Failed to find comp for dep!"));
+	        }
 	      }
-	    }
-	    if (modifies) {
-	      // find the tasks that up to this point require the variable
-	      // that we are modifying (i.e., the ones that use the computed
-	      // variable before we modify it), and put a dependency between
-	      // this task and those tasks
-	      list<DetailedTask*> requireBeforeModifiedTasks;
-	      creator->findRequiringTasks(req->var,
-					  requireBeforeModifiedTasks);
+	      if (modifies) {
+	        // find the tasks that up to this point require the variable
+	        // that we are modifying (i.e., the ones that use the computed
+	        // variable before we modify it), and put a dependency between
+	        // this task and those tasks
+	        list<DetailedTask*> requireBeforeModifiedTasks;
+	        creator->findRequiringTasks(req->var,
+					    requireBeforeModifiedTasks);
 
-	      list<DetailedTask*>::iterator reqTaskIter;
-	      for (reqTaskIter = requireBeforeModifiedTasks.begin();
-		   reqTaskIter != requireBeforeModifiedTasks.end();
-		   ++reqTaskIter) {
-		DetailedTask* prevReqTask = *reqTaskIter;
-		if(prevReqTask->task == task->task){
-		  if(!task->task->d_hasSubScheduler)
-		    cerr << "\n\n\nWARNING - task that requires with Ghost cells *and* modifies may not be correct\n";
-		} else if(prevReqTask != task){
-		  // dep requires what is to be modified before it is to be
-		  // modified so create a dependency between them so the
-		  // modifying won't conflist with the previous require.
-		  if (dbg.active()) {
-		    dbg << d_myworld->myrank() << "       Requires to modifies dependency from "
-			<< prevReqTask->getTask()->getName()
-			<< " to " << task->getTask()->getName() << "\n";
+	        list<DetailedTask*>::iterator reqTaskIter;
+	        for (reqTaskIter = requireBeforeModifiedTasks.begin();
+		    reqTaskIter != requireBeforeModifiedTasks.end();
+		    ++reqTaskIter) {
+		  DetailedTask* prevReqTask = *reqTaskIter;
+		  if(prevReqTask->task == task->task){
+		    if(!task->task->d_hasSubScheduler)
+		      cerr << "\n\n\nWARNING - task that requires with Ghost cells *and* modifies may not be correct\n";
+		  } else if(prevReqTask != task){
+		    // dep requires what is to be modified before it is to be
+		    // modified so create a dependency between them so the
+		    // modifying won't conflist with the previous require.
+		    if (dbg.active()) {
+		      dbg << d_myworld->myrank() << "       Requires to modifies dependency from "
+			  << prevReqTask->getTask()->getName()
+			  << " to " << task->getTask()->getName() << "\n";
+		    }
+		    dt->possiblyCreateDependency(prevReqTask, 0, 0, task, req, 0,
+					        matl, from_l, from_h);
 		  }
-		  dt->possiblyCreateDependency(prevReqTask, 0, 0, task, req, 0,
-					       matl, l, h);
-		}
+	        }
 	      }
-	    }
 
-	    dt->possiblyCreateDependency(creator, comp, neighbor,
-					 task, req, patch,
-					 matl, l, h);
+	      dt->possiblyCreateDependency(creator, comp, fromNeighbor,
+					  task, req, fromNeighbor,
+					  matl, from_l, from_h);
+	    }
 	  }
-	}
+        }
       }
     }
     else if (!patches && matls && !matls->empty()) {
