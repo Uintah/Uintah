@@ -411,43 +411,49 @@ void Matrix3::polarDecomposition(Matrix3& U,
 {
   Matrix3 F = *this;
   double det = F.Determinant();
-  if ( det == 0.0 ) {
+  if ( det <= 0.0 ) {
     cout << "Singular matrix in polar decomposition..." << endl;
     exit(1);
   }
   Matrix3 C = F.Transpose()*F;
-  double I1 = C.Trace();
+
   Matrix3 Csq = C*C;
+  double I1 = C.Trace();
   double I2 = .5*(I1*I1 - Csq.Trace());
   double I3 = C.Determinant();
-  double b = I2 - (I1*I1)/3.0;
-  double c = -(2.0/27.0)*I1*I1*I1 + (I1*I2)/3.0 - I3;
-  double TOL3 = tolerance;
-  //double TOL3 = 1e-8;
-  double x[3];
+  double I1_over_3 = I1/3.0;
 
-  if(fabs(b) <= TOL3){
-    c = (c > 0.0) ? c : 0.0; x[0] = -pow(c,1./3.); x[1] = x[0]; x[2] = x[0];
+  double b = I2 - I1*I1_over_3;
+  double c = -2.0*I1_over_3*I1_over_3*I1_over_3 + I1_over_3*I2 - I3;
+
+  double x1, x2, x3;
+  if(fabs(b) <= tolerance){
+    c = (c > 0.0) ? c : 0.0; 
+    x1 = -pow(c,1./3.); x2 = x1; x3 = x1;
   } else {
     double m = 2.*sqrt(-b/3.0);
     double n = (3.*c)/(m*b);
     if (fabs(n) > 1.0) n = copysign(1.0,n);  // n = cos(theta) 
                                              // and cannot be greater than 1.0
     double t = atan2(sqrt(1-n*n),n)/3.0;
-    for(int i=0;i<3;i++){
-      x[i] = m * cos(t + 2.*(((double) i) - 1.)*M_PI/3.);
-    }
-  }
-  double lam[3];
-  for(int i=0;i<3;i++) {
-    double xpI = x[i] + I1/3.0;
-    double maxXpI = (xpI > TOL3 ? xpI : TOL3);
-    lam[i] = sqrt(maxXpI);
+    x1 = m*cos(t);
+    x2 = m*cos(t + 2.0/3.0*M_PI);
+    x3 = m*cos(t + 4.0/3.0*M_PI);
   }
 
-  double i1 = lam[0] + lam[1] + lam[2];
-  double i2 = lam[0]*lam[1] + lam[0]*lam[2] + lam[1]*lam[2];
-  double i3 = lam[0]*lam[1]*lam[2];
+  double lam1sq = x1 + I1_over_3;
+  double lam2sq = x2 + I1_over_3;
+  double lam3sq = x3 + I1_over_3;
+  lam1sq = (lam1sq > 0.0) ? lam1sq : 0.0;
+  lam2sq = (lam2sq > 0.0) ? lam2sq : 0.0;
+  lam3sq = (lam3sq > 0.0) ? lam3sq : 0.0;
+  double lam1 = sqrt(lam1sq);
+  double lam2 = sqrt(lam2sq);
+  double lam3 = sqrt(lam3sq);
+
+  double i1 = lam1 + lam2 + lam3;
+  double i2 = lam1*lam2 + lam2*lam3 + lam3*lam1;
+  double i3 = lam1*lam2*lam3;
   double D = i1*i2 - i3;
 
   Matrix3 One; One.Identity();
@@ -459,8 +465,8 @@ void Matrix3::polarDecomposition(Matrix3& U,
   // Set small values to zero
   for (int i = 0 ; i < 3; ++i) {
     for (int j = 0 ; j < 3; ++j) {
-      R(i,j) = R(i,j) > TOL3 ? R(i,j) : 0.0;
-      U(i,j) = U(i,j) > TOL3 ? U(i,j) : 0.0;
+      R(i,j) = (fabs(R(i,j)) > tolerance) ? R(i,j) : 0.0;
+      U(i,j) = (fabs(U(i,j)) > tolerance) ? U(i,j) : 0.0;
     }
   }
 }
