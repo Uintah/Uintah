@@ -61,14 +61,14 @@ class DistTable
 public:
   typedef typename Field::mesh_type            mesh_type;
   typedef typename mesh_type::Elem::index_type elem_index;
-  typedef pair<double,elem_index>              table_entry;
+  typedef pair<long double,elem_index>     table_entry;
 
   vector<table_entry> table_;
 
   DistTable() {}
   ~DistTable() {}
 
-  void push_back(double size,elem_index id) 
+  void push_back(long double size,elem_index id) 
   { table_.push_back(table_entry(size,id)); }
   void push_back(table_entry entry) 
   { table_.push_back(entry); }
@@ -81,12 +81,12 @@ public:
   double size() { return table_.size(); }
   void clear() { table_.clear(); }
 
-  bool search(table_entry&, double);
+  bool search(table_entry&, long double);
 };
 
 template <class Field>
 bool
-DistTable<Field>::search(table_entry &e, double d)
+DistTable<Field>::search(table_entry &e, long double d)
 {
   int min=0,max=table_.size()-1;
   int cur = max/2;
@@ -115,7 +115,10 @@ class SeedField : public Module
   FieldHandle    vfhandle_;
   Field          *vf_;
 
-  char           firsttime_;
+  bool           firsttime_;
+  int            widgetid_;
+  Point          endpoint0_,endpoint1_;
+  double         widgetscale_;
 
   GuiInt maxSeeds_;
   GuiInt numSeeds_;
@@ -129,9 +132,8 @@ class SeedField : public Module
   template <class Field> 
   bool build_weight_table(Field *, DistTable<Field> &);
   template <class Field>
-  void generate_widget_seeds(Field *);
-  template <class Field>
   void generate_random_seeds(Field *);
+  void generate_widget_seeds(Field *);
 
   template <class Data, class Field>
   bool interp(Data &, Point &, Field *);
@@ -141,7 +143,7 @@ class SeedField : public Module
 
 public:
   CrowdMonitor widget_lock_;
-  GaugeWidget rake_;
+  GaugeWidget *rake_;
   SeedField(const string& id);
   virtual ~SeedField();
   virtual void execute();
@@ -164,8 +166,7 @@ SeedField::SeedField(const string& id)
     randDist_("dist", id, this),
     whichTab_("whichtab", id, this),
     vf_generation_(0),
-    widget_lock_("StreamLines widget lock"),
-    rake_(this,&widget_lock_,1)
+    widget_lock_("StreamLines widget lock")
 {
   // Create the input port
   ifport_ = scinew FieldIPort(this, "Field to Seed", FieldIPort::Atomic);
@@ -179,8 +180,10 @@ SeedField::SeedField(const string& id)
   add_oport(ogport_);
 
   vf_ = 0;
+  widgetid_=0;;
+  rake_ = 0;
 
-  firsttime_ = 1;
+  firsttime_ = true;
 }
 
 
@@ -192,9 +195,13 @@ SeedField::~SeedField()
 void
 SeedField::widget_moved(int i)
 {
-  if (i==1) 
-  {
+  if (rake_) 
+    rake_->GetEndpoints(endpoint0_,endpoint1_);
+
+  if (i==1) {
     want_to_execute();
+  } else {
+    Module::widget_moved(i);
   }
 }
 
@@ -228,22 +235,23 @@ SeedField::build_weight_table(Field *field, DistTable<Field> &table)
   typedef typename fdata_type::value_type      value_type;
   typedef typename mesh_type::Elem::iterator   elem_iterator;
   typedef typename mesh_type::Elem::index_type elem_index;
+  
+  long double size = 2.e-300;
 
   string dist = randDist_.get();
 
   mesh_type* mesh = field->get_typed_mesh().get_rep();
-  //fdata_type &fdata = field->fdata();
 
   elem_iterator ei = mesh->elem_begin();
   if (ei==mesh->elem_end()) // empty mesh
     return false;
 
   // the tables are to be filled with increasing values.
-  // degenerate elements will not be included in the table.
+  // degenerate elements (size<=0) will not be included in the table.
   // mag(data) <=0 means ignore the element (don't include in the table).
   // bin[n] = b[n-1]+newval;bin[0]=newval
 
-  if (dist=="importance") { // size of element * data at element
+  if (dist=="impuni") { // size of element * data at element
     value_type val;
     Point p;
     for(;;) {
@@ -260,12 +268,30 @@ SeedField::build_weight_table(Field *field, DistTable<Field> &table)
       if ( mesh->get_element_size(*ei)>0 && fdata_mag(val)>0) {
 	table.push_back(mesh->get_element_size(*ei)*fdata_mag(val)+
 			table[table.size()-1].first,*ei);
-	std::cerr << "adding: " << mesh->get_element_size(*ei)*fdata_mag(val)+
-	  table[table.size()-1].first << std::endl;
       }
       ++ei;
     }
-  } else if (dist=="uniform") { // size of element only
+  } else if (dist=="impscat") { // standard size * data at element
+    value_type val;
+    Point p;
+    for(;;) {
+      mesh->get_center(p,*ei);
+      if (!interp(val,p,field)) continue;
+      if (fdata_mag(val)>0) break;
+      ++ei;
+    }
+    table.push_back(size*fdata_mag(val),*ei);
+    ++ei;
+    while (ei != mesh->elem_end()) {
+      mesh->get_center(p,*ei);
+      if (!interp(val,p,field)) continue;
+      if ( fdata_mag(val)>0) {
+	table.push_back(size*fdata_mag(val)+
+			table[table.size()-1].first,*ei);
+      }
+      ++ei;
+    }
+  } else if (dist=="uniuni") { // size of element only
     for(;;) {
       if (mesh->get_element_size(*ei)>0) break;
       ++ei;
@@ -278,9 +304,11 @@ SeedField::build_weight_table(Field *field, DistTable<Field> &table)
 			table[table.size()-1].first,*ei);
       ++ei;
     }
-  } else if (dist=="scattered") { // element index; not uniform!
+  } else if (dist=="uniscat") { // standard size only
+    table.push_back(size,*ei);
+    ++ei;
     while (ei != mesh->elem_end()) {
-      table.push_back(table.size(),*ei);
+      table.push_back(size+table[table.size()-1].first,*ei);
       ++ei;
     }    
   } else { // unknown distribution type
@@ -292,33 +320,21 @@ SeedField::build_weight_table(Field *field, DistTable<Field> &table)
 
 template <class Field>
 void
-SeedField::generate_widget_seeds(Field *field)
-{
-}
-
-template <class Field>
-void
 SeedField::generate_random_seeds(Field *field)
 {
   typedef typename Field::mesh_type              mesh_type;
   typedef typename Field::fdata_type             fdata_type;
   typedef typename DistTable<Field>::table_entry table_entry;
 
-  //std::cerr << "trying to build weight table" << std::endl;
-
   DistTable<Field> table;
 
-  //std::cerr << "table created" << std::endl;
-
   table.clear();
-  if (!build_weight_table(field,table)) // unknown dist type
+  if (!build_weight_table(field,table)) // unknown dist type or empty mesh
     return;
-
-  //std::cerr << "generating random seeds" << std::endl;
 
   static MusilRNG rng(rngSeed_.get());
 
-  double max = table[table.size()-1].first;
+  long double max = table[table.size()-1].first;
   mesh_type *mesh = field->get_typed_mesh().get_rep();
   PointCloudMesh *pcmesh = scinew PointCloudMesh;
 
@@ -341,22 +357,27 @@ SeedField::generate_random_seeds(Field *field)
   }
 
   ofport_->send(seeds);
+  if (widgetid_) ogport_->delObj(widgetid_);
+  widgetid_=0;
+  rake_ = 0;
+  ogport_->flushViews();
 }
 
-#if 0
-SeedField::execute_rake()
+
+void
+SeedField::generate_widget_seeds(Field *field)
 {
-  const BBox bbox = vf_->mesh()->get_bounding_box();
+  const BBox bbox = field->mesh()->get_bounding_box();
   Point min = bbox.min();
   Point max = bbox.max();
+  double quarterl2norm;
 
-  if (firsttime_)
-  {
-    firsttime_=0;
+  if (firsttime_) {
+    firsttime_ = false;
     Point center(min.x()+(max.x()-min.x())/2.,
 		 min.y()+(max.y()-min.y())/2.,
 		 min.z()+(max.z()-min.z())/2.);
-    
+
     double x  = max.x()-min.x();
     double x2 = x*x;
     double y  = max.y()-min.y();
@@ -364,27 +385,34 @@ SeedField::execute_rake()
     double z  = max.z()-min.z();
     double z2 = z*z;
   
-    double quarterl2norm = sqrt(x2+y2+z2)/4.;
+    quarterl2norm = sqrt(x2+y2+z2)/4.;
+    widgetscale_ = quarterl2norm*.06;// this size seems empirically good
+
+    endpoint0_ = Point(center.x()-quarterl2norm,
+		       center.y()-quarterl2norm/3,
+		       center.z()-quarterl2norm/4);
+    endpoint1_ = Point(center.x()+quarterl2norm,
+		       center.y()+quarterl2norm/2,
+		       center.z()+quarterl2norm/3);
+  }
+
+  if (!rake_)
+  {
+    rake_ = scinew GaugeWidget(this,&widget_lock_,1);
+    rake_->SetScale(widgetscale_);
     
-    rake_.SetScale(quarterl2norm*.06); // this size seems empirically good
-    
-    rake_.SetEndpoints(Point(center.x()-quarterl2norm,
-			     center.y()-quarterl2norm/3,
-			     center.z()-quarterl2norm/4),
-		       Point(center.x()+quarterl2norm,
-			     center.y()+quarterl2norm/2,
-			     center.z()+quarterl2norm/3));
+    rake_->SetEndpoints(endpoint0_,endpoint1_);
   }
 
   GeomGroup *widget_group = scinew GeomGroup;
-  widget_group->add(rake_.GetWidget());
+  widget_group->add(rake_->GetWidget());
   
-  rake_.GetEndpoints(min,max);
+  rake_->GetEndpoints(min,max);
   
   int max_seeds = maxSeeds_.get();
 
   Vector dir(max-min);
-  int num_seeds = (int)(rake_.GetRatio()*max_seeds);
+  int num_seeds = (int)(rake_->GetRatio()*max_seeds);
   remark("num_seeds = " + to_string(num_seeds));
   dir*=1./(num_seeds-1);
 
@@ -404,9 +432,9 @@ SeedField::execute_rake()
   }
   
   ofport_->send(seeds);
-  ogport_->addObj(widget_group,"StreamLines rake",&widget_lock_);
+  widgetid_ = ogport_->addObj(widget_group,"StreamLines rake",&widget_lock_);
+  ogport_->flushViews();
 }
-#endif
 
 void
 SeedField::execute()
@@ -418,8 +446,6 @@ SeedField::execute()
   }
 
   string tab = whichTab_.get();
-
-  //std::cerr << "executing SeedField" << std::endl;
 
   if (tab=="Random") {
     if (vf_->get_type_name(-1)=="LatticeVol<double>") {
@@ -438,24 +464,8 @@ SeedField::execute()
       // can't do this kind of field
       return;
     }
-  } else if (tab=="Widget") {
-    if (vf_->get_type_name(-1)=="LatticeVol<double>") {
-      generate_widget_seeds((LatticeVol<double>*)vf_);
-    } else if (vf_->get_type_name(-1)=="TetVol<double>") {
-      generate_widget_seeds((TetVol<double>*)vf_);
-    } else if (vf_->get_type_name(-1)=="TriSurf<double>") {
-      generate_widget_seeds((TriSurf<double>*)vf_);
-    } else if (vf_->get_type_name(-1)=="LatticeVol<Vector>") {
-      generate_widget_seeds((LatticeVol<Vector>*)vf_);
-    } else if (vf_->get_type_name(-1)=="TetVol<Vector>") {
-      generate_widget_seeds((TetVol<Vector>*)vf_);
-    } else if (vf_->get_type_name(-1)=="TriSurf<Vector>") {
-      generate_widget_seeds((TriSurf<Vector>*)vf_);
-    } else {
-      // can't do this kind of field
-      return;
-    }
-  }
+  } else if (tab=="Widget")
+    generate_widget_seeds(vf_);
 }
 
 
