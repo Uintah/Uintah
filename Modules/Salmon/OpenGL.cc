@@ -243,14 +243,14 @@ void OpenGL::redraw_loop()
     while(1){
 	int nreply=0;
 	if(roe->inertia_mode){
-	    cerr << "Inertia mode...";
+//	    cerr << "Inertia mode...";
 //	    cerr << "framerate=" << framerate << endl;
 	    double current_time=throttle.time();
 	    if(framerate==0)
 		framerate=30;
 	    double frametime=1./framerate;
 	    double delta=current_time-newtime;
-	    cerr << "delta=" << delta << endl;
+//	    cerr << "delta=" << delta << endl;
 	    if(delta > 1.5*frametime){
 //		cerr << "REALLY backing off..." << endl;
 		framerate=1./delta;
@@ -296,7 +296,7 @@ void OpenGL::redraw_loop()
 	    // axis - the current quaternion is roe->ball->qNow	    
 	    // the first 3 components of this 
 
-	    cerr << "Using time: " << newtime << endl;
+//	    cerr << "Using time: " << newtime << endl;
 	    roe->ball->SetAngle(newtime*roe->angular_v);
 
 	    View tmpview(roe->rot_view);
@@ -842,8 +842,10 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 	    drawinfo->lighting=1;
 	}
 	else if (val == "Default") {
-	    drawinfo->currently_lit=drawinfo->lighting;
-	    drawinfo->init_lighting(drawinfo->lighting);
+//	    drawinfo->currently_lit=drawinfo->lighting;
+//	    drawinfo->init_lighting(drawinfo->lighting);
+	    clString globals("global");
+	    setState(drawinfo,globals);	    
 	    return; // if they are using the default, con't change
 	} else {
 	    cerr << "Unknown shading(" << val << "), defaulting to phong" << endl;

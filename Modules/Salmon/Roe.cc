@@ -398,6 +398,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
 
 	    prev_time[0] = time;
 	    prev_quat[0] = mouse;
+	    prev_time[1] = prev_time[2] = -100;
 	    ball->Update();
 	    last_time=time;
 	    inertia_mode=0;
@@ -491,7 +492,12 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
 
 	    ball->Place(center,rad);
 
-	    ball->vDown = prev_quat[2];
+	    int index=2;
+
+	    if (prev_time[index] == -100)
+		index = 1;
+
+	    ball->vDown = prev_quat[index];
 	    ball->vNow  = prev_quat[0];
 	    ball->dragging = 1;
 	    ball->Update();
@@ -506,15 +512,15 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
 	    if (mag < 0.00001) { // arbitrary ad-hoc threshold
 		inertia_mode = 0;
 		need_redraw = 1;
-		cerr << mag << " " << prev_time[0] - prev_time[2] << endl;
+		cerr << mag << " " << prev_time[0] - prev_time[index] << endl;
 	    }
 	    else {
 		double c = 1.0/mag;
-		double dt = prev_time[0] - prev_time[2]; // time between last 2 events
+		double dt = prev_time[0] - prev_time[index];// time between last 2 events
 		ball->qNorm.x *= c;
 		ball->qNorm.y *= c;
 		ball->qNorm.z *= c;
-		angular_v = 2*cos(ball->qNow.w)*100.0/dt;
+		angular_v = 2*acos(ball->qNow.w)*1000.0/dt;
 		cerr << dt << endl;
 	    }
 	} else {
