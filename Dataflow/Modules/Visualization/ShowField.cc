@@ -161,6 +161,7 @@ ShowField::ShowField(const string& id) :
   res_(0),
   renderer_(0)
  {
+   cerr << "ShowField constructor" << endl;
  }
 
 ShowField::~ShowField() {}
@@ -321,7 +322,7 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     Material m(Color(def_color_r_.get(), def_color_g_.get(), 
 		     def_color_b_.get()));
     *def_mat_handle_.get_rep() = m;
-    ogeom_->flushViews();
+    if (ogeom_) ogeom_->flushViews();
   } else if (args[1] == "node_display_type") {
     nodes_dirty_ = true;
     want_to_execute();
@@ -338,7 +339,7 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
       nodes_dirty_ = true;
       want_to_execute();
     } else {
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
     }
   } else if (args[1] == "toggle_display_edges"){
     // Toggle the GeomSwitch.
@@ -350,7 +351,7 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
       edges_dirty_ = true;
       want_to_execute();
     } else {
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
     }
   } else if (args[1] == "toggle_display_faces"){
     // Toggle the GeomSwitch.
@@ -362,7 +363,7 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
       faces_dirty_ = true;
       want_to_execute();
     } else {
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
     }
   } else if (args[1] == "toggle_display_vectors"){
     // Toggle the GeomSwitch.
@@ -374,7 +375,7 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
       data_dirty_ = true;
       want_to_execute();
     } else {
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
     }
   } else if (args[1] == "toggle_normalize"){
     // Toggle the GeomSwitch.
