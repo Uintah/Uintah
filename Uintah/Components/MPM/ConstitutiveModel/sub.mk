@@ -8,10 +8,16 @@ SRCDIR   := Uintah/Components/MPM/ConstitutiveModel
 SRCS     += $(SRCDIR)/CompMooneyRivlin.cc $(SRCDIR)/CompNeoHook.cc \
 	$(SRCDIR)/CompNeoHookPlas.cc $(SRCDIR)/ConstitutiveModelFactory.cc \
 	$(SRCDIR)/ElasticConstitutiveModel.cc \
-	$(SRCDIR)/HyperElasticDamage.cc $(SRCDIR)/ViscoElasticDamage.cc
+	$(SRCDIR)/HyperElasticDamage.cc $(SRCDIR)/ViscoElasticDamage.cc \
+	$(SRCDIR)/MPMMaterial.cc 
 
 #
 # $Log$
+# Revision 1.3  2000/03/24 00:44:33  guilkey
+# Added MPMMaterial class, as well as a skeleton Material class, from
+# which MPMMaterial is inherited.  The Material class will be filled in
+# as it's mission becomes better identified.
+#
 # Revision 1.2  2000/03/20 17:17:10  sparker
 # Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 #

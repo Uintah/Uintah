@@ -21,8 +21,10 @@ CompMooneyRivlin::CompMooneyRivlin(const Region* region,
   // Create storage in datawarehouse for data fields
   // needed for model parameters
 
+  matlindex = matl->getDWIndex();
+
   ParticleVariable<CMData> cmdata;
-  dw->get(cmdata,"p.cmdata", matl, region, 0);
+  dw->get(cmdata,"p.cmdata", matlindex, region, 0);
 }
 
 CompMooneyRivlin::~CompMooneyRivlin()
@@ -54,25 +56,29 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
   Vector dx = region->dCell();
   double oodx[3] { 1.0/dx.x(),1.0/dx.y(),1.0/dx.z() };
 
+  int matlindex = matl->getDWIndex();
+
   // Create array for the particle position
   ParticleVariable<Vector> px;
-  old_dw->get(px, "p.x", matl, region, 0);
+  old_dw->get(px, "p.x", matlindex, region, 0);
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
-  old_dw->get(deformationGradient, "p.deformationMeasure", matl, region, 0);
+  old_dw->get(deformationGradient, "p.deformationMeasure", matlindex, region, 0);
+
   // Create array for the particle stress
   ParticleVariable<Matrix3> stress;
-  new_dw->get(stress, "p.stress", matl, region, 0);
+  new_dw->get(stress, "p.stress", matlindex, region, 0);
+
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, "p.cmdata", matl, region, 0);
+  new_dw->get(cmdata, "p.cmdata", matlindex, region, 0);
   ParticleVariable<Matrix3> pmass;
-  old_dw->get(pmass, "p.mass", matl, region, 0);
+  old_dw->get(pmass, "p.mass", matlindex, region, 0);
   ParticleVariable<Matrix3> pvolume;
-  old_dw->get(pvolume, "p.volume", matl, region, 0);
+  old_dw->get(pvolume, "p.volume", matlindex, region, 0);
 
   NCVariable<Vector> gvelocity;
-  new_dw->get(gvelocity, "g.velocity", matl,region, 0);
+  new_dw->get(gvelocity, "g.velocity", matlindex,region, 0);
   SoleVariable<double> delt;
   old_dw->get(delt, "delt");
 
@@ -149,9 +155,9 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
     new_dw->put(SoleVariable<double>(MaxWaveSpeed),
 				"WaveSpeed", DataWarehouse::Max);
 
-    new_dw->put(stress, "p.stress", matl, region, 0);
+    new_dw->put(stress, "p.stress", matlindex, region, 0);
     new_dw->put(deformationGradient, "p.deformationMeasure",
-						matl, region, 0);
+						matlindex, region, 0);
 }
 
 double CompMooneyRivlin::computeStrainEnergy(const Region* region,
@@ -162,14 +168,16 @@ double CompMooneyRivlin::computeStrainEnergy(const Region* region,
   double invar1,invar2,invar3,J,se=0.0;
   Matrix3 B,BSQ;
 
+  matlindex = matl->getDWIndex();
+
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
-  new->get(deformationGradient, "p.deformationMeasure", matl, region, 0);
+  new->get(deformationGradient, "p.deformationMeasure", matlindex, region, 0);
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  old_dw->get(cmdata, "p.cmdata", matl, region, 0);
+  old_dw->get(cmdata, "p.cmdata", matlindex, region, 0);
   ParticleVariable<Matrix3> pvolume;
-  old_dw->get(pvolume, "p.volume", matl, region, 0);
+  old_dw->get(pvolume, "p.volume", matlindex, region, 0);
 
   ParticleSubset* pset = pvolume.getParticleSubset();
   ASSERT(pset == pdeformationMeasure.getParticleSubset());
@@ -202,6 +210,11 @@ double CompMooneyRivlin::computeStrainEnergy(const Region* region,
 #endif
 
 // $Log$
+// Revision 1.5  2000/03/24 00:44:33  guilkey
+// Added MPMMaterial class, as well as a skeleton Material class, from
+// which MPMMaterial is inherited.  The Material class will be filled in
+// as it's mission becomes better identified.
+//
 // Revision 1.4  2000/03/20 17:17:07  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //
