@@ -51,9 +51,7 @@ class FieldCage : public Module {
     TCLint numz;
 public:
     FieldCage(const clString& id);
-    FieldCage(const FieldCage&, int deep);
     virtual ~FieldCage();
-    virtual Module* clone(int deep);
     virtual void execute();
     MaterialHandle matl;
 };
@@ -91,19 +89,8 @@ FieldCage::FieldCage(const clString& id)
 			  Color(.5,.5,.5), 20);
 }
 
-FieldCage::FieldCage(const FieldCage& copy, int deep)
-: Module(copy, deep), numx("numx", id, this), numy("numy", id, this), numz("numz", id, this)
-{
-    NOT_FINISHED("FieldCage::FieldCage");
-}
-
 FieldCage::~FieldCage()
 {
-}
-
-Module* FieldCage::clone(int deep)
-{
-    return new FieldCage(*this, deep);
 }
 
 void FieldCage::execute()
@@ -187,6 +174,15 @@ void FieldCage::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:05  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:48  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

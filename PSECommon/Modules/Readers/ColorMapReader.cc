@@ -36,9 +36,7 @@ class ColorMapReader : public Module {
     clString old_filename;
 public:
     ColorMapReader(const clString& id);
-    ColorMapReader(const ColorMapReader&, int deep=0);
     virtual ~ColorMapReader();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -54,19 +52,8 @@ ColorMapReader::ColorMapReader(const clString& id)
     add_oport(outport);
 }
 
-ColorMapReader::ColorMapReader(const ColorMapReader& copy, int deep)
-: Module(copy, deep), filename("filename", id, this)
-{
-    NOT_FINISHED("ColorMapReader::ColorMapReader");
-}
-
 ColorMapReader::~ColorMapReader()
 {
-}
-
-Module* ColorMapReader::clone(int deep)
-{
-    return scinew ColorMapReader(*this, deep);
 }
 
 #ifdef BROKEN
@@ -117,6 +104,15 @@ void ColorMapReader::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:47  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:33  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

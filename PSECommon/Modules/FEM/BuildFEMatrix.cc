@@ -68,9 +68,7 @@ class BuildFEMatrix : public Module {
 public:
     void parallel(int);
     BuildFEMatrix(const clString& id);
-    BuildFEMatrix(const BuildFEMatrix&, int deep);
     virtual ~BuildFEMatrix();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -102,20 +100,8 @@ BuildFEMatrix::BuildFEMatrix(const clString& id)
     gen=-1;
 }
 
-BuildFEMatrix::BuildFEMatrix(const BuildFEMatrix& copy, int deep)
-: Module(copy, deep), BCFlag("BCFlag", id, this),
-  UseCondTCL("UseCondTCL", id, this)
-{
-    NOT_FINISHED("BuildFEMatrix::BuildFEMatrix");
-}
-
 BuildFEMatrix::~BuildFEMatrix()
 {
-}
-
-Module* BuildFEMatrix::clone(int deep)
-{
-    return scinew BuildFEMatrix(*this, deep);
 }
 
 void BuildFEMatrix::parallel(int proc)
@@ -397,6 +383,15 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:36  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:25  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -43,9 +43,7 @@ private:
 
 public:
   GeometryWriter(const clString& id);
-  GeometryWriter(const GeometryWriter&, int deep=0);
   virtual ~GeometryWriter();
-  virtual Module* clone(int deep);
   virtual void execute();
 
 };
@@ -65,18 +63,8 @@ GeometryWriter::GeometryWriter(const clString& id)
   have_own_dispatch = 1; 
 }
 
-GeometryWriter::GeometryWriter(const GeometryWriter& copy, int deep)
-  : Module( copy, deep ), filename("filename", id, this),
-    filetype("filetype", id, this)
-{
-}
-
 GeometryWriter::~GeometryWriter()
 {
-}
-
-Module *GeometryWriter::clone(int deep) {
-  return scinew GeometryWriter(*this,deep);
 }
 
 void GeometryWriter::do_execute() {
@@ -146,6 +134,15 @@ void GeometryWriter::execute() {
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:15  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:56  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -38,9 +38,7 @@ class ComposeError : public Module {
     ScalarFieldOPort* outfield;
 public:
     ComposeError(const clString& id);
-    ComposeError(const ComposeError&, int deep);
     virtual ~ComposeError();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -67,18 +65,8 @@ ComposeError::ComposeError(const clString& id)
     add_oport(outfield);
 }
 
-ComposeError::ComposeError(const ComposeError& copy, int deep)
-: Module(copy, deep)
-{
-}
-
 ComposeError::~ComposeError()
 {
-}
-
-Module* ComposeError::clone(int deep)
-{
-    return new ComposeError(*this, deep);
 }
 
 void ComposeError::execute()
@@ -144,6 +132,15 @@ void ComposeError::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:36  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:25  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

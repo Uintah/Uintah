@@ -67,10 +67,8 @@ class SimpVolVis : public Module {
   int num_slices;
 public:
   SimpVolVis( const clString& id);
-  SimpVolVis( const SimpVolVis&, int deep);
 
   virtual ~SimpVolVis();
-  virtual Module* clone( int deep );
   virtual void widget_moved(int last);    
   virtual void execute();
   void tcl_command( TCLArgs&, void* );
@@ -110,21 +108,9 @@ SimpVolVis::SimpVolVis(const clString& id)
   widgetMoved=1;
 }
 
-SimpVolVis::SimpVolVis(const SimpVolVis& copy, int deep)
-  : Module(copy,deep),rvol(0),mode(0),avail_tex("avail_tex", id, this)
-
-{
-
-}
-
 SimpVolVis::~SimpVolVis()
 {
 
-}
-
-Module* SimpVolVis::clone(int deep)
-{
-  return scinew SimpVolVis(*this,deep);
 }
 
 void SimpVolVis::tcl_command( TCLArgs& args, void* userdata)
@@ -388,7 +374,7 @@ void SimpVolVis::execute(void)
 
 
 
-void SimpVolVis::widget_moved(int last)
+void SimpVolVis::widget_moved(int /*last*/)
 {
   if( !mode )
     {
@@ -426,6 +412,15 @@ void SimpVolVis::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:10  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:53  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

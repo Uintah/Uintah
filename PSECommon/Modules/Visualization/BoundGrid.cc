@@ -49,9 +49,7 @@ class BoundGrid : public Module {
   GeomQMesh* grid[6]; // ptrs to all of the grids - so you can change alpha
 public:
   BoundGrid(const clString& id);
-  BoundGrid(const BoundGrid&, int deep);
   virtual ~BoundGrid();
-  virtual Module* clone(int deep);
   virtual void execute();
 
 //  virtual void tcl_command(TCLArgs&, void*);
@@ -86,19 +84,8 @@ BoundGrid::BoundGrid(const clString& id)
   // grids are initialized now...
 }
 
-BoundGrid::BoundGrid(const BoundGrid& copy, int deep)
-: Module(copy, deep),   use_lines("use_lines",id,this)
-{
-  NOT_FINISHED("BoundGrid::BoundGrid");
-}
-
 BoundGrid::~BoundGrid()
 {
-}
-
-Module* BoundGrid::clone(int deep)
-{
-  return scinew BoundGrid(*this, deep);
 }
 
 void BoundGrid::execute()
@@ -319,6 +306,15 @@ void BoundGrid::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:02  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:47  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

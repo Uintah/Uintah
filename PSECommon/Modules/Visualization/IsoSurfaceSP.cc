@@ -159,9 +159,7 @@ class IsoSurfaceMSRG : public Module {
     Point v[8];
 public:
     IsoSurfaceMSRG(const clString& id);
-    IsoSurfaceMSRG(const IsoSurfaceMSRG&, int deep);
     virtual ~IsoSurfaceMSRG();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -236,22 +234,8 @@ IsoSurfaceMSRG::IsoSurfaceMSRG(const clString& id)
 		-1;
 }
 
-IsoSurfaceMSRG::IsoSurfaceMSRG(const IsoSurfaceMSRG& copy, int deep)
-: Module(copy, deep), seed_point("seed_point", id, this),
-  have_seedpoint("have_seedpoint", id, this), isoval("isoval", id, this),
-  do_3dwidget("do_3dwidget", id, this), emit_surface("emit_surface", id, this),
-  show_progress("show_progress", id, this)
-{
-    NOT_FINISHED("IsoSurfaceMSRG::IsoSurfaceMSRG");
-}
-
 IsoSurfaceMSRG::~IsoSurfaceMSRG()
 {
-}
-
-Module* IsoSurfaceMSRG::clone(int deep)
-{
-    return scinew IsoSurfaceMSRG(*this, deep);
 }
 
 void IsoSurfaceMSRG::execute()
@@ -1723,6 +1707,15 @@ void IsoSurfaceMSRG::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:09  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:52  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

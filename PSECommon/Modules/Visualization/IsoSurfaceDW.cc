@@ -194,9 +194,7 @@ public:
     void parallel_reg_grid_hash(int proc);
     void parallel_reg_grid_rings(int proc);
     IsoSurfaceDW(const clString& id);
-    IsoSurfaceDW(const IsoSurfaceDW&, int deep);
     virtual ~IsoSurfaceDW();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -286,25 +284,8 @@ IsoSurfaceDW::IsoSurfaceDW(const clString& id)
     init=1;
 }
 
-IsoSurfaceDW::IsoSurfaceDW(const IsoSurfaceDW& copy, int deep)
-: Module(copy, deep), seed_point("seed_point", id, this),
-  have_seedpoint("have_seedpoint", id, this), isoval("isoval", id, this),
-  do_3dwidget("do_3dwidget", id, this), emit_surface("emit_surface", id, this),
-  single("single", id, this), show_progress("show_progress", id, this),
-  tclBlockSize("tclBlockSize", id, this),
-  method("method", id, this), clr_r("clr-r", id, this), 
-  clr_g("clr-g", id, this), clr_b("clr-b", id, this)
-{
-    NOT_FINISHED("IsoSurfaceDW::IsoSurfaceDW");
-}
-
 IsoSurfaceDW::~IsoSurfaceDW()
 {
-}
-
-Module* IsoSurfaceDW::clone(int deep)
-{
-    return scinew IsoSurfaceDW(*this, deep);
 }
 
 void IsoSurfaceDW::execute()
@@ -991,8 +972,8 @@ void IsoSurfaceDW::parallel_reg_grid_hash(int proc)
     for(i=0;i<all_elems[proc].size();i++){
 	TSElement* e=all_elems[proc][i];
 	int flag=0;
-	int ii1, ii2, ii3;
-	ii1=e->i1; ii2=e->i2; ii3=e->i3;
+	//int ii1, ii2, ii3;
+	//ii1=e->i1; ii2=e->i2; ii3=e->i3;
 	if (e->i1<0) {
 	    flag=1;
 	    e->i1 = -2 - e->i1 + next_start_pt;
@@ -1695,8 +1676,8 @@ void IsoSurfaceDW::parallel_reg_grid_rings(int proc)
     for(i=0;i<all_elems[proc].size();i++){
 	TSElement* e=all_elems[proc][i];
 	int flag=0;
-	int ii1, ii2, ii3;
-	ii1=e->i1; ii2=e->i2; ii3=e->i3;
+	//int ii1, ii2, ii3;
+	//ii1=e->i1; ii2=e->i2; ii3=e->i3;
 	if (e->i1<0) {
 	    flag=1;
 	    e->i1 = -2 - e->i1 + next_start_pt;
@@ -2276,7 +2257,7 @@ void IsoSurfaceDW::remap_element(int& rval, Element *src, Element *dst)
 // ABCD and generates the correct primitives/codes
 
 void inline emit_in_2(int& rf, int& pf,
-		      int& eA,int& eB,int& eC,int& eD,
+		      int& /*eA*/,int& /*eB*/,int& eC,int& eD,
 		      Point& pA,Point& pB,Point& pC,Point& pD,
 		      GeomTriStripList* group)
 {
@@ -2317,7 +2298,7 @@ int IsoSurfaceDW::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     int pfaces=0;
     int rfaces=0;
     int use2 = !((f1+f2+f3+f4)&1);
-    int rfc2,rfc3,rfc4;
+    int rfc2,rfc3; //,rfc4;
 
     // these points/codes are just for 2 triangle mode!
 
@@ -2595,10 +2576,10 @@ void IsoSurfaceDW::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
 	return;
     }
 
-    int total_prims = 0;
+    //int total_prims = 0;
     int max_prim=0;
     int strip_prims=0;
-    int grp_prims=0;
+    //int grp_prims=0;
     GeomTrianglesP *bgroup = 0;
     isoval.set(iv);
     // 1st bit array is for ones that are done
@@ -2618,8 +2599,8 @@ void IsoSurfaceDW::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
 
     tocheck.set(ix);
     surfQ.append(ix);
-    int groupid=0;
-    int counter=1;
+    //int groupid=0;
+    //int counter=1;
     while(!surfQ.is_empty()) {
 	if (sp && abort_flag)
 	    break;
@@ -2845,6 +2826,15 @@ void IsoSurfaceDW::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:09  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:51  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

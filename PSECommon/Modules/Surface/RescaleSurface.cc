@@ -54,9 +54,7 @@ class RescaleSurface : public Module {
     int generation;
 public:
     RescaleSurface(const clString& id);
-    RescaleSurface(const RescaleSurface&, int deep);
     virtual ~RescaleSurface();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -88,11 +86,6 @@ RescaleSurface::RescaleSurface(const RescaleSurface& copy, int deep)
 
 RescaleSurface::~RescaleSurface()
 {
-}
-
-Module* RescaleSurface::clone(int deep)
-{
-    return new RescaleSurface(*this, deep);
 }
 
 void RescaleSurface::execute()
@@ -180,6 +173,15 @@ void RescaleSurface::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/18 20:19:56  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.1  1999/07/27 16:57:57  mcq
 // Initial commit
 //

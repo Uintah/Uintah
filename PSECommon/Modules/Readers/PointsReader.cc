@@ -38,9 +38,7 @@ class PointsReader : public Module {
     clString old_filename, old_Tname;
 public:
     PointsReader(const clString& id);
-    PointsReader(const PointsReader&, int deep=0);
     virtual ~PointsReader();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -59,20 +57,8 @@ PointsReader::PointsReader(const clString& id)
     mesh = new Mesh;
 }
 
-PointsReader::PointsReader(const PointsReader& copy, int deep)
-: Module(copy, deep), ptsname("ptsname", id, this), 
-tetname("tetname", id, this)
-{
-    NOT_FINISHED("PointsReader::PointsReader");
-}
-
 PointsReader::~PointsReader()
 {
-}
-
-Module* PointsReader::clone(int deep)
-{
-    return new PointsReader(*this, deep);
 }
 
 #ifdef BROKEN
@@ -131,6 +117,15 @@ void PointsReader::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:50  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:35  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

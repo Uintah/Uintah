@@ -46,18 +46,14 @@ Module::Module(const clString& name, const clString& id,
 {
 }
 
-Module::Module(const Module& copy, int)
-: state(NeedData), helper(0), have_own_dispatch(0), mailbox(100),
-  name(copy.name), abort_flag(0), need_execute(0),
-  sched_class(copy.sched_class), id(copy.id), handle(0), remote(0),
-  skeleton(0),
-  notes("notes", id, this)
-{
-    NOT_FINISHED("Module copy CTOR");
-}
-
 Module::~Module()
 {
+}
+
+int Module::clone(int)
+{
+    ASSERTFAIL("Module::clone should not get called!\n");
+    return 0;
 }
 
 void Module::update_state(State st)
@@ -447,6 +443,15 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.4  1999/08/18 20:20:18  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.3  1999/08/17 06:38:22  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -44,9 +44,7 @@ class SurfNewVals : public Module {
     TCLstring surfid;
 public:
     SurfNewVals(const clString& id);
-    SurfNewVals(const SurfNewVals&, int deep);
     virtual ~SurfNewVals();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -66,18 +64,8 @@ SurfNewVals::SurfNewVals(const clString& id)
     add_oport(osurf);
 }
 
-SurfNewVals::SurfNewVals(const SurfNewVals& copy, int deep)
-: Module(copy, deep), surfid("surfid", id, this)
-{
-}
-
 SurfNewVals::~SurfNewVals()
 {
-}
-
-Module* SurfNewVals::clone(int deep)
-{
-    return new SurfNewVals(*this, deep);
 }
 
 void SurfNewVals::execute() {
@@ -139,6 +127,15 @@ void SurfNewVals::execute() {
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:59  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:44  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

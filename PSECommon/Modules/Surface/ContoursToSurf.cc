@@ -59,9 +59,7 @@ class ContoursToSurf : public Module {
     void contours_to_surf(const Array1<ContourSetHandle> &contours, TriSurface*);
 public:
     ContoursToSurf(const clString&);
-    ContoursToSurf(const ContoursToSurf&, int deep);
     virtual ~ContoursToSurf();
-    virtual Module* clone(int deep);
     virtual void connection(Module::ConnectionMode, int, int);
     virtual void execute();
 };
@@ -98,19 +96,8 @@ void ContoursToSurf::connection(ConnectionMode mode, int which_port,
     }
 }
 	
-ContoursToSurf::ContoursToSurf(const ContoursToSurf&copy, int deep)
-: Module(copy, deep)
-{
-    NOT_FINISHED("ContoursToSurf::ContoursToSurf");
-}
-
 ContoursToSurf::~ContoursToSurf()
 {
-}
-
-Module* ContoursToSurf::clone(int deep)
-{
-    return scinew ContoursToSurf(*this, deep);
 }
 
 void ContoursToSurf::execute()
@@ -340,6 +327,15 @@ void ContoursToSurf::contours_to_surf(const Array1<ContourSetHandle> &contours,
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:55  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:42  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

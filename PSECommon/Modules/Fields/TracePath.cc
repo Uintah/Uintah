@@ -95,7 +95,6 @@ class TracePath : public Module {
     int have_paths;
 public:
     TracePath( const clString& id);
-    TracePath( const TracePath&, int deep);
     void genPaths(ScalarFieldRG* dfield, Array3<char> &parray,
 		  ScalarFieldRGuchar* rgchar, const Point &p, 
 		  ScalarFieldRGuchar* sss, Array3<int> &darray, 
@@ -106,7 +105,6 @@ public:
 			 int si, int sj, int sk, 
 			 int ei, int ej, int ek);
     virtual ~TracePath();
-    virtual Module* clone( int deep );
     virtual void widget_moved(int last);
     virtual void execute();
     void tcl_command( TCLArgs&, void * );
@@ -166,22 +164,8 @@ TracePath::TracePath(const clString& id)
     in_addlines=0;
 }
 
-TracePath::TracePath(const TracePath& copy, int deep)
-: Module(copy,deep), swapXZ("swapXZ", id, this), thresh("thresh", id, this),
-  partial("partial", id, this), updatelines("updatelines", id, this),
-  sx("sx", id, this), sy("sy", id, this), sz("sz", id, this),
-  eax("eax", id, this), eay("eay", id, this), eaz("eaz", id, this),
-  ebx("ebx", id, this), eby("eby", id, this), ebz("ebz", id, this),
-  ecx("ecx", id, this), ecy("ecy", id, this), ecz("ecz", id, this),
-  tclAlpha("tclAlpha", id, this), tclBeta("tclBeta", id, this){
-}
-
 TracePath::~TracePath()
 {
-}
-
-Module* TracePath::clone(int deep) {
-    return scinew TracePath(*this,deep);
 }
 
 #define POS_X 1
@@ -211,7 +195,7 @@ void TracePath::genPaths(ScalarFieldRG* dfield, Array3<char> &parray,
 			 int beamsize) {
 
     double alpha = tclAlpha.get();
-    double beta = tclBeta.get();
+    //double beta = tclBeta.get();
     FLPQueue<VoxelPath> flpq(beamsize);
     visitedpts.resize(0);
     abort=0;
@@ -261,8 +245,8 @@ void TracePath::genPaths(ScalarFieldRG* dfield, Array3<char> &parray,
     nbr_dd[4]=nbr_dd[5]=dz;
 //    double threshold = thresh.get();
 //    threshold*=threshold*threshold;
-    double maxw=255;
-    double MAXDIST=nx*ny;
+    //double maxw=255;
+    //double MAXDIST=nx*ny;
     while(!flpq.is_empty()) {
 	if ((count % 100) == 0) {
 	    reset_vars();
@@ -486,7 +470,7 @@ int TracePath::addLines() {
     return retval;
 }	
 
-GeomLines *TracePath::findLines(Array3<char> &parray, Array3<int> &darray, 
+GeomLines *TracePath::findLines(Array3<char> &parray, Array3<int>&/*darray*/, 
 				ScalarFieldRG *dfield,
 				int si, int sj, int sk, 
 				int ei, int ej, int ek) {
@@ -834,6 +818,15 @@ void TracePath::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:42  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:29  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

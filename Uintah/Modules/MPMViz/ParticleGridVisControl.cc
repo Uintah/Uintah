@@ -79,24 +79,8 @@ ParticleGridVisControl::ParticleGridVisControl(const clString& id)
 
 } 
 
-//---------------------------------------------------------- 
-ParticleGridVisControl::ParticleGridVisControl(const ParticleGridVisControl& copy, int deep) 
-  : Module(copy, deep),
-    tcl_status("tcl_status", id, this), sVar("sVar", id, this),
-    vVar("vVar", id, this), psVar("psVar", id, this),
-    pvVar("pvVar", id, this),  sMaterial("sMaterial", id, this),
-    vMaterial("vMaterial", id, this), pMaterial("pMaterial", id, this)
-
-{} 
-
 //------------------------------------------------------------ 
 ParticleGridVisControl::~ParticleGridVisControl(){} 
-
-//------------------------------------------------------------- 
-Module* ParticleGridVisControl::clone(int deep) 
-{ 
-  return new ParticleGridVisControl(*this, deep); 
-} 
 
 //-------------------------------------------------------------- 
 void ParticleGridVisControl::tcl_command( TCLArgs& args, void* userdata)

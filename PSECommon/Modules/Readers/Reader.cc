@@ -30,9 +30,7 @@ class TYPEReader : public Module {
     clString old_filename;
 public:
     TYPEReader(const clString& id);
-    TYPEReader(const TYPEReader&, int deep=0);
     virtual ~TYPEReader();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -56,11 +54,6 @@ TYPEReader::TYPEReader(const TYPEReader& copy, int deep)
 
 TYPEReader::~TYPEReader()
 {
-}
-
-Module* TYPEReader::clone(int deep)
-{
-    return scinew TYPEReader(*this, deep);
 }
 
 #ifdef BROKEN

@@ -35,9 +35,7 @@ class ContourSetWriter : public Module {
     TCLstring filetype;
 public:
     ContourSetWriter(const clString& id);
-    ContourSetWriter(const ContourSetWriter&, int deep=0);
     virtual ~ContourSetWriter();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -54,20 +52,8 @@ ContourSetWriter::ContourSetWriter(const clString& id)
     add_iport(inport);
 }
 
-ContourSetWriter::ContourSetWriter(const ContourSetWriter& copy, int deep)
-: Module(copy, deep), filename("filename", id, this),
-  filetype("filetype", id, this)
-{
-    NOT_FINISHED("ContourSetWriter::ContourSetWriter");
-}
-
 ContourSetWriter::~ContourSetWriter()
 {
-}
-
-Module* ContourSetWriter::clone(int deep)
-{
-    return scinew ContourSetWriter(*this, deep);
 }
 
 #if 0
@@ -106,6 +92,15 @@ void ContourSetWriter::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:14  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:56  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -124,7 +124,8 @@ void CylinderSurface::add_node(Array1<NodeHandle>& nodes,
     nodes.add(node);
 }
 
-void CylinderSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
+void CylinderSurface::set_surfnodes(const Array1<NodeHandle>& /*nodes*/)
+{
     NOT_FINISHED("CylinderSurface::set_surfnodes");
 }
 
@@ -378,7 +379,8 @@ void SphereSurface::add_node(Array1<NodeHandle>& nodes,
     nodes.add(node);
 }
 
-void SphereSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
+void SphereSurface::set_surfnodes(const Array1<NodeHandle>& /*nodes*/)
+{
     NOT_FINISHED("SphereSurface::set_surfnodes");
 }
 
@@ -589,7 +591,8 @@ void PointSurface::add_node(Array1<NodeHandle>& nodes,
     nodes.add(node);
 }
 
-void PointSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
+void PointSurface::set_surfnodes(const Array1<NodeHandle>& /*nodes*/)
+{
     NOT_FINISHED("PointSurface::set_surfnodes");
 }
 
@@ -755,6 +758,15 @@ void PointsSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:19  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:38:42  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -75,9 +75,7 @@ class VectorSeg : public Module {
 public:
     void parallel_vec_seg(int proc);
     VectorSeg(const clString&);
-    VectorSeg(const VectorSeg&, int deep);
     virtual ~VectorSeg();
-    virtual Module* clone(int deep);
     virtual void connection(Module::ConnectionMode, int, int);
     virtual void execute();
 };
@@ -125,21 +123,8 @@ void VectorSeg::connection(ConnectionMode mode, int which_port,
     }
 }
 	
-VectorSeg::VectorSeg(const VectorSeg&copy, int deep)
-: Module(copy, deep), numFields("numFields", id, this), 
-  have_ever_executed(0)
-{
-    myid=id;
-    NOT_FINISHED("VectorSeg::VectorSeg");
-}
-
 VectorSeg::~VectorSeg()
 {
-}
-
-Module* VectorSeg::clone(int deep)
-{
-    return scinew VectorSeg(*this, deep);
 }
 
 void VectorSeg::execute()
@@ -297,6 +282,15 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &,
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:12  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:54  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

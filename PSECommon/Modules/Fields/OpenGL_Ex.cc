@@ -78,9 +78,7 @@ class OpenGL_Ex : public Module {
     int tcl_execute;
 public:
     OpenGL_Ex(const clString& id);
-    OpenGL_Ex(const OpenGL_Ex&, int deep);
     virtual ~OpenGL_Ex();
-    virtual Module* clone(int deep);
     virtual void execute();
     void set_str_vars();
     void tcl_command( TCLArgs&, void * );
@@ -101,19 +99,8 @@ OpenGL_Ex::OpenGL_Ex(const clString& id)
     add_iport(iport);
 }
 
-OpenGL_Ex::OpenGL_Ex(const OpenGL_Ex& copy, int deep)
-: Module(copy, deep), tcl_execute(0)
-{
-    NOT_FINISHED("OpenGL_Ex::OpenGL_Ex");
-}
-
 OpenGL_Ex::~OpenGL_Ex()
 {
-}
-
-Module* OpenGL_Ex::clone(int deep)
-{
-    return scinew OpenGL_Ex(*this, deep);
 }
 
 void OpenGL_Ex::execute()
@@ -247,6 +234,15 @@ int OpenGL_Ex::makeCurrent() {
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:42  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:29  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -96,9 +96,7 @@ class FieldSeed : public Module {
 public:
   
   FieldSeed(const clString& id);
-  FieldSeed(const FieldSeed&, int deep);
   virtual ~FieldSeed();
-  virtual Module* clone(int deep);
   virtual void execute();
 
   void tcl_command( TCLArgs&, void *);
@@ -139,24 +137,9 @@ FieldSeed::FieldSeed(const clString& id)
   add_oport(ogeom);
 }
 
-
-FieldSeed::FieldSeed(const FieldSeed& copy, int deep)
-:Module(copy,deep),num_samps("num_samps",id,this),
- samps_alpha("samps_alpha",id,this),draw_pts("draw_pts",id,this),
- draw_vec("draw_vec",id,this),hedge_scale("hedge_scale",id,this),
- reghedge("reghedge",id,this),xstep("xstep",id,this),ystep("ystep",id,this)
-{
-  // NOT DONE
-}
-
 FieldSeed::~FieldSeed()
 {
   // does anything need to be deleted?
-}
-
-Module* FieldSeed::clone(int)
-{
-  return 0; // NOT DONE
 }
 
 void FieldSeed::execute()
@@ -606,6 +589,15 @@ void FieldSeed::Visualize(int which, int onoff)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:40  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:27  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

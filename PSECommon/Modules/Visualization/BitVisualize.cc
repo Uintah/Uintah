@@ -88,9 +88,7 @@ class BitVisualize : public Module {
 public:
     void parallel_vol_render1(int proc);
     BitVisualize(const clString& id);
-    BitVisualize(const BitVisualize&, int deep);
     virtual ~BitVisualize();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -146,19 +144,8 @@ BitVisualize::BitVisualize(const clString& id)
     }	
 }
 
-BitVisualize::BitVisualize(const BitVisualize& copy, int deep)
-: Module(copy, deep)
-{
-    NOT_FINISHED("BitVisualize::BitVisualize");
-}
-
 BitVisualize::~BitVisualize()
 {
-}
-
-Module* BitVisualize::clone(int deep)
-{
-    return scinew BitVisualize(*this, deep);
 }
 
 void BitVisualize::execute()
@@ -292,6 +279,15 @@ void BitVisualize::vol_render1_grid() {
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:02  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:46  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

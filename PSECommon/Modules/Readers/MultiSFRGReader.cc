@@ -37,9 +37,7 @@ class MultiSFRGReader : public Module {
   clString old_filename;
 public:
   MultiSFRGReader(const clString& id);
-  MultiSFRGReader(const MultiSFRGReader&, int deep=0);
   virtual ~MultiSFRGReader();
-  virtual Module* clone(int deep);
   virtual void execute();
 };
 
@@ -55,19 +53,8 @@ MultiSFRGReader::MultiSFRGReader(const clString& id)
   add_oport(outport);
 }
 
-MultiSFRGReader::MultiSFRGReader(const MultiSFRGReader& copy, int deep)
-: Module(copy, deep), filename("filename", id, this)
-{
-  NOT_FINISHED("MultiSFRGReader::MultiSFRGReader");
-}
-
 MultiSFRGReader::~MultiSFRGReader()
 {
-}
-
-Module* MultiSFRGReader::clone(int deep)
-{
-  return scinew MultiSFRGReader(*this, deep);
 }
 
 #ifdef BROKEN
@@ -165,6 +152,15 @@ void MultiSFRGReader::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:49  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:35  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

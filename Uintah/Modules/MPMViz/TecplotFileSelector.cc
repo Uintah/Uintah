@@ -43,25 +43,10 @@ TecplotFileSelector::TecplotFileSelector(const clString& id)
 
 } 
 
-//---------------------------------------------------------- 
-TecplotFileSelector::TecplotFileSelector(const TecplotFileSelector& copy,
-					   int deep) 
-  : Module(copy, deep), 
-    filebase("filebase", id, this), animate("animate", id, this),
-    startFrame("startFrame", id, this), endFrame("endFrame", id, this),
-    increment("increment", id, this),
-    tcl_status("tcl_status",id,this) 
-{} 
-
 //------------------------------------------------------------ 
 TecplotFileSelector::~TecplotFileSelector(){} 
 
 //------------------------------------------------------------- 
-Module* TecplotFileSelector::clone(int deep) 
-{ 
-  return new TecplotFileSelector(*this, deep); 
-} 
-//-------------------------------------------------------------- 
 
 bool TecplotFileSelector::checkFile(const clString& fname)
 {
@@ -125,15 +110,16 @@ void TecplotFileSelector::doAnimation()
   clString file = basename( filebase.get() );
   clString path = pathname( filebase.get() );
   const char *p = file();
-  char n[5];
+  //char n[5];
   char root[ 80 ];
   int i;
-  int j = 0;
+  //int j = 0;
   int k = 0;
   for( i= 0; i < file.len(); i++ )
     {
-      if(isdigit(*p)) n[j++] = *p;
-      else root[k++] = *p;
+	//if(isdigit(*p)) n[j++] = *p;
+	//else
+	root[k++] = *p;
       p++;
     }
   root[k] = '\0';
@@ -166,6 +152,15 @@ PSECore::Dataflow::Module* make_TecplotFileSelector( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:23  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:40:12  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

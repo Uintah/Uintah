@@ -63,7 +63,6 @@ static clString prefix()
     }
     return pf;
 }
-#endif
 
 static clString application()
 {
@@ -80,6 +79,8 @@ static clString application()
     }
     return app;
 }
+
+#endif
 
 void TCL::execute(const clString& string)
 {
@@ -456,6 +457,15 @@ void TCL::set_tclvar(const clString& base, const clString& name,
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:21  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:39:44  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

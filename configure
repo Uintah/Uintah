@@ -596,8 +596,8 @@ srcdir="${oldSrcDir}"
 # Check whether --enable-64bit or --disable-64bit was given.
 if test "${enable_64bit+set}" = set; then
   enableval="$enable_64bit"
-  lac_cv_64bit="$enableval"
-	lac_cv_64bit=${lac_cv_64bit='no'}
+  is_64bit="$enableval"
+	is_64bit=${is_64bit='no'}
 fi
 
 
@@ -606,7 +606,7 @@ case $host in
            if test -f /opt/MIPSpro/bin/cc ; then
              echo "yes"
              echo "  Using MIPSpro compilers instead of gcc; they're better"
-	     if test "$lac_cv_64bit" = "yes" ; then
+	     if test "$is_64bit" = "yes" ; then
                BINARYFLAGS="-64 -mips4"
              else
                BINARYFLAGS="-n32 -mips4"
@@ -643,7 +643,7 @@ case $host in
            echo "#define SCI_ASSERTION_LEVEL_3" >> config.h
            echo "#define SCI_OPENGL" >> config.h
            echo "#define SCI_NORM_OGL" >> config.h
-	   if test "$lac_cv_64bit" = "yes" ; then
+	   if test "$is_64bit" = "yes" ; then
              echo "#define SCI_IRIX_BIN_n64_mips4" >> config.h
 	     echo "#define SCI_64BIT" >> config.h
 	   else
@@ -1244,12 +1244,12 @@ fi
 # Check whether --enable-enterleave or --disable-enterleave was given.
 if test "${enable_enterleave+set}" = set; then
   enableval="$enable_enterleave"
-  lac_cv_enterleave="$enableval"
-	lac_cv_enterleave=${lac_cv_enterleave='no'}
+  enterleave="$enableval"
+	enterleave=${enterleave='no'}
 fi
 
 
-if test "$lac_cv_enterleave" = "yes" ; then
+if test "$enterleave" = "yes" ; then
 	NOPRINTDIR=EMPTY
 else
 	NOPRINTDIR="--no-print-directory"

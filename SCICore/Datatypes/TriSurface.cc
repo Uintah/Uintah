@@ -111,7 +111,7 @@ void TriSurface::order_faces() {
     if (elements.size() == 0) 
 	directed=1;
     else {
-	ASSERTL1(!"Can't order faces yet!");
+	ASSERTFAIL("Can't order faces yet!");
     }
 }
 
@@ -289,7 +289,7 @@ void TriSurface::bldNodeInfo() {
 int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
 				      const Point &p3) {
     if (grid==0) {
-	ASSERT(!"Can't run TriSurface::get_closest_vertex_id() w/o a grid\n");
+	ASSERTFAIL("Can't run TriSurface::get_closest_vertex_id() w/o a grid\n");
     }
     int i[3], j[3], k[3];	// grid element indices containing these points
     int maxi, maxj, maxk, mini, minj, mink;
@@ -365,7 +365,7 @@ int TriSurface::cautious_add_triangle(const Point &p1, const Point &p2,
 				       const Point &p3, int cw) {
     directed&=cw;
     if (grid==0) {
-	ASSERT(!"Can't run TriSurface::cautious_add_triangle w/o a grid\n");
+	ASSERTFAIL("Can't run TriSurface::cautious_add_triangle w/o a grid\n");
     }
     int i1=find_or_add(p1);
     int i2=find_or_add(p2);
@@ -551,7 +551,7 @@ void TriSurface::construct_hash(int xdim, int ydim, const Point &p, double res) 
 double TriSurface::distance(const Point &p,Array1<int> &res, Point *pp) {
 
     if (grid==0) {
-	ASSERT(!"Can't run TriSurface::distance w/o a grid\n");
+	ASSERTFAIL("Can't run TriSurface::distance w/o a grid\n");
     }
     Array1<int>* elem;
     Array1<int> tri;
@@ -1131,6 +1131,15 @@ void Pio(Piostream& stream, TSEdge*& data)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:20  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:38:57  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

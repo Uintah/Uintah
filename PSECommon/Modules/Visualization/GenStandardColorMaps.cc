@@ -328,22 +328,7 @@ GenStandardColorMaps::GenStandardColorMaps(const clString& id)
 } 
 
 //---------------------------------------------------------- 
-GenStandardColorMaps::GenStandardColorMaps(const GenStandardColorMaps& copy, int deep) 
-  : Module(copy, deep), 
-    mapType("mapType", id, this),
-    minRes("minRes", id, this),
-    resolution("resolution", id, this),
-    tcl_status("tcl_status",id,this) 
-{} 
-
-//------------------------------------------------------------ 
 GenStandardColorMaps::~GenStandardColorMaps(){} 
-
-//------------------------------------------------------------- 
-Module* GenStandardColorMaps::clone(int deep) 
-{ 
-  return new GenStandardColorMaps(*this, deep); 
-} 
 
 //-------------------------------------------------------------- 
 void GenStandardColorMaps::tcl_command( TCLArgs& args, void* userdata)

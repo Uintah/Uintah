@@ -97,9 +97,7 @@ class TrainSegment : public Module {
     int tcl_execute;
 public:
     TrainSegment(const clString& id);
-    TrainSegment(const TrainSegment&, int deep);
     virtual ~TrainSegment();
-    virtual Module* clone(int deep);
     virtual void execute();
     void set_str_vars();
     void tcl_command( TCLArgs&, void * );
@@ -136,22 +134,8 @@ TrainSegment::TrainSegment(const clString& id)
     ctable.add(Color(0, 1, 1));
 }
 
-TrainSegment::TrainSegment(const TrainSegment& copy, int deep)
-: Module(copy, deep), bias("bias", id, this), tcl_execute(0),
-  scale("scale", id, this), tissue("tissue", id, this),
-  tx("tx", id, this), ty("ty", id, this), tz("tz", id, this),
-  sagFld(0), corFld(0), axiFld(0)
-{
-    NOT_FINISHED("TrainSegment::TrainSegment");
-}
-
 TrainSegment::~TrainSegment()
 {
-}
-
-Module* TrainSegment::clone(int deep)
-{
-    return scinew TrainSegment(*this, deep);
 }
 
 void TrainSegment::execute()
@@ -793,6 +777,15 @@ int TrainSegment::makeCurrent() {
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:44  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:29  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

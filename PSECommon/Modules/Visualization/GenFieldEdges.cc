@@ -38,9 +38,7 @@ class GenFieldEdges : public Module {
     GeometryOPort* ogeom;
 public:
     GenFieldEdges(const clString& id);
-    GenFieldEdges(const GenFieldEdges&, int deep);
     virtual ~GenFieldEdges();
-    virtual Module* clone(int deep);
     virtual void execute();
     MaterialHandle matl;
 };
@@ -64,19 +62,8 @@ GenFieldEdges::GenFieldEdges(const clString& id)
 			 Color(.7,.7,.7), 50);
 }
 
-GenFieldEdges::GenFieldEdges(const GenFieldEdges& copy, int deep)
-: Module(copy, deep)
-{
-    NOT_FINISHED("GenFieldEdges::GenFieldEdges");
-}
-
 GenFieldEdges::~GenFieldEdges()
 {
-}
-
-Module* GenFieldEdges::clone(int deep)
-{
-    return new GenFieldEdges(*this, deep);
 }
 
 void GenFieldEdges::execute()
@@ -110,6 +97,15 @@ void GenFieldEdges::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:06  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:48  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -102,9 +102,7 @@ class Ted : public Module {
   
 public: 
   Ted(const clString& id);
-  Ted(const Ted&, int deep);
   virtual ~Ted();
-  virtual Module* clone(int deep);
 
   void abs_parallel(int proc);   // Takes care of negatives, finds max
   void scale_parallel(int proc); // scales, or normalizes
@@ -192,11 +190,6 @@ Ted::Ted(const Ted& copy, int deep)
 
 Ted::~Ted()
 {
-}
-
-Module* Ted::clone(int deep)
-{
-  return scinew Ted(*this, deep);
 }
 
 void Ted::scale_parallel(int proc)  // Scales image to 1.0 
@@ -706,6 +699,15 @@ int Ted::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:11  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:54  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -33,9 +33,7 @@ public:
     int np;
     Mutex minmax;
     Magnitude(const clString& id);
-    Magnitude(const Magnitude&, int deep);
     virtual ~Magnitude();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -61,11 +59,6 @@ Magnitude::Magnitude(const Magnitude& copy, int deep)
 
 Magnitude::~Magnitude()
 {
-}
-
-Module* Magnitude::clone(int deep)
-{
-    return new Magnitude(*this, deep);
 }
 
 static void do_parallel(void* obj, int proc)

@@ -33,9 +33,7 @@ class TYPEIterator : public Module {
     TYPEOPort* feedback_oport;
 public:
     TYPEIterator(const clString& id);
-    TYPEIterator(const TYPEIterator&, int deep=0);
     virtual ~TYPEIterator();
-    virtual Module* clone(int deep);
     virtual void execute();
     int first;
 };
@@ -70,11 +68,6 @@ TYPEIterator::TYPEIterator(const TYPEIterator& copy, int deep)
 
 TYPEIterator::~TYPEIterator()
 {
-}
-
-Module* TYPEIterator::clone(int deep)
-{
-    return scinew TYPEIterator(*this, deep);
 }
 
 void TYPEIterator::execute()
