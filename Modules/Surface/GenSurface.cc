@@ -48,8 +48,8 @@ public:
     virtual ~GenSurface();
     virtual Module* clone(int deep);
     virtual void execute();
-    virtual void geom_release(void*);
-    virtual void geom_moved(int, double, const Vector&, void*);
+    virtual void geom_release(GeomPick*, void*);
+    virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
 };
 
 static Module* make_GenSurface(const clString& id)
@@ -131,14 +131,14 @@ void GenSurface::execute()
         outport->send(SurfaceHandle(surf));
 }
 
-void GenSurface::geom_moved(int, double, const Vector& delta, void*)
+void GenSurface::geom_moved(GeomPick*, int, double, const Vector& delta, void*)
 {
     sphere->cen+=delta*6; // SC94 ONLY (*10000)
     point_pos.set(sphere->cen);
     sphere->adjust();
 }
 
-void GenSurface::geom_release(void*)
+void GenSurface::geom_release(GeomPick*, void*)
 {
     if(!abort_flag){
 	abort_flag=1;
