@@ -58,27 +58,20 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
   db->require("ref_point", d_pressRef);
   string finite_diff;
   db->require("finite_difference", finite_diff);
-  if (finite_diff == "second") 
-    d_discretize = scinew Discretization();
-  else {
+  if (finite_diff == "second") d_discretize = scinew Discretization();
+  else 
     throw InvalidValue("Finite Differencing scheme "
 		       "not supported: " + finite_diff);
-    //throw InvalidValue("Finite Differencing scheme "
-	//	       "not supported: " + finite_diff, db);
-  }
 
-  // make source and boundary_condition objects
+  // make source objects
   d_source = scinew Source(d_turbModel, d_physicalConsts);
+
   string linear_sol;
   db->require("linear_solver", linear_sol);
-  if (linear_sol == "linegs")
-    d_linearSolver = scinew RBGSSolver();
-  else {
+  if (linear_sol == "linegs") d_linearSolver = scinew RBGSSolver();
+  else 
     throw InvalidValue("Linear solver option"
 		       " not supported" + linear_sol);
-    //throw InvalidValue("linear solver option"
-	//	       " not supported" + linear_sol, db);
-  }
   d_linearSolver->problemSetup(db);
 }
 
@@ -151,7 +144,7 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       Task* tsk = scinew Task("Pressure::VelCoef",
 			      patch, old_dw, new_dw, d_discretize,
 			      &Discretization::calculateVelocityCoeff, 
-			      delta_t, eqnType);
+			      delta_t, eqnType, 0);
       int numGhostCells = 0;
       int matlIndex = 0;
       tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
@@ -184,7 +177,7 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       Task* tsk = scinew Task("Pressure::VelSource",
 			      patch, old_dw, new_dw, d_source,
 			      &Source::calculateVelocitySource, 
-			      delta_t, eqnType);
+			      delta_t, eqnType, 0);
       int numGhostCells = 0;
       int matlIndex = 0;
       tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
@@ -219,7 +212,7 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       Task* tsk = scinew Task("Pressure::VelBC",
 			      patch, old_dw, new_dw, d_boundaryCondition,
 			      &BoundaryCondition::velocityBC, 
-			      eqnType);
+			      eqnType, 0);
       int numGhostCells = 0;
       int matlIndex = 0;
       tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
@@ -259,7 +252,7 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       Task* tsk = scinew Task("Pressure::VelMassSource",
 			      patch, old_dw, new_dw, d_source,
 			      &Source::modifyVelMassSource, 
-			      delta_t, eqnType);
+			      delta_t, eqnType, 0);
       int numGhostCells = 0;
       int matlIndex = 0;
       tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
@@ -275,6 +268,12 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->requires(new_dw, d_lab->vVelCoefP1Label, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
       tsk->requires(new_dw, d_lab->wVelCoefP1Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelConvCoefPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelConvCoefPBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelConvCoefPBLMLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
       tsk->requires(new_dw, d_lab->uVelLinSrcP1Label, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
@@ -306,7 +305,7 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       Task* tsk = scinew Task("Pressure::VelDiagonal",
 			      patch, old_dw, new_dw, d_discretize,
 			      &Discretization::calculateVelDiagonal, 
-			      eqnType);
+			      eqnType, 0);
       int numGhostCells = 0;
       int matlIndex = 0;
       tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
@@ -360,7 +359,7 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
     // Task 7: Calculate Pressure Source
     //  requires : pressureSPBC, [u,v,w]VelocitySIVBC, densityCP,
     //           [u,v,w]VelCoefPBLM, [u,v,w]VelNonLinSrcPBLM
-    //  computes: presLinSrcPBLM, presNonLinSrcPBLM
+    //  computes: presLinSrcP0, presNonLinSrcP0
     {
       Task* tsk = scinew Task("Pressure::PresSource",
 			      patch, old_dw, new_dw, d_source,
@@ -393,15 +392,15 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->requires(new_dw, d_lab->wVelNonLinSrcPBLMLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
       
-      tsk->computes(new_dw, d_lab->presLinSrcPBLMLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->presNonLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->presLinSrcP0Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->presNonLinSrcP0Label, matlIndex, patch);
       
       sched->addTask(tsk);
     }
 
     // Task 8: Calculate Pressure BC
-    //  requires : pressureSPBC, presCoefP0
-    //  computes: presCoefP1
+    //  requires : pressureSPBC, presCoefP0, presLinSrcP0, presNonLinSrc0
+    //  computes: presCoefP1, presLinSrcPBLM, presNonLinSrcPBLM
     {
       Task* tsk = scinew Task("Pressure::PresBC",
 			      patch, old_dw, new_dw, d_boundaryCondition,
@@ -414,8 +413,14 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
 		    Ghost::None, numGhostCells);
       tsk->requires(new_dw, d_lab->presCoefP0Label, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->presLinSrcP0Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->presNonLinSrcP0Label, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
 
       tsk->computes(new_dw, d_lab->presCoefP1Label, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->presLinSrcPBLMLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->presNonLinSrcPBLMLabel, matlIndex, patch);
       
       sched->addTask(tsk);
     }
@@ -545,8 +550,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
-// Revision 1.38  2000/07/18 22:33:52  bbanerje
-// Changes to PressureSolver for put error. Added ArchesLabel.
+// Revision 1.39  2000/07/19 06:30:02  bbanerje
+// ** MAJOR CHANGES **
+// If you want to get the old code go two checkins back.
 //
 // Revision 1.37  2000/07/17 22:06:58  rawat
 // modified momentum source

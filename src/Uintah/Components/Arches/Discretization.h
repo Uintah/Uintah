@@ -37,9 +37,7 @@ WARNING
 none
 ****************************************/
 
-//#include <Uintah/Components/Arches/StencilMatrix.h>
-//#include <Uintah/Grid/CCVariable.h>
-//#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Components/Arches/ArchesLabel.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/LevelP.h>
@@ -91,7 +89,7 @@ public:
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw,
 				  double delta_t,
-				  int eqnType);
+				  int eqnType, int labID);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -126,7 +124,7 @@ public:
 				const Patch* patch,
 				DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw,
-				int eqnType);
+				int eqnType, int labID);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -160,56 +158,7 @@ private:
       //StencilMatrix<CCVariable<double> >* d_scalar_stencil_matrix;
 
       // const VarLabel*
-      const VarLabel* d_cellInfoLabel;
-
-      // inputs
-      const VarLabel* d_uVelocitySIVBCLabel;
-      const VarLabel* d_vVelocitySIVBCLabel;
-      const VarLabel* d_wVelocitySIVBCLabel;
-      const VarLabel* d_densityCPLabel;
-      const VarLabel* d_viscosityCTSLabel;
-      const VarLabel* d_uVelocityCPBCLabel;
-      const VarLabel* d_vVelocityCPBCLabel;
-      const VarLabel* d_wVelocityCPBCLabel;
-
-      // used/output by calculateVelocityCoeff
-      const VarLabel* d_DUPBLMLabel;
-      const VarLabel* d_uVelCoefPBLMLabel;
-      const VarLabel* d_vVelCoefPBLMLabel;
-      const VarLabel* d_wVelCoefPBLMLabel;
-      const VarLabel* d_uVelConvCoefPBLMLabel;
-      const VarLabel* d_vVelConvCoefPBLMLabel;
-      const VarLabel* d_wVelConvCoefPBLMLabel;
-      const VarLabel* d_uVelCoefMBLMLabel;
-      const VarLabel* d_vVelCoefMBLMLabel;
-      const VarLabel* d_wVelCoefMBLMLabel;
-      const VarLabel* d_uVelConvCoefMBLMLabel;
-      const VarLabel* d_vVelConvCoefMBLMLabel;
-      const VarLabel* d_wVelConvCoefMBLMLabel;
-
-      // input/output for calculatePressureCoeff
-      const VarLabel* d_pressureSPBCLabel;
-      const VarLabel* d_presCoefPBLMLabel;
-      const VarLabel* d_presLinSrcPBLMLabel;
-
-      // Input/output for calculateVelDiagonal
-      const VarLabel* d_uVelLinSrcPBLMLabel;
-      const VarLabel* d_vVelLinSrcPBLMLabel;
-      const VarLabel* d_wVelLinSrcPBLMLabel;
-      const VarLabel* d_uVelLinSrcMBLMLabel;
-      const VarLabel* d_vVelLinSrcMBLMLabel;
-      const VarLabel* d_wVelLinSrcMBLMLabel;
-
-      // Input/output for calculateScalarCoeff
-      const VarLabel* d_scalarSPLabel;
-      const VarLabel* d_uVelocityMSLabel;
-      const VarLabel* d_vVelocityMSLabel;
-      const VarLabel* d_wVelocityMSLabel;
-      const VarLabel* d_scalCoefSBLMLabel;
-      const VarLabel* d_scalConvCoefSBLMLabel;
-
-      // Input/output for calculateScalarDiagonal
-      const VarLabel* d_scalLinSrcSBLMLabel;
+      const ArchesLabel* d_lab;
 
 }; // end class Discretization
 } // end namespace ArchesSpace
@@ -219,6 +168,10 @@ private:
   
 //
 // $Log$
+// Revision 1.27  2000/07/19 06:30:01  bbanerje
+// ** MAJOR CHANGES **
+// If you want to get the old code go two checkins back.
+//
 // Revision 1.26  2000/07/18 22:33:51  bbanerje
 // Changes to PressureSolver for put error. Added ArchesLabel.
 //

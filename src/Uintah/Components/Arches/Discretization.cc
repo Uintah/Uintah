@@ -1,5 +1,4 @@
 //----- Discretization.cc ---------------------------------------------- \
-	$(SRCDIR)/ArchesLabel.cc
 
 /* REFERENCED */
 static char *id="@(#) $Id$";
@@ -35,93 +34,7 @@ using SCICore::Geometry::Vector;
 //****************************************************************************
 Discretization::Discretization()
 {
-  // inputs
-  d_cellInfoLabel = scinew VarLabel("cellInformation",
-			    PerPatch<CellInformation*>::getTypeDescription());
-  d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
-				    SFCXVariable<double>::getTypeDescription() );
-  d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
-				    SFCYVariable<double>::getTypeDescription() );
-  d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
-				    SFCZVariable<double>::getTypeDescription() );
-  d_densityCPLabel = scinew VarLabel("densityCP",
-				   CCVariable<double>::getTypeDescription() );
-  d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
-				   CCVariable<double>::getTypeDescription() );
-  d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC",
-				    SFCXVariable<double>::getTypeDescription() );
-  d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC",
-				    SFCYVariable<double>::getTypeDescription() );
-  d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC",
-				    SFCZVariable<double>::getTypeDescription() );
-
-  // computes (calculateVelocityCoeff)
-  d_DUPBLMLabel = scinew VarLabel("DUPBLM",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_uVelCoefPBLMLabel = scinew VarLabel("uVelCoefPBLM",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_vVelCoefPBLMLabel = scinew VarLabel("vVelCoefPBLM",
-				   SFCYVariable<double>::getTypeDescription() );
-  d_wVelCoefPBLMLabel = scinew VarLabel("wVelCoefPBLM",
-				   SFCZVariable<double>::getTypeDescription() );
-  d_uVelConvCoefPBLMLabel = scinew VarLabel("uVelConvCoefPBLM",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_vVelConvCoefPBLMLabel = scinew VarLabel("vVelConvCoefPBLM",
-				   SFCYVariable<double>::getTypeDescription() );
-  d_wVelConvCoefPBLMLabel = scinew VarLabel("wVelConvCoefPBLM",
-				   SFCZVariable<double>::getTypeDescription() );
-  d_uVelCoefMBLMLabel = scinew VarLabel("uVelCoefMBLM",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_vVelCoefMBLMLabel = scinew VarLabel("vVelCoefMBLM",
-				   SFCYVariable<double>::getTypeDescription() );
-  d_wVelCoefMBLMLabel = scinew VarLabel("wVelCoefMBLM",
-				   SFCZVariable<double>::getTypeDescription() );
-  d_uVelConvCoefMBLMLabel = scinew VarLabel("uVelConvCoefMBLM",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_vVelConvCoefMBLMLabel = scinew VarLabel("vVelConvCoefMBLM",
-				   SFCYVariable<double>::getTypeDescription() );
-  d_wVelConvCoefMBLMLabel = scinew VarLabel("wVelConvCoefMBLM",
-				   SFCZVariable<double>::getTypeDescription() );
-  // calculateVelDiagonal
-  d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM",
-				   SFCYVariable<double>::getTypeDescription() );
-  d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM",
-				   SFCZVariable<double>::getTypeDescription() );
-  d_uVelLinSrcMBLMLabel = scinew VarLabel("uVelLinSrcMBLM",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_vVelLinSrcMBLMLabel = scinew VarLabel("vVelLinSrcMBLM",
-				   SFCYVariable<double>::getTypeDescription() );
-  d_wVelLinSrcMBLMLabel = scinew VarLabel("wVelLinSrcMBLM",
-				   SFCZVariable<double>::getTypeDescription() );
-  // calculatePressureCoeff
-  d_presCoefPBLMLabel = scinew VarLabel("presCoefPBLM",
-				   CCVariable<double>::getTypeDescription() );
-
-  // calculatePressDiagonal
-  d_pressureSPBCLabel = scinew VarLabel("pressureSPBC",
-				   CCVariable<double>::getTypeDescription() );
-  d_presLinSrcPBLMLabel = scinew VarLabel("presLinSrcPBLM",
-				   CCVariable<double>::getTypeDescription() );
-
-  // calculateScalarCoeff
-  d_scalarSPLabel = scinew VarLabel("scalarSP",
-				   CCVariable<double>::getTypeDescription() );
-  d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
-				    SFCXVariable<double>::getTypeDescription() );
-  d_vVelocityMSLabel = scinew VarLabel("vVelocityMS",
-				    SFCYVariable<double>::getTypeDescription() );
-  d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
-				    SFCZVariable<double>::getTypeDescription() );
-  d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM",
-				   CCVariable<double>::getTypeDescription() );
-  d_scalConvCoefSBLMLabel = scinew VarLabel("scalConvCoefSBLM",
-				   CCVariable<double>::getTypeDescription() );
-
-  // calculateScalarDiagonal
-  d_scalLinSrcSBLMLabel = scinew VarLabel("scalLinSrcSBLM",
-				   CCVariable<double>::getTypeDescription() );
+  d_lab = scinew ArchesLabel();
 }
 
 //****************************************************************************
@@ -140,70 +53,70 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw,
 				       double delta_t,
-				       int eqnType)
+				       int eqnType, int labID)
 {
+  int matlIndex = 0;
+  int numGhostCells = 0;
+  int nofStencils = 7;
+
+  SFCXVariable<double> uVelocity;
+  SFCXVariable<double> variableCalledDU;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
+  CCVariable<double> density;
+  CCVariable<double> viscosity;
+  StencilMatrix<SFCXVariable<double> > uVelocityCoeff;
+  StencilMatrix<SFCYVariable<double> > vVelocityCoeff;
+  StencilMatrix<SFCZVariable<double> > wVelocityCoeff;
+  StencilMatrix<SFCXVariable<double> > uVelocityConvectCoeff;
+  StencilMatrix<SFCYVariable<double> > vVelocityConvectCoeff;
+  StencilMatrix<SFCZVariable<double> > wVelocityConvectCoeff;
+  
+  // Get the required data
+  new_dw->get(density, d_lab->densityCPLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  new_dw->get(viscosity, d_lab->viscosityCTSLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  switch(eqnType) {
+  case Arches::PRESSURE:
+    new_dw->get(uVelocity, d_lab->uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    new_dw->get(vVelocity, d_lab->vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    new_dw->get(wVelocity, d_lab->wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    break;
+  case Arches::MOMENTUM:
+    new_dw->get(uVelocity, d_lab->uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    new_dw->get(vVelocity, d_lab->vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    new_dw->get(wVelocity, d_lab->wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    break;
+  default:
+    throw InvalidValue("Equation type should be PRESSURE or MOMENTUM");
+  }
+    
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  old_dw->get(cellInfoP, d_lab->cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellinfo = cellInfoP;
+    
   // compute all three componenets of velocity stencil coefficients
   for(int index = 1; index <= Arches::NDIM; ++index) {
 
-    int matlIndex = 0;
-    int numGhostCells = 0;
-    int nofStencils = 7;
-
-    SFCXVariable<double> uVelocity;
-    SFCXVariable<double> variableCalledDU;
-    SFCYVariable<double> vVelocity;
-    SFCZVariable<double> wVelocity;
-    CCVariable<double> density;
-    CCVariable<double> viscosity;
-    StencilMatrix<SFCXVariable<double> > uVelocityCoeff;
-    StencilMatrix<SFCYVariable<double> > vVelocityCoeff;
-    StencilMatrix<SFCZVariable<double> > wVelocityCoeff;
-    StencilMatrix<SFCXVariable<double> > uVelocityConvectCoeff;
-    StencilMatrix<SFCYVariable<double> > vVelocityConvectCoeff;
-    StencilMatrix<SFCZVariable<double> > wVelocityConvectCoeff;
-
-    // Get the required data
-    new_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
-    new_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
-    switch(eqnType) {
-    case Arches::PRESSURE:
-      new_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-		  numGhostCells);
-      new_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-		  numGhostCells);
-      new_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-		  numGhostCells);
-      break;
-    case Arches::MOMENTUM:
-      new_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
-		  numGhostCells);
-      new_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
-		  numGhostCells);
-      new_dw->get(wVelocity, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
-		  numGhostCells);
-      break;
-    default:
-      throw InvalidValue("Equation type should be PRESSURE or MOMENTUM");
-    }
-    
-    // Get the PerPatch CellInformation data
-    PerPatch<CellInformation*> cellInfoP;
-    old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-    //  if (old_dw->exists(d_cellInfoLabel, patch)) 
-    //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-    //else {
-    //  cellInfoP.setData(scinew CellInformation(patch));
-    //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-    //}
-    CellInformation* cellinfo = cellInfoP;
-    
     // Allocate space in new datawarehouse
     switch(eqnType) {
     case Arches::PRESSURE:
       if (index == Arches::XDIR) {
-	new_dw->allocate(variableCalledDU, d_DUPBLMLabel, matlIndex, patch);
+	new_dw->allocate(variableCalledDU, d_lab->DUPBLMLabel, matlIndex, patch);
       } 
       break;
     case Arches::MOMENTUM:
@@ -215,38 +128,39 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
       switch(eqnType) {
       case Arches::PRESSURE:
 	if (index == Arches::XDIR) {
-	  new_dw->allocate(uVelocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
-	  new_dw->allocate(uVelocityConvectCoeff[ii], d_uVelConvCoefPBLMLabel, ii, 
-			   patch);
+	  new_dw->allocate(uVelocityCoeff[ii], d_lab->uVelCoefP0Label, ii, patch);
+	  new_dw->allocate(uVelocityConvectCoeff[ii], d_lab->uVelConvCoefPBLMLabel, 
+			   ii, patch);
 	}
 	else if (index == Arches::YDIR) {
-	  new_dw->allocate(vVelocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
-	  new_dw->allocate(vVelocityConvectCoeff[ii], d_vVelConvCoefPBLMLabel, ii, 
-			   patch);
+	  new_dw->allocate(vVelocityCoeff[ii], d_lab->vVelCoefP0Label, ii, patch);
+	  new_dw->allocate(vVelocityConvectCoeff[ii], d_lab->vVelConvCoefPBLMLabel, 
+			   ii, patch);
 	}
 	else if (index == Arches::ZDIR) {
-	  new_dw->allocate(wVelocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
-	  new_dw->allocate(wVelocityConvectCoeff[ii], d_wVelConvCoefPBLMLabel, ii, 
-			   patch);
+	  new_dw->allocate(wVelocityCoeff[ii], d_lab->wVelCoefP0Label, ii, patch);
+	  new_dw->allocate(wVelocityConvectCoeff[ii], d_lab->wVelConvCoefPBLMLabel, 
+			   ii, patch);
 	}
 	else
 	  throw InvalidValue("Invalid index, should lie between {1,3]");
 	break;
       case Arches::MOMENTUM:
 	if (index == Arches::XDIR) {
-	  new_dw->allocate(uVelocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
-	  new_dw->allocate(uVelocityConvectCoeff[ii], d_uVelConvCoefMBLMLabel, ii, 
-			   patch);
+	  new_dw->allocate(uVelocityCoeff[ii], d_lab->uVelCoefM0Label[labID], 
+			   ii, patch);
+	  new_dw->allocate(uVelocityConvectCoeff[ii], d_lab->uVelConvCoefMBLMLabel[labID], 
+			   ii, patch);
 	}
 	else if (index == Arches::YDIR) {
-	  new_dw->allocate(vVelocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
-	  new_dw->allocate(vVelocityConvectCoeff[ii], d_vVelConvCoefMBLMLabel, ii, 
-			   patch);
+	  new_dw->allocate(vVelocityCoeff[ii], d_lab->vVelCoefM0Label[labID], ii, patch);
+	  new_dw->allocate(vVelocityConvectCoeff[ii], d_lab->vVelConvCoefMBLMLabel[labID], 
+			   ii, patch);
 	}
 	else {
-	  new_dw->allocate(wVelocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch);
-	  new_dw->allocate(wVelocityConvectCoeff[ii], d_wVelConvCoefMBLMLabel, ii, 
-			   patch);
+	  new_dw->allocate(wVelocityCoeff[ii], d_lab->wVelCoefM0Label[labID], ii, patch);
+	  new_dw->allocate(wVelocityConvectCoeff[ii], d_lab->wVelConvCoefMBLMLabel[labID], 
+			   ii, patch);
 	}
 	break;
       default:
@@ -421,31 +335,31 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
       switch(eqnType) {
       case Arches::PRESSURE:
 	if (index == Arches::XDIR) {
-	  new_dw->put(uVelocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
-	  new_dw->put(uVelocityConvectCoeff[ii], d_uVelConvCoefPBLMLabel, ii, 
+	  new_dw->put(uVelocityCoeff[ii], d_lab->uVelCoefP0Label, ii, patch);
+	  new_dw->put(uVelocityConvectCoeff[ii], d_lab->uVelConvCoefPBLMLabel, ii, 
 		      patch);
 	} else if (index == Arches::YDIR) {
-	  new_dw->put(vVelocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
-	  new_dw->put(vVelocityConvectCoeff[ii], d_vVelConvCoefPBLMLabel, ii, 
+	  new_dw->put(vVelocityCoeff[ii], d_lab->vVelCoefP0Label, ii, patch);
+	  new_dw->put(vVelocityConvectCoeff[ii], d_lab->vVelConvCoefPBLMLabel, ii, 
 		      patch);
 	} else if (index == Arches::ZDIR) {
-	  new_dw->put(wVelocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
-	  new_dw->put(wVelocityConvectCoeff[ii], d_wVelConvCoefPBLMLabel, ii,
+	  new_dw->put(wVelocityCoeff[ii], d_lab->wVelCoefP0Label, ii, patch);
+	  new_dw->put(wVelocityConvectCoeff[ii], d_lab->wVelConvCoefPBLMLabel, ii,
 		      patch);
 	}
 	break;
       case Arches::MOMENTUM:
 	if (index == Arches::XDIR) {
-	  new_dw->put(uVelocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
-	  new_dw->put(uVelocityConvectCoeff[ii], d_uVelConvCoefMBLMLabel, ii, 
+	  new_dw->put(uVelocityCoeff[ii], d_lab->uVelCoefM0Label[labID], ii, patch);
+	  new_dw->put(uVelocityConvectCoeff[ii], d_lab->uVelConvCoefMBLMLabel[labID], ii, 
 		      patch);
 	} else if (index == Arches::YDIR) {
-	  new_dw->put(vVelocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
-	  new_dw->put(vVelocityConvectCoeff[ii], d_vVelConvCoefMBLMLabel, ii, 
+	  new_dw->put(vVelocityCoeff[ii], d_lab->vVelCoefM0Label[labID], ii, patch);
+	  new_dw->put(vVelocityConvectCoeff[ii], d_lab->vVelConvCoefMBLMLabel[labID], ii, 
 		      patch);
 	} else if (index == Arches::ZDIR) {
-	  new_dw->put(wVelocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch);
-	  new_dw->put(wVelocityConvectCoeff[ii], d_wVelConvCoefMBLMLabel, ii, 
+	  new_dw->put(wVelocityCoeff[ii], d_lab->wVelCoefM0Label[labID], ii, patch);
+	  new_dw->put(wVelocityConvectCoeff[ii], d_lab->wVelConvCoefMBLMLabel[labID], ii, 
 		      patch);
 	}
 	break;
@@ -472,27 +386,27 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   int nofStencils = 0;
 
   CCVariable<double> density;
-  old_dw->get(density, d_densityCPLabel, matlIndex, patch,
+  old_dw->get(density, d_lab->densityCPLabel, matlIndex, patch,
 	      Ghost::None, numGhostCells);
   StencilMatrix<SFCXVariable<double> > uVelCoeff;
   StencilMatrix<SFCYVariable<double> > vVelCoeff;
   StencilMatrix<SFCZVariable<double> > wVelCoeff;
-  new_dw->get(uVelCoeff[Arches::AP], d_uVelCoefPBLMLabel, Arches::AP, patch, 
+  new_dw->get(uVelCoeff[Arches::AP], d_lab->uVelCoefPBLMLabel, Arches::AP, patch, 
 	      Ghost::None, numGhostCells);
-  new_dw->get(vVelCoeff[Arches::AP], d_vVelCoefPBLMLabel, Arches::AP, patch, 
+  new_dw->get(vVelCoeff[Arches::AP], d_lab->vVelCoefPBLMLabel, Arches::AP, patch, 
 	      Ghost::None, numGhostCells);
-  new_dw->get(wVelCoeff[Arches::AP], d_wVelCoefPBLMLabel, Arches::AP, patch, 
+  new_dw->get(wVelCoeff[Arches::AP], d_lab->wVelCoefPBLMLabel, Arches::AP, patch, 
 	      Ghost::None, numGhostCells);
 
   // Get the PerPatch CellInformation data
   PerPatch<CellInformation*> cellInfoP;
-  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  old_dw->get(cellInfoP, d_lab->cellInfoLabel, matlIndex, patch);
   CellInformation* cellinfo = cellInfoP;
   
   // Create vars for new_dw
   StencilMatrix<CCVariable<double> > pressCoeff; //7 point stencil
   for (int ii = 0; ii < nofStencils; ii++) 
-    new_dw->allocate(pressCoeff[ii], d_presCoefPBLMLabel, ii, patch);
+    new_dw->allocate(pressCoeff[ii], d_lab->presCoefP0Label, ii, patch);
 
   // Get the domain size and the patch indices
   IntVector domLo = density.getFortLowIndex();
@@ -531,7 +445,7 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
 		  cellinfo->dzpb.get_objs());
 
   for (int ii = 1; ii < nofStencils; ii++) {
-    new_dw->put(pressCoeff[ii], d_presCoefPBLMLabel, ii, patch);
+    new_dw->put(pressCoeff[ii], d_lab->presCoefP0Label, ii, patch);
   }
 }
   
@@ -557,23 +471,23 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
   CCVariable<double> viscosity;
   //CCVariable<double> scalar;
 
-  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_lab->densityCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(viscosity, d_lab->viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   // ithe componenet of scalar vector
   //old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
 	//      numGhostCells);
-  new_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(uVelocity, d_lab->uVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  new_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(vVelocity, d_lab->vVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  new_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(wVelocity, d_lab->wVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   // Get the PerPatch CellInformation data
   PerPatch<CellInformation*> cellInfoP;
-  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  old_dw->get(cellInfoP, d_lab->cellInfoLabel, matlIndex, patch);
   CellInformation* cellinfo = cellInfoP;
   
   //7pt stencil declaration
@@ -581,8 +495,8 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
   StencilMatrix<CCVariable<double> > scalarConvectCoeff;
 
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->allocate(scalarCoeff[ii], d_scalCoefSBLMLabel, ii, patch);
-    new_dw->allocate(scalarConvectCoeff[ii], d_scalConvCoefSBLMLabel, ii, patch);
+    new_dw->allocate(scalarCoeff[ii], d_lab->scalCoefSBLMLabel, ii, patch);
+    new_dw->allocate(scalarConvectCoeff[ii], d_lab->scalConvCoefSBLMLabel, ii, patch);
   }
 
   // Get the domain size and the patch indices
@@ -634,8 +548,8 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
 		   cellinfo->dzpb.get_objs());
 
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(scalarCoeff[ii], d_scalCoefSBLMLabel, ii, patch);
-    new_dw->put(scalarConvectCoeff[ii], d_scalConvCoefSBLMLabel, ii, patch);
+    new_dw->put(scalarCoeff[ii], d_lab->scalCoefSBLMLabel, ii, patch);
+    new_dw->put(scalarConvectCoeff[ii], d_lab->scalConvCoefSBLMLabel, ii, patch);
   }
 }
 
@@ -647,45 +561,44 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw,
-				     int eqnType)
+				     int eqnType, int labID)
 {
-  
+  int matlIndex = 0;
+  int numGhostCells = 0;
+  int nofStencils = 7;
+
+  StencilMatrix<SFCXVariable<double> > uVelCoeff;
+  StencilMatrix<SFCYVariable<double> > vVelCoeff;
+  StencilMatrix<SFCZVariable<double> > wVelCoeff;
+  SFCXVariable<double> uVelLinearSrc;
+  SFCYVariable<double> vVelLinearSrc;
+  SFCZVariable<double> wVelLinearSrc;
+
   // compute all three componenets of velocity stencil coefficients
   for(int index = 1; index <= Arches::NDIM; ++index) {
-
-    int matlIndex = 0;
-    int numGhostCells = 0;
-    int nofStencils = 7;
-
-    StencilMatrix<SFCXVariable<double> > uVelCoeff;
-    StencilMatrix<SFCYVariable<double> > vVelCoeff;
-    StencilMatrix<SFCZVariable<double> > wVelCoeff;
-    SFCXVariable<double> uVelLinearSrc;
-    SFCYVariable<double> vVelLinearSrc;
-    SFCZVariable<double> wVelLinearSrc;
 
     switch(eqnType) {
     case Arches::PRESSURE:
       switch(index) {
       case Arches::XDIR:
 	for (int ii = 0; ii < nofStencils; ii++) 
-	  new_dw->get(uVelCoeff[ii], d_uVelCoefPBLMLabel, ii, patch, 
+	  new_dw->get(uVelCoeff[ii], d_lab->uVelCoefP1Label, ii, patch, 
 		      Ghost::None, numGhostCells);
-	new_dw->get(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch, 
+	new_dw->get(uVelLinearSrc, d_lab->uVelLinSrcPBLMLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
 	break;
       case Arches::YDIR:
 	for (int ii = 0; ii < nofStencils; ii++) 
-	  new_dw->get(vVelCoeff[ii], d_vVelCoefPBLMLabel, ii, patch, 
+	  new_dw->get(vVelCoeff[ii], d_lab->vVelCoefP1Label, ii, patch, 
 		      Ghost::None, numGhostCells);
-	new_dw->get(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch, 
+	new_dw->get(vVelLinearSrc, d_lab->vVelLinSrcPBLMLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
 	break;
       case Arches::ZDIR:
 	for (int ii = 0; ii < nofStencils; ii++) 
-	  new_dw->get(wVelCoeff[ii], d_wVelCoefPBLMLabel, ii, patch, Ghost::None,
+	  new_dw->get(wVelCoeff[ii], d_lab->wVelCoefP1Label, ii, patch, Ghost::None,
 		      numGhostCells);
-	new_dw->get(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch, 
+	new_dw->get(wVelLinearSrc, d_lab->wVelLinSrcPBLMLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
 	break;
       default:
@@ -696,23 +609,23 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
       switch(index) {
       case Arches::XDIR:
 	for (int ii = 0; ii < nofStencils; ii++) 
-	  new_dw->get(uVelCoeff[ii], d_uVelCoefMBLMLabel, ii, patch, 
+	  new_dw->get(uVelCoeff[ii], d_lab->uVelCoefM1Label[labID], ii, patch, 
 		      Ghost::None, numGhostCells);
-	new_dw->get(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch, 
+	new_dw->get(uVelLinearSrc, d_lab->uVelLinSrcMBLMLabel[labID], matlIndex, patch, 
 		    Ghost::None, numGhostCells);
 	break;
       case Arches::YDIR:
 	for (int ii = 0; ii < nofStencils; ii++) 
-	  new_dw->get(vVelCoeff[ii], d_vVelCoefMBLMLabel, ii, patch, 
+	  new_dw->get(vVelCoeff[ii], d_lab->vVelCoefM1Label[labID], ii, patch, 
 		      Ghost::None, numGhostCells);
-	new_dw->get(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch, 
+	new_dw->get(vVelLinearSrc, d_lab->vVelLinSrcMBLMLabel[labID], matlIndex, patch, 
 		    Ghost::None, numGhostCells);
 	break;
       case Arches::ZDIR:
 	for (int ii = 0; ii < nofStencils; ii++) 
-	  new_dw->get(wVelCoeff[ii], d_wVelCoefMBLMLabel, ii, patch, 
+	  new_dw->get(wVelCoeff[ii], d_lab->wVelCoefM1Label[labID], ii, patch, 
 		      Ghost::None, numGhostCells);
-	new_dw->get(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch, 
+	new_dw->get(wVelLinearSrc, d_lab->wVelLinSrcMBLMLabel[labID], matlIndex, patch, 
 		    Ghost::None, numGhostCells);
 	break;
       default:
@@ -785,13 +698,28 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
     case Arches::PRESSURE:
       switch(index) {
       case Arches::XDIR:
-	new_dw->put(uVelCoeff[Arches::AP], d_uVelCoefPBLMLabel, Arches::AP, patch);
+	for (int ii = 0; ii < nofStencils; ii++) {
+	  new_dw->allocate(uVelCoeff[ii], d_lab->uVelCoefPBLMLabel, 
+			   ii, patch);
+	  new_dw->put(uVelCoeff[ii], d_lab->uVelCoefPBLMLabel, 
+		      ii, patch);
+	}
 	break;
       case Arches::YDIR:
-	new_dw->put(vVelCoeff[Arches::AP], d_vVelCoefPBLMLabel, Arches::AP, patch);
+	for (int ii = 0; ii < nofStencils; ii++) {
+	  new_dw->allocate(vVelCoeff[ii], d_lab->vVelCoefPBLMLabel, 
+			   ii, patch);
+	  new_dw->put(vVelCoeff[ii], d_lab->vVelCoefPBLMLabel, 
+		      ii, patch);
+	}
 	break;
       case Arches::ZDIR:
-	new_dw->put(wVelCoeff[Arches::AP], d_wVelCoefPBLMLabel, Arches::AP, patch);
+	for (int ii = 0; ii < nofStencils; ii++) {
+	  new_dw->allocate(wVelCoeff[ii], d_lab->wVelCoefPBLMLabel, 
+			   ii, patch);
+	  new_dw->put(wVelCoeff[ii], d_lab->wVelCoefPBLMLabel, 
+		      ii, patch);
+	}
 	break;
       default:
 	throw InvalidValue("Invalid index in Pressure::calcVelDiagonal");
@@ -800,13 +728,28 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
     case Arches::MOMENTUM:
       switch(index) {
       case Arches::XDIR:
-	new_dw->put(uVelCoeff[Arches::AP], d_uVelCoefMBLMLabel, Arches::AP, patch);
+	for (int ii = 0; ii < nofStencils; ii++) {
+	  new_dw->allocate(uVelCoeff[ii], d_lab->uVelCoefMBLMLabel[labID], 
+		      ii, patch);
+	  new_dw->put(uVelCoeff[ii], d_lab->uVelCoefMBLMLabel[labID], 
+		      ii, patch);
+	}
 	break;
       case Arches::YDIR:
-	new_dw->put(vVelCoeff[Arches::AP], d_vVelCoefMBLMLabel, Arches::AP, patch);
+	for (int ii = 0; ii < nofStencils; ii++) {
+	  new_dw->allocate(vVelCoeff[ii], d_lab->vVelCoefMBLMLabel[labID], 
+		      ii, patch);
+	  new_dw->put(vVelCoeff[ii], d_lab->vVelCoefMBLMLabel[labID], 
+		      ii, patch);
+	}
 	break;
       case Arches::ZDIR:
-	new_dw->put(wVelCoeff[Arches::AP], d_wVelCoefMBLMLabel, Arches::AP, patch);
+	for (int ii = 0; ii < nofStencils; ii++) {
+	  new_dw->allocate(wVelCoeff[ii], d_lab->wVelCoefMBLMLabel[labID], 
+		      ii, patch);
+	  new_dw->put(wVelCoeff[ii], d_lab->wVelCoefMBLMLabel[labID], 
+		      ii, patch);
+	}
 	break;
       default:
 	throw InvalidValue("Invalid index in Pressure::calcVelDiagonal");
@@ -836,10 +779,10 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
   CCVariable<double> presLinearSrc;
 
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(pressCoeff[ii], d_presCoefPBLMLabel, ii, patch, Ghost::None,
+    new_dw->get(pressCoeff[ii], d_lab->presCoefP1Label, ii, patch, Ghost::None,
 		numGhostCells);
   }
-  new_dw->get(presLinearSrc, d_presLinSrcPBLMLabel, matlIndex, patch, 
+  new_dw->get(presLinearSrc, d_lab->presLinSrcPBLMLabel, matlIndex, patch, 
 	      Ghost::None, numGhostCells);
 
   // Get the domain size and the patch indices
@@ -860,7 +803,10 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
 	     pressCoeff[Arches::AB].getPointer(),
 	     presLinearSrc.getPointer());
 
-  new_dw->put(pressCoeff[Arches::AP], d_presCoefPBLMLabel, Arches::AP, patch);
+  for (int ii = 0; ii < nofStencils; ii++) {
+    new_dw->allocate(pressCoeff[ii], d_lab->presCoefPBLMLabel, ii, patch);
+    new_dw->put(pressCoeff[ii], d_lab->presCoefPBLMLabel, ii, patch);
+  }
 }
 
 //****************************************************************************
@@ -885,10 +831,10 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
   CCVariable<double> scalarLinearSrc;
 
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(scalarCoeff[ii], d_scalCoefSBLMLabel, index, patch, 
+    new_dw->get(scalarCoeff[ii], d_lab->scalCoefSBLMLabel, index, patch, 
 		Ghost::None, numGhostCells);
   }
-  new_dw->get(scalarLinearSrc, d_scalLinSrcSBLMLabel, matlIndex, patch, 
+  new_dw->get(scalarLinearSrc, d_lab->scalLinSrcSBLMLabel, matlIndex, patch, 
 	      Ghost::None, numGhostCells);
 
   // Get the domain size and the patch indices
@@ -914,12 +860,16 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
   //             Currently overwriting scalarCoeff[ii] with the same data
   //             for the current scalar
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(scalarCoeff[ii], d_scalCoefSBLMLabel, index, patch);
+    new_dw->put(scalarCoeff[ii], d_lab->scalCoefSBLMLabel, index, patch);
   }
 }
 
 //
 // $Log$
+// Revision 1.34  2000/07/19 06:30:01  bbanerje
+// ** MAJOR CHANGES **
+// If you want to get the old code go two checkins back.
+//
 // Revision 1.33  2000/07/18 22:33:51  bbanerje
 // Changes to PressureSolver for put error. Added ArchesLabel.
 //

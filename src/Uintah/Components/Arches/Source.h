@@ -36,6 +36,7 @@ WARNING
 none
 ****************************************/
 
+#include <Uintah/Components/Arches/ArchesLabel.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/LevelP.h>
@@ -106,7 +107,7 @@ public:
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw,
 				   double delta_t, 
-				   int eqnType);
+				   int eqnType, int labID);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -130,7 +131,7 @@ public:
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw,
 			       double delta_t, 
-			       int eqnType);
+			       int eqnType, int labelID);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -162,65 +163,7 @@ private:
       PhysicalConstants* d_physicalConsts;
 
       // const VarLabel*
-      const VarLabel* d_cellTypeLabel ;
-      const VarLabel* d_cellInfoLabel ;
-
-      // inputs for CalculateVelocitySource 
-      const VarLabel* d_uVelocitySPBCLabel ;
-      const VarLabel* d_vVelocitySPBCLabel ;
-      const VarLabel* d_wVelocitySPBCLabel ;
-      const VarLabel* d_uVelocitySIVBCLabel ;
-      const VarLabel* d_vVelocitySIVBCLabel ;
-      const VarLabel* d_wVelocitySIVBCLabel ;
-      const VarLabel* d_densityCPLabel ;
-      const VarLabel* d_viscosityCTSLabel ;
-      const VarLabel* d_uVelocityCPBCLabel ;
-      const VarLabel* d_vVelocityCPBCLabel ;
-      const VarLabel* d_wVelocityCPBCLabel ;
-
-      // outputs for CalculateVelocitySource
-      const VarLabel* d_uVelLinSrcPBLMLabel ;
-      const VarLabel* d_uVelNonLinSrcPBLMLabel ;
-      const VarLabel* d_vVelLinSrcPBLMLabel ;
-      const VarLabel* d_vVelNonLinSrcPBLMLabel ;
-      const VarLabel* d_wVelLinSrcPBLMLabel ;
-      const VarLabel* d_wVelNonLinSrcPBLMLabel ;
-      const VarLabel* d_uVelLinSrcMBLMLabel ;
-      const VarLabel* d_uVelNonLinSrcMBLMLabel ;
-      const VarLabel* d_vVelLinSrcMBLMLabel ;
-      const VarLabel* d_vVelNonLinSrcMBLMLabel ;
-      const VarLabel* d_wVelLinSrcMBLMLabel ;
-      const VarLabel* d_wVelNonLinSrcMBLMLabel ;
-
-      // inputs for CalculateVelocityMassSource 
-      const VarLabel* d_uVelCoefPBLMLabel ;
-      const VarLabel* d_vVelCoefPBLMLabel ;
-      const VarLabel* d_wVelCoefPBLMLabel ;
-      const VarLabel* d_uVelCoefMBLMLabel ;
-      const VarLabel* d_vVelCoefMBLMLabel ;
-      const VarLabel* d_wVelCoefMBLMLabel ;
-      const VarLabel* d_uVelConvCoefPBLMLabel ;
-      const VarLabel* d_vVelConvCoefPBLMLabel ;
-      const VarLabel* d_wVelConvCoefPBLMLabel ;
-      const VarLabel* d_uVelConvCoefMBLMLabel ;
-      const VarLabel* d_vVelConvCoefMBLMLabel ;
-      const VarLabel* d_wVelConvCoefMBLMLabel ;
-      // for pressure gradient
-      const VarLabel* d_pressurePSLabel;
-
-      // inputs/outputs for CalculatePressureSource 
-      const VarLabel* d_pressureSPBCLabel ;
-      const VarLabel* d_presLinSrcPBLMLabel ;
-      const VarLabel* d_presNonLinSrcPBLMLabel ;
-
-      // inputs/outputs for CalculateScalarSource 
-      const VarLabel* d_uVelocityMSLabel ;
-      const VarLabel* d_vVelocityMSLabel ;
-      const VarLabel* d_wVelocityMSLabel ;
-      const VarLabel* d_scalarSPLabel ;
-      const VarLabel* d_scalLinSrcSBLMLabel ;
-      const VarLabel* d_scalNonLinSrcSBLMLabel ;
-
+      const ArchesLabel* d_lab;
 }; // end Class Source
 
 }  // End namespace ArchesSpace
@@ -229,6 +172,10 @@ private:
   
 //
 // $Log$
+// Revision 1.23  2000/07/19 06:30:02  bbanerje
+// ** MAJOR CHANGES **
+// If you want to get the old code go two checkins back.
+//
 // Revision 1.22  2000/07/18 22:33:52  bbanerje
 // Changes to PressureSolver for put error. Added ArchesLabel.
 //
