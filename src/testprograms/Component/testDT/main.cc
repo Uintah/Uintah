@@ -31,150 +31,250 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
-#include <Core/CCA/Comm/DT/DTThread.h>
 #include <Core/CCA/PIDL/URL.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/Comm/DT/DataTransmitter.h>
 #include <Core/CCA/Comm/DT/DTMessage.h>
 #include <Core/CCA/Comm/DT/DTPoint.h>
-#include <Core/CCA/PIDL/MalformedURL.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Runnable.h>
+#include <stdlib.h>
+#include <time.h>
+#include <mpi.h>
 
 using namespace SCIRun;
 using namespace std;
 
 
-using namespace std;
-using namespace SCIRun;
+const int SIZE=40; //80000; //maximum message size
+const int nServer=5; //number of servers in each process
+const int nMsg=10;  //number of messages sent from one point to another point.
 
+//this method creates a message body (id+message), 
+//or does error check
+void create_check_message(int id, DTMessage *msg, bool errcheck=false){
+  int len;
 
-
-void usage(char* progname)
-{
-    cerr << "usage: " << progname << " [options]\n";
-    cerr << "valid options are:\n";
-    cerr << "  server  - server process\n";
-    cerr << "  client  - client process\n";
-    cerr << "\n";
-    exit(1);
-}
-
-
-  
-class MyThread :public Runnable{
-public:
-  void run()
-  {
-    cerr<<"One thread starts...\n";
-    while(1){
-      //sleep(1);
+  if(errcheck){
+    len=msg->length;
+    for(int i=sizeof(int); i<len; i++){
+      if(msg->buf[i]!=char((id+i)%128)){
+	cerr<<"Error: wrong message body"<<endl;
+      }
     }
   }
+  else{
+    len= ((unsigned)rand())%SIZE;
+    if(len<(int)sizeof(int)) len=sizeof(int);
+    msg->buf=new char[len];
+    *((int*)msg->buf)=id;
+    for(int i=sizeof(int); i<len; i++){
+      msg->buf[i]=char((id+i)%128);
+    }
+    msg->length=len;
+  }
+}
+
+class EPThread : public Runnable{
+public:
+  EPThread(DTAddress *addrlist, DTPoint **eplist, DTPoint *me, int mpi_size, bool isSender, Semaphore *sema){
+    this->addrlist=addrlist;
+    this->eplist=eplist;
+    this->me=me;
+    this->mpi_size=mpi_size;
+    this->isSender=isSender;
+    this->sema=sema;
+      
+  }
   
+  void run(){
+    srand(clock());
+    
+    //sending log:
+    //from me to mpi_size*nServer
+    
+    //recving log
+    //from mpi_size*nServer to me
+    
+    int *log=new int[mpi_size*nServer];
+    for(int i=0; i<mpi_size*nServer; i++) log[i]=0;
+    if(isSender){
+      //cerr<<"Sending thread is working"<<endl;
+      while(true){
+	bool done=true;
+	for(int i=0; i<mpi_size*nServer; i++){
+	  if(log[i]<nMsg){
+	    done=false;
+	    break;
+	  }
+	}
+	if(done) break;
+
+	int iaddr = ((unsigned)rand())%mpi_size; 
+	int ipt = nServer*iaddr+((unsigned)rand())%nServer;
+
+	//update the sender's log
+	if(log[ipt]>=nMsg) continue;
+	//cerr<<"send message to : iaddr/ipt/log[ipt]="<<iaddr<<"/"<<ipt<<"/"<<log[ipt]<<endl;
+
+	
+	DTMessage *msg=new DTMessage;
+	create_check_message(log[ipt], msg);
+	msg->recver=eplist[ipt];
+	msg->to_addr=addrlist[iaddr];
+	msg->autofree=true;
+	//cerr<<"Send a message:"<<endl;
+	//msg->display();
+	me->putMessage(msg);
+
+	log[ipt]++;
+	//if(iter++%10==0)sleep(1); 
+      }
+      cerr<<"Sending job is done"<<endl;
+      sema->up();
+    }
+    else{
+      //cerr<<"Receiving thread is working"<<endl;
+      while(true){
+	bool done=true;
+	for(int i=0; i<mpi_size*nServer; i++){
+	  if(log[i]<nMsg){
+	    done=false;
+	    break;
+	  }
+	}
+	if(done) break;
+
+	DTMessage *msg=me->getMessage();
+	bool bad=true;
+	int iaddr=-1;
+	for(iaddr=0; iaddr<mpi_size; iaddr++){
+	  if(addrlist[iaddr]==msg->fr_addr){
+	    bad=false;
+	    break;
+	  }
+	}
+
+	if(bad) cerr<<"Error: unexpected from address"<<endl;
+	bad=true;
+	int ipt;
+	for(ipt=iaddr*nServer; ipt<(iaddr+1)*nServer;ipt++){
+	  if(eplist[ipt]==msg->sender){
+	    bad=false;
+	    break;
+	  }
+	}
+	if(bad) cerr<<"Error: unexpected sender"<<endl;
+
+	int id=*((int*)(msg->buf));
+	if(id!=log[ipt]){
+	  cerr<<"Error: received message in bad order."<<endl;
+	  cerr<<"id/log[ipt]="<<id<<"/"<<log[ipt]<<endl;
+	}
+
+	create_check_message(id, msg, true); //message body error check
+
+	log[ipt]++;
+
+	//cerr<<"get a message"<<endl;
+	//msg->display();
+	delete msg;
+      }
+      cerr<<"Recving job is done"<<endl;
+      sema->up();
+    }
+    delete []log;
+  }
+private:
+  DTPoint *me;
+  DTAddress *addrlist;
+  DTPoint **eplist;
+  int mpi_size;
+  bool isSender;
+  Semaphore *sema;
 };
 
-const int nServer=10;
-const int nClient=10;
-const int nRep=100;
-const int SIZE=80000;
 
 int main(int argc, char* argv[])
 {
-    using std::string;
-    try{
-      bool client=false;
-      bool server=false;
-      bool stop=false;
-      bool test=false;
-      string url;
-      
-      for(int i=1;i<argc;i++){
-	string arg(argv[i]);
-	if(arg == "server") server=true;
-        else if(arg == "client") client=true;
-        else url=arg;
-      }
-      if(!client && !server && !stop && !test)
-	usage(argv[0]);
+  Semaphore *sema;
+  
+  using std::string;
+  try{
+    MPI_Init(&argc,&argv);
+    int mpi_size, mpi_rank;
+    MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+    PIDL::initialize(mpi_rank, mpi_size);
 
+    sema=new Semaphore("dt points semapore", 0);
 
-      PIDL::initialize();
-      if(server) {
-	DTPoint *ep[nServer];
-	ofstream f("pp.url");
-	f<<PIDL::getDT()->getUrl()<<endl;
-	for(int i=0; i<nServer; i++){
-	  ep[i]=new DTPoint(PIDL::getDT());
-	  f<<(long)ep[i]<<endl;
-	}
-	f.close();
-
-	while(true){
-	  for(int i=0; i<nServer; i++){
-	    DTMessage *msg=ep[i]->getMessage();
-	    cerr<<"getMessage="<<msg->buf<<endl;
-	    /*
-	    DTMessage *rm=new DTMessage;
-	    rm->buf="I got it";
-	    rm->length=strlen(msg->buf);
-	    rm->autofree=false;
-	    rm->to_addr=msg->fr_addr;
-	    rm->recver=msg->sender;
-	    ep->putMessage(rm);
-	    */
-	  }
-	}
-      }
-      else if(client){
-	ifstream f("pp.url");
-	DTPoint *sp[nClient];
-
-	for(int i=0; i<nClient; i++){
-	  sp[i]=new DTPoint(PIDL::getDT());
-	}
-
-	cerr<<"sender="<< (long)sp<<endl;
-	long ep[nServer];
-	string ppurl;
-	f>>ppurl;
-	for(int i=0; i<nServer; i++){
-	  f>>ep[i];
-	  cerr<<"ppurl="<<ppurl<<ep[i]<<endl;
-	}
-	f.close();
-
-	URL url(ppurl);
-
-	int port=url.getPortNumber();
-	long ip=url.getIP();
-
-	for(int k=0; k<nRep; k++){
-	  for(int j=0; j<nClient; j++){
-	    for(int i=0; i<nServer; i++){
-	      DTMessage *msg=new DTMessage;
-	      msg->buf=new char[SIZE];
-	      msg->length=SIZE;
-	      sprintf(msg->buf, "$This is LONG message #%d from client %d to server %d $...",k, j, i);
-	      msg->autofree=true;
-	      msg->to_addr.port=port;
-	      msg->to_addr.ip  =ip;
-	      msg->recver= (DTPoint *)ep[i];
-	      sp[j]->putMessage(msg);
-	      //msg=sp[j]->getMessage();
-	      //cerr<<"getMessage="<<msg->buf<<endl;	  
-	    }
-	  }
-	}
-      }
-    } catch(const MalformedURL& e) {
-      cerr << "pp.cc: Caught MalformedURL exception:\n";
-      cerr << e.message() << '\n';
-    } catch(...) {
-      cerr << "Caught unexpected exception!\n";
-      abort();
+    DTPoint *ep[nServer];
+    for(int i=0; i<nServer; i++){
+      ep[i]=new DTPoint(PIDL::getDT());
     }
-    PIDL::finalize();
-    return 0;
+      
+    DTAddress *addrlist=new DTAddress[mpi_size];
+    
+    DTAddress myaddr;
+    URL url(PIDL::getDT()->getUrl());
+    myaddr.ip= url.getIP();
+    myaddr.port= url.getPortNumber();
+    
+    MPI_Allgather(&myaddr, sizeof(DTAddress), MPI_CHAR,  
+		  addrlist, sizeof(DTAddress), MPI_CHAR,   MPI_COMM_WORLD);
+    
+    if(mpi_rank==0){
+	cerr<<"gathered addresses are:"<<endl;
+	for(int i=0; i<mpi_size; i++){
+	  cerr<<"addr "<<i<<"="<<addrlist[i].ip<<":"<<addrlist[i].port<<endl;
+	}
+    }
+    
+    DTPoint **eplist=new (DTPoint*)[nServer*mpi_size];
+    
+    MPI_Allgather(ep, sizeof(DTPoint *)*nServer, MPI_CHAR,   
+		  eplist, sizeof(DTPoint *)*nServer, MPI_CHAR,  MPI_COMM_WORLD);
+    
+    if(mpi_rank==0){
+      cerr<<"gathered eps are:"<<endl;
+      for(int i=0; i<mpi_size; i++){
+	cerr<<"rank="<<i<<endl;
+	for(int j=0; j<nServer; j++){
+	  cerr<<"ep"<<j<<"="<<eplist[i*nServer+j]<<endl;
+	}
+      }
+    }
+    
+    
+    // start one thread for each ep, so that it can
+    // randomly send messages.
+    for(int i=0; i<nServer; i++){
+      Thread *ep_thread= new Thread(new EPThread(addrlist, eplist, ep[i], mpi_size, true, sema), "ep sender thread", 0, Thread::Activated);
+	ep_thread->detach();
+    }
+    
+    // start one thread for each ep, so that it can
+    // check and receive the incoming messages.
+    for(int i=0; i<nServer; i++){
+      Thread *ep_thread= new Thread(new EPThread(addrlist, eplist, ep[i], mpi_size, false, sema), "ep receiver thread", 0, Thread::Activated);
+      ep_thread->detach();
+    }
+
+    for(int i=0; i<nServer*2;i++){
+      sema->down();
+    }
+    delete sema;
+    cerr<<"testDT done on rank="<<mpi_rank<<endl;
+  }catch(...) {
+    cerr << "Caught unexpected exception!\n";
+    abort();
+  }
+  
+  PIDL::finalize();
+  MPI_Finalize();
+  return 0;
 }
 
 

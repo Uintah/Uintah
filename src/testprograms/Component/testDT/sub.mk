@@ -38,5 +38,7 @@ PROGRAM := $(SRCDIR)/testDT
 SRCS := $(SRCDIR)/main.cc
 GENHDRS :=
 
+LIBS += $(MPI_LIBRARY) 
+
 include $(SCIRUN_SCRIPTS)/program.mk
 
