@@ -240,3 +240,26 @@ PetscSolver::scalarLisolve(const ProcessorGroup*,
 {
   throw InternalError("PetscSolver not configured");
 }
+
+void 
+PetscSolver::computeEnthalpyUnderrelax(const ProcessorGroup* ,
+				       const Patch* patch,
+				       ArchesVariables* vars)
+{
+  throw InternalError("PetscSolver not configured");
+}
+
+
+//****************************************************************************
+// Scalar Solve
+//****************************************************************************
+void 
+PetscSolver::enthalpyLisolve(const ProcessorGroup* pc,
+			  const Patch* patch,
+			  double delta_t,
+			  ArchesVariables* vars,
+			  CellInformation* cellinfo,
+			  const ArchesLabel* lab)
+{
+  throw InternalError("PetscSolver not configured");
+}
