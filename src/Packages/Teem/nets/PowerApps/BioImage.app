@@ -195,6 +195,7 @@ class BioImageApp {
         set 2D_fixed 0
 	set ViewSlices_executed_on_error 0
         set current_crop -1
+	set enter_crop 0
 
         set turn_off_crop 0
         set updating_crop_ui 0
@@ -778,6 +779,7 @@ class BioImageApp {
 	    -sashwidth 5000 -sashindent 0 -sashborderwidth 2 -sashheight 6 \
 	    -sashcursor sb_v_double_arrow -width $viewer_width -height $viewer_height
 	pack $w.topbot -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+	Tooltip $w.topbot "Click and drag to resize"
 	
 	$w.topbot add top -margin 3 -minimum 0
 	$w.topbot add bottom  -margin 0 -minimum 0
@@ -789,6 +791,7 @@ class BioImageApp {
 	iwidgets::panedwindow $top.lmr -orient vertical -thickness 0 \
 	    -sashheight 5000 -sashwidth 6 -sashindent 0 -sashborderwidth 2 \
 	    -sashcursor sb_h_double_arrow
+	Tooltip $top.lmr "Click and drag to resize"
 
 	$top.lmr add left -margin 3 -minimum 0
 	$top.lmr add middle -margin 3 -minimum 0
@@ -843,12 +846,15 @@ class BioImageApp {
 	radiobutton $window.modes.buttons.slice -text "Slice" \
 	    -variable $mods(ViewSlices)-$axis-viewport0-mode -value 0 \
 	    -command "$this update_ViewSlices_mode $axis"
+	Tooltip $window.modes.buttons.slice "Select to view in\nsingle slice mode.\nAdjust slider to\nchange current\nslice"
 	radiobutton $window.modes.buttons.slab -text "Slab" \
 	    -variable $mods(ViewSlices)-$axis-viewport0-mode -value 1 \
 	    -command "$this update_ViewSlices_mode $axis"
+	Tooltip $window.modes.buttons.slab "Select to view a\nmaximum intensity\nprojection of a slab\nof slices"
 	radiobutton $window.modes.buttons.mip -text "MIP" \
 	    -variable $mods(ViewSlices)-$axis-viewport0-mode -value 2 \
 	    -command "$this update_ViewSlices_mode $axis"
+	Tooltip $window.modes.buttons.mip "Select to view a\nmaximum intensity\nprojection of all\nslices"
 	pack $window.modes.buttons.slice $window.modes.buttons.slab \
 	    $window.modes.buttons.mip -side left -anchor n -padx 2 \
 	    -expand yes -fill x
@@ -899,6 +905,7 @@ class BioImageApp {
 	    -varmax $mods(ViewSlices)-$axis-viewport0-slab_max \
 	    -command "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis; \
                       $mods(ViewSlices)-c redrawall"
+	Tooltip $window.modes.slider.slab.s "Click and drag the\nmin or max sliders\nto change the extent\nof the slab. Click\nand drage the red\nrange bar to change the\ncenter poisition of\nthe slab range"
 	# max range value label
 	label $window.modes.slider.slab.max \
 	    -textvariable $mods(ViewSlices)-$axis-viewport0-slab_max \
@@ -919,6 +926,7 @@ class BioImageApp {
 	    -relief raised -image $img \
 	    -cursor based_arrow_down \
 	    -command "$this hide_control_panel $window.modes"
+	Tooltip $window.modes.expand "Click to minimize/show the\nviewing mode controls"
 	pack $window.modes.expand -side bottom -fill both
     }
     
@@ -1040,6 +1048,8 @@ class BioImageApp {
 	    pack $m.p.sf -side top -anchor nw -expand yes -fill both
 	    set history [$m.p.sf childsite]
 
+	    Tooltip $history "Shows a history of steps\nin the dynamic pipeline"
+
 	    # Add Load UI
 	    $this add_Load $history $case
 	    
@@ -1052,7 +1062,7 @@ class BioImageApp {
 		-command "$this update_changes" \
 		-background "#008b45" \
 		-activebackground "#31a065"
-	    Tooltip $m.p.update "Update any filter changes, also\nupdating the 3D and 2D view windows."
+	    Tooltip $m.p.update "Update any filter changes, also\nupdating the currenlty viewed data."
 
 	    pack $m.p.update -side top -anchor s -padx 3 -pady 3 -ipadx 3 -ipady 2
 
@@ -1443,7 +1453,7 @@ class BioImageApp {
  	    -anchor nw \
  	    -command "$this change_visibility $which" \
  	    -relief flat
-	Tooltip $data.expand.b "Click to hide/show the Load UI"
+	Tooltip $data.expand.b "Click to minimize/show\nthe Load UI"
  	label $data.expand.l -text "Data - Unknown" -width [expr $label_width+2] \
  	    -anchor nw
 	Tooltip $data.expand.l "Right click to edit label."
@@ -1464,6 +1474,7 @@ class BioImageApp {
 	    -tabpos n -equaltabs false
 	pack $data.ui.tnb -side top -anchor nw \
 	    -padx 0 -pady 3
+	Tooltip $data.ui.tnb "Load 3D volume in Nrrd,\nDicom, Analyze, or Field format."
 	
 	# Make pointers to modules 
 	set NrrdReader  [lindex [lindex $filters($which) $modules] $load_nrrd]
@@ -1493,7 +1504,7 @@ class BioImageApp {
 	button $page.load -text "Browse" \
 	    -command "$this check_crop; $this open_nrrd_reader_ui $which" \
 	    -width 12
-	Tooltip $page.load "Use a file browser to\nselect a data set"
+	Tooltip $page.load "Use a file browser to\nselect a Nrrd data set"
 	pack $page.load -side top -anchor n -padx 3 -pady 1
 	
 	
@@ -1503,6 +1514,7 @@ class BioImageApp {
 	
 	button $page.load -text "Dicom Loader" \
 	    -command "$this check_crop; $this enable_update 1 2 3; $this dicom_ui"
+	Tooltip $page.load "Open Dicom Load user interface"
 	
 	pack $page.load -side top -anchor n \
 	    -padx 3 -pady 10 -ipadx 2 -ipady 2
@@ -1513,6 +1525,7 @@ class BioImageApp {
 	
 	button $page.load -text "Analyze Loader" \
 	    -command "$this check_crop; $$this enable_update 1 2 3; this analyze_ui"
+	Tooltip $page.load "Open Dicom Load user interface"
 	
 	pack $page.load -side top -anchor n \
 	    -padx 3 -pady 10 -ipadx 2 -ipady 2
@@ -1536,6 +1549,7 @@ class BioImageApp {
 	button $page.load -text "Browse" \
 	    -command "[set FieldReader] initialize_ui; .ui[set FieldReader].f7.execute configure -state disabled" \
 	    -width 12
+	Tooltip $page.load "Use a file browser to\nselect a Nrrd data set"
 
         trace variable [set FieldReader]-filename w "$this enable_update"
 	pack $page.load -side top -anchor n -padx 3 -pady 1
@@ -2020,7 +2034,7 @@ class BioImageApp {
   	    checkbutton $page.planes.xm -text "Show Sagittal MIP" \
   		-variable show_MIP_x \
   		-command "$this toggle_show_MIP_x"
-              Tooltip $page.planes.xm "Turn Sagittal MIP on/off"
+            Tooltip $page.planes.xm "Turn Sagittal MIP on/off"
 
 
 	    checkbutton $page.planes.yp -text "Show Coronal Plane" \
@@ -2073,6 +2087,7 @@ class BioImageApp {
                 -from 0 -to 9999 -length 130 -width 15 \
                 -showvalue false -orient horizontal \
                 -command "$this change_window_width"
+            Tooltip $winlevel.ww.s "Control the window width of\nthe 2D viewers"
             bind $winlevel.ww.s <ButtonRelease> "$this execute_vol_ren_when_linked"
             entry $winlevel.ww.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_ww \
                 -relief flat
@@ -2084,6 +2099,7 @@ class BioImageApp {
                 -from 0 -to 9999 -length 130 -width 15 \
                 -showvalue false -orient horizontal \
                 -command "$this change_window_level"
+            Tooltip $winlevel.wl.s "Control the window level of\nthe 2D viewers"
             bind $winlevel.wl.s <ButtonRelease> "$this execute_vol_ren_when_linked"
             entry $winlevel.wl.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_wl \
                 -relief flat
@@ -2104,6 +2120,7 @@ class BioImageApp {
  	        -orient horizontal -showvalue false \
  	        -length 100 -width 15 \
 	        -variable planes_threshold
+            Tooltip $page.thresh.s "Clip out values less than\nspecified background threshold"
             label $page.thresh.l2 -textvariable planes_threshold
 
             pack $page.thresh.l $page.thresh.s $page.thresh.l2 -side left -anchor nw \
@@ -2121,27 +2138,22 @@ class BioImageApp {
 		-variable show_guidelines \
 		-command "$this toggle_show_guidelines" 
             pack $page.lines -side top -anchor nw -padx 4 -pady 7
+            Tooltip $page.lines "Toggle 2D Viewer guidelines"
 
             global filter2Dtextures
 	    checkbutton $page.2Dtext -text "Filter 2D Textures" \
 		-variable filter2Dtextures \
 		-command "$this toggle_filter2Dtextures" 
             pack $page.2Dtext -side top -anchor nw -padx 4 -pady 7
+            Tooltip $page.2Dtext "Turn filtering 2D textures\non/off"
 
 	    global planes_color
 	    iwidgets::labeledframe $page.isocolor \
-		-labeltext "Color Planes Using" \
+		-labeltext "Color Planes By" \
 		-labelpos nw 
-	    pack $page.isocolor -side top -anchor n -padx 3 -pady 5
+	    pack $page.isocolor -side top -anchor n -padx 3 -pady 0 -fill x
 	    
-	    set isocolor [$page.isocolor childsite]
-	    
-	    iwidgets::labeledframe $isocolor.maps \
-		-labeltext "Color Maps" \
-		-labelpos nw 
-	    pack $isocolor.maps -side top -anchor n -padx 3 -pady 0 -fill x
-	    
-	    set maps [$isocolor.maps childsite]
+	    set maps [$page.isocolor childsite]
 
 	    global planes_mapType
 	    
@@ -2153,6 +2165,7 @@ class BioImageApp {
 		-variable planes_mapType \
 		-value 0 \
 		-command "$this update_planes_color_by"
+            Tooltip $maps.gray.b "Select color map for coloring planes"
 	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.gray.f -relief sunken -borderwidth 2
@@ -2171,6 +2184,7 @@ class BioImageApp {
 		-variable planes_mapType \
 		-value 2 \
 		-command "$this update_planes_color_by"
+            Tooltip $maps.rainbow.b "Select color map for coloring planes"
 	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.rainbow.f -relief sunken -borderwidth 2
@@ -2188,6 +2202,7 @@ class BioImageApp {
 		-variable planes_mapType \
 		-value 5 \
 		-command "$this update_planes_color_by"
+            Tooltip $maps.darkhue.b "Select color map for coloring planes"
 	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.darkhue.f -relief sunken -borderwidth 2
@@ -2206,6 +2221,7 @@ class BioImageApp {
 		-variable planes_mapType \
 		-value 7 \
 		-command "$this update_planes_color_by"
+            Tooltip $maps.blackbody.b "Select color map for coloring planes"
 	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.blackbody.f -relief sunken -borderwidth 2 
@@ -2223,6 +2239,7 @@ class BioImageApp {
 		-variable planes_mapType \
 		-value 17 \
 		-command "$this update_planes_color_by"
+            Tooltip $maps.bpseismic.b "Select color map for coloring planes"
 	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
 	    
 	    frame $maps.bpseismic.f -relief sunken -borderwidth 2
@@ -2240,11 +2257,13 @@ class BioImageApp {
 	    checkbutton $page.toggle -text "Show Volume Rendering" \
 		-variable show_vol_ren \
 		-command "$this toggle_show_vol_ren"
+            Tooltip $page.toggle "Turn volume rendering on/off"
             pack $page.toggle -side top -anchor nw -padx 3 -pady 3
 
 
             button $page.vol -text "Edit Transfer Function" \
                 -command "$this check_crop; $mods(EditTransferFunc) initialize_ui"
+            Tooltip $page.vol "Open up the interface\nfor editing the transfer function"
             pack $page.vol -side top -anchor n -padx 3 -pady 3
             
             set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
@@ -2285,6 +2304,7 @@ class BioImageApp {
             -relief flat \
             -variable [set ChooseNrrdLighting]-port-index -onvalue 1 -offvalue 0 \
             -anchor w -command "$this toggle_compute_shading"
+        Tooltip $page.lighting "Turn computing data for shaded volume\nrendering on/off."
         pack $page.lighting -side top -fill x -padx 4
 
         #-----------------------------------------------------------
@@ -2293,6 +2313,7 @@ class BioImageApp {
 	checkbutton $page.shading -text "Show shaded volume rendering" -relief flat \
             -variable [set VolumeVisualizer]-shading -onvalue 1 -offvalue 0 \
             -anchor n -command "$n"
+        Tooltip $page.shading "If computed, turn use of shading on/off"
         pack $page.shading -side top -fill x -padx 4
 
         #-----------------------------------------------------------
@@ -2367,6 +2388,7 @@ class BioImageApp {
         checkbutton $winlevel.link -text "Link to Slice Window/Level" \
             -variable link_winlevel \
             -command "$this link_windowlevels"
+        Tooltip $winlevel.link "Link the changes of the\nwindow controls below to\nthe planes window controls"
         pack $winlevel.link -side top -anchor nw -pady 1
 
         frame $winlevel.ww
@@ -2378,6 +2400,7 @@ class BioImageApp {
             -from 0 -to 9999 -length 130 -width 15 \
             -showvalue false -orient horizontal \
             -command "$this change_volume_window_width_and_level"
+        Tooltip $winlevel.ww.s "Control the window width of\nthe volume rendering"
         bind $winlevel.ww.s <ButtonRelease> "$this execute_vol_ren"
         entry $winlevel.ww.e -textvariable vol_width \
             -relief flat
@@ -2389,6 +2412,7 @@ class BioImageApp {
             -from 0 -to 9999 -length 130 -width 15 \
             -showvalue false -orient horizontal \
             -command "$this change_volume_window_width_and_level"
+        Tooltip $winlevel.wl.s "Control the window width of\nthe volume rendering"
        bind $winlevel.wl.s <ButtonRelease> "$this execute_vol_ren"
         entry $winlevel.wl.e -textvariable vol_level \
             -relief flat
@@ -3276,7 +3300,6 @@ class BioImageApp {
     }
 
     method start_crop {which} {
-
         global mods
 
         if {!$loading && [lindex $filters($which) $filter_type] == "crop"} {
@@ -3288,7 +3311,6 @@ class BioImageApp {
             # turn on Cropping widgets in ViewSlices windows
 	    # corresponding with padding values from filter $which
             set pad_vals [lindex $filters($which) 12]
-
             set $mods(ViewSlices)-crop_minPadAxis0 [lindex $pad_vals 0]
 	    set $mods(ViewSlices)-crop_maxPadAxis0 [lindex $pad_vals 1]
 	    set $mods(ViewSlices)-crop_minPadAxis1 [lindex $pad_vals 2]
@@ -3309,15 +3331,21 @@ class BioImageApp {
                 [set [set UnuCrop]-minAxis2] == 0 && [set [set UnuCrop]-maxAxis2] == 0} {
                 set first_time 1
             }
+
+            if {$first_time == 0} {
+		set enter_crop 1
+            }
                 
 
             # should set ViewSlices crop vals if they have been set
             if {$needs_update == 1 && !$first_time} {
+                set updating_crop_ui 1
+		update
+
 		global $mods(ViewSlices)-crop_minAxis0 $mods(ViewSlices)-crop_maxAxis0
 		global $mods(ViewSlices)-crop_minAxis1 $mods(ViewSlices)-crop_maxAxis1
 		global $mods(ViewSlices)-crop_minAxis2 $mods(ViewSlices)-crop_maxAxis2
 
-                set updating_crop_ui 1
                 $mods(ViewSlices)-c startcrop
 		set $mods(ViewSlices)-crop_minAxis0 [set [set UnuCrop]-minAxis0]
 		set $mods(ViewSlices)-crop_minAxis1 [set [set UnuCrop]-minAxis1]
@@ -3329,6 +3357,7 @@ class BioImageApp {
             } else {
                 $mods(ViewSlices)-c startcrop
             }
+            set enter_crop 0
 	    set turn_off_crop 1
 	    set updating_crop_ui 0
 	    set current_crop $which
@@ -3346,6 +3375,7 @@ class BioImageApp {
 	# get values from UnuCrop, then
 	# set ViewSlices crop values
  	set UnuCrop [lindex [lindex $filters($which) $modules] 0]
+        set updating_crop_ui 1
         if {$type == "min"} {
     	    global [set UnuCrop]-minAxis$i $mods(ViewSlices)-crop_minAxis$i
             set min [set [set UnuCrop]-minAxis$i]
@@ -3355,6 +3385,7 @@ class BioImageApp {
             set max [set [set UnuCrop]-maxAxis$i]
             set $mods(ViewSlices)-crop_maxAxisi$ $max 
         }
+        set updating_crop_ui 0
 
 	# if crop on, update it
         $this update_crop $which
@@ -3410,7 +3441,7 @@ class BioImageApp {
 	    -anchor nw \
 	    -command "$this change_visibility $which" \
 	    -relief flat
-	Tooltip $w.expand.b "Click to hide/show the Resample UI"
+	Tooltip $w.expand.b "Click to minimize/show\nthe Resample UI"
 	label $w.expand.l -text "Resample - Unknown" -width $label_width \
             -anchor nw
 	Tooltip $w.expand.l "Right click to edit label"
@@ -3420,7 +3451,7 @@ class BioImageApp {
  	    -command "$this filter_Delete $which" \
  	    -relief flat
 
-	Tooltip $w.expand.c "Click to delete this filter."
+	Tooltip $w.expand.c "Click to delete this filter from\nthe pipeline. All settings\nfor this filter will be lost."
 
 	pack $w.expand.b $w.expand.l $w.expand.c -side left -anchor nw
 
@@ -3505,7 +3536,7 @@ class BioImageApp {
 	    -anchor nw \
 	    -command "$this change_visibility $which" \
 	    -relief flat
-	Tooltip $w.expand.b "Click to hide/show the Crop UI"
+	Tooltip $w.expand.b "Click to minimize/show\nthe Crop UI"
 	label $w.expand.l -text "Crop - Unknown" -width $label_width \
 	    -anchor nw
 	Tooltip $w.expand.l "Right click to edit label"
@@ -3516,7 +3547,7 @@ class BioImageApp {
  	    -command "$this filter_Delete $which" \
  	    -relief flat
 
-	Tooltip $w.expand.c "Click to delete filter."
+	Tooltip $w.expand.c "Click to delete this filter from\nthe pipeline. All settings\nfor the filter will be lost."
 
 	pack $w.expand.b $w.expand.l $w.expand.c -side left -anchor nw 
 
@@ -3584,10 +3615,9 @@ class BioImageApp {
 
 
     method update_crop_values { varname varele varop } {
-
  	    global mods 
 
-	if {$current_crop != -1 && $updating_crop_ui == 0} {
+	if {$current_crop != -1 && $updating_crop_ui == 0 && $enter_crop == 0} {
  	    # verify that a crop is selected
  	    if {[lindex $filters($current_crop) $filter_type] != "crop"} {
                  return
@@ -3662,7 +3692,7 @@ class BioImageApp {
 	    -anchor nw \
 	    -command "$this change_visibility $which" \
 	    -relief flat
-        Tooltip $w.expand.b "Click to hide/show the Cmedian UI"
+        Tooltip $w.expand.b "Click to minimize/show\nthe Cmedian UI"
 	label $w.expand.l -text "Cmedian - Unknown" -width $label_width \
 	    -anchor nw
 	Tooltip $w.expand.l "Right click to edit label"
@@ -3672,7 +3702,7 @@ class BioImageApp {
  	    -command "$this filter_Delete $which" \
  	    -relief flat
 
-	Tooltip $w.expand.c "Click to delete filter."
+	Tooltip $w.expand.c "Click to delete this filter from\nthe pipeline. All settings\nfor the filter will be lost."
 
 	pack $w.expand.b $w.expand.l $w.expand.c -side left -anchor nw 
 
@@ -3737,7 +3767,7 @@ class BioImageApp {
  	    -command "$this filter_Delete $which" \
  	    -relief flat
 
-	Tooltip $w.expand.c "Click to delete filter."
+	Tooltip $w.expand.c "Click to delete this filter from\nthe pipeline. All settings\nfor the filter will be lost."
 
 	pack $w.expand.b $w.expand.l $w.expand.c -side left -anchor nw 
 
@@ -3751,7 +3781,7 @@ class BioImageApp {
         set UnuQuantize [lindex [lindex $filters($which) $modules] 1]
         set ScalarFieldStats [lindex [lindex $filters($which) $modules] 3]
 
-        ### Historgram
+        ### Histogram
         iwidgets::labeledframe $w.ui.histo \
             -labelpos nw -labeltext "Histogram"
  	pack $w.ui.histo -side top -fill x -anchor n -expand 1
@@ -5001,6 +5031,7 @@ class BioImageApp {
     variable turn_off_crop
     variable updating_crop_ui
     variable needs_update
+    variable enter_crop
 
     variable cur_data_tab
     variable c_vis_tab
