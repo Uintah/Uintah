@@ -352,6 +352,7 @@ void Streamline::execute()
 	    error("Error reading algorithm variable");
 	    return;
 	}
+	cerr << alg << endl;
 	ALGS alg_enum;
 	if(alg == "Euler"){
 	    alg_enum=Euler;
@@ -930,7 +931,7 @@ void SLPointSource::find(const Point& start, const Vector&, double scale)
     pw->SetScale(scale/50);
 }
 
-Point SLPointSource::trace_start(double s, double t)
+Point SLPointSource::trace_start(double /*s*/, double /*t*/)
 {
     return pw->GetPosition();
 }
@@ -1103,10 +1104,39 @@ SLRK4Tracer::~SLRK4Tracer()
 {
 }
 
-int SLRK4Tracer::advance(const VectorFieldHandle&, double, int)
+int SLRK4Tracer::advance(const VectorFieldHandle& vfield, double stepsize, int skip)
 {
-    NOT_FINISHED("SLRK4Tracer::advance");
-    return 0;
+    Vector F1, F2, F3, F4;
+
+    for(int i=0;i<skip;i++){
+	if(!vfield->interpolate(p, grad)){
+	    inside=0;
+	    return 0;
+	} else {
+	    F1 = grad*stepsize;
+	    if(!vfield->interpolate(p+F1*0.5, grad)){
+		inside=0;
+		return 0;
+	    } else {
+		F2 = grad*stepsize;
+		if(!vfield->interpolate(p+F2*0.5, grad)){
+		    inside=0;
+		    return 0;
+		} else {
+		F3 = grad*stepsize;
+		if(!vfield->interpolate(p+F3, grad)){
+		    inside=0;
+		    return 0;
+		} else {
+		    F4 = grad * stepsize;
+		}
+		}
+	    }
+	}
+    
+	p += (F1 + F2 * 2.0 + F3 * 2.0 + F4) / 6.0;
+    }
+    return 1;
 }
 
 void Streamline::tcl_command(TCLArgs& args, void* userdata)
