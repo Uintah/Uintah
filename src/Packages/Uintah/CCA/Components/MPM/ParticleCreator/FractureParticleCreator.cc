@@ -38,13 +38,13 @@ ParticleSubset* FractureParticleCreator::createParticles(MPMMaterial* matl,
 							   new_dw,lb,
 							   d_geom_objs);
 
- ParticleVariable<Point> position0;
- constParticleVariable<Point> position;
+ //ParticleVariable<Point> position0;
+ //constParticleVariable<Point> position;
 
- new_dw->allocateAndPut(position0,lb->pX0Label,subset);
- new_dw->get(position,lb->pXLabel,subset);
+ //new_dw->allocateAndPut(position0,lb->pX0Label,subset);
+ //new_dw->get(position,lb->pXLabel,subset);
 
- position0.copyData(position);
+ //position0.copyData(position);
 
  return subset;
 }
@@ -69,8 +69,8 @@ void
 FractureParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
 							MPMLabel* lb)
 {
-  particle_state.push_back(lb->pX0Label);
-  particle_state_preReloc.push_back(lb->pX0Label_preReloc);
+  //particle_state.push_back(lb->pX0Label);
+  //particle_state_preReloc.push_back(lb->pX0Label_preReloc);
 
   // Remove the pSp_volLabel and pSp_volLabel_preReloc
   vector<const VarLabel*>::iterator r1,r2;
