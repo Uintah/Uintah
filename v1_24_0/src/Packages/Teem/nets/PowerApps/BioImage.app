@@ -45,10 +45,6 @@ set bbox {0 0 3100 3100}
 set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 17 2900]
 
 
-
-
-
-
 global mods
 set mods(Viewer) $m1
 
@@ -204,6 +200,10 @@ class BioImageApp {
         set updating_crop_ui 0
         set needs_update 1
 
+	set axial-size 0
+	set sagittal-size 0
+	set coronal-size 0
+
 
 	set cur_data_tab "Nrrd"
 	set c_vis_tab "Planes"
@@ -357,13 +357,18 @@ class BioImageApp {
  		global $mods(ViewSlices)-sagittal-viewport0-clut_wl
  		global $mods(ViewSlices)-coronal-viewport0-clut_wl
 
+                global $mods(ViewSlices)-min $mods(ViewSlices)-max
+		set val_min [set $mods(ViewSlices)-min]
+		set val_max [set $mods(ViewSlices)-max]
+
+                set ww [expr int([expr abs([expr $val_max-$val_min])])]
+                set wl [expr [expr int($ww/2)]]
+
 		set $mods(ViewSlices)-sagittal-viewport0-axis 0
 		set $mods(ViewSlices)-coronal-viewport0-axis 1
 		set $mods(ViewSlices)-axial-viewport0-axis 2
 
 
-                set ww [set $mods(ViewSlices)-axial-viewport0-clut_ww]
-                set wl [set $mods(ViewSlices)-axial-viewport0-clut_wl]
 		set $mods(ViewSlices)-axial-viewport0-clut_ww $ww
 		set $mods(ViewSlices)-sagittal-viewport0-clut_ww $ww
 		set $mods(ViewSlices)-coronal-viewport0-clut_ww $ww
@@ -414,6 +419,9 @@ class BioImageApp {
               after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 
                 set 2D_fixed 1
+
+		# re-execute ViewSlices so that all the planes show up (hack)
+                $mods(ViewSlices)-c needexecute
 	    } 
 
 	    global $mods(ViewSlices)-min $mods(ViewSlices)-max
@@ -431,16 +439,18 @@ class BioImageApp {
 		$slice_frame($axis).modes.slider.slice.s configure -from 0 -to $size
 		$slice_frame($axis).modes.slider.slab.s configure -from 0 -to $size
 
-		if {!$loading} {
-		    upvar \#0 $mods(ViewSlices)-$axis-viewport0-slice slice
-		    upvar \#0 $mods(ViewSlices)-$axis-viewport0-slab_min slab_min
-		    upvar \#0 $mods(ViewSlices)-$axis-viewport0-slab_max slab_max
+		set $axis-size $size
 
+		upvar \#0 $mods(ViewSlices)-$axis-viewport0-slice slice
+		upvar \#0 $mods(ViewSlices)-$axis-viewport0-slab_min slab_min
+		upvar \#0 $mods(ViewSlices)-$axis-viewport0-slab_max slab_max
+
+		if {!$loading} {
 		    # set slice to be middle slice
 		    set slice [expr $size/2]		;# 50%
 		    set slab_min [expr $size/4]		;# 25%
 		    set slab_max [expr $size*3/4]	;# 75%
-		} 
+		}
 		incr axis_num
 	    }
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && $state == "JustStarted"} {
@@ -737,7 +747,7 @@ class BioImageApp {
 	set slice_frame(axial) $topr
 	set slice_frame(coronal) $botr
 	set slice_frame(sagittal) $botl
-
+	
 	foreach axis "sagittal coronal axial" {
 	    create_2d_frame $slice_frame($axis) $axis
 	    $viewimage gl_frame $slice_frame($axis).$axis
@@ -797,8 +807,8 @@ class BioImageApp {
 	set slice_frame(coronal) $topm
 	set slice_frame(axial) $topr
 
-
 	foreach axis "sagittal coronal axial" {
+	    global $mods(ViewSlices)-$axis-viewport0-mode
 	    create_2d_frame $slice_frame($axis) $axis
 	    $viewimage gl_frame $slice_frame($axis).$axis
 	    pack $slice_frame($axis).$axis -expand 1 -fill both \
@@ -858,6 +868,7 @@ class BioImageApp {
 	    -orient horizontal \
 	    -command "$mods(ViewSlices)-c rebind $slice_frame($axis).$axis; \
                       $mods(ViewSlices)-c redrawall"
+
 	# slice value label
 	label $window.modes.slider.slice.l \
 	    -textvariable $mods(ViewSlices)-$axis-viewport0-slice \
@@ -4231,6 +4242,16 @@ class BioImageApp {
     }
 
     ##############################
+    ### save_image
+    ##############################
+    # To be filled in by child class. It should save out the
+    # viewer image.
+    method save_image {} {
+	global mods
+	$mods(Viewer)-ViewWindow_0 makeSaveImagePopup
+    }
+
+    ##############################
     ### save_session
     ##############################
     # To be filled in by child class. It should save out a session
@@ -4294,6 +4315,11 @@ class BioImageApp {
         global eye
         puts $fileid "global eye"
         puts $fileid "set eye \{[set eye]\}"
+
+        global show_guidelines
+        puts $fileid "global show_guidelines"
+        puts $fileid "set show_guidelines \{[set show_guidelines]\}"
+
 
         global top
         puts $fileid "global top"
@@ -4450,6 +4476,62 @@ class BioImageApp {
        # source at the global level for module settings
        uplevel \#0 source \{$saveFile\}
 
+       # save out ViewSlices and Viewer variables that will be overwritten
+       # two modules are destroyed and recreated and reset their state
+       
+       global $mods(ViewSlices)-axial-viewport0-mode
+       global $mods(ViewSlices)-sagittal-viewport0-mode
+       global $mods(ViewSlices)-coronal-viewport0-mode
+       global $mods(ViewSlices)-axial-viewport0-slice
+       global $mods(ViewSlices)-sagittal-viewport0-slice
+       global $mods(ViewSlices)-coronal-viewport0-slice
+       global $mods(ViewSlices)-axial-viewport0-slab_min
+       global $mods(ViewSlices)-sagittal-viewport0-slab_min
+       global $mods(ViewSlices)-coronal-viewport0-slab_min
+       global $mods(ViewSlices)-axial-viewport0-slab_max
+       global $mods(ViewSlices)-sagittal-viewport0-slab_max
+       global $mods(ViewSlices)-coronal-viewport0-slab_max
+       global $mods(ViewSlices)-axial-viewport0-clut_ww
+       global $mods(ViewSlices)-axial-viewport0-clut_wl
+       global $mods(ViewSlices)-min $mods(ViewSlices)-max
+
+       set axial_mode [set $mods(ViewSlices)-axial-viewport0-mode]
+       set sagittal_mode [set $mods(ViewSlices)-sagittal-viewport0-mode]
+       set coronal_mode [set $mods(ViewSlices)-coronal-viewport0-mode]
+       set axial_slice [set $mods(ViewSlices)-axial-viewport0-slice]
+       set sagittal_slice [set $mods(ViewSlices)-sagittal-viewport0-slice]
+       set coronal_slice [set $mods(ViewSlices)-coronal-viewport0-slice]
+       set axial_slab_min [set $mods(ViewSlices)-axial-viewport0-slab_min]
+       set sagittal_slab_min [set $mods(ViewSlices)-sagittal-viewport0-slab_min]
+       set coronal_slab_min [set $mods(ViewSlices)-coronal-viewport0-slab_min]
+       set axial_slab_max [set $mods(ViewSlices)-axial-viewport0-slab_max]
+       set sagittal_slab_max [set $mods(ViewSlices)-sagittal-viewport0-slab_max]
+       set coronal_slab_max [set $mods(ViewSlices)-coronal-viewport0-slab_max]
+       set ww [set $mods(ViewSlices)-axial-viewport0-clut_ww]
+       set wl [set $mods(ViewSlices)-axial-viewport0-clut_wl]
+
+       global $mods(Viewer)-ViewWindow_0-view-eyep-x 
+       global $mods(Viewer)-ViewWindow_0-view-eyep-y 
+       global $mods(Viewer)-ViewWindow_0-view-eyep-z 
+       global $mods(Viewer)-ViewWindow_0-view-lookat-x 
+       global $mods(Viewer)-ViewWindow_0-view-lookat-y 
+       global $mods(Viewer)-ViewWindow_0-view-lookat-z 
+       global $mods(Viewer)-ViewWindow_0-view-up-x 
+       global $mods(Viewer)-ViewWindow_0-view-up-y 
+       global $mods(Viewer)-ViewWindow_0-view-up-z 
+       global $mods(Viewer)-ViewWindow_0-view-fov 
+
+       set eyepx [set $mods(Viewer)-ViewWindow_0-view-eyep-x] 
+       set eyepy [set $mods(Viewer)-ViewWindow_0-view-eyep-y] 
+       set eyepz [set $mods(Viewer)-ViewWindow_0-view-eyep-z] 
+       set lookx [set $mods(Viewer)-ViewWindow_0-view-lookat-x]
+       set looky [set $mods(Viewer)-ViewWindow_0-view-lookat-y]
+       set lookz [set $mods(Viewer)-ViewWindow_0-view-lookat-z]
+       set upx [set $mods(Viewer)-ViewWindow_0-view-up-x]
+       set upy [set $mods(Viewer)-ViewWindow_0-view-up-y]
+       set upz [set $mods(Viewer)-ViewWindow_0-view-up-z]
+       set fov [set $mods(Viewer)-ViewWindow_0-view-fov]
+
        set loading_ui 1
        set last_valid 0
        set data_tab $cur_data_tab
@@ -4525,8 +4607,6 @@ class BioImageApp {
             }
 	}
 
-        # rebuild the viewer windows
-        $this build_viewers $mods(Viewer) $mods(ViewSlices)
 
         set loading_ui 0
 
@@ -4546,14 +4626,65 @@ class BioImageApp {
         # update components using globals
         $this update_orientations
         $this update_planes_color_by
+        $this update_planes_threshold_slider_min_max [set $mods(ViewSlices)-min] [set $mods(ViewSlices)-max]
         $this update_planes_threshold
+        $this update_window_level_scales 1 2 3
         $this change_volume_window_width_and_level -1
+        $this toggle_show_guidelines
 
         # bring proper tabs forward
         set cur_data_tab $data_tab
         $attachedPFr.f.p.sf.lwchildsite.clipper.canvas.sfchildsite.0.f0.childsite.ui.tnb view $cur_data_tab
         $detachedPFr.f.p.sf.lwchildsite.clipper.canvas.sfchildsite.0.f0.childsite.ui.tnb view $cur_data_tab
         $this change_vis_frame $c_vis_tab
+
+        # rebuild the viewer windows
+        $this build_viewers $mods(Viewer) $mods(ViewSlices)
+
+        # configure slice/mip sliders
+        global slice_frame
+        foreach axis "sagittal coronal axial" {
+            $slice_frame($axis).modes.slider.slice.s configure -from 0 -to [set $axis-size]
+            $slice_frame($axis).modes.slider.slab.s configure -from 0 -to [set $axis-size]
+        }
+
+        # reset saved ViewSlices variables
+        set $mods(ViewSlices)-axial-viewport0-mode $axial_mode
+        set $mods(ViewSlices)-axial-viewport0-slice $axial_slice
+        set $mods(ViewSlices)-axial-viewport0-slab_min $axial_slab_min
+        set $mods(ViewSlices)-axial-viewport0-slab_max $axial_slab_max
+        set $mods(ViewSlices)-axial-viewport0-clut_ww $ww
+        set $mods(ViewSlices)-axial-viewport0-clut_wl $wl
+
+        set $mods(ViewSlices)-sagittal-viewport0-mode $sagittal_mode
+        set $mods(ViewSlices)-sagittal-viewport0-slice $sagittal_slice
+        set $mods(ViewSlices)-sagittal-viewport0-slab_min $sagittal_slab_min
+        set $mods(ViewSlices)-sagittal-viewport0-slab_max $sagittal_slab_max
+
+        set $mods(ViewSlices)-coronal-viewport0-mode $coronal_mode
+        set $mods(ViewSlices)-coronal-viewport0-slice $coronal_slice
+        set $mods(ViewSlices)-coronal-viewport0-slab_min $coronal_slab_min
+        set $mods(ViewSlices)-coronal-viewport0-slab_max $coronal_slab_max
+
+        # make calls to set up ViewSlices settings properly
+        $this update_ViewSlices_mode axial
+        $this update_ViewSlices_mode coronal
+        $this update_ViewSlices_mode sagittal
+
+        # set viewer settings
+       set $mods(Viewer)-ViewWindow_0-view-eyep-x $eyepx
+       set $mods(Viewer)-ViewWindow_0-view-eyep-y $eyepy
+       set $mods(Viewer)-ViewWindow_0-view-eyep-z $eyepz
+       set $mods(Viewer)-ViewWindow_0-view-lookat-x $lookx
+       set $mods(Viewer)-ViewWindow_0-view-lookat-y $looky
+       set $mods(Viewer)-ViewWindow_0-view-lookat-z $lookz
+       set $mods(Viewer)-ViewWindow_0-view-up-x $upx
+       set $mods(Viewer)-ViewWindow_0-view-up-y $upy
+       set $mods(Viewer)-ViewWindow_0-view-up-z $upz
+       set $mods(Viewer)-ViewWindow_0-view-fov $fov
+
+       set has_autoviewed 1
+       set 2D_fixed 1
     }	
 
 
@@ -4749,7 +4880,7 @@ class BioImageApp {
     method update_ViewSlices_mode { axis args } {
 	global mods slice_frame
         upvar \#0 $mods(ViewSlices)-$axis-viewport0-mode mode
-	
+
         set w $slice_frame($axis)
         # forget and repack appropriate widget
 	if {$mode == 0} {
@@ -4874,6 +5005,10 @@ class BioImageApp {
 
     variable cur_data_tab
     variable c_vis_tab
+
+    variable axial-size
+    variable sagittal-size
+    variable coronal-size
 }
 
 
