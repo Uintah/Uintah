@@ -37,13 +37,16 @@ DEALINGS IN THE SOFTWARE.
   <para> The <ulink
   url="http://www-unix.mcs.anl.gov/petsc/petsc-2/"><acronym>PETSc</acronym></ulink>
   library adds equation solvers to &sr;'s SolveMatrix module.
+  Installation of <acronym>PETSc</acronym> is optional.
   <acronym>PETSc</acronym> requires
   <acronym>BLAS</acronym>/<acronym>ATLAS</acronym> and
-  <acronym>LAPACK</acronym>.  The <ulink
+  <acronym>LAPACK</acronym>.</para>
+
+  <para>The <ulink
   url="http://www.itk.org">Insight Toolkit
-  (<acronym>ITK</acronym>)</ulink> provides segmentation, registration,
-  and image processing filters encapsulated as &sr; modules.
-  </para>
+  (<acronym>ITK</acronym>)</ulink> provides segmentation,
+  registration, and image processing filters encapsulated as &sr;
+  modules.  Installation of <acronym>ITK</acronym> is optional. </para>
 
   <para>
     &sr; has been tested on three platforms: SGI, Linux, and Mac OS X.
@@ -56,26 +59,14 @@ DEALINGS IN THE SOFTWARE.
     <xref linkend="tbl.disk_space"/>.
   </para>
 
-  <para>See <xref linkend="intro.nvidia_notes"
-  /> for information on the use of
-  Nvidia graphics cards with the Linux operating system.</para>
-
-  <para>See <xref 
-  linkend="intro.ati_notes"/> for information on the use of ATI cards
-  and drivers with the Linux operating system.</para>
-
-  <para>See <xref linkend="intro.redhat_ent_notes"
-  /> for information about the use
-  of Red Hat Enterprise Linux.</para>
-
   <table id="tbl.pltfm_req">
     <title>Platform Guidelines</title>
     <tgroup cols="3">
       <thead >
 	<row>
 	  <entry align="center">Linux</entry>
-	  <entry>SGI</entry>
-	  <entry>Mac OS X</entry>
+	  <entry align="center">SGI</entry>
+	  <entry align="center">Mac OS X</entry>
 	</row>
       </thead>
       <tbody>
@@ -117,13 +108,12 @@ DEALINGS IN THE SOFTWARE.
 	      <listitem>
 		<para>OS X 10.3 (Panther)</para>
 	      </listitem>
-
 	      <listitem>
 		<para>&osx; 10.3 developer tools.</para>
 	      </listitem>
 	      <listitem>
-
-		<para>Apple's X11 and X11 <acronym>SDK</acronym> for &osx; 10.3.</para>
+		<para>Apple's X11 and X11 <acronym>SDK</acronym> for
+		&osx; 10.3.</para>
 	      </listitem>
 	      <listitem>
 		<para>G4 or G5 processor</para>
@@ -137,6 +127,7 @@ DEALINGS IN THE SOFTWARE.
       </tbody>
     </tgroup>
   </table>
+
 
   <table id="tbl.disk_space">
     <title>Disk Space Requirements</title>
@@ -169,23 +160,55 @@ DEALINGS IN THE SOFTWARE.
     available only through the &sr; source code distribution.
   </para>
 
-  <para>
-    On SGI and &osx; systems &sr; must be <link
-    linkend="sec.source_inst">installed from the source code
-    distribution</link>.
-  </para>
+  <para>See <xref linkend="intro.nvidia_notes" /> for information on
+  the use of Nvidia graphics cards with the Linux operating
+  system.</para>
 
-  <para>
-    Read  <xref linkend="sec.prepare"
-    /> after
-    installing &sr;.
-  </para>
+  <para>See <xref linkend="intro.ati_notes"/> for information on the
+  use of ATI cards and drivers with the Linux operating system.</para>
 
-  <para>Proceed to <xref linkend="sec.rpminst"
-  /> if installing &sr; from an
-  <acronym>RPM</acronym>.  Otherwise, start with <xref linkend="sec.source_inst"
-  /> to install &sr; from 
-  source code.</para>
+  <para>See <xref linkend="intro.redhat_ent_notes" /> for information
+  about the use of Red Hat Enterprise Linux.</para>
+
+  <para>On SGI systems &sr; must be <link
+  linkend="sec.source_inst">installed from the source code
+  distribution</link>.</para>
+
+  <para>On &osx; systems &sr; must be <link
+  linkend="sec.source_inst">installed from the source code
+  distribution</link>.  <xref linkend="sec.osx_notes"/> discusses
+  &osx; prerequisites.</para>
+
+  <para>Read <xref linkend="sec.prepare" /> after installing
+  &sr;.</para>
+
+  <para>Proceed to <xref linkend="sec.rpminst" /> if installing &sr;
+  via an <acronym>RPM</acronym>.  Otherwise, start with <xref
+  linkend="sec.source_inst" /> to install &sr; from source
+  code.</para>
+
+  <section id="sec.osx_notes">
+    <title>&osx; Prerequisites</title>
+    <para>Apple's X11 software must be installed on &osx;.  X11 is
+    distributed with &osx; but is not installed by default.  X11 is
+    installed by double-clicking on file
+    <filename>X11User.pkg</filename>.  <filename>X11User.pkg</filename>
+    is located on the third CD of the &osx; distribution in the
+    <filename>Packages</filename> directory.</para>
+
+    <para>Apple's Xcode developement tools must be installed on &osx;
+    systems.  Xcode tools are distributed with &osx; on their own CD.
+    Xcode tools are installed by double-clicking file
+    <filename>Developer.mpkg</filename>, which is found on the Xcode
+    CD.</para>
+
+    <para>Apple's X11 software development kit must be installed on
+    &osx;.  The X11 SDK is distributed with the Xcode tools but are
+    not part of the default Xcode installation.  To install the X11
+    SDK, double-click file <filename>X11SDK.pkg</filename>, which is
+    found in the <filename>Packages</filename> directory of the Xcode
+    distribution.</para>
+  </section>
 
   <section id="intro.nvidia_notes">
     <title id="intro.nvidia_notes.title">Linux and Nvidia Driver Notes</title>

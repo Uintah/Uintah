@@ -41,7 +41,7 @@ changing the working directory (<command>cd</command>ing) to
 </para>
 
 <para>
-If built from its source code tarballs, &sr;'s installation can be
+If built from source code, &sr;'s installation can be
 tested by changing the working directory (<command>cd</command>ing) to
 &sr;'s build directory and typing <command>./scirun</command>.
 </para>

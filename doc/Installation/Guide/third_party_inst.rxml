@@ -31,11 +31,13 @@ DEALINGS IN THE SOFTWARE.
   <title id="title.third_party_inst">Building Third Party Software</title>
 
   <para>Third party software must be built before building &sr;.
-  Instructions for SGI and Linux are different from
-  instructions for &osx;.  The next two sections are instructions for
-  SGI/Linux and &osx; platforms respectively.</para>
+  Instructions for SGI and Linux are different from instructions for
+  &osx;.  <xref linkend="sec.third_party_linux_sgi"/> provides
+  instructions for SGI and Linux.  <xref
+  linkend="sec.third_party_macx"/> provides instructions for
+  &osx;.</para>
 
-  <section>
+  <section id="sec.third_party_linux_sgi">
     <title>SGI/Linux</title>
 
     <para>
@@ -194,7 +196,7 @@ python install /usr/local/&sr;/Thirdparty
 
   </section>
 
-  <section>
+  <section id="sec.third_party_macx">
     <title>&osx;</title>
     <para>Follow these steps to install the third-party distribution on
     the &osx; platform:
@@ -217,9 +219,10 @@ cd Thirdparty_install_osx.<replaceable>x.x.x</replaceable>
       </listitem>
 
       <listitem>
-	<para>Enable <acronym>PNG</acronym> support in the TEEM
-	third party library.  Set the <envar>TEEM_ZLIB</envar> and
-	<envar>TEEM_PNG</envar>environment variables:</para>
+	<para><emphasis>Optional:</emphasis> Enable
+	<acronym>PNG</acronym> support in the TEEM third party
+	library.  Set the <envar>TEEM_ZLIB</envar> and
+	<envar>TEEM_PNG</envar> environment variables:</para>
 	<para>
 	  For sh-type shells:
 	  <literallayout class="monospaced">
@@ -294,7 +297,7 @@ setenv TEEM_ZLIB_IPATH -I/usr/local/include
 	  </literallayout>
 	  The path to the third-party installation directory is used
 	  in the configure step of the &sr; build process.  The configure
-	  step is described in Section<xref linkend="sec.build-sr"/>.
+	  step is described in <xref linkend="sec.build-sr"/>.
 	</para>
       </listitem>
 
@@ -305,10 +308,7 @@ setenv TEEM_ZLIB_IPATH -I/usr/local/include
 
   <section>
     <title>Next</title>
-    <para>Proceed to <xref linkend="sec.opt_inst"/> if support for
-    <acronym>BLAS</acronym>, <acronym>LAPACK</acronym>,
-    <acronym>PETSc</acronym>, or Insight is desired.  Otherwise
-    proceed to <xref linkend="sec.build-sr"/>.</para>
+    <para>Proceed to <xref linkend="sec.build-sr"/>.</para>
   </section>
 
 </section>

@@ -49,8 +49,9 @@ DEALINGS IN THE SOFTWARE.
       provides built-in solvers if <acronym>PETSc</acronym> is not available.
     </para>
     <para>
-      <acronym>PETSc</acronym> is built and installed from its source code
-      distribution.
+      <acronym>PETSc</acronym> is built and installed from its source
+      code distribution.  &sr; supports <acronym>PETSc</acronym>
+      versions 2.1.5-2.2.0.
     </para>
     <note>
       <para>
@@ -75,21 +76,17 @@ DEALINGS IN THE SOFTWARE.
 	  </listitem>
 	  <listitem>
 	    <para>
-	      <ulink
-	      url="http://www.netlib.org/blas/"><acronym>BLAS</acronym></ulink>
-	      or <ulink
-	      url="http://math-atlas.sourceforge.net/">Atlas</ulink>
-	      and <ulink
-	      url="http://www.netlib.org/lapack/"><acronym>LAPACK</acronym></ulink>
-	      libraries must be installed on SGI and Linux before
-	      installing <acronym>PETSc</acronym>.  See <xref 
+	      <acronym>BLAS</acronym> or <acronym>ATLAS</acronym> and
+	      <acronym>LAPACK</acronym> libraries must be installed on
+	      SGI and Linux before installing
+	      <acronym>PETSc</acronym>.  See <xref
 	      linkend="sec.blas_lapack_inst"/> for <ulink
 	      url="http://www.netlib.org/blas/"><acronym>BLAS</acronym></ulink>
 	      and <ulink
 	      url="http://www.netlib.org/lapack/"><acronym>LAPACK</acronym></ulink>
 	      installation instructions.  There is no need to install
-	      <acronym>BLAS/ATLAS</acronym> or <acronym>LAPACK</acronym>
-	      libraries on &osx;.
+	      <acronym>BLAS/ATLAS</acronym> or
+	      <acronym>LAPACK</acronym> libraries on &osx;.
 	    </para>
 	  </listitem>
 	  <listitem>
@@ -266,7 +263,7 @@ make test
       </varlistentry>
     </variablelist>
     </para>
-    <para>Here is an example <command>configure</command> command:
+    <para>Here is an example &sr;  <command>configure</command> command:
     <literallayout class="monospaced">
       ../src/configure \
       --with-thirdparty=/usr/local/&sr;/Thirdparty/1.22.0/Irix/CC-32bit \
@@ -294,10 +291,9 @@ make test
   <section>
     <title>Next</title> 
 
-    <para>Proceed to <xref
-    linkend="sec.itk_inst" /> when adding support for the
-    Insight toolkit.  Otherwise, proceed to <xref
-    linkend="sec.build-sr" /> after <acronym>PETSc has been
+    <para>Proceed to <xref linkend="sec.itk_inst" /> when adding
+    support for the Insight toolkit.  Otherwise, proceed to <xref
+    linkend="sec.third_party_inst"/> after <acronym>PETSc has been
     installed.</acronym></para>
   </section>
 
