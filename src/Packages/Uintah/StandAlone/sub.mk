@@ -143,16 +143,17 @@ else
         Packages/Uintah/Core/ProblemSpec   \
         Packages/Uintah/Core/Disclosure    \
         Packages/Uintah/Core/DataArchive   \
+	Packages/Uintah/Core/Parallel   \
 	Packages/Uintah/CCA/Ports          \
+	Packages/Uintah/CCA/Components/ProblemSpecification \
+	Dataflow/XMLUtil  \
 	Core/Persistent   \
 	Core/Datatypes    \
-	Core/Geom         \
-	Core/Util         \
-	Core/Exceptions  \
         Core/Geometry    \
         Core/Thread      \
         Core/Util        \
-        Core/OS          \
+	Core/Math        \
+	Core/Exceptions  \
         Core/Containers
 endif
 
