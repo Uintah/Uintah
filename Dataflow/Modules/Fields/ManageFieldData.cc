@@ -381,7 +381,7 @@ ManageFieldData::dispatch_pointcloud(F *ifield)
       return;
     }
 
-    const int rows = imatrix->nrows();
+    const unsigned int rows = imatrix->nrows();
     PointCloudMeshHandle mesh = ifield->get_typed_mesh();
     PointCloud<double> *ofield;
     if (rows == mesh->nodes_size())
@@ -443,7 +443,7 @@ ManageFieldData::dispatch_contourfield(F *ifield)
       return;
     }
 
-    const int rows = imatrix->nrows();
+    const unsigned int rows = imatrix->nrows();
     ContourMeshHandle mesh = ifield->get_typed_mesh();
     ContourField<double> *ofield;
     if (rows == mesh->nodes_size())
