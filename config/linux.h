@@ -28,4 +28,4 @@
 #define SCI_LX11 -lX11
 #define SCI_LXDR
 #define SCI_LAUDIO
-#define SCI_LGL
+#define SCI_LGL /home/sparker/direct/glu/libGLU.a /home/sparker/direct/gl/libGL.a /home/sparker/direct/gl/samplegl/libdirectGL.a /home/sparker/direct/gl/libGL.a -lXext
