@@ -119,6 +119,9 @@ public:
       // Create the matrix
       HYPRE_StructMatrix HA;
       HYPRE_StructMatrixCreate(pg->getComm(), grid, stencil, &HA);
+      HYPRE_StructMatrixSetSymmetric(HA, 0);
+      int ghost[] = {1,1,1,1,1,1};
+      HYPRE_StructMatrixSetNumGhost(HA, ghost);
       HYPRE_StructMatrixInitialize(HA);
 
       for(int p=0;p<patches->size();p++){
