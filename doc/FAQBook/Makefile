@@ -61,7 +61,7 @@ printable.html: ${FAQBOOK} ${FAQS}
 	${call xmltohtml,printable.html,print}
 
 clean:
-	-rm *~
+	-rm -f *~
 
 veryclean: clean
-	-rm *.html
+	-rm -f *.html

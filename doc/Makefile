@@ -25,8 +25,8 @@ TARCMD := gnutar --exclude='*CVS*' --exclude='auto' \
 PRODUCTS := FAQBook Installation User Developer Documentum
 
 # Build all docs except code view docs (in Developer/CodeViews).  To
-# additionallly build code views invoke make this way: make WITH_CV=true
-default : products
+# additionally build code views invoke make this way: make WITH_CV=true
+default : index.html products
 
 # Build all docs and put them in  a tarball.
 tarball : tar
@@ -44,6 +44,9 @@ tar: products
 	-rm -f ${TARFILE}
 	cd ../..; ${TARCMD} ${tarlist}
 
+index.html: index.rhtml edition.xml
+	eruby --delimiters html $< >$@
+
 # Build all docs.
 products:
 	for p in ${PRODUCTS} ; do cd $$p; ${MAKE}; cd ..; done
@@ -59,4 +62,5 @@ clean:
 
 veryclean:
 	${rmtgz}
+	-rm -f index.html
 	for p in ${PRODUCTS} ; do cd $$p; ${MAKE} veryclean; cd ..; done

@@ -26,17 +26,24 @@
 
 # ########## Variables
 
+# edition file
+edition:=../../edition.xml
+
 # Latex command
 latex:=latex -interaction=nonstopmode
 
 # Name of root doc sans extension.
 bn := usersguide
 
-# Macros used by latex and latex2html
+# The macros file used by latex and latex2html is generated from this
+# one.
+rmacrosfile := srugmacros.rtex
+
+# Macros used by latex and latex2html.  Generated from ${rmacrosfile}
 macrosfile := srugmacros.tex
 
 # Style file used by latex.   This file has the exact same content as
-# ${macrofile} and is automatically generated from it.
+# ${macrosfile} and is automatically generated from it.
 styfile := srugmacros.sty
 
 # User created/edited sources (generated sources come into play further
@@ -124,7 +131,7 @@ endef
 # Make "<Package>_modules.tex" file for package given by ${1}. List of tex
 # files is given by ${2}
 define makemodtexfile
--test -f ${1}_modules.tex && rm ${1}_modules.tex; \
+-test -f ${1}_modules.tex && rm -f ${1}_modules.tex; \
 echo "\section{${1} Modules}" >> ${1}_modules.tex; \
 for f in ${2}; do echo $$f | ruby ${treetop}/doc/Utilities/TeX/mkpkgmodtex.rb >> ${1}_modules.tex; done
 endef
@@ -139,6 +146,16 @@ endef
 # Convert $< to eps scaling them down if they are too large.
 define imagetoeps
 -convert -geometry '490x634>' $< EPS:$@
+endef
+
+# Remove list of directories
+define rmdirs
+${if ${1},${shell rm -rf ${1}}}
+endef
+
+# Remove list of files
+define rmfiles
+${if ${1},${shell rm -f ${1}}}
 endef
 
 # ########## Targets for making various forms of the users guide.
@@ -156,25 +173,22 @@ ps: ${psfile}
 bib: ${bn}.bbl
 
 # Note: ${bn}.bbl must be the last dependency!
-${dvifile}: ${mainfile} ${srcs} ${packagetargets} ${bn}.bbl 
+${dvifile}: ${macrosfile} ${mainfile} ${srcs} ${packagetargets} ${bn}.bbl 
 	-${latex}  ${bn}
 	-makeindex ${bn}.idx
 	-${latex} ${bn}
 
-${styfile}: ${macrosfile}
-	echo "%************************************************" > ${styfile}; \
-	echo "%* DON'T EDIT ME - I'M AUTOMATICALLY GENERATED! *" >> ${styfile}; \
-	echo "%* Edit srugmacros.tex instead.                 *" >> ${styfile}; \
-	echo "%************************************************" >> ${styfile}; \
-	cat ${macrosfile} >> ${styfile}
+${macrosfile}: ${rmacrosfile} ${edition}
+	eruby --delimiters tex $< >$@
+	cp ${macrosfile} ${styfile}
 
 ${bn}.bbl: ${mainfile}
 	-${latex} ${bn}
-	-rm -f ${bn}.bbl
+	${call rmfiles,${bn}.bbl}
 	-bibtex ${bn}
 
 ${htmldir}: ${dvifile}
-	-test -d ${htmldir} && rm -rf ${htmldir}; \
+	${call rmdirs,${htmldir}}
 	latex2html ${latex2htmloptions} ${mainfile}
 
 ${psfile}: ${dvifile}
@@ -210,10 +224,11 @@ SCIRun_clean:
 	@echo $@
 
 SCIRun_veryclean_eps_files:
-	-rm  ${SCIRun_jpg_eps_files} ${SCIRun_gif_eps_files}
+	${call rmfiles,${SCIRun_jpg_eps_files}}
+	${call rmfiles,${SCIRun_gif_eps_files}}
 
 SCIRun_veryclean_xml_tex_files:
-	-rm ${SCIRun_xml_tex_files} SCIRun_modules.tex
+	${call rmfiles,${SCIRun_xml_tex_files} SCIRun_modules.tex}
 
 SCIRun_veryclean: SCIRun_clean SCIRun_veryclean_eps_files SCIRun_veryclean_xml_tex_files
 
@@ -242,10 +257,11 @@ BioPSE_clean:
 	@echo $@
 
 BioPSE_veryclean_eps_files:
-	-rm  ${BioPSE_jpg_eps_files} ${BioPSE_gif_eps_files}
+	${call rmfiles,${BioPSE_gif_eps_files}}
+	${call rmfiles,${BioPSE_jpg_eps_files}}
 
 BioPSE_veryclean_xml_tex_files:
-	-rm ${BioPSE_xml_tex_files} BioPSE_modules.tex
+	${call rmfiles,${BioPSE_xml_tex_files} BioPSE_modules.tex}
 
 BioPSE_veryclean: BioPSE_clean BioPSE_veryclean_eps_files BioPSE_veryclean_xml_tex_files
 
@@ -276,10 +292,11 @@ Teem_clean:
 	@echo $@
 
 Teem_veryclean_eps_files:
-	-rm  ${Teem_jpg_eps_files} ${Teem_gif_eps_files}
+	${call rmfiles,${Teem_jpg_eps_files}}
+	${call rmfiles,${Teem_gif_eps_files}}
 
 Teem_veryclean_xml_tex_files:
-	-rm ${Teem_xml_tex_files} Teem_modules.tex
+	${call rmfiles,${Teem_xml_tex_files} Teem_modules.tex}
 
 Teem_veryclean: Teem_clean Teem_veryclean_eps_files Teem_veryclean_xml_tex_files
 
@@ -308,10 +325,11 @@ Fusion_clean:
 	@echo $@
 
 Fusion_veryclean_eps_files:
-	-rm  ${Fusion_jpg_eps_files} ${Fusion_gif_eps_files}
+	${call rmfiles,${Fusion_jpg_eps_files}}
+	${call rmfiles,${Fusion_gif_eps_files}}
 
 Fusion_veryclean_xml_tex_files:
-	-rm ${Fusion_xml_tex_files} Fusion_modules.tex
+	${call rmfiles,${Fusion_xml_tex_files} Fusion_modules.tex}
 
 Fusion_veryclean: Fusion_clean Fusion_veryclean_eps_files Fusion_veryclean_xml_tex_files
 
@@ -341,10 +359,11 @@ MatlabInterface_clean:
 	@echo $@
 
 MatlabInterface_veryclean_eps_files:
-	-rm  ${MatlabInterface_jpg_eps_files} ${MatlabInterface_gif_eps_files}
+	${call rmfiles,${MatlabInterface_jpg_eps_files}}
+	${call rmfiles,${MatlabInterface_gif_eps_files}}
 
 MatlabInterface_veryclean_xml_tex_files:
-	-rm ${MatlabInterface_xml_tex_files} MatlabInterface_modules.tex
+	${call rmfiles,${MatlabInterface_xml_tex_files} MatlabInterface_modules.tex}
 
 MatlabInterface_veryclean: MatlabInterface_clean \
 MatlabInterface_veryclean_eps_files MatlabInterface_veryclean_xml_tex_files
@@ -374,23 +393,24 @@ VDT_clean:
 	@echo $@
 
 VDT_veryclean_eps_files:
-	-rm  ${VDT_jpg_eps_files} ${VDT_gif_eps_files}
+	${call rmfiles,${VDT_jpg_eps_files}}
+	${call rmfiles,${VDT_gif_eps_files}}
 
 VDT_veryclean_xml_tex_files:
-	-rm ${VDT_xml_tex_files} VDT_modules.tex
+	${call rmfiles,${VDT_xml_tex_files} VDT_modules.tex}
 
 VDT_veryclean: VDT_clean VDT_veryclean_eps_files VDT_veryclean_xml_tex_files
 
 # ########## Cleanage
 clean: ${addsuffix _clean,${packages}}
-	-rm -f ${bn}.aux ${bn}.log ${bn}.toc ${bn}.lot \
+	${call rmfiles,${bn}.aux ${bn}.log ${bn}.toc ${bn}.lot \
 	${bn}.lof ${bn}.dvi ${bn}.blg ${bn}.idx ${bn}.ilg \
-	${bn}.ind
+	${bn}.ind}
 
 veryclean_xml_tex_files: ${addsuffix _veryclean_xml_tex_files,${packages}}
 
 veryclean_eps_files: ${addsuffix _veryclean_eps_files,${packages}}
 
-veryclean: clean ${addsuffix _veryclean,${packages}}
-	-rm -rf ${htmldir}
-	-rm ${psfile} ${psfile2} *.gz *.bbl ${styfile}
+veryclean: ${addsuffix _veryclean,${packages}}
+	${call rmdirs,${htmldir}}
+	${call rmfiles,${psfile} ${psfile2} *.gz *.bbl ${macrosfile} ${styfile}}

@@ -15,16 +15,15 @@
 #  University of Utah. All Rights Reserved.
 #
 
-#
-# This file uses xalan-java 2.3.1 or higher to process the xml files.
-# The environment variable CLASSPATH must point to xalan.jar, xml-api.jar,
-#  and xercesImpl.jar.
-#
-
 # Makefile for Developer directory.
 .PHONY: products
 
 PRODUCTS = Guide Modules CodeViews 
+
+default: index.html products
+
+index.html: index.rhtml ../edition.xml
+	eruby --delimiters html $< >$@
 
 # Build all docs except code view docs (in CodeViews).  To additionallly
 # build code views invoke make this way: make WITH_CV=true
@@ -34,5 +33,5 @@ products:
 clean:
 	for p in ${PRODUCTS} ; do cd $$p;  ${MAKE} clean; cd ..; done
 
-veryclean: clean
+veryclean:
 	for p in ${PRODUCTS} ; do cd $$p; ${MAKE} veryclean; cd ..; done

@@ -21,12 +21,12 @@
 # STYLESHEET_PATH must point to the location of the srdocbook stylesheets,
 #  e.g. /Applications/docbook-xsl-1.51.1/html/.
 
-BOOK = main.xml
 PARAMS_COMMON=
 PARMS_CHUNK=${PARAMS_COMMON} chunk.section.depth=0 use.id.as.filename=1
 PARAMS_NOCHUNK=${PARAMS_COMMON} 
 STYLESHEET_CHUNK=${STYLESHEET_PATH}/srdocbook-chunk.xsl
 STYLESHEET_NOCHUNK=${STYLESHEET_PATH}/srdocbook.xsl
+SRCS=main.xml intro.xml dev/*.xml src/*.xml
 
 .PHONY: default chunk nochunk clean veryclean
 
@@ -34,19 +34,23 @@ default: chunk
 
 chunk: index.html
 
-index.html: *.xml dev/*.xml src/*.xml
+main.xml: main.rxml ../../edition.xml
+	eruby --delimiters xml main.rxml > $@
+
+index.html: ${SRCS}
 	-java com.icl.saxon.StyleSheet -w2 \
-	${BOOK} ${STYLESHEET_CHUNK} ${PARMS_CHUNK}
+	main.xml ${STYLESHEET_CHUNK} ${PARMS_CHUNK}
 
 nochunk: Guide.html
 
 .DELETE_ON_ERROR: Guide.html
-Guide.html: *.xml dev/*.xml src/*.xml
+Guide.html: ${SRCS}
 	java com.icl.saxon.StyleSheet -w2 \
-	${BOOK} ${STYLESHEET_NOCHUNK} ${PARAMS_NOCHUNK} >$@
+	main.xml ${STYLESHEET_NOCHUNK} ${PARAMS_NOCHUNK} >$@
 
 clean:
-	-rm *~
+	-rm -f *~
 
 veryclean: clean
-	-rm dev.html dev.*.html src.html src.*.html index.html intro.html
+	-rm -f main.xml dev.html dev.*.html src.html \
+src.*.html index.html intro.html

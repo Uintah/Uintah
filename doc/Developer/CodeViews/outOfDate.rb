@@ -15,16 +15,15 @@
 #  University of Utah. All Rights Reserved.
 #
 
-#
-# This program determines if the doxygen generated documents are
-# out of date with respect to .c, .cc, and .h files in the src
-# side of the tree. Returns 0 if out of date and 1 if not.
-#
+# This program determines if the doxygen generated documents are out
+# of date with respect to Doxyconfig and .c, .cc, and .h files in the
+# src side of the tree. Returns 0 if out of date and 1 if not.
 
 require 'find'
 
 begin
   timestamp = File.mtime("html")
+  exit(0) if File.mtime("Doxyconfig") > timestamp
   sourceMatch = /\.(c|cc|h)$/
   Find.find("../../../src") do |f|
     exit(0) if (f =~ sourceMatch) and (File.mtime(f) > timestamp)

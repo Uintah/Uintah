@@ -58,6 +58,7 @@ define texhtmldirs
 ${filter-out %/CVS,${foreach n,${notdir ${wildcard ${1}/*}},${1}/${n}/${n}}}
 endef
 
+
 # Return path of XML directory for package given by ${1}
 define xmldir
 ${treetop}/src/${if ${1},Packages/${1}/}Dataflow/XML
@@ -73,6 +74,16 @@ define makepkgindex
 ruby ${pkgindexgenscript} ${1} ${2} ${3}
 endef 
 
+# Remove list of directories
+define rmdirs
+${if ${1},${shell rm -rf ${1}}}
+endef
+
+# Remove list of files
+define rmfiles
+${if ${1},${shell rm -f ${1}}}
+endef
+
 # ########## Variables
 
 # Top of tree relative to this directory
@@ -86,6 +97,9 @@ xmlsrtreetop:=../../../
 
 # Top of tree relative to Package XML dirs
 xmlpkgtreetop:= ../../../../../
+
+# Edition file
+edition:=../../edition.xml
 
 # Script that generates package index files
 pkgindexgenscript:=${treetop}/doc/Utilities/HTML/makepkgindex.rb
@@ -121,7 +135,10 @@ ifeq (${strip ${SRGROUP}},)
 packages :=
 endif
 
-default: ${packages}
+default: index.html ${packages}
+
+index.html : index.rhtml ${edition} 
+	eruby --delimiters html $< > $@
 
 # ########## SCIRun
 SCIRun_xml_dir:=${call xmldir}
@@ -131,7 +148,7 @@ SCIRun_tex_html_dirs:=${call texhtmldirs,${SCIRun_tex_dir}}
 
 SCIRun : SCIRun.html
 
-SCIRun.html : ${SCIRun_xml_html_files} ${SCIRun_tex_html_dirs} \
+SCIRun.html : ${edition} ${SCIRun_xml_html_files} ${SCIRun_tex_html_dirs} \
 		${pkgindexgenscript}
 	${call makepkgindex,SCIRun,${SCIRun_xml_dir},${SCIRun_tex_dir}}
 
@@ -145,8 +162,9 @@ SCIRun_clean:
 	@echo $@
 
 SCIRun_veryclean:
-	-rm -f ${SCIRun_xml_html_files} ${SCIRun_tex_html_files}
-	-rm -rf ${SCIRun_tex_html_dirs}
+	${call rmfiles,${SCIRun_xml_html_files}}
+	${call rmfiles,${SCIRun_tex_html_files}}
+	${call rmdirs,${SCIRun_tex_html_dirs}}
 
 # ########## BioPSE
 BioPSE_xml_dir:=${call xmldir,BioPSE}
@@ -156,7 +174,7 @@ BioPSE_tex_html_dirs:=${call texhtmldirs,${BioPSE_tex_dir}}
 
 BioPSE : BioPSE.html
 
-BioPSE.html : ${BioPSE_xml_html_files} ${BioPSE_tex_html_dirs} \
+BioPSE.html : ${edition} ${BioPSE_xml_html_files} ${BioPSE_tex_html_dirs} \
 		${pkgindexgenscript}
 	${call makepkgindex,BioPSE,${BioPSE_xml_dir},${BioPSE_tex_dir}}
 
@@ -170,8 +188,9 @@ BioPSE_clean:
 	@echo $@
 
 BioPSE_veryclean: BioPSE_clean
-	-rm -f ${BioPSE_xml_html_files} ${BioPSE_tex_html_files}
-	-rm -rf ${BioPSE_tex_html_dirs}
+	${call rmfiles,${BioPSE_xml_html_files}}
+	${call rmfiles,${BioPSE_tex_html_files}}
+	${call rmdirs,${BioPSE_tex_html_dirs}}
 
 # ########## Teem
 Teem_xml_dir:=${call xmldir,Teem}
@@ -181,7 +200,7 @@ Teem_tex_html_dirs:=${call texhtmldirs,${Teem_tex_dir}}
 
 Teem : Teem.html
 
-Teem.html : ${Teem_xml_html_files} ${Teem_tex_html_dirs} \
+Teem.html : ${edition} ${Teem_xml_html_files} ${Teem_tex_html_dirs} \
 		${pkgindexgenscript}
 	${call makepkgindex,Teem,${Teem_xml_dir},${Teem_tex_dir}}
 
@@ -195,8 +214,9 @@ Teem_clean:
 	@echo $@
 
 Teem_veryclean:
-	-rm -f ${Teem_xml_html_files} ${Teem_tex_html_files}
-	-rm -rf ${Teem_tex_html_dirs}
+	${call rmfiles,${Teem_xml_html_files}}
+	${call rmfiles,${Teem_tex_html_files}}
+	${call rmdirs,${Teem_tex_html_dirs}}
 
 # ########## VDT
 VDT_xml_dir:=${call xmldir,VDT}
@@ -206,7 +226,7 @@ VDT_tex_html_dirs:=${call texhtmldirs,${VDT_tex_dir}}
 
 VDT : VDT.html
 
-VDT.html : ${VDT_xml_html_files} ${VDT_tex_html_dirs} \
+VDT.html : ${edition} ${VDT_xml_html_files} ${VDT_tex_html_dirs} \
 		${pkgindexgenscript}
 	${call makepkgindex,VDT,${VDT_xml_dir},${VDT_tex_dir}}
 
@@ -220,8 +240,9 @@ VDT_clean:
 	@echo $@
 
 VDT_veryclean:
-	-rm -f ${VDT_xml_html_files} ${VDT_tex_html_files}
-	-rm -rf ${VDT_tex_html_dirs}
+	${call rmfiles,${VDT_xml_html_files}}
+	${call rmfiles,${VDT_tex_html_files}}
+	${call rmdirs,${VDT_tex_html_dirs}}
 
 # ########## MatlabInterface
 MatlabInterface_xml_dir:=${call xmldir,MatlabInterface}
@@ -231,7 +252,7 @@ MatlabInterface_tex_html_dirs:=${call texhtmldirs,${MatlabInterface_tex_dir}}
 
 MatlabInterface : MatlabInterface.html
 
-MatlabInterface.html : ${MatlabInterface_xml_html_files} \
+MatlabInterface.html : ${edition} ${MatlabInterface_xml_html_files} \
 		${MatlabInterface_tex_html_dirs} ${pkgindexgenscript}
 	${call makepkgindex,MatlabInterface,${MatlabInterface_xml_dir},${MatlabInterface_tex_dir}}
 
@@ -245,8 +266,9 @@ MatlabInterface_clean:
 	@echo $@
 
 MatlabInterface_veryclean: MatlabInterface_clean
-	-rm -f ${MatlabInterface_xml_html_files} ${MatlabInterface_tex_html_files}
-	-rm -rf ${MatlabInterface_tex_html_dirs}
+	${call rmfiles,${MatlabInterface_xml_html_files}}
+	${call rmfiles,${MatlabInterface_tex_html_files}}
+	${call rmdirs,${MatlabInterface_tex_html_dirs}}
 
 # ########## Fusion
 Fusion_xml_dir:=${call xmldir,Fusion}
@@ -256,7 +278,7 @@ Fusion_tex_html_dirs:=${call texhtmldirs,${Fusion_tex_dir}}
 
 Fusion : Fusion.html
 
-Fusion.html : ${Fusion_xml_html_files} ${Fusion_tex_html_dirs} \
+Fusion.html : ${edition} ${Fusion_xml_html_files} ${Fusion_tex_html_dirs} \
 		${pkgindexgenscript}
 	${call makepkgindex,Fusion,${Fusion_xml_dir},${Fusion_tex_dir}}
 
@@ -270,13 +292,14 @@ Fusion_clean:
 	@echo $@
 
 Fusion_veryclean:
-	-rm -f ${Fusion_xml_html_files} ${Fusion_tex_html_files}
-	-rm -rf ${Fusion_tex_html_dirs}
+	${call rmfiles,${Fusion_xml_html_files}}
+	${call rmfiles,${Fusion_tex_html_files}}
+	${call rmdirs,${Fusion_tex_html_dirs}}
 
 # ########## Cleanage
 clean: ${addsuffix _clean,${packages}}
 	@echo clean
 
 veryclean: clean ${addsuffix _veryclean,${packages}}
-	-rm ${addsuffix .html,${packages}}
+	${call rmfiles,${addsuffix .html,${packages}} index.html}
 

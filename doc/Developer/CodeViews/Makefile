@@ -17,11 +17,18 @@
 # Makefile for source code views.
 #
 
-.PHONY: products
+.PHONY: default docs clean veryclean
 
-SRC = ../../../src
+SRC:=../../../src
+edition:=../../edition.xml
 
-products:
+
+default: Doxyconfig docs
+
+Doxyconfig: Doxyconfig.r ${edition}
+	eruby $< >$@
+
+docs:
 	if ( test -d ${SRC} && ( test "$$WITH_CV" = true || test $$MAKELEVEL -eq 1 ) ) && ( test ! -d html || ruby outOfDate.rb ) ;  \
 	then \
 		test -d html && rm -rf html; \
@@ -29,7 +36,7 @@ products:
 	fi
 
 clean:
-	-rm *~
+	-rm -f *~
 
 veryclean:
-	-rm -rf html
+	-rm -rf html Doxyconfig
