@@ -25,28 +25,38 @@ version="1.0">
 
   <!-- Generate java script code that locates root of doc tree -->
   <xsl:template name="user.head.content">
-    <script language="JavaScript">
+    <script type="text/javascript">
       var treetop="";
       var path = location.pathname;
-      while (path.substr(path.lastIndexOf("/")+1) != "doc") {
-      treetop += "../";
-      path = path.substr(0, path.lastIndexOf("/"));
+      var iLimit = 20;
+      var i = 0;
+      while (i &lt; iLimit &amp;&amp; path.substr(path.lastIndexOf("/")+1) != "doc") {
+        treetop += "../";
+        i += 1;
+        path = path.substr(0, path.lastIndexOf("/"));
       }
-      document.write("&lt;link href='",treetop,"doc/Utilities/HTML/srdocbook.css' rel='stylesheet' type='text/css'&gt;")
+      var inDocTree = i &lt; iLimit;
+      if (inDocTree) {
+      document.write("&lt;link href='",treetop,"doc/Utilities/HTML/srdocbook.css' rel='stylesheet' type='text/css'/&gt;")
+      }
     </script>
   </xsl:template>
 
   <!-- Generate SCI header banner -->
   <xsl:template name="user.header.content">
-    <script language="JavaScript">
-      document.write('&lt;script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"&gt;&lt;\/script&gt;');
+    <script type="text/javascript">
+      if (inDocTree) {
+        document.write('&lt;script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"&gt;&lt;\/script&gt;');
+      }
     </script>
   </xsl:template>
 
   <!-- Generate SCI footer. -->
   <xsl:template name="user.footer.content">
-    <script language="JavaScript">
-      document.write('&lt;script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"&gt;&lt;\/script&gt;');
+    <script type="text/javascript">
+      if (inDocTree) {
+        document.write('&lt;script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"&gt;&lt;\/script&gt;');
+      }
     </script>
   </xsl:template>
 
