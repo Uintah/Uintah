@@ -25,10 +25,11 @@ SRCS     += \
 	$(SRCDIR)/Debug.cc \
 	$(SRCDIR)/DebugStream.cc \
 	$(SRCDIR)/DynamicLoader.cc \
+	$(SRCDIR)/DynamicCompilation.cc \
+	$(SRCDIR)/ProgressReporter.cc \
 	$(SRCDIR)/Endian.cc \
 	$(SRCDIR)/SizeTypeConvert.cc \
 	$(SRCDIR)/MacroSubstitute.cc \
-	$(SRCDIR)/ModuleReporter.cc \
 	$(SRCDIR)/RCParse.cc \
 	$(SRCDIR)/RWS.cc \
 	$(SRCDIR)/sci_system.cc \
