@@ -7,7 +7,6 @@ static char *id="@(#) $Id$";
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/IntVector.h>
 
-#include <Uintah/Interface/DWMpiHandler.h>
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <Uintah/Exceptions/UnknownVariable.h>
@@ -36,10 +35,10 @@ using SCICore::Geometry::Point;
 using namespace Uintah;
 
 OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
-					      int generation, DataWarehouseP& parent) :
+					      int generation, 
+					      DataWarehouseP& parent) :
   d_lock("DataWarehouse lock"),
-  DataWarehouse( myworld, generation, parent),
-  d_responseTag( 0 )
+  DataWarehouse( myworld, generation, parent)
 {
   d_finalized = false;
 
@@ -53,7 +52,6 @@ OnDemandDataWarehouse::setGrid(const GridP& grid)
 
 OnDemandDataWarehouse::~OnDemandDataWarehouse()
 {
-
   for (reductionDBtype::const_iterator iter = d_reductionDB.begin(); 
        iter != d_reductionDB.end(); iter++) {
     delete iter->second->var;
@@ -277,88 +275,18 @@ OnDemandDataWarehouse::override(const ReductionVariableBase& var,
    d_reductionDB[label]=scinew ReductionRecord(var.clone());
 }
 
-void
-OnDemandDataWarehouse::sendMpiDataRequest( const string & /*varName*/,
-					         Patch * /*patch*/,
-					         int      /*numGhostCells*/ )
-{
-  if( d_myworld->size() == 1 ) {
-      throw InternalError( "sendMpiDataRequest should not be called if"
-			   " there is only one process" );
-  }
-
-  // Must send a reqest to 26 neighbors:
-  // 0-8 are above, 8-17 are on the same level (this node is 13), 
-  // 18-26 are below.
-  //
-  //                                                      0  1  2
-  //                                 /  /  /              /\  \  \
-  //                                9 10 11                 3  4  5
-  //          /  /  /              / \  \  \                 \  \  \
-  //         18 19 20                12 13 14                 6  7  8
-  //          \  \  \                  \  \  \/               /  /  /
-  //          21 22 23                 15 16 17
-  //            \  \  \/               /  /  /
-  //            24 25 26
-  //
-  //  8 is directly above 17 which is directly above 26
-
-
-  // Figure out the bottom and top points of the ghost patch
-  // immediately above this patch.  (Ie: Determine Top (Area 4))
-
-  int                           currentTag;
-  DWMpiHandler::MpiDataRequest  request;
-
-  request.fromMpiRank = d_myworld->myrank();
-  request.toMpiRank = !d_myworld->myrank(); // Just a testing hack...
-
-  d_lock.writeLock();
-  request.tag = d_responseTag;
-  currentTag = d_responseTag;
-  d_responseTag++;
-  d_lock.writeUnlock();
-
-  request.type = DWMpiHandler::GridVar;
-  sprintf( request.varName, "varA" );
-  request.patch = 0;
-  request.generation = d_generation;
-
-  cerr << "OnDemandDataWarehouse " << d_myworld->myrank() << ": sending data request\n";
-
-  MPI_Bsend( (void*)&request, sizeof( request ), MPI_BYTE, request.toMpiRank,
-	     DWMpiHandler::DATA_REQUEST_TAG, MPI_COMM_WORLD );
-
-  cerr << "                       Data request sent\n";
-
-  char       * buffer = scinew char[ DWMpiHandler::MAX_BUFFER_SIZE ];
-  MPI_Status   status;
-
-  cerr << "OnDemandDataWarehouse: waiting for data response from "
-       << request.toMpiRank << "\n";
-
-  MPI_Recv( buffer, 100, MPI_BYTE, request.toMpiRank, 
-	    currentTag, MPI_COMM_WORLD, &status );
-
-    cerr << "STATUS IS:\n";
-    cerr << "SOURCE: " << status.MPI_SOURCE << "\n";
-    cerr << "TAG:    " << status.MPI_TAG << "\n";
-    cerr << "ERROR:  " << status.MPI_ERROR << "\n";
-    cerr << "SIZE:   " << status.size << "\n";
-
-  cerr << "Received this message: [" << buffer << "]\n";
-  free( buffer );
-}
-
 ParticleSubset*
 OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
 					    int matlIndex, const Patch* patch)
 {
    ParticleSet* pset = scinew ParticleSet(numParticles);
-   ParticleSubset* psubset = scinew ParticleSubset(pset, true, matlIndex, patch);
+   ParticleSubset* psubset = 
+                       scinew ParticleSubset(pset, true, matlIndex, patch);
+
    psetDBType::key_type key(matlIndex, patch);
    if(d_psetDB.find(key) != d_psetDB.end())
       throw InternalError("createParticleSubset called twice for patch");
+
    d_psetDB[key]=psubset;
    psubset->addReference();
 
@@ -1402,6 +1330,9 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.46  2000/08/24 21:04:33  dav
+// Removed DWMpiHandler Stuff
+//
 // Revision 1.45  2000/08/22 20:54:48  sparker
 // Fixed memory leaks
 //
