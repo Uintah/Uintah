@@ -502,10 +502,11 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
       old_filename_ = fn;
       
       int len = fn.size();
-      const string suffix(".xff");
+      const string suffix(".cmap2");
 
       // Check the suffix.
-      if (fn.substr(len - 4, 4) == suffix) {
+
+      if (fn.substr(len - suffix.size(), suffix.size()) == suffix) {
         BinaryPiostream *stream = new BinaryPiostream(fn, Piostream::Read);
         if (!stream) {
           error("Error reading file '" + fn + "'.");
@@ -513,14 +514,14 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
         }
 
         // read the file.
-        int size;
-        stream->io(size);
-        if(stream->reading()) widgets_.resize(size);
-        for(unsigned int i = 0; i < widgets_.size(); i++) {
-          Pio(*stream, widgets_[i]);
-        }
+	ColorMap2Handle icmap = scinew ColorMap2();
+	Pio(*stream, icmap);
+	widgets_ = icmap->widgets();
+	icmap_generation_ = icmap->generation;
+	
         delete stream;
 
+	cmap_dirty_ = true;
         redraw(true);
         update_to_gui();
 	force_execute();
@@ -534,7 +535,7 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
     // Now we trim off the .ppm, add a .xff and call
     // the save_function() method
     string fn = filename_.get();
-    fn += ".xff";
+    fn += ".cmap2";
     char buf[256];
     sprintf(buf, fn.c_str());
     
@@ -631,11 +632,7 @@ EditColorMap2D::save_function(const string& filename)
   if (stream->error())
     error("Could not open file for writing" + filename);
   else {
-    int size = widgets_.size();
-    Pio(*stream, size);
-    for(unsigned int i = 0; i < widgets_.size(); i++) {
-      Pio(*stream, widgets_[i]);
-    }
+    Pio(*stream, sent_cmap2_);
     delete stream;
   }
 }
