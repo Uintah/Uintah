@@ -168,13 +168,20 @@ void StartSCIRun::run()
 			// example" modGui->set("::SCIRun_DataIO_FieldReader_0-filename", "/scratch/DATA1.22.0/utahtorso/utahtorso-voltage.tvd.fld");
 			modGui->set("::" + readerName + "-filename", dataPath);
 		}
+		else if(readerName != ""){
+			//for running a module that doesnt neccesarily have a file to load
+			mod=net->get_module_by_id(readerName); //example: SCIRun_DataIO_FieldReader_0
+		}
 		
 	}
     // Now activate the TCL event loop
     tcl_task->release_mainloop();
 
-	//tell the first module that it wants to execute
-	mod->want_to_execute();
+	
+	//should just have a general run network here.
+	if(runNet==1 && readerName != ""){
+		mod->want_to_execute();  //tell the first module that it wants to execute
+	}
 	
     JNIUtils::sem().up();
 
