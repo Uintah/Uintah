@@ -96,8 +96,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	// Load in the silhouette transfer function for use in the texture.
 	Nrrd *nrrdsil = nrrdNew();
 	if (nrrdLoad(nrrdsil, sil_filenames[0],0)) {
-	  fprintf(stderr, "%s: problem with gagePerVolumeAttach:\n%s\n",
-		  me, errS = biffGetDone(GAGE));
+	  fprintf(stderr, "%s: problem with loading silhouette transfer function:\n%s\n",
+		  me, errS = biffGetDone(NRRD));
 	  free(errS);
 	  return 0;
 	}
