@@ -56,6 +56,11 @@ set modulesBbox {0 0 0 0}
 global netedit_savefile
 set netedit_savefile ""
 
+# List of all currently existing modules
+global modules
+set modules ""
+
+
 proc resource {} {
 }
 
@@ -73,18 +78,22 @@ proc makeNetworkEditor {} {
     menu .main_menu.file.menu.new -tearoff false
     .main_menu.file.menu.new add command -label "Module..." \
         -underline 0 -command "ComponentWizard"
+
+    # Create the "File" Menu sub-menus.  Create (most of) them in the
+    # disabled state.  They will be enabled when all packages are loaded.
     .main_menu.file.menu add command -label "Save" -underline 0 \
-	-command "popupSaveMenu"
+	-command "popupSaveMenu" -state disabled
     .main_menu.file.menu add command -label "Save As..." -underline 0 \
-	-command "popupSaveAsMenu"
+	-command "popupSaveAsMenu" -state disabled
     .main_menu.file.menu add command -label "Load..." -underline 0 \
-	-command "popupLoadMenu"
+	-command "popupLoadMenu" -state disabled
+
     .main_menu.file.menu add command -label "Insert" -underline 0 \
-	-command "popupInsertMenu"
+	-command "popupInsertMenu" -state disabled
     .main_menu.file.menu add command -label "Clear" -underline 0 \
-	-command "ClearCanvas"
+	-command "ClearCanvas" -state disabled
     .main_menu.file.menu add cascade -label "New" -underline 0\
-        -menu .main_menu.file.menu.new
+        -menu .main_menu.file.menu.new -state disabled
 
 # This was added by Mohamed Dekhil to add some infor to the net
     .main_menu.file.menu add command -label "Add Info..." -underline 0 \
@@ -227,6 +236,15 @@ proc makeNetworkEditor {} {
     bind . <Destroy> {if {"%W"=="."} {exit 1}} 
 }
 
+proc activate_file_submenus { } {
+    # Activate the "File" menu items
+    .main_menu.file.menu entryconfig 0 -state active
+    .main_menu.file.menu entryconfig 1 -state active
+    .main_menu.file.menu entryconfig 2 -state active
+    .main_menu.file.menu entryconfig 3 -state active
+    .main_menu.file.menu entryconfig 4 -state active
+    .main_menu.file.menu entryconfig 5 -state active
+}
 
 proc modulesMenuPressCB { x y } {
     set canvas .bot.neteditFrame.canvas

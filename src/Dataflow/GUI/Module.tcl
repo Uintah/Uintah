@@ -41,8 +41,6 @@ global MacroedModules
 set MacroedModules ""
 
 global modules
-set modules ""
-
 
 itcl_class Module {
    
