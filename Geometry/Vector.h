@@ -14,12 +14,12 @@ class Piostream;
 
 class Vector {
     double _x,_y,_z;
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
     int uninit;
 #endif
 public:
     inline Vector(double x, double y, double z): _x(x), _y(y), _z(z)
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
 	, uninit(0)
 #endif
 	    { }

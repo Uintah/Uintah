@@ -37,7 +37,7 @@ Point::Point(double x, double y, double z, double w)
     _x=x/w;
     _y=y/w;
     _z=z/w;
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
     uninit=0;
 #endif
 }

@@ -1,7 +1,7 @@
 
 inline Vector::Vector()
 {
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
     uninit=1;
 #endif
 }
@@ -11,24 +11,24 @@ inline Vector::Vector(const Vector& p)
     _x=p._x;
     _y=p._y;
     _z=p._z;
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
     uninit=0;
 #endif
 }
 
 inline double Vector::length2() const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return _x*_x+_y*_y+_z*_z;
 }
 
 inline Vector& Vector::operator=(const Vector& v)
 {
-    ASSERTL3(!v.uninit);
+    ASSERTL4(!v.uninit);
     _x=v._x;
     _y=v._y;
     _z=v._z;
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
     uninit=0;
 #endif
     return *this;
@@ -36,31 +36,31 @@ inline Vector& Vector::operator=(const Vector& v)
 
 inline Vector Vector::operator*(const double s) const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return Vector(_x*s, _y*s, _z*s);
 }
 
 inline Vector Vector::operator/(const double d) const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return Vector(_x/d, _y/d, _z/d);
 }
 
 inline Vector Vector::operator+(const Vector& v2) const
 {
-    ASSERTL3(!uninit && !v2.uninit);
+    ASSERTL4(!uninit && !v2.uninit);
     return Vector(_x+v2._x, _y+v2._y, _z+v2._z);
 }
 
 inline Vector Vector::operator-(const Vector& v2) const
 {
-    ASSERTL3(!uninit && !v2.uninit);
+    ASSERTL4(!uninit && !v2.uninit);
     return Vector(_x-v2._x, _y-v2._y, _z-v2._z);
 }
 
 inline Vector& Vector::operator+=(const Vector& v2)
 {
-    ASSERTL3(!uninit && !v2.uninit);
+    ASSERTL4(!uninit && !v2.uninit);
     _x+=v2._x;
     _y+=v2._y;
     _z+=v2._z;
@@ -69,7 +69,7 @@ inline Vector& Vector::operator+=(const Vector& v2)
 
 inline Vector& Vector::operator-=(const Vector& v2)
 {
-    ASSERTL3(!uninit && !v2.uninit);
+    ASSERTL4(!uninit && !v2.uninit);
     _x-=v2._x;
     _y-=v2._y;
     _z-=v2._z;
@@ -78,31 +78,31 @@ inline Vector& Vector::operator-=(const Vector& v2)
 
 inline Vector Vector::operator-() const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return Vector(-_x,-_y,-_z);
 }
 
 inline double Dot(const Vector& v1, const Vector& v2)
 {
-    ASSERTL3(!v1.uninit && !v2.uninit);
+    ASSERTL4(!v1.uninit && !v2.uninit);
     return v1._x*v2._x+v1._y*v2._y+v1._z*v2._z;
 }
 
 inline double Dot(const Vector& v, const Point& p)
 {
-    ASSERTL3(!v.uninit && !p.uninit);
+    ASSERTL4(!v.uninit && !p.uninit);
     return v._x*p._x+v._y*p._y+v._z*p._z;
 }
 
 inline double Vector::length() const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return Sqrt(_x*_x+_y*_y+_z*_z);
 }
 
 inline Vector Abs(const Vector& v)
 {
-    ASSERTL3(!v.uninit);
+    ASSERTL4(!v.uninit);
     double x=Abs(v._x);
     double y=Abs(v._y);
     double z=Abs(v._z);
@@ -111,7 +111,7 @@ inline Vector Abs(const Vector& v)
 
 inline Vector Cross(const Vector& v1, const Vector& v2)
 {
-    ASSERTL3(!v1.uninit && !v2.uninit);
+    ASSERTL4(!v1.uninit && !v2.uninit);
     return Vector(
 	v1._y*v2._z-v1._z*v2._y,
 	v1._z*v2._x-v1._x*v2._z,
@@ -121,7 +121,7 @@ inline Vector Cross(const Vector& v1, const Vector& v2)
 inline Vector Interpolate(const Vector& v1, const Vector& v2,
 			  double weight)
 {
-    ASSERTL3(!v1.uninit && !v2.uninit);
+    ASSERTL4(!v1.uninit && !v2.uninit);
     double weight1=1.0-weight;
     return Vector(
 	v2._x*weight+v1._x*weight1,
@@ -131,7 +131,7 @@ inline Vector Interpolate(const Vector& v1, const Vector& v2,
 
 inline Vector& Vector::operator*=(const double d)
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     _x*=d;
     _y*=d;
     _z*=d;
@@ -140,7 +140,7 @@ inline Vector& Vector::operator*=(const double d)
 
 inline void Vector::x(double d)
 {
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
     uninit=0;
 #endif
     _x=d;
@@ -148,13 +148,13 @@ inline void Vector::x(double d)
 
 inline double Vector::x() const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return _x;
 }
 
 inline void Vector::y(double d)
 {
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
     uninit=0;
 #endif
     _y=d;
@@ -162,13 +162,13 @@ inline void Vector::y(double d)
 
 inline double Vector::y() const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return _y;
 }
 
 inline void Vector::z(double d)
 {
-#if SCI_ASSERTION_LEVEL >= 3
+#if SCI_ASSERTION_LEVEL >= 4
     uninit=0;
 #endif
     _z=d;
@@ -176,7 +176,7 @@ inline void Vector::z(double d)
 
 inline double Vector::z() const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return _z;
 }
 
@@ -214,7 +214,7 @@ inline void Vector::rotz90(const int c)
 
 inline Point Vector::point() const
 {
-    ASSERTL3(!uninit);
+    ASSERTL4(!uninit);
     return Point(_x,_y,_z);
 }
 
