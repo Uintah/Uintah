@@ -88,6 +88,8 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    db->require("turbulentPrandtNo",prturb);
    db->require("fluidHeatCapacity",cpfluid);
 
+   cout << "Done with MPMArches problemsetup requires" << endl;
+
    d_mpm->setMPMLabel(Mlb);
    d_mpm->setWithArches();
    d_mpm->problemSetup(prob_spec, grid, d_sharedState);
@@ -96,7 +98,11 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    d_Alab = d_arches->getArchesLabel();
    d_arches->problemSetup(prob_spec, grid, d_sharedState);
    d_arches->getBoundaryCondition()->setIfCalcEnergyExchange(d_calcEnergyExchange);
-   d_DORad = d_arches->getNonlinearSolver()->getEnthalpySolver()->checkDORadiation();
+   if (d_arches->checkSolveEnthalpy()) {
+     d_DORad = d_arches->getNonlinearSolver()->getEnthalpySolver()->checkDORadiation();
+   }
+   else 
+     d_DORad = false;
 
    cerr << "Done with problemSetup \t\t\t MPMArches" <<endl;
    cerr << "--------------------------------\n"<<endl;
@@ -288,9 +294,10 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   schedulePutAllForcesOnCC(sched, patches, mpm_matls);
   schedulePutAllForcesOnNC(sched, patches, mpm_matls);
 
-  scheduleComputeIntegratedSolidProps(sched, patches, arches_matls, mpm_matls, all_matls);
-
-  scheduleComputeTotalHT(sched, patches, arches_matls);
+  if (d_calcEnergyExchange) {
+    scheduleComputeIntegratedSolidProps(sched, patches, arches_matls, mpm_matls, all_matls);
+    scheduleComputeTotalHT(sched, patches, arches_matls);
+  }
 
   // we may also need mass exchange here later.  This is 
   // not implemented yet.  This will be of the form
