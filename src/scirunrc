@@ -123,6 +123,11 @@ SCIRUN_TMP_DIR = /tmp
 # SCI_SIGNALMODE = ask
 
 
+### SCIRUN_CONFIRM_OVERWRITE = [boolean]
+#   If false, SCIRun writer will not prompt the user before overwriting a file
+# SCIRUN_CONFIRM_OVERWRITE = true
+
+
 ### SCIRUN_INSERT_NET_COPYRIGHT = [boolean]
 #   If true, adds SCI copyright to any SCI .net files that are created.
 # SCIRUN_INSERT_NET_COPYRIGHT = false
@@ -137,6 +142,11 @@ SCIRUN_TMP_DIR = /tmp
 ### SCI_NOSPLASH = [boolean]
 #   If true, SCIRun will not display the splash screen at startup.
 # SCI_NOSPLASH = false
+
+
+### SCIRUN_FAST_QUIT = [boolean]
+#   If true, SCIRun will not ask the user to save a network before quitting
+# SCIRUN_FAST_QUIT = false
 
 
 ### SCI_NPROCESSORS = [integer]
@@ -155,7 +165,7 @@ SCIRUN_TMP_DIR = /tmp
 # THREAD_NO_CATCH_SIGNALS = true
 
 
-### THREAD_SHOW_INIT = [boolean]
+### THREAD_SHOWINIT = [boolean]
 #   Debugging flag that, when turned on, shows information about the
 #   initialization of the thread library.
 # THREAD_SHOWINIT = true
@@ -185,8 +195,6 @@ SCIRUN_GUI_MoveGuiToMouse = on
 #################
 # UNDOCUMENTED ##
 #################
-# SCI_CONFIRM_OVERWRITE
-# PSE_DATA
 # LOGNAME
 # USER
 # SCI_DEBUG
