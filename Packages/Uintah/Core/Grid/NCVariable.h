@@ -73,6 +73,9 @@ class NCVariable : public Array3<T>, public NCVariableBase {
      virtual void allocate(const IntVector& lowIndex,
 			   const IntVector& highIndex);
      
+     virtual void allocate(const Patch* patch)
+     { allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex()); }
+
      virtual void copyPatch(NCVariableBase* src,
 			     const IntVector& lowIndex,
 			     const IntVector& highIndex);
@@ -84,10 +87,12 @@ class NCVariable : public Array3<T>, public NCVariableBase {
      virtual void getSizes(IntVector& low, IntVector& high,
 			   IntVector& siz, IntVector& strides) const;
      // Replace the values on the indicated face with value
-     void fillFace(Patch::FaceType face, const T& value)
+     void fillFace(Patch::FaceType face, const T& value, 
+		   IntVector offset = IntVector(0,0,0))
        { 
-	 IntVector low = getLowIndex();
-	 IntVector hi = getHighIndex();
+	 IntVector low,hi;
+	 low = getLowIndex() + offset;
+	 hi = getHighIndex() - offset;
 	 switch (face) {
 	 case Patch::xplus:
 	   for (int j = low.y(); j<hi.y(); j++) {
@@ -140,10 +145,12 @@ class NCVariable : public Array3<T>, public NCVariableBase {
      // Use to apply symmetry boundary conditions.  On the
      // indicated face, replace the component of the vector
      // normal to the face with 0.0
-     void fillFaceNormal(Patch::FaceType face)
+     void fillFaceNormal(Patch::FaceType face, 
+			 IntVector offset = IntVector(0,0,0))
        {
-	 IntVector low = getLowIndex();
-	 IntVector hi = getHighIndex();
+	 IntVector low,hi;
+	 low = getLowIndex() + offset;
+	 hi = getHighIndex() - offset;
 	 switch (face) {
 	 case Patch::xplus:
 	   for (int j = low.y(); j<hi.y(); j++) {
@@ -375,6 +382,7 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 	 strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
 			     (int)(sizeof(T)*siz.y()*siz.x()));
       }
-} // End namespace Uintah
+   
+} // end namespace Uintah
 
 #endif
