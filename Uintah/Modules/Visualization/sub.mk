@@ -8,8 +8,14 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Uintah/Modules/Visualization
 
 SRCS     += $(SRCDIR)/GridVisualizer.cc \
-	$(SRCDIR)/NodeHedgehog.cc
-
+	$(SRCDIR)/NodeHedgehog.cc \
+	$(SRCDIR)/TimestepSelector.cc \
+	$(SRCDIR)/ScalarFieldExtractor.cc \
+	$(SRCDIR)/VectorFieldExtractor.cc \
+	$(SRCDIR)/TensorFieldExtractor.cc \
+	$(SRCDIR)/ParticleFieldExtractor.cc \
+	$(SRCDIR)/RescaleColorMapForParticles.cc \
+	$(SRCDIR)/ParticleVis.cc 
 
 
 PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
@@ -17,7 +23,7 @@ PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
         SCICore/TclInterface SCICore/Containers SCICore/Datatypes \
         SCICore/Geom Uintah/Grid Uintah/Interface Uintah/Exceptions \
 	SCICore/Geometry PSECore/Widgets PSECore/XMLUtil \
-	SCICore/Util Uintah/Datatypes
+	SCICore/Util  Uintah/Components/MPM Uintah/Datatypes
 
 LIBS := $(XML_LIBRARY) -lm
 
@@ -26,6 +32,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/07/31 17:45:46  kuzimmer
+# Added files and modules for Field Extraction from uda
+#
 # Revision 1.3  2000/06/27 16:58:00  bigler
 # Added NodeHedgehog.cc
 #

@@ -6,6 +6,7 @@
 #include <Uintah/Grid/TypeDescription.h>
 #include <Uintah/Interface/InputContext.h>
 #include <Uintah/Interface/OutputContext.h>
+#include <Uintah/Grid/TypeUtils.h>
 #include <SCICore/Exceptions/ErrnoException.h>
 #include <SCICore/Exceptions/InternalError.h>
 #include <SCICore/Geometry/Vector.h>
@@ -372,6 +373,9 @@ class NCVariable : public Array3<T>, public NCVariableBase {
 
 //
 // $Log$
+// Revision 1.27  2000/07/31 17:45:44  kuzimmer
+// Added files and modules for Field Extraction from uda
+//
 // Revision 1.26  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support

@@ -33,7 +33,124 @@ Level 6: Magenta</documentation>
       <creationFunction>make_GridVisualizer</creationFunction>
     </implementation>
   </dataflow-component>
-
+  <dataflow-component name="TimestepSelector">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date></version-date>
+      <version>1.0</version>
+      <description>Selects a timestep for uda visualization</description>
+      <documentation></documentation>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>Archive with timestep selected</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TimestepSelector</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ScalarFieldExtractor">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date></version-date>
+      <version>1.0</version>
+      <description> extracts scalarfields from udas </description>
+      <documentation></documentation>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>ScalarField</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ScalarFieldExtractor</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="VectorFieldExtractor">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date></version-date>
+      <version>1.0</version>
+      <description> extracts vectorfields from udas </description>
+      <documentation></documentation>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>VectorField</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VectorFieldExtractor</creationFunction>
+    </implementation>
+  </dataflow-component>
+   <dataflow-component name="TensorFieldExtractor">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date></version-date>
+      <version>1.0</version>
+      <description> extracts tensorfields from udas </description>
+      <documentation></documentation>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>TensorField</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TensorFieldExtractor</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ParticleFieldExtractor">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date></version-date>
+      <version>1.0</version>
+      <description> extracts Particlefields from udas </description>
+      <documentation></documentation>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>ScalarParticles, VectorParticles, TensorParticles</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ParticleFieldExtractor</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ParticleVis">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date></version-date>
+      <version>1.0</version>
+      <description> changes particle data to geometry </description>
+      <documentation></documentation>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>ScalarParticles, VectorParticles, TensorParticles</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ParticleVis</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="RescaleColorMapForParticles">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs> Colormap, ScalarParticles  </inputs>
+    <outputs> Colormap </outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RescaleColorMapForParticles</creationFunction>
+    </implementation>
+  </dataflow-component>
   <dataflow-component name="NodeHedgehog">
     <meta>
       <authors>
@@ -52,14 +169,12 @@ Level 6: Magenta</documentation>
       <creationFunction>make_NodeHedgehog</creationFunction>
     </implementation>
   </dataflow-component>
-
   </scirun-library>
   <scirun-library category="MPMViz">
   <soNames>
     <soName>libUintah_Modules_MPMViz.so</soName>
     <soName>libUintah.so</soName>
   </soNames>
-
   <dataflow-component name="VizControl">
     <meta>
       <authors>
@@ -76,7 +191,6 @@ Level 6: Magenta</documentation>
       <creationFunction>make_VizControl</creationFunction>
     </implementation>
   </dataflow-component>
-
   <dataflow-component name="ParticleDB">
     <meta>
       <authors>
