@@ -145,7 +145,7 @@ NrrdFieldConverter::execute(){
 	int *max = scinew int[nrrdDim];
 
 	// Keep the same dims except for the tuple axis.
-	for( ic=1; ic<nrrdDim; ic++) {
+	for( ic=1; ic<nrrdDim; ic++ ) {
 	  min[ic] = 0;
 	  max[ic] = nHandle->nrrd->axis[ic].size-1;
 	}
@@ -230,7 +230,7 @@ NrrdFieldConverter::execute(){
 
     // Save all of the current generation values.
     nGenerations_.resize( nHandles.size() );
-    for( ic=0; ic++; ic<nHandles.size() )
+    for( ic=0; ic<nHandles.size(); ic++ )
       nGenerations_[ic] = nHandles[ic]->generation;
 
     topology_ = UNKNOWN;
