@@ -45,6 +45,7 @@ none
 #include <Uintah/Grid/VarLabel.h>
 
 #include <SCICore/Containers/Array1.h>
+#include <Uintah/Components/Arches/ArchesVariables.h>
 
 namespace Uintah {
 class ProcessorGroup;
@@ -83,34 +84,63 @@ public:
       //
       void problemSetup(const ProblemSpecP& params);
 
-      // GROUP:  Schedule Action :
       ////////////////////////////////////////////////////////////////////////
       //
-      // Underrelaxation
+      // Pressure Underrelaxation
       //
-      void sched_underrelax(const LevelP& level,
-			    SchedulerP& sched,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw);
+      void computePressUnderrelax(const ProcessorGroup* pc,
+				  const Patch* patch,
+				  DataWarehouseP& old_dw,
+				  DataWarehouseP& new_dw, ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
       // Pressure Solve
       //
-      void sched_pressureSolve(const LevelP& level,
-			       SchedulerP& sched,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw);
+      void pressLisolve(const ProcessorGroup* pc,
+			const Patch* patch,
+			DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw, ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
-      // Velocity Solve
+      // Calculate pressure residuals
       //
-      void sched_velSolve(const LevelP& level,
-			  SchedulerP& sched,
-			  DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw,
-			  int index);
+      void computePressResidual(const ProcessorGroup* pc,
+				const Patch* patch,
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw, ArchesVariables* vars);
+
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Pressure Underrelaxation
+      //
+      virtual void computeVelUnderrelax(const ProcessorGroup* pc,
+					const Patch* patch,
+					DataWarehouseP& old_dw,
+					DataWarehouseP& new_dw, int index,
+					ArchesVariables* vars);
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Pressure Solve
+      //
+      virtual void velocityLisolve(const ProcessorGroup* pc,
+				   const Patch* patch,
+				   DataWarehouseP& old_dw,
+				   DataWarehouseP& new_dw, int index,
+				   ArchesVariables* vars);
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Calculate pressure residuals
+      //
+      virtual void computeVelResidual(const ProcessorGroup* pc,
+				      const Patch* patch,
+				      DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw, int index,
+				      ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -126,62 +156,6 @@ protected:
 private:
 
       // GROUP:  Actual Action :
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // Pressure Underrelaxation
-      //
-      void press_underrelax(const ProcessorGroup* pc,
-			    const Patch* patch,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw);
-
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // Pressure Solve
-      //
-      void press_lisolve(const ProcessorGroup* pc,
-			 const Patch* patch,
-			 DataWarehouseP& old_dw,
-			 DataWarehouseP& new_dw);
-
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // Calculate pressure residuals
-      //
-      void press_residCalculation(const ProcessorGroup* pc,
-				  const Patch* patch,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw);
-
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // Velocity Underrelaxation
-      //
-      void vel_underrelax(const ProcessorGroup* pc,
-			  const Patch* patch,
-			  DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw, 
-			  int index);
-
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // Velocity Solve
-      //
-      void vel_lisolve(const ProcessorGroup* pc,
-		       const Patch* patch,
-		       DataWarehouseP& old_dw,
-		       DataWarehouseP& new_dw, 
-		       int index);
-
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // Calculate Velocity residuals
-      //
-      void vel_residCalculation(const ProcessorGroup* pc,
-				const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw, 
-				int index);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -221,43 +195,11 @@ private:
 
       // const VarLabel *
       // inputs (Pressure Solve)
-      const VarLabel* d_pressureSPBCLabel;
-      const VarLabel* d_presCoefPBLMLabel;
-      const VarLabel* d_presNonLinSrcPBLMLabel;
-
-      // computes (Pressure Solve)
-      const VarLabel* d_presResidualPSLabel;
-      const VarLabel* d_presCoefPSLabel;
-      const VarLabel* d_presNonLinSrcPSLabel;
-      const VarLabel* d_pressurePSLabel;
 
       // inputs (Momentum Solve)
-      const VarLabel* d_uVelocityCPBCLabel;
-      const VarLabel* d_uVelCoefMBLMLabel;
-      const VarLabel* d_uVelNonLinSrcMBLMLabel;
-      const VarLabel* d_vVelocityCPBCLabel;
-      const VarLabel* d_vVelCoefMBLMLabel;
-      const VarLabel* d_vVelNonLinSrcMBLMLabel;
-      const VarLabel* d_wVelocityCPBCLabel;
-      const VarLabel* d_wVelCoefMBLMLabel;
-      const VarLabel* d_wVelNonLinSrcMBLMLabel;
-
-      // computes (Momentum Solve)
-      const VarLabel* d_uVelResidualMSLabel;
-      const VarLabel* d_uVelCoefMSLabel;
-      const VarLabel* d_uVelNonLinSrcMSLabel;
-      const VarLabel* d_uVelocityMSLabel;
-      const VarLabel* d_vVelResidualMSLabel;
-      const VarLabel* d_vVelCoefMSLabel;
-      const VarLabel* d_vVelNonLinSrcMSLabel;
-      const VarLabel* d_vVelocityMSLabel;
-      const VarLabel* d_wVelResidualMSLabel;
-      const VarLabel* d_wVelCoefMSLabel;
-      const VarLabel* d_wVelNonLinSrcMSLabel;
-      const VarLabel* d_wVelocityMSLabel;
 
       // inputs (Scalar Solve)
-      const VarLabel* d_scalarSPLabel;
+      const VarLabel* d_scalarINLabel;
       const VarLabel* d_scalCoefSBLMLabel;
       const VarLabel* d_scalNonLinSrcSBLMLabel;
 
@@ -265,7 +207,7 @@ private:
       const VarLabel* d_scalResidualSSLabel;
       const VarLabel* d_scalCoefSSLabel;
       const VarLabel* d_scalNonLinSrcSSLabel;
-      const VarLabel* d_scalarSSLabel;
+      const VarLabel* d_scalarSPLabel;
 
 }; // End class RBGSSolver.h
 
@@ -276,6 +218,10 @@ private:
   
 //
 // $Log$
+// Revision 1.13  2000/07/28 02:31:00  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
+//
 // Revision 1.12  2000/07/08 08:03:34  bbanerje
 // Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
 // made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc

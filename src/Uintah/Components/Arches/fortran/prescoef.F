@@ -46,8 +46,8 @@ c*********************************************************************
       double precision AB(domLo(1):domHi(1),
      &     domLo(2):domHi(2),domLo(3):domHi(3))
       integer domLoU(3), domHiU(3)
-      double precision AUP(domLo(1):domHi(1),
-     &     domLo(2):domHi(2),domLo(3):domHi(3))
+      double precision AUP(domLoU(1):domHiU(1),
+     &     domLoU(2):domHiU(2),domLoU(3):domHiU(3))
       integer domLoV(3), domHiV(3)
       double precision AVP(domLoV(1):domHiV(1),
      &     domLoV(2):domHiV(2),domLoV(3):domHiV(3))
@@ -140,6 +140,10 @@ C-----------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/07/28 02:31:04  rawat
+c moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+c coeffecients
+c
 c Revision 1.2  2000/07/17 22:07:02  rawat
 c modified momentum source
 c

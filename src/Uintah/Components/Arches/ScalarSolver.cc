@@ -12,6 +12,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/Arches/PhysicalConstants.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Patch.h>
@@ -36,32 +37,16 @@ ScalarSolver::ScalarSolver()
 //****************************************************************************
 // Default constructor for PressureSolver
 //****************************************************************************
-ScalarSolver::ScalarSolver(TurbulenceModel* turb_model,
+ScalarSolver::ScalarSolver(const ArchesLabel* label,
+			   TurbulenceModel* turb_model,
 			   BoundaryCondition* bndry_cond,
-			   PhysicalConstants* physConst) : 
+			   PhysicalConstants* physConst) :
+                                 d_lab(label),
                                  d_turbModel(turb_model), 
                                  d_boundaryCondition(bndry_cond),
-				 d_physicalConsts(physConst),
-				 d_generation(0)
+				 d_physicalConsts(physConst)
 {
-  d_scalarSPLabel = scinew VarLabel("scalarSP",
-				CCVariable<double>::getTypeDescription() );
-  d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
-				SFCXVariable<double>::getTypeDescription() );
-  d_vVelocityMSLabel = scinew VarLabel("vVelocityMS",
-				SFCYVariable<double>::getTypeDescription() );
-  d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
-				SFCZVariable<double>::getTypeDescription() );
-  d_densityCPLabel = scinew VarLabel("densityCP",
-				CCVariable<double>::getTypeDescription() );
-  d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
-				CCVariable<double>::getTypeDescription() );
-  d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM",
-				CCVariable<double>::getTypeDescription() );
-  d_scalLinSrcSBLMLabel = scinew VarLabel("scalLinSrcSBLM",
-				CCVariable<double>::getTypeDescription() );
-  d_scalNonLinSrcSBLMLabel = scinew VarLabel("scalNonLinSrcSBLM",
-				CCVariable<double>::getTypeDescription() );
+  d_scalarVars = scinew ArchesVariables();
 }
 
 //****************************************************************************
@@ -109,27 +94,24 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
 void 
 ScalarSolver::solve(const LevelP& level,
 		    SchedulerP& sched,
-		    DataWarehouseP& old_dw,
+		    DataWarehouseP&,
 		    DataWarehouseP& new_dw,
 		    double time, double delta_t, int index)
 {
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
   // pressure solve.
-  //DataWarehouseP matrix_dw = sched->createDataWarehouse(d_generation);
-  //++d_generation;
+  DataWarehouseP matrix_dw = sched->createDataWarehouse(new_dw);
 
   //computes stencil coefficients and source terms
-  // requires : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
+  // requires : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
   // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
-  //sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t, index);
-  sched_buildLinearMatrix(level, sched, old_dw, new_dw, delta_t, index);
-    
+  sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t, index);
+  
   // Schedule the scalar solve
-  // require : scalarSP, scalCoefSBLM, scalNonLinSrcSBLM
-  // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSS
-  //d_linearSolver->sched_scalarSolve(level, sched, new_dw, matrix_dw, index);
-  d_linearSolver->sched_scalarSolve(level, sched, old_dw, new_dw, index);
+  // require : scalarIN, scalCoefSBLM, scalNonLinSrcSBLM
+  // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSP
+  d_linearSolver->sched_scalarSolve(level, sched, new_dw, matrix_dw, index);
     
 }
 
@@ -139,8 +121,8 @@ ScalarSolver::solve(const LevelP& level,
 void 
 ScalarSolver::sched_buildLinearMatrix(const LevelP& level,
 				      SchedulerP& sched,
-				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw,
+				      DataWarehouseP& matrix_dw,
 				      double delta_t, int index)
 {
   for(Level::const_patchIterator iter=level->patchesBegin();
@@ -153,34 +135,39 @@ ScalarSolver::sched_buildLinearMatrix(const LevelP& level,
 	//		      Discretization::buildLinearMatrix,
 	//		      delta_t, index);
       Task* tsk = scinew Task("ScalarSolver::BuildCoeff",
-			      patch, old_dw, new_dw, this,
+			      patch, new_dw, matrix_dw, this,
 			      &ScalarSolver::buildLinearMatrix,
 			      delta_t, index);
 
       int numGhostCells = 0;
       int matlIndex = 0;
-
-      // This task requires
-      tsk->requires(old_dw, d_scalarSPLabel, matlIndex, patch, Ghost::None,
+      int nofStencils = 7;
+      DataWarehouseP old_dw = new_dw->getTop();
+      // This task requires scalar and density from old time step for transient
+      // calculation
+      tsk->requires(old_dw, d_lab->d_scalarSPLabel, index, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_lab->d_scalarINLabel, index, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(new_dw, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(new_dw, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(new_dw, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-
-      /// requires convection coeff because of the nodal
-      // differencing
-      // computes all the components of velocity
+      tsk->requires(new_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(new_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
       // added one more argument of index to specify scalar component
-      tsk->computes(new_dw, d_scalCoefSBLMLabel, index, patch);
-      tsk->computes(new_dw, d_scalLinSrcSBLMLabel, index, patch);
-      tsk->computes(new_dw, d_scalNonLinSrcSBLMLabel, index, patch);
+      for (int ii = 0; ii < nofStencils; ii++) {
+	tsk->computes(matrix_dw, d_lab->d_scalCoefSBLMLabel, ii, patch);
+	tsk->computes(matrix_dw, d_lab->d_scalConvCoefSBLMLabel, ii, patch);
+      }
+      tsk->computes(matrix_dw, d_lab->d_scalLinSrcSBLMLabel, matlIndex, patch);
+      tsk->computes(matrix_dw, d_lab->d_scalNonLinSrcSBLMLabel, matlIndex, patch);
 
       sched->addTask(tsk);
     }
@@ -193,45 +180,107 @@ ScalarSolver::sched_buildLinearMatrix(const LevelP& level,
 //****************************************************************************
 void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				     const Patch* patch,
-				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw,
+				     DataWarehouseP& matrix_dw,
 				     double delta_t, int index)
 {
-  // compute ith componenet of velocity stencil coefficients
+  int matlIndex = 0;
+  int numGhostCells = 0;
+  int nofStencils = 7;
+  DataWarehouseP old_dw = new_dw->getTop();
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformation*> cellInfoP;
+  // get old_dw from getTop function
+  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellinfo = cellInfoP;
+  old_dw->get(d_scalarVars->old_density, d_lab->d_densityCPLabel, matlIndex, patch, 
+	      Ghost::None,
+	      numGhostCells);
+  // index component of scalar
+  old_dw->get(d_scalarVars->old_scalar, d_lab->d_scalarSPLabel, index, patch, 
+	      Ghost::None,
+	      numGhostCells);
+  old_dw->get(d_scalarVars->cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  new_dw->get(d_scalarVars->density, d_lab->d_densityINLabel, matlIndex, patch,
+	      Ghost::None, numGhostCells);
+  new_dw->get(d_scalarVars->viscosity, d_lab->d_viscosityINLabel, matlIndex, patch, 
+	      Ghost::None, numGhostCells);
+  new_dw->get(d_scalarVars->scalar, d_lab->d_scalarINLabel, index, patch,
+	      Ghost::None, numGhostCells);
+  new_dw->get(d_scalarVars->uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch,
+	      Ghost::None, numGhostCells);
+  new_dw->get(d_scalarVars->vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
+	      Ghost::None, numGhostCells);
+  new_dw->get(d_scalarVars->wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, 
+	      patch, Ghost::None, numGhostCells);
+  // allocate matrix coeffs
+  for (int ii = 0; ii < nofStencils; ii++) {
+    matrix_dw->allocate(d_scalarVars->scalarCoeff[ii], d_lab->d_scalCoefSBLMLabel, 
+			  ii, patch);
+    matrix_dw->allocate(d_scalarVars->scalarConvectCoeff[ii],
+			d_lab->d_scalConvCoefSBLMLabel, 
+			ii, patch);
+  }
+  matrix_dw->allocate(d_scalarVars->scalarLinearSrc, d_lab->d_scalLinSrcSBLMLabel, 
+			matlIndex, patch);
+  matrix_dw->allocate(d_scalarVars->scalarNonlinearSrc, d_lab->d_scalNonLinSrcSBLMLabel,
+			matlIndex, patch);
+ 
+  // compute ith component of scalar stencil coefficients
   // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
-  // outputs: scalCoefSBLM, scalConvCoefSBLM
-  d_discretize->calculateScalarCoeff(pc, patch, old_dw, new_dw, 
-				     delta_t, index);
+  // outputs: scalCoefSBLM
+  d_discretize->calculateScalarCoeff(pc, patch, new_dw, matrix_dw, 
+				     delta_t, index, cellinfo, 
+				     d_scalarVars);
 
   // Calculate scalar source terms
   // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
   // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
-  d_source->calculateScalarSource(pc, patch, old_dw, new_dw, 
-				  delta_t, index);
+  d_source->calculateScalarSource(pc, patch, new_dw, matrix_dw, 
+				  delta_t, index, cellinfo, 
+				  d_scalarVars );
 
   // Calculate the scalar boundary conditions
   // inputs : scalarSP, scalCoefSBLM
   // outputs: scalCoefSBLM
-  d_boundaryCondition->scalarBC(pc, patch, old_dw, new_dw, index);
+  d_boundaryCondition->scalarBC(pc, patch, new_dw, matrix_dw, index, cellinfo, 
+				  d_scalarVars);
 
   // similar to mascal
   // inputs :
   // outputs:
-  d_source->modifyScalarMassSource(pc, patch, old_dw,
-				   new_dw, delta_t, index);
+  d_source->modifyScalarMassSource(pc, patch, new_dw,
+				   matrix_dw, delta_t, index, d_scalarVars);
 
   // Calculate the scalar diagonal terms
   // inputs : scalCoefSBLM, scalLinSrcSBLM
   // outputs: scalCoefSBLM
   d_discretize->calculateScalarDiagonal(pc, patch, new_dw,
-				     new_dw, index);
+				     matrix_dw, index, d_scalarVars);
+  for (int ii = 0; ii < nofStencils; ii++) {
+    matrix_dw->put(d_scalarVars->scalarCoeff[ii], d_lab->d_scalCoefSBLMLabel, ii, patch);
+    matrix_dw->put(d_scalarVars->scalarConvectCoeff[ii], 
+		   d_lab->d_scalConvCoefSBLMLabel, 
+		   ii, patch);
+  }
+  matrix_dw->put(d_scalarVars->scalarNonlinearSrc, d_lab->d_scalNonLinSrcSBLMLabel, 
+		 matlIndex, patch);
+
 }
 
 //
 // $Log$
-// Revision 1.16  2000/07/14 05:23:50  bbanerje
-// Added scalcoef.F and updated related stuff in C++. scalcoef ==> coefs.f
-// in Kumar's code.
+// Revision 1.17  2000/07/28 02:31:00  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
 //
 // Revision 1.15  2000/07/03 05:30:16  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.

@@ -45,8 +45,9 @@ none
 #include <SCICore/Containers/Array1.h>
 
 namespace Uintah {
+class ProcessorGroup;
 namespace ArchesSpace {
-
+class ArchesVariables;
 // class StencilMatrix;
 using namespace SCICore::Containers;
 
@@ -81,34 +82,66 @@ public:
       //
       virtual void problemSetup(const ProblemSpecP& params) = 0;
 
-      // GROUP: Schedule Action:
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // Schedule underrelaxation
-      //
-      virtual void sched_underrelax(const LevelP& level,
-				       SchedulerP& sched,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw) = 0;
 
       ////////////////////////////////////////////////////////////////////////
       //
-      // Schedule the pressure solve
+      // Pressure Underrelaxation
       //
-      virtual void sched_pressureSolve(const LevelP& level,
-				       SchedulerP& sched,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw) = 0;
-
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // Schedule the velocity solve
-      //
-      virtual void sched_velSolve(const LevelP& level,
-				  SchedulerP& sched,
+      virtual void computePressUnderrelax(const ProcessorGroup* pc,
+				  const Patch* patch,
 				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw,
-				  const int index) = 0;
+				  DataWarehouseP& new_dw, ArchesVariables* vars)= 0;
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Pressure Solve
+      //
+      virtual void pressLisolve(const ProcessorGroup* pc,
+			const Patch* patch,
+			DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw, ArchesVariables* vars) = 0;
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Calculate pressure residuals
+      //
+      virtual void computePressResidual(const ProcessorGroup* pc,
+				const Patch* patch,
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw, ArchesVariables* vars) = 0;
+
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Pressure Underrelaxation
+      //
+      virtual void computeVelUnderrelax(const ProcessorGroup* pc,
+					const Patch* patch,
+					DataWarehouseP& old_dw,
+					DataWarehouseP& new_dw, int index,
+					ArchesVariables* vars)= 0;
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Pressure Solve
+      //
+      virtual void velocityLisolve(const ProcessorGroup* pc,
+				   const Patch* patch,
+				   DataWarehouseP& old_dw,
+				   DataWarehouseP& new_dw, int index,
+				   ArchesVariables* vars) = 0;
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Calculate pressure residuals
+      //
+      virtual void computeVelResidual(const ProcessorGroup* pc,
+				      const Patch* patch,
+				      DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw, int index,
+				      ArchesVariables* vars) = 0;
+
+
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -131,6 +164,10 @@ private:
 
 //
 // $Log$
+// Revision 1.8  2000/07/28 02:31:00  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
+//
 // Revision 1.7  2000/06/17 07:06:24  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

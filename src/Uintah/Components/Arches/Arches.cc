@@ -45,22 +45,7 @@ using namespace Uintah::ArchesSpace;
 Arches::Arches(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
-  d_densityINLabel = scinew VarLabel("densityIN", 
-				   CCVariable<double>::getTypeDescription() );
-  d_pressureINLabel = scinew VarLabel("pressureIN", 
-				   CCVariable<double>::getTypeDescription() );
-  d_uVelocityINLabel = scinew VarLabel("uVelocityIN", 
-				   SFCXVariable<double>::getTypeDescription() );
-  d_vVelocityINLabel = scinew VarLabel("vVelocityIN", 
-				   SFCYVariable<double>::getTypeDescription() );
-  d_wVelocityINLabel = scinew VarLabel("wVelocityIN", 
-				   SFCZVariable<double>::getTypeDescription() );
-  d_scalarINLabel = scinew VarLabel("scalarIN", 
-				   CCVariable<double>::getTypeDescription() );
-  d_viscosityINLabel = scinew VarLabel("viscosityIN", 
-				   CCVariable<double>::getTypeDescription() );
-  d_cellTypeLabel = scinew VarLabel("cellType", 
-				   CCVariable<int>::getTypeDescription() );
+  d_lab = scinew ArchesLabel();
 }
 
 //****************************************************************************
@@ -94,7 +79,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_physicalConsts->problemSetup(db);
 
   // read properties
-  d_props = scinew Properties();
+  d_props = scinew Properties(d_lab);
   d_props->problemSetup(db);
   d_nofScalars = d_props->getNumMixVars();
 
@@ -102,20 +87,21 @@ Arches::problemSetup(const ProblemSpecP& params,
   string turbModel;
   db->require("turbulence_model", turbModel);
   if (turbModel == "smagorinsky") 
-    d_turbModel = scinew SmagorinskyModel(d_physicalConsts);
+    d_turbModel = scinew SmagorinskyModel(d_lab, d_physicalConsts);
   else 
     throw InvalidValue("Turbulence Model not supported" + turbModel);
   d_turbModel->problemSetup(db);
 
   // read boundary
-  d_boundaryCondition = scinew BoundaryCondition(d_turbModel, d_props);
+  d_boundaryCondition = scinew BoundaryCondition(d_lab, d_turbModel, d_props);
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->problemSetup(db);
   string nlSolver;
   db->require("nonlinear_solver", nlSolver);
-  if(nlSolver == "picard")
-    d_nlSolver = scinew PicardNonlinearSolver(d_props, d_boundaryCondition,
+  if(nlSolver == "picard") {
+    d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_props, d_boundaryCondition,
 					   d_turbModel, d_physicalConsts);
+  }
   else
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver);
 
@@ -185,14 +171,14 @@ Arches::sched_paramInit(const LevelP& level,
 			 patch, old_dw, new_dw, this,
 			 &Arches::paramInit);
     int matlIndex = 0;
-    tsk->computes(new_dw, d_uVelocityINLabel, matlIndex, patch);
-    tsk->computes(new_dw, d_vVelocityINLabel, matlIndex, patch);
-    tsk->computes(new_dw, d_wVelocityINLabel, matlIndex, patch);
-    tsk->computes(new_dw, d_pressureINLabel, matlIndex, patch);
+    tsk->computes(new_dw, d_lab->d_uVelocityINLabel, matlIndex, patch);
+    tsk->computes(new_dw, d_lab->d_vVelocityINLabel, matlIndex, patch);
+    tsk->computes(new_dw, d_lab->d_wVelocityINLabel, matlIndex, patch);
+    tsk->computes(new_dw, d_lab->d_pressureINLabel, matlIndex, patch);
     for (int ii = 0; ii < d_nofScalars; ii++) 
-      tsk->computes(new_dw, d_scalarINLabel, ii, patch);
-    tsk->computes(new_dw, d_densityINLabel, matlIndex, patch);
-    tsk->computes(new_dw, d_viscosityINLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->d_scalarINLabel, ii, patch);
+    tsk->computes(new_dw, d_lab->d_densityINLabel, matlIndex, patch);
+    tsk->computes(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch);
     sched->addTask(tsk);
   }
 }
@@ -227,12 +213,12 @@ Arches::scheduleTimeAdvance(double time, double dt,
   //           pressurePS, scalarSS 
   int error_code = d_nlSolver->nonlinearSolve(level, sched, old_dw, new_dw,
 					      time, dt);
-  if (!error_code) {
-    old_dw = new_dw;
-  }
-  else {
-    cerr << "Nonlinear Solver didn't converge" << endl;
-  }
+  //  if (!error_code) {
+  //    old_dw = new_dw;
+  //  }
+  //  else {
+  //    cerr << "Nonlinear Solver didn't converge" << endl;
+  //  }
   cerr << "Done: Arches::scheduleTimeAdvance\n";
 }
 
@@ -256,15 +242,15 @@ Arches::paramInit(const ProcessorGroup* ,
   CCVariable<double> viscosity;
 
   int matlIndex = 0;
-  old_dw->allocate(uVelocity, d_uVelocityINLabel, matlIndex, patch);
-  old_dw->allocate(vVelocity, d_vVelocityINLabel, matlIndex, patch);
-  old_dw->allocate(wVelocity, d_wVelocityINLabel, matlIndex, patch);
-  old_dw->allocate(pressure, d_pressureINLabel, matlIndex, patch);
+  old_dw->allocate(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch);
+  old_dw->allocate(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
+  old_dw->allocate(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
+  old_dw->allocate(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
   for (int ii = 0; ii < d_nofScalars; ii++) {
-    old_dw->allocate(scalar[ii], d_scalarINLabel, ii, patch);
+    old_dw->allocate(scalar[ii], d_lab->d_scalarINLabel, ii, patch);
   }
-  old_dw->allocate(density, d_densityINLabel, matlIndex, patch);
-  old_dw->allocate(viscosity, d_viscosityINLabel, matlIndex, patch);
+  old_dw->allocate(density, d_lab->d_densityINLabel, matlIndex, patch);
+  old_dw->allocate(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
 
   // ** WARNING **  this needs to be changed soon (6/9/2000)
   IntVector domLoU = uVelocity.getFortLowIndex();
@@ -309,15 +295,15 @@ Arches::paramInit(const ProcessorGroup* ,
 		     scalar[ii].getPointer(), &scalVal);
   }
 
-  old_dw->put(uVelocity, d_uVelocityINLabel, matlIndex, patch);
-  old_dw->put(vVelocity, d_vVelocityINLabel, matlIndex, patch);
-  old_dw->put(wVelocity, d_wVelocityINLabel, matlIndex, patch);
-  old_dw->put(pressure, d_pressureINLabel, matlIndex, patch);
+  old_dw->put(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch);
+  old_dw->put(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
+  old_dw->put(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
+  old_dw->put(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
   for (int ii = 0; ii < d_nofScalars; ii++) {
-    old_dw->put(scalar[ii], d_scalarINLabel, ii, patch);
+    old_dw->put(scalar[ii], d_lab->d_scalarINLabel, ii, patch);
   }
-  old_dw->put(density, d_densityINLabel, matlIndex, patch);
-  old_dw->put(viscosity, d_viscosityINLabel, matlIndex, patch);
+  old_dw->put(density, d_lab->d_densityINLabel, matlIndex, patch);
+  old_dw->put(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
 
   // Testing if correct values have been put
   /*
@@ -337,6 +323,10 @@ Arches::paramInit(const ProcessorGroup* ,
   
 //
 // $Log$
+// Revision 1.53  2000/07/28 02:30:59  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
+//
 // Revision 1.52  2000/07/13 06:32:09  bbanerje
 // Labels are once more consistent for one iteration.
 //

@@ -1,4 +1,4 @@
-//----- Discretization.cc ---------------------------------------------- \
+//----- Discretization.cc ----------------------------------------------
 
 /* REFERENCED */
 static char *id="@(#) $Id$";
@@ -34,7 +34,6 @@ using SCICore::Geometry::Vector;
 //****************************************************************************
 Discretization::Discretization()
 {
-  d_lab = scinew ArchesLabel();
 }
 
 //****************************************************************************
@@ -50,324 +49,223 @@ Discretization::~Discretization()
 void 
 Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 				       const Patch* patch,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw,
+				       DataWarehouseP&,
+				       DataWarehouseP&,
 				       double delta_t,
-				       int eqnType, int labID)
+				       int index,
+				       int eqnType, CellInformation* cellinfo,
+				       ArchesVariables* coeff_vars)
 {
-  int matlIndex = 0;
-  int numGhostCells = 0;
-  int nofStencils = 7;
+  // Get the domain size 
+  IntVector domLoU = coeff_vars->uVelocity.getFortLowIndex();
+  IntVector domHiU = coeff_vars->uVelocity.getFortHighIndex();
+  IntVector domLoV = coeff_vars->vVelocity.getFortLowIndex();
+  IntVector domHiV = coeff_vars->vVelocity.getFortHighIndex();
+  IntVector domLoW = coeff_vars->wVelocity.getFortLowIndex();
+  IntVector domHiW = coeff_vars->wVelocity.getFortHighIndex();
+  IntVector domLo = coeff_vars->density.getFortLowIndex();
+  IntVector domHi = coeff_vars->density.getFortHighIndex();
+  //IntVector idxLo = patch->getCellFORTLowIndex();
+  //IntVector idxHi = patch->getCellFORTHighIndex();
 
-  SFCXVariable<double> uVelocity;
-  SFCXVariable<double> variableCalledDU;
-  SFCYVariable<double> vVelocity;
-  SFCZVariable<double> wVelocity;
-  CCVariable<double> density;
-  CCVariable<double> viscosity;
-  StencilMatrix<SFCXVariable<double> > uVelocityCoeff;
-  StencilMatrix<SFCYVariable<double> > vVelocityCoeff;
-  StencilMatrix<SFCZVariable<double> > wVelocityCoeff;
-  StencilMatrix<SFCXVariable<double> > uVelocityConvectCoeff;
-  StencilMatrix<SFCYVariable<double> > vVelocityConvectCoeff;
-  StencilMatrix<SFCZVariable<double> > wVelocityConvectCoeff;
-  
-  // Get the required data
-  new_dw->get(density, d_lab->densityCPLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  new_dw->get(viscosity, d_lab->viscosityCTSLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  switch(eqnType) {
-  case Arches::PRESSURE:
-    new_dw->get(uVelocity, d_lab->uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
-    new_dw->get(vVelocity, d_lab->vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
-    new_dw->get(wVelocity, d_lab->wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
-    break;
-  case Arches::MOMENTUM:
-    new_dw->get(uVelocity, d_lab->uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
-    new_dw->get(vVelocity, d_lab->vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
-    new_dw->get(wVelocity, d_lab->wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
-    break;
-  default:
-    throw InvalidValue("Equation type should be PRESSURE or MOMENTUM");
+  if (index == Arches::XDIR) {
+
+    // Get the patch indices
+    IntVector idxLoU = patch->getSFCXFORTLowIndex();
+    IntVector idxHiU = patch->getSFCXFORTHighIndex();
+
+    // Calculate the coeffs
+    FORT_UVELCOEF(domLoU.get_pointer(), domHiU.get_pointer(),
+		  idxLoU.get_pointer(), idxHiU.get_pointer(),
+		  coeff_vars->uVelocity.getPointer(),
+		  coeff_vars->uVelocityConvectCoeff[Arches::AE].getPointer(), 
+		  coeff_vars->uVelocityConvectCoeff[Arches::AW].getPointer(), 
+		  coeff_vars->uVelocityConvectCoeff[Arches::AN].getPointer(), 
+		  coeff_vars->uVelocityConvectCoeff[Arches::AS].getPointer(), 
+		  coeff_vars->uVelocityConvectCoeff[Arches::AT].getPointer(), 
+		  coeff_vars->uVelocityConvectCoeff[Arches::AB].getPointer(), 
+		  coeff_vars->uVelocityCoeff[Arches::AP].getPointer(), 
+		  coeff_vars->uVelocityCoeff[Arches::AE].getPointer(), 
+		  coeff_vars->uVelocityCoeff[Arches::AW].getPointer(), 
+		  coeff_vars->uVelocityCoeff[Arches::AN].getPointer(), 
+		  coeff_vars->uVelocityCoeff[Arches::AS].getPointer(), 
+		  coeff_vars->uVelocityCoeff[Arches::AT].getPointer(), 
+		  coeff_vars->uVelocityCoeff[Arches::AB].getPointer(), 
+		  coeff_vars->variableCalledDU.getPointer(),
+		  domLoV.get_pointer(), domHiV.get_pointer(),
+		  coeff_vars->vVelocity.getPointer(),
+		  domLoW.get_pointer(), domHiW.get_pointer(),
+		  coeff_vars->wVelocity.getPointer(),
+		  domLo.get_pointer(), domHi.get_pointer(),
+		  coeff_vars->density.getPointer(),
+		  coeff_vars->viscosity.getPointer(),
+		  &delta_t,
+		  cellinfo->ceeu.get_objs(), cellinfo->cweu.get_objs(),
+		  cellinfo->cwwu.get_objs(),
+		  cellinfo->cnn.get_objs(), cellinfo->csn.get_objs(),
+		  cellinfo->css.get_objs(),
+		  cellinfo->ctt.get_objs(), cellinfo->cbt.get_objs(),
+		  cellinfo->cbb.get_objs(),
+		  cellinfo->sewu.get_objs(), cellinfo->sew.get_objs(),
+		  cellinfo->sns.get_objs(),
+		  cellinfo->stb.get_objs(),
+		  cellinfo->dxepu.get_objs(), cellinfo->dxpwu.get_objs(),
+		  cellinfo->dxpw.get_objs(),
+		  cellinfo->dynp.get_objs(), cellinfo->dyps.get_objs(),
+		  cellinfo->dztp.get_objs(), cellinfo->dzpb.get_objs(),
+		  cellinfo->fac1u.get_objs(), cellinfo->fac2u.get_objs(),
+		  cellinfo->fac3u.get_objs(), cellinfo->fac4u.get_objs(),
+		  cellinfo->iesdu.get_objs(), cellinfo->iwsdu.get_objs(), 
+		  cellinfo->enfac.get_objs(), cellinfo->sfac.get_objs(),
+		  cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs());
+  } else if (index == Arches::YDIR) {
+
+    // Get the patch indices
+    IntVector idxLoV = patch->getSFCYFORTLowIndex();
+    IntVector idxHiV = patch->getSFCYFORTHighIndex();
+
+    // Calculate the coeffs
+    FORT_VVELCOEF(domLoV.get_pointer(), domHiV.get_pointer(),
+		  idxLoV.get_pointer(), idxHiV.get_pointer(),
+		  coeff_vars->vVelocity.getPointer(),
+		  coeff_vars->vVelocityConvectCoeff[Arches::AE].getPointer(), 
+		  coeff_vars->vVelocityConvectCoeff[Arches::AW].getPointer(), 
+		  coeff_vars->vVelocityConvectCoeff[Arches::AN].getPointer(), 
+		  coeff_vars->vVelocityConvectCoeff[Arches::AS].getPointer(), 
+		  coeff_vars->vVelocityConvectCoeff[Arches::AT].getPointer(), 
+		  coeff_vars->vVelocityConvectCoeff[Arches::AB].getPointer(), 
+		  coeff_vars->vVelocityCoeff[Arches::AP].getPointer(), 
+		  coeff_vars->vVelocityCoeff[Arches::AE].getPointer(), 
+		  coeff_vars->vVelocityCoeff[Arches::AW].getPointer(), 
+		  coeff_vars->vVelocityCoeff[Arches::AN].getPointer(), 
+		  coeff_vars->vVelocityCoeff[Arches::AS].getPointer(), 
+		  coeff_vars->vVelocityCoeff[Arches::AT].getPointer(), 
+		  coeff_vars->vVelocityCoeff[Arches::AB].getPointer(), 
+		  coeff_vars->variableCalledDV.getPointer(),
+		  domLoU.get_pointer(), domHiU.get_pointer(),
+		  coeff_vars->uVelocity.getPointer(),
+		  domLoW.get_pointer(), domHiW.get_pointer(),
+		  coeff_vars->wVelocity.getPointer(),
+		  domLo.get_pointer(), domHi.get_pointer(),
+		  coeff_vars->density.getPointer(),
+		  coeff_vars->viscosity.getPointer(),
+		  &delta_t,
+		  cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(),
+		  cellinfo->cww.get_objs(),
+		  cellinfo->cnnv.get_objs(), cellinfo->csnv.get_objs(),
+		  cellinfo->cssv.get_objs(),
+		  cellinfo->ctt.get_objs(), cellinfo->cbt.get_objs(),
+		  cellinfo->cbb.get_objs(),
+		  cellinfo->sew.get_objs(), cellinfo->snsv.get_objs(),
+		  cellinfo->sns.get_objs(),
+		  cellinfo->stb.get_objs(),
+		  cellinfo->dxep.get_objs(), cellinfo->dxpw.get_objs(),
+		  cellinfo->dynpv.get_objs(), cellinfo->dypsv.get_objs(),
+		  cellinfo->dyps.get_objs(),
+		  cellinfo->dztp.get_objs(), cellinfo->dzpb.get_objs(),
+		  cellinfo->fac1v.get_objs(), cellinfo->fac2v.get_objs(),
+		  cellinfo->fac3v.get_objs(), cellinfo->fac4v.get_objs(),
+		  cellinfo->jnsdv.get_objs(), cellinfo->jssdv.get_objs(), 
+		  cellinfo->efac.get_objs(), cellinfo->wfac.get_objs(),
+		  cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs());
+  } else if (index == Arches::ZDIR) {
+
+    // Get the patch indices
+    IntVector idxLoW = patch->getSFCZFORTLowIndex();
+    IntVector idxHiW = patch->getSFCZFORTHighIndex();
+
+    // Calculate the coeffs
+    FORT_WVELCOEF(domLoW.get_pointer(), domHiW.get_pointer(),
+		  idxLoW.get_pointer(), idxHiW.get_pointer(),
+		  coeff_vars->wVelocity.getPointer(),
+		  coeff_vars->wVelocityConvectCoeff[Arches::AE].getPointer(), 
+		  coeff_vars->wVelocityConvectCoeff[Arches::AW].getPointer(), 
+		  coeff_vars->wVelocityConvectCoeff[Arches::AN].getPointer(), 
+		  coeff_vars->wVelocityConvectCoeff[Arches::AS].getPointer(), 
+		  coeff_vars->wVelocityConvectCoeff[Arches::AT].getPointer(), 
+		  coeff_vars->wVelocityConvectCoeff[Arches::AB].getPointer(), 
+		  coeff_vars->wVelocityCoeff[Arches::AP].getPointer(), 
+		  coeff_vars->wVelocityCoeff[Arches::AE].getPointer(), 
+		  coeff_vars->wVelocityCoeff[Arches::AW].getPointer(), 
+		  coeff_vars->wVelocityCoeff[Arches::AN].getPointer(), 
+		  coeff_vars->wVelocityCoeff[Arches::AS].getPointer(), 
+		  coeff_vars->wVelocityCoeff[Arches::AT].getPointer(), 
+		  coeff_vars->wVelocityCoeff[Arches::AB].getPointer(), 
+		  coeff_vars->variableCalledDW.getPointer(),
+		  domLoU.get_pointer(), domHiU.get_pointer(),
+		  coeff_vars->uVelocity.getPointer(),
+		  domLoV.get_pointer(), domHiV.get_pointer(),
+		  coeff_vars->vVelocity.getPointer(),
+		  domLo.get_pointer(), domHi.get_pointer(),
+		  coeff_vars->density.getPointer(),
+		  coeff_vars->viscosity.getPointer(),
+		  &delta_t,
+		  cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(),
+		  cellinfo->cww.get_objs(),
+		  cellinfo->cnn.get_objs(), cellinfo->csn.get_objs(),
+		  cellinfo->css.get_objs(),
+		  cellinfo->cttw.get_objs(), cellinfo->cbtw.get_objs(),
+		  cellinfo->cbbw.get_objs(),
+		  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
+		  cellinfo->stbw.get_objs(), cellinfo->stb.get_objs(),
+		  cellinfo->dxep.get_objs(), cellinfo->dxpw.get_objs(),
+		  cellinfo->dynp.get_objs(), cellinfo->dyps.get_objs(),
+		  cellinfo->dztpw.get_objs(), cellinfo->dzpbw.get_objs(),
+		  cellinfo->dzpb.get_objs(),
+		  cellinfo->fac1w.get_objs(), cellinfo->fac2w.get_objs(),
+		  cellinfo->fac3w.get_objs(), cellinfo->fac4w.get_objs(),
+		  cellinfo->ktsdw.get_objs(), cellinfo->kbsdw.get_objs(), 
+		  cellinfo->efac.get_objs(), cellinfo->wfac.get_objs(),
+		  cellinfo->enfac.get_objs(), cellinfo->sfac.get_objs());
   }
-    
-  // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
-  old_dw->get(cellInfoP, d_lab->cellInfoLabel, matlIndex, patch);
-  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
-  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //else {
-  //  cellInfoP.setData(scinew CellInformation(patch));
-  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //}
-  CellInformation* cellinfo = cellInfoP;
-    
-  // compute all three componenets of velocity stencil coefficients
-  for(int index = 1; index <= Arches::NDIM; ++index) {
 
-    // Allocate space in new datawarehouse
-    switch(eqnType) {
-    case Arches::PRESSURE:
-      if (index == Arches::XDIR) {
-	new_dw->allocate(variableCalledDU, d_lab->DUPBLMLabel, matlIndex, patch);
-      } 
-      break;
-    case Arches::MOMENTUM:
-      break;
-    default:
-      break;
-    }
-    for (int ii = 0; ii < nofStencils; ii++) {
-      switch(eqnType) {
-      case Arches::PRESSURE:
-	if (index == Arches::XDIR) {
-	  new_dw->allocate(uVelocityCoeff[ii], d_lab->uVelCoefP0Label, ii, patch);
-	  new_dw->allocate(uVelocityConvectCoeff[ii], d_lab->uVelConvCoefPBLMLabel, 
-			   ii, patch);
-	}
-	else if (index == Arches::YDIR) {
-	  new_dw->allocate(vVelocityCoeff[ii], d_lab->vVelCoefP0Label, ii, patch);
-	  new_dw->allocate(vVelocityConvectCoeff[ii], d_lab->vVelConvCoefPBLMLabel, 
-			   ii, patch);
-	}
-	else if (index == Arches::ZDIR) {
-	  new_dw->allocate(wVelocityCoeff[ii], d_lab->wVelCoefP0Label, ii, patch);
-	  new_dw->allocate(wVelocityConvectCoeff[ii], d_lab->wVelConvCoefPBLMLabel, 
-			   ii, patch);
-	}
-	else
-	  throw InvalidValue("Invalid index, should lie between {1,3]");
-	break;
-      case Arches::MOMENTUM:
-	if (index == Arches::XDIR) {
-	  new_dw->allocate(uVelocityCoeff[ii], d_lab->uVelCoefM0Label[labID], 
-			   ii, patch);
-	  new_dw->allocate(uVelocityConvectCoeff[ii], d_lab->uVelConvCoefMBLMLabel[labID], 
-			   ii, patch);
-	}
-	else if (index == Arches::YDIR) {
-	  new_dw->allocate(vVelocityCoeff[ii], d_lab->vVelCoefM0Label[labID], ii, patch);
-	  new_dw->allocate(vVelocityConvectCoeff[ii], d_lab->vVelConvCoefMBLMLabel[labID], 
-			   ii, patch);
-	}
-	else {
-	  new_dw->allocate(wVelocityCoeff[ii], d_lab->wVelCoefM0Label[labID], ii, patch);
-	  new_dw->allocate(wVelocityConvectCoeff[ii], d_lab->wVelConvCoefMBLMLabel[labID], 
-			   ii, patch);
-	}
-	break;
-      default:
-	throw InvalidValue("EqnType in calcVelCoef should be 0 or 1");
-      }
-    }
+#ifdef MAY_BE_USEFUL_LATER  
+  // int ioff = 1;
+  // int joff = 0;
+  // int koff = 0;
 
-    // Get the domain size 
-    IntVector domLoU = uVelocity.getFortLowIndex();
-    IntVector domHiU = uVelocity.getFortHighIndex();
-    IntVector domLoV = vVelocity.getFortLowIndex();
-    IntVector domHiV = vVelocity.getFortHighIndex();
-    IntVector domLoW = wVelocity.getFortLowIndex();
-    IntVector domHiW = wVelocity.getFortHighIndex();
-    IntVector domLo = density.getFortLowIndex();
-    IntVector domHi = density.getFortHighIndex();
-    //IntVector idxLo = patch->getCellFORTLowIndex();
-    //IntVector idxHi = patch->getCellFORTHighIndex();
+  // 3-d array for volume - fortran uses it for temporary storage
+  // Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
+  // FORT_VELCOEF(domLoU.get_pointer(), domHiU.get_pointer(),
+  //       idxLoU.get_pointer(), idxHiU.get_pointer(),
+  //       uVelocity.getPointer(),
+  //       domLoV.get_pointer(), domHiV.get_pointer(),
+  //       idxLoV.get_pointer(), idxHiV.get_pointer(),
+  //       vVelocity.getPointer(),
+  //       domLoW.get_pointer(), domHiW.get_pointer(),
+  //       idxLoW.get_pointer(), idxHiW.get_pointer(),
+  //       wVelocity.getPointer(),
+  //       domLo.get_pointer(), domHi.get_pointer(),
+  //       idxLo.get_pointer(), idxHi.get_pointer(),
+  //       density.getPointer(),
+  //       viscosity.getPointer(),
+  //       uVelocityConvectCoeff[Arches::AP].getPointer(), 
+  //       uVelocityConvectCoeff[Arches::AE].getPointer(), 
+  //       uVelocityConvectCoeff[Arches::AW].getPointer(), 
+  //       uVelocityConvectCoeff[Arches::AN].getPointer(), 
+  //       uVelocityConvectCoeff[Arches::AS].getPointer(), 
+  //       uVelocityConvectCoeff[Arches::AT].getPointer(), 
+  //       uVelocityConvectCoeff[Arches::AB].getPointer(), 
+  //       uVelocityCoeff[Arches::AP].getPointer(), 
+  //       uVelocityCoeff[Arches::AE].getPointer(), 
+  //       uVelocityCoeff[Arches::AW].getPointer(), 
+  //       uVelocityCoeff[Arches::AN].getPointer(), 
+  //       uVelocityCoeff[Arches::AS].getPointer(), 
+  //       uVelocityCoeff[Arches::AT].getPointer(), 
+  //       uVelocityCoeff[Arches::AB].getPointer(), 
+  //       delta_t,
+  //       ioff, joff, koff, 
+  //       cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
+  //       cellinfo->cnn, cellinfo->csn, cellinfo->css,
+  //       cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
+  //       cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+  //       cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
+  //       cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
+  //       cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
+  //       cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
+  //       cellinfo->tfac, cellinfo->bfac, volume);
+#endif
 
-    if (index == Arches::XDIR) {
-      
-      // Get the patch indices
-      IntVector idxLoU = patch->getSFCXFORTLowIndex();
-      IntVector idxHiU = patch->getSFCXFORTHighIndex();
-
-      // Calculate the coeffs
-      FORT_UVELCOEF(domLoU.get_pointer(), domHiU.get_pointer(),
-		    idxLoU.get_pointer(), idxHiU.get_pointer(),
-		    uVelocity.getPointer(),
-		    uVelocityConvectCoeff[Arches::AE].getPointer(), 
-		    uVelocityConvectCoeff[Arches::AW].getPointer(), 
-		    uVelocityConvectCoeff[Arches::AN].getPointer(), 
-		    uVelocityConvectCoeff[Arches::AS].getPointer(), 
-		    uVelocityConvectCoeff[Arches::AT].getPointer(), 
-		    uVelocityConvectCoeff[Arches::AB].getPointer(), 
-		    uVelocityCoeff[Arches::AP].getPointer(), 
-		    uVelocityCoeff[Arches::AE].getPointer(), 
-		    uVelocityCoeff[Arches::AW].getPointer(), 
-		    uVelocityCoeff[Arches::AN].getPointer(), 
-		    uVelocityCoeff[Arches::AS].getPointer(), 
-		    uVelocityCoeff[Arches::AT].getPointer(), 
-		    uVelocityCoeff[Arches::AB].getPointer(), 
-		    variableCalledDU.getPointer(),
-		    domLoV.get_pointer(), domHiV.get_pointer(),
-		    vVelocity.getPointer(),
-		    domLoW.get_pointer(), domHiW.get_pointer(),
-		    wVelocity.getPointer(),
-		    domLo.get_pointer(), domHi.get_pointer(),
-		    density.getPointer(),
-		    viscosity.getPointer(),
-		    &delta_t,
-		    cellinfo->ceeu.get_objs(), cellinfo->cweu.get_objs(),
-		    cellinfo->cwwu.get_objs(),
-		    cellinfo->cnn.get_objs(), cellinfo->csn.get_objs(),
-		    cellinfo->css.get_objs(),
-		    cellinfo->ctt.get_objs(), cellinfo->cbt.get_objs(),
-		    cellinfo->cbb.get_objs(),
-		    cellinfo->sewu.get_objs(), cellinfo->sew.get_objs(),
-		    cellinfo->sns.get_objs(),
-		    cellinfo->stb.get_objs(),
-		    cellinfo->dxepu.get_objs(), cellinfo->dxpwu.get_objs(),
-		    cellinfo->dxpw.get_objs(),
-		    cellinfo->dynp.get_objs(), cellinfo->dyps.get_objs(),
-		    cellinfo->dztp.get_objs(), cellinfo->dzpb.get_objs(),
-		    cellinfo->fac1u.get_objs(), cellinfo->fac2u.get_objs(),
-		    cellinfo->fac3u.get_objs(), cellinfo->fac4u.get_objs(),
-		    cellinfo->iesdu.get_objs(), cellinfo->iwsdu.get_objs(), 
-		    cellinfo->enfac.get_objs(), cellinfo->sfac.get_objs(),
-		    cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs());
-    } else if (index == Arches::YDIR) {
-      
-      // Get the patch indices
-      IntVector idxLoV = patch->getSFCYFORTLowIndex();
-      IntVector idxHiV = patch->getSFCYFORTHighIndex();
-      
-      // Calculate the coeffs
-      FORT_VVELCOEF(domLoV.get_pointer(), domHiV.get_pointer(),
-		    idxLoV.get_pointer(), idxHiV.get_pointer(),
-		    vVelocity.getPointer(),
-		    vVelocityConvectCoeff[Arches::AE].getPointer(), 
-		    vVelocityConvectCoeff[Arches::AW].getPointer(), 
-		    vVelocityConvectCoeff[Arches::AN].getPointer(), 
-		    vVelocityConvectCoeff[Arches::AS].getPointer(), 
-		    vVelocityConvectCoeff[Arches::AT].getPointer(), 
-		    vVelocityConvectCoeff[Arches::AB].getPointer(), 
-		    vVelocityCoeff[Arches::AP].getPointer(), 
-		    vVelocityCoeff[Arches::AE].getPointer(), 
-		    vVelocityCoeff[Arches::AW].getPointer(), 
-		    vVelocityCoeff[Arches::AN].getPointer(), 
-		    vVelocityCoeff[Arches::AS].getPointer(), 
-		    vVelocityCoeff[Arches::AT].getPointer(), 
-		    vVelocityCoeff[Arches::AB].getPointer(), 
-		    variableCalledDU.getPointer(),
-		    domLoU.get_pointer(), domHiU.get_pointer(),
-		    uVelocity.getPointer(),
-		    domLoW.get_pointer(), domHiW.get_pointer(),
-		    wVelocity.getPointer(),
-		    domLo.get_pointer(), domHi.get_pointer(),
-		    density.getPointer(),
-		    viscosity.getPointer(),
-		    &delta_t,
-		    cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(),
-		    cellinfo->cww.get_objs(),
-		    cellinfo->cnnv.get_objs(), cellinfo->csnv.get_objs(),
-		    cellinfo->cssv.get_objs(),
-		    cellinfo->ctt.get_objs(), cellinfo->cbt.get_objs(),
-		    cellinfo->cbb.get_objs(),
-		    cellinfo->sew.get_objs(), cellinfo->snsv.get_objs(),
-		    cellinfo->sns.get_objs(),
-		    cellinfo->stb.get_objs(),
-		    cellinfo->dxep.get_objs(), cellinfo->dxpw.get_objs(),
-		    cellinfo->dynpv.get_objs(), cellinfo->dypsv.get_objs(),
-		    cellinfo->dyps.get_objs(),
-		    cellinfo->dztp.get_objs(), cellinfo->dzpb.get_objs(),
-		    cellinfo->fac1v.get_objs(), cellinfo->fac2v.get_objs(),
-		    cellinfo->fac3v.get_objs(), cellinfo->fac4v.get_objs(),
-		    cellinfo->jnsdv.get_objs(), cellinfo->jssdv.get_objs(), 
-		    cellinfo->efac.get_objs(), cellinfo->wfac.get_objs(),
-		    cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs());
-    } else if (index == Arches::ZDIR) {
-
-      // Get the patch indices
-      IntVector idxLoW = patch->getSFCZFORTLowIndex();
-      IntVector idxHiW = patch->getSFCZFORTHighIndex();
-
-      // Calculate the coeffs
-      FORT_WVELCOEF(domLoW.get_pointer(), domHiW.get_pointer(),
-		    idxLoW.get_pointer(), idxHiW.get_pointer(),
-		    wVelocity.getPointer(),
-		    wVelocityConvectCoeff[Arches::AE].getPointer(), 
-		    wVelocityConvectCoeff[Arches::AW].getPointer(), 
-		    wVelocityConvectCoeff[Arches::AN].getPointer(), 
-		    wVelocityConvectCoeff[Arches::AS].getPointer(), 
-		    wVelocityConvectCoeff[Arches::AT].getPointer(), 
-		    wVelocityConvectCoeff[Arches::AB].getPointer(), 
-		    wVelocityCoeff[Arches::AP].getPointer(), 
-		    wVelocityCoeff[Arches::AE].getPointer(), 
-		    wVelocityCoeff[Arches::AW].getPointer(), 
-		    wVelocityCoeff[Arches::AN].getPointer(), 
-		    wVelocityCoeff[Arches::AS].getPointer(), 
-		    wVelocityCoeff[Arches::AT].getPointer(), 
-		    wVelocityCoeff[Arches::AB].getPointer(), 
-		    variableCalledDU.getPointer(),
-		    domLoU.get_pointer(), domHiU.get_pointer(),
-		    uVelocity.getPointer(),
-		    domLoV.get_pointer(), domHiV.get_pointer(),
-		    vVelocity.getPointer(),
-		    domLo.get_pointer(), domHi.get_pointer(),
-		    density.getPointer(),
-		    viscosity.getPointer(),
-		    &delta_t,
-		    cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(),
-		    cellinfo->cww.get_objs(),
-		    cellinfo->cnn.get_objs(), cellinfo->csn.get_objs(),
-		    cellinfo->css.get_objs(),
-		    cellinfo->cttw.get_objs(), cellinfo->cbtw.get_objs(),
-		    cellinfo->cbbw.get_objs(),
-		    cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
-		    cellinfo->stbw.get_objs(), cellinfo->stb.get_objs(),
-		    cellinfo->dxep.get_objs(), cellinfo->dxpw.get_objs(),
-		    cellinfo->dynp.get_objs(), cellinfo->dyps.get_objs(),
-		    cellinfo->dztpw.get_objs(), cellinfo->dzpbw.get_objs(),
-		    cellinfo->dzpb.get_objs(),
-		    cellinfo->fac1w.get_objs(), cellinfo->fac2w.get_objs(),
-		    cellinfo->fac3w.get_objs(), cellinfo->fac4w.get_objs(),
-		    cellinfo->ktsdw.get_objs(), cellinfo->kbsdw.get_objs(), 
-		    cellinfo->efac.get_objs(), cellinfo->wfac.get_objs(),
-		    cellinfo->enfac.get_objs(), cellinfo->sfac.get_objs());
-    }
-
-    for (int ii = 0; ii < nofStencils; ii++) {
-      switch(eqnType) {
-      case Arches::PRESSURE:
-	if (index == Arches::XDIR) {
-	  new_dw->put(uVelocityCoeff[ii], d_lab->uVelCoefP0Label, ii, patch);
-	  new_dw->put(uVelocityConvectCoeff[ii], d_lab->uVelConvCoefPBLMLabel, ii, 
-		      patch);
-	} else if (index == Arches::YDIR) {
-	  new_dw->put(vVelocityCoeff[ii], d_lab->vVelCoefP0Label, ii, patch);
-	  new_dw->put(vVelocityConvectCoeff[ii], d_lab->vVelConvCoefPBLMLabel, ii, 
-		      patch);
-	} else if (index == Arches::ZDIR) {
-	  new_dw->put(wVelocityCoeff[ii], d_lab->wVelCoefP0Label, ii, patch);
-	  new_dw->put(wVelocityConvectCoeff[ii], d_lab->wVelConvCoefPBLMLabel, ii,
-		      patch);
-	}
-	break;
-      case Arches::MOMENTUM:
-	if (index == Arches::XDIR) {
-	  new_dw->put(uVelocityCoeff[ii], d_lab->uVelCoefM0Label[labID], ii, patch);
-	  new_dw->put(uVelocityConvectCoeff[ii], d_lab->uVelConvCoefMBLMLabel[labID], ii, 
-		      patch);
-	} else if (index == Arches::YDIR) {
-	  new_dw->put(vVelocityCoeff[ii], d_lab->vVelCoefM0Label[labID], ii, patch);
-	  new_dw->put(vVelocityConvectCoeff[ii], d_lab->vVelConvCoefMBLMLabel[labID], ii, 
-		      patch);
-	} else if (index == Arches::ZDIR) {
-	  new_dw->put(wVelocityCoeff[ii], d_lab->wVelCoefM0Label[labID], ii, patch);
-	  new_dw->put(wVelocityConvectCoeff[ii], d_lab->wVelConvCoefMBLMLabel[labID], ii, 
-		      patch);
-	}
-	break;
-      default:
-	throw InvalidValue("EqnType in calcVelCoef should be 0 or 1");
-      }
-    }
-  }
 }
 
 
@@ -379,62 +277,37 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
 				       const Patch* patch,
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw,
-				       double delta_t)
+				       double delta_t, 
+				       CellInformation* cellinfo,
+				       ArchesVariables* coeff_vars)
 {
-  int matlIndex = 0;
-  int numGhostCells = 0;
-  int nofStencils = 0;
-
-  CCVariable<double> density;
-  old_dw->get(density, d_lab->densityCPLabel, matlIndex, patch,
-	      Ghost::None, numGhostCells);
-  StencilMatrix<SFCXVariable<double> > uVelCoeff;
-  StencilMatrix<SFCYVariable<double> > vVelCoeff;
-  StencilMatrix<SFCZVariable<double> > wVelCoeff;
-  new_dw->get(uVelCoeff[Arches::AP], d_lab->uVelCoefPBLMLabel, Arches::AP, patch, 
-	      Ghost::None, numGhostCells);
-  new_dw->get(vVelCoeff[Arches::AP], d_lab->vVelCoefPBLMLabel, Arches::AP, patch, 
-	      Ghost::None, numGhostCells);
-  new_dw->get(wVelCoeff[Arches::AP], d_lab->wVelCoefPBLMLabel, Arches::AP, patch, 
-	      Ghost::None, numGhostCells);
-
-  // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
-  old_dw->get(cellInfoP, d_lab->cellInfoLabel, matlIndex, patch);
-  CellInformation* cellinfo = cellInfoP;
-  
-  // Create vars for new_dw
-  StencilMatrix<CCVariable<double> > pressCoeff; //7 point stencil
-  for (int ii = 0; ii < nofStencils; ii++) 
-    new_dw->allocate(pressCoeff[ii], d_lab->presCoefP0Label, ii, patch);
-
   // Get the domain size and the patch indices
-  IntVector domLo = density.getFortLowIndex();
-  IntVector domHi = density.getFortHighIndex();
+  IntVector domLo = coeff_vars->density.getFortLowIndex();
+  IntVector domHi = coeff_vars->density.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  IntVector domLoU = uVelCoeff[Arches::AP].getFortLowIndex();
-  IntVector domHiU = uVelCoeff[Arches::AP].getFortHighIndex();
-  IntVector domLoV = vVelCoeff[Arches::AP].getFortLowIndex();
-  IntVector domHiV = vVelCoeff[Arches::AP].getFortHighIndex();
-  IntVector domLoW = wVelCoeff[Arches::AP].getFortLowIndex();
-  IntVector domHiW = wVelCoeff[Arches::AP].getFortHighIndex();
+  IntVector domLoU = coeff_vars->uVelocityCoeff[Arches::AP].getFortLowIndex();
+  IntVector domHiU = coeff_vars->uVelocityCoeff[Arches::AP].getFortHighIndex();
+  IntVector domLoV = coeff_vars->vVelocityCoeff[Arches::AP].getFortLowIndex();
+  IntVector domHiV = coeff_vars->vVelocityCoeff[Arches::AP].getFortHighIndex();
+  IntVector domLoW = coeff_vars->wVelocityCoeff[Arches::AP].getFortLowIndex();
+  IntVector domHiW = coeff_vars->wVelocityCoeff[Arches::AP].getFortHighIndex();
 
   FORT_PRESSCOEFF(domLo.get_pointer(), domHi.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
-		  density.getPointer(),
-		  pressCoeff[Arches::AE].getPointer(), 
-		  pressCoeff[Arches::AW].getPointer(), 
-		  pressCoeff[Arches::AN].getPointer(), 
-		  pressCoeff[Arches::AS].getPointer(), 
-		  pressCoeff[Arches::AT].getPointer(), 
-		  pressCoeff[Arches::AB].getPointer(), 
+		  coeff_vars->density.getPointer(),
+		  coeff_vars->pressCoeff[Arches::AE].getPointer(), 
+		  coeff_vars->pressCoeff[Arches::AW].getPointer(), 
+		  coeff_vars->pressCoeff[Arches::AN].getPointer(), 
+		  coeff_vars->pressCoeff[Arches::AS].getPointer(), 
+		  coeff_vars->pressCoeff[Arches::AT].getPointer(), 
+		  coeff_vars->pressCoeff[Arches::AB].getPointer(), 
 		  domLoU.get_pointer(), domHiU.get_pointer(),
-		  uVelCoeff[Arches::AP].getPointer(),
+		  coeff_vars->uVelocityCoeff[Arches::AP].getPointer(),
 		  domLoV.get_pointer(), domHiV.get_pointer(),
-		  vVelCoeff[Arches::AP].getPointer(),
+		  coeff_vars->vVelocityCoeff[Arches::AP].getPointer(),
 		  domLoW.get_pointer(), domHiW.get_pointer(),
-		  wVelCoeff[Arches::AP].getPointer(),
+		  coeff_vars->wVelocityCoeff[Arches::AP].getPointer(),
 		  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
 		  cellinfo->stb.get_objs(),
 		  cellinfo->sewu.get_objs(), cellinfo->dxep.get_objs(), 
@@ -444,9 +317,7 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
 		  cellinfo->stbw.get_objs(), cellinfo->dztp.get_objs(), 
 		  cellinfo->dzpb.get_objs());
 
-  for (int ii = 1; ii < nofStencils; ii++) {
-    new_dw->put(pressCoeff[ii], d_lab->presCoefP0Label, ii, patch);
-  }
+
 }
   
 //****************************************************************************
@@ -458,81 +329,45 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw,
 				     double delta_t,
-				     int index)
+				     int index, 
+				     CellInformation* cellinfo,
+				     ArchesVariables* coeff_vars)
 {
-  int matlIndex = 0;
-  int numGhostCells = 0;
-  int nofStencils = 7;
-
-  SFCXVariable<double> uVelocity;
-  SFCYVariable<double> vVelocity;
-  SFCZVariable<double> wVelocity;
-  CCVariable<double> density;
-  CCVariable<double> viscosity;
-  //CCVariable<double> scalar;
-
-  old_dw->get(density, d_lab->densityCPLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  old_dw->get(viscosity, d_lab->viscosityCTSLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  // ithe componenet of scalar vector
-  //old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
-	//      numGhostCells);
-  new_dw->get(uVelocity, d_lab->uVelocityMSLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  new_dw->get(vVelocity, d_lab->vVelocityMSLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  new_dw->get(wVelocity, d_lab->wVelocityMSLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-
-  // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
-  old_dw->get(cellInfoP, d_lab->cellInfoLabel, matlIndex, patch);
-  CellInformation* cellinfo = cellInfoP;
-  
-  //7pt stencil declaration
-  StencilMatrix<CCVariable<double> > scalarCoeff;
-  StencilMatrix<CCVariable<double> > scalarConvectCoeff;
-
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->allocate(scalarCoeff[ii], d_lab->scalCoefSBLMLabel, ii, patch);
-    new_dw->allocate(scalarConvectCoeff[ii], d_lab->scalConvCoefSBLMLabel, ii, patch);
-  }
 
   // Get the domain size and the patch indices
-  IntVector domLo = density.getFortLowIndex();
-  IntVector domHi = density.getFortHighIndex();
+  IntVector domLo = coeff_vars->density.getFortLowIndex();
+  IntVector domHi = coeff_vars->density.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  IntVector domLoU = uVelocity.getFortLowIndex();
-  IntVector domHiU = uVelocity.getFortHighIndex();
-  IntVector domLoV = vVelocity.getFortLowIndex();
-  IntVector domHiV = vVelocity.getFortHighIndex();
-  IntVector domLoW = wVelocity.getFortLowIndex();
-  IntVector domHiW = wVelocity.getFortHighIndex();
-
+  IntVector domLoU = coeff_vars->uVelocity.getFortLowIndex();
+  IntVector domHiU = coeff_vars->uVelocity.getFortHighIndex();
+  IntVector domLoV = coeff_vars->vVelocity.getFortLowIndex();
+  IntVector domHiV = coeff_vars->vVelocity.getFortHighIndex();
+  IntVector domLoW = coeff_vars->wVelocity.getFortLowIndex();
+  IntVector domHiW = coeff_vars->wVelocity.getFortHighIndex();
+  
   FORT_SCALARCOEFF(domLo.get_pointer(), domHi.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
-		   density.getPointer(),
-		   viscosity.getPointer(), 
-		   scalarCoeff[Arches::AE].getPointer(), 
-		   scalarCoeff[Arches::AW].getPointer(), 
-		   scalarCoeff[Arches::AN].getPointer(), 
-		   scalarCoeff[Arches::AS].getPointer(), 
-		   scalarCoeff[Arches::AT].getPointer(), 
-		   scalarCoeff[Arches::AB].getPointer(), 
-		   scalarConvectCoeff[Arches::AE].getPointer(), 
-		   scalarConvectCoeff[Arches::AW].getPointer(), 
-		   scalarConvectCoeff[Arches::AN].getPointer(), 
-		   scalarConvectCoeff[Arches::AS].getPointer(), 
-		   scalarConvectCoeff[Arches::AT].getPointer(), 
-		   scalarConvectCoeff[Arches::AB].getPointer(), 
+		   coeff_vars->density.getPointer(),
+		   coeff_vars->viscosity.getPointer(), 
+		   coeff_vars->scalarCoeff[Arches::AE].getPointer(), 
+		   coeff_vars->scalarCoeff[Arches::AW].getPointer(), 
+		   coeff_vars->scalarCoeff[Arches::AN].getPointer(), 
+		   coeff_vars->scalarCoeff[Arches::AS].getPointer(), 
+		   coeff_vars->scalarCoeff[Arches::AT].getPointer(), 
+		   coeff_vars->scalarCoeff[Arches::AB].getPointer(), 
+		   coeff_vars->scalarConvectCoeff[Arches::AE].getPointer(), 
+		   coeff_vars->scalarConvectCoeff[Arches::AW].getPointer(), 
+		   coeff_vars->scalarConvectCoeff[Arches::AN].getPointer(), 
+		   coeff_vars->scalarConvectCoeff[Arches::AS].getPointer(), 
+		   coeff_vars->scalarConvectCoeff[Arches::AT].getPointer(), 
+		   coeff_vars->scalarConvectCoeff[Arches::AB].getPointer(), 
 		   domLoU.get_pointer(), domHiU.get_pointer(),
-		   uVelocity.getPointer(),
+		   coeff_vars->uVelocity.getPointer(),
 		   domLoV.get_pointer(), domHiV.get_pointer(),
-		   vVelocity.getPointer(),
+		   coeff_vars->vVelocity.getPointer(),
 		   domLoW.get_pointer(), domHiW.get_pointer(),
-		   wVelocity.getPointer(),
+		   coeff_vars->wVelocity.getPointer(),
 		   cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
 		   cellinfo->stb.get_objs(),
 		   cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(), 
@@ -546,11 +381,6 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
 		   cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs(),
 		   cellinfo->dxpw.get_objs(), cellinfo->dyps.get_objs(), 
 		   cellinfo->dzpb.get_objs());
-
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(scalarCoeff[ii], d_lab->scalCoefSBLMLabel, ii, patch);
-    new_dw->put(scalarConvectCoeff[ii], d_lab->scalConvCoefSBLMLabel, ii, patch);
-  }
 }
 
 //****************************************************************************
@@ -561,204 +391,69 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw,
-				     int eqnType, int labID)
+				     int index,
+				     int eqnType,
+				     ArchesVariables* coeff_vars)
 {
-  int matlIndex = 0;
-  int numGhostCells = 0;
-  int nofStencils = 7;
-
-  StencilMatrix<SFCXVariable<double> > uVelCoeff;
-  StencilMatrix<SFCYVariable<double> > vVelCoeff;
-  StencilMatrix<SFCZVariable<double> > wVelCoeff;
-  SFCXVariable<double> uVelLinearSrc;
-  SFCYVariable<double> vVelLinearSrc;
-  SFCZVariable<double> wVelLinearSrc;
-
-  // compute all three componenets of velocity stencil coefficients
-  for(int index = 1; index <= Arches::NDIM; ++index) {
-
-    switch(eqnType) {
-    case Arches::PRESSURE:
-      switch(index) {
-      case Arches::XDIR:
-	for (int ii = 0; ii < nofStencils; ii++) 
-	  new_dw->get(uVelCoeff[ii], d_lab->uVelCoefP1Label, ii, patch, 
-		      Ghost::None, numGhostCells);
-	new_dw->get(uVelLinearSrc, d_lab->uVelLinSrcPBLMLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-	break;
-      case Arches::YDIR:
-	for (int ii = 0; ii < nofStencils; ii++) 
-	  new_dw->get(vVelCoeff[ii], d_lab->vVelCoefP1Label, ii, patch, 
-		      Ghost::None, numGhostCells);
-	new_dw->get(vVelLinearSrc, d_lab->vVelLinSrcPBLMLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-	break;
-      case Arches::ZDIR:
-	for (int ii = 0; ii < nofStencils; ii++) 
-	  new_dw->get(wVelCoeff[ii], d_lab->wVelCoefP1Label, ii, patch, Ghost::None,
-		      numGhostCells);
-	new_dw->get(wVelLinearSrc, d_lab->wVelLinSrcPBLMLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-	break;
-      default:
-	throw InvalidValue("Invalid index in Pressure::calcVelDiagonal");
-      }
-      break;
-    case Arches::MOMENTUM:
-      switch(index) {
-      case Arches::XDIR:
-	for (int ii = 0; ii < nofStencils; ii++) 
-	  new_dw->get(uVelCoeff[ii], d_lab->uVelCoefM1Label[labID], ii, patch, 
-		      Ghost::None, numGhostCells);
-	new_dw->get(uVelLinearSrc, d_lab->uVelLinSrcMBLMLabel[labID], matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-	break;
-      case Arches::YDIR:
-	for (int ii = 0; ii < nofStencils; ii++) 
-	  new_dw->get(vVelCoeff[ii], d_lab->vVelCoefM1Label[labID], ii, patch, 
-		      Ghost::None, numGhostCells);
-	new_dw->get(vVelLinearSrc, d_lab->vVelLinSrcMBLMLabel[labID], matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-	break;
-      case Arches::ZDIR:
-	for (int ii = 0; ii < nofStencils; ii++) 
-	  new_dw->get(wVelCoeff[ii], d_lab->wVelCoefM1Label[labID], ii, patch, 
-		      Ghost::None, numGhostCells);
-	new_dw->get(wVelLinearSrc, d_lab->wVelLinSrcMBLMLabel[labID], matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-	break;
-      default:
-	throw InvalidValue("Invalid index in Momentum::calcVelDiagonal");
-      }
-      break;
-    default:
-      throw InvalidValue("Invalid eqnType in Discretization::calcVelDiagonal");
-    }
-
-    // Get the patch and variable indices
-    IntVector domLo;
-    IntVector domHi;
-    IntVector idxLo;
-    IntVector idxHi;
-    switch(index) {
-    case Arches::XDIR:
-      domLo = uVelLinearSrc.getFortLowIndex();
-      domHi = uVelLinearSrc.getFortHighIndex();
-      idxLo = patch->getSFCXFORTLowIndex();
-      idxHi = patch->getSFCXFORTHighIndex();
-      FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
-		 idxLo.get_pointer(), idxHi.get_pointer(),
-		 uVelCoeff[Arches::AP].getPointer(), 
-		 uVelCoeff[Arches::AE].getPointer(), 
-		 uVelCoeff[Arches::AW].getPointer(), 
-		 uVelCoeff[Arches::AN].getPointer(), 
-		 uVelCoeff[Arches::AS].getPointer(), 
-		 uVelCoeff[Arches::AT].getPointer(), 
-		 uVelCoeff[Arches::AB].getPointer(),
-		 uVelLinearSrc.getPointer());
-      break;
-    case Arches::YDIR:
-      domLo = vVelLinearSrc.getFortLowIndex();
-      domHi = vVelLinearSrc.getFortHighIndex();
-      idxLo = patch->getSFCYFORTLowIndex();
-      idxHi = patch->getSFCYFORTHighIndex();
-      FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
-		 idxLo.get_pointer(), idxHi.get_pointer(),
-		 vVelCoeff[Arches::AP].getPointer(), 
-		 vVelCoeff[Arches::AE].getPointer(), 
-		 vVelCoeff[Arches::AW].getPointer(), 
-		 vVelCoeff[Arches::AN].getPointer(), 
-		 vVelCoeff[Arches::AS].getPointer(), 
-		 vVelCoeff[Arches::AT].getPointer(), 
-		 vVelCoeff[Arches::AB].getPointer(),
-		 vVelLinearSrc.getPointer());
-      break;
-    case Arches::ZDIR:
-      domLo = wVelLinearSrc.getFortLowIndex();
-      domHi = wVelLinearSrc.getFortHighIndex();
-      idxLo = patch->getSFCZFORTLowIndex();
-      idxHi = patch->getSFCZFORTHighIndex();
-      FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
-		 idxLo.get_pointer(), idxHi.get_pointer(),
-		 wVelCoeff[Arches::AP].getPointer(), 
-		 wVelCoeff[Arches::AE].getPointer(), 
-		 wVelCoeff[Arches::AW].getPointer(), 
-		 wVelCoeff[Arches::AN].getPointer(), 
-		 wVelCoeff[Arches::AS].getPointer(), 
-		 wVelCoeff[Arches::AT].getPointer(), 
-		 wVelCoeff[Arches::AB].getPointer(),
-		 wVelLinearSrc.getPointer());
-      break;
-    default:
-      throw InvalidValue("Invalid index in Discretization::calcVelDiagonal");
-    }
-
-    switch(eqnType) {
-    case Arches::PRESSURE:
-      switch(index) {
-      case Arches::XDIR:
-	for (int ii = 0; ii < nofStencils; ii++) {
-	  new_dw->allocate(uVelCoeff[ii], d_lab->uVelCoefPBLMLabel, 
-			   ii, patch);
-	  new_dw->put(uVelCoeff[ii], d_lab->uVelCoefPBLMLabel, 
-		      ii, patch);
-	}
-	break;
-      case Arches::YDIR:
-	for (int ii = 0; ii < nofStencils; ii++) {
-	  new_dw->allocate(vVelCoeff[ii], d_lab->vVelCoefPBLMLabel, 
-			   ii, patch);
-	  new_dw->put(vVelCoeff[ii], d_lab->vVelCoefPBLMLabel, 
-		      ii, patch);
-	}
-	break;
-      case Arches::ZDIR:
-	for (int ii = 0; ii < nofStencils; ii++) {
-	  new_dw->allocate(wVelCoeff[ii], d_lab->wVelCoefPBLMLabel, 
-			   ii, patch);
-	  new_dw->put(wVelCoeff[ii], d_lab->wVelCoefPBLMLabel, 
-		      ii, patch);
-	}
-	break;
-      default:
-	throw InvalidValue("Invalid index in Pressure::calcVelDiagonal");
-      }
-      break;
-    case Arches::MOMENTUM:
-      switch(index) {
-      case Arches::XDIR:
-	for (int ii = 0; ii < nofStencils; ii++) {
-	  new_dw->allocate(uVelCoeff[ii], d_lab->uVelCoefMBLMLabel[labID], 
-		      ii, patch);
-	  new_dw->put(uVelCoeff[ii], d_lab->uVelCoefMBLMLabel[labID], 
-		      ii, patch);
-	}
-	break;
-      case Arches::YDIR:
-	for (int ii = 0; ii < nofStencils; ii++) {
-	  new_dw->allocate(vVelCoeff[ii], d_lab->vVelCoefMBLMLabel[labID], 
-		      ii, patch);
-	  new_dw->put(vVelCoeff[ii], d_lab->vVelCoefMBLMLabel[labID], 
-		      ii, patch);
-	}
-	break;
-      case Arches::ZDIR:
-	for (int ii = 0; ii < nofStencils; ii++) {
-	  new_dw->allocate(wVelCoeff[ii], d_lab->wVelCoefMBLMLabel[labID], 
-		      ii, patch);
-	  new_dw->put(wVelCoeff[ii], d_lab->wVelCoefMBLMLabel[labID], 
-		      ii, patch);
-	}
-	break;
-      default:
-	throw InvalidValue("Invalid index in Pressure::calcVelDiagonal");
-      }
-      break;
-    default:
-      throw InvalidValue("Invalid eqnType in Discretization::calcVelDiagonal");
-    }
+  
+  // Get the patch and variable indices
+  IntVector domLo;
+  IntVector domHi;
+  IntVector idxLo;
+  IntVector idxHi;
+  switch(index) {
+  case Arches::XDIR:
+    domLo = coeff_vars->uVelLinearSrc.getFortLowIndex();
+    domHi = coeff_vars->uVelLinearSrc.getFortHighIndex();
+    idxLo = patch->getSFCXFORTLowIndex();
+    idxHi = patch->getSFCXFORTHighIndex();
+    FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
+	       idxLo.get_pointer(), idxHi.get_pointer(),
+	       coeff_vars->uVelocityCoeff[Arches::AP].getPointer(), 
+	       coeff_vars->uVelocityCoeff[Arches::AE].getPointer(), 
+	       coeff_vars->uVelocityCoeff[Arches::AW].getPointer(), 
+	       coeff_vars->uVelocityCoeff[Arches::AN].getPointer(), 
+	       coeff_vars->uVelocityCoeff[Arches::AS].getPointer(), 
+	       coeff_vars->uVelocityCoeff[Arches::AT].getPointer(), 
+	       coeff_vars->uVelocityCoeff[Arches::AB].getPointer(),
+	       coeff_vars->uVelLinearSrc.getPointer());
+    break;
+  case Arches::YDIR:
+    domLo = coeff_vars->vVelLinearSrc.getFortLowIndex();
+    domHi = coeff_vars->vVelLinearSrc.getFortHighIndex();
+    idxLo = patch->getSFCYFORTLowIndex();
+    idxHi = patch->getSFCYFORTHighIndex();
+    FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
+	       idxLo.get_pointer(), idxHi.get_pointer(),
+	       coeff_vars->vVelocityCoeff[Arches::AP].getPointer(), 
+	       coeff_vars->vVelocityCoeff[Arches::AE].getPointer(), 
+	       coeff_vars->vVelocityCoeff[Arches::AW].getPointer(), 
+	       coeff_vars->vVelocityCoeff[Arches::AN].getPointer(), 
+	       coeff_vars->vVelocityCoeff[Arches::AS].getPointer(), 
+	       coeff_vars->vVelocityCoeff[Arches::AT].getPointer(), 
+	       coeff_vars->vVelocityCoeff[Arches::AB].getPointer(),
+	       coeff_vars->vVelLinearSrc.getPointer());
+    break;
+  case Arches::ZDIR:
+    domLo = coeff_vars->wVelLinearSrc.getFortLowIndex();
+    domHi = coeff_vars->wVelLinearSrc.getFortHighIndex();
+    idxLo = patch->getSFCZFORTLowIndex();
+    idxHi = patch->getSFCZFORTHighIndex();
+    FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
+	       idxLo.get_pointer(), idxHi.get_pointer(),
+	       coeff_vars->wVelocityCoeff[Arches::AP].getPointer(), 
+	       coeff_vars->wVelocityCoeff[Arches::AE].getPointer(), 
+	       coeff_vars->wVelocityCoeff[Arches::AW].getPointer(), 
+	       coeff_vars->wVelocityCoeff[Arches::AN].getPointer(), 
+	       coeff_vars->wVelocityCoeff[Arches::AS].getPointer(), 
+	       coeff_vars->wVelocityCoeff[Arches::AT].getPointer(), 
+	       coeff_vars->wVelocityCoeff[Arches::AB].getPointer(),
+	       coeff_vars->wVelLinearSrc.getPointer());
+    break;
+  default:
+    throw InvalidValue("Invalid index in Discretization::calcVelDiagonal");
   }
+
 }
 
 //****************************************************************************
@@ -768,45 +463,27 @@ void
 Discretization::calculatePressDiagonal(const ProcessorGroup*,
 				       const Patch* patch,
 				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw) 
+				       DataWarehouseP& new_dw,
+				       ArchesVariables* coeff_vars) 
 {
   
-  int matlIndex = 0;
-  int numGhostCells = 0;
-  int nofStencils = 7;
-
-  StencilMatrix<CCVariable<double> > pressCoeff;
-  CCVariable<double> presLinearSrc;
-
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(pressCoeff[ii], d_lab->presCoefP1Label, ii, patch, Ghost::None,
-		numGhostCells);
-  }
-  new_dw->get(presLinearSrc, d_lab->presLinSrcPBLMLabel, matlIndex, patch, 
-	      Ghost::None, numGhostCells);
-
   // Get the domain size and the patch indices
-  IntVector domLo = presLinearSrc.getFortLowIndex();
-  IntVector domHi = presLinearSrc.getFortHighIndex();
+  IntVector domLo = coeff_vars->pressLinearSrc.getFortLowIndex();
+  IntVector domHi = coeff_vars->pressLinearSrc.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   // Calculate the diagonal terms (AP)
   FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
 	     idxLo.get_pointer(), idxHi.get_pointer(),
-	     pressCoeff[Arches::AP].getPointer(), 
-	     pressCoeff[Arches::AE].getPointer(), 
-	     pressCoeff[Arches::AW].getPointer(), 
-	     pressCoeff[Arches::AN].getPointer(), 
-	     pressCoeff[Arches::AS].getPointer(), 
-	     pressCoeff[Arches::AT].getPointer(), 
-	     pressCoeff[Arches::AB].getPointer(),
-	     presLinearSrc.getPointer());
-
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->allocate(pressCoeff[ii], d_lab->presCoefPBLMLabel, ii, patch);
-    new_dw->put(pressCoeff[ii], d_lab->presCoefPBLMLabel, ii, patch);
-  }
+	     coeff_vars->pressCoeff[Arches::AP].getPointer(), 
+	     coeff_vars->pressCoeff[Arches::AE].getPointer(), 
+	     coeff_vars->pressCoeff[Arches::AW].getPointer(), 
+	     coeff_vars->pressCoeff[Arches::AN].getPointer(), 
+	     coeff_vars->pressCoeff[Arches::AS].getPointer(), 
+	     coeff_vars->pressCoeff[Arches::AT].getPointer(), 
+	     coeff_vars->pressCoeff[Arches::AB].getPointer(),
+	     coeff_vars->pressLinearSrc.getPointer());
 }
 
 //****************************************************************************
@@ -817,65 +494,33 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 					const Patch* patch,
 					DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw,
-					int index)
+					int index,
+					ArchesVariables* coeff_vars)
 {
   
-  int matlIndex = 0;
-  int numGhostCells = 0;
-  int nofStencils = 7;
-
-  // **WARNING** Don't know how to get the stencil data yet for scalars
-  //             Currently overwriting scalarCoeff[ii] with the same data
-  //             for the current scalar
-  StencilMatrix<CCVariable<double> > scalarCoeff;
-  CCVariable<double> scalarLinearSrc;
-
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->get(scalarCoeff[ii], d_lab->scalCoefSBLMLabel, index, patch, 
-		Ghost::None, numGhostCells);
-  }
-  new_dw->get(scalarLinearSrc, d_lab->scalLinSrcSBLMLabel, matlIndex, patch, 
-	      Ghost::None, numGhostCells);
-
   // Get the domain size and the patch indices
-  IntVector domLo = scalarLinearSrc.getFortLowIndex();
-  IntVector domHi = scalarLinearSrc.getFortHighIndex();
+  IntVector domLo = coeff_vars->scalarLinearSrc.getFortLowIndex();
+  IntVector domHi = coeff_vars->scalarLinearSrc.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-#ifdef WONT_COMPILE_YET
   FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
 	     idxLo.get_pointer(), idxHi.get_pointer(),
-	     scalarLinearSrc.getPointer(),
-	     scalarCoeff[Arches::AP].getPointer(), 
-	     scalarCoeff[Arches::AE].getPointer(), 
-	     scalarCoeff[Arches::AW].getPointer(), 
-	     scalarCoeff[Arches::AN].getPointer(), 
-	     scalarCoeff[Arches::AS].getPointer(), 
-	     scalarCoeff[Arches::AT].getPointer(), 
-	     scalarCoeff[Arches::AB].getPointer());
-#endif
-
-  // **WARNING** Don't know how to get the stencil data yet for scalars
-  //             Currently overwriting scalarCoeff[ii] with the same data
-  //             for the current scalar
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(scalarCoeff[ii], d_lab->scalCoefSBLMLabel, index, patch);
-  }
+	     coeff_vars->scalarCoeff[Arches::AP].getPointer(), 
+	     coeff_vars->scalarCoeff[Arches::AE].getPointer(), 
+	     coeff_vars->scalarCoeff[Arches::AW].getPointer(), 
+	     coeff_vars->scalarCoeff[Arches::AN].getPointer(), 
+	     coeff_vars->scalarCoeff[Arches::AS].getPointer(), 
+	     coeff_vars->scalarCoeff[Arches::AT].getPointer(), 
+	     coeff_vars->scalarCoeff[Arches::AB].getPointer(),
+	     coeff_vars->scalarLinearSrc.getPointer());
 }
 
 //
 // $Log$
-// Revision 1.34  2000/07/19 06:30:01  bbanerje
-// ** MAJOR CHANGES **
-// If you want to get the old code go two checkins back.
-//
-// Revision 1.33  2000/07/18 22:33:51  bbanerje
-// Changes to PressureSolver for put error. Added ArchesLabel.
-//
-// Revision 1.32  2000/07/14 05:23:50  bbanerje
-// Added scalcoef.F and updated related stuff in C++. scalcoef ==> coefs.f
-// in Kumar's code.
+// Revision 1.35  2000/07/28 02:30:59  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
 //
 // Revision 1.31  2000/07/14 03:45:45  rawat
 // completed velocity bc and fixed some bugs

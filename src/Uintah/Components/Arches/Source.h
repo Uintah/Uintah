@@ -36,12 +36,12 @@ WARNING
 none
 ****************************************/
 
-#include <Uintah/Components/Arches/ArchesLabel.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Components/Arches/ArchesVariables.h>
 
 #include <SCICore/Containers/Array1.h>
 
@@ -95,7 +95,9 @@ public:
 				   const Patch* patch,
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw,
-				   double delta_t); 
+				   double delta_t,
+				   CellInformation* cellinfo,
+				   ArchesVariables* vars); 
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -107,7 +109,10 @@ public:
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw,
 				   double delta_t, 
-				   int eqnType, int labID);
+				   int index,
+				   int eqnType, 
+				   CellInformation* cellinfo,
+				   ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -119,7 +124,9 @@ public:
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw,
 				 double delta_t, 
-				 int index);
+				 int index,
+				 CellInformation* cellinfo,
+				 ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -131,7 +138,8 @@ public:
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw,
 			       double delta_t, 
-			       int eqnType, int labelID);
+			       int index,
+			       int eqnType, ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -143,7 +151,7 @@ public:
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw,
 				  double delta_t, 
-				  int index);
+				  int index, ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -155,15 +163,16 @@ public:
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw,
 			     double delta_t,
-			     int index);
+			     int index,
+			     CellInformation* cellinfo,
+			     ArchesVariables* vars);
   
 private:
 
       TurbulenceModel* d_turbModel;
       PhysicalConstants* d_physicalConsts;
 
-      // const VarLabel*
-      const ArchesLabel* d_lab;
+
 }; // end Class Source
 
 }  // End namespace ArchesSpace
@@ -172,12 +181,9 @@ private:
   
 //
 // $Log$
-// Revision 1.23  2000/07/19 06:30:02  bbanerje
-// ** MAJOR CHANGES **
-// If you want to get the old code go two checkins back.
-//
-// Revision 1.22  2000/07/18 22:33:52  bbanerje
-// Changes to PressureSolver for put error. Added ArchesLabel.
+// Revision 1.24  2000/07/28 02:31:00  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
 //
 // Revision 1.21  2000/07/17 22:06:59  rawat
 // modified momentum source

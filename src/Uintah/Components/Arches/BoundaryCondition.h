@@ -52,6 +52,7 @@ none
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/Array3.h>
 #include <SCICore/Containers/Array1.h>
+#include <Uintah/Components/Arches/ArchesVariables.h>
 #include <vector>
 
 namespace Uintah {
@@ -90,7 +91,8 @@ public:
       //
       // BoundaryCondition constructor used in Uintah PSE
       //
-      BoundaryCondition(TurbulenceModel* turb_model, Properties* props);
+      BoundaryCondition(const ArchesLabel* label,
+			TurbulenceModel* turb_model, Properties* props);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -158,6 +160,35 @@ public:
 
       ////////////////////////////////////////////////////////////////////////
       //
+      // Schedule Computation of Velocity boundary conditions terms. 
+      //
+      void sched_velocityBC(const LevelP& level,
+			    SchedulerP& sched,
+			    DataWarehouseP& old_dw,
+			    DataWarehouseP& new_dw,
+			    int index);
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Schedule Computation of Pressure boundary conditions terms. 
+      //
+      void sched_pressureBC(const LevelP& level,
+			    SchedulerP& sched,
+			    DataWarehouseP& old_dw,
+			    DataWarehouseP& new_dw);
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Schedule Computation of Scalar boundary conditions terms. 
+      //
+      void sched_scalarBC(const LevelP& level,
+			  SchedulerP& sched,
+			  DataWarehouseP& old_dw,
+			  DataWarehouseP& new_dw,
+			  int index);
+
+      ////////////////////////////////////////////////////////////////////////
+      //
       // Schedule Setting inlet velocity bc's
       // we need to do it because of staggered grid
       // 
@@ -217,7 +248,10 @@ public:
 		      const Patch* patch,
 		      DataWarehouseP& old_dw,
 		      DataWarehouseP& new_dw,
-		      int eqnType, int labID);
+		      const int index,
+		      int eqnType,
+		      CellInformation* cellinfo,
+		      ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -226,7 +260,9 @@ public:
       void pressureBC(const ProcessorGroup*,
 		      const Patch* patch,
 		      DataWarehouseP& old_dw,
-		      DataWarehouseP& new_dw);
+		      DataWarehouseP& new_dw,
+		      CellInformation* cellinfo,
+		      ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -236,7 +272,9 @@ public:
 		    const Patch* patch,
 		    DataWarehouseP& old_dw,
 		    DataWarehouseP& new_dw,
-		    const int index);
+		    const int index,
+		    CellInformation* cellinfo,
+		    ArchesVariables* vars);
 
 private:
 
@@ -247,11 +285,10 @@ private:
       //
       void uVelocityBC(DataWarehouseP& new_dw,
 		       const Patch* patch,
-		       CCVariable<int>* cellType,
-		       SFCXVariable<double>* uVelocity, 
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
-		       int eqnType, int labID);
+		       ArchesVariables* vars);
+		      
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -259,11 +296,9 @@ private:
       //
       void vVelocityBC(DataWarehouseP& new_dw,
 		       const Patch* patch,
-		       CCVariable<int>* cellType,
-		       SFCYVariable<double>* vVelocity, 
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
-		       int eqnType, int labID);
+		       ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -271,11 +306,9 @@ private:
       //
       void wVelocityBC(DataWarehouseP& new_dw,
 		       const Patch* patch,
-		       CCVariable<int>* cellType,
-		       SFCZVariable<double>* wVelocity, 
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
-		       int eqnType, int labID);
+		        ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -402,7 +435,7 @@ private:
       FlowOutlet* d_outletBC;
       int d_flowfieldCellTypeVal;
 
-      // const VarLabel* 
+      // const VarLabel* inputs
       const ArchesLabel* d_lab;
 
 }; // End of class BoundaryCondition
@@ -412,12 +445,9 @@ private:
   
 //
 // $Log$
-// Revision 1.39  2000/07/19 06:30:01  bbanerje
-// ** MAJOR CHANGES **
-// If you want to get the old code go two checkins back.
-//
-// Revision 1.38  2000/07/18 22:33:51  bbanerje
-// Changes to PressureSolver for put error. Added ArchesLabel.
+// Revision 1.40  2000/07/28 02:30:59  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
 //
 // Revision 1.37  2000/07/17 22:06:58  rawat
 // modified momentum source

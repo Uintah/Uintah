@@ -139,12 +139,12 @@ c*********************************************************************
       iEndGhost = domainHigh(1)
       jEndGhost = domainHigh(2)
       kEndGhost = domainHigh(3)
-      IST = indexLow(1)
-      JST = indexLow(2)
-      KST = indexLow(3)
-      IEND = indexHigh(1)
-      JEND = indexHigh(2)
-      KEND = indexHigh(3)
+      IST = indexLow(1)+1
+      JST = indexLow(2)+1
+      KST = indexLow(3)+1
+      IEND = indexHigh(1)-1
+      JEND = indexHigh(2)-1
+      KEND = indexHigh(3)-1
 
 C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
@@ -254,7 +254,8 @@ C-----------------------------------------------------------------------
           IWSDU(I) = -2
         END IF
   800 CONTINUE
-
+      iwsdu(ist) = 0
+      iesdu(ist) = 0
 C-----------------------------------------------------------------------
 C     Y-DIRECTION
 C-----------------------------------------------------------------------
@@ -331,6 +332,8 @@ C-----------------------------------------------------------------------
           JSSDV(J) = -2
         END IF
   850 CONTINUE
+        jssdv(jst) = 0
+        jnsdv(jst) = 0
 
 C-----------------------------------------------------------------------
 C     Z-DIRECTION
@@ -416,6 +419,8 @@ C$DIR NO_RECURRENCE
             KBSDW(K) = -2
           END IF
         END IF
+        KBSDW(KST) = 0
+        ktsdw(kst) = 0
   900 CONTINUE
       FAC3W(KST) = FAC1W(KEND)
       FAC4W(KST) = FAC2W(KEND)
@@ -425,6 +430,10 @@ C$DIR NO_RECURRENCE
 c*********************************************************************
 c
 c $Log$
+c Revision 1.5  2000/07/28 02:31:04  rawat
+c moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+c coeffecients
+c
 c Revision 1.4  2000/07/01 05:21:01  bbanerje
 c Changed CellInformation calcs for Turbulence model requirements ..
 c CellInformation still needs work.

@@ -5,7 +5,7 @@ c
 c*********************************************************************
 
       SUBROUTINE addpressgrad(domLoU, domHiU, idxLoU, idxHiU, UU, 
-     &     SU, 
+     &     SU, AP,
      &     domLo, domHi, press, old_den,
      &     deltat, ioff, joff, koff,
      &     SEWU, SNS, STB,
@@ -28,6 +28,8 @@ c*********************************************************************
      &     domLoU(3):domHiU(3))
       double precision SU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
      &     domLoU(3):domHiU(3))
+      double precision AP(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
+     &     domLoU(3):domHiU(3))
       integer domLo(3), domHi(3)
       double precision PRESS(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
@@ -48,7 +50,7 @@ c     Local Variables :
 c*********************************************************************
       integer i, j, k, idf
 
-      double precision VOL
+      double precision VOL, APO
       logical ltim
       ltim = .true.
       do 120 k =idxLoU(3), idxHiU(3)
@@ -59,8 +61,9 @@ c*********************************************************************
                SU(I,J,K) = SU(I,J,K)+(PRESS(I-IOFF,J-JOFF,K-KOFF)-
      $              PRESS(I,J,K))*VOL/DXPW(idf)
                if (ltim) then
-                  SU(I,J,K) = SU(I,J,K) + old_den(I,J,K)*VOL/
-     $                 deltat*UU(I,J,K)
+                  APO =  old_den(I,J,K)*VOL/deltat
+                  SU(I,J,K) = SU(I,J,K) + APO*UU(I,J,K)
+                  AP(I,J,K) = AP(I,J,K) + APO
                end if
  100        continue
  110     continue
@@ -71,6 +74,10 @@ c*********************************************************************
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/07/28 02:31:04  rawat
+c moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+c coeffecients
+c
 c Revision 1.1  2000/07/17 22:07:02  rawat
 c modified momentum source
 c

@@ -35,6 +35,7 @@ WARNING
 ****************************************/
 
 #include <Uintah/Components/Arches/Arches.h>
+#include <Uintah/Components/Arches/ArchesLabel.h>
 #include <Uintah/Components/Arches/NonlinearSolver.h>
 
 namespace Uintah {
@@ -58,7 +59,8 @@ public:
       //
       // Solver initialized with all input data 
       //
-      PicardNonlinearSolver(Properties* props, 
+      PicardNonlinearSolver(const ArchesLabel* label,
+			    Properties* props, 
 			    BoundaryCondition* bc,
 			    TurbulenceModel* turbModel, 
 			    PhysicalConstants* physConst);
@@ -163,20 +165,8 @@ private:
       BoundaryCondition* d_boundaryCondition;
 
       // const VarLabel*
-      const VarLabel* d_pressureSPBCLabel;
-      const VarLabel* d_uVelocitySPBCLabel;
-      const VarLabel* d_vVelocitySPBCLabel;
-      const VarLabel* d_wVelocitySPBCLabel;
-      const VarLabel* d_pressureINLabel;
-      const VarLabel* d_uVelocitySPLabel;
-      const VarLabel* d_vVelocitySPLabel;
-      const VarLabel* d_wVelocitySPLabel;
-      const VarLabel* d_scalarSPLabel;
-      const VarLabel* d_densityCPLabel;
-      const VarLabel* d_viscosityCTSLabel;
-
+      const ArchesLabel* d_lab;
       // generation variable for DataWarehouse creation
-      int d_generation;
   
 }; // End class PicardNonlinearSolver
 
@@ -187,6 +177,10 @@ private:
 
 //
 // $Log$
+// Revision 1.18  2000/07/28 02:31:00  rawat
+// moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
+// coeffecients
+//
 // Revision 1.17  2000/07/11 15:46:27  rawat
 // added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
 //
