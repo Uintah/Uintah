@@ -2,6 +2,8 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/RigidMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CNHDamage.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CNHPDamage.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyper.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyperImplicit.h>
@@ -63,6 +65,11 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     else if (flags->d_integrator_type == "implicit")
       return(scinew CompNeoHookImplicit(child,lb,flags));
   }
+  else if (mat_type ==  "cnh_damage") 
+    return(scinew CNHDamage(child,lb,flags));
+
+  else if (mat_type ==  "cnhp_damage") 
+    return(scinew CNHPDamage(child,lb,flags));
 
   else if (mat_type ==  "trans_iso_hyper") {
     if (flags->d_integrator_type == "explicit" || 
@@ -134,6 +141,12 @@ ConstitutiveModelFactory::createCopy(const ConstitutiveModel* cm)
 
   else if (dynamic_cast<const CompNeoHook*>(cm)) 
     return(scinew CompNeoHook(dynamic_cast<const CompNeoHook*>(cm)));
+
+  else if (dynamic_cast<const CNHDamage*>(cm)) 
+    return(scinew CNHDamage(dynamic_cast<const CNHDamage*>(cm)));
+
+  else if (dynamic_cast<const CNHPDamage*>(cm)) 
+    return(scinew CNHPDamage(dynamic_cast<const CNHPDamage*>(cm)));
 
   else if (dynamic_cast<const CompNeoHookImplicit*>(cm)) 
     return(scinew CompNeoHookImplicit(dynamic_cast<const CompNeoHookImplicit*>(cm)));
