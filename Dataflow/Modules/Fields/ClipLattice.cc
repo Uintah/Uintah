@@ -47,6 +47,13 @@ private:
   BBox last_bounds_;
   bool gui_exec_p_;
   int  last_input_generation_;
+  GuiInt use_text_bbox_;
+  GuiDouble text_min_x_;
+  GuiDouble text_min_y_;
+  GuiDouble text_min_z_;
+  GuiDouble text_max_x_;
+  GuiDouble text_max_y_;
+  GuiDouble text_max_z_;
 
   bool bbox_similar_to(const BBox &a, const BBox &b);
 
@@ -55,6 +62,7 @@ public:
   virtual ~ClipLattice();
 
   virtual void execute();
+  virtual void tcl_command(TCLArgs&, void*);
   virtual void widget_moved(int);
 };
 
@@ -68,7 +76,14 @@ ClipLattice::ClipLattice(const string& id)
   : Module("ClipLattice", id, Source, "Fields", "SCIRun"),
     widget_lock_("ClipLattice widget lock"),
     gui_exec_p_(true),
-    last_input_generation_(0)
+    last_input_generation_(0),
+    use_text_bbox_("use-text-bbox", id, this),
+    text_min_x_("text-min-x", id, this),
+    text_min_y_("text-min-y", id, this),
+    text_min_z_("text-min-z", id, this),
+    text_max_x_("text-max-x", id, this),
+    text_max_y_("text-max-y", id, this),
+    text_max_z_("text-max-z", id, this)
 {
   widget_ = scinew BoxWidget(this, &widget_lock_, 1.0, true, false);
 }
@@ -140,33 +155,48 @@ ClipLattice::execute()
 
   // Update the widget.
   const BBox bbox = ifieldhandle->mesh()->get_bounding_box();
-  if (!bbox_similar_to(last_bounds_, bbox))
+  if (!bbox_similar_to(last_bounds_, bbox) || 
+      use_text_bbox_.get())
   {
-    Point bmin = bbox.min();
-    Point bmax = bbox.max();
-
-    // Fix degenerate boxes.
-    const double size_estimate = Max((bmax-bmin).length() * 0.01, 1.0e-5);
-    if (fabs(bmax.x() - bmin.x()) < 1.0e-6)
-    {
-      bmin.x(bmin.x() - size_estimate);
-      bmax.x(bmax.x() + size_estimate);
+    Point center, right, down, in, bmin, bmax;
+    if (use_text_bbox_.get()) {
+      bmin = Point(text_min_x_.get(), text_min_y_.get(), text_min_z_.get());
+      bmax = Point(text_max_x_.get(), text_max_y_.get(), text_max_z_.get());
+      center = bmin + Vector(bmax-bmin) * 0.5;
+      right = center + Vector(bmax.x()-bmin.x()/2.0, 0, 0);
+      down = center + Vector(0, bmax.x()-bmin.x()/2.0, 0);
+      in = center + Vector(0, 0, bmax.x()-bmin.x()/2.0);
+    } else {
+      bmin = bbox.min();
+      bmax = bbox.max();
+      // Fix degenerate boxes.
+      const double size_estimate = Max((bmax-bmin).length() * 0.01, 1.0e-5);
+      if (fabs(bmax.x() - bmin.x()) < 1.0e-6)
+      {
+	bmin.x(bmin.x() - size_estimate);
+	bmax.x(bmax.x() + size_estimate);
+      }
+      if (fabs(bmax.y() - bmin.y()) < 1.0e-6)
+      {
+	bmin.y(bmin.y() - size_estimate);
+	bmax.y(bmax.y() + size_estimate);
+      }
+      if (fabs(bmax.z() - bmin.z()) < 1.0e-6)
+      {
+	bmin.z(bmin.z() - size_estimate);
+	bmax.z(bmax.z() + size_estimate);
+      }
+      center = bmin + Vector(bmax - bmin) * 0.25;
+      right = center + Vector((bmax.x()-bmin.x())/4.0, 0, 0);
+      down = center + Vector(0, (bmax.y()-bmin.y())/4.0, 0);
+      in = center + Vector(0, 0, (bmax.z()-bmin.z())/4.0);
+      text_min_x_.set(right.x());
+      text_min_y_.set(down.y());
+      text_min_z_.set(in.z());
+      text_max_x_.set(2.*center.x()-right.x());
+      text_max_y_.set(2.*center.y()-down.y());
+      text_max_z_.set(2.*center.z()-in.z());
     }
-    if (fabs(bmax.y() - bmin.y()) < 1.0e-6)
-    {
-      bmin.y(bmin.y() - size_estimate);
-      bmax.y(bmax.y() + size_estimate);
-    }
-    if (fabs(bmax.z() - bmin.z()) < 1.0e-6)
-    {
-      bmin.z(bmin.z() - size_estimate);
-      bmax.z(bmax.z() + size_estimate);
-    }
-
-    const Point center = bmin + Vector(bmax - bmin) * 0.25;
-    const Point right = center + Vector((bmax.x()-bmin.x())/4.0, 0, 0);
-    const Point down = center + Vector(0, (bmax.y()-bmin.y())/4.0, 0);
-    const Point in = center + Vector(0, 0, (bmax.z()-bmin.z())/4.0);
 
     const double l2norm = (bmax - bmin).length();
 
@@ -212,14 +242,30 @@ ClipLattice::execute()
     }
 
     // Get widget bounds.
-    Point center, r, d, i;
-    widget_->GetPosition(center, r, d, i);
-    const Vector dx = r - center;
-    const Vector dy = d - center;
-    const Vector dz = i - center;
-
-    const Point top = center + dx + dy + dz;
-    const Point bottom = center - dx - dy - dz;
+    Point center, r, d, i, top, bottom;
+    if (use_text_bbox_.get()) {
+      top = Point(text_max_x_.get(), text_max_y_.get(), text_max_z_.get());
+      bottom = Point(text_min_x_.get(), text_min_y_.get(), text_min_z_.get());
+      center = bottom + Vector(top-bottom)/2.;
+      r=d=i=center;
+      r.x(bottom.x());
+      d.y(bottom.y());
+      i.z(bottom.z());
+      widget_->SetPosition(center, r, d, i);
+    } else {
+      widget_->GetPosition(center, r, d, i);
+      const Vector dx = r - center;
+      const Vector dy = d - center;
+      const Vector dz = i - center;
+      text_min_x_.set(r.x());
+      text_min_y_.set(d.y());
+      text_min_z_.set(i.z());
+      text_max_x_.set(2.*center.x()-r.x());
+      text_max_y_.set(2.*center.y()-d.y());
+      text_max_z_.set(2.*center.z()-i.z());      
+      top = center + dx + dy + dz;
+      bottom = center - dx - dy - dz;
+    }
 
     // Execute the clip.
     FieldHandle ofield = algo->execute(ifieldhandle, top, bottom);
@@ -245,7 +291,21 @@ ClipLattice::widget_moved(int i)
   }
 }
 
-
+void
+ClipLattice::tcl_command(TCLArgs& args, void* userdata) {
+  if (args.count() < 2) {
+    args.error("ClipLattice needs a minor command");
+    return;
+  }
+  if (args[1] == "execute") {
+    gui_exec_p_ = true;
+    want_to_execute();
+  }
+  else
+  {
+    Module::tcl_command(args, userdata);
+  }
+}
 
 CompileInfo *
 ClipLatticeAlgo::get_compile_info(const TypeDescription *fsrc)
