@@ -55,19 +55,17 @@ Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
   groundplane(groundplane),
   transmissionMode_(false),
   ref_cnt(0),
+  ambientScale_(ambientscale),
   lock("rtrt::Scene lock")
 {
-  lightsGroup_ = new Group;
-  mainGroupWithLights_ = lightsGroup_;
-
-  origAmbientColor_ = Color(1,1,1) * ambientscale;
-  ambientColor_     = origAmbientColor_;
-
   init(cam, bgcolor);
 }
 
 void Scene::init(const Camera& cam, const Color& bgcolor)
 {
+  lightsGroup_ = new Group;
+  mainGroupWithLights_ = lightsGroup_;
+
   work.refill(0,0,8);
   shadow_mode = Hard_Shadows;
   camera0=new Camera(cam);
@@ -92,6 +90,10 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
   add_shadowmode(ShadowBase::shadowTypeNames[5],new UncachedHardShadows());
 
   select_shadow_mode( Hard_Shadows );
+
+  origAmbientColor_ = Color(1,1,1);
+  ambientColor_     = origAmbientColor_;
+  setAmbientLevel( ambientScale_ );
 }
 
 void
@@ -138,15 +140,10 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
   cdown(cdown), 
   groundplane(groundplane), 
   transmissionMode_(false),
+  ambientScale_(ambientscale),
   ref_cnt(0),
   lock("rtrt::Scene lock")
 {
-  lightsGroup_ = new Group;
-  mainGroupWithLights_ = lightsGroup_;
-
-  origAmbientColor_ = Color(1,1,1) * ambientscale;
-  ambientColor_     = origAmbientColor_;
-
   init(cam, bgcolor);
 }
 
@@ -325,7 +322,7 @@ Scene::turnOnAllLights()
     light->updateIntensity(0);
   }
 
-  setAmbientLevel(1.0);
+  setAmbientLevel(0.8);
 
 }
 
@@ -441,5 +438,13 @@ Scene::addObjectOfInterest( Object * obj, bool animate /* = false */ )
     animateObjects_.add( obj );
   if( obj->name_ != "" )
     objectsOfInterest_.add( obj );
+}
+
+// For adding single route names
+void
+Scene::addRouteName( const string & filename, const string & room )
+{
+  routeNames_.push_back( filename );
+  roomsForRoutes_.push_back( room );
 }
 
