@@ -46,6 +46,8 @@ SRCS := \
 	$(SRCDIR)/MatlabNrrdsReader.tcl\
 	$(SRCDIR)/MatlabNrrdsWriter.tcl\
 	$(SRCDIR)/MatlabMatricesWriter.tcl\
+	$(SRCDIR)/MatlabBundlesWriter.tcl\
+	$(SRCDIR)/MatlabBundlesReader.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
