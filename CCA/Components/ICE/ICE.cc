@@ -50,7 +50,8 @@ static DebugStream cout_doing("ICE_DOING_COUT", false);
 //#define ANNULUSICE
 #undef ANNULUSICE
 /*`==========TESTING==========*/ 
-#define RATE_FORM 0
+#define RATE_FORM
+#undef EQ_FORM
  /*==========TESTING==========`*/
 
 ICE::ICE(const ProcessorGroup* myworld) 
@@ -310,11 +311,12 @@ void ICE::scheduleTimeAdvance(const LevelP& level,
 //__________________________________
 //    RATE FORM 
 //    This duplication will go away soon
-#if RATE_FORM
-  scheduleComputeNonEquilibrationPressureRF(sched, patches, press_matl,
+#ifdef RATE_FORM
+  scheduleComputeNonEquilibrationPressureRF(sched, patches, ice_matls_sub,
+                                                            press_matl,
                                                             all_matls);
                                                           
-  scheduleComputeFCPressDiff(               sched, patches, ice_matls_sub,
+  scheduleComputeFCPressDiffRF(             sched, patches, ice_matls_sub,
                                                             mpm_matls_sub,
                                                             press_matl,
                                                             all_matls);
@@ -348,7 +350,8 @@ void ICE::scheduleTimeAdvance(const LevelP& level,
 
   scheduleAddExchangeToMomentumAndEnergyRF( sched, patches, all_matls);
 
-  scheduleComputeLagrangianSpecificVolumeRF(sched, patches, press_matl, 
+  scheduleComputeLagrangianSpecificVolumeRF(sched, patches, press_matl,
+                                                            ice_matls_sub, 
                                                             all_matls);
 
   scheduleAdvectAndAdvanceInTime(           sched, patches, all_matls);
@@ -361,6 +364,7 @@ void ICE::scheduleTimeAdvance(const LevelP& level,
 //__________________________________
   
  /*==========TESTING==========`*/
+#ifdef EQ_FORM
   scheduleComputeEquilibrationPressure(   sched, patches, press_matl,
                                                           all_matls);
 
@@ -402,6 +406,7 @@ void ICE::scheduleTimeAdvance(const LevelP& level,
     schedulePrintConservedQuantities(     sched, patches, press_matl,
                                                           all_matls); 
   }
+#endif
 
   // whatever tasks use press_matl will have their own reference to it.
   if (press_matl->removeReference())
