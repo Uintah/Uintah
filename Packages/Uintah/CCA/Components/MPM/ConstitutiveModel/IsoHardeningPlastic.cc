@@ -60,7 +60,7 @@ IsoHardeningPlastic::allocateCMDataAddRequires(Task* task,
 					       MPMLabel* lb) const
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,pAlphaLabel, Ghost::None);
+  task->requires(Task::NewDW,pAlphaLabel_preReloc, Ghost::None);
 }
 
 void IsoHardeningPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
@@ -77,7 +77,7 @@ void IsoHardeningPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
 
   new_dw->allocateTemporary(pAlpha,addset);
 
-  old_dw->get(o_Alpha,pAlphaLabel,delset);
+  old_dw->get(o_Alpha,pAlphaLabel_preReloc,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for(o = delset->begin(); o != delset->end(); o++, n++) {

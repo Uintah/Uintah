@@ -252,9 +252,9 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
   task->requires(Task::OldDW,lb->pDispLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pXLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pVelocityLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pExternalForceLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pMassLabel, Ghost::None);
+  task->requires(Task::NewDW,lb->pExtForceLabel_preReloc, Ghost::None);
   task->requires(Task::OldDW,lb->pVolumeLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pMassLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pTemperatureLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pSp_volLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pParticleIDLabel, Ghost::None);
@@ -309,9 +309,9 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
   old_dw->get(o_disp,lb->pDispLabel,delset);
   old_dw->get(o_position,lb->pXLabel,delset);
   old_dw->get(o_velocity,lb->pVelocityLabel,delset);
-  old_dw->get(o_external_force,lb->pExternalForceLabel,delset);
-  old_dw->get(o_mass,lb->pMassLabel,delset);
+  new_dw->get(o_external_force,lb->pExtForceLabel_preReloc,delset);
   old_dw->get(o_volume,lb->pVolumeLabel,delset);
+  old_dw->get(o_mass,lb->pMassLabel,delset);
   old_dw->get(o_temperature,lb->pTemperatureLabel,delset);
   old_dw->get(o_sp_vol,lb->pSp_volLabel,delset);
   old_dw->get(o_particleID,lb->pParticleIDLabel,delset);
