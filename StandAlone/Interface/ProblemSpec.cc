@@ -8,7 +8,7 @@ static char *id="@(#) $Id$";
 using std::cerr;
 
 namespace Uintah {
-namespace Grid {
+namespace Interface {
 
 ProblemSpec::ProblemSpec()
 {
@@ -24,11 +24,15 @@ const TypeDescription* ProblemSpec::getTypeDescription()
     return 0;
 }
 
-} // end namespace Grid
+} // end namespace Interface 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.2  2000/03/23 20:00:17  jas
+// Changed the include files, namespace, and using statements to reflect the
+// move of ProblemSpec from Grid/ to Interface/.
+//
 // Revision 1.1  2000/03/23 19:47:55  jas
 // Moved the ProblemSpec stuff from Grid/ to Interface.
 //
