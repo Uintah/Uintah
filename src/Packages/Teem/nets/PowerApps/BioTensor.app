@@ -891,7 +891,7 @@ set $m44-ViewWindow_0-global-light {1}
 set $m44-ViewWindow_0-global-fog {0}
 set $m44-ViewWindow_0-global-debug {0}
 set $m44-ViewWindow_0-global-clip {0}
-set $m44-ViewWindow_0-global-cull {0}
+set $m44-ViewWindow_0-global-cull {1}
 set $m44-ViewWindow_0-global-dl {0}
 set $m44-ViewWindow_0-global-type {Gouraud}
 set $m44-ViewWindow_0-ortho-view {1}
@@ -3114,7 +3114,7 @@ class BioTensorApp {
 	checkbutton $view_opts.eframe.cull -text "Back Cull" \
 	    -variable $mods(Viewer)-ViewWindow_0-global-cull \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
-	$view_opts.eframe.cull select
+#	$view_opts.eframe.cull select
 	
 	pack $view_opts.eframe.light $view_opts.eframe.fog \
 	    $view_opts.eframe.bbox  $view_opts.eframe.cull\
