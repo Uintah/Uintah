@@ -496,14 +496,16 @@ herr_t HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
   for( int ic=0; ic<ndims; ic++ )
     cc *= dims[ic];
 
-  int size;
+  int size, element_size;
 
   if( H5Tget_size(type_id) > H5Tget_size(mem_type_id) )
-    size = cc * H5Tget_size(type_id);
+    element_size = H5Tget_size(type_id);
   else
-    size = cc * H5Tget_size(mem_type_id);
+    element_size = H5Tget_size(mem_type_id);
 
-  void *data = new char[size+1];
+  size = cc * element_size;
+
+  void *data = new char[size];
 
   if( data == NULL ) {
     cerr << "Can not allocate enough memory for the data" << endl;
@@ -518,8 +520,6 @@ herr_t HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
 		     data);
   else
     status = H5Aread(obj_id, mem_type_id, data);
-
-  ((char*) data)[size] = '\0';
 
   if( status < 0 ) {
     cerr << "Can not read data" << endl;
@@ -548,8 +548,14 @@ herr_t HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
     else if( H5Tget_class(type_id) == H5T_STRING ) {
       if(H5Tis_variable_str(type_id))
 	*iostr << ((char*) data)[ic];
-      else
-	*iostr << "\"" << (char*) data  << "\"";
+      // For non variable types all of the string data is read together
+      // so parse it out based on the element size.
+      else {
+	*iostr << "\"";
+	for( int jc=0; jc<element_size; jc++ )
+	  *iostr << ((char*) data)[ic*element_size+jc];
+	*iostr << "\"";
+      }
     }
 
     if( cc > 1 && ic<cc-1)
