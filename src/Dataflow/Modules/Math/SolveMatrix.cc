@@ -746,8 +746,8 @@ void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
   data.mat=matrix;
   data.timer=new WallClockTimer;
   data.stats=new PStats[data.np];
-  Thread::parallel(Parallel<SolveMatrix>(this, &SolveMatrix::parallel_conjugate_gradient),
-		   data.np, true);
+  Parallel<SolveMatrix> p(this, &SolveMatrix::parallel_conjugate_gradient);
+  Thread::parallel(p, data.np, true);
   delete data.timer;
   delete data.stats;
 //  delete data;
@@ -1006,8 +1006,8 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
   data.trans = trans;
   
 //   int i,p;
-  Thread::parallel(Parallel<SolveMatrix>(this, &SolveMatrix::parallel_bi_conjugate_gradient),
-		   data.np, true);
+  Parallel<SolveMatrix> p(this, &SolveMatrix::parallel_bi_conjugate_gradient);
+  Thread::parallel(p, data.np, true);
   delete data.timer;
   delete data.stats;
 //  delete data;
