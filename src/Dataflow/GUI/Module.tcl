@@ -500,9 +500,9 @@ proc fadeinIcon { modid { seconds 0.333 } } {
 	    
     set toggle 1
     global Color
-    $modid setColorAndTitle $Color(Flashing)
+    $modid setColorAndTitle $Color(IconFadeStart)
     while { $t < $stopAt } {
-	set color [blend $Color(Selected) $Color(Flashing) $alpha]
+	set color [blend $Color(Selected) $Color(IconFadeStart) $alpha]
 	after [expr int($t)] "$modid setColorAndTitle $color"
 	set alpha [expr double($alpha+$dA)]
 	set t [expr double($t+$period)]
