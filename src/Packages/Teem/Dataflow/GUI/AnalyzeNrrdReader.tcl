@@ -164,6 +164,7 @@ itcl_class Teem_DataIO_AnalyzeNrrdReader {
 	    -initialdir $initdir \
 	    -defaultextension $defext \
 	    -command "wm withdraw $w" \
+            -commandname Read
 
 	moveToCursor $w
 	wm deiconify $w	
