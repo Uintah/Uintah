@@ -40,33 +40,36 @@ using std::endl;
 
 namespace SCIRun {
 
-TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
-              int mx, int my, int mz, const BBox& bbox, const BBox& tbox)
+TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb,
+			    int ox, int oy, int oz,
+			    int mx, int my, int mz,
+			    const BBox& bbox, const BBox& tbox)
   : nx_(nx), ny_(ny), nz_(nz), nc_(nc), ox_(ox), oy_(oy), oz_(oz),
     mx_(mx), my_(my), mz_(mz), bbox_(bbox), tbox_(tbox), dirty_(true)
 {
-  for(int c=0; c<nc_; c++) {
+  for (int c=0; c<nc_; c++)
+  {
     nb_[c] = nb[c];
   }
 
   /* The cube is numbered in the following way 
      
-       2________6        y
-      /|        |        |  
-     / |       /|        |
-    /  |      / |        |
-   /   0_____/__4        |
+  2________6        y
+  /|        |        |  
+  / |       /|        |
+  /  |      / |        |
+  /   0_____/__4        |
   3---------7   /        |_________ x
   |  /      |  /         /
   | /       | /         /
   |/        |/         /
   1_________5         /
-                     z  
+  z  
   */
 
   // set up vertices
-  Point pmin(bbox_.min());
-  Point pmax(bbox_.max());
+  const Point &pmin(bbox_.min());
+  const Point &pmax(bbox_.max());
   corner_[0] = pmin;
   corner_[1] = Point(pmin.x(), pmin.y(), pmax.z());
   corner_[2] = Point(pmin.x(), pmax.y(), pmin.z());
@@ -75,10 +78,11 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb, int ox, int
   corner_[5] = Point(pmax.x(), pmin.y(), pmax.z());
   corner_[6] = Point(pmax.x(), pmax.y(), pmin.z());
   corner_[7] = pmax;
+
   // set up texture coordinates
   Point texture[8];
-  Point tmin(tbox_.min());
-  Point tmax(tbox_.max());
+  const Point &tmin(tbox_.min());
+  const Point &tmax(tbox_.max());
   texture[0] = Point(tmin.x(), tmin.y(), tmin.z());
   texture[1] = Point(tmin.x(), tmin.y(), tmax.z());
   texture[2] = Point(tmin.x(), tmax.y(), tmin.z());
@@ -87,6 +91,7 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb, int ox, int
   texture[5] = Point(tmax.x(), tmin.y(), tmax.z());
   texture[6] = Point(tmax.x(), tmax.y(), tmin.z());
   texture[7] = Point(tmax.x(), tmax.y(), tmax.z());
+
   // set up edges
   edge_[0] = Ray(corner_[0], corner_[2] - corner_[0]);
   edge_[1] = Ray(corner_[2], corner_[6] - corner_[2]);
@@ -100,6 +105,7 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb, int ox, int
   edge_[9] = Ray(corner_[2], corner_[3] - corner_[2]);
   edge_[10] = Ray(corner_[6], corner_[7] - corner_[6]);
   edge_[11] = Ray(corner_[4], corner_[5] - corner_[4]);
+
   // set up texture coordinate edges
   tex_edge_[0] = Ray(texture[0], texture[2] - texture[0]);
   tex_edge_[1] = Ray(texture[2], texture[6] - texture[2]);
@@ -118,32 +124,26 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb, int ox, int
 TextureBrick::~TextureBrick()
 {}
 
+
 // compute polygon of edge plane intersections
 void
 TextureBrick::compute_polygon(const Ray& view, double t,
-                       Array1<float>& vertex, Array1<float>& texcoord,
-                       Array1<int>& size) const
+			      Array1<float>& vertex, Array1<float>& texcoord,
+			      Array1<int>& size) const
 {
   compute_polygons(view, t, t, 1.0, vertex, texcoord, size);
 }
 
+
 void
 TextureBrick::compute_polygons(const Ray& view, double dt,
-                        Array1<float>& vertex, Array1<float>& texcoord,
-                        Array1<int>& size) const
+			       Array1<float>& vertex, Array1<float>& texcoord,
+			       Array1<int>& size) const
 {
-  Point corner[8];
-  corner[0] = bbox_.min();
-  corner[1] = Point(bbox_.min().x(), bbox_.min().y(), bbox_.max().z());
-  corner[2] = Point(bbox_.min().x(), bbox_.max().y(), bbox_.min().z());
-  corner[3] = Point(bbox_.min().x(), bbox_.max().y(), bbox_.max().z());
-  corner[4] = Point(bbox_.max().x(), bbox_.min().y(), bbox_.min().z());
-  corner[5] = Point(bbox_.max().x(), bbox_.min().y(), bbox_.max().z());
-  corner[6] = Point(bbox_.max().x(), bbox_.max().y(), bbox_.min().z());
-  corner[7] = bbox_.max();
   double t[8];
-  for(int i=0; i<8; i++) {
-    t[i] = Dot(corner[i]-view.origin(), view.direction());
+  for (int i=0; i<8; i++)
+  {
+    t[i] = Dot(corner_[i]-view.origin(), view.direction());
   }
   Sort(t, 8);
   double tmin = (floor(t[0]/dt) + 1)*dt;
@@ -151,11 +151,18 @@ TextureBrick::compute_polygons(const Ray& view, double dt,
   compute_polygons(view, tmin, tmax, dt, vertex, texcoord, size);
 }
 
+
 // compute polygon list of edge plane intersections
+//
+// This is never called externally and could be private.
+//
+// The representation returned is not efficient, but it appears a
+// typical rendering only contains about 1k triangles.
 void
-TextureBrick::compute_polygons(const Ray& view, double tmin, double tmax, double dt,
-                        Array1<float>& vertex, Array1<float>& texcoord,
-                        Array1<int>& size) const
+TextureBrick::compute_polygons(const Ray& view,
+			       double tmin, double tmax, double dt,
+			       Array1<float>& vertex, Array1<float>& texcoord,
+			       Array1<int>& size) const
 {
   Vector vv[6], tt[6]; // temp storage for vertices and texcoords
   double t = tmax; // start at tmax
@@ -168,7 +175,8 @@ TextureBrick::compute_polygons(const Ray& view, double tmin, double tmax, double
   Vector right;
   switch(MinIndex(fabs(vdir.x()),
                   fabs(vdir.y()),
-                  fabs(vdir.z()))) {
+                  fabs(vdir.z())))
+  {
   case 0:
     up.x(0.0); up.y(-vdir.z()); up.z(vdir.y());
     break;
@@ -182,33 +190,42 @@ TextureBrick::compute_polygons(const Ray& view, double tmin, double tmax, double
   up.normalize();
   right = Cross(vdir, up);
   // we compute polys back to front
-  while(t >= tmin) {
+  while (t >= tmin)
+  {
     // find intersections
     degree = 0;
-    for(int j=0; j<12; j++) {
+    for (int j=0; j<12; j++)
+    {
       double u;
-      bool isec =
-        edge_[j].planeIntersectParameter(-view.direction(), view.parameter(t), u);
-      if(isec && u >= 0.0 && u <= 1.0) {
+      const bool isec =
+        edge_[j].planeIntersectParameter(-view.direction(),
+					 view.parameter(t), u);
+      if (isec && u >= 0.0 && u <= 1.0)
+      {
         vv[degree] = (Vector)(edge_[j].parameter(u));
         tt[degree] = (Vector)(tex_edge_[j].parameter(u));
         degree++;
       }
     }
-    // 
-    if(degree > 3) {
+
+    if (degree > 3)
+    {
       // compute centroids
       Vector vc(0.0, 0.0, 0.0), tc(0.0, 0.0, 0.0);
-      for(int j=0; j<degree; j++) {
+      for (int j=0; j<degree; j++)
+      {
         vc += vv[j]; tc += tt[j];
       }
       vc /= (double)degree; tc /= (double)degree;
+
       // sort vertices
       int idx[6];
       double pa[6];
-      for(int i=0; i<degree; i++) {
+      for (int i=0; i<degree; i++)
+      {
         double vx = Dot(vv[i] - vc, right);
         double vy = Dot(vv[i] - vc, up);
+
         // compute pseudo-angle
         pa[i] = vy / (fabs(vx) + fabs(vy));
         if (vx < 0.0) pa[i] = 2.0 - pa[i];
@@ -217,8 +234,10 @@ TextureBrick::compute_polygons(const Ray& view, double tmin, double tmax, double
         idx[i] = i;
       }
       Sort(pa, idx, degree);
+
       // output polygon
-      for(int j=0; j<degree; j++) {
+      for (int j=0; j<degree; j++)
+      {
         vertex.add(vv[idx[j]].x());
         vertex.add(vv[idx[j]].y());
         vertex.add(vv[idx[j]].z());
@@ -226,9 +245,12 @@ TextureBrick::compute_polygons(const Ray& view, double tmin, double tmax, double
         texcoord.add(tt[idx[j]].y());
         texcoord.add(tt[idx[j]].z());
       }
-    } else if (degree == 3) {
+    }
+    else if (degree == 3)
+    {
       // output a single triangle
-      for(int j=0; j<degree; j++) {
+      for (int j=0; j<degree; j++)
+      {
         vertex.add(vv[j].x());
         vertex.add(vv[j].y());
         vertex.add(vv[j].z());
@@ -238,10 +260,14 @@ TextureBrick::compute_polygons(const Ray& view, double tmin, double tmax, double
       }
     }
     // else we don't care
-    if(degree >= 3) {
+
+    // Add our poly count to the sizes.
+    if(degree >= 3)
+    {
       k += degree;
       size.add(degree);
     }
+
     // decrement ray parameter
     t -= dt;
   }

@@ -49,13 +49,6 @@ public:
         int mx, int my, int mz, const BBox& bbox, const BBox& tbox);
   virtual ~TextureBrick();
 
-  // access one of the 8 vertices [0,7]
-  inline const Point& operator[] (int i) const { return corner_[i]; }
-  inline BBox bbox() const { return bbox_; }
-  inline BBox tbox() const { return tbox_; }
-  inline Point center() const
-  { return corner_[0] + 0.5*(corner_[7] - corner_[0]); }
-
   inline int nx() { return nx_; }
   inline int ny() { return ny_; }
   inline int nz() { return nz_; }
