@@ -405,12 +405,11 @@ QuadSurfMesh::locate(Edge::index_type &loc, const Point &p) const
 }
 
 
+// TODO: Nearest cell center is incorrect if the quads are not a
+// delanay triangulation of the cell centers which is most of the time.
 bool
 QuadSurfMesh::locate(Face::index_type &loc, const Point &p) const
 {  
-  ASSERTMSG(synchronized_ & FACES_E,
-	    "Must call synchronize FACES_E on QuadSurfMesh first");
-
   Face::iterator bi, ei;
   Point center;
   begin(bi);
@@ -471,13 +470,6 @@ QuadSurfMesh::get_weights(const Point &p,
   if (locate(idx, p))
   {
     get_nodes(l, idx);
-#if 1
-    w.resize(4);
-    w[0] = 1.0;
-    w[1] = 0.0;
-    w[2] = 0.0;
-    w[3] = 0.0;
-#else
     Point p0, p1, p2, p3;
     get_center(p0, l[0]);
     get_center(p1, l[1]);
@@ -495,7 +487,6 @@ QuadSurfMesh::get_weights(const Point &p,
     w[1] *= suminv;
     w[2] *= suminv;
     w[3] *= suminv;
-#endif
   }
 }
 
