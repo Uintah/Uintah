@@ -40,7 +40,7 @@ namespace Jacobi_ns {
     public:
 	Jacobi_impl();
 	virtual ~Jacobi_impl();
-	virtual int solveHeatEquation(SIDL::array2<double>& ,double top,double bottom, 
+	virtual int solveHeatEquation(SSIDL::array2<double>& ,double top,double bottom, 
 				      double left,double right);
     };
 } // End namespace Jacobi
