@@ -15,7 +15,7 @@ of SCIRun 2.0 in late August.
 Macintosh support: Preliminary work has been done to port SCIRun to
 the Macintosh resulting in the ability to run SCIRun on a Macintosh
 here at SCI; however there are still a number of issues that must be
-addressed.  In the near future (late April, '03), the Mac will become
+addressed.  In the near future (early May, '03), the Mac will become
 an officially supported platform.  Updates to SCIRun version 1.10 will
 be provided to those interested in running SCIRun on a Mac.
 
@@ -157,7 +157,7 @@ New Modules  (SCIRun, unless noted otherwise.)
     the tuple axis, or choose to add a new tuple axis before sending
     the nrrd downstream.
 
-  - Added NrrdJoin module which takes N (NRRD) inputs and joins them
+  - NrrdJoin module added which takes N (NRRD) inputs and joins them
     into a single NrrdData along the user selected axis.
 
   - Added test networks for all the new/changed Teem modules in
