@@ -51,17 +51,23 @@ Level::patchIterator Level::patchesEnd()
     return d_patches.end();
 }
 
-Patch* Level::addPatch(const IntVector& lowIndex, const IntVector& highIndex)
+Patch* Level::addPatch(const IntVector& lowIndex, const IntVector& highIndex,
+		       const IntVector& extraLowIndex, 
+		       const IntVector& extraHighIndex)
 {
-    Patch* r = scinew Patch(this, lowIndex, highIndex);
+    Patch* r = scinew Patch(this, lowIndex, highIndex,extraLowIndex,
+			    extraHighIndex);
     d_patches.push_back(r);
     return r;
 }
 
 Patch* Level::addPatch(const IntVector& lowIndex, const IntVector& highIndex,
+		       const IntVector& extraLowIndex, 
+		       const IntVector& extraHighIndex,
 		       int ID)
 {
-    Patch* r = scinew Patch(this, lowIndex, highIndex, ID);
+    Patch* r = scinew Patch(this, lowIndex, highIndex, extraLowIndex,
+			    extraHighIndex,ID);
     d_patches.push_back(r);
     return r;
 }
@@ -276,6 +282,9 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
 //
 // $Log$
+// Revision 1.24  2000/11/14 03:53:33  jas
+// Implemented getExtraCellIterator.
+//
 // Revision 1.23  2000/11/02 21:25:55  jas
 // Rearranged the boundary conditions so there is consistency between ICE
 // and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now

@@ -143,7 +143,7 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 	};
      
       // Set the Neumann BC condition using a 1st order approximation
-      void fillFaceFlux(Patch::FaceType face, const T& value)
+      void fillFaceFlux(Patch::FaceType face, const T& value, const Vector& dx)
 	{ 
 	  IntVector low = getLowIndex();
 	  IntVector hi = getHighIndex();
@@ -151,42 +151,48 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 	  case Patch::xplus:
 	    for (int j = low.y(); j<hi.y(); j++) {
 	      for (int k = low.z(); k<hi.z(); k++) {
-		(*this)[IntVector(hi.x()-1,j,k)] = value;
+		(*this)[IntVector(hi.x()-1,j,k)] = 
+		   (*this)[IntVector(hi.x()-2,j,k)] - value*dx.x();
 	      }
 	    }
 	    break;
 	  case Patch::xminus:
 	    for (int j = low.y(); j<hi.y(); j++) {
 	      for (int k = low.z(); k<hi.z(); k++) {
-		(*this)[IntVector(low.x(),j,k)] = value;
+		(*this)[IntVector(low.x(),j,k)] = 
+		  (*this)[IntVector(low.x()+1,j,k)] - value * dx.x();
 	      }
 	    }
 	    break;
 	  case Patch::yplus:
 	    for (int i = low.x(); i<hi.x(); i++) {
 	      for (int k = low.z(); k<hi.z(); k++) {
-		(*this)[IntVector(i,hi.y()-1,k)] = value;
+		(*this)[IntVector(i,hi.y()-1,k)] = 
+		  (*this)[IntVector(i,hi.y()-2,k)] - value * dx.y();
 	      }
 	    }
 	    break;
 	  case Patch::yminus:
 	    for (int i = low.x(); i<hi.x(); i++) {
 	      for (int k = low.z(); k<hi.z(); k++) {
-		(*this)[IntVector(i,low.y(),k)] = value;
+		(*this)[IntVector(i,low.y(),k)] = 
+		  (*this)[IntVector(i,low.y()+1,k)] - value * dx.y();
 	      }
 	    }
 	    break;
 	  case Patch::zplus:
 	    for (int i = low.x(); i<hi.x(); i++) {
 	      for (int j = low.y(); j<hi.y(); j++) {
-		(*this)[IntVector(i,j,hi.z()-1)] = value;
+		(*this)[IntVector(i,j,hi.z()-1)] = 
+		  (*this)[IntVector(i,j,hi.z()-2)] - value * dx.z();
 	      }
 	    }
 	    break;
 	  case Patch::zminus:
 	    for (int i = low.x(); i<hi.x(); i++) {
 	      for (int j = low.y(); j<hi.y(); j++) {
-		(*this)[IntVector(i,j,low.z())] = value;
+		(*this)[IntVector(i,j,low.z())] = 
+		  (*this)[IntVector(i,j,low.z()+1)] -  value * dx.z();
 	      }
 	    }
 	    break;
@@ -436,6 +442,9 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 
 //
 // $Log$
+// Revision 1.16  2000/11/14 03:53:33  jas
+// Implemented getExtraCellIterator.
+//
 // Revision 1.15  2000/11/02 21:25:55  jas
 // Rearranged the boundary conditions so there is consistency between ICE
 // and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now

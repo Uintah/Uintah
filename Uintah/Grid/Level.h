@@ -67,10 +67,14 @@ WARNING
       patchIterator patchesEnd();
       
       Patch* addPatch(const SCICore::Geometry::IntVector& lowIndex,
-		      const SCICore::Geometry::IntVector& highIndex);
+		      const SCICore::Geometry::IntVector& highIndex,
+		      const SCICore::Geometry::IntVector& extraLowIndex,
+		      const SCICore::Geometry::IntVector& extrahighIndex);
       
       Patch* addPatch(const SCICore::Geometry::IntVector& lowIndex,
 		      const SCICore::Geometry::IntVector& highIndex,
+		      const SCICore::Geometry::IntVector& extraLowIndex,
+		      const SCICore::Geometry::IntVector& extrahighIndex,
 		      int ID);
 
      //////////
@@ -99,6 +103,7 @@ WARNING
       Point getAnchor() const {
 	 return d_anchor;
       }
+
       Point getNodePosition(const IntVector&) const;
       Point getCellPosition(const IntVector&) const;
       IntVector getCellIndex(const Point&) const;
@@ -125,6 +130,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.22  2000/11/14 03:53:33  jas
+// Implemented getExtraCellIterator.
+//
 // Revision 1.21  2000/09/25 20:37:42  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
