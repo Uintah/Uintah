@@ -38,9 +38,6 @@ using std::ostringstream;
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/Hairline.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glx.h>
 
 
 namespace SCIRun {
@@ -53,9 +50,9 @@ Persistent* make_Hairline()
 PersistentTypeID Hairline::type_id("Hairline", "Widget", make_Hairline);
 
 Hairline::Hairline( const BBox2d &bbox, const string &name)
-  : Widget(name), 
-    from_(bbox.min().x()), to_(bbox.max().x()), pos_( (from_+to_)/2 )
+  : TclObj( name ), Widget(name), hair_(0)
 {
+  hair_ = scinew HairObj( bbox, "hair" );
 }
 
 
@@ -63,37 +60,51 @@ Hairline::~Hairline()
 {
 }
 
-void
-Hairline::select( double x, double y, int  )
+
+void 
+Hairline::add( Polyline *p )
 {
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  glLoadIdentity();
-  glOrtho( from_, to_,  0, 1,  -1, 1 );
-  glGetDoublev( GL_PROJECTION_MATRIX, proj );
-  glGetDoublev( GL_MODELVIEW_MATRIX, model );
-  glGetIntegerv( GL_VIEWPORT, viewport );
-  glPopMatrix();
+  poly_.add( p );
+  Color c = p->get_color();
+  tcl_ << " add " << (poly_.size()-1) << " #";
+  tcl_.setf(ios::hex,ios::basefield);
+  tcl_<< int(c.r()*255) << int(c.g()*255) << int(c.b()*255) << " "
+       << p->at( hair_->at() );
+  tcl_exec();
+}
+
+void
+Hairline::select( double x, double y, int b )
+{
+  hair_->select( x, y, b );
+  update();
 }
   
 void
-Hairline::move( double x, double y, int )
+Hairline::move( double x, double y, int b)
 {
-  GLdouble px, py, pz;
-  gluUnProject( x, y, 0, model, proj, viewport, &px, &py, &pz );
-  if ( px >= from_ && px <= to_ )
-    pos_ = px;
+  hair_->move( x, y, b );
+  update();
 }
   
 void
-Hairline::release( double x, double y, int )
+Hairline::release( double x, double y, int b)
 {
-  GLdouble px, py, pz;
-  gluUnProject( x, y, 0, model, proj, viewport, &px, &py, &pz );
-  if ( px >= from_ && px <= to_ )
-    pos_ = px;
+  hair_->release( x, y, b );
+  cerr << "release\n";
+  update();
 }
   
+
+void
+Hairline::update()
+{
+  tcl_ << " values ";
+  double at = hair_->at();
+  for (int i=0; i<poly_.size(); i++) 
+    tcl_ << poly_[i]->at( at ) << " ";
+  tcl_exec();
+}
 
 #define HAIRLINE_VERSION 1
 
@@ -101,7 +112,7 @@ void
 Hairline::io(Piostream& stream)
 {
   stream.begin_class("Hairline", HAIRLINE_VERSION);
-  Drawable::io(stream);
+  Widget::io(stream);
   stream.end_class();
 }
 

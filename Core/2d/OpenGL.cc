@@ -32,7 +32,7 @@
 #include <Core/2d/OpenGL.h>
 #include <Core/2d/Polyline.h>
 #include <Core/2d/Diagram.h>
-#include <Core/2d/HairObj.h>
+#include <Core/2d/Hairline.h>
 #include <Core/2d/Axes.h>
 
 #include <GL/gl.h>
@@ -55,7 +55,7 @@ Polyline::draw()
 {
   lock();
 
-  glColor3f( color.r(), color.g(), color.b() );
+  glColor3f( color_.r(), color_.g(), color_.b() );
   glBegin(GL_LINE_STRIP);
   for (int i=0; i<data_.size(); i++) 
     glVertex2f( i, data_[i] );
@@ -73,9 +73,6 @@ Diagram::draw()
 {
   GLenum errcode;
 
-  double smidgex;
-  double smidgey;
-  
   if ( graph_.size() == 0 ) return; 
 
   glMatrixMode(GL_PROJECTION);
@@ -106,7 +103,7 @@ Diagram::draw()
 	    graph_[i]->get_bounds( bbox );
 	    if ( bbox.valid() ) {
 	      glMatrixMode(GL_PROJECTION);
-	      glLoadIdentity();
+	      glPushMatrix();
 	      glOrtho( bbox.min().x(),  bbox.max().x(),
 		       bbox.min().y(),  bbox.max().y(),
 		       -1, 1 );
@@ -131,9 +128,16 @@ Diagram::draw()
 	}
       }
     }  
-    
-    for (int i=0; i<widget_.size(); i++) {
-      widget_[i]->draw();
+    {
+      BBox2d b1, b2;
+      get_bounds( b1 );
+      b2.extend( Point2d( b1.min().x(), 0 ) );
+      b2.extend( Point2d( b1.max().x(), 1 ) );
+      
+      for (int i=0; i<widget_.size(); i++) {
+	widget_[i]->set_bbox( b2 );
+	widget_[i]->draw();
+      }
     }
     break;
     
@@ -149,6 +153,12 @@ Diagram::draw()
   while((errcode=glGetError()) != GL_NO_ERROR)
     cerr << "Diagram GL error: " 
 	 << (char*)gluErrorString(errcode) << endl;
+}
+
+void
+Hairline::draw()
+{
+  hair_->draw();
 }
 
 void
@@ -179,9 +189,7 @@ Axes::draw()
     initialized = true;
   }
 
-  double pm[16];
   double smidge;
-  //  glGetDoublev(GL_PROJECTION_MATRIX,pm);
 
   // set the projection to NDC
   glMatrixMode(GL_PROJECTION);
@@ -214,7 +222,6 @@ Axes::draw()
   glEnd();
 
   // restore the projection
-  //glLoadMatrixd(pm);
   glPopMatrix();
 }
 

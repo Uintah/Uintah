@@ -57,7 +57,7 @@ Polyline::Polyline( const Array1<double> &data, const string &name )
       else if ( max_ < data_[i] ) max_ = data_[i];
   }
 
-  color = Color( 0, 0, 0 );
+  color_ = Color( 0, 0, 0 );
 }
 
 
@@ -74,10 +74,22 @@ Polyline::~Polyline()
 {
 }
 
+double
+Polyline::at( double v )
+{
+  if ( v < 0 )
+    return data_[0];
+  if ( v > data_.size()-1 )
+    return data_[data_.size()-1];
+
+  int p = int(v);
+  return data_[p] + (data_[p+1] - data_[p])*(v-p);
+}
+
 void
 Polyline::set_color( const Color &c )
 {
-  color = c;
+  color_ = c;
 }
 
 void

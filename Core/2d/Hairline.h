@@ -31,22 +31,25 @@
 #ifndef SCI_Hairline_h
 #define SCI_Hairline_h 
 
+#include <Core/GuiInterface/TclObj.h>
+#include <Core/2d/Polyline.h>
 #include <Core/2d/Widget.h>
+#include <Core/2d/HairObj.h>
 
 namespace SCIRun {
   
-class SCICORESHARE Hairline :  public Widget {
+class SCICORESHARE Hairline :  public TclObj, public Widget {
 private:
-  double from_, to_;
-  double pos_;
-
-  double proj[16], model[16];
-  int viewport[4];
+  HairObj *hair_;
+  Array1< Polyline *> poly_;
 public:
   
-  Hairline() {}
+  Hairline() : TclObj( "hairline") {}
   Hairline( const BBox2d &, const string &name="hairline" );
   virtual ~Hairline();
+
+  void add( Polyline *);
+  void update();
 
   virtual void select( double x, double y, int b );
   virtual void move( double x, double y, int b );

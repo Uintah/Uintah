@@ -26,6 +26,7 @@ SRCS     += $(SRCDIR)/Point2d.cc \
 	$(SRCDIR)/BBox2d.cc \
 	$(SRCDIR)/Diagram.cc \
 	$(SRCDIR)/HairObj.cc \
+	$(SRCDIR)/Hairline.cc \
 	$(SRCDIR)/Polyline.cc \
 	$(SRCDIR)/OpenGLWindow.cc \
 	$(SRCDIR)/OpenGL.cc \
