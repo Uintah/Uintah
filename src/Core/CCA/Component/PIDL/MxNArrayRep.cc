@@ -98,14 +98,14 @@ int SCIRun::lcm(int m,int n) {
   return ((m*n) / gcd(m,n));
 }
 
-MxNArrayRep::MxNArrayRep(int dimno, Index* dimarr[], Reference* remote_ref = NULL) 
+MxNArrayRep::MxNArrayRep(int dimno, Index* dimarr[], Reference* remote_ref) 
   : mydimarr(dimarr), mydimno(dimno)
 {
   if (remote_ref != NULL)  remoteRef = (*remote_ref);
   received = false;
 }
 
-MxNArrayRep::MxNArrayRep(CIA::array2<int>& arr, Reference* remote_ref = NULL) 
+MxNArrayRep::MxNArrayRep(CIA::array2<int>& arr, Reference* remote_ref) 
 {
   mydimno = arr.size2();
   mydimarr = new Index* [mydimno];
