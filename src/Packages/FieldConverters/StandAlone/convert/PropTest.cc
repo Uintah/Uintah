@@ -11,6 +11,7 @@
  */
 
 #include <Core/Datatypes/TetVol.h>
+#include <Core/Containers/Array1.h>
 
 using namespace SCIRun;
 
@@ -19,6 +20,8 @@ main(int argc, char **argv)
 {  
   TetVol<double> *field = new TetVol<double>;
   field->store("date", string("today"));
+  Array1<double> temp;
+  field->store("junk", temp);
   delete(field);
   return 0;  
 }    
