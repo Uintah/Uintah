@@ -410,7 +410,7 @@ main(int argc, char** argv)
       if(e.stackTrace())
 	cerr << "Stack trace: " << e.stackTrace() << '\n';
       cerrLock.unlock();
-
+      
       // Dd: I believe that these cause error messages
       // to be lost when the program dies...
       //Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
@@ -441,7 +441,7 @@ main(int argc, char** argv)
     /*
      * Finalize MPI
      */
-    Uintah::Parallel::finalizeManager();
+    Uintah::Parallel::finalizeManager(thrownException?Uintah::Parallel::Abort:Uintah::Parallel::NormalShutdown);
 
     if (thrownException) {
       Thread::exitAll(1);
