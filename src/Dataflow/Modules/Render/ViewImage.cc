@@ -58,7 +58,9 @@
 #include <Core/Math/MinMax.h>
 
 #include <Core/Geom/GeomSwitch.h>
+#include <Core/Geom/TexSquare.h>
 #include <Core/Algorithms/Visualization/RenderField.h>
+
 #include <Dataflow/Ports/NrrdPort.h>
 
 #include <Dataflow/Network/Module.h>
@@ -74,6 +76,7 @@
 
 #include <typeinfo>
 #include <iostream>
+#include <map>
 
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
@@ -215,7 +218,7 @@ class ViewImage : public Module
     string		name_;
     SliceWindows	windows_;
     FreeTypeText	text_;
-    map<SliceWindow *, GLuint> tex_name_;
+    std::map<SliceWindow *, GLuint> tex_name_;
   };
 
   typedef vector<TextLabel *>		Labels;
@@ -242,6 +245,7 @@ class ViewImage : public Module
 
 
   int			max_slice_[3];
+  int			cur_slice_[3];
   double		scale_[3];
   double		center_[3];
 
@@ -250,6 +254,8 @@ class ViewImage : public Module
 
   //! output port
   GeometryOPort *	ogeom_;
+  map<string,TexSquare*>    tobjs_;
+  map<string,GeomID>    gobjs_;
 
   FreeTypeLibrary *	freetype_lib_;
   map<string, FreeTypeFace *>		fonts_;
@@ -272,7 +278,8 @@ class ViewImage : public Module
   bool			extract_colormap(SliceWindow &);
   bool			extract_clut(SliceWindow &);
 
-  void			draw_guidelines(SliceWindow &, float, float, float);
+  void			draw_guidelines(SliceWindow &, float, float, float, 
+					bool thin=true);
 
   int			x_axis(SliceWindow &);
   int			y_axis(SliceWindow &);
@@ -308,6 +315,8 @@ class ViewImage : public Module
   void			handle_gui_leave(GuiArgs &args);
 
   void			debug_print_state(int state);
+
+  void			send_slice(NrrdSlice &slice);
   
 public:
   ViewImage(GuiContext* ctx);
@@ -564,11 +573,12 @@ ViewImage::log2(const unsigned int dim) const {
 void
 ViewImage::real_draw_all()
 {
-  WindowLayouts::iterator pos = layouts_.begin();
-  while (pos != layouts_.end()) {
-    WindowLayout &layout = *(*pos).second;
-    SliceWindows::iterator viter, vend = layout.windows_.end();
-    for (viter = layout.windows_.begin(); viter != vend; ++viter) {
+  WindowLayouts::iterator liter = layouts_.begin(), lend = layouts_.end();
+  for (; liter != lend; ++liter) {
+    WindowLayout &layout = *(liter->second);
+    SliceWindows::iterator viter = layout.windows_.begin();
+    SliceWindows::iterator vend = layout.windows_.end();
+    for (; viter != vend; ++viter) {
       SliceWindow &window = **viter;
       if (!window.redraw_) continue;
       window.redraw_ = false;
@@ -577,13 +587,13 @@ ViewImage::real_draw_all()
       for (unsigned int s = 0; s < window.slices_.size(); ++s)
 	draw_slice(window, *window.slices_[s]);
       
-      if (*window.show_guidelines_)
+      if (bool(window.show_guidelines_()) && mouse_in_window(window))
 	draw_guidelines(window, cursor_.x(), cursor_.y(), cursor_.z());
+      draw_guidelines(window, cur_slice_[0]*scale_[0],
+		      cur_slice_[1]*scale_[1], cur_slice_[2]*scale_[2], false);
       window.viewport_->swap();
       window.viewport_->release();
     }
-
-    pos++;
   }
 }
 
@@ -677,39 +687,53 @@ ViewImage::extract_colormap(SliceWindow &window)
 // selected slices in other dimensions
 // if x, y, or z < 0, then that dimension wont be rendered
 void
-ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z) {
-  if (!current_window_) return;
-  if (!current_window_->show_guidelines_()) return;
+ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z, 
+			   bool thin) {
+  if (thin && !current_window_) return;
+  if (thin && !current_window_->show_guidelines_()) return;
   window.viewport_->make_current();
   setup_gl_view(window);
   const bool inside = mouse_in_window(window);
+
+  float unscaled_one = 1.0;
   Vector tmp = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
   tmp[window.axis_] = 0;
-  float one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
+  float screen_space_one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
+  if (thin || screen_space_one > unscaled_one) 
+    unscaled_one = screen_space_one;
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
   GLdouble green[4] = { 0.5, 1.0, 0.1, 0.8 };
   GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
-  //  GLdouble blue[4] = { 0.3, 0.2, 0.7, 0.8 };
   GLdouble yellow[4] = { 1.0, 0.76, 0.1, 0.8 };
-  
+  GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
-  if (inside) 
-    glColor4dv(green);
-  else 
-    glColor4dv(red);
-    
-
-  glBegin(GL_QUADS);
   const int axis = window.axis_;
   int p = (axis+1)%3;
   int s = (axis+2)%3;
+
+
+  double one;
   double c[3];
   c[0] = x;
   c[1] = y;
   c[2] = z;
   for (int i = 0; i < 2; ++i) {
+    if (thin) {
+      one = unscaled_one;
+      glColor4dv(yellow);
+    } else {
+      one = unscaled_one*scale_[p];
+      switch (p) {
+      case 0: glColor4dv(red); break;
+      case 1: glColor4dv(green); break;
+      default:
+      case 2: glColor4dv(blue); break;
+      }
+    }
+    glBegin(GL_QUADS);    
      if (c[p] >= 0 && c[p] <= max_slice_[p]*scale_[p]) {
        glVertex3f(p==0?x:0.0, p==1?y:0.0, p==2?z:0.0);
        glVertex3f(p==0?x+one:0.0, p==1?y+one:0.0, p==2?z+one:0.0);
@@ -721,13 +745,14 @@ ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z) {
 		  p==1?y:(axis==1?0.0:(max_slice_[s]+1)*scale_[s]),
 		  p==2?z:(axis==2?0.0:(max_slice_[s]+1)*scale_[s]));
      }
+     glEnd();
      SWAP(p,s);
   }
 
-  glEnd();
 
 
-  if (!inside) {
+
+  if (!inside || !thin) {
     window.viewport_->release();
     return;
   }
@@ -739,7 +764,7 @@ ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z) {
 			       window.viewport_->max_height());
   cvll(window.axis_) = 0;
   cvur(window.axis_) = 0;
-  glColor4dv(yellow);
+  glColor4dv(white);
   glBegin(GL_QUADS);
   for (int i = 0; i < 2; ++i) {
     if (c[p] < 0 || c[p] > max_slice_[p]*scale_[p]) {
@@ -1191,6 +1216,7 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, slice.tex_wid_, slice.tex_hei_, 
     		 0, GL_COLOR_INDEX, type, slice.nrrd_->nrrd->data);    
+    send_slice(slice);
   }
 
   set_slice_coords(slice);
@@ -1229,7 +1255,7 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
   }
   
   font = fonts_["fps"];
-  if (font) {
+  if (font && string(sci_getenv("USER")) == string("mdavis")) {
     font->set_points(20.0);
     draw_label(window, "fps: "+to_string(fps_), 
 	       0, window.viewport_->height() - 2,
@@ -1404,8 +1430,12 @@ ViewImage::extract_slice(NrrdVolume &volume,
       temp1->nrrd->type != nrrdTypeShort || 
       temp1->nrrd->type != nrrdTypeUShort) {
     temp2->nrrd = nrrdNew();  
-    NrrdRange *range =nrrdRangeNewSet(temp1->nrrd,nrrdBlind8BitRangeState);
-    if (nrrdQuantize(temp2->nrrd, temp1->nrrd, range, 8)) {
+    NrrdRange range;
+    range.min = min_;
+    range.max = max_;
+    range.hasNonExist = false;
+    //nrrdRangeNewSet(temp1->nrrd,nrrdBlind8BitRangeState);
+    if (nrrdQuantize(temp2->nrrd, temp1->nrrd, &range, 8)) {
       char *err = biffGetDone(NRRD);
       error(string("Trouble quantizing: ") + err);
       free(err);
@@ -1457,6 +1487,7 @@ ViewImage::prev_slice(SliceWindow &window)
     window.slice_[window.axis_] = 0;
   else 
     window.slice_[window.axis_]--;
+  cur_slice_[window.axis_] = window.slice_[window.axis_];
   cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
   extract_window_slices(window);
   redraw_all();
@@ -1472,7 +1503,7 @@ ViewImage::next_slice(SliceWindow &window)
     window.slice_[window.axis_] = max_slice_[window.axis_];
   else
     window.slice_[window.axis_]++;
-  
+  cur_slice_[window.axis_] = window.slice_[window.axis_];
   cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
   extract_window_slices(window);
   redraw_all();
@@ -1537,8 +1568,8 @@ ViewImage::execute()
   }
 
   if (!ogeom_) {
-    error("Unable to initialize oport Scene Graph.");
-    return;
+    //error("Unable to initialize oport Scene Graph.");
+    //    return;
   }
 
   update_state(Module::NeedData);
@@ -1598,6 +1629,15 @@ ViewImage::execute()
       scale_[i] = (airExists_d(volume->nrrd_->nrrd->axis[i].spacing) ?
 		   volume->nrrd_->nrrd->axis[i].spacing : 1.0);
       center_[i] = (volume->nrrd_->nrrd->axis[i].size*scale_[i])/2;
+    }
+  }
+
+  WindowLayouts::iterator pos = layouts_.begin();
+  while (pos != layouts_.end()) {
+    WindowLayout &layout = *(*pos++).second;
+    SliceWindows::iterator viter, vend = layout.windows_.end();
+    for (viter = layout.windows_.begin(); viter != vend; ++viter) {
+      extract_window_slices(**viter);
     }
   }
 
@@ -2033,6 +2073,29 @@ ViewImage::tcl_command(GuiArgs& args, void* userdata) {
 }
 
 
+
+void
+ViewImage::send_slice(NrrdSlice &slice) {
+  GeometryOPort *geom = (GeometryOPort *)get_oport("Geometry");
+  if (!geom) {
+    error("Cannot find port Geometry!\n");
+    return;
+  }
+  set_slice_coords(slice);
+  string name = "Slice"+to_string(slice.axis_);
+  if (tobjs_[name] == 0) 
+    tobjs_[name] = scinew TexSquare();
+  tobjs_[name]->set_coords(slice.tex_coords_, slice.pos_coords_);
+  tobjs_[name]->set_texname(slice.tex_name_);
+  //ture((unsigned char *)slice.nrrd_->nrrd->data, 1, 
+  //		   slice.tex_wid_, slice.tex_hei_);
+  GeomHandle gobj = tobjs_[name];
+
+  if (gobjs_[name]) geom->delObj(gobjs_[name]);
+  gobjs_[name] = geom->addObj(gobj, name);
+  geom->flush();
+  //  geom->flushViews();
+}
 
 } // End namespace SCIRun
 
