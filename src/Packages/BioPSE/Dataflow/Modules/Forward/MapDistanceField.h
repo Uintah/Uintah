@@ -27,8 +27,6 @@
 
 namespace SCIRun {
 
-#define BIA_MAX_DISTANCE (1.0e6)
-
 class MapDistanceFieldAlgo : public DynamicAlgoBase
 {
 public:
@@ -102,7 +100,8 @@ execute(FieldHandle fsrcH, MeshHandle mdstH, Field::data_location loc_dst)
       Point cloc1, cloc2;
       msrc->get_center(cloc1, array[0]);
       msrc->get_center(cloc2, array[1]);
-      const double tmp = distance_to_line2(location, cloc1, cloc2) / val;
+//      const double tmp = distance_to_line2(location, cloc1, cloc2) / val;
+      const double tmp = distance_to_line2(location, cloc1, cloc2);
       if (tmp < dist)
       {
 	dist = tmp;
@@ -131,9 +130,15 @@ execute(FieldHandle fsrcH, MeshHandle mdstH, Field::data_location loc_dst)
   {
     vector<pair<typename LDST::index_type, double> > dvec;
     foutsrc->value(dvec, *citr);
+    if (dvec.size() == 0)
+    {
+// This doesn't work for some reason.  crb 6/15/02
+//      module.error("Edge " + to_string((unsigned int)(*citr)) +
+//		   " is mapped to zero surface elements.");
+    }
     for (unsigned int i=0; i<dvec.size(); i++)
     {
-      dvec[i].second = 1.0 / dvec.size();
+      dvec[i].second = 1.0 / (double)dvec.size();
     }
     foutsrc->set_value(dvec, *citr);
 
