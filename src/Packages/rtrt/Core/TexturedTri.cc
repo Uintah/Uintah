@@ -268,6 +268,12 @@ TexturedTri::uv(UV& uv, const Point&, const HitInfo& hit)
 void TexturedTri::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		    PerProcessorContext*)
 {
+  if( bad )
+    {
+      cout << "warning, intersect called on bad textured tri\n";
+      return;
+    }
+
     st->tri_isect++;
     Vector e1(p2-p1);
     Vector e2(p3-p1);
@@ -298,6 +304,11 @@ void TexturedTri::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 void TexturedTri::light_intersect(Ray& ray, HitInfo& hit, Color&,
 				  DepthStats* st, PerProcessorContext*)
 {
+  if( bad )
+    {
+      cout << "warning, light intersect called on bad textured tri\n";
+      return;
+    }
   st->tri_isect++;
   Vector e1(p2-p1);
   Vector e2(p3-p1);
@@ -338,6 +349,12 @@ void TexturedTri::softshadow_intersect(Light* light, Ray& ray,
 				       HitInfo&, double dist, Color& atten,
 				       DepthStats* st, PerProcessorContext*)
 {
+  if( bad )
+    {
+      cout << "warning, softshadow_intersect intersect called on bad textured tri\n";
+      return;
+    }
+
     st->tri_light_isect++;
     Vector dir(ray.direction());
     Point orig(ray.origin());

@@ -146,6 +146,11 @@ Tri::~Tri()
 void Tri::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		    PerProcessorContext*)
 {
+  if( bad )
+    {
+      cout << "warning, intersect called on bad tri\n";
+      return;
+    }
     st->tri_isect++;
     Vector e1(p2-p1);
     Vector e2(p3-p1);
@@ -260,6 +265,12 @@ Tri::pairMeUp( Tri * tri )
 void Tri::light_intersect(Ray& ray, HitInfo& hit, Color&,
 			  DepthStats* st, PerProcessorContext*)
 {
+  if( bad )
+    {
+      cout << "warning, light intersect called on bad tri\n";
+      return;
+    }
+
   st->tri_isect++;
   Vector e1(p2-p1);
   Vector e2(p3-p1);
@@ -309,6 +320,12 @@ void Tri::softshadow_intersect(Light* light, Ray& ray,
 			       HitInfo&, double dist, Color& atten,
 			       DepthStats* st, PerProcessorContext*)
 {
+  if( bad )
+    {
+      cout << "warning, softshadow intersect called on bad tri\n";
+      return;
+    }
+
     st->tri_light_isect++;
     Vector dir(ray.direction());
     Point orig(ray.origin());
