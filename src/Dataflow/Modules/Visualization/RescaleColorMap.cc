@@ -81,10 +81,10 @@ RescaleColorMap::execute()
   if( isFixed.get() ){
     cmap->Scale(min.get(), max.get());
   } else {
-    dynamic_port_range range = get_iports("Field");
+    port_range_type range = get_iports("Field");
     if (range.first == range.second)
       return;
-    port_map::iterator pi = range.first;
+    port_map_type::iterator pi = range.first;
     while (pi != range.second)
     {
       FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);

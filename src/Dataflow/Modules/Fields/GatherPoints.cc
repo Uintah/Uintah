@@ -64,11 +64,11 @@ GatherPoints::execute()
     return;
   }
 
-  dynamic_port_range range = get_iports("Field");
+  port_range_type range = get_iports("Field");
   if (range.first == range.second)
     return;
 
-  port_map::iterator pi = range.first;
+  port_map_type::iterator pi = range.first;
   PointCloudMeshHandle pcmH = scinew PointCloudMesh;
 
   while (pi != range.second)
