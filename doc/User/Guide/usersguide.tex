@@ -35,14 +35,20 @@
 \begin{document}
 
 \begin{rawhtml}
-<script language="JavaScript">
+<script type="text/javascript">
 var treetop="";
 var path = location.pathname;
-while (path.substr(path.lastIndexOf("/")+1) != "doc") {
+var iLimit = 20;
+var i = 0;
+while (i < iLimit && path.substr(path.lastIndexOf("/")+1) != "doc") {
 treetop += "../";
+i += 1;
 path = path.substr(0, path.lastIndexOf("/"));
 }
-document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+var inDocTree = i < iLimit;
+if (inDocTree) {
+document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+}
 </script>
 \end{rawhtml}
 
