@@ -40,42 +40,161 @@ public:
   typedef Data value_type;
   typedef Data * iterator;
 
-  Data *begin() { return &(*this)(0,0,0); }
-  Data *end() { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
+  Data *begin();
+  Data *end();
     
-  FData3d():Array3<Data>() {}
-  FData3d(int):Array3<Data>() {}
-  FData3d(const FData3d& data) {copy(data);}
-  virtual ~FData3d(){}
+  FData3d();
+  FData3d(const FData3d& data);
+  virtual ~FData3d();
   
-  const value_type &operator[](typename LatVolMesh::Cell::index_type idx) const 
-    { return operator()(idx.k_,idx.j_,idx.i_); } 
-  const value_type &operator[](typename LatVolMesh::Face::index_type idx) const
-    { return operator()(0, 0, idx.i_); }
-  const value_type &operator[](typename LatVolMesh::Edge::index_type idx) const 
-    { return operator()(0, 0, idx.i_); }
-  const value_type &operator[](typename LatVolMesh::Node::index_type idx) const
-    { return operator()(idx.k_,idx.j_,idx.i_); }
+  const value_type &operator[](typename LatVolMesh::Cell::index_type idx) const;
+  const value_type &operator[](typename LatVolMesh::Face::index_type idx) const;
+  const value_type &operator[](typename LatVolMesh::Edge::index_type idx) const;
+  const value_type &operator[](typename LatVolMesh::Node::index_type idx) const;
 
-  value_type &operator[](typename LatVolMesh::Cell::index_type idx)
-    { return operator()(idx.k_,idx.j_,idx.i_); } 
-  value_type &operator[](typename LatVolMesh::Face::index_type idx)
-    { return operator()(0, 0, idx.i_); }
-  value_type &operator[](typename LatVolMesh::Edge::index_type idx)
-    { return operator()(0, 0, idx.i_); }
-  value_type &operator[](typename LatVolMesh::Node::index_type idx)
-    { return operator()(idx.k_,idx.j_,idx.i_); }
+  value_type &operator[](typename LatVolMesh::Cell::index_type idx);
+  value_type &operator[](typename LatVolMesh::Face::index_type idx);
+  value_type &operator[](typename LatVolMesh::Edge::index_type idx);
+  value_type &operator[](typename LatVolMesh::Node::index_type idx);
+
+  void resize(const LatVolMesh::Node::size_type &size);
+  void resize(const LatVolMesh::Edge::size_type &size);
+  void resize(const LatVolMesh::Face::size_type &size);
+  void resize(const LatVolMesh::Cell::size_type &size);
 
   static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const { return type_name(n); }
-
-  void resize(const LatVolMesh::Node::size_type &size)
-    { newsize(size.k_, size.j_, size.i_); }
-  void resize(LatVolMesh::Edge::size_type) {}
-  void resize(LatVolMesh::Face::size_type) {}
-  void resize(const LatVolMesh::Cell::size_type &size)
-    { newsize(size.k_, size.j_, size.i_); }
+  virtual const string get_type_name(int n = -1) const;
 };
+
+
+template <class Data>
+Data *
+FData3d<Data>::begin()
+{
+  return &(*this)(0,0,0);
+}
+
+
+template <class Data>
+Data *
+FData3d<Data>::end()
+{
+  return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1;
+}
+
+
+template <class Data>
+FData3d<Data>::FData3d()
+  : Array3<Data>()
+{
+}
+
+
+template <class Data>
+FData3d<Data>::FData3d(const FData3d& data)
+{
+  copy(data);
+}
+
+
+template <class Data>
+FData3d<Data>::~FData3d()
+{
+}
+
+  
+template <class Data>
+const FData3d<Data>::value_type &
+FData3d<Data>::operator[](typename LatVolMesh::Cell::index_type idx) const
+{
+  return operator()(idx.k_,idx.j_,idx.i_);
+} 
+
+
+template <class Data>
+const FData3d<Data>::value_type &
+FData3d<Data>::operator[](typename LatVolMesh::Face::index_type idx) const
+{
+  return operator()(0, 0, idx.i_);
+}
+
+
+template <class Data>
+const FData3d<Data>::value_type &
+FData3d<Data>::operator[](typename LatVolMesh::Edge::index_type idx) const
+{
+  return operator()(0, 0, idx.i_);
+}
+
+
+template <class Data>
+const FData3d<Data>::value_type &
+FData3d<Data>::operator[](typename LatVolMesh::Node::index_type idx) const
+{
+  return operator()(idx.k_,idx.j_,idx.i_);
+}
+
+
+template <class Data>
+FData3d<Data>::value_type &
+FData3d<Data>::operator[](typename LatVolMesh::Cell::index_type idx)
+{
+  return operator()(idx.k_,idx.j_,idx.i_);
+} 
+
+
+template <class Data>
+FData3d<Data>::value_type &
+FData3d<Data>::operator[](typename LatVolMesh::Face::index_type idx)
+{
+  return operator()(0, 0, idx.i_);
+}
+
+
+template <class Data>
+FData3d<Data>::value_type &
+FData3d<Data>::operator[](typename LatVolMesh::Edge::index_type idx)
+{
+  return operator()(0, 0, idx.i_);
+}
+
+
+template <class Data>
+FData3d<Data>::value_type &
+FData3d<Data>::operator[](typename LatVolMesh::Node::index_type idx)
+{
+  return operator()(idx.k_,idx.j_,idx.i_);
+}
+
+template <class Data>
+void
+FData3d<Data>::resize(const LatVolMesh::Node::size_type &size)
+{
+  newsize(size.k_, size.j_, size.i_);
+}
+
+
+template <class Data>
+void
+FData3d<Data>::resize(const LatVolMesh::Edge::size_type &size)
+{
+}
+
+
+template <class Data>
+void
+FData3d<Data>::resize(const LatVolMesh::Face::size_type &size)
+{
+}
+
+
+template <class Data>
+void
+FData3d<Data>::resize(const LatVolMesh::Cell::size_type &size)
+{
+  newsize(size.k_, size.j_, size.i_);
+}
+
 
 template <class Data>
 const string
@@ -96,6 +215,16 @@ FData3d<Data>::type_name(int n)
     return find_type_name((Data *)0);
   }
 }
+
+
+template <class Data>
+const string
+FData3d<Data>::get_type_name(int n) const
+{
+  return type_name(n);
+}
+
+
 
 
 template <class Data>

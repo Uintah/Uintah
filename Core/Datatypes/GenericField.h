@@ -99,9 +99,7 @@ public:
   static  PersistentTypeID type_id;
   static  const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
-  virtual const TypeDescription* get_type_description() const {
-    ASSERTFAIL("TD MUST BE AT LEAF LEVEL OF INHERITENCE"); 
-  }
+  virtual const TypeDescription* get_type_description() const;
 
   // -- mutability --
   virtual void freeze();
@@ -405,6 +403,15 @@ GenericField<Mesh, FData>::get_type_name(int n) const
 {
   return type_name(n);
 }
+
+
+template <class Mesh, class FData>
+const TypeDescription *
+GenericField<Mesh, FData>::get_type_description() const
+{
+  ASSERTFAIL("TD MUST BE AT LEAF LEVEL OF INHERITENCE"); 
+}
+
 
 template <class Mesh, class FData>
 const TypeDescription *
