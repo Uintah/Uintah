@@ -1,0 +1,108 @@
+<HTML>
+<HEAD><TITLE>UINTAH-ICE CFD FUNCTION DESCRIPTIONS</TITLE></HEAD>
+<BODY BGCOLOR="#F5DEB3">
+<FONT SIZE="3">
+
+    <UL>
+    <center><h2>
+        FUNCTIONS
+    </h2></center><PRE>
+<LI><BOLD><A HREF="ICE_body.html#topofpage" TARGET="main">TOP</A></BOLD>
+
+<LI><A HREF="ICE_body.html#Is_it_time_to_write_output" TARGET="main">Is_it_time_to_write_output</A>
+<LI><A HREF="ICE_body.html#Message" TARGET="main">Message</A>
+<LI><A HREF="ICE_body.html#accumulate_energy_source_sinks" TARGET="main">accumulate_energy_source_sinks</A>
+<LI><A HREF="ICE_body.html#accumulate_momentum_source_sinks" TARGET="main">accumulate_momentum_source_sinks</A>
+<LI><A HREF="ICE_body.html#advect_and_advance_in_time" TARGET="main">advect_and_advance_in_time</A>
+<LI><A HREF="ICE_body.html#advect_preprocess" TARGET="main">advect_preprocess</A>
+<LI><A HREF="ICE_body.html#advect_q" TARGET="main">advect_q</A>
+<LI><A HREF="ICE_body.html#calc_flux_or_primitive_vars" TARGET="main">calc_flux_or_primitive_vars</A>
+<LI><A HREF="ICE_body.html#compute_face_centered_velocities" TARGET="main">compute_face_centered_velocities</A>
+<LI><A HREF="ICE_body.html#definition_of_different_physical_boundary_conditions" TARGET="main">definition_of_different_physical_boundary_conditions</A>
+<LI><A HREF="ICE_body.html#divergence_of_face_centered_velocity" TARGET="main">divergence_of_face_centered_velocity</A>
+<LI><A HREF="ICE_body.html#doubleCheckConservationLaws" TARGET="main">doubleCheckConservationLaws</A>
+<LI><A HREF="ICE_body.html#dumpArrayTecplotCC" TARGET="main">dumpArrayTecplotCC</A>
+<LI><A HREF="ICE_body.html#dumpArrayTecplotCC_MM" TARGET="main">dumpArrayTecplotCC_MM</A>
+<LI><A HREF="ICE_body.html#dumpArrayTecplotFC" TARGET="main">dumpArrayTecplotFC</A>
+<LI><A HREF="ICE_body.html#dumpArrayTecplotFC_MM" TARGET="main">dumpArrayTecplotFC_MM</A>
+<LI><A HREF="ICE_body.html#equate_ptr_addresses_adjacent_cell_faces" TARGET="main">equate_ptr_addresses_adjacent_cell_faces</A>
+<LI><A HREF="ICE_body.html#equation_of_state" TARGET="main">equation_of_state</A>
+<LI><A HREF="ICE_body.html#explicit_delPress" TARGET="main">explicit_delPress</A>
+<LI><A HREF="ICE_body.html#find_delta_time_based_on_CC_vel" TARGET="main">find_delta_time_based_on_CC_vel</A>
+<LI><A HREF="ICE_body.html#find_delta_time_based_on_FC_vel" TARGET="main">find_delta_time_based_on_FC_vel</A>
+<LI><A HREF="ICE_body.html#find_delta_time_based_on_on_change_in_vol" TARGET="main">find_delta_time_based_on_on_change_in_vol</A>
+<LI><A HREF="ICE_body.html#find_loop_index_limits_at_domain_edges" TARGET="main">find_loop_index_limits_at_domain_edges</A>
+<LI><A HREF="ICE_body.html#find_q_CC_max_min" TARGET="main">find_q_CC_max_min</A>
+<LI><A HREF="ICE_body.html#find_q_vertex" TARGET="main">find_q_vertex</A>
+<LI><A HREF="ICE_body.html#find_q_vertex" TARGET="main">find_q_vertex</A>
+<LI><A HREF="ICE_body.html#find_q_vertex_max_min" TARGET="main">find_q_vertex_max_min</A>
+<LI><A HREF="ICE_body.html#generateGrid" TARGET="main">generateGrid</A>
+<LI><A HREF="ICE_body.html#grad_FC_Xdir" TARGET="main">grad_FC_Xdir</A>
+<LI><A HREF="ICE_body.html#grad_FC_Ydir" TARGET="main">grad_FC_Ydir</A>
+<LI><A HREF="ICE_body.html#grad_FC_Zdir" TARGET="main">grad_FC_Zdir</A>
+<LI><A HREF="ICE_body.html#grad_q" TARGET="main">grad_q</A>
+<LI><A HREF="ICE_body.html#gradient_limiter" TARGET="main">gradient_limiter</A>
+<LI><A HREF="ICE_body.html#influx_outflux_volume" TARGET="main">influx_outflux_volume</A>
+<LI><A HREF="ICE_body.html#initialize_darray_3d" TARGET="main">initialize_darray_3d</A>
+<LI><A HREF="ICE_body.html#initialize_darray_4d" TARGET="main">initialize_darray_4d</A>
+<LI><A HREF="ICE_body.html#interpolate_to_FC" TARGET="main">interpolate_to_FC</A>
+<LI><A HREF="ICE_body.html#lagrangian_values" TARGET="main">lagrangian_values</A>
+<LI><A HREF="ICE_body.html#lagrangian_vol" TARGET="main">lagrangian_vol</A>
+<LI><A HREF="ICE_body.html#main" TARGET="main">main</A>
+<LI><A HREF="ICE_body.html#neumann_BC_diffenence_formula" TARGET="main">neumann_BC_diffenence_formula</A>
+<LI><A HREF="ICE_body.html#outflow_vol_centroid" TARGET="main">outflow_vol_centroid</A>
+<LI><A HREF="ICE_body.html#plot_2d_scatter" TARGET="main">plot_2d_scatter</A>
+<LI><A HREF="ICE_body.html#plot_color_spectrum" TARGET="main">plot_color_spectrum</A>
+<LI><A HREF="ICE_body.html#plot_contour" TARGET="main">plot_contour</A>
+<LI><A HREF="ICE_body.html#plot_contour_checkerboard" TARGET="main">plot_contour_checkerboard</A>
+<LI><A HREF="ICE_body.html#plot_control" TARGET="main">plot_control</A>
+<LI><A HREF="ICE_body.html#plot_dbl_flt" TARGET="main">plot_dbl_flt</A>
+<LI><A HREF="ICE_body.html#plot_face_centered_data" TARGET="main">plot_face_centered_data</A>
+<LI><A HREF="ICE_body.html#plot_find_cursor_pos" TARGET="main">plot_find_cursor_pos</A>
+<LI><A HREF="ICE_body.html#plot_generate_axis" TARGET="main">plot_generate_axis</A>
+<LI><A HREF="ICE_body.html#plot_legend" TARGET="main">plot_legend</A>
+<LI><A HREF="ICE_body.html#plot_open_window_file" TARGET="main">plot_open_window_file</A>
+<LI><A HREF="ICE_body.html#plot_open_window_screen" TARGET="main">plot_open_window_screen</A>
+<LI><A HREF="ICE_body.html#plot_scaling" TARGET="main">plot_scaling</A>
+<LI><A HREF="ICE_body.html#plot_scaling_CC" TARGET="main">plot_scaling_CC</A>
+<LI><A HREF="ICE_body.html#plot_scaling_FC" TARGET="main">plot_scaling_FC</A>
+<LI><A HREF="ICE_body.html#plot_vector" TARGET="main">plot_vector</A>
+<LI><A HREF="ICE_body.html#press_face" TARGET="main">press_face</A>
+<LI><A HREF="ICE_body.html#printData_1d" TARGET="main">printData_1d</A>
+<LI><A HREF="ICE_body.html#printData_3d" TARGET="main">printData_3d</A>
+<LI><A HREF="ICE_body.html#printData_4d" TARGET="main">printData_4d</A>
+<LI><A HREF="ICE_body.html#printData_5d" TARGET="main">printData_5d</A>
+<LI><A HREF="ICE_body.html#printData_6d" TARGET="main">printData_6d</A>
+<LI><A HREF="ICE_body.html#print_3d_where_computations_have_taken_place" TARGET="main">print_3d_where_computations_have_taken_place</A>
+<LI><A HREF="ICE_body.html#print_4d_where_computations_have_taken_place" TARGET="main">print_4d_where_computations_have_taken_place</A>
+<LI><A HREF="ICE_body.html#print_5d_where_computations_have_taken_place" TARGET="main">print_5d_where_computations_have_taken_place</A>
+<LI><A HREF="ICE_body.html#q_in_flux" TARGET="main">q_in_flux</A>
+<LI><A HREF="ICE_body.html#q_out_flux" TARGET="main">q_out_flux</A>
+<LI><A HREF="ICE_body.html#readInputFile" TARGET="main">readInputFile</A>
+<LI><A HREF="ICE_body.html#readdouble" TARGET="main">readdouble</A>
+<LI><A HREF="ICE_body.html#readfloat" TARGET="main">readfloat</A>
+<LI><A HREF="ICE_body.html#readint" TARGET="main">readint</A>
+<LI><A HREF="ICE_body.html#readstring" TARGET="main">readstring</A>
+<LI><A HREF="ICE_body.html#set_Dirichlet_BC" TARGET="main">set_Dirichlet_BC</A>
+<LI><A HREF="ICE_body.html#set_Dirichlet_BC_FC" TARGET="main">set_Dirichlet_BC_FC</A>
+<LI><A HREF="ICE_body.html#set_Neumann_BC" TARGET="main">set_Neumann_BC</A>
+<LI><A HREF="ICE_body.html#set_Neumann_BC_FC" TARGET="main">set_Neumann_BC_FC</A>
+<LI><A HREF="ICE_body.html#set_Periodic_BC" TARGET="main">set_Periodic_BC</A>
+<LI><A HREF="ICE_body.html#set_corner_cells_BC" TARGET="main">set_corner_cells_BC</A>
+<LI><A HREF="ICE_body.html#shear_stress_Xdir" TARGET="main">shear_stress_Xdir</A>
+<LI><A HREF="ICE_body.html#shear_stress_Ydir" TARGET="main">shear_stress_Ydir</A>
+<LI><A HREF="ICE_body.html#shear_stress_Zdir" TARGET="main">shear_stress_Zdir</A>
+<LI><A HREF="ICE_body.html#speed_of_sound" TARGET="main">speed_of_sound</A>
+<LI><A HREF="ICE_body.html#stopwatch" TARGET="main">stopwatch</A>
+<LI><A HREF="ICE_body.html#tecplot_CC" TARGET="main">tecplot_CC</A>
+<LI><A HREF="ICE_body.html#tecplot_FC" TARGET="main">tecplot_FC</A>
+<LI><A HREF="ICE_body.html#testInputFile" TARGET="main">testInputFile</A>
+<LI><A HREF="ICE_body.html#update_CC_FC_physical_boundary_conditions" TARGET="main">update_CC_FC_physical_boundary_conditions</A>
+<LI><A HREF="ICE_body.html#update_CC_physical_boundary_conditions" TARGET="main">update_CC_physical_boundary_conditions</A>
+<LI><A HREF="ICE_body.html#zero_arrays_3d" TARGET="main">zero_arrays_3d</A>
+<LI><A HREF="ICE_body.html#zero_arrays_4d" TARGET="main">zero_arrays_4d</A>
+<LI><A HREF="ICE_body.html#zero_arrays_5d" TARGET="main">zero_arrays_5d</A>
+<LI><A HREF="ICE_body.html#zero_arrays_6d" TARGET="main">zero_arrays_6d</A>
+</UL>
+</PRE>
+</BODY></HTML>
