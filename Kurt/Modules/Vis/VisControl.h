@@ -31,8 +31,8 @@ LOG
 #define VISCONTROL_H 1
 
 
-#include <Kurt/DataArchive/Archive.h>
-#include <Kurt/DataArchive/ArchivePort.h>
+#include <Uintah/Datatypes/Archive.h>
+#include <Uintah/Datatypes/ArchivePort.h>
 #include <Kurt/DataArchive/VisParticleSetPort.h>
 #include <PSECore/Datatypes/ScalarFieldPort.h>
 #include <PSECore/Datatypes/VectorFieldPort.h>
@@ -58,6 +58,7 @@ using Kurt::Datatypes::VisParticleSet;
 using SCICore::Datatypes::ScalarFieldRGdouble;
 using SCICore::Datatypes::VectorFieldRG;
 using Uintah::DataArchive;
+using namespace Uintah::Datatypes;
 using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;

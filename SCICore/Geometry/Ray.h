@@ -36,11 +36,11 @@ public:
     Vector direction() const;
   Point parameter(double t) const; // returns the Point at parameter t
 			     //  does not pre-normalized direction
-    
   
   void normalize(); // normalizes the direction vector
     void direction(const Vector& newdir);
 };
+
 
 }
 }

@@ -74,11 +74,11 @@ public:
   virtual void drawWireFrame() = 0;
   
   void Reload(){reload = (unsigned char *)1;}
+
   
 protected:
 
   virtual void setAlpha(const Brick& brick) = 0;
-  
   void computeView(Ray&);
   void loadTexture( Brick& brick);
   void makeTextureMatrix(const Brick& brick);

@@ -11,14 +11,11 @@ SRCS     += $(SRCDIR)/GLTextureBuilder.cc  $(SRCDIR)/PadField.cc \
 		$(SRCDIR)/TextureVolVis.cc \
 		$(SRCDIR)/TexCuttingPlanes.cc \
 		$(SRCDIR)/VolVis.cc \
-		$(SRCDIR)/ArchiveReader.cc \
 		$(SRCDIR)/KurtScalarFieldReader.cc \
 		$(SRCDIR)/VisControl.cc \
 		$(SRCDIR)/RescaleColorMapForParticles.cc \
 		$(SRCDIR)/ParticleColorMapKey.cc \
-		$(SRCDIR)/ParticleVis.cc \
-		$(SRCDIR)/GridVisualizer.cc
-
+		$(SRCDIR)/ParticleVis.cc 
 
 
 PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
@@ -26,7 +23,8 @@ PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
         SCICore/TclInterface SCICore/Containers SCICore/Datatypes \
         SCICore/Geom Uintah/Grid Uintah/Interface Uintah/Exceptions \
 	SCICore/Geometry PSECore/Widgets PSECore/XMLUtil \
-	Kurt/Datatypes Kurt/DataArchive Kurt/Geom SCICore/Util
+	Kurt/Datatypes Kurt/DataArchive Kurt/Geom SCICore/Util \
+	Uintah/Datatypes
 
 LIBS := $(XML_LIBRARY) -lm
 
@@ -35,6 +33,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.8  2000/06/21 04:14:16  kuzimmer
+# removed unneeded dependencies on Kurt
+#
 # Revision 1.7  2000/06/15 19:49:39  sparker
 # Link against SCICore/Util
 #

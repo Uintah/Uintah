@@ -81,6 +81,7 @@ public:
   GLVolumeRenderer(const GLVolumeRenderer&);
   ~GLVolumeRenderer();
 
+
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif

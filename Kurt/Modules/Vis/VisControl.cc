@@ -67,6 +67,7 @@ using SCICore::Geometry::BBox;
 using SCICore::Datatypes::VectorFieldRG;
 using SCICore::Datatypes::ScalarFieldRGdouble;
 using namespace Uintah;
+using namespace Uintah::Datatypes;
 
 extern "C" Module* make_VisControl( const clString& id ) {
   return scinew VisControl( id ); 
