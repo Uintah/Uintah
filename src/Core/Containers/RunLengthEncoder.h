@@ -395,7 +395,7 @@ private:
 };
 
 template <class T, class Tdiff>
-Tdiff EqualIntervalSequencer<T, Tdiff>::defaultSequenceRule = Tdiff(0);
+Tdiff EqualIntervalSequencer<T, Tdiff>::defaultSequenceRule(0);
 
 #ifdef __sgi
 #pragma set woff 1375
