@@ -140,12 +140,13 @@ FieldBoundary::execute()
       Handle<ApplyInterpMatrixAlgo> algo;
       if (module_dynamic_compile(ci, algo))
       {
-	algo->execute_aux(input, tri_fh_, interp_mh_);
+	tri_fh_ = algo->execute(input, tri_fh_->mesh(),
+				interp_mh_, tri_fh_->data_at());
       }
     }
   }
 
-  if (interp_mh_.get_rep())
+  if (!(interp_mh_.get_rep()))
   {
     warning("Interpolation for these particular field types and/or locations is not supported, use DirectInterpolate.");
   }
