@@ -44,6 +44,7 @@ namespace Uintah {
       bool d_initEnthalpy;
       std::vector<double> d_rxnVars;
       int d_axialLoc;
+      double d_scalarDisp;
 
     }; // End class InletStream
 
