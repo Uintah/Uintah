@@ -5,7 +5,7 @@
 // Paint-By-Numbers material
 
 #include <Packages/rtrt/Core/Material.h>
-#include <Core/Util/PPMImage.h>
+#include <Packages/rtrt/Core/PPMImage.h>
 #include <vector>
 
 namespace rtrt {
