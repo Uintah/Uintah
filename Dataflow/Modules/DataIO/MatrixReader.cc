@@ -23,7 +23,7 @@ class MatrixReader : public Module {
   GuiString filename_;
   MatrixHandle handle_;
   clString old_filename_;
-  long old_filemodification_;
+  time_t old_filemodification_;
 public:
   MatrixReader(const clString& id);
   virtual ~MatrixReader();
@@ -60,11 +60,16 @@ void MatrixReader::execute()
 
   // If we haven't read yet, or if it's a new filename, 
   //  or if the datestamp has changed -- then read...
+#ifdef __sgi
+  time_t new_filemodification = buf.st_mtim.tv_sec;
+#else
+  time_t new_filemodification = buf.st_mtime;
+#endif
   if(!handle_.get_rep() || 
      fn != old_filename_ || 
-     buf.st_mtim.tv_nsec != old_filemodification_)
+     new_filemodification != old_filemodification_)
   {
-    old_filemodification_=buf.st_mtim.tv_nsec;
+    old_filemodification_ = new_filemodification;
     old_filename_=fn;
     Piostream* stream=auto_istream(fn);
     if(!stream){
