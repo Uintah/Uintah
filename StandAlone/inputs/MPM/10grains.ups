@@ -20,6 +20,11 @@
    <DataArchiver>
         <filebase>10grains.uda</filebase>
         <outputInterval>.005</outputInterval>
+        <save label="KineticEnergy"/>
+        <save label="TotalMass"/>
+        <save label="StrainEnergy"/>
+        <save label="g.mass"/>
+        <save label="g.stressFS"/>
    </DataArchiver>
 
     <MPM>
