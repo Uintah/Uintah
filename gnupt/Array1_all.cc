@@ -95,3 +95,7 @@ static void _fn5_(Piostream& p1, Array1<double>& p2)
     Pio(p1, p2);
 }
 
+static void _fn6_(Piostream& p1, Array1<MaterialHandle>& p2)
+{
+    Pio(p1, p2);
+}
