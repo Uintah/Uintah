@@ -34,8 +34,7 @@ if [ $yesno == "y" -o $yesno == "yes" ]; then
   echo "cp $replacement_dir/$testname/malloc_stats $gold_standard_dir/$testname/."
   cp $replacement_dir/$testname/malloc_stats $gold_standard_dir/$testname/.
   if [ $? != "0" ]; then
-    echo "failed"
-    exit 1
+    echo "No malloc_stats -- ok"
   fi
   echo "cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/$testname/."
   cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/$testname/.
