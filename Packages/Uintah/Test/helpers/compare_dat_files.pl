@@ -9,10 +9,26 @@ $allowable_rel_error = $ARGV[1];
 $uda_dir1 = $ARGV[2];
 $uda_dir2 = $ARGV[3];
 $greatest_rel_error = 0;
-$greatest_error_time1 = 0;
-$greatest_error_time2 = 0;
-$first_significant_error_time1 = 0;
-$first_significant_error_time2 = 0;
+$greatest_abs_error = 0;
+$first_significant_rel_error = 0;
+$first_significant_abs_error = 0;
+$greatest_rel_error_time1 = 0;
+$greatest_rel_error_time2 = 0;
+$greatest_abs_error_time1 = 0;
+$greatest_abs_error_time2 = 0;
+$first_significant_rel_error_time1 = 0;
+$first_significant_rel_error_time2 = 0;
+$first_significant_abs_error_time1 = 0;
+$first_significant_abs_error_time2 = 0;
+
+$greatest_rel_error_value1 = 0;
+$greatest_rel_error_value2 = 0;
+$greatest_abs_error_value1 = 0;
+$greatest_abs_error_value2 = 0;
+$first_significant_rel_error_value1 = 0;
+$first_significant_rel_error_value2 = 0;
+$first_significant_abs_error_value1 = 0;
+$first_significant_abs_error_value2 = 0;
 $failed = 0;
 
 foreach $datfile (@ARGV[4 .. @ARGV-1]) {
@@ -25,7 +41,10 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
 	print "Could not open " . $datfilename2 . "\n";
     }
     print "Comparing " . $datfile . "... ";
-    $has_significant_error = 0;
+    $has_significant_rel_error = 0;
+    $has_significant_abs_error = 0;
+    $greatest_rel_error = 0;
+    $greatest_abs_error = 0;
     
     while (($line1 = <IN1>) && ($line2 = <IN2>)) {
 	($time1, @values1) = getTimeAndValue($line1);
@@ -44,33 +63,84 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
 		$max_abs = abs($value2);
 	    }
 	    if ($max_abs != 0) {
-		if (abs($value1 - $value2) > $allowable_abs_error) {
-		    $rel_error = abs($value1 - $value2) / $max_abs;
-		}
-		if ($rel_error > $greatest_rel_error) {
-		    $greatest_rel_error = $rel_error;
-		    $greatest_error_time1 = $time1;
-		    $greatest_error_time2 = $time2;
-		    if ($has_significant_error == 0 && \ 
-			$rel_error > $allowable_rel_error) {
-			$first_significant_error_time1 = $time1;
-			$first_significant_error_time2 = $time2;
-			$has_significant_error = 1;
+                # do absolute comparisons
+                $abs_error = abs($value1 - $value2);
+		if ($abs_error > $allowable_abs_error) {
+		    if ($has_significant_abs_error == 0) { 
+                        $first_significant_abs_error = $abs_error;
+			$first_significant_abs_error_time1 = $time1;
+			$first_significant_abs_error_time2 = $time2;
+			$first_significant_abs_error_value1 = $value1;
+			$first_significant_abs_error_value2 = $value2;
+			$has_significant_abs_error = 1;
 		    }
+                    if ($abs_error > $greatest_abs_error) {
+                        $greatest_abs_error = $abs_error;
+                        $greatest_abs_error_time1 = $time1;
+                        $greatest_abs_error_time2 = $time2;
+                        $greatest_abs_error_value1 = $value1;
+                        $greatest_abs_error_value2 = $value2;
+                    }
+		}
+
+                # do relative comparisons
+                $rel_error = abs($value1 - $value2) / $max_abs;
+                if ($rel_error > $allowable_rel_error) {
+		    if ($has_significant_rel_error == 0) { 
+                        $first_significant_rel_error = $rel_error;
+			$first_significant_rel_error_time1 = $time1;
+			$first_significant_rel_error_time2 = $time2;
+			$first_significant_rel_error_value1 = $value1;
+			$first_significant_rel_error_value2 = $value2;
+			$has_significant_rel_error = 1;
+		    }
+                    if ($rel_error > $greatest_rel_error) {
+                        $greatest_rel_error = $rel_error;
+                        $greatest_rel_error_time1 = $time1;
+                        $greatest_rel_error_time2 = $time2;
+                        $greatest_rel_error_value1 = $value1;
+                        $greatest_rel_error_value2 = $value2;
+                    }
 		}
 	    }
 	}
     }
 
-    if ($has_significant_error != 0) {
+    if ($has_significant_rel_error != 0 || $has_significant_abs_error != 0) {
 	print "*** failed\n";
-	print "\tgreatest relative error: %" . $greatest_rel_error * 100;
-	print "\n\tat times: " . $greatest_error_time1 . " / ";
-	print $greatest_error_time2 . "\n\tand first signifant error at: ";
-	print $first_significant_error_time1 . " / ";
-	print $first_significant_error_time2 . "\n";
-	print "\nThe following is the suggested command to compare these files:\n";
+        if ($has_significant_rel_error != 0) {
+            print "\tgreatest relative error: %" . $greatest_rel_error * 100;
+            print "\n\tat times: " . $greatest_rel_error_time1 . " / ";
+            print $greatest_rel_error_time2 . "\n";
+            print "\tvalues: " . $greatest_rel_error_value1 . " / ";
+            print $greatest_rel_error_value2 . "\n";
 
+            if ($greatest_rel_error != $first_significant_rel_error) {
+                print "\tand first signifant relative error: %" . $first_significant_rel_error * 100 . "\n";
+                print "\tat times: " . $first_significant_rel_error_time1 . " / ";
+                print $first_significant_rel_error_time2 . "\n";
+                
+                print "\tvalues: " . $first_significant_rel_error_value1 . " / ";
+                print $first_significant_rel_error_value2 . "\n";
+            }
+        }
+        if ($has_significant_abs_error != 0) {
+            print "\n\tgreatest absolute error: %" . $greatest_abs_error * 100;
+            print "\n\tat times: " . $greatest_abs_error_time1 . " / ";
+            print $greatest_abs_error_time2 . "\n";
+            print "\tvalues: " . $greatest_abs_error_value1 . " / ";
+            print $greatest_abs_error_value2 . "\n";
+
+            if ($greatest_abs_error != $first_significant_abs_error) {
+                print "\tand first signifant absolute error: %" . $first_significant_abs_error * 100 . "\n";
+                print "\tat times: " . $first_significant_abs_error_time1 . " / ";
+                print $first_significant_abs_error_time2 . "\n";
+                
+                print "\tvalues: " . $first_significant_abs_error_value1 . " / ";
+                print $first_significant_abs_error_value2 . "\n";
+            }
+        }
+        print "\nThe following is the suggested command to compare these files:\n";
 	print "xdiff\\\n" . $datfilename1 . "\\\n" . $datfilename2 . "\n\n";
 	$failed = 1;
     }
