@@ -7,7 +7,6 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/BoundCondData.h>
 
-#include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Math/MiscMath.h>
 
@@ -513,7 +512,7 @@ IntVector Patch::getInteriorNodeLowIndex() const {
     return d_inLowIndex;
 }
 
- IntVector Patch::getInteriorNodeHighIndex() const {
+IntVector Patch::getInteriorNodeHighIndex() const {
    IntVector hi = d_inHighIndex;
    hi +=IntVector(getBCType(xplus) == Neighbor?0:1,
                   getBCType(yplus) == Neighbor?0:1,
@@ -617,76 +616,73 @@ IntVector Patch::getCellFORTHighIndex() const
 
 }
 
+IntVector Patch::getGhostCellLowIndex(int numGC) const
+{
+  return d_lowIndex - IntVector(d_bctypes[xminus] == Neighbor?numGC:0,
+				d_bctypes[yminus] == Neighbor?numGC:0,
+				d_bctypes[zminus] == Neighbor?numGC:0);
 
-// numGC = number of ghost cells
-IntVector Patch::getGhostCellLowIndex(const int numGC) const
-{  IntVector h(d_lowIndex-
-	       IntVector(getBCType(xminus) == Neighbor?numGC:0,
-			 getBCType(yminus) == Neighbor?numGC:0,
-			 getBCType(zminus) == Neighbor?numGC:0));
-   return h;
 }
 
-IntVector Patch::getGhostCellHighIndex(const int numGC) const
-{  IntVector h(d_highIndex+
-	       IntVector(getBCType(xplus) == Neighbor?numGC:0,
-			 getBCType(yplus) == Neighbor?numGC:0,
-			 getBCType(zplus) == Neighbor?numGC:0));
-   return h;
+IntVector Patch::getGhostCellHighIndex(int numGC) const
+{
+  return d_highIndex + IntVector(d_bctypes[xplus] == Neighbor?numGC:0,
+				 d_bctypes[yplus] == Neighbor?numGC:0,
+				 d_bctypes[zplus] == Neighbor?numGC:0);
 }
 
-// numGC = number of ghost cells
-IntVector Patch::getGhostSFCXLowIndex(const int numGC) const
-{  IntVector h(d_lowIndex-
-	       IntVector(getBCType(xminus) == Neighbor?numGC:0,
-			 getBCType(yminus) == Neighbor?numGC:0,
-			 getBCType(zminus) == Neighbor?numGC:0));
-   return h;
+void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
+			    int numGhostCells,
+			    IntVector& lowOffset, IntVector& highOffset)
+{
+  // This stuff works by assuming there are no neighbors.  If there are
+  // neighbors, it can simply cut back appropriately later (no neighbor
+  // essentially means no ghost cell on that side).
+  IntVector g(numGhostCells, numGhostCells, numGhostCells);
+  if (numGhostCells == 0) {
+    lowOffset = highOffset = IntVector(0, 0, 0);
+    return;
+  }
+  else if (gtype == Ghost::None)
+    throw InternalError("ghost cells should not be specified with Ghost::None");
+
+  if (basis == CellBased) {
+    if (gtype == Ghost::AroundCells) {
+      // Cells around cells
+      lowOffset = highOffset = g;
+    }
+    else {
+      // cells around nodes/faces
+      IntVector aroundDir = Ghost::getGhostTypeDir(gtype);
+      lowOffset = g * aroundDir;
+      highOffset = lowOffset - aroundDir;
+    }
+  }
+  else {
+    // node or face based
+    IntVector dir = Ghost::getGhostTypeDir((Ghost::GhostType)basis);
+    if (gtype == Ghost::AroundCells) {
+      // Nodes/faces around cells
+      lowOffset = g - IntVector(1, 1, 1);
+      highOffset = lowOffset + dir; // I think this is the right way
+    }
+    else if (basis == gtype) {
+      // nodes around nodes or faces around faces
+      lowOffset = highOffset = g * dir; 
+    }
+    else {
+      string basisName = Ghost::getGhostTypeName((Ghost::GhostType)basis);
+      string ghostTypeName = Ghost::getGhostTypeName(gtype);
+      throw InternalError(basisName + " around " + ghostTypeName + " not supported for ghost offsets");
+    }
+  }
+
+  ASSERT(lowOffset[0] >= 0 && lowOffset[1] >= 0 && lowOffset[2] >= 0 &&
+	 highOffset[0] >= 0 && highOffset[2] >= 0 && highOffset[2] >= 0); 
 }
 
-IntVector Patch::getGhostSFCXHighIndex(const int numGC) const
-{  IntVector h(d_highIndex+
-	       IntVector(getBCType(xplus) == Neighbor?numGC:1,
-			 getBCType(yplus) == Neighbor?numGC:0,
-			 getBCType(zplus) == Neighbor?numGC:0));
-   return h;
-}
-
-// numGC = number of ghost cells
-IntVector Patch::getGhostSFCYLowIndex(const int numGC) const
-{  IntVector h(d_lowIndex-
-	       IntVector(getBCType(xminus) == Neighbor?numGC:0,
-			 getBCType(yminus) == Neighbor?numGC:0,
-			 getBCType(zminus) == Neighbor?numGC:0));
-   return h;
-}
-
-IntVector Patch::getGhostSFCYHighIndex(const int numGC) const
-{  IntVector h(d_highIndex+
-	       IntVector(getBCType(xplus) == Neighbor?numGC:0,
-			 getBCType(yplus) == Neighbor?numGC:1,
-			 getBCType(zplus) == Neighbor?numGC:0));
-   return h;
-}
-
-// numGC = number of ghost cells
-IntVector Patch::getGhostSFCZLowIndex(const int numGC) const
-{  IntVector h(d_lowIndex-
-	       IntVector(getBCType(xminus) == Neighbor?numGC:0,
-			 getBCType(yminus) == Neighbor?numGC:0,
-			 getBCType(zminus) == Neighbor?numGC:0));
-   return h;
-}
-
-IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
-{  IntVector h(d_highIndex+
-	       IntVector(getBCType(xplus) == Neighbor?numGC:0,
-			 getBCType(yplus) == Neighbor?numGC:0,
-			 getBCType(zplus) == Neighbor?numGC:1));
-   return h;
-}
-
-void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
+#if 0
+void Patch::computeVariableExtents2(VariableBasis basis, Ghost::GhostType gtype,
 				   int numGhostCells,
 				   Level::selectType& neighbors,
 				   IntVector& low, IntVector& high) const
@@ -895,41 +891,88 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
     high=h;
     d_level->selectPatches(low, high, neighbors);
 }
+#endif
 
-void Patch::computeVariableExtents(TypeDescription::Type basis,
-				   Ghost::GhostType gtype,
+void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
+				   int numGhostCells,
+				   IntVector& low, IntVector& high) const
+{
+  IntVector lowOffset, highOffset;
+  getGhostOffsets(basis, gtype, numGhostCells, lowOffset, highOffset);
+  computeExtents(basis, lowOffset, highOffset, low, high);
+}
+
+void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 				   int numGhostCells,
 				   Level::selectType& neighbors,
 				   IntVector& low, IntVector& high) const
 {
-  VariableBasis translation;
-  switch(basis){
-  case TypeDescription::CCVariable:
-    translation=CellFaceBased;
-    break;
-  case TypeDescription::NCVariable:
-    translation=NodeBased;
-    break;
-  case TypeDescription::SFCXVariable:
-    translation=XFaceBased;
-    break;
-  case TypeDescription::SFCYVariable:
-    translation=YFaceBased;
-    break;
-  case TypeDescription::SFCZVariable:
-    translation=ZFaceBased;
-    break;
-  case TypeDescription::ParticleVariable:
-    translation=CellBased;
-    break;
-  default:
-    if(gtype == Ghost::None)
-      translation=CellBased;  // Shouldn't matter what it is
-    else
-      throw InternalError("Unknown variable type in Patch::getVariableExtents (from TypeDescription::Type)");
+  IntVector lowOffset, highOffset;
+  getGhostOffsets(basis, gtype, numGhostCells, lowOffset, highOffset);
+  computeExtents(basis, lowOffset, highOffset, low, high);
+  d_level->selectPatches(low, high, neighbors);
+#if 0
+  IntVector low2;
+  IntVector high2;
+  Level::selectType neighbors2;
+  computeVariableExtents2(basis, gtype, numGhostCells, neighbors2, low2, high2);
+  ASSERT(low == low2);
+  ASSERT(high == high2);
+#endif
+}
+
+
+void Patch::computeExtents(VariableBasis basis, const IntVector& lowOffset,
+			   const IntVector& highOffset,
+			   IntVector& low, IntVector& high) const
+
+{
+  ASSERT(lowOffset[0] >= 0 && lowOffset[1] >= 0 && lowOffset[2] >= 0 &&
+	 highOffset[0] >= 0 && highOffset[2] >= 0 && highOffset[2] >= 0);
+  
+  IntVector origLowIndex = getLowIndex(basis);
+  IntVector origHighIndex = getHighIndex(basis);
+  low = origLowIndex - lowOffset;
+  high = origHighIndex + highOffset;
+
+  for (int i = 0; i < 3; i++) {
+    FaceType faceType = (FaceType)(2 * i); // x, y, or z minus
+    if (getBCType(faceType) != Neighbor) {
+      // no neighbor -- use original low index for that side
+      low[i] = origLowIndex[i];
+    }
+    
+    faceType = (FaceType)(faceType + 1); // x, y, or z plus
+    if (getBCType(faceType) != Neighbor) {
+      // no neighbor -- use original high index for that side
+      high[i] = origHighIndex[i];
+    }
   }
-  computeVariableExtents(translation, gtype, numGhostCells,
-			 neighbors, low, high);
+}
+  
+
+Patch::VariableBasis Patch::translateTypeToBasis(TypeDescription::Type type,
+						 bool mustExist)
+{
+  switch(type){
+  case TypeDescription::CCVariable:
+    return CellBased;
+  case TypeDescription::NCVariable:
+    return NodeBased;
+  case TypeDescription::SFCXVariable:
+    return XFaceBased;
+  case TypeDescription::SFCYVariable:
+    return YFaceBased;
+  case TypeDescription::SFCZVariable:
+    return ZFaceBased;
+  case TypeDescription::ParticleVariable:
+    return CellBased;
+  default:
+    if (mustExist)
+      throw InternalError("Unknown variable type in Patch::getVariableExtents (from TypeDescription::Type)");
+    else
+      return CellBased; // doesn't matter
+  }
 }
 
 void Patch::setLayoutHint(const IntVector& pos)
@@ -945,8 +988,6 @@ bool Patch::getLayoutHint(IntVector& pos) const
   return have_layout;
 }
 
-
-Box Patch::getBox() const
-{
+Box Patch::getBox() const {
   return d_level->getBox(d_lowIndex, d_highIndex);
 }

@@ -1,6 +1,9 @@
 #ifndef UINTAH_HOMEBREW_Ghost_H
 #define UINTAH_HOMEBREW_Ghost_H
 
+#include <Core/Util/Assert.h>
+#include <Core/Geometry/IntVector.h>
+
 namespace Uintah {
    /**************************************
      
@@ -30,7 +33,9 @@ namespace Uintah {
      WARNING
       
      ****************************************/
-    
+
+using namespace SCIRun;
+
    class Ghost {
    public:
       enum GhostType {
@@ -40,14 +45,30 @@ namespace Uintah {
 	 AroundXFaces,
 	 AroundYFaces,
 	 AroundZFaces,
-	 AroundAllFaces
+	 AroundAllFaces,
+	 numGhostTypes // 7
       };
-      
+
+     static IntVector getGhostTypeDir(Ghost::GhostType gtype)
+     {
+       int index = (int)gtype;
+       CHECKARRAYBOUNDS(index, 0, numGhostTypes);
+       return directions[index];
+     }
+
+     static string getGhostTypeName(Ghost::GhostType gtype)
+     {
+       int index = (int)gtype;
+       CHECKARRAYBOUNDS(index, 0, numGhostTypes);
+       return names[index];
+     }
    private:
       Ghost();
       Ghost(const Ghost&);
       Ghost& operator=(const Ghost&);
-      
+
+     static IntVector directions[numGhostTypes];
+     static string names[numGhostTypes];
 #ifdef __GNUG__
    public:
       // Keep gcc quiet, to avoid:
