@@ -156,7 +156,7 @@ PIDL::getIntraComm()
     return (new IntraCommMPI());
   }
 }
-void
+bool
 PIDL::isNexus(){
   return comm_type==COMM_NEXUS;
 }
