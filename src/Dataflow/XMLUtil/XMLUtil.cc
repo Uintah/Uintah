@@ -21,7 +21,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-#include <dom/DOM_NamedNodeMap.hpp>
+#include <xercesc/dom/DOMNamedNodeMap.hpp>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -36,98 +36,91 @@ static void postMessage(const string& errmsg)
     cerr << errmsg << '\n';
 }
 
-DOM_Node findNode(const std::string &name,DOM_Node node)
+const DOMNode* findNode(const std::string &name, const DOMNode *node)
 {
-  // Convert string name to a DOMString;
+  // Convert string name to a DOMText;
   
-  DOMString search_name(name.c_str());
+  const XMLCh *search_name = to_xml_ch_ptr(name.c_str());
   // Do the child nodes now
-  DOM_Node child = node.getFirstChild();
+  const DOMNode *child = node->getFirstChild();
   while (child != 0) {
-    DOMString child_name = child.getNodeName();
-    char *s = child_name.transcode();
-    std::string c_name(s);
-    delete[] s;
-    if (search_name.equals(child_name) ) {
+    if (XMLString::compareString(search_name, child->getNodeName()) == 0) {
       return child;
     }
-    //DOM_Node tmp = findNode(name,child);
-    child = child.getNextSibling();
+    child = child->getNextSibling();
   }
-  
-  DOM_Node unknown;
-  return unknown;
+  return 0;
 }
 
-DOM_Node findNextNode(const std::string& name, DOM_Node node)
-{
-  // Iterate through all of the child nodes that have this name
-  DOM_Node found_node = node.getNextSibling();
+// DOMNode findNextNode(const std::string& name, DOMNode node)
+// {
+//   // Iterate through all of the child nodes that have this name
+//   DOMNode found_node = node.getNextSibling();
 
-  DOMString search_name(name.c_str());
-  while(found_node != 0){
-    DOMString node_name = found_node.getNodeName();
-    if (search_name.equals(node_name) ) {
-      break;
-    }
-    found_node = found_node.getNextSibling();
-  }
-  return found_node;
-}
+//   DOMText search_name(name.c_str());
+//   while(found_node != 0){
+//     DOMText node_name = found_node.getNodeName();
+//     if (search_name.equals(node_name) ) {
+//       break;
+//     }
+//     found_node = found_node.getNextSibling();
+//   }
+//   return found_node;
+// }
 
 
-DOM_Node findTextNode(DOM_Node node)
-{
-   for (DOM_Node child = node.getFirstChild(); child != 0;
-	child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	 return child;
-      }
-   }
-  DOM_Node unknown;
-  return unknown;   
-}
+// DOMNode findTextNode(DOMNode node)
+// {
+//    for (DOMNode child = node.getFirstChild(); child != 0;
+// 	child = child.getNextSibling()) {
+//       if (child.getNodeType() == DOMNode::TEXT_NODE) {
+// 	 return child;
+//       }
+//    }
+//   DOMNode unknown;
+//   return unknown;   
+// }
 
-string toString(const XMLCh* const str)
-{
-    char* s = XMLString::transcode(str);
-    if(!s)
-       return "";
-    string ret = string(s);
-    delete[] s;
-    return ret;
-}
+// string toString(const XMLCh* const str)
+// {
+//     char* s = XMLString::transcode(str);
+//     if(!s)
+//        return "";
+//     string ret = string(s);
+//     delete[] s;
+//     return ret;
+// }
 
-string toString(const DOMString& str)
-{
-    char* s = str.transcode();
-    if(!s)
-       return "";
-    string ret = string(s);
-    delete[] s;
-    return ret;
-}
+// string toString(const DOMText* str)
+// {
+//     char* s = str.transcode();
+//     if(!s)
+//        return "";
+//     string ret = string(s);
+//     delete[] s;
+//     return ret;
+// }
 
 // ---------------------------------------------------------------------------
-//  ostream << DOM_Node   
+//  ostream << DOMNode   
 //                Stream out a DOM node, and, recursively, all of its children.
 //                This function is the heart of writing a DOM tree out as
 //                XML source.  Give it a document node and it will do the whole thing.
 // ---------------------------------------------------------------------------
-ostream& operator<<(ostream& target, const DOM_Node& toWrite)
+ostream& operator<<(ostream& target, const DOMNode* toWrite)
 {
    // Get the name and value out for convenience
-   DOMString   nodeName = toWrite.getNodeName();
-   DOMString   nodeValue = toWrite.getNodeValue();
+   const XMLCh *nodeName = toWrite->getNodeName();
+   const XMLCh *nodeValue = toWrite->getNodeValue();
    
-   switch (toWrite.getNodeType()) {
-   case DOM_Node::TEXT_NODE:
+   switch (toWrite->getNodeType()) {
+   case DOMNode::TEXT_NODE:
       {
 	 outputContent(target, nodeValue);
 	 break;
       }
    
-   case DOM_Node::PROCESSING_INSTRUCTION_NODE :
+   case DOMNode::PROCESSING_INSTRUCTION_NODE :
       {
 	 target  << "<?"
 		 << nodeName
@@ -137,50 +130,51 @@ ostream& operator<<(ostream& target, const DOM_Node& toWrite)
 	 break;
       }
    
-   case DOM_Node::DOCUMENT_NODE :
+   case DOMNode::DOCUMENT_NODE :
       {
 	 // Bug here:  we need to find a way to get the encoding name
 	 //   for the default code page on the system where the
 	 //   program is running, and plug that in for the encoding
 	 //   name.  
-	 target << "<?xml version='1.0' encoding='ISO-8859-1' ?>\n";
-	 DOM_Node child = toWrite.getFirstChild();
-	 while( child != 0)
-            {
-	       target << child << endl;
-	       child = child.getNextSibling();
-            }
-	 
-	 break;
+	//MLCh *enc_name = XMLPlatformUtils::fgTransService->getEncodingName();
+	target << "<?xml version='1.0' encoding='ISO-8859-1' ?>\n";
+	DOMNode *child = toWrite->getFirstChild();
+	while(child != 0)
+	{
+	  target << child << endl;
+	  child = child->getNextSibling();
+	}
+	
+	break;
       }
    
-   case DOM_Node::ELEMENT_NODE :
+   case DOMNode::ELEMENT_NODE :
       {
 	 // Output the element start tag.
 	 target << '<' << nodeName;
 	 
 	 // Output any attributes on this element
-	 DOM_NamedNodeMap attributes = toWrite.getAttributes();
-	 int attrCount = attributes.getLength();
+	 DOMNamedNodeMap *attributes = toWrite->getAttributes();
+	 int attrCount = attributes->getLength();
 	 for (int i = 0; i < attrCount; i++) {
-	    DOM_Node  attribute = attributes.item(i);
+	    DOMNode  *attribute = attributes->item(i);
 	    
-	    target  << ' ' << attribute.getNodeName()
+	    target  << ' ' << attribute->getNodeName()
 		    << " = \"";
 	    //  Note that "<" must be escaped in attribute values.
-	    outputContent(target, attribute.getNodeValue());
+	    outputContent(target, attribute->getNodeValue());
 	    target << '"';
 	 }
 	 
 	 //  Test for the presence of children, which includes both
 	 //  text content and nested elements.
-	 DOM_Node child = toWrite.getFirstChild();
+	 DOMNode *child = toWrite->getFirstChild();
 	 if (child != 0) {
 	    // There are children. Close start-tag, and output children.
 	    target << ">";
-	    while( child != 0) {
+	    while(child != 0) {
 	       target << child;
-	       child = child.getNextSibling();
+	       child = child->getNextSibling();
 	    }
 
 	    // Done with children.  Output the end tag.
@@ -193,21 +187,22 @@ ostream& operator<<(ostream& target, const DOM_Node& toWrite)
 	 break;
       }
    
-   case DOM_Node::ENTITY_REFERENCE_NODE:
+   case DOMNode::ENTITY_REFERENCE_NODE:
       {
-	 DOM_Node child;
-	 for (child = toWrite.getFirstChild(); child != 0; child = child.getNextSibling())
+	 DOMNode *child;
+	 for (child = toWrite->getFirstChild(); child != 0; 
+	      child = child->getNextSibling())
 	    target << child;
 	 break;
       }
    
-   case DOM_Node::CDATA_SECTION_NODE:
+   case DOMNode::CDATA_SECTION_NODE:
       {
 	 target << "<![CDATA[" << nodeValue << "]]>";
 	 break;
       }
    
-   case DOM_Node::COMMENT_NODE:
+   case DOMNode::COMMENT_NODE:
       {
 	 target << "<!--" << nodeValue << "-->";
 	 break;
@@ -215,78 +210,79 @@ ostream& operator<<(ostream& target, const DOM_Node& toWrite)
    
    default:
       cerr << "Unrecognized node type = "
-	   << (long)toWrite.getNodeType() << endl;
+	   << (long)toWrite->getNodeType() << endl;
    }
    return target;
 }
 
 
 // ---------------------------------------------------------------------------
-//  outputContent  - Write document content from a DOMString to a C++ ostream.
+//  outputContent  - Write document content from a DOMCh* to a C++ ostream.
 //                   Escape the XML special characters (<, &, etc.) unless this
 //                   is suppressed by the command line option.
 // ---------------------------------------------------------------------------
-void outputContent(ostream& target, const DOMString &toWrite)
+void outputContent(ostream& target, const XMLCh *to_write)
 {
-   int            length = toWrite.length();
-   const XMLCh*   chars  = toWrite.rawBuffer();
-   
-   int index;
-   for (index = 0; index < length; index++) {
-      switch (chars[index]) {
-      case chAmpersand :
-	 target << "&amp;";
-	 break;
+  const char* chars = strdup(to_char_ptr(to_write));
+  for (unsigned int index = 0; index < strlen(chars); index++) {
+    switch (chars[index]) {
+    case chAmpersand :
+      target << "&amp;";
+      break;
+      
+    case chOpenAngle :
+      target << "&lt;";
+      break;
 	 
-      case chOpenAngle :
-	 target << "&lt;";
-	 break;
+    case chCloseAngle:
+      target << "&gt;";
+      break;
 	 
-      case chCloseAngle:
-	 target << "&gt;";
-	 break;
+    case chDoubleQuote :
+      target << "&quot;";
+      break;
 	 
-      case chDoubleQuote :
-	 target << "&quot;";
-	 break;
-	 
-      default:
-	 // If it is none of the special characters, print it as such
-	 target << toWrite.substringData(index, 1);
-	 break;
-      }
-   }
+    default:
+      // If it is none of the special characters, print it as such
+      target << chars[index];
+      break;
+    }
+  }
+  delete[] chars;
 }
 
 
 // ---------------------------------------------------------------------------
-//  ostream << DOMString    Stream out a DOM string.
+//  ostream << DOMText    Stream out a DOM string.
 //                          Doing this requires that we first transcode
 //                          to char * form in the default code page
 //                          for the system
 // ---------------------------------------------------------------------------
-ostream& operator<<(ostream& target, const DOMString& s)
+ostream& operator<<(ostream& target, const DOMText* s)
 {
-   char *p = s.transcode();
+   const char *p = to_char_ptr(s->getData());
    target << p;
-   delete [] p;
    return target;
 }
 
-void appendElement(DOM_Element& root, const DOMString& name,
+void appendElement(DOMElement* root, const DOMText* name,
 		   const std::string& value)
 {
-   DOM_Text leader = root.getOwnerDocument().createTextNode("\n\t");
-   root.appendChild(leader);
-   DOM_Element newElem = root.getOwnerDocument().createElement(name);
-   root.appendChild(newElem);
-   DOM_Text newVal = root.getOwnerDocument().createTextNode(value.c_str());
-   newElem.appendChild(newVal);
-   DOM_Text trailer = root.getOwnerDocument().createTextNode("\n");
-   root.appendChild(trailer);
+   DOMText *leader = 
+     root->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\n\t"));
+   root->appendChild(leader);
+   DOMElement *newElem = 
+     root->getOwnerDocument()->createElement(name->getData());
+   root->appendChild(newElem);
+   DOMText *newVal = 
+     root->getOwnerDocument()->createTextNode(to_xml_ch_ptr(value.c_str()));
+   newElem->appendChild(newVal);
+   DOMText *trailer = 
+     root->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\n"));
+   root->appendChild(trailer);
 }
       
-void appendElement(DOM_Element& root, const DOMString& name,
+void appendElement(DOMElement* root, const DOMText* name,
 		   int value)
 {
    ostringstream val;
@@ -294,7 +290,7 @@ void appendElement(DOM_Element& root, const DOMString& name,
    appendElement(root, name, val.str());
 }
       
-void appendElement(DOM_Element& root, const DOMString& name,
+void appendElement(DOMElement* root, const DOMText* name,
 		   const IntVector& value)
 {
    ostringstream val;
@@ -302,7 +298,7 @@ void appendElement(DOM_Element& root, const DOMString& name,
    appendElement(root, name, val.str());
 }
       
-void appendElement(DOM_Element& root, const DOMString& name,
+void appendElement(DOMElement* root, const DOMText* name,
 		   const Point& value)
 {
    ostringstream val;
@@ -310,7 +306,7 @@ void appendElement(DOM_Element& root, const DOMString& name,
    appendElement(root, name, val.str());
 }
       
-void appendElement(DOM_Element& root, const DOMString& name,
+void appendElement(DOMElement* root, const DOMText* name,
 		   const Vector& value)
 {
    ostringstream val;
@@ -318,7 +314,7 @@ void appendElement(DOM_Element& root, const DOMString& name,
    appendElement(root, name, val.str());
 }
       
-void appendElement(DOM_Element& root, const DOMString& name,
+void appendElement(DOMElement* root, const DOMText* name,
 		   long value)
 {
    ostringstream val;
@@ -326,7 +322,7 @@ void appendElement(DOM_Element& root, const DOMString& name,
    appendElement(root, name, val.str());
 }
       
-void appendElement(DOM_Element& root, const DOMString& name,
+void appendElement(DOMElement* root, const DOMText* name,
 		   double value)
 {
    ostringstream val;
@@ -334,106 +330,96 @@ void appendElement(DOM_Element& root, const DOMString& name,
    appendElement(root, name, val.str());
 }
       
-bool get(const DOM_Node& node, int &value)
+bool get(const DOMNode* node, int &value)
 {
-   for (DOM_Node child = node.getFirstChild(); child != 0;
-	child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	 DOMString val = child.getNodeValue();
-	 char* s = val.transcode();
+   for (DOMNode *child = node->getFirstChild(); child != 0;
+	child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	 const char* s = to_char_ptr(child->getNodeValue());
 	 value = atoi(s);
-	 delete[] s;
 	 return true;
       }
    }
    return false;
 }
 
-bool get(const DOM_Node& node,
-		const std::string& name, int &value)
+bool 
+get(const DOMNode* node, const std::string& name, int &value)
 {
-   DOM_Node found_node = findNode(name, node);
-   if(found_node.isNull())
-      return false;
+   const DOMNode *found_node = findNode(name, node);
+   if(!found_node)
+     return false;
    return get(found_node, value);
 }
 
-bool get(const DOM_Node& node, long &value)
+bool get(const DOMNode* node, long &value)
 {
-   for (DOM_Node child = node.getFirstChild(); child != 0;
-	child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	 DOMString val = child.getNodeValue();
-	 char* s = val.transcode();
+   for (DOMNode *child = node->getFirstChild(); child != 0;
+	child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	 const char *s = to_char_ptr(child->getNodeValue());
 	 value = atoi(s);
-	 delete[] s;
 	 return true;
       }
    }
    return false;
 }
 
-bool get(const DOM_Node& node,
-		const std::string& name, long &value)
+bool 
+get(const DOMNode* node, const std::string& name, long &value)
 {
-   DOM_Node found_node = findNode(name, node);
-   if(found_node.isNull())
+   const DOMNode *found_node = findNode(name, node);
+   if(!found_node)
       return false;
    return get(found_node, value);
 }
 
-bool get(const DOM_Node& node,
-		const std::string& name, double &value)
+bool 
+get(const DOMNode* node, const std::string& name, double &value)
 {
-   DOM_Node found_node = findNode(name, node);
-   if(found_node.isNull())
+   const DOMNode *found_node = findNode(name, node);
+   if(!found_node)
       return false;
-   for (DOM_Node child = found_node.getFirstChild(); child != 0;
-	child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	 DOMString val = child.getNodeValue();
-	 char* s = val.transcode();
+   for (DOMNode *child = found_node->getFirstChild(); child != 0;
+	child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	 const char* s = to_char_ptr(child->getNodeValue());
 	 value = atof(s);
-	 delete[] s;
 	 return true;
       }
    }
    return false;
 }
 
-bool get(const DOM_Node& node,
-		const std::string& name, std::string &value)
+bool 
+get(const DOMNode* node, const std::string& name, std::string &value)
 {
-   DOM_Node found_node = findNode(name, node);
-   if(found_node.isNull())
+   const DOMNode *found_node = findNode(name, node);
+   if(!found_node)
       return false;
-   for (DOM_Node child = found_node.getFirstChild(); child != 0;
-	child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	 DOMString val = child.getNodeValue();
-	 char *s = val.transcode();
+   for (DOMNode *child = found_node->getFirstChild(); child != 0;
+	child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	 const char* s = to_char_ptr(child->getNodeValue());
 	 value = std::string(s);
-	 delete[] s;
 	 return true;
       }
    }
    return false;
 }
 
-bool get(const DOM_Node& node,
-		const std::string& name, 
-		Vector& value)
+bool 
+get(const DOMNode* node, const std::string& name, Vector& value)
 {
-   DOM_Node found_node = findNode(name, node);
-   if(found_node.isNull())
+   const DOMNode *found_node = findNode(name, node);
+   if(!found_node)
       return false;
-   for (DOM_Node child = found_node.getFirstChild(); child != 0;
-	child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	 DOMString val = child.getNodeValue();
-	 char *s = val.transcode();
+   for (DOMNode *child = found_node->getFirstChild(); child != 0;
+	child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	 const char* s = to_char_ptr(child->getNodeValue());
 	 string string_value = std::string(s);
-	 delete[] s;
+	 
 	 // Parse out the [num,num,num]
 	 // Now pull apart the string_value
 	 std::string::size_type i1 = string_value.find("[");
@@ -454,30 +440,27 @@ bool get(const DOM_Node& node,
    return false;
 }
 
-bool get(const DOM_Node& node,
-		const std::string& name, 
-		Point& value)
+bool 
+get(const DOMNode* node, const std::string& name, Point& value)
 {
    Vector v;
-   bool status=get(node, name, v);
+   bool status = get(node, name, v);
    value=Point(v);
    return status;
 }
 
-bool get(const DOM_Node& node,
-		const std::string& name, 
-		IntVector &value)
+bool 
+get(const DOMNode* node, const std::string& name, IntVector &value)
 {
-   DOM_Node found_node = findNode(name, node);
-   if(found_node.isNull())
+   const DOMNode *found_node = findNode(name, node);
+   if(!found_node)
       return false;
-   for (DOM_Node child = found_node.getFirstChild(); child != 0;
-	child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	 DOMString val = child.getNodeValue();
-	 char *s = val.transcode();
+   for (DOMNode *child = found_node->getFirstChild(); child != 0;
+	child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	 const char* s = to_char_ptr(child->getNodeValue());
 	 string string_value = std::string(s);
-	 delete[] s;
+	 
 	 // Parse out the [num,num,num]
 	 // Now pull apart the string_value
 	 std::string::size_type i1 = string_value.find("[");
@@ -498,19 +481,18 @@ bool get(const DOM_Node& node,
    return false;
 }
 
-bool get(const DOM_Node& node,
-		const std::string& name, bool &value)
+bool 
+get(const DOMNode* node, const std::string& name, bool &value)
 {
-   DOM_Node found_node = findNode(name, node);
-   if(found_node.isNull())
+   const DOMNode *found_node = findNode(name, node);
+   if(!found_node)
       return false;
-   for (DOM_Node child = found_node.getFirstChild(); child != 0;
-	child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	 DOMString val = child.getNodeValue();
-	 char *s = val.transcode();
+   for (DOMNode *child = found_node->getFirstChild(); child != 0;
+	child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	 const char* s = to_char_ptr(child->getNodeValue());
 	 std::string cmp(s);
-	 delete[] s;
+	 
 	 if (cmp == "false")
 	    value = false;
 	 else if (cmp == "true")
@@ -522,124 +504,123 @@ bool get(const DOM_Node& node,
    return false;
 }
 
-char* getSerializedAttributes(DOM_Node& d)
+char* getSerializedAttributes(DOMNode* d)
 {
-  char* string = 0;
-  char* fullstring = new char[1];
-  char* newstring = 0;
+  char* str = 0;
+  char* fullstr = new char[1];
+  char* newstr = 0;
 
-  fullstring[0]='\0';
+  fullstr[0]='\0';
 
-  DOM_NamedNodeMap attr = d.getAttributes();
-  int length = attr.getLength();
+  DOMNamedNodeMap *attr = d->getAttributes();
+  int length = attr->getLength();
   int index = 0;
-  for(DOM_Node n=attr.item(index);
-      index!=length;n=attr.item(++index)) {
-    string = new char[strlen(n.getNodeName().transcode())+
-		      strlen(n.getNodeValue().transcode())+5];
-    sprintf(string," %s=\"%s\"",n.getNodeName().transcode(),
-	    n.getNodeValue().transcode());
+  for(DOMNode *n=attr->item(index);
+      index!=length;n=attr->item(++index)) {
+    const char* nn = to_char_ptr(n->getNodeName());
+    const char* nv = to_char_ptr(n->getNodeValue());
+    str = new char[strlen(nn) + strlen(nv) + 5];
+    sprintf(str, " %s=\"%s\"", nn, nv);
 
-    int newlength = strlen(string)+strlen(fullstring);
-    newstring = new char[newlength+1];
-    newstring[0]='\0';
-    sprintf(newstring,"%s%s",fullstring,string);
-    delete[] fullstring;
-    fullstring = newstring;
-    newstring = 0;
+    int newlength = strlen(str)+strlen(fullstr);
+    newstr = new char[newlength+1];
+    newstr[0]='\0';
+    sprintf(newstr,"%s%s",fullstr,str);
+    delete[] fullstr;
+    fullstr = newstr;
+    newstr = 0;
 
-    delete[] string;
-    string = 0;
+    delete[] str;
+    str = 0;
   }
 
-  return fullstring;
+  return fullstr;
 }
 
-char* getSerializedChildren(DOM_Node& d)
+char* getSerializedChildren(DOMNode* d)
 {
   char* temp = 0;
   char* temp2 = 0;
-  char* string = 0;
-  char* fullstring = new char[1];
-  char* newstring = 0;
+  char* str = 0;
+  char* fullstr = new char[1];
+  char* newstr = 0;
 
-  fullstring[0]='\0';
+  fullstr[0]='\0';
 
-  for (DOM_Node n=d.getFirstChild();n!=0;n=n.getNextSibling()) {
-    if (n.getNodeType()==DOM_Node::TEXT_NODE) {
-      string = new char[strlen(n.getNodeValue().transcode())+1];
-      string[0]='\0';
-      sprintf(string,"%s",n.getNodeValue().transcode());
+  for (DOMNode *n = d->getFirstChild(); n != 0; n = n->getNextSibling()) {
+    const char *nn = to_char_ptr(n->getNodeName());
+    const char *nv = to_char_ptr(n->getNodeValue());
+    if (n->getNodeType() == DOMNode::TEXT_NODE) {
+      str = new char[strlen(nv) + 1];
+      str[0]='\0';
+      sprintf(str, "%s", nv);
     } else {
       temp = getSerializedAttributes(n);
       temp2 = getSerializedChildren(n);
-      string = new char[2*strlen(n.getNodeName().transcode())+
-		        strlen(temp)+strlen(temp2)+6];
-      string[0]='\0';
-      sprintf(string,"<%s%s>%s</%s>",n.getNodeName().transcode(),
-	      temp,temp2,n.getNodeName().transcode());
+      str = new char[2 * strlen(nn) + strlen(temp) + strlen(temp2) + 6];
+      str[0]='\0';
+      sprintf(str, "<%s%s>%s</%s>", nn, temp, temp2, nn);
       delete[] temp;
       delete[] temp2;
     } 
+    int newlength = strlen(str) + strlen(fullstr);
+    newstr = new char[newlength+1];
+    newstr[0]='\0';
     
-    int newlength = strlen(string) + strlen(fullstring);
-    newstring = new char[newlength+1];
-    newstring[0]='\0';
+    sprintf(newstr,"%s%s",fullstr,str);
+    delete[] fullstr;
+    fullstr = newstr;
+    newstr = 0;
     
-    sprintf(newstring,"%s%s",fullstring,string);
-    delete[] fullstring;
-    fullstring = newstring;
-    newstring = 0;
-    
-    delete[] string;
-    string = 0;
+    delete[] str;
+    str = 0;
   }
   
-  return fullstring;
+  return fullstr;
 }
 
-string xmlto_string(const DOMString& str)
+string xmlto_string(const DOMText* str)
 {
-  char* s = str.transcode();
+  const char* s = to_char_ptr(str->getData());
   string ret = string(s);
-  delete[] s;
   return ret;
 }
 
 string xmlto_string(const XMLCh* const str)
 {
-  char* s = XMLString::transcode(str);
+  const char* s = to_char_ptr(str);
   string ret = string(s);
-  delete[] s;
   return ret;
 }
 
-void invalidNode(const DOM_Node& n, const string& filename)
+void invalidNode(const DOMNode* n, const string& filename)
 {
-  if(n.getNodeType() == DOM_Node::COMMENT_NODE)
+  if(n->getNodeType() == DOMNode::COMMENT_NODE)
       return;
-  if(n.getNodeType() == DOM_Node::TEXT_NODE){
-    DOMString s = n.getNodeValue();
-    char* str = s.transcode();
+  if(n->getNodeType() == DOMNode::TEXT_NODE){
+    const char* str = to_char_ptr(n->getNodeValue());
     bool allwhite=true;
-    for(char* p = str; *p != 0; p++){
+    for(const char* p = str; *p != 0; p++){
       if(!isspace(*p))
 	allwhite=false;
       }
     if(!allwhite){
-      postMessage(string("Extraneous text: ")+str+"after node: "+xmlto_string(n.getNodeName())+"(in file "+filename+")");
+      postMessage(string("Extraneous text: ") + str + "after node: " + 
+		  xmlto_string(n->getNodeName()) + "(in file " + filename + 
+		  ")");
     }
-    delete[] str;
     return;
   }
-  postMessage(string("Do not understand node: ")+xmlto_string(n.getNodeName())+"(in file "+filename+")");
+  postMessage(string("Do not understand node: ") + 
+	      xmlto_string(n->getNodeName()) + "(in file " + filename + ")");
 }
 
-DOMString findText(DOM_Node& node)
+const XMLCh* 
+findText(DOMNode* node)
 {
-  for(DOM_Node n = node.getFirstChild();n != 0; n = n.getNextSibling()){
-    if(n.getNodeType() == DOM_Node::TEXT_NODE)
-      return n.getNodeValue();
+  for(DOMNode *n = node->getFirstChild();n != 0; n = n->getNextSibling()){
+    if(n->getNodeType() == DOMNode::TEXT_NODE)
+      return n->getNodeValue();
   }
   return 0;
 }

@@ -34,12 +34,12 @@
 #pragma set woff 1375
 #pragma set woff 3303
 #endif
-#include <util/PlatformUtils.hpp>
-#include <sax/SAXException.hpp>
-#include <sax/SAXParseException.hpp>
-#include <parsers/DOMParser.hpp>
-#include <dom/DOM_NamedNodeMap.hpp>
-#include <sax/ErrorHandler.hpp>
+#include <xercesc/util/PlatformUtils.hpp>
+#include <xercesc/sax/SAXException.hpp>
+#include <xercesc/sax/SAXParseException.hpp>
+#include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/dom/DOMNamedNodeMap.hpp>
+#include <xercesc/sax/ErrorHandler.hpp>
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #pragma reset woff 3303
@@ -163,7 +163,7 @@ void DestroyComponentNode(component_node* node);
 // ProcessComponentNode()
 // Copies the contents of "tree" into the active fields of "node"
 
-void ProcessComponentNode(const DOM_Node& tree, component_node* node);
+void ProcessComponentNode(const DOMNode& tree, component_node* node);
 
 
 //////////////////////////
