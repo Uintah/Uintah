@@ -14,8 +14,10 @@
  */
 
 #include <sci_config.h>
+#define BUILD_tcl
 #include <tk.h>
 #include <itk.h>
+#undef BUILD_tcl
 
 #include <stdio.h>
 
