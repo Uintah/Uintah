@@ -55,7 +55,7 @@ Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
   ambientScale_(ambientscale),
   ref_cnt(0),
   lock("rtrt::Scene lock"),
-  soundVolume_(100),
+  soundVolume_(50),
   obj(ob), 
   mainGroup_(ob), 
   camera0(camera0), 
@@ -86,7 +86,7 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
   shadowobj=0;
   background = new ConstantBackground( bgcolor );
   animate=true;
-  hotspots=false;
+  hotSpotMode_ = 0;
   frameno=0;
   frametime_fp=0;
   lasttime=0;
@@ -141,7 +141,7 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
   ambientScale_(ambientscale),
   ref_cnt(0),
   lock("rtrt::Scene lock"),
-  soundVolume_(100),
+  soundVolume_(50),
   obj(ob), 
   mainGroup_(ob ),
   camera0(camera0), 
@@ -433,7 +433,7 @@ Scene::io(SCIRun::Piostream &stream) {
   //  SCIRun::Pio(stream, displays);
   SCIRun::Pio(stream, ambientColor_);
   SCIRun::Pio(stream, origAmbientColor_);
-  SCIRun::Pio(stream, hotspots);
+  SCIRun::Pio(stream, hotSpotMode_);
   SCIRun::Pio(stream, materials);
   stream.end_class();
 }

@@ -244,7 +244,7 @@ public:
   int ref_cnt;
   SCIRun::Mutex lock;
 
-  inline bool doHotSpots() const { return hotspots; }
+  inline int getHotSpotsMode() const { return hotSpotMode_; }
 
   // Display image as a "transmission".  Ie: turn off every other scan line.
   // (Net effect of this is to double the frame rate.)
@@ -345,7 +345,7 @@ private:
   Color  ambientColor_;
   Color  origAmbientColor_;
 
-  bool hotspots;
+  int  hotSpotMode_; // 0 == off, 1 == normal, 2 == half screen
   bool transmissionMode_;
 
   Array1<Material*> materials;
