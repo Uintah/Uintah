@@ -1350,7 +1350,6 @@ proc startOPortConnection {omodid owhich x y} {
 
 proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
 
-    puts "$connid $portcolor $omodid $owhich $imodid $iwhich"
 
     set path [routeConnection $omodid $owhich $imodid $iwhich]
     set minipath ""
