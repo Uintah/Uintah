@@ -607,13 +607,8 @@ FragmentProgramARB::create ()
   glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, mId);
   glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB,
 		     mLength, mBuffer);
-#if 1
-  if (glGetError() != GL_NO_ERROR)
-  {
-	cerr << "Fragment program error" << endl;
-	return;
-  }
-#endif
+
+  CHECK_OPENGL_ERROR("FragmentProgramARB::create");
 }
 
 void
