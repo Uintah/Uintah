@@ -70,7 +70,7 @@ PACK_PSELIBS = $(patsubst SCIRUN%,,$(TMP_PACK_PSELIBS))
 
 $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)%,$(CORE_PSELIBS)) $(patsubst %,$(LIBDIR)%,$(PACK_PSELIBS))
 	rm -f $@
-	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $($(notdir $@)_LIBS)
+	$(CXX) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $($(notdir $@)_LIBS)
 
 #$(LIBNAME).pure: $(LIBNAME)
 #	$(purify) $(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@.pure $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)lib%.so,-l%,$(filter %.so,$^)) $($(notdir $@)_LIBS)
