@@ -86,6 +86,7 @@ namespace Uintah {
       StencilMatrix<CCVariable<double> > scalarDiffusionCoeff; //7 point stencil
       StencilMatrix<CCVariable<double> > scalarConvectCoeff; //7 point stencil
       CCVariable<double> scalarLinearSrc;
+      CCVariable<double> scalarDiffNonlinearSrc;
       CCVariable<double> scalarNonlinearSrc;
       StencilMatrix<CCVariable<double> > reactscalarCoeff; //7 point stencil
       StencilMatrix<CCVariable<double> > reactscalarConvectCoeff; //7 point stencil

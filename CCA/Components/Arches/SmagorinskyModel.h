@@ -69,7 +69,8 @@ public:
       // Schedule the computation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
-      virtual void sched_computeTurbSubmodel(SchedulerP&, const PatchSet* patches,
+      virtual void sched_computeTurbSubmodel(const LevelP&,
+					     SchedulerP&, const PatchSet* patches,
 					     const MaterialSet* matls);
 
       ///////////////////////////////////////////////////////////////////////
@@ -128,6 +129,8 @@ public:
 				      int index);
 
 protected:
+      PhysicalConstants* d_physicalConsts;
+      BoundaryCondition* d_boundaryCondition;
 
 private:
 
@@ -182,11 +185,7 @@ private:
 private:
 
       // const VarLabel* variables 
-      const ArchesLabel* d_lab;
-      const MPMArchesLabel* d_MAlab;
 
-      PhysicalConstants* d_physicalConsts;
-      BoundaryCondition* d_boundaryCondition;
       double d_CF; //model constant
       double d_factorMesh; // lengthscale = fac_mesh*meshsize
       double d_filterl; // prescribed filter length scale

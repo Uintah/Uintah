@@ -55,7 +55,7 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
   db->require("PDFShape",d_pdfShape);
   if ((d_pdfShape != "Beta")&&(d_pdfShape != "ClippedGaussian")) {
     cout << "PDFShape is Beta" << endl;
-    d_pdfShape = "beta";
+    d_pdfShape = "Beta";
     //throw InvalidValue("PDF shape not implemented " + d_pdfShape);
   }
   // read and initialize reaction model with chemkin interface

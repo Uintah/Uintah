@@ -1,18 +1,18 @@
-//----- ScaleSimilarityModel.h --------------------------------------------------
+//----- DynamicProcedure.h --------------------------------------------------
 
-#ifndef Uintah_Component_Arches_ScaleSimilarityModel_h
-#define Uintah_Component_Arches_ScaleSimilarityModel_h
+#ifndef Uintah_Component_Arches_DynamicProcedure_h
+#define Uintah_Component_Arches_DynamicProcedure_h
 
 /**************************************
 CLASS
-   ScaleSimilarityModel
+   DynamicProcedure
    
-   Class ScaleSimilarityModel is an LES model for
+   Class DynamicProcedure is an LES model for
    computing sub-grid scale turbulent viscosity.
 
 
 GENERAL INFORMATION
-   ScaleSimilarityModel.h - declaration of the class
+   DynamicProcedure.h - declaration of the class
    
    Author: Rajesh Rawat (rawat@crsim.utah.edu)
       
@@ -26,7 +26,7 @@ KEYWORDS
 
 
 DESCRIPTION
-   Class ScaleSimilarityModel is an LES model for
+   Class DynamicProcedure is an LES model for
    computing sub-grid scale turbulent viscosity.
 
 
@@ -41,22 +41,23 @@ namespace Uintah {
 class PhysicalConstants;
 class BoundaryCondition;
 
-class ScaleSimilarityModel: public SmagorinskyModel {
+
+class DynamicProcedure: public SmagorinskyModel {
 
 public:
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
-      // Blank constructor for ScaleSimilarityModel.
-      ScaleSimilarityModel(const ArchesLabel* label, 
+      // Blank constructor for DynamicProcedure.
+      DynamicProcedure(const ArchesLabel* label, 
 		       const MPMArchesLabel* MAlb,
 		       PhysicalConstants* phyConsts,
 		       BoundaryCondition* bndryCondition);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
-      // Virtual destructor for ScaleSimilarityModel.
-      virtual ~ScaleSimilarityModel();
+      // Virtual destructor for DynamicProcedure.
+      virtual ~DynamicProcedure();
 
       // GROUP: Problem Setup :
       ///////////////////////////////////////////////////////////////////////
@@ -68,6 +69,7 @@ public:
       // Schedule the computation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
+
       virtual void sched_computeTurbSubmodel(const LevelP&, 
 					     SchedulerP&, const PatchSet* patches,
 					     const MaterialSet* matls);
@@ -79,23 +81,14 @@ public:
       virtual void sched_reComputeTurbSubmodel(SchedulerP&, const PatchSet* patches,
 					       const MaterialSet* matls);
 
-      // GROUP: Schedule Action :
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the computation of Turbulence Model data
-      //    [in] 
-      //        data User data needed for solve 
-      virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
-					       const MaterialSet* matls);
-
-
 protected:
 
 private:
 
       // GROUP: Constructors (not instantiated):
       ////////////////////////////////////////////////////////////////////////
-      // Blank constructor for ScaleSimilarityModel.
-      ScaleSimilarityModel();
+      // Blank constructor for DynamicProcedure.
+      DynamicProcedure();
 
       // GROUP: Action Methods (private)  :
       ///////////////////////////////////////////////////////////////////////
@@ -108,6 +101,7 @@ private:
 			       DataWarehouse* old_dw,
 			       DataWarehouse* new_dw);
 
+
       ///////////////////////////////////////////////////////////////////////
       // Actually reCalculate the Turbulence sub model
       //    [in] 
@@ -118,21 +112,22 @@ private:
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw);
  
-      ///////////////////////////////////////////////////////////////////////
-      // Actually Calculate the subgrid scale variance
-      //    [in] 
-      //        documentation here
-      void computeScalarVariance(const ProcessorGroup*,
+      void reComputeFilterValues(const ProcessorGroup*,
 				 const PatchSubset* patches,
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw);
+ 
+      void reComputeSmagCoeff(const ProcessorGroup*,
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw);
+ private:
 
-private:
-      double d_CF; //model constant
       // const VarLabel* variables 
 
-}; // End class ScaleSimilarityModel
+ }; // End class DynamicProcedure
 } // End namespace Uintah
   
   

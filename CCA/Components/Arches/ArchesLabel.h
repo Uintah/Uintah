@@ -49,6 +49,7 @@ namespace Uintah {
       MaterialSubset* d_stencilMatl;
       // material subset for turbulent stress, required by scalesimilarity model
       MaterialSubset* d_stressTensorMatl;
+      MaterialSubset* d_stressSymTensorMatl;
       MaterialSubset* d_scalarFluxMatl;
 
       // Cell Information
@@ -271,6 +272,8 @@ namespace Uintah {
       // scalar diffusion coeffs, required for divergence constraint
       const VarLabel* d_scalDiffCoefPredLabel;
 
+      const VarLabel* d_scalDiffCoefSrcPredLabel;
+
       const VarLabel* d_scalDiffCoefCorrLabel;
 
       const VarLabel* d_enthDiffCoefPredLabel;
@@ -337,11 +340,15 @@ namespace Uintah {
       // labels for scalesimilaritymodels
 
       const VarLabel* d_stressTensorCompLabel;
+      const VarLabel* d_strainTensorCompLabel;
 
       const VarLabel* d_scalarFluxCompLabel;
       
-
-
+      // labels for dynamic procedure
+      const VarLabel* d_strainMagnitudeLabel;
+      const VarLabel* d_strainMagnitudeMLLabel;
+      const VarLabel* d_strainMagnitudeMMLabel;
+      const VarLabel* d_CsLabel;
       // label for ref_density and pressure
 
       const VarLabel* d_refDensity_label;

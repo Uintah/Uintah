@@ -13,6 +13,7 @@ SRCS     += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/Discretization.cc \
 	$(SRCDIR)/EnthalpySolver.cc \
 	$(SRCDIR)/ExplicitSolver.cc \
+	$(SRCDIR)/Filter.cc \
 	$(SRCDIR)/LinearSolver.cc \
 	$(SRCDIR)/MomentumSolver.cc \
 	$(SRCDIR)/NonlinearSolver.cc \
@@ -25,6 +26,7 @@ SRCS     += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/ScalarSolver.cc \
 	$(SRCDIR)/SmagorinskyModel.cc \
 	$(SRCDIR)/ScaleSimilarityModel.cc \
+	$(SRCDIR)/DynamicProcedure.cc \
 	$(SRCDIR)/Source.cc \
 	$(SRCDIR)/TurbulenceModel.cc
 

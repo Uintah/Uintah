@@ -11,6 +11,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
 #include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/DynamicProcedure.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -51,6 +52,9 @@ using std::endl;
 
 using namespace Uintah;
 using namespace SCIRun;
+#ifdef PetscFilter
+#include <Packages/Uintah/CCA/Components/Arches/Filter.h>
+#endif
 
 #include <Packages/Uintah/CCA/Components/Arches/fortran/initScal_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/init_fort.h>
@@ -146,6 +150,9 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (turbModel == "smagorinsky") 
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
 					  d_boundaryCondition);
+  else if (turbModel == "dynamicprocedure") 
+    d_turbModel = scinew DynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
+					  d_boundaryCondition);
   else if (turbModel == "mixmodel") { 
     d_turbModel = scinew ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
 					      d_boundaryCondition);
@@ -154,6 +161,15 @@ Arches::problemSetup(const ProblemSpecP& params,
     throw InvalidValue("Turbulence Model not supported" + turbModel);
   if (d_turbModel)
     d_turbModel->problemSetup(db);
+
+#ifdef PetscFilter
+  if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)||
+      dynamic_cast<const DynamicProcedure*>(d_turbModel)) {
+    d_filter = scinew Filter(d_lab, d_myworld);
+    d_filter->problemSetup(db);
+    d_turbModel->setFilter(d_filter);
+  }
+#endif
 
   d_props->setBC(d_boundaryCondition);
 
@@ -224,7 +240,7 @@ Arches::scheduleInitialize(const LevelP& level,
   // Compute Turb subscale model (output Varlabel have CTS appended to them)
   // require : densityCP, viscosityIN, [u,v,w]VelocitySP
   // compute : viscosityCTS
-  d_turbModel->sched_computeTurbSubmodel(sched, patches, matls);
+  d_turbModel->sched_computeTurbSubmodel(level, sched, patches, matls);
 
   // Computes velocities at apecified pressure b.c's
   // require : densityCP, pressureIN, [u,v,w]VelocitySP
