@@ -8,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/Models/test/Mixing2.h>
 #include <Packages/Uintah/CCA/Components/Models/test/AdiabaticTable.h>
 #include <Packages/Uintah/CCA/Components/Models/test/PinTo300Test.h>
+#include <Packages/Uintah/CCA/Components/Models/test/PassiveScalar.h>
 #include <Packages/Uintah/CCA/Components/Models/test/SimpleRxn.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TableTest.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TestModel.h>
@@ -66,6 +67,8 @@ void ModelFactory::makeModels(const ProblemSpecP& params, GridP&,
       models.push_back(scinew flameSheet_rxn(d_myworld, model));
     else if(type == "PinTo300Test")
       models.push_back(scinew PinTo300Test(d_myworld, model));
+    else if(type == "PassiveScalar")
+      models.push_back(scinew PassiveScalar(d_myworld, model));
     else
       throw ProblemSetupException("Unknown model: "+type);
   }
