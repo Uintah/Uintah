@@ -43,12 +43,11 @@ itcl_class Fusion_DataIO_VULCANDataReader {
 	#######################################################
 	# to be modified for particular reader
 
-	# extansion to append if no extension supplied by user
-	set defext ".cmap"
-	set title "Open colormap file"
+	set title "Open Vulcan file"
 	
 	# file types to appers in filter box
 	set types {
+	    {{File List}       {.list} }
 	    {{All Files}       {.*}    }
 	}
 	
@@ -61,8 +60,7 @@ itcl_class Fusion_DataIO_VULCANDataReader {
 		-cancel "wm withdraw $w" \
 		-title $title \
 		-filetypes $types \
-		-initialdir $initdir \
-		-defaultextension $defext
+		-initialdir $initdir
 
 	moveToCursor $w
     }
