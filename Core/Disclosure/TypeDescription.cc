@@ -29,7 +29,6 @@ void TypeDescription::deleteAll()
   killed=true;
   vector<const TypeDescription*>::iterator iter = typelist->begin();
   for(;iter != typelist->end();iter++) {
-    cerr << "Killing " << (*iter)->getName() << endl;
     delete *iter;
   }
   delete types;
