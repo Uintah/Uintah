@@ -79,7 +79,15 @@ double ICEMaterial::getHeatTransferCoefficient() const
   return d_heatTransferCoefficient;
 }
 
+double ICEMaterial::getGamma() const
+{
+  return d_gamma;
+}
+
 // $Log$
+// Revision 1.3  2000/10/05 04:26:48  guilkey
+// Added code for part of the EOS evaluation.
+//
 // Revision 1.2  2000/10/04 20:17:52  jas
 // Change namespace ICE to ICESpace.
 //

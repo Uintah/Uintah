@@ -67,6 +67,7 @@ WARNING
          double getThermalConductivity() const;
          double getSpecificHeat() const;
          double getHeatTransferCoefficient() const;
+         double getGamma() const;
 
       private:
 
@@ -77,6 +78,7 @@ WARNING
          double d_thermalConductivity;
          double d_specificHeat;
 	 double d_heatTransferCoefficient;
+	 double d_gamma;
          
 	 ICELabel* lb;
 
@@ -92,6 +94,9 @@ WARNING
 #endif // __ICE_MATERIAL_H__
 
 // $Log$
+// Revision 1.3  2000/10/05 04:26:48  guilkey
+// Added code for part of the EOS evaluation.
+//
 // Revision 1.2  2000/10/04 20:17:52  jas
 // Change namespace ICE to ICESpace.
 //

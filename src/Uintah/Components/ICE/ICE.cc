@@ -113,6 +113,13 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	Task* t = scinew Task("ICE::step1",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep1);
 	for (int m = 0; m < numMatls; m++) {
+            Material* matl = d_sharedState->getMaterial(m);
+            ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+            if(ice_matl){
+               EquationOfState* eos = ice_matl->getEOS();
+               eos->addComputesAndRequiresSS( t,ice_matl,patch, old_dw, new_dw);
+               eos->addComputesAndRequiresCEB(t,ice_matl,patch, old_dw, new_dw);
+            }
 	}
 	sched->addTask(t);
       }
@@ -204,20 +211,12 @@ void ICE::actuallyStep1(const ProcessorGroup*,
     Material* matl = d_sharedState->getMaterial(m);
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if (ice_matl) {
-      int matlindex = matl->getDWIndex();
-      int vfindex = matl->getVFIndex();
-      // Get the required variables for this patch
-      CCVariable<double> press_CC, cv_CC, Temp_CC;
-      CCVariable<double> rho_micro_CC;
-
       EquationOfState* eos = ice_matl->getEOS();
-     
+      eos->computeSpeedSound(patch,ice_matl,old_dw,new_dw);
+      eos->computeEquilibrationPressure(patch,ice_matl,old_dw,new_dw);
     }
   }
 
-
-
-  
 }
 
 
@@ -280,6 +279,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.25  2000/10/05 04:26:48  guilkey
+// Added code for part of the EOS evaluation.
+//
 // Revision 1.24  2000/10/05 00:16:33  jas
 // Starting to work on the speed of sound stuff.
 //

@@ -54,11 +54,29 @@ WARNING
 				       const ICEMaterial* matl,
 				       DataWarehouseP& new_dw) = 0;
 
-	 virtual void addComputesAndRequires(Task* task,
-					     const ICEMaterial* matl,
-					     const Patch* patch,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw) const = 0;
+	 // C&R for sound speed calc.
+	 virtual void addComputesAndRequiresSS(Task* task,
+					       const ICEMaterial* matl,
+					       const Patch* patch,
+					       DataWarehouseP& old_dw,
+					       DataWarehouseP& new_dw) const=0;
+
+	 // C&R for compute equilibration pressure 
+	 virtual void addComputesAndRequiresCEB(Task* task,
+					        const ICEMaterial* matl,
+					        const Patch* patch,
+					        DataWarehouseP& old_dw,
+					        DataWarehouseP& new_dw) const=0;
+
+         virtual void computeSpeedSound(const Patch* patch,
+                                 const ICEMaterial* matl,
+                                 DataWarehouseP& old_dw,
+                                 DataWarehouseP& new_dw) = 0;
+
+         virtual void computeEquilibrationPressure(const Patch* patch,
+	                                           const ICEMaterial* matl,
+                 	                           DataWarehouseP& old_dw,
+                                 	           DataWarehouseP& new_dw) = 0;
 
 
         protected:
@@ -71,6 +89,9 @@ WARNING
 #endif  // __EQUATION_OF_STATE_H__
 
 // $Log$
+// Revision 1.4  2000/10/05 04:26:48  guilkey
+// Added code for part of the EOS evaluation.
+//
 // Revision 1.3  2000/10/04 23:41:25  jas
 // Get rid of particle stuff.
 //
