@@ -1,0 +1,5 @@
+
+<!ELEMENT para (#PCDATA)>
+<!ELEMENT book (#PCDATA)>
+<!ELEMENT chapter (#PCDATA)>
+<!ELEMENT sect1 (#PCDATA)>

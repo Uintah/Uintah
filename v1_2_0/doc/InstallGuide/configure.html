@@ -1,0 +1,124 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+<html>
+<head>
+	<title>Useful Configuration Flags</title>
+	<LINK TITLE="default style" TYPE="text/css" REL="STYLESHEET" HREF="../doc_styles.css">
+</head>
+
+<body>
+Useful configuration flags:<p>
+
+<center><table border=2>
+  <tr>
+    <td><b><i>Flag</i></b></td>
+    <td><b><i>Explanation</i></b></td>
+  </tr>
+
+  <tr>
+    <td>--enable-package=&lt;package_name&gt; <BR>
+    <td>&lt;package_name&gt; should be one (or more) of: 
+           Uintah, BioPSE, DaveW, Yarden, Kurt, Phil.
+           ( eg: --enable-package="Uintah BioPSE" )
+  </tr>
+
+  <tr>
+    <td>--enable-exename=NAME
+    <td>call the executable NAME instead of the default 'scirun'
+  </tr>
+
+  <tr>
+    <td>--enable-debug
+    <td>Turn on debugging.  This adds the -g flag to compiles.  To
+        use something else besides -g, use --enable-debug="-myflags"
+  </tr>
+
+  <tr>
+    <td>--enable-optimize
+    <td>Turn on optimization.  This adds the -O2 flag to
+        compiles.  To use something else besides -O2,
+        use --enable-optimize="-myflags"
+  </tr>
+
+  <tr>
+    <td>--enable-enterleave
+    <td>enable the annoying "Entering directory..." and
+        "Leaving directory..." messages from make, which help
+        emacs find the errors from the compile output.
+  </tr>
+
+  <tr>
+    <td>--enable-64bit
+    <td>compile in 64 bit mode instead of in 32 bit mode.   Available
+        on the following platforms: Irix
+  </tr>
+
+  <tr>
+    <td>--enable-threads=IMPL
+    <td>Set the thread implementation to IMPL.  pthreads is the
+        default, except on irix.  You can use --enable-threads=pthreads
+        to get pthreads support on Irix.
+  </tr>
+
+  <tr>
+    <td>--enable-assertion-level=N
+    <td>set the assertion level to N (default=3).  Assertion level 0 is no
+        assertions (fastest), level 1 is few assertions, level 2 is most
+        assertions, and level 3 is all assertions, including array
+        bounds checking (slowest).
+  </tr>
+
+  <tr>
+    <td>--enable-parallel
+    <td>Compile the new distributed memory parallel SCIRun.  This is
+        very experimental and may break many things.  It is also a
+        much different world.
+  </tr>
+
+  <tr>
+    <td>--enable-globus=DIR
+    <td>Use the globus installation in DIR.  Only applicatble
+        with the --enable-parallel option.
+  </tr>
+
+  <tr>
+    <td>--with-tcl=DIR
+    <td>Use the tcl installation in DIR, where DIR is the location
+        of the /lib, /bin and /include dirs for tcl8.0.4, tk8.0.4,
+        itcl/itk3.0 and blt2.4.
+  </tr>
+
+  <tr>
+    <td>--with-xerces=DIR
+    <td>Use the xerces-c library file (libxerces-c1_1.so or libxerces-c1_2.so)
+        located in DIR.
+  </tr>
+
+</table></center><p>
+
+A typical configuration would be:<p>
+
+<code><ul>
+./configure --enable-debug --enable-enterleave 
+            --enable-package="Uintah BioPSE"
+</ul></code><p>
+
+For more detailed information on compiling the SCIRun, see the
+<a href="building.html">building tutorial</a>.
+
+</body>
+</html>
