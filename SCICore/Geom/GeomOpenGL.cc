@@ -47,6 +47,7 @@
 #include <SCICore/Geom/Pt.h>
 #include <SCICore/Geom/RenderMode.h>
 #include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/GeomEllipsoid.h>
 #include <SCICore/Geom/GeomDL.h>
 #if 0
 #include <SCICore/Geom/Squares.h>
@@ -2517,6 +2518,18 @@ void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
+void GeomEllipsoid::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+    pre_draw(di,matl,1);
+    glPushMatrix();
+    glTranslated(cen.x(), cen.y(), cen.z());
+    glMultMatrixd(m_tensor_matrix);
+    glTranslated(-cen.x(), -cen.y(), -cen.z());
+    GeomSphere::draw(di, matl, 1);
+    glPopMatrix();
+}
+
+
 void GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
    if(state)
@@ -4258,6 +4271,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.23  2000/09/15 20:57:53  kuzimmer
+//  resurrected GeomEllipse from old code
+//
 // Revision 1.22  2000/08/01 01:30:46  yarden
 // replace call to glNewList(dl, GL_COMPILE_AND_EXECUTE)
 // with a call using GL_COMPILE
