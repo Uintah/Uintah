@@ -389,7 +389,7 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 			cellinfo->sns, cellinfo->stb, CFVar, d_factorMesh,
 			d_filterl);
 
-    /*
+    
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -471,7 +471,7 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 	}
       }
     }
-    */
+    
   }
 }
 
@@ -586,7 +586,7 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
       }
     }
 
-    /*
+    
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -668,6 +668,6 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
 	}
       }
     }
-    */
+    
   }
 }

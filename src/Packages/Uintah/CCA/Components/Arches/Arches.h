@@ -61,11 +61,6 @@ WARNING
 
 //#define filter_convection_terms
 
-// What to do with negative velocity correction
-// The velocity on the outlet will not be negative in any case as requested
-// by Rajesh
-
-//#define discard_negative_velocity_correction
 
 #ifdef HAVE_PETSC
   #define PetscFilter

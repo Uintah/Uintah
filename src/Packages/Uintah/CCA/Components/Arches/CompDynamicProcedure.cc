@@ -640,7 +640,8 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
         for (int colX = indexLowU.x(); colX <= indexHighU.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
 	  IntVector shift(0,0,0);
-	  if ((xplus)&&(colX == indexHighU.x())) shift = IntVector(-1,0,0);
+	  if ((xplus)&&((colX == indexHighU.x())||(colX == indexHighU.x()-1)))
+	    shift = IntVector(-1,0,0);
 	  int bndry_count=0;
 	  if  (!(cellType[currCell + shift - IntVector(1,0,0)] == flowID))
 		   bndry_count++;
@@ -693,7 +694,8 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
         for (int colX = indexLowV.x(); colX <= indexHighV.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
 	  IntVector shift(0,0,0);
-	  if ((yplus)&&(colY == indexHighV.y())) shift = IntVector(0,-1,0);
+	  if ((yplus)&&((colY == indexHighV.y())||(colY == indexHighV.y()-1)))
+            shift = IntVector(0,-1,0);
 	  int bndry_count=0;
 	  if  (!(cellType[currCell + shift - IntVector(1,0,0)] == flowID))
 		   bndry_count++;
@@ -746,7 +748,8 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
         for (int colX = indexLowW.x(); colX <= indexHighW.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
 	  IntVector shift(0,0,0);
-	  if ((zplus)&&(colZ == indexHighW.z())) shift = IntVector(0,0,-1);
+	  if ((zplus)&&((colZ == indexHighW.z())||(colZ == indexHighW.z()-1))) 
+	    shift = IntVector(0,0,-1);
 	  int bndry_count=0;
 	  if  (!(cellType[currCell + shift - IntVector(1,0,0)] == flowID))
 		   bndry_count++;

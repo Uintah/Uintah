@@ -29,6 +29,7 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 
 #include <Core/Thread/Time.h>
+#include <Core/Math/MinMax.h>
 
 using namespace std;
 
@@ -1934,7 +1935,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
 	  double value;
-	  if (MMHatI[currCell] < 1.0e-20)
+	  if ((MMHatI[currCell] < 1.0e-10)||(MLHatI[currCell] < 1.0e-7))
 	    value = 0.0;
 	  else
 	    value = MLHatI[currCell]/MMHatI[currCell];
@@ -1973,8 +1974,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	    IntVector currCell(colX, colY, colZ);
 	    double delta = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
 	    double filter = pow(delta, 1.0/3.0);
-	    if (Cs[currCell] < 0.0) Cs[currCell] = 0.0;
-	    else if (Cs[currCell] > 100.0) Cs[currCell] = 100.0;
+	    Cs[currCell] = Min(Cs[currCell],10.0);
 	    Cs[currCell] = factor * sqrt(Cs[currCell]);
 	    viscosity[currCell] =  Cs[currCell] * Cs[currCell] * filter * filter *
 	      IsI[currCell] * den[currCell] + viscos*voidFraction[currCell];
@@ -1989,8 +1989,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	    IntVector currCell(colX, colY, colZ);
 	    double delta = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
 	    double filter = pow(delta, 1.0/3.0);
-	    if (Cs[currCell] < 0.0) Cs[currCell] = 0.0;
-	    else if (Cs[currCell] > 100.0) Cs[currCell] = 100.0;
+	    Cs[currCell] = Min(Cs[currCell],10.0);
 	    Cs[currCell] = factor * sqrt(Cs[currCell]);
 	    viscosity[currCell] =  Cs[currCell] * Cs[currCell] * filter * filter *
 	      IsI[currCell] * den[currCell] + viscos;
@@ -2234,9 +2233,9 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     int outlet_celltypeval = d_boundaryCondition->outletCellType();
     int pressure_celltypeval = d_boundaryCondition->pressureCellType();
     if (xminus) {
-      int colX = idxLo.x();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      int colX = indexLow.x();
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	  IntVector currCell(colX-1, colY, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
@@ -2246,9 +2245,9 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
       }
     }
     if (xplus) {
-      int colX = idxHi.x();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      int colX = indexHigh.x();
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	  IntVector currCell(colX+1, colY, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
@@ -2258,9 +2257,9 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
       }
     }
     if (yminus) {
-      int colY = idxLo.y();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+      int colY = indexLow.y();
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY-1, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
@@ -2270,9 +2269,9 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
       }
     }
     if (yplus) {
-      int colY = idxHi.y();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+      int colY = indexHigh.y();
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY+1, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
@@ -2282,9 +2281,9 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
       }
     }
     if (zminus) {
-      int colZ = idxLo.z();
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+      int colZ = indexLow.z();
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ-1);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
@@ -2294,9 +2293,9 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
       }
     }
     if (zplus) {
-      int colZ = idxHi.z();
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+      int colZ = indexHigh.z();
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ+1);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
