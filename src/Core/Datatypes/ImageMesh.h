@@ -162,13 +162,36 @@ public:
     }
   };
 
-  //typedef ImageIndex      under_type;
+  struct ImageSize
+  { 
+  public:
+    ImageSize() : i_(0), j_(0) {}
+    ImageSize(unsigned i, unsigned j) : i_(i), j_(j) {}
+
+    operator unsigned() const { return i_*j_; }
+
+    unsigned i_, j_;
+  };
+
+  struct INodeSize : public ImageSize
+  {
+    INodeSize() : ImageSize() {}
+    INodeSize(unsigned i, unsigned j) : ImageSize(i,j) {}
+  };
+
+
+  struct IFaceSize : public ImageSize
+  {
+    IFaceSize() : ImageSize() {}
+    IFaceSize(unsigned i, unsigned j) : ImageSize(i,j) {}
+  };
+
 
   //! Index and Iterator types required for Mesh Concept.
   struct Node {
     typedef INodeIndex                       index_type;
     typedef INodeIter                        iterator;
-    typedef INodeIndex                       size_type;
+    typedef INodeSize                        size_type;
     typedef vector<index_type>               array_type;
   };			
 			
@@ -182,7 +205,7 @@ public:
   struct Face {		
     typedef IFaceIndex                       index_type;
     typedef IFaceIter                        iterator;
-    typedef IFaceIndex                       size_type;
+    typedef IFaceSize                        size_type;
     typedef vector<index_type>               array_type;
   };			
 			

@@ -458,7 +458,7 @@ ImageMesh::end(ImageMesh::Node::iterator &itr) const
 void
 ImageMesh::size(ImageMesh::Node::size_type &s) const
 {
-  s = Node::size_type(this, ni_, nj_);
+  s = Node::size_type(ni_, nj_);
 }
 
 
@@ -495,7 +495,7 @@ ImageMesh::end(ImageMesh::Face::iterator &itr) const
 void
 ImageMesh::size(ImageMesh::Face::size_type &s) const
 {
-  s = Face::size_type(this, ni_-1, nj_-1);
+  s = Face::size_type(ni_-1, nj_-1);
 }
 
 
