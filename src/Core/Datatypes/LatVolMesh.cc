@@ -52,7 +52,7 @@ LatVolMesh::LatVolMesh(unsigned x, unsigned y, unsigned z,
   transform_.pre_scale(Vector(1.0 / (x-1.0), 1.0 / (y-1.0), 1.0 / (z-1.0)));
   transform_.pre_scale(max - min);
 
-  transform_.pre_translate(Vector(min));
+  transform_.pre_translate(min.asVector());
   transform_.compute_imat();
 }
 
