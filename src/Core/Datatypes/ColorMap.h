@@ -112,6 +112,9 @@ public:
 
   Color FindColor(double t);
   double FindAlpha(double t);
+
+  // return the number of color points in the colormap
+  int size() const { return rawRampColor.size();} 
 };
 
 typedef LockingHandle<ColorMap> ColorMapHandle;
