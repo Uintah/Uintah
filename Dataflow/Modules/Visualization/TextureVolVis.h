@@ -32,8 +32,7 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
 
-#include <Core/Datatypes/GLVolumeRenderer.h>
-#include <Core/Datatypes/GLTexture3D.h>
+#include <Core/GLVolumeRenderer/GLVolumeRenderer.h>
 #include <Dataflow/Ports/GLTexture3DPort.h>
 
 

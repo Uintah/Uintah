@@ -32,7 +32,7 @@
 #define SCI_project_GLTexture3DPort_h 1
 
 #include <Dataflow/Ports/SimplePort.h>
-#include <Core/Datatypes/GLTexture3D.h>
+#include <Core/GLVolumeRenderer/GLTexture3D.h>
 
 namespace SCIRun {
 

@@ -47,7 +47,7 @@ PSELIBS := Dataflow/Network Dataflow/Widgets Dataflow/Ports \
 	Dataflow/Modules/Render Core/Datatypes Core/Containers \
 	Core/Exceptions Core/Thread Core/GuiInterface Core/Geom \
 	Core/Persistent Core/Disclosure Core/Geometry Core/Util \
-	Core/TkExtensions Core/Algorithms/Visualization
+	Core/TkExtensions Core/Algorithms/Visualization Core/GLVolumeRenderer
 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 

@@ -30,6 +30,7 @@ SUBDIRS := \
 	$(SRCDIR)/GUI \
 	$(SRCDIR)/Geom \
 	$(SRCDIR)/Geometry \
+	$(SRCDIR)/GLVolumeRenderer \
 	$(SRCDIR)/GuiInterface \
 	$(SRCDIR)/Malloc \
 	$(SRCDIR)/Math \

@@ -23,8 +23,8 @@
 #include <Core/Geometry/Ray.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Containers/Array3.h>
-#include <Core/Datatypes/Brick.h>
-#include <Core/Datatypes/VolRenState.h>
+#include <Core/GLVolumeRenderer/Brick.h>
+#include <Core/GLVolumeRenderer/VolRenState.h>
 
 namespace Kurt {
 

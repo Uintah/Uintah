@@ -38,7 +38,7 @@
 #include <Dataflow/Widgets/PointWidget.h>
 #include <iostream>
 #include <algorithm>
-#include <Core/Datatypes/VolumeUtils.h>
+#include <Core/GLVolumeRenderer/VolumeUtils.h>
 
 
 

@@ -28,7 +28,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/GLTexture3D.h>
+#include <Core/GLVolumeRenderer/GLTexture3D.h>
 #include <Dataflow/Ports/GLTexture3DPort.h>
 #include <Core/Datatypes/Field.h>
 #include <GL/glx.h>

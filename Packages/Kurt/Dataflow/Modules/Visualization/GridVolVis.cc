@@ -44,7 +44,7 @@
 #include <ios>
 #endif
 #include <algorithm>
-#include <Core/Datatypes/VolumeUtils.h>
+#include <Core/GLVolumeRenderer/VolumeUtils.h>
 #include <strstream>
 using std::hex;
 using std::dec;

@@ -21,57 +21,37 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Datatypes
 
-SRCS += $(SRCDIR)/Clipper.cc		    	\
+SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/ColorMap.cc		    	\
-        $(SRCDIR)/ColumnMatrix.cc	    	\
+	$(SRCDIR)/ColumnMatrix.cc	    	\
 	$(SRCDIR)/ContourMesh.cc            	\
-        $(SRCDIR)/cd_templates.cc	    	\
-        $(SRCDIR)/cd_templates_fields_0.cc    	\
-        $(SRCDIR)/cd_templates_fields_1.cc    	\
-        $(SRCDIR)/cd_templates_fields_2.cc    	\
-        $(SRCDIR)/cd_templates_fields_3.cc    	\
-        $(SRCDIR)/cd_templates_fields_4.cc    	\
-        $(SRCDIR)/cd_templates_fields_5.cc    	\
-        $(SRCDIR)/Datatype.cc		    	\
-        $(SRCDIR)/DenseMatrix.cc	    	\
-        $(SRCDIR)/Field.cc		    	\
-        $(SRCDIR)/FieldSet.cc		    	\
-        $(SRCDIR)/GenFunction.cc	    	\
+	$(SRCDIR)/Datatype.cc		    	\
+	$(SRCDIR)/DenseMatrix.cc	    	\
+	$(SRCDIR)/Field.cc		    	\
+	$(SRCDIR)/FieldSet.cc		    	\
+	$(SRCDIR)/GenFunction.cc	    	\
 	$(SRCDIR)/HexVolMesh.cc			\
-        $(SRCDIR)/Image.cc		    	\
-        $(SRCDIR)/ImageMesh.cc		    	\
+	$(SRCDIR)/Image.cc		    	\
+	$(SRCDIR)/ImageMesh.cc		    	\
 	$(SRCDIR)/LatVolMesh.cc 		\
-        $(SRCDIR)/Matrix.cc		    	\
-        $(SRCDIR)/Mesh.cc		    	\
-        $(SRCDIR)/Path.cc		    	\
+	$(SRCDIR)/Matrix.cc		    	\
+	$(SRCDIR)/Mesh.cc		    	\
+	$(SRCDIR)/Path.cc		    	\
 	$(SRCDIR)/PointCloudMesh.cc         	\
-        $(SRCDIR)/PropertyManager.cc	    	\
+	$(SRCDIR)/PropertyManager.cc	    	\
 	$(SRCDIR)/QuadSurfMesh.cc               \
 	$(SRCDIR)/ScanlineMesh.cc           	\
-        $(SRCDIR)/SparseRowMatrix.cc	    	\
-        $(SRCDIR)/TetVolMesh.cc 	    	\
-        $(SRCDIR)/TriSurfMesh.cc	    	\
+	$(SRCDIR)/SparseRowMatrix.cc	    	\
+	$(SRCDIR)/TetVolMesh.cc 	    	\
+	$(SRCDIR)/TriSurfMesh.cc	    	\
 	$(SRCDIR)/TypeName.cc		    	\
-	$(SRCDIR)/Brick.cc		    	\
-	$(SRCDIR)/FullRes.cc 			\
-	$(SRCDIR)/FullResIterator.cc 		\
-	$(SRCDIR)/GLAttenuate.cc 		\
-	$(SRCDIR)/GLMIP.cc 			\
-	$(SRCDIR)/GLOverOp.cc 			\
-	$(SRCDIR)/GLPlanes.cc 			\
-        $(SRCDIR)/GLTexture3D.cc 		\
-	$(SRCDIR)/GLTextureIterator.cc 		\
-	$(SRCDIR)/GLTexRenState.cc 		\
-	$(SRCDIR)/GLVolRenState.cc 		\
-	$(SRCDIR)/GLVolumeRenderer.cc 		\
-	$(SRCDIR)/LOS.cc 			\
-	$(SRCDIR)/LOSIterator.cc 		\
-	$(SRCDIR)/ROI.cc 			\
-	$(SRCDIR)/ROIIterator.cc 		\
-	$(SRCDIR)/SliceTable.cc 		\
-	$(SRCDIR)/TexPlanes.cc 			\
-	$(SRCDIR)/VolumeUtils.cc 		\
-
+	$(SRCDIR)/cd_templates.cc	    	\
+	$(SRCDIR)/cd_templates_fields_0.cc    	\
+	$(SRCDIR)/cd_templates_fields_1.cc    	\
+	$(SRCDIR)/cd_templates_fields_2.cc    	\
+	$(SRCDIR)/cd_templates_fields_3.cc    	\
+	$(SRCDIR)/cd_templates_fields_4.cc    	\
+	$(SRCDIR)/cd_templates_fields_5.cc
 
 
 PSELIBS := Core/Persistent Core/Disclosure Core/Exceptions Core/Containers \

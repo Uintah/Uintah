@@ -21,34 +21,63 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Geom
 
-SRCS     += $(SRCDIR)/GeomObj.cc $(SRCDIR)/GeomOpenGL.cc \
-	$(SRCDIR)/GeomArrows.cc $(SRCDIR)/Pt.cc $(SRCDIR)/GeomText.cc \
-	$(SRCDIR)/BBoxCache.cc $(SRCDIR)/ColorMapTex.cc \
-	$(SRCDIR)/GeomGrid.cc $(SRCDIR)/HistogramTex.cc \
-	$(SRCDIR)/GeomQMesh.cc $(SRCDIR)/TimeGrid.cc \
-	$(SRCDIR)/GeomBillboard.cc $(SRCDIR)/GeomGroup.cc \
-	$(SRCDIR)/GeomRenderMode.cc $(SRCDIR)/GeomTimeGroup.cc \
-	$(SRCDIR)/GeomBox.cc $(SRCDIR)/HeadLight.cc $(SRCDIR)/GeomScene.cc \
-	$(SRCDIR)/GeomTorus.cc $(SRCDIR)/Color.cc \
-	$(SRCDIR)/IndexedGroup.cc $(SRCDIR)/GeomSphere.cc \
-	$(SRCDIR)/GeomEllipsoid.cc \
-	$(SRCDIR)/GeomTransform.cc $(SRCDIR)/GeomCone.cc \
-	$(SRCDIR)/Light.cc $(SRCDIR)/Sticky.cc $(SRCDIR)/GeomTri.cc \
-	$(SRCDIR)/GeomContainer.cc $(SRCDIR)/Lighting.cc \
-	$(SRCDIR)/Switch.cc $(SRCDIR)/GeomTriStrip.cc \
-	$(SRCDIR)/GeomCylinder.cc $(SRCDIR)/GeomLine.cc \
-	$(SRCDIR)/GeomTriangles.cc $(SRCDIR)/GeomDisc.cc \
-	$(SRCDIR)/Material.cc $(SRCDIR)/GeomTube.cc $(SRCDIR)/GeomTetra.cc \
-	$(SRCDIR)/GeomVertexPrim.cc $(SRCDIR)/PointLight.cc \
-	$(SRCDIR)/GeomTexSlices.cc $(SRCDIR)/View.cc \
-	$(SRCDIR)/GeomPolyline.cc $(SRCDIR)/TexSquare.cc \
-	$(SRCDIR)/tGrid.cc $(SRCDIR)/GeomPick.cc $(SRCDIR)/Pickable.cc \
-	$(SRCDIR)/GuiGeom.cc $(SRCDIR)/GuiView.cc \
-	$(SRCDIR)/templates.cc 	$(SRCDIR)/GeomDL.cc
+SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
+	$(SRCDIR)/Color.cc		                \
+	$(SRCDIR)/ColorMapTex.cc	                \
+	$(SRCDIR)/GeomArrows.cc		                \
+	$(SRCDIR)/GeomBillboard.cc	                \
+	$(SRCDIR)/GeomBox.cc		                \
+	$(SRCDIR)/GeomCone.cc		                \
+	$(SRCDIR)/GeomContainer.cc	                \
+	$(SRCDIR)/GeomCylinder.cc	                \
+	$(SRCDIR)/GeomDL.cc                             \
+	$(SRCDIR)/GeomDisc.cc		                \
+	$(SRCDIR)/GeomEllipsoid.cc	                \
+	$(SRCDIR)/GeomGrid.cc		                \
+	$(SRCDIR)/GeomGroup.cc		                \
+	$(SRCDIR)/GeomLine.cc		                \
+	$(SRCDIR)/GeomObj.cc                            \
+	$(SRCDIR)/GeomOpenGL.cc		                \
+	$(SRCDIR)/GeomPick.cc		                \
+	$(SRCDIR)/GeomPolyline.cc	                \
+	$(SRCDIR)/GeomQMesh.cc		                \
+	$(SRCDIR)/GeomRenderMode.cc	                \
+	$(SRCDIR)/GeomScene.cc		                \
+	$(SRCDIR)/GeomSphere.cc		                \
+	$(SRCDIR)/GeomTetra.cc		                \
+	$(SRCDIR)/GeomTexSlices.cc	                \
+	$(SRCDIR)/GeomText.cc		                \
+	$(SRCDIR)/GeomTimeGroup.cc	                \
+	$(SRCDIR)/GeomTorus.cc		                \
+	$(SRCDIR)/GeomTransform.cc	                \
+	$(SRCDIR)/GeomTri.cc		                \
+	$(SRCDIR)/GeomTriStrip.cc	                \
+	$(SRCDIR)/GeomTriangles.cc	                \
+	$(SRCDIR)/GeomTube.cc		                \
+	$(SRCDIR)/GeomVertexPrim.cc	                \
+	$(SRCDIR)/GuiGeom.cc		    		\
+	$(SRCDIR)/GuiView.cc		    		\
+	$(SRCDIR)/HeadLight.cc		    		\
+	$(SRCDIR)/HistogramTex.cc	    		\
+	$(SRCDIR)/IndexedGroup.cc	    		\
+	$(SRCDIR)/Light.cc		    		\
+	$(SRCDIR)/Lighting.cc		    		\
+	$(SRCDIR)/Material.cc		    		\
+	$(SRCDIR)/Pickable.cc		    		\
+	$(SRCDIR)/PointLight.cc		    		\
+	$(SRCDIR)/Pt.cc			    		\
+	$(SRCDIR)/Sticky.cc		    		\
+	$(SRCDIR)/Switch.cc		    		\
+	$(SRCDIR)/TexSquare.cc		    		\
+	$(SRCDIR)/TimeGrid.cc		    		\
+	$(SRCDIR)/View.cc		    		\
+	$(SRCDIR)/tGrid.cc		    		\
+	$(SRCDIR)/templates.cc
 
 PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
 	Core/Math Core/Containers Core/Thread \
 	Core/GuiInterface
+
 LIBS := $(GL_LIBS) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

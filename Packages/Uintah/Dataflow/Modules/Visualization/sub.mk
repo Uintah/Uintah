@@ -36,6 +36,7 @@ PSELIBS := \
 	Core/Datatypes                 \
         Core/Geom                      \
 	Core/Geometry                  \
+	Core/GLVolumeRenderer          \
 	Core/Util                      \
 	Core/Disclosure                \
 	Packages/Uintah/Core/Grid          \

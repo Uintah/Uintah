@@ -15,7 +15,7 @@ SRCS   += \
 
 PSELIBS := Core/Exceptions Core/Geometry \
 	Core/Datatypes \
-	Core/Containers Core/Geom Core/Thread \
+	Core/Containers Core/Geom Core/Thread Core/GLVolumeRenderer \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Datatypes \
 	Packages/Uintah/Core/Exceptions \
