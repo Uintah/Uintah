@@ -51,8 +51,6 @@ PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Core/GuiInterface Core/TkExtensions Core/Util \
 	Core/TkExtensions Core/Datatypes Core/GeomInterface
 
-CFLAGS += $(MPEG_DEF_FLAG) $(MAGICK_DEF_FLAG)
-
 INCLUDES += $(MPEG_INCLUDE) $(MAGICK_INCLUDE)
 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) $(MPEG_LIBRARY) $(MAGICK_LIBS) -lm

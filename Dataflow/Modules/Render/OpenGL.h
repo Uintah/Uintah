@@ -45,6 +45,8 @@
 #include <map>
 #include <vector>
 
+#include <sci_defs.h>
+
 #include <Core/Geom/GeomObj.h>
 #include <Core/Util/Timer.h>
 #include <Core/Geom/GeomObj.h>
@@ -70,9 +72,9 @@
 #include <Core/Geom/GeomTri.h>
 #include <Core/Geom/GeomText.h>
 
-#ifdef MPEG
+#ifdef HAVE_MPEG
 #include <mpege.h>
-#endif // MPEG
+#endif // HAVE_MPEG
 
 #ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
@@ -176,10 +178,10 @@ protected:
 #endif
   bool do_hi_res;
   bool encoding_mpeg;
-#ifdef MPEG
+#ifdef HAVE_MPEG
   FILE *output;
   MPEGe_options options;
-#endif // MPEG
+#endif // HAVE_MPEG
 
 public:
   static bool query(GuiInterface* gui);

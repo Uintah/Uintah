@@ -33,7 +33,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <values.h>
 
-#ifdef MAGICK
+#ifdef HAVE_MAGICK
 namespace C_Magick {
 #include <magick/magick.h>
 }
@@ -325,7 +325,7 @@ void
 OpenGL::render_and_save_image(int x, int y, 
 			      const string& fname, const string &ftype)
 {
-#ifndef MAGICK
+#ifndef HAVE_MAGICK
   if (ftype != "ppm" && ftype != "raw") {
     cerr << "Error - ImageMagick is not enabled, can only save .ppm or .raw files.\n";
     return;
@@ -365,7 +365,7 @@ OpenGL::render_and_save_image(int x, int y,
   const int ncols = (int)ceil(hi_res.ncols);
       
   ofstream *image_file;
-#ifdef MAGICK
+#ifdef HAVE_MAGICK
   C_Magick::Image *image;
   C_Magick::ImageInfo *image_info;
 #endif
@@ -387,7 +387,7 @@ OpenGL::render_and_save_image(int x, int y,
   }
   else 
   {
-#ifdef MAGICK
+#ifdef HAVE_MAGICK
     C_Magick::InitializeMagick(0);
     num_channels = 4;
     channel_bytes = 2;
@@ -421,7 +421,7 @@ OpenGL::render_and_save_image(int x, int y,
     
     if (do_magick)
     {
-#ifdef MAGICK
+#ifdef HAVE_MAGICK
       pixels = (unsigned char *)C_Magick::SetImagePixels
 	(image,0,vp[3]*(nrows - 1 - hi_res.row),hi_res.resx,read_height);
 #endif
@@ -469,7 +469,7 @@ OpenGL::render_and_save_image(int x, int y,
       memcpy(bot_row, tmp_row, hi_res.resx*pix_size);
     }
     if (do_magick) {
-#ifdef MAGICK
+#ifdef HAVE_MAGICK
       C_Magick::SyncImagePixels(image);
 #endif
     } else
@@ -483,7 +483,7 @@ OpenGL::render_and_save_image(int x, int y,
 
   if (do_magick)
   {
-#ifdef MAGICK    
+#ifdef HAVE_MAGICK    
     if (!C_Magick::WriteImage(image_info,image))
     {
       cerr << "\nCannont Write " << fname << " because: " 
@@ -1938,7 +1938,7 @@ void OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
 void OpenGL::StartMpeg(const string& fname)
 {
   // let's get a file pointer pointing to the output file
-#ifdef MPEG
+#ifdef HAVE_MPEG
   output=fopen(fname.c_str(), "w");
   if (!output){
     cerr<<"Failed to open file "<< fname.c_str()<<" for writing\n";
@@ -1954,12 +1954,12 @@ void OpenGL::StartMpeg(const string& fname)
     cerr << "MPEGe library initialisation failure!:" << options.error << "\n";
     return;
   }
-#endif // MPEG
+#endif // HAVE_MPEG
 }
 
 void OpenGL::AddMpegFrame()
 {
-#ifdef MPEG
+#ifdef HAVE_MPEG
   static ImVfb *image=NULL; /* we only wnat to alloc memory for these once */
   int width, height;
   ImVfbPtr ptr;
@@ -2008,12 +2008,12 @@ void OpenGL::AddMpegFrame()
   if( !MPEGe_image(image, &options) ){
     cerr << "MPEGe_image failure:" << options.error << "\n";
   }
-#endif // MPEG
+#endif // HAVE_MPEG
 }
 
 void OpenGL::EndMpeg()
 {
-#ifdef MPEG
+#ifdef HAVE_MPEG
   if( !MPEGe_close(&options) ){
     cerr<<"Had a bit of difficulty closing the file:"<<options.error;
   }
@@ -2021,7 +2021,7 @@ void OpenGL::EndMpeg()
 //  fclose(output);  -- MPEGe_close closes the file for us
 
   cerr<<"Ending Mpeg\n";
-#endif // MPEG
+#endif // HAVE_MPEG
 }
 
 // return world-space depth to point under pixel (x, y)
