@@ -135,8 +135,8 @@ void SimpleOPort<T>::send_intermediate(const T& data)
     if(nconnections() == 0)
 	return;
     turn_on();
+    module->multisend(this);
     for(int i=0;i<nconnections();i++){
-	connections[i]->iport->get_module()->multisend(this);
 	SimplePortComm<T>* msg=scinew SimplePortComm<T>(data);
 	((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
     }
