@@ -19,18 +19,22 @@
 /*
  * HEADER (H) FILE : DicomSeriesReader.h
  *
- * DESCRIPTION     : 
+ * DESCRIPTION     : Provides ability to read and get information about
+ *                   a set of DICOM files.  The read function can read
+ *                   one valid DICOM series at a time.  The other functions
+ *                   return information about what DICOM series' are in a 
+ *                   directory and what files are in each series.  The user
+ *                   can use that information to decide which directory/files
+ *                   to read from.  The read function stores each DICOM series
+ *                   as a DicomImage object, which in turn contains information
+ *                   about the series (dimensions, pixel spacing, etc.).
  *                     
  * AUTHOR(S)       : Jenny Simpson
  *                   SCI Institute
  *                   University of Utah
  *                 
- *                   Darby J. Van Uitert
- *                   SCI Institute
- *                   University of Utah
- *
  * CREATED         : 9/19/2003
- * MODIFIED        : 9/19/2003
+ * MODIFIED        : 10/2/2003
  * DOCUMENTATION   :
  * NOTES           : 
  *
@@ -40,12 +44,14 @@
 #ifndef DicomSeriesReader_h
 #define DicomSeriesReader_h
 
+// SCIRun includes
+
 // Itk includes
 #include "itkDicomImageIOFactory.h"
 #include "itkDicomImageIO.h"
 #include "itkImageSeriesReader.h"
+#include "itkImageFileReader.h"
 #include "itkDICOMSeriesFileNames.h"
-//#include "Testing/Code/BasicFilters/itkFilterWatcher.h"
 #include <Core/Algorithms/DataIO/DicomImage.h>
 
 // Standard lib includes
@@ -57,8 +63,6 @@ namespace SCIRun {
 // ************************ Class: DicomSeriesReader **************************
 // ****************************************************************************
 
-typedef itk::ImageSeriesReader<ImageNDType> ReaderType;
-
 class DicomSeriesReader
 {
 
@@ -66,12 +70,27 @@ public:
   DicomSeriesReader();
   ~DicomSeriesReader();
 
-  //! Reading function
-  DicomImage read_series( char * dir );
+  //! Reading functions
+  void set_dir( std::string dir );
+  std::string get_dir();
+  void set_files( const std::vector<std::string> files );
+  const std::vector<std::string> get_files();
+
+  int read( DicomImage & di );
+
+  //! Series information
+  const std::vector<std::string> &get_series_uids();
+  const std::vector<std::string> &get_file_names( const std::string& 
+                                                  series_uid );
+  void set_sort_image_num();
+  void set_sort_slice_loc();
+  void set_sort_pos_patient();
 
 private:
 
-protected:
+  std::string dir_;
+  std::vector<std::string> files_;
+  itk::DICOMSeriesFileNames::Pointer names_;
 
 };
 
