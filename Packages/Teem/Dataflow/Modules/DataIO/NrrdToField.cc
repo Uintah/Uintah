@@ -67,6 +67,10 @@ NrrdToField::~NrrdToField()
 
 FieldHandle create_scanline_field(NrrdDataHandle &nrd) {
   Nrrd *n = nrd->nrrd;
+  for (int a = 0; a < 2; a++) {
+    if (!(AIR_EXISTS(n->axis[a].min) && AIR_EXISTS(n->axis[a].max)))
+      nrrdAxisMinMaxSet(n, a);
+  }
   Point min(n->axis[1].min, .0, .0);
   Point max(n->axis[1].max, .0, .0);
   ScanlineMesh *m = new ScanlineMesh(n->axis[1].size, min, max);
@@ -124,6 +128,10 @@ FieldHandle create_scanline_field(NrrdDataHandle &nrd) {
 
 FieldHandle create_image_field(NrrdDataHandle &nrd) {
   Nrrd *n = nrd->nrrd;
+  for (int a = 0; a < 3; a++) {
+    if (!(AIR_EXISTS(n->axis[a].min) && AIR_EXISTS(n->axis[a].max)))
+      nrrdAxisMinMaxSet(n, a);
+  }
   Point min(n->axis[1].min, n->axis[2].min, .0);
   Point max(n->axis[1].max, n->axis[2].max, .0);
   ImageMesh *m = new ImageMesh(n->axis[1].size, n->axis[2].size,
@@ -182,6 +190,11 @@ FieldHandle create_image_field(NrrdDataHandle &nrd) {
 
 FieldHandle create_latvol_field(NrrdDataHandle &nrd) {
   Nrrd *n = nrd->nrrd;
+
+  for (int a = 0; a < 4; a++) {
+    if (!(AIR_EXISTS(n->axis[a].min) && AIR_EXISTS(n->axis[a].max)))
+      nrrdAxisMinMaxSet(n, a);
+  }
   Point min(n->axis[1].min, n->axis[2].min, n->axis[3].min);
   Point max(n->axis[1].max, n->axis[2].max, n->axis[3].max);
   LatVolMesh *m = new LatVolMesh(n->axis[1].size, n->axis[2].size, 
@@ -325,10 +338,9 @@ void NrrdToField::execute()
   if (dim_based_convert) {
 
     int dim = n->dim;
-    if (ninH->is_sci_nrrd()) {
-      // have always dim + 1 axes 
-      --dim;
-    }
+    // have always dim + 1 axes 
+    --dim;
+
     switch (dim) {
 
     case 1:
