@@ -8,31 +8,40 @@
    </Meta>
 
    <Time>
-	<maxTime>.3</maxTime>
+	<maxTime>1</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>.05</delt_max>
-	<timestep_multiplier>1</timestep_multiplier>
+	<max_initial_delt>.001</max_initial_delt>
+	<initial_delt_range>.01</initial_delt_range>
+	<timestep_multiplier>.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>cfd.uda</filebase>
-	<outputInterval>.3</outputInterval>
+	<outputInterval>.002</outputInterval>
 	<save label = "density"/>
-	<save label = "xvelocity"/>
-	<save label = "yvelocity"/>
-	<save label = "zvelocity"/>
-	<!--	<checkpoint cycle = "2" interval = "1"/> -->
+	<save label = "ccvelocity"/>
+	<save label = "pressure"/>
+	<save label = "ccvorticity"/>
+	<save label = "ccvorticitymag"/>
+	<save label = "vcforce"/>
+	<save label = "N"/>
+	<checkpoint cycle = "2" interval = ".2"/>
    </DataArchiver>
 
     <SimpleCFD>
         <delt_multiplier>1</delt_multiplier>
-	<diffusion>.01</diffusion>
-	<viscosity>1.1</viscosity>
-	<dissipation>1</dissipation>
+	<diffusion>.1</diffusion>
+	<viscosity>.1</viscosity>
+	<dissipation>0</dissipation>
 	<pressure_pin>[0.5,0.5,0.5]</pressure_pin>
 	<advection_tolerance>1.e-4</advection_tolerance>
 	<maxadvect>1</maxadvect>
 	<keep_pressure>true</keep_pressure>
+	<buoyancy>0</buoyancy>
+	<thermal_conduction>0</thermal_conduction>
+	<vorticity_confinement>cellbased</vorticity_confinement>
+	<vorticity_confinement_scale>2</vorticity_confinement_scale>
 	<Solver>
 	   <Parameters>
 	      <tolerance>1.e-4</tolerance>
@@ -80,7 +89,7 @@
 		</Condition>
 		<Condition var="xvelocity">
 		    <region name="z+"/>
-		    <value>1</value>
+		    <value>100</value>
 		    <type>FixedValue</type>
 		    <applyAt>ZFace</applyAt>
 		</Condition>
@@ -104,7 +113,7 @@
 	    <Box label = "1">
 		<lower>[0,0,0]</lower>
 		<upper>[1.0,1.0,1.0]</upper>
-	        <resolution>[39,39,39]</resolution>
+	        <resolution>[81,11,81]</resolution>
 		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>

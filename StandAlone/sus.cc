@@ -29,6 +29,7 @@
 #include <Packages/Uintah/CCA/Components/Examples/Burger.h>
 #include <Packages/Uintah/CCA/Components/Examples/Poisson3.h>
 #include <Packages/Uintah/CCA/Components/Examples/SimpleCFD.h>
+#include <Packages/Uintah/CCA/Components/Examples/AMRSimpleCFD.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
@@ -65,6 +66,9 @@
 
 #if HAVE_IEEEFP_H
 #include <ieeefp.h>
+#endif
+#if 0
+#include <fenv.h>
 #endif
 
 #include <iostream>
@@ -163,6 +167,9 @@ main( int argc, char** argv )
   
 #if HAVE_IEEEFP_H
     fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
+#endif
+#if 0
+    feenableexcept(FE_INVALID|FE_OVERFLOW|FE_DIVBYZERO);
 #endif
 
     /*
@@ -438,7 +445,11 @@ main( int argc, char** argv )
 	  sim = poisson3;
 	  comp = poisson3;
 	} else if(do_simplecfd){
-	  SimpleCFD* simplecfd = scinew SimpleCFD(world);
+	  SimpleCFD* simplecfd;
+	  if(do_AMR)
+	    simplecfd = scinew AMRSimpleCFD(world);
+	  else
+	    simplecfd = scinew SimpleCFD(world);
 	  sim = simplecfd;
 	  comp = simplecfd;
 	} else if (combine_patches) {
