@@ -83,22 +83,26 @@ void
 NrrdCrop::load_gui() {
   num_axes_.reset();
   if (num_axes_.get() == 0) { return; }
-
+  
+ 
   lastmin_.resize(num_axes_.get(), -1);
   lastmax_.resize(num_axes_.get(), -1);  
-  for (int a = 0; a < num_axes_.get(); a++) {
-    ostringstream str;
-    str << "minAxis" << a;
-    mins_.push_back(new GuiInt(ctx->subVar(str.str())));
-    ostringstream str1;
-    str1 << "maxAxis" << a;
-    maxs_.push_back(new GuiInt(ctx->subVar(str1.str())));
-    ostringstream str2;
-    str2 << "absmaxAxis" << a;
-    absmaxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
+
+  if (mins_.size() != num_axes_.get()) {
+    for (int a = 0; a < num_axes_.get(); a++) {
+      ostringstream str;
+      str << "minAxis" << a;
+      mins_.push_back(new GuiInt(ctx->subVar(str.str())));
+      ostringstream str1;
+      str1 << "maxAxis" << a;
+      maxs_.push_back(new GuiInt(ctx->subVar(str1.str())));
+      ostringstream str2;
+      str2 << "absmaxAxis" << a;
+      absmaxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
+    }
   }
 }
-  
+
 void 
 NrrdCrop::execute()
 {
@@ -127,7 +131,31 @@ NrrdCrop::execute()
   if (last_generation_ != nrrdH->generation) {
     ostringstream str;
 
-    if (last_generation_ != -1) {
+    load_gui();
+
+    bool do_clear = false;
+    // if the dim and sizes are the same don't clear.
+    if ((num_axes_.get() == nrrdH->nrrd->dim)) {
+      for (int a = 0; a < num_axes_.get(); a++) {
+	if (a == 0) {
+	  if (absmaxs_[a]->get() != nrrdH->get_tuple_axis_size() - 1) {
+	    do_clear = true;
+	    break;
+	  }
+	} else {
+	  if (absmaxs_[a]->get() != nrrdH->nrrd->axis[a].size - 1) {
+	    do_clear = true;
+	    break;
+	  }
+	}
+      }
+    } else {
+      do_clear = true;
+    }
+
+
+    if (do_clear) {
+
       lastmin_.clear();
       lastmax_.clear();
       vector<GuiInt*>::iterator iter = mins_.begin();
@@ -149,29 +177,31 @@ NrrdCrop::execute()
       }
       absmaxs_.clear();
       gui->execute(id.c_str() + string(" clear_axes"));
-    }
-
-    num_axes_.set(nrrdH->nrrd->dim);
-    num_axes_.reset();
-    load_gui();
-    gui->execute(id.c_str() + string(" init_axes"));
-
-    for (int a = 0; a < num_axes_.get(); a++) {
-      maxs_[a]->reset();
-    }
-    for (int a = 0; a < num_axes_.get(); a++) {
-      mins_[a]->set(0);
-      if (a == 0) {
-	absmaxs_[a]->set(nrrdH->get_tuple_axis_size() - 1);
-      } else {
-	absmaxs_[a]->set(nrrdH->nrrd->axis[a].size - 1);
-      }
-      maxs_[a]->reset();
-      absmaxs_[a]->reset();
-    }
+      
     
-    str << id.c_str() << " set_max_vals" << endl; 
-    gui->execute(str.str());
+      num_axes_.set(nrrdH->nrrd->dim);
+      num_axes_.reset();
+      load_gui();
+      gui->execute(id.c_str() + string(" init_axes"));
+
+      for (int a = 0; a < num_axes_.get(); a++) {
+	maxs_[a]->reset();
+      }
+      for (int a = 0; a < num_axes_.get(); a++) {
+	mins_[a]->set(0);
+	if (a == 0) {
+	  absmaxs_[a]->set(nrrdH->get_tuple_axis_size() - 1);
+	} else {
+	  absmaxs_[a]->set(nrrdH->nrrd->axis[a].size - 1);
+	}
+	maxs_[a]->reset();
+	absmaxs_[a]->reset();
+      }
+    
+      str << id.c_str() << " set_max_vals" << endl; 
+      gui->execute(str.str());
+    
+    }
   }
 
   if (num_axes_.get() == 0) { return; }
