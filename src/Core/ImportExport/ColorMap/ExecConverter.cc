@@ -236,8 +236,14 @@ TextColorMap_writer(ProgressReporter *pr,
   return Exec_writer(pr, colormap, filename, command);
 }
 
+#ifndef __APPLE__
+// On the Mac, this is done in FieldIEPlugin.cc, in the
+// macImportExportForceLoad() function to force the loading of this
+// (and other) plugins.
 static ColorMapIEPlugin
 TextColorMap_plugin("TextColorMap",
 		    "", "",
 		    TextColorMap_reader,
 		    TextColorMap_writer);
+#endif
+
