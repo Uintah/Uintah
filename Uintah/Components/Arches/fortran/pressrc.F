@@ -220,6 +220,7 @@ c-----------------------------------------------------------------------
      &                    suu(i,j,k))/aup(i,j,k)
                if (pcell(i+1,j,k).eq.ffield)
      &              ue = (aue(i+1,j,k)*uu(i+2,j,k)+
+c     &              ue = (aue(i+1,j,k)*uu(i+1,j,k)+
      &                    auw(i+1,j,k)*uu(i,j,k)+
      $                    aun(i+1,j,k)*uu(i+1,j+1,k)+
      &                    aus(i+1,j,k)*uu(i+1,j-1,k)+
@@ -238,6 +239,7 @@ c-----------------------------------------------------------------------
      &              vn = (ave(i,j+1,k)*vv(i+1,j+1,k)+
      &                    avw(i,j+1,k)*vv(i-1,j+1,k)+
      $                    avn(i,j+1,k)*vv(i,j+2,k)+
+c     $                    avn(i,j+1,k)*vv(i,j+1,k)+
      &                    avs(i,j+1,k)*vv(i,j,k)+
      $                    avt(i,j+1,k)*vv(i,j+1,k+1)+
      &                    avb(i,j+1,k)*vv(i,j+1,k-1)+
@@ -256,6 +258,7 @@ c-----------------------------------------------------------------------
      $                    awn(i,j,k+1)*ww(i,j+1,k+1)+
      &                    aws(i,j,k+1)*ww(i,j-1,k+1)+
      $                    awt(i,j,k+1)*ww(i,j,k+2)+
+c     $                    awt(i,j,k+1)*ww(i,j,k+1)+
      &                    awb(i,j,k+1)*ww(i,j,k)+
      $                    swu(i,j,k+1))/awp(i,j,k+1)   
 
@@ -318,6 +321,9 @@ c        convs = convs/((KEND-KST+1)*(JEND-JST+1)*(IEND-IST+1))
          end
 c
 c $Log$
+c Revision 1.7  2000/10/04 16:46:29  rawat
+c Parallel solver for pressure is working
+c
 c Revision 1.6  2000/09/26 04:35:34  rawat
 c added some more multi-patch support
 c

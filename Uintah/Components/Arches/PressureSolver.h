@@ -137,6 +137,11 @@ private:
 			     DataWarehouseP& new_dw,
 			     DataWarehouseP& matrix_dw,
 			     double delta_t);
+      void buildLinearMatrixPress(const ProcessorGroup* pc,
+			     const Patch* patch,
+			     DataWarehouseP& new_dw,
+			     DataWarehouseP& matrix_dw,
+			     double delta_t);
 
       void pressureLinearSolve_all(const ProcessorGroup* pc,
 				   const Patch* patch,
@@ -198,6 +203,9 @@ private:
 
 //
 // $Log$
+// Revision 1.29  2000/10/04 16:46:24  rawat
+// Parallel solver for pressure is working
+//
 // Revision 1.28  2000/09/20 18:05:34  sparker
 // Adding support for Petsc and per-processor tasks
 //
