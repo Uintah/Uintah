@@ -484,8 +484,7 @@ SCI_ARG_ENABLE(perfex,
 SCI_ARG_ENABLE(package,
   AC_HELP_STRING(--enable-package=<list>,
                  Use the SCIRun packages specified by list.
-                 example: --enable-package='BioPSE Teem'
-                 default: all directories under SCIRun/src/Packages),
+                 example: --enable-package='BioPSE Teem'),
   [package="$enableval"],
   [package=""])
 SCI_ARG_ENABLE(exename,
