@@ -31,7 +31,10 @@
     </summary>
     <description>
       <p>
-        Convert an interpolant field into an equivalent sparse transfer matrix.
+        Convert an interpolant field into an equivalent transfer
+        matrix.  The transfer matrix will be of type SparseRowMatrix.  The
+        matrix rows correspond to the source field indices and the columns
+        refer to the destination field indices.
       </p> 
     </description>
   </overview>
@@ -44,7 +47,7 @@
     </inputs>
     <outputs>
       <port>
-	<name>Output</name>
+	<name>Transfer</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>

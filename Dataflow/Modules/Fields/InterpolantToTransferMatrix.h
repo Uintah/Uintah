@@ -25,8 +25,8 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Util/ModuleReporter.h>
+#include <algorithm>
 
 namespace SCIRun {
 
@@ -38,6 +38,13 @@ public:
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fitp,
 					    const TypeDescription *litp);
+
+protected:
+
+  static bool pair_less(const pair<int, float> &a, const pair<int, float> &b)
+  {
+    return a.first < b.first;
+  }
 };
 
 
@@ -69,24 +76,51 @@ Interp2TransferAlgoT<FITP, LITP>::execute(ModuleReporter *m,
   typename LITP::size_type itrsize;
   fitp->get_typed_mesh()->size(itrsize);
 
-  DenseMatrix *matrix = scinew DenseMatrix((unsigned int)itrsize, range);
-
   typename LITP::iterator iter, eiter;
   fitp->get_typed_mesh()->begin(iter);
   fitp->get_typed_mesh()->end(eiter);
   unsigned int counter = 0;
+  int *rowdata = scinew int[((unsigned int)itrsize)+1];
+  vector<int> coldatav;
+  vector<double> datav;
+  rowdata[0] = 0;
   while (iter != eiter)
   {
-    typename FITP::value_type v;
-    fitp->value(v, *iter);
+    typename FITP::value_type vtmp;
+    fitp->value(vtmp, *iter);
+    vector<pair<int, double> > v(vtmp.size());
+    for (i=0; i<vtmp.size(); i++)
+    {
+      v[i].first = (int)(vtmp[i].first);
+      v[i].second = vtmp[i].second;
+    }
+
+    rowdata[counter+1] = rowdata[counter] + v.size();
+    std::sort(v.begin(), v.end(), pair_less);
     for (i = 0; i < v.size(); i++)
     {
-      const unsigned int tmp = (unsigned int)v[i].first;
-      matrix->put(counter, tmp, v[i].second);
+      coldatav.push_back(v[i].first);
+      datav.push_back(v[i].second);
     }
     ++counter;
     ++iter;
   }
+
+  int *coldata = scinew int[coldatav.size()];
+  for (i=0; i < coldatav.size(); i++)
+  {
+    coldata[i] = coldatav[i];
+  }
+
+  double *data = scinew double[datav.size()];
+  for (i=0; i < datav.size(); i++)
+  {
+    data[i] = datav[i];
+  }
+
+  SparseRowMatrix *matrix =
+    scinew SparseRowMatrix((unsigned int)itrsize, range, rowdata, coldata,
+			   datav.size(), data);
 
   return matrix;
 }
