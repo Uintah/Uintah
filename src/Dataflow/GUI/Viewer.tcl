@@ -1154,8 +1154,12 @@ itcl_class ViewWindow {
     method addObjectToFrame_2 {objid frame} {
 	set w .ui[modname]
 	set m $frame.f
-	pack $m.objlist.canvas.frame.objt$objid -side top -anchor w
-	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
+	pack $m.objlist.canvas.frame.objt$objid \
+	    -side top -anchor w -fill x -expand y
+	pack $m.objlist.canvas.frame.obj$objid  \
+	    -in $m.objlist.canvas.frame.objt$objid -side left
+	pack $m.objlist.canvas.frame.menu$objid \
+	    -in $m.objlist.canvas.frame.objt$objid -side right -padx 1 -pady 1
     }
     
 
