@@ -233,22 +233,11 @@ void MPMICE::scheduleCCMomExchange(const Patch* patch,
     int iceidx = matl->getDWIndex();
     t->requires(old_dw,Ilb->rho_CCLabel,       iceidx,patch,Ghost::None);
     t->requires(new_dw,Ilb->mom_L_CCLabel,    iceidx,patch,Ghost::None);
-#if 0
-    t->requires(new_dw,Ilb->xmom_L_CCLabel,    iceidx,patch,Ghost::None);
-    t->requires(new_dw,Ilb->ymom_L_CCLabel,    iceidx,patch,Ghost::None);
-    t->requires(new_dw,Ilb->zmom_L_CCLabel,    iceidx,patch,Ghost::None);
-#endif
     t->requires(new_dw,Ilb->int_eng_L_CCLabel, iceidx,patch,Ghost::None);
     t->requires(new_dw,Ilb->vol_frac_CCLabel,  iceidx,patch,Ghost::None);
     t->requires(old_dw,Ilb->cv_CCLabel,        iceidx,patch,Ghost::None);
     t->requires(new_dw,Ilb->rho_micro_equil_CCLabel, iceidx,patch,Ghost::None);
-
     t->computes(new_dw,Ilb->mom_L_ME_CCLabel,    iceidx, patch);
-#if 0
-    t->computes(new_dw,Ilb->xmom_L_ME_CCLabel,    iceidx, patch);
-    t->computes(new_dw,Ilb->ymom_L_ME_CCLabel,    iceidx, patch);
-    t->computes(new_dw,Ilb->zmom_L_ME_CCLabel,    iceidx, patch);
-#endif
     t->computes(new_dw,Ilb->int_eng_L_ME_CCLabel, iceidx, patch);
   }
 
@@ -295,11 +284,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   // Create variables for the required values
   vector<CCVariable<double> > rho_CC(numICEMatls);
   vector<CCVariable<Vector> > mom_L(numICEMatls);
-#if 0
-  vector<CCVariable<double> > xmom_L(numICEMatls);
-  vector<CCVariable<double> > ymom_L(numICEMatls);
-  vector<CCVariable<double> > zmom_L(numICEMatls);
-#endif
   vector<CCVariable<double> > int_eng_L(numICEMatls);
   vector<CCVariable<double> > vol_frac_CC(numICEMatls);
   vector<CCVariable<double> > rho_micro_CC(numICEMatls);
@@ -307,11 +291,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 
   // Create variables for the results
   vector<CCVariable<Vector> > mom_L_ME(numICEMatls);
-#if 0
-  vector<CCVariable<double> > xmom_L_ME(numICEMatls);
-  vector<CCVariable<double> > ymom_L_ME(numICEMatls);
-  vector<CCVariable<double> > zmom_L_ME(numICEMatls);
-#endif
   vector<CCVariable<double> > int_eng_L_ME(numICEMatls);
 
   vector<double> b(numICEMatls);
@@ -332,14 +311,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
                                 dwindex, patch, Ghost::None, 0);
     new_dw->get(mom_L[m],       Ilb->mom_L_CCLabel,
                                 dwindex, patch, Ghost::None, 0);
-#if 0
-    new_dw->get(xmom_L[m],       Ilb->xmom_L_CCLabel,
-                                dwindex, patch, Ghost::None, 0);
-    new_dw->get(ymom_L[m],       Ilb->ymom_L_CCLabel,
-                                dwindex, patch, Ghost::None, 0);
-    new_dw->get(zmom_L[m],       Ilb->zmom_L_CCLabel,
-                                dwindex, patch, Ghost::None, 0);
-#endif
     new_dw->get(int_eng_L[m],    Ilb->int_eng_L_CCLabel,
                                 dwindex, patch, Ghost::None, 0);
     new_dw->get(vol_frac_CC[m],  Ilb->vol_frac_CCLabel,
@@ -350,12 +321,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
                                 dwindex, patch, Ghost::None, 0);
 
     new_dw->allocate(mom_L_ME[m],   Ilb->mom_L_ME_CCLabel,    dwindex, patch);
-#if 0
-    new_dw->allocate(xmom_L_ME[m],   Ilb->xmom_L_ME_CCLabel,    dwindex, patch);
-    new_dw->allocate(ymom_L_ME[m],   Ilb->ymom_L_ME_CCLabel,    dwindex, patch);
-    new_dw->allocate(zmom_L_ME[m],   Ilb->zmom_L_ME_CCLabel,    dwindex, patch);
-#endif
-    new_dw->allocate(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel, dwindex, patch);
+    new_dw->allocate(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel,dwindex, patch);
   }
 
    
@@ -368,11 +334,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
      ICEMaterial* matl = d_sharedState->getICEMaterial( m );
      int dwindex = matl->getDWIndex();
      new_dw->put(mom_L_ME[m],   Ilb->mom_L_ME_CCLabel,   dwindex, patch);
-#if 0
-     new_dw->put(xmom_L_ME[m],   Ilb->xmom_L_ME_CCLabel,   dwindex, patch);
-     new_dw->put(ymom_L_ME[m],   Ilb->ymom_L_ME_CCLabel,   dwindex, patch);
-     new_dw->put(zmom_L_ME[m],   Ilb->zmom_L_ME_CCLabel,   dwindex, patch);
-#endif
      new_dw->put(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel,dwindex, patch);
   }
 
@@ -426,6 +387,11 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.10  2001/01/08 22:00:50  jas
+// Removed #if 0  #endif pairs surrounding unused code related to momentum
+// variables that are now combined into CCVariables<Vector>.  This includes
+// mom_source, mom_L and mom_L_ME.
+//
 // Revision 1.9  2001/01/08 20:38:49  jas
 // Replace {x,y,z}mom_L_ME with a single CCVariable<Vector> mom_L_ME.
 //

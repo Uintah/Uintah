@@ -439,11 +439,6 @@ void ICE::scheduleStep4a(const Patch* patch, SchedulerP& sched,
     task->requires(old_dw,  lb->viscosity_CCLabel,  dwindex,patch,Ghost::None);
     task->requires(new_dw,  lb->vol_frac_CCLabel,   dwindex,patch,Ghost::None);
     task->computes(new_dw,  lb->mom_source_CCLabel,dwindex,patch);
-#if 0
-    task->computes(new_dw,  lb->xmom_source_CCLabel,dwindex,patch);
-    task->computes(new_dw,  lb->ymom_source_CCLabel,dwindex,patch);
-    task->computes(new_dw,  lb->zmom_source_CCLabel,dwindex,patch);
-#endif
     task->computes(new_dw,  lb->tau_X_FCLabel,      dwindex,patch);
     task->computes(new_dw,  lb->tau_Y_FCLabel,      dwindex,patch);
     task->computes(new_dw,  lb->tau_Z_FCLabel,      dwindex,patch);
@@ -500,20 +495,10 @@ void ICE::scheduleStep5a(const Patch* patch, SchedulerP&  sched,
     task->requires( old_dw, lb->cv_CCLabel,         dwindex,patch,Ghost::None);
     task->requires( old_dw, lb->temp_CCLabel,       dwindex,patch,Ghost::None);
     task->requires( new_dw, lb->mom_source_CCLabel,dwindex,patch,Ghost::None);
-#if 0
-    task->requires( new_dw, lb->xmom_source_CCLabel,dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->ymom_source_CCLabel,dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->zmom_source_CCLabel,dwindex,patch,Ghost::None);
-#endif
     task->requires( new_dw, lb->int_eng_source_CCLabel,
 		    dwindex,patch,Ghost::None);
     
     task->computes( new_dw, lb->mom_L_CCLabel,     dwindex,patch);
-#if 0
-    task->computes( new_dw, lb->xmom_L_CCLabel,     dwindex,patch);
-    task->computes( new_dw, lb->ymom_L_CCLabel,     dwindex,patch);
-    task->computes( new_dw, lb->zmom_L_CCLabel,     dwindex,patch);
-#endif
     task->computes( new_dw, lb->int_eng_L_CCLabel,  dwindex,patch);
     task->computes( new_dw, lb->mass_L_CCLabel,     dwindex,patch);
     task->computes( new_dw, lb->rho_L_CCLabel,      dwindex,patch);
@@ -537,11 +522,6 @@ void ICE::scheduleStep5b(const Patch* patch,SchedulerP& sched,
     int dwindex = matl->getDWIndex();
     task->requires( old_dw, lb->rho_CCLabel,        dwindex,patch,Ghost::None);
     task->requires( new_dw, lb->mom_L_CCLabel,     dwindex,patch,Ghost::None);
-#if 0
-    task->requires( new_dw, lb->xmom_L_CCLabel,     dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->ymom_L_CCLabel,     dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->zmom_L_CCLabel,     dwindex,patch,Ghost::None);
-#endif
     task->requires( new_dw, lb->int_eng_L_CCLabel,  dwindex,patch,Ghost::None);
     task->requires( new_dw, lb->vol_frac_CCLabel,   dwindex,patch,Ghost::None);
     task->requires( old_dw, lb->cv_CCLabel,         dwindex,patch,Ghost::None);
@@ -549,11 +529,6 @@ void ICE::scheduleStep5b(const Patch* patch,SchedulerP& sched,
 		    dwindex,patch,Ghost::None);
     
     task->computes( new_dw, lb->mom_L_ME_CCLabel,  dwindex,patch);
-#if 0
-    task->computes( new_dw, lb->xmom_L_ME_CCLabel,  dwindex,patch);
-    task->computes( new_dw, lb->ymom_L_ME_CCLabel,  dwindex,patch);
-    task->computes( new_dw, lb->zmom_L_ME_CCLabel,  dwindex,patch);
-#endif
     task->computes( new_dw, lb->int_eng_L_ME_CCLabel,dwindex,patch);
   }
   sched->addTask(task);
@@ -579,11 +554,6 @@ void ICE::scheduleStep6and7(const Patch* patch, SchedulerP& sched,
     task->requires(old_dw, lb->vel_CCLabel,      dwindex,patch,Ghost::None);
     task->requires(old_dw, lb->temp_CCLabel,      dwindex,patch,Ghost::None);
     task->requires(new_dw, lb->mom_L_ME_CCLabel, dwindex,patch,Ghost::None,0);
-#if 0
-    task->requires(new_dw, lb->xmom_L_ME_CCLabel, dwindex,patch,Ghost::None,0);
-    task->requires(new_dw, lb->ymom_L_ME_CCLabel, dwindex,patch,Ghost::None,0);
-    task->requires(new_dw, lb->zmom_L_ME_CCLabel, dwindex,patch,Ghost::None,0);
-#endif
     task->requires(new_dw, lb->int_eng_L_ME_CCLabel,dwindex,patch,
 		   Ghost::None,0);    
     task->requires(new_dw, lb->speedSound_CCLabel,dwindex,patch,Ghost::None);
@@ -1724,27 +1694,16 @@ void ICE::actuallyStep4a(const ProcessorGroup*,const Patch* patch,
     old_dw->get(visc_CC, lb->viscosity_CCLabel,dwindex,patch,Ghost::None, 0);
     new_dw->get(vol_frac,lb->vol_frac_CCLabel, dwindex,patch,Ghost::None, 0);
 
-    CCVariable<double>   xmom_source, ymom_source, zmom_source;
     CCVariable<Vector>   mom_source;
     SFCXVariable<double> tau_X_FC;
     SFCYVariable<double> tau_Y_FC;
     SFCZVariable<double> tau_Z_FC;
     new_dw->allocate(mom_source, lb->mom_source_CCLabel, dwindex, patch);
-#if 0
-    new_dw->allocate(xmom_source, lb->xmom_source_CCLabel, dwindex, patch);
-    new_dw->allocate(ymom_source, lb->ymom_source_CCLabel, dwindex, patch);
-    new_dw->allocate(zmom_source, lb->zmom_source_CCLabel, dwindex, patch);
-#endif
     new_dw->allocate(tau_X_FC,    lb->tau_X_FCLabel,       dwindex, patch);
     new_dw->allocate(tau_Y_FC,    lb->tau_Y_FCLabel,       dwindex, patch);
     new_dw->allocate(tau_Z_FC,    lb->tau_Z_FCLabel,       dwindex, patch);
  
     mom_source.initialize(Vector(0.,0.,0.));
-#if 0
-    xmom_source.initialize(0.);
-    ymom_source.initialize(0.);
-    zmom_source.initialize(0.);
-#endif
 
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       mass = rho_CC[*iter] * vol;
@@ -1806,11 +1765,6 @@ void ICE::actuallyStep4a(const ProcessorGroup*,const Patch* patch,
     }
 
     new_dw->put(mom_source, lb->mom_source_CCLabel, dwindex, patch);
-#if 0
-    new_dw->put(xmom_source, lb->xmom_source_CCLabel, dwindex, patch);
-    new_dw->put(ymom_source, lb->ymom_source_CCLabel, dwindex, patch);
-    new_dw->put(zmom_source, lb->zmom_source_CCLabel, dwindex, patch);
-#endif
   }
 }
 
@@ -1887,34 +1841,19 @@ void ICE::actuallyStep5a(const ProcessorGroup*, const Patch* patch,
   for(int m = 0; m < numMatls; m++) {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
     int dwindex = matl->getDWIndex();
-    CCVariable<double> rho_CC,cv_CC,temp_CC;
-    CCVariable<Vector> vel_CC;
-    CCVariable<double> xmom_source,ymom_source, zmom_source,int_eng_source;
-    CCVariable<Vector> mom_source;
+    CCVariable<double> rho_CC,cv_CC,temp_CC, int_eng_source;
+    CCVariable<Vector> vel_CC, mom_source;
     old_dw->get(rho_CC,  lb->rho_CCLabel,     dwindex,patch,Ghost::None, 0);
     old_dw->get(vel_CC, lb->vel_CCLabel,    dwindex,patch,Ghost::None, 0);
     old_dw->get(cv_CC,   lb->cv_CCLabel,      dwindex,patch,Ghost::None, 0);
     old_dw->get(temp_CC, lb->temp_CCLabel,    dwindex,patch,Ghost::None, 0);
     new_dw->get(mom_source,    lb->mom_source_CCLabel,dwindex,patch,
 		Ghost::None, 0);
-#if 0
-    new_dw->get(xmom_source,    lb->xmom_source_CCLabel,dwindex,patch,
-		Ghost::None, 0);
-    new_dw->get(ymom_source,    lb->ymom_source_CCLabel,dwindex,patch,
-		Ghost::None, 0);
-    new_dw->get(zmom_source,    lb->zmom_source_CCLabel,dwindex,patch,
-		Ghost::None, 0);
-#endif
     new_dw->get(int_eng_source, lb->int_eng_source_CCLabel,dwindex,patch,
 		Ghost::None, 0);
-    CCVariable<double> xmom_L,ymom_L, zmom_L,int_eng_L, mass_L, rho_L;
+    CCVariable<double> int_eng_L, mass_L, rho_L;
     CCVariable<Vector> mom_L;
     new_dw->allocate(mom_L,    lb->mom_L_CCLabel,    dwindex,patch);
-#if 0
-    new_dw->allocate(xmom_L,    lb->xmom_L_CCLabel,    dwindex,patch);
-    new_dw->allocate(ymom_L,    lb->ymom_L_CCLabel,    dwindex,patch);
-    new_dw->allocate(zmom_L,    lb->zmom_L_CCLabel,    dwindex,patch);
-#endif
     new_dw->allocate(int_eng_L, lb->int_eng_L_CCLabel, dwindex,patch);
     new_dw->allocate(mass_L,    lb->mass_L_CCLabel,    dwindex,patch);
     new_dw->allocate(rho_L,     lb->rho_L_CCLabel,     dwindex,patch);
@@ -1930,30 +1869,12 @@ void ICE::actuallyStep5a(const ProcessorGroup*, const Patch* patch,
       mom_L[*iter] = vel_CC[*iter] * mass
 	//- vel_CC[*iter] * mass_source[*iter]
 	+ mom_source[*iter];
-#if 0
-      xmom_L[*iter] = mass * vel_CC[*iter].x()
-	//- vel_CC[*iter].x() * mass_source[*iter]
-	+ mom_source[*iter].x();
-      
-      ymom_L[*iter] = mass * vel_CC[*iter].y()
-	//- vel_CC[*iter].y() * mass_source[*iter]
-	+ mom_source[*iter].y();
-      
-      zmom_L[*iter] = mass * vel_CC[*iter].z()
-	//- vel_CC[*iter].z() * mass_source[*iter]
-	+ mom_source[*iter].z();
-#endif
       
       int_eng_L[*iter] = mass * cv_CC[*iter] * temp_CC[*iter]
 	//-cv_CC[*iter] * temp_CC * mass_source[*iter]
 	+ int_eng_source[*iter];
     }
     new_dw->put(mom_L,    lb->mom_L_CCLabel,    dwindex,patch);
-#if 0
-    new_dw->put(xmom_L,    lb->xmom_L_CCLabel,    dwindex,patch);
-    new_dw->put(ymom_L,    lb->ymom_L_CCLabel,    dwindex,patch);
-    new_dw->put(zmom_L,    lb->zmom_L_CCLabel,    dwindex,patch);
-#endif
     new_dw->put(int_eng_L, lb->int_eng_L_CCLabel, dwindex,patch);
     new_dw->put(mass_L,    lb->mass_L_CCLabel,    dwindex,patch);
   }
@@ -2009,22 +1930,11 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
 
   vector<CCVariable<double> > rho_CC(numMatls);
   vector<CCVariable<Vector> > mom_L(numMatls);
-#if 0
-  vector<CCVariable<double> > xmom_L(numMatls);
-  vector<CCVariable<double> > ymom_L(numMatls);
-  vector<CCVariable<double> > zmom_L(numMatls);
-#endif
   vector<CCVariable<double> > int_eng_L(numMatls);
   vector<CCVariable<double> > vol_frac_CC(numMatls);
   vector<CCVariable<double> > rho_micro_CC(numMatls);
   vector<CCVariable<double> > cv_CC(numMatls);
-
   vector<CCVariable<Vector> > mom_L_ME(numMatls);
-#if 0
-  vector<CCVariable<double> > xmom_L_ME(numMatls);
-  vector<CCVariable<double> > ymom_L_ME(numMatls);
-  vector<CCVariable<double> > zmom_L_ME(numMatls);
-#endif
   vector<CCVariable<double> > int_eng_L_ME(numMatls);
     
   vector<double> b(numMatls);
@@ -2037,11 +1947,6 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
     int dwindex = matl->getDWIndex();
     old_dw->get(rho_CC[m],lb->rho_CCLabel,dwindex,patch, Ghost::None, 0);
     new_dw->get(mom_L[m],lb->mom_L_CCLabel,dwindex, patch, Ghost::None, 0);
-#if 0
-    new_dw->get(xmom_L[m],lb->xmom_L_CCLabel,dwindex, patch, Ghost::None, 0);
-    new_dw->get(ymom_L[m],lb->ymom_L_CCLabel,dwindex,patch, Ghost::None, 0);
-    new_dw->get(zmom_L[m],lb->zmom_L_CCLabel,dwindex,patch, Ghost::None, 0);
-#endif
     new_dw->get(int_eng_L[m],lb->int_eng_L_CCLabel,dwindex,patch,
 		Ghost::None,0);
     new_dw->get(vol_frac_CC[m],lb->vol_frac_CCLabel,dwindex,patch,Ghost::None,
@@ -2051,11 +1956,6 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
     old_dw->get(cv_CC[m],lb->cv_CCLabel,dwindex,patch, Ghost::None, 0);
 
     new_dw->allocate( mom_L_ME[m],  lb->mom_L_ME_CCLabel,    dwindex, patch);
-#if 0
-    new_dw->allocate( xmom_L_ME[m],  lb->xmom_L_ME_CCLabel,    dwindex, patch);
-    new_dw->allocate( ymom_L_ME[m],  lb->ymom_L_ME_CCLabel,    dwindex, patch);
-    new_dw->allocate( zmom_L_ME[m],  lb->zmom_L_ME_CCLabel,    dwindex, patch);
-#endif
     new_dw->allocate(int_eng_L_ME[m],lb->int_eng_L_ME_CCLabel, dwindex, patch);
   }
   for (int i = 0; i < numMatls; i++ )  {
@@ -2185,22 +2085,12 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
   
   for (int m = 0; m < numMatls; m++)  {
     setBC(mom_L_ME[m],"Velocity",patch);
-#if 0
-    setBC(xmom_L_ME[m],"Velocity","x",patch);
-    setBC(ymom_L_ME[m],"Velocity","y",patch);
-    setBC(zmom_L_ME[m],"Velocity","z",patch);
-#endif
   }
   
   for(int m = 0; m < numMatls; m++) {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
     int dwindex = matl->getDWIndex();
     new_dw->put(mom_L_ME[m],   lb->mom_L_ME_CCLabel,   dwindex, patch);
-#if 0
-    new_dw->put(xmom_L_ME[m],   lb->xmom_L_ME_CCLabel,   dwindex, patch);
-    new_dw->put(ymom_L_ME[m],   lb->ymom_L_ME_CCLabel,   dwindex, patch);
-    new_dw->put(zmom_L_ME[m],   lb->zmom_L_ME_CCLabel,   dwindex, patch);
-#endif
     new_dw->put(int_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,dwindex, patch);
   }
 
@@ -2236,7 +2126,7 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
       CFL = d_CFL;
     }
   
-  CCVariable<double> xmom_L_ME, ymom_L_ME, zmom_L_ME, int_eng_L_ME, mass_L;
+  CCVariable<double> int_eng_L_ME, mass_L;
   CCVariable<Vector> mom_L_ME;
   CCVariable<double> speedSound,cv_old;
   
@@ -2274,11 +2164,6 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
     new_dw->get(vvel_FC,   lb->vvel_FCMELabel,   dwindex,patch,Ghost::None,0);
     new_dw->get(wvel_FC,   lb->wvel_FCMELabel,   dwindex,patch,Ghost::None,0);
     new_dw->get(mom_L_ME, lb->mom_L_ME_CCLabel,dwindex,patch,Ghost::None,0);
-#if 0
-    new_dw->get(xmom_L_ME, lb->xmom_L_ME_CCLabel,dwindex,patch,Ghost::None,0);
-    new_dw->get(ymom_L_ME, lb->ymom_L_ME_CCLabel,dwindex,patch,Ghost::None,0);
-    new_dw->get(zmom_L_ME, lb->zmom_L_ME_CCLabel,dwindex,patch,Ghost::None,0);
-#endif
     new_dw->get(mass_L,    lb->mass_L_CCLabel,   dwindex,patch,Ghost::None,0);
     new_dw->get(int_eng_L_ME,lb->int_eng_L_ME_CCLabel,dwindex,patch,
 		Ghost::None,0);
@@ -3625,6 +3510,11 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.81  2001/01/08 22:01:55  jas
+// Removed #if 0  #endif pairs surrounding unused code related to momentum
+// variables that are now combined into CCVariables<Vector>.  This includes
+// mom_source, mom_L and mom_L_ME.
+//
 // Revision 1.80  2001/01/08 20:40:51  jas
 // Replace {x,y,z}mom_L_ME with a single CCVariable<Vector> mom_L_ME.
 //
