@@ -38,13 +38,31 @@ Salmon::Salmon(const clString& id)
 : Module("Salmon", id, Sink), max_portno(0)
 {
     // Add a headlight
-    lighting.lights.add(new HeadLight(Color(1,1,1)));
+    lighting.lights.add(new HeadLight("Headlight", Color(1,1,1)));
     // Create the input port
     add_iport(new GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
     default_matl=new Material(Color(.1,.1,.1), Color(.6,0,0),
 			      Color(.7,.7,.7), 10);
     busy_bit=1;
     have_own_dispatch=1;
+
+    // Create port 0 - we use this for global objects such as cameras,
+    // light source icons, etc.
+    int portid=max_portno++;
+    // Create the port
+    PortInfo* pi=new PortInfo;
+    portHash.insert(portid, pi);
+    pi->msg_head=pi->msg_tail=0;
+    pi->portno=portid;
+    pi->objs=new HashTable<int, SceneItem*>;
+
+    // Fill it up with the defaults...
+    int serial=0;
+    for(int i=0;i<lighting.lights.size();i++){
+	GeomObj* geom=lighting.lights[i]->geom();
+	if(geom)
+	    addObj(pi, i, geom, lighting.lights[i]->name);
+    }
 }
 
 Salmon::~Salmon()
@@ -181,6 +199,7 @@ void Salmon::delObj(PortInfo* port, int serial)
 	port->objs->remove(serial);
 	for (int i=0; i<roe.size(); i++)
 	    roe[i]->itemDeleted(si);
+	cerr << "Deleting object: " << si->name << ", " << serial << endl;
 	delete si->obj;
 	delete si;
     } else {
