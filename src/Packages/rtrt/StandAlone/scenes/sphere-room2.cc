@@ -432,10 +432,10 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
   // add the light (the sun, as mentioned above)
   Light2 *light = new Light2(sol_m, Color(1,.9,.8), 
-                             Point(ROOMCENTER, ROOMHEIGHT/2.), .2,4);
+                             Point(ROOMCENTER, ROOMHEIGHT/2.), .2*ROOMSCALE,4);
   //Light *light = new Light(Color(1,.9,.8), 
-  //                         Point(ROOMCENTER, ROOMHEIGHT/2.), .2);
-  scene->add_light( light );
+  //                         Point(ROOMCENTER, ROOMHEIGHT/2.), .2*ROOMSCALE);
+  scene->add_permanent_light( light );
   scene->addObjectOfInterest(light->getSphere(),ANIMATE);
 
   return scene;
