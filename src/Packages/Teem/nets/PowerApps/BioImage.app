@@ -236,7 +236,29 @@ class BioImageApp {
  	    change_indicator_labels "Dynamically Compiling [$which name]..."
 	} else {
 	    change_indicate_val 2
-	    change_indicator_labels "Visualizing..."
+	    if {$executing_modules == 0} {
+		if {$grid_rows == 1} {
+		    global show_vol_ren
+		    if {$show_vol_ren == 1} {
+			change_indicator_labels "Done Volume Rendering"
+		    } else {
+			change_indicator_labels "Done Loading Volume"
+		    }		
+		} else {
+		    change_indicator_labels "Done Updating Pipeline and Visualizing"
+		}
+	    } else {
+		if {$grid_rows == 1} {
+		    global show_vol_ren
+		    if {$show_vol_ren == 1} {
+			change_indicator_labels "Volume Rendering..."
+		    } else {
+			change_indicator_labels "Loading Volume..."
+		    }
+		} else {
+		    change_indicator_labels "Updating Pipeline and Visualizing..."
+		}
+	    }
 	}
     }
     
@@ -305,8 +327,16 @@ class BioImageApp {
 	} else {
 	    if {$which == $error_module} {
 		set error_module ""
-		#puts "FIX ME implement indicate_error"
-		change_indicator_labels "Visualizing..."
+		if {$grid_rows == 1} {
+		    global show_vol_ren
+		    if {$show_vol_ren == 1} {
+			change_indicator_labels "Volume Rendering..."
+		    } else {
+			change_indicator_labels "Loading Volume..."
+		    }
+		} else {
+		    change_indicator_labels "Updating Pipeline and Visualizing..."
+		}
 		change_indicate_val 0
 		if {[string first "ViewSlices" $which] != -1} {
 		    set ViewSlices_executed_on_error 0
@@ -337,11 +367,12 @@ class BioImageApp {
 	    change_indicate_val 1
 	} elseif {[string first "EditTransferFunc2" $which] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
-	} elseif {[string first "VolumeVisualizer" $which] != -1 && $state == "Completed"} {
-	    if {$has_autoviewed == 0} {
-		set has_autoviewed 1
-		after 200 "$mods(Viewer)-ViewWindow_0-c autoview"
-	    }
+	} elseif {[string first "VolumeVisualizer" $which] != -1 && $state == "JustStarted"} {
+	    change_indicator_labels "Volume Rendering..."
+	    change_indicate_val 1
+        } elseif {[string first "VolumeVisualizer" $which] != -1 && $state == "Completed"} {
+	    change_indicate_val 2
+	    change_indicator_labels "Done Volume Rendering"
         } elseif {[string first "ViewSlices" $which] != -1 && $state == "Completed"} {
             if {$2D_fixed == 0} {
                 # simulate a click in each window and set them to the correct views
@@ -514,26 +545,31 @@ class BioImageApp {
 	    change_indicator_labels "Resampling Volume..."
 	} elseif {[string first "UnuResample" $which 0] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
+	    change_indicator_labels "Done Resampling Volume"
 	} elseif {[string first "UnuCrop" $which 0] != -1 && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Cropping Volume..."
 	} elseif {[string first "UnuCrop" $which 0] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
-	} elseif {[string first "UnuHeq" $which 0] != -1 && $state == "JustStarted"} {
+	    change_indicator_labels "Done Cropping Volume"
+	} elseif {[string first "UnuHeq" $which 0] != -1 && $which != "Teem_UnuAtoM_UnuHeq_0" && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Performing Histogram Equilization..."
-	} elseif {[string first "UnuHeq" $which 0] != -1 && $state == "Completed"} {
+	} elseif {[string first "UnuHeq" $which 0] != -1 && $which != "Teem_UnuAtoM_UnuHeq_0" && $state == "Completed"} {
 	    change_indicate_val 2
+	    change_indicator_labels "Done Performing Histogram Equilization"
 	} elseif {[string first "UnuCmedian" $which 0] != -1 && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Performing Median/Mode Filtering..."
 	} elseif {[string first "UnuCmedian" $which 0] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
+	    change_indicator_labels "Done Performing Median/Mode Filtering"
 	} elseif {[string first "ScalarFieldStats" $which] != -1 && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Building Histogram..."
 	} elseif {[string first "ScalarFieldStats" $which] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
+	    change_indicator_labels "Done Building Histogram"
 	}
     }
     
@@ -566,8 +602,16 @@ class BioImageApp {
 
 		    if {$loading} {
 			set loading 0
-			#puts "FIX ME change_indicate_val - labels"
-			change_indicator_labels "Visualizing..."
+			if {$grid_rows == 1} {
+			    global show_vol_ren
+			    if {$show_vol_ren == 1} {
+				change_indicator_labels "Volume Rendering..."
+			    } else {
+				change_indicator_labels "Loading Volume..."
+			    }
+			} else {
+			    change_indicator_labels "Updating Pipeline and Visualizing..."
+			}
 		    }
 
 
@@ -578,8 +622,16 @@ class BioImageApp {
 
 		    if {$loading} {
 			set loading 0
-			#puts "FIX ME change_indicate_val - labels"
-			change_indicator_labels "Visualizing..."
+			if {$grid_rows == 1} {
+			    global show_vol_ren
+			    if {$show_vol_ren == 1} {
+				change_indicator_labels "Volume Rendering..."
+			    } else {
+				change_indicator_labels "Loading Volume..."
+			    }			    
+			} else {
+			    change_indicator_labels "Done Updating Pipeline and Visualizing"
+			}		     
 		    }
 
 		}
@@ -2714,6 +2766,8 @@ class BioImageApp {
 	set num_filters [expr $num_filters + 1]
 	set grid_rows [expr $grid_rows + 1]
 
+        change_indicator_labels "Press Update to Resample Volume..."
+
         $this enable_update 1 2 3
     }
 
@@ -2815,7 +2869,7 @@ class BioImageApp {
 	set num_filters [expr $num_filters + 1]
 	set grid_rows [expr $grid_rows + 1]
 
-        change_indicator_labels "Press Update to crop volume..."
+        change_indicator_labels "Press Update to Crop Volume..."
 
         $this enable_update 1 2 3
 
@@ -2900,6 +2954,8 @@ class BioImageApp {
 
 	set num_filters [expr $num_filters + 1]
 	set grid_rows [expr $grid_rows + 1]
+
+        change_indicator_labels "Press Update to Perform Median/Mode Filtering..."
 
         $this enable_update 1 2 3
 
@@ -3019,6 +3075,8 @@ class BioImageApp {
         if {$has_executed} {
 	    $m4-c needexecute
 	}
+
+        change_indicator_labels "Press Update to Perform Histogram Equalization..."
 
         $this enable_update 1 2 3
     }
@@ -4892,6 +4950,7 @@ class BioImageApp {
 	    disableModule [set NrrdTextureBuilder] 0
 	    disableModule [set UnuProject] 0
 
+            change_indicator_labels "Volume Rendering..."
 
             [set NodeGradient]-c needexecute
         } else {
