@@ -375,6 +375,8 @@ protected:
   int              NGN;      // Number of ghost nodes     needed.
 
   double           d_artificialDampCoeff; // Artificial damping coefficient
+  double           d_artificialViscCoeff1; // Artificial viscosity coefficient 1
+  double           d_artificialViscCoeff2; // Artificial viscosity coefficient 2
   bool             d_accStrainEnergy; // Flag for accumulating strain energy
   bool             d_useLoadCurves; // Flag for using load curves
   bool             d_doErosion; // Flag to decide whether to erode or not
