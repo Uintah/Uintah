@@ -16,6 +16,7 @@
 #define Component_PIDL_MalformedURL_h
 
 #include <SCICore/Exceptions/Exception.h>
+#include <string>
 
 namespace Component {
     namespace PIDL {
@@ -46,7 +47,11 @@ DESCRIPTION
 
 	    //////////
 	    // Return a human readable explanation
-	    virtual std::string message() const;
+	    virtual const char* message() const;
+
+	    //////////
+	    // Return the name of this class
+	    virtual const char* type() const;
 	protected:
 	private:
 	    //////////
@@ -56,6 +61,10 @@ DESCRIPTION
 	    //////////
 	    // The error explanation
 	    std::string d_error;
+
+	    //////////
+	    // The "complete" message
+	    std::string d_msg;
 	};
     }
 }
@@ -64,6 +73,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.6  2000/03/23 10:27:36  sparker
+// Added "name" method to match new Exception base class
+//
 // Revision 1.5  1999/09/24 20:15:58  sparker
 // Cocoon documentation updates
 //

@@ -16,6 +16,7 @@
 #define Component_PIDL_GlobusError_h
 
 #include <Component/PIDL/PIDLException.h>
+#include <string>
 
 namespace Component {
     namespace PIDL {
@@ -48,7 +49,11 @@ DESCRIPTION
 	    //////////
 	    // An explanation message, containing the msg string and the
 	    // return code passed into the constructor.
-	    std::string message() const;
+	    const char* message() const;
+
+	    //////////
+	    // The name of this class
+	    const char* type() const;
 	protected:
 	private:
 	    //////////
@@ -67,6 +72,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.5  2000/03/23 10:27:35  sparker
+// Added "name" method to match new Exception base class
+//
 // Revision 1.4  1999/09/24 20:15:57  sparker
 // Cocoon documentation updates
 //

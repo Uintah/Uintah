@@ -17,22 +17,31 @@
 using Component::PIDL::MalformedURL;
 
 MalformedURL::MalformedURL(const std::string& url,
-					 const std::string& error)
+			   const std::string& error)
     : d_url(url), d_error(error)
 {
+    d_msg = "Malformed URL: "+d_url+" ("+d_error+")"; 
 }
 
 MalformedURL::~MalformedURL()
 {
 }
 
-std::string MalformedURL::message() const
+const char* MalformedURL::message() const
 {
-    return "Malformed URL: "+d_url+" ("+d_error+")";
+    return d_msg.c_str();
+}
+
+const char* MalformedURL::type() const
+{
+    return "Component::PIDL::MalformedURL";
 }
 
 //
 // $Log$
+// Revision 1.3  2000/03/23 10:27:36  sparker
+// Added "name" method to match new Exception base class
+//
 // Revision 1.2  1999/08/31 08:59:00  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library
