@@ -357,7 +357,8 @@ int main(int argc, char* argv[])
 						  gridcellsize, 
 						  gridcellsizeL2,
 						  gridcellsizeL3,
-						  minObjs1, minObjs2 ));
+						  minObjs1, minObjs2, 
+						  rtrt_engine->np ));
       } else if(use_bv==5){
 	Object *obj = scene->get_object();
 	Group *g = dynamic_cast<Group *>(obj);
