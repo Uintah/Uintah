@@ -121,6 +121,13 @@ AC_DEFUN(SCI_CHECK_LIB,
 EOF
 
     rm -f conftest.out a.out
+    echo
+    echo $ac_link
+    echo $CFLAGS
+    echo $CXXFLAGS
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    echo
     ac_try="$ac_link -L$1 -l$2 $6 >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
@@ -1222,9 +1229,9 @@ AC_SUBST(INCGL_H)
 
 ##  --  search for dlopen  -----------------------------------------------
 
-SCI_CHECK_LIB($thirdparty/lib,c, dlopen, HAVE_LIBDL=yes;DL_LIBRARY=,)
+SCI_CHECK_LIB($thirdparty/lib,c, dlopen, HAVE_LIBDL=yes;LIBDL_FLAG=,)
 if test -z "$HAVE_LIBDL"; then
-  SCI_CHECK_LIB($thirdparty/lib,dl, dlopen, HAVE_LIBDL=yes; DL_LIBRARY="-ldl",)
+  SCI_CHECK_LIB($thirdparty/lib,dl, dlopen, HAVE_LIBDL=yes; LIBDL_FLAG="-ldl",)
 fi
 AC_CHECK_HEADERS(dlfcn.h,HAVE_DLFCN_H=yes)
 
@@ -1232,13 +1239,9 @@ if (test -z "$HAVE_LIBDL" &&
     test -z "$HAVE_LIBC") ||
     test -z "$HAVE_DLFCN_H"; then
   AC_MSG_ERROR(couldn't find the required dynamic library components. exiting.)
-else
-  LIBDL_FLAG=-ldl
 fi
 
-PLATFORM_LDFLAGS="-ldl"
-
-
+PLATFORM_LDFLAGS=$LIBDL_FLAG
 
 AC_SUBST(PLATFORM_LDFLAGS)
 AC_SUBST(LIBDL)
