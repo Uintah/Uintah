@@ -156,6 +156,10 @@ WARNING
       // data required from old data warehouse
      set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
      vector<const Task::Dependency*> d_initRequires;
+
+     typedef map<const VarLabel*, DetailedTask*, VarLabel::Compare>
+     ReductionTasksMap;
+     ReductionTasksMap d_reductionTasks;
    };
 
 } // End namespace Uintah
