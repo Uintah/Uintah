@@ -17,12 +17,13 @@
 #include <Packages/rtrt/Core/Parallelogram2.h>
 #include <Packages/rtrt/Core/RingSatellite.h>
 #include <Packages/rtrt/Core/TexturedTri2.h>
+#include <Packages/rtrt/Core/Sphere.h>
 
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Light.h>
-#include <Packages/rtrt/Core/Light2.h>
+#include <Packages/rtrt/Core/LightObject.h>
 #include <Packages/rtrt/Core/Grid.h>
 #include <Packages/rtrt/Core/Grid2.h>
 #include <Packages/rtrt/Core/BV1.h>
@@ -220,12 +221,37 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   holo1->insert(starfield,1);
 
   // add the light (the sun, as mentioned above)
-  Light2 *light = new Light2(sol_m, Color(1,.9,.8), 
-                             Point(ROOMCENTER, ROOMHEIGHT/2.), .2*ROOMSCALE,4);
-  //Light *light = new Light(Color(1,.9,.8), 
-  //                         Point(ROOMCENTER, ROOMHEIGHT/2.), .2*ROOMSCALE);
-  scene->add_perm_per_matl_light( light );
-  scene->addObjectOfInterest(light->getSphere(),ANIMATE, false);
+  LightObject *light;
+  {
+    // Create the geometry for the light
+    Color light_color(1,.9,.8);
+    double halo_factor = 4;
+    Point light_center(ROOMCENTER, ROOMHEIGHT/2.);
+    double light_radius = .2*ROOMSCALE;
+    
+    LightMaterial *lm = new LightMaterial(light_color);
+
+    Group *light_geom = new Group();
+    light_geom->add( new Sphere(new HaloMaterial(lm, halo_factor),
+				light_center, light_radius*1.3) );
+
+    Satellite *sun_sat = new Satellite("light", sol_m, light_center,
+				       light_radius, 0, Vector(0,0,1));
+    sun_sat->set_rev_speed(.2);
+    sun_sat->set_orb_speed(0);
+    sun_sat->set_orb_radius(0);
+    sun_sat->set_parent(0);
+    sun_sat->set_center(light_center);
+    
+    light_geom->add( sun_sat );
+
+    // Create the light
+    light = new LightObject(light_geom,
+			    light_center, light_color, light_radius);
+    // Add it to the scene
+    scene->add_perm_per_matl_light( light );
+    scene->addObjectOfInterest(light->getSphere(),ANIMATE, false);
+  }
 
   //
   // objects
