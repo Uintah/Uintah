@@ -38,8 +38,8 @@ struct OSHunk {
 
 //
 // $Log$
-// Revision 1.1.2.1  2000/09/28 03:12:24  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.1.2.2  2000/10/26 17:38:00  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.3  2000/08/01 00:00:24  sparker
 // Added a double to the AllocOS struct to ensure that the memory will

@@ -609,11 +609,8 @@ Transform& Transform::operator=(const Transform& copy)
 
 //
 // $Log$
-// Revision 1.5.2.2  2000/10/26 10:04:34  moulding
+// Revision 1.5.2.3  2000/10/26 17:55:49  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.5.2.1  2000/09/28 03:12:21  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.8  2000/08/13 04:44:06  dmw
 // fixed bug in invert()

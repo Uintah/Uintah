@@ -1325,11 +1325,8 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
-// Revision 1.22.2.2  2000/10/26 10:04:49  moulding
+// Revision 1.22.2.3  2000/10/26 17:48:19  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.22.2.1  2000/09/28 03:11:47  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.24  2000/08/29 19:25:55  jas
 // Increased the number of atomic_alloc_reservoir from 100 to 500.  Needed

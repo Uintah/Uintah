@@ -504,11 +504,8 @@ void clString::test_performance(PerfTest* __pt) {
 
 //
 // $Log$
-// Revision 1.9.2.2  2000/10/26 10:04:17  moulding
+// Revision 1.9.2.3  2000/10/26 17:44:52  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.9.2.1  2000/09/28 03:14:28  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.10  2000/09/25 19:45:53  sparker
 // Quiet warnings under g++

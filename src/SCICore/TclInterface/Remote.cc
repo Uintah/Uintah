@@ -176,11 +176,8 @@ int receiveReply (TCLMessage* msg, int skt)
 
 //
 // $Log$
-// Revision 1.4.2.2  2000/10/26 10:04:44  moulding
+// Revision 1.4.2.3  2000/10/26 17:42:54  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.4.2.1  2000/09/28 03:11:44  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.6  2000/09/27 22:20:53  yarden
 // move include on Remote.h after the system files includes

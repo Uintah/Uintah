@@ -283,16 +283,8 @@ inline double Dot(const Point& p1, const Point& p2)
 
 //
 // $Log$
-// Revision 1.6.2.3  2000/09/28 20:42:14  yarden
-// remove initialization y=0.0 z=0.0 from the
-// Point constructor. it causes ambiguity in
-// the Widgets.
-//
-// Revision 1.6.2.2  2000/09/28 03:12:21  mcole
-// merge trunk into FIELD_REDESIGN branch
-//
-// Revision 1.6.2.1  2000/09/11 17:43:25  kuehne
-// change Point to handle 1 and 2 D construction
+// Revision 1.6.2.4  2000/10/26 17:55:49  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.8  2000/07/18 00:29:54  tan
 // Added operator()(int idx) to pointer.  In consistant with IntVector and Vector

@@ -1200,11 +1200,8 @@ void DumpAllocator(Allocator* a)
 
 //
 // $Log$
-// Revision 1.10.2.2  2000/10/26 10:04:37  moulding
+// Revision 1.10.2.3  2000/10/26 17:38:00  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.10.2.1  2000/09/28 03:12:24  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.14  2000/09/25 19:47:33  sparker
 // Quiet warnings under g++

@@ -367,11 +367,8 @@ Thread::getStateString(ThreadState state)
 
 //
 // $Log$
-// Revision 1.16.2.2  2000/10/26 10:04:49  moulding
+// Revision 1.16.2.3  2000/10/26 17:48:19  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.16.2.1  2000/09/28 03:11:47  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.21  2000/09/25 18:04:05  sparker
 // Added partial support for debuggin under linux
