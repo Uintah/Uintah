@@ -261,51 +261,6 @@ void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
 //______________________________________________________________________
 //
 
-void MPMArches::schedulePutAllForcesOnCC(SchedulerP& sched,
-				         const PatchSet* patches,
-				         const MaterialSet* mpm_matls)
-{
-  // Grab all of the forces which Arches wants to give to MPM and
-  // accumulate them on the cell centers
-  Task* t=scinew Task("MPMArches::putAllForcesOnCC",
-		      this, &MPMArches::putAllForcesOnCC);
-
-  t->requires(Task::NewDW, d_MAlb->DragForceX_CCLabel, mpm_matls->getUnion(),
-								Ghost::None, 0);
-  t->requires(Task::NewDW, d_MAlb->DragForceY_CCLabel, mpm_matls->getUnion(),
-								Ghost::None, 0);
-  t->requires(Task::NewDW, d_MAlb->DragForceZ_CCLabel, mpm_matls->getUnion(),
-								Ghost::None, 0);
-	      
-  t->requires(Task::NewDW, d_MAlb->PressureForce_FCXLabel,mpm_matls->getUnion(),
-						Ghost::AroundCells, 1);
-  t->requires(Task::NewDW, d_MAlb->PressureForce_FCYLabel,mpm_matls->getUnion(),
-						Ghost::AroundCells, 1);
-  t->requires(Task::NewDW, d_MAlb->PressureForce_FCZLabel,mpm_matls->getUnion(),
-						Ghost::AroundCells, 1);
-
-  t->computes(d_MAlb->SumAllForcesCCLabel, mpm_matls->getUnion());
-
-  sched->addTask(t, patches, mpm_matls);
-}
-
-void MPMArches::schedulePutAllForcesOnNC(SchedulerP& sched,
-				         const PatchSet* patches,
-				         const MaterialSet* mpm_matls)
-{
-  // Take the cell centered forces from Arches and put them on the
-  // nodes where SerialMPM can grab and use them
-  Task* t=scinew Task("MPMArches::putAllForcesOnNC",
-		      this, &MPMArches::putAllForcesOnNC);
-
-  t->requires(Task::NewDW,d_MAlb->SumAllForcesCCLabel, mpm_matls->getUnion(),
-					Ghost::AroundCells, 1);
-
-  t->computes(d_MAlb->SumAllForcesNCLabel, mpm_matls->getUnion());
-
-  sched->addTask(t, patches, mpm_matls);
-}
-
 void MPMArches::scheduleMomExchange(SchedulerP& sched,
 				    const PatchSet* patches,
 				    const MaterialSet* arches_matls,
@@ -561,6 +516,54 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   t->computes(d_MAlb->DragForceX_FCXLabel, mpm_matls->getUnion());
   t->computes(d_MAlb->DragForceY_FCYLabel, mpm_matls->getUnion());
   t->computes(d_MAlb->DragForceZ_FCZLabel, mpm_matls->getUnion());
+  sched->addTask(t, patches, mpm_matls);
+}
+
+void MPMArches::schedulePutAllForcesOnCC(SchedulerP& sched,
+				         const PatchSet* patches,
+				         const MaterialSet* mpm_matls)
+{
+  // Grab all of the forces which Arches wants to give to MPM and
+  // accumulate them on the cell centers
+  Task* t=scinew Task("MPMArches::putAllForcesOnCC",
+		      this, &MPMArches::putAllForcesOnCC);
+
+  t->requires(Task::NewDW, d_MAlb->cMassLabel, Ghost::None, 0);
+
+  t->requires(Task::NewDW, d_MAlb->DragForceX_CCLabel, mpm_matls->getUnion(),
+								Ghost::None, 0);
+  t->requires(Task::NewDW, d_MAlb->DragForceY_CCLabel, mpm_matls->getUnion(),
+								Ghost::None, 0);
+  t->requires(Task::NewDW, d_MAlb->DragForceZ_CCLabel, mpm_matls->getUnion(),
+								Ghost::None, 0);
+	      
+  t->requires(Task::NewDW, d_MAlb->PressureForce_FCXLabel,mpm_matls->getUnion(),
+						Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, d_MAlb->PressureForce_FCYLabel,mpm_matls->getUnion(),
+						Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, d_MAlb->PressureForce_FCZLabel,mpm_matls->getUnion(),
+						Ghost::AroundCells, 1);
+
+  t->computes(d_MAlb->SumAllForcesCCLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->AccArchesCCLabel,    mpm_matls->getUnion());
+
+  sched->addTask(t, patches, mpm_matls);
+}
+
+void MPMArches::schedulePutAllForcesOnNC(SchedulerP& sched,
+				         const PatchSet* patches,
+				         const MaterialSet* mpm_matls)
+{
+  // Take the cell centered forces from Arches and put them on the
+  // nodes where SerialMPM can grab and use them
+  Task* t=scinew Task("MPMArches::putAllForcesOnNC",
+		      this, &MPMArches::putAllForcesOnNC);
+
+  t->requires(Task::NewDW,d_MAlb->AccArchesCCLabel, mpm_matls->getUnion(),
+					Ghost::AroundCells, 1);
+
+  t->computes(d_MAlb->AccArchesNCLabel,             mpm_matls->getUnion());
+
   sched->addTask(t, patches, mpm_matls);
 }
 
@@ -2396,18 +2399,97 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
 
 void MPMArches::putAllForcesOnCC(const ProcessorGroup*,
 				const PatchSubset* patches,
-				const MaterialSubset* ,
+				const MaterialSubset* matls,
 				DataWarehouse* old_dw,
 				DataWarehouse* new_dw)
 
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    for(int m=0;m<matls->size();m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int matlindex = mpm_matl->getDWIndex();
+      CCVariable<Vector> totalforce;
+      CCVariable<Vector> acc_arches;
+      CCVariable<double> DFX_CC, DFY_CC, DFZ_CC, cmass;
+      SFCXVariable<double> PRX_FC;
+      SFCYVariable<double> PRY_FC;
+      SFCZVariable<double> PRZ_FC;
+
+      new_dw->allocate(totalforce, d_MAlb->SumAllForcesCCLabel,matlindex,patch);
+      new_dw->allocate(acc_arches, d_MAlb->AccArchesCCLabel,   matlindex,patch);
+
+      new_dw->get(cmass,  d_MAlb->cMassLabel,         matlindex, patch,
+							Ghost::None, 0);
+      new_dw->get(DFX_CC, d_MAlb->DragForceX_CCLabel, matlindex, patch,
+							Ghost::None,0);
+      new_dw->get(DFY_CC, d_MAlb->DragForceY_CCLabel, matlindex, patch,
+							Ghost::None,0);
+      new_dw->get(DFZ_CC, d_MAlb->DragForceZ_CCLabel, matlindex, patch,
+							Ghost::None,0);
+
+      new_dw->get(PRX_FC, d_MAlb->PressureForce_FCXLabel, matlindex, patch,
+							Ghost::AroundCells, 1);
+      new_dw->get(PRY_FC, d_MAlb->PressureForce_FCYLabel, matlindex, patch,
+							Ghost::AroundCells, 1);
+      new_dw->get(PRZ_FC, d_MAlb->PressureForce_FCZLabel, matlindex, patch,
+							Ghost::AroundCells, 1);
+
+      acc_arches.initialize(Vector(0.,0.,0.));
+
+      for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
+	totalforce[*iter] = Vector(DFX_CC[*iter], DFY_CC[*iter], DFZ_CC[*iter]);
+	IntVector curcell = *iter;
+	double XCPF, YCPF, ZCPF;
+	if (curcell.x() >= (patch->getInteriorCellLowIndex()).x()) {
+	  IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z());
+	  XCPF = .5*(PRX_FC[curcell] + PRX_FC[adjcell]);
+	}
+	if (curcell.y() >= (patch->getInteriorCellLowIndex()).y()) {
+	  IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z());
+	  YCPF = .5*(PRY_FC[curcell] + PRY_FC[adjcell]);
+	}
+	if (curcell.z() >= (patch->getInteriorCellLowIndex()).z()) {
+	  IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1);
+	  ZCPF = .5*(PRZ_FC[curcell] + PRZ_FC[adjcell]);
+	}
+	totalforce[*iter] += Vector(XCPF, YCPF, ZCPF);
+	if(cmass[*iter] > d_SMALL_NUM){
+	  acc_arches[*iter] = totalforce[*iter]/cmass[*iter];
+        }
+      }
+      new_dw->put(totalforce, d_MAlb->SumAllForcesCCLabel, matlindex, patch);
+      new_dw->put(acc_arches, d_MAlb->AccArchesCCLabel,    matlindex, patch);
+    }
+  }
 }
 
 void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
 				const PatchSubset* patches,
-				const MaterialSubset* ,
+				const MaterialSubset* matls,
 				DataWarehouse* old_dw,
 				DataWarehouse* new_dw)
-
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    IntVector cIdx[8];
+
+    for(int m=0;m<matls->size();m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int matlindex = mpm_matl->getDWIndex();
+      CCVariable<Vector> acc_archesCC;
+      NCVariable<Vector> acc_archesNC;
+      new_dw->get(acc_archesCC, d_MAlb->AccArchesCCLabel,   matlindex,patch,
+						Ghost::AroundCells, 1);
+      new_dw->allocate(acc_archesNC, d_MAlb->AccArchesNCLabel, matlindex,patch);
+
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        patch->findCellsFromNode(*iter,cIdx);
+        for (int in=0;in<8;in++){
+          acc_archesNC[*iter]  += acc_archesCC[cIdx[in]]*.125;
+        }
+      }
+      new_dw->put(acc_archesNC, d_MAlb->AccArchesNCLabel,  matlindex, patch);
+    }
+  }
 }
