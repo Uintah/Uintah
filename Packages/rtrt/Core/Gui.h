@@ -103,6 +103,8 @@ private:
   bool  beQuiet_;
 
   std::vector<Light*> lights_;
+  bool                lightsOn_;
+  bool                lightsBeingRendered_;
 
   ////////////////////////////////////////////////////////////////
   //
@@ -138,12 +140,16 @@ private:
 
   GLUI_Listbox * lightList;
 
+  GLUI_Panel   * lightsColorPanel_;
   GLUI_Spinner * r_color_spin;
   GLUI_Spinner * g_color_spin;
   GLUI_Spinner * b_color_spin;
 
   GLUI_Spinner * lightIntensity_;
   GLUI_Spinner * ambientIntensity_;
+
+  GLUI_Button  * toggleLightsOnOffBtn_;
+  GLUI_Button  * toggleShowLightsBtn_;
 
   float lightBrightness_;
   float ambientBrightness_;
@@ -175,7 +181,8 @@ private:
   void createLightWindow( GLUI * window );
   static void toggleLightsWindowCB( int id );
   static void updateLightPanelCB( int id );
-  static void toggleOtherLights( int id );
+  static void toggleLightSwitchesCB( int id ); // turn all lights on/off
+  static void toggleShowLightsCB( int id );    // display light positions
 
   // Get String Window Callbacks
   void createGetStringWindow( GLUI * window );
@@ -231,6 +238,7 @@ private:
 
   void toggleGui();
   void updateShadowMode();
+  void quit();
 
   ////////////////////////////////////////////////////////////////
 
