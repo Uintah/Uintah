@@ -17,11 +17,11 @@
 -->
 
 <chapter>
-  <title>Deferred Compilation</title>
+  <title>Dynamic Compilation</title>
 
   <sect1>
     <para>
-      This chapter introduces the concept of <term>Deferred
+      This chapter introduces the concept of <term>Dynamic
       Compilation</term> within SCIRun.
     </para>
   </sect1>
@@ -34,7 +34,7 @@
       structures once, while allowing them to be usable with many
       types of data.  However, in order to use any particular type of
       data, the templates need to know about them at compile time.
-      Deferred compilation allows templates written in
+      Dynamic compilation allows templates written in
       the past to be applied to new data types at run time by
       dynamically compiling code.
     </para>
@@ -68,7 +68,7 @@
   </sect1>
 
   <sect1>
-    <title>Programming with SCIRun deferred compilation</title>
+    <title>Programming with SCIRun dynamic compilation</title>
     <para>
       A developer is likely to use this code from within modules that 
       has a field port. A FieldHandle can be one of *many* types of fields.
