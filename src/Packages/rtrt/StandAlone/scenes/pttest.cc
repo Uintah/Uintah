@@ -1,5 +1,6 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/GridSpheresDpy.h>
+#include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Core/Geometry/Point.h>
@@ -7,7 +8,6 @@
 #include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/UVSphere2.h>
-#include <Packages/rtrt/Core/SharedTexture.h>
 #include <Packages/rtrt/Core/PPMImage.h>
 #include <Packages/rtrt/Core/TextureGridSpheres.h>
 #include <Packages/rtrt/Core/PCAGridSpheres.h>
@@ -27,6 +27,10 @@
 
 using namespace SCIRun;
 using namespace rtrt;
+using namespace std;
+
+using std::cerr;
+using std::endl;
 
 #define NUM_TEXTURES 8
 #define MAX_LINE_LEN 256
@@ -45,12 +49,15 @@ float radius = 1.0;
 // Returns 1 if there was an error.  This is based on if the texture
 // was found.
 int add_sphere(char *tex_name, const Point& center, Group *group) {
-  SharedTexture* matl = new SharedTexture(tex_name);
+  ImageMaterial* matl = new ImageMaterial(tex_name, ImageMaterial::Clamp,
+					  ImageMaterial::Clamp, 1.0,
+					  Color(1.0, 1.0, 1.0), 0.0);
   if (!matl->valid())
   {
     cerr << "AddSphere::texture is bad :" << tex_name << endl;
     return 1;
   }
+
   group->add( new UVSphere2(matl, center, radius) );
   return 0;
 }
