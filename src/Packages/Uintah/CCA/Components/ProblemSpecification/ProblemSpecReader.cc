@@ -13,6 +13,9 @@
 #include <iostream>
 #include <stdio.h>
 
+#include <xercesc/dom/DOMElement.hpp>
+#include <xercesc/dom/DOMNode.hpp>
+
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
@@ -28,53 +31,54 @@ ProblemSpecReader::~ProblemSpecReader()
 
 ProblemSpecP ProblemSpecReader::readInputFile()
 {
+  ProblemSpecP prob_spec;
+  
   try {
     XMLPlatformUtils::Initialize();
-  }
-  catch(const XMLException& toCatch) {
-      throw ProblemSetupException("XML Exception: " +
-				  string(to_char_ptr(toCatch.getMessage())));
-  }
-  
-  ProblemSpecP prob_spec;
-  try {
-      // Instantiate the DOM parser.
-      XercesDOMParser* parser = new XercesDOMParser;
-      parser->setDoValidation(false);
 
-      SimpleErrorHandler handler;
-      parser->setErrorHandler(&handler);
-
-      // Parse the input file
-      // No exceptions just yet, need to add
-
-      parser->parse(filename.c_str());
-
-      if(handler.foundError){
-	throw ProblemSetupException("Error reading file: "+filename);
-      }
-
-      // Add the parser contents to the ProblemSpecP d_doc
-      DOMDocument * temp = parser->getDocument();
-      DOMNode * node = temp->cloneNode(true);
-
+    // Instantiate the DOM parser.
+    XercesDOMParser* parser = new XercesDOMParser;
+    parser->setDoValidation(false);
+    
+    SimpleErrorHandler handler;
+    parser->setErrorHandler(&handler);
+    
+    // Parse the input file
+    // No exceptions just yet, need to add
+    
+    parser->parse(filename.c_str());
+    
+    if(handler.foundError){
+      throw ProblemSetupException("Error reading file: "+filename);
+    }
+    
+    // Clone the Node so we can delete the parser but keep the document
+    // contents.  THIS NODE WILL NEED TO BE RELEASED MANUALLY LATER!!!!
+    DOMNode* node = parser->getDocument()->cloneNode(true);
 #if !defined( _AIX )
-      DOMDocument* doc = dynamic_cast<DOMDocument*>(node);
+    DOMDocument* doc = dynamic_cast<DOMDocument*>(node);
 #else
-      DOMDocument* doc = static_cast<DOMDocument*>(node);
+    DOMDocument* doc = static_cast<DOMDocument*>(node);
 #endif
 
-      if( !doc ) {
-	cout << "dynamic_cast to DOMDocument * failed!\n";
-	throw InternalError( "dynamic_cast to DOMDocument * failed!\n" );
-      }
+    if( !doc ) {
+      cout << "dynamic_cast to DOMDocument * failed!\n";
+      throw InternalError( "dynamic_cast to DOMDocument * failed!\n" );
+    }
 
-      delete parser;
-      DOMNode * de = doc->getDocumentElement();
-      prob_spec = scinew ProblemSpec( de );
-  } catch(const XMLException& ex) {
-      throw ProblemSetupException("XML Exception: "+string(to_char_ptr(ex.getMessage())));
+    delete parser;
+
+    // Add the parser contents to the ProblemSpecP
+    prob_spec = scinew ProblemSpec(doc->getDocumentElement());
+  } catch(const XMLException& toCatch) {
+    char* ch = XMLString::transcode(toCatch.getMessage());
+    string ex("XML Exception: " + string(ch));
+    delete [] ch;
+    throw ProblemSetupException(ex);
   }
   return prob_spec;
 }
+
+
+
 

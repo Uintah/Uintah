@@ -10,7 +10,8 @@ namespace Uintah {
    public:
       ProblemSpecReader(const std::string& filename);
       ~ProblemSpecReader();
-      
+
+      // be sure to call releaseDocument on this ProblemSpecP
       virtual ProblemSpecP readInputFile();
       
    private:
