@@ -56,6 +56,8 @@ WARNING
 
          // Coefficient of friction
          double d_mu;
+         // Nodal volume fraction that must occur before contact is applied
+         double d_vol_const;
          int d_8or27;
 
       public:
