@@ -15,7 +15,7 @@ echo ""
 echo "Configuring ${mode} build at `date` using these arguments"
 echo "  $CONFIGURE_ARGS"
 echo "#!/bin/tcsh" > configure_command
-echo "../../src/configure $CONFIGURE_ARGS" >> configure_command
+echo "nice ../../src/configure $CONFIGURE_ARGS" >> configure_command
 chmod a+x configure_command
 ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
 retval=$?
@@ -127,7 +127,7 @@ for test in *; do
 	echo "setenv PATH $PATH" >> "$doTestScript"
 	echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
 	/bin/chmod a+x "$doTestScript"
-	"$doTestScript" > "${test}.log"  2>&1
+	nice "$doTestScript" > "${test}.log"  2>&1
 	retval=$?
 	cat "${test}.log" >> "$summary_log"
 	cd TestScripts
