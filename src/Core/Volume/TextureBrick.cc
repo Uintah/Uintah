@@ -287,4 +287,41 @@ TextureBrick::compute_polygons(const Ray& view,
   }
 }
 
+
+
+NrrdTextureBrick::NrrdTextureBrick(NrrdDataHandle n0, NrrdDataHandle n1,
+				   int nx, int ny, int nz, int nc, int *nb,
+				   int ox, int oy, int oz,
+				   int mx, int my, int mz,
+				   const BBox& bbox, const BBox& tbox)
+  : TextureBrick(nx, ny, nz, nc, nb, ox, oy, oz, mx, my, mz, bbox, tbox)
+{
+  data_[0] = n0;
+  data_[1] = n1;
+}
+
+
+NrrdTextureBrick::~NrrdTextureBrick()
+{
+}
+
+
+GLenum
+NrrdTextureBrick::tex_type()
+{
+  // TODO: Only support unsigned bytes at this time, since that's all we
+  // currently create.  Add rest later.  (Need to add texture
+  // transform to make min/max work without resampling data anyway).
+  ASSERT(data_[0]->nrrd->type == nrrdTypeUChar);
+  return GL_UNSIGNED_BYTE;
+}
+
+void *
+NrrdTextureBrick::tex_data(int c)
+{
+  ASSERT(c == 0 || c == 1);
+  return data_[c]->nrrd->data;
+}
+
+
 } // end namespace SCIRun

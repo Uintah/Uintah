@@ -40,7 +40,7 @@
 #include <Core/Volume/GLinfo.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Containers/LockingHandle.h>
-
+#include <Core/Datatypes/NrrdData.h>
 #include <vector>
 
 namespace SCIRun {
@@ -105,6 +105,28 @@ public:
 };
 
 typedef LockingHandle<TextureBrick> TextureBrickHandle;
+
+
+
+class NrrdTextureBrick : public TextureBrick
+{
+public:
+  NrrdTextureBrick(NrrdDataHandle n0, NrrdDataHandle n1,
+		   int nx, int ny, int nz, int nc, int *nb,
+		   int ox, int oy, int oz, int mx, int my, int mz,
+		   const BBox& bbox, const BBox& tbox);
+  virtual ~NrrdTextureBrick();
+  
+  virtual GLenum tex_type();
+  virtual void *tex_data(int c);
+
+  void set_nrrds(const NrrdDataHandle &n0, const NrrdDataHandle &n1)
+  { data_[0] = n0; data_[1] = n1; }
+
+protected:
+  NrrdDataHandle data_[2];
+};
+
 
 
 template <typename T>
