@@ -16,6 +16,7 @@
 
 #include <SCICore/Containers/AVLTree.h>
 #include <SCICore/Containers/String.h>
+#include <SCICore/Geometry/Point.h>
 
 namespace SCICore {
   namespace GeomSpace {
@@ -51,6 +52,7 @@ using SCICore::GeomSpace::Color;
 using SCICore::GeomSpace::View;
 using SCICore::TclInterface::TCLArgs;
 using SCICore::Thread::FutureValue;
+using SCICore::Geometry::Point;
 
 class Roe;
 class Salmon;
@@ -85,6 +87,10 @@ public:
 
     int xres, yres;
     virtual void getData(int datamask, FutureValue<GeometryData*>* result);
+
+    // compute world space point under cursor (x,y).  If successful,
+    // set 'p' to that value & return true.  Otherwise, return false.
+    virtual int    pick_scene(int x, int y, Point *p) { return 0; }
 };
 
 class RegisterRenderer {
@@ -102,6 +108,16 @@ public:
 
 //
 // $Log$
+// Revision 1.6  2000/12/01 23:24:42  yarden
+// remove Alexi's rotations.
+// add new 3D navigation from Brown.
+//   1. press right button and move *initially* left/right means Pan mode
+//   2. press right button and move *initially* up/down    means Move in/out
+//   3. click right button create a point as origin of rotation
+//      then, press right button to rotate around that point.
+//      after the rotation, the point disappear.
+// Alexi will now reinsert his code.
+//
 // Revision 1.5  2000/06/07 20:59:26  kuzimmer
 // Modifications to make the image save menu item work on SGIs
 //
