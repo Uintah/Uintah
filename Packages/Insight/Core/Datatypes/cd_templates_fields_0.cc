@@ -26,6 +26,7 @@ template class ITKFData3d<char>;
 template class ITKFData3d<unsigned int>;
 template class ITKFData3d<unsigned short>;
 template class ITKFData3d<unsigned char>;
+template class ITKFData3d<unsigned long>;
 
 template class GenericField<LatVolMesh, ITKFData3d<Tensor> >;
 template class GenericField<LatVolMesh, ITKFData3d<Vector> >;
@@ -37,6 +38,7 @@ template class GenericField<LatVolMesh, ITKFData3d<char> >;
 template class GenericField<LatVolMesh, ITKFData3d<unsigned int> >;
 template class GenericField<LatVolMesh, ITKFData3d<unsigned short> >;
 template class GenericField<LatVolMesh, ITKFData3d<unsigned char> >;
+template class GenericField<LatVolMesh, ITKFData3d<unsigned long> >;
 
 template class ITKLatVolField<Tensor>;
 template class ITKLatVolField<Vector>;
@@ -48,6 +50,7 @@ template class ITKLatVolField<char>;
 template class ITKLatVolField<unsigned int>;
 template class ITKLatVolField<unsigned short>;
 template class ITKLatVolField<unsigned char>;
+template class ITKLatVolField<unsigned long>;
 
 const TypeDescription* get_type_description(ITKLatVolField<Tensor> *);
 const TypeDescription* get_type_description(ITKLatVolField<Vector> *);
@@ -59,6 +62,7 @@ const TypeDescription* get_type_description(ITKLatVolField<char> *);
 const TypeDescription* get_type_description(ITKLatVolField<unsigned int> *);
 const TypeDescription* get_type_description(ITKLatVolField<unsigned short> *);
 const TypeDescription* get_type_description(ITKLatVolField<unsigned char> *);
+const TypeDescription* get_type_description(ITKLatVolField<unsigned long> *);
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
