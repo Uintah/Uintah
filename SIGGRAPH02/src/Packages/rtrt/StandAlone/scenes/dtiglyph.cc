@@ -21,6 +21,7 @@
 #include <Packages/rtrt/Core/PhongMaterial.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Sphere.h>
+#include <Packages/rtrt/Core/Glyph.h>
 #include <Packages/rtrt/Core/Instance.h>
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
 #include <Core/Geometry/Transform.h>
@@ -124,6 +125,10 @@ dtiRgbGen(Color &rgb, float evec[3], float an) {
 	      AIR_AFFINE(0.0, an, 1.0, 0.5, b));
 }
 
+namespace rtrt {
+  extern float glyph_threshold;
+}
+
 extern "C" 
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 {
@@ -185,6 +190,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   fprintf(stderr, "%s: dti volume spacings %g x %g x %g\n", me,
 	  nin->axis[1].spacing, nin->axis[2].spacing, nin->axis[3].spacing);
 
+  glyph_threshold = anisoThresh;
   //////////////////////////////////////////////////////
   // add geometry to this :)
   Group *all = new Group();
@@ -214,21 +220,21 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	x = xs * xi;
 
 	// we always ignore data points with confidence < 0.5
-	if (!( tdata[0] > 0.5 ))
+	if (!( tdata[0] > 0.4 ))
 	  continue;
 
 	// do eigensystem solve
 	tenEigensolve(eval, evec, tdata);
 	tenAnisoCalc(c, eval);
-	if (!( c[anisoType] > anisoThresh))
-	  continue;
+	//	if (!( c[anisoType] > anisoThresh))
+	//	  continue;
 	
 	// so there will be a glyph generated for this sample
 	numGlyphs++;
 	Color rgb;
 	dtiRgbGen(rgb, evec, c[anisoType]);
-	//	Phong *matl = new Phong(rgb, Color(1,1,1), 100);
-	PhongMaterial *matl = new PhongMaterial(rgb, 1);
+	Phong *matl = new Phong(rgb, Color(1,1,1), 100);
+	//PhongMaterial *matl = new PhongMaterial(rgb, 1);
 	// all glyphs start at the origin
 
 	Sphere *obj = new Sphere(matl, Point(0,0,0), glyphScale);
@@ -242,18 +248,19 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	ELL_4M_SET_TRANSLATE(B, x, y, z);
 	ELL_4M_MUL(C, B, A);
 	ELL_4M_TRANSPOSE_IP(C, tmp);
-	printf("glyph at (%d,%d,%d) -> (%g,%g,%g) with transform:\n",
-	       xi, yi, zi, x, y, z);
-	ell4mPrint_d(stdout, C);
+	//	printf("glyph at (%d,%d,%d) -> (%g,%g,%g) with transform:\n",
+	//	       xi, yi, zi, x, y, z);
+	//	ell4mPrint_d(stdout, C);
 	Transform *tr = new Transform();
 	tr->set(C);
 
-	//	Sphere *obj = new Sphere(matl, Point(x,y,z), glyphScale);
+	//Sphere *obj = new Sphere(matl, Point(x,y,z), glyphScale);
 	//	all->add(obj);
 
 #if 1
-	BBox b (Point(x-10,y-10,z-10), Point(x+10,y+10,z+10));
-	all->add(new Instance(new InstanceWrapperObject(obj),tr,b));
+	//BBox b (Point(x-10,y-10,z-10), Point(x+10,y+10,z+10));
+	all->add(new Glyph(new Instance(new InstanceWrapperObject(obj),tr),
+		 c[anisoType]));
 #endif
       }
     }
