@@ -71,6 +71,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_momex_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mmenthalpywallbc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_trans_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_computevel_fort.h>
@@ -1974,6 +1975,8 @@ BoundaryCondition::mmpressureBC(const ProcessorGroup*,
 		vars->pressNonlinearSrc, vars->pressLinearSrc,
 		constvars->cellType, d_mmWallID);
 }
+
+
 // applies multimaterial bc's for scalars and pressure
 void
 BoundaryCondition::mmscalarWallBC( const ProcessorGroup*,
@@ -1987,6 +1990,27 @@ BoundaryCondition::mmscalarWallBC( const ProcessorGroup*,
   IntVector idxHi = patch->getCellFORTHighIndex();
   //fortran call
   fort_mmwallbc(idxLo, idxHi,
+		vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
+		vars->scalarCoeff[Arches::AN], vars->scalarCoeff[Arches::AS],
+		vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB],
+		vars->scalarNonlinearSrc, vars->scalarLinearSrc,
+		constvars->cellType, d_mmWallID);
+}
+
+
+// applies multimaterial bc's for enthalpy
+void
+BoundaryCondition::mmEnthalpyWallBC( const ProcessorGroup*,
+				   const Patch* patch,
+				   CellInformation*,
+				   ArchesVariables* vars,
+				   ArchesConstVariables* constvars)
+{
+  // Get the low and high index for the patch
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  //fortran call
+  fort_mmenthalpywallbc(idxLo, idxHi,
 		vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
 		vars->scalarCoeff[Arches::AN], vars->scalarCoeff[Arches::AS],
 		vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB],
