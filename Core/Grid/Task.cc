@@ -217,7 +217,6 @@ Task::computes(const VarLabel* var,
       matls_dom = OutOfDomain;
     }
     ASSERT(patches == 0);
-    patches_dom = OutOfDomain;
   }
   
   Dependency* dep = scinew Dependency(this, NewDW, var, patches, matls,
