@@ -7,6 +7,7 @@
  */
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
+#include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Interface/CFDInterface.h>
 #include <Uintah/Interface/ProblemSpecP.h>
@@ -14,18 +15,51 @@
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Region.h>
 #include <Uintah/Grid/VarTypes.h>
-#include <Uintah/Parallel/ProcessorContext.h>
+#include <Uintah/Grid/SimulationState.h>
+#include <Uintah/Grid/SimulationStateP.h>
+
 #include <SCICore/Geometry/Vector.h>
 
 namespace Uintah {
-   class VarLabel;
-   namespace ArchesSpace {
+
+class VarLabel;
+
+namespace ArchesSpace {
 
 class PhysicalConstants;
 class NonlinearSolver;
 class Properties;
 class TurbulenceModel;
 class BoundaryCondition;
+
+/**************************************
+
+CLASS
+   Arches
+   
+   Short description...
+
+GENERAL INFORMATION
+
+   Arches.h
+
+   Author
+   Department
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 SCI Group
+
+KEYWORDS
+   Arches
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
 
 class Arches : public UintahParallelComponent, public CFDInterface {
 public:
@@ -87,6 +121,9 @@ private:
 
 //
 // $Log$
+// Revision 1.21  2000/05/30 17:06:11  dav
+// added Cocoon doc template.  fixed non compilation problem.
+//
 // Revision 1.20  2000/05/30 15:44:58  rawat
 // modified computeStableTimestep
 //
