@@ -25,8 +25,20 @@ itcl_class SCIRun_FieldsCreate_ClipByFunction {
     method set_defaults {} {
         global $this-clipfunction
 	global $this-clipmode
+	global $this-uservar0
+	global $this-uservar1
+	global $this-uservar2
+	global $this-uservar3
+	global $this-uservar4
+	global $this-uservar5
 	set $this-clipfunction "x < 0"
 	set $this-clipmode "cell"
+	set $this-uservar0 0.0
+	set $this-uservar1 0.0
+	set $this-uservar2 0.0
+	set $this-uservar3 0.0
+	set $this-uservar4 0.0
+	set $this-uservar5 0.0
     }
 
     method ui {} {
