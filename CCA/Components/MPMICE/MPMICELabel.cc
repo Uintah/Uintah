@@ -45,13 +45,6 @@ MPMICELabel::MPMICELabel()
 			CCVariable<double>::getTypeDescription());  
   releasedHeatCCLabel = VarLabel::create("releasedHeat",
 			CCVariable<double>::getTypeDescription());
-  sumBurnedMassLabel  = VarLabel::create("sumBurnedMass",
-			CCVariable<double>::getTypeDescription());  
-  sumReleasedHeatLabel = VarLabel::create("sumReleasedHeat",
-			CCVariable<double>::getTypeDescription());
-  sumCreatedVolLabel   = VarLabel::create("sumCreateVol",
-                        CCVariable<double>::getTypeDescription());
-
 
 } 
 
@@ -70,7 +63,4 @@ MPMICELabel::~MPMICELabel()
   VarLabel::destroy(velInc_NCLabel);
   VarLabel::destroy(burnedMassCCLabel);
   VarLabel::destroy(releasedHeatCCLabel);
-  VarLabel::destroy(sumBurnedMassLabel);
-  VarLabel::destroy(sumReleasedHeatLabel);
-  VarLabel::destroy(sumCreatedVolLabel);
 }
