@@ -292,7 +292,7 @@ void BuildMultiMesh::partial_execute() {
 	ColormapHandle cmap;
 	int have_cmap=icmap->get(cmap);
 	if (!have_cmap) {
-	    cmap=scinew Colormap(30, min, max);
+	    cmap=scinew ColorMap(30, min, max);
 	    cmap->build_default();
 	}
 	// set source widget sizes and colors, and on/off switches

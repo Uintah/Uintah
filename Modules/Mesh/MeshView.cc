@@ -328,7 +328,7 @@ void MeshView::execute()
 
     // If we don't have a colormap, then create a generic one.
     if (!colorPort -> get(genColors)){
-	genColors = new Colormap;
+	genColors = new ColorMap;
 	genColors -> build_default();
     }
 
