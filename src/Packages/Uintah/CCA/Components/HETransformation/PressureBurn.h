@@ -44,7 +44,7 @@ WARNING
 
     class PressureBurn : public Burn { 
     private:
-      double thresholdTemp, thresholdPressure, Enthalpy, BurnCoeff, pressureExponent;
+      double thresholdTemp, thresholdPressure, Enthalpy, BurnCoeff, pressureExponent, refPressure;
       
       // Prevent copying of this class
       // copy constructor
