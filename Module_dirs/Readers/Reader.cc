@@ -89,7 +89,7 @@ void TYPEReader::execute()
 	    return; // Can't open file...
 	}
 	// Read the file...
-	stream->watch_progress(watcher, (void*)this);
+//	stream->watch_progress(watcher, (void*)this);
 	Pio(*stream, handle);
 	cerr << "Pio done!\n";
 	if(!handle.get_rep()){
