@@ -44,7 +44,7 @@ int
 main(int argc, char **argv) {
   HexVolMesh *hvm = new HexVolMesh();
   if (argc != 5) {
-    cerr << "Usage: "<<argv[0]<<" cells nodes conds fieldout\n";
+    cerr << "Usage: "<<argv[0]<<" nodes cells conds fieldout\n";
     return 0;
   }
 
@@ -65,7 +65,7 @@ main(int argc, char **argv) {
     nodeIndex.add(hvm->add_point(Point(x,y,z)));
   }
   if (count != npts) {
-    cerr <<"Error -- was told "<<npts<<" points, but only found "<<count<<"\n";
+    cerr <<"Error -- was told "<<npts<<" points, but found "<<count<<"\n";
     exit(0);
   }
 
@@ -82,7 +82,7 @@ main(int argc, char **argv) {
 		 nodeIndex[i4], nodeIndex[i5], nodeIndex[16], nodeIndex[i7]);
   }
   if (count != ncells) {
-    cerr <<"Error -- was told "<<npts<<" points, but only found "<<count<<"\n";
+    cerr <<"Error -- was told "<<npts<<" points, but found "<<count<<"\n";
     exit(0);
   }
 
@@ -95,16 +95,15 @@ main(int argc, char **argv) {
     exit(0);
   }
 
-  while(condstream) {
+  while(condstream && (conds.size()<nconds)) {
     int cond;
     condstream >> cond;
     conds.add(cond);
   }
   if (conds.size() != nconds) {
-    cerr <<"Error -- was told "<<nconds<<" conductivity entries, but only found "<<conds.size()<<"\n";
+    cerr <<"Error -- was told "<<nconds<<" conductivity entries, but found "<<conds.size()<<"\n";
     exit(0);
   }
-
   HexVolMeshHandle hvmH(hvm);
   HexVolField<int> *hv = scinew HexVolField<int>(hvmH, Field::CELL);
 
