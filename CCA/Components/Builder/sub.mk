@@ -35,8 +35,8 @@ LIBS := $(QT_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-PROGRAM := builder
-SRCS := $(SRCDIR)/builder.cc
+PROGRAM := builder_main
+SRCS := $(SRCDIR)/builder_main.cc
 PSELIBS := CCA/Components/Builder Core/CCA/SSIDL \
 	Core/CCA/PIDL Core/Exceptions Core/CCA/spec SCIRun
 LIBS := 
@@ -46,4 +46,4 @@ include $(SCIRUN_SCRIPTS)/program.mk
 $(SRCDIR)/Builder.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/BuilderWindow.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/moc_BuilderWindow.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/builder.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/builder_main.o: Core/CCA/spec/cca_sidl.h
