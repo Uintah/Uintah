@@ -110,6 +110,11 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable, Allocator* allocator)
 #endif
        
        if(allocator){
+#ifdef SCI_64BITS
+	 fprintf(stderr, "Allocator was using %lu bytes.\n", allocator->sizealloc );
+#else
+	 fprintf(stderr, "Allocator was using %u bytes.\n", allocator->sizealloc );
+#endif
 	 // If the allocator is already dieing, we will just quit to try
 	 // to avoid going into an infinite loop
 	 if(allocator->dieing)
