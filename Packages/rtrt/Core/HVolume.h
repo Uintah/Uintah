@@ -123,7 +123,10 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
   min=Point(x,y,z);
   in >> x >> y >> z;
   Point max(x,y,z);
-  in >> datamin >> datamax;
+  double dmin, dmax;
+  in >> dmin >> dmax;
+  datamin = (T)dmin;
+  datamax = (T)dmax;
   if(!in){
     cerr << "Error reading header: " << buf << '\n';
     exit(1);
