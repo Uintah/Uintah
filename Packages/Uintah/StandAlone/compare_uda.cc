@@ -166,8 +166,8 @@ bool compare(Point a, Point b, double abs_tolerance, double rel_tolerance)
 bool compare(const Matrix3& a, const Matrix3& b, double abs_tolerance,
 	     double rel_tolerance)
 {
-  for (int i = 1; i <= 3; i++)
-    for (int j = 1; j <= 3; j++)
+  for (int i = 0; i < 3; i++)
+    for (int j = 0; j < 3; j++)
       if (!compare(a(i,j), b(i, j), abs_tolerance, rel_tolerance))
 	return false;
   return true;
