@@ -34,7 +34,7 @@ void
 SocketMessage::createMessage()  { 
   realloc(msg, INIT_SIZE);
   capacity=INIT_SIZE;
-  used=0;
+  msg_size=0;
 }
 
 void 
@@ -115,30 +115,35 @@ SocketMessage::unmarshalLong(long *buf, int size){
   unmarshalBuf(buf, size*sizeof(long));
 }
 
-void SocketMessage::unmarshalSpChannel(SpChannel* channel){
+void 
+SocketMessage::unmarshalSpChannel(SpChannel* channel){
   //...
 }
 
-void* SocketMessage::getLocalObj() {  return 0; }
+void* 
+SocketMessage::getLocalObj(){
+  return 0; 
+}
 
 void SocketMessage::destroyMessage() {
   if(msg!=NULL) free(msg);
+  msg=NULL;
 }
 
 
 //private methods
 void 
 SocketMessage::marshalBuf(const void *buf, int fullsize){
-  used+=fullsize;
-  if(used>capacity){
-    capacity=used+INIT_SIZE;
+  msg_size+=fullsize;
+  if(msg_size>capacity){
+    capacity=msg_size+INIT_SIZE;
     realloc(msg, capacity);
   }
-  memcpy((char*)msg+used-fullsize, buf, fullsize); 
+  memcpy((char*)msg+msg_size-fullsize, buf, fullsize); 
 }
 
 void 
 SocketMessage::unmarshalBuf(void *buf, int fullsize){
-  memcpy(buf, (char*)msg+used, fullsize); 
-  used+=fullsize;
+  memcpy(buf, (char*)msg+msg_size, fullsize); 
+  msg_size+=fullsize;
 }
