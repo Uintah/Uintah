@@ -48,7 +48,7 @@ void Crack::addComputesAndRequiresPropagateCrackFrontPoints(Task* t,
   t->requires(Task::NewDW, lb->gMassLabel, gac, NGC);
   t->requires(Task::NewDW, lb->GMassLabel, gac, NGC);
 
-  if(d_8or27==27)
+  if(flag->d_8or27==27)
    t->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
 }
 
@@ -88,7 +88,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
       new_dw->get(Gmass, lb->GMassLabel, dwi, patch, gac, NGC);
 
       constParticleVariable<Vector> psize;
-      if(d_8or27==27) old_dw->get(psize, lb->pSizeLabel, pset);
+      if(flag->d_8or27==27) old_dw->get(psize, lb->pSizeLabel, pset);
 
       if(doCrackPropagation) {
         /* Step 1: Detect if crack front nodes propagate (cp)
@@ -213,12 +213,12 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
 	      // Detect if new_pt is inside material
               for(int k=0; k<patch_size; k++) {
 		if(newPtInPatch[k]) {
-                  if(d_8or27==8)
+                  if(flag->d_8or27==8)
                     patch->findCellNodes(new_pt, ni);
-                  else if(d_8or27==27)
+                  else if(flag->d_8or27==27)
                     patch->findCellNodes27(new_pt, ni);
 		  
-                  for(int j=0; j<d_8or27; j++) {
+                  for(int j=0; j<flag->d_8or27; j++) {
                     double totalMass=gmass[ni[j]]+Gmass[ni[j]];
                     if(totalMass<d_cell_mass/64.) {
                       newPtInMat=NO;
@@ -251,14 +251,14 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
 	      for(int k=0; k<patch_size; k++) {
 	        if(newPtInPatch[k]) {
                   // Get cell nodes where new_pt is
-	          if(d_8or27==8)
+	          if(flag->d_8or27==8)
 	            patch->findCellNodes(new_pt, ni);
-	          else if(d_8or27==27)
+	          else if(flag->d_8or27==27)
                     patch->findCellNodes27(new_pt, ni);
                   // Get the lowest and highest points of the cell
 	          Point LLP=Point( 9e99, 9e99, 9e99);
 	          Point LHP=Point(-9e99,-9e99,-9e99);		  
-	          for(int j=0; j<d_8or27; j++) {
+	          for(int j=0; j<flag->d_8or27; j++) {
 	            Point pj=patch->nodePosition(ni[j]);
 	            LLP=Min(LLP,pj);
 	            LHP=Max(LHP,pj);

@@ -39,8 +39,7 @@ using std::string;
 #define MAX_BASIS 27
 
 Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
-                           Output* d_dataArchiver,
-                           MPMLabel* Mlb,int n8or27)
+	     Output* d_dataArchiver, MPMLabel* Mlb,MPMFlags* MFlag)
 { 
   MPI_Comm_dup( MPI_COMM_WORLD, & mpi_crack_comm );
 
@@ -49,10 +48,10 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   d_sharedState = d_sS;
   dataArchiver = d_dataArchiver;
   lb = Mlb;
-  d_8or27=n8or27;
+  flag = MFlag;
 
-  if(d_8or27==8) {NGP=1; NGN=1;}
-  else if(d_8or27==MAX_BASIS) {NGP=2; NGN=2;}
+  if(flag->d_8or27==8) {NGP=1; NGN=1;}
+  else if(flag->d_8or27==MAX_BASIS) {NGP=2; NGN=2;}
   
   // Default values of parameters for fracture analysis 
   rdadx=1.;   // Ratio of crack growth to cell-size

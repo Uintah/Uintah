@@ -28,6 +28,7 @@ namespace Uintah {
 
    class DataWarehouse;
    class MPMLabel;
+   class MPMFlags;
    class ProcessorGroup;
    class Patch;
    class VarLabel;
@@ -39,7 +40,7 @@ class Crack
     // Constructor
     Crack(const ProblemSpecP& ps, SimulationStateP& d_sS,
                            Output* dataArchiver,
-                           MPMLabel* lb,int n8or27);
+                           MPMLabel* lb,MPMFlags* MFlag);
     // Destructor
      ~Crack();
 
@@ -158,7 +159,7 @@ class Crack
     MPI_Comm mpi_crack_comm;
 
     SimulationStateP d_sharedState;
-    int d_8or27;
+    MPMFlags* flag;
     int NGP;
     int NGN;
     
