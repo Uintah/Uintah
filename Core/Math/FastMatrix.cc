@@ -45,36 +45,17 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-const int FastMatrix::smallSize = 16; // Make sure smallMat and smallMatPtr
-const int FastMatrix::smallRows = 4;  // are updated (in .h file) if
-                                      // you change these.
 FastMatrix::FastMatrix(int rows, int cols)
   : rows(rows), cols(cols)
 {
   ASSERT(rows>0);
   ASSERT(cols>0);
-  int size=rows*cols;
-  if(size<=smallSize && rows <= smallRows){
-    mat=&smallMatPtr[0];
-    for(int i=0;i<rows;i++)
-      mat[i]=&smallMat[i*cols];
-  } else {
-    // Require allocation...
-    mat = new double*[rows];
-    double* tmp=new double[size];
-    for(int i=0;i<rows;i++){
-      mat[i]=tmp;
-      tmp+=cols;
-    }
-  }
+  ASSERT(rows <= MaxSize);
+  ASSERT(cols <= MaxSize);
 }
 
 FastMatrix::~FastMatrix()
 {
-  if(mat != &smallMatPtr[0]){
-    delete[] mat[0];
-    delete[] mat;
-  }
 }
 
 void FastMatrix::destructiveInvert(FastMatrix& a)
@@ -95,6 +76,7 @@ void FastMatrix::destructiveInvert(FastMatrix& a)
       mat[1][1] =  a.mat[0][0]*one_over_denom;
     }
     break;
+#if 0
   case 3:
     {
       double a00 = a.mat[0][0], a01 = a.mat[0][1], a02 = a.mat[0][2];
@@ -112,74 +94,7 @@ void FastMatrix::destructiveInvert(FastMatrix& a)
       mat[2][1] =  (a01*a20 - a00*a21) * one_over_denom;
       mat[2][2] =  (-(a01*a10) + a00*a11) * one_over_denom;
     }
-    break;
-  case 4:
-    {
-      double a00 = a.mat[0][0], a01 = a.mat[0][1], a02 = a.mat[0][2], a03 = a.mat[0][3];
-      double a10 = a.mat[1][0], a11 = a.mat[1][1], a12 = a.mat[1][2], a13 = a.mat[1][3];
-      double a20 = a.mat[2][0], a21 = a.mat[2][1], a22 = a.mat[2][2], a23 = a.mat[2][3];
-      double a30 = a.mat[3][0], a31 = a.mat[3][1], a32 = a.mat[3][2], a33 = a.mat[3][3];
-      double one_over_denom = 1./(a03*a12*a21*a30 - a02*a13*a21*a30 - 
-				  a03*a11*a22*a30 + a01*a13*a22*a30 + 
-				  a02*a11*a23*a30 - a01*a12*a23*a30 - 
-				  a03*a12*a20*a31 + a02*a13*a20*a31 + 
-				  a03*a10*a22*a31 - a00*a13*a22*a31 - 
-				  a02*a10*a23*a31 + a00*a12*a23*a31 + 
-				  a03*a11*a20*a32 - a01*a13*a20*a32 - 
-				  a03*a10*a21*a32 + a00*a13*a21*a32 + 
-				  a01*a10*a23*a32 - a00*a11*a23*a32 - 
-				  a02*a11*a20*a33 + a01*a12*a20*a33 + 
-				  a02*a10*a21*a33 - a00*a12*a21*a33 - 
-				  a01*a10*a22*a33 + a00*a11*a22*a33);
-
-      mat[0][0] = (-(a13*a22*a31) + a12*a23*a31 + a13*a21*a32 - 
-		   a11*a23*a32 - a12*a21*a33 + a11*a22*a33)*one_over_denom;
-
-      mat[0][1] = (a03*a22*a31 - a02*a23*a31 - a03*a21*a32 + a01*a23*a32 + 
-		   a02*a21*a33 - a01*a22*a33) * one_over_denom;
-    
-      mat[0][2] = (-(a03*a12*a31) + a02*a13*a31 + a03*a11*a32 - a01*a13*a32
-		   - a02*a11*a33 +  a01*a12*a33) * one_over_denom;
-    
-      mat[0][3] = (a03*a12*a21 - a02*a13*a21 - a03*a11*a22 + a01*a13*a22 + 
-		   a02*a11*a23 -  a01*a12*a23) * one_over_denom;
-      
-      mat[1][0] = (a13*a22*a30 - a12*a23*a30 - a13*a20*a32 + a10*a23*a32 + 
-		   a12*a20*a33 - a10*a22*a33) * one_over_denom;
-      
-      mat[1][1] = (-(a03*a22*a30) + a02*a23*a30 + a03*a20*a32 - 
-		   a00*a23*a32 - a02*a20*a33 + a00*a22*a33)*one_over_denom;
-
-      mat[1][2] = (a03*a12*a30 - a02*a13*a30 - a03*a10*a32 + a00*a13*a32 +
-		   a02*a10*a33 -  a00*a12*a33) * one_over_denom;
-     
-      mat[1][3] = (-(a03*a12*a20) + a02*a13*a20 + a03*a10*a22 - 
-		   a00*a13*a22 - a02*a10*a23 + a00*a12*a23)*one_over_denom;
-
-      mat[2][0] = (-(a13*a21*a30) + a11*a23*a30 + a13*a20*a31 - 
-		   a10*a23*a31 - a11*a20*a33 + a10*a21*a33)*one_over_denom;
-     
-      mat[2][1] = (a03*a21*a30 - a01*a23*a30 - a03*a20*a31 + a00*a23*a31 +
-		   a01*a20*a33 - a00*a21*a33) * one_over_denom;
-     
-      mat[2][2] = (-(a03*a11*a30) + a01*a13*a30 + a03*a10*a31 - 
-		   a00*a13*a31 - a01*a10*a33 + a00*a11*a33)*one_over_denom;
-     
-      mat[2][3] = (a03*a11*a20 - a01*a13*a20 - a03*a10*a21 + a00*a13*a21 +
-		   a01*a10*a23 - a00*a11*a23) * one_over_denom;
-
-      mat[3][0] = (a12*a21*a30 - a11*a22*a30 - a12*a20*a31 + a10*a22*a31 +
-		   a11*a20*a32 - a10*a21*a32) * one_over_denom;
-     
-      mat[3][1] = (-(a02*a21*a30) + a01*a22*a30 + a02*a20*a31 - 
-		   a00*a22*a31 - a01*a20*a32 + a00*a21*a32)*one_over_denom;
-     
-      mat[3][2] = (a02*a11*a30 - a01*a12*a30 - a02*a10*a31 + a00*a12*a31 +
-		   a01*a10*a32 -  a00*a11*a32) * one_over_denom;
-
-      mat[3][3] = (-(a02*a11*a20) + a01*a12*a20 + a02*a10*a21 - 
-		   a00*a12*a21 - a01*a10*a22 + a00*a11*a22)*one_over_denom;
-    }
+#endif
     break;
   default:
     // Bigger than 4x4:
@@ -187,223 +102,6 @@ void FastMatrix::destructiveInvert(FastMatrix& a)
     break;
   }
 }
-
-/*---------------------------------------------------------------------
- Function~  matrixSolver--
- Reference~  Mathematica provided the code
- ---------------------------------------------------------------------  */
-void FastMatrix::destructiveSolve(const vector<double>& b,
-				  vector<double>& X)
-{
-  // Can ruin the matrix (this) and the vector b.  Currently only does so for
-  // matrices > 4x4
-  ASSERTEQ(rows, cols);
-  ASSERTEQ(rows, (int)b.size());
-  ASSERTEQ(cols, (int)X.size());
-  switch(rows){
-  case 1:
-    X[0] = b[0]/mat[0][0];
-    break;
-  case 2:
-    {
-      // 2 X 2 Matrix
-      //__________________________________
-      // Example Problem Hilbert Matrix
-      //  Exact solution is 1,1
-      /*
-	mat[0][0] = 1.0;   mat[0][1] = 1/2.0;
-	mat[1][0] = 1/2.0; mat[1][1] = 1/3.0;
-	b[0] = 3.0/2.0;   b[1] = 5.0/6.0;*/
-    
-      double a00 = mat[0][0], a01 = mat[0][1];
-      double a10 = mat[1][0], a11 = mat[1][1];
-      double b0 = b[0], b1 = b[1];
-
-      double one_over_denom = 1./(a00*a11 - a01*a10);
-      X[0] = (a11*b0 - a01*b1)*one_over_denom;
-      X[1] = (a00*b1-a10*b0)*one_over_denom;
-    } 
-    break;
-  case 3:
-    {
-      // 3 X 3 Matrix
-      double a00 = mat[0][0], a01 = mat[0][1], a02 = mat[0][2];
-      double a10 = mat[1][0], a11 = mat[1][1], a12 = mat[1][2];
-      double a20 = mat[2][0], a21 = mat[2][1], a22 = mat[2][2];
-      double b0 = b[0], b1 = b[1], b2 = b[2];
-
-      //__________________________________
-      // Example Problem Hilbert matrix
-      // Exact Solution is 1,1,1
-      /*
-	double a00 = 1.0,       a01 = 1.0/2.0,  a02 = 1.0/3.0;
-	double a10 = 1.0/2.0,   a11 = 1.0/3.0,  a12 = 1.0/4.0;
-	double a20 = 1.0/3.0,   a21 = 1.0/4.0,  a22 = 1.0/5.0;
-	double b0 = 11.0/6.0, b1 = 13.0/12.0, b2 = 47.0/60.0; */
-
-      double one_over_denom = 1./(-(a02*a11*a20) + a01*a12*a20 + a02*a10*a21 
-				  - a00*a12*a21 -  a01*a10*a22 + a00*a11*a22);
-
-      X[0] = ( (-(a12*a21) + a11*a22)*b0 + (a02*a21 - a01*a22)*b1 +
-	       (-(a02*a11) + a01*a12)*b2 )*one_over_denom;
-
-
-      X[1] = ( (a12*a20 - a10*a22)*b0 +  (-(a02*a20) + a00*a22)*b1 +
-	       (a02*a10 - a00*a12)*b2 ) * one_over_denom;
-
-      X[2] =  ( (-(a11*a20) + a10*a21)*b0 +  (a01*a20 - a00*a21)*b1 +
-		(-(a01*a10) + a00*a11)*b2) * one_over_denom;
-    }
-    break;
-  case 4:
-    {
-      // 4 X 4 matrix
-      double a00 = mat[0][0], a01 = mat[0][1], a02 = mat[0][2], a03 = mat[0][3];
-      double a10 = mat[1][0], a11 = mat[1][1], a12 = mat[1][2], a13 = mat[1][3];
-      double a20 = mat[2][0], a21 = mat[2][1], a22 = mat[2][2], a23 = mat[2][3];
-      double a30 = mat[3][0], a31 = mat[3][1], a32 = mat[3][2], a33 = mat[3][3];
-      double b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
-
-      //__________________________________
-      //  Test Problem
-      // exact solution is 1,1,1,1
-      /*
-	double a00 = 1.1348, a01 = 3.8326, a02 = 1.1651, a03 = 3.4017;
-	double a10 = 0.5301, a11 = 1.7875, a12 = 2.5330, a13 = 1.5435;
-	double a20 = 3.4129, a21 = 4.9317, a22 = 8.7643, a23 = 1.3142;
-	double a30 = 1.2371, a31 = 4.9998, a32 = 10.6721, a33 = 0.0147;
-	double b0 = 9.5342,  b1 = 6.3941,  b2 = 18.4231,  b3 = 16.9237;*/
-
-      double one_over_denom = 1./(a03*a12*a21*a30 - a02*a13*a21*a30 -
-				  a03*a11*a22*a30 + a01*a13*a22*a30 + 
-				  a02*a11*a23*a30 - a01*a12*a23*a30 - 
-				  a03*a12*a20*a31 + a02*a13*a20*a31 + 
-				  a03*a10*a22*a31 - a00*a13*a22*a31 - 
-				  a02*a10*a23*a31 + a00*a12*a23*a31 + 
-				  a03*a11*a20*a32 - a01*a13*a20*a32 - 
-				  a03*a10*a21*a32 + a00*a13*a21*a32 + 
-				  a01*a10*a23*a32 - a00*a11*a23*a32 -
-				  a02*a11*a20*a33 + a01*a12*a20*a33 + 
-				  a02*a10*a21*a33 - a00*a12*a21*a33 - 
-				  a01*a10*a22*a33 + a00*a11*a22*a33);
-
-      X[0] = ((-(a13*a22*a31) + a12*a23*a31 + a13*a21*a32 - a11*a23*a32 - 
-	       a12*a21*a33 + a11*a22*a33)*b0 +   (a03*a22*a31 - a02*a23*a31 - 
-          a03*a21*a32 + a01*a23*a32 + a02*a21*a33 -  a01*a22*a33)*b1 + 
-         (-(a03*a12*a31) + a02*a13*a31 + a03*a11*a32 - a01*a13*a32 - 
-          a02*a11*a33 + a01*a12*a33)*b2 +  (a03*a12*a21 - a02*a13*a21 - 
-         a03*a11*a22 + a01*a13*a22 + a02*a11*a23 -  a01*a12*a23)*b3) * 
-	one_over_denom;
-
-      X[1] = ( (a13*a22*a30 - a12*a23*a30 - a13*a20*a32 + a10*a23*a32 + 
-	    a12*a20*a33 - a10*a22*a33)*b0 + (-(a03*a22*a30) + a02*a23*a30 + 
-           a03*a20*a32 - a00*a23*a32 - a02*a20*a33 +  a00*a22*a33)*b1 + 
-          (a03*a12*a30 - a02*a13*a30 - a03*a10*a32 + a00*a13*a32 + 
-           a02*a10*a33 - a00*a12*a33)*b2 + (-(a03*a12*a20) + a02*a13*a20 + 
-           a03*a10*a22 - a00*a13*a22 - a02*a10*a23 + a00*a12*a23)*b3 ) * 
-	one_over_denom;
-
-      X[2] = ((-(a13*a21*a30) + a11*a23*a30 + a13*a20*a31 - a10*a23*a31 - 
-          a11*a20*a33 +  a10*a21*a33)*b0 +  (a03*a21*a30 - a01*a23*a30 - 
-           a03*a20*a31 + a00*a23*a31 + a01*a20*a33 - a00*a21*a33)*b1 + 
-         (-(a03*a11*a30) + a01*a13*a30 + a03*a10*a31 - a00*a13*a31 - 
-          a01*a10*a33 + a00*a11*a33)*b2 + (a03*a11*a20 - a01*a13*a20 - 
-          a03*a10*a21 + a00*a13*a21 + a01*a10*a23 - a00*a11*a23)*b3 ) * 
-	one_over_denom;
-
-      X[3] = ((a12*a21*a30 - a11*a22*a30 - a12*a20*a31 + a10*a22*a31 + 
-          a11*a20*a32 - a10*a21*a32)*b0 + (-(a02*a21*a30) + a01*a22*a30 + 
-           a02*a20*a31 - a00*a22*a31 - a01*a20*a32 + a00*a21*a32)*b1 + 
-         (a02*a11*a30 - a01*a12*a30 - a02*a10*a31 + a00*a12*a31 + 
-          a01*a10*a32 - a00*a11*a32)*b2 +  (-(a02*a11*a20) + a01*a12*a20 + 
-          a02*a10*a21 - a00*a12*a21 - a01*a10*a22 + a00*a11*a22)*b3) * 
-	one_over_denom;
-    }
-    break;
-  default:
-    big_destructiveSolve(b, X);
-    break;
-  }
-}
-
-/*---------------------------------------------------------------------
- Function~  matrixSolver--
- Reference~  Mathematica provided the code
- ---------------------------------------------------------------------  */
-void FastMatrix::destructiveSolve(double* X1, double* X2)
-{
-  // Can ruin the matrix (this) and the vector b.  Currently only does so for
-  // matrices > 2x2
-  ASSERTEQ(rows, cols);
-  switch(rows){
-  case 1:
-    X1[0] /= mat[0][0];
-    X2[0] /= mat[0][0];
-    break;
-  case 2:
-    {
-      // 2 X 2 Matrix
-      //__________________________________
-      // Example Problem Hilbert Matrix
-      //  Exact solution is 1,1
-      /*
-	mat[0][0] = 1.0;   mat[0][1] = 1/2.0;
-	mat[1][0] = 1/2.0; mat[1][1] = 1/3.0;
-	b[0] = 3.0/2.0;   b[1] = 5.0/6.0;*/
-    
-      double a00 = mat[0][0], a01 = mat[0][1];
-      double a10 = mat[1][0], a11 = mat[1][1];
-      double one_over_denom = 1./(a00*a11 - a01*a10);
-      double b10 = X1[0], b11 = X1[1];
-      X1[0] = (a11*b10 - a01*b11)*one_over_denom;
-      X1[1] = (a00*b11 - a10*b10)*one_over_denom;
-      double b20 = X2[0], b21 = X2[1];
-      X2[0] = (a11*b20 - a01*b21)*one_over_denom;
-      X2[1] = (a00*b21 - a10*b20)*one_over_denom;
-    } 
-    break;
-  default:
-    big_destructiveSolve(X1, X2);
-    break;
-  }
-}
-
-void FastMatrix::big_destructiveSolve(double* X1, double* X2)
-{
-  // Gauss-Jordan with no pivoting
-  for(int i=0;i<rows;i++){
-    double denom=1./mat[i][i];
-    double* r1=mat[i];
-    X1[i]*=denom;
-    X2[i]*=denom;
-    for(int j=0;j<rows;j++){
-      r1[j]*=denom;
-    }
-    for(int j=i+1;j<rows;j++){
-      double factor=mat[j][i];
-      double* r2=mat[j];
-      X1[j]-=factor*X1[i];
-      X2[j]-=factor*X2[i];
-      for(int k=0;k<rows;k++){
-	r2[k]-=factor*r1[k];
-      }
-    }
-  }
-
-  // Back-substitution
-  for(int i=1;i<rows;i++){
-    double* r1=mat[i];
-    for(int j=0;j<i;j++){
-      double factor=mat[j][i];
-      double* r2=mat[j];
-      X1[j]-=factor*X1[i];
-      X2[j]-=factor*X2[i];
-      for(int k=0;k<rows;k++){
-	r2[k]-=factor*r1[k];
-      }
-    }
-  }
-}  
 
 void FastMatrix::transpose(const FastMatrix& a)
 {
@@ -456,10 +154,10 @@ void FastMatrix::multiply(const FastMatrix& a, const FastMatrix& b)
 
 void FastMatrix::multiply(double s)
 {
-  int size=rows*cols;
-  double* ptr=&mat[0][0];
-  for(int i=0;i<size;i++)
-    *ptr++*=s;
+  for(int i=0;i<rows;i++){
+    for(int j=0;j<cols;j++)
+      mat[i][j] *= s;
+  }
 }
 
 /*---------------------------------------------------------------------
@@ -503,10 +201,10 @@ void FastMatrix::identity()
 
 void FastMatrix::zero()
 {
-  int size=rows*cols;
-  double* ptr=&mat[0][0];
-  for(int i=0;i<size;i++)
-    *ptr++=0;
+  for(int i=0;i<rows;i++){
+    for(int j=0;j<cols;j++)
+      mat[i][j] = 0;
+  }
 }
 
 void FastMatrix::copy(const FastMatrix& a)
@@ -514,10 +212,10 @@ void FastMatrix::copy(const FastMatrix& a)
   ASSERTEQ(rows, a.rows);
   ASSERTEQ(cols, a.cols);
   int size=rows*cols;
-  double* ptr1=&mat[0][0];
-  double* ptr2=&a.mat[0][0];
-  for(int i=0;i<size;i++)
-    *ptr1++=*ptr2++;
+  for(int i=0;i<rows;i++){
+    for(int j=0;j<cols;j++)
+      mat[i][j] = a.mat[i][j];
+  }
 }
 
 void FastMatrix::print(ostream& out)
@@ -597,63 +295,457 @@ void FastMatrix::big_destructiveInvert(FastMatrix& a)
   }
 }
 
-// This could also be made faster...
-void FastMatrix::big_destructiveSolve(const vector<double>& b, vector<double>& X)
+void FastMatrix::big_destructiveSolve(double* b)
 {
   ASSERTEQ(rows, cols);
-  ASSERTEQ(rows, (int)b.size());
-  ASSERTEQ(cols, (int)X.size());
-  for(int i=0;i<rows;i++)
-    X[i]=b[i];
 
-  // Gauss-Jordan with partial pivoting
+  // Gauss-Jordan with no pivoting
   for(int i=0;i<rows;i++){
-    double max=Abs(mat[i][i]);
-    int row=i;
-    for(int j=i+1;j<rows;j++){
-      if(Abs(mat[j][i]) > max){
-	max=Abs(mat[j][i]);
-	row=j;
-      }
-    }
-    ASSERT(max > 1.e-12);
-    if(row != i){
-      // Switch rows
-      double tmp2 = X[i];
-      X[i] = X[row];
-      X[row] = tmp2;
-      for(int j=0;j<rows;j++){
-	double tmp = mat[i][j];
-	mat[i][j] = mat[row][j];
-	mat[row][j] = tmp;
-      }
-    }
-    double denom=1./mat[i][i];
-    double* r1=mat[i];
-    X[i]*=denom;
-    for(int j=0;j<rows;j++){
-      r1[j]*=denom;
+    double scale=1./mat[i][i];
+    b[i]*=scale;
+    for(int j=i;j<rows;j++){
+      mat[i][j]*=scale;
     }
     for(int j=i+1;j<rows;j++){
       double factor=mat[j][i];
-      double* r2=mat[j];
-      X[j]-=factor*X[i];
+      b[j]-=factor*b[i];
       for(int k=0;k<rows;k++){
-	r2[k]-=factor*r1[k];
+	mat[j][k]-=factor*mat[i][k];
       }
     }
   }
 
   // Back-substitution
-  for(int i=1;i<rows;i++){
-    double* r1=mat[i];
-    for(int j=0;j<i;j++){
+  for(int i=rows-1;i>=0;i--){
+    for(int j=i-1;j>=0;j--){
       double factor=mat[j][i];
-      double* r2=mat[j];
-      X[j]-=factor*X[i];
-      for(int k=0;k<rows;k++){
-	r2[k]-=factor*r1[k];
+      b[j]-=factor*b[i];
+    }
+  }
+}
+
+template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][FastMatrix::MaxSize], double* b)
+{
+  // Gauss-Jordan with no pivoting
+  for(int i=0;i<size;i++){
+    double scale=1./mat[i][i];
+    b[i]*=scale;
+    for(int j=i;j<size;j++){
+      mat[i][j]*=scale;
+    }
+    for(int j=i+1;j<size;j++){
+      double factor=mat[j][i];
+      b[j]-=factor*b[i];
+      for(int k=0;k<size;k++){
+	mat[j][k]-=factor*mat[i][k];
       }
     }
+  }
+
+  // Back-substitution
+  for(int i=size-1;i>=0;i--){
+    for(int j=i-1;j>=0;j--){
+      double factor=mat[j][i];
+      b[j]-=factor*b[i];
+    }
+  }
+}
+
+/*---------------------------------------------------------------------
+ Function~  matrixSolver--
+ Reference~  Mathematica provided the code
+ ---------------------------------------------------------------------  */
+void FastMatrix::destructiveSolve(double* b)
+{
+  ASSERTEQ(rows, cols);
+  switch(rows){
+  case 1:
+    b[0] /= mat[0][0];
+    break;
+  case 2:
+    {
+      // 2 X 2 Matrix
+      //__________________________________
+      // Example Problem Hilbert Matrix
+      //  Exact solution is 1,1
+      /*
+	mat[0][0] = 1.0;   mat[0][1] = 1/2.0;
+	mat[1][0] = 1/2.0; mat[1][1] = 1/3.0;
+	b[0] = 3.0/2.0;   b[1] = 5.0/6.0;*/
+    
+      double a00 = mat[0][0], a01 = mat[0][1];
+      double a10 = mat[1][0], a11 = mat[1][1];
+      double b0 = b[0], b1 = b[1];
+
+      double one_over_denom = 1./(a00*a11 - a01*a10);
+      b[0] = (a11*b0 - a01*b1)*one_over_denom;
+      b[1] = (a00*b1 - a10*b0)*one_over_denom;
+    } 
+    break;
+  case 3:
+    {
+      // 3 X 3 Matrix
+      double a00 = mat[0][0], a01 = mat[0][1], a02 = mat[0][2];
+      double a10 = mat[1][0], a11 = mat[1][1], a12 = mat[1][2];
+      double a20 = mat[2][0], a21 = mat[2][1], a22 = mat[2][2];
+      double b0 = b[0], b1 = b[1], b2 = b[2];
+
+      //__________________________________
+      // Example Problem Hilbert matrix
+      // Exact Solution is 1,1,1
+      /*
+	double a00 = 1.0,       a01 = 1.0/2.0,  a02 = 1.0/3.0;
+	double a10 = 1.0/2.0,   a11 = 1.0/3.0,  a12 = 1.0/4.0;
+	double a20 = 1.0/3.0,   a21 = 1.0/4.0,  a22 = 1.0/5.0;
+	double b0 = 11.0/6.0, b1 = 13.0/12.0, b2 = 47.0/60.0; */
+
+      double one_over_denom = 1./(-(a02*a11*a20) + a01*a12*a20 + a02*a10*a21 
+				  - a00*a12*a21 -  a01*a10*a22 + a00*a11*a22);
+
+      b[0] = ( (-(a12*a21) + a11*a22)*b0 + (a02*a21 - a01*a22)*b1 +
+	       (-(a02*a11) + a01*a12)*b2 )*one_over_denom;
+
+
+      b[1] = ( (a12*a20 - a10*a22)*b0 +  (-(a02*a20) + a00*a22)*b1 +
+	       (a02*a10 - a00*a12)*b2 ) * one_over_denom;
+
+      b[2] =  ( (-(a11*a20) + a10*a21)*b0 +  (a01*a20 - a00*a21)*b1 +
+		(-(a01*a10) + a00*a11)*b2) * one_over_denom;
+    }
+    break;
+  case 4:
+    med_destructiveSolve<4>(mat, b);
+    break;
+  case 5:
+    med_destructiveSolve<5>(mat, b);
+    break;
+  case 6:
+    med_destructiveSolve<6>(mat, b);
+    break;
+  default:
+    big_destructiveSolve(b);
+    break;
+  }
+}
+
+void FastMatrix::big_destructiveSolve(double* b1, double* b2)
+{
+  ASSERTEQ(rows, cols);
+
+  // Gauss-Jordan with no pivoting
+  for(int i=0;i<rows;i++){
+    double scale=1./mat[i][i];
+    b1[i]*=scale;
+    b2[i]*=scale;
+    for(int j=i;j<rows;j++){
+      mat[i][j]*=scale;
+    }
+    for(int j=i+1;j<rows;j++){
+      double factor=mat[j][i];
+      b1[j]-=factor*b1[i];
+      b2[j]-=factor*b2[i];
+      for(int k=0;k<rows;k++){
+	mat[j][k]-=factor*mat[i][k];
+      }
+    }
+  }
+
+  // Back-substitution
+  for(int i=rows-1;i>=0;i--){
+    for(int j=i-1;j>=0;j--){
+      double factor=mat[j][i];
+      b1[j]-=factor*b1[i];
+      b2[j]-=factor*b2[i];
+    }
+  }
+}
+
+template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][FastMatrix::MaxSize],
+                                             double* b1, double* b2)
+{
+  // Gauss-Jordan with no pivoting
+  for(int i=0;i<size;i++){
+    double scale=1./mat[i][i];
+    b1[i]*=scale;
+    b2[i]*=scale;
+    for(int j=i;j<size;j++){
+      mat[i][j]*=scale;
+    }
+    for(int j=i+1;j<size;j++){
+      double factor=mat[j][i];
+      b1[j]-=factor*b1[i];
+      b2[j]-=factor*b2[i];
+      for(int k=0;k<size;k++){
+	mat[j][k]-=factor*mat[i][k];
+      }
+    }
+  }
+
+  // Back-substitution
+  for(int i=size-1;i>=0;i--){
+    for(int j=i-1;j>=0;j--){
+      double factor=mat[j][i];
+      b1[j]-=factor*b1[i];
+      b2[j]-=factor*b2[i];
+    }
+  }
+}
+
+/*---------------------------------------------------------------------
+ Function~  matrixSolver--
+ Reference~  Mathematica provided the code
+ ---------------------------------------------------------------------  */
+void FastMatrix::destructiveSolve(double* b1, double* b2)
+{
+  // Can ruin the matrix (this) and replaces the vector b
+  ASSERTEQ(rows, cols);
+  switch(rows){
+  case 1:
+    b1[0] /= mat[0][0];
+    b2[0] /= mat[0][0];
+    break;
+  case 2:
+    {
+      // 2 X 2 Matrix
+      //__________________________________
+      // Example Problem Hilbert Matrix
+      //  Exact solution is 1,1
+      /*
+	mat[0][0] = 1.0;   mat[0][1] = 1/2.0;
+	mat[1][0] = 1/2.0; mat[1][1] = 1/3.0;
+	b[0] = 3.0/2.0;   b[1] = 5.0/6.0;*/
+    
+      double a00 = mat[0][0], a01 = mat[0][1];
+      double a10 = mat[1][0], a11 = mat[1][1];
+      double one_over_denom = 1./(a00*a11 - a01*a10);
+      double b10 = b1[0], b11 = b1[1];
+      b1[0] = (a11*b10 - a01*b11)*one_over_denom;
+      b1[1] = (a00*b11 - a10*b10)*one_over_denom;
+      double b20 = b2[0], b21 = b2[1];
+      b2[0] = (a11*b20 - a01*b21)*one_over_denom;
+      b2[1] = (a00*b21 - a10*b20)*one_over_denom;
+    } 
+    break;
+  case 3:
+    {
+      // 3 X 3 Matrix
+      double a00 = mat[0][0], a01 = mat[0][1], a02 = mat[0][2];
+      double a10 = mat[1][0], a11 = mat[1][1], a12 = mat[1][2];
+      double a20 = mat[2][0], a21 = mat[2][1], a22 = mat[2][2];
+      double b10 = b1[0], b11 = b1[1], b12 = b1[2];
+      double b20 = b2[0], b21 = b2[1], b22 = b2[2];
+
+      //__________________________________
+      // Example Problem Hilbert matrix
+      // Exact Solution is 1,1,1
+      /*
+	double a00 = 1.0,       a01 = 1.0/2.0,  a02 = 1.0/3.0;
+	double a10 = 1.0/2.0,   a11 = 1.0/3.0,  a12 = 1.0/4.0;
+	double a20 = 1.0/3.0,   a21 = 1.0/4.0,  a22 = 1.0/5.0;
+	double b0 = 11.0/6.0, b1 = 13.0/12.0, b2 = 47.0/60.0; */
+
+      double one_over_denom = 1./(-(a02*a11*a20) + a01*a12*a20 + a02*a10*a21 
+				  - a00*a12*a21 -  a01*a10*a22 + a00*a11*a22);
+
+      b1[0] = ( (-(a12*a21) + a11*a22)*b10 + (a02*a21 - a01*a22)*b11 +
+	       (-(a02*a11) + a01*a12)*b12 )*one_over_denom;
+      b2[0] = ( (-(a12*a21) + a11*a22)*b20 + (a02*a21 - a01*a22)*b21 +
+	       (-(a02*a11) + a01*a12)*b22 )*one_over_denom;
+
+
+      b1[1] = ( (a12*a20 - a10*a22)*b10 +  (-(a02*a20) + a00*a22)*b11 +
+	       (a02*a10 - a00*a12)*b12 ) * one_over_denom;
+      b2[1] = ( (a12*a20 - a10*a22)*b20 +  (-(a02*a20) + a00*a22)*b21 +
+	       (a02*a10 - a00*a12)*b22 ) * one_over_denom;
+
+      b1[2] =  ( (-(a11*a20) + a10*a21)*b10 +  (a01*a20 - a00*a21)*b11 +
+		(-(a01*a10) + a00*a11)*b12) * one_over_denom;
+      b2[2] =  ( (-(a11*a20) + a10*a21)*b20 +  (a01*a20 - a00*a21)*b21 +
+		(-(a01*a10) + a00*a11)*b22) * one_over_denom;
+    }
+    break;
+  case 4:
+    med_destructiveSolve<4>(mat, b1, b2);
+    break;
+  case 5:
+    med_destructiveSolve<5>(mat, b1, b2);
+    break;
+  case 6:
+    med_destructiveSolve<6>(mat, b1, b2);
+    break;
+  default:
+    big_destructiveSolve(b1, b2);
+    break;
+  }
+}
+
+
+// 3 RHS
+
+void FastMatrix::big_destructiveSolve(double* b1, double* b2, double* b3)
+{
+  ASSERTEQ(rows, cols);
+
+  // Gauss-Jordan with no pivoting
+  for(int i=0;i<rows;i++){
+    double scale=1./mat[i][i];
+    b1[i]*=scale;
+    b2[i]*=scale;
+    b3[i]*=scale;
+    for(int j=i;j<rows;j++){
+      mat[i][j]*=scale;
+    }
+    for(int j=i+1;j<rows;j++){
+      double factor=mat[j][i];
+      b1[j]-=factor*b1[i];
+      b2[j]-=factor*b2[i];
+      b3[j]-=factor*b3[i];
+      for(int k=0;k<rows;k++){
+	mat[j][k]-=factor*mat[i][k];
+      }
+    }
+  }
+
+  // Back-substitution
+  for(int i=rows-1;i>=0;i--){
+    for(int j=i-1;j>=0;j--){
+      double factor=mat[j][i];
+      b1[j]-=factor*b1[i];
+      b2[j]-=factor*b2[i];
+      b3[j]-=factor*b3[i];
+    }
+  }
+}
+
+template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][FastMatrix::MaxSize],
+                                             double* b1, double* b2, double* b3)
+{
+  // Gauss-Jordan with no pivoting
+  for(int i=0;i<size;i++){
+    double scale=1./mat[i][i];
+    b1[i]*=scale;
+    b2[i]*=scale;
+    b3[i]*=scale;
+    for(int j=i;j<size;j++){
+      mat[i][j]*=scale;
+    }
+    for(int j=i+1;j<size;j++){
+      double factor=mat[j][i];
+      b1[j]-=factor*b1[i];
+      b2[j]-=factor*b2[i];
+      b3[j]-=factor*b3[i];
+      for(int k=0;k<size;k++){
+	mat[j][k]-=factor*mat[i][k];
+      }
+    }
+  }
+
+  // Back-substitution
+  for(int i=size-1;i>=0;i--){
+    for(int j=i-1;j>=0;j--){
+      double factor=mat[j][i];
+      b1[j]-=factor*b1[i];
+      b2[j]-=factor*b2[i];
+      b3[j]-=factor*b3[i];
+    }
+  }
+}
+
+/*---------------------------------------------------------------------
+ Function~  matrixSolver--
+ Reference~  Mathematica provided the code
+ ---------------------------------------------------------------------  */
+void FastMatrix::destructiveSolve(double* b1, double* b2, double* b3)
+{
+  // Can ruin the matrix (this) and replaces the vector b
+  ASSERTEQ(rows, cols);
+  switch(rows){
+  case 1:
+    b1[0] /= mat[0][0];
+    b2[0] /= mat[0][0];
+    b3[0] /= mat[0][0];
+    break;
+  case 2:
+    {
+      // 2 X 2 Matrix
+      //__________________________________
+      // Example Problem Hilbert Matrix
+      //  Exact solution is 1,1
+      /*
+	mat[0][0] = 1.0;   mat[0][1] = 1/2.0;
+	mat[1][0] = 1/2.0; mat[1][1] = 1/3.0;
+	b[0] = 3.0/2.0;   b[1] = 5.0/6.0;*/
+    
+      double a00 = mat[0][0], a01 = mat[0][1];
+      double a10 = mat[1][0], a11 = mat[1][1];
+      double one_over_denom = 1./(a00*a11 - a01*a10);
+      double b10 = b1[0], b11 = b1[1];
+      b1[0] = (a11*b10 - a01*b11)*one_over_denom;
+      b1[1] = (a00*b11 - a10*b10)*one_over_denom;
+      double b20 = b2[0], b21 = b2[1];
+      b2[0] = (a11*b20 - a01*b21)*one_over_denom;
+      b2[1] = (a00*b21 - a10*b20)*one_over_denom;
+      double b30 = b3[0], b31 = b3[1];
+      b3[0] = (a11*320 - a01*b31)*one_over_denom;
+      b3[1] = (a00*321 - a10*b30)*one_over_denom;
+    } 
+    break;
+  case 3:
+    {
+      // 3 X 3 Matrix
+      double a00 = mat[0][0], a01 = mat[0][1], a02 = mat[0][2];
+      double a10 = mat[1][0], a11 = mat[1][1], a12 = mat[1][2];
+      double a20 = mat[2][0], a21 = mat[2][1], a22 = mat[2][2];
+      double b10 = b1[0], b11 = b1[1], b12 = b1[2];
+      double b20 = b2[0], b21 = b2[1], b22 = b2[2];
+      double b30 = b3[0], b31 = b3[1], b32 = b3[2];
+
+      //__________________________________
+      // Example Problem Hilbert matrix
+      // Exact Solution is 1,1,1
+      /*
+	double a00 = 1.0,       a01 = 1.0/2.0,  a02 = 1.0/3.0;
+	double a10 = 1.0/2.0,   a11 = 1.0/3.0,  a12 = 1.0/4.0;
+	double a20 = 1.0/3.0,   a21 = 1.0/4.0,  a22 = 1.0/5.0;
+	double b0 = 11.0/6.0, b1 = 13.0/12.0, b2 = 47.0/60.0; */
+
+      double one_over_denom = 1./(-(a02*a11*a20) + a01*a12*a20 + a02*a10*a21 
+				  - a00*a12*a21 -  a01*a10*a22 + a00*a11*a22);
+
+      b1[0] = ( (-(a12*a21) + a11*a22)*b10 + (a02*a21 - a01*a22)*b11 +
+	       (-(a02*a11) + a01*a12)*b12 )*one_over_denom;
+      b2[0] = ( (-(a12*a21) + a11*a22)*b20 + (a02*a21 - a01*a22)*b21 +
+	       (-(a02*a11) + a01*a12)*b22 )*one_over_denom;
+      b3[0] = ( (-(a12*a21) + a11*a22)*b30 + (a02*a21 - a01*a22)*b31 +
+	       (-(a02*a11) + a01*a12)*b32 )*one_over_denom;
+
+
+      b1[1] = ( (a12*a20 - a10*a22)*b10 +  (-(a02*a20) + a00*a22)*b11 +
+	       (a02*a10 - a00*a12)*b12 ) * one_over_denom;
+      b2[1] = ( (a12*a20 - a10*a22)*b20 +  (-(a02*a20) + a00*a22)*b21 +
+	       (a02*a10 - a00*a12)*b22 ) * one_over_denom;
+      b3[1] = ( (a12*a20 - a10*a22)*b30 +  (-(a02*a20) + a00*a22)*b31 +
+	       (a02*a10 - a00*a12)*b32 ) * one_over_denom;
+
+      b1[2] =  ( (-(a11*a20) + a10*a21)*b10 +  (a01*a20 - a00*a21)*b11 +
+		(-(a01*a10) + a00*a11)*b12) * one_over_denom;
+      b2[2] =  ( (-(a11*a20) + a10*a21)*b20 +  (a01*a20 - a00*a21)*b21 +
+		(-(a01*a10) + a00*a11)*b22) * one_over_denom;
+      b3[2] =  ( (-(a11*a20) + a10*a21)*b30 +  (a01*a20 - a00*a21)*b31 +
+		(-(a01*a10) + a00*a11)*b32) * one_over_denom;
+    }
+    break;
+  case 4:
+    med_destructiveSolve<4>(mat, b1, b2, b3);
+    break;
+  case 5:
+    med_destructiveSolve<5>(mat, b1, b2, b3);
+    break;
+  case 6:
+    med_destructiveSolve<6>(mat, b1, b2, b3);
+    break;
+  default:
+    big_destructiveSolve(b1, b2, b3);
+    break;
   }
 }
