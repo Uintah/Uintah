@@ -138,7 +138,7 @@ Levoy::PrepareAssociateValue( double sv_max, Array1<double> * ScalarVals,
     }
 
 
-  j = 0;
+  j = 3;
   counter = 0;
   SVB[counter++] = AssociatedVals[j][0];
   
