@@ -93,19 +93,18 @@ color="maroon">
      HREF="../Guide/usersguide/srug3.html#sec:scirundata">User's Guide 3.4,
      SCIRun_DATA</a>.  This process assumes that you have downloaded the SCIRunData directory, a separate download from the SCIRun build.  
     <ol>
-      <li value="1.">The SCIRUN_DATA variable points to the location 
-      of the SCIRunData directory on your system.  
-      <li value="2.0">The SCIRUN_DATASET variable indicates which dataset
+      <p><li value="1.">The SCIRUN_DATA variable points to the location 
+      of the SCIRunData directory on your system</p>  
+      <p><li value="2.0">The SCIRUN_DATASET variable indicates which dataset
       to load 
-      since many of our example networks run with a variety of data inputs such as sphere, brain-EG, and utahtorso-lowres.
-    </ol> 
+      since many of our example networks run with a variety of data inputs such as sphere, brain-EG, and utahtorso-lowres</p></ol> 
 
 <p>To begin, we will construct a network that loads a geometric mesh from disk and renders it to the screen.  In your Unix shell window:</p>
 <ol>
-  <li value="1.">Set your SCIRUN_DATA variable, pointing to the
-  location of SCIRunData.  
-  <li value="2.">Set your SCIRUN_DATASET variable to utahtorso-lowres
-  (as shown in <b>Figure 1.2.</b>)</ol>
+  <p><li value="1.">Set your SCIRUN_DATA variable, pointing to the
+  location of SCIRunData</p>  
+  <p><li value="2.">Set your SCIRUN_DATASET variable to utahtorso-lowres
+  (as shown in <b>Figure 1.2</b>)</p></ol>
   
   </div>
   <center>
@@ -128,12 +127,13 @@ color="maroon">
   <p>Having set these environment variables, you are now ready to
   start SCIRun.   
   <ol>
-    <li value="1.">Change into your SCIRun/src/ directory, and
-    enter the command &quot;./scirun&quot;.  SCIRun cannot be run as a background application.  
-    <li value="2.">The SCIRun NetworkEditor window appears on your
+    <p><li value="1.">Change into your SCIRun/src/ directory, and
+    enter the command &quot;./scirun&quot;.  SCIRun cannot be run as a background application  
+    <p><li value="2.">The SCIRun NetworkEditor window appears on your
     screen, as shown in 
-    <b>Figure 1.3.</b>.</ol>
-	<p> The NetworkEditor screen consists of three frames: the GlobalView frame in the left uppermost corner; the Error frame in the right uppermost corner, and the NetEdit frame. The NetEdit frame is a large area in which you will construct your networks of modules. Since the NetEdit frame is so extensive, the Global View frame shows you which part of the NetEdit frame you are currently viewing. The Error frame will show errors that appear in red during startup, or during the execution of a net.  
+    <b>Figure 1.3</b></p></ol>
+	<p> The NetworkEditor screen consists of three frames: the GlobalView frame in the left uppermost corner; the Error frame in the right uppermost corner, and the NetEdit frame. The NetEdit frame is a large area in which you will construct your networks of modules.</p>
+<p> Since the NetEdit frame is so extensive, the Global View frame shows you which part of the NetEdit frame you are currently viewing. The Error frame will show errors that appear in red during startup, or during the execution of a net.  
     
     </div>
     <center>
@@ -146,11 +146,11 @@ color="maroon">
 <p>For a more complete description of modules, you may consult the User's Guide, Section 2.3 Modules and Networks>.</p>
 <p> Each datatype in SCIRun has a unique color such as yellow, purple, or pink.  You may connect ports of the same color. These colors are described in more detail in the User's Guide, Section 4.2, Anatomy of a Module.</p> 
 <p>By joining the modules together, data passes from one module to another; two or more connected modules form a SCIRun network (&quot;net&quot;).</p>
-<br> 
+
     <p>We will first create a FieldReader module that loads a SCIRun Field.</p>
 	<p><ul><li>From the
     SCIRun menu, select DataIO/FieldReader, as shown in
-    <b>Figure 1.3.1.</b></p></ul>
+    <b>Figure 1.3.1</b></p></ul>
 <p> To find out more about using nets, see the <a
     HREF="../Guide/usersguide/srug4.html#sec:workingwithnets">User's Guide
     4.0, Working 
@@ -166,13 +166,13 @@ color="maroon">
 <p>Set the user interface (UI) settings for the FieldReader module:
    <ol>
       <p><li value="1.">Press the UI button to launch the file
-      browser window, titled "Open field file." Your SCIRun environment should look like <b>Figure 1.4</b>.</p></li>  
+      browser window, titled "Open field file." Your SCIRun environment should look like <b>Figure 1.4</b></p></li>  
     <li value="2.">Type, or point-and-click to the
       utahtorso-lowres/utahtorso-lowres-voltage.tvd.fld input file. This dataset is a low resolution tetrahedral mesh of a human
-      torso.</p>
+      torso</p>
 <li><p>Select the filename in the file-browser
 	  window, press &quot;Open.&quot;  The file-browser window
-	  disappears and the module begins to execute.</p><br>  
+	  disappears and the module begins to execute</p><br>  
     </div>
     <center>
     <p><img height="512" width="500" src="images/figures/1_4.gif"><br>
@@ -181,10 +181,10 @@ color="maroon">
     <div align="left">
     <p>
      <ul>
-      <li><p>The module finishes computing and the progress bar turns green.</p> 
+      <li><p>The module finishes computing and the progress bar turns green</p> 
       <li><p>The module icon displays a number that indicates the amount of
-	  CPU time required to complete its execution (<b>Figure 1.5</b>).</p>
-	<li><p> You have just loaded a SCIRun Field.</p>
+	  CPU time required to complete its execution (<b>Figure 1.5</b>)</p>
+	<li><p> You have just loaded a SCIRun Field</p>
     </ul><br>
     
     </div>
@@ -283,7 +283,7 @@ color="maroon">
     flow between them.</p>  
    
        
-     <p><ol><li>Select ShowField from the SCIRun/Visualization menu.</li></p>
+     <p><ol><li>Select ShowField from the SCIRun/Visualization menu</li></p>
  <p><li value="2.">Position the
       mouse pointer over the yellow output port on
       the FieldReader. Now press and hold
@@ -296,9 +296,9 @@ color="maroon">
     <b>Figure 1.7.1</b></p>
     </center>
     <div align="left">
- <ol><li value="3."> Continue to hold the button and drag your mouse toward the yellow ShowField input port.</p> 
+ <ol><li value="3."> Continue to hold the button and drag your mouse toward the yellow ShowField input port</p> 
       <p><li>The line turns red, showing the desired connection. Release the mouse
-	  button. </p>   
+	  button </p>   
     </div>
     <center>
     <p><img height="250" width="250" src="images/figures/1_7b.gif"><br>
@@ -306,7 +306,7 @@ color="maroon">
     </center>
     <div align="left">
 <ol><li value="4.">You should see a yellow pipe showing a data flow connection
-	  between FieldReader and ShowField.
+	  between FieldReader and ShowField
     </p></ol>
     </p><br>
     </div>
@@ -325,12 +325,12 @@ color="maroon">
         
     <p><ol>
       <li value="1.">Select the UI button on the ShowField
-      module.</p>
+      module</p>
     <p><li value= "2.">Select the Default Color button
-      near the bottom of the GUI to change the default color and a separate &quot;color&quot; GUI appears.</p>    
+      near the bottom of the GUI to change the default color and a separate &quot;color&quot; GUI appears</p>    
       <li ><p>In the color GUI, you can use the sliders to adjust the color values. Set Red and Green to 0.00, and Blue to 1.00. The Alpha value remains at 0.50 </p>  
-      <li><p>Select the &quot;OK&quot; button in the color GUI. Notice that the Default Color swatch in the ShowField GUI has changed to blue.  Your SCIRun environment should look like <b>Figure 1.8</b>.</p>  
-      <li ><p>In the color GUI, Select &quot;Cancel&quot; to close the window.</p></ol>
+      <li><p>Select the &quot;OK&quot; button in the color GUI. Notice that the Default Color swatch in the ShowField GUI has changed to blue.  Your SCIRun environment should look like <b>Figure 1.8</b></p>  
+      <li ><p>In the color GUI, Select &quot;Cancel&quot; to close the window</p></ol>
 </div>
     <center>
     <p><img height="512" width="500" src="images/figures/1_6.gif"><br>
@@ -340,11 +340,11 @@ color="maroon">
 <br>
 <p>We will now change the scale and resolution of the nodes.</p>
  
-      <ol><li><p>In the ShowField GUI, you can increase the Node Scale interval by a power of 10 by pressing the + button.  Set the Node Scale to 2.</p>
+      <ol><li><p>In the ShowField GUI, you can increase the Node Scale interval by a power of 10 by pressing the + button.  Set the Node Scale to 2</p>
 <p><li>Set the Sphere Resolution
-	  to 5.</p> 
-      <li><p>Go to the Edges tab and turn off the display of edges by deselecting the &quot;Show Edges&quot; check box.</p>  
-      <li><p>Go the the Faces tab and repeat the same action.</p></ol><br> 
+	  to 5</p> 
+      <li><p>Go to the Edges tab and turn off the display of edges by deselecting the &quot;Show Edges&quot; check box</p>  
+      <li><p>Go the the Faces tab and repeat the same action</p></ol><br> 
       <p>The ShowField module is now ready to render the nodes as blue
 	  spheres. The module will &quot;Interactively Update&quot;, by default, to execute after every change.  Or, you may select &quot;Execute Button Only&quot; that holds all changes until you press the Execute button.
     </ol>
@@ -362,101 +362,67 @@ color="maroon">
 
     <p><b><A name="section-5">Viewer module</b><br></A>
     
-    <p>The Viewer module is the last that we will add to our
+    <p>The Viewer is the last module that we will add to our
     network. You may find more information about the Viewer in the <a
     HREF="../Guide/usersguide/srug5.html#sec:viewer">User's Guide 5.0,
     Visualization with the Viewer</a>. 
     <ol>
-      <li>Locate the Viewer under the SCIRun/Render
-	  menu.  
-      <li>Connect the output port from ShowField into the Viewer
-	  input port.   As a result, the Viewer module has generated a new
-	  input port. The Viewer provides an example of SCIRun modules that
-	  have dynamic input ports.
-      <LI> To generate a Viewer window press the Viewer's UI button.
-      <LI> In the Viewer window, you will see a set of orthogonal axes as
-	  arrows.  Now look for the button near the bottom called
-	  Autoview; press that and you should see the points of the
-	  geometry, something like in <b>Figure 1.10</b>  
-      <LI> Things may not look quite like they should, so continue with the next section
-	  for directions on manipulating the Viewer.
-    </ol> 
-		
+      <p><li>Locate the Viewer under the SCIRun/Render
+	  menu</p>  
+      <li><p>Connect the output port from ShowField into the Viewer
+	  input port. The Viewer module now has a new
+	  input port. This is an example of a SCIRun module that
+	  has dynamic input ports</p> 
+      <li><p>Open the Viewer window by pressing the Viewer's UI button</p>
+      <li><p>In the Viewer window, you will see a set of axes, representing X, Y, and Z directions. Press the Autoview button near the bottom of the window, and you should see the points of the geometry, similar to <b>Figure 1.10</b>  
+    </ol></p> 
+	<p>The image in your Viewer will appear at a somewhat different angle, since the image in <b>Figure 1.10</b> has been been rotated.</p>  	
     </div>
     <center>
     <p><img height="451" width="450" src="images/figures/1_10.gif"><br>
-    <b>Figure 1.10</b></p>
+    <b>Figure 1.10, Viewer window showing the utahtorso-lowres-voltage.tvd.fld data</b></p>
     </center>
     <div align="left">
     <p><br>
     
        <p><b><A name="section-6">Navigating the Viewer Window</b><br></A>
     
-    <p>Since the Viewer is one of the most important modules of SCIRun,
-    you may want to know more about its functionality.  The <a
+    <p>Since the Viewer is one of the most important SCIRun modules.  The <a
     HREF="../Guide/usersguide/srug5.html#sec:view-anatomy">User's Guide 5.1,
     Anatomy of the Viewer Window</a> provides a full description of the
     Viewer.   
-    
-    <p> <b>Figure 1.10</b> shows the Viewer window from the
-    network you have built earlier in this chapter. In the lower right
-    corner of the Viewer's window you will 
-    find buttons for controlling the display. However, the controls you will 
-    use most frequently are not visible.
-    
+           
     <p><b><A name="section-7">Mouse controls</b><br></A>
     
-    <p>The mouse has functionality that works with the Viewer. The <a
+    <p>In the Viewer, you can rotate scale and translate your image using the mouse.The <a
     HREF="../Guide/usersguide/srug5.html#sec:view-mouse">User's Guide 5.2,
     Mouse Control in the Viewer</a> 
-	provides more complete information.
-    <p>To get a feel for this functionality:
+	provides more complete information.</p><br>
+<p><b>Translating the image</b></p>
     <ol>
-      <li> Move the mouse to the center of the Viewer window.
-      <li> Click and hold the left mouse button. 
-      <li> While holding, slide the mouse and objects in the Viewer window
-	  shift to follow the mouse movement.   
-      <li> Now release the mouse and move it back to the center of the
-	  object.
-      <LI> Click and hold the middle mouse button and then drag it around;
-	  objects in the Viewer will now rotate.
-      <li> Release the button and move the mouse to the edge of
-	  the objects in the Viewer window.  
-      <li> Click, hold, and drag the middle mouse button. The object still
-	  rotates but in a different direction from before.  Up and down
-	  motions cause the objects to rotate counterclockwise and 
-	  clockwise, rather than around a horizontal axis by clicking on
-	  the middle of the objects.
-    </ol>
+      <p><li> Move the mouse to the center of the image</p>
+      <p><li> Click and hold the left mouse button</p> 
+      <p><li> Move the mouse in order to move the image</p>  
+      <p><li>Release the button and the image will stay where you have placed it within the Viewer window</p></ol><br>
+<p><b>Rotating the image</b></p>
+      <ol><p><li> Click and hold the middle mouse button</p> 
+	<p><li>Move the mouse in order to rotate the image</p>
+<p><li>Release the mouse button</p>
+	<p><li>If you release the mouse button while dragging, the image will continue to rotate</p>
+<p><li>Click the middle mouse button to stop rotation</p>
+</ol>  
     
-    <p>To picture the rotation action of the mouse, imagine the objects
-    sitting  
-    within a sphere. To grab a point on the sphere, click the middle mouse
-    button. 
-    Moving the mouse drags that point on the sphere around as if the sphere
-    were free to rotate but not to shift its position.  By this mechanism,
-    the actual movement of the objects 
-    depends on the point you click on before moving the mouse. To use an 
-    analogy, this is 
-    like placing a floating ball in a bowl full of water, touching the ball
-    only
-    at one point, and then rotating the ball by moving your finger.
-	
-    <p>Using this type of mouse control, objects can rotate in three
-    dimensions  
-    while the mouse moves only in two.  With experimentation, you will 
-    be able to orient objects in whatever direction you
-    wish through simple mouse manipulations.
+    <p><b>Scaling the scene</b></p>
 
-    <p>Clicking and dragging the right mouse button 
-    causes the contents of the Viewer window to get larger and
-    smaller.  This creates the impression of moving closer in or
-    further away from the contents of the window <b>(Figure 1.10.1)</b>. 
+    <ol><p><li>Click the right mouse button and drag the mouse</p>
+<p><li>Move the mouse up or to the left in order to zoom the image out</p>
+<p><li>Move the mouse down or to the right in order to zoom the image in</p>
+ <p><b>Figure 1.10.1</b> shows the image rotated approximately 90 degrees and scaled. 
     
     </div>
     <center>
     <p><img height="451" width="450" src="images/figures/1_10_1.gif"><br>
-    <b>Figure 1.10.1</b></p>
+    <b>Figure 1.10.1, rotated and scaled image</b></p>
     </center>
     <div align="left">
     <p><br>
@@ -466,140 +432,109 @@ color="maroon">
 
     <p><b><A name="section-8">Setting Visualization Parameters</b><br></A>
     
-    </div>
-    <center>
-    <p><img height="64" width="500" src="images/figures/1_10_2.gif"><br>
-    <b>Figure 1.10.2</b></p>
-    </center>
-    <div align="left">
-    <p><br>
+   
     
-    <p>Now we will use the controls in the Viewer
-    window below the objects <b>(Figure 1.10.2)</b>. Here, you see buttons
+    <p>Now we will use the controls at the bottom of the Viewer window, <b>(Figure 1.10.2)</b>. Here, you see buttons
     for the 
     following functions:
     <br>
     <ul>
-      <li>Autoview: restores the display back to its default
+      <p><li>Autoview: restores the display back to its default
 	  condition; very useful when first viewing an object or when some
 	  combination of settings results in objects disappearing from the
-	  View window.  
-      <li>Set Home View: captures the setting of the current view so you
+	  View window</p> 
+      <p><li>Set Home View: captures the setting of the current view so you
 	  can return to it later by clicking the ``Go home'' 
-	  button.
-      <li>Go home: restores the current home view.  
-      <li>Views: lists a number of standard viewing angles and
-	  orientations for you to select.
+	  button</p>
+      <p><li>Go home: restores the current home view</p>  
+      <p><li>Views: lists a number of standard viewing angles and
+	  orientations for you to select</p>
     </ul>
- 
-        
-    <p>To access even more display options:
-    <ul>
-      <li>Locate the "+" button in the lower right corner of the Viewer
-	  window.   
-	  This button provides access to a more complete set of display
-	  options <b>(Figure 1.10.3)</b>. 
-	  
-      <li>Select features for all objects or for specific objects 
-	  in the display through the Extended Control Window, detailed in
-	  the <a
-	  HREF="../Guide/usersguide/srug5.html#sec:view-control">User's Guide
-	  5.3, Extended Control Window</a>. 
-    </ul> 
-
-    </div>
+  </div>
     <center>
-    <p><img height="273" width="500" src="images/figures/1_10_3.gif"><br>
-    <b>Figure 1.10.3</b></p>
+    <p><img height="64" width="500" src="images/figures/1_10_2.gif"><br>
+    <b>Figure 1.10.2, basic Viewer controls</b></p>
     </center>
     <div align="left">
     <p><br>
+ </div>
     
-    <p>Each object has its own list entry in the Extended Control Window.  
-    Settings that determine the rendering of each associated object are
-    located in the object list. These settings  
-    may even turn the entire object on or off,(<i>i.e.</i>, make it appear
-    or disappear).   
+           
+    <p>To access even more display options:
+    <ul>
+      <p><li>Locate the "+" button in the lower right corner of the Viewer
+	  window to access the Extended Control Window which contains additional Viewer settings<b>(Figure 1.10.3)</b>, as described in the <a
+	  HREF="../Guide/usersguide/srug5.html#sec:view-control">User's Guide
+	  5.3, Extended Control Window</a></p> 
+    </ul> 
+<center>
+    <p><img height="273" width="500" src="images/figures/1_10_3.gif"><br>
+    <b>Figure 1.10.3, Extended Control Window</b></p>
+    </center>
+    <div align="left">
+    <p><br>
+  <p>Using the Extended Control Window, you can manipulate various settings for individual objects and see their possible effects.</p><br> 
     
-    <p>Default settings apply to all objects that contain the
-    "default" selection.  We suggest that you manipulate all of these
-    settings to see their possible effects, and consult the <a
-    HREF="../Guide/usersguide/srug1.html"> User's Guide</a> 
-    for a more complete description.
-    
- 
-    <p>Learn more about the Viewer's components in the <a
-    HREF="../Guide/usersguide/srug5.html#sec:viewer">User's Guide 5.0,  
-	Visualization with the Viewer</a>
- 
+     
     <p><b><A name="section-10">Saving and reloading networks</b><br></A> 
 
-    <p>The three-module network that we created earlier provides the
-    foundation
-    for the nets we create through the rest of this tutorial.  Now we
-    will  
-    examine how to save nets to disk and reload them in a future SCIRun
+    <p>Since you have created a three-module network, you
+    can now save the net to disk. This net may be reloaded in a future SCIRun
     session. 
 
-    <p>To save a SCIRun network (<b>Figure 1.11</b>):
+    <p>Saving a SCIRun network:
     <ol>
-      <li value="1.">Pull down the File menu from the top of the SCIRun window.
-      <li>Select &quot;Save&quot;.  
-      <li>When the file browser appears, follow the prompt to choose a
-	  location and filename for your net (by convention, we keep most
-	  nets in the SCIRun/src/nets/ directory, but you can store them in
-	  whatever location you wish). 
-      <li>For this example, store the net as
-	  SCIRun/src/nets/show-torso-mesh.net (we use the .net suffix for
-	  SCIRun network files).
+      <p><li value="1.">Click on the File menu and select &quot;Save As&quot;</p>  
+      <p><li>When the file browser appears, follow the prompt to choose a
+	  location and filename for your net. By convention, most
+	  nets are stored in the SCIRun/src/nets/ directory, but you can store them in another location</p>
+      <p><li>For this example, store the net as
+	  SCIRun/src/nets/show-torso-mesh.net, as in <b>Figure 1.11</b>. The .net suffix represents a SCIRun network file</p>
     </ol><br> 
 
     </div>
     <center>
     <p><img height="216" width="320" src="images/figures/1_11.gif"><br>
-    <b>Figure 1.11</b></p>
+    <b>Figure 1.11, &quot;Save As&quot; GUI</b>
     </center>
     <div align="left">
-    <p><br>
+    </p><br>
     <ol>
-      <li value="5.">Now exit SCIRun and restart the program.  
-      <li>To load the saved net (<b>Figure 1.12</b>), pull down the
-      &quot;Load...&quot; option from the File menu bar.
+<p><li>Click the &quot;Save&quot; button. The network will be saved, and the GUI disappears</p>
+      <p><li>Exit SCIRun</p></ol>
+<p>Loading a SCIRun network:</p>  
+      <ol><p><li>Start SCIRun</p>
+<p><li>From the File drop-down menu, select the 
+      the &quot;Load...&quot; option</p>
       <li>Select SCIRun/src/nets/show-torso-mesh.net 
     </ol><br>
     
     </div>
     <center>
     <p><img height="369" width="500" src="images/figures/1_12.gif"><br>
-    <b>Figure 1.12</b></p>
+    <b>Figure 1.12, GUI for loading a network</b></p>
     </center>
     <div align="left">
     <p><br>
     </div>
     
-    <p>The net should reload into SCIRun, where it was when you saved it.   
-    After changing anything in the display (<i>e.g.</i>, rotating the view
+    <p>The net should reload into SCIRun, where you previously saved it.  
+    After changing any module settings (<i>e.g.</i>, rotating the view
     in the Viewer Window or changing
-    the rendering color of the nodes in ShowField), then there are
-    two options to re-save the net:
+    the rendering color of the nodes in ShowField), there are
+    two options for re-saving the net:</p>
     <ul>
-      <li>Overwrite the existing show-torso-mesh.net file by simply
-	  pulling down File > Save from the menu.  
-      <li>Alternatively, save it to a new file using File > Save As...  
+      <p><li>Overwrite the existing show-torso-mesh.net file by
+	  using File/Save from the drop-down menu</p>  
+      <p><li>Or, you can save the net to a new file by using File/Save As...</p>  
     </ul>
     
-    <p>For more information on the File menu options (such as Insert and
-    Clear), please refer to <a
-    HREF="../Guide/usersguide/srug4.html#sec:workwithnets"> User's Guide 4.0,  
-    Working with Networks</a>.
-    
+      
     <p><b><H4>Summary</b></H4>
     
     <p>In this chapter, we created a three module network to visualize the
-    geometry  
-    of a mesh.  We rendered that mesh to the viewing window, and practiced
-    saving  
-    and reloading networks.
+    geometry of a mesh.  We rendered that mesh to the viewing window, and practiced
+    saving and reloading networks.
 
     <p>The next chapter features additional tools to examine data values, 
     and instructions for varying colors over the geometry. 
