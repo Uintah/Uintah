@@ -1284,6 +1284,7 @@ TetVolMesh::add_find_point(const Point &p, double err)
   {
     dirty_ = true;
     points_.push_back(p);
+    nodes_.push_back(vector<Cell::index_type>());
     return points_.size() - 1;
   }
 }
