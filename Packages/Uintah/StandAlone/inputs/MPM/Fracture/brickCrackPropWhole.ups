@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-	<maxTime>200.0e-6</maxTime>
+	<maxTime>20.0e-6</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.0</delt_min>
 	<delt_max>5e-6</delt_max>
