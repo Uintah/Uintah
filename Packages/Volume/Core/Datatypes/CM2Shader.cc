@@ -98,12 +98,12 @@ namespace Volume {
 "MUL p.xy, fragment.position.xyyy, program.local[4].xyyy; \n" \
 "TEX t, p.xyyy, texture[0], 2D; \n" \
 "SUB p.w, 1.0, c.w; \n" \
-"MAD result.color, t, p.w, c; \n" \
+"MAD_SAT result.color, t, p.w, c; \n" \
 "END"
 #define CM2_FRAGMENT_BLEND_NV \
 "TEX t, fragment.position.xyyy, texture[0], RECT; \n" \
 "SUB p.w, 1.0, c.w; \n" \
-"MAD result.color, t, p.w, c; \n" \
+"MAD_SAT result.color, t, p.w, c; \n" \
 "END"
 
 CM2Shader::CM2Shader(CM2ShaderType type, bool faux, CM2BlendType blend)
