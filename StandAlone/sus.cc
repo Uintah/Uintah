@@ -21,6 +21,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/FractureMPM.h> // for Fracture
 #include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
+#include <Packages/Uintah/CCA/Components/MPM/ShellMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
@@ -132,6 +133,7 @@ usage( const std::string & message,
       cerr << "-mpm                 : \n";
       cerr << "-mpmf                : \n";  // option for Fracture
       cerr << "-rmpm                : \n";  // option for rigid MPM
+      cerr << "-smpm                : \n";  // option for shell MPM
       cerr << "-ice                 : \n";
       cerr << "-arches              : \n";
       cerr << "-AMR                 : use AMR simulation controller\n";
@@ -183,6 +185,7 @@ main( int argc, char** argv )
     bool   do_mpm=false;
     bool   do_mpmf=false;      // for Fracture
     bool   do_rmpm=false;      // for rigid MPM
+    bool   do_smpm=false;      // for shell MPM
     bool   do_impmpm=false;
     bool   do_arches=false;
     bool   do_ice=false;
@@ -241,6 +244,8 @@ main( int argc, char** argv )
           do_mpmf=true;
 	} else if(s == "-rmpm"){
           do_rmpm=true;
+	} else if(s == "-smpm"){
+          do_smpm=true;
 	} else if(s == "-impm"){
 	  do_impmpm=true;
 	} else if(s == "-arches"){
@@ -352,8 +357,8 @@ main( int argc, char** argv )
 	usage( "ICE and Arches do not work together", "", argv[0]);
     }
 
-    if(!(do_ice || do_arches || do_mpm || do_mpmf  || do_rmpm || do_impmpm || do_burger || do_poisson1 || do_poisson2 || do_poisson3 || do_simplecfd || combine_patches)){
-	usage( "You need to specify -arches, -ice, -mpmf, -rmpm, or -mpm", "", argv[0]);
+    if(!(do_ice || do_arches || do_mpm || do_mpmf  || do_rmpm || do_smpm || do_impmpm || do_burger || do_poisson1 || do_poisson2 || do_poisson3 || do_simplecfd || combine_patches)){
+	usage( "You need to specify -arches, -ice, -mpmf, -rmpm, -smpm or -mpm", "", argv[0]);
     }
 
     SimulationController::start_addr = (char*)sbrk(0);
@@ -443,6 +448,10 @@ main( int argc, char** argv )
           RigidMPM* rmpm = scinew RigidMPM(world);
 	  sim = rmpm;
 	  comp = rmpm;
+	} else if(do_smpm){
+          ShellMPM* smpm = scinew ShellMPM(world);
+	  sim = smpm;
+	  comp = smpm;
 	} else if(do_impmpm){
 	  ImpMPM* impm = scinew ImpMPM(world);
 	  sim = impm;
