@@ -197,10 +197,10 @@ namespace SCIRun {
     virtual void connection(Port::ConnectionState, int, bool);
     virtual void widget_moved(bool last);
 
-  protected:
-
     template <class DC>
     bool module_dynamic_compile(const CompileInfo &ci, DC &result);
+
+  protected:
 
     virtual void tcl_command(GuiArgs&, void*);
 
