@@ -47,7 +47,7 @@ typedef struct{
 // takes a string and replaces all occurances of old with newch
 string replaceChar(string s, char old, char newch) {
   string result;
-  for (int i = 0; i<s.size(); i++)
+  for (int i = 0; i<(int)s.size(); i++)
     if (s[i] == old)
       result += newch;
     else
@@ -263,7 +263,7 @@ int main(int argc, char** argv)
       da->queryTimesteps(index, times);
       ASSERTEQ(index.size(), times.size());
       cout << "There are " << index.size() << " timesteps:\n";
-      for(int i=0;i<index.size();i++)
+      for(int i=0;i<(int)index.size();i++)
 	cout << index[i] << ": " << times[i] << '\n';
     }
     if(do_gridstats){
@@ -272,7 +272,7 @@ int main(int argc, char** argv)
       da->queryTimesteps(index, times);
       ASSERTEQ(index.size(), times.size());
       cout << "There are " << index.size() << " timesteps:\n";
-      for(int i=0;i<index.size();i++){
+      for(int i=0;i<(int)index.size();i++){
 	cout << index[i] << ": " << times[i] << '\n';
 	GridP grid = da->queryGrid(times[i]);
 	grid->performConsistencyCheck();
@@ -284,7 +284,7 @@ int main(int argc, char** argv)
       vector<const TypeDescription*> types;
       da->queryVariables(vars, types);
       cout << "There are " << vars.size() << " variables:\n";
-      for(int i=0;i<vars.size();i++){
+      for(int i=0;i<(int)vars.size();i++){
 	cout << vars[i] << ": " << types[i]->getName() << '\n';
       }
     }
@@ -318,7 +318,7 @@ int main(int argc, char** argv)
 	double time = times[t];
 	cout << "time = " << time << "\n";
 	GridP grid = da->queryGrid(time);
-	for(int v=0;v<vars.size();v++){
+	for(int v=0;v<(int)vars.size();v++){
 	  std::string var = vars[v];
 	  const TypeDescription* td = types[v];
 	  const TypeDescription* subtype = td->getSubType();
@@ -993,7 +993,7 @@ int main(int argc, char** argv)
 	    vector<MaterialData> material_data_list; 
 	    	    
 	    // for all vars in one timestep in one patch
-	    for(int v=0;v<vars.size();v++){
+	    for(int v=0;v<(int)vars.size();v++){
 	      std::string var = vars[v];
 	      //cerr << "***********Found variable " << var << "*********\n";
 	      variable_file = replaceChar(var,'.','_');
@@ -1009,7 +1009,7 @@ int main(int argc, char** argv)
 
 		MaterialData material_data;
 
-		if (matl < material_data_list.size())
+		if (matl <(int) material_data_list.size())
 		  material_data = material_data_list[matl];
 		
 	        switch(td->getType()){
@@ -1199,7 +1199,7 @@ int main(int argc, char** argv)
 		  cerr << "Variable of unknown type: " << td->getType() << '\n';
 		  break;
 		} // end switch(td->getType())
-		if (matl < material_data_list.size())
+		if (matl < (int)material_data_list.size())
 		  material_data_list[matl] = material_data;
 		else
 		  material_data_list.push_back(material_data);
@@ -1219,7 +1219,7 @@ int main(int argc, char** argv)
 	      
 	      // loops until a non empty material_data set has been
 	      // found and inialized the mins and maxes
-	      for(int m = 0; m < material_data_list.size(); m++) {
+	      for(int m = 0; m <(int) material_data_list.size(); m++) {
 		// determine the min and max
 		MaterialData md = material_data_list[m];
 		//cerr << "First md = " << m << endl;
@@ -1236,15 +1236,15 @@ int main(int argc, char** argv)
 		  min=max=md.p_x[*iter];
 		  // setup min/max for all others
 		  if (do_PTvar_all) {
-		    for(int i = 0; i < md.pv_double_list.size(); i++) {
+		    for(int i = 0; i <(int) md.pv_double_list.size(); i++) {
 		      d_min.push_back(md.pv_double_list[i][*iter]);
 		      d_max.push_back(md.pv_double_list[i][*iter]);
 		    }
-		    for(int i = 0; i < md.pv_vector_list.size(); i++) {
+		    for(int i = 0; i < (int)md.pv_vector_list.size(); i++) {
 		      v_min.push_back(md.pv_vector_list[i][*iter].length());
 		      v_max.push_back(md.pv_vector_list[i][*iter].length());
 		    }
-		    for(int i = 0; i < md.pv_matrix3_list.size(); i++) {
+		    for(int i = 0; i < (int)md.pv_matrix3_list.size(); i++) {
 		      m_min.push_back(md.pv_matrix3_list[i][*iter].Norm());
 		      m_max.push_back(md.pv_matrix3_list[i][*iter].Norm());
 		    }
@@ -1268,7 +1268,7 @@ int main(int argc, char** argv)
 
 	      if (do_verbose)
 		cerr << "---Extracting data and writing it out  ";
-	      for(int m = 0; m < material_data_list.size(); m++) {
+	      for(int m = 0; m <(int) material_data_list.size(); m++) {
 		MaterialData md = material_data_list[m];
 		ParticleSubset* pset = md.p_x.getParticleSubset();
 		// a little redundant, but may not have been cought
@@ -1294,7 +1294,7 @@ int main(int argc, char** argv)
 		    fwrite(&temp_value, sizeof(float), 1, datafile);
 		    if (do_PTvar_all) {
 		      // double data
-		      for(int i = 0; i < md.pv_double_list.size(); i++) {
+		      for(int i = 0; i <(int) md.pv_double_list.size(); i++) {
 			double value = md.pv_double_list[i][*iter];
 			d_min[i]=Min(d_min[i],value);
 			d_max[i]=Max(d_max[i],value);
@@ -1302,7 +1302,7 @@ int main(int argc, char** argv)
 			fwrite(&temp_value, sizeof(float), 1, datafile);
 		      }
 		      // vector data
-		      for(int i = 0; i < md.pv_vector_list.size(); i++) {
+		      for(int i = 0; i < (int)md.pv_vector_list.size(); i++) {
 			double value = md.pv_vector_list[i][*iter].length();
 			v_min[i]=Min(v_min[i],value);
 			v_max[i]=Max(v_max[i],value);
@@ -1310,7 +1310,7 @@ int main(int argc, char** argv)
 			fwrite(&temp_value, sizeof(float), 1, datafile);
 		      }
 		      // matrix3 data
-		      for(int i = 0; i < md.pv_matrix3_list.size(); i++) {
+		      for(int i = 0; i < (int)md.pv_matrix3_list.size(); i++) {
 			double value = md.pv_matrix3_list[i][*iter].Norm();
 			m_min[i]=Min(m_min[i],value);
 			m_max[i]=Max(m_max[i],value);
@@ -1342,13 +1342,13 @@ int main(int argc, char** argv)
 		fprintf(headerfile,"%.17g %.17g\n",min.y(),max.y());
 		fprintf(headerfile,"%.17g %.17g\n",min.z(),max.z());
 		if (do_PTvar_all) {
-		  for(int i = 0; i < d_min.size(); i++) {
+		  for(int i = 0; i < (int)d_min.size(); i++) {
 		    fprintf(headerfile,"%.17g %.17g\n",d_min[i],d_max[i]);
 		  }
-		  for(int i = 0; i < v_min.size(); i++) {
+		  for(int i = 0; i < (int)v_min.size(); i++) {
 		    fprintf(headerfile,"%.17g %.17g\n",v_min[i],v_max[i]);
 		  }
-		  for(int i = 0; i < m_min.size(); i++) {
+		  for(int i = 0; i < (int)m_min.size(); i++) {
 		    fprintf(headerfile,"%.17g %.17g\n",m_min[i],m_max[i]);
 		  }
 		  if (do_patch) {
@@ -1380,6 +1380,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.15  2000/10/18 03:53:36  jas
+// Get rid of g++ warnings.
+//
 // Revision 1.14  2000/09/26 18:44:27  bigler
 // Increased the pricision to 17 digits of data writen to the rtdata headerfiles.
 //
