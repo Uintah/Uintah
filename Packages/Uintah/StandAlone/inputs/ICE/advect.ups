@@ -19,7 +19,7 @@
     <!--   timestep_mulipler= ???????????                                   -->
     <!--____________________________________________________________________-->
    <Time>
-	<maxTime>            0.001         </maxTime>
+	<maxTime>            0.01         </maxTime>
 	<initTime>           0.0         </initTime>
 	<delt_min>           0.0         </delt_min>
 	<delt_max>           1.0         </delt_max>
@@ -143,16 +143,20 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
 	<filebase>advect.uda</filebase>
-	<outputInterval>.001</outputInterval>
+	<outputInterval>0.00</outputInterval>
         <save label="vel_CC"/>
         <save label="press_CC"/>
         <save label="rho_CC"/>
-        <save label="KineticEnergy"/>
    </DataArchiver>
 
   <Debug>
+      <dbg_timeStart>       0.00   </dbg_timeStart>
+      <dbg_timeStop>        0.01   </dbg_timeStop>
+      <dbg_outputInterval>  1e-9   </dbg_outputInterval>
+      <!--
+      <debug label = "switchDebug_equilibration_press"/>
        <debug label = "switchTestConservation"/> 
-    <!--<debug label = "switchDebug_equilibration_press"/>
+       <debug label = "switchDebug_equilibration_press"/>
        <debug label = "switchDebug_vel_FC"/>            
        <debug label = "switchDebug_explicit_press"/>   
        <debug label = "switchDebug_PressFC"/>         
