@@ -57,6 +57,8 @@
 #include <Core/Datatypes/StructQuadSurfField.h>
 #include <Core/Datatypes/StructCurveField.h>
 
+#include <Core/Containers/StringUtil.h>
+
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
 
@@ -138,19 +140,19 @@ execute(MeshHandle& mHandle, NrrdDataHandle dataH, int data_size)
     trans.pre_scale(Vector(1.0 / (array[0]-1.0),
 			   1.0,
 			   1.0));
-
+  
   else if( array.size() == 2 )
     trans.pre_scale(Vector(1.0 / (array[0]-1.0),
 			   1.0 / (array[1]-1.0),
 			   1.0));
-
+  
   else  if( array.size() == 3 )
     trans.pre_scale(Vector(1.0 / (array[0]-1.0),
 			   1.0 / (array[1]-1.0),
 			   1.0 / (array[2]-1.0)));
-
+  
   trans.pre_scale(maxpt - minpt);
-
+  
   trans.pre_translate(minpt.asVector());
   trans.compute_imat();
 
@@ -389,8 +391,7 @@ execute(MeshHandle& mHandle,
 	    ++ielemItr;
 	  }
 	}
-      }
-
+      }    
     }
     else {
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
@@ -440,6 +441,8 @@ execute(MeshHandle& mHandle,
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = 0;
 
+  FieldHandle fH = 0;
+
   if (dataH != 0) {
     // determine if nrrd is unknown, node or cell centered
     int data_center = nrrdCenterUnknown;
@@ -481,11 +484,35 @@ execute(MeshHandle& mHandle,
 	i++;
       }
     }
+
+    // set transform if one of the nrrd properties
+    fH = ifield;
+    const string meshstr =
+      fH->get_type_description(0)->get_name().substr(0, 6);
+    
+    if (!(imesh->is_editable() && meshstr != "Struct"))
+      {
+	string trans_string;
+	if (dataH->get_property("Transform", trans_string) && trans_string != "Unknown") {
+	  double t[16];
+	  Transform trans;
+	  int old_index=0, new_index=0;
+	  for(int i=0; i<16; i++) {
+	    new_index = trans_string.find(" ", old_index);
+	    string temp = trans_string.substr(old_index, new_index-old_index);
+	    old_index = new_index+1;
+	    string_to_double(temp, t[i]);
+	  }
+	  trans.set(t);
+	  imesh->set_transform(trans);
+	} 
+      }	        
   } else {
     ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+    fH = ifield;
   }
   
-  return FieldHandle( ifield );
+  return fH;
 }
 
 
@@ -601,7 +628,7 @@ execute(MeshHandle& mHandle,
 
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = 0;
-
+  FieldHandle fH = 0;
 
   if (dataH != 0) {
     // determine if nrrd is unknown, node or cell centered
@@ -657,11 +684,35 @@ execute(MeshHandle& mHandle,
 	i++;
       }
     }
+
+    // set transform if one of the nrrd properties
+    fH = ifield;
+    const string meshstr =
+      fH->get_type_description(0)->get_name().substr(0, 6);
+    
+    if (!(imesh->is_editable() && meshstr != "Struct"))
+      {
+	string trans_string;
+	if (dataH->get_property("Transform", trans_string) && trans_string != "Unknown") {
+	  double t[16];
+	  Transform trans;
+	  int old_index=0, new_index=0;
+	  for(int i=0; i<16; i++) {
+	    new_index = trans_string.find(" ", old_index);
+	    string temp = trans_string.substr(old_index, new_index-old_index);
+	    old_index = new_index+1;
+	    string_to_double(temp, t[i]);
+	  }
+	  trans.set(t);
+	  imesh->set_transform(trans);
+	} 
+      }	  
   } else {
     ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+    fH = ifield;
   }
 
-  return FieldHandle( ifield );
+  return fH;
 }
 
 
@@ -1116,6 +1167,7 @@ execute(MeshHandle& mHandle,
 {
   MESH *imesh = (MESH *) mHandle.get_rep();
   FIELD *ifield = 0;
+  FieldHandle fH;
 
   if (dataH != 0) {
     // determine if nrrd is unknown, node or cell centered
@@ -1292,7 +1344,8 @@ execute(MeshHandle& mHandle,
 	    ifield->set_value( tmp, *iter);
 	  }
 	} else {
-	  return FieldHandle( ifield );
+	  fH = ifield;
+	  return fH;
 	}
 	++iter;
 	i++;
@@ -1466,16 +1519,41 @@ execute(MeshHandle& mHandle,
 	    ifield->set_value( tmp, *iter);
 	  }
 	} else {
-	  return FieldHandle( ifield );
+	  fH = ifield;
+	  return fH;
 	}
 	++iter;
 	i++;
       }    
     }
+
+    // set transform if one of the nrrd properties
+    fH = ifield;
+    const string meshstr =
+      fH->get_type_description(0)->get_name().substr(0, 6);
+    
+    if (!(imesh->is_editable() && meshstr != "Struct"))
+      {
+	string trans_string;
+	if (dataH->get_property("Transform", trans_string) && trans_string != "Unknown") {
+	  double t[16];
+	  Transform trans;
+	  int old_index=0, new_index=0;
+	  for(int i=0; i<16; i++) {
+	    new_index = trans_string.find(" ", old_index);
+	    string temp = trans_string.substr(old_index, new_index-old_index);
+	    old_index = new_index+1;
+	    string_to_double(temp, t[i]);
+	  }
+	  trans.set(t);
+	  imesh->set_transform(trans);
+	} 
+      }	        
   } else {
     ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
+    fH = ifield;
   }
-  return FieldHandle( ifield );
+  return fH;
 }
 
 

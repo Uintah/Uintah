@@ -33,7 +33,7 @@
 #if !defined(ConvertToNrrd_h)
 #define ConvertToNrrd_h
 
-
+#include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/ImageField.h>
@@ -498,7 +498,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	}
 
 	if (pad_data > 0) {
-	  // 1D nrrd with vector/tenssor
+	  // 1D nrrd with vector/tensor
 	  ndata->nrrd->axis[0].label = strdup(sink_label.c_str());
 	  ndata->nrrd->axis[1].label = strdup("x");
 
@@ -511,7 +511,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	  // 2D nrrd of scalars
 	  ndata->nrrd->axis[0].label = strdup("x");
 	  ndata->nrrd->axis[1].label = strdup("y");
-	
+
 	  if (with_spacing) {
 	    ndata->nrrd->axis[0].min=minP.x();
 	    ndata->nrrd->axis[0].max=maxP.x();
@@ -654,7 +654,26 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
     default:
       break;
     }
-    dataH = ndata;
+
+    // check for transform
+    const string meshstr =
+      ifh->get_type_description(0)->get_name().substr(0, 6);
+    
+    if (!(ifh->mesh()->is_editable() && meshstr != "Struct"))
+    {
+      Transform t = m->get_transform();
+      double trans[16];
+      t.get(trans);
+      string trans_string = "";
+      for(int i=0; i<16; i++) {
+	trans_string += to_string(trans[i]);
+	trans_string += " ";
+      }
+      dataH = ndata;
+      dataH->set_property("Transform", trans_string, false);
+    } else {
+      dataH = ndata;
+    }
   }
   return true;
 }
