@@ -92,7 +92,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *craters = new Group;
   Group *rock_tower = new Group;
 
-  TimeVaryingCheapCaustics* tvcc= new TimeVaryingCheapCaustics("/usr/sci/data/Geometry/textures/caustics/caust%d.pgm", 32,
+  TimeVaryingCheapCaustics* tvcc= new TimeVaryingCheapCaustics("/opt/SCIRun/data/Geometry/textures/caustics/caust%d.pgm", 32,
 	                                                        Point(0,0,6), Vector(1,0,0), Vector(0,1,0),
 							        Color(0.5,0.5,0.5), 0.1, .3);// last should be .6
   
@@ -429,7 +429,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   
 /*
   // video textures test/////////////////////////////////////////////////////////////////////////
-  Material* vid = new VideoMap("/usr/sci/data/Geometry/models/videotex/gatcha%d.ppm", 550, 20, 
+  Material* vid = new VideoMap("/opt/SCIRun/data/Geometry/models/videotex/gatcha%d.ppm", 550, 20, 
 	                       Color(.7, .7, .7), 50, .3); 
   all_tubes->add(new Rect(vid, Point(0, 4, 4), Vector(2, 0, 0), Vector(0, 0, -2)));  
 */  
@@ -437,8 +437,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t3.load_identity();
   t3.pre_scale(Vector(.0005, .0005, .0005));
   t3.pre_translate(Vector(-3.9, -2.6, -.80));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/gaz.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/gaz.mtl",
+  if (!readObjFile("/opt/SCIRun/data/Geometry/models/read_in_models/gaz.obj",
+                   "/opt/SCIRun/data/Geometry/models/read_in_models/gaz.mtl",
                    t3, gazebo))
     exit(-1);
   
@@ -467,7 +467,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // ocean floor
   
   // add a plane for the ocean floor base
-  all_tubes->add(new Heightfield<BrickArray2<float>, Array2<HMCell<float> > >(tan, "/usr/sci/data/Geometry/models/ocean_floor", 3, 8));
+  all_tubes->add(new Heightfield<BrickArray2<float>, Array2<HMCell<float> > >(tan, "/opt/SCIRun/data/Geometry/models/ocean_floor", 3, 8));
   all_tubes->add(east_tube);
 
   all_tubes->add(new Rect(tan, Point(-100, 0, -1.5), Vector(50, 0, 0), Vector(0, 150, 0)));  

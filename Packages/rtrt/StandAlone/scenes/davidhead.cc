@@ -27,8 +27,8 @@ Scene* make_scene(int argc, char* argv[])
 //      return 0;
 //    }
 // -eye -1329.7 333.468 -8572.81 -lookat 79.9753 34.1933 -13346.8 -up -0.168284 0.979459 -0.111091 -fov 60
-  char* file = "/usr/sci/data/Geometry/Stanford_Sculptures/david_head_1mm_color.ply";
-  //char* file = "/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply";
+  char* file = "/opt/SCIRun/data/Geometry/Stanford_Sculptures/david_head_1mm_color.ply";
+  //char* file = "/opt/SCIRun/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply";
   int cells=5;
   int depth=3;
   double scale = .001;

@@ -102,7 +102,7 @@ static void make_box(Group* group, Material* mat,
 {
   //Group *boxgroup = new Group();
 
-  Material *matl = new NormalMapMaterial(mat, "/usr/sci/data/Geometry/textures/testmap.ppm",4);
+  Material *matl = new NormalMapMaterial(mat, "/opt/SCIRun/data/Geometry/textures/testmap.ppm",4);
 //use the normal map to add some lines through the boxes
 
   group->add(new Rect(matl, corner+x+z, x, z));
@@ -143,8 +143,8 @@ static Object* make_obj(int size)
     make_box(world, matl1, corner, diag1, diag2, z);
 
     Material* matl3=new MetalMaterial( Color(.7,.7,.7));
-    Material* nmatl = new BumpMaterial(matl3,"/usr/sci/data/Geometry/textures/tile-bump.ppm",8);
-    //Material * nmatl = new NormalMapMaterial(matl3,"/usr/sci/data/Geometry/textures/testmap.ppm",4);
+    Material* nmatl = new BumpMaterial(matl3,"/opt/SCIRun/data/Geometry/textures/tile-bump.ppm",8);
+    //Material * nmatl = new NormalMapMaterial(matl3,"/opt/SCIRun/data/Geometry/textures/testmap.ppm",4);
     //Material *nmatl = matl3;
     world->add(new Sphere(nmatl, corner+diag1*1.25+diag2*.6+z*2+Vector(0,0,.6), .6));
     Material* matl2=new Checker(new LambertianMaterial(Color(.95,.95,.95)),
@@ -153,7 +153,7 @@ static Object* make_obj(int size)
 double planesize=15;
 
 Material *image = new 
-ImageMaterial("/usr/sci/data/Geometry/textures/granite-tile.ppm",
+ImageMaterial("/opt/SCIRun/data/Geometry/textures/granite-tile.ppm",
 ImageMaterial::Tile,
 ImageMaterial::Tile,
 1,Color(1,1,1),4000);
@@ -163,11 +163,11 @@ ImageMaterial::Tile,
  matl2 = image;
 
 
-//Material *bumpmatl = new BumpMaterial(matl2,"/usr/sci/data/Geometry/textures/tile-bump",1);
-//Material *bumpmatl = new NormalMapMaterial(matl2, 	"/usr/sci/data/Geometry/textures/testmap.ppm", 75);
+//Material *bumpmatl = new BumpMaterial(matl2,"/opt/SCIRun/data/Geometry/textures/tile-bump",1);
+//Material *bumpmatl = new NormalMapMaterial(matl2, 	"/opt/SCIRun/data/Geometry/textures/testmap.ppm", 75);
 	
  Material *bumpmatl = new 
-BumpMaterial(matl2,"/usr/sci/data/Geometry/textures/tile-bump.ppm", 8);
+BumpMaterial(matl2,"/opt/SCIRun/data/Geometry/textures/tile-bump.ppm", 8);
     Object* obj1=new Rect(bumpmatl, Point(0,0,0), 
 Vector(planesize,planesize*1.1,0), Vector(-planesize*1.1,planesize,0));
     world->add(obj1);

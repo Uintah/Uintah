@@ -342,10 +342,10 @@ void make_walls_and_posters(Group *g, const Point &center,
   Group* east_wall=new Group();
   Group* ceiling_floor=new Group();
 
-  ImageMaterial *stucco = new ImageMaterial("/usr/sci/data/Geometry/textures/science-room/stucco.ppm",
+  ImageMaterial *stucco = new ImageMaterial("/opt/SCIRun/data/Geometry/textures/science-room/stucco.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
-  ImageMaterial *seawalls = new ImageMaterial("/usr/sci/data/Geometry/models/livingroom/livingroom-obj/maps/brick.ppm",
+  ImageMaterial *seawalls = new ImageMaterial("/opt/SCIRun/data/Geometry/models/livingroom/livingroom-obj/maps/brick.ppm",
 		      ImageMaterial::Tile, ImageMaterial::Tile,
 		      1, Color(0,0,0), 0);
 					      
@@ -440,7 +440,7 @@ void make_walls_and_posters(Group *g, const Point &center,
 			       cable_radius));
 
   Material* dnaM =
-    new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/DNA2.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/models/science-room/posters2/DNA2.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
   north_wall->add(new Rect(dnaM, north_cable_1_base+up*2.4-
@@ -449,7 +449,7 @@ void make_walls_and_posters(Group *g, const Point &center,
     dnaM->my_lights.add(room_lights[l]);
 
   Material* hypatiaM =
-    new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/Hypatia.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/models/science-room/posters2/Hypatia.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
   north_wall->add(new Rect(hypatiaM, north_cable_2_base+up*3.0-
@@ -458,7 +458,7 @@ void make_walls_and_posters(Group *g, const Point &center,
     hypatiaM->my_lights.add(room_lights[l]);
 
   Material* emilieM =
-    new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/emilie_du_chatelet.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/models/science-room/posters2/emilie_du_chatelet.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
   north_wall->add(new Rect(emilieM, north_cable_2_base+up*1.6-
@@ -467,7 +467,7 @@ void make_walls_and_posters(Group *g, const Point &center,
     emilieM->my_lights.add(room_lights[l]);
 
   Material* bluesunM =
-    new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/bluesun.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/models/science-room/posters2/bluesun.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
   for (l=0; l<room_lights.size(); l++)
@@ -495,7 +495,7 @@ void make_walls_and_posters(Group *g, const Point &center,
 			      cable_radius));
 
   Material* galileoM =
-    new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/galileo.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/models/science-room/posters2/galileo.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
   west_wall->add(new Rect(galileoM, west_cable_1_base+up*2.3+
@@ -504,7 +504,7 @@ void make_walls_and_posters(Group *g, const Point &center,
     galileoM->my_lights.add(room_lights[l]);
   
   Material* brunoM =
-    new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/bruno.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/models/science-room/posters2/bruno.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
   west_wall->add(new Rect(brunoM, west_cable_2_base+up*2.95+
@@ -513,7 +513,7 @@ void make_walls_and_posters(Group *g, const Point &center,
     brunoM->my_lights.add(room_lights[l]);
 
   Material* maxwellM =
-    new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/james_clerk_maxwell.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/models/science-room/posters2/james_clerk_maxwell.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
   west_wall->add(new Rect(maxwellM, west_cable_2_base+up*1.6+
@@ -522,7 +522,7 @@ void make_walls_and_posters(Group *g, const Point &center,
     maxwellM->my_lights.add(room_lights[l]);
 
   Material* joeM =
-    new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/joe_head.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/models/science-room/posters2/joe_head.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
   west_wall->add(new Rect(joeM, west_cable_3_base+up*1.65+
@@ -531,7 +531,7 @@ void make_walls_and_posters(Group *g, const Point &center,
     joeM->my_lights.add(room_lights[l]);
 
   Material* australM =
-    new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/australopithecus_boisei.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/models/science-room/posters2/australopithecus_boisei.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
   west_wall->add(new Rect(australM, west_cable_4_base+up*1.65+
@@ -540,7 +540,7 @@ void make_walls_and_posters(Group *g, const Point &center,
     australM->my_lights.add(room_lights[l]);
 
   Material* apolloM =
-    new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/Apollo16_lander.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/models/science-room/posters2/Apollo16_lander.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
   west_wall->add(new Rect(apolloM, west_cable_3_base+up*3.2+north*.75+
@@ -816,7 +816,7 @@ void make_walls_and_posters(Group *g, const Point &center,
 
   // table top
   ImageMaterial *cement_floor = 
-    new ImageMaterial("/usr/sci/data/Geometry/textures/science-room/cement-floor.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/textures/science-room/cement-floor.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp, 0,
 		      Color(0,0,0), 0);
   for (l=0; l<room_lights.size(); l++)
@@ -893,7 +893,7 @@ void add_objects(Group *g, Group *s, const Point &center,
   Transform room_trans;
   room_trans.pre_translate(center.vector());
 
-  string pathname("/usr/sci/data/Geometry/models/science-room/");
+  string pathname("/opt/SCIRun/data/Geometry/models/science-room/");
 
   Array1<int> sizes;
   Array1<string> names;
@@ -1047,7 +1047,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   int ac=9;
   char *av[100]= 
     {"rtrt",
-     "/usr/sci/data/Geometry/volumes2/gk/gk2-rcc-b06-mask-s070.nhdr",
+     "/opt/SCIRun/data/Geometry/volumes2/gk/gk2-rcc-b06-mask-s070.nhdr",
      "fa",
      "0.45",
      "0.71",
@@ -1066,7 +1066,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   Group* table=new Group();
 
   ImageMaterial *cement_pedestal = 
-    new ImageMaterial("/usr/sci/data/Geometry/textures/science-room/cement-pedestal.ppm",
+    new ImageMaterial("/opt/SCIRun/data/Geometry/textures/science-room/cement-pedestal.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp, 0,
 		      Color(0,0,0), 0);
   
@@ -1121,7 +1121,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 #ifdef ADD_VIS_FEM
   CutPlaneDpy* vcpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
 
-  ColorMap *vcmap = new ColorMap("/usr/sci/data/Geometry/volumes2/vfem",256);
+  ColorMap *vcmap = new ColorMap("/opt/SCIRun/data/Geometry/volumes2/vfem",256);
   Material* vmat=new LambertianMaterial(Color(0.7,0.7,0.7));
   for (l=0; l<holo_lights.size(); l++)
     vmat->my_lights.add(holo_lights[l]);
@@ -1133,31 +1133,31 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   CutVolumeDpy* vcvdpy = new CutVolumeDpy(1200.5, vcmap);
   
   HVolumeBrick16* slc0=new HVolumeBrick16(vcutmat, vcvdpy,
-					  "/usr/sci/data/Geometry/volumes2/vfem16_0",
+					  "/opt/SCIRun/data/Geometry/volumes2/vfem16_0",
 					  3, nworkers);
   
   HVolumeBrick16* slc1=new HVolumeBrick16(vcutmat, vcvdpy,
-					  "/usr/sci/data/Geometry/volumes2/vfem16_1",
+					  "/opt/SCIRun/data/Geometry/volumes2/vfem16_1",
 					  3, nworkers);
   
   HVolumeBrick16* slc2=new HVolumeBrick16(vcutmat, vcvdpy,
-					  "/usr/sci/data/Geometry/volumes2/vfem16_2",
+					  "/opt/SCIRun/data/Geometry/volumes2/vfem16_2",
 					  3, nworkers);
 
   HVolumeBrick16* slc3=new HVolumeBrick16(vcutmat, vcvdpy,
-					  "/usr/sci/data/Geometry/volumes2/vfem16_3",
+					  "/opt/SCIRun/data/Geometry/volumes2/vfem16_3",
 					  3, nworkers);
   
   HVolumeBrick16* slc4=new HVolumeBrick16(vcutmat, vcvdpy,
-					  "/usr/sci/data/Geometry/volumes2/vfem16_4",
+					  "/opt/SCIRun/data/Geometry/volumes2/vfem16_4",
 					  3, nworkers);
   
   HVolumeBrick16* slc5=new HVolumeBrick16(vcutmat, vcvdpy,
-					  "/usr/sci/data/Geometry/volumes2/vfem16_5",
+					  "/opt/SCIRun/data/Geometry/volumes2/vfem16_5",
 					  3, nworkers);
 
   HVolumeBrick16* slc6=new HVolumeBrick16(vcutmat, vcvdpy,
-					  "/usr/sci/data/Geometry/volumes2/vfem16_6",
+					  "/opt/SCIRun/data/Geometry/volumes2/vfem16_6",
 					  3, nworkers);
 					  
 
@@ -1207,7 +1207,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   //ADD THE HEAD DATA SET
   CutPlaneDpy* hcpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
 
-  ColorMap *hcmap = new ColorMap("/usr/sci/data/Geometry/volumes2/head",256);
+  ColorMap *hcmap = new ColorMap("/opt/SCIRun/data/Geometry/volumes2/head",256);
   //Material *hmat=new LambertianMaterial(Color(1,0.7,0.7));
   Phong *hmat = new Phong(Color(0.6,0.5,0.5), Color(1,1,1), 50);
 
@@ -1221,8 +1221,8 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   CutVolumeDpy* hcvdpy = new CutVolumeDpy(11000.0, hcmap);
 
   HVolumeBrick16* head=new HVolumeBrick16(hcutmat, hcvdpy,
-					  //    "/usr/sci/data/Geometry/volumes2/dave",
-					  "/usr/sci/data/Geometry/volumes2/gk2-anat-US.raw",
+					  //    "/opt/SCIRun/data/Geometry/volumes2/dave",
+					  "/opt/SCIRun/data/Geometry/volumes2/gk2-anat-US.raw",
 					      3, nworkers);
   InstanceWrapperObject *hiw = new InstanceWrapperObject(head);
 
@@ -1339,7 +1339,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   for(int f = fstart; f <= fend; f+= finc) {
     char buf[1000];
     // load in the temperature field to color by
-    sprintf(buf, "/usr/sci/data/Geometry/volumes2/CSAFE/h300_%04df.raw", f);
+    sprintf(buf, "/opt/SCIRun/data/Geometry/volumes2/CSAFE/h300_%04df.raw", f);
     //    cout << "Reading "<<buf<<endl;
     // Send 1 for depth since we don't need to render it and preprocess
     // goes much quickley.
@@ -1365,7 +1365,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
       temp_color_map->my_lights.add(holo_lights[l]);
 
     // Load the velocity field that will be used to isosurface.
-    sprintf(buf, "/usr/sci/data/Geometry/volumes2/CSAFE/heptane300_velmag_%04d.raw", f);
+    sprintf(buf, "/opt/SCIRun/data/Geometry/volumes2/CSAFE/heptane300_velmag_%04d.raw", f);
     HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > *vel =
       new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > >
       (temp_color_map, vel_dpy, buf, 3, nworkers);
@@ -1390,7 +1390,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   //ADD THE GEOLOGY DATA SET
   CutPlaneDpy* gcpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
 
-  ColorMap *gcmap = new ColorMap("/usr/sci/data/Geometry/volumes2/Seismic/geo",256);
+  ColorMap *gcmap = new ColorMap("/opt/SCIRun/data/Geometry/volumes2/Seismic/geo",256);
   Material* gmat=new LambertianMaterial(Color(0.25,0.125,0));
   for (l=0; l<holo_lights.size(); l++)
     gmat->my_lights.add(holo_lights[l]);
@@ -1403,9 +1403,9 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 
   HVolumeBrick16* geology=new HVolumeBrick16(gcutmat, gcvdpy,
 					     //unfiltered, full data set
-					     //"/usr/sci/data/Geometry/volumes2/Seismic/stack-16full.raw",
+					     //"/opt/SCIRun/data/Geometry/volumes2/Seismic/stack-16full.raw",
 					     //filtered, cropped data set
-					     "/usr/sci/data/Geometry/volumes2/Seismic/stack-chunks01-m2-16.raw",
+					     "/opt/SCIRun/data/Geometry/volumes2/Seismic/stack-chunks01-m2-16.raw",
 					      3, nworkers);
   InstanceWrapperObject *giw = new InstanceWrapperObject(geology);
 
@@ -1467,9 +1467,9 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
     gmat_brown->my_lights.add(holo_lights[l]);
   HVolumeBrick16* geology=new HVolumeBrick16(gmat_brown, gcvdpy,
 					     //unfiltered, full data set
-					     //"/usr/sci/data/Geometry/volumes2/Seismic/stack-16full.raw",
+					     //"/opt/SCIRun/data/Geometry/volumes2/Seismic/stack-16full.raw",
 					     //filtered, cropped data set
-					     "/usr/sci/data/Geometry/volumes2/Seismic/stack-chunks01-m2-16.raw",
+					     "/opt/SCIRun/data/Geometry/volumes2/Seismic/stack-chunks01-m2-16.raw",
 					      3, nworkers);
 
   InstanceWrapperObject *giw = new InstanceWrapperObject(geology);
@@ -1522,7 +1522,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   //ADD THE SHEEP HEART DATA SET
   CutPlaneDpy* scpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
 
-  ColorMap *scmap = new ColorMap("/usr/sci/data/Geometry/volumes2/sheep",256);
+  ColorMap *scmap = new ColorMap("/opt/SCIRun/data/Geometry/volumes2/sheep",256);
   //  Material *smat=new LambertianMaterial(Color(0.7,0.7,0.7));
   Material *smat=new Phong(Color(0.5,0,0), Color(1,0,0), 50);
   for (l=0; l<holo_lights.size(); l++)
@@ -1535,7 +1535,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   CutVolumeDpy* scvdpy = new CutVolumeDpy(11000.0, scmap);
 
   HVolumeBrick16* sheep=new HVolumeBrick16(scutmat, scvdpy,
-					   "/usr/sci/data/Geometry/volumes2/sheep-US.raw",
+					   "/opt/SCIRun/data/Geometry/volumes2/sheep-US.raw",
 					   3, nworkers);
   InstanceWrapperObject *siw = new InstanceWrapperObject(sheep);
 
@@ -1775,6 +1775,6 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 
 /*
 
-./rtrt -np 10 -scene scenes/science-room.mo /usr/sci/data/Geometry/volumes2/gk/gk2-rcc-b06-mask-s070.nhdr fa 0.45 0.55 -gridcellsize 100 -nl 2
+./rtrt -np 10 -scene scenes/science-room.mo /opt/SCIRun/data/Geometry/volumes2/gk/gk2-rcc-b06-mask-s070.nhdr fa 0.45 0.55 -gridcellsize 100 -nl 2
 
 */

@@ -47,7 +47,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   double ambient_scale=.5;
   Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
   
-  FILE *fp = fopen("/usr/sci/data/Geometry/models/bun.ply","r");
+  FILE *fp = fopen("/opt/SCIRun/data/Geometry/models/bun.ply","r");
   if (!fp) {
     fprintf(stderr,"No such file!\n");
     exit(-1);

@@ -71,7 +71,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   Camera cam(room_trans.project(eye),room_trans.project(lookat),up,fov);
 
-  string pathname("/usr/sci/data/Geometry/models/livingroom/livingroom-obj2_fullpaths/");
+  string pathname("/opt/SCIRun/data/Geometry/models/livingroom/livingroom-obj2_fullpaths/");
 
   double lightBrightness = 0.5;
   Light * overhead = new Light( room_trans.project(Point(7.3, 18.3, 144.5)),
@@ -255,7 +255,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     //////////////// TRIGGERS ////////////////////////
     // livingroom main_text
     Trigger * last;
-    string ifpath = "/usr/sci/data/Geometry/interface/";
+    string ifpath = "/opt/SCIRun/data/Geometry/interface/";
 
     PPMImage * ppm = new PPMImage(ifpath+"livingroom/main_text.ppm", true);
     vector<Point> loc; loc.push_back(room_trans.project(Point(0,0,2)));
@@ -365,7 +365,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
 #if !defined(linux)
   {
-    string path = "/usr/sci/data/Geometry/sounds/";
+    string path = "/opt/SCIRun/data/Geometry/sounds/";
     vector<Point> loc;
     loc.push_back(room_trans.project(Point(53,82,64)));  // piano
     Sound * sound = new Sound( path+"player-piano-cd026_73.wav", "piano", 

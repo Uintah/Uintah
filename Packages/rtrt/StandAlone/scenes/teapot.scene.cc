@@ -80,7 +80,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
         teapotT.pre_rotate(M_PI_4,Vector(0,0,1));
         teapotT.post_translate(Vector(20,0,0));
  
-        fp = fopen("/usr/sci/data/Geometry/models/teapot.dat","r");
+        fp = fopen("/opt/SCIRun/data/Geometry/models/teapot.dat","r");
 	Group* teapot=new Group();
         while (fscanf(fp,"%s",buf) != EOF) {
   	if (!strcasecmp(buf,"bezier")) {
@@ -113,7 +113,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
         Transform bunnyT;
 
 
-    fp = fopen("/usr/sci/data/Geometry/models/bun.ply","r");
+    fp = fopen("/opt/SCIRun/data/Geometry/models/bun.ply","r");
     if (!fp) {
       fprintf(stderr,"No such file!\n");
       exit(-1);
@@ -153,7 +153,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     fclose(fp);
     
     Material* vwmat=new Phong (Color(.6,.6,0),Color(.5,.5,.5),30);
-    fp = fopen("/usr/sci/data/Geometry/models/vw.geom","r");
+    fp = fopen("/opt/SCIRun/data/Geometry/models/vw.geom","r");
     if (!fp) {
       fprintf(stderr,"No such file!\n");
       exit(-1);
@@ -213,7 +213,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   //min.x(),min.y(),min.z());
 
    Material* bookcoverimg = new ImageMaterial(1,
-					      "/usr/sci/data/Geometry/textures/i3d97.smaller.gamma",
+					      "/opt/SCIRun/data/Geometry/textures/i3d97.smaller.gamma",
                                               ImageMaterial::Clamp,
                                               ImageMaterial::Clamp, 1,
                                               Color(0,0,0), 0);
@@ -311,7 +311,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       //room
 
       Material* whittedimg = new ImageMaterial(1,
-					       "/usr/sci/data/Geometry/textures/whitted",
+					       "/opt/SCIRun/data/Geometry/textures/whitted",
 					       ImageMaterial::Clamp,
 					       ImageMaterial::Clamp, 1,
 					       Color(0,0,0), 0);
@@ -323,7 +323,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	     ;
 
       Material* bumpimg = new ImageMaterial(1,
-					    "/usr/sci/data/Geometry/textures/bump",
+					    "/opt/SCIRun/data/Geometry/textures/bump",
 					    ImageMaterial::Clamp,
 					    ImageMaterial::Clamp, 1,
 					    Color(0,0,0), 0);

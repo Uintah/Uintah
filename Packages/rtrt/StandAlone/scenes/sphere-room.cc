@@ -186,7 +186,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   TileImageMaterial *bookcoverimg = 
     new TileImageMaterial(
 #if INSCILAB
-                      "/usr/sci/data/Geometry/textures/i3d97.ppm",
+                      "/opt/SCIRun/data/Geometry/textures/i3d97.ppm",
 #else
                       "/home/moulding/i3d97.ppm",
 #endif

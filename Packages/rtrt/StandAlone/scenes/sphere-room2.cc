@@ -57,7 +57,7 @@ using namespace std;
 #if 0
 #define IMAGEDIR      "/home/moulding/images/"
 #else
-#define IMAGEDIR      "/usr/sci/data/Geometry/textures/holo-room/"
+#define IMAGEDIR      "/opt/SCIRun/data/Geometry/textures/holo-room/"
 #endif
 
 typedef struct {

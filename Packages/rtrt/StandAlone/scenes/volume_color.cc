@@ -152,8 +152,8 @@ void add_fire2(Group *g, int nworkers, int finc, int fstart, int fend,
   for(int f = fstart; f <= fend; f+= finc) {
     char buf[1000];
     // load in the temperature field to color by
-    //sprintf(buf, "/usr/sci/data/Geometry/volumes2/CSAFE/h300_%04f.raw", f);
-    sprintf(buf, "/usr/sci/data/Geometry/volumes2/CSAFE/heptane300_velmag_%04d.raw", f);
+    //sprintf(buf, "/opt/SCIRun/data/Geometry/volumes2/CSAFE/h300_%04f.raw", f);
+    sprintf(buf, "/opt/SCIRun/data/Geometry/volumes2/CSAFE/heptane300_velmag_%04d.raw", f);
     //    cout << "Reading "<<buf<<endl;
     // Send 1 for depth since we don't need to render it and preprocess
     // goes much quickley.
@@ -173,8 +173,8 @@ void add_fire2(Group *g, int nworkers, int finc, int fstart, int fend,
        fcdpy->get_alpha_transfer_pointer());
 
     // Load the velocity field that will be used to isosurface.
-    //sprintf(buf, "/usr/sci/data/Geometry/volumes2/CSAFE/heptane300_velmag_%04d.raw", f);
-    sprintf(buf, "/usr/sci/data/Geometry/volumes2/CSAFE/h300_%04df.raw", f);
+    //sprintf(buf, "/opt/SCIRun/data/Geometry/volumes2/CSAFE/heptane300_velmag_%04d.raw", f);
+    sprintf(buf, "/opt/SCIRun/data/Geometry/volumes2/CSAFE/h300_%04df.raw", f);
     HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > *vel =
       new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > >
       (temp_color_map, vel_dpy, buf, 3, nworkers);
@@ -228,7 +228,7 @@ void add_fire(Group *g, int nworkers) {
   HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > *fire =
     new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > >
     (firematl, fire_dpy,
-     "/usr/sci/data/Geometry/volumes2/CSAFE/h300_0064f.raw",
+     "/opt/SCIRun/data/Geometry/volumes2/CSAFE/h300_0064f.raw",
      1, nworkers);
   
   float min, max;
@@ -244,7 +244,7 @@ void add_fire(Group *g, int nworkers) {
   HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > *vel =
     new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > >
     (hmat, vel_dpy,
-     "/usr/sci/data/Geometry/volumes2/CSAFE/heptane300_velmag_0064.raw",
+     "/opt/SCIRun/data/Geometry/volumes2/CSAFE/heptane300_velmag_0064.raw",
      3, nworkers);
 
   CutPlaneDpy* pd=new CutPlaneDpy(Vector(0,1,0), Point(0,0,0));
@@ -267,8 +267,8 @@ void add_head(Group *g, int nworkers) {
   dpys.add(head_dpy);
 
   Object* head=new HVolumeBrick16(headmatl, head_dpy,
-					  //    "/usr/sci/data/Geometry/volumes2/dave",
-				  //					  "/usr/sci/data/Geometry/volumes2/gk2-anat-US.raw",
+					  //    "/opt/SCIRun/data/Geometry/volumes2/dave",
+				  //					  "/opt/SCIRun/data/Geometry/volumes2/gk2-anat-US.raw",
 				  "/usr/sci/data/CSAFE/heptane300_3D_NRRD/h300_0072_short.raw",
 					      3, nworkers);
   
@@ -302,7 +302,7 @@ void add_head(Group *g, int nworkers) {
 
 #if 0
   //ADD THE HEAD DATA SET
-  ColorMap *hcmap = new ColorMap("/usr/sci/data/Geometry/volumes2/head",256);
+  ColorMap *hcmap = new ColorMap("/opt/SCIRun/data/Geometry/volumes2/head",256);
   Material *hmat=new LambertianMaterial(Color(0.7,0.7,0.7));
   hmat->my_lights.add(holo_light1);
   hmat->my_lights.add(holo_light2);

@@ -154,7 +154,7 @@ Scene* make_scene(int argc, char* argv[])
 
       for (int i=0; i<g->numObjects(); i++)
 	{
-	  sprintf(tens_buf,"/usr/sci/data/Geometry/textures/museum/history/cbox/TENSOR.%d.rad.tex",i);
+	  sprintf(tens_buf,"/opt/SCIRun/data/Geometry/textures/museum/history/cbox/TENSOR.%d.rad.tex",i);
 	  g->objs[i]->set_matl(new ImageMaterial(tens_buf,
 						 ImageMaterial::Clamp,
 						 ImageMaterial::Clamp,

@@ -59,7 +59,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   double x,y,z;
   int subdivlevel = 3;
   
-  fp = fopen("/usr/sci/data/Geometry/models/teapot.dat","r");
+  fp = fopen("/opt/SCIRun/data/Geometry/models/teapot.dat","r");
   
   while (fscanf(fp,"%s",buf) != EOF) {
     if (!strcasecmp(buf,"bezier")) {
@@ -93,7 +93,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
 
 
-  fp = fopen("/usr/sci/data/Geometry/models/bun.ply","r");
+  fp = fopen("/opt/SCIRun/data/Geometry/models/bun.ply","r");
   if (!fp) {
     fprintf(stderr,"No such file!\n");
     exit(-1);

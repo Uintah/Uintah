@@ -70,7 +70,7 @@ Scene* make_scene(int argc, char* /*argv[]*/, int /*nworkers*/)
 
   Camera cam(room_trans.project(eye),room_trans.project(lookat),up,fov);
 
-  string pathname("/usr/sci/data/Geometry/models/livingroom/livingroom-obj2_fullpaths/");
+  string pathname("/opt/SCIRun/data/Geometry/models/livingroom/livingroom-obj2_fullpaths/");
 
   double lightBrightness = 0.4;
 

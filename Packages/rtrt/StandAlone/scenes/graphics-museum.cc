@@ -164,7 +164,7 @@ void add_poster_on_wall (string image_name, const Point &top_left,
   Material* glass= new DielectricMaterial(1.5, 1.0, 0.05, 400.0, 
 					  Color(.80, .93 , .87), 
 					  Color(1,1,1), false);
-  Material* grey = new PhongMaterial(Color(.5,.5,.5),1,0.3,100,true);
+  Material* grey = new PhongMaterial(Color(.5,.5,.5),1,0.3,100);
   Vector in = Cross (right,down);
   Vector out = Cross (down, right);
   in.normalize();
@@ -212,8 +212,8 @@ void add_cheap_poster_on_wall (string image_name, const Point &top_left,
 			 Group* wall_group, Scene *scene) {
 
   /* add glass frame */
-  Material* glass = new PhongMaterial (Color(0.45,0.5,0.45),0.1,0.15,50,false);
-  Material* grey = new PhongMaterial(Color(.5,.5,.5),1,0.3,100,true);
+  Material* glass = new PhongMaterial (Color(0.45,0.5,0.45),0.1,0.15,50);
+  Material* grey = new PhongMaterial(Color(.5,.5,.5),1,0.3,100);
   Vector in = Cross (right,down);
   Vector out = Cross (down, right);
   in.normalize();
@@ -305,7 +305,7 @@ void add_baseboards (Group* obj_group, Light *h0, Light *h1, Light *h2,
 
 void add_glass_box (Group* obj_group, const Point UpperCorner,Vector FarDir) {
   
-  Material* clear = new PhongMaterial (Color(0.8,0.85,0.8),0.1,0.15,50,false);
+  Material* clear = new PhongMaterial (Color(0.8,0.85,0.8),0.1,0.15,50);
 
   Vector u (FarDir.x()/2., 0, 0);
   Vector v (0,FarDir.y()/2.,0);
@@ -324,7 +324,7 @@ void add_glass_box (Group* obj_group, const Point UpperCorner,Vector FarDir) {
 void add_lit_glass_box (Group* obj_group, const Point UpperCorner,Vector FarDir,
 			Light *l1, Light *l2) {
   
-  Material* clear = new PhongMaterial (Color(0.45,0.5,0.45),0.1,0.15,50,false);
+  Material* clear = new PhongMaterial (Color(0.45,0.5,0.45),0.1,0.15,50);
   clear->my_lights.add(l1);
   clear->my_lights.add(l2);
 
@@ -350,7 +350,7 @@ void add_pedestal_and_year (Group* obj_group,Group* glass_group,Group* fake_grou
 			    const Vector u, const Vector v, const Vector w,
 			    Light* l1, Light* l2) {
 
-  Material* ped_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-pill.ppm",
+  Material* ped_white = new ImageMaterial("/opt/SCIRun/data/Geometry/textures/museum/general/tex-pill.ppm",
 					  ImageMaterial::Tile,
 					  ImageMaterial::Tile, 1,
 					  Color(0,0,0), 0);
@@ -409,7 +409,7 @@ void add_pedestal_and_year (Group* obj_group,Group* glass_group,Group* fake_grou
 void add_pedestal_and_label (Group* obj_group, Group* glass_group,Group* fake_group,
 			     string sign_name, const Point UpperCorner, 
 			     const Vector FarDir, float sign_ratio, Scene *scene) {
-  Material* ped_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-pill.ppm",
+  Material* ped_white = new ImageMaterial("/opt/SCIRun/data/Geometry/textures/museum/general/tex-pill.ppm",
 					  ImageMaterial::Tile,
 					  ImageMaterial::Tile, 1,
 					  Color(0,0,0), 0);
@@ -478,7 +478,7 @@ void add_pedestal_and_label (Group* obj_group, Group* glass_group,Group* fake_gr
 void add_stadium_pedestal (Group* obj_group, Group* glass_group,Group* fake_group,
 			   string sign_name, const Point UpperCorner, 
 			   const Vector FarDir, float sign_ratio, Scene *scene) {
-  Material* ped_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-pill.ppm",
+  Material* ped_white = new ImageMaterial("/opt/SCIRun/data/Geometry/textures/museum/general/tex-pill.ppm",
 					  ImageMaterial::Tile,
 					  ImageMaterial::Tile, 1,
 					  Color(0,0,0), 0);
@@ -545,7 +545,7 @@ void add_stadium_pedestal (Group* obj_group, Group* glass_group,Group* fake_grou
 
 void add_pedestal (Group* obj_group, const Point UpperCorner, 
 		   const Vector FarDir, Scene *scene) {
-  Material* ped_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-pill.ppm",
+  Material* ped_white = new ImageMaterial("/opt/SCIRun/data/Geometry/textures/museum/general/tex-pill.ppm",
 					  ImageMaterial::Tile,
 					  ImageMaterial::Tile, 1,
 					  Color(0,0,0), 0);
@@ -759,7 +759,7 @@ void build_cornell_box (Group* main_group, const Point CBoxPoint, float ped_size
   
   for (int i=0; i<cornellg->numObjects(); i++)
     {
-      sprintf(tens_buf,"/usr/sci/data/Geometry/textures/museum/history/cbox/TENSOR.%d.rad.tex",i);
+      sprintf(tens_buf,"/opt/SCIRun/data/Geometry/textures/museum/history/cbox/TENSOR.%d.rad.tex",i);
       Material *matl = new ImageMaterial(tens_buf,ImageMaterial::Clamp,
 					 ImageMaterial::Clamp,1,
 					 Color(0,0,0), 0);
@@ -782,9 +782,9 @@ void build_history_hall (Group* main_group, Group* no_shadow_group,
   char *name;
   double x,y,z;
   int subdivlevel = 3;
-  string imgpath = "/usr/sci/data/Geometry/textures/museum/history/";
-  string modelpath = "/usr/sci/data/Geometry/models/";
-  string texturepath = "/usr/sci/data/Geometry/textures/museum/misc/";
+  string imgpath = "/opt/SCIRun/data/Geometry/textures/museum/history/";
+  string modelpath = "/opt/SCIRun/data/Geometry/models/";
+  string texturepath = "/opt/SCIRun/data/Geometry/textures/museum/misc/";
   
   /* **************** history hall **************** */
 
@@ -1206,7 +1206,7 @@ void build_history_hall (Group* main_group, Group* no_shadow_group,
   teapotT.pre_scale(Vector(0.003, 0.003, 0.003));
   teapotT.pre_translate(TeapotVector);
   
-  fp = fopen("/usr/sci/data/Geometry/models/teapot.dat","r");
+  fp = fopen("/opt/SCIRun/data/Geometry/models/teapot.dat","r");
   
    Group* teapot_g = new Group();
 
@@ -1251,7 +1251,7 @@ void build_history_hall (Group* main_group, Group* no_shadow_group,
   historyg->add (new Parallelogram(lightblue,
 				   VWVector.point()-Vector(ped_size/2.-diff,ped_size/2.-diff,-0.001),
 				   Vector(0,gbox_size,0),Vector(gbox_size,0,0)));
-  fp = fopen("/usr/sci/data/Geometry/models/vw.geom","r");
+  fp = fopen("/opt/SCIRun/data/Geometry/models/vw.geom","r");
   if (!fp) {
     fprintf(stderr,"No such file!\n");
     exit(-1);
@@ -1410,7 +1410,7 @@ void build_history_hall (Group* main_group, Group* no_shadow_group,
 				      ImageMaterial::Clamp,
 				      ImageMaterial::Clamp, 1,
 				      Color(1.0,1.0,1.0), 50, 0.05, false);
-  Material* white = new PhongMaterial(Color(.9,.9,.7),1,0.05,50,false);
+  Material* white = new PhongMaterial(Color(.9,.9,.7),1,0.05,50);
 
   l = (new Light(BallsPoint+Vector(1,1,4),Color(1.,1.,1.),0,0.7));
   l->name_ = "Billiards";
@@ -1513,7 +1513,7 @@ void build_history_hall (Group* main_group, Group* no_shadow_group,
   /* **************** Phong Glass Scene **************** */
 
   Transform phong_glass;
-  Material* clear = new PhongMaterial (Color(0.1,0.3,0.4),0.1,0.5,100,true);  
+  Material* clear = new PhongMaterial (Color(0.1,0.3,0.4),0.1,0.5,100);
   Material* phchessbd = 
     new ImageMaterial(texturepath+"phong-bk.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
@@ -1642,7 +1642,7 @@ void build_history_hall (Group* main_group, Group* no_shadow_group,
 
   Group* copterg;
   // read in the copter geometry
-  copterg = readtris("/usr/sci/data/Geometry/models/museum/copter.tris",copter_matl);
+  copterg = readtris("/opt/SCIRun/data/Geometry/models/museum/copter.tris",copter_matl);
 
   BBox copter_bbox;
 
@@ -1686,9 +1686,9 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
     = new CrowMarble(4.5, Vector(.3, .3, 0), Color(.9,.9,.9), 
 		     Color(.8, .8,.8), Color(.7, .7, .7)); 
 
-  string modelpath = "/usr/sci/data/Geometry/models/museum/";
-  string stanfordpath = "/usr/sci/data/Geometry/Stanford_Sculptures/";
-  string texturepath = "/usr/sci/data/Geometry/textures/museum/david/text-blur/";
+  string modelpath = "/opt/SCIRun/data/Geometry/models/museum/";
+  string stanfordpath = "/opt/SCIRun/data/Geometry/Stanford_Sculptures/";
+  string texturepath = "/opt/SCIRun/data/Geometry/textures/museum/david/text-blur/";
 
   /* **************** david trigger **************** */
   /*
@@ -1775,7 +1775,7 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
 //    davidT.pre_translate (Vector(-13.256088,-20.334214,5.427));
   davidT.pre_translate (Vector(-13.256088,-20.334214,5.127));
   //  davidT.print();
-  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_1mm.ply",davidg,&davidT);
+  read_ply("/opt/SCIRun/data/Geometry/Stanford_Sculptures/david_1mm.ply",davidg,&davidT);
 #else
   GridTris* davidg = new GridTris(david_white, cells, depth,
                                   stanfordpath+"david_2mm-grid"); 
@@ -1785,7 +1785,7 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
 		    Vector(0.,-0.001000,0.));
   davidT.pre_translate (Vector(-14.079300,-33.336876,3.5000));
   //  davidT.print();
-  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_2mm.ply",davidg,&davidT);  
+  read_ply("/opt/SCIRun/data/Geometry/Stanford_Sculptures/david_2mm.ply",davidg,&davidT);  
 #endif
 
   david_white->my_lights.add (l1);
@@ -1893,12 +1893,12 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
   Group *david_signs = new Group();
 
 #if INSERTVIDEO 
-  add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/david/digital_michelangelo.ppm",
+  add_poster_on_wall ("/opt/SCIRun/data/Geometry/textures/museum/david/digital_michelangelo.ppm",
 		      Point (-20+IMG_EPS,-20,3.1), Vector(0,2,0), Vector(0,0,-2),
 		      david_signs);
 #endif
 
-  add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/david/digital_michelangelo.ppm",
+  add_poster_on_wall ("/opt/SCIRun/data/Geometry/textures/museum/david/digital_michelangelo.ppm",
 		      Point (-8.15-IMG_EPS,-20,3.1), Vector (0,-2,0), Vector(0,0,-2),
 		      david_signs);
 
@@ -1997,19 +1997,19 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
 
   /* **************** images on North partition in David room **************** */
   Group* david_nwall=new Group();
-  add_poster_on_wall ("/usr/sci/data/Geometry/textures/david/david-b1-fill.ppm",  
+  add_poster_on_wall ("/opt/SCIRun/data/Geometry/textures/david/david-b1-fill.ppm",  
 		      Point(-18.5, -16.15-IMG_EPS, 3.0), 
 		      Vector(-1.0,0,0), Vector(0,0,-1.0), david_nwall);
-  add_poster_on_wall ("/usr/sci/data/Geometry/textures/david/david-b2-fill.ppm",  
+  add_poster_on_wall ("/opt/SCIRun/data/Geometry/textures/david/david-b2-fill.ppm",  
 		      Point(-18.5+1.5, -16.15-IMG_EPS, 3.0), 
 		      Vector(-1.0,0,0), Vector(0,0,-1.0), david_nwall);
-  add_poster_on_wall ("/usr/sci/data/Geometry/textures/david/david-b3-fill.ppm",  
+  add_poster_on_wall ("/opt/SCIRun/data/Geometry/textures/david/david-b3-fill.ppm",  
 		      Point(-18.5+(1.5*2), -16.15-IMG_EPS, 3.0), 
 		      Vector(-1.0,0,0), Vector(0,0,-1.0), david_nwall);
-  add_poster_on_wall ("/usr/sci/data/Geometry/textures/david/david-b4-fill.ppm",  
+  add_poster_on_wall ("/opt/SCIRun/data/Geometry/textures/david/david-b4-fill.ppm",  
 		      Point(-18.5+(1.5*3), -16.15-IMG_EPS, 3.0), 
 		      Vector(-1.0,0,0), Vector(0,0,-1.0), david_nwall);
-  add_poster_on_wall ("/usr/sci/data/Geometry/textures/david/david-b5-fill.ppm",  
+  add_poster_on_wall ("/opt/SCIRun/data/Geometry/textures/david/david-b5-fill.ppm",  
 		      Point(-18.5+(1.5*4), -16.15-IMG_EPS, 3.0), 
 		      Vector(-1.0,0,0), Vector(0,0,-1.0), david_nwall);
 		      
@@ -2031,13 +2031,13 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
 
   /* **************** images on South partition in David room **************** */
   Group* david_swall=new Group();
-  add_poster_on_wall ("/usr/sci/data/Geometry/textures/david/david-a2-fill.ppm",  
+  add_poster_on_wall ("/opt/SCIRun/data/Geometry/textures/david/david-a2-fill.ppm",  
 		      Point(-8.5, -23.85+IMG_EPS, 4.5), 
 		      Vector(-2.0,0,0), Vector(0,0,-2.0), david_swall);
-  add_poster_on_wall ("/usr/sci/data/Geometry/textures/david/david-c1-fill.ppm",  
+  add_poster_on_wall ("/opt/SCIRun/data/Geometry/textures/david/david-c1-fill.ppm",  
 		      Point(-8.5-2.5, -23.85+IMG_EPS, 4.5), 
 		      Vector(-2.0,0,0), Vector(0,0,-2.0), david_swall);
-  add_poster_on_wall ("/usr/sci/data/Geometry/textures/david/david-c2-fill.ppm",  
+  add_poster_on_wall ("/opt/SCIRun/data/Geometry/textures/david/david-c2-fill.ppm",  
 		      Point(-8.5-(2.5*2), -23.85+IMG_EPS, 4.5), 
 		      Vector(-2.0,0,0), Vector(0,0,-2.0), david_swall);
 
@@ -2071,9 +2071,9 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   const float sign_ratio = 0.63;
   Light *l1, *l2;
   
-  string modelpath = "/usr/sci/data/Geometry/models/";
-  string stanfordpath = "/usr/sci/data/Geometry/Stanford_Sculptures/";
-  string texturepath = "/usr/sci/data/Geometry/textures/museum/modern/";
+  string modelpath = "/opt/SCIRun/data/Geometry/models/";
+  string stanfordpath = "/opt/SCIRun/data/Geometry/Stanford_Sculptures/";
+  string texturepath = "/opt/SCIRun/data/Geometry/textures/museum/modern/";
 
   //  pedestals
   Group* moderng = new Group();
@@ -2101,7 +2101,7 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
 
   Group* crankg;
   // read in the part geometry
-  crankg = readtris("/usr/sci/data/Geometry/models/museum/Crank.tris",crank_matl);
+  crankg = readtris("/opt/SCIRun/data/Geometry/models/museum/Crank.tris",crank_matl);
 
   BBox crank_bbox;
 
@@ -2130,7 +2130,7 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   /*  David's head  */
   Point head_ped_top(-10,-11,ped_ht);
   add_pedestal_and_label (moderng,no_shadow_group,no_draw_group,
-			  "/usr/sci/data/Geometry/interface/new-images/david.ppm",
+			  "/opt/SCIRun/data/Geometry/interface/new-images/david.ppm",
 			  head_ped_top-Vector(half_ped_size,half_ped_size,0),
 			  Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht),
 			  sign_ratio,scene);
@@ -2162,7 +2162,7 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   dheadg->my_lights.add(l2);
   dheadg->local_ambient_mode=Arc_Ambient;
 
-  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_head_1mm_color.ply",dheadg,&dheadT);
+  read_ply("/opt/SCIRun/data/Geometry/Stanford_Sculptures/david_head_1mm_color.ply",dheadg,&dheadT);
 
   /*
   BBox dhead_bbox;
@@ -2231,12 +2231,12 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
 #if INSERTHUGEMODELS
   GridTris* dragong = new GridTris(shiny_green,dragon_cells,dragon_depth,
                                    stanfordpath+"dragon_vrip-grid");
-  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip.ply",dragong,&dragonT);
+  read_ply("/opt/SCIRun/data/Geometry/Stanford_Sculptures/dragon_vrip.ply",dragong,&dragonT);
 
 #else
   GridTris* dragong = new GridTris(shiny_green,dragon_cells,dragon_depth,
                                    stanfordpath+"dragon_vrip_res2-grid");
-  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip_res2.ply",dragong,&dragonT);
+  read_ply("/opt/SCIRun/data/Geometry/Stanford_Sculptures/dragon_vrip_res2.ply",dragong,&dragonT);
 #endif
   
   /*
@@ -2398,11 +2398,11 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
 #if INSERTHUGEMODELS
   GridTris* buddhag = new GridTris(buddha_mat,buddha_cells,buddha_depth,
                                    stanfordpath+"happy_vrip-grid");
-  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip.ply",buddhag,&buddhaT);
+  read_ply("/opt/SCIRun/data/Geometry/Stanford_Sculptures/happy_vrip.ply",buddhag,&buddhaT);
 #else
   GridTris* buddhag = new GridTris(buddha_mat,buddha_cells,buddha_depth,
                                    stanfordpath+"happy_vrip_res2-grid");
-  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply",buddhag,&buddhaT);
+  read_ply("/opt/SCIRun/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply",buddhag,&buddhaT);
 #endif
 
   /*
@@ -2514,7 +2514,7 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   flat_white->my_lights.add(l2);
   //  flat_white->local_ambient_mode=Arc_Ambient;
 
-  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/venus.ply",venusg,&venusT);
+  read_ply("/opt/SCIRun/data/Geometry/Stanford_Sculptures/venus.ply",venusg,&venusT);
 
   /*
   BBox venus_bbox;
@@ -2573,7 +2573,7 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
 
   Transform bunnyT;
 
-  fp = fopen("/usr/sci/data/Geometry/models/bun.ply","r");
+  fp = fopen("/opt/SCIRun/data/Geometry/models/bun.ply","r");
   if (!fp) {
     fprintf(stderr,"No such file!\n");
     exit(-1);
@@ -2657,7 +2657,7 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
 
   Group* partg;
   // read in the part geometry
-  partg = readtris("/usr/sci/data/Geometry/models/museum/part.tris",silver);
+  partg = readtris("/opt/SCIRun/data/Geometry/models/museum/part.tris",silver);
 
   BBox part_bbox;
 
@@ -2692,7 +2692,7 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
 //    Material *lucy_white = new LambertianMaterial(Color(1,1,1));
 //    Group* lucyg = new Group();
 //    TriMesh* lucy_tm = new TriMesh();
-//    read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/lucy.ply",lucy_white, lucy_tm, lucyg);
+//    read_ply("/opt/SCIRun/data/Geometry/Stanford_Sculptures/lucy.ply",lucy_white, lucy_tm, lucyg);
 
 //    BBox lucy_bbox;
 
@@ -2905,7 +2905,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *shadow = new Group();
  
   Camera cam(Eye,Lookat,Up,fov);
-  string texturepath = "/usr/sci/data/Geometry/textures/museum/general/";
+  string texturepath = "/opt/SCIRun/data/Geometry/textures/museum/general/";
 
   /*
   Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
@@ -3227,7 +3227,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Scene *scene = new Scene(new Grid(g,16), cam, bgcolor, cdown, cup, groundplane, 0.7, 
 			   Constant_Ambient);
   scene->setBaseAmbientColor(Color(0.5,0.5,0.5));
-  EnvironmentMapBackground *emap = new EnvironmentMapBackground ("/usr/sci/data/Geometry/textures/holo-room/environmap2.ppm", Vector(0,0,1));
+  EnvironmentMapBackground *emap = new EnvironmentMapBackground ("/opt/SCIRun/data/Geometry/textures/holo-room/environmap2.ppm", Vector(0,0,1));
   scene->set_ambient_environment_map(emap);
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
@@ -3345,9 +3345,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
     //////////////// TRIGGERS ////////////////////////
 
-    string ifpath = "/usr/sci/data/Geometry/interface/museum/";
-    string newifpath = "/usr/sci/data/Geometry/interface/new-images/";
-    string baseifpath = "/usr/sci/data/Geometry/interface/";
+    string ifpath = "/opt/SCIRun/data/Geometry/interface/museum/";
+    string newifpath = "/opt/SCIRun/data/Geometry/interface/new-images/";
+    string baseifpath = "/opt/SCIRun/data/Geometry/interface/";
 
     // museum credits
     PPMImage *ppm = new PPMImage(ifpath+"museum_credits11.ppm", true);
