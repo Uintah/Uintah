@@ -38,7 +38,7 @@ void PicardNonlinearSolver::problemSetup(const ProblemSpecP& params,
     throw InvalidValue("Turbulence Model not supported" + turbModel, db);
   d_turbModel->problemSetup(db, dw);
   d_boundaryCondition = new BoundaryCondition(d_turbModel);
-  d_boundaryCondition(db, dw);
+  d_boundaryCondition->problemSetup(db, dw);
   bool calPress;
   db->require("cal_pressure", calPress);
   if (calPress) {
@@ -75,6 +75,9 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     // it copies the dw to new_dw
     DataWarehouseP nonlinear_dw = sched->createDataWarehouse();
 
+    //correct inlet velocities to account for change in properties
+    d_boundaryCondition->sched_setInletVelocityBC(level, sched, new_dw, 
+						nonlinear_dw);
     // linearizes and solves pressure eqn
     d_pressSolver->solve(level, sched, new_dw, nonlinear_dw);
     // if external boundary then recompute velocities using new pressure
@@ -96,9 +99,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     // LES Turbulence model to compute turbulent viscosity
     // that accounts for sub-grid scale turbulence
     d_turbModel->computeTurbulenceSubmodel(level, sched, new_dw, nonlinear_dw);
-    //correct inlet velocities to account for change in properties
-    d_boundaryCondition->computeInletVelocityBC(level, sched, new_dw, 
-						nonlinear_dw);
     // residual represents the degrees of inaccuracies
     nlResidual = computeResidual(level, sched, new_dw, nonlinear_dw);
     ++nlIterations;

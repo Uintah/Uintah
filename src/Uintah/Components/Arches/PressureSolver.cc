@@ -44,8 +44,8 @@ void PressureSolver::problemSetup(const ProblemSpecP& params,
   d_source = Source(d_turbModel);
   string linear_sol;
   db->require("linear_solver", linear_sol);
-  if (linear_sol == "GaussSiedel")
-    d_linearSolver = new LineGS();
+  if (linear_sol == "RBGaussSeidel")
+    d_linearSolver = new RBGSSolver();
   else 
     throw InvalidValue("linear solver option"
 		       " not supported" + linear_sol, db);
@@ -69,7 +69,7 @@ void PressureSolver::solve(const LevelP& level,
   //residual at the start of linear solve
   calculateResidual(level, sched, new_dw, matrix_dw);
   calculateOrderMagnitude(level, sched, new_dw, matrix_dw);
-  d_linearSolver->sched_solve(level, sched, new_dw, matrix_dw);
+  d_linearSolver->sched_pressureSolve(level, sched, new_dw, matrix_dw);
   // if linearSolver succesful then copy pressure from new_dw
   // to old_dw
   sched_update(level, sched, old_dw, new_dw, matrix_dw);
@@ -88,6 +88,11 @@ void PressureSolver::buildLinearMatrix(const LevelP& level,
     d_source->sched_calculateVelocitySource(index, level, sched, 
 					    old_dw, new_dw);
     d_boundaryCondition->sched_velocityBC(index, level, sched,
+					  old_dw, new_dw);
+    // similar to mascal
+    d_source->sched_modifyMassSource(index, level, sched,
+				     old_dw, new_dw);
+    d_discretize->sched_calculateDiagonal(index, level, sched,
 					  old_dw, new_dw);
   }
   d_discretize->sched_calculatePressureCoeff(level, sched,

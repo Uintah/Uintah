@@ -44,7 +44,7 @@ void BoundaryCondition::problemSetup(const ProblemSpecP& params,
   for (int i = 0; i < numFlowInlets; i++) {
     FlowInlet* flow_inlet = new FlowInlet(numMixingScalars);
     // put flow_inlet to the database, use celltype info to
-    // differentiate different inlets
+    // differentiate between different inlets
     flow_inlet->problemSetup(db, dw);
   }
   bool pressureBC;
