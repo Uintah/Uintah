@@ -78,7 +78,9 @@ public:
   // Slows down in all dimensions (pitch, speed, turn, etc);
   void slowDown();
   void stopAllMovement();
-  void stopPitching();
+  void stopPitchAndRotate();
+  void stopPitch();
+  void stopRotate();
 
   void slideLeft();
   void slideRight();

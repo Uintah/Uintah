@@ -14,6 +14,8 @@ Stealth::Stealth( double scale /* = 100 */ ) :
   vertical_accel_cnt_( 0 ), pitch_accel_cnt_( 0 ), rotate_accel_cnt_( 0 ),
   scale_( scale ), segment_percentage_( 0 )
 {
+  cout << "scale is " << scale << "\n";
+
   path_.push_back( Point(-5.5,-5,5) );
   path_.push_back( Point(4.5,5.3,1) );
   path_.push_back( Point(0,10.2,5.1) );
@@ -73,24 +75,27 @@ Stealth::decelerate()
   decrease_a_speed( speed_, accel_cnt_ );
 }
 
+static double base = 1.8; // 2.0 gets too big to quickly... i think
+static int    max_accel_rate = 8;
 void
 Stealth::increase_a_speed( double & speed, int & accel_cnt )
 {
+  if( accel_cnt > max_accel_rate ) {
+    cout << "Going too fast... can't speed up\n";
+    return;
+  }
+
   accel_cnt++;
 
-  // Amount to scale acceleration by.  Probably need to find out "size"
-  // (dimensions?) of data set to set this appropriately.
-  double scale = 100;
-  
   // Amount of acceleration doubles for each consecutive request.
   double amount;
 
   if( accel_cnt == 0 )
-    amount = 1 / scale;
+    amount = 1 / scale_;
   else if( accel_cnt > 0 )
-    amount = pow(2.0, (double)accel_cnt - 1.0) / scale;
+    amount = pow(base, (double)accel_cnt - 1.0) / scale_;
   else
-    amount = pow(2.0, (double)(-accel_cnt)) / scale;
+    amount = pow(base, (double)(-accel_cnt)) / scale_;
 
   printf("accelerating by %lf\n", amount);
 
@@ -100,19 +105,20 @@ Stealth::increase_a_speed( double & speed, int & accel_cnt )
 void
 Stealth::decrease_a_speed( double & speed, int & accel_cnt )
 {
+  if( accel_cnt < -max_accel_rate ) {
+    cout << "Going too fast (in reverse)... can't speed up\n";
+    return;
+  }
+
   accel_cnt--;
 
-  // Amount to scale acceleration by.  Probably need to find out "size"
-  // (dimensions?) of data set to set this appropriately.
-  double scale = 100;
-  
   // Amount of acceleration doubles for each consecutive request.
-  double amount = pow(2.0, (double)abs(accel_cnt)) / scale;
+  double amount; // = pow(base, (double)abs(accel_cnt)) / scale_;
 
   if( accel_cnt >= 0 )
-    amount = pow(2.0, accel_cnt) / scale;
+    amount = pow(base, accel_cnt) / scale_;
   else
-    amount = pow(2.0, (double)(-accel_cnt) - 1.0) / scale;
+    amount = pow(base, (double)(-accel_cnt) - 1.0) / scale_;
 
   printf("reversing by %lf\n", amount);
 
@@ -160,21 +166,60 @@ Stealth::stopAllMovement()
 }
 
 void
-Stealth::stopPitching()
+Stealth::stopPitch()
 {
   pitch_speed_ = 0;
   pitch_accel_cnt_ = 0;
 }
 
 void
+Stealth::stopRotate()
+{
+  rotate_speed_ = 0;
+  rotate_accel_cnt_ = 0;
+}
+
+void
+Stealth::stopPitchAndRotate()
+{
+  cout << "Stop pitch and rotate\n";
+
+  stopPitch();
+  stopRotate();
+}
+
+void
 Stealth::slowDown()
 {
-  double slow_factor = .9;
-  speed_            /= slow_factor;
-  horizontal_speed_ /= slow_factor;
-  vertical_speed_   /= slow_factor;
-  pitch_speed_      /= slow_factor;
-  rotate_speed_     /= slow_factor;
+  if( speed_ > 0 ) {
+    decrease_a_speed( speed_, accel_cnt_ );
+  } else if( speed_ < 0 ) {
+    increase_a_speed( speed_, accel_cnt_ );
+  }
+
+  if( horizontal_speed_ > 0 ) {
+    decrease_a_speed( horizontal_speed_, horizontal_accel_cnt_ );
+  } else if( horizontal_speed_ < 0 ) {
+    increase_a_speed( horizontal_speed_, horizontal_accel_cnt_ );
+  }
+
+  if( vertical_speed_ > 0 ) {
+    decrease_a_speed( vertical_speed_, vertical_accel_cnt_ );
+  } else if( vertical_speed_ < 0 ) {
+    increase_a_speed( vertical_speed_, vertical_accel_cnt_ );
+  }
+
+  if( pitch_speed_ > 0 ) {
+    decrease_a_speed( pitch_speed_, pitch_accel_cnt_ );
+  } else if( pitch_speed_ < 0 ) {
+    increase_a_speed( pitch_speed_, pitch_accel_cnt_ );
+  }
+
+  if( rotate_speed_ > 0 ) {
+    decrease_a_speed( rotate_speed_, rotate_accel_cnt_ );
+  } else if( rotate_speed_ < 0 ) {
+    increase_a_speed( rotate_speed_, rotate_accel_cnt_ );
+  }
 }
 
 void
