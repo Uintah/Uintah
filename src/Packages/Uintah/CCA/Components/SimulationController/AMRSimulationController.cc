@@ -250,13 +250,12 @@ void AMRSimulationController::run()
    }
 
    d_ups->releaseDocument();
-   amrout << "ALL DONE\n";
 }
 
 
 void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, int numLevel)
 {
-  amrout << "Start AMRSimulationController::subCycle, level=" << numLevel << '\n';
+  //amrout << "Start AMRSimulationController::subCycle, level=" << numLevel << '\n';
   // We are on (the fine) level numLevel
   LevelP fineLevel = grid->getLevel(numLevel);
   LevelP coarseLevel = grid->getLevel(numLevel-1);
@@ -407,8 +406,8 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
   if (currentGrid != oldGrid) {
     if (d_myworld->myrank() == 0) {
       cout << "  REGRIDDING!!!!!\n";
-      //cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
-      //cout << "---------- NEW GRID ----------" << *(currentGrid.get_rep());
+      amrout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
+      amrout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
     }
          
     // Compute number of dataWarehouses
@@ -417,46 +416,7 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
     //numDWs *= oldGrid->getLevel(i)->timeRefinementRatio();
 
     d_lb->possiblyDynamicallyReallocate(currentGrid, false); 
-    
-
-    d_scheduler->advanceDataWarehouse(currentGrid);
-    d_scheduler->initialize(1, 1);
-    d_scheduler->clearMappings();
-    d_scheduler->mapDataWarehouse(Task::OldDW, 0);
-    d_scheduler->mapDataWarehouse(Task::NewDW, 1);
-    
-    d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
-    d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
-    
-    DataWarehouse* oldDataWarehouse = d_scheduler->get_dw(0);
-    DataWarehouse* newDataWarehouse = d_scheduler->getLastDW();
-
-    d_scheduler->scheduleDataCopy(currentGrid, d_sharedState);
-    for ( int levelIndex = 1; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
-      d_sim->scheduleRefine(currentGrid->getLevel(levelIndex), d_scheduler);
-    }
-    
-    d_scheduler->compile(); 
-    d_scheduler->execute();
-
-    vector<VarLabelMatl<Level> > levelVariableInfo;
-    oldDataWarehouse->getVarLabelMatlLevelTriples(levelVariableInfo);
-    
-    //         cerr << getpid() << ": RANDY: Copying level variables" << endl;
-    
-    for ( unsigned int i = 0; i < levelVariableInfo.size(); i++ ) {
-      VarLabelMatl<Level> currentReductionVar = levelVariableInfo[i];
-      // cout << "REDUNCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl; 
-      const Level* oldLevel = currentReductionVar.domain_;
-      const Level* newLevel = NULL;
-      if (oldLevel) {
-        newLevel = (newDataWarehouse->getGrid()->getLevel( oldLevel->getIndex() )).get_rep();
-      }
-      
-      ReductionVariableBase* v = dynamic_cast<ReductionVariableBase*>(currentReductionVar.label_->typeDescription()->createInstance());
-      oldDataWarehouse->get(*v, currentReductionVar.label_, currentReductionVar.domain_, currentReductionVar.matlIndex_);
-      newDataWarehouse->put(*v, currentReductionVar.label_, newLevel, currentReductionVar.matlIndex_);
-    }
+    d_scheduler->scheduleAndDoDataCopy(currentGrid, d_sharedState, d_sim);
 
     double time = Time::currentSeconds() - start;
     if(d_myworld->myrank() == 0)
