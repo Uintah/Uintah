@@ -42,6 +42,7 @@ SRCS     += $(SRCDIR)/ApplyFEMCurrentSource.cc\
 	    $(SRCDIR)/ModifyConductivities.cc\
 	    $(SRCDIR)/SetupBEMatrix.cc\
 	    $(SRCDIR)/SetupFEMatrix.cc\
+	    $(SRCDIR)/TensorsToIndices.cc\
 #[INSERT NEW CODE FILE HERE]	
 
 
