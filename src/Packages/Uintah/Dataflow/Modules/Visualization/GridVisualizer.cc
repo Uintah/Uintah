@@ -120,6 +120,7 @@ protected:
   int widget_id;
   bool widget_on;
   bool nodes_on;
+  Point iPoint_;
   int need_2d;
   vector<int> old_id_list;
   vector<int> id_list;
@@ -159,6 +160,7 @@ GridVisualizer::GridVisualizer(GuiContext* ctx):
   polygons(ctx->subVar("polygons")),
   widget_lock("GridVusualizer widget lock"),
   init(1),
+  iPoint_(Point(0,0,0)),
   need_2d(1),
   selected_sphere_geom_id(0),
   show_selected_node(ctx->subVar("show_selected_node"))
@@ -201,16 +203,21 @@ void GridVisualizer::update_widget() {
   widget_on = plane_on.get() != 0;
   widget2d->SetState(widget_on);
 
+  Point min, max;
+  BBox gridBB;
+  grid->getSpatialRange(gridBB);
+  // Need to extend the BBox just a smidgen to correct for floating
+  // point error.
+  Vector offset(1e-12, 1e-12, 1e-12);
+  min = gridBB.min()-offset;
+  max = gridBB.max()+offset;
+  
+  if( iPoint_ != min ){
+    iPoint_ = min;
+    need_2d = 1;
+  }
+  
   if (need_2d != 0){
-    Point min, max;
-    BBox gridBB;
-    grid->getSpatialRange(gridBB);
-    // Need to extend the BBox just a smidgen to correct for floating
-    // point error.
-    Vector offset(1e-12, 1e-12, 1e-12);
-    min = gridBB.min()-offset;
-    max = gridBB.max()+offset;
-    
     Point center = min + (max-min)/2.0;
     double max_scale;
     if (need_2d == 1) {
