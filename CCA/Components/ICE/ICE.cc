@@ -2921,21 +2921,11 @@ void ICE::setBC(CCVariable<double>& press_CC, CCVariable<double>& rho_micro,
       
       if (bc->getKind() == "Neumann") 
 	press_CC.fillFaceFlux(face,bc->getValue(),dx);
-      
-    }
-    if (bc_base->getType() == "Density") {
-      DensityBoundCond* bc = dynamic_cast<DensityBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet") 
-	press_CC.fillFace(face,bc->getValue());
-      
-      if (bc->getKind() == "Neumann") 
-	press_CC.fillFaceFlux(face,bc->getValue(),dx);
-      
+       
       if ( fabs(gravity.x()) > 0.0  || 
            fabs(gravity.y()) > 0.0  || fabs(gravity.z()) > 0.0) {
         press_CC.setHydrostaticPressureBC(face, gravity, rho_micro, dx);
       }
-      
     }
   }
 }
