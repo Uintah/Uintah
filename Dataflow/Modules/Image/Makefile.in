@@ -1,6 +1,5 @@
-# Generated automatically from Makefile.in by configure.
-SRCTOP   = ../../..
-SRCDIR   = .
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
 SRCS     = Binop.cc Edge.cc FFT.cc FFTImage.cc FilterImage.cc Gauss.cc \
