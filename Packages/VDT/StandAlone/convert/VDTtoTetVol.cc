@@ -52,8 +52,8 @@ int readLine(FILE **f, char *buf) {
 
 int
 main(int argc, char **argv) {
-  if (argc != 3) {
-    cerr << "usage: " << argv[0] << " vdt_t3d_file scirun_tet_vol_mesh\n";
+  if (argc != 4) {
+    cerr << "usage: " << argv[0] << " vdt_t3d_file scirun_tvt scirun_tvd\n";
     exit(0);
   }
 
@@ -119,5 +119,11 @@ main(int argc, char **argv) {
   FieldHandle tvH(tvi);
   TextPiostream out_stream(argv[2], Piostream::Write);
   Pio(out_stream, tvH);
+
+  TetVol<double> *tvd = scinew TetVol<double>(tvm, Field::NODE);
+  tvH=tvd;
+  TextPiostream out_stream2(argv[3], Piostream::Write);
+  Pio(out_stream2, tvH);
+
   return 0;  
 }    
