@@ -85,7 +85,6 @@ void LaceContoursTemp::execute()
 void LaceContoursTemp::lace_contours_temp(const ContourSetHandle& contour, 
 				   TriSurface* surf) {
     surf->name=contour->name;
-    surf->conductivity=contour->conductivity;
     Array1<int> row;
     int i;
     int curr;
