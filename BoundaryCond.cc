@@ -14,6 +14,9 @@
 
 /*`==========TESTING==========*/
 #define JET_BC 0
+
+//#define JOHN_BCS
+#undef  JOHN_BCS
 /*==========TESTING==========`*/
 
 
@@ -217,103 +220,7 @@ void setHydrostaticPressureBC(CCVariable<double>& press,Patch::FaceType face,
   }
 }
 
-// Takes care of Pressure_CC
-void setBCJohn(CCVariable<double>& press_CC,
-              const CCVariable<double>& rho_micro,
-              const string& which_Var,
-              const string& kind, 
-              const Patch* patch,
-              SimulationStateP& sharedState, 
-              const int mat_id,
-              DataWarehouse* new_dw)
-{
-  Vector dx = patch->dCell();
-  for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-       face=Patch::nextFace(face)) {
-    double spacing;
-    double gravity;
-    determineSpacingAndGravity(face,dx,sharedState,spacing,gravity);
-
-    if (patch->getBCType(face) == Patch::None) {
-      // find the correct BC
-      // check its type (symmetric, neumann, dirichlet)
-      // do the fill face
-      
-      // fill face
-      // as iterate over the values, need to check what the proper value
-      // should be,  need a inside function for getValue(), since
-      // the BC value could be different -- union, difference, etc.
-
-      // For a given Intvector boundary, find the appropriate bc, determine if
-      // it is symmetric, neumann, dirichlet, and its value,
-      for (int child = 0; 
-	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
-	vector<IntVector> bound,inter,sfx,sfy,sfz;
-	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-							  kind,bound,inter,
-							  sfx,sfy,sfz,
-							  child);
-	
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
-
-	const BoundCond<double> *new_bcs = 
-	  dynamic_cast<const BoundCond<double> *>(bc);	
-	double bc_value=0;
-	string bc_kind="";
-	if (new_bcs != 0) {
-	  bc_value = new_bcs->getValue();
-	  bc_kind = new_bcs->getKind();
-#if 0
-	  cout << "BC kind = " << bc_kind << endl;
-	  cout << "BC value = " << bc_value << endl;
-#endif
-	}
-	
-	// Apply the boundary conditions
-	vector<IntVector>::const_iterator boundary,interior;
-	  
-	if (bc_kind == "Dirichlet")
-	  for (boundary=bound.begin(); boundary != bound.end(); 
-	       boundary++) 
-	    press_CC[*boundary] = bc_value;
-	
-	if (bc_kind == "Neumann") {
-	  for (boundary=bound.begin(),interior=inter.begin(); 
-	       boundary != bound.end();   boundary++,interior++) {
-	    press_CC[*boundary] = press_CC[*interior] - bc_value*spacing;
-	  }
-	}
-	  
-	
-	if (sym_bc != 0)
-	  for (boundary=bound.begin(),interior=inter.begin(); 
-	       boundary != bound.end(); boundary++,interior++) 
-	    press_CC[*boundary] = press_CC[*interior];
-	
-	// If we have gravity, need to apply hydrostatic condition
-	if ((sharedState->getGravity()).length() > 0.) {
-	  if (which_Var == "sp_vol") {
-	    for (boundary=bound.begin(),interior=inter.begin();
-		 boundary != bound.end(); boundary++,interior++) 
-	      press_CC[*boundary] = press_CC[*interior] + 
-		gravity*spacing/rho_micro[*interior];
-	  }
-	  if (which_Var == "rho_micro") {
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      press_CC[*boundary] = press_CC[*interior] +
-		gravity*spacing*rho_micro[*interior];
-	  }
-	}
-      }
-    }
-  }
-}
- 
+#ifndef JOHN_BCS
 /* --------------------------------------------------------------------- 
  Function~  setBC--
  Purpose~   Takes care Pressure_CC
@@ -377,122 +284,6 @@ void setBC(CCVariable<double>& press_CC,
     }
   }
 }
-
-void determineSpacingAndGravity(Patch::FaceType face, 
-				Vector& dx,SimulationStateP& sharedState,
-				double& spacing, double& gravity)
-{
-  if (face == Patch::xminus || face == Patch::xplus) spacing = dx.x();
-  if (face == Patch::yminus || face == Patch::yplus) spacing = dx.y();
-  if (face == Patch::zminus || face == Patch::zplus) spacing = dx.z();
-  
-  if (face == Patch::xminus) gravity = -(sharedState->getGravity().x());
-  if (face == Patch::xplus) gravity = (sharedState->getGravity().x());
-  if (face == Patch::yminus) gravity = -(sharedState->getGravity().y());
-  if (face == Patch::yplus) gravity = (sharedState->getGravity().y());
-  if (face == Patch::zminus) gravity = -(sharedState->getGravity().z());
-  if (face == Patch::zplus) gravity = (sharedState->getGravity().z());
-
-
-}
-
-// Take care of the Density and Temperature
-void setBCJohn(CCVariable<double>& variable, const string& kind, 
-	       const Patch* patch,  SimulationStateP& sharedState,
-	       const int mat_id)
-{
-  Vector dx = patch->dCell();
-  for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-       face=Patch::nextFace(face)) {
-    double spacing;
-    double gravity;
-    determineSpacingAndGravity(face,dx,sharedState,spacing,gravity);
-
-    if (patch->getBCType(face) == Patch::None) {
-
-      for (int child = 0; 
-	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
-	vector<IntVector> bound,inter,sfx,sfy,sfz;
-      
-	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-							  kind, bound,inter,
-							  sfx,sfy,sfz,
-							  child);
-      
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
-	const BoundCond<double> *new_bcs = 
-	  dynamic_cast<const BoundCond<double> *>(bc);	
-	
-	double bc_value=0;
-	string bc_kind="";
-	if (new_bcs != 0) {
-	  bc_value = new_bcs->getValue();
-	  bc_kind = new_bcs->getKind();
-#if 0
-	  cout << "BC kind = " << bc_kind << endl;
-	  cout << "BC value = " << bc_value << endl;
-#endif
-	}
-	
-	// Apply the "zeroNeumann"
-	vector<IntVector>::const_iterator boundary,interior;
-	if (kind == "zeroNeumann")
-	  for (boundary=bound.begin(),interior=inter.begin(); 
-	       boundary != bound.end(); boundary++,interior++) 
-	    variable[*boundary] = variable[*interior];
-	
-	if (sym_bc != 0) {
-	  if (kind == "Density" || kind == "Temperature" 
-	      || kind == "set_if_sym_BC")
-	  for (boundary=bound.begin(),interior=inter.begin(); 
-	       boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior];
-	}
-	
-	if (kind == "Density") {
-	  if (bc_kind == "Dirichlet")
-	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-	      variable[*boundary] = bc_value;
-	  if (bc_kind == "Neumann")
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] =  variable[*interior] - bc_value*spacing;
-	}
-	
-	if (kind == "Temperature") {
-	  if (bc_kind == "Dirichlet")
-	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-	      variable[*boundary] = bc_value;
-	  if (bc_kind == "Neumann") {
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior] - bc_value*spacing;
-	    // We have gravity
-	    if ((sharedState->getGravity()).length() > 0.) {
-	      // Do the hydrostatic temperature adjustment
-	      Material *matl = sharedState->getMaterial(mat_id);
-	      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-	      if (ice_matl) {
-		double cv = ice_matl->getSpecificHeat();
-		double gamma = ice_matl->getGamma();
-		for (boundary=bound.begin(); boundary != bound.end(); 
-		     boundary++) 
-		  variable[*boundary] += gravity*spacing/((gamma-1.)*cv);
-	      }
-	    }
-	  }
-	}
-      }
-    } 
-    
-  }
-}
-
-
 
 /* --------------------------------------------------------------------- 
  Function~  setBC--
@@ -596,128 +387,12 @@ void setBC(CCVariable<double>& variable, const string& kind,
   }  // Patch loop
 }
 
-
 /* --------------------------------------------------------------------- 
  Function~  setBC--        
  Purpose~   Takes care of Velocity_CC Boundary conditions
  Notes:      CheckValveBC removes any inflow from outside
              the domain.
  ---------------------------------------------------------------------  */
-void setBCJohn(CCVariable<Vector>& variable, const string& kind, 
-              const Patch* patch, const int mat_id) 
-{
-  Vector dx = patch->dCell();
-  for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-       face=Patch::nextFace(face)) {
-    
-    Vector sign;
-    double spacing;
-    if (face == Patch::xminus || face == Patch::xplus) {
-      sign=Vector(-1.,1.,1.);
-      spacing = dx.x();
-    }
-    if (face == Patch::yminus || face == Patch::yplus) {
-      sign=Vector(1.,-1.,1.);
-      spacing = dx.y();
-    }
-    if (face == Patch::zminus || face == Patch::zplus) {
-      sign=Vector(1.,1.,-1.);
-      spacing = dx.z();
-    }
-
-    if (patch->getBCType(face) == Patch::None) {
-      for (int child = 0; 
-	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
-	vector<IntVector> bound,inter,sfx,sfy,sfz;
-	
-	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-							  kind,bound,inter,
-							  sfx,sfy,sfz,
-							  child);
-      
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
-	const BoundCond<Vector> *new_bcs = 
-	  dynamic_cast<const BoundCond<Vector> *>(bc);	
-	
-	Vector bc_value(0.,0.,0.);
-	string bc_kind="";
-	if (new_bcs != 0) {
-	  bc_value = new_bcs->getValue();
-	  bc_kind = new_bcs->getKind();
-#if 0
-	  cout << "BC kind = " << bc_kind << endl;
-	  cout << "BC value = " << bc_value << endl;
-#endif
-	}
-	vector<IntVector>::const_iterator boundary,interior;
-	if (sym_bc != 0 && (kind == "Velocity" || kind == "set_if_sym_BC")) {
-	  for (boundary=bound.begin(),interior=inter.begin(); 
-	       boundary != bound.end(); boundary++,interior++) {
-	    variable[*boundary] = variable[*interior];  
-	    variable[*boundary] = sign*variable[*interior];
-	  }
-	}
-	
-	if (bc_kind == "Neumann") 
-	  for (boundary=bound.begin(),interior=inter.begin(); 
-	       boundary != bound.end(); boundary++,interior++) 
-	    variable[*boundary] = variable[*interior];
-	
-	if (kind == "Velocity") {
-	  if (bc_kind == "Dirichlet")
-	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-	      variable[*boundary] = bc_value;
-	  
-	  if (bc_kind == "Neumann")
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior] - bc_value*spacing;
-	  
-	  if (bc_kind == "NegInterior") 
-	    for (boundary=bound.begin(),interior=inter.begin();
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = -variable[*interior];
-	  
-	  if (bc_kind == "Neumann_CkValve") {
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior] - bc_value*spacing;
-
-	    if (face == Patch::xplus)
-	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
-		variable[*boundary].x(std::max(variable[*boundary].x(),0.));
-	    
-	    if (face == Patch::xminus)
-	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
-		variable[*boundary].x(std::min(variable[*boundary].x(),0.));
-	    
-	    if (face == Patch::yplus)
-	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
-		variable[*boundary].y(std::max(variable[*boundary].y(),0.));
-	    
-	    if (face == Patch::yminus)
-	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
-		variable[*boundary].y(std::min(variable[*boundary].y(),0.));
-	    
-	    if (face == Patch::zplus)
-	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
-		variable[*boundary].z(std::max(variable[*boundary].z(),0.));
-	    
-	    if (face == Patch::zminus)
-	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
-		variable[*boundary].z(std::min(variable[*boundary].z(),0.));
-	    
-	  }
-	}
-      }
-    }
-  }
-}
-
 void setBC(CCVariable<Vector>& variable, const string& kind, 
               const Patch* patch, const int mat_id) 
 {
@@ -897,106 +572,6 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
   }
 }
 
-void determineSpacingAndSign(Patch::FaceType face, Vector& dx,double& spacing,
-			     double& sign)
-{
-  if (face == Patch::xminus || face == Patch::xplus) {
-      spacing = dx.x();
-  }
-  if (face == Patch::yminus || face == Patch::yplus) {
-    spacing = dx.y();
-  }
-  if (face == Patch::zminus || face == Patch::zplus) {
-    spacing = dx.z();
-  }
-  
-  if (face == Patch::xminus || face == Patch::yminus || 
-      face == Patch::zminus) sign = -1.;
-  
-  if (face == Patch::xplus || face == Patch::yplus || 
-      face == Patch::zplus) sign = 1.;
-  
-}
-
-/* --------------------------------------------------------------------- 
- Function~  setBC--      
- Purpose~   Takes care of vel_FC.x()
- Note:      Neumann BC values are not set on xminus or xplus, 
-            hey are computed in AddExchangeContributionToFCVel.
- ---------------------------------------------------------------------  */
-void setBCJohn(SFCXVariable<double>& variable, const  string& kind, 
-              const string& comp, const Patch* patch, const int mat_id) 
-{
-  Vector dx = patch->dCell();
-  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-      face=Patch::nextFace(face)){
-    double spacing,sign;
-    determineSpacingAndSign(face,dx,spacing,sign);
-
-    if (patch->getBCType(face) == Patch::None) {
-      for (int child = 0; 
-	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
-	vector<IntVector> bound,inter,sfx,sfy,sfz;
-	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
-							  bound,inter,
-							  sfx,sfy,sfz,child);
-	
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
-	
-	const BoundCond<Vector>* new_bcs  = 
-	  dynamic_cast<const BoundCond<Vector> *>(bc);
-    
-	Vector bc_value(0.,0.,0.);
-	string bc_kind="";
-	if (new_bcs != 0) {
-	  bc_value = new_bcs->getValue();
-	  bc_kind = new_bcs->getKind();
-	}
-	vector<IntVector>::const_iterator boundary,interior,sfcx;
-	//__________________________________
-	//  Symmetry boundary conditions
-	//  -set Neumann = 0 on all walls
-	if (sym_bc != 0) {
-	  // Since this is for the SFCXVariable, only set things on the 
-	  // y and z faces  -- set the tangential components
-	  if (face == Patch::yminus || face == Patch::yplus || 
-	      face == Patch::zminus || face == Patch::zplus)
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior];
-	  
-	  // Set normal component = 0
-	  if(face == Patch::xplus || face == Patch::xminus ) 
-	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-	      variable[*boundary] = 0.;
-        }
-         
-	//__________________________________
-	// Neumann or Dirichlet
-	if (bc_kind == "Dirichlet") {
-	  // Use the interior index for the xminus face and 
-	  // no neighboring patches
-	  // Use the boundary index for the xplus face
-	  for (sfcx=sfx.begin(); sfcx != sfx.end(); sfcx++)
-	    variable[*sfcx] = bc_value.x();
-	}
-	if (bc_kind == "Neumann") {
-	  if (face == Patch::yminus || face == Patch::yplus || 
-	      face == Patch::zminus || face == Patch::zplus)
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior] + 
-		bc_value.x()*spacing*sign;
-	}
-      }
-    }
-  }
-}
-
 
 /* --------------------------------------------------------------------- 
  Function~  setBC--      
@@ -1053,85 +628,6 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
     }
   }
 }
-
-/* --------------------------------------------------------------------- 
- Function~  setBC--      
- Purpose~   Takes care of vel_FC.y()
- Note:      Neumann BC values are not set on yminus or yplus, 
-            hey are computed in AddExchangeContributionToFCVel.
- ---------------------------------------------------------------------  */
-void setBCJohn(SFCYVariable<double>& variable, const  string& kind, 
-	       const string& comp, const Patch* patch, const int mat_id) 
-{
-  Vector dx = patch->dCell();
-  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-      face=Patch::nextFace(face)){
-    double spacing,sign;
-    determineSpacingAndSign(face,dx,spacing,sign);
-
-    if (patch->getBCType(face) == Patch::None) {
-      for (int child = 0; 
-	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
-	vector<IntVector> bound,inter,sfx,sfy,sfz;
-	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
-							  bound,inter,
-							  sfx,sfy,sfz,child);
-	
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
-	
-	const BoundCond<Vector>* new_bcs  = 
-	  dynamic_cast<const BoundCond<Vector> *>(bc);
-    
-	Vector bc_value(0.,0.,0.);
-	string bc_kind="";
-	if (new_bcs != 0) {
-	  bc_value = new_bcs->getValue();
-	  bc_kind = new_bcs->getKind();
-	}
-	vector<IntVector>::const_iterator boundary,interior,sfcy;
-	//__________________________________
-	//  Symmetry boundary conditions
-	//  -set Neumann = 0 on all walls
-	if (sym_bc != 0) {
-	  // Since this is for the SFCYVariable, only set things on the 
-	  // x and z faces  -- set the tangential components
-	  if (face == Patch::xminus || face == Patch::xplus || 
-	      face == Patch::zminus || face == Patch::zplus)
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior];
-	  
-	  // Set normal component = 0
-	  if( face == Patch::yplus || face == Patch::yminus ) 
-	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-	      variable[*boundary] = 0.;
-        }
-         
-	//__________________________________
-	// Neumann or Dirichlet
-	if (bc_kind == "Dirichlet") {
-	  for (sfcy=sfy.begin();sfcy != sfy.end(); sfcy++) {
-	    variable[*sfcy] = bc_value.y();
-	  }
-	}
-	
-	if (bc_kind == "Neumann") {
-	  if (face == Patch::xminus || face == Patch::xplus || 
-	      face == Patch::zminus || face == Patch::zplus)
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior] + 
-		bc_value.y()*spacing*sign;
-	}
-      }
-    }
-  }
-}
-
 
 /* --------------------------------------------------------------------- 
  Function~  setBC--      
@@ -1205,83 +701,6 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
  Note:      Neumann BC values are not set on zminus or zplus, 
             hey are computed in AddExchangeContributionToFCVel.
  ---------------------------------------------------------------------  */
-void setBCJohn(SFCZVariable<double>& variable, const  string& kind, 
-	       const string& comp, const Patch* patch, const int mat_id) 
-{
-  Vector dx = patch->dCell();
-  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-      face=Patch::nextFace(face)){
-    double spacing,sign;
-    determineSpacingAndSign(face,dx,spacing,sign);
-
-    if (patch->getBCType(face) == Patch::None) {
-      for (int child = 0; 
-	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
-	vector<IntVector> bound,inter,sfx,sfy,sfz;
-	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
-							  bound,inter,
-							  sfx,sfy,sfz,child);
-	
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
-	
-	const BoundCond<Vector>* new_bcs  = 
-	  dynamic_cast<const BoundCond<Vector> *>(bc);
-    
-	Vector bc_value(0.,0.,0.);
-	string bc_kind="";
-	if (new_bcs != 0) {
-	  bc_value = new_bcs->getValue();
-	  bc_kind = new_bcs->getKind();
-	}
-	vector<IntVector>::const_iterator boundary,interior,sfcz;
-	//__________________________________
-	//  Symmetry boundary conditions
-	//  -set Neumann = 0 on all walls
-	if (sym_bc != 0) {
-	  // Since this is for the SFCZVariable, only set things on the 
-	  // x and y faces  -- set the tangential components
-	  if (face == Patch::xminus || face == Patch::xplus || 
-	      face == Patch::yminus || face == Patch::yplus)
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior];
-	  
-	  // Set normal component = 0
-	  if( face == Patch::zplus || face == Patch::zminus ) 
-	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-	      variable[*boundary] = 0.;
-        }
-         
-	//__________________________________
-	// Neumann or Dirichlet
-	if (bc_kind == "Dirichlet") 
-	  for (sfcz=sfz.begin();sfcz != sfz.end(); sfcz++)
-	    variable[*sfcz] = bc_value.z();
-	
-	if (bc_kind == "Neumann") {
-	  if (face == Patch::xminus || face == Patch::xplus || 
-	      face == Patch::yminus || face == Patch::yplus)
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior] + 
-		bc_value.z()*spacing*sign;
-	}
-      }
-    }
-  }
-}
-
-
-/* --------------------------------------------------------------------- 
- Function~  setBC--      
- Purpose~   Takes care of vel_FC.z()
- Note:      Neumann BC values are not set on zminus or zplus, 
-            hey are computed in AddExchangeContributionToFCVel.
- ---------------------------------------------------------------------  */
 void setBC(SFCZVariable<double>& variable, const  string& kind, 
               const string& comp, const Patch* patch, const int mat_id) 
 {
@@ -1333,6 +752,8 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
     }
   }
 }
+
+#endif
 /* --------------------------------------------------------------------- 
  Function~  checkValveBC--      
  Purpose~   Velocity/momentum can only go out of the domain,  If setBC(Neumann)
@@ -1465,5 +886,602 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
     }  // face on edge of domain?
   }  // face loop
 }
+
+
+
+//______________________________________________________________________
+//                  J O H N ' S   B C
+
+#ifdef JOHN_BCS
+// Takes care of Pressure_CC
+void setBC(CCVariable<double>& press_CC,
+              const CCVariable<double>& rho_micro,
+              const string& which_Var,
+              const string& kind, 
+              const Patch* patch,
+              SimulationStateP& sharedState, 
+              const int mat_id,
+              DataWarehouse* new_dw)
+{
+  cout << " I ' M   U S I N G   J O H N ' S   B C"<< endl;
+  Vector dx = patch->dCell();
+  for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+       face=Patch::nextFace(face)) {
+    double spacing;
+    double gravity;
+    determineSpacingAndGravity(face,dx,sharedState,spacing,gravity);
+
+    if (patch->getBCType(face) == Patch::None) {
+      // find the correct BC
+      // check its type (symmetric, neumann, dirichlet)
+      // do the fill face
+      
+      // fill face
+      // as iterate over the values, need to check what the proper value
+      // should be,  need a inside function for getValue(), since
+      // the BC value could be different -- union, difference, etc.
+
+      // For a given Intvector boundary, find the appropriate bc, determine if
+      // it is symmetric, neumann, dirichlet, and its value,
+      for (int child = 0; 
+	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
+	vector<IntVector> bound,inter,sfx,sfy,sfz;
+	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
+							  kind,bound,inter,
+							  sfx,sfy,sfz,
+							  child);
+	
+	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
+							      "Symmetric",
+							      bound,inter,
+							      sfx,sfy,sfz,
+							      child);
+
+	const BoundCond<double> *new_bcs = 
+	  dynamic_cast<const BoundCond<double> *>(bc);	
+	double bc_value=0;
+	string bc_kind="";
+	if (new_bcs != 0) {
+	  bc_value = new_bcs->getValue();
+	  bc_kind = new_bcs->getKind();
+#if 0
+	  cout << "BC kind = " << bc_kind << endl;
+	  cout << "BC value = " << bc_value << endl;
+#endif
+	}
+	
+	// Apply the boundary conditions
+	vector<IntVector>::const_iterator boundary,interior;
+	  
+	if (bc_kind == "Dirichlet")
+	  for (boundary=bound.begin(); boundary != bound.end(); 
+	       boundary++) 
+	    press_CC[*boundary] = bc_value;
+	
+	if (bc_kind == "Neumann") {
+	  for (boundary=bound.begin(),interior=inter.begin(); 
+	       boundary != bound.end();   boundary++,interior++) {
+	    press_CC[*boundary] = press_CC[*interior] - bc_value*spacing;
+	  }
+	}
+	  
+	
+	if (sym_bc != 0)
+	  for (boundary=bound.begin(),interior=inter.begin(); 
+	       boundary != bound.end(); boundary++,interior++) 
+	    press_CC[*boundary] = press_CC[*interior];
+	
+	// If we have gravity, need to apply hydrostatic condition
+	if ((sharedState->getGravity()).length() > 0.) {
+	  if (which_Var == "sp_vol") {
+	    for (boundary=bound.begin(),interior=inter.begin();
+		 boundary != bound.end(); boundary++,interior++) 
+	      press_CC[*boundary] = press_CC[*interior] + 
+		gravity*spacing/rho_micro[*interior];
+	  }
+	  if (which_Var == "rho_micro") {
+	    for (boundary=bound.begin(),interior=inter.begin(); 
+		 boundary != bound.end(); boundary++,interior++) 
+	      press_CC[*boundary] = press_CC[*interior] +
+		gravity*spacing*rho_micro[*interior];
+	  }
+	}
+      }
+    }
+  }
+}
+//______________________________________________________________________
+//
+void determineSpacingAndGravity(Patch::FaceType face, 
+				Vector& dx,SimulationStateP& sharedState,
+				double& spacing, double& gravity)
+{
+  if (face == Patch::xminus || face == Patch::xplus) spacing = dx.x();
+  if (face == Patch::yminus || face == Patch::yplus) spacing = dx.y();
+  if (face == Patch::zminus || face == Patch::zplus) spacing = dx.z();
+  
+  if (face == Patch::xminus) gravity = -(sharedState->getGravity().x());
+  if (face == Patch::xplus) gravity = (sharedState->getGravity().x());
+  if (face == Patch::yminus) gravity = -(sharedState->getGravity().y());
+  if (face == Patch::yplus) gravity = (sharedState->getGravity().y());
+  if (face == Patch::zminus) gravity = -(sharedState->getGravity().z());
+  if (face == Patch::zplus) gravity = (sharedState->getGravity().z());
+}
+
+
+//______________________________________________________________________
+// Take care of the Density and Temperature
+void setBC(CCVariable<double>& variable, const string& kind, 
+	       const Patch* patch,  SimulationStateP& sharedState,
+	       const int mat_id)
+{
+  Vector dx = patch->dCell();
+  for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+       face=Patch::nextFace(face)) {
+    double spacing;
+    double gravity;
+    determineSpacingAndGravity(face,dx,sharedState,spacing,gravity);
+
+    if (patch->getBCType(face) == Patch::None) {
+
+      for (int child = 0; 
+	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
+	vector<IntVector> bound,inter,sfx,sfy,sfz;
+      
+	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
+							  kind, bound,inter,
+							  sfx,sfy,sfz,
+							  child);
+      
+	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
+							      "Symmetric",
+							      bound,inter,
+							      sfx,sfy,sfz,
+							      child);
+	const BoundCond<double> *new_bcs = 
+	  dynamic_cast<const BoundCond<double> *>(bc);	
+	
+	double bc_value=0;
+	string bc_kind="";
+	if (new_bcs != 0) {
+	  bc_value = new_bcs->getValue();
+	  bc_kind = new_bcs->getKind();
+#if 0
+	  cout << "BC kind = " << bc_kind << endl;
+	  cout << "BC value = " << bc_value << endl;
+#endif
+	}
+	
+	// Apply the "zeroNeumann"
+	vector<IntVector>::const_iterator boundary,interior;
+	if (kind == "zeroNeumann")
+	  for (boundary=bound.begin(),interior=inter.begin(); 
+	       boundary != bound.end(); boundary++,interior++) 
+	    variable[*boundary] = variable[*interior];
+	
+	if (sym_bc != 0) {
+	  if (kind == "Density" || kind == "Temperature" 
+	      || kind == "set_if_sym_BC")
+	  for (boundary=bound.begin(),interior=inter.begin(); 
+	       boundary != bound.end(); boundary++,interior++) 
+	      variable[*boundary] = variable[*interior];
+	}
+	
+	if (kind == "Density") {
+	  if (bc_kind == "Dirichlet")
+	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
+	      variable[*boundary] = bc_value;
+	  if (bc_kind == "Neumann")
+	    for (boundary=bound.begin(),interior=inter.begin(); 
+		 boundary != bound.end(); boundary++,interior++) 
+	      variable[*boundary] =  variable[*interior] - bc_value*spacing;
+	}
+	
+	if (kind == "Temperature") {
+	  if (bc_kind == "Dirichlet")
+	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
+	      variable[*boundary] = bc_value;
+	  if (bc_kind == "Neumann") {
+	    for (boundary=bound.begin(),interior=inter.begin(); 
+		 boundary != bound.end(); boundary++,interior++) 
+	      variable[*boundary] = variable[*interior] - bc_value*spacing;
+	    // We have gravity
+	    if ((sharedState->getGravity()).length() > 0.) {
+	      // Do the hydrostatic temperature adjustment
+	      Material *matl = sharedState->getMaterial(mat_id);
+	      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+	      if (ice_matl) {
+		double cv = ice_matl->getSpecificHeat();
+		double gamma = ice_matl->getGamma();
+		for (boundary=bound.begin(); boundary != bound.end(); 
+		     boundary++) 
+		  variable[*boundary] += gravity*spacing/((gamma-1.)*cv);
+	      }
+	    }
+	  }
+	}
+      }
+    } 
+    
+  }
+}
+
+
+/* --------------------------------------------------------------------- 
+ Function~  setBC--        
+ Purpose~   Takes care of Velocity_CC Boundary conditions
+ Notes:      CheckValveBC removes any inflow from outside
+             the domain.
+ ---------------------------------------------------------------------  */
+void setBC(CCVariable<Vector>& variable, const string& kind, 
+              const Patch* patch, const int mat_id) 
+{
+  Vector dx = patch->dCell();
+  for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+       face=Patch::nextFace(face)) {
+    
+    Vector sign;
+    double spacing;
+    if (face == Patch::xminus || face == Patch::xplus) {
+      sign=Vector(-1.,1.,1.);
+      spacing = dx.x();
+    }
+    if (face == Patch::yminus || face == Patch::yplus) {
+      sign=Vector(1.,-1.,1.);
+      spacing = dx.y();
+    }
+    if (face == Patch::zminus || face == Patch::zplus) {
+      sign=Vector(1.,1.,-1.);
+      spacing = dx.z();
+    }
+
+    if (patch->getBCType(face) == Patch::None) {
+      for (int child = 0; 
+	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
+	vector<IntVector> bound,inter,sfx,sfy,sfz;
+	
+	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
+							  kind,bound,inter,
+							  sfx,sfy,sfz,
+							  child);
+      
+	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
+							      "Symmetric",
+							      bound,inter,
+							      sfx,sfy,sfz,
+							      child);
+	const BoundCond<Vector> *new_bcs = 
+	  dynamic_cast<const BoundCond<Vector> *>(bc);	
+	
+	Vector bc_value(0.,0.,0.);
+	string bc_kind="";
+	if (new_bcs != 0) {
+	  bc_value = new_bcs->getValue();
+	  bc_kind = new_bcs->getKind();
+#if 0
+	  cout << "BC kind = " << bc_kind << endl;
+	  cout << "BC value = " << bc_value << endl;
+#endif
+	}
+	vector<IntVector>::const_iterator boundary,interior;
+	if (sym_bc != 0 && (kind == "Velocity" || kind == "set_if_sym_BC")) {
+	  for (boundary=bound.begin(),interior=inter.begin(); 
+	       boundary != bound.end(); boundary++,interior++) {
+	    variable[*boundary] = variable[*interior];  
+	    variable[*boundary] = sign*variable[*interior];
+	  }
+	}
+	
+	if (bc_kind == "Neumann") 
+	  for (boundary=bound.begin(),interior=inter.begin(); 
+	       boundary != bound.end(); boundary++,interior++) 
+	    variable[*boundary] = variable[*interior];
+	
+	if (kind == "Velocity") {
+	  if (bc_kind == "Dirichlet")
+	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
+	      variable[*boundary] = bc_value;
+	  
+	  if (bc_kind == "Neumann")
+	    for (boundary=bound.begin(),interior=inter.begin(); 
+		 boundary != bound.end(); boundary++,interior++) 
+	      variable[*boundary] = variable[*interior] - bc_value*spacing;
+	  
+	  if (bc_kind == "NegInterior") 
+	    for (boundary=bound.begin(),interior=inter.begin();
+		 boundary != bound.end(); boundary++,interior++) 
+	      variable[*boundary] = -variable[*interior];
+	  
+	  if (bc_kind == "Neumann_CkValve") {
+	    for (boundary=bound.begin(),interior=inter.begin(); 
+		 boundary != bound.end(); boundary++,interior++) 
+	      variable[*boundary] = variable[*interior] - bc_value*spacing;
+
+	    if (face == Patch::xplus)
+	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
+		variable[*boundary].x(std::max(variable[*boundary].x(),0.));
+	    
+	    if (face == Patch::xminus)
+	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
+		variable[*boundary].x(std::min(variable[*boundary].x(),0.));
+	    
+	    if (face == Patch::yplus)
+	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
+		variable[*boundary].y(std::max(variable[*boundary].y(),0.));
+	    
+	    if (face == Patch::yminus)
+	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
+		variable[*boundary].y(std::min(variable[*boundary].y(),0.));
+	    
+	    if (face == Patch::zplus)
+	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
+		variable[*boundary].z(std::max(variable[*boundary].z(),0.));
+	    
+	    if (face == Patch::zminus)
+	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
+		variable[*boundary].z(std::min(variable[*boundary].z(),0.));
+	    
+	  }
+	}
+      }
+    }
+  }
+}
+//______________________________________________________________________
+//
+void determineSpacingAndSign(Patch::FaceType face, Vector& dx,double& spacing,
+			     double& sign)
+{
+  if (face == Patch::xminus || face == Patch::xplus) {
+      spacing = dx.x();
+  }
+  if (face == Patch::yminus || face == Patch::yplus) {
+    spacing = dx.y();
+  }
+  if (face == Patch::zminus || face == Patch::zplus) {
+    spacing = dx.z();
+  }
+  
+  if (face == Patch::xminus || face == Patch::yminus || 
+      face == Patch::zminus) sign = -1.;
+  
+  if (face == Patch::xplus || face == Patch::yplus || 
+      face == Patch::zplus) sign = 1.;
+  
+}
+
+/* --------------------------------------------------------------------- 
+ Function~  setBC--      
+ Purpose~   Takes care of vel_FC.x()
+ Note:      Neumann BC values are not set on xminus or xplus, 
+            hey are computed in AddExchangeContributionToFCVel.
+ ---------------------------------------------------------------------  */
+void setBC(SFCXVariable<double>& variable, const  string& kind, 
+              const string& comp, const Patch* patch, const int mat_id) 
+{
+  Vector dx = patch->dCell();
+  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+      face=Patch::nextFace(face)){
+    double spacing,sign;
+    determineSpacingAndSign(face,dx,spacing,sign);
+
+    if (patch->getBCType(face) == Patch::None) {
+      for (int child = 0; 
+	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
+	vector<IntVector> bound,inter,sfx,sfy,sfz;
+	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
+							  bound,inter,
+							  sfx,sfy,sfz,child);
+	
+	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
+							      "Symmetric",
+							      bound,inter,
+							      sfx,sfy,sfz,
+							      child);
+	
+	const BoundCond<Vector>* new_bcs  = 
+	  dynamic_cast<const BoundCond<Vector> *>(bc);
+    
+	Vector bc_value(0.,0.,0.);
+	string bc_kind="";
+	if (new_bcs != 0) {
+	  bc_value = new_bcs->getValue();
+	  bc_kind = new_bcs->getKind();
+	}
+	vector<IntVector>::const_iterator boundary,interior,sfcx;
+	//__________________________________
+	//  Symmetry boundary conditions
+	//  -set Neumann = 0 on all walls
+	if (sym_bc != 0) {
+	  // Since this is for the SFCXVariable, only set things on the 
+	  // y and z faces  -- set the tangential components
+	  if (face == Patch::yminus || face == Patch::yplus || 
+	      face == Patch::zminus || face == Patch::zplus)
+	    for (boundary=bound.begin(),interior=inter.begin(); 
+		 boundary != bound.end(); boundary++,interior++) 
+	      variable[*boundary] = variable[*interior];
+	  
+	  // Set normal component = 0
+	  if(face == Patch::xplus || face == Patch::xminus ) 
+	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
+	      variable[*boundary] = 0.;
+        }
+         
+	//__________________________________
+	// Neumann or Dirichlet
+	if (bc_kind == "Dirichlet") {
+	  // Use the interior index for the xminus face and 
+	  // no neighboring patches
+	  // Use the boundary index for the xplus face
+	  for (sfcx=sfx.begin(); sfcx != sfx.end(); sfcx++)
+	    variable[*sfcx] = bc_value.x();
+	}
+	if (bc_kind == "Neumann") {
+	  if (face == Patch::yminus || face == Patch::yplus || 
+	      face == Patch::zminus || face == Patch::zplus)
+	    for (boundary=bound.begin(),interior=inter.begin(); 
+		 boundary != bound.end(); boundary++,interior++) 
+	      variable[*boundary] = variable[*interior] + 
+		bc_value.x()*spacing*sign;
+	}
+      }
+    }
+  }
+}
+
+/* --------------------------------------------------------------------- 
+ Function~  setBC--      
+ Purpose~   Takes care of vel_FC.y()
+ Note:      Neumann BC values are not set on yminus or yplus, 
+            hey are computed in AddExchangeContributionToFCVel.
+ ---------------------------------------------------------------------  */
+void setBC(SFCYVariable<double>& variable, const  string& kind, 
+	       const string& comp, const Patch* patch, const int mat_id) 
+{
+  Vector dx = patch->dCell();
+  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+      face=Patch::nextFace(face)){
+    double spacing,sign;
+    determineSpacingAndSign(face,dx,spacing,sign);
+
+    if (patch->getBCType(face) == Patch::None) {
+      for (int child = 0; 
+	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
+	vector<IntVector> bound,inter,sfx,sfy,sfz;
+	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
+							  bound,inter,
+							  sfx,sfy,sfz,child);
+	
+	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
+							      "Symmetric",
+							      bound,inter,
+							      sfx,sfy,sfz,
+							      child);
+	
+	const BoundCond<Vector>* new_bcs  = 
+	  dynamic_cast<const BoundCond<Vector> *>(bc);
+    
+	Vector bc_value(0.,0.,0.);
+	string bc_kind="";
+	if (new_bcs != 0) {
+	  bc_value = new_bcs->getValue();
+	  bc_kind = new_bcs->getKind();
+	}
+	vector<IntVector>::const_iterator boundary,interior,sfcy;
+	//__________________________________
+	//  Symmetry boundary conditions
+	//  -set Neumann = 0 on all walls
+	if (sym_bc != 0) {
+	  // Since this is for the SFCYVariable, only set things on the 
+	  // x and z faces  -- set the tangential components
+	  if (face == Patch::xminus || face == Patch::xplus || 
+	      face == Patch::zminus || face == Patch::zplus)
+	    for (boundary=bound.begin(),interior=inter.begin(); 
+		 boundary != bound.end(); boundary++,interior++) 
+	      variable[*boundary] = variable[*interior];
+	  
+	  // Set normal component = 0
+	  if( face == Patch::yplus || face == Patch::yminus ) 
+	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
+	      variable[*boundary] = 0.;
+        }
+         
+	//__________________________________
+	// Neumann or Dirichlet
+	if (bc_kind == "Dirichlet") {
+	  for (sfcy=sfy.begin();sfcy != sfy.end(); sfcy++) {
+	    variable[*sfcy] = bc_value.y();
+	  }
+	}
+	
+	if (bc_kind == "Neumann") {
+	  if (face == Patch::xminus || face == Patch::xplus || 
+	      face == Patch::zminus || face == Patch::zplus)
+	    for (boundary=bound.begin(),interior=inter.begin(); 
+		 boundary != bound.end(); boundary++,interior++) 
+	      variable[*boundary] = variable[*interior] + 
+		bc_value.y()*spacing*sign;
+	}
+      }
+    }
+  }
+}
+
+/* --------------------------------------------------------------------- 
+ Function~  setBC--      
+ Purpose~   Takes care of vel_FC.z()
+ Note:      Neumann BC values are not set on zminus or zplus, 
+            hey are computed in AddExchangeContributionToFCVel.
+ ---------------------------------------------------------------------  */
+void setBC(SFCZVariable<double>& variable, const  string& kind, 
+	       const string& comp, const Patch* patch, const int mat_id) 
+{
+  Vector dx = patch->dCell();
+  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+      face=Patch::nextFace(face)){
+    double spacing,sign;
+    determineSpacingAndSign(face,dx,spacing,sign);
+
+    if (patch->getBCType(face) == Patch::None) {
+      for (int child = 0; 
+	   child < patch->getBCDataArray(face).getNumberChildren(); child++) {
+	vector<IntVector> bound,inter,sfx,sfy,sfz;
+	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
+							  bound,inter,
+							  sfx,sfy,sfz,child);
+	
+	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
+							      "Symmetric",
+							      bound,inter,
+							      sfx,sfy,sfz,
+							      child);
+	
+	const BoundCond<Vector>* new_bcs  = 
+	  dynamic_cast<const BoundCond<Vector> *>(bc);
+    
+	Vector bc_value(0.,0.,0.);
+	string bc_kind="";
+	if (new_bcs != 0) {
+	  bc_value = new_bcs->getValue();
+	  bc_kind = new_bcs->getKind();
+	}
+	vector<IntVector>::const_iterator boundary,interior,sfcz;
+	//__________________________________
+	//  Symmetry boundary conditions
+	//  -set Neumann = 0 on all walls
+	if (sym_bc != 0) {
+	  // Since this is for the SFCZVariable, only set things on the 
+	  // x and y faces  -- set the tangential components
+	  if (face == Patch::xminus || face == Patch::xplus || 
+	      face == Patch::yminus || face == Patch::yplus)
+	    for (boundary=bound.begin(),interior=inter.begin(); 
+		 boundary != bound.end(); boundary++,interior++) 
+	      variable[*boundary] = variable[*interior];
+	  
+	  // Set normal component = 0
+	  if( face == Patch::zplus || face == Patch::zminus ) 
+	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
+	      variable[*boundary] = 0.;
+        }
+         
+	//__________________________________
+	// Neumann or Dirichlet
+	if (bc_kind == "Dirichlet") 
+	  for (sfcz=sfz.begin();sfcz != sfz.end(); sfcz++)
+	    variable[*sfcz] = bc_value.z();
+	
+	if (bc_kind == "Neumann") {
+	  if (face == Patch::xminus || face == Patch::xplus || 
+	      face == Patch::yminus || face == Patch::yplus)
+	    for (boundary=bound.begin(),interior=inter.begin(); 
+		 boundary != bound.end(); boundary++,interior++) 
+	      variable[*boundary] = variable[*interior] + 
+		bc_value.z()*spacing*sign;
+	}
+      }
+    }
+  }
+}
+#endif
 
 }  // using namespace Uintah
