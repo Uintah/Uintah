@@ -17,14 +17,15 @@
 #endif
 
 #include <SCICore/TclInterface/Histogram.h>
-#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Thread/Mutex.h>
 
 #include <string.h>
+
+using SCICore::Thread::Mutex;
 
 namespace SCICore {
 namespace TclInterface {
 
-using SCICore::Multitask::Mutex;
 using SCICore::Containers::to_string;
 
 static clString widget_name("Histogram");
@@ -32,7 +33,7 @@ static clString widget_name("Histogram");
 static clString make_id(const clString& name)
 {
    static int next_widget_number=0;
-   static Mutex idlock;
+   static Mutex idlock("Histogram id name lock");
    idlock.lock();
    clString id ( name+"_"+to_string(next_widget_number++) );
    idlock.unlock();
@@ -278,6 +279,9 @@ Histogram::SetNumBuckets( const int nb )
 
 //
 // $Log$
+// Revision 1.3  1999/08/28 17:54:52  sparker
+// Integrated new Thread library
+//
 // Revision 1.2  1999/08/17 06:39:43  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

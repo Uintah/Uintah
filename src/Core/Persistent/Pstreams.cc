@@ -107,7 +107,6 @@ TextPiostream::TextPiostream(int fd, Direction dir)
 
 TextPiostream::~TextPiostream()
 {
-    cancel_timers();
     if(istr)
 	delete istr;
     if(ostr)
@@ -660,7 +659,6 @@ BinaryPiostream::BinaryPiostream (int fd, Direction dir)
 
 BinaryPiostream::~BinaryPiostream()
 {
-    cancel_timers();
     if(xdr){
 	xdr_destroy(xdr);
 	delete xdr;
@@ -914,7 +912,6 @@ GzipPiostream::GzipPiostream(char* name, int version)
 
 GzipPiostream::~GzipPiostream()
 {
-    cancel_timers();
     gzclose(gzfile);
 }
 
@@ -1185,7 +1182,6 @@ GunzipPiostream::GunzipPiostream(ifstream* istr, int version)
 
 GunzipPiostream::~GunzipPiostream()
 {
-    cancel_timers();
     close(unzipfile);
 }
 

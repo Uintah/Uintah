@@ -35,6 +35,7 @@
 #include <SCICore/TclInterface/Remote.h>
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/Thread/Thread.h>
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,6 +49,8 @@
   
 #include <fstream.h>
   
+using SCICore::Thread::Thread;
+
 //#define DEBUG 1
 #include <tcl.h>
   
@@ -102,8 +105,8 @@ void init_notes ()
 }
 
 NetworkEditor::NetworkEditor(Network* net)
-: Task("Network Editor", 1), net(net),
-  first_schedule(1), mailbox(100), schedule(1)
+: mailbox("NetworkEditor request FIFO", 100), net(net),
+    first_schedule(1), schedule(1)
 {
     // Create User interface...
     TCL::add_command("netedit", this, 0);
@@ -121,12 +124,12 @@ NetworkEditor::~NetworkEditor()
 {
 }
 
-int NetworkEditor::body(int)
+void
+NetworkEditor::run()
 {
     // Go into Main loop...
     do_scheduling(0);
     main_loop();
-    return 0;
 }
 
 void NetworkEditor::main_loop()
@@ -466,7 +469,7 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
     }
     if(args[1] == "quit"){
 	printf("quit received {%s,%d}\n"__FILE__,__LINE__);
-	Task::exit_all(-1);
+	Thread::exitAll(0);
     } else if(args[1] == "addmodule"){
 	if(args.count() < 5){
 	    args.error("netedit addmodule needs a package name,"
@@ -668,6 +671,9 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:30  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/23 06:30:33  sparker
 // Linux port
 // Added X11 configuration options

@@ -14,24 +14,21 @@
 #ifndef SCI_project_ModuleHelper_h
 #define SCI_project_ModuleHelper_h 1
 
+#include <SCICore/Thread/Runnable.h>
 #include <PSECore/share/share.h>
-
-#include <SCICore/Multitask/Task.h>
 
 namespace PSECore {
 namespace Dataflow {
 
-using SCICore::Multitask::Task;
-
 class Module;
 
-class PSECORESHARE ModuleHelper : public Task {
+class PSECORESHARE ModuleHelper : public SCICore::Thread::Runnable {
     Module* module;
 public:
     ModuleHelper(Module* module);
     virtual ~ModuleHelper();
 
-    virtual int body(int);
+    virtual void run();
 };
 
 } // End namespace Dataflow
@@ -39,6 +36,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:29  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/26 23:59:07  moulding
 // changed SCICORESHARE to PSECORESHARE
 //

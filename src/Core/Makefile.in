@@ -11,7 +11,7 @@ TK_LIB_FLAG   = @TK_LIB_FLAG@
 ITCL_LIB_FLAG = @ITCL_LIB_FLAG@
 
 SUBDIRS = Containers Datatypes Exceptions Geom Geometry Malloc Math \
-          Multitask TclInterface TkExtensions Tester Persistent Util
+          TclInterface Thread TkExtensions Tester Persistent Util
 SOLIB   = libSCICore.so
 
 SOLIBRARIES = -lGLU -lGL \

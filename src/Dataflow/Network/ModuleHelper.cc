@@ -29,8 +29,7 @@ namespace PSECore {
 namespace Dataflow {
 
 ModuleHelper::ModuleHelper(Module* module)
-: Task(module->name(), 1, DEFAULT_MODULE_PRIORITY),
-  module(module)
+: module(module)
 {
 }
 
@@ -38,7 +37,7 @@ ModuleHelper::~ModuleHelper()
 {
 }
 
-int ModuleHelper::body(int)
+void ModuleHelper::run()
 {
   using PSECore::Comm::MessageTypes;
 
@@ -78,7 +77,6 @@ int ModuleHelper::body(int)
 	    delete msg;
 	}
     }
-    return 0;
 }
 
 } // End namespace Dataflow
@@ -86,6 +84,9 @@ int ModuleHelper::body(int)
 
 //
 // $Log$
+// Revision 1.3  1999/08/28 17:54:29  sparker
+// Integrated new Thread library
+//
 // Revision 1.2  1999/08/17 06:38:23  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -18,9 +18,9 @@
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Util/Timer.h>
-#include <SCICore/Multitask/ITC.h>
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Mailbox.h>
 #include <SCICore/Geom/Pickable.h>
 
 namespace SCICore {
@@ -49,7 +49,6 @@ namespace Dataflow {
 using SCICore::TclInterface::TCL;
 using SCICore::TclInterface::TCLArgs;
 using SCICore::TclInterface::TCLstring;
-using SCICore::Multitask::Mailbox;
 using SCICore::GeomSpace::GeomPick;
 using SCICore::GeomSpace::BState;
 using SCICore::GeomSpace::Pickable;
@@ -118,7 +117,7 @@ public:
      */
     virtual int clone(int deep);
 
-    Mailbox<MessageBase*> mailbox;
+    SCICore::Thread::Mailbox<MessageBase*> mailbox;
 
     inline State get_state(){ return state;}
     inline double get_progress(){ return progress;}
@@ -195,6 +194,9 @@ typedef Module* (*ModuleMaker)(const clString& id);
 
 //
 // $Log$
+// Revision 1.6  1999/08/28 17:54:29  sparker
+// Integrated new Thread library
+//
 // Revision 1.5  1999/08/26 23:59:07  moulding
 // changed SCICORESHARE to PSECORESHARE
 //

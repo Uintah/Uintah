@@ -20,11 +20,11 @@
 #include <PSECore/Dataflow/NetworkEditor.h>
 //#include <PSECore/Distributed/SlaveController.h>
 #include <PSECore/Dataflow/PackageDB.h>
-#include <SCICore/Multitask/Task.h>
 #include <SCICore/TclInterface/GuiServer.h>
 #include <SCICore/TclInterface/GuiManager.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCL.h>
+#include <SCICore/Thread/Thread.h>
 #include <SCICore/Containers/String.h>
 
 #include <iostream.h>
@@ -33,16 +33,15 @@
 #include <unistd.h>
 #include <dlfcn.h>
 
-using SCICore::Multitask::Task;
 using SCICore::TclInterface::TCLTask;
 using SCICore::TclInterface::GuiManager;
 using SCICore::TclInterface::GuiServer;
+using SCICore::Thread::Thread;
 using namespace SCICore::Containers;
 using namespace PSECore::Dataflow;
 
 using PSECore::Dataflow::Network;
 using PSECore::Dataflow::NetworkEditor;
-//using PSECore::Distributed::SlaveController;
 
 namespace PSECore {
   namespace Dataflow {
@@ -76,14 +75,13 @@ char** global_argv;
 // master creates slave by rsh "sr -slave hostname portnumber"
 int main(int argc, char** argv)
 {
-    // Initialize the multithreader
-    Task::initialize(argv[0]);
     global_argc=argc;
     global_argv=argv;
 
     // Start up TCL...
     TCLTask* tcl_task = new TCLTask(argc, argv);
-    tcl_task->activate(0);
+    Thread* t=new Thread(tcl_task, "TCL main event loop");
+    t->detach();
     tcl_task->mainloop_waitstart();
 
     // Set up the TCL environment to find core components
@@ -112,18 +110,19 @@ int main(int argc, char** argv)
 
     // Activate the network editor and scheduler.  Arguments and return
     // values are meaningless
-    gui_task->activate(0);
+    Thread* t2=new Thread(gui_task, "Scheduler");
+    t2->setDaemon(true);
+    t2->detach();
 
     // startup master-side GuiServer, even when no slave..
     // XXX: Is this a remnant of dist'd stuff?  Michelle?
     GuiServer* gui_server = new GuiServer;
-    gui_server->activate(0);
+    Thread* t3=new Thread(gui_server, "GUI server thread");
+    t3->setDaemon(true);
+    t3->detach();
 
     // Now activate the TCL event loop
     tcl_task->release_mainloop();
-
-    // This will wait until all tasks have completed before exiting
-    Task::main_exit();
 
     // Never reached
     return 0;
@@ -131,6 +130,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:54  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/17 06:40:15  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -21,6 +21,7 @@
 #include <SCICore/Containers/HashTable.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/Point.h>
+#include <SCICore/Thread/CrowdMonitor.h>
 
 namespace SCICore {
 
@@ -40,7 +41,6 @@ using GeomSpace::GeomObj;
 using Containers::HashTable;
 using Containers::Array1;
 using Containers::clString;
-using Multitask::CrowdMonitor;
 
 class  Surface;
 struct Node;
@@ -67,7 +67,7 @@ protected:
 private:
     Representation rep;
 public:
-    CrowdMonitor monitor;
+    SCICore::Thread::CrowdMonitor monitor;
     int hash_x;
     int hash_y;
     Point hash_min;
@@ -114,6 +114,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:36  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/25 03:48:42  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

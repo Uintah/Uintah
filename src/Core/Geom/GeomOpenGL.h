@@ -59,8 +59,7 @@ struct DrawInfoOpenGL {
     enum DrawType {
 	WireFrame,
 	Flat,
-	Gouraud,
-	Phong
+	Gouraud
     };
 private:
     DrawType drawtype;
@@ -114,6 +113,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:41  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/19 05:30:55  sparker
 // Configuration updates:
 //  - renamed config.h to sci_config.h

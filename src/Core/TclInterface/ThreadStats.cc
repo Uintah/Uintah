@@ -14,21 +14,17 @@
 
 #include <SCICore/TclInterface/ThreadStats.h>
 
-#include <SCICore/Multitask/Task.h>
-
 #include <iostream.h>
 #include <stdio.h>
 
 namespace SCICore {
 namespace TclInterface {
 
-using SCICore::Multitask::Task;
-using SCICore::Multitask::TaskInfo;
 using SCICore::Containers::to_string;
 
 ThreadStats::ThreadStats()
 {
-    oldinfo=info=0;
+    //oldinfo=info=0;
 }
 
 ThreadStats::~ThreadStats()
@@ -46,6 +42,7 @@ void ThreadStats::tcl_command(TCLArgs& args, void*)
 	args.error("threadstats needs a minor command");
 	return;
     }
+#if 0
     if(args[1] == "ntasks"){
 	if(oldinfo){
 	    delete oldinfo;
@@ -53,6 +50,7 @@ void ThreadStats::tcl_command(TCLArgs& args, void*)
 	oldinfo=info;
 	info=Task::get_taskinfo();
 	args.result(to_string(info->ntasks));
+	args.result("0");
     } else if(args[1] == "dbx"){
 	int which;
 	if(args.count() < 3 || !args[2].get_int(which)){
@@ -94,8 +92,11 @@ void ThreadStats::tcl_command(TCLArgs& args, void*)
 		info->tinfo[which].pid);
 	args.result(buf);
     } else {
+#endif
 	args.error("Unknown minor command for threadstats");
+#if 0
     }
+#endif
 }
 
 } // End namespace TclInterface
@@ -103,6 +104,9 @@ void ThreadStats::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:52  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/19 23:18:08  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

@@ -104,7 +104,6 @@ void GeomDisc::get_bounds(BBox& bb)
 void GeomDisc::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     stream.begin_class("GeomDisc", GEOMDISC_VERSION);
     GeomObj::io(stream);
@@ -127,6 +126,9 @@ bool GeomDisc::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:39  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/17 23:50:20  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

@@ -14,30 +14,26 @@
 #ifndef SCI_project_TCLTask_h
 #define SCI_project_TCLTask_h 1
 
-#include <SCICore/Multitask/Task.h>
-#include <SCICore/Multitask/ITC.h>
-
 #include <SCICore/share/share.h>
+#include <SCICore/Thread/Runnable.h>
+#include <SCICore/Thread/Semaphore.h>
 
 namespace SCICore {
 namespace TclInterface {
 
-using SCICore::Multitask::Task;
-using SCICore::Multitask::Semaphore;
-
-class SCICORESHARE TCLTask : public Task {
+class SCICORESHARE TCLTask : public SCICore::Thread::Runnable {
     int argc;
     char** argv;
-    Semaphore cont;
-    Semaphore start;
+    SCICore::Thread::Semaphore cont;
+    SCICore::Thread::Semaphore start;
 protected:
-    virtual int body(int);
+    virtual void run();
     friend void wait_func(void*);
     void mainloop_wait();
 public:
     TCLTask(int argc, char* argv[]);
     virtual ~TCLTask();
-    static Task* get_owner();
+    static SCICore::Thread::Thread* get_owner();
     static void lock();
     static int try_lock();
     static void unlock();
@@ -50,6 +46,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/28 17:54:52  sparker
+// Integrated new Thread library
+//
 // Revision 1.2  1999/08/17 06:39:45  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

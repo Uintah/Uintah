@@ -16,13 +16,11 @@
 
 #include <SCICore/share/share.h>
 
-#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Thread/Mutex.h>
 #include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
 namespace Containers {
-
-using SCICore::Multitask::Mutex;
 
 class SCICORESHARE TrivialAllocator {
     struct List {
@@ -34,7 +32,7 @@ class SCICORESHARE TrivialAllocator {
     unsigned int nalloc;
     unsigned int alloc_size;
     unsigned int size;
-    Mutex lock;
+    SCICore::Thread::Mutex lock;
     int ta_disable;
 public:
     TrivialAllocator(unsigned int size);
@@ -87,6 +85,9 @@ inline void TrivialAllocator::free(void* rp)
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:35  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/23 06:30:34  sparker
 // Linux port
 // Added X11 configuration options
