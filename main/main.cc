@@ -39,8 +39,6 @@
  *  Copyright (C) 1999 U of U
  */
 
-#include <sci_defs/environment_defs.h>
-
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/PackageDB.h>
@@ -75,15 +73,6 @@ using std::cout;
 #define SCIRUN_VERSION "1.22.0"
 
 using namespace SCIRun;
-
-#ifndef LOAD_PACKAGE
-#error You must set a LOAD_PACKAGE or life is pretty dull
-#endif
-
-#ifndef ITCL_WIDGETS
-#error You must set ITCL_WIDGETS to the iwidgets/scripts path
-#endif
-
 
 void
 usage()
@@ -213,14 +202,17 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
   }
   // check to make sure home directory is there
   const char* HOME = sci_getenv("HOME");
+  const char* srcdir = sci_getenv("SCIRUN_SRCDIR");
+  ASSERT(HOME);
+  ASSERT(srcdir);
   if (!HOME) return;
   // If the user accepted the license then create a .scirunrc for them
   if (tclresult == "accept") {
     string homerc = string(HOME)+"/.scirunrc";
-    string cmd = string("cp -f ")+SCIRUN_SRCDIR+string("/scirunrc ")+homerc;
-    std::cout << "Copying default " << SCIRUN_SRCDIR << "/scirunrc to " <<
+    string cmd = string("cp -f ")+srcdir+string("/scirunrc ")+homerc;
+    std::cout << "Copying default " << srcdir << "/scirunrc to " <<
       homerc << "...\n";
-    if (sci_system(cmd.c_str())) {      
+    if (sci_system(cmd.c_str())) {
       std::cerr << "Error executing: " << cmd << std::endl;
     } else { 
       // if the scirunrc file was copied, then parse it
@@ -259,7 +251,7 @@ public:
 int
 main(int argc, char *argv[], char **environment) {
   // Setup the SCIRun key/value environment
-  create_sci_environment(environment);
+  create_sci_environment(environment, argv[0]);
   sci_putenv("SCIRUN_VERSION", SCIRUN_VERSION);
 
   // Parse the command line arguments to find a network to execute
@@ -286,10 +278,6 @@ main(int argc, char *argv[], char **environment) {
 
   // Create user interface link
   TCLInterface *gui = new TCLInterface();
-  // setup TCL auto_path to find core components
-  gui->eval("lappend auto_path "SCIRUN_SRCDIR"/Core/GUI "
-	    SCIRUN_SRCDIR"/Dataflow/GUI "ITCL_WIDGETS);
-  gui->eval("set scirun2 0");
 
   // TCL Socket
   int port;
