@@ -25,10 +25,6 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-#define OLD_SPARSE
-#undef OLD_SPARSE
-#define DEBUG 1
-
 CompNeoHookImplicit::CompNeoHookImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 {
   lb = Mlb;
@@ -258,49 +254,33 @@ void CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 }
 
 
-void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches,
-					      const MPMMaterial* matl,
-					      DataWarehouse* old_dw,
-					      DataWarehouse* new_dw,
-					      SparseMatrix<double,int>& KK,
-#ifdef HAVE_PETSC
-					      Mat &A,
-					      map<const Patch*, Array3<int> >& d_petscLocalToGlobal,
-						      Solver* solver,
-#endif
-					      const bool recursion)
+void 
+CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches,
+						 const MPMMaterial* matl,
+						 DataWarehouse* old_dw,
+						 DataWarehouse* new_dw,
+						 Solver* solver,
+						 const bool recursion)
 
 {
 
   IntVector nodes(0,0,0);
   int num_nodes(0);
-#if DEBUG 
-  cerr << "nodes = " << nodes << endl;
-  cerr << "number of patches = " << patches->size() << endl;
-#endif
 
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     nodes = patch->getNNodes();
     num_nodes += (nodes.x())*(nodes.y())*(nodes.z())*3;
-#if DEBUG
-    cerr << "num_nodes = " << num_nodes << "\n";
-#endif
   }
 
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     cerr <<"Doing computeStressTensor on " << patch->getID()
 	 <<"\t\t\t\t IMPM"<< "\n" << "\n";
-#ifdef HAVE_PETSC
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     solver->copyL2G(l2g,patch);
-#if 0
-    l2g.copy(d_petscLocalToGlobal[patch]);
-#endif
-#endif
 
     Matrix3 velGrad,Shear,deformationGradientInc,dispGrad,fbar;
     FastMatrix kmat(24,24);
@@ -345,8 +325,6 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
       old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);    
     }
     
-    cerr << "number of particles = " << pset->numParticles() << endl;
-  
     if (recursion)
       old_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::AroundCells,1);
     else
@@ -369,9 +347,7 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
     for(ParticleSubset::iterator iter = pset->begin();
 	iter != pset->end(); iter++){
       particleIndex idx = *iter;
-#if DEBUG
-      cerr << "Particle " << px[idx] << endl;
-#endif
+
       velGrad.set(0.0);
       dispGrad.set(0.0);
       // Get the node indices that surround the cell
@@ -380,36 +356,15 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
       
       patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
       vector<int> dof(0);
-      
-#ifdef HAVE_PETSC
       int l2g_node_num;
-#endif
       for(int k = 0; k < 8; k++) {
 	// Need to loop over the neighboring patches l2g to get the right
 	// dof number.
-#if 0
-	cerr << "working on node = " << ni[k] << endl;
-	cerr << "patch extents = " << patch->getNodeLowIndex() << " " 
-	     << patch->getNodeHighIndex() << endl;
-#endif
+	l2g_node_num = l2g[ni[k]];
+	dof.push_back(l2g_node_num);
+	dof.push_back(l2g_node_num+1);
+	dof.push_back(l2g_node_num+2);
 
-#ifdef HAVE_PETSC
-	  l2g_node_num = l2g[ni[k]];
-	  // cerr << "l2g_node_num = " << l2g_node_num << endl;
-	  dof.push_back(l2g_node_num);
-	  dof.push_back(l2g_node_num+1);
-	  dof.push_back(l2g_node_num+2);
-#endif
-	  
-
-#ifndef HAVE_PETSC 		
-	int node_num = ni[k].x() + (nodes.x())*ni[k].y() + (nodes.x())*
-	  (nodes.y())*ni[k].z();
-
-	dof.push_back(3*node_num);
-	dof.push_back(3*node_num+1);
-	dof.push_back(3*node_num+2);
-#endif
 	const Vector& disp = dispNew[ni[k]];
 	
 	for (int j = 0; j<3; j++){
@@ -417,13 +372,6 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 	    dispGrad(i+1,j+1) += disp[i] * d_S[k][j]* oodx[j];
 	  }
 	}
-#if DEBUG
-	cerr << "d_Shape = " << d_S[k] << endl;
-	cerr << "oodx = " << oodx[0] << "\t" << oodx[1] << "\t" << oodx[2] <<
-	  endl;
-	cerr << "d_S = " << d_S[k][0]*oodx[0] << "\t" << d_S[k][1]*oodx[1]
-	     << "\t" << d_S[k][2]*oodx[2] << endl;
-#endif
 	
 	B(0,3*k) = d_S[k][0]*oodx[0];
 	B(3,3*k) = d_S[k][1]*oodx[1];
@@ -466,40 +414,7 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
       // Compute the deformation gradient increment using the dispGrad
       
       deformationGradientInc = dispGrad + Identity;
-#if DEBUG
-      for (int i = 1; i<= 3; i++) {
-	for (int j = 1; j <= 3; j++) {
-	  cerr << "dispGrad(" << i << "," << j << ")= " << dispGrad(i,j) 
-	       << "\t";
-	}
-	cerr << endl;
-      }
-      
-      for (int i = 1; i<= 3; i++) {
-	for (int j = 1; j <= 3; j++) {
-	  cerr << "defGradInc(" << i << "," << j << ")= " 
-	       << deformationGradientInc(i,j)  << "\t";
-	}
-	cerr << endl;
-      }
-      
-      for (int i = 1; i<= 3; i++) {
-	for (int j = 1; j <= 3; j++) {
-	  cerr << "defGrad(" << i << "," << j << ")= " 
-	       << deformationGradient[idx](i,j)  << "\t";
-	}
-	cerr << endl;
-      }
-#if 0
-      for (int i = 1; i<= 3; i++) {
-	for (int j = 1; j <= 3; j++) {
-	  cerr << "defGrad_new(" << i << "," << j << ")= " 
-	       << deformationGradient_new[idx](i,j)  << "\t";
-	}
-	cerr << endl;
-      }
-#endif
-#endif
+
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
 	deformationGradient[idx];
@@ -509,28 +424,13 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
       
       fbar = deformationGradientInc * 
 	pow(deformationGradientInc.Determinant(),-1./3.);
-#if DEBUG
-      cerr << "J = " << J << " fbar = " << fbar << endl;
-#endif
+
       bElBar_new[idx] = fbar*bElBar_old[idx]*fbar.Transpose();
-#if 0
-      cerr << "bElBar_old = " << bElBar_old[idx] << endl;
-      
-      cerr << "bElBar_new = " << bElBar_new[idx] << endl;
-#endif
+
       // Shear is equal to the shear modulus times dev(bElBar)
       double mubar = 1./3. * bElBar_new[idx].Trace()*shear;
       Matrix3 shrTrl = (bElBar_new[idx]*shear - Identity*mubar);
-#if 0
-      cerr << "shear " << shear << endl;
-      
-      for (int i = 1; i<= 3; i++) {
-	for (int j = 1; j <= 3; j++) {
-	  cerr << "shrTrl(" << i << "," << j << ")= " << shrTrl(i,j) << "\t";
-	}
-	cerr << endl;
-      }
-#endif
+
       // get the hydrostatic part of the stress
       double p = bulk*log(J)/J;
       
@@ -540,10 +440,7 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
             
       double coef1 = bulk;
       double coef2 = 2.*bulk*log(J);
-#if 0
-      cerr << "mubar = " << mubar << " coef1 = " << coef1 << " coef2 = " 
-	   << coef2 << endl;
-#endif
+
       FastMatrix D(6,6);
       
       D(0,0) = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(1,1));
@@ -591,44 +488,11 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 	}
       }
 
-      // Error it looks like the stress tensor is doubled for some reason.
-#if DEBUG
-      cerr << "sig = " << "\t" << sig(0,0) << "\t" << sig(0,1) << "\t" 
-	   << sig(0,2) << endl;
-      cerr << "sig = " << "\t" << sig(1,0) << "\t" << sig(1,1) << "\t" 
-	   << sig(1,2) << endl;
-      cerr << "sig = " << "\t" << sig(2,0) << "\t" << sig(2,1) << "\t" 
-	   << sig(2,2) << endl;
-#endif
-      
       double volold = pvolumeold[idx];
       double volnew = pvolumeold[idx]*J;
-#if DEBUG
-      cerr << "volnew = " << volnew << " volold = " << volold << endl;
-#endif
+
       pvolume_deformed[idx] = volnew;
-#if DEBUG
-      for (int i = 0; i < 6; i++) {
-	for (int j = 0; j < 6; j++) {
-	  cerr << "D[" << i << "][" << j << "]= " << D(i,j) << "\t";
-	}
-	cerr << endl;
-      }
-      
-      for (int i = 0; i < 6; i++) {
-	for (int j = 0; j < 24; j++) {
-	  cerr << "B[" << i << "][" << j << "]= " << B(i,j) << "\t";
-	}
-	cerr << endl;
-      }
-      
-      for (int i = 0; i < 3; i++) {
-	for (int j = 0; j < 24; j++) {
-	  cerr << "Bnl[" << i << "][" << j << "]= " << Bnl(i,j) << "\t";
-	}
-	cerr << endl;
-      }
-#endif
+
       // Perform kmat = B.transpose()*D*B*volold
       FastMatrix out(24,6);
       Btrans.transpose(B);
@@ -642,53 +506,19 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
       out1.multiply(Bnltrans, sig);
       kgeo.multiply(out1, Bnl);
       kgeo.multiply(volnew);
-      cerr.precision(16);
-#if 0
-      for (int d_o_f = 0; d_o_f < (int) dof.size(); d_o_f++)
-	cerr << "dof = " << dof[d_o_f] << endl;
-#endif
+
       for (int I = 0; I < (int)dof.size();I++) {
 	int dofi = dof[I];
 	for (int J = 0; J < (int)dof.size(); J++) {
 	  int dofj = dof[J];
-#if DEBUG
-#ifdef OLD_SPARSE
-	  cerr << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
-	       << endl;
-#endif
-#if 0
-	  cerr << "kmat[" << I << "][" << J << "]= " << kmat(I,J) << endl;
-	  cerr << "kgeo[" << I << "][" << J << "]= " << kgeo(I,J) << endl;
-#endif
-#endif
-#ifdef OLD_SPARSE
-	  KK[dofi][dofj] = KK[dofi][dofj] + (kmat(I,J) + kgeo(I,J));
-#endif
-#ifdef HAVE_PETSC
-#if 0
-	  PetscScalar v = kmat(I,J) + kgeo(I,J);
-	  MatSetValues(A,1,&dofi,1,&dofj,&v,ADD_VALUES);
-#endif
 	  double v = kmat(I,J) + kgeo(I,J);
 	  solver->fillMatrix(dofi,dofj,v);
-#endif
-#ifdef OLD_SPARSE
-	  cerr << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
-	       << endl;
-#endif
-	  
 	}
       }
       
     }
   }
-#ifdef HAVE_PETSC
   solver->flushMatrix();
-#if 0
-  MatAssemblyBegin(A,MAT_FLUSH_ASSEMBLY);
-  MatAssemblyEnd(A,MAT_FLUSH_ASSEMBLY);
-#endif
-#endif
   
 }
 
@@ -737,8 +567,6 @@ void CompNeoHookImplicit::computeStressTensorImplicitOnly(const PatchSubset* pat
 			    lb->pDeformationMeasureLabel_preReloc, pset);
      new_dw->allocateAndPut(bElBar_new,lb->bElBarLabel_preReloc, pset);
 
-     cerr << "delT = " << delT << endl;
-
      double shear = d_initialData.Shear;
      double bulk  = d_initialData.Bulk;
 
@@ -746,9 +574,7 @@ void CompNeoHookImplicit::computeStressTensorImplicitOnly(const PatchSubset* pat
      for(ParticleSubset::iterator iter = pset->begin();
 	 iter != pset->end(); iter++){
 	particleIndex idx = *iter;
-#if DEBUG
-      cerr << "Particle " << px[idx] << endl;
-#endif
+
 	velGrad.set(0.0);
 	dispGrad.set(0.0);
 	// Get the node indices that surround the cell
@@ -775,37 +601,8 @@ void CompNeoHookImplicit::computeStressTensorImplicitOnly(const PatchSubset* pat
        // Compute the deformation gradient increment using the dispGrad
 
        deformationGradientInc = dispGrad + Identity;
-#if DEBUG
-      for (int i = 1; i<= 3; i++) {
-	for (int j = 1; j <= 3; j++) {
-	  cerr << "dispGrad(" << i << "," << j << ")= " << dispGrad(i,j) 
-	       << "\t";
-	}
-	cerr << endl;
-      }
-      
-      for (int i = 1; i<= 3; i++) {
-	for (int j = 1; j <= 3; j++) {
-	  cerr << "defGradInc(" << i << "," << j << ")= " 
-	       << deformationGradientInc(i,j)  << "\t";
-	}
-	cerr << endl;
-      }
-      for (int i = 1; i<= 3; i++) {
-	for (int j = 1; j <= 3; j++) {
-	  cerr << "defGrad(" << i << "," << j << ")= " 
-	       << deformationGradient[idx](i,j)  << "\t";
-	}
-	cerr << endl;
-      }
-      
-#endif
+
        // Update the deformation gradient tensor to its time n+1 value.
-#if 0
-       cerr << "Before the update . . ." << endl;
-       cerr << "Old defGrad = " << deformationGradient[idx] << endl;
-       cerr << "New defGrad = " << deformationGradient_new[idx] << endl;
-#endif
        
        deformationGradient_new[idx] = deformationGradientInc *
 				      deformationGradient[idx];
@@ -816,9 +613,6 @@ void CompNeoHookImplicit::computeStressTensorImplicitOnly(const PatchSubset* pat
        fbar = deformationGradientInc * 
 	 pow(deformationGradientInc.Determinant(),-1./3.);
 
-#if DEBUG
-      cerr << "J = " << J << " fbar = " << fbar << endl;
-#endif
        bElBar_new[idx] = fbar*bElBar_old[idx]*fbar.Transpose();
 
        // Shear is equal to the shear modulus times dev(bElBar)
@@ -839,21 +633,7 @@ void CompNeoHookImplicit::computeStressTensorImplicitOnly(const PatchSubset* pat
 	 }
        }
 
-#if DEBUG
-      cerr << "sig = " << "\t" << sig(0,0) << "\t" << sig(0,1) << "\t" 
-	   << sig(0,2) << endl;
-      cerr << "sig = " << "\t" << sig(1,0) << "\t" << sig(1,1) << "\t" 
-	   << sig(1,2) << endl;
-      cerr << "sig = " << "\t" << sig(2,0) << "\t" << sig(2,1) << "\t" 
-	   << sig(2,2) << endl;
-#endif
-
        pvolume_deformed[idx] = pvolumeold[idx]*J;
-#if DEBUG
-      cerr << "volnew = " << pvolumeold[idx]*J << " volold = " 
-	   << pvolumeold[idx] << endl;
-#endif
-
      }
      new_dw->put(delt_vartype(delT),lb->delTLabel);
    }

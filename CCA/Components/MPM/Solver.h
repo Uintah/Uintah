@@ -32,16 +32,10 @@ namespace Uintah {
 
     virtual void destroyMatrix(bool recursion) = 0;
     
-    virtual void setRhs() = 0;
-
     virtual void fillMatrix(int, int, double) = 0;
     
     virtual void fillVector(int, double) = 0;
     
-    virtual void zeroRow(int) = 0;
-    
-    virtual void zeroColumn(int) = 0;
-
     virtual void copyL2G(Array3<int>& l2g, const Patch* patch) = 0;
 
     virtual void removeFixedDOF(set<int>& fixedDOF, int num_nodes) = 0;

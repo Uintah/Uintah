@@ -19,11 +19,6 @@
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 
-#ifdef HAVE_PETSC
-extern "C" {
-#include "petscsles.h"
-}
-#endif
 namespace Uintah {
       class CompNeoHookImplicit : public ConstitutiveModel {
       private:
@@ -55,22 +50,16 @@ namespace Uintah {
                                             DataWarehouse* new_dw);
 
          // compute stress at each particle in the patch
-#if 1
          virtual void computeStressTensor(const PatchSubset* patches,
                                           const MPMMaterial* matl,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
-#endif
+
          virtual void computeStressTensorImplicit(const PatchSubset* patches,
 						  const MPMMaterial* matl,
 						  DataWarehouse* old_dw,
 						  DataWarehouse* new_dw,
-						  SparseMatrix<double,int>& KK,
-#ifdef HAVE_PETSC
-						  Mat &A,
-						  map<const Patch*, Array3<int> >& d_petscLocalToGlobal,
 						  Solver* solver,
-#endif
 						  const bool recursion);
 
          virtual void computeStressTensorImplicitOnly(const PatchSubset* patches,

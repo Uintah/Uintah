@@ -10,18 +10,11 @@
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
-#include <Packages/Uintah/Core/Math/Sparse.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <valarray>
 #include <map>
 
 using namespace std;
-
-#ifdef HAVE_PETSC
-extern "C" {
-#include "petscsles.h"
-}
-#endif
 
 namespace Uintah {
 
@@ -193,13 +186,6 @@ private:
 			       DataWarehouse* new_dw);
 
   void formStiffnessMatrix(const ProcessorGroup*,
-			   const PatchSubset* patches,
-			   const MaterialSubset* matls,
-			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw,
-			   const bool recursion);
-
-  void formStiffnessMatrixPetsc(const ProcessorGroup*,
 				const PatchSubset* patches,
 				const MaterialSubset* matls,
 				DataWarehouse* old_dw,
@@ -225,10 +211,6 @@ private:
 	       LevelP level, Scheduler* sched);
 
   void formQ(const ProcessorGroup*, const PatchSubset* patches,
-	     const MaterialSubset* matls, DataWarehouse* old_dw,
-	     DataWarehouse* new_dw,const bool recursion);
-
-  void formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
 		  const MaterialSubset* matls, DataWarehouse* old_dw,
 		  DataWarehouse* new_dw,const bool recursion);
 
@@ -238,11 +220,7 @@ private:
 			       DataWarehouse* old_dw,
 			       DataWarehouse* new_dw);
 
-  void removeFixedDOF(const ProcessorGroup*, const PatchSubset* patches,
-		      const MaterialSubset* matls, DataWarehouse* old_dw,
-		      DataWarehouse* new_dw, const bool recursion);
-
-  void removeFixedDOFPetsc(const ProcessorGroup*, 
+  void removeFixedDOF(const ProcessorGroup*, 
 			   const PatchSubset* patches,
 			   const MaterialSubset* matls, 
 			   DataWarehouse* old_dw,
@@ -250,10 +228,6 @@ private:
 
 
   void solveForDuCG(const ProcessorGroup*, const PatchSubset* patches,
-		    const MaterialSubset* matls, DataWarehouse* old_dw,
-		    DataWarehouse* new_dw, const bool recursion);
-
-  void solveForDuCGPetsc(const ProcessorGroup*, const PatchSubset* patches,
 			 const MaterialSubset* matls, DataWarehouse* old_dw,
 			 DataWarehouse* new_dw, const bool recursion);
 
@@ -401,27 +375,14 @@ private:
   double           d_nextOutputTime;
   double           d_outputInterval;
   double           d_SMALL_NUM_MPM;
+  
+  const PatchSet* d_perproc_patches;
 
   Solver* d_solver;
-  SparseMatrix<double,int> KK;
-
-  // right hand side
-  valarray<double> Q;
-
-
-#ifdef HAVE_PETSC
-   Mat A;
-   Vec petscQ, diagonal, d_x, d_b, d_u;
-   SLES sles;
-#endif
-
-   const PatchSet* d_perproc_patches;
-   map<const Patch*, int> d_petscGlobalStart;
-   map<const Patch*, Array3<int> > d_petscLocalToGlobal;
-
-   bool dynamic;
-   
-   IntegratorType d_integrator;
+  
+  bool dynamic;
+  
+  IntegratorType d_integrator;
 
 };
       

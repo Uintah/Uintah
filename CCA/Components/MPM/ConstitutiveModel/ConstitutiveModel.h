@@ -3,17 +3,11 @@
 
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <vector>
-#include <Packages/Uintah/Core/Math/Sparse.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Containers/StaticArray.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 
-#ifdef HAVE_PETSC
-extern "C" {
-#include "petscsles.h"
-}
-#endif
 
 #define MAX_BASIS 27
 #define RIGHT_POLAR 0
@@ -77,13 +71,7 @@ WARNING
 						  const MPMMaterial* matl,
 						  DataWarehouse* old_dw,
 						  DataWarehouse* new_dw,
-						  SparseMatrix<double,int>& K,
-#ifdef HAVE_PETSC
-						  Mat &A,
-						  map<const Patch*, Array3<int> >& d_petscLocalToGlobal,
 						  Solver* solver,
-
-#endif
 						  const bool recursion);
 	 
 	 virtual void computeStressTensorImplicitOnly(const PatchSubset* patches,
