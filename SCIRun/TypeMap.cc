@@ -69,8 +69,10 @@ sci::cca::TypeMap::pointer TypeMap::cloneEmpty()
 int
 TypeMap::getInt(const std::string& key, int dflt)
 {
-  IntMap::iterator found=intMap.find(key);
-  if(found!=intMap.end()) return found->second;
+  IntMap::iterator found = intMap.find(key);
+  if (found!=intMap.end()) {
+    return found->second;
+  }
   return dflt;
 }
     
@@ -118,9 +120,11 @@ TypeMap::getDcomplex(const std::string& key, std::complex<double>  dflt)
 std::string
 TypeMap::getString(const std::string& key, const std::string& dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
-  StringMap::iterator found=stringMap.find(key);
-  if(found!=stringMap.end()) return found->second;
+  //std::cerr<<"method not implemented" << std::endl;  
+  StringMap::iterator found = stringMap.find(key);
+  if (found!=stringMap.end()) {
+    return found->second;
+  }
   return dflt;
 }
 
@@ -134,9 +138,11 @@ TypeMap::getBool(const std::string& key, bool dflt)
 
 // array1< int, 1> .sci.cca.TypeMap.getIntArray(in string key, in array1< int, 1> dflt)throws .sci.cca.TypeMismatchException
 ::SSIDL::array1< int>
-TypeMap::getIntArray(const ::std::string& key, const ::SSIDL::array1< int>& dflt){
-  IntArrayMap::iterator found=intArrayMap.find(key);
-  if(found!=intArrayMap.end()) return found->second;
+TypeMap::getIntArray(const std::string& key, const ::SSIDL::array1< int>& dflt){
+  IntArrayMap::iterator found = intArrayMap.find(key);
+  if (found != intArrayMap.end()) {
+    return found->second;
+  }
   return dflt;
 }
 
@@ -182,12 +188,15 @@ TypeMap::getDcomplexArray(const std::string& key,
   return dflt;
 }
 
-// array1< string, 1> .sci.cca.TypeMap.getStringArray(in string key, in array1< string, 1> dflt)throws .sci.cca.TypeMismatchException
-SSIDL::array1< std::string>
-TypeMap::getStringArray(const std::string& key, const SSIDL::array1< std::string>& dflt)
+// array1<string, 1> .sci.cca.TypeMap.getStringArray(in string key, in array1<string, 1> dflt)throws .sci.cca.TypeMismatchException
+SSIDL::array1<std::string>
+TypeMap::getStringArray(const std::string& key, const SSIDL::array1<std::string>& dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
-  return dflt;
+    StringArrayMap::iterator found = stringArrayMap.find(key);
+    if (found != stringArrayMap.end()) {
+	return found->second;
+    }
+    return dflt;
 }
 
 // array1< bool, 1> .sci.cca.TypeMap.getBoolArray(in string key, in array1< bool, 1> dflt)throws .sci.cca.TypeMismatchException
@@ -202,7 +211,9 @@ TypeMap::getBoolArray(const std::string& key, const SSIDL::array1< bool>& dflt)
 void
 TypeMap::putInt(const std::string& key, int value)
 {
-  intMap.insert(IntMap::value_type(key, value));
+  // insert new value for key or
+  // change existing value for key
+  intMap[key] = value;
   return;
 }
 
@@ -250,7 +261,9 @@ TypeMap::putDcomplex(const std::string& key, std::complex<double> value)
 void
 TypeMap::putString(const std::string& key, const std::string& value)
 {
-  stringMap.insert(StringMap::value_type(key, value));
+  // insert new value for key or
+  // change existing value for key
+  stringMap[key] = value;
   return;
 }
 
@@ -264,7 +277,7 @@ TypeMap::putBool(const std::string& key, bool value)
    
 // void .sci.cca.TypeMap.putIntArray(in string key, in array1< int, 1> value)
 void
-TypeMap::putIntArray(const ::std::string& key, const ::SSIDL::array1< int>& value){
+TypeMap::putIntArray(const std::string& key, const ::SSIDL::array1< int>& value){
   intArrayMap.insert(IntArrayMap::value_type(key, value));
   return;
 }
@@ -317,7 +330,7 @@ void
 TypeMap::putStringArray(const std::string& key,
                         const SSIDL::array1< std::string>& value)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  stringArrayMap.insert(StringArrayMap::value_type(key, value));
   return;
 }
     
@@ -331,9 +344,9 @@ TypeMap::putBoolArray(const std::string& key, const SSIDL::array1< bool>& value)
 
 // void .sci.cca.TypeMap.remove(in string key)
 void
-TypeMap:: remove(const std::string& key)
+TypeMap::remove(const std::string& key)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  std::cerr<<"method not implemented" << std::endl;
   return;
 }
 
